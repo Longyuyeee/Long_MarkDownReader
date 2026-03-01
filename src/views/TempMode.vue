@@ -78,13 +78,14 @@ onMounted(async () => {
   }
 
   vditor = new Vditor('vditor', {
-    cdn: 'https://cdn.jsdelivr.net/npm/vditor',
+    cdn: '/vditor',
     height: 'calc(100vh - 74px)',
     mode: 'wysiwyg',
     value: initialContent,
     placeholder: '开始记录胧月下的灵感...',
     theme: 'classic',
     icon: 'ant',
+    customWysiwygToolbar: () => {}, 
     input: () => { isDirty.value = true },
     after: () => {
       window.addEventListener('keydown', (e) => {
