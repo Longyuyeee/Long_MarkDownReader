@@ -154,6 +154,7 @@ body::before {
   padding-left: 16px; 
   flex: 1; 
   height: 100%; 
+  min-width: 0;
 }
 .app-logo { 
   font-size: 13px; 
@@ -163,12 +164,16 @@ body::before {
   -webkit-text-fill-color: transparent; 
   margin-right: 10px; 
   letter-spacing: -0.02em;
+  flex-shrink: 0;
 }
 .titlebar-title { 
   font-size: 11px; 
   font-weight: 500;
   opacity: 0.5; 
   letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .titlebar-right { display: flex; height: 100%; }
 .window-controls { display: flex; height: 100%; }

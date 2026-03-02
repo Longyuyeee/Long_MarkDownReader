@@ -5,7 +5,7 @@
     class="settings-modal"
     title="首选项"
     :bordered="false"
-    style="width: 500px; border-radius: 12px; backdrop-filter: blur(20px); background: rgba(255, 255, 255, 0.8);"
+    style="max-width: 500px; width: calc(100vw - 40px); border-radius: 12px; backdrop-filter: blur(20px); background: rgba(255, 255, 255, 0.8);"
   >
     <n-form label-placement="left" label-width="100" size="medium">
       <n-form-item label="库保存路径">

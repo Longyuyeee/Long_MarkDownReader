@@ -119,7 +119,7 @@ const saveAll = async () => {
 }
 
 .settings-header {
-  padding: 24px 40px;
+  padding: 24px 5%;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -134,10 +134,11 @@ const saveAll = async () => {
 .settings-content {
   flex: 1;
   overflow-y: auto;
-  padding: 40px 10%;
-  max-width: 900px;
+  padding: 40px 5%;
+  max-width: 800px;
   margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .section-title {
@@ -157,6 +158,13 @@ const saveAll = async () => {
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 8px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.setting-row .info {
+  flex: 1;
+  min-width: 200px;
 }
 
 .setting-row .label {
@@ -167,5 +175,21 @@ const saveAll = async () => {
 .setting-row .desc {
   font-size: 12px;
   opacity: 0.5;
+}
+
+@media (max-width: 600px) {
+  .settings-header {
+    padding: 16px 20px;
+  }
+  .settings-content {
+    padding: 20px 20px;
+  }
+  .setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .setting-row .n-button {
+    width: 100%;
+  }
 }
 </style>

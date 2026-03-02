@@ -37,6 +37,19 @@ const fileEncoding = ref('UTF-8')
 const isDirty = ref(false)
 let vditor: Vditor | null = null
 
+let autoSaveTimer: any = null
+const triggerAutoSave = (content: string) => {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer)
+  autoSaveTimer = setTimeout(async () => {
+    if (filePath.value) {
+      try {
+        await invoke('write_markdown_file', { path: filePath.value, content })
+        isDirty.value = false
+      } catch (e) { console.error('Auto-save failed', e) }
+    }
+  }, 2000)
+}
+
 const saveFile = async () => {
   if (!vditor || !filePath.value) return
   try {
@@ -44,28 +57,22 @@ const saveFile = async () => {
     await invoke('write_markdown_file', { path: filePath.value, content })
     isDirty.value = false
     message.success('已保存')
+    if (autoSaveTimer) clearTimeout(autoSaveTimer)
   } catch (err: any) {
     message.error('保存失败: ' + err)
   }
 }
 
-const importToLibrary = async () => {
-  if (!filePath.value) return
-  try {
-    const libraryRoot = 'C:\\Users\\Administrator\\Documents\\MistyLibrary' 
-    await invoke('import_to_library', {
-      sourcePath: filePath.value,
-      libraryRoot,
-      targetSubdir: ''
-    })
-    message.success('导入成功')
-    setTimeout(() => router.push({ name: 'LibraryMode' }), 800)
-  } catch (err: any) {
-    message.error('导入失败: ' + err)
+const handleKeyDown = (e: KeyboardEvent) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault()
+    e.stopPropagation()
+    saveFile()
   }
 }
 
 onMounted(async () => {
+  window.addEventListener('keydown', handleKeyDown)
   let initialContent = ''
   if (filePath.value) {
     try {
@@ -86,20 +93,21 @@ onMounted(async () => {
     theme: 'classic',
     icon: 'ant',
     customWysiwygToolbar: () => {}, 
-    input: () => { isDirty.value = true },
-    after: () => {
-      window.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-          e.preventDefault()
-          saveFile()
-        }
-      })
+    input: (val) => { 
+      isDirty.value = true 
+      triggerAutoSave(val)
     },
     preview: {
       delay: 300,
       actions: []
     }
   })
+})
+
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+  if (autoSaveTimer) clearTimeout(autoSaveTimer)
 })
 </script>
 
@@ -115,4 +123,19 @@ onMounted(async () => {
 :deep(.vditor) { border: none !important; background: transparent !important; }
 :deep(.vditor-toolbar) { background: rgba(255, 255, 255, 0.02) !important; border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; padding: 0 12px !important; }
 :deep(.vditor-content) { background: transparent !important; }
+
+:deep(.vditor-wysiwyg) {
+  padding: 40px 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+:deep(.vditor-reset) {
+  width: 90% !important;
+  max-width: 860px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  color: inherit !important;
+}
 </style>

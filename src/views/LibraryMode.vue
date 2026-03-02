@@ -68,19 +68,21 @@
     </div>
 
     <div class="editor-main" :class="{ 'zen-mode': store.isZen }">
-      <div class="tab-scroller" v-if="!store.isZen && tabs.length > 0">
-        <div 
-          v-for="tab in tabs" 
-          :key="tab.id" 
-          class="tab-pill" 
-          :class="{ active: activeTabId === tab.id }" 
-          @click="activeTabId = tab.id"
-        >
-          <n-icon :component="FileIcon" class="pill-icon" />
-          <span class="pill-text">{{ tab.title }}</span>
-          <n-icon :component="CloseIcon" class="pill-close" @click.stop="closeTab(tab.id)" />
+      <div class="tabs-bar" v-if="!store.isZen && tabs.length > 0">
+        <div class="tab-scroller" ref="tabsScrollRef" @wheel="handleTabsWheel">
+          <div 
+            v-for="tab in tabs" 
+            :key="tab.id" 
+            class="tab-pill" 
+            :class="{ active: activeTabId === tab.id }" 
+            @click="activeTabId = tab.id"
+          >
+            <n-icon :component="FileIcon" class="pill-icon" />
+            <span class="pill-text">{{ tab.title }}</span>
+            <n-icon :component="CloseIcon" class="pill-close" @click.stop="closeTab(tab.id)" />
+          </div>
         </div>
-        <div class="tab-actions" v-if="tabs.length > 0">
+        <div class="tab-actions">
           <n-button size="tiny" quaternary round @click="saveCurrentFile" :disabled="!activeTabId">
             <template #icon><n-icon :component="SaveIcon" /></template>
             保存
@@ -185,6 +187,13 @@ const renameState = reactive({ show: false, oldPath: '', newName: '' })
 
 const libraryName = computed(() => store.libraryPath ? store.libraryPath.split(/[\\/]/).pop() : '')
 
+const tabsScrollRef = ref<HTMLElement | null>(null)
+const handleTabsWheel = (e: WheelEvent) => {
+  if (tabsScrollRef.value) {
+    tabsScrollRef.value.scrollLeft += e.deltaY
+  }
+}
+
 const startResizing = (type: 'sidebar' | 'inspector') => { activeResizer.value = type }
 const onMouseUp = () => { activeResizer.value = null }
 const onMouseMove = (e: MouseEvent) => {
@@ -199,7 +208,7 @@ const loadDirectory = async (path: string): Promise<TreeOption[]> => {
   try {
     const entries = await invoke<FileEntry[]>('scan_directory', { path })
     return entries.map(entry => ({
-      label: entry.name,
+      label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''),
       key: entry.path,
       isLeaf: !entry.is_dir,
       children: entry.is_dir ? undefined : undefined, 
@@ -222,7 +231,8 @@ const handleNodeSelect = (keys: string[]) => {
   const path = keys[0]; if (!path) return
   selectedKeys.value = keys
   if (path.endsWith('.md')) {
-    store.addTab({ id: path, title: path.split(/[\\/]/).pop() || '笔记', path, isDirty: false })
+    const title = path.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'
+    store.addTab({ id: path, title, path, isDirty: false })
   } else {
     // 选中文件夹时自动展开/收起
     if (expandedKeys.value.includes(path)) {
@@ -251,7 +261,8 @@ const handleLoadChildren = async (option: TreeOption) => {
 
 const deleteAction = async (path: string) => {
   if (!path) return
-  if (confirm(`确认要物理删除 ${path.split(/[\\/]/).pop()} 吗？`)) {
+  const displayTitle = path.split(/[\\/]/).pop()?.replace(/\.md$/, '')
+  if (confirm(`确认要物理删除 ${displayTitle} 吗？`)) {
     try {
       await invoke('delete_item', { path })
       // 局部刷新逻辑：如果删除的是当前打开的 Tab，则关闭它
@@ -279,13 +290,26 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
       }
       contextMenu.options = items; contextMenu.show = true
     }, 50)
+  },
+  onClick: (e: MouseEvent) => {
+    // 处理文件夹的一键展开：如果是文件夹节点且不是点击的展开箭头（Naive UI Tree 的行点击）
+    const path = option.key as string
+    if (!option.isLeaf) {
+       handleNodeSelect([path])
+    }
   }
 })
 
 const onMenuAction = async (key: string) => {
   contextMenu.show = false
   const path = contextMenu.targetPath
-  if (key === 'rename') { renameState.oldPath = path; renameState.newName = path.split(/[\\/]/).pop() || ''; renameState.show = true }
+  if (key === 'rename') { 
+    renameState.oldPath = path
+    let name = path.split(/[\\/]/).pop() || ''
+    if (path.endsWith('.md')) name = name.replace(/\.md$/, '')
+    renameState.newName = name
+    renameState.show = true 
+  }
   else if (key === 'delete') { await deleteAction(path) }
   else if (key === 'add-file') {
     const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: path })
@@ -319,12 +343,30 @@ const handleToolbarAction = async (type: 'file' | 'folder') => {
 
 const applyRename = async () => {
   try {
-    await invoke('rename_item', { oldPath: renameState.oldPath, newName: renameState.newName })
+    let finalName = renameState.newName
+    if (renameState.oldPath.endsWith('.md') && !finalName.endsWith('.md')) {
+      finalName += '.md'
+    }
+    await invoke('rename_item', { oldPath: renameState.oldPath, newName: finalName })
     await refreshLibrary(); renameState.show = false; message.success('修改成功')
   } catch (e) { message.error('重命名失败') }
 }
 
 const closeTab = (id: string) => store.removeTab(id)
+
+let autoSaveTimer: any = null
+const triggerAutoSave = (content: string) => {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer)
+  autoSaveTimer = setTimeout(async () => {
+    const cur = tabs.value.find(t => t.id === activeTabId.value)
+    if (cur) {
+      try {
+        await invoke('write_markdown_file', { path: cur.path, content })
+        // 如果有 shadow copy 也可以在这里更新或者删除
+      } catch (e) { console.error('Auto-save failed', e) }
+    }
+  }, 2000) // 2秒无操作自动保存
+}
 
 const saveCurrentFile = async () => {
   if (!vditor || !activeTabId.value) return
@@ -334,6 +376,7 @@ const saveCurrentFile = async () => {
       const content = vditor.getValue()
       await invoke('write_markdown_file', { path: t.path, content })
       message.success('已保存')
+      if (autoSaveTimer) clearTimeout(autoSaveTimer)
     } catch (e) { message.error('保存失败') }
   }
 }
@@ -354,7 +397,10 @@ const initVditor = () => {
     customWysiwygToolbar: () => {}, 
     input: (val) => {
       const cur = tabs.value.find(t => t.id === activeTabId.value)
-      if (cur) invoke('save_shadow_copy', { path: cur.path, content: val })
+      if (cur) {
+        invoke('save_shadow_copy', { path: cur.path, content: val })
+        triggerAutoSave(val)
+      }
     },
     after: () => {
       isVditorReady = true
@@ -369,18 +415,30 @@ const initVditor = () => {
 
 watch(activeTabId, (newId) => { if (newId) { const t = tabs.value.find(item => item.id === newId); if (t) loadFileToEditor(t.path) } })
 
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'F2' && selectedKeys.value.length > 0) {
+    const p = selectedKeys.value[0]; renameState.oldPath = p; renameState.newName = p.split(/[\\/]/).pop() || ''; renameState.show = true
+  }
+  if (e.key === 'Delete' && selectedKeys.value.length > 0) {
+    deleteAction(selectedKeys.value[0])
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault()
+    e.stopPropagation() // 阻止冒泡到 App.vue
+    saveCurrentFile()
+  }
+}
+
 onMounted(async () => {
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'F2' && selectedKeys.value.length > 0) {
-      const p = selectedKeys.value[0]; renameState.oldPath = p; renameState.newName = p.split(/[\\/]/).pop() || ''; renameState.show = true
-    }
-    if (e.key === 'Delete' && selectedKeys.value.length > 0) {
-      deleteAction(selectedKeys.value[0])
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
-  })
+  window.addEventListener('keydown', handleKeyDown)
   await refreshLibrary()
   initVditor()
+})
+
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+  if (autoSaveTimer) clearTimeout(autoSaveTimer)
 })
 </script>
 
@@ -511,14 +569,26 @@ onMounted(async () => {
 .zen-mode { padding: 0 15% 0px; }
 
 /* 胶囊标签页美化 */
+.tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 0;
+  gap: 12px;
+  background: transparent;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .tab-scroller { 
+  flex: 1;
   height: 40px; 
   display: flex; 
-  padding: 8px 12px 0; 
   gap: 8px; 
   align-items: center; 
   overflow-x: auto;
   scrollbar-width: none;
+  min-width: 0;
 }
 .tab-scroller::-webkit-scrollbar { display: none; }
 
@@ -537,7 +607,15 @@ onMounted(async () => {
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
   color: #86868b;
   white-space: nowrap;
+  flex-shrink: 0;
 }
+
+.tab-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
 .is-dark .tab-pill { background: rgba(255, 255, 255, 0.05); color: #8e8e93; }
 
 .tab-pill.active { 
@@ -577,8 +655,17 @@ onMounted(async () => {
 .is-dark :deep(.vditor-toolbar) { background: rgba(28, 28, 30, 0.8) !important; }
 
 :deep(.vditor-wysiwyg) {
-  padding: 60px 80px !important;
-  transition: opacity 0.4s ease;
+  padding: 40px 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+:deep(.vditor-reset) {
+  width: 90% !important;
+  max-width: 860px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
 }
 
 /* 动效：树节点入场 */
@@ -603,4 +690,55 @@ onMounted(async () => {
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; 
 }
 .is-dark .inspector-sidebar { background: rgba(28, 28, 30, 0.5); }
+
+/* 引导页 (Hero Viewport) 样式 */
+.hero-viewport {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: transparent;
+}
+
+.hero-content {
+  text-align: center;
+  animation: heroAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes heroAppear {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-brand {
+  font-size: 64px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 10px 20px rgba(102, 126, 234, 0.3));
+}
+
+.hero-content h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #1d1d1f;
+}
+
+.is-dark .hero-content h2 { color: #f5f5f7; }
+
+.hero-content p {
+  font-size: 15px;
+  color: #86868b;
+  margin-bottom: 32px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
 </style>
