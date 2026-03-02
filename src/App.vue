@@ -99,23 +99,103 @@ onMounted(async () => {
 
 <style>
 :root { --titlebar-height: 34px; }
-body { margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei", sans-serif; background: transparent; transition: background-color 0.3s ease; }
-.app-container { height: 100vh; display: flex; flex-direction: column; background: transparent; color: #333; transition: color 0.3s ease; }
-.app-container.is-dark { color: #eee; background-color: rgba(20, 20, 20, 0.1); }
-.custom-titlebar { height: var(--titlebar-height); display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); user-select: none; z-index: 9999; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-.is-dark .custom-titlebar { background: rgba(0, 0, 0, 0.15); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-.titlebar-left { display: flex; align-items: center; padding-left: 12px; flex: 1; height: 100%; }
-.app-logo { font-size: 14px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-right: 8px; }
-.titlebar-title { font-size: 12px; opacity: 0.7; }
+body { 
+  margin: 0; 
+  padding: 0; 
+  overflow: hidden; 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", "SF Pro Text", "Helvetica Neue", "Microsoft YaHei", sans-serif; 
+  background: #f5f5f7; 
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+.app-container { 
+  height: 100vh; 
+  display: flex; 
+  flex-direction: column; 
+  background: transparent; 
+  color: #1d1d1f; 
+  transition: color 0.3s ease; 
+}
+.app-container.is-dark { 
+  color: #f5f5f7; 
+  background-color: #000; 
+}
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+.is-dark body {
+  background: #1c1c1e;
+}
+.custom-titlebar { 
+  height: var(--titlebar-height); 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  background: rgba(255, 255, 255, 0.7); 
+  backdrop-filter: saturate(180%) blur(20px); 
+  user-select: none; 
+  z-index: 9999; 
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05); 
+}
+.is-dark .custom-titlebar { 
+  background: rgba(28, 28, 30, 0.7); 
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+}
+.titlebar-left { 
+  display: flex; 
+  align-items: center; 
+  padding-left: 16px; 
+  flex: 1; 
+  height: 100%; 
+}
+.app-logo { 
+  font-size: 13px; 
+  font-weight: 600; 
+  background: linear-gradient(135deg, #007aff 0%, #5856d6 100%); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+  margin-right: 10px; 
+  letter-spacing: -0.02em;
+}
+.titlebar-title { 
+  font-size: 11px; 
+  font-weight: 500;
+  opacity: 0.5; 
+  letter-spacing: 0.01em;
+}
 .titlebar-right { display: flex; height: 100%; }
 .window-controls { display: flex; height: 100%; }
-.win-btn { width: 46px; height: 100%; display: flex; align-items: center; justify-content: center; cursor: default; transition: background 0.2s, color 0.2s; color: currentColor; }
-.win-btn:hover { background: rgba(0, 0, 0, 0.1); }
+.win-btn { 
+  width: 44px; 
+  height: 100%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  cursor: default; 
+  transition: all 0.2s ease; 
+  color: currentColor; 
+}
+.win-btn:hover { background: rgba(0, 0, 0, 0.05); }
 .is-dark .win-btn:hover { background: rgba(255, 255, 255, 0.1); }
-.win-btn.close:hover { background: #e81123 !important; color: #fff !important; }
+.win-btn.close:hover { background: #ff3b30 !important; color: #fff !important; }
 .app-content { flex: 1; position: relative; overflow: hidden; }
 .zen-mode .app-content { background: transparent; }
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
-.is-dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { 
+  background: rgba(0, 0, 0, 0.15); 
+  border-radius: 20px; 
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.is-dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 0, 0, 0.25); background-clip: content-box; }
+.is-dark ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.3); background-clip: content-box; }
 </style>
