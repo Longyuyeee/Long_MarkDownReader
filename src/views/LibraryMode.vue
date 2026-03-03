@@ -332,6 +332,16 @@ const deleteAction = async (path: string) => {
 }
 
 const nodeProps = ({ option }: { option: TreeOption }) => ({
+  draggable: true,
+  onDragstart: (e: DragEvent) => {
+    // 关键点：阻止事件冒泡，防止 Tauri 原生拦截
+    e.stopPropagation()
+    if (e.dataTransfer) {
+      e.dataTransfer.setData('text/plain', option.key as string)
+      e.dataTransfer.effectAllowed = 'move'
+    }
+    console.log('DragStart:', option.key)
+  },
   onClick: () => {
     handleNodeSelect([option.key as string])
     if (!option.isLeaf) {

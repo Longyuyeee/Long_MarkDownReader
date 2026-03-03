@@ -60,6 +60,7 @@
     - 注入 `-webkit-app-region: no-drag` 样式。
     - 强制设置 `user-select: auto` 样式。
     - 在 `App.vue` 顶层拦截全局 `dragover` 事件。
+    - 在 `onDragstart` 中显式调用 `e.stopPropagation()` 阻止事件向上冒泡到 Tauri 窗口管理器。
 - **结论/备选方案**：若必须实现拖拽，后续建议弃用 HTML5 原生 DND 接口，改用基于鼠标位置模拟的 **虚拟拖拽方案**（如 `vuedraggable` 或 `dnd-kit` 的手动模式）。
 
 ---
