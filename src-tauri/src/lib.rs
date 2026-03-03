@@ -257,14 +257,30 @@ async fn search_library(library_root: String, query: String) -> Result<Vec<FileE
 
 fn search_recursive(dir: &Path, query: &str, results: &mut Vec<FileEntry>) {
     if let Ok(entries) = fs::read_dir(dir) {
+        let query_lower = query.to_lowercase();
         for entry in entries.flatten() {
             let path = entry.path();
             let name = path.file_name().unwrap_or_default().to_string_lossy();
             if name.starts_with('.') || name.ends_with(".assets") { continue; }
-            if path.is_dir() { search_recursive(&path, query, results); }
-            else if name.ends_with(".md") {
-                if name.to_lowercase().contains(&query.to_lowercase()) {
-                    results.push(FileEntry { name: name.into_owned(), path: path.to_string_lossy().into_owned(), is_dir: false });
+            
+            if path.is_dir() { 
+                search_recursive(&path, query, results); 
+            } else if name.ends_with(".md") {
+                let name_matches = name.to_lowercase().contains(&query_lower);
+                let content_matches = if !name_matches {
+                    fs::read_to_string(&path)
+                        .map(|c| c.to_lowercase().contains(&query_lower))
+                        .unwrap_or(false)
+                } else {
+                    false
+                };
+
+                if name_matches || content_matches {
+                    results.push(FileEntry { 
+                        name: name.into_owned(), 
+                        path: path.to_string_lossy().into_owned(), 
+                        is_dir: false 
+                    });
                 }
             }
         }
