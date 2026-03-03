@@ -32,11 +32,8 @@
           </div>
           <n-tree 
             v-else
-            block-line 
-            expand-on-click
             :data="treeData" 
             @update:selected-keys="handleNodeSelect" 
-            virtual-scroll 
             lazy
             :on-load="handleLoadChildren"
             draggable
@@ -219,6 +216,42 @@ const loadDirectory = async (path: string): Promise<TreeOption[]> => {
 
 const refreshLibrary = async () => { if (store.libraryPath) treeData.value = await loadDirectory(store.libraryPath) }
 
+const refreshNode = async (path: string) => {
+  if (!path || !store.libraryPath) return
+  const newEntries = await loadDirectory(path)
+  
+  // 核心：深度同步函数，保持已有的展开状态和子元素数据
+  const syncNodes = (oldNodes: TreeOption[], newNodes: TreeOption[]) => {
+    const oldMap = new Map(oldNodes.map(n => [n.key, n]))
+    return newNodes.map(newNode => {
+      const matchedOld = oldMap.get(newNode.key as string)
+      // 如果旧树中已经加载过这个目录的子元素，则保留它们，防止收缩
+      if (matchedOld && matchedOld.children !== undefined) {
+        return { ...newNode, children: matchedOld.children }
+      }
+      return newNode
+    })
+  }
+
+  if (path === store.libraryPath) {
+    treeData.value = syncNodes(treeData.value, newEntries)
+  } else {
+    const patch = (nodes: TreeOption[]): boolean => {
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].key === path) {
+          nodes[i].children = syncNodes(nodes[i].children || [], newEntries)
+          return true
+        }
+        if (nodes[i].children && patch(nodes[i].children)) return true
+      }
+      return false
+    }
+    patch(treeData.value)
+    // 强制触发 Vue 数组响应式
+    treeData.value = [...treeData.value]
+  }
+}
+
 const loadFileToEditor = async (path: string) => {
   if (!vditor || !isVditorReady || !path) return
   try {
@@ -236,15 +269,47 @@ const handleNodeSelect = (keys: string[]) => {
   }
 }
 
-const handleAllowDrop = () => true
-const handleDrop = async (info: any) => {
-  const sourcePath = info.dragNode.key as string
-  let targetDir = info.node.key as string
-  if (info.dropPosition !== 0 || info.node.isLeaf) { targetDir = targetDir.substring(0, targetDir.lastIndexOf('\\')) }
+const handleAllowDrop = (info: { dropPosition: 'before' | 'inside' | 'after', node: TreeOption, dragNode: TreeOption }) => {
+  const { dropPosition, node, dragNode } = info
+  if (!node || !dragNode) return false
+  
+  if (dragNode.key === node.key) return false
+  if (dropPosition === 'inside' && node.isLeaf) return false
+  return true
+}
+
+const handleDrop = async (info: { node: TreeOption, dragNode: TreeOption, dropPosition: 'before' | 'inside' | 'after' }) => {
+  const { node, dragNode, dropPosition } = info
+  if (!node || !dragNode) return
+  
+  console.log('Drop:', dragNode.key, '->', node.key, dropPosition)
+  
+  const sourcePath = dragNode.key as string
+  let targetDir = node.key as string
+  
+  if (dropPosition !== 'inside') {
+    const lastSlash = Math.max(targetDir.lastIndexOf('\\'), targetDir.lastIndexOf('/'))
+    targetDir = lastSlash !== -1 ? targetDir.substring(0, lastSlash) : store.libraryPath
+  }
+  
+  if (!targetDir) targetDir = store.libraryPath
+
   try {
+    message.loading('正在移动项目...', { duration: 1000 })
     await invoke('move_item', { sourcePath, targetDir })
-    await refreshLibrary(); message.success('移动成功')
-  } catch (err) { message.error('移动失败') }
+    
+    const sourceParentIndex = Math.max(sourcePath.lastIndexOf('\\'), sourcePath.lastIndexOf('/'))
+    const sourceParentPath = sourceParentIndex !== -1 ? sourcePath.substring(0, sourceParentIndex) : store.libraryPath
+    
+    await refreshNode(sourceParentPath)
+    if (sourceParentPath !== targetDir) {
+      await refreshNode(targetDir)
+    }
+    message.success('移动成功')
+  } catch (err: any) {
+    console.error('Move Error:', err)
+    message.error(typeof err === 'string' ? err : '移动失败')
+  }
 }
 
 const handleLoadChildren = async (option: TreeOption) => {
@@ -255,18 +320,31 @@ const handleLoadChildren = async (option: TreeOption) => {
 const deleteAction = async (path: string) => {
   if (!path) return
   const displayTitle = path.split(/[\\/]/).pop()?.replace(/\.md$/, '')
+  const parentPath = path.substring(0, path.lastIndexOf('\\'))
   if (confirm(`确认要物理删除 ${displayTitle} 吗？`)) {
     try {
       await invoke('delete_item', { path })
-      // 局部刷新逻辑：如果删除的是当前打开的 Tab，则关闭它
       if (activeTabId.value === path) store.removeTab(path)
-      await refreshLibrary()
+      await refreshNode(parentPath || store.libraryPath)
       message.success('已删除')
     } catch (e) { message.error('删除失败') }
   }
 }
 
 const nodeProps = ({ option }: { option: TreeOption }) => ({
+  onClick: () => {
+    handleNodeSelect([option.key as string])
+    if (!option.isLeaf) {
+      const key = option.key as string
+      const index = expandedKeys.value.indexOf(key)
+      if (index > -1) {
+        expandedKeys.value.splice(index, 1)
+        expandedKeys.value = [...expandedKeys.value]
+      } else {
+        expandedKeys.value = [...expandedKeys.value, key]
+      }
+    }
+  },
   onContextmenu: (e: MouseEvent) => {
     e.preventDefault(); contextMenu.show = false
     setTimeout(() => {
@@ -300,11 +378,11 @@ const onMenuAction = async (key: string) => {
   else if (key === 'add-file') {
     const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: path })
     if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path)
-    await refreshLibrary(); handleNodeSelect([p])
+    await refreshNode(path); handleNodeSelect([p])
   } else if (key === 'add-folder') {
     await invoke('create_new_folder', { parentPath: path })
     if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path)
-    await refreshLibrary()
+    await refreshNode(path)
   }
 }
 
@@ -319,10 +397,10 @@ const handleToolbarAction = async (type: 'file' | 'folder') => {
   try {
     if (type === 'file') {
       const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target })
-      await refreshLibrary(); handleNodeSelect([p])
+      await refreshNode(target); handleNodeSelect([p])
     } else {
       await invoke('create_new_folder', { parentPath: target })
-      await refreshLibrary()
+      await refreshNode(target)
     }
   } catch (e) { message.error('操作失败') }
 }
@@ -334,7 +412,9 @@ const applyRename = async () => {
       finalName += '.md'
     }
     await invoke('rename_item', { oldPath: renameState.oldPath, newName: finalName })
-    await refreshLibrary(); renameState.show = false; message.success('修改成功')
+    const parentPath = renameState.oldPath.substring(0, renameState.oldPath.lastIndexOf('\\'))
+    await refreshNode(parentPath || store.libraryPath)
+    renameState.show = false; message.success('修改成功')
   } catch (e) { message.error('重命名失败') }
 }
 
@@ -436,7 +516,7 @@ onUnmounted(() => {
   width: 100vw; 
   overflow: hidden; 
   background: transparent; 
-  user-select: none; 
+  user-select: auto !important; /* 关键修复：放开全局 user-select，允许启动拖拽动作 */
   box-sizing: border-box; 
   animation: fadeIn 0.6s ease-out;
 }
@@ -467,6 +547,14 @@ onUnmounted(() => {
 .sidebar-header { padding: 24px 16px 12px; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; }
 
 .tree-viewport { flex: 1; overflow-y: auto; padding: 4px 12px; }
+
+/* 树节点样式修正 */
+:deep(.n-tree-node-content) {
+  -webkit-app-region: no-drag !important;
+}
+:deep(.n-tree-node-wrapper) {
+  -webkit-app-region: no-drag !important;
+}
 
 /* 左下角卡片设计 */
 .sidebar-footer { 
@@ -652,15 +740,6 @@ onUnmounted(() => {
   max-width: 860px !important;
   margin: 0 auto !important;
   padding: 0 !important;
-}
-
-/* 动效：树节点入场 */
-:deep(.n-tree-node) {
-  animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-10px); }
-  to { opacity: 1; transform: translateX(0); }
 }
 
 /* 按钮点击动效 */
