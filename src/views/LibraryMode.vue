@@ -36,9 +36,6 @@
             @update:selected-keys="handleNodeSelect" 
             lazy
             :on-load="handleLoadChildren"
-            draggable
-            :allow-drop="handleAllowDrop"
-            @drop="handleDrop"
             :node-props="nodeProps"
             v-model:selected-keys="selectedKeys"
             v-model:expanded-keys="expandedKeys"
@@ -55,6 +52,12 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 将 Ghost 移动到侧边栏外部，放置在 library-mode 根部 -->
+    <div v-if="virtualDrag.active" class="drag-ghost" :style="{ left: virtualDrag.x + 'px', top: virtualDrag.y + 'px' }">
+      <n-icon :component="virtualDrag.dragNode?.isLeaf ? FileIcon : FolderIcon" />
+      <span>{{ virtualDrag.ghostText }}</span>
     </div>
 
     <div class="resizer-area" v-if="!store.isZen">
@@ -171,6 +174,19 @@ const sidebarWidth = ref(260)
 const inspectorWidth = ref(280)
 const activeResizer = ref<'sidebar' | 'inspector' | null>(null)
 
+// 虚拟拖拽状态
+const virtualDrag = reactive({
+  active: false,
+  x: 0,
+  y: 0,
+  startX: 0,
+  startY: 0,
+  dragNode: null as any,
+  dropTarget: null as any,
+  ghostText: '',
+  timer: null as any
+})
+
 const treeData = ref<TreeOption[]>([])
 const searchQuery = ref('')
 const selectedKeys = ref<string[]>([])
@@ -192,10 +208,67 @@ const handleTabsWheel = (e: WheelEvent) => {
 }
 
 const startResizing = (type: 'sidebar' | 'inspector') => { activeResizer.value = type }
-const onMouseUp = () => { activeResizer.value = null }
+const onMouseUp = async () => {
+  activeResizer.value = null
+  
+  if (virtualDrag.timer) {
+    clearTimeout(virtualDrag.timer)
+    virtualDrag.timer = null
+  }
+
+  if (virtualDrag.active) {
+    const sourcePath = virtualDrag.dragNode?.key
+    const targetPath = virtualDrag.dropTarget
+    
+    if (sourcePath && targetPath && sourcePath !== targetPath) {
+      try {
+        message.loading('正在移动项目...', { duration: 1000 })
+        await invoke('move_item', { sourcePath, targetDir: targetPath })
+        
+        const sourceParentIndex = Math.max(sourcePath.lastIndexOf('\\'), sourcePath.lastIndexOf('/'))
+        const sourceParentPath = sourceParentIndex !== -1 ? sourcePath.substring(0, sourceParentIndex) : store.libraryPath
+        
+        await refreshNode(sourceParentPath)
+        if (sourceParentPath !== targetPath) {
+          await refreshNode(targetPath)
+        }
+        message.success('移动成功')
+      } catch (err: any) {
+        message.error(typeof err === 'string' ? err : '移动失败')
+      }
+    }
+    
+    virtualDrag.active = false
+    virtualDrag.dragNode = null
+    virtualDrag.dropTarget = null
+  }
+}
+
 const onMouseMove = (e: MouseEvent) => {
   if (activeResizer.value === 'sidebar') { sidebarWidth.value = Math.max(180, Math.min(e.clientX, 500)) }
   else if (activeResizer.value === 'inspector') { inspectorWidth.value = Math.max(200, Math.min(window.innerWidth - e.clientX, 500)) }
+  
+  virtualDrag.x = e.clientX
+  virtualDrag.y = e.clientY
+
+  if (virtualDrag.active) {
+    const el = document.elementFromPoint(e.clientX, e.clientY)
+    const targetEl = el?.closest('[data-key]')
+    
+    if (targetEl) {
+      const key = targetEl.getAttribute('data-key')
+      const isDir = targetEl.getAttribute('data-is-dir') === 'true'
+      
+      // 合法性判定：目标必须是目录，且不能是正在拖拽的节点本身
+      if (key && isDir && key !== virtualDrag.dragNode?.key) {
+        virtualDrag.dropTarget = key
+      } else {
+        virtualDrag.dropTarget = null
+      }
+    } else {
+      virtualDrag.dropTarget = null
+    }
+  }
 }
 
 const openSettings = () => router.push('/settings')
@@ -332,17 +405,25 @@ const deleteAction = async (path: string) => {
 }
 
 const nodeProps = ({ option }: { option: TreeOption }) => ({
-  draggable: true,
-  onDragstart: (e: DragEvent) => {
-    // 关键点：阻止事件冒泡，防止 Tauri 原生拦截
-    e.stopPropagation()
-    if (e.dataTransfer) {
-      e.dataTransfer.setData('text/plain', option.key as string)
-      e.dataTransfer.effectAllowed = 'move'
-    }
-    console.log('DragStart:', option.key)
+  'data-key': option.key,
+  'data-is-dir': !option.isLeaf ? 'true' : 'false',
+  class: virtualDrag.dropTarget === option.key ? 'drop-active' : '',
+  onMousedown: (e: MouseEvent) => {
+    if (e.button !== 0) return
+    
+    virtualDrag.startX = e.clientX
+    virtualDrag.startY = e.clientY
+    
+    if (virtualDrag.timer) clearTimeout(virtualDrag.timer)
+    virtualDrag.timer = setTimeout(() => {
+      virtualDrag.active = true
+      virtualDrag.dragNode = option
+      virtualDrag.ghostText = option.label as string
+      virtualDrag.timer = null
+    }, 350) // 增加到 350ms 确认为长按
   },
   onClick: () => {
+    if (virtualDrag.active) return
     handleNodeSelect([option.key as string])
     if (!option.isLeaf) {
       const key = option.key as string
@@ -356,6 +437,7 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
     }
   },
   onContextmenu: (e: MouseEvent) => {
+    if (virtualDrag.active) return
     e.preventDefault(); contextMenu.show = false
     setTimeout(() => {
       contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf
@@ -379,8 +461,13 @@ const onMenuAction = async (key: string) => {
   const path = contextMenu.targetPath
   if (key === 'rename') { 
     renameState.oldPath = path
-    let name = path.split(/[\\/]/).pop() || ''
-    if (path.endsWith('.md')) name = name.replace(/\.md$/, '')
+    const parts = path.split(/[\\/]/).filter(Boolean)
+    let name = parts[parts.length - 1] || ''
+    // 只有文件才尝试剥离后缀，目录保持原样
+    if (!contextMenu.isDir) {
+      const lastDot = name.lastIndexOf('.')
+      if (lastDot > 0) name = name.substring(0, lastDot)
+    }
     renameState.newName = name
     renameState.show = true 
   }
@@ -493,7 +580,17 @@ watch(activeTabId, (newId) => { if (newId) { const t = tabs.value.find(item => i
 
 const handleKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'F2' && selectedKeys.value.length > 0) {
-    const p = selectedKeys.value[0]; renameState.oldPath = p; renameState.newName = p.split(/[\\/]/).pop() || ''; renameState.show = true
+    const p = selectedKeys.value[0]
+    renameState.oldPath = p
+    const parts = p.split(/[\\/]/).filter(Boolean)
+    let name = parts[parts.length - 1] || ''
+    // 只有文件才剥离后缀
+    if (p.endsWith('.md')) {
+      const lastDot = name.lastIndexOf('.')
+      if (lastDot > 0) name = name.substring(0, lastDot)
+    }
+    renameState.newName = name
+    renameState.show = true
   }
   if (e.key === 'Delete' && selectedKeys.value.length > 0) {
     deleteAction(selectedKeys.value[0])
@@ -815,5 +912,45 @@ onUnmounted(() => {
   display: flex;
   gap: 16px;
   justify-content: center;
+}
+
+/* 虚拟拖拽样式 */
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid #007aff;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #007aff;
+  animation: ghostPulse 1.5s infinite ease-in-out;
+}
+.is-dark .drag-ghost {
+  background: rgba(44, 44, 46, 0.9);
+  border-color: #0a84ff;
+  color: #0a84ff;
+}
+
+@keyframes ghostPulse {
+  0% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.02); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.9; }
+}
+
+:deep(.n-tree-node.drop-active) {
+  background-color: rgba(0, 122, 255, 0.1) !important;
+  border: 1px dashed #007aff !important;
+  border-radius: 4px;
+}
+.is-dark :deep(.n-tree-node.drop-active) {
+  background-color: rgba(10, 132, 255, 0.15) !important;
+  border-color: #0a84ff !important;
 }
 </style>
