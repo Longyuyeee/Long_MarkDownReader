@@ -10,7 +10,6 @@
       <div class="actions">
         <n-button-group size="small">
           <n-button secondary type="success" @click="saveFile">保存</n-button>
-          <n-button primary type="primary" @click="importToLibrary">导入到库</n-button>
         </n-button-group>
       </div>
     </div>
@@ -22,14 +21,13 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage } from 'naive-ui'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 
 const route = useRoute()
-const router = useRouter()
 const message = useMessage()
 const filePath = ref(route.query.path as string || '')
 const fileName = computed(() => filePath.value ? filePath.value.split(/[\\/]/).pop() : '新文档.md')

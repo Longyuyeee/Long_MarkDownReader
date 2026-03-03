@@ -233,13 +233,6 @@ const handleNodeSelect = (keys: string[]) => {
   if (path.endsWith('.md')) {
     const title = path.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'
     store.addTab({ id: path, title, path, isDirty: false })
-  } else {
-    // 选中文件夹时自动展开/收起
-    if (expandedKeys.value.includes(path)) {
-      expandedKeys.value = expandedKeys.value.filter(k => k !== path)
-    } else {
-      expandedKeys.value.push(path)
-    }
   }
 }
 
@@ -290,13 +283,6 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
       }
       contextMenu.options = items; contextMenu.show = true
     }, 50)
-  },
-  onClick: (e: MouseEvent) => {
-    // 处理文件夹的一键展开：如果是文件夹节点且不是点击的展开箭头（Naive UI Tree 的行点击）
-    const path = option.key as string
-    if (!option.isLeaf) {
-       handleNodeSelect([path])
-    }
   }
 })
 
