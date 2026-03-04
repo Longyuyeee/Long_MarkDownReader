@@ -232,8 +232,9 @@ import 'vditor/dist/index.css'
 import { useAppStore } from '../store/app'
 import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { listen } from '@tauri-apps/api/event'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
 interface OutlineItem { id: string; text: string; level: number; }
@@ -674,10 +675,18 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 const tabsScrollRef = ref<HTMLElement | null>(null)
 let searchDebounce: any = null
+let unlistenRefresh: any = null
+
 onMounted(async () => { 
   await store.loadConfig()
   window.addEventListener('keydown', handleKeyDown); 
   if (store.libraryPath) await refreshLibrary(); 
+  
+  // 核心：监听来自快速笔记的全局刷新信号
+  unlistenRefresh = await listen('refresh-library', () => {
+    refreshLibrary()
+  })
+
   nextTick(() => { initVditor(); startShadowSaveTimer() })
 
   const appWindow = getCurrentWindow()
@@ -695,7 +704,13 @@ onMounted(async () => {
 })
 
 watch(() => store.libraryPath, (newPath) => { if (newPath) refreshLibrary() })
-onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); if (outlineObserver) outlineObserver.disconnect() })
+onUnmounted(() => { 
+  window.removeEventListener('keydown', handleKeyDown); 
+  if (autoSaveTimer) clearTimeout(autoSaveTimer); 
+  if (shadowSaveTimer) clearInterval(shadowSaveTimer); 
+  if (outlineObserver) outlineObserver.disconnect() 
+  if (unlistenRefresh) unlistenRefresh()
+})
 watch(activeTabId, (newId) => { if (newId) { const t = tabs.value.find(item => item.id === newId); if (t) loadFileToEditor(t.path) } })
 watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); if (!val.trim()) { refreshLibrary(); return }; searchDebounce = setTimeout(async () => { try { const results = await invoke<FileEntry[]>('search_library', { libraryRoot: store.libraryPath, query: val.trim() }); treeData.value = results.map(entry => ({ label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''), key: entry.path, isLeaf: !entry.is_dir, prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' }) })) } catch (e) {} }, 300) })
 </script>

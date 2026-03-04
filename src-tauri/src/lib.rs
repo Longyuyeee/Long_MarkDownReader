@@ -118,13 +118,14 @@ fn set_as_default_handler() -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn create_new_file(library_root: String, target_dir: Option<String>) -> Result<String, String> {
+async fn create_new_file(library_root: String, target_dir: Option<String>, prefix: Option<String>) -> Result<String, String> {
     let root = if let Some(dir) = target_dir { PathBuf::from(dir) } else { PathBuf::from(&library_root) };
     if !root.exists() { fs::create_dir_all(&root).map_err(|e| e.to_string())?; }
     let mut index = 0;
+    let base_name = prefix.unwrap_or_else(|| "未命名".to_string());
     let mut file_path;
     loop {
-        let name = if index == 0 { "未命名.md".to_string() } else { format!("未命名 {}.md", index) };
+        let name = if index == 0 { format!("{}.md", base_name) } else { format!("{} {}.md", base_name, index) };
         file_path = root.join(name);
         if !file_path.exists() { break; }
         index += 1;
@@ -431,6 +432,9 @@ async fn export_to_html(path: String, html_content: String) -> Result<(), String
     fs::write(html_path, full_html).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn exit_app(app_handle: tauri::AppHandle) { app_handle.exit(0); }
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -441,6 +445,14 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             if args.len() > 1 { let _ = app.emit("open-file", args[1].clone()); }
         }))
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if window.label() == "main" {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+        })
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
             #[cfg(target_os = "windows")]
@@ -449,7 +461,10 @@ pub fn run() {
             let show_i = MenuItem::with_id(app, "show", "显示主窗口", true, None::<&str>)?;
             let quick_i = MenuItem::with_id(app, "quick", "快速笔记", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quick_i, &show_i, &quit_i])?;
-            let _tray = TrayIconBuilder::new().icon(app.default_window_icon().unwrap().clone()).menu(&menu)
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .tooltip("胧编辑 · MD助手")
+                .menu(&menu)
                 .on_menu_event(|app: &tauri::AppHandle, event| match event.id.as_ref() {
                     "quit" => { app.exit(0); }
                     "show" => { let win = app.get_webview_window("main").unwrap(); let _ = win.show(); let _ = win.set_focus(); }
@@ -459,8 +474,9 @@ pub fn run() {
                     }
                     _ => {}
                 })
-                .on_tray_icon_event(|tray: &tauri::tray::TrayIcon, event: TrayIconEvent| {
-                    if let TrayIconEvent::Click { .. } = event {
+                .on_tray_icon_event(|tray, event| {
+                    // 核心修复：仅响应左键点击
+                    if let TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, .. } = event {
                         let win = tray.app_handle().get_webview_window("main").unwrap();
                         let _ = win.show(); let _ = win.set_focus();
                     }
@@ -472,7 +488,8 @@ pub fn run() {
             import_to_library, save_image, save_shadow_copy, get_url_title, search_library, 
             export_to_html, get_config, save_config, create_new_file, create_new_folder,
             rename_item, delete_item, move_item, set_as_default_handler,
-            save_history_version, list_history, delete_history_version, clear_all_history
+            save_history_version, list_history, delete_history_version, clear_all_history,
+            exit_app
         ])
         .run(tauri::generate_context!())
         .expect("error");
