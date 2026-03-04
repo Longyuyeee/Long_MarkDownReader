@@ -1,10 +1,19 @@
-# 胧编辑 · MD助手 (MistyEdit MDHelper)
+# 胧编辑 · MistyEdit (MDHelper)
 
 一款基于 **Tauri 2.0** 和 **Vue 3** 打造的轻量级、极致美学、响应式本地 Markdown 知识库编辑器。
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Tauri](https://img.shields.io/badge/Tauri-2.0-orange.svg)
 ![Vue](https://img.shields.io/badge/Vue-3.0-green.svg)
+
+---
+
+## 📥 下载安装 (Download)
+
+**最新版本: v0.1.0**
+
+- [🚀 下载 EXE 安装包 (Windows)](./releases/MistyEdit_Setup.exe) - 推荐
+- [📦 下载 MSI 安装包 (Windows)](./releases/MistyEdit_Setup.msi)
 
 ---
 
