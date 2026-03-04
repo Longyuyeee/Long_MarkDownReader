@@ -78,6 +78,7 @@
             class="tab-pill" 
             :class="{ active: activeTabId === tab.id }" 
             @click="activeTabId = tab.id"
+            :ref="(el) => { if (activeTabId === tab.id) activeTabRef = el as HTMLElement }"
           >
             <n-icon :component="FileIcon" class="pill-icon" />
             <span class="pill-text">{{ tab.title }}</span>
@@ -252,6 +253,16 @@ const isInspectorCollapsed = ref(false)
 const sidebarWidth = ref(260)
 const inspectorWidth = ref(300)
 const activeResizer = ref<'sidebar' | 'inspector' | null>(null)
+const activeTabRef = ref<HTMLElement | null>(null)
+
+// 标签页自动滚动逻辑
+watch(activeTabId, () => {
+  nextTick(() => {
+    if (activeTabRef.value) {
+      activeTabRef.value.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    }
+  })
+})
 
 const treeData = ref<TreeOption[]>([])
 const searchQuery = ref('')
@@ -559,6 +570,18 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .sidebar-inner { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 .sidebar-header { padding: 24px 16px 12px; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; }
 .tree-viewport { flex: 1; overflow-y: auto; padding: 4px 12px; border: 2px solid transparent; transition: all 0.2s; }
+/* 核心修复：长文本截断 */
+:deep(.n-tree-node-content) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+:deep(.n-tree-node-content__text) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
 .tree-viewport.drop-active { background: rgba(0, 122, 255, 0.05); border-color: rgba(0, 122, 255, 0.3); border-radius: 8px; }
 :deep(.n-tree-node.drop-active .n-tree-node-content) { background: rgba(0, 122, 255, 0.1) !important; box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.3) inset; border-radius: 6px; }
 .sidebar-footer { margin: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.5); border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.05); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); cursor: pointer; }
@@ -576,7 +599,8 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
 .tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; gap: 12px; }
 .tab-scroller { flex: 1; height: 40px; display: flex; gap: 8px; align-items: center; overflow-x: auto; scrollbar-width: none; }
-.tab-pill { height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(0, 0, 0, 0.03); border-radius: 15px; transition: all 0.3s; white-space: nowrap; }
+.tab-pill { height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(0, 0, 0, 0.03); border-radius: 15px; transition: all 0.3s; white-space: nowrap; max-width: 200px; }
+.pill-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 .tab-pill.active { background: #fff; color: #007aff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
 .editor-viewport { flex: 1; position: relative; background: #fff; border-radius: 12px 12px 0 0; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
 .is-dark .editor-viewport { background: #1c1c1e; }
