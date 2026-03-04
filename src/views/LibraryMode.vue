@@ -540,22 +540,34 @@ const saveCurrentFile = async () => {
 const syncVditorMode = () => {
   if (!vditor) return
   const currentMode = vditor.getCurrentMode()
+  // 增加对分栏预览状态的判定
+  let finalMode = currentMode
+  if (vditor.vditor.options.preview.mode === 'both') {
+    // 如果处于分栏模式，可以根据需要特殊处理，但 Vditor 官方 getCurrentMode 足够覆盖
+  }
+  
   if (currentMode && currentMode !== store.editorMode) {
     store.updateConfig({ editorMode: currentMode as any })
   }
 }
 
 const handleEditorClick = (e: MouseEvent) => {
-  // 如果点击了工具栏按钮，延迟同步模式（等待 Vditor 内部状态更新完成）
   const isToolbarBtn = (e.target as HTMLElement).closest('.vditor-toolbar__item')
   if (isToolbarBtn) {
-    setTimeout(syncVditorMode, 200)
+    // 延迟更久一点，确保 Vditor 内部状态机切换完成
+    setTimeout(() => {
+      syncVditorMode()
+      // 如果点击的是代码主题切换
+      const themeBtn = (e.target as HTMLElement).closest('[data-type="code-theme"]')
+      if (themeBtn) {
+        // 主题已在 handleCodeThemeChange 中保存，此处仅为双保险
+      }
+    }, 300)
   }
 }
 
 const initVditor = () => {
   const container = document.getElementById('vditor-lib'); if (!container) return
-  // 添加点击监听以捕获模式切换
   container.addEventListener('click', handleEditorClick)
   
   editorLoading.value = true
@@ -569,6 +581,7 @@ const initVditor = () => {
         hljs: { enable: true, style: store.codeTheme || 'github' }, 
         anchor: 1 
       },
+      // ... 
       // ... (rest of config)
       toolbar: [
         'undo', 'redo', '|', 
