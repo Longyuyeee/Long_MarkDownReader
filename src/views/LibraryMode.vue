@@ -22,7 +22,7 @@
           </div>
         </div>
 
-        <div class="tree-viewport">
+        <div class="tree-viewport" :class="{ 'drop-active': virtualDrag.dropTarget === store.libraryPath }">
           <div v-if="!store.libraryPath" class="path-guide">
             <n-empty description="库未就绪" size="small">
               <template #extra>
@@ -122,7 +122,7 @@
       <div class="drag-handle" @mousedown="startResizing('inspector')"></div>
     </div>
 
-    <!-- 右侧面板 (大纲) -->
+    <!-- 右侧面板 (大纲 & 历史) -->
     <div 
       class="inspector-sidebar" 
       :style="{ 
@@ -130,13 +130,39 @@
         opacity: (!store.isZen && tabs.length > 0 && !isInspectorCollapsed) ? 1 : 0
       }"
     >
-      <n-tabs type="segment" animated justify-content="space-evenly" size="small" display-directive="show">
-        <n-tab-pane name="outline" tab="大纲">
-          <div id="right-outline-container" class="outline-box"></div>
+      <n-tabs type="segment" animated justify-content="space-evenly" size="small" class="inspector-tabs" display-directive="show">
+        <n-tab-pane name="outline" tab="大纲" class="inspector-pane">
+          <div id="right-outline-container" class="outline-box" @click="handleOutlineClick"></div>
         </n-tab-pane>
-        <n-tab-pane name="meta" tab="历史">
+        <n-tab-pane name="history" tab="历史" class="inspector-pane">
           <div class="history-box">
-            <n-empty description="暂无快照" size="small" />
+            <div class="history-header">
+              <span>影子副本 ({{ historyList.length }})</span>
+              <n-button quaternary circle size="tiny" @click="clearAllHistory" title="清空全部缓存">
+                <template #icon><n-icon :component="TrashIcon" /></template>
+              </n-button>
+            </div>
+            
+            <div v-if="historyList.length === 0" class="empty-history">
+              <n-empty description="暂无历史快照" size="small" />
+            </div>
+            
+            <div v-else class="history-bubbles-wrapper">
+              <div v-for="h in historyList" :key="h.timestamp" class="history-bubble" @click="restoreHistory(h.content)">
+                <div class="bubble-content">
+                  <div class="bubble-top">
+                    <span class="bubble-time">{{ formatTime(h.timestamp) }}</span>
+                    <span class="bubble-meta">{{ h.content.length }} 字</span>
+                  </div>
+                  <div class="bubble-preview">{{ h.content.slice(0, 80).replace(/[\n#*`]/g, ' ') }}...</div>
+                </div>
+                <div class="bubble-actions">
+                  <n-button quaternary circle size="tiny" class="delete-trigger" @click.stop="deleteHistory(h.timestamp)">
+                    <template #icon><n-icon :component="CloseIcon" /></template>
+                  </n-button>
+                </div>
+              </div>
+            </div>
           </div>
         </n-tab-pane>
       </n-tabs>
@@ -173,6 +199,7 @@ import { useAppStore } from '../store/app'
 import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
 import { useRouter } from 'vue-router'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
 
@@ -181,12 +208,33 @@ const store = useAppStore()
 const { tabs, activeTabId } = storeToRefs(store)
 const router = useRouter()
 
+const updateDropTarget = (x: number, y: number, isExternal: boolean) => {
+  const el = document.elementFromPoint(x, y)
+  const targetEl = el?.closest('[data-key]')
+  if (targetEl) {
+    const key = targetEl.getAttribute('data-key'); const isDir = targetEl.getAttribute('data-is-dir') === 'true'
+    if (key && isDir && (isExternal || key !== virtualDrag.dragNode?.key)) {
+      virtualDrag.dropTarget = key
+    } else { virtualDrag.dropTarget = null }
+  } else {
+    const isOverViewport = el?.closest('.tree-viewport')
+    if (isOverViewport) {
+      if (!isExternal) {
+        const sourcePath = virtualDrag.dragNode?.key as string
+        const lastSlash = Math.max(sourcePath.lastIndexOf('\\'), sourcePath.lastIndexOf('/'))
+        const parentPath = lastSlash !== -1 ? sourcePath.substring(0, lastSlash) : ''
+        if (parentPath === store.libraryPath) virtualDrag.dropTarget = null; else virtualDrag.dropTarget = store.libraryPath
+      } else { virtualDrag.dropTarget = store.libraryPath }
+    } else { virtualDrag.dropTarget = null }
+  }
+}
+
 // 状态
 const editorLoading = ref(false)
 const isSidebarCollapsed = ref(false)
 const isInspectorCollapsed = ref(false)
 const sidebarWidth = ref(260)
-const inspectorWidth = ref(280)
+const inspectorWidth = ref(300)
 const activeResizer = ref<'sidebar' | 'inspector' | null>(null)
 
 const treeData = ref<TreeOption[]>([])
@@ -195,13 +243,83 @@ const selectedKeys = ref<string[]>([])
 const expandedKeys = ref<string[]>([])
 let vditor: any = null
 let isVditorReady = false
+let lastLoadedPath = '' 
 
 const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0 })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, options: [] as any[] })
 const renameState = reactive({ show: false, oldPath: '', newName: '' })
+const historyList = ref<{timestamp: number, content: string}[]>([])
 
-// 函数
 const openSettings = () => router.push('/settings')
+
+const fetchHistory = async () => {
+  if (!activeTabId.value) return
+  try {
+    const res = await invoke<[number, string][]>('list_history', { path: activeTabId.value })
+    historyList.value = res.map(([timestamp, content]) => ({ timestamp, content }))
+  } catch (e) { console.error('Failed to fetch history', e) }
+}
+
+const restoreHistory = (content: string) => {
+  if (!vditor || !isVditorReady) return
+  vditor.setValue(content)
+  message.success('已恢复到该历史版本')
+}
+
+const deleteHistory = async (timestamp: number) => {
+  if (!activeTabId.value) return
+  try {
+    await invoke('delete_history_version', { path: activeTabId.value, timestamp })
+    await fetchHistory()
+    message.success('已移除该备份')
+  } catch (e) { message.error('删除失败') }
+}
+
+const clearAllHistory = async () => {
+  if (!confirm('确定要清除所有文件的历史备份吗？')) return
+  try {
+    await invoke('clear_all_history')
+    historyList.value = []
+    message.success('历史缓存已全部清空')
+  } catch (e) { message.error('清空失败') }
+}
+
+const formatTime = (ts: number) => {
+  const date = new Date(ts * 1000)
+  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`
+}
+
+let shadowSaveTimer: any = null
+const startShadowSaveTimer = () => {
+  if (shadowSaveTimer) clearInterval(shadowSaveTimer)
+  const interval = store.autoSaveInterval * 60 * 1000
+  shadowSaveTimer = setInterval(async () => {
+    if (activeTabId.value && activeTabId.value === lastLoadedPath && vditor && isVditorReady) {
+      const content = vditor.getValue()
+      if (content && content.trim().length > 0) {
+        await invoke('save_history_version', { path: activeTabId.value, content, maxCount: store.maxHistoryCount })
+        fetchHistory()
+      }
+    }
+  }, interval)
+}
+
+watch(() => store.autoSaveInterval, () => {
+  startShadowSaveTimer()
+  message.info(`保存间隔已重置为 ${store.autoSaveInterval} 分钟`)
+})
+
+const handleOutlineClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  const item = target.closest('.vditor-outline__item') as HTMLElement
+  if (item && vditor) {
+    const id = item.getAttribute('data-id')
+    if (id) {
+      const targetEl = vditor.vditor.wysiwyg.element.querySelector(`#${id}`)
+      if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+}
 const libraryName = computed(() => store.libraryPath ? store.libraryPath.split(/[\\/]/).pop() : '')
 const startResizing = (type: 'sidebar' | 'inspector') => { activeResizer.value = type }
 
@@ -216,8 +334,6 @@ const syncOutline = () => {
   })
 }
 
-watch(isInspectorCollapsed, (val) => { if (!val) syncOutline() })
-
 const virtualDrag = reactive({ active: false, x: 0, y: 0, startX: 0, startY: 0, dragNode: null as any, dropTarget: null as any, ghostText: '', timer: null as any })
 
 const onMouseUp = async () => {
@@ -227,7 +343,7 @@ const onMouseUp = async () => {
     const sourcePath = virtualDrag.dragNode?.key; const targetPath = virtualDrag.dropTarget
     if (sourcePath && targetPath && sourcePath !== targetPath) {
       try {
-        message.loading('正在移动项目...', { duration: 1000 })
+        message.loading('正在移动...', { duration: 1000 })
         await invoke('move_item', { sourcePath, targetDir: targetPath })
         const sourceParentIndex = Math.max(sourcePath.lastIndexOf('\\'), sourcePath.lastIndexOf('/'))
         const sourceParentPath = sourceParentIndex !== -1 ? sourcePath.substring(0, sourceParentIndex) : store.libraryPath
@@ -241,16 +357,9 @@ const onMouseUp = async () => {
 
 const onMouseMove = (e: MouseEvent) => {
   if (activeResizer.value === 'sidebar') { sidebarWidth.value = Math.max(180, Math.min(e.clientX, 500)) }
-  else if (activeResizer.value === 'inspector') { inspectorWidth.value = Math.max(200, Math.min(window.innerWidth - e.clientX, 500)) }
+  else if (activeResizer.value === 'inspector') { inspectorWidth.value = Math.max(240, Math.min(window.innerWidth - e.clientX, 500)) }
   virtualDrag.x = e.clientX; virtualDrag.y = e.clientY
-  if (virtualDrag.active) {
-    const el = document.elementFromPoint(e.clientX, e.clientY)
-    const targetEl = el?.closest('[data-key]')
-    if (targetEl) {
-      const key = targetEl.getAttribute('data-key'); const isDir = targetEl.getAttribute('data-is-dir') === 'true'
-      if (key && isDir && key !== virtualDrag.dragNode?.key) virtualDrag.dropTarget = key; else virtualDrag.dropTarget = null
-    } else virtualDrag.dropTarget = null
-  }
+  if (virtualDrag.active) { updateDropTarget(e.clientX, e.clientY, false) }
 }
 
 const loadDirectory = async (path: string): Promise<TreeOption[]> => {
@@ -277,10 +386,13 @@ const refreshNode = async (path: string) => {
 }
 
 const loadFileToEditor = async (path: string) => {
-  if (!vditor || !isVditorReady || !path) return
+  if (!vditor || !path) return
+  lastLoadedPath = '' 
   try {
     const res = await invoke<{content: string}>('read_markdown_file', { path })
     vditor.setValue(res.content)
+    fetchHistory()
+    nextTick(() => { setTimeout(() => { lastLoadedPath = path }, 100) })
     syncOutline()
   } catch (err) { message.error("读取失败") }
 }
@@ -288,7 +400,10 @@ const loadFileToEditor = async (path: string) => {
 const handleNodeSelect = (keys: string[]) => {
   const path = keys[0]; if (!path) return
   selectedKeys.value = keys
-  if (path.endsWith('.md')) { const title = path.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'; store.addTab({ id: path, title, path, isDirty: false }) }
+  if (path.endsWith('.md')) { 
+    const title = path.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'; 
+    store.addTab({ id: path, title, path, isDirty: false }) 
+  }
 }
 
 const handleLoadChildren = async (option: TreeOption) => { option.children = await loadDirectory(option.key as string) }
@@ -296,7 +411,14 @@ const handleLoadChildren = async (option: TreeOption) => { option.children = awa
 const deleteAction = async (path: string) => {
   if (!path) return; const displayTitle = path.split(/[\\/]/).pop()?.replace(/\.md$/, '')
   const parentPath = path.substring(0, Math.max(path.lastIndexOf('\\'), path.lastIndexOf('/')))
-  if (confirm(`确认要物理删除 ${displayTitle} 吗？`)) { try { await invoke('delete_item', { path }); if (activeTabId.value === path) store.removeTab(path); await refreshNode(parentPath || store.libraryPath); message.success('已删除') } catch (e) { message.error('删除失败') } }
+  if (confirm(`确认要物理删除 ${displayTitle} 吗？`)) { 
+    try { 
+      await invoke('delete_item', { path }); 
+      if (activeTabId.value === path) store.removeTab(path); 
+      await refreshNode(parentPath || store.libraryPath); 
+      message.success('已删除') 
+    } catch (e) { message.error('删除失败') } 
+  }
 }
 
 const nodeProps = ({ option }: { option: TreeOption }) => ({
@@ -343,21 +465,23 @@ const saveCurrentFile = async () => {
 const initVditor = () => {
   const container = document.getElementById('vditor-lib'); if (!container) return
   editorLoading.value = true
-  vditor = new Vditor('vditor-lib', {
-    cdn: '/vditor', lang: 'zh_CN', height: '100%', mode: 'wysiwyg', cache: { enable: false }, theme: store.theme === 'dark' ? 'dark' : 'classic',
-    preview: { theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, hljs: { enable: true } },
-    outline: { enable: false }, // 物理禁用内置大纲
-    toolbarConfig: { hide: false },
-    customWysiwygToolbar: () => {}, 
-    input: (val) => {
-      const cur = tabs.value.find(t => t.id === activeTabId.value)
-      if (cur) { invoke('save_shadow_copy', { path: cur.path, content: val }); triggerAutoSave(val); syncOutline() }
-    },
-    after: () => {
-      isVditorReady = true; editorLoading.value = false
-      if (activeTabId.value) { const t = tabs.value.find(item => item.id === activeTabId.value); if (t) loadFileToEditor(t.path) }
-    }
-  })
+  try {
+    vditor = new Vditor('vditor-lib', {
+      cdn: '/vditor', lang: 'zh_CN', height: '100%', mode: 'wysiwyg', cache: { enable: false }, theme: store.theme === 'dark' ? 'dark' : 'classic',
+      preview: { theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, hljs: { enable: true } },
+      outline: { enable: false }, 
+      toolbarConfig: { hide: false },
+      customWysiwygToolbar: () => {}, 
+      input: (val) => {
+        const cur = tabs.value.find(t => t.id === activeTabId.value)
+        if (cur) { triggerAutoSave(val); syncOutline() }
+      },
+      after: () => {
+        isVditorReady = true; editorLoading.value = false
+        if (activeTabId.value) { const t = tabs.value.find(item => item.id === activeTabId.value); if (t) loadFileToEditor(t.path) }
+      }
+    })
+  } catch (e) { editorLoading.value = false }
 }
 
 const handleTabsWheel = (e: WheelEvent) => { if (tabsScrollRef.value) tabsScrollRef.value.scrollLeft += e.deltaY }
@@ -367,60 +491,119 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); e.stopPropagation(); saveCurrentFile() }
 }
 
-let searchDebounce: any = null; const tabsScrollRef = ref<HTMLElement | null>(null)
-onMounted(async () => { window.addEventListener('keydown', handleKeyDown); await refreshLibrary(); initVditor() })
-onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer) })
+const tabsScrollRef = ref<HTMLElement | null>(null)
+let searchDebounce: any = null
+onMounted(async () => { 
+  await store.loadConfig() // 1. 确保先加载配置
+  window.addEventListener('keydown', handleKeyDown); 
+  
+  if (store.libraryPath) await refreshLibrary(); // 2. 只有拿到路径才刷新
+  
+  nextTick(() => { initVditor(); startShadowSaveTimer() })
+
+  const appWindow = getCurrentWindow()
+  appWindow.onDragDropEvent(async (event) => {
+    if (event.payload.type === 'over') {
+      updateDropTarget(event.payload.position.x, event.payload.position.y, true)
+    } else if (event.payload.type === 'drop') {
+      const paths = event.payload.paths
+      const targetDir = virtualDrag.dropTarget || store.libraryPath
+      if (paths.length > 0 && targetDir) {
+        try {
+          message.loading(`正在导入...`)
+          for (const p of paths) { await invoke('import_to_library', { sourcePath: p, libraryRoot: store.libraryPath, targetDir }) }
+          await refreshNode(targetDir); message.destroyAll(); message.success('导入完成')
+        } catch (err) { message.destroyAll(); message.error('导入失败') }
+      }
+      virtualDrag.dropTarget = null
+    } else { virtualDrag.dropTarget = null }
+  })
+})
+
+// 3. 关键：监听库路径变化，自动刷新列表（解决启动后延迟加载路径的问题）
+watch(() => store.libraryPath, (newPath) => { if (newPath) refreshLibrary() })
+
+onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer) })
 watch(activeTabId, (newId) => { if (newId) { const t = tabs.value.find(item => item.id === newId); if (t) loadFileToEditor(t.path) } })
 watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); if (!val.trim()) { refreshLibrary(); return }; searchDebounce = setTimeout(async () => { try { const results = await invoke<FileEntry[]>('search_library', { libraryRoot: store.libraryPath, query: val.trim() }); treeData.value = results.map(entry => ({ label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''), key: entry.path, isLeaf: !entry.is_dir, prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' }) })) } catch (e) {} }, 300) })
 </script>
 
 <style scoped>
 .library-mode { display: flex; height: 100%; width: 100vw; overflow: hidden; background: transparent; user-select: auto !important; box-sizing: border-box; animation: fadeIn 0.6s ease-out; }
-/* 彻底解决拖拽卡顿：当处于拖拽状态时，强制取消所有 transition */
 .is-dragging, .is-dragging * { transition: none !important; }
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .sidebar { height: 100%; background: rgba(255, 255, 255, 0.4); backdrop-filter: saturate(180%) blur(40px); border-right: 1px solid rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; overflow: hidden; transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; z-index: 20; }
 .is-dark .sidebar { background: rgba(28, 28, 30, 0.5); border-right: 1px solid rgba(255, 255, 255, 0.08); }
 .sidebar-inner { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 .sidebar-header { padding: 24px 16px 12px; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; }
-.tree-viewport { flex: 1; overflow-y: auto; padding: 4px 12px; }
-.sidebar-footer { margin: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.5); border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.05); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); transition: all 0.3s ease; cursor: pointer; }
-.sidebar-footer:hover { background: rgba(255, 255, 255, 0.8); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06); }
-.is-dark .sidebar-footer { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.05); }
-.settings-trigger { color: #007aff; transition: transform 0.5s; }
-.sidebar-footer:hover .settings-trigger { transform: rotate(90deg); }
+.tree-viewport { flex: 1; overflow-y: auto; padding: 4px 12px; border: 2px solid transparent; transition: all 0.2s; }
+.tree-viewport.drop-active { background: rgba(0, 122, 255, 0.05); border-color: rgba(0, 122, 255, 0.3); border-radius: 8px; }
+:deep(.n-tree-node.drop-active .n-tree-node-content) { background: rgba(0, 122, 255, 0.1) !important; box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.3) inset; border-radius: 6px; }
+.sidebar-footer { margin: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.5); border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.05); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); cursor: pointer; }
+.is-dark .sidebar-footer { background: rgba(255, 255, 255, 0.05); }
 .meta-path { font-size: 13px; font-weight: 600; color: #1d1d1f; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .is-dark .meta-path { color: #f5f5f7; }
+
 .resizer-area { position: relative; width: 1px; height: 100%; z-index: 100; background: rgba(0, 0, 0, 0.03); cursor: col-resize; }
 .resizer-area:hover { background: #007aff; }
 .drag-handle { position: absolute; top: 0; left: -8px; right: -8px; bottom: 0; z-index: 101; cursor: col-resize; }
 .collapse-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 24px; height: 48px; background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 150; }
 .collapse-btn.left { left: 0px; border-radius: 0 12px 12px 0; }
 .collapse-btn.right { right: 0px; border-radius: 12px 0 0 12px; }
+
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
 .tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; gap: 12px; }
 .tab-scroller { flex: 1; height: 40px; display: flex; gap: 8px; align-items: center; overflow-x: auto; scrollbar-width: none; }
-.tab-pill { height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(0, 0, 0, 0.03); border-radius: 15px; transition: all 0.3s; }
+.tab-pill { height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(0, 0, 0, 0.03); border-radius: 15px; transition: all 0.3s; white-space: nowrap; }
 .tab-pill.active { background: #fff; color: #007aff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
-.editor-viewport { flex: 1; position: relative; background: #fff; border-radius: 12px 12px 0 0; overflow: visible; display: flex; flex-direction: column; min-height: 0; }
+.editor-viewport { flex: 1; position: relative; background: #fff; border-radius: 12px 12px 0 0; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
 .is-dark .editor-viewport { background: #1c1c1e; }
 .vditor-instance { flex: 1; height: 0; }
-:deep(.vditor) { border: none !important; background: transparent !important; height: 100% !important; display: flex !important; flex-direction: column !important; }
-/* 彻底扼杀中间的大纲 */
-:deep(.vditor-outline) { display: none !important; }
-:deep(.vditor-content) { flex: 1 !important; overflow: hidden !important; }
-:deep(.vditor-toolbar) { background: rgba(255, 255, 255, 0.8) !important; backdrop-filter: blur(20px); z-index: 100 !important; border-bottom: 1px solid rgba(0,0,0,0.03) !important; }
-:deep(.vditor-wysiwyg) { padding: 40px 0 !important; overflow-y: auto !important; }
-:deep(.vditor-reset) { width: 95% !important; max-width: 1000px !important; margin: 0 auto !important; }
+.vditor-instance[style*="display: none"] { height: 0 !important; overflow: hidden !important; }
+
+/* Hero 界面样式补全 */
+.hero-viewport { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: inherit; z-index: 5; }
+.hero-content { text-align: center; }
+.hero-brand { font-size: 64px; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
+.hero-content h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; color: #1d1d1f; }
+.is-dark .hero-content h2 { color: #f5f5f7; }
+.hero-content p { color: #86868b; margin-bottom: 24px; }
+.hero-actions { display: flex; gap: 12px; justify-content: center; }
+
 .inspector-sidebar { height: 100%; background: rgba(255, 255, 255, 0.4); backdrop-filter: saturate(180%) blur(40px); border-left: 1px solid rgba(0, 0, 0, 0.05); overflow: hidden; transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; }
-.is-dark .inspector-sidebar { background: rgba(28, 28, 30, 0.5); }
-.outline-box { padding: 12px; height: 100%; overflow-y: auto; font-size: 13px; color: #1d1d1f; line-height: 1.6; }
-.is-dark .outline-box { color: #f5f5f7; }
-:deep(.vditor-outline__item) { display: block !important; padding: 6px 10px !important; border-radius: 6px !important; cursor: pointer !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: inherit !important; text-decoration: none !important; margin-bottom: 2px !important; }
+.is-dark .inspector-sidebar { background: rgba(28, 28, 30, 0.5); border-left: 1px solid rgba(255, 255, 255, 0.08); }
+
+.inspector-tabs { height: 100%; display: flex; flex-direction: column; }
+:deep(.n-tabs-pane-wrapper) { flex: 1; min-height: 0; }
+.inspector-pane { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+
+.history-box { padding: 16px; height: 100%; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; }
+.history-header { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #86868b; font-weight: 600; }
+.history-bubbles-wrapper { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 2px 20px; }
+.history-bubble { 
+  position: relative; padding: 14px; 
+  background: #fff; 
+  border: 1px solid rgba(0, 0, 0, 0.06); 
+  border-radius: 14px; 
+  cursor: pointer; 
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex; gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+.is-dark .history-bubble { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.08); }
+.history-bubble:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); border-color: #007aff; }
+.bubble-content { flex: 1; min-width: 0; }
+.bubble-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.bubble-time { font-size: 13px; font-weight: 700; color: #1d1d1f; }
+.is-dark .bubble-time { color: #f5f5f7; }
+.bubble-meta { font-size: 11px; color: #007aff; background: rgba(0, 122, 255, 0.1); padding: 1px 6px; border-radius: 4px; }
+.bubble-preview { font-size: 12px; color: #86868b; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all; }
+.bubble-actions { opacity: 0; transition: opacity 0.2s; position: absolute; top: -8px; right: -8px; }
+.history-bubble:hover .bubble-actions { opacity: 1; }
+
+.outline-box { padding: 12px; height: 100%; overflow-y: auto; font-size: 13px; }
+:deep(.vditor-outline__item) { display: block !important; padding: 6px 10px !important; border-radius: 6px !important; cursor: pointer !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 :deep(.vditor-outline__item:hover) { background: rgba(0, 122, 255, 0.1) !important; color: #007aff !important; }
-:deep(.vditor-outline__item--current) { background: rgba(0, 122, 255, 0.15) !important; color: #007aff !important; font-weight: 600 !important; }
-.hero-viewport { flex: 1; display: flex; align-items: center; justify-content: center; height: 100%; }
-.hero-brand { font-size: 64px; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
 .drag-ghost { position: fixed; pointer-events: none; z-index: 9999; padding: 8px 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #007aff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); display: flex; align-items: center; gap: 8px; font-size: 13px; color: #007aff; }
 </style>

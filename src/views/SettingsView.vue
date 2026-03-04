@@ -14,7 +14,7 @@
             <div class="section-title">通用设置</div>
             <n-form-item label="软件库根目录">
               <n-input-group>
-                <n-input v-model:value="config.library_path" placeholder="请输入或选择存放笔记的文件夹" />
+                <n-input v-model:value="config.libraryPath" placeholder="请输入或选择存放笔记的文件夹" />
                 <n-button type="primary" secondary @click="chooseDir">选择文件夹</n-button>
               </n-input-group>
               <template #feedback>
@@ -24,11 +24,29 @@
           </n-grid-item>
 
           <n-grid-item>
+            <div class="section-title">影子副本 (Shadow Copy)</div>
+            <div class="setting-card">
+              <n-form-item label="自动保存间隔 (分钟)">
+                <n-input-number v-model:value="config.autoSaveInterval" :min="1" :max="60">
+                  <template #suffix>分钟</template>
+                </n-input-number>
+              </n-form-item>
+              <n-form-item label="最大保留历史版本数">
+                <n-input-number v-model:value="config.maxHistoryCount" :min="1" :max="50" />
+              </n-form-item>
+              <div class="danger-zone">
+                <n-button type="error" ghost @click="clearHistory">清空所有历史版本缓存</n-button>
+                <div class="desc">此操作将删除所有文件的影子副本记录，无法撤销。</div>
+              </div>
+            </div>
+          </n-grid-item>
+
+          <n-grid-item>
             <div class="section-title">系统集成</div>
             <div class="setting-row">
               <div class="info">
                 <div class="label">设为默认 Markdown 编辑器</div>
-                <div class="desc">双击 .md 文件将自动使用胧编辑打开（临时模式）</div>
+                <div class="desc">双击 .md 文件将自动使用胧编辑打开</div>
               </div>
               <n-button secondary type="info" @click="setAsDefault">立即设置</n-button>
             </div>
@@ -68,19 +86,26 @@ const message = useMessage()
 const store = useAppStore()
 
 const config = ref({
-  library_path: store.libraryPath,
-  theme: store.theme
+  libraryPath: store.libraryPath,
+  theme: store.theme,
+  autoSaveInterval: store.autoSaveInterval,
+  maxHistoryCount: store.maxHistoryCount
 })
 
 onMounted(async () => {
-  const c = await invoke<any>('get_config')
-  config.value = { library_path: c.library_path, theme: c.theme }
+  await store.loadConfig()
+  config.value = {
+    libraryPath: store.libraryPath,
+    theme: store.theme,
+    autoSaveInterval: store.autoSaveInterval,
+    maxHistoryCount: store.maxHistoryCount
+  }
 })
 
 const chooseDir = async () => {
   const selected = await open({ directory: true, multiple: false, title: '选择软件库根目录' })
   if (selected && typeof selected === 'string') {
-    config.value.library_path = selected
+    config.value.libraryPath = selected
   }
 }
 
@@ -88,10 +113,21 @@ const applyTheme = (val: string) => {
   store.theme = val as any
 }
 
+const clearHistory = async () => {
+  if (confirm('确认要永久清空所有历史版本吗？')) {
+    try {
+      await invoke('clear_all_history')
+      message.success('历史缓存已清空')
+    } catch (e) {
+      message.error('操作失败')
+    }
+  }
+}
+
 const setAsDefault = async () => {
   try {
     await invoke('set_as_default_handler')
-    message.success('已成功修改系统注册表，设置为默认打开方式')
+    message.success('已成功修改系统注册表')
   } catch (err) {
     message.error('设置失败: ' + err)
   }
@@ -99,10 +135,10 @@ const setAsDefault = async () => {
 
 const saveAll = async () => {
   try {
-    await invoke('save_config', { config: config.value })
-    store.libraryPath = config.value.library_path
-    store.theme = config.value.theme as any
-    message.success('配置已保存并持久化')
+    await store.updateConfig(config.value)
+    // 强制重载确保 UI 同步
+    await store.loadConfig()
+    message.success('配置已保存并生效')
   } catch (err) {
     message.error('保存失败: ' + err)
   }
@@ -126,10 +162,7 @@ const saveAll = async () => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.settings-header h2 {
-  margin: 0;
-  font-weight: 600;
-}
+.settings-header h2 { margin: 0; font-weight: 600; }
 
 .settings-content {
   flex: 1;
@@ -146,8 +179,15 @@ const saveAll = async () => {
   font-weight: bold;
   margin-bottom: 16px;
   opacity: 0.9;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #007aff;
   padding-left: 12px;
+}
+
+.setting-card {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .setting-row {
@@ -159,37 +199,21 @@ const saveAll = async () => {
   border-radius: 8px;
   margin-bottom: 8px;
   gap: 20px;
-  flex-wrap: wrap;
 }
 
-.setting-row .info {
-  flex: 1;
-  min-width: 200px;
+.danger-zone {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 0, 0, 0.1);
 }
 
-.setting-row .label {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.setting-row .desc {
+.danger-zone .desc {
   font-size: 12px;
-  opacity: 0.5;
+  color: #ff4d4f;
+  margin-top: 8px;
+  opacity: 0.8;
 }
 
-@media (max-width: 600px) {
-  .settings-header {
-    padding: 16px 20px;
-  }
-  .settings-content {
-    padding: 20px 20px;
-  }
-  .setting-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .setting-row .n-button {
-    width: 100%;
-  }
-}
+.setting-row .label { font-size: 14px; font-weight: 500; }
+.setting-row .desc { font-size: 12px; opacity: 0.5; }
 </style>

@@ -26,8 +26,14 @@ pub struct FileEntry {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct AppConfig {
+    #[serde(rename = "libraryPath")]
     pub library_path: String,
+    #[serde(rename = "theme")]
     pub theme: String, 
+    #[serde(rename = "autoSaveInterval")]
+    pub auto_save_interval: u32,
+    #[serde(rename = "maxHistoryCount")]
+    pub max_history_count: u32,
 }
 
 #[tauri::command]
@@ -47,6 +53,8 @@ fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
     AppConfig {
         library_path: path.to_string_lossy().into_owned(),
         theme: "system".into(),
+        auto_save_interval: 3,
+        max_history_count: 10,
     }
 }
 
@@ -108,16 +116,23 @@ async fn create_new_folder(parent_path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn rename_item(old_path: String, new_name: String) -> Result<String, String> {
+async fn rename_item(app_handle: tauri::AppHandle, old_path: String, new_name: String) -> Result<String, String> {
     let old = Path::new(&old_path);
     let parent = old.parent().ok_or("无效路径")?;
     let new_path = parent.join(new_name);
     fs::rename(old, &new_path).map_err(|e| e.to_string())?;
+    
+    // 同步迁移历史记录文件夹
+    let old_history = get_history_dir(&app_handle, &old_path);
+    if old_history.exists() {
+        let new_history = get_history_dir(&app_handle, &new_path.to_string_lossy());
+        let _ = fs::rename(old_history, new_history);
+    }
     Ok(new_path.to_string_lossy().into_owned())
 }
 
 #[tauri::command]
-async fn move_item(source_path: String, target_dir: String) -> Result<String, String> {
+async fn move_item(app_handle: tauri::AppHandle, source_path: String, target_dir: String) -> Result<String, String> {
     let source = Path::new(&source_path);
     let target = Path::new(&target_dir);
     if !target.is_dir() { return Err("目标必须是一个文件夹".into()); }
@@ -125,14 +140,26 @@ async fn move_item(source_path: String, target_dir: String) -> Result<String, St
     let new_path = target.join(file_name);
     if new_path.exists() { return Err("目标目录已存在同名项".into()); }
     fs::rename(source, &new_path).map_err(|e| e.to_string())?;
+
+    // 同步迁移历史记录文件夹
+    let old_history = get_history_dir(&app_handle, &source_path);
+    if old_history.exists() {
+        let new_history = get_history_dir(&app_handle, &new_path.to_string_lossy());
+        let _ = fs::rename(old_history, new_history);
+    }
     Ok(new_path.to_string_lossy().into_owned())
 }
 
 #[tauri::command]
-async fn delete_item(path: String) -> Result<(), String> {
+async fn delete_item(app_handle: tauri::AppHandle, path: String) -> Result<(), String> {
     let p = Path::new(&path);
-    if p.is_dir() { fs::remove_dir_all(p).map_err(|e| e.to_string()) }
-    else { fs::remove_file(p).map_err(|e| e.to_string()) }
+    if p.is_dir() { fs::remove_dir_all(p).map_err(|e| e.to_string())?; }
+    else { fs::remove_file(p).map_err(|e| e.to_string())?; }
+
+    // 同步清理历史记录
+    let history_dir = get_history_dir(&app_handle, &path);
+    if history_dir.exists() { let _ = fs::remove_dir_all(history_dir); }
+    Ok(())
 }
 
 #[tauri::command]
@@ -176,25 +203,33 @@ fn scan_directory(path: String) -> Result<Vec<FileEntry>, String> {
 }
 
 #[tauri::command]
-async fn import_to_library(source_path: String, library_root: String, target_subdir: String) -> Result<String, String> {
+async fn import_to_library(source_path: String, library_root: String, target_dir: String) -> Result<String, String> {
     let source = Path::new(&source_path);
-    let mut target_dir = PathBuf::from(&library_root);
-    if !target_subdir.is_empty() { target_dir.push(target_subdir); }
-    if !target_dir.exists() { fs::create_dir_all(&target_dir).map_err(|e| e.to_string())?; }
-    let file_name = source.file_name().ok_or("无效文件名")?;
-    let mut target_file_path = target_dir.clone();
-    target_file_path.push(file_name);
-    fs::copy(source, &target_file_path).map_err(|e| e.to_string())?;
-    let mut assets_dir_name = source.file_stem().unwrap().to_os_string();
-    assets_dir_name.push(".assets");
-    let mut source_assets = source.parent().unwrap().to_path_buf();
-    source_assets.push(&assets_dir_name);
-    if source_assets.exists() && source_assets.is_dir() {
-        let mut target_assets = target_dir.clone();
-        target_assets.push(&assets_dir_name);
-        let _ = copy_dir_recursive(&source_assets, &target_assets);
+    // 如果 target_dir 是绝对路径且在库内，则直接使用；否则使用 library_root
+    let final_target_dir = if !target_dir.is_empty() { PathBuf::from(&target_dir) } else { PathBuf::from(&library_root) };
+    
+    if !final_target_dir.exists() { fs::create_dir_all(&final_target_dir).map_err(|e| e.to_string())?; }
+    
+    let item_name = source.file_name().ok_or("无效的文件名")?;
+    let target_item_path = final_target_dir.join(item_name);
+
+    if source.is_dir() {
+        // 如果是文件夹，递归拷贝整个结构
+        copy_dir_recursive(source, &target_item_path)?;
+    } else {
+        // 如果是文件，直接拷贝
+        fs::copy(source, &target_item_path).map_err(|e| e.to_string())?;
+        
+        // 处理关联的 .assets 资源文件夹 (Markdown 常见约定)
+        let mut assets_name = source.file_stem().unwrap().to_os_string();
+        assets_name.push(".assets");
+        let source_assets = source.parent().unwrap().join(&assets_name);
+        if source_assets.exists() && source_assets.is_dir() {
+            let target_assets = final_target_dir.join(&assets_name);
+            let _ = copy_dir_recursive(&source_assets, &target_assets);
+        }
     }
-    Ok(target_file_path.to_string_lossy().into_owned())
+    Ok(target_item_path.to_string_lossy().into_owned())
 }
 
 fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<(), String> {
@@ -223,6 +258,73 @@ async fn save_image(md_path: String, image_name: String, image_data: Vec<u8>) ->
     rel_path.push(".assets/");
     rel_path.push(image_name);
     Ok(rel_path.to_string_lossy().into_owned())
+}
+
+fn get_history_dir(app_handle: &tauri::AppHandle, path: &str) -> PathBuf {
+    let cache_dir = app_handle.path().app_cache_dir().unwrap().join("history_v2");
+    let file_hash = format!("{:x}", md5::compute(path));
+    cache_dir.join(file_hash)
+}
+
+#[tauri::command]
+async fn save_history_version(app_handle: tauri::AppHandle, path: String, content: String, max_count: u32) -> Result<(), String> {
+    let file_history_dir = get_history_dir(&app_handle, &path);
+    if !file_history_dir.exists() { fs::create_dir_all(&file_history_dir).map_err(|e| e.to_string())?; }
+
+    // 检查最近的一个版本是否内容相同
+    let mut entries: Vec<_> = fs::read_dir(&file_history_dir).map_err(|e| e.to_string())?
+        .filter_map(|res| res.ok()).collect();
+    if !entries.is_empty() {
+        entries.sort_by_key(|e| e.metadata().unwrap().modified().unwrap());
+        if let Some(last) = entries.last() {
+            if let Ok(last_content) = fs::read_to_string(last.path()) {
+                // 统一去掉 \r 进行纯内容比对，防止 Windows 换行符干扰
+                if last_content.replace("\r", "") == content.replace("\r", "") { return Ok(()); }
+            }
+        }
+    }
+
+    let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+    let history_file = file_history_dir.join(format!("{}.md", timestamp));
+    fs::write(history_file, content).map_err(|e| e.to_string())?;
+
+    let mut entries: Vec<_> = fs::read_dir(&file_history_dir).map_err(|e| e.to_string())?.filter_map(|res| res.ok()).collect();
+    if entries.len() > max_count as usize {
+        entries.sort_by_key(|e| e.metadata().unwrap().modified().unwrap());
+        for i in 0..(entries.len() - max_count as usize) { let _ = fs::remove_file(entries[i].path()); }
+    }
+    Ok(())
+}
+
+#[tauri::command]
+async fn list_history(app_handle: tauri::AppHandle, path: String) -> Result<Vec<(u64, String)>, String> {
+    let file_history_dir = get_history_dir(&app_handle, &path);
+    if !file_history_dir.exists() { return Ok(vec![]); }
+    let mut list = vec![];
+    if let Ok(entries) = fs::read_dir(file_history_dir) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if let Some(ts_str) = p.file_stem().and_then(|s| s.to_str()) {
+                if let Ok(ts) = ts_str.parse::<u64>() { if let Ok(content) = fs::read_to_string(p) { list.push((ts, content)); } }
+            }
+        }
+    }
+    list.sort_by(|a, b| b.0.cmp(&a.0));
+    Ok(list)
+}
+
+#[tauri::command]
+async fn delete_history_version(app_handle: tauri::AppHandle, path: String, timestamp: u64) -> Result<(), String> {
+    let file_path = get_history_dir(&app_handle, &path).join(format!("{}.md", timestamp));
+    if file_path.exists() { fs::remove_file(file_path).map_err(|e| e.to_string())?; }
+    Ok(())
+}
+
+#[tauri::command]
+async fn clear_all_history(app_handle: tauri::AppHandle) -> Result<(), String> {
+    let cache_dir = app_handle.path().app_cache_dir().map_err(|e| e.to_string())?.join("history_v2");
+    if cache_dir.exists() { fs::remove_dir_all(cache_dir).map_err(|e| e.to_string())?; }
+    Ok(())
 }
 
 #[tauri::command]
@@ -335,7 +437,8 @@ pub fn run() {
             read_markdown_file, write_markdown_file, get_launch_args, scan_directory, 
             import_to_library, save_image, save_shadow_copy, get_url_title, search_library, 
             export_to_html, get_config, save_config, create_new_file, create_new_folder,
-            rename_item, delete_item, move_item, set_as_default_handler
+            rename_item, delete_item, move_item, set_as_default_handler,
+            save_history_version, list_history, delete_history_version, clear_all_history
         ])
         .run(tauri::generate_context!())
         .expect("error");

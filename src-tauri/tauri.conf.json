@@ -5,7 +5,7 @@
   "identifier": "com.mistyedit.mdhelper",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:9000",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
@@ -17,7 +17,7 @@
         "height": 700,
         "decorations": false,
         "transparent": true,
-        "dragDropEnabled": false
+        "dragDropEnabled": true
       }
     ],
     "security": {

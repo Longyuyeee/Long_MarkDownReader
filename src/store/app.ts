@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { invoke } from '@tauri-apps/api/core'
 
 export type SessionMode = 'TEMP' | 'LIBRARY'
 
@@ -15,10 +16,31 @@ export const useAppStore = defineStore('app', {
     tabs: [] as TabInfo[],
     activeTabId: null as string | null,
     theme: 'system' as 'light' | 'dark' | 'system',
-    libraryPath: '', // 初始为空
+    libraryPath: '',
+    autoSaveInterval: 3,
+    maxHistoryCount: 10,
     isZen: false,
   }),
   actions: {
+    async loadConfig() {
+      try {
+        const config = await invoke<any>('get_config')
+        this.libraryPath = config.libraryPath
+        this.theme = config.theme
+        this.autoSaveInterval = config.autoSaveInterval || 3
+        this.maxHistoryCount = config.maxHistoryCount || 10
+      } catch (e) { console.error('Failed to load config', e) }
+    },
+    async updateConfig(patch: any) {
+      Object.assign(this, patch)
+      // 直接传递对象，Rust 端通过 camelCase 自动解析
+      await invoke('save_config', { config: {
+        libraryPath: this.libraryPath,
+        theme: this.theme,
+        autoSaveInterval: this.autoSaveInterval,
+        maxHistoryCount: this.maxHistoryCount
+      } })
+    },
     addTab(tab: TabInfo) {
       const exists = this.tabs.find(t => t.path === tab.path)
       if (exists) {
