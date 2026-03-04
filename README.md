@@ -1,4 +1,4 @@
-# 胧编辑 · MistyEdit (MDHelper)
+# 胧编辑 · MD助手 (MistyEdit MDHelper)
 
 一款基于 **Tauri 2.0** 和 **Vue 3** 打造的轻量级、极致美学、响应式本地 Markdown 知识库编辑器。
 
