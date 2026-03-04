@@ -55,8 +55,11 @@
           <n-grid-item>
             <div class="section-title">外观</div>
             <n-form-item label="颜色主题">
-              <n-radio-group v-model:value="config.theme" name="theme" @update:value="applyTheme">
-                <n-radio-button value="light">浅色</n-radio-button>
+              <n-radio-group v-model:value="config.theme" name="theme" @update:value="applyTheme" size="large">
+                <n-radio-button value="white">纯白</n-radio-button>
+                <n-radio-button value="green">护眼绿</n-radio-button>
+                <n-radio-button value="blue">清爽蓝</n-radio-button>
+                <n-radio-button value="pink">浪漫粉</n-radio-button>
                 <n-radio-button value="dark">深色</n-radio-button>
                 <n-radio-button value="system">跟随系统</n-radio-button>
               </n-radio-group>
@@ -150,24 +153,37 @@ const saveAll = async () => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(20px);
+  background: transparent;
+  animation: settings-fade-in 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes settings-fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .settings-header {
-  padding: 24px 5%;
+  padding: 32px 5% 16px;
   display: flex;
   align-items: center;
   gap: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.settings-header h2 { margin: 0; font-weight: 600; }
+.is-dark .settings-header { border-bottom-color: rgba(255, 255, 255, 0.05); }
+
+.settings-header h2 { 
+  margin: 0; 
+  font-weight: 700; 
+  letter-spacing: -0.02em;
+  font-size: 24px;
+  color: var(--theme-text);
+}
 
 .settings-content {
   flex: 1;
   overflow-y: auto;
-  padding: 40px 5%;
+  padding: 30px 5% 60px;
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
@@ -175,45 +191,80 @@ const saveAll = async () => {
 }
 
 .section-title {
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 700;
   margin-bottom: 16px;
-  opacity: 0.9;
-  border-left: 4px solid #007aff;
-  padding-left: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--theme-primary);
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.1;
 }
 
 .setting-card {
-  background: rgba(255, 255, 255, 0.03);
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--theme-card);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+.is-dark .setting-card {
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .setting-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 8px;
+  background: var(--theme-card);
+  padding: 18px 20px;
+  border-radius: 12px;
+  margin-bottom: 12px;
   gap: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.is-dark .setting-row {
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .danger-zone {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 0, 0, 0.1);
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px dashed rgba(255, 59, 48, 0.2);
 }
 
-.danger-zone .desc {
-  font-size: 12px;
-  color: #ff4d4f;
-  margin-top: 8px;
+.setting-row .label { font-size: 15px; font-weight: 600; color: var(--theme-text); }
+.setting-row .desc { font-size: 12px; opacity: 0.5; margin-top: 2px; }
+
+:deep(.n-form-item-label) {
+  color: var(--theme-text) !important;
   opacity: 0.8;
 }
 
-.setting-row .label { font-size: 14px; font-weight: 500; }
-.setting-row .desc { font-size: 12px; opacity: 0.5; }
+:deep(.n-input), :deep(.n-input-number) {
+  background-color: var(--theme-card) !important;
+}
+
+:deep(.n-radio-button) {
+  background: var(--theme-card) !important;
+  color: var(--theme-text) !important;
+}
+
+:deep(.n-radio-button--checked) {
+  background: var(--theme-primary) !important;
+  color: #fff !important;
+}
 </style>

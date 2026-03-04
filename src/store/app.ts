@@ -15,7 +15,7 @@ export const useAppStore = defineStore('app', {
     activeSession: 'LIBRARY' as SessionMode,
     tabs: [] as TabInfo[],
     activeTabId: null as string | null,
-    theme: 'system' as 'light' | 'dark' | 'system',
+    theme: 'system' as 'white' | 'dark' | 'system' | 'green' | 'blue' | 'pink',
     libraryPath: '',
     autoSaveInterval: 3,
     maxHistoryCount: 10,
