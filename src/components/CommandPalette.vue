@@ -1,40 +1,42 @@
 <template>
-  <div v-if="show" class="command-palette-overlay" @click.self="close">
-    <div class="command-palette-container">
-      <n-input
-        ref="inputInst"
-        v-model:value="query"
-        placeholder="搜索笔记 (直接输入) 或执行命令 (输入 >)"
-        @keydown.enter="handleEnter"
-        @keydown.esc="close"
-        @keydown.down.prevent="moveSelection(1)"
-        @keydown.up.prevent="moveSelection(-1)"
-      >
-        <template #prefix>
-          <n-icon :component="SearchIcon" />
-        </template>
-      </n-input>
-      <div class="results-list" v-if="results.length > 0">
-        <div 
-          v-for="(item, index) in results" 
-          :key="index"
-          class="result-item"
-          :class="{ active: selectedIndex === index }"
-          @click="execute(item)"
-          @mouseenter="selectedIndex = index"
+  <transition name="palette-pop">
+    <div v-if="show" class="command-palette-overlay" @click.self="close">
+      <div class="command-palette-container">
+        <n-input
+          ref="inputInst"
+          v-model:value="query"
+          placeholder="搜索笔记 (直接输入) 或执行命令 (输入 >)"
+          @keydown.enter="handleEnter"
+          @keydown.esc="close"
+          @keydown.down.prevent="moveSelection(1)"
+          @keydown.up.prevent="moveSelection(-1)"
         >
-          <n-icon :component="item.icon" class="item-icon" />
-          <div class="item-info">
-            <div class="item-title">{{ item.title }}</div>
-            <div class="item-desc">{{ item.description }}</div>
+          <template #prefix>
+            <n-icon :component="SearchIcon" />
+          </template>
+        </n-input>
+        <div class="results-list" v-if="results.length > 0">
+          <div 
+            v-for="(item, index) in results" 
+            :key="index"
+            class="result-item"
+            :class="{ active: selectedIndex === index }"
+            @click="execute(item)"
+            @mouseenter="selectedIndex = index"
+          >
+            <n-icon :component="item.icon" class="item-icon" />
+            <div class="item-info">
+              <div class="item-title">{{ item.title }}</div>
+              <div class="item-desc">{{ item.description }}</div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="no-results" v-else-if="query.length > 0">
-        无匹配结果
+        <div class="no-results" v-else-if="query.length > 0">
+          无匹配结果
+        </div>
       </div>
     </div>
-  </div>
+  </transition>
 </template>
 
 <script setup lang="ts">
@@ -122,4 +124,25 @@ watch(query, async (val) => {
 .item-title { font-size: 14px; font-weight: 500; }
 .item-desc { font-size: 11px; opacity: 0.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 500px; }
 .no-results { padding: 20px; text-align: center; color: #888; font-size: 13px; }
+
+/* 命令面板动效 */
+.palette-pop-enter-active, .palette-pop-leave-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.palette-pop-enter-active .command-palette-container,
+.palette-pop-leave-active .command-palette-container {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.palette-pop-enter-from { opacity: 0; }
+.palette-pop-enter-from .command-palette-container { 
+  transform: scale(0.9) translateY(-20px); 
+  opacity: 0; 
+}
+
+.palette-pop-leave-to { opacity: 0; }
+.palette-pop-leave-to .command-palette-container { 
+  transform: scale(0.95); 
+  opacity: 0; 
+}
 </style>

@@ -15,7 +15,13 @@
             </div>
           </div>
         </div>
-        <div class="app-content"><router-view /></div>
+        <div class="app-content">
+          <router-view v-slot="{ Component }">
+            <transition name="premium-switch">
+              <component :is="Component" />
+            </transition>
+          </router-view>
+        </div>
         <CommandPalette :show="showPalette" @close="showPalette = false" @execute="handleCommand" />
       </div>
     </n-message-provider>
@@ -182,6 +188,27 @@ body[data-theme="dark"] .win-btn:hover { background: rgba(255, 255, 255, 0.1); }
 .win-btn.close:hover { background: #ff3b30 !important; color: #fff !important; }
 
 .app-content { flex: 1; position: relative; overflow: hidden; }
+
+/* 全局高级转场动效：深度图层切换 */
+.premium-switch-enter-active, .premium-switch-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: absolute;
+  width: 100%;
+}
+
+/* 入场：从略小、下方滑入，带模糊 */
+.premium-switch-enter-from {
+  opacity: 0;
+  transform: scale(0.96) translateY(15px);
+  filter: blur(10px);
+}
+
+/* 离场：轻微放大，原地渐隐，模拟被推远 */
+.premium-switch-leave-to {
+  opacity: 0;
+  transform: scale(1.04);
+  filter: blur(5px);
+}
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }

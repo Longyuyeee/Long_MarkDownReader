@@ -72,18 +72,20 @@
     <div class="editor-main" :class="{ 'zen-mode': store.isZen }">
       <div class="tabs-bar" v-if="!store.isZen && tabs.length > 0">
         <div class="tab-scroller" ref="tabsScrollRef" @wheel="handleTabsWheel">
-          <div 
-            v-for="tab in tabs" 
-            :key="tab.id" 
-            class="tab-pill" 
-            :class="{ active: activeTabId === tab.id }" 
-            @click="activeTabId = tab.id"
-            :ref="(el) => { if (activeTabId === tab.id) activeTabRef = el as HTMLElement }"
-          >
-            <n-icon :component="FileIcon" class="pill-icon" />
-            <span class="pill-text">{{ tab.title }}</span>
-            <n-icon :component="CloseIcon" class="pill-close" @click.stop="closeTab(tab.id)" />
-          </div>
+          <transition-group name="tab-list">
+            <div 
+              v-for="tab in tabs" 
+              :key="tab.id" 
+              class="tab-pill" 
+              :class="{ active: activeTabId === tab.id }" 
+              @click="activeTabId = tab.id"
+              :ref="(el) => { if (activeTabId === tab.id) activeTabRef = el as HTMLElement }"
+            >
+              <n-icon :component="FileIcon" class="pill-icon" />
+              <span class="pill-text">{{ tab.title }}</span>
+              <n-icon :component="CloseIcon" class="pill-close" @click.stop="closeTab(tab.id)" />
+            </div>
+          </transition-group>
         </div>
         <div class="tab-actions">
           <!-- 隐藏的调色盘触发器 -->
@@ -706,8 +708,20 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .is-dark .sidebar { background: rgba(28, 28, 30, 0.5); border-right: 1px solid rgba(255, 255, 255, 0.08); }
 .sidebar-inner { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 .sidebar-header { padding: 24px 16px 12px; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; }
-.tree-viewport { flex: 1; overflow-y: auto; padding: 4px 12px; border: 2px solid transparent; transition: all 0.2s; }
-/* 核心修复：长文本截断 */
+.tree-viewport { 
+  flex: 1; 
+  overflow-y: auto; 
+  padding: 4px 12px; 
+  border: 2px solid transparent; 
+  transition: all 0.2s;
+  animation: treeContainerFade 0.5s ease-out;
+}
+
+@keyframes treeContainerFade {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* 移除节点级动画，防止展开闪烁 */
 :deep(.n-tree-node-content) {
   flex: 1;
   min-width: 0;
@@ -961,4 +975,16 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .history-bubble:hover .bubble-actions { opacity: 1; }
 
 .drag-ghost { position: fixed; pointer-events: none; z-index: 9999; padding: 8px 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #007aff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); display: flex; align-items: center; gap: 8px; font-size: 13px; color: #007aff; }
+
+/* 标签页平滑滑动动效 */
+.tab-list-enter-active, .tab-list-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tab-list-enter-from, .tab-list-leave-to {
+  opacity: 0;
+  transform: scale(0.9) translateY(5px);
+}
+.tab-list-move {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 </style>

@@ -1,13 +1,15 @@
 <template>
-  <div v-if="show" class="hover-preview" :style="style">
-    <div class="preview-header">
-      <n-icon :component="FileIcon" />
-      <span>{{ title }}</span>
+  <transition name="preview-fade">
+    <div v-if="show" class="hover-preview" :style="style">
+      <div class="preview-header">
+        <n-icon :component="FileIcon" />
+        <span>{{ title }}</span>
+      </div>
+      <div class="preview-content">
+        <div ref="previewContent"></div>
+      </div>
     </div>
-    <div class="preview-content">
-      <div ref="previewContent"></div>
-    </div>
-  </div>
+  </transition>
 </template>
 
 <script setup lang="ts">
@@ -85,5 +87,14 @@ watch(() => props.path, async (newPath) => {
 
 :deep(.vditor-reset) {
   font-size: 13px !important;
+}
+
+/* 预览动效 */
+.preview-fade-enter-active, .preview-fade-leave-active {
+  transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.preview-fade-enter-from, .preview-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateY(5px);
 }
 </style>
