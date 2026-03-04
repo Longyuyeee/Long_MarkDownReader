@@ -34,7 +34,7 @@ export const useAppStore = defineStore('app', {
     libraryPath: (state) => state.activeLibraryPath,
     currentLibraryName: (state) => {
       const lib = state.libraries.find(l => l.path === state.activeLibraryPath)
-      return lib ? lib.name : '未关联软件库'
+      return lib ? lib.name : '未关联文件库'
     }
   },
   actions: {
@@ -52,6 +52,12 @@ export const useAppStore = defineStore('app', {
       } catch (e) { console.error('Failed to load config', e) }
     },
     async updateConfig(patch: any) {
+      // 检测文件库切换，若切换则清空标签页
+      if (patch.activeLibraryPath !== undefined && patch.activeLibraryPath !== this.activeLibraryPath) {
+        this.tabs = []
+        this.activeTabId = null
+      }
+
       for (const key in patch) {
         if (patch[key] !== undefined) {
           (this as any)[key] = patch[key]

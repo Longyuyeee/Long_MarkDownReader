@@ -11,7 +11,7 @@
       <n-form label-placement="top" size="medium">
         <n-grid :cols="1" :y-gap="24">
           <n-grid-item>
-            <div class="section-title">软件库管理</div>
+            <div class="section-title">文件库管理</div>
             <div class="library-manager-card">
               <div v-for="(lib, index) in config.libraries" :key="index" class="library-item" :class="{ active: lib.path === config.activeLibraryPath }">
                 <div class="lib-info">
@@ -80,10 +80,6 @@
               </n-radio-group>
             </n-form-item>
           </n-grid-item>
-
-          <n-grid-item>
-            <n-button type="primary" size="large" block @click="saveAll">保存所有设置</n-button>
-          </n-grid-item>
         </n-grid>
       </n-form>
     </div>
@@ -91,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
@@ -130,6 +126,11 @@ onMounted(async () => {
   }
 })
 
+// 深度监听配置对象，实现实时保存
+watch(config, (newVal) => {
+  store.updateConfig(newVal)
+}, { deep: true })
+
 const chooseNewLibDir = async () => {
   const selected = await open({ directory: true, multiple: false, title: '选择软件库文件夹' })
   if (selected && typeof selected === 'string') {
@@ -154,7 +155,7 @@ const addLibrary = () => {
   if (!config.value.activeLibraryPath) config.value.activeLibraryPath = newLib.path
   newLib.name = ''
   newLib.path = ''
-  message.success('已添加到待保存列表')
+  message.success('已添加新库并保存')
 }
 
 const removeLibrary = (index: number) => {
@@ -162,10 +163,12 @@ const removeLibrary = (index: number) => {
   if (config.value.activeLibraryPath === removed.path) {
     config.value.activeLibraryPath = config.value.libraries.length > 0 ? config.value.libraries[0].path : ''
   }
+  message.info('库已移除')
 }
 
 const applyTheme = (val: string) => {
   store.theme = val as any
+  // config.theme 已通过 v-model 绑定，watch 会处理保存
 }
 
 const clearHistory = async () => {
@@ -187,16 +190,7 @@ const setAsDefault = async () => {
     message.error('设置失败: ' + err)
   }
 }
-
-const saveAll = async () => {
-  try {
-    await store.updateConfig(config.value)
-    await store.loadConfig()
-    message.success('配置已保存并生效')
-  } catch (err) {
-    message.error('保存失败: ' + err)
-  }
-}
+// 移除 saveAll 函数
 </script>
 
 <style scoped>

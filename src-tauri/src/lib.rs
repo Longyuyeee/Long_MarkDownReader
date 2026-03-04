@@ -78,7 +78,7 @@ fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
     path.push("MistyLibrary");
     let default_path = path.to_string_lossy().into_owned();
     AppConfig {
-        libraries: vec![LibraryConfig { name: "默认软件库".into(), path: default_path.clone() }],
+        libraries: vec![LibraryConfig { name: "默认文件库".into(), path: default_path.clone() }],
         active_library_path: default_path,
         theme: "system".into(),
         code_theme: "github".into(),

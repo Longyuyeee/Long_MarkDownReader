@@ -47,7 +47,7 @@
             <template #icon><n-icon :component="SettingsIcon" /></template>
           </n-button>
           <div class="lib-meta">
-            <span class="meta-title">当前软件库</span>
+            <span class="meta-title">当前文件库</span>
             <span class="meta-path" :title="store.libraryPath">{{ store.currentLibraryName }}</span>
           </div>
         </div>
@@ -116,7 +116,7 @@
             <p>选择一个文档或直接将文件拖拽至此</p>
             <div class="hero-actions">
               <n-button secondary type="primary" round @click="handleToolbarAction('file')">创建新笔记</n-button>
-              <n-button secondary round @click="openSettings">软件库配置</n-button>
+              <n-button secondary round @click="openSettings">文件库配置</n-button>
             </div>
           </div>
         </div>
@@ -711,7 +711,9 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .resizer-area { position: relative; width: 1px; height: 100%; z-index: 100; background: rgba(0, 0, 0, 0.03); cursor: col-resize; }
 .resizer-area:hover { background: #007aff; }
 .drag-handle { position: absolute; top: 0; left: -8px; right: -8px; bottom: 0; z-index: 101; cursor: col-resize; }
-.collapse-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 24px; height: 48px; background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 150; }
+.collapse-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 24px; height: 48px; background: var(--theme-card); color: var(--theme-text); border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 150; transition: all 0.3s ease; }
+.is-dark .collapse-btn { border-color: rgba(255, 255, 255, 0.1); background: var(--theme-card); }
+.collapse-btn:hover { background: var(--theme-primary); color: #fff; border-color: var(--theme-primary); }
 .collapse-btn.left { left: 0px; border-radius: 0 12px 12px 0; }
 .collapse-btn.right { right: 0px; border-radius: 12px 0 0 12px; }
 
