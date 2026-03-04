@@ -97,9 +97,7 @@ const maximizeWindow = async () => {
 const closeWindow = () => appWindow.close()
 
 onMounted(async () => {
-  const config = await invoke<any>('get_config')
-  store.libraryPath = config.libraryPath
-  store.theme = config.theme || 'system'
+  await store.loadConfig()
 
   await listen<string>('open-file', (event) => {
     const filePath = event.payload

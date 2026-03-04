@@ -24,22 +24,30 @@ pub struct FileEntry {
     pub is_dir: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct AppConfig {
-    #[serde(rename = "libraryPath")]
     pub library_path: String,
-    #[serde(rename = "theme")]
     pub theme: String, 
-    #[serde(rename = "codeTheme")]
     pub code_theme: String,
-    #[serde(rename = "editorMode")]
     pub editor_mode: String,
-    #[serde(rename = "editorBgColor")]
     pub editor_bg_color: String,
-    #[serde(rename = "autoSaveInterval")]
     pub auto_save_interval: u32,
-    #[serde(rename = "maxHistoryCount")]
     pub max_history_count: u32,
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        Self {
+            library_path: "".into(),
+            theme: "system".into(),
+            code_theme: "github".into(),
+            editor_mode: "wysiwyg".into(),
+            editor_bg_color: "".into(),
+            auto_save_interval: 3,
+            max_history_count: 10,
+        }
+    }
 }
 
 #[tauri::command]
@@ -47,7 +55,10 @@ fn get_config(app_handle: tauri::AppHandle) -> AppConfig {
     let config_path = app_handle.path().app_config_dir().unwrap().join("config.json");
     if config_path.exists() {
         let content = fs::read_to_string(config_path).unwrap_or_default();
-        serde_json::from_str(&content).unwrap_or_else(|_| get_default_config(&app_handle))
+        serde_json::from_str(&content).unwrap_or_else(|e| {
+            eprintln!("Config parse error: {}, using default", e);
+            get_default_config(&app_handle)
+        })
     } else {
         get_default_config(&app_handle)
     }

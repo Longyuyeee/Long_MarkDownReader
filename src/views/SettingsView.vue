@@ -91,6 +91,9 @@ const store = useAppStore()
 const config = ref({
   libraryPath: store.libraryPath,
   theme: store.theme,
+  codeTheme: store.codeTheme,
+  editorMode: store.editorMode,
+  editorBgColor: store.editorBgColor,
   autoSaveInterval: store.autoSaveInterval,
   maxHistoryCount: store.maxHistoryCount
 })
@@ -100,6 +103,9 @@ onMounted(async () => {
   config.value = {
     libraryPath: store.libraryPath,
     theme: store.theme,
+    codeTheme: store.codeTheme,
+    editorMode: store.editorMode,
+    editorBgColor: store.editorBgColor,
     autoSaveInterval: store.autoSaveInterval,
     maxHistoryCount: store.maxHistoryCount
   }

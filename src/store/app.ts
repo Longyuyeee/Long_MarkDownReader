@@ -38,7 +38,13 @@ export const useAppStore = defineStore('app', {
       } catch (e) { console.error('Failed to load config', e) }
     },
     async updateConfig(patch: any) {
-      Object.assign(this, patch)
+      // 仅合并 patch 中存在的非 undefined 字段
+      for (const key in patch) {
+        if (patch[key] !== undefined) {
+          (this as any)[key] = patch[key]
+        }
+      }
+      
       await invoke('save_config', { config: {
         libraryPath: this.libraryPath,
         theme: this.theme,

@@ -536,19 +536,40 @@ const saveCurrentFile = async () => {
   if (t) { try { const content = vditor.getValue(); await invoke('write_markdown_file', { path: t.path, content }); message.success('已保存'); if (autoSaveTimer) clearTimeout(autoSaveTimer) } catch (e) { message.error('保存失败') } }
 }
 
+// 核心：处理 Vditor 模式同步与点击捕获
+const syncVditorMode = () => {
+  if (!vditor) return
+  const currentMode = vditor.getCurrentMode()
+  if (currentMode && currentMode !== store.editorMode) {
+    store.updateConfig({ editorMode: currentMode as any })
+  }
+}
+
+const handleEditorClick = (e: MouseEvent) => {
+  // 如果点击了工具栏按钮，延迟同步模式（等待 Vditor 内部状态更新完成）
+  const isToolbarBtn = (e.target as HTMLElement).closest('.vditor-toolbar__item')
+  if (isToolbarBtn) {
+    setTimeout(syncVditorMode, 200)
+  }
+}
+
 const initVditor = () => {
   const container = document.getElementById('vditor-lib'); if (!container) return
+  // 添加点击监听以捕获模式切换
+  container.addEventListener('click', handleEditorClick)
+  
   editorLoading.value = true
   try {
     vditor = new Vditor('vditor-lib', {
       cdn: '/vditor', lang: 'zh_CN', height: '100%', 
-      mode: store.editorMode || 'wysiwyg', // 核心：从 Store 读取初始模式
+      mode: store.editorMode || 'wysiwyg', 
       cache: { enable: false }, theme: store.theme === 'dark' ? 'dark' : 'classic',
       preview: { 
         theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, 
         hljs: { enable: true, style: store.codeTheme || 'github' }, 
         anchor: 1 
       },
+      // ... (rest of config)
       toolbar: [
         'undo', 'redo', '|', 
         'emoji', 'headings', 'bold', 'italic', 'strike', '|',
@@ -584,14 +605,19 @@ const initVditor = () => {
       input: (val) => {
         const cur = tabs.value.find(t => t.id === activeTabId.value)
         if (cur) { triggerAutoSave(val); }
-        // 实时捕获模式变化并保存
-        const currentMode = vditor.getCurrentMode() as any
+        // 实时同步模式
+        const currentMode = vditor.getCurrentMode()
         if (currentMode && currentMode !== store.editorMode) {
-          store.updateConfig({ editorMode: currentMode })
+          store.updateConfig({ editorMode: currentMode as any })
         }
       },
       after: () => {
         isVditorReady = true; editorLoading.value = false
+        // 确保初始化完成后，如果模式不对，进行一次同步
+        const actualMode = vditor.getCurrentMode()
+        if (actualMode && actualMode !== store.editorMode) {
+          store.updateConfig({ editorMode: actualMode as any })
+        }
         if (activeTabId.value) { const t = tabs.value.find(item => item.id === activeTabId.value); if (t) loadFileToEditor(t.path) }
       }
     })
