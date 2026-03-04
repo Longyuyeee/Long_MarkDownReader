@@ -10,7 +10,7 @@
     <div class="settings-content">
       <n-form label-placement="top" size="medium">
         <n-grid :cols="1" :y-gap="24">
-          <n-grid-item>
+          <n-grid-item class="animate-item" style="--delay: 0.1s">
             <div class="section-title">文件库管理</div>
             <div class="library-manager-card">
               <div v-for="(lib, index) in config.libraries" :key="index" class="library-item" :class="{ active: lib.path === config.activeLibraryPath }">
@@ -38,7 +38,7 @@
             </div>
           </n-grid-item>
 
-          <n-grid-item>
+          <n-grid-item class="animate-item" style="--delay: 0.2s">
             <div class="section-title">影子副本 (Shadow Copy)</div>
             <div class="setting-card">
               <n-form-item label="自动保存间隔 (分钟)">
@@ -56,7 +56,7 @@
             </div>
           </n-grid-item>
 
-          <n-grid-item>
+          <n-grid-item class="animate-item" style="--delay: 0.3s">
             <div class="section-title">系统集成</div>
             <div class="setting-row">
               <div class="info">
@@ -67,7 +67,7 @@
             </div>
           </n-grid-item>
 
-          <n-grid-item>
+          <n-grid-item class="animate-item" style="--delay: 0.4s">
             <div class="section-title">外观</div>
             <n-form-item label="颜色主题">
               <n-radio-group v-model:value="config.theme" name="theme" @update:value="applyTheme" size="large">
@@ -256,13 +256,20 @@ const setAsDefault = async () => {
   opacity: 0.1;
 }
 
-.setting-card, .library-manager-card {
-  background: var(--theme-card);
-  padding: 24px;
-  border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.03);
-  margin-bottom: 12px;
-  transition: all 0.3s ease;
+.animate-item {
+  opacity: 0;
+  animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--delay);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.setting-card:hover, .library-manager-card:hover {
+  border-color: rgba(var(--theme-primary-rgb), 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
 }
 
 .library-item {

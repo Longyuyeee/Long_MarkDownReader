@@ -110,15 +110,21 @@
         <div v-show="tabs.length > 0" id="vditor-lib" class="vditor-instance"></div>
         
         <div v-if="tabs.length === 0" class="hero-viewport">
+          <!-- 背景装饰光斑 -->
+          <div class="ambient-glow">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+          </div>
+          
           <div class="hero-content">
             <div class="hero-brand">
               <n-icon :component="getHeroIcon(store.heroIcon)" />
             </div>
-            <h2>胧编辑 · MD助手</h2>
-            <p>选择一个文档或直接将文件拖拽至此</p>
+            <h2 class="hero-title">胧编辑 · MD助手</h2>
+            <p class="hero-subtitle">选择一个文档或直接将文件拖拽至此</p>
             <div class="hero-actions">
-              <n-button secondary type="primary" round @click="handleToolbarAction('file')">创建新笔记</n-button>
-              <n-button secondary round @click="openSettings">文件库配置</n-button>
+              <n-button secondary type="primary" round size="large" class="hero-btn" @click="handleToolbarAction('file')">创建新笔记</n-button>
+              <n-button secondary round size="large" class="hero-btn" @click="openSettings">文件库配置</n-button>
             </div>
           </div>
         </div>
@@ -811,13 +817,86 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
   z-index: 1000 !important;
 }
 
-.hero-viewport { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: inherit; z-index: 5; }
-.hero-content { text-align: center; }
-.hero-brand { font-size: 64px; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
-.hero-content h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; color: #1d1d1f; }
-.is-dark .hero-content h2 { color: #f5f5f7; }
-.hero-content p { color: #86868b; margin-bottom: 24px; }
-.hero-actions { display: flex; gap: 12px; justify-content: center; }
+.hero-viewport { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: inherit; z-index: 5; overflow: hidden; }
+
+/* 背景装饰光斑 */
+.ambient-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; filter: blur(80px); opacity: 0.4; }
+.blob { position: absolute; width: 400px; height: 400px; border-radius: 50%; animation: blobRotate 20s infinite alternate; }
+.blob-1 { background: rgba(102, 126, 234, 0.3); top: -100px; right: -100px; }
+.blob-2 { background: rgba(118, 75, 162, 0.2); bottom: -150px; left: -100px; animation-delay: -5s; }
+
+.hero-content { text-align: center; z-index: 10; max-width: 500px; }
+
+.hero-brand { 
+  font-size: 84px; 
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+  color: var(--theme-primary);
+  filter: drop-shadow(0 0 20px rgba(var(--theme-primary-rgb), 0.2));
+  animation: 
+    heroFloat 4s ease-in-out infinite,
+    heroGlow 4s ease-in-out infinite,
+    heroEntry 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-title { 
+  font-size: 32px; 
+  font-weight: 800; 
+  margin-bottom: 12px; 
+  color: var(--theme-text); 
+  letter-spacing: -0.02em;
+  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.hero-subtitle { 
+  font-size: 16px;
+  color: var(--theme-text);
+  opacity: 0.6; 
+  margin-bottom: 32px; 
+  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+}
+
+.hero-actions { 
+  display: flex; 
+  gap: 16px; 
+  justify-content: center; 
+  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+}
+
+.hero-btn {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.hero-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* 动画关键帧 */
+@keyframes heroEntry {
+  from { opacity: 0; transform: scale(0.8) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes heroGlow {
+  0%, 100% { filter: drop-shadow(0 0 20px rgba(var(--theme-primary-rgb), 0.2)); }
+  50% { filter: drop-shadow(0 0 40px rgba(var(--theme-primary-rgb), 0.5)); }
+}
+
+@keyframes blobRotate {
+  from { transform: rotate(0deg) scale(1); }
+  to { transform: rotate(360deg) scale(1.2); }
+}
 
 .inspector-sidebar { height: 100%; background: rgba(255, 255, 255, 0.4); backdrop-filter: saturate(180%) blur(40px); border-left: 1px solid rgba(0, 0, 0, 0.05); overflow: hidden; transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; }
 .is-dark .inspector-sidebar { background: rgba(28, 28, 30, 0.5); border-left: 1px solid rgba(255, 255, 255, 0.08); }
@@ -841,9 +920,37 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .history-box { padding: 16px; height: 100%; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; }
 .history-header { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #86868b; font-weight: 600; }
 .history-bubbles-wrapper { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 2px 20px; }
-.history-bubble { position: relative; padding: 14px; background: #fff; border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 14px; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); display: flex; gap: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02); }
+.history-bubble { 
+  position: relative; 
+  padding: 14px; 
+  background: #fff; 
+  border: 1px solid rgba(0, 0, 0, 0.06); 
+  border-radius: 14px; 
+  cursor: pointer; 
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+  display: flex; 
+  gap: 12px; 
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02); 
+  animation: bubblePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* 阶梯加载：前 10 个气泡依次延迟 */
+.history-bubble:nth-child(1) { animation-delay: 0.05s; }
+.history-bubble:nth-child(2) { animation-delay: 0.1s; }
+.history-bubble:nth-child(3) { animation-delay: 0.15s; }
+.history-bubble:nth-child(4) { animation-delay: 0.2s; }
+.history-bubble:nth-child(5) { animation-delay: 0.25s; }
+.history-bubble:nth-child(6) { animation-delay: 0.3s; }
+.history-bubble:nth-child(7) { animation-delay: 0.35s; }
+.history-bubble:nth-child(8) { animation-delay: 0.4s; }
+
+@keyframes bubblePop {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 .is-dark .history-bubble { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.08); }
-.history-bubble:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); border-color: #007aff; }
+.history-bubble:hover { transform: translateX(4px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); border-color: #007aff; }
 .bubble-content { flex: 1; min-width: 0; }
 .bubble-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .bubble-time { font-size: 13px; font-weight: 700; color: #1d1d1f; }
