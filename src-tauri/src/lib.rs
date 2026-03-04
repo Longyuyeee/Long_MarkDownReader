@@ -30,6 +30,12 @@ pub struct AppConfig {
     pub library_path: String,
     #[serde(rename = "theme")]
     pub theme: String, 
+    #[serde(rename = "codeTheme")]
+    pub code_theme: String,
+    #[serde(rename = "editorMode")]
+    pub editor_mode: String,
+    #[serde(rename = "editorBgColor")]
+    pub editor_bg_color: String,
     #[serde(rename = "autoSaveInterval")]
     pub auto_save_interval: u32,
     #[serde(rename = "maxHistoryCount")]
@@ -53,6 +59,9 @@ fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
     AppConfig {
         library_path: path.to_string_lossy().into_owned(),
         theme: "system".into(),
+        code_theme: "github".into(),
+        editor_mode: "wysiwyg".into(),
+        editor_bg_color: "".into(),
         auto_save_interval: 3,
         max_history_count: 10,
     }

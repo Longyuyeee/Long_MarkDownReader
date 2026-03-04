@@ -86,6 +86,14 @@
           </div>
         </div>
         <div class="tab-actions">
+          <!-- 隐藏的调色盘触发器 -->
+          <div class="hidden-picker-trigger">
+            <n-color-picker 
+              v-model:value="store.editorBgColor" 
+              :modes="['hex']" 
+              @update:value="handleEditorBgChange"
+            />
+          </div>
           <n-button size="tiny" quaternary round @click="saveCurrentFile" :disabled="!activeTabId">
             <template #icon><n-icon :component="SaveIcon" /></template>
             保存
@@ -93,7 +101,7 @@
         </div>
       </div>
       
-      <div class="editor-viewport">
+      <div class="editor-viewport" :style="{ '--custom-editor-bg': store.editorBgColor || 'transparent' }">
         <div v-if="editorLoading && tabs.length > 0" class="editor-loading">
           <n-spin size="large">
             <template #description>同步中...</template>
@@ -451,6 +459,29 @@ const handleNodeSelect = (keys: string[]) => {
 
 const handleLoadChildren = async (option: TreeOption) => { option.children = await loadDirectory(option.key as string) }
 
+const codeThemeOptions = [
+  { label: 'GitHub', value: 'github' },
+  { label: 'Monokai', value: 'monokai' },
+  { label: 'Dracula', value: 'dracula' },
+  { label: 'VS Code', value: 'vscode' },
+  { label: 'Native', value: 'native' },
+  { label: 'One Dark', value: 'one-dark' }
+]
+
+const handleCodeThemeChange = async (val: string) => {
+  store.codeTheme = val
+  await store.updateConfig({ codeTheme: val })
+  if (vditor && isVditorReady) {
+    const isDark = store.theme === 'dark'
+    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', val)
+  }
+}
+
+const handleEditorBgChange = async (val: string) => {
+  store.editorBgColor = val
+  await store.updateConfig({ editorBgColor: val })
+}
+
 const deleteAction = async (path: string) => {
   if (!path) return; const displayTitle = path.split(/[\\/]/).pop()?.replace(/\.md$/, '')
   const parentPath = path.substring(0, Math.max(path.lastIndexOf('\\'), path.lastIndexOf('/')))
@@ -510,13 +541,54 @@ const initVditor = () => {
   editorLoading.value = true
   try {
     vditor = new Vditor('vditor-lib', {
-      cdn: '/vditor', lang: 'zh_CN', height: '100%', mode: 'wysiwyg', cache: { enable: false }, theme: store.theme === 'dark' ? 'dark' : 'classic',
-      preview: { theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, hljs: { enable: true }, anchor: 1 },
-      outline: { enable: false }, toolbarConfig: { hide: false },
+      cdn: '/vditor', lang: 'zh_CN', height: '100%', 
+      mode: store.editorMode || 'wysiwyg', // 核心：从 Store 读取初始模式
+      cache: { enable: false }, theme: store.theme === 'dark' ? 'dark' : 'classic',
+      preview: { 
+        theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, 
+        hljs: { enable: true, style: store.codeTheme || 'github' }, 
+        anchor: 1 
+      },
+      toolbar: [
+        'undo', 'redo', '|', 
+        'emoji', 'headings', 'bold', 'italic', 'strike', '|',
+        'line', 'quote', 'list', 'ordered-list', 'check', '|',
+        'code', 'inline-code', 
+        {
+          name: 'code-theme',
+          tip: '代码高亮风格',
+          icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>',
+          click: () => {
+            const themes = codeThemeOptions.map(o => o.value)
+            const currentIdx = themes.indexOf(store.codeTheme)
+            const nextTheme = themes[(currentIdx + 1) % themes.length]
+            handleCodeThemeChange(nextTheme)
+            message.info(`代码风格: ${nextTheme.toUpperCase()}`)
+          }
+        },
+        {
+          name: 'editor-bg',
+          tip: '修改文章背景色',
+          icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>',
+          click: () => {
+            const trigger = document.querySelector('.hidden-picker-trigger .n-color-picker-trigger') as HTMLElement
+            trigger?.click()
+          }
+        },
+        '|',
+        'upload', 'link', 'table', '|',
+        'both', 'preview', 'edit-mode'
+      ],
+      toolbarConfig: { hide: false },
       customWysiwygToolbar: () => {}, 
       input: (val) => {
         const cur = tabs.value.find(t => t.id === activeTabId.value)
         if (cur) { triggerAutoSave(val); }
+        // 实时捕获模式变化并保存
+        const currentMode = vditor.getCurrentMode() as any
+        if (currentMode && currentMode !== store.editorMode) {
+          store.updateConfig({ editorMode: currentMode })
+        }
       },
       after: () => {
         isVditorReady = true; editorLoading.value = false
@@ -525,6 +597,14 @@ const initVditor = () => {
     })
   } catch (e) { editorLoading.value = false }
 }
+
+// 监听代码主题变化并实时更新编辑器
+watch(() => store.codeTheme, (newTheme) => {
+  if (vditor && isVditorReady) {
+    const isDark = store.theme === 'dark'
+    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', newTheme)
+  }
+}, { immediate: true })
 
 const handleTabsWheel = (e: WheelEvent) => { if (tabsScrollRef.value) tabsScrollRef.value.scrollLeft += e.deltaY }
 const handleKeyDown = (e: KeyboardEvent) => {
@@ -602,10 +682,81 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .tab-pill { height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(0, 0, 0, 0.03); border-radius: 15px; transition: all 0.3s; white-space: nowrap; max-width: 200px; }
 .pill-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 .tab-pill.active { background: #fff; color: #007aff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
-.editor-viewport { flex: 1; position: relative; background: #fff; border-radius: 12px 12px 0 0; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+
+/* 隐藏触发器样式 */
+.hidden-picker-trigger {
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  position: absolute;
+}
+
+.editor-viewport { flex: 1; position: relative; background: #fff; border-radius: 12px 12px 0 0; overflow: visible; display: flex; flex-direction: column; min-height: 0; z-index: 10; }
 .is-dark .editor-viewport { background: #1c1c1e; }
-.vditor-instance { flex: 1; height: 0; }
-.vditor-instance[style*="display: none"] { height: 0 !important; overflow: hidden !important; }
+.vditor-instance { flex: 1; height: 0; overflow: visible !important; }
+
+/* 核心修复：确保自定义背景色穿透应用到 Vditor 内部 */
+:deep(.vditor-wysiwyg), 
+:deep(.vditor-preview), 
+:deep(.vditor-panel),
+:deep(.vditor-reset) {
+  background-color: var(--custom-editor-bg) !important;
+}
+
+/* === 响应式智能气泡对齐 (适配折行布局) === */
+
+/* 1. 基础重置：消除原生位移导致的撕裂，所有气泡默认靠左对齐并向右生长 */
+:deep(.vditor-tooltipped::after) {
+  background-color: rgba(28, 28, 30, 0.98) !important;
+  color: #fff !important;
+  font-size: 11px !important;
+  padding: 7px 12px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+  white-space: nowrap !important;
+  width: max-content !important;
+  left: 0 !important; /* 核心：对齐按钮左边缘 */
+  right: auto !important;
+  transform: translateY(-5px) !important; /* 仅向上微调，不再进行水平位移 */
+  opacity: 0;
+  pointer-events: none;
+}
+
+:deep(.vditor-tooltipped:hover::after) {
+  opacity: 1;
+}
+
+/* 2. 箭头（尖尖）定位：始终居中指向按钮 */
+:deep(.vditor-tooltipped::before) {
+  left: 14px !important; /* 按钮中心位置 */
+  transform: translateX(-50%) !important;
+  border-top-color: rgba(28, 28, 30, 0.98) !important;
+}
+
+/* 3. 针对靠近最右边缘按钮的补偿（可选） */
+/* 由于工具栏右侧通常有很大空间（tabs-actions），默认向右生长是最稳健的。
+   如果在极窄模式下发生右侧出界，可以使用以下规则让最后的按钮向左展开 */
+:deep(.vditor-toolbar__item:nth-last-child(-n+5) .vditor-tooltipped::after) {
+  /* 在极窄布局下，最后几个按钮尝试向左生长以防止右侧出界 */
+  left: auto !important;
+  right: 0 !important;
+}
+:deep(.vditor-toolbar__item:nth-last-child(-n+5) .vditor-tooltipped::before) {
+  left: auto !important;
+  right: 14px !important;
+}
+
+:deep(.vditor-content) {
+  overflow: hidden;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* 修正提示气泡样式，确保其不被遮挡 */
+:deep(.vditor-tooltipped::after), 
+:deep(.vditor-tooltipped::before) {
+  z-index: 1000 !important;
+}
 
 .hero-viewport { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: inherit; z-index: 5; }
 .hero-content { text-align: center; }

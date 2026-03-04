@@ -139,7 +139,6 @@ const setAsDefault = async () => {
 const saveAll = async () => {
   try {
     await store.updateConfig(config.value)
-    // 强制重载确保 UI 同步
     await store.loadConfig()
     message.success('配置已保存并生效')
   } catch (err) {
@@ -254,7 +253,7 @@ const saveAll = async () => {
   opacity: 0.8;
 }
 
-:deep(.n-input), :deep(.n-input-number) {
+:deep(.n-input), :deep(.n-input-number), :deep(.n-select .n-base-selection) {
   background-color: var(--theme-card) !important;
 }
 

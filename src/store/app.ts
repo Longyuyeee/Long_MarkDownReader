@@ -16,6 +16,9 @@ export const useAppStore = defineStore('app', {
     tabs: [] as TabInfo[],
     activeTabId: null as string | null,
     theme: 'system' as 'white' | 'dark' | 'system' | 'green' | 'blue' | 'pink',
+    codeTheme: 'github' as string,
+    editorMode: 'wysiwyg' as 'wysiwyg' | 'ir' | 'sv',
+    editorBgColor: '' as string,
     libraryPath: '',
     autoSaveInterval: 3,
     maxHistoryCount: 10,
@@ -25,18 +28,23 @@ export const useAppStore = defineStore('app', {
     async loadConfig() {
       try {
         const config = await invoke<any>('get_config')
-        this.libraryPath = config.libraryPath
-        this.theme = config.theme
+        this.libraryPath = config.libraryPath || ''
+        this.theme = config.theme || 'system'
+        this.codeTheme = config.codeTheme || 'github'
+        this.editorMode = config.editorMode || 'wysiwyg'
+        this.editorBgColor = config.editorBgColor || ''
         this.autoSaveInterval = config.autoSaveInterval || 3
         this.maxHistoryCount = config.maxHistoryCount || 10
       } catch (e) { console.error('Failed to load config', e) }
     },
     async updateConfig(patch: any) {
       Object.assign(this, patch)
-      // 直接传递对象，Rust 端通过 camelCase 自动解析
       await invoke('save_config', { config: {
         libraryPath: this.libraryPath,
         theme: this.theme,
+        codeTheme: this.codeTheme,
+        editorMode: this.editorMode,
+        editorBgColor: this.editorBgColor,
         autoSaveInterval: this.autoSaveInterval,
         maxHistoryCount: this.maxHistoryCount
       } })
