@@ -84,6 +84,7 @@ onMounted(async () => {
 
   vditor = new Vditor('vditor', {
     cdn: '/vditor',
+    lang: 'zh_CN',
     height: 'calc(100vh - 74px)',
     mode: 'wysiwyg',
     value: initialContent,

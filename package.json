@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "postinstall": "node -e \"const fs=require('fs');const p=require('path');const src=p.join('node_modules','vditor','dist');const dest=p.join('public','vditor','dist');if(fs.existsSync(src)){fs.mkdirSync(p.dirname(dest),{recursive:true});fs.cpSync(src,dest,{recursive:true});console.log('Vditor assets copied')}\""
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
@@ -29,6 +30,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "typescript": "~5.6.2",
     "vite": "^6.0.3",
+    "vite-plugin-static-copy": "^3.2.0",
     "vue-tsc": "^2.1.10"
   }
 }
