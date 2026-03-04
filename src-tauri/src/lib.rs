@@ -40,6 +40,7 @@ pub struct AppConfig {
     pub code_theme: String,
     pub editor_mode: String,
     pub editor_bg_color: String,
+    pub hero_icon: String,
     pub auto_save_interval: u32,
     pub max_history_count: u32,
 }
@@ -53,6 +54,7 @@ impl Default for AppConfig {
             code_theme: "github".into(),
             editor_mode: "wysiwyg".into(),
             editor_bg_color: "".into(),
+            hero_icon: "BookOpen".into(),
             auto_save_interval: 3,
             max_history_count: 10,
         }
@@ -84,6 +86,7 @@ fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
         code_theme: "github".into(),
         editor_mode: "wysiwyg".into(),
         editor_bg_color: "".into(),
+        hero_icon: "BookOpen".into(),
         auto_save_interval: 3,
         max_history_count: 10,
     }

@@ -111,7 +111,9 @@
         
         <div v-if="tabs.length === 0" class="hero-viewport">
           <div class="hero-content">
-            <div class="hero-brand">胧</div>
+            <div class="hero-brand">
+              <n-icon :component="getHeroIcon(store.heroIcon)" />
+            </div>
             <h2>胧编辑 · MD助手</h2>
             <p>选择一个文档或直接将文件拖拽至此</p>
             <div class="hero-actions">
@@ -215,7 +217,7 @@ import {
   RefreshCw as RefreshIcon, FileText as FileIcon, Folder as FolderIcon,
   Plus as PlusIcon, FolderPlus as FolderPlusIcon, Trash as TrashIcon,
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
-  Save as SaveIcon
+  Save as SaveIcon, BookOpen as BookOpenIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -289,6 +291,16 @@ const renameState = reactive({ show: false, oldPath: '', newName: '' })
 const historyList = ref<{timestamp: number, content: string}[]>([])
 
 const openSettings = () => router.push('/settings')
+
+const getHeroIcon = (iconName: string) => {
+  switch (iconName) {
+    case 'BookOpen': return BookOpenIcon
+    case 'FileText': return FileIcon
+    case 'Folder': return FolderIcon
+    case 'Settings': return SettingsIcon
+    default: return BookOpenIcon
+  }
+}
 
 const fetchHistory = async () => {
   if (!activeTabId.value) return
