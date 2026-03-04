@@ -132,7 +132,22 @@
     >
       <n-tabs type="segment" animated justify-content="space-evenly" size="small" class="inspector-tabs" display-directive="show">
         <n-tab-pane name="outline" tab="大纲" class="inspector-pane">
-          <div id="right-outline-container" class="outline-box" @click="handleOutlineClick"></div>
+          <div class="manual-outline-box">
+            <div v-if="outlineItems.length === 0" class="empty-outline">
+              <n-empty description="暂无大纲" size="small" />
+            </div>
+            <div v-else class="outline-list">
+              <div 
+                v-for="item in outlineItems" 
+                :key="item.id" 
+                class="outline-item"
+                :class="['level-' + item.level]"
+                @click="scrollToHeading(item.id)"
+              >
+                {{ item.text }}
+              </div>
+            </div>
+          </div>
         </n-tab-pane>
         <n-tab-pane name="history" tab="历史" class="inspector-pane">
           <div class="history-box">
@@ -202,6 +217,7 @@ import { useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
+interface OutlineItem { id: string; text: string; level: number; }
 
 const message = useMessage()
 const store = useAppStore()
@@ -244,6 +260,9 @@ const expandedKeys = ref<string[]>([])
 let vditor: any = null
 let isVditorReady = false
 let lastLoadedPath = '' 
+let outlineObserver: MutationObserver | null = null
+
+const outlineItems = ref<OutlineItem[]>([])
 
 const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0 })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, options: [] as any[] })
@@ -309,29 +328,43 @@ watch(() => store.autoSaveInterval, () => {
   message.info(`保存间隔已重置为 ${store.autoSaveInterval} 分钟`)
 })
 
-const handleOutlineClick = (e: MouseEvent) => {
-  const target = e.target as HTMLElement
-  const item = target.closest('.vditor-outline__item') as HTMLElement
-  if (item && vditor) {
-    const id = item.getAttribute('data-id')
-    if (id) {
-      const targetEl = vditor.vditor.wysiwyg.element.querySelector(`#${id}`)
-      if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }
-}
-const libraryName = computed(() => store.libraryPath ? store.libraryPath.split(/[\\/]/).pop() : '')
+const libraryName = computed(() => {
+  if (!store.libraryPath) return ''
+  const normalizedPath = store.libraryPath.replace(/\\/g, '/')
+  const parts = normalizedPath.split('/').filter(Boolean)
+  return parts[parts.length - 1] || '根目录'
+})
+
 const startResizing = (type: 'sidebar' | 'inspector') => { activeResizer.value = type }
 
-const syncOutline = () => {
+const scrollToHeading = (id: string) => {
+  if (!vditor) return
+  const targetEl = vditor.vditor.wysiwyg.element.querySelector(`[data-id="${id}"]`) || vditor.vditor.wysiwyg.element.querySelector(`#${id}`)
+  if (targetEl) {
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
+const syncOutlineManual = () => {
   if (!vditor || !isVditorReady) return
-  nextTick(() => {
-    setTimeout(() => {
-      const outlineEl = document.getElementById('right-outline-container')
-      const contentEl = vditor.vditor.wysiwyg.element
-      if (outlineEl && contentEl) Vditor.outlineRender(contentEl, outlineEl)
-    }, 300)
+  const contentEl = vditor.vditor.wysiwyg?.element
+  if (!contentEl) return
+  const headings = contentEl.querySelectorAll('h1, h2, h3, h4, h5, h6')
+  const newItems: OutlineItem[] = []
+  headings.forEach((h: HTMLElement, index: number) => {
+    if (!h.id) h.id = `heading-${index}`
+    const id = h.getAttribute('data-id') || h.id
+    newItems.push({ id: id, text: h.innerText.trim() || '未命名标题', level: parseInt(h.tagName.substring(1)) })
   })
+  outlineItems.value = newItems
+}
+
+const initOutlineObserver = () => {
+  if (outlineObserver) outlineObserver.disconnect()
+  const contentEl = vditor.vditor.wysiwyg?.element
+  if (!contentEl) return
+  outlineObserver = new MutationObserver(() => syncOutlineManual())
+  outlineObserver.observe(contentEl, { childList: true, subtree: true, characterData: true })
 }
 
 const virtualDrag = reactive({ active: false, x: 0, y: 0, startX: 0, startY: 0, dragNode: null as any, dropTarget: null as any, ghostText: '', timer: null as any })
@@ -392,8 +425,7 @@ const loadFileToEditor = async (path: string) => {
     const res = await invoke<{content: string}>('read_markdown_file', { path })
     vditor.setValue(res.content)
     fetchHistory()
-    nextTick(() => { setTimeout(() => { lastLoadedPath = path }, 100) })
-    syncOutline()
+    nextTick(() => { setTimeout(() => { lastLoadedPath = path; syncOutlineManual(); initOutlineObserver() }, 200) })
   } catch (err) { message.error("读取失败") }
 }
 
@@ -411,7 +443,7 @@ const handleLoadChildren = async (option: TreeOption) => { option.children = awa
 const deleteAction = async (path: string) => {
   if (!path) return; const displayTitle = path.split(/[\\/]/).pop()?.replace(/\.md$/, '')
   const parentPath = path.substring(0, Math.max(path.lastIndexOf('\\'), path.lastIndexOf('/')))
-  if (confirm(`确认要物理删除 ${displayTitle} 吗？`)) { 
+  if (confirm(`确认要物理删除 ${displayTitle}吗？`)) { 
     try { 
       await invoke('delete_item', { path }); 
       if (activeTabId.value === path) store.removeTab(path); 
@@ -468,13 +500,12 @@ const initVditor = () => {
   try {
     vditor = new Vditor('vditor-lib', {
       cdn: '/vditor', lang: 'zh_CN', height: '100%', mode: 'wysiwyg', cache: { enable: false }, theme: store.theme === 'dark' ? 'dark' : 'classic',
-      preview: { theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, hljs: { enable: true } },
-      outline: { enable: false }, 
-      toolbarConfig: { hide: false },
+      preview: { theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, hljs: { enable: true }, anchor: 1 },
+      outline: { enable: false }, toolbarConfig: { hide: false },
       customWysiwygToolbar: () => {}, 
       input: (val) => {
         const cur = tabs.value.find(t => t.id === activeTabId.value)
-        if (cur) { triggerAutoSave(val); syncOutline() }
+        if (cur) { triggerAutoSave(val); }
       },
       after: () => {
         isVditorReady = true; editorLoading.value = false
@@ -494,36 +525,27 @@ const handleKeyDown = (e: KeyboardEvent) => {
 const tabsScrollRef = ref<HTMLElement | null>(null)
 let searchDebounce: any = null
 onMounted(async () => { 
-  await store.loadConfig() // 1. 确保先加载配置
+  await store.loadConfig()
   window.addEventListener('keydown', handleKeyDown); 
-  
-  if (store.libraryPath) await refreshLibrary(); // 2. 只有拿到路径才刷新
-  
+  if (store.libraryPath) await refreshLibrary(); 
   nextTick(() => { initVditor(); startShadowSaveTimer() })
 
   const appWindow = getCurrentWindow()
   appWindow.onDragDropEvent(async (event) => {
-    if (event.payload.type === 'over') {
-      updateDropTarget(event.payload.position.x, event.payload.position.y, true)
-    } else if (event.payload.type === 'drop') {
-      const paths = event.payload.paths
-      const targetDir = virtualDrag.dropTarget || store.libraryPath
+    if (event.payload.type === 'over') { updateDropTarget(event.payload.position.x, event.payload.position.y, true) }
+    else if (event.payload.type === 'drop') {
+      const paths = event.payload.paths; const targetDir = virtualDrag.dropTarget || store.libraryPath
       if (paths.length > 0 && targetDir) {
-        try {
-          message.loading(`正在导入...`)
-          for (const p of paths) { await invoke('import_to_library', { sourcePath: p, libraryRoot: store.libraryPath, targetDir }) }
-          await refreshNode(targetDir); message.destroyAll(); message.success('导入完成')
-        } catch (err) { message.destroyAll(); message.error('导入失败') }
+        try { message.loading(`正在导入...`); for (const p of paths) { await invoke('import_to_library', { sourcePath: p, libraryRoot: store.libraryPath, targetDir }) } await refreshNode(targetDir); message.destroyAll(); message.success('导入完成') }
+        catch (err) { message.destroyAll(); message.error('导入失败') }
       }
       virtualDrag.dropTarget = null
     } else { virtualDrag.dropTarget = null }
   })
 })
 
-// 3. 关键：监听库路径变化，自动刷新列表（解决启动后延迟加载路径的问题）
 watch(() => store.libraryPath, (newPath) => { if (newPath) refreshLibrary() })
-
-onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer) })
+onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); if (outlineObserver) outlineObserver.disconnect() })
 watch(activeTabId, (newId) => { if (newId) { const t = tabs.value.find(item => item.id === newId); if (t) loadFileToEditor(t.path) } })
 watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); if (!val.trim()) { refreshLibrary(); return }; searchDebounce = setTimeout(async () => { try { const results = await invoke<FileEntry[]>('search_library', { libraryRoot: store.libraryPath, query: val.trim() }); treeData.value = results.map(entry => ({ label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''), key: entry.path, isLeaf: !entry.is_dir, prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' }) })) } catch (e) {} }, 300) })
 </script>
@@ -561,7 +583,6 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .vditor-instance { flex: 1; height: 0; }
 .vditor-instance[style*="display: none"] { height: 0 !important; overflow: hidden !important; }
 
-/* Hero 界面样式补全 */
 .hero-viewport { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: inherit; z-index: 5; }
 .hero-content { text-align: center; }
 .hero-brand { font-size: 64px; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
@@ -577,19 +598,22 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 :deep(.n-tabs-pane-wrapper) { flex: 1; min-height: 0; }
 .inspector-pane { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 
+.manual-outline-box { padding: 12px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; }
+.outline-list { display: flex; flex-direction: column; gap: 4px; padding-bottom: 40px; }
+.outline-item { padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #1d1d1f; transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.is-dark .outline-item { color: #f5f5f7; }
+.outline-item:hover { background: rgba(0, 122, 255, 0.1); color: #007aff; }
+.level-1 { font-weight: 700; font-size: 14px; }
+.level-2 { padding-left: 24px; opacity: 0.9; }
+.level-3 { padding-left: 36px; opacity: 0.8; font-size: 12.5px; }
+.level-4 { padding-left: 48px; opacity: 0.7; font-size: 12px; }
+.level-5 { padding-left: 60px; opacity: 0.6; font-size: 12px; }
+.level-6 { padding-left: 72px; opacity: 0.5; font-size: 12px; }
+
 .history-box { padding: 16px; height: 100%; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; }
 .history-header { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #86868b; font-weight: 600; }
 .history-bubbles-wrapper { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 2px 20px; }
-.history-bubble { 
-  position: relative; padding: 14px; 
-  background: #fff; 
-  border: 1px solid rgba(0, 0, 0, 0.06); 
-  border-radius: 14px; 
-  cursor: pointer; 
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex; gap: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-}
+.history-bubble { position: relative; padding: 14px; background: #fff; border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 14px; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); display: flex; gap: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02); }
 .is-dark .history-bubble { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.08); }
 .history-bubble:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); border-color: #007aff; }
 .bubble-content { flex: 1; min-width: 0; }
@@ -600,10 +624,6 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .bubble-preview { font-size: 12px; color: #86868b; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all; }
 .bubble-actions { opacity: 0; transition: opacity 0.2s; position: absolute; top: -8px; right: -8px; }
 .history-bubble:hover .bubble-actions { opacity: 1; }
-
-.outline-box { padding: 12px; height: 100%; overflow-y: auto; font-size: 13px; }
-:deep(.vditor-outline__item) { display: block !important; padding: 6px 10px !important; border-radius: 6px !important; cursor: pointer !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-:deep(.vditor-outline__item:hover) { background: rgba(0, 122, 255, 0.1) !important; color: #007aff !important; }
 
 .drag-ghost { position: fixed; pointer-events: none; z-index: 9999; padding: 8px 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #007aff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); display: flex; align-items: center; gap: 8px; font-size: 13px; color: #007aff; }
 </style>
