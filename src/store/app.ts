@@ -10,6 +10,11 @@ export interface TabInfo {
   isDirty: boolean
 }
 
+export interface LibraryConfig {
+  name: string
+  path: string
+}
+
 export const useAppStore = defineStore('app', {
   state: () => ({
     activeSession: 'LIBRARY' as SessionMode,
@@ -19,16 +24,25 @@ export const useAppStore = defineStore('app', {
     codeTheme: 'github' as string,
     editorMode: 'wysiwyg' as 'wysiwyg' | 'ir' | 'sv',
     editorBgColor: '' as string,
-    libraryPath: '',
+    libraries: [] as LibraryConfig[],
+    activeLibraryPath: '',
     autoSaveInterval: 3,
     maxHistoryCount: 10,
     isZen: false,
   }),
+  getters: {
+    libraryPath: (state) => state.activeLibraryPath,
+    currentLibraryName: (state) => {
+      const lib = state.libraries.find(l => l.path === state.activeLibraryPath)
+      return lib ? lib.name : '未关联软件库'
+    }
+  },
   actions: {
     async loadConfig() {
       try {
         const config = await invoke<any>('get_config')
-        this.libraryPath = config.libraryPath || ''
+        this.libraries = config.libraries || []
+        this.activeLibraryPath = config.activeLibraryPath || ''
         this.theme = config.theme || 'system'
         this.codeTheme = config.codeTheme || 'github'
         this.editorMode = config.editorMode || 'wysiwyg'
@@ -38,7 +52,6 @@ export const useAppStore = defineStore('app', {
       } catch (e) { console.error('Failed to load config', e) }
     },
     async updateConfig(patch: any) {
-      // 仅合并 patch 中存在的非 undefined 字段
       for (const key in patch) {
         if (patch[key] !== undefined) {
           (this as any)[key] = patch[key]
@@ -46,7 +59,8 @@ export const useAppStore = defineStore('app', {
       }
       
       await invoke('save_config', { config: {
-        libraryPath: this.libraryPath,
+        libraries: this.libraries,
+        activeLibraryPath: this.activeLibraryPath,
         theme: this.theme,
         codeTheme: this.codeTheme,
         editorMode: this.editorMode,

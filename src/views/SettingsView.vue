@@ -11,16 +11,31 @@
       <n-form label-placement="top" size="medium">
         <n-grid :cols="1" :y-gap="24">
           <n-grid-item>
-            <div class="section-title">通用设置</div>
-            <n-form-item label="软件库根目录">
-              <n-input-group>
-                <n-input v-model:value="config.libraryPath" placeholder="请输入或选择存放笔记的文件夹" />
-                <n-button type="primary" secondary @click="chooseDir">选择文件夹</n-button>
-              </n-input-group>
-              <template #feedback>
-                所有导入的文件和新笔记都将物理存放在此目录下。
-              </template>
-            </n-form-item>
+            <div class="section-title">软件库管理</div>
+            <div class="library-manager-card">
+              <div v-for="(lib, index) in config.libraries" :key="index" class="library-item" :class="{ active: lib.path === config.activeLibraryPath }">
+                <div class="lib-info">
+                  <div class="lib-name">{{ lib.name }}</div>
+                  <div class="lib-path">{{ lib.path }}</div>
+                </div>
+                <div class="lib-actions">
+                  <n-button size="tiny" secondary type="primary" v-if="lib.path !== config.activeLibraryPath" @click="config.activeLibraryPath = lib.path">切换</n-button>
+                  <n-tag size="small" type="success" v-else>当前使用</n-tag>
+                  <n-button size="tiny" quaternary circle type="error" @click="removeLibrary(index)">
+                    <template #icon><n-icon :component="TrashIcon" /></template>
+                  </n-button>
+                </div>
+              </div>
+
+              <div class="add-library-form">
+                <n-input-group>
+                  <n-input v-model:value="newLib.name" placeholder="库名称" style="width: 30%" />
+                  <n-input v-model:value="newLib.path" placeholder="库路径" style="flex: 1" />
+                  <n-button quaternary @click="chooseNewLibDir">选择</n-button>
+                  <n-button type="primary" @click="addLibrary">添加库</n-button>
+                </n-input-group>
+              </div>
+            </div>
           </n-grid-item>
 
           <n-grid-item>
@@ -76,12 +91,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft as ArrowLeftIcon } from 'lucide-vue-next'
+import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
-import { useMessage } from 'naive-ui'
+import { useMessage, NTag, NInputGroup } from 'naive-ui'
 import { useAppStore } from '../store/app'
 
 const router = useRouter()
@@ -89,7 +104,8 @@ const message = useMessage()
 const store = useAppStore()
 
 const config = ref({
-  libraryPath: store.libraryPath,
+  libraries: [] as any[],
+  activeLibraryPath: store.activeLibraryPath,
   theme: store.theme,
   codeTheme: store.codeTheme,
   editorMode: store.editorMode,
@@ -98,10 +114,13 @@ const config = ref({
   maxHistoryCount: store.maxHistoryCount
 })
 
+const newLib = reactive({ name: '', path: '' })
+
 onMounted(async () => {
   await store.loadConfig()
   config.value = {
-    libraryPath: store.libraryPath,
+    libraries: [...store.libraries],
+    activeLibraryPath: store.activeLibraryPath,
     theme: store.theme,
     codeTheme: store.codeTheme,
     editorMode: store.editorMode,
@@ -111,10 +130,37 @@ onMounted(async () => {
   }
 })
 
-const chooseDir = async () => {
-  const selected = await open({ directory: true, multiple: false, title: '选择软件库根目录' })
+const chooseNewLibDir = async () => {
+  const selected = await open({ directory: true, multiple: false, title: '选择软件库文件夹' })
   if (selected && typeof selected === 'string') {
-    config.value.libraryPath = selected
+    newLib.path = selected
+    if (!newLib.name) {
+      const parts = selected.split(/[\\/]/).filter(Boolean)
+      newLib.name = parts[parts.length - 1] || '新建库'
+    }
+  }
+}
+
+const addLibrary = () => {
+  if (!newLib.name || !newLib.path) {
+    message.warning('请填写库名称和路径')
+    return
+  }
+  if (config.value.libraries.find(l => l.path === newLib.path)) {
+    message.warning('该路径已在列表中')
+    return
+  }
+  config.value.libraries.push({ ...newLib })
+  if (!config.value.activeLibraryPath) config.value.activeLibraryPath = newLib.path
+  newLib.name = ''
+  newLib.path = ''
+  message.success('已添加到待保存列表')
+}
+
+const removeLibrary = (index: number) => {
+  const removed = config.value.libraries.splice(index, 1)[0]
+  if (config.value.activeLibraryPath === removed.path) {
+    config.value.activeLibraryPath = config.value.libraries.length > 0 ? config.value.libraries[0].path : ''
   }
 }
 
@@ -216,7 +262,7 @@ const saveAll = async () => {
   opacity: 0.1;
 }
 
-.setting-card {
+.setting-card, .library-manager-card {
   background: var(--theme-card);
   padding: 24px;
   border-radius: 16px;
@@ -224,6 +270,43 @@ const saveAll = async () => {
   margin-bottom: 12px;
   transition: all 0.3s ease;
 }
+
+.library-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.is-dark .library-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.library-item.active {
+  border-color: var(--theme-primary);
+  background: rgba(var(--theme-primary-rgb), 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.lib-info { flex: 1; min-width: 0; }
+.lib-name { font-size: 15px; font-weight: 700; color: var(--theme-text); margin-bottom: 2px; }
+.lib-path { font-size: 12px; opacity: 0.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lib-actions { display: flex; align-items: center; gap: 12px; margin-left: 16px; }
+
+.add-library-form {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.is-dark .add-library-form { border-top-color: rgba(255, 255, 255, 0.1); }
 
 .is-dark .setting-card {
   border-color: rgba(255, 255, 255, 0.05);

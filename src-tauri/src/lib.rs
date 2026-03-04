@@ -24,10 +24,18 @@ pub struct FileEntry {
     pub is_dir: bool,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct LibraryConfig {
+    pub name: String,
+    pub path: String,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AppConfig {
-    pub library_path: String,
+    pub libraries: Vec<LibraryConfig>,
+    pub active_library_path: String,
     pub theme: String, 
     pub code_theme: String,
     pub editor_mode: String,
@@ -39,7 +47,8 @@ pub struct AppConfig {
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            library_path: "".into(),
+            libraries: vec![],
+            active_library_path: "".into(),
             theme: "system".into(),
             code_theme: "github".into(),
             editor_mode: "wysiwyg".into(),
@@ -67,8 +76,10 @@ fn get_config(app_handle: tauri::AppHandle) -> AppConfig {
 fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
     let mut path = app_handle.path().document_dir().unwrap_or_else(|_| PathBuf::from("C:\\"));
     path.push("MistyLibrary");
+    let default_path = path.to_string_lossy().into_owned();
     AppConfig {
-        library_path: path.to_string_lossy().into_owned(),
+        libraries: vec![LibraryConfig { name: "默认软件库".into(), path: default_path.clone() }],
+        active_library_path: default_path,
         theme: "system".into(),
         code_theme: "github".into(),
         editor_mode: "wysiwyg".into(),

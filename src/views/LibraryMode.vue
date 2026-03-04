@@ -47,8 +47,8 @@
             <template #icon><n-icon :component="SettingsIcon" /></template>
           </n-button>
           <div class="lib-meta">
-            <span class="meta-title">当前知识库</span>
-            <span class="meta-path" :title="store.libraryPath">{{ libraryName || '未关联' }}</span>
+            <span class="meta-title">当前软件库</span>
+            <span class="meta-path" :title="store.libraryPath">{{ store.currentLibraryName }}</span>
           </div>
         </div>
       </div>
