@@ -10,7 +10,7 @@
     <n-form label-placement="left" label-width="100" size="medium">
       <n-form-item label="库保存路径">
         <n-input-group>
-          <n-input v-model:value="config.library_path" placeholder="请选择存放笔记的文件夹" readonly />
+          <n-input v-model:value="config.activeLibraryPath" placeholder="请选择存放笔记的文件夹" readonly />
           <n-button type="primary" secondary @click="chooseDir">选择</n-button>
         </n-input-group>
       </n-form-item>
@@ -36,7 +36,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { open } from '@tauri-apps/plugin-dialog'
-import { invoke } from '@tauri-apps/api/core'
 import { useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
 
@@ -50,7 +49,7 @@ watch(() => props.show, (v) => show.value = v)
 watch(show, (v) => emit('update:show', v))
 
 const config = ref({
-  library_path: store.libraryPath,
+  activeLibraryPath: store.activeLibraryPath,
   theme: store.theme
 })
 
@@ -61,15 +60,16 @@ const chooseDir = async () => {
     title: '选择软件库根目录'
   })
   if (selected && typeof selected === 'string') {
-    config.value.library_path = selected
+    config.value.activeLibraryPath = selected
   }
 }
 
 const save = async () => {
   try {
-    await invoke('save_config', { config: config.value })
-    store.libraryPath = config.value.library_path
-    store.theme = config.value.theme as any
+    await store.updateConfig({ 
+      activeLibraryPath: config.value.activeLibraryPath,
+      theme: config.value.theme
+    })
     message.success('配置已保存')
     emit('saved')
     show.value = false

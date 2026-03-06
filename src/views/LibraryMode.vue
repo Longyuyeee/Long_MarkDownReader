@@ -1,54 +1,149 @@
 <template>
   <div class="library-mode" :class="{ 'is-dragging': !!activeResizer }" @mousemove="onMouseMove" @mouseup="onMouseUp">
-    <!-- 左侧侧边栏 -->
+    <!-- 统一左侧侧边栏 -->
     <div class="sidebar" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
       <div class="sidebar-inner">
-        <div class="sidebar-header">
-          <div class="search-area">
-            <n-input v-model:value="searchQuery" placeholder="搜索文档..." size="small" round clearable>
-              <template #prefix><n-icon :component="SearchIcon" /></template>
-            </n-input>
-          </div>
-          <div class="toolbar-area">
-            <n-button quaternary circle size="small" @click="handleToolbarAction('file')" title="新建笔记">
-              <template #icon><n-icon :component="PlusIcon" /></template>
-            </n-button>
-            <n-button quaternary circle size="small" @click="handleToolbarAction('folder')" title="新建文件夹">
-              <template #icon><n-icon :component="FolderPlusIcon" /></template>
-            </n-button>
-            <n-button quaternary circle size="small" @click="refreshLibrary" title="刷新列表">
-              <template #icon><n-icon :component="RefreshIcon" /></template>
-            </n-button>
-          </div>
+        <!-- 侧边栏顶部切换 -->
+        <div class="sidebar-tabs-header">
+          <n-tabs v-model:value="activeSidebarTab" type="segment" size="small" animated class="custom-sidebar-tabs">
+            <n-tab name="files">
+              <div class="tab-label-inner"><n-icon :component="FileIcon" /><span>文件</span></div>
+            </n-tab>
+            <n-tab name="outline">
+              <div class="tab-label-inner"><n-icon :component="ListIcon" /><span>目录</span></div>
+            </n-tab>
+            <n-tab name="history">
+              <div class="tab-label-inner"><n-icon :component="ClockIcon" /><span>历史</span></div>
+            </n-tab>
+          </n-tabs>
         </div>
 
-        <div class="tree-viewport" :class="{ 'drop-active': virtualDrag.dropTarget === store.libraryPath }">
-          <div v-if="!store.libraryPath" class="path-guide">
-            <n-empty description="库未就绪" size="small">
-              <template #extra>
-                <n-button size="tiny" type="primary" @click="openSettings">去配置路径</n-button>
-              </template>
-            </n-empty>
-          </div>
-          <n-tree 
-            v-else
-            :data="treeData" 
-            @update:selected-keys="handleNodeSelect" 
-            lazy
-            :on-load="handleLoadChildren"
-            :node-props="nodeProps"
-            v-model:selected-keys="selectedKeys"
-            v-model:expanded-keys="expandedKeys"
-          />
+        <div class="sidebar-tab-content">
+          <transition name="tab-fade" mode="out-in">
+            <!-- 文件树面板 -->
+            <div v-if="activeSidebarTab === 'files'" :key="'files'" class="tab-pane files-pane">
+              <div class="sidebar-header">
+                <div class="search-area">
+                  <n-input v-model:value="searchQuery" placeholder="搜索文档..." size="small" round clearable>
+                    <template #prefix><n-icon :component="SearchIcon" /></template>
+                  </n-input>
+                </div>
+                <div class="toolbar-area">
+                  <n-button quaternary circle size="small" @click="handleToolbarAction('file')" title="新建笔记">
+                    <template #icon><n-icon :component="PlusIcon" /></template>
+                  </n-button>
+                  <n-button quaternary circle size="small" @click="handleToolbarAction('folder')" title="新建文件夹">
+                    <template #icon><n-icon :component="FolderPlusIcon" /></template>
+                  </n-button>
+                  <n-button quaternary circle size="small" @click="refreshLibrary" title="刷新列表">
+                    <template #icon><n-icon :component="RefreshIcon" /></template>
+                  </n-button>
+                </div>
+              </div>
+
+              <div class="tree-viewport" :class="{ 'drop-active': virtualDrag.dropTarget === store.libraryPath }">
+                <div v-if="!store.libraryPath" class="path-guide">
+                  <n-empty description="库未就绪" size="small">
+                    <template #extra>
+                      <n-button size="tiny" type="primary" @click="openSettings">去配置路径</n-button>
+                    </template>
+                  </n-empty>
+                </div>
+                <n-tree 
+                  v-else
+                  :data="treeData" 
+                  @update:selected-keys="handleNodeSelect" 
+                  lazy
+                  :on-load="handleLoadChildren"
+                  :node-props="nodeProps"
+                  v-model:selected-keys="selectedKeys"
+                  v-model:expanded-keys="expandedKeys"
+                />
+              </div>
+            </div>
+
+            <!-- 大纲（目录）面板 -->
+            <div v-else-if="activeSidebarTab === 'outline'" :key="'outline'" class="tab-pane outline-pane">
+              <div class="manual-outline-box">
+                <div v-if="!activeTabId" class="empty-state-hint">
+                  <n-empty description="未打开文件" size="small" />
+                </div>
+                <div v-else-if="outlineTreeData.length === 0" class="empty-state-hint">
+                  <n-empty description="暂无大纲" size="small" />
+                </div>
+                <div v-else class="outline-tree-wrapper">
+                  <n-tree
+                    block-line
+                    expand-on-click
+                    :data="outlineTreeData"
+                    :on-update:selected-keys="handleOutlineSelect"
+                    class="compact-outline-tree"
+                    default-expand-all
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- 历史面板 - 视觉增强版 -->
+            <div v-else-if="activeSidebarTab === 'history'" :key="'history'" class="tab-pane history-pane">
+              <div class="history-box">
+                <div class="history-header">
+                  <div class="history-title-row">
+                    <n-icon :component="ClockIcon" class="title-icon" />
+                    <span>影子副本 ({{ historyList.length }})</span>
+                  </div>
+                  <n-button quaternary circle size="tiny" @click="clearAllHistory" title="清空全部缓存" class="clear-all-btn">
+                    <template #icon><n-icon :component="TrashIcon" /></template>
+                  </n-button>
+                </div>
+                
+                <div v-if="!activeTabId" class="empty-state-hint">
+                  <n-empty description="未打开文件" size="small" />
+                </div>
+                <div v-else-if="historyList.length === 0" class="empty-state-hint">
+                  <n-empty description="暂无历史快照" size="small" />
+                </div>
+                
+                <div v-else class="history-bubbles-wrapper">
+                  <div v-for="h in historyList" :key="h.timestamp" class="history-bubble" @click="restoreHistory(h.content)">
+                    <div class="bubble-accent-line"></div>
+                    <div class="bubble-content">
+                      <div class="bubble-top">
+                        <div class="time-box">
+                          <span class="bubble-time">{{ formatTime(h.timestamp) }}</span>
+                        </div>
+                        <div class="bubble-meta">{{ h.content.length }} 字</div>
+                      </div>
+                      <div class="bubble-preview">{{ h.content.slice(0, 45).replace(/[\n#*`]/g, ' ') }}...</div>
+                    </div>
+                    <div class="bubble-actions">
+                      <n-button quaternary circle size="tiny" class="delete-trigger" @click.stop="deleteHistory(h.timestamp)">
+                        <template #icon><n-icon :component="CloseIcon" /></template>
+                      </n-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </transition>
         </div>
 
-        <div class="sidebar-footer" @click="openSettings">
-          <n-button quaternary circle size="large" class="settings-trigger" title="设置">
-            <template #icon><n-icon :component="SettingsIcon" /></template>
-          </n-button>
-          <div class="lib-meta">
-            <span class="meta-title">当前文件库</span>
-            <span class="meta-path" :title="store.libraryPath">{{ store.currentLibraryName }}</span>
+        <!-- 侧边栏页脚 -->
+        <div class="sidebar-footer-container">
+          <div class="sidebar-footer" @click="openSettings">
+            <div class="settings-icon-box">
+              <n-icon :component="SettingsIcon" class="rotating-settings" />
+            </div>
+            <div class="lib-info-box">
+              <div class="lib-name-row">
+                <span class="lib-label">Active Library</span>
+                <div class="lib-status-dot"></div>
+              </div>
+              <span class="meta-path" :title="store.libraryPath">{{ store.currentLibraryName }}</span>
+            </div>
+            <div class="footer-chevron">
+              <n-icon :component="ChevronRightIcon" />
+            </div>
           </div>
         </div>
       </div>
@@ -88,7 +183,6 @@
           </transition-group>
         </div>
         <div class="tab-actions">
-          <!-- 隐藏的调色盘触发器 -->
           <div class="hidden-picker-trigger">
             <n-color-picker 
               v-model:value="store.editorBgColor" 
@@ -112,7 +206,6 @@
         <div v-show="tabs.length > 0" id="vditor-lib" class="vditor-instance"></div>
         
         <div v-if="tabs.length === 0" class="hero-viewport">
-          <!-- 背景装饰光斑 -->
           <div class="ambient-glow">
             <div class="blob blob-1"></div>
             <div class="blob blob-2"></div>
@@ -133,75 +226,6 @@
       </div>
     </div>
 
-    <!-- 右侧分隔条 -->
-    <div class="resizer-area" v-if="!store.isZen && tabs.length > 0">
-      <div class="collapse-btn right" @click="isInspectorCollapsed = !isInspectorCollapsed">
-        <n-icon :component="isInspectorCollapsed ? ChevronLeftIcon : ChevronRightIcon" />
-      </div>
-      <div class="drag-handle" @mousedown="startResizing('inspector')"></div>
-    </div>
-
-    <!-- 右侧面板 (大纲 & 历史) -->
-    <div 
-      class="inspector-sidebar" 
-      :style="{ 
-        width: (!store.isZen && tabs.length > 0 && !isInspectorCollapsed) ? inspectorWidth + 'px' : '0px', 
-        opacity: (!store.isZen && tabs.length > 0 && !isInspectorCollapsed) ? 1 : 0
-      }"
-    >
-      <n-tabs type="segment" animated justify-content="space-evenly" size="small" class="inspector-tabs" display-directive="show">
-        <n-tab-pane name="outline" tab="大纲" class="inspector-pane">
-          <div class="manual-outline-box">
-            <div v-if="outlineItems.length === 0" class="empty-outline">
-              <n-empty description="暂无大纲" size="small" />
-            </div>
-            <div v-else class="outline-list">
-              <div 
-                v-for="item in outlineItems" 
-                :key="item.id" 
-                class="outline-item"
-                :class="['level-' + item.level]"
-                @click="scrollToHeading(item.id)"
-              >
-                {{ item.text }}
-              </div>
-            </div>
-          </div>
-        </n-tab-pane>
-        <n-tab-pane name="history" tab="历史" class="inspector-pane">
-          <div class="history-box">
-            <div class="history-header">
-              <span>影子副本 ({{ historyList.length }})</span>
-              <n-button quaternary circle size="tiny" @click="clearAllHistory" title="清空全部缓存">
-                <template #icon><n-icon :component="TrashIcon" /></template>
-              </n-button>
-            </div>
-            
-            <div v-if="historyList.length === 0" class="empty-history">
-              <n-empty description="暂无历史快照" size="small" />
-            </div>
-            
-            <div v-else class="history-bubbles-wrapper">
-              <div v-for="h in historyList" :key="h.timestamp" class="history-bubble" @click="restoreHistory(h.content)">
-                <div class="bubble-content">
-                  <div class="bubble-top">
-                    <span class="bubble-time">{{ formatTime(h.timestamp) }}</span>
-                    <span class="bubble-meta">{{ h.content.length }} 字</span>
-                  </div>
-                  <div class="bubble-preview">{{ h.content.slice(0, 80).replace(/[\n#*`]/g, ' ') }}...</div>
-                </div>
-                <div class="bubble-actions">
-                  <n-button quaternary circle size="tiny" class="delete-trigger" @click.stop="deleteHistory(h.timestamp)">
-                    <template #icon><n-icon :component="CloseIcon" /></template>
-                  </n-button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </n-tab-pane>
-      </n-tabs>
-    </div>
-
     <HoverPreview :show="preview.show" :title="preview.title" :path="preview.path" :x="preview.x" :y="preview.y" />
     
     <n-dropdown
@@ -217,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch, computed, reactive, h, onUnmounted, nextTick } from 'vue'
+import { onMounted, ref, watch, reactive, h, onUnmounted, nextTick, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
@@ -225,14 +249,14 @@ import {
   RefreshCw as RefreshIcon, FileText as FileIcon, Folder as FolderIcon,
   Plus as PlusIcon, FolderPlus as FolderPlusIcon, Trash as TrashIcon,
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
-  Save as SaveIcon, BookOpen as BookOpenIcon
+  Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore } from '../store/app'
 import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 
@@ -244,43 +268,15 @@ const store = useAppStore()
 const { tabs, activeTabId } = storeToRefs(store)
 const router = useRouter()
 
-const updateDropTarget = (x: number, y: number, isExternal: boolean) => {
-  const el = document.elementFromPoint(x, y)
-  const targetEl = el?.closest('[data-key]')
-  if (targetEl) {
-    const key = targetEl.getAttribute('data-key'); const isDir = targetEl.getAttribute('data-is-dir') === 'true'
-    if (key && isDir && (isExternal || key !== virtualDrag.dragNode?.key)) {
-      virtualDrag.dropTarget = key
-    } else { virtualDrag.dropTarget = null }
-  } else {
-    const isOverViewport = el?.closest('.tree-viewport')
-    if (isOverViewport) {
-      if (!isExternal) {
-        const sourcePath = virtualDrag.dragNode?.key as string
-        const lastSlash = Math.max(sourcePath.lastIndexOf('\\'), sourcePath.lastIndexOf('/'))
-        const parentPath = lastSlash !== -1 ? sourcePath.substring(0, lastSlash) : ''
-        if (parentPath === store.libraryPath) virtualDrag.dropTarget = null; else virtualDrag.dropTarget = store.libraryPath
-      } else { virtualDrag.dropTarget = store.libraryPath }
-    } else { virtualDrag.dropTarget = null }
-  }
-}
-
-// 状态
+const activeSidebarTab = ref<'files' | 'outline' | 'history'>('files')
 const editorLoading = ref(false)
 const isSidebarCollapsed = ref(false)
-const isInspectorCollapsed = ref(false)
 const sidebarWidth = ref(260)
-const inspectorWidth = ref(300)
-const activeResizer = ref<'sidebar' | 'inspector' | null>(null)
+const activeResizer = ref<'sidebar' | null>(null)
 const activeTabRef = ref<HTMLElement | null>(null)
 
-// 标签页自动滚动逻辑
 watch(activeTabId, () => {
-  nextTick(() => {
-    if (activeTabRef.value) {
-      activeTabRef.value.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
-    }
-  })
+  nextTick(() => { if (activeTabRef.value) activeTabRef.value.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }) })
 })
 
 const treeData = ref<TreeOption[]>([])
@@ -291,16 +287,30 @@ let vditor: any = null
 let isVditorReady = false
 let lastLoadedPath = '' 
 let outlineObserver: MutationObserver | null = null
-
 const outlineItems = ref<OutlineItem[]>([])
 
+const outlineTreeData = computed(() => {
+  const result: TreeOption[] = []
+  const stack: { level: number; children: TreeOption[] }[] = [{ level: 0, children: result }]
+  outlineItems.value.forEach(item => {
+    const node: TreeOption = { label: item.text, key: item.id, level: item.level, children: [] }
+    while (stack.length > 1 && stack[stack.length - 1].level >= item.level) stack.pop()
+    stack[stack.length - 1].children.push(node)
+    stack.push({ level: item.level, children: node.children as TreeOption[] })
+  })
+  const clean = (nodes: TreeOption[]) => {
+    nodes.forEach(n => { if (n.children && n.children.length === 0) delete n.children; else if (n.children) clean(n.children) })
+  }
+  clean(result); return result
+})
+
+const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
 const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0 })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, options: [] as any[] })
 const renameState = reactive({ show: false, oldPath: '', newName: '' })
 const historyList = ref<{timestamp: number, content: string}[]>([])
 
 const openSettings = () => router.push('/settings')
-
 const getHeroIcon = (iconName: string) => {
   switch (iconName) {
     case 'BookOpen': return BookOpenIcon
@@ -319,28 +329,16 @@ const fetchHistory = async () => {
   } catch (e) { console.error('Failed to fetch history', e) }
 }
 
-const restoreHistory = (content: string) => {
-  if (!vditor || !isVditorReady) return
-  vditor.setValue(content)
-  message.success('已恢复到该历史版本')
-}
-
+const restoreHistory = (content: string) => { if (!vditor || !isVditorReady) return; vditor.setValue(content); message.success('已恢复到该历史版本') }
 const deleteHistory = async (timestamp: number) => {
   if (!activeTabId.value) return
-  try {
-    await invoke('delete_history_version', { path: activeTabId.value, timestamp })
-    await fetchHistory()
-    message.success('已移除该备份')
-  } catch (e) { message.error('删除失败') }
+  try { await invoke('delete_history_version', { path: activeTabId.value, timestamp }); await fetchHistory(); message.success('已移除该备份') }
+  catch (e) { message.error('删除失败') }
 }
-
 const clearAllHistory = async () => {
   if (!confirm('确定要清除所有文件的历史备份吗？')) return
-  try {
-    await invoke('clear_all_history')
-    historyList.value = []
-    message.success('历史缓存已全部清空')
-  } catch (e) { message.error('清空失败') }
+  try { await invoke('clear_all_history'); historyList.value = []; message.success('历史缓存已全部清空') }
+  catch (e) { message.error('清空失败') }
 }
 
 const formatTime = (ts: number) => {
@@ -357,38 +355,22 @@ const startShadowSaveTimer = () => {
       const content = vditor.getValue()
       if (content && content.trim().length > 0) {
         await invoke('save_history_version', { path: activeTabId.value, content, maxCount: store.maxHistoryCount })
-        fetchHistory()
+        if (activeSidebarTab.value === 'history') fetchHistory()
       }
     }
   }, interval)
 }
 
-watch(() => store.autoSaveInterval, () => {
-  startShadowSaveTimer()
-  message.info(`保存间隔已重置为 ${store.autoSaveInterval} 分钟`)
-})
-
-const libraryName = computed(() => {
-  if (!store.libraryPath) return ''
-  const normalizedPath = store.libraryPath.replace(/\\/g, '/')
-  const parts = normalizedPath.split('/').filter(Boolean)
-  return parts[parts.length - 1] || '根目录'
-})
-
-const startResizing = (type: 'sidebar' | 'inspector') => { activeResizer.value = type }
-
+const startResizing = (type: 'sidebar') => { activeResizer.value = type }
 const scrollToHeading = (id: string) => {
   if (!vditor) return
   const targetEl = vditor.vditor.wysiwyg.element.querySelector(`[data-id="${id}"]`) || vditor.vditor.wysiwyg.element.querySelector(`#${id}`)
-  if (targetEl) {
-    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 const syncOutlineManual = () => {
   if (!vditor || !isVditorReady) return
-  const contentEl = vditor.vditor.wysiwyg?.element
-  if (!contentEl) return
+  const contentEl = vditor.vditor.wysiwyg?.element; if (!contentEl) return
   const headings = contentEl.querySelectorAll('h1, h2, h3, h4, h5, h6')
   const newItems: OutlineItem[] = []
   headings.forEach((h: HTMLElement, index: number) => {
@@ -401,14 +383,12 @@ const syncOutlineManual = () => {
 
 const initOutlineObserver = () => {
   if (outlineObserver) outlineObserver.disconnect()
-  const contentEl = vditor.vditor.wysiwyg?.element
-  if (!contentEl) return
+  const contentEl = vditor.vditor.wysiwyg?.element; if (!contentEl) return
   outlineObserver = new MutationObserver(() => syncOutlineManual())
   outlineObserver.observe(contentEl, { childList: true, subtree: true, characterData: true })
 }
 
 const virtualDrag = reactive({ active: false, x: 0, y: 0, startX: 0, startY: 0, dragNode: null as any, dropTarget: null as any, ghostText: '', timer: null as any })
-
 const onMouseUp = async () => {
   activeResizer.value = null
   if (virtualDrag.timer) { clearTimeout(virtualDrag.timer); virtualDrag.timer = null }
@@ -429,95 +409,94 @@ const onMouseUp = async () => {
 }
 
 const onMouseMove = (e: MouseEvent) => {
-  if (activeResizer.value === 'sidebar') { sidebarWidth.value = Math.max(180, Math.min(e.clientX, 500)) }
-  else if (activeResizer.value === 'inspector') { inspectorWidth.value = Math.max(240, Math.min(window.innerWidth - e.clientX, 500)) }
+  if (activeResizer.value === 'sidebar') { sidebarWidth.value = Math.max(220, Math.min(e.clientX, 600)) }
   virtualDrag.x = e.clientX; virtualDrag.y = e.clientY
-  if (virtualDrag.active) { updateDropTarget(e.clientX, e.clientY, false) }
+  if (virtualDrag.active) updateDropTarget(e.clientX, e.clientY, false)
+}
+
+const updateDropTarget = (x: number, y: number, isExternal: boolean) => {
+  const el = document.elementFromPoint(x, y)
+  const targetEl = el?.closest('[data-key]')
+  if (targetEl) {
+    const key = targetEl.getAttribute('data-key'); const isDir = targetEl.getAttribute('data-is-dir') === 'true'
+    if (key && isDir && (isExternal || key !== virtualDrag.dragNode?.key)) virtualDrag.dropTarget = key; else virtualDrag.dropTarget = null
+  } else {
+    const isOverViewport = el?.closest('.tree-viewport')
+    if (isOverViewport) {
+      if (!isExternal) {
+        const sourcePath = virtualDrag.dragNode?.key as string
+        const lastSlash = Math.max(sourcePath.lastIndexOf('\\'), sourcePath.lastIndexOf('/'))
+        const parentPath = lastSlash !== -1 ? sourcePath.substring(0, lastSlash) : ''
+        if (parentPath === store.libraryPath) virtualDrag.dropTarget = null; else virtualDrag.dropTarget = store.libraryPath
+      } else virtualDrag.dropTarget = store.libraryPath
+    } else virtualDrag.dropTarget = null
+  }
 }
 
 const loadDirectory = async (path: string): Promise<TreeOption[]> => {
   if (!path) return []
   try {
     const entries = await invoke<FileEntry[]>('scan_directory', { path })
-    return entries.map(entry => ({ label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''), key: entry.path, isLeaf: !entry.is_dir, children: entry.is_dir ? undefined : undefined, prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' }) }))
+    return entries.map(entry => ({ label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''), key: entry.path, isLeaf: !entry.is_dir, prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' }) }))
   } catch (err) { return [] }
 }
 
 const refreshLibrary = async () => { if (store.libraryPath) treeData.value = await loadDirectory(store.libraryPath) }
-
 const refreshNode = async (path: string) => {
   if (!path || !store.libraryPath) return
   const newEntries = await loadDirectory(path)
   const syncNodes = (oldNodes: TreeOption[], newNodes: TreeOption[]) => {
     const oldMap = new Map(oldNodes.map(n => [n.key, n]))
-    return newNodes.map(newNode => { const matchedOld = oldMap.get(newNode.key as string); if (matchedOld && matchedOld.children !== undefined) return { ...newNode, children: matchedOld.children }; return newNode })
+    return newNodes.map(newNode => { const matchedOld = oldMap.get(newNode.key as string); return matchedOld && matchedOld.children !== undefined ? { ...newNode, children: matchedOld.children } : newNode })
   }
-  if (path === store.libraryPath) { treeData.value = syncNodes(treeData.value, newEntries) } else {
-    const patch = (nodes: TreeOption[]): boolean => { for (let i = 0; i < nodes.length; i++) { if (nodes[i].key === path) { nodes[i].children = syncNodes(nodes[i].children || [], newEntries); return true } if (nodes[i].children && patch(nodes[i].children)) return true } return false }
+  if (path === store.libraryPath) treeData.value = syncNodes(treeData.value, newEntries); else {
+    const patch = (nodes: TreeOption[]): boolean => { 
+      for (let i = 0; i < nodes.length; i++) { 
+        if (nodes[i].key === path) { nodes[i].children = syncNodes(nodes[i].children || [], newEntries); return true } 
+        const childNodes = nodes[i].children; if (childNodes && patch(childNodes)) return true 
+      } 
+      return false 
+    }
     patch(treeData.value); treeData.value = [...treeData.value]
   }
 }
 
 const loadFileToEditor = async (path: string) => {
-  if (!vditor || !path) return
-  lastLoadedPath = '' 
+  if (!vditor || !path) return; lastLoadedPath = '' 
   try {
     const res = await invoke<{content: string}>('read_markdown_file', { path })
-    vditor.setValue(res.content)
-    fetchHistory()
+    vditor.setValue(res.content); fetchHistory()
     nextTick(() => { setTimeout(() => { lastLoadedPath = path; syncOutlineManual(); initOutlineObserver() }, 200) })
   } catch (err) { message.error("读取失败") }
 }
 
 const handleNodeSelect = (keys: string[]) => {
   const path = keys[0]; if (!path) return
-  selectedKeys.value = keys
-  if (path.endsWith('.md')) { 
-    const title = path.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'; 
+  selectedKeys.value = keys; if (path.endsWith('.md')) { 
+    const title = path.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'
     store.addTab({ id: path, title, path, isDirty: false }) 
   }
 }
 
 const handleLoadChildren = async (option: TreeOption) => { option.children = await loadDirectory(option.key as string) }
-
-const codeThemeOptions = [
-  { label: 'GitHub', value: 'github' },
-  { label: 'Monokai', value: 'monokai' },
-  { label: 'Dracula', value: 'dracula' },
-  { label: 'VS Code', value: 'vscode' },
-  { label: 'Native', value: 'native' },
-  { label: 'One Dark', value: 'one-dark' }
-]
-
 const handleCodeThemeChange = async (val: string) => {
-  store.codeTheme = val
-  await store.updateConfig({ codeTheme: val })
-  if (vditor && isVditorReady) {
-    const isDark = store.theme === 'dark'
-    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', val)
-  }
+  store.codeTheme = val; await store.updateConfig({ codeTheme: val })
+  if (vditor && isVditorReady) { const isDark = store.theme === 'dark'; vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', val) }
 }
-
-const handleEditorBgChange = async (val: string) => {
-  store.editorBgColor = val
-  await store.updateConfig({ editorBgColor: val })
-}
+const handleEditorBgChange = async (val: string) => { store.editorBgColor = val; await store.updateConfig({ editorBgColor: val }) }
 
 const deleteAction = async (path: string) => {
   if (!path) return; const displayTitle = path.split(/[\\/]/).pop()?.replace(/\.md$/, '')
   const parentPath = path.substring(0, Math.max(path.lastIndexOf('\\'), path.lastIndexOf('/')))
   if (confirm(`确认要物理删除 ${displayTitle}吗？`)) { 
-    try { 
-      await invoke('delete_item', { path }); 
-      if (activeTabId.value === path) store.removeTab(path); 
-      await refreshNode(parentPath || store.libraryPath); 
-      message.success('已删除') 
-    } catch (e) { message.error('删除失败') } 
+    try { await invoke('delete_item', { path }); if (activeTabId.value === path) store.removeTab(path); await refreshNode(parentPath || store.libraryPath); message.success('已删除') }
+    catch (e) { message.error('删除失败') } 
   }
 }
 
 const nodeProps = ({ option }: { option: TreeOption }) => ({
-  'data-key': option.key, 'data-is-dir': !option.isLeaf ? 'true' : 'false', class: virtualDrag.dropTarget === option.key ? 'drop-active' : '',
+  'data-key': option.key, 'data-is-dir': !option.isLeaf ? 'true' : 'false', 
+  class: virtualDrag.dropTarget === option.key ? 'drop-active' : '',
   onMousedown: (e: MouseEvent) => { if (e.button !== 0) return; virtualDrag.startX = e.clientX; virtualDrag.startY = e.clientY; if (virtualDrag.timer) clearTimeout(virtualDrag.timer); virtualDrag.timer = setTimeout(() => { virtualDrag.active = true; virtualDrag.dragNode = option; virtualDrag.ghostText = option.label as string; virtualDrag.timer = null }, 350) },
   onClick: () => { if (virtualDrag.active) return; handleNodeSelect([option.key as string]); if (!option.isLeaf) { const key = option.key as string; const index = expandedKeys.value.indexOf(key); if (index > -1) expandedKeys.value.splice(index, 1); else expandedKeys.value.push(key); expandedKeys.value = [...expandedKeys.value] } },
   onContextmenu: (e: MouseEvent) => { if (virtualDrag.active) return; e.preventDefault(); contextMenu.show = false; setTimeout(() => { contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf; const items = [ { label: '重命名 (F2)', key: 'rename', icon: () => h(NIcon, null, { default: () => h(EditIcon) }) }, { label: '物理删除 (Del)', key: 'delete', icon: () => h(NIcon, { color: '#f5222d' }, { default: () => h(TrashIcon) }) } ]; if (contextMenu.isDir) { items.unshift({ label: '新建子笔记', key: 'add-file', icon: () => h(NIcon, null, { default: () => h(PlusIcon) }) }, { label: '新建子文件夹', key: 'add-folder', icon: () => h(NIcon, null, { default: () => h(FolderPlusIcon) }) }) } contextMenu.options = items; contextMenu.show = true }, 50) }
@@ -525,8 +504,8 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
 
 const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
-  if (key === 'rename') { renameState.oldPath = path; const parts = path.split(/[\\/]/).filter(Boolean); let name = parts[parts.length - 1] || ''; if (!contextMenu.isDir) { const lastDot = name.lastIndexOf('.'); if (lastDot > 0) name = name.substring(0, lastDot) } renameState.newName = name; renameState.show = true }
-  else if (key === 'delete') { await deleteAction(path) }
+  if (key === 'rename') { renameState.oldPath = path; let name = path.split(/[\\/]/).pop() || ''; if (!contextMenu.isDir) name = name.substring(0, name.lastIndexOf('.')); renameState.newName = name; renameState.show = true }
+  else if (key === 'delete') await deleteAction(path)
   else if (key === 'add-file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path); handleNodeSelect([p]) }
   else if (key === 'add-folder') { await invoke('create_new_folder', { parentPath: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path) }
 }
@@ -542,14 +521,10 @@ const applyRename = async () => {
 }
 
 const closeTab = (id: string) => store.removeTab(id)
-
 let autoSaveTimer: any = null
 const triggerAutoSave = (content: string) => {
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
-  autoSaveTimer = setTimeout(async () => {
-    const cur = tabs.value.find(t => t.id === activeTabId.value)
-    if (cur) { try { await invoke('write_markdown_file', { path: cur.path, content }) } catch (e) {} }
-  }, 2000)
+  autoSaveTimer = setTimeout(async () => { const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) try { await invoke('write_markdown_file', { path: cur.path, content }) } catch (e) {} }, 2000)
 }
 
 const saveCurrentFile = async () => {
@@ -557,449 +532,292 @@ const saveCurrentFile = async () => {
   if (t) { try { const content = vditor.getValue(); await invoke('write_markdown_file', { path: t.path, content }); message.success('已保存'); if (autoSaveTimer) clearTimeout(autoSaveTimer) } catch (e) { message.error('保存失败') } }
 }
 
-// 核心：处理 Vditor 模式同步与点击捕获
-const syncVditorMode = () => {
-  if (!vditor) return
-  const currentMode = vditor.getCurrentMode()
-  // 增加对分栏预览状态的判定
-  let finalMode = currentMode
-  if (vditor.vditor.options.preview.mode === 'both') {
-    // 如果处于分栏模式，可以根据需要特殊处理，但 Vditor 官方 getCurrentMode 足够覆盖
-  }
-  
-  if (currentMode && currentMode !== store.editorMode) {
-    store.updateConfig({ editorMode: currentMode as any })
-  }
-}
-
-const handleEditorClick = (e: MouseEvent) => {
-  const isToolbarBtn = (e.target as HTMLElement).closest('.vditor-toolbar__item')
-  if (isToolbarBtn) {
-    // 延迟更久一点，确保 Vditor 内部状态机切换完成
-    setTimeout(() => {
-      syncVditorMode()
-      // 如果点击的是代码主题切换
-      const themeBtn = (e.target as HTMLElement).closest('[data-type="code-theme"]')
-      if (themeBtn) {
-        // 主题已在 handleCodeThemeChange 中保存，此处仅为双保险
-      }
-    }, 300)
-  }
-}
+const syncVditorMode = () => { if (vditor) { const currentMode = vditor.getCurrentMode(); if (currentMode && currentMode !== store.editorMode) store.updateConfig({ editorMode: currentMode as any }) } }
+const handleEditorClick = (e: MouseEvent) => { if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(() => syncVditorMode(), 300) }
 
 const initVditor = () => {
-  const container = document.getElementById('vditor-lib'); if (!container) return
-  container.addEventListener('click', handleEditorClick)
-  
-  editorLoading.value = true
+  const container = document.getElementById('vditor-lib'); if (!container) return; container.addEventListener('click', handleEditorClick); editorLoading.value = true
   try {
     vditor = new Vditor('vditor-lib', {
-      cdn: '/vditor', lang: 'zh_CN', height: '100%', 
-      mode: store.editorMode || 'wysiwyg', 
-      cache: { enable: false }, theme: store.theme === 'dark' ? 'dark' : 'classic',
-      preview: { 
-        theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, 
-        hljs: { enable: true, style: store.codeTheme || 'github' }, 
-        anchor: 1 
-      },
-      // ... 
-      // ... (rest of config)
+      cdn: '/vditor', lang: 'zh_CN', height: '100%', mode: store.editorMode || 'wysiwyg', cache: { enable: false }, theme: store.theme === 'dark' ? 'dark' : 'classic',
+      preview: { theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, hljs: { enable: true, style: store.codeTheme || 'github' } },
       toolbar: [
-        'undo', 'redo', '|', 
-        'emoji', 'headings', 'bold', 'italic', 'strike', '|',
-        'line', 'quote', 'list', 'ordered-list', 'check', '|',
+        'undo', 'redo', '|', 'emoji', 'headings', 'bold', 'italic', 'strike', '|', 'line', 'quote', 'list', 'ordered-list', 'check', '|',
         'code', 'inline-code', 
-        {
-          name: 'code-theme',
-          tip: '代码高亮风格',
-          icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>',
-          click: () => {
-            const themes = codeThemeOptions.map(o => o.value)
-            const currentIdx = themes.indexOf(store.codeTheme)
-            const nextTheme = themes[(currentIdx + 1) % themes.length]
-            handleCodeThemeChange(nextTheme)
-            message.info(`代码风格: ${nextTheme.toUpperCase()}`)
-          }
-        },
-        {
-          name: 'editor-bg',
-          tip: '修改文章背景色',
-          icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>',
-          click: () => {
-            const trigger = document.querySelector('.hidden-picker-trigger .n-color-picker-trigger') as HTMLElement
-            trigger?.click()
-          }
-        },
-        '|',
-        'upload', 'link', 'table', '|',
-        'both', 'preview', 'edit-mode'
+        { name: 'code-theme', tip: '代码高亮风格', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>', click: () => {
+          const themes = ['github', 'monokai', 'dracula', 'vscode', 'native', 'one-dark']
+          const nextTheme = themes[(themes.indexOf(store.codeTheme) + 1) % themes.length]
+          handleCodeThemeChange(nextTheme); message.info(`代码风格: ${nextTheme.toUpperCase()}`)
+        }},
+        { name: 'editor-bg', tip: '修改文章背景色', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>', click: () => { (document.querySelector('.hidden-picker-trigger .n-color-picker-trigger') as HTMLElement)?.click() }},
+        '|', 'upload', 'link', 'table', '|', 'both', 'preview', 'edit-mode'
       ],
-      toolbarConfig: { hide: false },
-      customWysiwygToolbar: () => {}, 
-      input: (val) => {
-        const cur = tabs.value.find(t => t.id === activeTabId.value)
-        if (cur) { triggerAutoSave(val); }
-        // 实时同步模式
-        const currentMode = vditor.getCurrentMode()
-        if (currentMode && currentMode !== store.editorMode) {
-          store.updateConfig({ editorMode: currentMode as any })
-        }
-      },
-      after: () => {
-        isVditorReady = true; editorLoading.value = false
-        // 确保初始化完成后，如果模式不对，进行一次同步
-        const actualMode = vditor.getCurrentMode()
-        if (actualMode && actualMode !== store.editorMode) {
-          store.updateConfig({ editorMode: actualMode as any })
-        }
-        if (activeTabId.value) { const t = tabs.value.find(item => item.id === activeTabId.value); if (t) loadFileToEditor(t.path) }
-      }
+      input: (val) => { const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) triggerAutoSave(val); syncVditorMode() },
+      after: () => { isVditorReady = true; editorLoading.value = false; syncVditorMode(); if (activeTabId.value) { const t = tabs.value.find(item => item.id === activeTabId.value); if (t) loadFileToEditor(t.path) } }
     })
   } catch (e) { editorLoading.value = false }
 }
 
-// 监听代码主题变化并实时更新编辑器
-watch(() => store.codeTheme, (newTheme) => {
-  if (vditor && isVditorReady) {
-    const isDark = store.theme === 'dark'
-    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', newTheme)
-  }
-}, { immediate: true })
-
 const handleTabsWheel = (e: WheelEvent) => { if (tabsScrollRef.value) tabsScrollRef.value.scrollLeft += e.deltaY }
 const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.key === 'F2' && selectedKeys.value.length > 0) { const p = selectedKeys.value[0]; renameState.oldPath = p; const parts = p.split(/[\\/]/).filter(Boolean); let name = parts[parts.length - 1] || ''; if (p.endsWith('.md')) { const lastDot = name.lastIndexOf('.'); if (lastDot > 0) name = name.substring(0, lastDot) } renameState.newName = name; renameState.show = true }
+  if (e.key === 'F2' && selectedKeys.value.length > 0) { const p = selectedKeys.value[0]; renameState.oldPath = p; let name = p.split(/[\\/]/).pop() || ''; if (p.endsWith('.md')) name = name.substring(0, name.lastIndexOf('.')); renameState.newName = name; renameState.show = true }
   if (e.key === 'Delete' && selectedKeys.value.length > 0) deleteAction(selectedKeys.value[0])
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); e.stopPropagation(); saveCurrentFile() }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
 }
 
 const tabsScrollRef = ref<HTMLElement | null>(null)
-let searchDebounce: any = null
-let unlistenRefresh: any = null
+let searchDebounce: any = null, unlistenRefresh: any = null
 
 onMounted(async () => { 
-  await store.loadConfig()
-  window.addEventListener('keydown', handleKeyDown); 
-  if (store.libraryPath) await refreshLibrary(); 
-  
-  // 核心：监听来自快速笔记的全局刷新信号
-  unlistenRefresh = await listen('refresh-library', () => {
-    refreshLibrary()
-  })
-
+  await store.loadConfig(); window.addEventListener('keydown', handleKeyDown)
+  if (store.libraryPath) await refreshLibrary()
+  unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
   nextTick(() => { initVditor(); startShadowSaveTimer() })
-
-  const appWindow = getCurrentWindow()
-  appWindow.onDragDropEvent(async (event) => {
-    if (event.payload.type === 'over') { updateDropTarget(event.payload.position.x, event.payload.position.y, true) }
+  getCurrentWindow().onDragDropEvent(async (event) => {
+    if (event.payload.type === 'over') updateDropTarget(event.payload.position.x, event.payload.position.y, true)
     else if (event.payload.type === 'drop') {
-      const paths = event.payload.paths; const targetDir = virtualDrag.dropTarget || store.libraryPath
-      if (paths.length > 0 && targetDir) {
-        try { message.loading(`正在导入...`); for (const p of paths) { await invoke('import_to_library', { sourcePath: p, libraryRoot: store.libraryPath, targetDir }) } await refreshNode(targetDir); message.destroyAll(); message.success('导入完成') }
+      const targetDir = virtualDrag.dropTarget || store.libraryPath
+      if (event.payload.paths.length > 0 && targetDir) {
+        try { message.loading(`正在导入...`); for (const p of event.payload.paths) await invoke('import_to_library', { sourcePath: p, libraryRoot: store.libraryPath, targetDir }); await refreshNode(targetDir); message.destroyAll(); message.success('导入完成') }
         catch (err) { message.destroyAll(); message.error('导入失败') }
       }
       virtualDrag.dropTarget = null
-    } else { virtualDrag.dropTarget = null }
+    } else virtualDrag.dropTarget = null
   })
 })
 
+onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); if (outlineObserver) outlineObserver.disconnect(); if (unlistenRefresh) unlistenRefresh() })
 watch(() => store.libraryPath, (newPath) => { if (newPath) refreshLibrary() })
-onUnmounted(() => { 
-  window.removeEventListener('keydown', handleKeyDown); 
-  if (autoSaveTimer) clearTimeout(autoSaveTimer); 
-  if (shadowSaveTimer) clearInterval(shadowSaveTimer); 
-  if (outlineObserver) outlineObserver.disconnect() 
-  if (unlistenRefresh) unlistenRefresh()
-})
 watch(activeTabId, (newId) => { if (newId) { const t = tabs.value.find(item => item.id === newId); if (t) loadFileToEditor(t.path) } })
 watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); if (!val.trim()) { refreshLibrary(); return }; searchDebounce = setTimeout(async () => { try { const results = await invoke<FileEntry[]>('search_library', { libraryRoot: store.libraryPath, query: val.trim() }); treeData.value = results.map(entry => ({ label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''), key: entry.path, isLeaf: !entry.is_dir, prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' }) })) } catch (e) {} }, 300) })
 </script>
 
 <style scoped>
-.library-mode { display: flex; height: 100%; width: 100vw; overflow: hidden; background: transparent; user-select: auto !important; box-sizing: border-box; animation: fadeIn 0.6s ease-out; }
-.is-dragging, .is-dragging * { transition: none !important; }
+.library-mode { display: flex; height: 100%; width: 100vw; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s ease-out; }
+.is-dragging, .is-dragging * { transition: none !important; user-select: none !important; }
 
-.sidebar { height: 100%; background: rgba(255, 255, 255, 0.4); backdrop-filter: saturate(180%) blur(40px); border-right: 1px solid rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; overflow: hidden; transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; z-index: 20; }
+.sidebar { 
+  height: 100%; background: rgba(255, 255, 255, 0.4); backdrop-filter: saturate(180%) blur(40px); 
+  border-right: 1px solid rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; overflow: hidden; 
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; z-index: 20; 
+}
 .is-dark .sidebar { background: rgba(28, 28, 30, 0.5); border-right: 1px solid rgba(255, 255, 255, 0.08); }
 .sidebar-inner { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-.sidebar-header { padding: 24px 16px 12px; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; }
-.tree-viewport { 
-  flex: 1; 
-  overflow-y: auto; 
-  padding: 4px 12px; 
-  border: 2px solid transparent; 
-  transition: all 0.2s;
-  animation: treeContainerFade 0.5s ease-out;
+
+/* === 顶部 Tabs 优化 === */
+.sidebar-tabs-header { padding: 12px 12px 8px; flex-shrink: 0; }
+.custom-sidebar-tabs :deep(.n-tabs-nav) { background: rgba(0, 0, 0, 0.03); border-radius: 10px; padding: 4px; }
+.is-dark .custom-sidebar-tabs :deep(.n-tabs-nav) { background: rgba(255, 255, 255, 0.05); }
+.custom-sidebar-tabs :deep(.n-tabs-rail) { background: transparent !important; }
+.tab-label-inner { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; transition: all 0.3s; }
+.tab-label-inner n-icon { font-size: 14px; }
+
+.sidebar-tab-content { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.tab-pane { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+
+.tab-fade-enter-active, .tab-fade-leave-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.tab-fade-enter-from { opacity: 0; transform: translateY(10px); }
+.tab-fade-leave-to { opacity: 0; transform: translateY(-10px); }
+
+.sidebar-header { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
+
+.tree-viewport { flex: 1; overflow-y: auto; padding: 4px 12px; border: 2px solid transparent; transition: all 0.2s; animation: treeContainerFade 0.5s ease-out; }
+.tree-viewport.drop-active { background: rgba(0, 122, 255, 0.05); border-color: rgba(0, 122, 255, 0.3); border-radius: 8px; }
+
+:deep(.n-tree-node-content) { flex: 1; min-width: 0; overflow: hidden; }
+:deep(.n-tree-node-content__text) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+:deep(.n-tree-node.drop-active .n-tree-node-content) { background: rgba(0, 122, 255, 0.1) !important; box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.3) inset; border-radius: 6px; }
+
+.empty-state-hint { padding: 60px 20px; opacity: 0.6; animation: slideUp 0.6s ease-out both; }
+
+.manual-outline-box { padding: 0; height: 100%; overflow: hidden; display: flex; flex-direction: column; }
+.outline-tree-wrapper { flex: 1; overflow-y: auto; padding: 12px 8px; }
+/* 极致紧凑样式覆盖 */
+.compact-outline-tree :deep(.n-tree-node) { 
+  margin-top: 1px; 
+  align-items: center; 
+  /* 还原入场动效 */
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes treeContainerFade {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+/* 阶梯延迟：前 12 个标题依次滑入 */
+.compact-outline-tree :deep(.n-tree-node:nth-child(1)) { animation-delay: 0.02s; }
+.compact-outline-tree :deep(.n-tree-node:nth-child(2)) { animation-delay: 0.04s; }
+.compact-outline-tree :deep(.n-tree-node:nth-child(3)) { animation-delay: 0.06s; }
+.compact-outline-tree :deep(.n-tree-node:nth-child(4)) { animation-delay: 0.08s; }
+.compact-outline-tree :deep(.n-tree-node:nth-child(5)) { animation-delay: 0.10s; }
+.compact-outline-tree :deep(.n-tree-node:nth-child(n+6)) { animation-delay: 0.12s; }
+
+.compact-outline-tree :deep(.n-tree-node-content) { 
+  padding: 2px 6px !important; 
+  min-height: 28px !important; 
+  font-size: 13px !important; 
+  border-radius: 6px; 
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important; 
 }
-/* 移除节点级动画，防止展开闪烁 */
-:deep(.n-tree-node-content) {
-  flex: 1;
-  min-width: 0;
+
+.compact-outline-tree :deep(.n-tree-node-content:hover) { 
+  background: rgba(var(--theme-primary-rgb), 0.08) !important; 
+  /* 还原悬停位移 */
+  transform: translateX(4px); 
+  color: var(--theme-primary);
+}
+
+.compact-outline-tree :deep(.n-tree-node-indent) { width: 12px !important; }
+.compact-outline-tree :deep(.n-tree-node-switcher) { width: 16px !important; height: 16px !important; }
+/* === 历史面板深度优化 === */
+.history-box { padding: 12px 16px; height: 100%; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; }
+.history-header { display: flex; align-items: center; justify-content: space-between; }
+.history-title-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #86868b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.clear-all-btn { opacity: 0.6; transition: all 0.3s; }
+.clear-all-btn:hover { opacity: 1; color: #f5222d; transform: rotate(15deg); }
+
+.history-bubbles-wrapper { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 4px 2px 20px; }
+
+.history-bubble { 
+  position: relative; padding: 12px 14px; background: rgba(255, 255, 255, 0.6); 
+  border: 1px solid rgba(0, 0, 0, 0.04); border-radius: 14px; 
+  cursor: pointer; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+  display: flex; gap: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02); 
+  animation: bubblePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   overflow: hidden;
 }
-:deep(.n-tree-node-content__text) {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
+.is-dark .history-bubble { background: rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.06); }
+
+/* 侧边装饰线 */
+.bubble-accent-line { 
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px; 
+  background: var(--theme-primary); opacity: 0; transition: all 0.3s;
 }
-.tree-viewport.drop-active { background: rgba(0, 122, 255, 0.05); border-color: rgba(0, 122, 255, 0.3); border-radius: 8px; }
-:deep(.n-tree-node.drop-active .n-tree-node-content) { background: rgba(0, 122, 255, 0.1) !important; box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.3) inset; border-radius: 6px; }
-.sidebar-footer { margin: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.5); border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.05); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); cursor: pointer; }
-.is-dark .sidebar-footer { background: rgba(255, 255, 255, 0.05); }
-.meta-path { font-size: 13px; font-weight: 600; color: #1d1d1f; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.is-dark .meta-path { color: #f5f5f7; }
+
+.history-bubble:hover { 
+  background: #fff; 
+  transform: translateX(4px) scale(1.01); 
+  border-color: rgba(var(--theme-primary-rgb), 0.1); 
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.04); 
+}
+.is-dark .history-bubble:hover { background: rgba(255, 255, 255, 0.08); }
+.history-bubble:hover .bubble-accent-line { opacity: 1; height: 100%; }
+
+.bubble-content { flex: 1; min-width: 0; z-index: 2; }
+.bubble-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.bubble-time { font-size: 13px; font-weight: 800; color: var(--theme-text); font-variant-numeric: tabular-nums; }
+.bubble-meta { 
+  font-size: 10px; font-weight: 700; color: var(--theme-primary); 
+  background: rgba(var(--theme-primary-rgb), 0.08); padding: 2px 8px; border-radius: 20px;
+  backdrop-filter: blur(4px); transition: all 0.3s;
+}
+.history-bubble:hover .bubble-meta { background: var(--theme-primary); color: #fff; }
+
+.bubble-preview { 
+  font-size: 12px; color: var(--theme-text); opacity: 0.5; line-height: 1.5; 
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; 
+  overflow: hidden; word-break: break-all; transition: all 0.3s;
+}
+.history-bubble:hover .bubble-preview { opacity: 0.8; }
+
+.bubble-actions { 
+  opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+  transform: scale(0.8) rotate(-20deg);
+}
+.history-bubble:hover .bubble-actions { opacity: 1; transform: scale(1) rotate(0deg); }
+
+/* 阶梯加载动效 */
+.history-bubble:nth-child(1) { animation-delay: 0.05s; }
+.history-bubble:nth-child(2) { animation-delay: 0.1s; }
+.history-bubble:nth-child(3) { animation-delay: 0.15s; }
+.history-bubble:nth-child(4) { animation-delay: 0.2s; }
+
+/* === 底部 Footer - 硬核立体版 === */
+.sidebar-footer-container { padding: 12px; flex-shrink: 0; }
+.sidebar-footer { 
+  display: flex; align-items: center; gap: 12px; padding: 12px; 
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 240, 243, 0.9) 100%);
+  backdrop-filter: blur(20px); 
+  border-radius: 16px; 
+  /* 核心：更清晰的描边 + 更沉的阴影 */
+  border: 1.2px solid rgba(var(--theme-primary-rgb), 0.65); 
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  cursor: pointer; 
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.is-dark .sidebar-footer { 
+  background: linear-gradient(135deg, rgba(50, 50, 55, 0.95) 0%, rgba(25, 25, 28, 0.98) 100%);
+  border-color: rgba(var(--theme-primary-rgb), 0.7); 
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-footer:hover { 
+  transform: translateY(-5px) scale(1.02); 
+  background: #fff; 
+  /* 极致立体：深层投影 + 品牌色外发光 */
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.15),
+    0 10px 25px rgba(var(--theme-primary-rgb), 0.25),
+    0 0 0 1px var(--theme-primary); 
+  border-color: transparent; 
+}
+.is-dark .sidebar-footer:hover { background: #1c1c1e; }
+
+.settings-icon-box { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.03); border-radius: 10px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); color: var(--theme-text); opacity: 0.8; }
+.is-dark .settings-icon-box { background: rgba(255, 255, 255, 0.06); }
+.sidebar-footer:hover .settings-icon-box { background: rgba(0, 122, 255, 0.1); color: var(--theme-primary); opacity: 1; }
+.rotating-settings { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+.sidebar-footer:hover .rotating-settings { transform: rotate(180deg); }
+
+.lib-info-box { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lib-name-row { display: flex; align-items: center; gap: 6px; }
+.lib-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.3; transition: opacity 0.3s; }
+.sidebar-footer:hover .lib-label { opacity: 0.5; }
+.lib-status-dot { width: 6px; height: 6px; background: #42b883; border-radius: 50%; box-shadow: 0 0 8px rgba(66, 184, 131, 0.4); }
+.meta-path { font-size: 13px; font-weight: 700; color: var(--theme-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.9; }
+.footer-chevron { font-size: 14px; opacity: 0.2; transition: all 0.3s; transform: translateX(-4px); }
+.sidebar-footer:hover .footer-chevron { opacity: 0.6; transform: translateX(0); }
 
 .resizer-area { position: relative; width: 1px; height: 100%; z-index: 100; background: rgba(0, 0, 0, 0.03); cursor: col-resize; }
-.resizer-area:hover { background: #007aff; }
+.resizer-area:hover { background: var(--theme-primary); }
 .drag-handle { position: absolute; top: 0; left: -8px; right: -8px; bottom: 0; z-index: 101; cursor: col-resize; }
-.collapse-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 24px; height: 48px; background: var(--theme-card); color: var(--theme-text); border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 150; transition: all 0.3s ease; }
-.is-dark .collapse-btn { border-color: rgba(255, 255, 255, 0.1); background: var(--theme-card); }
-.collapse-btn:hover { background: var(--theme-primary); color: #fff; border-color: var(--theme-primary); }
+.collapse-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 24px; height: 48px; background: var(--theme-card); color: var(--theme-text); border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 150; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.collapse-btn:hover { background: var(--theme-primary); color: #fff; transform: translateY(-50%) scale(1.1); }
 .collapse-btn.left { left: 0px; border-radius: 0 12px 12px 0; }
-.collapse-btn.right { right: 0px; border-radius: 12px 0 0 12px; }
 
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
 .tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; gap: 12px; }
 .tab-scroller { flex: 1; height: 40px; display: flex; gap: 8px; align-items: center; overflow-x: auto; scrollbar-width: none; }
-.tab-pill { height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(0, 0, 0, 0.03); border-radius: 15px; transition: all 0.3s; white-space: nowrap; max-width: 200px; }
-.pill-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
-.tab-pill.active { background: #fff; color: #007aff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
-
-/* 隐藏触发器样式 */
-.hidden-picker-trigger {
-  width: 0;
-  height: 0;
-  overflow: hidden;
-  position: absolute;
-}
+.tab-pill { height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(0, 0, 0, 0.03); border-radius: 15px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap; max-width: 200px; }
+.tab-pill:hover { background: rgba(0, 0, 0, 0.06); transform: translateY(-1px); }
+.tab-pill.active { background: #fff; color: var(--theme-primary); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
 
 .editor-viewport { flex: 1; position: relative; background: #fff; border-radius: 12px 12px 0 0; overflow: visible; display: flex; flex-direction: column; min-height: 0; z-index: 10; }
 .is-dark .editor-viewport { background: #1c1c1e; }
 .vditor-instance { flex: 1; height: 0; overflow: visible !important; }
 
-/* 核心修复：确保自定义背景色穿透应用到 Vditor 内部 */
-:deep(.vditor-wysiwyg), 
-:deep(.vditor-preview), 
-:deep(.vditor-panel),
-:deep(.vditor-reset) {
-  background-color: var(--custom-editor-bg) !important;
-}
-
-/* === 响应式智能气泡对齐 (适配折行布局) === */
-
-/* 1. 基础重置：消除原生位移导致的撕裂，所有气泡默认靠左对齐并向右生长 */
-:deep(.vditor-tooltipped::after) {
-  background-color: rgba(28, 28, 30, 0.98) !important;
-  color: #fff !important;
-  font-size: 11px !important;
-  padding: 7px 12px !important;
-  border-radius: 6px !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
-  white-space: nowrap !important;
-  width: max-content !important;
-  left: 0 !important; /* 核心：对齐按钮左边缘 */
-  right: auto !important;
-  transform: translateY(-5px) !important; /* 仅向上微调，不再进行水平位移 */
-  opacity: 0;
-  pointer-events: none;
-}
-
-:deep(.vditor-tooltipped:hover::after) {
-  opacity: 1;
-}
-
-/* 2. 箭头（尖尖）定位：始终居中指向按钮 */
-:deep(.vditor-tooltipped::before) {
-  left: 14px !important; /* 按钮中心位置 */
-  transform: translateX(-50%) !important;
-  border-top-color: rgba(28, 28, 30, 0.98) !important;
-}
-
-/* 3. 针对靠近最右边缘按钮的补偿（可选） */
-/* 由于工具栏右侧通常有很大空间（tabs-actions），默认向右生长是最稳健的。
-   如果在极窄模式下发生右侧出界，可以使用以下规则让最后的按钮向左展开 */
-:deep(.vditor-toolbar__item:nth-last-child(-n+5) .vditor-tooltipped::after) {
-  /* 在极窄布局下，最后几个按钮尝试向左生长以防止右侧出界 */
-  left: auto !important;
-  right: 0 !important;
-}
-:deep(.vditor-toolbar__item:nth-last-child(-n+5) .vditor-tooltipped::before) {
-  left: auto !important;
-  right: 14px !important;
-}
-
-:deep(.vditor-content) {
-  overflow: hidden;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
-}
-
-/* 修正提示气泡样式，确保其不被遮挡 */
-:deep(.vditor-tooltipped::after), 
-:deep(.vditor-tooltipped::before) {
-  z-index: 1000 !important;
-}
+:deep(.vditor-wysiwyg), :deep(.vditor-preview), :deep(.vditor-panel), :deep(.vditor-reset) { background-color: var(--custom-editor-bg) !important; }
 
 .hero-viewport { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: inherit; z-index: 5; overflow: hidden; }
-
-/* 背景装饰光斑 */
 .ambient-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; filter: blur(80px); opacity: 0.4; }
 .blob { position: absolute; width: 400px; height: 400px; border-radius: 50%; animation: blobRotate 20s infinite alternate; }
 .blob-1 { background: rgba(102, 126, 234, 0.3); top: -100px; right: -100px; }
 .blob-2 { background: rgba(118, 75, 162, 0.2); bottom: -150px; left: -100px; animation-delay: -5s; }
 
 .hero-content { text-align: center; z-index: 10; max-width: 500px; }
+.hero-brand { font-size: 84px; display: flex; justify-content: center; margin-bottom: 24px; color: var(--theme-primary); animation: heroFloat 4s ease-in-out infinite, heroGlow 4s ease-in-out infinite, heroEntry 1s cubic-bezier(0.16, 1, 0.3, 1); }
+.hero-title { font-size: 32px; font-weight: 800; margin-bottom: 12px; animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+.hero-subtitle { font-size: 16px; opacity: 0.6; margin-bottom: 32px; animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
+.hero-actions { display: flex; gap: 16px; justify-content: center; animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both; }
 
-.hero-brand { 
-  font-size: 84px; 
-  display: flex;
-  justify-content: center;
-  margin-bottom: 24px;
-  color: var(--theme-primary);
-  filter: drop-shadow(0 0 20px rgba(var(--theme-primary-rgb), 0.2));
-  animation: 
-    heroFloat 4s ease-in-out infinite,
-    heroGlow 4s ease-in-out infinite,
-    heroEntry 1s cubic-bezier(0.16, 1, 0.3, 1);
-}
+.drag-ghost { position: fixed; pointer-events: none; z-index: 9999; padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid var(--theme-primary); border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--theme-primary); }
 
-.hero-title { 
-  font-size: 32px; 
-  font-weight: 800; 
-  margin-bottom: 12px; 
-  color: var(--theme-text); 
-  letter-spacing: -0.02em;
-  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
-}
-
-.hero-subtitle { 
-  font-size: 16px;
-  color: var(--theme-text);
-  opacity: 0.6; 
-  margin-bottom: 32px; 
-  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
-}
-
-.hero-actions { 
-  display: flex; 
-  gap: 16px; 
-  justify-content: center; 
-  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
-}
-
-.hero-btn {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-.hero-btn:hover {
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
-}
-
-/* 动画关键帧 */
-@keyframes heroEntry {
-  from { opacity: 0; transform: scale(0.8) translateY(20px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes heroFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
-}
-
-@keyframes heroGlow {
-  0%, 100% { filter: drop-shadow(0 0 20px rgba(var(--theme-primary-rgb), 0.2)); }
-  50% { filter: drop-shadow(0 0 40px rgba(var(--theme-primary-rgb), 0.5)); }
-}
-
-@keyframes blobRotate {
-  from { transform: rotate(0deg) scale(1); }
-  to { transform: rotate(360deg) scale(1.2); }
-}
-
-.inspector-sidebar { height: 100%; background: rgba(255, 255, 255, 0.4); backdrop-filter: saturate(180%) blur(40px); border-left: 1px solid rgba(0, 0, 0, 0.05); overflow: hidden; transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; }
-.is-dark .inspector-sidebar { background: rgba(28, 28, 30, 0.5); border-left: 1px solid rgba(255, 255, 255, 0.08); }
-
-.inspector-tabs { height: 100%; display: flex; flex-direction: column; }
-:deep(.n-tabs-pane-wrapper) { flex: 1; min-height: 0; }
-.inspector-pane { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-
-.manual-outline-box { padding: 12px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; }
-.outline-list { display: flex; flex-direction: column; gap: 4px; padding-bottom: 40px; }
-.outline-item { padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #1d1d1f; transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.is-dark .outline-item { color: #f5f5f7; }
-.outline-item:hover { background: rgba(0, 122, 255, 0.1); color: #007aff; }
-.level-1 { font-weight: 700; font-size: 14px; }
-.level-2 { padding-left: 24px; opacity: 0.9; }
-.level-3 { padding-left: 36px; opacity: 0.8; font-size: 12.5px; }
-.level-4 { padding-left: 48px; opacity: 0.7; font-size: 12px; }
-.level-5 { padding-left: 60px; opacity: 0.6; font-size: 12px; }
-.level-6 { padding-left: 72px; opacity: 0.5; font-size: 12px; }
-
-.history-box { padding: 16px; height: 100%; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; }
-.history-header { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #86868b; font-weight: 600; }
-.history-bubbles-wrapper { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 2px 20px; }
-.history-bubble { 
-  position: relative; 
-  padding: 14px; 
-  background: #fff; 
-  border: 1px solid rgba(0, 0, 0, 0.06); 
-  border-radius: 14px; 
-  cursor: pointer; 
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
-  display: flex; 
-  gap: 12px; 
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02); 
-  animation: bubblePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-/* 阶梯加载：前 10 个气泡依次延迟 */
-.history-bubble:nth-child(1) { animation-delay: 0.05s; }
-.history-bubble:nth-child(2) { animation-delay: 0.1s; }
-.history-bubble:nth-child(3) { animation-delay: 0.15s; }
-.history-bubble:nth-child(4) { animation-delay: 0.2s; }
-.history-bubble:nth-child(5) { animation-delay: 0.25s; }
-.history-bubble:nth-child(6) { animation-delay: 0.3s; }
-.history-bubble:nth-child(7) { animation-delay: 0.35s; }
-.history-bubble:nth-child(8) { animation-delay: 0.4s; }
-
-@keyframes bubblePop {
-  from { opacity: 0; transform: scale(0.9) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.is-dark .history-bubble { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.08); }
-.history-bubble:hover { transform: translateX(4px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); border-color: #007aff; }
-.bubble-content { flex: 1; min-width: 0; }
-.bubble-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.bubble-time { font-size: 13px; font-weight: 700; color: #1d1d1f; }
-.is-dark .bubble-time { color: #f5f5f7; }
-.bubble-meta { font-size: 11px; color: #007aff; background: rgba(0, 122, 255, 0.1); padding: 1px 6px; border-radius: 4px; }
-.bubble-preview { font-size: 12px; color: #86868b; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all; }
-.bubble-actions { opacity: 0; transition: opacity 0.2s; position: absolute; top: -8px; right: -8px; }
-.history-bubble:hover .bubble-actions { opacity: 1; }
-
-.drag-ghost { position: fixed; pointer-events: none; z-index: 9999; padding: 8px 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #007aff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); display: flex; align-items: center; gap: 8px; font-size: 13px; color: #007aff; }
-
-/* 标签页平滑滑动动效 */
-.tab-list-enter-active, .tab-list-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.tab-list-enter-from, .tab-list-leave-to {
-  opacity: 0;
-  transform: scale(0.9) translateY(5px);
-}
-.tab-list-move {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+@keyframes treeContainerFade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bubblePop { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes heroFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+@keyframes heroEntry { from { opacity: 0; transform: scale(0.8) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes heroGlow { 0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 122, 255, 0.2)); } 50% { filter: drop-shadow(0 0 40px rgba(0, 122, 255, 0.5)); } }
+@keyframes blobRotate { from { transform: rotate(0deg) scale(1); } to { transform: rotate(360deg) scale(1.2); } }
 </style>
