@@ -186,17 +186,20 @@
           </transition-group>
         </div>
         <div class="tab-actions">
-          <div class="hidden-picker-trigger">
+          <n-button size="tiny" quaternary round @click="saveCurrentFile" :disabled="!activeTabId" class="save-btn">
+            <template #icon><n-icon :component="SaveIcon" /></template>
+            保存
+          </n-button>
+          <div class="word-count-info" v-if="activeTabId">
+            {{ wordCount }} 字
+          </div>
+          <div class="hidden-picker-trigger" style="position: absolute; opacity: 0; pointer-events: none;">
             <n-color-picker 
               v-model:value="store.editorBgColor" 
               :modes="['hex']" 
               @update:value="handleEditorBgChange"
             />
           </div>
-          <n-button size="tiny" quaternary round @click="saveCurrentFile" :disabled="!activeTabId">
-            <template #icon><n-icon :component="SaveIcon" /></template>
-            保存
-          </n-button>
         </div>
       </div>
       
@@ -273,15 +276,32 @@ const router = useRouter()
 
 const activeSidebarTab = ref<'files' | 'outline' | 'history'>('files')
 const editorLoading = ref(false)
+const wordCount = ref(0)
 const isSidebarCollapsed = ref(false)
 const sidebarWidth = ref(260)
 const activeResizer = ref<'sidebar' | null>(null)
+const tabsScrollRef = ref<HTMLElement | null>(null)
 const activeTabRef = ref<HTMLElement | null>(null)
 
-watch(activeTabId, () => {
-  nextTick(() => { if (activeTabRef.value) activeTabRef.value.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }) })
-})
+const scrollActiveTabIntoView = () => {
+  if (!activeTabRef.value || !tabsScrollRef.value) return
+  const container = tabsScrollRef.value
+  const tab = activeTabRef.value
+  
+  const containerRect = container.getBoundingClientRect()
+  const tabRect = tab.getBoundingClientRect()
+  
+  // 只有当标签不在可视区域内时才滚动
+  if (tabRect.left < containerRect.left) {
+    container.scrollTo({ left: container.scrollLeft - (containerRect.left - tabRect.left) - 20, behavior: 'smooth' })
+  } else if (tabRect.right > containerRect.right) {
+    container.scrollTo({ left: container.scrollLeft + (tabRect.right - containerRect.right) + 20, behavior: 'smooth' })
+  }
+}
 
+watch(activeTabId, () => {
+  nextTick(() => { setTimeout(() => { scrollActiveTabIntoView() }, 50) })
+})
 const treeData = ref<TreeOption[]>([])
 const searchQuery = ref('')
 const selectedKeys = ref<string[]>([])
@@ -291,6 +311,13 @@ let isVditorReady = false
 let lastLoadedPath = '' 
 let outlineObserver: MutationObserver | null = null
 const outlineItems = ref<OutlineItem[]>([])
+
+const updateWordCount = () => {
+  if (vditor && isVditorReady) {
+    const val = vditor.getValue()
+    wordCount.value = val.length
+  }
+}
 
 const outlineTreeData = computed(() => {
   const result: TreeOption[] = []
@@ -441,13 +468,20 @@ const loadFileToEditor = async (path: string) => {
   try {
     const res = await invoke<{content: string}>('read_markdown_file', { path })
     vditor.setValue(res.content); fetchHistory()
-    nextTick(() => { setTimeout(() => { lastLoadedPath = path; syncOutlineManual(); initOutlineObserver() }, 200) })
+    nextTick(() => { 
+      setTimeout(() => { 
+        lastLoadedPath = path; 
+        syncOutlineManual(); 
+        initOutlineObserver();
+        updateWordCount();
+      }, 200) 
+    })
   } catch (err) { message.error("读取失败") }
 }
 
 const virtualDrag = reactive({ active: false, x: 0, y: 0, startX: 0, startY: 0, dragNode: null as any, dropTarget: null as any, ghostText: '', timer: null as any, selectedPaths: [] as string[] })
 
-const updateDropTarget = (x: number, y: number, isExternal: boolean) => {
+const updateDropTarget = (x: number, y: number) => {
   const elements = document.elementsFromPoint(x, y)
   let foundKey = null
   let isViewport = false
@@ -521,7 +555,7 @@ const onMouseMove = (e: MouseEvent) => {
   if (activeResizer.value === 'sidebar') { sidebarWidth.value = Math.max(220, Math.min(e.clientX, 600)) }
   // 影子偏移，确保不挡住探测
   virtualDrag.x = e.clientX + 10; virtualDrag.y = e.clientY + 10
-  if (virtualDrag.active) updateDropTarget(e.clientX, e.clientY, false)
+  if (virtualDrag.active) updateDropTarget(e.clientX, e.clientY)
 }
 
 const deleteAction = async (paths: string[]) => {
@@ -638,8 +672,22 @@ const initVditor = () => {
         { name: 'editor-bg', tip: '修改文章背景色', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>', click: () => { (document.querySelector('.hidden-picker-trigger .n-color-picker-trigger') as HTMLElement)?.click() }},
         '|', 'upload', 'link', 'table', '|', 'both', 'preview', 'edit-mode'
       ],
-      input: (val) => { const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) triggerAutoSave(val); syncVditorMode() },
-      after: () => { isVditorReady = true; editorLoading.value = false; syncVditorMode(); if (activeTabId.value) { const t = tabs.value.find(item => item.id === activeTabId.value); if (t) loadFileToEditor(t.path) } }
+      input: (val) => { 
+        const cur = tabs.value.find(t => t.id === activeTabId.value); 
+        if (cur) triggerAutoSave(val); 
+        syncVditorMode();
+        wordCount.value = val.length;
+      },
+      after: () => { 
+        isVditorReady = true; 
+        editorLoading.value = false; 
+        syncVditorMode(); 
+        if (activeTabId.value) { 
+          const t = tabs.value.find(item => item.id === activeTabId.value); 
+          if (t) loadFileToEditor(t.path) 
+        }
+        updateWordCount();
+      }
     })
   } catch (e) { editorLoading.value = false }
 }
@@ -651,7 +699,6 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
 }
 
-const tabsScrollRef = ref<HTMLElement | null>(null)
 let searchDebounce: any = null, unlistenRefresh: any = null
 
 onMounted(async () => { 
@@ -660,7 +707,7 @@ onMounted(async () => {
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
   nextTick(() => { initVditor(); startShadowSaveTimer() })
   getCurrentWindow().onDragDropEvent(async (event) => {
-    if (event.payload.type === 'over') updateDropTarget(event.payload.position.x, event.payload.position.y, true)
+    if (event.payload.type === 'over') updateDropTarget(event.payload.position.x, event.payload.position.y)
     else if (event.payload.type === 'drop') {
       const targetDir = virtualDrag.dropTarget || store.libraryPath
       if (event.payload.paths.length > 0 && targetDir) {
@@ -856,9 +903,60 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
 .tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; gap: 12px; }
 .tab-scroller { flex: 1; height: 40px; display: flex; gap: 8px; align-items: center; overflow-x: auto; scrollbar-width: none; }
-.tab-pill { height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(0, 0, 0, 0.03); border-radius: 15px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap; max-width: 200px; }
+.tab-pill { height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(0, 0, 0, 0.03); border-radius: 15px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap; max-width: 200px; min-width: 0; flex-shrink: 0; }
 .tab-pill:hover { background: rgba(0, 0, 0, 0.06); transform: translateY(-1px); }
 .tab-pill.active { background: #fff; color: var(--theme-primary); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+
+.pill-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 0 8px 4px;
+}
+
+.save-btn {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.save-btn:hover {
+  transform: translateY(-1px);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.save-btn:active {
+  transform: scale(0.95);
+}
+
+.word-count-info {
+  font-size: 10px;
+  opacity: 0.4;
+  font-weight: 700;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1px 6px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  animation: countFadeIn 0.5s ease-out;
+}
+
+.is-dark .word-count-info {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes countFadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 0.4; transform: translateY(0); }
+}
 
 .editor-viewport { flex: 1; position: relative; background: #fff; border-radius: 12px 12px 0 0; overflow: visible; display: flex; flex-direction: column; min-height: 0; z-index: 10; }
 .is-dark .editor-viewport { background: #1c1c1e; }
