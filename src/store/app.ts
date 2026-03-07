@@ -29,6 +29,8 @@ export const useAppStore = defineStore('app', {
     activeLibraryPath: '',
     autoSaveInterval: 3,
     maxHistoryCount: 10,
+    isAutostart: false,
+    exitStrategy: 'ask' as 'ask' | 'quit' | 'minimize',
     isZen: false,
   }),
   getters: {
@@ -51,6 +53,8 @@ export const useAppStore = defineStore('app', {
         this.heroIcon = config.heroIcon || 'BookOpen'
         this.autoSaveInterval = config.autoSaveInterval || 3
         this.maxHistoryCount = config.maxHistoryCount || 10
+        this.isAutostart = config.isAutostart || false
+        this.exitStrategy = config.exitStrategy || 'ask'
       } catch (e) { console.error('Failed to load config', e) }
     },
     async updateConfig(patch: any) {
@@ -75,7 +79,9 @@ export const useAppStore = defineStore('app', {
         editorBgColor: this.editorBgColor,
         heroIcon: this.heroIcon,
         autoSaveInterval: this.autoSaveInterval,
-        maxHistoryCount: this.maxHistoryCount
+        maxHistoryCount: this.maxHistoryCount,
+        isAutostart: this.isAutostart,
+        exitStrategy: this.exitStrategy
       } })
     },
     addTab(tab: TabInfo) {

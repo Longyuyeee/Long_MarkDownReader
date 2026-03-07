@@ -30,6 +30,9 @@
             <div class="exit-modal-card">
               <div class="modal-header">退出确认</div>
               <div class="modal-body">您想如何处理当前窗口？</div>
+              <div class="modal-checkbox">
+                <n-checkbox v-model:checked="dontAskAgain">不再提示，设为默认退出方式</n-checkbox>
+              </div>
               <div class="modal-footer">
                 <n-button quaternary @click="showExitModal = false">取消</n-button>
                 <n-button secondary type="primary" @click="handleHide">最小化到托盘</n-button>
@@ -103,6 +106,7 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
 
 const showPalette = ref(false)
 const showExitModal = ref(false)
+const dontAskAgain = ref(false)
 
 const handleCommand = (item: any) => {
   if (item.type === 'cmd') {
@@ -120,9 +124,28 @@ const maximizeWindow = async () => {
   if (isMaximized) appWindow.unmaximize()
   else appWindow.maximize()
 }
-const closeWindow = () => { showExitModal.value = true }
-const handleHide = () => { showExitModal.value = false; appWindow.hide() }
-const handleExit = () => { invoke('exit_app') }
+const closeWindow = () => { 
+  if (store.exitStrategy === 'quit') {
+    handleExit()
+  } else if (store.exitStrategy === 'minimize') {
+    handleHide()
+  } else {
+    showExitModal.value = true 
+  }
+}
+const handleHide = () => { 
+  if (dontAskAgain.value) {
+    store.updateConfig({ exitStrategy: 'minimize' })
+  }
+  showExitModal.value = false; 
+  appWindow.hide() 
+}
+const handleExit = () => { 
+  if (dontAskAgain.value) {
+    store.updateConfig({ exitStrategy: 'quit' })
+  }
+  invoke('exit_app') 
+}
 
 onMounted(async () => {
   await store.loadConfig()
@@ -184,6 +207,7 @@ body {
 }
 .modal-header { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
 .modal-body { font-size: 14px; opacity: 0.8; margin-bottom: 24px; }
+.modal-checkbox { margin-bottom: 24px; display: flex; justify-content: center; }
 .modal-footer { display: flex; gap: 8px; justify-content: center; }
 
 .modal-fade-enter-active, .modal-fade-leave-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -221,6 +245,15 @@ body[data-theme="dark"] .win-btn:hover { background: rgba(255, 255, 255, 0.1); }
 }
 .premium-switch-enter-from { opacity: 0; transform: scale(0.96) translateY(15px); filter: blur(10px); }
 .premium-switch-leave-to { opacity: 0; transform: scale(1.04); filter: blur(5px); }
+
+/* 隐藏 Vditor 浮动工具栏，提升专注感 */
+.vditor-panel--focus, 
+.vditor-ir__node { 
+  display: none !important; 
+  visibility: hidden !important; 
+  opacity: 0 !important; 
+  pointer-events: none !important; 
+}
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }

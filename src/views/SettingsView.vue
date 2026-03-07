@@ -60,6 +60,24 @@
             <div class="section-title">系统集成</div>
             <div class="setting-row">
               <div class="info">
+                <div class="label">开机自动启动</div>
+                <div class="desc">在 Windows 启动时自动运行胧编辑</div>
+              </div>
+              <n-switch v-model:value="config.isAutostart" @update:value="toggleAutostart" />
+            </div>
+            <div class="setting-row">
+              <div class="info">
+                <div class="label">退出行为</div>
+                <div class="desc">点击关闭按钮时的默认处理方式</div>
+              </div>
+              <n-radio-group v-model:value="config.exitStrategy" size="small">
+                <n-radio-button value="ask">提示</n-radio-button>
+                <n-radio-button value="quit">直接退出</n-radio-button>
+                <n-radio-button value="minimize">后台运行</n-radio-button>
+              </n-radio-group>
+            </div>
+            <div class="setting-row">
+              <div class="info">
                 <div class="label">设为默认 Markdown 编辑器</div>
                 <div class="desc">双击 .md 文件将自动使用胧编辑打开</div>
               </div>
@@ -92,6 +110,7 @@ import { useRouter } from 'vue-router'
 import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
+import { isEnabled, enable, disable } from '@tauri-apps/plugin-autostart'
 import { useMessage, NTag, NInputGroup } from 'naive-ui'
 import { useAppStore } from '../store/app'
 
@@ -107,13 +126,21 @@ const config = ref({
   editorMode: store.editorMode,
   editorBgColor: store.editorBgColor,
   autoSaveInterval: store.autoSaveInterval,
-  maxHistoryCount: store.maxHistoryCount
+  maxHistoryCount: store.maxHistoryCount,
+  isAutostart: store.isAutostart,
+  exitStrategy: store.exitStrategy
 })
 
 const newLib = reactive({ name: '', path: '' })
 
 onMounted(async () => {
   await store.loadConfig()
+  // 同步系统自启动状态到配置中 (以防外部修改)
+  const autostartEnabled = await isEnabled()
+  if (autostartEnabled !== store.isAutostart) {
+    store.isAutostart = autostartEnabled
+  }
+  
   config.value = {
     libraries: [...store.libraries],
     activeLibraryPath: store.activeLibraryPath,
@@ -122,7 +149,9 @@ onMounted(async () => {
     editorMode: store.editorMode,
     editorBgColor: store.editorBgColor,
     autoSaveInterval: store.autoSaveInterval,
-    maxHistoryCount: store.maxHistoryCount
+    maxHistoryCount: store.maxHistoryCount,
+    isAutostart: store.isAutostart,
+    exitStrategy: store.exitStrategy
   }
 })
 
@@ -130,6 +159,21 @@ onMounted(async () => {
 watch(config, (newVal) => {
   store.updateConfig(newVal)
 }, { deep: true })
+
+const toggleAutostart = async (val: boolean) => {
+  try {
+    if (val) {
+      await enable()
+      message.success('已开启开机自启动')
+    } else {
+      await disable()
+      message.success('已关闭开机自启动')
+    }
+  } catch (err) {
+    message.error('设置自启动失败')
+    config.value.isAutostart = !val // 失败时回滚
+  }
+}
 
 const chooseNewLibDir = async () => {
   const selected = await open({ directory: true, multiple: false, title: '选择软件库文件夹' })

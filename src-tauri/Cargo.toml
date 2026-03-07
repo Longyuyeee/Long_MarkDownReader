@@ -1,6 +1,6 @@
 [package]
 name = "tauri-app"
-version = "0.2.0"
+version = "0.3.0"
 description = "A Tauri App"
 authors = ["longyuye"]
 edition = "2021"
@@ -33,4 +33,5 @@ scraper = "0.22"
 tauri-plugin-dialog = "2.6.0"
 tauri-plugin-fs = "2.4.5"
 tauri-plugin-os = "2.3.2"
+tauri-plugin-autostart = "2"
 

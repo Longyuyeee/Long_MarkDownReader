@@ -20,7 +20,7 @@
 
         <div class="sidebar-tab-content">
           <transition name="tab-fade" mode="out-in">
-            <!-- 文件树面板 -->
+            <!-- 文件 tree 面板 -->
             <div v-if="activeSidebarTab === 'files'" :key="'files'" class="tab-pane files-pane">
               <div class="sidebar-header">
                 <div class="search-area">
@@ -52,17 +52,20 @@
                 <n-tree 
                   v-else
                   :data="treeData" 
-                  @update:selected-keys="handleNodeSelect" 
                   lazy
+                  multiple
+                  block-line
+                  expand-on-click
                   :on-load="handleLoadChildren"
                   :node-props="nodeProps"
-                  v-model:selected-keys="selectedKeys"
+                  :selected-keys="selectedKeys"
                   v-model:expanded-keys="expandedKeys"
+                  @update:selected-keys="handleNodeSelect"
                 />
               </div>
             </div>
 
-            <!-- 大纲（目录）面板 -->
+            <!-- 大纲面板 -->
             <div v-else-if="activeSidebarTab === 'outline'" :key="'outline'" class="tab-pane outline-pane">
               <div class="manual-outline-box">
                 <div v-if="!activeTabId" class="empty-state-hint">
@@ -84,7 +87,7 @@
               </div>
             </div>
 
-            <!-- 历史面板 - 视觉增强版 -->
+            <!-- 历史面板 -->
             <div v-else-if="activeSidebarTab === 'history'" :key="'history'" class="tab-pane history-pane">
               <div class="history-box">
                 <div class="history-header">
@@ -388,50 +391,22 @@ const initOutlineObserver = () => {
   outlineObserver.observe(contentEl, { childList: true, subtree: true, characterData: true })
 }
 
-const virtualDrag = reactive({ active: false, x: 0, y: 0, startX: 0, startY: 0, dragNode: null as any, dropTarget: null as any, ghostText: '', timer: null as any })
-const onMouseUp = async () => {
-  activeResizer.value = null
-  if (virtualDrag.timer) { clearTimeout(virtualDrag.timer); virtualDrag.timer = null }
-  if (virtualDrag.active) {
-    const sourcePath = virtualDrag.dragNode?.key; const targetPath = virtualDrag.dropTarget
-    if (sourcePath && targetPath && sourcePath !== targetPath) {
-      try {
-        message.loading('正在移动...', { duration: 1000 })
-        await invoke('move_item', { sourcePath, targetDir: targetPath })
-        const sourceParentIndex = Math.max(sourcePath.lastIndexOf('\\'), sourcePath.lastIndexOf('/'))
-        const sourceParentPath = sourceParentIndex !== -1 ? sourcePath.substring(0, sourceParentIndex) : store.libraryPath
-        await refreshNode(sourceParentPath); if (sourceParentPath !== targetPath) await refreshNode(targetPath)
-        message.success('移动成功')
-      } catch (err: any) { message.error('移动失败') }
-    }
-    virtualDrag.active = false; virtualDrag.dragNode = null; virtualDrag.dropTarget = null
+const handleNodeSelect = (keys: string[]) => {
+  if (keys.length === 0) return
+  const lastKey = keys[keys.length - 1]
+  if (lastKey && lastKey.endsWith('.md')) { 
+    const title = lastKey.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'
+    store.addTab({ id: lastKey, title, path: lastKey, isDirty: false }) 
   }
 }
 
-const onMouseMove = (e: MouseEvent) => {
-  if (activeResizer.value === 'sidebar') { sidebarWidth.value = Math.max(220, Math.min(e.clientX, 600)) }
-  virtualDrag.x = e.clientX; virtualDrag.y = e.clientY
-  if (virtualDrag.active) updateDropTarget(e.clientX, e.clientY, false)
-}
+const handleLoadChildren = async (option: TreeOption) => { option.children = await loadDirectory(option.key as string) }
 
-const updateDropTarget = (x: number, y: number, isExternal: boolean) => {
-  const el = document.elementFromPoint(x, y)
-  const targetEl = el?.closest('[data-key]')
-  if (targetEl) {
-    const key = targetEl.getAttribute('data-key'); const isDir = targetEl.getAttribute('data-is-dir') === 'true'
-    if (key && isDir && (isExternal || key !== virtualDrag.dragNode?.key)) virtualDrag.dropTarget = key; else virtualDrag.dropTarget = null
-  } else {
-    const isOverViewport = el?.closest('.tree-viewport')
-    if (isOverViewport) {
-      if (!isExternal) {
-        const sourcePath = virtualDrag.dragNode?.key as string
-        const lastSlash = Math.max(sourcePath.lastIndexOf('\\'), sourcePath.lastIndexOf('/'))
-        const parentPath = lastSlash !== -1 ? sourcePath.substring(0, lastSlash) : ''
-        if (parentPath === store.libraryPath) virtualDrag.dropTarget = null; else virtualDrag.dropTarget = store.libraryPath
-      } else virtualDrag.dropTarget = store.libraryPath
-    } else virtualDrag.dropTarget = null
-  }
+const handleCodeThemeChange = async (val: string) => {
+  store.codeTheme = val; await store.updateConfig({ codeTheme: val })
+  if (vditor && isVditorReady) { const isDark = store.theme === 'dark'; vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', val) }
 }
+const handleEditorBgChange = async (val: string) => { store.editorBgColor = val; await store.updateConfig({ editorBgColor: val }) }
 
 const loadDirectory = async (path: string): Promise<TreeOption[]> => {
   if (!path) return []
@@ -470,42 +445,153 @@ const loadFileToEditor = async (path: string) => {
   } catch (err) { message.error("读取失败") }
 }
 
-const handleNodeSelect = (keys: string[]) => {
-  const path = keys[0]; if (!path) return
-  selectedKeys.value = keys; if (path.endsWith('.md')) { 
-    const title = path.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'
-    store.addTab({ id: path, title, path, isDirty: false }) 
+const virtualDrag = reactive({ active: false, x: 0, y: 0, startX: 0, startY: 0, dragNode: null as any, dropTarget: null as any, ghostText: '', timer: null as any, selectedPaths: [] as string[] })
+
+const updateDropTarget = (x: number, y: number, isExternal: boolean) => {
+  const elements = document.elementsFromPoint(x, y)
+  let foundKey = null
+  let isViewport = false
+
+  // 1. 深度优先搜索：寻找树节点
+  for (const el of elements) {
+    if (el.classList.contains('drag-ghost')) continue
+    if (el.classList.contains('tree-viewport')) isViewport = true
+    
+    // 尝试寻找带有标识的节点
+    const node = el.closest('[data-drop-path]')
+    if (node) {
+      const path = node.getAttribute('data-drop-path') as string
+      const isDir = node.getAttribute('data-drop-dir') === 'true'
+      
+      if (isDir) {
+        if (!virtualDrag.selectedPaths.includes(path)) foundKey = path
+      } else {
+        const lastIdx = Math.max(path.lastIndexOf('\\'), path.lastIndexOf('/'))
+        const parentPath = lastIdx !== -1 ? path.substring(0, lastIdx) : store.libraryPath
+        if (!virtualDrag.selectedPaths.includes(parentPath)) foundKey = parentPath
+      }
+      if (foundKey) break 
+    }
+  }
+
+  if (foundKey) {
+    virtualDrag.dropTarget = foundKey
+  } else if (isViewport) {
+    virtualDrag.dropTarget = store.libraryPath
+  } else {
+    virtualDrag.dropTarget = null
   }
 }
 
-const handleLoadChildren = async (option: TreeOption) => { option.children = await loadDirectory(option.key as string) }
-const handleCodeThemeChange = async (val: string) => {
-  store.codeTheme = val; await store.updateConfig({ codeTheme: val })
-  if (vditor && isVditorReady) { const isDark = store.theme === 'dark'; vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', val) }
-}
-const handleEditorBgChange = async (val: string) => { store.editorBgColor = val; await store.updateConfig({ editorBgColor: val }) }
+const onMouseUp = async () => {
+  activeResizer.value = null
+  if (virtualDrag.timer) { clearTimeout(virtualDrag.timer); virtualDrag.timer = null }
+  if (virtualDrag.active) {
+    const targetPath = virtualDrag.dropTarget
+    const sourcePaths = virtualDrag.selectedPaths.length > 0 ? virtualDrag.selectedPaths : (virtualDrag.dragNode ? [virtualDrag.dragNode.key] : [])
+    
+    if (sourcePaths.length > 0 && targetPath) {
+      const validSources = sourcePaths.filter(p => {
+        const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/'))
+        const parent = idx !== -1 ? p.substring(0, idx) : store.libraryPath
+        return parent !== targetPath && p !== targetPath
+      })
 
-const deleteAction = async (path: string) => {
-  if (!path) return; const displayTitle = path.split(/[\\/]/).pop()?.replace(/\.md$/, '')
-  const parentPath = path.substring(0, Math.max(path.lastIndexOf('\\'), path.lastIndexOf('/')))
-  if (confirm(`确认要物理删除 ${displayTitle}吗？`)) { 
-    try { await invoke('delete_item', { path }); if (activeTabId.value === path) store.removeTab(path); await refreshNode(parentPath || store.libraryPath); message.success('已删除') }
-    catch (e) { message.error('删除失败') } 
+      if (validSources.length > 0) {
+        try {
+          message.loading(`正在移动 ${validSources.length} 个项目...`)
+          await invoke('move_items', { sourcePaths: validSources, targetDir: targetPath })
+          const parentsToRefresh = new Set<string>()
+          parentsToRefresh.add(targetPath)
+          validSources.forEach(p => {
+            const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/'))
+            parentsToRefresh.add(idx !== -1 ? p.substring(0, idx) : store.libraryPath)
+          })
+          for (const p of parentsToRefresh) await refreshNode(p)
+          selectedKeys.value = []
+          message.destroyAll(); message.success('移动成功')
+        } catch (err: any) { message.destroyAll(); message.error('移动失败: ' + err) }
+      }
+    }
+    virtualDrag.active = false; virtualDrag.dragNode = null; virtualDrag.dropTarget = null; virtualDrag.selectedPaths = []
+  }
+}
+
+const onMouseMove = (e: MouseEvent) => {
+  if (activeResizer.value === 'sidebar') { sidebarWidth.value = Math.max(220, Math.min(e.clientX, 600)) }
+  // 影子偏移，确保不挡住探测
+  virtualDrag.x = e.clientX + 10; virtualDrag.y = e.clientY + 10
+  if (virtualDrag.active) updateDropTarget(e.clientX, e.clientY, false)
+}
+
+const deleteAction = async (paths: string[]) => {
+  if (paths.length === 0) return;
+  const isMultiple = paths.length > 1
+  const displayTitle = isMultiple ? `选中的 ${paths.length} 个项目` : paths[0].split(/[\\/]/).pop()?.replace(/\.md$/, '')
+  if (confirm(`确认要物理删除 ${displayTitle} 吗？`)) { 
+    try { 
+      await invoke('delete_items', { paths })
+      paths.forEach(p => { if (activeTabId.value === p || store.tabs.some(t => t.id === p)) store.removeTab(p) })
+      const parentsToRefresh = new Set<string>()
+      paths.forEach(p => { const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/')); parentsToRefresh.add(idx !== -1 ? p.substring(0, idx) : store.libraryPath) })
+      for (const p of parentsToRefresh) await refreshNode(p)
+      selectedKeys.value = []; message.success('已物理删除')
+    } catch (e) { message.error('删除失败') } 
   }
 }
 
 const nodeProps = ({ option }: { option: TreeOption }) => ({
-  'data-key': option.key, 'data-is-dir': !option.isLeaf ? 'true' : 'false', 
+  'data-drop-path': option.key, 
+  'data-drop-dir': !option.isLeaf ? 'true' : 'false', 
   class: virtualDrag.dropTarget === option.key ? 'drop-active' : '',
-  onMousedown: (e: MouseEvent) => { if (e.button !== 0) return; virtualDrag.startX = e.clientX; virtualDrag.startY = e.clientY; if (virtualDrag.timer) clearTimeout(virtualDrag.timer); virtualDrag.timer = setTimeout(() => { virtualDrag.active = true; virtualDrag.dragNode = option; virtualDrag.ghostText = option.label as string; virtualDrag.timer = null }, 350) },
-  onClick: () => { if (virtualDrag.active) return; handleNodeSelect([option.key as string]); if (!option.isLeaf) { const key = option.key as string; const index = expandedKeys.value.indexOf(key); if (index > -1) expandedKeys.value.splice(index, 1); else expandedKeys.value.push(key); expandedKeys.value = [...expandedKeys.value] } },
-  onContextmenu: (e: MouseEvent) => { if (virtualDrag.active) return; e.preventDefault(); contextMenu.show = false; setTimeout(() => { contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf; const items = [ { label: '重命名 (F2)', key: 'rename', icon: () => h(NIcon, null, { default: () => h(EditIcon) }) }, { label: '物理删除 (Del)', key: 'delete', icon: () => h(NIcon, { color: '#f5222d' }, { default: () => h(TrashIcon) }) } ]; if (contextMenu.isDir) { items.unshift({ label: '新建子笔记', key: 'add-file', icon: () => h(NIcon, null, { default: () => h(PlusIcon) }) }, { label: '新建子文件夹', key: 'add-folder', icon: () => h(NIcon, null, { default: () => h(FolderPlusIcon) }) }) } contextMenu.options = items; contextMenu.show = true }, 50) }
+  onMousedown: (e: MouseEvent) => { 
+    if (e.button !== 0) return; 
+    virtualDrag.startX = e.clientX; virtualDrag.startY = e.clientY; 
+    if (virtualDrag.timer) clearTimeout(virtualDrag.timer); 
+    virtualDrag.timer = setTimeout(() => { 
+      virtualDrag.active = true; virtualDrag.dragNode = option; 
+      if (selectedKeys.value.includes(option.key as string)) {
+        virtualDrag.selectedPaths = [...selectedKeys.value]
+        virtualDrag.ghostText = `移动 ${selectedKeys.value.length} 个项目`
+      } else {
+        virtualDrag.selectedPaths = [option.key as string]
+        virtualDrag.ghostText = option.label as string
+      }
+      virtualDrag.timer = null 
+    }, 350) 
+  },
+  onClick: (e: MouseEvent) => { 
+    if (virtualDrag.active) return;
+    const key = option.key as string
+    if (e.ctrlKey || e.metaKey) {
+      const idx = selectedKeys.value.indexOf(key)
+      if (idx > -1) selectedKeys.value.splice(idx, 1); else selectedKeys.value.push(key)
+    } else {
+      selectedKeys.value = [key]
+    }
+    selectedKeys.value = [...selectedKeys.value]
+    handleNodeSelect(selectedKeys.value)
+  },
+  onContextmenu: (e: MouseEvent) => { 
+    if (virtualDrag.active) return; e.preventDefault(); contextMenu.show = false; 
+    if (!selectedKeys.value.includes(option.key as string)) selectedKeys.value = [option.key as string]
+    setTimeout(() => { 
+      contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf; 
+      const isMulti = selectedKeys.value.length > 1
+      const items = [ 
+        { label: isMulti ? '批量重命名不可用' : '重命名 (F2)', key: 'rename', disabled: isMulti, icon: () => h(NIcon, null, { default: () => h(EditIcon) }) }, 
+        { label: isMulti ? `物理删除所选 ${selectedKeys.value.length} 项` : '物理删除 (Del)', key: 'delete', icon: () => h(NIcon, { color: '#f5222d' }, { default: () => h(TrashIcon) }) } 
+      ]; 
+      if (!isMulti && contextMenu.isDir) items.unshift({ label: '新建子笔记', key: 'add-file', icon: () => h(NIcon, null, { default: () => h(PlusIcon) }) }, { label: '新建子文件夹', key: 'add-folder', icon: () => h(NIcon, null, { default: () => h(FolderPlusIcon) }) })
+      contextMenu.options = items; contextMenu.show = true 
+    }, 50) 
+  }
 })
 
 const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
   if (key === 'rename') { renameState.oldPath = path; let name = path.split(/[\\/]/).pop() || ''; if (!contextMenu.isDir) name = name.substring(0, name.lastIndexOf('.')); renameState.newName = name; renameState.show = true }
-  else if (key === 'delete') await deleteAction(path)
+  else if (key === 'delete') await deleteAction(selectedKeys.value)
   else if (key === 'add-file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path); handleNodeSelect([p]) }
   else if (key === 'add-folder') { await invoke('create_new_folder', { parentPath: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path) }
 }
@@ -561,7 +647,7 @@ const initVditor = () => {
 const handleTabsWheel = (e: WheelEvent) => { if (tabsScrollRef.value) tabsScrollRef.value.scrollLeft += e.deltaY }
 const handleKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'F2' && selectedKeys.value.length > 0) { const p = selectedKeys.value[0]; renameState.oldPath = p; let name = p.split(/[\\/]/).pop() || ''; if (p.endsWith('.md')) name = name.substring(0, name.lastIndexOf('.')); renameState.newName = name; renameState.show = true }
-  if (e.key === 'Delete' && selectedKeys.value.length > 0) deleteAction(selectedKeys.value[0])
+  if (e.key === 'Delete' && selectedKeys.value.length > 0) deleteAction(selectedKeys.value)
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
 }
 
@@ -728,40 +814,21 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .history-bubble:nth-child(3) { animation-delay: 0.15s; }
 .history-bubble:nth-child(4) { animation-delay: 0.2s; }
 
-/* === 底部 Footer - 硬核立体版 === */
+/* === 底部 Footer === */
 .sidebar-footer-container { padding: 12px; flex-shrink: 0; }
 .sidebar-footer { 
   display: flex; align-items: center; gap: 12px; padding: 12px; 
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 240, 243, 0.9) 100%);
   backdrop-filter: blur(20px); 
   border-radius: 16px; 
-  /* 核心：更清晰的描边 + 更沉的阴影 */
   border: 1.2px solid rgba(var(--theme-primary-rgb), 0.65); 
-  box-shadow: 
-    0 6px 16px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 1);
   cursor: pointer; 
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.is-dark .sidebar-footer { 
-  background: linear-gradient(135deg, rgba(50, 50, 55, 0.95) 0%, rgba(25, 25, 28, 0.98) 100%);
-  border-color: rgba(var(--theme-primary-rgb), 0.7); 
-  box-shadow: 
-    0 12px 32px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-.sidebar-footer:hover { 
-  transform: translateY(-5px) scale(1.02); 
-  background: #fff; 
-  /* 极致立体：深层投影 + 品牌色外发光 */
-  box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.15),
-    0 10px 25px rgba(var(--theme-primary-rgb), 0.25),
-    0 0 0 1px var(--theme-primary); 
-  border-color: transparent; 
-}
+.is-dark .sidebar-footer { background: linear-gradient(135deg, rgba(50, 50, 55, 0.95) 0%, rgba(25, 25, 28, 0.98) 100%); border-color: rgba(var(--theme-primary-rgb), 0.7); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+.sidebar-footer:hover { transform: translateY(-5px) scale(1.02); background: #fff; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 0 10px 25px rgba(var(--theme-primary-rgb), 0.25), 0 0 0 1px var(--theme-primary); border-color: transparent; }
 .is-dark .sidebar-footer:hover { background: #1c1c1e; }
 
 .settings-icon-box { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.03); border-radius: 10px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); color: var(--theme-text); opacity: 0.8; }
@@ -811,7 +878,8 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .hero-subtitle { font-size: 16px; opacity: 0.6; margin-bottom: 32px; animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
 .hero-actions { display: flex; gap: 16px; justify-content: center; animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both; }
 
-.drag-ghost { position: fixed; pointer-events: none; z-index: 9999; padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid var(--theme-primary); border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--theme-primary); }
+.drag-ghost { position: fixed; pointer-events: none !important; z-index: 9999; padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid var(--theme-primary); border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--theme-primary); }
+.drag-ghost * { pointer-events: none !important; }
 
 @keyframes treeContainerFade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes bubblePop { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }

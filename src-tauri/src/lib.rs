@@ -43,7 +43,13 @@ pub struct AppConfig {
     pub hero_icon: String,
     pub auto_save_interval: u32,
     pub max_history_count: u32,
+    #[serde(default)]
+    pub is_autostart: bool,
+    #[serde(default = "default_exit_strategy")]
+    pub exit_strategy: String,
 }
+
+fn default_exit_strategy() -> String { "ask".into() }
 
 impl Default for AppConfig {
     fn default() -> Self {
@@ -57,6 +63,8 @@ impl Default for AppConfig {
             hero_icon: "BookOpen".into(),
             auto_save_interval: 3,
             max_history_count: 10,
+            is_autostart: false,
+            exit_strategy: "ask".into(),
         }
     }
 }
@@ -89,6 +97,8 @@ fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
         hero_icon: "BookOpen".into(),
         auto_save_interval: 3,
         max_history_count: 10,
+        is_autostart: false,
+        exit_strategy: "ask".into(),
     }
 }
 
@@ -433,6 +443,22 @@ async fn export_to_html(path: String, html_content: String) -> Result<(), String
 }
 
 #[tauri::command]
+async fn move_items(app_handle: tauri::AppHandle, source_paths: Vec<String>, target_dir: String) -> Result<(), String> {
+    for source_path in source_paths {
+        let _ = move_item(app_handle.clone(), source_path, target_dir.clone()).await?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+async fn delete_items(app_handle: tauri::AppHandle, paths: Vec<String>) -> Result<(), String> {
+    for path in paths {
+        let _ = delete_item(app_handle.clone(), path).await?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 fn exit_app(app_handle: tauri::AppHandle) { app_handle.exit(0); }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -441,6 +467,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             if args.len() > 1 { let _ = app.emit("open-file", args[1].clone()); }
@@ -487,7 +514,7 @@ pub fn run() {
             read_markdown_file, write_markdown_file, get_launch_args, scan_directory, 
             import_to_library, save_image, save_shadow_copy, get_url_title, search_library, 
             export_to_html, get_config, save_config, create_new_file, create_new_folder,
-            rename_item, delete_item, move_item, set_as_default_handler,
+            rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler,
             save_history_version, list_history, delete_history_version, clear_all_history,
             exit_app
         ])
