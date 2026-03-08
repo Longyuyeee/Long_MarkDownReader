@@ -787,6 +787,14 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
   font-size: 13px !important; 
   border-radius: 6px; 
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important; 
+  overflow: hidden;
+}
+
+.compact-outline-tree :deep(.n-tree-node-content__text) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }
 
 .compact-outline-tree :deep(.n-tree-node-content:hover) { 

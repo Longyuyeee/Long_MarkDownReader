@@ -31,6 +31,7 @@ export const useAppStore = defineStore('app', {
     autoSaveInterval: 3,
     maxHistoryCount: 10,
     isAutostart: false,
+    isDefaultEditor: false,
     exitStrategy: 'ask' as 'ask' | 'quit' | 'minimize',
     isZen: false,
   }),
@@ -62,7 +63,17 @@ export const useAppStore = defineStore('app', {
         } catch (e) {
           this.isAutostart = config.isAutostart || false
         }
+        
+        // 校准系统默认关联状态
+        await this.checkSystemStatus()
       } catch (e) { console.error('Failed to load config', e) }
+    },
+    async checkSystemStatus() {
+      try {
+        this.isDefaultEditor = await invoke<boolean>('check_association_status')
+      } catch (e) {
+        console.error('Failed to check association status', e)
+      }
     },
     async updateConfig(patch: any) {
       // 检测文件库切换，若切换则清空标签页

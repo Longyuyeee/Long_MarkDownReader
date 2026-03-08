@@ -81,7 +81,14 @@
                 <div class="label">设为默认 Markdown 编辑器</div>
                 <div class="desc">双击 .md 文件将自动使用胧编辑打开</div>
               </div>
-              <n-button secondary type="info" @click="setAsDefault">立即设置</n-button>
+              <n-button 
+                secondary 
+                :type="store.isDefaultEditor ? 'success' : 'info'" 
+                @click="setAsDefault"
+                :disabled="store.isDefaultEditor"
+              >
+                {{ store.isDefaultEditor ? '已是默认编辑器' : '立即设置' }}
+              </n-button>
             </div>
           </n-grid-item>
 
@@ -208,7 +215,17 @@ const clearHistory = async () => {
 const setAsDefault = async () => {
   try {
     await invoke('set_as_default_handler')
-    message.success('已成功修改系统注册表')
+    message.loading('正在同步系统设置...', { duration: 1000 })
+    
+    // 延迟检查，给系统注册表反应时间
+    setTimeout(async () => {
+      await store.checkSystemStatus()
+      if (store.isDefaultEditor) {
+        message.success('已成功设为默认编辑器')
+      } else {
+        message.warning('设置已提交，若未生效请在系统“打开方式”中手动选择胧编辑')
+      }
+    }, 1500)
   } catch (err) {
     message.error('设置失败: ' + err)
   }

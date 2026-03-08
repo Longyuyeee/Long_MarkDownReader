@@ -114,17 +114,40 @@ fn save_config(app_handle: tauri::AppHandle, config: AppConfig) -> Result<(), St
 fn set_as_default_handler() -> Result<(), String> {
     let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
     let exe_str = exe_path.to_string_lossy().to_string();
+    
+    // 修复：使用 Set-Item 直接设置默认值，而不是 Set-ItemProperty -Name ''
     let script = format!(
-        "$regPath = 'Registry::HKEY_CLASSES_ROOT\\.md'; \
-         if (-not (Test-Path $regPath)) {{ New-Item -Path $regPath -Force }}; \
-         Set-ItemProperty -Path $regPath -Name '' -Value 'MDReader.MD'; \
-         $shellPath = 'Registry::HKEY_CLASSES_ROOT\\MDReader.MD\\shell\\open\\command'; \
-         if (-not (Test-Path $shellPath)) {{ New-Item -Path $shellPath -Force }}; \
-         Set-ItemProperty -Path $shellPath -Name '' -Value '\"{}\" \"%1\"'",
+        "$classesPath = 'Registry::HKEY_CURRENT_USER\\Software\\Classes'; \
+         $mdPath = \"$classesPath\\.md\"; \
+         $progId = '胧编辑.MD'; \
+         $progIdPath = \"$classesPath\\$progId\"; \
+         if (-not (Test-Path $mdPath)) {{ New-Item -Path $mdPath -Force | Out-Null }}; \
+         Set-Item -Path $mdPath -Value $progId; \
+         if (-not (Test-Path \"$progIdPath\\shell\\open\\command\")) {{ New-Item -Path \"$progIdPath\\shell\\open\\command\" -Force | Out-Null }}; \
+         Set-Item -Path $progIdPath -Value 'Markdown 文本文件'; \
+         Set-ItemProperty -Path $progIdPath -Name 'FriendlyAppName' -Value '胧编辑'; \
+         Set-Item -Path \"$progIdPath\\shell\\open\\command\" -Value '\"{}\" \"%1\"'",
         exe_str
     );
-    Command::new("powershell").args(["-Command", &script]).output().map_err(|e| e.to_string())?;
+    
+    let output = Command::new("powershell").args(["-Command", &script]).output().map_err(|e| e.to_string())?;
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).to_string());
+    }
     Ok(())
+}
+
+#[tauri::command]
+fn check_association_status() -> bool {
+    // 修复：使用 (Get-Item).'(default)' 获取默认值
+    let script = "(Get-Item -Path 'Registry::HKEY_CURRENT_USER\\Software\\Classes\\.md' -ErrorAction SilentlyContinue).'(default)'";
+    let output = Command::new("powershell").args(["-Command", script]).output();
+    
+    if let Ok(out) = output {
+        let val = String::from_utf8_lossy(&out.stdout).trim().to_string();
+        return val == "胧编辑.MD";
+    }
+    false
 }
 
 #[tauri::command]
@@ -548,6 +571,7 @@ pub fn run() {
             import_to_library, save_image, save_shadow_copy, get_url_title, search_library, 
             export_to_html, get_config, save_config, create_new_file, create_new_folder,
             rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler,
+            check_association_status,
             save_history_version, list_history, delete_history_version, clear_all_history,
             exit_app
         ])
