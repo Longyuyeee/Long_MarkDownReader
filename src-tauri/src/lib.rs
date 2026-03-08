@@ -85,10 +85,10 @@ fn get_config(app_handle: tauri::AppHandle) -> AppConfig {
 
 fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
     let mut path = app_handle.path().document_dir().unwrap_or_else(|_| PathBuf::from("C:\\"));
-    path.push("MistyLibrary");
+    path.push("胧编辑知识库");
     let default_path = path.to_string_lossy().into_owned();
     AppConfig {
-        libraries: vec![LibraryConfig { name: "默认文件库".into(), path: default_path.clone() }],
+        libraries: vec![LibraryConfig { name: "默认知识库".into(), path: default_path.clone() }],
         active_library_path: default_path,
         theme: "system".into(),
         code_theme: "github".into(),
@@ -117,8 +117,8 @@ fn set_as_default_handler() -> Result<(), String> {
     let script = format!(
         "$regPath = 'Registry::HKEY_CLASSES_ROOT\\.md'; \
          if (-not (Test-Path $regPath)) {{ New-Item -Path $regPath -Force }}; \
-         Set-ItemProperty -Path $regPath -Name '' -Value 'MistyEdit.MD'; \
-         $shellPath = 'Registry::HKEY_CLASSES_ROOT\\MistyEdit.MD\\shell\\open\\command'; \
+         Set-ItemProperty -Path $regPath -Name '' -Value 'MDReader.MD'; \
+         $shellPath = 'Registry::HKEY_CLASSES_ROOT\\MDReader.MD\\shell\\open\\command'; \
          if (-not (Test-Path $shellPath)) {{ New-Item -Path $shellPath -Force }}; \
          Set-ItemProperty -Path $shellPath -Name '' -Value '\"{}\" \"%1\"'",
         exe_str
@@ -311,6 +311,38 @@ fn get_history_dir(app_handle: &tauri::AppHandle, path: &str) -> PathBuf {
     cache_dir.join(file_hash)
 }
 
+/// 数据迁移服务：处理旧版本到新版本的路径平滑过渡
+fn check_and_migrate_data(app: &tauri::AppHandle) {
+    let old_identifier = "com.mistyedit.mdhelper";
+    let new_identifier = app.config().identifier.clone();
+    
+    // 如果标识符没变，不需要迁移
+    if old_identifier == new_identifier { return; }
+
+    let resolver = app.path();
+    let old_config_dir = resolver.app_config_dir().unwrap().to_string_lossy().replace(&new_identifier, old_identifier);
+    let new_config_dir = resolver.app_config_dir().unwrap();
+    let old_cache_dir = resolver.app_cache_dir().unwrap().to_string_lossy().replace(&new_identifier, old_identifier);
+    let new_cache_dir = resolver.app_cache_dir().unwrap();
+
+    let old_config_path = PathBuf::from(old_config_dir);
+    let old_cache_path = PathBuf::from(old_cache_dir);
+
+    // 1. 迁移配置文件
+    if old_config_path.exists() && !new_config_dir.exists() {
+        println!("Detecting old config, migrating...");
+        let _ = fs::create_dir_all(new_config_dir.parent().unwrap());
+        let _ = fs::rename(&old_config_path, &new_config_dir);
+    }
+
+    // 2. 迁移历史记录缓存
+    if old_cache_path.exists() && !new_cache_dir.exists() {
+        println!("Detecting old cache, migrating...");
+        let _ = fs::create_dir_all(new_cache_dir.parent().unwrap());
+        let _ = fs::rename(&old_cache_path, &new_cache_dir);
+    }
+}
+
 #[tauri::command]
 async fn save_history_version(app_handle: tauri::AppHandle, path: String, content: String, max_count: u32) -> Result<(), String> {
     let file_history_dir = get_history_dir(&app_handle, &path);
@@ -481,6 +513,7 @@ pub fn run() {
             }
         })
         .setup(|app| {
+            check_and_migrate_data(app.handle());
             let window = app.get_webview_window("main").unwrap();
             #[cfg(target_os = "windows")]
             { if let Err(_) = apply_mica(&window, None) { let _ = apply_blur(&window, Some((0, 0, 0, 0))); } }

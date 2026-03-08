@@ -63,7 +63,7 @@
                 <div class="label">开机自动启动</div>
                 <div class="desc">在 Windows 启动时自动运行胧编辑</div>
               </div>
-              <n-switch v-model:value="config.isAutostart" @update:value="toggleAutostart" />
+              <n-switch v-model:value="config.isAutostart" />
             </div>
             <div class="setting-row">
               <div class="info">
@@ -110,7 +110,6 @@ import { useRouter } from 'vue-router'
 import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
-import { isEnabled, enable, disable } from '@tauri-apps/plugin-autostart'
 import { useMessage, NTag, NInputGroup } from 'naive-ui'
 import { useAppStore } from '../store/app'
 
@@ -135,11 +134,6 @@ const newLib = reactive({ name: '', path: '' })
 
 onMounted(async () => {
   await store.loadConfig()
-  // 同步系统自启动状态到配置中 (以防外部修改)
-  const autostartEnabled = await isEnabled()
-  if (autostartEnabled !== store.isAutostart) {
-    store.isAutostart = autostartEnabled
-  }
   
   config.value = {
     libraries: [...store.libraries],
@@ -159,21 +153,6 @@ onMounted(async () => {
 watch(config, (newVal) => {
   store.updateConfig(newVal)
 }, { deep: true })
-
-const toggleAutostart = async (val: boolean) => {
-  try {
-    if (val) {
-      await enable()
-      message.success('已开启开机自启动')
-    } else {
-      await disable()
-      message.success('已关闭开机自启动')
-    }
-  } catch (err) {
-    message.error('设置自启动失败')
-    config.value.isAutostart = !val // 失败时回滚
-  }
-}
 
 const chooseNewLibDir = async () => {
   const selected = await open({ directory: true, multiple: false, title: '选择软件库文件夹' })

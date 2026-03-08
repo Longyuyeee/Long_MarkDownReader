@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { invoke } from '@tauri-apps/api/core'
+import { enable, disable, isEnabled } from '@tauri-apps/plugin-autostart'
 
 export type SessionMode = 'TEMP' | 'LIBRARY'
 
@@ -53,8 +54,14 @@ export const useAppStore = defineStore('app', {
         this.heroIcon = config.heroIcon || 'BookOpen'
         this.autoSaveInterval = config.autoSaveInterval || 3
         this.maxHistoryCount = config.maxHistoryCount || 10
-        this.isAutostart = config.isAutostart || false
         this.exitStrategy = config.exitStrategy || 'ask'
+
+        // 同步系统真实的自启状态，以系统为准
+        try {
+          this.isAutostart = await isEnabled()
+        } catch (e) {
+          this.isAutostart = config.isAutostart || false
+        }
       } catch (e) { console.error('Failed to load config', e) }
     },
     async updateConfig(patch: any) {
@@ -62,6 +69,17 @@ export const useAppStore = defineStore('app', {
       if (patch.activeLibraryPath !== undefined && patch.activeLibraryPath !== this.activeLibraryPath) {
         this.tabs = []
         this.activeTabId = null
+      }
+
+      // 核心修复：真实调用自启插件
+      if (patch.isAutostart !== undefined && patch.isAutostart !== this.isAutostart) {
+        try {
+          if (patch.isAutostart) await enable()
+          else await disable()
+        } catch (e) {
+          console.error('Autostart plugin error', e)
+          patch.isAutostart = this.isAutostart // 如果操作失败，回滚 patch 值
+        }
       }
 
       for (const key in patch) {
@@ -83,6 +101,7 @@ export const useAppStore = defineStore('app', {
         isAutostart: this.isAutostart,
         exitStrategy: this.exitStrategy
       } })
+
     },
     addTab(tab: TabInfo) {
       const exists = this.tabs.find(t => t.path === tab.path)
