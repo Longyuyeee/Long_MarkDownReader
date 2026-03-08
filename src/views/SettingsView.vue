@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, watch } from 'vue'
+import { ref, onMounted, reactive, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
@@ -123,6 +123,7 @@ import { useAppStore } from '../store/app'
 const router = useRouter()
 const message = useMessage()
 const store = useAppStore()
+const isInitializing = ref(true)
 
 const config = ref({
   libraries: [] as any[],
@@ -140,6 +141,7 @@ const config = ref({
 const newLib = reactive({ name: '', path: '' })
 
 onMounted(async () => {
+  isInitializing.value = true
   await store.loadConfig()
   
   config.value = {
@@ -154,10 +156,15 @@ onMounted(async () => {
     isAutostart: store.isAutostart,
     exitStrategy: store.exitStrategy
   }
+  
+  nextTick(() => {
+    isInitializing.value = false
+  })
 })
 
 // 深度监听配置对象，实现实时保存
 watch(config, (newVal) => {
+  if (isInitializing.value) return
   store.updateConfig(newVal)
 }, { deep: true })
 

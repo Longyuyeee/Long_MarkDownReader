@@ -150,8 +150,15 @@ const handleExit = () => {
 onMounted(async () => {
   await store.loadConfig()
 
-  await listen<string>('open-file', (event) => {
+  await listen<string>('open-file', async (event) => {
     const filePath = event.payload
+    
+    // 唤醒窗口
+    const win = new Window('main')
+    if (await win.isMinimized()) await win.unminimize()
+    await win.show()
+    await win.setFocus()
+
     if (filePath.endsWith('.md')) {
       router.push({ name: 'TempMode', query: { path: filePath, t: Date.now() } })
     }
@@ -179,6 +186,7 @@ body[data-theme="pink"]  { --theme-bg: #fff5f8; --theme-primary: #ff6b9d; --them
 body[data-theme="dark"]  { --theme-bg: #1c1c1e; --theme-primary: #42b883; --theme-card: rgba(255,255,255,0.08); --theme-text: #f5f5f7; }
 
 body { 
+  --titlebar-height: 32px;
   margin: 0; 
   padding: 0; 
   overflow: hidden; 

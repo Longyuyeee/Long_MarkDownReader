@@ -193,7 +193,17 @@ onUnmounted(() => {
 
 <style scoped>
 .temp-mode { height: 100vh; display: flex; flex-direction: column; background: var(--theme-bg); color: var(--theme-text); }
-.temp-header { height: 40px; background: rgba(0, 0, 0, 0.03); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); z-index: 10; }
+.temp-header { 
+  height: 48px; 
+  background: var(--theme-bg); 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  padding: 0 20px; 
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05); 
+  z-index: 10; 
+  backdrop-filter: saturate(180%) blur(20px);
+}
 .is-dark .temp-header { background: rgba(255, 255, 255, 0.05); border-bottom-color: rgba(255, 255, 255, 0.1); }
 
 .main-content { flex: 1; display: flex; overflow: hidden; }

@@ -9,6 +9,8 @@ use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use serde::{Serialize, Deserialize};
 use std::process::Command;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
 
 #[derive(Serialize)]
 pub struct FileContent {
@@ -115,7 +117,6 @@ fn set_as_default_handler() -> Result<(), String> {
     let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
     let exe_str = exe_path.to_string_lossy().to_string();
     
-    // 修复：使用 Set-Item 直接设置默认值，而不是 Set-ItemProperty -Name ''
     let script = format!(
         "$classesPath = 'Registry::HKEY_CURRENT_USER\\Software\\Classes'; \
          $mdPath = \"$classesPath\\.md\"; \
@@ -130,7 +131,14 @@ fn set_as_default_handler() -> Result<(), String> {
         exe_str
     );
     
-    let output = Command::new("powershell").args(["-Command", &script]).output().map_err(|e| e.to_string())?;
+    let mut cmd = Command::new("powershell");
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); 
+    }
+    
+    let output = cmd.args(["-Command", &script]).output().map_err(|e| e.to_string())?;
     if !output.status.success() {
         return Err(String::from_utf8_lossy(&output.stderr).to_string());
     }
@@ -139,9 +147,16 @@ fn set_as_default_handler() -> Result<(), String> {
 
 #[tauri::command]
 fn check_association_status() -> bool {
-    // 修复：使用 (Get-Item).'(default)' 获取默认值
     let script = "(Get-Item -Path 'Registry::HKEY_CURRENT_USER\\Software\\Classes\\.md' -ErrorAction SilentlyContinue).'(default)'";
-    let output = Command::new("powershell").args(["-Command", script]).output();
+    
+    let mut cmd = Command::new("powershell");
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000);
+    }
+
+    let output = cmd.args(["-Command", script]).output();
     
     if let Ok(out) = output {
         let val = String::from_utf8_lossy(&out.stdout).trim().to_string();
