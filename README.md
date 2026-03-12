@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.3.4-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.4.4-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -19,10 +19,10 @@
 
 ## 📥 立即体验 (Download)
 
-**性能飞跃，静默稳定：**
+**智能资源管理，系统深度集成：**
 
-*   [🚀 **Windows (.exe) 安装包**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v0.3.4/MistyEdit_Setup_v0.3.4.exe) - **首选推荐**，极速安装。
-*   [📦 **Windows (.msi) 安装包**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v0.3.4/MistyEdit_Setup_v0.3.4.msi) - 企业级部署，标准安装。
+*   [🚀 **Windows (.exe) 安装包**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v0.4.4/MistyEdit_Setup_v0.4.4.exe) - **首选推荐**，极速安装。
+*   [📦 **Windows (.msi) 安装包**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v0.4.4/MistyEdit_v0.4.4_x64_zh-CN.msi) - 企业级部署，标准安装。
 
 ---
 
@@ -34,9 +34,9 @@
 *   **阶梯式加载**：内容项依次有序滑入，赋予软件丝滑的生命感。
 
 ### 🛡️ 数据安全与迁移 (Robust Data)
-*   **自动化迁移服务**：v0.3.4 引入路径自动兼容逻辑，无感迁移旧版配置与历史记录。
+*   **自定义渲染协议**：v0.4.4 引入 `misty-img://` 专有协议，完美解决中文路径、跨盘符图片渲染问题。
+*   **镜像渲染代理**：采用非侵入式 DOM 拦截技术，编辑器显示的是安全路径，源码保存的是原始相对路径。
 *   **影子副本系统**：内置高频自动保存引擎，毫秒级捕捉编辑瞬间。
-*   **响应式性能防护**：引入初始化锁机制，彻底消除配置加载时的逻辑死循环，运行极其流畅。
 
 ### 📂 多文件库管理 (Library Pro)
 *   **逻辑多库支持**：支持关联无限数量的本地文件夹，并可自定义库别名。
@@ -44,21 +44,39 @@
 
 ### ⚡ 系统级生产力 (Integration)
 *   **智能关联唤醒**：优化单实例通信，右键打开外部文件时，程序自动从后台唤醒并夺取焦点。
-*   **100% 静默执行**：所有系统调用（注册表、自启设置）均在后台静默运行，告别控制台黑框闪烁。
+*   **100% 静默执行**：所有系统调用（注册表、自启设置）均在后台静默运行，告白控制台黑框闪烁。
 *   **快速笔记小窗**：`Tray` 菜单一键呼出独立小窗，灵感捕捉后自动存入 Inbox。
+
+---
+
+## 📦 智能资源管理约定 (Resource Management)
+
+为了保持知识库的极致纯净，本软件引入了 **“物理匹配 + 视图过滤”** 的资源管理方案：
+
+### 1. 视图过滤规则
+在左侧文件树侧边栏中，以下文件夹将**物理存在但自动隐藏**（不会显示在树状图中）：
+*   **常用资源目录**: `public`, `assets`, `img`, `images`, `static`
+*   **约定附件目录**: 任何以 `.assets` 结尾的文件夹
+*   **系统隐藏目录**: 任何以 `.` 开头的文件夹
+
+### 2. 精准导入与同步
+当您将外部 `.md` 文件拖入或点击“存入知识库”时：
+*   **按需搬运**: 软件会解析文档内容，**仅拷贝**引用的本地图片，拒绝冗余。
+*   **自动收纳**: 粘贴图片默认存入文档同级的 `.assets` 隐藏目录。
+*   **路径保留**: 保持原始相对路径结构，确保文档在 Typora/Obsidian 中依然可用。
+
+### 3. 绿色卸载
+当您在软件内**物理删除**一个 Markdown 文档时：
+*   **智能清理**: 软件会自动检测并删除该文档在库内引用的本地图片（仅限位于上述隐藏资源目录下），防止垃圾堆积。
 
 ---
 
 ## 📖 快速上手 (Quick Start)
 
 ### 1. 关联知识库
-启动后，点击左下角的 **设置图标** 或中间的 **“文件库配置”**，添加您电脑上存放 Markdown 的文件夹。胧编辑将 1:1 镜像同步该目录结构。
+启动后，点击左下角的 **设置图标**，添加您电脑上存放 Markdown 的文件夹。
 
-### 2. 编辑与保存
-*   **WYSIWYG 模式**：默认开启所见即所得，像使用 Word 一样编辑 Markdown。
-*   **文章大纲**：侧边栏提供实时同步的目录树，支持长标题截断与快速跳转。
-
-### 3. 快捷键
+### 2. 快捷键
 *   `Ctrl + P`：呼出命令面板，搜索文件或切换主题。
 *   `F11`：进入/退出 禅定模式 (Zen Mode)。
 *   `Ctrl + \`：展开/折叠侧边栏。
@@ -67,31 +85,10 @@
 
 ## 🛠️ 技术底座 (Architecture)
 
-*   **Core**: Rust + Tauri 2.0 (High Performance / Low Memory)
+*   **Core**: Rust + Tauri 2.0
 *   **UI**: Vue 3 + TypeScript + Pinia
 *   **Components**: Naive UI (Customized)
 *   **Editor**: Vditor (Highly Personalized)
-
----
-
-## 📦 智能资源管理 (Resource Management)
-
-为了保持知识库的极致纯净，本软件引入了 **“物理匹配 + 视图过滤”** 的资源管理方案：
-
-### 1. 视图过滤规则
-在文件树侧边栏中，以下文件夹将**物理存在但自动隐藏**：
-*   **常用资源目录**: `public`, `assets`, `img`, `images`, `static`
-*   **约定附件目录**: 任何以 `.assets` 结尾的文件夹
-*   **系统隐藏目录**: 任何以 `.` 开头的文件夹
-
-### 2. 精准导入与同步
-当您将外部 `.md` 文件拖入或存入知识库时：
-*   **按需搬运**: 软件会自动解析文档内容，**仅拷贝**文档中引用的本地图片，不会搬运整个资源文件夹。
-*   **路径保留**: 保持原始相对路径结构（如 `public/logo.png`），确保文档在其他编辑器（如 Obsidian, Typora）中依然具备完美的便携性。
-
-### 3. 绿色卸载
-当您在软件内**删除**一个 Markdown 文档时：
-*   **智能清理**: 软件会自动检测并删除该文档在库内引用的本地图片（仅限位于同级资源目录下），防止垃圾文件堆积。
 
 ---
 
