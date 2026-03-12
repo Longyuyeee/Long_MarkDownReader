@@ -248,7 +248,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch, reactive, h, onUnmounted, nextTick, computed } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
+import { invoke, convertFileSrc } from '@tauri-apps/api/core'
 import { useMessage, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
@@ -474,9 +474,41 @@ const loadFileToEditor = async (path: string) => {
         syncOutlineManual(); 
         initOutlineObserver();
         updateWordCount();
+        fixEditorImages(); // 动态修正显示
       }, 200) 
     })
   } catch (err) { message.error("读取失败") }
+}
+
+const fixEditorImages = () => {
+  if (!vditor || !isVditorReady || !activeTabId.value) return
+  const path = activeTabId.value
+  const parentDir = path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1)
+  const normalizedParent = parentDir.replace(/\\/g, '/')
+  
+  const contentEl = vditor.vditor.wysiwyg?.element
+  if (!contentEl) return
+
+  const imgs = contentEl.querySelectorAll('img')
+  imgs.forEach(async (img: HTMLImageElement) => {
+    const rawSrc = img.getAttribute('src')
+    if (!rawSrc || rawSrc.startsWith('http') || rawSrc.startsWith('asset:') || rawSrc.startsWith('data:')) return
+
+    // 重点：处理相对路径图片
+    let absolutePath = ''
+    if (rawSrc.startsWith('./')) absolutePath = normalizedParent + rawSrc.substring(2)
+    else if (!rawSrc.includes(':') && !rawSrc.startsWith('/')) absolutePath = normalizedParent + rawSrc
+    else absolutePath = rawSrc
+
+    // 终极修复：使用保底命令获取 base64，彻底解决 ERR_CONNECTION_REFUSED
+    try {
+      const b64 = await invoke<string>('get_image_base64', { path: absolutePath.replace(/\\/g, '/') })
+      if (img.src !== b64) img.src = b64
+    } catch (e) {
+      // 如果保底也失败，尝试使用 convertFileSrc
+      img.src = convertFileSrc(absolutePath.replace(/\\/g, '/'))
+    }
+  })
 }
 
 const virtualDrag = reactive({ active: false, x: 0, y: 0, startX: 0, startY: 0, dragNode: null as any, dropTarget: null as any, ghostText: '', timer: null as any, selectedPaths: [] as string[] })
@@ -649,18 +681,58 @@ const triggerAutoSave = (content: string) => {
 
 const saveCurrentFile = async () => {
   if (!vditor || !activeTabId.value) return; const t = tabs.value.find(item => item.id === activeTabId.value)
-  if (t) { try { const content = vditor.getValue(); await invoke('write_markdown_file', { path: t.path, content }); message.success('已保存'); if (autoSaveTimer) clearTimeout(autoSaveTimer) } catch (e) { message.error('保存失败') } }
+  if (t) { 
+    try { 
+      let content = vditor.getValue(); 
+      
+      // 路径还原：将 asset 调试路径还原为相对路径 (public/文件名)
+      const assetPattern = /https?:\/\/asset\.localhost\/[^"'\)\s]+/g
+      content = content.replace(assetPattern, (match: string) => {
+        try {
+          const decoded = decodeURIComponent(match)
+          const fileName = decoded.split('/').pop() || ''
+          return `public/${fileName}`
+        } catch (e) { return match }
+      })
+
+      await invoke('write_markdown_file', { path: t.path, content }); 
+      message.success('已安全保存'); 
+      if (autoSaveTimer) clearTimeout(autoSaveTimer) 
+    } catch (e) { message.error('保存失败') } 
+  }
 }
 
 const syncVditorMode = () => { if (vditor) { const currentMode = vditor.getCurrentMode(); if (currentMode && currentMode !== store.editorMode) store.updateConfig({ editorMode: currentMode as any }) } }
 const handleEditorClick = (e: MouseEvent) => { if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(() => syncVditorMode(), 300) }
 
 const initVditor = () => {
-  const container = document.getElementById('vditor-lib'); if (!container) return; container.addEventListener('click', handleEditorClick); editorLoading.value = true
+  const container = document.getElementById('vditor-lib'); if (!container) return; 
+  container.addEventListener('click', handleEditorClick); 
+  editorLoading.value = true
   try {
     vditor = new Vditor('vditor-lib', {
-      cdn: '/vditor', lang: 'zh_CN', height: '100%', mode: store.editorMode || 'wysiwyg', cache: { enable: false }, theme: store.theme === 'dark' ? 'dark' : 'classic',
-      preview: { theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, hljs: { enable: true, style: store.codeTheme || 'github' } },
+      cdn: '/vditor', 
+      lang: 'zh_CN', 
+      height: '100%', 
+      mode: store.editorMode || 'wysiwyg', 
+      cache: { enable: false }, 
+      theme: store.theme === 'dark' ? 'dark' : 'classic',
+      preview: { 
+        theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, 
+        hljs: { enable: true, style: store.codeTheme || 'github' },
+        transform: (html) => {
+          // 在渲染前，将所有相对路径图片转换为 misty-img 协议路径
+          if (!activeTabId.value) return html
+          const path = activeTabId.value
+          const parentDir = path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
+          
+          return html.replace(/(<img [^>]*src=["'])(.*?)(["'][^>]*>)/g, (match, prefix, url, suffix) => {
+            if (url.startsWith('http') || url.startsWith('misty-img:') || url.startsWith('data:')) return match
+            let abs = url.startsWith('./') ? parentDir + url.substring(2) : (url.includes(':') ? url : parentDir + url)
+            return `${prefix}misty-img://${abs.replace(/\\/g, '/')}${suffix}`
+          })
+        }
+      },
       toolbar: [
         'undo', 'redo', '|', 'emoji', 'headings', 'bold', 'italic', 'strike', '|', 'line', 'quote', 'list', 'ordered-list', 'check', '|',
         'code', 'inline-code', 
@@ -677,6 +749,7 @@ const initVditor = () => {
         if (cur) triggerAutoSave(val); 
         syncVditorMode();
         wordCount.value = val.length;
+        fixEditorImages(); // 实时修正
       },
       after: () => { 
         isVditorReady = true; 
@@ -687,6 +760,7 @@ const initVditor = () => {
           if (t) loadFileToEditor(t.path) 
         }
         updateWordCount();
+        setTimeout(fixEditorImages, 300); // 启动后修正
       }
     })
   } catch (e) { editorLoading.value = false }
@@ -715,7 +789,7 @@ onMounted(async () => {
         catch (err) { message.destroyAll(); message.error('导入失败') }
       }
       virtualDrag.dropTarget = null
-    } else virtualDrag.dropTarget = null
+    }
   })
 })
 

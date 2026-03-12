@@ -152,22 +152,19 @@ onMounted(async () => {
 
   await listen<string>('open-file', async (event) => {
     const filePath = event.payload
-    
-    // 唤醒窗口
-    const win = new Window('main')
-    if (await win.isMinimized()) await win.unminimize()
-    await win.show()
-    await win.setFocus()
-
-    if (filePath.endsWith('.md')) {
-      router.push({ name: 'TempMode', query: { path: filePath, t: Date.now() } })
+    if (filePath.toLowerCase().endsWith('.md') || filePath.toLowerCase().includes('.md"')) {
+      const cleanPath = filePath.replace(/^"|"$/g, '')
+      router.push({ name: 'TempMode', query: { path: cleanPath, t: Date.now() } })
     }
   })
 
   try {
     const args = await invoke<string[]>('get_launch_args')
-    const filePath = args.find(arg => arg.endsWith('.md'))
-    if (filePath) router.push({ name: 'TempMode', query: { path: filePath } })
+    const filePath = args.find(arg => arg.toLowerCase().endsWith('.md') || arg.toLowerCase().includes('.md"'))
+    if (filePath) {
+      const cleanPath = filePath.replace(/^"|"$/g, '')
+      router.push({ name: 'TempMode', query: { path: cleanPath } })
+    }
   } catch (e) {}
 
   window.addEventListener('keydown', (e) => {

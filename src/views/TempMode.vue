@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed, onUnmounted } from 'vue'
+import { onMounted, ref, computed, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, TreeOption, NIcon } from 'naive-ui'
@@ -75,7 +75,60 @@ const outlineItems = ref<OutlineItem[]>([])
 let vditor: Vditor | null = null
 let outlineObserver: MutationObserver | null = null
 
-// 大纲逻辑复用
+// 核心优化：采用异步 Base64 代理方案，彻底解决跨盘符、中文、特殊 HTML 块显示问题
+const fixEditorImages = () => {
+  if (!vditor || !filePath.value) return
+  const parentDir = filePath.value.substring(0, Math.max(filePath.value.lastIndexOf('/'), filePath.value.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
+  
+  const contentEl = (vditor as any).vditor.wysiwyg?.element
+  if (!contentEl) return
+
+  const imgs = contentEl.querySelectorAll('img')
+  imgs.forEach(async (img: HTMLImageElement) => {
+    const rawSrc = img.getAttribute('src')
+    // 跳过已转换的
+    if (!rawSrc || rawSrc.startsWith('http') || rawSrc.startsWith('misty-img:') || rawSrc.startsWith('data:')) return
+
+    let absolutePath = ''
+    if (rawSrc.startsWith('./')) absolutePath = parentDir + rawSrc.substring(2)
+    else if (!rawSrc.includes(':') && !rawSrc.startsWith('/')) absolutePath = parentDir + rawSrc
+    else absolutePath = rawSrc
+
+    try {
+      // 优先使用 Base64 保底，这是最稳健的方案
+      const b64 = await invoke<string>('get_image_base64', { path: absolutePath.replace(/\\/g, '/') })
+      if (img.src !== b64) img.src = b64
+    } catch (e) {
+      // 如果 Base64 失败，退回到自定义协议
+      const protocolUrl = `misty-img://${absolutePath.replace(/\\/g, '/')}`
+      if (img.src !== protocolUrl) img.src = protocolUrl
+    }
+  })
+}
+
+// 核心修复：监听路径变化
+watch(() => route.query.path, async (newPath) => {
+  if (newPath && newPath !== filePath.value) {
+    filePath.value = newPath as string
+    await loadFileContent()
+  }
+})
+
+const loadFileContent = async () => {
+  if (!filePath.value) return
+  try {
+    const result = await invoke<{content: string}>('read_markdown_file', { path: filePath.value })
+    if (vditor) {
+      vditor.setValue(result.content)
+      isDirty.value = false
+      syncOutlineManual()
+      nextTick(() => setTimeout(fixEditorImages, 300))
+    }
+  } catch (err: any) { 
+    message.error('读取文件失败: ' + filePath.value) 
+  }
+}
+
 const outlineTreeData = computed(() => {
   const result: TreeOption[] = []
   const stack: { level: number; children: TreeOption[] }[] = [{ level: 0, children: result }]
@@ -95,7 +148,7 @@ const handleOutlineSelect = (keys: string[]) => {
   if (keys.length > 0 && vditor) {
     const id = keys[0]
     const targetEl = (vditor as any).vditor.wysiwyg.element.querySelector(`[data-id="${id}"]`) || (vditor as any).vditor.wysiwyg.element.querySelector(`#${id}`)
-    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 }
 
@@ -112,7 +165,6 @@ const syncOutlineManual = () => {
   outlineItems.value = newItems
 }
 
-// 核心逻辑：存入知识库
 const importToLibrary = async () => {
   if (!store.libraryPath || !filePath.value) return
   try {
@@ -124,8 +176,6 @@ const importToLibrary = async () => {
     })
     message.destroyAll()
     message.success('已成功存入知识库')
-    
-    // 自动转入库模式并打开该文件
     const title = newPath.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'
     store.addTab({ id: newPath, title, path: newPath, isDirty: false })
     router.push('/library')
@@ -146,15 +196,9 @@ const saveFile = async () => {
 }
 
 const startResizing = () => {
-  const onMouseMove = (moveEvent: MouseEvent) => {
-    sidebarWidth.value = Math.max(150, Math.min(moveEvent.clientX, 400))
-  }
-  const onMouseUp = () => {
-    document.removeEventListener('mousemove', onMouseMove)
-    document.removeEventListener('mouseup', onMouseUp)
-  }
-  document.addEventListener('mousemove', onMouseMove)
-  document.addEventListener('mouseup', onMouseUp)
+  const onMouseMove = (moveEvent: MouseEvent) => { sidebarWidth.value = Math.max(150, Math.min(moveEvent.clientX, 400)) }
+  const onMouseUp = () => { document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp) }
+  document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp)
 }
 
 onMounted(async () => {
@@ -169,81 +213,60 @@ onMounted(async () => {
   vditor = new Vditor('vditor', {
     cdn: '/vditor',
     lang: 'zh_CN',
-    height: 'calc(100vh - 40px)',
+    height: '100%',
     mode: 'wysiwyg',
     value: initialContent,
+    cache: { enable: false },
     theme: store.theme === 'dark' ? 'dark' : 'classic',
-    preview: { theme: { current: store.theme === 'dark' ? 'dark' : 'light' } },
-    input: () => { isDirty.value = true },
+    preview: { 
+      theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, 
+      hljs: { enable: true, style: store.codeTheme || 'github' } 
+    },
+    toolbar: [
+      'undo', 'redo', '|', 'emoji', 'headings', 'bold', 'italic', 'strike', '|', 'line', 'quote', 'list', 'ordered-list', 'check', '|',
+      'code', 'inline-code', 'upload', 'link', 'table', '|', 'both', 'preview', 'edit-mode'
+    ],
+    input: () => { 
+      isDirty.value = true 
+      fixEditorImages() // 实时修正
+    },
     after: () => {
       syncOutlineManual()
+      setTimeout(fixEditorImages, 500) // 给予足够的时间让 Vditor 完成初次渲染
       const contentEl = (vditor as any).vditor.wysiwyg?.element
       if (contentEl) {
-        outlineObserver = new MutationObserver(() => syncOutlineManual())
+        outlineObserver = new MutationObserver(() => {
+          syncOutlineManual()
+          fixEditorImages() // 捕获异步渲染的变化
+        })
         outlineObserver.observe(contentEl, { childList: true, subtree: true, characterData: true })
       }
     }
   })
 })
 
-onUnmounted(() => {
-  if (outlineObserver) outlineObserver.disconnect()
-})
+onUnmounted(() => { if (outlineObserver) outlineObserver.disconnect() })
 </script>
 
 <style scoped>
-.temp-mode { height: 100vh; display: flex; flex-direction: column; background: var(--theme-bg); color: var(--theme-text); }
-.temp-header { 
-  height: 48px; 
-  background: var(--theme-bg); 
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between; 
-  padding: 0 20px; 
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05); 
-  z-index: 10; 
-  backdrop-filter: saturate(180%) blur(20px);
-}
+.temp-mode { height: 100%; display: flex; flex-direction: column; background: var(--theme-bg); color: var(--theme-text); }
+.temp-header { height: 48px; background: var(--theme-bg); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); z-index: 10; }
 .is-dark .temp-header { background: rgba(255, 255, 255, 0.05); border-bottom-color: rgba(255, 255, 255, 0.1); }
-
 .main-content { flex: 1; display: flex; overflow: hidden; }
-
-.temp-sidebar { 
-  background: rgba(0, 0, 0, 0.02); 
-  border-right: 1px solid rgba(0, 0, 0, 0.05); 
-  display: flex; flex-direction: column;
-}
-.is-dark .temp-sidebar { background: rgba(255, 255, 255, 0.02); border-right-color: rgba(255, 255, 255, 0.05); }
-
+.temp-sidebar { background: rgba(0, 0, 0, 0.02); border-right: 1px solid rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; }
 .sidebar-header { padding: 12px 16px; font-size: 12px; font-weight: 700; opacity: 0.5; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(0, 0, 0, 0.03); }
-
 .outline-container { flex: 1; overflow-y: auto; padding: 8px; }
 .empty-outline { padding: 40px 20px; text-align: center; opacity: 0.3; font-size: 13px; }
-
 .resizer { width: 4px; cursor: col-resize; transition: background 0.2s; }
 .resizer:hover { background: var(--theme-primary); }
-
 .editor-container { flex: 1; min-width: 0; background: transparent; }
-
 .temp-info { display: flex; align-items: center; gap: 8px; }
 .file-name { font-size: 13px; font-weight: 600; opacity: 0.8; }
 .dirty-dot { width: 6px; height: 6px; background: #ff4d4f; border-radius: 50%; }
-
 :deep(.vditor) { border: none !important; background: transparent !important; }
 :deep(.vditor-toolbar) { background: transparent !important; border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important; }
 :deep(.vditor-content) { background: transparent !important; }
 :deep(.vditor-reset) { max-width: 800px !important; margin: 0 auto !important; color: inherit !important; }
-
-.compact-outline-tree :deep(.n-tree-node-content) { 
-  font-size: 13px !important; 
-  padding: 4px 8px !important; 
-  overflow: hidden;
-}
-
-.compact-outline-tree :deep(.n-tree-node-content__text) {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-}
+.compact-outline-tree :deep(.n-tree-node-content) { font-size: 13px !important; padding: 4px 8px !important; overflow: hidden; }
+.compact-outline-tree :deep(.n-tree-node-content__text) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 </style>
