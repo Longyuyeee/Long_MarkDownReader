@@ -5,7 +5,7 @@
         <div class="custom-titlebar" v-if="showMainTitlebar" data-tauri-drag-region>
           <div class="titlebar-left" data-tauri-drag-region>
             <div class="app-logo">胧</div>
-            <div class="titlebar-title">胧编辑</div>
+            <div class="titlebar-title">Long编辑</div>
           </div>
           <div class="titlebar-right">
             <div class="window-controls">

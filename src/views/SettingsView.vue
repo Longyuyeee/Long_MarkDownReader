@@ -61,7 +61,7 @@
             <div class="setting-row">
               <div class="info">
                 <div class="label">开机自动启动</div>
-                <div class="desc">在 Windows 启动时自动运行胧编辑</div>
+                <div class="desc">在 Windows 启动时自动运行Long编辑</div>
               </div>
               <n-switch v-model:value="config.isAutostart" />
             </div>
@@ -79,7 +79,7 @@
             <div class="setting-row">
               <div class="info">
                 <div class="label">设为默认 Markdown 编辑器</div>
-                <div class="desc">双击 .md 文件将自动使用胧编辑打开</div>
+                <div class="desc">双击 .md 文件将自动使用Long编辑打开</div>
               </div>
               <n-button 
                 secondary 
@@ -230,7 +230,7 @@ const setAsDefault = async () => {
       if (store.isDefaultEditor) {
         message.success('已成功设为默认编辑器')
       } else {
-        message.warning('设置已提交，若未生效请在系统“打开方式”中手动选择胧编辑')
+        message.warning('设置已提交，若未生效请在系统“打开方式”中手动选择Long编辑')
       }
     }, 1500)
   } catch (err) {

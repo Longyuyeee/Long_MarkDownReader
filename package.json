@@ -1,8 +1,9 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "0.4.4",
+  "version": "0.4.5",
   "type": "module",
+  "displayName": "Long编辑",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",

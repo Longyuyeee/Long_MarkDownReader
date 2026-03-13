@@ -221,7 +221,7 @@
             <div class="hero-brand">
               <n-icon :component="getHeroIcon(store.heroIcon)" />
             </div>
-            <h2 class="hero-title">胧编辑 · MD助手</h2>
+            <h2 class="hero-title">Long编辑 · MD助手</h2>
             <p class="hero-subtitle">选择一个文档或直接将文件拖拽至此</p>
             <div class="hero-actions">
               <n-button secondary type="primary" round size="large" class="hero-btn" @click="handleToolbarAction('file')">创建新笔记</n-button>
@@ -516,7 +516,8 @@ const virtualDrag = reactive({
   dragNode: null as any, dropTarget: null as any, 
   dropPosition: null as 'before' | 'inside' | 'after' | null,
   ghostText: '', timer: null as any, selectedPaths: [] as string[],
-  expandTimer: null as any
+  expandTimer: null as any,
+  scrollTimer: null as any
 })
 
 const updateDropTarget = (x: number, y: number) => {
@@ -551,12 +552,12 @@ const updateDropTarget = (x: number, y: number) => {
       virtualDrag.dropPosition = 'inside'
     }
 
-    // 文件夹自动展开逻辑
+    // 文件夹自动展开逻辑优化：只有当目标 Key 变化或不再是 inside 时才重置计时器
     if (isDir && virtualDrag.dropPosition === 'inside') {
       if (virtualDrag.dropTarget !== foundKey) {
         if (virtualDrag.expandTimer) clearTimeout(virtualDrag.expandTimer)
         virtualDrag.expandTimer = setTimeout(() => {
-          if (!expandedKeys.value.includes(foundKey!)) {
+          if (virtualDrag.dropTarget === foundKey && !expandedKeys.value.includes(foundKey!)) {
             expandedKeys.value.push(foundKey!)
             expandedKeys.value = [...expandedKeys.value]
           }
@@ -585,6 +586,7 @@ const onMouseUp = async () => {
   activeResizer.value = null
   if (virtualDrag.timer) { clearTimeout(virtualDrag.timer); virtualDrag.timer = null }
   if (virtualDrag.expandTimer) { clearTimeout(virtualDrag.expandTimer); virtualDrag.expandTimer = null }
+  if (virtualDrag.scrollTimer) { clearInterval(virtualDrag.scrollTimer); virtualDrag.scrollTimer = null }
   
   if (virtualDrag.active) {
     const targetPath = virtualDrag.dropTarget
@@ -592,6 +594,12 @@ const onMouseUp = async () => {
     const position = virtualDrag.dropPosition
 
     if (sourcePaths.length > 0 && targetPath) {
+      // 保护：如果目标在源路径中且是前后排序，视为原地操作
+      if (sourcePaths.includes(targetPath) && (position === 'before' || position === 'after')) {
+        virtualDrag.active = false; virtualDrag.dragNode = null; virtualDrag.dropTarget = null; virtualDrag.dropPosition = null; virtualDrag.selectedPaths = []
+        message.destroyAll(); return
+      }
+
       try {
         message.loading(`正在处理移动...`)
         
@@ -631,10 +639,15 @@ const onMouseUp = async () => {
           currentItems.push(...movingNames)
         } else {
           let refIdx = currentItems.indexOf(referenceItem!)
-          if (position === 'before') {
-            currentItems.splice(refIdx, 0, ...movingNames)
+          if (refIdx === -1) {
+            // 如果没找到参考项（例如参考项就在移动列表中且未被原地保护拦截），则追加到末尾
+            currentItems.push(...movingNames)
           } else {
-            currentItems.splice(refIdx + 1, 0, ...movingNames)
+            if (position === 'before') {
+              currentItems.splice(refIdx, 0, ...movingNames)
+            } else {
+              currentItems.splice(refIdx + 1, 0, ...movingNames)
+            }
           }
         }
 
@@ -669,7 +682,37 @@ const onMouseMove = (e: MouseEvent) => {
   if (activeResizer.value === 'sidebar') { sidebarWidth.value = Math.max(220, Math.min(e.clientX, 600)) }
   // 影子偏移，确保不挡住探测
   virtualDrag.x = e.clientX + 10; virtualDrag.y = e.clientY + 10
-  if (virtualDrag.active) updateDropTarget(e.clientX, e.clientY)
+  
+  if (virtualDrag.active) {
+    updateDropTarget(e.clientX, e.clientY)
+
+    // 边缘自动滚动逻辑
+    const viewport = document.querySelector('.tree-viewport')
+    if (viewport) {
+      const rect = viewport.getBoundingClientRect()
+      const threshold = 40 // 感应区高度
+      let scrollSpeed = 0
+
+      if (e.clientY < rect.top + threshold) {
+        scrollSpeed = -10 // 向上滚动
+      } else if (e.clientY > rect.bottom - threshold) {
+        scrollSpeed = 10 // 向下滚动
+      }
+
+      if (scrollSpeed !== 0) {
+        if (!virtualDrag.scrollTimer) {
+          virtualDrag.scrollTimer = setInterval(() => {
+            viewport.scrollTop += scrollSpeed
+          }, 20)
+        }
+      } else {
+        if (virtualDrag.scrollTimer) {
+          clearInterval(virtualDrag.scrollTimer)
+          virtualDrag.scrollTimer = null
+        }
+      }
+    }
+  }
 }
 
 const deleteAction = async (paths: string[]) => {
@@ -963,6 +1006,9 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 
 .tree-viewport { flex: 1; overflow-y: auto; padding: 4px 12px; border: 2px solid transparent; transition: all 0.2s; animation: treeContainerFade 0.5s ease-out; }
 .tree-viewport.drop-active { background: rgba(0, 122, 255, 0.05); border-color: rgba(0, 122, 255, 0.3); border-radius: 8px; }
+
+:deep(.n-tree-node-content) { flex: 1; min-width: 0; overflow: hidden; }
+:deep(.n-tree-node-content__text) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 
 :deep(.n-tree-node.drop-active .n-tree-node-content) { background: transparent !important; }
 :deep(.n-tree-node.is-drop-inside .n-tree-node-content) { background: rgba(var(--theme-primary-rgb), 0.1) !important; box-shadow: 0 0 0 1px var(--theme-primary) inset; border-radius: 6px; }

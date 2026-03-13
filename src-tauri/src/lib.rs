@@ -94,7 +94,7 @@ fn get_config(app_handle: tauri::AppHandle) -> AppConfig {
 
 fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
     let mut path = app_handle.path().document_dir().unwrap_or_else(|_| PathBuf::from("C:\\"));
-    path.push("胧编辑知识库");
+    path.push("Long编辑知识库");
     let default_path = path.to_string_lossy().into_owned();
     AppConfig {
         libraries: vec![LibraryConfig { name: "默认知识库".into(), path: default_path.clone() }],
@@ -126,13 +126,13 @@ fn set_as_default_handler() -> Result<(), String> {
     let script = format!(
         "$classesPath = 'Registry::HKEY_CURRENT_USER\\Software\\Classes'; \
          $mdPath = \"$classesPath\\.md\"; \
-         $progId = '胧编辑.MD'; \
+         $progId = 'Long编辑.MD'; \
          $progIdPath = \"$classesPath\\$progId\"; \
          if (-not (Test-Path $mdPath)) {{ New-Item -Path $mdPath -Force | Out-Null }}; \
          Set-Item -Path $mdPath -Value $progId; \
          if (-not (Test-Path \"$progIdPath\\shell\\open\\command\")) {{ New-Item -Path \"$progIdPath\\shell\\open\\command\" -Force | Out-Null }}; \
          Set-Item -Path $progIdPath -Value 'Markdown 文本文件'; \
-         Set-ItemProperty -Path $progIdPath -Name 'FriendlyAppName' -Value '胧编辑'; \
+         Set-ItemProperty -Path $progIdPath -Name 'FriendlyAppName' -Value 'Long编辑'; \
          Set-Item -Path \"$progIdPath\\shell\\open\\command\" -Value '\"{}\" \"%1\"'",
         exe_str
     );
@@ -151,7 +151,7 @@ fn check_association_status() -> bool {
     let output = cmd.args(["-Command", script]).output();
     if let Ok(out) = output {
         let val = String::from_utf8_lossy(&out.stdout).trim().to_string();
-        return val == "胧编辑.MD";
+        return val == "Long编辑.MD";
     }
     false
 }
@@ -415,16 +415,40 @@ fn get_history_dir(app_handle: &tauri::AppHandle, path: &str) -> PathBuf {
 }
 
 fn check_and_migrate_data(app: &tauri::AppHandle) {
+    let old_product_name = "Long编辑";
+    let new_product_name = "Long编辑";
     let old_identifier = "com.mistyedit.mdhelper";
-    let new_identifier = app.config().identifier.clone(); if old_identifier == new_identifier { return; }
+    let new_identifier = app.config().identifier.clone();
+    
     let resolver = app.path();
-    let old_config_dir = resolver.app_config_dir().unwrap().to_string_lossy().replace(&new_identifier, old_identifier);
-    let new_config_dir = resolver.app_config_dir().unwrap();
-    let old_cache_dir = resolver.app_cache_dir().unwrap().to_string_lossy().replace(&new_identifier, old_identifier);
-    let new_cache_dir = resolver.app_cache_dir().unwrap();
-    let old_config_path = PathBuf::from(old_config_dir); let old_cache_path = PathBuf::from(old_cache_dir);
-    if old_config_path.exists() && !new_config_dir.exists() { let _ = fs::create_dir_all(new_config_dir.parent().unwrap()); let _ = fs::rename(&old_config_path, &new_config_dir); }
-    if old_cache_path.exists() && !new_cache_dir.exists() { let _ = fs::create_dir_all(new_cache_dir.parent().unwrap()); let _ = fs::rename(&old_cache_path, &new_cache_dir); }
+    
+    // 1. 处理 identifier 导致的路径差异 (macOS 主要影响)
+    if old_identifier != new_identifier {
+        let current_config = resolver.app_config_dir().unwrap();
+        let old_config = PathBuf::from(current_config.to_string_lossy().replace(&new_identifier, old_identifier));
+        let current_cache = resolver.app_cache_dir().unwrap();
+        let old_cache = PathBuf::from(current_cache.to_string_lossy().replace(&new_identifier, old_identifier));
+        
+        if old_config.exists() && !current_config.exists() { let _ = fs::create_dir_all(current_config.parent().unwrap()); let _ = fs::rename(&old_config, &current_config); }
+        if old_cache.exists() && !current_cache.exists() { let _ = fs::create_dir_all(current_cache.parent().unwrap()); let _ = fs::rename(&old_cache, &current_cache); }
+    }
+
+    // 2. 处理 productName 导致的路径差异 (Windows 主要影响)
+    if cfg!(target_os = "windows") {
+        let current_config = resolver.app_config_dir().unwrap(); // 这应该是 .../Long编辑
+        let old_config = PathBuf::from(current_config.to_string_lossy().replace(new_product_name, old_product_name));
+        let current_cache = resolver.app_cache_dir().unwrap();
+        let old_cache = PathBuf::from(current_cache.to_string_lossy().replace(new_product_name, old_product_name));
+
+        if old_config.exists() && !current_config.exists() {
+            let _ = fs::create_dir_all(current_config.parent().unwrap());
+            let _ = fs::rename(&old_config, &current_config);
+        }
+        if old_cache.exists() && !current_cache.exists() {
+            let _ = fs::create_dir_all(current_cache.parent().unwrap());
+            let _ = fs::rename(&old_cache, &current_cache);
+        }
+    }
 }
 
 #[tauri::command]
@@ -580,7 +604,7 @@ pub fn run() {
             let show_i = MenuItem::with_id(app, "show", "显示主窗口", true, None::<&str>)?;
             let quick_i = MenuItem::with_id(app, "quick", "快速笔记", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quick_i, &show_i, &quit_i])?;
-            let _tray = TrayIconBuilder::new().icon(app.default_window_icon().unwrap().clone()).tooltip("胧编辑 · MD助手").menu(&menu)
+            let _tray = TrayIconBuilder::new().icon(app.default_window_icon().unwrap().clone()).tooltip("Long编辑 · MD助手").menu(&menu)
                 .on_menu_event(|app: &tauri::AppHandle, event| match event.id.as_ref() { "quit" => { app.exit(0); } "show" => { let win = app.get_webview_window("main").unwrap(); let _ = win.show(); let _ = win.set_focus(); } "quick" => { let _ = tauri::WebviewWindowBuilder::new(app, "quick-note", tauri::WebviewUrl::App("#/quick-note".into())).title("快速笔记").inner_size(400.0, 300.0).always_on_top(true).decorations(false).transparent(true).build(); } _ => {} })
                 .on_tray_icon_event(|tray, event| { if let TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, .. } = event { let win = tray.app_handle().get_webview_window("main").unwrap(); let _ = win.show(); let _ = win.set_focus(); } }).build(app)?;
             Ok(())
