@@ -490,11 +490,28 @@ pub fn run() {
             });
         })
         .plugin(tauri_plugin_fs::init()).plugin(tauri_plugin_dialog::init()).plugin(tauri_plugin_os::init()).plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec!["--minimized"]))).plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| { if let Some(win) = app.get_webview_window("main") { let _ = win.unminimize(); let _ = win.show(); let _ = win.set_focus(); } if args.len() > 1 { let _ = app.emit("open-file", args[1].clone()); } }))
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.unminimize();
+                let _ = win.show();
+                let _ = win.set_focus();
+            }
+            if args.len() > 1 {
+                let _ = app.emit("open-file", args[1].clone());
+            }
+        }))
         .on_window_event(|window, event| { if let tauri::WindowEvent::CloseRequested { api, .. } = event { if window.label() == "main" { api.prevent_close(); let _ = window.hide(); } } })
         .setup(|app| {
             check_and_migrate_data(app.handle());
             let window = app.get_webview_window("main").unwrap();
+
+            // 根据启动参数控制窗口显示：手动启动则显示窗口，自启参数 --minimized 则保持隐藏
+            let args: Vec<String> = std::env::args().collect();
+            if !args.contains(&"--minimized".to_string()) {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+
             #[cfg(target_os = "windows")] { if let Err(_) = apply_mica(&window, None) { let _ = apply_blur(&window, Some((0, 0, 0, 0))); } }
             let quit_i = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
             let show_i = MenuItem::with_id(app, "show", "显示主窗口", true, None::<&str>)?;
