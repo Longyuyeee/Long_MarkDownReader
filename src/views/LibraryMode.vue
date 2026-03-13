@@ -511,75 +511,157 @@ const fixEditorImages = () => {
   })
 }
 
-const virtualDrag = reactive({ active: false, x: 0, y: 0, startX: 0, startY: 0, dragNode: null as any, dropTarget: null as any, ghostText: '', timer: null as any, selectedPaths: [] as string[] })
+const virtualDrag = reactive({ 
+  active: false, x: 0, y: 0, startX: 0, startY: 0, 
+  dragNode: null as any, dropTarget: null as any, 
+  dropPosition: null as 'before' | 'inside' | 'after' | null,
+  ghostText: '', timer: null as any, selectedPaths: [] as string[],
+  expandTimer: null as any
+})
 
 const updateDropTarget = (x: number, y: number) => {
   const elements = document.elementsFromPoint(x, y)
   let foundKey = null
   let isViewport = false
+  let foundEl: HTMLElement | null = null
 
-  // 1. 深度优先搜索：寻找树节点
   for (const el of elements) {
     if (el.classList.contains('drag-ghost')) continue
     if (el.classList.contains('tree-viewport')) isViewport = true
     
-    // 尝试寻找带有标识的节点
-    const node = el.closest('[data-drop-path]')
+    const node = el.closest('[data-drop-path]') as HTMLElement
     if (node) {
-      const path = node.getAttribute('data-drop-path') as string
-      const isDir = node.getAttribute('data-drop-dir') === 'true'
-      
-      if (isDir) {
-        if (!virtualDrag.selectedPaths.includes(path)) foundKey = path
-      } else {
-        const lastIdx = Math.max(path.lastIndexOf('\\'), path.lastIndexOf('/'))
-        const parentPath = lastIdx !== -1 ? path.substring(0, lastIdx) : store.libraryPath
-        if (!virtualDrag.selectedPaths.includes(parentPath)) foundKey = parentPath
-      }
-      if (foundKey) break 
+      foundEl = node
+      foundKey = node.getAttribute('data-drop-path') as string
+      break 
     }
   }
 
-  if (foundKey) {
+  if (foundKey && foundEl) {
+    const rect = foundEl.getBoundingClientRect()
+    const relativeY = (y - rect.top) / rect.height
+    const isDir = foundEl.getAttribute('data-drop-dir') === 'true'
+
+    // 探测感应区：25% Before, 50% Inside, 25% After
+    if (relativeY < 0.25) {
+      virtualDrag.dropPosition = 'before'
+    } else if (relativeY > 0.75) {
+      virtualDrag.dropPosition = 'after'
+    } else {
+      virtualDrag.dropPosition = 'inside'
+    }
+
+    // 文件夹自动展开逻辑
+    if (isDir && virtualDrag.dropPosition === 'inside') {
+      if (virtualDrag.dropTarget !== foundKey) {
+        if (virtualDrag.expandTimer) clearTimeout(virtualDrag.expandTimer)
+        virtualDrag.expandTimer = setTimeout(() => {
+          if (!expandedKeys.value.includes(foundKey!)) {
+            expandedKeys.value.push(foundKey!)
+            expandedKeys.value = [...expandedKeys.value]
+          }
+        }, 600)
+      }
+    } else {
+      if (virtualDrag.expandTimer) {
+        clearTimeout(virtualDrag.expandTimer)
+        virtualDrag.expandTimer = null
+      }
+    }
+
     virtualDrag.dropTarget = foundKey
   } else if (isViewport) {
     virtualDrag.dropTarget = store.libraryPath
+    virtualDrag.dropPosition = 'inside'
+    if (virtualDrag.expandTimer) { clearTimeout(virtualDrag.expandTimer); virtualDrag.expandTimer = null }
   } else {
     virtualDrag.dropTarget = null
+    virtualDrag.dropPosition = null
+    if (virtualDrag.expandTimer) { clearTimeout(virtualDrag.expandTimer); virtualDrag.expandTimer = null }
   }
 }
 
 const onMouseUp = async () => {
   activeResizer.value = null
   if (virtualDrag.timer) { clearTimeout(virtualDrag.timer); virtualDrag.timer = null }
+  if (virtualDrag.expandTimer) { clearTimeout(virtualDrag.expandTimer); virtualDrag.expandTimer = null }
+  
   if (virtualDrag.active) {
     const targetPath = virtualDrag.dropTarget
     const sourcePaths = virtualDrag.selectedPaths.length > 0 ? virtualDrag.selectedPaths : (virtualDrag.dragNode ? [virtualDrag.dragNode.key] : [])
-    
-    if (sourcePaths.length > 0 && targetPath) {
-      const validSources = sourcePaths.filter(p => {
-        const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/'))
-        const parent = idx !== -1 ? p.substring(0, idx) : store.libraryPath
-        return parent !== targetPath && p !== targetPath
-      })
+    const position = virtualDrag.dropPosition
 
-      if (validSources.length > 0) {
-        try {
-          message.loading(`正在移动 ${validSources.length} 个项目...`)
-          await invoke('move_items', { sourcePaths: validSources, targetDir: targetPath })
-          const parentsToRefresh = new Set<string>()
-          parentsToRefresh.add(targetPath)
-          validSources.forEach(p => {
-            const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/'))
-            parentsToRefresh.add(idx !== -1 ? p.substring(0, idx) : store.libraryPath)
-          })
-          for (const p of parentsToRefresh) await refreshNode(p)
-          selectedKeys.value = []
-          message.destroyAll(); message.success('移动成功')
-        } catch (err: any) { message.destroyAll(); message.error('移动失败: ' + err) }
+    if (sourcePaths.length > 0 && targetPath) {
+      try {
+        message.loading(`正在处理移动...`)
+        
+        // 识别目标目录和目标参考项
+        let finalTargetDir = targetPath
+        let referenceItem = null
+        
+        if (position === 'before' || position === 'after') {
+          const lastIdx = Math.max(targetPath.lastIndexOf('\\'), targetPath.lastIndexOf('/'))
+          finalTargetDir = lastIdx !== -1 ? targetPath.substring(0, lastIdx) : store.libraryPath
+          referenceItem = targetPath.split(/[\\/]/).pop() || ''
+        }
+
+        // 1. 物理移动逻辑
+        const moveTasks = sourcePaths.filter(p => {
+          const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/'))
+          const parent = idx !== -1 ? p.substring(0, idx) : store.libraryPath
+          return parent !== finalTargetDir
+        })
+
+        if (moveTasks.length > 0) {
+          await invoke('move_items', { sourcePaths: moveTasks, targetDir: finalTargetDir })
+        }
+
+        // 2. 逻辑排序逻辑 (Misty Order)
+        // 获取目标文件夹的当前顺序
+        const order = await invoke<any>('get_folder_order', { path: finalTargetDir })
+        let currentItems = (await invoke<FileEntry[]>('scan_directory', { path: finalTargetDir }))
+          .map(e => e.name)
+        
+        // 移除正在移动的项
+        const movingNames = sourcePaths.map(p => p.split(/[\\/]/).pop() || '')
+        currentItems = currentItems.filter(name => !movingNames.includes(name))
+
+        // 插入到新位置
+        if (position === 'inside') {
+          currentItems.push(...movingNames)
+        } else {
+          let refIdx = currentItems.indexOf(referenceItem!)
+          if (position === 'before') {
+            currentItems.splice(refIdx, 0, ...movingNames)
+          } else {
+            currentItems.splice(refIdx + 1, 0, ...movingNames)
+          }
+        }
+
+        // 保存新顺序
+        await invoke('save_folder_order', { 
+          path: finalTargetDir, 
+          order: { items: currentItems, pinned: order.pinned || [] } 
+        })
+
+        // 3. 界面刷新
+        const parentsToRefresh = new Set<string>()
+        parentsToRefresh.add(finalTargetDir)
+        sourcePaths.forEach(p => {
+          const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/'))
+          parentsToRefresh.add(idx !== -1 ? p.substring(0, idx) : store.libraryPath)
+        })
+        for (const p of parentsToRefresh) await refreshNode(p)
+
+        selectedKeys.value = []
+        message.destroyAll()
+        message.success('操作成功')
+      } catch (err: any) {
+        message.destroyAll()
+        message.error('操作失败: ' + err)
       }
     }
-    virtualDrag.active = false; virtualDrag.dragNode = null; virtualDrag.dropTarget = null; virtualDrag.selectedPaths = []
+    virtualDrag.active = false; virtualDrag.dragNode = null; virtualDrag.dropTarget = null; virtualDrag.dropPosition = null; virtualDrag.selectedPaths = []
   }
 }
 
@@ -609,7 +691,12 @@ const deleteAction = async (paths: string[]) => {
 const nodeProps = ({ option }: { option: TreeOption }) => ({
   'data-drop-path': option.key, 
   'data-drop-dir': !option.isLeaf ? 'true' : 'false', 
-  class: virtualDrag.dropTarget === option.key ? 'drop-active' : '',
+  class: [
+    virtualDrag.dropTarget === option.key ? 'drop-active' : '',
+    virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'before' ? 'is-drop-before' : '',
+    virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'after' ? 'is-drop-after' : '',
+    virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'inside' ? 'is-drop-inside' : '',
+  ].join(' '),
   onMousedown: (e: MouseEvent) => { 
     if (e.button !== 0) return; 
     virtualDrag.startX = e.clientX; virtualDrag.startY = e.clientY; 
@@ -781,14 +868,60 @@ onMounted(async () => {
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
   nextTick(() => { initVditor(); startShadowSaveTimer() })
   getCurrentWindow().onDragDropEvent(async (event) => {
-    if (event.payload.type === 'over') updateDropTarget(event.payload.position.x, event.payload.position.y)
-    else if (event.payload.type === 'drop') {
-      const targetDir = virtualDrag.dropTarget || store.libraryPath
-      if (event.payload.paths.length > 0 && targetDir) {
-        try { message.loading(`正在导入...`); for (const p of event.payload.paths) await invoke('import_to_library', { sourcePath: p, libraryRoot: store.libraryPath, targetDir }); await refreshNode(targetDir); message.destroyAll(); message.success('导入完成') }
-        catch (err) { message.destroyAll(); message.error('导入失败') }
+    if (event.payload.type === 'over') {
+      updateDropTarget(event.payload.position.x, event.payload.position.y)
+    } else if (event.payload.type === 'drop') {
+      const targetPath = virtualDrag.dropTarget || store.libraryPath
+      const position = virtualDrag.dropPosition
+      
+      if (event.payload.paths.length > 0 && targetPath) {
+        try {
+          message.loading(`正在导入...`)
+          
+          let finalTargetDir = targetPath
+          let referenceItem = null
+          if (position === 'before' || position === 'after') {
+            const lastIdx = Math.max(targetPath.lastIndexOf('\\'), targetPath.lastIndexOf('/'))
+            finalTargetDir = lastIdx !== -1 ? targetPath.substring(0, lastIdx) : store.libraryPath
+            referenceItem = targetPath.split(/[\\/]/).pop() || ''
+          }
+
+          const importedPaths: string[] = []
+          for (const p of event.payload.paths) {
+            const newPath = await invoke<string>('import_to_library', { 
+              sourcePath: p, 
+              libraryRoot: store.libraryPath, 
+              targetDir: finalTargetDir 
+            })
+            importedPaths.push(newPath)
+          }
+
+          // 逻辑排序 JSON 更新
+          const order = await invoke<any>('get_folder_order', { path: finalTargetDir })
+          let currentItems = (await invoke<FileEntry[]>('scan_directory', { path: finalTargetDir }))
+            .map(e => e.name)
+          
+          const newNames = importedPaths.map(p => p.split(/[\\/]/).pop() || '')
+          currentItems = currentItems.filter(name => !newNames.includes(name))
+
+          if (position === 'inside' || !referenceItem) {
+            currentItems.push(...newNames)
+          } else {
+            let refIdx = currentItems.indexOf(referenceItem)
+            if (position === 'before') currentItems.splice(refIdx, 0, ...newNames)
+            else currentItems.splice(refIdx + 1, 0, ...newNames)
+          }
+
+          await invoke('save_folder_order', { 
+            path: finalTargetDir, 
+            order: { items: currentItems, pinned: order.pinned || [] } 
+          })
+
+          await refreshNode(finalTargetDir)
+          message.destroyAll(); message.success('导入完成')
+        } catch (err) { message.destroyAll(); message.error('导入失败') }
       }
-      virtualDrag.dropTarget = null
+      virtualDrag.dropTarget = null; virtualDrag.dropPosition = null
     }
   })
 })
@@ -831,9 +964,31 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .tree-viewport { flex: 1; overflow-y: auto; padding: 4px 12px; border: 2px solid transparent; transition: all 0.2s; animation: treeContainerFade 0.5s ease-out; }
 .tree-viewport.drop-active { background: rgba(0, 122, 255, 0.05); border-color: rgba(0, 122, 255, 0.3); border-radius: 8px; }
 
-:deep(.n-tree-node-content) { flex: 1; min-width: 0; overflow: hidden; }
-:deep(.n-tree-node-content__text) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-:deep(.n-tree-node.drop-active .n-tree-node-content) { background: rgba(0, 122, 255, 0.1) !important; box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.3) inset; border-radius: 6px; }
+:deep(.n-tree-node.drop-active .n-tree-node-content) { background: transparent !important; }
+:deep(.n-tree-node.is-drop-inside .n-tree-node-content) { background: rgba(var(--theme-primary-rgb), 0.1) !important; box-shadow: 0 0 0 1px var(--theme-primary) inset; border-radius: 6px; }
+
+:deep(.n-tree-node) { position: relative; }
+:deep(.n-tree-node.is-drop-before::before),
+:deep(.n-tree-node.is-drop-after::after) {
+  content: "";
+  position: absolute;
+  left: 36px;
+  right: 12px;
+  height: 2px;
+  background: var(--theme-primary);
+  z-index: 10;
+  pointer-events: none;
+}
+
+:deep(.n-tree-node.is-drop-before::before) { top: -1px; }
+:deep(.n-tree-node.is-drop-after::after) { bottom: -1px; }
+
+/* 指示线两端的圆点装饰 */
+:deep(.n-tree-node.is-drop-before::before),
+:deep(.n-tree-node.is-drop-after::after) {
+  box-shadow: -4px 0 0 var(--theme-primary), 4px 0 0 var(--theme-primary);
+  border-radius: 2px;
+}
 
 .empty-state-hint { padding: 60px 20px; opacity: 0.6; animation: slideUp 0.6s ease-out both; }
 

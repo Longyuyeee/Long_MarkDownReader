@@ -27,6 +27,14 @@ pub struct FileEntry {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]
+pub struct FolderOrder {
+    pub items: Vec<String>,
+    #[serde(default)]
+    pub pinned: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct LibraryConfig {
     pub name: String,
     pub path: String,
@@ -249,17 +257,36 @@ async fn write_markdown_file(path: String, content: String) -> Result<(), String
 fn get_launch_args() -> Vec<String> { std::env::args().collect() }
 
 #[tauri::command]
+fn get_folder_order(path: String) -> FolderOrder {
+    let order_path = Path::new(&path).join(".misty_order.json");
+    if order_path.exists() {
+        let content = fs::read_to_string(order_path).unwrap_or_default();
+        serde_json::from_str(&content).unwrap_or_default()
+    } else {
+        FolderOrder::default()
+    }
+}
+
+#[tauri::command]
+fn save_folder_order(path: String, order: FolderOrder) -> Result<(), String> {
+    let order_path = Path::new(&path).join(".misty_order.json");
+    let content = serde_json::to_string_pretty(&order).map_err(|e| e.to_string())?;
+    fs::write(order_path, content).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn scan_directory(path: String) -> Result<Vec<FileEntry>, String> {
     let root = Path::new(&path);
     if !root.exists() || !root.is_dir() { return Err("目录不存在".into()); }
-    let mut entries = Vec::new();
+    
+    // 1. 物理扫描
+    let mut physical_entries = std::collections::HashMap::new();
     if let Ok(dir_entries) = fs::read_dir(root) {
         for entry in dir_entries.flatten() {
-            let path = entry.path();
-            let name = path.file_name().unwrap_or_default().to_string_lossy().into_owned();
+            let p = entry.path();
+            let name = p.file_name().unwrap_or_default().to_string_lossy().into_owned();
             
-            // 资源文件夹黑名单：这些文件夹在物理上存在，但在 UI 树中隐藏
-            let is_resource_folder = path.is_dir() && (
+            let is_resource_folder = p.is_dir() && (
                 name == "public" || 
                 name == "assets" || 
                 name == "img" || 
@@ -270,16 +297,52 @@ fn scan_directory(path: String) -> Result<Vec<FileEntry>, String> {
             );
 
             if is_resource_folder { continue; }
-            if path.is_dir() || name.ends_with(".md") {
-                entries.push(FileEntry { name, path: path.to_string_lossy().into_owned(), is_dir: path.is_dir() });
+            if p.is_dir() || name.ends_with(".md") {
+                physical_entries.insert(name.clone(), FileEntry { 
+                    name, 
+                    path: p.to_string_lossy().into_owned(), 
+                    is_dir: p.is_dir() 
+                });
             }
         }
     }
-    entries.sort_by(|a, b| {
+
+    // 2. 读取逻辑顺序
+    let order = get_folder_order(path);
+    let mut sorted_entries = Vec::new();
+    let mut visited = std::collections::HashSet::new();
+
+    // 优先处理置顶项
+    for name in &order.pinned {
+        if let Some(entry) = physical_entries.get(name) {
+            sorted_entries.push(entry.clone());
+            visited.insert(name.clone());
+        }
+    }
+
+    // 处理排序项
+    for name in &order.items {
+        if !visited.contains(name) {
+            if let Some(entry) = physical_entries.get(name) {
+                sorted_entries.push(entry.clone());
+                visited.insert(name.clone());
+            }
+        }
+    }
+
+    // 处理剩余的物理文件（按默认排序：文件夹在前，字母顺序）
+    let mut remaining: Vec<_> = physical_entries.values()
+        .filter(|e| !visited.contains(&e.name))
+        .cloned()
+        .collect();
+    
+    remaining.sort_by(|a, b| {
         if a.is_dir != b.is_dir { b.is_dir.cmp(&a.is_dir) } 
         else { a.name.to_lowercase().cmp(&b.name.to_lowercase()) }
     });
-    Ok(entries)
+
+    sorted_entries.extend(remaining);
+    Ok(sorted_entries)
 }
 
 #[tauri::command]
@@ -522,6 +585,6 @@ pub fn run() {
                 .on_tray_icon_event(|tray, event| { if let TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, .. } = event { let win = tray.app_handle().get_webview_window("main").unwrap(); let _ = win.show(); let _ = win.set_focus(); } }).build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, get_image_base64 ])
+        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, get_folder_order, save_folder_order, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, get_image_base64 ])
         .run(tauri::generate_context!()).expect("error");
 }
