@@ -51,6 +51,7 @@
                 </div>
                 <n-tree 
                   v-else
+                  ref="treeInstRef"
                   :data="treeData" 
                   lazy
                   multiple
@@ -176,7 +177,7 @@
               :key="tab.id" 
               class="tab-pill" 
               :class="{ active: activeTabId === tab.id }" 
-              @click="activeTabId = tab.id"
+              @click="store.addTab(tab)"
               :ref="(el) => { if (activeTabId === tab.id) activeTabRef = el as HTMLElement }"
             >
               <n-icon :component="FileIcon" class="pill-icon" />
@@ -186,10 +187,14 @@
           </transition-group>
         </div>
         <div class="tab-actions">
-          <n-button size="tiny" quaternary round @click="saveCurrentFile" :disabled="!activeTabId" class="save-btn">
-            <template #icon><n-icon :component="SaveIcon" /></template>
-            保存
-          </n-button>
+          <div class="action-btn-group">
+            <n-button quaternary circle size="small" @click="refreshCurrentFile" :disabled="!activeTabId" title="从磁盘同步内容">
+              <template #icon><n-icon :component="RefreshIcon" /></template>
+            </n-button>
+            <n-button quaternary circle size="small" @click="saveCurrentFile" :disabled="!activeTabId" title="保存到磁盘 (Ctrl+S)">
+              <template #icon><n-icon :component="SaveIcon" /></template>
+            </n-button>
+          </div>
           <div class="word-count-info" v-if="activeTabId">
             {{ wordCount }} 字
           </div>
@@ -282,6 +287,7 @@ const sidebarWidth = ref(260)
 const activeResizer = ref<'sidebar' | null>(null)
 const tabsScrollRef = ref<HTMLElement | null>(null)
 const activeTabRef = ref<HTMLElement | null>(null)
+const treeInstRef = ref<any>(null)
 
 const scrollActiveTabIntoView = () => {
   if (!activeTabRef.value || !tabsScrollRef.value) return
@@ -335,7 +341,7 @@ const outlineTreeData = computed(() => {
 })
 
 const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
-const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0 })
+const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0, timer: null as any })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, options: [] as any[] })
 const renameState = reactive({ show: false, oldPath: '', newName: '' })
 const historyList = ref<{timestamp: number, content: string}[]>([])
@@ -465,22 +471,45 @@ const refreshNode = async (path: string) => {
 
 const loadFileToEditor = async (path: string) => {
   if (!vditor || !path) return; lastLoadedPath = '' 
-  try {
-    const res = await invoke<{content: string}>('read_markdown_file', { path })
-    vditor.setValue(res.content); fetchHistory()
+  const currentTab = tabs.value.find(t => t.path === path)
+  
+  // 核心优化：利用内存快照实现瞬时加载
+  const setEditorValue = (content: string) => {
+    // 路径预处理逻辑：在解析 Markdown 前通过正则修复相对路径图片，避免 DOM 扫描延迟
+    const parentDir = path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
+    
+    // 匹配 Markdown 图片语法: ![alt](url)
+    const fixedContent = content.replace(/(!\[.*?\]\()(.+?)(\))/g, (match, prefix, url, suffix) => {
+      if (url.startsWith('http') || url.startsWith('misty-img:') || url.startsWith('data:')) return match
+      const abs = url.startsWith('./') ? parentDir + url.substring(2) : (url.includes(':') ? url : parentDir + url)
+      return `${prefix}misty-img://${abs.replace(/\\/g, '/')}${suffix}`
+    })
+
+    vditor.setValue(fixedContent)
+    fetchHistory()
     nextTick(() => { 
       setTimeout(() => { 
         lastLoadedPath = path; 
         syncOutlineManual(); 
         initOutlineObserver();
         updateWordCount();
-        fixEditorImages(); // 动态修正显示
-      }, 200) 
+        fixEditorImages(); // 后台增强：通过 Base64 进一步提升图片清晰度/稳定性
+      }, 50) 
     })
-  } catch (err) { message.error("读取失败") }
+  }
+
+  if (currentTab?.content) {
+    setEditorValue(currentTab.content)
+  } else {
+    try {
+      const res = await invoke<{content: string}>('read_markdown_file', { path })
+      if (currentTab) currentTab.content = res.content
+      setEditorValue(res.content)
+    } catch (err) { message.error("读取失败") }
+  }
 }
 
-const fixEditorImages = () => {
+const fixEditorImages = async () => {
   if (!vditor || !isVditorReady || !activeTabId.value) return
   const path = activeTabId.value
   const parentDir = path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1)
@@ -490,25 +519,31 @@ const fixEditorImages = () => {
   if (!contentEl) return
 
   const imgs = contentEl.querySelectorAll('img')
-  imgs.forEach(async (img: HTMLImageElement) => {
+  const tasks = Array.from(imgs).map(async (img: any) => {
+    // 避免重复处理
+    if (img.dataset.fixed === 'true') return
+    
     const rawSrc = img.getAttribute('src')
-    if (!rawSrc || rawSrc.startsWith('http') || rawSrc.startsWith('asset:') || rawSrc.startsWith('data:')) return
+    if (!rawSrc || rawSrc.startsWith('http') || rawSrc.startsWith('asset:') || rawSrc.startsWith('data:')) {
+      img.dataset.fixed = 'true'
+      return
+    }
 
-    // 重点：处理相对路径图片
     let absolutePath = ''
     if (rawSrc.startsWith('./')) absolutePath = normalizedParent + rawSrc.substring(2)
     else if (!rawSrc.includes(':') && !rawSrc.startsWith('/')) absolutePath = normalizedParent + rawSrc
     else absolutePath = rawSrc
 
-    // 终极修复：使用保底命令获取 base64，彻底解决 ERR_CONNECTION_REFUSED
     try {
       const b64 = await invoke<string>('get_image_base64', { path: absolutePath.replace(/\\/g, '/') })
       if (img.src !== b64) img.src = b64
+      img.dataset.fixed = 'true'
     } catch (e) {
-      // 如果保底也失败，尝试使用 convertFileSrc
       img.src = convertFileSrc(absolutePath.replace(/\\/g, '/'))
+      img.dataset.fixed = 'true'
     }
   })
+  await Promise.all(tasks)
 }
 
 const virtualDrag = reactive({ 
@@ -732,6 +767,7 @@ const deleteAction = async (paths: string[]) => {
 }
 
 const nodeProps = ({ option }: { option: TreeOption }) => ({
+  'data-key': option.key,
   'data-drop-path': option.key, 
   'data-drop-dir': !option.isLeaf ? 'true' : 'false', 
   class: [
@@ -756,21 +792,24 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
       virtualDrag.timer = null 
     }, 350) 
   },
-  onClick: (e: MouseEvent) => { 
-    if (virtualDrag.active) return;
-    const key = option.key as string
-    if (e.ctrlKey || e.metaKey) {
-      const idx = selectedKeys.value.indexOf(key)
-      if (idx > -1) selectedKeys.value.splice(idx, 1); else selectedKeys.value.push(key)
-    } else {
-      selectedKeys.value = [key]
-    }
-    selectedKeys.value = [...selectedKeys.value]
-    handleNodeSelect(selectedKeys.value)
+  onMouseenter: (e: MouseEvent) => {
+    if (!option.isLeaf || virtualDrag.active) return
+    if (preview.timer) clearTimeout(preview.timer)
+    preview.timer = setTimeout(() => {
+      preview.show = true
+      preview.title = option.label as string
+      preview.path = option.key as string
+      preview.x = e.clientX
+      preview.y = e.clientY
+    }, 400)
+  },
+  onMouseleave: () => {
+    if (preview.timer) clearTimeout(preview.timer)
+    preview.show = false
   },
   onContextmenu: (e: MouseEvent) => { 
     if (virtualDrag.active) return; e.preventDefault(); contextMenu.show = false; 
-    if (!selectedKeys.value.includes(option.key as string)) selectedKeys.value = [option.key as string]
+    if (preview.timer) clearTimeout(preview.timer); preview.show = false;
     setTimeout(() => { 
       contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf; 
       const isMulti = selectedKeys.value.length > 1
@@ -807,6 +846,17 @@ let autoSaveTimer: any = null
 const triggerAutoSave = (content: string) => {
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
   autoSaveTimer = setTimeout(async () => { const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) try { await invoke('write_markdown_file', { path: cur.path, content }) } catch (e) {} }, 2000)
+}
+
+const refreshCurrentFile = async () => {
+  if (!activeTabId.value) return
+  const currentTab = tabs.value.find(t => t.id === activeTabId.value)
+  if (currentTab) {
+    // 强制清除内容缓存，使 loadFileToEditor 重新触发磁盘读取
+    currentTab.content = undefined
+    await loadFileToEditor(activeTabId.value)
+    message.success('已同步磁盘最新内容')
+  }
 }
 
 const saveCurrentFile = async () => {
@@ -876,10 +926,12 @@ const initVditor = () => {
       ],
       input: (val) => { 
         const cur = tabs.value.find(t => t.id === activeTabId.value); 
-        if (cur) triggerAutoSave(val); 
+        if (cur) {
+          triggerAutoSave(val); 
+          store.updateTabContent(cur.path, val);
+        }
         syncVditorMode();
         wordCount.value = val.length;
-        fixEditorImages(); // 实时修正
       },
       after: () => { 
         isVditorReady = true; 
@@ -970,8 +1022,68 @@ onMounted(async () => {
 })
 
 onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); if (outlineObserver) outlineObserver.disconnect(); if (unlistenRefresh) unlistenRefresh() })
+watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory() })
+watch(() => store.theme, (newTheme) => {
+  if (vditor && isVditorReady) {
+    const isDark = newTheme === 'dark'
+    // 1. 同步编辑器背景色
+    const targetBg = isDark ? '#1c1c1e' : '#ffffff'
+    if (store.editorBgColor !== targetBg) {
+      handleEditorBgChange(targetBg)
+    }
+    // 2. 同步 Vditor 内部组件主题
+    vditor.setTheme(
+      isDark ? 'dark' : 'classic', 
+      isDark ? 'dark' : 'light', 
+      store.codeTheme || 'github'
+    )
+  }
+})
+
+watch(() => store.codeTheme, (newCodeTheme) => {
+  if (vditor && isVditorReady) {
+    const isDark = store.theme === 'dark'
+    vditor.setTheme(
+      isDark ? 'dark' : 'classic',
+      isDark ? 'dark' : 'light',
+      newCodeTheme || 'github'
+    )
+  }
+})
+
+watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
 watch(() => store.libraryPath, (newPath) => { if (newPath) refreshLibrary() })
-watch(activeTabId, (newId) => { if (newId) { const t = tabs.value.find(item => item.id === newId); if (t) loadFileToEditor(t.path) } })
+watch(activeTabId, (newId, oldId) => { 
+  if (newId && newId !== oldId) { 
+    const t = tabs.value.find(item => item.id === newId); 
+    if (t) loadFileToEditor(t.path) 
+
+    // 侧边栏自动同步逻辑
+    selectedKeys.value = [newId]
+    
+    // 路径分隔符自适应处理 (修复 Windows 下无法折叠的问题)
+    const separator = newId.includes('\\') ? '\\' : '/'
+    const parts = newId.split(separator)
+    const newExpanded = [...expandedKeys.value]
+    let currentPath = ''
+    
+    // 排除文件名，逐级还原父目录原始路径
+    for (let i = 0; i < parts.length - 1; i++) {
+      currentPath += (i === 0 ? '' : separator) + parts[i]
+      if (!newExpanded.includes(currentPath)) {
+        newExpanded.push(currentPath)
+      }
+    }
+    expandedKeys.value = newExpanded
+
+    // 利用官方 API 实现精准平滑滚动 (彻底解决自动滚动失效)
+    nextTick(() => {
+      setTimeout(() => {
+        treeInstRef.value?.scrollTo({ key: newId, behavior: 'smooth' })
+      }, 300)
+    })
+  } 
+})
 watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); if (!val.trim()) { refreshLibrary(); return }; searchDebounce = setTimeout(async () => { try { const results = await invoke<FileEntry[]>('search_library', { libraryRoot: store.libraryPath, query: val.trim() }); treeData.value = results.map(entry => ({ label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''), key: entry.path, isLeaf: !entry.is_dir, prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' }) })) } catch (e) {} }, 300) })
 </script>
 
@@ -1082,7 +1194,7 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .compact-outline-tree :deep(.n-tree-node-indent) { width: 12px !important; }
 .compact-outline-tree :deep(.n-tree-node-switcher) { width: 16px !important; height: 16px !important; }
 /* === 历史面板深度优化 === */
-.history-box { padding: 12px 16px; height: 100%; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; }
+.history-box { padding: 12px 16px; height: 100%; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; min-height: 0; }
 .history-header { display: flex; align-items: center; justify-content: space-between; }
 .history-title-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #86868b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 .clear-all-btn { opacity: 0.6; transition: all 0.3s; }
@@ -1096,7 +1208,7 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
   cursor: pointer; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
   display: flex; gap: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02); 
   animation: bubblePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  overflow: hidden;
+  overflow: hidden; flex-shrink: 0;
 }
 .is-dark .history-bubble { background: rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.06); }
 
@@ -1188,7 +1300,14 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .tab-scroller { flex: 1; height: 40px; display: flex; gap: 8px; align-items: center; overflow-x: auto; scrollbar-width: none; }
 .tab-pill { height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(0, 0, 0, 0.03); border-radius: 15px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap; max-width: 200px; min-width: 0; flex-shrink: 0; }
 .tab-pill:hover { background: rgba(0, 0, 0, 0.06); transform: translateY(-1px); }
-.tab-pill.active { background: #fff; color: var(--theme-primary); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+.tab-pill.active { 
+  background: var(--custom-editor-bg); 
+  color: var(--theme-primary); 
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.03); 
+}
+.is-dark .tab-pill.active {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
 
 .pill-text {
   flex: 1;
@@ -1202,9 +1321,15 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   flex-shrink: 0;
   padding: 0 8px 4px;
+}
+
+.action-btn-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
 }
 
 .save-btn {

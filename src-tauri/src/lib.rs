@@ -555,6 +555,23 @@ async fn delete_items(app_handle: tauri::AppHandle, paths: Vec<String>) -> Resul
 #[tauri::command]
 fn exit_app(app_handle: tauri::AppHandle) { app_handle.exit(0); }
 
+#[derive(Serialize)]
+struct FileStats {
+    created: u64,
+    modified: u64,
+    size: u64,
+}
+
+#[tauri::command]
+async fn get_file_stats(path: String) -> Result<FileStats, String> {
+    let metadata = fs::metadata(&path).map_err(|e| e.to_string())?;
+    let created = metadata.created().unwrap_or(metadata.modified().unwrap_or(std::time::SystemTime::now()))
+        .duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+    let modified = metadata.modified().unwrap_or(std::time::SystemTime::now())
+        .duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+    Ok(FileStats { created, modified, size: metadata.len() })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -604,11 +621,51 @@ pub fn run() {
             let show_i = MenuItem::with_id(app, "show", "显示主窗口", true, None::<&str>)?;
             let quick_i = MenuItem::with_id(app, "quick", "快速笔记", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quick_i, &show_i, &quit_i])?;
-            let _tray = TrayIconBuilder::new().icon(app.default_window_icon().unwrap().clone()).tooltip("Long编辑 · MD助手").menu(&menu)
-                .on_menu_event(|app: &tauri::AppHandle, event| match event.id.as_ref() { "quit" => { app.exit(0); } "show" => { let win = app.get_webview_window("main").unwrap(); let _ = win.show(); let _ = win.set_focus(); } "quick" => { let _ = tauri::WebviewWindowBuilder::new(app, "quick-note", tauri::WebviewUrl::App("#/quick-note".into())).title("快速笔记").inner_size(400.0, 300.0).always_on_top(true).decorations(false).transparent(true).build(); } _ => {} })
-                .on_tray_icon_event(|tray, event| { if let TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, .. } = event { let win = tray.app_handle().get_webview_window("main").unwrap(); let _ = win.show(); let _ = win.set_focus(); } }).build(app)?;
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .tooltip("Long编辑 · MD助手")
+                .menu(&menu)
+                .menu_on_left_click(false)
+                .on_menu_event(|app: &tauri::AppHandle, event| match event.id.as_ref() {
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    "show" => {
+                        let win = app.get_webview_window("main").unwrap();
+                        let _ = win.unminimize();
+                        let _ = win.show();
+                        let _ = win.set_focus();
+                    }
+                    "quick" => {
+                        let _ = tauri::WebviewWindowBuilder::new(
+                            app,
+                            "quick-note",
+                            tauri::WebviewUrl::App("#/quick-note".into()),
+                        )
+                        .title("快速笔记")
+                        .inner_size(400.0, 300.0)
+                        .always_on_top(true)
+                        .decorations(false)
+                        .transparent(true)
+                        .build();
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: tauri::tray::MouseButton::Left,
+                        ..
+                    } = event
+                    {
+                        let win = tray.app_handle().get_webview_window("main").unwrap();
+                        let _ = win.unminimize();
+                        let _ = win.show();
+                        let _ = win.set_focus();
+                    }
+                })
+                .build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, get_folder_order, save_folder_order, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, get_image_base64 ])
+        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, get_folder_order, save_folder_order, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, get_image_base64, get_file_stats ])
         .run(tauri::generate_context!()).expect("error");
 }

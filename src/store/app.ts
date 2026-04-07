@@ -4,11 +4,21 @@ import { enable, disable, isEnabled } from '@tauri-apps/plugin-autostart'
 
 export type SessionMode = 'TEMP' | 'LIBRARY'
 
+export const THEME_MAP: Record<string, string> = {
+  white: '#ffffff',
+  green: '#f0f9eb',
+  blue: '#f0f7ff',
+  pink: '#fff5f7',
+  dark: '#1c1c1e',
+  system: '#ffffff'
+}
+
 export interface TabInfo {
   id: string
   title: string
   path: string
   isDirty: boolean
+  content?: string
 }
 
 export interface LibraryConfig {
@@ -115,13 +125,23 @@ export const useAppStore = defineStore('app', {
 
     },
     addTab(tab: TabInfo) {
-      const exists = this.tabs.find(t => t.path === tab.path)
-      if (exists) {
-        this.activeTabId = exists.id
+      const idx = this.tabs.findIndex(t => t.path === tab.path)
+      if (idx > -1) {
+        const existing = this.tabs[idx]
+        if (tab.content) existing.content = tab.content
+        const [removed] = this.tabs.splice(idx, 1)
+        this.tabs.unshift(removed)
+        if (this.activeTabId !== existing.id) {
+          this.activeTabId = existing.id
+        }
       } else {
-        this.tabs.push(tab)
+        this.tabs.unshift(tab)
         this.activeTabId = tab.id
       }
+    },
+    updateTabContent(path: string, content: string) {
+      const tab = this.tabs.find(t => t.path === path)
+      if (tab) tab.content = content
     },
     removeTab(tabId: string) {
       this.tabs = this.tabs.filter(t => t.id !== tabId)

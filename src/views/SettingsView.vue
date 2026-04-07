@@ -104,6 +104,34 @@
                 <n-radio-button value="system">跟随系统</n-radio-button>
               </n-radio-group>
             </n-form-item>
+            <n-grid :cols="2" :x-gap="20">
+              <n-grid-item>
+                <n-form-item label="代码高亮风格">
+                  <n-select v-model:value="config.codeTheme" :options="codeThemeOptions" placeholder="选择高亮风格" />
+                </n-form-item>
+              </n-grid-item>
+              <n-grid-item>
+                <n-form-item label="文章背景色">
+                  <n-color-picker v-model:value="config.editorBgColor" :modes="['hex']" :show-alpha="false" />
+                </n-form-item>
+              </n-grid-item>
+            </n-grid>
+            <div class="section-title">实时预览</div>
+            <div class="theme-preview-card" :style="{ backgroundColor: config.editorBgColor }">
+              <div class="preview-content">
+                <h3 class="preview-md-h"># 这是一个示例标题</h3>
+                <p class="preview-md-p">这是正文预览效果。当您修改左侧的设置时，此区域的背景色、文字颜色和代码风格将实时同步更新。</p>
+                <div class="preview-code-block" :class="'theme-' + config.codeTheme">
+                  <div class="code-header">
+                    <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                    <span class="lang">typescript</span>
+                  </div>
+                  <pre><code><span class="keyword">const</span> <span class="variable">app</span> = <span class="keyword">new</span> <span class="class">MistyEditor</span>();
+<span class="variable">app</span>.<span class="method">setTheme</span>(<span class="string">'{{ config.codeTheme }}'</span>);
+<span class="variable">app</span>.<span class="method">render</span>();</code></pre>
+                </div>
+              </div>
+            </div>
           </n-grid-item>
         </n-grid>
       </n-form>
@@ -118,12 +146,25 @@ import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, NTag, NInputGroup } from 'naive-ui'
-import { useAppStore } from '../store/app'
+import { useAppStore, THEME_MAP } from '../store/app'
 
 const router = useRouter()
 const message = useMessage()
 const store = useAppStore()
 const isInitializing = ref(true)
+
+const codeThemeOptions = [
+  { label: 'GitHub (默认)', value: 'github' },
+  { label: 'GitHub Dark', value: 'github-dark' },
+  { label: 'Atom One Dark', value: 'atom-one-dark' },
+  { label: 'Monokai', value: 'monokai' },
+  { label: 'Dracula', value: 'dracula' },
+  { label: 'VS Code Light', value: 'vs' },
+  { label: 'VS Code Dark', value: 'vs2015' },
+  { label: 'Xcode', value: 'xcode' },
+  { label: 'Nord', value: 'nord' },
+  { label: 'Tokyo Night', value: 'tokyo-night-dark' }
+]
 
 const config = ref({
   libraries: [] as any[],
@@ -205,7 +246,10 @@ const removeLibrary = (index: number) => {
 
 const applyTheme = (val: string) => {
   store.theme = val as any
-  // config.theme 已通过 v-model 绑定，watch 会处理保存
+  if (THEME_MAP[val]) {
+    config.value.editorBgColor = THEME_MAP[val]
+    store.updateConfig({ editorBgColor: THEME_MAP[val] })
+  }
 }
 
 const clearHistory = async () => {
@@ -403,4 +447,93 @@ const setAsDefault = async () => {
   background: var(--theme-primary) !important;
   color: #fff !important;
 }
+
+/* 实时预览区域样式 */
+.theme-preview-card {
+  margin-top: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  min-height: 200px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+.is-dark .theme-preview-card { border-color: rgba(255, 255, 255, 0.1); }
+
+.preview-content {
+  max-width: 100%;
+}
+
+.preview-md-h {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 12px;
+  color: var(--theme-text);
+  opacity: 0.9;
+}
+
+.preview-md-p {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  color: var(--theme-text);
+  opacity: 0.7;
+}
+
+.preview-code-block {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+}
+
+.code-header {
+  height: 32px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.red { background: #ff5f56; }
+.dot.yellow { background: #ffbd2e; }
+.dot.green { background: #27c93f; }
+.lang { margin-left: auto; font-size: 10px; font-weight: 700; opacity: 0.4; text-transform: uppercase; }
+
+.preview-code-block pre { margin: 0; padding: 16px; overflow-x: auto; background: rgba(0, 0, 0, 0.02); }
+
+/* 代码高亮模拟颜色 */
+.theme-github .keyword { color: #d73a49; }
+.theme-github .variable { color: #005cc5; }
+.theme-github .string { color: #032f62; }
+.theme-github .method { color: #6f42c1; }
+
+.theme-monokai { background: #272822; color: #f8f8f2; }
+.theme-monokai .keyword { color: #f92672; }
+.theme-monokai .variable { color: #a6e22e; }
+.theme-monokai .string { color: #e6db74; }
+.theme-monokai .method { color: #66d9ef; }
+
+.theme-dracula { background: #282a36; color: #f8f8f2; }
+.theme-dracula .keyword { color: #ff79c6; }
+.theme-dracula .variable { color: #50fa7b; }
+.theme-dracula .string { color: #f1fa8c; }
+.theme-dracula .method { color: #8be9fd; }
+
+.theme-one-dark { background: #282c34; color: #abb2bf; }
+.theme-one-dark .keyword { color: #c678dd; }
+.theme-one-dark .variable { color: #e06c75; }
+.theme-one-dark .string { color: #98c379; }
+.theme-one-dark .method { color: #61afef; }
+
+.theme-vscode { background: #1e1e1e; color: #d4d4d4; }
+.theme-vscode .keyword { color: #569cd6; }
+.theme-vscode .variable { color: #9cdcfe; }
+.theme-vscode .string { color: #ce9178; }
+.theme-vscode .method { color: #dcdcaa; }
 </style>
