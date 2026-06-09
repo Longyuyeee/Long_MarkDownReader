@@ -265,7 +265,7 @@ import {
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
-import { useAppStore } from '../store/app'
+import { useAppStore, THEME_MAP } from '../store/app'
 import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
 import { useRouter } from 'vue-router'
@@ -992,15 +992,13 @@ watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory() }
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
     const isDark = newTheme === 'dark'
-    // 1. 同步编辑器背景色
-    const targetBg = isDark ? '#1c1c1e' : '#ffffff'
-    if (store.editorBgColor !== targetBg) {
-      handleEditorBgChange(targetBg)
-    }
+    // 1. 同步编辑器背景色：使用 THEME_MAP 正确匹配所有配色
+    const targetBg = THEME_MAP[newTheme] || (isDark ? '#1c1c1e' : '#ffffff')
+    handleEditorBgChange(targetBg)
     // 2. 同步 Vditor 内部组件主题
     vditor.setTheme(
-      isDark ? 'dark' : 'classic', 
-      isDark ? 'dark' : 'light', 
+      isDark ? 'dark' : 'classic',
+      isDark ? 'dark' : 'light',
       store.codeTheme || 'github'
     )
   }
