@@ -19,7 +19,7 @@
                   <div class="lib-path">{{ lib.path }}</div>
                 </div>
                 <div class="lib-actions">
-                  <n-button size="tiny" secondary type="primary" v-if="lib.path !== config.activeLibraryPath" @click="config.activeLibraryPath = lib.path">切换</n-button>
+                  <n-button size="tiny" secondary type="primary" v-if="lib.path !== config.activeLibraryPath" @click="switchLibrary(lib.path)">切换</n-button>
                   <n-tag size="small" type="success" v-else>当前使用</n-tag>
                   <n-button size="tiny" quaternary circle type="error" @click="removeLibrary(index)">
                     <template #icon><n-icon :component="TrashIcon" /></template>
@@ -145,11 +145,12 @@ import { useRouter } from 'vue-router'
 import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
-import { useMessage, NTag, NInputGroup } from 'naive-ui'
+import { useMessage, useDialog, NTag, NInputGroup } from 'naive-ui'
 import { useAppStore, THEME_MAP } from '../store/app'
 
 const router = useRouter()
 const message = useMessage()
+const dialog = useDialog()
 const store = useAppStore()
 const isInitializing = ref(true)
 
@@ -180,6 +181,23 @@ const config = ref({
 })
 
 const newLib = reactive({ name: '', path: '' })
+
+const switchLibrary = (path: string) => {
+  if (store.tabs.length === 0) {
+    config.value.activeLibraryPath = path
+    return
+  }
+  const hasDirty = store.tabs.some(t => t.isDirty)
+  dialog.warning({
+    title: '切换知识库',
+    content: hasDirty
+      ? `有 ${store.tabs.length} 个标签页处于打开状态，其中包含未保存的修改。切换知识库将清空所有标签页，是否继续？`
+      : `当前有 ${store.tabs.length} 个标签页处于打开状态，切换知识库将清空所有标签页，是否继续？`,
+    positiveText: '确认切换',
+    negativeText: '取消',
+    onPositiveClick: () => { config.value.activeLibraryPath = path }
+  })
+}
 
 onMounted(async () => {
   isInitializing.value = true
