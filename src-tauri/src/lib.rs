@@ -199,9 +199,16 @@ async fn create_new_folder(parent_path: String) -> Result<String, String> {
 
 #[tauri::command]
 async fn rename_item(app_handle: tauri::AppHandle, old_path: String, new_name: String) -> Result<String, String> {
+    if new_name.is_empty() || new_name.contains('/') || new_name.contains('\\') {
+        return Err("文件名包含非法字符".into());
+    }
     let old = Path::new(&old_path);
     let parent = old.parent().ok_or("无效路径")?;
-    let new_path = parent.join(new_name);
+    let new_path = parent.join(&new_name);
+    // 防止路径穿越：确保 new_path 的父目录与原 parent 一致
+    if new_path.parent() != Some(parent) {
+        return Err("文件名包含非法字符".into());
+    }
     fs::rename(old, &new_path).map_err(|e| e.to_string())?;
     let old_history = get_history_dir(&app_handle, &old_path);
     if old_history.exists() { let new_history = get_history_dir(&app_handle, &new_path.to_string_lossy()); let _ = fs::rename(old_history, new_history); }
