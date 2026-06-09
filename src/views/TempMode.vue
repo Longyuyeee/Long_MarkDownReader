@@ -160,7 +160,7 @@ const startShadowSaveTimer = () => {
     if (vditor && filePath.value) {
       const content = vditor.getValue()
       if (content && content.trim().length > 0) {
-        await invoke('save_history_version', { path: filePath.value, content, maxCount: store.maxHistoryCount }).catch(() => {})
+        await invoke('save_history_version', { path: filePath.value, content, maxCount: store.maxHistoryCount }).catch((e: any) => { console.error('Shadow save failed:', e) })
       }
     }
   }, interval)

@@ -770,7 +770,7 @@ const closeTab = (id: string) => store.removeTab(id)
 let autoSaveTimer: any = null
 const triggerAutoSave = (content: string) => {
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
-  autoSaveTimer = setTimeout(async () => { const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) try { await invoke('write_markdown_file', { path: cur.path, content }) } catch (e) {} }, 2000)
+  autoSaveTimer = setTimeout(async () => { const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) try { await invoke('write_markdown_file', { path: cur.path, content }) } catch (e) { console.error('Auto-save failed:', e) } }, 2000)
 }
 
 const refreshCurrentFile = async () => {
