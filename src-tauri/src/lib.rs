@@ -513,8 +513,8 @@ async fn save_shadow_copy(app_handle: tauri::AppHandle, path: String, content: S
 
 #[tauri::command]
 async fn get_url_title(url: String) -> Result<String, String> {
-    let resp = reqwest::blocking::get(&url).map_err(|e| e.to_string())?;
-    let body = resp.text().map_err(|e| e.to_string())?;
+    let resp = reqwest::get(&url).await.map_err(|e| e.to_string())?;
+    let body = resp.text().await.map_err(|e| e.to_string())?;
     let fragment = Html::parse_document(&body);
     let selector = Selector::parse("title").map_err(|_| "解析失败")?;
     if let Some(title_element) = fragment.select(&selector).next() { Ok(title_element.inner_html().trim().to_string()) } else { Ok(url) }
