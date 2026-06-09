@@ -10,6 +10,14 @@ use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use serde::{Serialize, Deserialize};
 use std::process::Command;
 use base64::{Engine as _, engine::general_purpose};
+use std::sync::LazyLock;
+
+static RE_MD_IMG: LazyLock<regex::Regex> = LazyLock::new(|| {
+    regex::Regex::new(r"!\[(?:[^\]]*)\]\(([^)\s]+)").unwrap()
+});
+static RE_HTML_IMG: LazyLock<regex::Regex> = LazyLock::new(|| {
+    regex::Regex::new(r#"<img[^>]*\ssrc\s*=\s*["']([^"']+)["']"#).unwrap()
+});
 
 #[derive(Serialize)]
 pub struct FileContent {
@@ -221,11 +229,9 @@ async fn delete_item(app_handle: tauri::AppHandle, path: String) -> Result<(), S
     if p.is_file() && path.ends_with(".md") {
         if let Ok(content) = fs::read_to_string(p) {
             let parent = p.parent().unwrap();
-            let re_md = regex::Regex::new(r"!\[.*?\]\((.*?)\)").unwrap();
-            let re_html = regex::Regex::new(r#"<img [^>]*src=["'](.*?)["']"#).unwrap();
             let mut paths: std::collections::HashSet<String> = std::collections::HashSet::new();
-            for cap in re_md.captures_iter(&content) { paths.insert(cap[1].to_string()); }
-            for cap in re_html.captures_iter(&content) { paths.insert(cap[1].to_string()); }
+            for cap in RE_MD_IMG.captures_iter(&content) { paths.insert(cap[1].to_string()); }
+            for cap in RE_HTML_IMG.captures_iter(&content) { paths.insert(cap[1].to_string()); }
             for rel_path in paths {
                 if rel_path.starts_with("http") || rel_path.starts_with("data:") { continue; }
                 let clean_rel = rel_path.split('?').next().unwrap_or(&rel_path).replace("%20", " ");
@@ -363,11 +369,9 @@ async fn import_to_library(source_path: String, library_root: String, target_dir
     fs::copy(source, &target_item_path).map_err(|e| e.to_string())?;
     if let Ok(content) = fs::read_to_string(source) {
         let parent = source.parent().unwrap();
-        let re_md = regex::Regex::new(r"!\[.*?\]\((.*?)\)").unwrap();
-        let re_html = regex::Regex::new(r#"<img [^>]*src=["'](.*?)["']"#).unwrap();
         let mut paths: std::collections::HashSet<String> = std::collections::HashSet::new();
-        for cap in re_md.captures_iter(&content) { paths.insert(cap[1].to_string()); }
-        for cap in re_html.captures_iter(&content) { paths.insert(cap[1].to_string()); }
+        for cap in RE_MD_IMG.captures_iter(&content) { paths.insert(cap[1].to_string()); }
+        for cap in RE_HTML_IMG.captures_iter(&content) { paths.insert(cap[1].to_string()); }
         for rel_path in paths {
             if rel_path.starts_with("http") || rel_path.starts_with("data:") { continue; }
             let clean_rel = rel_path.split('?').next().unwrap_or(&rel_path).replace("%20", " ");
