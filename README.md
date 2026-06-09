@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.5.0-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.5.1-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,12 +21,11 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **Windows (.exe) 安装包**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v0.5.0/LongEdit_Setup_v0.5.0.exe) - **首选推荐**，极速安装。
-*   [📦 **Windows (.msi) 安装包**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v0.5.0/LongEdit_v0.5.0_x64_zh-CN.msi) - 标准 MSI 安装。
+*   [🚀 **前往 GitHub 下载 v0.5.1**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.1) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.5.0)
+## 🆕 最新版本更新 (v0.5.1)
 
 ### 🔗 知识网络
 *   **双向链接 `[[wikilink]]`**：使用 `[[笔记名]]` 语法创建内部链接，自动发现反向链接。
