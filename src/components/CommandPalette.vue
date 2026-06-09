@@ -75,7 +75,9 @@ const execute = async (item: any) => {
   close()
 }
 
-watch(query, async (val) => {
+let searchDebounce: any = null
+
+watch(query, (val) => {
   if (val.startsWith('>')) {
     const cmd = val.slice(1).toLowerCase()
     const allCmds = [
@@ -86,19 +88,23 @@ watch(query, async (val) => {
       { title: '深色主题', description: 'Appearance: Dark', icon: CommandIcon, type: 'cmd', action: 'theme-dark' },
     ]
     results.value = allCmds.filter(c => c.title.includes(cmd))
+    selectedIndex.value = 0
   } else if (val.length > 0) {
-    try {
-      const files = await invoke<any[]>('search_library', { libraryRoot: store.libraryPath, query: val })
-      results.value = files.map(f => ({
-        title: f.name,
-        description: f.path,
-        icon: FileIcon,
-        type: 'file',
-        path: f.path
-      }))
-    } catch (e) { results.value = [] }
+    if (searchDebounce) clearTimeout(searchDebounce)
+    searchDebounce = setTimeout(async () => {
+      try {
+        const files = await invoke<any[]>('search_library', { libraryRoot: store.libraryPath, query: val })
+        results.value = files.map(f => ({
+          title: f.name,
+          description: f.path,
+          icon: FileIcon,
+          type: 'file',
+          path: f.path
+        }))
+      } catch (e) { results.value = [] }
+      selectedIndex.value = 0
+    }, 200)
   } else { results.value = [] }
-  selectedIndex.value = 0
 })
 </script>
 
