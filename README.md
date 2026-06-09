@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.4.9-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.5.0-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,43 +21,51 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **Windows (.exe) 安装包**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v0.4.9/LongEdit_Setup_v0.4.9.exe) - **首选推荐**，极速安装。
-*   [📦 **Windows (.msi) 安装包**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v0.4.9/LongEdit_v0.4.9_x64_zh-CN.msi) - 标准 MSI 安装。
+*   [🚀 **Windows (.exe) 安装包**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v0.5.0/LongEdit_Setup_v0.5.0.exe) - **首选推荐**，极速安装。
+*   [📦 **Windows (.msi) 安装包**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v0.5.0/LongEdit_v0.5.0_x64_zh-CN.msi) - 标准 MSI 安装。
 
 ---
 
-## 🆕 最新版本更新 (v0.4.9)
+## 🆕 最新版本更新 (v0.5.0)
+
+### 🔗 知识网络
+*   **双向链接 `[[wikilink]]`**：使用 `[[笔记名]]` 语法创建内部链接，自动发现反向链接。
+*   **标签系统 `#tag`**：内联标签 + 标签云面板，一键筛选相关笔记。
+*   **知识图谱**：交互式力导向图可视化笔记关联，支持拖拽缩放。
+
+### ✨ 编辑器增强
+*   **阅读时间估算**：底部状态栏显示字数 + 预估阅读时间。
+*   **工具栏汉化**：Vditor 全部工具按钮中文提示。
+*   **光标行列显示**：实时显示当前编辑位置（行:列）。
+*   **宽度三档切换**：窄/中/宽三档编辑器宽度一键切换。
+*   **打字机滚动**：Zen 模式下光标自动居中。
+*   **主题适配**：编辑器背景色正确跟随所有配色主题。
+
+### 📋 知识管理
+*   **每日笔记**：一键创建/打开当天日期笔记。
+*   **笔记模板**：会议纪要、周报、读书笔记模板。
+*   **文件收藏**：右键收藏常用文件，侧边栏优先显示。
+*   **最近文件**：侧边栏显示最近打开的文件列表。
+*   **知识库统计**：文件总数 + 总字数实时统计。
+*   **大纲自动高亮**：滚动时大纲树自动定位当前章节。
 
 ### 🔒 安全加固
-*   **CSP 策略启用**: 设置 Content Security Policy 阻止 Markdown XSS 脚本注入。
-*   **路径穿越修复**: 重命名操作增加非法字符校验，防止目录穿越。
-*   **正则增强**: 图片引用解析预编译为 LazyLock，修正 HTML 属性误匹配。
-
-### 🛡 数据保护
-*   **切换库确认**: 切换知识库时弹出确认对话框，防止标签页意外丢失。
-*   **临时编辑保护**: 离开/关闭临时编辑时提示未保存修改。
-*   **标签页持久化**: 打开的文件标签页重启后自动恢复。
-*   **自动保存日志**: 自动保存失败时输出错误日志而非静默吞错。
+*   **CSP 策略**：阻止 Markdown XSS 脚本注入。
+*   **路径穿越修复**：重命名操作防目录穿越。
+*   **符号链接保护**：递归目录遍历防死循环。
 
 ### ⚡ 性能优化
-*   **按键性能**: 修复临时编辑模式每次按键都扫描图片的性能瓶颈。
-*   **搜索去抖**: 命令面板文件搜索增加 200ms 去抖，避免频繁 IPC 调用。
-*   **异步化**: `get_url_title` 从阻塞 HTTP 改为异步；`scan_directory` 改为异步。
-*   **设置保存**: 设置页面保存增加 500ms 去抖，避免每次按键触发全量保存。
+*   **按键性能**：TempMode 不再每次按键扫描图片。
+*   **搜索去抖**：命令面板 + 文件搜索均增加防抖。
+*   **异步化**：HTTP 请求、目录扫描全部异步。
+*   **设置保存**：设置页面保存增加防抖。
 
-### ✨ 体验增强
-*   **全屏适配**: 临时编辑模式支持 Zen 模式（F11）全屏沉浸体验。
-*   **导出 HTML**: 命令面板导出 HTML 功能已接通，支持离线样式。
-*   **对话框统一**: 删除文件、清空历史等操作统一使用 Naive UI 对话框。
-*   **标签页指示**: 标签页增加蓝色圆点显示未保存修改状态。
-*   **快捷键提示**: 命令面板显示键盘快捷键。
-*   **外部变更检测**: 窗口获焦时自动检测文件是否被外部程序修改。
-
-### 🏗 代码质量
-*   **Composable 提取**: 大纲同步、图片修复、主题监听提取为公共 composable。
-*   **内存泄漏修复**: Vditor 实例在组件卸载时正确销毁。
-*   **全局错误边界**: Vue 异常不再导致白屏。
-*   **Rust 零警告**: 消除所有 deprecation 和 dead_code 警告。
+### 🎨 体验优化
+*   **标签页持久化**：重启后自动恢复打开的文件。
+*   **外部变更检测**：窗口获焦时检测文件是否被其他程序修改。
+*   **对话框统一**：删除/清空等操作使用 Naive UI 对话框。
+*   **数据保护**：切换库/离开编辑时弹出未保存提示。
+*   **命令面板升级**：模糊搜索 + 匹配高亮 + 最近文件快捷入口。
 
 ---
 
@@ -76,6 +84,7 @@
 *   **UI**: Vue 3 + TypeScript + Pinia
 *   **Components**: Naive UI (Customized)
 *   **Editor**: Vditor (Highly Personalized)
+*   **Graph**: Canvas Force-Directed Layout
 
 ---
 
