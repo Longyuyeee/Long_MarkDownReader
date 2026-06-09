@@ -81,11 +81,14 @@ watch(query, (val) => {
   if (val.startsWith('>')) {
     const cmd = val.slice(1).toLowerCase()
     const allCmds = [
-      { title: '切换专注模式', description: 'Command: Toggle Zen Mode (F11)', icon: CommandIcon, type: 'cmd', action: 'zen-mode' },
-      { title: '导出为 HTML', description: 'Command: Export current file to HTML', icon: CommandIcon, type: 'cmd', action: 'export-html' },
-      { title: '刷新库目录', description: 'Command: Refresh Library', icon: CommandIcon, type: 'cmd', action: 'refresh' },
-      { title: '浅色主题', description: 'Appearance: Light', icon: CommandIcon, type: 'cmd', action: 'theme-light' },
-      { title: '深色主题', description: 'Appearance: Dark', icon: CommandIcon, type: 'cmd', action: 'theme-dark' },
+      { title: '专注模式', description: '切换全屏专注模式  F11', icon: CommandIcon, type: 'cmd', action: 'zen-mode' },
+      { title: '导出 HTML', description: '导出当前文件为 HTML 文件', icon: CommandIcon, type: 'cmd', action: 'export-html' },
+      { title: '保存文件', description: '保存当前编辑的文件  Ctrl+S', icon: CommandIcon, type: 'cmd', action: 'export-html' },
+      { title: '刷新目录', description: '重新扫描知识库目录结构', icon: CommandIcon, type: 'cmd', action: 'refresh' },
+      { title: '纯白主题', description: '切换到纯白配色', icon: CommandIcon, type: 'cmd', action: 'theme-white' },
+      { title: '深色主题', description: '切换到深色配色', icon: CommandIcon, type: 'cmd', action: 'theme-dark' },
+      { title: '重命名文件', description: '重命名选中的文件  F2', icon: CommandIcon, type: 'cmd', action: 'rename' },
+      { title: '删除文件', description: '删除选中的文件  Delete', icon: CommandIcon, type: 'cmd', action: 'delete' },
     ]
     results.value = allCmds.filter(c => c.title.includes(cmd))
     selectedIndex.value = 0

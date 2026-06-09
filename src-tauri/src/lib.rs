@@ -468,15 +468,15 @@ async fn save_history_version(app_handle: tauri::AppHandle, path: String, conten
     if !file_history_dir.exists() { fs::create_dir_all(&file_history_dir).map_err(|e| e.to_string())?; }
     let mut entries: Vec<_> = fs::read_dir(&file_history_dir).map_err(|e| e.to_string())?.filter_map(|res| res.ok()).collect();
     if !entries.is_empty() {
-        entries.sort_by_key(|e| e.metadata().unwrap().modified().unwrap());
+        entries.sort_by_key(|e| e.metadata().and_then(|m| m.modified()).unwrap_or(std::time::UNIX_EPOCH));
         if let Some(last) = entries.last() { if let Ok(last_content) = fs::read_to_string(last.path()) { if last_content.replace("\r", "") == content.replace("\r", "") { return Ok(()); } } }
     }
-    let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+    let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs();
     let history_file = file_history_dir.join(format!("{}.md", timestamp));
     fs::write(history_file, content).map_err(|e| e.to_string())?;
     let mut entries: Vec<_> = fs::read_dir(&file_history_dir).map_err(|e| e.to_string())?.filter_map(|res| res.ok()).collect();
     if entries.len() > max_count as usize {
-        entries.sort_by_key(|e| e.metadata().unwrap().modified().unwrap());
+        entries.sort_by_key(|e| e.metadata().and_then(|m| m.modified()).unwrap_or(std::time::UNIX_EPOCH));
         for i in 0..(entries.len() - max_count as usize) { let _ = fs::remove_file(entries[i].path()); }
     }
     Ok(())

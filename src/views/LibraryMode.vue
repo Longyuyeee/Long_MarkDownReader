@@ -182,6 +182,7 @@
             >
               <n-icon :component="FileIcon" class="pill-icon" />
               <span class="pill-text">{{ tab.title }}</span>
+              <span class="pill-dirty-dot" v-if="tab.isDirty" title="有未保存的修改"></span>
               <n-icon :component="CloseIcon" class="pill-close" @click.stop="closeTab(tab.id)" />
             </div>
           </transition-group>
@@ -1262,6 +1263,11 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.pill-dirty-dot {
+  width: 6px; height: 6px; min-width: 6px;
+  background: var(--theme-primary, #007aff);
+  border-radius: 50%; opacity: 0.8;
 }
 
 .tab-actions {
