@@ -43,6 +43,7 @@ export const useAppStore = defineStore('app', {
     isAutostart: false,
     isDefaultEditor: false,
     exitStrategy: 'ask' as 'ask' | 'quit' | 'minimize',
+    isTempDirty: false,
     isZen: false,
   }),
   getters: {

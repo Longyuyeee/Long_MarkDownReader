@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed, onUnmounted, watch, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { useMessage, NIcon } from 'naive-ui'
@@ -71,6 +71,14 @@ const store = useAppStore()
 const filePath = ref(route.query.path as string || '')
 const fileName = computed(() => filePath.value ? filePath.value.split(/[\\/]/).pop() : '新文档.md')
 const isDirty = ref(false)
+watch(isDirty, (v) => { store.isTempDirty = v })
+
+onBeforeRouteLeave((_to, _from, next) => {
+  if (!isDirty.value) { store.isTempDirty = false; return next() }
+  const answer = window.confirm('当前文档有未保存的修改，确定要离开吗？')
+  if (answer) { store.isTempDirty = false; next() } else { next(false) }
+})
+
 const sidebarWidth = ref(240)
 const showOutline = ref(true)
 let vditor: Vditor | null = null

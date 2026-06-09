@@ -126,9 +126,13 @@ const maximizeWindow = async () => {
   if (isMaximized) appWindow.unmaximize()
   else appWindow.maximize()
 }
-const closeWindow = async () => { 
+const closeWindow = async () => {
   // 识别当前路由：如果是临时编辑界面，关闭时应重置回到主库
   if (router.currentRoute.value.name === 'TempMode') {
+    if (store.isTempDirty) {
+      if (!window.confirm('临时编辑中有未保存的修改，确定关闭吗？')) return
+      store.isTempDirty = false
+    }
     await router.push({ name: 'LibraryMode' })
   }
 
