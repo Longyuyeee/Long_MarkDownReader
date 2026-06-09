@@ -41,6 +41,13 @@
                 </div>
               </div>
 
+              <div class="recent-files" v-if="store.starredFiles.length > 0">
+                <div class="recent-header">收藏文件</div>
+                <div class="recent-item" v-for="sp in store.starredFiles" :key="sp" @click="handleNodeSelect([sp])" :title="sp">
+                  <n-icon :component="StarIcon" size="14" color="#f5a623" />
+                  <span>{{ sp.split(/[\\/]/).pop()?.replace('.md', '') || sp }}</span>
+                </div>
+              </div>
               <div class="recent-files" v-if="store.recentFiles.length > 0">
                 <div class="recent-header">最近打开</div>
                 <div class="recent-item" v-for="rf in store.recentFiles.slice(0, 5)" :key="rf.path" @click="handleNodeSelect([rf.path])" :title="rf.path">
@@ -87,6 +94,7 @@
                     block-line
                     expand-on-click
                     :data="outlineTreeData"
+                    :selected-keys="activeHeadingKey ? [activeHeadingKey] : []"
                     :on-update:selected-keys="handleOutlineSelect"
                     class="compact-outline-tree"
                     default-expand-all
@@ -273,7 +281,8 @@ import {
   RefreshCw as RefreshIcon, FileText as FileIcon, Folder as FolderIcon,
   Plus as PlusIcon, FolderPlus as FolderPlusIcon, Trash as TrashIcon,
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
-  Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon
+  Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
+  Star as StarIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -337,6 +346,7 @@ let lastKnownModified = 0
 
 const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
 const { fixEditorImages } = useImageFix(() => vditor, () => activeTabId.value || '')
+const activeHeadingKey = ref<string | null>(null)
 const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
 
 const updateWordCount = () => {
@@ -770,10 +780,12 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
     setTimeout(() => { 
       contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf; 
       const isMulti = selectedKeys.value.length > 1
-      const items = [ 
-        { label: isMulti ? '批量重命名不可用' : '重命名 (F2)', key: 'rename', disabled: isMulti, icon: () => h(NIcon, null, { default: () => h(EditIcon) }) }, 
-        { label: isMulti ? `物理删除所选 ${selectedKeys.value.length} 项` : '物理删除 (Del)', key: 'delete', icon: () => h(NIcon, { color: '#f5222d' }, { default: () => h(TrashIcon) }) } 
-      ]; 
+      const isStarred = !contextMenu.isDir && store.isStarred(contextMenu.targetPath)
+      const items = [
+        !contextMenu.isDir && !isMulti ? { label: isStarred ? '取消收藏' : '收藏文件', key: 'star', icon: () => h(NIcon, { color: isStarred ? '#f5a623' : undefined }, { default: () => h(StarIcon) }) } : null,
+        { label: isMulti ? '批量重命名不可用' : '重命名 (F2)', key: 'rename', disabled: isMulti, icon: () => h(NIcon, null, { default: () => h(EditIcon) }) },
+        { label: isMulti ? `物理删除所选 ${selectedKeys.value.length} 项` : '物理删除 (Del)', key: 'delete', icon: () => h(NIcon, { color: '#f5222d' }, { default: () => h(TrashIcon) }) }
+      ].filter(Boolean);
       if (!isMulti && contextMenu.isDir) items.unshift({ label: '新建子笔记', key: 'add-file', icon: () => h(NIcon, null, { default: () => h(PlusIcon) }) }, { label: '新建子文件夹', key: 'add-folder', icon: () => h(NIcon, null, { default: () => h(FolderPlusIcon) }) })
       contextMenu.options = items; contextMenu.show = true 
     }, 50) 
@@ -782,7 +794,8 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
 
 const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
-  if (key === 'rename') { renameState.oldPath = path; let name = path.split(/[\\/]/).pop() || ''; if (!contextMenu.isDir) name = name.substring(0, name.lastIndexOf('.')); renameState.newName = name; renameState.show = true }
+  if (key === 'star') { store.toggleStar(path); message.info(store.isStarred(path) ? '已收藏' : '已取消收藏') }
+  else if (key === 'rename') { renameState.oldPath = path; let name = path.split(/[\\/]/).pop() || ''; if (!contextMenu.isDir) name = name.substring(0, name.lastIndexOf('.')); renameState.newName = name; renameState.show = true }
   else if (key === 'delete') await deleteAction(selectedKeys.value)
   else if (key === 'add-file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path); handleNodeSelect([p]) }
   else if (key === 'add-folder') { await invoke('create_new_folder', { parentPath: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path) }
@@ -914,6 +927,19 @@ const initVditor = () => {
           }
           contentEl.addEventListener('keyup', updateCursor)
           contentEl.addEventListener('click', updateCursor)
+          // 滚动追踪：自动高亮当前章节
+          const viewport = contentEl.closest('.editor-viewport') as HTMLElement
+          if (viewport) {
+            viewport.addEventListener('scroll', () => {
+              const headings = contentEl.querySelectorAll('h1, h2, h3, h4, h5, h6')
+              let closestId = null as string | null
+              headings.forEach((h: HTMLElement) => {
+                const rect = h.getBoundingClientRect()
+                if (rect.top <= 160) closestId = h.getAttribute('data-id') || h.id
+              })
+              activeHeadingKey.value = closestId
+            }, { passive: true })
+          }
         }
         if (activeTabId.value) { 
           const t = tabs.value.find(item => item.id === activeTabId.value); 
@@ -1389,6 +1415,13 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .editor-width-wide :deep(.vditor-reset) { max-width: none !important; margin: 0 !important; }
 .width-toggle { display: flex; gap: 2px; margin-left: 8px; padding-left: 8px; border-left: 1px solid rgba(0,0,0,0.08); }
 .is-dark .width-toggle { border-left-color: rgba(255,255,255,0.08); }
+/* Zen 模式打字机滚动：增大顶部留白让光标居中 */
+.editor-main.zen-mode .editor-viewport {
+  padding-top: 30vh;
+}
+.editor-main.zen-mode :deep(.vditor-content) {
+  min-height: 70vh;
+}
 
 .hero-viewport { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: inherit; z-index: 5; overflow: hidden; }
 .ambient-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; filter: blur(80px); opacity: 0.4; }

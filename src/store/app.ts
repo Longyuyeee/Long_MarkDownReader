@@ -48,6 +48,7 @@ export const useAppStore = defineStore('app', {
     isTempDirty: false,
     isZen: false,
     recentFiles: [] as { title: string; path: string }[],
+    starredFiles: [] as string[],
   }),
   getters: {
     libraryPath: (state) => state.activeLibraryPath,
@@ -165,12 +166,22 @@ export const useAppStore = defineStore('app', {
     toggleZen() {
       this.isZen = !this.isZen
     },
+    toggleStar(path: string) {
+      const idx = this.starredFiles.indexOf(path)
+      if (idx > -1) this.starredFiles.splice(idx, 1)
+      else this.starredFiles.push(path)
+      this.saveTabsState()
+    },
+    isStarred(path: string) {
+      return this.starredFiles.includes(path)
+    },
     saveTabsState() {
       try {
         const state = {
           tabs: this.tabs.map(t => ({ id: t.id, title: t.title, path: t.path, isDirty: t.isDirty })),
           activeTabId: this.activeTabId,
-          recentFiles: this.recentFiles
+          recentFiles: this.recentFiles,
+          starredFiles: this.starredFiles
         }
         localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(state))
       } catch (e) { /* storage full or unavailable */ }
@@ -186,6 +197,9 @@ export const useAppStore = defineStore('app', {
         }
         if (state.recentFiles && Array.isArray(state.recentFiles)) {
           this.recentFiles = state.recentFiles
+        }
+        if (state.starredFiles && Array.isArray(state.starredFiles)) {
+          this.starredFiles = state.starredFiles
         }
       } catch (e) { localStorage.removeItem(TABS_STORAGE_KEY) }
     },
