@@ -245,7 +245,7 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => { if (outlineObserver) outlineObserver.disconnect() })
+onUnmounted(() => { if (outlineObserver) outlineObserver.disconnect(); if (vditor) vditor.destroy() })
 </script>
 
 <style scoped>
