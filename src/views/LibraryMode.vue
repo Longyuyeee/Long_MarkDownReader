@@ -254,7 +254,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch, reactive, h, onUnmounted, nextTick } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useMessage, TreeOption, NIcon, NDropdown } from 'naive-ui'
+import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
   RefreshCw as RefreshIcon, FileText as FileIcon, Folder as FolderIcon,
@@ -276,6 +276,7 @@ import { useImageFix } from '../composables/useImageFix'
 interface FileEntry { name: string; path: string; is_dir: boolean; }
 
 const message = useMessage()
+const dialog = useDialog()
 const store = useAppStore()
 const { tabs, activeTabId } = storeToRefs(store)
 const router = useRouter()
@@ -359,9 +360,16 @@ const deleteHistory = async (timestamp: number) => {
   catch (e) { message.error('删除失败') }
 }
 const clearAllHistory = async () => {
-  if (!confirm('确定要清除所有文件的历史备份吗？')) return
-  try { await invoke('clear_all_history'); historyList.value = []; message.success('历史缓存已全部清空') }
-  catch (e) { message.error('清空失败') }
+  dialog.warning({
+    title: '清空历史备份',
+    content: '确定要清除所有文件的历史备份吗？此操作不可撤销。',
+    positiveText: '确认清空',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try { await invoke('clear_all_history'); historyList.value = []; message.success('历史缓存已全部清空') }
+      catch (e) { message.error('清空失败') }
+    }
+  })
 }
 
 const formatTime = (ts: number) => {
@@ -679,16 +687,22 @@ const deleteAction = async (paths: string[]) => {
   if (paths.length === 0) return;
   const isMultiple = paths.length > 1
   const displayTitle = isMultiple ? `选中的 ${paths.length} 个项目` : paths[0].split(/[\\/]/).pop()?.replace(/\.md$/, '')
-  if (confirm(`确认要物理删除 ${displayTitle} 吗？`)) { 
-    try { 
-      await invoke('delete_items', { paths })
-      paths.forEach(p => { if (activeTabId.value === p || store.tabs.some(t => t.id === p)) store.removeTab(p) })
-      const parentsToRefresh = new Set<string>()
-      paths.forEach(p => { const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/')); parentsToRefresh.add(idx !== -1 ? p.substring(0, idx) : store.libraryPath) })
-      for (const p of parentsToRefresh) await refreshNode(p)
-      selectedKeys.value = []; message.success('已物理删除')
-    } catch (e) { message.error('删除失败') } 
-  }
+  dialog.warning({
+    title: '删除确认',
+    content: `确认要物理删除 ${displayTitle} 吗？此操作不可撤销。`,
+    positiveText: '确认删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await invoke('delete_items', { paths })
+        paths.forEach(p => { if (activeTabId.value === p || store.tabs.some(t => t.id === p)) store.removeTab(p) })
+        const parentsToRefresh = new Set<string>()
+        paths.forEach(p => { const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/')); parentsToRefresh.add(idx !== -1 ? p.substring(0, idx) : store.libraryPath) })
+        for (const p of parentsToRefresh) await refreshNode(p)
+        selectedKeys.value = []; message.success('已物理删除')
+      } catch (e) { message.error('删除失败') }
+    }
+  })
 }
 
 const nodeProps = ({ option }: { option: TreeOption }) => ({

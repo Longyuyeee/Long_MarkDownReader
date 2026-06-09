@@ -282,14 +282,20 @@ const applyTheme = (val: string) => {
 }
 
 const clearHistory = async () => {
-  if (confirm('确认要永久清空所有历史版本吗？')) {
-    try {
-      await invoke('clear_all_history')
-      message.success('历史缓存已清空')
-    } catch (e) {
-      message.error('操作失败')
+  dialog.warning({
+    title: '清空历史版本',
+    content: '确认要永久清空所有历史版本吗？此操作不可撤销。',
+    positiveText: '确认清空',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await invoke('clear_all_history')
+        message.success('历史缓存已清空')
+      } catch (e) {
+        message.error('操作失败')
+      }
     }
-  }
+  })
 }
 
 const setAsDefault = async () => {
