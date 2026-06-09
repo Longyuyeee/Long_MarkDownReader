@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.5.1-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.5.2-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,7 +21,7 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.5.1**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.1) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.5.2**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.2) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
