@@ -26,6 +26,8 @@ export interface LibraryConfig {
   path: string
 }
 
+const TABS_STORAGE_KEY = 'longedit_tabs_state'
+
 export const useAppStore = defineStore('app', {
   state: () => ({
     activeSession: 'LIBRARY' as SessionMode,
@@ -77,6 +79,8 @@ export const useAppStore = defineStore('app', {
         
         // 校准系统默认关联状态
         await this.checkSystemStatus()
+        // 恢复上一次的标签页
+        this.restoreTabsState()
       } catch (e) { console.error('Failed to load config', e) }
     },
     async checkSystemStatus() {
@@ -91,6 +95,7 @@ export const useAppStore = defineStore('app', {
       if (patch.activeLibraryPath !== undefined && patch.activeLibraryPath !== this.activeLibraryPath) {
         this.tabs = []
         this.activeTabId = null
+        this.clearTabsState()
       }
 
       // 核心修复：真实调用自启插件
@@ -139,6 +144,7 @@ export const useAppStore = defineStore('app', {
         this.tabs.unshift(tab)
         this.activeTabId = tab.id
       }
+      this.saveTabsState()
     },
     updateTabContent(path: string, content: string) {
       const tab = this.tabs.find(t => t.path === path)
@@ -149,9 +155,33 @@ export const useAppStore = defineStore('app', {
       if (this.activeTabId === tabId) {
         this.activeTabId = this.tabs.length > 0 ? this.tabs[this.tabs.length - 1].id : null
       }
+      this.saveTabsState()
     },
     toggleZen() {
       this.isZen = !this.isZen
+    },
+    saveTabsState() {
+      try {
+        const state = {
+          tabs: this.tabs.map(t => ({ id: t.id, title: t.title, path: t.path, isDirty: t.isDirty })),
+          activeTabId: this.activeTabId
+        }
+        localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(state))
+      } catch (e) { /* storage full or unavailable */ }
+    },
+    restoreTabsState() {
+      try {
+        const raw = localStorage.getItem(TABS_STORAGE_KEY)
+        if (!raw) return
+        const state = JSON.parse(raw)
+        if (state.tabs && Array.isArray(state.tabs)) {
+          this.tabs = state.tabs.filter((t: any) => t.path)
+          this.activeTabId = state.activeTabId || (this.tabs.length > 0 ? this.tabs[this.tabs.length - 1].id : null)
+        }
+      } catch (e) { localStorage.removeItem(TABS_STORAGE_KEY) }
+    },
+    clearTabsState() {
+      try { localStorage.removeItem(TABS_STORAGE_KEY) } catch (e) {}
     }
   }
 })
