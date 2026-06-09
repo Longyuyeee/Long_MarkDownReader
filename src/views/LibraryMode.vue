@@ -252,8 +252,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch, reactive, h, onUnmounted, nextTick, computed } from 'vue'
-import { invoke, convertFileSrc } from '@tauri-apps/api/core'
+import { onMounted, ref, watch, reactive, h, onUnmounted, nextTick } from 'vue'
+import { invoke } from '@tauri-apps/api/core'
 import { useMessage, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
@@ -270,9 +270,10 @@ import HoverPreview from '../components/HoverPreview.vue'
 import { useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
+import { useOutline } from '../composables/useOutline'
+import { useImageFix } from '../composables/useImageFix'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
-interface OutlineItem { id: string; text: string; level: number; }
 
 const message = useMessage()
 const store = useAppStore()
@@ -314,9 +315,11 @@ const selectedKeys = ref<string[]>([])
 const expandedKeys = ref<string[]>([])
 let vditor: any = null
 let isVditorReady = false
-let lastLoadedPath = '' 
-let outlineObserver: MutationObserver | null = null
-const outlineItems = ref<OutlineItem[]>([])
+let lastLoadedPath = ''
+
+const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
+const { fixEditorImages } = useImageFix(() => vditor, () => activeTabId.value || '')
+const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
 
 const updateWordCount = () => {
   if (vditor && isVditorReady) {
@@ -325,22 +328,6 @@ const updateWordCount = () => {
   }
 }
 
-const outlineTreeData = computed(() => {
-  const result: TreeOption[] = []
-  const stack: { level: number; children: TreeOption[] }[] = [{ level: 0, children: result }]
-  outlineItems.value.forEach(item => {
-    const node: TreeOption = { label: item.text, key: item.id, level: item.level, children: [] }
-    while (stack.length > 1 && stack[stack.length - 1].level >= item.level) stack.pop()
-    stack[stack.length - 1].children.push(node)
-    stack.push({ level: item.level, children: node.children as TreeOption[] })
-  })
-  const clean = (nodes: TreeOption[]) => {
-    nodes.forEach(n => { if (n.children && n.children.length === 0) delete n.children; else if (n.children) clean(n.children) })
-  }
-  clean(result); return result
-})
-
-const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
 const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0, timer: null as any })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, options: [] as any[] })
 const renameState = reactive({ show: false, oldPath: '', newName: '' })
@@ -398,31 +385,6 @@ const startShadowSaveTimer = () => {
 }
 
 const startResizing = (type: 'sidebar') => { activeResizer.value = type }
-const scrollToHeading = (id: string) => {
-  if (!vditor) return
-  const targetEl = vditor.vditor.wysiwyg.element.querySelector(`[data-id="${id}"]`) || vditor.vditor.wysiwyg.element.querySelector(`#${id}`)
-  if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-const syncOutlineManual = () => {
-  if (!vditor || !isVditorReady) return
-  const contentEl = vditor.vditor.wysiwyg?.element; if (!contentEl) return
-  const headings = contentEl.querySelectorAll('h1, h2, h3, h4, h5, h6')
-  const newItems: OutlineItem[] = []
-  headings.forEach((h: HTMLElement, index: number) => {
-    if (!h.id) h.id = `heading-${index}`
-    const id = h.getAttribute('data-id') || h.id
-    newItems.push({ id: id, text: h.innerText.trim() || '未命名标题', level: parseInt(h.tagName.substring(1)) })
-  })
-  outlineItems.value = newItems
-}
-
-const initOutlineObserver = () => {
-  if (outlineObserver) outlineObserver.disconnect()
-  const contentEl = vditor.vditor.wysiwyg?.element; if (!contentEl) return
-  outlineObserver = new MutationObserver(() => syncOutlineManual())
-  outlineObserver.observe(contentEl, { childList: true, subtree: true, characterData: true })
-}
 
 const handleNodeSelect = (keys: string[]) => {
   if (keys.length === 0) return
@@ -491,7 +453,7 @@ const loadFileToEditor = async (path: string) => {
       setTimeout(() => { 
         lastLoadedPath = path; 
         syncOutlineManual(); 
-        initOutlineObserver();
+        setupOutlineObserver();
         updateWordCount();
         fixEditorImages(); // 后台增强：通过 Base64 进一步提升图片清晰度/稳定性
       }, 50) 
@@ -507,43 +469,6 @@ const loadFileToEditor = async (path: string) => {
       setEditorValue(res.content)
     } catch (err) { message.error("读取失败") }
   }
-}
-
-const fixEditorImages = async () => {
-  if (!vditor || !isVditorReady || !activeTabId.value) return
-  const path = activeTabId.value
-  const parentDir = path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1)
-  const normalizedParent = parentDir.replace(/\\/g, '/')
-  
-  const contentEl = vditor.vditor.wysiwyg?.element
-  if (!contentEl) return
-
-  const imgs = contentEl.querySelectorAll('img')
-  const tasks = Array.from(imgs).map(async (img: any) => {
-    // 避免重复处理
-    if (img.dataset.fixed === 'true') return
-    
-    const rawSrc = img.getAttribute('src')
-    if (!rawSrc || rawSrc.startsWith('http') || rawSrc.startsWith('asset:') || rawSrc.startsWith('data:')) {
-      img.dataset.fixed = 'true'
-      return
-    }
-
-    let absolutePath = ''
-    if (rawSrc.startsWith('./')) absolutePath = normalizedParent + rawSrc.substring(2)
-    else if (!rawSrc.includes(':') && !rawSrc.startsWith('/')) absolutePath = normalizedParent + rawSrc
-    else absolutePath = rawSrc
-
-    try {
-      const b64 = await invoke<string>('get_image_base64', { path: absolutePath.replace(/\\/g, '/') })
-      if (img.src !== b64) img.src = b64
-      img.dataset.fixed = 'true'
-    } catch (e) {
-      img.src = convertFileSrc(absolutePath.replace(/\\/g, '/'))
-      img.dataset.fixed = 'true'
-    }
-  })
-  await Promise.all(tasks)
 }
 
 const virtualDrag = reactive({ 
@@ -1029,7 +954,7 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); if (outlineObserver) outlineObserver.disconnect(); if (unlistenRefresh) unlistenRefresh(); if (unlistenExport) unlistenExport(); if (unlistenRefreshCmd) unlistenRefreshCmd(); if (vditor && isVditorReady) vditor.destroy() })
+onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); destroyOutlineObserver(); if (unlistenRefresh) unlistenRefresh(); if (unlistenExport) unlistenExport(); if (unlistenRefreshCmd) unlistenRefreshCmd(); if (vditor && isVditorReady) vditor.destroy() })
 watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory() })
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {

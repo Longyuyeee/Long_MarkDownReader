@@ -54,13 +54,14 @@ import { onMounted, ref, computed, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import { useMessage, TreeOption, NIcon } from 'naive-ui'
+import { useMessage, NIcon } from 'naive-ui'
 import { List as ListIcon, BookPlus as BookPlusIcon } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore } from '../store/app'
-
-interface OutlineItem { id: string; text: string; level: number; }
+import { useOutline } from '../composables/useOutline'
+import { useImageFix } from '../composables/useImageFix'
+import { useVditorTheme } from '../composables/useVditorTheme'
 
 const route = useRoute()
 const router = useRouter()
@@ -72,39 +73,14 @@ const fileName = computed(() => filePath.value ? filePath.value.split(/[\\/]/).p
 const isDirty = ref(false)
 const sidebarWidth = ref(240)
 const showOutline = ref(true)
-const outlineItems = ref<OutlineItem[]>([])
 let vditor: Vditor | null = null
-let outlineObserver: MutationObserver | null = null
 
-// 核心优化：采用异步 Base64 代理方案，彻底解决跨盘符、中文、特殊 HTML 块显示问题
-const fixEditorImages = () => {
-  if (!vditor || !filePath.value) return
-  const parentDir = filePath.value.substring(0, Math.max(filePath.value.lastIndexOf('/'), filePath.value.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
-  
-  const contentEl = (vditor as any).vditor.wysiwyg?.element
-  if (!contentEl) return
+const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
+const { fixEditorImages } = useImageFix(() => vditor, () => filePath.value)
+useVditorTheme(() => vditor)
 
-  const imgs = contentEl.querySelectorAll('img')
-  imgs.forEach(async (img: HTMLImageElement) => {
-    const rawSrc = img.getAttribute('src')
-    // 跳过已转换的
-    if (!rawSrc || rawSrc.startsWith('http') || rawSrc.startsWith('misty-img:') || rawSrc.startsWith('data:')) return
-
-    let absolutePath = ''
-    if (rawSrc.startsWith('./')) absolutePath = parentDir + rawSrc.substring(2)
-    else if (!rawSrc.includes(':') && !rawSrc.startsWith('/')) absolutePath = parentDir + rawSrc
-    else absolutePath = rawSrc
-
-    try {
-      // 优先使用 Base64 保底，这是最稳健的方案
-      const b64 = await invoke<string>('get_image_base64', { path: absolutePath.replace(/\\/g, '/') })
-      if (img.src !== b64) img.src = b64
-    } catch (e) {
-      // 如果 Base64 失败，退回到自定义协议
-      const protocolUrl = `misty-img://${absolutePath.replace(/\\/g, '/')}`
-      if (img.src !== protocolUrl) img.src = protocolUrl
-    }
-  })
+const handleOutlineSelect = (keys: string[]) => {
+  if (keys.length > 0) scrollToHeading(keys[0])
 }
 
 // 核心修复：监听路径变化
@@ -125,45 +101,9 @@ const loadFileContent = async () => {
       syncOutlineManual()
       nextTick(() => setTimeout(fixEditorImages, 300))
     }
-  } catch (err: any) { 
-    message.error('读取文件失败: ' + filePath.value) 
+  } catch (err: any) {
+    message.error('读取文件失败: ' + filePath.value)
   }
-}
-
-const outlineTreeData = computed(() => {
-  const result: TreeOption[] = []
-  const stack: { level: number; children: TreeOption[] }[] = [{ level: 0, children: result }]
-  outlineItems.value.forEach(item => {
-    const node: TreeOption = { label: item.text, key: item.id, level: item.level, children: [] }
-    while (stack.length > 1 && stack[stack.length - 1].level >= item.level) stack.pop()
-    stack[stack.length - 1].children.push(node)
-    stack.push({ level: item.level, children: node.children as TreeOption[] })
-  })
-  const clean = (nodes: TreeOption[]) => {
-    nodes.forEach(n => { if (n.children && n.children.length === 0) delete n.children; else if (n.children) clean(n.children) })
-  }
-  clean(result); return result
-})
-
-const handleOutlineSelect = (keys: string[]) => {
-  if (keys.length > 0 && vditor) {
-    const id = keys[0]
-    const targetEl = (vditor as any).vditor.wysiwyg.element.querySelector(`[data-id="${id}"]`) || (vditor as any).vditor.wysiwyg.element.querySelector(`#${id}`)
-    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }
-}
-
-const syncOutlineManual = () => {
-  if (!vditor) return
-  const contentEl = (vditor as any).vditor.wysiwyg?.element; if (!contentEl) return
-  const headings = contentEl.querySelectorAll('h1, h2, h3, h4, h5, h6')
-  const newItems: OutlineItem[] = []
-  headings.forEach((h: HTMLElement, index: number) => {
-    if (!h.id) h.id = `heading-${index}`
-    const id = h.getAttribute('data-id') || h.id
-    newItems.push({ id: id, text: h.innerText.trim() || '未命名标题', level: parseInt(h.tagName.substring(1)) })
-  })
-  outlineItems.value = newItems
 }
 
 const importToLibrary = async () => {
@@ -256,13 +196,9 @@ onMounted(async () => {
     after: () => {
       syncOutlineManual()
       setTimeout(fixEditorImages, 500)
+      setupOutlineObserver(fixEditorImages)
       const contentEl = (vditor as any).vditor.wysiwyg?.element
       if (contentEl) {
-        outlineObserver = new MutationObserver(() => {
-          syncOutlineManual()
-          fixEditorImages()
-        })
-        outlineObserver.observe(contentEl, { childList: true, subtree: true, characterData: true })
         contentEl.addEventListener('click', (e: MouseEvent) => {
           if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(syncVditorMode, 300)
         })
@@ -272,7 +208,7 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => { if (outlineObserver) outlineObserver.disconnect(); if (vditor) vditor.destroy(); if (unlistenExport) unlistenExport(); if (shadowSaveTimer) clearInterval(shadowSaveTimer) })
+onUnmounted(() => { destroyOutlineObserver(); if (vditor) vditor.destroy(); if (unlistenExport) unlistenExport(); if (shadowSaveTimer) clearInterval(shadowSaveTimer) })
 
 const syncVditorMode = () => {
   if (vditor) {
@@ -280,20 +216,6 @@ const syncVditorMode = () => {
     if (currentMode && currentMode !== store.editorMode) store.updateConfig({ editorMode: currentMode as any })
   }
 }
-
-watch(() => store.theme, (newTheme) => {
-  if (vditor) {
-    const isDark = newTheme === 'dark'
-    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', store.codeTheme || 'github')
-  }
-})
-
-watch(() => store.codeTheme, (newCodeTheme) => {
-  if (vditor) {
-    const isDark = store.theme === 'dark'
-    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', newCodeTheme || 'github')
-  }
-})
 
 watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
 </script>
