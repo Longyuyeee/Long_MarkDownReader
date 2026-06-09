@@ -56,6 +56,14 @@
                   <span>{{ sp.split(/[\\/]/).pop()?.replace('.md', '') || sp }}</span>
                 </div>
               </div>
+              <div class="recent-files" v-if="allTags.length > 0">
+                <div class="recent-header">标签</div>
+                <div class="tag-cloud">
+                  <span class="tag-badge" v-for="t in allTags.slice(0, 20)" :key="t.tag" @click="searchByTag(t.tag)" :title="t.count + ' 篇'">
+                    #{{ t.tag }} <small>{{ t.count }}</small>
+                  </span>
+                </div>
+              </div>
               <div class="recent-files" v-if="store.recentFiles.length > 0">
                 <div class="recent-header">最近打开</div>
                 <div class="recent-item" v-for="rf in store.recentFiles.slice(0, 5)" :key="rf.path" @click="handleNodeSelect([rf.path])" :title="rf.path">
@@ -376,11 +384,23 @@ const wordCount = ref(0)
 const cursorLine = ref(1)
 const cursorCol = ref(1)
 const libStats = ref<{ file_count: number; total_chars: number; total_words: number } | null>(null)
+const allTags = ref<{ tag: string; count: number }[]>([])
 
 const fetchLibStats = async () => {
   if (!store.libraryPath) return
   try { libStats.value = await invoke<any>('get_library_stats', { path: store.libraryPath }) }
   catch (e) { libStats.value = null }
+}
+
+const fetchAllTags = async () => {
+  if (!store.libraryPath) return
+  try { allTags.value = await invoke<any[]>('get_all_tags', { libraryRoot: store.libraryPath }) }
+  catch (e) { allTags.value = [] }
+}
+
+const searchByTag = (tag: string) => {
+  searchQuery.value = '#' + tag
+  activeSidebarTab.value = 'files'
 }
 const isSidebarCollapsed = ref(false)
 const editorWidthMode = ref<'narrow' | 'medium' | 'wide'>('medium')
@@ -1086,7 +1106,7 @@ const handleExportHtml = async () => {
 
 onMounted(async () => {
   await store.loadConfig(); window.addEventListener('keydown', handleKeyDown)
-  if (store.libraryPath) { await refreshLibrary(); fetchLibStats() }
+  if (store.libraryPath) { await refreshLibrary(); fetchLibStats(); fetchAllTags() }
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
   unlistenExport = await listen('command-export', handleExportHtml)
   unlistenRefreshCmd = await listen('command-refresh', () => refreshLibrary())
@@ -1196,7 +1216,7 @@ watch(() => store.codeTheme, (newCodeTheme) => {
 })
 
 watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
-watch(() => store.libraryPath, (newPath) => { if (newPath) { refreshLibrary(); fetchLibStats() } })
+watch(() => store.libraryPath, (newPath) => { if (newPath) { refreshLibrary(); fetchLibStats(); fetchAllTags() } })
 watch(activeTabId, (newId, oldId) => { 
   if (newId && newId !== oldId) { 
     const t = tabs.value.find(item => item.id === newId); 
@@ -1280,6 +1300,12 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .bl-title { font-size: 13px; font-weight: 600; }
 .bl-context { font-size: 11px; opacity: 0.5; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .is-dark .link-item:hover, .is-dark .backlink-item:hover { background: rgba(255,255,255,0.04); }
+/* 标签云 */
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 2px; }
+.tag-badge { display: inline-flex; align-items: center; gap: 2px; padding: 2px 8px; font-size: 11px; border-radius: 10px; background: rgba(0,0,0,0.04); cursor: pointer; transition: all 0.15s; color: var(--theme-text); opacity: 0.7; }
+.tag-badge:hover { background: var(--theme-primary); color: #fff; opacity: 1; }
+.tag-badge small { font-size: 9px; opacity: 0.6; }
+.is-dark .tag-badge { background: rgba(255,255,255,0.06); }
 .tree-viewport.drop-active { background: rgba(0, 122, 255, 0.05); border-color: rgba(0, 122, 255, 0.3); border-radius: 8px; }
 
 :deep(.n-tree-node-content) { flex: 1; min-width: 0; overflow: hidden; }
