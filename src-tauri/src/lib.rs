@@ -393,17 +393,6 @@ async fn import_to_library(source_path: String, library_root: String, target_dir
     Ok(target_item_path.to_string_lossy().into_owned())
 }
 
-fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<(), String> {
-    fs::create_dir_all(dst).map_err(|e| e.to_string())?;
-    for entry in fs::read_dir(src).map_err(|e| e.to_string())? {
-        let entry = entry.map_err(|e| e.to_string())?;
-        let file_type = entry.file_type().map_err(|e| e.to_string())?;
-        if file_type.is_dir() { copy_dir_recursive(&entry.path(), &dst.join(entry.file_name()))?; }
-        else { fs::copy(entry.path(), dst.join(entry.file_name())).map_err(|e| e.to_string())?; }
-    }
-    Ok(())
-}
-
 #[tauri::command]
 async fn save_image(md_path: String, image_name: String, image_data: Vec<u8>) -> Result<String, String> {
     let md_file = Path::new(&md_path);
@@ -636,7 +625,7 @@ pub fn run() {
                 .icon(app.default_window_icon().unwrap().clone())
                 .tooltip("Long编辑 · MD助手")
                 .menu(&menu)
-                .menu_on_left_click(false)
+                .show_menu_on_left_click(false)
                 .on_menu_event(|app: &tauri::AppHandle, event| match event.id.as_ref() {
                     "quit" => {
                         app.exit(0);

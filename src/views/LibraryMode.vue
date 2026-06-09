@@ -318,6 +318,7 @@ const expandedKeys = ref<string[]>([])
 let vditor: any = null
 let isVditorReady = false
 let lastLoadedPath = ''
+let lastKnownModified = 0
 
 const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
 const { fixEditorImages } = useImageFix(() => vditor, () => activeTabId.value || '')
@@ -460,8 +461,9 @@ const loadFileToEditor = async (path: string) => {
     fetchHistory()
     nextTick(() => { 
       setTimeout(() => { 
-        lastLoadedPath = path; 
-        syncOutlineManual(); 
+        lastLoadedPath = path;
+        invoke<any>('get_file_stats', { path }).then(s => { lastKnownModified = s.modified }).catch(() => {})
+        syncOutlineManual();
         setupOutlineObserver();
         updateWordCount();
         fixEditorImages(); // 后台增强：通过 Base64 进一步提升图片清晰度/稳定性
@@ -909,6 +911,22 @@ onMounted(async () => {
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
   unlistenExport = await listen('command-export', handleExportHtml)
   unlistenRefreshCmd = await listen('command-refresh', () => refreshLibrary())
+  // 外部文件变更检测：窗口获焦时检查活跃文件是否被外部修改
+  getCurrentWindow().listen('tauri://focus', async () => {
+    if (!activeTabId.value || !lastKnownModified) return
+    try {
+      const stats = await invoke<any>('get_file_stats', { path: activeTabId.value })
+      if (stats.modified > lastKnownModified) {
+        dialog.warning({
+          title: '文件已在外部被修改',
+          content: '当前文件已被其他程序修改。是否重新加载最新内容？',
+          positiveText: '重新加载',
+          negativeText: '保留当前',
+          onPositiveClick: () => refreshCurrentFile()
+        })
+      }
+    } catch (e) { /* file may have been deleted */ }
+  })
   nextTick(() => { initVditor(); startShadowSaveTimer() })
   getCurrentWindow().onDragDropEvent(async (event) => {
     if (event.payload.type === 'over') {
