@@ -21,6 +21,11 @@ const routes = [
     component: () => import('../views/QuickNote.vue')
   },
   {
+    path: '/graph',
+    name: 'Graph',
+    component: () => import('../components/GraphView.vue')
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('../views/SettingsView.vue')

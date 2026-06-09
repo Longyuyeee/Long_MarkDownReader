@@ -624,6 +624,69 @@ fn search_tag_recursive(dir: &Path, tag: &str, results: &mut Vec<FileEntry>) {
     }
 }
 
+#[derive(Serialize)]
+struct GraphData {
+    nodes: Vec<GraphNode>,
+    edges: Vec<GraphEdge>,
+}
+
+#[derive(Serialize)]
+struct GraphNode {
+    id: String,
+    title: String,
+    path: String,
+    size: f64,
+}
+
+#[derive(Serialize)]
+struct GraphEdge {
+    source: String,
+    target: String,
+}
+
+#[tauri::command]
+async fn build_link_graph(library_root: String) -> Result<GraphData, String> {
+    let mut nodes = Vec::new();
+    let mut edges = Vec::new();
+    let mut node_ids: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let root = Path::new(&library_root);
+    if !root.exists() { return Ok(GraphData { nodes, edges }); }
+    build_graph_recursive(root, &mut nodes, &mut edges, &mut node_ids);
+    Ok(GraphData { nodes, edges })
+}
+
+fn build_graph_recursive(dir: &Path, nodes: &mut Vec<GraphNode>, edges: &mut Vec<GraphEdge>, node_ids: &mut std::collections::HashSet<String>) {
+    static RE: LazyLock<regex::Regex> = LazyLock::new(|| regex::Regex::new(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]").unwrap());
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            let name = p.file_name().unwrap_or_default().to_string_lossy();
+            if name.starts_with('.') || name.ends_with(".assets") { continue; }
+            if p.is_dir() { build_graph_recursive(&p, nodes, edges, node_ids); }
+            else if name.ends_with(".md") {
+                let path_str = p.to_string_lossy().to_string();
+                let title = name.trim_end_matches(".md").to_string();
+                let id = path_str.clone();
+                if node_ids.insert(id.clone()) {
+                    let size = fs::metadata(&p).map(|m| m.len()).unwrap_or(0) as f64;
+                    nodes.push(GraphNode { id: id.clone(), title, path: path_str.clone(), size: (size / 100.0).min(30.0).max(5.0) });
+                }
+                if let Ok(content) = fs::read_to_string(&p) {
+                    for cap in RE.captures_iter(&content) {
+                        let target_title = cap[1].trim().to_string();
+                        let target_id = if target_title.contains(':') || target_title.contains('/') || target_title.contains('\\') {
+                            target_title.clone()
+                        } else {
+                            format!("{}/{}.md", dir.to_string_lossy(), target_title)
+                        };
+                        edges.push(GraphEdge { source: id.clone(), target: target_id });
+                    }
+                }
+            }
+        }
+    }
+}
+
 #[derive(Serialize, Clone)]
 struct Backlink {
     title: String,
@@ -839,6 +902,6 @@ pub fn run() {
                 .build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, get_folder_order, save_folder_order, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, get_image_base64, get_file_stats, search_all_libraries, get_library_stats, extract_wikilinks, find_backlinks, get_all_tags, search_by_tag ])
+        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, get_folder_order, save_folder_order, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, get_image_base64, get_file_stats, search_all_libraries, get_library_stats, extract_wikilinks, find_backlinks, get_all_tags, search_by_tag, build_link_graph ])
         .run(tauri::generate_context!()).expect("error");
 }

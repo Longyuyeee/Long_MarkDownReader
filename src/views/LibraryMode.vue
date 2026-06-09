@@ -187,6 +187,13 @@
           <span>{{ libStats.file_count }} 篇笔记</span>
           <span>{{ libStats.total_words.toLocaleString() }} 词</span>
         </div>
+        <!-- 快捷操作 -->
+        <div class="sidebar-actions" v-if="store.libraryPath">
+          <n-button quaternary size="tiny" @click="openGraph">
+            <template #icon><n-icon size="16"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="8.5" y1="6.5" x2="10.5" y2="10.5"/><line x1="15.5" y1="6.5" x2="13.5" y2="10.5"/><line x1="8.5" y1="17.5" x2="10.5" y2="13.5"/><line x1="15.5" y1="17.5" x2="13.5" y2="13.5"/></svg></n-icon></template>
+            知识图谱
+          </n-button>
+        </div>
         <!-- 侧边栏页脚 -->
         <div class="sidebar-footer-container">
           <div class="sidebar-footer" @click="openSettings">
@@ -456,6 +463,7 @@ const renameState = reactive({ show: false, oldPath: '', newName: '' })
 const historyList = ref<{timestamp: number, content: string}[]>([])
 
 const openSettings = () => router.push('/settings')
+const openGraph = () => router.push('/graph')
 const getHeroIcon = (iconName: string) => {
   switch (iconName) {
     case 'BookOpen': return BookOpenIcon
@@ -1096,7 +1104,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
 }
 
-let searchDebounce: any = null, unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd: any = null, unlistenSaveCmd: any = null
+let searchDebounce: any = null, unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd: any = null, unlistenSaveCmd: any = null, unlistenDailyNote: any = null
 
 const handleExportHtml = async () => {
   if (!vditor || !isVditorReady || !activeTabId.value) { message.warning('无可导出的内容'); return }
@@ -1111,6 +1119,7 @@ onMounted(async () => {
   unlistenExport = await listen('command-export', handleExportHtml)
   unlistenRefreshCmd = await listen('command-refresh', () => refreshLibrary())
   unlistenSaveCmd = await listen('command-save', saveCurrentFile)
+  unlistenDailyNote = await listen('command-daily-note', createDailyNote)
   // 外部文件变更检测：窗口获焦时检查活跃文件是否被外部修改
   getCurrentWindow().listen('tauri://focus', async () => {
     if (!activeTabId.value || !lastKnownModified) return
@@ -1187,7 +1196,7 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); destroyOutlineObserver(); if (unlistenRefresh) unlistenRefresh(); if (unlistenExport) unlistenExport(); if (unlistenRefreshCmd) unlistenRefreshCmd(); if (unlistenSaveCmd) unlistenSaveCmd(); if (vditor && isVditorReady) vditor.destroy() })
+onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); destroyOutlineObserver(); if (unlistenRefresh) unlistenRefresh(); if (unlistenExport) unlistenExport(); if (unlistenRefreshCmd) unlistenRefreshCmd(); if (unlistenSaveCmd) unlistenSaveCmd(); if (unlistenDailyNote) unlistenDailyNote(); if (vditor && isVditorReady) vditor.destroy() })
 watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory(); if (newTab === 'links') fetchLinks() })
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
@@ -1448,6 +1457,8 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 /* === 底部 Footer === */
 .lib-stats-bar { display: flex; justify-content: space-between; padding: 6px 16px; font-size: 11px; opacity: 0.5; border-top: 1px solid rgba(0,0,0,0.05); }
 .is-dark .lib-stats-bar { border-top-color: rgba(255,255,255,0.05); }
+.sidebar-actions { padding: 0 12px; }
+.sidebar-actions .n-button { width: 100%; justify-content: flex-start; font-size: 12px; }
 .sidebar-footer-container { padding: 12px; flex-shrink: 0; }
 .sidebar-footer { 
   display: flex; align-items: center; gap: 12px; padding: 12px; 

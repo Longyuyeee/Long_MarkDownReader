@@ -114,6 +114,7 @@ const handleCommand = (item: any) => {
     else if (item.action === 'export-html') emit('command-export')
     else if (item.action === 'save-file') emit('command-save')
     else if (item.action === 'refresh') emit('command-refresh')
+    else if (item.action === 'daily-note') emit('command-daily-note')
     else if (item.action.startsWith('theme-')) store.theme = item.action.replace('theme-', '') as any
   } else if (item.type === 'file') {
     router.push({ name: 'LibraryMode', query: { path: item.path } })
