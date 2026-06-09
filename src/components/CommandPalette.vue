@@ -44,11 +44,9 @@ import { ref, watch, nextTick } from 'vue'
 import { Search as SearchIcon, FileText as FileIcon, Command as CommandIcon } from 'lucide-vue-next'
 import { InputInst } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
-import { useAppStore } from '../store/app'
 
 const props = defineProps<{ show: boolean }>()
 const emitEvent = defineEmits(['close', 'execute'])
-const store = useAppStore()
 
 const query = ref('')
 const selectedIndex = ref(0)
@@ -96,7 +94,7 @@ watch(query, (val) => {
     if (searchDebounce) clearTimeout(searchDebounce)
     searchDebounce = setTimeout(async () => {
       try {
-        const files = await invoke<any[]>('search_library', { libraryRoot: store.libraryPath, query: val })
+        const files = await invoke<any[]>('search_all_libraries', { query: val })
         results.value = files.map(f => ({
           title: f.name,
           description: f.path,

@@ -35,6 +35,9 @@
                   <n-button quaternary circle size="small" @click="handleToolbarAction('folder')" title="新建文件夹">
                     <template #icon><n-icon :component="FolderPlusIcon" /></template>
                   </n-button>
+                  <n-button quaternary circle size="small" @click="createDailyNote" title="今日笔记">
+                    <template #icon><n-icon :component="CalendarIcon" /></template>
+                  </n-button>
                   <n-button quaternary circle size="small" @click="refreshLibrary" title="刷新列表">
                     <template #icon><n-icon :component="RefreshIcon" /></template>
                   </n-button>
@@ -282,7 +285,7 @@ import {
   Plus as PlusIcon, FolderPlus as FolderPlusIcon, Trash as TrashIcon,
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
   Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
-  Star as StarIcon
+  Star as StarIcon, CalendarDays as CalendarIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -805,6 +808,18 @@ const handleToolbarAction = async (type: 'file' | 'folder') => {
   if (!store.libraryPath) { openSettings(); return }
   let target = store.libraryPath; if (selectedKeys.value.length > 0) { const sel = selectedKeys.value[0]; target = sel.endsWith('.md') ? sel.substring(0, Math.max(sel.lastIndexOf('\\'), sel.lastIndexOf('/'))) : sel }
   try { if (type === 'file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target }); await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { parentPath: target }); await refreshNode(target) } } catch (e) { message.error('操作失败') }
+}
+
+const createDailyNote = async () => {
+  if (!store.libraryPath) { openSettings(); return }
+  const now = new Date()
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const dailyDir = store.libraryPath.replace(/[\\/]$/, '') + '/Daily'
+  try {
+    const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: dailyDir, prefix: dateStr })
+    await refreshNode(dailyDir)
+    handleNodeSelect([p])
+  } catch (e) { message.error('创建今日笔记失败') }
 }
 
 const applyRename = async () => {

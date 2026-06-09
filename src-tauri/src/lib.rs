@@ -540,6 +540,17 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<FileEntry>) {
 }
 
 #[tauri::command]
+async fn search_all_libraries(app_handle: tauri::AppHandle, query: String) -> Result<Vec<FileEntry>, String> {
+    let config = get_config(app_handle);
+    let mut results = Vec::new();
+    for lib in &config.libraries {
+        let root = Path::new(&lib.path);
+        if root.exists() { search_recursive(root, &query, &mut results); }
+    }
+    Ok(results)
+}
+
+#[tauri::command]
 async fn export_to_html(path: String, html_content: String) -> Result<(), String> {
     let mut html_path = PathBuf::from(&path); html_path.set_extension("html");
     let full_html = format!(r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Export</title><style>body{{padding:40px;max-width:800px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.6;color:#1d1d1f}}pre{{background:#f5f5f5;padding:16px;border-radius:8px;overflow-x:auto}}code{{font-family:"Fira Code",monospace;font-size:0.9em}}blockquote{{border-left:3px solid #007aff;padding-left:16px;color:#666;margin:16px 0}}table{{border-collapse:collapse;width:100%}}td,th{{border:1px solid #ddd;padding:8px 12px}}img{{max-width:100%}}h1,h2,h3,h4,h5,h6{{margin-top:24px;margin-bottom:12px}}p{{margin:12px 0}}</style></head><body><div class="vditor-reset">{}</div></body></html>"#, html_content);
@@ -666,6 +677,6 @@ pub fn run() {
                 .build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, get_folder_order, save_folder_order, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, get_image_base64, get_file_stats ])
+        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, get_folder_order, save_folder_order, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, get_image_base64, get_file_stats, search_all_libraries ])
         .run(tauri::generate_context!()).expect("error");
 }
