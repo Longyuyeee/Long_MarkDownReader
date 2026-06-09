@@ -1,6 +1,6 @@
 <template>
-  <div class="temp-mode" :class="{ 'is-dark': store.theme === 'dark' }">
-    <div class="temp-header">
+  <div class="temp-mode" :class="{ 'is-dark': store.theme === 'dark', 'zen-mode': store.isZen }">
+    <div class="temp-header" v-if="!store.isZen">
       <div class="temp-info">
         <n-tag :bordered="false" type="error" size="small" class="mode-tag">临时编辑</n-tag>
         <span class="file-name" :title="filePath">{{ fileName }}</span>
@@ -19,7 +19,7 @@
 
     <div class="main-content">
       <!-- 侧边大纲栏 -->
-      <div class="temp-sidebar" :style="{ width: sidebarWidth + 'px' }" v-if="showOutline">
+      <div class="temp-sidebar" :style="{ width: sidebarWidth + 'px' }" v-if="showOutline && !store.isZen">
         <div class="sidebar-header">
           <n-icon :component="ListIcon" />
           <span>文章目录</span>
@@ -39,7 +39,7 @@
       </div>
 
       <!-- 分隔条 -->
-      <div class="resizer" @mousedown="startResizing" v-if="showOutline"></div>
+      <div class="resizer" @mousedown="startResizing" v-if="showOutline && !store.isZen"></div>
 
       <!-- 编辑区 -->
       <div class="editor-container">
@@ -269,4 +269,14 @@ onUnmounted(() => { if (outlineObserver) outlineObserver.disconnect() })
 :deep(.vditor-reset) { max-width: 800px !important; margin: 0 auto !important; color: inherit !important; }
 .compact-outline-tree :deep(.n-tree-node-content) { font-size: 13px !important; padding: 4px 8px !important; overflow: hidden; }
 .compact-outline-tree :deep(.n-tree-node-content__text) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+
+/* Zen 模式全屏适配 */
+.temp-mode.zen-mode .main-content {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+.temp-mode.zen-mode :deep(.vditor-reset) {
+  max-width: 100% !important;
+}
 </style>
