@@ -550,6 +550,40 @@ async fn search_all_libraries(app_handle: tauri::AppHandle, query: String) -> Re
     Ok(results)
 }
 
+#[derive(Serialize)]
+struct LibraryStats {
+    file_count: usize,
+    total_chars: usize,
+    total_words: usize,
+}
+
+#[tauri::command]
+async fn get_library_stats(path: String) -> Result<LibraryStats, String> {
+    let root = Path::new(&path);
+    if !root.exists() { return Ok(LibraryStats { file_count: 0, total_chars: 0, total_words: 0 }); }
+    let mut stats = LibraryStats { file_count: 0, total_chars: 0, total_words: 0 };
+    count_stats(root, &mut stats);
+    Ok(stats)
+}
+
+fn count_stats(dir: &Path, stats: &mut LibraryStats) {
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            let name = p.file_name().unwrap_or_default().to_string_lossy();
+            if name.starts_with('.') || name.ends_with(".assets") { continue; }
+            if p.is_dir() { count_stats(&p, stats); }
+            else if name.ends_with(".md") {
+                stats.file_count += 1;
+                if let Ok(content) = fs::read_to_string(&p) {
+                    stats.total_chars += content.chars().count();
+                    stats.total_words += content.split_whitespace().count();
+                }
+            }
+        }
+    }
+}
+
 #[tauri::command]
 async fn export_to_html(path: String, html_content: String) -> Result<(), String> {
     let mut html_path = PathBuf::from(&path); html_path.set_extension("html");
@@ -677,6 +711,6 @@ pub fn run() {
                 .build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, get_folder_order, save_folder_order, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, get_image_base64, get_file_stats, search_all_libraries ])
+        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, get_folder_order, save_folder_order, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, get_image_base64, get_file_stats, search_all_libraries, get_library_stats ])
         .run(tauri::generate_context!()).expect("error");
 }

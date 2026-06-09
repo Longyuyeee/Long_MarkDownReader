@@ -29,9 +29,11 @@
                   </n-input>
                 </div>
                 <div class="toolbar-area">
-                  <n-button quaternary circle size="small" @click="handleToolbarAction('file')" title="新建笔记">
-                    <template #icon><n-icon :component="PlusIcon" /></template>
-                  </n-button>
+                  <n-dropdown trigger="click" :options="templateOptions" @select="handleTemplateCreate">
+                    <n-button quaternary circle size="small" title="新建笔记">
+                      <template #icon><n-icon :component="PlusIcon" /></template>
+                    </n-button>
+                  </n-dropdown>
                   <n-button quaternary circle size="small" @click="handleToolbarAction('folder')" title="新建文件夹">
                     <template #icon><n-icon :component="FolderPlusIcon" /></template>
                   </n-button>
@@ -150,6 +152,11 @@
           </transition>
         </div>
 
+        <!-- 侧边栏统计 -->
+        <div class="lib-stats-bar" v-if="libStats">
+          <span>{{ libStats.file_count }} 篇笔记</span>
+          <span>{{ libStats.total_words.toLocaleString() }} 词</span>
+        </div>
         <!-- 侧边栏页脚 -->
         <div class="sidebar-footer-container">
           <div class="sidebar-footer" @click="openSettings">
@@ -311,6 +318,13 @@ const editorLoading = ref(false)
 const wordCount = ref(0)
 const cursorLine = ref(1)
 const cursorCol = ref(1)
+const libStats = ref<{ file_count: number; total_chars: number; total_words: number } | null>(null)
+
+const fetchLibStats = async () => {
+  if (!store.libraryPath) return
+  try { libStats.value = await invoke<any>('get_library_stats', { path: store.libraryPath }) }
+  catch (e) { libStats.value = null }
+}
 const isSidebarCollapsed = ref(false)
 const editorWidthMode = ref<'narrow' | 'medium' | 'wide'>('medium')
 const sidebarWidth = ref(260)
@@ -804,6 +818,32 @@ const onMenuAction = async (key: string) => {
   else if (key === 'add-folder') { await invoke('create_new_folder', { parentPath: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path) }
 }
 
+const TEMPLATES: Record<string, string> = {
+  '空白笔记': '',
+  '会议纪要': `# 会议纪要\n\n**日期**：\n**参会人**：\n**主题**：\n\n## 讨论内容\n\n\n## 决议事项\n\n- \n\n## 待办事项\n\n- [ ] \n`,
+  '周报': `# 周报\n\n**周期**：\n\n## 本周完成\n\n- \n\n## 下周计划\n\n- \n\n## 遇到的问题\n\n`,
+  '读书笔记': `# 读书笔记\n\n**书名**：\n**作者**：\n\n## 核心观点\n\n\n## 摘录\n\n> \n\n## 个人感悟\n\n`,
+}
+
+const templateOptions = Object.keys(TEMPLATES).map(k => ({ label: k, key: k }))
+
+const handleTemplateCreate = async (key: string) => {
+  if (!store.libraryPath) { openSettings(); return }
+  const tmpl = TEMPLATES[key] || ''
+  try {
+    const prefix = key === '空白笔记' ? undefined : key
+    let target = store.libraryPath
+    if (selectedKeys.value.length > 0) {
+      const sel = selectedKeys.value[0]
+      target = sel.endsWith('.md') ? sel.substring(0, Math.max(sel.lastIndexOf('\\'), sel.lastIndexOf('/'))) : sel
+    }
+    const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target, prefix })
+    if (tmpl) await invoke('write_markdown_file', { path: p, content: tmpl })
+    await refreshNode(target)
+    handleNodeSelect([p])
+  } catch (e) { message.error('创建失败') }
+}
+
 const handleToolbarAction = async (type: 'file' | 'folder') => {
   if (!store.libraryPath) { openSettings(); return }
   let target = store.libraryPath; if (selectedKeys.value.length > 0) { const sel = selectedKeys.value[0]; target = sel.endsWith('.md') ? sel.substring(0, Math.max(sel.lastIndexOf('\\'), sel.lastIndexOf('/'))) : sel }
@@ -984,7 +1024,7 @@ const handleExportHtml = async () => {
 
 onMounted(async () => {
   await store.loadConfig(); window.addEventListener('keydown', handleKeyDown)
-  if (store.libraryPath) await refreshLibrary()
+  if (store.libraryPath) { await refreshLibrary(); fetchLibStats() }
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
   unlistenExport = await listen('command-export', handleExportHtml)
   unlistenRefreshCmd = await listen('command-refresh', () => refreshLibrary())
@@ -1305,6 +1345,8 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .history-bubble:nth-child(4) { animation-delay: 0.2s; }
 
 /* === 底部 Footer === */
+.lib-stats-bar { display: flex; justify-content: space-between; padding: 6px 16px; font-size: 11px; opacity: 0.5; border-top: 1px solid rgba(0,0,0,0.05); }
+.is-dark .lib-stats-bar { border-top-color: rgba(255,255,255,0.05); }
 .sidebar-footer-container { padding: 12px; flex-shrink: 0; }
 .sidebar-footer { 
   display: flex; align-items: center; gap: 12px; padding: 12px; 
