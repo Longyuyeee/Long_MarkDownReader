@@ -81,7 +81,7 @@ watch(query, (val) => {
     const allCmds = [
       { title: '专注模式', description: '切换全屏专注模式  F11', icon: CommandIcon, type: 'cmd', action: 'zen-mode' },
       { title: '导出 HTML', description: '导出当前文件为 HTML 文件', icon: CommandIcon, type: 'cmd', action: 'export-html' },
-      { title: '保存文件', description: '保存当前编辑的文件  Ctrl+S', icon: CommandIcon, type: 'cmd', action: 'export-html' },
+      { title: '保存文件', description: '保存当前编辑的文件  Ctrl+S', icon: CommandIcon, type: 'cmd', action: 'save-file' },
       { title: '刷新目录', description: '重新扫描知识库目录结构', icon: CommandIcon, type: 'cmd', action: 'refresh' },
       { title: '纯白主题', description: '切换到纯白配色', icon: CommandIcon, type: 'cmd', action: 'theme-white' },
       { title: '深色主题', description: '切换到深色配色', icon: CommandIcon, type: 'cmd', action: 'theme-dark' },

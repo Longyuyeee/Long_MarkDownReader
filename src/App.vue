@@ -112,6 +112,7 @@ const handleCommand = (item: any) => {
   if (item.type === 'cmd') {
     if (item.action === 'zen-mode') store.toggleZen()
     else if (item.action === 'export-html') emit('command-export')
+    else if (item.action === 'save-file') emit('command-save')
     else if (item.action === 'refresh') emit('command-refresh')
     else if (item.action.startsWith('theme-')) store.theme = item.action.replace('theme-', '') as any
   } else if (item.type === 'file') {

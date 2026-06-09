@@ -813,7 +813,10 @@ const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
   if (key === 'star') { store.toggleStar(path); message.info(store.isStarred(path) ? '已收藏' : '已取消收藏') }
   else if (key === 'rename') { renameState.oldPath = path; let name = path.split(/[\\/]/).pop() || ''; if (!contextMenu.isDir) name = name.substring(0, name.lastIndexOf('.')); renameState.newName = name; renameState.show = true }
-  else if (key === 'delete') await deleteAction(selectedKeys.value)
+  else if (key === 'delete') {
+    const targets = selectedKeys.value.includes(path) ? selectedKeys.value : [path]
+    await deleteAction(targets)
+  }
   else if (key === 'add-file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path); handleNodeSelect([p]) }
   else if (key === 'add-folder') { await invoke('create_new_folder', { parentPath: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path) }
 }
@@ -965,15 +968,17 @@ const initVditor = () => {
         isVditorReady = true;
         editorLoading.value = false;
         syncVditorMode();
-        // 光标位置追踪
-        const contentEl = vditor.vditor.wysiwyg?.element
+        // 光标位置追踪（兼容 WYSIWYG / IR / SV 三种模式）
+        const contentEl = vditor.vditor.wysiwyg?.element || vditor.vditor.ir?.element || vditor.vditor.sv?.element
         if (contentEl) {
+          const getEditEl = () => vditor.vditor.wysiwyg?.element || vditor.vditor.ir?.element || vditor.vditor.sv?.element || contentEl
           const updateCursor = () => {
+            const el = getEditEl()
             const sel = window.getSelection()
-            if (!sel || !sel.rangeCount || !contentEl.contains(sel.anchorNode)) return
+            if (!sel || !sel.rangeCount || !el.contains(sel.anchorNode)) return
             const range = sel.getRangeAt(0)
             const preRange = document.createRange()
-            preRange.selectNodeContents(contentEl)
+            preRange.selectNodeContents(el)
             preRange.setEnd(range.startContainer, range.startOffset)
             const text = preRange.toString()
             const lines = text.split('\n')
@@ -1014,7 +1019,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
 }
 
-let searchDebounce: any = null, unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd: any = null
+let searchDebounce: any = null, unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd: any = null, unlistenSaveCmd: any = null
 
 const handleExportHtml = async () => {
   if (!vditor || !isVditorReady || !activeTabId.value) { message.warning('无可导出的内容'); return }
@@ -1028,6 +1033,7 @@ onMounted(async () => {
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
   unlistenExport = await listen('command-export', handleExportHtml)
   unlistenRefreshCmd = await listen('command-refresh', () => refreshLibrary())
+  unlistenSaveCmd = await listen('command-save', saveCurrentFile)
   // 外部文件变更检测：窗口获焦时检查活跃文件是否被外部修改
   getCurrentWindow().listen('tauri://focus', async () => {
     if (!activeTabId.value || !lastKnownModified) return
@@ -1104,7 +1110,7 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); destroyOutlineObserver(); if (unlistenRefresh) unlistenRefresh(); if (unlistenExport) unlistenExport(); if (unlistenRefreshCmd) unlistenRefreshCmd(); if (vditor && isVditorReady) vditor.destroy() })
+onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); destroyOutlineObserver(); if (unlistenRefresh) unlistenRefresh(); if (unlistenExport) unlistenExport(); if (unlistenRefreshCmd) unlistenRefreshCmd(); if (unlistenSaveCmd) unlistenSaveCmd(); if (vditor && isVditorReady) vditor.destroy() })
 watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory() })
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
@@ -1133,7 +1139,7 @@ watch(() => store.codeTheme, (newCodeTheme) => {
 })
 
 watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
-watch(() => store.libraryPath, (newPath) => { if (newPath) refreshLibrary() })
+watch(() => store.libraryPath, (newPath) => { if (newPath) { refreshLibrary(); fetchLibStats() } })
 watch(activeTabId, (newId, oldId) => { 
   if (newId && newId !== oldId) { 
     const t = tabs.value.find(item => item.id === newId); 

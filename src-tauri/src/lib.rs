@@ -88,7 +88,11 @@ impl Default for AppConfig {
 
 #[tauri::command]
 fn get_config(app_handle: tauri::AppHandle) -> AppConfig {
-    let config_path = app_handle.path().app_config_dir().unwrap().join("config.json");
+    let config_dir = match app_handle.path().app_config_dir() {
+        Ok(d) => d,
+        Err(_) => return get_default_config(&app_handle),
+    };
+    let config_path = config_dir.join("config.json");
     if config_path.exists() {
         let content = fs::read_to_string(config_path).unwrap_or_default();
         serde_json::from_str(&content).unwrap_or_else(|e| {
@@ -523,13 +527,19 @@ async fn search_library(library_root: String, query: String) -> Result<Vec<FileE
 }
 
 fn search_recursive(dir: &Path, query: &str, results: &mut Vec<FileEntry>) {
+    search_recursive_impl(dir, query, results, &mut std::collections::HashSet::new())
+}
+
+fn search_recursive_impl(dir: &Path, query: &str, results: &mut Vec<FileEntry>, visited: &mut std::collections::HashSet<PathBuf>) {
+    let canonical = dir.canonicalize().unwrap_or_else(|_| dir.to_path_buf());
+    if !visited.insert(canonical) { return; }
     if let Ok(entries) = fs::read_dir(dir) {
         let query_lower = query.to_lowercase();
         for entry in entries.flatten() {
             let path = entry.path();
             let name = path.file_name().unwrap_or_default().to_string_lossy();
             if name.starts_with('.') || name.ends_with(".assets") { continue; }
-            if path.is_dir() { search_recursive(&path, query, results); } 
+            if path.is_dir() { search_recursive_impl(&path, query, results, visited); }
             else if name.ends_with(".md") {
                 let name_matches = name.to_lowercase().contains(&query_lower);
                 let content_matches = if !name_matches { fs::read_to_string(&path).map(|c| c.to_lowercase().contains(&query_lower)).unwrap_or(false) } else { false };
@@ -567,12 +577,18 @@ async fn get_library_stats(path: String) -> Result<LibraryStats, String> {
 }
 
 fn count_stats(dir: &Path, stats: &mut LibraryStats) {
+    count_stats_impl(dir, stats, &mut std::collections::HashSet::new())
+}
+
+fn count_stats_impl(dir: &Path, stats: &mut LibraryStats, visited: &mut std::collections::HashSet<PathBuf>) {
+    let canonical = dir.canonicalize().unwrap_or_else(|_| dir.to_path_buf());
+    if !visited.insert(canonical) { return; }
     if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
             let p = entry.path();
             let name = p.file_name().unwrap_or_default().to_string_lossy();
             if name.starts_with('.') || name.ends_with(".assets") { continue; }
-            if p.is_dir() { count_stats(&p, stats); }
+            if p.is_dir() { count_stats_impl(&p, stats, visited); }
             else if name.ends_with(".md") {
                 stats.file_count += 1;
                 if let Ok(content) = fs::read_to_string(&p) {
