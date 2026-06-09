@@ -199,12 +199,12 @@ onMounted(async () => {
     ],
     input: () => {
       isDirty.value = true
-      fixEditorImages()
+      syncVditorMode()
     },
     after: () => {
       syncOutlineManual()
       setTimeout(fixEditorImages, 500)
-      setupOutlineObserver(fixEditorImages)
+      setupOutlineObserver()
       const contentEl = (vditor as any).vditor.wysiwyg?.element
       if (contentEl) {
         contentEl.addEventListener('click', (e: MouseEvent) => {
