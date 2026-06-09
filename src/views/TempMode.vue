@@ -195,7 +195,7 @@ onMounted(async () => {
     },
     toolbar: [
       'undo', 'redo', '|', 'emoji', 'headings', 'bold', 'italic', 'strike', '|', 'line', 'quote', 'list', 'ordered-list', 'check', '|',
-      'code', 'inline-code', 'upload', 'link', 'table', '|', 'both', 'preview', 'edit-mode'
+      'code', 'inline-code', 'link', 'table', '|', 'both', 'preview', 'edit-mode'
     ],
     input: () => {
       isDirty.value = true

@@ -847,7 +847,7 @@ const initVditor = () => {
           handleCodeThemeChange(nextTheme); message.info(`代码风格: ${nextTheme.toUpperCase()}`)
         }},
         { name: 'editor-bg', tip: '修改文章背景色', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>', click: () => { (document.querySelector('.hidden-picker-trigger .n-color-picker-trigger') as HTMLElement)?.click() }},
-        '|', 'upload', 'link', 'table', '|', 'both', 'preview', 'edit-mode'
+        '|', 'link', 'table', '|', 'both', 'preview', 'edit-mode'
       ],
       input: (val) => { 
         const cur = tabs.value.find(t => t.id === activeTabId.value); 
