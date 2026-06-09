@@ -203,6 +203,20 @@ const startResizing = () => {
 }
 
 let unlistenExport: any = null
+let shadowSaveTimer: any = null
+
+const startShadowSaveTimer = () => {
+  if (shadowSaveTimer) clearInterval(shadowSaveTimer)
+  const interval = store.autoSaveInterval * 60 * 1000
+  shadowSaveTimer = setInterval(async () => {
+    if (vditor && filePath.value) {
+      const content = vditor.getValue()
+      if (content && content.trim().length > 0) {
+        await invoke('save_history_version', { path: filePath.value, content, maxCount: store.maxHistoryCount }).catch(() => {})
+      }
+    }
+  }, interval)
+}
 
 onMounted(async () => {
   let initialContent = ''
@@ -253,11 +267,12 @@ onMounted(async () => {
           if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(syncVditorMode, 300)
         })
       }
+      startShadowSaveTimer()
     }
   })
 })
 
-onUnmounted(() => { if (outlineObserver) outlineObserver.disconnect(); if (vditor) vditor.destroy(); if (unlistenExport) unlistenExport() })
+onUnmounted(() => { if (outlineObserver) outlineObserver.disconnect(); if (vditor) vditor.destroy(); if (unlistenExport) unlistenExport(); if (shadowSaveTimer) clearInterval(shadowSaveTimer) })
 
 const syncVditorMode = () => {
   if (vditor) {
@@ -279,6 +294,8 @@ watch(() => store.codeTheme, (newCodeTheme) => {
     vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', newCodeTheme || 'github')
   }
 })
+
+watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
 </script>
 
 <style scoped>
