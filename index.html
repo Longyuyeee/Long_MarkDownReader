@@ -1,14 +1,37 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri + Vue + Typescript App</title>
+    <title>Long编辑</title>
+    <style>
+      #crash-screen { display: none; position: fixed; inset: 0; background: #1a1a1a; color: #f44; z-index: 99999; padding: 40px; font-family: monospace; overflow: auto; }
+      #crash-screen h2 { color: #f44; }
+      #crash-screen pre { background: #111; padding: 16px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; color: #ddd; font-size: 13px; }
+    </style>
   </head>
 
   <body>
     <div id="app"></div>
+    <div id="crash-screen">
+      <h2>应用加载失败</h2>
+      <p>请截图发给开发者：</p>
+      <pre id="crash-info"></pre>
+      <p style="color:#888;margin-top:20px">按 Ctrl+Shift+F12 可尝试打开开发者工具</p>
+    </div>
+    <script>
+      window.onerror = function(msg, url, line, col, err) {
+        document.getElementById('crash-screen').style.display = 'block';
+        document.getElementById('crash-info').textContent =
+          'Error: ' + msg + '\nURL: ' + url + '\nLine: ' + line + ':' + col + '\nStack: ' + (err ? err.stack : 'none');
+      };
+      window.addEventListener('unhandledrejection', function(e) {
+        document.getElementById('crash-screen').style.display = 'block';
+        document.getElementById('crash-info').textContent =
+          'Promise Error: ' + (e.reason ? (e.reason.stack || e.reason) : 'unknown');
+      });
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
