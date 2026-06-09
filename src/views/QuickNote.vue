@@ -42,7 +42,7 @@ const close = async () => {
 }
 
 const save = async () => {
-  if (!content.value.trim()) return
+  if (!content.value.trim()) { message.warning('请输入内容'); return }
   saving.value = true
   try {
     const libPath = store.activeLibraryPath

@@ -553,7 +553,7 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<FileEntry>) {
 #[tauri::command]
 async fn export_to_html(path: String, html_content: String) -> Result<(), String> {
     let mut html_path = PathBuf::from(&path); html_path.set_extension("html");
-    let full_html = format!(r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Export</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor/dist/index.css" /><style>body {{ padding: 40px; max-width: 800px; margin: 0 auto; font-family: sans-serif; }}</style></head><body><div class="vditor-reset">{}</div></body></html>"#, html_content);
+    let full_html = format!(r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Export</title><style>body{{padding:40px;max-width:800px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.6;color:#1d1d1f}}pre{{background:#f5f5f5;padding:16px;border-radius:8px;overflow-x:auto}}code{{font-family:"Fira Code",monospace;font-size:0.9em}}blockquote{{border-left:3px solid #007aff;padding-left:16px;color:#666;margin:16px 0}}table{{border-collapse:collapse;width:100%}}td,th{{border:1px solid #ddd;padding:8px 12px}}img{{max-width:100%}}h1,h2,h3,h4,h5,h6{{margin-top:24px;margin-bottom:12px}}p{{margin:12px 0}}</style></head><body><div class="vditor-reset">{}</div></body></html>"#, html_content);
     fs::write(html_path, full_html).map_err(|e| e.to_string())
 }
 
