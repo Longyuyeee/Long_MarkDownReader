@@ -45,7 +45,6 @@ import { Search as SearchIcon, FileText as FileIcon, Command as CommandIcon } fr
 import { InputInst } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
 import { useAppStore } from '../store/app'
-import { emit } from '@tauri-apps/api/event'
 
 const props = defineProps<{ show: boolean }>()
 const emitEvent = defineEmits(['close', 'execute'])
@@ -72,15 +71,7 @@ const handleEnter = () => {
 }
 
 const execute = async (item: any) => {
-  if (item.type === 'cmd') {
-    if (item.action === 'export-html') {
-      await emit('command-export')
-    } else {
-      emitEvent('execute', item)
-    }
-  } else {
-    emitEvent('execute', item)
-  }
+  emitEvent('execute', item)
   close()
 }
 

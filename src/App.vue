@@ -52,7 +52,7 @@ import { darkTheme, useOsTheme, GlobalThemeOverrides } from 'naive-ui'
 import { Window } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
-import { listen } from '@tauri-apps/api/event'
+import { listen, emit } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import { useAppStore } from './store/app'
 
@@ -111,7 +111,9 @@ const dontAskAgain = ref(false)
 const handleCommand = (item: any) => {
   if (item.type === 'cmd') {
     if (item.action === 'zen-mode') store.toggleZen()
-    if (item.action.startsWith('theme-')) store.theme = item.action.replace('theme-', '') as any
+    else if (item.action === 'export-html') emit('command-export')
+    else if (item.action === 'refresh') emit('command-refresh')
+    else if (item.action.startsWith('theme-')) store.theme = item.action.replace('theme-', '') as any
   } else if (item.type === 'file') {
     router.push({ name: 'LibraryMode', query: { path: item.path } })
   }

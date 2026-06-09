@@ -53,6 +53,7 @@
 import { onMounted, ref, computed, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { useMessage, TreeOption, NIcon } from 'naive-ui'
 import { List as ListIcon, BookPlus as BookPlusIcon } from 'lucide-vue-next'
 import Vditor from 'vditor'
@@ -201,6 +202,8 @@ const startResizing = () => {
   document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp)
 }
 
+let unlistenExport: any = null
+
 onMounted(async () => {
   let initialContent = ''
   if (filePath.value) {
@@ -210,6 +213,12 @@ onMounted(async () => {
     } catch (err: any) { message.error('读取失败') }
   }
 
+  unlistenExport = await listen('command-export', async () => {
+    if (!vditor || !filePath.value) { message.warning('无可导出的内容'); return }
+    const html = vditor.getHTML()
+    try { await invoke('export_to_html', { path: filePath.value, htmlContent: html }); message.success('HTML 已导出') } catch (e) { message.error('导出失败') }
+  })
+
   vditor = new Vditor('vditor', {
     cdn: '/vditor',
     lang: 'zh_CN',
@@ -218,16 +227,16 @@ onMounted(async () => {
     value: initialContent,
     cache: { enable: false },
     theme: store.theme === 'dark' ? 'dark' : 'classic',
-    preview: { 
-      theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, 
-      hljs: { enable: true, style: store.codeTheme || 'github' } 
+    preview: {
+      theme: { current: store.theme === 'dark' ? 'dark' : 'light' },
+      hljs: { enable: true, style: store.codeTheme || 'github' }
     },
     toolbar: [
       'undo', 'redo', '|', 'emoji', 'headings', 'bold', 'italic', 'strike', '|', 'line', 'quote', 'list', 'ordered-list', 'check', '|',
       'code', 'inline-code', 'upload', 'link', 'table', '|', 'both', 'preview', 'edit-mode'
     ],
-    input: () => { 
-      isDirty.value = true 
+    input: () => {
+      isDirty.value = true
       fixEditorImages() // 实时修正
     },
     after: () => {
@@ -245,7 +254,7 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => { if (outlineObserver) outlineObserver.disconnect(); if (vditor) vditor.destroy() })
+onUnmounted(() => { if (outlineObserver) outlineObserver.disconnect(); if (vditor) vditor.destroy(); if (unlistenExport) unlistenExport() })
 </script>
 
 <style scoped>

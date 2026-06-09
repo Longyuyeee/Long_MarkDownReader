@@ -955,12 +955,20 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
 }
 
-let searchDebounce: any = null, unlistenRefresh: any = null
+let searchDebounce: any = null, unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd: any = null
 
-onMounted(async () => { 
+const handleExportHtml = async () => {
+  if (!vditor || !isVditorReady || !activeTabId.value) { message.warning('无可导出的内容'); return }
+  const html = vditor.getHTML()
+  try { await invoke('export_to_html', { path: activeTabId.value, htmlContent: html }); message.success('HTML 已导出') } catch (e) { message.error('导出失败') }
+}
+
+onMounted(async () => {
   await store.loadConfig(); window.addEventListener('keydown', handleKeyDown)
   if (store.libraryPath) await refreshLibrary()
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
+  unlistenExport = await listen('command-export', handleExportHtml)
+  unlistenRefreshCmd = await listen('command-refresh', () => refreshLibrary())
   nextTick(() => { initVditor(); startShadowSaveTimer() })
   getCurrentWindow().onDragDropEvent(async (event) => {
     if (event.payload.type === 'over') {
@@ -1021,7 +1029,7 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); if (outlineObserver) outlineObserver.disconnect(); if (unlistenRefresh) unlistenRefresh(); if (vditor && isVditorReady) vditor.destroy() })
+onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); if (outlineObserver) outlineObserver.disconnect(); if (unlistenRefresh) unlistenRefresh(); if (unlistenExport) unlistenExport(); if (unlistenRefreshCmd) unlistenRefreshCmd(); if (vditor && isVditorReady) vditor.destroy() })
 watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory() })
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
