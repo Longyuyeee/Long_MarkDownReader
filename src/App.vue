@@ -132,6 +132,7 @@ const closeWindow = async () => {
   // 识别当前路由：如果是临时编辑界面，关闭时应重置回到主库
   if (router.currentRoute.value.name === 'TempMode') {
     if (store.isTempDirty) {
+      // 窗口关闭流程是同步的，必须用同步 confirm，async dialog 无法在此处工作
       if (!window.confirm('临时编辑中有未保存的修改，确定关闭吗？')) return
       store.isTempDirty = false
     }
@@ -178,7 +179,7 @@ onMounted(async () => {
       const cleanPath = filePath.replace(/^"|"$/g, '')
       router.push({ name: 'TempMode', query: { path: cleanPath } })
     }
-  } catch (e) {}
+  } catch (_) { /* launch args unavailable, not critical */ }
 
   window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); showPalette.value = true }

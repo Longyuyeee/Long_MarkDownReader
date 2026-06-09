@@ -1104,7 +1104,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
 }
 
-let searchDebounce: any = null, unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd: any = null, unlistenSaveCmd: any = null, unlistenDailyNote: any = null
+let searchDebounce: any = null, unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd: any = null, unlistenSaveCmd: any = null, unlistenDailyNote: any = null, unlistenFocus: any = null, unlistenDrop: any = null
 
 const handleExportHtml = async () => {
   if (!vditor || !isVditorReady || !activeTabId.value) { message.warning('无可导出的内容'); return }
@@ -1121,7 +1121,7 @@ onMounted(async () => {
   unlistenSaveCmd = await listen('command-save', saveCurrentFile)
   unlistenDailyNote = await listen('command-daily-note', createDailyNote)
   // 外部文件变更检测：窗口获焦时检查活跃文件是否被外部修改
-  getCurrentWindow().listen('tauri://focus', async () => {
+  unlistenFocus = await getCurrentWindow().listen('tauri://focus', async () => {
     if (!activeTabId.value || !lastKnownModified) return
     try {
       const stats = await invoke<any>('get_file_stats', { path: activeTabId.value })
@@ -1137,7 +1137,7 @@ onMounted(async () => {
     } catch (e) { /* file may have been deleted */ }
   })
   nextTick(() => { initVditor(); startShadowSaveTimer() })
-  getCurrentWindow().onDragDropEvent(async (event) => {
+  unlistenDrop = await getCurrentWindow().onDragDropEvent(async (event) => {
     if (event.payload.type === 'over') {
       updateDropTarget(event.payload.position.x, event.payload.position.y)
     } else if (event.payload.type === 'drop') {
@@ -1196,7 +1196,7 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); destroyOutlineObserver(); if (unlistenRefresh) unlistenRefresh(); if (unlistenExport) unlistenExport(); if (unlistenRefreshCmd) unlistenRefreshCmd(); if (unlistenSaveCmd) unlistenSaveCmd(); if (unlistenDailyNote) unlistenDailyNote(); if (vditor && isVditorReady) vditor.destroy() })
+onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); destroyOutlineObserver(); if (unlistenRefresh) unlistenRefresh(); if (unlistenExport) unlistenExport(); if (unlistenRefreshCmd) unlistenRefreshCmd(); if (unlistenSaveCmd) unlistenSaveCmd(); if (unlistenDailyNote) unlistenDailyNote(); if (unlistenFocus) unlistenFocus(); if (unlistenDrop) unlistenDrop(); if (vditor && isVditorReady) vditor.destroy() })
 watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory(); if (newTab === 'links') fetchLinks() })
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
@@ -1257,7 +1257,7 @@ watch(activeTabId, (newId, oldId) => {
     })
   } 
 })
-watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); if (!val.trim()) { refreshLibrary(); return }; searchDebounce = setTimeout(async () => { try { const results = await invoke<FileEntry[]>('search_library', { libraryRoot: store.libraryPath, query: val.trim() }); treeData.value = results.map(entry => ({ label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''), key: entry.path, isLeaf: !entry.is_dir, prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' }) })) } catch (e) {} }, 300) })
+watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); if (!val.trim()) { refreshLibrary(); return }; searchDebounce = setTimeout(async () => { try { const results = await invoke<FileEntry[]>('search_library', { libraryRoot: store.libraryPath, query: val.trim() }); treeData.value = results.map(entry => ({ label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''), key: entry.path, isLeaf: !entry.is_dir, prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' }) })) } catch (_) { /* search failed, results stay unchanged */ } }, 300) })
 </script>
 
 <style scoped>
