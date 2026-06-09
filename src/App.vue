@@ -184,7 +184,7 @@ onMounted(async () => {
   window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); showPalette.value = true }
     if (e.key === 'F11') { e.preventDefault(); store.toggleZen() }
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'F12') { e.preventDefault(); appWindow.openDevtools() }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'F12') { e.preventDefault(); (appWindow as any).open_devtools() }
   })
 })
 </script>
