@@ -12,6 +12,9 @@
             <n-tab name="outline">
               <div class="tab-label-inner"><n-icon :component="ListIcon" /><span>目录</span></div>
             </n-tab>
+            <n-tab name="links">
+              <div class="tab-label-inner"><n-icon :component="LinkIcon" /><span>链接</span></div>
+            </n-tab>
             <n-tab name="history">
               <div class="tab-label-inner"><n-icon :component="ClockIcon" /><span>历史</span></div>
             </n-tab>
@@ -104,6 +107,25 @@
                     class="compact-outline-tree"
                     default-expand-all
                   />
+                </div>
+              </div>
+            </div>
+
+            <!-- 链接面板 -->
+            <div v-else-if="activeSidebarTab === 'links'" :key="'links'" class="tab-pane links-pane">
+              <div v-if="!activeTabId" class="path-guide"><n-empty description="未打开文件" size="small" /></div>
+              <div v-else class="links-content">
+                <div class="links-section" v-if="outgoingLinks.length > 0">
+                  <div class="links-section-title">链出 ({{ outgoingLinks.length }})</div>
+                  <div class="link-item" v-for="link in outgoingLinks" :key="link" @click="navigateToLink(link)">{{ link }}</div>
+                </div>
+                <div class="links-section">
+                  <div class="links-section-title">反向链接 ({{ backlinks.length }})</div>
+                  <div v-if="backlinks.length === 0" class="links-empty">暂无其他文件链接到此处</div>
+                  <div class="backlink-item" v-for="bl in backlinks" :key="bl.path" @click="handleNodeSelect([bl.path])" :title="bl.path">
+                    <div class="bl-title">{{ bl.title }}</div>
+                    <div class="bl-context">{{ bl.context }}</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -292,7 +314,7 @@ import {
   Plus as PlusIcon, FolderPlus as FolderPlusIcon, Trash as TrashIcon,
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
   Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
-  Star as StarIcon, CalendarDays as CalendarIcon
+  Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -313,7 +335,42 @@ const store = useAppStore()
 const { tabs, activeTabId } = storeToRefs(store)
 const router = useRouter()
 
-const activeSidebarTab = ref<'files' | 'outline' | 'history'>('files')
+const activeSidebarTab = ref<'files' | 'outline' | 'links' | 'history'>('files')
+const outgoingLinks = ref<string[]>([])
+const backlinks = ref<{ title: string; path: string; context: string }[]>([])
+
+const fetchLinks = async () => {
+  if (!activeTabId.value) { outgoingLinks.value = []; backlinks.value = []; return }
+  try {
+    const content = vditor?.getValue() || ''
+    outgoingLinks.value = await invoke<string[]>('extract_wikilinks', { content })
+    backlinks.value = await invoke<any[]>('find_backlinks', { filePath: activeTabId.value, libraryRoot: store.libraryPath })
+  } catch (e) { outgoingLinks.value = []; backlinks.value = [] }
+}
+
+const navigateToLink = (title: string) => {
+  // Try to find and open the linked file
+  const candidates = [
+    store.libraryPath + '/' + title + '.md',
+    store.libraryPath + '/' + title,
+  ]
+  for (const p of candidates) {
+    const tab = store.tabs.find(t => t.path === p)
+    if (tab) { store.addTab(tab); expandedKeys.value = [...new Set([...expandedKeys.value, store.libraryPath])]; return }
+  }
+  // Try to find in tree data
+  const findInTree = (nodes: any[]): string | null => {
+    for (const n of nodes) {
+      const nodeTitle = (n.label as string || '').replace('.md', '')
+      if (nodeTitle === title || n.key === title) return n.key as string
+      if (n.children) { const r = findInTree(n.children); if (r) return r }
+    }
+    return null
+  }
+  const found = findInTree(treeData.value)
+  if (found) handleNodeSelect([found])
+  else message.warning('未找到链接目标: ' + title)
+}
 const editorLoading = ref(false)
 const wordCount = ref(0)
 const cursorLine = ref(1)
@@ -1111,7 +1168,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); destroyOutlineObserver(); if (unlistenRefresh) unlistenRefresh(); if (unlistenExport) unlistenExport(); if (unlistenRefreshCmd) unlistenRefreshCmd(); if (unlistenSaveCmd) unlistenSaveCmd(); if (vditor && isVditorReady) vditor.destroy() })
-watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory() })
+watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory(); if (newTab === 'links') fetchLinks() })
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
     const isDark = newTheme === 'dark'
@@ -1211,6 +1268,18 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .recent-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .is-dark .recent-files { border-bottom-color: rgba(255,255,255,0.04); }
 .is-dark .recent-item:hover { background: rgba(255,255,255,0.05); }
+/* 链接面板 */
+.links-content { padding: 12px; overflow-y: auto; }
+.links-section { margin-bottom: 20px; }
+.links-section-title { font-size: 11px; font-weight: 700; opacity: 0.4; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.link-item { padding: 6px 10px; font-size: 13px; border-radius: 6px; cursor: pointer; color: var(--theme-primary); transition: background 0.15s; }
+.link-item:hover { background: rgba(0,0,0,0.04); }
+.links-empty { font-size: 12px; opacity: 0.4; padding: 8px 0; }
+.backlink-item { padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: background 0.15s; margin-bottom: 4px; }
+.backlink-item:hover { background: rgba(0,0,0,0.04); }
+.bl-title { font-size: 13px; font-weight: 600; }
+.bl-context { font-size: 11px; opacity: 0.5; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.is-dark .link-item:hover, .is-dark .backlink-item:hover { background: rgba(255,255,255,0.04); }
 .tree-viewport.drop-active { background: rgba(0, 122, 255, 0.05); border-color: rgba(0, 122, 255, 0.3); border-radius: 8px; }
 
 :deep(.n-tree-node-content) { flex: 1; min-width: 0; overflow: hidden; }
