@@ -9,7 +9,12 @@
       "Bash(npx vue-tsc:*)",
       "Bash(npx vite:*)",
       "Bash(ls:*)",
-      "Bash(cargo check:*)"
+      "Bash(cargo check:*)",
+      "Bash(gh auth:*)",
+      "Bash(cargo:*)",
+      "Bash(npm run:*)",
+      "Bash(winget install:*)",
+      "Bash(export:*)"
     ]
   }
 }

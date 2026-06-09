@@ -47,6 +47,7 @@ export const useAppStore = defineStore('app', {
     exitStrategy: 'ask' as 'ask' | 'quit' | 'minimize',
     isTempDirty: false,
     isZen: false,
+    recentFiles: [] as { title: string; path: string }[],
   }),
   getters: {
     libraryPath: (state) => state.activeLibraryPath,
@@ -144,6 +145,10 @@ export const useAppStore = defineStore('app', {
         this.tabs.unshift(tab)
         this.activeTabId = tab.id
       }
+      // 最近文件追踪
+      this.recentFiles = this.recentFiles.filter(f => f.path !== tab.path)
+      this.recentFiles.unshift({ title: tab.title, path: tab.path })
+      if (this.recentFiles.length > 10) this.recentFiles = this.recentFiles.slice(0, 10)
       this.saveTabsState()
     },
     updateTabContent(path: string, content: string) {
@@ -164,7 +169,8 @@ export const useAppStore = defineStore('app', {
       try {
         const state = {
           tabs: this.tabs.map(t => ({ id: t.id, title: t.title, path: t.path, isDirty: t.isDirty })),
-          activeTabId: this.activeTabId
+          activeTabId: this.activeTabId,
+          recentFiles: this.recentFiles
         }
         localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(state))
       } catch (e) { /* storage full or unavailable */ }
@@ -177,6 +183,9 @@ export const useAppStore = defineStore('app', {
         if (state.tabs && Array.isArray(state.tabs)) {
           this.tabs = state.tabs.filter((t: any) => t.path)
           this.activeTabId = state.activeTabId || (this.tabs.length > 0 ? this.tabs[this.tabs.length - 1].id : null)
+        }
+        if (state.recentFiles && Array.isArray(state.recentFiles)) {
+          this.recentFiles = state.recentFiles
         }
       } catch (e) { localStorage.removeItem(TABS_STORAGE_KEY) }
     },

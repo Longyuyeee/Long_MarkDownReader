@@ -41,6 +41,13 @@
                 </div>
               </div>
 
+              <div class="recent-files" v-if="store.recentFiles.length > 0">
+                <div class="recent-header">最近打开</div>
+                <div class="recent-item" v-for="rf in store.recentFiles.slice(0, 5)" :key="rf.path" @click="handleNodeSelect([rf.path])" :title="rf.path">
+                  <n-icon :component="FileIcon" size="14" />
+                  <span>{{ rf.title }}</span>
+                </div>
+              </div>
               <div class="tree-viewport" :class="{ 'drop-active': virtualDrag.dropTarget === store.libraryPath }">
                 <div v-if="!store.libraryPath" class="path-guide">
                   <n-empty description="库未就绪" size="small">
@@ -195,9 +202,14 @@
             <n-button quaternary circle size="small" @click="saveCurrentFile" :disabled="!activeTabId" title="保存到磁盘 (Ctrl+S)">
               <template #icon><n-icon :component="SaveIcon" /></template>
             </n-button>
+            <div class="width-toggle" v-if="activeTabId">
+              <n-button quaternary size="tiny" :type="editorWidthMode === 'narrow' ? 'primary' : 'default'" @click="editorWidthMode = 'narrow'" title="窄栏 600px">窄</n-button>
+              <n-button quaternary size="tiny" :type="editorWidthMode === 'medium' ? 'primary' : 'default'" @click="editorWidthMode = 'medium'" title="中栏 800px">中</n-button>
+              <n-button quaternary size="tiny" :type="editorWidthMode === 'wide' ? 'primary' : 'default'" @click="editorWidthMode = 'wide'" title="宽栏 全宽">宽</n-button>
+            </div>
           </div>
           <div class="word-count-info" v-if="activeTabId">
-            {{ wordCount }} 字
+            {{ wordCount }} 字 · 约 {{ Math.max(1, Math.ceil(wordCount / 300)) }} 分钟 · 行 {{ cursorLine }}:{{ cursorCol }}
           </div>
           <div class="hidden-picker-trigger" style="position: absolute; opacity: 0; pointer-events: none;">
             <n-color-picker 
@@ -209,7 +221,7 @@
         </div>
       </div>
       
-      <div class="editor-viewport" :style="{ '--custom-editor-bg': store.editorBgColor || 'transparent' }">
+      <div class="editor-viewport" :class="'editor-width-' + editorWidthMode" :style="{ '--custom-editor-bg': store.editorBgColor || 'transparent' }">
         <div v-if="editorLoading && tabs.length > 0" class="editor-loading">
           <n-spin size="large">
             <template #description>同步中...</template>
@@ -285,7 +297,10 @@ const router = useRouter()
 const activeSidebarTab = ref<'files' | 'outline' | 'history'>('files')
 const editorLoading = ref(false)
 const wordCount = ref(0)
+const cursorLine = ref(1)
+const cursorCol = ref(1)
 const isSidebarCollapsed = ref(false)
+const editorWidthMode = ref<'narrow' | 'medium' | 'wide'>('medium')
 const sidebarWidth = ref(260)
 const activeResizer = ref<'sidebar' | null>(null)
 const tabsScrollRef = ref<HTMLElement | null>(null)
@@ -856,15 +871,18 @@ const initVditor = () => {
         }
       },
       toolbar: [
-        'undo', 'redo', '|', 'emoji', 'headings', 'bold', 'italic', 'strike', '|', 'line', 'quote', 'list', 'ordered-list', 'check', '|',
-        'code', 'inline-code', 
-        { name: 'code-theme', tip: '代码高亮风格', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>', click: () => {
+        { name: 'undo', tip: '撤销 Ctrl+Z' }, { name: 'redo', tip: '重做 Ctrl+Y' }, '|',
+        { name: 'emoji', tip: '表情' }, { name: 'headings', tip: '标题' }, { name: 'bold', tip: '加粗 Ctrl+B' }, { name: 'italic', tip: '斜体 Ctrl+I' }, { name: 'strike', tip: '删除线' }, '|',
+        { name: 'line', tip: '分割线' }, { name: 'quote', tip: '引用' }, { name: 'list', tip: '无序列表' }, { name: 'ordered-list', tip: '有序列表' }, { name: 'check', tip: '任务列表' }, '|',
+        { name: 'code', tip: '代码块' }, { name: 'inline-code', tip: '行内代码' },
+        { name: 'link', tip: '插入链接' }, { name: 'table', tip: '插入表格' }, '|',
+        { name: 'code-theme', tip: '切换代码高亮风格', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>', click: () => {
           const themes = ['github', 'monokai', 'dracula', 'vscode', 'native', 'one-dark']
           const nextTheme = themes[(themes.indexOf(store.codeTheme) + 1) % themes.length]
           handleCodeThemeChange(nextTheme); message.info(`代码风格: ${nextTheme.toUpperCase()}`)
         }},
         { name: 'editor-bg', tip: '修改文章背景色', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>', click: () => { (document.querySelector('.hidden-picker-trigger .n-color-picker-trigger') as HTMLElement)?.click() }},
-        '|', 'link', 'table', '|', 'both', 'preview', 'edit-mode'
+        '|', { name: 'both', tip: '双栏预览' }, { name: 'preview', tip: '预览' }, { name: 'edit-mode', tip: '切换编辑模式' }
       ],
       input: (val) => { 
         const cur = tabs.value.find(t => t.id === activeTabId.value); 
@@ -875,10 +893,28 @@ const initVditor = () => {
         syncVditorMode();
         wordCount.value = val.length;
       },
-      after: () => { 
-        isVditorReady = true; 
-        editorLoading.value = false; 
-        syncVditorMode(); 
+      after: () => {
+        isVditorReady = true;
+        editorLoading.value = false;
+        syncVditorMode();
+        // 光标位置追踪
+        const contentEl = vditor.vditor.wysiwyg?.element
+        if (contentEl) {
+          const updateCursor = () => {
+            const sel = window.getSelection()
+            if (!sel || !sel.rangeCount || !contentEl.contains(sel.anchorNode)) return
+            const range = sel.getRangeAt(0)
+            const preRange = document.createRange()
+            preRange.selectNodeContents(contentEl)
+            preRange.setEnd(range.startContainer, range.startOffset)
+            const text = preRange.toString()
+            const lines = text.split('\n')
+            cursorLine.value = lines.length
+            cursorCol.value = lines[lines.length - 1].length + 1
+          }
+          contentEl.addEventListener('keyup', updateCursor)
+          contentEl.addEventListener('click', updateCursor)
+        }
         if (activeTabId.value) { 
           const t = tabs.value.find(item => item.id === activeTabId.value); 
           if (t) loadFileToEditor(t.path) 
@@ -1081,6 +1117,13 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .sidebar-header { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
 
 .tree-viewport { flex: 1; overflow-y: auto; padding: 4px 12px; border: 2px solid transparent; transition: all 0.2s; animation: treeContainerFade 0.5s ease-out; }
+.recent-files { padding: 8px 14px 4px; border-bottom: 1px solid rgba(0,0,0,0.04); }
+.recent-header { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.4; margin-bottom: 6px; }
+.recent-item { display: flex; align-items: center; gap: 6px; padding: 5px 8px; font-size: 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+.recent-item:hover { background: rgba(0,0,0,0.04); }
+.recent-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.is-dark .recent-files { border-bottom-color: rgba(255,255,255,0.04); }
+.is-dark .recent-item:hover { background: rgba(255,255,255,0.05); }
 .tree-viewport.drop-active { background: rgba(0, 122, 255, 0.05); border-color: rgba(0, 122, 255, 0.3); border-radius: 8px; }
 
 :deep(.n-tree-node-content) { flex: 1; min-width: 0; overflow: hidden; }
@@ -1340,6 +1383,12 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .vditor-instance { flex: 1; height: 0; overflow: visible !important; }
 
 :deep(.vditor-wysiwyg), :deep(.vditor-preview), :deep(.vditor-panel), :deep(.vditor-reset) { background-color: var(--custom-editor-bg) !important; }
+/* 编辑器宽度模式 */
+.editor-width-narrow :deep(.vditor-reset) { max-width: 600px !important; margin: 0 auto !important; }
+.editor-width-medium :deep(.vditor-reset) { max-width: 800px !important; margin: 0 auto !important; }
+.editor-width-wide :deep(.vditor-reset) { max-width: none !important; margin: 0 !important; }
+.width-toggle { display: flex; gap: 2px; margin-left: 8px; padding-left: 8px; border-left: 1px solid rgba(0,0,0,0.08); }
+.is-dark .width-toggle { border-left-color: rgba(255,255,255,0.08); }
 
 .hero-viewport { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: inherit; z-index: 5; overflow: hidden; }
 .ambient-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; filter: blur(80px); opacity: 0.4; }
