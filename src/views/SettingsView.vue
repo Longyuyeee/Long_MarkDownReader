@@ -257,11 +257,20 @@ const addLibrary = () => {
 }
 
 const removeLibrary = (index: number) => {
-  const removed = config.value.libraries.splice(index, 1)[0]
-  if (config.value.activeLibraryPath === removed.path) {
-    config.value.activeLibraryPath = config.value.libraries.length > 0 ? config.value.libraries[0].path : ''
-  }
-  message.info('库已移除')
+  const lib = config.value.libraries[index]
+  dialog.warning({
+    title: '移除知识库',
+    content: `确定要从列表中移除知识库「${lib.name}」吗？此操作不会删除磁盘文件。`,
+    positiveText: '确认移除',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      const removed = config.value.libraries.splice(index, 1)[0]
+      if (config.value.activeLibraryPath === removed.path) {
+        config.value.activeLibraryPath = config.value.libraries.length > 0 ? config.value.libraries[0].path : ''
+      }
+      message.info('库已移除')
+    }
+  })
 }
 
 const applyTheme = (val: string) => {

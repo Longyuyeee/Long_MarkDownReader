@@ -288,7 +288,7 @@ fn save_folder_order(path: String, order: FolderOrder) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn scan_directory(path: String) -> Result<Vec<FileEntry>, String> {
+async fn scan_directory(path: String) -> Result<Vec<FileEntry>, String> {
     let root = Path::new(&path);
     if !root.exists() || !root.is_dir() { return Err("目录不存在".into()); }
     
