@@ -223,7 +223,7 @@ onMounted(async () => {
     cdn: '/vditor',
     lang: 'zh_CN',
     height: '100%',
-    mode: 'wysiwyg',
+    mode: store.editorMode || 'wysiwyg',
     value: initialContent,
     cache: { enable: false },
     theme: store.theme === 'dark' ? 'dark' : 'classic',
@@ -237,24 +237,48 @@ onMounted(async () => {
     ],
     input: () => {
       isDirty.value = true
-      fixEditorImages() // 实时修正
+      fixEditorImages()
     },
     after: () => {
       syncOutlineManual()
-      setTimeout(fixEditorImages, 500) // 给予足够的时间让 Vditor 完成初次渲染
+      setTimeout(fixEditorImages, 500)
       const contentEl = (vditor as any).vditor.wysiwyg?.element
       if (contentEl) {
         outlineObserver = new MutationObserver(() => {
           syncOutlineManual()
-          fixEditorImages() // 捕获异步渲染的变化
+          fixEditorImages()
         })
         outlineObserver.observe(contentEl, { childList: true, subtree: true, characterData: true })
+        contentEl.addEventListener('click', (e: MouseEvent) => {
+          if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(syncVditorMode, 300)
+        })
       }
     }
   })
 })
 
 onUnmounted(() => { if (outlineObserver) outlineObserver.disconnect(); if (vditor) vditor.destroy(); if (unlistenExport) unlistenExport() })
+
+const syncVditorMode = () => {
+  if (vditor) {
+    const currentMode = vditor.getCurrentMode()
+    if (currentMode && currentMode !== store.editorMode) store.updateConfig({ editorMode: currentMode as any })
+  }
+}
+
+watch(() => store.theme, (newTheme) => {
+  if (vditor) {
+    const isDark = newTheme === 'dark'
+    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', store.codeTheme || 'github')
+  }
+})
+
+watch(() => store.codeTheme, (newCodeTheme) => {
+  if (vditor) {
+    const isDark = store.theme === 'dark'
+    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', newCodeTheme || 'github')
+  }
+})
 </script>
 
 <style scoped>
