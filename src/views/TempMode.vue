@@ -271,8 +271,8 @@ onMounted(async () => {
     preview: {
       theme: { current: store.theme === 'dark' ? 'dark' : 'light' },
       hljs: { enable: true, style: store.codeTheme || 'github' },
-      math: { engine: 'KaTeX' },
-      markdown: { mermaid: true, footnotes: true, toc: true },
+      math: { engine: 'KaTeX' } as any,
+      markdown: { mermaid: true, footnotes: true, toc: true } as any,
     },
     toolbar: [
       { name: 'undo', tip: '撤销 Ctrl+Z' }, { name: 'redo', tip: '重做 Ctrl+Y' }, '|',

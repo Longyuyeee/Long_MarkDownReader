@@ -1308,8 +1308,8 @@ const initVditor = () => {
       preview: {
         theme: { current: store.theme === 'dark' ? 'dark' : 'light' },
         hljs: { enable: true, style: store.codeTheme || 'github' },
-        math: { engine: 'KaTeX' },
-        markdown: { mermaid: true, footnotes: true, toc: true },
+        math: { engine: 'KaTeX' } as any,
+        markdown: { mermaid: true, footnotes: true, toc: true } as any,
         transform: (html) => {
           // 在渲染前，将所有相对路径图片转换为 misty-img 协议路径
           if (!activeTabId.value) return html
