@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.5.2-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.5.5-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,11 +21,32 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.5.2**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.2) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.5.5**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.5) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.5.1)
+## 🆕 最新版本更新 (v0.5.5)
+
+### 🎨 界面重构
+*   **图标 TAB 栏**：侧边栏切换改为图标模式，默认只显示图标，选中后文字滑出展开，极致节省空间。
+*   **独立标签管理**：新增标签管理面板，支持筛选标签、一键搜索相关笔记、为当前文档添加标签。
+*   **快捷入口独立**：收藏文件和最近打开记录移入独立"历史"面板。
+*   **版本备份重命名**：原"历史"面板改名为"备份"，语义更清晰。
+
+### 📋 功能增强
+*   **标签搜索可用**：搜索框支持按 `#标签名` 搜索和全文关键词搜索，300ms 防抖。
+*   **编辑器宽度持久化**：宽/中/窄三档宽度选择自动保存，下次启动恢复。
+*   **知识图谱增强**：悬停节点高亮关联、显示文件全名；双击节点跳转文件；布局稳定后自动停止模拟，大幅减少卡顿。
+
+### 🔧 问题修复
+*   **修复打包白屏**：Vite 资源路径改为相对路径，解决 Tauri 生产模式加载失败。
+*   **修复开发模式白屏**：补充 `<n-dialog-provider>`，修复 `useDialog()` 崩溃。
+*   **修复文件夹点击无反应**：每日笔记创建后树状态损坏导致所有文件夹点击失效。
+*   **修复 Vditor 初始化崩溃**：适配 Vditor 3.11.2 新增的 `customWysiwygToolbar` 配置。
+
+---
+
+## 🆕 历史版本更新 (v0.5.1)
 
 ### 🔗 知识网络
 *   **双向链接 `[[wikilink]]`**：使用 `[[笔记名]]` 语法创建内部链接，自动发现反向链接。

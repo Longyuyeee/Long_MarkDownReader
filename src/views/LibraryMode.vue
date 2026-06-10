@@ -3,22 +3,18 @@
     <!-- 统一左侧侧边栏 -->
     <div class="sidebar" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
       <div class="sidebar-inner">
-        <!-- 侧边栏顶部切换 -->
+        <!-- 侧边栏图标 Tab 栏（点击展开文字） -->
         <div class="sidebar-tabs-header">
-          <n-tabs v-model:value="activeSidebarTab" type="segment" size="small" animated class="custom-sidebar-tabs">
-            <n-tab name="files">
-              <div class="tab-label-inner"><n-icon :component="FileIcon" /><span>文件</span></div>
-            </n-tab>
-            <n-tab name="outline">
-              <div class="tab-label-inner"><n-icon :component="ListIcon" /><span>目录</span></div>
-            </n-tab>
-            <n-tab name="links">
-              <div class="tab-label-inner"><n-icon :component="LinkIcon" /><span>链接</span></div>
-            </n-tab>
-            <n-tab name="history">
-              <div class="tab-label-inner"><n-icon :component="ClockIcon" /><span>历史</span></div>
-            </n-tab>
-          </n-tabs>
+          <div
+            v-for="tab in sidebarTabs" :key="tab.key"
+            class="icon-tab"
+            :class="{ active: activeSidebarTab === tab.key }"
+            @click="activeSidebarTab = tab.key"
+            :title="tab.label"
+          >
+            <n-icon :component="tab.icon" size="18" />
+            <span class="icon-tab-text">{{ tab.label }}</span>
+          </div>
         </div>
 
         <div class="sidebar-tab-content">
@@ -49,28 +45,6 @@
                 </div>
               </div>
 
-              <div class="recent-files" v-if="store.starredFiles.length > 0">
-                <div class="recent-header">收藏文件</div>
-                <div class="recent-item" v-for="sp in store.starredFiles" :key="sp" @click="handleNodeSelect([sp])" :title="sp">
-                  <n-icon :component="StarIcon" size="14" color="#f5a623" />
-                  <span>{{ sp.split(/[\\/]/).pop()?.replace('.md', '') || sp }}</span>
-                </div>
-              </div>
-              <div class="recent-files" v-if="allTags.length > 0">
-                <div class="recent-header">标签</div>
-                <div class="tag-cloud">
-                  <span class="tag-badge" v-for="t in allTags.slice(0, 20)" :key="t.tag" @click="searchByTag(t.tag)" :title="t.count + ' 篇'">
-                    #{{ t.tag }} <small>{{ t.count }}</small>
-                  </span>
-                </div>
-              </div>
-              <div class="recent-files" v-if="store.recentFiles.length > 0">
-                <div class="recent-header">最近打开</div>
-                <div class="recent-item" v-for="rf in store.recentFiles.slice(0, 5)" :key="rf.path" @click="handleNodeSelect([rf.path])" :title="rf.path">
-                  <n-icon :component="FileIcon" size="14" />
-                  <span>{{ rf.title }}</span>
-                </div>
-              </div>
               <div class="tree-viewport" :class="{ 'drop-active': virtualDrag.dropTarget === store.libraryPath }">
                 <div v-if="!store.libraryPath" class="path-guide">
                   <n-empty description="库未就绪" size="small">
@@ -93,6 +67,54 @@
                   v-model:expanded-keys="expandedKeys"
                   @update:selected-keys="handleNodeSelect"
                 />
+              </div>
+            </div>
+
+            <!-- 历史面板（收藏 + 最近） -->
+            <div v-else-if="activeSidebarTab === 'quick'" :key="'quick'" class="tab-pane quick-pane">
+              <div v-if="!store.starredFiles.length && !store.recentFiles.length" class="empty-state-hint">
+                <n-empty description="暂无记录" size="small" />
+              </div>
+              <div class="recent-files" v-if="store.starredFiles.length > 0">
+                <div class="recent-header">收藏文件</div>
+                <div class="recent-item" v-for="sp in store.starredFiles" :key="sp" @click="handleNodeSelect([sp])" :title="sp">
+                  <n-icon :component="StarIcon" size="14" color="#f5a623" />
+                  <span>{{ sp.split(/[\\/]/).pop()?.replace('.md', '') || sp }}</span>
+                </div>
+              </div>
+              <div class="recent-files" v-if="store.recentFiles.length > 0">
+                <div class="recent-header">最近打开</div>
+                <div class="recent-item" v-for="rf in store.recentFiles" :key="rf.path" @click="handleNodeSelect([rf.path])" :title="rf.path">
+                  <n-icon :component="FileIcon" size="14" />
+                  <span>{{ rf.title }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 标签管理面板 -->
+            <div v-else-if="activeSidebarTab === 'tags'" :key="'tags'" class="tab-pane tags-pane">
+              <div class="tags-help">标签从笔记中的 <code>#标签名</code> 语法自动识别</div>
+
+              <!-- 给当前文件加标签 -->
+              <div class="tag-add-row" v-if="activeTabId">
+                <n-input v-model:value="newTagName" placeholder="输入标签名..." size="small" @keydown.enter="addTagToCurrentFile" />
+                <n-button size="tiny" type="primary" @click="addTagToCurrentFile" :disabled="!newTagName.trim()">+</n-button>
+              </div>
+
+              <div v-if="allTags.length === 0" class="empty-state-hint">
+                <n-empty description="暂无标签" size="small" />
+              </div>
+              <div v-else class="tags-manage">
+                <div class="tags-search">
+                  <n-input v-model:value="tagFilterText" placeholder="筛选标签..." size="small" clearable />
+                </div>
+                <div class="tag-cloud">
+                  <div class="tag-row" v-for="t in filteredTags" :key="t.tag" @click="searchByTag(t.tag)">
+                    <n-icon :component="TagIcon" size="14" />
+                    <span class="tag-name">#{{ t.tag }}</span>
+                    <span class="tag-count">{{ t.count }} 篇</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -119,7 +141,7 @@
               </div>
             </div>
 
-            <!-- 链接面板 -->
+            <!-- 引用面板 -->
             <div v-else-if="activeSidebarTab === 'links'" :key="'links'" class="tab-pane links-pane">
               <div v-if="!activeTabId" class="path-guide"><n-empty description="未打开文件" size="small" /></div>
               <div v-else class="links-content">
@@ -320,7 +342,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch, reactive, h, onUnmounted, nextTick } from 'vue'
+import { onMounted, ref, watch, reactive, h, onUnmounted, nextTick, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
@@ -329,7 +351,7 @@ import {
   Plus as PlusIcon, FolderPlus as FolderPlusIcon, Trash as TrashIcon,
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
   Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
-  Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon
+  Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -350,7 +372,15 @@ const store = useAppStore()
 const { tabs, activeTabId } = storeToRefs(store)
 const router = useRouter()
 
-const activeSidebarTab = ref<'files' | 'outline' | 'links' | 'history'>('files')
+const activeSidebarTab = ref<'files' | 'quick' | 'tags' | 'outline' | 'links' | 'history'>('files')
+const sidebarTabs = [
+  { key: 'files' as const, icon: FileIcon, label: '文件' },
+  { key: 'outline' as const, icon: ListIcon, label: '目录' },
+  { key: 'tags' as const, icon: TagIcon, label: '标签' },
+  { key: 'links' as const, icon: LinkIcon, label: '引用' },
+  { key: 'quick' as const, icon: ClockIcon, label: '历史' },
+  { key: 'history' as const, icon: SaveIcon, label: '备份' },
+]
 const outgoingLinks = ref<string[]>([])
 const backlinks = ref<{ title: string; path: string; context: string }[]>([])
 
@@ -405,12 +435,35 @@ const fetchAllTags = async () => {
   catch (e) { allTags.value = [] }
 }
 
+const newTagName = ref('')
+const addTagToCurrentFile = () => {
+  const tag = newTagName.value.trim()
+  if (!tag || !vditor) return
+  const tagStr = ' #' + tag.replace(/\s/g, '')
+  if (vditor.getCurrentMode() === 'wysiwyg') {
+    vditor.insertValue(tagStr)
+  } else {
+    vditor.setValue(vditor.getValue() + tagStr)
+  }
+  newTagName.value = ''
+  fetchAllTags()
+}
+
 const searchByTag = (tag: string) => {
   searchQuery.value = '#' + tag
   activeSidebarTab.value = 'files'
 }
 const isSidebarCollapsed = ref(false)
-const editorWidthMode = ref<'narrow' | 'medium' | 'wide'>('medium')
+const tagFilterText = ref('')
+const filteredTags = computed(() => {
+  if (!tagFilterText.value.trim()) return allTags.value
+  const q = tagFilterText.value.toLowerCase()
+  return allTags.value.filter(t => t.tag.toLowerCase().includes(q))
+})
+const editorWidthMode = ref<'narrow' | 'medium' | 'wide'>(
+  (localStorage.getItem('longedit_editor_width') as any) || 'medium'
+)
+watch(editorWidthMode, (v) => { localStorage.setItem('longedit_editor_width', v) })
 const sidebarWidth = ref(260)
 const activeResizer = ref<'sidebar' | null>(null)
 const tabsScrollRef = ref<HTMLElement | null>(null)
@@ -532,7 +585,26 @@ const handleNodeSelect = (keys: string[]) => {
   }
 }
 
-const handleLoadChildren = async (option: TreeOption) => { option.children = await loadDirectory(option.key as string) }
+const handleLoadChildren = async (option: TreeOption) => {
+  try {
+    const children = await loadDirectory(option.key as string)
+    option.children = children
+  } catch (e) {
+    option.children = []
+    console.error('Failed to load directory:', option.key, e)
+  }
+}
+
+const loadDirectory = async (path: string): Promise<TreeOption[]> => {
+  if (!path) return []
+  const entries = await invoke<FileEntry[]>('scan_directory', { path })
+  return entries.map(entry => ({
+    label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''),
+    key: entry.path,
+    isLeaf: !entry.is_dir,
+    prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' })
+  }))
+}
 
 const handleCodeThemeChange = async (val: string) => {
   store.codeTheme = val; await store.updateConfig({ codeTheme: val })
@@ -540,13 +612,6 @@ const handleCodeThemeChange = async (val: string) => {
 }
 const handleEditorBgChange = async (val: string) => { store.editorBgColor = val; await store.updateConfig({ editorBgColor: val }) }
 
-const loadDirectory = async (path: string): Promise<TreeOption[]> => {
-  if (!path) return []
-  try {
-    const entries = await invoke<FileEntry[]>('scan_directory', { path })
-    return entries.map(entry => ({ label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''), key: entry.path, isLeaf: !entry.is_dir, prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' }) }))
-  } catch (err) { return [] }
-}
 
 const refreshLibrary = async () => { if (store.libraryPath) treeData.value = await loadDirectory(store.libraryPath) }
 const refreshNode = async (path: string) => {
@@ -556,15 +621,26 @@ const refreshNode = async (path: string) => {
     const oldMap = new Map(oldNodes.map(n => [n.key, n]))
     return newNodes.map(newNode => { const matchedOld = oldMap.get(newNode.key as string); return matchedOld && matchedOld.children !== undefined ? { ...newNode, children: matchedOld.children } : newNode })
   }
-  if (path === store.libraryPath) treeData.value = syncNodes(treeData.value, newEntries); else {
-    const patch = (nodes: TreeOption[]): boolean => { 
-      for (let i = 0; i < nodes.length; i++) { 
-        if (nodes[i].key === path) { nodes[i].children = syncNodes(nodes[i].children || [], newEntries); return true } 
-        const childNodes = nodes[i].children; if (childNodes && patch(childNodes)) return true 
-      } 
-      return false 
+  if (path === store.libraryPath) {
+    treeData.value = syncNodes(treeData.value, newEntries)
+    return
+  }
+  const patch = (nodes: TreeOption[]): boolean => {
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].key === path) { nodes[i].children = syncNodes(nodes[i].children || [], newEntries); return true }
+      const childNodes = nodes[i].children; if (childNodes && patch(childNodes)) return true
     }
-    patch(treeData.value); treeData.value = [...treeData.value]
+    return false
+  }
+  if (patch(treeData.value)) {
+    treeData.value = [...treeData.value]
+  } else {
+    // 节点不在树中 (如首次创建 Daily 目录)，全量刷新
+    treeData.value = await loadDirectory(store.libraryPath)
+    // 展开新创建的父目录
+    if (!expandedKeys.value.includes(path)) {
+      expandedKeys.value = [...expandedKeys.value, path]
+    }
   }
 }
 
@@ -1004,10 +1080,11 @@ const initVditor = () => {
   editorLoading.value = true
   try {
     vditor = new Vditor('vditor-lib', {
-      cdn: '/vditor', 
-      lang: 'zh_CN', 
-      height: '100%', 
-      mode: store.editorMode || 'wysiwyg', 
+      cdn: '/vditor',
+      lang: 'zh_CN',
+      height: '100%',
+      mode: store.editorMode || 'wysiwyg',
+      customWysiwygToolbar: () => {},
       cache: { enable: false }, 
       theme: store.theme === 'dark' ? 'dark' : 'classic',
       preview: { 
@@ -1225,7 +1302,34 @@ watch(() => store.codeTheme, (newCodeTheme) => {
 })
 
 watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
-watch(() => store.libraryPath, (newPath) => { if (newPath) { refreshLibrary(); fetchLibStats(); fetchAllTags() } })
+watch(() => store.libraryPath, (newPath) => { if (newPath) { searchQuery.value = ''; refreshLibrary(); fetchLibStats(); fetchAllTags() } })
+
+// 搜索防抖
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(searchQuery, (q) => {
+  if (searchTimer) clearTimeout(searchTimer)
+  if (!q.trim()) {
+    refreshLibrary()
+    return
+  }
+  searchTimer = setTimeout(async () => {
+    if (!store.libraryPath) return
+    try {
+      let results: FileEntry[]
+      if (q.startsWith('#')) {
+        results = await invoke<FileEntry[]>('search_by_tag', { libraryRoot: store.libraryPath, tag: q.slice(1) })
+      } else {
+        results = await invoke<FileEntry[]>('search_library', { libraryRoot: store.libraryPath, query: q })
+      }
+      treeData.value = results.map(r => ({
+        label: r.name.replace(/\.md$/, ''),
+        key: r.path,
+        isLeaf: true,
+        prefix: () => h(FileIcon, { size: 14, style: 'opacity: 0.6' })
+      }))
+    } catch (e) { /* search failed */ }
+  }, 300)
+})
 watch(activeTabId, (newId, oldId) => { 
   if (newId && newId !== oldId) { 
     const t = tabs.value.find(item => item.id === newId); 
@@ -1273,12 +1377,38 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .sidebar-inner { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 
 /* === 顶部 Tabs 优化 === */
-.sidebar-tabs-header { padding: 12px 12px 8px; flex-shrink: 0; }
-.custom-sidebar-tabs :deep(.n-tabs-nav) { background: rgba(0, 0, 0, 0.03); border-radius: 10px; padding: 4px; }
-.is-dark .custom-sidebar-tabs :deep(.n-tabs-nav) { background: rgba(255, 255, 255, 0.05); }
-.custom-sidebar-tabs :deep(.n-tabs-rail) { background: transparent !important; }
-.tab-label-inner { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; transition: all 0.3s; }
-.tab-label-inner n-icon { font-size: 14px; }
+.sidebar-tabs-header {
+  display: flex; gap: 4px; padding: 8px 8px; flex-shrink: 0;
+  overflow-x: auto; overflow-y: hidden;
+}
+.icon-tab {
+  display: flex; align-items: center; justify-content: center; gap: 0;
+  width: 32px; min-width: 32px; height: 32px; padding: 0;
+  border-radius: 8px; cursor: pointer;
+  background: transparent; color: var(--theme-text, #1d1d1f);
+  opacity: 0.55; overflow: hidden;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              gap 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              padding 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.3s ease, opacity 0.3s ease;
+}
+.icon-tab:hover { opacity: 0.8; background: rgba(0,0,0,0.05); }
+.icon-tab.active {
+  opacity: 1; width: auto; padding: 0 12px; gap: 6px;
+  background: rgba(0,0,0,0.08); justify-content: flex-start;
+}
+.icon-tab-text {
+  font-size: 0; opacity: 0; max-width: 0;
+  white-space: nowrap; font-weight: 600; flex-shrink: 0;
+  transition: font-size 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.icon-tab.active .icon-tab-text {
+  font-size: 12px; opacity: 1; max-width: 60px;
+}
+.is-dark .icon-tab:hover { background: rgba(255,255,255,0.08); }
+.is-dark .icon-tab.active { background: rgba(255,255,255,0.12); }
 
 .sidebar-tab-content { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .tab-pane { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
@@ -1290,7 +1420,27 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .sidebar-header { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
 
 .tree-viewport { flex: 1; overflow-y: auto; padding: 4px 12px; border: 2px solid transparent; transition: all 0.2s; animation: treeContainerFade 0.5s ease-out; }
+.quick-pane { padding: 8px 0; overflow-y: auto; }
+.tags-pane { padding: 12px; overflow-y: auto; }
+.tags-help { font-size: 11px; opacity: 0.5; margin-bottom: 10px; padding: 6px 8px; background: rgba(0,0,0,0.03); border-radius: 6px; line-height: 1.5; }
+.tags-help code { background: rgba(0,0,0,0.08); padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+.tag-add-row { display: flex; gap: 6px; margin-bottom: 10px; }
+.tag-add-row .n-input { flex: 1; }
+.is-dark .tags-help { background: rgba(255,255,255,0.04); }
+.is-dark .tags-help code { background: rgba(255,255,255,0.08); }
+.tags-manage { display: flex; flex-direction: column; gap: 12px; }
+.tags-search { margin-bottom: 4px; }
+.tag-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 6px; cursor: pointer;
+  transition: background 0.15s; font-size: 13px;
+}
+.tag-row:hover { background: rgba(0,0,0,0.04); }
+.tag-name { flex: 1; font-weight: 500; }
+.tag-count { font-size: 11px; opacity: 0.5; }
+.is-dark .tag-row:hover { background: rgba(255,255,255,0.05); }
 .recent-files { padding: 8px 14px 4px; border-bottom: 1px solid rgba(0,0,0,0.04); }
+.recent-files:last-child { border-bottom: none; }
 .recent-header { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.4; margin-bottom: 6px; }
 .recent-item { display: flex; align-items: center; gap: 6px; padding: 5px 8px; font-size: 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
 .recent-item:hover { background: rgba(0,0,0,0.04); }

@@ -4,9 +4,14 @@
       <button class="back-btn" @click="$router.push('/library')">← 返回</button>
       <span class="graph-title">知识图谱</span>
     </div>
-    <canvas ref="canvasRef" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @wheel.prevent="onZoom" @click="onClick"></canvas>
+    <canvas ref="canvasRef" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @wheel.prevent="onZoom" @click="onClick" @dblclick="onDblClick"></canvas>
     <div class="graph-info">
       {{ graphData.nodes.length }} 节点 · {{ graphData.edges.length }} 连接
+    </div>
+    <!-- 节点悬浮提示 -->
+    <div v-if="hoveredNode" class="node-tooltip" :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }">
+      <strong>{{ hoveredNode.title }}</strong>
+      <span class="tip-path">{{ hoveredNode.path }}</span>
     </div>
   </div>
 </template>
@@ -14,6 +19,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { useRouter } from 'vue-router'
 import { useAppStore } from '../store/app'
 
 interface GraphNode { id: string; title: string; path: string; size: number; x?: number; y?: number; vx?: number; vy?: number }
@@ -25,6 +31,7 @@ const emit = defineEmits(['selectFile'])
 const containerRef = ref<HTMLElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const store = useAppStore()
+const router = useRouter()
 
 const graphData = ref<{ nodes: GraphNode[]; edges: GraphEdge[] }>({ nodes: [], edges: [] })
 
@@ -32,6 +39,12 @@ let animationId = 0
 let dragging: GraphNode | null = null
 let offsetX = 0, offsetY = 0
 let viewX = 0, viewY = 0, zoom = 1
+let frameCount = 0
+let layoutSettled = false
+const hoveredNode = ref<GraphNode | null>(null)
+const tooltipX = ref(0)
+const tooltipY = ref(0)
+let mouseX = 0, mouseY = 0
 
 const loadGraph = async () => {
   if (!store.libraryPath) return
@@ -53,11 +66,18 @@ const initLayout = () => {
 }
 
 const simulate = () => {
+  if (layoutSettled) return
   const nodes = graphData.value.nodes
   const edges = graphData.value.edges
+  if (nodes.length === 0) return
 
-  // 力导向迭代
-  for (let iter = 0; iter < 3; iter++) {
+  frameCount++
+  // 120 帧后布局稳定，停止模拟
+  if (frameCount > 120) { layoutSettled = true; return }
+  // 60 帧后降低频率
+  if (frameCount > 60 && frameCount % 2 !== 0) return
+
+  for (let iter = 0; iter < (frameCount < 60 ? 3 : 1); iter++) {
     // 斥力
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
@@ -77,7 +97,7 @@ const simulate = () => {
       if (!s || !t) continue
       const dx = (t.x || 0) - (s.x || 0)
       const dy = (t.y || 0) - (s.y || 0)
-      const dist = Math.sqrt(dx * dx + dy * dy)
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1
       const force = dist * 0.01
       s.vx = (s.vx || 0) + (dx / dist) * force; s.vy = (s.vy || 0) + (dy / dist) * force
       t.vx = (t.vx || 0) - (dx / dist) * force; t.vy = (t.vy || 0) - (dy / dist) * force
@@ -88,12 +108,20 @@ const simulate = () => {
     for (const n of nodes) {
       n.vx = (n.vx || 0) + (cx - (n.x || 0)) * 0.001
       n.vy = (n.vy || 0) + (cy - (n.y || 0)) * 0.001
-      // 阻尼
       n.vx = (n.vx || 0) * 0.9; n.vy = (n.vy || 0) * 0.9
       n.x = (n.x || 0) + (n.vx || 0)
       n.y = (n.y || 0) + (n.vy || 0)
     }
   }
+}
+
+const findNodeAt = (mx: number, my: number): GraphNode | null => {
+  for (const n of graphData.value.nodes) {
+    const r = n.size * 0.6
+    const dx = mx - (n.x || 0), dy = my - (n.y || 0)
+    if (dx * dx + dy * dy < r * r + 100) return n
+  }
+  return null
 }
 
 const draw = () => {
@@ -110,16 +138,19 @@ const draw = () => {
   ctx.translate(viewX, viewY)
   ctx.scale(zoom, zoom)
 
+  const hovered = hoveredNode.value
+
   // 边
-  ctx.strokeStyle = 'rgba(128,128,128,0.15)'
-  ctx.lineWidth = 1 / zoom
   for (const e of graphData.value.edges) {
     const s = graphData.value.nodes.find(n => n.id === e.source)
     const t = graphData.value.nodes.find(n => n.id === e.target)
     if (!s || !t) continue
+    const isHighlight = hovered && (s === hovered || t === hovered)
     ctx.beginPath()
     ctx.moveTo(s.x || 0, s.y || 0)
     ctx.lineTo(t.x || 0, t.y || 0)
+    ctx.strokeStyle = isHighlight ? 'rgba(128,128,255,0.4)' : 'rgba(128,128,128,0.12)'
+    ctx.lineWidth = isHighlight ? 2 / zoom : 1 / zoom
     ctx.stroke()
   }
 
@@ -129,8 +160,17 @@ const draw = () => {
     const r = n.size * 0.6
     ctx.beginPath()
     ctx.arc(n.x || 0, n.y || 0, r, 0, Math.PI * 2)
-    ctx.fillStyle = isDark ? 'rgba(66,184,131,0.7)' : 'rgba(0,122,255,0.7)'
+    const isHovered = hovered === n
+    ctx.fillStyle = isHovered
+      ? (isDark ? 'rgba(100,200,150,0.9)' : 'rgba(0,100,255,0.9)')
+      : (isDark ? 'rgba(66,184,131,0.7)' : 'rgba(0,122,255,0.7)')
     ctx.fill()
+    // 悬停描边
+    if (isHovered) {
+      ctx.strokeStyle = isDark ? '#fff' : '#000'
+      ctx.lineWidth = 2 / zoom
+      ctx.stroke()
+    }
     // 标签
     ctx.fillStyle = isDark ? '#ccc' : '#333'
     ctx.font = `${Math.max(10, 12 / zoom)}px sans-serif`
@@ -140,6 +180,19 @@ const draw = () => {
   }
 
   ctx.restore()
+
+  // 更新悬停检测
+  const canvasRect = canvas.getBoundingClientRect()
+  const worldX = (mouseX - canvasRect.left - viewX) / zoom
+  const worldY = (mouseY - canvasRect.top - viewY) / zoom
+  const node = findNodeAt(worldX, worldY)
+  if (node !== hoveredNode.value) {
+    hoveredNode.value = node
+    if (node) {
+      tooltipX.value = mouseX - canvasRect.left + 16
+      tooltipY.value = mouseY - canvasRect.top - 40
+    }
+  }
 }
 
 const loop = () => {
@@ -154,23 +207,19 @@ const startDrag = (e: MouseEvent) => {
   const rect = canvas.getBoundingClientRect()
   const mx = (e.clientX - rect.left - viewX) / zoom
   const my = (e.clientY - rect.top - viewY) / zoom
-  // 检查是否点击了节点
-  for (const n of graphData.value.nodes) {
-    const r = n.size * 0.6
-    const dx = mx - (n.x || 0), dy = my - (n.y || 0)
-    if (dx * dx + dy * dy < r * r + 100) {
-      dragging = n
-      offsetX = (n.x || 0) - mx
-      offsetY = (n.y || 0) - my
-      return
-    }
+  const node = findNodeAt(mx, my)
+  if (node) {
+    dragging = node
+    offsetX = (node.x || 0) - mx
+    offsetY = (node.y || 0) - my
+    return
   }
-  // 否则拖拽画布
   dragging = { id: '', title: '', path: '', size: 0, x: e.clientX, y: e.clientY } as any
   offsetX = viewX; offsetY = viewY
 }
 
 const onDrag = (e: MouseEvent) => {
+  mouseX = e.clientX; mouseY = e.clientY
   if (!dragging) return
   if (dragging.id) {
     const canvas = canvasRef.value
@@ -186,51 +235,52 @@ const onDrag = (e: MouseEvent) => {
   }
 }
 
-const endDrag = () => { dragging = null }
+const endDrag = () => {
+  if (dragging && dragging.id) {
+    // 拖拽节点后重新模拟几秒让布局稳定
+    layoutSettled = false; frameCount = 90
+  }
+  dragging = null
+}
 
 const onZoom = (e: WheelEvent) => {
+  mouseX = e.clientX; mouseY = e.clientY
   const newZoom = zoom * (e.deltaY > 0 ? 0.9 : 1.1)
   zoom = Math.max(0.1, Math.min(3, newZoom))
+  layoutSettled = false; frameCount = 100
 }
 
 const onClick = () => {
   if (dragging && dragging.id) { emit('selectFile', dragging.path) }
 }
 
+const onDblClick = () => {
+  if (hoveredNode.value) {
+    router.push({ name: 'LibraryMode', query: { path: hoveredNode.value.path } })
+  }
+}
+
 watch(() => props.show, (v) => { if (v) loadGraph() })
 watch(() => store.libraryPath, () => { if (props.show) loadGraph() })
 
-onMounted(() => { loop() })
+onMounted(() => { loadGraph(); loop() })
 onUnmounted(() => { cancelAnimationFrame(animationId) })
 </script>
 
 <style scoped>
-.graph-container {
-  width: 100%; height: 100vh; position: relative;
-  background: var(--theme-bg); display: flex; flex-direction: column;
-}
-.graph-header {
-  display: flex; align-items: center; gap: 16px;
-  padding: 12px 20px; flex-shrink: 0;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-.back-btn {
-  background: none; border: none; cursor: pointer;
-  font-size: 14px; color: var(--theme-primary); padding: 4px 8px;
-  border-radius: 6px; transition: background 0.15s;
-}
+.graph-container { width: 100%; height: 100vh; position: relative; background: var(--theme-bg); display: flex; flex-direction: column; }
+.graph-header { display: flex; align-items: center; gap: 16px; padding: 12px 20px; flex-shrink: 0; border-bottom: 1px solid rgba(0,0,0,0.05); z-index: 10; }
+.back-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--theme-primary); padding: 4px 8px; border-radius: 6px; }
 .back-btn:hover { background: rgba(0,0,0,0.05); }
 .graph-title { font-size: 16px; font-weight: 700; }
+canvas { display: block; cursor: grab; flex: 1; }
+canvas:active { cursor: grabbing; }
+.graph-info { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); font-size: 12px; opacity: 0.5; pointer-events: none; background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 10px; }
+.node-tooltip { position: absolute; pointer-events: none; background: var(--theme-bg); border: 1px solid rgba(0,0,0,0.1); padding: 6px 10px; border-radius: 8px; font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; display: flex; flex-direction: column; gap: 2px; max-width: 220px; }
+.node-tooltip strong { font-size: 13px; }
+.tip-path { opacity: 0.5; font-size: 10px; word-break: break-all; }
 .is-dark .graph-header { border-bottom-color: rgba(255,255,255,0.05); }
 .is-dark .back-btn:hover { background: rgba(255,255,255,0.05); }
-canvas {
-  display: block; cursor: grab;
-}
-canvas:active { cursor: grabbing; }
-.graph-info {
-  position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-  font-size: 12px; opacity: 0.5; pointer-events: none;
-  background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 10px;
-}
 .is-dark .graph-info { background: rgba(255,255,255,0.05); }
+.is-dark .node-tooltip { border-color: rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
 </style>

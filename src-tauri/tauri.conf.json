@@ -1,11 +1,11 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Long编辑",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "identifier": "com.longyuye.mdreader",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:9000",
+    "devUrl": "http://127.0.0.1:9000",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
