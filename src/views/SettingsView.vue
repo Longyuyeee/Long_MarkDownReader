@@ -14,16 +14,34 @@
             <div class="section-title">文件库管理</div>
             <div class="library-manager-card">
               <div v-for="(lib, index) in config.libraries" :key="index" class="library-item" :class="{ active: lib.path === config.activeLibraryPath }">
-                <div class="lib-info">
-                  <div class="lib-name">{{ lib.name }}</div>
-                  <div class="lib-path">{{ lib.path }}</div>
+                <div class="lib-top-row">
+                  <div class="lib-info">
+                    <div class="lib-name">{{ lib.name }}</div>
+                    <div class="lib-path">{{ lib.path }}</div>
+                  </div>
+                  <div class="lib-actions">
+                    <n-button size="tiny" quaternary circle @click="toggleGitConfig(index)" title="Git 设置">
+                      <template #icon><n-icon :component="GitBranchIcon" size="14" /></template>
+                    </n-button>
+                    <n-button size="tiny" secondary type="primary" v-if="lib.path !== config.activeLibraryPath" @click="switchLibrary(lib.path)">切换</n-button>
+                    <n-tag size="small" type="success" v-else>当前使用</n-tag>
+                    <n-button size="tiny" quaternary circle type="error" @click="removeLibrary(index)">
+                      <template #icon><n-icon :component="TrashIcon" /></template>
+                    </n-button>
+                  </div>
                 </div>
-                <div class="lib-actions">
-                  <n-button size="tiny" secondary type="primary" v-if="lib.path !== config.activeLibraryPath" @click="switchLibrary(lib.path)">切换</n-button>
-                  <n-tag size="small" type="success" v-else>当前使用</n-tag>
-                  <n-button size="tiny" quaternary circle type="error" @click="removeLibrary(index)">
-                    <template #icon><n-icon :component="TrashIcon" /></template>
-                  </n-button>
+                <!-- Git 配置展开 -->
+                <div v-if="expandedGitLib === index" class="git-config-panel">
+                  <div class="setting-row">
+                    <div class="info"><div class="label">启用 Git</div></div>
+                    <n-switch v-model:value="lib.gitEnabled" size="small" />
+                  </div>
+                  <n-form-item label="Remote URL" size="small" v-if="lib.gitEnabled">
+                    <n-input v-model:value="lib.gitRemote" placeholder="https://github.com/user/repo.git" size="small" />
+                  </n-form-item>
+                  <n-form-item label="分支" size="small" v-if="lib.gitEnabled">
+                    <n-input v-model:value="lib.gitBranch" placeholder="main" size="small" />
+                  </n-form-item>
                 </div>
               </div>
 
@@ -92,6 +110,32 @@
             </div>
           </n-grid-item>
 
+          <n-grid-item class="animate-item" style="--delay: 0.35s">
+            <div class="section-title">AI 辅助</div>
+            <div class="setting-card">
+              <div class="setting-row">
+                <div class="info">
+                  <div class="label">启用 AI 辅助</div>
+                  <div class="desc">开启后可在编辑器工具栏使用 AI 处理文本</div>
+                </div>
+                <n-switch v-model:value="config.aiEnabled" />
+              </div>
+              <n-form-item label="AI 服务商">
+                <n-select v-model:value="config.aiProvider" :options="aiProviderOptions" @update:value="onAiProviderChange" />
+              </n-form-item>
+              <n-form-item label="接口地址">
+                <n-input v-model:value="config.aiEndpoint" placeholder="https://api.openai.com/v1" />
+                <template #feedback><span style="font-size:11px;opacity:0.5">兼容 OpenAI API 格式即可（DeepSeek/Ollama 等）</span></template>
+              </n-form-item>
+              <n-form-item label="API Key">
+                <n-input v-model:value="config.aiApiKey" type="password" placeholder="sk-..." show-password-on="click" />
+              </n-form-item>
+              <n-form-item label="模型名称">
+                <n-input v-model:value="config.aiModel" placeholder="gpt-4o-mini" />
+              </n-form-item>
+            </div>
+          </n-grid-item>
+
           <n-grid-item class="animate-item" style="--delay: 0.4s">
             <div class="section-title">外观</div>
             <n-form-item label="颜色主题">
@@ -142,7 +186,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon } from 'lucide-vue-next'
+import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon, GitBranch as GitBranchIcon } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, NTag, NInputGroup } from 'naive-ui'
@@ -167,6 +211,26 @@ const codeThemeOptions = [
   { label: 'Tokyo Night', value: 'tokyo-night-dark' }
 ]
 
+const aiProviderOptions = [
+  { label: 'OpenAI', value: 'openai' },
+  { label: 'DeepSeek', value: 'deepseek' },
+  { label: 'Ollama (本地)', value: 'ollama' },
+  { label: '自定义', value: 'custom' },
+]
+
+const aiProviderPresets: Record<string, { endpoint: string; model: string }> = {
+  openai: { endpoint: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+  deepseek: { endpoint: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
+  ollama: { endpoint: 'http://localhost:11434/v1', model: 'llama3' },
+  custom: { endpoint: '', model: '' },
+}
+
+const onAiProviderChange = (provider: string) => {
+  const preset = aiProviderPresets[provider]
+  if (preset && preset.endpoint) config.value.aiEndpoint = preset.endpoint
+  if (preset && preset.model) config.value.aiModel = preset.model
+}
+
 const config = ref({
   libraries: [] as any[],
   activeLibraryPath: store.activeLibraryPath,
@@ -177,10 +241,17 @@ const config = ref({
   autoSaveInterval: store.autoSaveInterval,
   maxHistoryCount: store.maxHistoryCount,
   isAutostart: store.isAutostart,
-  exitStrategy: store.exitStrategy
+  exitStrategy: store.exitStrategy,
+  aiEnabled: store.aiEnabled,
+  aiProvider: store.aiProvider,
+  aiEndpoint: store.aiEndpoint,
+  aiApiKey: store.aiApiKey,
+  aiModel: store.aiModel,
 })
 
 const newLib = reactive({ name: '', path: '' })
+const expandedGitLib = ref(-1)
+const toggleGitConfig = (index: number) => { expandedGitLib.value = expandedGitLib.value === index ? -1 : index }
 
 const switchLibrary = (path: string) => {
   if (store.tabs.length === 0) {
@@ -213,9 +284,14 @@ onMounted(async () => {
     autoSaveInterval: store.autoSaveInterval,
     maxHistoryCount: store.maxHistoryCount,
     isAutostart: store.isAutostart,
-    exitStrategy: store.exitStrategy
+    exitStrategy: store.exitStrategy,
+    aiEnabled: store.aiEnabled,
+    aiProvider: store.aiProvider,
+    aiEndpoint: store.aiEndpoint,
+    aiApiKey: store.aiApiKey,
+    aiModel: store.aiModel,
   }
-  
+
   nextTick(() => {
     isInitializing.value = false
   })
@@ -421,6 +497,9 @@ const setAsDefault = async () => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+.lib-top-row { display: flex; align-items: center; }
+.git-config-panel { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 8px; }
+.is-dark .git-config-panel { border-top-color: rgba(255,255,255,0.06); }
 .lib-info { flex: 1; min-width: 0; }
 .lib-name { font-size: 15px; font-weight: 700; color: var(--theme-text); margin-bottom: 2px; }
 .lib-path { font-size: 12px; opacity: 0.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

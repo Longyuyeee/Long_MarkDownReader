@@ -209,6 +209,27 @@
           <span>{{ libStats.file_count }} 篇笔记</span>
           <span>{{ libStats.total_words.toLocaleString() }} 词</span>
         </div>
+
+        <!-- Git 状态 -->
+        <div class="git-status-bar" v-if="currentLibGitEnabled">
+          <template v-if="gitStatus && gitStatus.initialized">
+            <div class="git-status-info" @click="refreshGitStatus">
+              <span class="git-branch">🔀 {{ gitStatus.branch }}</span>
+              <span class="git-ahead" v-if="gitStatus.ahead > 0">↑{{ gitStatus.ahead }}</span>
+              <span class="git-behind" v-if="gitStatus.behind > 0">↓{{ gitStatus.behind }}</span>
+              <span class="git-dirty" v-if="gitStatus.dirty_count > 0">· {{ gitStatus.dirty_count }} 更改</span>
+            </div>
+            <div class="git-actions">
+              <n-button quaternary circle size="tiny" @click="gitPull" title="拉取"><n-icon size="14"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></n-icon></n-button>
+              <n-button quaternary circle size="tiny" @click="gitPush" title="推送"><n-icon size="14"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></n-icon></n-button>
+            </div>
+          </template>
+          <div v-else class="git-status-hint" @click="gitInitRepo">
+            <span>Git 未初始化</span>
+            <n-button size="tiny" quaternary type="info">初始化</n-button>
+          </div>
+        </div>
+
         <!-- 快捷操作 -->
         <div class="sidebar-actions" v-if="store.libraryPath">
           <n-button quaternary size="tiny" @click="openGraph">
@@ -279,6 +300,16 @@
             <n-button quaternary circle size="small" @click="saveCurrentFile" :disabled="!activeTabId" title="保存到磁盘 (Ctrl+S)">
               <template #icon><n-icon :component="SaveIcon" /></template>
             </n-button>
+            <n-dropdown trigger="click" :options="exportOptions" @select="handleExport" v-if="activeTabId">
+              <n-button quaternary circle size="small" title="导出">
+                <template #icon><n-icon :component="DownloadIcon" /></template>
+              </n-button>
+            </n-dropdown>
+            <div class="mode-toggle" v-if="activeTabId">
+              <n-button quaternary size="tiny" :type="store.editorMode === 'wysiwyg' ? 'primary' : 'default'" @click="switchEditorMode('wysiwyg')" title="所见即所得">所见</n-button>
+              <n-button quaternary size="tiny" :type="store.editorMode === 'ir' ? 'primary' : 'default'" @click="switchEditorMode('ir')" title="即时渲染">IR</n-button>
+              <n-button quaternary size="tiny" :type="store.editorMode === 'sv' ? 'primary' : 'default'" @click="switchEditorMode('sv')" title="源码编辑">源码</n-button>
+            </div>
             <div class="width-toggle" v-if="activeTabId">
               <n-button quaternary size="tiny" :type="editorWidthMode === 'narrow' ? 'primary' : 'default'" @click="editorWidthMode = 'narrow'" title="窄栏 600px">窄</n-button>
               <n-button quaternary size="tiny" :type="editorWidthMode === 'medium' ? 'primary' : 'default'" @click="editorWidthMode = 'medium'" title="中栏 800px">中</n-button>
@@ -338,6 +369,41 @@
     <n-modal v-model:show="renameState.show" preset="dialog" title="项目重命名" positive-text="更新" negative-text="取消" @positive-click="applyRename">
       <n-input v-model:value="renameState.newName" placeholder="请输入新名称（无需后缀）" autofocus @keyup.enter="applyRename" />
     </n-modal>
+
+    <!-- AI 操作选择弹窗 -->
+    <n-modal v-model:show="aiState.showActionModal" preset="dialog" title="AI 辅助" positive-text="" negative-text="取消" @negative-click="aiState.showActionModal = false">
+      <div class="ai-action-grid">
+        <n-button block secondary @click="handleAIAction('polish')" class="ai-action-btn">
+          <template #icon><n-icon size="18"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></n-icon></template>
+          润色
+        </n-button>
+        <n-button block secondary @click="handleAIAction('rewrite')" class="ai-action-btn">
+          <template #icon><n-icon size="18"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></n-icon></template>
+          重写
+        </n-button>
+        <n-button block secondary @click="handleAIAction('summarize')" class="ai-action-btn">
+          <template #icon><n-icon size="18"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></n-icon></template>
+          总结
+        </n-button>
+        <n-button block secondary @click="handleAIAction('translate')" class="ai-action-btn">
+          <template #icon><n-icon size="18"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></svg></n-icon></template>
+          翻译
+        </n-button>
+      </div>
+    </n-modal>
+
+    <!-- AI 结果弹窗 -->
+    <n-modal v-model:show="aiState.showResultModal" preset="dialog" title="AI 处理结果" positive-text="替换原文" negative-text="取消" @positive-click="replaceWithResult" @negative-click="aiState.showResultModal = false">
+      <div style="min-height: 80px;">
+        <div v-if="aiState.loading" style="display:flex;align-items:center;justify-content:center;padding:24px;">
+          <n-spin size="medium" />
+        </div>
+        <div v-else class="ai-result-content">{{ aiState.result }}</div>
+      </div>
+      <template #action>
+        <n-button quaternary @click="copyAIResult">复制结果</n-button>
+      </template>
+    </n-modal>
   </div>
 </template>
 
@@ -351,7 +417,7 @@ import {
   Plus as PlusIcon, FolderPlus as FolderPlusIcon, Trash as TrashIcon,
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
   Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
-  Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon
+  Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -421,6 +487,53 @@ const wordCount = ref(0)
 const cursorLine = ref(1)
 const cursorCol = ref(1)
 const libStats = ref<{ file_count: number; total_chars: number; total_words: number } | null>(null)
+
+// --- Git ---
+const gitStatus = ref<{ initialized: boolean; branch: string; remote: string; ahead: number; behind: number; dirty_count: number; last_commit: string } | null>(null)
+const currentLibGitEnabled = computed(() => {
+  const lib = store.libraries.find(l => l.path === store.libraryPath)
+  return lib?.gitEnabled || false
+})
+const refreshGitStatus = async () => {
+  if (!store.libraryPath || !currentLibGitEnabled.value) { gitStatus.value = null; return }
+  try {
+    const s = await invoke<any>('git_status', { libraryPath: store.libraryPath })
+    gitStatus.value = s
+    if (s.initialized && s.remote) {
+      const lib = store.libraries.find(l => l.path === store.libraryPath)
+      if (lib && !lib.gitRemote) { lib.gitRemote = s.remote; lib.gitBranch = s.branch; store.updateConfig({ libraries: store.libraries }) }
+    }
+  } catch (e) { gitStatus.value = null }
+}
+const gitInitRepo = async () => {
+  if (!store.libraryPath) return
+  const lib = store.libraries.find(l => l.path === store.libraryPath)
+  if (!lib || !lib.gitRemote) { message.warning('请先在设置中配置 Git Remote URL'); return }
+  try {
+    message.loading('正在初始化 Git...')
+    await invoke('git_init', { libraryPath: store.libraryPath, remote: lib.gitRemote, branch: lib.gitBranch || 'main' })
+    message.destroyAll(); message.success('Git 仓库已初始化')
+    refreshGitStatus()
+  } catch (e: any) { message.destroyAll(); message.error('初始化失败: ' + (e?.toString() || '')) }
+}
+const gitPush = async () => {
+  if (!store.libraryPath) return
+  try {
+    message.loading('正在推送...')
+    const msg = await invoke<string>('git_push', { libraryPath: store.libraryPath })
+    message.destroyAll(); message.success(msg)
+    refreshGitStatus()
+  } catch (e: any) { message.destroyAll(); message.error('Push 失败: ' + (e?.toString() || '')) }
+}
+const gitPull = async () => {
+  if (!store.libraryPath) return
+  try {
+    message.loading('正在拉取...')
+    const msg = await invoke<string>('git_pull', { libraryPath: store.libraryPath })
+    message.destroyAll(); message.success(msg)
+    refreshGitStatus()
+  } catch (e: any) { message.destroyAll(); message.error('Pull 失败: ' + (e?.toString() || '')) }
+}
 const allTags = ref<{ tag: string; count: number }[]>([])
 
 const fetchLibStats = async () => {
@@ -513,6 +626,94 @@ const updateWordCount = () => {
 const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0, timer: null as any })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, options: [] as any[] })
 const renameState = reactive({ show: false, oldPath: '', newName: '' })
+
+// --- AI Assistant ---
+const aiState = reactive({ showActionModal: false, showResultModal: false, loading: false, result: '', selectedText: '' })
+
+const systemPrompts: Record<string, string> = {
+  polish: '请润色以下文本，使其更加通顺、优美，保持原意不变，只返回润色后的结果，不要添加任何额外说明：',
+  rewrite: '请重写以下文本，保持核心意思不变，使用不同的表达方式，只返回重写后的结果，不要添加任何额外说明：',
+  summarize: '请总结以下文本的核心要点，简洁明了，只返回总结结果，不要添加任何额外说明：',
+  translate: '请将以下文本翻译为中文，只返回翻译结果，不要添加任何额外说明：',
+}
+
+const handleAIAssist = () => {
+  if (!store.aiEnabled) { message.warning('请先在设置中启用 AI 并配置 API'); return }
+  const sel = window.getSelection()?.toString().trim()
+  if (!sel) { message.warning('请先选择要处理的文本'); return }
+  aiState.selectedText = sel
+  aiState.showActionModal = true
+}
+
+const handleAIAction = async (action: string) => {
+  aiState.showActionModal = false
+  aiState.loading = true; aiState.result = ''
+  aiState.showResultModal = true
+  try {
+    aiState.result = await invoke<string>('ai_chat_completion', {
+      apiKey: store.aiApiKey,
+      endpoint: store.aiEndpoint,
+      model: store.aiModel,
+      systemPrompt: systemPrompts[action],
+      userContent: aiState.selectedText,
+    })
+  } catch (e: any) {
+    message.error('AI 请求失败: ' + (e?.toString() || '未知错误'))
+    aiState.showResultModal = false
+  }
+  aiState.loading = false
+}
+
+const replaceWithResult = () => {
+  if (!vditor || !aiState.result) return
+  if (vditor.getCurrentMode() === 'wysiwyg') {
+    vditor.insertValue(aiState.result)
+  } else {
+    const content = vditor.getValue()
+    const idx = content.indexOf(aiState.selectedText)
+    if (idx !== -1) {
+      vditor.setValue(content.substring(0, idx) + aiState.result + content.substring(idx + aiState.selectedText.length))
+    } else {
+      vditor.setValue(content + '\n' + aiState.result)
+    }
+  }
+  aiState.showResultModal = false; aiState.result = ''
+  message.success('已替换')
+}
+
+const copyAIResult = () => {
+  navigator.clipboard.writeText(aiState.result)
+  message.success('已复制到剪贴板')
+}
+
+// --- Export ---
+const exportOptions = [
+  { label: '导出 PDF', key: 'pdf' },
+  { label: '导出 HTML', key: 'html' },
+  { label: '导出 Markdown', key: 'md' },
+]
+const handleExport = async (key: string) => {
+  if (!activeTabId.value || !vditor) return
+  const tab = tabs.value.find(t => t.id === activeTabId.value)
+  if (!tab) return
+
+  if (key === 'pdf') {
+    // Vditor 内置 exportPDF，打开打印对话框 → 用户选「另存为 PDF」
+    try { (vditor as any).exportPDF() } catch (e) { message.error('PDF 导出失败') }
+  } else if (key === 'html') {
+    try {
+      const html = vditor.getHTML()
+      await invoke('export_to_html', { path: tab.path, htmlContent: html })
+      message.success('HTML 已导出到文件旁')
+    } catch (e) { message.error('导出失败') }
+  } else if (key === 'md') {
+    try {
+      const { save } = await import('@tauri-apps/plugin-dialog')
+      const filePath = await save({ defaultPath: tab.title + '.md', filters: [{ name: 'Markdown', extensions: ['md'] }] })
+      if (filePath) { await invoke('write_markdown_file', { path: filePath, content: vditor.getValue() }); message.success('已导出') }
+    } catch (e) { /* user cancelled */ }
+  }
+}
 const historyList = ref<{timestamp: number, content: string}[]>([])
 
 const openSettings = () => router.push('/settings')
@@ -1064,14 +1265,31 @@ const saveCurrentFile = async () => {
         } catch (e) { return match }
       })
 
-      await invoke('write_markdown_file', { path: t.path, content }); 
-      message.success('已安全保存'); 
-      if (autoSaveTimer) clearTimeout(autoSaveTimer) 
-    } catch (e) { message.error('保存失败') } 
+      await invoke('write_markdown_file', { path: t.path, content });
+      message.success('已安全保存');
+      // Git 自动 commit（本地）
+      if (currentLibGitEnabled.value) {
+        invoke('git_commit', { libraryPath: store.libraryPath, message: `更新: ${t.title}` }).catch(() => {})
+      }
+      if (autoSaveTimer) clearTimeout(autoSaveTimer)
+    } catch (e) { message.error('保存失败') }
   }
 }
 
 const syncVditorMode = () => { if (vditor) { const currentMode = vditor.getCurrentMode(); if (currentMode && currentMode !== store.editorMode) store.updateConfig({ editorMode: currentMode as any }) } }
+const switchEditorMode = (mode: string) => {
+  if (!vditor || store.editorMode === mode) return
+  const content = vditor.getValue()
+  editorLoading.value = true
+  vditor.destroy(); vditor = null; isVditorReady = false
+  store.updateConfig({ editorMode: mode })
+  nextTick(() => {
+    initVditor()
+    const check = setInterval(() => {
+      if (vditor && isVditorReady) { clearInterval(check); vditor.setValue(content); editorLoading.value = false }
+    }, 100)
+  })
+}
 const handleEditorClick = (e: MouseEvent) => { if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(() => syncVditorMode(), 300) }
 
 const initVditor = () => {
@@ -1080,16 +1298,18 @@ const initVditor = () => {
   editorLoading.value = true
   try {
     vditor = new Vditor('vditor-lib', {
-      cdn: '/vditor',
+      cdn: 'https://cdn.jsdelivr.net/npm/vditor@3.11.2',
       lang: 'zh_CN',
       height: '100%',
       mode: store.editorMode || 'wysiwyg',
       customWysiwygToolbar: () => {},
-      cache: { enable: false }, 
+      cache: { enable: false },
       theme: store.theme === 'dark' ? 'dark' : 'classic',
-      preview: { 
-        theme: { current: store.theme === 'dark' ? 'dark' : 'light' }, 
+      preview: {
+        theme: { current: store.theme === 'dark' ? 'dark' : 'light' },
         hljs: { enable: true, style: store.codeTheme || 'github' },
+        math: { engine: 'KaTeX' },
+        markdown: { mermaid: true, footnotes: true, toc: true },
         transform: (html) => {
           // 在渲染前，将所有相对路径图片转换为 misty-img 协议路径
           if (!activeTabId.value) return html
@@ -1115,6 +1335,7 @@ const initVditor = () => {
           handleCodeThemeChange(nextTheme); message.info(`代码风格: ${nextTheme.toUpperCase()}`)
         }},
         { name: 'editor-bg', tip: '修改文章背景色', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>', click: () => { (document.querySelector('.hidden-picker-trigger .n-color-picker-trigger') as HTMLElement)?.click() }},
+        { name: 'ai-assist', tip: 'AI 辅助 (Alt+A)', icon: '<svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>', click: () => handleAIAssist() },
         '|', { name: 'both', tip: '双栏预览' }, { name: 'preview', tip: '预览' }, { name: 'edit-mode', tip: '切换编辑模式' }
       ],
       input: (val) => { 
@@ -1179,6 +1400,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'F2' && selectedKeys.value.length > 0) { const p = selectedKeys.value[0]; renameState.oldPath = p; let name = p.split(/[\\/]/).pop() || ''; if (p.endsWith('.md')) name = name.substring(0, name.lastIndexOf('.')); renameState.newName = name; renameState.show = true }
   if (e.key === 'Delete' && selectedKeys.value.length > 0) deleteAction(selectedKeys.value)
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
+  if (e.altKey && e.key === 'a') { e.preventDefault(); handleAIAssist() }
 }
 
 let searchDebounce: any = null, unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd: any = null, unlistenSaveCmd: any = null, unlistenDailyNote: any = null, unlistenFocus: any = null, unlistenDrop: any = null
@@ -1302,7 +1524,9 @@ watch(() => store.codeTheme, (newCodeTheme) => {
 })
 
 watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
-watch(() => store.libraryPath, (newPath) => { if (newPath) { searchQuery.value = ''; refreshLibrary(); fetchLibStats(); fetchAllTags() } })
+watch(() => store.libraryPath, (newPath) => { if (newPath) { searchQuery.value = ''; refreshLibrary(); fetchLibStats(); fetchAllTags(); refreshGitStatus() } })
+// 从设置页返回后刷新 Git 状态
+watch(() => store.libraries, () => { nextTick(() => refreshGitStatus()) }, { deep: true })
 
 // 搜索防抖
 let searchTimer: ReturnType<typeof setTimeout> | null = null
@@ -1607,6 +1831,17 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 /* === 底部 Footer === */
 .lib-stats-bar { display: flex; justify-content: space-between; padding: 6px 16px; font-size: 11px; opacity: 0.5; border-top: 1px solid rgba(0,0,0,0.05); }
 .is-dark .lib-stats-bar { border-top-color: rgba(255,255,255,0.05); }
+
+/* Git 状态 */
+.git-status-bar { display: flex; align-items: center; justify-content: space-between; padding: 4px 16px; font-size: 11px; border-top: 1px solid rgba(0,0,0,0.05); }
+.git-status-info { display: flex; align-items: center; gap: 6px; cursor: pointer; flex: 1; }
+.git-branch { font-weight: 600; opacity: 0.7; }
+.git-ahead { color: #f5a623; }
+.git-behind { color: #4a90d9; }
+.git-dirty { opacity: 0.5; }
+.git-actions { display: flex; gap: 2px; }
+.git-status-hint { display: flex; align-items: center; justify-content: space-between; width: 100%; font-size: 11px; opacity: 0.6; cursor: pointer; }
+.is-dark .git-status-bar { border-top-color: rgba(255,255,255,0.05); }
 .sidebar-actions { padding: 0 12px; }
 .sidebar-actions .n-button { width: 100%; justify-content: flex-start; font-size: 12px; }
 .sidebar-footer-container { padding: 12px; flex-shrink: 0; }
@@ -1732,6 +1967,7 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .editor-width-narrow :deep(.vditor-reset) { max-width: 600px !important; margin: 0 auto !important; }
 .editor-width-medium :deep(.vditor-reset) { max-width: 800px !important; margin: 0 auto !important; }
 .editor-width-wide :deep(.vditor-reset) { max-width: none !important; margin: 0 !important; }
+.mode-toggle { display: flex; gap: 2px; }
 .width-toggle { display: flex; gap: 2px; margin-left: 8px; padding-left: 8px; border-left: 1px solid rgba(0,0,0,0.08); }
 .is-dark .width-toggle { border-left-color: rgba(255,255,255,0.08); }
 /* Zen 模式打字机滚动：增大顶部留白让光标居中 */
@@ -1764,4 +2000,9 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes heroGlow { 0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 122, 255, 0.2)); } 50% { filter: drop-shadow(0 0 40px rgba(0, 122, 255, 0.5)); } }
 @keyframes blobRotate { from { transform: rotate(0deg) scale(1); } to { transform: rotate(360deg) scale(1.2); } }
+
+/* AI 辅助 */
+.ai-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 8px 0; }
+.ai-action-btn { height: 56px; font-size: 15px; font-weight: 600; }
+.ai-result-content { white-space: pre-wrap; line-height: 1.7; font-size: 14px; color: var(--theme-text); max-height: 400px; overflow-y: auto; }
 </style>

@@ -1,6 +1,6 @@
 [package]
 name = "tauri-app"
-version = "0.5.5"
+version = "0.5.6"
 description = "A Tauri App"
 authors = ["longyuye"]
 edition = "2021"
@@ -28,7 +28,7 @@ encoding_rs = "0.8"
 chardetng = "0.1"
 anyhow = "1.0"
 md5 = "0.7"
-reqwest = { version = "0.12" }
+reqwest = { version = "0.12", default-features = true, features = ["json"] }
 scraper = "0.22"
 regex = "1.10"
 base64 = "0.22"

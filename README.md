@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.5.5-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.5.6-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,28 +21,38 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.5.5**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.5) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.5.6**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.6) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.5.5)
+## 🆕 最新版本更新 (v0.5.6)
 
-### 🎨 界面重构
-*   **图标 TAB 栏**：侧边栏切换改为图标模式，默认只显示图标，选中后文字滑出展开，极致节省空间。
-*   **独立标签管理**：新增标签管理面板，支持筛选标签、一键搜索相关笔记、为当前文档添加标签。
-*   **快捷入口独立**：收藏文件和最近打开记录移入独立"历史"面板。
-*   **版本备份重命名**：原"历史"面板改名为"备份"，语义更清晰。
+### 🤖 AI 智能辅助
+*   **多模型支持**：内置 AI 文本处理，支持 OpenAI / DeepSeek / Ollama / 自定义端点。
+*   **四种操作**：选中文本一键润色、重写、总结、翻译，替换原文或复制结果。
+*   **配置灵活**：设置页可配置服务商、API Key、模型，切服务商自动填充端点。
+*   **快捷键**：`Alt+A` 快速调起 AI，结果弹窗预览。
 
-### 📋 功能增强
-*   **标签搜索可用**：搜索框支持按 `#标签名` 搜索和全文关键词搜索，300ms 防抖。
-*   **编辑器宽度持久化**：宽/中/窄三档宽度选择自动保存，下次启动恢复。
-*   **知识图谱增强**：悬停节点高亮关联、显示文件全名；双击节点跳转文件；布局稳定后自动停止模拟，大幅减少卡顿。
+### 🔄 Git 版本同步
+*   **每库独立配置**：每个知识库可单独开启 Git，配置 Remote URL 和分支。
+*   **侧边栏状态**：实时显示分支名、ahead/behind、未提交更改数。
+*   **一键 Push/Pull**：侧边栏操作按钮，保存文件自动本地 commit。
+*   **智能检测**：若库已是 Git 仓库自动读取 remote，未初始化一键 init。
 
-### 🔧 问题修复
-*   **修复打包白屏**：Vite 资源路径改为相对路径，解决 Tauri 生产模式加载失败。
-*   **修复开发模式白屏**：补充 `<n-dialog-provider>`，修复 `useDialog()` 崩溃。
-*   **修复文件夹点击无反应**：每日笔记创建后树状态损坏导致所有文件夹点击失效。
-*   **修复 Vditor 初始化崩溃**：适配 Vditor 3.11.2 新增的 `customWysiwygToolbar` 配置。
+### 📐 编辑器升级
+*   **三模式切换**：所见即所得 / 即时渲染 / 源码编辑，一键切换。
+*   **Mermaid 图表**：支持流程图、时序图、甘特图等 9+ 图表类型。
+*   **KaTeX 数学公式**：行内 `$E=mc^2$` 和块级公式渲染。
+*   **脚注 + 目录**：Markdown 脚注语法和自动目录生成。
+*   **导出增强**：PDF（打印另存）、HTML、Markdown 三种导出格式。
+
+### 🎨 v0.5.5 界面重构
+*   **图标 TAB 栏**：侧边栏切换改为图标模式，选中文字滑出展开。
+*   **独立标签管理**：标签面板支持筛选、搜索、为文档添加标签。
+*   **知识图谱增强**：悬停高亮 + 双击跳转 + 稳定后自动停止模拟。
+
+### 🔧 v0.5.5 问题修复
+*   修复打包白屏、开发模式白屏、每日笔记后文件夹点击失效、Vditor 初始化崩溃。
 
 ---
 

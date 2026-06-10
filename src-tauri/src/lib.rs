@@ -41,11 +41,19 @@ pub struct FolderOrder {
     pub pinned: Vec<String>,
 }
 
+fn default_git_branch() -> String { "main".into() }
+
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct LibraryConfig {
     pub name: String,
     pub path: String,
+    #[serde(default)]
+    pub git_enabled: bool,
+    #[serde(default)]
+    pub git_remote: String,
+    #[serde(default = "default_git_branch")]
+    pub git_branch: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -64,7 +72,21 @@ pub struct AppConfig {
     pub is_autostart: bool,
     #[serde(default = "default_exit_strategy")]
     pub exit_strategy: String,
+    #[serde(default)]
+    pub ai_enabled: bool,
+    #[serde(default = "default_ai_provider")]
+    pub ai_provider: String,
+    #[serde(default = "default_ai_endpoint")]
+    pub ai_endpoint: String,
+    #[serde(default)]
+    pub ai_api_key: String,
+    #[serde(default = "default_ai_model")]
+    pub ai_model: String,
 }
+
+fn default_ai_provider() -> String { "openai".into() }
+fn default_ai_endpoint() -> String { "https://api.openai.com/v1".into() }
+fn default_ai_model() -> String { "gpt-4o-mini".into() }
 
 fn default_exit_strategy() -> String { "ask".into() }
 
@@ -82,6 +104,11 @@ impl Default for AppConfig {
             max_history_count: 10,
             is_autostart: false,
             exit_strategy: "ask".into(),
+            ai_enabled: false,
+            ai_provider: default_ai_provider(),
+            ai_endpoint: default_ai_endpoint(),
+            ai_api_key: String::new(),
+            ai_model: default_ai_model(),
         }
     }
 }
@@ -109,7 +136,7 @@ fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
     path.push("Long编辑知识库");
     let default_path = path.to_string_lossy().into_owned();
     AppConfig {
-        libraries: vec![LibraryConfig { name: "默认知识库".into(), path: default_path.clone() }],
+        libraries: vec![LibraryConfig { name: "默认知识库".into(), path: default_path.clone(), ..Default::default() }],
         active_library_path: default_path,
         theme: "system".into(),
         code_theme: "github".into(),
@@ -120,6 +147,11 @@ fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
         max_history_count: 10,
         is_autostart: false,
         exit_strategy: "ask".into(),
+        ai_enabled: false,
+        ai_provider: default_ai_provider(),
+        ai_endpoint: default_ai_endpoint(),
+        ai_api_key: String::new(),
+        ai_model: default_ai_model(),
     }
 }
 
@@ -788,6 +820,105 @@ async fn move_items(app_handle: tauri::AppHandle, source_paths: Vec<String>, tar
 #[tauri::command]
 async fn delete_items(app_handle: tauri::AppHandle, paths: Vec<String>) -> Result<(), String> { for path in paths { let _ = delete_item(app_handle.clone(), path).await?; } Ok(()) }
 
+#[derive(Serialize, Deserialize, Clone)]
+struct AiChatMessage { role: String, content: String }
+
+#[derive(Serialize)]
+struct AiChatRequest { model: String, messages: Vec<AiChatMessage>, stream: bool }
+
+#[derive(Deserialize)]
+struct AiChatResponse { choices: Vec<AiChatChoice> }
+
+#[derive(Deserialize)]
+struct AiChatChoice { message: AiChatMessage }
+
+#[tauri::command]
+async fn ai_chat_completion(
+    api_key: String,
+    endpoint: String,
+    model: String,
+    system_prompt: String,
+    user_content: String,
+) -> Result<String, String> {
+    let url = format!("{}/chat/completions", endpoint.trim_end_matches('/'));
+    let body = AiChatRequest {
+        model,
+        messages: vec![
+            AiChatMessage { role: "system".into(), content: system_prompt },
+            AiChatMessage { role: "user".into(), content: user_content },
+        ],
+        stream: false,
+    };
+    let client = reqwest::Client::new();
+    let resp = client.post(&url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Content-Type", "application/json")
+        .json(&body)
+        .send().await.map_err(|e| format!("请求失败: {}", e))?;
+    let status = resp.status();
+    if !status.is_success() {
+        let err_text = resp.text().await.unwrap_or_default();
+        return Err(format!("API 错误 ({}): {}", status, err_text));
+    }
+    let completion: AiChatResponse = resp.json().await.map_err(|e| format!("解析响应失败: {}", e))?;
+    completion.choices.into_iter().next().map(|c| c.message.content).ok_or_else(|| "API 未返回有效结果".into())
+}
+
+#[derive(Serialize)]
+struct GitStatus { initialized: bool, branch: String, remote: String, ahead: i32, behind: i32, dirty_count: i32, last_commit: String }
+
+fn run_git(path: &str, args: &[&str]) -> Result<String, String> {
+    let output = std::process::Command::new("git")
+        .args(args).current_dir(path)
+        .output().map_err(|e| format!("git 命令失败: {}", e))?;
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
+#[tauri::command]
+fn git_status(library_path: String) -> GitStatus {
+    let path = library_path.as_str();
+    let initialized = run_git(path, &["rev-parse", "--is-inside-work-tree"]).is_ok();
+    if !initialized { return GitStatus { initialized: false, branch: String::new(), remote: String::new(), ahead: 0, behind: 0, dirty_count: 0, last_commit: String::new() }; }
+    let branch = run_git(path, &["rev-parse", "--abbrev-ref", "HEAD"]).unwrap_or_default();
+    let remote = run_git(path, &["remote", "get-url", "origin"]).unwrap_or_default();
+    let ahead = run_git(path, &["rev-list", "--count", &format!("HEAD..origin/{}", branch)]).ok().and_then(|v| v.parse().ok()).unwrap_or(0);
+    let behind = run_git(path, &["rev-list", "--count", &format!("origin/{}..HEAD", branch)]).ok().and_then(|v| v.parse().ok()).unwrap_or(0);
+    let dirty = run_git(path, &["status", "--porcelain"]).map(|s| s.lines().count() as i32).unwrap_or(0);
+    let last = run_git(path, &["log", "-1", "--format=%s"]).unwrap_or_default();
+    GitStatus { initialized: true, branch, remote, ahead, behind, dirty_count: dirty, last_commit: last }
+}
+
+#[tauri::command]
+fn git_init(library_path: String, remote: String, branch: String) -> Result<String, String> {
+    run_git(&library_path, &["init"])?;
+    run_git(&library_path, &["checkout", "-b", &branch])?;
+    if !remote.is_empty() { run_git(&library_path, &["remote", "add", "origin", &remote])?; }
+    Ok("仓库已初始化".into())
+}
+
+#[tauri::command]
+fn git_commit(library_path: String, message: String) -> Result<String, String> {
+    run_git(&library_path, &["add", "-A"])?;
+    run_git(&library_path, &["commit", "-m", &message])?;
+    Ok("已提交".into())
+}
+
+#[tauri::command]
+fn git_push(library_path: String) -> Result<String, String> {
+    let branch = run_git(&library_path, &["rev-parse", "--abbrev-ref", "HEAD"])?;
+    run_git(&library_path, &["push", "-u", "origin", &branch])?;
+    Ok("推送成功".into())
+}
+
+#[tauri::command]
+fn git_pull(library_path: String) -> Result<String, String> {
+    run_git(&library_path, &["pull", "--rebase"])?;
+    Ok("拉取成功".into())
+}
+
 #[tauri::command]
 fn exit_app(app_handle: tauri::AppHandle) { app_handle.exit(0); }
 
@@ -902,6 +1033,6 @@ pub fn run() {
                 .build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, get_folder_order, save_folder_order, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, get_image_base64, get_file_stats, search_all_libraries, get_library_stats, extract_wikilinks, find_backlinks, get_all_tags, search_by_tag, build_link_graph ])
+        .invoke_handler(tauri::generate_handler![ read_markdown_file, write_markdown_file, get_launch_args, scan_directory, get_folder_order, save_folder_order, import_to_library, save_image, save_shadow_copy, get_url_title, search_library, export_to_html, get_config, save_config, create_new_file, create_new_folder, rename_item, delete_item, delete_items, move_item, move_items, set_as_default_handler, check_association_status, save_history_version, list_history, delete_history_version, clear_all_history, exit_app, ai_chat_completion, git_status, git_init, git_commit, git_push, git_pull, get_image_base64, get_file_stats, search_all_libraries, get_library_stats, extract_wikilinks, find_backlinks, get_all_tags, search_by_tag, build_link_graph ])
         .run(tauri::generate_context!()).expect("error");
 }

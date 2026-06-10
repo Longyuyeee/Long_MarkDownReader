@@ -24,6 +24,9 @@ export interface TabInfo {
 export interface LibraryConfig {
   name: string
   path: string
+  gitEnabled?: boolean
+  gitRemote?: string
+  gitBranch?: string
 }
 
 const TABS_STORAGE_KEY = 'longedit_tabs_state'
@@ -47,6 +50,11 @@ export const useAppStore = defineStore('app', {
     exitStrategy: 'ask' as 'ask' | 'quit' | 'minimize',
     isTempDirty: false,
     isZen: false,
+    aiEnabled: false,
+    aiProvider: 'openai',
+    aiEndpoint: 'https://api.openai.com/v1',
+    aiApiKey: '',
+    aiModel: 'gpt-4o-mini',
     recentFiles: [] as { title: string; path: string }[],
     starredFiles: [] as string[],
   }),
@@ -61,7 +69,7 @@ export const useAppStore = defineStore('app', {
     async loadConfig() {
       try {
         const config = await invoke<any>('get_config')
-        this.libraries = config.libraries || []
+        this.libraries = (config.libraries || []).map((l: any) => ({ ...l, gitEnabled: l.gitEnabled || false, gitRemote: l.gitRemote || '', gitBranch: l.gitBranch || 'main' }))
         this.activeLibraryPath = config.activeLibraryPath || ''
         this.theme = config.theme || 'system'
         this.codeTheme = config.codeTheme || 'github'
@@ -71,6 +79,11 @@ export const useAppStore = defineStore('app', {
         this.autoSaveInterval = config.autoSaveInterval || 3
         this.maxHistoryCount = config.maxHistoryCount || 10
         this.exitStrategy = config.exitStrategy || 'ask'
+        this.aiEnabled = config.aiEnabled || false
+        this.aiProvider = config.aiProvider || 'openai'
+        this.aiEndpoint = config.aiEndpoint || 'https://api.openai.com/v1'
+        this.aiApiKey = config.aiApiKey || ''
+        this.aiModel = config.aiModel || 'gpt-4o-mini'
 
         // 同步系统真实的自启状态，以系统为准
         try {
@@ -128,7 +141,12 @@ export const useAppStore = defineStore('app', {
         autoSaveInterval: this.autoSaveInterval,
         maxHistoryCount: this.maxHistoryCount,
         isAutostart: this.isAutostart,
-        exitStrategy: this.exitStrategy
+        exitStrategy: this.exitStrategy,
+        aiEnabled: this.aiEnabled,
+        aiProvider: this.aiProvider,
+        aiEndpoint: this.aiEndpoint,
+        aiApiKey: this.aiApiKey,
+        aiModel: this.aiModel,
       } })
 
     },

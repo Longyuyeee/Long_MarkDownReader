@@ -46,11 +46,34 @@
         <div id="vditor"></div>
       </div>
     </div>
+
+    <!-- AI 操作选择弹窗 -->
+    <n-modal v-model:show="aiState.showActionModal" preset="dialog" title="AI 辅助" positive-text="" negative-text="取消" @negative-click="aiState.showActionModal = false">
+      <div class="ai-action-grid">
+        <n-button block secondary @click="handleAIAction('polish')" class="ai-action-btn">✨ 润色</n-button>
+        <n-button block secondary @click="handleAIAction('rewrite')" class="ai-action-btn">✏️ 重写</n-button>
+        <n-button block secondary @click="handleAIAction('summarize')" class="ai-action-btn">📝 总结</n-button>
+        <n-button block secondary @click="handleAIAction('translate')" class="ai-action-btn">🌐 翻译</n-button>
+      </div>
+    </n-modal>
+
+    <!-- AI 结果弹窗 -->
+    <n-modal v-model:show="aiState.showResultModal" preset="dialog" title="AI 处理结果" positive-text="替换原文" negative-text="取消" @positive-click="replaceAIResult" @negative-click="aiState.showResultModal = false">
+      <div style="min-height: 80px;">
+        <div v-if="aiState.loading" style="display:flex;align-items:center;justify-content:center;padding:24px;">
+          <n-spin size="medium" />
+        </div>
+        <div v-else class="ai-result-content">{{ aiState.result }}</div>
+      </div>
+      <template #action>
+        <n-button quaternary @click="copyAIResult">复制结果</n-button>
+      </template>
+    </n-modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed, onUnmounted, watch, nextTick } from 'vue'
+import { onMounted, ref, computed, onUnmounted, watch, nextTick, reactive } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
@@ -144,6 +167,62 @@ const saveFile = async () => {
   } catch (err: any) { message.error('保存失败: ' + err) }
 }
 
+// --- AI Assistant ---
+const aiState = reactive({ showActionModal: false, showResultModal: false, loading: false, result: '', selectedText: '' })
+
+const systemPrompts: Record<string, string> = {
+  polish: '请润色以下文本，使其更加通顺、优美，保持原意不变，只返回润色后的结果，不要添加任何额外说明：',
+  rewrite: '请重写以下文本，保持核心意思不变，使用不同的表达方式，只返回重写后的结果，不要添加任何额外说明：',
+  summarize: '请总结以下文本的核心要点，简洁明了，只返回总结结果，不要添加任何额外说明：',
+  translate: '请将以下文本翻译为中文，只返回翻译结果，不要添加任何额外说明：',
+}
+
+const handleAIAssist = () => {
+  if (!store.aiEnabled) { message.warning('请先在设置中启用 AI 并配置 API'); return }
+  const sel = window.getSelection()?.toString().trim()
+  if (!sel) { message.warning('请先选择要处理的文本'); return }
+  aiState.selectedText = sel
+  aiState.showActionModal = true
+}
+
+const handleAIAction = async (action: string) => {
+  aiState.showActionModal = false
+  aiState.loading = true; aiState.result = ''
+  aiState.showResultModal = true
+  try {
+    aiState.result = await invoke<string>('ai_chat_completion', {
+      apiKey: store.aiApiKey, endpoint: store.aiEndpoint, model: store.aiModel,
+      systemPrompt: systemPrompts[action], userContent: aiState.selectedText,
+    })
+  } catch (e: any) {
+    message.error('AI 请求失败: ' + (e?.toString() || '未知错误'))
+    aiState.showResultModal = false
+  }
+  aiState.loading = false
+}
+
+const replaceAIResult = () => {
+  if (!vditor || !aiState.result) return
+  if (vditor.getCurrentMode() === 'wysiwyg') {
+    vditor.insertValue(aiState.result)
+  } else {
+    const content = vditor.getValue()
+    const idx = content.indexOf(aiState.selectedText)
+    if (idx !== -1) {
+      vditor.setValue(content.substring(0, idx) + aiState.result + content.substring(idx + aiState.selectedText.length))
+    } else {
+      vditor.setValue(content + '\n' + aiState.result)
+    }
+  }
+  aiState.showResultModal = false; aiState.result = ''
+  message.success('已替换')
+}
+
+const copyAIResult = () => {
+  navigator.clipboard.writeText(aiState.result)
+  message.success('已复制到剪贴板')
+}
+
 const startResizing = () => {
   const onMouseMove = (moveEvent: MouseEvent) => { sidebarWidth.value = Math.max(150, Math.min(moveEvent.clientX, 400)) }
   const onMouseUp = () => { document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp) }
@@ -182,7 +261,7 @@ onMounted(async () => {
   })
 
   vditor = new Vditor('vditor', {
-    cdn: '/vditor',
+    cdn: 'https://cdn.jsdelivr.net/npm/vditor@3.11.2',
     lang: 'zh_CN',
     height: '100%',
     mode: store.editorMode || 'wysiwyg',
@@ -191,13 +270,17 @@ onMounted(async () => {
     theme: store.theme === 'dark' ? 'dark' : 'classic',
     preview: {
       theme: { current: store.theme === 'dark' ? 'dark' : 'light' },
-      hljs: { enable: true, style: store.codeTheme || 'github' }
+      hljs: { enable: true, style: store.codeTheme || 'github' },
+      math: { engine: 'KaTeX' },
+      markdown: { mermaid: true, footnotes: true, toc: true },
     },
     toolbar: [
       { name: 'undo', tip: '撤销 Ctrl+Z' }, { name: 'redo', tip: '重做 Ctrl+Y' }, '|',
       { name: 'emoji', tip: '表情' }, { name: 'headings', tip: '标题' }, { name: 'bold', tip: '加粗 Ctrl+B' }, { name: 'italic', tip: '斜体 Ctrl+I' }, { name: 'strike', tip: '删除线' }, '|',
       { name: 'line', tip: '分割线' }, { name: 'quote', tip: '引用' }, { name: 'list', tip: '无序列表' }, { name: 'ordered-list', tip: '有序列表' }, { name: 'check', tip: '任务列表' }, '|',
       { name: 'code', tip: '代码块' }, { name: 'inline-code', tip: '行内代码' }, { name: 'link', tip: '插入链接' }, { name: 'table', tip: '插入表格' }, '|',
+      { name: 'ai-assist', tip: 'AI 辅助 (Alt+A)', icon: '<svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>', click: () => handleAIAssist() },
+      '|',
       { name: 'both', tip: '双栏预览' }, { name: 'preview', tip: '预览' }, { name: 'edit-mode', tip: '切换编辑模式' }
     ],
     input: () => {
@@ -262,4 +345,7 @@ watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
 .temp-mode.zen-mode :deep(.vditor-reset) {
   max-width: 100% !important;
 }
+.ai-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 8px 0; }
+.ai-action-btn { height: 56px; font-size: 15px; font-weight: 600; }
+.ai-result-content { white-space: pre-wrap; line-height: 1.7; font-size: 14px; color: var(--theme-text); max-height: 400px; overflow-y: auto; }
 </style>
