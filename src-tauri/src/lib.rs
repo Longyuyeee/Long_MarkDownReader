@@ -868,9 +868,10 @@ async fn ai_chat_completion(
 struct GitStatus { initialized: bool, branch: String, remote: String, ahead: i32, behind: i32, dirty_count: i32, last_commit: String }
 
 fn run_git(path: &str, args: &[&str]) -> Result<String, String> {
-    let output = std::process::Command::new("git")
-        .args(args).current_dir(path)
-        .output().map_err(|e| format!("git 命令失败: {}", e))?;
+    let mut cmd = std::process::Command::new("git");
+    cmd.args(args).current_dir(path);
+    #[cfg(target_os = "windows")] { use std::os::windows::process::CommandExt; cmd.creation_flags(0x08000000); }
+    let output = cmd.output().map_err(|e| format!("git 命令失败: {}", e))?;
     if !output.status.success() {
         return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
     }

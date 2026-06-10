@@ -494,16 +494,20 @@ const currentLibGitEnabled = computed(() => {
   const lib = store.libraries.find(l => l.path === store.libraryPath)
   return lib?.gitEnabled || false
 })
+let gitStatusTimer: ReturnType<typeof setTimeout> | null = null
 const refreshGitStatus = async () => {
-  if (!store.libraryPath || !currentLibGitEnabled.value) { gitStatus.value = null; return }
-  try {
-    const s = await invoke<any>('git_status', { libraryPath: store.libraryPath })
-    gitStatus.value = s
-    if (s.initialized && s.remote) {
-      const lib = store.libraries.find(l => l.path === store.libraryPath)
-      if (lib && !lib.gitRemote) { lib.gitRemote = s.remote; lib.gitBranch = s.branch; store.updateConfig({ libraries: store.libraries }) }
-    }
-  } catch (e) { gitStatus.value = null }
+  if (gitStatusTimer) clearTimeout(gitStatusTimer)
+  gitStatusTimer = setTimeout(async () => {
+    if (!store.libraryPath || !currentLibGitEnabled.value) { gitStatus.value = null; return }
+    try {
+      const s = await invoke<any>('git_status', { libraryPath: store.libraryPath })
+      gitStatus.value = s
+      if (s.initialized && s.remote) {
+        const lib = store.libraries.find(l => l.path === store.libraryPath)
+        if (lib && !lib.gitRemote) { lib.gitRemote = s.remote; lib.gitBranch = s.branch; store.updateConfig({ libraries: store.libraries }) }
+      }
+    } catch (e) { gitStatus.value = null }
+  }, 500)
 }
 const gitInitRepo = async () => {
   if (!store.libraryPath) return
