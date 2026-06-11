@@ -72,46 +72,51 @@ const simulate = () => {
   if (nodes.length === 0) return
 
   frameCount++
-  // 120 帧后布局稳定，停止模拟
-  if (frameCount > 120) { layoutSettled = true; return }
-  // 60 帧后降低频率
-  if (frameCount > 60 && frameCount % 2 !== 0) return
+  if (frameCount > 90) { layoutSettled = true; return }
+  if (frameCount > 40 && frameCount % 2 !== 0) return
 
-  for (let iter = 0; iter < (frameCount < 60 ? 3 : 1); iter++) {
-    // 斥力
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const dx = (nodes[j].x || 0) - (nodes[i].x || 0)
-        const dy = (nodes[j].y || 0) - (nodes[i].y || 0)
-        const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1)
-        const force = 500 / (dist * dist)
-        const fx = (dx / dist) * force, fy = (dy / dist) * force
-        nodes[i].vx = (nodes[i].vx || 0) - fx; nodes[i].vy = (nodes[i].vy || 0) - fy
-        nodes[j].vx = (nodes[j].vx || 0) + fx; nodes[j].vy = (nodes[j].vy || 0) + fy
+  // 构建节点索引 Map（加速边查找）
+  const nodeMap = new Map<string, GraphNode>(); nodes.forEach(n => nodeMap.set(n.id, n))
+
+  const iters = frameCount < 30 ? 2 : 1
+  for (let iter = 0; iter < iters; iter++) {
+    let etotal = 0
+    // 斥力 — 仅对节点数 ≤200 时用 O(n^2)，超过则跳过
+    if (nodes.length <= 200) {
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = (nodes[j].x || 0) - (nodes[i].x || 0)
+          const dy = (nodes[j].y || 0) - (nodes[i].y || 0)
+          const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1)
+          const force = 500 / (dist * dist)
+          const fx = (dx / dist) * force, fy = (dy / dist) * force
+          nodes[i].vx = (nodes[i].vx || 0) - fx; nodes[i].vy = (nodes[i].vy || 0) - fy
+          nodes[j].vx = (nodes[j].vx || 0) + fx; nodes[j].vy = (nodes[j].vy || 0) + fy
+        }
       }
     }
-    // 引力（边）
+    // 引力 — 用 Map 替代 find()
     for (const e of edges) {
-      const s = nodes.find(n => n.id === e.source)
-      const t = nodes.find(n => n.id === e.target)
+      const s = nodeMap.get(e.source), t = nodeMap.get(e.target)
       if (!s || !t) continue
-      const dx = (t.x || 0) - (s.x || 0)
-      const dy = (t.y || 0) - (s.y || 0)
+      const dx = (t.x || 0) - (s.x || 0), dy = (t.y || 0) - (s.y || 0)
       const dist = Math.sqrt(dx * dx + dy * dy) || 1
-      const force = dist * 0.01
-      s.vx = (s.vx || 0) + (dx / dist) * force; s.vy = (s.vy || 0) + (dy / dist) * force
-      t.vx = (t.vx || 0) - (dx / dist) * force; t.vy = (t.vy || 0) - (dy / dist) * force
+      const f = dist * 0.01
+      s.vx = (s.vx || 0) + (dx / dist) * f; s.vy = (s.vy || 0) + (dy / dist) * f
+      t.vx = (t.vx || 0) - (dx / dist) * f; t.vy = (t.vy || 0) - (dy / dist) * f
     }
-    // 中心引力
+    // 中心引力 + 能量累计
     const cx = (containerRef.value?.clientWidth || 800) / 2 / zoom - viewX / zoom
     const cy = (containerRef.value?.clientHeight || 600) / 2 / zoom - viewY / zoom
     for (const n of nodes) {
       n.vx = (n.vx || 0) + (cx - (n.x || 0)) * 0.001
       n.vy = (n.vy || 0) + (cy - (n.y || 0)) * 0.001
-      n.vx = (n.vx || 0) * 0.9; n.vy = (n.vy || 0) * 0.9
-      n.x = (n.x || 0) + (n.vx || 0)
-      n.y = (n.y || 0) + (n.vy || 0)
+      n.vx = (n.vx || 0) * 0.88; n.vy = (n.vy || 0) * 0.88
+      n.x = (n.x || 0) + (n.vx || 0); n.y = (n.y || 0) + (n.vy || 0)
+      etotal += Math.abs(n.vx || 0) + Math.abs(n.vy || 0)
     }
+    // 能量收敛 → 提前停止
+    if (etotal < 1.0 && frameCount > 20) { layoutSettled = true; return }
   }
 }
 
@@ -263,8 +268,13 @@ const onDblClick = () => {
 watch(() => props.show, (v) => { if (v) loadGraph() })
 watch(() => store.libraryPath, () => { if (props.show) loadGraph() })
 
-onMounted(() => { loadGraph(); loop() })
-onUnmounted(() => { cancelAnimationFrame(animationId) })
+let paused = false
+const handleVisibility = () => {
+  if (document.hidden) { paused = true; cancelAnimationFrame(animationId) }
+  else if (paused) { paused = false; layoutSettled = false; frameCount = 40; loop() }
+}
+onMounted(() => { loadGraph(); loop(); document.addEventListener('visibilitychange', handleVisibility) })
+onUnmounted(() => { cancelAnimationFrame(animationId); document.removeEventListener('visibilitychange', handleVisibility) })
 </script>
 
 <style scoped>

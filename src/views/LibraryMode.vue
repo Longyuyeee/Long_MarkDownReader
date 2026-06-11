@@ -1355,6 +1355,8 @@ const initVditor = () => {
         isVditorReady = true;
         editorLoading.value = false;
         syncVditorMode();
+        const isDark = store.theme === 'dark'
+        vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', store.codeTheme || 'github')
         // 光标位置追踪（兼容 WYSIWYG / IR / SV 三种模式）
         const contentEl = vditor.vditor.wysiwyg?.element || vditor.vditor.ir?.element || vditor.vditor.sv?.element
         if (contentEl) {
@@ -1504,15 +1506,16 @@ watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory(); 
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
     const isDark = newTheme === 'dark'
-    // 1. 同步编辑器背景色：使用 THEME_MAP 正确匹配所有配色
     const targetBg = THEME_MAP[newTheme] || (isDark ? '#1c1c1e' : '#ffffff')
     handleEditorBgChange(targetBg)
-    // 2. 同步 Vditor 内部组件主题
-    vditor.setTheme(
-      isDark ? 'dark' : 'classic',
-      isDark ? 'dark' : 'light',
-      store.codeTheme || 'github'
-    )
+    // 联动代码风格：深色→dark 代码主题, 浅色→light
+    const codeThemes = ['github', 'atom-one-dark', 'github-dark', 'dracula', 'vs2015', 'tokyo-night-dark']
+    const lightThemes = ['github', 'atom-one-light', 'vs', 'xcode', 'nord']
+    const preferred = isDark ? 'atom-one-dark' : 'github'
+    const currentIsDark = codeThemes.includes(store.codeTheme)
+    const codeTheme = (isDark && !currentIsDark) || (!isDark && currentIsDark) ? preferred : store.codeTheme
+    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', codeTheme)
+    if (codeTheme !== store.codeTheme) store.updateConfig({ codeTheme })
   }
 })
 

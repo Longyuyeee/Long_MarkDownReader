@@ -138,6 +138,13 @@
 
           <n-grid-item class="animate-item" style="--delay: 0.4s">
             <div class="section-title">外观</div>
+            <n-form-item label="界面风格">
+              <n-radio-group v-model:value="config.visualStyle" size="medium">
+                <n-radio-button value="soft">柔和 ⸱ 圆角阴影</n-radio-button>
+                <n-radio-button value="glass">玻璃 ⸱ 半透明毛玻璃</n-radio-button>
+                <n-radio-button value="minimal">极简 ⸱ 扁平直角</n-radio-button>
+              </n-radio-group>
+            </n-form-item>
             <n-form-item label="颜色主题">
               <n-radio-group v-model:value="config.theme" name="theme" @update:value="applyTheme" size="large">
                 <n-radio-button value="white">纯白</n-radio-button>
@@ -242,6 +249,7 @@ const config = ref({
   maxHistoryCount: store.maxHistoryCount,
   isAutostart: store.isAutostart,
   exitStrategy: store.exitStrategy,
+  visualStyle: store.visualStyle,
   aiEnabled: store.aiEnabled,
   aiProvider: store.aiProvider,
   aiEndpoint: store.aiEndpoint,
@@ -285,6 +293,7 @@ onMounted(async () => {
     maxHistoryCount: store.maxHistoryCount,
     isAutostart: store.isAutostart,
     exitStrategy: store.exitStrategy,
+    visualStyle: store.visualStyle,
     aiEnabled: store.aiEnabled,
     aiProvider: store.aiProvider,
     aiEndpoint: store.aiEndpoint,

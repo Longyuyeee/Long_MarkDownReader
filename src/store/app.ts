@@ -50,6 +50,7 @@ export const useAppStore = defineStore('app', {
     exitStrategy: 'ask' as 'ask' | 'quit' | 'minimize',
     isTempDirty: false,
     isZen: false,
+    visualStyle: 'soft' as 'soft' | 'glass' | 'minimal',
     aiEnabled: false,
     aiProvider: 'openai',
     aiEndpoint: 'https://api.openai.com/v1',
@@ -79,6 +80,7 @@ export const useAppStore = defineStore('app', {
         this.autoSaveInterval = config.autoSaveInterval || 3
         this.maxHistoryCount = config.maxHistoryCount || 10
         this.exitStrategy = config.exitStrategy || 'ask'
+        this.visualStyle = config.visualStyle || 'soft'
         this.aiEnabled = config.aiEnabled || false
         this.aiProvider = config.aiProvider || 'openai'
         this.aiEndpoint = config.aiEndpoint || 'https://api.openai.com/v1'
@@ -142,6 +144,7 @@ export const useAppStore = defineStore('app', {
         maxHistoryCount: this.maxHistoryCount,
         isAutostart: this.isAutostart,
         exitStrategy: this.exitStrategy,
+        visualStyle: this.visualStyle,
         aiEnabled: this.aiEnabled,
         aiProvider: this.aiProvider,
         aiEndpoint: this.aiEndpoint,

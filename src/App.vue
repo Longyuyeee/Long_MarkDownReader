@@ -83,6 +83,12 @@ watch(currentThemeName, (name) => {
   document.body.setAttribute('data-theme', name)
 }, { immediate: true })
 
+watch(() => store.visualStyle, (v) => {
+  document.body.setAttribute('data-style', v)
+  const br = { soft: '8px', glass: '16px', minimal: '4px' }[v]
+  document.body.style.setProperty('--theme-radius', br || '8px')
+}, { immediate: true })
+
 // 计算主题色调
 const themeColors = computed(() => {
   const themes: Record<string, any> = {
@@ -198,7 +204,19 @@ body[data-theme="blue"]  { --theme-bg: #f0f7ff; --theme-primary: #00a2ff; --them
 body[data-theme="pink"]  { --theme-bg: #fff5f8; --theme-primary: #ff6b9d; --theme-card: rgba(255,107,157,0.06); --theme-text: #1d1d1f; }
 body[data-theme="dark"]  { --theme-bg: #1c1c1e; --theme-primary: #42b883; --theme-card: rgba(255,255,255,0.08); --theme-text: #f5f5f7; }
 
-body { 
+/* --theme-primary-rgb (从 hex 提取 RGB 分量) */
+body[data-theme="white"] { --theme-primary-rgb: 0,122,255; }
+body[data-theme="green"] { --theme-primary-rgb: 66,184,131; }
+body[data-theme="blue"]  { --theme-primary-rgb: 0,162,255; }
+body[data-theme="pink"]  { --theme-primary-rgb: 255,107,157; }
+body[data-theme="dark"]  { --theme-primary-rgb: 66,184,131; }
+
+/* 视觉风格 */
+body[data-style="soft"] { --theme-radius: 12px; --theme-shadow: 0 4px 16px rgba(0,0,0,0.06); --theme-glass: none; }
+body[data-style="glass"] { --theme-radius: 16px; --theme-shadow: none; --theme-glass: saturate(180%) blur(20px); }
+body[data-style="minimal"] { --theme-radius: 4px; --theme-shadow: none; --theme-glass: none; }
+
+body {
   --titlebar-height: 32px;
   margin: 0; 
   padding: 0; 
