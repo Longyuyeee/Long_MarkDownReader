@@ -140,9 +140,12 @@
             <div class="section-title">外观</div>
             <n-form-item label="界面风格">
               <n-radio-group v-model:value="config.visualStyle" size="medium">
-                <n-radio-button value="soft">柔和 ⸱ 圆角阴影</n-radio-button>
-                <n-radio-button value="glass">玻璃 ⸱ 半透明毛玻璃</n-radio-button>
-                <n-radio-button value="minimal">极简 ⸱ 扁平直角</n-radio-button>
+                <n-radio-button value="soft">柔和</n-radio-button>
+                <n-radio-button value="neo">新拟态</n-radio-button>
+                <n-radio-button value="glass">玻璃</n-radio-button>
+                <n-radio-button value="airy">呼吸</n-radio-button>
+                <n-radio-button value="minimal">极简</n-radio-button>
+                <n-radio-button value="sharp">锐利</n-radio-button>
               </n-radio-group>
             </n-form-item>
             <n-form-item label="颜色主题">
@@ -480,15 +483,17 @@ const setAsDefault = async () => {
 
 .setting-card:hover, .library-manager-card:hover {
   border-color: rgba(var(--theme-primary-rgb), 0.2);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--theme-shadow);
 }
 
 .library-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.3);
+  flex-direction: column;
+  padding: calc(14px * var(--theme-spacing));
+  border-radius: var(--theme-radius);
+  background: var(--theme-card);
+  border: var(--theme-border);
+  gap: calc(10px * var(--theme-spacing));
   border-radius: 12px;
   margin-bottom: 12px;
   border: 1px solid rgba(0, 0, 0, 0.05);
@@ -532,11 +537,13 @@ const setAsDefault = async () => {
   justify-content: space-between;
   align-items: center;
   background: var(--theme-card);
-  padding: 18px 20px;
-  border-radius: 12px;
-  margin-bottom: 12px;
+  padding: calc(16px * var(--theme-spacing)) calc(18px * var(--theme-spacing));
+  border-radius: var(--theme-radius);
+  margin-bottom: calc(10px * var(--theme-spacing));
   gap: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.02);
+  border: var(--theme-border);
+  box-shadow: var(--theme-shadow-sm);
+  backdrop-filter: var(--theme-glass);
 }
 
 .is-dark .setting-row {

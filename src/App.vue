@@ -85,8 +85,6 @@ watch(currentThemeName, (name) => {
 
 watch(() => store.visualStyle, (v) => {
   document.body.setAttribute('data-style', v)
-  const br = { soft: '8px', glass: '16px', minimal: '4px' }[v]
-  document.body.style.setProperty('--theme-radius', br || '8px')
 }, { immediate: true })
 
 // 计算主题色调
@@ -103,7 +101,8 @@ const themeColors = computed(() => {
 
 const themeOverrides = computed<GlobalThemeOverrides>(() => ({
   common: {
-    borderRadius: '8px',
+    borderRadius: getComputedStyle(document.body).getPropertyValue('--theme-radius-sm').trim() || '8px',
+    borderRadiusSmall: getComputedStyle(document.body).getPropertyValue('--theme-radius-sm').trim() || '6px',
     primaryColor: themeColors.value.primary,
     primaryColorHover: themeColors.value.primary,
     bodyColor: 'transparent',
@@ -211,10 +210,48 @@ body[data-theme="blue"]  { --theme-primary-rgb: 0,162,255; }
 body[data-theme="pink"]  { --theme-primary-rgb: 255,107,157; }
 body[data-theme="dark"]  { --theme-primary-rgb: 66,184,131; }
 
-/* 视觉风格 */
-body[data-style="soft"] { --theme-radius: 12px; --theme-shadow: 0 4px 16px rgba(0,0,0,0.06); --theme-glass: none; }
-body[data-style="glass"] { --theme-radius: 16px; --theme-shadow: none; --theme-glass: saturate(180%) blur(20px); }
-body[data-style="minimal"] { --theme-radius: 4px; --theme-shadow: none; --theme-glass: none; }
+/* 视觉风格 — 通过 CSS 变量覆盖全局组件样式 */
+body[data-style="soft"] {
+  --theme-radius: 12px; --theme-radius-sm: 8px;
+  --theme-shadow: 0 2px 12px rgba(0,0,0,0.06); --theme-shadow-sm: 0 1px 4px rgba(0,0,0,0.04);
+  --theme-glass: none; --theme-border: 1px solid rgba(0,0,0,0.04);
+  --theme-spacing: 1; --theme-font: inherit;
+}
+body[data-style="glass"] {
+  --theme-radius: 16px; --theme-radius-sm: 10px;
+  --theme-shadow: none; --theme-shadow-sm: none;
+  --theme-glass: saturate(180%) blur(20px); --theme-border: 1px solid rgba(255,255,255,0.08);
+  --theme-spacing: 1.2; --theme-font: inherit;
+}
+body[data-style="minimal"] {
+  --theme-radius: 3px; --theme-radius-sm: 2px;
+  --theme-shadow: none; --theme-shadow-sm: none;
+  --theme-glass: none; --theme-border: 1px solid rgba(0,0,0,0.08);
+  --theme-spacing: 0.85; --theme-font: inherit;
+}
+body[data-style="neo"] {
+  --theme-radius: 14px; --theme-radius-sm: 10px;
+  --theme-shadow: 6px 6px 14px rgba(0,0,0,0.08), -4px -4px 12px rgba(255,255,255,0.6);
+  --theme-shadow-sm: 2px 2px 5px rgba(0,0,0,0.06), -1px -1px 3px rgba(255,255,255,0.5);
+  --theme-glass: none; --theme-border: none;
+  --theme-spacing: 1; --theme-font: inherit;
+}
+body[data-style="airy"] {
+  --theme-radius: 10px; --theme-radius-sm: 6px;
+  --theme-shadow: 0 8px 30px rgba(0,0,0,0.04); --theme-shadow-sm: 0 2px 8px rgba(0,0,0,0.03);
+  --theme-glass: none; --theme-border: 1px solid rgba(0,0,0,0.03);
+  --theme-spacing: 1.5; --theme-font: inherit;
+}
+body[data-style="sharp"] {
+  --theme-radius: 0px; --theme-radius-sm: 0px;
+  --theme-shadow: none; --theme-shadow-sm: none;
+  --theme-glass: none; --theme-border: 2px solid rgba(0,0,0,0.1);
+  --theme-spacing: 0.75; --theme-font: inherit;
+}
+body[data-theme="dark"][data-style="neo"] {
+  --theme-shadow: 6px 6px 14px rgba(0,0,0,0.4), -4px -4px 12px rgba(255,255,255,0.04);
+  --theme-shadow-sm: 2px 2px 5px rgba(0,0,0,0.3), -1px -1px 3px rgba(255,255,255,0.03);
+}
 
 body {
   --titlebar-height: 32px;

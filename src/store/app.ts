@@ -50,7 +50,7 @@ export const useAppStore = defineStore('app', {
     exitStrategy: 'ask' as 'ask' | 'quit' | 'minimize',
     isTempDirty: false,
     isZen: false,
-    visualStyle: 'soft' as 'soft' | 'glass' | 'minimal',
+    visualStyle: 'soft' as 'soft' | 'glass' | 'minimal' | 'neo' | 'airy' | 'sharp',
     aiEnabled: false,
     aiProvider: 'openai',
     aiEndpoint: 'https://api.openai.com/v1',

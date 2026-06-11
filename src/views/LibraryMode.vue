@@ -1615,7 +1615,7 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .icon-tab {
   display: flex; align-items: center; justify-content: center; gap: 0;
   width: 32px; min-width: 32px; height: 32px; padding: 0;
-  border-radius: 8px; cursor: pointer;
+  border-radius: var(--theme-radius-sm); cursor: pointer;
   background: transparent; color: var(--theme-text, #1d1d1f);
   opacity: 0.55; overflow: hidden;
   transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
@@ -1852,14 +1852,14 @@ watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); 
 .sidebar-actions { padding: 0 12px; }
 .sidebar-actions .n-button { width: 100%; justify-content: flex-start; font-size: 12px; }
 .sidebar-footer-container { padding: 12px; flex-shrink: 0; }
-.sidebar-footer { 
-  display: flex; align-items: center; gap: 12px; padding: 12px; 
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 240, 243, 0.9) 100%);
-  backdrop-filter: blur(20px); 
-  border-radius: 16px; 
-  border: 1.2px solid rgba(var(--theme-primary-rgb), 0.65); 
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 1);
-  cursor: pointer; 
+.sidebar-footer {
+  display: flex; align-items: center; gap: 12px; padding: calc(10px * var(--theme-spacing));
+  background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,240,243,0.9) 100%);
+  backdrop-filter: var(--theme-glass);
+  border-radius: calc(var(--theme-radius) * 1.3);
+  border: var(--theme-border, 1.2px solid rgba(var(--theme-primary-rgb), 0.65));
+  box-shadow: var(--theme-shadow);
+  cursor: pointer;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
