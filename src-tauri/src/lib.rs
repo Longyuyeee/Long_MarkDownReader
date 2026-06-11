@@ -57,24 +57,22 @@ pub struct LibraryConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 pub struct AppConfig {
     pub libraries: Vec<LibraryConfig>,
     pub active_library_path: String,
-    pub theme: String, 
+    pub theme: String,
     pub code_theme: String,
     pub editor_mode: String,
     pub editor_bg_color: String,
     pub hero_icon: String,
     pub auto_save_interval: u32,
     pub max_history_count: u32,
-    #[serde(default)]
     pub is_autostart: bool,
     #[serde(default = "default_exit_strategy")]
     pub exit_strategy: String,
     #[serde(default = "default_visual_style")]
     pub visual_style: String,
-    #[serde(default)]
     pub ai_enabled: bool,
     #[serde(default = "default_ai_provider")]
     pub ai_provider: String,
@@ -854,7 +852,7 @@ async fn ai_chat_completion(
         ],
         stream: false,
     };
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(30)).build().map_err(|e| format!("客户端创建失败: {}", e))?;
     let resp = client.post(&url)
         .header("Authorization", format!("Bearer {}", api_key))
         .header("Content-Type", "application/json")
@@ -890,8 +888,8 @@ fn git_status(library_path: String) -> GitStatus {
     if !initialized { return GitStatus { initialized: false, branch: String::new(), remote: String::new(), ahead: 0, behind: 0, dirty_count: 0, last_commit: String::new() }; }
     let branch = run_git(path, &["rev-parse", "--abbrev-ref", "HEAD"]).unwrap_or_default();
     let remote = run_git(path, &["remote", "get-url", "origin"]).unwrap_or_default();
-    let ahead = run_git(path, &["rev-list", "--count", &format!("HEAD..origin/{}", branch)]).ok().and_then(|v| v.parse().ok()).unwrap_or(0);
-    let behind = run_git(path, &["rev-list", "--count", &format!("origin/{}..HEAD", branch)]).ok().and_then(|v| v.parse().ok()).unwrap_or(0);
+    let behind = run_git(path, &["rev-list", "--count", &format!("HEAD..origin/{}", branch)]).ok().and_then(|v| v.parse().ok()).unwrap_or(0);
+    let ahead = run_git(path, &["rev-list", "--count", &format!("origin/{}..HEAD", branch)]).ok().and_then(|v| v.parse().ok()).unwrap_or(0);
     let dirty = run_git(path, &["status", "--porcelain"]).map(|s| s.lines().count() as i32).unwrap_or(0);
     let last = run_git(path, &["log", "-1", "--format=%s"]).unwrap_or_default();
     GitStatus { initialized: true, branch, remote, ahead, behind, dirty_count: dirty, last_commit: last }

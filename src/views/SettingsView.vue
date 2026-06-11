@@ -363,9 +363,10 @@ const removeLibrary = (index: number) => {
 
 const applyTheme = (val: string) => {
   store.theme = val as any
-  if (THEME_MAP[val]) {
+  // 只有当前背景色是某个主题默认色时才更新（不覆盖用户自选颜色）
+  const isDefaultBg = Object.values(THEME_MAP).includes(config.value.editorBgColor)
+  if (THEME_MAP[val] && isDefaultBg) {
     config.value.editorBgColor = THEME_MAP[val]
-    store.updateConfig({ editorBgColor: THEME_MAP[val] })
   }
 }
 

@@ -674,11 +674,20 @@ const replaceWithResult = () => {
     vditor.insertValue(aiState.result)
   } else {
     const content = vditor.getValue()
-    const idx = content.indexOf(aiState.selectedText)
-    if (idx !== -1) {
-      vditor.setValue(content.substring(0, idx) + aiState.result + content.substring(idx + aiState.selectedText.length))
+    // 用实际选区偏移量定位，避免选错重复文本
+    const sel = window.getSelection()
+    const prevEl = vditor.vditor.sv?.element || vditor.vditor.ir?.element
+    if (sel && sel.rangeCount > 0 && prevEl) {
+      const pre = document.createRange(); pre.selectNodeContents(prevEl)
+      pre.setEnd(sel.anchorNode!, sel.anchorOffset!)
+      const start = pre.toString().length
+      pre.setEnd(sel.focusNode!, sel.focusOffset!)
+      const end = pre.toString().length
+      const [s, e] = start < end ? [start, end] : [end, start]
+      vditor.setValue(content.substring(0, s) + aiState.result + content.substring(e))
     } else {
-      vditor.setValue(content + '\n' + aiState.result)
+      const idx = content.indexOf(aiState.selectedText)
+      if (idx !== -1) vditor.setValue(content.substring(0, idx) + aiState.result + content.substring(idx + aiState.selectedText.length))
     }
   }
   aiState.showResultModal = false; aiState.result = ''
@@ -1507,7 +1516,8 @@ watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
     const isDark = newTheme === 'dark'
     const targetBg = THEME_MAP[newTheme] || (isDark ? '#1c1c1e' : '#ffffff')
-    handleEditorBgChange(targetBg)
+    const isDefaultBg = Object.values(THEME_MAP).includes(store.editorBgColor)
+    if (isDefaultBg) handleEditorBgChange(targetBg)
     // 联动代码风格：深色→dark 代码主题, 浅色→light
     const codeThemes = ['github', 'atom-one-dark', 'github-dark', 'dracula', 'vs2015', 'tokyo-night-dark']
     const lightThemes = ['github', 'atom-one-light', 'vs', 'xcode', 'nord']
@@ -1592,7 +1602,6 @@ watch(activeTabId, (newId, oldId) => {
     })
   } 
 })
-watch(searchQuery, (val) => { if (searchDebounce) clearTimeout(searchDebounce); if (!val.trim()) { refreshLibrary(); return }; searchDebounce = setTimeout(async () => { try { const results = await invoke<FileEntry[]>('search_library', { libraryRoot: store.libraryPath, query: val.trim() }); treeData.value = results.map(entry => ({ label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''), key: entry.path, isLeaf: !entry.is_dir, prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' }) })) } catch (_) { /* search failed, results stay unchanged */ } }, 300) })
 </script>
 
 <style scoped>

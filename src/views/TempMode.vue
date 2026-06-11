@@ -207,11 +207,19 @@ const replaceAIResult = () => {
     vditor.insertValue(aiState.result)
   } else {
     const content = vditor.getValue()
-    const idx = content.indexOf(aiState.selectedText)
-    if (idx !== -1) {
-      vditor.setValue(content.substring(0, idx) + aiState.result + content.substring(idx + aiState.selectedText.length))
+    const sel = window.getSelection()
+    const prevEl = vditor.vditor.sv?.element || vditor.vditor.ir?.element
+    if (sel && sel.rangeCount > 0 && prevEl) {
+      const pre = document.createRange(); pre.selectNodeContents(prevEl)
+      pre.setEnd(sel.anchorNode!, sel.anchorOffset!)
+      const start = pre.toString().length
+      pre.setEnd(sel.focusNode!, sel.focusOffset!)
+      const end = pre.toString().length
+      const [s, e] = start < end ? [start, end] : [end, start]
+      vditor.setValue(content.substring(0, s) + aiState.result + content.substring(e))
     } else {
-      vditor.setValue(content + '\n' + aiState.result)
+      const idx = content.indexOf(aiState.selectedText)
+      if (idx !== -1) vditor.setValue(content.substring(0, idx) + aiState.result + content.substring(idx + aiState.selectedText.length))
     }
   }
   aiState.showResultModal = false; aiState.result = ''
@@ -266,6 +274,7 @@ onMounted(async () => {
     height: '100%',
     mode: store.editorMode || 'wysiwyg',
     value: initialContent,
+    customWysiwygToolbar: () => {},
     cache: { enable: false },
     theme: store.theme === 'dark' ? 'dark' : 'classic',
     preview: {
@@ -273,6 +282,15 @@ onMounted(async () => {
       hljs: { enable: true, style: store.codeTheme || 'github' },
       math: { engine: 'KaTeX' } as any,
       markdown: { mermaid: true, footnotes: true, toc: true } as any,
+      transform: ((html) => {
+        if (!filePath.value) return html
+        const parentDir = filePath.value.substring(0, Math.max(filePath.value.lastIndexOf('/'), filePath.value.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
+        return html.replace(/(<img [^>]*src=["'])(.*?)(["'][^>]*>)/g, (_m, prefix, url, suffix) => {
+          if (url.startsWith('http') || url.startsWith('misty-img:') || url.startsWith('data:')) return _m as string
+          let abs = url.startsWith('./') ? parentDir + url.substring(2) : parentDir + url
+          return `${prefix}misty-img://${abs.replace(/\\/g, '/')}${suffix}`
+        })
+      }) as any,
     },
     toolbar: [
       { name: 'undo', tip: '撤销 Ctrl+Z' }, { name: 'redo', tip: '重做 Ctrl+Y' }, '|',
