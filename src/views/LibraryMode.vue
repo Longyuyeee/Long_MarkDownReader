@@ -1418,7 +1418,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if (e.altKey && e.key === 'a') { e.preventDefault(); handleAIAssist() }
 }
 
-let searchDebounce: any = null, unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd: any = null, unlistenSaveCmd: any = null, unlistenDailyNote: any = null, unlistenFocus: any = null, unlistenDrop: any = null
+let unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd: any = null, unlistenSaveCmd: any = null, unlistenDailyNote: any = null, unlistenFocus: any = null, unlistenDrop: any = null
 
 const handleExportHtml = async () => {
   if (!vditor || !isVditorReady || !activeTabId.value) { message.warning('无可导出的内容'); return }
@@ -1520,7 +1520,6 @@ watch(() => store.theme, (newTheme) => {
     if (isDefaultBg) handleEditorBgChange(targetBg)
     // 联动代码风格：深色→dark 代码主题, 浅色→light
     const codeThemes = ['github', 'atom-one-dark', 'github-dark', 'dracula', 'vs2015', 'tokyo-night-dark']
-    const lightThemes = ['github', 'atom-one-light', 'vs', 'xcode', 'nord']
     const preferred = isDark ? 'atom-one-dark' : 'github'
     const currentIsDark = codeThemes.includes(store.codeTheme)
     const codeTheme = (isDark && !currentIsDark) || (!isDark && currentIsDark) ? preferred : store.codeTheme
