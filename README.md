@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.5.6-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.5.7-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,13 +21,18 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.5.6**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.6) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.5.7**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.6) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.5.6)
+## 🆕 最新版本更新 (v0.5.7)
 
-### 🤖 AI 智能辅助
+### 🎨 v0.5.7 新增
+*   **6 种视觉风格**：柔和/新拟态/玻璃/呼吸/极简/锐利，CSS 变量全局适配。
+*   **图谱性能优化**：能量收敛提前停、可见性暂停、边查找 Map 加速。
+*   **15+ bug 修复**：代码主题生效、标签搜索恢复、Git ahead/behind 修正、AI 超时等。
+
+### 🤖 v0.5.6 AI 智能辅助
 *   **多模型支持**：内置 AI 文本处理，支持 OpenAI / DeepSeek / Ollama / 自定义端点。
 *   **四种操作**：选中文本一键润色、重写、总结、翻译，替换原文或复制结果。
 *   **配置灵活**：设置页可配置服务商、API Key、模型，切服务商自动填充端点。
