@@ -26,7 +26,9 @@
           >
             <n-icon :component="item.icon" class="item-icon" />
             <div class="item-info">
-              <div class="item-title" v-html="highlightMatch(item.title, query)"></div>
+              <div class="item-title">
+                <span v-for="(seg, segIdx) in highlightMatch(item.title, query)" :key="segIdx" :class="{ 'highlight-match': seg.highlight }">{{ seg.text }}</span>
+              </div>
               <div class="item-desc">{{ item.description }}</div>
             </div>
             <span class="item-badge" v-if="item.type === 'cmd'">命令</span>
@@ -85,20 +87,26 @@ const fuzzyMatch = (text: string, query: string): boolean => {
   return qi === q.length
 }
 
-// 高亮匹配字符
-const highlightMatch = (text: string, query: string): string => {
-  if (!query) return text
+// 高亮匹配字符 — 返回安全的分段数组
+const highlightMatch = (text: string, query: string): { text: string; highlight: boolean }[] => {
+  if (!query) return [{ text, highlight: false }]
   const t = text.toLowerCase(), q = query.toLowerCase()
-  let result = '', qi = 0, inMatch = false
+  const segments: { text: string; highlight: boolean }[] = []
+  let qi = 0, inMatch = false, segStart = 0
   for (let ti = 0; ti < text.length; ti++) {
     const matches = qi < q.length && t[ti] === q[qi]
-    if (matches && !inMatch) { result += '<b>'; inMatch = true }
-    if (!matches && inMatch) { result += '</b>'; inMatch = false }
-    result += text[ti]
+    if (matches && !inMatch) {
+      if (ti > segStart) segments.push({ text: text.slice(segStart, ti), highlight: false })
+      inMatch = true; segStart = ti
+    }
+    if (!matches && inMatch) {
+      segments.push({ text: text.slice(segStart, ti), highlight: true })
+      inMatch = false; segStart = ti
+    }
     if (matches) qi++
   }
-  if (inMatch) result += '</b>'
-  return result
+  if (segStart < text.length) segments.push({ text: text.slice(segStart), highlight: inMatch })
+  return segments
 }
 
 const ALL_COMMANDS = [
@@ -145,6 +153,7 @@ watch(query, (val) => {
     selectedIndex.value = 0
   } else if (val.length > 0) {
     // 文件搜索模式
+    selectedIndex.value = 0
     if (searchDebounce) clearTimeout(searchDebounce)
     searchDebounce = setTimeout(async () => {
       try {
@@ -168,18 +177,18 @@ watch(query, (val) => {
 </script>
 
 <style scoped>
-.command-palette-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(4px); z-index: 10000; display: flex; justify-content: center; padding-top: 15vh; }
-.command-palette-container { width: 600px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(30px); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); overflow: hidden; height: fit-content; border: 1px solid rgba(255, 255, 255, 0.4); }
-.is-dark .command-palette-container { background: rgba(30, 30, 30, 0.85); border-color: rgba(255, 255, 255, 0.1); }
+.command-palette-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.15); z-index: 10000; display: flex; justify-content: center; padding-top: 15vh; }
+.command-palette-container { width: 600px; background: var(--theme-bg); border-radius: var(--theme-radius); box-shadow: var(--theme-shadow); overflow: hidden; height: fit-content; border: var(--theme-border); }
+.is-dark .command-palette-container { background: var(--theme-bg); }
 :deep(.n-input) { --n-border: none !important; --n-border-hover: none !important; --n-border-focus: none !important; --n-box-shadow-focus: none !important; background: transparent !important; padding: 14px 18px; font-size: 16px; }
-.results-list { border-top: 1px solid rgba(0, 0, 0, 0.05); max-height: 360px; overflow-y: auto; }
+.results-list { border-top: var(--theme-border); max-height: 360px; overflow-y: auto; }
 .result-item { padding: 12px 18px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: background 0.1s; }
 .result-item.active { background: rgba(0, 0, 0, 0.05); }
 .is-dark .result-item.active { background: rgba(255, 255, 255, 0.1); }
 .item-icon { font-size: 18px; opacity: 0.6; flex-shrink: 0; }
 .item-info { flex: 1; min-width: 0; }
 .item-title { font-size: 14px; font-weight: 500; }
-.item-title :deep(b) { color: var(--theme-primary, #007aff); }
+.item-title .highlight-match { color: var(--theme-primary, #007aff); font-weight: 700; }
 .item-desc { font-size: 11px; opacity: 0.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 500px; }
 .no-results { padding: 20px; text-align: center; color: #888; font-size: 13px; }
 .item-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.06); opacity: 0.5; flex-shrink: 0; }
@@ -188,11 +197,11 @@ watch(query, (val) => {
 .is-dark .file-badge { background: rgba(0,122,255,0.15); }
 
 .palette-pop-enter-active, .palette-pop-leave-active {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s var(--ease-premium);
 }
 .palette-pop-enter-active .command-palette-container,
 .palette-pop-leave-active .command-palette-container {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s var(--ease-premium);
 }
 .palette-pop-enter-from { opacity: 0; }
 .palette-pop-enter-from .command-palette-container {

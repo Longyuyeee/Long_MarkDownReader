@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { darkTheme, useOsTheme, GlobalThemeOverrides } from 'naive-ui'
 import { Window } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
@@ -114,6 +114,12 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
 const showPalette = ref(false)
 const showExitModal = ref(false)
 const dontAskAgain = ref(false)
+let unlistenOpenFile: (() => void) | null = null
+
+const handleGlobalKeydown = (e: KeyboardEvent) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); showPalette.value = true }
+  if (e.key === 'F11') { e.preventDefault(); store.toggleZen() }
+}
 
 const handleCommand = (item: any) => {
   if (item.type === 'cmd') {
@@ -171,7 +177,7 @@ const handleExit = () => {
 onMounted(async () => {
   await store.loadConfig()
 
-  await listen<string>('open-file', async (event) => {
+  unlistenOpenFile = await listen<string>('open-file', async (event) => {
     const filePath = event.payload
     if (filePath.toLowerCase().endsWith('.md') || filePath.toLowerCase().includes('.md"')) {
       const cleanPath = filePath.replace(/^"|"$/g, '')
@@ -188,10 +194,12 @@ onMounted(async () => {
     }
   } catch (_) { /* launch args unavailable, not critical */ }
 
-  window.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); showPalette.value = true }
-    if (e.key === 'F11') { e.preventDefault(); store.toggleZen() }
-  })
+  window.addEventListener('keydown', handleGlobalKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown)
+  if (unlistenOpenFile) unlistenOpenFile()
 })
 </script>
 
@@ -212,8 +220,8 @@ body[data-theme="dark"]  { --theme-primary-rgb: 66,184,131; }
 
 /* 视觉风格 — 通过 CSS 变量覆盖全局组件样式 */
 body[data-style="soft"] {
-  --theme-radius: 12px; --theme-radius-sm: 8px;
-  --theme-shadow: 0 2px 12px rgba(0,0,0,0.06); --theme-shadow-sm: 0 1px 4px rgba(0,0,0,0.04);
+  --theme-radius: 8px; --theme-radius-sm: 6px;
+  --theme-shadow: 0 1px 3px rgba(0,0,0,0.06); --theme-shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
   --theme-glass: none; --theme-border: 1px solid rgba(0,0,0,0.04);
   --theme-spacing: 1; --theme-font: inherit;
 }
@@ -231,8 +239,8 @@ body[data-style="minimal"] {
 }
 body[data-style="neo"] {
   --theme-radius: 14px; --theme-radius-sm: 10px;
-  --theme-shadow: 6px 6px 14px rgba(0,0,0,0.08), -4px -4px 12px rgba(255,255,255,0.6);
-  --theme-shadow-sm: 2px 2px 5px rgba(0,0,0,0.06), -1px -1px 3px rgba(255,255,255,0.5);
+  --theme-shadow: 3px 3px 8px rgba(0,0,0,0.06), -2px -2px 6px rgba(255,255,255,0.5);
+  --theme-shadow-sm: 1px 1px 3px rgba(0,0,0,0.04), -1px -1px 2px rgba(255,255,255,0.4);
   --theme-glass: none; --theme-border: none;
   --theme-spacing: 1; --theme-font: inherit;
 }
@@ -249,9 +257,17 @@ body[data-style="sharp"] {
   --theme-spacing: 0.75; --theme-font: inherit;
 }
 body[data-theme="dark"][data-style="neo"] {
-  --theme-shadow: 6px 6px 14px rgba(0,0,0,0.4), -4px -4px 12px rgba(255,255,255,0.04);
-  --theme-shadow-sm: 2px 2px 5px rgba(0,0,0,0.3), -1px -1px 3px rgba(255,255,255,0.03);
+  --theme-shadow: 3px 3px 8px rgba(0,0,0,0.3), -2px -2px 6px rgba(255,255,255,0.03);
+  --theme-shadow-sm: 1px 1px 3px rgba(0,0,0,0.2), -1px -1px 2px rgba(255,255,255,0.02);
 }
+
+/* Typography scale */
+body { --text-xs: 10px; --text-sm: 12px; --text-base: 13px; --text-md: 14px; --text-lg: 16px; --text-xl: 20px; --text-2xl: 28px; }
+/* Text color hierarchy */
+body { --text-secondary: rgba(29, 29, 31, 0.55); --text-tertiary: rgba(29, 29, 31, 0.35); }
+body[data-theme="dark"] { --text-secondary: rgba(245, 245, 247, 0.55); --text-tertiary: rgba(245, 245, 247, 0.35); }
+/* Unified easing */
+body { --ease-premium: cubic-bezier(0.16, 1, 0.3, 1); }
 
 body {
   --titlebar-height: 32px;
@@ -261,24 +277,23 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", "SF Pro Text", "Helvetica Neue", "Microsoft YaHei", sans-serif; 
   background-color: var(--theme-bg) !important; 
   color: var(--theme-text);
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s ease; 
+  transition: background-color 0.4s var(--ease-premium), color 0.3s ease;
 }
 
 .app-container { height: 100vh; display: flex; flex-direction: column; background: transparent; position: relative; }
 
-/* 退出弹窗样式 */
+/* 退出弹窗 Simplaised */
 .exit-modal-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.2);
   z-index: 10000;
   display: flex; align-items: center; justify-content: center;
 }
 .exit-modal-card {
   background: var(--theme-bg);
-  padding: 24px; border-radius: 16px; width: 360px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  padding: 24px; border-radius: var(--theme-radius); width: 360px;
+  border: var(--theme-border);
+  box-shadow: var(--theme-shadow);
   text-align: center;
 }
 .modal-header { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
@@ -286,7 +301,7 @@ body {
 .modal-checkbox { margin-bottom: 24px; display: flex; justify-content: center; }
 .modal-footer { display: flex; gap: 8px; justify-content: center; }
 
-.modal-fade-enter-active, .modal-fade-leave-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.modal-fade-enter-active, .modal-fade-leave-active { transition: all 0.3s var(--ease-premium); }
 .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; transform: scale(0.95); }
 
 .custom-titlebar { 
@@ -299,7 +314,7 @@ body {
   opacity: 0.98;
   user-select: none; 
   z-index: 9999; 
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05); 
+  border-bottom: var(--theme-border);
 }
 
 .titlebar-left { display: flex; align-items: center; padding-left: 16px; flex: 1; height: 100%; }
@@ -316,7 +331,7 @@ body[data-theme="dark"] .win-btn:hover { background: rgba(255, 255, 255, 0.1); }
 
 /* 全局高级转场动效 */
 .premium-switch-enter-active, .premium-switch-leave-active {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s var(--ease-premium);
   position: absolute; width: 100%;
 }
 .premium-switch-enter-from { opacity: 0; transform: scale(0.96) translateY(15px); filter: blur(10px); }

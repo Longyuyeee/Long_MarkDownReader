@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.5.8-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.5.9-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,17 +21,28 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.5.8**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.8) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.5.9**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.9) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.5.8)
+## 🆕 最新版本更新 (v0.5.9)
 
-### 🐛 v0.5.8 Bug 修复
-*   **修复临时编辑崩溃**：TempMode 点击文档内容导致 `customWysiwygToolbar` 报错。
-*   **修复外部修改弹窗循环**：编辑后反复弹出"文件已在外部被修改"对话框。
-*   **修复模式切换脏写**：编辑模式切换时旧 auto-save 定时器可能覆盖文件。
-*   **预防性修复**：LibraryMode Vditor preview 配置补齐，杜绝潜在崩溃。
+### 🐛 v0.5.9 安全加固 & 崩溃修复 (34 项后端 + 25 项前端)
+*   **崩溃预防**：移除 Rust 后端 31 处 `.unwrap()` 调用，杜绝潜在 panic 崩溃。
+*   **路径穿越修复**：`save_image` 文件名过滤、标签搜索词边界匹配、多目录安全增强。
+*   **XSS 修复**：命令面板 `v-html` 替换为安全分段高亮。
+*   **图谱节点点击**：修复单击节点永远不触发跳转的死代码问题。
+*   **内存泄漏**：App.vue 键盘监听和 open-file 事件监听器正确清理。
+*   **标签准确度**：修复 `#heading` 文本被误识别为标签、标签子字符串误匹配。
+*   **Git 配置**：删除知识库后索引漂移导致展开错误库。
+
+### 🎨 UI 全面现代化
+*   **统一设计系统**：50+ 处硬编码边框/阴影/圆角替换为 CSS 变量。
+*   **排版体系**：新增 8 级字体尺度 + 文本层级色彩变量。
+*   **动画统一**：全应用 5 种缓动曲线合并为单一优雅曲线，去除弹性弹跳效果。
+*   **扁平化**：命令面板去除玻璃拟态、主屏简化、侧边栏底部去渐变、弹窗轻量化。
+
+### 🎨 v0.5.7 新增
 
 ### 🎨 v0.5.7 新增
 *   **6 种视觉风格**：柔和/新拟态/玻璃/呼吸/极简/锐利，CSS 变量全局适配。

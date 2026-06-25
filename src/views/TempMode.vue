@@ -335,11 +335,11 @@ watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
 
 <style scoped>
 .temp-mode { height: 100%; display: flex; flex-direction: column; background: var(--theme-bg); color: var(--theme-text); }
-.temp-header { height: 48px; background: var(--theme-bg); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); z-index: 10; }
+.temp-header { height: 48px; background: var(--theme-bg); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: var(--theme-border); z-index: 10; }
 .is-dark .temp-header { background: rgba(255, 255, 255, 0.05); border-bottom-color: rgba(255, 255, 255, 0.1); }
 .main-content { flex: 1; display: flex; overflow: hidden; }
-.temp-sidebar { background: rgba(0, 0, 0, 0.02); border-right: 1px solid rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; }
-.sidebar-header { padding: 12px 16px; font-size: 12px; font-weight: 700; opacity: 0.5; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(0, 0, 0, 0.03); }
+.temp-sidebar { background: rgba(0, 0, 0, 0.02); border-right: var(--theme-border); display: flex; flex-direction: column; }
+.sidebar-header { padding: 12px 16px; font-size: 12px; font-weight: 700; opacity: 0.5; display: flex; align-items: center; gap: 8px; border-bottom: var(--theme-border); }
 .outline-container { flex: 1; overflow-y: auto; padding: 8px; }
 .empty-outline { padding: 40px 20px; text-align: center; opacity: 0.3; font-size: 13px; }
 .resizer { width: 4px; cursor: col-resize; transition: background 0.2s; }
@@ -349,7 +349,7 @@ watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
 .file-name { font-size: 13px; font-weight: 600; opacity: 0.8; }
 .dirty-dot { width: 6px; height: 6px; background: #ff4d4f; border-radius: 50%; }
 :deep(.vditor) { border: none !important; background: transparent !important; }
-:deep(.vditor-toolbar) { background: transparent !important; border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important; }
+:deep(.vditor-toolbar) { background: transparent !important; border-bottom: var(--theme-border) !important; }
 :deep(.vditor-content) { background: transparent !important; }
 :deep(.vditor-reset) { max-width: 800px !important; margin: 0 auto !important; color: inherit !important; }
 .compact-outline-tree :deep(.n-tree-node-content) { font-size: 13px !important; padding: 4px 8px !important; overflow: hidden; }

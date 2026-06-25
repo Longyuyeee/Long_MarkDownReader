@@ -31,7 +31,7 @@
                   </div>
                 </div>
                 <!-- Git 配置展开 -->
-                <div v-if="expandedGitLib === index" class="git-config-panel">
+                <div v-if="expandedGitLib === lib.path" class="git-config-panel">
                   <div class="setting-row">
                     <div class="info"><div class="label">启用 Git</div></div>
                     <n-switch v-model:value="lib.gitEnabled" size="small" />
@@ -261,8 +261,12 @@ const config = ref({
 })
 
 const newLib = reactive({ name: '', path: '' })
-const expandedGitLib = ref(-1)
-const toggleGitConfig = (index: number) => { expandedGitLib.value = expandedGitLib.value === index ? -1 : index }
+const expandedGitLib = ref<string>('')
+const toggleGitConfig = (index: number) => {
+  const lib = config.value.libraries[index]
+  if (!lib) return
+  expandedGitLib.value = expandedGitLib.value === lib.path ? '' : lib.path
+}
 
 const switchLibrary = (path: string) => {
   if (store.tabs.length === 0) {
@@ -353,6 +357,7 @@ const removeLibrary = (index: number) => {
     negativeText: '取消',
     onPositiveClick: () => {
       const removed = config.value.libraries.splice(index, 1)[0]
+      if (expandedGitLib.value === removed.path) expandedGitLib.value = ''
       if (config.value.activeLibraryPath === removed.path) {
         config.value.activeLibraryPath = config.value.libraries.length > 0 ? config.value.libraries[0].path : ''
       }
@@ -414,7 +419,7 @@ const setAsDefault = async () => {
   display: flex;
   flex-direction: column;
   background: transparent;
-  animation: settings-fade-in 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: settings-fade-in 0.6s var(--ease-premium);
 }
 
 @keyframes settings-fade-in {
@@ -427,7 +432,7 @@ const setAsDefault = async () => {
   display: flex;
   align-items: center;
   gap: 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: var(--theme-border);
 }
 
 .is-dark .settings-header { border-bottom-color: rgba(255, 255, 255, 0.05); }
@@ -473,7 +478,7 @@ const setAsDefault = async () => {
 
 .animate-item {
   opacity: 0;
-  animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: fadeUp 0.6s var(--ease-premium) forwards;
   animation-delay: var(--delay);
 }
 
@@ -495,10 +500,8 @@ const setAsDefault = async () => {
   background: var(--theme-card);
   border: var(--theme-border);
   gap: calc(10px * var(--theme-spacing));
-  border-radius: 12px;
   margin-bottom: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  transition: all 0.3s var(--ease-premium);
 }
 
 .is-dark .library-item {
@@ -509,11 +512,11 @@ const setAsDefault = async () => {
 .library-item.active {
   border-color: var(--theme-primary);
   background: rgba(var(--theme-primary-rgb), 0.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--theme-shadow-sm);
 }
 
 .lib-top-row { display: flex; align-items: center; }
-.git-config-panel { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 8px; }
+.git-config-panel { margin-top: 12px; padding-top: 12px; border-top: var(--theme-border); display: flex; flex-direction: column; gap: 8px; }
 .is-dark .git-config-panel { border-top-color: rgba(255,255,255,0.06); }
 .lib-info { flex: 1; min-width: 0; }
 .lib-name { font-size: 15px; font-weight: 700; color: var(--theme-text); margin-bottom: 2px; }
@@ -524,7 +527,7 @@ const setAsDefault = async () => {
 .add-library-form {
   margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-top: var(--theme-border);
 }
 
 .is-dark .add-library-form { border-top-color: rgba(255, 255, 255, 0.1); }
@@ -582,11 +585,11 @@ const setAsDefault = async () => {
 /* 实时预览区域样式 */
 .theme-preview-card {
   margin-top: 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--theme-radius);
+  border: var(--theme-border);
   padding: 24px;
   min-height: 200px;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s var(--ease-premium);
   box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.02);
   overflow: hidden;
 }
@@ -614,9 +617,9 @@ const setAsDefault = async () => {
 }
 
 .preview-code-block {
-  border-radius: 10px;
+  border-radius: var(--theme-radius-sm);
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--theme-shadow);
   font-family: 'Fira Code', monospace;
   font-size: 13px;
 }

@@ -37,6 +37,7 @@ const graphData = ref<{ nodes: GraphNode[]; edges: GraphEdge[] }>({ nodes: [], e
 
 let animationId = 0
 let dragging: GraphNode | null = null
+let wasDragging = false
 let offsetX = 0, offsetY = 0
 let viewX = 0, viewY = 0, zoom = 1
 let frameCount = 0
@@ -226,6 +227,7 @@ const startDrag = (e: MouseEvent) => {
 const onDrag = (e: MouseEvent) => {
   mouseX = e.clientX; mouseY = e.clientY
   if (!dragging) return
+  if (!wasDragging) wasDragging = true
   if (dragging.id) {
     const canvas = canvasRef.value
     if (!canvas) return
@@ -245,7 +247,11 @@ const endDrag = () => {
     // 拖拽节点后重新模拟几秒让布局稳定
     layoutSettled = false; frameCount = 90
   }
+  if (dragging && dragging.id && !wasDragging) {
+    emit('selectFile', dragging.path)
+  }
   dragging = null
+  wasDragging = false
 }
 
 const onZoom = (e: WheelEvent) => {
@@ -256,7 +262,7 @@ const onZoom = (e: WheelEvent) => {
 }
 
 const onClick = () => {
-  if (dragging && dragging.id) { emit('selectFile', dragging.path) }
+  // 点击逻辑由 endDrag 处理 — 此处不再发射
 }
 
 const onDblClick = () => {

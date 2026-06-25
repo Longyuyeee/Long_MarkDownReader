@@ -18,6 +18,9 @@ static RE_MD_IMG: LazyLock<regex::Regex> = LazyLock::new(|| {
 static RE_HTML_IMG: LazyLock<regex::Regex> = LazyLock::new(|| {
     regex::Regex::new(r#"<img[^>]*\ssrc\s*=\s*["']([^"']+)["']"#).unwrap()
 });
+static RE_TAG: LazyLock<regex::Regex> = LazyLock::new(|| {
+    regex::Regex::new(r"(?:^|\s)#([^\s#`\[\]()]+)").unwrap()
+});
 
 #[derive(Serialize)]
 pub struct FileContent {
@@ -160,7 +163,7 @@ fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
 
 #[tauri::command]
 fn save_config(app_handle: tauri::AppHandle, config: AppConfig) -> Result<(), String> {
-    let config_dir = app_handle.path().app_config_dir().unwrap();
+    let config_dir = app_handle.path().app_config_dir().map_err(|e| format!("config dir error: {}", e))?;
     if !config_dir.exists() { fs::create_dir_all(&config_dir).map_err(|e| e.to_string())?; }
     let content = serde_json::to_string_pretty(&config).map_err(|e| e.to_string())?;
     fs::write(config_dir.join("config.json"), content).map_err(|e| e.to_string())
@@ -249,8 +252,8 @@ async fn rename_item(app_handle: tauri::AppHandle, old_path: String, new_name: S
         return Err("文件名包含非法字符".into());
     }
     fs::rename(old, &new_path).map_err(|e| e.to_string())?;
-    let old_history = get_history_dir(&app_handle, &old_path);
-    if old_history.exists() { let new_history = get_history_dir(&app_handle, &new_path.to_string_lossy()); let _ = fs::rename(old_history, new_history); }
+    let old_history = get_history_dir(&app_handle, &old_path)?;
+    if old_history.exists() { let new_history = get_history_dir(&app_handle, &new_path.to_string_lossy())?; let _ = fs::rename(old_history, new_history); }
     Ok(new_path.to_string_lossy().into_owned())
 }
 
@@ -263,8 +266,8 @@ async fn move_item(app_handle: tauri::AppHandle, source_path: String, target_dir
     let new_path = target.join(file_name);
     if new_path.exists() { return Err("目标目录已存在同名项".into()); }
     fs::rename(source, &new_path).map_err(|e| e.to_string())?;
-    let old_history = get_history_dir(&app_handle, &source_path);
-    if old_history.exists() { let new_history = get_history_dir(&app_handle, &new_path.to_string_lossy()); let _ = fs::rename(old_history, new_history); }
+    let old_history = get_history_dir(&app_handle, &source_path)?;
+    if old_history.exists() { let new_history = get_history_dir(&app_handle, &new_path.to_string_lossy())?; let _ = fs::rename(old_history, new_history); }
     Ok(new_path.to_string_lossy().into_owned())
 }
 
@@ -274,7 +277,7 @@ async fn delete_item(app_handle: tauri::AppHandle, path: String) -> Result<(), S
     if !p.exists() { return Ok(()); }
     if p.is_file() && path.ends_with(".md") {
         if let Ok(content) = fs::read_to_string(p) {
-            let parent = p.parent().unwrap();
+            let parent = p.parent().ok_or_else(|| "invalid parent path".to_string())?;
             let mut paths: std::collections::HashSet<String> = std::collections::HashSet::new();
             for cap in RE_MD_IMG.captures_iter(&content) { paths.insert(cap[1].to_string()); }
             for cap in RE_HTML_IMG.captures_iter(&content) { paths.insert(cap[1].to_string()); }
@@ -287,7 +290,7 @@ async fn delete_item(app_handle: tauri::AppHandle, path: String) -> Result<(), S
         }
     }
     if p.is_dir() { fs::remove_dir_all(p).map_err(|e| e.to_string())?; } else { fs::remove_file(p).map_err(|e| e.to_string())?; }
-    let history_dir = get_history_dir(&app_handle, &path);
+    let history_dir = get_history_dir(&app_handle, &path)?;
     if history_dir.exists() { let _ = fs::remove_dir_all(history_dir); }
     Ok(())
 }
@@ -414,7 +417,7 @@ async fn import_to_library(source_path: String, library_root: String, target_dir
     let target_item_path = final_target_dir.join(item_name);
     fs::copy(source, &target_item_path).map_err(|e| e.to_string())?;
     if let Ok(content) = fs::read_to_string(source) {
-        let parent = source.parent().unwrap();
+        let parent = source.parent().ok_or_else(|| "invalid parent path".to_string())?;
         let mut paths: std::collections::HashSet<String> = std::collections::HashSet::new();
         for cap in RE_MD_IMG.captures_iter(&content) { paths.insert(cap[1].to_string()); }
         for cap in RE_HTML_IMG.captures_iter(&content) { paths.insert(cap[1].to_string()); }
@@ -441,6 +444,13 @@ async fn save_image(md_path: String, image_name: String, image_data: Vec<u8>) ->
     let assets_dir = parent.join(".assets");
     if !assets_dir.exists() { fs::create_dir_all(&assets_dir).map_err(|e| e.to_string())?; }
 
+    // 路径穿越防护：剥离目录组件，仅保留文件名
+    let image_name = Path::new(&image_name)
+        .file_name()
+        .ok_or_else(|| "invalid image name".to_string())?
+        .to_string_lossy()
+        .to_string();
+
     let img_path = assets_dir.join(&image_name);
     fs::write(&img_path, image_data).map_err(|e| e.to_string())?;
 
@@ -448,72 +458,110 @@ async fn save_image(md_path: String, image_name: String, image_data: Vec<u8>) ->
     Ok(format!(".assets/{}", image_name))
 }
 
-fn get_history_dir(app_handle: &tauri::AppHandle, path: &str) -> PathBuf {
-    let cache_dir = app_handle.path().app_cache_dir().unwrap().join("history_v2");
-    let file_hash = format!("{:x}", md5::compute(path)); cache_dir.join(file_hash)
+fn get_history_dir(app_handle: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
+    let cache_dir = app_handle.path().app_cache_dir().map_err(|e| format!("cache dir error: {}", e))?.join("history_v2");
+    let file_hash = format!("{:x}", md5::compute(path)); Ok(cache_dir.join(file_hash))
 }
 
-fn check_and_migrate_data(app: &tauri::AppHandle) {
+fn check_and_migrate_data(app: &tauri::AppHandle) -> Result<(), String> {
     let old_product_name = "Long编辑";
     let new_product_name = "Long编辑";
     let old_identifier = "com.mistyedit.mdhelper";
     let new_identifier = app.config().identifier.clone();
-    
+
     let resolver = app.path();
-    
+
     // 1. 处理 identifier 导致的路径差异 (macOS 主要影响)
     if old_identifier != new_identifier {
-        let current_config = resolver.app_config_dir().unwrap();
+        let current_config = resolver.app_config_dir().map_err(|e| format!("config dir error: {}", e))?;
         let old_config = PathBuf::from(current_config.to_string_lossy().replace(&new_identifier, old_identifier));
-        let current_cache = resolver.app_cache_dir().unwrap();
+        let current_cache = resolver.app_cache_dir().map_err(|e| format!("cache dir error: {}", e))?;
         let old_cache = PathBuf::from(current_cache.to_string_lossy().replace(&new_identifier, old_identifier));
-        
-        if old_config.exists() && !current_config.exists() { let _ = fs::create_dir_all(current_config.parent().unwrap()); let _ = fs::rename(&old_config, &current_config); }
-        if old_cache.exists() && !current_cache.exists() { let _ = fs::create_dir_all(current_cache.parent().unwrap()); let _ = fs::rename(&old_cache, &current_cache); }
+
+        if old_config.exists() && !current_config.exists() { let _ = fs::create_dir_all(current_config.parent().ok_or_else(|| "invalid parent path".to_string())?); let _ = fs::rename(&old_config, &current_config); }
+        if old_cache.exists() && !current_cache.exists() { let _ = fs::create_dir_all(current_cache.parent().ok_or_else(|| "invalid parent path".to_string())?); let _ = fs::rename(&old_cache, &current_cache); }
     }
 
     // 2. 处理 productName 导致的路径差异 (Windows 主要影响)
     if cfg!(target_os = "windows") {
-        let current_config = resolver.app_config_dir().unwrap(); // 这应该是 .../Long编辑
+        let current_config = resolver.app_config_dir().map_err(|e| format!("config dir error: {}", e))?; // 这应该是 .../Long编辑
         let old_config = PathBuf::from(current_config.to_string_lossy().replace(new_product_name, old_product_name));
-        let current_cache = resolver.app_cache_dir().unwrap();
+        let current_cache = resolver.app_cache_dir().map_err(|e| format!("cache dir error: {}", e))?;
         let old_cache = PathBuf::from(current_cache.to_string_lossy().replace(new_product_name, old_product_name));
 
         if old_config.exists() && !current_config.exists() {
-            let _ = fs::create_dir_all(current_config.parent().unwrap());
+            let _ = fs::create_dir_all(current_config.parent().ok_or_else(|| "invalid parent path".to_string())?);
             let _ = fs::rename(&old_config, &current_config);
         }
         if old_cache.exists() && !current_cache.exists() {
-            let _ = fs::create_dir_all(current_cache.parent().unwrap());
+            let _ = fs::create_dir_all(current_cache.parent().ok_or_else(|| "invalid parent path".to_string())?);
             let _ = fs::rename(&old_cache, &current_cache);
         }
-    }
-}
-
-#[tauri::command]
-async fn save_history_version(app_handle: tauri::AppHandle, path: String, content: String, max_count: u32) -> Result<(), String> {
-    let file_history_dir = get_history_dir(&app_handle, &path);
-    if !file_history_dir.exists() { fs::create_dir_all(&file_history_dir).map_err(|e| e.to_string())?; }
-    let mut entries: Vec<_> = fs::read_dir(&file_history_dir).map_err(|e| e.to_string())?.filter_map(|res| res.ok()).collect();
-    if !entries.is_empty() {
-        entries.sort_by_key(|e| e.metadata().and_then(|m| m.modified()).unwrap_or(std::time::UNIX_EPOCH));
-        if let Some(last) = entries.last() { if let Ok(last_content) = fs::read_to_string(last.path()) { if last_content.replace("\r", "") == content.replace("\r", "") { return Ok(()); } } }
-    }
-    let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs();
-    let history_file = file_history_dir.join(format!("{}.md", timestamp));
-    fs::write(history_file, content).map_err(|e| e.to_string())?;
-    let mut entries: Vec<_> = fs::read_dir(&file_history_dir).map_err(|e| e.to_string())?.filter_map(|res| res.ok()).collect();
-    if entries.len() > max_count as usize {
-        entries.sort_by_key(|e| e.metadata().and_then(|m| m.modified()).unwrap_or(std::time::UNIX_EPOCH));
-        for i in 0..(entries.len() - max_count as usize) { let _ = fs::remove_file(entries[i].path()); }
     }
     Ok(())
 }
 
 #[tauri::command]
+async fn save_history_version(app_handle: tauri::AppHandle, path: String, content: String, max_count: u32) -> Result<(), String> {
+    let file_history_dir = get_history_dir(&app_handle, &path)?;
+    if !file_history_dir.exists() {
+        fs::create_dir_all(&file_history_dir).map_err(|e| e.to_string())?;
+    }
+
+    // 读取一次目录条目
+    let entries: Vec<_> = fs::read_dir(&file_history_dir).map_err(|e| e.to_string())?
+        .filter_map(|res| res.ok())
+        .collect();
+
+    let content_normalized = content.replace("\r\n", "\n").replace("\r", "\n");
+
+    // 检查 ALL 条目是否存在重复内容
+    for entry in &entries {
+        if let Ok(entry_content) = fs::read_to_string(entry.path()) {
+            let entry_normalized = entry_content.replace("\r\n", "\n").replace("\r", "\n");
+            if entry_normalized == content_normalized {
+                return Ok(());
+            }
+        }
+    }
+
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+
+    // 使用文件名中的时间戳排序（而非 filesystem metadata）
+    let mut timestamps: Vec<u64> = entries
+        .iter()
+        .filter_map(|e| {
+            e.path()
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .and_then(|s| s.parse::<u64>().ok())
+        })
+        .collect();
+
+    // 写入新历史版本
+    let history_file = file_history_dir.join(format!("{}.md", timestamp));
+    fs::write(&history_file, &content).map_err(|e| e.to_string())?;
+    timestamps.push(timestamp);
+
+    // 裁剪多余条目
+    if timestamps.len() > max_count as usize {
+        timestamps.sort();
+        let to_remove = timestamps.len() - max_count as usize;
+        for ts in timestamps.iter().take(to_remove) {
+            let old_file = file_history_dir.join(format!("{}.md", ts));
+            let _ = fs::remove_file(old_file);
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
 async fn list_history(app_handle: tauri::AppHandle, path: String) -> Result<Vec<(u64, String)>, String> {
-    let file_history_dir = get_history_dir(&app_handle, &path);
-    if !file_history_dir.exists() { return Ok(vec![]); }
+    let file_history_dir = get_history_dir(&app_handle, &path)?;
     let mut list = vec![];
     if let Ok(entries) = fs::read_dir(file_history_dir) {
         for entry in entries.flatten() {
@@ -526,7 +574,7 @@ async fn list_history(app_handle: tauri::AppHandle, path: String) -> Result<Vec<
 
 #[tauri::command]
 async fn delete_history_version(app_handle: tauri::AppHandle, path: String, timestamp: u64) -> Result<(), String> {
-    let file_path = get_history_dir(&app_handle, &path).join(format!("{}.md", timestamp));
+    let file_path = get_history_dir(&app_handle, &path)?.join(format!("{}.md", timestamp));
     if file_path.exists() { fs::remove_file(file_path).map_err(|e| e.to_string())?; } Ok(())
 }
 
@@ -542,7 +590,7 @@ async fn save_shadow_copy(app_handle: tauri::AppHandle, path: String, content: S
     let mut shadow_dir = cache_dir; shadow_dir.push("shadow_cache");
     if !shadow_dir.exists() { fs::create_dir_all(&shadow_dir).map_err(|e| e.to_string())?; }
     let hash = format!("{:x}", md5::compute(path));
-    let mut shadow_file = shadow_dir; shadow_file.push(format!("{}.md.tmp", hash));
+    let mut shadow_file = shadow_dir; shadow_file.push(format!("{}.md", hash));
     fs::write(shadow_file, content).map_err(|e| e.to_string())
 }
 
@@ -628,8 +676,7 @@ fn collect_tags(dir: &Path, tag_counts: &mut std::collections::HashMap<String, u
             if p.is_dir() { collect_tags(&p, tag_counts); }
             else if name.ends_with(".md") {
                 if let Ok(content) = fs::read_to_string(&p) {
-                    let re = regex::Regex::new(r"(?:^|\s)#([^\s#`\[\]()]+)").unwrap();
-                    for cap in re.captures_iter(&content) {
+                    for cap in RE_TAG.captures_iter(&content) {
                         let tag = cap[1].to_string();
                         if !tag.is_empty() && !tag.starts_with('#') {
                             *tag_counts.entry(tag).or_insert(0) += 1;
@@ -650,8 +697,11 @@ fn search_tag_recursive(dir: &Path, tag: &str, results: &mut Vec<FileEntry>) {
             if p.is_dir() { search_tag_recursive(&p, tag, results); }
             else if name.ends_with(".md") {
                 if let Ok(content) = fs::read_to_string(&p) {
-                    if content.contains(&format!("#{}", tag)) {
-                        results.push(FileEntry { name: name.into_owned(), path: p.to_string_lossy().into_owned(), is_dir: false });
+                    let tag_pattern = format!(r"(?:^|\s)#{}(?:$|\s|[.,;:!\[\](){{}}])", regex::escape(tag));
+                    if let Ok(tag_re) = regex::Regex::new(&tag_pattern) {
+                        if tag_re.is_match(&content) {
+                            results.push(FileEntry { name: name.into_owned(), path: p.to_string_lossy().into_owned(), is_dir: false });
+                        }
                     }
                 }
             }
@@ -704,7 +754,7 @@ fn build_graph_recursive(dir: &Path, nodes: &mut Vec<GraphNode>, edges: &mut Vec
                 let id = path_str.clone();
                 if node_ids.insert(id.clone()) {
                     let size = fs::metadata(&p).map(|m| m.len()).unwrap_or(0) as f64;
-                    nodes.push(GraphNode { id: id.clone(), title, path: path_str.clone(), size: (size / 100.0).min(30.0).max(5.0) });
+                    nodes.push(GraphNode { id: id.clone(), title, path: path_str.clone(), size: (size / 100.0).clamp(5.0, 30.0) });
                 }
                 if let Ok(content) = fs::read_to_string(&p) {
                     for cap in RE.captures_iter(&content) {
@@ -731,7 +781,7 @@ struct Backlink {
 
 #[tauri::command]
 async fn extract_wikilinks(content: String) -> Result<Vec<String>, String> {
-    let re = regex::Regex::new(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]").unwrap();
+    let re = regex::Regex::new(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]").map_err(|e| format!("regex error: {}", e))?;
     let links: Vec<String> = re.captures_iter(&content).map(|c| c[1].trim().to_string()).collect();
     Ok(links)
 }
@@ -755,7 +805,7 @@ fn find_backlinks_recursive(dir: &Path, target: &str, results: &mut Vec<Backlink
             else if name.ends_with(".md") {
                 if let Ok(content) = fs::read_to_string(&p) {
                     if content.contains(&format!("[[{}", target)) || content.contains(&format!("[[{}|", target)) {
-                        let re = regex::Regex::new(&format!(r"\[\[{}[\]|]", regex::escape(target))).unwrap();
+                        let Ok(re) = regex::Regex::new(&format!(r"\[\[{}[\]|]", regex::escape(target))) else { continue; };
                         let snippet = re.find(&content).map(|m| {
                             let start = m.start().saturating_sub(20);
                             let end = (m.end() + 30).min(content.len());
@@ -821,7 +871,7 @@ async fn export_to_html(path: String, html_content: String) -> Result<(), String
 async fn move_items(app_handle: tauri::AppHandle, source_paths: Vec<String>, target_dir: String) -> Result<(), String> { for source_path in source_paths { let _ = move_item(app_handle.clone(), source_path, target_dir.clone()).await?; } Ok(()) }
 
 #[tauri::command]
-async fn delete_items(app_handle: tauri::AppHandle, paths: Vec<String>) -> Result<(), String> { for path in paths { let _ = delete_item(app_handle.clone(), path).await?; } Ok(()) }
+async fn delete_items(app_handle: tauri::AppHandle, paths: Vec<String>) -> Result<(), String> { for path in paths { delete_item(app_handle.clone(), path).await?; } Ok(()) }
 
 #[derive(Serialize, Deserialize, Clone)]
 struct AiChatMessage { role: String, content: String }
@@ -937,9 +987,9 @@ struct FileStats {
 async fn get_file_stats(path: String) -> Result<FileStats, String> {
     let metadata = fs::metadata(&path).map_err(|e| e.to_string())?;
     let created = metadata.created().unwrap_or(metadata.modified().unwrap_or(std::time::SystemTime::now()))
-        .duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+        .duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs();
     let modified = metadata.modified().unwrap_or(std::time::SystemTime::now())
-        .duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+        .duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs();
     Ok(FileStats { created, modified, size: metadata.len() })
 }
 
@@ -957,10 +1007,12 @@ pub fn run() {
                     Ok(data) => {
                         let extension = Path::new(&clean_path).extension().and_then(|s| s.to_str()).unwrap_or("");
                         let mime = match extension.to_lowercase().as_str() { "jpg" | "jpeg" => "image/jpeg", "png" => "image/png", "gif" => "image/gif", "webp" => "image/webp", "svg" => "image/svg+xml", _ => "application/octet-stream" };
-                        let response = tauri::http::Response::builder().header("Content-Type", mime).header("Access-Control-Allow-Origin", "*").body(data).unwrap();
+                        let response = tauri::http::Response::builder().header("Content-Type", mime).header("Access-Control-Allow-Origin", "*").body(data)
+                            .unwrap_or_else(|_| tauri::http::Response::builder().status(500).body(Vec::<u8>::new()).unwrap());
                         responder.respond(response);
                     }
-                    Err(_) => responder.respond(tauri::http::Response::builder().status(404).body(Vec::<u8>::new()).unwrap()),
+                    Err(_) => responder.respond(tauri::http::Response::builder().status(404).body(Vec::<u8>::new())
+                        .unwrap_or_else(|_| tauri::http::Response::builder().status(500).body(Vec::<u8>::new()).unwrap())),
                 }
             });
         })
@@ -977,8 +1029,8 @@ pub fn run() {
         }))
         .on_window_event(|window, event| { if let tauri::WindowEvent::CloseRequested { api, .. } = event { if window.label() == "main" { api.prevent_close(); let _ = window.hide(); } } })
         .setup(|app| {
-            check_and_migrate_data(app.handle());
-            let window = app.get_webview_window("main").unwrap();
+            let _ = check_and_migrate_data(app.handle());
+            let window = app.get_webview_window("main").ok_or_else(|| "main window not found".to_string())?;
 
             // 根据启动参数控制窗口显示：手动启动则显示窗口，自启参数 --minimized 则保持隐藏
             let args: Vec<String> = std::env::args().collect();
@@ -987,13 +1039,14 @@ pub fn run() {
                 let _ = window.set_focus();
             }
 
-            #[cfg(target_os = "windows")] { if let Err(_) = apply_mica(&window, None) { let _ = apply_blur(&window, Some((0, 0, 0, 0))); } }
+            #[cfg(target_os = "windows")] { if apply_mica(&window, None).is_err() { let _ = apply_blur(&window, Some((0, 0, 0, 0))); } }
             let quit_i = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
             let show_i = MenuItem::with_id(app, "show", "显示主窗口", true, None::<&str>)?;
             let quick_i = MenuItem::with_id(app, "quick", "快速笔记", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quick_i, &show_i, &quit_i])?;
+            let default_icon = app.default_window_icon().ok_or_else(|| "no default icon".to_string())?.clone();
             let _tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
+                .icon(default_icon)
                 .tooltip("Long编辑 · MD助手")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
@@ -1002,7 +1055,7 @@ pub fn run() {
                         app.exit(0);
                     }
                     "show" => {
-                        let win = app.get_webview_window("main").unwrap();
+                        let Some(win) = app.get_webview_window("main") else { return; };
                         let _ = win.unminimize();
                         let _ = win.show();
                         let _ = win.set_focus();
@@ -1028,7 +1081,7 @@ pub fn run() {
                         ..
                     } = event
                     {
-                        let win = tray.app_handle().get_webview_window("main").unwrap();
+                        let Some(win) = tray.app_handle().get_webview_window("main") else { return; };
                         let _ = win.unminimize();
                         let _ = win.show();
                         let _ = win.set_focus();
