@@ -282,6 +282,7 @@ onMounted(async () => {
       hljs: { enable: true, style: store.codeTheme || 'github' },
       math: { engine: 'KaTeX' } as any,
       markdown: { mermaid: true, footnotes: true, toc: true } as any,
+      customWysiwygToolbar: () => {},
       transform: ((html: string) => {
         if (!filePath.value) return html
         const parentDir = filePath.value.substring(0, Math.max(filePath.value.lastIndexOf('/'), filePath.value.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
@@ -291,7 +292,7 @@ onMounted(async () => {
           return `${prefix}misty-img://${abs.replace(/\\/g, '/')}${suffix}`
         })
       }) as any,
-    },
+    } as any,
     toolbar: [
       { name: 'undo', tip: '撤销 Ctrl+Z' }, { name: 'redo', tip: '重做 Ctrl+Y' }, '|',
       { name: 'emoji', tip: '表情' }, { name: 'headings', tip: '标题' }, { name: 'bold', tip: '加粗 Ctrl+B' }, { name: 'italic', tip: '斜体 Ctrl+I' }, { name: 'strike', tip: '删除线' }, '|',

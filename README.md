@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.5.7-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.5.8-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,11 +21,17 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.5.7**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.6) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.5.8**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.8) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.5.7)
+## 🆕 最新版本更新 (v0.5.8)
+
+### 🐛 v0.5.8 Bug 修复
+*   **修复临时编辑崩溃**：TempMode 点击文档内容导致 `customWysiwygToolbar` 报错。
+*   **修复外部修改弹窗循环**：编辑后反复弹出"文件已在外部被修改"对话框。
+*   **修复模式切换脏写**：编辑模式切换时旧 auto-save 定时器可能覆盖文件。
+*   **预防性修复**：LibraryMode Vditor preview 配置补齐，杜绝潜在崩溃。
 
 ### 🎨 v0.5.7 新增
 *   **6 种视觉风格**：柔和/新拟态/玻璃/呼吸/极简/锐利，CSS 变量全局适配。

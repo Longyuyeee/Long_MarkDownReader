@@ -1248,7 +1248,7 @@ const closeTab = (id: string) => store.removeTab(id)
 let autoSaveTimer: any = null
 const triggerAutoSave = (content: string) => {
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
-  autoSaveTimer = setTimeout(async () => { const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) try { await invoke('write_markdown_file', { path: cur.path, content }) } catch (e) { console.error('Auto-save failed:', e) } }, 2000)
+  autoSaveTimer = setTimeout(async () => { if (!isVditorReady) return; const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) try { await invoke('write_markdown_file', { path: cur.path, content }); lastKnownModified = Math.floor(Date.now() / 1000) } catch (e) { console.error('Auto-save failed:', e) } }, 2000)
 }
 
 const refreshCurrentFile = async () => {
@@ -1279,6 +1279,7 @@ const saveCurrentFile = async () => {
       })
 
       await invoke('write_markdown_file', { path: t.path, content });
+      lastKnownModified = Math.floor(Date.now() / 1000)
       message.success('已安全保存');
       // Git 自动 commit（本地）
       if (currentLibGitEnabled.value) {
@@ -1293,6 +1294,7 @@ const syncVditorMode = () => { if (vditor) { const currentMode = vditor.getCurre
 const switchEditorMode = (mode: string) => {
   if (!vditor || store.editorMode === mode) return
   const content = vditor.getValue()
+  if (autoSaveTimer) { clearTimeout(autoSaveTimer); autoSaveTimer = null }
   editorLoading.value = true
   vditor.destroy(); vditor = null; isVditorReady = false
   store.updateConfig({ editorMode: mode })
@@ -1323,19 +1325,20 @@ const initVditor = () => {
         hljs: { enable: true, style: store.codeTheme || 'github' },
         math: { engine: 'KaTeX' } as any,
         markdown: { mermaid: true, footnotes: true, toc: true } as any,
-        transform: (html) => {
+        customWysiwygToolbar: () => {},
+        transform: (html: string) => {
           // 在渲染前，将所有相对路径图片转换为 misty-img 协议路径
           if (!activeTabId.value) return html
           const path = activeTabId.value
           const parentDir = path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
-          
-          return html.replace(/(<img [^>]*src=["'])(.*?)(["'][^>]*>)/g, (match, prefix, url, suffix) => {
+
+          return html.replace(/(<img [^>]*src=["'])(.*?)(["'][^>]*>)/g, (match: string, prefix: string, url: string, suffix: string) => {
             if (url.startsWith('http') || url.startsWith('misty-img:') || url.startsWith('data:')) return match
             let abs = url.startsWith('./') ? parentDir + url.substring(2) : (url.includes(':') ? url : parentDir + url)
             return `${prefix}misty-img://${abs.replace(/\\/g, '/')}${suffix}`
           })
         }
-      },
+      } as any,
       toolbar: [
         { name: 'undo', tip: '撤销 Ctrl+Z' }, { name: 'redo', tip: '重做 Ctrl+Y' }, '|',
         { name: 'emoji', tip: '表情' }, { name: 'headings', tip: '标题' }, { name: 'bold', tip: '加粗 Ctrl+B' }, { name: 'italic', tip: '斜体 Ctrl+I' }, { name: 'strike', tip: '删除线' }, '|',
@@ -1445,7 +1448,8 @@ onMounted(async () => {
           content: '当前文件已被其他程序修改。是否重新加载最新内容？',
           positiveText: '重新加载',
           negativeText: '保留当前',
-          onPositiveClick: () => refreshCurrentFile()
+          onPositiveClick: () => refreshCurrentFile(),
+          onNegativeClick: () => { lastKnownModified = stats.modified }
         })
       }
     } catch (e) { /* file may have been deleted */ }
