@@ -205,60 +205,67 @@ onUnmounted(() => {
 
 <style>
 /* 全局变量：定义在 body 级别以确保覆盖所有子模块 */
-body[data-theme="white"] { --theme-bg: #ffffff; --theme-primary: #007aff; --theme-card: rgba(0,0,0,0.03); --theme-text: #1d1d1f; }
-body[data-theme="green"] { --theme-bg: #f2f9f1; --theme-primary: #42b883; --theme-card: rgba(66,184,131,0.06); --theme-text: #1d1d1f; }
-body[data-theme="blue"]  { --theme-bg: #f0f7ff; --theme-primary: #00a2ff; --theme-card: rgba(0,162,255,0.06); --theme-text: #1d1d1f; }
-body[data-theme="pink"]  { --theme-bg: #fff5f8; --theme-primary: #ff6b9d; --theme-card: rgba(255,107,157,0.06); --theme-text: #1d1d1f; }
-body[data-theme="dark"]  { --theme-bg: #1c1c1e; --theme-primary: #42b883; --theme-card: rgba(255,255,255,0.08); --theme-text: #f5f5f7; }
+body[data-theme="white"] { --theme-bg: #ffffff; --theme-primary: #0071e3; --theme-card: rgba(0,0,0,0.025); --theme-text: #1d1d1f; --theme-bg-rgb: 255,255,255; }
+body[data-theme="green"] { --theme-bg: #edf7f0; --theme-primary: #34c759; --theme-card: rgba(52,199,89,0.08); --theme-text: #1d1d1f; --theme-bg-rgb: 237,247,240; }
+body[data-theme="blue"]  { --theme-bg: #eef5ff; --theme-primary: #0a84ff; --theme-card: rgba(10,132,255,0.07); --theme-text: #1d1d1f; --theme-bg-rgb: 238,245,255; }
+body[data-theme="pink"]  { --theme-bg: #fff0f5; --theme-primary: #ff375f; --theme-card: rgba(255,55,95,0.07); --theme-text: #1d1d1f; --theme-bg-rgb: 255,240,245; }
+body[data-theme="dark"]  { --theme-bg: #161618; --theme-primary: #30d158; --theme-card: rgba(255,255,255,0.06); --theme-text: #f5f5f7; --theme-bg-rgb: 22,22,24; }
 
 /* --theme-primary-rgb (从 hex 提取 RGB 分量) */
-body[data-theme="white"] { --theme-primary-rgb: 0,122,255; }
-body[data-theme="green"] { --theme-primary-rgb: 66,184,131; }
-body[data-theme="blue"]  { --theme-primary-rgb: 0,162,255; }
-body[data-theme="pink"]  { --theme-primary-rgb: 255,107,157; }
-body[data-theme="dark"]  { --theme-primary-rgb: 66,184,131; }
+body[data-theme="white"] { --theme-primary-rgb: 0,113,227; }
+body[data-theme="green"] { --theme-primary-rgb: 52,199,89; }
+body[data-theme="blue"]  { --theme-primary-rgb: 10,132,255; }
+body[data-theme="pink"]  { --theme-primary-rgb: 255,55,95; }
+body[data-theme="dark"]  { --theme-primary-rgb: 48,209,88; }
 
 /* 视觉风格 — 通过 CSS 变量覆盖全局组件样式 */
 body[data-style="soft"] {
-  --theme-radius: 8px; --theme-radius-sm: 6px;
-  --theme-shadow: 0 1px 3px rgba(0,0,0,0.06); --theme-shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-  --theme-glass: none; --theme-border: 1px solid rgba(0,0,0,0.04);
+  --theme-radius: 10px; --theme-radius-sm: 6px;
+  --theme-shadow: 0 1px 4px rgba(0,0,0,0.06); --theme-shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --theme-glass: none; --theme-border: 1px solid rgba(0,0,0,0.05);
   --theme-spacing: 1; --theme-font: inherit;
-}
-body[data-style="glass"] {
-  --theme-radius: 16px; --theme-radius-sm: 10px;
-  --theme-shadow: none; --theme-shadow-sm: none;
-  --theme-glass: saturate(180%) blur(20px); --theme-border: 1px solid rgba(255,255,255,0.08);
-  --theme-spacing: 1.2; --theme-font: inherit;
-}
-body[data-style="minimal"] {
-  --theme-radius: 3px; --theme-radius-sm: 2px;
-  --theme-shadow: none; --theme-shadow-sm: none;
-  --theme-glass: none; --theme-border: 1px solid rgba(0,0,0,0.08);
-  --theme-spacing: 0.85; --theme-font: inherit;
 }
 body[data-style="neo"] {
-  --theme-radius: 14px; --theme-radius-sm: 10px;
-  --theme-shadow: 3px 3px 8px rgba(0,0,0,0.06), -2px -2px 6px rgba(255,255,255,0.5);
-  --theme-shadow-sm: 1px 1px 3px rgba(0,0,0,0.04), -1px -1px 2px rgba(255,255,255,0.4);
+  --theme-radius: 16px; --theme-radius-sm: 12px;
+  --theme-shadow: 6px 6px 12px rgba(0,0,0,0.08), -4px -4px 12px rgba(255,255,255,0.7);
+  --theme-shadow-sm: 3px 3px 6px rgba(0,0,0,0.05), -2px -2px 6px rgba(255,255,255,0.6);
   --theme-glass: none; --theme-border: none;
-  --theme-spacing: 1; --theme-font: inherit;
+  --theme-spacing: 1.05; --theme-font: inherit;
+}
+body[data-style="glass"] {
+  --theme-radius: 18px; --theme-radius-sm: 12px;
+  --theme-shadow: 0 8px 32px rgba(0,0,0,0.1); --theme-shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
+  --theme-glass: saturate(180%) blur(30px); --theme-border: 1px solid rgba(255,255,255,0.15);
+  --theme-spacing: 1.15; --theme-font: inherit;
 }
 body[data-style="airy"] {
-  --theme-radius: 10px; --theme-radius-sm: 6px;
-  --theme-shadow: 0 8px 30px rgba(0,0,0,0.04); --theme-shadow-sm: 0 2px 8px rgba(0,0,0,0.03);
+  --theme-radius: 12px; --theme-radius-sm: 8px;
+  --theme-shadow: 0 4px 24px rgba(0,0,0,0.05); --theme-shadow-sm: 0 2px 8px rgba(0,0,0,0.03);
   --theme-glass: none; --theme-border: 1px solid rgba(0,0,0,0.03);
-  --theme-spacing: 1.5; --theme-font: inherit;
+  --theme-spacing: 1.6; --theme-font: inherit;
+}
+body[data-style="minimal"] {
+  --theme-radius: 4px; --theme-radius-sm: 2px;
+  --theme-shadow: none; --theme-shadow-sm: none;
+  --theme-glass: none; --theme-border: none;
+  --theme-spacing: 0.8; --theme-font: inherit;
 }
 body[data-style="sharp"] {
   --theme-radius: 0px; --theme-radius-sm: 0px;
-  --theme-shadow: none; --theme-shadow-sm: none;
-  --theme-glass: none; --theme-border: 2px solid rgba(0,0,0,0.1);
-  --theme-spacing: 0.75; --theme-font: inherit;
+  --theme-shadow: 3px 3px 0 rgba(0,0,0,0.08); --theme-shadow-sm: 2px 2px 0 rgba(0,0,0,0.05);
+  --theme-glass: none; --theme-border: 2px solid rgba(0,0,0,0.12);
+  --theme-spacing: 0.7; --theme-font: inherit;
 }
 body[data-theme="dark"][data-style="neo"] {
-  --theme-shadow: 3px 3px 8px rgba(0,0,0,0.3), -2px -2px 6px rgba(255,255,255,0.03);
-  --theme-shadow-sm: 1px 1px 3px rgba(0,0,0,0.2), -1px -1px 2px rgba(255,255,255,0.02);
+  --theme-shadow: 6px 6px 12px rgba(0,0,0,0.5), -4px -4px 12px rgba(255,255,255,0.04);
+  --theme-shadow-sm: 3px 3px 6px rgba(0,0,0,0.35), -2px -2px 6px rgba(255,255,255,0.03);
+}
+body[data-theme="dark"][data-style="glass"] {
+  --theme-border: 1px solid rgba(255,255,255,0.1);
+}
+body[data-theme="dark"][data-style="sharp"] {
+  --theme-shadow: 3px 3px 0 rgba(0,0,0,0.5); --theme-shadow-sm: 2px 2px 0 rgba(0,0,0,0.3);
+  --theme-border: 2px solid rgba(255,255,255,0.15);
 }
 
 /* Typography scale */

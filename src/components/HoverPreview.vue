@@ -117,37 +117,35 @@ watch([() => props.path, () => props.show], fetchStats, { immediate: true })
   max-width: 320px;
   z-index: 20000;
   pointer-events: none;
-  border-radius: 18px;
+  border-radius: var(--theme-radius);
   overflow: hidden;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%);
-  box-shadow: 
-    0 10px 30px rgba(0,0,0,0.12),
-    0 0 0 1px rgba(0,0,0,0.05);
-  backdrop-filter: blur(25px) saturate(160%);
-  animation: cardPulse 4s infinite alternate;
+  background: rgba(var(--theme-primary-rgb, 0,122,255), 0.08);
+  box-shadow: var(--theme-shadow);
+  border: var(--theme-border);
+}
+
+:global(.is-dark) .hover-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .card-glow {
-  position: absolute;
-  top: -50%; left: -50%; width: 200%; height: 200%;
-  background: radial-gradient(circle at center, var(--theme-primary) 0%, transparent 70%);
-  opacity: 0.05;
-  pointer-events: none;
+  display: none;
 }
 
 .card-inner {
   position: relative;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--theme-bg);
   padding: 16px 18px;
-  border-radius: 17px;
+  border-radius: calc(var(--theme-radius) - 1px);
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
 :global(.is-dark) .card-inner {
-  background: rgba(30, 30, 32, 0.8);
+  background: rgba(30, 30, 32, 0.95);
 }
 
 .card-header {
@@ -181,7 +179,7 @@ watch([() => props.path, () => props.show], fetchStats, { immediate: true })
 
 .file-path {
   font-size: 10px;
-  opacity: 0.4;
+  color: var(--text-tertiary, rgba(29,29,31,0.35));
   font-weight: 500;
   padding-left: 24px;
   white-space: nowrap;
@@ -209,7 +207,7 @@ watch([() => props.path, () => props.show], fetchStats, { immediate: true })
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  opacity: 0.5;
+  color: var(--text-tertiary, rgba(29,29,31,0.35));
 }
 
 .stat-label n-icon {
@@ -236,34 +234,24 @@ watch([() => props.path, () => props.show], fetchStats, { immediate: true })
   font-size: 10px;
   font-weight: 900;
   padding: 2px 8px;
-  background: rgba(0,0,0,0.05);
+  background: var(--theme-card);
   border-radius: 20px;
+  color: var(--theme-text);
   opacity: 0.6;
-}
-
-:global(.is-dark) .size-tag {
-  background: rgba(255,255,255,0.1);
 }
 
 /* 动效 */
 .preview-fade-enter-active {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s var(--ease-premium);
 }
 .preview-fade-leave-active {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.15s var(--ease-premium);
 }
 .preview-fade-enter-from {
   opacity: 0;
-  transform: scale(0.9) translateY(10px) rotate(-2deg);
-  filter: blur(10px);
+  transform: translateY(6px);
 }
 .preview-fade-leave-to {
   opacity: 0;
-  transform: scale(0.95);
-}
-
-@keyframes cardPulse {
-  from { box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
-  to { box-shadow: 0 15px 40px rgba(var(--theme-primary-rgb), 0.15); }
 }
 </style>

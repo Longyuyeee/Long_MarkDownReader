@@ -139,24 +139,25 @@
           <n-grid-item class="animate-item" style="--delay: 0.4s">
             <div class="section-title">外观</div>
             <n-form-item label="界面风格">
-              <n-radio-group v-model:value="config.visualStyle" size="medium">
-                <n-radio-button value="soft">柔和</n-radio-button>
-                <n-radio-button value="neo">新拟态</n-radio-button>
-                <n-radio-button value="glass">玻璃</n-radio-button>
-                <n-radio-button value="airy">呼吸</n-radio-button>
-                <n-radio-button value="minimal">极简</n-radio-button>
-                <n-radio-button value="sharp">锐利</n-radio-button>
-              </n-radio-group>
+              <div class="style-swatch-row">
+                <div v-for="s in styleOptions" :key="s.value" class="style-swatch" :class="{ active: config.visualStyle === s.value }" @click="config.visualStyle = s.value">
+                  <div class="swatch-preview" :class="'swatch-' + s.value">
+                    <div class="swatch-dot"></div>
+                    <div class="swatch-line"></div>
+                  </div>
+                  <div class="swatch-label">{{ s.label }}</div>
+                </div>
+              </div>
             </n-form-item>
             <n-form-item label="颜色主题">
-              <n-radio-group v-model:value="config.theme" name="theme" @update:value="applyTheme" size="large">
-                <n-radio-button value="white">纯白</n-radio-button>
-                <n-radio-button value="green">护眼绿</n-radio-button>
-                <n-radio-button value="blue">清爽蓝</n-radio-button>
-                <n-radio-button value="pink">浪漫粉</n-radio-button>
-                <n-radio-button value="dark">深色</n-radio-button>
-                <n-radio-button value="system">跟随系统</n-radio-button>
-              </n-radio-group>
+              <div class="theme-swatch-row">
+                <div v-for="t in themeOptions" :key="t.value" class="theme-swatch" :class="{ active: config.theme === t.value }" @click="applyTheme(t.value)">
+                  <div class="theme-dot" :style="{ background: t.color }">
+                    <n-icon v-if="config.theme === t.value" :component="CheckIcon" size="16" color="#fff" />
+                  </div>
+                  <div class="swatch-label">{{ t.label }}</div>
+                </div>
+              </div>
             </n-form-item>
             <n-grid :cols="2" :x-gap="20">
               <n-grid-item>
@@ -196,7 +197,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon, GitBranch as GitBranchIcon } from 'lucide-vue-next'
+import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon, GitBranch as GitBranchIcon, Check as CheckIcon } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, NTag, NInputGroup } from 'naive-ui'
@@ -207,6 +208,24 @@ const message = useMessage()
 const dialog = useDialog()
 const store = useAppStore()
 const isInitializing = ref(true)
+
+const styleOptions: { label: string; value: 'soft' | 'neo' | 'glass' | 'airy' | 'minimal' | 'sharp' }[] = [
+  { label: '柔和', value: 'soft' },
+  { label: '新拟态', value: 'neo' },
+  { label: '玻璃', value: 'glass' },
+  { label: '呼吸', value: 'airy' },
+  { label: '极简', value: 'minimal' },
+  { label: '锐利', value: 'sharp' },
+]
+
+const themeOptions = [
+  { label: '纯白', value: 'white', color: '#ffffff' },
+  { label: '护眼绿', value: 'green', color: '#42b883' },
+  { label: '清爽蓝', value: 'blue', color: '#00a2ff' },
+  { label: '浪漫粉', value: 'pink', color: '#ff6b9d' },
+  { label: '深色', value: 'dark', color: '#1c1c1e' },
+  { label: '跟随系统', value: 'system', color: '#8e8e93' },
+]
 
 const codeThemeOptions = [
   { label: 'GitHub (默认)', value: 'github' },
@@ -581,6 +600,87 @@ const setAsDefault = async () => {
   background: var(--theme-primary) !important;
   color: #fff !important;
 }
+
+/* 主题 & 风格色块选择器 */
+.theme-swatch-row, .style-swatch-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.theme-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--theme-radius-sm);
+  transition: all 0.2s var(--ease-premium);
+  min-width: 52px;
+}
+.theme-swatch:hover { background: var(--theme-card); }
+.theme-swatch.active { background: var(--theme-card); }
+
+.theme-dot {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.06);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s var(--ease-premium);
+  box-shadow: 0 0 0 2px transparent;
+}
+:global(.is-dark) .theme-dot { border-color: rgba(255,255,255,0.12); }
+.theme-swatch.active .theme-dot {
+  box-shadow: 0 0 0 2px var(--theme-primary);
+  transform: scale(1.1);
+}
+
+.style-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 10px 14px;
+  border-radius: var(--theme-radius-sm);
+  transition: all 0.2s var(--ease-premium);
+  border: var(--theme-border);
+}
+.style-swatch:hover { border-color: rgba(var(--theme-primary-rgb), 0.3); }
+.style-swatch.active { border-color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.06); }
+
+.swatch-preview {
+  width: 56px; height: 28px;
+  border-radius: 4px;
+  background: var(--theme-card);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.swatch-soft { border-radius: 6px; background: var(--theme-card); }
+.swatch-neo { border-radius: 12px; box-shadow: 2px 2px 4px rgba(0,0,0,0.08), -1px -1px 3px rgba(255,255,255,0.6); }
+.swatch-glass { border-radius: 12px; background: rgba(255,255,255,0.3); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.swatch-airy { border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+.swatch-minimal { border-radius: 2px; box-shadow: none; background: var(--theme-card); }
+.swatch-sharp { border-radius: 0; box-shadow: none; border: 2px solid rgba(0,0,0,0.12); }
+
+.swatch-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--theme-text);
+  opacity: 0.2;
+}
+.swatch-line {
+  width: 24px; height: 2px;
+  border-radius: 1px;
+  background: var(--theme-text);
+  opacity: 0.1;
+}
+
+.swatch-label { font-size: 11px; font-weight: 600; color: var(--theme-text); opacity: 0.7; text-align: center; }
 
 /* 实时预览区域样式 */
 .theme-preview-card {

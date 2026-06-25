@@ -414,7 +414,7 @@ import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
   RefreshCw as RefreshIcon, FileText as FileIcon, Folder as FolderIcon,
-  Plus as PlusIcon, FolderPlus as FolderPlusIcon, Trash as TrashIcon,
+  Plus as PlusIcon, FolderPlus as FolderPlusIcon, FolderOpen as FolderOpenIcon, Trash as TrashIcon,
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
   Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon
@@ -1160,33 +1160,38 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
       preview.path = option.key as string
       preview.x = e.clientX
       preview.y = e.clientY
-    }, 400)
+    }, 600)
   },
   onMouseleave: () => {
     if (preview.timer) clearTimeout(preview.timer)
     preview.show = false
   },
-  onContextmenu: (e: MouseEvent) => { 
-    if (virtualDrag.active) return; e.preventDefault(); contextMenu.show = false; 
+  onContextmenu: (e: MouseEvent) => {
+    if (virtualDrag.active) return; e.preventDefault(); contextMenu.show = false;
     if (preview.timer) clearTimeout(preview.timer); preview.show = false;
-    setTimeout(() => { 
-      contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf; 
+    setTimeout(() => {
+      contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf;
       const isMulti = selectedKeys.value.length > 1
       const isStarred = !contextMenu.isDir && store.isStarred(contextMenu.targetPath)
       const items = [
+        !isMulti ? { label: '打开所在文件夹', key: 'open-folder', icon: () => h(NIcon, null, { default: () => h(FolderOpenIcon) }) } : null,
         !contextMenu.isDir && !isMulti ? { label: isStarred ? '取消收藏' : '收藏文件', key: 'star', icon: () => h(NIcon, { color: isStarred ? '#f5a623' : undefined }, { default: () => h(StarIcon) }) } : null,
         { label: isMulti ? '批量重命名不可用' : '重命名 (F2)', key: 'rename', disabled: isMulti, icon: () => h(NIcon, null, { default: () => h(EditIcon) }) },
         { label: isMulti ? `物理删除所选 ${selectedKeys.value.length} 项` : '物理删除 (Del)', key: 'delete', icon: () => h(NIcon, { color: '#f5222d' }, { default: () => h(TrashIcon) }) }
       ].filter(Boolean);
       if (!isMulti && contextMenu.isDir) items.unshift({ label: '新建子笔记', key: 'add-file', icon: () => h(NIcon, null, { default: () => h(PlusIcon) }) }, { label: '新建子文件夹', key: 'add-folder', icon: () => h(NIcon, null, { default: () => h(FolderPlusIcon) }) })
-      contextMenu.options = items; contextMenu.show = true 
-    }, 50) 
+      contextMenu.options = items; contextMenu.show = true
+    }, 50)
   }
 })
 
 const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
-  if (key === 'star') { store.toggleStar(path); message.info(store.isStarred(path) ? '已收藏' : '已取消收藏') }
+  if (key === 'open-folder') {
+    const { openPath } = await import('@tauri-apps/plugin-opener')
+    const dir = contextMenu.isDir ? path : path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')))
+    await openPath(dir)
+  } else if (key === 'star') { store.toggleStar(path); message.info(store.isStarred(path) ? '已收藏' : '已取消收藏') }
   else if (key === 'rename') { renameState.oldPath = path; let name = path.split(/[\\/]/).pop() || ''; if (!contextMenu.isDir) name = name.substring(0, name.lastIndexOf('.')); renameState.newName = name; renameState.show = true }
   else if (key === 'delete') {
     const targets = selectedKeys.value.includes(path) ? selectedKeys.value : [path]
