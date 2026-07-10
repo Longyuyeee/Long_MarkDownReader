@@ -1,0 +1,478 @@
+// ============================================
+// 色彩主题（Color Themes）
+// 定义不同色调的基础调色板
+// ============================================
+
+body[data-theme="white"] {
+  --theme-bg: #f7f8fa;
+  --theme-surface: #ffffff;
+  --theme-surface-2: #f1f3f6;
+  --theme-card: rgba(255, 255, 255, 0.82);
+  --theme-primary: #2563eb;
+  --theme-primary-rgb: 37, 99, 235;
+  --theme-text: #171a1f;
+  --theme-bg-rgb: 247, 248, 250;
+  --text-secondary: rgba(23, 26, 31, 0.62);
+  --text-tertiary: rgba(23, 26, 31, 0.38);
+}
+
+body[data-theme="green"] {
+  --theme-bg: #f2f7f2;
+  --theme-surface: #fbfdfb;
+  --theme-surface-2: #e8f0ea;
+  --theme-card: rgba(255, 255, 255, 0.78);
+  --theme-primary: #1b8a5a;
+  --theme-primary-rgb: 27, 138, 90;
+  --theme-text: #17211c;
+  --theme-bg-rgb: 242, 247, 242;
+  --text-secondary: rgba(23, 33, 28, 0.62);
+  --text-tertiary: rgba(23, 33, 28, 0.38);
+}
+
+body[data-theme="blue"] {
+  --theme-bg: #f1f6fb;
+  --theme-surface: #fbfdff;
+  --theme-surface-2: #e6eef8;
+  --theme-card: rgba(255, 255, 255, 0.78);
+  --theme-primary: #0b73d9;
+  --theme-primary-rgb: 11, 115, 217;
+  --theme-text: #142033;
+  --theme-bg-rgb: 241, 246, 251;
+  --text-secondary: rgba(20, 32, 51, 0.62);
+  --text-tertiary: rgba(20, 32, 51, 0.38);
+}
+
+body[data-theme="pink"] {
+  --theme-bg: #fbf4f7;
+  --theme-surface: #fffbfd;
+  --theme-surface-2: #f4e8ee;
+  --theme-card: rgba(255, 255, 255, 0.78);
+  --theme-primary: #cf3f72;
+  --theme-primary-rgb: 207, 63, 114;
+  --theme-text: #2a1820;
+  --theme-bg-rgb: 251, 244, 247;
+  --text-secondary: rgba(42, 24, 32, 0.62);
+  --text-tertiary: rgba(42, 24, 32, 0.38);
+}
+
+body[data-theme="dark"] {
+  --theme-bg: #111316;
+  --theme-surface: #181b20;
+  --theme-surface-2: #20242b;
+  --theme-card: rgba(255, 255, 255, 0.055);
+  --theme-primary: #64d987;
+  --theme-primary-rgb: 100, 217, 135;
+  --theme-text: #f4f6f8;
+  --theme-bg-rgb: 17, 19, 22;
+  --text-secondary: rgba(244, 246, 248, 0.62);
+  --text-tertiary: rgba(244, 246, 248, 0.38);
+}
+
+// ============================================
+// 视觉风格（Visual Styles）
+// 从"变色"升级到"完整视觉语言"
+// 每种风格有独立的审美体系
+// ============================================
+
+// ============================================
+// SOFT - 柔和、温暖、舒适
+// 奶油质感 | 柔和渐变 | 缓慢舒展
+// ============================================
+body[data-style="soft"] {
+  // 圆角策略：圆润柔和
+  --theme-radius: 12px;
+  --theme-radius-sm: 8px;
+  --theme-radius-lg: 16px;
+
+  // 边框策略：细腻柔和
+  --theme-border: 1px solid rgba(19, 25, 35, 0.08);
+  --theme-border-strong: 1px solid rgba(19, 25, 35, 0.14);
+
+  // 阴影策略：柔和扩散，多层次
+  --theme-shadow:
+    0 16px 40px rgba(30, 41, 59, 0.08),
+    0 8px 16px rgba(30, 41, 59, 0.04);
+  --theme-shadow-sm:
+    0 6px 18px rgba(30, 41, 59, 0.06),
+    0 2px 8px rgba(30, 41, 59, 0.03);
+  --theme-shadow-hover:
+    0 20px 50px rgba(30, 41, 59, 0.12),
+    0 10px 20px rgba(30, 41, 59, 0.06),
+    0 0 0 1px rgba(var(--theme-primary-rgb), 0.08);
+
+  // 渐变背景：柔和过渡
+  --style-bg-gradient: linear-gradient(135deg,
+    rgba(var(--theme-primary-rgb), 0.02) 0%,
+    rgba(var(--theme-primary-rgb), 0.06) 50%,
+    rgba(var(--theme-primary-rgb), 0.03) 100%);
+
+  // 卡片渐变：奶油质感
+  --style-card-gradient: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.7) 100%);
+
+  // 按钮渐变：果冻感
+  --style-button-gradient: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.05) 100%);
+
+  --theme-glass: none;
+  --theme-spacing: 1;
+  --style-control-bg: rgba(255, 255, 255, 0.68);
+  --style-hover-lift: -2px;
+  --style-hover-scale: 1.01;
+
+  // 发光效果
+  --style-glow-color: rgba(var(--theme-primary-rgb), 0.25);
+  --style-glow: 0 0 20px var(--style-glow-color);
+}
+
+// ============================================
+// NEO - 未来、科技、锐利
+// 硬质科技感 | 霓虹强调 | 快速弹性
+// ============================================
+body[data-style="neo"] {
+  // 圆角策略：锐利小圆角
+  --theme-radius: 4px;
+  --theme-radius-sm: 3px;
+  --theme-radius-lg: 6px;
+
+  // 边框策略：发光边线
+  --theme-border: 1px solid rgba(var(--theme-primary-rgb), 0.2);
+  --theme-border-strong: 2px solid rgba(var(--theme-primary-rgb), 0.5);
+
+  // 阴影策略：硬质投影 + 对侧高光
+  --theme-shadow:
+    8px 8px 20px rgba(0, 0, 0, 0.15),
+    -4px -4px 12px rgba(255, 255, 255, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  --theme-shadow-sm:
+    4px 4px 12px rgba(0, 0, 0, 0.12),
+    -2px -2px 8px rgba(255, 255, 255, 0.5);
+  --theme-shadow-hover:
+    10px 10px 28px rgba(0, 0, 0, 0.18),
+    -6px -6px 16px rgba(255, 255, 255, 0.7),
+    0 0 30px rgba(var(--theme-primary-rgb), 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+
+  // 渐变背景：科技感深空
+  --style-bg-gradient: linear-gradient(135deg,
+    rgba(var(--theme-primary-rgb), 0.05) 0%,
+    rgba(var(--theme-primary-rgb), 0.12) 50%,
+    rgba(var(--theme-primary-rgb), 0.08) 100%);
+
+  // 卡片渐变：金属光泽
+  --style-card-gradient: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.9) 100%);
+
+  // 按钮渐变：霓虹脉冲
+  --style-button-gradient: linear-gradient(135deg,
+    rgba(var(--theme-primary-rgb), 1) 0%,
+    rgba(var(--theme-primary-rgb), 0.85) 50%,
+    rgba(var(--theme-primary-rgb), 0.95) 100%);
+
+  --theme-glass: none;
+  --theme-spacing: 1.08;
+  --style-control-bg: rgba(var(--theme-primary-rgb), 0.08);
+  --style-hover-lift: -3px;
+  --style-hover-scale: 1.02;
+
+  // 霓虹发光
+  --style-glow-color: rgba(var(--theme-primary-rgb), 0.6);
+  --style-glow:
+    0 0 20px rgba(var(--theme-primary-rgb), 0.4),
+    0 0 40px rgba(var(--theme-primary-rgb), 0.2),
+    inset 0 0 10px rgba(var(--theme-primary-rgb), 0.1);
+}
+
+// ============================================
+// GLASS - 晶透、轻盈、现代
+// 玻璃质感（无 blur）| 透明层叠 | 轻快漂浮
+// ============================================
+body[data-style="glass"] {
+  // 圆角策略：中等圆润
+  --theme-radius: 14px;
+  --theme-radius-sm: 10px;
+  --theme-radius-lg: 20px;
+
+  // 边框策略：晶透细线
+  --theme-border: 1px solid rgba(var(--theme-primary-rgb), 0.15);
+  --theme-border-strong: 1px solid rgba(var(--theme-primary-rgb), 0.35);
+
+  // 阴影策略：多层叠加
+  --theme-shadow:
+    0 20px 50px rgba(20, 24, 32, 0.12),
+    0 10px 20px rgba(20, 24, 32, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  --theme-shadow-sm:
+    0 10px 25px rgba(20, 24, 32, 0.08),
+    0 4px 10px rgba(20, 24, 32, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  --theme-shadow-hover:
+    0 24px 60px rgba(20, 24, 32, 0.15),
+    0 12px 24px rgba(20, 24, 32, 0.1),
+    0 0 0 1px rgba(var(--theme-primary-rgb), 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+
+  // 渐变背景：晶透层叠
+  --style-bg-gradient: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(var(--theme-primary-rgb), 0.05) 50%,
+    rgba(255, 255, 255, 0.12) 100%);
+
+  // 卡片渐变：玻璃折射
+  --style-card-gradient: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(255, 255, 255, 0.8) 100%);
+
+  // 按钮渐变：玻璃光泽
+  --style-button-gradient: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(0, 0, 0, 0.03) 100%);
+
+  --theme-glass: none;
+  --theme-spacing: 1.08;
+  --style-control-bg: rgba(var(--theme-primary-rgb), 0.06);
+  --style-hover-lift: -2px;
+  --style-hover-scale: 1.015;
+
+  // 晶透发光
+  --style-glow-color: rgba(var(--theme-primary-rgb), 0.3);
+  --style-glow:
+    0 0 30px rgba(var(--theme-primary-rgb), 0.2),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+// ============================================
+// AIRY - 空气感、呼吸、留白
+// 纸张质感 | 大量留白 | 轻柔平滑
+// ============================================
+body[data-style="airy"] {
+  // 圆角策略：柔和适中
+  --theme-radius: 10px;
+  --theme-radius-sm: 7px;
+  --theme-radius-lg: 14px;
+
+  // 边框策略：极细边线
+  --theme-border: 0.5px solid rgba(19, 25, 35, 0.06);
+  --theme-border-strong: 1px solid rgba(var(--theme-primary-rgb), 0.18);
+
+  // 阴影策略：极浅柔和
+  --theme-shadow:
+    0 24px 64px rgba(30, 41, 59, 0.06),
+    0 8px 16px rgba(30, 41, 59, 0.03);
+  --theme-shadow-sm:
+    0 12px 32px rgba(30, 41, 59, 0.04),
+    0 4px 8px rgba(30, 41, 59, 0.02);
+  --theme-shadow-hover:
+    0 28px 72px rgba(30, 41, 59, 0.08),
+    0 10px 20px rgba(30, 41, 59, 0.04),
+    0 0 0 1px rgba(var(--theme-primary-rgb), 0.05);
+
+  // 渐变背景：纸张质感
+  --style-bg-gradient: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(var(--theme-primary-rgb), 0.02) 50%,
+    rgba(255, 255, 255, 0.5) 100%);
+
+  // 卡片渐变：轻盈漂浮
+  --style-card-gradient: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.88) 100%);
+
+  // 按钮渐变：悬浮质感
+  --style-button-gradient: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0) 100%);
+
+  --theme-glass: none;
+  --theme-spacing: 1.28;
+  --style-control-bg: rgba(255, 255, 255, 0.55);
+  --style-hover-lift: -3px;
+  --style-hover-scale: 1.005;
+
+  // 轻柔光晕
+  --style-glow-color: rgba(var(--theme-primary-rgb), 0.15);
+  --style-glow: 0 0 40px var(--style-glow-color);
+}
+
+// ============================================
+// MINIMAL - 极简、专注、纯粹
+// 几何纯色 | 极弱装饰 | 直接利落
+// ============================================
+body[data-style="minimal"] {
+  // 圆角策略：小圆角或直角
+  --theme-radius: 6px;
+  --theme-radius-sm: 4px;
+  --theme-radius-lg: 8px;
+
+  // 边框策略：清晰线条
+  --theme-border: 1px solid rgba(19, 25, 35, 0.12);
+  --theme-border-strong: 1px solid rgba(19, 25, 35, 0.22);
+
+  // 阴影策略：无或极弱
+  --theme-shadow: 0 4px 12px rgba(30, 41, 59, 0.04);
+  --theme-shadow-sm: 0 2px 6px rgba(30, 41, 59, 0.03);
+  --theme-shadow-hover:
+    0 6px 16px rgba(30, 41, 59, 0.08),
+    0 0 0 1px rgba(var(--theme-primary-rgb), 0.1);
+
+  // 渐变背景：极简纯色
+  --style-bg-gradient: none;
+
+  // 卡片渐变：纯色或微渐变
+  --style-card-gradient: linear-gradient(180deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.98) 100%);
+
+  // 按钮渐变：纯色块
+  --style-button-gradient: none;
+
+  --theme-glass: none;
+  --theme-spacing: 0.92;
+  --style-control-bg: transparent;
+  --style-hover-lift: 0px;
+  --style-hover-scale: 1;
+
+  // 极简强调
+  --style-glow-color: rgba(var(--theme-primary-rgb), 0.12);
+  --style-glow: 0 0 0 2px var(--style-glow-color);
+}
+
+// ============================================
+// SHARP - 锋利、专业、严谨
+// 直角硬边 | 高对比 | 精准快速
+// ============================================
+body[data-style="sharp"] {
+  // 圆角策略：直角或极小圆角
+  --theme-radius: 0px;
+  --theme-radius-sm: 0px;
+  --theme-radius-lg: 2px;
+
+  // 边框策略：清晰硬边
+  --theme-border: 1px solid rgba(19, 25, 35, 0.2);
+  --theme-border-strong: 2px solid rgba(var(--theme-primary-rgb), 0.5);
+
+  // 阴影策略：硬质投影
+  --theme-shadow:
+    6px 6px 0 rgba(20, 24, 32, 0.1),
+    0 0 0 1px rgba(19, 25, 35, 0.12);
+  --theme-shadow-sm:
+    3px 3px 0 rgba(20, 24, 32, 0.08),
+    0 0 0 1px rgba(19, 25, 35, 0.1);
+  --theme-shadow-hover:
+    8px 8px 0 rgba(20, 24, 32, 0.14),
+    0 0 0 2px rgba(var(--theme-primary-rgb), 0.3);
+
+  // 渐变背景：几何网格
+  --style-bg-gradient: linear-gradient(90deg,
+    rgba(var(--theme-primary-rgb), 0.03) 0%,
+    rgba(var(--theme-primary-rgb), 0.06) 50%,
+    rgba(var(--theme-primary-rgb), 0.03) 100%);
+
+  // 卡片渐变：硬质分割
+  --style-card-gradient: linear-gradient(180deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+
+  // 按钮渐变：锐利切换
+  --style-button-gradient: linear-gradient(180deg,
+    rgba(var(--theme-primary-rgb), 1) 0%,
+    rgba(var(--theme-primary-rgb), 0.9) 100%);
+
+  --theme-glass: none;
+  --theme-spacing: 0.88;
+  --style-control-bg: rgba(var(--theme-primary-rgb), 0.05);
+  --style-hover-lift: -1px;
+  --style-hover-scale: 1;
+
+  // 锐利强调
+  --style-glow-color: rgba(var(--theme-primary-rgb), 0.4);
+  --style-glow: 0 0 0 2px var(--style-glow-color);
+}
+
+// ============================================
+// 深色主题适配
+// ============================================
+body[data-theme="dark"] {
+  --theme-border: 1px solid rgba(255, 255, 255, 0.085);
+  --theme-border-strong: 1px solid rgba(255, 255, 255, 0.16);
+  --style-control-bg: rgba(255, 255, 255, 0.055);
+}
+
+body[data-theme="dark"][data-style="soft"] {
+  --theme-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.3),
+    0 8px 16px rgba(0, 0, 0, 0.2);
+  --theme-shadow-sm:
+    0 6px 18px rgba(0, 0, 0, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.15);
+  --style-card-gradient: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.04) 100%);
+  --style-glow-color: rgba(var(--theme-primary-rgb), 0.4);
+}
+
+body[data-theme="dark"][data-style="neo"] {
+  --theme-border: 1px solid rgba(var(--theme-primary-rgb), 0.3);
+  --theme-shadow:
+    10px 10px 28px rgba(0, 0, 0, 0.5),
+    -8px -8px 20px rgba(255, 255, 255, 0.03),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --theme-shadow-sm:
+    5px 5px 16px rgba(0, 0, 0, 0.4),
+    -4px -4px 12px rgba(255, 255, 255, 0.02);
+  --style-card-gradient: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.08) 100%);
+  --style-glow:
+    0 0 20px rgba(var(--theme-primary-rgb), 0.6),
+    0 0 40px rgba(var(--theme-primary-rgb), 0.3),
+    inset 0 0 10px rgba(var(--theme-primary-rgb), 0.15);
+}
+
+body[data-theme="dark"][data-style="glass"] {
+  --style-card-gradient: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.1) 100%);
+  --theme-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.4),
+    0 10px 20px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+body[data-theme="dark"][data-style="airy"] {
+  --theme-border: 0.5px solid rgba(255, 255, 255, 0.08);
+  --theme-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.3),
+    0 8px 16px rgba(0, 0, 0, 0.2);
+  --style-card-gradient: linear-gradient(145deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.03) 100%);
+}
+
+body[data-theme="dark"][data-style="minimal"] {
+  --theme-border: 1px solid rgba(255, 255, 255, 0.12);
+  --theme-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --style-card-gradient: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.03) 100%);
+}
+
+body[data-theme="dark"][data-style="sharp"] {
+  --theme-shadow:
+    6px 6px 0 rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
+  --style-card-gradient: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.04) 100%);
+}

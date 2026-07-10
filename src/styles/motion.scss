@@ -1,0 +1,53 @@
+body {
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 260ms;
+  --motion-page: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-premium: var(--ease-emphasized);
+}
+
+body[data-motion="calm"] {
+  --motion-fast: 160ms;
+  --motion-base: 240ms;
+  --motion-slow: 340ms;
+  --motion-page: 420ms;
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body[data-motion="swift"] {
+  --motion-fast: 90ms;
+  --motion-base: 140ms;
+  --motion-slow: 210ms;
+  --motion-page: 260ms;
+  --ease-standard: cubic-bezier(0.3, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0.9, 0.18, 1);
+}
+
+body[data-motion="expressive"] {
+  --motion-fast: 130ms;
+  --motion-base: 210ms;
+  --motion-slow: 320ms;
+  --motion-page: 460ms;
+  --ease-standard: cubic-bezier(0.18, 0.88, 0.24, 1);
+  --ease-emphasized: cubic-bezier(0.12, 1.16, 0.28, 1);
+}
+
+body[data-motion="reduced"] {
+  --motion-fast: 1ms;
+  --motion-base: 1ms;
+  --motion-slow: 1ms;
+  --motion-page: 1ms;
+  --ease-standard: linear;
+  --ease-emphasized: linear;
+}
+
+body[data-motion="reduced"] *,
+body[data-motion="reduced"] *::before,
+body[data-motion="reduced"] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}
