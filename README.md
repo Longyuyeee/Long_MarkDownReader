@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.6.1-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.6.2-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,11 +21,18 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.6.1**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.1) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.6.2**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.2) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.6.1)
+## 🆕 最新版本更新 (v0.6.2)
+
+### 🎨 v0.6.2 文档渲染华丽化升级
+*   **标题系统 2.0**：渐变色装饰条、文字渐变效果、阴影立体感，层次分明的视觉层级。
+*   **引用块 2.0**：左侧渐变装饰条、图标标记、柔和背景色，信息传达更直观。
+*   **代码块 2.0**：语言标签徽章、顶部装饰线、优化的行号样式，专业感十足。
+*   **图片展示 2.0**：柔和阴影、悬停放大效果、圆角边框，视觉焦点突出。
+*   **微交互动效**：链接悬停下划线动画、段落淡入效果，细节处见真章。
 
 ### 🎨 v0.6.1 主题系统扩展 + 智能预设
 *   **8 色调系统**：扩展到 8 个独特色调（新增奶油/紫梦幻/琥珀），满足多样化审美需求。
