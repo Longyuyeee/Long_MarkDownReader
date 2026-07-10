@@ -87,6 +87,10 @@ watch(() => store.visualStyle, (v) => {
   document.body.setAttribute('data-style', v)
 }, { immediate: true })
 
+watch(() => store.motionSpeed, (v) => {
+  document.body.setAttribute('data-motion', v)
+}, { immediate: true })
+
 // 计算主题色调
 const themeColors = computed(() => {
   const themes: Record<string, any> = {
@@ -316,8 +320,8 @@ body {
   display: flex; 
   align-items: center; 
   justify-content: space-between; 
-  background: var(--theme-bg); 
-  backdrop-filter: saturate(180%) blur(20px); 
+  background: color-mix(in srgb, var(--theme-surface) 88%, var(--theme-bg)); 
+  backdrop-filter: none; 
   opacity: 0.98;
   user-select: none; 
   z-index: 9999; 
@@ -338,7 +342,10 @@ body[data-theme="dark"] .win-btn:hover { background: rgba(255, 255, 255, 0.1); }
 
 /* 全局高级转场动效 */
 .premium-switch-enter-active, .premium-switch-leave-active {
-  transition: all 0.3s var(--ease-premium);
+  transition:
+    opacity var(--motion-page) var(--ease-standard),
+    transform var(--motion-page) var(--ease-emphasized),
+    filter var(--motion-page) var(--ease-standard);
   position: absolute; width: 100%;
 }
 .premium-switch-enter-from { opacity: 0; transform: scale(0.96) translateY(15px); filter: blur(10px); }

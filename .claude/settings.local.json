@@ -14,7 +14,16 @@
       "Bash(cargo:*)",
       "Bash(npm run:*)",
       "Bash(winget install:*)",
-      "Bash(export:*)"
+      "Bash(export:*)",
+      "Bash(node:*)",
+      "Bash(setx GITHUB_TOKEN:*)",
+      "WebSearch",
+      "Bash(git:*)",
+      "Bash(taskkill:*)",
+      "Bash(gh release:*)",
+      "Bash(gh repo:*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :9000)"
     ]
   }
 }

@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.5.9-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.6.0-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,11 +21,17 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.5.9**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.5.9) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.6.0**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.0) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.5.9)
+## 🆕 最新版本更新 (v0.6.0)
+
+### 🎨 v0.6.0 视觉系统全面升级
+*   **完整风格系统**：themes.scss 升级为包含尺寸、间距、圆角、阴影、动画的完整设计令牌体系。
+*   **命令面板华丽化**：全新视觉风格、更清晰的层次结构、优雅的交互反馈。
+*   **设置页重构**：采用新设计系统，扁平优雅的卡片布局，提升用户体验。
+*   **文件树精致化**：更细腻的状态反馈、统一的视觉语言。
 
 ### 🐛 v0.5.9 安全加固 & 崩溃修复 (34 项后端 + 25 项前端)
 *   **崩溃预防**：移除 Rust 后端 31 处 `.unwrap()` 调用，杜绝潜在 panic 崩溃。

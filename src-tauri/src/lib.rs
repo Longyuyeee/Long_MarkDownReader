@@ -76,6 +76,8 @@ pub struct AppConfig {
     pub exit_strategy: String,
     #[serde(default = "default_visual_style")]
     pub visual_style: String,
+    #[serde(default = "default_motion_speed")]
+    pub motion_speed: String,
     pub ai_enabled: bool,
     #[serde(default = "default_ai_provider")]
     pub ai_provider: String,
@@ -88,6 +90,7 @@ pub struct AppConfig {
 }
 
 fn default_visual_style() -> String { "soft".into() }
+fn default_motion_speed() -> String { "calm".into() }
 fn default_ai_provider() -> String { "openai".into() }
 fn default_ai_endpoint() -> String { "https://api.openai.com/v1".into() }
 fn default_ai_model() -> String { "gpt-4o-mini".into() }
@@ -109,6 +112,7 @@ impl Default for AppConfig {
             is_autostart: false,
             exit_strategy: "ask".into(),
             visual_style: default_visual_style(),
+            motion_speed: default_motion_speed(),
             ai_enabled: false,
             ai_provider: default_ai_provider(),
             ai_endpoint: default_ai_endpoint(),
@@ -153,6 +157,7 @@ fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
         is_autostart: false,
         exit_strategy: "ask".into(),
         visual_style: default_visual_style(),
+        motion_speed: default_motion_speed(),
         ai_enabled: false,
         ai_provider: default_ai_provider(),
         ai_endpoint: default_ai_endpoint(),
