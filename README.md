@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.6.0-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.6.1-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,11 +21,18 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.6.0**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.0) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.6.1**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.1) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.6.0)
+## 🆕 最新版本更新 (v0.6.1)
+
+### 🎨 v0.6.1 主题系统扩展 + 智能预设
+*   **8 色调系统**：扩展到 8 个独特色调（新增奶油/紫梦幻/琥珀），满足多样化审美需求。
+*   **10 个精选预设**：云白纸张、科技蓝霓虹、森林绿柔和、樱粉玻璃等，一键应用完整配置。
+*   **智能主题跟随**：Vditor 编辑器主题自动跟随系统深色/浅色模式切换。
+*   **代码高亮适配**：切换主题时代码高亮自动选择匹配的深色/浅色方案。
+*   **可视化选择器**：设置页新增预设卡片网格，图标+描述+标签一目了然。
 
 ### 🎨 v0.6.0 视觉系统全面升级
 *   **完整风格系统**：themes.scss 升级为包含尺寸、间距、圆角、阴影、动画的完整设计令牌体系。
