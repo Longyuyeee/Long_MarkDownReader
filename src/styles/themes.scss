@@ -14,6 +14,20 @@ body[data-theme="white"] {
   --theme-bg-rgb: 247, 248, 250;
   --text-secondary: rgba(23, 26, 31, 0.62);
   --text-tertiary: rgba(23, 26, 31, 0.38);
+
+  // Vditor 内容区域变量
+  --text-primary: #171a1f;
+  --text-code-inline: #d73a49;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7f8fa;
+  --bg-tertiary: #e8eaed;
+  --bg-hover: #f1f3f6;
+  --bg-code-inline: rgba(37, 99, 235, 0.08);
+  --bg-code-block: #f6f8fa;
+  --border-color: #e0e3e7;
+  --accent-primary: #2563eb;
+  --accent-primary-hover: #1e40af;
+  --accent-secondary: #7c3aed;
 }
 
 body[data-theme="green"] {
@@ -27,6 +41,20 @@ body[data-theme="green"] {
   --theme-bg-rgb: 242, 247, 242;
   --text-secondary: rgba(23, 33, 28, 0.62);
   --text-tertiary: rgba(23, 33, 28, 0.38);
+
+  // Vditor 内容区域变量
+  --text-primary: #17211c;
+  --text-code-inline: #0d5231;
+  --bg-primary: #fbfdfb;
+  --bg-secondary: #f2f7f2;
+  --bg-tertiary: #e0ebe2;
+  --bg-hover: #e8f0ea;
+  --bg-code-inline: rgba(27, 138, 90, 0.08);
+  --bg-code-block: #f4f9f5;
+  --border-color: #d4e4d7;
+  --accent-primary: #1b8a5a;
+  --accent-primary-hover: #146b47;
+  --accent-secondary: #059669;
 }
 
 body[data-theme="blue"] {
@@ -40,6 +68,20 @@ body[data-theme="blue"] {
   --theme-bg-rgb: 241, 246, 251;
   --text-secondary: rgba(20, 32, 51, 0.62);
   --text-tertiary: rgba(20, 32, 51, 0.38);
+
+  // Vditor 内容区域变量
+  --text-primary: #142033;
+  --text-code-inline: #0369a1;
+  --bg-primary: #fbfdff;
+  --bg-secondary: #f1f6fb;
+  --bg-tertiary: #dce9f5;
+  --bg-hover: #e6eef8;
+  --bg-code-inline: rgba(11, 115, 217, 0.08);
+  --bg-code-block: #f4f8fc;
+  --border-color: #cfe0f0;
+  --accent-primary: #0b73d9;
+  --accent-primary-hover: #075aa8;
+  --accent-secondary: #3b82f6;
 }
 
 body[data-theme="pink"] {
@@ -53,6 +95,20 @@ body[data-theme="pink"] {
   --theme-bg-rgb: 251, 244, 247;
   --text-secondary: rgba(42, 24, 32, 0.62);
   --text-tertiary: rgba(42, 24, 32, 0.38);
+
+  // Vditor 内容区域变量
+  --text-primary: #2a1820;
+  --text-code-inline: #be185d;
+  --bg-primary: #fffbfd;
+  --bg-secondary: #fbf4f7;
+  --bg-tertiary: #f0dfe6;
+  --bg-hover: #f4e8ee;
+  --bg-code-inline: rgba(207, 63, 114, 0.08);
+  --bg-code-block: #fdf7fa;
+  --border-color: #ead5df;
+  --accent-primary: #cf3f72;
+  --accent-primary-hover: #a8335c;
+  --accent-secondary: #ec4899;
 }
 
 body[data-theme="dark"] {
@@ -66,6 +122,20 @@ body[data-theme="dark"] {
   --theme-bg-rgb: 17, 19, 22;
   --text-secondary: rgba(244, 246, 248, 0.62);
   --text-tertiary: rgba(244, 246, 248, 0.38);
+
+  // Vditor 内容区域变量
+  --text-primary: #f4f6f8;
+  --text-code-inline: #86efac;
+  --bg-primary: #181b20;
+  --bg-secondary: #20242b;
+  --bg-tertiary: #2a2f38;
+  --bg-hover: #282d35;
+  --bg-code-inline: rgba(100, 217, 135, 0.12);
+  --bg-code-block: #1a1d23;
+  --border-color: #363a42;
+  --accent-primary: #64d987;
+  --accent-primary-hover: #86efac;
+  --accent-secondary: #22d3ee;
 }
 
 body[data-theme="cream"] {
@@ -79,6 +149,20 @@ body[data-theme="cream"] {
   --theme-bg-rgb: 250, 247, 242;
   --text-secondary: rgba(45, 36, 22, 0.62);
   --text-tertiary: rgba(45, 36, 22, 0.38);
+
+  // Vditor 内容区域变量
+  --text-primary: #2d2416;
+  --text-code-inline: #c2410c;
+  --bg-primary: #fffdfb;
+  --bg-secondary: #faf7f2;
+  --bg-tertiary: #f0e9dc;
+  --bg-hover: #f5efe5;
+  --bg-code-inline: rgba(230, 126, 77, 0.08);
+  --bg-code-block: #fdf9f5;
+  --border-color: #e8ddc9;
+  --accent-primary: #e67e4d;
+  --accent-primary-hover: #d97038;
+  --accent-secondary: #f97316;
 }
 
 body[data-theme="purple"] {
@@ -92,6 +176,20 @@ body[data-theme="purple"] {
   --theme-bg-rgb: 246, 244, 251;
   --text-secondary: rgba(32, 24, 51, 0.62);
   --text-tertiary: rgba(32, 24, 51, 0.38);
+
+  // Vditor 内容区域变量
+  --text-primary: #201833;
+  --text-code-inline: #6d28d9;
+  --bg-primary: #fdfcff;
+  --bg-secondary: #f6f4fb;
+  --bg-tertiary: #e7e0f5;
+  --bg-hover: #ede8f8;
+  --bg-code-inline: rgba(124, 58, 237, 0.08);
+  --bg-code-block: #faf8fe;
+  --border-color: #ddd4f0;
+  --accent-primary: #7c3aed;
+  --accent-primary-hover: #6d28d9;
+  --accent-secondary: #a855f7;
 }
 
 body[data-theme="amber"] {
@@ -105,6 +203,20 @@ body[data-theme="amber"] {
   --theme-bg-rgb: 254, 248, 241;
   --text-secondary: rgba(45, 31, 10, 0.62);
   --text-tertiary: rgba(45, 31, 10, 0.38);
+
+  // Vditor 内容区域变量
+  --text-primary: #2d1f0a;
+  --text-code-inline: #b45309;
+  --bg-primary: #fffdfb;
+  --bg-secondary: #fef8f1;
+  --bg-tertiary: #f5e8d6;
+  --bg-hover: #f9ede0;
+  --bg-code-inline: rgba(217, 119, 6, 0.08);
+  --bg-code-block: #fefaf5;
+  --border-color: #ecd9be;
+  --accent-primary: #d97706;
+  --accent-primary-hover: #b45309;
+  --accent-secondary: #f59e0b;
 }
 
 // ============================================

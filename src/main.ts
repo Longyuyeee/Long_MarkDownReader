@@ -9,6 +9,7 @@ import 'vfonts/FiraCode.css'
 import './styles/tokens.scss'
 import './styles/themes.scss'
 import './styles/motion.scss'
+import './styles/vditor-content-themes.scss'
 
 const app = createApp(App)
 const pinia = createPinia()

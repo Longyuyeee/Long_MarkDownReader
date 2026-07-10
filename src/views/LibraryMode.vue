@@ -1317,10 +1317,12 @@ const initVditor = () => {
   container.addEventListener('click', handleEditorClick);
   editorLoading.value = true
 
-  // 根据当前主题判断 Vditor 的渲染主题
+  // 编辑器工具栏主题：深色用 dark，其他用 classic
   const isDarkTheme = store.theme === 'dark'
-  const vditorContentTheme = isDarkTheme ? 'dark' : 'light'
   const vditorEditorTheme = isDarkTheme ? 'dark' : 'classic'
+
+  // 内容渲染：不使用 Vditor 内置主题，让我们的自定义 CSS 接管
+  // 所有色调都使用 'light' 作为基础，通过 CSS 变量覆盖样式
 
   try {
     vditor = new Vditor('vditor-lib', {
@@ -1332,7 +1334,7 @@ const initVditor = () => {
       cache: { enable: false },
       theme: vditorEditorTheme,
       preview: {
-        theme: { current: vditorContentTheme },
+        theme: { current: 'light' },  // 使用 light 作为基础，CSS 变量会覆盖
         hljs: { enable: true, style: store.codeTheme || 'github' },
         math: { engine: 'KaTeX' } as any,
         markdown: { mermaid: true, footnotes: true, toc: true } as any,
