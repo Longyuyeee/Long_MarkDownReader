@@ -9,6 +9,9 @@ export const THEME_MAP: Record<string, string> = {
   green: '#f0f9eb',
   blue: '#f0f7ff',
   pink: '#fff5f7',
+  cream: '#faf7f2',
+  purple: '#f6f4fb',
+  amber: '#fef8f1',
   dark: '#1c1c1e',
   system: '#ffffff'
 }
@@ -36,7 +39,7 @@ export const useAppStore = defineStore('app', {
     activeSession: 'LIBRARY' as SessionMode,
     tabs: [] as TabInfo[],
     activeTabId: null as string | null,
-    theme: 'system' as 'white' | 'dark' | 'system' | 'green' | 'blue' | 'pink',
+    theme: 'system' as 'white' | 'dark' | 'system' | 'green' | 'blue' | 'pink' | 'cream' | 'purple' | 'amber',
     codeTheme: 'github' as string,
     editorMode: 'wysiwyg' as 'wysiwyg' | 'ir' | 'sv',
     editorBgColor: '' as string,

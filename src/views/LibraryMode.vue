@@ -1313,9 +1313,15 @@ const switchEditorMode = (mode: string) => {
 const handleEditorClick = (e: MouseEvent) => { if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(() => syncVditorMode(), 300) }
 
 const initVditor = () => {
-  const container = document.getElementById('vditor-lib'); if (!container) return; 
-  container.addEventListener('click', handleEditorClick); 
+  const container = document.getElementById('vditor-lib'); if (!container) return;
+  container.addEventListener('click', handleEditorClick);
   editorLoading.value = true
+
+  // 根据当前主题判断 Vditor 的渲染主题
+  const isDarkTheme = store.theme === 'dark'
+  const vditorContentTheme = isDarkTheme ? 'dark' : 'light'
+  const vditorEditorTheme = isDarkTheme ? 'dark' : 'classic'
+
   try {
     vditor = new Vditor('vditor-lib', {
       cdn: 'https://cdn.jsdelivr.net/npm/vditor@3.11.2',
@@ -1324,9 +1330,9 @@ const initVditor = () => {
       mode: store.editorMode || 'wysiwyg',
       customWysiwygToolbar: () => {},
       cache: { enable: false },
-      theme: store.theme === 'dark' ? 'dark' : 'classic',
+      theme: vditorEditorTheme,
       preview: {
-        theme: { current: store.theme === 'dark' ? 'dark' : 'light' },
+        theme: { current: vditorContentTheme },
         hljs: { enable: true, style: store.codeTheme || 'github' },
         math: { engine: 'KaTeX' } as any,
         markdown: { mermaid: true, footnotes: true, toc: true } as any,
@@ -1523,17 +1529,40 @@ onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (au
 watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory(); if (newTab === 'links') fetchLinks() })
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
+    // 判断当前主题是否为深色系
     const isDark = newTheme === 'dark'
+
+    // 自动调整编辑器背景色
     const targetBg = THEME_MAP[newTheme] || (isDark ? '#1c1c1e' : '#ffffff')
     const isDefaultBg = Object.values(THEME_MAP).includes(store.editorBgColor)
     if (isDefaultBg) handleEditorBgChange(targetBg)
-    // 联动代码风格：深色→dark 代码主题, 浅色→light
-    const codeThemes = ['github', 'atom-one-dark', 'github-dark', 'dracula', 'vs2015', 'tokyo-night-dark']
-    const preferred = isDark ? 'atom-one-dark' : 'github'
-    const currentIsDark = codeThemes.includes(store.codeTheme)
-    const codeTheme = (isDark && !currentIsDark) || (!isDark && currentIsDark) ? preferred : store.codeTheme
-    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', codeTheme)
-    if (codeTheme !== store.codeTheme) store.updateConfig({ codeTheme })
+
+    // 根据是否深色主题，智能切换 Vditor 渲染主题和代码高亮
+    const darkCodeThemes = ['atom-one-dark', 'github-dark', 'dracula', 'vs2015', 'tokyo-night-dark', 'monokai', 'native']
+
+    // 如果当前代码主题与新主题色调不匹配，自动切换
+    const currentCodeThemeIsDark = darkCodeThemes.includes(store.codeTheme)
+    let finalCodeTheme = store.codeTheme
+
+    if (isDark && !currentCodeThemeIsDark) {
+      // 切换到深色主题，但代码主题是浅色 → 自动换成深色代码主题
+      finalCodeTheme = 'atom-one-dark'
+    } else if (!isDark && currentCodeThemeIsDark) {
+      // 切换到浅色主题，但代码主题是深色 → 自动换成浅色代码主题
+      finalCodeTheme = 'github'
+    }
+
+    // 应用 Vditor 主题
+    vditor.setTheme(
+      isDark ? 'dark' : 'classic',
+      isDark ? 'dark' : 'light',
+      finalCodeTheme
+    )
+
+    // 如果代码主题被自动调整了，同步到 store
+    if (finalCodeTheme !== store.codeTheme) {
+      store.updateConfig({ codeTheme: finalCodeTheme })
+    }
   }
 })
 

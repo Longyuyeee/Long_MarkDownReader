@@ -23,7 +23,9 @@
       "Bash(gh release:*)",
       "Bash(gh repo:*)",
       "Bash(netstat -ano)",
-      "Bash(findstr :9000)"
+      "Bash(findstr :9000)",
+      "Bash(ping *)",
+      "Bash(findstr LISTENING)"
     ]
   }
 }

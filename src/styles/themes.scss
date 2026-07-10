@@ -68,6 +68,45 @@ body[data-theme="dark"] {
   --text-tertiary: rgba(244, 246, 248, 0.38);
 }
 
+body[data-theme="cream"] {
+  --theme-bg: #faf7f2;
+  --theme-surface: #fffdfb;
+  --theme-surface-2: #f5efe5;
+  --theme-card: rgba(255, 253, 251, 0.85);
+  --theme-primary: #e67e4d;
+  --theme-primary-rgb: 230, 126, 77;
+  --theme-text: #2d2416;
+  --theme-bg-rgb: 250, 247, 242;
+  --text-secondary: rgba(45, 36, 22, 0.62);
+  --text-tertiary: rgba(45, 36, 22, 0.38);
+}
+
+body[data-theme="purple"] {
+  --theme-bg: #f6f4fb;
+  --theme-surface: #fdfcff;
+  --theme-surface-2: #ede8f8;
+  --theme-card: rgba(253, 252, 255, 0.8);
+  --theme-primary: #7c3aed;
+  --theme-primary-rgb: 124, 58, 237;
+  --theme-text: #201833;
+  --theme-bg-rgb: 246, 244, 251;
+  --text-secondary: rgba(32, 24, 51, 0.62);
+  --text-tertiary: rgba(32, 24, 51, 0.38);
+}
+
+body[data-theme="amber"] {
+  --theme-bg: #fef8f1;
+  --theme-surface: #fffdfb;
+  --theme-surface-2: #f9ede0;
+  --theme-card: rgba(255, 253, 251, 0.82);
+  --theme-primary: #d97706;
+  --theme-primary-rgb: 217, 119, 6;
+  --theme-text: #2d1f0a;
+  --theme-bg-rgb: 254, 248, 241;
+  --text-secondary: rgba(45, 31, 10, 0.62);
+  --text-tertiary: rgba(45, 31, 10, 0.38);
+}
+
 // ============================================
 // 视觉风格（Visual Styles）
 // 从"变色"升级到"完整视觉语言"
@@ -475,4 +514,23 @@ body[data-theme="dark"][data-style="sharp"] {
   --style-card-gradient: linear-gradient(180deg,
     rgba(255, 255, 255, 0.08) 0%,
     rgba(255, 255, 255, 0.04) 100%);
+}
+
+// ============================================
+// 新色调的深色适配
+// ============================================
+body[data-theme="cream"][data-style="soft"] {
+  --style-card-gradient: linear-gradient(145deg,
+    rgba(255, 253, 251, 0.92) 0%,
+    rgba(255, 253, 251, 0.75) 100%);
+}
+
+body[data-theme="purple"][data-style="glass"] {
+  --theme-border: 1px solid rgba(var(--theme-primary-rgb), 0.18);
+}
+
+body[data-theme="amber"][data-style="soft"] {
+  --style-card-gradient: linear-gradient(145deg,
+    rgba(255, 253, 251, 0.9) 0%,
+    rgba(255, 253, 251, 0.72) 100%);
 }

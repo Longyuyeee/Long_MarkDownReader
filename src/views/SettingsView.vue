@@ -137,7 +137,26 @@
           </n-grid-item>
 
           <n-grid-item class="animate-item" style="--delay: 0.4s">
-            <div class="section-title">外观</div>
+            <div class="section-title">外观主题</div>
+            <div class="theme-preset-grid">
+              <div
+                v-for="preset in themePresets"
+                :key="preset.id"
+                class="theme-preset-card"
+                :class="{ active: isPresetActive(preset) }"
+                @click="applyPreset(preset)"
+              >
+                <div class="preset-icon">{{ preset.icon }}</div>
+                <div class="preset-name">{{ preset.name }}</div>
+                <div class="preset-desc">{{ preset.description }}</div>
+                <div class="preset-tags">
+                  <span class="tag">{{ getThemeLabel(preset.theme) }}</span>
+                  <span class="tag">{{ getStyleLabel(preset.style) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-title" style="margin-top: 32px;">高级定制</div>
             <n-form-item label="界面风格">
               <div class="style-swatch-row">
                 <div v-for="s in styleOptions" :key="s.value" class="style-swatch" :class="{ active: config.visualStyle === s.value }" @click="config.visualStyle = s.value">
@@ -223,6 +242,7 @@ import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, NTag, NInputGroup } from 'naive-ui'
 import { useAppStore, THEME_MAP } from '../store/app'
+import { themePresets, type ThemePreset } from '../config/themePresets'
 
 const router = useRouter()
 const message = useMessage()
@@ -251,6 +271,9 @@ const themeOptions = [
   { label: '护眼绿', value: 'green', color: '#42b883' },
   { label: '清爽蓝', value: 'blue', color: '#00a2ff' },
   { label: '浪漫粉', value: 'pink', color: '#ff6b9d' },
+  { label: '奶油', value: 'cream', color: '#e67e4d' },
+  { label: '紫梦幻', value: 'purple', color: '#7c3aed' },
+  { label: '琥珀', value: 'amber', color: '#d97706' },
   { label: '深色', value: 'dark', color: '#1c1c1e' },
   { label: '跟随系统', value: 'system', color: '#8e8e93' },
 ]
@@ -422,6 +445,33 @@ const applyTheme = (val: string) => {
   if (THEME_MAP[val] && isDefaultBg) {
     config.value.editorBgColor = THEME_MAP[val]
   }
+}
+
+const applyPreset = (preset: ThemePreset) => {
+  config.value.theme = preset.theme as any
+  config.value.visualStyle = preset.style as any
+  config.value.codeTheme = preset.vditorCodeTheme
+
+  // 更新编辑器背景色
+  if (THEME_MAP[preset.theme]) {
+    config.value.editorBgColor = THEME_MAP[preset.theme]
+  }
+
+  message.success(`已应用主题预设「${preset.name}」`)
+}
+
+const isPresetActive = (preset: ThemePreset): boolean => {
+  return config.value.theme === preset.theme && config.value.visualStyle === preset.style
+}
+
+const getThemeLabel = (theme: string): string => {
+  const option = themeOptions.find(t => t.value === theme)
+  return option?.label || theme
+}
+
+const getStyleLabel = (style: string): string => {
+  const option = styleOptions.find(s => s.value === style)
+  return option?.label || style
 }
 
 const clearHistory = async () => {
@@ -943,6 +993,106 @@ const setAsDefault = async () => {
 
 .theme-swatch.active .theme-dot::before {
   opacity: 1;
+}
+
+/* 主题预设卡片网格 */
+.theme-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.theme-preset-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border-radius: var(--theme-radius-lg);
+  background: var(--style-card-gradient);
+  border: var(--theme-border);
+  cursor: pointer;
+  transition:
+    all var(--motion-base) var(--ease-premium),
+    transform var(--motion-fast) var(--ease-emphasized);
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-preset-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    rgba(var(--theme-primary-rgb), 0.05),
+    transparent 60%);
+  opacity: 0;
+  transition: opacity var(--motion-base) var(--ease-standard);
+}
+
+.theme-preset-card:hover {
+  border-color: rgba(var(--theme-primary-rgb), 0.3);
+  box-shadow: var(--theme-shadow-hover);
+  transform: translateY(var(--style-hover-lift)) scale(var(--style-hover-scale));
+}
+
+.theme-preset-card:hover::before {
+  opacity: 1;
+}
+
+.theme-preset-card.active {
+  border-color: rgba(var(--theme-primary-rgb), 0.5);
+  background: linear-gradient(135deg,
+    rgba(var(--theme-primary-rgb), 0.12) 0%,
+    rgba(var(--theme-primary-rgb), 0.06) 100%);
+  box-shadow:
+    var(--theme-shadow),
+    0 0 0 2px rgba(var(--theme-primary-rgb), 0.15);
+}
+
+.theme-preset-card.active::before {
+  opacity: 1;
+}
+
+.preset-icon {
+  font-size: 32px;
+  text-align: center;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.preset-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--theme-text);
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.preset-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.preset-tags {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.preset-tags .tag {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(var(--theme-primary-rgb), 0.1);
+  color: var(--theme-primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .style-swatch {
