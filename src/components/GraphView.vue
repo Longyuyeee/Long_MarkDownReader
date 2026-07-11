@@ -1,18 +1,84 @@
 <template>
   <div class="graph-container" ref="containerRef">
     <div class="graph-header">
-      <button class="back-btn" @click="$router.push('/library')">← 返回</button>
-      <span class="graph-title">知识图谱</span>
+      <button class="back-btn" @click="$router.push('/library')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        返回
+      </button>
+      <div class="header-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <circle cx="5" cy="5" r="2"/>
+          <circle cx="19" cy="5" r="2"/>
+          <circle cx="5" cy="19" r="2"/>
+          <circle cx="19" cy="19" r="2"/>
+          <line x1="8.5" y1="6.5" x2="10.5" y2="10.5"/>
+          <line x1="15.5" y1="6.5" x2="13.5" y2="10.5"/>
+          <line x1="8.5" y1="17.5" x2="10.5" y2="13.5"/>
+          <line x1="15.5" y1="17.5" x2="13.5" y2="13.5"/>
+        </svg>
+        <span class="graph-title">知识图谱</span>
+      </div>
+      <div class="graph-controls">
+        <button class="control-btn" @click="resetView" title="重置视图">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+            <path d="M21 3v5h-5"/>
+          </svg>
+        </button>
+        <button class="control-btn" @click="zoom = Math.min(3, zoom * 1.2)" title="放大">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35M11 8v6M8 11h6"/>
+          </svg>
+        </button>
+        <button class="control-btn" @click="zoom = Math.max(0.1, zoom * 0.8)" title="缩小">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35M8 11h6"/>
+          </svg>
+        </button>
+      </div>
     </div>
     <canvas ref="canvasRef" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @wheel.prevent="onZoom" @click="onClick" @dblclick="onDblClick"></canvas>
-    <div class="graph-info">
-      {{ graphData.nodes.length }} 节点 · {{ graphData.edges.length }} 连接
+    <div class="graph-stats">
+      <div class="stat-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+        </svg>
+        {{ graphData.nodes.length }} 节点
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        </svg>
+        {{ graphData.edges.length }} 连接
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"/>
+        </svg>
+        {{ Math.round(zoom * 100) }}%
+      </div>
     </div>
     <!-- 节点悬浮提示 -->
-    <div v-if="hoveredNode" class="node-tooltip" :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }">
-      <strong>{{ hoveredNode.title }}</strong>
-      <span class="tip-path">{{ hoveredNode.path }}</span>
-    </div>
+    <transition name="tooltip-fade">
+      <div v-if="hoveredNode" class="node-tooltip" :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }">
+        <div class="tooltip-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <strong>{{ hoveredNode.title }}</strong>
+        </div>
+        <span class="tip-path">{{ hoveredNode.path }}</span>
+        <div class="tooltip-hint">双击打开 · 拖拽移动</div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -34,6 +100,13 @@ const store = useAppStore()
 const router = useRouter()
 
 const graphData = ref<{ nodes: GraphNode[]; edges: GraphEdge[] }>({ nodes: [], edges: [] })
+
+// 图谱布局常量
+const LAYOUT_MAX_FRAMES = 120
+const LAYOUT_OPTIMIZATION_START_FRAME = 60
+const LAYOUT_FRAME_SKIP = 3
+const LAYOUT_SETTLE_THRESHOLD = 0.8
+const LAYOUT_MIN_FRAMES = 30
 
 let animationId = 0
 let dragging: GraphNode | null = null
@@ -73,59 +146,107 @@ const simulate = () => {
   if (nodes.length === 0) return
 
   frameCount++
-  if (frameCount > 90) { layoutSettled = true; return }
-  if (frameCount > 40 && frameCount % 2 !== 0) return
+  if (frameCount > LAYOUT_MAX_FRAMES) { layoutSettled = true; return }
 
-  // 构建节点索引 Map（加速边查找）
-  const nodeMap = new Map<string, GraphNode>(); nodes.forEach(n => nodeMap.set(n.id, n))
+  // 降低帧率优化：超过 60 帧后每 3 帧计算一次
+  if (frameCount > LAYOUT_OPTIMIZATION_START_FRAME && frameCount % LAYOUT_FRAME_SKIP !== 0) return
 
-  const iters = frameCount < 30 ? 2 : 1
-  for (let iter = 0; iter < iters; iter++) {
-    let etotal = 0
-    // 斥力 — 仅对节点数 ≤200 时用 O(n^2)，超过则跳过
-    if (nodes.length <= 200) {
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const dx = (nodes[j].x || 0) - (nodes[i].x || 0)
-          const dy = (nodes[j].y || 0) - (nodes[i].y || 0)
-          const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1)
-          const force = 500 / (dist * dist)
-          const fx = (dx / dist) * force, fy = (dy / dist) * force
-          nodes[i].vx = (nodes[i].vx || 0) - fx; nodes[i].vy = (nodes[i].vy || 0) - fy
-          nodes[j].vx = (nodes[j].vx || 0) + fx; nodes[j].vy = (nodes[j].vy || 0) + fy
+  const nodeMap = new Map<string, GraphNode>()
+  nodes.forEach(n => nodeMap.set(n.id, n))
+
+  // 使用空间分区优化 O(n²) 斥力计算
+  const cellSize = 100
+  const grid = new Map<string, GraphNode[]>()
+
+  for (const n of nodes) {
+    const cx = Math.floor((n.x || 0) / cellSize)
+    const cy = Math.floor((n.y || 0) / cellSize)
+    const key = `${cx},${cy}`
+    if (!grid.has(key)) grid.set(key, [])
+    grid.get(key)!.push(n)
+  }
+
+  let etotal = 0
+
+  // 斥力 — 使用空间分区只计算邻近节点，增加距离阈值优化
+  const maxRepulsionDist = 300 // 超过此距离不计算斥力
+  for (const n of nodes) {
+    const cx = Math.floor((n.x || 0) / cellSize)
+    const cy = Math.floor((n.y || 0) / cellSize)
+
+    // 检查周围 9 个格子
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const key = `${cx + dx},${cy + dy}`
+        const neighbors = grid.get(key) || []
+        for (const m of neighbors) {
+          if (n === m) continue
+          const vx = (m.x || 0) - (n.x || 0)
+          const vy = (m.y || 0) - (n.y || 0)
+          const distSq = vx * vx + vy * vy
+          if (distSq < 1 || distSq > maxRepulsionDist * maxRepulsionDist) continue
+          const dist = Math.sqrt(distSq)
+          const force = Math.min(800 / distSq, 50)
+          const fx = (vx / dist) * force
+          const fy = (vy / dist) * force
+          n.vx = (n.vx || 0) - fx
+          n.vy = (n.vy || 0) - fy
         }
       }
     }
-    // 引力 — 用 Map 替代 find()
-    for (const e of edges) {
-      const s = nodeMap.get(e.source), t = nodeMap.get(e.target)
-      if (!s || !t) continue
-      const dx = (t.x || 0) - (s.x || 0), dy = (t.y || 0) - (s.y || 0)
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1
-      const f = dist * 0.01
-      s.vx = (s.vx || 0) + (dx / dist) * f; s.vy = (s.vy || 0) + (dy / dist) * f
-      t.vx = (t.vx || 0) - (dx / dist) * f; t.vy = (t.vy || 0) - (dy / dist) * f
-    }
-    // 中心引力 + 能量累计
-    const cx = (containerRef.value?.clientWidth || 800) / 2 / zoom - viewX / zoom
-    const cy = (containerRef.value?.clientHeight || 600) / 2 / zoom - viewY / zoom
-    for (const n of nodes) {
-      n.vx = (n.vx || 0) + (cx - (n.x || 0)) * 0.001
-      n.vy = (n.vy || 0) + (cy - (n.y || 0)) * 0.001
-      n.vx = (n.vx || 0) * 0.88; n.vy = (n.vy || 0) * 0.88
-      n.x = (n.x || 0) + (n.vx || 0); n.y = (n.y || 0) + (n.vy || 0)
-      etotal += Math.abs(n.vx || 0) + Math.abs(n.vy || 0)
-    }
-    // 能量收敛 → 提前停止
-    if (etotal < 1.0 && frameCount > 20) { layoutSettled = true; return }
+  }
+
+  // 引力
+  for (const e of edges) {
+    const s = nodeMap.get(e.source)
+    const t = nodeMap.get(e.target)
+    if (!s || !t) continue
+    const dx = (t.x || 0) - (s.x || 0)
+    const dy = (t.y || 0) - (s.y || 0)
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1
+    const f = dist * 0.015
+    s.vx = (s.vx || 0) + (dx / dist) * f
+    s.vy = (s.vy || 0) + (dy / dist) * f
+    t.vx = (t.vx || 0) - (dx / dist) * f
+    t.vy = (t.vy || 0) - (dy / dist) * f
+  }
+
+  // 中心引力 + 阻尼 + 更新位置
+  const cx = (containerRef.value?.clientWidth || 800) / 2 / zoom - viewX / zoom
+  const cy = (containerRef.value?.clientHeight || 600) / 2 / zoom - viewY / zoom
+
+  for (const n of nodes) {
+    n.vx = (n.vx || 0) + (cx - (n.x || 0)) * 0.002
+    n.vy = (n.vy || 0) + (cy - (n.y || 0)) * 0.002
+    n.vx = (n.vx || 0) * 0.85
+    n.vy = (n.vy || 0) * 0.85
+    n.x = (n.x || 0) + (n.vx || 0)
+    n.y = (n.y || 0) + (n.vy || 0)
+    etotal += Math.abs(n.vx || 0) + Math.abs(n.vy || 0)
+  }
+
+  // 能量收敛检测
+  if (etotal < LAYOUT_SETTLE_THRESHOLD && frameCount > LAYOUT_MIN_FRAMES) {
+    layoutSettled = true
   }
 }
 
+const resetView = () => {
+  viewX = 0
+  viewY = 0
+  zoom = 1
+  frameCount = 0
+  layoutSettled = false
+  initLayout()
+}
+
 const findNodeAt = (mx: number, my: number): GraphNode | null => {
+  // 缩放时调整检测范围 - 缩小时扩大点击区域
+  const detectionRadius = 100 / Math.max(0.5, zoom)
   for (const n of graphData.value.nodes) {
     const r = n.size * 0.6
     const dx = mx - (n.x || 0), dy = my - (n.y || 0)
-    if (dx * dx + dy * dy < r * r + 100) return n
+    if (dx * dx + dy * dy < r * r + detectionRadius) return n
   }
   return null
 }
@@ -134,55 +255,119 @@ const draw = () => {
   const canvas = canvasRef.value
   const container = containerRef.value
   if (!canvas || !container) return
-  canvas.width = container.clientWidth
-  canvas.height = container.clientHeight
+
+  const dpr = window.devicePixelRatio || 1
+  const width = container.clientWidth
+  const height = container.clientHeight
+
+  // 仅在尺寸变化时调整 canvas
+  if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
+    canvas.width = width * dpr
+    canvas.height = height * dpr
+    canvas.style.width = width + 'px'
+    canvas.style.height = height + 'px'
+  }
+
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
+  ctx.scale(dpr, dpr)
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   ctx.save()
   ctx.translate(viewX, viewY)
   ctx.scale(zoom, zoom)
 
   const hovered = hoveredNode.value
-
-  // 边
-  for (const e of graphData.value.edges) {
-    const s = graphData.value.nodes.find(n => n.id === e.source)
-    const t = graphData.value.nodes.find(n => n.id === e.target)
-    if (!s || !t) continue
-    const isHighlight = hovered && (s === hovered || t === hovered)
-    ctx.beginPath()
-    ctx.moveTo(s.x || 0, s.y || 0)
-    ctx.lineTo(t.x || 0, t.y || 0)
-    ctx.strokeStyle = isHighlight ? 'rgba(128,128,255,0.4)' : 'rgba(128,128,128,0.12)'
-    ctx.lineWidth = isHighlight ? 2 / zoom : 1 / zoom
-    ctx.stroke()
-  }
-
-  // 节点
   const isDark = store.theme === 'dark'
-  for (const n of graphData.value.nodes) {
-    const r = n.size * 0.6
-    ctx.beginPath()
-    ctx.arc(n.x || 0, n.y || 0, r, 0, Math.PI * 2)
-    const isHovered = hovered === n
-    ctx.fillStyle = isHovered
-      ? (isDark ? 'rgba(100,200,150,0.9)' : 'rgba(0,100,255,0.9)')
-      : (isDark ? 'rgba(66,184,131,0.7)' : 'rgba(0,122,255,0.7)')
-    ctx.fill()
-    // 悬停描边
-    if (isHovered) {
-      ctx.strokeStyle = isDark ? '#fff' : '#000'
-      ctx.lineWidth = 2 / zoom
+
+  // 构建节点 Map 加速查找
+  const nodeMap = new Map<string, GraphNode>()
+  graphData.value.nodes.forEach(n => nodeMap.set(n.id, n))
+
+  // 边 - 渐变效果（小缩放级别时跳过以优化性能）
+  if (zoom > 0.3) {
+    for (const e of graphData.value.edges) {
+      const s = nodeMap.get(e.source)
+      const t = nodeMap.get(e.target)
+      if (!s || !t) continue
+
+      const isHighlight = hovered && (s === hovered || t === hovered)
+
+      ctx.beginPath()
+      ctx.moveTo(s.x || 0, s.y || 0)
+      ctx.lineTo(t.x || 0, t.y || 0)
+
+      if (isHighlight) {
+        const gradient = ctx.createLinearGradient(s.x || 0, s.y || 0, t.x || 0, t.y || 0)
+        gradient.addColorStop(0, isDark ? 'rgba(66,184,131,0.6)' : 'rgba(0,122,255,0.6)')
+        gradient.addColorStop(1, isDark ? 'rgba(66,184,131,0.3)' : 'rgba(0,122,255,0.3)')
+        ctx.strokeStyle = gradient
+        ctx.lineWidth = 2.5 / zoom
+      } else {
+        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
+        ctx.lineWidth = 1 / zoom
+      }
       ctx.stroke()
     }
-    // 标签
-    ctx.fillStyle = isDark ? '#ccc' : '#333'
-    ctx.font = `${Math.max(10, 12 / zoom)}px sans-serif`
-    ctx.textAlign = 'center'
-    const display = n.title.length > 8 ? n.title.slice(0, 8) + '..' : n.title
-    ctx.fillText(display, n.x || 0, (n.y || 0) + r + 14 / zoom)
+  }
+
+  // 节点 - 光晕效果
+  for (const n of graphData.value.nodes) {
+    const r = n.size * 0.6
+    const isHovered = hovered === n
+
+    // 外层光晕
+    if (isHovered) {
+      const glowGradient = ctx.createRadialGradient(n.x || 0, n.y || 0, r, n.x || 0, n.y || 0, r * 2)
+      glowGradient.addColorStop(0, isDark ? 'rgba(66,184,131,0.3)' : 'rgba(0,122,255,0.3)')
+      glowGradient.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = glowGradient
+      ctx.beginPath()
+      ctx.arc(n.x || 0, n.y || 0, r * 2, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    // 主体节点
+    ctx.beginPath()
+    ctx.arc(n.x || 0, n.y || 0, r, 0, Math.PI * 2)
+
+    const nodeGradient = ctx.createRadialGradient(
+      (n.x || 0) - r * 0.3, (n.y || 0) - r * 0.3, 0,
+      n.x || 0, n.y || 0, r
+    )
+
+    if (isHovered) {
+      nodeGradient.addColorStop(0, isDark ? 'rgba(100,220,170,1)' : 'rgba(40,140,255,1)')
+      nodeGradient.addColorStop(1, isDark ? 'rgba(66,184,131,0.9)' : 'rgba(0,122,255,0.9)')
+    } else {
+      nodeGradient.addColorStop(0, isDark ? 'rgba(80,200,150,0.85)' : 'rgba(60,150,255,0.85)')
+      nodeGradient.addColorStop(1, isDark ? 'rgba(66,184,131,0.7)' : 'rgba(0,122,255,0.7)')
+    }
+
+    ctx.fillStyle = nodeGradient
+    ctx.fill()
+
+    // 边缘描边
+    ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'
+    ctx.lineWidth = (isHovered ? 2 : 1) / zoom
+    ctx.stroke()
+
+    // 标签 - 根据缩放级别动态显示
+    if (zoom > 0.4) {
+      ctx.fillStyle = isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)'
+      ctx.font = `600 ${Math.max(11, 13 / zoom)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'top'
+
+      const maxLen = zoom > 1 ? 10 : Math.floor(10 / (1.5 - zoom * 0.5))
+      const display = n.title.length > maxLen ? n.title.slice(0, maxLen) + '…' : n.title
+
+      // 文字阴影
+      ctx.shadowColor = isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)'
+      ctx.shadowBlur = 3 / zoom
+      ctx.fillText(display, n.x || 0, (n.y || 0) + r + 8 / zoom)
+      ctx.shadowBlur = 0
+    }
   }
 
   ctx.restore()
@@ -195,8 +380,8 @@ const draw = () => {
   if (node !== hoveredNode.value) {
     hoveredNode.value = node
     if (node) {
-      tooltipX.value = mouseX - canvasRect.left + 16
-      tooltipY.value = mouseY - canvasRect.top - 40
+      tooltipX.value = mouseX - canvasRect.left + 20
+      tooltipY.value = mouseY - canvasRect.top - 60
     }
   }
 }
@@ -256,8 +441,30 @@ const endDrag = () => {
 
 const onZoom = (e: WheelEvent) => {
   mouseX = e.clientX; mouseY = e.clientY
-  const newZoom = zoom * (e.deltaY > 0 ? 0.9 : 1.1)
+  const canvas = canvasRef.value
+  if (!canvas) return
+
+  const rect = canvas.getBoundingClientRect()
+  const mouseXCanvas = e.clientX - rect.left
+  const mouseYCanvas = e.clientY - rect.top
+
+  // 计算鼠标在世界坐标系中的位置（缩放前）
+  const worldXBefore = (mouseXCanvas - viewX) / zoom
+  const worldYBefore = (mouseYCanvas - viewY) / zoom
+
+  // 缩放
+  const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1
+  const newZoom = zoom * zoomFactor
   zoom = Math.max(0.1, Math.min(3, newZoom))
+
+  // 计算鼠标在世界坐标系中的位置（缩放后）
+  const worldXAfter = (mouseXCanvas - viewX) / zoom
+  const worldYAfter = (mouseYCanvas - viewY) / zoom
+
+  // 调整视图偏移，使鼠标位置保持不变
+  viewX += (worldXAfter - worldXBefore) * zoom
+  viewY += (worldYAfter - worldYBefore) * zoom
+
   layoutSettled = false; frameCount = 100
 }
 
@@ -284,19 +491,258 @@ onUnmounted(() => { cancelAnimationFrame(animationId); document.removeEventListe
 </script>
 
 <style scoped>
-.graph-container { width: 100%; height: 100vh; position: relative; background: var(--theme-bg); display: flex; flex-direction: column; }
-.graph-header { display: flex; align-items: center; gap: 16px; padding: 12px 20px; flex-shrink: 0; border-bottom: 1px solid rgba(0,0,0,0.05); z-index: 10; }
-.back-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--theme-primary); padding: 4px 8px; border-radius: 6px; }
-.back-btn:hover { background: rgba(0,0,0,0.05); }
-.graph-title { font-size: 16px; font-weight: 700; }
-canvas { display: block; cursor: grab; flex: 1; }
-canvas:active { cursor: grabbing; }
-.graph-info { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); font-size: 12px; opacity: 0.5; pointer-events: none; background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 10px; }
-.node-tooltip { position: absolute; pointer-events: none; background: var(--theme-bg); border: 1px solid rgba(0,0,0,0.1); padding: 6px 10px; border-radius: 8px; font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; display: flex; flex-direction: column; gap: 2px; max-width: 220px; }
-.node-tooltip strong { font-size: 13px; }
-.tip-path { opacity: 0.5; font-size: 10px; word-break: break-all; }
-.is-dark .graph-header { border-bottom-color: rgba(255,255,255,0.05); }
-.is-dark .back-btn:hover { background: rgba(255,255,255,0.05); }
-.is-dark .graph-info { background: rgba(255,255,255,0.05); }
-.is-dark .node-tooltip { border-color: rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.graph-container {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  background: linear-gradient(135deg,
+    var(--theme-bg) 0%,
+    color-mix(in srgb, var(--theme-bg) 95%, var(--theme-primary)) 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.graph-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  flex-shrink: 0;
+  background: var(--theme-card);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  z-index: 10;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--theme-text);
+}
+
+.header-title svg {
+  color: var(--theme-primary);
+  opacity: 0.9;
+}
+
+.graph-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(var(--theme-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.15);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-primary);
+  padding: 8px 14px;
+  border-radius: var(--theme-radius);
+  transition: all 0.3s var(--ease-premium);
+}
+
+.back-btn:hover {
+  background: var(--theme-primary);
+  color: white;
+  transform: translateX(-2px);
+  box-shadow: 0 2px 8px rgba(var(--theme-primary-rgb), 0.25);
+}
+
+.graph-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.control-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--theme-radius-sm);
+  cursor: pointer;
+  transition: all 0.3s var(--ease-premium);
+  color: var(--theme-text);
+  opacity: 0.7;
+}
+
+.control-btn:hover {
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+  color: white;
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.2);
+}
+
+canvas {
+  display: block;
+  cursor: grab;
+  flex: 1;
+}
+
+canvas:active {
+  cursor: grabbing;
+}
+
+.graph-stats {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--theme-card);
+  backdrop-filter: blur(20px);
+  padding: 10px 20px;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+  animation: slideUp 0.6s var(--ease-premium);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--theme-text);
+  opacity: 0.8;
+}
+
+.stat-item svg {
+  opacity: 0.6;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.node-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--theme-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.2);
+  padding: 12px 16px;
+  border-radius: var(--theme-radius);
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 280px;
+  min-width: 180px;
+}
+
+.tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--theme-text);
+}
+
+.tooltip-header svg {
+  color: var(--theme-primary);
+  flex-shrink: 0;
+}
+
+.tooltip-header strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.tip-path {
+  opacity: 0.5;
+  font-size: 11px;
+  word-break: break-all;
+  line-height: 1.4;
+  padding-left: 22px;
+}
+
+.tooltip-hint {
+  font-size: 10px;
+  opacity: 0.4;
+  text-align: center;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin-top: 2px;
+}
+
+.tooltip-fade-enter-active,
+.tooltip-fade-leave-active {
+  transition: all 0.3s var(--ease-premium);
+}
+
+.tooltip-fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+}
+
+.tooltip-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+
+/* 深色主题适配 */
+.is-dark .graph-container {
+  background: linear-gradient(135deg,
+    var(--theme-bg) 0%,
+    color-mix(in srgb, var(--theme-bg) 97%, var(--theme-primary)) 100%);
+}
+
+.is-dark .graph-header {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.is-dark .control-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.is-dark .graph-stats {
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.is-dark .stat-divider {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.is-dark .node-tooltip {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.is-dark .tooltip-hint {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
 </style>

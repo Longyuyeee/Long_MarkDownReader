@@ -404,6 +404,7 @@
       <div style="min-height: 80px;">
         <div v-if="aiState.loading" style="display:flex;align-items:center;justify-content:center;padding:24px;">
           <n-spin size="medium" />
+          <n-button quaternary @click="cancelAIRequest" style="margin-left: 12px;">取消请求</n-button>
         </div>
         <div v-else class="ai-result-content">{{ aiState.result }}</div>
       </div>
@@ -450,6 +451,18 @@ const handleError = (error: any, userMessage: string, logContext?: string) => {
   const errorMsg = error?.message || error?.toString() || '未知错误'
   console.error(`[${logContext || 'Error'}]`, errorMsg, error)
   message.error(`${userMessage}: ${errorMsg}`)
+}
+
+// 图片路径转换缓存
+const imagePathCache = new Map<string, string>()
+const computeContentHash = (content: string): string => {
+  let hash = 0
+  for (let i = 0; i < content.length; i++) {
+    const char = content.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash
+  }
+  return hash.toString(36)
 }
 
 const activeSidebarTab = ref<'files' | 'quick' | 'tags' | 'outline' | 'links' | 'history'>('files')
@@ -618,7 +631,7 @@ const scrollActiveTabIntoView = () => {
 }
 
 watch(activeTabId, () => {
-  nextTick(() => { setTimeout(() => { scrollActiveTabIntoView() }, 50) })
+  nextTick(() => { setTimeout(() => { scrollActiveTabIntoView() }, SCROLL_DEBOUNCE_MS) })
 })
 const treeData = ref<TreeOption[]>([])
 const searchQuery = ref('')
@@ -628,6 +641,12 @@ let vditor: any = null
 let isVditorReady = false
 let lastLoadedPath = ''
 let lastKnownModified = 0
+
+// 常量定义
+const SCROLL_DEBOUNCE_MS = 50
+const AUTO_SAVE_DELAY_MS = 2000
+const EDITOR_MODE_SYNC_DELAY_MS = 300
+const IMAGE_FIX_DELAY_MS = 300
 
 const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
 const { fixEditorImages } = useImageFix(() => vditor, () => activeTabId.value || '')
@@ -646,7 +665,14 @@ const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: f
 const renameState = reactive({ show: false, oldPath: '', newName: '' })
 
 // --- AI Assistant ---
-const aiState = reactive({ showActionModal: false, showResultModal: false, loading: false, result: '', selectedText: '' })
+const aiState = reactive({
+  showActionModal: false,
+  showResultModal: false,
+  loading: false,
+  result: '',
+  selectedText: '',
+  abortController: null as AbortController | null
+})
 
 const systemPrompts: Record<string, string> = {
   polish: '请润色以下文本，使其更加通顺、优美，保持原意不变，只返回润色后的结果，不要添加任何额外说明：',
@@ -654,6 +680,8 @@ const systemPrompts: Record<string, string> = {
   summarize: '请总结以下文本的核心要点，简洁明了，只返回总结结果，不要添加任何额外说明：',
   translate: '请将以下文本翻译为中文，只返回翻译结果，不要添加任何额外说明：',
 }
+
+const AI_REQUEST_TIMEOUT = 30000
 
 const handleAIAssist = () => {
   if (!store.aiEnabled) { message.warning('请先在设置中启用 AI 并配置 API'); return }
@@ -667,6 +695,15 @@ const handleAIAction = async (action: string) => {
   aiState.showActionModal = false
   aiState.loading = true; aiState.result = ''
   aiState.showResultModal = true
+
+  // 创建超时控制器
+  aiState.abortController = new AbortController()
+  const timeoutId = setTimeout(() => {
+    if (aiState.abortController) {
+      aiState.abortController.abort()
+    }
+  }, AI_REQUEST_TIMEOUT)
+
   try {
     aiState.result = await invoke<string>('ai_chat_completion', {
       apiKey: store.aiApiKey,
@@ -675,11 +712,28 @@ const handleAIAction = async (action: string) => {
       systemPrompt: systemPrompts[action],
       userContent: aiState.selectedText,
     })
+    clearTimeout(timeoutId)
   } catch (e: any) {
-    message.error('AI 请求失败: ' + (e?.toString() || '未知错误'))
+    clearTimeout(timeoutId)
+    if (aiState.abortController?.signal.aborted) {
+      message.error('AI 请求超时（30秒）')
+    } else {
+      message.error('AI 请求失败: ' + (e?.toString() || '未知错误'))
+    }
     aiState.showResultModal = false
   }
   aiState.loading = false
+  aiState.abortController = null
+}
+
+const cancelAIRequest = () => {
+  if (aiState.abortController) {
+    aiState.abortController.abort()
+    aiState.abortController = null
+  }
+  aiState.loading = false
+  aiState.showResultModal = false
+  message.info('已取消 AI 请求')
 }
 
 const replaceWithResult = () => {
@@ -878,15 +932,31 @@ const loadFileToEditor = async (path: string) => {
   
   // 核心优化：利用内存快照实现瞬时加载
   const setEditorValue = (content: string) => {
-    // 路径预处理逻辑：在解析 Markdown 前通过正则修复相对路径图片，避免 DOM 扫描延迟
-    const parentDir = path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
-    
-    // 匹配 Markdown 图片语法: ![alt](url)
-    const fixedContent = content.replace(/(!\[.*?\]\()(.+?)(\))/g, (match, prefix, url, suffix) => {
-      if (url.startsWith('http') || url.startsWith('misty-img:') || url.startsWith('data:')) return match
-      const abs = url.startsWith('./') ? parentDir + url.substring(2) : (url.includes(':') ? url : parentDir + url)
-      return `${prefix}misty-img://${abs.replace(/\\/g, '/')}${suffix}`
-    })
+    // 计算内容 hash 用于缓存
+    const contentHash = computeContentHash(content)
+    const cacheKey = `${path}:${contentHash}`
+
+    // 检查缓存
+    let fixedContent = imagePathCache.get(cacheKey)
+
+    if (!fixedContent) {
+      // 路径预处理逻辑：在解析 Markdown 前通过正则修复相对路径图片，避免 DOM 扫描延迟
+      const parentDir = path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
+
+      // 匹配 Markdown 图片语法: ![alt](url)
+      fixedContent = content.replace(/(!\[.*?\]\()(.+?)(\))/g, (match, prefix, url, suffix) => {
+        if (url.startsWith('http') || url.startsWith('misty-img:') || url.startsWith('data:')) return match
+        const abs = url.startsWith('./') ? parentDir + url.substring(2) : (url.includes(':') ? url : parentDir + url)
+        return `${prefix}misty-img://${abs.replace(/\\/g, '/')}${suffix}`
+      })
+
+      // 缓存转换结果（限制缓存大小防止内存泄漏）
+      if (imagePathCache.size > 100) {
+        const firstKey = imagePathCache.keys().next().value
+        imagePathCache.delete(firstKey)
+      }
+      imagePathCache.set(cacheKey, fixedContent)
+    }
 
     vditor.setValue(fixedContent)
     fetchHistory()
@@ -1271,7 +1341,7 @@ const closeTab = (id: string) => store.removeTab(id)
 let autoSaveTimer: any = null
 const triggerAutoSave = (content: string) => {
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
-  autoSaveTimer = setTimeout(async () => { if (!isVditorReady) return; const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) try { await invoke('write_markdown_file', { path: cur.path, content }); lastKnownModified = Math.floor(Date.now() / 1000) } catch (e) { console.error('Auto-save failed:', e) } }, 2000)
+  autoSaveTimer = setTimeout(async () => { if (!isVditorReady) return; const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) try { await invoke('write_markdown_file', { path: cur.path, content }); lastKnownModified = Math.floor(Date.now() / 1000) } catch (e) { console.error('Auto-save failed:', e) } }, AUTO_SAVE_DELAY_MS)
 }
 
 const refreshCurrentFile = async () => {
@@ -1330,7 +1400,7 @@ const switchEditorMode = (mode: string) => {
     }, 100)
   })
 }
-const handleEditorClick = (e: MouseEvent) => { if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(() => syncVditorMode(), 300) }
+const handleEditorClick = (e: MouseEvent) => { if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(() => syncVditorMode(), EDITOR_MODE_SYNC_DELAY_MS) }
 
 const initVditor = () => {
   const container = document.getElementById('vditor-lib'); if (!container) return;
@@ -1446,12 +1516,12 @@ const initVditor = () => {
             viewport.addEventListener('scroll', scrollHandler, { passive: true })
           }
         }
-        if (activeTabId.value) { 
-          const t = tabs.value.find(item => item.id === activeTabId.value); 
-          if (t) loadFileToEditor(t.path) 
+        if (activeTabId.value) {
+          const t = tabs.value.find(item => item.id === activeTabId.value);
+          if (t) loadFileToEditor(t.path)
         }
         updateWordCount();
-        setTimeout(fixEditorImages, 300); // 启动后修正
+        setTimeout(fixEditorImages, IMAGE_FIX_DELAY_MS); // 启动后修正
       }
     })
   } catch (e) { editorLoading.value = false }
