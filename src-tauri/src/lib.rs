@@ -11,6 +11,7 @@ use serde::{Serialize, Deserialize};
 use std::process::Command;
 use base64::{Engine as _, engine::general_purpose};
 use std::sync::LazyLock;
+use std::io::Write;
 
 static RE_MD_IMG: LazyLock<regex::Regex> = LazyLock::new(|| {
     regex::Regex::new(r"!\[(?:[^\]]*)\]\(([^)\s]+)").unwrap()
@@ -21,6 +22,37 @@ static RE_HTML_IMG: LazyLock<regex::Regex> = LazyLock::new(|| {
 static RE_TAG: LazyLock<regex::Regex> = LazyLock::new(|| {
     regex::Regex::new(r"(?:^|\s)#([^\s#`\[\]()]+)").unwrap()
 });
+
+// 路径安全验证：确保文件路径在允许的根目录范围内，防止路径穿越攻击
+fn validate_path_in_root(path: &Path, root: &Path) -> Result<PathBuf, String> {
+    let canonical_path = path.canonicalize()
+        .or_else(|_| {
+            // 如果文件不存在，尝试规范化父目录
+            if let Some(parent) = path.parent() {
+                let parent_canonical = parent.canonicalize()
+                    .map_err(|e| format!("路径验证失败: {}", e))?;
+                Ok(parent_canonical.join(path.file_name().ok_or("无效文件名")?))
+            } else {
+                Err(format!("无效路径: {}", path.display()))
+            }
+        })?;
+
+    let canonical_root = root.canonicalize()
+        .map_err(|e| format!("根目录不存在: {}", e))?;
+
+    if !canonical_path.starts_with(&canonical_root) {
+        return Err(format!("安全错误：路径超出允许范围"));
+    }
+
+    Ok(canonical_path)
+}
+
+// 过滤文件名中的非法字符，防止注入攻击
+fn sanitize_filename(name: &str) -> String {
+    name.chars()
+        .filter(|c| !matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|'))
+        .collect()
+}
 
 #[derive(Serialize)]
 pub struct FileContent {
@@ -213,10 +245,21 @@ fn check_association_status() -> bool {
 
 #[tauri::command]
 async fn create_new_file(library_root: String, target_dir: Option<String>, prefix: Option<String>) -> Result<String, String> {
-    let root = if let Some(dir) = target_dir { PathBuf::from(dir) } else { PathBuf::from(&library_root) };
+    let library_path = PathBuf::from(&library_root);
+    let root = if let Some(dir) = target_dir {
+        let target_path = PathBuf::from(&dir);
+        validate_path_in_root(&target_path, &library_path)?
+    } else {
+        library_path.clone()
+    };
+
     if !root.exists() { fs::create_dir_all(&root).map_err(|e| e.to_string())?; }
     let mut index = 0;
-    let base_name = prefix.unwrap_or_else(|| "未命名".to_string());
+    let base_name = sanitize_filename(&prefix.unwrap_or_else(|| "未命名".to_string()));
+    if base_name.is_empty() {
+        return Err("文件名不能为空".into());
+    }
+
     let mut file_path;
     loop {
         let name = if index == 0 { format!("{}.md", base_name) } else { format!("{} {}.md", base_name, index) };
@@ -294,7 +337,11 @@ async fn delete_item(app_handle: tauri::AppHandle, path: String) -> Result<(), S
             }
         }
     }
-    if p.is_dir() { fs::remove_dir_all(p).map_err(|e| e.to_string())?; } else { fs::remove_file(p).map_err(|e| e.to_string())?; }
+    if p.is_dir() {
+        fs::remove_dir_all(p).map_err(|e| format!("删除目录失败: {}", e))?;
+    } else {
+        fs::remove_file(p).map_err(|e| format!("删除文件失败: {}", e))?;
+    }
     let history_dir = get_history_dir(&app_handle, &path)?;
     if history_dir.exists() { let _ = fs::remove_dir_all(history_dir); }
     Ok(())
@@ -302,7 +349,7 @@ async fn delete_item(app_handle: tauri::AppHandle, path: String) -> Result<(), S
 
 #[tauri::command]
 async fn read_markdown_file(path: String) -> Result<FileContent, String> {
-    let bytes = fs::read(&path).map_err(|e| e.to_string())?;
+    let bytes = fs::read(&path).map_err(|e| format!("读取文件失败: {}", e))?;
     let mut detector = EncodingDetector::new();
     detector.feed(&bytes, true);
     let encoding = detector.guess(None, true);
@@ -311,7 +358,23 @@ async fn read_markdown_file(path: String) -> Result<FileContent, String> {
 }
 
 #[tauri::command]
-async fn write_markdown_file(path: String, content: String) -> Result<(), String> { fs::write(path, content).map_err(|e| e.to_string()) }
+async fn write_markdown_file(path: String, content: String) -> Result<(), String> {
+    // 原子写入：先写临时文件，再原子重命名
+    let file_path = Path::new(&path);
+    let temp_path = file_path.with_extension("md.tmp");
+
+    let mut temp_file = fs::File::create(&temp_path).map_err(|e| format!("创建临时文件失败: {}", e))?;
+    temp_file.write_all(content.as_bytes()).map_err(|e| format!("写入失败: {}", e))?;
+    temp_file.sync_all().map_err(|e| format!("同步失败: {}", e))?;
+    drop(temp_file);
+
+    fs::rename(&temp_path, file_path).map_err(|e| {
+        let _ = fs::remove_file(&temp_path);
+        format!("保存失败: {}", e)
+    })?;
+
+    Ok(())
+}
 
 #[tauri::command]
 fn get_launch_args() -> Vec<String> { std::env::args().collect() }

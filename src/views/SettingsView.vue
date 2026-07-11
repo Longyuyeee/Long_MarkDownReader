@@ -235,7 +235,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, reactive, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon, GitBranch as GitBranchIcon, Check as CheckIcon } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
@@ -490,6 +490,10 @@ const clearHistory = async () => {
     }
   })
 }
+
+onUnmounted(() => {
+  if (saveDebounce) clearTimeout(saveDebounce)
+})
 
 const setAsDefault = async () => {
   try {

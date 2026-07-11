@@ -4,12 +4,19 @@
     <div class="sidebar" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
       <div class="sidebar-inner">
         <!-- 侧边栏图标 Tab 栏（点击展开文字） -->
-        <div class="sidebar-tabs-header">
+        <div class="sidebar-tabs-header" role="tablist" aria-label="侧边栏导航">
           <div
             v-for="tab in sidebarTabs" :key="tab.key"
             class="icon-tab"
             :class="{ active: activeSidebarTab === tab.key }"
+            role="tab"
+            :aria-selected="activeSidebarTab === tab.key"
+            :aria-label="tab.label"
+            :aria-controls="`panel-${tab.key}`"
+            tabindex="0"
             @click="activeSidebarTab = tab.key"
+            @keydown.enter="activeSidebarTab = tab.key"
+            @keydown.space.prevent="activeSidebarTab = tab.key"
             :title="tab.label"
           >
             <n-icon :component="tab.icon" size="18" />
@@ -20,7 +27,7 @@
         <div class="sidebar-tab-content">
           <transition name="tab-fade" mode="out-in">
             <!-- 文件 tree 面板 -->
-            <div v-if="activeSidebarTab === 'files'" :key="'files'" class="tab-pane files-pane">
+            <div v-if="activeSidebarTab === 'files'" :key="'files'" class="tab-pane files-pane" role="tabpanel" :id="`panel-files`" :aria-labelledby="`tab-files`">
               <div class="sidebar-header">
                 <div class="search-area">
                   <n-input v-model:value="searchQuery" placeholder="搜索文档..." size="small" round clearable>
@@ -437,6 +444,13 @@ const dialog = useDialog()
 const store = useAppStore()
 const { tabs, activeTabId } = storeToRefs(store)
 const router = useRouter()
+
+// 统一错误处理辅助函数
+const handleError = (error: any, userMessage: string, logContext?: string) => {
+  const errorMsg = error?.message || error?.toString() || '未知错误'
+  console.error(`[${logContext || 'Error'}]`, errorMsg, error)
+  message.error(`${userMessage}: ${errorMsg}`)
+}
 
 const activeSidebarTab = ref<'files' | 'quick' | 'tags' | 'outline' | 'links' | 'history'>('files')
 const sidebarTabs = [
@@ -1120,7 +1134,9 @@ const deleteAction = async (paths: string[]) => {
         paths.forEach(p => { const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/')); parentsToRefresh.add(idx !== -1 ? p.substring(0, idx) : store.libraryPath) })
         for (const p of parentsToRefresh) await refreshNode(p)
         selectedKeys.value = []; message.success('已物理删除')
-      } catch (e) { message.error('删除失败') }
+      } catch (e: any) {
+        handleError(e, '删除失败', 'deleteAction')
+      }
     }
   })
 }
@@ -1224,13 +1240,15 @@ const handleTemplateCreate = async (key: string) => {
     if (tmpl) await invoke('write_markdown_file', { path: p, content: tmpl })
     await refreshNode(target)
     handleNodeSelect([p])
-  } catch (e) { message.error('创建失败') }
+  } catch (e: any) {
+    handleError(e, '创建失败', 'handleTemplateCreate')
+  }
 }
 
 const handleToolbarAction = async (type: 'file' | 'folder') => {
   if (!store.libraryPath) { openSettings(); return }
   let target = store.libraryPath; if (selectedKeys.value.length > 0) { const sel = selectedKeys.value[0]; target = sel.endsWith('.md') ? sel.substring(0, Math.max(sel.lastIndexOf('\\'), sel.lastIndexOf('/'))) : sel }
-  try { if (type === 'file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target }); await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { parentPath: target }); await refreshNode(target) } } catch (e) { message.error('操作失败') }
+  try { if (type === 'file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target }); await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { parentPath: target }); await refreshNode(target) } } catch (e: any) { handleError(e, '操作失败', 'handleToolbarAction') }
 }
 
 const createDailyNote = async () => {
@@ -1291,7 +1309,9 @@ const saveCurrentFile = async () => {
         invoke('git_commit', { libraryPath: store.libraryPath, message: `更新: ${t.title}` }).catch(() => {})
       }
       if (autoSaveTimer) clearTimeout(autoSaveTimer)
-    } catch (e) { message.error('保存失败') }
+    } catch (e: any) {
+      handleError(e, '保存失败', 'saveCurrentFile')
+    }
   }
 }
 
@@ -1385,6 +1405,9 @@ const initVditor = () => {
         // 光标位置追踪（兼容 WYSIWYG / IR / SV 三种模式）
         const contentEl = vditor.vditor.wysiwyg?.element || vditor.vditor.ir?.element || vditor.vditor.sv?.element
         if (contentEl) {
+          // 清理旧的监听器
+          cleanupEditorListeners()
+
           const getEditEl = () => vditor.vditor.wysiwyg?.element || vditor.vditor.ir?.element || vditor.vditor.sv?.element || contentEl
           const updateCursor = () => {
             const el = getEditEl()
@@ -1399,12 +1422,17 @@ const initVditor = () => {
             cursorLine.value = lines.length
             cursorCol.value = lines[lines.length - 1].length + 1
           }
+
+          // 保存监听器引用以便清理
+          cursorUpdateHandler = updateCursor
+          currentContentEl = contentEl
           contentEl.addEventListener('keyup', updateCursor)
           contentEl.addEventListener('click', updateCursor)
+
           // 滚动追踪：自动高亮当前章节
           const viewport = contentEl.closest('.editor-viewport') as HTMLElement
           if (viewport) {
-            viewport.addEventListener('scroll', () => {
+            const scrollHandler = () => {
               const headings = contentEl.querySelectorAll('h1, h2, h3, h4, h5, h6')
               let closestId = null as string | null
               headings.forEach((h: HTMLElement) => {
@@ -1412,7 +1440,10 @@ const initVditor = () => {
                 if (rect.top <= 160) closestId = h.getAttribute('data-id') || h.id
               })
               activeHeadingKey.value = closestId
-            }, { passive: true })
+            }
+            scrollUpdateHandler = scrollHandler
+            currentViewport = viewport
+            viewport.addEventListener('scroll', scrollHandler, { passive: true })
           }
         }
         if (activeTabId.value) { 
@@ -1435,6 +1466,26 @@ const handleKeyDown = (e: KeyboardEvent) => {
 }
 
 let unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd: any = null, unlistenSaveCmd: any = null, unlistenDailyNote: any = null, unlistenFocus: any = null, unlistenDrop: any = null
+
+// 事件监听器清理
+let cursorUpdateHandler: (() => void) | null = null
+let scrollUpdateHandler: (() => void) | null = null
+let currentContentEl: HTMLElement | null = null
+let currentViewport: HTMLElement | null = null
+
+const cleanupEditorListeners = () => {
+  if (currentContentEl && cursorUpdateHandler) {
+    currentContentEl.removeEventListener('keyup', cursorUpdateHandler)
+    currentContentEl.removeEventListener('click', cursorUpdateHandler)
+  }
+  if (currentViewport && scrollUpdateHandler) {
+    currentViewport.removeEventListener('scroll', scrollUpdateHandler)
+  }
+  cursorUpdateHandler = null
+  scrollUpdateHandler = null
+  currentContentEl = null
+  currentViewport = null
+}
 
 const handleExportHtml = async () => {
   if (!vditor || !isVditorReady || !activeTabId.value) { message.warning('无可导出的内容'); return }
@@ -1527,7 +1578,26 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => { window.removeEventListener('keydown', handleKeyDown); if (autoSaveTimer) clearTimeout(autoSaveTimer); if (shadowSaveTimer) clearInterval(shadowSaveTimer); destroyOutlineObserver(); if (unlistenRefresh) unlistenRefresh(); if (unlistenExport) unlistenExport(); if (unlistenRefreshCmd) unlistenRefreshCmd(); if (unlistenSaveCmd) unlistenSaveCmd(); if (unlistenDailyNote) unlistenDailyNote(); if (unlistenFocus) unlistenFocus(); if (unlistenDrop) unlistenDrop(); if (vditor && isVditorReady) vditor.destroy() })
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+  if (autoSaveTimer) clearTimeout(autoSaveTimer)
+  if (shadowSaveTimer) clearInterval(shadowSaveTimer)
+  if (gitStatusTimer) clearTimeout(gitStatusTimer)
+  if (searchTimer) clearTimeout(searchTimer)
+  cleanupEditorListeners()
+  destroyOutlineObserver()
+  if (unlistenRefresh) unlistenRefresh()
+  if (unlistenExport) unlistenExport()
+  if (unlistenRefreshCmd) unlistenRefreshCmd()
+  if (unlistenSaveCmd) unlistenSaveCmd()
+  if (unlistenDailyNote) unlistenDailyNote()
+  if (unlistenFocus) unlistenFocus()
+  if (unlistenDrop) unlistenDrop()
+  if (vditor && isVditorReady) {
+    vditor.destroy()
+    vditor = null
+  }
+})
 watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory(); if (newTab === 'links') fetchLinks() })
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
@@ -2453,10 +2523,44 @@ watch(activeTabId, (newId, oldId) => {
 .vditor-instance { flex: 1; height: 0; overflow: visible !important; }
 
 :deep(.vditor-wysiwyg), :deep(.vditor-preview), :deep(.vditor-panel), :deep(.vditor-reset) { background-color: var(--custom-editor-bg) !important; }
-/* 编辑器宽度模式 */
-.editor-width-narrow :deep(.vditor-reset) { max-width: 600px !important; margin: 0 auto !important; }
-.editor-width-medium :deep(.vditor-reset) { max-width: 800px !important; margin: 0 auto !important; }
-.editor-width-wide :deep(.vditor-reset) { max-width: none !important; margin: 0 !important; }
+/* 编辑器宽度模式 - 自适应设计 */
+.editor-width-narrow :deep(.vditor-reset) {
+  max-width: min(65ch, 90vw) !important;
+  margin: 0 auto !important;
+  padding: 24px clamp(16px, 3vw, 32px) !important;
+}
+
+.editor-width-medium :deep(.vditor-reset) {
+  max-width: min(80ch, 95vw) !important;
+  margin: 0 auto !important;
+  padding: 24px clamp(20px, 4vw, 40px) !important;
+}
+
+.editor-width-wide :deep(.vditor-reset) {
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 24px clamp(40px, 5vw, 80px) !important;
+  width: 100% !important;
+}
+
+/* 宽模式下容器也要撑满 */
+.editor-width-wide :deep(.vditor-content),
+.editor-width-wide :deep(.vditor-wysiwyg),
+.editor-width-wide :deep(.vditor-ir) {
+  max-width: 100% !important;
+}
+
+/* 小屏幕优化 */
+@media (max-width: 768px) {
+  .editor-width-narrow :deep(.vditor-reset),
+  .editor-width-medium :deep(.vditor-reset) {
+    padding: 16px 20px !important;
+  }
+
+  .editor-width-wide :deep(.vditor-reset) {
+    padding: 16px 24px !important;
+  }
+}
 .mode-toggle { display: flex; gap: 2px; }
 .width-toggle { display: flex; gap: 2px; margin-left: 8px; padding-left: 8px; border-left: var(--theme-border); }
 .is-dark .width-toggle { border-left-color: rgba(255,255,255,0.08); }

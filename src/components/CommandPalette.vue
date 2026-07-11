@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onUnmounted } from 'vue'
 import { Search as SearchIcon, FileText as FileIcon, Command as CommandIcon, Clock as ClockIcon } from 'lucide-vue-next'
 import { InputInst } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
@@ -174,6 +174,10 @@ watch(query, (val) => {
     results.value = loadRecentFiles()
     selectedIndex.value = 0
   }
+})
+
+onUnmounted(() => {
+  if (searchDebounce) clearTimeout(searchDebounce)
 })
 </script>
 

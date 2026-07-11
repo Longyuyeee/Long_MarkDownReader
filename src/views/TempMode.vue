@@ -321,7 +321,15 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => { destroyOutlineObserver(); if (vditor) vditor.destroy(); if (unlistenExport) unlistenExport(); if (shadowSaveTimer) clearInterval(shadowSaveTimer) })
+onUnmounted(() => {
+  destroyOutlineObserver()
+  if (shadowSaveTimer) clearInterval(shadowSaveTimer)
+  if (unlistenExport) unlistenExport()
+  if (vditor) {
+    vditor.destroy()
+    vditor = null
+  }
+})
 
 const syncVditorMode = () => {
   if (vditor) {
