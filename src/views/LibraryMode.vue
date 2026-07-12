@@ -953,7 +953,9 @@ const loadFileToEditor = async (path: string) => {
       // 缓存转换结果（限制缓存大小防止内存泄漏）
       if (imagePathCache.size > 100) {
         const firstKey = imagePathCache.keys().next().value
-        imagePathCache.delete(firstKey)
+        if (firstKey !== undefined) {
+          imagePathCache.delete(firstKey)
+        }
       }
       imagePathCache.set(cacheKey, fixedContent)
     }
@@ -1213,8 +1215,9 @@ const deleteAction = async (paths: string[]) => {
 
 const nodeProps = ({ option }: { option: TreeOption }) => ({
   'data-key': option.key,
-  'data-drop-path': option.key, 
-  'data-drop-dir': !option.isLeaf ? 'true' : 'false', 
+  'data-drop-path': option.key,
+  'data-drop-dir': !option.isLeaf ? 'true' : 'false',
+  'title': option.label as string,
   class: [
     virtualDrag.dropTarget === option.key ? 'drop-active' : '',
     virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'before' ? 'is-drop-before' : '',
@@ -2629,6 +2632,37 @@ watch(activeTabId, (newId, oldId) => {
 
   .editor-width-wide :deep(.vditor-reset) {
     padding: 16px 24px !important;
+  }
+}
+
+/* 响应式布局优化 - 小屏幕断点 */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 200px !important;
+  }
+
+  .tabs-bar {
+    padding: 8px 8px 0 !important;
+  }
+
+  .tab-pill {
+    max-width: 150px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+  }
+
+  .sidebar-header {
+    padding: 10px 12px !important;
+  }
+
+  .icon-tab {
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+  }
+
+  .icon-tab.active {
+    padding: 0 10px !important;
   }
 }
 .mode-toggle { display: flex; gap: 2px; }
