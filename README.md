@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.6.3-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.6.4-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,11 +21,16 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.6.3**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.3) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.6.4**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.4) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.6.2)
+## 🆕 最新版本更新 (v0.6.4)
+
+### 🎨 v0.6.4 知识图谱空状态提示优化
+*   **空状态提示组件**：用户打开空白图谱时显示清晰的使用说明。
+*   **引导性提示**：提示用户使用 `[[笔记名]]` 语法创建双向链接。
+*   **优化视觉设计**：虚线圆形图标、渐变背景、代码样式标签，体验更友好。
 
 ### 🎨 v0.6.2 文档渲染华丽化升级
 *   **标题系统 2.0**：渐变色装饰条、文字渐变效果、阴影立体感，层次分明的视觉层级。
