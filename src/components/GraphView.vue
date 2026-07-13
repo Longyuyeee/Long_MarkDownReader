@@ -43,6 +43,27 @@
       </div>
     </div>
     <canvas ref="canvasRef" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @wheel.prevent="onZoom" @click="onClick" @dblclick="onDblClick"></canvas>
+
+    <!-- 空状态提示 -->
+    <div v-if="graphData.nodes.length === 0" class="empty-graph-hint">
+      <div class="empty-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/>
+          <circle cx="5" cy="5" r="2"/>
+          <circle cx="19" cy="5" r="2"/>
+          <circle cx="5" cy="19" r="2"/>
+          <circle cx="19" cy="19" r="2"/>
+          <line x1="8.5" y1="6.5" x2="10.5" y2="10.5"/>
+          <line x1="15.5" y1="6.5" x2="13.5" y2="10.5"/>
+          <line x1="8.5" y1="17.5" x2="10.5" y2="13.5"/>
+          <line x1="15.5" y1="17.5" x2="13.5" y2="13.5"/>
+        </svg>
+      </div>
+      <h3>知识图谱为空</h3>
+      <p>在笔记中使用 <code>[[笔记名]]</code> 语法创建双向链接</p>
+      <p class="hint-detail">例如：在笔记 A 中写 <code>[[笔记 B]]</code>，即可建立连接关系</p>
+    </div>
+
     <div class="graph-stats">
       <div class="stat-item">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -698,6 +719,70 @@ canvas:active {
 .tooltip-fade-leave-to {
   opacity: 0;
   transform: translateY(-10px) scale(0.95);
+}
+
+/* 空状态提示 */
+.empty-graph-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 5;
+  max-width: 480px;
+  padding: 40px;
+}
+
+.empty-icon {
+  margin: 0 auto 24px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg,
+    rgba(var(--theme-primary-rgb), 0.1) 0%,
+    rgba(var(--theme-primary-rgb), 0.05) 100%);
+  border: 2px dashed rgba(var(--theme-primary-rgb), 0.3);
+}
+
+.empty-icon svg {
+  color: var(--theme-primary);
+  opacity: 0.6;
+}
+
+.empty-graph-hint h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--theme-text);
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.empty-graph-hint p {
+  font-size: 14px;
+  color: var(--theme-text-secondary);
+  line-height: 1.6;
+  margin: 8px 0;
+}
+
+.empty-graph-hint code {
+  background: rgba(var(--theme-primary-rgb), 0.1);
+  color: var(--theme-primary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hint-detail {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 /* 深色主题适配 */
