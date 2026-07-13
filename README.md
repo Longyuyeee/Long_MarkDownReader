@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.6.4-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.6.5-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,11 +21,16 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.6.4**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.4) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.6.5**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.5) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.6.4)
+## 🆕 最新版本更新 (v0.6.5)
+
+### 🔧 v0.6.5 双向链接核心修复
+*   **全局文件名索引**：实现跨目录链接解析，`[[笔记名]]` 现在能找到任何目录下的文件。
+*   **智能匹配策略**：唯一文件名直接返回，同名文件优先同目录，支持 `[[子目录/文件名]]` 语法。
+*   **知识图谱修复**：解决图谱为空的核心问题，跨目录链接现在正常工作。
 
 ### 🎨 v0.6.4 知识图谱空状态提示优化
 *   **空状态提示组件**：用户打开空白图谱时显示清晰的使用说明。
