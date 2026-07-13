@@ -804,19 +804,50 @@ async fn build_link_graph(library_root: String) -> Result<GraphData, String> {
     let mut node_ids: std::collections::HashSet<String> = std::collections::HashSet::new();
     let root = Path::new(&library_root);
     if !root.exists() { return Ok(GraphData { nodes, edges }); }
-    build_graph_recursive(root, &mut nodes, &mut edges, &mut node_ids);
+
+    // 第一次遍历：构建全局文件名索引
+    let mut name_to_paths: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+    build_filename_index(root, &mut name_to_paths);
+
+    // 第二次遍历：构建节点和边
+    build_graph_recursive(root, &mut nodes, &mut edges, &mut node_ids, &name_to_paths);
     Ok(GraphData { nodes, edges })
 }
 
-fn build_graph_recursive(dir: &Path, nodes: &mut Vec<GraphNode>, edges: &mut Vec<GraphEdge>, node_ids: &mut std::collections::HashSet<String>) {
+// 构建全局文件名索引
+fn build_filename_index(dir: &Path, index: &mut std::collections::HashMap<String, Vec<String>>) {
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            let name = p.file_name().unwrap_or_default().to_string_lossy();
+            if name.starts_with('.') || name.ends_with(".assets") { continue; }
+            if p.is_dir() {
+                build_filename_index(&p, index);
+            } else if name.ends_with(".md") {
+                let stem = name.trim_end_matches(".md").to_string();
+                let full_path = p.to_string_lossy().to_string();
+                index.entry(stem).or_insert_with(Vec::new).push(full_path);
+            }
+        }
+    }
+}
+
+fn build_graph_recursive(
+    dir: &Path,
+    nodes: &mut Vec<GraphNode>,
+    edges: &mut Vec<GraphEdge>,
+    node_ids: &mut std::collections::HashSet<String>,
+    name_to_paths: &std::collections::HashMap<String, Vec<String>>,
+) {
     static RE: LazyLock<regex::Regex> = LazyLock::new(|| regex::Regex::new(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]").unwrap());
     if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
             let p = entry.path();
             let name = p.file_name().unwrap_or_default().to_string_lossy();
             if name.starts_with('.') || name.ends_with(".assets") { continue; }
-            if p.is_dir() { build_graph_recursive(&p, nodes, edges, node_ids); }
-            else if name.ends_with(".md") {
+            if p.is_dir() {
+                build_graph_recursive(&p, nodes, edges, node_ids, name_to_paths);
+            } else if name.ends_with(".md") {
                 let path_str = p.to_string_lossy().to_string();
                 let title = name.trim_end_matches(".md").to_string();
                 let id = path_str.clone();
@@ -827,17 +858,63 @@ fn build_graph_recursive(dir: &Path, nodes: &mut Vec<GraphNode>, edges: &mut Vec
                 if let Ok(content) = fs::read_to_string(&p) {
                     for cap in RE.captures_iter(&content) {
                         let target_title = cap[1].trim().to_string();
-                        let target_id = if target_title.contains(':') || target_title.contains('/') || target_title.contains('\\') {
-                            target_title.clone()
-                        } else {
-                            format!("{}/{}.md", dir.to_string_lossy(), target_title)
-                        };
+                        let target_id = resolve_wikilink(&target_title, name_to_paths, dir);
                         edges.push(GraphEdge { source: id.clone(), target: target_id });
                     }
                 }
             }
         }
     }
+}
+
+// 解析 wikilink 到实际文件路径
+fn resolve_wikilink(link: &str, name_to_paths: &std::collections::HashMap<String, Vec<String>>, current_dir: &Path) -> String {
+    // 处理绝对路径（Windows 盘符或 Unix 根路径）
+    if link.contains(':') || link.starts_with('/') || link.starts_with('\\') {
+        return link.to_string();
+    }
+
+    // 处理带路径分隔符的链接（如 "子目录/文件名"）
+    if link.contains('/') || link.contains('\\') {
+        let normalized = link.replace('\\', "/");
+        let file_name = normalized.split('/').last().unwrap_or(link);
+
+        if let Some(paths) = name_to_paths.get(file_name) {
+            // 查找路径中包含完整链接路径的文件
+            for p in paths {
+                let normalized_path = p.replace('\\', "/");
+                if normalized_path.ends_with(&format!("/{}.md", normalized)) || normalized_path.ends_with(&format!("\\{}.md", link)) {
+                    return p.clone();
+                }
+            }
+            // 降级：返回第一个同名文件
+            return paths[0].clone();
+        }
+        // 未找到，返回猜测路径（向后兼容）
+        return format!("{}.md", link);
+    }
+
+    // 纯文件名链接（最常见情况）
+    if let Some(paths) = name_to_paths.get(link) {
+        if paths.len() == 1 {
+            // 唯一匹配，直接返回
+            return paths[0].clone();
+        }
+
+        // 多个同名文件：优先选择同目录下的文件
+        let current_dir_str = current_dir.to_string_lossy();
+        for p in paths {
+            if p.starts_with(current_dir_str.as_ref()) {
+                return p.clone();
+            }
+        }
+
+        // 无同目录匹配，返回第一个（按字典序最早的）
+        return paths[0].clone();
+    }
+
+    // 未找到任何匹配，返回相对路径猜测（向后兼容旧行为）
+    format!("{}/{}.md", current_dir.to_string_lossy(), link)
 }
 
 #[derive(Serialize, Clone)]

@@ -25,7 +25,10 @@
       "Bash(netstat -ano)",
       "Bash(findstr :9000)",
       "Bash(ping *)",
-      "Bash(findstr LISTENING)"
+      "Bash(findstr LISTENING)",
+      "Bash(tee /tmp/build-output.log)",
+      "Bash(curl -s http://127.0.0.1:9000)",
+      "Bash(findstr 9000)"
     ]
   }
 }
