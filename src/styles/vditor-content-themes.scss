@@ -1065,12 +1065,17 @@
       display: block;
     }
 
-    /* 修复 Mermaid 节点文字大小写问题 */
+    /* 修复 Mermaid 节点文字大小写问题 - 增强覆盖 */
     text,
     tspan,
     .nodeLabel,
-    .edgeLabel {
+    .edgeLabel,
+    foreignObject,
+    div,
+    span,
+    p {
       text-transform: none !important;
+      font-variant-caps: normal !important;
     }
   }
 }

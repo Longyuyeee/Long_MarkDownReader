@@ -62,6 +62,7 @@
       <h3>知识图谱为空</h3>
       <p>在笔记中使用 <code>[[笔记名]]</code> 语法创建双向链接</p>
       <p class="hint-detail">例如：在笔记 A 中写 <code>[[笔记 B]]</code>，即可建立连接关系</p>
+      <p class="hint-detail">支持跨目录引用：<code>[[子目录/文件名]]</code> 或直接使用文件名（唯一时自动匹配）</p>
     </div>
 
     <div class="graph-stats">
