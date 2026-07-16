@@ -292,8 +292,10 @@ const draw = () => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
+  // 重置变换矩阵，避免累积缩放
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
   ctx.scale(dpr, dpr)
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.clearRect(0, 0, width, height)
   ctx.save()
   ctx.translate(viewX, viewY)
   ctx.scale(zoom, zoom)

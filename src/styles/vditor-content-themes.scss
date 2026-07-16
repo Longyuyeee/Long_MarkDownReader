@@ -134,7 +134,6 @@
     font-size: 0.95em;
     font-weight: 600;
     letter-spacing: 0.02em;
-    text-transform: uppercase;
 
     &::before {
       width: 3px;
@@ -432,7 +431,6 @@
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.05em;
-      text-transform: uppercase;
       border-radius: 6px;
       border: 1px solid rgba(var(--theme-primary-rgb, 37, 99, 235), 0.2);
       backdrop-filter: blur(4px);
@@ -1058,10 +1056,21 @@
     border-radius: 8px;
     padding: 20px;
     margin: 16px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
 
     svg {
       max-width: 100%;
       height: auto;
+      display: block;
+    }
+
+    /* 修复 Mermaid 节点文字大小写问题 */
+    text,
+    tspan,
+    .nodeLabel,
+    .edgeLabel {
+      text-transform: none !important;
     }
   }
 }

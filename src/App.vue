@@ -18,8 +18,10 @@
         </div>
         <div class="app-content">
           <router-view v-slot="{ Component }">
-            <transition name="premium-switch">
-              <component :is="Component" />
+            <transition name="premium-switch" mode="out-in">
+              <div :key="$route.path" class="route-wrapper">
+                <component :is="Component" />
+              </div>
             </transition>
           </router-view>
         </div>
@@ -341,15 +343,31 @@ body[data-theme="dark"] .win-btn:hover { background: rgba(255, 255, 255, 0.1); }
 .app-content { flex: 1; position: relative; overflow: hidden; }
 
 /* 全局高级转场动效 */
+.route-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
 .premium-switch-enter-active, .premium-switch-leave-active {
   transition:
     opacity var(--motion-page) var(--ease-standard),
     transform var(--motion-page) var(--ease-emphasized),
     filter var(--motion-page) var(--ease-standard);
-  position: absolute; width: 100%;
 }
 .premium-switch-enter-from { opacity: 0; transform: scale(0.96) translateY(15px); filter: blur(10px); }
 .premium-switch-leave-to { opacity: 0; transform: scale(1.04); filter: blur(5px); }
+
+.premium-switch-leave-active {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.premium-switch-enter-active {
+  position: relative;
+  z-index: 2;
+}
 
 /* 隐藏 Vditor 浮动工具栏，提升专注感 */
 .vditor-panel--focus, 
