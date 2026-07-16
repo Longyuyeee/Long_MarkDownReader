@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.6.5-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.6.6-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,11 +21,16 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.6.5**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.5) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.6.6**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.6) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.6.5)
+## 🆕 最新版本更新 (v0.6.6)
+
+### 🐛 v0.6.6 核心渲染修复 & 体验优化
+*   **知识图谱渲染修复**：修复 Canvas 节点不显示问题（悬浮提示正常但节点不可见），解决 DPR 缩放累积导致的变换矩阵错误。
+*   **Mermaid 图表优化**：修复节点文字首字母强制大写问题，优化图表显示解决内容截断，添加水平滚动支持。
+*   **页面切换体验优化**：添加平滑过渡动画，消除页面切换时的空白闪烁，优化加载状态显示。
 
 ### 🔧 v0.6.5 双向链接核心修复
 *   **全局文件名索引**：实现跨目录链接解析，`[[笔记名]]` 现在能找到任何目录下的文件。
