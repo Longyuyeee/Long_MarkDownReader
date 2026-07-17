@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.6.6-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.6.7-blue?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
@@ -21,11 +21,15 @@
 
 **智能资源管理，系统深度集成：**
 
-*   [🚀 **前往 GitHub 下载 v0.6.6**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.6) - 在发布页面选择 .exe 或 .msi 安装包。
+*   [🚀 **前往 GitHub 下载 v0.6.7**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.7) - 在发布页面选择 .exe 或 .msi 安装包。
 
 ---
 
-## 🆕 最新版本更新 (v0.6.6)
+## 🆕 最新版本更新 (v0.6.7)
+
+### 🐛 v0.6.7 Mermaid 渲染增强 & 知识图谱提示完善
+*   **Mermaid 文字大小写增强修复**：扩展 CSS 选择器覆盖所有文本元素（foreignObject/div/span/p），添加 font-variant-caps 防止浏览器默认首字母转换。
+*   **知识图谱提示完善**：空状态提示增加跨目录引用说明，支持 `[[子目录/文件名]]` 或直接使用唯一文件名自动匹配。
 
 ### 🐛 v0.6.6 核心渲染修复 & 体验优化
 *   **知识图谱渲染修复**：修复 Canvas 节点不显示问题（悬浮提示正常但节点不可见），解决 DPR 缩放累积导致的变换矩阵错误。
