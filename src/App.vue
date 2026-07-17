@@ -24,6 +24,17 @@
               </div>
             </transition>
           </router-view>
+          <transition name="page-loader-fade">
+            <div v-if="routeLoading" class="page-loader" role="status" aria-live="polite">
+              <div class="page-loader-mark" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="page-loader-copy">
+                <strong>{{ routeLoadingLabel }}</strong>
+                <span>正在准备页面内容...</span>
+              </div>
+            </div>
+          </transition>
         </div>
         <CommandPalette :show="showPalette" @close="showPalette = false" @execute="handleCommand" />
 
@@ -120,7 +131,44 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
 const showPalette = ref(false)
 const showExitModal = ref(false)
 const dontAskAgain = ref(false)
+const routeLoading = ref(true)
+const routeLoadingLabel = ref('正在打开知识库')
 let unlistenOpenFile: (() => void) | null = null
+let routeLoadingTimer: ReturnType<typeof setTimeout> | null = null
+let routeLoadingStartedAt = performance.now()
+
+const getRouteLoadingLabel = (routeName: unknown) => {
+  const labels: Record<string, string> = {
+    LibraryMode: '正在打开知识库',
+    TempMode: '正在载入文档',
+    QuickNote: '正在打开快速笔记',
+    Graph: '正在准备知识图谱',
+    Settings: '正在载入设置'
+  }
+  return labels[String(routeName)] || '正在切换页面'
+}
+
+const startRouteLoading = (routeName?: unknown) => {
+  if (routeLoadingTimer) clearTimeout(routeLoadingTimer)
+  routeLoadingStartedAt = performance.now()
+  routeLoadingLabel.value = getRouteLoadingLabel(routeName)
+  routeLoading.value = true
+}
+
+const finishRouteLoading = () => {
+  if (routeLoadingTimer) clearTimeout(routeLoadingTimer)
+  const remaining = Math.max(0, 420 - (performance.now() - routeLoadingStartedAt))
+  routeLoadingTimer = setTimeout(() => { routeLoading.value = false }, remaining)
+}
+
+const removeBeforeEach = router.beforeEach((to) => {
+  startRouteLoading(to.name)
+  return true
+})
+const removeAfterEach = router.afterEach(() => {
+  // Give the destination component two paint frames before revealing it.
+  requestAnimationFrame(() => requestAnimationFrame(finishRouteLoading))
+})
 
 const handleGlobalKeydown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); showPalette.value = true }
@@ -201,11 +249,15 @@ onMounted(async () => {
   } catch (_) { /* launch args unavailable, not critical */ }
 
   window.addEventListener('keydown', handleGlobalKeydown)
+  finishRouteLoading()
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown)
   if (unlistenOpenFile) unlistenOpenFile()
+  if (routeLoadingTimer) clearTimeout(routeLoadingTimer)
+  removeBeforeEach()
+  removeAfterEach()
 })
 </script>
 
@@ -341,6 +393,90 @@ body[data-theme="dark"] .win-btn:hover { background: rgba(255, 255, 255, 0.1); }
 .win-btn.close:hover { background: #ff3b30 !important; color: #fff !important; }
 
 .app-content { flex: 1; position: relative; overflow: hidden; }
+
+.page-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(var(--theme-primary-rgb), 0.1), transparent 32%),
+    color-mix(in srgb, var(--theme-bg) 90%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.page-loader-mark {
+  position: relative;
+  width: 58px;
+  height: 58px;
+}
+
+.page-loader-mark::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 16px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.2);
+  background: rgba(var(--theme-primary-rgb), 0.055);
+  transform: rotate(45deg);
+  animation: loaderTile 1.8s var(--ease-premium) infinite;
+}
+
+.page-loader-mark span {
+  position: absolute;
+  top: 25px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  box-shadow: 0 0 14px rgba(var(--theme-primary-rgb), 0.45);
+  animation: loaderDot 1.1s ease-in-out infinite;
+}
+
+.page-loader-mark span:nth-child(1) { left: 12px; }
+.page-loader-mark span:nth-child(2) { left: 25px; animation-delay: 0.14s; }
+.page-loader-mark span:nth-child(3) { left: 38px; animation-delay: 0.28s; }
+
+.page-loader-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.page-loader-copy strong {
+  color: var(--theme-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.page-loader-copy span {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.page-loader-fade-enter-active,
+.page-loader-fade-leave-active {
+  transition: opacity 0.25s ease, backdrop-filter 0.25s ease;
+}
+
+.page-loader-fade-enter-from,
+.page-loader-fade-leave-to {
+  opacity: 0;
+  backdrop-filter: blur(0);
+}
+
+@keyframes loaderTile {
+  0%, 100% { transform: rotate(45deg) scale(0.92); opacity: 0.65; }
+  50% { transform: rotate(135deg) scale(1.05); opacity: 1; }
+}
+
+@keyframes loaderDot {
+  0%, 100% { transform: translateY(4px) scale(0.75); opacity: 0.45; }
+  50% { transform: translateY(-4px) scale(1); opacity: 1; }
+}
 
 /* 全局高级转场动效 */
 .route-wrapper {

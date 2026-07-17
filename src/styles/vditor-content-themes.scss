@@ -1060,12 +1060,13 @@
     overflow-y: hidden;
 
     svg {
-      max-width: 100%;
+      max-width: none;
+      min-width: 100%;
       height: auto;
       display: block;
     }
 
-    /* 修复 Mermaid 节点文字大小写问题 - 增强覆盖 */
+    /* Mermaid 标签是 HTML 段落，必须与正文的首字下沉和段落间距隔离。 */
     text,
     tspan,
     .nodeLabel,
@@ -1076,6 +1077,44 @@
     p {
       text-transform: none !important;
       font-variant-caps: normal !important;
+    }
+
+    .nodeLabel,
+    .edgeLabel {
+      line-height: 1.25 !important;
+      font-size: 14px !important;
+    }
+
+    .nodeLabel p,
+    .edgeLabel p,
+    foreignObject p {
+      margin: 0 !important;
+      padding: 0 !important;
+      line-height: 1.25 !important;
+      font-size: inherit !important;
+      font-weight: inherit !important;
+      animation: none !important;
+      float: none !important;
+    }
+
+    .nodeLabel p:first-of-type::first-letter,
+    .edgeLabel p:first-of-type::first-letter,
+    foreignObject p:first-of-type::first-letter {
+      float: none !important;
+      margin: 0 !important;
+      font-size: inherit !important;
+      font-weight: inherit !important;
+      line-height: inherit !important;
+      color: inherit !important;
+    }
+
+    .node foreignObject > div {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      height: 100%;
+      overflow: visible;
     }
   }
 }

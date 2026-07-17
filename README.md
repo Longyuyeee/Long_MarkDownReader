@@ -5,27 +5,56 @@
 <h1 align="center">Long编辑 · 知识助手</h1>
 
 <p align="center">
-  <strong>一款基于 Tauri 2.0 构建的极致美学、极致性能、生产级 Markdown 知识库编辑器</strong>
+  <strong>轻盈、专注、连接思考的本地 Markdown 知识库</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.6.7-blue?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v0.6.8-0078d4?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Platform-Windows-0078d4?style=flat-square&logo=windows11&logoColor=white" alt="Windows">
   <img src="https://img.shields.io/badge/Tauri-2.0-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3.0-green?style=flat-square" alt="Vue">
+  <img src="https://img.shields.io/badge/Editor-Vditor-6c5ce7?style=flat-square" alt="Vditor">
   <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License">
+</p>
+
+<p align="center">
+  <a href="#-立即体验-download">下载安装</a> ·
+  <a href="#-快速开始">快速开始</a> ·
+  <a href="#-软件亮点-highlights">功能亮点</a> ·
+  <a href="#️-技术底座-architecture">技术架构</a>
 </p>
 
 ---
 
 ## 📥 立即体验 (Download)
 
-**智能资源管理，系统深度集成：**
+> 当前稳定版本：**v0.6.8** · 支持 Windows 10/11 x64
 
-*   [🚀 **前往 GitHub 下载 v0.6.7**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.7) - 在发布页面选择 .exe 或 .msi 安装包。
+* [🚀 **前往 GitHub 下载 v0.6.8**](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.8) — 推荐普通用户下载 `.exe` 安装包，也可选择 `.msi` 企业安装包。
+
+## 🚀 快速开始
+
+| 步骤 | 操作 | 你将获得 |
+| :--: | --- | --- |
+| 1 | 添加或创建本地知识库目录 | 文件仍由你完全掌控，无私有格式锁定 |
+| 2 | 新建 Markdown 笔记并开始编辑 | 所见即所得、即时渲染、源码三种模式 |
+| 3 | 输入 `[[笔记名]]` 连接相关内容 | 自动生成双向链接、反向引用与知识图谱 |
+| 4 | 按 `Ctrl + P` 打开命令面板 | 快速搜索文件并执行常用操作 |
+
+<p align="center">
+  <strong>本地优先</strong> · 多知识库 · 双向链接 · 知识图谱 · Git 同步 · AI 辅助
+</p>
 
 ---
 
-## 🆕 最新版本更新 (v0.6.7)
+## 🆕 最新版本更新 (v0.6.8)
+
+### ✨ v0.6.8 知识图谱引导、Mermaid 排版修复与加载体验升级
+* **知识图谱教程**：新增随时可打开的三步链接教程，空图谱会主动引导使用 `[[笔记名]]` 和跨目录链接。
+* **图谱加载反馈**：构建图谱时显示节点连线动效，避免大型知识库分析期间出现空白界面。
+* **Mermaid 节点修复**：隔离正文首字下沉与段落样式，解决流程图节点首字放大、文字超出方框问题。
+* **长图浏览优化**：流程图保持正确尺寸并支持横向滚动，复杂业务图不再被强制压缩。
+* **页面切换动效**：知识库、设置、图谱和临时文档切换时显示语义化加载提示，数据准备完成后平滑淡出。
 
 ### 🐛 v0.6.7 Mermaid 渲染增强 & 知识图谱提示完善
 *   **Mermaid 文字大小写增强修复**：扩展 CSS 选择器覆盖所有文本元素（foreignObject/div/span/p），添加 font-variant-caps 防止浏览器默认首字母转换。

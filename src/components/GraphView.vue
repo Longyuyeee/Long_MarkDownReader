@@ -22,6 +22,14 @@
         <span class="graph-title">知识图谱</span>
       </div>
       <div class="graph-controls">
+        <button class="tutorial-btn" :class="{ active: showTutorial }" @click="showTutorial = !showTutorial" title="如何建立链接">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.1 9a3 3 0 1 1 5.8 1c0 2-3 2-3 4"/>
+            <path d="M12 18h.01"/>
+          </svg>
+          <span>如何建立链接</span>
+        </button>
         <button class="control-btn" @click="resetView" title="重置视图">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
@@ -44,8 +52,20 @@
     </div>
     <canvas ref="canvasRef" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @wheel.prevent="onZoom" @click="onClick" @dblclick="onDblClick"></canvas>
 
-    <!-- 空状态提示 -->
-    <div v-if="graphData.nodes.length === 0" class="empty-graph-hint">
+    <transition name="hint-fade">
+      <div v-if="isLoading" class="graph-loading" role="status" aria-live="polite">
+        <div class="graph-loader" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <strong>正在构建知识图谱</strong>
+        <p>正在分析笔记之间的链接关系...</p>
+      </div>
+    </transition>
+
+    <!-- 空状态和随时可打开的链接教程 -->
+    <transition name="hint-fade">
+    <div v-if="!isLoading && (showTutorial || graphData.nodes.length === 0)" class="empty-graph-hint tutorial-card">
+      <button v-if="showTutorial && graphData.nodes.length > 0" class="tutorial-close" @click="showTutorial = false" aria-label="关闭教程">×</button>
       <div class="empty-icon">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <circle cx="12" cy="12" r="3"/>
@@ -59,11 +79,28 @@
           <line x1="15.5" y1="17.5" x2="13.5" y2="13.5"/>
         </svg>
       </div>
-      <h3>知识图谱为空</h3>
-      <p>在笔记中使用 <code>[[笔记名]]</code> 语法创建双向链接</p>
-      <p class="hint-detail">例如：在笔记 A 中写 <code>[[笔记 B]]</code>，即可建立连接关系</p>
-      <p class="hint-detail">支持跨目录引用：<code>[[子目录/文件名]]</code> 或直接使用文件名（唯一时自动匹配）</p>
+      <h3>{{ graphData.nodes.length === 0 ? '用双向链接点亮知识图谱' : '如何建立笔记链接' }}</h3>
+      <p class="tutorial-intro">在任意 Markdown 笔记中输入双方括号语法，保存后即可生成节点与连线。</p>
+      <div class="tutorial-steps">
+        <div class="tutorial-step">
+          <span class="step-number">1</span>
+          <div><strong>准备目标笔记</strong><p>例如已有一篇名为“会议记录.md”的笔记</p></div>
+        </div>
+        <div class="tutorial-step">
+          <span class="step-number">2</span>
+          <div><strong>在另一篇笔记中输入链接</strong><code>[[会议记录]]</code></div>
+        </div>
+        <div class="tutorial-step">
+          <span class="step-number">3</span>
+          <div><strong>保存并返回知识图谱</strong><p>图谱会自动识别链接并建立连线</p></div>
+        </div>
+      </div>
+      <div class="tutorial-note">
+        跨目录可写 <code>[[子目录/文件名]]</code>；文件名在知识库中唯一时，也可直接写 <code>[[文件名]]</code>。
+      </div>
+      <button class="tutorial-action" @click="router.push('/library')">返回编辑器试一试</button>
     </div>
+    </transition>
 
     <div class="graph-stats">
       <div class="stat-item">
@@ -122,6 +159,8 @@ const store = useAppStore()
 const router = useRouter()
 
 const graphData = ref<{ nodes: GraphNode[]; edges: GraphEdge[] }>({ nodes: [], edges: [] })
+const isLoading = ref(true)
+const showTutorial = ref(false)
 
 // 图谱布局常量
 const LAYOUT_MAX_FRAMES = 120
@@ -143,11 +182,20 @@ const tooltipY = ref(0)
 let mouseX = 0, mouseY = 0
 
 const loadGraph = async () => {
-  if (!store.libraryPath) return
+  isLoading.value = true
+  if (!store.libraryPath) {
+    graphData.value = { nodes: [], edges: [] }
+    isLoading.value = false
+    return
+  }
   try {
     graphData.value = await invoke<any>('build_link_graph', { libraryRoot: store.libraryPath })
     initLayout()
-  } catch (e) { graphData.value = { nodes: [], edges: [] } }
+  } catch (e) {
+    graphData.value = { nodes: [], edges: [] }
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const initLayout = () => {
@@ -585,6 +633,31 @@ onUnmounted(() => { cancelAnimationFrame(animationId); document.removeEventListe
   gap: 6px;
 }
 
+.tutorial-btn {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.18);
+  border-radius: var(--theme-radius-sm);
+  background: rgba(var(--theme-primary-rgb), 0.07);
+  color: var(--theme-primary);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-premium);
+}
+
+.tutorial-btn:hover,
+.tutorial-btn.active {
+  color: #fff;
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.22);
+}
+
 .control-btn {
   width: 36px;
   height: 36px;
@@ -732,8 +805,36 @@ canvas:active {
   transform: translate(-50%, -50%);
   text-align: center;
   z-index: 5;
-  max-width: 480px;
-  padding: 40px;
+  width: min(560px, calc(100vw - 48px));
+  padding: 28px 32px 30px;
+  box-sizing: border-box;
+}
+
+.tutorial-card {
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.15);
+  border-radius: calc(var(--theme-radius) * 1.5);
+  background: color-mix(in srgb, var(--theme-card) 94%, transparent);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(22px);
+}
+
+.tutorial-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--theme-text);
+  font-size: 20px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.tutorial-close:hover {
+  background: rgba(var(--theme-primary-rgb), 0.12);
 }
 
 .empty-icon {
@@ -770,6 +871,89 @@ canvas:active {
   margin: 8px 0;
 }
 
+.tutorial-intro {
+  margin: 0 auto 18px !important;
+  max-width: 440px;
+}
+
+.tutorial-steps {
+  display: grid;
+  gap: 9px;
+  text-align: left;
+}
+
+.tutorial-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--theme-radius-sm);
+  background: rgba(var(--theme-primary-rgb), 0.055);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.08);
+}
+
+.tutorial-step > div {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 10px;
+}
+
+.tutorial-step strong {
+  color: var(--theme-text);
+  font-size: 13px;
+}
+
+.tutorial-step p {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.step-number {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 750;
+  box-shadow: 0 3px 9px rgba(var(--theme-primary-rgb), 0.24);
+}
+
+.tutorial-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--theme-radius-sm);
+  color: var(--theme-text-secondary);
+  background: rgba(0, 0, 0, 0.025);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.tutorial-action {
+  margin-top: 16px;
+  padding: 9px 18px;
+  border: 0;
+  border-radius: var(--theme-radius-sm);
+  background: var(--theme-primary);
+  color: #fff;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 5px 16px rgba(var(--theme-primary-rgb), 0.22);
+  transition: transform 0.25s var(--ease-premium), box-shadow 0.25s ease;
+}
+
+.tutorial-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(var(--theme-primary-rgb), 0.3);
+}
+
 .empty-graph-hint code {
   background: rgba(var(--theme-primary-rgb), 0.1);
   color: var(--theme-primary);
@@ -780,12 +964,72 @@ canvas:active {
   font-weight: 600;
 }
 
-.hint-detail {
+.graph-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-text);
+  background: color-mix(in srgb, var(--theme-bg) 78%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.graph-loading strong {
+  margin-top: 18px;
+  font-size: 15px;
+}
+
+.graph-loading p {
+  margin: 7px 0 0;
+  color: var(--theme-text-secondary);
   font-size: 12px;
-  opacity: 0.7;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.graph-loader {
+  position: relative;
+  width: 76px;
+  height: 48px;
+}
+
+.graph-loader span {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  box-shadow: 0 0 16px rgba(var(--theme-primary-rgb), 0.42);
+  animation: graphNodePulse 1.35s ease-in-out infinite;
+}
+
+.graph-loader span:nth-child(1) { left: 4px; top: 28px; }
+.graph-loader span:nth-child(2) { left: 32px; top: 4px; animation-delay: 0.16s; }
+.graph-loader span:nth-child(3) { right: 4px; top: 28px; animation-delay: 0.32s; }
+
+.graph-loader::before,
+.graph-loader::after {
+  content: '';
+  position: absolute;
+  top: 25px;
+  width: 34px;
+  height: 2px;
+  background: rgba(var(--theme-primary-rgb), 0.35);
+  transform-origin: center;
+}
+
+.graph-loader::before { left: 11px; transform: rotate(-40deg); }
+.graph-loader::after { right: 11px; transform: rotate(40deg); }
+
+.hint-fade-enter-active,
+.hint-fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.3s var(--ease-premium);
+}
+
+.hint-fade-enter-from,
+.hint-fade-leave-to {
+  opacity: 0;
 }
 
 /* 深色主题适配 */
@@ -832,5 +1076,17 @@ canvas:active {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
+}
+
+@keyframes graphNodePulse {
+  0%, 100% { transform: scale(0.82); opacity: 0.55; }
+  50% { transform: scale(1.18); opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .tutorial-btn span { display: none; }
+  .tutorial-btn { width: 36px; padding: 0; justify-content: center; }
+  .tutorial-card { padding: 24px 18px; }
+  .empty-icon { display: none; }
 }
 </style>
