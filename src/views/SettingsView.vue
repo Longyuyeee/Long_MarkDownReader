@@ -146,7 +146,14 @@
                 :class="{ active: isPresetActive(preset) }"
                 @click="applyPreset(preset)"
               >
-                <div class="preset-icon">{{ preset.icon }}</div>
+                <div class="preset-visual" :style="getPresetPreviewStyle(preset)">
+                  <div class="preset-window">
+                    <span></span><span></span><span></span>
+                    <div class="preset-sidebar"></div>
+                    <div class="preset-document"><i></i><i></i><i></i></div>
+                  </div>
+                  <div class="preset-icon">{{ preset.icon }}</div>
+                </div>
                 <div class="preset-name">{{ preset.name }}</div>
                 <div class="preset-desc">{{ preset.description }}</div>
                 <div class="preset-tags">
@@ -277,6 +284,18 @@ const themeOptions = [
   { label: '深色', value: 'dark', color: '#1c1c1e' },
   { label: '跟随系统', value: 'system', color: '#8e8e93' },
 ]
+
+const presetPreviewColors: Record<string, { background: string; surface: string; accent: string }> = {
+  white: { background: '#f4f7fb', surface: '#ffffff', accent: '#0071e3' },
+  green: { background: '#edf7f0', surface: '#fbfefc', accent: '#34a853' },
+  blue: { background: '#eaf3ff', surface: '#fbfdff', accent: '#0b73d9' },
+  pink: { background: '#fbecf3', surface: '#fffafd', accent: '#cf3f72' },
+  cream: { background: '#f8efe2', surface: '#fffaf3', accent: '#e67e4d' },
+  purple: { background: '#eee9fa', surface: '#fcfaff', accent: '#7c3aed' },
+  amber: { background: '#f9ecd8', surface: '#fffaf2', accent: '#d97706' },
+  dark: { background: '#101318', surface: '#20252d', accent: '#64d987' },
+  system: { background: '#e7e9ed', surface: '#ffffff', accent: '#707780' },
+}
 
 const codeThemeOptions = [
   { label: 'GitHub (默认)', value: 'github' },
@@ -439,11 +458,22 @@ const removeLibrary = (index: number) => {
 }
 
 const applyTheme = (val: string) => {
+  // config 是设置页的保存源，必须与 store 同步，否则深度保存会把旧主题写回。
+  config.value.theme = val as any
   store.theme = val as any
   // 只有当前背景色是某个主题默认色时才更新（不覆盖用户自选颜色）
   const isDefaultBg = Object.values(THEME_MAP).includes(config.value.editorBgColor)
   if (THEME_MAP[val] && isDefaultBg) {
     config.value.editorBgColor = THEME_MAP[val]
+  }
+}
+
+const getPresetPreviewStyle = (preset: ThemePreset) => {
+  const colors = presetPreviewColors[preset.theme] || presetPreviewColors.white
+  return {
+    '--preset-bg': colors.background,
+    '--preset-surface': colors.surface,
+    '--preset-accent': colors.accent,
   }
 }
 
@@ -1010,8 +1040,8 @@ const setAsDefault = async () => {
 .theme-preset-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 20px;
+  gap: 9px;
+  padding: 12px 12px 14px;
   border-radius: var(--theme-radius-lg);
   background: var(--style-card-gradient);
   border: var(--theme-border);
@@ -1058,32 +1088,111 @@ const setAsDefault = async () => {
   opacity: 1;
 }
 
+.preset-visual {
+  position: relative;
+  height: 92px;
+  overflow: hidden;
+  border-radius: calc(var(--theme-radius-sm) + 2px);
+  background:
+    radial-gradient(circle at 82% 15%, color-mix(in srgb, var(--preset-accent) 28%, transparent), transparent 36%),
+    linear-gradient(145deg, var(--preset-bg), color-mix(in srgb, var(--preset-bg) 78%, var(--preset-accent)));
+  border: 1px solid color-mix(in srgb, var(--preset-accent) 18%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.preset-window {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 15px;
+  bottom: -8px;
+  overflow: hidden;
+  border-radius: 7px 7px 0 0;
+  background: var(--preset-surface);
+  box-shadow: 0 9px 24px color-mix(in srgb, var(--preset-accent) 18%, rgba(0, 0, 0, 0.14));
+}
+
+.preset-window > span {
+  position: absolute;
+  top: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--preset-accent);
+  opacity: 0.48;
+}
+
+.preset-window > span:nth-child(1) { left: 9px; }
+.preset-window > span:nth-child(2) { left: 17px; opacity: 0.3; }
+.preset-window > span:nth-child(3) { left: 25px; opacity: 0.18; }
+
+.preset-sidebar {
+  position: absolute;
+  left: 0;
+  top: 20px;
+  bottom: 0;
+  width: 31%;
+  background: color-mix(in srgb, var(--preset-accent) 10%, var(--preset-surface));
+  border-right: 1px solid color-mix(in srgb, var(--preset-accent) 12%, transparent);
+}
+
+.preset-document {
+  position: absolute;
+  left: 41%;
+  right: 10%;
+  top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.preset-document i {
+  display: block;
+  height: 4px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--preset-accent) 38%, transparent);
+}
+
+.preset-document i:nth-child(1) { width: 62%; height: 6px; background: var(--preset-accent); }
+.preset-document i:nth-child(2) { width: 100%; opacity: 0.48; }
+.preset-document i:nth-child(3) { width: 78%; opacity: 0.32; }
+
 .preset-icon {
-  font-size: 32px;
-  text-align: center;
+  position: absolute;
+  right: 9px;
+  top: 7px;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--preset-surface) 84%, transparent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
   line-height: 1;
-  margin-bottom: 4px;
 }
 
 .preset-name {
   font-size: 16px;
   font-weight: 700;
   color: var(--theme-text);
-  text-align: center;
-  margin-bottom: 4px;
+  text-align: left;
+  padding: 0 3px;
 }
 
 .preset-desc {
   font-size: 12px;
   color: var(--text-secondary);
-  text-align: center;
+  text-align: left;
   line-height: 1.4;
-  margin-bottom: 8px;
+  min-height: 34px;
+  padding: 0 3px;
 }
 
 .preset-tags {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  padding: 0 3px;
   gap: 6px;
   flex-wrap: wrap;
 }

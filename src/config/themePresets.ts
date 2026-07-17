@@ -112,6 +112,66 @@ export const themePresets: ThemePreset[] = [
     vditorTheme: 'light',
     vditorCodeTheme: 'github',
     icon: '📜'
+  },
+  {
+    id: 'ocean-glass',
+    name: '深海晶蓝',
+    description: '清透蓝调，沉浸式整理思路',
+    theme: 'blue',
+    style: 'glass',
+    vditorTheme: 'light',
+    vditorCodeTheme: 'xcode',
+    icon: '🌊'
+  },
+  {
+    id: 'midnight-glass',
+    name: '午夜星河',
+    description: '深色晶透，夜间写作更专注',
+    theme: 'dark',
+    style: 'glass',
+    vditorTheme: 'dark',
+    vditorCodeTheme: 'tokyo-night-dark',
+    icon: '🌌'
+  },
+  {
+    id: 'jade-airy',
+    name: '青岚留白',
+    description: '自然青绿，大留白轻阅读',
+    theme: 'green',
+    style: 'airy',
+    vditorTheme: 'light',
+    vditorCodeTheme: 'github',
+    icon: '🍃'
+  },
+  {
+    id: 'rose-soft',
+    name: '玫瑰晨雾',
+    description: '低饱和粉调，柔和不甜腻',
+    theme: 'pink',
+    style: 'soft',
+    vditorTheme: 'light',
+    vditorCodeTheme: 'github',
+    icon: '🌷'
+  },
+  {
+    id: 'cream-airy',
+    name: '燕麦纸笺',
+    description: '温润纸张感，适合长文创作',
+    theme: 'cream',
+    style: 'airy',
+    vditorTheme: 'light',
+    vditorCodeTheme: 'xcode',
+    icon: '🥐'
+  },
+  {
+    id: 'violet-neon',
+    name: '霓虹紫电',
+    description: '高辨识紫调，灵感与科技感并存',
+    theme: 'purple',
+    style: 'neo',
+    vditorTheme: 'light',
+    vditorCodeTheme: 'atom-one-light',
+    icon: '🔮'
   }
 ]
 
