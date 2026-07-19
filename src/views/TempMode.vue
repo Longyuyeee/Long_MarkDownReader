@@ -191,7 +191,7 @@ const handleAIAction = async (action: string) => {
   aiState.showResultModal = true
   try {
     aiState.result = await invoke<string>('ai_chat_completion', {
-      apiKey: store.aiApiKey, endpoint: store.aiEndpoint, model: store.aiModel,
+      endpoint: store.aiEndpoint, model: store.aiModel,
       systemPrompt: systemPrompts[action], userContent: aiState.selectedText,
     })
   } catch (e: any) {
@@ -269,7 +269,7 @@ onMounted(async () => {
   })
 
   vditor = new Vditor('vditor', {
-    cdn: 'https://cdn.jsdelivr.net/npm/vditor@3.11.2',
+    cdn: './vditor',
     lang: 'zh_CN',
     height: '100%',
     mode: store.editorMode || 'wysiwyg',

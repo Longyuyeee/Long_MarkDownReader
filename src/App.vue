@@ -143,6 +143,11 @@ const getRouteLoadingLabel = (routeName: unknown) => {
     TempMode: '正在载入文档',
     QuickNote: '正在打开快速笔记',
     Graph: '正在准备知识图谱',
+    Canvas: '正在打开知识画布',
+    Pdf: '正在打开 PDF',
+    Table: '正在打开数据表',
+    Workbook: '正在解析 XLSX 工作簿',
+    Diagram: '正在打开 Mermaid 图表工作室',
     Settings: '正在载入设置'
   }
   return labels[String(routeName)] || '正在切换页面'

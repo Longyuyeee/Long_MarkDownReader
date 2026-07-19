@@ -26,6 +26,31 @@ const routes = [
     component: () => import('../components/GraphView.vue')
   },
   {
+    path: '/canvas',
+    name: 'Canvas',
+    component: () => import('../views/CanvasView.vue')
+  },
+  {
+    path: '/pdf',
+    name: 'Pdf',
+    component: () => import('../views/PdfView.vue')
+  },
+  {
+    path: '/table',
+    name: 'Table',
+    component: () => import('../views/TableView.vue')
+  },
+  {
+    path: '/workbook',
+    name: 'Workbook',
+    component: () => import('../views/WorkbookView.vue')
+  },
+  {
+    path: '/diagram',
+    name: 'Diagram',
+    component: () => import('../views/DiagramStudio.vue')
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('../views/SettingsView.vue')

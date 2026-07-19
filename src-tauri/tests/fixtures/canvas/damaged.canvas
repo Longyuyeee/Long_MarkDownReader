@@ -1,0 +1,20 @@
+{
+  "nodes": [
+    {
+      "id": "orphan",
+      "type": "text",
+      "text": "这是一份故意损坏的测试画布",
+      "x": 0,
+      "y": 0,
+      "width": 280,
+      "height": 120
+    }
+  ],
+  "edges": [
+    {
+      "id": "dangling-edge",
+      "fromNode": "orphan",
+      "toNode": "missing-node"
+    }
+  ]
+}

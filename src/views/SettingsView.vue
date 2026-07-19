@@ -128,7 +128,12 @@
                 <template #feedback><span style="font-size:11px;opacity:0.5">兼容 OpenAI API 格式即可（DeepSeek/Ollama 等）</span></template>
               </n-form-item>
               <n-form-item label="API Key">
-                <n-input v-model:value="config.aiApiKey" type="password" placeholder="sk-..." show-password-on="click" />
+                <div style="width:100%;display:flex;gap:8px">
+                  <n-input v-model:value="credentialDraft" type="password" :placeholder="store.aiCredentialStored ? '已保存到系统凭据库；输入新值可替换' : '输入 API Key'" show-password-on="click" @keyup.enter="saveCredential" />
+                  <n-button :disabled="!credentialDraft.trim() || credentialSaving" :loading="credentialSaving" @click="saveCredential">安全保存</n-button>
+                  <n-button v-if="store.aiCredentialStored" tertiary type="error" :disabled="credentialSaving" @click="removeCredential">删除</n-button>
+                </div>
+                <template #feedback><span style="font-size:11px;opacity:0.6">{{ store.aiCredentialStored ? '已存储在操作系统凭据库，配置文件和前端不会读取明文。' : '尚未保存凭据；本地 Ollama 回环地址可无 Key 使用。' }}</span></template>
               </n-form-item>
               <n-form-item label="模型名称">
                 <n-input v-model:value="config.aiModel" placeholder="gpt-4o-mini" />
@@ -346,9 +351,10 @@ const config = ref({
   aiEnabled: store.aiEnabled,
   aiProvider: store.aiProvider,
   aiEndpoint: store.aiEndpoint,
-  aiApiKey: store.aiApiKey,
   aiModel: store.aiModel,
 })
+const credentialDraft = ref('')
+const credentialSaving = ref(false)
 
 const newLib = reactive({ name: '', path: '' })
 const expandedGitLib = ref<string>('')
@@ -395,7 +401,6 @@ onMounted(async () => {
     aiEnabled: store.aiEnabled,
     aiProvider: store.aiProvider,
     aiEndpoint: store.aiEndpoint,
-    aiApiKey: store.aiApiKey,
     aiModel: store.aiModel,
   }
 
@@ -411,6 +416,30 @@ watch(config, (newVal) => {
   if (saveDebounce) clearTimeout(saveDebounce)
   saveDebounce = setTimeout(() => store.updateConfig(newVal), 500)
 }, { deep: true })
+
+const saveCredential = async () => {
+  if (!credentialDraft.value.trim() || credentialSaving.value) return
+  credentialSaving.value = true
+  try {
+    await store.saveAiCredential(credentialDraft.value)
+    credentialDraft.value = ''
+    message.success('API Key 已保存到系统凭据库')
+  } catch (error) { message.error(`凭据保存失败：${String(error)}`) }
+  finally { credentialSaving.value = false }
+}
+const removeCredential = () => {
+  dialog.warning({
+    title: '删除 API 凭据',
+    content: '确定从操作系统凭据库删除当前 API Key？配置文件中没有可恢复副本。',
+    positiveText: '删除', negativeText: '取消',
+    onPositiveClick: async () => {
+      credentialSaving.value = true
+      try { await store.clearAiCredential(); credentialDraft.value = ''; message.success('API Key 已删除') }
+      catch (error) { message.error(`凭据删除失败：${String(error)}`) }
+      finally { credentialSaving.value = false }
+    }
+  })
+}
 
 const chooseNewLibDir = async () => {
   const selected = await open({ directory: true, multiple: false, title: '选择软件库文件夹' })

@@ -58,7 +58,7 @@ export const useAppStore = defineStore('app', {
     aiEnabled: false,
     aiProvider: 'openai',
     aiEndpoint: 'https://api.openai.com/v1',
-    aiApiKey: '',
+    aiCredentialStored: false,
     aiModel: 'gpt-4o-mini',
     recentFiles: [] as { title: string; path: string }[],
     starredFiles: [] as string[],
@@ -89,7 +89,8 @@ export const useAppStore = defineStore('app', {
         this.aiEnabled = config.aiEnabled || false
         this.aiProvider = config.aiProvider || 'openai'
         this.aiEndpoint = config.aiEndpoint || 'https://api.openai.com/v1'
-        this.aiApiKey = config.aiApiKey || ''
+        try { this.aiCredentialStored = await invoke<boolean>('get_ai_credential_status') }
+        catch { this.aiCredentialStored = false }
         this.aiModel = config.aiModel || 'gpt-4o-mini'
 
         // 同步系统真实的自启状态，以系统为准
@@ -154,10 +155,17 @@ export const useAppStore = defineStore('app', {
         aiEnabled: this.aiEnabled,
         aiProvider: this.aiProvider,
         aiEndpoint: this.aiEndpoint,
-        aiApiKey: this.aiApiKey,
         aiModel: this.aiModel,
       } })
 
+    },
+    async saveAiCredential(apiKey: string) {
+      await invoke('set_ai_credential', { apiKey })
+      this.aiCredentialStored = true
+    },
+    async clearAiCredential() {
+      await invoke('clear_ai_credential')
+      this.aiCredentialStored = false
     },
     addTab(tab: TabInfo) {
       const idx = this.tabs.findIndex(t => t.path === tab.path)

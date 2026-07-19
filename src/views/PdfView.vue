@@ -1,0 +1,1030 @@
+<template>
+  <div class="pdf-view" @keydown="handleKeydown" tabindex="-1">
+    <header class="pdf-toolbar">
+      <div class="toolbar-leading">
+        <button class="icon-btn" title="返回知识库" @click="router.push('/library')">←</button>
+        <button class="icon-btn" :class="{ active: sidebarOpen }" title="缩略图与目录" @click="sidebarOpen = !sidebarOpen">☰</button>
+        <div class="document-title"><strong>{{ fileName }}</strong><span v-if="pdfDocument">{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template></span></div>
+      </div>
+      <div v-if="pdfDocument" class="toolbar-center">
+        <button class="icon-btn" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
+        <label class="page-jump"><input v-model.number="pageInput" type="number" min="1" :max="pdfDocument.numPages" @keydown.enter="commitPageInput" @blur="commitPageInput"/><span>/ {{ pdfDocument.numPages }}</span></label>
+        <button class="icon-btn" :disabled="currentPage >= pdfDocument.numPages" @click="goToPage(currentPage + 1)">›</button>
+      </div>
+      <div v-if="pdfDocument" class="toolbar-actions">
+        <div class="pdf-search" :class="{ active: searchQuery }">
+          <span aria-hidden="true">⌕</span>
+          <input ref="searchInputRef" v-model="searchQuery" aria-label="搜索 PDF 正文" placeholder="搜索 PDF" @keydown.enter.prevent="navigateMatch($event.shiftKey ? -1 : 1)" @keydown.esc="clearSearch"/>
+          <small v-if="searchQuery">{{ searchStatus }}</small>
+          <button v-if="searchQuery" title="上一个命中" :disabled="!searchMatches.length" @click="navigateMatch(-1)">↑</button>
+          <button v-if="searchQuery" title="下一个命中" :disabled="!searchMatches.length" @click="navigateMatch(1)">↓</button>
+          <button v-if="searchQuery" title="清除搜索" @click="clearSearch">×</button>
+        </div>
+        <button class="icon-btn" title="缩小" @click="changeScale(-0.1)">−</button>
+        <button class="scale-label" title="恢复 100%" @click="setScale(1)">{{ Math.round(scale * 100) }}%</button>
+        <button class="icon-btn" title="放大" @click="changeScale(0.1)">＋</button>
+        <button class="fit-btn" :class="{ active: fitWidth }" @click="toggleFitWidth">适合宽度</button>
+        <button class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" title="离线识别扫描页" @click="openOcrPanel">OCR</button>
+        <button class="fit-btn" :class="{ active: areaMode }" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode">区域批注</button>
+        <button class="fit-btn" :disabled="!annotationWritable" title="为当前页添加评论" @click="createPageComment">页评论</button>
+      </div>
+    </header>
+
+    <main class="pdf-workspace">
+      <aside v-if="sidebarOpen && pdfDocument" class="pdf-sidebar">
+        <div class="sidebar-switch">
+          <button :class="{ active: sidebarTab === 'thumbnails' }" @click="sidebarTab = 'thumbnails'">缩略图</button>
+          <button :class="{ active: sidebarTab === 'outline' }" @click="sidebarTab = 'outline'">目录</button>
+          <button :class="{ active: sidebarTab === 'annotations' }" @click="sidebarTab = 'annotations'">批注 {{ annotations.length || '' }}</button>
+          <button :class="{ active: sidebarTab === 'ocr' }" @click="sidebarTab = 'ocr'">OCR {{ ocrDocument?.pages.length || '' }}</button>
+        </div>
+        <div v-if="sidebarTab === 'thumbnails'" class="thumbnail-list">
+          <button v-for="page in pdfDocument.numPages" :key="page" :class="['thumbnail-item', { active: page === currentPage }]" @click="goToPage(page)">
+            <PdfPage :document="pdfDocument" :page-number="page" :scale="thumbnailScale" :placeholder-width="basePage.width" :placeholder-height="basePage.height" thumbnail/>
+            <span>{{ page }}</span>
+          </button>
+        </div>
+        <div v-else-if="sidebarTab === 'outline'" class="outline-list">
+          <p v-if="outlineLoading" class="sidebar-empty">正在读取目录…</p>
+          <p v-else-if="!outline.length" class="sidebar-empty">此文档没有内置目录</p>
+          <button v-for="(item, index) in outline" :key="`${item.title}-${index}`" :style="{ paddingLeft: `${12 + item.depth * 14}px` }" @click="openOutlineItem(item)">{{ item.title }}</button>
+        </div>
+        <div v-else-if="sidebarTab === 'annotations'" class="annotation-panel">
+          <div v-if="annotationError" class="annotation-alert">{{ annotationError }}</div>
+          <div v-else-if="!annotations.length" class="sidebar-empty">选择正文后添加高亮，或启用“区域批注”框选页面。</div>
+          <button v-for="annotation in sortedAnnotations" :key="annotation.id" :class="['annotation-card', { active: selectedAnnotationId === annotation.id }]" @click="selectAnnotation(annotation.id)">
+            <span class="annotation-card-head"><strong>第 {{ annotation.page }} 页 · {{ annotationKindLabel(annotation.kind) }}</strong><i :class="`dot-${annotation.color}`"></i></span>
+            <span>{{ annotation.quote || annotation.comment || '未填写评论' }}</span>
+          </button>
+          <div v-if="selectedAnnotation" class="annotation-editor">
+            <label>评论<textarea v-model="selectedAnnotation.comment" :disabled="!annotationWritable" maxlength="20000" placeholder="为这条批注补充评论…" @change="touchSelectedAnnotation"></textarea></label>
+            <div class="annotation-colors"><button v-for="color in annotationColors" :key="color" :disabled="!annotationWritable" :class="[`color-${color}`, { active: selectedAnnotation.color === color }]" @click="setSelectedAnnotationColor(color)"></button></div>
+            <div class="annotation-reference-actions">
+              <button :disabled="referenceWorking" @click="copySelectedAnnotationReference">复制引用</button>
+              <button v-if="markdownTarget" :disabled="referenceWorking" @click="insertSelectedAnnotationReference">插入到 {{ markdownTarget.title }}</button>
+            </div>
+            <button class="delete-annotation" :disabled="!annotationWritable" @click="deleteSelectedAnnotation">删除批注</button>
+          </div>
+          <div v-if="referenceNotice" class="annotation-alert">{{ referenceNotice }}</div>
+          <div v-if="annotationDocument" class="annotation-save-state" :class="{ error: annotationSaveError }">{{ annotationSaveError || (annotationSaving ? '正在保存批注…' : annotationDirty ? '等待保存…' : '批注已保存到 sidecar') }}</div>
+        </div>
+        <div v-else class="ocr-panel">
+          <div class="ocr-summary">
+            <strong>离线 OCR</strong>
+            <span>Tesseract WASM · 简体中文 + 英文</span>
+            <p>页面只在本机内存中渲染，识别文本写入独立 sidecar，不修改原 PDF。</p>
+          </div>
+          <div v-if="ocrSourceChanged" class="annotation-alert">PDF 内容已变化，旧 OCR 结果仅供查看；请重新识别。</div>
+          <div v-if="ocrError" class="annotation-alert">{{ ocrError }}</div>
+          <div v-if="ocrBusy" class="ocr-progress">
+            <span>{{ ocrTaskState === 'preparing' ? '正在加载离线模型…' : `正在识别第 ${ocrCurrentPage} 页` }}</span>
+            <progress :value="ocrOverallProgress" max="1"></progress>
+            <small>{{ Math.round(ocrOverallProgress * 100) }}% · {{ ocrProgressStatus }}</small>
+            <button @click="cancelOcr">取消任务</button>
+          </div>
+          <div v-else class="ocr-actions">
+            <button @click="runOcr([currentPage], true)">识别当前页</button>
+            <button @click="runOcr(Array.from({ length: pdfDocument.numPages }, (_, index) => index + 1))">识别缺失页面</button>
+          </div>
+          <p v-if="ocrTaskState === 'cancelled'" class="ocr-note">任务已取消，已完成页面仍保存在 sidecar。</p>
+          <p v-else-if="ocrTaskState === 'completed'" class="ocr-note">识别完成，结果已进入统一搜索与知识图谱。</p>
+          <div class="ocr-page-list">
+            <button v-for="page in sortedOcrPages" :key="page.page" @click="goToPage(page.page)">
+              <span><strong>第 {{ page.page }} 页</strong><i>{{ page.confidence.toFixed(1) }}%</i></span>
+              <small>{{ page.text || '未识别到文本' }}</small>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <section ref="scrollRef" class="pdf-scroll" @scroll.passive="handleScroll" @mouseup="captureTextSelection">
+        <div v-if="loading" class="pdf-state"><div class="loader"></div><strong>正在打开 PDF</strong><span v-if="loadProgress">{{ loadProgress }}%</span></div>
+        <div v-else-if="error" class="pdf-state error"><strong>无法打开 PDF</strong><p>{{ error }}</p><button @click="loadPdf">重试</button></div>
+        <div v-else-if="pdfDocument" class="page-list">
+          <div v-for="page in pdfDocument.numPages" :id="`pdf-page-${page}`" :key="page" class="page-shell" :data-page="page">
+            <PdfPage
+              :document="pdfDocument"
+              :page-number="page"
+              :scale="scale"
+              :placeholder-width="basePage.width"
+              :placeholder-height="basePage.height"
+              :text-content="textContents[page]"
+              :matches="matchesByPage.get(page)"
+              :active-match-id="activeMatchId"
+              :annotations="annotationsByPage.get(page)"
+              :active-annotation-id="selectedAnnotationId"
+              :area-mode="areaMode"
+              @need-text="ensurePageText"
+              @rendered="recordPageRendered"
+              @area-create="createAreaAnnotation"
+              @select-annotation="selectAnnotation"
+            />
+            <span class="page-number">{{ page }}</span>
+          </div>
+        </div>
+      </section>
+    </main>
+    <div v-if="selectionTool.show" class="selection-annotation-tool" :style="{ left: `${selectionTool.x}px`, top: `${selectionTool.y}px` }" @mousedown.prevent>
+      <span>高亮</span>
+      <button v-for="color in annotationColors" :key="color" :class="`color-${color}`" :title="`${color} 高亮`" @click="createSelectionAnnotation(color, false)"></button>
+      <button class="comment-selection" @click="createSelectionAnnotation(annotationColor, true)">高亮并评论</button>
+      <button class="close-selection" @click="dismissSelectionTool">×</button>
+    </div>
+    <div v-if="areaMode" class="area-mode-hint">区域批注模式：在任意页面拖出矩形，Esc 退出</div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue'
+import { invoke } from '@tauri-apps/api/core'
+import { useMessage } from 'naive-ui'
+import { useRoute, useRouter } from 'vue-router'
+import * as pdfjsLib from 'pdfjs-dist'
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist'
+import type { TextContent } from 'pdfjs-dist/types/src/display/api'
+import PdfPage from '../components/PdfPage.vue'
+import { useAppStore } from '../store/app'
+import { buildPdfPageText, findPdfPageMatches, type PdfSearchMatch } from '../utils/pdfText'
+import type { PdfAnnotationReference } from '../utils/pdfReference'
+import type { PdfAnnotation, PdfAnnotationColor, PdfAnnotationDocument, PdfAnnotationKind, PdfAnnotationRect } from '../types/pdfAnnotations'
+import type { PdfOcrDocument, PdfOcrPage, PdfOcrTaskState } from '../types/pdfOcr'
+import { createOfflineOcrWorker } from '../utils/pdfOcr'
+import { TauriPdfRangeTransport, type PdfReadDescriptor } from '../utils/tauriPdfRangeTransport'
+import type { Worker as TesseractWorker } from 'tesseract.js'
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
+
+interface OutlineEntry { title: string; depth: number; destination: string | unknown[] | null }
+const POSITION_KEY = 'longedit.pdf.positions.v1'
+const route = useRoute()
+const router = useRouter()
+const store = useAppStore()
+const message = useMessage()
+const scrollRef = ref<HTMLElement | null>(null)
+const searchInputRef = ref<HTMLInputElement | null>(null)
+const pdfDocument = shallowRef<PDFDocumentProxy | null>(null)
+const loading = ref(true)
+const error = ref('')
+const loadProgress = ref(0)
+const loadMode = ref<'full' | 'range'>('full')
+const firstPageReadyMs = ref(0)
+const currentPage = ref(1)
+const pageInput = ref(1)
+const scale = ref(1)
+const fitWidth = ref(false)
+const sidebarOpen = ref(true)
+const sidebarTab = ref<'thumbnails' | 'outline' | 'annotations' | 'ocr'>('thumbnails')
+const outline = ref<OutlineEntry[]>([])
+const outlineLoading = ref(false)
+const basePage = ref({ width: 612, height: 792 })
+const textContents = shallowReactive<Record<number, TextContent>>({})
+const searchQuery = ref('')
+const searchMatches = ref<PdfSearchMatch[]>([])
+const activeMatchIdState = ref('')
+const searchIndexedPages = ref(0)
+const searchRunning = ref(false)
+const annotationDocument = ref<PdfAnnotationDocument | null>(null)
+const annotationError = ref('')
+const annotationSaveError = ref('')
+const annotationSaving = ref(false)
+const annotationDirty = ref(false)
+const annotationWritable = ref(true)
+const referenceWorking = ref(false)
+const referenceNotice = ref('')
+const selectedAnnotationId = ref('')
+const annotationColor = ref<PdfAnnotationColor>('yellow')
+const areaMode = ref(false)
+const ocrDocument = ref<PdfOcrDocument | null>(null)
+const ocrTaskState = ref<PdfOcrTaskState>('idle')
+const ocrCurrentPage = ref(0)
+const ocrCompletedPages = ref(0)
+const ocrTotalPages = ref(0)
+const ocrPageProgress = ref(0)
+const ocrProgressStatus = ref('')
+const ocrError = ref('')
+const ocrSourceChanged = ref(false)
+const selectionTool = ref({ show: false, page: 0, quote: '', rects: [] as PdfAnnotationRect[], x: 0, y: 0 })
+let loadingTask: PDFDocumentLoadingTask | null = null
+let rangeTransport: TauriPdfRangeTransport | null = null
+let loadStartedAt = 0
+let scrollFrame = 0
+let positionTimer = 0
+let searchTimer = 0
+let searchGeneration = 0
+let annotationSaveTimer = 0
+let annotationSaveChain: Promise<void> = Promise.resolve()
+let annotationRevision = 0
+let annotationSourcePath = ''
+let annotationLibraryRoot = ''
+let annotationLoadGeneration = 0
+let ocrGeneration = 0
+let ocrWorker: TesseractWorker | null = null
+const textPromises = new Map<number, Promise<TextContent | undefined>>()
+const textAccess = new Map<number, number>()
+const annotationColors: PdfAnnotationColor[] = ['yellow', 'green', 'pink', 'blue']
+
+const pdfPath = computed(() => String(route.query.path || ''))
+const fileName = computed(() => pdfPath.value.split(/[\\/]/).pop()?.replace(/\.pdf$/i, '') || 'PDF 文档')
+const thumbnailScale = computed(() => Math.min(0.25, 132 / basePage.value.width))
+const loadModeLabel = computed(() => loadMode.value === 'range' ? '渐进读取' : '快速读取')
+const positionId = () => `${store.libraryPath}\n${pdfPath.value}`
+const activeMatchId = computed(() => activeMatchIdState.value || undefined)
+const activeMatchIndex = computed(() => searchMatches.value.findIndex(match => match.id === activeMatchIdState.value))
+const searchStatus = computed(() => {
+  if (!pdfDocument.value) return '0 / 0'
+  if (searchRunning.value) return `${searchMatches.value.length}+ · ${searchIndexedPages.value}/${pdfDocument.value.numPages} 页`
+  if (!searchMatches.value.length) return '0 / 0'
+  return `${Math.max(1, activeMatchIndex.value + 1)} / ${searchMatches.value.length}`
+})
+const matchesByPage = computed(() => {
+  const result = new Map<number, PdfSearchMatch[]>()
+  for (const match of searchMatches.value) {
+    const pageMatches = result.get(match.page) || []
+    pageMatches.push(match)
+    result.set(match.page, pageMatches)
+  }
+  return result
+})
+const annotations = computed(() => annotationDocument.value?.annotations || [])
+const markdownTarget = computed(() => store.tabs.find(tab => tab.id === store.activeTabId && tab.path.toLowerCase().endsWith('.md')))
+const sortedAnnotations = computed(() => [...annotations.value].sort((a, b) => a.page - b.page || a.createdAt - b.createdAt))
+const selectedAnnotation = computed(() => annotations.value.find(annotation => annotation.id === selectedAnnotationId.value))
+const annotationsByPage = computed(() => {
+  const result = new Map<number, PdfAnnotation[]>()
+  for (const annotation of annotations.value) {
+    const pageAnnotations = result.get(annotation.page) || []
+    pageAnnotations.push(annotation)
+    result.set(annotation.page, pageAnnotations)
+  }
+  return result
+})
+const sortedOcrPages = computed(() => [...(ocrDocument.value?.pages || [])].sort((a, b) => a.page - b.page))
+const ocrBusy = computed(() => ocrTaskState.value === 'preparing' || ocrTaskState.value === 'running')
+const ocrOverallProgress = computed(() => {
+  if (!ocrTotalPages.value) return 0
+  return Math.min(1, (ocrCompletedPages.value + ocrPageProgress.value) / ocrTotalPages.value)
+})
+
+const readPositions = (): Record<string, number> => {
+  try { return JSON.parse(localStorage.getItem(POSITION_KEY) || '{}') } catch { return {} }
+}
+const savePosition = () => {
+  if (!pdfPath.value) return
+  const positions = readPositions()
+  delete positions[positionId()]
+  positions[positionId()] = currentPage.value
+  const limited = Object.fromEntries(Object.entries(positions).slice(-100))
+  try { localStorage.setItem(POSITION_KEY, JSON.stringify(limited)) } catch { /* best effort */ }
+}
+
+const flattenOutline = (items: Awaited<ReturnType<PDFDocumentProxy['getOutline']>>, depth = 0): OutlineEntry[] => {
+  if (!items) return []
+  return items.flatMap(item => [{ title: item.title || '未命名章节', depth, destination: item.dest }, ...flattenOutline(item.items, depth + 1)])
+}
+
+const loadOutline = async () => {
+  if (!pdfDocument.value) return
+  outlineLoading.value = true
+  try { outline.value = flattenOutline(await pdfDocument.value.getOutline()) } catch { outline.value = [] }
+  finally { outlineLoading.value = false }
+}
+
+const annotationKindLabel = (kind: PdfAnnotationKind) => ({ highlight: '文字高亮', area: '区域', comment: '评论' }[kind])
+const makeAnnotationId = () => `pdf-annotation-${typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`}`
+const currentFingerprint = (document = pdfDocument.value) => document?.fingerprints?.[0] || undefined
+const requestedPage = () => {
+  const page = Number(route.query.page)
+  return Number.isInteger(page) && page > 0 ? page : undefined
+}
+const requestedAnnotationId = () => typeof route.query.annotation === 'string' && route.query.annotation.length <= 128 ? route.query.annotation : ''
+
+const focusRequestedReference = () => {
+  const id = requestedAnnotationId()
+  if (id) {
+    if (annotations.value.some(annotation => annotation.id === id)) {
+      referenceNotice.value = ''
+      selectAnnotation(id)
+    } else {
+      referenceNotice.value = '引用对应的批注不存在或已被删除，已定位到引用页码。'
+      sidebarOpen.value = true
+      sidebarTab.value = 'annotations'
+      if (requestedPage()) goToPage(requestedPage()!, 'auto')
+    }
+  } else if (requestedPage()) {
+    goToPage(requestedPage()!, 'auto')
+  }
+}
+
+const loadAnnotations = async (document: PDFDocumentProxy) => {
+  const generation = ++annotationLoadGeneration
+  annotationError.value = ''
+  annotationSaveError.value = ''
+  annotationWritable.value = true
+  selectedAnnotationId.value = ''
+  try {
+    const sourcePath = pdfPath.value
+    const libraryRoot = store.libraryPath
+    const loaded = await invoke<PdfAnnotationDocument>('read_pdf_annotations', { libraryRoot, pdfPath: sourcePath })
+    if (generation !== annotationLoadGeneration || pdfDocument.value !== document) return
+    const fingerprint = currentFingerprint(document)
+    if (loaded.source.fingerprint && fingerprint && loaded.source.fingerprint !== fingerprint) {
+      annotationError.value = 'PDF 内容已变化，现有批注位置可能失效；批注仍以只读方式显示。'
+      annotationWritable.value = false
+    }
+    loaded.source.fingerprint = fingerprint
+    annotationDocument.value = loaded
+    annotationSourcePath = sourcePath
+    annotationLibraryRoot = libraryRoot
+    await nextTick()
+    focusRequestedReference()
+  } catch (cause) {
+    if (generation !== annotationLoadGeneration || pdfDocument.value !== document) return
+    annotationDocument.value = null
+    annotationError.value = `批注 sidecar 无法读取：${String(cause)}`
+    annotationWritable.value = false
+    sidebarOpen.value = true
+    sidebarTab.value = 'annotations'
+  }
+}
+
+const loadOcrDocument = async (document: PDFDocumentProxy) => {
+  const generation = ocrGeneration
+  ocrError.value = ''
+  ocrSourceChanged.value = false
+  try {
+    const loaded = await invoke<PdfOcrDocument>('read_pdf_ocr', { libraryRoot: store.libraryPath, pdfPath: pdfPath.value })
+    if (generation !== ocrGeneration || pdfDocument.value !== document) return
+    const fingerprint = currentFingerprint(document)
+    ocrSourceChanged.value = Boolean(loaded.source.fingerprint && fingerprint && loaded.source.fingerprint !== fingerprint)
+    loaded.source.fingerprint = fingerprint
+    ocrDocument.value = loaded
+  } catch (cause) {
+    if (generation !== ocrGeneration || pdfDocument.value !== document) return
+    ocrDocument.value = null
+    ocrError.value = `OCR sidecar 无法读取：${String(cause)}`
+  }
+}
+
+const openOcrPanel = () => {
+  sidebarOpen.value = true
+  sidebarTab.value = 'ocr'
+}
+
+const persistOcrDocument = async () => {
+  if (!ocrDocument.value) return
+  const snapshot = JSON.parse(JSON.stringify(ocrDocument.value)) as PdfOcrDocument
+  await invoke('write_pdf_ocr', { libraryRoot: store.libraryPath, pdfPath: pdfPath.value, document: snapshot })
+}
+
+const cancelOcr = async () => {
+  if (!ocrBusy.value) return
+  ocrGeneration++
+  ocrTaskState.value = 'cancelled'
+  ocrProgressStatus.value = '正在停止…'
+  const worker = ocrWorker
+  ocrWorker = null
+  if (worker) await worker.terminate().catch(() => undefined)
+}
+
+const runOcr = async (requestedPages: number[], replaceExisting = false) => {
+  if (!pdfDocument.value || !ocrDocument.value || ocrBusy.value || ocrSourceChanged.value) return
+  const existing = new Set(ocrDocument.value.pages.map(page => page.page))
+  const pages = requestedPages
+    .filter(page => Number.isInteger(page) && page >= 1 && page <= pdfDocument.value!.numPages)
+    .filter(page => replaceExisting || !existing.has(page))
+  if (!pages.length) {
+    message.info('所选页面已有 OCR 结果；可用“识别当前页”重新识别。')
+    return
+  }
+  const generation = ++ocrGeneration
+  ocrTaskState.value = 'preparing'
+  ocrError.value = ''
+  ocrCompletedPages.value = 0
+  ocrTotalPages.value = pages.length
+  ocrPageProgress.value = 0
+  ocrProgressStatus.value = '初始化离线引擎'
+  openOcrPanel()
+  try {
+    const worker = await createOfflineOcrWorker(progress => {
+      if (generation !== ocrGeneration) return
+      ocrProgressStatus.value = progress.status
+      if (ocrTaskState.value === 'running') ocrPageProgress.value = progress.progress
+    })
+    if (generation !== ocrGeneration) {
+      await worker.terminate()
+      return
+    }
+    ocrWorker = worker
+    ocrTaskState.value = 'running'
+    for (const pageNumber of pages) {
+      if (generation !== ocrGeneration || !pdfDocument.value) return
+      ocrCurrentPage.value = pageNumber
+      ocrPageProgress.value = 0
+      const page = await pdfDocument.value.getPage(pageNumber)
+      const baseViewport = page.getViewport({ scale: 1 })
+      const renderScale = Math.min(2, 3000 / Math.max(baseViewport.width, baseViewport.height))
+      const viewport = page.getViewport({ scale: Math.max(1, renderScale) })
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.ceil(viewport.width)
+      canvas.height = Math.ceil(viewport.height)
+      const context = canvas.getContext('2d', { alpha: false })
+      if (!context) throw new Error('无法创建 OCR 页面画布')
+      await page.render({ canvas, canvasContext: context, viewport }).promise
+      if (generation !== ocrGeneration) return
+      const result = await worker.recognize(canvas)
+      if (generation !== ocrGeneration) return
+      const recognized: PdfOcrPage = {
+        page: pageNumber,
+        text: result.data.text.trim().slice(0, 500_000),
+        confidence: Math.max(0, Math.min(100, result.data.confidence || 0)),
+        processedAt: Date.now(),
+        width: canvas.width,
+        height: canvas.height,
+      }
+      ocrDocument.value.pages = ocrDocument.value.pages.filter(item => item.page !== pageNumber)
+      ocrDocument.value.pages.push(recognized)
+      ocrDocument.value.updatedAt = Date.now()
+      await persistOcrDocument()
+      ocrCompletedPages.value++
+      ocrPageProgress.value = 0
+      canvas.width = 0
+      canvas.height = 0
+    }
+    ocrTaskState.value = 'completed'
+    message.success(`OCR 完成：${pages.length} 页已保存并进入统一索引`)
+  } catch (cause) {
+    if (generation !== ocrGeneration) return
+    ocrTaskState.value = 'failed'
+    ocrError.value = `OCR 任务失败：${String(cause).replace(/^Error:\s*/, '')}`
+  } finally {
+    if (generation === ocrGeneration) {
+      const worker = ocrWorker
+      ocrWorker = null
+      if (worker) await worker.terminate().catch(() => undefined)
+    }
+  }
+}
+
+const persistAnnotations = async () => {
+  if (!annotationDocument.value || !annotationWritable.value || !annotationDirty.value || !annotationSourcePath || !annotationLibraryRoot) return
+  const snapshot = JSON.parse(JSON.stringify(annotationDocument.value)) as PdfAnnotationDocument
+  const revision = annotationRevision
+  const sourcePath = annotationSourcePath
+  const libraryRoot = annotationLibraryRoot
+  annotationSaving.value = true
+  annotationSaveError.value = ''
+  annotationSaveChain = annotationSaveChain.catch(() => undefined).then(async () => {
+    try {
+      await invoke('write_pdf_annotations', { libraryRoot, pdfPath: sourcePath, document: snapshot })
+      if (revision === annotationRevision) annotationDirty.value = false
+    } catch (cause) {
+      annotationDirty.value = true
+      annotationSaveError.value = `批注保存失败：${String(cause)}`
+    } finally {
+      annotationSaving.value = false
+    }
+  })
+  await annotationSaveChain
+}
+
+const scheduleAnnotationSave = () => {
+  annotationRevision++
+  annotationDirty.value = true
+  window.clearTimeout(annotationSaveTimer)
+  annotationSaveTimer = window.setTimeout(persistAnnotations, 280)
+}
+
+const addAnnotation = (annotation: PdfAnnotation) => {
+  if (!annotationDocument.value || !annotationWritable.value) return
+  annotationDocument.value.annotations.push(annotation)
+  selectedAnnotationId.value = annotation.id
+  sidebarOpen.value = true
+  sidebarTab.value = 'annotations'
+  scheduleAnnotationSave()
+}
+
+const makeAnnotation = (kind: PdfAnnotationKind, page: number, rects: PdfAnnotationRect[], quote = '', comment = '', color = annotationColor.value): PdfAnnotation => {
+  const now = Date.now()
+  return { id: makeAnnotationId(), kind, page, color, rects, quote: quote.slice(0, 20_000), comment: comment.slice(0, 20_000), createdAt: now, updatedAt: now }
+}
+
+const dismissSelectionTool = () => {
+  selectionTool.value.show = false
+  window.getSelection()?.removeAllRanges()
+}
+
+const captureTextSelection = () => {
+  if (areaMode.value || !annotationWritable.value) return
+  window.setTimeout(() => {
+    const selection = window.getSelection()
+    if (!selection || selection.isCollapsed || !selection.rangeCount) { selectionTool.value.show = false; return }
+    const range = selection.getRangeAt(0)
+    const ancestor = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+      ? range.commonAncestorContainer as Element
+      : range.commonAncestorContainer.parentElement
+    const textLayer = ancestor?.closest('.textLayer')
+    const pageHost = textLayer?.closest<HTMLElement>('[data-pdf-page]')
+    const quote = selection.toString().trim()
+    if (!pageHost || !quote) { selectionTool.value.show = false; return }
+    const hostBounds = pageHost.getBoundingClientRect()
+    const rects = [...range.getClientRects()].filter(rect => rect.width > 1 && rect.height > 1 && rect.bottom > hostBounds.top && rect.top < hostBounds.bottom).slice(0, 200).map(rect => {
+      const x = Math.max(0, Math.min(1, (rect.left - hostBounds.left) / hostBounds.width))
+      const y = Math.max(0, Math.min(1, (rect.top - hostBounds.top) / hostBounds.height))
+      return {
+        x,
+        y,
+        width: Math.min(1 - x, rect.width / hostBounds.width),
+        height: Math.min(1 - y, rect.height / hostBounds.height),
+      }
+    }).filter(rect => rect.width > 0 && rect.height > 0)
+    if (!rects.length) { selectionTool.value.show = false; return }
+    const bounds = range.getBoundingClientRect()
+    selectionTool.value = {
+      show: true, page: Number(pageHost.dataset.pdfPage), quote, rects,
+      x: Math.max(12, Math.min(window.innerWidth - 360, bounds.left)),
+      y: Math.max(12, bounds.top - 48),
+    }
+  }, 0)
+}
+
+const createSelectionAnnotation = (color: PdfAnnotationColor, withComment: boolean) => {
+  const tool = selectionTool.value
+  if (!tool.show) return
+  annotationColor.value = color
+  const comment = withComment ? window.prompt('为这段高亮添加评论（可留空）', '') : ''
+  if (withComment && comment === null) return
+  addAnnotation(makeAnnotation('highlight', tool.page, tool.rects, tool.quote, comment || '', color))
+  dismissSelectionTool()
+}
+
+const createAreaAnnotation = (page: number, rect: PdfAnnotationRect) => {
+  const comment = window.prompt('区域批注评论（可留空）', '')
+  if (comment === null) return
+  addAnnotation(makeAnnotation('area', page, [rect], '', comment))
+  areaMode.value = false
+}
+
+const createPageComment = () => {
+  const comment = window.prompt(`为第 ${currentPage.value} 页添加评论`, '')
+  if (!comment?.trim()) return
+  addAnnotation(makeAnnotation('comment', currentPage.value, [], '', comment.trim()))
+}
+
+const scrollToAnnotation = (id: string, attempt = 0) => {
+  if (selectedAnnotationId.value !== id) return
+  const escapedId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function' ? CSS.escape(id) : id.replace(/["\\]/g, '\\$&')
+  const element = document.querySelector<HTMLElement>(`[data-annotation-id="${escapedId}"]`)
+  if (element) element.scrollIntoView({ behavior: attempt ? 'auto' : 'smooth', block: 'center', inline: 'center' })
+  else if (attempt < 20) window.setTimeout(() => scrollToAnnotation(id, attempt + 1), 40)
+}
+
+const selectAnnotation = (id: string) => {
+  const annotation = annotations.value.find(item => item.id === id)
+  if (!annotation) return
+  selectedAnnotationId.value = id
+  sidebarOpen.value = true
+  sidebarTab.value = 'annotations'
+  goToPage(annotation.page, 'auto')
+  nextTick(() => scrollToAnnotation(id))
+}
+
+const touchSelectedAnnotation = () => {
+  if (!selectedAnnotation.value) return
+  selectedAnnotation.value.updatedAt = Date.now()
+  scheduleAnnotationSave()
+}
+const setSelectedAnnotationColor = (color: PdfAnnotationColor) => {
+  if (!selectedAnnotation.value) return
+  selectedAnnotation.value.color = color
+  annotationColor.value = color
+  touchSelectedAnnotation()
+}
+
+const buildSelectedAnnotationReference = async (): Promise<PdfAnnotationReference> => {
+  if (!selectedAnnotation.value) throw new Error('请先选择一条批注')
+  window.clearTimeout(annotationSaveTimer)
+  await persistAnnotations()
+  if (annotationDirty.value || annotationSaveError.value) throw new Error(annotationSaveError.value || '批注尚未保存')
+  return invoke<PdfAnnotationReference>('build_pdf_annotation_reference', {
+    libraryRoot: store.libraryPath,
+    pdfPath: pdfPath.value,
+    annotationId: selectedAnnotation.value.id,
+  })
+}
+
+const copySelectedAnnotationReference = async () => {
+  referenceWorking.value = true
+  try {
+    const reference = await buildSelectedAnnotationReference()
+    await navigator.clipboard.writeText(reference.markdown)
+    message.success('批注引用已复制')
+  } catch (cause) {
+    message.error(`复制引用失败：${String(cause)}`)
+  } finally {
+    referenceWorking.value = false
+  }
+}
+
+const insertSelectedAnnotationReference = async () => {
+  const target = markdownTarget.value
+  if (!target) return
+  referenceWorking.value = true
+  try {
+    const reference = await buildSelectedAnnotationReference()
+    const disk = target.content === undefined
+      ? await invoke<{ content: string }>('read_markdown_file', { path: target.path })
+      : undefined
+    const content = target.content ?? disk?.content ?? ''
+    const separator = content ? (content.endsWith('\n') ? '\n' : '\n\n') : ''
+    const updated = `${content}${separator}${reference.markdown}\n`
+    await invoke('write_markdown_file', { path: target.path, content: updated })
+    store.updateTabContent(target.path, updated)
+    message.success(`已插入到 ${target.title}`)
+    await router.push({ name: 'LibraryMode', query: { path: target.path } })
+  } catch (cause) {
+    message.error(`插入引用失败：${String(cause)}`)
+  } finally {
+    referenceWorking.value = false
+  }
+}
+const deleteSelectedAnnotation = () => {
+  if (!annotationDocument.value || !selectedAnnotation.value || !window.confirm('确定删除这条 PDF 批注吗？')) return
+  const id = selectedAnnotation.value.id
+  annotationDocument.value.annotations = annotationDocument.value.annotations.filter(annotation => annotation.id !== id)
+  selectedAnnotationId.value = ''
+  scheduleAnnotationSave()
+}
+
+const clearTextState = () => {
+  searchGeneration++
+  textPromises.clear()
+  textAccess.clear()
+  for (const key of Object.keys(textContents)) delete textContents[Number(key)]
+  searchMatches.value = []
+  activeMatchIdState.value = ''
+  searchIndexedPages.value = 0
+  searchRunning.value = false
+  searchQuery.value = ''
+}
+
+const trimTextCache = () => {
+  const limit = 48
+  const keys = Object.keys(textContents).map(Number)
+  if (keys.length <= limit) return
+  const activePage = searchMatches.value.find(match => match.id === activeMatchIdState.value)?.page
+  const removable = keys
+    .filter(page => page !== currentPage.value && page !== activePage)
+    .sort((left, right) => (textAccess.get(left) || 0) - (textAccess.get(right) || 0))
+  for (const page of removable.slice(0, Math.max(0, keys.length - limit))) {
+    delete textContents[page]
+    textAccess.delete(page)
+  }
+}
+
+const ensurePageText = (pageNumber: number): Promise<TextContent | undefined> => {
+  if (textContents[pageNumber]) {
+    textAccess.set(pageNumber, performance.now())
+    return Promise.resolve(textContents[pageNumber])
+  }
+  const pending = textPromises.get(pageNumber)
+  if (pending) return pending
+  const document = pdfDocument.value
+  if (!document) return Promise.resolve(undefined)
+  const promise = document.getPage(pageNumber)
+    .then(page => page.getTextContent({ includeMarkedContent: false }))
+    .then(content => {
+      if (pdfDocument.value === document) {
+        textContents[pageNumber] = content
+        textAccess.set(pageNumber, performance.now())
+        trimTextCache()
+      }
+      return pdfDocument.value === document ? content : undefined
+    })
+    .catch(error => { console.error(`PDF page ${pageNumber} text extraction failed`, error); return undefined })
+    .finally(() => textPromises.delete(pageNumber))
+  textPromises.set(pageNumber, promise)
+  return promise
+}
+
+const recordPageRendered = () => {
+  if (firstPageReadyMs.value || !loadStartedAt) return
+  firstPageReadyMs.value = Math.max(1, Math.round(performance.now() - loadStartedAt))
+}
+
+const scrollToMatch = (match: PdfSearchMatch, attempt = 0) => {
+  if (activeMatchIdState.value !== match.id) return
+  const element = document.querySelector<HTMLElement>(`[data-match-id="${match.id}"]`)
+  if (element) {
+    element.scrollIntoView({ behavior: attempt ? 'auto' : 'smooth', block: 'center', inline: 'center' })
+  } else if (attempt < 20) {
+    window.setTimeout(() => scrollToMatch(match, attempt + 1), 40)
+  }
+}
+
+const activateMatch = (match: PdfSearchMatch) => {
+  activeMatchIdState.value = match.id
+  goToPage(match.page, 'auto')
+  nextTick(() => scrollToMatch(match))
+}
+
+const navigateMatch = (direction: 1 | -1) => {
+  if (!searchMatches.value.length) return
+  const current = activeMatchIndex.value
+  const next = current < 0
+    ? (direction > 0 ? 0 : searchMatches.value.length - 1)
+    : (current + direction + searchMatches.value.length) % searchMatches.value.length
+  activateMatch(searchMatches.value[next])
+}
+
+const clearSearch = () => {
+  searchQuery.value = ''
+  searchMatches.value = []
+  activeMatchIdState.value = ''
+  searchRunning.value = false
+  searchGeneration++
+  searchInputRef.value?.focus()
+}
+
+const runSearch = async () => {
+  const query = searchQuery.value.trim()
+  const document = pdfDocument.value
+  const generation = ++searchGeneration
+  searchMatches.value = []
+  activeMatchIdState.value = ''
+  searchIndexedPages.value = 0
+  if (!query || !document) { searchRunning.value = false; return }
+  searchRunning.value = true
+  const pageResults = new Map<number, PdfSearchMatch[]>()
+  const pages = [currentPage.value, ...Array.from({ length: document.numPages }, (_, index) => index + 1).filter(page => page !== currentPage.value)]
+  let firstMatch: PdfSearchMatch | undefined
+  for (const pageNumber of pages) {
+    if (generation !== searchGeneration || pdfDocument.value !== document) return
+    const content = await ensurePageText(pageNumber)
+    if (content) {
+      const matches = findPdfPageMatches(pageNumber, buildPdfPageText(content).text, query)
+      pageResults.set(pageNumber, matches)
+      if (!firstMatch && matches.length) firstMatch = matches[0]
+    }
+    searchIndexedPages.value++
+    searchMatches.value = [...pageResults.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .flatMap(([, matches]) => matches)
+    if (firstMatch && !activeMatchIdState.value) activateMatch(firstMatch)
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+  }
+  if (generation === searchGeneration) searchRunning.value = false
+}
+
+const loadPdf = async () => {
+  await cancelOcr()
+  ocrGeneration++
+  annotationLoadGeneration++
+  window.clearTimeout(annotationSaveTimer)
+  await persistAnnotations()
+  error.value = ''
+  loading.value = true
+  loadStartedAt = performance.now()
+  firstPageReadyMs.value = 0
+  loadProgress.value = 0
+  outline.value = []
+  annotationDocument.value = null
+  annotationSourcePath = ''
+  annotationLibraryRoot = ''
+  annotationRevision = 0
+  annotationDirty.value = false
+  annotationError.value = ''
+  referenceNotice.value = ''
+  selectedAnnotationId.value = ''
+  areaMode.value = false
+  ocrDocument.value = null
+  ocrTaskState.value = 'idle'
+  ocrError.value = ''
+  ocrSourceChanged.value = false
+  dismissSelectionTool()
+  clearTextState()
+  await loadingTask?.destroy()
+  rangeTransport?.abort()
+  rangeTransport = null
+  loadingTask = null
+  pdfDocument.value = null
+  if (!store.libraryPath || !pdfPath.value.toLowerCase().endsWith('.pdf')) {
+    error.value = 'PDF 路径无效或知识库尚未配置'
+    loading.value = false
+    return
+  }
+  try {
+    const descriptor = await invoke<PdfReadDescriptor>('read_pdf_info', { libraryRoot: store.libraryPath, path: pdfPath.value })
+    if (descriptor.fullData) {
+      loadMode.value = 'full'
+      loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(descriptor.fullData), useWasm: false })
+    } else {
+      loadMode.value = 'range'
+      rangeTransport = new TauriPdfRangeTransport(
+        descriptor.length,
+        new Uint8Array(descriptor.initialData),
+        {
+          libraryRoot: store.libraryPath,
+          path: pdfPath.value,
+          signature: descriptor.signature,
+          fileName: `${fileName.value}.pdf`,
+          onError: cause => {
+            error.value = cause
+            loading.value = false
+            void loadingTask?.destroy()
+          },
+        },
+      )
+      loadingTask = pdfjsLib.getDocument({
+        range: rangeTransport,
+        rangeChunkSize: descriptor.rangeChunkSize,
+        disableStream: true,
+        disableAutoFetch: true,
+        useWasm: false,
+      })
+    }
+    loadingTask.onProgress = (progress: { loaded: number; total: number }) => { if (progress.total) loadProgress.value = Math.min(100, Math.round(progress.loaded / progress.total * 100)) }
+    loadingTask.onPassword = (updatePassword: (password: string) => void) => {
+      const password = window.prompt('此 PDF 受密码保护，请输入密码')
+      if (password !== null) updatePassword(password)
+      else {
+        error.value = '已取消输入 PDF 密码'
+        loading.value = false
+        loadingTask?.destroy()
+      }
+    }
+    const document = await loadingTask.promise
+    pdfDocument.value = document
+    const firstPage = await document.getPage(1)
+    const viewport = firstPage.getViewport({ scale: 1 })
+    basePage.value = { width: viewport.width, height: viewport.height }
+    const restored = Math.max(1, Math.min(document.numPages, requestedPage() || readPositions()[positionId()] || 1))
+    currentPage.value = restored
+    pageInput.value = restored
+    loading.value = false
+    await nextTick()
+    if (fitWidth.value) applyFitWidth()
+    goToPage(restored, 'auto')
+    loadOutline()
+    await loadAnnotations(document)
+    await loadOcrDocument(document)
+  } catch (cause) {
+    if (!error.value) error.value = String(cause).replace(/^Error:\s*/, '')
+    loading.value = false
+  }
+}
+
+const goToPage = (page: number, behavior: ScrollBehavior = 'smooth') => {
+  if (!pdfDocument.value) return
+  const target = Math.max(1, Math.min(pdfDocument.value.numPages, Math.round(page)))
+  currentPage.value = target
+  pageInput.value = target
+  document.getElementById(`pdf-page-${target}`)?.scrollIntoView({ behavior, block: 'start' })
+  schedulePositionSave()
+}
+const commitPageInput = () => goToPage(pageInput.value || currentPage.value)
+const setScale = (value: number) => {
+  fitWidth.value = false
+  scale.value = Math.max(0.5, Math.min(2.5, Math.round(value * 10) / 10))
+  nextTick(() => goToPage(currentPage.value, 'auto'))
+}
+const changeScale = (delta: number) => setScale(scale.value + delta)
+const applyFitWidth = () => {
+  if (!scrollRef.value) return
+  scale.value = Math.max(0.5, Math.min(2.5, (scrollRef.value.clientWidth - 64) / basePage.value.width))
+  nextTick(() => goToPage(currentPage.value, 'auto'))
+}
+const toggleFitWidth = () => { fitWidth.value = !fitWidth.value; if (fitWidth.value) applyFitWidth() }
+const schedulePositionSave = () => { window.clearTimeout(positionTimer); positionTimer = window.setTimeout(savePosition, 250) }
+
+const handleScroll = () => {
+  cancelAnimationFrame(scrollFrame)
+  scrollFrame = requestAnimationFrame(() => {
+    const container = scrollRef.value
+    if (!container) return
+    const top = container.getBoundingClientRect().top + 96
+    let nearest = currentPage.value, distance = Infinity
+    for (const element of container.querySelectorAll<HTMLElement>('.page-shell')) {
+      const delta = Math.abs(element.getBoundingClientRect().top - top)
+      if (delta < distance) { distance = delta; nearest = Number(element.dataset.page) }
+    }
+    if (nearest !== currentPage.value) { currentPage.value = nearest; pageInput.value = nearest; schedulePositionSave() }
+  })
+}
+
+const openOutlineItem = async (item: OutlineEntry) => {
+  if (!pdfDocument.value || !item.destination) return
+  try {
+    const destination = typeof item.destination === 'string' ? await pdfDocument.value.getDestination(item.destination) : item.destination
+    if (!destination?.[0]) return
+    const pageIndex = typeof destination[0] === 'object' ? await pdfDocument.value.getPageIndex(destination[0] as any) : Number(destination[0])
+    goToPage(pageIndex + 1)
+  } catch { /* malformed outline target */ }
+}
+
+const handleKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    areaMode.value = false
+    dismissSelectionTool()
+  }
+  if (!(event.ctrlKey || event.metaKey)) return
+  if (event.key.toLowerCase() === 'f') { event.preventDefault(); searchInputRef.value?.focus(); searchInputRef.value?.select(); return }
+  if (event.key === '=' || event.key === '+') { event.preventDefault(); changeScale(0.1) }
+  if (event.key === '-') { event.preventDefault(); changeScale(-0.1) }
+  if (event.key === '0') { event.preventDefault(); setScale(1) }
+}
+
+const handleResize = () => { if (fitWidth.value) applyFitWidth() }
+watch([pdfPath, () => store.libraryPath], loadPdf)
+watch([() => route.query.page, () => route.query.annotation], () => {
+  if (pdfDocument.value && annotationDocument.value) focusRequestedReference()
+})
+watch(searchQuery, () => {
+  window.clearTimeout(searchTimer)
+  searchTimer = window.setTimeout(runSearch, 220)
+})
+onMounted(() => { loadPdf(); window.addEventListener('resize', handleResize) })
+onBeforeUnmount(async () => {
+  await cancelOcr()
+  savePosition()
+  window.clearTimeout(positionTimer)
+  window.clearTimeout(searchTimer)
+  window.clearTimeout(annotationSaveTimer)
+  searchGeneration++
+  cancelAnimationFrame(scrollFrame)
+  window.removeEventListener('resize', handleResize)
+  await persistAnnotations()
+  await loadingTask?.destroy()
+  rangeTransport?.abort()
+  rangeTransport = null
+  pdfjsLib.TextLayer.cleanup()
+})
+</script>
+
+<style scoped>
+.pdf-view { height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: #d9dde3; outline: none; }
+.pdf-toolbar { min-height: 58px; display: grid; grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr); align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); box-shadow: 0 2px 10px rgba(0,0,0,.07); z-index: 5; }
+.toolbar-leading,.toolbar-center,.toolbar-actions { display: flex; align-items: center; gap: 7px; }
+.toolbar-actions { justify-content: flex-end; }
+.document-title { min-width: 0; display: flex; flex-direction: column; }
+.document-title strong { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.document-title span { color: var(--theme-text-secondary); font-size: 9px; }
+.icon-btn,.scale-label,.fit-btn { height: 32px; border: 1px solid rgba(0,0,0,.09); border-radius: 7px; color: var(--theme-text); background: rgba(0,0,0,.035); cursor: pointer; }
+.icon-btn { min-width: 32px; font-size: 18px; }
+.icon-btn:hover,.icon-btn.active,.fit-btn:hover,.fit-btn.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.4); background: rgba(var(--theme-primary-rgb),.09); }
+.icon-btn:disabled { cursor: default; opacity: .35; }
+.scale-label { min-width: 54px; font-size: 11px; }
+.fit-btn { padding: 0 10px; font-size: 10px; font-weight: 650; }
+.pdf-search { height: 32px; width: 184px; display: flex; align-items: center; gap: 4px; padding: 0 5px 0 9px; box-sizing: border-box; border: 1px solid rgba(0,0,0,.09); border-radius: 7px; color: var(--theme-text-secondary); background: rgba(0,0,0,.025); }
+.pdf-search.active { width: 280px; border-color: rgba(var(--theme-primary-rgb),.35); background: rgba(var(--theme-primary-rgb),.055); }
+.pdf-search input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--theme-text); background: transparent; font-size: 10px; }
+.pdf-search small { flex: none; color: var(--theme-text-secondary); font-size: 8px; white-space: nowrap; }
+.pdf-search button { width: 21px; height: 22px; flex: none; padding: 0; border: 0; border-radius: 4px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }
+.pdf-search button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); }
+.pdf-search button:disabled { cursor: default; opacity: .35; }
+.page-jump { height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 8px; border: 1px solid rgba(0,0,0,.09); border-radius: 7px; color: var(--theme-text-secondary); background: rgba(0,0,0,.025); font-size: 10px; }
+.page-jump input { width: 42px; border: 0; outline: 0; color: var(--theme-text); background: transparent; text-align: right; }
+.pdf-workspace { min-height: 0; flex: 1; display: flex; }
+.pdf-sidebar { width: 220px; flex: none; display: flex; flex-direction: column; border-right: 1px solid rgba(0,0,0,.1); background: color-mix(in srgb, var(--theme-card) 96%, #d9dde3); }
+.sidebar-switch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 9px; border-bottom: 1px solid rgba(0,0,0,.07); }
+.sidebar-switch button { height: 28px; border: 0; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 10px; }
+.sidebar-switch button.active { color: #fff; background: var(--theme-primary); }
+.thumbnail-list,.outline-list { min-height: 0; flex: 1; overflow: auto; padding: 12px; }
+.thumbnail-item { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 12px; padding: 8px; border: 1px solid transparent; border-radius: 8px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 9px; }
+.thumbnail-item:hover,.thumbnail-item.active { border-color: rgba(var(--theme-primary-rgb),.45); background: rgba(var(--theme-primary-rgb),.08); }
+.outline-list { padding: 8px 0; }
+.outline-list button { width: 100%; min-height: 34px; padding: 7px 12px; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; font-size: 10px; line-height: 1.4; }
+.outline-list button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); }
+.sidebar-empty { padding: 24px 14px; color: var(--theme-text-secondary); font-size: 10px; text-align: center; }
+.annotation-panel { min-height: 0; flex: 1; overflow: auto; padding: 9px; }
+.annotation-alert { margin-bottom: 8px; padding: 8px; border: 1px solid rgba(220,76,62,.24); border-radius: 7px; color: #b83e34; background: rgba(220,76,62,.08); font-size: 9px; line-height: 1.45; }
+.annotation-card { width: 100%; display: flex; flex-direction: column; gap: 5px; margin-bottom: 6px; padding: 9px; border: 1px solid rgba(0,0,0,.08); border-radius: 7px; color: var(--theme-text); background: rgba(255,255,255,.42); cursor: pointer; text-align: left; }
+.annotation-card:hover,.annotation-card.active { border-color: rgba(var(--theme-primary-rgb),.42); background: rgba(var(--theme-primary-rgb),.08); }
+.annotation-card-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }.annotation-card-head strong { font-size: 9px; }.annotation-card-head i { width: 7px; height: 7px; flex: none; border-radius: 50%; }.dot-yellow { background: #e3b500; }.dot-green { background: #159653; }.dot-pink { background: #d83a83; }.dot-blue { background: #1674d1; }
+.annotation-card > span:last-child { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: 9px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.annotation-editor { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,.08); }.annotation-editor label { color: var(--theme-text-secondary); font-size: 9px; }.annotation-editor textarea { width: 100%; min-height: 74px; margin-top: 5px; padding: 7px; box-sizing: border-box; resize: vertical; border: 1px solid rgba(0,0,0,.12); border-radius: 6px; color: var(--theme-text); background: var(--theme-card); font: inherit; line-height: 1.45; }.annotation-editor textarea:focus { outline: 1px solid var(--theme-primary); }
+.annotation-colors { display: flex; gap: 7px; }.annotation-colors button,.selection-annotation-tool > button:not(.comment-selection):not(.close-selection) { width: 18px; height: 18px; padding: 0; border: 2px solid #fff; border-radius: 50%; cursor: pointer; box-shadow: 0 0 0 1px rgba(0,0,0,.14); }.annotation-colors button.active { outline: 2px solid var(--theme-primary); outline-offset: 1px; }.color-yellow { background: #f0c928; }.color-green { background: #2fbd75; }.color-pink { background: #ef68a6; }.color-blue { background: #3e91ee; }
+.annotation-reference-actions { display: grid; grid-template-columns: 1fr 1.35fr; gap: 6px; }.annotation-reference-actions button { min-height: 28px; padding: 4px 6px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 8px; line-height: 1.25; }.annotation-reference-actions button:disabled { cursor: default; opacity: .4; }
+.delete-annotation { height: 28px; border: 1px solid rgba(220,76,62,.24); border-radius: 6px; color: #c4473c; background: rgba(220,76,62,.06); cursor: pointer; font-size: 9px; }.delete-annotation:disabled,.annotation-colors button:disabled { cursor: default; opacity: .4; }
+.annotation-save-state { margin-top: 10px; color: var(--theme-text-secondary); font-size: 8px; text-align: center; }.annotation-save-state.error { color: #c4473c; }
+.ocr-panel { min-height: 0; flex: 1; overflow: auto; padding: 10px; }
+.ocr-summary { display: flex; flex-direction: column; gap: 4px; padding: 10px; border: 1px solid rgba(var(--theme-primary-rgb),.18); border-radius: 8px; background: rgba(var(--theme-primary-rgb),.055); }.ocr-summary strong { font-size: 11px; }.ocr-summary span,.ocr-summary p { margin: 0; color: var(--theme-text-secondary); font-size: 8px; line-height: 1.5; }
+.ocr-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }.ocr-actions button,.ocr-progress button { min-height: 30px; border: 1px solid rgba(var(--theme-primary-rgb),.25); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 9px; }
+.ocr-progress { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; padding: 9px; border-radius: 7px; background: rgba(0,0,0,.035); font-size: 9px; }.ocr-progress progress { width: 100%; accent-color: var(--theme-primary); }.ocr-progress small,.ocr-note { color: var(--theme-text-secondary); font-size: 8px; }
+.ocr-page-list { display: flex; flex-direction: column; gap: 6px; }.ocr-page-list button { display: flex; flex-direction: column; gap: 5px; padding: 8px; border: 1px solid rgba(0,0,0,.08); border-radius: 7px; color: var(--theme-text); background: rgba(255,255,255,.4); cursor: pointer; text-align: left; }.ocr-page-list button > span { display: flex; justify-content: space-between; font-size: 9px; }.ocr-page-list i { color: var(--theme-primary); font-style: normal; }.ocr-page-list small { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: 8px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.selection-annotation-tool { position: fixed; z-index: 50; height: 36px; display: flex; align-items: center; gap: 7px; padding: 0 8px; border: 1px solid rgba(0,0,0,.14); border-radius: 9px; color: #e8edf3; background: #252a31; box-shadow: 0 10px 30px rgba(0,0,0,.28); font-size: 9px; }
+.selection-annotation-tool .comment-selection { height: 24px; padding: 0 8px; border: 0; border-radius: 5px; color: #fff; background: #506073; cursor: pointer; font-size: 9px; }.selection-annotation-tool .close-selection { width: 22px; height: 22px; padding: 0; border: 0; color: #bbc4cf; background: transparent; cursor: pointer; font-size: 16px; }
+.area-mode-hint { position: fixed; right: 18px; bottom: 18px; z-index: 40; padding: 9px 13px; border: 1px solid rgba(0,122,255,.28); border-radius: 8px; color: #fff; background: rgba(20,42,67,.92); box-shadow: 0 6px 20px rgba(0,0,0,.2); font-size: 10px; }
+.pdf-scroll { min-width: 0; flex: 1; overflow: auto; scroll-behavior: smooth; }
+.page-list { min-width: max-content; display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 30px 32px 60px; }
+.page-shell { position: relative; scroll-margin-top: 22px; }
+.page-number { position: absolute; right: 0; bottom: -18px; left: 0; color: #667085; font-size: 9px; text-align: center; }
+.pdf-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #596273; }
+.pdf-state strong { color: #273142; font-size: 15px; }
+.pdf-state.error p { max-width: 520px; margin: 0; font-size: 11px; text-align: center; }
+.pdf-state.error button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }
+.loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 980px) { .pdf-search { width: 150px; }.pdf-search.active { width: 220px; }.document-title strong { max-width: 160px; } }
+@media (max-width: 760px) { .pdf-toolbar { grid-template-columns: 1fr auto; }.toolbar-center { order: 3; grid-column: 1 / -1; justify-content: center; padding-bottom: 7px; }.pdf-sidebar { width: 176px; }.fit-btn,.scale-label { display: none; }.pdf-search { width: 130px; }.pdf-search.active { width: 190px; } }
+</style>

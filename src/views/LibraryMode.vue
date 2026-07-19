@@ -36,7 +36,7 @@
                 </div>
                 <div class="toolbar-area">
                   <n-dropdown trigger="click" :options="templateOptions" @select="handleTemplateCreate">
-                    <n-button quaternary circle size="small" title="新建笔记">
+                    <n-button quaternary circle size="small" title="新建笔记或画布">
                       <template #icon><n-icon :component="PlusIcon" /></template>
                     </n-button>
                   </n-dropdown>
@@ -59,6 +59,15 @@
                       <n-button size="tiny" type="primary" @click="openSettings">去配置路径</n-button>
                     </template>
                   </n-empty>
+                </div>
+                <div v-else-if="searchQuery.trim()" class="knowledge-search-results">
+                  <div v-if="knowledgeSearchRunning" class="knowledge-search-state">正在搜索 Markdown、Canvas、PDF 与数据表…</div>
+                  <div v-else-if="!knowledgeSearchResults.length" class="knowledge-search-state">没有找到匹配内容</div>
+                  <button v-for="(result, index) in knowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.annotationId || index}`" class="knowledge-search-result" @click="openKnowledgeSearchResult(result)">
+                    <span class="knowledge-result-head"><strong>{{ result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '') }}</strong><i>{{ result.objectType === 'pdf' ? 'PDF' : result.objectType === 'canvas' ? 'Canvas' : result.objectType === 'table' ? '表格' : 'MD' }} · {{ searchKindLabel(result.matchKind) }}</i></span>
+                    <span class="knowledge-result-context">{{ result.context }}</span>
+                    <small v-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
+                  </button>
                 </div>
                 <n-tree 
                   v-else
@@ -152,6 +161,13 @@
             <div v-else-if="activeSidebarTab === 'links'" :key="'links'" class="tab-pane links-pane">
               <div v-if="!activeTabId" class="path-guide"><n-empty description="未打开文件" size="small" /></div>
               <div v-else class="links-content">
+                <LocalGraph
+                  :library-root="store.libraryPath"
+                  :current-path="activeTabId"
+                  @select="path => handleNodeSelect([path])"
+                  @open-mindmap="openLocalMindMap"
+                  @open-canvas="createCanvasFromCurrentGraph"
+                />
                 <div class="links-section" v-if="outgoingLinks.length > 0">
                   <div class="links-section-title">链出 ({{ outgoingLinks.length }})</div>
                   <div class="link-item" v-for="link in outgoingLinks" :key="link" @click="navigateToLink(link)">{{ link }}</div>
@@ -312,6 +328,7 @@
                 <template #icon><n-icon :component="DownloadIcon" /></template>
               </n-button>
             </n-dropdown>
+            <n-button quaternary size="tiny" v-if="activeTabId" @click="createMindMapFromCurrentMarkdown" title="将当前文档标题和列表转换为可编辑思维导图">转脑图</n-button>
             <div class="mode-toggle" v-if="activeTabId">
               <n-button quaternary size="tiny" :type="store.editorMode === 'wysiwyg' ? 'primary' : 'default'" @click="switchEditorMode('wysiwyg')" title="所见即所得">所见</n-button>
               <n-button quaternary size="tiny" :type="store.editorMode === 'ir' ? 'primary' : 'default'" @click="switchEditorMode('ir')" title="即时渲染">IR</n-button>
@@ -343,6 +360,13 @@
           </n-spin>
         </div>
         <div v-show="tabs.length > 0" id="vditor-lib" class="vditor-instance"></div>
+        <MarkdownChartEmbeds
+          v-if="activeMarkdownContent && activeTabId"
+          :markdown="activeMarkdownContent"
+          :library-root="store.libraryPath"
+          :host-path="activeTabId"
+          @open="openEmbeddedTableChart"
+        />
         
         <div v-if="tabs.length === 0" class="hero-viewport">
           <div class="ambient-glow">
@@ -432,19 +456,36 @@ import 'vditor/dist/index.css'
 import { useAppStore, THEME_MAP } from '../store/app'
 import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
-import { useRouter } from 'vue-router'
+import LocalGraph from '../components/LocalGraph.vue'
+import MarkdownChartEmbeds from '../components/MarkdownChartEmbeds.vue'
+import { useRoute, useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
+import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
+interface KnowledgeSearchResult {
+  title: string
+  path: string
+  objectType: 'markdown' | 'canvas' | 'pdf' | 'table'
+  matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'tag'
+  context: string
+  page?: number
+  annotationId?: string
+  score: number
+  extractionFailed: boolean
+}
 
 const message = useMessage()
 const dialog = useDialog()
 const store = useAppStore()
 const { tabs, activeTabId } = storeToRefs(store)
 const router = useRouter()
+const route = useRoute()
+const activeMarkdownContent = computed(() => tabs.value.find(tab => tab.id === activeTabId.value)?.content || '')
+const openEmbeddedTableChart = (path: string) => router.push({ name: 'Table', query: { path } })
 
 // 统一错误处理辅助函数
 const handleError = (error: any, userMessage: string, logContext?: string) => {
@@ -635,6 +676,9 @@ watch(activeTabId, () => {
 })
 const treeData = ref<TreeOption[]>([])
 const searchQuery = ref('')
+const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
+const knowledgeSearchRunning = ref(false)
+let knowledgeSearchGeneration = 0
 const selectedKeys = ref<string[]>([])
 const expandedKeys = ref<string[]>([])
 let vditor: any = null
@@ -706,7 +750,6 @@ const handleAIAction = async (action: string) => {
 
   try {
     aiState.result = await invoke<string>('ai_chat_completion', {
-      apiKey: store.aiApiKey,
       endpoint: store.aiEndpoint,
       model: store.aiModel,
       systemPrompt: systemPrompts[action],
@@ -799,6 +842,40 @@ const historyList = ref<{timestamp: number, content: string}[]>([])
 
 const openSettings = () => router.push('/settings')
 const openGraph = () => router.push('/graph')
+const openLocalMindMap = () => {
+  if (!activeTabId.value) return
+  router.push({ name: 'Graph', query: { mode: 'mindmap', root: activeTabId.value } })
+}
+
+const createCanvasFromCurrentGraph = async (depth: number) => {
+  if (!activeTabId.value) return
+  try {
+    const path = await invoke<string>('create_canvas_from_graph', {
+      libraryRoot: store.libraryPath,
+      centerPath: activeTabId.value,
+      depth
+    })
+    await refreshLibrary()
+    router.push({ name: 'Canvas', query: { path } })
+  } catch (error) {
+    message.error(`生成画布失败：${String(error)}`)
+  }
+}
+
+const createMindMapFromCurrentMarkdown = async () => {
+  if (!activeTabId.value) return
+  try {
+    await saveCurrentFile()
+    const path = await invoke<string>('create_canvas_from_markdown', {
+      libraryRoot: store.libraryPath,
+      markdownPath: activeTabId.value
+    })
+    await refreshLibrary()
+    router.push({ name: 'Canvas', query: { path } })
+  } catch (error) {
+    message.error(`转换思维导图失败：${String(error)}`)
+  }
+}
 const getHeroIcon = (iconName: string) => {
   switch (iconName) {
     case 'BookOpen': return BookOpenIcon
@@ -864,6 +941,39 @@ const handleNodeSelect = (keys: string[]) => {
   if (lastKey && lastKey.endsWith('.md')) { 
     const title = lastKey.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'
     store.addTab({ id: lastKey, title, path: lastKey, isDirty: false }) 
+  } else if (lastKey && lastKey.toLowerCase().endsWith('.canvas')) {
+    router.push({ name: 'Canvas', query: { path: lastKey } })
+  } else if (lastKey && lastKey.toLowerCase().endsWith('.pdf')) {
+    router.push({ name: 'Pdf', query: { path: lastKey } })
+  } else if (lastKey && /(?:\.(csv|tsv)|\.table\.json)$/i.test(lastKey)) {
+    router.push({ name: 'Table', query: { path: lastKey } })
+  } else if (lastKey && lastKey.toLowerCase().endsWith('.xlsx')) {
+    router.push({ name: 'Workbook', query: { path: lastKey } })
+  } else if (lastKey && /\.(?:mmd|mermaid)$/i.test(lastKey)) {
+    router.push({ name: 'Diagram', query: { path: lastKey } })
+  }
+}
+
+const searchKindLabel = (kind: KnowledgeSearchResult['matchKind']) => ({
+  title: '标题', body: '正文', ocr: 'OCR', annotation: '批注', tag: '标签',
+}[kind])
+
+const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
+  if (result.objectType === 'pdf') {
+    router.push({
+      name: 'Pdf',
+      query: {
+        path: result.path,
+        ...(result.page ? { page: String(result.page) } : {}),
+        ...(result.annotationId ? { annotation: result.annotationId } : {}),
+      },
+    })
+  } else if (result.objectType === 'canvas') {
+    router.push({ name: 'Canvas', query: { path: result.path } })
+  } else if (result.objectType === 'table') {
+    router.push({ name: 'Table', query: { path: result.path } })
+  } else {
+    handleNodeSelect([result.path])
   }
 }
 
@@ -881,7 +991,7 @@ const loadDirectory = async (path: string): Promise<TreeOption[]> => {
   if (!path) return []
   const entries = await invoke<FileEntry[]>('scan_directory', { path })
   return entries.map(entry => ({
-    label: entry.is_dir ? entry.name : entry.name.replace(/\.md$/, ''),
+    label: entry.is_dir ? entry.name : entry.name.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid))$/i, ''),
     key: entry.path,
     isLeaf: !entry.is_dir,
     prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' })
@@ -1281,7 +1391,7 @@ const onMenuAction = async (key: string) => {
     const dir = contextMenu.isDir ? path : path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')))
     await openPath(dir)
   } else if (key === 'star') { store.toggleStar(path); message.info(store.isStarred(path) ? '已收藏' : '已取消收藏') }
-  else if (key === 'rename') { renameState.oldPath = path; let name = path.split(/[\\/]/).pop() || ''; if (!contextMenu.isDir) name = name.substring(0, name.lastIndexOf('.')); renameState.newName = name; renameState.show = true }
+  else if (key === 'rename') { renameState.oldPath = path; let name = path.split(/[\\/]/).pop() || ''; if (!contextMenu.isDir) name = name.replace(/(?:\.table\.json|\.[^.]+)$/i, ''); renameState.newName = name; renameState.show = true }
   else if (key === 'delete') {
     const targets = selectedKeys.value.includes(path) ? selectedKeys.value : [path]
     await deleteAction(targets)
@@ -1297,20 +1407,35 @@ const TEMPLATES: Record<string, string> = {
   '读书笔记': `# 读书笔记\n\n**书名**：\n**作者**：\n\n## 核心观点\n\n\n## 摘录\n\n> \n\n## 个人感悟\n\n`,
 }
 
-const templateOptions = Object.keys(TEMPLATES).map(k => ({ label: k, key: k }))
+const templateOptions = [
+  ...Object.keys(TEMPLATES).map(k => ({ label: k, key: k })),
+  { type: 'divider', key: 'canvas-divider' },
+  { label: '空白画布（JSON Canvas）', key: '__canvas__' },
+  { label: '空白数据表（开放 Table）', key: '__table__' },
+  { label: 'Mermaid 图表工作室', key: '__diagram__' }
+]
 
 const handleTemplateCreate = async (key: string) => {
   if (!store.libraryPath) { openSettings(); return }
   const tmpl = TEMPLATES[key] || ''
   try {
+    const isCanvas = key === '__canvas__'
+    const isTable = key === '__table__'
+    const isDiagram = key === '__diagram__'
     const prefix = key === '空白笔记' ? undefined : key
     let target = store.libraryPath
     if (selectedKeys.value.length > 0) {
       const sel = selectedKeys.value[0]
-      target = sel.endsWith('.md') ? sel.substring(0, Math.max(sel.lastIndexOf('\\'), sel.lastIndexOf('/'))) : sel
+      target = /(?:\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid)|\.table\.json)$/i.test(sel) ? sel.substring(0, Math.max(sel.lastIndexOf('\\'), sel.lastIndexOf('/'))) : sel
     }
-    const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target, prefix })
-    if (tmpl) await invoke('write_markdown_file', { path: p, content: tmpl })
+    const p = isCanvas
+      ? await invoke<string>('create_canvas_file', { libraryRoot: store.libraryPath, targetDir: target, prefix: undefined })
+      : isTable
+        ? await invoke<string>('create_table_file', { libraryRoot: store.libraryPath, targetDir: target, prefix: undefined })
+        : isDiagram
+          ? await invoke<string>('create_diagram_file', { libraryRoot: store.libraryPath, targetDir: target, prefix: undefined })
+        : await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target, prefix })
+    if (tmpl && !isTable && !isDiagram) await invoke('write_markdown_file', { path: p, content: tmpl })
     await refreshNode(target)
     handleNodeSelect([p])
   } catch (e: any) {
@@ -1320,7 +1445,7 @@ const handleTemplateCreate = async (key: string) => {
 
 const handleToolbarAction = async (type: 'file' | 'folder') => {
   if (!store.libraryPath) { openSettings(); return }
-  let target = store.libraryPath; if (selectedKeys.value.length > 0) { const sel = selectedKeys.value[0]; target = sel.endsWith('.md') ? sel.substring(0, Math.max(sel.lastIndexOf('\\'), sel.lastIndexOf('/'))) : sel }
+  let target = store.libraryPath; if (selectedKeys.value.length > 0) { const sel = selectedKeys.value[0]; target = /(?:\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid)|\.table\.json)$/i.test(sel) ? sel.substring(0, Math.max(sel.lastIndexOf('\\'), sel.lastIndexOf('/'))) : sel }
   try { if (type === 'file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target }); await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { parentPath: target }); await refreshNode(target) } } catch (e: any) { handleError(e, '操作失败', 'handleToolbarAction') }
 }
 
@@ -1337,7 +1462,7 @@ const createDailyNote = async () => {
 }
 
 const applyRename = async () => {
-  try { let finalName = renameState.newName; if (renameState.oldPath.endsWith('.md') && !finalName.endsWith('.md')) finalName += '.md'; await invoke('rename_item', { oldPath: renameState.oldPath, newName: finalName }); const parentPath = renameState.oldPath.substring(0, Math.max(renameState.oldPath.lastIndexOf('\\'), renameState.oldPath.lastIndexOf('/'))); await refreshNode(parentPath || store.libraryPath); renameState.show = false; message.success('修改成功') } catch (e) { message.error('重命名失败') }
+  try { let finalName = renameState.newName; const extension = renameState.oldPath.match(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid))$/i)?.[0] || ''; if (extension && !finalName.toLowerCase().endsWith(extension.toLowerCase())) finalName += extension; await invoke('rename_item', { oldPath: renameState.oldPath, newName: finalName }); const parentPath = renameState.oldPath.substring(0, Math.max(renameState.oldPath.lastIndexOf('\\'), renameState.oldPath.lastIndexOf('/'))); await refreshNode(parentPath || store.libraryPath); renameState.show = false; message.success('修改成功') } catch (e) { message.error('重命名失败') }
 }
 
 const closeTab = (id: string) => store.removeTab(id)
@@ -1405,6 +1530,31 @@ const switchEditorMode = (mode: string) => {
 }
 const handleEditorClick = (e: MouseEvent) => { if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(() => syncVditorMode(), EDITOR_MODE_SYNC_DELAY_MS) }
 
+interface ChartSourceDocument { views: { id: string; name: string; kind: string }[] }
+const resolveMarkdownReference = (source: string, host: string) => {
+  if (/^[A-Za-z]:[\\/]/.test(source) || source.startsWith('/')) return source
+  const separator = host.includes('\\') ? '\\' : '/'
+  const parent = host.substring(0, Math.max(host.lastIndexOf('/'), host.lastIndexOf('\\')))
+  return `${parent}${separator}${source.replace(/[\\/]/g, separator)}`
+}
+const insertTableChartReference = async () => {
+  if (!vditor || !activeTabId.value) return
+  const source = window.prompt('输入要引用的 .table.json 路径（相对当前 Markdown 或绝对路径）', 'data.table.json')?.trim()
+  if (!source) return
+  if (!source.toLocaleLowerCase().endsWith('.table.json')) { message.error('图表源必须是 .table.json 文件'); return }
+  try {
+    const table = await invoke<ChartSourceDocument>('read_table_file', { libraryRoot: store.libraryPath, path: resolveMarkdownReference(source, activeTabId.value) })
+    const charts = table.views.filter(view => view.kind === 'chart')
+    if (!charts.length) { message.warning('该 Table 尚未创建图表视图'); return }
+    const viewId = window.prompt(`输入图表视图 ID\n${charts.map(view => `${view.id} — ${view.name}`).join('\n')}`, charts[0].id)?.trim()
+    if (!viewId) return
+    if (!charts.some(view => view.id === viewId)) { message.error('输入的 chart 视图不存在'); return }
+    const reference = JSON.stringify({ source, view: viewId })
+    vditor.insertValue(`\n\n\`\`\`longedit-chart\n${reference}\n\`\`\`\n`)
+    message.success('已插入实时 Table 图表引用')
+  } catch (cause) { message.error(`无法读取图表源：${String(cause).replace(/^Error:\s*/, '')}`) }
+}
+
 const initVditor = () => {
   const container = document.getElementById('vditor-lib'); if (!container) return;
   container.addEventListener('click', handleEditorClick);
@@ -1419,7 +1569,7 @@ const initVditor = () => {
 
   try {
     vditor = new Vditor('vditor-lib', {
-      cdn: 'https://cdn.jsdelivr.net/npm/vditor@3.11.2',
+      cdn: './vditor',
       lang: 'zh_CN',
       height: '100%',
       mode: store.editorMode || 'wysiwyg',
@@ -1450,7 +1600,8 @@ const initVditor = () => {
         { name: 'emoji', tip: '表情' }, { name: 'headings', tip: '标题' }, { name: 'bold', tip: '加粗 Ctrl+B' }, { name: 'italic', tip: '斜体 Ctrl+I' }, { name: 'strike', tip: '删除线' }, '|',
         { name: 'line', tip: '分割线' }, { name: 'quote', tip: '引用' }, { name: 'list', tip: '无序列表' }, { name: 'ordered-list', tip: '有序列表' }, { name: 'check', tip: '任务列表' }, '|',
         { name: 'code', tip: '代码块' }, { name: 'inline-code', tip: '行内代码' },
-        { name: 'link', tip: '插入链接' }, { name: 'table', tip: '插入表格' }, '|',
+        { name: 'link', tip: '插入链接' }, { name: 'table', tip: '插入表格' },
+        { name: 'table-chart', tip: '插入实时 Table 图表', icon: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>', click: () => { void insertTableChartReference() } }, '|',
         { name: 'code-theme', tip: '切换代码高亮风格', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>', click: () => {
           const themes = ['github', 'monokai', 'dracula', 'vscode', 'native', 'one-dark']
           const nextTheme = themes[(themes.indexOf(store.codeTheme) + 1) % themes.length]
@@ -1498,9 +1649,11 @@ const initVditor = () => {
 
           // 保存监听器引用以便清理
           cursorUpdateHandler = updateCursor
+          pdfReferenceClickHandler = openPdfReference
           currentContentEl = contentEl
           contentEl.addEventListener('keyup', updateCursor)
           contentEl.addEventListener('click', updateCursor)
+          contentEl.addEventListener('click', openPdfReference)
 
           // 滚动追踪：自动高亮当前章节
           const viewport = contentEl.closest('.editor-viewport') as HTMLElement
@@ -1532,7 +1685,7 @@ const initVditor = () => {
 
 const handleTabsWheel = (e: WheelEvent) => { if (tabsScrollRef.value) tabsScrollRef.value.scrollLeft += e.deltaY }
 const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.key === 'F2' && selectedKeys.value.length > 0) { const p = selectedKeys.value[0]; renameState.oldPath = p; let name = p.split(/[\\/]/).pop() || ''; if (p.endsWith('.md')) name = name.substring(0, name.lastIndexOf('.')); renameState.newName = name; renameState.show = true }
+  if (e.key === 'F2' && selectedKeys.value.length > 0) { const p = selectedKeys.value[0]; renameState.oldPath = p; let name = p.split(/[\\/]/).pop() || ''; name = name.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid))$/i, ''); renameState.newName = name; renameState.show = true }
   if (e.key === 'Delete' && selectedKeys.value.length > 0) deleteAction(selectedKeys.value)
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
   if (e.altKey && e.key === 'a') { e.preventDefault(); handleAIAssist() }
@@ -1543,6 +1696,7 @@ let unlistenRefresh: any = null, unlistenExport: any = null, unlistenRefreshCmd:
 // 事件监听器清理
 let cursorUpdateHandler: (() => void) | null = null
 let scrollUpdateHandler: (() => void) | null = null
+let pdfReferenceClickHandler: ((event: MouseEvent) => void) | null = null
 let currentContentEl: HTMLElement | null = null
 let currentViewport: HTMLElement | null = null
 
@@ -1551,13 +1705,35 @@ const cleanupEditorListeners = () => {
     currentContentEl.removeEventListener('keyup', cursorUpdateHandler)
     currentContentEl.removeEventListener('click', cursorUpdateHandler)
   }
+  if (currentContentEl && pdfReferenceClickHandler) {
+    currentContentEl.removeEventListener('click', pdfReferenceClickHandler)
+  }
   if (currentViewport && scrollUpdateHandler) {
     currentViewport.removeEventListener('scroll', scrollUpdateHandler)
   }
   cursorUpdateHandler = null
   scrollUpdateHandler = null
+  pdfReferenceClickHandler = null
   currentContentEl = null
   currentViewport = null
+}
+
+const openPdfReference = (event: MouseEvent) => {
+  const anchor = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href]')
+  const href = anchor?.getAttribute('href') || ''
+  if (!href.toLowerCase().startsWith('longedit://pdf')) return
+  event.preventDefault()
+  event.stopPropagation()
+  const target = parsePdfReferenceUri(href)
+  const path = target && resolveLibraryPdfPath(store.libraryPath, target.relativePath)
+  if (!target || !path) {
+    message.warning('PDF 批注引用格式无效')
+    return
+  }
+  router.push({
+    name: 'Pdf',
+    query: { path, page: String(target.page), annotation: target.annotationId },
+  })
 }
 
 const handleExportHtml = async () => {
@@ -1723,6 +1899,30 @@ watch(() => store.codeTheme, (newCodeTheme) => {
 })
 
 watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
+watch(() => route.query.path, (path) => {
+  if (typeof path !== 'string' || !path) return
+  if (path.toLowerCase().endsWith('.canvas')) {
+    router.replace({ name: 'Canvas', query: { path } })
+    return
+  }
+  if (path.toLowerCase().endsWith('.pdf')) {
+    router.replace({ name: 'Pdf', query: { path } })
+    return
+  }
+  if (/(?:\.(csv|tsv)|\.table\.json)$/i.test(path)) {
+    router.replace({ name: 'Table', query: { path } })
+    return
+  }
+  if (path.toLowerCase().endsWith('.xlsx')) {
+    router.replace({ name: 'Workbook', query: { path } })
+    return
+  }
+  if (/\.(?:mmd|mermaid)$/i.test(path)) {
+    router.replace({ name: 'Diagram', query: { path } })
+    return
+  }
+  if (path.toLowerCase().endsWith('.md')) handleNodeSelect([path])
+}, { immediate: true })
 watch(() => store.libraryPath, (newPath) => { if (newPath) { searchQuery.value = ''; refreshLibrary(); fetchLibStats(); fetchAllTags(); refreshGitStatus() } })
 // 从设置页返回后刷新 Git 状态
 watch(() => store.libraries, () => { nextTick(() => refreshGitStatus()) }, { deep: true })
@@ -1730,33 +1930,42 @@ watch(() => store.libraries, () => { nextTick(() => refreshGitStatus()) }, { dee
 // 搜索防抖
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 watch(searchQuery, (q) => {
+  const generation = ++knowledgeSearchGeneration
   if (searchTimer) clearTimeout(searchTimer)
   if (!q.trim()) {
+    knowledgeSearchResults.value = []
+    knowledgeSearchRunning.value = false
     refreshLibrary()
     return
   }
+  knowledgeSearchRunning.value = true
   searchTimer = setTimeout(async () => {
     if (!store.libraryPath) return
     try {
-      let results: FileEntry[]
       if (q.startsWith('#')) {
-        results = await invoke<FileEntry[]>('search_by_tag', { libraryRoot: store.libraryPath, tag: q.slice(1) })
+        const results = await invoke<FileEntry[]>('search_by_tag', { libraryRoot: store.libraryPath, tag: q.slice(1) })
+        if (generation !== knowledgeSearchGeneration) return
+        knowledgeSearchResults.value = results.map(result => ({
+          title: result.name, path: result.path, objectType: 'markdown', matchKind: 'tag',
+          context: `标签 #${q.slice(1)}`, score: 80, extractionFailed: false,
+        }))
       } else {
-        results = await invoke<FileEntry[]>('search_library', { libraryRoot: store.libraryPath, query: q })
+        const results = await invoke<KnowledgeSearchResult[]>('search_knowledge', { libraryRoot: store.libraryPath, query: q })
+        if (generation !== knowledgeSearchGeneration) return
+        knowledgeSearchResults.value = results
       }
-      treeData.value = results.map(r => ({
-        label: r.name.replace(/\.md$/, ''),
-        key: r.path,
-        isLeaf: true,
-        prefix: () => h(FileIcon, { size: 14, style: 'opacity: 0.6' })
-      }))
-    } catch (e) { /* search failed */ }
+    } catch (e) {
+      if (generation === knowledgeSearchGeneration) knowledgeSearchResults.value = []
+    } finally {
+      if (generation === knowledgeSearchGeneration) knowledgeSearchRunning.value = false
+    }
   }, 300)
 })
 watch(activeTabId, (newId, oldId) => { 
   if (newId && newId !== oldId) { 
     const t = tabs.value.find(item => item.id === newId); 
     if (t) loadFileToEditor(t.path) 
+    if (activeSidebarTab.value === 'links') fetchLinks()
 
     // 侧边栏自动同步逻辑
     selectedKeys.value = [newId]
@@ -2015,6 +2224,12 @@ watch(activeTabId, (newId, oldId) => {
 
 .tags-manage { display: flex; flex-direction: column; gap: 12px; }
 .tags-search { margin-bottom: 6px; }
+.knowledge-search-results { display: flex; flex-direction: column; gap: 6px; padding: 6px 8px 14px; overflow-y: auto; }
+.knowledge-search-state { padding: 24px 10px; color: var(--theme-text-secondary); font-size: 11px; text-align: center; line-height: 1.6; }
+.knowledge-search-result { display: flex; flex-direction: column; gap: 5px; width: 100%; padding: 9px 10px; border: 1px solid rgba(0,0,0,.07); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: rgba(var(--theme-primary-rgb),.035); cursor: pointer; text-align: left; }
+.knowledge-search-result:hover { border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }
+.knowledge-result-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.knowledge-result-head strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }.knowledge-result-head i { flex: none; color: var(--theme-primary); font-size: 8px; font-style: normal; font-weight: 700; }
+.knowledge-result-context { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: 9px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.knowledge-search-result small { color: var(--theme-primary); font-size: 8px; }
 
 .tag-row {
   display: flex;

@@ -22,6 +22,16 @@
         <span class="graph-title">知识图谱</span>
       </div>
       <div class="graph-controls">
+        <div class="view-switch" aria-label="图谱布局模式">
+          <button :class="{ active: viewMode === 'network' }" @click="switchView('network')">关系网络</button>
+          <button :class="{ active: viewMode === 'mindmap' }" @click="switchView('mindmap')">思维导图</button>
+        </div>
+        <label class="graph-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input v-model="searchQuery" placeholder="搜索节点" @keydown.enter="focusFirstMatch" />
+        </label>
         <button class="tutorial-btn" :class="{ active: showTutorial }" @click="showTutorial = !showTutorial" title="如何建立链接">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
@@ -30,7 +40,12 @@
           </svg>
           <span>如何建立链接</span>
         </button>
-        <button class="control-btn" @click="resetView" title="重置视图">
+        <button class="health-entry" :class="{ active: healthOpen }" @click="healthOpen = !healthOpen">
+          <span class="health-dot"></span>知识治理
+        </button>
+        <button class="graph-export-btn" :disabled="isExporting" @click="exportGraph('svg')">导出 SVG</button>
+        <button class="graph-export-btn" :disabled="isExporting" @click="exportGraph('png')">导出 PNG</button>
+        <button class="control-btn" @click="resetLayout" title="清除已保存位置并重新布局">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
             <path d="M21 3v5h-5"/>
@@ -50,7 +65,30 @@
         </button>
       </div>
     </div>
+    <div class="graph-options">
+      <GraphFilterControls :graph="graphData" :show-search="false" />
+      <template v-if="viewMode === 'mindmap'">
+        <span class="option-divider"></span>
+        <label>展开深度
+          <select v-model.number="mindmapDepth" @change="refreshMindMap">
+            <option :value="1">1 层</option>
+            <option :value="2">2 层</option>
+            <option :value="3">3 层</option>
+            <option :value="4">4 层</option>
+          </select>
+        </label>
+        <span class="mindmap-root">中心：{{ mindmapRoot?.title || '请选择节点' }}</span>
+      </template>
+      <span v-if="searchQuery" class="match-count">{{ visibleNodes.length }} 个匹配</span>
+    </div>
     <canvas ref="canvasRef" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @wheel.prevent="onZoom" @click="onClick" @dblclick="onDblClick"></canvas>
+    <GraphHealthPanel
+      :open="healthOpen"
+      :library-root="store.libraryPath"
+      @close="healthOpen = false"
+      @open-file="openPath"
+      @repaired="handleHealthRepaired"
+    />
 
     <transition name="hint-fade">
       <div v-if="isLoading" class="graph-loading" role="status" aria-live="polite">
@@ -107,14 +145,14 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
         </svg>
-        {{ graphData.nodes.length }} 节点
+        {{ visibleNodes.length }} / {{ graphData.nodes.length }} 节点
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
         </svg>
-        {{ graphData.edges.length }} 连接
+        {{ visibleEdges.length }} 连接
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
@@ -133,34 +171,146 @@
             <polyline points="14 2 14 8 20 8"/>
           </svg>
           <strong>{{ hoveredNode.title }}</strong>
+          <small>{{ objectTypeLabel(hoveredNode.objectType) }}</small>
         </div>
         <span class="tip-path">{{ hoveredNode.path }}</span>
         <div class="tooltip-hint">双击打开 · 拖拽移动</div>
       </div>
     </transition>
+    <transition name="details-slide">
+      <aside v-if="selectedNode" class="node-details">
+        <button class="details-close" @click="selectedNode = null" aria-label="关闭节点详情">×</button>
+        <span class="details-kicker">节点详情</span>
+        <h3>{{ selectedNode.title }}</h3>
+        <p class="details-path">{{ selectedNode.path }}</p>
+        <div class="details-metrics">
+          <div><strong>{{ nodeDegree(selectedNode.id) }}</strong><span>关系</span></div>
+          <div><strong>{{ incomingCount(selectedNode.id) }}</strong><span>反向链接</span></div>
+          <div><strong>{{ outgoingCount(selectedNode.id) }}</strong><span>出链</span></div>
+        </div>
+        <div class="details-actions">
+          <button class="primary-action" @click="openNode(selectedNode)">打开{{ selectedNode.objectType === 'pdf' ? ' PDF' : selectedNode.objectType === 'table' ? '表格' : '笔记' }}</button>
+          <button @click="useAsMindmapRoot(selectedNode)">设为思维导图中心</button>
+          <button :disabled="isCreatingCanvas" @click="sendToCanvas(selectedNode)">{{ isCreatingCanvas ? '正在生成…' : '发送到可编辑画布' }}</button>
+        </div>
+        <div v-if="selectedRelations.length" class="details-relations">
+          <span class="neighbor-title">关系依据</span>
+          <button
+            v-for="relation in selectedRelations.slice(0, 12)"
+            :key="`${relation.edge.source}-${relation.edge.target}`"
+            class="details-relation-card"
+            @click="selectAndCenter(relation.other)"
+          >
+            <span class="details-relation-head">
+              <strong>{{ relation.other.title }}</strong>
+              <small>{{ relation.direction === 'related' ? '相关' : relation.direction === 'outgoing' ? '链出 →' : '← 链入' }}</small>
+            </span>
+            <span class="details-relation-context">{{ relation.evidence?.context || relation.evidence?.syntax || 'Wikilink 引用' }}</span>
+            <span class="details-relation-meta">
+              <code>{{ relation.evidence?.syntax || '[[wikilink]]' }}</code>
+              <span>{{ relationTypeLabel(relation.edge.relationType) }}<template v-if="relation.evidence?.line"> · 第 {{ relation.evidence.line }} 行</template><template v-if="relation.edge.mentions.length > 1"> · {{ relation.edge.mentions.length }} 处</template></span>
+            </span>
+          </button>
+        </div>
+        <div v-if="selectedNeighbors.length" class="neighbor-list">
+          <span class="neighbor-title">相关笔记</span>
+          <button v-for="node in selectedNeighbors.slice(0, 12)" :key="node.id" @click="selectAndCenter(node)">
+            <span>{{ node.title }}</span><small>{{ nodeDegree(node.id) }} 条关系</small>
+          </button>
+        </div>
+      </aside>
+    </transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '../store/app'
+import GraphFilterControls from './GraphFilterControls.vue'
+import GraphHealthPanel from './GraphHealthPanel.vue'
+import { applyGraphFilters, useGraphFilters } from '../composables/useGraphFilters'
+import { clearGraphLayout, createGraphSvg, graphSvgToPng, restoreGraphLayout, saveGraphLayout } from '../utils/graphWorkspace'
+import type { GraphData, GraphNode } from '../types/graph'
 
-interface GraphNode { id: string; title: string; path: string; size: number; x?: number; y?: number; vx?: number; vy?: number }
-interface GraphEdge { source: string; target: string }
-
-const props = defineProps<{ show: boolean }>()
+const props = defineProps<{ show?: boolean }>()
 const emit = defineEmits(['selectFile'])
 
 const containerRef = ref<HTMLElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const store = useAppStore()
 const router = useRouter()
+const route = useRoute()
 
-const graphData = ref<{ nodes: GraphNode[]; edges: GraphEdge[] }>({ nodes: [], edges: [] })
+const graphData = ref<GraphData>({ nodes: [], edges: [] })
 const isLoading = ref(true)
 const showTutorial = ref(false)
+const isCreatingCanvas = ref(false)
+const isExporting = ref(false)
+const healthOpen = ref(false)
+const viewMode = ref<'network' | 'mindmap'>('network')
+const { filters } = useGraphFilters()
+const searchQuery = computed({ get: () => filters.query, set: value => { filters.query = value } })
+const selectedNode = ref<GraphNode | null>(null)
+const mindmapRoot = ref<GraphNode | null>(null)
+const mindmapDepth = ref(3)
+const mindmapNodeIds = ref<Set<string> | null>(null)
+
+const degreeMap = computed(() => {
+  const result = new Map<string, number>()
+  for (const edge of graphData.value.edges) {
+    result.set(edge.source, (result.get(edge.source) || 0) + 1)
+    result.set(edge.target, (result.get(edge.target) || 0) + 1)
+  }
+  return result
+})
+
+const filteredGraph = computed(() => applyGraphFilters(graphData.value, filters))
+const visibleNodes = computed(() => {
+  return filteredGraph.value.nodes.filter(node =>
+    viewMode.value !== 'mindmap' || !mindmapNodeIds.value || mindmapNodeIds.value.has(node.id)
+  )
+})
+
+const visibleNodeIds = computed(() => new Set(visibleNodes.value.map(node => node.id)))
+const visibleEdges = computed(() => filteredGraph.value.edges.filter(edge => visibleNodeIds.value.has(edge.source) && visibleNodeIds.value.has(edge.target)))
+const nodeDegree = (id: string) => degreeMap.value.get(id) || 0
+const incomingCount = (id: string) => graphData.value.edges.filter(edge => edge.target === id).length
+const outgoingCount = (id: string) => graphData.value.edges.filter(edge => edge.source === id).length
+const selectedNeighbors = computed(() => {
+  if (!selectedNode.value) return []
+  const ids = new Set<string>()
+  for (const edge of graphData.value.edges) {
+    if (edge.source === selectedNode.value.id) ids.add(edge.target)
+    if (edge.target === selectedNode.value.id) ids.add(edge.source)
+  }
+  return graphData.value.nodes.filter(node => ids.has(node.id)).sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))
+})
+const selectedRelations = computed(() => {
+  if (!selectedNode.value) return []
+  const nodeMap = new Map(graphData.value.nodes.map(node => [node.id, node]))
+  return graphData.value.edges.flatMap(edge => {
+    const outgoing = edge.source === selectedNode.value?.id
+    const incoming = edge.target === selectedNode.value?.id
+    if (!outgoing && !incoming) return []
+    const other = nodeMap.get(outgoing ? edge.target : edge.source)
+    if (!other) return []
+    return [{
+      edge,
+      other,
+      direction: !edge.directed ? 'related' as const : outgoing ? 'outgoing' as const : 'incoming' as const,
+      evidence: edge.mentions[0],
+    }]
+  }).sort((a, b) => {
+    if (a.direction !== b.direction) return a.direction === 'outgoing' ? -1 : 1
+    return a.other.title.localeCompare(b.other.title, 'zh-CN')
+  })
+})
+const relationTypeLabel = (type: string) => ({
+  'links-to': '普通引用', parent: '父级', child: '子级', 'depends-on': '依赖', related: '相关',
+  contains: '包含', cites: '引用文献', annotates: '批注', 'derived-from': '派生自',
+}[type] || type || '关系')
 
 // 图谱布局常量
 const LAYOUT_MAX_FRAMES = 120
@@ -180,6 +330,21 @@ const hoveredNode = ref<GraphNode | null>(null)
 const tooltipX = ref(0)
 const tooltipY = ref(0)
 let mouseX = 0, mouseY = 0
+let layoutSaveTimer = 0
+
+const currentLayoutId = () => viewMode.value === 'mindmap'
+  ? `mindmap:${mindmapRoot.value?.id || 'none'}:${mindmapDepth.value}`
+  : 'network'
+
+const layoutNodes = () => viewMode.value === 'network' ? graphData.value.nodes : visibleNodes.value
+const persistLayout = () => saveGraphLayout(store.libraryPath, currentLayoutId(), layoutNodes())
+const scheduleLayoutSave = () => {
+  window.clearTimeout(layoutSaveTimer)
+  const libraryRoot = store.libraryPath
+  const layoutId = currentLayoutId()
+  const nodes = layoutNodes()
+  layoutSaveTimer = window.setTimeout(() => saveGraphLayout(libraryRoot, layoutId, nodes), 350)
+}
 
 const loadGraph = async () => {
   isLoading.value = true
@@ -190,7 +355,19 @@ const loadGraph = async () => {
   }
   try {
     graphData.value = await invoke<any>('build_link_graph', { libraryRoot: store.libraryPath })
-    initLayout()
+    const strongest = [...graphData.value.nodes].sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))[0]
+    const requestedRoot = typeof route.query.root === 'string'
+      ? graphData.value.nodes.find(node => node.id === route.query.root)
+      : undefined
+    const initialNode = requestedRoot || selectedNode.value || strongest
+    if (initialNode) selectedNode.value = initialNode
+
+    if (route.query.mode === 'mindmap' && initialNode) {
+      viewMode.value = 'mindmap'
+      applyMindMapLayout(initialNode)
+    } else {
+      initLayout()
+    }
   } catch (e) {
     graphData.value = { nodes: [], edges: [] }
   } finally {
@@ -202,21 +379,168 @@ const initLayout = () => {
   const nodes = graphData.value.nodes
   const cx = (containerRef.value?.clientWidth || 800) / 2
   const cy = (containerRef.value?.clientHeight || 600) / 2
+  const restored = restoreGraphLayout(store.libraryPath, 'network', nodes)
   nodes.forEach(n => {
-    n.x = cx + (Math.random() - 0.5) * 400
-    n.y = cy + (Math.random() - 0.5) * 400
+    if (!Number.isFinite(n.x) || !Number.isFinite(n.y)) {
+      n.x = cx + (Math.random() - 0.5) * 400
+      n.y = cy + (Math.random() - 0.5) * 400
+    }
     n.vx = 0; n.vy = 0
   })
+  frameCount = restored === nodes.length && nodes.length > 0 ? LAYOUT_MAX_FRAMES : 0
+  layoutSettled = restored === nodes.length && nodes.length > 0
+}
+
+const adjacencyFor = (id: string) => {
+  const ids = new Set<string>()
+  for (const edge of graphData.value.edges) {
+    if (edge.source === id) ids.add(edge.target)
+    if (edge.target === id) ids.add(edge.source)
+  }
+  return [...ids]
+}
+
+const applyMindMapLayout = (root: GraphNode) => {
+  const nodeMap = new Map(graphData.value.nodes.map(node => [node.id, node]))
+  const visited = new Set<string>([root.id])
+  const levels: GraphNode[][] = [[root]]
+  let frontier = [root.id]
+
+  for (let depth = 1; depth <= mindmapDepth.value && frontier.length; depth++) {
+    const next: string[] = []
+    const level: GraphNode[] = []
+    for (const id of frontier) {
+      for (const neighborId of adjacencyFor(id)) {
+        if (visited.has(neighborId)) continue
+        const node = nodeMap.get(neighborId)
+        if (!node) continue
+        visited.add(neighborId)
+        next.push(neighborId)
+        level.push(node)
+      }
+    }
+    if (level.length) levels.push(level)
+    frontier = next
+  }
+
+  const height = Math.max(520, containerRef.value?.clientHeight || 600)
+  levels.forEach((level, depth) => {
+    level.sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))
+    level.forEach((node, index) => {
+      node.x = 150 + depth * 260
+      node.y = depth === 0 ? height / 2 : ((index + 1) * height) / (level.length + 1)
+      node.vx = 0
+      node.vy = 0
+    })
+  })
+
+  mindmapRoot.value = root
+  mindmapNodeIds.value = visited
+  restoreGraphLayout(store.libraryPath, `mindmap:${root.id}:${mindmapDepth.value}`, levels.flat())
+  layoutSettled = true
+  frameCount = LAYOUT_MAX_FRAMES
+  viewX = 40
+  viewY = 0
+  zoom = Math.max(0.55, Math.min(1, 3.2 / Math.max(1, levels.length)))
+}
+
+const switchView = (mode: 'network' | 'mindmap') => {
+  viewMode.value = mode
+  searchQuery.value = ''
+  if (mode === 'network') {
+    mindmapNodeIds.value = null
+    resetView()
+    return
+  }
+  const root = selectedNode.value || [...graphData.value.nodes].sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))[0]
+  if (root) applyMindMapLayout(root)
+}
+
+const refreshMindMap = () => {
+  if (mindmapRoot.value) applyMindMapLayout(mindmapRoot.value)
+}
+
+const safeExportName = () => (store.currentLibraryName || '知识图谱').replace(/[\\/:*?"<>|]/g, '-').trim() || '知识图谱'
+const exportGraph = async (format: 'svg' | 'png') => {
+  if (isExporting.value) return
+  isExporting.value = true
+  try {
+    const svg = createGraphSvg(visibleNodes.value, visibleEdges.value, {
+      mode: viewMode.value,
+      title: `${store.currentLibraryName} - ${viewMode.value === 'mindmap' ? '思维导图' : '知识图谱'}`,
+      dark: store.theme === 'dark',
+      rootId: mindmapRoot.value?.id,
+    })
+    const { save } = await import('@tauri-apps/plugin-dialog')
+    const path = await save({
+      defaultPath: `${safeExportName()}-${viewMode.value === 'mindmap' ? '思维导图' : '知识图谱'}.${format}`,
+      filters: [{ name: format.toUpperCase(), extensions: [format] }],
+    })
+    if (!path) return
+    const { writeFile } = await import('@tauri-apps/plugin-fs')
+    const bytes = format === 'svg' ? new TextEncoder().encode(svg) : await graphSvgToPng(svg)
+    await writeFile(path, bytes)
+  } catch (error) {
+    window.alert(`图谱导出失败：${String(error)}`)
+  } finally {
+    isExporting.value = false
+  }
+}
+
+const useAsMindmapRoot = (node: GraphNode) => {
+  selectedNode.value = node
+  viewMode.value = 'mindmap'
+  searchQuery.value = ''
+  applyMindMapLayout(node)
+}
+
+const centerOnNode = (node: GraphNode) => {
+  const width = containerRef.value?.clientWidth || 800
+  const height = containerRef.value?.clientHeight || 600
+  viewX = width / 2 - (node.x || 0) * zoom
+  viewY = height / 2 - (node.y || 0) * zoom
+}
+
+const selectAndCenter = (node: GraphNode) => {
+  selectedNode.value = node
+  centerOnNode(node)
+}
+
+const focusFirstMatch = () => {
+  const node = visibleNodes.value[0]
+  if (node) selectAndCenter(node)
+}
+
+const objectTypeLabel = (type: string) => ({ pdf: 'PDF 资料', table: 'CSV/TSV 数据表', canvas: 'Canvas 画布', markdown: 'Markdown 笔记' }[type] || type)
+const openNode = (node: GraphNode) => router.push({ name: node.objectType === 'pdf' ? 'Pdf' : node.objectType === 'table' ? 'Table' : 'LibraryMode', query: { path: node.path } })
+const openPath = (path: string) => router.push({ name: 'LibraryMode', query: { path } })
+const handleHealthRepaired = () => loadGraph()
+
+const sendToCanvas = async (node: GraphNode) => {
+  if (isCreatingCanvas.value) return
+  isCreatingCanvas.value = true
+  try {
+    const path = await invoke<string>('create_canvas_from_graph', {
+      libraryRoot: store.libraryPath,
+      centerPath: node.path,
+      depth: mindmapDepth.value
+    })
+    router.push({ name: 'Canvas', query: { path } })
+  } catch (error) {
+    window.alert(`生成画布失败：${String(error)}`)
+  } finally {
+    isCreatingCanvas.value = false
+  }
 }
 
 const simulate = () => {
-  if (layoutSettled) return
-  const nodes = graphData.value.nodes
-  const edges = graphData.value.edges
+  if (layoutSettled || viewMode.value === 'mindmap') return
+  const nodes = visibleNodes.value
+  const edges = visibleEdges.value
   if (nodes.length === 0) return
 
   frameCount++
-  if (frameCount > LAYOUT_MAX_FRAMES) { layoutSettled = true; return }
+  if (frameCount > LAYOUT_MAX_FRAMES) { layoutSettled = true; scheduleLayoutSave(); return }
 
   // 降低帧率优化：超过 60 帧后每 3 帧计算一次
   if (frameCount > LAYOUT_OPTIMIZATION_START_FRAME && frameCount % LAYOUT_FRAME_SKIP !== 0) return
@@ -298,6 +622,7 @@ const simulate = () => {
   // 能量收敛检测
   if (etotal < LAYOUT_SETTLE_THRESHOLD && frameCount > LAYOUT_MIN_FRAMES) {
     layoutSettled = true
+    scheduleLayoutSave()
   }
 }
 
@@ -307,15 +632,32 @@ const resetView = () => {
   zoom = 1
   frameCount = 0
   layoutSettled = false
-  initLayout()
+  if (viewMode.value === 'mindmap' && mindmapRoot.value) applyMindMapLayout(mindmapRoot.value)
+  else initLayout()
+}
+
+const resetLayout = () => {
+  clearGraphLayout(store.libraryPath, currentLayoutId())
+  for (const node of graphData.value.nodes) {
+    node.x = undefined
+    node.y = undefined
+    node.vx = 0
+    node.vy = 0
+  }
+  resetView()
 }
 
 const findNodeAt = (mx: number, my: number): GraphNode | null => {
   // 缩放时调整检测范围 - 缩小时扩大点击区域
   const detectionRadius = 100 / Math.max(0.5, zoom)
-  for (const n of graphData.value.nodes) {
-    const r = n.size * 0.6
+  for (const n of visibleNodes.value) {
     const dx = mx - (n.x || 0), dy = my - (n.y || 0)
+    if (viewMode.value === 'mindmap') {
+      const width = n.id === mindmapRoot.value?.id ? 180 : 160
+      if (Math.abs(dx) <= width / 2 && Math.abs(dy) <= 24) return n
+      continue
+    }
+    const r = n.size * 0.6
     if (dx * dx + dy * dy < r * r + detectionRadius) return n
   }
   return null
@@ -354,20 +696,26 @@ const draw = () => {
 
   // 构建节点 Map 加速查找
   const nodeMap = new Map<string, GraphNode>()
-  graphData.value.nodes.forEach(n => nodeMap.set(n.id, n))
+  visibleNodes.value.forEach(n => nodeMap.set(n.id, n))
 
   // 边 - 渐变效果（小缩放级别时跳过以优化性能）
   if (zoom > 0.3) {
-    for (const e of graphData.value.edges) {
+    for (const e of visibleEdges.value) {
       const s = nodeMap.get(e.source)
       const t = nodeMap.get(e.target)
       if (!s || !t) continue
 
       const isHighlight = hovered && (s === hovered || t === hovered)
 
+      ctx.setLineDash(e.directed ? [] : [5 / zoom, 4 / zoom])
       ctx.beginPath()
       ctx.moveTo(s.x || 0, s.y || 0)
-      ctx.lineTo(t.x || 0, t.y || 0)
+      if (viewMode.value === 'mindmap') {
+        const midX = ((s.x || 0) + (t.x || 0)) / 2
+        ctx.bezierCurveTo(midX, s.y || 0, midX, t.y || 0, t.x || 0, t.y || 0)
+      } else {
+        ctx.lineTo(t.x || 0, t.y || 0)
+      }
 
       if (isHighlight) {
         const gradient = ctx.createLinearGradient(s.x || 0, s.y || 0, t.x || 0, t.y || 0)
@@ -380,13 +728,64 @@ const draw = () => {
         ctx.lineWidth = 1 / zoom
       }
       ctx.stroke()
+      ctx.setLineDash([])
+
+      if (e.directed) {
+        const sx = s.x || 0, sy = s.y || 0, tx = t.x || 0, ty = t.y || 0
+        const angle = Math.atan2(ty - sy, tx - sx)
+        const arrowX = sx + (tx - sx) * 0.72
+        const arrowY = sy + (ty - sy) * 0.72
+        const arrowSize = 5 / zoom
+        ctx.save()
+        ctx.translate(arrowX, arrowY)
+        ctx.rotate(angle)
+        ctx.beginPath()
+        ctx.moveTo(arrowSize, 0)
+        ctx.lineTo(-arrowSize, -arrowSize * 0.7)
+        ctx.lineTo(-arrowSize, arrowSize * 0.7)
+        ctx.closePath()
+        ctx.fillStyle = ctx.strokeStyle
+        ctx.fill()
+        ctx.restore()
+      }
     }
   }
 
   // 节点 - 光晕效果
-  for (const n of graphData.value.nodes) {
+  for (const n of visibleNodes.value) {
     const r = n.size * 0.6
     const isHovered = hovered === n
+    const isSelected = selectedNode.value?.id === n.id
+
+    if (viewMode.value === 'mindmap') {
+      const isRoot = n.id === mindmapRoot.value?.id
+      const width = isRoot ? 180 : 160
+      const height = isRoot ? 48 : 42
+      const x = (n.x || 0) - width / 2
+      const y = (n.y || 0) - height / 2
+      ctx.beginPath()
+      ctx.roundRect(x, y, width, height, isRoot ? 16 : 11)
+      ctx.fillStyle = isRoot
+        ? (isDark ? 'rgba(66,184,131,0.96)' : 'rgba(0,122,255,0.94)')
+        : (isDark ? 'rgba(37,42,48,0.96)' : 'rgba(255,255,255,0.98)')
+      ctx.shadowColor = isHovered || isSelected ? 'rgba(0,122,255,0.3)' : 'rgba(0,0,0,0.12)'
+      ctx.shadowBlur = isHovered || isSelected ? 18 : 8
+      ctx.fill()
+      ctx.shadowBlur = 0
+      ctx.strokeStyle = isHovered || isSelected
+        ? (isDark ? 'rgba(100,220,170,0.9)' : 'rgba(0,122,255,0.9)')
+        : (isDark ? 'rgba(255,255,255,0.13)' : 'rgba(0,0,0,0.1)')
+      ctx.lineWidth = (isHovered || isSelected ? 2 : 1) / zoom
+      ctx.stroke()
+      ctx.fillStyle = isRoot ? '#fff' : (isDark ? 'rgba(255,255,255,0.92)' : 'rgba(20,24,31,0.9)')
+      ctx.font = `${isRoot ? 700 : 600} 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      const nodeTitle = n.objectType === 'pdf' ? `PDF · ${n.title}` : n.objectType === 'table' ? `表格 · ${n.title}` : n.title
+      const display = nodeTitle.length > 16 ? `${nodeTitle.slice(0, 16)}…` : nodeTitle
+      ctx.fillText(display, n.x || 0, n.y || 0, width - 18)
+      continue
+    }
 
     // 外层光晕
     if (isHovered) {
@@ -408,7 +807,13 @@ const draw = () => {
       n.x || 0, n.y || 0, r
     )
 
-    if (isHovered) {
+    if (n.objectType === 'pdf') {
+      nodeGradient.addColorStop(0, isDark ? 'rgba(255,190,80,1)' : 'rgba(255,176,48,1)')
+      nodeGradient.addColorStop(1, isDark ? 'rgba(217,132,28,0.88)' : 'rgba(221,132,20,0.85)')
+    } else if (n.objectType === 'table') {
+      nodeGradient.addColorStop(0, isDark ? 'rgba(92,211,211,1)' : 'rgba(22,177,181,1)')
+      nodeGradient.addColorStop(1, isDark ? 'rgba(27,135,145,0.9)' : 'rgba(10,126,139,0.88)')
+    } else if (isHovered) {
       nodeGradient.addColorStop(0, isDark ? 'rgba(100,220,170,1)' : 'rgba(40,140,255,1)')
       nodeGradient.addColorStop(1, isDark ? 'rgba(66,184,131,0.9)' : 'rgba(0,122,255,0.9)')
     } else {
@@ -503,8 +908,10 @@ const endDrag = () => {
   if (dragging && dragging.id) {
     // 拖拽节点后重新模拟几秒让布局稳定
     layoutSettled = false; frameCount = 90
+    scheduleLayoutSave()
   }
   if (dragging && dragging.id && !wasDragging) {
+    selectedNode.value = dragging
     emit('selectFile', dragging.path)
   }
   dragging = null
@@ -546,12 +953,18 @@ const onClick = () => {
 
 const onDblClick = () => {
   if (hoveredNode.value) {
-    router.push({ name: 'LibraryMode', query: { path: hoveredNode.value.path } })
+    openNode(hoveredNode.value)
   }
 }
 
-watch(() => props.show, (v) => { if (v) loadGraph() })
-watch(() => store.libraryPath, () => { if (props.show) loadGraph() })
+watch(() => props.show, (v) => { if (v !== false) loadGraph() })
+watch(() => store.libraryPath, () => { if (props.show !== false) loadGraph() })
+watch(filters, () => {
+  if (viewMode.value === 'network') {
+    frameCount = 0
+    layoutSettled = false
+  }
+}, { deep: true })
 
 let paused = false
 const handleVisibility = () => {
@@ -559,7 +972,7 @@ const handleVisibility = () => {
   else if (paused) { paused = false; layoutSettled = false; frameCount = 40; loop() }
 }
 onMounted(() => { loadGraph(); loop(); document.addEventListener('visibilitychange', handleVisibility) })
-onUnmounted(() => { cancelAnimationFrame(animationId); document.removeEventListener('visibilitychange', handleVisibility) })
+onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); document.removeEventListener('visibilitychange', handleVisibility) })
 </script>
 
 <style scoped>
@@ -630,8 +1043,90 @@ onUnmounted(() => { cancelAnimationFrame(animationId); document.removeEventListe
 
 .graph-controls {
   display: flex;
+  align-items: center;
   gap: 6px;
 }
+
+.view-switch {
+  display: flex;
+  padding: 3px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.14);
+  border-radius: var(--theme-radius-sm);
+  background: rgba(var(--theme-primary-rgb), 0.045);
+}
+
+.view-switch button {
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: calc(var(--theme-radius-sm) - 3px);
+  color: var(--theme-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.view-switch button.active {
+  color: #fff;
+  background: var(--theme-primary);
+  box-shadow: 0 3px 10px rgba(var(--theme-primary-rgb), 0.22);
+}
+
+.graph-search {
+  width: 180px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--theme-radius-sm);
+  color: var(--theme-text-secondary);
+  background: rgba(0, 0, 0, 0.025);
+}
+
+.graph-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: var(--theme-text);
+  background: transparent;
+  font-size: 12px;
+}
+
+.graph-options {
+  position: absolute;
+  top: 76px;
+  left: 18px;
+  z-index: 4;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: var(--theme-radius-sm);
+  color: var(--theme-text-secondary);
+  background: color-mix(in srgb, var(--theme-card) 92%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  font-size: 11px;
+}
+
+.graph-options label { display: flex; align-items: center; gap: 6px; }
+.graph-options input { accent-color: var(--theme-primary); }
+.graph-options select {
+  border: 0;
+  outline: 0;
+  color: var(--theme-text);
+  background: transparent;
+  font-size: 11px;
+}
+.option-divider { width: 1px; height: 16px; background: rgba(0, 0, 0, 0.1); }
+.mindmap-root { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text); }
+.match-count { color: var(--theme-primary); font-weight: 650; }
 
 .tutorial-btn {
   height: 36px;
@@ -657,6 +1152,38 @@ onUnmounted(() => { cancelAnimationFrame(animationId); document.removeEventListe
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.22);
 }
+
+.health-entry {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.18);
+  border-radius: var(--theme-radius-sm);
+  color: var(--theme-text);
+  background: rgba(var(--theme-primary-rgb), 0.04);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+}
+.health-entry:hover, .health-entry.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb), 0.42); background: rgba(var(--theme-primary-rgb), 0.09); }
+.health-dot { width: 7px; height: 7px; border-radius: 50%; background: #d59a35; box-shadow: 0 0 0 3px rgba(213, 154, 53, 0.13); }
+.health-entry.active .health-dot { background: var(--theme-primary); box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb), 0.14); }
+
+.graph-export-btn {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.18);
+  border-radius: var(--theme-radius-sm);
+  color: var(--theme-primary);
+  background: rgba(var(--theme-primary-rgb), 0.05);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+.graph-export-btn:hover { border-color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.12); }
+.graph-export-btn:disabled { cursor: wait; opacity: 0.5; }
 
 .control-btn {
   width: 36px;
@@ -747,6 +1274,60 @@ canvas:active {
   max-width: 280px;
   min-width: 180px;
 }
+
+.node-details {
+  position: absolute;
+  top: 76px;
+  right: 18px;
+  z-index: 5;
+  width: 290px;
+  max-height: calc(100vh - 116px);
+  overflow: auto;
+  padding: 20px;
+  box-sizing: border-box;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.14);
+  border-radius: calc(var(--theme-radius) * 1.25);
+  color: var(--theme-text);
+  background: color-mix(in srgb, var(--theme-card) 95%, transparent);
+  backdrop-filter: blur(22px);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.14);
+}
+
+.details-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: 0;
+  color: var(--theme-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+}
+.details-kicker { color: var(--theme-primary); font-size: 10px; font-weight: 750; letter-spacing: 0.1em; }
+.node-details h3 { margin: 7px 26px 4px 0; font-size: 18px; line-height: 1.3; }
+.details-path { margin: 0 0 16px; color: var(--theme-text-secondary); font-size: 10px; line-height: 1.45; word-break: break-all; }
+.details-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.details-metrics div { display: flex; flex-direction: column; gap: 3px; padding: 10px 6px; border-radius: var(--theme-radius-sm); text-align: center; background: rgba(var(--theme-primary-rgb), 0.06); }
+.details-metrics strong { color: var(--theme-primary); font-size: 17px; }
+.details-metrics span { color: var(--theme-text-secondary); font-size: 9px; }
+.details-actions { display: grid; gap: 7px; margin: 14px 0; }
+.details-actions button { min-height: 34px; border: 1px solid rgba(var(--theme-primary-rgb), 0.18); border-radius: var(--theme-radius-sm); color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.06); cursor: pointer; font-size: 11px; font-weight: 650; }
+.details-actions .primary-action { color: #fff; background: var(--theme-primary); }
+.details-relations { display: flex; flex-direction: column; gap: 7px; }
+.details-relation-card { display: flex; flex-direction: column; gap: 5px; width: 100%; padding: 9px; border: 1px solid rgba(var(--theme-primary-rgb), 0.12); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: rgba(var(--theme-primary-rgb), 0.035); cursor: pointer; text-align: left; }
+.details-relation-card:hover { border-color: rgba(var(--theme-primary-rgb), 0.38); background: rgba(var(--theme-primary-rgb), 0.075); }
+.details-relation-head, .details-relation-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.details-relation-head strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.details-relation-head small { flex: none; color: var(--theme-primary); font-size: 8px; }
+.details-relation-context { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: 9px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.details-relation-meta { color: var(--theme-text-secondary); font-size: 8px; }
+.details-relation-meta code { max-width: 55%; overflow: hidden; color: var(--theme-primary); text-overflow: ellipsis; white-space: nowrap; }
+.neighbor-title { display: block; margin: 16px 0 7px; color: var(--theme-text-secondary); font-size: 10px; font-weight: 700; }
+.neighbor-list button { width: 100%; display: flex; justify-content: space-between; gap: 8px; padding: 8px 4px; border: 0; border-bottom: 1px solid rgba(0, 0, 0, 0.05); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }
+.neighbor-list button:hover { color: var(--theme-primary); }
+.neighbor-list small { flex: none; color: var(--theme-text-secondary); font-size: 9px; }
+.details-slide-enter-active, .details-slide-leave-active { transition: opacity 0.22s ease, transform 0.3s var(--ease-premium); }
+.details-slide-enter-from, .details-slide-leave-to { opacity: 0; transform: translateX(18px); }
 
 .tooltip-header {
   display: flex;
@@ -1084,8 +1665,14 @@ canvas:active {
 }
 
 @media (max-width: 640px) {
+  .view-switch button { padding: 0 7px; }
+  .graph-search { display: none; }
+  .graph-options { right: 12px; left: 12px; overflow-x: auto; }
+  .node-details { right: 12px; left: 12px; bottom: 16px; top: auto; width: auto; max-height: 50vh; }
   .tutorial-btn span { display: none; }
   .tutorial-btn { width: 36px; padding: 0; justify-content: center; }
+  .health-entry { width: 36px; padding: 0; justify-content: center; font-size: 0; }
+  .graph-export-btn { display: none; }
   .tutorial-card { padding: 24px 18px; }
   .empty-icon { display: none; }
 }

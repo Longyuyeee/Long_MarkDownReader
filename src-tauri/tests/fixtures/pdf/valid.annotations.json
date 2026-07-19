@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "pdfFile": "paper.pdf",
+    "size": 100,
+    "modifiedAt": 1,
+    "fingerprint": "fixture-fingerprint"
+  },
+  "annotations": [
+    {
+      "id": "fixture-highlight-1",
+      "kind": "highlight",
+      "page": 1,
+      "color": "yellow",
+      "rects": [
+        { "x": 0.1, "y": 0.2, "width": 0.3, "height": 0.04 }
+      ],
+      "quote": "important text",
+      "comment": "fixture comment",
+      "createdAt": 10,
+      "updatedAt": 10
+    }
+  ]
+}

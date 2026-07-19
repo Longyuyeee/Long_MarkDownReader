@@ -1,0 +1,31 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "type": "text",
+      "text": "项目知识库",
+      "x": 0,
+      "y": 0,
+      "width": 280,
+      "height": 120
+    },
+    {
+      "id": "goal",
+      "type": "text",
+      "text": "增强知识图谱",
+      "x": 360,
+      "y": 0,
+      "width": 280,
+      "height": 120
+    }
+  ],
+  "edges": [
+    {
+      "id": "root-to-goal",
+      "fromNode": "root",
+      "toNode": "goal",
+      "fromSide": "right",
+      "toSide": "left"
+    }
+  ]
+}
