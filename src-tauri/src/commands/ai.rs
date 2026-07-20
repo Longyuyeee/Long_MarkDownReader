@@ -34,6 +34,16 @@ fn endpoint_is_loopback(url: &reqwest::Url) -> bool {
     })
 }
 
+fn validate_endpoint(url: &reqwest::Url) -> Result<bool, String> {
+    let is_loopback = endpoint_is_loopback(url);
+    match url.scheme() {
+        "https" => Ok(is_loopback),
+        "http" if is_loopback => Ok(true),
+        "http" => Err("远程 AI 接口必须使用 HTTPS".into()),
+        _ => Err("AI 接口仅支持 HTTPS，或本机 HTTP 地址".into()),
+    }
+}
+
 #[tauri::command]
 pub async fn ai_chat_completion(
     endpoint: String,
@@ -43,7 +53,7 @@ pub async fn ai_chat_completion(
 ) -> Result<String, String> {
     let url = format!("{}/chat/completions", endpoint.trim_end_matches('/'));
     let parsed_url = reqwest::Url::parse(&url).map_err(|_| "AI 接口地址无效")?;
-    let is_loopback = endpoint_is_loopback(&parsed_url);
+    let is_loopback = validate_endpoint(&parsed_url)?;
     let api_key = tauri::async_runtime::spawn_blocking(read_ai_secret)
         .await
         .map_err(|error| format!("系统凭据任务失败: {error}"))??;
@@ -116,5 +126,17 @@ mod tests {
         ] {
             assert!(!endpoint_is_loopback(&reqwest::Url::parse(url).unwrap()));
         }
+    }
+
+    #[test]
+    fn remote_endpoints_require_https() {
+        let remote_http =
+            reqwest::Url::parse("http://api.example.com/v1/chat/completions").unwrap();
+        let remote_https =
+            reqwest::Url::parse("https://api.example.com/v1/chat/completions").unwrap();
+        let local_http = reqwest::Url::parse("http://127.0.0.1:11434/v1/chat/completions").unwrap();
+        assert!(validate_endpoint(&remote_http).is_err());
+        assert_eq!(validate_endpoint(&remote_https), Ok(false));
+        assert_eq!(validate_endpoint(&local_http), Ok(true));
     }
 }

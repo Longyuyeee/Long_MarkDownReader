@@ -156,9 +156,7 @@ fn frontmatter_relation_type(line: &str, relations_indent: &mut Option<usize>) -
         *relations_indent = Some(indent);
         return None;
     }
-    let Some(parent_indent) = *relations_indent else {
-        return None;
-    };
+    let parent_indent = (*relations_indent)?;
     if trimmed.is_empty() {
         return None;
     }

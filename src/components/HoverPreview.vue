@@ -40,6 +40,7 @@
 import { ref, computed, watch, reactive } from 'vue'
 import { FileText as FileIcon, Clock as ClockIcon, Edit as EditIcon } from 'lucide-vue-next'
 import { invoke } from '@tauri-apps/api/core'
+import { useAppStore } from '../store/app'
 
 const props = defineProps<{
   show: boolean
@@ -51,6 +52,7 @@ const props = defineProps<{
 
 const stats = ref({ created: '', modified: '', size: 0 })
 const offset = reactive({ x: 15, y: 15 })
+const store = useAppStore()
 
 const style = computed(() => {
   let left = props.x + offset.x
@@ -95,7 +97,7 @@ const formatSize = (bytes: number) => {
 const fetchStats = async () => {
   if (props.path && props.show) {
     try {
-      const res = await invoke<any>('get_file_stats', { path: props.path })
+      const res = await invoke<any>('get_file_stats', { libraryRoot: store.libraryPath, path: props.path })
       stats.value = {
         created: formatDate(res.created),
         modified: formatDate(res.modified),

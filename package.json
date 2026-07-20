@@ -1,14 +1,14 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "0.6.9",
+  "version": "0.7.0",
   "type": "module",
   "displayName": "Long编辑",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "test:rust": "cargo test --locked --manifest-path src-tauri/Cargo.toml",
-    "audit:prod": "npm audit --omit=dev",
+    "audit:prod": "npm audit --omit=dev --registry=https://registry.npmjs.org",
     "benchmark:pdf-range": "node scripts/benchmark-pdf-range.mjs",
     "ci:check": "npm run build && npm run test:rust && npm run benchmark:pdf-range && npm run audit:prod",
     "preview": "vite preview",

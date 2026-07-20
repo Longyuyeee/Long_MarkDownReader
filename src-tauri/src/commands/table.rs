@@ -429,7 +429,7 @@ fn parse_table(path: &Path) -> Result<TableDocument, String> {
         .from_reader(content.as_bytes());
     let mut records = Vec::new();
     for (index, record) in reader.records().enumerate() {
-        if index >= MAX_TABLE_ROWS + 1 {
+        if index > MAX_TABLE_ROWS {
             return Err(format!("表格超过 {} 行上限", MAX_TABLE_ROWS));
         }
         let record =
@@ -952,7 +952,7 @@ fn write_table(file: &Path, payload: TableWritePayload) -> Result<TableWriteResu
     if file_signature(&metadata, &current_bytes) != payload.expected_signature {
         return Err("CSV/TSV 已被其他程序修改，请重新加载后再保存".into());
     }
-    let expected_delimiter = table_delimiter(&file)?;
+    let expected_delimiter = table_delimiter(file)?;
     let delimiter = payload
         .delimiter
         .as_bytes()
@@ -1000,7 +1000,7 @@ fn write_table(file: &Path, payload: TableWritePayload) -> Result<TableWriteResu
     if output.len() as u64 > MAX_TABLE_BYTES {
         return Err("保存结果超过 32 MB 上限".into());
     }
-    write_bytes(&file, &output)?;
+    write_bytes(file, &output)?;
     let saved = file
         .metadata()
         .map_err(|error| format!("读取保存结果失败: {}", error))?;

@@ -1,7 +1,7 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-20
-交接基线：`v0.6.9` 之后的专业知识工作区改造
+交接基线：专业知识工作区已进入 `main`，当前开发版本 `v0.7.0`
 
 ## 1. 新电脑快速恢复
 
@@ -18,7 +18,7 @@
 git clone https://github.com/Longyuyeee/Long_MarkDownReader.git
 cd Long_MarkDownReader
 git fetch --all --prune
-git switch codex/professional-workspace-foundation
+git switch main
 npm ci
 npm run ci:check
 npm run tauri -- build --debug --no-bundle
@@ -76,7 +76,9 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 ## 6. 下一阶段顺序
 
-1. 完成 FR-BASE-001：审计所有接收文件路径的 Tauri 命令，让知识库内文件访问统一经过 `WorkspaceGuard`，补齐路径穿越、绝对路径越界和符号链接越界测试。
+当前 `v0.7.0` 基线已完成知识库文件树的创建、移动、重命名、删除、排序、扫描和状态读取路径守卫，并修复旧 API Key 迁移失败丢失及远程 HTTP 传输风险。
+
+1. 完成 FR-BASE-001：继续收口 Markdown 单文件模式与用户明确授权的外部文件访问，补齐授权生命周期测试。
 2. 完成 FR-BASE-002：继续统一 Markdown、Canvas、配置和其他写入路径的可靠写入/恢复策略。
 3. 完善 FR-BASE-005：在 CI 中增加关键保存流程 E2E 和 fixture 门禁。
 4. 开始图谱体验增强：以当前笔记为中心的局部图谱常驻入口、邻接关系面板、图谱/大纲/Canvas 双向转换，以及真正可编辑的树形思维导图布局。

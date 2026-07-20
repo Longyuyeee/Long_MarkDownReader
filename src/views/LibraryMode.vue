@@ -989,7 +989,7 @@ const handleLoadChildren = async (option: TreeOption) => {
 
 const loadDirectory = async (path: string): Promise<TreeOption[]> => {
   if (!path) return []
-  const entries = await invoke<FileEntry[]>('scan_directory', { path })
+  const entries = await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path })
   return entries.map(entry => ({
     label: entry.is_dir ? entry.name : entry.name.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid))$/i, ''),
     key: entry.path,
@@ -1075,7 +1075,7 @@ const loadFileToEditor = async (path: string) => {
     nextTick(() => { 
       setTimeout(() => { 
         lastLoadedPath = path;
-        invoke<any>('get_file_stats', { path }).then(s => { lastKnownModified = s.modified }).catch(() => {})
+        invoke<any>('get_file_stats', { libraryRoot: store.libraryPath, path }).then(s => { lastKnownModified = s.modified }).catch(() => {})
         syncOutlineManual();
         setupOutlineObserver();
         updateWordCount();
@@ -1205,13 +1205,13 @@ const onMouseUp = async () => {
         })
 
         if (moveTasks.length > 0) {
-          await invoke('move_items', { sourcePaths: moveTasks, targetDir: finalTargetDir })
+          await invoke('move_items', { libraryRoot: store.libraryPath, sourcePaths: moveTasks, targetDir: finalTargetDir })
         }
 
         // 2. 逻辑排序逻辑 (Misty Order)
         // 获取目标文件夹的当前顺序
-        const order = await invoke<any>('get_folder_order', { path: finalTargetDir })
-        let currentItems = (await invoke<FileEntry[]>('scan_directory', { path: finalTargetDir }))
+        const order = await invoke<any>('get_folder_order', { libraryRoot: store.libraryPath, path: finalTargetDir })
+        let currentItems = (await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path: finalTargetDir }))
           .map(e => e.name)
         
         // 移除正在移动的项
@@ -1237,6 +1237,7 @@ const onMouseUp = async () => {
 
         // 保存新顺序
         await invoke('save_folder_order', { 
+          libraryRoot: store.libraryPath,
           path: finalTargetDir, 
           order: { items: currentItems, pinned: order.pinned || [] } 
         })
@@ -1310,7 +1311,7 @@ const deleteAction = async (paths: string[]) => {
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await invoke('delete_items', { paths })
+        await invoke('delete_items', { libraryRoot: store.libraryPath, paths })
         paths.forEach(p => { if (activeTabId.value === p || store.tabs.some(t => t.id === p)) store.removeTab(p) })
         const parentsToRefresh = new Set<string>()
         paths.forEach(p => { const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/')); parentsToRefresh.add(idx !== -1 ? p.substring(0, idx) : store.libraryPath) })
@@ -1397,7 +1398,7 @@ const onMenuAction = async (key: string) => {
     await deleteAction(targets)
   }
   else if (key === 'add-file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path); handleNodeSelect([p]) }
-  else if (key === 'add-folder') { await invoke('create_new_folder', { parentPath: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path) }
+  else if (key === 'add-folder') { await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path) }
 }
 
 const TEMPLATES: Record<string, string> = {
@@ -1446,7 +1447,7 @@ const handleTemplateCreate = async (key: string) => {
 const handleToolbarAction = async (type: 'file' | 'folder') => {
   if (!store.libraryPath) { openSettings(); return }
   let target = store.libraryPath; if (selectedKeys.value.length > 0) { const sel = selectedKeys.value[0]; target = /(?:\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid)|\.table\.json)$/i.test(sel) ? sel.substring(0, Math.max(sel.lastIndexOf('\\'), sel.lastIndexOf('/'))) : sel }
-  try { if (type === 'file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target }); await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { parentPath: target }); await refreshNode(target) } } catch (e: any) { handleError(e, '操作失败', 'handleToolbarAction') }
+  try { if (type === 'file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target }); await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: target }); await refreshNode(target) } } catch (e: any) { handleError(e, '操作失败', 'handleToolbarAction') }
 }
 
 const createDailyNote = async () => {
@@ -1462,7 +1463,7 @@ const createDailyNote = async () => {
 }
 
 const applyRename = async () => {
-  try { let finalName = renameState.newName; const extension = renameState.oldPath.match(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid))$/i)?.[0] || ''; if (extension && !finalName.toLowerCase().endsWith(extension.toLowerCase())) finalName += extension; await invoke('rename_item', { oldPath: renameState.oldPath, newName: finalName }); const parentPath = renameState.oldPath.substring(0, Math.max(renameState.oldPath.lastIndexOf('\\'), renameState.oldPath.lastIndexOf('/'))); await refreshNode(parentPath || store.libraryPath); renameState.show = false; message.success('修改成功') } catch (e) { message.error('重命名失败') }
+  try { let finalName = renameState.newName; const extension = renameState.oldPath.match(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid))$/i)?.[0] || ''; if (extension && !finalName.toLowerCase().endsWith(extension.toLowerCase())) finalName += extension; await invoke('rename_item', { libraryRoot: store.libraryPath, oldPath: renameState.oldPath, newName: finalName }); const parentPath = renameState.oldPath.substring(0, Math.max(renameState.oldPath.lastIndexOf('\\'), renameState.oldPath.lastIndexOf('/'))); await refreshNode(parentPath || store.libraryPath); renameState.show = false; message.success('修改成功') } catch (e) { message.error('重命名失败') }
 }
 
 const closeTab = (id: string) => store.removeTab(id)
@@ -1754,7 +1755,7 @@ onMounted(async () => {
   unlistenFocus = await getCurrentWindow().listen('tauri://focus', async () => {
     if (!activeTabId.value || !lastKnownModified) return
     try {
-      const stats = await invoke<any>('get_file_stats', { path: activeTabId.value })
+      const stats = await invoke<any>('get_file_stats', { libraryRoot: store.libraryPath, path: activeTabId.value })
       if (stats.modified > lastKnownModified) {
         dialog.warning({
           title: '文件已在外部被修改',
@@ -1798,8 +1799,8 @@ onMounted(async () => {
           }
 
           // 逻辑排序 JSON 更新
-          const order = await invoke<any>('get_folder_order', { path: finalTargetDir })
-          let currentItems = (await invoke<FileEntry[]>('scan_directory', { path: finalTargetDir }))
+          const order = await invoke<any>('get_folder_order', { libraryRoot: store.libraryPath, path: finalTargetDir })
+          let currentItems = (await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path: finalTargetDir }))
             .map(e => e.name)
           
           const newNames = importedPaths.map(p => p.split(/[\\/]/).pop() || '')
@@ -1814,6 +1815,7 @@ onMounted(async () => {
           }
 
           await invoke('save_folder_order', { 
+            libraryRoot: store.libraryPath,
             path: finalTargetDir, 
             order: { items: currentItems, pinned: order.pinned || [] } 
           })

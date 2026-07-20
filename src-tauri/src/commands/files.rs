@@ -18,6 +18,14 @@ pub(crate) fn validate_path_in_root(path: &Path, root: &Path) -> Result<PathBuf,
     WorkspaceGuard::new(root)?.resolve_for_write(path)
 }
 
+fn reject_workspace_root(path: &Path, guard: &WorkspaceGuard) -> Result<(), String> {
+    if path == guard.root() {
+        Err("不能对知识库根目录执行此操作".into())
+    } else {
+        Ok(())
+    }
+}
+
 pub(crate) fn sanitize_filename(name: &str) -> String {
     name.chars()
         .filter(|character| {
@@ -95,11 +103,12 @@ pub async fn create_new_file(
 }
 
 #[tauri::command]
-pub async fn create_new_folder(parent_path: String) -> Result<String, String> {
-    let parent = Path::new(&parent_path);
-    if !parent.exists() {
-        return Err("父目录不存在".into());
-    }
+pub async fn create_new_folder(
+    library_root: String,
+    parent_path: String,
+) -> Result<String, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let parent = guard.resolve_directory(parent_path, false)?;
     let mut index = 0;
     let folder_path = loop {
         let name = if index == 0 {
@@ -120,19 +129,23 @@ pub async fn create_new_folder(parent_path: String) -> Result<String, String> {
 #[tauri::command]
 pub async fn rename_item(
     app_handle: tauri::AppHandle,
+    library_root: String,
     old_path: String,
     new_name: String,
 ) -> Result<String, String> {
     if new_name.is_empty() || new_name.contains('/') || new_name.contains('\\') {
         return Err("文件名包含非法字符".into());
     }
-    let old = Path::new(&old_path);
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let old = guard.resolve_existing(&old_path)?;
+    reject_workspace_root(&old, &guard)?;
     let parent = old.parent().ok_or("无效路径")?;
     let new_path = parent.join(&new_name);
     if new_path.parent() != Some(parent) {
         return Err("文件名包含非法字符".into());
     }
-    fs::rename(old, &new_path).map_err(|error| error.to_string())?;
+    let new_path = guard.resolve_for_write(&new_path)?;
+    fs::rename(&old, &new_path).map_err(|error| error.to_string())?;
     let old_history = history_dir(&app_handle, &old_path)?;
     if old_history.exists() {
         let new_history = history_dir(&app_handle, &new_path.to_string_lossy())?;
@@ -144,20 +157,21 @@ pub async fn rename_item(
 #[tauri::command]
 pub async fn move_item(
     app_handle: tauri::AppHandle,
+    library_root: String,
     source_path: String,
     target_dir: String,
 ) -> Result<String, String> {
-    let source = Path::new(&source_path);
-    let target = Path::new(&target_dir);
-    if !target.is_dir() {
-        return Err("目标必须是一个文件夹".into());
-    }
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source = guard.resolve_existing(&source_path)?;
+    reject_workspace_root(&source, &guard)?;
+    let target = guard.resolve_directory(&target_dir, false)?;
     let file_name = source.file_name().ok_or("无效文件名")?;
     let new_path = target.join(file_name);
     if new_path.exists() {
         return Err("目标目录已存在同名项".into());
     }
-    fs::rename(source, &new_path).map_err(|error| error.to_string())?;
+    let new_path = guard.resolve_for_write(&new_path)?;
+    fs::rename(&source, &new_path).map_err(|error| error.to_string())?;
     let old_history = history_dir(&app_handle, &source_path)?;
     if old_history.exists() {
         let new_history = history_dir(&app_handle, &new_path.to_string_lossy())?;
@@ -169,28 +183,41 @@ pub async fn move_item(
 #[tauri::command]
 pub async fn move_items(
     app_handle: tauri::AppHandle,
+    library_root: String,
     source_paths: Vec<String>,
     target_dir: String,
 ) -> Result<(), String> {
     for source_path in source_paths {
-        move_item(app_handle.clone(), source_path, target_dir.clone()).await?;
+        move_item(
+            app_handle.clone(),
+            library_root.clone(),
+            source_path,
+            target_dir.clone(),
+        )
+        .await?;
     }
     Ok(())
 }
 
 #[tauri::command]
-pub async fn delete_item(app_handle: tauri::AppHandle, path: String) -> Result<(), String> {
-    let target = Path::new(&path);
+pub async fn delete_item(
+    app_handle: tauri::AppHandle,
+    library_root: String,
+    path: String,
+) -> Result<(), String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let target = guard.resolve_for_write(&path)?;
+    reject_workspace_root(&target, &guard)?;
     if !target.exists() {
         return Ok(());
     }
     if target.is_file() && path.ends_with(".md") {
-        delete_local_markdown_assets(target)?;
+        delete_local_markdown_assets(&target)?;
     }
     if target.is_dir() {
-        fs::remove_dir_all(target).map_err(|error| format!("删除目录失败: {error}"))?;
+        fs::remove_dir_all(&target).map_err(|error| format!("删除目录失败: {error}"))?;
     } else {
-        fs::remove_file(target).map_err(|error| format!("删除文件失败: {error}"))?;
+        fs::remove_file(&target).map_err(|error| format!("删除文件失败: {error}"))?;
     }
     let cached_history = history_dir(&app_handle, &path)?;
     if cached_history.exists() {
@@ -231,9 +258,13 @@ fn referenced_assets(content: &str) -> HashSet<String> {
 }
 
 #[tauri::command]
-pub async fn delete_items(app_handle: tauri::AppHandle, paths: Vec<String>) -> Result<(), String> {
+pub async fn delete_items(
+    app_handle: tauri::AppHandle,
+    library_root: String,
+    paths: Vec<String>,
+) -> Result<(), String> {
     for path in paths {
-        delete_item(app_handle.clone(), path).await?;
+        delete_item(app_handle.clone(), library_root.clone(), path).await?;
     }
     Ok(())
 }
@@ -264,30 +295,38 @@ pub fn get_launch_args() -> Vec<String> {
 }
 
 #[tauri::command]
-pub fn get_folder_order(path: String) -> FolderOrder {
-    let order_path = Path::new(&path).join(".misty_order.json");
+pub fn get_folder_order(library_root: String, path: String) -> Result<FolderOrder, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let directory = guard.resolve_directory(path, false)?;
+    let order_path = directory.join(".misty_order.json");
     let _ = recover_interrupted_write(&order_path);
     if order_path.exists() {
-        serde_json::from_str(&fs::read_to_string(order_path).unwrap_or_default())
-            .unwrap_or_default()
+        Ok(
+            serde_json::from_str(&fs::read_to_string(order_path).unwrap_or_default())
+                .unwrap_or_default(),
+        )
     } else {
-        FolderOrder::default()
+        Ok(FolderOrder::default())
     }
 }
 
 #[tauri::command]
-pub fn save_folder_order(path: String, order: FolderOrder) -> Result<(), String> {
-    let order_path = Path::new(&path).join(".misty_order.json");
+pub fn save_folder_order(
+    library_root: String,
+    path: String,
+    order: FolderOrder,
+) -> Result<(), String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let directory = guard.resolve_directory(path, false)?;
+    let order_path = directory.join(".misty_order.json");
     let content = serde_json::to_string_pretty(&order).map_err(|error| error.to_string())?;
     write_utf8(order_path, &content)
 }
 
 #[tauri::command]
-pub async fn scan_directory(path: String) -> Result<Vec<FileEntry>, String> {
-    let root = Path::new(&path);
-    if !root.is_dir() {
-        return Err("目录不存在".into());
-    }
+pub async fn scan_directory(library_root: String, path: String) -> Result<Vec<FileEntry>, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let root = guard.resolve_directory(&path, false)?;
     let mut physical_entries = HashMap::new();
     if let Ok(entries) = fs::read_dir(root) {
         for entry in entries.flatten() {
@@ -318,7 +357,7 @@ pub async fn scan_directory(path: String) -> Result<Vec<FileEntry>, String> {
             }
         }
     }
-    let order = get_folder_order(path);
+    let order = get_folder_order(library_root, path)?;
     let mut sorted_entries = Vec::new();
     let mut visited = HashSet::new();
     for name in order.pinned.iter().chain(order.items.iter()) {
@@ -461,7 +500,9 @@ pub async fn export_to_html(path: String, html_content: String) -> Result<(), St
 }
 
 #[tauri::command]
-pub async fn get_file_stats(path: String) -> Result<FileStats, String> {
+pub async fn get_file_stats(library_root: String, path: String) -> Result<FileStats, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let path = guard.resolve_existing(path)?;
     let metadata = fs::metadata(path).map_err(|error| error.to_string())?;
     let now = std::time::SystemTime::now();
     let modified_time = metadata.modified().unwrap_or(now);
@@ -530,5 +571,31 @@ mod tests {
         let escaped = root.join("..").join("outside.png");
         assert!(validate_path_in_root(&escaped, &root).is_err());
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn folder_metadata_access_stays_inside_workspace() {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-folder-guard-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let root = base.join("workspace");
+        let outside = base.join("outside");
+        fs::create_dir_all(&root).unwrap();
+        fs::create_dir_all(&outside).unwrap();
+
+        assert!(get_folder_order(
+            root.to_string_lossy().into_owned(),
+            outside.to_string_lossy().into_owned()
+        )
+        .is_err());
+        let guard = WorkspaceGuard::new(&root).unwrap();
+        assert!(reject_workspace_root(guard.root(), &guard).is_err());
+
+        fs::remove_dir_all(base).unwrap();
     }
 }

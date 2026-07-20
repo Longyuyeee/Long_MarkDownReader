@@ -191,9 +191,9 @@ mod tests {
         let payloads: Vec<String> = (0..8)
             .map(|index| format!("payload-{}-{}", index, "x".repeat(4096)))
             .collect();
+        let expected_payloads = payloads.clone();
         let handles: Vec<_> = payloads
-            .iter()
-            .cloned()
+            .into_iter()
             .map(|payload| {
                 let target = target.clone();
                 std::thread::spawn(move || write_utf8(target, &payload).unwrap())
@@ -203,7 +203,7 @@ mod tests {
             handle.join().unwrap();
         }
         let result = fs::read_to_string(&target).unwrap();
-        assert!(payloads.contains(&result));
+        assert!(expected_payloads.contains(&result));
         fs::remove_dir_all(root).unwrap();
     }
 }

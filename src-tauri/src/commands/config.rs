@@ -119,13 +119,19 @@ pub fn get_config(app_handle: tauri::AppHandle) -> AppConfig {
         get_default_config(&app_handle)
     };
     if !config.ai_api_key.is_empty() {
-        if let Err(error) = store_ai_secret(&config.ai_api_key) {
-            eprintln!("Legacy API credential migration failed: {error}");
-        }
-        config.ai_api_key.clear();
-        if let Ok(content) = serde_json::to_string_pretty(&config) {
-            if let Err(error) = write_utf8(&config_path, &content) {
-                eprintln!("Failed to remove legacy API credential from config: {error}");
+        match store_ai_secret(&config.ai_api_key) {
+            Ok(()) => {
+                config.ai_api_key.clear();
+                if let Ok(content) = serde_json::to_string_pretty(&config) {
+                    if let Err(error) = write_utf8(&config_path, &content) {
+                        eprintln!("Failed to remove migrated API credential from config: {error}");
+                    }
+                }
+            }
+            Err(error) => {
+                // Leave the legacy value on disk so migration can be retried next launch.
+                eprintln!("Legacy API credential migration failed: {error}");
+                config.ai_api_key.clear();
             }
         }
     }
@@ -191,8 +197,10 @@ mod tests {
 
     #[test]
     fn app_config_never_serializes_legacy_api_key() {
-        let mut config = AppConfig::default();
-        config.ai_api_key = "must-not-leave-process".into();
+        let config = AppConfig {
+            ai_api_key: "must-not-leave-process".into(),
+            ..Default::default()
+        };
         let serialized = serde_json::to_string(&config).unwrap();
         assert!(!serialized.contains("must-not-leave-process"));
         assert!(!serialized.contains("aiApiKey"));
