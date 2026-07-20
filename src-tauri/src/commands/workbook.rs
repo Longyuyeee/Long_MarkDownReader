@@ -83,14 +83,17 @@ fn used_dimensions<T: CellType>(range: &calamine::Range<T>) -> (usize, usize) {
 impl WorkbookEngine for CalamineWorkbookEngine {
     fn capabilities(&self) -> WorkbookCapabilities {
         WorkbookCapabilities {
-            engine_id: "calamine-ooxml-v2".into(),
+            engine_id: "calamine-ooxml-v3".into(),
             extensions: vec!["xlsx".into()],
             read: WorkbookCapabilityLevel::Supported,
             cached_formula_results: WorkbookCapabilityLevel::Supported,
             existing_cell_editing: WorkbookCapabilityLevel::Supported,
+            blank_cell_creation: WorkbookCapabilityLevel::Supported,
+            range_editing: WorkbookCapabilityLevel::Supported,
+            clipboard_tsv: WorkbookCapabilityLevel::Supported,
             conflict_detection: WorkbookCapabilityLevel::Supported,
             ooxml_part_preservation: WorkbookCapabilityLevel::Supported,
-            cell_editing: WorkbookCapabilityLevel::Planned,
+            cell_editing: WorkbookCapabilityLevel::Supported,
             formatting: WorkbookCapabilityLevel::Planned,
             formula_recalculation: WorkbookCapabilityLevel::Planned,
             charts: WorkbookCapabilityLevel::Planned,
@@ -341,7 +344,7 @@ pub async fn import_workbook_sheet(
 mod tests {
     use super::*;
     use crate::formats::workbook::{WorkbookCellEdit, WorkbookWritePayload};
-    use rust_xlsxwriter::{Formula, Workbook};
+    use rust_xlsxwriter::{Format, Formula, Workbook};
     use std::io::{Cursor, Read};
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -366,6 +369,9 @@ mod tests {
         first.write_number(1, 1, 75).unwrap();
         first
             .write_formula(2, 1, Formula::new("=SUM(B2, 5)").set_result("80"))
+            .unwrap();
+        first
+            .merge_range(4, 0, 4, 1, "合并区域", &Format::new().set_bold())
             .unwrap();
         workbook.add_worksheet().set_name("说明").unwrap();
         workbook.save(&path).unwrap();
@@ -449,7 +455,14 @@ mod tests {
             capabilities.cached_formula_results,
             WorkbookCapabilityLevel::Supported
         );
-        assert_eq!(capabilities.cell_editing, WorkbookCapabilityLevel::Planned);
+        assert_eq!(
+            capabilities.cell_editing,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.blank_cell_creation,
+            WorkbookCapabilityLevel::Supported
+        );
         assert_eq!(
             capabilities.existing_cell_editing,
             WorkbookCapabilityLevel::Supported
@@ -546,24 +559,71 @@ mod tests {
     }
 
     #[test]
-    fn rejects_edits_for_cells_that_do_not_exist_in_source_xml() {
+    fn creates_cells_in_existing_and_new_rows() {
         let (base, path) = fixture();
         let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let merged_result = tauri::async_runtime::block_on(write_workbook_cells(
+            base.join("library").to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookWritePayload {
+                expected_signature: document.signature.clone(),
+                edits: vec![WorkbookCellEdit {
+                    sheet: "进度".into(),
+                    row: 4,
+                    column: 1,
+                    input: "不能写入".into(),
+                    kind: "string".into(),
+                }],
+            },
+        ));
+        assert!(merged_result.unwrap_err().contains("只能编辑左上角"));
         let result = tauri::async_runtime::block_on(write_workbook_cells(
             base.join("library").to_string_lossy().into_owned(),
             path.to_string_lossy().into_owned(),
             WorkbookWritePayload {
                 expected_signature: document.signature,
-                edits: vec![WorkbookCellEdit {
-                    sheet: "进度".into(),
-                    row: 100,
-                    column: 10,
-                    input: "new".into(),
-                    kind: "string".into(),
-                }],
+                edits: vec![
+                    WorkbookCellEdit {
+                        sheet: "进度".into(),
+                        row: 1,
+                        column: 2,
+                        input: "同一行新单元格".into(),
+                        kind: "string".into(),
+                    },
+                    WorkbookCellEdit {
+                        sheet: "进度".into(),
+                        row: 100,
+                        column: 10,
+                        input: "全新行单元格".into(),
+                        kind: "string".into(),
+                    },
+                    WorkbookCellEdit {
+                        sheet: "进度".into(),
+                        row: 2,
+                        column: 0,
+                        input: "公式前插入".into(),
+                        kind: "string".into(),
+                    },
+                ],
             },
-        ));
-        assert!(result.unwrap_err().contains("只能编辑工作簿中已存在"));
+        ))
+        .unwrap();
+        assert!(result.size > 0);
+        let first_page = CalamineWorkbookEngine
+            .read_sheet(&path, "进度", 0, 10)
+            .unwrap();
+        assert_eq!(first_page.rows[1][2].value, "同一行新单元格");
+        assert_eq!(first_page.rows[2][0].value, "公式前插入");
+        let later_page = CalamineWorkbookEngine
+            .read_sheet(&path, "进度", 100, 10)
+            .unwrap();
+        assert_eq!(later_page.rows[0][10].value, "全新行单元格");
+        let bytes = fs::read(&path).unwrap();
+        let sheet_xml = String::from_utf8(zip_part(&bytes, "xl/worksheets/sheet1.xml")).unwrap();
+        assert!(sheet_xml.contains("dimension ref=\"A1:K101\""));
+        let a3 = sheet_xml.find("r=\"A3\"").unwrap();
+        let b3 = sheet_xml.find("r=\"B3\"").unwrap();
+        assert!(a3 < b3);
         fs::remove_dir_all(base).unwrap();
     }
 }

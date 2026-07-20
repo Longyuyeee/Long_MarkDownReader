@@ -8,6 +8,8 @@
       <div v-if="workbook" class="workbook-actions">
         <button class="icon-button" title="撤销" :disabled="!undoStack.length || saving" @click="undo"><n-icon :component="UndoIcon" /></button>
         <button class="icon-button" title="重做" :disabled="!redoStack.length || saving" @click="redo"><n-icon :component="RedoIcon" /></button>
+        <button class="icon-button" title="复制区域" :disabled="!selectedCell || saving" @click="copySelection"><n-icon :component="CopyIcon" /></button>
+        <button class="icon-button" title="粘贴区域" :disabled="!selectedCell || saving" @click="pasteSelection"><n-icon :component="PasteIcon" /></button>
         <button :class="{ active: showFormulas }" :disabled="saving" @click="showFormulas = !showFormulas"><n-icon :component="FunctionIcon" />{{ showFormulas ? '结果' : '公式' }}</button>
         <button class="icon-button" title="重新读取" :disabled="saving" @click="refreshWorkbook"><n-icon :component="RefreshIcon" /></button>
         <button :disabled="importing || saving || !activeSheet" @click="convertSheet"><n-icon :component="TableIcon" />{{ importing ? '转换中…' : '转为 Table' }}</button>
@@ -47,13 +49,13 @@
           <div class="sheet-canvas" :style="{ width: `${sheetWidth}px` }">
             <div class="sheet-header" :style="gridStyle">
               <div class="row-number corner">#</div>
-              <div v-for="column in sheetInfo.returnedColumns" :key="column" class="column-header">{{ columnLabel(column - 1) }}</div>
+              <div v-for="column in canvasColumnCount" :key="column" class="column-header">{{ columnLabel(column - 1) }}</div>
             </div>
-            <div class="virtual-sheet" :style="{ height: `${sheetInfo.totalRows * rowHeight}px` }">
+            <div class="virtual-sheet" :style="{ height: `${canvasRowCount * rowHeight}px` }">
               <div v-for="row in visibleRows" :key="row.index" class="sheet-row" :style="[{ transform: `translateY(${row.index * rowHeight}px)` }, gridStyle]">
                 <div class="row-number">{{ row.index + 1 }}</div>
                 <div
-                  v-for="column in sheetInfo.returnedColumns"
+                  v-for="column in canvasColumnCount"
                   :key="column"
                   class="workbook-cell"
                   :class="[
@@ -61,12 +63,14 @@
                     {
                       formula: Boolean(cellAt(row.index, column - 1).formula),
                       selected: isSelected(row.index, column - 1),
+                      'in-range': isInSelection(row.index, column - 1),
                       dirty: isDirty(activeSheet, row.index, column - 1),
                       editable: isEditableCell(row.index, column - 1),
                     },
                   ]"
                   :title="cellTitle(row.index, column - 1)"
-                  @click="selectCell(row.index, column - 1)"
+                  @pointerdown="startCellSelection(row.index, column - 1, $event)"
+                  @pointerenter="extendCellSelection(row.index, column - 1)"
                   @dblclick="beginCellEdit(row.index, column - 1)"
                 >{{ cellDisplay(row.index, column - 1) }}</div>
               </div>
@@ -83,7 +87,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
-import { ArrowLeft as ArrowLeftIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
+import { ArrowLeft as ArrowLeftIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 
 interface WorkbookDocument { path: string; size: number; signature: string; sheets: string[] }
@@ -99,9 +103,13 @@ interface WorkbookSheetPage {
 }
 interface WorkbookCellEdit { sheet: string; row: number; column: number; input: string; kind: 'string' | 'number' | 'boolean' | 'empty' | 'formula' }
 interface CellSelection { sheet: string; row: number; column: number }
-interface EditAction { key: string; before?: WorkbookCellEdit; after?: WorkbookCellEdit }
+interface CellChange { key: string; before?: WorkbookCellEdit; after?: WorkbookCellEdit }
+interface EditAction { changes: CellChange[] }
 
 const PAGE_ROWS = 2_000
+const MAX_BATCH_CELLS = 10_000
+const EXTRA_ROWS = 100
+const EXTRA_COLUMNS = 5
 const rowHeight = 32
 const columnWidth = 140
 const route = useRoute()
@@ -118,6 +126,7 @@ const drafts = ref(new Map<string, WorkbookCellEdit>())
 const undoStack = ref<EditAction[]>([])
 const redoStack = ref<EditAction[]>([])
 const selectedCell = ref<CellSelection | null>(null)
+const selectionAnchor = ref<CellSelection | null>(null)
 const formulaInput = ref('')
 const formulaInputRef = ref<HTMLInputElement | null>(null)
 const loading = ref(true)
@@ -132,13 +141,41 @@ const viewportHeight = ref(600)
 let resizeObserver: ResizeObserver | null = null
 let generation = 0
 let wantedOffset = 0
+let dragSelecting = false
 
 const workbookPath = computed(() => String(route.query.path || ''))
 const fileName = computed(() => workbookPath.value.split(/[\\/]/).pop() || '工作簿.xlsx')
-const sheetWidth = computed(() => 52 + (sheetInfo.value?.returnedColumns || 1) * columnWidth)
-const gridStyle = computed(() => ({ gridTemplateColumns: `52px repeat(${sheetInfo.value?.returnedColumns || 1}, ${columnWidth}px)` }))
+const draftExtent = computed(() => {
+  let row = -1
+  let column = -1
+  for (const edit of drafts.value.values()) {
+    if (edit.sheet === activeSheet.value) { row = Math.max(row, edit.row); column = Math.max(column, edit.column) }
+  }
+  return { row, column }
+})
+const canvasRowCount = computed(() => Math.min(1_048_576, Math.max(EXTRA_ROWS, (sheetInfo.value?.totalRows || 0) + EXTRA_ROWS, draftExtent.value.row + 1)))
+const canvasColumnCount = computed(() => {
+  const info = sheetInfo.value
+  if (!info) return 1
+  if (info.truncatedColumns) return info.returnedColumns
+  return Math.min(256, Math.max(12, info.returnedColumns + EXTRA_COLUMNS, draftExtent.value.column + 1))
+})
+const sheetWidth = computed(() => 52 + canvasColumnCount.value * columnWidth)
+const gridStyle = computed(() => ({ gridTemplateColumns: `52px repeat(${canvasColumnCount.value}, ${columnWidth}px)` }))
 const dirtyCount = computed(() => drafts.value.size)
-const selectedAddress = computed(() => selectedCell.value ? `${columnLabel(selectedCell.value.column)}${selectedCell.value.row + 1}` : '')
+const selectionBounds = computed(() => {
+  const anchor = selectionAnchor.value
+  const focus = selectedCell.value
+  if (!anchor || !focus || anchor.sheet !== focus.sheet) return null
+  return { top: Math.min(anchor.row, focus.row), bottom: Math.max(anchor.row, focus.row), left: Math.min(anchor.column, focus.column), right: Math.max(anchor.column, focus.column) }
+})
+const selectedAddress = computed(() => {
+  const bounds = selectionBounds.value
+  if (!bounds) return ''
+  const first = `${columnLabel(bounds.left)}${bounds.top + 1}`
+  const last = `${columnLabel(bounds.right)}${bounds.bottom + 1}`
+  return first === last ? first : `${first}:${last}`
+})
 const selectedEditable = computed(() => selectedCell.value ? isEditableCell(selectedCell.value.row, selectedCell.value.column) : false)
 const emptyCell: WorkbookCell = { value: '', kind: 'empty' }
 const formatBytes = (size: number) => size >= 1024 * 1024 ? `${(size / 1024 / 1024).toFixed(1)} MB` : `${(size / 1024).toFixed(1)} KB`
@@ -156,13 +193,16 @@ const cellAt = (row: number, column: number): WorkbookCell => {
   return { value: edit.input, kind: edit.kind === 'string' ? 'text' : edit.kind }
 }
 const originalInput = (cell: WorkbookCell) => cell.formula || cell.value || ''
-const editableKinds = new Set(['text', 'string', 'number', 'integer', 'boolean'])
 const isEditableCell = (row: number, column: number) => {
   const source = sourceCellAt(row, column)
-  return Boolean(source.formula) || editableKinds.has(source.kind)
+  return Boolean(source.formula) || !['date', 'error'].includes(source.kind)
 }
 const isDirty = (sheet: string, row: number, column: number) => drafts.value.has(editKey(sheet, row, column))
 const isSelected = (row: number, column: number) => selectedCell.value?.sheet === activeSheet.value && selectedCell.value.row === row && selectedCell.value.column === column
+const isInSelection = (row: number, column: number) => {
+  const bounds = selectionBounds.value
+  return Boolean(bounds && row >= bounds.top && row <= bounds.bottom && column >= bounds.left && column <= bounds.right)
+}
 const cellDisplay = (row: number, column: number) => {
   const cell = cellAt(row, column)
   return showFormulas.value && cell.formula ? cell.formula : cell.value || (cell.formula ? cell.formula : '')
@@ -172,7 +212,7 @@ const cellTitle = (row: number, column: number) => {
   return cell.formula ? `${columnLabel(column)}${row + 1}\n公式：${cell.formula}\n结果：${cell.value || '等待外部公式引擎重算'}` : cell.value
 }
 const visibleRows = computed(() => {
-  const total = sheetInfo.value?.totalRows || 0
+  const total = canvasRowCount.value
   const start = Math.max(0, Math.floor(scrollTop.value / rowHeight) - 10)
   const count = Math.ceil(viewportHeight.value / rowHeight) + 20
   return Array.from({ length: Math.min(count, Math.max(0, total - start)) }, (_, offset) => ({ index: start + offset }))
@@ -191,9 +231,22 @@ const setDraft = (key: string, edit?: WorkbookCellEdit) => {
   else next.delete(key)
   drafts.value = next
 }
-const selectCell = (row: number, column: number) => {
+const setSelectionFocus = (row: number, column: number) => {
   selectedCell.value = { sheet: activeSheet.value, row, column }
   formulaInput.value = originalInput(cellAt(row, column))
+}
+const selectCell = (row: number, column: number, extend = false) => {
+  if (!extend || selectionAnchor.value?.sheet !== activeSheet.value) selectionAnchor.value = { sheet: activeSheet.value, row, column }
+  setSelectionFocus(row, column)
+}
+const startCellSelection = (row: number, column: number, event: PointerEvent) => {
+  if (event.button !== 0) return
+  event.preventDefault()
+  dragSelecting = true
+  selectCell(row, column, event.shiftKey)
+}
+const extendCellSelection = (row: number, column: number) => {
+  if (dragSelecting) setSelectionFocus(row, column)
 }
 const beginCellEdit = (row: number, column: number) => {
   selectCell(row, column)
@@ -212,12 +265,19 @@ const commitFormulaInput = () => {
   const after = formulaInput.value === originalInput(source) ? undefined : inferEdit(selection, formulaInput.value)
   if (JSON.stringify(before) === JSON.stringify(after)) return
   setDraft(key, after)
-  undoStack.value.push({ key, before, after })
+  undoStack.value.push({ changes: [{ key, before, after }] })
   redoStack.value = []
 }
 const applyHistoryAction = (action: EditAction, direction: 'undo' | 'redo') => {
-  setDraft(action.key, direction === 'undo' ? action.before : action.after)
-  const edit = direction === 'undo' ? action.before : action.after
+  const next = new Map(drafts.value)
+  for (const change of action.changes) {
+    const edit = direction === 'undo' ? change.before : change.after
+    if (edit) next.set(change.key, edit)
+    else next.delete(change.key)
+  }
+  drafts.value = next
+  const last = action.changes[action.changes.length - 1]
+  const edit = last && (direction === 'undo' ? last.before : last.after)
   if (edit && edit.sheet === activeSheet.value) {
     selectedCell.value = { sheet: edit.sheet, row: edit.row, column: edit.column }
     formulaInput.value = edit.input
@@ -226,9 +286,83 @@ const applyHistoryAction = (action: EditAction, direction: 'undo' | 'redo') => {
 const undo = () => { const action = undoStack.value.pop(); if (action) { applyHistoryAction(action, 'undo'); redoStack.value.push(action) } }
 const redo = () => { const action = redoStack.value.pop(); if (action) { applyHistoryAction(action, 'redo'); undoStack.value.push(action) } }
 
+const applyBatchInputs = (start: CellSelection, matrix: string[][]) => {
+  const cellCount = matrix.reduce((count, row) => count + row.length, 0)
+  const width = Math.max(0, ...matrix.map(row => row.length))
+  if (!cellCount || cellCount > MAX_BATCH_CELLS || matrix.length * width > MAX_BATCH_CELLS) throw new Error(`单次区域编辑不能超过 ${MAX_BATCH_CELLS.toLocaleString()} 个单元格`)
+  const changes: CellChange[] = []
+  matrix.forEach((values, rowOffset) => values.forEach((input, columnOffset) => {
+    const selection = { sheet: start.sheet, row: start.row + rowOffset, column: start.column + columnOffset }
+    if (selection.row >= 1_048_576 || selection.column >= 16_384) throw new Error('粘贴区域超出 XLSX 坐标上限')
+    if (selection.column >= 256) throw new Error('当前工作面最多编辑前 256 列')
+    const key = editKey(selection.sheet, selection.row, selection.column)
+    const before = drafts.value.get(key)
+    const source = sourceCellAt(selection.row, selection.column)
+    if (!before && ['date', 'error'].includes(source.kind)) throw new Error(`${columnLabel(selection.column)}${selection.row + 1} 当前类型暂不支持区域写入`)
+    const after = input === originalInput(source) || (!input && source.kind === 'empty') ? undefined : inferEdit(selection, input)
+    if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
+  }))
+  if (!changes.length) return
+  const next = new Map(drafts.value)
+  for (const change of changes) {
+    if (change.after) next.set(change.key, change.after)
+    else next.delete(change.key)
+  }
+  drafts.value = next
+  undoStack.value.push({ changes })
+  redoStack.value = []
+}
+const selectedMatrix = () => {
+  const bounds = selectionBounds.value
+  if (!bounds) return []
+  const count = (bounds.bottom - bounds.top + 1) * (bounds.right - bounds.left + 1)
+  if (count > MAX_BATCH_CELLS) throw new Error(`选择区域不能超过 ${MAX_BATCH_CELLS.toLocaleString()} 个单元格`)
+  for (let row = bounds.top; row <= bounds.bottom; row += 1) {
+    if (row < (sheetInfo.value?.totalRows || 0) && !loadedRows.value.has(row)) throw new Error('选择区域包含尚未载入的数据，请滚动到该区域后重试')
+  }
+  return Array.from({ length: bounds.bottom - bounds.top + 1 }, (_, rowOffset) =>
+    Array.from({ length: bounds.right - bounds.left + 1 }, (_, columnOffset) => originalInput(cellAt(bounds.top + rowOffset, bounds.left + columnOffset))))
+}
+const copySelection = async () => {
+  try {
+    const matrix = selectedMatrix()
+    if (!matrix.length) return false
+    await navigator.clipboard.writeText(matrix.map(row => row.join('\t')).join('\r\n'))
+    message.success(`已复制 ${matrix.length} × ${matrix[0].length} 区域`)
+    return true
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')); return false }
+}
+const pasteSelection = async () => {
+  if (!selectedCell.value) return
+  try {
+    const text = await navigator.clipboard.readText()
+    if (text.length > 10 * 1024 * 1024) throw new Error('剪贴板文本不能超过 10 MB')
+    const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n$/, '')
+    const matrix = normalized.split('\n').map(row => row.split('\t'))
+    const start = { ...selectedCell.value }
+    applyBatchInputs(start, matrix)
+    selectionAnchor.value = start
+    const bottom = start.row + matrix.length - 1
+    const right = start.column + Math.max(...matrix.map(row => row.length)) - 1
+    setSelectionFocus(bottom, right)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+}
+const clearSelection = () => {
+  const bounds = selectionBounds.value
+  const focus = selectedCell.value
+  if (!bounds || !focus) return
+  try {
+    const matrix = Array.from({ length: bounds.bottom - bounds.top + 1 }, () => Array.from({ length: bounds.right - bounds.left + 1 }, () => ''))
+    applyBatchInputs({ sheet: focus.sheet, row: bounds.top, column: bounds.left }, matrix)
+    formulaInput.value = originalInput(cellAt(focus.row, focus.column))
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+}
+const cutSelection = async () => { if (await copySelection()) clearSelection() }
+
 const loadPage = async (offset: number) => {
   if (!activeSheet.value || !workbook.value) return
   offset = Math.max(0, Math.floor(offset / PAGE_ROWS) * PAGE_ROWS)
+  if (sheetInfo.value && offset >= sheetInfo.value.totalRows) return
   wantedOffset = offset
   if (loadedPages.has(offset) || pageLoading.value) return
   const current = generation
@@ -253,6 +387,7 @@ const selectSheet = async (sheet: string) => {
   generation += 1
   activeSheet.value = sheet
   selectedCell.value = null
+  selectionAnchor.value = null
   formulaInput.value = ''
   sheetInfo.value = null
   loadedRows.value = new Map()
@@ -272,6 +407,7 @@ const loadWorkbook = async () => {
     workbook.value = document
     activeSheet.value = ''
     selectedCell.value = null
+    selectionAnchor.value = null
     loading.value = false
     await selectSheet(document.sheets[0])
   } catch (cause) {
@@ -326,14 +462,30 @@ const handleScroll = () => {
   if (end % PAGE_ROWS > PAGE_ROWS - 100) void loadPage(end)
 }
 const handleShortcut = (event: KeyboardEvent) => {
-  if (!(event.ctrlKey || event.metaKey)) return
+  const formulaFocused = event.target === formulaInputRef.value
+  if (!(event.ctrlKey || event.metaKey)) {
+    if (!formulaFocused && event.key === 'Delete') { event.preventDefault(); clearSelection() }
+    if (!formulaFocused && selectedCell.value && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+      event.preventDefault()
+      const rowDelta = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0
+      const columnDelta = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0
+      const row = Math.max(0, Math.min(canvasRowCount.value - 1, selectedCell.value.row + rowDelta))
+      const column = Math.max(0, Math.min(canvasColumnCount.value - 1, selectedCell.value.column + columnDelta))
+      selectCell(row, column, event.shiftKey)
+    }
+    return
+  }
   const key = event.key.toLowerCase()
   if (key === 's') { event.preventDefault(); void saveWorkbook() }
-  else if (key === 'z' && event.shiftKey) { event.preventDefault(); redo() }
-  else if (key === 'z') { event.preventDefault(); undo() }
-  else if (key === 'y') { event.preventDefault(); redo() }
+  else if (!formulaFocused && key === 'c') { event.preventDefault(); void copySelection() }
+  else if (!formulaFocused && key === 'v') { event.preventDefault(); void pasteSelection() }
+  else if (!formulaFocused && key === 'x') { event.preventDefault(); void cutSelection() }
+  else if (!formulaFocused && key === 'z' && event.shiftKey) { event.preventDefault(); redo() }
+  else if (!formulaFocused && key === 'z') { event.preventDefault(); undo() }
+  else if (!formulaFocused && key === 'y') { event.preventDefault(); redo() }
 }
 const warnBeforeUnload = (event: BeforeUnloadEvent) => { if (dirtyCount.value) event.preventDefault() }
+const stopCellSelection = () => { dragSelecting = false }
 
 watch(workbookPath, () => { drafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook() })
 watch(scrollRef, element => {
@@ -346,12 +498,14 @@ onMounted(() => {
   resizeObserver = new ResizeObserver(() => { if (scrollRef.value) viewportHeight.value = scrollRef.value.clientHeight })
   nextTick(() => { if (scrollRef.value) resizeObserver?.observe(scrollRef.value) })
   window.addEventListener('keydown', handleShortcut)
+  window.addEventListener('pointerup', stopCellSelection)
   window.addEventListener('beforeunload', warnBeforeUnload)
 })
 onBeforeUnmount(() => {
   generation += 1
   resizeObserver?.disconnect()
   window.removeEventListener('keydown', handleShortcut)
+  window.removeEventListener('pointerup', stopCellSelection)
   window.removeEventListener('beforeunload', warnBeforeUnload)
 })
 </script>
@@ -392,6 +546,7 @@ onBeforeUnmount(() => {
 .column-header { display: grid; place-items: center; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 94%, #dce6ef); font-size: 9px; font-weight: 700; }
 .workbook-cell { position: relative; overflow: hidden; padding: 7px 8px 0; outline: 0; text-overflow: ellipsis; white-space: nowrap; background: var(--theme-card); font-size: 9px; user-select: none; }
 .workbook-cell.editable { cursor: cell; }
+.workbook-cell.in-range { background: color-mix(in srgb, var(--theme-card) 88%, var(--theme-primary)); }
 .workbook-cell.selected { z-index: 3; box-shadow: inset 0 0 0 2px var(--theme-primary); }
 .workbook-cell.dirty::after { content: ''; position: absolute; top: 0; right: 0; border-top: 7px solid #df8a27; border-left: 7px solid transparent; }
 .workbook-cell.formula { color: #436fb7; }

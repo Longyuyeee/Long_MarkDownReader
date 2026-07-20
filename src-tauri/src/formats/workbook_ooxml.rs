@@ -1,7 +1,7 @@
 use crate::formats::workbook::WorkbookCellEdit;
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::{Reader, Writer};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Cursor, Read, Write};
 use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipArchive, ZipWriter};
@@ -123,6 +123,37 @@ fn cell_reference(row: usize, column: usize) -> Result<String, String> {
     Ok(format!("{label}{}", row + 1))
 }
 
+fn parse_cell_reference(reference: &str) -> Result<(usize, usize), String> {
+    let reference = reference.trim_matches('$');
+    let split = reference
+        .find(|character: char| character.is_ascii_digit())
+        .ok_or_else(|| format!("单元格坐标无效: {reference}"))?;
+    let (column_text, row_text) = reference.split_at(split);
+    if column_text.is_empty()
+        || row_text.is_empty()
+        || !row_text.bytes().all(|byte| byte.is_ascii_digit())
+    {
+        return Err(format!("单元格坐标无效: {reference}"));
+    }
+    let mut column = 0usize;
+    for byte in column_text.bytes() {
+        if !byte.is_ascii_alphabetic() {
+            return Err(format!("单元格坐标无效: {reference}"));
+        }
+        column = column
+            .checked_mul(26)
+            .and_then(|value| value.checked_add((byte.to_ascii_uppercase() - b'A' + 1) as usize))
+            .ok_or("单元格列坐标溢出")?;
+    }
+    let row = row_text
+        .parse::<usize>()
+        .map_err(|_| format!("单元格行坐标无效: {reference}"))?;
+    if row == 0 || column == 0 || row > MAX_XLSX_ROWS || column > MAX_XLSX_COLUMNS {
+        return Err(format!("单元格坐标超出 XLSX 上限: {reference}"));
+    }
+    Ok((row - 1, column - 1))
+}
+
 fn validate_edit(edit: &WorkbookCellEdit) -> Result<(), String> {
     if edit.sheet.is_empty() || edit.sheet.chars().count() > 31 {
         return Err("工作表名称无效".into());
@@ -219,33 +250,74 @@ fn write_cell(
         .map_err(|error| format!("结束单元格写入失败: {error}"))
 }
 
-fn patch_sheet_xml(
-    xml: &[u8],
-    edits: &HashMap<String, &WorkbookCellEdit>,
-) -> Result<Vec<u8>, String> {
-    let mut reader = Reader::from_reader(xml);
-    reader.config_mut().trim_text(false);
-    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
-    let mut buffer = Vec::new();
-    let mut applied = HashSet::new();
+fn write_new_cell(
+    writer: &mut Writer<Vec<u8>>,
+    row: usize,
+    column: usize,
+    edit: &WorkbookCellEdit,
+) -> Result<(), String> {
+    if edit.kind == "empty" {
+        return Ok(());
+    }
+    let reference = cell_reference(row, column)?;
+    let mut cell = BytesStart::new("c");
+    cell.push_attribute(("r", reference.as_str()));
+    write_cell(writer, &cell, edit)
+}
+
+fn write_pending_cells(
+    writer: &mut Writer<Vec<u8>>,
+    row: usize,
+    pending: &mut BTreeMap<usize, &WorkbookCellEdit>,
+    before_column: Option<usize>,
+) -> Result<(), String> {
+    let columns = pending
+        .range(..before_column.unwrap_or(usize::MAX))
+        .map(|(column, _)| *column)
+        .collect::<Vec<_>>();
+    for column in columns {
+        if let Some(edit) = pending.remove(&column) {
+            write_new_cell(writer, row, column, edit)?;
+        }
+    }
+    Ok(())
+}
+
+fn patch_existing_row(
+    reader: &mut Reader<&[u8]>,
+    writer: &mut Writer<Vec<u8>>,
+    row_start: &BytesStart<'_>,
+    row: usize,
+    edits: &BTreeMap<usize, &WorkbookCellEdit>,
+    buffer: &mut Vec<u8>,
+) -> Result<(), String> {
+    writer
+        .write_event(Event::Start(row_start.to_owned()))
+        .map_err(|error| format!("写入工作表行失败: {error}"))?;
+    let mut pending = edits.clone();
+    let mut last_column = None;
+    buffer.clear();
     loop {
         let event = reader
-            .read_event_into(&mut buffer)
-            .map_err(|error| format!("解析工作表 XML 失败: {error}"))?;
+            .read_event_into(buffer)
+            .map_err(|error| format!("解析工作表行失败: {error}"))?;
         match event {
             Event::Start(ref start) if start.local_name().as_ref() == b"c" => {
-                let reference = xml_value(start, b"r", reader.decoder())?;
-                if let Some((reference, edit)) = reference
-                    .as_ref()
-                    .and_then(|reference| edits.get(reference).map(|edit| (reference, *edit)))
-                {
-                    write_cell(&mut writer, start, edit)?;
-                    applied.insert(reference.clone());
+                let reference =
+                    xml_value(start, b"r", reader.decoder())?.ok_or("工作表单元格缺少坐标")?;
+                let (cell_row, column) = parse_cell_reference(&reference)?;
+                if cell_row != row || last_column.is_some_and(|last| column <= last) {
+                    return Err("工作表单元格坐标未按行列有序排列".into());
+                }
+                last_column = Some(column);
+                write_pending_cells(writer, row, &mut pending, Some(column))?;
+                if let Some(edit) = pending.remove(&column) {
+                    write_cell(writer, start, edit)?;
                     let mut depth = 1usize;
                     buffer.clear();
                     while depth > 0 {
                         match reader
-                            .read_event_into(&mut buffer)
+                            .read_event_into(buffer)
                             .map_err(|error| format!("跳过原单元格内容失败: {error}"))?
                         {
                             Event::Start(_) => depth += 1,
@@ -255,25 +327,293 @@ fn patch_sheet_xml(
                         }
                         buffer.clear();
                     }
-                } else {
-                    writer
-                        .write_event(event.into_owned())
-                        .map_err(|error| format!("复制工作表 XML 失败: {error}"))?;
+                    continue;
                 }
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制工作表单元格失败: {error}"))?;
             }
             Event::Empty(ref start) if start.local_name().as_ref() == b"c" => {
-                let reference = xml_value(start, b"r", reader.decoder())?;
-                if let Some((reference, edit)) = reference
-                    .as_ref()
-                    .and_then(|reference| edits.get(reference).map(|edit| (reference, *edit)))
-                {
-                    write_cell(&mut writer, start, edit)?;
-                    applied.insert(reference.clone());
+                let reference =
+                    xml_value(start, b"r", reader.decoder())?.ok_or("工作表单元格缺少坐标")?;
+                let (cell_row, column) = parse_cell_reference(&reference)?;
+                if cell_row != row || last_column.is_some_and(|last| column <= last) {
+                    return Err("工作表单元格坐标未按行列有序排列".into());
+                }
+                last_column = Some(column);
+                write_pending_cells(writer, row, &mut pending, Some(column))?;
+                if let Some(edit) = pending.remove(&column) {
+                    write_cell(writer, start, edit)?;
                 } else {
                     writer
                         .write_event(event.into_owned())
-                        .map_err(|error| format!("复制工作表 XML 失败: {error}"))?;
+                        .map_err(|error| format!("复制工作表单元格失败: {error}"))?;
                 }
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"row" => {
+                write_pending_cells(writer, row, &mut pending, None)?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束工作表行写入失败: {error}"))?;
+                return Ok(());
+            }
+            Event::Eof => return Err("工作表行 XML 意外结束".into()),
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制工作表行内容失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+}
+
+fn write_new_row(
+    writer: &mut Writer<Vec<u8>>,
+    row: usize,
+    edits: &BTreeMap<usize, &WorkbookCellEdit>,
+) -> Result<(), String> {
+    if edits.values().all(|edit| edit.kind == "empty") {
+        return Ok(());
+    }
+    let row_number = (row + 1).to_string();
+    let mut row_start = BytesStart::new("row");
+    row_start.push_attribute(("r", row_number.as_str()));
+    writer
+        .write_event(Event::Start(row_start))
+        .map_err(|error| format!("创建工作表行失败: {error}"))?;
+    for (column, edit) in edits {
+        write_new_cell(writer, row, *column, edit)?;
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new("row")))
+        .map_err(|error| format!("结束新工作表行失败: {error}"))
+}
+
+fn write_dimension(
+    writer: &mut Writer<Vec<u8>>,
+    original: &BytesStart<'_>,
+    min_row: usize,
+    min_column: usize,
+    max_row: usize,
+    max_column: usize,
+) -> Result<(), String> {
+    let existing = original
+        .attributes()
+        .filter_map(Result::ok)
+        .find(|attribute| attribute.key.as_ref() == b"ref")
+        .and_then(|attribute| String::from_utf8(attribute.value.into_owned()).ok())
+        .unwrap_or_else(|| "A1".into());
+    let existing_first = existing.split(':').next().unwrap_or("A1");
+    let existing_last = existing.rsplit(':').next().unwrap_or("A1");
+    let (existing_first_row, existing_first_column) =
+        parse_cell_reference(existing_first).unwrap_or((0, 0));
+    let (existing_row, existing_column) = parse_cell_reference(existing_last).unwrap_or((0, 0));
+    let first = cell_reference(
+        existing_first_row.min(min_row),
+        existing_first_column.min(min_column),
+    )?;
+    let last = cell_reference(existing_row.max(max_row), existing_column.max(max_column))?;
+    let dimension_ref = if first == last {
+        first
+    } else {
+        format!("{first}:{last}")
+    };
+    let mut dimension = BytesStart::new("dimension");
+    for attribute in original.attributes() {
+        let attribute = attribute.map_err(|error| format!("读取工作表范围属性失败: {error}"))?;
+        if attribute.key.as_ref() != b"ref" {
+            dimension.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+        }
+    }
+    dimension.push_attribute(("ref", dimension_ref.as_str()));
+    writer
+        .write_event(Event::Empty(dimension))
+        .map_err(|error| format!("写入工作表范围失败: {error}"))
+}
+
+fn validate_merged_cells(
+    xml: &[u8],
+    edits: &BTreeMap<usize, BTreeMap<usize, &WorkbookCellEdit>>,
+) -> Result<(), String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析合并单元格失败: {error}"))?
+        {
+            Event::Start(event) | Event::Empty(event)
+                if event.local_name().as_ref() == b"mergeCell" =>
+            {
+                let reference =
+                    xml_value(&event, b"ref", reader.decoder())?.ok_or("合并单元格缺少范围")?;
+                let mut parts = reference.split(':');
+                let (top, left) = parse_cell_reference(parts.next().unwrap_or_default())?;
+                let (bottom, right) = parse_cell_reference(parts.next().unwrap_or(&reference))?;
+                if parts.next().is_some() || bottom < top || right < left {
+                    return Err(format!("合并单元格范围无效: {reference}"));
+                }
+                for (row, columns) in edits.range(top..=bottom) {
+                    for (column, _) in columns.range(left..=right) {
+                        if *row != top || *column != left {
+                            return Err(format!(
+                                "合并区域 {reference} 只能编辑左上角单元格 {}",
+                                cell_reference(top, left)?
+                            ));
+                        }
+                    }
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(())
+}
+
+fn patch_sheet_xml(
+    xml: &[u8],
+    edits: &BTreeMap<usize, BTreeMap<usize, &WorkbookCellEdit>>,
+) -> Result<Vec<u8>, String> {
+    validate_merged_cells(xml, edits)?;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
+    let mut buffer = Vec::new();
+    let mut pending = edits.clone();
+    let non_empty_coordinates = edits.iter().flat_map(|(row, columns)| {
+        columns
+            .iter()
+            .filter(|(_, edit)| edit.kind != "empty")
+            .map(move |(column, _)| (*row, *column))
+    });
+    let coordinates = non_empty_coordinates.collect::<Vec<_>>();
+    let extent = if coordinates.is_empty() {
+        None
+    } else {
+        Some((
+            coordinates.iter().map(|(row, _)| *row).min().unwrap(),
+            coordinates.iter().map(|(_, column)| *column).min().unwrap(),
+            coordinates.iter().map(|(row, _)| *row).max().unwrap(),
+            coordinates.iter().map(|(_, column)| *column).max().unwrap(),
+        ))
+    };
+    let mut inside_sheet_data = false;
+    let mut found_sheet_data = false;
+    let mut last_row = None;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析工作表 XML 失败: {error}"))?;
+        match event {
+            Event::Empty(ref start) if start.local_name().as_ref() == b"dimension" => {
+                if let Some((min_row, min_column, max_row, max_column)) = extent {
+                    write_dimension(&mut writer, start, min_row, min_column, max_row, max_column)?;
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("复制工作表范围失败: {error}"))?;
+                }
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"sheetData" => {
+                inside_sheet_data = true;
+                found_sheet_data = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("写入工作表数据节点失败: {error}"))?;
+            }
+            Event::Start(ref start)
+                if inside_sheet_data && start.local_name().as_ref() == b"row" =>
+            {
+                let row_number = xml_value(start, b"r", reader.decoder())?
+                    .ok_or("工作表行缺少行号")?
+                    .parse::<usize>()
+                    .map_err(|_| "工作表行号无效")?;
+                if row_number == 0 || row_number > MAX_XLSX_ROWS {
+                    return Err("工作表行号超出 XLSX 上限".into());
+                }
+                let row = row_number - 1;
+                if last_row.is_some_and(|last| row <= last) {
+                    return Err("工作表行未按行号有序排列".into());
+                }
+                last_row = Some(row);
+                let rows_before = pending
+                    .range(..row)
+                    .map(|(row, _)| *row)
+                    .collect::<Vec<_>>();
+                for missing_row in rows_before {
+                    if let Some(row_edits) = pending.remove(&missing_row) {
+                        write_new_row(&mut writer, missing_row, &row_edits)?;
+                    }
+                }
+                if let Some(row_edits) = pending.remove(&row) {
+                    let row_start = start.to_owned();
+                    patch_existing_row(
+                        &mut reader,
+                        &mut writer,
+                        &row_start,
+                        row,
+                        &row_edits,
+                        &mut buffer,
+                    )?;
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("复制工作表行失败: {error}"))?;
+                }
+            }
+            Event::Empty(ref start)
+                if inside_sheet_data && start.local_name().as_ref() == b"row" =>
+            {
+                let row_number = xml_value(start, b"r", reader.decoder())?
+                    .ok_or("工作表行缺少行号")?
+                    .parse::<usize>()
+                    .map_err(|_| "工作表行号无效")?;
+                if row_number == 0 || row_number > MAX_XLSX_ROWS {
+                    return Err("工作表行号超出 XLSX 上限".into());
+                }
+                let row = row_number - 1;
+                if last_row.is_some_and(|last| row <= last) {
+                    return Err("工作表行未按行号有序排列".into());
+                }
+                last_row = Some(row);
+                let rows_before = pending
+                    .range(..row)
+                    .map(|(row, _)| *row)
+                    .collect::<Vec<_>>();
+                for missing_row in rows_before {
+                    if let Some(row_edits) = pending.remove(&missing_row) {
+                        write_new_row(&mut writer, missing_row, &row_edits)?;
+                    }
+                }
+                if let Some(row_edits) = pending.remove(&row) {
+                    let row_start = start.to_owned();
+                    writer
+                        .write_event(Event::Start(row_start.borrow()))
+                        .map_err(|error| format!("扩展空工作表行失败: {error}"))?;
+                    for (column, edit) in &row_edits {
+                        write_new_cell(&mut writer, row, *column, edit)?;
+                    }
+                    writer
+                        .write_event(Event::End(BytesEnd::new("row")))
+                        .map_err(|error| format!("结束工作表行失败: {error}"))?;
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("复制空工作表行失败: {error}"))?;
+                }
+            }
+            Event::End(ref end)
+                if inside_sheet_data && end.local_name().as_ref() == b"sheetData" =>
+            {
+                for (row, row_edits) in std::mem::take(&mut pending) {
+                    write_new_row(&mut writer, row, &row_edits)?;
+                }
+                inside_sheet_data = false;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束工作表数据节点失败: {error}"))?;
             }
             Event::Eof => break,
             _ => writer
@@ -282,16 +622,8 @@ fn patch_sheet_xml(
         }
         buffer.clear();
     }
-    let missing = edits
-        .keys()
-        .filter(|reference| !applied.contains(*reference))
-        .cloned()
-        .collect::<Vec<_>>();
-    if !missing.is_empty() {
-        return Err(format!(
-            "当前批次只能编辑工作簿中已存在的单元格，未找到: {}",
-            missing.join(", ")
-        ));
+    if !found_sheet_data || !pending.is_empty() {
+        return Err("XLSX 工作表缺少可写入的 sheetData".into());
     }
     Ok(writer.into_inner())
 }
@@ -344,7 +676,8 @@ pub fn patch_workbook(source: &[u8], edits: &[WorkbookCellEdit]) -> Result<Vec<u
         });
     }
     let sheet_paths = workbook_sheet_paths(&entries)?;
-    let mut edits_by_path: HashMap<String, HashMap<String, &WorkbookCellEdit>> = HashMap::new();
+    let mut edits_by_path: HashMap<String, BTreeMap<usize, BTreeMap<usize, &WorkbookCellEdit>>> =
+        HashMap::new();
     for edit in edits {
         let path = sheet_paths
             .get(&edit.sheet)
@@ -352,7 +685,9 @@ pub fn patch_workbook(source: &[u8], edits: &[WorkbookCellEdit]) -> Result<Vec<u
         edits_by_path
             .entry(path.clone())
             .or_default()
-            .insert(cell_reference(edit.row, edit.column)?, edit);
+            .entry(edit.row)
+            .or_default()
+            .insert(edit.column, edit);
     }
     for entry in &mut entries {
         if let Some(sheet_edits) = edits_by_path.remove(&entry.name) {
