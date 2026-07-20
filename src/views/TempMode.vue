@@ -107,7 +107,7 @@ const showOutline = ref(true)
 let vditor: Vditor | null = null
 
 const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
-const { fixEditorImages } = useImageFix(() => vditor, () => filePath.value)
+const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => filePath.value, { external: true })
 useVditorTheme(() => vditor)
 
 const handleOutlineSelect = (keys: string[]) => {
@@ -247,7 +247,7 @@ const startShadowSaveTimer = () => {
     if (vditor && filePath.value) {
       const content = vditor.getValue()
       if (content && content.trim().length > 0) {
-        await invoke('save_history_version', { path: filePath.value, content, maxCount: store.maxHistoryCount }).catch((e: any) => { console.error('Shadow save failed:', e) })
+        await invoke('save_external_history_version', { path: filePath.value, content, maxCount: store.maxHistoryCount }).catch((e: any) => { console.error('Shadow save failed:', e) })
       }
     }
   }, interval)
@@ -283,15 +283,7 @@ onMounted(async () => {
       math: { engine: 'KaTeX' } as any,
       markdown: { mermaid: true, footnotes: true, toc: true } as any,
       customWysiwygToolbar: () => {},
-      transform: ((html: string) => {
-        if (!filePath.value) return html
-        const parentDir = filePath.value.substring(0, Math.max(filePath.value.lastIndexOf('/'), filePath.value.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
-        return html.replace(/(<img [^>]*src=["'])(.*?)(["'][^>]*>)/g, (_m: string, prefix: string, url: string, suffix: string) => {
-          if (url.startsWith('http') || url.startsWith('misty-img:') || url.startsWith('data:')) return _m
-          let abs = url.startsWith('./') ? parentDir + url.substring(2) : parentDir + url
-          return `${prefix}misty-img://${abs.replace(/\\/g, '/')}${suffix}`
-        })
-      }) as any,
+      transform: ((html: string) => html) as any,
     } as any,
     toolbar: [
       { name: 'undo', tip: '撤销 Ctrl+Z' }, { name: 'redo', tip: '重做 Ctrl+Y' }, '|',
@@ -322,6 +314,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  destroyImageFix()
   destroyOutlineObserver()
   if (shadowSaveTimer) clearInterval(shadowSaveTimer)
   if (unlistenExport) unlistenExport()

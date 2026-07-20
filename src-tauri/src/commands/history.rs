@@ -1,7 +1,10 @@
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::write_utf8;
+use crate::services::workspace_guard::WorkspaceGuard;
 use std::fs;
 use std::path::PathBuf;
 use tauri::Manager;
+use tauri::State;
 
 pub(crate) fn history_dir(app_handle: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
     let cache_dir = app_handle
@@ -16,11 +19,44 @@ pub(crate) fn history_dir(app_handle: &tauri::AppHandle, path: &str) -> Result<P
 #[tauri::command]
 pub async fn save_history_version(
     app_handle: tauri::AppHandle,
+    library_root: String,
     path: String,
     content: String,
     max_count: u32,
 ) -> Result<(), String> {
-    let file_history_dir = history_dir(&app_handle, &path)?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
+    save_history(
+        &app_handle,
+        path.to_string_lossy().as_ref(),
+        content,
+        max_count,
+    )
+}
+
+#[tauri::command]
+pub async fn save_external_history_version(
+    app_handle: tauri::AppHandle,
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+    content: String,
+    max_count: u32,
+) -> Result<(), String> {
+    let path = access.resolve_markdown(path)?;
+    save_history(
+        &app_handle,
+        path.to_string_lossy().as_ref(),
+        content,
+        max_count,
+    )
+}
+
+fn save_history(
+    app_handle: &tauri::AppHandle,
+    path: &str,
+    content: String,
+    max_count: u32,
+) -> Result<(), String> {
+    let file_history_dir = history_dir(app_handle, path)?;
     if !file_history_dir.exists() {
         fs::create_dir_all(&file_history_dir).map_err(|error| error.to_string())?;
     }
@@ -73,10 +109,19 @@ fn normalize_line_endings(content: &str) -> String {
 #[tauri::command]
 pub async fn list_history(
     app_handle: tauri::AppHandle,
+    library_root: String,
     path: String,
 ) -> Result<Vec<(u64, String)>, String> {
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
+    list_history_for_path(&app_handle, path.to_string_lossy().as_ref())
+}
+
+fn list_history_for_path(
+    app_handle: &tauri::AppHandle,
+    path: &str,
+) -> Result<Vec<(u64, String)>, String> {
     let mut versions = Vec::new();
-    if let Ok(entries) = fs::read_dir(history_dir(&app_handle, &path)?) {
+    if let Ok(entries) = fs::read_dir(history_dir(app_handle, path)?) {
         for entry in entries.flatten() {
             let file_path = entry.path();
             let Some(timestamp) = file_path
@@ -98,10 +143,13 @@ pub async fn list_history(
 #[tauri::command]
 pub async fn delete_history_version(
     app_handle: tauri::AppHandle,
+    library_root: String,
     path: String,
     timestamp: u64,
 ) -> Result<(), String> {
-    let file_path = history_dir(&app_handle, &path)?.join(format!("{timestamp}.md"));
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
+    let file_path =
+        history_dir(&app_handle, path.to_string_lossy().as_ref())?.join(format!("{timestamp}.md"));
     if file_path.exists() {
         fs::remove_file(file_path).map_err(|error| error.to_string())?;
     }
@@ -124,9 +172,11 @@ pub async fn clear_all_history(app_handle: tauri::AppHandle) -> Result<(), Strin
 #[tauri::command]
 pub async fn save_shadow_copy(
     app_handle: tauri::AppHandle,
+    library_root: String,
     path: String,
     content: String,
 ) -> Result<(), String> {
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
     let shadow_dir = app_handle
         .path()
         .app_cache_dir()
@@ -135,7 +185,7 @@ pub async fn save_shadow_copy(
     if !shadow_dir.exists() {
         fs::create_dir_all(&shadow_dir).map_err(|error| error.to_string())?;
     }
-    let hash = format!("{:x}", md5::compute(path));
+    let hash = format!("{:x}", md5::compute(path.to_string_lossy().as_bytes()));
     write_utf8(shadow_dir.join(format!("{hash}.md")), &content)
 }
 

@@ -1,5 +1,7 @@
 # XLSX 基础兼容边界 1.0
 
+> 本文描述 v0.7.0 当前已交付能力，不是长期产品上限。完整 Excel 等价编辑已进入 FR-DATA-009，内核契约与兼容性门禁见 `Workbook_Engine_Interface.md`。
+
 状态：S3-6 已实现  
 定位：安全预览与渐进导入，不宣称替代 Microsoft Excel。
 

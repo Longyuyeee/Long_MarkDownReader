@@ -4,11 +4,14 @@ use crate::commands::table::{
 use crate::formats::table::{
     validate_internal_table, MAX_INTERNAL_TABLE_BYTES, MAX_TABLE_COLUMNS, MAX_TABLE_ROWS,
 };
+use crate::formats::workbook::{
+    WorkbookCapabilities, WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine,
+    WorkbookSheetPage,
+};
 use crate::sanitize_filename;
 use crate::services::reliable_write::write_bytes;
 use crate::services::workspace_guard::WorkspaceGuard;
 use calamine::{open_workbook, CellType, Data, Reader, Xlsx};
-use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
@@ -17,34 +20,8 @@ const MAX_WORKBOOK_BYTES: u64 = 128 * 1024 * 1024;
 const MAX_PAGE_ROWS: usize = 5_000;
 const MAX_PREVIEW_COLUMNS: usize = 256;
 
-#[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkbookDocument {
-    pub path: String,
-    pub size: u64,
-    pub signature: String,
-    pub sheets: Vec<String>,
-}
-
-#[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkbookCell {
-    pub value: String,
-    pub formula: Option<String>,
-    pub kind: String,
-}
-
-#[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkbookSheetPage {
-    pub sheet: String,
-    pub row_offset: usize,
-    pub total_rows: usize,
-    pub total_columns: usize,
-    pub returned_columns: usize,
-    pub rows: Vec<Vec<WorkbookCell>>,
-    pub truncated_columns: bool,
-}
+#[derive(Clone, Copy, Debug, Default)]
+struct CalamineWorkbookEngine;
 
 fn workbook_signature(metadata: &fs::Metadata) -> String {
     let modified = metadata
@@ -102,53 +79,60 @@ fn used_dimensions<T: CellType>(range: &calamine::Range<T>) -> (usize, usize) {
         .unwrap_or((0, 0))
 }
 
-#[tauri::command]
-pub async fn read_workbook_file(
-    library_root: String,
-    path: String,
-) -> Result<WorkbookDocument, String> {
-    let guard = WorkspaceGuard::new(library_root)?;
-    let file = guard.resolve_existing_file(path, &["xlsx"])?;
-    tauri::async_runtime::spawn_blocking(move || {
-        let metadata = file
+impl WorkbookEngine for CalamineWorkbookEngine {
+    fn capabilities(&self) -> WorkbookCapabilities {
+        WorkbookCapabilities {
+            engine_id: "calamine-preview-v1".into(),
+            extensions: vec!["xlsx".into()],
+            read: WorkbookCapabilityLevel::Supported,
+            cached_formula_results: WorkbookCapabilityLevel::Supported,
+            cell_editing: WorkbookCapabilityLevel::Planned,
+            formatting: WorkbookCapabilityLevel::Planned,
+            formula_recalculation: WorkbookCapabilityLevel::Planned,
+            charts: WorkbookCapabilityLevel::Planned,
+            pivot_tables: WorkbookCapabilityLevel::Planned,
+            data_validation: WorkbookCapabilityLevel::Planned,
+            print_layout: WorkbookCapabilityLevel::Planned,
+            xlsx_round_trip: WorkbookCapabilityLevel::Planned,
+            max_file_bytes: MAX_WORKBOOK_BYTES,
+            max_page_rows: MAX_PAGE_ROWS,
+            max_preview_columns: MAX_PREVIEW_COLUMNS,
+        }
+    }
+
+    fn inspect(&self, path: &Path) -> Result<WorkbookDocument, String> {
+        let metadata = path
             .metadata()
             .map_err(|error| format!("读取 XLSX 元数据失败: {}", error))?;
-        let workbook = open_xlsx(&file)?;
+        let workbook = open_xlsx(path)?;
         let sheets = workbook.sheet_names().to_vec();
         if sheets.is_empty() {
             return Err("XLSX 不包含可读取的工作表".into());
         }
         Ok(WorkbookDocument {
-            path: file.to_string_lossy().into_owned(),
+            path: path.to_string_lossy().into_owned(),
             size: metadata.len(),
             signature: workbook_signature(&metadata),
             sheets,
         })
-    })
-    .await
-    .map_err(|error| format!("XLSX 读取任务失败: {}", error))?
-}
+    }
 
-#[tauri::command]
-pub async fn read_workbook_sheet(
-    library_root: String,
-    path: String,
-    sheet: String,
-    row_offset: usize,
-    row_limit: usize,
-) -> Result<WorkbookSheetPage, String> {
-    let guard = WorkspaceGuard::new(library_root)?;
-    let file = guard.resolve_existing_file(path, &["xlsx"])?;
-    tauri::async_runtime::spawn_blocking(move || {
-        let mut workbook = open_xlsx(&file)?;
-        if !workbook.sheet_names().iter().any(|name| name == &sheet) {
+    fn read_sheet(
+        &self,
+        path: &Path,
+        sheet: &str,
+        row_offset: usize,
+        row_limit: usize,
+    ) -> Result<WorkbookSheetPage, String> {
+        let mut workbook = open_xlsx(path)?;
+        if !workbook.sheet_names().iter().any(|name| name == sheet) {
             return Err("指定的工作表不存在".into());
         }
         let values = workbook
-            .worksheet_range(&sheet)
+            .worksheet_range(sheet)
             .map_err(|error| format!("读取工作表失败: {}", error))?;
         let formulas = workbook
-            .worksheet_formula(&sheet)
+            .worksheet_formula(sheet)
             .map_err(|error| format!("读取公式失败: {}", error))?;
         let (total_rows, total_columns) = used_dimensions(&values);
         let formula_dimensions = used_dimensions(&formulas);
@@ -178,7 +162,7 @@ pub async fn read_workbook_sheet(
             })
             .collect();
         Ok(WorkbookSheetPage {
-            sheet,
+            sheet: sheet.to_string(),
             row_offset,
             total_rows,
             total_columns,
@@ -186,6 +170,38 @@ pub async fn read_workbook_sheet(
             rows,
             truncated_columns: total_columns > returned_columns,
         })
+    }
+}
+
+#[tauri::command]
+pub fn get_workbook_capabilities() -> WorkbookCapabilities {
+    CalamineWorkbookEngine.capabilities()
+}
+
+#[tauri::command]
+pub async fn read_workbook_file(
+    library_root: String,
+    path: String,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || CalamineWorkbookEngine.inspect(&file))
+        .await
+        .map_err(|error| format!("XLSX 读取任务失败: {}", error))?
+}
+
+#[tauri::command]
+pub async fn read_workbook_sheet(
+    library_root: String,
+    path: String,
+    sheet: String,
+    row_offset: usize,
+    row_limit: usize,
+) -> Result<WorkbookSheetPage, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        CalamineWorkbookEngine.read_sheet(&file, &sheet, row_offset, row_limit)
     })
     .await
     .map_err(|error| format!("工作表读取任务失败: {}", error))?
@@ -358,5 +374,48 @@ mod tests {
         assert_eq!(parsed.data.columns[0].name, "项目");
         assert_eq!(parsed.data.rows[0].values["column-2"], "75");
         fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn committed_compatibility_fixture_matches_engine_contract() {
+        let fixture_root =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/workbook");
+        let workbook_path = fixture_root.join("compatibility-baseline.xlsx");
+        let expectation: serde_json::Value = serde_json::from_str(
+            &fs::read_to_string(fixture_root.join("compatibility-baseline.json")).unwrap(),
+        )
+        .unwrap();
+        let engine = CalamineWorkbookEngine;
+
+        let document = engine.inspect(&workbook_path).unwrap();
+        assert_eq!(
+            document.sheets,
+            expectation["sheets"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|value| value.as_str().unwrap().to_string())
+                .collect::<Vec<_>>()
+        );
+        let page = engine
+            .read_sheet(&workbook_path, "Summary", 0, 100)
+            .unwrap();
+        assert_eq!(page.rows[1][0].value, "Alpha");
+        assert_eq!(page.rows[1][1].value, "1250.5");
+        assert_eq!(page.rows[1][2].value, "true");
+        assert_eq!(page.rows[2][1].formula.as_deref(), Some("=SUM(B2:B2)"));
+        assert_eq!(page.rows[2][1].value, "1250.5");
+
+        let capabilities = engine.capabilities();
+        assert_eq!(capabilities.read, WorkbookCapabilityLevel::Supported);
+        assert_eq!(
+            capabilities.cached_formula_results,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(capabilities.cell_editing, WorkbookCapabilityLevel::Planned);
+        assert_eq!(
+            capabilities.xlsx_round_trip,
+            WorkbookCapabilityLevel::Planned
+        );
     }
 }

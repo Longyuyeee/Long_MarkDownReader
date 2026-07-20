@@ -4,15 +4,20 @@ use std::sync::Mutex;
 
 #[derive(Debug, Default)]
 pub struct ExternalFileAccess {
-    authorized_files: Mutex<HashSet<PathBuf>>,
+    authorized_markdown: Mutex<HashSet<PathBuf>>,
+    authorized_imports: Mutex<HashSet<PathBuf>>,
 }
 
 impl ExternalFileAccess {
     pub fn authorize_markdown(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
         let resolved = resolve_markdown(path.as_ref())?;
-        self.authorized_files
+        self.authorized_markdown
             .lock()
             .map_err(|_| "External file authorization state is unavailable".to_string())?
+            .insert(resolved.clone());
+        self.authorized_imports
+            .lock()
+            .map_err(|_| "External import authorization state is unavailable".to_string())?
             .insert(resolved.clone());
         Ok(resolved)
     }
@@ -20,7 +25,7 @@ impl ExternalFileAccess {
     pub fn resolve_markdown(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
         let resolved = resolve_markdown(path.as_ref())?;
         let is_authorized = self
-            .authorized_files
+            .authorized_markdown
             .lock()
             .map_err(|_| "External file authorization state is unavailable".to_string())?
             .contains(&resolved);
@@ -28,6 +33,32 @@ impl ExternalFileAccess {
             Ok(resolved)
         } else {
             Err("This external file has not been authorized by the user".into())
+        }
+    }
+
+    pub fn authorize_import(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
+        let resolved = resolve_import(path.as_ref())?;
+        self.authorized_imports
+            .lock()
+            .map_err(|_| "External import authorization state is unavailable".to_string())?
+            .insert(resolved.clone());
+        Ok(resolved)
+    }
+
+    pub fn resolve_import(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
+        let resolved = resolve_import(path.as_ref())?;
+        let is_authorized = self
+            .authorized_imports
+            .lock()
+            .map_err(|_| "External import authorization state is unavailable".to_string())?
+            .contains(&resolved);
+        if is_authorized {
+            Ok(resolved)
+        } else {
+            Err(
+                "This import file was not provided through an authorized system file interaction"
+                    .into(),
+            )
         }
     }
 }
@@ -45,6 +76,37 @@ fn resolve_markdown(path: &Path) -> Result<PathBuf, String> {
         .is_some_and(|extension| extension.eq_ignore_ascii_case("md"));
     if !is_markdown {
         return Err("Only Markdown (.md) external files are supported".into());
+    }
+    Ok(resolved)
+}
+
+fn resolve_import(path: &Path) -> Result<PathBuf, String> {
+    let resolved = path
+        .canonicalize()
+        .map_err(|error| format!("Import file is unavailable: {error}"))?;
+    if !resolved.is_file() {
+        return Err("Import path must be a file".into());
+    }
+    let name = resolved
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or_default()
+        .to_lowercase();
+    let supported = [
+        ".md",
+        ".canvas",
+        ".mmd",
+        ".mermaid",
+        ".pdf",
+        ".csv",
+        ".tsv",
+        ".xlsx",
+        ".table.json",
+    ]
+    .iter()
+    .any(|extension| name.ends_with(extension));
+    if !supported {
+        return Err("The dropped file format is not supported by this workspace".into());
     }
     Ok(resolved)
 }
@@ -95,6 +157,24 @@ mod tests {
         assert!(access
             .authorize_markdown(directory.join("missing.md"))
             .is_err());
+
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn import_authorization_is_limited_to_supported_explicit_files() {
+        let directory = fixture("import");
+        let workbook = directory.join("report.xlsx");
+        let executable = directory.join("report.exe");
+        fs::write(&workbook, "xlsx").unwrap();
+        fs::write(&executable, "exe").unwrap();
+
+        let access = ExternalFileAccess::default();
+        assert!(access.resolve_import(&workbook).is_err());
+        access.authorize_import(&workbook).unwrap();
+        assert!(access.resolve_import(&workbook).is_ok());
+        assert!(access.resolve_import(&workbook).is_ok());
+        assert!(access.authorize_import(&executable).is_err());
 
         fs::remove_dir_all(directory).unwrap();
     }

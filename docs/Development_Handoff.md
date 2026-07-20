@@ -59,6 +59,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/Open_Table_Format_Spec.md`：开放表格文件格式。
 - `docs/Table_Chart_Reference_Spec.md`：图表引用和嵌入规范。
 - `docs/XLSX_Compatibility_Boundary.md`：XLSX 能力边界。
+- `docs/Workbook_Engine_Interface.md`：完整工作簿内核契约、能力矩阵和 XLSX fixture 门禁。
 - `docs/Credential_Storage_Security.md`：凭据安全模型和迁移方式。
 - `docs/Mermaid_Diagram_Workspace.md`：Diagram Studio 行为与兼容边界。
 
@@ -67,8 +68,8 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 最后一次完整验证结果：
 
 - `npm run ci:check`：通过。
-- Rust：83 项测试通过，0 失败。
-- 100 MiB PDF 范围读取基准：约 615 ms，仅读取约 256 KiB（目标小于 2 秒）。
+- Rust：86 项测试通过，0 失败。
+- 100 MiB PDF 范围读取基准：约 97 ms，仅读取约 256 KiB（目标小于 2 秒）。
 - `npm audit --omit=dev`：0 个漏洞。
 - `npm run tauri -- build --debug --no-bundle`：通过。
 
@@ -78,9 +79,9 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 当前 `v0.7.0` 基线已完成知识库文件树的创建、移动、重命名、删除、排序、扫描和状态读取路径守卫，并修复旧 API Key 迁移失败丢失及远程 HTTP 传输风险。
 
-1. 完成 FR-BASE-001/007：继续收口导入、图片、历史等文件命令；Markdown 单文件现已区分知识库访问和经启动参数、单实例事件或后端选择器授权的外部访问。
-2. 完成 FR-INDEX-004/FR-FORMAT-001：当前已建立前端统一格式注册表，下一批把格式能力、创建入口和索引适配器也迁入注册机制。
-3. 启动 FR-DATA-009：以完整 Excel 等价编辑器为目标，先冻结工作簿内核接口、公式/样式模型、XLSX 往返 fixture 和许可方案，再交付第一批原位编辑能力。
+1. 完成 FR-BASE-001/007：拖拽导入现由 Rust 系统事件授权；历史缓存区分知识库与外部文档；图片读取要求被当前 Markdown 精确引用。下一批继续审计少量平台和导出命令。
+2. 完成 FR-INDEX-004/FR-FORMAT-001：格式注册表已增加读取、编辑、创建、索引和外部编辑能力声明，下一批迁移创建入口和索引适配器。
+3. 推进 FR-DATA-009：`WorkbookEngine`、机器可读能力矩阵和首个可重复生成的 XLSX fixture 已建立；下一批定义可编辑单元格/样式模型、工作副本和可靠写回。
 4. 扩展新文件格式编辑器与 FR-THEME-001 主题预设；所有新工作面必须按需加载并复用统一 token、权限和可靠写入。
 5. 完善 FR-BASE-005：增加关键保存流程 E2E、格式 fixture 和视觉回归门禁。
 

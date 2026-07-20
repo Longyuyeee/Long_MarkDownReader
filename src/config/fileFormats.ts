@@ -6,6 +6,10 @@ export interface FileFormatDefinition {
   label: string
   extensions: readonly string[]
   routeName: EditorRouteName
+  readable: boolean
+  editable: boolean
+  creatable: boolean
+  indexable: boolean
   externallyEditable: boolean
   matches: (path: string) => boolean
 }
@@ -16,12 +20,12 @@ const extensionMatcher = (...extensions: string[]) => {
 }
 
 export const FILE_FORMATS: readonly FileFormatDefinition[] = [
-  { id: 'markdown', label: 'Markdown', extensions: ['.md'], routeName: 'LibraryMode', externallyEditable: true, matches: extensionMatcher('.md') },
-  { id: 'canvas', label: 'JSON Canvas', extensions: ['.canvas'], routeName: 'Canvas', externallyEditable: false, matches: extensionMatcher('.canvas') },
-  { id: 'pdf', label: 'PDF', extensions: ['.pdf'], routeName: 'Pdf', externallyEditable: false, matches: extensionMatcher('.pdf') },
-  { id: 'table', label: 'Data table', extensions: ['.table.json', '.csv', '.tsv'], routeName: 'Table', externallyEditable: false, matches: extensionMatcher('.table.json', '.csv', '.tsv') },
-  { id: 'workbook', label: 'Excel workbook', extensions: ['.xlsx'], routeName: 'Workbook', externallyEditable: false, matches: extensionMatcher('.xlsx') },
-  { id: 'diagram', label: 'Mermaid diagram', extensions: ['.mmd', '.mermaid'], routeName: 'Diagram', externallyEditable: false, matches: extensionMatcher('.mmd', '.mermaid') },
+  { id: 'markdown', label: 'Markdown', extensions: ['.md'], routeName: 'LibraryMode', readable: true, editable: true, creatable: true, indexable: true, externallyEditable: true, matches: extensionMatcher('.md') },
+  { id: 'canvas', label: 'JSON Canvas', extensions: ['.canvas'], routeName: 'Canvas', readable: true, editable: true, creatable: true, indexable: true, externallyEditable: false, matches: extensionMatcher('.canvas') },
+  { id: 'pdf', label: 'PDF', extensions: ['.pdf'], routeName: 'Pdf', readable: true, editable: false, creatable: false, indexable: true, externallyEditable: false, matches: extensionMatcher('.pdf') },
+  { id: 'table', label: 'Data table', extensions: ['.table.json', '.csv', '.tsv'], routeName: 'Table', readable: true, editable: true, creatable: true, indexable: true, externallyEditable: false, matches: extensionMatcher('.table.json', '.csv', '.tsv') },
+  { id: 'workbook', label: 'Excel workbook', extensions: ['.xlsx'], routeName: 'Workbook', readable: true, editable: false, creatable: false, indexable: true, externallyEditable: false, matches: extensionMatcher('.xlsx') },
+  { id: 'diagram', label: 'Mermaid diagram', extensions: ['.mmd', '.mermaid'], routeName: 'Diagram', readable: true, editable: true, creatable: true, indexable: true, externallyEditable: false, matches: extensionMatcher('.mmd', '.mermaid') },
 ]
 
 export const findFileFormat = (path: string) => FILE_FORMATS.find(format => format.matches(path))

@@ -495,18 +495,6 @@ const handleError = (error: any, userMessage: string, logContext?: string) => {
   message.error(`${userMessage}: ${errorMsg}`)
 }
 
-// 图片路径转换缓存
-const imagePathCache = new Map<string, string>()
-const computeContentHash = (content: string): string => {
-  let hash = 0
-  for (let i = 0; i < content.length; i++) {
-    const char = content.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash
-  }
-  return hash.toString(36)
-}
-
 const activeSidebarTab = ref<'files' | 'quick' | 'tags' | 'outline' | 'links' | 'history'>('files')
 const sidebarTabs = [
   { key: 'files' as const, icon: FileIcon, label: '文件' },
@@ -694,7 +682,7 @@ const EDITOR_MODE_SYNC_DELAY_MS = 300
 const IMAGE_FIX_DELAY_MS = 300
 
 const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
-const { fixEditorImages } = useImageFix(() => vditor, () => activeTabId.value || '')
+const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => activeTabId.value || '', { libraryRoot: () => store.libraryPath })
 const activeHeadingKey = ref<string | null>(null)
 const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
 
@@ -889,7 +877,7 @@ const getHeroIcon = (iconName: string) => {
 const fetchHistory = async () => {
   if (!activeTabId.value) return
   try {
-    const res = await invoke<[number, string][]>('list_history', { path: activeTabId.value })
+    const res = await invoke<[number, string][]>('list_history', { libraryRoot: store.libraryPath, path: activeTabId.value })
     historyList.value = res.map(([timestamp, content]) => ({ timestamp, content }))
   } catch (e) { console.error('Failed to fetch history', e) }
 }
@@ -897,7 +885,7 @@ const fetchHistory = async () => {
 const restoreHistory = (content: string) => { if (!vditor || !isVditorReady) return; vditor.setValue(content); message.success('已恢复到该历史版本') }
 const deleteHistory = async (timestamp: number) => {
   if (!activeTabId.value) return
-  try { await invoke('delete_history_version', { path: activeTabId.value, timestamp }); await fetchHistory(); message.success('已移除该备份') }
+  try { await invoke('delete_history_version', { libraryRoot: store.libraryPath, path: activeTabId.value, timestamp }); await fetchHistory(); message.success('已移除该备份') }
   catch (e) { message.error('删除失败') }
 }
 const clearAllHistory = async () => {
@@ -926,7 +914,7 @@ const startShadowSaveTimer = () => {
     if (activeTabId.value && activeTabId.value === lastLoadedPath && vditor && isVditorReady) {
       const content = vditor.getValue()
       if (content && content.trim().length > 0) {
-        await invoke('save_history_version', { path: activeTabId.value, content, maxCount: store.maxHistoryCount })
+        await invoke('save_history_version', { libraryRoot: store.libraryPath, path: activeTabId.value, content, maxCount: store.maxHistoryCount })
         if (activeSidebarTab.value === 'history') fetchHistory()
       }
     }
@@ -1033,37 +1021,8 @@ const loadFileToEditor = async (path: string) => {
   if (!vditor || !path) return; lastLoadedPath = '' 
   const currentTab = tabs.value.find(t => t.path === path)
   
-  // 核心优化：利用内存快照实现瞬时加载
   const setEditorValue = (content: string) => {
-    // 计算内容 hash 用于缓存
-    const contentHash = computeContentHash(content)
-    const cacheKey = `${path}:${contentHash}`
-
-    // 检查缓存
-    let fixedContent = imagePathCache.get(cacheKey)
-
-    if (!fixedContent) {
-      // 路径预处理逻辑：在解析 Markdown 前通过正则修复相对路径图片，避免 DOM 扫描延迟
-      const parentDir = path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
-
-      // 匹配 Markdown 图片语法: ![alt](url)
-      fixedContent = content.replace(/(!\[.*?\]\()(.+?)(\))/g, (match, prefix, url, suffix) => {
-        if (url.startsWith('http') || url.startsWith('misty-img:') || url.startsWith('data:')) return match
-        const abs = url.startsWith('./') ? parentDir + url.substring(2) : (url.includes(':') ? url : parentDir + url)
-        return `${prefix}misty-img://${abs.replace(/\\/g, '/')}${suffix}`
-      })
-
-      // 缓存转换结果（限制缓存大小防止内存泄漏）
-      if (imagePathCache.size > 100) {
-        const firstKey = imagePathCache.keys().next().value
-        if (firstKey !== undefined) {
-          imagePathCache.delete(firstKey)
-        }
-      }
-      imagePathCache.set(cacheKey, fixedContent)
-    }
-
-    vditor.setValue(fixedContent)
+    vditor.setValue(content)
     fetchHistory()
     nextTick(() => { 
       setTimeout(() => { 
@@ -1576,18 +1535,7 @@ const initVditor = () => {
         math: { engine: 'KaTeX' } as any,
         markdown: { mermaid: true, footnotes: true, toc: true } as any,
         customWysiwygToolbar: () => {},
-        transform: (html: string) => {
-          // 在渲染前，将所有相对路径图片转换为 misty-img 协议路径
-          if (!activeTabId.value) return html
-          const path = activeTabId.value
-          const parentDir = path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
-
-          return html.replace(/(<img [^>]*src=["'])(.*?)(["'][^>]*>)/g, (match: string, prefix: string, url: string, suffix: string) => {
-            if (url.startsWith('http') || url.startsWith('misty-img:') || url.startsWith('data:')) return match
-            let abs = url.startsWith('./') ? parentDir + url.substring(2) : (url.includes(':') ? url : parentDir + url)
-            return `${prefix}misty-img://${abs.replace(/\\/g, '/')}${suffix}`
-          })
-        }
+        transform: (html: string) => html
       } as any,
       toolbar: [
         { name: 'undo', tip: '撤销 Ctrl+Z' }, { name: 'redo', tip: '重做 Ctrl+Y' }, '|',
@@ -1823,6 +1771,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  destroyImageFix()
   window.removeEventListener('keydown', handleKeyDown)
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
   if (shadowSaveTimer) clearInterval(shadowSaveTimer)

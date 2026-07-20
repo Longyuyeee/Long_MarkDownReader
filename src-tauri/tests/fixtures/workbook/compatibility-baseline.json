@@ -1,0 +1,29 @@
+{
+  "fixture": "compatibility-baseline.xlsx",
+  "sheets": ["Summary", "Details"],
+  "semanticCells": {
+    "Summary!A2": "Alpha",
+    "Summary!B2": "1250.5",
+    "Summary!C2": "true",
+    "Summary!B3.formula": "=SUM(B2:B2)",
+    "Summary!B3.cachedResult": "1250.5"
+  },
+  "documentFeatures": {
+    "formattedHeader": true,
+    "currencyNumberFormat": true,
+    "mergedCells": true,
+    "columnWidths": true
+  },
+  "currentEngineExpectations": {
+    "read": "supported",
+    "cachedFormulaResults": "supported",
+    "cellEditing": "planned",
+    "formatting": "planned",
+    "formulaRecalculation": "planned",
+    "charts": "planned",
+    "pivotTables": "planned",
+    "dataValidation": "planned",
+    "printLayout": "planned",
+    "xlsxRoundTrip": "planned"
+  }
+}

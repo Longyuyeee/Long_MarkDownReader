@@ -1,6 +1,6 @@
 use crate::commands::history::history_dir;
 use crate::services::external_file_access::ExternalFileAccess;
-use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_utf8};
+use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
 use chardetng::EncodingDetector;
@@ -491,9 +491,93 @@ fn is_workspace_file(name: &str) -> bool {
 }
 
 #[tauri::command]
-pub async fn get_image_base64(path: String) -> Result<String, String> {
-    let bytes = fs::read(&path).map_err(|error| error.to_string())?;
-    let extension = Path::new(&path)
+pub async fn get_image_base64(
+    library_root: String,
+    document_path: String,
+    path: String,
+) -> Result<String, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let document = guard.resolve_existing_file(document_path, &["md"])?;
+    let image = guard.resolve_existing_file(path, IMAGE_EXTENSIONS)?;
+    ensure_markdown_references_image(&document, &image)?;
+    encode_image(&image)
+}
+
+#[tauri::command]
+pub async fn get_external_image_base64(
+    access: State<'_, ExternalFileAccess>,
+    document_path: String,
+    path: String,
+) -> Result<String, String> {
+    let document = access.resolve_markdown(document_path)?;
+    let image = PathBuf::from(path)
+        .canonicalize()
+        .map_err(|error| format!("图片路径无效: {error}"))?;
+    ensure_image_file(&image)?;
+    ensure_markdown_references_image(&document, &image)?;
+    encode_image(&image)
+}
+
+const IMAGE_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "gif", "webp", "bmp", "ico"];
+
+fn ensure_image_file(path: &Path) -> Result<(), String> {
+    if !path.is_file() {
+        return Err("图片路径必须指向文件".into());
+    }
+    let extension = path
+        .extension()
+        .and_then(|value| value.to_str())
+        .unwrap_or_default();
+    if !IMAGE_EXTENSIONS
+        .iter()
+        .any(|allowed| extension.eq_ignore_ascii_case(allowed))
+    {
+        return Err("不支持的图片格式".into());
+    }
+    if path.metadata().map_err(|error| error.to_string())?.len() > 50 * 1024 * 1024 {
+        return Err("图片不能超过 50 MB".into());
+    }
+    Ok(())
+}
+
+fn ensure_markdown_references_image(document: &Path, image: &Path) -> Result<(), String> {
+    ensure_image_file(image)?;
+    let image = image
+        .canonicalize()
+        .map_err(|error| format!("图片路径无效: {error}"))?;
+    let content = fs::read_to_string(document).map_err(|error| error.to_string())?;
+    let parent = document.parent().ok_or("Markdown 文件没有父目录")?;
+    let referenced = referenced_assets(&content).into_iter().any(|reference| {
+        if reference.starts_with("http")
+            || reference.starts_with("data:")
+            || reference.starts_with("misty-img:")
+        {
+            return false;
+        }
+        let clean = reference.split('?').next().unwrap_or(&reference);
+        let decoded = urlencoding::decode(clean).unwrap_or_else(|_| clean.into());
+        let candidate = Path::new(decoded.as_ref());
+        let candidate = if candidate.is_absolute() {
+            candidate.to_path_buf()
+        } else {
+            parent.join(candidate)
+        };
+        candidate
+            .canonicalize()
+            .map(|resolved| resolved == image)
+            .unwrap_or(false)
+    });
+    if referenced {
+        Ok(())
+    } else {
+        Err("图片未被当前 Markdown 文档引用".into())
+    }
+}
+
+fn encode_image(path: &Path) -> Result<String, String> {
+    ensure_image_file(path)?;
+    let bytes = fs::read(path).map_err(|error| error.to_string())?;
+    let extension = path
         .extension()
         .and_then(|extension| extension.to_str())
         .unwrap_or("png");
@@ -501,7 +585,8 @@ pub async fn get_image_base64(path: String) -> Result<String, String> {
         "jpg" | "jpeg" => "image/jpeg",
         "gif" => "image/gif",
         "webp" => "image/webp",
-        "svg" => "image/svg+xml",
+        "bmp" => "image/bmp",
+        "ico" => "image/x-icon",
         _ => "image/png",
     };
     Ok(format!(
@@ -512,23 +597,25 @@ pub async fn get_image_base64(path: String) -> Result<String, String> {
 
 #[tauri::command]
 pub async fn import_to_library(
+    access: State<'_, ExternalFileAccess>,
     source_path: String,
     library_root: String,
     target_dir: String,
 ) -> Result<String, String> {
-    let source = Path::new(&source_path);
+    let source = access.resolve_import(&source_path)?;
+    let guard = WorkspaceGuard::new(&library_root)?;
     let destination = if target_dir.is_empty() {
-        PathBuf::from(&library_root)
+        guard.root().to_path_buf()
     } else {
-        validate_path_in_root(Path::new(&target_dir), Path::new(&library_root))?
+        guard.resolve_directory(&target_dir, false)?
     };
     if !destination.exists() {
         fs::create_dir_all(&destination).map_err(|error| error.to_string())?;
     }
     let item_name = source.file_name().ok_or("无效文件名")?;
     let target_path = destination.join(item_name);
-    fs::copy(source, &target_path).map_err(|error| error.to_string())?;
-    if let Ok(content) = fs::read_to_string(source) {
+    fs::copy(&source, &target_path).map_err(|error| error.to_string())?;
+    if let Ok(content) = fs::read_to_string(&source) {
         let parent = source.parent().ok_or("无效路径")?;
         for relative_path in referenced_assets(&content) {
             if relative_path.starts_with("http") || relative_path.starts_with("data:") {
@@ -557,26 +644,6 @@ pub async fn import_to_library(
         }
     }
     Ok(target_path.to_string_lossy().into_owned())
-}
-
-#[tauri::command]
-pub async fn save_image(
-    md_path: String,
-    image_name: String,
-    image_data: Vec<u8>,
-) -> Result<String, String> {
-    let parent = Path::new(&md_path).parent().ok_or("无效路径")?;
-    let assets_dir = parent.join(".assets");
-    if !assets_dir.exists() {
-        fs::create_dir_all(&assets_dir).map_err(|error| error.to_string())?;
-    }
-    let image_name = Path::new(&image_name)
-        .file_name()
-        .ok_or("无效图片名称")?
-        .to_string_lossy()
-        .to_string();
-    write_bytes(assets_dir.join(&image_name), &image_data)?;
-    Ok(format!(".assets/{image_name}"))
 }
 
 #[tauri::command]
@@ -681,6 +748,34 @@ mod tests {
         fs::create_dir_all(&root).unwrap();
         let escaped = root.join("..").join("outside.png");
         assert!(validate_path_in_root(&escaped, &root).is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn image_reads_require_an_exact_markdown_reference_and_safe_format() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-image-reference-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let assets = root.join("assets");
+        fs::create_dir_all(&assets).unwrap();
+        let document = root.join("note.md");
+        let referenced = assets.join("referenced image.png");
+        let unrelated = assets.join("unrelated.png");
+        let svg = assets.join("active.svg");
+        fs::write(&document, "![chart](assets/referenced%20image.png)").unwrap();
+        fs::write(&referenced, [137, 80, 78, 71]).unwrap();
+        fs::write(&unrelated, [137, 80, 78, 71]).unwrap();
+        fs::write(&svg, "<svg/>").unwrap();
+
+        assert!(ensure_markdown_references_image(&document, &referenced).is_ok());
+        assert!(ensure_markdown_references_image(&document, &unrelated).is_err());
+        assert!(ensure_image_file(&svg).is_err());
+
         fs::remove_dir_all(root).unwrap();
     }
 

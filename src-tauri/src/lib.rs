@@ -16,10 +16,10 @@ use commands::diagram::{
 };
 use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
-    export_markdown_file, export_to_html, get_file_stats, get_folder_order, get_image_base64,
-    get_launch_args, import_to_library, move_item, move_items, pick_external_markdown_file,
-    read_external_markdown_file, read_markdown_file, rename_item, save_folder_order, save_image,
-    scan_directory, write_external_markdown_file, write_markdown_file,
+    export_markdown_file, export_to_html, get_external_image_base64, get_file_stats,
+    get_folder_order, get_image_base64, get_launch_args, import_to_library, move_item, move_items,
+    pick_external_markdown_file, read_external_markdown_file, read_markdown_file, rename_item,
+    save_folder_order, scan_directory, write_external_markdown_file, write_markdown_file,
 };
 pub(crate) use commands::files::{sanitize_filename, FileContent, FileEntry};
 use commands::git::{git_commit, git_init, git_pull, git_push, git_status};
@@ -31,7 +31,8 @@ use commands::graph::{
 #[cfg(test)]
 pub(crate) use commands::graph::{GraphEdge, GraphNode};
 use commands::history::{
-    clear_all_history, delete_history_version, list_history, save_history_version, save_shadow_copy,
+    clear_all_history, delete_history_version, list_history, save_external_history_version,
+    save_history_version, save_shadow_copy,
 };
 use commands::index::search_knowledge;
 use commands::pdf::{
@@ -43,11 +44,11 @@ use commands::system::{check_association_status, exit_app, get_url_title, set_as
 use commands::table::{
     create_table_file, export_table_file, import_table_file, read_table_file, write_table_file,
 };
-use commands::workbook::{import_workbook_sheet, read_workbook_file, read_workbook_sheet};
+use commands::workbook::{
+    get_workbook_capabilities, import_workbook_sheet, read_workbook_file, read_workbook_sheet,
+};
 use services::data_migration::check_and_migrate_data;
 use services::external_file_access::ExternalFileAccess;
-use std::fs;
-use std::path::Path;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::Emitter;
@@ -58,85 +59,6 @@ use window_vibrancy::{apply_blur, apply_mica};
 pub fn run() {
     tauri::Builder::default()
         .manage(ExternalFileAccess::default())
-        .register_asynchronous_uri_scheme_protocol("misty-img", move |_app, request, responder| {
-            let uri = request.uri().to_string();
-            let path_part = uri.strip_prefix("misty-img://localhost").unwrap_or(&uri);
-            let path_part = path_part.strip_prefix("misty-img:").unwrap_or(path_part);
-            let decoded_path = urlencoding::decode(path_part)
-                .unwrap_or(std::borrow::Cow::Borrowed(path_part))
-                .into_owned();
-            let clean_path = if cfg!(windows) {
-                decoded_path.trim_start_matches('/').to_string()
-            } else {
-                decoded_path
-            };
-            std::thread::spawn(move || {
-                let extension = Path::new(&clean_path)
-                    .extension()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("")
-                    .to_lowercase();
-                if !matches!(
-                    extension.as_str(),
-                    "jpg" | "jpeg" | "png" | "gif" | "webp" | "bmp" | "ico"
-                ) {
-                    responder.respond(
-                        tauri::http::Response::builder()
-                            .status(403)
-                            .body(Vec::<u8>::new())
-                            .unwrap_or_else(|_| tauri::http::Response::new(Vec::<u8>::new())),
-                    );
-                    return;
-                }
-                if fs::metadata(&clean_path)
-                    .map(|m| m.len() > 50 * 1024 * 1024)
-                    .unwrap_or(true)
-                {
-                    responder.respond(
-                        tauri::http::Response::builder()
-                            .status(413)
-                            .body(Vec::<u8>::new())
-                            .unwrap_or_else(|_| tauri::http::Response::new(Vec::<u8>::new())),
-                    );
-                    return;
-                }
-                match fs::read(&clean_path) {
-                    Ok(data) => {
-                        let mime = match extension.as_str() {
-                            "jpg" | "jpeg" => "image/jpeg",
-                            "png" => "image/png",
-                            "gif" => "image/gif",
-                            "webp" => "image/webp",
-                            "bmp" => "image/bmp",
-                            "ico" => "image/x-icon",
-                            _ => "application/octet-stream",
-                        };
-                        let response = tauri::http::Response::builder()
-                            .header("Content-Type", mime)
-                            .header("Access-Control-Allow-Origin", "*")
-                            .body(data)
-                            .unwrap_or_else(|_| {
-                                tauri::http::Response::builder()
-                                    .status(500)
-                                    .body(Vec::<u8>::new())
-                                    .unwrap()
-                            });
-                        responder.respond(response);
-                    }
-                    Err(_) => responder.respond(
-                        tauri::http::Response::builder()
-                            .status(404)
-                            .body(Vec::<u8>::new())
-                            .unwrap_or_else(|_| {
-                                tauri::http::Response::builder()
-                                    .status(500)
-                                    .body(Vec::<u8>::new())
-                                    .unwrap()
-                            }),
-                    ),
-                }
-            });
-        })
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
@@ -158,13 +80,20 @@ pub fn run() {
                 }
             }
         }))
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+        .on_window_event(|window, event| match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
                 if window.label() == "main" {
                     api.prevent_close();
                     let _ = window.hide();
                 }
             }
+            tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) => {
+                let access = window.state::<ExternalFileAccess>();
+                for path in paths {
+                    let _ = access.authorize_import(path);
+                }
+            }
+            _ => {}
         })
         .setup(|app| {
             let _ = check_and_migrate_data(app.handle());
@@ -275,6 +204,7 @@ pub fn run() {
             read_workbook_file,
             read_workbook_sheet,
             import_workbook_sheet,
+            get_workbook_capabilities,
             build_pdf_annotation_reference,
             analyze_graph_health,
             repair_graph_links,
@@ -283,7 +213,6 @@ pub fn run() {
             get_folder_order,
             save_folder_order,
             import_to_library,
-            save_image,
             save_shadow_copy,
             get_url_title,
             search_library,
@@ -308,6 +237,7 @@ pub fn run() {
             set_as_default_handler,
             check_association_status,
             save_history_version,
+            save_external_history_version,
             list_history,
             delete_history_version,
             clear_all_history,
@@ -319,6 +249,7 @@ pub fn run() {
             git_push,
             git_pull,
             get_image_base64,
+            get_external_image_base64,
             get_file_stats,
             search_all_libraries,
             get_library_stats,
