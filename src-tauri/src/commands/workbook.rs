@@ -5,13 +5,17 @@ use crate::formats::table::{
     validate_internal_table, MAX_INTERNAL_TABLE_BYTES, MAX_TABLE_COLUMNS, MAX_TABLE_ROWS,
 };
 use crate::formats::workbook::{
-    WorkbookCapabilities, WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine,
-    WorkbookSheetPage, WorkbookWritePayload,
+    WorkbookCalculationPayload, WorkbookCalculationResult, WorkbookCapabilities,
+    WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine, WorkbookSheetPage,
+    WorkbookWritePayload,
 };
+use crate::formats::workbook_calculation::calculate_workbook;
 use crate::formats::workbook_formula::{
     translate_formula, WorkbookFormulaTranslation, MAX_FORMULA_TRANSLATIONS,
 };
-use crate::formats::workbook_ooxml::{patch_workbook, read_workbook_sheet_layout};
+use crate::formats::workbook_ooxml::{
+    patch_workbook, read_workbook_sheet_layout, validate_workbook_package,
+};
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -86,7 +90,7 @@ fn used_dimensions<T: CellType>(range: &calamine::Range<T>) -> (usize, usize) {
 impl WorkbookEngine for CalamineWorkbookEngine {
     fn capabilities(&self) -> WorkbookCapabilities {
         WorkbookCapabilities {
-            engine_id: "calamine-ooxml-v5".into(),
+            engine_id: "calamine-ooxml-ironcalc-v6".into(),
             extensions: vec!["xlsx".into()],
             read: WorkbookCapabilityLevel::Supported,
             cached_formula_results: WorkbookCapabilityLevel::Supported,
@@ -102,7 +106,8 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             multi_area_selection: WorkbookCapabilityLevel::Supported,
             fill_handle: WorkbookCapabilityLevel::Supported,
             formula_reference_translation: WorkbookCapabilityLevel::Supported,
-            formula_recalculation: WorkbookCapabilityLevel::Planned,
+            formula_dependency_graph: WorkbookCapabilityLevel::Supported,
+            formula_recalculation: WorkbookCapabilityLevel::Supported,
             charts: WorkbookCapabilityLevel::Planned,
             pivot_tables: WorkbookCapabilityLevel::Planned,
             data_validation: WorkbookCapabilityLevel::Planned,
@@ -215,6 +220,35 @@ pub fn translate_workbook_formulas(
         .into_iter()
         .map(|request| translate_formula(&request.formula, request.row_delta, request.column_delta))
         .collect()
+}
+
+#[tauri::command]
+pub async fn recalculate_workbook_formulas(
+    library_root: String,
+    path: String,
+    payload: WorkbookCalculationPayload,
+) -> Result<WorkbookCalculationResult, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再重算".into());
+        }
+        validate_workbook_package(&source)?;
+        let name = file
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or("workbook.xlsx");
+        calculate_workbook(&source, name, payload)
+    })
+    .await
+    .map_err(|error| format!("公式重算任务失败: {error}"))?
 }
 
 #[tauri::command]

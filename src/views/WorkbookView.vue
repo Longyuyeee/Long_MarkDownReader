@@ -10,6 +10,7 @@
         <button class="icon-button" title="重做" :disabled="!redoStack.length || saving" @click="redo"><n-icon :component="RedoIcon" /></button>
         <button class="icon-button" title="复制区域" :disabled="!selectedCell || saving" @click="copySelection"><n-icon :component="CopyIcon" /></button>
         <button class="icon-button" title="粘贴区域" :disabled="!selectedCell || saving" @click="pasteSelection"><n-icon :component="PasteIcon" /></button>
+        <button title="重算当前已加载公式" :disabled="calculating || saving || !activeSheet" @click="recalculateFormulas"><n-icon :component="CalculatorIcon" />{{ calculating ? '重算中…' : '重算' }}</button>
         <button :class="{ active: showFormulas }" :disabled="saving" @click="showFormulas = !showFormulas"><n-icon :component="FunctionIcon" />{{ showFormulas ? '结果' : '公式' }}</button>
         <button class="icon-button" title="重新读取" :disabled="saving" @click="refreshWorkbook"><n-icon :component="RefreshIcon" /></button>
         <button :disabled="importing || saving || !activeSheet" @click="convertSheet"><n-icon :component="TableIcon" />{{ importing ? '转换中…' : '转为 Table' }}</button>
@@ -66,10 +67,12 @@
       <div v-if="loading" class="workbook-state"><div class="loader"></div><strong>正在解析 XLSX 工作簿</strong></div>
       <div v-else-if="error" class="workbook-state error"><strong>无法打开工作簿</strong><p>{{ error }}</p><button @click="loadWorkbook">重试</button></div>
       <template v-else-if="workbook && sheetInfo">
-        <div v-if="dirtyCount || sheetInfo.truncatedColumns || pageLoading" class="workbook-status">
+        <div v-if="dirtyCount || sheetInfo.truncatedColumns || pageLoading || calculationCount || calculationErrors" class="workbook-status">
           <span v-if="dirtyCount">{{ dirtyCount }} 个单元格尚未保存</span>
           <span v-if="sheetInfo.truncatedColumns">当前显示前 {{ sheetInfo.returnedColumns }} 列</span>
           <span v-if="pageLoading">正在载入行数据…</span>
+          <span v-if="calculationCount">已重算 {{ calculationCount }} 个公式</span>
+          <span v-if="calculationErrors" class="calculation-error">{{ calculationErrors }} 个公式错误</span>
         </div>
         <div ref="scrollRef" class="sheet-scroll" @scroll="handleScroll">
           <div class="sheet-canvas" :style="{ width: `${sheetWidth}px` }">
@@ -118,7 +121,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSPro
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
-import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
+import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Calculator as CalculatorIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 
 interface WorkbookDocument { path: string; size: number; signature: string; sheets: string[] }
@@ -169,6 +172,10 @@ interface CellChange { key: string; before?: WorkbookCellEdit; after?: WorkbookC
 interface StyleChange { key: string; before?: WorkbookStylePatch; after?: WorkbookStylePatch }
 interface EditAction { changes?: CellChange[]; styleChanges?: StyleChange[] }
 interface FormulaTranslation { formula: string; rowDelta: number; columnDelta: number }
+interface WorkbookFormulaTarget { sheet: string; row: number; column: number }
+interface WorkbookCalculatedCell { sheet: string; row: number; column: number; value: string; formattedValue: string; kind: string }
+interface WorkbookCalculationDiagnostic { sheet: string; row: number; column: number; code: string }
+interface WorkbookCalculationResult { cells: WorkbookCalculatedCell[]; diagnostics: WorkbookCalculationDiagnostic[]; evaluatedFormulaCount: number }
 
 const PAGE_ROWS = 2_000
 const MAX_BATCH_CELLS = 10_000
@@ -201,8 +208,12 @@ const loading = ref(true)
 const pageLoading = ref(false)
 const importing = ref(false)
 const saving = ref(false)
+const calculating = ref(false)
 const error = ref('')
 const showFormulas = ref(false)
+const calculatedValues = ref(new Map<string, WorkbookCalculatedCell>())
+const calculationCount = ref(0)
+const calculationErrors = ref(0)
 const scrollRef = ref<HTMLElement | null>(null)
 const scrollTop = ref(0)
 const viewportHeight = ref(600)
@@ -277,10 +288,20 @@ const mergeStyle = (style: WorkbookCellStyle, patch?: WorkbookStylePatch): Workb
 } : style
 const cellStyleAt = (row: number, column: number) => mergeStyle(sourceCellAt(row, column).style || defaultStyle, styleDrafts.value.get(editKey(activeSheet.value, row, column)))
 const cellAt = (row: number, column: number): WorkbookCell => {
-  const edit = drafts.value.get(editKey(activeSheet.value, row, column))
-  if (!edit) return { ...sourceCellAt(row, column), style: cellStyleAt(row, column) }
-  if (edit.kind === 'formula') return { value: '', formula: edit.input, kind: 'formula', style: cellStyleAt(row, column) }
+  const key = editKey(activeSheet.value, row, column)
+  const edit = drafts.value.get(key)
+  const calculated = calculatedValues.value.get(key)
+  if (!edit) {
+    const source = sourceCellAt(row, column)
+    return { ...source, ...(source.formula && calculated ? { value: calculated.value, kind: calculated.kind } : {}), style: cellStyleAt(row, column) }
+  }
+  if (edit.kind === 'formula') return { value: calculated?.value || '', formula: edit.input, kind: calculated?.kind || 'formula', style: cellStyleAt(row, column) }
   return { value: edit.input, kind: edit.kind === 'string' ? 'text' : edit.kind, style: cellStyleAt(row, column) }
+}
+const invalidateCalculation = () => {
+  calculatedValues.value = new Map()
+  calculationCount.value = 0
+  calculationErrors.value = 0
 }
 const originalInput = (cell: WorkbookCell) => cell.formula || cell.value || ''
 const isEditableCell = (row: number, column: number) => {
@@ -466,6 +487,7 @@ const commitFormulaInput = () => {
   const after = formulaInput.value === originalInput(source) ? undefined : inferEdit(selection, formulaInput.value)
   if (JSON.stringify(before) === JSON.stringify(after)) return
   setDraft(key, after)
+  invalidateCalculation()
   undoStack.value.push({ changes: [{ key, before, after }] })
   redoStack.value = []
 }
@@ -477,6 +499,7 @@ const applyHistoryAction = (action: EditAction, direction: 'undo' | 'redo') => {
     else next.delete(change.key)
   }
   drafts.value = next
+  if (action.changes?.length) invalidateCalculation()
   const nextStyles = new Map(styleDrafts.value)
   for (const change of action.styleChanges || []) {
     const patch = direction === 'undo' ? change.before : change.after
@@ -574,6 +597,7 @@ const applyBatchInputs = (start: CellSelection, matrix: string[][]) => {
     else next.delete(change.key)
   }
   drafts.value = next
+  invalidateCalculation()
   undoStack.value.push({ changes })
   redoStack.value = []
 }
@@ -635,6 +659,7 @@ const clearSelection = () => {
         else next.delete(change.key)
       }
       drafts.value = next
+      invalidateCalculation()
       undoStack.value.push({ changes })
       redoStack.value = []
     }
@@ -716,6 +741,7 @@ const commitFill = async (source: SelectionArea | null, preview: SelectionArea |
     const nextDrafts = new Map(drafts.value)
     for (const change of changes) change.after ? nextDrafts.set(change.key, change.after) : nextDrafts.delete(change.key)
     drafts.value = nextDrafts
+    if (changes.length) invalidateCalculation()
     const nextStyles = new Map(styleDrafts.value)
     for (const change of styleChanges) change.after ? nextStyles.set(change.key, change.after) : nextStyles.delete(change.key)
     styleDrafts.value = nextStyles
@@ -725,6 +751,45 @@ const commitFill = async (source: SelectionArea | null, preview: SelectionArea |
     selectionAnchor.value = { sheet: activeSheet.value, row: preview.top, column: preview.left }
     setSelectionFocus(preview.bottom, preview.right)
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+}
+
+const recalculateFormulas = async () => {
+  commitFormulaInput()
+  if (!workbook.value || calculating.value) return
+  const sheet = activeSheet.value
+  const targets = new Map<string, WorkbookFormulaTarget>()
+  for (const [row, cells] of loadedRows.value) {
+    cells.forEach((cell, column) => {
+      const key = editKey(sheet, row, column)
+      const edit = drafts.value.get(key)
+      if (edit?.kind === 'formula' || (!edit && cell.formula)) targets.set(key, { sheet, row, column })
+    })
+  }
+  for (const [key, edit] of drafts.value) {
+    if (edit.sheet === sheet && edit.kind === 'formula') targets.set(key, { sheet, row: edit.row, column: edit.column })
+  }
+  if (!targets.size) return void message.info('当前已加载区域没有公式')
+  if (targets.size > MAX_BATCH_CELLS) return void message.error(`单次最多重算 ${MAX_BATCH_CELLS.toLocaleString()} 个已加载公式`)
+  const currentGeneration = generation
+  calculating.value = true
+  try {
+    const result = await invoke<WorkbookCalculationResult>('recalculate_workbook_formulas', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        edits: Array.from(drafts.value.values()),
+        targets: Array.from(targets.values()),
+      },
+    })
+    if (currentGeneration !== generation || sheet !== activeSheet.value) return
+    calculatedValues.value = new Map(result.cells.map(cell => [editKey(cell.sheet, cell.row, cell.column), cell]))
+    calculationCount.value = result.evaluatedFormulaCount
+    calculationErrors.value = result.diagnostics.length
+    if (result.diagnostics.length) message.warning(`重算完成，发现 ${result.diagnostics.length} 个公式错误`)
+    else message.success(`已重算 ${result.evaluatedFormulaCount} 个公式`)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { calculating.value = false }
 }
 
 const loadPage = async (offset: number) => {
@@ -757,6 +822,7 @@ const selectSheet = async (sheet: string) => {
   selectedCell.value = null
   selectionAnchor.value = null
   selectionAreas.value = []
+  invalidateCalculation()
   formulaInput.value = ''
   sheetInfo.value = null
   loadedRows.value = new Map()
@@ -778,6 +844,7 @@ const loadWorkbook = async () => {
     selectedCell.value = null
     selectionAnchor.value = null
     selectionAreas.value = []
+    invalidateCalculation()
     loading.value = false
     await selectSheet(document.sheets[0])
   } catch (cause) {
@@ -934,6 +1001,7 @@ onBeforeUnmount(() => {
 .color-control input::-webkit-color-swatch { border: 0; }
 .workbook-main { min-height: 0; flex: 1; display: flex; flex-direction: column; }
 .workbook-status { min-height: 28px; flex: none; display: flex; align-items: center; gap: 18px; padding: 0 14px; border-bottom: 1px solid rgba(0,0,0,.07); color: #9a641f; background: color-mix(in srgb, var(--theme-card) 94%, #fff3d8); font-size: 9px; }
+.workbook-status .calculation-error { color: #c43f3f; font-weight: 700; }
 .sheet-scroll { min-height: 0; flex: 1; overflow: auto; }
 .sheet-canvas { min-height: 100%; }
 .sheet-header,.sheet-row { display: grid; }

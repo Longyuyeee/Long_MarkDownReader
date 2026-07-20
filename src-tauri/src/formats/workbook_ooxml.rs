@@ -3,7 +3,7 @@ use crate::formats::workbook_styles::{
     parse_styles, read_sheet_style_ids, resolve_style_edits, ResolvedStyleEdit,
 };
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
-use quick_xml::{Reader, Writer};
+use quick_xml::{Reader, Writer, XmlVersion};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Cursor, Read, Write};
 use zip::write::SimpleFileOptions;
@@ -42,7 +42,7 @@ fn xml_value(
         let attribute = attribute.map_err(|error| format!("解析 XLSX XML 属性失败: {error}"))?;
         if attribute.key.as_ref() == key {
             return attribute
-                .decode_and_unescape_value(decoder)
+                .decoded_and_normalized_value(XmlVersion::Implicit1_0, decoder)
                 .map(|value| Some(value.into_owned()))
                 .map_err(|error| format!("解码 XLSX XML 属性失败: {error}"));
         }
@@ -166,7 +166,7 @@ fn parse_cell_reference(reference: &str) -> Result<(usize, usize), String> {
     Ok((row - 1, column - 1))
 }
 
-fn validate_edit(edit: &WorkbookCellEdit) -> Result<(), String> {
+pub(crate) fn validate_edit(edit: &WorkbookCellEdit) -> Result<(), String> {
     if edit.sheet.is_empty() || edit.sheet.chars().count() > 31 {
         return Err("工作表名称无效".into());
     }
@@ -750,6 +750,10 @@ pub fn read_workbook_sheet_layout(
         .map(|(coordinate, style_id)| (coordinate, catalog.public_style(style_id)))
         .collect();
     Ok((extent, styles))
+}
+
+pub fn validate_workbook_package(source: &[u8]) -> Result<(), String> {
+    load_package(source).map(drop)
 }
 
 fn sheet_extent(xml: &[u8]) -> Result<(usize, usize), String> {

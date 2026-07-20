@@ -27,6 +27,7 @@ pub struct WorkbookCapabilities {
     pub multi_area_selection: WorkbookCapabilityLevel,
     pub fill_handle: WorkbookCapabilityLevel,
     pub formula_reference_translation: WorkbookCapabilityLevel,
+    pub formula_dependency_graph: WorkbookCapabilityLevel,
     pub formula_recalculation: WorkbookCapabilityLevel,
     pub charts: WorkbookCapabilityLevel,
     pub pivot_tables: WorkbookCapabilityLevel,
@@ -150,6 +151,52 @@ pub struct WorkbookWritePayload {
     pub edits: Vec<WorkbookCellEdit>,
     #[serde(default)]
     pub style_edits: Vec<WorkbookCellStyleEdit>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookFormulaTarget {
+    pub sheet: String,
+    pub row: usize,
+    pub column: usize,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookCalculationPayload {
+    pub expected_signature: String,
+    #[serde(default)]
+    pub edits: Vec<WorkbookCellEdit>,
+    #[serde(default)]
+    pub targets: Vec<WorkbookFormulaTarget>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookCalculatedCell {
+    pub sheet: String,
+    pub row: usize,
+    pub column: usize,
+    pub value: String,
+    pub formatted_value: String,
+    pub kind: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookCalculationDiagnostic {
+    pub sheet: String,
+    pub row: usize,
+    pub column: usize,
+    pub code: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookCalculationResult {
+    pub cells: Vec<WorkbookCalculatedCell>,
+    pub diagnostics: Vec<WorkbookCalculationDiagnostic>,
+    pub evaluated_formula_count: usize,
 }
 
 pub trait WorkbookEngine {

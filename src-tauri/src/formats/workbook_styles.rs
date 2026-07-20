@@ -1,6 +1,6 @@
 use crate::formats::workbook::{WorkbookCellStyle, WorkbookCellStyleEdit, WorkbookStylePatch};
 use quick_xml::events::{BytesEnd, BytesStart, Event};
-use quick_xml::{Reader, Writer};
+use quick_xml::{Reader, Writer, XmlVersion};
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 
@@ -64,7 +64,7 @@ fn xml_value(
         let attribute = attribute.map_err(|error| format!("解析样式属性失败: {error}"))?;
         if attribute.key.as_ref() == key {
             return attribute
-                .decode_and_unescape_value(decoder)
+                .decoded_and_normalized_value(XmlVersion::Implicit1_0, decoder)
                 .map(|value| Some(value.into_owned()))
                 .map_err(|error| format!("解码样式属性失败: {error}"));
         }
