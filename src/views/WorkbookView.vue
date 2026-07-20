@@ -36,6 +36,32 @@
       />
     </div>
 
+    <div v-if="workbook && sheetInfo" class="format-toolbar" aria-label="单元格格式">
+      <select :value="focusedStyle.fontName" title="字体" :disabled="!selectedCell || saving" @change="applyStylePatch({ fontName: ($event.target as HTMLSelectElement).value })">
+        <option v-if="!fontOptions.includes(focusedStyle.fontName)" :value="focusedStyle.fontName">{{ focusedStyle.fontName }}</option>
+        <option v-for="font in fontOptions" :key="font" :value="font">{{ font }}</option>
+      </select>
+      <input class="font-size" type="number" min="6" max="72" step="1" title="字号" :value="focusedStyle.fontSize" :disabled="!selectedCell || saving" @change="applyFontSize">
+      <span class="toolbar-divider"></span>
+      <button class="icon-button text-icon" :class="{ active: focusedStyle.bold }" title="粗体" :disabled="!selectedCell || saving" @click="applyStylePatch({ bold: !focusedStyle.bold })"><n-icon :component="BoldIcon" /></button>
+      <button class="icon-button text-icon" :class="{ active: focusedStyle.italic }" title="斜体" :disabled="!selectedCell || saving" @click="applyStylePatch({ italic: !focusedStyle.italic })"><n-icon :component="ItalicIcon" /></button>
+      <button class="icon-button text-icon" :class="{ active: focusedStyle.underline }" title="下划线" :disabled="!selectedCell || saving" @click="applyStylePatch({ underline: !focusedStyle.underline })"><n-icon :component="UnderlineIcon" /></button>
+      <label class="color-control" title="文字颜色"><n-icon :component="TypeIcon" /><input type="color" :value="focusedStyle.fontColor || '#111827'" :disabled="!selectedCell || saving" @input="applyStylePatch({ fontColor: ($event.target as HTMLInputElement).value })"></label>
+      <label class="color-control" title="填充颜色"><n-icon :component="FillIcon" /><input type="color" :value="focusedStyle.fillColor || '#ffffff'" :disabled="!selectedCell || saving" @input="applyStylePatch({ fillColor: ($event.target as HTMLInputElement).value })"></label>
+      <span class="toolbar-divider"></span>
+      <div class="segmented" aria-label="水平对齐">
+        <button class="icon-button" :class="{ active: focusedStyle.horizontalAlignment === 'left' }" title="左对齐" :disabled="!selectedCell || saving" @click="applyStylePatch({ horizontalAlignment: focusedStyle.horizontalAlignment === 'left' ? 'general' : 'left' })"><n-icon :component="AlignLeftIcon" /></button>
+        <button class="icon-button" :class="{ active: focusedStyle.horizontalAlignment === 'center' }" title="居中" :disabled="!selectedCell || saving" @click="applyStylePatch({ horizontalAlignment: focusedStyle.horizontalAlignment === 'center' ? 'general' : 'center' })"><n-icon :component="AlignCenterIcon" /></button>
+        <button class="icon-button" :class="{ active: focusedStyle.horizontalAlignment === 'right' }" title="右对齐" :disabled="!selectedCell || saving" @click="applyStylePatch({ horizontalAlignment: focusedStyle.horizontalAlignment === 'right' ? 'general' : 'right' })"><n-icon :component="AlignRightIcon" /></button>
+      </div>
+      <button class="icon-button" :class="{ active: focusedStyle.wrapText }" title="自动换行" :disabled="!selectedCell || saving" @click="applyStylePatch({ wrapText: !focusedStyle.wrapText })"><n-icon :component="WrapIcon" /></button>
+      <button class="icon-button" :class="{ active: focusedStyle.borderStyle !== 'none' }" title="所有边框" :disabled="!selectedCell || saving" @click="applyStylePatch({ borderStyle: focusedStyle.borderStyle === 'none' ? 'thin' : 'none', borderColor: focusedStyle.borderStyle === 'none' ? '#808080' : '' })"><n-icon :component="BorderIcon" /></button>
+      <span class="toolbar-divider"></span>
+      <select :value="focusedStyle.numberFormat" title="数字格式" :disabled="!selectedCell || saving" @change="applyStylePatch({ numberFormat: ($event.target as HTMLSelectElement).value })">
+        <option value="general">常规</option><option value="integer">整数</option><option value="decimal">数值</option><option value="percent">百分比</option><option value="currency">货币</option><option value="date">日期</option><option value="text">文本</option>
+      </select>
+    </div>
+
     <main class="workbook-main">
       <div v-if="loading" class="workbook-state"><div class="loader"></div><strong>正在解析 XLSX 工作簿</strong></div>
       <div v-else-if="error" class="workbook-state error"><strong>无法打开工作簿</strong><p>{{ error }}</p><button @click="loadWorkbook">重试</button></div>
@@ -69,6 +95,7 @@
                     },
                   ]"
                   :title="cellTitle(row.index, column - 1)"
+                  :style="cellStyleCss(row.index, column - 1)"
                   @pointerdown="startCellSelection(row.index, column - 1, $event)"
                   @pointerenter="extendCellSelection(row.index, column - 1)"
                   @dblclick="beginCellEdit(row.index, column - 1)"
@@ -83,15 +110,44 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
-import { ArrowLeft as ArrowLeftIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
+import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 
 interface WorkbookDocument { path: string; size: number; signature: string; sheets: string[] }
-interface WorkbookCell { value: string; formula?: string; kind: string }
+interface WorkbookCellStyle {
+  styleId: number
+  numberFormat: string
+  fontName: string
+  fontSize: number
+  bold: boolean
+  italic: boolean
+  underline: boolean
+  fontColor?: string
+  fillColor?: string
+  borderStyle: string
+  borderColor?: string
+  horizontalAlignment: string
+  wrapText: boolean
+}
+interface WorkbookStylePatch {
+  numberFormat?: string
+  fontName?: string
+  fontSize?: number
+  bold?: boolean
+  italic?: boolean
+  underline?: boolean
+  fontColor?: string
+  fillColor?: string
+  borderStyle?: string
+  borderColor?: string
+  horizontalAlignment?: string
+  wrapText?: boolean
+}
+interface WorkbookCell { value: string; formula?: string; kind: string; style: WorkbookCellStyle }
 interface WorkbookSheetPage {
   sheet: string
   rowOffset: number
@@ -102,9 +158,11 @@ interface WorkbookSheetPage {
   truncatedColumns: boolean
 }
 interface WorkbookCellEdit { sheet: string; row: number; column: number; input: string; kind: 'string' | 'number' | 'boolean' | 'empty' | 'formula' }
+interface WorkbookCellStyleEdit { sheet: string; row: number; column: number; patch: WorkbookStylePatch }
 interface CellSelection { sheet: string; row: number; column: number }
 interface CellChange { key: string; before?: WorkbookCellEdit; after?: WorkbookCellEdit }
-interface EditAction { changes: CellChange[] }
+interface StyleChange { key: string; before?: WorkbookStylePatch; after?: WorkbookStylePatch }
+interface EditAction { changes?: CellChange[]; styleChanges?: StyleChange[] }
 
 const PAGE_ROWS = 2_000
 const MAX_BATCH_CELLS = 10_000
@@ -123,6 +181,7 @@ const sheetInfo = ref<WorkbookSheetPage | null>(null)
 const loadedRows = ref(new Map<number, WorkbookCell[]>())
 const loadedPages = new Set<number>()
 const drafts = ref(new Map<string, WorkbookCellEdit>())
+const styleDrafts = ref(new Map<string, WorkbookStylePatch>())
 const undoStack = ref<EditAction[]>([])
 const redoStack = ref<EditAction[]>([])
 const selectedCell = ref<CellSelection | null>(null)
@@ -151,6 +210,10 @@ const draftExtent = computed(() => {
   for (const edit of drafts.value.values()) {
     if (edit.sheet === activeSheet.value) { row = Math.max(row, edit.row); column = Math.max(column, edit.column) }
   }
+  for (const key of styleDrafts.value.keys()) {
+    const [sheet, rowText, columnText] = key.split('\u0000')
+    if (sheet === activeSheet.value) { row = Math.max(row, Number(rowText)); column = Math.max(column, Number(columnText)) }
+  }
   return { row, column }
 })
 const canvasRowCount = computed(() => Math.min(1_048_576, Math.max(EXTRA_ROWS, (sheetInfo.value?.totalRows || 0) + EXTRA_ROWS, draftExtent.value.row + 1)))
@@ -162,7 +225,7 @@ const canvasColumnCount = computed(() => {
 })
 const sheetWidth = computed(() => 52 + canvasColumnCount.value * columnWidth)
 const gridStyle = computed(() => ({ gridTemplateColumns: `52px repeat(${canvasColumnCount.value}, ${columnWidth}px)` }))
-const dirtyCount = computed(() => drafts.value.size)
+const dirtyCount = computed(() => new Set([...drafts.value.keys(), ...styleDrafts.value.keys()]).size)
 const selectionBounds = computed(() => {
   const anchor = selectionAnchor.value
   const focus = selectedCell.value
@@ -177,7 +240,9 @@ const selectedAddress = computed(() => {
   return first === last ? first : `${first}:${last}`
 })
 const selectedEditable = computed(() => selectedCell.value ? isEditableCell(selectedCell.value.row, selectedCell.value.column) : false)
-const emptyCell: WorkbookCell = { value: '', kind: 'empty' }
+const defaultStyle: WorkbookCellStyle = { styleId: 0, numberFormat: 'general', fontName: 'Calibri', fontSize: 11, bold: false, italic: false, underline: false, borderStyle: 'none', horizontalAlignment: 'general', wrapText: false }
+const emptyCell: WorkbookCell = { value: '', kind: 'empty', style: defaultStyle }
+const fontOptions = ['Calibri', 'Aptos', 'Arial', 'Microsoft YaHei', 'SimSun', 'Times New Roman']
 const formatBytes = (size: number) => size >= 1024 * 1024 ? `${(size / 1024 / 1024).toFixed(1)} MB` : `${(size / 1024).toFixed(1)} KB`
 const columnLabel = (index: number) => {
   let label = ''
@@ -186,18 +251,34 @@ const columnLabel = (index: number) => {
 }
 const editKey = (sheet: string, row: number, column: number) => `${sheet}\u0000${row}\u0000${column}`
 const sourceCellAt = (row: number, column: number) => loadedRows.value.get(row)?.[column] || emptyCell
+const mergeStyle = (style: WorkbookCellStyle, patch?: WorkbookStylePatch): WorkbookCellStyle => patch ? {
+  ...style,
+  ...(patch.numberFormat !== undefined ? { numberFormat: patch.numberFormat } : {}),
+  ...(patch.fontName !== undefined ? { fontName: patch.fontName } : {}),
+  ...(patch.fontSize !== undefined ? { fontSize: patch.fontSize } : {}),
+  ...(patch.bold !== undefined ? { bold: patch.bold } : {}),
+  ...(patch.italic !== undefined ? { italic: patch.italic } : {}),
+  ...(patch.underline !== undefined ? { underline: patch.underline } : {}),
+  ...(patch.fontColor !== undefined ? { fontColor: patch.fontColor || undefined } : {}),
+  ...(patch.fillColor !== undefined ? { fillColor: patch.fillColor || undefined } : {}),
+  ...(patch.borderStyle !== undefined ? { borderStyle: patch.borderStyle } : {}),
+  ...(patch.borderColor !== undefined ? { borderColor: patch.borderColor || undefined } : {}),
+  ...(patch.horizontalAlignment !== undefined ? { horizontalAlignment: patch.horizontalAlignment } : {}),
+  ...(patch.wrapText !== undefined ? { wrapText: patch.wrapText } : {}),
+} : style
+const cellStyleAt = (row: number, column: number) => mergeStyle(sourceCellAt(row, column).style || defaultStyle, styleDrafts.value.get(editKey(activeSheet.value, row, column)))
 const cellAt = (row: number, column: number): WorkbookCell => {
   const edit = drafts.value.get(editKey(activeSheet.value, row, column))
-  if (!edit) return sourceCellAt(row, column)
-  if (edit.kind === 'formula') return { value: '', formula: edit.input, kind: 'formula' }
-  return { value: edit.input, kind: edit.kind === 'string' ? 'text' : edit.kind }
+  if (!edit) return { ...sourceCellAt(row, column), style: cellStyleAt(row, column) }
+  if (edit.kind === 'formula') return { value: '', formula: edit.input, kind: 'formula', style: cellStyleAt(row, column) }
+  return { value: edit.input, kind: edit.kind === 'string' ? 'text' : edit.kind, style: cellStyleAt(row, column) }
 }
 const originalInput = (cell: WorkbookCell) => cell.formula || cell.value || ''
 const isEditableCell = (row: number, column: number) => {
   const source = sourceCellAt(row, column)
   return Boolean(source.formula) || !['date', 'error'].includes(source.kind)
 }
-const isDirty = (sheet: string, row: number, column: number) => drafts.value.has(editKey(sheet, row, column))
+const isDirty = (sheet: string, row: number, column: number) => drafts.value.has(editKey(sheet, row, column)) || styleDrafts.value.has(editKey(sheet, row, column))
 const isSelected = (row: number, column: number) => selectedCell.value?.sheet === activeSheet.value && selectedCell.value.row === row && selectedCell.value.column === column
 const isInSelection = (row: number, column: number) => {
   const bounds = selectionBounds.value
@@ -205,12 +286,38 @@ const isInSelection = (row: number, column: number) => {
 }
 const cellDisplay = (row: number, column: number) => {
   const cell = cellAt(row, column)
-  return showFormulas.value && cell.formula ? cell.formula : cell.value || (cell.formula ? cell.formula : '')
+  if (showFormulas.value && cell.formula) return cell.formula
+  const raw = cell.value || (cell.formula ? cell.formula : '')
+  const numeric = Number(raw)
+  if (!raw || !Number.isFinite(numeric)) return raw
+  if (cell.style.numberFormat === 'integer') return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(numeric)
+  if (cell.style.numberFormat === 'decimal' || cell.style.numberFormat === 'currency') return new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numeric)
+  if (cell.style.numberFormat === 'percent') return new Intl.NumberFormat(undefined, { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numeric)
+  return raw
 }
 const cellTitle = (row: number, column: number) => {
   const cell = cellAt(row, column)
   return cell.formula ? `${columnLabel(column)}${row + 1}\n公式：${cell.formula}\n结果：${cell.value || '等待外部公式引擎重算'}` : cell.value
 }
+const cellStyleCss = (row: number, column: number): CSSProperties => {
+  const style = cellStyleAt(row, column)
+  return {
+    '--cell-fill': style.fillColor || 'var(--theme-card)',
+    color: style.fontColor || undefined,
+    fontFamily: style.fontName,
+    fontSize: `${style.fontSize}pt`,
+    fontWeight: style.bold ? '700' : '400',
+    fontStyle: style.italic ? 'italic' : 'normal',
+    textDecoration: style.underline ? 'underline' : 'none',
+    textAlign: style.horizontalAlignment === 'general' ? undefined : style.horizontalAlignment as CSSProperties['textAlign'],
+    whiteSpace: style.wrapText ? 'normal' : 'nowrap',
+    borderColor: style.borderStyle === 'none' ? undefined : (style.borderColor || '#808080'),
+    borderTopStyle: style.borderStyle === 'none' ? undefined : 'solid' as const,
+    borderLeftStyle: style.borderStyle === 'none' ? undefined : 'solid' as const,
+    borderWidth: style.borderStyle === 'medium' ? '2px' : undefined,
+  }
+}
+const focusedStyle = computed(() => selectedCell.value ? cellStyleAt(selectedCell.value.row, selectedCell.value.column) : defaultStyle)
 const visibleRows = computed(() => {
   const total = canvasRowCount.value
   const start = Math.max(0, Math.floor(scrollTop.value / rowHeight) - 10)
@@ -270,13 +377,21 @@ const commitFormulaInput = () => {
 }
 const applyHistoryAction = (action: EditAction, direction: 'undo' | 'redo') => {
   const next = new Map(drafts.value)
-  for (const change of action.changes) {
+  for (const change of action.changes || []) {
     const edit = direction === 'undo' ? change.before : change.after
     if (edit) next.set(change.key, edit)
     else next.delete(change.key)
   }
   drafts.value = next
-  const last = action.changes[action.changes.length - 1]
+  const nextStyles = new Map(styleDrafts.value)
+  for (const change of action.styleChanges || []) {
+    const patch = direction === 'undo' ? change.before : change.after
+    if (patch) nextStyles.set(change.key, patch)
+    else nextStyles.delete(change.key)
+  }
+  styleDrafts.value = nextStyles
+  const changes = action.changes || []
+  const last = changes[changes.length - 1]
   const edit = last && (direction === 'undo' ? last.before : last.after)
   if (edit && edit.sheet === activeSheet.value) {
     selectedCell.value = { sheet: edit.sheet, row: edit.row, column: edit.column }
@@ -285,6 +400,47 @@ const applyHistoryAction = (action: EditAction, direction: 'undo' | 'redo') => {
 }
 const undo = () => { const action = undoStack.value.pop(); if (action) { applyHistoryAction(action, 'undo'); redoStack.value.push(action) } }
 const redo = () => { const action = redoStack.value.pop(); if (action) { applyHistoryAction(action, 'redo'); undoStack.value.push(action) } }
+
+const stylePatchMatchesSource = (row: number, column: number, patch: WorkbookStylePatch) => {
+  const source = sourceCellAt(row, column).style || defaultStyle
+  const result = mergeStyle(source, patch)
+  return result.numberFormat === source.numberFormat && result.fontName === source.fontName && result.fontSize === source.fontSize
+    && result.bold === source.bold && result.italic === source.italic && result.underline === source.underline
+    && result.fontColor === source.fontColor && result.fillColor === source.fillColor
+    && result.borderStyle === source.borderStyle && result.borderColor === source.borderColor
+    && result.horizontalAlignment === source.horizontalAlignment && result.wrapText === source.wrapText
+}
+const applyStylePatch = (patch: WorkbookStylePatch) => {
+  const bounds = selectionBounds.value
+  if (!bounds || !selectedCell.value) return
+  const count = (bounds.bottom - bounds.top + 1) * (bounds.right - bounds.left + 1)
+  if (count > MAX_BATCH_CELLS) return void message.error(`单次区域格式不能超过 ${MAX_BATCH_CELLS.toLocaleString()} 个单元格`)
+  const changes: StyleChange[] = []
+  for (let row = bounds.top; row <= bounds.bottom; row += 1) {
+    if (row < (sheetInfo.value?.totalRows || 0) && !loadedRows.value.has(row)) return void message.error('选择区域包含尚未载入的数据，请滚动到该区域后重试')
+    for (let column = bounds.left; column <= bounds.right; column += 1) {
+      const key = editKey(activeSheet.value, row, column)
+      const before = styleDrafts.value.get(key)
+      const merged = { ...(before || {}), ...patch }
+      const after = stylePatchMatchesSource(row, column, merged) ? undefined : merged
+      if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
+    }
+  }
+  if (!changes.length) return
+  const next = new Map(styleDrafts.value)
+  for (const change of changes) {
+    if (change.after) next.set(change.key, change.after)
+    else next.delete(change.key)
+  }
+  styleDrafts.value = next
+  undoStack.value.push({ styleChanges: changes })
+  redoStack.value = []
+}
+const applyFontSize = (event: Event) => {
+  const value = Number((event.target as HTMLInputElement).value)
+  if (!Number.isFinite(value) || value < 6 || value > 72) return void message.error('字号必须在 6 到 72 之间')
+  applyStylePatch({ fontSize: value })
+}
 
 const applyBatchInputs = (start: CellSelection, matrix: string[][]) => {
   const cellCount = matrix.reduce((count, row) => count + row.length, 0)
@@ -416,7 +572,7 @@ const loadWorkbook = async () => {
     error.value = String(cause).replace(/^Error:\s*/, '')
   } finally { if (current === generation) loading.value = false }
 }
-const discardAndReload = () => { drafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook() }
+const discardAndReload = () => { drafts.value = new Map(); styleDrafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook() }
 const refreshWorkbook = () => {
   if (!dirtyCount.value) return void loadWorkbook()
   dialog.warning({ title: '放弃未保存更改？', content: `将丢弃 ${dirtyCount.value} 个单元格变更。`, positiveText: '放弃并重新读取', negativeText: '取消', onPositiveClick: discardAndReload })
@@ -427,13 +583,18 @@ const saveWorkbook = async () => {
   saving.value = true
   const previousSheet = activeSheet.value
   try {
+    const styleEdits: WorkbookCellStyleEdit[] = Array.from(styleDrafts.value.entries()).map(([key, patch]) => {
+      const [sheet, row, column] = key.split('\u0000')
+      return { sheet, row: Number(row), column: Number(column), patch }
+    })
     const document = await invoke<WorkbookDocument>('write_workbook_cells', {
       libraryRoot: store.libraryPath,
       path: workbookPath.value,
-      payload: { expectedSignature: workbook.value.signature, edits: Array.from(drafts.value.values()) },
+      payload: { expectedSignature: workbook.value.signature, edits: Array.from(drafts.value.values()), styleEdits },
     })
     workbook.value = document
     drafts.value = new Map()
+    styleDrafts.value = new Map()
     undoStack.value = []
     redoStack.value = []
     generation += 1
@@ -487,7 +648,7 @@ const handleShortcut = (event: KeyboardEvent) => {
 const warnBeforeUnload = (event: BeforeUnloadEvent) => { if (dirtyCount.value) event.preventDefault() }
 const stopCellSelection = () => { dragSelecting = false }
 
-watch(workbookPath, () => { drafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook() })
+watch(workbookPath, () => { drafts.value = new Map(); styleDrafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook() })
 watch(scrollRef, element => {
   resizeObserver?.disconnect()
   if (element) { viewportHeight.value = element.clientHeight; resizeObserver?.observe(element) }
@@ -532,6 +693,22 @@ onBeforeUnmount(() => {
 .formula-bar input { min-width: 0; height: 100%; padding: 0 10px; border: 0; border-left: 1px solid rgba(0,0,0,.08); outline: 0; color: var(--theme-text); background: transparent; font: inherit; font-size: 10px; }
 .formula-bar input:focus { box-shadow: inset 0 -2px var(--theme-primary); }
 .formula-bar input:disabled { opacity: .55; }
+.format-toolbar { min-height: 40px; flex: none; display: flex; align-items: center; gap: 5px; padding: 4px 12px; overflow-x: auto; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); }
+.format-toolbar select,.format-toolbar input,.format-toolbar button { flex: none; height: 30px; box-sizing: border-box; border: 1px solid rgba(0,0,0,.1); border-radius: 5px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 96%, #dce6ef); font-size: 9px; }
+.format-toolbar select { min-width: 92px; padding: 0 24px 0 8px; }
+.format-toolbar .font-size { width: 50px; padding: 0 4px 0 7px; }
+.format-toolbar .icon-button { width: 30px; display: grid; place-items: center; padding: 0; cursor: pointer; }
+.format-toolbar .icon-button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.4); background: rgba(var(--theme-primary-rgb),.09); }
+.format-toolbar button:disabled,.format-toolbar input:disabled,.format-toolbar select:disabled { opacity: .45; cursor: default; }
+.format-toolbar .toolbar-divider { width: 1px; height: 22px; flex: none; margin: 0 3px; background: rgba(0,0,0,.1); }
+.format-toolbar .segmented { display: flex; }
+.format-toolbar .segmented button { border-radius: 0; border-right-width: 0; }
+.format-toolbar .segmented button:first-child { border-radius: 5px 0 0 5px; }
+.format-toolbar .segmented button:last-child { border-right-width: 1px; border-radius: 0 5px 5px 0; }
+.color-control { position: relative; width: 31px; height: 30px; flex: none; display: grid; place-items: center; box-sizing: border-box; border: 1px solid rgba(0,0,0,.1); border-radius: 5px; cursor: pointer; }
+.color-control input { position: absolute; inset: auto 3px 2px; width: 23px; height: 5px; padding: 0; border: 0; border-radius: 1px; cursor: pointer; }
+.color-control input::-webkit-color-swatch-wrapper { padding: 0; }
+.color-control input::-webkit-color-swatch { border: 0; }
 .workbook-main { min-height: 0; flex: 1; display: flex; flex-direction: column; }
 .workbook-status { min-height: 28px; flex: none; display: flex; align-items: center; gap: 18px; padding: 0 14px; border-bottom: 1px solid rgba(0,0,0,.07); color: #9a641f; background: color-mix(in srgb, var(--theme-card) 94%, #fff3d8); font-size: 9px; }
 .sheet-scroll { min-height: 0; flex: 1; overflow: auto; }
@@ -544,9 +721,9 @@ onBeforeUnmount(() => {
 .row-number { position: sticky; left: 0; z-index: 8; display: grid; place-items: center; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 91%, #d9e3ed); font-size: 8px; }
 .corner { z-index: 24; }
 .column-header { display: grid; place-items: center; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 94%, #dce6ef); font-size: 9px; font-weight: 700; }
-.workbook-cell { position: relative; overflow: hidden; padding: 7px 8px 0; outline: 0; text-overflow: ellipsis; white-space: nowrap; background: var(--theme-card); font-size: 9px; user-select: none; }
+.workbook-cell { position: relative; overflow: hidden; padding: 7px 8px 0; outline: 0; text-overflow: ellipsis; white-space: nowrap; background: var(--cell-fill, var(--theme-card)); font-size: 9px; user-select: none; }
 .workbook-cell.editable { cursor: cell; }
-.workbook-cell.in-range { background: color-mix(in srgb, var(--theme-card) 88%, var(--theme-primary)); }
+.workbook-cell.in-range { background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 82%, var(--theme-primary)); }
 .workbook-cell.selected { z-index: 3; box-shadow: inset 0 0 0 2px var(--theme-primary); }
 .workbook-cell.dirty::after { content: ''; position: absolute; top: 0; right: 0; border-top: 7px solid #df8a27; border-left: 7px solid transparent; }
 .workbook-cell.formula { color: #436fb7; }

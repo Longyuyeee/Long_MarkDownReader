@@ -49,6 +49,45 @@ pub struct WorkbookCell {
     pub value: String,
     pub formula: Option<String>,
     pub kind: String,
+    pub style: WorkbookCellStyle,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookCellStyle {
+    pub style_id: usize,
+    pub number_format: String,
+    pub font_name: String,
+    pub font_size: f64,
+    pub bold: bool,
+    pub italic: bool,
+    pub underline: bool,
+    pub font_color: Option<String>,
+    pub fill_color: Option<String>,
+    pub border_style: String,
+    pub border_color: Option<String>,
+    pub horizontal_alignment: String,
+    pub wrap_text: bool,
+}
+
+impl Default for WorkbookCellStyle {
+    fn default() -> Self {
+        Self {
+            style_id: 0,
+            number_format: "general".into(),
+            font_name: "Calibri".into(),
+            font_size: 11.0,
+            bold: false,
+            italic: false,
+            underline: false,
+            font_color: None,
+            fill_color: None,
+            border_style: "none".into(),
+            border_color: None,
+            horizontal_alignment: "general".into(),
+            wrap_text: false,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -73,11 +112,40 @@ pub struct WorkbookCellEdit {
     pub kind: String,
 }
 
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookStylePatch {
+    pub number_format: Option<String>,
+    pub font_name: Option<String>,
+    pub font_size: Option<f64>,
+    pub bold: Option<bool>,
+    pub italic: Option<bool>,
+    pub underline: Option<bool>,
+    pub font_color: Option<String>,
+    pub fill_color: Option<String>,
+    pub border_style: Option<String>,
+    pub border_color: Option<String>,
+    pub horizontal_alignment: Option<String>,
+    pub wrap_text: Option<bool>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookCellStyleEdit {
+    pub sheet: String,
+    pub row: usize,
+    pub column: usize,
+    pub patch: WorkbookStylePatch,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkbookWritePayload {
     pub expected_signature: String,
+    #[serde(default)]
     pub edits: Vec<WorkbookCellEdit>,
+    #[serde(default)]
+    pub style_edits: Vec<WorkbookCellStyleEdit>,
 }
 
 pub trait WorkbookEngine {

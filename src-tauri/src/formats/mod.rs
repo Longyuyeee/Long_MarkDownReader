@@ -6,3 +6,4 @@ pub mod pdf_ocr;
 pub mod table;
 pub mod workbook;
 pub mod workbook_ooxml;
+pub mod workbook_styles;

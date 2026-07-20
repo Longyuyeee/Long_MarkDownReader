@@ -8,7 +8,7 @@ use crate::formats::workbook::{
     WorkbookCapabilities, WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine,
     WorkbookSheetPage, WorkbookWritePayload,
 };
-use crate::formats::workbook_ooxml::patch_workbook;
+use crate::formats::workbook_ooxml::{patch_workbook, read_workbook_sheet_layout};
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -83,7 +83,7 @@ fn used_dimensions<T: CellType>(range: &calamine::Range<T>) -> (usize, usize) {
 impl WorkbookEngine for CalamineWorkbookEngine {
     fn capabilities(&self) -> WorkbookCapabilities {
         WorkbookCapabilities {
-            engine_id: "calamine-ooxml-v3".into(),
+            engine_id: "calamine-ooxml-v4".into(),
             extensions: vec!["xlsx".into()],
             read: WorkbookCapabilityLevel::Supported,
             cached_formula_results: WorkbookCapabilityLevel::Supported,
@@ -94,7 +94,7 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             conflict_detection: WorkbookCapabilityLevel::Supported,
             ooxml_part_preservation: WorkbookCapabilityLevel::Supported,
             cell_editing: WorkbookCapabilityLevel::Supported,
-            formatting: WorkbookCapabilityLevel::Planned,
+            formatting: WorkbookCapabilityLevel::Supported,
             formula_recalculation: WorkbookCapabilityLevel::Planned,
             charts: WorkbookCapabilityLevel::Planned,
             pivot_tables: WorkbookCapabilityLevel::Planned,
@@ -143,10 +143,19 @@ impl WorkbookEngine for CalamineWorkbookEngine {
         let formulas = workbook
             .worksheet_formula(sheet)
             .map_err(|error| format!("读取公式失败: {}", error))?;
+        let source = fs::read(path).map_err(|error| format!("读取 XLSX 样式失败: {error}"))?;
         let (total_rows, total_columns) = used_dimensions(&values);
         let formula_dimensions = used_dimensions(&formulas);
-        let total_rows = total_rows.max(formula_dimensions.0);
-        let total_columns = total_columns.max(formula_dimensions.1);
+        let requested_end = row_offset.saturating_add(row_limit.clamp(1, MAX_PAGE_ROWS));
+        let (sheet_extent, styles) = read_workbook_sheet_layout(
+            &source,
+            sheet,
+            row_offset,
+            requested_end,
+            MAX_PREVIEW_COLUMNS,
+        )?;
+        let total_rows = total_rows.max(formula_dimensions.0).max(sheet_extent.0);
+        let total_columns = total_columns.max(formula_dimensions.1).max(sheet_extent.1);
         let returned_columns = total_columns.min(MAX_PREVIEW_COLUMNS);
         let row_offset = row_offset.min(total_rows);
         let row_limit = row_limit.clamp(1, MAX_PAGE_ROWS);
@@ -165,6 +174,7 @@ impl WorkbookEngine for CalamineWorkbookEngine {
                             value: value.to_string(),
                             formula,
                             kind: cell_kind(&value).into(),
+                            style: styles.get(&(row, column)).cloned().unwrap_or_default(),
                         }
                     })
                     .collect()
@@ -234,7 +244,7 @@ pub async fn write_workbook_cells(
         if workbook_signature(&metadata, &source) != payload.expected_signature {
             return Err("XLSX 已被其他程序修改，请重新加载后再保存".into());
         }
-        let output = patch_workbook(&source, &payload.edits)?;
+        let output = patch_workbook(&source, &payload.edits, &payload.style_edits)?;
         if output.len() as u64 > MAX_WORKBOOK_BYTES {
             return Err("保存后的 XLSX 不能超过 128 MB".into());
         }
@@ -343,7 +353,9 @@ pub async fn import_workbook_sheet(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::formats::workbook::{WorkbookCellEdit, WorkbookWritePayload};
+    use crate::formats::workbook::{
+        WorkbookCellEdit, WorkbookCellStyleEdit, WorkbookStylePatch, WorkbookWritePayload,
+    };
     use rust_xlsxwriter::{Format, Formula, Workbook};
     use std::io::{Cursor, Read};
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -448,6 +460,10 @@ mod tests {
         assert_eq!(page.rows[1][2].value, "true");
         assert_eq!(page.rows[2][1].formula.as_deref(), Some("=SUM(B2:B2)"));
         assert_eq!(page.rows[2][1].value, "1250.5");
+        assert!(page.rows[0][0].style.bold);
+        assert_eq!(page.rows[0][0].style.font_color.as_deref(), Some("#FFFFFF"));
+        assert_eq!(page.rows[0][0].style.fill_color.as_deref(), Some("#2563EB"));
+        assert_eq!(page.rows[1][1].style.number_format, "currency");
 
         let capabilities = engine.capabilities();
         assert_eq!(capabilities.read, WorkbookCapabilityLevel::Supported);
@@ -471,6 +487,7 @@ mod tests {
             capabilities.conflict_detection,
             WorkbookCapabilityLevel::Supported
         );
+        assert_eq!(capabilities.formatting, WorkbookCapabilityLevel::Supported);
         assert_eq!(
             capabilities.xlsx_round_trip,
             WorkbookCapabilityLevel::Planned
@@ -518,6 +535,7 @@ mod tests {
                     kind: "formula".into(),
                 },
             ],
+            style_edits: vec![],
         };
         let saved = tauri::async_runtime::block_on(write_workbook_cells(
             root_string.clone(),
@@ -547,6 +565,7 @@ mod tests {
                 input: "不应写入".into(),
                 kind: "string".into(),
             }],
+            style_edits: vec![],
         };
         assert!(tauri::async_runtime::block_on(write_workbook_cells(
             root_string,
@@ -574,6 +593,7 @@ mod tests {
                     input: "不能写入".into(),
                     kind: "string".into(),
                 }],
+                style_edits: vec![],
             },
         ));
         assert!(merged_result.unwrap_err().contains("只能编辑左上角"));
@@ -605,6 +625,7 @@ mod tests {
                         kind: "string".into(),
                     },
                 ],
+                style_edits: vec![],
             },
         ))
         .unwrap();
@@ -624,6 +645,120 @@ mod tests {
         let a3 = sheet_xml.find("r=\"A3\"").unwrap();
         let b3 = sheet_xml.find("r=\"B3\"").unwrap();
         assert!(a3 < b3);
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn reads_and_writes_basic_styles_without_rewriting_cell_values() {
+        let (base, path) = fixture();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let before = fs::read(&path).unwrap();
+        let formula_before =
+            String::from_utf8(zip_part(&before, "xl/worksheets/sheet1.xml")).unwrap();
+        let invalid = tauri::async_runtime::block_on(write_workbook_cells(
+            base.join("library").to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookWritePayload {
+                expected_signature: document.signature.clone(),
+                edits: vec![],
+                style_edits: vec![WorkbookCellStyleEdit {
+                    sheet: "进度".into(),
+                    row: 1,
+                    column: 1,
+                    patch: WorkbookStylePatch {
+                        font_size: Some(100.0),
+                        ..Default::default()
+                    },
+                }],
+            },
+        ));
+        assert!(invalid.unwrap_err().contains("字号必须"));
+        let merged = tauri::async_runtime::block_on(write_workbook_cells(
+            base.join("library").to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookWritePayload {
+                expected_signature: document.signature.clone(),
+                edits: vec![],
+                style_edits: vec![WorkbookCellStyleEdit {
+                    sheet: "进度".into(),
+                    row: 4,
+                    column: 1,
+                    patch: WorkbookStylePatch {
+                        bold: Some(true),
+                        ..Default::default()
+                    },
+                }],
+            },
+        ));
+        assert!(merged.unwrap_err().contains("只能编辑左上角"));
+        tauri::async_runtime::block_on(write_workbook_cells(
+            base.join("library").to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookWritePayload {
+                expected_signature: document.signature,
+                edits: vec![],
+                style_edits: vec![
+                    WorkbookCellStyleEdit {
+                        sheet: "进度".into(),
+                        row: 1,
+                        column: 1,
+                        patch: WorkbookStylePatch {
+                            number_format: Some("percent".into()),
+                            bold: Some(true),
+                            fill_color: Some("#DDEBF7".into()),
+                            border_style: Some("thin".into()),
+                            border_color: Some("#4472C4".into()),
+                            horizontal_alignment: Some("center".into()),
+                            ..Default::default()
+                        },
+                    },
+                    WorkbookCellStyleEdit {
+                        sheet: "进度".into(),
+                        row: 2,
+                        column: 1,
+                        patch: WorkbookStylePatch {
+                            italic: Some(true),
+                            font_color: Some("#C00000".into()),
+                            ..Default::default()
+                        },
+                    },
+                    WorkbookCellStyleEdit {
+                        sheet: "进度".into(),
+                        row: 8,
+                        column: 3,
+                        patch: WorkbookStylePatch {
+                            fill_color: Some("#FFF2CC".into()),
+                            ..Default::default()
+                        },
+                    },
+                ],
+            },
+        ))
+        .unwrap();
+
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "进度", 0, 20)
+            .unwrap();
+        assert_eq!(page.rows[1][1].value, "75");
+        assert_eq!(page.rows[1][1].style.number_format, "percent");
+        assert!(page.rows[1][1].style.bold);
+        assert_eq!(page.rows[1][1].style.fill_color.as_deref(), Some("#DDEBF7"));
+        assert_eq!(page.rows[1][1].style.border_style, "thin");
+        assert_eq!(page.rows[1][1].style.horizontal_alignment, "center");
+        assert_eq!(page.rows[2][1].formula.as_deref(), Some("=SUM(B2, 5)"));
+        assert!(page.rows[2][1].style.italic);
+        assert_eq!(page.rows[2][1].style.font_color.as_deref(), Some("#C00000"));
+        assert_eq!(page.rows[8][3].style.fill_color.as_deref(), Some("#FFF2CC"));
+
+        let after = fs::read(&path).unwrap();
+        let formula_after =
+            String::from_utf8(zip_part(&after, "xl/worksheets/sheet1.xml")).unwrap();
+        assert!(formula_before.contains("<f>SUM(B2, 5)</f>"));
+        assert!(formula_after.contains("<f>SUM(B2, 5)</f>"));
+        assert_ne!(
+            zip_part(&before, "xl/styles.xml"),
+            zip_part(&after, "xl/styles.xml")
+        );
         fs::remove_dir_all(base).unwrap();
     }
 }

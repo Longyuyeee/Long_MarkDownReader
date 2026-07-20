@@ -1,4 +1,7 @@
-use crate::formats::workbook::WorkbookCellEdit;
+use crate::formats::workbook::{WorkbookCellEdit, WorkbookCellStyle, WorkbookCellStyleEdit};
+use crate::formats::workbook_styles::{
+    parse_styles, read_sheet_style_ids, resolve_style_edits, ResolvedStyleEdit,
+};
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::{Reader, Writer};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -20,6 +23,15 @@ struct PackageEntry {
     compression: CompressionMethod,
     data: Vec<u8>,
 }
+
+#[derive(Clone, Copy, Default)]
+struct CellPatch<'a> {
+    edit: Option<&'a WorkbookCellEdit>,
+    style_id: Option<usize>,
+}
+
+type SheetPatches<'a> = BTreeMap<usize, BTreeMap<usize, CellPatch<'a>>>;
+type SheetStyleMap = HashMap<(usize, usize), WorkbookCellStyle>;
 
 fn xml_value(
     event: &BytesStart<'_>,
@@ -184,13 +196,21 @@ fn write_cell(
     writer: &mut Writer<Vec<u8>>,
     original: &BytesStart<'_>,
     edit: &WorkbookCellEdit,
+    style_id: Option<usize>,
 ) -> Result<(), String> {
     let mut cell = BytesStart::new("c");
     for attribute in original.attributes() {
         let attribute = attribute.map_err(|error| format!("读取单元格属性失败: {error}"))?;
-        if attribute.key.as_ref() != b"t" {
+        if attribute.key.as_ref() != b"t" && !(style_id.is_some() && attribute.key.as_ref() == b"s")
+        {
             cell.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
         }
+    }
+    let style_text = style_id
+        .filter(|value| *value > 0)
+        .map(|value| value.to_string());
+    if let Some(style) = &style_text {
+        cell.push_attribute(("s", style.as_str()));
     }
     match edit.kind.as_str() {
         "string" => cell.push_attribute(("t", "inlineStr")),
@@ -250,25 +270,51 @@ fn write_cell(
         .map_err(|error| format!("结束单元格写入失败: {error}"))
 }
 
+fn styled_cell_start(
+    original: &BytesStart<'_>,
+    style_id: usize,
+) -> Result<BytesStart<'static>, String> {
+    let mut cell = BytesStart::new("c");
+    for attribute in original.attributes() {
+        let attribute = attribute.map_err(|error| format!("读取单元格样式属性失败: {error}"))?;
+        if attribute.key.as_ref() != b"s" {
+            cell.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+        }
+    }
+    if style_id > 0 {
+        cell.push_attribute(("s", style_id.to_string().as_str()));
+    }
+    Ok(cell.into_owned())
+}
+
 fn write_new_cell(
     writer: &mut Writer<Vec<u8>>,
     row: usize,
     column: usize,
-    edit: &WorkbookCellEdit,
+    patch: CellPatch<'_>,
 ) -> Result<(), String> {
-    if edit.kind == "empty" {
+    if patch.edit.is_some_and(|edit| edit.kind == "empty") && patch.style_id.is_none() {
         return Ok(());
     }
     let reference = cell_reference(row, column)?;
     let mut cell = BytesStart::new("c");
     cell.push_attribute(("r", reference.as_str()));
-    write_cell(writer, &cell, edit)
+    if let Some(edit) = patch.edit {
+        write_cell(writer, &cell, edit, patch.style_id)
+    } else if let Some(style_id) = patch.style_id {
+        let cell = styled_cell_start(&cell, style_id)?;
+        writer
+            .write_event(Event::Empty(cell))
+            .map_err(|error| format!("创建样式单元格失败: {error}"))
+    } else {
+        Ok(())
+    }
 }
 
 fn write_pending_cells(
     writer: &mut Writer<Vec<u8>>,
     row: usize,
-    pending: &mut BTreeMap<usize, &WorkbookCellEdit>,
+    pending: &mut BTreeMap<usize, CellPatch<'_>>,
     before_column: Option<usize>,
 ) -> Result<(), String> {
     let columns = pending
@@ -276,8 +322,8 @@ fn write_pending_cells(
         .map(|(column, _)| *column)
         .collect::<Vec<_>>();
     for column in columns {
-        if let Some(edit) = pending.remove(&column) {
-            write_new_cell(writer, row, column, edit)?;
+        if let Some(patch) = pending.remove(&column) {
+            write_new_cell(writer, row, column, patch)?;
         }
     }
     Ok(())
@@ -288,13 +334,13 @@ fn patch_existing_row(
     writer: &mut Writer<Vec<u8>>,
     row_start: &BytesStart<'_>,
     row: usize,
-    edits: &BTreeMap<usize, &WorkbookCellEdit>,
+    patches: &BTreeMap<usize, CellPatch<'_>>,
     buffer: &mut Vec<u8>,
 ) -> Result<(), String> {
     writer
         .write_event(Event::Start(row_start.to_owned()))
         .map_err(|error| format!("写入工作表行失败: {error}"))?;
-    let mut pending = edits.clone();
+    let mut pending = patches.clone();
     let mut last_column = None;
     buffer.clear();
     loop {
@@ -311,8 +357,18 @@ fn patch_existing_row(
                 }
                 last_column = Some(column);
                 write_pending_cells(writer, row, &mut pending, Some(column))?;
-                if let Some(edit) = pending.remove(&column) {
-                    write_cell(writer, start, edit)?;
+                if let Some(patch) = pending.remove(&column) {
+                    if let Some(edit) = patch.edit {
+                        write_cell(writer, start, edit, patch.style_id)?;
+                    } else if let Some(style_id) = patch.style_id {
+                        writer
+                            .write_event(Event::Start(styled_cell_start(start, style_id)?))
+                            .map_err(|error| format!("写入单元格样式失败: {error}"))?;
+                    }
+                    if patch.edit.is_none() {
+                        buffer.clear();
+                        continue;
+                    }
                     let mut depth = 1usize;
                     buffer.clear();
                     while depth > 0 {
@@ -342,8 +398,14 @@ fn patch_existing_row(
                 }
                 last_column = Some(column);
                 write_pending_cells(writer, row, &mut pending, Some(column))?;
-                if let Some(edit) = pending.remove(&column) {
-                    write_cell(writer, start, edit)?;
+                if let Some(patch) = pending.remove(&column) {
+                    if let Some(edit) = patch.edit {
+                        write_cell(writer, start, edit, patch.style_id)?;
+                    } else if let Some(style_id) = patch.style_id {
+                        writer
+                            .write_event(Event::Empty(styled_cell_start(start, style_id)?))
+                            .map_err(|error| format!("写入空单元格样式失败: {error}"))?;
+                    }
                 } else {
                     writer
                         .write_event(event.into_owned())
@@ -369,9 +431,11 @@ fn patch_existing_row(
 fn write_new_row(
     writer: &mut Writer<Vec<u8>>,
     row: usize,
-    edits: &BTreeMap<usize, &WorkbookCellEdit>,
+    patches: &BTreeMap<usize, CellPatch<'_>>,
 ) -> Result<(), String> {
-    if edits.values().all(|edit| edit.kind == "empty") {
+    if patches.values().all(|patch| {
+        patch.style_id.is_none() && patch.edit.is_some_and(|edit| edit.kind == "empty")
+    }) {
         return Ok(());
     }
     let row_number = (row + 1).to_string();
@@ -380,8 +444,8 @@ fn write_new_row(
     writer
         .write_event(Event::Start(row_start))
         .map_err(|error| format!("创建工作表行失败: {error}"))?;
-    for (column, edit) in edits {
-        write_new_cell(writer, row, *column, edit)?;
+    for (column, patch) in patches {
+        write_new_cell(writer, row, *column, *patch)?;
     }
     writer
         .write_event(Event::End(BytesEnd::new("row")))
@@ -430,10 +494,7 @@ fn write_dimension(
         .map_err(|error| format!("写入工作表范围失败: {error}"))
 }
 
-fn validate_merged_cells(
-    xml: &[u8],
-    edits: &BTreeMap<usize, BTreeMap<usize, &WorkbookCellEdit>>,
-) -> Result<(), String> {
+fn validate_merged_cells(xml: &[u8], patches: &SheetPatches<'_>) -> Result<(), String> {
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(true);
     let mut buffer = Vec::new();
@@ -453,7 +514,7 @@ fn validate_merged_cells(
                 if parts.next().is_some() || bottom < top || right < left {
                     return Err(format!("合并单元格范围无效: {reference}"));
                 }
-                for (row, columns) in edits.range(top..=bottom) {
+                for (row, columns) in patches.range(top..=bottom) {
                     for (column, _) in columns.range(left..=right) {
                         if *row != top || *column != left {
                             return Err(format!(
@@ -472,20 +533,19 @@ fn validate_merged_cells(
     Ok(())
 }
 
-fn patch_sheet_xml(
-    xml: &[u8],
-    edits: &BTreeMap<usize, BTreeMap<usize, &WorkbookCellEdit>>,
-) -> Result<Vec<u8>, String> {
-    validate_merged_cells(xml, edits)?;
+fn patch_sheet_xml(xml: &[u8], patches: &SheetPatches<'_>) -> Result<Vec<u8>, String> {
+    validate_merged_cells(xml, patches)?;
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(false);
     let mut writer = Writer::new(Vec::with_capacity(xml.len()));
     let mut buffer = Vec::new();
-    let mut pending = edits.clone();
-    let non_empty_coordinates = edits.iter().flat_map(|(row, columns)| {
+    let mut pending = patches.clone();
+    let non_empty_coordinates = patches.iter().flat_map(|(row, columns)| {
         columns
             .iter()
-            .filter(|(_, edit)| edit.kind != "empty")
+            .filter(|(_, patch)| {
+                patch.style_id.is_some() || patch.edit.is_some_and(|edit| edit.kind != "empty")
+            })
             .map(move |(column, _)| (*row, *column))
     });
     let coordinates = non_empty_coordinates.collect::<Vec<_>>();
@@ -592,8 +652,8 @@ fn patch_sheet_xml(
                     writer
                         .write_event(Event::Start(row_start.borrow()))
                         .map_err(|error| format!("扩展空工作表行失败: {error}"))?;
-                    for (column, edit) in &row_edits {
-                        write_new_cell(&mut writer, row, *column, edit)?;
+                    for (column, patch) in &row_edits {
+                        write_new_cell(&mut writer, row, *column, *patch)?;
                     }
                     writer
                         .write_event(Event::End(BytesEnd::new("row")))
@@ -628,22 +688,7 @@ fn patch_sheet_xml(
     Ok(writer.into_inner())
 }
 
-pub fn patch_workbook(source: &[u8], edits: &[WorkbookCellEdit]) -> Result<Vec<u8>, String> {
-    if edits.is_empty() {
-        return Err("没有需要保存的单元格变更".into());
-    }
-    if edits.len() > MAX_CELL_EDITS {
-        return Err(format!("单次最多保存 {MAX_CELL_EDITS} 个单元格变更"));
-    }
-    let mut seen = HashSet::new();
-    for edit in edits {
-        validate_edit(edit)?;
-        let reference = cell_reference(edit.row, edit.column)?;
-        if !seen.insert((edit.sheet.clone(), reference)) {
-            return Err("保存请求包含重复单元格".into());
-        }
-    }
-
+fn load_package(source: &[u8]) -> Result<Vec<PackageEntry>, String> {
     let mut archive = ZipArchive::new(Cursor::new(source))
         .map_err(|error| format!("打开 XLSX 容器失败: {error}"))?;
     let mut entries = Vec::with_capacity(archive.len());
@@ -675,26 +720,152 @@ pub fn patch_workbook(source: &[u8], edits: &[WorkbookCellEdit]) -> Result<Vec<u
             data,
         });
     }
+    Ok(entries)
+}
+
+pub fn read_workbook_sheet_layout(
+    source: &[u8],
+    sheet: &str,
+    row_start: usize,
+    row_end: usize,
+    max_columns: usize,
+) -> Result<((usize, usize), SheetStyleMap), String> {
+    let entries = load_package(source)?;
+    let paths = workbook_sheet_paths(&entries)?;
+    let sheet_path = paths
+        .get(sheet)
+        .ok_or_else(|| format!("工作表不存在: {sheet}"))?;
+    let styles = entries
+        .iter()
+        .find(|entry| entry.name == "xl/styles.xml")
+        .ok_or("XLSX 缺少 xl/styles.xml")?;
+    let sheet_xml = entries
+        .iter()
+        .find(|entry| &entry.name == sheet_path)
+        .ok_or("XLSX 工作表部件缺失")?;
+    let catalog = parse_styles(&styles.data)?;
+    let extent = sheet_extent(&sheet_xml.data)?;
+    let styles = read_sheet_style_ids(&sheet_xml.data, row_start, row_end, max_columns)?
+        .into_iter()
+        .map(|(coordinate, style_id)| (coordinate, catalog.public_style(style_id)))
+        .collect();
+    Ok((extent, styles))
+}
+
+fn sheet_extent(xml: &[u8]) -> Result<(usize, usize), String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析工作表范围失败: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"dimension" =>
+            {
+                let reference =
+                    xml_value(event, b"ref", reader.decoder())?.unwrap_or_else(|| "A1".into());
+                let last = reference.rsplit(':').next().unwrap_or("A1");
+                let (row, column) = parse_cell_reference(last)?;
+                return Ok((row + 1, column + 1));
+            }
+            Event::Eof => return Ok((0, 0)),
+            _ => {}
+        }
+        buffer.clear();
+    }
+}
+
+pub fn patch_workbook(
+    source: &[u8],
+    edits: &[WorkbookCellEdit],
+    style_edits: &[WorkbookCellStyleEdit],
+) -> Result<Vec<u8>, String> {
+    if edits.is_empty() && style_edits.is_empty() {
+        return Err("没有需要保存的单元格变更".into());
+    }
+    if edits.len() > MAX_CELL_EDITS {
+        return Err(format!("单次最多保存 {MAX_CELL_EDITS} 个单元格变更"));
+    }
+    let mut seen = HashSet::new();
+    for edit in edits {
+        validate_edit(edit)?;
+        let reference = cell_reference(edit.row, edit.column)?;
+        if !seen.insert((edit.sheet.clone(), reference)) {
+            return Err("保存请求包含重复单元格".into());
+        }
+    }
+
+    let mut entries = load_package(source)?;
     let sheet_paths = workbook_sheet_paths(&entries)?;
-    let mut edits_by_path: HashMap<String, BTreeMap<usize, BTreeMap<usize, &WorkbookCellEdit>>> =
-        HashMap::new();
+    let style_sheet_xml = style_edits
+        .iter()
+        .map(|edit| {
+            let path = sheet_paths
+                .get(&edit.sheet)
+                .ok_or_else(|| format!("工作表不存在: {}", edit.sheet))?;
+            let xml = entries
+                .iter()
+                .find(|entry| &entry.name == path)
+                .ok_or("XLSX 工作表部件缺失")?;
+            Ok((edit.sheet.clone(), xml.data.as_slice()))
+        })
+        .collect::<Result<HashMap<_, _>, String>>()?;
+    let resolved_styles = if style_edits.is_empty() {
+        Vec::new()
+    } else {
+        let styles = entries
+            .iter()
+            .find(|entry| entry.name == "xl/styles.xml")
+            .ok_or("XLSX 缺少 xl/styles.xml")?;
+        let (updated, resolved) = resolve_style_edits(&styles.data, &style_sheet_xml, style_edits)?;
+        entries
+            .iter_mut()
+            .find(|entry| entry.name == "xl/styles.xml")
+            .ok_or("XLSX 缺少 xl/styles.xml")?
+            .data = updated;
+        resolved
+    };
+    let mut patches_by_path: HashMap<String, SheetPatches<'_>> = HashMap::new();
     for edit in edits {
         let path = sheet_paths
             .get(&edit.sheet)
             .ok_or_else(|| format!("工作表不存在: {}", edit.sheet))?;
-        edits_by_path
+        patches_by_path
             .entry(path.clone())
             .or_default()
             .entry(edit.row)
             .or_default()
-            .insert(edit.column, edit);
+            .entry(edit.column)
+            .or_default()
+            .edit = Some(edit);
+    }
+    for ResolvedStyleEdit {
+        sheet,
+        row,
+        column,
+        style_id,
+    } in &resolved_styles
+    {
+        let path = sheet_paths
+            .get(sheet)
+            .ok_or_else(|| format!("工作表不存在: {sheet}"))?;
+        patches_by_path
+            .entry(path.clone())
+            .or_default()
+            .entry(*row)
+            .or_default()
+            .entry(*column)
+            .or_default()
+            .style_id = Some(*style_id);
     }
     for entry in &mut entries {
-        if let Some(sheet_edits) = edits_by_path.remove(&entry.name) {
-            entry.data = patch_sheet_xml(&entry.data, &sheet_edits)?;
+        if let Some(sheet_patches) = patches_by_path.remove(&entry.name) {
+            entry.data = patch_sheet_xml(&entry.data, &sheet_patches)?;
         }
     }
-    if !edits_by_path.is_empty() {
+    if !patches_by_path.is_empty() {
         return Err("XLSX 工作表部件缺失".into());
     }
 
