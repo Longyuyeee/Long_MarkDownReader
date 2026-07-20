@@ -63,7 +63,7 @@ const save = async () => {
     const prefix = `快速笔记_${timestamp}`
     
     const filePath = await invoke<string>('create_new_file', { libraryRoot: libPath, prefix })
-    await invoke('write_markdown_file', { path: filePath, content: content.value })
+    await invoke('write_markdown_file', { libraryRoot: libPath, path: filePath, content: content.value })
     
     // 发送全局刷新事件
     await emit('refresh-library')

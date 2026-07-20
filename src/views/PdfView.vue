@@ -633,12 +633,12 @@ const insertSelectedAnnotationReference = async () => {
   try {
     const reference = await buildSelectedAnnotationReference()
     const disk = target.content === undefined
-      ? await invoke<{ content: string }>('read_markdown_file', { path: target.path })
+      ? await invoke<{ content: string }>('read_markdown_file', { libraryRoot: store.libraryPath, path: target.path })
       : undefined
     const content = target.content ?? disk?.content ?? ''
     const separator = content ? (content.endsWith('\n') ? '\n' : '\n\n') : ''
     const updated = `${content}${separator}${reference.markdown}\n`
-    await invoke('write_markdown_file', { path: target.path, content: updated })
+    await invoke('write_markdown_file', { libraryRoot: store.libraryPath, path: target.path, content: updated })
     store.updateTabContent(target.path, updated)
     message.success(`已插入到 ${target.title}`)
     await router.push({ name: 'LibraryMode', query: { path: target.path } })

@@ -203,9 +203,12 @@ pub async fn create_canvas_from_markdown(
     if source.metadata().map_err(|error| error.to_string())?.len() > 10 * 1024 * 1024 {
         return Err("Markdown 文件不能超过 10 MB".into());
     }
-    let content = read_markdown_file(source.to_string_lossy().into_owned())
-        .await?
-        .content;
+    let content = read_markdown_file(
+        guard.root().to_string_lossy().into_owned(),
+        source.to_string_lossy().into_owned(),
+    )
+    .await?
+    .content;
     let source_file = source
         .file_name()
         .unwrap_or_default()

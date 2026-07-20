@@ -1,4 +1,5 @@
 use crate::commands::history::history_dir;
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
@@ -8,6 +9,8 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
+use tauri::State;
+use tauri_plugin_dialog::DialogExt;
 
 static RE_MD_IMG: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(r"!\[(?:[^\]]*)\]\(([^)\s]+)").unwrap());
@@ -270,7 +273,99 @@ pub async fn delete_items(
 }
 
 #[tauri::command]
-pub async fn read_markdown_file(path: String) -> Result<FileContent, String> {
+pub async fn read_markdown_file(library_root: String, path: String) -> Result<FileContent, String> {
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
+    read_markdown(path)
+}
+
+#[tauri::command]
+pub async fn write_markdown_file(
+    library_root: String,
+    path: String,
+    content: String,
+) -> Result<(), String> {
+    let path = WorkspaceGuard::new(library_root)?.resolve_file_for_write(path, &["md"])?;
+    write_utf8(path, &content)
+}
+
+#[tauri::command]
+pub async fn read_external_markdown_file(
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+) -> Result<FileContent, String> {
+    let path = access.resolve_markdown(path)?;
+    read_markdown(path)
+}
+
+#[tauri::command]
+pub async fn write_external_markdown_file(
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+    content: String,
+) -> Result<(), String> {
+    let path = access.resolve_markdown(path)?;
+    write_utf8(path, &content)
+}
+
+#[tauri::command]
+pub async fn pick_external_markdown_file(
+    app_handle: tauri::AppHandle,
+    access: State<'_, ExternalFileAccess>,
+) -> Result<Option<String>, String> {
+    let selected = app_handle
+        .dialog()
+        .file()
+        .set_title("Open Markdown file")
+        .add_filter("Markdown", &["md"])
+        .blocking_pick_file();
+    let Some(selected) = selected else {
+        return Ok(None);
+    };
+    let path = selected
+        .into_path()
+        .map_err(|error| format!("Invalid selected path: {error}"))?;
+    let path = access.authorize_markdown(path)?;
+    Ok(Some(path.to_string_lossy().into_owned()))
+}
+
+#[tauri::command]
+pub async fn export_markdown_file(
+    app_handle: tauri::AppHandle,
+    suggested_name: String,
+    content: String,
+) -> Result<Option<String>, String> {
+    let safe_name = sanitize_filename(&suggested_name);
+    let selected = app_handle
+        .dialog()
+        .file()
+        .set_title("Export Markdown file")
+        .set_file_name(if safe_name.is_empty() {
+            "document.md".to_string()
+        } else if safe_name.to_lowercase().ends_with(".md") {
+            safe_name
+        } else {
+            format!("{safe_name}.md")
+        })
+        .add_filter("Markdown", &["md"])
+        .blocking_save_file();
+    let Some(selected) = selected else {
+        return Ok(None);
+    };
+    let mut path = selected
+        .into_path()
+        .map_err(|error| format!("Invalid selected path: {error}"))?;
+    if !path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+    {
+        path.set_extension("md");
+    }
+    write_utf8(&path, &content)?;
+    Ok(Some(path.to_string_lossy().into_owned()))
+}
+
+fn read_markdown(path: PathBuf) -> Result<FileContent, String> {
     recover_interrupted_write(&path)?;
     let bytes = fs::read(&path).map_err(|error| format!("读取文件失败: {error}"))?;
     let mut detector = EncodingDetector::new();
@@ -280,13 +375,8 @@ pub async fn read_markdown_file(path: String) -> Result<FileContent, String> {
     Ok(FileContent {
         content: text.into_owned(),
         encoding: encoding.name().to_string(),
-        path,
+        path: path.to_string_lossy().into_owned(),
     })
-}
-
-#[tauri::command]
-pub async fn write_markdown_file(path: String, content: String) -> Result<(), String> {
-    write_utf8(path, &content)
 }
 
 #[tauri::command]
@@ -490,9 +580,30 @@ pub async fn save_image(
 }
 
 #[tauri::command]
-pub async fn export_to_html(path: String, html_content: String) -> Result<(), String> {
-    let mut html_path = PathBuf::from(path);
+pub async fn export_to_html(
+    library_root: String,
+    path: String,
+    html_content: String,
+) -> Result<(), String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let mut html_path = guard.resolve_existing_file(path, &["md"])?;
     html_path.set_extension("html");
+    let html_path = guard.resolve_file_for_write(html_path, &["html"])?;
+    write_html(html_path, html_content)
+}
+
+#[tauri::command]
+pub async fn export_external_to_html(
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+    html_content: String,
+) -> Result<(), String> {
+    let mut html_path = access.resolve_markdown(path)?;
+    html_path.set_extension("html");
+    write_html(html_path, html_content)
+}
+
+fn write_html(html_path: PathBuf, html_content: String) -> Result<(), String> {
     let document = format!(
         r#"<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Export</title><style>body{{padding:40px;max-width:800px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.6;color:#1d1d1f}}pre{{background:#f5f5f5;padding:16px;border-radius:8px;overflow-x:auto}}code{{font-family:"Fira Code",monospace;font-size:0.9em}}blockquote{{border-left:3px solid #007aff;padding-left:16px;color:#666;margin:16px 0}}table{{border-collapse:collapse;width:100%}}td,th{{border:1px solid #ddd;padding:8px 12px}}img{{max-width:100%}}h1,h2,h3,h4,h5,h6{{margin-top:24px;margin-bottom:12px}}p{{margin:12px 0}}</style></head><body><div class="vditor-reset">{html_content}</div></body></html>"#
     );

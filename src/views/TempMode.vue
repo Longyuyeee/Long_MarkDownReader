@@ -125,7 +125,7 @@ watch(() => route.query.path, async (newPath) => {
 const loadFileContent = async () => {
   if (!filePath.value) return
   try {
-    const result = await invoke<{content: string}>('read_markdown_file', { path: filePath.value })
+    const result = await invoke<{content: string}>('read_external_markdown_file', { path: filePath.value })
     if (vditor) {
       vditor.setValue(result.content)
       isDirty.value = false
@@ -161,7 +161,7 @@ const saveFile = async () => {
   if (!vditor || !filePath.value) return
   try {
     const content = vditor.getValue()
-    await invoke('write_markdown_file', { path: filePath.value, content })
+    await invoke('write_external_markdown_file', { path: filePath.value, content })
     isDirty.value = false
     message.success('已保存')
   } catch (err: any) { message.error('保存失败: ' + err) }
@@ -257,7 +257,7 @@ onMounted(async () => {
   let initialContent = ''
   if (filePath.value) {
     try {
-      const result = await invoke<{content: string}>('read_markdown_file', { path: filePath.value })
+      const result = await invoke<{content: string}>('read_external_markdown_file', { path: filePath.value })
       initialContent = result.content
     } catch (err: any) { message.error('读取失败') }
   }
@@ -265,7 +265,7 @@ onMounted(async () => {
   unlistenExport = await listen('command-export', async () => {
     if (!vditor || !filePath.value) { message.warning('无可导出的内容'); return }
     const html = vditor.getHTML()
-    try { await invoke('export_to_html', { path: filePath.value, htmlContent: html }); message.success('HTML 已导出') } catch (e) { message.error('导出失败') }
+    try { await invoke('export_external_to_html', { path: filePath.value, htmlContent: html }); message.success('HTML 已导出') } catch (e) { message.error('导出失败') }
   })
 
   vditor = new Vditor('vditor', {

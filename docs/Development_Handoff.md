@@ -48,9 +48,9 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - `src-tauri/src/lib.rs`：仅保留 Tauri 应用装配、托盘/窗口事件、URI 协议与命令注册。
 - `src-tauri/src/commands/`：按 AI、Canvas、配置、图表、文件、Git、图谱、历史、索引、PDF、搜索、系统、表格和工作簿拆分的 IPC 命令。
 - `src-tauri/src/formats/`：Canvas、Diagram、Markdown、PDF 标注/OCR、开放表格格式适配与验证。
-- `src-tauri/src/services/`：系统凭据、数据迁移、PDF 索引、可靠写入和 `WorkspaceGuard`。
+- `src-tauri/src/services/`：系统凭据、数据迁移、PDF 索引、可靠写入、`WorkspaceGuard` 和外部单文件授权状态。
 
-FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降至 314 行，Rust 业务测试随模块放置。
+FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降至当前 334 行，Rust 业务测试随模块放置。
 
 ## 4. 关键设计文档
 
@@ -67,8 +67,8 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 最后一次完整验证结果：
 
 - `npm run ci:check`：通过。
-- Rust：79 项测试通过，0 失败。
-- 100 MiB PDF 范围读取基准：约 72 ms，仅读取约 256 KiB。
+- Rust：83 项测试通过，0 失败。
+- 100 MiB PDF 范围读取基准：约 615 ms，仅读取约 256 KiB（目标小于 2 秒）。
 - `npm audit --omit=dev`：0 个漏洞。
 - `npm run tauri -- build --debug --no-bundle`：通过。
 
@@ -78,17 +78,18 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 当前 `v0.7.0` 基线已完成知识库文件树的创建、移动、重命名、删除、排序、扫描和状态读取路径守卫，并修复旧 API Key 迁移失败丢失及远程 HTTP 传输风险。
 
-1. 完成 FR-BASE-001：继续收口 Markdown 单文件模式与用户明确授权的外部文件访问，补齐授权生命周期测试。
-2. 完成 FR-BASE-002：继续统一 Markdown、Canvas、配置和其他写入路径的可靠写入/恢复策略。
-3. 完善 FR-BASE-005：在 CI 中增加关键保存流程 E2E 和 fixture 门禁。
-4. 开始图谱体验增强：以当前笔记为中心的局部图谱常驻入口、邻接关系面板、图谱/大纲/Canvas 双向转换，以及真正可编辑的树形思维导图布局。
+1. 完成 FR-BASE-001/007：继续收口导入、图片、历史等文件命令；Markdown 单文件现已区分知识库访问和经启动参数、单实例事件或后端选择器授权的外部访问。
+2. 完成 FR-INDEX-004/FR-FORMAT-001：当前已建立前端统一格式注册表，下一批把格式能力、创建入口和索引适配器也迁入注册机制。
+3. 启动 FR-DATA-009：以完整 Excel 等价编辑器为目标，先冻结工作簿内核接口、公式/样式模型、XLSX 往返 fixture 和许可方案，再交付第一批原位编辑能力。
+4. 扩展新文件格式编辑器与 FR-THEME-001 主题预设；所有新工作面必须按需加载并复用统一 token、权限和可靠写入。
+5. 完善 FR-BASE-005：增加关键保存流程 E2E、格式 fixture 和视觉回归门禁。
 
 开始新功能前先更新路线图中的需求状态与验收条件；每个阶段至少执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
 
 ## 7. 已知边界与注意事项
 
 - 当前重点是本地优先和开放文件格式，不引入私有数据库作为唯一事实源。
-- XLSX 当前为专业预览与导入能力，不应宣传为 Excel 等价编辑器。
+- XLSX 当前仍只是专业预览与导入能力，不能提前宣传为 Excel 等价编辑器；完整等价编辑已成为后续主线目标，按兼容矩阵逐项验收。
 - PDF 标注和 OCR 使用 sidecar 文件，不直接重写原 PDF。
 - 图谱支持 Markdown、PDF 和表格节点，但“思维导图”仍需独立交互模型，不能仅把力导向图改成树形布局。
 - 不要提交 `.claude/settings.local.json`、系统凭据、知识库内容、`dist/` 或 `src-tauri/target/`。

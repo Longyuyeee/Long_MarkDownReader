@@ -70,6 +70,7 @@ import { useRouter } from 'vue-router'
 import { listen, emit } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import { useAppStore } from './store/app'
+import { isExternallyEditable } from './config/fileFormats'
 
 const osTheme = useOsTheme()
 const router = useRouter()
@@ -180,9 +181,15 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
   if (e.key === 'F11') { e.preventDefault(); store.toggleZen() }
 }
 
-const handleCommand = (item: any) => {
+const openExternalFile = async () => {
+  const filePath = await invoke<string | null>('pick_external_markdown_file')
+  if (filePath) await router.push({ name: 'TempMode', query: { path: filePath, t: Date.now() } })
+}
+
+const handleCommand = async (item: any) => {
   if (item.type === 'cmd') {
     if (item.action === 'zen-mode') store.toggleZen()
+    else if (item.action === 'open-external-file') await openExternalFile()
     else if (item.action === 'export-html') emit('command-export')
     else if (item.action === 'save-file') emit('command-save')
     else if (item.action === 'refresh') emit('command-refresh')
@@ -238,7 +245,7 @@ onMounted(async () => {
 
   unlistenOpenFile = await listen<string>('open-file', async (event) => {
     const filePath = event.payload
-    if (filePath.toLowerCase().endsWith('.md') || filePath.toLowerCase().includes('.md"')) {
+    if (isExternallyEditable(filePath)) {
       const cleanPath = filePath.replace(/^"|"$/g, '')
       router.push({ name: 'TempMode', query: { path: cleanPath, t: Date.now() } })
     }
@@ -246,7 +253,7 @@ onMounted(async () => {
 
   try {
     const args = await invoke<string[]>('get_launch_args')
-    const filePath = args.find(arg => arg.toLowerCase().endsWith('.md') || arg.toLowerCase().includes('.md"'))
+    const filePath = args.find(arg => isExternallyEditable(arg.replace(/^"|"$/g, '')))
     if (filePath) {
       const cleanPath = filePath.replace(/^"|"$/g, '')
       router.push({ name: 'TempMode', query: { path: cleanPath } })

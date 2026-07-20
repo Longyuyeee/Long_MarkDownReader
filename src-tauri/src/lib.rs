@@ -15,10 +15,11 @@ use commands::diagram::{
     write_diagram_file,
 };
 use commands::files::{
-    create_new_file, create_new_folder, delete_item, delete_items, export_to_html, get_file_stats,
-    get_folder_order, get_image_base64, get_launch_args, import_to_library, move_item, move_items,
-    read_markdown_file, rename_item, save_folder_order, save_image, scan_directory,
-    write_markdown_file,
+    create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
+    export_markdown_file, export_to_html, get_file_stats, get_folder_order, get_image_base64,
+    get_launch_args, import_to_library, move_item, move_items, pick_external_markdown_file,
+    read_external_markdown_file, read_markdown_file, rename_item, save_folder_order, save_image,
+    scan_directory, write_external_markdown_file, write_markdown_file,
 };
 pub(crate) use commands::files::{sanitize_filename, FileContent, FileEntry};
 use commands::git::{git_commit, git_init, git_pull, git_push, git_status};
@@ -44,6 +45,7 @@ use commands::table::{
 };
 use commands::workbook::{import_workbook_sheet, read_workbook_file, read_workbook_sheet};
 use services::data_migration::check_and_migrate_data;
+use services::external_file_access::ExternalFileAccess;
 use std::fs;
 use std::path::Path;
 use tauri::menu::{Menu, MenuItem};
@@ -55,6 +57,7 @@ use window_vibrancy::{apply_blur, apply_mica};
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(ExternalFileAccess::default())
         .register_asynchronous_uri_scheme_protocol("misty-img", move |_app, request, responder| {
             let uri = request.uri().to_string();
             let path_part = uri.strip_prefix("misty-img://localhost").unwrap_or(&uri);
@@ -148,8 +151,11 @@ pub fn run() {
                 let _ = win.show();
                 let _ = win.set_focus();
             }
-            if args.len() > 1 {
-                let _ = app.emit("open-file", args[1].clone());
+            let access = app.state::<ExternalFileAccess>();
+            for argument in args.iter().skip(1) {
+                if let Ok(path) = access.authorize_markdown(argument.trim_matches('"')) {
+                    let _ = app.emit("open-file", path.to_string_lossy().into_owned());
+                }
             }
         }))
         .on_window_event(|window, event| {
@@ -168,6 +174,10 @@ pub fn run() {
 
             // 根据启动参数控制窗口显示：手动启动则显示窗口，自启参数 --minimized 则保持隐藏
             let args: Vec<String> = std::env::args().collect();
+            let access = app.state::<ExternalFileAccess>();
+            for argument in args.iter().skip(1) {
+                let _ = access.authorize_markdown(argument.trim_matches('"'));
+            }
             if !args.contains(&"--minimized".to_string()) {
                 let _ = window.show();
                 let _ = window.set_focus();
@@ -239,6 +249,11 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             read_markdown_file,
             write_markdown_file,
+            read_external_markdown_file,
+            write_external_markdown_file,
+            pick_external_markdown_file,
+            export_markdown_file,
+            export_external_to_html,
             read_canvas_file,
             write_canvas_file,
             read_diagram_file,

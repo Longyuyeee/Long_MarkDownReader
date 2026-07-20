@@ -464,6 +464,7 @@ import { listen } from '@tauri-apps/api/event'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
+import { findFileFormat, knownFileExtension } from '../config/fileFormats'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
 interface KnowledgeSearchResult {
@@ -827,14 +828,13 @@ const handleExport = async (key: string) => {
   } else if (key === 'html') {
     try {
       const html = vditor.getHTML()
-      await invoke('export_to_html', { path: tab.path, htmlContent: html })
+      await invoke('export_to_html', { libraryRoot: store.libraryPath, path: tab.path, htmlContent: html })
       message.success('HTML 已导出到文件旁')
     } catch (e) { message.error('导出失败') }
   } else if (key === 'md') {
     try {
-      const { save } = await import('@tauri-apps/plugin-dialog')
-      const filePath = await save({ defaultPath: tab.title + '.md', filters: [{ name: 'Markdown', extensions: ['md'] }] })
-      if (filePath) { await invoke('write_markdown_file', { path: filePath, content: vditor.getValue() }); message.success('已导出') }
+      const filePath = await invoke<string | null>('export_markdown_file', { suggestedName: tab.title, content: vditor.getValue() })
+      if (filePath) message.success('已导出')
     } catch (e) { /* user cancelled */ }
   }
 }
@@ -938,19 +938,12 @@ const startResizing = (type: 'sidebar') => { activeResizer.value = type }
 const handleNodeSelect = (keys: string[]) => {
   if (keys.length === 0) return
   const lastKey = keys[keys.length - 1]
-  if (lastKey && lastKey.endsWith('.md')) { 
+  const format = lastKey ? findFileFormat(lastKey) : undefined
+  if (format?.id === 'markdown') {
     const title = lastKey.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'
-    store.addTab({ id: lastKey, title, path: lastKey, isDirty: false }) 
-  } else if (lastKey && lastKey.toLowerCase().endsWith('.canvas')) {
-    router.push({ name: 'Canvas', query: { path: lastKey } })
-  } else if (lastKey && lastKey.toLowerCase().endsWith('.pdf')) {
-    router.push({ name: 'Pdf', query: { path: lastKey } })
-  } else if (lastKey && /(?:\.(csv|tsv)|\.table\.json)$/i.test(lastKey)) {
-    router.push({ name: 'Table', query: { path: lastKey } })
-  } else if (lastKey && lastKey.toLowerCase().endsWith('.xlsx')) {
-    router.push({ name: 'Workbook', query: { path: lastKey } })
-  } else if (lastKey && /\.(?:mmd|mermaid)$/i.test(lastKey)) {
-    router.push({ name: 'Diagram', query: { path: lastKey } })
+    store.addTab({ id: lastKey, title, path: lastKey, isDirty: false })
+  } else if (format) {
+    router.push({ name: format.routeName, query: { path: lastKey } })
   }
 }
 
@@ -1088,7 +1081,7 @@ const loadFileToEditor = async (path: string) => {
     setEditorValue(currentTab.content)
   } else {
     try {
-      const res = await invoke<{content: string}>('read_markdown_file', { path })
+      const res = await invoke<{content: string}>('read_markdown_file', { libraryRoot: store.libraryPath, path })
       if (currentTab) currentTab.content = res.content
       setEditorValue(res.content)
     } catch (err) { message.error("读取失败") }
@@ -1436,7 +1429,7 @@ const handleTemplateCreate = async (key: string) => {
         : isDiagram
           ? await invoke<string>('create_diagram_file', { libraryRoot: store.libraryPath, targetDir: target, prefix: undefined })
         : await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target, prefix })
-    if (tmpl && !isTable && !isDiagram) await invoke('write_markdown_file', { path: p, content: tmpl })
+    if (tmpl && !isTable && !isDiagram) await invoke('write_markdown_file', { libraryRoot: store.libraryPath, path: p, content: tmpl })
     await refreshNode(target)
     handleNodeSelect([p])
   } catch (e: any) {
@@ -1463,14 +1456,14 @@ const createDailyNote = async () => {
 }
 
 const applyRename = async () => {
-  try { let finalName = renameState.newName; const extension = renameState.oldPath.match(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid))$/i)?.[0] || ''; if (extension && !finalName.toLowerCase().endsWith(extension.toLowerCase())) finalName += extension; await invoke('rename_item', { libraryRoot: store.libraryPath, oldPath: renameState.oldPath, newName: finalName }); const parentPath = renameState.oldPath.substring(0, Math.max(renameState.oldPath.lastIndexOf('\\'), renameState.oldPath.lastIndexOf('/'))); await refreshNode(parentPath || store.libraryPath); renameState.show = false; message.success('修改成功') } catch (e) { message.error('重命名失败') }
+  try { let finalName = renameState.newName; const extension = knownFileExtension(renameState.oldPath); if (extension && !finalName.toLowerCase().endsWith(extension)) finalName += extension; await invoke('rename_item', { libraryRoot: store.libraryPath, oldPath: renameState.oldPath, newName: finalName }); const parentPath = renameState.oldPath.substring(0, Math.max(renameState.oldPath.lastIndexOf('\\'), renameState.oldPath.lastIndexOf('/'))); await refreshNode(parentPath || store.libraryPath); renameState.show = false; message.success('修改成功') } catch (e) { message.error('重命名失败') }
 }
 
 const closeTab = (id: string) => store.removeTab(id)
 let autoSaveTimer: any = null
 const triggerAutoSave = (content: string) => {
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
-  autoSaveTimer = setTimeout(async () => { if (!isVditorReady) return; const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) try { await invoke('write_markdown_file', { path: cur.path, content }); lastKnownModified = Math.floor(Date.now() / 1000) } catch (e) { console.error('Auto-save failed:', e) } }, AUTO_SAVE_DELAY_MS)
+  autoSaveTimer = setTimeout(async () => { if (!isVditorReady) return; const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) try { await invoke('write_markdown_file', { libraryRoot: store.libraryPath, path: cur.path, content }); lastKnownModified = Math.floor(Date.now() / 1000) } catch (e) { console.error('Auto-save failed:', e) } }, AUTO_SAVE_DELAY_MS)
 }
 
 const refreshCurrentFile = async () => {
@@ -1500,7 +1493,7 @@ const saveCurrentFile = async () => {
         } catch (e) { return match }
       })
 
-      await invoke('write_markdown_file', { path: t.path, content });
+      await invoke('write_markdown_file', { libraryRoot: store.libraryPath, path: t.path, content });
       lastKnownModified = Math.floor(Date.now() / 1000)
       message.success('已安全保存');
       // Git 自动 commit（本地）
@@ -1740,7 +1733,7 @@ const openPdfReference = (event: MouseEvent) => {
 const handleExportHtml = async () => {
   if (!vditor || !isVditorReady || !activeTabId.value) { message.warning('无可导出的内容'); return }
   const html = vditor.getHTML()
-  try { await invoke('export_to_html', { path: activeTabId.value, htmlContent: html }); message.success('HTML 已导出') } catch (e) { message.error('导出失败') }
+  try { await invoke('export_to_html', { libraryRoot: store.libraryPath, path: activeTabId.value, htmlContent: html }); message.success('HTML 已导出') } catch (e) { message.error('导出失败') }
 }
 
 onMounted(async () => {
@@ -1903,27 +1896,10 @@ watch(() => store.codeTheme, (newCodeTheme) => {
 watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
 watch(() => route.query.path, (path) => {
   if (typeof path !== 'string' || !path) return
-  if (path.toLowerCase().endsWith('.canvas')) {
-    router.replace({ name: 'Canvas', query: { path } })
-    return
-  }
-  if (path.toLowerCase().endsWith('.pdf')) {
-    router.replace({ name: 'Pdf', query: { path } })
-    return
-  }
-  if (/(?:\.(csv|tsv)|\.table\.json)$/i.test(path)) {
-    router.replace({ name: 'Table', query: { path } })
-    return
-  }
-  if (path.toLowerCase().endsWith('.xlsx')) {
-    router.replace({ name: 'Workbook', query: { path } })
-    return
-  }
-  if (/\.(?:mmd|mermaid)$/i.test(path)) {
-    router.replace({ name: 'Diagram', query: { path } })
-    return
-  }
-  if (path.toLowerCase().endsWith('.md')) handleNodeSelect([path])
+  const format = findFileFormat(path)
+  if (!format) return
+  if (format.id === 'markdown') handleNodeSelect([path])
+  else router.replace({ name: format.routeName, query: { path } })
 }, { immediate: true })
 watch(() => store.libraryPath, (newPath) => { if (newPath) { searchQuery.value = ''; refreshLibrary(); fetchLibStats(); fetchAllTags(); refreshGitStatus() } })
 // 从设置页返回后刷新 Git 状态

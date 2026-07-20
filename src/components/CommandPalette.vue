@@ -111,6 +111,7 @@ const highlightMatch = (text: string, query: string): { text: string; highlight:
 }
 
 const ALL_COMMANDS = [
+  { title: '打开外部 Markdown', description: '选择并临时编辑一个 Markdown 文件', keywords: 'open external markdown file', icon: FileIcon, type: 'cmd', action: 'open-external-file' },
   { title: '专注模式', description: '切换全屏专注模式  F11', keywords: 'zen f11 fullscreen', icon: CommandIcon, type: 'cmd', action: 'zen-mode' },
   { title: '导出 HTML', description: '导出当前文件为 HTML', keywords: 'export html', icon: CommandIcon, type: 'cmd', action: 'export-html' },
   { title: '保存文件', description: '保存当前编辑的文件  Ctrl+S', keywords: 'save write', icon: CommandIcon, type: 'cmd', action: 'save-file' },
