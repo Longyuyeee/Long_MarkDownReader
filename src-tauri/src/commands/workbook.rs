@@ -8,6 +8,9 @@ use crate::formats::workbook::{
     WorkbookCapabilities, WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine,
     WorkbookSheetPage, WorkbookWritePayload,
 };
+use crate::formats::workbook_formula::{
+    translate_formula, WorkbookFormulaTranslation, MAX_FORMULA_TRANSLATIONS,
+};
 use crate::formats::workbook_ooxml::{patch_workbook, read_workbook_sheet_layout};
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
@@ -83,7 +86,7 @@ fn used_dimensions<T: CellType>(range: &calamine::Range<T>) -> (usize, usize) {
 impl WorkbookEngine for CalamineWorkbookEngine {
     fn capabilities(&self) -> WorkbookCapabilities {
         WorkbookCapabilities {
-            engine_id: "calamine-ooxml-v4".into(),
+            engine_id: "calamine-ooxml-v5".into(),
             extensions: vec!["xlsx".into()],
             read: WorkbookCapabilityLevel::Supported,
             cached_formula_results: WorkbookCapabilityLevel::Supported,
@@ -95,6 +98,10 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             ooxml_part_preservation: WorkbookCapabilityLevel::Supported,
             cell_editing: WorkbookCapabilityLevel::Supported,
             formatting: WorkbookCapabilityLevel::Supported,
+            row_column_selection: WorkbookCapabilityLevel::Supported,
+            multi_area_selection: WorkbookCapabilityLevel::Supported,
+            fill_handle: WorkbookCapabilityLevel::Supported,
+            formula_reference_translation: WorkbookCapabilityLevel::Supported,
             formula_recalculation: WorkbookCapabilityLevel::Planned,
             charts: WorkbookCapabilityLevel::Planned,
             pivot_tables: WorkbookCapabilityLevel::Planned,
@@ -195,6 +202,19 @@ impl WorkbookEngine for CalamineWorkbookEngine {
 #[tauri::command]
 pub fn get_workbook_capabilities() -> WorkbookCapabilities {
     CalamineWorkbookEngine.capabilities()
+}
+
+#[tauri::command]
+pub fn translate_workbook_formulas(
+    requests: Vec<WorkbookFormulaTranslation>,
+) -> Result<Vec<String>, String> {
+    if requests.len() > MAX_FORMULA_TRANSLATIONS {
+        return Err(format!("单次最多迁移 {MAX_FORMULA_TRANSLATIONS} 个公式"));
+    }
+    requests
+        .into_iter()
+        .map(|request| translate_formula(&request.formula, request.row_delta, request.column_delta))
+        .collect()
 }
 
 #[tauri::command]

@@ -3,6 +3,12 @@
 version = 4
 
 [[package]]
+name = "a1"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47aaf03afdd36675d4e054f4f55eb84e159c2b09d170d88db5945138b7fc1d88"
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4551,6 +4557,7 @@ dependencies = [
 name = "tauri-app"
 version = "0.7.0"
 dependencies = [
+ "a1",
  "anyhow",
  "base64 0.22.1",
  "calamine",

@@ -46,7 +46,7 @@ use commands::table::{
 };
 use commands::workbook::{
     get_workbook_capabilities, import_workbook_sheet, read_workbook_file, read_workbook_sheet,
-    write_workbook_cells,
+    translate_workbook_formulas, write_workbook_cells,
 };
 use services::data_migration::check_and_migrate_data;
 use services::external_file_access::ExternalFileAccess;
@@ -206,6 +206,7 @@ pub fn run() {
             read_workbook_sheet,
             import_workbook_sheet,
             get_workbook_capabilities,
+            translate_workbook_formulas,
             write_workbook_cells,
             build_pdf_annotation_reference,
             analyze_graph_health,

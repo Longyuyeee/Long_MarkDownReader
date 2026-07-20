@@ -74,12 +74,12 @@
         <div ref="scrollRef" class="sheet-scroll" @scroll="handleScroll">
           <div class="sheet-canvas" :style="{ width: `${sheetWidth}px` }">
             <div class="sheet-header" :style="gridStyle">
-              <div class="row-number corner">#</div>
-              <div v-for="column in canvasColumnCount" :key="column" class="column-header">{{ columnLabel(column - 1) }}</div>
+              <div class="row-number corner" title="选择当前工作区" @pointerdown="selectAllCells">#</div>
+              <div v-for="column in canvasColumnCount" :key="column" class="column-header" :class="{ active: isColumnSelected(column - 1) }" @pointerdown="selectColumn(column - 1, $event)">{{ columnLabel(column - 1) }}</div>
             </div>
             <div class="virtual-sheet" :style="{ height: `${canvasRowCount * rowHeight}px` }">
               <div v-for="row in visibleRows" :key="row.index" class="sheet-row" :style="[{ transform: `translateY(${row.index * rowHeight}px)` }, gridStyle]">
-                <div class="row-number">{{ row.index + 1 }}</div>
+                <div class="row-number" :class="{ active: isRowSelected(row.index) }" @pointerdown="selectRow(row.index, $event)">{{ row.index + 1 }}</div>
                 <div
                   v-for="column in canvasColumnCount"
                   :key="column"
@@ -90,6 +90,7 @@
                       formula: Boolean(cellAt(row.index, column - 1).formula),
                       selected: isSelected(row.index, column - 1),
                       'in-range': isInSelection(row.index, column - 1),
+                      'fill-preview': isInFillPreview(row.index, column - 1),
                       dirty: isDirty(activeSheet, row.index, column - 1),
                       editable: isEditableCell(row.index, column - 1),
                     },
@@ -99,7 +100,10 @@
                   @pointerdown="startCellSelection(row.index, column - 1, $event)"
                   @pointerenter="extendCellSelection(row.index, column - 1)"
                   @dblclick="beginCellEdit(row.index, column - 1)"
-                >{{ cellDisplay(row.index, column - 1) }}</div>
+                >
+                  <span class="cell-content">{{ cellDisplay(row.index, column - 1) }}</span>
+                  <span v-if="isFillHandleCell(row.index, column - 1)" class="fill-handle" title="拖动填充" @pointerdown.stop="startFill($event)"></span>
+                </div>
               </div>
             </div>
           </div>
@@ -160,12 +164,15 @@ interface WorkbookSheetPage {
 interface WorkbookCellEdit { sheet: string; row: number; column: number; input: string; kind: 'string' | 'number' | 'boolean' | 'empty' | 'formula' }
 interface WorkbookCellStyleEdit { sheet: string; row: number; column: number; patch: WorkbookStylePatch }
 interface CellSelection { sheet: string; row: number; column: number }
+interface SelectionArea { top: number; bottom: number; left: number; right: number }
 interface CellChange { key: string; before?: WorkbookCellEdit; after?: WorkbookCellEdit }
 interface StyleChange { key: string; before?: WorkbookStylePatch; after?: WorkbookStylePatch }
 interface EditAction { changes?: CellChange[]; styleChanges?: StyleChange[] }
+interface FormulaTranslation { formula: string; rowDelta: number; columnDelta: number }
 
 const PAGE_ROWS = 2_000
 const MAX_BATCH_CELLS = 10_000
+const MAX_SELECTION_AREAS = 32
 const EXTRA_ROWS = 100
 const EXTRA_COLUMNS = 5
 const rowHeight = 32
@@ -186,6 +193,8 @@ const undoStack = ref<EditAction[]>([])
 const redoStack = ref<EditAction[]>([])
 const selectedCell = ref<CellSelection | null>(null)
 const selectionAnchor = ref<CellSelection | null>(null)
+const selectionAreas = ref<SelectionArea[]>([])
+const fillPreview = ref<SelectionArea | null>(null)
 const formulaInput = ref('')
 const formulaInputRef = ref<HTMLInputElement | null>(null)
 const loading = ref(true)
@@ -201,6 +210,8 @@ let resizeObserver: ResizeObserver | null = null
 let generation = 0
 let wantedOffset = 0
 let dragSelecting = false
+let fillSource: SelectionArea | null = null
+let filling = false
 
 const workbookPath = computed(() => String(route.query.path || ''))
 const fileName = computed(() => workbookPath.value.split(/[\\/]/).pop() || '工作簿.xlsx')
@@ -227,17 +238,15 @@ const sheetWidth = computed(() => 52 + canvasColumnCount.value * columnWidth)
 const gridStyle = computed(() => ({ gridTemplateColumns: `52px repeat(${canvasColumnCount.value}, ${columnWidth}px)` }))
 const dirtyCount = computed(() => new Set([...drafts.value.keys(), ...styleDrafts.value.keys()]).size)
 const selectionBounds = computed(() => {
-  const anchor = selectionAnchor.value
-  const focus = selectedCell.value
-  if (!anchor || !focus || anchor.sheet !== focus.sheet) return null
-  return { top: Math.min(anchor.row, focus.row), bottom: Math.max(anchor.row, focus.row), left: Math.min(anchor.column, focus.column), right: Math.max(anchor.column, focus.column) }
+  const areas = selectionAreas.value
+  return areas.length ? areas[areas.length - 1] : null
 })
 const selectedAddress = computed(() => {
-  const bounds = selectionBounds.value
-  if (!bounds) return ''
-  const first = `${columnLabel(bounds.left)}${bounds.top + 1}`
-  const last = `${columnLabel(bounds.right)}${bounds.bottom + 1}`
-  return first === last ? first : `${first}:${last}`
+  return selectionAreas.value.map(bounds => {
+    const first = `${columnLabel(bounds.left)}${bounds.top + 1}`
+    const last = `${columnLabel(bounds.right)}${bounds.bottom + 1}`
+    return first === last ? first : `${first}:${last}`
+  }).join(',')
 })
 const selectedEditable = computed(() => selectedCell.value ? isEditableCell(selectedCell.value.row, selectedCell.value.column) : false)
 const defaultStyle: WorkbookCellStyle = { styleId: 0, numberFormat: 'general', fontName: 'Calibri', fontSize: 11, bold: false, italic: false, underline: false, borderStyle: 'none', horizontalAlignment: 'general', wrapText: false }
@@ -281,8 +290,17 @@ const isEditableCell = (row: number, column: number) => {
 const isDirty = (sheet: string, row: number, column: number) => drafts.value.has(editKey(sheet, row, column)) || styleDrafts.value.has(editKey(sheet, row, column))
 const isSelected = (row: number, column: number) => selectedCell.value?.sheet === activeSheet.value && selectedCell.value.row === row && selectedCell.value.column === column
 const isInSelection = (row: number, column: number) => {
-  const bounds = selectionBounds.value
-  return Boolean(bounds && row >= bounds.top && row <= bounds.bottom && column >= bounds.left && column <= bounds.right)
+  return selectionAreas.value.some(bounds => row >= bounds.top && row <= bounds.bottom && column >= bounds.left && column <= bounds.right)
+}
+const isRowSelected = (row: number) => selectionAreas.value.some(bounds => row >= bounds.top && row <= bounds.bottom && bounds.left === 0 && bounds.right === canvasColumnCount.value - 1)
+const isColumnSelected = (column: number) => selectionAreas.value.some(bounds => column >= bounds.left && column <= bounds.right && bounds.top === 0 && bounds.bottom === canvasRowCount.value - 1)
+const isInFillPreview = (row: number, column: number) => {
+  const area = fillPreview.value
+  return Boolean(area && row >= area.top && row <= area.bottom && column >= area.left && column <= area.right)
+}
+const isFillHandleCell = (row: number, column: number) => {
+  const area = selectionBounds.value
+  return selectionAreas.value.length === 1 && Boolean(area && row === area.bottom && column === area.right)
 }
 const cellDisplay = (row: number, column: number) => {
   const cell = cellAt(row, column)
@@ -342,18 +360,94 @@ const setSelectionFocus = (row: number, column: number) => {
   selectedCell.value = { sheet: activeSheet.value, row, column }
   formulaInput.value = originalInput(cellAt(row, column))
 }
-const selectCell = (row: number, column: number, extend = false) => {
-  if (!extend || selectionAnchor.value?.sheet !== activeSheet.value) selectionAnchor.value = { sheet: activeSheet.value, row, column }
+const areaBetween = (anchor: CellSelection, row: number, column: number): SelectionArea => ({
+  top: Math.min(anchor.row, row), bottom: Math.max(anchor.row, row),
+  left: Math.min(anchor.column, column), right: Math.max(anchor.column, column),
+})
+const replacePrimaryArea = (area: SelectionArea) => {
+  const next = selectionAreas.value.slice()
+  if (next.length) next[next.length - 1] = area
+  else next.push(area)
+  selectionAreas.value = next
+}
+const appendArea = (area: SelectionArea) => {
+  if (selectionAreas.value.length >= MAX_SELECTION_AREAS) {
+    message.warning(`最多选择 ${MAX_SELECTION_AREAS} 个区域`)
+    return false
+  }
+  selectionAreas.value = [...selectionAreas.value, area]
+  return true
+}
+const selectCell = (row: number, column: number, extend = false, additive = false) => {
+  if (additive) {
+    const anchor = { sheet: activeSheet.value, row, column }
+    if (!appendArea(areaBetween(anchor, row, column))) return
+    selectionAnchor.value = anchor
+  } else if (!extend || selectionAnchor.value?.sheet !== activeSheet.value) {
+    selectionAnchor.value = { sheet: activeSheet.value, row, column }
+    selectionAreas.value = [areaBetween(selectionAnchor.value, row, column)]
+  } else {
+    replacePrimaryArea(areaBetween(selectionAnchor.value, row, column))
+  }
   setSelectionFocus(row, column)
 }
 const startCellSelection = (row: number, column: number, event: PointerEvent) => {
   if (event.button !== 0) return
   event.preventDefault()
   dragSelecting = true
-  selectCell(row, column, event.shiftKey)
+  selectCell(row, column, event.shiftKey, event.ctrlKey || event.metaKey)
 }
 const extendCellSelection = (row: number, column: number) => {
-  if (dragSelecting) setSelectionFocus(row, column)
+  if (filling && fillSource) {
+    const source = fillSource
+    const verticalDistance = row < source.top ? source.top - row : row > source.bottom ? row - source.bottom : 0
+    const horizontalDistance = column < source.left ? source.left - column : column > source.right ? column - source.right : 0
+    if (!verticalDistance && !horizontalDistance) fillPreview.value = source
+    else if (verticalDistance >= horizontalDistance) fillPreview.value = { ...source, top: Math.min(source.top, row), bottom: Math.max(source.bottom, row) }
+    else fillPreview.value = { ...source, left: Math.min(source.left, column), right: Math.max(source.right, column) }
+    return
+  }
+  if (dragSelecting && selectionAnchor.value) {
+    replacePrimaryArea(areaBetween(selectionAnchor.value, row, column))
+    setSelectionFocus(row, column)
+  }
+}
+const startFill = (event: PointerEvent) => {
+  if (event.button !== 0 || selectionAreas.value.length !== 1 || !selectionBounds.value) return
+  event.preventDefault()
+  dragSelecting = false
+  filling = true
+  fillSource = { ...selectionBounds.value }
+  fillPreview.value = { ...selectionBounds.value }
+}
+const selectRow = (row: number, event: PointerEvent) => {
+  if (event.button !== 0) return
+  event.preventDefault()
+  const additive = event.ctrlKey || event.metaKey
+  const anchorRow = event.shiftKey && selectionAnchor.value?.sheet === activeSheet.value ? selectionAnchor.value.row : row
+  const area = { top: Math.min(anchorRow, row), bottom: Math.max(anchorRow, row), left: 0, right: canvasColumnCount.value - 1 }
+  const anchor = { sheet: activeSheet.value, row: anchorRow, column: 0 }
+  if (additive) { if (!appendArea(area)) return } else selectionAreas.value = [area]
+  selectionAnchor.value = anchor
+  setSelectionFocus(row, 0)
+}
+const selectColumn = (column: number, event: PointerEvent) => {
+  if (event.button !== 0) return
+  event.preventDefault()
+  const additive = event.ctrlKey || event.metaKey
+  const anchorColumn = event.shiftKey && selectionAnchor.value?.sheet === activeSheet.value ? selectionAnchor.value.column : column
+  const area = { top: 0, bottom: canvasRowCount.value - 1, left: Math.min(anchorColumn, column), right: Math.max(anchorColumn, column) }
+  const anchor = { sheet: activeSheet.value, row: 0, column: anchorColumn }
+  if (additive) { if (!appendArea(area)) return } else selectionAreas.value = [area]
+  selectionAnchor.value = anchor
+  setSelectionFocus(0, column)
+}
+const selectAllCells = (event: PointerEvent) => {
+  if (event.button !== 0) return
+  event.preventDefault()
+  selectionAnchor.value = { sheet: activeSheet.value, row: 0, column: 0 }
+  selectionAreas.value = [{ top: 0, bottom: canvasRowCount.value - 1, left: 0, right: canvasColumnCount.value - 1 }]
+  setSelectionFocus(0, 0)
 }
 const beginCellEdit = (row: number, column: number) => {
   selectCell(row, column)
@@ -395,6 +489,8 @@ const applyHistoryAction = (action: EditAction, direction: 'undo' | 'redo') => {
   const edit = last && (direction === 'undo' ? last.before : last.after)
   if (edit && edit.sheet === activeSheet.value) {
     selectedCell.value = { sheet: edit.sheet, row: edit.row, column: edit.column }
+    selectionAnchor.value = selectedCell.value
+    selectionAreas.value = [{ top: edit.row, bottom: edit.row, left: edit.column, right: edit.column }]
     formulaInput.value = edit.input
   }
 }
@@ -410,22 +506,35 @@ const stylePatchMatchesSource = (row: number, column: number, patch: WorkbookSty
     && result.borderStyle === source.borderStyle && result.borderColor === source.borderColor
     && result.horizontalAlignment === source.horizontalAlignment && result.wrapText === source.wrapText
 }
+const selectedCoordinates = () => {
+  const coordinates: Array<{ row: number; column: number }> = []
+  const seen = new Set<string>()
+  for (const area of selectionAreas.value) {
+    for (let row = area.top; row <= area.bottom; row += 1) {
+      if (row < (sheetInfo.value?.totalRows || 0) && !loadedRows.value.has(row)) throw new Error('选择区域包含尚未载入的数据，请滚动到该区域后重试')
+      for (let column = area.left; column <= area.right; column += 1) {
+        const key = `${row}:${column}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        coordinates.push({ row, column })
+        if (coordinates.length > MAX_BATCH_CELLS) throw new Error(`单次区域操作不能超过 ${MAX_BATCH_CELLS.toLocaleString()} 个单元格`)
+      }
+    }
+  }
+  return coordinates
+}
 const applyStylePatch = (patch: WorkbookStylePatch) => {
-  const bounds = selectionBounds.value
-  if (!bounds || !selectedCell.value) return
-  const count = (bounds.bottom - bounds.top + 1) * (bounds.right - bounds.left + 1)
-  if (count > MAX_BATCH_CELLS) return void message.error(`单次区域格式不能超过 ${MAX_BATCH_CELLS.toLocaleString()} 个单元格`)
+  if (!selectedCell.value) return
   const changes: StyleChange[] = []
-  for (let row = bounds.top; row <= bounds.bottom; row += 1) {
-    if (row < (sheetInfo.value?.totalRows || 0) && !loadedRows.value.has(row)) return void message.error('选择区域包含尚未载入的数据，请滚动到该区域后重试')
-    for (let column = bounds.left; column <= bounds.right; column += 1) {
+  try {
+    for (const { row, column } of selectedCoordinates()) {
       const key = editKey(activeSheet.value, row, column)
       const before = styleDrafts.value.get(key)
       const merged = { ...(before || {}), ...patch }
       const after = stylePatchMatchesSource(row, column, merged) ? undefined : merged
       if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
     }
-  }
+  } catch (cause) { return void message.error(String(cause).replace(/^Error:\s*/, '')) }
   if (!changes.length) return
   const next = new Map(styleDrafts.value)
   for (const change of changes) {
@@ -471,6 +580,7 @@ const applyBatchInputs = (start: CellSelection, matrix: string[][]) => {
 const selectedMatrix = () => {
   const bounds = selectionBounds.value
   if (!bounds) return []
+  if (selectionAreas.value.length !== 1) throw new Error('多区域选择不能直接复制为 TSV，请保留一个连续区域')
   const count = (bounds.bottom - bounds.top + 1) * (bounds.right - bounds.left + 1)
   if (count > MAX_BATCH_CELLS) throw new Error(`选择区域不能超过 ${MAX_BATCH_CELLS.toLocaleString()} 个单元格`)
   for (let row = bounds.top; row <= bounds.bottom; row += 1) {
@@ -500,20 +610,122 @@ const pasteSelection = async () => {
     selectionAnchor.value = start
     const bottom = start.row + matrix.length - 1
     const right = start.column + Math.max(...matrix.map(row => row.length)) - 1
+    selectionAreas.value = [{ top: start.row, bottom, left: start.column, right }]
     setSelectionFocus(bottom, right)
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 const clearSelection = () => {
-  const bounds = selectionBounds.value
   const focus = selectedCell.value
-  if (!bounds || !focus) return
+  if (!focus) return
   try {
-    const matrix = Array.from({ length: bounds.bottom - bounds.top + 1 }, () => Array.from({ length: bounds.right - bounds.left + 1 }, () => ''))
-    applyBatchInputs({ sheet: focus.sheet, row: bounds.top, column: bounds.left }, matrix)
+    const changes: CellChange[] = []
+    for (const { row, column } of selectedCoordinates()) {
+      const key = editKey(focus.sheet, row, column)
+      const before = drafts.value.get(key)
+      const source = sourceCellAt(row, column)
+      if (!before && ['date', 'error'].includes(source.kind)) throw new Error(`${columnLabel(column)}${row + 1} 当前类型暂不支持区域写入`)
+      const selection = { sheet: focus.sheet, row, column }
+      const after = source.kind === 'empty' ? undefined : inferEdit(selection, '')
+      if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
+    }
+    if (changes.length) {
+      const next = new Map(drafts.value)
+      for (const change of changes) {
+        if (change.after) next.set(change.key, change.after)
+        else next.delete(change.key)
+      }
+      drafts.value = next
+      undoStack.value.push({ changes })
+      redoStack.value = []
+    }
     formulaInput.value = originalInput(cellAt(focus.row, focus.column))
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 const cutSelection = async () => { if (await copySelection()) clearSelection() }
+
+const styleAsPatch = (style: WorkbookCellStyle): WorkbookStylePatch => ({
+  numberFormat: style.numberFormat, fontName: style.fontName, fontSize: style.fontSize,
+  bold: style.bold, italic: style.italic, underline: style.underline,
+  fontColor: style.fontColor || '', fillColor: style.fillColor || '',
+  borderStyle: style.borderStyle, borderColor: style.borderColor || '',
+  horizontalAlignment: style.horizontalAlignment, wrapText: style.wrapText,
+})
+const patternIndex = (value: number, start: number, size: number) => start + ((value - start) % size + size) % size
+const commitFill = async (source: SelectionArea | null, preview: SelectionArea | null) => {
+  if (!source || !preview || JSON.stringify(source) === JSON.stringify(preview)) return
+  try {
+    const destination: Array<{ row: number; column: number; sourceRow: number; sourceColumn: number; input: string }> = []
+    const sourceHeight = source.bottom - source.top + 1
+    const sourceWidth = source.right - source.left + 1
+    const vertical = preview.top !== source.top || preview.bottom !== source.bottom
+    for (let row = preview.top; row <= preview.bottom; row += 1) {
+      for (let column = preview.left; column <= preview.right; column += 1) {
+        if (row >= source.top && row <= source.bottom && column >= source.left && column <= source.right) continue
+        const sourceRow = patternIndex(row, source.top, sourceHeight)
+        const sourceColumn = patternIndex(column, source.left, sourceWidth)
+        const sourceCell = cellAt(sourceRow, sourceColumn)
+        if (['date', 'error'].includes(sourceCell.kind)) throw new Error('日期和错误单元格暂不支持填充')
+        destination.push({ row, column, sourceRow, sourceColumn, input: originalInput(sourceCell) })
+        if (destination.length > MAX_BATCH_CELLS) throw new Error(`单次填充不能超过 ${MAX_BATCH_CELLS.toLocaleString()} 个单元格`)
+      }
+    }
+
+    const seriesCells = vertical && sourceWidth === 1 && sourceHeight >= 2
+      ? Array.from({ length: sourceHeight }, (_, index) => cellAt(source.top + index, source.left))
+      : !vertical && sourceHeight === 1 && sourceWidth >= 2
+        ? Array.from({ length: sourceWidth }, (_, index) => cellAt(source.top, source.left + index))
+        : []
+    const seriesValues = seriesCells.map(cell => cell.formula ? Number.NaN : Number(originalInput(cell)))
+    if (seriesValues.length >= 2 && seriesValues.every(Number.isFinite)) {
+      const step = seriesValues[seriesValues.length - 1] - seriesValues[seriesValues.length - 2]
+      for (const item of destination) {
+        const offset = vertical ? item.row - source.top : item.column - source.left
+        item.input = String(seriesValues[0] + step * offset)
+      }
+    }
+
+    const formulaRequests: FormulaTranslation[] = []
+    const formulaDestinations: number[] = []
+    destination.forEach((item, index) => {
+      if (!item.input.startsWith('=')) return
+      formulaRequests.push({ formula: item.input, rowDelta: item.row - item.sourceRow, columnDelta: item.column - item.sourceColumn })
+      formulaDestinations.push(index)
+    })
+    if (formulaRequests.length) {
+      const translated = await invoke<string[]>('translate_workbook_formulas', { requests: formulaRequests })
+      translated.forEach((formula, index) => { destination[formulaDestinations[index]].input = formula })
+    }
+
+    const changes: CellChange[] = []
+    const styleChanges: StyleChange[] = []
+    for (const item of destination) {
+      const key = editKey(activeSheet.value, item.row, item.column)
+      const before = drafts.value.get(key)
+      const targetSource = sourceCellAt(item.row, item.column)
+      if (!before && ['date', 'error'].includes(targetSource.kind)) throw new Error(`${columnLabel(item.column)}${item.row + 1} 当前类型暂不支持填充`)
+      const selection = { sheet: activeSheet.value, row: item.row, column: item.column }
+      const after = item.input === originalInput(targetSource) || (!item.input && targetSource.kind === 'empty') ? undefined : inferEdit(selection, item.input)
+      if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
+
+      const styleBefore = styleDrafts.value.get(key)
+      const copiedStyle = styleAsPatch(cellStyleAt(item.sourceRow, item.sourceColumn))
+      const styleAfter = stylePatchMatchesSource(item.row, item.column, copiedStyle) ? undefined : copiedStyle
+      if (JSON.stringify(styleBefore) !== JSON.stringify(styleAfter)) styleChanges.push({ key, before: styleBefore, after: styleAfter })
+    }
+    if (!changes.length && !styleChanges.length) return
+    const nextDrafts = new Map(drafts.value)
+    for (const change of changes) change.after ? nextDrafts.set(change.key, change.after) : nextDrafts.delete(change.key)
+    drafts.value = nextDrafts
+    const nextStyles = new Map(styleDrafts.value)
+    for (const change of styleChanges) change.after ? nextStyles.set(change.key, change.after) : nextStyles.delete(change.key)
+    styleDrafts.value = nextStyles
+    undoStack.value.push({ changes, styleChanges })
+    redoStack.value = []
+    selectionAreas.value = [preview]
+    selectionAnchor.value = { sheet: activeSheet.value, row: preview.top, column: preview.left }
+    setSelectionFocus(preview.bottom, preview.right)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+}
 
 const loadPage = async (offset: number) => {
   if (!activeSheet.value || !workbook.value) return
@@ -544,6 +756,7 @@ const selectSheet = async (sheet: string) => {
   activeSheet.value = sheet
   selectedCell.value = null
   selectionAnchor.value = null
+  selectionAreas.value = []
   formulaInput.value = ''
   sheetInfo.value = null
   loadedRows.value = new Map()
@@ -564,6 +777,7 @@ const loadWorkbook = async () => {
     activeSheet.value = ''
     selectedCell.value = null
     selectionAnchor.value = null
+    selectionAreas.value = []
     loading.value = false
     await selectSheet(document.sheets[0])
   } catch (cause) {
@@ -646,7 +860,16 @@ const handleShortcut = (event: KeyboardEvent) => {
   else if (!formulaFocused && key === 'y') { event.preventDefault(); redo() }
 }
 const warnBeforeUnload = (event: BeforeUnloadEvent) => { if (dirtyCount.value) event.preventDefault() }
-const stopCellSelection = () => { dragSelecting = false }
+const stopCellSelection = () => {
+  dragSelecting = false
+  if (!filling) return
+  const source = fillSource
+  const preview = fillPreview.value
+  filling = false
+  fillSource = null
+  fillPreview.value = null
+  void commitFill(source, preview)
+}
 
 watch(workbookPath, () => { drafts.value = new Map(); styleDrafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook() })
 watch(scrollRef, element => {
@@ -719,12 +942,17 @@ onBeforeUnmount(() => {
 .sheet-row { position: absolute; top: 0; left: 0; height: 32px; }
 .row-number,.column-header,.workbook-cell { min-width: 0; box-sizing: border-box; border-right: 1px solid rgba(0,0,0,.07); border-bottom: 1px solid rgba(0,0,0,.07); }
 .row-number { position: sticky; left: 0; z-index: 8; display: grid; place-items: center; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 91%, #d9e3ed); font-size: 8px; }
+.row-number:not(.corner),.column-header,.corner { cursor: pointer; user-select: none; }
+.row-number.active,.column-header.active { color: var(--theme-primary); background: color-mix(in srgb, var(--theme-card) 78%, var(--theme-primary)); }
 .corner { z-index: 24; }
 .column-header { display: grid; place-items: center; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 94%, #dce6ef); font-size: 9px; font-weight: 700; }
 .workbook-cell { position: relative; overflow: hidden; padding: 7px 8px 0; outline: 0; text-overflow: ellipsis; white-space: nowrap; background: var(--cell-fill, var(--theme-card)); font-size: 9px; user-select: none; }
 .workbook-cell.editable { cursor: cell; }
 .workbook-cell.in-range { background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 82%, var(--theme-primary)); }
+.workbook-cell.fill-preview { background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 72%, var(--theme-primary)); }
 .workbook-cell.selected { z-index: 3; box-shadow: inset 0 0 0 2px var(--theme-primary); }
+.cell-content { display: block; overflow: hidden; text-overflow: ellipsis; }
+.fill-handle { position: absolute; right: -1px; bottom: -1px; z-index: 5; width: 7px; height: 7px; box-sizing: border-box; border: 1px solid var(--theme-card); background: var(--theme-primary); cursor: crosshair; }
 .workbook-cell.dirty::after { content: ''; position: absolute; top: 0; right: 0; border-top: 7px solid #df8a27; border-left: 7px solid transparent; }
 .workbook-cell.formula { color: #436fb7; }
 .workbook-cell.cell-error { color: #d24e4e; }
