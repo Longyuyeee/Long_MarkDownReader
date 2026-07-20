@@ -49,6 +49,7 @@ import { ref, watch, nextTick, onUnmounted } from 'vue'
 import { Search as SearchIcon, FileText as FileIcon, Command as CommandIcon, Clock as ClockIcon } from 'lucide-vue-next'
 import { InputInst } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
+import { themePresets } from '../config/themePresets'
 
 const props = defineProps<{ show: boolean }>()
 const emitEvent = defineEmits(['close', 'execute'])
@@ -110,17 +111,22 @@ const highlightMatch = (text: string, query: string): { text: string; highlight:
   return segments
 }
 
+const themeCommands = themePresets.map(preset => ({
+  title: `应用主题：${preset.name}`,
+  description: preset.description,
+  keywords: ['theme', '主题', preset.mode, ...preset.keywords].join(' '),
+  icon: CommandIcon,
+  type: 'cmd',
+  action: `theme-preset:${preset.id}`,
+}))
+
 const ALL_COMMANDS = [
   { title: '打开外部 Markdown', description: '选择并临时编辑一个 Markdown 文件', keywords: 'open external markdown file', icon: FileIcon, type: 'cmd', action: 'open-external-file' },
   { title: '专注模式', description: '切换全屏专注模式  F11', keywords: 'zen f11 fullscreen', icon: CommandIcon, type: 'cmd', action: 'zen-mode' },
   { title: '导出 HTML', description: '导出当前文件为 HTML', keywords: 'export html', icon: CommandIcon, type: 'cmd', action: 'export-html' },
   { title: '保存文件', description: '保存当前编辑的文件  Ctrl+S', keywords: 'save write', icon: CommandIcon, type: 'cmd', action: 'save-file' },
   { title: '刷新目录', description: '重新扫描知识库目录结构', keywords: 'refresh reload', icon: CommandIcon, type: 'cmd', action: 'refresh' },
-  { title: '纯白主题', description: '切换到纯白配色', keywords: 'white light', icon: CommandIcon, type: 'cmd', action: 'theme-white' },
-  { title: '深色主题', description: '切换到深色配色', keywords: 'dark night', icon: CommandIcon, type: 'cmd', action: 'theme-dark' },
-  { title: '绿色主题', description: '切换到护眼绿配色', keywords: 'green', icon: CommandIcon, type: 'cmd', action: 'theme-green' },
-  { title: '蓝色主题', description: '切换到清爽蓝配色', keywords: 'blue', icon: CommandIcon, type: 'cmd', action: 'theme-blue' },
-  { title: '粉色主题', description: '切换到浪漫粉配色', keywords: 'pink', icon: CommandIcon, type: 'cmd', action: 'theme-pink' },
+  ...themeCommands,
   { title: '今日笔记', description: '创建或打开今天日期的日记', keywords: 'daily today journal', icon: CommandIcon, type: 'cmd', action: 'daily-note' },
 ]
 

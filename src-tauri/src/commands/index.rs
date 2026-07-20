@@ -1,3 +1,5 @@
+use crate::formats::file_registry::file_format_for_path;
+use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -72,12 +74,16 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
         let path_string = path.to_string_lossy().into_owned();
         let title = name.into_owned();
         let title_matches = title.to_lowercase().contains(query);
-        let extension = path
-            .extension()
-            .and_then(|value| value.to_str())
-            .unwrap_or_default()
-            .to_lowercase();
-        if extension == "pdf" {
+        let Ok(format) = file_format_for_path(&path) else {
+            continue;
+        };
+        if !format.capabilities.index.is_supported() {
+            continue;
+        }
+        let Some(indexer) = format.adapters.indexer.as_deref() else {
+            continue;
+        };
+        if indexer == "pdf" {
             let index = load_pdf_index(&path);
             if title_matches {
                 results.push(KnowledgeSearchResult {
@@ -146,11 +152,10 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     extraction_failed: index.extraction_failed,
                 });
             }
-        } else if matches!(extension.as_str(), "md" | "canvas" | "csv" | "tsv")
-            || title.to_ascii_lowercase().ends_with(".table.json")
-        {
-            let is_table = matches!(extension.as_str(), "csv" | "tsv")
-                || title.to_ascii_lowercase().ends_with(".table.json");
+        } else if matches!(
+            indexer,
+            "markdown" | "text" | "json-text" | "table" | "opml"
+        ) {
             let content = path
                 .metadata()
                 .ok()
@@ -161,7 +166,11 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     detector.feed(&bytes, true);
                     let encoding = detector.guess(None, true);
                     let (text, _, _) = encoding.decode(&bytes);
-                    if title.to_ascii_lowercase().ends_with(".table.json") {
+                    if indexer == "opml" {
+                        parse_opml(text.strip_prefix('\u{feff}').unwrap_or(&text))
+                            .ok()
+                            .map(|document| opml_search_text(&document))
+                    } else if title.to_ascii_lowercase().ends_with(".table.json") {
                         parse_internal_table(text.strip_prefix('\u{feff}').unwrap_or(&text))
                             .ok()
                             .map(|table| table_search_text(&table, MAX_TEXT_FILE_BYTES as usize))
@@ -176,14 +185,7 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                 results.push(KnowledgeSearchResult {
                     title,
                     path: path_string,
-                    object_type: if extension == "canvas" {
-                        "canvas"
-                    } else if is_table {
-                        "table"
-                    } else {
-                        "markdown"
-                    }
-                    .into(),
+                    object_type: format.id.clone(),
                     match_kind: if title_matches { "title" } else { "body" }.into(),
                     context: context.unwrap_or_else(|| "文件名匹配".into()),
                     page: None,
@@ -353,6 +355,57 @@ mod tests {
                 && result.context.contains("Unique board evidence")
                 && !result.context.contains("schemaVersion")
         }));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn indexes_registered_plain_text_through_the_generic_adapter() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("longedit-text-index-test-{nonce}"));
+        fs::create_dir_all(&root).unwrap();
+        fs::write(
+            root.join("adapter-proof.txt"),
+            "Generic adapter evidence lives here.",
+        )
+        .unwrap();
+        let results = tauri::async_runtime::block_on(search_knowledge(
+            root.to_string_lossy().into_owned(),
+            "generic adapter evidence".into(),
+        ))
+        .unwrap();
+        assert!(results.iter().any(|result| {
+            result.object_type == "plain-text"
+                && result.match_kind == "body"
+                && result.context.contains("Generic adapter evidence")
+        }));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn indexes_opml_semantics_without_exposing_xml_markup() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("longedit-opml-index-test-{nonce}"));
+        fs::create_dir_all(&root).unwrap();
+        fs::write(
+            root.join("strategy.opml"),
+            include_str!("../../tests/fixtures/formats/mindmap.opml"),
+        )
+        .unwrap();
+        let results = tauri::async_runtime::block_on(search_knowledge(
+            root.to_string_lossy().into_owned(),
+            "增强关系发现".into(),
+        ))
+        .unwrap();
+        assert!(results.iter().any(|result| result.object_type == "opml"
+            && result.match_kind == "body"
+            && result.context.contains("增强关系发现")
+            && !result.context.contains("outline")));
         fs::remove_dir_all(root).unwrap();
     }
 }

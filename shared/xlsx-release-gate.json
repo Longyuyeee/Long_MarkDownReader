@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "profileId": "xlsx-progressive-editing-v1",
+  "engineId": "calamine-ooxml-ironcalc-v14",
+  "publicClaim": "XLSX 渐进式编辑（以公开兼容性矩阵为准）",
+  "prohibitedClaims": [
+    "完整 Excel 等价",
+    "100% Excel 兼容",
+    "无损编辑所有 XLSX 功能"
+  ],
+  "complexFixture": {
+    "path": "src-tauri/tests/fixtures/workbook/compatibility-baseline.xlsx",
+    "minimumSheets": 4,
+    "minimumZipParts": 24,
+    "minimumDocumentFeatures": 20
+  },
+  "differentialGate": {
+    "requireNoAddedParts": true,
+    "requireNoRemovedParts": true,
+    "contentAndStyleAllowedChangedParts": [
+      "xl/styles.xml",
+      "xl/worksheets/sheet1.xml"
+    ],
+    "preserveAllOtherPartsByteForByte": true
+  },
+  "performanceWorkload": {
+    "sheets": 4,
+    "rows": 10000,
+    "columns": 12,
+    "formulaRows": 1000
+  },
+  "performanceBudgetsMs": {
+    "inspect": 2000,
+    "readPage": 7000,
+    "patch": 5000,
+    "total": 12000
+  },
+  "maximumPatchedFileGrowthPercent": 5
+}

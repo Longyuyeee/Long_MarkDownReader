@@ -328,8 +328,8 @@
                 <template #icon><n-icon :component="DownloadIcon" /></template>
               </n-button>
             </n-dropdown>
-            <n-button quaternary size="tiny" v-if="activeTabId" @click="createMindMapFromCurrentMarkdown" title="将当前文档标题和列表转换为可编辑思维导图">转脑图</n-button>
-            <div class="mode-toggle" v-if="activeTabId">
+            <n-button quaternary size="tiny" v-if="activeTabId && activeIsMarkdown" @click="createMindMapFromCurrentMarkdown" title="将当前文档标题和列表转换为可编辑思维导图">转脑图</n-button>
+            <div class="mode-toggle" v-if="activeTabId && activeIsMarkdown">
               <n-button quaternary size="tiny" :type="store.editorMode === 'wysiwyg' ? 'primary' : 'default'" @click="switchEditorMode('wysiwyg')" title="所见即所得">所见</n-button>
               <n-button quaternary size="tiny" :type="store.editorMode === 'ir' ? 'primary' : 'default'" @click="switchEditorMode('ir')" title="即时渲染">IR</n-button>
               <n-button quaternary size="tiny" :type="store.editorMode === 'sv' ? 'primary' : 'default'" @click="switchEditorMode('sv')" title="源码编辑">源码</n-button>
@@ -361,7 +361,7 @@
         </div>
         <div v-show="tabs.length > 0" id="vditor-lib" class="vditor-instance"></div>
         <MarkdownChartEmbeds
-          v-if="activeMarkdownContent && activeTabId"
+          v-if="activeIsMarkdown && activeMarkdownContent && activeTabId"
           :markdown="activeMarkdownContent"
           :library-root="store.libraryPath"
           :host-path="activeTabId"
@@ -454,6 +454,7 @@ import {
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore, THEME_MAP } from '../store/app'
+import { isActiveThemeDark } from '../config/themePresets'
 import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
 import LocalGraph from '../components/LocalGraph.vue'
@@ -464,13 +465,20 @@ import { listen } from '@tauri-apps/api/event'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
-import { findFileFormat, knownFileExtension } from '../config/fileFormats'
+import {
+  CREATABLE_FILE_FORMATS,
+  fileDisplayName,
+  findFileFormat,
+  findFileFormatById,
+  knownFileExtension,
+  routeForFile,
+} from '../config/fileFormats'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
 interface KnowledgeSearchResult {
   title: string
   path: string
-  objectType: 'markdown' | 'canvas' | 'pdf' | 'table'
+  objectType: string
   matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'tag'
   context: string
   page?: number
@@ -485,7 +493,9 @@ const store = useAppStore()
 const { tabs, activeTabId } = storeToRefs(store)
 const router = useRouter()
 const route = useRoute()
-const activeMarkdownContent = computed(() => tabs.value.find(tab => tab.id === activeTabId.value)?.content || '')
+const activeDocumentFormat = computed(() => activeTabId.value ? findFileFormat(activeTabId.value) : undefined)
+const activeIsMarkdown = computed(() => activeDocumentFormat.value?.id === 'markdown')
+const activeMarkdownContent = computed(() => activeIsMarkdown.value ? tabs.value.find(tab => tab.id === activeTabId.value)?.content || '' : '')
 const openEmbeddedTableChart = (path: string) => router.push({ name: 'Table', query: { path } })
 
 // 统一错误处理辅助函数
@@ -508,7 +518,7 @@ const outgoingLinks = ref<string[]>([])
 const backlinks = ref<{ title: string; path: string; context: string }[]>([])
 
 const fetchLinks = async () => {
-  if (!activeTabId.value) { outgoingLinks.value = []; backlinks.value = []; return }
+  if (!activeTabId.value || !activeIsMarkdown.value) { outgoingLinks.value = []; backlinks.value = []; return }
   try {
     const content = vditor?.getValue() || ''
     outgoingLinks.value = await invoke<string[]>('extract_wikilinks', { content })
@@ -927,8 +937,8 @@ const handleNodeSelect = (keys: string[]) => {
   if (keys.length === 0) return
   const lastKey = keys[keys.length - 1]
   const format = lastKey ? findFileFormat(lastKey) : undefined
-  if (format?.id === 'markdown') {
-    const title = lastKey.split(/[\\/]/).pop()?.replace(/\.md$/, '') || '笔记'
+  if (format?.routeName === 'LibraryMode') {
+    const title = fileDisplayName(lastKey) || format.label
     store.addTab({ id: lastKey, title, path: lastKey, isDirty: false })
   } else if (format) {
     router.push({ name: format.routeName, query: { path: lastKey } })
@@ -949,12 +959,10 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
         ...(result.annotationId ? { annotation: result.annotationId } : {}),
       },
     })
-  } else if (result.objectType === 'canvas') {
-    router.push({ name: 'Canvas', query: { path: result.path } })
-  } else if (result.objectType === 'table') {
-    router.push({ name: 'Table', query: { path: result.path } })
   } else {
-    handleNodeSelect([result.path])
+    const target = routeForFile(result.path)
+    if (target?.name === 'LibraryMode') handleNodeSelect([result.path])
+    else if (target) router.push(target)
   }
 }
 
@@ -972,7 +980,7 @@ const loadDirectory = async (path: string): Promise<TreeOption[]> => {
   if (!path) return []
   const entries = await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path })
   return entries.map(entry => ({
-    label: entry.is_dir ? entry.name : entry.name.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid))$/i, ''),
+    label: entry.is_dir ? entry.name : fileDisplayName(entry.name),
     key: entry.path,
     isLeaf: !entry.is_dir,
     prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' })
@@ -981,7 +989,7 @@ const loadDirectory = async (path: string): Promise<TreeOption[]> => {
 
 const handleCodeThemeChange = async (val: string) => {
   store.codeTheme = val; await store.updateConfig({ codeTheme: val })
-  if (vditor && isVditorReady) { const isDark = store.theme === 'dark'; vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', val) }
+  if (vditor && isVditorReady) { const isDark = isActiveThemeDark(store.theme); vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', val) }
 }
 const handleEditorBgChange = async (val: string) => { store.editorBgColor = val; await store.updateConfig({ editorBgColor: val }) }
 
@@ -1040,7 +1048,9 @@ const loadFileToEditor = async (path: string) => {
     setEditorValue(currentTab.content)
   } else {
     try {
-      const res = await invoke<{content: string}>('read_markdown_file', { libraryRoot: store.libraryPath, path })
+      const format = findFileFormat(path)
+      if (!format || format.routeName !== 'LibraryMode') throw new Error('文件未注册为文本工作面格式')
+      const res = await invoke<{content: string}>('read_text_document', { libraryRoot: store.libraryPath, path, formatId: format.id })
       if (currentTab) currentTab.content = res.content
       setEditorValue(res.content)
     } catch (err) { message.error("读取失败") }
@@ -1255,7 +1265,7 @@ const onMouseMove = (e: MouseEvent) => {
 const deleteAction = async (paths: string[]) => {
   if (paths.length === 0) return;
   const isMultiple = paths.length > 1
-  const displayTitle = isMultiple ? `选中的 ${paths.length} 个项目` : paths[0].split(/[\\/]/).pop()?.replace(/\.md$/, '')
+  const displayTitle = isMultiple ? `选中的 ${paths.length} 个项目` : fileDisplayName(paths[0])
   dialog.warning({
     title: '删除确认',
     content: `确认要物理删除 ${displayTitle} 吗？此操作不可撤销。`,
@@ -1362,33 +1372,43 @@ const TEMPLATES: Record<string, string> = {
 
 const templateOptions = [
   ...Object.keys(TEMPLATES).map(k => ({ label: k, key: k })),
-  { type: 'divider', key: 'canvas-divider' },
-  { label: '空白画布（JSON Canvas）', key: '__canvas__' },
-  { label: '空白数据表（开放 Table）', key: '__table__' },
-  { label: 'Mermaid 图表工作室', key: '__diagram__' }
+  { type: 'divider', key: 'format-divider' },
+  ...CREATABLE_FILE_FORMATS.filter(format => format.id !== 'markdown').map(format => ({
+    label: `新建${format.label}`,
+    key: `__format:${format.id}`,
+  })),
 ]
+
+const selectedTargetDirectory = () => {
+  if (!selectedKeys.value.length) return store.libraryPath
+  const selected = selectedKeys.value[0]
+  if (!findFileFormat(selected)) return selected
+  return selected.substring(0, Math.max(selected.lastIndexOf('\\'), selected.lastIndexOf('/')))
+}
+
+const createRegisteredFile = async (formatId: string, target: string, prefix?: string, content?: string) => {
+  const format = findFileFormatById(formatId)
+  if (!format?.creation || !format.adapters.creator) throw new Error(`格式 ${formatId} 不支持创建`)
+  if (format.adapters.creator === 'table') {
+    return invoke<string>('create_table_file', { libraryRoot: store.libraryPath, targetDir: target, prefix })
+  }
+  return invoke<string>('create_format_file', {
+    libraryRoot: store.libraryPath,
+    targetDir: target,
+    formatId,
+    prefix,
+    content,
+  })
+}
 
 const handleTemplateCreate = async (key: string) => {
   if (!store.libraryPath) { openSettings(); return }
   const tmpl = TEMPLATES[key] || ''
   try {
-    const isCanvas = key === '__canvas__'
-    const isTable = key === '__table__'
-    const isDiagram = key === '__diagram__'
-    const prefix = key === '空白笔记' ? undefined : key
-    let target = store.libraryPath
-    if (selectedKeys.value.length > 0) {
-      const sel = selectedKeys.value[0]
-      target = /(?:\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid)|\.table\.json)$/i.test(sel) ? sel.substring(0, Math.max(sel.lastIndexOf('\\'), sel.lastIndexOf('/'))) : sel
-    }
-    const p = isCanvas
-      ? await invoke<string>('create_canvas_file', { libraryRoot: store.libraryPath, targetDir: target, prefix: undefined })
-      : isTable
-        ? await invoke<string>('create_table_file', { libraryRoot: store.libraryPath, targetDir: target, prefix: undefined })
-        : isDiagram
-          ? await invoke<string>('create_diagram_file', { libraryRoot: store.libraryPath, targetDir: target, prefix: undefined })
-        : await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target, prefix })
-    if (tmpl && !isTable && !isDiagram) await invoke('write_markdown_file', { libraryRoot: store.libraryPath, path: p, content: tmpl })
+    const formatId = key.startsWith('__format:') ? key.slice('__format:'.length) : 'markdown'
+    const prefix = key === '空白笔记' || key.startsWith('__format:') ? undefined : key
+    const target = selectedTargetDirectory()
+    const p = await createRegisteredFile(formatId, target, prefix, formatId === 'markdown' ? tmpl : undefined)
     await refreshNode(target)
     handleNodeSelect([p])
   } catch (e: any) {
@@ -1398,8 +1418,8 @@ const handleTemplateCreate = async (key: string) => {
 
 const handleToolbarAction = async (type: 'file' | 'folder') => {
   if (!store.libraryPath) { openSettings(); return }
-  let target = store.libraryPath; if (selectedKeys.value.length > 0) { const sel = selectedKeys.value[0]; target = /(?:\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid)|\.table\.json)$/i.test(sel) ? sel.substring(0, Math.max(sel.lastIndexOf('\\'), sel.lastIndexOf('/'))) : sel }
-  try { if (type === 'file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: target }); await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: target }); await refreshNode(target) } } catch (e: any) { handleError(e, '操作失败', 'handleToolbarAction') }
+  const target = selectedTargetDirectory()
+  try { if (type === 'file') { const p = await createRegisteredFile('markdown', target); await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: target }); await refreshNode(target) } } catch (e: any) { handleError(e, '操作失败', 'handleToolbarAction') }
 }
 
 const createDailyNote = async () => {
@@ -1408,7 +1428,7 @@ const createDailyNote = async () => {
   const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const dailyDir = store.libraryPath.replace(/[\\/]$/, '') + '/Daily'
   try {
-    const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: dailyDir, prefix: dateStr })
+    const p = await createRegisteredFile('markdown', dailyDir, dateStr)
     await refreshNode(dailyDir)
     handleNodeSelect([p])
   } catch (e) { message.error('创建今日笔记失败') }
@@ -1422,7 +1442,17 @@ const closeTab = (id: string) => store.removeTab(id)
 let autoSaveTimer: any = null
 const triggerAutoSave = (content: string) => {
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
-  autoSaveTimer = setTimeout(async () => { if (!isVditorReady) return; const cur = tabs.value.find(t => t.id === activeTabId.value); if (cur) try { await invoke('write_markdown_file', { libraryRoot: store.libraryPath, path: cur.path, content }); lastKnownModified = Math.floor(Date.now() / 1000) } catch (e) { console.error('Auto-save failed:', e) } }, AUTO_SAVE_DELAY_MS)
+  autoSaveTimer = setTimeout(async () => {
+    if (!isVditorReady) return
+    const current = tabs.value.find(tab => tab.id === activeTabId.value)
+    const format = current ? findFileFormat(current.path) : undefined
+    if (current && format?.routeName === 'LibraryMode') {
+      try {
+        await invoke('write_text_document', { libraryRoot: store.libraryPath, path: current.path, formatId: format.id, content })
+        lastKnownModified = Math.floor(Date.now() / 1000)
+      } catch (error) { console.error('Auto-save failed:', error) }
+    }
+  }, AUTO_SAVE_DELAY_MS)
 }
 
 const refreshCurrentFile = async () => {
@@ -1442,17 +1472,20 @@ const saveCurrentFile = async () => {
     try { 
       let content = vditor.getValue(); 
       
-      // 路径还原：将 asset 调试路径还原为相对路径 (public/文件名)
-      const assetPattern = /https?:\/\/asset\.localhost\/[^"'\)\s]+/g
-      content = content.replace(assetPattern, (match: string) => {
-        try {
-          const decoded = decodeURIComponent(match)
-          const fileName = decoded.split('/').pop() || ''
-          return `public/${fileName}`
-        } catch (e) { return match }
-      })
+      const format = findFileFormat(t.path)
+      if (!format || format.routeName !== 'LibraryMode') throw new Error('当前文件没有文本写入适配器')
+      if (format.id === 'markdown') {
+        const assetPattern = /https?:\/\/asset\.localhost\/[^"'\)\s]+/g
+        content = content.replace(assetPattern, (match: string) => {
+          try {
+            const decoded = decodeURIComponent(match)
+            const fileName = decoded.split('/').pop() || ''
+            return `public/${fileName}`
+          } catch (e) { return match }
+        })
+      }
 
-      await invoke('write_markdown_file', { libraryRoot: store.libraryPath, path: t.path, content });
+      await invoke('write_text_document', { libraryRoot: store.libraryPath, path: t.path, formatId: format.id, content });
       lastKnownModified = Math.floor(Date.now() / 1000)
       message.success('已安全保存');
       // Git 自动 commit（本地）
@@ -1514,7 +1547,7 @@ const initVditor = () => {
   editorLoading.value = true
 
   // 编辑器工具栏主题：深色用 dark，其他用 classic
-  const isDarkTheme = store.theme === 'dark'
+  const isDarkTheme = isActiveThemeDark(store.theme)
   const vditorEditorTheme = isDarkTheme ? 'dark' : 'classic'
 
   // 内容渲染：不使用 Vditor 内置主题，让我们的自定义 CSS 接管
@@ -1525,7 +1558,7 @@ const initVditor = () => {
       cdn: './vditor',
       lang: 'zh_CN',
       height: '100%',
-      mode: store.editorMode || 'wysiwyg',
+      mode: activeIsMarkdown.value ? store.editorMode || 'wysiwyg' : 'sv',
       customWysiwygToolbar: () => {},
       cache: { enable: false },
       theme: vditorEditorTheme,
@@ -1566,7 +1599,7 @@ const initVditor = () => {
         isVditorReady = true;
         editorLoading.value = false;
         syncVditorMode();
-        const isDark = store.theme === 'dark'
+        const isDark = isActiveThemeDark(store.theme)
         vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', store.codeTheme || 'github')
         // 光标位置追踪（兼容 WYSIWYG / IR / SV 三种模式）
         const contentEl = vditor.vditor.wysiwyg?.element || vditor.vditor.ir?.element || vditor.vditor.sv?.element
@@ -1679,7 +1712,7 @@ const openPdfReference = (event: MouseEvent) => {
 }
 
 const handleExportHtml = async () => {
-  if (!vditor || !isVditorReady || !activeTabId.value) { message.warning('无可导出的内容'); return }
+  if (!vditor || !isVditorReady || !activeTabId.value || !activeIsMarkdown.value) { message.warning('只有 Markdown 文档支持 HTML 导出'); return }
   const html = vditor.getHTML()
   try { await invoke('export_to_html', { libraryRoot: store.libraryPath, path: activeTabId.value, htmlContent: html }); message.success('HTML 已导出') } catch (e) { message.error('导出失败') }
 }
@@ -1795,7 +1828,7 @@ watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory(); 
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
     // 判断当前主题是否为深色系
-    const isDark = newTheme === 'dark'
+    const isDark = isActiveThemeDark(newTheme)
 
     // 自动调整编辑器背景色
     const targetBg = THEME_MAP[newTheme] || (isDark ? '#1c1c1e' : '#ffffff')
@@ -1833,7 +1866,7 @@ watch(() => store.theme, (newTheme) => {
 
 watch(() => store.codeTheme, (newCodeTheme) => {
   if (vditor && isVditorReady) {
-    const isDark = store.theme === 'dark'
+    const isDark = isActiveThemeDark(store.theme)
     vditor.setTheme(
       isDark ? 'dark' : 'classic',
       isDark ? 'dark' : 'light',
@@ -1847,7 +1880,7 @@ watch(() => route.query.path, (path) => {
   if (typeof path !== 'string' || !path) return
   const format = findFileFormat(path)
   if (!format) return
-  if (format.id === 'markdown') handleNodeSelect([path])
+  if (format.routeName === 'LibraryMode') handleNodeSelect([path])
   else router.replace({ name: format.routeName, query: { path } })
 }, { immediate: true })
 watch(() => store.libraryPath, (newPath) => { if (newPath) { searchQuery.value = ''; refreshLibrary(); fetchLibStats(); fetchAllTags(); refreshGitStatus() } })

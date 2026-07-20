@@ -1,5 +1,5 @@
 <template>
-  <div class="temp-mode" :class="{ 'is-dark': store.theme === 'dark', 'zen-mode': store.isZen }">
+  <div class="temp-mode" :class="{ 'is-dark': isActiveThemeDark(store.theme), 'zen-mode': store.isZen }">
     <div class="temp-header" v-if="!store.isZen">
       <div class="temp-info">
         <n-tag :bordered="false" type="error" size="small" class="mode-tag">临时编辑</n-tag>
@@ -82,6 +82,7 @@ import { List as ListIcon, BookPlus as BookPlusIcon } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore } from '../store/app'
+import { isActiveThemeDark } from '../config/themePresets'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { useVditorTheme } from '../composables/useVditorTheme'
@@ -276,9 +277,9 @@ onMounted(async () => {
     value: initialContent,
     customWysiwygToolbar: () => {},
     cache: { enable: false },
-    theme: store.theme === 'dark' ? 'dark' : 'classic',
+    theme: isActiveThemeDark(store.theme) ? 'dark' : 'classic',
     preview: {
-      theme: { current: store.theme === 'dark' ? 'dark' : 'light' },
+      theme: { current: isActiveThemeDark(store.theme) ? 'dark' : 'light' },
       hljs: { enable: true, style: store.codeTheme || 'github' },
       math: { engine: 'KaTeX' } as any,
       markdown: { mermaid: true, footnotes: true, toc: true } as any,

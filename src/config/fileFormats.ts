@@ -1,41 +1,94 @@
-export type FileFormatId = 'markdown' | 'canvas' | 'pdf' | 'table' | 'workbook' | 'diagram'
-export type EditorRouteName = 'LibraryMode' | 'Canvas' | 'Pdf' | 'Table' | 'Workbook' | 'Diagram'
+import registrySource from '../../shared/file-formats.json'
+
+export type CapabilityLevel = 'supported' | 'planned' | 'unsupported'
+export type ExternalFilePolicy = 'none' | 'import' | 'edit'
+export type EditorRouteName = 'LibraryMode' | 'Canvas' | 'Pdf' | 'Table' | 'Workbook' | 'Diagram' | 'MindMap'
+
+export interface FileFormatCapabilities {
+  read: CapabilityLevel
+  edit: CapabilityLevel
+  create: CapabilityLevel
+  index: CapabilityLevel
+}
+
+export interface FileFormatAdapters {
+  reader: string | null
+  writer: string | null
+  creator: string | null
+  indexer: string | null
+}
+
+export interface FileFormatCreation {
+  defaultExtension: string
+  defaultContent: string | null
+  defaultName: string
+}
 
 export interface FileFormatDefinition {
-  id: FileFormatId
+  id: string
   label: string
   extensions: readonly string[]
+  mimeTypes: readonly string[]
   routeName: EditorRouteName
-  readable: boolean
-  editable: boolean
-  creatable: boolean
-  indexable: boolean
-  externallyEditable: boolean
-  matches: (path: string) => boolean
+  maxBytes: number
+  capabilities: FileFormatCapabilities
+  externalPolicy: ExternalFilePolicy
+  adapters: FileFormatAdapters
+  creation: FileFormatCreation | null
 }
 
-const extensionMatcher = (...extensions: string[]) => {
-  const normalized = extensions.map(extension => extension.toLowerCase())
-  return (path: string) => normalized.some(extension => path.toLowerCase().endsWith(extension))
+interface FileFormatRegistry { schemaVersion: number; formats: FileFormatDefinition[] }
+
+const registry = registrySource as FileFormatRegistry
+const supported = (level: CapabilityLevel) => level === 'supported'
+
+const validateRegistry = () => {
+  if (registry.schemaVersion !== 1) throw new Error(`Unsupported file format registry schema ${registry.schemaVersion}`)
+  const ids = new Set<string>()
+  const extensions = new Set<string>()
+  for (const format of registry.formats) {
+    if (ids.has(format.id)) throw new Error(`Duplicate file format id ${format.id}`)
+    ids.add(format.id)
+    if (!format.extensions.length || !format.routeName || format.maxBytes <= 0) throw new Error(`Incomplete file format ${format.id}`)
+    for (const extension of format.extensions) {
+      if (!extension.startsWith('.') || extension !== extension.toLowerCase()) throw new Error(`Invalid extension ${extension}`)
+      if (extensions.has(extension)) throw new Error(`Duplicate extension ${extension}`)
+      extensions.add(extension)
+    }
+    if (supported(format.capabilities.create) !== Boolean(format.creation && format.adapters.creator)) throw new Error(`Invalid creation contract ${format.id}`)
+    if (supported(format.capabilities.index) !== Boolean(format.adapters.indexer)) throw new Error(`Invalid index contract ${format.id}`)
+  }
 }
 
-export const FILE_FORMATS: readonly FileFormatDefinition[] = [
-  { id: 'markdown', label: 'Markdown', extensions: ['.md'], routeName: 'LibraryMode', readable: true, editable: true, creatable: true, indexable: true, externallyEditable: true, matches: extensionMatcher('.md') },
-  { id: 'canvas', label: 'JSON Canvas', extensions: ['.canvas'], routeName: 'Canvas', readable: true, editable: true, creatable: true, indexable: true, externallyEditable: false, matches: extensionMatcher('.canvas') },
-  { id: 'pdf', label: 'PDF', extensions: ['.pdf'], routeName: 'Pdf', readable: true, editable: false, creatable: false, indexable: true, externallyEditable: false, matches: extensionMatcher('.pdf') },
-  { id: 'table', label: 'Data table', extensions: ['.table.json', '.csv', '.tsv'], routeName: 'Table', readable: true, editable: true, creatable: true, indexable: true, externallyEditable: false, matches: extensionMatcher('.table.json', '.csv', '.tsv') },
-  { id: 'workbook', label: 'Excel workbook', extensions: ['.xlsx'], routeName: 'Workbook', readable: true, editable: true, creatable: false, indexable: true, externallyEditable: false, matches: extensionMatcher('.xlsx') },
-  { id: 'diagram', label: 'Mermaid diagram', extensions: ['.mmd', '.mermaid'], routeName: 'Diagram', readable: true, editable: true, creatable: true, indexable: true, externallyEditable: false, matches: extensionMatcher('.mmd', '.mermaid') },
-]
+validateRegistry()
 
-export const findFileFormat = (path: string) => FILE_FORMATS.find(format => format.matches(path))
+export const FILE_FORMAT_SCHEMA_VERSION = registry.schemaVersion
+export const FILE_FORMATS: readonly FileFormatDefinition[] = Object.freeze(registry.formats)
+export const CREATABLE_FILE_FORMATS = FILE_FORMATS.filter(format => supported(format.capabilities.create))
 
-export const isExternallyEditable = (path: string) => findFileFormat(path)?.externallyEditable === true
+export const findFileFormat = (path: string) => {
+  const lowerPath = path.toLowerCase()
+  return FILE_FORMATS.find(format => format.extensions.some(extension => lowerPath.endsWith(extension)))
+}
+
+export const findFileFormatById = (id: string) => FILE_FORMATS.find(format => format.id === id)
+export const isExternallyEditable = (path: string) => findFileFormat(path)?.externalPolicy === 'edit'
+export const isFormatCapabilitySupported = (format: FileFormatDefinition, capability: keyof FileFormatCapabilities) => supported(format.capabilities[capability])
 
 export const knownFileExtension = (path: string) => {
   const lowerPath = path.toLowerCase()
-  return FILE_FORMATS
-    .flatMap(format => format.extensions)
+  return FILE_FORMATS.flatMap(format => format.extensions)
     .sort((left, right) => right.length - left.length)
     .find(extension => lowerPath.endsWith(extension)) || ''
+}
+
+export const fileDisplayName = (path: string) => {
+  const name = path.split(/[\\/]/).pop() || path
+  const extension = knownFileExtension(name)
+  return extension ? name.slice(0, -extension.length) : name
+}
+
+export const routeForFile = (path: string) => {
+  const format = findFileFormat(path)
+  return format ? { name: format.routeName, query: { path } } : null
 }

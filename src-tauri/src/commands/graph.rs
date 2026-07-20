@@ -1,5 +1,6 @@
 use crate::formats::markdown::{
-    extract_pdf_reference_mentions, extract_wikilink_mentions, WikilinkMention,
+    extract_pdf_reference_mentions, extract_wikilink_mentions, normalize_relation_type,
+    WikilinkMention,
 };
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::pdf_index::load_pdf_index;
@@ -33,6 +34,7 @@ pub struct GraphNode {
     pub(crate) modified_at: u64,
     pub(crate) object_type: String,
     pub(crate) search_text: String,
+    pub(crate) content_signature: Option<String>,
 }
 
 impl GraphNode {
@@ -48,6 +50,7 @@ impl GraphNode {
             modified_at: 0,
             object_type: "markdown".into(),
             search_text: String::new(),
+            content_signature: None,
         }
     }
 }
@@ -294,7 +297,8 @@ fn add_markdown_node(
 ) {
     let path_string = path.to_string_lossy().into_owned();
     let id = path_string.clone();
-    let content = fs::read_to_string(path).unwrap_or_default();
+    let bytes = fs::read(path).unwrap_or_default();
+    let content = String::from_utf8(bytes.clone()).unwrap_or_default();
     if node_ids.insert(id.clone()) {
         let metadata = fs::metadata(path).ok();
         let size = metadata.as_ref().map(|value| value.len()).unwrap_or(0) as f64;
@@ -314,6 +318,7 @@ fn add_markdown_node(
             modified_at: modified_timestamp(metadata),
             object_type: "markdown".into(),
             search_text: content.chars().take(8_000).collect(),
+            content_signature: Some(format!("{:x}", md5::compute(&bytes))),
         });
     }
     for mention in extract_wikilink_mentions(&content) {
@@ -371,6 +376,7 @@ fn add_pdf_node(
         modified_at: modified_timestamp(metadata),
         object_type: "pdf".into(),
         search_text: search_text.chars().take(12_000).collect(),
+        content_signature: None,
     });
 }
 
@@ -414,6 +420,7 @@ fn add_table_node(
         modified_at: modified_timestamp(metadata),
         object_type: "table".into(),
         search_text,
+        content_signature: None,
     });
 }
 
@@ -879,6 +886,228 @@ pub async fn repair_graph_links(
     })
 }
 
+const EDITABLE_RELATION_TYPES: &[&str] = &[
+    "parent",
+    "child",
+    "depends-on",
+    "related",
+    "contains",
+    "cites",
+    "derived-from",
+];
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphRelationMutation {
+    source_path: String,
+    target_path: String,
+    relation_type: String,
+    action: String,
+    expected_signature: String,
+    expected_line: Option<usize>,
+    expected_syntax: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphRelationMutationResult {
+    content_signature: String,
+}
+
+#[tauri::command]
+pub async fn update_graph_relation(
+    library_root: String,
+    mutation: GraphRelationMutation,
+) -> Result<GraphRelationMutationResult, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source = guard.resolve_existing_file(&mutation.source_path, &["md"])?;
+    let target = guard.resolve_existing_file(&mutation.target_path, &["md"])?;
+    if source == target {
+        return Err("不能创建指向自身的图谱关系".into());
+    }
+    let relation_type = normalize_relation_type(&mutation.relation_type)
+        .filter(|value| EDITABLE_RELATION_TYPES.contains(&value.as_str()))
+        .ok_or("不支持的图谱关系类型")?;
+    if mutation.expected_signature.len() != 32
+        || !mutation
+            .expected_signature
+            .chars()
+            .all(|character| character.is_ascii_hexdigit())
+    {
+        return Err("图谱关系写回签名无效，请刷新图谱后重试".into());
+    }
+    let target_reference = target
+        .strip_prefix(guard.root())
+        .map_err(|_| "关系目标超出知识库范围")?
+        .with_extension("")
+        .to_string_lossy()
+        .replace('\\', "/");
+    if target_reference.contains(['[', ']', '"', '\r', '\n']) {
+        return Err("关系目标文件名无法安全写入 Wikilink".into());
+    }
+
+    tauri::async_runtime::spawn_blocking(move || {
+        let bytes = fs::read(&source).map_err(|error| format!("读取关系源笔记失败: {error}"))?;
+        let current_signature = format!("{:x}", md5::compute(&bytes));
+        if !current_signature.eq_ignore_ascii_case(&mutation.expected_signature) {
+            return Err("源笔记已被修改，请刷新图谱后再编辑关系".into());
+        }
+        let content = String::from_utf8(bytes).map_err(|_| "关系源笔记不是 UTF-8 文本")?;
+        let updated = match mutation.action.as_str() {
+            "add" => add_frontmatter_relation(&content, &relation_type, &target_reference)?,
+            "remove" => remove_frontmatter_relation(
+                &content,
+                &relation_type,
+                mutation.expected_line.ok_or("删除关系缺少原始行号")?,
+                mutation
+                    .expected_syntax
+                    .as_deref()
+                    .ok_or("删除关系缺少原始链接语法")?,
+            )?,
+            _ => return Err("不支持的图谱关系操作".into()),
+        };
+        write_utf8(&source, &updated)?;
+        Ok(GraphRelationMutationResult {
+            content_signature: format!("{:x}", md5::compute(updated.as_bytes())),
+        })
+    })
+    .await
+    .map_err(|error| format!("图谱关系写回任务失败: {error}"))?
+}
+
+fn split_markdown_lines(content: &str) -> (Vec<String>, &'static str, bool) {
+    let newline = if content.contains("\r\n") {
+        "\r\n"
+    } else {
+        "\n"
+    };
+    let trailing_newline = content.ends_with('\n');
+    let lines = content.lines().map(str::to_string).collect();
+    (lines, newline, trailing_newline)
+}
+
+fn join_markdown_lines(lines: &[String], newline: &str, trailing_newline: bool) -> String {
+    let mut result = lines.join(newline);
+    if trailing_newline {
+        result.push_str(newline);
+    }
+    result
+}
+
+fn add_frontmatter_relation(
+    content: &str,
+    relation_type: &str,
+    target_reference: &str,
+) -> Result<String, String> {
+    let (mut lines, newline, trailing_newline) = split_markdown_lines(content);
+    let syntax = format!("[[{target_reference}]]");
+    if extract_wikilink_mentions(content)
+        .iter()
+        .any(|mention| mention.relation_type == relation_type && mention.target == target_reference)
+    {
+        return Err("该语义关系已经存在".into());
+    }
+
+    let frontmatter_end = if lines.first().is_some_and(|line| line.trim() == "---") {
+        lines
+            .iter()
+            .enumerate()
+            .skip(1)
+            .find_map(|(index, line)| (line.trim() == "---").then_some(index))
+            .ok_or("Markdown Frontmatter 未闭合，无法安全写入关系")?
+    } else {
+        lines.splice(
+            0..0,
+            [
+                "---".to_string(),
+                "relations:".to_string(),
+                format!("  {relation_type}: \"{syntax}\""),
+                "---".to_string(),
+            ],
+        );
+        return Ok(join_markdown_lines(&lines, newline, trailing_newline));
+    };
+
+    let relations_index = lines[1..frontmatter_end]
+        .iter()
+        .position(|line| line == "relations:")
+        .map(|index| index + 1);
+    let Some(relations_index) = relations_index else {
+        lines.insert(frontmatter_end, "relations:".into());
+        lines.insert(
+            frontmatter_end + 1,
+            format!("  {relation_type}: \"{syntax}\""),
+        );
+        return Ok(join_markdown_lines(&lines, newline, trailing_newline));
+    };
+
+    let block_end = ((relations_index + 1)..frontmatter_end)
+        .find(|index| {
+            let line = &lines[*index];
+            !line.trim().is_empty() && !line.starts_with(' ') && !line.starts_with('\t')
+        })
+        .unwrap_or(frontmatter_end);
+    let relation_line = ((relations_index + 1)..block_end).find(|index| {
+        lines[*index]
+            .trim()
+            .split_once(':')
+            .and_then(|(key, _)| normalize_relation_type(key))
+            .is_some_and(|value| value == relation_type)
+    });
+    if let Some(index) = relation_line {
+        let mut syntaxes: Vec<String> = extract_wikilink_mentions(content)
+            .into_iter()
+            .filter(|mention| mention.line == index + 1 && mention.relation_type == relation_type)
+            .map(|mention| mention.syntax)
+            .collect();
+        syntaxes.push(syntax);
+        lines[index] = format!("  {relation_type}: \"{}\"", syntaxes.join(" "));
+    } else {
+        lines.insert(block_end, format!("  {relation_type}: \"{syntax}\""));
+    }
+    Ok(join_markdown_lines(&lines, newline, trailing_newline))
+}
+
+fn remove_frontmatter_relation(
+    content: &str,
+    relation_type: &str,
+    expected_line: usize,
+    expected_syntax: &str,
+) -> Result<String, String> {
+    if expected_line == 0
+        || expected_syntax.len() > 500
+        || !expected_syntax.starts_with("[[")
+        || !expected_syntax.ends_with("]]")
+    {
+        return Err("待删除关系的证据无效".into());
+    }
+    let (mut lines, newline, trailing_newline) = split_markdown_lines(content);
+    let index = expected_line - 1;
+    let line = lines.get(index).ok_or("关系位置已变化，请刷新图谱")?;
+    let key_matches = line
+        .trim()
+        .split_once(':')
+        .and_then(|(key, _)| normalize_relation_type(key))
+        .is_some_and(|value| value == relation_type);
+    if !key_matches || !line.contains(expected_syntax) {
+        return Err("关系内容已被修改，请刷新图谱后重试".into());
+    }
+    lines[index] = line.replacen(expected_syntax, "", 1);
+    let value_empty = lines[index].split_once(':').is_some_and(|(_, value)| {
+        value
+            .trim()
+            .trim_matches(|character: char| matches!(character, '"' | '\''))
+            .trim()
+            .is_empty()
+    });
+    if value_empty {
+        lines.remove(index);
+    } else {
+        lines[index] = lines[index].trim_end().to_string();
+    }
+    Ok(join_markdown_lines(&lines, newline, trailing_newline))
+}
+
 fn replace_at_line(
     content: &str,
     line_number: usize,
@@ -1130,6 +1359,64 @@ mod tests {
         ));
         assert!(outside_result.is_err());
         assert!(replace_at_line("[[Changed]]", 1, "[[Missing]]", "Target").is_err());
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn graph_relation_editor_adds_removes_and_preserves_markdown() {
+        let original = "---\r\ntype: project\r\n---\r\n# 项目\r\n正文\r\n";
+        let added = add_frontmatter_relation(original, "depends-on", "docs/Target").unwrap();
+        assert!(added.contains("relations:\r\n  depends-on: \"[[docs/Target]]\""));
+        assert!(added.ends_with("# 项目\r\n正文\r\n"));
+        let with_second = add_frontmatter_relation(&added, "depends-on", "docs/Other").unwrap();
+        assert!(with_second.contains("depends-on: \"[[docs/Target]] [[docs/Other]]\""));
+        let mention = extract_wikilink_mentions(&added)
+            .into_iter()
+            .find(|item| item.relation_type == "depends-on")
+            .unwrap();
+        let removed =
+            remove_frontmatter_relation(&added, "depends-on", mention.line, &mention.syntax)
+                .unwrap();
+        assert!(!removed.contains("depends-on:"));
+        assert!(removed.contains("type: project"));
+        assert!(add_frontmatter_relation(&added, "depends-on", "docs/Target").is_err());
+    }
+
+    #[test]
+    fn graph_relation_command_rejects_stale_signature_and_outside_target() {
+        let (base, root) = fixture("relation-edit");
+        let source = root.join("Source.md");
+        let target = root.join("Target.md");
+        let outside = base.join("Outside.md");
+        fs::write(&source, "# Source\n").unwrap();
+        fs::write(&target, "# Target\n").unwrap();
+        fs::write(&outside, "# Outside\n").unwrap();
+        let stale = tauri::async_runtime::block_on(update_graph_relation(
+            root.to_string_lossy().into_owned(),
+            GraphRelationMutation {
+                source_path: source.to_string_lossy().into_owned(),
+                target_path: target.to_string_lossy().into_owned(),
+                relation_type: "related".into(),
+                action: "add".into(),
+                expected_signature: "00000000000000000000000000000000".into(),
+                expected_line: None,
+                expected_syntax: None,
+            },
+        ));
+        assert!(stale.is_err());
+        let outside_result = tauri::async_runtime::block_on(update_graph_relation(
+            root.to_string_lossy().into_owned(),
+            GraphRelationMutation {
+                source_path: source.to_string_lossy().into_owned(),
+                target_path: outside.to_string_lossy().into_owned(),
+                relation_type: "related".into(),
+                action: "add".into(),
+                expected_signature: format!("{:x}", md5::compute(b"# Source\n")),
+                expected_line: None,
+                expected_syntax: None,
+            },
+        ));
+        assert!(outside_result.is_err());
         fs::remove_dir_all(base).unwrap();
     }
 

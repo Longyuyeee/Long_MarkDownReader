@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-21",
+  "engineId": "calamine-ooxml-ironcalc-v14",
+  "compatibilityProfileId": "xlsx-progressive-editing-v1",
+  "format": "xlsx",
+  "statusDefinitions": {
+    "supported": "已实现并有自动化测试证据",
+    "limited": "可用于明确边界内的场景，存在公开限制",
+    "preserved": "不提供编辑，但工作簿写回保持原 OOXML 对象",
+    "planned": "尚未作为产品能力开放",
+    "not_applicable": "该维度不适用于此能力"
+  },
+  "features": [
+    {
+      "id": "scalar_values",
+      "label": "文本、数值与布尔值",
+      "read": "supported",
+      "view": "supported",
+      "edit": "supported",
+      "calculate": "not_applicable",
+      "roundTrip": "supported",
+      "evidence": "compatibility-baseline.xlsx + workbook command tests"
+    },
+    {
+      "id": "date_time_values",
+      "label": "日期与日期时间值",
+      "read": "supported",
+      "view": "supported",
+      "edit": "planned",
+      "calculate": "limited",
+      "roundTrip": "supported",
+      "evidence": "Summary!D2:E2 fixture + semantic round-trip test"
+    },
+    {
+      "id": "error_values",
+      "label": "Excel 错误值",
+      "read": "supported",
+      "view": "supported",
+      "edit": "planned",
+      "calculate": "supported",
+      "roundTrip": "supported",
+      "evidence": "Summary!F2 #DIV/0! fixture + semantic round-trip test"
+    },
+    {
+      "id": "formulas",
+      "label": "常规公式、依赖图与显式重算",
+      "read": "supported",
+      "view": "supported",
+      "edit": "supported",
+      "calculate": "limited",
+      "roundTrip": "supported",
+      "evidence": "same-sheet/cross-sheet/cycle tests; unsupported Excel functions return diagnostics"
+    },
+    {
+      "id": "named_ranges",
+      "label": "工作簿级与工作表级命名区域",
+      "read": "supported",
+      "view": "supported",
+      "edit": "planned",
+      "calculate": "supported",
+      "roundTrip": "preserved",
+      "evidence": "AmountRange/ReportWindow/Details!Codes fixtures + navigation/recalculation/preservation gates"
+    },
+    {
+      "id": "cell_formatting",
+      "label": "基础与高级单元格样式",
+      "read": "supported",
+      "view": "supported",
+      "edit": "supported",
+      "calculate": "not_applicable",
+      "roundTrip": "supported",
+      "evidence": "named styles/theme colors/per-side borders/custom number formats tests"
+    },
+    {
+      "id": "conditional_formatting",
+      "label": "条件格式",
+      "read": "preserved",
+      "view": "planned",
+      "edit": "planned",
+      "calculate": "planned",
+      "roundTrip": "preserved",
+      "evidence": "conditionalFormatting byte-preservation test"
+    },
+    {
+      "id": "sheet_structure",
+      "label": "行高、列宽与合并区域",
+      "read": "supported",
+      "view": "supported",
+      "edit": "supported",
+      "calculate": "not_applicable",
+      "roundTrip": "supported",
+      "evidence": "structure edit and re-read tests"
+    },
+    {
+      "id": "volatile_functions",
+      "label": "易失函数",
+      "read": "supported",
+      "view": "supported",
+      "edit": "supported",
+      "calculate": "planned",
+      "roundTrip": "preserved",
+      "evidence": "calculation equivalence fixture not yet established"
+    },
+    {
+      "id": "dynamic_arrays",
+      "label": "动态数组与溢出区域",
+      "read": "limited",
+      "view": "limited",
+      "edit": "planned",
+      "calculate": "planned",
+      "roundTrip": "preserved",
+      "evidence": "OOXML parts preserved; spill semantics not implemented"
+    },
+    {
+      "id": "freeze_panes",
+      "label": "冻结窗格",
+      "read": "supported",
+      "view": "supported",
+      "edit": "supported",
+      "calculate": "not_applicable",
+      "roundTrip": "supported",
+      "evidence": "freeze pane fixture + signature-protected update/remove tests"
+    },
+    {
+      "id": "sort_filter_view",
+      "label": "排序与筛选会话视图",
+      "read": "supported",
+      "view": "supported",
+      "edit": "not_applicable",
+      "calculate": "not_applicable",
+      "roundTrip": "preserved",
+      "evidence": "AutoFilter/Table range driven session view; source row order is never rewritten"
+    },
+    {
+      "id": "excel_tables",
+      "label": "Excel Table",
+      "read": "supported",
+      "view": "supported",
+      "edit": "planned",
+      "calculate": "limited",
+      "roundTrip": "preserved",
+      "evidence": "InventoryTable relationship/range/column/style fixture + table part preservation test"
+    },
+    {
+      "id": "data_validation",
+      "label": "数据验证",
+      "read": "supported",
+      "view": "supported",
+      "edit": "limited",
+      "calculate": "limited",
+      "roundTrip": "preserved",
+      "evidence": "literal list validation fixture + frontend/backend rejection + valid input round-trip"
+    },
+    {
+      "id": "charts_and_drawings",
+      "label": "图表、图片与绘图对象",
+      "read": "supported",
+      "view": "limited",
+      "edit": "planned",
+      "calculate": "not_applicable",
+      "roundTrip": "preserved",
+      "evidence": "chart/image fixture + relationship/anchor/series parser + object navigation + OOXML byte-preservation test"
+    },
+    {
+      "id": "pivot_and_external_data",
+      "label": "数据透视表、切片器与外部数据",
+      "read": "supported",
+      "view": "limited",
+      "edit": "planned",
+      "calculate": "planned",
+      "roundTrip": "preserved",
+      "evidence": "pivot/cache/slicer/link/connection fixture + redacted structure inventory + no-follow external relationship policy + byte-preservation tests"
+    },
+    {
+      "id": "print_and_protection",
+      "label": "打印布局、页面设置与保护",
+      "read": "supported",
+      "view": "limited",
+      "edit": "planned",
+      "calculate": "not_applicable",
+      "roundTrip": "preserved",
+      "evidence": "print area/page setup/margins/header-footer/protection fixture + read-only UI + protected-write rejection + byte-preservation tests"
+    }
+  ]
+}

@@ -140,6 +140,12 @@ mod tests {
         summary
             .write_formula(0, 0, Formula::new("=Data!B2+5"))
             .unwrap();
+        workbook.define_name("Numbers", "=Data!$A$1:$A$2").unwrap();
+        workbook
+            .worksheet_from_name("Data")
+            .unwrap()
+            .write_formula(3, 1, Formula::new("=SUM(Numbers)"))
+            .unwrap();
         workbook.save_to_buffer().unwrap()
     }
 
@@ -197,6 +203,28 @@ mod tests {
         .unwrap();
         assert_eq!(result.cells[0].kind, "error");
         assert_eq!(result.diagnostics.len(), 1);
+    }
+
+    #[test]
+    fn recalculates_formula_using_named_range() {
+        let result = calculate_workbook(
+            &workbook_bytes(),
+            "calculation.xlsx",
+            WorkbookCalculationPayload {
+                expected_signature: String::new(),
+                edits: vec![WorkbookCellEdit {
+                    sheet: "Data".into(),
+                    row: 1,
+                    column: 0,
+                    input: "40".into(),
+                    kind: "number".into(),
+                }],
+                targets: vec![target(3)],
+            },
+        )
+        .unwrap();
+        assert_eq!(result.cells[0].value, "50");
+        assert!(result.diagnostics.is_empty());
     }
 
     #[test]

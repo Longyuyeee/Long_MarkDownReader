@@ -1,3 +1,4 @@
+use crate::formats::file_registry::file_format_for_path;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -70,12 +71,9 @@ fn resolve_markdown(path: &Path) -> Result<PathBuf, String> {
     if !resolved.is_file() {
         return Err("External path must be a file".into());
     }
-    let is_markdown = resolved
-        .extension()
-        .and_then(|extension| extension.to_str())
-        .is_some_and(|extension| extension.eq_ignore_ascii_case("md"));
-    if !is_markdown {
-        return Err("Only Markdown (.md) external files are supported".into());
+    let format = file_format_for_path(&resolved)?;
+    if format.external_policy != "edit" {
+        return Err(format!("{} 不允许作为外部可编辑文档打开", format.label));
     }
     Ok(resolved)
 }
@@ -87,25 +85,8 @@ fn resolve_import(path: &Path) -> Result<PathBuf, String> {
     if !resolved.is_file() {
         return Err("Import path must be a file".into());
     }
-    let name = resolved
-        .file_name()
-        .and_then(|value| value.to_str())
-        .unwrap_or_default()
-        .to_lowercase();
-    let supported = [
-        ".md",
-        ".canvas",
-        ".mmd",
-        ".mermaid",
-        ".pdf",
-        ".csv",
-        ".tsv",
-        ".xlsx",
-        ".table.json",
-    ]
-    .iter()
-    .any(|extension| name.ends_with(extension));
-    if !supported {
+    let format = file_format_for_path(&resolved)?;
+    if format.external_policy == "none" {
         return Err("The dropped file format is not supported by this workspace".into());
     }
     Ok(resolved)
@@ -147,13 +128,13 @@ mod tests {
     }
 
     #[test]
-    fn rejects_non_markdown_and_missing_files() {
+    fn accepts_registered_external_text_and_rejects_missing_files() {
         let directory = fixture("format");
         let text_file = directory.join("note.txt");
         fs::write(&text_file, "text").unwrap();
 
         let access = ExternalFileAccess::default();
-        assert!(access.authorize_markdown(&text_file).is_err());
+        assert!(access.authorize_markdown(&text_file).is_ok());
         assert!(access
             .authorize_markdown(directory.join("missing.md"))
             .is_err());

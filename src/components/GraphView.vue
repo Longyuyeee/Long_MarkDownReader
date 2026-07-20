@@ -193,24 +193,40 @@
           <button @click="useAsMindmapRoot(selectedNode)">设为思维导图中心</button>
           <button :disabled="isCreatingCanvas" @click="sendToCanvas(selectedNode)">{{ isCreatingCanvas ? '正在生成…' : '发送到可编辑画布' }}</button>
         </div>
+        <div v-if="selectedNode.objectType === 'markdown'" class="relation-editor">
+          <span class="neighbor-title">建立语义关系</span>
+          <div class="relation-editor-grid">
+            <select v-model="relationDraftType" aria-label="关系类型">
+              <option v-for="option in relationTypeOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+            </select>
+            <select v-model="relationDraftTarget" aria-label="关系目标">
+              <option value="">选择目标笔记</option>
+              <option v-for="node in relationCandidates" :key="node.id" :value="node.path">{{ node.title }} · {{ node.directory || '根目录' }}</option>
+            </select>
+            <button :disabled="relationSaving || !relationDraftTarget" @click="addGraphRelation">{{ relationSaving ? '写入中…' : '添加关系' }}</button>
+          </div>
+          <small>关系写入源笔记 Frontmatter，Markdown 始终是事实源。</small>
+        </div>
         <div v-if="selectedRelations.length" class="details-relations">
           <span class="neighbor-title">关系依据</span>
-          <button
+          <div
             v-for="relation in selectedRelations.slice(0, 12)"
             :key="`${relation.edge.source}-${relation.edge.target}`"
             class="details-relation-card"
-            @click="selectAndCenter(relation.other)"
           >
-            <span class="details-relation-head">
-              <strong>{{ relation.other.title }}</strong>
-              <small>{{ relation.direction === 'related' ? '相关' : relation.direction === 'outgoing' ? '链出 →' : '← 链入' }}</small>
-            </span>
-            <span class="details-relation-context">{{ relation.evidence?.context || relation.evidence?.syntax || 'Wikilink 引用' }}</span>
-            <span class="details-relation-meta">
-              <code>{{ relation.evidence?.syntax || '[[wikilink]]' }}</code>
-              <span>{{ relationTypeLabel(relation.edge.relationType) }}<template v-if="relation.evidence?.line"> · 第 {{ relation.evidence.line }} 行</template><template v-if="relation.edge.mentions.length > 1"> · {{ relation.edge.mentions.length }} 处</template></span>
-            </span>
-          </button>
+            <button class="relation-focus" @click="selectAndCenter(relation.other)">
+              <span class="details-relation-head">
+                <strong>{{ relation.other.title }}</strong>
+                <small>{{ relation.direction === 'related' ? '相关' : relation.direction === 'outgoing' ? '链出 →' : '← 链入' }}</small>
+              </span>
+              <span class="details-relation-context">{{ relation.evidence?.context || relation.evidence?.syntax || 'Wikilink 引用' }}</span>
+              <span class="details-relation-meta">
+                <code>{{ relation.evidence?.syntax || '[[wikilink]]' }}</code>
+                <span>{{ relationTypeLabel(relation.edge.relationType) }}<template v-if="relation.evidence?.line"> · 第 {{ relation.evidence.line }} 行</template><template v-if="relation.edge.mentions.length > 1"> · {{ relation.edge.mentions.length }} 处</template></span>
+              </span>
+            </button>
+            <button v-if="canDeleteRelation(relation)" class="relation-delete" :disabled="relationSaving" title="从源笔记删除此语义关系" @click="removeGraphRelation(relation)">删除</button>
+          </div>
         </div>
         <div v-if="selectedNeighbors.length" class="neighbor-list">
           <span class="neighbor-title">相关笔记</span>
@@ -228,6 +244,7 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '../store/app'
+import { getActiveThemeTone, isActiveThemeDark } from '../config/themePresets'
 import GraphFilterControls from './GraphFilterControls.vue'
 import GraphHealthPanel from './GraphHealthPanel.vue'
 import { applyGraphFilters, useGraphFilters } from '../composables/useGraphFilters'
@@ -256,6 +273,19 @@ const selectedNode = ref<GraphNode | null>(null)
 const mindmapRoot = ref<GraphNode | null>(null)
 const mindmapDepth = ref(3)
 const mindmapNodeIds = ref<Set<string> | null>(null)
+const relationSaving = ref(false)
+const relationDraftType = ref('related')
+const relationDraftTarget = ref('')
+const relationTypeOptions = [
+  { value: 'related', label: '相关' },
+  { value: 'parent', label: '父级' },
+  { value: 'child', label: '子级' },
+  { value: 'depends-on', label: '依赖' },
+  { value: 'contains', label: '包含' },
+  { value: 'cites', label: '引用文献' },
+  { value: 'derived-from', label: '派生自' },
+]
+const editableRelationTypes = new Set(relationTypeOptions.map(option => option.value))
 
 const degreeMap = computed(() => {
   const result = new Map<string, number>()
@@ -307,10 +337,82 @@ const selectedRelations = computed(() => {
     return a.other.title.localeCompare(b.other.title, 'zh-CN')
   })
 })
+const relationCandidates = computed(() => graphData.value.nodes
+  .filter(node => node.objectType === 'markdown' && node.id !== selectedNode.value?.id)
+  .sort((a, b) => a.title.localeCompare(b.title, 'zh-CN')))
 const relationTypeLabel = (type: string) => ({
   'links-to': '普通引用', parent: '父级', child: '子级', 'depends-on': '依赖', related: '相关',
   contains: '包含', cites: '引用文献', annotates: '批注', 'derived-from': '派生自',
 }[type] || type || '关系')
+
+type SelectedRelation = (typeof selectedRelations.value)[number]
+const relationSourceNode = (relation: SelectedRelation) => graphData.value.nodes.find(node => node.id === relation.edge.source)
+const canDeleteRelation = (relation: SelectedRelation) => {
+  const source = relationSourceNode(relation)
+  return Boolean(source?.objectType === 'markdown'
+    && source.contentSignature
+    && relation.evidence?.line
+    && relation.evidence?.syntax
+    && editableRelationTypes.has(relation.edge.relationType))
+}
+
+const reloadAfterRelationMutation = async (selectedPath: string) => {
+  selectedNode.value = null
+  await loadGraph()
+  const refreshed = graphData.value.nodes.find(node => node.path === selectedPath)
+  if (refreshed) selectedNode.value = refreshed
+}
+
+const addGraphRelation = async () => {
+  const source = selectedNode.value
+  if (!source?.contentSignature || !relationDraftTarget.value || relationSaving.value) return
+  relationSaving.value = true
+  try {
+    await invoke('update_graph_relation', {
+      libraryRoot: store.libraryPath,
+      mutation: {
+        sourcePath: source.path,
+        targetPath: relationDraftTarget.value,
+        relationType: relationDraftType.value,
+        action: 'add',
+        expectedSignature: source.contentSignature,
+      },
+    })
+    relationDraftTarget.value = ''
+    await reloadAfterRelationMutation(source.path)
+  } catch (error) {
+    window.alert(`添加图谱关系失败：${String(error)}`)
+  } finally {
+    relationSaving.value = false
+  }
+}
+
+const removeGraphRelation = async (relation: SelectedRelation) => {
+  const source = relationSourceNode(relation)
+  const evidence = relation.evidence
+  if (!source?.contentSignature || !evidence || relationSaving.value) return
+  relationSaving.value = true
+  const selectedPath = selectedNode.value?.path || source.path
+  try {
+    await invoke('update_graph_relation', {
+      libraryRoot: store.libraryPath,
+      mutation: {
+        sourcePath: source.path,
+        targetPath: relation.edge.target,
+        relationType: relation.edge.relationType,
+        action: 'remove',
+        expectedSignature: source.contentSignature,
+        expectedLine: evidence.line,
+        expectedSyntax: evidence.syntax,
+      },
+    })
+    await reloadAfterRelationMutation(selectedPath)
+  } catch (error) {
+    window.alert(`删除图谱关系失败：${String(error)}`)
+  } finally {
+    relationSaving.value = false
+  }
+}
 
 // 图谱布局常量
 const LAYOUT_MAX_FRAMES = 120
@@ -465,11 +567,19 @@ const exportGraph = async (format: 'svg' | 'png') => {
   if (isExporting.value) return
   isExporting.value = true
   try {
+    const tone = getActiveThemeTone(store.theme)
     const svg = createGraphSvg(visibleNodes.value, visibleEdges.value, {
       mode: viewMode.value,
       title: `${store.currentLibraryName} - ${viewMode.value === 'mindmap' ? '思维导图' : '知识图谱'}`,
-      dark: store.theme === 'dark',
+      dark: isActiveThemeDark(store.theme),
       rootId: mindmapRoot.value?.id,
+      colors: {
+        background: tone.ui.background,
+        foreground: tone.ui.text,
+        card: tone.ui.surface,
+        primary: tone.ui.primary,
+        edge: tone.chartPalette[5],
+      },
     })
     const { save } = await import('@tauri-apps/plugin-dialog')
     const path = await save({
@@ -692,7 +802,8 @@ const draw = () => {
   ctx.scale(zoom, zoom)
 
   const hovered = hoveredNode.value
-  const isDark = store.theme === 'dark'
+  const isDark = isActiveThemeDark(store.theme)
+  const activeTone = getActiveThemeTone(store.theme)
 
   // 构建节点 Map 加速查找
   const nodeMap = new Map<string, GraphNode>()
@@ -719,8 +830,8 @@ const draw = () => {
 
       if (isHighlight) {
         const gradient = ctx.createLinearGradient(s.x || 0, s.y || 0, t.x || 0, t.y || 0)
-        gradient.addColorStop(0, isDark ? 'rgba(66,184,131,0.6)' : 'rgba(0,122,255,0.6)')
-        gradient.addColorStop(1, isDark ? 'rgba(66,184,131,0.3)' : 'rgba(0,122,255,0.3)')
+        gradient.addColorStop(0, `${activeTone.ui.primary}99`)
+        gradient.addColorStop(1, `${activeTone.ui.primary}4d`)
         ctx.strokeStyle = gradient
         ctx.lineWidth = 2.5 / zoom
       } else {
@@ -766,14 +877,14 @@ const draw = () => {
       ctx.beginPath()
       ctx.roundRect(x, y, width, height, isRoot ? 16 : 11)
       ctx.fillStyle = isRoot
-        ? (isDark ? 'rgba(66,184,131,0.96)' : 'rgba(0,122,255,0.94)')
+        ? activeTone.ui.primary
         : (isDark ? 'rgba(37,42,48,0.96)' : 'rgba(255,255,255,0.98)')
-      ctx.shadowColor = isHovered || isSelected ? 'rgba(0,122,255,0.3)' : 'rgba(0,0,0,0.12)'
+      ctx.shadowColor = isHovered || isSelected ? `${activeTone.ui.primary}4d` : 'rgba(0,0,0,0.12)'
       ctx.shadowBlur = isHovered || isSelected ? 18 : 8
       ctx.fill()
       ctx.shadowBlur = 0
       ctx.strokeStyle = isHovered || isSelected
-        ? (isDark ? 'rgba(100,220,170,0.9)' : 'rgba(0,122,255,0.9)')
+        ? activeTone.ui.primary
         : (isDark ? 'rgba(255,255,255,0.13)' : 'rgba(0,0,0,0.1)')
       ctx.lineWidth = (isHovered || isSelected ? 2 : 1) / zoom
       ctx.stroke()
@@ -959,6 +1070,7 @@ const onDblClick = () => {
 
 watch(() => props.show, (v) => { if (v !== false) loadGraph() })
 watch(() => store.libraryPath, () => { if (props.show !== false) loadGraph() })
+watch(() => selectedNode.value?.id, () => { relationDraftTarget.value = '' })
 watch(filters, () => {
   if (viewMode.value === 'network') {
     frameCount = 0
@@ -1313,9 +1425,19 @@ canvas:active {
 .details-actions { display: grid; gap: 7px; margin: 14px 0; }
 .details-actions button { min-height: 34px; border: 1px solid rgba(var(--theme-primary-rgb), 0.18); border-radius: var(--theme-radius-sm); color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.06); cursor: pointer; font-size: 11px; font-weight: 650; }
 .details-actions .primary-action { color: #fff; background: var(--theme-primary); }
+.relation-editor { margin: 4px 0 14px; padding: 10px; border: 1px solid rgba(var(--theme-primary-rgb), 0.14); border-radius: var(--theme-radius-sm); background: rgba(var(--theme-primary-rgb), 0.035); }
+.relation-editor .neighbor-title { margin: 0 0 8px; }
+.relation-editor-grid { display: grid; gap: 7px; }
+.relation-editor select, .relation-editor button { min-height: 32px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb), 0.18); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: var(--theme-card); font-size: 10px; }
+.relation-editor button { color: #fff; background: var(--theme-primary); cursor: pointer; font-weight: 700; }
+.relation-editor button:disabled { cursor: not-allowed; opacity: 0.5; }
+.relation-editor > small { display: block; margin-top: 7px; color: var(--theme-text-secondary); font-size: 8px; line-height: 1.5; }
 .details-relations { display: flex; flex-direction: column; gap: 7px; }
-.details-relation-card { display: flex; flex-direction: column; gap: 5px; width: 100%; padding: 9px; border: 1px solid rgba(var(--theme-primary-rgb), 0.12); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: rgba(var(--theme-primary-rgb), 0.035); cursor: pointer; text-align: left; }
+.details-relation-card { position: relative; display: flex; width: 100%; border: 1px solid rgba(var(--theme-primary-rgb), 0.12); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: rgba(var(--theme-primary-rgb), 0.035); text-align: left; }
 .details-relation-card:hover { border-color: rgba(var(--theme-primary-rgb), 0.38); background: rgba(var(--theme-primary-rgb), 0.075); }
+.relation-focus { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; padding: 9px; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; }
+.relation-delete { align-self: stretch; width: 42px; border: 0; border-left: 1px solid rgba(var(--theme-primary-rgb), 0.1); color: #c74848; background: transparent; cursor: pointer; font-size: 9px; }
+.relation-delete:hover { background: rgba(199, 72, 72, 0.09); }
 .details-relation-head, .details-relation-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .details-relation-head strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .details-relation-head small { flex: none; color: var(--theme-primary); font-size: 8px; }

@@ -219,6 +219,43 @@ body[data-theme="amber"] {
   --accent-secondary: #f59e0b;
 }
 
+body[data-theme="contrast"] {
+  color-scheme: dark;
+  --theme-bg: #000000;
+  --theme-surface: #111111;
+  --theme-surface-2: #1b1b1b;
+  --theme-card: #111111;
+  --theme-primary: #ffd400;
+  --theme-primary-rgb: 255, 212, 0;
+  --theme-text: #ffffff;
+  --theme-bg-rgb: 0, 0, 0;
+  --text-secondary: rgba(255, 255, 255, 0.82);
+  --text-tertiary: rgba(255, 255, 255, 0.68);
+  --text-primary: #ffffff;
+  --text-code-inline: #00e5ff;
+  --bg-primary: #000000;
+  --bg-secondary: #111111;
+  --bg-tertiary: #222222;
+  --bg-hover: #292929;
+  --bg-code-inline: rgba(255, 212, 0, 0.16);
+  --bg-code-block: #080808;
+  --border-color: #ffffff;
+  --accent-primary: #ffd400;
+  --accent-primary-hover: #fff06a;
+  --accent-secondary: #00e5ff;
+}
+
+body[data-theme="contrast"][data-style] {
+  --theme-border: 2px solid #ffffff;
+  --theme-border-strong: 3px solid #ffffff;
+  --theme-shadow: 0 0 0 2px #000000, 0 0 0 4px #ffffff;
+  --theme-shadow-sm: 0 0 0 2px #ffffff;
+  --theme-shadow-hover: 0 0 0 3px #ffd400;
+  --style-control-bg: #111111;
+  --style-card-gradient: #111111;
+  --style-glow-color: rgba(255, 212, 0, 0.65);
+}
+
 // ============================================
 // 视觉风格（Visual Styles）
 // 从"变色"升级到"完整视觉语言"

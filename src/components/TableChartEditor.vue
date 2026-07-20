@@ -134,6 +134,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useAppStore } from '../store/app'
+import { getActiveThemeTone } from '../config/themePresets'
 
 type ChartType = 'bar' | 'line' | 'pie' | 'scatter'
 type Aggregation = 'count' | 'sum' | 'average'
@@ -159,7 +161,8 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ (event: 'update:config', value: ChartConfig): void }>()
 
-const palette = ['#4f7cff', '#20a47b', '#f0a23b', '#dc5c76', '#7c62d8', '#32a9c7', '#9e6d45', '#6f8f3e', '#d178c7', '#66758b']
+const store = useAppStore()
+const palette = computed(() => getActiveThemeTone(store.theme).chartPalette)
 const chartTypes: { value: ChartType; label: string; icon: string }[] = [
   { value: 'bar', label: '柱状', icon: '▥' }, { value: 'line', label: '折线', icon: '⌁' },
   { value: 'pie', label: '饼图', icon: '◕' }, { value: 'scatter', label: '散点', icon: '∴' },
@@ -227,7 +230,7 @@ const rawScatter = computed(() => {
   }).slice(0, renderLimit.value)
 })
 const seriesNames = computed(() => [...new Set((props.config.chartType === 'scatter' ? rawScatter.value : aggregated.value).map(item => item.series))])
-const colorFor = (series: string) => palette[Math.max(0, seriesNames.value.indexOf(series)) % palette.length]
+const colorFor = (series: string) => palette.value[Math.max(0, seriesNames.value.indexOf(series)) % palette.value.length]
 const values = computed(() => props.config.chartType === 'scatter' ? rawScatter.value.map(item => item.rawY) : aggregated.value.map(item => item.value))
 const yMin = computed(() => Math.min(0, ...values.value))
 const yMax = computed(() => Math.max(1, ...values.value))
@@ -284,7 +287,7 @@ const pieSlices = computed(() => {
     const x2 = Math.cos(next) * 170; const y2 = Math.sin(next) * 170
     const path = ratio >= .999999 ? 'M 0 -170 A 170 170 0 1 1 -0.01 -170 Z' : `M 0 0 L ${x1} ${y1} A 170 170 0 ${large} 1 ${x2} ${y2} Z`
     angle = next
-    return [{ ...item, label: item.series === '数据' ? item.category : `${item.category} · ${item.series}`, ratio, path, color: palette[index % palette.length] }]
+    return [{ ...item, label: item.series === '数据' ? item.category : `${item.category} · ${item.series}`, ratio, path, color: palette.value[index % palette.value.length] }]
   })
 })
 

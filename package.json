@@ -10,7 +10,11 @@
     "test:rust": "cargo test --locked --manifest-path src-tauri/Cargo.toml",
     "audit:prod": "npm audit --omit=dev --registry=https://registry.npmjs.org",
     "benchmark:pdf-range": "node scripts/benchmark-pdf-range.mjs",
-    "ci:check": "npm run build && npm run test:rust && npm run benchmark:pdf-range && npm run audit:prod",
+    "check:theme-contract": "node scripts/check-theme-contract.mjs",
+    "check:format-contract": "node scripts/check-format-contract.mjs",
+    "check:workbook-contract": "node scripts/check-workbook-contract.mjs",
+    "check:xlsx-release-gate": "node scripts/check-xlsx-release-gate.mjs",
+    "ci:check": "npm run build && npm run check:theme-contract && npm run check:format-contract && npm run check:workbook-contract && npm run check:xlsx-release-gate && npm run test:rust && npm run benchmark:pdf-range && npm run audit:prod",
     "preview": "vite preview",
     "tauri": "tauri"
   },

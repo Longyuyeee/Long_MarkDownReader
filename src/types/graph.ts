@@ -8,6 +8,7 @@ export interface GraphNode {
   modifiedAt: number
   objectType: string
   searchText: string
+  contentSignature?: string | null
   x?: number
   y?: number
   vx?: number

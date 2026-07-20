@@ -1,6 +1,8 @@
 pub mod canvas;
 pub mod diagram;
+pub mod file_registry;
 pub mod markdown;
+pub mod opml;
 pub mod pdf_annotations;
 pub mod pdf_ocr;
 pub mod table;

@@ -22,11 +22,14 @@ use commands::files::{
     save_folder_order, scan_directory, write_external_markdown_file, write_markdown_file,
 };
 pub(crate) use commands::files::{sanitize_filename, FileContent, FileEntry};
+use commands::formats::{
+    create_format_file, get_file_format_registry, read_text_document, write_text_document,
+};
 use commands::git::{git_commit, git_init, git_pull, git_push, git_status};
 pub(crate) use commands::graph::GraphData;
 use commands::graph::{
     analyze_graph_health, build_link_graph, build_local_graph, extract_wikilinks, find_backlinks,
-    get_library_stats, repair_graph_links,
+    get_library_stats, repair_graph_links, update_graph_relation,
 };
 #[cfg(test)]
 pub(crate) use commands::graph::{GraphEdge, GraphNode};
@@ -35,6 +38,7 @@ use commands::history::{
     save_history_version, save_shadow_copy,
 };
 use commands::index::search_knowledge;
+use commands::mindmap::{create_canvas_from_opml, read_opml_file, write_opml_file};
 use commands::pdf::{
     build_pdf_annotation_reference, read_pdf_annotations, read_pdf_file, read_pdf_info,
     read_pdf_ocr, read_pdf_range, write_pdf_annotations, write_pdf_ocr,
@@ -46,7 +50,8 @@ use commands::table::{
 };
 use commands::workbook::{
     get_workbook_capabilities, import_workbook_sheet, read_workbook_file, read_workbook_sheet,
-    recalculate_workbook_formulas, translate_workbook_formulas, write_workbook_cells,
+    recalculate_workbook_formulas, translate_workbook_formulas, update_workbook_freeze_pane,
+    write_workbook_cells,
 };
 use services::data_migration::check_and_migrate_data;
 use services::external_file_access::ExternalFileAccess;
@@ -179,6 +184,13 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             read_markdown_file,
             write_markdown_file,
+            get_file_format_registry,
+            read_text_document,
+            write_text_document,
+            create_format_file,
+            read_opml_file,
+            write_opml_file,
+            create_canvas_from_opml,
             read_external_markdown_file,
             write_external_markdown_file,
             pick_external_markdown_file,
@@ -209,9 +221,11 @@ pub fn run() {
             recalculate_workbook_formulas,
             translate_workbook_formulas,
             write_workbook_cells,
+            update_workbook_freeze_pane,
             build_pdf_annotation_reference,
             analyze_graph_health,
             repair_graph_links,
+            update_graph_relation,
             get_launch_args,
             scan_directory,
             get_folder_order,

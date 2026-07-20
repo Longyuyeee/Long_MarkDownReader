@@ -14,7 +14,9 @@ use crate::formats::workbook_formula::{
     translate_formula, WorkbookFormulaTranslation, MAX_FORMULA_TRANSLATIONS,
 };
 use crate::formats::workbook_ooxml::{
-    patch_workbook, read_workbook_sheet_layout, validate_workbook_package,
+    patch_workbook, patch_workbook_freeze_pane, read_workbook_defined_names,
+    read_workbook_linked_data, read_workbook_protection, read_workbook_sheet_layout,
+    validate_workbook_package,
 };
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
@@ -68,18 +70,6 @@ fn cell_kind(cell: &Data) -> &'static str {
     }
 }
 
-fn normalized_formula(value: Option<&String>) -> Option<String> {
-    value
-        .filter(|formula| !formula.trim().is_empty())
-        .map(|formula| {
-            if formula.starts_with('=') {
-                formula.clone()
-            } else {
-                format!("={}", formula)
-            }
-        })
-}
-
 fn used_dimensions<T: CellType>(range: &calamine::Range<T>) -> (usize, usize) {
     range
         .end()
@@ -90,7 +80,7 @@ fn used_dimensions<T: CellType>(range: &calamine::Range<T>) -> (usize, usize) {
 impl WorkbookEngine for CalamineWorkbookEngine {
     fn capabilities(&self) -> WorkbookCapabilities {
         WorkbookCapabilities {
-            engine_id: "calamine-ooxml-ironcalc-v6".into(),
+            engine_id: "calamine-ooxml-ironcalc-v14".into(),
             extensions: vec!["xlsx".into()],
             read: WorkbookCapabilityLevel::Supported,
             cached_formula_results: WorkbookCapabilityLevel::Supported,
@@ -108,10 +98,27 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             formula_reference_translation: WorkbookCapabilityLevel::Supported,
             formula_dependency_graph: WorkbookCapabilityLevel::Supported,
             formula_recalculation: WorkbookCapabilityLevel::Supported,
-            charts: WorkbookCapabilityLevel::Planned,
-            pivot_tables: WorkbookCapabilityLevel::Planned,
-            data_validation: WorkbookCapabilityLevel::Planned,
-            print_layout: WorkbookCapabilityLevel::Planned,
+            row_dimensions: WorkbookCapabilityLevel::Supported,
+            column_dimensions: WorkbookCapabilityLevel::Supported,
+            merged_cells: WorkbookCapabilityLevel::Supported,
+            freeze_panes: WorkbookCapabilityLevel::Supported,
+            sort_filter_view: WorkbookCapabilityLevel::Supported,
+            excel_tables: WorkbookCapabilityLevel::Supported,
+            named_ranges: WorkbookCapabilityLevel::Supported,
+            date_time_values: WorkbookCapabilityLevel::Supported,
+            error_values: WorkbookCapabilityLevel::Supported,
+            named_styles: WorkbookCapabilityLevel::Supported,
+            theme_indexed_colors: WorkbookCapabilityLevel::Supported,
+            per_side_borders: WorkbookCapabilityLevel::Supported,
+            custom_number_formats: WorkbookCapabilityLevel::Supported,
+            conditional_formatting_preservation: WorkbookCapabilityLevel::Supported,
+            charts: WorkbookCapabilityLevel::Supported,
+            pivot_tables: WorkbookCapabilityLevel::Supported,
+            slicers: WorkbookCapabilityLevel::Supported,
+            external_data: WorkbookCapabilityLevel::Supported,
+            data_validation: WorkbookCapabilityLevel::Supported,
+            sheet_protection: WorkbookCapabilityLevel::Supported,
+            print_layout: WorkbookCapabilityLevel::Supported,
             xlsx_round_trip: WorkbookCapabilityLevel::Planned,
             max_file_bytes: MAX_WORKBOOK_BYTES,
             max_page_rows: MAX_PAGE_ROWS,
@@ -135,6 +142,9 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             size: metadata.len(),
             signature: workbook_signature(&metadata, &bytes),
             sheets,
+            defined_names: read_workbook_defined_names(&bytes)?,
+            linked_data: read_workbook_linked_data(&bytes)?,
+            protection: read_workbook_protection(&bytes)?,
         })
     }
 
@@ -152,22 +162,18 @@ impl WorkbookEngine for CalamineWorkbookEngine {
         let values = workbook
             .worksheet_range(sheet)
             .map_err(|error| format!("读取工作表失败: {}", error))?;
-        let formulas = workbook
-            .worksheet_formula(sheet)
-            .map_err(|error| format!("读取公式失败: {}", error))?;
         let source = fs::read(path).map_err(|error| format!("读取 XLSX 样式失败: {error}"))?;
         let (total_rows, total_columns) = used_dimensions(&values);
-        let formula_dimensions = used_dimensions(&formulas);
         let requested_end = row_offset.saturating_add(row_limit.clamp(1, MAX_PAGE_ROWS));
-        let (sheet_extent, styles) = read_workbook_sheet_layout(
+        let layout = read_workbook_sheet_layout(
             &source,
             sheet,
             row_offset,
             requested_end,
             MAX_PREVIEW_COLUMNS,
         )?;
-        let total_rows = total_rows.max(formula_dimensions.0).max(sheet_extent.0);
-        let total_columns = total_columns.max(formula_dimensions.1).max(sheet_extent.1);
+        let total_rows = total_rows.max(layout.extent.0);
+        let total_columns = total_columns.max(layout.extent.1);
         let returned_columns = total_columns.min(MAX_PREVIEW_COLUMNS);
         let row_offset = row_offset.min(total_rows);
         let row_limit = row_limit.clamp(1, MAX_PAGE_ROWS);
@@ -180,13 +186,16 @@ impl WorkbookEngine for CalamineWorkbookEngine {
                             .get_value((row as u32, column as u32))
                             .cloned()
                             .unwrap_or(Data::Empty);
-                        let formula =
-                            normalized_formula(formulas.get_value((row as u32, column as u32)));
+                        let formula = layout.formulas.get(&(row, column)).cloned();
                         WorkbookCell {
                             value: value.to_string(),
                             formula,
                             kind: cell_kind(&value).into(),
-                            style: styles.get(&(row, column)).cloned().unwrap_or_default(),
+                            style: layout
+                                .styles
+                                .get(&(row, column))
+                                .cloned()
+                                .unwrap_or_default(),
                         }
                     })
                     .collect()
@@ -200,6 +209,18 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             returned_columns,
             rows,
             truncated_columns: total_columns > returned_columns,
+            default_row_height: layout.default_row_height,
+            default_column_width: layout.default_column_width,
+            row_heights: layout.row_heights,
+            column_widths: layout.column_widths,
+            merged_cells: layout.merged_cells,
+            named_styles: layout.named_styles,
+            freeze_pane: layout.freeze_pane,
+            auto_filter: layout.auto_filter,
+            tables: layout.tables,
+            data_validations: layout.data_validations,
+            drawings: layout.drawings,
+            page_layout: layout.page_layout,
         })
     }
 }
@@ -298,7 +319,14 @@ pub async fn write_workbook_cells(
         if workbook_signature(&metadata, &source) != payload.expected_signature {
             return Err("XLSX 已被其他程序修改，请重新加载后再保存".into());
         }
-        let output = patch_workbook(&source, &payload.edits, &payload.style_edits)?;
+        let output = patch_workbook(
+            &source,
+            &payload.edits,
+            &payload.style_edits,
+            &payload.row_height_edits,
+            &payload.column_width_edits,
+            &payload.merge_edits,
+        )?;
         if output.len() as u64 > MAX_WORKBOOK_BYTES {
             return Err("保存后的 XLSX 不能超过 128 MB".into());
         }
@@ -307,6 +335,36 @@ pub async fn write_workbook_cells(
     })
     .await
     .map_err(|error| format!("XLSX 写回任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn update_workbook_freeze_pane(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    sheet: String,
+    rows: usize,
+    columns: usize,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再修改冻结窗格".into());
+        }
+        let output = patch_workbook_freeze_pane(&source, &sheet, rows, columns)?;
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("冻结窗格写回任务失败: {error}"))?
 }
 
 fn sheet_to_table(source: &Path, sheet: &str) -> Result<PathBuf, String> {
@@ -408,11 +466,15 @@ pub async fn import_workbook_sheet(
 mod tests {
     use super::*;
     use crate::formats::workbook::{
-        WorkbookCellEdit, WorkbookCellStyleEdit, WorkbookStylePatch, WorkbookWritePayload,
+        WorkbookCellEdit, WorkbookCellStyleEdit, WorkbookColumnWidthEdit, WorkbookMergeEdit,
+        WorkbookRowHeightEdit, WorkbookStylePatch, WorkbookWritePayload,
     };
-    use rust_xlsxwriter::{Format, Formula, Workbook};
+    use rust_xlsxwriter::{
+        ConditionalFormatCell, ConditionalFormatCellRule, Format, Formula, Workbook,
+    };
+    use std::collections::{BTreeMap, BTreeSet};
     use std::io::{Cursor, Read};
-    use std::time::{SystemTime, UNIX_EPOCH};
+    use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
     fn fixture() -> (PathBuf, PathBuf) {
         let base = std::env::temp_dir().join(format!(
@@ -434,6 +496,20 @@ mod tests {
         first.write_string(1, 0, "图谱").unwrap();
         first.write_number(1, 1, 75).unwrap();
         first
+            .add_conditional_format(
+                1,
+                1,
+                1,
+                1,
+                &ConditionalFormatCell::new()
+                    .set_rule(ConditionalFormatCellRule::GreaterThan(50))
+                    .set_format(Format::new().set_bold()),
+            )
+            .unwrap();
+        first.set_row_height(1, 28).unwrap();
+        first.set_column_width(0, 18).unwrap();
+        first.set_column_width(1, 14).unwrap();
+        first
             .write_formula(2, 1, Formula::new("=SUM(B2, 5)").set_result("80"))
             .unwrap();
         first
@@ -441,6 +517,27 @@ mod tests {
             .unwrap();
         workbook.add_worksheet().set_name("说明").unwrap();
         workbook.save(&path).unwrap();
+        (base, path)
+    }
+
+    fn compatibility_fixture_copy(name: &str) -> (PathBuf, PathBuf) {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-xlsx-{name}-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let root = base.join("library");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("compatibility.xlsx");
+        fs::copy(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("tests/fixtures/workbook/compatibility-baseline.xlsx"),
+            &path,
+        )
+        .unwrap();
         (base, path)
     }
 
@@ -464,6 +561,21 @@ mod tests {
         assert_eq!(page.rows[1][1].value, "75");
         assert_eq!(page.rows[2][1].value, "80");
         assert_eq!(page.rows[2][1].formula.as_deref(), Some("=SUM(B2, 5)"));
+        assert_eq!(page.row_heights[0].row, 1);
+        assert!((page.row_heights[0].height - 27.75).abs() < 0.01);
+        assert!(page
+            .column_widths
+            .iter()
+            .any(|item| { item.start_column == 0 && item.end_column == 0 && item.width > 18.0 }));
+        assert_eq!(
+            page.merged_cells,
+            [crate::formats::workbook::WorkbookMergeRange {
+                top: 4,
+                bottom: 4,
+                left: 0,
+                right: 1,
+            }]
+        );
         fs::remove_dir_all(base).unwrap();
     }
 
@@ -514,10 +626,239 @@ mod tests {
         assert_eq!(page.rows[1][2].value, "true");
         assert_eq!(page.rows[2][1].formula.as_deref(), Some("=SUM(B2:B2)"));
         assert_eq!(page.rows[2][1].value, "1250.5");
+        assert_eq!(page.rows[1][3].kind, "date");
+        assert_eq!(page.rows[1][4].kind, "date");
+        assert_eq!(page.rows[1][5].kind, "error");
+        assert_eq!(page.rows[1][5].value, "#DIV/0!");
+        assert_eq!(
+            page.rows[3][1].formula.as_deref(),
+            Some("=SUM(AmountRange)")
+        );
+        assert_eq!(page.rows[3][1].value, "1250.5");
+        assert_eq!(page.freeze_pane.rows, 1);
+        assert_eq!(page.freeze_pane.columns, 1);
+        assert_eq!(
+            page.page_layout.print_area,
+            Some(crate::formats::workbook::WorkbookMergeRange {
+                top: 0,
+                bottom: 4,
+                left: 0,
+                right: 5,
+            })
+        );
+        assert_eq!(
+            page.page_layout.setup.orientation.as_deref(),
+            Some("landscape")
+        );
+        assert_eq!(page.page_layout.setup.paper_size, Some(9));
+        assert_eq!(page.page_layout.setup.fit_to_height, Some(0));
+        assert!(page.page_layout.setup.fit_to_page);
+        assert_eq!(page.page_layout.margins.left, Some(0.5));
+        assert_eq!(page.page_layout.margins.right, Some(0.5));
+        assert!(page.page_layout.options.grid_lines);
+        assert!(page.page_layout.options.headings);
+        assert!(page.page_layout.options.horizontal_centered);
+        assert_eq!(
+            page.page_layout.header_footer.odd_header.as_deref(),
+            Some("&LConfidential&CQuarterly summary&RPage &P of &N")
+        );
+        assert_eq!(
+            page.page_layout.header_footer.odd_footer.as_deref(),
+            Some("&CGenerated by LongEdit fixture")
+        );
+        assert!(!page.page_layout.protection.enabled);
+        let protected_page = engine
+            .read_sheet(&workbook_path, "Protected", 0, 10)
+            .unwrap();
+        assert!(protected_page.page_layout.protection.enabled);
+        assert!(protected_page.page_layout.protection.password_protected);
+        assert_eq!(
+            protected_page.page_layout.protection.blocked_actions,
+            ["objects", "scenarios"]
+        );
+        let details_page = engine
+            .read_sheet(&workbook_path, "Details", 0, 100)
+            .unwrap();
+        assert_eq!(
+            details_page.auto_filter,
+            Some(crate::formats::workbook::WorkbookMergeRange {
+                top: 0,
+                bottom: 1,
+                left: 0,
+                right: 1,
+            })
+        );
+        assert_eq!(details_page.data_validations.len(), 1);
+        assert_eq!(details_page.data_validations[0].kind, "list");
+        assert_eq!(
+            details_page.data_validations[0].formula1.as_deref(),
+            Some("\"Active,Paused,Closed\"")
+        );
+        let inventory_page = engine
+            .read_sheet(&workbook_path, "Inventory", 0, 100)
+            .unwrap();
+        assert_eq!(inventory_page.tables.len(), 1);
+        assert_eq!(inventory_page.tables[0].name, "InventoryTable");
+        assert_eq!(
+            inventory_page.tables[0].columns,
+            ["Product", "Stock", "Category"]
+        );
+        assert_eq!(inventory_page.drawings.len(), 2);
+        let chart_drawing = inventory_page
+            .drawings
+            .iter()
+            .find(|drawing| drawing.kind == "chart")
+            .unwrap();
+        assert_eq!(chart_drawing.name, "InventoryStockChart");
+        assert_eq!((chart_drawing.from.row, chart_drawing.from.column), (1, 4));
+        assert_eq!(
+            chart_drawing
+                .to
+                .as_ref()
+                .map(|anchor| (anchor.row, anchor.column)),
+            Some((15, 11))
+        );
+        assert_eq!(chart_drawing.part.as_deref(), Some("xl/charts/chart1.xml"));
+        let chart = chart_drawing.chart.as_ref().unwrap();
+        assert_eq!(chart.chart_type, "column");
+        assert_eq!(chart.title.as_deref(), Some("Inventory stock"));
+        assert_eq!(chart.series.len(), 1);
+        assert_eq!(chart.series[0].name.as_deref(), Some("Stock"));
+        assert_eq!(
+            chart.series[0].categories.as_deref(),
+            Some("Inventory!$A$2:$A$3")
+        );
+        assert_eq!(
+            chart.series[0].values.as_deref(),
+            Some("Inventory!$B$2:$B$3")
+        );
+        let image_drawing = inventory_page
+            .drawings
+            .iter()
+            .find(|drawing| drawing.kind == "image")
+            .unwrap();
+        assert_eq!(
+            image_drawing.description.as_deref(),
+            Some("Inventory marker")
+        );
+        assert_eq!((image_drawing.from.row, image_drawing.from.column), (18, 4));
+        assert_eq!(image_drawing.part.as_deref(), Some("xl/media/image1.png"));
+        assert_eq!(document.linked_data.pivot_tables.len(), 1);
+        let pivot = &document.linked_data.pivot_tables[0];
+        assert_eq!(pivot.name, "InventoryPivot");
+        assert_eq!(pivot.sheet.as_deref(), Some("Inventory"));
+        assert_eq!(pivot.cache_id, Some(1));
+        assert_eq!(pivot.source_type, "worksheet");
+        assert_eq!(pivot.source_sheet.as_deref(), Some("Inventory"));
+        assert_eq!(pivot.source_range.as_deref(), Some("A1:C3"));
+        assert!(pivot.refresh_on_load);
+        assert_eq!(document.linked_data.slicers.len(), 1);
+        assert_eq!(document.linked_data.slicers[0].name, "CategorySlicer");
+        assert_eq!(
+            document.linked_data.slicers[0].sheet.as_deref(),
+            Some("Inventory")
+        );
+        assert_eq!(document.linked_data.external_links.len(), 1);
+        assert_eq!(
+            document.linked_data.external_links[0].kind,
+            "external_workbook"
+        );
+        assert_eq!(
+            document.linked_data.external_links[0]
+                .target_kind
+                .as_deref(),
+            Some("file")
+        );
+        assert_eq!(document.linked_data.external_relationship_count, 1);
+        assert_eq!(document.linked_data.connections.len(), 1);
+        assert_eq!(document.linked_data.connections[0].id, Some(7));
+        assert_eq!(
+            document.linked_data.connections[0].name,
+            "Warehouse fixture"
+        );
+        assert!(document.linked_data.connections[0].refresh_on_load);
+        assert!(document.protection.enabled);
+        assert!(document.protection.lock_structure);
+        assert!(document.protection.password_protected);
+        let public_document = serde_json::to_string(&document).unwrap();
+        assert!(!public_document.contains("secret.example"));
+        assert!(!public_document.contains("not-for-ui"));
+        assert!(!public_document.contains("external-data.xlsx"));
+        assert!(!public_document.contains("ABCD"));
+        assert!(!public_document.contains("B459"));
+        assert!(!public_document.contains("fixture-protection"));
+        assert_eq!(
+            document
+                .defined_names
+                .iter()
+                .filter(|item| !item.name.starts_with("_xlnm."))
+                .count(),
+            5
+        );
+        assert!(document
+            .defined_names
+            .iter()
+            .any(|item| item.name == "_xlnm._FilterDatabase" && item.hidden));
+        let amount_range = document
+            .defined_names
+            .iter()
+            .find(|item| item.name == "AmountRange")
+            .unwrap();
+        assert_eq!(amount_range.formula, "Summary!$B$2:$B$2");
+        assert_eq!(
+            amount_range.reference,
+            Some(crate::formats::workbook::WorkbookRangeReference {
+                sheet: "Summary".into(),
+                top: 1,
+                bottom: 1,
+                left: 1,
+                right: 1,
+            })
+        );
+        let local_name = document
+            .defined_names
+            .iter()
+            .find(|item| item.name == "Codes")
+            .unwrap();
+        assert_eq!(local_name.scope.as_deref(), Some("Details"));
+        assert_eq!(local_name.reference.as_ref().unwrap().sheet, "Details");
+        assert!(document
+            .defined_names
+            .iter()
+            .find(|item| item.name == "TaxRate")
+            .unwrap()
+            .reference
+            .is_none());
+        assert_eq!(
+            document
+                .defined_names
+                .iter()
+                .find(|item| item.name == "TeamLabel")
+                .unwrap()
+                .formula,
+            "\"R&D\""
+        );
         assert!(page.rows[0][0].style.bold);
         assert_eq!(page.rows[0][0].style.font_color.as_deref(), Some("#FFFFFF"));
         assert_eq!(page.rows[0][0].style.fill_color.as_deref(), Some("#2563EB"));
         assert_eq!(page.rows[1][1].style.number_format, "currency");
+        assert!(page
+            .row_heights
+            .iter()
+            .any(|item| item.row == 1 && (item.height - 27.75).abs() < 0.01));
+        assert!(page
+            .column_widths
+            .iter()
+            .any(|item| { item.start_column == 0 && item.end_column == 0 && item.width > 22.0 }));
+        assert_eq!(
+            page.merged_cells,
+            [crate::formats::workbook::WorkbookMergeRange {
+                top: 4,
+                bottom: 4,
+                left: 0,
+                right: 2,
+            }]
+        );
 
         let capabilities = engine.capabilities();
         assert_eq!(capabilities.read, WorkbookCapabilityLevel::Supported);
@@ -543,9 +884,316 @@ mod tests {
         );
         assert_eq!(capabilities.formatting, WorkbookCapabilityLevel::Supported);
         assert_eq!(
+            capabilities.row_dimensions,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.column_dimensions,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.merged_cells,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.freeze_panes,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.sort_filter_view,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.excel_tables,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.data_validation,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(capabilities.charts, WorkbookCapabilityLevel::Supported);
+        assert_eq!(
+            capabilities.pivot_tables,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(capabilities.slicers, WorkbookCapabilityLevel::Supported);
+        assert_eq!(
+            capabilities.external_data,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.sheet_protection,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.print_layout,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.named_ranges,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.date_time_values,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.error_values,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert!(!page.named_styles.is_empty());
+        assert_eq!(
+            capabilities.named_styles,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.theme_indexed_colors,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.per_side_borders,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.custom_number_formats,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.conditional_formatting_preservation,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
             capabilities.xlsx_round_trip,
             WorkbookCapabilityLevel::Planned
         );
+    }
+
+    #[test]
+    fn compatibility_fixture_preserves_defined_names_dates_and_errors_during_cell_patch() {
+        let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/workbook/compatibility-baseline.xlsx");
+        let source = fs::read(fixture_path).unwrap();
+        let output = patch_workbook(
+            &source,
+            &[WorkbookCellEdit {
+                sheet: "Summary".into(),
+                row: 1,
+                column: 0,
+                input: "Alpha updated".into(),
+                kind: "string".into(),
+            }],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap();
+        assert_eq!(
+            zip_part(&source, "xl/workbook.xml"),
+            zip_part(&output, "xl/workbook.xml")
+        );
+        assert_eq!(
+            read_workbook_defined_names(&source).unwrap(),
+            read_workbook_defined_names(&output).unwrap()
+        );
+
+        let base = std::env::temp_dir().join(format!(
+            "longedit-xlsx-s6-10-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&base).unwrap();
+        let path = base.join("round-trip.xlsx");
+        fs::write(&path, output).unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Summary", 0, 10)
+            .unwrap();
+        assert_eq!(page.rows[1][0].value, "Alpha updated");
+        assert_eq!(page.rows[1][3].kind, "date");
+        assert_eq!(page.rows[1][4].kind, "date");
+        assert_eq!(page.rows[1][5].kind, "error");
+        assert_eq!(page.rows[1][5].value, "#DIV/0!");
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn updates_and_removes_freeze_panes_with_signature_protection() {
+        let (base, path) = compatibility_fixture_copy("freeze-pane");
+        let root = base.join("library");
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let updated = tauri::async_runtime::block_on(update_workbook_freeze_pane(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            document.signature,
+            "Summary".into(),
+            2,
+            0,
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Summary", 0, 10)
+            .unwrap();
+        assert_eq!(page.freeze_pane.rows, 2);
+        assert_eq!(page.freeze_pane.columns, 0);
+        tauri::async_runtime::block_on(update_workbook_freeze_pane(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            updated.signature,
+            "Summary".into(),
+            0,
+            0,
+        ))
+        .unwrap();
+        assert_eq!(
+            CalamineWorkbookEngine
+                .read_sheet(&path, "Summary", 0, 10)
+                .unwrap()
+                .freeze_pane,
+            crate::formats::workbook::WorkbookFreezePane::default()
+        );
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn enforces_literal_list_validation_and_preserves_table_parts() {
+        let (base, path) = compatibility_fixture_copy("validation");
+        let root = base.join("library");
+        let before = fs::read(&path).unwrap();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let payload = |input: &str, signature: String| WorkbookWritePayload {
+            expected_signature: signature,
+            edits: vec![WorkbookCellEdit {
+                sheet: "Details".into(),
+                row: 1,
+                column: 1,
+                input: input.into(),
+                kind: "string".into(),
+            }],
+            style_edits: vec![],
+            row_height_edits: vec![],
+            column_width_edits: vec![],
+            merge_edits: vec![],
+        };
+        let invalid = tauri::async_runtime::block_on(write_workbook_cells(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            payload("Unknown", document.signature.clone()),
+        ));
+        assert!(invalid.unwrap_err().contains("Active, Paused, or Closed"));
+        assert_eq!(fs::read(&path).unwrap(), before);
+
+        let saved = tauri::async_runtime::block_on(write_workbook_cells(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            payload("Paused", document.signature),
+        ))
+        .unwrap();
+        assert!(!saved.signature.is_empty());
+        assert_eq!(
+            CalamineWorkbookEngine
+                .read_sheet(&path, "Details", 0, 10)
+                .unwrap()
+                .rows[1][1]
+                .value,
+            "Paused"
+        );
+        assert_eq!(
+            zip_part(&before, "xl/tables/table1.xml"),
+            zip_part(&fs::read(&path).unwrap(), "xl/tables/table1.xml")
+        );
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn preserves_chart_drawing_and_image_parts_when_editing_cells() {
+        let (base, path) = compatibility_fixture_copy("drawings");
+        let root = base.join("library");
+        let before = fs::read(&path).unwrap();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let payload = WorkbookWritePayload {
+            expected_signature: document.signature,
+            edits: vec![WorkbookCellEdit {
+                sheet: "Inventory".into(),
+                row: 1,
+                column: 1,
+                input: "18".into(),
+                kind: "number".into(),
+            }],
+            style_edits: vec![],
+            row_height_edits: vec![],
+            column_width_edits: vec![],
+            merge_edits: vec![],
+        };
+        tauri::async_runtime::block_on(write_workbook_cells(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            payload,
+        ))
+        .unwrap();
+        let after = fs::read(&path).unwrap();
+        for part in [
+            "xl/drawings/drawing1.xml",
+            "xl/drawings/_rels/drawing1.xml.rels",
+            "xl/charts/chart1.xml",
+            "xl/media/image1.png",
+            "xl/pivotTables/pivotTable1.xml",
+            "xl/pivotCache/pivotCacheDefinition1.xml",
+            "xl/slicers/slicer1.xml",
+            "xl/externalLinks/externalLink1.xml",
+            "xl/externalLinks/_rels/externalLink1.xml.rels",
+            "xl/connections.xml",
+            "xl/worksheets/sheet1.xml",
+            "xl/workbook.xml",
+        ] {
+            assert_eq!(zip_part(&before, part), zip_part(&after, part), "{part}");
+        }
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn refuses_to_edit_or_reconfigure_protected_sheet() {
+        let (base, path) = compatibility_fixture_copy("protected-sheet");
+        let root = base.join("library");
+        let before = fs::read(&path).unwrap();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let payload = WorkbookWritePayload {
+            expected_signature: document.signature.clone(),
+            edits: vec![WorkbookCellEdit {
+                sheet: "Protected".into(),
+                row: 1,
+                column: 0,
+                input: "bypass".into(),
+                kind: "string".into(),
+            }],
+            style_edits: vec![],
+            row_height_edits: vec![],
+            column_width_edits: vec![],
+            merge_edits: vec![],
+        };
+        let rejected = tauri::async_runtime::block_on(write_workbook_cells(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            payload,
+        ));
+        assert!(rejected.unwrap_err().contains("不会绕过 Excel 工作表保护"));
+        assert_eq!(fs::read(&path).unwrap(), before);
+
+        let freeze_rejected = tauri::async_runtime::block_on(update_workbook_freeze_pane(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            document.signature,
+            "Protected".into(),
+            1,
+            1,
+        ));
+        assert!(freeze_rejected
+            .unwrap_err()
+            .contains("不会绕过 Excel 工作表保护"));
+        assert_eq!(fs::read(&path).unwrap(), before);
+        fs::remove_dir_all(base).unwrap();
     }
 
     fn zip_part(bytes: &[u8], name: &str) -> Vec<u8> {
@@ -554,6 +1202,237 @@ mod tests {
         let mut output = Vec::new();
         part.read_to_end(&mut output).unwrap();
         output
+    }
+
+    fn zip_parts(bytes: &[u8]) -> BTreeMap<String, Vec<u8>> {
+        let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
+        let mut output = BTreeMap::new();
+        for index in 0..archive.len() {
+            let mut part = archive.by_index(index).unwrap();
+            if part.is_dir() {
+                continue;
+            }
+            let name = part.name().to_string();
+            let mut data = Vec::new();
+            part.read_to_end(&mut data).unwrap();
+            assert!(output.insert(name, data).is_none());
+        }
+        output
+    }
+
+    #[test]
+    fn complex_fixture_package_diff_is_allowlisted_and_lossless() {
+        let manifest_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let gate: serde_json::Value = serde_json::from_str(
+            &fs::read_to_string(manifest_root.join("../shared/xlsx-release-gate.json")).unwrap(),
+        )
+        .unwrap();
+        let source =
+            fs::read(manifest_root.join("tests/fixtures/workbook/compatibility-baseline.xlsx"))
+                .unwrap();
+        let output = patch_workbook(
+            &source,
+            &[WorkbookCellEdit {
+                sheet: "Summary".into(),
+                row: 1,
+                column: 0,
+                input: "Alpha audited".into(),
+                kind: "string".into(),
+            }],
+            &[WorkbookCellStyleEdit {
+                sheet: "Summary".into(),
+                row: 1,
+                column: 0,
+                patch: WorkbookStylePatch {
+                    bold: Some(true),
+                    fill_color: Some("#DBEAFE".into()),
+                    ..Default::default()
+                },
+            }],
+            &[WorkbookRowHeightEdit {
+                sheet: "Summary".into(),
+                row: 1,
+                height: Some(30.0),
+            }],
+            &[WorkbookColumnWidthEdit {
+                sheet: "Summary".into(),
+                start_column: 0,
+                end_column: 0,
+                width: Some(24.0),
+            }],
+            &[WorkbookMergeEdit {
+                sheet: "Summary".into(),
+                top: 5,
+                bottom: 5,
+                left: 3,
+                right: 4,
+                action: "merge".into(),
+            }],
+        )
+        .unwrap();
+
+        let before = zip_parts(&source);
+        let after = zip_parts(&output);
+        let before_names = before.keys().cloned().collect::<BTreeSet<_>>();
+        let after_names = after.keys().cloned().collect::<BTreeSet<_>>();
+        assert_eq!(before_names, after_names, "ZIP parts were added or removed");
+        assert!(
+            before.len() >= gate["complexFixture"]["minimumZipParts"].as_u64().unwrap() as usize
+        );
+
+        let changed = before
+            .iter()
+            .filter_map(|(name, data)| (after.get(name) != Some(data)).then_some(name.clone()))
+            .collect::<BTreeSet<_>>();
+        let allowed = gate["differentialGate"]["contentAndStyleAllowedChangedParts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|value| value.as_str().unwrap().to_string())
+            .collect::<BTreeSet<_>>();
+        assert_eq!(changed, allowed, "unexpected OOXML package differential");
+
+        let base = std::env::temp_dir().join(format!(
+            "longedit-xlsx-differential-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&base).unwrap();
+        let path = base.join("audited.xlsx");
+        fs::write(&path, output).unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Summary", 0, 10)
+            .unwrap();
+        assert_eq!(page.rows[1][0].value, "Alpha audited");
+        assert!(page.rows[1][0].style.bold);
+        assert_eq!(page.rows[1][0].style.fill_color.as_deref(), Some("#DBEAFE"));
+        assert!(page
+            .merged_cells
+            .iter()
+            .any(|range| { (range.top, range.bottom, range.left, range.right) == (5, 5, 3, 4) }));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn complex_workbook_performance_stays_within_release_budget() {
+        let manifest_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let gate: serde_json::Value = serde_json::from_str(
+            &fs::read_to_string(manifest_root.join("../shared/xlsx-release-gate.json")).unwrap(),
+        )
+        .unwrap();
+        let workload = &gate["performanceWorkload"];
+        let sheet_count = workload["sheets"].as_u64().unwrap() as usize;
+        let row_count = workload["rows"].as_u64().unwrap() as usize;
+        let column_count = workload["columns"].as_u64().unwrap() as usize;
+        let formula_rows = workload["formulaRows"].as_u64().unwrap() as usize;
+        let base = std::env::temp_dir().join(format!(
+            "longedit-xlsx-performance-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&base).unwrap();
+        let path = base.join("business-workload.xlsx");
+        let mut workbook = Workbook::new();
+        for sheet_index in 0..sheet_count {
+            let sheet = workbook.add_worksheet();
+            sheet
+                .set_name(format!("Business{}", sheet_index + 1))
+                .unwrap();
+            for column in 0..column_count {
+                sheet
+                    .write_string(0, column as u16, format!("Field{}", column + 1))
+                    .unwrap();
+            }
+            if sheet_index == 0 {
+                for row in 1..row_count {
+                    sheet
+                        .write_string(row as u32, 0, format!("Record-{row:05}"))
+                        .unwrap();
+                    for column in 1..column_count {
+                        sheet
+                            .write_number(row as u32, column as u16, (row * column) as f64)
+                            .unwrap();
+                    }
+                    if row <= formula_rows {
+                        sheet
+                            .write_formula(
+                                row as u32,
+                                (column_count - 1) as u16,
+                                Formula::new(format!("=B{}+C{}", row + 1, row + 1))
+                                    .set_result((row * 3).to_string()),
+                            )
+                            .unwrap();
+                    }
+                }
+            }
+        }
+        workbook.save(&path).unwrap();
+        let source = fs::read(&path).unwrap();
+
+        let total_started = Instant::now();
+        let inspect_started = Instant::now();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let inspect_ms = inspect_started.elapsed().as_millis();
+        assert_eq!(document.sheets.len(), sheet_count);
+
+        let page_started = Instant::now();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Business1", row_count / 2, 200)
+            .unwrap();
+        let page_ms = page_started.elapsed().as_millis();
+        assert_eq!(page.rows.len(), 200);
+        assert_eq!(page.returned_columns, column_count);
+
+        let patch_started = Instant::now();
+        let output = patch_workbook(
+            &source,
+            &[WorkbookCellEdit {
+                sheet: "Business1".into(),
+                row: row_count / 2,
+                column: 1,
+                input: "42".into(),
+                kind: "number".into(),
+            }],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap();
+        let patch_ms = patch_started.elapsed().as_millis();
+        let total_ms = total_started.elapsed().as_millis();
+        eprintln!(
+            "workbook performance: inspect={inspect_ms}ms page={page_ms}ms patch={patch_ms}ms total={total_ms}ms"
+        );
+        let budgets = &gate["performanceBudgetsMs"];
+        assert!(
+            inspect_ms <= budgets["inspect"].as_u64().unwrap() as u128,
+            "inspect {inspect_ms} ms"
+        );
+        assert!(
+            page_ms <= budgets["readPage"].as_u64().unwrap() as u128,
+            "page {page_ms} ms"
+        );
+        assert!(
+            patch_ms <= budgets["patch"].as_u64().unwrap() as u128,
+            "patch {patch_ms} ms"
+        );
+        assert!(
+            total_ms <= budgets["total"].as_u64().unwrap() as u128,
+            "total {total_ms} ms"
+        );
+        let growth_percent = output.len().saturating_sub(source.len()) * 100 / source.len();
+        assert!(
+            growth_percent <= gate["maximumPatchedFileGrowthPercent"].as_u64().unwrap() as usize,
+            "patched package grew by {growth_percent}%"
+        );
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]
@@ -590,6 +1469,9 @@ mod tests {
                 },
             ],
             style_edits: vec![],
+            row_height_edits: vec![],
+            column_width_edits: vec![],
+            merge_edits: vec![],
         };
         let saved = tauri::async_runtime::block_on(write_workbook_cells(
             root_string.clone(),
@@ -620,6 +1502,9 @@ mod tests {
                 kind: "string".into(),
             }],
             style_edits: vec![],
+            row_height_edits: vec![],
+            column_width_edits: vec![],
+            merge_edits: vec![],
         };
         assert!(tauri::async_runtime::block_on(write_workbook_cells(
             root_string,
@@ -648,6 +1533,9 @@ mod tests {
                     kind: "string".into(),
                 }],
                 style_edits: vec![],
+                row_height_edits: vec![],
+                column_width_edits: vec![],
+                merge_edits: vec![],
             },
         ));
         assert!(merged_result.unwrap_err().contains("只能编辑左上角"));
@@ -680,6 +1568,9 @@ mod tests {
                     },
                 ],
                 style_edits: vec![],
+                row_height_edits: vec![],
+                column_width_edits: vec![],
+                merge_edits: vec![],
             },
         ))
         .unwrap();
@@ -699,6 +1590,99 @@ mod tests {
         let a3 = sheet_xml.find("r=\"A3\"").unwrap();
         let b3 = sheet_xml.find("r=\"B3\"").unwrap();
         assert!(a3 < b3);
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn edits_row_heights_column_widths_and_merge_ranges_without_data_loss() {
+        let (base, path) = fixture();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let saved = tauri::async_runtime::block_on(write_workbook_cells(
+            base.join("library").to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookWritePayload {
+                expected_signature: document.signature,
+                edits: vec![WorkbookCellEdit {
+                    sheet: "进度".into(),
+                    row: 6,
+                    column: 0,
+                    input: "新的合并标题".into(),
+                    kind: "string".into(),
+                }],
+                style_edits: vec![],
+                row_height_edits: vec![WorkbookRowHeightEdit {
+                    sheet: "进度".into(),
+                    row: 1,
+                    height: Some(36.0),
+                }],
+                column_width_edits: vec![WorkbookColumnWidthEdit {
+                    sheet: "进度".into(),
+                    start_column: 0,
+                    end_column: 1,
+                    width: Some(20.0),
+                }],
+                merge_edits: vec![
+                    WorkbookMergeEdit {
+                        sheet: "进度".into(),
+                        top: 4,
+                        bottom: 4,
+                        left: 0,
+                        right: 1,
+                        action: "unmerge".into(),
+                    },
+                    WorkbookMergeEdit {
+                        sheet: "进度".into(),
+                        top: 6,
+                        bottom: 6,
+                        left: 0,
+                        right: 2,
+                        action: "merge".into(),
+                    },
+                ],
+            },
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "进度", 0, 100)
+            .unwrap();
+        assert!(page
+            .row_heights
+            .iter()
+            .any(|item| item.row == 1 && (item.height - 36.0).abs() < 0.01));
+        assert!((0..=1).all(|column| page.column_widths.iter().any(|item| {
+            item.start_column <= column
+                && item.end_column >= column
+                && (item.width - 20.0).abs() < 0.01
+        })));
+        assert_eq!(
+            page.merged_cells,
+            [crate::formats::workbook::WorkbookMergeRange {
+                top: 6,
+                bottom: 6,
+                left: 0,
+                right: 2,
+            }]
+        );
+        let rejected = tauri::async_runtime::block_on(write_workbook_cells(
+            base.join("library").to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookWritePayload {
+                expected_signature: saved.signature,
+                edits: vec![],
+                style_edits: vec![],
+                row_height_edits: vec![],
+                column_width_edits: vec![],
+                merge_edits: vec![WorkbookMergeEdit {
+                    sheet: "进度".into(),
+                    top: 0,
+                    bottom: 1,
+                    left: 0,
+                    right: 1,
+                    action: "merge".into(),
+                }],
+            },
+        ));
+        assert!(rejected.unwrap_err().contains("避免数据丢失"));
         fs::remove_dir_all(base).unwrap();
     }
 
@@ -724,6 +1708,9 @@ mod tests {
                         ..Default::default()
                     },
                 }],
+                row_height_edits: vec![],
+                column_width_edits: vec![],
+                merge_edits: vec![],
             },
         ));
         assert!(invalid.unwrap_err().contains("字号必须"));
@@ -742,6 +1729,9 @@ mod tests {
                         ..Default::default()
                     },
                 }],
+                row_height_edits: vec![],
+                column_width_edits: vec![],
+                merge_edits: vec![],
             },
         ));
         assert!(merged.unwrap_err().contains("只能编辑左上角"));
@@ -786,6 +1776,9 @@ mod tests {
                         },
                     },
                 ],
+                row_height_edits: vec![],
+                column_width_edits: vec![],
+                merge_edits: vec![],
             },
         ))
         .unwrap();
@@ -809,6 +1802,12 @@ mod tests {
             String::from_utf8(zip_part(&after, "xl/worksheets/sheet1.xml")).unwrap();
         assert!(formula_before.contains("<f>SUM(B2, 5)</f>"));
         assert!(formula_after.contains("<f>SUM(B2, 5)</f>"));
+        assert!(formula_before.contains("<conditionalFormatting"));
+        assert_eq!(
+            formula_before.split("<conditionalFormatting").nth(1),
+            formula_after.split("<conditionalFormatting").nth(1),
+            "样式写回应原样保留条件格式及其后的工作表对象"
+        );
         assert_ne!(
             zip_part(&before, "xl/styles.xml"),
             zip_part(&after, "xl/styles.xml")
