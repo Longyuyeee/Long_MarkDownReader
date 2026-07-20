@@ -6,10 +6,11 @@ use crate::formats::table::{
 };
 use crate::formats::workbook::{
     WorkbookCapabilities, WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine,
-    WorkbookSheetPage,
+    WorkbookSheetPage, WorkbookWritePayload,
 };
+use crate::formats::workbook_ooxml::patch_workbook;
 use crate::sanitize_filename;
-use crate::services::reliable_write::write_bytes;
+use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use calamine::{open_workbook, CellType, Data, Reader, Xlsx};
 use std::fs;
@@ -23,14 +24,14 @@ const MAX_PREVIEW_COLUMNS: usize = 256;
 #[derive(Clone, Copy, Debug, Default)]
 struct CalamineWorkbookEngine;
 
-fn workbook_signature(metadata: &fs::Metadata) -> String {
+fn workbook_signature(metadata: &fs::Metadata, bytes: &[u8]) -> String {
     let modified = metadata
         .modified()
         .ok()
         .and_then(|value| value.duration_since(UNIX_EPOCH).ok())
         .map(|value| value.as_nanos())
         .unwrap_or_default();
-    format!("{}:{}", metadata.len(), modified)
+    format!("{}:{}:{:x}", metadata.len(), modified, md5::compute(bytes))
 }
 
 fn ensure_workbook(path: &Path) -> Result<(), String> {
@@ -82,10 +83,13 @@ fn used_dimensions<T: CellType>(range: &calamine::Range<T>) -> (usize, usize) {
 impl WorkbookEngine for CalamineWorkbookEngine {
     fn capabilities(&self) -> WorkbookCapabilities {
         WorkbookCapabilities {
-            engine_id: "calamine-preview-v1".into(),
+            engine_id: "calamine-ooxml-v2".into(),
             extensions: vec!["xlsx".into()],
             read: WorkbookCapabilityLevel::Supported,
             cached_formula_results: WorkbookCapabilityLevel::Supported,
+            existing_cell_editing: WorkbookCapabilityLevel::Supported,
+            conflict_detection: WorkbookCapabilityLevel::Supported,
+            ooxml_part_preservation: WorkbookCapabilityLevel::Supported,
             cell_editing: WorkbookCapabilityLevel::Planned,
             formatting: WorkbookCapabilityLevel::Planned,
             formula_recalculation: WorkbookCapabilityLevel::Planned,
@@ -101,9 +105,11 @@ impl WorkbookEngine for CalamineWorkbookEngine {
     }
 
     fn inspect(&self, path: &Path) -> Result<WorkbookDocument, String> {
+        recover_interrupted_write(path)?;
         let metadata = path
             .metadata()
             .map_err(|error| format!("读取 XLSX 元数据失败: {}", error))?;
+        let bytes = fs::read(path).map_err(|error| format!("读取 XLSX 失败: {}", error))?;
         let workbook = open_xlsx(path)?;
         let sheets = workbook.sheet_names().to_vec();
         if sheets.is_empty() {
@@ -112,7 +118,7 @@ impl WorkbookEngine for CalamineWorkbookEngine {
         Ok(WorkbookDocument {
             path: path.to_string_lossy().into_owned(),
             size: metadata.len(),
-            signature: workbook_signature(&metadata),
+            signature: workbook_signature(&metadata, &bytes),
             sheets,
         })
     }
@@ -205,6 +211,35 @@ pub async fn read_workbook_sheet(
     })
     .await
     .map_err(|error| format!("工作表读取任务失败: {}", error))?
+}
+
+#[tauri::command]
+pub async fn write_workbook_cells(
+    library_root: String,
+    path: String,
+    payload: WorkbookWritePayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再保存".into());
+        }
+        let output = patch_workbook(&source, &payload.edits)?;
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("保存后的 XLSX 不能超过 128 MB".into());
+        }
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX 写回任务失败: {error}"))?
 }
 
 fn sheet_to_table(source: &Path, sheet: &str) -> Result<PathBuf, String> {
@@ -305,7 +340,9 @@ pub async fn import_workbook_sheet(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::formats::workbook::{WorkbookCellEdit, WorkbookWritePayload};
     use rust_xlsxwriter::{Formula, Workbook};
+    use std::io::{Cursor, Read};
     use std::time::{SystemTime, UNIX_EPOCH};
 
     fn fixture() -> (PathBuf, PathBuf) {
@@ -414,8 +451,119 @@ mod tests {
         );
         assert_eq!(capabilities.cell_editing, WorkbookCapabilityLevel::Planned);
         assert_eq!(
+            capabilities.existing_cell_editing,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
+            capabilities.conflict_detection,
+            WorkbookCapabilityLevel::Supported
+        );
+        assert_eq!(
             capabilities.xlsx_round_trip,
             WorkbookCapabilityLevel::Planned
         );
+    }
+
+    fn zip_part(bytes: &[u8], name: &str) -> Vec<u8> {
+        let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
+        let mut part = archive.by_name(name).unwrap();
+        let mut output = Vec::new();
+        part.read_to_end(&mut output).unwrap();
+        output
+    }
+
+    #[test]
+    fn writes_existing_cells_preserves_unedited_parts_and_rejects_stale_save() {
+        let (base, path) = fixture();
+        let root = base.join("library");
+        let root_string = root.to_string_lossy().into_owned();
+        let path_string = path.to_string_lossy().into_owned();
+        let before = fs::read(&path).unwrap();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let payload = WorkbookWritePayload {
+            expected_signature: document.signature.clone(),
+            edits: vec![
+                WorkbookCellEdit {
+                    sheet: "进度".into(),
+                    row: 1,
+                    column: 0,
+                    input: "编辑完成".into(),
+                    kind: "string".into(),
+                },
+                WorkbookCellEdit {
+                    sheet: "进度".into(),
+                    row: 1,
+                    column: 1,
+                    input: "99".into(),
+                    kind: "number".into(),
+                },
+                WorkbookCellEdit {
+                    sheet: "进度".into(),
+                    row: 2,
+                    column: 1,
+                    input: "=SUM(B2, 1)".into(),
+                    kind: "formula".into(),
+                },
+            ],
+        };
+        let saved = tauri::async_runtime::block_on(write_workbook_cells(
+            root_string.clone(),
+            path_string.clone(),
+            payload,
+        ))
+        .unwrap();
+        assert_ne!(saved.signature, document.signature);
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "进度", 0, 100)
+            .unwrap();
+        assert_eq!(page.rows[1][0].value, "编辑完成");
+        assert_eq!(page.rows[1][1].value, "99");
+        assert_eq!(page.rows[2][1].formula.as_deref(), Some("=SUM(B2, 1)"));
+
+        let after = fs::read(&path).unwrap();
+        assert_eq!(
+            zip_part(&before, "xl/styles.xml"),
+            zip_part(&after, "xl/styles.xml")
+        );
+        let stale = WorkbookWritePayload {
+            expected_signature: document.signature,
+            edits: vec![WorkbookCellEdit {
+                sheet: "进度".into(),
+                row: 1,
+                column: 0,
+                input: "不应写入".into(),
+                kind: "string".into(),
+            }],
+        };
+        assert!(tauri::async_runtime::block_on(write_workbook_cells(
+            root_string,
+            path_string,
+            stale,
+        ))
+        .unwrap_err()
+        .contains("其他程序修改"));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn rejects_edits_for_cells_that_do_not_exist_in_source_xml() {
+        let (base, path) = fixture();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let result = tauri::async_runtime::block_on(write_workbook_cells(
+            base.join("library").to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookWritePayload {
+                expected_signature: document.signature,
+                edits: vec![WorkbookCellEdit {
+                    sheet: "进度".into(),
+                    row: 100,
+                    column: 10,
+                    input: "new".into(),
+                    kind: "string".into(),
+                }],
+            },
+        ));
+        assert!(result.unwrap_err().contains("只能编辑工作簿中已存在"));
+        fs::remove_dir_all(base).unwrap();
     }
 }

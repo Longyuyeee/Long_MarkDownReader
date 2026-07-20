@@ -39,7 +39,7 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - JSON Canvas 可视化编辑，以及 Markdown、文件、Mermaid、表格图表等节点。
 - Mermaid Diagram Studio，支持结构化编辑、预览与 SVG/PNG 导出。
 - CSV/TSV 和开放 `.table.json` 表格编辑、图表、仪表盘、Markdown/Canvas 嵌入。
-- XLSX 多工作表只读预览，可将工作表转换为开放表格；暂不承诺原位完整 XLSX 编辑。
+- XLSX 多工作表预览与已有基础单元格编辑，支持冲突检测和 OOXML 局部可靠写回；可将工作表转换为开放表格。
 - PDF 分段读取、阅读、标注、OCR sidecar、全文索引和图谱关系。
 - API Key 使用 Windows 系统凭据存储；旧配置中的明文 Key 会一次性迁移并清除。
 
@@ -68,8 +68,8 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 最后一次完整验证结果：
 
 - `npm run ci:check`：通过。
-- Rust：86 项测试通过，0 失败。
-- 100 MiB PDF 范围读取基准：约 97 ms，仅读取约 256 KiB（目标小于 2 秒）。
+- Rust：88 项测试通过，0 失败。
+- 100 MiB PDF 范围读取基准：约 476 ms，仅读取约 256 KiB（目标小于 2 秒）。
 - `npm audit --omit=dev`：0 个漏洞。
 - `npm run tauri -- build --debug --no-bundle`：通过。
 
@@ -81,7 +81,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 1. 完成 FR-BASE-001/007：拖拽导入现由 Rust 系统事件授权；历史缓存区分知识库与外部文档；图片读取要求被当前 Markdown 精确引用。下一批继续审计少量平台和导出命令。
 2. 完成 FR-INDEX-004/FR-FORMAT-001：格式注册表已增加读取、编辑、创建、索引和外部编辑能力声明，下一批迁移创建入口和索引适配器。
-3. 推进 FR-DATA-009：`WorkbookEngine`、机器可读能力矩阵和首个可重复生成的 XLSX fixture 已建立；下一批定义可编辑单元格/样式模型、工作副本和可靠写回。
+3. 推进 FR-DATA-009：已有文本、数字、布尔、清空和公式单元格支持编辑与 OOXML 局部写回；下一批增加空白单元格、区域粘贴、选择模型和基础样式。
 4. 扩展新文件格式编辑器与 FR-THEME-001 主题预设；所有新工作面必须按需加载并复用统一 token、权限和可靠写入。
 5. 完善 FR-BASE-005：增加关键保存流程 E2E、格式 fixture 和视觉回归门禁。
 
@@ -90,7 +90,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 ## 7. 已知边界与注意事项
 
 - 当前重点是本地优先和开放文件格式，不引入私有数据库作为唯一事实源。
-- XLSX 当前仍只是专业预览与导入能力，不能提前宣传为 Excel 等价编辑器；完整等价编辑已成为后续主线目标，按兼容矩阵逐项验收。
+- XLSX 当前已具备第一批已有单元格编辑能力，但新增单元格、样式和公式重算尚未完成，不能提前宣传为 Excel 等价编辑器；完整等价编辑按兼容矩阵逐项验收。
 - PDF 标注和 OCR 使用 sidecar 文件，不直接重写原 PDF。
 - 图谱支持 Markdown、PDF 和表格节点，但“思维导图”仍需独立交互模型，不能仅把力导向图改成树形布局。
 - 不要提交 `.claude/settings.local.json`、系统凭据、知识库内容、`dist/` 或 `src-tauri/target/`。

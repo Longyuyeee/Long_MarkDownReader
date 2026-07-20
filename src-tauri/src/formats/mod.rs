@@ -5,3 +5,4 @@ pub mod pdf_annotations;
 pub mod pdf_ocr;
 pub mod table;
 pub mod workbook;
+pub mod workbook_ooxml;

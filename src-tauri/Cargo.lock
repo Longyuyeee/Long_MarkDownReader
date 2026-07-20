@@ -4560,6 +4560,7 @@ dependencies = [
  "keyring",
  "md5",
  "pdf-extract",
+ "quick-xml 0.38.4",
  "regex",
  "reqwest 0.12.28",
  "rust_xlsxwriter",
@@ -4576,6 +4577,7 @@ dependencies = [
  "tauri-plugin-single-instance",
  "urlencoding",
  "window-vibrancy 0.5.3",
+ "zip 7.2.0",
 ]
 
 [[package]]

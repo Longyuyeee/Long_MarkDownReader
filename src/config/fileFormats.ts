@@ -24,7 +24,7 @@ export const FILE_FORMATS: readonly FileFormatDefinition[] = [
   { id: 'canvas', label: 'JSON Canvas', extensions: ['.canvas'], routeName: 'Canvas', readable: true, editable: true, creatable: true, indexable: true, externallyEditable: false, matches: extensionMatcher('.canvas') },
   { id: 'pdf', label: 'PDF', extensions: ['.pdf'], routeName: 'Pdf', readable: true, editable: false, creatable: false, indexable: true, externallyEditable: false, matches: extensionMatcher('.pdf') },
   { id: 'table', label: 'Data table', extensions: ['.table.json', '.csv', '.tsv'], routeName: 'Table', readable: true, editable: true, creatable: true, indexable: true, externallyEditable: false, matches: extensionMatcher('.table.json', '.csv', '.tsv') },
-  { id: 'workbook', label: 'Excel workbook', extensions: ['.xlsx'], routeName: 'Workbook', readable: true, editable: false, creatable: false, indexable: true, externallyEditable: false, matches: extensionMatcher('.xlsx') },
+  { id: 'workbook', label: 'Excel workbook', extensions: ['.xlsx'], routeName: 'Workbook', readable: true, editable: true, creatable: false, indexable: true, externallyEditable: false, matches: extensionMatcher('.xlsx') },
   { id: 'diagram', label: 'Mermaid diagram', extensions: ['.mmd', '.mermaid'], routeName: 'Diagram', readable: true, editable: true, creatable: true, indexable: true, externallyEditable: false, matches: extensionMatcher('.mmd', '.mermaid') },
 ]
 

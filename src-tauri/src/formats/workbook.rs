@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
@@ -15,6 +15,9 @@ pub struct WorkbookCapabilities {
     pub extensions: Vec<String>,
     pub read: WorkbookCapabilityLevel,
     pub cached_formula_results: WorkbookCapabilityLevel,
+    pub existing_cell_editing: WorkbookCapabilityLevel,
+    pub conflict_detection: WorkbookCapabilityLevel,
+    pub ooxml_part_preservation: WorkbookCapabilityLevel,
     pub cell_editing: WorkbookCapabilityLevel,
     pub formatting: WorkbookCapabilityLevel,
     pub formula_recalculation: WorkbookCapabilityLevel,
@@ -55,6 +58,23 @@ pub struct WorkbookSheetPage {
     pub returned_columns: usize,
     pub rows: Vec<Vec<WorkbookCell>>,
     pub truncated_columns: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookCellEdit {
+    pub sheet: String,
+    pub row: usize,
+    pub column: usize,
+    pub input: String,
+    pub kind: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookWritePayload {
+    pub expected_signature: String,
+    pub edits: Vec<WorkbookCellEdit>,
 }
 
 pub trait WorkbookEngine {
