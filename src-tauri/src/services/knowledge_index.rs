@@ -1,5 +1,8 @@
 use crate::commands::graph::GraphData;
 use crate::formats::file_registry::file_format_for_path;
+use crate::formats::opml::{opml_search_text, parse_opml};
+use crate::formats::table::{parse_internal_table, table_search_text};
+use crate::services::pdf_index::load_pdf_index;
 use crate::services::reliable_write::write_utf8;
 use chardetng::EncodingDetector;
 use serde::{Deserialize, Serialize};
@@ -16,6 +19,8 @@ const MAX_INDEX_BYTES: u64 = 128 * 1024 * 1024;
 const MAX_INDEX_SOURCES: usize = 100_000;
 const MAX_INDEX_OBJECTS: usize = 250_000;
 const MAX_INDEX_RELATIONS: usize = 500_000;
+const MAX_INDEX_SEARCH_SEGMENTS: usize = 500_000;
+const MAX_INDEX_TEXT_FILE_BYTES: u64 = 20 * 1024 * 1024;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -51,6 +56,19 @@ pub struct IndexedRelation {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct IndexedSearchSegment {
+    pub title: String,
+    pub path: String,
+    pub object_type: String,
+    pub match_kind: String,
+    pub text: String,
+    pub page: Option<u32>,
+    pub annotation_id: Option<String>,
+    pub extraction_failed: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct KnowledgeIndexSnapshot {
     pub schema_version: u32,
     pub workspace_fingerprint: String,
@@ -59,6 +77,8 @@ pub struct KnowledgeIndexSnapshot {
     pub sources: Vec<IndexedSource>,
     pub objects: Vec<IndexedKnowledgeObject>,
     pub relations: Vec<IndexedRelation>,
+    #[serde(default)]
+    pub search_segments: Vec<IndexedSearchSegment>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -130,6 +150,11 @@ impl KnowledgeIndexRuntime {
     pub fn is_building(&self, workspace: &Path) -> bool {
         self.get(workspace)
             .is_some_and(|status| status.state == "building")
+    }
+
+    pub fn blocks_index_reads(&self, workspace: &Path) -> bool {
+        self.get(workspace)
+            .is_some_and(|status| status.state == "building" || status.state == "error")
     }
 }
 
@@ -208,9 +233,133 @@ pub fn source_digest(sources: &[IndexedSource]) -> String {
     format!("{:x}", md5::compute(encoded))
 }
 
+fn source_title(path: &Path) -> String {
+    path.file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .into_owned()
+}
+
+fn decode_searchable_text(path: &Path, indexer: &str) -> Option<String> {
+    let bytes = path
+        .metadata()
+        .ok()
+        .filter(|metadata| metadata.len() <= MAX_INDEX_TEXT_FILE_BYTES)
+        .and_then(|_| fs::read(path).ok())?;
+    let mut detector = EncodingDetector::new();
+    detector.feed(&bytes, true);
+    let encoding = detector.guess(None, true);
+    let (text, _, _) = encoding.decode(&bytes);
+    let text = text.strip_prefix('\u{feff}').unwrap_or(&text);
+    if indexer == "opml" {
+        parse_opml(text)
+            .ok()
+            .map(|document| opml_search_text(&document))
+    } else if path
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_ascii_lowercase()
+        .ends_with(".table.json")
+    {
+        parse_internal_table(text)
+            .ok()
+            .map(|table| table_search_text(&table, MAX_INDEX_TEXT_FILE_BYTES as usize))
+    } else {
+        Some(text.to_string())
+    }
+}
+
+fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<IndexedSearchSegment> {
+    let mut segments = Vec::new();
+    for source in sources {
+        if source.path.ends_with(".annotations.json") || source.path.ends_with(".ocr.json") {
+            continue;
+        }
+        let path = workspace.join(source.path.replace('/', std::path::MAIN_SEPARATOR_STR));
+        let Ok(format) = file_format_for_path(&path) else {
+            continue;
+        };
+        let Some(indexer) = format.adapters.indexer.as_deref() else {
+            continue;
+        };
+        let title = source_title(&path);
+        let path_string = path.to_string_lossy().into_owned();
+        if indexer == "pdf" {
+            let index = load_pdf_index(&path);
+            segments.push(IndexedSearchSegment {
+                title: title.clone(),
+                path: path_string.clone(),
+                object_type: format.id.clone(),
+                match_kind: "title".into(),
+                text: String::new(),
+                page: None,
+                annotation_id: None,
+                extraction_failed: index.extraction_failed,
+            });
+            for (page, text) in index.pages.into_iter().enumerate() {
+                if !text.trim().is_empty() {
+                    segments.push(IndexedSearchSegment {
+                        title: title.clone(),
+                        path: path_string.clone(),
+                        object_type: format.id.clone(),
+                        match_kind: "body".into(),
+                        text,
+                        page: Some((page + 1) as u32),
+                        annotation_id: None,
+                        extraction_failed: index.extraction_failed,
+                    });
+                }
+            }
+            for page in index.ocr_pages {
+                segments.push(IndexedSearchSegment {
+                    title: title.clone(),
+                    path: path_string.clone(),
+                    object_type: format.id.clone(),
+                    match_kind: "ocr".into(),
+                    text: page.text,
+                    page: Some(page.page),
+                    annotation_id: None,
+                    extraction_failed: index.extraction_failed,
+                });
+            }
+            for annotation in index.annotations {
+                segments.push(IndexedSearchSegment {
+                    title: title.clone(),
+                    path: path_string.clone(),
+                    object_type: format.id.clone(),
+                    match_kind: "annotation".into(),
+                    text: annotation.text,
+                    page: Some(annotation.page),
+                    annotation_id: Some(annotation.id),
+                    extraction_failed: index.extraction_failed,
+                });
+            }
+        } else if matches!(
+            indexer,
+            "markdown" | "text" | "json-text" | "table" | "opml"
+        ) {
+            if let Some(text) = decode_searchable_text(&path, indexer) {
+                segments.push(IndexedSearchSegment {
+                    title,
+                    path: path_string,
+                    object_type: format.id.clone(),
+                    match_kind: "body".into(),
+                    text,
+                    page: None,
+                    annotation_id: None,
+                    extraction_failed: false,
+                });
+            }
+        }
+    }
+    segments
+}
+
 pub fn snapshot_from_graph(workspace: &Path, graph: GraphData) -> KnowledgeIndexSnapshot {
     let sources = collect_index_sources(workspace);
     let source_digest = source_digest(&sources);
+    let search_segments = build_search_segments(workspace, &sources);
     let mut objects: Vec<IndexedKnowledgeObject> = graph
         .nodes
         .into_iter()
@@ -300,6 +449,7 @@ pub fn snapshot_from_graph(workspace: &Path, graph: GraphData) -> KnowledgeIndex
         sources,
         objects,
         relations,
+        search_segments,
     }
 }
 
@@ -311,6 +461,7 @@ pub fn write_snapshot(
     if snapshot.sources.len() > MAX_INDEX_SOURCES
         || snapshot.objects.len() > MAX_INDEX_OBJECTS
         || snapshot.relations.len() > MAX_INDEX_RELATIONS
+        || snapshot.search_segments.len() > MAX_INDEX_SEARCH_SEGMENTS
     {
         return Err("知识索引对象数量超过安全上限".into());
     }
@@ -344,10 +495,31 @@ pub fn read_snapshot(
         serde_json::from_str(&content).map_err(|error| format!("知识索引已损坏: {error}"))?;
     if snapshot.schema_version != KNOWLEDGE_INDEX_SCHEMA_VERSION
         || snapshot.workspace_fingerprint != workspace_fingerprint(workspace)
+        || snapshot.sources.len() > MAX_INDEX_SOURCES
+        || snapshot.objects.len() > MAX_INDEX_OBJECTS
+        || snapshot.relations.len() > MAX_INDEX_RELATIONS
+        || snapshot.search_segments.len() > MAX_INDEX_SEARCH_SEGMENTS
     {
-        return Err("知识索引版本或工作区标识不匹配".into());
+        return Err("知识索引版本、工作区标识或数量边界不匹配".into());
     }
     Ok(Some(snapshot))
+}
+
+pub fn read_ready_snapshot(
+    cache_root: &Path,
+    workspace: &Path,
+    runtime_blocks_read: bool,
+) -> Option<KnowledgeIndexSnapshot> {
+    if runtime_blocks_read {
+        return None;
+    }
+    let snapshot = read_snapshot(cache_root, workspace).ok().flatten()?;
+    if snapshot.search_segments.is_empty()
+        || source_digest(&collect_index_sources(workspace)) != snapshot.source_digest
+    {
+        return None;
+    }
+    Some(snapshot)
 }
 
 pub fn inspect_index(

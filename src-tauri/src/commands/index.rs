@@ -2,13 +2,14 @@ use crate::formats::file_registry::file_format_for_path;
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::knowledge_index::{
-    delete_index, inspect_index, snapshot_from_graph, write_snapshot, KnowledgeIndexRuntime,
-    KnowledgeIndexStatus,
+    delete_index, inspect_index, read_ready_snapshot, snapshot_from_graph, write_snapshot,
+    IndexedSearchSegment, KnowledgeIndexRuntime, KnowledgeIndexStatus,
 };
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::workspace_guard::WorkspaceGuard;
 use chardetng::EncodingDetector;
 use serde::Serialize;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, State};
@@ -126,6 +127,80 @@ fn text_match_context(value: &str, query: &str) -> Option<String> {
         .find(|line| line.to_lowercase().contains(query))
         .map(snippet)
         .or_else(|| value.to_lowercase().contains(query).then(|| snippet(value)))
+}
+
+fn sort_search_results(results: &mut Vec<KnowledgeSearchResult>) {
+    results.sort_by(|left, right| {
+        right
+            .score
+            .cmp(&left.score)
+            .then_with(|| left.title.cmp(&right.title))
+            .then_with(|| left.page.cmp(&right.page))
+    });
+    results.truncate(MAX_SEARCH_RESULTS);
+}
+
+fn search_segments(segments: &[IndexedSearchSegment], query: &str) -> Vec<KnowledgeSearchResult> {
+    let mut results = Vec::new();
+    let mut title_paths = HashSet::new();
+    let mut match_counts: HashMap<(&str, &str), usize> = HashMap::new();
+    for segment in segments {
+        if results.len() >= MAX_SEARCH_RESULTS {
+            break;
+        }
+        if segment.title.to_lowercase().contains(query) && title_paths.insert(segment.path.as_str())
+        {
+            results.push(KnowledgeSearchResult {
+                title: segment.title.clone(),
+                path: segment.path.clone(),
+                object_type: segment.object_type.clone(),
+                match_kind: "title".into(),
+                context: if segment.extraction_failed {
+                    "PDF 正文不可提取，可能是扫描件、加密文件或损坏文件".into()
+                } else {
+                    "文件名匹配".into()
+                },
+                page: None,
+                annotation_id: None,
+                score: 100,
+                extraction_failed: segment.extraction_failed,
+            });
+        }
+        let Some(context) = text_match_context(&segment.text, query) else {
+            continue;
+        };
+        let limit = if segment.match_kind == "annotation" {
+            5
+        } else {
+            1
+        };
+        let count = match_counts
+            .entry((&segment.path, &segment.match_kind))
+            .or_default();
+        if *count >= limit {
+            continue;
+        }
+        *count += 1;
+        let score = match segment.match_kind.as_str() {
+            "annotation" => 90,
+            "ocr" => 75,
+            "body" if segment.object_type == "pdf" => 70,
+            _ => 60,
+        };
+        results.push(KnowledgeSearchResult {
+            title: segment.title.clone(),
+            path: segment.path.clone(),
+            object_type: segment.object_type.clone(),
+            match_kind: segment.match_kind.clone(),
+            context,
+            page: segment.page,
+            annotation_id: segment.annotation_id.clone(),
+            score,
+            extraction_failed: segment.extraction_failed,
+        });
+    }
+    sort_search_results(&mut results);
+    results
 }
 
 fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchResult>) {
@@ -284,8 +359,26 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
     }
 }
 
+fn search_workspace(
+    root: &Path,
+    query: &str,
+    index: Option<(&Path, bool)>,
+) -> Vec<KnowledgeSearchResult> {
+    if let Some((cache_root, runtime_blocks_read)) = index {
+        if let Some(snapshot) = read_ready_snapshot(cache_root, root, runtime_blocks_read) {
+            return search_segments(&snapshot.search_segments, query);
+        }
+    }
+    let mut results = Vec::new();
+    search_recursive(root, query, &mut results);
+    sort_search_results(&mut results);
+    results
+}
+
 #[tauri::command]
 pub async fn search_knowledge(
+    app: AppHandle,
+    runtime: State<'_, KnowledgeIndexRuntime>,
     library_root: String,
     query: String,
 ) -> Result<Vec<KnowledgeSearchResult>, String> {
@@ -295,18 +388,10 @@ pub async fn search_knowledge(
     }
     let guard = WorkspaceGuard::new(library_root)?;
     let root = guard.root().to_path_buf();
+    let cache_root = knowledge_index_cache_root(&app)?;
+    let runtime_blocks_read = runtime.blocks_index_reads(&root);
     tauri::async_runtime::spawn_blocking(move || {
-        let mut results = Vec::new();
-        search_recursive(&root, &query, &mut results);
-        results.sort_by(|left, right| {
-            right
-                .score
-                .cmp(&left.score)
-                .then_with(|| left.title.cmp(&right.title))
-                .then_with(|| left.page.cmp(&right.page))
-        });
-        results.truncate(MAX_SEARCH_RESULTS);
-        results
+        search_workspace(&root, &query, Some((&cache_root, runtime_blocks_read)))
     })
     .await
     .map_err(|error| format!("知识索引任务失败: {}", error))
@@ -315,6 +400,7 @@ pub async fn search_knowledge(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::commands::graph::GraphData;
     use crate::services::pdf_index::clear_pdf_index_cache;
     use base64::{engine::general_purpose, Engine as _};
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -350,19 +436,11 @@ mod tests {
         )
         .unwrap();
 
-        let body = tauri::async_runtime::block_on(search_knowledge(
-            root.to_string_lossy().into_owned(),
-            "Second Page Beta".into(),
-        ))
-        .unwrap();
+        let body = search_workspace(&root, "second page beta", None);
         assert!(body.iter().any(|result| {
             result.match_kind == "body" && result.page == Some(2) && result.object_type == "pdf"
         }));
-        let annotations = tauri::async_runtime::block_on(search_knowledge(
-            root.to_string_lossy().into_owned(),
-            "critical insight".into(),
-        ))
-        .unwrap();
+        let annotations = search_workspace(&root, "critical insight", None);
         assert!(annotations.iter().any(|result| {
             result.match_kind == "annotation"
                 && result.page == Some(1)
@@ -383,16 +461,80 @@ mod tests {
             }"#,
         )
         .unwrap();
-        let ocr = tauri::async_runtime::block_on(search_knowledge(
-            root.to_string_lossy().into_owned(),
-            "unique scanned evidence".into(),
-        ))
-        .unwrap();
+        let ocr = search_workspace(&root, "unique scanned evidence", None);
         assert!(ocr.iter().any(|result| {
             result.match_kind == "ocr" && result.page == Some(1) && result.object_type == "pdf"
         }));
+
+        let cache = root.join("cache");
+        fs::create_dir_all(&cache).unwrap();
+        let snapshot = snapshot_from_graph(
+            &root,
+            GraphData {
+                nodes: Vec::new(),
+                edges: Vec::new(),
+            },
+        );
+        write_snapshot(&cache, &root, &snapshot).unwrap();
+        let indexed_body = search_workspace(&root, "second page beta", Some((&cache, false)));
+        let indexed_annotation = search_workspace(&root, "critical insight", Some((&cache, false)));
+        let indexed_ocr = search_workspace(&root, "unique scanned evidence", Some((&cache, false)));
+        assert!(indexed_body
+            .iter()
+            .any(|result| result.match_kind == "body" && result.page == Some(2)));
+        assert!(indexed_annotation.iter().any(|result| {
+            result.match_kind == "annotation"
+                && result.page == Some(1)
+                && result.annotation_id.as_deref() == Some("annotation-1")
+        }));
+        assert!(indexed_ocr
+            .iter()
+            .any(|result| result.match_kind == "ocr" && result.page == Some(1)));
         let _ = fs::remove_dir_all(root);
         clear_pdf_index_cache();
+    }
+
+    #[test]
+    fn ready_index_is_used_and_stale_or_legacy_snapshot_falls_back() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let base = std::env::temp_dir().join(format!("longedit-index-fallback-{nonce}"));
+        let root = base.join("workspace");
+        let cache = base.join("cache");
+        fs::create_dir_all(&root).unwrap();
+        fs::create_dir_all(&cache).unwrap();
+        let note = root.join("evidence.txt");
+        fs::write(&note, "Indexed snapshot evidence").unwrap();
+        let graph = GraphData {
+            nodes: Vec::new(),
+            edges: Vec::new(),
+        };
+        let mut snapshot = snapshot_from_graph(&root, graph.clone());
+        snapshot.search_segments[0].text = "Synthetic index-only evidence".into();
+        write_snapshot(&cache, &root, &snapshot).unwrap();
+        assert!(read_ready_snapshot(&cache, &root, false).is_some());
+        assert!(
+            search_workspace(&root, "synthetic index-only", Some((&cache, false)))
+                .iter()
+                .any(|result| result.context.contains("Synthetic index-only evidence"))
+        );
+
+        fs::write(&note, "Fresh live fallback evidence with a different size").unwrap();
+        assert!(read_ready_snapshot(&cache, &root, false).is_none());
+        assert!(
+            search_workspace(&root, "fresh live fallback", Some((&cache, false)))
+                .iter()
+                .any(|result| result.context.contains("Fresh live fallback evidence"))
+        );
+
+        let mut legacy_snapshot = snapshot_from_graph(&root, graph);
+        legacy_snapshot.search_segments.clear();
+        write_snapshot(&cache, &root, &legacy_snapshot).unwrap();
+        assert!(read_ready_snapshot(&cache, &root, false).is_none());
+        assert!(!search_workspace(&root, "fresh live fallback", Some((&cache, false))).is_empty());
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]
@@ -408,11 +550,7 @@ mod tests {
             "name,segment\nAcme Research,Strategic Account\n",
         )
         .unwrap();
-        let results = tauri::async_runtime::block_on(search_knowledge(
-            root.to_string_lossy().into_owned(),
-            "strategic account".into(),
-        ))
-        .unwrap();
+        let results = search_workspace(&root, "strategic account", None);
         assert!(results.iter().any(|result| {
             result.object_type == "table"
                 && result.match_kind == "body"
@@ -431,11 +569,7 @@ mod tests {
             }"#,
         )
         .unwrap();
-        let internal = tauri::async_runtime::block_on(search_knowledge(
-            root.to_string_lossy().into_owned(),
-            "unique board evidence".into(),
-        ))
-        .unwrap();
+        let internal = search_workspace(&root, "unique board evidence", None);
         assert!(internal.iter().any(|result| {
             result.object_type == "table"
                 && result.context.contains("Unique board evidence")
@@ -457,11 +591,7 @@ mod tests {
             "Generic adapter evidence lives here.",
         )
         .unwrap();
-        let results = tauri::async_runtime::block_on(search_knowledge(
-            root.to_string_lossy().into_owned(),
-            "generic adapter evidence".into(),
-        ))
-        .unwrap();
+        let results = search_workspace(&root, "generic adapter evidence", None);
         assert!(results.iter().any(|result| {
             result.object_type == "plain-text"
                 && result.match_kind == "body"
@@ -483,11 +613,7 @@ mod tests {
             include_str!("../../tests/fixtures/formats/mindmap.opml"),
         )
         .unwrap();
-        let results = tauri::async_runtime::block_on(search_knowledge(
-            root.to_string_lossy().into_owned(),
-            "增强关系发现".into(),
-        ))
-        .unwrap();
+        let results = search_workspace(&root, "增强关系发现", None);
         assert!(results.iter().any(|result| result.object_type == "opml"
             && result.match_kind == "body"
             && result.context.contains("增强关系发现")
