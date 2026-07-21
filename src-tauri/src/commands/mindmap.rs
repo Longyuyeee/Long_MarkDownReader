@@ -143,6 +143,14 @@ mod tests {
     }
 
     #[test]
+    fn opml_parser_rejects_document_type_declarations() {
+        let content = r#"<?xml version="1.0"?>
+<!DOCTYPE opml [<!ENTITY example "expanded">]>
+<opml version="2.0"><head><title>&example;</title></head><body><outline text="Root" /></body></opml>"#;
+        assert!(parse_opml(content).is_err());
+    }
+
+    #[test]
     fn commands_reject_stale_writes_and_create_canvas_projection() {
         let base = std::env::temp_dir().join(format!(
             "longedit-opml-{}-{}",

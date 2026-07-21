@@ -1033,6 +1033,16 @@ fn add_frontmatter_relation(
         .position(|line| line == "relations:")
         .map(|index| index + 1);
     let Some(relations_index) = relations_index else {
+        let has_unsupported_relations = lines[1..frontmatter_end].iter().any(|line| {
+            if line.starts_with([' ', '\t']) {
+                return false;
+            }
+            line.split_once(':')
+                .is_some_and(|(key, _)| key.trim().trim_matches(['\'', '"']) == "relations")
+        });
+        if has_unsupported_relations {
+            return Err("现有 relations Frontmatter 结构无法安全编辑，请先转换为块映射".into());
+        }
         lines.insert(frontmatter_end, "relations:".into());
         lines.insert(
             frontmatter_end + 1,
@@ -1380,6 +1390,12 @@ mod tests {
         assert!(!removed.contains("depends-on:"));
         assert!(removed.contains("type: project"));
         assert!(add_frontmatter_relation(&added, "depends-on", "docs/Target").is_err());
+    }
+
+    #[test]
+    fn graph_relation_editor_rejects_unsupported_frontmatter() {
+        let inline = "---\nrelations: { related: '[[Existing]]' }\ntype: note\n---\nBody\n";
+        assert!(add_frontmatter_relation(inline, "related", "Target").is_err());
     }
 
     #[test]

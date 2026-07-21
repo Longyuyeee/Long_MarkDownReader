@@ -175,6 +175,7 @@ pub fn parse_opml(content: &str) -> Result<OpmlDocument, String> {
                     metadata.insert(field, value);
                 }
             }
+            Event::DocType(_) => return Err("OPML 不允许包含 DTD".into()),
             Event::Eof => break,
             _ => {}
         }

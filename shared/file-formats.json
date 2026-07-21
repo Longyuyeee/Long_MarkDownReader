@@ -67,7 +67,7 @@
       "extensions": [".xlsx"],
       "mimeTypes": ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
       "routeName": "Workbook",
-      "maxBytes": 268435456,
+      "maxBytes": 134217728,
       "capabilities": { "read": "supported", "edit": "supported", "create": "unsupported", "index": "planned" },
       "externalPolicy": "import",
       "adapters": { "reader": "workbook", "writer": "workbook", "creator": null, "indexer": null },

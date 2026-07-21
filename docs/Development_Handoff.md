@@ -68,7 +68,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 最后一次完整验证结果：
 
 - `npm run ci:check`：通过。
-- Rust：118 项测试通过，0 失败。
+- Rust：120 项测试通过，0 失败。
 - 100 MiB PDF 范围读取基准：约 58 ms，仅读取约 256 KiB（目标小于 2 秒；不同机器会有波动）。
 - `npm audit --omit=dev`：0 个漏洞。
 - `npm run tauri -- build --debug --no-bundle`：通过。
