@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "formats": [
+    {
+      "id": "markdown",
+      "label": "Markdown",
+      "extensions": [".md"],
+      "mimeTypes": ["text/markdown", "text/x-markdown"],
+      "routeName": "LibraryMode",
+      "maxBytes": 20971520,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "externalPolicy": "edit",
+      "adapters": { "reader": "text", "writer": "text", "creator": "text", "indexer": "markdown" },
+      "creation": { "defaultExtension": ".md", "defaultContent": "", "defaultName": "未命名" }
+    },
+    {
+      "id": "plain-text",
+      "label": "纯文本",
+      "extensions": [".txt"],
+      "mimeTypes": ["text/plain"],
+      "routeName": "LibraryMode",
+      "maxBytes": 20971520,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "externalPolicy": "edit",
+      "adapters": { "reader": "text", "writer": "text", "creator": "text", "indexer": "text" },
+      "creation": { "defaultExtension": ".txt", "defaultContent": "", "defaultName": "未命名文本" }
+    },
+    {
+      "id": "canvas",
+      "label": "JSON Canvas",
+      "extensions": [".canvas"],
+      "mimeTypes": ["application/json", "application/vnd.jsoncanvas+json"],
+      "routeName": "Canvas",
+      "maxBytes": 16777216,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "canvas", "writer": "canvas", "creator": "text-template", "indexer": "json-text" },
+      "creation": { "defaultExtension": ".canvas", "defaultContent": "{\n  \"nodes\": [],\n  \"edges\": []\n}\n", "defaultName": "未命名画布" }
+    },
+    {
+      "id": "pdf",
+      "label": "PDF",
+      "extensions": [".pdf"],
+      "mimeTypes": ["application/pdf"],
+      "routeName": "Pdf",
+      "maxBytes": 536870912,
+      "capabilities": { "read": "supported", "edit": "unsupported", "create": "unsupported", "index": "supported" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "pdf", "writer": null, "creator": null, "indexer": "pdf" },
+      "creation": null
+    },
+    {
+      "id": "table",
+      "label": "开放数据表",
+      "extensions": [".table.json", ".csv", ".tsv"],
+      "mimeTypes": ["application/vnd.longedit.table+json", "text/csv", "text/tab-separated-values"],
+      "routeName": "Table",
+      "maxBytes": 67108864,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "table", "writer": "table", "creator": "table", "indexer": "table" },
+      "creation": { "defaultExtension": ".table.json", "defaultContent": null, "defaultName": "未命名数据表" }
+    },
+    {
+      "id": "workbook",
+      "label": "Excel 工作簿",
+      "extensions": [".xlsx"],
+      "mimeTypes": ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+      "routeName": "Workbook",
+      "maxBytes": 134217728,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "unsupported", "index": "planned" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "workbook", "writer": "workbook", "creator": null, "indexer": null },
+      "creation": null
+    },
+    {
+      "id": "diagram",
+      "label": "Mermaid 图表",
+      "extensions": [".mmd", ".mermaid"],
+      "mimeTypes": ["text/vnd.mermaid", "text/plain"],
+      "routeName": "Diagram",
+      "maxBytes": 2097152,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "diagram", "writer": "diagram", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".mmd", "defaultContent": "flowchart TD\n  A[开始] --> B[结束]\n", "defaultName": "未命名图表" }
+    },
+    {
+      "id": "opml",
+      "label": "OPML 思维导图",
+      "extensions": [".opml"],
+      "mimeTypes": ["text/x-opml", "application/xml", "text/xml"],
+      "routeName": "MindMap",
+      "maxBytes": 8388608,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "opml", "writer": "opml", "creator": "text-template", "indexer": "opml" },
+      "creation": { "defaultExtension": ".opml", "defaultContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<opml version=\"2.0\">\n  <head><title>未命名思维导图</title></head>\n  <body>\n    <outline text=\"中心主题\" _longeditId=\"root\"/>\n  </body>\n</opml>\n", "defaultName": "未命名思维导图" }
+    }
+  ]
+}

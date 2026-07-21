@@ -16,8 +16,9 @@ PDF 批注：
 
 Workbook：
 
-- `workbook/compatibility-baseline.xlsx`：包含多 Sheet、文本、数值、布尔值、公式缓存、表头样式、数字格式、合并单元格和列宽的工作簿基线。
+- `workbook/compatibility-baseline.xlsx`：包含多 Sheet、文本、数值、布尔值、日期/时间、错误值、命名区域与命名公式、公式缓存、表头样式、数字格式、条件格式、合并单元格、尺寸、冻结窗格、自动筛选、Excel Table、数据验证、柱形图、嵌入图片、透视表、切片器、外部链接、数据连接、打印区域/页面设置/页眉页脚及工作簿与 Sheet 保护的工作簿基线。
 - `workbook/compatibility-baseline.json`：记录必须保持的语义单元格、文档特性和当前引擎能力等级。
+- `shared/xlsx-release-gate.json`：定义复杂 fixture 覆盖下限、OOXML 全包差异白名单、10,000×12 Debug CI 性能负载和禁止宣传语。
 - 运行 `cargo run --manifest-path src-tauri/Cargo.toml --example generate_workbook_fixture` 可重新生成 XLSX fixture。
 
 超限样本由测试基于 `MAX_CANVAS_BYTES` 动态构造，避免在仓库中保存超过 20 MB 的无效文件。测试同时确认校验发生在落盘前。

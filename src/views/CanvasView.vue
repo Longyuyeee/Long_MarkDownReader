@@ -156,7 +156,7 @@
               :library-root="store.libraryPath"
               :source="node.file!"
               :host-path="canvasPath"
-              :dark="store.theme === 'dark'"
+              :dark="isActiveThemeDark(store.theme)"
               @open="openEmbeddedDiagram"
             />
             <template v-else>
@@ -290,6 +290,8 @@ import { invoke } from '@tauri-apps/api/core'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
+import { isActiveThemeDark } from '../config/themePresets'
+import { routeForFile } from '../config/fileFormats'
 import TableChartEmbed from '../components/TableChartEmbed.vue'
 import MermaidDiagramEmbed from '../components/MermaidDiagramEmbed.vue'
 
@@ -1223,12 +1225,9 @@ const openEmbeddedDiagram = (path: string) => router.push({ name: 'Diagram', que
 const openNode = async (node: CanvasNode) => {
   if (node.type === 'file' && node.file) {
     const path = resolveFilePath(node.file)
-    if (path.toLowerCase().endsWith('.canvas')) router.push({ name: 'Canvas', query: { path } })
-    else if (path.toLowerCase().endsWith('.pdf')) router.push({ name: 'Pdf', query: { path } })
-    else if (/(?:\.(csv|tsv)|\.table\.json)$/i.test(path)) router.push({ name: 'Table', query: { path } })
-    else if (path.toLowerCase().endsWith('.xlsx')) router.push({ name: 'Workbook', query: { path } })
-    else if (/\.(?:mmd|mermaid)$/i.test(path)) router.push({ name: 'Diagram', query: { path } })
-    else router.push({ name: 'LibraryMode', query: { path } })
+    const target = routeForFile(path)
+    if (target) router.push(target)
+    else message.warning('该文件格式尚未注册工作面')
   } else if (node.type === 'link' && node.url) {
     try { await openUrl(node.url) } catch { message.error('无法打开该链接') }
   }

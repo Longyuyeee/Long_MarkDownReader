@@ -61,7 +61,13 @@ const escapeXml = (value: string) => value.replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;',
 }[character] || character))
 
-export interface GraphSvgOptions { mode: 'network' | 'mindmap'; title: string; dark: boolean; rootId?: string }
+export interface GraphSvgOptions {
+  mode: 'network' | 'mindmap'
+  title: string
+  dark: boolean
+  rootId?: string
+  colors?: { background: string; foreground: string; card: string; primary: string; edge: string }
+}
 
 export const createGraphSvg = (nodes: GraphNode[], edges: GraphEdge[], options: GraphSvgOptions) => {
   if (!nodes.length) throw new Error('当前筛选条件下没有可导出的节点')
@@ -84,11 +90,11 @@ export const createGraphSvg = (nodes: GraphNode[], edges: GraphEdge[], options: 
   const width = Math.max(320, Math.ceil(maxX - minX))
   const height = Math.max(240, Math.ceil(maxY - minY))
   const nodeMap = new Map(nodes.map(node => [node.id, node]))
-  const background = options.dark ? '#17191d' : '#f7f9fc'
-  const foreground = options.dark ? '#f2f5f7' : '#18202b'
-  const card = options.dark ? '#252a30' : '#ffffff'
-  const primary = options.dark ? '#42b883' : '#007aff'
-  const edgeColor = options.dark ? '#56616d' : '#aab5c2'
+  const background = options.colors?.background ?? (options.dark ? '#17191d' : '#f7f9fc')
+  const foreground = options.colors?.foreground ?? (options.dark ? '#f2f5f7' : '#18202b')
+  const card = options.colors?.card ?? (options.dark ? '#252a30' : '#ffffff')
+  const primary = options.colors?.primary ?? (options.dark ? '#42b883' : '#007aff')
+  const edgeColor = options.colors?.edge ?? (options.dark ? '#56616d' : '#aab5c2')
   const edgeMarkup = edges.flatMap(edge => {
     const source = nodeMap.get(edge.source), target = nodeMap.get(edge.target)
     if (!source || !target) return []

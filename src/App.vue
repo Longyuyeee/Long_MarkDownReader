@@ -71,15 +71,14 @@ import { listen, emit } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import { useAppStore } from './store/app'
 import { isExternallyEditable } from './config/fileFormats'
+import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 
 const osTheme = useOsTheme()
 const router = useRouter()
 const store = useAppStore()
 
-const isDark = computed(() => {
-  if (store.theme === 'system') return osTheme.value === 'dark'
-  return store.theme === 'dark'
-})
+const systemDark = computed(() => osTheme.value === 'dark')
+const isDark = computed(() => isDarkTheme(store.theme, systemDark.value))
 const activeTheme = computed(() => (isDark.value ? darkTheme : null))
 
 // 是否显示主窗口标题栏（排除快速笔记窗口）
@@ -87,10 +86,8 @@ const showMainTitlebar = computed(() => {
   return !store.isZen && router.currentRoute.value.name !== 'QuickNote'
 })
 
-const currentThemeName = computed(() => {
-  if (store.theme === 'system') return osTheme.value === 'dark' ? 'dark' : 'white'
-  return store.theme
-})
+const currentThemeName = computed(() => resolveThemeName(store.theme, systemDark.value))
+const currentThemeTone = computed(() => getThemeTone(store.theme, systemDark.value))
 
 // 核心修复：将主题属性实时同步到 body 元素
 watch(currentThemeName, (name) => {
@@ -105,27 +102,15 @@ watch(() => store.motionSpeed, (v) => {
   document.body.setAttribute('data-motion', v)
 }, { immediate: true })
 
-// 计算主题色调
-const themeColors = computed(() => {
-  const themes: Record<string, any> = {
-    white: { primary: '#007aff', bg: '#ffffff', card: 'rgba(0,0,0,0.03)' },
-    green: { primary: '#42b883', bg: '#f2f9f1', card: 'rgba(66,184,131,0.06)' },
-    blue:  { primary: '#00a2ff', bg: '#f0f7ff', card: 'rgba(0,162,255,0.06)' },
-    pink:  { primary: '#ff6b9d', bg: '#fff5f8', card: 'rgba(255,107,157,0.06)' },
-    dark:  { primary: '#42b883', bg: '#1c1c1e', card: 'rgba(255,255,255,0.08)' }
-  }
-  return themes[currentThemeName.value] || themes.white
-})
-
 const themeOverrides = computed<GlobalThemeOverrides>(() => ({
   common: {
     borderRadius: getComputedStyle(document.body).getPropertyValue('--theme-radius-sm').trim() || '8px',
     borderRadiusSmall: getComputedStyle(document.body).getPropertyValue('--theme-radius-sm').trim() || '6px',
-    primaryColor: themeColors.value.primary,
-    primaryColorHover: themeColors.value.primary,
+    primaryColor: currentThemeTone.value.ui.primary,
+    primaryColorHover: currentThemeTone.value.ui.primary,
     bodyColor: 'transparent',
-    cardColor: themeColors.value.bg,
-    modalColor: themeColors.value.bg,
+    cardColor: currentThemeTone.value.ui.surface,
+    modalColor: currentThemeTone.value.ui.surface,
   }
 }))
 
@@ -149,6 +134,7 @@ const getRouteLoadingLabel = (routeName: unknown) => {
     Table: '正在打开数据表',
     Workbook: '正在解析 XLSX 工作簿',
     Diagram: '正在打开 Mermaid 图表工作室',
+    MindMap: '正在打开 OPML 思维导图',
     Settings: '正在载入设置'
   }
   return labels[String(routeName)] || '正在切换页面'
@@ -194,7 +180,7 @@ const handleCommand = async (item: any) => {
     else if (item.action === 'save-file') emit('command-save')
     else if (item.action === 'refresh') emit('command-refresh')
     else if (item.action === 'daily-note') emit('command-daily-note')
-    else if (item.action.startsWith('theme-')) store.theme = item.action.replace('theme-', '') as any
+    else if (item.action.startsWith('theme-preset:')) await store.applyThemePreset(item.action.slice('theme-preset:'.length))
   } else if (item.type === 'file') {
     router.push({ name: 'LibraryMode', query: { path: item.path } })
   }
@@ -274,75 +260,6 @@ onUnmounted(() => {
 </script>
 
 <style>
-/* 全局变量：定义在 body 级别以确保覆盖所有子模块 */
-body[data-theme="white"] { --theme-bg: #ffffff; --theme-primary: #0071e3; --theme-card: rgba(0,0,0,0.025); --theme-text: #1d1d1f; --theme-bg-rgb: 255,255,255; }
-body[data-theme="green"] { --theme-bg: #edf7f0; --theme-primary: #34c759; --theme-card: rgba(52,199,89,0.08); --theme-text: #1d1d1f; --theme-bg-rgb: 237,247,240; }
-body[data-theme="blue"]  { --theme-bg: #eef5ff; --theme-primary: #0a84ff; --theme-card: rgba(10,132,255,0.07); --theme-text: #1d1d1f; --theme-bg-rgb: 238,245,255; }
-body[data-theme="pink"]  { --theme-bg: #fff0f5; --theme-primary: #ff375f; --theme-card: rgba(255,55,95,0.07); --theme-text: #1d1d1f; --theme-bg-rgb: 255,240,245; }
-body[data-theme="dark"]  { --theme-bg: #161618; --theme-primary: #30d158; --theme-card: rgba(255,255,255,0.06); --theme-text: #f5f5f7; --theme-bg-rgb: 22,22,24; }
-
-/* --theme-primary-rgb (从 hex 提取 RGB 分量) */
-body[data-theme="white"] { --theme-primary-rgb: 0,113,227; }
-body[data-theme="green"] { --theme-primary-rgb: 52,199,89; }
-body[data-theme="blue"]  { --theme-primary-rgb: 10,132,255; }
-body[data-theme="pink"]  { --theme-primary-rgb: 255,55,95; }
-body[data-theme="dark"]  { --theme-primary-rgb: 48,209,88; }
-
-/* 视觉风格 — 通过 CSS 变量覆盖全局组件样式 */
-body[data-style="soft"] {
-  --theme-radius: 10px; --theme-radius-sm: 6px;
-  --theme-shadow: 0 1px 4px rgba(0,0,0,0.06); --theme-shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-  --theme-glass: none; --theme-border: 1px solid rgba(0,0,0,0.05);
-  --theme-spacing: 1; --theme-font: inherit;
-}
-body[data-style="neo"] {
-  --theme-radius: 16px; --theme-radius-sm: 12px;
-  --theme-shadow: 6px 6px 12px rgba(0,0,0,0.08), -4px -4px 12px rgba(255,255,255,0.7);
-  --theme-shadow-sm: 3px 3px 6px rgba(0,0,0,0.05), -2px -2px 6px rgba(255,255,255,0.6);
-  --theme-glass: none; --theme-border: none;
-  --theme-spacing: 1.05; --theme-font: inherit;
-}
-body[data-style="glass"] {
-  --theme-radius: 18px; --theme-radius-sm: 12px;
-  --theme-shadow: 0 8px 32px rgba(0,0,0,0.1); --theme-shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
-  --theme-glass: saturate(180%) blur(30px); --theme-border: 1px solid rgba(255,255,255,0.15);
-  --theme-spacing: 1.15; --theme-font: inherit;
-}
-body[data-style="airy"] {
-  --theme-radius: 12px; --theme-radius-sm: 8px;
-  --theme-shadow: 0 4px 24px rgba(0,0,0,0.05); --theme-shadow-sm: 0 2px 8px rgba(0,0,0,0.03);
-  --theme-glass: none; --theme-border: 1px solid rgba(0,0,0,0.03);
-  --theme-spacing: 1.6; --theme-font: inherit;
-}
-body[data-style="minimal"] {
-  --theme-radius: 4px; --theme-radius-sm: 2px;
-  --theme-shadow: none; --theme-shadow-sm: none;
-  --theme-glass: none; --theme-border: none;
-  --theme-spacing: 0.8; --theme-font: inherit;
-}
-body[data-style="sharp"] {
-  --theme-radius: 0px; --theme-radius-sm: 0px;
-  --theme-shadow: 3px 3px 0 rgba(0,0,0,0.08); --theme-shadow-sm: 2px 2px 0 rgba(0,0,0,0.05);
-  --theme-glass: none; --theme-border: 2px solid rgba(0,0,0,0.12);
-  --theme-spacing: 0.7; --theme-font: inherit;
-}
-body[data-theme="dark"][data-style="neo"] {
-  --theme-shadow: 6px 6px 12px rgba(0,0,0,0.5), -4px -4px 12px rgba(255,255,255,0.04);
-  --theme-shadow-sm: 3px 3px 6px rgba(0,0,0,0.35), -2px -2px 6px rgba(255,255,255,0.03);
-}
-body[data-theme="dark"][data-style="glass"] {
-  --theme-border: 1px solid rgba(255,255,255,0.1);
-}
-body[data-theme="dark"][data-style="sharp"] {
-  --theme-shadow: 3px 3px 0 rgba(0,0,0,0.5); --theme-shadow-sm: 2px 2px 0 rgba(0,0,0,0.3);
-  --theme-border: 2px solid rgba(255,255,255,0.15);
-}
-
-/* Typography scale */
-body { --text-xs: 10px; --text-sm: 12px; --text-base: 13px; --text-md: 14px; --text-lg: 16px; --text-xl: 20px; --text-2xl: 28px; }
-/* Text color hierarchy */
-body { --text-secondary: rgba(29, 29, 31, 0.55); --text-tertiary: rgba(29, 29, 31, 0.35); }
-body[data-theme="dark"] { --text-secondary: rgba(245, 245, 247, 0.55); --text-tertiary: rgba(245, 245, 247, 0.35); }
 /* Unified easing */
 body { --ease-premium: cubic-bezier(0.16, 1, 0.3, 1); }
 
@@ -401,7 +318,7 @@ body {
 .titlebar-right, .window-controls { display: flex; height: 100%; }
 .win-btn { width: 44px; height: 100%; display: flex; align-items: center; justify-content: center; cursor: default; transition: all 0.2s ease; color: currentColor; }
 .win-btn:hover { background: rgba(0, 0, 0, 0.05); }
-body[data-theme="dark"] .win-btn:hover { background: rgba(255, 255, 255, 0.1); }
+body[data-theme="dark"] .win-btn:hover, body[data-theme="contrast"] .win-btn:hover { background: rgba(255, 255, 255, 0.1); }
 .win-btn.close:hover { background: #ff3b30 !important; color: #fff !important; }
 
 .app-content { flex: 1; position: relative; overflow: hidden; }

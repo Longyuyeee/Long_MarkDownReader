@@ -1,4 +1,5 @@
 use crate::commands::history::history_dir;
+use crate::formats::file_registry::file_format_registry;
 use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -474,20 +475,10 @@ pub async fn scan_directory(library_root: String, path: String) -> Result<Vec<Fi
 }
 
 fn is_workspace_file(name: &str) -> bool {
-    let name = name.to_lowercase();
-    [
-        ".md",
-        ".canvas",
-        ".mmd",
-        ".mermaid",
-        ".pdf",
-        ".csv",
-        ".tsv",
-        ".xlsx",
-        ".table.json",
-    ]
-    .iter()
-    .any(|extension| name.ends_with(extension))
+    file_format_registry()
+        .ok()
+        .and_then(|registry| registry.by_path(name))
+        .is_some()
 }
 
 #[tauri::command]
@@ -725,6 +716,7 @@ mod tests {
     fn workspace_file_filter_rejects_disguised_extensions() {
         assert!(is_workspace_file("diagram.MERMAID"));
         assert!(is_workspace_file("data.table.json"));
+        assert!(is_workspace_file("notes.txt"));
         assert!(!is_workspace_file("note.md.exe"));
     }
 

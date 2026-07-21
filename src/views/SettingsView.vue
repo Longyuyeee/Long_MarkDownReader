@@ -254,7 +254,14 @@ import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, NTag, NInputGroup } from 'naive-ui'
 import { useAppStore, THEME_MAP } from '../store/app'
-import { themePresets, type ThemePreset } from '../config/themePresets'
+import {
+  THEME_EDITOR_BACKGROUNDS,
+  themePresets,
+  themeToneById,
+  themeTones,
+  type ThemeName,
+  type ThemePreset,
+} from '../config/themePresets'
 
 const router = useRouter()
 const message = useMessage()
@@ -278,29 +285,7 @@ const motionOptions: { label: string; desc: string; value: 'calm' | 'swift' | 'e
   { label: '减少', desc: '尽量降低界面动效', value: 'reduced' },
 ]
 
-const themeOptions = [
-  { label: '纯白', value: 'white', color: '#ffffff' },
-  { label: '护眼绿', value: 'green', color: '#42b883' },
-  { label: '清爽蓝', value: 'blue', color: '#00a2ff' },
-  { label: '浪漫粉', value: 'pink', color: '#ff6b9d' },
-  { label: '奶油', value: 'cream', color: '#e67e4d' },
-  { label: '紫梦幻', value: 'purple', color: '#7c3aed' },
-  { label: '琥珀', value: 'amber', color: '#d97706' },
-  { label: '深色', value: 'dark', color: '#1c1c1e' },
-  { label: '跟随系统', value: 'system', color: '#8e8e93' },
-]
-
-const presetPreviewColors: Record<string, { background: string; surface: string; accent: string }> = {
-  white: { background: '#f4f7fb', surface: '#ffffff', accent: '#0071e3' },
-  green: { background: '#edf7f0', surface: '#fbfefc', accent: '#34a853' },
-  blue: { background: '#eaf3ff', surface: '#fbfdff', accent: '#0b73d9' },
-  pink: { background: '#fbecf3', surface: '#fffafd', accent: '#cf3f72' },
-  cream: { background: '#f8efe2', surface: '#fffaf3', accent: '#e67e4d' },
-  purple: { background: '#eee9fa', surface: '#fcfaff', accent: '#7c3aed' },
-  amber: { background: '#f9ecd8', surface: '#fffaf2', accent: '#d97706' },
-  dark: { background: '#101318', surface: '#20252d', accent: '#64d987' },
-  system: { background: '#e7e9ed', surface: '#ffffff', accent: '#707780' },
-}
+const themeOptions = themeTones.map(item => ({ label: item.label, value: item.id, color: item.swatch }))
 
 const codeThemeOptions = [
   { label: 'GitHub (默认)', value: 'github' },
@@ -486,10 +471,10 @@ const removeLibrary = (index: number) => {
   })
 }
 
-const applyTheme = (val: string) => {
+const applyTheme = (val: ThemeName) => {
   // config 是设置页的保存源，必须与 store 同步，否则深度保存会把旧主题写回。
-  config.value.theme = val as any
-  store.theme = val as any
+  config.value.theme = val
+  store.theme = val
   // 只有当前背景色是某个主题默认色时才更新（不覆盖用户自选颜色）
   const isDefaultBg = Object.values(THEME_MAP).includes(config.value.editorBgColor)
   if (THEME_MAP[val] && isDefaultBg) {
@@ -498,7 +483,7 @@ const applyTheme = (val: string) => {
 }
 
 const getPresetPreviewStyle = (preset: ThemePreset) => {
-  const colors = presetPreviewColors[preset.theme] || presetPreviewColors.white
+  const colors = themeToneById[preset.theme].preview
   return {
     '--preset-bg': colors.background,
     '--preset-surface': colors.surface,
@@ -507,26 +492,24 @@ const getPresetPreviewStyle = (preset: ThemePreset) => {
 }
 
 const applyPreset = (preset: ThemePreset) => {
-  config.value.theme = preset.theme as any
-  config.value.visualStyle = preset.style as any
+  config.value.theme = preset.theme
+  config.value.visualStyle = preset.style
   config.value.codeTheme = preset.vditorCodeTheme
+  store.theme = preset.theme
+  store.visualStyle = preset.style
+  store.codeTheme = preset.vditorCodeTheme
 
   // 更新编辑器背景色
-  if (THEME_MAP[preset.theme]) {
-    config.value.editorBgColor = THEME_MAP[preset.theme]
-  }
+  config.value.editorBgColor = THEME_EDITOR_BACKGROUNDS[preset.theme]
 
   message.success(`已应用主题预设「${preset.name}」`)
 }
 
 const isPresetActive = (preset: ThemePreset): boolean => {
-  return config.value.theme === preset.theme && config.value.visualStyle === preset.style
+  return config.value.theme === preset.theme && config.value.visualStyle === preset.style && config.value.codeTheme === preset.vditorCodeTheme
 }
 
-const getThemeLabel = (theme: string): string => {
-  const option = themeOptions.find(t => t.value === theme)
-  return option?.label || theme
-}
+const getThemeLabel = (theme: ThemeName): string => themeToneById[theme].label
 
 const getStyleLabel = (style: string): string => {
   const option = styleOptions.find(s => s.value === style)

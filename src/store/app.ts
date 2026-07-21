@@ -1,20 +1,17 @@
 import { defineStore } from 'pinia'
 import { invoke } from '@tauri-apps/api/core'
 import { enable, disable, isEnabled } from '@tauri-apps/plugin-autostart'
+import {
+  THEME_EDITOR_BACKGROUNDS,
+  getThemePreset,
+  normalizeThemeName,
+  type ThemeName,
+  type VisualStyle,
+} from '../config/themePresets'
 
 export type SessionMode = 'TEMP' | 'LIBRARY'
 
-export const THEME_MAP: Record<string, string> = {
-  white: '#ffffff',
-  green: '#f0f9eb',
-  blue: '#f0f7ff',
-  pink: '#fff5f7',
-  cream: '#faf7f2',
-  purple: '#f6f4fb',
-  amber: '#fef8f1',
-  dark: '#1c1c1e',
-  system: '#ffffff'
-}
+export const THEME_MAP = THEME_EDITOR_BACKGROUNDS
 
 export interface TabInfo {
   id: string
@@ -39,7 +36,7 @@ export const useAppStore = defineStore('app', {
     activeSession: 'LIBRARY' as SessionMode,
     tabs: [] as TabInfo[],
     activeTabId: null as string | null,
-    theme: 'system' as 'white' | 'dark' | 'system' | 'green' | 'blue' | 'pink' | 'cream' | 'purple' | 'amber',
+    theme: 'system' as ThemeName,
     codeTheme: 'github' as string,
     editorMode: 'wysiwyg' as 'wysiwyg' | 'ir' | 'sv',
     editorBgColor: '' as string,
@@ -53,7 +50,7 @@ export const useAppStore = defineStore('app', {
     exitStrategy: 'ask' as 'ask' | 'quit' | 'minimize',
     isTempDirty: false,
     isZen: false,
-    visualStyle: 'soft' as 'soft' | 'glass' | 'minimal' | 'neo' | 'airy' | 'sharp',
+    visualStyle: 'soft' as VisualStyle,
     motionSpeed: 'calm' as 'calm' | 'swift' | 'expressive' | 'reduced',
     aiEnabled: false,
     aiProvider: 'openai',
@@ -76,7 +73,7 @@ export const useAppStore = defineStore('app', {
         const config = await invoke<any>('get_config')
         this.libraries = (config.libraries || []).map((l: any) => ({ ...l, gitEnabled: l.gitEnabled || false, gitRemote: l.gitRemote || '', gitBranch: l.gitBranch || 'main' }))
         this.activeLibraryPath = config.activeLibraryPath || ''
-        this.theme = config.theme || 'system'
+        this.theme = normalizeThemeName(config.theme)
         this.codeTheme = config.codeTheme || 'github'
         this.editorMode = config.editorMode || 'wysiwyg'
         this.editorBgColor = config.editorBgColor || ''
@@ -158,6 +155,16 @@ export const useAppStore = defineStore('app', {
         aiModel: this.aiModel,
       } })
 
+    },
+    async applyThemePreset(presetId: string) {
+      const selected = getThemePreset(presetId)
+      if (!selected) throw new Error(`Unknown theme preset: ${presetId}`)
+      await this.updateConfig({
+        theme: selected.theme,
+        visualStyle: selected.style,
+        codeTheme: selected.vditorCodeTheme,
+        editorBgColor: THEME_MAP[selected.theme],
+      })
     },
     async saveAiCredential(apiKey: string) {
       await invoke('set_ai_credential', { apiKey })

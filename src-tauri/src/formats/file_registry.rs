@@ -1,0 +1,181 @@
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+use std::path::Path;
+use std::sync::LazyLock;
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum CapabilityLevel {
+    Supported,
+    Planned,
+    Unsupported,
+}
+
+impl CapabilityLevel {
+    pub fn is_supported(self) -> bool {
+        self == Self::Supported
+    }
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FileFormatCapabilities {
+    pub read: CapabilityLevel,
+    pub edit: CapabilityLevel,
+    pub create: CapabilityLevel,
+    pub index: CapabilityLevel,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FileFormatAdapters {
+    pub reader: Option<String>,
+    pub writer: Option<String>,
+    pub creator: Option<String>,
+    pub indexer: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FileFormatCreation {
+    pub default_extension: String,
+    pub default_content: Option<String>,
+    pub default_name: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FileFormatDefinition {
+    pub id: String,
+    pub label: String,
+    pub extensions: Vec<String>,
+    pub mime_types: Vec<String>,
+    pub route_name: String,
+    pub max_bytes: u64,
+    pub capabilities: FileFormatCapabilities,
+    pub external_policy: String,
+    pub adapters: FileFormatAdapters,
+    pub creation: Option<FileFormatCreation>,
+}
+
+impl FileFormatDefinition {
+    pub fn matches_path(&self, path: impl AsRef<Path>) -> bool {
+        let name = path
+            .as_ref()
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or_default()
+            .to_lowercase();
+        self.extensions
+            .iter()
+            .any(|extension| name.ends_with(extension))
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FileFormatRegistry {
+    pub schema_version: u32,
+    pub formats: Vec<FileFormatDefinition>,
+}
+
+impl FileFormatRegistry {
+    fn parse() -> Result<Self, String> {
+        let registry: Self =
+            serde_json::from_str(include_str!("../../../shared/file-formats.json"))
+                .map_err(|error| format!("文件格式契约无法解析: {error}"))?;
+        registry.validate()?;
+        Ok(registry)
+    }
+
+    pub fn validate(&self) -> Result<(), String> {
+        if self.schema_version != 1 {
+            return Err(format!("不支持的文件格式契约版本 {}", self.schema_version));
+        }
+        let mut ids = HashSet::new();
+        let mut extensions = HashSet::new();
+        for format in &self.formats {
+            if format.id.trim().is_empty() || !ids.insert(format.id.as_str()) {
+                return Err(format!("文件格式 ID 重复或为空: {}", format.id));
+            }
+            if format.extensions.is_empty() || format.max_bytes == 0 {
+                return Err(format!("文件格式契约不完整: {}", format.id));
+            }
+            for extension in &format.extensions {
+                if !extension.starts_with('.')
+                    || extension != &extension.to_lowercase()
+                    || !extensions.insert(extension.as_str())
+                {
+                    return Err(format!("文件扩展名无效或重复: {extension}"));
+                }
+            }
+            let has_creation = format.creation.is_some() && format.adapters.creator.is_some();
+            if format.capabilities.create.is_supported() != has_creation {
+                return Err(format!("创建能力与适配器不一致: {}", format.id));
+            }
+            if format.capabilities.index.is_supported() != format.adapters.indexer.is_some() {
+                return Err(format!("索引能力与适配器不一致: {}", format.id));
+            }
+        }
+        Ok(())
+    }
+
+    pub fn by_id(&self, id: &str) -> Option<&FileFormatDefinition> {
+        self.formats.iter().find(|format| format.id == id)
+    }
+
+    pub fn by_path(&self, path: impl AsRef<Path>) -> Option<&FileFormatDefinition> {
+        self.formats
+            .iter()
+            .find(|format| format.matches_path(path.as_ref()))
+    }
+}
+
+static FILE_FORMAT_REGISTRY: LazyLock<Result<FileFormatRegistry, String>> =
+    LazyLock::new(FileFormatRegistry::parse);
+
+pub fn file_format_registry() -> Result<&'static FileFormatRegistry, String> {
+    FILE_FORMAT_REGISTRY.as_ref().map_err(Clone::clone)
+}
+
+pub fn file_format_by_id(id: &str) -> Result<&'static FileFormatDefinition, String> {
+    file_format_registry()?
+        .by_id(id)
+        .ok_or_else(|| format!("未知文件格式: {id}"))
+}
+
+pub fn file_format_for_path(
+    path: impl AsRef<Path>,
+) -> Result<&'static FileFormatDefinition, String> {
+    file_format_registry()?
+        .by_path(path.as_ref())
+        .ok_or_else(|| "文件格式未在工作区契约中注册".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn shared_registry_is_valid_and_matches_compound_extensions() {
+        let registry = file_format_registry().unwrap();
+        assert_eq!(registry.schema_version, 1);
+        assert_eq!(registry.by_path("DATA.TABLE.JSON").unwrap().id, "table");
+        assert_eq!(
+            registry.by_path("notes/readme.txt").unwrap().id,
+            "plain-text"
+        );
+        assert!(registry.by_path("note.md.exe").is_none());
+    }
+
+    #[test]
+    fn lightweight_text_adapter_is_fully_declared_without_special_commands() {
+        let format = file_format_by_id("plain-text").unwrap();
+        assert!(format.capabilities.read.is_supported());
+        assert!(format.capabilities.edit.is_supported());
+        assert!(format.capabilities.create.is_supported());
+        assert!(format.capabilities.index.is_supported());
+        assert_eq!(format.adapters.reader.as_deref(), Some("text"));
+        assert_eq!(format.adapters.indexer.as_deref(), Some("text"));
+    }
+}

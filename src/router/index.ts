@@ -51,6 +51,11 @@ const routes = [
     component: () => import('../views/DiagramStudio.vue')
   },
   {
+    path: '/mindmap',
+    name: 'MindMap',
+    component: () => import('../views/MindMapView.vue')
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('../views/SettingsView.vue')

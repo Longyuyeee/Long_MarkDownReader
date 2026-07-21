@@ -168,7 +168,7 @@ fn frontmatter_relation_type(line: &str, relations_indent: &mut Option<usize>) -
     normalize_relation_type(key)
 }
 
-fn normalize_relation_type(value: &str) -> Option<String> {
+pub(crate) fn normalize_relation_type(value: &str) -> Option<String> {
     let normalized = value.trim().to_ascii_lowercase().replace(['_', ' '], "-");
     if normalized.is_empty()
         || normalized.len() > 40
