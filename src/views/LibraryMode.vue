@@ -270,6 +270,10 @@
 
         <!-- 快捷操作 -->
         <div class="sidebar-actions" v-if="store.libraryPath">
+          <n-button quaternary size="tiny" @click="openWorkspace">
+            <template #icon><n-icon :component="DashboardIcon" size="16" /></template>
+            工作台
+          </n-button>
           <n-button quaternary size="tiny" @click="openGraph">
             <template #icon><n-icon size="16"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="8.5" y1="6.5" x2="10.5" y2="10.5"/><line x1="15.5" y1="6.5" x2="13.5" y2="10.5"/><line x1="8.5" y1="17.5" x2="10.5" y2="13.5"/><line x1="15.5" y1="17.5" x2="13.5" y2="13.5"/></svg></n-icon></template>
             知识图谱
@@ -465,7 +469,7 @@ import {
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
   Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
-  Database as DatabaseIcon
+  Database as DatabaseIcon, LayoutDashboard as DashboardIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -876,6 +880,7 @@ const handleExport = async (key: string) => {
 const historyList = ref<{timestamp: number, content: string}[]>([])
 
 const openSettings = () => router.push('/settings')
+const openWorkspace = () => router.push('/workspace')
 const openGraph = () => router.push('/graph')
 const openLocalMindMap = () => {
   if (!activeTabId.value) return

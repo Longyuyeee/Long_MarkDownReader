@@ -14,3 +14,4 @@ pub mod search;
 pub mod system;
 pub mod table;
 pub mod workbook;
+pub mod workspace;

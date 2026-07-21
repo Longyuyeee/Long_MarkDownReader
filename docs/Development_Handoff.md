@@ -50,7 +50,7 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - `src-tauri/src/formats/`：Canvas、Diagram、Markdown、PDF 标注/OCR、开放表格格式适配与验证。
 - `src-tauri/src/services/`：系统凭据、数据迁移、PDF 索引、可靠写入、`WorkspaceGuard` 和外部单文件授权状态。
 
-FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降至当前 334 行，Rust 业务测试随模块放置。
+FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降至当前 292 行，Rust 业务测试随模块放置。
 
 ## 4. 关键设计文档
 
@@ -64,13 +64,14 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/Mermaid_Diagram_Workspace.md`：Diagram Studio 行为与兼容边界。
 - `docs/Knowledge_Object_Relation_Contract.md`：统一图谱对象身份、定位、关系和格式适配边界。
 - `docs/Local_Knowledge_Index_Contract.md`：可重建缓存、状态、失效、安全和规模边界。
+- `docs/Professional_Workspace_Home.md`：默认工作台的数据来源、扫描边界和验收约束。
 
 ## 5. 验证基线
 
 最后一次完整验证结果：
 
 - `npm run ci:check`：通过。
-- Rust：123 项测试通过，0 失败。
+- Rust：124 项测试通过，0 失败。
 - 100 MiB PDF 范围读取基准：约 58 ms，仅读取约 256 KiB（目标小于 2 秒；不同机器会有波动）。
 - `npm audit --omit=dev`：0 个漏洞。
 - `npm run tauri -- build --debug --no-bundle`：通过。
@@ -79,7 +80,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 ## 6. 下一阶段顺序
 
-完整阶段审计、设计对齐和后续交错排期见 `docs/Development_Stage_Audit_2026-07-20.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1 与 I7-2；下一入口为 W7-1 / FR-WB-001。
+完整阶段审计、设计对齐和后续交错排期见 `docs/Development_Stage_Audit_2026-07-20.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1、I7-2 与 W7-1；下一入口为 W7-2 / FR-WB-002。
 
 当前 `v0.7.0` 基线已完成知识库文件树的创建、移动、重命名、删除、排序、扫描和状态读取路径守卫，并修复旧 API Key 迁移失败丢失及远程 HTTP 传输风险。
 
@@ -96,8 +97,9 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 11. G7-3 已完成：OPML 主题、Canvas 节点、PDF 批注和 Table 视图成为可寻址图谱对象，跨格式结构关系与精确打开链路已交付。
 12. I7-1 已完成：版本化本地快照支持状态、进度、源签名失效、显式重建和删除，用户文件继续作为唯一事实源。
 13. I7-2 已完成：跨格式全文搜索优先消费有效快照，保留 PDF 正文页、OCR 页和批注定位，并在旧、缺失、损坏或过期时实时扫描降级。
-14. 下一批 W7-1 / FR-WB-001：建设专业主页/工作台，聚合最近、收藏、待办、知识库健康度和常用 Canvas。
-15. 完善 FR-BASE-005：增加关键保存流程 E2E、格式 fixture 和视觉回归门禁。
+14. W7-1 已完成：默认专业工作台聚合收藏、最近、待办、常用 Canvas、图谱健康和索引状态；概览扫描受格式注册表、路径守卫、条目数和文件大小约束。
+15. 下一批 W7-2 / FR-WB-002：实现可保存查询、动态集合和可重复打开的智能视图。
+16. 完善 FR-BASE-005：增加关键保存流程 E2E、格式 fixture 和视觉回归门禁。
 
 开始新功能前先更新路线图中的需求状态与验收条件；每个阶段至少执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
 

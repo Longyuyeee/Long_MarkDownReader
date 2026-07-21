@@ -55,6 +55,7 @@ use commands::workbook::{
     recalculate_workbook_formulas, translate_workbook_formulas, update_workbook_freeze_pane,
     write_workbook_cells,
 };
+use commands::workspace::get_workspace_overview;
 use services::data_migration::check_and_migrate_data;
 use services::external_file_access::ExternalFileAccess;
 use services::knowledge_index::KnowledgeIndexRuntime;
@@ -278,6 +279,7 @@ pub fn run() {
             get_file_stats,
             search_all_libraries,
             get_library_stats,
+            get_workspace_overview,
             extract_wikilinks,
             find_backlinks,
             get_all_tags,

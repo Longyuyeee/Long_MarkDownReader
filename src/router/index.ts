@@ -3,7 +3,12 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 const routes = [
   {
     path: '/',
-    redirect: '/library'
+    redirect: '/workspace'
+  },
+  {
+    path: '/workspace',
+    name: 'WorkspaceHome',
+    component: () => import('../views/WorkspaceHome.vue')
   },
   {
     path: '/temp',

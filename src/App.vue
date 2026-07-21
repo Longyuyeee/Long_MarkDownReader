@@ -125,6 +125,7 @@ let routeLoadingStartedAt = performance.now()
 
 const getRouteLoadingLabel = (routeName: unknown) => {
   const labels: Record<string, string> = {
+    WorkspaceHome: '正在准备工作台',
     LibraryMode: '正在打开知识库',
     TempMode: '正在载入文档',
     QuickNote: '正在打开快速笔记',

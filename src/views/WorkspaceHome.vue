@@ -1,0 +1,221 @@
+<template>
+  <div class="workspace-home">
+    <header class="workspace-header">
+      <div class="brand-block">
+        <span class="brand-mark">胧</span>
+        <div><strong>Long编辑</strong><small>专业工作台</small></div>
+      </div>
+      <nav class="workspace-nav" aria-label="工作台导航">
+        <button title="资料库" @click="router.push({ name: 'LibraryMode' })"><LibraryIcon /><span>资料库</span></button>
+        <button title="知识图谱" :disabled="!store.libraryPath" @click="router.push({ name: 'Graph' })"><NetworkIcon /><span>图谱</span></button>
+        <button title="设置" @click="router.push({ name: 'Settings' })"><SettingsIcon /></button>
+        <button title="刷新工作台" :disabled="loading || !store.libraryPath" @click="loadWorkspace"><RefreshIcon :class="{ spinning: loading }" /></button>
+      </nav>
+    </header>
+
+    <main v-if="store.libraryPath" class="workspace-content">
+      <section class="workspace-identity">
+        <div>
+          <span class="section-kicker">ACTIVE WORKSPACE</span>
+          <h1>{{ store.currentLibraryName }}</h1>
+          <p :title="store.libraryPath">{{ store.libraryPath }}</p>
+        </div>
+        <div class="workspace-signals">
+          <span :class="`signal index-${indexStatus.state}`"><DatabaseIcon />{{ indexLabel }}</span>
+          <span class="signal"><ClockIcon />{{ refreshedLabel }}</span>
+        </div>
+      </section>
+
+      <section class="metric-strip" aria-label="工作区指标">
+        <button @click="router.push({ name: 'LibraryMode' })"><span>可管理文件</span><strong>{{ overview.totalFiles }}</strong></button>
+        <button @click="router.push({ name: 'LibraryMode' })"><span>Markdown</span><strong>{{ formatCount('markdown') }}</strong></button>
+        <button @click="openFirstCanvas" :disabled="!canvasItems.length"><span>Canvas</span><strong>{{ formatCount('canvas') }}</strong></button>
+        <button @click="scrollToTasks"><span>未完成任务</span><strong>{{ overview.tasks.length }}</strong></button>
+        <button @click="router.push({ name: 'Graph' })"><span>关系风险</span><strong>{{ healthRiskCount }}</strong></button>
+      </section>
+
+      <div v-if="error" class="workspace-alert"><AlertIcon /><span>{{ error }}</span><button @click="loadWorkspace">重试</button></div>
+
+      <div class="workspace-grid">
+        <section class="workspace-section activity-section">
+          <div class="section-heading"><div><span class="section-kicker">ACTIVITY</span><h2>继续工作</h2></div></div>
+          <template v-if="starredItems.length">
+            <div class="list-label">已收藏</div>
+            <div class="file-list starred-list">
+              <button v-for="item in starredItems" :key="item.path" class="file-row" @click="openPath(item.path)">
+                <span class="file-icon"><StarIcon /></span>
+                <span class="file-copy"><strong>{{ displayName(item.path) }}</strong><small>{{ relativeLabel(item.path) }}</small></span>
+                <span class="file-action"><ArrowIcon /></span>
+              </button>
+            </div>
+          </template>
+          <div class="list-label">最近使用</div>
+          <div v-if="recentItems.length" class="file-list">
+            <button v-for="item in recentItems" :key="item.path" class="file-row" @click="openPath(item.path)">
+              <span class="file-icon"><component :is="iconForPath(item.path)" /></span>
+              <span class="file-copy"><strong>{{ displayName(item.path, item.title) }}</strong><small>{{ relativeLabel(item.path) }}</small></span>
+              <span class="file-action"><ArrowIcon /></span>
+            </button>
+          </div>
+          <div v-else class="empty-line">暂无最近文件</div>
+        </section>
+
+        <section class="workspace-section health-section">
+          <div class="section-heading"><div><span class="section-kicker">KNOWLEDGE HEALTH</span><h2>知识库健康</h2></div><button class="text-command" @click="router.push({ name: 'Graph' })">查看图谱</button></div>
+          <div class="health-grid">
+            <button @click="router.push({ name: 'Graph' })"><span>断链</span><strong>{{ health.brokenLinks.length }}</strong></button>
+            <button @click="router.push({ name: 'Graph' })"><span>歧义</span><strong>{{ health.ambiguousLinks.length }}</strong></button>
+            <button @click="router.push({ name: 'Graph' })"><span>孤立笔记</span><strong>{{ health.orphanNotes.length }}</strong></button>
+          </div>
+          <div class="index-line">
+            <DatabaseIcon />
+            <div><strong>{{ indexLabel }}</strong><small v-if="indexStatus.state === 'ready'">{{ indexStatus.objectCount }} 对象 · {{ indexStatus.relationCount }} 关系</small><small v-else>在资料库中维护索引</small></div>
+            <button title="打开资料库索引" @click="router.push({ name: 'LibraryMode' })"><ArrowIcon /></button>
+          </div>
+          <div class="format-line" v-if="overview.formatCounts.length">
+            <span v-for="item in overview.formatCounts.slice(0, 6)" :key="item.objectType"><i>{{ formatLabel(item.objectType) }}</i><b>{{ item.count }}</b></span>
+          </div>
+        </section>
+
+        <section ref="tasksSection" class="workspace-section task-section">
+          <div class="section-heading"><div><span class="section-kicker">OPEN TASKS</span><h2>待办</h2></div><span class="section-count">{{ overview.tasks.length }}</span></div>
+          <div v-if="overview.tasks.length" class="task-list">
+            <button v-for="task in overview.tasks" :key="`${task.path}:${task.line}`" @click="openPath(task.path)">
+              <span class="task-check"></span>
+              <span><strong>{{ task.text }}</strong><small>{{ task.relativePath }} · 第 {{ task.line }} 行</small></span>
+              <ArrowIcon />
+            </button>
+          </div>
+          <div v-else class="empty-line">没有未完成任务</div>
+        </section>
+
+        <section class="workspace-section canvas-section">
+          <div class="section-heading"><div><span class="section-kicker">CANVAS</span><h2>常用画布</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode' })">浏览文件</button></div>
+          <div v-if="canvasItems.length" class="canvas-list">
+            <button v-for="canvas in canvasItems" :key="canvas.path" @click="openPath(canvas.path)">
+              <CanvasIcon />
+              <span><strong>{{ displayName(canvas.path, canvas.title) }}</strong><small>{{ relativeLabel(canvas.path) }}</small></span>
+              <ArrowIcon />
+            </button>
+          </div>
+          <div v-else class="empty-line">暂无 Canvas</div>
+        </section>
+      </div>
+    </main>
+
+    <main v-else class="workspace-empty">
+      <span class="brand-mark large">胧</span>
+      <h1>Long编辑</h1>
+      <p>未关联知识库</p>
+      <button @click="router.push({ name: 'Settings' })"><SettingsIcon />配置知识库</button>
+    </main>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
+import { invoke } from '@tauri-apps/api/core'
+import { useRouter } from 'vue-router'
+import {
+  AlertTriangle as AlertIcon, ArrowRight as ArrowIcon, BookOpen as LibraryIcon,
+  Clock3 as ClockIcon, Database as DatabaseIcon, FileSpreadsheet as TableIcon,
+  FileText as FileIcon, LayoutDashboard as CanvasIcon, Network as NetworkIcon,
+  RefreshCw as RefreshIcon, Settings as SettingsIcon, Star as StarIcon, Workflow as DiagramIcon,
+} from 'lucide-vue-next'
+import { useAppStore } from '../store/app'
+import { fileDisplayName, findFileFormat, routeForFile } from '../config/fileFormats'
+
+interface WorkspaceTask { title: string; path: string; relativePath: string; line: number; text: string }
+interface WorkspaceFile { title: string; path: string; relativePath: string; objectType: string; modifiedAt: number; size: number }
+interface WorkspaceOverview { totalFiles: number; tasks: WorkspaceTask[]; recentFiles: WorkspaceFile[]; canvases: WorkspaceFile[]; formatCounts: { objectType: string; count: number }[] }
+interface GraphHealth { brokenLinks: unknown[]; ambiguousLinks: unknown[]; orphanNotes: unknown[]; scannedNotes: number }
+interface IndexStatus { state: 'missing' | 'building' | 'ready' | 'stale' | 'corrupt' | 'error'; objectCount: number; relationCount: number }
+
+const router = useRouter()
+const store = useAppStore()
+const loading = ref(false)
+const error = ref('')
+const refreshedAt = ref(0)
+const tasksSection = ref<HTMLElement | null>(null)
+const overview = ref<WorkspaceOverview>({ totalFiles: 0, tasks: [], recentFiles: [], canvases: [], formatCounts: [] })
+const health = ref<GraphHealth>({ brokenLinks: [], ambiguousLinks: [], orphanNotes: [], scannedNotes: 0 })
+const indexStatus = ref<IndexStatus>({ state: 'missing', objectCount: 0, relationCount: 0 })
+
+const indexLabel = computed(() => ({ missing: '索引未构建', building: '索引构建中', ready: '索引就绪', stale: '索引已过期', corrupt: '索引已损坏', error: '索引异常' }[indexStatus.value.state]))
+const healthRiskCount = computed(() => health.value.brokenLinks.length + health.value.ambiguousLinks.length + health.value.orphanNotes.length)
+const refreshedLabel = computed(() => refreshedAt.value ? new Date(refreshedAt.value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '尚未刷新')
+const starredItems = computed(() => store.starredFiles.slice(0, 6).map(path => ({ path })))
+const recentItems = computed(() => {
+  const combined = [...store.recentFiles, ...overview.value.recentFiles]
+  return combined.filter((item, index) => combined.findIndex(candidate => candidate.path === item.path) === index).slice(0, 8)
+})
+const canvasItems = computed(() => {
+  const starred = store.starredFiles.filter(path => findFileFormat(path)?.id === 'canvas').map(path => ({ path, title: fileDisplayName(path) }))
+  const combined = [...starred, ...overview.value.canvases]
+  return combined.filter((item, index) => combined.findIndex(candidate => candidate.path === item.path) === index).slice(0, 8)
+})
+
+const formatLabels: Record<string, string> = { markdown: 'MD', canvas: 'Canvas', pdf: 'PDF', table: 'Table', workbook: 'XLSX', diagram: 'Mermaid', opml: 'OPML', 'plain-text': 'TXT' }
+const formatIcons: Record<string, typeof FileIcon> = { table: TableIcon, workbook: TableIcon, canvas: CanvasIcon, diagram: DiagramIcon }
+const formatCount = (id: string) => overview.value.formatCounts.find(item => item.objectType === id)?.count || 0
+const formatLabel = (id: string) => formatLabels[id] || id
+const displayName = (path: string, fallback?: string) => fileDisplayName(path) || fallback || path.split(/[\\/]/).pop() || path
+const relativeLabel = (path: string) => path.replace(store.libraryPath, '').replace(/^[\\/]+/, '') || path
+const iconForPath = (path: string) => formatIcons[findFileFormat(path)?.id || ''] || FileIcon
+const scrollToTasks = () => tasksSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+const openFirstCanvas = () => {
+  const firstCanvas = canvasItems.value[0]
+  if (firstCanvas) openPath(firstCanvas.path)
+}
+
+const openPath = (path: string) => {
+  const target = routeForFile(path)
+  if (!target) return
+  if (target.name === 'LibraryMode') router.push({ name: 'LibraryMode', query: { path } })
+  else router.push(target)
+}
+
+const loadWorkspace = async () => {
+  if (!store.libraryPath || loading.value) return
+  loading.value = true
+  error.value = ''
+  const [overviewResult, healthResult, indexResult] = await Promise.allSettled([
+    invoke<WorkspaceOverview>('get_workspace_overview', { libraryRoot: store.libraryPath }),
+    invoke<GraphHealth>('analyze_graph_health', { libraryRoot: store.libraryPath }),
+    invoke<IndexStatus>('get_knowledge_index_status', { libraryRoot: store.libraryPath }),
+  ])
+  if (overviewResult.status === 'fulfilled') overview.value = overviewResult.value
+  else error.value = `工作台概览不可用：${String(overviewResult.reason)}`
+  if (healthResult.status === 'fulfilled') health.value = healthResult.value
+  if (indexResult.status === 'fulfilled') indexStatus.value = indexResult.value
+  refreshedAt.value = Date.now()
+  loading.value = false
+}
+
+onMounted(async () => {
+  await store.loadConfig()
+  await loadWorkspace()
+})
+</script>
+
+<style scoped>
+.workspace-home { height: 100%; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
+.workspace-header { height: 58px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: var(--theme-border); background: var(--theme-surface); }
+.brand-block { display: flex; align-items: center; gap: 10px; }.brand-block>div { display: grid; gap: 1px; }.brand-block strong { font-size: 13px; }.brand-block small { color: var(--theme-text-secondary); font-size: 9px; }
+.brand-mark { width: 28px; height: 28px; display: grid; place-items: center; color: #fff; background: var(--theme-primary); border-radius: 6px; font-weight: 800; }.brand-mark.large { width: 42px; height: 42px; font-size: 20px; }
+.workspace-nav { display: flex; align-items: center; gap: 4px; }.workspace-nav button { min-width: 34px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 9px; border: 1px solid transparent; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 10px; }.workspace-nav button:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.22); background: rgba(var(--theme-primary-rgb),.06); }.workspace-nav button:disabled { opacity: .35; cursor: default; }.workspace-nav svg { width: 15px; }.spinning { animation: spin .8s linear infinite; }
+.workspace-content { height: calc(100% - 58px); overflow: auto; box-sizing: border-box; padding: 24px clamp(18px,4vw,54px) 48px; }
+.workspace-identity { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 19px; border-bottom: 2px solid var(--theme-text); }.workspace-identity h1 { margin: 4px 0 3px; font-size: 25px; line-height: 1.15; letter-spacing: 0; }.workspace-identity p { max-width: min(620px,60vw); margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.section-kicker { color: var(--theme-primary); font-size: 8px; font-weight: 800; }.workspace-signals { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }.signal { height: 27px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: var(--theme-border); border-radius: 5px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: 9px; }.signal svg { width: 13px; }.signal.index-ready { color: #168a52; }.signal.index-stale,.signal.index-corrupt,.signal.index-error { color: #b66d0d; }
+.metric-strip { display: grid; grid-template-columns: repeat(5,minmax(100px,1fr)); border-bottom: var(--theme-border); }.metric-strip button { min-height: 74px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; padding: 10px 16px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; }.metric-strip button:first-child { padding-left: 0; }.metric-strip button:last-child { border-right: 0; }.metric-strip button:hover { background: rgba(var(--theme-primary-rgb),.045); }.metric-strip span { color: var(--theme-text-secondary); font-size: 9px; }.metric-strip strong { font-size: 22px; font-weight: 680; }
+.workspace-alert { min-height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 10px; color: #a64d23; border-bottom: 1px solid rgba(166,77,35,.25); font-size: 10px; }.workspace-alert svg { width: 14px; }.workspace-alert span { flex: 1; }.workspace-alert button,.text-command { border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: 9px; }
+.workspace-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,.8fr); column-gap: 32px; }.workspace-section { min-width: 0; padding: 25px 0 28px; border-bottom: var(--theme-border); }.section-heading { min-height: 35px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }.section-heading h2 { margin: 3px 0 0; font-size: 14px; letter-spacing: 0; }.section-count { min-width: 24px; text-align: right; color: var(--theme-text-secondary); font-size: 11px; }
+.list-label { margin: 9px 0 5px; color: var(--theme-text-secondary); font-size: 8px; font-weight: 700; }.list-label:first-of-type { margin-top: 0; }.file-list,.task-list { display: grid; }.starred-list { margin-bottom: 15px; }.file-row { min-height: 51px; display: grid; grid-template-columns: 28px minmax(0,1fr) 18px; align-items: center; gap: 10px; padding: 6px 8px 6px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.file-row:hover { background: rgba(var(--theme-primary-rgb),.045); }.file-icon { width: 26px; height: 26px; display: grid; place-items: center; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); border-radius: 5px; }.file-icon svg,.file-action svg { width: 13px; }.file-copy { min-width: 0; display: grid; gap: 3px; }.file-copy strong,.task-list strong,.canvas-list strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.file-copy small,.task-list small,.canvas-list small { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 8px; }.file-action { color: var(--theme-text-secondary); }
+.health-grid { display: grid; grid-template-columns: repeat(3,1fr); border-top: var(--theme-border); border-bottom: var(--theme-border); }.health-grid button { min-height: 65px; display: grid; align-content: center; gap: 4px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: center; }.health-grid button:last-child { border-right: 0; }.health-grid span { color: var(--theme-text-secondary); font-size: 8px; }.health-grid strong { font-size: 17px; }.index-line { min-height: 54px; display: grid; grid-template-columns: 22px minmax(0,1fr) 24px; align-items: center; gap: 8px; border-bottom: var(--theme-border); }.index-line>svg { width: 16px; color: var(--theme-primary); }.index-line>div { display: grid; gap: 2px; }.index-line strong { font-size: 9px; }.index-line small { color: var(--theme-text-secondary); font-size: 8px; }.index-line button { border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.index-line button svg { width: 13px; }.format-line { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 10px; }.format-line span { display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: var(--theme-border); border-radius: 4px; font-size: 8px; }.format-line i { color: var(--theme-text-secondary); font-style: normal; }.format-line b { font-weight: 700; }
+.task-list button { min-height: 48px; display: grid; grid-template-columns: 16px minmax(0,1fr) 16px; align-items: center; gap: 9px; padding: 5px 8px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.task-list button:hover { background: rgba(var(--theme-primary-rgb),.045); }.task-list button>span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }.task-list svg { width: 13px; color: var(--theme-text-secondary); }.task-check { width: 11px; height: 11px; border: 1px solid var(--theme-text-secondary); border-radius: 2px; }
+.canvas-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }.canvas-list button { min-height: 58px; display: grid; grid-template-columns: 24px minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 8px; border: var(--theme-border); border-radius: 6px; color: var(--theme-text); background: var(--theme-surface); cursor: pointer; text-align: left; }.canvas-list button:hover { border-color: rgba(var(--theme-primary-rgb),.35); }.canvas-list button>svg { width: 15px; color: var(--theme-primary); }.canvas-list button>span { min-width: 0; display: grid; gap: 3px; }.canvas-list button>svg:last-child { width: 12px; color: var(--theme-text-secondary); }
+.empty-line { min-height: 68px; display: grid; place-items: center; color: var(--theme-text-secondary); border-top: var(--theme-border); font-size: 9px; }.workspace-empty { height: calc(100% - 58px); display: grid; place-content: center; justify-items: center; gap: 8px; }.workspace-empty h1 { margin: 4px 0 0; font-size: 22px; }.workspace-empty p { margin: 0 0 10px; color: var(--theme-text-secondary); font-size: 10px; }.workspace-empty button { height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 12px; border: 0; border-radius: 6px; color: #fff; background: var(--theme-primary); cursor: pointer; }.workspace-empty button svg { width: 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 900px) { .workspace-grid { grid-template-columns: 1fr; }.health-section { grid-row: auto; }.metric-strip { grid-template-columns: repeat(3,1fr); }.metric-strip button:nth-child(3) { border-right: 0; }.workspace-nav button span { display: none; }.workspace-identity { align-items: flex-start; flex-direction: column; }.workspace-signals { justify-content: flex-start; }.workspace-identity p { max-width: 80vw; } }
+@media (max-width: 560px) { .workspace-header { padding: 0 12px; }.workspace-content { padding: 18px 14px 36px; }.metric-strip { grid-template-columns: repeat(2,1fr); }.metric-strip button { border-right: var(--theme-border) !important; }.metric-strip button:nth-child(2n) { border-right: 0 !important; }.canvas-list { grid-template-columns: 1fr; }.workspace-nav { gap: 1px; }.workspace-nav button { padding: 0 7px; }.workspace-identity h1 { font-size: 21px; } }
+</style>
