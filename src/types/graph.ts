@@ -1,3 +1,9 @@
+export interface GraphObjectLocator {
+  kind: string
+  objectId: string
+  page?: number | null
+}
+
 export interface GraphNode {
   id: string
   title: string
@@ -9,6 +15,9 @@ export interface GraphNode {
   objectType: string
   searchText: string
   contentSignature?: string | null
+  parentId?: string | null
+  locator?: GraphObjectLocator | null
+  locationLabel?: string | null
   x?: number
   y?: number
   vx?: number

@@ -173,7 +173,7 @@
           <strong>{{ hoveredNode.title }}</strong>
           <small>{{ objectTypeLabel(hoveredNode.objectType) }}</small>
         </div>
-        <span class="tip-path">{{ hoveredNode.path }}</span>
+        <span class="tip-path">{{ hoveredNode.locationLabel || hoveredNode.path }}</span>
         <div class="tooltip-hint">双击打开 · 拖拽移动</div>
       </div>
     </transition>
@@ -182,16 +182,16 @@
         <button class="details-close" @click="selectedNode = null" aria-label="关闭节点详情">×</button>
         <span class="details-kicker">节点详情</span>
         <h3>{{ selectedNode.title }}</h3>
-        <p class="details-path">{{ selectedNode.path }}</p>
+        <p class="details-path">{{ selectedNode.path }}<template v-if="selectedNode.locationLabel"> · {{ selectedNode.locationLabel }}</template></p>
         <div class="details-metrics">
           <div><strong>{{ nodeDegree(selectedNode.id) }}</strong><span>关系</span></div>
           <div><strong>{{ incomingCount(selectedNode.id) }}</strong><span>反向链接</span></div>
           <div><strong>{{ outgoingCount(selectedNode.id) }}</strong><span>出链</span></div>
         </div>
         <div class="details-actions">
-          <button class="primary-action" @click="openNode(selectedNode)">打开{{ selectedNode.objectType === 'pdf' ? ' PDF' : selectedNode.objectType === 'table' ? '表格' : '笔记' }}</button>
+          <button class="primary-action" @click="openNode(selectedNode)">打开{{ objectTypeLabel(selectedNode.objectType) }}</button>
           <button @click="useAsMindmapRoot(selectedNode)">设为思维导图中心</button>
-          <button :disabled="isCreatingCanvas" @click="sendToCanvas(selectedNode)">{{ isCreatingCanvas ? '正在生成…' : '发送到可编辑画布' }}</button>
+          <button :disabled="isCreatingCanvas || Boolean(selectedNode.parentId)" @click="sendToCanvas(selectedNode)">{{ isCreatingCanvas ? '正在生成…' : '发送到可编辑画布' }}</button>
         </div>
         <div v-if="selectedNode.objectType === 'markdown'" class="relation-editor">
           <span class="neighbor-title">建立语义关系</span>
@@ -219,9 +219,9 @@
                 <strong>{{ relation.other.title }}</strong>
                 <small>{{ relation.direction === 'related' ? '相关' : relation.direction === 'outgoing' ? '链出 →' : '← 链入' }}</small>
               </span>
-              <span class="details-relation-context">{{ relation.evidence?.context || relation.evidence?.syntax || 'Wikilink 引用' }}</span>
+              <span class="details-relation-context">{{ relation.evidence?.context || relation.evidence?.syntax || '结构关系' }}</span>
               <span class="details-relation-meta">
-                <code>{{ relation.evidence?.syntax || '[[wikilink]]' }}</code>
+                <code>{{ relation.evidence?.syntax || relationTypeLabel(relation.edge.relationType) }}</code>
                 <span>{{ relationTypeLabel(relation.edge.relationType) }}<template v-if="relation.evidence?.line"> · 第 {{ relation.evidence.line }} 行</template><template v-if="relation.edge.mentions.length > 1"> · {{ relation.edge.mentions.length }} 处</template></span>
               </span>
             </button>
@@ -621,8 +621,26 @@ const focusFirstMatch = () => {
   if (node) selectAndCenter(node)
 }
 
-const objectTypeLabel = (type: string) => ({ pdf: 'PDF 资料', table: 'CSV/TSV 数据表', canvas: 'Canvas 画布', markdown: 'Markdown 笔记' }[type] || type)
-const openNode = (node: GraphNode) => router.push({ name: node.objectType === 'pdf' ? 'Pdf' : node.objectType === 'table' ? 'Table' : 'LibraryMode', query: { path: node.path } })
+const objectTypeLabel = (type: string) => ({
+  pdf: 'PDF 资料', pdf_annotation: 'PDF 批注', table: '数据表', table_view: '表格视图',
+  canvas: 'Canvas 画布', canvas_node: 'Canvas 节点', opml: '思维导图', opml_node: '思维导图主题', markdown: 'Markdown 笔记'
+}[type] || type)
+const openNode = (node: GraphNode) => {
+  const locator = node.locator
+  if (node.objectType === 'pdf' || node.objectType === 'pdf_annotation') {
+    return router.push({ name: 'Pdf', query: { path: node.path, page: locator?.page, annotation: locator?.objectId } })
+  }
+  if (node.objectType === 'table' || node.objectType === 'table_view') {
+    return router.push({ name: 'Table', query: { path: node.path, view: locator?.objectId } })
+  }
+  if (node.objectType === 'canvas' || node.objectType === 'canvas_node') {
+    return router.push({ name: 'Canvas', query: { path: node.path, node: locator?.objectId } })
+  }
+  if (node.objectType === 'opml' || node.objectType === 'opml_node') {
+    return router.push({ name: 'MindMap', query: { path: node.path, node: locator?.objectId } })
+  }
+  return router.push({ name: 'LibraryMode', query: { path: node.path } })
+}
 const openPath = (path: string) => router.push({ name: 'LibraryMode', query: { path } })
 const handleHealthRepaired = () => loadGraph()
 

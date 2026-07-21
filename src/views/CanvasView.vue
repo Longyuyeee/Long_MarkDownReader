@@ -1260,6 +1260,8 @@ const loadCanvas = async () => {
     loadCollapsedState()
     loadLayoutBackup()
     saveState.value = 'saved'
+    const requestedNode = typeof route.query.node === 'string' ? route.query.node : ''
+    if (requestedNode && document.nodes.some(node => node.id === requestedNode)) selectedNodeIds.value = [requestedNode]
     setTimeout(fitToContent, 0)
   } catch (error) { loadError.value = String(error) }
   finally { loading.value = false }
@@ -1287,7 +1289,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   else if (event.key === 'Escape') { setTool('select'); clearSelection() }
 }
 
-watch(canvasPath, loadCanvas)
+watch([canvasPath, () => route.query.node], loadCanvas)
 watch(snapEnabled, enabled => {
   localStorage.setItem('canvas-snap-enabled', String(enabled))
   if (!enabled) alignmentGuides.value = []

@@ -1,7 +1,9 @@
+use crate::formats::canvas::validate_canvas_json;
 use crate::formats::markdown::{
     extract_pdf_reference_mentions, extract_wikilink_mentions, normalize_relation_type,
     WikilinkMention,
 };
+use crate::formats::opml::{parse_opml, OpmlNode};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::reliable_write::write_utf8;
@@ -35,6 +37,17 @@ pub struct GraphNode {
     pub(crate) object_type: String,
     pub(crate) search_text: String,
     pub(crate) content_signature: Option<String>,
+    pub(crate) parent_id: Option<String>,
+    pub(crate) locator: Option<GraphObjectLocator>,
+    pub(crate) location_label: Option<String>,
+}
+
+#[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphObjectLocator {
+    pub(crate) kind: String,
+    pub(crate) object_id: String,
+    pub(crate) page: Option<u32>,
 }
 
 impl GraphNode {
@@ -51,6 +64,9 @@ impl GraphNode {
             object_type: "markdown".into(),
             search_text: String::new(),
             content_signature: None,
+            parent_id: None,
+            locator: None,
+            location_label: None,
         }
     }
 }
@@ -74,6 +90,16 @@ impl GraphEdge {
             directed: relation_type != "related",
             relation_type,
             mentions: vec![mention],
+        }
+    }
+
+    fn structural(source: String, target: String, relation_type: &str) -> Self {
+        Self {
+            source,
+            target,
+            relation_type: relation_type.into(),
+            directed: relation_type != "related",
+            mentions: Vec::new(),
         }
     }
 
@@ -107,6 +133,24 @@ pub async fn build_link_graph(library_root: String) -> Result<GraphData, String>
             &mut node_ids,
             &name_to_paths,
         );
+        for edge in &mut edges {
+            if edge.relation_type != "annotates" || node_ids.contains(&edge.target) {
+                continue;
+            }
+            let Some(mention) = edge.mentions.first() else {
+                continue;
+            };
+            let fallback = root.join(mention.target.replace('/', std::path::MAIN_SEPARATOR_STR));
+            let fallback_id = fallback
+                .canonicalize()
+                .ok()
+                .filter(|value| value.starts_with(&root))
+                .map(|value| value.to_string_lossy().into_owned())
+                .unwrap_or_else(|| fallback.to_string_lossy().into_owned());
+            if node_ids.contains(&fallback_id) {
+                edge.target = fallback_id;
+            }
+        }
         edges.retain(|edge| node_ids.contains(&edge.source) && node_ids.contains(&edge.target));
         edges = merge_graph_edges(edges);
         let mut degrees = HashMap::new();
@@ -274,12 +318,16 @@ fn build_graph_recursive(
                 name_to_paths,
             );
         } else if name.to_lowercase().ends_with(".pdf") {
-            add_pdf_node(library_root, &path, &name, nodes, node_ids);
+            add_pdf_node(library_root, &path, &name, nodes, edges, node_ids);
         } else if name.to_lowercase().ends_with(".csv")
             || name.to_lowercase().ends_with(".tsv")
             || name.to_lowercase().ends_with(".table.json")
         {
-            add_table_node(library_root, &path, &name, nodes, node_ids);
+            add_table_node(library_root, &path, &name, nodes, edges, node_ids);
+        } else if name.to_lowercase().ends_with(".canvas") {
+            add_canvas_document(library_root, &path, &name, nodes, edges, node_ids);
+        } else if name.to_lowercase().ends_with(".opml") {
+            add_opml_document(library_root, &path, &name, nodes, edges, node_ids);
         }
     }
 }
@@ -319,6 +367,9 @@ fn add_markdown_node(
             object_type: "markdown".into(),
             search_text: content.chars().take(8_000).collect(),
             content_signature: Some(format!("{:x}", md5::compute(&bytes))),
+            parent_id: None,
+            locator: None,
+            location_label: None,
         });
     }
     for mention in extract_wikilink_mentions(&content) {
@@ -333,6 +384,10 @@ fn add_markdown_node(
             .filter(|value| value.starts_with(library_root))
             .map(|value| value.to_string_lossy().into_owned())
             .unwrap_or_else(|| target.to_string_lossy().into_owned());
+        let target_id = query_parameter(&mention.syntax, "annotation")
+            .filter(|annotation_id| !annotation_id.is_empty())
+            .map(|annotation_id| knowledge_object_id(&target_id, "pdf_annotation", &annotation_id))
+            .unwrap_or(target_id);
         edges.push(GraphEdge::wikilink(id.clone(), target_id, mention));
     }
 }
@@ -342,6 +397,7 @@ fn add_pdf_node(
     path: &Path,
     name: &str,
     nodes: &mut Vec<GraphNode>,
+    edges: &mut Vec<GraphEdge>,
     node_ids: &mut HashSet<String>,
 ) {
     let path_string = path.to_string_lossy().into_owned();
@@ -369,7 +425,7 @@ fn add_pdf_node(
     nodes.push(GraphNode {
         id: path_string.clone(),
         title: name[..name.len().saturating_sub(4)].to_string(),
-        path: path_string,
+        path: path_string.clone(),
         size: 8.0,
         tags: Vec::new(),
         directory: relative_directory(path, library_root),
@@ -377,7 +433,45 @@ fn add_pdf_node(
         object_type: "pdf".into(),
         search_text: search_text.chars().take(12_000).collect(),
         content_signature: None,
+        parent_id: None,
+        locator: None,
+        location_label: None,
     });
+    for annotation in index.annotations {
+        let annotation_id = knowledge_object_id(&path_string, "pdf_annotation", &annotation.id);
+        if !node_ids.insert(annotation_id.clone()) {
+            continue;
+        }
+        let title = if annotation.text.trim().is_empty() {
+            format!("第 {} 页批注", annotation.page)
+        } else {
+            truncate_text(annotation.text.trim(), 80)
+        };
+        nodes.push(GraphNode {
+            id: annotation_id.clone(),
+            title,
+            path: path_string.clone(),
+            size: 8.0,
+            tags: Vec::new(),
+            directory: relative_directory(path, library_root),
+            modified_at: modified_timestamp(fs::metadata(path).ok()),
+            object_type: "pdf_annotation".into(),
+            search_text: annotation.text,
+            content_signature: None,
+            parent_id: Some(path_string.clone()),
+            locator: Some(GraphObjectLocator {
+                kind: "pdf_annotation".into(),
+                object_id: annotation.id,
+                page: Some(annotation.page),
+            }),
+            location_label: Some(format!("第 {} 页", annotation.page)),
+        });
+        edges.push(GraphEdge::structural(
+            path_string.clone(),
+            annotation_id,
+            "contains",
+        ));
+    }
 }
 
 fn add_table_node(
@@ -385,6 +479,7 @@ fn add_table_node(
     path: &Path,
     name: &str,
     nodes: &mut Vec<GraphNode>,
+    edges: &mut Vec<GraphEdge>,
     node_ids: &mut HashSet<String>,
 ) {
     let path_string = path.to_string_lossy().into_owned();
@@ -398,13 +493,15 @@ fn add_table_node(
     detector.feed(&bytes, true);
     let encoding = detector.guess(None, true);
     let (content, _, _) = encoding.decode(&bytes);
-    let search_text = if name.to_ascii_lowercase().ends_with(".table.json") {
-        parse_internal_table(content.strip_prefix('\u{feff}').unwrap_or(&content))
-            .map(|table| table_search_text(&table, 12_000))
-            .unwrap_or_default()
+    let table = if name.to_ascii_lowercase().ends_with(".table.json") {
+        parse_internal_table(content.strip_prefix('\u{feff}').unwrap_or(&content)).ok()
     } else {
-        content.chars().take(12_000).collect()
+        None
     };
+    let search_text = table
+        .as_ref()
+        .map(|table| table_search_text(table, 12_000))
+        .unwrap_or_else(|| content.chars().take(12_000).collect());
     let title = name
         .strip_suffix(".table.json")
         .or_else(|| name.rsplit_once('.').map(|(stem, _)| stem))
@@ -413,7 +510,7 @@ fn add_table_node(
     nodes.push(GraphNode {
         id: path_string.clone(),
         title,
-        path: path_string,
+        path: path_string.clone(),
         size: ((size as f64 / 20_000.0) + 8.0).clamp(8.0, 20.0),
         tags: Vec::new(),
         directory: relative_directory(path, library_root),
@@ -421,7 +518,361 @@ fn add_table_node(
         object_type: "table".into(),
         search_text,
         content_signature: None,
+        parent_id: None,
+        locator: None,
+        location_label: None,
     });
+    let Some(table) = table else { return };
+    for view in &table.views {
+        let view_id = knowledge_object_id(&path_string, "table_view", &view.id);
+        if !node_ids.insert(view_id.clone()) {
+            continue;
+        }
+        nodes.push(GraphNode {
+            id: view_id.clone(),
+            title: view.name.clone(),
+            path: path_string.clone(),
+            size: 8.0,
+            tags: Vec::new(),
+            directory: relative_directory(path, library_root),
+            modified_at: modified_timestamp(fs::metadata(path).ok()),
+            object_type: "table_view".into(),
+            search_text: format!("{} {}", view.name, view.kind),
+            content_signature: None,
+            parent_id: Some(path_string.clone()),
+            locator: Some(GraphObjectLocator {
+                kind: "table_view".into(),
+                object_id: view.id.clone(),
+                page: None,
+            }),
+            location_label: Some(table_view_label(&view.kind)),
+        });
+        edges.push(GraphEdge::structural(
+            path_string.clone(),
+            view_id,
+            "contains",
+        ));
+    }
+    for view in &table.views {
+        if view.kind != "dashboard" {
+            continue;
+        }
+        let source = knowledge_object_id(&path_string, "table_view", &view.id);
+        for item in &view.config.dashboard_items {
+            let target = knowledge_object_id(&path_string, "table_view", &item.chart_view_id);
+            edges.push(GraphEdge::structural(source.clone(), target, "embeds"));
+        }
+    }
+}
+
+fn add_canvas_document(
+    library_root: &Path,
+    path: &Path,
+    name: &str,
+    nodes: &mut Vec<GraphNode>,
+    edges: &mut Vec<GraphEdge>,
+    node_ids: &mut HashSet<String>,
+) {
+    let Ok(content) = fs::read_to_string(path) else {
+        return;
+    };
+    if validate_canvas_json(&content).is_err() {
+        return;
+    }
+    let Ok(document) = serde_json::from_str::<serde_json::Value>(&content) else {
+        return;
+    };
+    let Some(canvas_nodes) = document.get("nodes").and_then(|value| value.as_array()) else {
+        return;
+    };
+    let path_string = path.to_string_lossy().into_owned();
+    if !node_ids.insert(path_string.clone()) {
+        return;
+    }
+    let metadata = fs::metadata(path).ok();
+    nodes.push(GraphNode {
+        id: path_string.clone(),
+        title: name.strip_suffix(".canvas").unwrap_or(name).to_string(),
+        path: path_string.clone(),
+        size: 8.0,
+        tags: Vec::new(),
+        directory: relative_directory(path, library_root),
+        modified_at: modified_timestamp(metadata),
+        object_type: "canvas".into(),
+        search_text: canvas_nodes
+            .iter()
+            .filter_map(|node| node.get("text").and_then(|value| value.as_str()))
+            .collect::<Vec<_>>()
+            .join("\n")
+            .chars()
+            .take(12_000)
+            .collect(),
+        content_signature: Some(format!("{:x}", md5::compute(content.as_bytes()))),
+        parent_id: None,
+        locator: None,
+        location_label: None,
+    });
+    for node in canvas_nodes.iter().take(5_000) {
+        let Some(local_id) = node.get("id").and_then(|value| value.as_str()) else {
+            continue;
+        };
+        let object_id = knowledge_object_id(&path_string, "canvas_node", local_id);
+        if !node_ids.insert(object_id.clone()) {
+            continue;
+        }
+        let node_type = node
+            .get("type")
+            .and_then(|value| value.as_str())
+            .unwrap_or("text");
+        let title = canvas_node_title(node, local_id);
+        nodes.push(GraphNode {
+            id: object_id.clone(),
+            title: title.clone(),
+            path: path_string.clone(),
+            size: 8.0,
+            tags: Vec::new(),
+            directory: relative_directory(path, library_root),
+            modified_at: modified_timestamp(fs::metadata(path).ok()),
+            object_type: "canvas_node".into(),
+            search_text: title,
+            content_signature: None,
+            parent_id: Some(path_string.clone()),
+            locator: Some(GraphObjectLocator {
+                kind: "canvas_node".into(),
+                object_id: local_id.to_string(),
+                page: None,
+            }),
+            location_label: Some(canvas_node_label(node_type)),
+        });
+        edges.push(GraphEdge::structural(
+            path_string.clone(),
+            object_id.clone(),
+            "contains",
+        ));
+        if node_type == "file" {
+            if let Some(file) = node.get("file").and_then(|value| value.as_str()) {
+                if let Some(target_path) = resolve_workspace_reference(library_root, file) {
+                    let target = node
+                        .get("longeditViewId")
+                        .and_then(|value| value.as_str())
+                        .map(|view_id| knowledge_object_id(&target_path, "table_view", view_id))
+                        .unwrap_or(target_path);
+                    edges.push(GraphEdge::structural(object_id, target, "embeds"));
+                }
+            }
+        }
+    }
+    if let Some(canvas_edges) = document.get("edges").and_then(|value| value.as_array()) {
+        for edge in canvas_edges.iter().take(5_000) {
+            let Some(from) = edge.get("fromNode").and_then(|value| value.as_str()) else {
+                continue;
+            };
+            let Some(to) = edge.get("toNode").and_then(|value| value.as_str()) else {
+                continue;
+            };
+            let relation = edge
+                .get("relationType")
+                .and_then(|value| value.as_str())
+                .filter(|value| !value.trim().is_empty())
+                .and_then(normalize_relation_type)
+                .unwrap_or_else(|| "links-to".into());
+            edges.push(GraphEdge::structural(
+                knowledge_object_id(&path_string, "canvas_node", from),
+                knowledge_object_id(&path_string, "canvas_node", to),
+                &relation,
+            ));
+        }
+    }
+}
+
+fn add_opml_document(
+    library_root: &Path,
+    path: &Path,
+    name: &str,
+    nodes: &mut Vec<GraphNode>,
+    edges: &mut Vec<GraphEdge>,
+    node_ids: &mut HashSet<String>,
+) {
+    let Ok(content) = fs::read_to_string(path) else {
+        return;
+    };
+    let Ok(document) = parse_opml(&content) else {
+        return;
+    };
+    let path_string = path.to_string_lossy().into_owned();
+    if !node_ids.insert(path_string.clone()) {
+        return;
+    }
+    let title = if document.title.trim().is_empty() {
+        name.strip_suffix(".opml").unwrap_or(name).to_string()
+    } else {
+        document.title.clone()
+    };
+    nodes.push(GraphNode {
+        id: path_string.clone(),
+        title,
+        path: path_string.clone(),
+        size: 8.0,
+        tags: Vec::new(),
+        directory: relative_directory(path, library_root),
+        modified_at: modified_timestamp(fs::metadata(path).ok()),
+        object_type: "opml".into(),
+        search_text: content.chars().take(12_000).collect(),
+        content_signature: Some(format!("{:x}", md5::compute(content.as_bytes()))),
+        parent_id: None,
+        locator: None,
+        location_label: None,
+    });
+    for root in &document.roots {
+        add_opml_node(
+            root,
+            0,
+            &path_string,
+            &path_string,
+            library_root,
+            path,
+            nodes,
+            edges,
+            node_ids,
+        );
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn add_opml_node(
+    node: &OpmlNode,
+    depth: usize,
+    parent_id: &str,
+    document_path: &str,
+    library_root: &Path,
+    path: &Path,
+    nodes: &mut Vec<GraphNode>,
+    edges: &mut Vec<GraphEdge>,
+    node_ids: &mut HashSet<String>,
+) {
+    let object_id = knowledge_object_id(document_path, "opml_node", &node.id);
+    if !node_ids.insert(object_id.clone()) {
+        return;
+    }
+    nodes.push(GraphNode {
+        id: object_id.clone(),
+        title: truncate_text(&node.text, 100),
+        path: document_path.to_string(),
+        size: 8.0,
+        tags: Vec::new(),
+        directory: relative_directory(path, library_root),
+        modified_at: modified_timestamp(fs::metadata(path).ok()),
+        object_type: "opml_node".into(),
+        search_text: format!("{} {}", node.text, node.note),
+        content_signature: None,
+        parent_id: Some(document_path.to_string()),
+        locator: Some(GraphObjectLocator {
+            kind: "opml_node".into(),
+            object_id: node.id.clone(),
+            page: None,
+        }),
+        location_label: Some(format!("第 {} 层主题", depth + 1)),
+    });
+    edges.push(GraphEdge::structural(
+        parent_id.to_string(),
+        object_id.clone(),
+        "contains",
+    ));
+    for child in &node.children {
+        add_opml_node(
+            child,
+            depth + 1,
+            &object_id,
+            document_path,
+            library_root,
+            path,
+            nodes,
+            edges,
+            node_ids,
+        );
+    }
+}
+
+fn knowledge_object_id(path: &str, kind: &str, local_id: &str) -> String {
+    format!(
+        "longedit-object:{kind}:{:x}:{}",
+        md5::compute(path.as_bytes()),
+        urlencoding::encode(local_id)
+    )
+}
+
+fn query_parameter(uri: &str, key: &str) -> Option<String> {
+    let query = uri.split_once('?')?.1;
+    query.split('&').find_map(|field| {
+        let (field_key, value) = field.split_once('=')?;
+        (field_key == key)
+            .then(|| {
+                urlencoding::decode(value)
+                    .ok()
+                    .map(|value| value.into_owned())
+            })
+            .flatten()
+    })
+}
+
+fn resolve_workspace_reference(library_root: &Path, reference: &str) -> Option<String> {
+    if reference.starts_with('/') || reference.starts_with('\\') || reference.get(1..2) == Some(":")
+    {
+        return None;
+    }
+    let candidate = library_root.join(reference.replace('/', std::path::MAIN_SEPARATOR_STR));
+    candidate
+        .canonicalize()
+        .ok()
+        .filter(|value| value.starts_with(library_root))
+        .map(|value| value.to_string_lossy().into_owned())
+}
+
+fn truncate_text(value: &str, limit: usize) -> String {
+    let trimmed = value.trim();
+    let mut result: String = trimmed.chars().take(limit).collect();
+    if trimmed.chars().count() > limit {
+        result.push_str("...");
+    }
+    result
+}
+
+fn table_view_label(kind: &str) -> String {
+    match kind {
+        "grid" => "表格视图",
+        "board" => "看板视图",
+        "chart" => "图表视图",
+        "dashboard" => "仪表盘视图",
+        _ => "数据视图",
+    }
+    .into()
+}
+
+fn canvas_node_label(kind: &str) -> String {
+    match kind {
+        "file" => "文件节点",
+        "link" => "链接节点",
+        "group" => "分组节点",
+        _ => "文本节点",
+    }
+    .into()
+}
+
+fn canvas_node_title(node: &serde_json::Value, fallback: &str) -> String {
+    for field in ["text", "label", "file", "url"] {
+        if let Some(value) = node.get(field).and_then(|value| value.as_str()) {
+            let first_line = value
+                .lines()
+                .next()
+                .unwrap_or(value)
+                .trim_start_matches('#')
+                .trim();
+            if !first_line.is_empty() {
+                return truncate_text(first_line, 100);
+            }
+        }
+    }
+    fallback.to_string()
 }
 
 fn relative_directory(path: &Path, library_root: &Path) -> String {
@@ -1524,18 +1975,33 @@ mod tests {
         fs::write(root.join("Target.md"), "# Target").unwrap();
         fs::write(sub.join("Paper.pdf"), b"%PDF fixture without text").unwrap();
         fs::write(
+            sub.join("Paper.pdf.annotations.json"),
+            r#"{"schemaVersion":1,"source":{"pdfFile":"Paper.pdf","size":25,"modifiedAt":1},"annotations":[{"id":"a-1","kind":"comment","page":2,"color":"yellow","rects":[],"quote":"","comment":"Key evidence","createdAt":1,"updatedAt":1}]}"#,
+        )
+        .unwrap();
+        fs::write(
             sub.join("Metrics.csv"),
             "metric,value\nKnowledge coverage,92\n",
         )
         .unwrap();
         fs::write(
             sub.join("Planning.table.json"),
-            r#"{"schemaVersion":1,"kind":"longedit.table","data":{"columns":[{"id":"topic","name":"主题","type":"text"}],"rows":[{"id":"row-1","values":{"topic":"Roadmap"}}]},"views":[{"id":"grid","name":"表格","kind":"grid","config":{"filter":"","frozenColumns":1,"columnWidths":{"topic":160}}}],"activeView":"grid"}"#,
+            r#"{"schemaVersion":1,"kind":"longedit.table","data":{"columns":[{"id":"topic","name":"主题","type":"text"}],"rows":[{"id":"row-1","values":{"topic":"Roadmap"}}]},"views":[{"id":"grid","name":"表格","kind":"grid","config":{"filter":"","frozenColumns":1,"columnWidths":{"topic":160}}},{"id":"chart","name":"Roadmap chart","kind":"chart","config":{"categoryColumn":"topic"}},{"id":"dashboard","name":"Executive dashboard","kind":"dashboard","config":{"dashboardItems":[{"chartViewId":"chart","width":6}]}}],"activeView":"grid"}"#,
+        )
+        .unwrap();
+        fs::write(
+            sub.join("Workspace.canvas"),
+            r#"{"nodes":[{"id":"idea","type":"text","text":"Roadmap idea","x":0,"y":0,"width":240,"height":120},{"id":"chart-ref","type":"file","file":"research/Planning.table.json","longeditViewId":"chart","x":320,"y":0,"width":240,"height":120}],"edges":[{"id":"edge-1","fromNode":"idea","toNode":"chart-ref","relationType":"supports"}]}"#,
+        )
+        .unwrap();
+        fs::write(
+            sub.join("Outline.opml"),
+            r#"<?xml version="1.0" encoding="UTF-8"?><opml version="2.0"><head><title>Research outline</title></head><body><outline text="Evidence" _longeditId="evidence"><outline text="Conclusion" _longeditId="conclusion"/></outline></body></opml>"#,
         )
         .unwrap();
         fs::write(
             sub.join("Topic.md"),
-            "---\nrelations:\n  depends-on: [[Target]]\n---\n# Topic\n#研究 #图谱\n[来源](longedit://pdf?path=research%2FPaper.pdf&page=2&annotation=a-1)",
+            "---\nrelations:\n  depends-on: [[Target]]\n---\n# Topic\n#研究 #图谱\n[来源](longedit://pdf?path=research%2FPaper.pdf&page=2&annotation=a-1)\n[旧批注](longedit://pdf?path=research%2FPaper.pdf&page=3&annotation=removed)",
         )
         .unwrap();
         let graph =
@@ -1554,6 +2020,11 @@ mod tests {
             .iter()
             .find(|node| node.object_type == "pdf")
             .unwrap();
+        let annotation = graph
+            .nodes
+            .iter()
+            .find(|node| node.object_type == "pdf_annotation")
+            .unwrap();
         let table = graph
             .nodes
             .iter()
@@ -1564,9 +2035,53 @@ mod tests {
             .edges
             .iter()
             .any(|edge| edge.source == topic.id && edge.relation_type == "depends-on"));
+        assert_eq!(annotation.parent_id.as_deref(), Some(pdf.id.as_str()));
+        assert_eq!(annotation.locator.as_ref().unwrap().object_id, "a-1");
+        assert!(graph.edges.iter().any(|edge| edge.source == topic.id
+            && edge.target == annotation.id
+            && edge.relation_type == "annotates"));
         assert!(graph.edges.iter().any(|edge| edge.source == topic.id
             && edge.target == pdf.id
             && edge.relation_type == "annotates"));
+        let chart = graph
+            .nodes
+            .iter()
+            .find(|node| node.object_type == "table_view" && node.title == "Roadmap chart")
+            .unwrap();
+        let dashboard = graph
+            .nodes
+            .iter()
+            .find(|node| node.object_type == "table_view" && node.title == "Executive dashboard")
+            .unwrap();
+        let chart_reference = graph
+            .nodes
+            .iter()
+            .find(|node| {
+                node.object_type == "canvas_node" && node.title == "research/Planning.table.json"
+            })
+            .unwrap();
+        assert!(graph.edges.iter().any(|edge| edge.source == dashboard.id
+            && edge.target == chart.id
+            && edge.relation_type == "embeds"));
+        assert!(graph
+            .edges
+            .iter()
+            .any(|edge| edge.source == chart_reference.id
+                && edge.target == chart.id
+                && edge.relation_type == "embeds"));
+        let evidence = graph
+            .nodes
+            .iter()
+            .find(|node| node.object_type == "opml_node" && node.title == "Evidence")
+            .unwrap();
+        let conclusion = graph
+            .nodes
+            .iter()
+            .find(|node| node.object_type == "opml_node" && node.title == "Conclusion")
+            .unwrap();
+        assert!(graph.edges.iter().any(|edge| edge.source == evidence.id
+            && edge.target == conclusion.id
+            && edge.relation_type == "contains"));
         fs::remove_dir_all(base).unwrap();
     }
 }

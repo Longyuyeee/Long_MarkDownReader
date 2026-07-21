@@ -155,7 +155,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 | FR-GRAPH-005 | P1 | 标签、目录、日期和类型筛选 | 已完成 | 全局/局部图谱共享同一筛选模型 |
 | FR-GRAPH-006 | P1 | 断链、歧义链接和孤立笔记治理 | 已完成 | 提供问题列表、定位、批量修复建议和处理状态 |
 | FR-GRAPH-007 | P2 | 布局持久化和图谱导出 | 已完成 | 布局保存在设备状态；支持 PNG/SVG 导出 |
-| FR-GRAPH-008 | P2 | 跨格式关系 | 未开始 | PDF 批注、Canvas、表格和图表能作为图谱节点与边 |
+| FR-GRAPH-008 | P2 | 跨格式关系 | 已完成 | PDF 批注、Canvas、OPML、表格和图表能作为可寻址图谱节点与边 |
 
 ### 6.4 Canvas 与思维导图工作面
 
@@ -216,7 +216,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 
 | 编号 | 优先级 | 需求 | 当前状态 | 验收标准 |
 |---|---:|---|---|---|
-| FR-INDEX-001 | P0 | 统一 KnowledgeObject/Relation 模型 | 未开始 | Markdown、Canvas、PDF、Table 通过适配器输出统一元数据 |
+| FR-INDEX-001 | P0 | 统一 KnowledgeObject/Relation 模型 | 已完成 | Markdown、Canvas、OPML、PDF、Table 通过适配器输出统一元数据 |
 | FR-INDEX-002 | P0 | 可重建本地索引 | 未开始 | 删除索引后可从用户文件重建；索引不是唯一事实源 |
 | FR-INDEX-003 | P1 | 跨格式全文搜索 | 部分完成 | 搜索结果标明类型、位置、摘要和所属知识库 |
 | FR-INDEX-004 | P1 | 文件类型注册与统一打开路由 | 已完成 | 新格式通过适配器注册，不继续向 LibraryMode 堆充分支 |
@@ -1051,6 +1051,16 @@ FR-DATA-009 继续保持“部分完成”。打印预览、分页引擎、布�
 
 FR-DATA-009 继续保持“部分完成”。按连续工作簿批次上限，下一开发入口切换为 G7-3 / FR-GRAPH-008：让 OPML 节点、Canvas 节点、PDF 批注、Table/图表等成为可寻址的细粒度图谱对象。
 
+### G7-3：跨格式细粒度关系（已完成）
+
+- 建立统一 KnowledgeObject 定位字段：文件对象保持路径 ID，文件内部对象使用格式、路径摘要和源格式原生 ID 生成稳定 ID，并携带 `parentId`、`locator` 与位置标签。
+- PDF 批注、Open Table 视图、Canvas 节点和 OPML 主题成为独立图谱节点；文档包含关系、OPML 层级、Canvas 原生边、Dashboard 到 Chart、Canvas 文件节点到 Table 视图均进入统一关系图。
+- Markdown 的 `longedit://pdf` 引用精确指向批注；批注已删除时安全降级到 PDF 文件对象，保留历史关系。
+- 图谱对象可精确打开并定位到 PDF 页码/批注、Table 视图、Canvas 节点或 OPML 主题；对象类型筛选和详情位置同步扩展。
+- 跨格式 fixture 覆盖 Markdown→PDF 批注、Canvas→Table Chart、Dashboard→Chart 和 OPML 父子关系；对象模型、安全边界和规模限制见 `Knowledge_Object_Relation_Contract.md`。
+
+FR-GRAPH-008 与 FR-INDEX-001 验收完成。当前图谱仍在请求时从文件全量构建，下一开发入口为 I7-1 / FR-INDEX-002：建设可删除、可重建、可报告进度且不成为唯一事实源的本地索引。
+
 ## 12. 需求变更流程
 
 1. 新需求先说明目标用户、场景和解决的问题。
@@ -1083,4 +1093,4 @@ FR-DATA-009 继续保持“部分完成”。按连续工作簿批次上限，�
 - 实际代码和自动化测试负责证明“已经完成”。
 - 每个里程碑结束时更新版本、状态和追踪矩阵。
 
-下一开发入口为第 11 节当前迭代：G7-3 / FR-GRAPH-008 跨格式细粒度关系。
+下一开发入口为第 11 节当前迭代：I7-1 / FR-INDEX-002 可重建本地索引。

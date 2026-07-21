@@ -242,7 +242,7 @@ const projectToCanvas = async () => {
 }
 const load = async () => {
   loading.value = true; error.value = ''; saveError.value = ''
-  try { const result = await invoke<OpmlFile>('read_opml_file', { libraryRoot: store.libraryPath, path: path.value }); signature.value = result.signature; document.value = result.document; dirty.value = false; undoStack.value = []; redoStack.value = []; ensureSelection() }
+  try { const result = await invoke<OpmlFile>('read_opml_file', { libraryRoot: store.libraryPath, path: path.value }); signature.value = result.signature; document.value = result.document; dirty.value = false; undoStack.value = []; redoStack.value = []; const requestedNode = typeof route.query.node === 'string' ? route.query.node : ''; selectedId.value = requestedNode && locate(requestedNode) ? requestedNode : ''; ensureSelection() }
   catch (cause) { document.value = null; error.value = String(cause).replace(/^Error:\s*/, '') }
   finally { loading.value = false }
 }
@@ -252,7 +252,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (command && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? redo() : undo() }
 }
 watch(viewMode, value => localStorage.setItem('opml-view-mode', value))
-watch(path, () => { void load() })
+watch([path, () => route.query.node], () => { void load() })
 onMounted(() => { window.addEventListener('keydown', handleKeydown); void load() })
 onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeydown); if (saveTimer) clearTimeout(saveTimer) })
 onBeforeRouteLeave(async () => !dirty.value || await save())

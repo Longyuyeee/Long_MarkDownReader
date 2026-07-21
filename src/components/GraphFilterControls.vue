@@ -78,7 +78,10 @@ const relationTypeLabel = (type: string) => ({
   'links-to': '普通引用', parent: '父级', child: '子级', 'depends-on': '依赖', related: '相关',
   contains: '包含', cites: '引用文献', annotates: '批注', 'derived-from': '派生自',
 }[type] || type)
-const objectTypeLabel = (type: string) => ({ markdown: 'Markdown', canvas: 'Canvas', pdf: 'PDF', table: '表格', opml: '思维导图' }[type] || type)
+const objectTypeLabel = (type: string) => ({
+  markdown: 'Markdown', canvas: 'Canvas', canvas_node: 'Canvas 节点', pdf: 'PDF', pdf_annotation: 'PDF 批注',
+  table: '表格', table_view: '表格视图', opml: '思维导图', opml_node: '思维导图主题'
+}[type] || type)
 </script>
 
 <style scoped>

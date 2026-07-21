@@ -476,7 +476,10 @@ const loadTable = async () => {
     if (generation !== loadGeneration) return
     table.value = document
     views.value = document.views?.length ? document.views : [{ id: 'grid', name: '表格', kind: 'grid', config: document.view }]
-    activeViewId.value = views.value.some(view => view.id === document.activeView) ? document.activeView : views.value[0].id
+    const requestedView = typeof route.query.view === 'string' ? route.query.view : ''
+    activeViewId.value = views.value.some(view => view.id === requestedView)
+      ? requestedView
+      : views.value.some(view => view.id === document.activeView) ? document.activeView : views.value[0].id
     applyView(activeView.value)
     notice.value = `已解析 ${table.value.rows.length.toLocaleString()} 行`
   } catch (cause) {
@@ -584,7 +587,7 @@ const beforeUnload = (event: BeforeUnloadEvent) => {
   }
 }
 
-watch(tablePath, loadTable)
+watch([tablePath, () => route.query.view], loadTable)
 watch(scrollRef, element => {
   resizeObserver?.disconnect()
   if (element) {
