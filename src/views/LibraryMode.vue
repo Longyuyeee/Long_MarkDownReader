@@ -52,6 +52,21 @@
                 </div>
               </div>
 
+              <div v-if="store.libraryPath" class="knowledge-index-strip" :class="`state-${knowledgeIndexStatus.state}`">
+                <n-icon :component="DatabaseIcon" />
+                <span>{{ knowledgeIndexLabel }}</span>
+                <small v-if="knowledgeIndexStatus.state === 'ready'">{{ knowledgeIndexStatus.objectCount }} 对象 · {{ knowledgeIndexStatus.relationCount }} 关系</small>
+                <small v-else-if="knowledgeIndexStatus.state === 'building'">{{ knowledgeIndexStatus.progress }}%</small>
+                <div class="knowledge-index-actions">
+                  <n-button quaternary circle size="tiny" :disabled="knowledgeIndexBusy" title="重建知识索引" @click="rebuildKnowledgeIndex">
+                    <template #icon><n-icon :component="RefreshIcon" /></template>
+                  </n-button>
+                  <n-button quaternary circle size="tiny" :disabled="knowledgeIndexBusy || knowledgeIndexStatus.state === 'missing'" title="删除本地索引" @click="deleteKnowledgeIndex">
+                    <template #icon><n-icon :component="TrashIcon" /></template>
+                  </n-button>
+                </div>
+              </div>
+
               <div class="tree-viewport" :class="{ 'drop-active': virtualDrag.dropTarget === store.libraryPath }">
                 <div v-if="!store.libraryPath" class="path-guide">
                   <n-empty description="库未就绪" size="small">
@@ -449,7 +464,8 @@ import {
   Plus as PlusIcon, FolderPlus as FolderPlusIcon, FolderOpen as FolderOpenIcon, Trash as TrashIcon,
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
   Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
-  Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon
+  Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
+  Database as DatabaseIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -485,6 +501,18 @@ interface KnowledgeSearchResult {
   annotationId?: string
   score: number
   extractionFailed: boolean
+}
+
+interface KnowledgeIndexStatus {
+  state: 'missing' | 'building' | 'ready' | 'stale' | 'corrupt' | 'error'
+  schemaVersion: number
+  builtAt?: number
+  sourceCount: number
+  objectCount: number
+  relationCount: number
+  progress: number
+  cacheBytes: number
+  error?: string
 }
 
 const message = useMessage()
@@ -678,6 +706,15 @@ const searchQuery = ref('')
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
 const knowledgeSearchRunning = ref(false)
 let knowledgeSearchGeneration = 0
+const knowledgeIndexStatus = ref<KnowledgeIndexStatus>({
+  state: 'missing', schemaVersion: 1, sourceCount: 0, objectCount: 0,
+  relationCount: 0, progress: 0, cacheBytes: 0,
+})
+const knowledgeIndexBusy = ref(false)
+const knowledgeIndexLabel = computed(() => ({
+  missing: '索引未构建', building: '正在构建索引', ready: '索引就绪', stale: '索引已过期',
+  corrupt: '索引已损坏', error: '索引构建失败',
+}[knowledgeIndexStatus.value.state]))
 const selectedKeys = ref<string[]>([])
 const expandedKeys = ref<string[]>([])
 let vditor: any = null
@@ -1719,7 +1756,7 @@ const handleExportHtml = async () => {
 
 onMounted(async () => {
   await store.loadConfig(); window.addEventListener('keydown', handleKeyDown)
-  if (store.libraryPath) { await refreshLibrary(); fetchLibStats(); fetchAllTags() }
+  if (store.libraryPath) { await refreshLibrary(); fetchLibStats(); fetchAllTags(); void refreshKnowledgeIndexStatus() }
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
   unlistenExport = await listen('command-export', handleExportHtml)
   unlistenRefreshCmd = await listen('command-refresh', () => refreshLibrary())
@@ -1883,7 +1920,38 @@ watch(() => route.query.path, (path) => {
   if (format.routeName === 'LibraryMode') handleNodeSelect([path])
   else router.replace({ name: format.routeName, query: { path } })
 }, { immediate: true })
-watch(() => store.libraryPath, (newPath) => { if (newPath) { searchQuery.value = ''; refreshLibrary(); fetchLibStats(); fetchAllTags(); refreshGitStatus() } })
+const refreshKnowledgeIndexStatus = async () => {
+  if (!store.libraryPath) return
+  try {
+    knowledgeIndexStatus.value = await invoke<KnowledgeIndexStatus>('get_knowledge_index_status', { libraryRoot: store.libraryPath })
+  } catch (error) {
+    knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'error', error: String(error) }
+  }
+}
+const rebuildKnowledgeIndex = async () => {
+  if (!store.libraryPath || knowledgeIndexBusy.value) return
+  knowledgeIndexBusy.value = true
+  knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'building', progress: 10, error: undefined }
+  const progressTimer = window.setInterval(() => { void refreshKnowledgeIndexStatus() }, 400)
+  try {
+    knowledgeIndexStatus.value = await invoke<KnowledgeIndexStatus>('rebuild_knowledge_index', { libraryRoot: store.libraryPath })
+    message.success('知识索引已重建')
+  } catch (error) {
+    knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'error', progress: 0, error: String(error) }
+    message.error(`知识索引重建失败：${String(error)}`)
+  } finally { window.clearInterval(progressTimer); knowledgeIndexBusy.value = false }
+}
+const deleteKnowledgeIndex = async () => {
+  if (!store.libraryPath || knowledgeIndexBusy.value || !window.confirm('删除当前知识库的本地索引？用户文件不会被删除。')) return
+  knowledgeIndexBusy.value = true
+  try {
+    knowledgeIndexStatus.value = await invoke<KnowledgeIndexStatus>('delete_knowledge_index', { libraryRoot: store.libraryPath })
+    message.success('本地索引已删除')
+  } catch (error) { message.error(`删除索引失败：${String(error)}`) }
+  finally { knowledgeIndexBusy.value = false }
+}
+
+watch(() => store.libraryPath, (newPath) => { if (newPath) { searchQuery.value = ''; refreshLibrary(); fetchLibStats(); fetchAllTags(); refreshGitStatus(); void refreshKnowledgeIndexStatus() } })
 // 从设置页返回后刷新 Git 状态
 watch(() => store.libraries, () => { nextTick(() => refreshGitStatus()) }, { deep: true })
 
@@ -2190,6 +2258,8 @@ watch(activeTabId, (newId, oldId) => {
 .knowledge-search-result:hover { border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }
 .knowledge-result-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.knowledge-result-head strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }.knowledge-result-head i { flex: none; color: var(--theme-primary); font-size: 8px; font-style: normal; font-weight: 700; }
 .knowledge-result-context { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: 9px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.knowledge-search-result small { color: var(--theme-primary); font-size: 8px; }
+.knowledge-index-strip { min-height: 30px; display: grid; grid-template-columns:16px minmax(0,auto) minmax(0,1fr) auto; align-items:center; gap:6px; padding:0 8px 0 12px; border-bottom:var(--theme-border); color:var(--theme-text-secondary); background:var(--theme-surface); font-size:9px; }
+.knowledge-index-strip>span { color:var(--theme-text); font-weight:650; white-space:nowrap; }.knowledge-index-strip>small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.knowledge-index-strip.state-ready>svg { color:#168a52; }.knowledge-index-strip.state-stale>svg,.knowledge-index-strip.state-corrupt>svg,.knowledge-index-strip.state-error>svg { color:#c47a16; }.knowledge-index-actions { display:flex; align-items:center; }
 
 .tag-row {
   display: flex;

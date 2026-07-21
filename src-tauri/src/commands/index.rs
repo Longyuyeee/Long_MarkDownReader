@@ -1,15 +1,101 @@
 use crate::formats::file_registry::file_format_for_path;
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
+use crate::services::knowledge_index::{
+    delete_index, inspect_index, snapshot_from_graph, write_snapshot, KnowledgeIndexRuntime,
+    KnowledgeIndexStatus,
+};
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::workspace_guard::WorkspaceGuard;
 use chardetng::EncodingDetector;
 use serde::Serialize;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use tauri::{AppHandle, Manager, State};
 
 const MAX_SEARCH_RESULTS: usize = 200;
 const MAX_TEXT_FILE_BYTES: u64 = 20 * 1024 * 1024;
+
+fn knowledge_index_cache_root(app: &AppHandle) -> Result<PathBuf, String> {
+    app.path()
+        .app_cache_dir()
+        .map_err(|error| format!("无法定位应用缓存目录: {error}"))
+}
+
+#[tauri::command]
+pub fn get_knowledge_index_status(
+    app: AppHandle,
+    runtime: State<'_, KnowledgeIndexRuntime>,
+    library_root: String,
+) -> Result<KnowledgeIndexStatus, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let cache_root = knowledge_index_cache_root(&app)?;
+    Ok(inspect_index(&cache_root, guard.root(), &runtime))
+}
+
+#[tauri::command]
+pub async fn rebuild_knowledge_index(
+    app: AppHandle,
+    runtime: State<'_, KnowledgeIndexRuntime>,
+    library_root: String,
+) -> Result<KnowledgeIndexStatus, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let workspace = guard.root().to_path_buf();
+    let cache_root = knowledge_index_cache_root(&app)?;
+    if runtime.is_building(&workspace) {
+        return Err("知识索引正在构建，请稍后再试".into());
+    }
+    runtime.set(&workspace, "building", 10, None);
+    let graph =
+        match crate::commands::graph::build_link_graph(workspace.to_string_lossy().into_owned())
+            .await
+        {
+            Ok(graph) => graph,
+            Err(error) => {
+                runtime.set(&workspace, "error", 0, Some(error.clone()));
+                return Err(error);
+            }
+        };
+    runtime.set(&workspace, "building", 75, None);
+    let workspace_for_task = workspace.clone();
+    let cache_for_task = cache_root.clone();
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        let snapshot = snapshot_from_graph(&workspace_for_task, graph);
+        write_snapshot(&cache_for_task, &workspace_for_task, &snapshot)
+    })
+    .await;
+    let result = match result {
+        Ok(result) => result,
+        Err(error) => {
+            let error = format!("知识索引写入任务失败: {error}");
+            runtime.set(&workspace, "error", 0, Some(error.clone()));
+            return Err(error);
+        }
+    };
+    if let Err(error) = result {
+        runtime.set(&workspace, "error", 0, Some(error.clone()));
+        return Err(error);
+    }
+    runtime.set(&workspace, "ready", 100, None);
+    Ok(inspect_index(&cache_root, &workspace, &runtime))
+}
+
+#[tauri::command]
+pub fn delete_knowledge_index(
+    app: AppHandle,
+    runtime: State<'_, KnowledgeIndexRuntime>,
+    library_root: String,
+) -> Result<KnowledgeIndexStatus, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let workspace = guard.root();
+    let cache_root = knowledge_index_cache_root(&app)?;
+    if runtime.is_building(workspace) {
+        return Err("知识索引正在构建，暂时不能删除".into());
+    }
+    delete_index(&cache_root, workspace)?;
+    runtime.set(workspace, "missing", 0, None);
+    Ok(inspect_index(&cache_root, workspace, &runtime))
+}
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

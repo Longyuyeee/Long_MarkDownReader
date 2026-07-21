@@ -37,7 +37,9 @@ use commands::history::{
     clear_all_history, delete_history_version, list_history, save_external_history_version,
     save_history_version, save_shadow_copy,
 };
-use commands::index::search_knowledge;
+use commands::index::{
+    delete_knowledge_index, get_knowledge_index_status, rebuild_knowledge_index, search_knowledge,
+};
 use commands::mindmap::{create_canvas_from_opml, read_opml_file, write_opml_file};
 use commands::pdf::{
     build_pdf_annotation_reference, read_pdf_annotations, read_pdf_file, read_pdf_info,
@@ -55,6 +57,7 @@ use commands::workbook::{
 };
 use services::data_migration::check_and_migrate_data;
 use services::external_file_access::ExternalFileAccess;
+use services::knowledge_index::KnowledgeIndexRuntime;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::Emitter;
@@ -65,6 +68,7 @@ use window_vibrancy::{apply_blur, apply_mica};
 pub fn run() {
     tauri::Builder::default()
         .manage(ExternalFileAccess::default())
+        .manage(KnowledgeIndexRuntime::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
@@ -235,6 +239,9 @@ pub fn run() {
             get_url_title,
             search_library,
             search_knowledge,
+            get_knowledge_index_status,
+            rebuild_knowledge_index,
+            delete_knowledge_index,
             export_to_html,
             get_config,
             save_config,
