@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "test:rust": "cargo test --locked --manifest-path src-tauri/Cargo.toml",
+    "test:rust": "npm run test:rust:functional && npm run test:rust:performance",
+    "test:rust:functional": "cargo test --locked --manifest-path src-tauri/Cargo.toml -- --skip complex_workbook_performance_stays_within_release_budget",
+    "test:rust:performance": "cargo test --locked --manifest-path src-tauri/Cargo.toml commands::workbook::tests::complex_workbook_performance_stays_within_release_budget -- --nocapture --test-threads=1",
     "audit:prod": "npm audit --omit=dev --registry=https://registry.npmjs.org",
     "benchmark:pdf-range": "node scripts/benchmark-pdf-range.mjs",
     "check:theme-contract": "node scripts/check-theme-contract.mjs",
