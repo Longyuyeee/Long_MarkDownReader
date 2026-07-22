@@ -100,6 +100,18 @@
           </div>
           <div v-else class="empty-line">暂无 Canvas</div>
         </section>
+
+        <section class="workspace-section collection-section">
+          <div class="section-heading"><div><span class="section-kicker">SMART VIEWS</span><h2>智能集合</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode', query: { panel: 'collections' } })">管理集合</button></div>
+          <div v-if="savedSearches.length" class="collection-list">
+            <button v-for="search in savedSearches" :key="search.id" @click="openSavedSearch(search.query, search.objectTypes)">
+              <CollectionIcon />
+              <span><strong>{{ search.name }}</strong><small>{{ search.objectTypes.length ? search.objectTypes.map(formatLabel).join(' · ') : '全部格式' }}</small></span>
+              <ArrowIcon />
+            </button>
+          </div>
+          <div v-else class="empty-line">暂无智能集合</div>
+        </section>
       </div>
     </main>
 
@@ -120,7 +132,8 @@ import {
   AlertTriangle as AlertIcon, ArrowRight as ArrowIcon, BookOpen as LibraryIcon,
   Clock3 as ClockIcon, Database as DatabaseIcon, FileSpreadsheet as TableIcon,
   FileText as FileIcon, LayoutDashboard as CanvasIcon, Network as NetworkIcon,
-  RefreshCw as RefreshIcon, Settings as SettingsIcon, Star as StarIcon, Workflow as DiagramIcon,
+  ListFilter as CollectionIcon, RefreshCw as RefreshIcon, Settings as SettingsIcon,
+  Star as StarIcon, Workflow as DiagramIcon,
 } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 import { fileDisplayName, findFileFormat, routeForFile } from '../config/fileFormats'
@@ -154,6 +167,10 @@ const canvasItems = computed(() => {
   const combined = [...starred, ...overview.value.canvases]
   return combined.filter((item, index) => combined.findIndex(candidate => candidate.path === item.path) === index).slice(0, 8)
 })
+const savedSearches = computed(() => store.savedSearches
+  .filter(search => search.libraryPath === store.libraryPath)
+  .sort((left, right) => right.createdAt - left.createdAt)
+  .slice(0, 6))
 
 const formatLabels: Record<string, string> = { markdown: 'MD', canvas: 'Canvas', pdf: 'PDF', table: 'Table', workbook: 'XLSX', diagram: 'Mermaid', opml: 'OPML', 'plain-text': 'TXT' }
 const formatIcons: Record<string, typeof FileIcon> = { table: TableIcon, workbook: TableIcon, canvas: CanvasIcon, diagram: DiagramIcon }
@@ -167,6 +184,10 @@ const openFirstCanvas = () => {
   const firstCanvas = canvasItems.value[0]
   if (firstCanvas) openPath(firstCanvas.path)
 }
+const openSavedSearch = (query: string, objectTypes: string[]) => router.push({
+  name: 'LibraryMode',
+  query: { search: query, ...(objectTypes.length ? { types: objectTypes.join(',') } : {}) },
+})
 
 const openPath = (path: string) => {
   const target = routeForFile(path)
@@ -214,6 +235,7 @@ onMounted(async () => {
 .health-grid { display: grid; grid-template-columns: repeat(3,1fr); border-top: var(--theme-border); border-bottom: var(--theme-border); }.health-grid button { min-height: 65px; display: grid; align-content: center; gap: 4px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: center; }.health-grid button:last-child { border-right: 0; }.health-grid span { color: var(--theme-text-secondary); font-size: 8px; }.health-grid strong { font-size: 17px; }.index-line { min-height: 54px; display: grid; grid-template-columns: 22px minmax(0,1fr) 24px; align-items: center; gap: 8px; border-bottom: var(--theme-border); }.index-line>svg { width: 16px; color: var(--theme-primary); }.index-line>div { display: grid; gap: 2px; }.index-line strong { font-size: 9px; }.index-line small { color: var(--theme-text-secondary); font-size: 8px; }.index-line button { border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.index-line button svg { width: 13px; }.format-line { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 10px; }.format-line span { display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: var(--theme-border); border-radius: 4px; font-size: 8px; }.format-line i { color: var(--theme-text-secondary); font-style: normal; }.format-line b { font-weight: 700; }
 .task-list button { min-height: 48px; display: grid; grid-template-columns: 16px minmax(0,1fr) 16px; align-items: center; gap: 9px; padding: 5px 8px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.task-list button:hover { background: rgba(var(--theme-primary-rgb),.045); }.task-list button>span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }.task-list svg { width: 13px; color: var(--theme-text-secondary); }.task-check { width: 11px; height: 11px; border: 1px solid var(--theme-text-secondary); border-radius: 2px; }
 .canvas-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }.canvas-list button { min-height: 58px; display: grid; grid-template-columns: 24px minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 8px; border: var(--theme-border); border-radius: 6px; color: var(--theme-text); background: var(--theme-surface); cursor: pointer; text-align: left; }.canvas-list button:hover { border-color: rgba(var(--theme-primary-rgb),.35); }.canvas-list button>svg { width: 15px; color: var(--theme-primary); }.canvas-list button>span { min-width: 0; display: grid; gap: 3px; }.canvas-list button>svg:last-child { width: 12px; color: var(--theme-text-secondary); }
+.collection-list { display: grid; }.collection-list button { min-height: 48px; display: grid; grid-template-columns: 22px minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 5px 7px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.collection-list button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.045); }.collection-list button>svg { width: 14px; color: var(--theme-primary); }.collection-list button>svg:last-child { width: 12px; color: var(--theme-text-secondary); }.collection-list button>span { min-width: 0; display: grid; gap: 3px; }.collection-list strong,.collection-list small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-list strong { font-size: 10px; }.collection-list small { color: var(--theme-text-secondary); font-size: 8px; }
 .empty-line { min-height: 68px; display: grid; place-items: center; color: var(--theme-text-secondary); border-top: var(--theme-border); font-size: 9px; }.workspace-empty { height: calc(100% - 58px); display: grid; place-content: center; justify-items: center; gap: 8px; }.workspace-empty h1 { margin: 4px 0 0; font-size: 22px; }.workspace-empty p { margin: 0 0 10px; color: var(--theme-text-secondary); font-size: 10px; }.workspace-empty button { height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 12px; border: 0; border-radius: 6px; color: #fff; background: var(--theme-primary); cursor: pointer; }.workspace-empty button svg { width: 14px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 900px) { .workspace-grid { grid-template-columns: 1fr; }.health-section { grid-row: auto; }.metric-strip { grid-template-columns: repeat(3,1fr); }.metric-strip button:nth-child(3) { border-right: 0; }.workspace-nav button span { display: none; }.workspace-identity { align-items: flex-start; flex-direction: column; }.workspace-signals { justify-content: flex-start; }.workspace-identity p { max-width: 80vw; } }

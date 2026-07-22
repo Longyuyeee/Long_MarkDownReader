@@ -30,9 +30,15 @@
             <div v-if="activeSidebarTab === 'files'" :key="'files'" class="tab-pane files-pane" role="tabpanel" :id="`panel-files`" :aria-labelledby="`tab-files`">
               <div class="sidebar-header">
                 <div class="search-area">
-                  <n-input v-model:value="searchQuery" placeholder="搜索文档..." size="small" round clearable>
-                    <template #prefix><n-icon :component="SearchIcon" /></template>
-                  </n-input>
+                  <div class="search-control-row">
+                    <n-input v-model:value="searchQuery" placeholder="搜索文档..." size="small" round clearable>
+                      <template #prefix><n-icon :component="SearchIcon" /></template>
+                    </n-input>
+                    <n-button quaternary circle size="small" title="保存当前搜索" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
+                      <template #icon><n-icon :component="BookmarkAddIcon" /></template>
+                    </n-button>
+                  </div>
+                  <n-select v-if="searchQuery.trim()" v-model:value="searchObjectTypes" class="search-format-filter" size="tiny" multiple clearable :max-tag-count="1" placeholder="全部格式" :options="searchFormatOptions" />
                 </div>
                 <div class="toolbar-area">
                   <n-dropdown trigger="click" :options="templateOptions" @select="handleTemplateCreate">
@@ -77,9 +83,9 @@
                 </div>
                 <div v-else-if="searchQuery.trim()" class="knowledge-search-results">
                   <div v-if="knowledgeSearchRunning" class="knowledge-search-state">正在搜索 Markdown、Canvas、PDF 与数据表…</div>
-                  <div v-else-if="!knowledgeSearchResults.length" class="knowledge-search-state">没有找到匹配内容</div>
-                  <button v-for="(result, index) in knowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.annotationId || index}`" class="knowledge-search-result" @click="openKnowledgeSearchResult(result)">
-                    <span class="knowledge-result-head"><strong>{{ result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '') }}</strong><i>{{ result.objectType === 'pdf' ? 'PDF' : result.objectType === 'canvas' ? 'Canvas' : result.objectType === 'table' ? '表格' : 'MD' }} · {{ searchKindLabel(result.matchKind) }}</i></span>
+                  <div v-else-if="!visibleKnowledgeSearchResults.length" class="knowledge-search-state">没有找到匹配内容</div>
+                  <button v-for="(result, index) in visibleKnowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.annotationId || index}`" class="knowledge-search-result" @click="openKnowledgeSearchResult(result)">
+                    <span class="knowledge-result-head"><strong>{{ result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '') }}</strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
                     <span class="knowledge-result-context">{{ result.context }}</span>
                     <small v-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
                   </button>
@@ -118,6 +124,27 @@
                 <div class="recent-item" v-for="rf in store.recentFiles" :key="rf.path" @click="handleNodeSelect([rf.path])" :title="rf.path">
                   <n-icon :component="FileIcon" size="14" />
                   <span>{{ rf.title }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div v-else-if="activeSidebarTab === 'collections'" :key="'collections'" class="tab-pane collections-pane">
+              <div class="collections-header">
+                <div><strong>智能集合</strong><small>{{ librarySavedSearches.length }} 个</small></div>
+                <n-button quaternary circle size="small" title="保存当前搜索" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
+                  <template #icon><n-icon :component="BookmarkAddIcon" /></template>
+                </n-button>
+              </div>
+              <div v-if="!librarySavedSearches.length" class="empty-state-hint"><n-empty description="暂无保存的搜索" size="small" /></div>
+              <div v-else class="collection-list">
+                <div v-for="search in librarySavedSearches" :key="search.id" class="collection-row">
+                  <button class="collection-open" @click="openSavedSearch(search)">
+                    <n-icon :component="CollectionIcon" />
+                    <span><strong>{{ search.name }}</strong><small>{{ collectionFilterLabel(search.objectTypes) }}</small></span>
+                  </button>
+                  <n-button quaternary circle size="tiny" title="删除智能集合" @click="confirmRemoveSavedSearch(search.id, search.name)">
+                    <template #icon><n-icon :component="TrashIcon" /></template>
+                  </n-button>
                 </div>
               </div>
             </div>
@@ -469,11 +496,12 @@ import {
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
   Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
-  Database as DatabaseIcon, LayoutDashboard as DashboardIcon
+  Database as DatabaseIcon, LayoutDashboard as DashboardIcon, ListFilter as CollectionIcon,
+  BookmarkPlus as BookmarkAddIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
-import { useAppStore, THEME_MAP } from '../store/app'
+import { useAppStore, THEME_MAP, type SavedSearchConfig } from '../store/app'
 import { isActiveThemeDark } from '../config/themePresets'
 import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
@@ -487,6 +515,7 @@ import { useImageFix } from '../composables/useImageFix'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
 import {
   CREATABLE_FILE_FORMATS,
+  FILE_FORMATS,
   fileDisplayName,
   findFileFormat,
   findFileFormatById,
@@ -537,9 +566,10 @@ const handleError = (error: any, userMessage: string, logContext?: string) => {
   message.error(`${userMessage}: ${errorMsg}`)
 }
 
-const activeSidebarTab = ref<'files' | 'quick' | 'tags' | 'outline' | 'links' | 'history'>('files')
+const activeSidebarTab = ref<'files' | 'quick' | 'collections' | 'tags' | 'outline' | 'links' | 'history'>('files')
 const sidebarTabs = [
   { key: 'files' as const, icon: FileIcon, label: '文件' },
+  { key: 'collections' as const, icon: CollectionIcon, label: '集合' },
   { key: 'outline' as const, icon: ListIcon, label: '目录' },
   { key: 'tags' as const, icon: TagIcon, label: '标签' },
   { key: 'links' as const, icon: LinkIcon, label: '引用' },
@@ -666,8 +696,38 @@ const addTagToCurrentFile = () => {
 }
 
 const searchByTag = (tag: string) => {
+  searchObjectTypes.value = []
   searchQuery.value = '#' + tag
   activeSidebarTab.value = 'files'
+}
+const resultFormatLabel = (objectType: string) => findFileFormatById(objectType)?.label || objectType
+const collectionFilterLabel = (objectTypes: string[]) => objectTypes.length
+  ? objectTypes.map(resultFormatLabel).join(' · ')
+  : '全部格式'
+const saveCurrentSearch = async () => {
+  if (!searchQuery.value.trim()) return
+  try {
+    const before = store.savedSearches.length
+    await store.addSavedSearch(searchQuery.value, searchObjectTypes.value)
+    message.success(store.savedSearches.length === before ? '该搜索已保存' : '已保存为智能集合')
+  } catch (error) { message.error(`保存搜索失败：${String(error)}`) }
+}
+const openSavedSearch = (search: SavedSearchConfig) => {
+  searchObjectTypes.value = [...search.objectTypes]
+  searchQuery.value = search.query
+  activeSidebarTab.value = 'files'
+}
+const confirmRemoveSavedSearch = (id: string, name: string) => {
+  dialog.warning({
+    title: '删除智能集合',
+    content: `删除“${name}”？这不会删除任何知识库文件。`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try { await store.removeSavedSearch(id); message.success('智能集合已删除') }
+      catch (error) { message.error(`删除失败：${String(error)}`) }
+    },
+  })
 }
 const isSidebarCollapsed = ref(false)
 const tagFilterText = ref('')
@@ -707,6 +767,7 @@ watch(activeTabId, () => {
 })
 const treeData = ref<TreeOption[]>([])
 const searchQuery = ref('')
+const searchObjectTypes = ref<string[]>([])
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
 const knowledgeSearchRunning = ref(false)
 let knowledgeSearchGeneration = 0
@@ -715,6 +776,15 @@ const knowledgeIndexStatus = ref<KnowledgeIndexStatus>({
   relationCount: 0, progress: 0, cacheBytes: 0,
 })
 const knowledgeIndexBusy = ref(false)
+const searchFormatOptions = FILE_FORMATS
+  .filter(format => format.capabilities.index === 'supported')
+  .map(format => ({ label: format.label, value: format.id }))
+const visibleKnowledgeSearchResults = computed(() => searchObjectTypes.value.length
+  ? knowledgeSearchResults.value.filter(result => searchObjectTypes.value.includes(result.objectType))
+  : knowledgeSearchResults.value)
+const librarySavedSearches = computed(() => store.savedSearches
+  .filter(search => search.libraryPath === store.libraryPath)
+  .sort((left, right) => right.createdAt - left.createdAt))
 const knowledgeIndexLabel = computed(() => ({
   missing: '索引未构建', building: '正在构建索引', ready: '索引就绪', stale: '索引已过期',
   corrupt: '索引已损坏', error: '索引构建失败',
@@ -1761,6 +1831,7 @@ const handleExportHtml = async () => {
 
 onMounted(async () => {
   await store.loadConfig(); window.addEventListener('keydown', handleKeyDown)
+  applyRouteSearch()
   if (store.libraryPath) { await refreshLibrary(); fetchLibStats(); fetchAllTags(); void refreshKnowledgeIndexStatus() }
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
   unlistenExport = await listen('command-export', handleExportHtml)
@@ -1925,6 +1996,17 @@ watch(() => route.query.path, (path) => {
   if (format.routeName === 'LibraryMode') handleNodeSelect([path])
   else router.replace({ name: format.routeName, query: { path } })
 }, { immediate: true })
+const applyRouteSearch = () => {
+  if (route.query.panel === 'collections') activeSidebarTab.value = 'collections'
+  const query = route.query.search
+  if (typeof query !== 'string' || !query.trim()) return
+  searchQuery.value = query
+  searchObjectTypes.value = typeof route.query.types === 'string'
+    ? route.query.types.split(',').filter(type => searchFormatOptions.some(option => option.value === type))
+    : []
+  activeSidebarTab.value = 'files'
+}
+watch(() => [route.query.search, route.query.types, route.query.panel], applyRouteSearch)
 const refreshKnowledgeIndexStatus = async () => {
   if (!store.libraryPath) return
   try {
@@ -1956,7 +2038,7 @@ const deleteKnowledgeIndex = async () => {
   finally { knowledgeIndexBusy.value = false }
 }
 
-watch(() => store.libraryPath, (newPath) => { if (newPath) { searchQuery.value = ''; refreshLibrary(); fetchLibStats(); fetchAllTags(); refreshGitStatus(); void refreshKnowledgeIndexStatus() } })
+watch(() => store.libraryPath, (newPath) => { if (newPath) { searchQuery.value = ''; searchObjectTypes.value = []; refreshLibrary(); fetchLibStats(); fetchAllTags(); refreshGitStatus(); void refreshKnowledgeIndexStatus() } })
 // 从设置页返回后刷新 Git 状态
 watch(() => store.libraries, () => { nextTick(() => refreshGitStatus()) }, { deep: true })
 
@@ -2082,6 +2164,7 @@ watch(activeTabId, (newId, oldId) => {
 .tab-fade-leave-to { opacity: 0; transform: translateY(-10px); }
 
 .sidebar-header { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
+.search-area { display: grid; gap: 7px; }.search-control-row { display: grid; grid-template-columns: minmax(0,1fr) 30px; align-items: center; gap: 4px; }.search-format-filter { width: 100%; }
 
 .tree-viewport {
   flex: 1;
@@ -2221,6 +2304,7 @@ watch(activeTabId, (newId, oldId) => {
 }
 
 .quick-pane { padding: 8px 0; overflow-y: auto; }
+.collections-pane { overflow-y: auto; }.collections-header { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border-bottom: var(--theme-border); }.collections-header>div { display: flex; align-items: baseline; gap: 7px; }.collections-header strong { font-size: 11px; }.collections-header small { color: var(--theme-text-secondary); font-size: 8px; }.collection-list { display: grid; padding: 5px 10px 14px; }.collection-row { min-height: 54px; display: grid; grid-template-columns: minmax(0,1fr) 28px; align-items: center; gap: 4px; border-bottom: var(--theme-border); }.collection-open { min-width: 0; height: 100%; display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 8px; padding: 6px 2px; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.collection-open:hover { color: var(--theme-primary); }.collection-open>svg { width: 15px; color: var(--theme-primary); }.collection-open>span { min-width: 0; display: grid; gap: 3px; }.collection-open strong,.collection-open small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-open strong { font-size: 10px; }.collection-open small { color: var(--theme-text-secondary); font-size: 8px; }
 .tags-pane { padding: 12px; overflow-y: auto; }
 
 .tags-help {

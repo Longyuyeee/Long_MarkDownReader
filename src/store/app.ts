@@ -29,6 +29,15 @@ export interface LibraryConfig {
   gitBranch?: string
 }
 
+export interface SavedSearchConfig {
+  id: string
+  name: string
+  query: string
+  libraryPath: string
+  objectTypes: string[]
+  createdAt: number
+}
+
 const TABS_STORAGE_KEY = 'longedit_tabs_state'
 
 export const useAppStore = defineStore('app', {
@@ -59,6 +68,7 @@ export const useAppStore = defineStore('app', {
     aiModel: 'gpt-4o-mini',
     recentFiles: [] as { title: string; path: string }[],
     starredFiles: [] as string[],
+    savedSearches: [] as SavedSearchConfig[],
   }),
   getters: {
     libraryPath: (state) => state.activeLibraryPath,
@@ -89,6 +99,7 @@ export const useAppStore = defineStore('app', {
         try { this.aiCredentialStored = await invoke<boolean>('get_ai_credential_status') }
         catch { this.aiCredentialStored = false }
         this.aiModel = config.aiModel || 'gpt-4o-mini'
+        this.savedSearches = Array.isArray(config.savedSearches) ? config.savedSearches : []
 
         // 同步系统真实的自启状态，以系统为准
         try {
@@ -134,6 +145,10 @@ export const useAppStore = defineStore('app', {
           (this as any)[key] = patch[key]
         }
       }
+      if (patch.libraries !== undefined) {
+        const libraryPaths = new Set(this.libraries.map(library => library.path))
+        this.savedSearches = this.savedSearches.filter(search => libraryPaths.has(search.libraryPath))
+      }
       
       await invoke('save_config', { config: {
         libraries: this.libraries,
@@ -153,6 +168,7 @@ export const useAppStore = defineStore('app', {
         aiProvider: this.aiProvider,
         aiEndpoint: this.aiEndpoint,
         aiModel: this.aiModel,
+        savedSearches: this.savedSearches,
       } })
 
     },
@@ -173,6 +189,33 @@ export const useAppStore = defineStore('app', {
     async clearAiCredential() {
       await invoke('clear_ai_credential')
       this.aiCredentialStored = false
+    },
+    async addSavedSearch(query: string, objectTypes: string[] = []) {
+      const normalizedQuery = query.trim()
+      if (!normalizedQuery || !this.activeLibraryPath) throw new Error('搜索查询或知识库为空')
+      const normalizedTypes = [...new Set(objectTypes)].sort()
+      const duplicate = this.savedSearches.find(search => search.libraryPath === this.activeLibraryPath
+        && search.query.toLowerCase() === normalizedQuery.toLowerCase()
+        && [...search.objectTypes].sort().join('|') === normalizedTypes.join('|'))
+      if (duplicate) return duplicate
+      if (this.savedSearches.length >= 64) throw new Error('保存的搜索不能超过 64 个')
+      const savedSearch: SavedSearchConfig = {
+        id: `search-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: normalizedQuery.slice(0, 80),
+        query: normalizedQuery.slice(0, 500),
+        libraryPath: this.activeLibraryPath,
+        objectTypes: normalizedTypes.slice(0, 8),
+        createdAt: Date.now(),
+      }
+      const previous = this.savedSearches
+      try { await this.updateConfig({ savedSearches: [savedSearch, ...previous] }) }
+      catch (error) { this.savedSearches = previous; throw error }
+      return savedSearch
+    },
+    async removeSavedSearch(id: string) {
+      const previous = this.savedSearches
+      try { await this.updateConfig({ savedSearches: previous.filter(search => search.id !== id) }) }
+      catch (error) { this.savedSearches = previous; throw error }
     },
     addTab(tab: TabInfo) {
       const idx = this.tabs.findIndex(t => t.path === tab.path)

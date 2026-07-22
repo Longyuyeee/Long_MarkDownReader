@@ -5,6 +5,11 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::Manager;
 
+const MAX_SAVED_SEARCHES: usize = 64;
+const MAX_SAVED_SEARCH_NAME_CHARS: usize = 80;
+const MAX_SAVED_SEARCH_QUERY_CHARS: usize = 500;
+const MAX_SAVED_SEARCH_FORMATS: usize = 8;
+
 fn default_git_branch() -> String {
     "main".into()
 }
@@ -20,6 +25,18 @@ pub struct LibraryConfig {
     pub git_remote: String,
     #[serde(default = "default_git_branch")]
     pub git_branch: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct SavedSearchConfig {
+    pub id: String,
+    pub name: String,
+    pub query: String,
+    pub library_path: String,
+    #[serde(default)]
+    pub object_types: Vec<String>,
+    pub created_at: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -50,6 +67,7 @@ pub struct AppConfig {
     pub ai_api_key: String,
     #[serde(default = "default_ai_model")]
     pub ai_model: String,
+    pub saved_searches: Vec<SavedSearchConfig>,
 }
 
 fn default_visual_style() -> String {
@@ -97,8 +115,60 @@ impl Default for AppConfig {
             ai_endpoint: default_ai_endpoint(),
             ai_api_key: String::new(),
             ai_model: default_ai_model(),
+            saved_searches: vec![],
         }
     }
+}
+
+fn validate_saved_searches(
+    searches: &[SavedSearchConfig],
+    libraries: &[LibraryConfig],
+) -> Result<(), String> {
+    if searches.len() > MAX_SAVED_SEARCHES {
+        return Err(format!("保存的搜索不能超过 {MAX_SAVED_SEARCHES} 个"));
+    }
+    let library_paths: std::collections::HashSet<_> = libraries
+        .iter()
+        .map(|library| library.path.as_str())
+        .collect();
+    let mut ids = std::collections::HashSet::new();
+    for search in searches {
+        if search.id.trim().is_empty()
+            || search.id.chars().count() > 80
+            || !ids.insert(search.id.as_str())
+        {
+            return Err("保存的搜索 ID 为空、重复或过长".into());
+        }
+        if search.name.trim().is_empty()
+            || search.name.chars().count() > MAX_SAVED_SEARCH_NAME_CHARS
+        {
+            return Err("保存的搜索名称为空或过长".into());
+        }
+        if search.query.trim().is_empty()
+            || search.query.chars().count() > MAX_SAVED_SEARCH_QUERY_CHARS
+        {
+            return Err("保存的搜索查询为空或过长".into());
+        }
+        if search.library_path.trim().is_empty() || search.library_path.chars().count() > 4096 {
+            return Err("保存的搜索知识库路径为空或过长".into());
+        }
+        if !library_paths.contains(search.library_path.as_str()) {
+            return Err("保存的搜索必须属于已登记知识库".into());
+        }
+        if search.object_types.len() > MAX_SAVED_SEARCH_FORMATS {
+            return Err("保存的搜索格式过滤器过多".into());
+        }
+        let mut object_types = std::collections::HashSet::new();
+        for object_type in &search.object_types {
+            let format = crate::formats::file_registry::file_format_by_id(object_type)?;
+            if !format.capabilities.index.is_supported()
+                || !object_types.insert(object_type.as_str())
+            {
+                return Err(format!("保存的搜索格式过滤器无效: {object_type}"));
+            }
+        }
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -165,6 +235,7 @@ pub fn save_config(app_handle: tauri::AppHandle, mut config: AppConfig) -> Resul
     if !config_dir.exists() {
         fs::create_dir_all(&config_dir).map_err(|error| error.to_string())?;
     }
+    validate_saved_searches(&config.saved_searches, &config.libraries)?;
     config.ai_api_key.clear();
     let content = serde_json::to_string_pretty(&config).map_err(|error| error.to_string())?;
     write_utf8(config_dir.join("config.json"), &content)
@@ -209,5 +280,43 @@ mod tests {
         )
         .unwrap();
         assert_eq!(legacy.ai_api_key, "legacy-value");
+    }
+
+    #[test]
+    fn saved_search_config_is_bounded_and_uses_indexed_formats() {
+        let valid = SavedSearchConfig {
+            id: "search-1".into(),
+            name: "Project notes".into(),
+            query: "milestone".into(),
+            library_path: "C:\\Knowledge".into(),
+            object_types: vec!["markdown".into(), "pdf".into()],
+            created_at: 1,
+        };
+        let libraries = vec![LibraryConfig {
+            name: "Knowledge".into(),
+            path: "C:\\Knowledge".into(),
+            ..Default::default()
+        }];
+        assert!(validate_saved_searches(std::slice::from_ref(&valid), &libraries).is_ok());
+
+        let mut duplicate = valid.clone();
+        duplicate.object_types.push("pdf".into());
+        assert!(validate_saved_searches(&[duplicate], &libraries).is_err());
+
+        let mut unsupported = valid;
+        unsupported.object_types = vec!["unknown".into()];
+        assert!(validate_saved_searches(&[unsupported], &libraries).is_err());
+
+        let mut outside = SavedSearchConfig {
+            id: "search-2".into(),
+            name: "Outside".into(),
+            query: "query".into(),
+            library_path: "C:\\Outside".into(),
+            object_types: vec![],
+            created_at: 2,
+        };
+        assert!(validate_saved_searches(std::slice::from_ref(&outside), &libraries).is_err());
+        outside.library_path = libraries[0].path.clone();
+        assert!(validate_saved_searches(&[outside], &libraries).is_ok());
     }
 }
