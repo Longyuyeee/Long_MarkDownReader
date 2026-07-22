@@ -3831,6 +3831,401 @@ fn migrate_selection_cell(
     cell_reference(change.index.min(MAX_XLSX_ROWS - 1), column)
 }
 
+fn patch_table_row_structure(
+    xml: &[u8],
+    current_sheet: &str,
+    change: &WorkbookStructureChange,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 64));
+    let mut buffer = Vec::new();
+    let mut formula_element = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析 Excel 表格部件失败: {error}"))?;
+        match event {
+            Event::Start(ref start) | Event::Empty(ref start)
+                if matches!(start.local_name().as_ref(), b"table" | b"autoFilter") =>
+            {
+                let reference =
+                    xml_value(start, b"ref", reader.decoder())?.ok_or("Excel 表格部件缺少范围")?;
+                let migrated = migrate_workbook_reference(&reference, Some(current_sheet), change)?;
+                if migrated == "#REF!" {
+                    return Err("本次删除会完整移除 Excel 表格；请先将表格转换为普通区域".into());
+                }
+                let updated = replace_xml_attribute(start, b"ref", &migrated, false)?;
+                writer
+                    .write_event(if matches!(event, Event::Start(_)) {
+                        Event::Start(updated)
+                    } else {
+                        Event::Empty(updated)
+                    })
+                    .map_err(|error| format!("写入 Excel 表格范围失败: {error}"))?;
+            }
+            Event::Start(ref start)
+                if matches!(
+                    start.local_name().as_ref(),
+                    b"calculatedColumnFormula" | b"totalsRowFormula"
+                ) =>
+            {
+                formula_element = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("写入 Excel 表格公式节点失败: {error}"))?;
+            }
+            Event::Text(ref text) if formula_element => {
+                let formula = decode_xml_text(text, "Excel 表格公式")?;
+                let migrated =
+                    migrate_workbook_formula(&format!("={formula}"), current_sheet, change)?;
+                writer
+                    .write_event(Event::Text(BytesText::new(&migrated[1..])))
+                    .map_err(|error| format!("写入迁移后的 Excel 表格公式失败: {error}"))?;
+            }
+            Event::End(ref end)
+                if formula_element
+                    && matches!(
+                        end.local_name().as_ref(),
+                        b"calculatedColumnFormula" | b"totalsRowFormula"
+                    ) =>
+            {
+                formula_element = false;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束 Excel 表格公式节点失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制 Excel 表格部件失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn patch_drawing_row_anchors(
+    xml: &[u8],
+    change: &WorkbookStructureChange,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 64));
+    let mut buffer = Vec::new();
+    let mut anchor_depth = 0usize;
+    let mut row_element = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析 Drawing 锚点失败: {error}"))?;
+        match event {
+            Event::Start(ref start) if matches!(start.local_name().as_ref(), b"from" | b"to") => {
+                anchor_depth += 1;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("写入 Drawing 锚点节点失败: {error}"))?;
+            }
+            Event::Start(ref start)
+                if anchor_depth > 0 && start.local_name().as_ref() == b"row" =>
+            {
+                row_element = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("写入 Drawing 行锚点失败: {error}"))?;
+            }
+            Event::Text(ref text) if row_element => {
+                let row = decode_xml_text(text, "Drawing 行锚点")?
+                    .parse::<usize>()
+                    .map_err(|_| "Drawing 行锚点不是有效整数")?;
+                let migrated = migrated_row_index(row, change).unwrap_or(change.index);
+                writer
+                    .write_event(Event::Text(BytesText::new(&migrated.to_string())))
+                    .map_err(|error| format!("写入迁移后的 Drawing 行锚点失败: {error}"))?;
+            }
+            Event::End(ref end) if row_element && end.local_name().as_ref() == b"row" => {
+                row_element = false;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束 Drawing 行锚点失败: {error}"))?;
+            }
+            Event::End(ref end) if matches!(end.local_name().as_ref(), b"from" | b"to") => {
+                anchor_depth = anchor_depth.saturating_sub(1);
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束 Drawing 锚点节点失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制 Drawing 部件失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn patch_chart_row_formulas(
+    xml: &[u8],
+    current_sheet: &str,
+    change: &WorkbookStructureChange,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 64));
+    let mut buffer = Vec::new();
+    let mut formula_element = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析图表公式失败: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"f" => {
+                formula_element = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("写入图表公式节点失败: {error}"))?;
+            }
+            Event::Text(ref text) if formula_element => {
+                let formula = decode_xml_text(text, "图表公式")?;
+                let migrated =
+                    migrate_workbook_formula(&format!("={formula}"), current_sheet, change)?;
+                writer
+                    .write_event(Event::Text(BytesText::new(&migrated[1..])))
+                    .map_err(|error| format!("写入迁移后的图表公式失败: {error}"))?;
+            }
+            Event::End(ref end) if formula_element && end.local_name().as_ref() == b"f" => {
+                formula_element = false;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束图表公式节点失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制图表部件失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn workbook_sheet_ids(xml: &[u8]) -> Result<HashMap<String, String>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut result = HashMap::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析工作簿 Sheet ID 失败: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"sheet" =>
+            {
+                let name =
+                    xml_value(event, b"name", reader.decoder())?.ok_or("工作簿 Sheet 缺少名称")?;
+                let id = xml_value(event, b"sheetId", reader.decoder())?
+                    .ok_or("工作簿 Sheet 缺少 sheetId")?;
+                result.insert(name, id);
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(result)
+}
+
+fn patch_calc_chain_rows(
+    xml: &[u8],
+    target_sheet_id: &str,
+    change: &WorkbookStructureChange,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
+    let mut buffer = Vec::new();
+    let mut current_sheet_id = String::new();
+    let mut output_sheet_id = String::new();
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析计算链失败: {error}"))?;
+        match event {
+            Event::Start(ref start) | Event::Empty(ref start)
+                if start.local_name().as_ref() == b"c" =>
+            {
+                if let Some(id) = xml_value(start, b"i", reader.decoder())? {
+                    current_sheet_id = id;
+                }
+                let reference =
+                    xml_value(start, b"r", reader.decoder())?.ok_or("计算链条目缺少单元格坐标")?;
+                let migrated = if current_sheet_id == target_sheet_id {
+                    migrate_workbook_reference(&reference, Some(&change.sheet), change)?
+                } else {
+                    reference
+                };
+                if migrated == "#REF!" {
+                    if matches!(event, Event::Start(_)) {
+                        skip_element(&mut reader, b"c", &mut buffer)?;
+                    }
+                    buffer.clear();
+                    continue;
+                }
+                let mut updated = replace_xml_attribute(start, b"r", &migrated, false)?;
+                if current_sheet_id != output_sheet_id {
+                    updated = replace_xml_attribute(&updated, b"i", &current_sheet_id, false)?;
+                }
+                output_sheet_id.clone_from(&current_sheet_id);
+                writer
+                    .write_event(if matches!(event, Event::Start(_)) {
+                        Event::Start(updated)
+                    } else {
+                        Event::Empty(updated)
+                    })
+                    .map_err(|error| format!("写入计算链条目失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制计算链失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn reference_list_fully_deleted(
+    references: &str,
+    current_sheet: &str,
+    change: &WorkbookStructureChange,
+) -> Result<bool, String> {
+    let migrated = references
+        .split_ascii_whitespace()
+        .map(|reference| migrate_workbook_reference(reference, Some(current_sheet), change))
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(!migrated.is_empty() && migrated.iter().all(|value| value == "#REF!"))
+}
+
+fn remove_deleted_sheet_range_objects(
+    xml: &[u8],
+    current_sheet: &str,
+    change: &WorkbookStructureChange,
+) -> Result<Vec<u8>, String> {
+    let mut surviving_merges = 0usize;
+    let mut surviving_validations = 0usize;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("扫描工作表范围对象失败: {error}"))?
+        {
+            Event::Start(ref start) | Event::Empty(ref start)
+                if start.local_name().as_ref() == b"mergeCell" =>
+            {
+                let reference =
+                    xml_value(start, b"ref", reader.decoder())?.ok_or("合并单元格缺少范围")?;
+                if migrate_workbook_reference(&reference, Some(current_sheet), change)? != "#REF!" {
+                    surviving_merges += 1;
+                }
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if start.local_name().as_ref() == b"dataValidation" =>
+            {
+                let references = xml_value(start, b"sqref", reader.decoder())?
+                    .ok_or("数据验证范围缺少 sqref")?;
+                if !reference_list_fully_deleted(&references, current_sheet, change)? {
+                    surviving_validations += 1;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
+    let mut buffer = Vec::new();
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析工作表范围对象失败: {error}"))?;
+        match event {
+            Event::Start(ref start) | Event::Empty(ref start)
+                if matches!(
+                    start.local_name().as_ref(),
+                    b"mergeCells" | b"dataValidations"
+                ) =>
+            {
+                let count = if start.local_name().as_ref() == b"mergeCells" {
+                    surviving_merges
+                } else {
+                    surviving_validations
+                };
+                if count == 0 {
+                    if matches!(event, Event::Start(_)) {
+                        let name = start.local_name().as_ref().to_vec();
+                        skip_element(&mut reader, &name, &mut buffer)?;
+                    }
+                    buffer.clear();
+                    continue;
+                }
+                let updated = replace_xml_attribute(start, b"count", &count.to_string(), false)?;
+                writer
+                    .write_event(if matches!(event, Event::Start(_)) {
+                        Event::Start(updated)
+                    } else {
+                        Event::Empty(updated)
+                    })
+                    .map_err(|error| format!("写入工作表范围对象计数失败: {error}"))?;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if matches!(
+                    start.local_name().as_ref(),
+                    b"mergeCell"
+                        | b"autoFilter"
+                        | b"dataValidation"
+                        | b"conditionalFormatting"
+                        | b"hyperlink"
+                ) =>
+            {
+                let attribute = if matches!(
+                    start.local_name().as_ref(),
+                    b"dataValidation" | b"conditionalFormatting"
+                ) {
+                    b"sqref".as_slice()
+                } else {
+                    b"ref".as_slice()
+                };
+                let references = xml_value(start, attribute, reader.decoder())?
+                    .ok_or("工作表范围对象缺少坐标")?;
+                if reference_list_fully_deleted(&references, current_sheet, change)? {
+                    if matches!(event, Event::Start(_)) {
+                        let name = start.local_name().as_ref().to_vec();
+                        skip_element(&mut reader, &name, &mut buffer)?;
+                    }
+                    buffer.clear();
+                    continue;
+                }
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制工作表范围对象失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制工作表范围对象失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
 fn patch_frozen_pane_event(
     event: &BytesStart<'_>,
     decoder: quick_xml::encoding::Decoder,
@@ -3880,8 +4275,7 @@ fn validate_plain_row_structure_sheet(xml: &[u8], target_sheet: bool) -> Result<
             Event::Start(ref event) | Event::Empty(ref event) => {
                 let feature = match event.local_name().as_ref() {
                     b"sheetProtection" if target_sheet => Some("工作表保护"),
-                    b"tableParts" | b"tablePart" => Some("Excel 表格"),
-                    b"drawing" | b"legacyDrawing" | b"picture" | b"oleObjects" | b"controls" => {
+                    b"legacyDrawing" | b"picture" | b"oleObjects" | b"controls" => {
                         Some("绘图、批注或嵌入对象")
                     }
                     b"pivotTableParts" | b"pivotTablePart" => Some("数据透视表"),
@@ -4359,14 +4753,38 @@ pub fn patch_workbook_row_structure(
         return Err("S8-1B2A 当前仅支持行插入与行删除".into());
     }
     let mut entries = load_package(source)?;
-    if entries.iter().any(|entry| entry.name == "xl/calcChain.xml") {
-        return Err("当前行结构事务暂不支持包含计算链的工作簿；请等待 S8-1B2B".into());
-    }
     let sheet_paths = workbook_sheet_paths(&entries)?;
     let target_path = sheet_paths
         .get(&change.sheet)
         .cloned()
         .ok_or_else(|| format!("工作表不存在: {}", change.sheet))?;
+    let workbook_xml = entries
+        .iter()
+        .find(|entry| entry.name == "xl/workbook.xml")
+        .ok_or("XLSX 缺少 xl/workbook.xml")?;
+    let target_sheet_id = workbook_sheet_ids(&workbook_xml.data)?
+        .remove(&change.sheet)
+        .ok_or_else(|| format!("工作表缺少 sheetId: {}", change.sheet))?;
+
+    let mut table_owners = HashMap::new();
+    let mut drawing_owners = HashMap::new();
+    for (sheet, path) in &sheet_paths {
+        for target in part_relationships(&entries, path)?.into_values() {
+            if target.starts_with("xl/tables/") {
+                table_owners.insert(target, sheet.clone());
+            } else if target.starts_with("xl/drawings/") && target.ends_with(".xml") {
+                drawing_owners.insert(target, sheet.clone());
+            }
+        }
+    }
+    let mut chart_owners = HashMap::new();
+    for (drawing_path, sheet) in &drawing_owners {
+        for target in part_relationships(&entries, drawing_path)?.into_values() {
+            if target.starts_with("xl/charts/") && target.ends_with(".xml") {
+                chart_owners.insert(target, sheet.clone());
+            }
+        }
+    }
     for (sheet, path) in &sheet_paths {
         let xml = entries
             .iter()
@@ -4381,7 +4799,23 @@ pub fn patch_workbook_row_structure(
             .iter_mut()
             .find(|entry| &entry.name == path)
             .ok_or_else(|| format!("工作表部件不存在: {path}"))?;
+        if path == &target_path {
+            entry.data = remove_deleted_sheet_range_objects(&entry.data, sheet, change)?;
+        }
         entry.data = patch_sheet_row_structure(&entry.data, sheet, change, path == &target_path)?;
+    }
+    for entry in &mut entries {
+        if let Some(sheet) = table_owners.get(&entry.name) {
+            entry.data = patch_table_row_structure(&entry.data, sheet, change)?;
+        } else if let Some(sheet) = drawing_owners.get(&entry.name) {
+            if sheet == &change.sheet {
+                entry.data = patch_drawing_row_anchors(&entry.data, change)?;
+            }
+        } else if let Some(sheet) = chart_owners.get(&entry.name) {
+            entry.data = patch_chart_row_formulas(&entry.data, sheet, change)?;
+        } else if entry.name == "xl/calcChain.xml" {
+            entry.data = patch_calc_chain_rows(&entry.data, &target_sheet_id, change)?;
+        }
     }
     let workbook = entries
         .iter_mut()
@@ -4602,15 +5036,16 @@ pub fn patch_workbook(
 #[cfg(test)]
 mod tests {
     use super::{
-        patch_sheet_row_structure, patch_workbook_row_structure, read_sheet_formulas,
-        read_workbook_defined_names, read_workbook_sheet_layout,
+        patch_calc_chain_rows, patch_sheet_row_structure, patch_workbook_row_structure,
+        read_sheet_formulas, read_workbook_defined_names, read_workbook_sheet_layout,
         validate_plain_row_structure_sheet, validate_workbook_package,
     };
     use crate::formats::workbook::{
         WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructureChange,
     };
     use rust_xlsxwriter::{
-        ConditionalFormatCell, ConditionalFormatCellRule, DataValidation, Format, Formula, Workbook,
+        Chart, ChartType, ConditionalFormatCell, ConditionalFormatCellRule, DataValidation, Format,
+        Formula, Table, TableColumn, Workbook,
     };
     use std::io::{Cursor, Read};
     use zip::ZipArchive;
@@ -4813,9 +5248,9 @@ mod tests {
         assert!(zip_text(&output, "xl/worksheets/sheet1.xml").contains("ref=\"A3:B3\""));
         change.action = WorkbookStructureAction::Delete;
         change.index = 1;
-        assert!(patch_workbook_row_structure(&source, &change)
-            .unwrap_err()
-            .contains("完整移除"));
+        let deleted = patch_workbook_row_structure(&source, &change).unwrap();
+        let deleted_xml = zip_text(&deleted, "xl/worksheets/sheet1.xml");
+        assert!(!deleted_xml.contains("mergeCells"));
 
         let mut workbook = Workbook::new();
         workbook.add_worksheet().set_name("Data").unwrap();
@@ -4829,7 +5264,125 @@ mod tests {
             br#"<worksheet><tableParts count="1"/></worksheet>"#,
             false,
         )
+        .is_ok());
+    }
+
+    #[test]
+    fn migrates_table_chart_drawing_and_calc_chain_parts() {
+        let mut workbook = Workbook::new();
+        let data = workbook.add_worksheet();
+        data.set_name("Data").unwrap();
+        data.write_string(0, 0, "Category").unwrap();
+        data.write_string(0, 1, "Value").unwrap();
+        data.write_string(1, 0, "A").unwrap();
+        data.write_number(1, 1, 10).unwrap();
+        data.write_string(2, 0, "B").unwrap();
+        data.write_number(2, 1, 20).unwrap();
+        let columns = [
+            TableColumn::new().set_header("Category"),
+            TableColumn::new().set_header("Value"),
+        ];
+        data.add_table(
+            0,
+            0,
+            2,
+            1,
+            &Table::new().set_name("DataTable").set_columns(&columns),
+        )
+        .unwrap();
+        let mut chart = Chart::new(ChartType::Column);
+        chart
+            .add_series()
+            .set_categories("Data!$A$2:$A$3")
+            .set_values("Data!$B$2:$B$3");
+        data.insert_chart(1, 3, &chart).unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let change = WorkbookStructureChange {
+            sheet: "Data".into(),
+            axis: WorkbookStructureAxis::Row,
+            action: WorkbookStructureAction::Insert,
+            index: 1,
+            count: 2,
+        };
+        let output = patch_workbook_row_structure(&source, &change).unwrap();
+        validate_workbook_package(&output).unwrap();
+        let table = zip_text(&output, "xl/tables/table1.xml");
+        let chart = zip_text(&output, "xl/charts/chart1.xml");
+        let drawing = zip_text(&output, "xl/drawings/drawing1.xml");
+        assert!(table.contains("ref=\"A1:B5\""));
+        assert!(chart.contains("Data!$A$4:$A$5"));
+        assert!(chart.contains("Data!$B$4:$B$5"));
+        assert!(drawing.contains("<xdr:row>3</xdr:row>"));
+
+        let calc_chain = br#"<?xml version="1.0" encoding="UTF-8"?>
+            <calcChain xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+              <c r="A2" i="1"/><c r="B3"/><c r="A1" i="2"/>
+            </calcChain>"#;
+        let deleted = WorkbookStructureChange {
+            action: WorkbookStructureAction::Delete,
+            index: 1,
+            count: 1,
+            ..change
+        };
+        let migrated =
+            String::from_utf8(patch_calc_chain_rows(calc_chain, "1", &deleted).unwrap()).unwrap();
+        assert!(!migrated.contains("r=\"A2\""));
+        assert!(migrated.contains("r=\"B2\" i=\"1\""));
+        assert!(migrated.contains("r=\"A1\" i=\"2\""));
+
+        let table = br#"<table ref="A1:B3"><autoFilter ref="A1:B3"/></table>"#;
+        let full_table_delete = WorkbookStructureChange {
+            index: 0,
+            count: 3,
+            ..deleted
+        };
+        assert!(
+            super::patch_table_row_structure(table, "Data", &full_table_delete)
+                .unwrap_err()
+                .contains("转换为普通区域")
+        );
+        assert!(validate_plain_row_structure_sheet(
+            br#"<worksheet><legacyDrawing r:id="rId1"/></worksheet>"#,
+            true,
+        )
         .unwrap_err()
-        .contains("Excel 表格"));
+        .contains("批注"));
+    }
+
+    #[test]
+    fn deletes_complete_sheet_range_objects_and_updates_counts() {
+        let xml = br#"<?xml version="1.0" encoding="UTF-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+              <dimension ref="A1:B4"/>
+              <sheetData>
+                <row r="1"><c r="A1"><v>1</v></c></row>
+                <row r="2"><c r="A2"><v>2</v></c></row>
+                <row r="4"><c r="A4"><v>4</v></c></row>
+              </sheetData>
+              <autoFilter ref="A2:B2"><filterColumn colId="0"/></autoFilter>
+              <mergeCells count="2"><mergeCell ref="A2:B2"/><mergeCell ref="A4:B4"/></mergeCells>
+              <conditionalFormatting sqref="A2:B2"><cfRule type="expression"><formula>A2&gt;0</formula></cfRule></conditionalFormatting>
+              <dataValidations count="2"><dataValidation sqref="A2"><formula1>A2&gt;0</formula1></dataValidation><dataValidation sqref="A4"/></dataValidations>
+              <hyperlinks><hyperlink ref="A2" location="Data!A2"/><hyperlink ref="A4" location="Data!A4"/></hyperlinks>
+            </worksheet>"#;
+        let change = WorkbookStructureChange {
+            sheet: "Data".into(),
+            axis: WorkbookStructureAxis::Row,
+            action: WorkbookStructureAction::Delete,
+            index: 1,
+            count: 1,
+        };
+        let pruned = super::remove_deleted_sheet_range_objects(xml, "Data", &change).unwrap();
+        let output =
+            String::from_utf8(patch_sheet_row_structure(&pruned, "Data", &change, true).unwrap())
+                .unwrap();
+        assert!(!output.contains("autoFilter"));
+        assert!(!output.contains("conditionalFormatting"));
+        assert!(output.contains("mergeCells count=\"1\""));
+        assert!(output.contains("mergeCell ref=\"A3:B3\""));
+        assert!(output.contains("dataValidations count=\"1\""));
+        assert!(output.contains("dataValidation sqref=\"A3\""));
+        assert_eq!(output.matches("<hyperlink ").count(), 1);
+        assert!(output.contains("hyperlink ref=\"A3\" location=\"Data!A3\""));
     }
 }
