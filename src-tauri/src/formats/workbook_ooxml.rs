@@ -1134,6 +1134,57 @@ fn parse_f64_attribute(
         .transpose()
 }
 
+#[derive(Default)]
+struct RowStructureAttributes {
+    row: Option<usize>,
+    height: Option<f64>,
+    hidden: bool,
+    outline_level: u8,
+    collapsed: bool,
+}
+
+fn row_structure_attributes(
+    event: &BytesStart<'_>,
+    decoder: quick_xml::encoding::Decoder,
+) -> Result<RowStructureAttributes, String> {
+    let mut result = RowStructureAttributes::default();
+    for attribute in event.attributes() {
+        let attribute = attribute.map_err(|error| format!("解析 XLSX XML 属性失败: {error}"))?;
+        let key = attribute.key.as_ref();
+        if !matches!(
+            key,
+            b"r" | b"ht" | b"hidden" | b"outlineLevel" | b"collapsed"
+        ) {
+            continue;
+        }
+        let value = attribute
+            .decoded_and_normalized_value(XmlVersion::Implicit1_0, decoder)
+            .map_err(|error| format!("解码 XLSX XML 属性失败: {error}"))?;
+        match key {
+            b"r" => {
+                result.row = value
+                    .parse::<usize>()
+                    .ok()
+                    .and_then(|value| value.checked_sub(1));
+            }
+            b"ht" => {
+                result.height = Some(
+                    value
+                        .parse::<f64>()
+                        .map_err(|_| format!("XLSX 尺寸属性无效: {value}"))?,
+                );
+            }
+            b"hidden" => result.hidden = matches!(value.as_ref(), "1" | "true"),
+            b"outlineLevel" => {
+                result.outline_level = value.parse::<u8>().unwrap_or(0).min(7);
+            }
+            b"collapsed" => result.collapsed = matches!(value.as_ref(), "1" | "true"),
+            _ => unreachable!(),
+        }
+    }
+    Ok(result)
+}
+
 fn read_sheet_structure(
     xml: &[u8],
     row_start: usize,
@@ -1256,31 +1307,24 @@ fn read_sheet_structure(
             Event::Start(ref event) | Event::Empty(ref event)
                 if event.local_name().as_ref() == b"row" =>
             {
-                let row = xml_value(event, b"r", reader.decoder())?
-                    .and_then(|value| value.parse::<usize>().ok())
-                    .and_then(|value| value.checked_sub(1));
-                let height = parse_f64_attribute(event, b"ht", reader.decoder())?;
-                if let (Some(row), Some(height)) = (row, height) {
+                let attributes = row_structure_attributes(event, reader.decoder())?;
+                if let (Some(row), Some(height)) = (attributes.row, attributes.height) {
                     if row >= row_start && row < row_end && height.is_finite() && height > 0.0 {
                         row_heights.push(WorkbookRowHeight { row, height });
                     }
                 }
-                if let Some(row) = row {
-                    let hidden = bool_attribute(event, b"hidden", reader.decoder(), false)?;
-                    let collapsed = bool_attribute(event, b"collapsed", reader.decoder(), false)?;
-                    let outline_level = xml_value(event, b"outlineLevel", reader.decoder())?
-                        .and_then(|value| value.parse::<u8>().ok())
-                        .unwrap_or(0)
-                        .min(7);
+                if let Some(row) = attributes.row {
                     if row >= row_start
                         && row < row_end
-                        && (hidden || collapsed || outline_level > 0)
+                        && (attributes.hidden
+                            || attributes.collapsed
+                            || attributes.outline_level > 0)
                     {
                         row_states.push(WorkbookRowState {
                             row,
-                            hidden,
-                            outline_level,
-                            collapsed,
+                            hidden: attributes.hidden,
+                            outline_level: attributes.outline_level,
+                            collapsed: attributes.collapsed,
                         });
                     }
                 }
