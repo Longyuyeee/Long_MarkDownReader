@@ -65,4 +65,4 @@
 - 打印预览、分页计算、页面设置/页眉页脚编辑，以及渐变填充、主题字体、垂直对齐、文本旋转和高级保护属性的完整还原；保护状态只读，不支持修改保护或密码解锁。
 - `.xls`、`.xlsb`、`.ods` 的产品入口，尽管底层读取库可能覆盖其中部分格式。
 
-因此 FR-DATA-006 与 FR-DATA-009 当前仍标记为“部分完成”。S6-15 已建立复杂 fixture 全包差异白名单、10,000×12 Debug CI 性能预算和机器可读发布档案；总体 `xlsxRoundTrip` 仍为计划，不能宣传完整 Excel 等价。S8-1A 已完成行列隐藏、取消隐藏和 0–7 级大纲分组；S8-1B1 已冻结插删坐标迁移规则并开放只读预览；S8-1B2A 已完成普通目标 Sheet 的受限整行插删后端事务。下一步进入 S8-1B2B 复杂载体迁移。详细分维度边界见 `XLSX_Public_Compatibility_Matrix.md`，发布口径见 `XLSX_Release_Compatibility_Statement.md`。
+因此 FR-DATA-006 与 FR-DATA-009 当前仍标记为“部分完成”。S6-15 已建立复杂 fixture 全包差异白名单、10,000×12 Debug CI 性能预算和机器可读发布档案；总体 `xlsxRoundTrip` 仍为计划，不能宣传完整 Excel 等价。S8-1A 已完成行列隐藏、取消隐藏和 0–7 级大纲分组；S8-1B1 已冻结插删坐标迁移规则并开放只读预览；S8-1B2A 已完成受限整行插删后端事务；S8-1B2B1 已覆盖工作表 XML 内的冻结、选择、合并、筛选、验证、条件格式和超链接。下一步进入 S8-1B2B2 关系部件与计算链迁移。详细分维度边界见 `XLSX_Public_Compatibility_Matrix.md`，发布口径见 `XLSX_Release_Compatibility_Statement.md`。
