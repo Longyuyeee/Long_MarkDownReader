@@ -51,10 +51,14 @@
     </div>
 
     <div v-if="workbook && sheetInfo" class="formula-bar">
-      <select value="" title="跳转到命名区域" :disabled="!navigableDefinedNames.length" @change="navigateDefinedName">
-        <option value="">{{ navigableDefinedNames.length ? '命名区域' : '无命名区域' }}</option>
+      <select v-model.number="selectedDefinedNameIndex" title="跳转和管理命名区域" :disabled="!navigableDefinedNames.length" @change="navigateDefinedName">
+        <option :value="-1">{{ navigableDefinedNames.length ? '命名区域' : '无命名区域' }}</option>
         <option v-for="item in navigableDefinedNames" :key="item.index" :value="item.index">{{ item.label }}</option>
       </select>
+      <button title="从当前单一区域创建名称" :disabled="!canEditDefinedNames || !definedNameSelection" @click="createDefinedName">新建名称</button>
+      <button title="重命名当前名称；被公式引用时会安全拒绝" :disabled="!canEditDefinedNames || selectedDefinedNameIndex < 0" @click="renameDefinedName">改名</button>
+      <button title="把当前名称指向当前单一区域" :disabled="!canEditDefinedNames || selectedDefinedNameIndex < 0 || !definedNameSelection" @click="updateDefinedNameRange">更新引用</button>
+      <button title="删除当前名称；被公式引用时会安全拒绝" :disabled="!canEditDefinedNames || selectedDefinedNameIndex < 0" @click="deleteDefinedName">删除名称</button>
       <output>{{ selectedAddress || '—' }}</output>
       <span>fx</span>
       <input
@@ -123,27 +127,70 @@
       <button title="取消当前工作表冻结窗格" :disabled="(!effectiveFreeze.rows && !effectiveFreeze.columns) || saving || updatingStructure || Boolean(dirtyCount)" @click="clearFreezePane">取消冻结</button>
     </div>
 
-    <div v-if="workbook && sheetInfo && (activeDataRegion || selectedValidation || tableSelection)" class="data-toolbar">
+    <div v-if="workbook && sheetInfo && (activeDataRegion || selectedValidation || tableSelection || validationSelection)" class="data-toolbar">
       <button v-if="tableSelection && !selectedTable" title="从选区创建 Excel Table" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('create')">创建 Table</button>
       <button v-if="tableSelection && selectedTable" title="把 Excel Table 调整到选区并同步表头" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('resize')">调整 Table</button>
+      <template v-if="selectedTable">
+        <button title="重命名当前 Excel Table" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="renameSelectedTable">重命名</button>
+        <select :value="selectedTable.styleName || 'TableStyleMedium2'" title="Table 样式" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @change="setSelectedTableStyle(($event.target as HTMLSelectElement).value)">
+          <option v-for="style in TABLE_STYLE_PRESETS" :key="style" :value="style">{{ style }}</option>
+        </select>
+        <button :class="{ active: selectedTable.showFirstColumn }" title="强调首列" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="setSelectedTableStyleOption('showFirstColumn', !selectedTable.showFirstColumn)">首列</button>
+        <button :class="{ active: selectedTable.showLastColumn }" title="强调末列" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="setSelectedTableStyleOption('showLastColumn', !selectedTable.showLastColumn)">末列</button>
+        <button :class="{ active: selectedTable.showRowStripes }" title="显示行条纹" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="setSelectedTableStyleOption('showRowStripes', !selectedTable.showRowStripes)">行条纹</button>
+        <button :class="{ active: selectedTable.showColumnStripes }" title="显示列条纹" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="setSelectedTableStyleOption('showColumnStripes', !selectedTable.showColumnStripes)">列条纹</button>
+        <button title="移除 Table 结构并保留单元格数据" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="removeSelectedTable('convert_to_range')">转普通区域</button>
+        <button title="删除 Table 定义并保留单元格数据" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="removeSelectedTable('delete')">删除 Table</button>
+      </template>
       <template v-if="activeDataRegion">
         <strong>{{ activeDataRegion.label }}</strong>
         <select v-model.number="filterColumn" title="筛选字段" @focus="prepareDataView">
           <option :value="-1">全部字段</option>
           <option v-for="column in activeDataColumns" :key="column.index" :value="column.index">{{ column.label }}</option>
         </select>
-        <input v-model="filterQuery" placeholder="会话筛选，不改写源文件" @focus="prepareDataView" @input="prepareDataView">
+        <input v-model="filterQuery" placeholder="包含筛选" @focus="prepareDataView" @input="prepareDataView">
         <select v-model.number="sortColumn" title="排序字段" @focus="prepareDataView">
           <option :value="-1">不排序</option>
           <option v-for="column in activeDataColumns" :key="column.index" :value="column.index">{{ column.label }}</option>
         </select>
         <button :class="{ active: sortDirection === 'asc' }" :disabled="sortColumn < 0" @click="sortDirection = 'asc'">升序</button>
         <button :class="{ active: sortDirection === 'desc' }" :disabled="sortColumn < 0" @click="sortDirection = 'desc'">降序</button>
+        <button title="把当前单列包含筛选和排序状态写入 XLSX" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount) || !activeDataRegion.filterState.editable" @click="persistDataView('apply')">应用到文件</button>
+        <button title="清除 XLSX 中的筛选和排序条件" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="persistDataView('clear')">清除条件</button>
+        <span v-if="!activeDataRegion.filterState.editable" class="validation-hint">高级筛选条件只读</span>
         <span>{{ dataViewLoading ? '载入数据…' : `${dataViewRows.length.toLocaleString()} 行` }}</span>
         <button :disabled="!dataViewRows.length" @click="navigateDataResult(-1)">上一条</button>
         <button :disabled="!dataViewRows.length" @click="navigateDataResult(1)">下一条</button>
       </template>
+      <template v-if="validationSelection">
+        <button v-if="!selectedValidation" title="为当前连续选区创建数据验证规则" :disabled="!canEditDataValidation" @click="editDataValidationRule('create')">新建验证</button>
+        <template v-else>
+          <button title="编辑当前单元格所属的数据验证规则" :disabled="!canEditDataValidation" @click="editDataValidationRule('update')">编辑验证</button>
+          <button title="把当前验证规则重新应用到当前连续选区" :disabled="!canEditDataValidation" @click="applyValidationToSelection">应用选区</button>
+          <button title="删除当前数据验证规则" :disabled="!canEditDataValidation" @click="deleteDataValidationRule">删除验证</button>
+        </template>
+      </template>
       <span v-if="selectedValidation" class="validation-hint" :title="selectedValidation.error || selectedValidation.prompt || ''">验证：{{ validationLabel(selectedValidation) }}</span>
+      <template v-if="conditionalSelection">
+        <button title="为当前连续选区创建基础条件格式" :disabled="!canEditConditionalFormat" @click="editConditionalFormatRule('create')">新建条件格式</button>
+        <template v-if="selectedConditionalFormats.length > 1">
+          <button title="查看上一条命中规则" @click="cycleConditionalFormat(-1)">上一规则</button>
+          <button title="查看下一条命中规则" @click="cycleConditionalFormat(1)">下一规则</button>
+        </template>
+        <template v-if="selectedConditionalFormat?.editable">
+          <button title="编辑当前单元格命中的条件格式规则" :disabled="!canEditConditionalFormat" @click="editConditionalFormatRule('update')">编辑条件格式</button>
+          <button :title="selectedConditionalGroupSize > 1 ? '同范围多规则组共享 sqref；请先保留原范围，避免隐式改变其他规则' : '把当前条件格式规则重新应用到选区'" :disabled="!canEditConditionalFormat || selectedConditionalGroupSize > 1" @click="applyConditionalFormatToSelection">应用条件选区</button>
+          <button title="提高当前规则的全工作表优先级" :disabled="!canMoveConditionalFormatUp" @click="moveConditionalFormatRule('move_up')">提高优先级</button>
+          <button title="降低当前规则的全工作表优先级" :disabled="!canMoveConditionalFormatDown" @click="moveConditionalFormatRule('move_down')">降低优先级</button>
+          <button v-if="selectedConditionalGroupSize > 1" title="把当前规则从共享 sqref 中拆出，并应用到当前选区" :disabled="!canSplitConditionalFormat" @click="splitConditionalFormatRule">拆分规则</button>
+          <button v-else-if="conditionalMergeCandidate" title="把当前独立规则重新并入范围完全相同的规则组" :disabled="!canEditConditionalFormat" @click="mergeConditionalFormatRule">合并同范围</button>
+          <button title="删除当前条件格式规则" :disabled="!canEditConditionalFormat" @click="deleteConditionalFormatRule">删除条件格式</button>
+        </template>
+        <span v-else-if="selectedConditionalFormat" class="validation-hint">当前条件格式超出安全子集，只读：{{ selectedConditionalFormat.kind }}</span>
+        <span v-if="selectedConditionalFormat" class="validation-hint" :title="conditionalFormatConflictHint">
+          条件 {{ selectedConditionalFormatPosition + 1 }}/{{ selectedConditionalFormats.length }} · 优先级 {{ selectedConditionalFormat.priority }} · {{ selectedConditionalFormat.kind }}{{ selectedConditionalFormat.stopIfTrue ? ' · 命中即停止' : '' }}{{ selectedConditionalGroupSize > 1 ? ` · 同范围组 ${selectedConditionalFormat.ruleIndex + 1}/${selectedConditionalGroupSize}` : '' }}
+        </span>
+      </template>
     </div>
 
     <div v-if="workbook && sheetInfo?.drawings.length" class="drawing-toolbar" aria-label="工作表绘图对象">
@@ -151,6 +198,7 @@
       <button
         v-for="drawing in sheetInfo.drawings"
         :key="drawing.id"
+        :class="{ active: selectedDrawing?.id === drawing.id }"
         :title="drawingTooltip(drawing)"
         @click="navigateDrawing(drawing)"
       >
@@ -158,8 +206,36 @@
         <b>{{ drawing.chart?.title || drawing.name || `对象 ${drawing.id}` }}</b>
         <small>{{ drawingAnchorLabel(drawing) }}<template v-if="drawing.chart"> · {{ drawing.chart.series.length }} 系列</template></small>
       </button>
-      <em>结构化预览；原始图表、图片与绘图部件会在单元格写回时保持不变</em>
+      <template v-if="selectedDrawing?.editable">
+        <button class="drawing-action" :disabled="!canEditDrawing" @click="editDrawingMetadata">编辑名称</button>
+        <button class="drawing-action" :disabled="!canApplyDrawingSelection" @click="applyDrawingSelection">应用当前选区</button>
+        <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canEditChartTitle" @click="editChartTitle">编辑图表标题</button>
+        <select v-if="selectedDrawing.chart?.series.length" v-model.number="selectedChartSeriesIndex" class="drawing-series-select" title="选择要编辑的图表系列">
+          <option v-for="series in selectedDrawing.chart.series" :key="series.index" :value="series.index">系列 {{ series.index + 1 }} · {{ series.name || '未命名' }}</option>
+        </select>
+        <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canEditChartSeries" @click="editChartSeries">编辑系列引用</button>
+      </template>
+      <em>{{ selectedDrawing && !selectedDrawing.editable ? '该对象不是标准双单元格锚点，当前只读' : '安全事务只修改目标对象；复杂图表结构继续只读' }}</em>
     </div>
+
+    <section v-if="selectedDrawing?.chart" class="workbook-chart-preview" aria-label="工作簿图表本地预览">
+      <header>
+        <div><strong>{{ selectedDrawing.chart.title || selectedDrawing.name }}</strong><span>{{ drawingKindLabel(selectedDrawing) }} · 本地读取系列源数据 · 最多预览 60 项</span></div>
+        <small v-if="chartPreviewLoading">正在读取图表数据…</small>
+        <small v-else-if="chartPreviewError" class="error">{{ chartPreviewError }}</small>
+        <small v-else>{{ chartPreview?.rows.length || 0 }} 个可验证数据点</small>
+      </header>
+      <TableChartEditor
+        v-if="chartPreview && !chartPreviewLoading"
+        readonly
+        :headers="chartPreview.headers"
+        :column-ids="chartPreview.columnIds"
+        :column-types="chartPreview.columnTypes"
+        :rows="chartPreview.rows"
+        :row-indices="chartPreview.rowIndices"
+        :config="chartPreview.config"
+      />
+    </section>
 
     <main class="workbook-main">
       <div v-if="loading" class="workbook-state"><div class="loader"></div><strong>正在解析 XLSX 工作簿</strong></div>
@@ -204,12 +280,19 @@
                     },
                   ]"
                   :title="cellTitle(row.index, column - 1)"
-                  :style="[cellStyleCss(row.index, column - 1), frozenColumnStyle(column - 1)]"
+                  :style="[cellStyleCss(row.index, column - 1), conditionalCellStyle(row.index, column - 1), frozenColumnStyle(column - 1)]"
                   @pointerdown="startCellSelection(row.index, column - 1, $event)"
                   @pointerenter="extendCellSelection(row.index, column - 1)"
                   @dblclick="beginCellEdit(row.index, column - 1)"
                 >
-                  <span class="cell-content">{{ cellDisplay(row.index, column - 1) }}</span>
+                  <span class="cell-content">
+                    <span
+                      v-if="conditionalIconSymbol(row.index, column - 1)"
+                      class="conditional-icon"
+                      :style="{ color: conditionalIconColor(row.index, column - 1) }"
+                    >{{ conditionalIconSymbol(row.index, column - 1) }}</span>
+                    <span v-if="!conditionalIconHidesValue(row.index, column - 1)">{{ cellDisplay(row.index, column - 1) }}</span>
+                  </span>
                   <span v-if="isFillHandleCell(row.index, column - 1)" class="fill-handle" title="拖动填充" @pointerdown.stop="startFill($event)"></span>
                 </div>
               </div>
@@ -228,6 +311,8 @@ import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
 import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Calculator as CalculatorIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
+import { conditionalExpressionReferences, evaluateConditionalExpression, parseConditionalExpression } from '../utils/conditionalExpression'
+import TableChartEditor from '../components/TableChartEditor.vue'
 
 interface WorkbookRangeReference { sheet: string; top: number; bottom: number; left: number; right: number }
 interface WorkbookDefinedName { name: string; formula: string; scope?: string; hidden: boolean; reference?: WorkbookRangeReference }
@@ -282,12 +367,25 @@ interface WorkbookRowHeight { row: number; height: number }
 interface WorkbookColumnWidth { startColumn: number; endColumn: number; width: number }
 interface WorkbookMergeRange { top: number; bottom: number; left: number; right: number }
 interface WorkbookFreezePane { rows: number; columns: number }
-interface WorkbookTable { name: string; displayName: string; range: WorkbookMergeRange; columns: string[]; totalsRowShown: boolean; styleName?: string }
+interface WorkbookFilterState { filterColumn?: number; query?: string; sortColumn?: number; sortDirection?: 'asc' | 'desc'; editable: boolean }
+interface WorkbookTable { name: string; displayName: string; range: WorkbookMergeRange; columns: string[]; totalsRowShown: boolean; styleName?: string; showFirstColumn: boolean; showLastColumn: boolean; showRowStripes: boolean; showColumnStripes: boolean; filterState: WorkbookFilterState }
 interface WorkbookDataValidation { ranges: WorkbookMergeRange[]; kind: string; operator?: string; formula1?: string; formula2?: string; allowBlank: boolean; showErrorMessage: boolean; errorTitle?: string; error?: string; promptTitle?: string; prompt?: string }
+interface WorkbookDataValidationChange { sheet: string; action: 'create' | 'update' | 'delete'; validationIndex?: number; validation?: WorkbookDataValidation }
+interface WorkbookConditionalFormatStyle { fontColor?: string; fillColor?: string; bold: boolean }
+interface WorkbookConditionalColorScalePoint { kind: string; value?: string; color: string; resolvedValue?: string }
+interface WorkbookConditionalColorScale { points: WorkbookConditionalColorScalePoint[] }
+interface WorkbookConditionalThreshold { kind: string; value?: string; resolvedValue?: string }
+interface WorkbookConditionalDataBar { minimum: WorkbookConditionalThreshold; maximum: WorkbookConditionalThreshold; color: string; showValue: boolean; minLength: number; maxLength: number }
+interface WorkbookConditionalIconThreshold { kind: string; value?: string; resolvedValue?: string; inclusive: boolean }
+interface WorkbookConditionalIconSet { iconSet: string; thresholds: WorkbookConditionalIconThreshold[]; reverse: boolean; showValue: boolean }
+interface WorkbookConditionalFormatRule { groupIndex: number; ruleIndex: number; ranges: WorkbookMergeRange[]; kind: string; operator?: string; formula1?: string; formula2?: string; priority: number; stopIfTrue: boolean; style: WorkbookConditionalFormatStyle; colorScale?: WorkbookConditionalColorScale; dataBar?: WorkbookConditionalDataBar; iconSet?: WorkbookConditionalIconSet; editable: boolean }
+interface WorkbookConditionalFormatChange { sheet: string; action: 'create' | 'update' | 'delete' | 'move_up' | 'move_down' | 'split' | 'merge'; groupIndex?: number; ruleIndex?: number; rule?: WorkbookConditionalFormatRule }
 interface WorkbookDrawingAnchor { row: number; column: number; rowOffset: number; columnOffset: number }
-interface WorkbookChartSeries { name?: string; categories?: string; values?: string }
-interface WorkbookChart { chartType: string; title?: string; series: WorkbookChartSeries[] }
-interface WorkbookDrawingObject { id: string; name: string; description?: string; kind: string; from: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; part?: string; chart?: WorkbookChart }
+interface WorkbookChartSeries { index: number; name?: string; categories?: string; values?: string; editable: boolean }
+interface WorkbookChart { chartType: string; title?: string; titleEditable: boolean; series: WorkbookChartSeries[] }
+interface WorkbookDrawingObject { id: string; objectId: string; drawingPart: string; anchorIndex: number; anchorKind: string; name: string; description?: string; kind: string; from: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; part?: string; chart?: WorkbookChart; editable: boolean }
+interface WorkbookDrawingChange { sheet: string; drawingPart: string; anchorIndex: number; objectId: string; action: 'update_metadata' | 'move_resize' | 'update_chart_title' | 'update_chart_series'; name?: string; description?: string; from?: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; chartTitle?: string; seriesIndex?: number; seriesCategories?: string; seriesValues?: string }
+interface WorkbookChartPreview { headers: string[]; columnIds: string[]; columnTypes: string[]; rows: string[][]; rowIndices: number[]; config: { chartType: 'bar' | 'line' | 'pie' | 'scatter'; categoryColumn: string; valueColumn: string; seriesColumn: string; aggregation: 'sum'; nullStrategy: 'skip'; showLegend: boolean } }
 interface WorkbookPageMargins { left?: number; right?: number; top?: number; bottom?: number; header?: number; footer?: number }
 interface WorkbookPageSetup { orientation?: string; paperSize?: number; scale?: number; fitToWidth?: number; fitToHeight?: number; firstPageNumber?: number; horizontalDpi?: number; verticalDpi?: number; blackAndWhite: boolean; draft: boolean; fitToPage: boolean }
 interface WorkbookPrintOptions { gridLines: boolean; headings: boolean; horizontalCentered: boolean; verticalCentered: boolean }
@@ -312,8 +410,10 @@ interface WorkbookSheetPage {
   namedStyles: WorkbookNamedStyle[]
   freezePane: WorkbookFreezePane
   autoFilter?: WorkbookMergeRange
+  autoFilterState: WorkbookFilterState
   tables: WorkbookTable[]
   dataValidations: WorkbookDataValidation[]
+  conditionalFormats: WorkbookConditionalFormatRule[]
   drawings: WorkbookDrawingObject[]
   pageLayout: WorkbookPageLayout
 }
@@ -329,7 +429,38 @@ interface WorkbookRowStateEdit extends WorkbookRowState { sheet: string }
 interface WorkbookColumnStateEdit extends WorkbookColumnState { sheet: string }
 interface WorkbookMergeEdit extends WorkbookMergeRange { sheet: string; action: 'merge' | 'unmerge' }
 interface WorkbookStructureChange { sheet: string; axis: 'row' | 'column'; action: 'insert' | 'delete'; index: number; count: number }
-interface WorkbookTableChange { sheet: string; action: 'create' | 'resize'; tableName: string; range: WorkbookMergeRange; columns: string[] }
+interface WorkbookTableChange {
+  sheet: string
+  action: 'create' | 'resize' | 'rename' | 'set_style' | 'convert_to_range' | 'delete'
+  tableName: string
+  newTableName?: string
+  styleName?: string
+  showFirstColumn?: boolean
+  showLastColumn?: boolean
+  showRowStripes?: boolean
+  showColumnStripes?: boolean
+  range: WorkbookMergeRange
+  columns?: string[]
+}
+interface WorkbookFilterChange {
+  sheet: string
+  target: 'worksheet' | 'table'
+  action: 'apply' | 'clear'
+  tableName?: string
+  range: WorkbookMergeRange
+  filterColumn?: number
+  query?: string
+  sortColumn?: number
+  sortDirection?: 'asc' | 'desc'
+}
+interface WorkbookDefinedNameChange {
+  action: 'create' | 'rename' | 'update_range' | 'delete'
+  name: string
+  newName?: string
+  scope?: string
+  targetSheet?: string
+  range?: WorkbookMergeRange
+}
 interface CellSelection { sheet: string; row: number; column: number }
 interface SelectionArea { top: number; bottom: number; left: number; right: number }
 interface CellChange { key: string; before?: WorkbookCellEdit; after?: WorkbookCellEdit }
@@ -352,6 +483,7 @@ const EXTRA_COLUMNS = 5
 const MIN_ROW_PIXELS = 24
 const MIN_COLUMN_PIXELS = 38
 const MAX_DATA_VIEW_ROWS = 50_000
+const TABLE_STYLE_PRESETS = ['TableStyleLight1', 'TableStyleLight9', 'TableStyleMedium2', 'TableStyleMedium4', 'TableStyleMedium9', 'TableStyleDark1', 'TableStyleDark4']
 const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
@@ -362,12 +494,15 @@ const activeSheet = ref('')
 const sheetInfo = ref<WorkbookSheetPage | null>(null)
 const loadedRows = ref(new Map<number, WorkbookCell[]>())
 const loadedPages = new Set<number>()
+const pendingConditionalDependencyPages = new Set<number>()
+let conditionalDependencyLoading = false
 const drafts = ref(new Map<string, WorkbookCellEdit>())
 const styleDrafts = ref(new Map<string, WorkbookStylePatch>())
 const rowHeightDrafts = ref(new Map<string, number | null>())
 const columnWidthDrafts = ref(new Map<string, number | null>())
 const mergeDrafts = ref(new Map<string, WorkbookMergeEdit>())
 const updatingStructure = ref(false)
+const selectedDefinedNameIndex = ref(-1)
 const filterQuery = ref('')
 const filterColumn = ref(-1)
 const sortColumn = ref(-1)
@@ -382,6 +517,13 @@ const sourceMergedCells = ref<WorkbookMergeRange[]>([])
 const undoStack = ref<EditAction[]>([])
 const redoStack = ref<EditAction[]>([])
 const selectedCell = ref<CellSelection | null>(null)
+const selectedDrawingId = ref('')
+const selectedChartSeriesIndex = ref(0)
+const chartPreview = ref<WorkbookChartPreview | null>(null)
+const chartPreviewLoading = ref(false)
+const chartPreviewError = ref('')
+let chartPreviewGeneration = 0
+const selectedConditionalRuleKey = ref('')
 const selectionAnchor = ref<CellSelection | null>(null)
 const selectionAreas = ref<SelectionArea[]>([])
 const fillPreview = ref<SelectionArea | null>(null)
@@ -532,11 +674,208 @@ const tableAt = (row: number, column: number) => sheetInfo.value?.tables.find(ta
 const isTableHeader = (row: number, column: number) => Boolean(sheetInfo.value?.tables.some(table => row === table.range.top && column >= table.range.left && column <= table.range.right))
 const validationAt = (row: number, column: number) => sheetInfo.value?.dataValidations.find(validation => validation.ranges.some(range => containsCell(range, row, column)))
 const selectedValidation = computed(() => selectedCell.value ? validationAt(selectedCell.value.row, selectedCell.value.column) : undefined)
+const selectedValidationIndex = computed(() => selectedValidation.value ? (sheetInfo.value?.dataValidations.indexOf(selectedValidation.value) ?? -1) : -1)
+const validationSelection = computed(() => {
+  const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
+  if (!area || area.bottom >= canvasRowCount.value || area.right >= canvasColumnCount.value) return null
+  return area
+})
+const canEditDataValidation = computed(() => Boolean(workbook.value && validationSelection.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
+const conditionalSelection = computed(() => validationSelection.value)
+const conditionalFormatsAt = (row: number, column: number) => (sheetInfo.value?.conditionalFormats || [])
+  .filter(rule => rule.ranges.some(range => containsCell(range, row, column)))
+  .sort((left, right) => left.priority - right.priority)
+const canEditConditionalFormat = computed(() => Boolean(workbook.value && conditionalSelection.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
+const conditionalRuleKey = (rule: WorkbookConditionalFormatRule) => `${rule.groupIndex}:${rule.ruleIndex}`
+const selectedConditionalFormats = computed(() => selectedCell.value ? conditionalFormatsAt(selectedCell.value.row, selectedCell.value.column) : [])
+const selectedConditionalFormat = computed(() => selectedConditionalFormats.value.find(rule => conditionalRuleKey(rule) === selectedConditionalRuleKey.value) || selectedConditionalFormats.value[0])
+const selectedConditionalFormatPosition = computed(() => Math.max(0, selectedConditionalFormats.value.findIndex(rule => rule === selectedConditionalFormat.value)))
+const selectedConditionalGroupSize = computed(() => selectedConditionalFormat.value
+  ? (sheetInfo.value?.conditionalFormats || []).filter(rule => rule.groupIndex === selectedConditionalFormat.value?.groupIndex).length
+  : 0)
+const conditionalRangesEqual = (left: WorkbookMergeRange[], right: WorkbookMergeRange[]) => left.length === right.length && left.every((range, index) => {
+  const candidate = right[index]
+  return Boolean(candidate && range.top === candidate.top && range.bottom === candidate.bottom && range.left === candidate.left && range.right === candidate.right)
+})
+const conditionalMergeCandidate = computed(() => {
+  const selected = selectedConditionalFormat.value
+  if (!selected || selectedConditionalGroupSize.value !== 1) return undefined
+  return (sheetInfo.value?.conditionalFormats || []).find(rule => rule.groupIndex !== selected.groupIndex && conditionalRangesEqual(rule.ranges, selected.ranges))
+})
+const canSplitConditionalFormat = computed(() => {
+  const selected = selectedConditionalFormat.value
+  const area = conditionalSelection.value
+  return Boolean(canEditConditionalFormat.value && selected?.editable && selectedConditionalGroupSize.value > 1 && area && !conditionalRangesEqual(selected.ranges, [area]))
+})
+const orderedConditionalFormats = computed(() => [...(sheetInfo.value?.conditionalFormats || [])].sort((left, right) => left.priority - right.priority || left.groupIndex - right.groupIndex || left.ruleIndex - right.ruleIndex))
+const selectedConditionalGlobalPosition = computed(() => orderedConditionalFormats.value.findIndex(rule => conditionalRuleKey(rule) === (selectedConditionalFormat.value ? conditionalRuleKey(selectedConditionalFormat.value) : '')))
+const canMoveConditionalFormatUp = computed(() => Boolean(canEditConditionalFormat.value && selectedConditionalFormat.value?.editable && selectedConditionalGlobalPosition.value > 0))
+const canMoveConditionalFormatDown = computed(() => Boolean(canEditConditionalFormat.value && selectedConditionalFormat.value?.editable && selectedConditionalGlobalPosition.value >= 0 && selectedConditionalGlobalPosition.value < orderedConditionalFormats.value.length - 1))
+const conditionalFormatConflictHint = computed(() => selectedConditionalFormats.value.length > 1
+  ? `${selectedConditionalFormats.value.length} 条规则覆盖当前单元格，按数字优先级从小到大执行；“命中即停止”会阻止后续规则。`
+  : '当前单元格仅命中一条条件格式规则。')
+const cycleConditionalFormat = (offset: number) => {
+  const rules = selectedConditionalFormats.value
+  if (!rules.length) return
+  const next = (selectedConditionalFormatPosition.value + offset + rules.length) % rules.length
+  selectedConditionalRuleKey.value = conditionalRuleKey(rules[next])
+}
+const expressionRuleMatches = (rule: WorkbookConditionalFormatRule, row: number, column: number) => {
+  const expression = parseConditionalExpression(rule.formula1 || '')
+  const anchor = rule.ranges[0]
+  if (!expression || !anchor) return false
+  return evaluateConditionalExpression(expression, {
+    row,
+    column,
+    anchorRow: anchor.top,
+    anchorColumn: anchor.left,
+    rowCount: canvasRowCount.value,
+    columnCount: canvasColumnCount.value,
+    valueAt: (dependencyRow, dependencyColumn) => loadedRows.value.has(dependencyRow) ? cellAt(dependencyRow, dependencyColumn).value : undefined,
+  })
+}
+const interpolateColor = (start: string, end: string, ratio: number) => {
+  const bounded = Math.max(0, Math.min(1, ratio))
+  const channel = (offset: number) => Math.round(parseInt(start.slice(offset, offset + 2), 16) + (parseInt(end.slice(offset, offset + 2), 16) - parseInt(start.slice(offset, offset + 2), 16)) * bounded).toString(16).padStart(2, '0')
+  return `#${channel(1)}${channel(3)}${channel(5)}`.toUpperCase()
+}
+const colorScaleFill = (rule: WorkbookConditionalFormatRule, value: string) => {
+  const current = Number(value)
+  const points = rule.colorScale?.points.map(point => ({ value: Number(point.resolvedValue ?? point.value), color: point.color })) || []
+  if (!Number.isFinite(current) || !matchesFixedColorScale(points)) return undefined
+  if (current <= points[0].value) return points[0].color
+  if (current >= points[points.length - 1].value) return points[points.length - 1].color
+  const upper = points.findIndex(point => current <= point.value)
+  const lower = points[upper - 1]
+  return interpolateColor(lower.color, points[upper].color, (current - lower.value) / (points[upper].value - lower.value))
+}
+const matchesFixedColorScale = (points: Array<{ value: number; color: string }>) => matchesColorScaleLength(points.length)
+  && points.every((point, index) => Number.isFinite(point.value) && /^#[0-9A-F]{6}$/i.test(point.color) && (!index || points[index - 1].value <= point.value))
+const matchesColorScaleLength = (length: number) => length === 2 || length === 3
+const dataBarStyle = (rule: WorkbookConditionalFormatRule, value: string): CSSProperties | undefined => {
+  const bar = rule.dataBar
+  if (!value.trim()) return undefined
+  const current = Number(value)
+  const minimum = Number(bar?.minimum.resolvedValue ?? bar?.minimum.value)
+  const maximum = Number(bar?.maximum.resolvedValue ?? bar?.maximum.value)
+  if (!bar || !Number.isFinite(current) || !Number.isFinite(minimum) || !Number.isFinite(maximum) || minimum >= maximum) return undefined
+  if (!/^#[0-9A-F]{6}$/i.test(bar.color) || bar.minLength < 0 || bar.minLength > bar.maxLength || bar.maxLength > 100) return undefined
+  const color = `${bar.color}99`
+  const bounded = Math.max(minimum, Math.min(maximum, current))
+  if (minimum >= 0) {
+    const ratio = (bounded - minimum) / (maximum - minimum)
+    const width = bar.minLength + (bar.maxLength - bar.minLength) * ratio
+    return { backgroundImage: `linear-gradient(90deg, ${color} 0%, ${color} ${width}%, transparent ${width}%, transparent 100%)` }
+  }
+  if (maximum <= 0) {
+    const ratio = (maximum - bounded) / (maximum - minimum)
+    const width = bar.minLength + (bar.maxLength - bar.minLength) * ratio
+    const start = 100 - width
+    return { backgroundImage: `linear-gradient(90deg, transparent 0%, transparent ${start}%, ${color} ${start}%, ${color} 100%)` }
+  }
+  const trackStart = (100 - bar.maxLength) / 2
+  const trackEnd = trackStart + bar.maxLength
+  const axis = trackStart + bar.maxLength * (-minimum / (maximum - minimum))
+  const end = bounded < 0
+    ? axis - (axis - trackStart) * (bounded / minimum)
+    : axis + (trackEnd - axis) * (bounded / maximum)
+  const start = Math.min(axis, end)
+  const finish = Math.max(axis, end)
+  const axisStart = Math.max(0, axis - 0.25)
+  const axisEnd = Math.min(100, axis + 0.25)
+  return {
+    backgroundImage: `linear-gradient(90deg, transparent 0%, transparent ${axisStart}%, #60646C ${axisStart}%, #60646C ${axisEnd}%, transparent ${axisEnd}%, transparent 100%), linear-gradient(90deg, transparent 0%, transparent ${start}%, ${color} ${start}%, ${color} ${finish}%, transparent ${finish}%, transparent 100%)`,
+  }
+}
+interface ConditionalIconVisual { symbol: string; color: string; showValue: boolean }
+const ICON_SET_VISUALS: Record<string, Array<{ symbol: string; color: string }>> = {
+  '3Arrows': [{ symbol: '↓', color: '#D64545' }, { symbol: '→', color: '#D39E00' }, { symbol: '↑', color: '#26944A' }],
+  '3ArrowsGray': [{ symbol: '↓', color: '#747B86' }, { symbol: '→', color: '#747B86' }, { symbol: '↑', color: '#747B86' }],
+  '3Flags': [{ symbol: '⚑', color: '#D64545' }, { symbol: '⚑', color: '#D39E00' }, { symbol: '⚑', color: '#26944A' }],
+  '3TrafficLights1': [{ symbol: '●', color: '#D64545' }, { symbol: '●', color: '#D39E00' }, { symbol: '●', color: '#26944A' }],
+  '3TrafficLights2': [{ symbol: '◉', color: '#D64545' }, { symbol: '◉', color: '#D39E00' }, { symbol: '◉', color: '#26944A' }],
+  '3Signs': [{ symbol: '◆', color: '#D64545' }, { symbol: '▲', color: '#D39E00' }, { symbol: '●', color: '#26944A' }],
+  '3Symbols': [{ symbol: '✕', color: '#D64545' }, { symbol: '!', color: '#D39E00' }, { symbol: '✓', color: '#26944A' }],
+  '3Symbols2': [{ symbol: '✕', color: '#D64545' }, { symbol: '!', color: '#D39E00' }, { symbol: '✓', color: '#26944A' }],
+  '4Arrows': [{ symbol: '↓', color: '#D64545' }, { symbol: '↘', color: '#D9822B' }, { symbol: '↗', color: '#A4A51E' }, { symbol: '↑', color: '#26944A' }],
+  '4ArrowsGray': ['↓', '↘', '↗', '↑'].map(symbol => ({ symbol, color: '#747B86' })),
+  '4RedToBlack': ['#D64545', '#B85C4C', '#7A6060', '#272A2F'].map(color => ({ symbol: '●', color })),
+  '4Rating': ['▂', '▄', '▆', '█'].map(symbol => ({ symbol, color: '#3D78B8' })),
+  '4TrafficLights': ['#D64545', '#D9822B', '#A4A51E', '#26944A'].map(color => ({ symbol: '●', color })),
+  '5Arrows': [{ symbol: '↓', color: '#D64545' }, { symbol: '↘', color: '#D9822B' }, { symbol: '→', color: '#D39E00' }, { symbol: '↗', color: '#78A83A' }, { symbol: '↑', color: '#26944A' }],
+  '5ArrowsGray': ['↓', '↘', '→', '↗', '↑'].map(symbol => ({ symbol, color: '#747B86' })),
+  '5Rating': ['▁', '▃', '▄', '▆', '█'].map(symbol => ({ symbol, color: '#3D78B8' })),
+  '5Quarters': ['○', '◔', '◑', '◕', '●'].map(symbol => ({ symbol, color: '#3D78B8' })),
+}
+const iconSetVisual = (rule: WorkbookConditionalFormatRule, value: string): ConditionalIconVisual | undefined => {
+  const iconSet = rule.iconSet
+  const current = Number(value)
+  const visuals = iconSet ? ICON_SET_VISUALS[iconSet.iconSet] : undefined
+  const thresholds = iconSet?.thresholds.map(point => ({ value: Number(point.resolvedValue ?? point.value), inclusive: point.inclusive })) || []
+  if (!value.trim() || !iconSet || !visuals || visuals.length !== thresholds.length || !Number.isFinite(current) || thresholds.some(point => !Number.isFinite(point.value))) return undefined
+  let index = 0
+  for (let candidate = 1; candidate < thresholds.length; candidate += 1) {
+    const threshold = thresholds[candidate]
+    if (threshold.inclusive ? current >= threshold.value : current > threshold.value) index = candidate
+  }
+  if (iconSet.reverse) index = visuals.length - 1 - index
+  return { ...visuals[index], showValue: iconSet.showValue }
+}
+const conditionalRuleMatches = (rule: WorkbookConditionalFormatRule, row: number, column: number) => {
+  if (!rule.editable) return false
+  if (rule.kind === 'colorScale') return Boolean(colorScaleFill(rule, cellAt(row, column).value))
+  if (rule.kind === 'dataBar') return Boolean(dataBarStyle(rule, cellAt(row, column).value))
+  if (rule.kind === 'iconSet') return Boolean(iconSetVisual(rule, cellAt(row, column).value))
+  if (rule.kind === 'expression') return expressionRuleMatches(rule, row, column)
+  if (rule.kind !== 'cellIs') return false
+  const current = Number(cellAt(row, column).value); const first = Number((rule.formula1 || '').replace(/^=/, '')); const second = Number((rule.formula2 || '').replace(/^=/, ''))
+  if (!Number.isFinite(current) || !Number.isFinite(first)) return false
+  if (['between', 'notBetween'].includes(rule.operator || '') && !Number.isFinite(second)) return false
+  if (rule.operator === 'between') return current >= first && current <= second
+  if (rule.operator === 'notBetween') return current < first || current > second
+  if (rule.operator === 'equal') return current === first
+  if (rule.operator === 'notEqual') return current !== first
+  if (rule.operator === 'lessThan') return current < first
+  if (rule.operator === 'lessThanOrEqual') return current <= first
+  if (rule.operator === 'greaterThan') return current > first
+  if (rule.operator === 'greaterThanOrEqual') return current >= first
+  return false
+}
+const conditionalIconAt = (row: number, column: number) => {
+  for (const rule of conditionalFormatsAt(row, column)) {
+    if (!rule.editable) continue
+    if (rule.kind === 'iconSet') {
+      const visual = iconSetVisual(rule, cellAt(row, column).value)
+      if (visual) return visual
+    }
+    if (conditionalRuleMatches(rule, row, column) && rule.stopIfTrue) return undefined
+  }
+  return undefined
+}
+const conditionalIconSymbol = (row: number, column: number) => conditionalIconAt(row, column)?.symbol || ''
+const conditionalIconColor = (row: number, column: number) => conditionalIconAt(row, column)?.color || 'currentColor'
+const conditionalIconHidesValue = (row: number, column: number) => conditionalIconAt(row, column)?.showValue === false
+const conditionalCellStyle = (row: number, column: number): CSSProperties => {
+  const result = {} as CSSProperties & Record<string, string>
+  for (const rule of conditionalFormatsAt(row, column)) {
+    if (!conditionalRuleMatches(rule, row, column)) continue
+    const scaleFill = rule.kind === 'colorScale' ? colorScaleFill(rule, cellAt(row, column).value) : undefined
+    const barStyle = rule.kind === 'dataBar' ? dataBarStyle(rule, cellAt(row, column).value) : undefined
+    if (scaleFill || rule.style.fillColor) result['--cell-fill'] = scaleFill || rule.style.fillColor!
+    if (barStyle?.backgroundImage) result.backgroundImage = barStyle.backgroundImage
+    if (barStyle && rule.dataBar?.showValue === false) result.color = 'transparent'
+    if (rule.style.fontColor) result.color = rule.style.fontColor
+    if (rule.style.bold) result.fontWeight = '700'
+    if (rule.stopIfTrue) break
+  }
+  return result
+}
 const validationLabel = (validation: WorkbookDataValidation) => {
   if (validation.kind === 'list') return `列表 ${validation.formula1 || ''}`
   if (validation.kind === 'whole') return `整数 ${validation.operator || 'between'} ${validation.formula1 || ''}${validation.formula2 ? `～${validation.formula2}` : ''}`
   if (validation.kind === 'decimal') return `数值 ${validation.operator || 'between'} ${validation.formula1 || ''}${validation.formula2 ? `～${validation.formula2}` : ''}`
   if (validation.kind === 'textLength') return `文本长度 ${validation.operator || 'between'}`
+  if (validation.kind === 'custom') return `自定义公式 ${validation.formula1 || ''}`
   return validation.kind
 }
 const tableSelection = computed(() => {
@@ -552,9 +891,9 @@ const selectedTable = computed(() => {
 })
 const activeDataRegion = computed(() => {
   const table = selectedTable.value || sheetInfo.value?.tables[0]
-  if (table) return { range: table.range, label: `Table · ${table.displayName}`, columns: table.columns }
+  if (table) return { range: table.range, label: `Table · ${table.displayName}`, columns: table.columns, target: 'table' as const, tableName: table.displayName, filterState: table.filterState }
   const range = sheetInfo.value?.autoFilter
-  return range ? { range, label: '自动筛选区域', columns: [] as string[] } : undefined
+  return range ? { range, label: '自动筛选区域', columns: [] as string[], target: 'worksheet' as const, tableName: undefined, filterState: sheetInfo.value?.autoFilterState || { editable: true } } : undefined
 })
 const activeDataColumns = computed(() => {
   const region = activeDataRegion.value
@@ -563,6 +902,20 @@ const activeDataColumns = computed(() => {
     const index = region.range.left + offset
     return { index, label: region.columns[offset] || cellAt(region.range.top, index).value || columnLabel(index) }
   })
+})
+const activeDataRegionStateKey = computed(() => {
+  const region = activeDataRegion.value
+  if (!region) return ''
+  const state = region.filterState
+  return [activeSheet.value, region.target, region.tableName || '', region.range.top, region.range.bottom, region.range.left, region.range.right, state.filterColumn ?? '', state.query ?? '', state.sortColumn ?? '', state.sortDirection ?? '', state.editable].join('|')
+})
+watch(activeDataRegionStateKey, () => {
+  const state = activeDataRegion.value?.filterState
+  filterColumn.value = state?.filterColumn ?? -1
+  filterQuery.value = state?.query ?? ''
+  sortColumn.value = state?.sortColumn ?? -1
+  sortDirection.value = state?.sortDirection || 'asc'
+  dataViewPosition.value = -1
 })
 const dataViewRows = computed(() => {
   const region = activeDataRegion.value
@@ -756,9 +1109,33 @@ const visibleRows = computed(() => {
   for (let row = 0; row < Math.min(effectiveFreeze.value.rows, total); row += 1) rows.add(row)
   return Array.from(rows).sort((left, right) => left - right).map(index => ({ index }))
 })
+const conditionalDependencyPageOffsets = computed(() => {
+  void loadedRows.value.size
+  const offsets = new Set<number>()
+  for (const rule of sheetInfo.value?.conditionalFormats || []) {
+    if (!rule.editable || rule.kind !== 'expression') continue
+    const expression = parseConditionalExpression(rule.formula1 || '')
+    const anchor = rule.ranges[0]
+    if (!expression || !anchor) continue
+    const references = conditionalExpressionReferences(expression)
+    for (const target of visibleRows.value) {
+      if (!rule.ranges.some(range => target.index >= range.top && target.index <= range.bottom)) continue
+      for (const reference of references) {
+        const row = reference.absoluteRow ? reference.row : reference.row + target.index - anchor.top
+        if (row < 0 || row >= (sheetInfo.value?.totalRows || 0)) continue
+        const offset = Math.floor(row / PAGE_ROWS) * PAGE_ROWS
+        if (!loadedPages.has(offset)) offsets.add(offset)
+      }
+    }
+  }
+  return Array.from(offsets).sort((left, right) => left - right).slice(0, 16)
+})
 const navigableDefinedNames = computed(() => (workbook.value?.definedNames || [])
   .map((item, index) => ({ item, index, label: `${item.scope ? `${item.scope}!` : ''}${item.name}` }))
   .filter(({ item }) => !item.hidden && item.reference && workbook.value?.sheets.includes(item.reference.sheet)))
+const selectedDefinedName = computed(() => selectedDefinedNameIndex.value >= 0 ? workbook.value?.definedNames[selectedDefinedNameIndex.value] : undefined)
+const definedNameSelection = computed(() => selectionAreas.value.length === 1 ? selectionBounds.value : null)
+const canEditDefinedNames = computed(() => Boolean(workbook.value && !workbook.value.protection.lockStructure && !saving.value && !updatingStructure.value && !dirtyCount.value))
 const rowLayoutStyle = (row: number): CSSProperties => row < effectiveFreeze.value.rows
   ? { position: 'sticky', top: `${38 + rowOffset(row)}px`, transform: 'none', height: `${rowPixelHeight(row)}px`, zIndex: 16 }
   : { transform: `translateY(${rowOffset(row)}px)`, height: `${rowPixelHeight(row)}px` }
@@ -1220,6 +1597,449 @@ const restoreTableSelection = async (sheet: string, area: WorkbookMergeRange) =>
   setSelectionFocus(area.top, area.left)
   await recalculateLoadedFormulas(false)
 }
+const selectedDrawing = computed(() => sheetInfo.value?.drawings.find(drawing => drawing.id === selectedDrawingId.value))
+const selectedChartSeries = computed(() => selectedDrawing.value?.chart?.series.find(series => series.index === selectedChartSeriesIndex.value))
+const canEditDrawing = computed(() => Boolean(selectedDrawing.value?.editable && workbook.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
+const canApplyDrawingSelection = computed(() => Boolean(canEditDrawing.value && selectionAreas.value.length === 1 && selectionBounds.value))
+const canEditChartTitle = computed(() => Boolean(canEditDrawing.value && selectedDrawing.value?.chart?.titleEditable))
+const canEditChartSeries = computed(() => Boolean(canEditDrawing.value && selectedChartSeries.value?.editable))
+const commitTableLifecycleChange = async (change: WorkbookTableChange, area: WorkbookMergeRange, success: string) => {
+  if (!workbook.value || updatingStructure.value) return
+  if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑 Table')
+  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
+  updatingStructure.value = true
+  const sheet = activeSheet.value
+  try {
+    const document = await invoke<WorkbookDocument>('update_workbook_table', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: { expectedSignature: workbook.value.signature, change },
+    })
+    workbook.value = document
+    undoStack.value = []
+    redoStack.value = []
+    await restoreTableSelection(sheet, area)
+    message.success(success)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
+}
+const promptDataValidationRule = (existing: WorkbookDataValidation | undefined, ranges: WorkbookMergeRange[]): WorkbookDataValidation | null => {
+  const kindInput = window.prompt('规则类型：list（列表）、whole（整数）、decimal（小数）、textLength（文本长度）或 custom（自定义公式）', existing?.kind || 'list')
+  if (kindInput === null) return null
+  const kindAliases: Record<string, string> = { list: 'list', '列表': 'list', whole: 'whole', '整数': 'whole', decimal: 'decimal', '小数': 'decimal', textlength: 'textLength', '文本长度': 'textLength', custom: 'custom', '自定义': 'custom', '自定义公式': 'custom' }
+  const kind = kindAliases[kindInput.trim().toLocaleLowerCase()] || kindAliases[kindInput.trim()]
+  if (!kind) { message.error('不支持的数据验证类型'); return null }
+  let operator: string | undefined
+  if (['whole', 'decimal', 'textLength'].includes(kind)) {
+    const input = window.prompt('比较方式：between、notBetween、equal、notEqual、lessThan、lessThanOrEqual、greaterThan、greaterThanOrEqual', existing?.operator || 'between')
+    if (input === null) return null
+    operator = input.trim()
+    if (!['between', 'notBetween', 'equal', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual'].includes(operator)) {
+      message.error('不支持的比较方式'); return null
+    }
+  }
+  const formulaHint = kind === 'list'
+    ? '输入列表来源：字面量示例 "是,否"，或区域公式示例 Options!$A$1:$A$10'
+    : kind === 'custom'
+      ? '输入自定义公式，例如 A1>0；公式按选区左上角作为相对引用基准'
+      : '输入第一个比较值或公式'
+  const formula1 = window.prompt(formulaHint, existing?.formula1 || (kind === 'list' ? '"是,否"' : kind === 'custom' ? `${columnLabel(ranges[0].left)}${ranges[0].top + 1}<>""` : '0'))?.trim()
+  if (!formula1) return null
+  let formula2: string | undefined
+  if (operator === 'between' || operator === 'notBetween') {
+    const input = window.prompt('输入第二个比较值或公式', existing?.formula2 || '100')
+    if (input === null) return null
+    formula2 = input.trim()
+    if (!formula2) return null
+  }
+  const error = window.prompt('输入错误提示；留空表示仅保存规则，不阻止当前编辑器中的输入', existing?.error || '输入不符合此单元格的数据验证规则')
+  if (error === null) return null
+  const prompt = window.prompt('输入选中单元格时的提示；可以留空', existing?.prompt || '')
+  if (prompt === null) return null
+  return {
+    ranges: ranges.map(range => ({ ...range })),
+    kind,
+    operator,
+    formula1,
+    formula2,
+    allowBlank: existing?.allowBlank ?? true,
+    showErrorMessage: Boolean(error.trim()),
+    errorTitle: error.trim() ? (existing?.errorTitle || '输入无效') : undefined,
+    error: error.trim() || undefined,
+    promptTitle: prompt.trim() ? (existing?.promptTitle || '数据验证') : undefined,
+    prompt: prompt.trim() || undefined,
+  }
+}
+const commitDataValidationChange = async (change: WorkbookDataValidationChange, area: WorkbookMergeRange, success: string) => {
+  if (!workbook.value || updatingStructure.value) return
+  if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改数据验证')
+  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
+  updatingStructure.value = true
+  const sheet = activeSheet.value
+  try {
+    const document = await invoke<WorkbookDocument>('update_workbook_data_validation', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: { expectedSignature: workbook.value.signature, change },
+    })
+    workbook.value = document
+    undoStack.value = []
+    redoStack.value = []
+    await restoreTableSelection(sheet, area)
+    message.success(success)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
+}
+const editDataValidationRule = (action: 'create' | 'update') => {
+  commitFormulaInput()
+  const area = validationSelection.value
+  if (!area || !canEditDataValidation.value) return
+  const existing = action === 'update' ? selectedValidation.value : undefined
+  const index = action === 'update' ? selectedValidationIndex.value : -1
+  if (action === 'update' && (!existing || index < 0)) return void message.error('请选择一个已有数据验证规则')
+  const validation = promptDataValidationRule(existing, existing?.ranges || [{ ...area }])
+  if (!validation) return
+  void commitDataValidationChange({
+    sheet: activeSheet.value,
+    action,
+    validationIndex: action === 'update' ? index : undefined,
+    validation,
+  }, area, action === 'create' ? '已创建数据验证规则' : '已更新数据验证规则')
+}
+const applyValidationToSelection = () => {
+  const existing = selectedValidation.value
+  const index = selectedValidationIndex.value
+  const area = validationSelection.value
+  if (!existing || index < 0 || !area || !canEditDataValidation.value) return
+  void commitDataValidationChange({
+    sheet: activeSheet.value,
+    action: 'update',
+    validationIndex: index,
+    validation: { ...existing, ranges: [{ ...area }] },
+  }, area, '已把数据验证规则应用到当前选区')
+}
+const deleteDataValidationRule = () => {
+  const existing = selectedValidation.value
+  const index = selectedValidationIndex.value
+  const area = validationSelection.value
+  if (!existing || index < 0 || !area || !canEditDataValidation.value) return
+  dialog.warning({
+    title: '删除数据验证规则？',
+    content: '将从 XLSX 中删除当前单元格所属的整条验证规则；规则覆盖的其他单元格也会失去该规则，且不能通过当前撤销栈恢复。',
+    positiveText: '删除规则',
+    negativeText: '取消',
+    onPositiveClick: () => commitDataValidationChange({ sheet: activeSheet.value, action: 'delete', validationIndex: index }, area, '已删除数据验证规则'),
+  })
+}
+const CONDITIONAL_STYLE_PRESETS: Record<string, WorkbookConditionalFormatStyle> = {
+  red_fill: { fillColor: '#FFC7CE', fontColor: '#9C0006', bold: false },
+  yellow_fill: { fillColor: '#FFEB9C', fontColor: '#9C6500', bold: false },
+  green_fill: { fillColor: '#C6EFCE', fontColor: '#006100', bold: false },
+  red_text: { fontColor: '#C00000', bold: true },
+  green_text: { fontColor: '#008000', bold: true },
+}
+const colorScaleThresholdToken = (point: WorkbookConditionalColorScalePoint) => point.kind === 'min' || point.kind === 'max' ? point.kind : `${point.kind}:${point.value || ''}`
+const conditionalThresholdToken = (point: WorkbookConditionalThreshold) => point.kind === 'min' || point.kind === 'max' ? point.kind : `${point.kind}:${point.value || ''}`
+const parseColorScaleThresholds = (source: string, count: number): WorkbookConditionalColorScalePoint[] | null => {
+  const tokens = source.split(',').map(value => value.trim()).filter(Boolean)
+  if (tokens.length !== count) return null
+  const points: WorkbookConditionalColorScalePoint[] = []
+  for (const [index, token] of tokens.entries()) {
+    const lower = token.toLowerCase()
+    if (lower === 'min' || lower === 'max') {
+      if ((lower === 'min' && index !== 0) || (lower === 'max' && index + 1 !== count)) return null
+      points.push({ kind: lower, color: '' }); continue
+    }
+    const match = lower.match(/^(num|percent|percentile):(.+)$/)
+    const kind = match?.[1] || 'num'
+    const valueSource = match?.[2] || token
+    const value = Number(valueSource)
+    if (!Number.isFinite(value) || (kind !== 'num' && (value < 0 || value > 100))) return null
+    points.push({ kind, value: String(value), color: '', resolvedValue: kind === 'num' ? String(value) : undefined })
+  }
+  const fixed = points.every(point => point.kind === 'num')
+  if (fixed && points.some((point, index) => index > 0 && Number(points[index - 1].value) >= Number(point.value))) return null
+  return points
+}
+const parseDataBarThresholds = (source: string): [WorkbookConditionalThreshold, WorkbookConditionalThreshold] | null => {
+  const points = parseColorScaleThresholds(source, 2)
+  if (!points) return null
+  return points.map(({ kind, value, resolvedValue }) => ({ kind, value, resolvedValue })) as [WorkbookConditionalThreshold, WorkbookConditionalThreshold]
+}
+const STANDARD_ICON_SET_COUNTS: Record<string, number> = {
+  '3Arrows': 3, '3ArrowsGray': 3, '3Flags': 3, '3TrafficLights1': 3, '3TrafficLights2': 3, '3Signs': 3, '3Symbols': 3, '3Symbols2': 3,
+  '4Arrows': 4, '4ArrowsGray': 4, '4RedToBlack': 4, '4Rating': 4, '4TrafficLights': 4,
+  '5Arrows': 5, '5ArrowsGray': 5, '5Rating': 5, '5Quarters': 5,
+}
+const iconThresholdToken = (point: WorkbookConditionalIconThreshold) => `${point.inclusive ? '' : '>'}${point.kind}:${point.value || ''}`
+const parseIconThresholds = (source: string, count: number): WorkbookConditionalIconThreshold[] | null => {
+  const tokens = source.split(',').map(value => value.trim()).filter(Boolean)
+  if (tokens.length !== count) return null
+  const thresholds: WorkbookConditionalIconThreshold[] = []
+  for (const token of tokens) {
+    const inclusive = !token.startsWith('>')
+    const match = token.replace(/^>/, '').toLowerCase().match(/^(num|percent|percentile):(.+)$/)
+    if (!match) return null
+    const kind = match[1]
+    const value = Number(match[2])
+    if (!Number.isFinite(value) || (kind !== 'num' && (value < 0 || value > 100))) return null
+    thresholds.push({ kind, value: String(value), resolvedValue: kind === 'num' ? String(value) : undefined, inclusive })
+  }
+  if (thresholds[0].kind !== 'percent' || thresholds[0].value !== '0' || !thresholds[0].inclusive) return null
+  if (thresholds.every(point => point.kind === thresholds[0].kind) && thresholds.some((point, index) => index > 0 && Number(thresholds[index - 1].value) > Number(point.value))) return null
+  return thresholds
+}
+const promptConditionalFormatRule = (existing: WorkbookConditionalFormatRule | undefined, ranges: WorkbookMergeRange[]): WorkbookConditionalFormatRule | null => {
+  const kind = window.prompt('规则类型：cellIs（单元格数值）、expression（引用表达式）、colorScale（色阶）、dataBar（数据条）或 iconSet（图标集）', existing?.kind || 'cellIs')?.trim()
+  if (!kind) return null
+  if (!['cellIs', 'expression', 'colorScale', 'dataBar', 'iconSet'].includes(kind)) { message.error('规则类型必须是 cellIs、expression、colorScale、dataBar 或 iconSet'); return null }
+  let operator: string | undefined
+  let formula1: string | undefined
+  let formula2: string | undefined
+  let colorScale: WorkbookConditionalColorScale | undefined
+  let dataBar: WorkbookConditionalDataBar | undefined
+  let iconSet: WorkbookConditionalIconSet | undefined
+  if (kind === 'colorScale') {
+    const existingPoints = existing?.kind === 'colorScale' ? existing.colorScale?.points : undefined
+    const countSource = window.prompt('色阶点数：2 或 3', String(existingPoints?.length || 3))?.trim()
+    const count = Number(countSource)
+    if (!matchesColorScaleLength(count)) { message.error('色阶点数必须是 2 或 3'); return null }
+    const thresholdSource = window.prompt(`输入 ${count} 个阈值：min、max、num:数值、percent:0-100 或 percentile:0-100，以逗号分隔`, existingPoints?.map(colorScaleThresholdToken).join(',') || (count === 2 ? 'min,max' : 'min,percentile:50,max'))?.trim()
+    const thresholds = thresholdSource ? parseColorScaleThresholds(thresholdSource, count) : null
+    if (!thresholds) { message.error('色阶阈值格式或顺序无效'); return null }
+    const colorSource = window.prompt(`输入 ${count} 个 #RRGGBB 颜色，以逗号分隔`, existingPoints?.map(point => point.color).join(',') || (count === 2 ? '#F8696B,#63BE7B' : '#F8696B,#FFEB84,#63BE7B'))?.trim()
+    const colors = colorSource?.split(',').map(value => value.trim().toUpperCase()) || []
+    if (colors.length !== count || colors.some(value => !/^#[0-9A-F]{6}$/.test(value))) { message.error('色阶颜色必须使用 #RRGGBB'); return null }
+    colorScale = { points: thresholds.map((point, index) => ({ ...point, color: colors[index] })) }
+  } else if (kind === 'dataBar') {
+    const existingBar = existing?.kind === 'dataBar' ? existing.dataBar : undefined
+    const thresholdSource = window.prompt('输入两个阈值：min、max、num:数值、percent:0-100 或 percentile:0-100，以逗号分隔；负数固定阈值会自动显示正负轴', existingBar ? `${conditionalThresholdToken(existingBar.minimum)},${conditionalThresholdToken(existingBar.maximum)}` : 'min,max')?.trim()
+    const thresholds = thresholdSource ? parseDataBarThresholds(thresholdSource) : null
+    if (!thresholds) { message.error('数据条阈值格式或顺序无效'); return null }
+    const color = window.prompt('数据条颜色（#RRGGBB）', existingBar?.color || '#638EC6')?.trim().toUpperCase()
+    if (!color || !/^#[0-9A-F]{6}$/.test(color)) { message.error('数据条颜色必须使用 #RRGGBB'); return null }
+    const minLength = Number(window.prompt('最短数据条长度（0-100）', String(existingBar?.minLength ?? 10))?.trim())
+    const maxLength = Number(window.prompt('最长数据条长度（0-100）', String(existingBar?.maxLength ?? 90))?.trim())
+    if (!Number.isInteger(minLength) || !Number.isInteger(maxLength) || minLength < 0 || minLength > maxLength || maxLength > 100) { message.error('数据条长度必须满足 0 ≤ 最短长度 ≤ 最长长度 ≤ 100'); return null }
+    const showValueSource = window.prompt('是否显示单元格数值：true 或 false', String(existingBar?.showValue ?? true))?.trim().toLowerCase()
+    if (!['true', 'false'].includes(showValueSource || '')) { message.error('是否显示数值必须填写 true 或 false'); return null }
+    dataBar = {
+      minimum: thresholds[0],
+      maximum: thresholds[1],
+      color,
+      showValue: showValueSource === 'true',
+      minLength,
+      maxLength,
+    }
+  } else if (kind === 'iconSet') {
+    const existingSet = existing?.kind === 'iconSet' ? existing.iconSet : undefined
+    const iconSetName = window.prompt(`标准图标集：${Object.keys(STANDARD_ICON_SET_COUNTS).join('、')}`, existingSet?.iconSet || '3TrafficLights1')?.trim()
+    const count = iconSetName ? STANDARD_ICON_SET_COUNTS[iconSetName] : undefined
+    if (!iconSetName || !count) { message.error('请选择受支持的标准图标集'); return null }
+    const defaults = count === 3 ? 'percent:0,percent:33,percent:67' : count === 4 ? 'percent:0,percent:25,percent:50,percent:75' : 'percent:0,percent:20,percent:40,percent:60,percent:80'
+    const thresholdSource = window.prompt(`输入 ${count} 个 num/percent/percentile 阈值；首项必须为 percent:0，在阈值前加 > 表示严格大于`, existingSet?.thresholds.map(iconThresholdToken).join(',') || defaults)?.trim()
+    const thresholds = thresholdSource ? parseIconThresholds(thresholdSource, count) : null
+    if (!thresholds) { message.error('图标阈值格式、数量或顺序无效'); return null }
+    const reverseSource = window.prompt('是否反转图标顺序：true 或 false', String(existingSet?.reverse ?? false))?.trim().toLowerCase()
+    const showValueSource = window.prompt('是否同时显示单元格数值：true 或 false', String(existingSet?.showValue ?? true))?.trim().toLowerCase()
+    if (!['true', 'false'].includes(reverseSource || '') || !['true', 'false'].includes(showValueSource || '')) { message.error('图标选项必须填写 true 或 false'); return null }
+    iconSet = { iconSet: iconSetName, thresholds, reverse: reverseSource === 'true', showValue: showValueSource === 'true' }
+  } else if (kind === 'expression') {
+    formula1 = window.prompt('输入安全条件表达式，例如 AND($D2="逾期",E2<100)；支持 AND、OR、NOT、多 A1 引用与字面量比较，不支持区域、跨 Sheet 或其他函数', existing?.kind === 'expression' ? existing.formula1 || '' : `${columnLabel(ranges[0]?.left || 0)}${(ranges[0]?.top || 0) + 1}>0`)?.trim()
+    if (!formula1 || !parseConditionalExpression(formula1)) { message.error('表达式不在安全子集内：仅支持 AND、OR、NOT 和 A1 引用/字面量比较'); return null }
+  } else {
+    operator = window.prompt('比较方式：between、notBetween、equal、notEqual、lessThan、lessThanOrEqual、greaterThan、greaterThanOrEqual', existing?.kind === 'cellIs' ? existing.operator || 'greaterThan' : 'greaterThan')?.trim()
+    if (!operator) return null
+    if (!['between', 'notBetween', 'equal', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual'].includes(operator)) {
+      message.error('不支持的条件格式比较方式'); return null
+    }
+    formula1 = window.prompt('输入第一个数字阈值', existing?.kind === 'cellIs' ? existing.formula1 || '0' : '0')?.trim()
+    if (!formula1 || !Number.isFinite(Number(formula1.replace(/^=/, '')))) { message.error('阈值必须是有限数字'); return null }
+    if (operator === 'between' || operator === 'notBetween') {
+      formula2 = window.prompt('输入第二个数字阈值', existing?.kind === 'cellIs' ? existing.formula2 || '100' : '100')?.trim()
+      if (!formula2 || !Number.isFinite(Number(formula2.replace(/^=/, '')))) { message.error('第二个阈值必须是有限数字'); return null }
+    }
+  }
+  let style: WorkbookConditionalFormatStyle = { bold: false }
+  if (!['colorScale', 'dataBar', 'iconSet'].includes(kind)) {
+    const preset = window.prompt('视觉样式：red_fill、yellow_fill、green_fill、red_text 或 green_text', 'yellow_fill')?.trim()
+    if (!preset) return null
+    const selected = CONDITIONAL_STYLE_PRESETS[preset]
+    if (!selected) { message.error('不支持的条件格式视觉样式'); return null }
+    style = { ...selected }
+  }
+  let stopIfTrue = false
+  if (!['colorScale', 'dataBar', 'iconSet'].includes(kind)) {
+    const stopSource = window.prompt('规则命中后是否停止执行后续规则：true 或 false', String(existing?.stopIfTrue ?? true))?.trim().toLowerCase()
+    if (!['true', 'false'].includes(stopSource || '')) { message.error('停止后续规则必须填写 true 或 false'); return null }
+    stopIfTrue = stopSource === 'true'
+  }
+  return {
+    groupIndex: existing?.groupIndex ?? 0,
+    ruleIndex: 0,
+    ranges: ranges.map(range => ({ ...range })),
+    kind,
+    operator,
+    formula1,
+    formula2,
+    priority: existing?.priority || 0,
+    stopIfTrue,
+    style,
+    colorScale,
+    dataBar,
+    iconSet,
+    editable: true,
+  }
+}
+const commitConditionalFormatChange = async (change: WorkbookConditionalFormatChange, area: WorkbookMergeRange, success: string) => {
+  if (!workbook.value || updatingStructure.value) return
+  if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改条件格式')
+  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
+  updatingStructure.value = true
+  const sheet = activeSheet.value
+  try {
+    const document = await invoke<WorkbookDocument>('update_workbook_conditional_format', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: { expectedSignature: workbook.value.signature, change },
+    })
+    workbook.value = document
+    undoStack.value = []
+    redoStack.value = []
+    await restoreTableSelection(sheet, area)
+    message.success(success)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
+}
+const editConditionalFormatRule = (action: 'create' | 'update') => {
+  commitFormulaInput()
+  const area = conditionalSelection.value
+  if (!area || !canEditConditionalFormat.value) return
+  const existing = action === 'update' ? selectedConditionalFormat.value : undefined
+  if (action === 'update' && !existing?.editable) return void message.error('当前条件格式为复杂只读规则')
+  const rule = promptConditionalFormatRule(existing, existing?.ranges || [{ ...area }])
+  if (!rule) return
+  void commitConditionalFormatChange({ sheet: activeSheet.value, action, groupIndex: existing?.groupIndex, ruleIndex: existing?.ruleIndex, rule }, area, action === 'create' ? '已创建条件格式规则' : '已更新条件格式规则')
+}
+const applyConditionalFormatToSelection = () => {
+  const existing = selectedConditionalFormat.value
+  const area = conditionalSelection.value
+  if (!existing?.editable || !area || !canEditConditionalFormat.value) return
+  if (selectedConditionalGroupSize.value > 1) return void message.error('同范围多规则组共享应用范围，当前不能单独改变其中一条规则的选区')
+  void commitConditionalFormatChange({ sheet: activeSheet.value, action: 'update', groupIndex: existing.groupIndex, ruleIndex: existing.ruleIndex, rule: { ...existing, ranges: [{ ...area }] } }, area, '已把条件格式应用到当前选区')
+}
+const moveConditionalFormatRule = (action: 'move_up' | 'move_down') => {
+  const existing = selectedConditionalFormat.value
+  const area = conditionalSelection.value
+  if (!existing?.editable || !area || !canEditConditionalFormat.value) return
+  selectedConditionalRuleKey.value = conditionalRuleKey(existing)
+  void commitConditionalFormatChange(
+    { sheet: activeSheet.value, action, groupIndex: existing.groupIndex, ruleIndex: existing.ruleIndex },
+    area,
+    action === 'move_up' ? '已提高条件格式优先级' : '已降低条件格式优先级',
+  )
+}
+const splitConditionalFormatRule = () => {
+  const existing = selectedConditionalFormat.value
+  const area = conditionalSelection.value
+  if (!existing?.editable || !area || !canSplitConditionalFormat.value) return
+  dialog.warning({
+    title: '拆分当前条件格式规则？',
+    content: `当前规则将离开共享范围组，并单独应用到 ${columnLabel(area.left)}${area.top + 1}:${columnLabel(area.right)}${area.bottom + 1}。其他组内规则保持原范围。`,
+    positiveText: '拆分规则',
+    negativeText: '取消',
+    onPositiveClick: () => commitConditionalFormatChange({
+      sheet: activeSheet.value,
+      action: 'split',
+      groupIndex: existing.groupIndex,
+      ruleIndex: existing.ruleIndex,
+      rule: { ...existing, ranges: [{ ...area }] },
+    }, area, '已拆分条件格式规则'),
+  })
+}
+const mergeConditionalFormatRule = () => {
+  const existing = selectedConditionalFormat.value
+  const area = conditionalSelection.value
+  if (!existing?.editable || !area || !conditionalMergeCandidate.value || !canEditConditionalFormat.value) return
+  dialog.warning({
+    title: '合并同范围条件格式规则？',
+    content: '当前独立规则将并入范围完全相同的规则组；公式、样式、优先级和停止语义保持不变。',
+    positiveText: '合并规则',
+    negativeText: '取消',
+    onPositiveClick: () => commitConditionalFormatChange({
+      sheet: activeSheet.value,
+      action: 'merge',
+      groupIndex: existing.groupIndex,
+      ruleIndex: existing.ruleIndex,
+    }, area, '已合并同范围条件格式规则'),
+  })
+}
+const deleteConditionalFormatRule = () => {
+  const existing = selectedConditionalFormat.value
+  const area = conditionalSelection.value
+  if (!existing?.editable || !area || !canEditConditionalFormat.value) return
+  dialog.warning({
+    title: '删除条件格式规则？',
+    content: '将删除当前单元格命中的整条条件格式规则，且不能通过当前撤销栈恢复。',
+    positiveText: '删除规则',
+    negativeText: '取消',
+    onPositiveClick: () => commitConditionalFormatChange({ sheet: activeSheet.value, action: 'delete', groupIndex: existing.groupIndex, ruleIndex: existing.ruleIndex }, area, '已删除条件格式规则'),
+  })
+}
+const renameSelectedTable = () => {
+  commitFormulaInput()
+  const table = selectedTable.value
+  if (!table) return
+  const newTableName = window.prompt('输入新的 Table 名称', table.displayName)?.trim()
+  if (!newTableName || newTableName === table.displayName) return
+  void commitTableLifecycleChange({
+    sheet: activeSheet.value,
+    action: 'rename',
+    tableName: table.displayName,
+    newTableName,
+    range: { ...table.range },
+  }, table.range, `已将 Table 重命名为 ${newTableName}`)
+}
+const setSelectedTableStyle = (styleName: string) => {
+  const table = selectedTable.value
+  if (!table || styleName === table.styleName) return
+  void commitTableLifecycleChange({
+    sheet: activeSheet.value,
+    action: 'set_style',
+    tableName: table.displayName,
+    styleName,
+    range: { ...table.range },
+  }, table.range, `已应用 ${styleName}`)
+}
+type TableStyleOption = 'showFirstColumn' | 'showLastColumn' | 'showRowStripes' | 'showColumnStripes'
+const setSelectedTableStyleOption = (option: TableStyleOption, value: boolean) => {
+  const table = selectedTable.value
+  if (!table) return
+  void commitTableLifecycleChange({
+    sheet: activeSheet.value,
+    action: 'set_style',
+    tableName: table.displayName,
+    [option]: value,
+    range: { ...table.range },
+  }, table.range, '已更新 Table 样式选项')
+}
+const removeSelectedTable = (action: 'convert_to_range' | 'delete') => {
+  commitFormulaInput()
+  const table = selectedTable.value
+  if (!table) return
+  dialog.warning({
+    title: action === 'convert_to_range' ? '转换为普通区域？' : '删除 Table？',
+    content: `${action === 'convert_to_range' ? '转换' : '删除'}后将移除 ${table.displayName} 的 Table 定义、样式和筛选入口，但保留当前单元格数据。此操作保存后不能通过当前撤销栈恢复。`,
+    positiveText: action === 'convert_to_range' ? '转换' : '删除 Table',
+    negativeText: '取消',
+    onPositiveClick: () => commitTableLifecycleChange({
+      sheet: activeSheet.value,
+      action,
+      tableName: table.displayName,
+      range: { ...table.range },
+    }, table.range, action === 'convert_to_range' ? '已转换为普通区域' : '已删除 Table 定义'),
+  })
+}
 const editSelectedTable = async (action: 'create' | 'resize') => {
   commitFormulaInput()
   const area = tableSelection.value
@@ -1557,11 +2377,37 @@ const loadPage = async (offset: number) => {
     if (current === generation) { pageLoading.value = false; if (!loadedPages.has(wantedOffset)) void loadPage(wantedOffset) }
   }
 }
+const loadConditionalDependencyPages = async (offsets: number[]) => {
+  offsets.forEach(offset => { if (!loadedPages.has(offset)) pendingConditionalDependencyPages.add(offset) })
+  if (conditionalDependencyLoading || !pendingConditionalDependencyPages.size || !activeSheet.value || !workbook.value) return
+  conditionalDependencyLoading = true
+  const current = generation
+  const sheet = activeSheet.value
+  try {
+    while (pendingConditionalDependencyPages.size && current === generation && sheet === activeSheet.value) {
+      const offset = pendingConditionalDependencyPages.values().next().value as number
+      pendingConditionalDependencyPages.delete(offset)
+      if (loadedPages.has(offset)) continue
+      const page = await invoke<WorkbookSheetPage>('read_workbook_sheet', { libraryRoot: store.libraryPath, path: workbookPath.value, sheet, rowOffset: offset, rowLimit: PAGE_ROWS })
+      if (current !== generation || sheet !== activeSheet.value) return
+      const next = new Map(loadedRows.value)
+      page.rows.forEach((row, index) => next.set(page.rowOffset + index, row))
+      loadedRows.value = next
+      loadedPages.add(page.rowOffset)
+    }
+  } catch (cause) {
+    if (current === generation) message.warning(`条件格式依赖读取失败：${String(cause).replace(/^Error:\s*/, '')}`)
+  } finally {
+    conditionalDependencyLoading = false
+    if (current === generation && pendingConditionalDependencyPages.size) void loadConditionalDependencyPages([])
+  }
+}
 const selectSheet = async (sheet: string) => {
   if (!sheet || (sheet === activeSheet.value && sheetInfo.value)) return
   generation += 1
   activeSheet.value = sheet
   selectedCell.value = null
+  selectedDrawingId.value = ''
   selectionAnchor.value = null
   selectionAreas.value = []
   invalidateCalculation()
@@ -1578,6 +2424,7 @@ const selectSheet = async (sheet: string) => {
   sortColumn.value = -1
   dataViewPosition.value = -1
   loadedPages.clear()
+  pendingConditionalDependencyPages.clear()
   scrollTop.value = 0
   scrollRef.value?.scrollTo({ top: 0, left: 0 })
   await loadPage(0)
@@ -1603,6 +2450,53 @@ const prepareDataView = async () => {
     }
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { if (current === generation) dataViewLoading.value = false }
+}
+const commitPersistedDataView = async (action: 'apply' | 'clear') => {
+  const region = activeDataRegion.value
+  if (!region || !workbook.value || updatingStructure.value) return
+  if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改筛选条件')
+  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
+  const query = filterQuery.value.trim()
+  if (action === 'apply' && query && filterColumn.value < 0) return void message.error('写入筛选条件前请选择一个筛选字段')
+  if (action === 'apply' && !query && sortColumn.value < 0) return void message.error('请设置筛选文本或排序字段')
+  if (action === 'apply' && !region.filterState.editable) return void message.error('当前区域包含暂不支持的高级或多列筛选条件，只能清除后重新设置')
+  const change: WorkbookFilterChange = {
+    sheet: activeSheet.value,
+    target: region.target,
+    action,
+    tableName: region.tableName,
+    range: { ...region.range },
+    filterColumn: action === 'apply' && query ? filterColumn.value : undefined,
+    query: action === 'apply' && query ? query : undefined,
+    sortColumn: action === 'apply' && sortColumn.value >= 0 ? sortColumn.value : undefined,
+    sortDirection: action === 'apply' && sortColumn.value >= 0 ? sortDirection.value : undefined,
+  }
+  updatingStructure.value = true
+  const sheet = activeSheet.value
+  try {
+    const document = await invoke<WorkbookDocument>('update_workbook_filter', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: { expectedSignature: workbook.value.signature, change },
+    })
+    workbook.value = document
+    undoStack.value = []
+    redoStack.value = []
+    await restoreTableSelection(sheet, region.range)
+    message.success(action === 'apply' ? '筛选与排序条件已写入 XLSX' : '筛选与排序条件已清除')
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
+}
+const persistDataView = (action: 'apply' | 'clear') => {
+  commitFormulaInput()
+  if (action === 'apply') return void commitPersistedDataView(action)
+  dialog.warning({
+    title: '清除筛选与排序条件？',
+    content: '将清除当前 Table 或自动筛选区域保存在 XLSX 中的全部筛选与排序条件，但不会删除数据或筛选区域。复杂条件也会被清除，保存后不能通过当前撤销栈恢复。',
+    positiveText: '清除条件',
+    negativeText: '取消',
+    onPositiveClick: () => commitPersistedDataView(action),
+  })
 }
 const navigateDataResult = async (direction: number) => {
   await prepareDataView()
@@ -1642,11 +2536,95 @@ const setFreezePane = () => {
   void applyFreezePane(selectedCell.value.row, selectedCell.value.column)
 }
 const clearFreezePane = () => void applyFreezePane(0, 0)
+const promptDefinedNameScope = (): string | undefined | null => {
+  const input = window.prompt('输入作用域：填写“工作簿”创建全局名称，或填写一个工作表名称创建局部名称', '工作簿')
+  if (input === null) return null
+  const scope = input.trim()
+  if (!scope || scope === '工作簿') return undefined
+  if (!workbook.value?.sheets.some(sheet => sheet.toLocaleLowerCase() === scope.toLocaleLowerCase())) {
+    message.error(`工作表不存在：${scope}`)
+    return null
+  }
+  return workbook.value.sheets.find(sheet => sheet.toLocaleLowerCase() === scope.toLocaleLowerCase())
+}
+const commitDefinedNameChange = async (change: WorkbookDefinedNameChange, success: string, selectedName?: string) => {
+  if (!workbook.value || updatingStructure.value) return
+  if (workbook.value.protection.lockStructure) return void message.error('工作簿结构受保护，不能修改命名区域')
+  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
+  updatingStructure.value = true
+  try {
+    const document = await invoke<WorkbookDocument>('update_workbook_defined_name', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: { expectedSignature: workbook.value.signature, change },
+    })
+    workbook.value = document
+    undoStack.value = []
+    redoStack.value = []
+    const targetName = selectedName || change.newName || change.name
+    selectedDefinedNameIndex.value = document.definedNames.findIndex(item => item.name.toLocaleLowerCase() === targetName.toLocaleLowerCase() && (item.scope || '').toLocaleLowerCase() === (change.scope || '').toLocaleLowerCase())
+    message.success(success)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
+}
+const createDefinedName = () => {
+  const area = definedNameSelection.value
+  if (!area || !canEditDefinedNames.value) return
+  const name = window.prompt('输入命名区域名称', `Range${(workbook.value?.definedNames.filter(item => !item.hidden).length || 0) + 1}`)?.trim()
+  if (!name) return
+  const scope = promptDefinedNameScope()
+  if (scope === null) return
+  void commitDefinedNameChange({
+    action: 'create',
+    name,
+    scope,
+    targetSheet: activeSheet.value,
+    range: { ...area },
+  }, `已创建命名区域 ${name}`)
+}
+const renameDefinedName = () => {
+  const item = selectedDefinedName.value
+  if (!item || !canEditDefinedNames.value) return
+  const newName = window.prompt('输入新的命名区域名称', item.name)?.trim()
+  if (!newName || newName === item.name) return
+  void commitDefinedNameChange({
+    action: 'rename',
+    name: item.name,
+    newName,
+    scope: item.scope,
+  }, `已将命名区域重命名为 ${newName}`, newName)
+}
+const updateDefinedNameRange = () => {
+  const item = selectedDefinedName.value
+  const area = definedNameSelection.value
+  if (!item || !area || !canEditDefinedNames.value) return
+  void commitDefinedNameChange({
+    action: 'update_range',
+    name: item.name,
+    scope: item.scope,
+    targetSheet: activeSheet.value,
+    range: { ...area },
+  }, `已更新 ${item.name} 的引用`, item.name)
+}
+const deleteDefinedName = () => {
+  const item = selectedDefinedName.value
+  if (!item || !canEditDefinedNames.value) return
+  dialog.warning({
+    title: `删除命名区域 ${item.name}？`,
+    content: '删除后不能通过当前撤销栈恢复；如果名称被公式、验证或图表引用，后端会拒绝事务。',
+    positiveText: '删除名称',
+    negativeText: '取消',
+    onPositiveClick: () => commitDefinedNameChange({
+      action: 'delete',
+      name: item.name,
+      scope: item.scope,
+    }, `已删除命名区域 ${item.name}`, ''),
+  })
+}
 const navigateDefinedName = async (event: Event) => {
   const select = event.target as HTMLSelectElement
-  if (!select.value) return
+  if (select.value === '-1') return
   const index = Number(select.value)
-  select.value = ''
   if (!Number.isInteger(index)) return
   const reference = workbook.value?.definedNames[index]?.reference
   if (!reference) return
@@ -1667,7 +2645,183 @@ const navigateDefinedName = async (event: Event) => {
     behavior: 'smooth',
   })
 }
+const chartColumnIndex = (label: string) => {
+  let result = 0
+  for (const character of label.toUpperCase()) result = result * 26 + character.charCodeAt(0) - 64
+  return result - 1
+}
+const parseChartReference = (formula: string) => {
+  const normalized = formula.trim().replace(/^=/, '')
+  const separator = normalized.lastIndexOf('!')
+  if (separator <= 0 || normalized.includes('[') || normalized.includes(']')) throw new Error('图表引用不是安全的内部工作表区域')
+  const rawSheet = normalized.slice(0, separator).trim()
+  const sheet = rawSheet.startsWith("'") && rawSheet.endsWith("'") ? rawSheet.slice(1, -1).replace(/''/g, "'") : rawSheet
+  const match = normalized.slice(separator + 1).match(/^\$?([A-Z]{1,3})\$?(\d+)(?::\$?([A-Z]{1,3})\$?(\d+))?$/i)
+  if (!match) throw new Error('图表引用不是单一 A1 区域')
+  const left = chartColumnIndex(match[1]); const top = Number(match[2]) - 1
+  const right = chartColumnIndex(match[3] || match[1]); const bottom = Number(match[4] || match[2]) - 1
+  if (top < 0 || left < 0 || (top !== bottom && left !== right)) throw new Error('本地预览只支持一维图表区域')
+  return { sheet, top: Math.min(top, bottom), bottom: Math.max(top, bottom), left: Math.min(left, right), right: Math.max(left, right) }
+}
+const readChartReference = async (formula: string) => {
+  const range = parseChartReference(formula)
+  const vertical = range.top !== range.bottom
+  const count = Math.min(60, vertical ? range.bottom - range.top + 1 : range.right - range.left + 1)
+  const previewBottom = vertical ? range.top + count - 1 : range.top
+  const page = await invoke<WorkbookSheetPage>('read_workbook_sheet', {
+    libraryRoot: store.libraryPath,
+    path: workbookPath.value,
+    sheet: range.sheet,
+    rowOffset: range.top,
+    rowLimit: previewBottom - range.top + 1,
+  })
+  return Array.from({ length: count }, (_, index) => {
+    const row = vertical ? range.top + index : range.top
+    const column = vertical ? range.left : range.left + index
+    if (column >= page.returnedColumns) throw new Error('图表引用超出当前 256 列本地预览边界')
+    return page.rows[row - page.rowOffset]?.[column]?.value || ''
+  })
+}
+const loadChartPreview = async () => {
+  const current = ++chartPreviewGeneration
+  const drawing = selectedDrawing.value
+  chartPreview.value = null
+  chartPreviewError.value = ''
+  if (!drawing?.chart) return
+  chartPreviewLoading.value = true
+  try {
+    const rows: string[][] = []
+    const failures: string[] = []
+    for (const series of drawing.chart.series.slice(0, 10)) {
+      if (!series.categories || !series.values || rows.length >= 60) continue
+      try {
+        const [categories, values] = await Promise.all([readChartReference(series.categories), readChartReference(series.values)])
+        const count = Math.min(categories.length, values.length, 60 - rows.length)
+        const name = series.name || `系列 ${series.index + 1}`
+        for (let index = 0; index < count; index += 1) rows.push([categories[index] || String(index + 1), values[index], name])
+      } catch (cause) { failures.push(String(cause).replace(/^Error:\s*/, '')) }
+    }
+    if (current !== chartPreviewGeneration) return
+    if (!rows.length) throw new Error(failures[0] || '没有可安全读取的公式型系列数据')
+    const chartType = drawing.chart.chartType === 'line' || drawing.chart.chartType === 'area'
+      ? 'line'
+      : drawing.chart.chartType === 'pie' || drawing.chart.chartType === 'pie_3d' || drawing.chart.chartType === 'doughnut'
+        ? 'pie'
+        : drawing.chart.chartType === 'scatter' || drawing.chart.chartType === 'bubble'
+          ? 'scatter'
+          : 'bar'
+    chartPreview.value = {
+      headers: ['分类', '数值', '系列'],
+      columnIds: ['category', 'value', 'series'],
+      columnTypes: [chartType === 'scatter' ? 'number' : 'text', 'number', 'text'],
+      rows,
+      rowIndices: rows.map((_, index) => index),
+      config: { chartType, categoryColumn: 'category', valueColumn: 'value', seriesColumn: 'series', aggregation: 'sum', nullStrategy: 'skip', showLegend: true },
+    }
+  } catch (cause) {
+    if (current === chartPreviewGeneration) chartPreviewError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally { if (current === chartPreviewGeneration) chartPreviewLoading.value = false }
+}
+const commitDrawingChange = async (change: WorkbookDrawingChange, area: WorkbookMergeRange, success: string) => {
+  if (!workbook.value || updatingStructure.value) return
+  if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑绘图对象')
+  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
+  updatingStructure.value = true
+  const sheet = activeSheet.value
+  const drawingId = selectedDrawingId.value
+  try {
+    const document = await invoke<WorkbookDocument>('update_workbook_drawing', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: { expectedSignature: workbook.value.signature, change },
+    })
+    workbook.value = document
+    undoStack.value = []
+    redoStack.value = []
+    await restoreTableSelection(sheet, area)
+    selectedDrawingId.value = drawingId
+    message.success(success)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
+}
+const editDrawingMetadata = () => {
+  const drawing = selectedDrawing.value
+  if (!drawing?.editable || !canEditDrawing.value) return
+  const name = window.prompt('绘图对象名称（最多 255 个字符）', drawing.name)?.trim()
+  if (!name) return
+  const description = window.prompt('替代文本/说明（可留空，最多 1024 个字符）', drawing.description || '')
+  if (description === null) return
+  const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
+  void commitDrawingChange({
+    sheet: activeSheet.value,
+    drawingPart: drawing.drawingPart,
+    anchorIndex: drawing.anchorIndex,
+    objectId: drawing.objectId,
+    action: 'update_metadata',
+    name,
+    description,
+  }, area, '已更新绘图对象名称与说明')
+}
+const applyDrawingSelection = () => {
+  const drawing = selectedDrawing.value
+  const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
+  if (!drawing?.editable || !area || !canApplyDrawingSelection.value) return
+  const from: WorkbookDrawingAnchor = { row: area.top, column: area.left, rowOffset: 0, columnOffset: 0 }
+  const to: WorkbookDrawingAnchor = { row: area.bottom + 1, column: area.right + 1, rowOffset: 0, columnOffset: 0 }
+  dialog.warning({
+    title: '移动并调整绘图对象？',
+    content: `对象“${drawing.name}”将对齐到 ${rangeLabel(area)}；图表内容、图片文件和关系部件保持不变。`,
+    positiveText: '应用选区',
+    negativeText: '取消',
+    onPositiveClick: () => commitDrawingChange({
+      sheet: activeSheet.value,
+      drawingPart: drawing.drawingPart,
+      anchorIndex: drawing.anchorIndex,
+      objectId: drawing.objectId,
+      action: 'move_resize',
+      from,
+      to,
+    }, area, '已移动并调整绘图对象'),
+  })
+}
+const editChartTitle = () => {
+  const drawing = selectedDrawing.value
+  if (!drawing?.chart?.titleEditable || !canEditChartTitle.value) return
+  const title = window.prompt('图表标题（最多 1024 个字符）', drawing.chart.title || '')?.trim()
+  if (!title || title === drawing.chart.title) return
+  const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
+  void commitDrawingChange({
+    sheet: activeSheet.value,
+    drawingPart: drawing.drawingPart,
+    anchorIndex: drawing.anchorIndex,
+    objectId: drawing.objectId,
+    action: 'update_chart_title',
+    chartTitle: title,
+  }, area, '已更新图表标题')
+}
+const editChartSeries = () => {
+  const drawing = selectedDrawing.value
+  const series = selectedChartSeries.value
+  if (!drawing?.chart || !series?.editable || !canEditChartSeries.value) return
+  const categories = window.prompt('分类引用：内部工作表的一维 A1 区域', series.categories || '')?.trim()
+  if (!categories) return
+  const values = window.prompt('数值引用：必须与分类引用包含相同数量的数据点', series.values || '')?.trim()
+  if (!values || (categories === series.categories && values === series.values)) return
+  const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
+  void commitDrawingChange({
+    sheet: activeSheet.value,
+    drawingPart: drawing.drawingPart,
+    anchorIndex: drawing.anchorIndex,
+    objectId: drawing.objectId,
+    action: 'update_chart_series',
+    seriesIndex: series.index,
+    seriesCategories: categories,
+    seriesValues: values,
+  }, area, `已更新系列 ${series.index + 1} 的引用`)
+}
 const navigateDrawing = async (drawing: WorkbookDrawingObject) => {
+  selectedDrawingId.value = drawing.id
+  selectedChartSeriesIndex.value = drawing.chart?.series[0]?.index || 0
   await loadPage(drawing.from.row)
   const column = Math.min(drawing.from.column, canvasColumnCount.value - 1)
   if (column < drawing.from.column) {
@@ -1813,6 +2967,12 @@ watch(scrollRef, element => {
   resizeObserver?.disconnect()
   if (element) { viewportHeight.value = element.clientHeight; resizeObserver?.observe(element) }
 })
+watch(() => conditionalDependencyPageOffsets.value.join(','), () => {
+  void loadConditionalDependencyPages(conditionalDependencyPageOffsets.value)
+})
+watch(() => [selectedDrawingId.value, workbook.value?.signature || '', sheetInfo.value?.sheet || ''], () => {
+  void loadChartPreview()
+})
 onBeforeRouteLeave(() => !dirtyCount.value || window.confirm(`还有 ${dirtyCount.value} 个单元格未保存，确定离开吗？`))
 onMounted(() => {
   void loadWorkbook()
@@ -1824,6 +2984,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   generation += 1
+  chartPreviewGeneration += 1
   resizeObserver?.disconnect()
   window.removeEventListener('keydown', handleShortcut)
   window.removeEventListener('pointerup', stopCellSelection)
@@ -1847,7 +3008,7 @@ onBeforeUnmount(() => {
 .sheet-tabs button { height: 33px; display: flex; align-items: center; gap: 6px; padding: 0 12px; border: 1px solid transparent; border-bottom: 0; border-radius: 7px 7px 0 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; white-space: nowrap; font-size: 10px; }
 .sheet-tabs button.active { color: var(--theme-primary); border-color: rgba(0,0,0,.1); background: var(--theme-card); }
 .sheet-tabs small { margin: 0 5px 10px auto; color: var(--theme-text-secondary); white-space: nowrap; font-size: 8px; }
-.formula-bar { height: 34px; flex: none; display: grid; grid-template-columns: 150px 72px 28px minmax(0, 1fr); align-items: center; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); }
+.formula-bar { height: 34px; flex: none; display: flex; align-items: center; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); }
 .linked-data-toolbar { min-height: 42px; flex: none; display: flex; align-items: center; gap: 7px; padding: 4px 12px; overflow-x: auto; border-bottom: 1px solid rgba(190,120,25,.18); color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 91%, #fff0cf); font-size: 9px; }
 .linked-data-toolbar > strong,.linked-data-toolbar > span,.linked-data-toolbar > em { flex: none; }
 .linked-data-toolbar > strong { color: #9a641f; }
@@ -1860,10 +3021,12 @@ onBeforeUnmount(() => {
 .page-layout-toolbar strong { color: var(--theme-primary); }
 .page-layout-toolbar span { padding: 4px 7px; border-radius: 4px; background: rgba(var(--theme-primary-rgb),.07); }
 .page-layout-toolbar em { margin-left: auto; color: #b14545; font-style: normal; font-weight: 700; }
-.formula-bar select { min-width: 0; height: 100%; padding: 0 24px 0 10px; border: 0; border-right: 1px solid rgba(0,0,0,.08); outline: 0; color: var(--theme-text); background: transparent; font-size: 9px; }
-.formula-bar output { overflow: hidden; padding: 0 10px; text-align: center; text-overflow: ellipsis; font-size: 10px; font-weight: 700; }
-.formula-bar span { color: var(--theme-text-secondary); text-align: center; font-size: 11px; font-style: italic; }
-.formula-bar input { min-width: 0; height: 100%; padding: 0 10px; border: 0; border-left: 1px solid rgba(0,0,0,.08); outline: 0; color: var(--theme-text); background: transparent; font: inherit; font-size: 10px; }
+.formula-bar select { width: 150px; min-width: 120px; height: 100%; padding: 0 24px 0 10px; border: 0; border-right: 1px solid rgba(0,0,0,.08); outline: 0; color: var(--theme-text); background: transparent; font-size: 9px; }
+.formula-bar button { height: 25px; flex: none; margin-left: 4px; padding: 0 7px; border: 1px solid rgba(0,0,0,.1); border-radius: 4px; color: var(--theme-text-secondary); background: transparent; font-size: 8px; cursor: pointer; }
+.formula-bar button:disabled { opacity: .4; cursor: default; }
+.formula-bar output { width: 72px; flex: none; overflow: hidden; padding: 0 8px; text-align: center; text-overflow: ellipsis; font-size: 10px; font-weight: 700; }
+.formula-bar span { width: 28px; flex: none; color: var(--theme-text-secondary); text-align: center; font-size: 11px; font-style: italic; }
+.formula-bar input { min-width: 0; height: 100%; flex: 1; padding: 0 10px; border: 0; border-left: 1px solid rgba(0,0,0,.08); outline: 0; color: var(--theme-text); background: transparent; font: inherit; font-size: 10px; }
 .formula-bar input:focus { box-shadow: inset 0 -2px var(--theme-primary); }
 .formula-bar input:disabled { opacity: .55; }
 .format-toolbar { min-height: 40px; flex: none; display: flex; align-items: center; gap: 5px; padding: 4px 12px; overflow-x: auto; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); }
@@ -1895,10 +3058,23 @@ onBeforeUnmount(() => {
 .drawing-toolbar > em { margin-left: auto; font-style: normal; opacity: .72; }
 .drawing-toolbar button { min-width: 168px; height: 38px; flex: none; display: grid; grid-template-columns: auto 1fr; grid-template-rows: 1fr 1fr; align-items: center; gap: 0 7px; padding: 4px 8px; border: 1px solid rgba(var(--theme-primary-rgb),.18); border-radius: 6px; color: var(--theme-text); background: var(--theme-card); text-align: left; cursor: pointer; }
 .drawing-toolbar button:hover { border-color: rgba(var(--theme-primary-rgb),.5); }
+.drawing-toolbar button.active { border-color: var(--theme-primary); box-shadow: inset 0 0 0 1px rgba(var(--theme-primary-rgb),.18); }
+.drawing-toolbar button.drawing-action { min-width: auto; height: 30px; display: inline-flex; padding: 0 9px; color: var(--theme-primary); }
+.drawing-toolbar button.drawing-action:disabled { opacity: .45; cursor: default; }
+.drawing-series-select { width: 150px; height: 30px; flex: none; padding: 0 7px; border: 1px solid rgba(var(--theme-primary-rgb),.22); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); font-size: 9px; }
 .drawing-toolbar button span { grid-row: 1 / 3; padding: 3px 5px; border-radius: 4px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); font-size: 8px; }
 .drawing-toolbar button b,.drawing-toolbar button small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .drawing-toolbar button b { font-size: 9px; }
 .drawing-toolbar button small { color: var(--theme-text-secondary); font-size: 8px; }
+.workbook-chart-preview { height: 250px; flex: none; display: grid; grid-template-columns: 230px minmax(0,1fr); overflow: hidden; border-bottom: 1px solid rgba(0,0,0,.09); background: color-mix(in srgb, var(--theme-card) 96%, var(--theme-primary)); }
+.workbook-chart-preview > header { padding: 14px; border-right: 1px solid rgba(0,0,0,.08); }
+.workbook-chart-preview > header div { display: grid; gap: 5px; }
+.workbook-chart-preview > header strong { color: var(--theme-text); font-size: 13px; }
+.workbook-chart-preview > header span,.workbook-chart-preview > header small { color: var(--theme-text-secondary); font-size: 9px; line-height: 1.55; }
+.workbook-chart-preview > header small { display: block; margin-top: 16px; }
+.workbook-chart-preview > header small.error { color: var(--theme-danger); }
+.workbook-chart-preview :deep(.chart-editor) { min-height: 0; height: 250px; border: 0; border-radius: 0; background: transparent; }
+.workbook-chart-preview :deep(.chart-preview) { min-height: 0; padding: 8px 14px; }
 .color-control { position: relative; width: 31px; height: 30px; flex: none; display: grid; place-items: center; box-sizing: border-box; border: 1px solid rgba(0,0,0,.1); border-radius: 5px; cursor: pointer; }
 .color-control input { position: absolute; inset: auto 3px 2px; width: 23px; height: 5px; padding: 0; border: 0; border-radius: 1px; cursor: pointer; }
 .color-control input::-webkit-color-swatch-wrapper { padding: 0; }
@@ -1931,6 +3107,7 @@ onBeforeUnmount(() => {
 .workbook-cell.merged-anchor { z-index: 4; }
 .workbook-cell.merged-covered { visibility: hidden; pointer-events: none; }
 .cell-content { display: block; overflow: hidden; text-overflow: ellipsis; }
+.conditional-icon { display: inline-block; min-width: 1.15em; margin-right: 4px; font-weight: 800; line-height: 1; text-align: center; vertical-align: -0.05em; }
 .fill-handle { position: absolute; right: -1px; bottom: -1px; z-index: 5; width: 7px; height: 7px; box-sizing: border-box; border: 1px solid var(--theme-card); background: var(--theme-primary); cursor: crosshair; }
 .workbook-cell.dirty::after { content: ''; position: absolute; top: 0; right: 0; border-top: 7px solid #df8a27; border-left: 7px solid transparent; }
 .workbook-cell.formula { color: #436fb7; }

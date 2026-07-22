@@ -1,13 +1,20 @@
 use crate::formats::workbook::{
     WorkbookCellEdit, WorkbookCellStyle, WorkbookCellStyleEdit, WorkbookChart, WorkbookChartSeries,
     WorkbookColumnState, WorkbookColumnStateEdit, WorkbookColumnWidth, WorkbookColumnWidthEdit,
-    WorkbookDataConnection, WorkbookDataValidation, WorkbookDefinedName, WorkbookDrawingAnchor,
-    WorkbookDrawingObject, WorkbookExternalLink, WorkbookFreezePane, WorkbookLinkedData,
-    WorkbookMergeEdit, WorkbookMergeRange, WorkbookNamedStyle, WorkbookPageLayout,
-    WorkbookPageMargins, WorkbookPivotTable, WorkbookPrintOptions, WorkbookProtection,
-    WorkbookRangeReference, WorkbookRowHeight, WorkbookRowHeightEdit, WorkbookRowState,
-    WorkbookRowStateEdit, WorkbookSlicer, WorkbookStructureAction, WorkbookStructureAxis,
-    WorkbookStructureChange, WorkbookTable, WorkbookTableAction, WorkbookTableChange,
+    WorkbookConditionalColorScale, WorkbookConditionalColorScalePoint, WorkbookConditionalDataBar,
+    WorkbookConditionalFormatAction, WorkbookConditionalFormatChange,
+    WorkbookConditionalFormatRule, WorkbookConditionalFormatStyle, WorkbookConditionalIconSet,
+    WorkbookConditionalIconThreshold, WorkbookConditionalThreshold, WorkbookDataConnection,
+    WorkbookDataValidation, WorkbookDataValidationAction, WorkbookDataValidationChange,
+    WorkbookDefinedName, WorkbookDefinedNameAction, WorkbookDefinedNameChange,
+    WorkbookDrawingAction, WorkbookDrawingAnchor, WorkbookDrawingChange, WorkbookDrawingObject,
+    WorkbookExternalLink, WorkbookFilterAction, WorkbookFilterChange, WorkbookFilterState,
+    WorkbookFilterTarget, WorkbookFreezePane, WorkbookLinkedData, WorkbookMergeEdit,
+    WorkbookMergeRange, WorkbookNamedStyle, WorkbookPageLayout, WorkbookPageMargins,
+    WorkbookPivotTable, WorkbookPrintOptions, WorkbookProtection, WorkbookRangeReference,
+    WorkbookRowHeight, WorkbookRowHeightEdit, WorkbookRowState, WorkbookRowStateEdit,
+    WorkbookSlicer, WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructureChange,
+    WorkbookTable, WorkbookTableAction, WorkbookTableChange,
 };
 use crate::formats::workbook_formula::{
     migrate_workbook_formula, migrate_workbook_reference, translate_formula,
@@ -40,6 +47,7 @@ const MAX_DEFINED_NAME_LENGTH: usize = 255;
 const MAX_DEFINED_NAME_FORMULA_LENGTH: usize = 8_192;
 const MAX_DATA_VALIDATIONS: usize = 10_000;
 const MAX_VALIDATION_RANGES: usize = 10_000;
+const MAX_CONDITIONAL_FORMAT_RULES: usize = 10_000;
 const MAX_DRAWING_OBJECTS: usize = 1_024;
 const MAX_CHART_SERIES: usize = 256;
 const MAX_DRAWING_TEXT: usize = 1_024;
@@ -77,8 +85,10 @@ pub(crate) struct WorkbookSheetLayout {
     pub merged_cells: Vec<WorkbookMergeRange>,
     pub freeze_pane: WorkbookFreezePane,
     pub auto_filter: Option<WorkbookMergeRange>,
+    pub auto_filter_state: WorkbookFilterState,
     pub tables: Vec<WorkbookTable>,
     pub data_validations: Vec<WorkbookDataValidation>,
+    pub conditional_formats: Vec<WorkbookConditionalFormatRule>,
     pub drawings: Vec<WorkbookDrawingObject>,
     pub page_layout: WorkbookPageLayout,
 }
@@ -195,6 +205,7 @@ struct SheetStructureSummary {
     merged_cells: Vec<WorkbookMergeRange>,
     freeze_pane: WorkbookFreezePane,
     auto_filter: Option<WorkbookMergeRange>,
+    auto_filter_state: WorkbookFilterState,
     data_validations: Vec<WorkbookDataValidation>,
 }
 
@@ -224,6 +235,139 @@ fn bool_attribute(
     Ok(xml_value(event, key, decoder)?
         .map(|value| matches!(value.as_str(), "1" | "true"))
         .unwrap_or(default))
+}
+
+fn decode_contains_filter(value: &str) -> Option<String> {
+    let inner = value.strip_prefix('*')?.strip_suffix('*')?;
+    let mut output = String::new();
+    let mut chars = inner.chars();
+    while let Some(character) = chars.next() {
+        if character == '~' {
+            output.push(chars.next()?);
+        } else if matches!(character, '*' | '?') {
+            return None;
+        } else {
+            output.push(character);
+        }
+    }
+    Some(output)
+}
+
+fn read_auto_filter_state(
+    xml: &[u8],
+    range: &WorkbookMergeRange,
+) -> Result<WorkbookFilterState, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut inside = false;
+    let mut current_column = None;
+    let mut filter_count = 0usize;
+    let mut sort_count = 0usize;
+    let mut state = WorkbookFilterState {
+        editable: true,
+        ..WorkbookFilterState::default()
+    };
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse AutoFilter state: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"autoFilter" => {
+                inside = true;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"autoFilter" => {
+                return Ok(state);
+            }
+            Event::End(ref end) if inside && end.local_name().as_ref() == b"autoFilter" => break,
+            Event::Start(ref start) if inside && start.local_name().as_ref() == b"filterColumn" => {
+                let column = xml_value(start, b"colId", reader.decoder())?
+                    .and_then(|value| value.parse::<usize>().ok());
+                current_column = column.and_then(|offset| range.left.checked_add(offset));
+                if current_column.is_none()
+                    || current_column.is_some_and(|column| column > range.right)
+                {
+                    state.editable = false;
+                }
+            }
+            Event::Empty(ref start) if inside && start.local_name().as_ref() == b"filterColumn" => {
+                let column = xml_value(start, b"colId", reader.decoder())?
+                    .and_then(|value| value.parse::<usize>().ok())
+                    .and_then(|offset| range.left.checked_add(offset));
+                if column.is_none() || column.is_some_and(|value| value > range.right) {
+                    state.editable = false;
+                }
+            }
+            Event::End(ref end) if inside && end.local_name().as_ref() == b"filterColumn" => {
+                current_column = None;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if inside && start.local_name().as_ref() == b"customFilter" =>
+            {
+                filter_count += 1;
+                let operator = xml_value(start, b"operator", reader.decoder())?
+                    .unwrap_or_else(|| "equal".into());
+                let value = xml_value(start, b"val", reader.decoder())?;
+                if filter_count == 1 && operator == "equal" {
+                    if let (Some(column), Some(query)) = (
+                        current_column,
+                        value.as_deref().and_then(decode_contains_filter),
+                    ) {
+                        state.filter_column = Some(column);
+                        state.query = Some(query);
+                    } else {
+                        state.editable = false;
+                    }
+                } else {
+                    state.editable = false;
+                }
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if inside
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"filters"
+                            | b"filter"
+                            | b"dateGroupItem"
+                            | b"top10"
+                            | b"dynamicFilter"
+                            | b"colorFilter"
+                            | b"iconFilter"
+                    ) =>
+            {
+                state.editable = false;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if inside && start.local_name().as_ref() == b"sortCondition" =>
+            {
+                sort_count += 1;
+                let reference = xml_value(start, b"ref", reader.decoder())?;
+                let column = reference
+                    .as_deref()
+                    .and_then(|value| parse_range_reference(value).ok())
+                    .map(|value| value.left);
+                if sort_count == 1
+                    && column.is_some_and(|value| value >= range.left && value <= range.right)
+                {
+                    state.sort_column = column;
+                    state.sort_direction = Some(
+                        if bool_attribute(start, b"descending", reader.decoder(), false)? {
+                            "desc"
+                        } else {
+                            "asc"
+                        }
+                        .into(),
+                    );
+                } else {
+                    state.editable = false;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(state)
 }
 
 fn validation_from_event(
@@ -1214,6 +1358,7 @@ fn read_sheet_structure(
     let mut data_validations = Vec::new();
     let mut current_validation: Option<WorkbookDataValidation> = None;
     let mut validation_formula: Option<u8> = None;
+    let mut validation_formula_text = String::new();
     loop {
         match reader
             .read_event_into(&mut buffer)
@@ -1279,9 +1424,11 @@ fn read_sheet_structure(
             }
             Event::Start(ref event) if event.local_name().as_ref() == b"formula1" => {
                 validation_formula = Some(1);
+                validation_formula_text.clear();
             }
             Event::Start(ref event) if event.local_name().as_ref() == b"formula2" => {
                 validation_formula = Some(2);
+                validation_formula_text.clear();
             }
             Event::Text(ref event) if validation_formula.is_some() => {
                 let decoded = event
@@ -1293,18 +1440,45 @@ fn read_sheet_structure(
                 if value.chars().count() > MAX_FORMULA_TEXT {
                     return Err("数据验证公式过长".into());
                 }
-                if let Some(validation) = current_validation.as_mut() {
-                    if validation_formula == Some(1) {
-                        validation.formula1 = Some(value);
-                    } else {
-                        validation.formula2 = Some(value);
-                    }
+                validation_formula_text.push_str(&value);
+            }
+            Event::CData(ref event) if validation_formula.is_some() => {
+                validation_formula_text.push_str(
+                    &event
+                        .decode()
+                        .map_err(|error| format!("解码数据验证公式失败: {error}"))?,
+                );
+            }
+            Event::GeneralRef(ref event) if validation_formula.is_some() => {
+                let decoded = event
+                    .decode()
+                    .map_err(|error| format!("解码数据验证公式实体失败: {error}"))?;
+                if let Some(value) = quick_xml::escape::resolve_xml_entity(&decoded) {
+                    validation_formula_text.push_str(value);
+                } else if let Some(value) = event
+                    .resolve_char_ref()
+                    .map_err(|error| format!("解码数据验证公式字符实体失败: {error}"))?
+                {
+                    validation_formula_text.push(value);
+                } else {
+                    return Err(format!("数据验证公式包含未知 XML 实体: &{decoded};"));
                 }
             }
             Event::End(ref event)
                 if matches!(event.local_name().as_ref(), b"formula1" | b"formula2") =>
             {
+                if validation_formula_text.chars().count() > MAX_FORMULA_TEXT {
+                    return Err("数据验证公式过长".into());
+                }
+                if let Some(validation) = current_validation.as_mut() {
+                    if validation_formula == Some(1) {
+                        validation.formula1 = Some(validation_formula_text.clone());
+                    } else {
+                        validation.formula2 = Some(validation_formula_text.clone());
+                    }
+                }
                 validation_formula = None;
+                validation_formula_text.clear();
             }
             Event::End(ref event) if event.local_name().as_ref() == b"dataValidation" => {
                 if let Some(validation) = current_validation.take() {
@@ -1414,6 +1588,11 @@ fn read_sheet_structure(
     row_states.sort_by_key(|item| item.row);
     column_states.sort_by_key(|item| (item.start_column, item.end_column));
     merged_cells.sort_by_key(|item| (item.top, item.left, item.bottom, item.right));
+    let auto_filter_state = auto_filter
+        .as_ref()
+        .map(|range| read_auto_filter_state(xml, range))
+        .transpose()?
+        .unwrap_or_default();
     Ok(SheetStructureSummary {
         default_row_height,
         default_column_width,
@@ -1424,8 +1603,1147 @@ fn read_sheet_structure(
         merged_cells,
         freeze_pane,
         auto_filter,
+        auto_filter_state,
         data_validations,
     })
+}
+
+fn rgb_style_color(
+    event: &BytesStart<'_>,
+    decoder: quick_xml::encoding::Decoder,
+) -> Option<String> {
+    xml_value(event, b"rgb", decoder)
+        .ok()
+        .flatten()
+        .and_then(|value| {
+            let value = value.trim_start_matches('#');
+            let value = if value.len() == 8 { &value[2..] } else { value };
+            (value.len() == 6 && value.bytes().all(|byte| byte.is_ascii_hexdigit()))
+                .then(|| format!("#{}", value.to_ascii_uppercase()))
+        })
+}
+
+fn read_conditional_dxf_styles(xml: &[u8]) -> Result<Vec<WorkbookConditionalFormatStyle>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut inside_dxfs = false;
+    let mut inside_dxf = false;
+    let mut inside_font = false;
+    let mut inside_fill = false;
+    let mut current = WorkbookConditionalFormatStyle::default();
+    let mut result = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse conditional-format styles: {error}"))?
+        {
+            Event::Start(ref start) if start.local_name().as_ref() == b"dxfs" => inside_dxfs = true,
+            Event::End(ref end) if end.local_name().as_ref() == b"dxfs" => inside_dxfs = false,
+            Event::Start(ref start) if inside_dxfs && start.local_name().as_ref() == b"dxf" => {
+                if result.len() >= MAX_CONDITIONAL_FORMAT_RULES {
+                    return Err("Too many conditional-format styles.".into());
+                }
+                inside_dxf = true;
+                current = WorkbookConditionalFormatStyle::default();
+            }
+            Event::End(ref end) if inside_dxf && end.local_name().as_ref() == b"dxf" => {
+                inside_dxf = false;
+                inside_font = false;
+                inside_fill = false;
+                result.push(current.clone());
+            }
+            Event::Start(ref start) if inside_dxf && start.local_name().as_ref() == b"font" => {
+                inside_font = true
+            }
+            Event::End(ref end) if inside_font && end.local_name().as_ref() == b"font" => {
+                inside_font = false
+            }
+            Event::Start(ref start) if inside_dxf && start.local_name().as_ref() == b"fill" => {
+                inside_fill = true
+            }
+            Event::End(ref end) if inside_fill && end.local_name().as_ref() == b"fill" => {
+                inside_fill = false
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if inside_font && start.local_name().as_ref() == b"b" =>
+            {
+                current.bold = bool_attribute(start, b"val", reader.decoder(), true)?;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if inside_font && start.local_name().as_ref() == b"color" =>
+            {
+                current.font_color = rgb_style_color(start, reader.decoder());
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if inside_fill && start.local_name().as_ref() == b"fgColor" =>
+            {
+                current.fill_color = rgb_style_color(start, reader.decoder());
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(result)
+}
+
+fn append_formula_general_reference(
+    target: &mut String,
+    event: &quick_xml::events::BytesRef<'_>,
+) -> Result<(), String> {
+    let decoded = event
+        .decode()
+        .map_err(|error| format!("Failed to decode conditional-format formula entity: {error}"))?;
+    if let Some(value) = quick_xml::escape::resolve_xml_entity(&decoded) {
+        target.push_str(value);
+    } else if let Some(value) = event
+        .resolve_char_ref()
+        .map_err(|error| format!("Failed to decode conditional-format character entity: {error}"))?
+    {
+        target.push(value);
+    } else {
+        return Err(format!(
+            "Unknown conditional-format XML entity: &{decoded};"
+        ));
+    }
+    Ok(())
+}
+
+fn conditional_operator_supported(operator: Option<&str>) -> bool {
+    matches!(
+        operator,
+        Some(
+            "between"
+                | "notBetween"
+                | "equal"
+                | "notEqual"
+                | "lessThan"
+                | "lessThanOrEqual"
+                | "greaterThan"
+                | "greaterThanOrEqual"
+        )
+    )
+}
+
+const MAX_CONDITIONAL_EXPRESSION_LENGTH: usize = 512;
+const MAX_CONDITIONAL_EXPRESSION_DEPTH: usize = 8;
+const MAX_CONDITIONAL_EXPRESSION_ARGUMENTS: usize = 8;
+const MAX_CONDITIONAL_EXPRESSION_REFERENCES: usize = 8;
+
+#[derive(Clone, Debug, PartialEq)]
+enum ConditionalExpressionToken {
+    Reference(String),
+    Number,
+    Text,
+    Boolean,
+    And,
+    Or,
+    Not,
+    Compare(bool),
+    LeftParen,
+    RightParen,
+    Comma,
+}
+
+fn tokenize_conditional_expression(
+    formula: &str,
+) -> Option<(Vec<ConditionalExpressionToken>, usize)> {
+    let source = formula
+        .trim()
+        .strip_prefix('=')
+        .unwrap_or(formula.trim())
+        .trim();
+    if source.is_empty() || source.chars().count() > MAX_CONDITIONAL_EXPRESSION_LENGTH {
+        return None;
+    }
+    let bytes = source.as_bytes();
+    let mut tokens = Vec::new();
+    let mut references = 0usize;
+    let mut index = 0usize;
+    while index < bytes.len() {
+        if bytes[index].is_ascii_whitespace() {
+            index += 1;
+            continue;
+        }
+        match bytes[index] {
+            b'(' => {
+                tokens.push(ConditionalExpressionToken::LeftParen);
+                index += 1;
+            }
+            b')' => {
+                tokens.push(ConditionalExpressionToken::RightParen);
+                index += 1;
+            }
+            b',' => {
+                tokens.push(ConditionalExpressionToken::Comma);
+                index += 1;
+            }
+            b'<' | b'>' | b'=' => {
+                let first = bytes[index];
+                let second = bytes.get(index + 1).copied();
+                let equality = first == b'=' || (first == b'<' && second == Some(b'>'));
+                if index + 1 < bytes.len()
+                    && matches!(
+                        (bytes[index], bytes[index + 1]),
+                        (b'<', b'=') | (b'>', b'=') | (b'<', b'>')
+                    )
+                {
+                    index += 2;
+                } else {
+                    index += 1;
+                }
+                tokens.push(ConditionalExpressionToken::Compare(equality));
+            }
+            b'"' => {
+                index += 1;
+                let mut closed = false;
+                while index < bytes.len() {
+                    if bytes[index] == b'"' {
+                        if index + 1 < bytes.len() && bytes[index + 1] == b'"' {
+                            index += 2;
+                        } else {
+                            index += 1;
+                            closed = true;
+                            break;
+                        }
+                    } else {
+                        index += 1;
+                    }
+                }
+                if !closed {
+                    return None;
+                }
+                tokens.push(ConditionalExpressionToken::Text);
+            }
+            b'+' | b'-' | b'.' | b'0'..=b'9' => {
+                let start = index;
+                if matches!(bytes[index], b'+' | b'-') {
+                    index += 1;
+                }
+                let integer_start = index;
+                while index < bytes.len() && bytes[index].is_ascii_digit() {
+                    index += 1;
+                }
+                let mut digits = index > integer_start;
+                if index < bytes.len() && bytes[index] == b'.' {
+                    index += 1;
+                    let fraction_start = index;
+                    while index < bytes.len() && bytes[index].is_ascii_digit() {
+                        index += 1;
+                    }
+                    digits |= index > fraction_start;
+                }
+                if !digits {
+                    return None;
+                }
+                if index < bytes.len() && matches!(bytes[index], b'e' | b'E') {
+                    index += 1;
+                    if index < bytes.len() && matches!(bytes[index], b'+' | b'-') {
+                        index += 1;
+                    }
+                    let exponent_start = index;
+                    while index < bytes.len() && bytes[index].is_ascii_digit() {
+                        index += 1;
+                    }
+                    if exponent_start == index {
+                        return None;
+                    }
+                }
+                if source[start..index]
+                    .parse::<f64>()
+                    .ok()
+                    .is_none_or(|value| !value.is_finite())
+                {
+                    return None;
+                }
+                tokens.push(ConditionalExpressionToken::Number);
+            }
+            b'$' | b'A'..=b'Z' | b'a'..=b'z' => {
+                let start = index;
+                if bytes[index] == b'$' {
+                    index += 1;
+                }
+                let letters_start = index;
+                while index < bytes.len() && bytes[index].is_ascii_alphabetic() {
+                    index += 1;
+                }
+                if letters_start == index {
+                    return None;
+                }
+                let word = &source[letters_start..index];
+                if index < bytes.len() && bytes[index] == b'$' {
+                    index += 1;
+                }
+                let row_start = index;
+                while index < bytes.len() && bytes[index].is_ascii_digit() {
+                    index += 1;
+                }
+                if row_start < index {
+                    let reference = &source[start..index];
+                    if word.len() > 3 || parse_cell_reference(&reference.replace('$', "")).is_err()
+                    {
+                        return None;
+                    }
+                    references += 1;
+                    if references > MAX_CONDITIONAL_EXPRESSION_REFERENCES {
+                        return None;
+                    }
+                    tokens.push(ConditionalExpressionToken::Reference(
+                        reference.to_ascii_uppercase(),
+                    ));
+                } else {
+                    if start != letters_start {
+                        return None;
+                    }
+                    let token = if word.eq_ignore_ascii_case("AND") {
+                        ConditionalExpressionToken::And
+                    } else if word.eq_ignore_ascii_case("OR") {
+                        ConditionalExpressionToken::Or
+                    } else if word.eq_ignore_ascii_case("NOT") {
+                        ConditionalExpressionToken::Not
+                    } else if word.eq_ignore_ascii_case("TRUE")
+                        || word.eq_ignore_ascii_case("FALSE")
+                    {
+                        ConditionalExpressionToken::Boolean
+                    } else {
+                        return None;
+                    };
+                    tokens.push(token);
+                }
+            }
+            _ => return None,
+        }
+    }
+    Some((tokens, references))
+}
+
+struct ConditionalExpressionParser {
+    tokens: Vec<ConditionalExpressionToken>,
+    position: usize,
+}
+
+impl ConditionalExpressionParser {
+    fn parse(mut self, references: usize) -> bool {
+        references > 0 && self.parse_expression(0) && self.position == self.tokens.len()
+    }
+
+    fn parse_expression(&mut self, depth: usize) -> bool {
+        if depth > MAX_CONDITIONAL_EXPRESSION_DEPTH {
+            return false;
+        }
+        match self.tokens.get(self.position) {
+            Some(ConditionalExpressionToken::And | ConditionalExpressionToken::Or) => {
+                self.position += 1;
+                if !self.take(&ConditionalExpressionToken::LeftParen) {
+                    return false;
+                }
+                let mut arguments = 0usize;
+                loop {
+                    if arguments >= MAX_CONDITIONAL_EXPRESSION_ARGUMENTS
+                        || !self.parse_expression(depth + 1)
+                    {
+                        return false;
+                    }
+                    arguments += 1;
+                    if self.take(&ConditionalExpressionToken::Comma) {
+                        continue;
+                    }
+                    return arguments >= 2 && self.take(&ConditionalExpressionToken::RightParen);
+                }
+            }
+            Some(ConditionalExpressionToken::Not) => {
+                self.position += 1;
+                self.take(&ConditionalExpressionToken::LeftParen)
+                    && self.parse_expression(depth + 1)
+                    && self.take(&ConditionalExpressionToken::RightParen)
+            }
+            _ => self.parse_comparison(),
+        }
+    }
+
+    fn parse_comparison(&mut self) -> bool {
+        let Some(left) = self.parse_operand() else {
+            return false;
+        };
+        let Some(equality) = self.take_compare() else {
+            return false;
+        };
+        let Some(right) = self.parse_operand() else {
+            return false;
+        };
+        equality
+            || !matches!(
+                left,
+                ConditionalExpressionToken::Text | ConditionalExpressionToken::Boolean
+            ) && !matches!(
+                right,
+                ConditionalExpressionToken::Text | ConditionalExpressionToken::Boolean
+            )
+    }
+
+    fn parse_operand(&mut self) -> Option<ConditionalExpressionToken> {
+        let token = self.tokens.get(self.position)?.clone();
+        if matches!(
+            token,
+            ConditionalExpressionToken::Reference(_)
+                | ConditionalExpressionToken::Number
+                | ConditionalExpressionToken::Text
+                | ConditionalExpressionToken::Boolean
+        ) {
+            self.position += 1;
+            Some(token)
+        } else {
+            None
+        }
+    }
+
+    fn take_compare(&mut self) -> Option<bool> {
+        let ConditionalExpressionToken::Compare(equality) = self.tokens.get(self.position)? else {
+            return None;
+        };
+        let equality = *equality;
+        self.position += 1;
+        Some(equality)
+    }
+
+    fn take(&mut self, expected: &ConditionalExpressionToken) -> bool {
+        if self.tokens.get(self.position) == Some(expected) {
+            self.position += 1;
+            true
+        } else {
+            false
+        }
+    }
+}
+
+fn safe_conditional_expression_supported(formula: &str) -> bool {
+    let Some((tokens, references)) = tokenize_conditional_expression(formula) else {
+        return false;
+    };
+    ConditionalExpressionParser {
+        tokens,
+        position: 0,
+    }
+    .parse(references)
+}
+
+fn standard_icon_set_count(icon_set: &str) -> Option<usize> {
+    match icon_set {
+        "3Arrows" | "3ArrowsGray" | "3Flags" | "3TrafficLights1" | "3TrafficLights2" | "3Signs"
+        | "3Symbols" | "3Symbols2" => Some(3),
+        "4Arrows" | "4ArrowsGray" | "4RedToBlack" | "4Rating" | "4TrafficLights" => Some(4),
+        "5Arrows" | "5ArrowsGray" | "5Rating" | "5Quarters" => Some(5),
+        _ => None,
+    }
+}
+
+fn read_conditional_formats(
+    xml: &[u8],
+    dxf_styles: &[WorkbookConditionalFormatStyle],
+) -> Result<Vec<WorkbookConditionalFormatRule>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut buffer = Vec::new();
+    let mut group_index = 0usize;
+    let mut ranges = Vec::new();
+    let mut group_rules = Vec::new();
+    let mut current: Option<WorkbookConditionalFormatRule> = None;
+    let mut formula_text = String::new();
+    let mut inside_formula = false;
+    let mut inside_color_scale = false;
+    let mut color_scale_values: Vec<(String, Option<String>)> = Vec::new();
+    let mut color_scale_colors: Vec<String> = Vec::new();
+    let mut inside_data_bar = false;
+    let mut data_bar_values: Vec<(String, Option<String>)> = Vec::new();
+    let mut data_bar_color: Option<String> = None;
+    let mut data_bar_show_value = true;
+    let mut data_bar_min_length = 10u8;
+    let mut data_bar_max_length = 90u8;
+    let mut inside_icon_set = false;
+    let mut icon_set_name = String::new();
+    let mut icon_set_thresholds = Vec::new();
+    let mut icon_set_reverse = false;
+    let mut icon_set_show_value = true;
+    let mut result = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse conditional formats: {error}"))?
+        {
+            Event::Start(ref start) if start.name().as_ref() == b"conditionalFormatting" => {
+                ranges = xml_value(start, b"sqref", reader.decoder())?
+                    .ok_or("Conditional formatting is missing sqref.")?
+                    .split_ascii_whitespace()
+                    .map(parse_range_reference)
+                    .collect::<Result<Vec<_>, _>>()?;
+                group_rules.clear();
+            }
+            Event::Start(ref start) if start.name().as_ref() == b"cfRule" => {
+                if result.len() + group_rules.len() >= MAX_CONDITIONAL_FORMAT_RULES {
+                    return Err("Too many conditional-format rules.".into());
+                }
+                let kind = xml_value(start, b"type", reader.decoder())?
+                    .unwrap_or_else(|| "unknown".into());
+                let operator = xml_value(start, b"operator", reader.decoder())?;
+                let priority = xml_value(start, b"priority", reader.decoder())?
+                    .and_then(|value| value.parse::<u32>().ok())
+                    .unwrap_or(0);
+                let dxf_id = xml_value(start, b"dxfId", reader.decoder())?
+                    .and_then(|value| value.parse::<usize>().ok());
+                current = Some(WorkbookConditionalFormatRule {
+                    group_index,
+                    rule_index: group_rules.len(),
+                    ranges: ranges.clone(),
+                    kind: kind.clone(),
+                    operator: operator.clone(),
+                    formula1: None,
+                    formula2: None,
+                    priority,
+                    stop_if_true: bool_attribute(start, b"stopIfTrue", reader.decoder(), false)?,
+                    style: dxf_id
+                        .and_then(|index| dxf_styles.get(index).cloned())
+                        .unwrap_or_default(),
+                    color_scale: None,
+                    data_bar: None,
+                    icon_set: None,
+                    editable: if matches!(kind.as_str(), "colorScale" | "dataBar" | "iconSet") {
+                        dxf_id.is_none()
+                    } else {
+                        matches!(kind.as_str(), "cellIs" | "expression")
+                            && (kind != "cellIs"
+                                || conditional_operator_supported(operator.as_deref()))
+                            && dxf_id.is_some_and(|index| dxf_styles.get(index).is_some())
+                    },
+                });
+            }
+            Event::Start(ref start)
+                if current.as_ref().is_some_and(|rule| rule.kind == "dataBar")
+                    && start.local_name().as_ref() == b"dataBar" =>
+            {
+                inside_data_bar = true;
+                data_bar_values.clear();
+                data_bar_color = None;
+                data_bar_show_value = bool_attribute(start, b"showValue", reader.decoder(), true)?;
+                data_bar_min_length = xml_value(start, b"minLength", reader.decoder())?
+                    .and_then(|value| value.parse::<u8>().ok())
+                    .unwrap_or(10);
+                data_bar_max_length = xml_value(start, b"maxLength", reader.decoder())?
+                    .and_then(|value| value.parse::<u8>().ok())
+                    .unwrap_or(90);
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if inside_data_bar && start.local_name().as_ref() == b"cfvo" =>
+            {
+                let kind = xml_value(start, b"type", reader.decoder())?
+                    .unwrap_or_else(|| "unknown".into());
+                let value = xml_value(start, b"val", reader.decoder())?;
+                if data_bar_values.len() >= 2 {
+                    if let Some(rule) = current.as_mut() {
+                        rule.editable = false;
+                    }
+                }
+                data_bar_values.push((kind, value));
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if inside_data_bar && start.local_name().as_ref() == b"color" =>
+            {
+                data_bar_color = rgb_style_color(start, reader.decoder());
+                if data_bar_color.is_none() {
+                    if let Some(rule) = current.as_mut() {
+                        rule.editable = false;
+                    }
+                }
+            }
+            Event::End(ref end) if inside_data_bar && end.local_name().as_ref() == b"dataBar" => {
+                inside_data_bar = false;
+                if let Some(rule) = current.as_mut() {
+                    let thresholds = data_bar_values
+                        .iter()
+                        .map(|(kind, value)| WorkbookConditionalThreshold {
+                            kind: kind.clone(),
+                            value: value.clone(),
+                            resolved_value: (kind == "num").then(|| value.clone()).flatten(),
+                        })
+                        .collect::<Vec<_>>();
+                    if thresholds.len() == 2 && data_bar_color.is_some() {
+                        let valid_threshold =
+                            |point: &WorkbookConditionalThreshold| match point.kind.as_str() {
+                                "min" | "max" => point.value.is_none(),
+                                "num" => point.value.as_deref().is_some_and(|value| {
+                                    value.parse::<f64>().is_ok_and(|number| number.is_finite())
+                                }),
+                                "percent" | "percentile" => {
+                                    point.value.as_deref().is_some_and(|value| {
+                                        value.parse::<f64>().is_ok_and(|number| {
+                                            number.is_finite() && (0.0..=100.0).contains(&number)
+                                        })
+                                    })
+                                }
+                                _ => false,
+                            };
+                        let fixed_values =
+                            thresholds.iter().all(|point| point.kind == "num").then(|| {
+                                thresholds
+                                    .iter()
+                                    .filter_map(|point| point.value.as_deref()?.parse::<f64>().ok())
+                                    .collect::<Vec<_>>()
+                            });
+                        if !thresholds.iter().all(valid_threshold)
+                            || thresholds[0].kind == "max"
+                            || thresholds[1].kind == "min"
+                            || fixed_values
+                                .as_ref()
+                                .is_some_and(|values| values.len() != 2 || values[0] >= values[1])
+                            || data_bar_min_length > data_bar_max_length
+                            || data_bar_max_length > 100
+                        {
+                            rule.editable = false;
+                        }
+                        rule.data_bar = Some(WorkbookConditionalDataBar {
+                            minimum: thresholds[0].clone(),
+                            maximum: thresholds[1].clone(),
+                            color: data_bar_color.clone().unwrap_or_default(),
+                            show_value: data_bar_show_value,
+                            min_length: data_bar_min_length,
+                            max_length: data_bar_max_length,
+                        });
+                    } else {
+                        rule.editable = false;
+                    }
+                }
+            }
+            Event::Start(ref start)
+                if current.as_ref().is_some_and(|rule| rule.kind == "iconSet")
+                    && start.local_name().as_ref() == b"iconSet" =>
+            {
+                inside_icon_set = true;
+                icon_set_name = xml_value(start, b"iconSet", reader.decoder())?
+                    .unwrap_or_else(|| "3TrafficLights1".into());
+                icon_set_reverse = bool_attribute(start, b"reverse", reader.decoder(), false)?;
+                icon_set_show_value = bool_attribute(start, b"showValue", reader.decoder(), true)?;
+                icon_set_thresholds.clear();
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if inside_icon_set && start.local_name().as_ref() == b"cfvo" =>
+            {
+                let kind = xml_value(start, b"type", reader.decoder())?
+                    .unwrap_or_else(|| "unknown".into());
+                let value = xml_value(start, b"val", reader.decoder())?;
+                let inclusive = bool_attribute(start, b"gte", reader.decoder(), true)?;
+                icon_set_thresholds.push(WorkbookConditionalIconThreshold {
+                    resolved_value: (kind == "num").then(|| value.clone()).flatten(),
+                    kind,
+                    value,
+                    inclusive,
+                });
+            }
+            Event::End(ref end) if inside_icon_set && end.local_name().as_ref() == b"iconSet" => {
+                inside_icon_set = false;
+                if let Some(rule) = current.as_mut() {
+                    let expected = standard_icon_set_count(&icon_set_name);
+                    let valid_threshold = |point: &WorkbookConditionalIconThreshold| match point
+                        .kind
+                        .as_str()
+                    {
+                        "num" => point.value.as_deref().is_some_and(|value| {
+                            value.parse::<f64>().is_ok_and(|number| number.is_finite())
+                        }),
+                        "percent" | "percentile" => point.value.as_deref().is_some_and(|value| {
+                            value.parse::<f64>().is_ok_and(|number| {
+                                number.is_finite() && (0.0..=100.0).contains(&number)
+                            })
+                        }),
+                        _ => false,
+                    };
+                    if !expected.is_some_and(|count| count == icon_set_thresholds.len())
+                        || !icon_set_thresholds.iter().all(valid_threshold)
+                        || !icon_set_thresholds.first().is_some_and(|point| {
+                            point.kind == "percent"
+                                && point.value.as_deref() == Some("0")
+                                && point.inclusive
+                        })
+                    {
+                        rule.editable = false;
+                    }
+                    rule.icon_set = Some(WorkbookConditionalIconSet {
+                        icon_set: icon_set_name.clone(),
+                        thresholds: icon_set_thresholds.clone(),
+                        reverse: icon_set_reverse,
+                        show_value: icon_set_show_value,
+                    });
+                }
+            }
+            Event::Start(ref start)
+                if current
+                    .as_ref()
+                    .is_some_and(|rule| rule.kind == "colorScale")
+                    && start.local_name().as_ref() == b"colorScale" =>
+            {
+                inside_color_scale = true;
+                color_scale_values.clear();
+                color_scale_colors.clear();
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if inside_color_scale && start.local_name().as_ref() == b"cfvo" =>
+            {
+                let kind = xml_value(start, b"type", reader.decoder())?
+                    .unwrap_or_else(|| "unknown".into());
+                let value = xml_value(start, b"val", reader.decoder())?;
+                let valid = matches!(kind.as_str(), "min" | "max")
+                    || (matches!(kind.as_str(), "num" | "percent" | "percentile")
+                        && value.as_deref().is_some_and(|value| {
+                            value.parse::<f64>().is_ok_and(|number| {
+                                number.is_finite()
+                                    && (kind == "num" || (0.0..=100.0).contains(&number))
+                            })
+                        }));
+                if !valid || color_scale_values.len() >= 3 {
+                    if let Some(rule) = current.as_mut() {
+                        rule.editable = false;
+                    }
+                }
+                color_scale_values.push((kind, value));
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if inside_color_scale && start.local_name().as_ref() == b"color" =>
+            {
+                if let Some(color) = rgb_style_color(start, reader.decoder()) {
+                    color_scale_colors.push(color);
+                } else if let Some(rule) = current.as_mut() {
+                    rule.editable = false;
+                }
+            }
+            Event::End(ref end)
+                if inside_color_scale && end.local_name().as_ref() == b"colorScale" =>
+            {
+                inside_color_scale = false;
+                if let Some(rule) = current.as_mut() {
+                    if matches!(color_scale_values.len(), 2 | 3)
+                        && color_scale_values.len() == color_scale_colors.len()
+                    {
+                        let scale = WorkbookConditionalColorScale {
+                            points: color_scale_values
+                                .iter()
+                                .zip(&color_scale_colors)
+                                .map(
+                                    |((kind, value), color)| WorkbookConditionalColorScalePoint {
+                                        kind: kind.clone(),
+                                        value: value.clone(),
+                                        color: color.clone(),
+                                        resolved_value: None,
+                                    },
+                                )
+                                .collect(),
+                        };
+                        let fixed = scale.points.iter().all(|point| point.kind == "num");
+                        let fixed_values = fixed.then(|| {
+                            scale
+                                .points
+                                .iter()
+                                .filter_map(|point| point.value.as_deref()?.parse::<f64>().ok())
+                                .collect::<Vec<_>>()
+                        });
+                        let invalid_order = scale
+                            .points
+                            .first()
+                            .is_some_and(|point| point.kind == "max")
+                            || scale.points.last().is_some_and(|point| point.kind == "min")
+                            || scale.points.iter().enumerate().any(|(index, point)| {
+                                (point.kind == "min" && index != 0)
+                                    || (point.kind == "max" && index + 1 != scale.points.len())
+                            });
+                        if invalid_order
+                            || fixed_values.as_ref().is_some_and(|values| {
+                                values.len() != scale.points.len()
+                                    || !values.windows(2).all(|pair| pair[0] < pair[1])
+                            })
+                        {
+                            rule.editable = false;
+                        }
+                        rule.color_scale = Some(scale);
+                    } else {
+                        rule.editable = false;
+                    }
+                }
+            }
+            Event::Start(ref start)
+                if current.is_some() && start.local_name().as_ref() == b"formula" =>
+            {
+                inside_formula = true;
+                formula_text.clear();
+            }
+            Event::Text(ref text) if inside_formula => {
+                let decoded = text.xml10_content().map_err(|error| {
+                    format!("Failed to decode conditional-format formula: {error}")
+                })?;
+                formula_text.push_str(&quick_xml::escape::unescape(&decoded).map_err(|error| {
+                    format!("Failed to unescape conditional-format formula: {error}")
+                })?);
+            }
+            Event::CData(ref text) if inside_formula => {
+                formula_text.push_str(&text.decode().map_err(|error| {
+                    format!("Failed to decode conditional-format formula: {error}")
+                })?);
+            }
+            Event::GeneralRef(ref reference) if inside_formula => {
+                append_formula_general_reference(&mut formula_text, reference)?
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"formula" => {
+                inside_formula = false;
+                if formula_text.chars().count() > MAX_FORMULA_TEXT {
+                    return Err("Conditional-format formula is too long.".into());
+                }
+                if let Some(rule) = current.as_mut() {
+                    if rule.formula1.is_none() {
+                        rule.formula1 = Some(formula_text.clone());
+                    } else if rule.formula2.is_none() {
+                        rule.formula2 = Some(formula_text.clone());
+                    } else {
+                        rule.editable = false;
+                    }
+                }
+                formula_text.clear();
+            }
+            Event::Start(ref start)
+                if current.is_some()
+                    && !inside_formula
+                    && !matches!(
+                        start.local_name().as_ref(),
+                        b"cfRule"
+                            | b"formula"
+                            | b"colorScale"
+                            | b"dataBar"
+                            | b"iconSet"
+                            | b"cfvo"
+                            | b"color"
+                    ) =>
+            {
+                if let Some(rule) = current.as_mut() {
+                    rule.editable = false;
+                }
+            }
+            Event::End(ref end) if end.name().as_ref() == b"cfRule" => {
+                if let Some(mut rule) = current.take() {
+                    let supported_formula = if rule.kind == "cellIs" {
+                        rule.formula1.as_deref().is_some_and(|value| {
+                            value.trim_start_matches('=').parse::<f64>().is_ok()
+                        }) && (!matches!(rule.operator.as_deref(), Some("between" | "notBetween"))
+                            || rule.formula2.as_deref().is_some_and(|value| {
+                                value.trim_start_matches('=').parse::<f64>().is_ok()
+                            }))
+                    } else if rule.kind == "expression" {
+                        rule.formula1
+                            .as_deref()
+                            .is_some_and(safe_conditional_expression_supported)
+                            && rule.formula2.is_none()
+                    } else if rule.kind == "colorScale" {
+                        rule.color_scale.is_some()
+                            && rule.formula1.is_none()
+                            && rule.formula2.is_none()
+                            && rule.operator.is_none()
+                    } else if rule.kind == "dataBar" {
+                        rule.data_bar.is_some()
+                            && rule.formula1.is_none()
+                            && rule.formula2.is_none()
+                            && rule.operator.is_none()
+                    } else {
+                        rule.icon_set.is_some()
+                            && rule.formula1.is_none()
+                            && rule.formula2.is_none()
+                            && rule.operator.is_none()
+                    };
+                    rule.editable &= supported_formula;
+                    group_rules.push(rule);
+                }
+            }
+            Event::End(ref end) if end.name().as_ref() == b"conditionalFormatting" => {
+                result.append(&mut group_rules);
+                group_index += 1;
+                ranges.clear();
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(result)
+}
+
+const MAX_DYNAMIC_COLOR_SCALE_RULES: usize = 64;
+const MAX_COLOR_SCALE_PERCENTILE_VALUES: usize = 1_000_000;
+
+#[derive(Default)]
+struct ColorScaleStatistics {
+    minimum: Option<f64>,
+    maximum: Option<f64>,
+    percentile_values: Vec<f64>,
+    needs_percentile: bool,
+    overflowed: bool,
+}
+
+fn resolve_dynamic_color_scales(
+    xml: &[u8],
+    rules: &mut [WorkbookConditionalFormatRule],
+) -> Result<(), String> {
+    let mut dynamic = Vec::new();
+    for (index, rule) in rules.iter_mut().enumerate() {
+        let mut has_dynamic = false;
+        if let Some(scale) = rule.color_scale.as_mut() {
+            for point in &mut scale.points {
+                point.resolved_value = if point.kind == "num" {
+                    point.value.clone()
+                } else {
+                    has_dynamic = true;
+                    None
+                };
+                if !matches!(
+                    point.kind.as_str(),
+                    "min" | "max" | "num" | "percent" | "percentile"
+                ) {
+                    rule.editable = false;
+                }
+            }
+        } else if let Some(bar) = rule.data_bar.as_mut() {
+            for point in [&mut bar.minimum, &mut bar.maximum] {
+                point.resolved_value = if point.kind == "num" {
+                    point.value.clone()
+                } else {
+                    has_dynamic = true;
+                    None
+                };
+                if !matches!(
+                    point.kind.as_str(),
+                    "min" | "max" | "num" | "percent" | "percentile"
+                ) {
+                    rule.editable = false;
+                }
+            }
+        } else if let Some(icon_set) = rule.icon_set.as_mut() {
+            for point in &mut icon_set.thresholds {
+                point.resolved_value = if point.kind == "num" {
+                    point.value.clone()
+                } else {
+                    has_dynamic = true;
+                    None
+                };
+                if !matches!(point.kind.as_str(), "num" | "percent" | "percentile") {
+                    rule.editable = false;
+                }
+            }
+        } else {
+            continue;
+        }
+        if has_dynamic && rule.editable {
+            dynamic.push(index);
+        }
+    }
+    if dynamic.is_empty() {
+        return Ok(());
+    }
+    if dynamic.len() > MAX_DYNAMIC_COLOR_SCALE_RULES {
+        for index in dynamic {
+            rules[index].editable = false;
+        }
+        return Ok(());
+    }
+
+    let mut statistics = dynamic
+        .iter()
+        .map(|index| {
+            let needs_percentile =
+                rules[*index].color_scale.as_ref().is_some_and(|scale| {
+                    scale.points.iter().any(|point| point.kind == "percentile")
+                }) || rules[*index].data_bar.as_ref().is_some_and(|bar| {
+                    [&bar.minimum, &bar.maximum]
+                        .iter()
+                        .any(|point| point.kind == "percentile")
+                }) || rules[*index].icon_set.as_ref().is_some_and(|icon_set| {
+                    icon_set
+                        .thresholds
+                        .iter()
+                        .any(|point| point.kind == "percentile")
+                });
+            (
+                *index,
+                ColorScaleStatistics {
+                    needs_percentile,
+                    ..Default::default()
+                },
+            )
+        })
+        .collect::<HashMap<_, _>>();
+    let mut total_percentile_values = 0usize;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut current_cell: Option<((usize, usize), bool)> = None;
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to scan color-scale values: {error}"))?
+        {
+            Event::Start(ref start) if start.local_name().as_ref() == b"c" => {
+                let coordinate = xml_value(start, b"r", reader.decoder())?
+                    .map(|reference| parse_cell_reference(&reference))
+                    .transpose()?;
+                let kind = xml_value(start, b"t", reader.decoder())?;
+                current_cell = coordinate
+                    .map(|coordinate| (coordinate, kind.as_deref().is_none_or(|kind| kind == "n")));
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"c" => current_cell = None,
+            Event::Start(ref start) if start.local_name().as_ref() == b"v" => {
+                let Some((coordinate, true)) = current_cell else {
+                    continue;
+                };
+                let text = reader
+                    .read_text(start.name())
+                    .map_err(|error| format!("Failed to read a color-scale cell value: {error}"))?;
+                let text = text.xml10_content().map_err(|error| {
+                    format!("Failed to decode a color-scale cell value: {error}")
+                })?;
+                let Ok(value) = text.trim().parse::<f64>() else {
+                    continue;
+                };
+                if !value.is_finite() {
+                    continue;
+                }
+                for index in &dynamic {
+                    if !rules[*index]
+                        .ranges
+                        .iter()
+                        .any(|range| contains_coordinate(range, coordinate))
+                    {
+                        continue;
+                    }
+                    let stats = statistics
+                        .get_mut(index)
+                        .expect("dynamic scale stats exist");
+                    stats.minimum = Some(stats.minimum.map_or(value, |current| current.min(value)));
+                    stats.maximum = Some(stats.maximum.map_or(value, |current| current.max(value)));
+                    if stats.needs_percentile {
+                        if total_percentile_values >= MAX_COLOR_SCALE_PERCENTILE_VALUES {
+                            stats.overflowed = true;
+                        } else {
+                            stats.percentile_values.push(value);
+                            total_percentile_values += 1;
+                        }
+                    }
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+
+    for index in dynamic {
+        let stats = statistics
+            .get_mut(&index)
+            .expect("dynamic scale stats exist");
+        if stats.overflowed {
+            rules[index].editable = false;
+            continue;
+        }
+        if stats.needs_percentile {
+            stats.percentile_values.sort_by(f64::total_cmp);
+        }
+        let resolve = |point: &WorkbookConditionalThreshold| match point.kind.as_str() {
+            "num" => point
+                .value
+                .as_deref()
+                .and_then(|value| value.parse::<f64>().ok()),
+            "min" => stats.minimum,
+            "max" => stats.maximum,
+            "percent" => point
+                .value
+                .as_deref()
+                .and_then(|value| value.parse::<f64>().ok())
+                .and_then(|percent| {
+                    Some(stats.minimum? + (stats.maximum? - stats.minimum?) * percent / 100.0)
+                }),
+            "percentile" => point
+                .value
+                .as_deref()
+                .and_then(|value| value.parse::<f64>().ok())
+                .and_then(|percentile| percentile_value(&stats.percentile_values, percentile)),
+            _ => None,
+        };
+        if let Some(scale) = rules[index].color_scale.as_mut() {
+            for point in &mut scale.points {
+                let threshold = WorkbookConditionalThreshold {
+                    kind: point.kind.clone(),
+                    value: point.value.clone(),
+                    resolved_value: None,
+                };
+                point.resolved_value = resolve(&threshold).map(|value| value.to_string());
+            }
+            let resolved = scale
+                .points
+                .iter()
+                .map(|point| point.resolved_value.as_deref()?.parse::<f64>().ok())
+                .collect::<Option<Vec<_>>>();
+            if resolved
+                .as_ref()
+                .is_some_and(|values| !values.windows(2).all(|pair| pair[0] <= pair[1]))
+            {
+                rules[index].editable = false;
+            }
+        } else if let Some(bar) = rules[index].data_bar.as_mut() {
+            for point in [&mut bar.minimum, &mut bar.maximum] {
+                point.resolved_value = resolve(point).map(|value| value.to_string());
+            }
+            let resolved = [&bar.minimum, &bar.maximum]
+                .iter()
+                .map(|point| point.resolved_value.as_deref()?.parse::<f64>().ok())
+                .collect::<Option<Vec<_>>>();
+            if resolved
+                .as_ref()
+                .is_some_and(|values| values.len() != 2 || values[0] >= values[1])
+            {
+                rules[index].editable = false;
+            }
+        } else if let Some(icon_set) = rules[index].icon_set.as_mut() {
+            for point in &mut icon_set.thresholds {
+                let threshold = WorkbookConditionalThreshold {
+                    kind: point.kind.clone(),
+                    value: point.value.clone(),
+                    resolved_value: None,
+                };
+                point.resolved_value = resolve(&threshold).map(|value| value.to_string());
+            }
+            let resolved = icon_set
+                .thresholds
+                .iter()
+                .map(|point| point.resolved_value.as_deref()?.parse::<f64>().ok())
+                .collect::<Option<Vec<_>>>();
+            if resolved.as_ref().is_some_and(|values| {
+                values.len() != icon_set.thresholds.len()
+                    || !values.windows(2).all(|pair| pair[0] <= pair[1])
+            }) {
+                rules[index].editable = false;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn contains_coordinate(range: &WorkbookMergeRange, coordinate: (usize, usize)) -> bool {
+    coordinate.0 >= range.top
+        && coordinate.0 <= range.bottom
+        && coordinate.1 >= range.left
+        && coordinate.1 <= range.right
+}
+
+fn percentile_value(values: &[f64], percentile: f64) -> Option<f64> {
+    if values.is_empty() || !(0.0..=100.0).contains(&percentile) {
+        return None;
+    }
+    let rank = percentile / 100.0 * (values.len() - 1) as f64;
+    let lower = rank.floor() as usize;
+    let upper = rank.ceil() as usize;
+    let ratio = rank - lower as f64;
+    Some(values[lower] + (values[upper] - values[lower]) * ratio)
 }
 
 fn related_part_path(source_part: &str, target: &str) -> Result<String, String> {
@@ -1562,6 +2880,11 @@ fn read_sheet_tables(
                             false,
                         )?,
                         style_name: None,
+                        show_first_column: false,
+                        show_last_column: false,
+                        show_row_stripes: true,
+                        show_column_stripes: false,
+                        filter_state: WorkbookFilterState::default(),
                     });
                 }
                 Event::Start(ref event) | Event::Empty(ref event)
@@ -1581,6 +2904,14 @@ fn read_sheet_tables(
                 {
                     if let Some(table) = table.as_mut() {
                         table.style_name = xml_value(event, b"name", reader.decoder())?;
+                        table.show_first_column =
+                            bool_attribute(event, b"showFirstColumn", reader.decoder(), false)?;
+                        table.show_last_column =
+                            bool_attribute(event, b"showLastColumn", reader.decoder(), false)?;
+                        table.show_row_stripes =
+                            bool_attribute(event, b"showRowStripes", reader.decoder(), true)?;
+                        table.show_column_stripes =
+                            bool_attribute(event, b"showColumnStripes", reader.decoder(), false)?;
                     }
                 }
                 Event::Eof => break,
@@ -1588,14 +2919,18 @@ fn read_sheet_tables(
             }
             buffer.clear();
         }
-        tables.push(table.ok_or("Excel Table 部件缺少 table 根节点")?);
+        let mut table = table.ok_or("Excel Table 部件缺少 table 根节点")?;
+        table.filter_state = read_auto_filter_state(&part.data, &table.range)?;
+        tables.push(table);
     }
     Ok(tables)
 }
 
 #[derive(Default)]
 struct PendingDrawing {
-    id: String,
+    object_id: String,
+    anchor_index: usize,
+    anchor_kind: String,
     name: String,
     description: Option<String>,
     kind: String,
@@ -1652,9 +2987,11 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
                         return Err(format!("单个图表系列不能超过 {MAX_CHART_SERIES} 个"));
                     }
                     current_series = Some(WorkbookChartSeries {
+                        index: series.len(),
                         name: None,
                         categories: None,
                         values: None,
+                        editable: false,
                     });
                 }
                 stack.push(local);
@@ -1711,7 +3048,17 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
             }
             Event::End(ref event) => {
                 if event.local_name().as_ref() == b"ser" {
-                    if let Some(item) = current_series.take() {
+                    if let Some(mut item) = current_series.take() {
+                        item.editable = item
+                            .categories
+                            .as_deref()
+                            .and_then(|formula| defined_name_reference(formula, None))
+                            .is_some()
+                            && item
+                                .values
+                                .as_deref()
+                                .and_then(|formula| defined_name_reference(formula, None))
+                                .is_some();
                         series.push(item);
                     }
                 }
@@ -1725,6 +3072,7 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
     let title = (!title_parts.is_empty()).then(|| title_parts.join(""));
     Ok(WorkbookChart {
         chart_type,
+        title_editable: title.is_some(),
         title,
         series,
     })
@@ -1772,6 +3120,7 @@ fn read_sheet_drawings(
         reader.config_mut().trim_text(true);
         let mut buffer = Vec::new();
         let mut current: Option<PendingDrawing> = None;
+        let mut next_anchor_index = 0usize;
         let mut anchor_section: Option<bool> = None;
         let mut anchor_field: Option<String> = None;
         loop {
@@ -1790,7 +3139,17 @@ fn read_sheet_drawings(
                             "单个 Sheet 绘图对象不能超过 {MAX_DRAWING_OBJECTS} 个"
                         ));
                     }
-                    current = Some(PendingDrawing::default());
+                    current = Some(PendingDrawing {
+                        anchor_index: next_anchor_index,
+                        anchor_kind: match event.local_name().as_ref() {
+                            b"twoCellAnchor" => "two_cell",
+                            b"oneCellAnchor" => "one_cell",
+                            _ => "absolute",
+                        }
+                        .into(),
+                        ..Default::default()
+                    });
+                    next_anchor_index += 1;
                 }
                 Event::Start(ref event) if event.local_name().as_ref() == b"from" => {
                     anchor_section = Some(false);
@@ -1837,11 +3196,11 @@ fn read_sheet_drawings(
                     if event.local_name().as_ref() == b"cNvPr" =>
                 {
                     if let Some(item) = current.as_mut() {
-                        if item.id.is_empty() {
-                            item.id = xml_value(event, b"id", reader.decoder())?
+                        if item.object_id.is_empty() {
+                            item.object_id = xml_value(event, b"id", reader.decoder())?
                                 .unwrap_or_else(|| (result.len() + 1).to_string());
                             item.name = xml_value(event, b"name", reader.decoder())?
-                                .unwrap_or_else(|| format!("Drawing {}", item.id));
+                                .unwrap_or_else(|| format!("Drawing {}", item.object_id));
                             item.description = xml_value(event, b"descr", reader.decoder())?;
                         }
                     }
@@ -1910,7 +3269,14 @@ fn read_sheet_drawings(
                             None
                         };
                         result.push(WorkbookDrawingObject {
-                            id: item.id,
+                            id: format!(
+                                "{}#{}:{}",
+                                drawing_path, item.anchor_index, item.object_id
+                            ),
+                            object_id: item.object_id.clone(),
+                            drawing_part: drawing_path.clone(),
+                            anchor_index: item.anchor_index,
+                            anchor_kind: item.anchor_kind.clone(),
                             name: item.name,
                             description: item.description,
                             kind: if item.kind.is_empty() {
@@ -1922,6 +3288,7 @@ fn read_sheet_drawings(
                             to: item.to,
                             part,
                             chart,
+                            editable: item.anchor_kind == "two_cell" && !item.object_id.is_empty(),
                         });
                     }
                 }
@@ -1940,6 +3307,598 @@ fn read_sheet_drawings(
         }
     }
     Ok(result)
+}
+
+fn validate_drawing_anchor(anchor: &WorkbookDrawingAnchor, endpoint: bool) -> Result<(), String> {
+    let row_limit = if endpoint {
+        MAX_XLSX_ROWS
+    } else {
+        MAX_XLSX_ROWS - 1
+    };
+    let column_limit = if endpoint {
+        MAX_XLSX_COLUMNS
+    } else {
+        MAX_XLSX_COLUMNS - 1
+    };
+    if anchor.row > row_limit || anchor.column > column_limit {
+        return Err("The Drawing anchor is outside the XLSX grid.".into());
+    }
+    if !(0..=100_000_000).contains(&anchor.row_offset)
+        || !(0..=100_000_000).contains(&anchor.column_offset)
+    {
+        return Err("Drawing anchor offsets must be between 0 and 100,000,000 EMU.".into());
+    }
+    Ok(())
+}
+
+fn patch_drawing_object_xml(xml: &[u8], change: &WorkbookDrawingChange) -> Result<Vec<u8>, String> {
+    let (from, to) = if change.action == WorkbookDrawingAction::MoveResize {
+        let from = change
+            .from
+            .as_ref()
+            .ok_or("Moving a Drawing object requires a start anchor.")?;
+        let to = change
+            .to
+            .as_ref()
+            .ok_or("Moving a Drawing object requires an end anchor.")?;
+        validate_drawing_anchor(from, false)?;
+        validate_drawing_anchor(to, true)?;
+        if to.row < from.row
+            || to.column < from.column
+            || (to.row == from.row
+                && to.column == from.column
+                && to.row_offset <= from.row_offset
+                && to.column_offset <= from.column_offset)
+        {
+            return Err("The Drawing end anchor must follow its start anchor.".into());
+        }
+        (Some(from), Some(to))
+    } else {
+        let name = change
+            .name
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .ok_or("A Drawing object name is required.")?;
+        if name.chars().count() > 255 {
+            return Err("A Drawing object name cannot exceed 255 characters.".into());
+        }
+        if change
+            .description
+            .as_deref()
+            .is_none_or(|value| value.chars().count() > MAX_DRAWING_TEXT)
+        {
+            return Err(format!(
+                "A Drawing description is required and cannot exceed {MAX_DRAWING_TEXT} characters."
+            ));
+        }
+        (None, None)
+    };
+
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 128));
+    let mut buffer = Vec::new();
+    let mut next_anchor = 0usize;
+    let mut active_anchor = None;
+    let mut anchor_section: Option<bool> = None;
+    let mut anchor_field: Option<Vec<u8>> = None;
+    let mut identity_found = false;
+    let mut patched_metadata = false;
+    let mut patched_coordinates = 0usize;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse Drawing object XML: {error}"))?;
+        match event {
+            Event::Start(ref start)
+                if matches!(
+                    start.local_name().as_ref(),
+                    b"twoCellAnchor" | b"oneCellAnchor" | b"absoluteAnchor"
+                ) =>
+            {
+                active_anchor = Some(next_anchor);
+                next_anchor += 1;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy Drawing anchor: {error}"))?;
+            }
+            Event::End(ref end)
+                if matches!(
+                    end.local_name().as_ref(),
+                    b"twoCellAnchor" | b"oneCellAnchor" | b"absoluteAnchor"
+                ) =>
+            {
+                active_anchor = None;
+                anchor_section = None;
+                anchor_field = None;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish Drawing anchor: {error}"))?;
+            }
+            Event::Start(ref start)
+                if active_anchor == Some(change.anchor_index)
+                    && matches!(start.local_name().as_ref(), b"from" | b"to") =>
+            {
+                anchor_section = Some(start.local_name().as_ref() == b"to");
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy Drawing marker: {error}"))?;
+            }
+            Event::End(ref end)
+                if active_anchor == Some(change.anchor_index)
+                    && matches!(end.local_name().as_ref(), b"from" | b"to") =>
+            {
+                anchor_section = None;
+                anchor_field = None;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish Drawing marker: {error}"))?;
+            }
+            Event::Start(ref start)
+                if active_anchor == Some(change.anchor_index)
+                    && anchor_section.is_some()
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"row" | b"col" | b"rowOff" | b"colOff"
+                    ) =>
+            {
+                anchor_field = Some(start.local_name().as_ref().to_vec());
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy Drawing coordinate: {error}"))?;
+            }
+            Event::Text(_)
+                if change.action == WorkbookDrawingAction::MoveResize
+                    && active_anchor == Some(change.anchor_index)
+                    && anchor_section.is_some()
+                    && anchor_field.is_some() =>
+            {
+                let anchor = if anchor_section == Some(true) {
+                    to.expect("validated Drawing end anchor")
+                } else {
+                    from.expect("validated Drawing start anchor")
+                };
+                let value = match anchor_field.as_deref() {
+                    Some(b"row") => anchor.row.to_string(),
+                    Some(b"col") => anchor.column.to_string(),
+                    Some(b"rowOff") => anchor.row_offset.to_string(),
+                    Some(b"colOff") => anchor.column_offset.to_string(),
+                    _ => return Err("Unknown Drawing anchor coordinate.".into()),
+                };
+                writer
+                    .write_event(Event::Text(BytesText::new(&value)))
+                    .map_err(|error| format!("Failed to write Drawing coordinate: {error}"))?;
+                patched_coordinates += 1;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if active_anchor == Some(change.anchor_index)
+                    && start.local_name().as_ref() == b"cNvPr" =>
+            {
+                let object_id = xml_value(start, b"id", reader.decoder())?.unwrap_or_default();
+                if object_id == change.object_id {
+                    identity_found = true;
+                    if change.action == WorkbookDrawingAction::UpdateMetadata {
+                        let updated = replace_xml_attribute(
+                            start,
+                            b"name",
+                            change
+                                .name
+                                .as_deref()
+                                .expect("validated Drawing name")
+                                .trim(),
+                            false,
+                        )?;
+                        let updated = replace_xml_attribute(
+                            &updated,
+                            b"descr",
+                            change
+                                .description
+                                .as_deref()
+                                .expect("validated Drawing description"),
+                            false,
+                        )?;
+                        let output = match event {
+                            Event::Start(_) => Event::Start(updated),
+                            Event::Empty(_) => Event::Empty(updated),
+                            _ => unreachable!(),
+                        };
+                        writer.write_event(output).map_err(|error| {
+                            format!("Failed to update Drawing metadata: {error}")
+                        })?;
+                        patched_metadata = true;
+                    } else {
+                        writer
+                            .write_event(event.into_owned())
+                            .map_err(|error| format!("Failed to copy Drawing identity: {error}"))?;
+                    }
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("Failed to copy Drawing metadata: {error}"))?;
+                }
+            }
+            Event::End(ref end)
+                if active_anchor == Some(change.anchor_index)
+                    && matches!(
+                        end.local_name().as_ref(),
+                        b"row" | b"col" | b"rowOff" | b"colOff"
+                    ) =>
+            {
+                anchor_field = None;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish Drawing coordinate: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy Drawing XML: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !identity_found {
+        return Err("The selected Drawing object no longer exists.".into());
+    }
+    if change.action == WorkbookDrawingAction::UpdateMetadata && !patched_metadata {
+        return Err("The selected Drawing metadata could not be updated.".into());
+    }
+    if change.action == WorkbookDrawingAction::MoveResize && patched_coordinates != 8 {
+        return Err("Only standard two-cell Drawing anchors can be moved or resized.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn validate_chart_range_formula(
+    formula: &str,
+    sheet_paths: &HashMap<String, String>,
+) -> Result<(String, WorkbookRangeReference, usize), String> {
+    let normalized = formula.trim().strip_prefix('=').unwrap_or(formula.trim());
+    if normalized.is_empty() || normalized.chars().count() > MAX_FORMULA_TEXT {
+        return Err("A chart series reference is empty or too long.".into());
+    }
+    if !normalized.contains('!') || normalized.contains(['[', ']', ',', ';']) {
+        return Err("Chart series references must use one internal worksheet A1 range.".into());
+    }
+    let reference = defined_name_reference(normalized, None)
+        .ok_or("Chart series references must use one internal worksheet A1 range.")?;
+    if !sheet_paths.contains_key(&reference.sheet) {
+        return Err("The chart series worksheet does not exist in this workbook.".into());
+    }
+    let rows = reference.bottom - reference.top + 1;
+    let columns = reference.right - reference.left + 1;
+    if rows > 1 && columns > 1 {
+        return Err("Chart series references must be one-dimensional ranges.".into());
+    }
+    let points = rows.max(columns);
+    if points > 10_000 {
+        return Err(
+            "A chart series cannot reference more than 10,000 points in this stage.".into(),
+        );
+    }
+    Ok((normalized.to_string(), reference, points))
+}
+
+fn patch_chart_title_xml(xml: &[u8], title: &str) -> Result<Vec<u8>, String> {
+    let title = title.trim();
+    if title.is_empty() || title.chars().count() > MAX_DRAWING_TEXT {
+        return Err(format!(
+            "A chart title is required and cannot exceed {MAX_DRAWING_TEXT} characters."
+        ));
+    }
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + title.len()));
+    let mut buffer = Vec::new();
+    let mut stack: Vec<Vec<u8>> = Vec::new();
+    let mut patched = 0usize;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse chart title XML: {error}"))?;
+        match event {
+            Event::Start(ref start) => {
+                stack.push(start.local_name().as_ref().to_vec());
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy chart title XML: {error}"))?;
+            }
+            Event::Text(_)
+                if stack.last().is_some_and(|name| name.as_slice() == b"t")
+                    && stack.iter().any(|name| name.as_slice() == b"title") =>
+            {
+                let replacement = if patched == 0 { title } else { "" };
+                writer
+                    .write_event(Event::Text(BytesText::new(replacement)))
+                    .map_err(|error| format!("Failed to update chart title: {error}"))?;
+                patched += 1;
+            }
+            Event::End(_) => {
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish chart title XML: {error}"))?;
+                stack.pop();
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy chart title XML: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if patched == 0 {
+        return Err("Only existing standard chart titles can be edited in this stage.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn chart_series_context(stack: &[Vec<u8>]) -> Option<bool> {
+    if stack
+        .iter()
+        .any(|name| matches!(name.as_slice(), b"cat" | b"xVal"))
+    {
+        Some(false)
+    } else if stack
+        .iter()
+        .any(|name| matches!(name.as_slice(), b"val" | b"yVal"))
+    {
+        Some(true)
+    } else {
+        None
+    }
+}
+
+fn patch_chart_series_xml(
+    xml: &[u8],
+    series_index: usize,
+    categories: &str,
+    values: &str,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(
+        xml.len() + categories.len() + values.len(),
+    ));
+    let mut buffer = Vec::new();
+    let mut stack: Vec<Vec<u8>> = Vec::new();
+    let mut next_series = 0usize;
+    let mut active_series = None;
+    let mut skip_depth = 0usize;
+    let mut patched_categories = 0usize;
+    let mut patched_values = 0usize;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse chart series XML: {error}"))?;
+        if skip_depth > 0 {
+            match event {
+                Event::Start(_) => skip_depth += 1,
+                Event::End(_) => skip_depth -= 1,
+                Event::Eof => return Err("The chart series cache XML is incomplete.".into()),
+                _ => {}
+            }
+            buffer.clear();
+            continue;
+        }
+        match event {
+            Event::Start(ref start) => {
+                let local = start.local_name().as_ref().to_vec();
+                if local.as_slice() == b"ser" {
+                    active_series = Some(next_series);
+                    next_series += 1;
+                }
+                if active_series == Some(series_index)
+                    && matches!(local.as_slice(), b"numCache" | b"strCache")
+                    && chart_series_context(&stack).is_some()
+                {
+                    skip_depth = 1;
+                } else {
+                    stack.push(local);
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("Failed to copy chart series XML: {error}"))?;
+                }
+            }
+            Event::Empty(ref empty)
+                if active_series == Some(series_index)
+                    && matches!(empty.local_name().as_ref(), b"numCache" | b"strCache")
+                    && chart_series_context(&stack).is_some() => {}
+            Event::Text(_)
+                if active_series == Some(series_index)
+                    && stack.last().is_some_and(|name| name.as_slice() == b"f") =>
+            {
+                match chart_series_context(&stack) {
+                    Some(false) => {
+                        writer
+                            .write_event(Event::Text(BytesText::new(categories)))
+                            .map_err(|error| {
+                                format!("Failed to update chart categories: {error}")
+                            })?;
+                        patched_categories += 1;
+                    }
+                    Some(true) => {
+                        writer
+                            .write_event(Event::Text(BytesText::new(values)))
+                            .map_err(|error| format!("Failed to update chart values: {error}"))?;
+                        patched_values += 1;
+                    }
+                    None => writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("Failed to copy chart series formula: {error}"))?,
+                }
+            }
+            Event::End(ref end) => {
+                let is_series = end.local_name().as_ref() == b"ser";
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish chart series XML: {error}"))?;
+                stack.pop();
+                if is_series {
+                    active_series = None;
+                }
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy chart series XML: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if patched_categories != 1 || patched_values != 1 {
+        return Err(
+            "Only formula-based chart series with one category and value reference can be edited."
+                .into(),
+        );
+    }
+    Ok(writer.into_inner())
+}
+
+pub fn patch_workbook_drawing(
+    source: &[u8],
+    change: &WorkbookDrawingChange,
+) -> Result<Vec<u8>, String> {
+    let mut entries = load_package(source)?;
+    let paths = workbook_sheet_paths(&entries)?;
+    let sheet_path = paths
+        .get(&change.sheet)
+        .cloned()
+        .ok_or("The Drawing worksheet no longer exists.")?;
+    let sheet_xml = entries
+        .iter()
+        .find(|entry| entry.name == sheet_path)
+        .map(|entry| entry.data.clone())
+        .ok_or("The Drawing worksheet part is missing.")?;
+    if parse_page_layout(&sheet_xml)?.protection.enabled {
+        return Err("The protected worksheet cannot modify Drawing objects.".into());
+    }
+    let target = read_sheet_drawings(&entries, &sheet_path, &sheet_xml)?
+        .into_iter()
+        .find(|item| {
+            item.drawing_part == change.drawing_part
+                && item.anchor_index == change.anchor_index
+                && item.object_id == change.object_id
+        })
+        .ok_or("The selected Drawing object no longer exists.")?;
+    if !target.editable || target.anchor_kind != "two_cell" {
+        return Err("Only standard two-cell Drawing objects can be edited in this stage.".into());
+    }
+    match change.action {
+        WorkbookDrawingAction::UpdateMetadata | WorkbookDrawingAction::MoveResize => {
+            let drawing_entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == change.drawing_part)
+                .ok_or("The Drawing part is missing.")?;
+            drawing_entry.data = patch_drawing_object_xml(&drawing_entry.data, change)?;
+            let updated = read_sheet_drawings(&entries, &sheet_path, &sheet_xml)?
+                .into_iter()
+                .find(|item| {
+                    item.drawing_part == change.drawing_part
+                        && item.anchor_index == change.anchor_index
+                        && item.object_id == change.object_id
+                })
+                .ok_or("The updated Drawing object could not be read back.")?;
+            if change.action == WorkbookDrawingAction::UpdateMetadata {
+                if updated.name != change.name.as_deref().unwrap_or_default().trim()
+                    || updated.description.as_deref() != change.description.as_deref()
+                {
+                    return Err("The Drawing metadata failed semantic verification.".into());
+                }
+            } else {
+                if Some(&updated.from) != change.from.as_ref()
+                    || updated.to.as_ref() != change.to.as_ref()
+                {
+                    return Err("The Drawing anchor failed semantic verification.".into());
+                }
+            }
+        }
+        WorkbookDrawingAction::UpdateChartTitle => {
+            let chart = target
+                .chart
+                .as_ref()
+                .ok_or("The selected Drawing object is not a chart.")?;
+            if !chart.title_editable {
+                return Err(
+                    "Only existing standard chart titles can be edited in this stage.".into(),
+                );
+            }
+            let title = change
+                .chart_title
+                .as_deref()
+                .ok_or("A chart title is required.")?;
+            let chart_part = target
+                .part
+                .as_deref()
+                .filter(|part| part.starts_with("xl/charts/") && part.ends_with(".xml"))
+                .ok_or("The chart part is missing or unsafe.")?;
+            let chart_entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == chart_part)
+                .ok_or("The chart part is missing.")?;
+            chart_entry.data = patch_chart_title_xml(&chart_entry.data, title)?;
+            let verified = parse_chart_part(&chart_entry.data)?;
+            if verified.title.as_deref() != Some(title.trim()) {
+                return Err("The chart title failed semantic verification.".into());
+            }
+        }
+        WorkbookDrawingAction::UpdateChartSeries => {
+            let chart = target
+                .chart
+                .as_ref()
+                .ok_or("The selected Drawing object is not a chart.")?;
+            let series_index = change
+                .series_index
+                .ok_or("A chart series index is required.")?;
+            if !chart
+                .series
+                .get(series_index)
+                .is_some_and(|series| series.editable)
+            {
+                return Err("The selected chart series is not safely editable.".into());
+            }
+            let (categories, _, category_points) = validate_chart_range_formula(
+                change
+                    .series_categories
+                    .as_deref()
+                    .ok_or("A chart category reference is required.")?,
+                &paths,
+            )?;
+            let (values, _, value_points) = validate_chart_range_formula(
+                change
+                    .series_values
+                    .as_deref()
+                    .ok_or("A chart value reference is required.")?,
+                &paths,
+            )?;
+            if category_points != value_points {
+                return Err(
+                    "Chart category and value references must contain the same number of points."
+                        .into(),
+                );
+            }
+            let chart_part = target
+                .part
+                .as_deref()
+                .filter(|part| part.starts_with("xl/charts/") && part.ends_with(".xml"))
+                .ok_or("The chart part is missing or unsafe.")?;
+            let chart_entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == chart_part)
+                .ok_or("The chart part is missing.")?;
+            chart_entry.data =
+                patch_chart_series_xml(&chart_entry.data, series_index, &categories, &values)?;
+            let verified = parse_chart_part(&chart_entry.data)?;
+            let series = verified
+                .series
+                .get(series_index)
+                .ok_or("The updated chart series could not be read back.")?;
+            if series.categories.as_deref() != Some(categories.as_str())
+                || series.values.as_deref() != Some(values.as_str())
+            {
+                return Err("The chart series references failed semantic verification.".into());
+            }
+        }
+    }
+    write_package(entries, source.len() + 512)
 }
 
 #[derive(Default)]
@@ -2520,6 +4479,7 @@ pub fn read_workbook_sheet_layout(
         .iter()
         .find(|entry| entry.name == "xl/theme/theme1.xml")
         .map(|entry| entry.data.as_slice());
+    let conditional_dxf_styles = read_conditional_dxf_styles(&styles.data)?;
     let catalog = parse_styles(&styles.data, theme)?;
     let extent = sheet_extent(&sheet_xml.data)?;
     let formulas = read_sheet_formulas(&sheet_xml.data, row_start, row_end, max_columns)?;
@@ -2528,6 +4488,9 @@ pub fn read_workbook_sheet_layout(
         .map(|(coordinate, style_id)| (coordinate, catalog.public_style(style_id)))
         .collect();
     let structure = read_sheet_structure(&sheet_xml.data, row_start, row_end, max_columns)?;
+    let mut conditional_formats =
+        read_conditional_formats(&sheet_xml.data, &conditional_dxf_styles)?;
+    resolve_dynamic_color_scales(&sheet_xml.data, &mut conditional_formats)?;
     let tables = read_sheet_tables(&entries, sheet_path, &sheet_xml.data)?;
     let drawings = read_sheet_drawings(&entries, sheet_path, &sheet_xml.data)?;
     let mut page_layout = parse_page_layout(&sheet_xml.data)?;
@@ -2561,8 +4524,10 @@ pub fn read_workbook_sheet_layout(
         merged_cells: structure.merged_cells,
         freeze_pane: structure.freeze_pane,
         auto_filter: structure.auto_filter,
+        auto_filter_state: structure.auto_filter_state,
         tables,
         data_validations: structure.data_validations,
+        conditional_formats,
         drawings,
         page_layout,
     })
@@ -4971,23 +6936,28 @@ fn table_reference(range: &WorkbookMergeRange) -> Result<String, String> {
     ))
 }
 
-fn validate_table_change(change: &WorkbookTableChange) -> Result<(), String> {
-    let range = &change.range;
-    if range.top > range.bottom
-        || range.left > range.right
-        || range.bottom >= MAX_XLSX_ROWS
-        || range.right >= MAX_XLSX_COLUMNS
-    {
-        return Err("The Table range is outside the XLSX grid.".into());
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct TableStyleSettings {
+    name: Option<String>,
+    show_first_column: bool,
+    show_last_column: bool,
+    show_row_stripes: bool,
+    show_column_stripes: bool,
+}
+
+impl Default for TableStyleSettings {
+    fn default() -> Self {
+        Self {
+            name: Some("TableStyleMedium2".into()),
+            show_first_column: false,
+            show_last_column: false,
+            show_row_stripes: true,
+            show_column_stripes: false,
+        }
     }
-    if range.top == range.bottom {
-        return Err("A Table needs a header row and at least one data row.".into());
-    }
-    let width = range.right - range.left + 1;
-    if change.columns.len() != width {
-        return Err("The Table column count must match the selected range width.".into());
-    }
-    let name = change.table_name.trim();
+}
+
+fn validate_table_name(name: &str) -> Result<(), String> {
     if name.is_empty() || name.len() > 255 {
         return Err("The Table name must contain 1 to 255 characters.".into());
     }
@@ -5004,20 +6974,68 @@ fn validate_table_change(change: &WorkbookTableChange) -> Result<(), String> {
     if parse_cell_reference(name).is_ok() {
         return Err("The Table name cannot be a cell reference.".into());
     }
-    let mut column_names = HashSet::new();
-    for column in &change.columns {
-        let column = column.trim();
-        if column.is_empty() || column.len() > 255 {
-            return Err("Table headers must contain 1 to 255 characters.".into());
+    Ok(())
+}
+
+fn is_builtin_table_style(name: &str) -> bool {
+    [
+        ("TableStyleLight", 21u8),
+        ("TableStyleMedium", 28u8),
+        ("TableStyleDark", 11u8),
+    ]
+    .iter()
+    .any(|(prefix, maximum)| {
+        name.strip_prefix(prefix)
+            .and_then(|suffix| suffix.parse::<u8>().ok())
+            .is_some_and(|number| (1..=*maximum).contains(&number))
+    })
+}
+
+fn validate_table_change(change: &WorkbookTableChange) -> Result<(), String> {
+    let range = &change.range;
+    if range.top > range.bottom
+        || range.left > range.right
+        || range.bottom >= MAX_XLSX_ROWS
+        || range.right >= MAX_XLSX_COLUMNS
+    {
+        return Err("The Table range is outside the XLSX grid.".into());
+    }
+    if range.top == range.bottom {
+        return Err("A Table needs a header row and at least one data row.".into());
+    }
+    let name = change.table_name.trim();
+    validate_table_name(name)?;
+    if let Some(new_name) = change.new_table_name.as_deref().map(str::trim) {
+        validate_table_name(new_name)?;
+    }
+    if matches!(
+        change.action,
+        WorkbookTableAction::Create | WorkbookTableAction::Resize
+    ) {
+        let width = range.right - range.left + 1;
+        if change.columns.len() != width {
+            return Err("The Table column count must match the selected range width.".into());
         }
-        if !column_names.insert(column.to_lowercase()) {
-            return Err(format!("Table headers must be unique: {column}"));
+        let mut column_names = HashSet::new();
+        for column in &change.columns {
+            let column = column.trim();
+            if column.is_empty() || column.len() > 255 {
+                return Err("Table headers must contain 1 to 255 characters.".into());
+            }
+            if !column_names.insert(column.to_lowercase()) {
+                return Err(format!("Table headers must be unique: {column}"));
+            }
+        }
+    }
+    if let Some(style_name) = change.style_name.as_deref().map(str::trim) {
+        if !is_builtin_table_style(style_name) {
+            return Err("The Table style must be a supported built-in Excel Table style.".into());
         }
     }
     Ok(())
 }
 
-fn table_root(xml: &[u8]) -> Result<(u32, String, WorkbookMergeRange, Option<String>), String> {
+fn table_root(xml: &[u8]) -> Result<(u32, String, WorkbookMergeRange, TableStyleSettings), String> {
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(true);
     let mut buffer = Vec::new();
@@ -5040,7 +7058,7 @@ fn table_root(xml: &[u8]) -> Result<(u32, String, WorkbookMergeRange, Option<Str
                     &xml_value(event, b"ref", reader.decoder())?
                         .ok_or("Excel Table is missing ref")?,
                 )?;
-                let style = read_table_style_name(xml)?;
+                let style = read_table_style(xml)?;
                 return Ok((id, name, range, style));
             }
             Event::Eof => return Err("Excel Table is missing its root element.".into()),
@@ -5050,7 +7068,7 @@ fn table_root(xml: &[u8]) -> Result<(u32, String, WorkbookMergeRange, Option<Str
     }
 }
 
-fn read_table_style_name(xml: &[u8]) -> Result<Option<String>, String> {
+fn read_table_style(xml: &[u8]) -> Result<TableStyleSettings, String> {
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(true);
     let mut buffer = Vec::new();
@@ -5062,9 +7080,35 @@ fn read_table_style_name(xml: &[u8]) -> Result<Option<String>, String> {
             Event::Start(ref event) | Event::Empty(ref event)
                 if event.local_name().as_ref() == b"tableStyleInfo" =>
             {
-                return xml_value(event, b"name", reader.decoder());
+                return Ok(TableStyleSettings {
+                    name: xml_value(event, b"name", reader.decoder())?,
+                    show_first_column: bool_attribute(
+                        event,
+                        b"showFirstColumn",
+                        reader.decoder(),
+                        false,
+                    )?,
+                    show_last_column: bool_attribute(
+                        event,
+                        b"showLastColumn",
+                        reader.decoder(),
+                        false,
+                    )?,
+                    show_row_stripes: bool_attribute(
+                        event,
+                        b"showRowStripes",
+                        reader.decoder(),
+                        true,
+                    )?,
+                    show_column_stripes: bool_attribute(
+                        event,
+                        b"showColumnStripes",
+                        reader.decoder(),
+                        false,
+                    )?,
+                });
             }
-            Event::Eof => return Ok(None),
+            Event::Eof => return Ok(TableStyleSettings::default()),
             _ => {}
         }
         buffer.clear();
@@ -5118,7 +7162,7 @@ fn build_table_xml(
     name: &str,
     range: &WorkbookMergeRange,
     columns: &[String],
-    style_name: Option<&str>,
+    style: &TableStyleSettings,
 ) -> Result<Vec<u8>, String> {
     let reference = table_reference(range)?;
     let mut writer = Writer::new(Vec::new());
@@ -5166,18 +7210,286 @@ fn build_table_xml(
     writer
         .write_event(Event::End(BytesEnd::new("tableColumns")))
         .map_err(|error| format!("Failed to finish Table columns: {error}"))?;
-    let mut style = BytesStart::new("tableStyleInfo");
-    style.push_attribute(("name", style_name.unwrap_or("TableStyleMedium2")));
-    style.push_attribute(("showFirstColumn", "0"));
-    style.push_attribute(("showLastColumn", "0"));
-    style.push_attribute(("showRowStripes", "1"));
-    style.push_attribute(("showColumnStripes", "0"));
-    writer
-        .write_event(Event::Empty(style))
-        .map_err(|error| format!("Failed to write Table style: {error}"))?;
+    write_table_style(&mut writer, style)?;
     writer
         .write_event(Event::End(BytesEnd::new("table")))
         .map_err(|error| format!("Failed to finish Table: {error}"))?;
+    Ok(writer.into_inner())
+}
+
+fn write_table_style(
+    writer: &mut Writer<Vec<u8>>,
+    style: &TableStyleSettings,
+) -> Result<(), String> {
+    let mut event = BytesStart::new("tableStyleInfo");
+    if let Some(name) = style.name.as_deref() {
+        event.push_attribute(("name", name));
+    }
+    event.push_attribute((
+        "showFirstColumn",
+        if style.show_first_column { "1" } else { "0" },
+    ));
+    event.push_attribute((
+        "showLastColumn",
+        if style.show_last_column { "1" } else { "0" },
+    ));
+    event.push_attribute((
+        "showRowStripes",
+        if style.show_row_stripes { "1" } else { "0" },
+    ));
+    event.push_attribute((
+        "showColumnStripes",
+        if style.show_column_stripes { "1" } else { "0" },
+    ));
+    writer
+        .write_event(Event::Empty(event))
+        .map_err(|error| format!("Failed to write Table style: {error}"))
+}
+
+fn patch_table_identity(xml: &[u8], name: &str) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
+    let mut buffer = Vec::new();
+    let mut patched = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse Excel Table name: {error}"))?;
+        match event {
+            Event::Start(ref start) if !patched && start.local_name().as_ref() == b"table" => {
+                let updated = replace_xml_attribute(start, b"name", name, false)?;
+                let updated = replace_xml_attribute(&updated, b"displayName", name, false)?;
+                writer
+                    .write_event(Event::Start(updated))
+                    .map_err(|error| format!("Failed to write Excel Table name: {error}"))?;
+                patched = true;
+            }
+            Event::Empty(ref start) if !patched && start.local_name().as_ref() == b"table" => {
+                let updated = replace_xml_attribute(start, b"name", name, false)?;
+                let updated = replace_xml_attribute(&updated, b"displayName", name, false)?;
+                writer
+                    .write_event(Event::Empty(updated))
+                    .map_err(|error| format!("Failed to write Excel Table name: {error}"))?;
+                patched = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy Excel Table: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !patched {
+        return Err("Excel Table is missing its root element.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn patch_table_style(xml: &[u8], style: &TableStyleSettings) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 100));
+    let mut buffer = Vec::new();
+    let mut patched = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse Excel Table style: {error}"))?;
+        match event {
+            Event::Start(ref start)
+                if !patched && start.local_name().as_ref() == b"tableStyleInfo" =>
+            {
+                write_table_style(&mut writer, style)?;
+                skip_element(&mut reader, b"tableStyleInfo", &mut buffer)?;
+                patched = true;
+            }
+            Event::Empty(ref start)
+                if !patched && start.local_name().as_ref() == b"tableStyleInfo" =>
+            {
+                write_table_style(&mut writer, style)?;
+                patched = true;
+            }
+            Event::End(ref end) if !patched && end.local_name().as_ref() == b"table" => {
+                write_table_style(&mut writer, style)?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish Excel Table: {error}"))?;
+                patched = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy Excel Table style: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !patched {
+        return Err("Excel Table is missing its root element.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn package_has_structured_table_reference(
+    entries: &[PackageEntry],
+    table_path: &str,
+    table_name: &str,
+) -> bool {
+    let needle = format!("{}[", table_name.to_lowercase());
+    entries.iter().any(|entry| {
+        entry.name != table_path
+            && entry.name.ends_with(".xml")
+            && String::from_utf8_lossy(&entry.data)
+                .to_lowercase()
+                .contains(&needle)
+    })
+}
+
+fn remove_table_relationship(xml: &[u8], relation_id: &str) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
+    let mut buffer = Vec::new();
+    let mut removed = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse worksheet relationships: {error}"))?;
+        match event {
+            Event::Start(ref start)
+                if start.local_name().as_ref() == b"Relationship"
+                    && xml_value(start, b"Id", reader.decoder())?.as_deref()
+                        == Some(relation_id) =>
+            {
+                skip_element(&mut reader, b"Relationship", &mut buffer)?;
+                removed = true;
+            }
+            Event::Empty(ref start)
+                if start.local_name().as_ref() == b"Relationship"
+                    && xml_value(start, b"Id", reader.decoder())?.as_deref()
+                        == Some(relation_id) =>
+            {
+                removed = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy worksheet relationships: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !removed {
+        return Err("The worksheet Table relationship is missing.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn remove_sheet_table_part(xml: &[u8], relation_id: &str) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut part_count = 0usize;
+    let mut found = false;
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to inspect worksheet Table references: {error}"))?
+        {
+            Event::Start(ref start) | Event::Empty(ref start)
+                if start.local_name().as_ref() == b"tablePart" =>
+            {
+                if xml_value(start, b"r:id", reader.decoder())?.as_deref() == Some(relation_id) {
+                    found = true;
+                } else {
+                    part_count += 1;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    if !found {
+        return Err("The worksheet Table reference is missing.".into());
+    }
+
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
+    let mut buffer = Vec::new();
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse worksheet Table references: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"tableParts" => {
+                if part_count == 0 {
+                    skip_element(&mut reader, b"tableParts", &mut buffer)?;
+                } else {
+                    let updated =
+                        replace_xml_attribute(start, b"count", &part_count.to_string(), false)?;
+                    writer.write_event(Event::Start(updated)).map_err(|error| {
+                        format!("Failed to update Table reference count: {error}")
+                    })?;
+                }
+            }
+            Event::Start(ref start)
+                if start.local_name().as_ref() == b"tablePart"
+                    && xml_value(start, b"r:id", reader.decoder())?.as_deref()
+                        == Some(relation_id) =>
+            {
+                skip_element(&mut reader, b"tablePart", &mut buffer)?;
+            }
+            Event::Empty(ref start)
+                if start.local_name().as_ref() == b"tablePart"
+                    && xml_value(start, b"r:id", reader.decoder())?.as_deref()
+                        == Some(relation_id) => {}
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy worksheet Table references: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn remove_table_content_type(xml: &[u8], part_name: &str) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
+    let mut buffer = Vec::new();
+    let mut removed = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse content types: {error}"))?;
+        match event {
+            Event::Start(ref start)
+                if start.local_name().as_ref() == b"Override"
+                    && xml_value(start, b"PartName", reader.decoder())?.as_deref()
+                        == Some(part_name) =>
+            {
+                skip_element(&mut reader, b"Override", &mut buffer)?;
+                removed = true;
+            }
+            Event::Empty(ref start)
+                if start.local_name().as_ref() == b"Override"
+                    && xml_value(start, b"PartName", reader.decoder())?.as_deref()
+                        == Some(part_name) =>
+            {
+                removed = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy content types: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !removed {
+        return Err("The Excel Table content type is missing.".into());
+    }
     Ok(writer.into_inner())
 }
 
@@ -5351,6 +7663,2666 @@ fn patch_content_types_with_table(xml: &[u8], part_name: &str) -> Result<Vec<u8>
     Ok(writer.into_inner())
 }
 
+fn validate_conditional_format_ranges(ranges: &[WorkbookMergeRange]) -> Result<(), String> {
+    if ranges.is_empty() || ranges.len() > MAX_VALIDATION_RANGES {
+        return Err("A conditional-format rule must target at least one valid range.".into());
+    }
+    for range in ranges {
+        if range.top > range.bottom
+            || range.left > range.right
+            || range.bottom >= MAX_XLSX_ROWS
+            || range.right >= MAX_XLSX_COLUMNS
+        {
+            return Err("A conditional-format range is outside the XLSX grid.".into());
+        }
+    }
+    Ok(())
+}
+
+fn validate_conditional_format_rule(rule: &WorkbookConditionalFormatRule) -> Result<(), String> {
+    validate_conditional_format_ranges(&rule.ranges)?;
+    if rule.kind == "cellIs" {
+        if !conditional_operator_supported(rule.operator.as_deref()) {
+            return Err("The cell-value conditional-format operator is unsupported.".into());
+        }
+        rule.formula1
+            .as_deref()
+            .map(str::trim)
+            .and_then(|value| value.trim_start_matches('=').parse::<f64>().ok())
+            .filter(|value| value.is_finite())
+            .ok_or("The first conditional-format threshold must be a finite number.")?;
+        if matches!(rule.operator.as_deref(), Some("between" | "notBetween")) {
+            rule.formula2
+                .as_deref()
+                .map(str::trim)
+                .and_then(|value| value.trim_start_matches('=').parse::<f64>().ok())
+                .filter(|value| value.is_finite())
+                .ok_or("Between and not-between rules require a finite second threshold.")?;
+        }
+    } else if rule.kind == "expression" {
+        if rule.operator.is_some() || rule.formula2.is_some() {
+            return Err(
+                "Expression conditional formats cannot have an operator or second formula.".into(),
+            );
+        }
+        let formula = rule
+            .formula1
+            .as_deref()
+            .ok_or("An expression conditional format requires a formula.")?;
+        if !safe_conditional_expression_supported(formula) {
+            return Err("The expression must use the safe AND/OR/NOT subset with A1 references and literal comparisons.".into());
+        }
+    } else if rule.kind == "colorScale" {
+        if rule.operator.is_some() || rule.formula1.is_some() || rule.formula2.is_some() {
+            return Err("Color scales cannot have an operator or formula.".into());
+        }
+        let points = rule
+            .color_scale
+            .as_ref()
+            .map(|scale| scale.points.as_slice())
+            .ok_or("A color scale requires threshold and color points.")?;
+        if !matches!(points.len(), 2 | 3) {
+            return Err("A color scale must have two or three points.".into());
+        }
+        for (index, point) in points.iter().enumerate() {
+            let valid = match point.kind.as_str() {
+                "min" | "max" => point.value.is_none(),
+                "num" => point.value.as_deref().is_some_and(|value| {
+                    value.parse::<f64>().is_ok_and(|number| number.is_finite())
+                }),
+                "percent" | "percentile" => point.value.as_deref().is_some_and(|value| {
+                    value
+                        .parse::<f64>()
+                        .is_ok_and(|number| number.is_finite() && (0.0..=100.0).contains(&number))
+                }),
+                _ => false,
+            };
+            if !valid {
+                return Err(
+                    "Color-scale thresholds must use min, max, num, percent, or percentile.".into(),
+                );
+            }
+            if (point.kind == "min" && index != 0)
+                || (point.kind == "max" && index + 1 != points.len())
+            {
+                return Err("Min and max color-scale thresholds must be endpoints.".into());
+            }
+        }
+        if points.iter().all(|point| point.kind == "num") {
+            let values = points
+                .iter()
+                .filter_map(|point| point.value.as_deref()?.parse::<f64>().ok())
+                .collect::<Vec<_>>();
+            if values.len() != points.len() || !values.windows(2).all(|pair| pair[0] < pair[1]) {
+                return Err("Fixed color-scale thresholds must be strictly increasing.".into());
+            }
+        }
+        if rule.style != WorkbookConditionalFormatStyle::default() {
+            return Err("Color scales store colors in the scale instead of a DXF style.".into());
+        }
+    } else if rule.kind == "dataBar" {
+        if rule.operator.is_some() || rule.formula1.is_some() || rule.formula2.is_some() {
+            return Err("Data bars cannot have an operator or formula.".into());
+        }
+        let bar = rule
+            .data_bar
+            .as_ref()
+            .ok_or("A data-bar rule requires bar settings.")?;
+        let threshold = |point: &WorkbookConditionalThreshold| match point.kind.as_str() {
+            "min" | "max" => point.value.is_none(),
+            "num" => point
+                .value
+                .as_deref()
+                .is_some_and(|value| value.parse::<f64>().is_ok_and(|number| number.is_finite())),
+            "percent" | "percentile" => point.value.as_deref().is_some_and(|value| {
+                value
+                    .parse::<f64>()
+                    .is_ok_and(|number| number.is_finite() && (0.0..=100.0).contains(&number))
+            }),
+            _ => false,
+        };
+        if !threshold(&bar.minimum) || !threshold(&bar.maximum) {
+            return Err(
+                "Data-bar thresholds must use min, max, num, percent, or percentile.".into(),
+            );
+        }
+        if bar.minimum.kind == "max" || bar.maximum.kind == "min" {
+            return Err("Min and max data-bar thresholds must be endpoints.".into());
+        }
+        if bar.minimum.kind == "num" && bar.maximum.kind == "num" {
+            let minimum = bar
+                .minimum
+                .value
+                .as_deref()
+                .and_then(|value| value.parse::<f64>().ok())
+                .ok_or("The data-bar minimum must be a finite number.")?;
+            let maximum = bar
+                .maximum
+                .value
+                .as_deref()
+                .and_then(|value| value.parse::<f64>().ok())
+                .ok_or("The data-bar maximum must be a finite number.")?;
+            if minimum >= maximum {
+                return Err("Fixed data-bar thresholds must be strictly increasing.".into());
+            }
+        }
+        if bar.min_length > bar.max_length || bar.max_length > 100 {
+            return Err("Data-bar lengths must satisfy 0 <= minLength <= maxLength <= 100.".into());
+        }
+        if rule.style != WorkbookConditionalFormatStyle::default() || rule.color_scale.is_some() {
+            return Err("Data bars cannot include a DXF style or color scale.".into());
+        }
+    } else if rule.kind == "iconSet" {
+        if rule.operator.is_some() || rule.formula1.is_some() || rule.formula2.is_some() {
+            return Err("Icon sets cannot have an operator or formula.".into());
+        }
+        let icon_set = rule
+            .icon_set
+            .as_ref()
+            .ok_or("An icon-set rule requires icon settings.")?;
+        let expected = standard_icon_set_count(&icon_set.icon_set)
+            .ok_or("The selected icon set requires an x14 extension and is read-only.")?;
+        if icon_set.thresholds.len() != expected {
+            return Err("The icon threshold count must match the selected icon set.".into());
+        }
+        for point in &icon_set.thresholds {
+            let valid = match point.kind.as_str() {
+                "num" => point.value.as_deref().is_some_and(|value| {
+                    value.parse::<f64>().is_ok_and(|number| number.is_finite())
+                }),
+                "percent" | "percentile" => point.value.as_deref().is_some_and(|value| {
+                    value
+                        .parse::<f64>()
+                        .is_ok_and(|number| number.is_finite() && (0.0..=100.0).contains(&number))
+                }),
+                _ => false,
+            };
+            if !valid {
+                return Err("Icon thresholds must use num, percent, or percentile.".into());
+            }
+        }
+        if !icon_set.thresholds.first().is_some_and(|point| {
+            point.kind == "percent" && point.value.as_deref() == Some("0") && point.inclusive
+        }) {
+            return Err("The first icon threshold must be inclusive percent:0.".into());
+        }
+        if icon_set
+            .thresholds
+            .windows(2)
+            .all(|pair| pair[0].kind == pair[1].kind)
+        {
+            let values = icon_set
+                .thresholds
+                .iter()
+                .filter_map(|point| point.value.as_deref()?.parse::<f64>().ok())
+                .collect::<Vec<_>>();
+            if values.len() != expected || !values.windows(2).all(|pair| pair[0] <= pair[1]) {
+                return Err("Icon thresholds must be ordered from low to high.".into());
+            }
+        }
+        if rule.style != WorkbookConditionalFormatStyle::default()
+            || rule.color_scale.is_some()
+            || rule.data_bar.is_some()
+        {
+            return Err("Icon sets cannot include a DXF style, color scale, or data bar.".into());
+        }
+    } else {
+        return Err("Only basic cell-value and direct-reference expression conditional formats can be edited.".into());
+    }
+    let valid_color = |value: &str| {
+        value.len() == 7
+            && value.starts_with('#')
+            && value[1..].bytes().all(|byte| byte.is_ascii_hexdigit())
+    };
+    for color in [
+        rule.style.font_color.as_deref(),
+        rule.style.fill_color.as_deref(),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        if !valid_color(color) {
+            return Err("Conditional-format colors must use #RRGGBB.".into());
+        }
+    }
+    if let Some(scale) = rule.color_scale.as_ref() {
+        if scale.points.iter().any(|point| !valid_color(&point.color)) {
+            return Err("Color-scale colors must use #RRGGBB.".into());
+        }
+    }
+    if let Some(bar) = rule.data_bar.as_ref() {
+        if !valid_color(&bar.color) {
+            return Err("Data-bar colors must use #RRGGBB.".into());
+        }
+    }
+    if !matches!(rule.kind.as_str(), "colorScale" | "dataBar" | "iconSet")
+        && rule.style.font_color.is_none()
+        && rule.style.fill_color.is_none()
+        && !rule.style.bold
+    {
+        return Err("Choose at least one conditional-format visual style.".into());
+    }
+    Ok(())
+}
+
+fn write_conditional_dxf(
+    writer: &mut Writer<Vec<u8>>,
+    style: &WorkbookConditionalFormatStyle,
+) -> Result<(), String> {
+    writer
+        .write_event(Event::Start(BytesStart::new("dxf")))
+        .map_err(|error| format!("Failed to write conditional-format style: {error}"))?;
+    if style.font_color.is_some() || style.bold {
+        writer
+            .write_event(Event::Start(BytesStart::new("font")))
+            .map_err(|error| format!("Failed to write conditional-format font: {error}"))?;
+        if style.bold {
+            writer
+                .write_event(Event::Empty(BytesStart::new("b")))
+                .map_err(|error| {
+                    format!("Failed to write conditional-format bold style: {error}")
+                })?;
+        }
+        if let Some(color) = style.font_color.as_deref() {
+            let value = format!("FF{}", color.trim_start_matches('#').to_ascii_uppercase());
+            let mut item = BytesStart::new("color");
+            item.push_attribute(("rgb", value.as_str()));
+            writer.write_event(Event::Empty(item)).map_err(|error| {
+                format!("Failed to write conditional-format font color: {error}")
+            })?;
+        }
+        writer
+            .write_event(Event::End(BytesEnd::new("font")))
+            .map_err(|error| format!("Failed to finish conditional-format font: {error}"))?;
+    }
+    if let Some(color) = style.fill_color.as_deref() {
+        let value = format!("FF{}", color.trim_start_matches('#').to_ascii_uppercase());
+        writer
+            .write_event(Event::Start(BytesStart::new("fill")))
+            .map_err(|error| format!("Failed to write conditional-format fill: {error}"))?;
+        let mut pattern = BytesStart::new("patternFill");
+        pattern.push_attribute(("patternType", "solid"));
+        writer
+            .write_event(Event::Start(pattern))
+            .map_err(|error| format!("Failed to write conditional-format fill pattern: {error}"))?;
+        let mut foreground = BytesStart::new("fgColor");
+        foreground.push_attribute(("rgb", value.as_str()));
+        writer
+            .write_event(Event::Empty(foreground))
+            .map_err(|error| format!("Failed to write conditional-format fill color: {error}"))?;
+        let mut background = BytesStart::new("bgColor");
+        background.push_attribute(("indexed", "64"));
+        writer
+            .write_event(Event::Empty(background))
+            .map_err(|error| format!("Failed to write conditional-format background: {error}"))?;
+        writer
+            .write_event(Event::End(BytesEnd::new("patternFill")))
+            .map_err(|error| {
+                format!("Failed to finish conditional-format fill pattern: {error}")
+            })?;
+        writer
+            .write_event(Event::End(BytesEnd::new("fill")))
+            .map_err(|error| format!("Failed to finish conditional-format fill: {error}"))?;
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new("dxf")))
+        .map_err(|error| format!("Failed to finish conditional-format style: {error}"))
+}
+
+fn patch_styles_add_conditional_dxf(
+    xml: &[u8],
+    style: &WorkbookConditionalFormatStyle,
+) -> Result<(Vec<u8>, usize), String> {
+    let existing_count = read_conditional_dxf_styles(xml)?.len();
+    if existing_count >= MAX_CONDITIONAL_FORMAT_RULES {
+        return Err("Too many conditional-format styles.".into());
+    }
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 180));
+    let mut buffer = Vec::new();
+    let mut found = false;
+    let mut inserted = false;
+    loop {
+        let event = reader.read_event_into(&mut buffer).map_err(|error| {
+            format!("Failed to parse styles for conditional formatting: {error}")
+        })?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"dxfs" => {
+                found = true;
+                let mut container = BytesStart::new("dxfs");
+                for attribute in start.attributes() {
+                    let attribute = attribute
+                        .map_err(|error| format!("Failed to read dxfs attributes: {error}"))?;
+                    if attribute.key.as_ref() != b"count" {
+                        container
+                            .push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+                    }
+                }
+                let count = (existing_count + 1).to_string();
+                container.push_attribute(("count", count.as_str()));
+                writer
+                    .write_event(Event::Start(container))
+                    .map_err(|error| format!("Failed to write dxfs: {error}"))?;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"dxfs" => {
+                found = true;
+                let mut container = BytesStart::new("dxfs");
+                container.push_attribute(("count", "1"));
+                writer
+                    .write_event(Event::Start(container))
+                    .map_err(|error| format!("Failed to write dxfs: {error}"))?;
+                write_conditional_dxf(&mut writer, style)?;
+                writer
+                    .write_event(Event::End(BytesEnd::new("dxfs")))
+                    .map_err(|error| format!("Failed to finish dxfs: {error}"))?;
+                inserted = true;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"dxfs" => {
+                write_conditional_dxf(&mut writer, style)?;
+                inserted = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish dxfs: {error}"))?;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if !found
+                    && !inserted
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"tableStyles" | b"colors" | b"extLst"
+                    ) =>
+            {
+                let mut container = BytesStart::new("dxfs");
+                container.push_attribute(("count", "1"));
+                writer
+                    .write_event(Event::Start(container))
+                    .map_err(|error| format!("Failed to insert dxfs: {error}"))?;
+                write_conditional_dxf(&mut writer, style)?;
+                writer
+                    .write_event(Event::End(BytesEnd::new("dxfs")))
+                    .map_err(|error| format!("Failed to finish dxfs: {error}"))?;
+                inserted = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy styles: {error}"))?;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"styleSheet" => {
+                if !inserted {
+                    let mut container = BytesStart::new("dxfs");
+                    container.push_attribute(("count", "1"));
+                    writer
+                        .write_event(Event::Start(container))
+                        .map_err(|error| format!("Failed to insert dxfs: {error}"))?;
+                    write_conditional_dxf(&mut writer, style)?;
+                    writer
+                        .write_event(Event::End(BytesEnd::new("dxfs")))
+                        .map_err(|error| format!("Failed to finish dxfs: {error}"))?;
+                    inserted = true;
+                }
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish styles: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy styles: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !inserted {
+        return Err("Could not append the conditional-format style.".into());
+    }
+    Ok((writer.into_inner(), existing_count))
+}
+
+fn write_conditional_format_group(
+    writer: &mut Writer<Vec<u8>>,
+    rule: &WorkbookConditionalFormatRule,
+    dxf_id: Option<usize>,
+) -> Result<(), String> {
+    let references = rule
+        .ranges
+        .iter()
+        .map(table_reference)
+        .collect::<Result<Vec<_>, _>>()?
+        .join(" ");
+    let mut group = BytesStart::new("conditionalFormatting");
+    group.push_attribute(("sqref", references.as_str()));
+    writer
+        .write_event(Event::Start(group))
+        .map_err(|error| format!("Failed to write conditional-format group: {error}"))?;
+    let mut item = BytesStart::new("cfRule");
+    item.push_attribute(("type", rule.kind.as_str()));
+    if rule.kind == "cellIs" {
+        item.push_attribute(("operator", rule.operator.as_deref().unwrap_or("equal")));
+    }
+    let priority = rule.priority.to_string();
+    let dxf = dxf_id.map(|value| value.to_string());
+    if let Some(dxf) = dxf.as_deref() {
+        item.push_attribute(("dxfId", dxf));
+    }
+    item.push_attribute(("priority", priority.as_str()));
+    if rule.stop_if_true {
+        item.push_attribute(("stopIfTrue", "1"));
+    }
+    writer
+        .write_event(Event::Start(item))
+        .map_err(|error| format!("Failed to write conditional-format rule: {error}"))?;
+    if let Some(scale) = rule.color_scale.as_ref() {
+        writer
+            .write_event(Event::Start(BytesStart::new("colorScale")))
+            .map_err(|error| format!("Failed to write color scale: {error}"))?;
+        for point in &scale.points {
+            let mut threshold = BytesStart::new("cfvo");
+            threshold.push_attribute(("type", point.kind.as_str()));
+            if let Some(value) = point.value.as_deref() {
+                threshold.push_attribute(("val", value));
+            }
+            writer
+                .write_event(Event::Empty(threshold))
+                .map_err(|error| format!("Failed to write color-scale threshold: {error}"))?;
+        }
+        for point in &scale.points {
+            let argb = format!(
+                "FF{}",
+                point.color.trim_start_matches('#').to_ascii_uppercase()
+            );
+            let mut color = BytesStart::new("color");
+            color.push_attribute(("rgb", argb.as_str()));
+            writer
+                .write_event(Event::Empty(color))
+                .map_err(|error| format!("Failed to write color-scale color: {error}"))?;
+        }
+        writer
+            .write_event(Event::End(BytesEnd::new("colorScale")))
+            .map_err(|error| format!("Failed to finish color scale: {error}"))?;
+    } else if let Some(bar) = rule.data_bar.as_ref() {
+        let mut data_bar = BytesStart::new("dataBar");
+        let min_length = bar.min_length.to_string();
+        let max_length = bar.max_length.to_string();
+        data_bar.push_attribute(("minLength", min_length.as_str()));
+        data_bar.push_attribute(("maxLength", max_length.as_str()));
+        if !bar.show_value {
+            data_bar.push_attribute(("showValue", "0"));
+        }
+        writer
+            .write_event(Event::Start(data_bar))
+            .map_err(|error| format!("Failed to write data bar: {error}"))?;
+        for point in [&bar.minimum, &bar.maximum] {
+            let mut threshold = BytesStart::new("cfvo");
+            threshold.push_attribute(("type", point.kind.as_str()));
+            if let Some(value) = point.value.as_deref() {
+                threshold.push_attribute(("val", value));
+            }
+            writer
+                .write_event(Event::Empty(threshold))
+                .map_err(|error| format!("Failed to write data-bar threshold: {error}"))?;
+        }
+        let argb = format!(
+            "FF{}",
+            bar.color.trim_start_matches('#').to_ascii_uppercase()
+        );
+        let mut color = BytesStart::new("color");
+        color.push_attribute(("rgb", argb.as_str()));
+        writer
+            .write_event(Event::Empty(color))
+            .map_err(|error| format!("Failed to write data-bar color: {error}"))?;
+        writer
+            .write_event(Event::End(BytesEnd::new("dataBar")))
+            .map_err(|error| format!("Failed to finish data bar: {error}"))?;
+    } else if let Some(icon_set) = rule.icon_set.as_ref() {
+        let mut item = BytesStart::new("iconSet");
+        item.push_attribute(("iconSet", icon_set.icon_set.as_str()));
+        if icon_set.reverse {
+            item.push_attribute(("reverse", "1"));
+        }
+        if !icon_set.show_value {
+            item.push_attribute(("showValue", "0"));
+        }
+        writer
+            .write_event(Event::Start(item))
+            .map_err(|error| format!("Failed to write icon set: {error}"))?;
+        for point in &icon_set.thresholds {
+            let mut threshold = BytesStart::new("cfvo");
+            threshold.push_attribute(("type", point.kind.as_str()));
+            if let Some(value) = point.value.as_deref() {
+                threshold.push_attribute(("val", value));
+            }
+            if !point.inclusive {
+                threshold.push_attribute(("gte", "0"));
+            }
+            writer
+                .write_event(Event::Empty(threshold))
+                .map_err(|error| format!("Failed to write icon-set threshold: {error}"))?;
+        }
+        writer
+            .write_event(Event::End(BytesEnd::new("iconSet")))
+            .map_err(|error| format!("Failed to finish icon set: {error}"))?;
+    } else {
+        for formula in [rule.formula1.as_deref(), rule.formula2.as_deref()]
+            .into_iter()
+            .flatten()
+        {
+            writer
+                .write_event(Event::Start(BytesStart::new("formula")))
+                .map_err(|error| format!("Failed to write conditional-format formula: {error}"))?;
+            writer
+                .write_event(Event::Text(BytesText::new(formula.trim())))
+                .map_err(|error| format!("Failed to write conditional-format formula: {error}"))?;
+            writer
+                .write_event(Event::End(BytesEnd::new("formula")))
+                .map_err(|error| format!("Failed to finish conditional-format formula: {error}"))?;
+        }
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new("cfRule")))
+        .map_err(|error| format!("Failed to finish conditional-format rule: {error}"))?;
+    writer
+        .write_event(Event::End(BytesEnd::new("conditionalFormatting")))
+        .map_err(|error| format!("Failed to finish conditional-format group: {error}"))
+}
+
+fn write_conditional_format_rule(
+    writer: &mut Writer<Vec<u8>>,
+    rule: &WorkbookConditionalFormatRule,
+    dxf_id: Option<usize>,
+) -> Result<(), String> {
+    let mut group_writer = Writer::new(Vec::new());
+    write_conditional_format_group(&mut group_writer, rule, dxf_id)?;
+    let generated = group_writer.into_inner();
+    let mut reader = Reader::from_reader(generated.as_slice());
+    reader.config_mut().trim_text(false);
+    let mut buffer = Vec::new();
+    let mut inside_group = false;
+    loop {
+        let event = reader.read_event_into(&mut buffer).map_err(|error| {
+            format!("Failed to parse generated conditional-format rule: {error}")
+        })?;
+        match event {
+            Event::Start(ref start) if start.name().as_ref() == b"conditionalFormatting" => {
+                inside_group = true;
+            }
+            Event::End(ref end) if end.name().as_ref() == b"conditionalFormatting" => break,
+            Event::Eof => {
+                return Err("Generated conditional-format rule ended unexpectedly.".into())
+            }
+            _ if inside_group => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to write conditional-format rule: {error}"))?,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(())
+}
+
+fn patch_sheet_conditional_format_group_rule(
+    xml: &[u8],
+    change: &WorkbookConditionalFormatChange,
+    rule: Option<&WorkbookConditionalFormatRule>,
+    dxf_id: Option<usize>,
+) -> Result<Vec<u8>, String> {
+    let target_group = change
+        .group_index
+        .ok_or("The selected conditional-format group no longer exists.")?;
+    let target_rule = change
+        .rule_index
+        .ok_or("The selected conditional-format rule no longer exists.")?;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 256));
+    let mut buffer = Vec::new();
+    let mut next_group = 0usize;
+    let mut current_group = None;
+    let mut next_rule = 0usize;
+    let mut skip_depth = 0usize;
+    let mut patched = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse grouped conditional formats: {error}"))?;
+        if skip_depth > 0 {
+            match event {
+                Event::Start(_) => skip_depth += 1,
+                Event::End(_) => skip_depth -= 1,
+                Event::Eof => {
+                    return Err("Grouped conditional-format XML ended unexpectedly.".into())
+                }
+                _ => {}
+            }
+            buffer.clear();
+            continue;
+        }
+        match event {
+            Event::Start(ref start) if start.name().as_ref() == b"conditionalFormatting" => {
+                current_group = Some(next_group);
+                next_group += 1;
+                next_rule = 0;
+                writer.write_event(event.into_owned()).map_err(|error| {
+                    format!("Failed to copy grouped conditional formatting: {error}")
+                })?;
+            }
+            Event::Start(ref start)
+                if start.name().as_ref() == b"cfRule" && current_group == Some(target_group) =>
+            {
+                let current_rule = next_rule;
+                next_rule += 1;
+                if current_rule == target_rule {
+                    if change.action == WorkbookConditionalFormatAction::Update {
+                        write_conditional_format_rule(
+                            &mut writer,
+                            rule.ok_or("A replacement rule is required.")?,
+                            dxf_id,
+                        )?;
+                    }
+                    patched = true;
+                    skip_depth = 1;
+                } else {
+                    writer.write_event(event.into_owned()).map_err(|error| {
+                        format!("Failed to copy grouped conditional-format rule: {error}")
+                    })?;
+                }
+            }
+            Event::Empty(ref start)
+                if start.name().as_ref() == b"cfRule" && current_group == Some(target_group) =>
+            {
+                let current_rule = next_rule;
+                next_rule += 1;
+                if current_rule == target_rule {
+                    if change.action == WorkbookConditionalFormatAction::Update {
+                        write_conditional_format_rule(
+                            &mut writer,
+                            rule.ok_or("A replacement rule is required.")?,
+                            dxf_id,
+                        )?;
+                    }
+                    patched = true;
+                } else {
+                    writer.write_event(event.into_owned()).map_err(|error| {
+                        format!("Failed to copy grouped conditional-format rule: {error}")
+                    })?;
+                }
+            }
+            Event::End(ref end) if end.name().as_ref() == b"conditionalFormatting" => {
+                current_group = None;
+                writer.write_event(event.into_owned()).map_err(|error| {
+                    format!("Failed to finish grouped conditional formatting: {error}")
+                })?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy grouped conditional formats: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !patched {
+        return Err("The selected conditional-format rule no longer exists.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn extract_conditional_format_rule_xml(
+    xml: &[u8],
+    target_group: usize,
+    target_rule: usize,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::new());
+    let mut buffer = Vec::new();
+    let mut next_group = 0usize;
+    let mut current_group = None;
+    let mut next_rule = 0usize;
+    let mut capture_depth = 0usize;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse conditional-format rule XML: {error}"))?;
+        if capture_depth > 0 {
+            match &event {
+                Event::Start(_) => capture_depth += 1,
+                Event::End(_) => capture_depth -= 1,
+                Event::Eof => return Err("Conditional-format rule XML ended unexpectedly.".into()),
+                _ => {}
+            }
+            writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to capture conditional-format rule: {error}"))?;
+            if capture_depth == 0 {
+                return Ok(writer.into_inner());
+            }
+            buffer.clear();
+            continue;
+        }
+        match event {
+            Event::Start(ref start) if start.name().as_ref() == b"conditionalFormatting" => {
+                current_group = Some(next_group);
+                next_group += 1;
+                next_rule = 0;
+            }
+            Event::Start(ref start)
+                if start.name().as_ref() == b"cfRule" && current_group == Some(target_group) =>
+            {
+                let current_rule = next_rule;
+                next_rule += 1;
+                if current_rule == target_rule {
+                    writer.write_event(event.into_owned()).map_err(|error| {
+                        format!("Failed to capture conditional-format rule: {error}")
+                    })?;
+                    capture_depth = 1;
+                }
+            }
+            Event::Empty(ref start)
+                if start.name().as_ref() == b"cfRule" && current_group == Some(target_group) =>
+            {
+                let current_rule = next_rule;
+                next_rule += 1;
+                if current_rule == target_rule {
+                    writer.write_event(event.into_owned()).map_err(|error| {
+                        format!("Failed to capture conditional-format rule: {error}")
+                    })?;
+                    return Ok(writer.into_inner());
+                }
+            }
+            Event::End(ref end) if end.name().as_ref() == b"conditionalFormatting" => {
+                current_group = None;
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Err("The selected conditional-format rule no longer exists.".into())
+}
+
+fn write_conditional_format_rule_fragment(
+    writer: &mut Writer<Vec<u8>>,
+    rule_xml: &[u8],
+) -> Result<(), String> {
+    let mut reader = Reader::from_reader(rule_xml);
+    reader.config_mut().trim_text(false);
+    let mut buffer = Vec::new();
+    loop {
+        let event = reader.read_event_into(&mut buffer).map_err(|error| {
+            format!("Failed to parse conditional-format rule fragment: {error}")
+        })?;
+        if matches!(event, Event::Eof) {
+            break;
+        }
+        writer.write_event(event.into_owned()).map_err(|error| {
+            format!("Failed to write conditional-format rule fragment: {error}")
+        })?;
+        buffer.clear();
+    }
+    Ok(())
+}
+
+fn write_raw_conditional_format_group(
+    writer: &mut Writer<Vec<u8>>,
+    ranges: &[WorkbookMergeRange],
+    rule_xml: &[u8],
+) -> Result<(), String> {
+    let references = ranges
+        .iter()
+        .map(table_reference)
+        .collect::<Result<Vec<_>, _>>()?
+        .join(" ");
+    let mut group = BytesStart::new("conditionalFormatting");
+    group.push_attribute(("sqref", references.as_str()));
+    writer
+        .write_event(Event::Start(group))
+        .map_err(|error| format!("Failed to write split conditional-format group: {error}"))?;
+    write_conditional_format_rule_fragment(writer, rule_xml)?;
+    writer
+        .write_event(Event::End(BytesEnd::new("conditionalFormatting")))
+        .map_err(|error| format!("Failed to finish split conditional-format group: {error}"))
+}
+
+fn insert_raw_conditional_format_group(
+    xml: &[u8],
+    ranges: &[WorkbookMergeRange],
+    rule_xml: &[u8],
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + rule_xml.len() + 96));
+    let mut buffer = Vec::new();
+    let mut inserted = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse worksheet for split rule: {error}"))?;
+        match event {
+            Event::Start(ref start) | Event::Empty(ref start)
+                if !inserted && conditional_format_later_element(start.local_name().as_ref()) =>
+            {
+                write_raw_conditional_format_group(&mut writer, ranges, rule_xml)?;
+                inserted = true;
+                writer.write_event(event.into_owned()).map_err(|error| {
+                    format!("Failed to copy worksheet after split rule: {error}")
+                })?;
+            }
+            Event::End(ref end) if end.name().as_ref() == b"worksheet" => {
+                if !inserted {
+                    write_raw_conditional_format_group(&mut writer, ranges, rule_xml)?;
+                    inserted = true;
+                }
+                writer.write_event(event.into_owned()).map_err(|error| {
+                    format!("Failed to finish worksheet after split rule: {error}")
+                })?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy worksheet for split rule: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !inserted {
+        return Err("Could not insert the split conditional-format group.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn append_raw_conditional_format_rule(
+    xml: &[u8],
+    target_group: usize,
+    rule_xml: &[u8],
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + rule_xml.len()));
+    let mut buffer = Vec::new();
+    let mut next_group = 0usize;
+    let mut current_group = None;
+    let mut appended = false;
+    loop {
+        let event = reader.read_event_into(&mut buffer).map_err(|error| {
+            format!("Failed to parse worksheet for grouped rule merge: {error}")
+        })?;
+        match event {
+            Event::Start(ref start) if start.name().as_ref() == b"conditionalFormatting" => {
+                current_group = Some(next_group);
+                next_group += 1;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy merge target group: {error}"))?;
+            }
+            Event::End(ref end) if end.name().as_ref() == b"conditionalFormatting" => {
+                if current_group == Some(target_group) {
+                    write_conditional_format_rule_fragment(&mut writer, rule_xml)?;
+                    appended = true;
+                }
+                current_group = None;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish merge target group: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer.write_event(event.into_owned()).map_err(|error| {
+                format!("Failed to copy worksheet for grouped rule merge: {error}")
+            })?,
+        }
+        buffer.clear();
+    }
+    if !appended {
+        return Err("The compatible conditional-format merge target no longer exists.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn conditional_format_later_element(name: &[u8]) -> bool {
+    matches!(
+        name,
+        b"dataValidations"
+            | b"hyperlinks"
+            | b"printOptions"
+            | b"pageMargins"
+            | b"pageSetup"
+            | b"headerFooter"
+            | b"rowBreaks"
+            | b"colBreaks"
+            | b"customProperties"
+            | b"cellWatches"
+            | b"ignoredErrors"
+            | b"smartTags"
+            | b"drawing"
+            | b"legacyDrawing"
+            | b"legacyDrawingHF"
+            | b"picture"
+            | b"oleObjects"
+            | b"controls"
+            | b"webPublishItems"
+            | b"tableParts"
+            | b"extLst"
+    )
+}
+
+fn patch_sheet_conditional_formats(
+    xml: &[u8],
+    change: &WorkbookConditionalFormatChange,
+    rule: Option<&WorkbookConditionalFormatRule>,
+    dxf_id: Option<usize>,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 420));
+    let mut buffer = Vec::new();
+    let mut group_index = 0usize;
+    let mut skip_depth = 0usize;
+    let mut inserted = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse worksheet conditional formats: {error}"))?;
+        if skip_depth > 0 {
+            match event {
+                Event::Start(_) => skip_depth += 1,
+                Event::End(_) => skip_depth -= 1,
+                Event::Eof => return Err("Conditional-format XML ended unexpectedly.".into()),
+                _ => {}
+            }
+            buffer.clear();
+            continue;
+        }
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"conditionalFormatting" => {
+                let current = group_index;
+                group_index += 1;
+                if change.group_index == Some(current)
+                    && change.action != WorkbookConditionalFormatAction::Create
+                {
+                    if change.action == WorkbookConditionalFormatAction::Update {
+                        write_conditional_format_group(
+                            &mut writer,
+                            rule.ok_or("A replacement rule is required.")?,
+                            dxf_id,
+                        )?;
+                    }
+                    skip_depth = 1;
+                } else {
+                    writer.write_event(event.into_owned()).map_err(|error| {
+                        format!("Failed to copy conditional formatting: {error}")
+                    })?;
+                }
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"conditionalFormatting" => {
+                let current = group_index;
+                group_index += 1;
+                if change.group_index == Some(current)
+                    && change.action == WorkbookConditionalFormatAction::Update
+                {
+                    write_conditional_format_group(
+                        &mut writer,
+                        rule.ok_or("A replacement rule is required.")?,
+                        dxf_id,
+                    )?;
+                } else if change.group_index != Some(current)
+                    || change.action == WorkbookConditionalFormatAction::Create
+                {
+                    writer.write_event(event.into_owned()).map_err(|error| {
+                        format!("Failed to copy conditional formatting: {error}")
+                    })?;
+                }
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if change.action == WorkbookConditionalFormatAction::Create
+                    && !inserted
+                    && conditional_format_later_element(start.local_name().as_ref()) =>
+            {
+                write_conditional_format_group(
+                    &mut writer,
+                    rule.ok_or("A conditional-format rule is required.")?,
+                    dxf_id,
+                )?;
+                inserted = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy worksheet: {error}"))?;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"worksheet" => {
+                if change.action == WorkbookConditionalFormatAction::Create && !inserted {
+                    write_conditional_format_group(
+                        &mut writer,
+                        rule.ok_or("A conditional-format rule is required.")?,
+                        dxf_id,
+                    )?;
+                    inserted = true;
+                }
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish worksheet: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer.write_event(event.into_owned()).map_err(|error| {
+                format!("Failed to copy worksheet conditional formats: {error}")
+            })?,
+        }
+        buffer.clear();
+    }
+    if change.action == WorkbookConditionalFormatAction::Create && !inserted {
+        return Err("Could not insert the conditional-format rule.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn patch_sheet_conditional_format_priorities(
+    xml: &[u8],
+    priorities: &HashMap<(usize, usize), u32>,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
+    let mut buffer = Vec::new();
+    let mut next_group_index = 0usize;
+    let mut current_group_index = None;
+    let mut next_rule_index = 0usize;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse conditional-format priorities: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.name().as_ref() == b"conditionalFormatting" => {
+                current_group_index = Some(next_group_index);
+                next_group_index += 1;
+                next_rule_index = 0;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy conditional-format group: {error}"))?;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if start.name().as_ref() == b"cfRule" && current_group_index.is_some() =>
+            {
+                let identity = (current_group_index.unwrap_or_default(), next_rule_index);
+                next_rule_index += 1;
+                if let Some(priority) = priorities.get(&identity) {
+                    let mut patched = start.to_owned();
+                    patched.clear_attributes();
+                    for attribute in start.attributes().with_checks(false) {
+                        let attribute = attribute.map_err(|error| {
+                            format!("Failed to parse conditional-format priority: {error}")
+                        })?;
+                        if attribute.key.as_ref() != b"priority" {
+                            patched.push_attribute(attribute);
+                        }
+                    }
+                    let priority = priority.to_string();
+                    patched.push_attribute(("priority", priority.as_str()));
+                    let patched_event = if matches!(event, Event::Start(_)) {
+                        Event::Start(patched)
+                    } else {
+                        Event::Empty(patched)
+                    };
+                    writer.write_event(patched_event).map_err(|error| {
+                        format!("Failed to write conditional-format priority: {error}")
+                    })?;
+                } else {
+                    writer.write_event(event.into_owned()).map_err(|error| {
+                        format!("Failed to copy conditional-format rule: {error}")
+                    })?;
+                }
+            }
+            Event::End(ref end) if end.name().as_ref() == b"conditionalFormatting" => {
+                current_group_index = None;
+                writer.write_event(event.into_owned()).map_err(|error| {
+                    format!("Failed to finish conditional-format group: {error}")
+                })?;
+            }
+            Event::Eof => break,
+            _ => writer.write_event(event.into_owned()).map_err(|error| {
+                format!("Failed to copy worksheet conditional formats: {error}")
+            })?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+pub fn patch_workbook_conditional_format(
+    source: &[u8],
+    change: &WorkbookConditionalFormatChange,
+) -> Result<Vec<u8>, String> {
+    let mut entries = load_package(source)?;
+    let sheet_path = workbook_sheet_paths(&entries)?
+        .remove(&change.sheet)
+        .ok_or_else(|| format!("Worksheet does not exist: {}", change.sheet))?;
+    if read_workbook_sheet_layout(source, &change.sheet, 0, 1, 1)?
+        .page_layout
+        .protection
+        .enabled
+    {
+        return Err("Protected worksheets cannot change conditional-format rules.".into());
+    }
+    let styles_xml = entries
+        .iter()
+        .find(|entry| entry.name == "xl/styles.xml")
+        .ok_or("XLSX is missing xl/styles.xml")?
+        .data
+        .clone();
+    let dxf_styles = read_conditional_dxf_styles(&styles_xml)?;
+    let sheet_xml = entries
+        .iter()
+        .find(|entry| entry.name == sheet_path)
+        .ok_or("The worksheet part is missing.")?
+        .data
+        .clone();
+    let existing = read_conditional_formats(&sheet_xml, &dxf_styles)?;
+    let mut normalized_rule = change.rule.clone();
+    if matches!(
+        change.action,
+        WorkbookConditionalFormatAction::Split | WorkbookConditionalFormatAction::Merge
+    ) {
+        let group_index = change
+            .group_index
+            .ok_or("The selected conditional-format group no longer exists.")?;
+        let rule_index = change
+            .rule_index
+            .ok_or("The selected conditional-format rule no longer exists.")?;
+        let current = existing
+            .iter()
+            .find(|rule| rule.group_index == group_index && rule.rule_index == rule_index)
+            .ok_or("The selected conditional-format rule no longer exists.")?;
+        if !current.editable {
+            return Err("This conditional-format rule is complex and cannot change groups.".into());
+        }
+        let source_group_size = existing
+            .iter()
+            .filter(|rule| rule.group_index == group_index)
+            .count();
+        let rule_xml = extract_conditional_format_rule_xml(&sheet_xml, group_index, rule_index)?;
+        let patched = if change.action == WorkbookConditionalFormatAction::Split {
+            if source_group_size < 2 {
+                return Err(
+                    "This conditional-format rule is already in an independent group.".into(),
+                );
+            }
+            let ranges = &change
+                .rule
+                .as_ref()
+                .ok_or("Splitting a conditional-format rule requires a target range.")?
+                .ranges;
+            validate_conditional_format_ranges(ranges)?;
+            if ranges == &current.ranges {
+                return Err("Choose a different target range when splitting a shared rule.".into());
+            }
+            let delete_change = WorkbookConditionalFormatChange {
+                sheet: change.sheet.clone(),
+                action: WorkbookConditionalFormatAction::Delete,
+                group_index: Some(group_index),
+                rule_index: Some(rule_index),
+                rule: None,
+            };
+            let without_rule =
+                patch_sheet_conditional_format_group_rule(&sheet_xml, &delete_change, None, None)?;
+            insert_raw_conditional_format_group(&without_rule, ranges, &rule_xml)?
+        } else {
+            if change.rule.is_some() {
+                return Err(
+                    "Merging a conditional-format rule must not replace its content.".into(),
+                );
+            }
+            if source_group_size != 1 {
+                return Err("Only an independent conditional-format rule can be merged into another shared-range group.".into());
+            }
+            let destination_group = existing
+                .iter()
+                .filter(|rule| rule.group_index != group_index && rule.ranges == current.ranges)
+                .min_by_key(|rule| (rule.priority, rule.group_index, rule.rule_index))
+                .map(|rule| rule.group_index)
+                .ok_or("No compatible conditional-format group has the same range.")?;
+            let with_appended =
+                append_raw_conditional_format_rule(&sheet_xml, destination_group, &rule_xml)?;
+            let delete_change = WorkbookConditionalFormatChange {
+                sheet: change.sheet.clone(),
+                action: WorkbookConditionalFormatAction::Delete,
+                group_index: Some(group_index),
+                rule_index: Some(rule_index),
+                rule: None,
+            };
+            patch_sheet_conditional_formats(&with_appended, &delete_change, None, None)?
+        };
+        let sheet = entries
+            .iter_mut()
+            .find(|entry| entry.name == sheet_path)
+            .ok_or("The worksheet part is missing.")?;
+        sheet.data = patched;
+        return write_package(entries, source.len() + 1024);
+    }
+    if matches!(
+        change.action,
+        WorkbookConditionalFormatAction::MoveUp | WorkbookConditionalFormatAction::MoveDown
+    ) {
+        if change.rule.is_some() {
+            return Err("Moving a conditional-format rule must not replace its content.".into());
+        }
+        let group_index = change
+            .group_index
+            .ok_or("The selected conditional-format group no longer exists.")?;
+        let rule_index = change
+            .rule_index
+            .ok_or("The selected conditional-format rule no longer exists.")?;
+        let current = existing
+            .iter()
+            .find(|rule| rule.group_index == group_index && rule.rule_index == rule_index)
+            .ok_or("The selected conditional-format rule no longer exists.")?;
+        if !current.editable {
+            return Err("This conditional-format rule is complex and cannot be reordered.".into());
+        }
+        let mut ordered = existing.iter().collect::<Vec<_>>();
+        ordered.sort_by_key(|rule| (rule.priority, rule.group_index, rule.rule_index));
+        let current_index = ordered
+            .iter()
+            .position(|rule| rule.group_index == group_index && rule.rule_index == rule_index)
+            .ok_or("The selected conditional-format rule no longer exists.")?;
+        let target_index = if change.action == WorkbookConditionalFormatAction::MoveUp {
+            current_index.checked_sub(1)
+        } else if current_index + 1 < ordered.len() {
+            Some(current_index + 1)
+        } else {
+            None
+        }
+        .ok_or("The conditional-format rule is already at that priority boundary.")?;
+        ordered.swap(current_index, target_index);
+        let priorities = ordered
+            .iter()
+            .enumerate()
+            .map(|(index, rule)| ((rule.group_index, rule.rule_index), (index + 1) as u32))
+            .collect::<HashMap<_, _>>();
+        let sheet = entries
+            .iter_mut()
+            .find(|entry| entry.name == sheet_path)
+            .ok_or("The worksheet part is missing.")?;
+        sheet.data = patch_sheet_conditional_format_priorities(&sheet_xml, &priorities)?;
+        return write_package(entries, source.len() + 1024);
+    }
+    match change.action {
+        WorkbookConditionalFormatAction::Create => {
+            if change.group_index.is_some() || change.rule_index.is_some() {
+                return Err(
+                    "Creating a conditional-format rule must not include an existing rule identity."
+                        .into(),
+                );
+            }
+            let next_priority = existing
+                .iter()
+                .map(|rule| rule.priority)
+                .max()
+                .unwrap_or(0)
+                .saturating_add(1);
+            let rule = normalized_rule
+                .as_mut()
+                .ok_or("A conditional-format rule is required.")?;
+            rule.priority = next_priority;
+            rule.group_index = existing
+                .iter()
+                .map(|rule| rule.group_index)
+                .max()
+                .map_or(0, |value| value + 1);
+            rule.rule_index = 0;
+            rule.editable = true;
+            validate_conditional_format_rule(rule)?;
+        }
+        WorkbookConditionalFormatAction::Update | WorkbookConditionalFormatAction::Delete => {
+            let group_index = change
+                .group_index
+                .ok_or("The selected conditional-format group no longer exists.")?;
+            let rule_index = change
+                .rule_index
+                .ok_or("The selected conditional-format rule no longer exists.")?;
+            let current = existing
+                .iter()
+                .find(|rule| rule.group_index == group_index && rule.rule_index == rule_index)
+                .ok_or("The selected conditional-format rule no longer exists.")?;
+            if !current.editable {
+                return Err("This conditional-format rule is complex and read-only.".into());
+            }
+            if change.action == WorkbookConditionalFormatAction::Update {
+                let rule = normalized_rule
+                    .as_mut()
+                    .ok_or("A replacement conditional-format rule is required.")?;
+                let group_size = existing
+                    .iter()
+                    .filter(|rule| rule.group_index == group_index)
+                    .count();
+                if group_size > 1 && rule.ranges != current.ranges {
+                    return Err("A rule in a shared-range conditional-format group cannot change its range until it is split into an independent group.".into());
+                }
+                rule.priority = current.priority;
+                rule.group_index = group_index;
+                rule.rule_index = rule_index;
+                rule.editable = true;
+                validate_conditional_format_rule(rule)?;
+            } else if change.rule.is_some() {
+                return Err(
+                    "Deleting a conditional-format rule must not include a replacement rule."
+                        .into(),
+                );
+            }
+        }
+        WorkbookConditionalFormatAction::MoveUp
+        | WorkbookConditionalFormatAction::MoveDown
+        | WorkbookConditionalFormatAction::Split
+        | WorkbookConditionalFormatAction::Merge => {
+            unreachable!("priority moves return before content patching")
+        }
+    }
+    let dxf_id = if let Some(rule) = normalized_rule
+        .as_ref()
+        .filter(|rule| !matches!(rule.kind.as_str(), "colorScale" | "dataBar" | "iconSet"))
+    {
+        let (patched, id) = patch_styles_add_conditional_dxf(&styles_xml, &rule.style)?;
+        entries
+            .iter_mut()
+            .find(|entry| entry.name == "xl/styles.xml")
+            .ok_or("XLSX is missing xl/styles.xml")?
+            .data = patched;
+        Some(id)
+    } else {
+        None
+    };
+    let sheet = entries
+        .iter_mut()
+        .find(|entry| entry.name == sheet_path)
+        .ok_or("The worksheet part is missing.")?;
+    let selected_group_size = change.group_index.map_or(0, |group_index| {
+        existing
+            .iter()
+            .filter(|rule| rule.group_index == group_index)
+            .count()
+    });
+    sheet.data = if selected_group_size > 1
+        && matches!(
+            change.action,
+            WorkbookConditionalFormatAction::Update | WorkbookConditionalFormatAction::Delete
+        ) {
+        patch_sheet_conditional_format_group_rule(
+            &sheet_xml,
+            change,
+            normalized_rule.as_ref(),
+            dxf_id,
+        )?
+    } else {
+        patch_sheet_conditional_formats(&sheet_xml, change, normalized_rule.as_ref(), dxf_id)?
+    };
+    write_package(entries, source.len() + 2048)
+}
+
+fn validate_data_validation_rule(validation: &WorkbookDataValidation) -> Result<(), String> {
+    if validation.ranges.is_empty() || validation.ranges.len() > MAX_VALIDATION_RANGES {
+        return Err(format!(
+            "A data validation rule must target 1 to {MAX_VALIDATION_RANGES} ranges."
+        ));
+    }
+    for range in &validation.ranges {
+        if range.top > range.bottom
+            || range.left > range.right
+            || range.bottom >= MAX_XLSX_ROWS
+            || range.right >= MAX_XLSX_COLUMNS
+        {
+            return Err("A data validation range is outside the XLSX grid.".into());
+        }
+    }
+    if !matches!(
+        validation.kind.as_str(),
+        "list" | "whole" | "decimal" | "textLength" | "custom"
+    ) {
+        return Err("Only list, whole-number, decimal, text-length, and custom validation rules can be edited safely.".into());
+    }
+    let formula1 = validation
+        .formula1
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or("The first validation formula is required.")?;
+    for formula in [Some(formula1), validation.formula2.as_deref()]
+        .into_iter()
+        .flatten()
+    {
+        if formula.chars().count() > MAX_FORMULA_TEXT {
+            return Err(format!(
+                "A data validation formula cannot exceed {MAX_FORMULA_TEXT} characters."
+            ));
+        }
+        if formula.contains('[') || formula.contains(']') {
+            return Err(
+                "External-workbook references are not allowed in editable validation rules.".into(),
+            );
+        }
+        if formula.chars().any(|character| {
+            matches!(character, '\u{0}'..='\u{8}' | '\u{b}' | '\u{c}' | '\u{e}'..='\u{1f}')
+        }) {
+            return Err("A validation formula contains unsupported control characters.".into());
+        }
+    }
+    if validation.kind == "list"
+        && formula1.starts_with('"')
+        && formula1.ends_with('"')
+        && formula1.chars().count() > 255
+    {
+        return Err("An inline validation list cannot exceed 255 characters.".into());
+    }
+    let needs_operator = matches!(validation.kind.as_str(), "whole" | "decimal" | "textLength");
+    if needs_operator
+        && !matches!(
+            validation.operator.as_deref(),
+            Some(
+                "between"
+                    | "notBetween"
+                    | "equal"
+                    | "notEqual"
+                    | "lessThan"
+                    | "lessThanOrEqual"
+                    | "greaterThan"
+                    | "greaterThanOrEqual"
+            )
+        )
+    {
+        return Err("The data validation operator is not supported.".into());
+    }
+    if needs_operator
+        && matches!(
+            validation.operator.as_deref(),
+            Some("between" | "notBetween")
+        )
+        && validation
+            .formula2
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .is_none()
+    {
+        return Err("Between and not-between validation rules require a second formula.".into());
+    }
+    for (value, limit, label) in [
+        (validation.error_title.as_deref(), 32, "error title"),
+        (validation.prompt_title.as_deref(), 32, "prompt title"),
+        (validation.error.as_deref(), 255, "error message"),
+        (validation.prompt.as_deref(), 255, "input prompt"),
+    ] {
+        if value.is_some_and(|value| value.chars().count() > limit) {
+            return Err(format!(
+                "The validation {label} cannot exceed {limit} characters."
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn validation_ranges_overlap(
+    left: &WorkbookDataValidation,
+    right: &WorkbookDataValidation,
+) -> bool {
+    left.ranges.iter().any(|left| {
+        right.ranges.iter().any(|right| {
+            left.top <= right.bottom
+                && right.top <= left.bottom
+                && left.left <= right.right
+                && right.left <= left.right
+        })
+    })
+}
+
+fn ensure_simple_data_validation(xml: &[u8], target_index: usize) -> Result<(), String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut buffer = Vec::new();
+    let mut index = 0usize;
+    let mut target_depth = 0usize;
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to inspect data validation XML: {error}"))?
+        {
+            Event::Start(ref start)
+                if target_depth == 0 && start.local_name().as_ref() == b"dataValidation" =>
+            {
+                if index == target_index {
+                    target_depth = 1;
+                }
+                index += 1;
+            }
+            Event::Empty(ref start)
+                if target_depth == 0 && start.local_name().as_ref() == b"dataValidation" =>
+            {
+                if index == target_index {
+                    return Ok(());
+                }
+                index += 1;
+            }
+            Event::Start(ref start) if target_depth > 0 => {
+                if target_depth != 1
+                    || !matches!(start.local_name().as_ref(), b"formula1" | b"formula2")
+                {
+                    return Err(
+                        "This validation rule contains extension content and is read-only.".into(),
+                    );
+                }
+                target_depth += 1;
+            }
+            Event::Empty(_) if target_depth > 0 => {
+                return Err(
+                    "This validation rule contains extension content and is read-only.".into(),
+                );
+            }
+            Event::End(_) if target_depth > 0 => {
+                target_depth -= 1;
+                if target_depth == 0 {
+                    return Ok(());
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Err("The selected data validation rule no longer exists.".into())
+}
+
+fn write_data_validation(
+    writer: &mut Writer<Vec<u8>>,
+    validation: &WorkbookDataValidation,
+    template: Option<&BytesStart<'_>>,
+) -> Result<(), String> {
+    let references = validation
+        .ranges
+        .iter()
+        .map(table_reference)
+        .collect::<Result<Vec<_>, _>>()?
+        .join(" ");
+    let mut item = BytesStart::new("dataValidation");
+    if let Some(template) = template {
+        for attribute in template.attributes() {
+            let attribute = attribute
+                .map_err(|error| format!("Failed to read data validation attributes: {error}"))?;
+            if !matches!(
+                attribute.key.as_ref(),
+                b"type"
+                    | b"operator"
+                    | b"sqref"
+                    | b"allowBlank"
+                    | b"showErrorMessage"
+                    | b"errorTitle"
+                    | b"error"
+                    | b"promptTitle"
+                    | b"prompt"
+            ) {
+                item.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+            }
+        }
+    } else if validation.prompt.is_some() || validation.prompt_title.is_some() {
+        item.push_attribute(("showInputMessage", "1"));
+    }
+    item.push_attribute(("type", validation.kind.as_str()));
+    if let Some(operator) = validation.operator.as_deref() {
+        item.push_attribute(("operator", operator));
+    }
+    item.push_attribute(("allowBlank", if validation.allow_blank { "1" } else { "0" }));
+    item.push_attribute((
+        "showErrorMessage",
+        if validation.show_error_message {
+            "1"
+        } else {
+            "0"
+        },
+    ));
+    if let Some(value) = validation.error_title.as_deref() {
+        item.push_attribute(("errorTitle", value));
+    }
+    if let Some(value) = validation.error.as_deref() {
+        item.push_attribute(("error", value));
+    }
+    if let Some(value) = validation.prompt_title.as_deref() {
+        item.push_attribute(("promptTitle", value));
+    }
+    if let Some(value) = validation.prompt.as_deref() {
+        item.push_attribute(("prompt", value));
+    }
+    item.push_attribute(("sqref", references.as_str()));
+    writer
+        .write_event(Event::Start(item))
+        .map_err(|error| format!("Failed to write data validation: {error}"))?;
+    for (name, formula) in [
+        ("formula1", validation.formula1.as_deref()),
+        ("formula2", validation.formula2.as_deref()),
+    ] {
+        if let Some(formula) = formula.map(str::trim).filter(|value| !value.is_empty()) {
+            writer
+                .write_event(Event::Start(BytesStart::new(name)))
+                .map_err(|error| format!("Failed to write validation formula: {error}"))?;
+            writer
+                .write_event(Event::Text(BytesText::new(formula)))
+                .map_err(|error| format!("Failed to write validation formula: {error}"))?;
+            writer
+                .write_event(Event::End(BytesEnd::new(name)))
+                .map_err(|error| format!("Failed to finish validation formula: {error}"))?;
+        }
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new("dataValidation")))
+        .map_err(|error| format!("Failed to finish data validation: {error}"))
+}
+
+fn data_validation_later_element(name: &[u8]) -> bool {
+    matches!(
+        name,
+        b"hyperlinks"
+            | b"printOptions"
+            | b"pageMargins"
+            | b"pageSetup"
+            | b"headerFooter"
+            | b"rowBreaks"
+            | b"colBreaks"
+            | b"customProperties"
+            | b"cellWatches"
+            | b"ignoredErrors"
+            | b"smartTags"
+            | b"drawing"
+            | b"legacyDrawing"
+            | b"legacyDrawingHF"
+            | b"picture"
+            | b"oleObjects"
+            | b"controls"
+            | b"webPublishItems"
+            | b"tableParts"
+            | b"extLst"
+    )
+}
+
+fn write_data_validations_container(
+    writer: &mut Writer<Vec<u8>>,
+    validation: &WorkbookDataValidation,
+) -> Result<(), String> {
+    let mut container = BytesStart::new("dataValidations");
+    container.push_attribute(("count", "1"));
+    writer
+        .write_event(Event::Start(container))
+        .map_err(|error| format!("Failed to write data validations: {error}"))?;
+    write_data_validation(writer, validation, None)?;
+    writer
+        .write_event(Event::End(BytesEnd::new("dataValidations")))
+        .map_err(|error| format!("Failed to finish data validations: {error}"))
+}
+
+fn patch_sheet_data_validations(
+    xml: &[u8],
+    change: &WorkbookDataValidationChange,
+    existing_count: usize,
+) -> Result<Vec<u8>, String> {
+    let target_index = change.validation_index;
+    let replacement = change.validation.as_ref();
+    let new_count = match change.action {
+        WorkbookDataValidationAction::Create => existing_count + 1,
+        WorkbookDataValidationAction::Update => existing_count,
+        WorkbookDataValidationAction::Delete => existing_count.saturating_sub(1),
+    };
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 512));
+    let mut buffer = Vec::new();
+    let mut inside_container = false;
+    let mut container_seen = false;
+    let mut inserted = false;
+    let mut index = 0usize;
+    let mut skip_depth = 0usize;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse worksheet data validations: {error}"))?;
+        if skip_depth > 0 {
+            match event {
+                Event::Start(_) => skip_depth += 1,
+                Event::End(_) => skip_depth -= 1,
+                Event::Eof => return Err("Data validation XML ended unexpectedly.".into()),
+                _ => {}
+            }
+            buffer.clear();
+            continue;
+        }
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"dataValidations" => {
+                container_seen = true;
+                if new_count == 0 {
+                    skip_depth = 1;
+                } else {
+                    let mut container = BytesStart::new("dataValidations");
+                    for attribute in start.attributes() {
+                        let attribute = attribute.map_err(|error| {
+                            format!("Failed to read data validation container: {error}")
+                        })?;
+                        if attribute.key.as_ref() != b"count" {
+                            container
+                                .push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+                        }
+                    }
+                    let count = new_count.to_string();
+                    container.push_attribute(("count", count.as_str()));
+                    writer
+                        .write_event(Event::Start(container))
+                        .map_err(|error| {
+                            format!("Failed to write data validation container: {error}")
+                        })?;
+                    inside_container = true;
+                }
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"dataValidations" => {
+                container_seen = true;
+                if let Some(validation) =
+                    replacement.filter(|_| change.action == WorkbookDataValidationAction::Create)
+                {
+                    write_data_validations_container(&mut writer, validation)?;
+                    inserted = true;
+                }
+            }
+            Event::Start(ref start)
+                if inside_container && start.local_name().as_ref() == b"dataValidation" =>
+            {
+                let current = index;
+                index += 1;
+                if target_index == Some(current)
+                    && change.action != WorkbookDataValidationAction::Create
+                {
+                    if let Some(validation) = replacement
+                        .filter(|_| change.action == WorkbookDataValidationAction::Update)
+                    {
+                        write_data_validation(&mut writer, validation, Some(start))?;
+                    }
+                    skip_depth = 1;
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("Failed to copy data validation: {error}"))?;
+                }
+            }
+            Event::Empty(ref start)
+                if inside_container && start.local_name().as_ref() == b"dataValidation" =>
+            {
+                let current = index;
+                index += 1;
+                if target_index == Some(current)
+                    && change.action != WorkbookDataValidationAction::Create
+                {
+                    if let Some(validation) = replacement
+                        .filter(|_| change.action == WorkbookDataValidationAction::Update)
+                    {
+                        write_data_validation(&mut writer, validation, Some(start))?;
+                    }
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("Failed to copy data validation: {error}"))?;
+                }
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"dataValidations" => {
+                if let Some(validation) =
+                    replacement.filter(|_| change.action == WorkbookDataValidationAction::Create)
+                {
+                    write_data_validation(&mut writer, validation, None)?;
+                    inserted = true;
+                }
+                inside_container = false;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish data validations: {error}"))?;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if !container_seen
+                    && !inserted
+                    && data_validation_later_element(start.local_name().as_ref()) =>
+            {
+                if let Some(validation) =
+                    replacement.filter(|_| change.action == WorkbookDataValidationAction::Create)
+                {
+                    write_data_validations_container(&mut writer, validation)?;
+                    inserted = true;
+                }
+                writer.write_event(event.into_owned()).map_err(|error| {
+                    format!("Failed to copy worksheet after data validations: {error}")
+                })?;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"worksheet" => {
+                if !container_seen && !inserted {
+                    if let Some(validation) = replacement
+                        .filter(|_| change.action == WorkbookDataValidationAction::Create)
+                    {
+                        write_data_validations_container(&mut writer, validation)?;
+                        inserted = true;
+                    }
+                }
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish worksheet: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy worksheet data validations: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if change.action == WorkbookDataValidationAction::Create && !inserted {
+        return Err("Could not insert the data validation rule.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+pub fn patch_workbook_data_validation(
+    source: &[u8],
+    change: &WorkbookDataValidationChange,
+) -> Result<Vec<u8>, String> {
+    let mut entries = load_package(source)?;
+    let sheet_path = workbook_sheet_paths(&entries)?
+        .remove(&change.sheet)
+        .ok_or_else(|| format!("Worksheet does not exist: {}", change.sheet))?;
+    let sheet = entries
+        .iter()
+        .find(|entry| entry.name == sheet_path)
+        .ok_or("The worksheet part is missing.")?;
+    let structure = read_sheet_structure(&sheet.data, 0, MAX_XLSX_ROWS, MAX_XLSX_COLUMNS)?;
+    if read_workbook_sheet_layout(source, &change.sheet, 0, 1, 1)?
+        .page_layout
+        .protection
+        .enabled
+    {
+        return Err("Protected worksheets cannot change data validation rules.".into());
+    }
+    let existing_count = structure.data_validations.len();
+    match change.action {
+        WorkbookDataValidationAction::Create => {
+            if change.validation_index.is_some() {
+                return Err(
+                    "Creating a validation rule must not include an existing index.".into(),
+                );
+            }
+            if existing_count >= MAX_DATA_VALIDATIONS {
+                return Err(format!(
+                    "A worksheet cannot exceed {MAX_DATA_VALIDATIONS} validation rules."
+                ));
+            }
+        }
+        WorkbookDataValidationAction::Update | WorkbookDataValidationAction::Delete => {
+            let index = change
+                .validation_index
+                .filter(|index| *index < existing_count)
+                .ok_or("The selected data validation rule no longer exists.")?;
+            ensure_simple_data_validation(&sheet.data, index)?;
+        }
+    }
+    if change.action == WorkbookDataValidationAction::Delete {
+        if change.validation.is_some() {
+            return Err("Deleting a validation rule must not include a replacement rule.".into());
+        }
+    } else {
+        let validation = change
+            .validation
+            .as_ref()
+            .ok_or("A validation rule is required.")?;
+        validate_data_validation_rule(validation)?;
+        for (index, existing) in structure.data_validations.iter().enumerate() {
+            if change.validation_index == Some(index) {
+                continue;
+            }
+            if validation_ranges_overlap(validation, existing) {
+                return Err(
+                    "The validation range overlaps another rule. Merge or remove that rule first."
+                        .into(),
+                );
+            }
+        }
+    }
+    let sheet = entries
+        .iter_mut()
+        .find(|entry| entry.name == sheet_path)
+        .ok_or("The worksheet part is missing.")?;
+    sheet.data = patch_sheet_data_validations(&sheet.data, change, existing_count)?;
+    write_package(entries, source.len() + 1024)
+}
+
+fn validate_filter_change(change: &WorkbookFilterChange) -> Result<(), String> {
+    let range = &change.range;
+    if range.top > range.bottom
+        || range.left > range.right
+        || range.bottom >= MAX_XLSX_ROWS
+        || range.right >= MAX_XLSX_COLUMNS
+    {
+        return Err("The AutoFilter range is outside the XLSX grid.".into());
+    }
+    if change.target == WorkbookFilterTarget::Table
+        && change
+            .table_name
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .is_none()
+    {
+        return Err("A Table name is required for a Table filter.".into());
+    }
+    if change.action == WorkbookFilterAction::Clear {
+        return Ok(());
+    }
+    if let Some(query) = change.query.as_deref() {
+        if query.chars().count() > 255 {
+            return Err("The filter query cannot exceed 255 characters.".into());
+        }
+        if !query.is_empty() && change.filter_column.is_none() {
+            return Err("Choose a filter column before applying a filter query.".into());
+        }
+    }
+    for column in [change.filter_column, change.sort_column]
+        .into_iter()
+        .flatten()
+    {
+        if column < range.left || column > range.right {
+            return Err("The filter or sort column is outside the AutoFilter range.".into());
+        }
+    }
+    if change.sort_column.is_some()
+        && !matches!(change.sort_direction.as_deref(), Some("asc" | "desc"))
+    {
+        return Err("The sort direction must be asc or desc.".into());
+    }
+    if change.query.as_deref().unwrap_or_default().is_empty() && change.sort_column.is_none() {
+        return Err("Choose a filter query or sort column before applying.".into());
+    }
+    Ok(())
+}
+
+fn encode_contains_filter(query: &str) -> String {
+    let mut encoded = String::with_capacity(query.len() + 2);
+    encoded.push('*');
+    for character in query.chars() {
+        if matches!(character, '~' | '*' | '?') {
+            encoded.push('~');
+        }
+        encoded.push(character);
+    }
+    encoded.push('*');
+    encoded
+}
+
+fn write_auto_filter(
+    writer: &mut Writer<Vec<u8>>,
+    range: &WorkbookMergeRange,
+    change: &WorkbookFilterChange,
+) -> Result<(), String> {
+    let reference = table_reference(range)?;
+    let mut filter = BytesStart::new("autoFilter");
+    filter.push_attribute(("ref", reference.as_str()));
+    let query = if change.action == WorkbookFilterAction::Apply {
+        change.query.as_deref().filter(|value| !value.is_empty())
+    } else {
+        None
+    };
+    let sort_column = if change.action == WorkbookFilterAction::Apply {
+        change.sort_column
+    } else {
+        None
+    };
+    if query.is_none() && sort_column.is_none() {
+        writer
+            .write_event(Event::Empty(filter))
+            .map_err(|error| format!("Failed to clear AutoFilter conditions: {error}"))?;
+        return Ok(());
+    }
+    writer
+        .write_event(Event::Start(filter))
+        .map_err(|error| format!("Failed to write AutoFilter: {error}"))?;
+    if let (Some(column), Some(query)) = (change.filter_column, query) {
+        let mut filter_column = BytesStart::new("filterColumn");
+        let column_id = (column - range.left).to_string();
+        filter_column.push_attribute(("colId", column_id.as_str()));
+        writer
+            .write_event(Event::Start(filter_column))
+            .map_err(|error| format!("Failed to write filter column: {error}"))?;
+        writer
+            .write_event(Event::Start(BytesStart::new("customFilters")))
+            .map_err(|error| format!("Failed to write custom filters: {error}"))?;
+        let mut custom = BytesStart::new("customFilter");
+        let value = encode_contains_filter(query);
+        custom.push_attribute(("operator", "equal"));
+        custom.push_attribute(("val", value.as_str()));
+        writer
+            .write_event(Event::Empty(custom))
+            .map_err(|error| format!("Failed to write custom filter: {error}"))?;
+        writer
+            .write_event(Event::End(BytesEnd::new("customFilters")))
+            .map_err(|error| format!("Failed to finish custom filters: {error}"))?;
+        writer
+            .write_event(Event::End(BytesEnd::new("filterColumn")))
+            .map_err(|error| format!("Failed to finish filter column: {error}"))?;
+    }
+    if let Some(column) = sort_column {
+        if range.top == range.bottom {
+            return Err("The AutoFilter has no data rows to sort.".into());
+        }
+        let data_range = WorkbookMergeRange {
+            top: range.top + 1,
+            bottom: range.bottom,
+            left: range.left,
+            right: range.right,
+        };
+        let condition_range = WorkbookMergeRange {
+            left: column,
+            right: column,
+            ..data_range.clone()
+        };
+        let mut sort_state = BytesStart::new("sortState");
+        let sort_reference = table_reference(&data_range)?;
+        sort_state.push_attribute(("ref", sort_reference.as_str()));
+        writer
+            .write_event(Event::Start(sort_state))
+            .map_err(|error| format!("Failed to write sort state: {error}"))?;
+        let mut condition = BytesStart::new("sortCondition");
+        let condition_reference = table_reference(&condition_range)?;
+        condition.push_attribute(("ref", condition_reference.as_str()));
+        if change.sort_direction.as_deref() == Some("desc") {
+            condition.push_attribute(("descending", "1"));
+        }
+        writer
+            .write_event(Event::Empty(condition))
+            .map_err(|error| format!("Failed to write sort condition: {error}"))?;
+        writer
+            .write_event(Event::End(BytesEnd::new("sortState")))
+            .map_err(|error| format!("Failed to finish sort state: {error}"))?;
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new("autoFilter")))
+        .map_err(|error| format!("Failed to finish AutoFilter: {error}"))
+}
+
+fn patch_auto_filter(
+    xml: &[u8],
+    range: &WorkbookMergeRange,
+    change: &WorkbookFilterChange,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 220));
+    let mut buffer = Vec::new();
+    let mut patched = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse AutoFilter: {error}"))?;
+        match event {
+            Event::Start(ref start) if !patched && start.local_name().as_ref() == b"autoFilter" => {
+                write_auto_filter(&mut writer, range, change)?;
+                skip_element(&mut reader, b"autoFilter", &mut buffer)?;
+                patched = true;
+            }
+            Event::Empty(ref start) if !patched && start.local_name().as_ref() == b"autoFilter" => {
+                write_auto_filter(&mut writer, range, change)?;
+                patched = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy AutoFilter XML: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !patched {
+        return Err("The target AutoFilter definition is missing.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+pub fn patch_workbook_filter(
+    source: &[u8],
+    change: &WorkbookFilterChange,
+) -> Result<Vec<u8>, String> {
+    validate_filter_change(change)?;
+    let mut entries = load_package(source)?;
+    let sheet_paths = workbook_sheet_paths(&entries)?;
+    let sheet_path = sheet_paths
+        .get(&change.sheet)
+        .cloned()
+        .ok_or_else(|| format!("Worksheet does not exist: {}", change.sheet))?;
+    let sheet_xml = entries
+        .iter()
+        .find(|entry| entry.name == sheet_path)
+        .ok_or("Worksheet part is missing")?
+        .data
+        .clone();
+    if has_element(&sheet_xml, b"sheetProtection")? {
+        return Err("The current Sheet is protected and its filters cannot be edited.".into());
+    }
+    let (path, range, state) = match change.target {
+        WorkbookFilterTarget::Worksheet => {
+            let structure = read_sheet_structure(&sheet_xml, 0, MAX_XLSX_ROWS, MAX_XLSX_COLUMNS)?;
+            let range = structure
+                .auto_filter
+                .ok_or("The worksheet AutoFilter definition is missing.")?;
+            (sheet_path.clone(), range, structure.auto_filter_state)
+        }
+        WorkbookFilterTarget::Table => {
+            let relationships = part_relationships(&entries, &sheet_path)?;
+            let expected_name = change.table_name.as_deref().unwrap_or_default();
+            let mut target = None;
+            for path in relationships
+                .into_values()
+                .filter(|path| path.starts_with("xl/tables/"))
+            {
+                let entry = entries
+                    .iter()
+                    .find(|entry| entry.name == path)
+                    .ok_or("Table part is missing")?;
+                let (_, name, range, _) = table_root(&entry.data)?;
+                if name.eq_ignore_ascii_case(expected_name) {
+                    let state = read_auto_filter_state(&entry.data, &range)?;
+                    target = Some((path, range, state));
+                    break;
+                }
+            }
+            target.ok_or_else(|| format!("Table does not exist: {expected_name}"))?
+        }
+    };
+    if range != change.range {
+        return Err("The AutoFilter range changed. Reload the worksheet before editing it.".into());
+    }
+    if change.action == WorkbookFilterAction::Apply && !state.editable {
+        return Err(
+            "This AutoFilter uses advanced or multi-column conditions that cannot be overwritten safely yet."
+                .into(),
+        );
+    }
+    let entry = entries
+        .iter_mut()
+        .find(|entry| entry.name == path)
+        .ok_or("AutoFilter part is missing")?;
+    entry.data = patch_auto_filter(&entry.data, &range, change)?;
+    write_package(entries, source.len() + 512)
+}
+
+fn validate_defined_name(name: &str) -> Result<(), String> {
+    if name.is_empty() || name.chars().count() > MAX_DEFINED_NAME_LENGTH {
+        return Err("A defined name must contain 1 to 255 characters.".into());
+    }
+    let mut characters = name.chars();
+    if !characters
+        .next()
+        .is_some_and(|value| value.is_ascii_alphabetic() || matches!(value, '_' | '\\'))
+        || !characters
+            .all(|value| value.is_ascii_alphanumeric() || matches!(value, '_' | '.' | '\\'))
+    {
+        return Err(
+            "A defined name must start with a letter, underscore, or backslash and contain no spaces."
+                .into(),
+        );
+    }
+    if matches!(name.to_ascii_lowercase().as_str(), "r" | "c") || parse_cell_reference(name).is_ok()
+    {
+        return Err(
+            "A defined name cannot be a cell reference or the reserved name R or C.".into(),
+        );
+    }
+    if name.to_ascii_lowercase().starts_with("_xlnm.") {
+        return Err("Built-in _xlnm names cannot be edited through this command.".into());
+    }
+    Ok(())
+}
+
+fn same_defined_name_scope(left: Option<&str>, right: Option<&str>) -> bool {
+    match (left, right) {
+        (None, None) => true,
+        (Some(left), Some(right)) => left.eq_ignore_ascii_case(right),
+        _ => false,
+    }
+}
+
+fn defined_name_key_matches(item: &WorkbookDefinedName, name: &str, scope: Option<&str>) -> bool {
+    item.name.eq_ignore_ascii_case(name) && same_defined_name_scope(item.scope.as_deref(), scope)
+}
+
+fn absolute_cell_reference(row: usize, column: usize) -> Result<String, String> {
+    let reference = cell_reference(row, column)?;
+    let split = reference
+        .find(|character: char| character.is_ascii_digit())
+        .ok_or("Could not build an absolute cell reference.")?;
+    Ok(format!("${}${}", &reference[..split], &reference[split..]))
+}
+
+fn defined_name_range_formula(sheet: &str, range: &WorkbookMergeRange) -> Result<String, String> {
+    let quoted_sheet = sheet.replace('\'', "''");
+    Ok(format!(
+        "'{quoted_sheet}'!{}:{}",
+        absolute_cell_reference(range.top, range.left)?,
+        absolute_cell_reference(range.bottom, range.right)?
+    ))
+}
+
+fn is_defined_name_character(character: char) -> bool {
+    character.is_ascii_alphanumeric() || matches!(character, '_' | '.' | '\\')
+}
+
+fn formula_references_defined_name(formula: &str, name: &str) -> bool {
+    let formula = formula.to_ascii_lowercase();
+    let name = name.to_ascii_lowercase();
+    let mut offset = 0usize;
+    while let Some(found) = formula[offset..].find(&name) {
+        let start = offset + found;
+        let end = start + name.len();
+        let before = formula[..start].chars().next_back();
+        let after = formula[end..].chars().next();
+        if !before.is_some_and(is_defined_name_character)
+            && !after.is_some_and(is_defined_name_character)
+        {
+            return true;
+        }
+        offset = end;
+    }
+    false
+}
+
+fn xml_formulas_reference_defined_name(xml: &[u8], name: &str) -> Result<bool, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut buffer = Vec::new();
+    let mut formula_depth = 0usize;
+    loop {
+        match reader.read_event_into(&mut buffer).map_err(|error| {
+            format!("Failed to inspect formulas for defined-name usage: {error}")
+        })? {
+            Event::Start(ref start)
+                if matches!(
+                    start.local_name().as_ref(),
+                    b"f" | b"formula" | b"formula1" | b"formula2"
+                ) =>
+            {
+                formula_depth += 1;
+            }
+            Event::Text(ref text) if formula_depth > 0 => {
+                if formula_references_defined_name(
+                    &decode_xml_text(text, "formula while checking defined-name usage")?,
+                    name,
+                ) {
+                    return Ok(true);
+                }
+            }
+            Event::End(ref end)
+                if formula_depth > 0
+                    && matches!(
+                        end.local_name().as_ref(),
+                        b"f" | b"formula" | b"formula1" | b"formula2"
+                    ) =>
+            {
+                formula_depth -= 1;
+            }
+            Event::Eof => return Ok(false),
+            _ => {}
+        }
+        buffer.clear();
+    }
+}
+
+fn write_defined_name(
+    writer: &mut Writer<Vec<u8>>,
+    name: &str,
+    local_sheet_id: Option<usize>,
+    formula: &str,
+) -> Result<(), String> {
+    let mut element = BytesStart::new("definedName");
+    element.push_attribute(("name", name));
+    let local_sheet_id = local_sheet_id.map(|value| value.to_string());
+    if let Some(local_sheet_id) = local_sheet_id.as_deref() {
+        element.push_attribute(("localSheetId", local_sheet_id));
+    }
+    writer
+        .write_event(Event::Start(element))
+        .map_err(|error| format!("Failed to write defined name: {error}"))?;
+    writer
+        .write_event(Event::Text(BytesText::new(formula)))
+        .map_err(|error| format!("Failed to write defined-name range: {error}"))?;
+    writer
+        .write_event(Event::End(BytesEnd::new("definedName")))
+        .map_err(|error| format!("Failed to finish defined name: {error}"))
+}
+
+fn patch_workbook_defined_names(
+    xml: &[u8],
+    change: &WorkbookDefinedNameChange,
+    local_sheet_id: Option<usize>,
+    formula: Option<&str>,
+    existing_count: usize,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 180));
+    let mut buffer = Vec::new();
+    let mut has_container = false;
+    let mut inserted = false;
+    let mut patched = false;
+    let mut inside_target = false;
+    let mut target_text_written = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse workbook defined names: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"definedNames" => {
+                has_container = true;
+                if change.action == WorkbookDefinedNameAction::Delete && existing_count == 1 {
+                    skip_element(&mut reader, b"definedNames", &mut buffer)?;
+                    patched = true;
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("Failed to write definedNames: {error}"))?;
+                }
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"definedNames" => {
+                has_container = true;
+                if change.action == WorkbookDefinedNameAction::Create {
+                    writer
+                        .write_event(Event::Start(BytesStart::new("definedNames")))
+                        .map_err(|error| format!("Failed to create definedNames: {error}"))?;
+                    write_defined_name(
+                        &mut writer,
+                        change.name.trim(),
+                        local_sheet_id,
+                        formula.ok_or("A range formula is required.")?,
+                    )?;
+                    writer
+                        .write_event(Event::End(BytesEnd::new("definedNames")))
+                        .map_err(|error| format!("Failed to finish definedNames: {error}"))?;
+                    inserted = true;
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("Failed to copy definedNames: {error}"))?;
+                }
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"definedName" => {
+                let event_name = xml_value(start, b"name", reader.decoder())?;
+                let event_scope = xml_value(start, b"localSheetId", reader.decoder())?
+                    .map(|value| {
+                        value
+                            .parse::<usize>()
+                            .map_err(|_| "Defined-name scope is invalid.")
+                    })
+                    .transpose()?;
+                let matches = event_name
+                    .as_deref()
+                    .is_some_and(|name| name.eq_ignore_ascii_case(change.name.trim()))
+                    && event_scope == local_sheet_id;
+                if matches && change.action == WorkbookDefinedNameAction::Delete {
+                    skip_element(&mut reader, b"definedName", &mut buffer)?;
+                    patched = true;
+                } else if matches {
+                    inside_target = true;
+                    target_text_written = false;
+                    let output = if change.action == WorkbookDefinedNameAction::Rename {
+                        replace_xml_attribute(
+                            start,
+                            b"name",
+                            change
+                                .new_name
+                                .as_deref()
+                                .map(str::trim)
+                                .ok_or("A new defined name is required.")?,
+                            false,
+                        )?
+                    } else {
+                        start.to_owned().into_owned()
+                    };
+                    writer
+                        .write_event(Event::Start(output))
+                        .map_err(|error| format!("Failed to update defined name: {error}"))?;
+                    if change.action == WorkbookDefinedNameAction::UpdateRange {
+                        writer
+                            .write_event(Event::Text(BytesText::new(
+                                formula.ok_or("A range formula is required.")?,
+                            )))
+                            .map_err(|error| {
+                                format!("Failed to update defined-name range: {error}")
+                            })?;
+                        target_text_written = true;
+                    }
+                    patched = true;
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("Failed to copy defined name: {error}"))?;
+                }
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"definedName" => {
+                inside_target = false;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish defined name: {error}"))?;
+            }
+            Event::Text(_) | Event::CData(_) | Event::GeneralRef(_)
+                if inside_target
+                    && target_text_written
+                    && change.action == WorkbookDefinedNameAction::UpdateRange => {}
+            Event::End(ref end)
+                if end.local_name().as_ref() == b"definedNames"
+                    && change.action == WorkbookDefinedNameAction::Create
+                    && !inserted =>
+            {
+                write_defined_name(
+                    &mut writer,
+                    change.name.trim(),
+                    local_sheet_id,
+                    formula.ok_or("A range formula is required.")?,
+                )?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish definedNames: {error}"))?;
+                inserted = true;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if !has_container
+                    && !inserted
+                    && change.action == WorkbookDefinedNameAction::Create
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"calcPr"
+                            | b"oleSize"
+                            | b"customWorkbookViews"
+                            | b"pivotCaches"
+                            | b"smartTagPr"
+                            | b"smartTagTypes"
+                            | b"webPublishing"
+                            | b"fileRecoveryPr"
+                            | b"webPublishObjects"
+                            | b"extLst"
+                    ) =>
+            {
+                writer
+                    .write_event(Event::Start(BytesStart::new("definedNames")))
+                    .map_err(|error| format!("Failed to create definedNames: {error}"))?;
+                write_defined_name(
+                    &mut writer,
+                    change.name.trim(),
+                    local_sheet_id,
+                    formula.ok_or("A range formula is required.")?,
+                )?;
+                writer
+                    .write_event(Event::End(BytesEnd::new("definedNames")))
+                    .map_err(|error| format!("Failed to finish definedNames: {error}"))?;
+                inserted = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy workbook XML: {error}"))?;
+            }
+            Event::End(ref end)
+                if end.local_name().as_ref() == b"workbook"
+                    && !inserted
+                    && change.action == WorkbookDefinedNameAction::Create =>
+            {
+                writer
+                    .write_event(Event::Start(BytesStart::new("definedNames")))
+                    .map_err(|error| format!("Failed to create definedNames: {error}"))?;
+                write_defined_name(
+                    &mut writer,
+                    change.name.trim(),
+                    local_sheet_id,
+                    formula.ok_or("A range formula is required.")?,
+                )?;
+                writer
+                    .write_event(Event::End(BytesEnd::new("definedNames")))
+                    .map_err(|error| format!("Failed to finish definedNames: {error}"))?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish workbook: {error}"))?;
+                inserted = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy workbook defined names: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if change.action == WorkbookDefinedNameAction::Create {
+        if !inserted {
+            return Err("Could not insert the defined name into workbook.xml.".into());
+        }
+    } else if !patched {
+        return Err("The target defined name was not found.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+pub fn patch_workbook_defined_name(
+    source: &[u8],
+    change: &WorkbookDefinedNameChange,
+) -> Result<Vec<u8>, String> {
+    let name = change.name.trim();
+    validate_defined_name(name)?;
+    if let Some(new_name) = change.new_name.as_deref().map(str::trim) {
+        validate_defined_name(new_name)?;
+    }
+    if read_workbook_protection(source)?.lock_structure {
+        return Err(
+            "The workbook structure is protected and defined names cannot be edited.".into(),
+        );
+    }
+    let mut entries = load_package(source)?;
+    let workbook_index = entries
+        .iter()
+        .position(|entry| entry.name == "xl/workbook.xml")
+        .ok_or("XLSX is missing xl/workbook.xml")?;
+    let workbook_xml = entries[workbook_index].data.clone();
+    let sheets = workbook_sheet_names(&workbook_xml)?;
+    let scope = change
+        .scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+    let local_sheet_id = scope
+        .map(|scope| {
+            sheets
+                .iter()
+                .position(|sheet| sheet.eq_ignore_ascii_case(scope))
+                .ok_or_else(|| format!("Defined-name scope worksheet does not exist: {scope}"))
+        })
+        .transpose()?;
+    let defined_names = read_workbook_defined_names_xml(&workbook_xml)?;
+    let existing = defined_names
+        .iter()
+        .find(|item| defined_name_key_matches(item, name, scope));
+    if change.action == WorkbookDefinedNameAction::Create {
+        if defined_names.len() >= MAX_DEFINED_NAMES {
+            return Err(format!(
+                "A workbook cannot contain more than {MAX_DEFINED_NAMES} names."
+            ));
+        }
+        if existing.is_some() {
+            return Err(format!(
+                "A defined name named {name} already exists in this scope."
+            ));
+        }
+    } else {
+        let existing = existing.ok_or_else(|| format!("Defined name does not exist: {name}"))?;
+        if existing.hidden || existing.name.to_ascii_lowercase().starts_with("_xlnm.") {
+            return Err("Hidden and built-in defined names cannot be edited.".into());
+        }
+    }
+    if change.action == WorkbookDefinedNameAction::Rename {
+        let new_name = change
+            .new_name
+            .as_deref()
+            .map(str::trim)
+            .ok_or("A new defined name is required.")?;
+        if !new_name.eq_ignore_ascii_case(name)
+            && defined_names
+                .iter()
+                .any(|item| defined_name_key_matches(item, new_name, scope))
+        {
+            return Err(format!(
+                "A defined name named {new_name} already exists in this scope."
+            ));
+        }
+    }
+    let formula = if matches!(
+        change.action,
+        WorkbookDefinedNameAction::Create | WorkbookDefinedNameAction::UpdateRange
+    ) {
+        let target_sheet = change
+            .target_sheet
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .ok_or("A target worksheet is required.")?;
+        if !sheets
+            .iter()
+            .any(|sheet| sheet.eq_ignore_ascii_case(target_sheet))
+        {
+            return Err(format!("Target worksheet does not exist: {target_sheet}"));
+        }
+        let range = change.range.as_ref().ok_or("A target range is required.")?;
+        if range.top > range.bottom
+            || range.left > range.right
+            || range.bottom >= MAX_XLSX_ROWS
+            || range.right >= MAX_XLSX_COLUMNS
+        {
+            return Err("The defined-name range is outside the XLSX grid.".into());
+        }
+        Some(defined_name_range_formula(target_sheet, range)?)
+    } else {
+        None
+    };
+    if matches!(
+        change.action,
+        WorkbookDefinedNameAction::Rename | WorkbookDefinedNameAction::Delete
+    ) && !(change.action == WorkbookDefinedNameAction::Rename
+        && change
+            .new_name
+            .as_deref()
+            .is_some_and(|new_name| new_name.trim().eq_ignore_ascii_case(name)))
+    {
+        let referenced_by_name = defined_names.iter().any(|item| {
+            !defined_name_key_matches(item, name, scope)
+                && formula_references_defined_name(&item.formula, name)
+        });
+        let referenced_by_formula = entries
+            .iter()
+            .filter(|entry| entry.name != "xl/workbook.xml" && entry.name.ends_with(".xml"))
+            .map(|entry| xml_formulas_reference_defined_name(&entry.data, name))
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .any(|value| value);
+        if referenced_by_name || referenced_by_formula {
+            return Err(
+                "This defined name is referenced by a formula and cannot be renamed or deleted safely yet."
+                    .into(),
+            );
+        }
+    }
+    entries[workbook_index].data = patch_workbook_defined_names(
+        &workbook_xml,
+        change,
+        local_sheet_id,
+        formula.as_deref(),
+        defined_names.len(),
+    )?;
+    write_package(entries, source.len() + 256)
+}
+
 pub fn patch_workbook_table(
     source: &[u8],
     change: &WorkbookTableChange,
@@ -5383,7 +10355,7 @@ pub fn patch_workbook_table(
     let relationships = part_relationships(&entries, &sheet_path)?;
     let mut max_id = 0u32;
     let mut all_names = HashSet::new();
-    let mut target: Option<(String, u32, Option<String>)> = None;
+    let mut target: Option<(String, u32, WorkbookMergeRange, TableStyleSettings)> = None;
     for (path, xml) in entries
         .iter()
         .filter(|entry| entry.name.starts_with("xl/tables/") && entry.name.ends_with(".xml"))
@@ -5394,7 +10366,7 @@ pub fn patch_workbook_table(
         all_names.insert(name.to_lowercase());
         if relationships.values().any(|value| value == &path) {
             if name.eq_ignore_ascii_case(&change.table_name) {
-                target = Some((path.clone(), id, style));
+                target = Some((path.clone(), id, range, style));
             } else if ranges_overlap(&range, &change.range) {
                 return Err(format!("The selected range overlaps Table {name}."));
             }
@@ -5403,7 +10375,7 @@ pub fn patch_workbook_table(
 
     match change.action {
         WorkbookTableAction::Resize => {
-            let (path, id, style) = target.ok_or_else(|| {
+            let (path, id, _, style) = target.ok_or_else(|| {
                 format!(
                     "Table does not exist on this worksheet: {}",
                     change.table_name
@@ -5419,7 +10391,7 @@ pub fn patch_workbook_table(
                 change.table_name.trim(),
                 &change.range,
                 &change.columns,
-                style.as_deref(),
+                &style,
             )?;
         }
         WorkbookTableAction::Create => {
@@ -5485,9 +10457,115 @@ pub fn patch_workbook_table(
                     change.table_name.trim(),
                     &change.range,
                     &change.columns,
-                    None,
+                    &TableStyleSettings::default(),
                 )?,
             });
+        }
+        WorkbookTableAction::Rename => {
+            let (path, _, _, _) = target.ok_or_else(|| {
+                format!(
+                    "Table does not exist on this worksheet: {}",
+                    change.table_name
+                )
+            })?;
+            let new_name = change
+                .new_table_name
+                .as_deref()
+                .map(str::trim)
+                .ok_or("A new Table name is required.")?;
+            if !new_name.eq_ignore_ascii_case(change.table_name.trim())
+                && all_names.contains(&new_name.to_lowercase())
+            {
+                return Err(format!("A Table named {new_name} already exists."));
+            }
+            if package_has_structured_table_reference(&entries, &path, change.table_name.trim()) {
+                return Err(
+                    "This Table is used by a structured reference and cannot be renamed safely yet."
+                        .into(),
+                );
+            }
+            let entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == path)
+                .ok_or("Table part is missing")?;
+            entry.data = patch_table_identity(&entry.data, new_name)?;
+        }
+        WorkbookTableAction::SetStyle => {
+            let (path, _, _, mut style) = target.ok_or_else(|| {
+                format!(
+                    "Table does not exist on this worksheet: {}",
+                    change.table_name
+                )
+            })?;
+            if let Some(name) = change.style_name.as_deref().map(str::trim) {
+                style.name = Some(name.into());
+            }
+            if let Some(value) = change.show_first_column {
+                style.show_first_column = value;
+            }
+            if let Some(value) = change.show_last_column {
+                style.show_last_column = value;
+            }
+            if let Some(value) = change.show_row_stripes {
+                style.show_row_stripes = value;
+            }
+            if let Some(value) = change.show_column_stripes {
+                style.show_column_stripes = value;
+            }
+            let entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == path)
+                .ok_or("Table part is missing")?;
+            entry.data = patch_table_style(&entry.data, &style)?;
+        }
+        WorkbookTableAction::ConvertToRange | WorkbookTableAction::Delete => {
+            let (path, _, _, _) = target.ok_or_else(|| {
+                format!(
+                    "Table does not exist on this worksheet: {}",
+                    change.table_name
+                )
+            })?;
+            let table_xml = entries
+                .iter()
+                .find(|entry| entry.name == path)
+                .ok_or("Table part is missing")?
+                .data
+                .clone();
+            ensure_simple_resizable_table(&table_xml)?;
+            if package_has_structured_table_reference(&entries, &path, change.table_name.trim()) {
+                return Err(
+                    "This Table is used by a structured reference and cannot be removed safely yet."
+                        .into(),
+                );
+            }
+            let relation_id = relationships
+                .iter()
+                .find_map(|(id, target)| (target == &path).then(|| id.clone()))
+                .ok_or("The worksheet Table relationship is missing.")?;
+            let relation_path = {
+                let (directory, file) = sheet_path
+                    .rsplit_once('/')
+                    .ok_or("Worksheet path is invalid")?;
+                format!("{directory}/_rels/{file}.rels")
+            };
+            let relationship_entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == relation_path)
+                .ok_or("The worksheet relationship part is missing.")?;
+            relationship_entry.data =
+                remove_table_relationship(&relationship_entry.data, &relation_id)?;
+            let sheet = entries
+                .iter_mut()
+                .find(|entry| entry.name == sheet_path)
+                .ok_or("Worksheet part is missing")?;
+            sheet.data = remove_sheet_table_part(&sheet.data, &relation_id)?;
+            let content_types = entries
+                .iter_mut()
+                .find(|entry| entry.name == "[Content_Types].xml")
+                .ok_or("XLSX is missing [Content_Types].xml")?;
+            content_types.data =
+                remove_table_content_type(&content_types.data, &format!("/{path}"))?;
+            entries.retain(|entry| entry.name != path);
         }
     }
     write_package(entries, source.len() + 1024)
@@ -5782,17 +10860,29 @@ pub fn patch_workbook(
 #[cfg(test)]
 mod tests {
     use super::{
-        patch_calc_chain_rows, patch_sheet_structure_axis, patch_workbook_structure,
-        patch_workbook_table, read_sheet_formulas, read_workbook_defined_names,
-        read_workbook_sheet_layout, validate_plain_structure_sheet, validate_workbook_package,
+        patch_calc_chain_rows, patch_sheet_structure_axis, patch_workbook_conditional_format,
+        patch_workbook_data_validation, patch_workbook_defined_name, patch_workbook_drawing,
+        patch_workbook_filter, patch_workbook_structure, patch_workbook_table, read_sheet_formulas,
+        read_workbook_defined_names, read_workbook_sheet_layout, validate_plain_structure_sheet,
+        validate_workbook_package,
     };
     use crate::formats::workbook::{
-        WorkbookMergeRange, WorkbookStructureAction, WorkbookStructureAxis,
+        WorkbookConditionalColorScale, WorkbookConditionalColorScalePoint,
+        WorkbookConditionalDataBar, WorkbookConditionalFormatAction,
+        WorkbookConditionalFormatChange, WorkbookConditionalFormatRule,
+        WorkbookConditionalFormatStyle, WorkbookConditionalIconSet,
+        WorkbookConditionalIconThreshold, WorkbookConditionalThreshold, WorkbookDataValidation,
+        WorkbookDataValidationAction, WorkbookDataValidationChange, WorkbookDefinedNameAction,
+        WorkbookDefinedNameChange, WorkbookDrawingAction, WorkbookDrawingAnchor,
+        WorkbookDrawingChange, WorkbookFilterAction, WorkbookFilterChange, WorkbookFilterState,
+        WorkbookFilterTarget, WorkbookMergeRange, WorkbookStructureAction, WorkbookStructureAxis,
         WorkbookStructureChange, WorkbookTableAction, WorkbookTableChange,
     };
     use rust_xlsxwriter::{
-        Chart, ChartType, ConditionalFormatCell, ConditionalFormatCellRule, DataValidation, Format,
-        Formula, Table, TableColumn, Workbook,
+        Chart, ChartType, ConditionalFormat2ColorScale, ConditionalFormatCell,
+        ConditionalFormatCellRule, ConditionalFormatDataBar, ConditionalFormatFormula,
+        ConditionalFormatIconSet, ConditionalFormatIconType, DataValidation, Format, Formula,
+        Table, TableColumn, Workbook,
     };
     use std::io::{Cursor, Read};
     use zip::ZipArchive;
@@ -5806,6 +10896,13 @@ mod tests {
             .read_to_string(&mut text)
             .unwrap();
         text
+    }
+
+    fn zip_has(source: &[u8], name: &str) -> bool {
+        ZipArchive::new(Cursor::new(source))
+            .unwrap()
+            .by_name(name)
+            .is_ok()
     }
 
     #[test]
@@ -6298,6 +11395,12 @@ mod tests {
                 sheet: "Data".into(),
                 action: WorkbookTableAction::Create,
                 table_name: "SalesTable".into(),
+                new_table_name: None,
+                style_name: None,
+                show_first_column: None,
+                show_last_column: None,
+                show_row_stripes: None,
+                show_column_stripes: None,
                 range: WorkbookMergeRange {
                     top: 0,
                     bottom: 2,
@@ -6324,6 +11427,12 @@ mod tests {
                 sheet: "Data".into(),
                 action: WorkbookTableAction::Resize,
                 table_name: "SalesTable".into(),
+                new_table_name: None,
+                style_name: None,
+                show_first_column: None,
+                show_last_column: None,
+                show_row_stripes: None,
+                show_column_stripes: None,
                 range: WorkbookMergeRange {
                     top: 0,
                     bottom: 2,
@@ -6339,5 +11448,2024 @@ mod tests {
         assert_eq!(layout.tables[0].range.right, 2);
         assert_eq!(layout.tables[0].columns, vec!["Item", "Amount", "Region"]);
         assert!(zip_text(&resized, "xl/tables/table1.xml").contains("ref=\"A1:C3\""));
+
+        let renamed = patch_workbook_table(
+            &resized,
+            &WorkbookTableChange {
+                sheet: "Data".into(),
+                action: WorkbookTableAction::Rename,
+                table_name: "SalesTable".into(),
+                new_table_name: Some("RevenueTable".into()),
+                style_name: None,
+                show_first_column: None,
+                show_last_column: None,
+                show_row_stripes: None,
+                show_column_stripes: None,
+                range: WorkbookMergeRange {
+                    top: 0,
+                    bottom: 2,
+                    left: 0,
+                    right: 2,
+                },
+                columns: Vec::new(),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&renamed, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.tables[0].display_name, "RevenueTable");
+
+        let styled = patch_workbook_table(
+            &renamed,
+            &WorkbookTableChange {
+                sheet: "Data".into(),
+                action: WorkbookTableAction::SetStyle,
+                table_name: "RevenueTable".into(),
+                new_table_name: None,
+                style_name: Some("TableStyleMedium4".into()),
+                show_first_column: Some(true),
+                show_last_column: Some(true),
+                show_row_stripes: Some(false),
+                show_column_stripes: Some(true),
+                range: WorkbookMergeRange {
+                    top: 0,
+                    bottom: 2,
+                    left: 0,
+                    right: 2,
+                },
+                columns: Vec::new(),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&styled, "Data", 0, 10, 10).unwrap();
+        assert_eq!(
+            layout.tables[0].style_name.as_deref(),
+            Some("TableStyleMedium4")
+        );
+        assert!(layout.tables[0].show_first_column);
+        assert!(layout.tables[0].show_last_column);
+        assert!(!layout.tables[0].show_row_stripes);
+        assert!(layout.tables[0].show_column_stripes);
+
+        let filtered = patch_workbook_filter(
+            &styled,
+            &WorkbookFilterChange {
+                sheet: "Data".into(),
+                target: WorkbookFilterTarget::Table,
+                action: WorkbookFilterAction::Apply,
+                table_name: Some("RevenueTable".into()),
+                range: WorkbookMergeRange {
+                    top: 0,
+                    bottom: 2,
+                    left: 0,
+                    right: 2,
+                },
+                filter_column: Some(2),
+                query: Some("Ea*?".into()),
+                sort_column: Some(1),
+                sort_direction: Some("desc".into()),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&filtered).unwrap();
+        let layout = read_workbook_sheet_layout(&filtered, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.tables[0].filter_state.filter_column, Some(2));
+        assert_eq!(layout.tables[0].filter_state.query.as_deref(), Some("Ea*?"));
+        assert_eq!(layout.tables[0].filter_state.sort_column, Some(1));
+        assert_eq!(
+            layout.tables[0].filter_state.sort_direction.as_deref(),
+            Some("desc")
+        );
+        assert!(layout.tables[0].filter_state.editable);
+
+        let cleared = patch_workbook_filter(
+            &filtered,
+            &WorkbookFilterChange {
+                sheet: "Data".into(),
+                target: WorkbookFilterTarget::Table,
+                action: WorkbookFilterAction::Clear,
+                table_name: Some("RevenueTable".into()),
+                range: WorkbookMergeRange {
+                    top: 0,
+                    bottom: 2,
+                    left: 0,
+                    right: 2,
+                },
+                filter_column: None,
+                query: None,
+                sort_column: None,
+                sort_direction: None,
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&cleared, "Data", 0, 10, 10).unwrap();
+        assert_eq!(
+            layout.tables[0].filter_state,
+            WorkbookFilterState {
+                editable: true,
+                ..WorkbookFilterState::default()
+            }
+        );
+
+        let converted = patch_workbook_table(
+            &cleared,
+            &WorkbookTableChange {
+                sheet: "Data".into(),
+                action: WorkbookTableAction::ConvertToRange,
+                table_name: "RevenueTable".into(),
+                new_table_name: None,
+                style_name: None,
+                show_first_column: None,
+                show_last_column: None,
+                show_row_stripes: None,
+                show_column_stripes: None,
+                range: WorkbookMergeRange {
+                    top: 0,
+                    bottom: 2,
+                    left: 0,
+                    right: 2,
+                },
+                columns: Vec::new(),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&converted).unwrap();
+        let layout = read_workbook_sheet_layout(&converted, "Data", 0, 10, 10).unwrap();
+        assert!(layout.tables.is_empty());
+        assert!(!zip_has(&converted, "xl/tables/table1.xml"));
+        assert!(!zip_text(&converted, "xl/worksheets/sheet1.xml").contains("tableParts"));
+        assert!(!zip_text(&converted, "xl/worksheets/_rels/sheet1.xml.rels")
+            .contains("relationships/table"));
+        assert!(!zip_text(&converted, "[Content_Types].xml").contains("/xl/tables/table1.xml"));
+
+        let recreated = patch_workbook_table(
+            &converted,
+            &WorkbookTableChange {
+                sheet: "Data".into(),
+                action: WorkbookTableAction::Create,
+                table_name: "ReplacementTable".into(),
+                new_table_name: None,
+                style_name: None,
+                show_first_column: None,
+                show_last_column: None,
+                show_row_stripes: None,
+                show_column_stripes: None,
+                range: WorkbookMergeRange {
+                    top: 0,
+                    bottom: 2,
+                    left: 0,
+                    right: 2,
+                },
+                columns: vec!["Item".into(), "Amount".into(), "Region".into()],
+            },
+        )
+        .unwrap();
+        let deleted = patch_workbook_table(
+            &recreated,
+            &WorkbookTableChange {
+                sheet: "Data".into(),
+                action: WorkbookTableAction::Delete,
+                table_name: "ReplacementTable".into(),
+                new_table_name: None,
+                style_name: None,
+                show_first_column: None,
+                show_last_column: None,
+                show_row_stripes: None,
+                show_column_stripes: None,
+                range: WorkbookMergeRange {
+                    top: 0,
+                    bottom: 2,
+                    left: 0,
+                    right: 2,
+                },
+                columns: Vec::new(),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&deleted).unwrap();
+        assert!(read_workbook_sheet_layout(&deleted, "Data", 0, 10, 10)
+            .unwrap()
+            .tables
+            .is_empty());
+    }
+
+    #[test]
+    fn persists_and_clears_worksheet_auto_filter_state() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_string(0, 0, "Item").unwrap();
+        sheet.write_string(0, 1, "Amount").unwrap();
+        sheet.write_string(1, 0, "Alpha").unwrap();
+        sheet.write_number(1, 1, 20).unwrap();
+        sheet.write_string(2, 0, "Beta").unwrap();
+        sheet.write_number(2, 1, 10).unwrap();
+        sheet.autofilter(0, 0, 2, 1).unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let range = WorkbookMergeRange {
+            top: 0,
+            bottom: 2,
+            left: 0,
+            right: 1,
+        };
+        let filtered = patch_workbook_filter(
+            &source,
+            &WorkbookFilterChange {
+                sheet: "Data".into(),
+                target: WorkbookFilterTarget::Worksheet,
+                action: WorkbookFilterAction::Apply,
+                table_name: None,
+                range: range.clone(),
+                filter_column: Some(0),
+                query: Some("Al".into()),
+                sort_column: Some(1),
+                sort_direction: Some("asc".into()),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&filtered, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.auto_filter_state.filter_column, Some(0));
+        assert_eq!(layout.auto_filter_state.query.as_deref(), Some("Al"));
+        assert_eq!(layout.auto_filter_state.sort_column, Some(1));
+        assert_eq!(
+            layout.auto_filter_state.sort_direction.as_deref(),
+            Some("asc")
+        );
+        assert!(layout.auto_filter_state.editable);
+
+        let cleared = patch_workbook_filter(
+            &filtered,
+            &WorkbookFilterChange {
+                sheet: "Data".into(),
+                target: WorkbookFilterTarget::Worksheet,
+                action: WorkbookFilterAction::Clear,
+                table_name: None,
+                range,
+                filter_column: None,
+                query: None,
+                sort_column: None,
+                sort_direction: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&cleared).unwrap();
+        let layout = read_workbook_sheet_layout(&cleared, "Data", 0, 10, 10).unwrap();
+        assert_eq!(
+            layout.auto_filter_state,
+            WorkbookFilterState {
+                editable: true,
+                ..WorkbookFilterState::default()
+            }
+        );
+    }
+
+    #[test]
+    fn marks_advanced_and_multi_column_filters_read_only() {
+        let range = WorkbookMergeRange {
+            top: 0,
+            bottom: 5,
+            left: 0,
+            right: 2,
+        };
+        let advanced = br#"<worksheet><autoFilter ref="A1:C6"><filterColumn colId="0"><top10 val="10"/></filterColumn></autoFilter></worksheet>"#;
+        assert!(
+            !super::read_auto_filter_state(advanced, &range)
+                .unwrap()
+                .editable
+        );
+        let multiple = br#"<worksheet><autoFilter ref="A1:C6"><filterColumn colId="0"><customFilters><customFilter val="*A*"/></customFilters></filterColumn><filterColumn colId="1"><customFilters><customFilter val="*B*"/></customFilters></filterColumn></autoFilter></worksheet>"#;
+        assert!(
+            !super::read_auto_filter_state(multiple, &range)
+                .unwrap()
+                .editable
+        );
+    }
+
+    #[test]
+    fn creates_updates_and_deletes_basic_conditional_format_rules() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_number(0, 0, 2).unwrap();
+        sheet.write_number(1, 0, 8).unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let rule = |range: WorkbookMergeRange,
+                    operator: &str,
+                    first: &str,
+                    second: Option<&str>,
+                    fill: &str| WorkbookConditionalFormatRule {
+            group_index: 0,
+            rule_index: 0,
+            ranges: vec![range],
+            kind: "cellIs".into(),
+            operator: Some(operator.into()),
+            formula1: Some(first.into()),
+            formula2: second.map(str::to_string),
+            priority: 0,
+            stop_if_true: true,
+            style: WorkbookConditionalFormatStyle {
+                font_color: None,
+                fill_color: Some(fill.into()),
+                bold: true,
+            },
+            color_scale: None,
+            data_bar: None,
+            icon_set: None,
+            editable: true,
+        };
+        let created = patch_workbook_conditional_format(
+            &source,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Create,
+                group_index: None,
+                rule_index: None,
+                rule: Some(rule(
+                    WorkbookMergeRange {
+                        top: 0,
+                        bottom: 2,
+                        left: 0,
+                        right: 0,
+                    },
+                    "greaterThan",
+                    "5",
+                    None,
+                    "#FFC7CE",
+                )),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&created, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.conditional_formats.len(), 1);
+        assert!(layout.conditional_formats[0].editable);
+        assert_eq!(
+            layout.conditional_formats[0].style.fill_color.as_deref(),
+            Some("#FFC7CE")
+        );
+        assert_eq!(layout.conditional_formats[0].priority, 1);
+
+        let updated = patch_workbook_conditional_format(
+            &created,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Update,
+                group_index: Some(0),
+                rule_index: Some(0),
+                rule: Some(rule(
+                    WorkbookMergeRange {
+                        top: 0,
+                        bottom: 2,
+                        left: 1,
+                        right: 1,
+                    },
+                    "between",
+                    "1",
+                    Some("10"),
+                    "#C6EFCE",
+                )),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&updated, "Data", 0, 10, 10).unwrap();
+        assert_eq!(
+            layout.conditional_formats[0].operator.as_deref(),
+            Some("between")
+        );
+        assert_eq!(
+            layout.conditional_formats[0].formula2.as_deref(),
+            Some("10")
+        );
+        assert_eq!(layout.conditional_formats[0].ranges[0].left, 1);
+        assert_eq!(
+            layout.conditional_formats[0].style.fill_color.as_deref(),
+            Some("#C6EFCE")
+        );
+
+        let deleted = patch_workbook_conditional_format(
+            &updated,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Delete,
+                group_index: Some(0),
+                rule_index: Some(0),
+                rule: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&deleted).unwrap();
+        assert!(read_workbook_sheet_layout(&deleted, "Data", 0, 10, 10)
+            .unwrap()
+            .conditional_formats
+            .is_empty());
+    }
+
+    #[test]
+    fn reorders_overlapping_conditional_formats_without_rewriting_rule_content() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_number(0, 0, 50).unwrap();
+        let mut source = workbook.save_to_buffer().unwrap();
+        let rule = |threshold: &str, fill: &str| WorkbookConditionalFormatRule {
+            group_index: 0,
+            rule_index: 0,
+            ranges: vec![WorkbookMergeRange {
+                top: 0,
+                bottom: 9,
+                left: 0,
+                right: 0,
+            }],
+            kind: "cellIs".into(),
+            operator: Some("greaterThan".into()),
+            formula1: Some(threshold.into()),
+            formula2: None,
+            priority: 0,
+            stop_if_true: threshold == "10",
+            style: WorkbookConditionalFormatStyle {
+                fill_color: Some(fill.into()),
+                ..Default::default()
+            },
+            color_scale: None,
+            data_bar: None,
+            icon_set: None,
+            editable: true,
+        };
+        for (threshold, fill) in [("10", "#FFC7CE"), ("20", "#FFEB9C"), ("30", "#C6EFCE")] {
+            source = patch_workbook_conditional_format(
+                &source,
+                &WorkbookConditionalFormatChange {
+                    sheet: "Data".into(),
+                    action: WorkbookConditionalFormatAction::Create,
+                    group_index: None,
+                    rule_index: None,
+                    rule: Some(rule(threshold, fill)),
+                },
+            )
+            .unwrap();
+        }
+        let styles_before = zip_text(&source, "xl/styles.xml");
+        let xml_before = zip_text(&source, "xl/worksheets/sheet1.xml");
+        let layout = read_workbook_sheet_layout(&source, "Data", 0, 10, 10).unwrap();
+        assert_eq!(
+            layout
+                .conditional_formats
+                .iter()
+                .map(|rule| (rule.group_index, rule.priority))
+                .collect::<Vec<_>>(),
+            vec![(0, 1), (1, 2), (2, 3)]
+        );
+        assert!(layout.conditional_formats[0].stop_if_true);
+
+        let moved_down = patch_workbook_conditional_format(
+            &source,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::MoveDown,
+                group_index: Some(0),
+                rule_index: Some(0),
+                rule: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&moved_down).unwrap();
+        assert_eq!(styles_before, zip_text(&moved_down, "xl/styles.xml"));
+        let layout = read_workbook_sheet_layout(&moved_down, "Data", 0, 10, 10).unwrap();
+        assert_eq!(
+            layout
+                .conditional_formats
+                .iter()
+                .map(|rule| (rule.group_index, rule.priority))
+                .collect::<Vec<_>>(),
+            vec![(0, 2), (1, 1), (2, 3)]
+        );
+        let xml_after = zip_text(&moved_down, "xl/worksheets/sheet1.xml");
+        for formula in [
+            "<formula>10</formula>",
+            "<formula>20</formula>",
+            "<formula>30</formula>",
+        ] {
+            assert_eq!(
+                xml_before.matches(formula).count(),
+                xml_after.matches(formula).count()
+            );
+        }
+
+        let moved_up = patch_workbook_conditional_format(
+            &moved_down,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::MoveUp,
+                group_index: Some(2),
+                rule_index: Some(0),
+                rule: None,
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&moved_up, "Data", 0, 10, 10).unwrap();
+        assert_eq!(
+            layout
+                .conditional_formats
+                .iter()
+                .map(|rule| (rule.group_index, rule.priority))
+                .collect::<Vec<_>>(),
+            vec![(0, 3), (1, 1), (2, 2)]
+        );
+        assert_eq!(styles_before, zip_text(&moved_up, "xl/styles.xml"));
+
+        let boundary_error = patch_workbook_conditional_format(
+            &moved_up,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::MoveUp,
+                group_index: Some(1),
+                rule_index: Some(0),
+                rule: None,
+            },
+        )
+        .unwrap_err();
+        assert!(boundary_error.contains("priority boundary"));
+    }
+
+    #[test]
+    fn updates_and_deletes_one_rule_inside_a_shared_range_group() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_number(0, 0, 15).unwrap();
+        let red = Format::new().set_background_color("#FFC7CE");
+        let green = Format::new().set_background_color("#C6EFCE");
+        sheet
+            .add_conditional_format(
+                0,
+                0,
+                9,
+                0,
+                &ConditionalFormatCell::new()
+                    .set_rule(ConditionalFormatCellRule::GreaterThan(10))
+                    .set_format(&red),
+            )
+            .unwrap();
+        sheet
+            .add_conditional_format(
+                0,
+                0,
+                9,
+                0,
+                &ConditionalFormatCell::new()
+                    .set_rule(ConditionalFormatCellRule::LessThan(20))
+                    .set_format(&green),
+            )
+            .unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let layout = read_workbook_sheet_layout(&source, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.conditional_formats.len(), 2);
+        assert!(layout.conditional_formats.iter().all(|rule| rule.editable));
+        assert_eq!(layout.conditional_formats[0].group_index, 0);
+        assert_eq!(layout.conditional_formats[0].rule_index, 0);
+        assert_eq!(layout.conditional_formats[1].group_index, 0);
+        assert_eq!(layout.conditional_formats[1].rule_index, 1);
+
+        let mut invalid_range = layout.conditional_formats[1].clone();
+        invalid_range.ranges[0].right = 1;
+        let error = patch_workbook_conditional_format(
+            &source,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Update,
+                group_index: Some(0),
+                rule_index: Some(1),
+                rule: Some(invalid_range),
+            },
+        )
+        .unwrap_err();
+        assert!(error.contains("shared-range"));
+
+        let mut replacement = layout.conditional_formats[1].clone();
+        replacement.formula1 = Some("25".into());
+        replacement.stop_if_true = true;
+        replacement.style.fill_color = Some("#C6EFCE".into());
+        let updated = patch_workbook_conditional_format(
+            &source,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Update,
+                group_index: Some(0),
+                rule_index: Some(1),
+                rule: Some(replacement),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&updated).unwrap();
+        let layout = read_workbook_sheet_layout(&updated, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.conditional_formats.len(), 2);
+        assert_eq!(
+            layout.conditional_formats[0].formula1.as_deref(),
+            Some("10")
+        );
+        assert_eq!(
+            layout.conditional_formats[1].formula1.as_deref(),
+            Some("25")
+        );
+        assert!(layout.conditional_formats[1].stop_if_true);
+        let xml = zip_text(&updated, "xl/worksheets/sheet1.xml");
+        assert_eq!(xml.matches("<conditionalFormatting").count(), 1);
+        assert_eq!(xml.matches("<cfRule").count(), 2);
+
+        let deleted_first = patch_workbook_conditional_format(
+            &updated,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Delete,
+                group_index: Some(0),
+                rule_index: Some(0),
+                rule: None,
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&deleted_first, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.conditional_formats.len(), 1);
+        assert_eq!(
+            layout.conditional_formats[0].formula1.as_deref(),
+            Some("25")
+        );
+        assert_eq!(layout.conditional_formats[0].rule_index, 0);
+
+        let deleted_last = patch_workbook_conditional_format(
+            &deleted_first,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Delete,
+                group_index: Some(0),
+                rule_index: Some(0),
+                rule: None,
+            },
+        )
+        .unwrap();
+        assert!(read_workbook_sheet_layout(&deleted_last, "Data", 0, 10, 10)
+            .unwrap()
+            .conditional_formats
+            .is_empty());
+    }
+
+    #[test]
+    fn splits_and_recombines_shared_range_rules_without_rebuilding_rule_xml() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        let red = Format::new().set_background_color("#FFC7CE");
+        let green = Format::new().set_background_color("#C6EFCE");
+        for conditional_format in [
+            ConditionalFormatCell::new()
+                .set_rule(ConditionalFormatCellRule::GreaterThan(10))
+                .set_format(&red),
+            ConditionalFormatCell::new()
+                .set_rule(ConditionalFormatCellRule::LessThan(20))
+                .set_format(&green),
+        ] {
+            sheet
+                .add_conditional_format(0, 0, 9, 0, &conditional_format)
+                .unwrap();
+        }
+        let source = workbook.save_to_buffer().unwrap();
+        let styles_before = zip_text(&source, "xl/styles.xml");
+        let layout = read_workbook_sheet_layout(&source, "Data", 0, 10, 10).unwrap();
+        let mut split_request = layout.conditional_formats[1].clone();
+        split_request.ranges = vec![WorkbookMergeRange {
+            top: 0,
+            bottom: 9,
+            left: 1,
+            right: 1,
+        }];
+        let split = patch_workbook_conditional_format(
+            &source,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Split,
+                group_index: Some(0),
+                rule_index: Some(1),
+                rule: Some(split_request),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&split).unwrap();
+        assert_eq!(styles_before, zip_text(&split, "xl/styles.xml"));
+        let layout = read_workbook_sheet_layout(&split, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.conditional_formats.len(), 2);
+        assert_eq!(layout.conditional_formats[0].group_index, 0);
+        assert_eq!(
+            layout.conditional_formats[0].formula1.as_deref(),
+            Some("10")
+        );
+        assert_eq!(layout.conditional_formats[1].group_index, 1);
+        assert_eq!(
+            layout.conditional_formats[1].formula1.as_deref(),
+            Some("20")
+        );
+        assert_eq!(layout.conditional_formats[1].ranges[0].left, 1);
+
+        let mut independent = layout.conditional_formats[1].clone();
+        independent.ranges = layout.conditional_formats[0].ranges.clone();
+        independent.style.fill_color = Some("#C6EFCE".into());
+        let aligned = patch_workbook_conditional_format(
+            &split,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Update,
+                group_index: Some(1),
+                rule_index: Some(0),
+                rule: Some(independent),
+            },
+        )
+        .unwrap();
+        let styles_aligned = zip_text(&aligned, "xl/styles.xml");
+        let merged = patch_workbook_conditional_format(
+            &aligned,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Merge,
+                group_index: Some(1),
+                rule_index: Some(0),
+                rule: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&merged).unwrap();
+        assert_eq!(styles_aligned, zip_text(&merged, "xl/styles.xml"));
+        let layout = read_workbook_sheet_layout(&merged, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.conditional_formats.len(), 2);
+        assert!(layout
+            .conditional_formats
+            .iter()
+            .all(|rule| rule.group_index == 0));
+        assert_eq!(
+            layout.conditional_formats[0].formula1.as_deref(),
+            Some("10")
+        );
+        assert_eq!(
+            layout.conditional_formats[1].formula1.as_deref(),
+            Some("20")
+        );
+        let xml = zip_text(&merged, "xl/worksheets/sheet1.xml");
+        assert_eq!(xml.matches("<conditionalFormatting").count(), 1);
+        assert_eq!(xml.matches("<cfRule").count(), 2);
+    }
+
+    #[test]
+    fn updates_two_cell_drawing_metadata_and_anchor_without_rebuilding_chart_parts() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_string(0, 0, "Category").unwrap();
+        sheet.write_number(0, 1, 10).unwrap();
+        sheet.write_string(1, 0, "Other").unwrap();
+        sheet.write_number(1, 1, 20).unwrap();
+        let mut chart = Chart::new(ChartType::Column);
+        chart
+            .add_series()
+            .set_categories("Data!$A$1:$A$2")
+            .set_values("Data!$B$1:$B$2");
+        sheet.insert_chart(1, 3, &chart).unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let chart_before = zip_text(&source, "xl/charts/chart1.xml");
+        let relationships_before = zip_text(&source, "xl/drawings/_rels/drawing1.xml.rels");
+        let layout = read_workbook_sheet_layout(&source, "Data", 0, 10, 10).unwrap();
+        let drawing = layout.drawings.first().unwrap();
+        assert_eq!(drawing.anchor_kind, "two_cell");
+        assert!(drawing.editable);
+
+        let metadata = patch_workbook_drawing(
+            &source,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: drawing.drawing_part.clone(),
+                anchor_index: drawing.anchor_index,
+                object_id: drawing.object_id.clone(),
+                action: WorkbookDrawingAction::UpdateMetadata,
+                name: Some("Quarterly chart".into()),
+                description: Some("Local inventory summary".into()),
+                from: None,
+                to: None,
+                chart_title: None,
+                series_index: None,
+                series_categories: None,
+                series_values: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&metadata).unwrap();
+        assert_eq!(chart_before, zip_text(&metadata, "xl/charts/chart1.xml"));
+        assert_eq!(
+            relationships_before,
+            zip_text(&metadata, "xl/drawings/_rels/drawing1.xml.rels")
+        );
+        let layout = read_workbook_sheet_layout(&metadata, "Data", 0, 10, 10).unwrap();
+        let drawing = layout.drawings.first().unwrap();
+        assert_eq!(drawing.name, "Quarterly chart");
+        assert_eq!(
+            drawing.description.as_deref(),
+            Some("Local inventory summary")
+        );
+
+        let from = WorkbookDrawingAnchor {
+            row: 4,
+            column: 5,
+            row_offset: 0,
+            column_offset: 0,
+        };
+        let to = WorkbookDrawingAnchor {
+            row: 16,
+            column: 11,
+            row_offset: 0,
+            column_offset: 0,
+        };
+        let moved = patch_workbook_drawing(
+            &metadata,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: drawing.drawing_part.clone(),
+                anchor_index: drawing.anchor_index,
+                object_id: drawing.object_id.clone(),
+                action: WorkbookDrawingAction::MoveResize,
+                name: None,
+                description: None,
+                from: Some(from.clone()),
+                to: Some(to.clone()),
+                chart_title: None,
+                series_index: None,
+                series_categories: None,
+                series_values: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&moved).unwrap();
+        assert_eq!(chart_before, zip_text(&moved, "xl/charts/chart1.xml"));
+        assert_eq!(
+            relationships_before,
+            zip_text(&moved, "xl/drawings/_rels/drawing1.xml.rels")
+        );
+        let layout = read_workbook_sheet_layout(&moved, "Data", 0, 20, 20).unwrap();
+        assert_eq!(layout.drawings[0].from, from);
+        assert_eq!(layout.drawings[0].to.as_ref(), Some(&to));
+        assert_eq!(layout.drawings[0].name, "Quarterly chart");
+
+        let error = patch_workbook_drawing(
+            &moved,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: drawing.drawing_part.clone(),
+                anchor_index: drawing.anchor_index,
+                object_id: "stale-id".into(),
+                action: WorkbookDrawingAction::UpdateMetadata,
+                name: Some("Invalid".into()),
+                description: Some(String::new()),
+                from: None,
+                to: None,
+                chart_title: None,
+                series_index: None,
+                series_categories: None,
+                series_values: None,
+            },
+        )
+        .unwrap_err();
+        assert!(error.contains("no longer exists"));
+    }
+
+    #[test]
+    fn updates_chart_title_and_internal_series_references_with_semantic_verification() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        for (row, (category, value)) in [("North", 10.0), ("South", 20.0), ("West", 30.0)]
+            .into_iter()
+            .enumerate()
+        {
+            sheet.write_string(row as u32, 0, category).unwrap();
+            sheet.write_number(row as u32, 1, value).unwrap();
+        }
+        let mut chart = Chart::new(ChartType::Column);
+        chart.title().set_name("Original title");
+        chart
+            .add_series()
+            .set_categories("Data!$A$1:$A$2")
+            .set_values("Data!$B$1:$B$2");
+        sheet.insert_chart(1, 3, &chart).unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let drawing_before = zip_text(&source, "xl/drawings/drawing1.xml");
+        let relationships_before = zip_text(&source, "xl/drawings/_rels/drawing1.xml.rels");
+        let layout = read_workbook_sheet_layout(&source, "Data", 0, 10, 10).unwrap();
+        let drawing = layout.drawings.first().unwrap();
+        let parsed = drawing.chart.as_ref().unwrap();
+        assert!(parsed.title_editable);
+        assert!(parsed.series[0].editable);
+
+        let titled = patch_workbook_drawing(
+            &source,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: drawing.drawing_part.clone(),
+                anchor_index: drawing.anchor_index,
+                object_id: drawing.object_id.clone(),
+                action: WorkbookDrawingAction::UpdateChartTitle,
+                name: None,
+                description: None,
+                from: None,
+                to: None,
+                chart_title: Some("Regional inventory".into()),
+                series_index: None,
+                series_categories: None,
+                series_values: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&titled).unwrap();
+        assert_eq!(
+            drawing_before,
+            zip_text(&titled, "xl/drawings/drawing1.xml")
+        );
+        assert_eq!(
+            relationships_before,
+            zip_text(&titled, "xl/drawings/_rels/drawing1.xml.rels")
+        );
+        let layout = read_workbook_sheet_layout(&titled, "Data", 0, 10, 10).unwrap();
+        let drawing = layout.drawings.first().unwrap();
+        assert_eq!(
+            drawing.chart.as_ref().unwrap().title.as_deref(),
+            Some("Regional inventory")
+        );
+
+        let updated = patch_workbook_drawing(
+            &titled,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: drawing.drawing_part.clone(),
+                anchor_index: drawing.anchor_index,
+                object_id: drawing.object_id.clone(),
+                action: WorkbookDrawingAction::UpdateChartSeries,
+                name: None,
+                description: None,
+                from: None,
+                to: None,
+                chart_title: None,
+                series_index: Some(0),
+                series_categories: Some("Data!$A$2:$A$3".into()),
+                series_values: Some("Data!$B$2:$B$3".into()),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&updated).unwrap();
+        assert_eq!(
+            drawing_before,
+            zip_text(&updated, "xl/drawings/drawing1.xml")
+        );
+        assert_eq!(
+            relationships_before,
+            zip_text(&updated, "xl/drawings/_rels/drawing1.xml.rels")
+        );
+        let layout = read_workbook_sheet_layout(&updated, "Data", 0, 10, 10).unwrap();
+        let series = &layout.drawings[0].chart.as_ref().unwrap().series[0];
+        assert_eq!(series.categories.as_deref(), Some("Data!$A$2:$A$3"));
+        assert_eq!(series.values.as_deref(), Some("Data!$B$2:$B$3"));
+
+        let error = patch_workbook_drawing(
+            &updated,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: drawing.drawing_part.clone(),
+                anchor_index: drawing.anchor_index,
+                object_id: drawing.object_id.clone(),
+                action: WorkbookDrawingAction::UpdateChartSeries,
+                name: None,
+                description: None,
+                from: None,
+                to: None,
+                chart_title: None,
+                series_index: Some(0),
+                series_categories: Some("[External.xlsx]Data!$A$1:$A$2".into()),
+                series_values: Some("Data!$B$1:$B$2".into()),
+            },
+        )
+        .unwrap_err();
+        assert!(error.contains("internal worksheet"));
+    }
+
+    #[test]
+    fn edits_safe_conditional_expressions_and_keeps_unsupported_formulas_read_only() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_string(0, 0, "Late").unwrap();
+        sheet
+            .add_conditional_format(
+                0,
+                0,
+                1,
+                0,
+                &ConditionalFormatFormula::new()
+                    .set_rule("=$A1=\"Late\"")
+                    .set_format(Format::new().set_background_color("#FFC7CE")),
+            )
+            .unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let layout = read_workbook_sheet_layout(&source, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.conditional_formats.len(), 1);
+        assert_eq!(layout.conditional_formats[0].kind, "expression");
+        assert!(layout.conditional_formats[0].editable);
+        assert_eq!(
+            layout.conditional_formats[0].formula1.as_deref(),
+            Some("$A1=\"Late\"")
+        );
+
+        let updated = patch_workbook_conditional_format(
+            &source,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Update,
+                group_index: Some(0),
+                rule_index: Some(0),
+                rule: Some(WorkbookConditionalFormatRule {
+                    group_index: 0,
+                    rule_index: 0,
+                    ranges: vec![WorkbookMergeRange {
+                        top: 0,
+                        bottom: 1,
+                        left: 0,
+                        right: 1,
+                    }],
+                    kind: "expression".into(),
+                    operator: None,
+                    formula1: Some("AND($A1=\"Closed\",B1<100)".into()),
+                    formula2: None,
+                    priority: 1,
+                    stop_if_true: true,
+                    style: WorkbookConditionalFormatStyle {
+                        fill_color: Some("#FFEB9C".into()),
+                        ..Default::default()
+                    },
+                    color_scale: None,
+                    data_bar: None,
+                    icon_set: None,
+                    editable: true,
+                }),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&updated).unwrap();
+        let layout = read_workbook_sheet_layout(&updated, "Data", 0, 10, 10).unwrap();
+        assert!(layout.conditional_formats[0].editable);
+        assert_eq!(
+            layout.conditional_formats[0].formula1.as_deref(),
+            Some("AND($A1=\"Closed\",B1<100)")
+        );
+        let sheet_xml = zip_text(&updated, "xl/worksheets/sheet1.xml");
+        assert!(sheet_xml.contains("type=\"expression\""));
+        assert!(!sheet_xml.contains("operator="));
+
+        let xml = br#"<worksheet><conditionalFormatting sqref="A1"><cfRule type="expression" dxfId="0" priority="1"><formula>AND(A1&gt;0,A1&lt;10)</formula></cfRule></conditionalFormatting></worksheet>"#;
+        let rules =
+            super::read_conditional_formats(xml, &[WorkbookConditionalFormatStyle::default()])
+                .unwrap();
+        assert_eq!(rules[0].kind, "expression");
+        assert!(rules[0].editable);
+        assert_eq!(rules[0].formula1.as_deref(), Some("AND(A1>0,A1<10)"));
+        assert!(super::safe_conditional_expression_supported("A1>0"));
+        assert!(super::safe_conditional_expression_supported("$D2=\"Late\""));
+        assert!(super::safe_conditional_expression_supported(
+            "AND($D2=\"逾期\",OR(E2<100,NOT(F2=TRUE)))"
+        ));
+        assert!(super::safe_conditional_expression_supported("A1<=$B$2"));
+        assert!(!super::safe_conditional_expression_supported("A1>\"Late\""));
+        assert!(!super::safe_conditional_expression_supported("Other!A1>0"));
+        assert!(!super::safe_conditional_expression_supported("SUM(A1)>0"));
+        assert!(!super::safe_conditional_expression_supported("A1:A2>0"));
+        let too_many_references = format!(
+            "AND({})",
+            (1..=9)
+                .map(|row| format!("A{row}>0"))
+                .collect::<Vec<_>>()
+                .join(",")
+        );
+        assert!(!super::safe_conditional_expression_supported(
+            &too_many_references
+        ));
+        let too_deep = format!("{}A1>0{}", "NOT(".repeat(9), ")".repeat(9));
+        assert!(!super::safe_conditional_expression_supported(&too_deep));
+
+        let unsupported = br#"<worksheet><conditionalFormatting sqref="A1"><cfRule type="expression" dxfId="0" priority="1"><formula>SUM(A1)&gt;0</formula></cfRule></conditionalFormatting></worksheet>"#;
+        let rules = super::read_conditional_formats(
+            unsupported,
+            &[WorkbookConditionalFormatStyle::default()],
+        )
+        .unwrap();
+        assert!(!rules[0].editable);
+        assert_eq!(rules[0].formula1.as_deref(), Some("SUM(A1)>0"));
+    }
+
+    #[test]
+    fn writes_fixed_numeric_color_scales_without_adding_dxf_styles() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_number(0, 0, 0).unwrap();
+        sheet.write_number(1, 0, 50).unwrap();
+        sheet.write_number(2, 0, 100).unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let styles_before = zip_text(&source, "xl/styles.xml");
+        let point = |value: &str, color: &str| WorkbookConditionalColorScalePoint {
+            kind: "num".into(),
+            value: Some(value.into()),
+            color: color.into(),
+            resolved_value: Some(value.into()),
+        };
+        let created = patch_workbook_conditional_format(
+            &source,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Create,
+                group_index: None,
+                rule_index: None,
+                rule: Some(WorkbookConditionalFormatRule {
+                    group_index: 0,
+                    rule_index: 0,
+                    ranges: vec![WorkbookMergeRange {
+                        top: 0,
+                        bottom: 2,
+                        left: 0,
+                        right: 0,
+                    }],
+                    kind: "colorScale".into(),
+                    operator: None,
+                    formula1: None,
+                    formula2: None,
+                    priority: 0,
+                    stop_if_true: false,
+                    style: WorkbookConditionalFormatStyle::default(),
+                    color_scale: Some(WorkbookConditionalColorScale {
+                        points: vec![
+                            point("0", "#F8696B"),
+                            point("50", "#FFEB84"),
+                            point("100", "#63BE7B"),
+                        ],
+                    }),
+                    data_bar: None,
+                    icon_set: None,
+                    editable: true,
+                }),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&created).unwrap();
+        assert_eq!(styles_before, zip_text(&created, "xl/styles.xml"));
+        let layout = read_workbook_sheet_layout(&created, "Data", 0, 10, 10).unwrap();
+        let rule = &layout.conditional_formats[0];
+        assert_eq!(rule.kind, "colorScale");
+        assert!(rule.editable);
+        assert_eq!(rule.color_scale.as_ref().unwrap().points.len(), 3);
+        assert!(zip_text(&created, "xl/worksheets/sheet1.xml")
+            .contains("<cfvo type=\"num\" val=\"50\"/>"));
+
+        let mut replacement = rule.clone();
+        replacement.color_scale = Some(WorkbookConditionalColorScale {
+            points: vec![point("10", "#F8696B"), point("90", "#63BE7B")],
+        });
+        let updated = patch_workbook_conditional_format(
+            &created,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Update,
+                group_index: Some(rule.group_index),
+                rule_index: Some(rule.rule_index),
+                rule: Some(replacement),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&updated, "Data", 0, 10, 10).unwrap();
+        assert_eq!(
+            layout.conditional_formats[0]
+                .color_scale
+                .as_ref()
+                .unwrap()
+                .points
+                .len(),
+            2
+        );
+        let deleted = patch_workbook_conditional_format(
+            &updated,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Delete,
+                group_index: Some(layout.conditional_formats[0].group_index),
+                rule_index: Some(layout.conditional_formats[0].rule_index),
+                rule: None,
+            },
+        )
+        .unwrap();
+        assert!(read_workbook_sheet_layout(&deleted, "Data", 0, 10, 10)
+            .unwrap()
+            .conditional_formats
+            .is_empty());
+        assert_eq!(styles_before, zip_text(&deleted, "xl/styles.xml"));
+
+        let dynamic_point =
+            |kind: &str, value: Option<&str>, color: &str| WorkbookConditionalColorScalePoint {
+                kind: kind.into(),
+                value: value.map(str::to_string),
+                color: color.into(),
+                resolved_value: None,
+            };
+        let dynamic_created = patch_workbook_conditional_format(
+            &deleted,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Create,
+                group_index: None,
+                rule_index: None,
+                rule: Some(WorkbookConditionalFormatRule {
+                    group_index: 0,
+                    rule_index: 0,
+                    ranges: vec![WorkbookMergeRange {
+                        top: 0,
+                        bottom: 2,
+                        left: 0,
+                        right: 0,
+                    }],
+                    kind: "colorScale".into(),
+                    operator: None,
+                    formula1: None,
+                    formula2: None,
+                    priority: 0,
+                    stop_if_true: false,
+                    style: WorkbookConditionalFormatStyle::default(),
+                    color_scale: Some(WorkbookConditionalColorScale {
+                        points: vec![
+                            dynamic_point("min", None, "#F8696B"),
+                            dynamic_point("percentile", Some("50"), "#FFEB84"),
+                            dynamic_point("max", None, "#63BE7B"),
+                        ],
+                    }),
+                    data_bar: None,
+                    icon_set: None,
+                    editable: true,
+                }),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&dynamic_created, "Data", 0, 10, 10).unwrap();
+        let points = &layout.conditional_formats[0]
+            .color_scale
+            .as_ref()
+            .unwrap()
+            .points;
+        assert!(layout.conditional_formats[0].editable);
+        assert_eq!(points[0].resolved_value.as_deref(), Some("0"));
+        assert_eq!(points[1].resolved_value.as_deref(), Some("50"));
+        assert_eq!(points[2].resolved_value.as_deref(), Some("100"));
+        assert_eq!(styles_before, zip_text(&dynamic_created, "xl/styles.xml"));
+
+        let mut percent_rule = layout.conditional_formats[0].clone();
+        let midpoint = &mut percent_rule.color_scale.as_mut().unwrap().points[1];
+        midpoint.kind = "percent".into();
+        midpoint.resolved_value = None;
+        let percent_updated = patch_workbook_conditional_format(
+            &dynamic_created,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Update,
+                group_index: Some(percent_rule.group_index),
+                rule_index: Some(percent_rule.rule_index),
+                rule: Some(percent_rule),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&percent_updated, "Data", 0, 10, 10).unwrap();
+        assert_eq!(
+            layout.conditional_formats[0]
+                .color_scale
+                .as_ref()
+                .unwrap()
+                .points[1]
+                .resolved_value
+                .as_deref(),
+            Some("50")
+        );
+
+        let mut dynamic = Workbook::new();
+        let sheet = dynamic.add_worksheet();
+        sheet.write_number(0, 0, 1).unwrap();
+        sheet.write_number(1, 0, 2).unwrap();
+        sheet
+            .add_conditional_format(0, 0, 1, 0, &ConditionalFormat2ColorScale::new())
+            .unwrap();
+        let dynamic = dynamic.save_to_buffer().unwrap();
+        let layout = read_workbook_sheet_layout(&dynamic, "Sheet1", 0, 10, 10).unwrap();
+        assert_eq!(layout.conditional_formats[0].kind, "colorScale");
+        assert!(layout.conditional_formats[0].editable);
+        let points = &layout.conditional_formats[0]
+            .color_scale
+            .as_ref()
+            .unwrap()
+            .points;
+        assert_eq!(points[0].resolved_value.as_deref(), Some("1"));
+        assert_eq!(points[1].resolved_value.as_deref(), Some("2"));
+    }
+
+    #[test]
+    fn writes_dynamic_and_negative_data_bars_without_adding_dxf_styles() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_number(0, 0, -100).unwrap();
+        sheet.write_number(1, 0, 0).unwrap();
+        sheet.write_number(2, 0, 100).unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let styles_before = zip_text(&source, "xl/styles.xml");
+        let threshold = |value: &str| WorkbookConditionalThreshold {
+            kind: "num".into(),
+            value: Some(value.into()),
+            resolved_value: Some(value.into()),
+        };
+        let created = patch_workbook_conditional_format(
+            &source,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Create,
+                group_index: None,
+                rule_index: None,
+                rule: Some(WorkbookConditionalFormatRule {
+                    group_index: 0,
+                    rule_index: 0,
+                    ranges: vec![WorkbookMergeRange {
+                        top: 0,
+                        bottom: 2,
+                        left: 0,
+                        right: 0,
+                    }],
+                    kind: "dataBar".into(),
+                    operator: None,
+                    formula1: None,
+                    formula2: None,
+                    priority: 0,
+                    stop_if_true: false,
+                    style: WorkbookConditionalFormatStyle::default(),
+                    color_scale: None,
+                    data_bar: Some(WorkbookConditionalDataBar {
+                        minimum: threshold("0"),
+                        maximum: threshold("100"),
+                        color: "#638EC6".into(),
+                        show_value: true,
+                        min_length: 10,
+                        max_length: 90,
+                    }),
+                    icon_set: None,
+                    editable: true,
+                }),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&created).unwrap();
+        assert_eq!(styles_before, zip_text(&created, "xl/styles.xml"));
+        let layout = read_workbook_sheet_layout(&created, "Data", 0, 10, 10).unwrap();
+        let rule = &layout.conditional_formats[0];
+        assert_eq!(rule.kind, "dataBar");
+        assert!(rule.editable);
+        let bar = rule.data_bar.as_ref().unwrap();
+        assert_eq!(bar.minimum.value.as_deref(), Some("0"));
+        assert_eq!(bar.maximum.value.as_deref(), Some("100"));
+        assert_eq!(bar.color, "#638EC6");
+        assert!(bar.show_value);
+        assert_eq!((bar.min_length, bar.max_length), (10, 90));
+
+        let mut replacement = rule.clone();
+        replacement.data_bar = Some(WorkbookConditionalDataBar {
+            minimum: threshold("-100"),
+            maximum: threshold("100"),
+            color: "#5B9BD5".into(),
+            show_value: false,
+            min_length: 5,
+            max_length: 95,
+        });
+        let updated = patch_workbook_conditional_format(
+            &created,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Update,
+                group_index: Some(rule.group_index),
+                rule_index: Some(rule.rule_index),
+                rule: Some(replacement),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&updated).unwrap();
+        assert_eq!(styles_before, zip_text(&updated, "xl/styles.xml"));
+        let layout = read_workbook_sheet_layout(&updated, "Data", 0, 10, 10).unwrap();
+        let bar = layout.conditional_formats[0].data_bar.as_ref().unwrap();
+        assert_eq!(bar.minimum.value.as_deref(), Some("-100"));
+        assert_eq!(bar.maximum.value.as_deref(), Some("100"));
+        assert_eq!(bar.color, "#5B9BD5");
+        assert!(!bar.show_value);
+        assert_eq!((bar.min_length, bar.max_length), (5, 95));
+
+        let deleted = patch_workbook_conditional_format(
+            &updated,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Delete,
+                group_index: Some(layout.conditional_formats[0].group_index),
+                rule_index: Some(layout.conditional_formats[0].rule_index),
+                rule: None,
+            },
+        )
+        .unwrap();
+        assert!(read_workbook_sheet_layout(&deleted, "Data", 0, 10, 10)
+            .unwrap()
+            .conditional_formats
+            .is_empty());
+        assert_eq!(styles_before, zip_text(&deleted, "xl/styles.xml"));
+
+        let dynamic_created = patch_workbook_conditional_format(
+            &deleted,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Create,
+                group_index: None,
+                rule_index: None,
+                rule: Some(WorkbookConditionalFormatRule {
+                    group_index: 0,
+                    rule_index: 0,
+                    ranges: vec![WorkbookMergeRange {
+                        top: 0,
+                        bottom: 2,
+                        left: 0,
+                        right: 0,
+                    }],
+                    kind: "dataBar".into(),
+                    operator: None,
+                    formula1: None,
+                    formula2: None,
+                    priority: 0,
+                    stop_if_true: false,
+                    style: WorkbookConditionalFormatStyle::default(),
+                    color_scale: None,
+                    data_bar: Some(WorkbookConditionalDataBar {
+                        minimum: WorkbookConditionalThreshold {
+                            kind: "min".into(),
+                            value: None,
+                            resolved_value: None,
+                        },
+                        maximum: WorkbookConditionalThreshold {
+                            kind: "max".into(),
+                            value: None,
+                            resolved_value: None,
+                        },
+                        color: "#638EC6".into(),
+                        show_value: true,
+                        min_length: 10,
+                        max_length: 90,
+                    }),
+                    icon_set: None,
+                    editable: true,
+                }),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&dynamic_created, "Data", 0, 10, 10).unwrap();
+        let rule = &layout.conditional_formats[0];
+        assert!(rule.editable);
+        let bar = rule.data_bar.as_ref().unwrap();
+        assert_eq!(bar.minimum.resolved_value.as_deref(), Some("-100"));
+        assert_eq!(bar.maximum.resolved_value.as_deref(), Some("100"));
+        assert_eq!(styles_before, zip_text(&dynamic_created, "xl/styles.xml"));
+
+        let mut percentile_rule = rule.clone();
+        let bar = percentile_rule.data_bar.as_mut().unwrap();
+        bar.minimum = WorkbookConditionalThreshold {
+            kind: "percentile".into(),
+            value: Some("25".into()),
+            resolved_value: None,
+        };
+        bar.maximum = WorkbookConditionalThreshold {
+            kind: "percentile".into(),
+            value: Some("75".into()),
+            resolved_value: None,
+        };
+        let percentile_updated = patch_workbook_conditional_format(
+            &dynamic_created,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Update,
+                group_index: Some(rule.group_index),
+                rule_index: Some(rule.rule_index),
+                rule: Some(percentile_rule),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&percentile_updated, "Data", 0, 10, 10).unwrap();
+        let bar = layout.conditional_formats[0].data_bar.as_ref().unwrap();
+        assert_eq!(bar.minimum.resolved_value.as_deref(), Some("-50"));
+        assert_eq!(bar.maximum.resolved_value.as_deref(), Some("50"));
+        assert_eq!(
+            styles_before,
+            zip_text(&percentile_updated, "xl/styles.xml")
+        );
+
+        let mut dynamic = Workbook::new();
+        let sheet = dynamic.add_worksheet();
+        sheet.write_number(0, 0, 1).unwrap();
+        sheet.write_number(1, 0, 2).unwrap();
+        sheet
+            .add_conditional_format(0, 0, 1, 0, &ConditionalFormatDataBar::new())
+            .unwrap();
+        let dynamic = dynamic.save_to_buffer().unwrap();
+        let layout = read_workbook_sheet_layout(&dynamic, "Sheet1", 0, 10, 10).unwrap();
+        assert_eq!(layout.conditional_formats[0].kind, "dataBar");
+        assert!(layout.conditional_formats[0].data_bar.is_some());
+        assert!(!layout.conditional_formats[0].editable);
+    }
+
+    #[test]
+    fn writes_standard_icon_sets_and_keeps_advanced_variants_read_only() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_number(0, 0, 0).unwrap();
+        sheet.write_number(1, 0, 50).unwrap();
+        sheet.write_number(2, 0, 100).unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let styles_before = zip_text(&source, "xl/styles.xml");
+        let threshold =
+            |kind: &str, value: &str, inclusive: bool| WorkbookConditionalIconThreshold {
+                kind: kind.into(),
+                value: Some(value.into()),
+                resolved_value: (kind == "num").then(|| value.into()),
+                inclusive,
+            };
+        let created = patch_workbook_conditional_format(
+            &source,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Create,
+                group_index: None,
+                rule_index: None,
+                rule: Some(WorkbookConditionalFormatRule {
+                    group_index: 0,
+                    rule_index: 0,
+                    ranges: vec![WorkbookMergeRange {
+                        top: 0,
+                        bottom: 2,
+                        left: 0,
+                        right: 0,
+                    }],
+                    kind: "iconSet".into(),
+                    operator: None,
+                    formula1: None,
+                    formula2: None,
+                    priority: 0,
+                    stop_if_true: false,
+                    style: WorkbookConditionalFormatStyle::default(),
+                    color_scale: None,
+                    data_bar: None,
+                    icon_set: Some(WorkbookConditionalIconSet {
+                        icon_set: "3TrafficLights1".into(),
+                        thresholds: vec![
+                            threshold("percent", "0", true),
+                            threshold("percent", "33", true),
+                            threshold("percent", "67", false),
+                        ],
+                        reverse: false,
+                        show_value: true,
+                    }),
+                    editable: true,
+                }),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&created).unwrap();
+        assert_eq!(styles_before, zip_text(&created, "xl/styles.xml"));
+        let layout = read_workbook_sheet_layout(&created, "Data", 0, 10, 10).unwrap();
+        let rule = &layout.conditional_formats[0];
+        assert_eq!(rule.kind, "iconSet");
+        assert!(rule.editable);
+        let icons = rule.icon_set.as_ref().unwrap();
+        assert_eq!(icons.icon_set, "3TrafficLights1");
+        assert_eq!(icons.thresholds.len(), 3);
+        assert_eq!(icons.thresholds[0].resolved_value.as_deref(), Some("0"));
+        assert_eq!(icons.thresholds[1].resolved_value.as_deref(), Some("33"));
+        assert_eq!(icons.thresholds[2].resolved_value.as_deref(), Some("67"));
+        assert!(!icons.thresholds[2].inclusive);
+        let sheet_xml = zip_text(&created, "xl/worksheets/sheet1.xml");
+        assert!(sheet_xml.contains("<iconSet iconSet=\"3TrafficLights1\""));
+        assert!(sheet_xml.contains("type=\"percent\" val=\"67\" gte=\"0\""));
+
+        let mut replacement = rule.clone();
+        replacement.icon_set = Some(WorkbookConditionalIconSet {
+            icon_set: "4Arrows".into(),
+            thresholds: vec![
+                threshold("percent", "0", true),
+                threshold("percent", "25", true),
+                threshold("percent", "50", true),
+                threshold("percent", "75", true),
+            ],
+            reverse: true,
+            show_value: false,
+        });
+        let updated = patch_workbook_conditional_format(
+            &created,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Update,
+                group_index: Some(rule.group_index),
+                rule_index: Some(rule.rule_index),
+                rule: Some(replacement),
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&updated).unwrap();
+        assert_eq!(styles_before, zip_text(&updated, "xl/styles.xml"));
+        let layout = read_workbook_sheet_layout(&updated, "Data", 0, 10, 10).unwrap();
+        let icons = layout.conditional_formats[0].icon_set.as_ref().unwrap();
+        assert_eq!(icons.icon_set, "4Arrows");
+        assert_eq!(icons.thresholds.len(), 4);
+        assert!(icons.reverse);
+        assert!(!icons.show_value);
+        let sheet_xml = zip_text(&updated, "xl/worksheets/sheet1.xml");
+        assert!(sheet_xml.contains("reverse=\"1\""));
+        assert!(sheet_xml.contains("showValue=\"0\""));
+
+        let deleted = patch_workbook_conditional_format(
+            &updated,
+            &WorkbookConditionalFormatChange {
+                sheet: "Data".into(),
+                action: WorkbookConditionalFormatAction::Delete,
+                group_index: Some(layout.conditional_formats[0].group_index),
+                rule_index: Some(layout.conditional_formats[0].rule_index),
+                rule: None,
+            },
+        )
+        .unwrap();
+        assert!(read_workbook_sheet_layout(&deleted, "Data", 0, 10, 10)
+            .unwrap()
+            .conditional_formats
+            .is_empty());
+        assert_eq!(styles_before, zip_text(&deleted, "xl/styles.xml"));
+
+        let mut standard = Workbook::new();
+        let sheet = standard.add_worksheet();
+        sheet.write_number(0, 0, 0).unwrap();
+        sheet.write_number(1, 0, 50).unwrap();
+        sheet.write_number(2, 0, 100).unwrap();
+        sheet
+            .add_conditional_format(
+                0,
+                0,
+                2,
+                0,
+                &ConditionalFormatIconSet::new()
+                    .set_icon_type(ConditionalFormatIconType::ThreeArrows),
+            )
+            .unwrap();
+        let standard = standard.save_to_buffer().unwrap();
+        let layout = read_workbook_sheet_layout(&standard, "Sheet1", 0, 10, 10).unwrap();
+        let rule = &layout.conditional_formats[0];
+        assert_eq!(rule.kind, "iconSet");
+        assert!(rule.editable);
+        assert_eq!(rule.icon_set.as_ref().unwrap().icon_set, "3Arrows");
+
+        let formula_threshold = br#"<worksheet><conditionalFormatting sqref="A1:A3"><cfRule type="iconSet" priority="1"><iconSet iconSet="3Arrows"><cfvo type="percent" val="0"/><cfvo type="formula" val="A1"/><cfvo type="percent" val="67"/></iconSet></cfRule></conditionalFormatting></worksheet>"#;
+        let rules = super::read_conditional_formats(formula_threshold, &[]).unwrap();
+        assert_eq!(rules[0].kind, "iconSet");
+        assert!(rules[0].icon_set.is_some());
+        assert!(!rules[0].editable);
+
+        let x14_only = br#"<worksheet><conditionalFormatting sqref="A1:A3"><cfRule type="iconSet" priority="1"><iconSet iconSet="3Stars"><cfvo type="percent" val="0"/><cfvo type="percent" val="33"/><cfvo type="percent" val="67"/></iconSet></cfRule></conditionalFormatting></worksheet>"#;
+        let rules = super::read_conditional_formats(x14_only, &[]).unwrap();
+        assert_eq!(rules[0].icon_set.as_ref().unwrap().icon_set, "3Stars");
+        assert!(!rules[0].editable);
+    }
+
+    #[test]
+    fn creates_updates_and_deletes_formula_data_validation_rules() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_string(0, 0, "Status").unwrap();
+        sheet.write_string(0, 1, "Amount").unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let rule = |kind: &str, range: WorkbookMergeRange, formula1: &str| WorkbookDataValidation {
+            ranges: vec![range],
+            kind: kind.into(),
+            operator: None,
+            formula1: Some(formula1.into()),
+            formula2: None,
+            allow_blank: true,
+            show_error_message: true,
+            error_title: Some("Invalid value".into()),
+            error: Some("Enter a value accepted by this rule.".into()),
+            prompt_title: Some("Data validation".into()),
+            prompt: Some("This cell is validated.".into()),
+        };
+        let created = patch_workbook_data_validation(
+            &source,
+            &WorkbookDataValidationChange {
+                sheet: "Data".into(),
+                action: WorkbookDataValidationAction::Create,
+                validation_index: None,
+                validation: Some(rule(
+                    "list",
+                    WorkbookMergeRange {
+                        top: 1,
+                        bottom: 3,
+                        left: 0,
+                        right: 0,
+                    },
+                    "\"Active,Paused,Closed\"",
+                )),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&created, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.data_validations.len(), 1);
+        assert_eq!(layout.data_validations[0].kind, "list");
+
+        let updated = patch_workbook_data_validation(
+            &created,
+            &WorkbookDataValidationChange {
+                sheet: "Data".into(),
+                action: WorkbookDataValidationAction::Update,
+                validation_index: Some(0),
+                validation: Some(rule(
+                    "custom",
+                    WorkbookMergeRange {
+                        top: 1,
+                        bottom: 3,
+                        left: 1,
+                        right: 1,
+                    },
+                    "B2>0",
+                )),
+            },
+        )
+        .unwrap();
+        let layout = read_workbook_sheet_layout(&updated, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.data_validations[0].kind, "custom");
+        assert_eq!(layout.data_validations[0].formula1.as_deref(), Some("B2>0"));
+        assert_eq!(layout.data_validations[0].ranges[0].left, 1);
+
+        let second = patch_workbook_data_validation(
+            &updated,
+            &WorkbookDataValidationChange {
+                sheet: "Data".into(),
+                action: WorkbookDataValidationAction::Create,
+                validation_index: None,
+                validation: Some(WorkbookDataValidation {
+                    operator: Some("greaterThan".into()),
+                    ..rule(
+                        "whole",
+                        WorkbookMergeRange {
+                            top: 1,
+                            bottom: 3,
+                            left: 2,
+                            right: 2,
+                        },
+                        "0",
+                    )
+                }),
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            read_workbook_sheet_layout(&second, "Data", 0, 10, 10)
+                .unwrap()
+                .data_validations
+                .len(),
+            2
+        );
+
+        let deleted = patch_workbook_data_validation(
+            &second,
+            &WorkbookDataValidationChange {
+                sheet: "Data".into(),
+                action: WorkbookDataValidationAction::Delete,
+                validation_index: Some(0),
+                validation: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&deleted).unwrap();
+        let layout = read_workbook_sheet_layout(&deleted, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.data_validations.len(), 1);
+        assert_eq!(layout.data_validations[0].kind, "whole");
+    }
+
+    #[test]
+    fn rejects_overlapping_and_external_data_validation_rules() {
+        let mut workbook = Workbook::new();
+        workbook.add_worksheet().set_name("Data").unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let validation = WorkbookDataValidation {
+            ranges: vec![WorkbookMergeRange {
+                top: 0,
+                bottom: 2,
+                left: 0,
+                right: 0,
+            }],
+            kind: "custom".into(),
+            operator: None,
+            formula1: Some("[Other.xlsx]Data!A1>0".into()),
+            formula2: None,
+            allow_blank: false,
+            show_error_message: true,
+            error_title: None,
+            error: None,
+            prompt_title: None,
+            prompt: None,
+        };
+        let error = patch_workbook_data_validation(
+            &source,
+            &WorkbookDataValidationChange {
+                sheet: "Data".into(),
+                action: WorkbookDataValidationAction::Create,
+                validation_index: None,
+                validation: Some(validation.clone()),
+            },
+        )
+        .unwrap_err();
+        assert!(error.contains("External-workbook"));
+
+        let first = patch_workbook_data_validation(
+            &source,
+            &WorkbookDataValidationChange {
+                sheet: "Data".into(),
+                action: WorkbookDataValidationAction::Create,
+                validation_index: None,
+                validation: Some(WorkbookDataValidation {
+                    formula1: Some("A1>0".into()),
+                    ..validation.clone()
+                }),
+            },
+        )
+        .unwrap();
+        let error = patch_workbook_data_validation(
+            &first,
+            &WorkbookDataValidationChange {
+                sheet: "Data".into(),
+                action: WorkbookDataValidationAction::Create,
+                validation_index: None,
+                validation: Some(WorkbookDataValidation {
+                    formula1: Some("A2<10".into()),
+                    ..validation
+                }),
+            },
+        )
+        .unwrap_err();
+        assert!(error.contains("overlaps another rule"));
+    }
+
+    #[test]
+    fn creates_updates_renames_and_deletes_defined_name_ranges() {
+        let mut workbook = Workbook::new();
+        workbook.add_worksheet().set_name("Data Sheet").unwrap();
+        workbook.add_worksheet().set_name("Archive").unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let created = patch_workbook_defined_name(
+            &source,
+            &WorkbookDefinedNameChange {
+                action: WorkbookDefinedNameAction::Create,
+                name: "ProjectRange".into(),
+                new_name: None,
+                scope: None,
+                target_sheet: Some("Data Sheet".into()),
+                range: Some(WorkbookMergeRange {
+                    top: 0,
+                    bottom: 2,
+                    left: 0,
+                    right: 1,
+                }),
+            },
+        )
+        .unwrap();
+        let names = read_workbook_defined_names(&created).unwrap();
+        assert_eq!(names.len(), 1);
+        assert_eq!(names[0].formula, "'Data Sheet'!$A$1:$B$3");
+        assert_eq!(names[0].reference.as_ref().unwrap().sheet, "Data Sheet");
+
+        let local = patch_workbook_defined_name(
+            &created,
+            &WorkbookDefinedNameChange {
+                action: WorkbookDefinedNameAction::Create,
+                name: "ProjectRange".into(),
+                new_name: None,
+                scope: Some("Archive".into()),
+                target_sheet: Some("Archive".into()),
+                range: Some(WorkbookMergeRange {
+                    top: 4,
+                    bottom: 5,
+                    left: 2,
+                    right: 3,
+                }),
+            },
+        )
+        .unwrap();
+        assert_eq!(read_workbook_defined_names(&local).unwrap().len(), 2);
+
+        let updated = patch_workbook_defined_name(
+            &local,
+            &WorkbookDefinedNameChange {
+                action: WorkbookDefinedNameAction::UpdateRange,
+                name: "ProjectRange".into(),
+                new_name: None,
+                scope: None,
+                target_sheet: Some("Data Sheet".into()),
+                range: Some(WorkbookMergeRange {
+                    top: 1,
+                    bottom: 3,
+                    left: 1,
+                    right: 2,
+                }),
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            read_workbook_defined_names(&updated)
+                .unwrap()
+                .iter()
+                .find(|item| item.scope.is_none())
+                .unwrap()
+                .formula,
+            "'Data Sheet'!$B$2:$C$4"
+        );
+
+        let renamed = patch_workbook_defined_name(
+            &updated,
+            &WorkbookDefinedNameChange {
+                action: WorkbookDefinedNameAction::Rename,
+                name: "ProjectRange".into(),
+                new_name: Some("ActiveRange".into()),
+                scope: None,
+                target_sheet: None,
+                range: None,
+            },
+        )
+        .unwrap();
+        assert!(read_workbook_defined_names(&renamed)
+            .unwrap()
+            .iter()
+            .any(|item| item.name == "ActiveRange" && item.scope.is_none()));
+
+        let deleted = patch_workbook_defined_name(
+            &renamed,
+            &WorkbookDefinedNameChange {
+                action: WorkbookDefinedNameAction::Delete,
+                name: "ActiveRange".into(),
+                new_name: None,
+                scope: None,
+                target_sheet: None,
+                range: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&deleted).unwrap();
+        let names = read_workbook_defined_names(&deleted).unwrap();
+        assert_eq!(names.len(), 1);
+        assert_eq!(names[0].scope.as_deref(), Some("Archive"));
+    }
+
+    #[test]
+    fn refuses_to_rename_or_delete_referenced_defined_names() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_number(0, 0, 1).unwrap();
+        sheet
+            .write_formula(0, 1, Formula::new("=SUM(ProjectRange)").set_result("1"))
+            .unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let created = patch_workbook_defined_name(
+            &source,
+            &WorkbookDefinedNameChange {
+                action: WorkbookDefinedNameAction::Create,
+                name: "ProjectRange".into(),
+                new_name: None,
+                scope: None,
+                target_sheet: Some("Data".into()),
+                range: Some(WorkbookMergeRange {
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                }),
+            },
+        )
+        .unwrap();
+        let error = patch_workbook_defined_name(
+            &created,
+            &WorkbookDefinedNameChange {
+                action: WorkbookDefinedNameAction::Delete,
+                name: "ProjectRange".into(),
+                new_name: None,
+                scope: None,
+                target_sheet: None,
+                range: None,
+            },
+        )
+        .unwrap_err();
+        assert!(error.contains("referenced by a formula"));
     }
 }

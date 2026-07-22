@@ -255,8 +255,10 @@ pub struct WorkbookSheetPage {
     pub named_styles: Vec<WorkbookNamedStyle>,
     pub freeze_pane: WorkbookFreezePane,
     pub auto_filter: Option<WorkbookMergeRange>,
+    pub auto_filter_state: WorkbookFilterState,
     pub tables: Vec<WorkbookTable>,
     pub data_validations: Vec<WorkbookDataValidation>,
+    pub conditional_formats: Vec<WorkbookConditionalFormatRule>,
     pub drawings: Vec<WorkbookDrawingObject>,
     pub page_layout: WorkbookPageLayout,
 }
@@ -347,9 +349,24 @@ pub struct WorkbookTable {
     pub columns: Vec<String>,
     pub totals_row_shown: bool,
     pub style_name: Option<String>,
+    pub show_first_column: bool,
+    pub show_last_column: bool,
+    pub show_row_stripes: bool,
+    pub show_column_stripes: bool,
+    pub filter_state: WorkbookFilterState,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookFilterState {
+    pub filter_column: Option<usize>,
+    pub query: Option<String>,
+    pub sort_column: Option<usize>,
+    pub sort_direction: Option<String>,
+    pub editable: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkbookDataValidation {
     pub ranges: Vec<WorkbookMergeRange>,
@@ -365,7 +382,92 @@ pub struct WorkbookDataValidation {
     pub prompt: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookConditionalFormatStyle {
+    pub font_color: Option<String>,
+    pub fill_color: Option<String>,
+    pub bold: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookConditionalColorScalePoint {
+    pub kind: String,
+    pub value: Option<String>,
+    pub color: String,
+    #[serde(default)]
+    pub resolved_value: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookConditionalColorScale {
+    pub points: Vec<WorkbookConditionalColorScalePoint>,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookConditionalThreshold {
+    pub kind: String,
+    pub value: Option<String>,
+    #[serde(default)]
+    pub resolved_value: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookConditionalDataBar {
+    pub minimum: WorkbookConditionalThreshold,
+    pub maximum: WorkbookConditionalThreshold,
+    pub color: String,
+    pub show_value: bool,
+    pub min_length: u8,
+    pub max_length: u8,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookConditionalIconThreshold {
+    pub kind: String,
+    pub value: Option<String>,
+    #[serde(default)]
+    pub resolved_value: Option<String>,
+    pub inclusive: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookConditionalIconSet {
+    pub icon_set: String,
+    pub thresholds: Vec<WorkbookConditionalIconThreshold>,
+    pub reverse: bool,
+    pub show_value: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookConditionalFormatRule {
+    pub group_index: usize,
+    pub rule_index: usize,
+    pub ranges: Vec<WorkbookMergeRange>,
+    pub kind: String,
+    pub operator: Option<String>,
+    pub formula1: Option<String>,
+    pub formula2: Option<String>,
+    pub priority: u32,
+    pub stop_if_true: bool,
+    pub style: WorkbookConditionalFormatStyle,
+    #[serde(default)]
+    pub color_scale: Option<WorkbookConditionalColorScale>,
+    #[serde(default)]
+    pub data_bar: Option<WorkbookConditionalDataBar>,
+    #[serde(default)]
+    pub icon_set: Option<WorkbookConditionalIconSet>,
+    pub editable: bool,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkbookDrawingAnchor {
     pub row: usize,
@@ -377,9 +479,11 @@ pub struct WorkbookDrawingAnchor {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkbookChartSeries {
+    pub index: usize,
     pub name: Option<String>,
     pub categories: Option<String>,
     pub values: Option<String>,
+    pub editable: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -387,6 +491,7 @@ pub struct WorkbookChartSeries {
 pub struct WorkbookChart {
     pub chart_type: String,
     pub title: Option<String>,
+    pub title_editable: bool,
     pub series: Vec<WorkbookChartSeries>,
 }
 
@@ -394,6 +499,10 @@ pub struct WorkbookChart {
 #[serde(rename_all = "camelCase")]
 pub struct WorkbookDrawingObject {
     pub id: String,
+    pub object_id: String,
+    pub drawing_part: String,
+    pub anchor_index: usize,
+    pub anchor_kind: String,
     pub name: String,
     pub description: Option<String>,
     pub kind: String,
@@ -401,6 +510,41 @@ pub struct WorkbookDrawingObject {
     pub to: Option<WorkbookDrawingAnchor>,
     pub part: Option<String>,
     pub chart: Option<WorkbookChart>,
+    pub editable: bool,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkbookDrawingAction {
+    UpdateMetadata,
+    MoveResize,
+    UpdateChartTitle,
+    UpdateChartSeries,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookDrawingChange {
+    pub sheet: String,
+    pub drawing_part: String,
+    pub anchor_index: usize,
+    pub object_id: String,
+    pub action: WorkbookDrawingAction,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub from: Option<WorkbookDrawingAnchor>,
+    pub to: Option<WorkbookDrawingAnchor>,
+    pub chart_title: Option<String>,
+    pub series_index: Option<usize>,
+    pub series_categories: Option<String>,
+    pub series_values: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookDrawingPayload {
+    pub expected_signature: String,
+    pub change: WorkbookDrawingChange,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -585,6 +729,10 @@ pub struct WorkbookStructurePayload {
 pub enum WorkbookTableAction {
     Create,
     Resize,
+    Rename,
+    SetStyle,
+    ConvertToRange,
+    Delete,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -593,7 +741,14 @@ pub struct WorkbookTableChange {
     pub sheet: String,
     pub action: WorkbookTableAction,
     pub table_name: String,
+    pub new_table_name: Option<String>,
+    pub style_name: Option<String>,
+    pub show_first_column: Option<bool>,
+    pub show_last_column: Option<bool>,
+    pub show_row_stripes: Option<bool>,
+    pub show_column_stripes: Option<bool>,
     pub range: WorkbookMergeRange,
+    #[serde(default)]
     pub columns: Vec<String>,
 }
 
@@ -602,6 +757,122 @@ pub struct WorkbookTableChange {
 pub struct WorkbookTablePayload {
     pub expected_signature: String,
     pub change: WorkbookTableChange,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkbookFilterTarget {
+    Worksheet,
+    Table,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkbookFilterAction {
+    Apply,
+    Clear,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookFilterChange {
+    pub sheet: String,
+    pub target: WorkbookFilterTarget,
+    pub action: WorkbookFilterAction,
+    pub table_name: Option<String>,
+    pub range: WorkbookMergeRange,
+    pub filter_column: Option<usize>,
+    pub query: Option<String>,
+    pub sort_column: Option<usize>,
+    pub sort_direction: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookFilterPayload {
+    pub expected_signature: String,
+    pub change: WorkbookFilterChange,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkbookDataValidationAction {
+    Create,
+    Update,
+    Delete,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookDataValidationChange {
+    pub sheet: String,
+    pub action: WorkbookDataValidationAction,
+    pub validation_index: Option<usize>,
+    pub validation: Option<WorkbookDataValidation>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookDataValidationPayload {
+    pub expected_signature: String,
+    pub change: WorkbookDataValidationChange,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkbookConditionalFormatAction {
+    Create,
+    Update,
+    Delete,
+    MoveUp,
+    MoveDown,
+    Split,
+    Merge,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookConditionalFormatChange {
+    pub sheet: String,
+    pub action: WorkbookConditionalFormatAction,
+    pub group_index: Option<usize>,
+    #[serde(default)]
+    pub rule_index: Option<usize>,
+    pub rule: Option<WorkbookConditionalFormatRule>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookConditionalFormatPayload {
+    pub expected_signature: String,
+    pub change: WorkbookConditionalFormatChange,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkbookDefinedNameAction {
+    Create,
+    Rename,
+    UpdateRange,
+    Delete,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookDefinedNameChange {
+    pub action: WorkbookDefinedNameAction,
+    pub name: String,
+    pub new_name: Option<String>,
+    pub scope: Option<String>,
+    pub target_sheet: Option<String>,
+    pub range: Option<WorkbookMergeRange>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookDefinedNamePayload {
+    pub expected_signature: String,
+    pub change: WorkbookDefinedNameChange,
 }
 
 #[derive(Clone, Debug, Deserialize)]

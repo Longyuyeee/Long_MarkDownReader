@@ -6,10 +6,11 @@ use crate::formats::table::{
 };
 use crate::formats::workbook::{
     WorkbookCalculationPayload, WorkbookCalculationResult, WorkbookCapabilities,
-    WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine,
-    WorkbookOutlinePayload, WorkbookSheetPage, WorkbookStructureChange,
-    WorkbookStructureMigrationPreview, WorkbookStructurePayload, WorkbookTablePayload,
-    WorkbookWritePayload,
+    WorkbookCapabilityLevel, WorkbookCell, WorkbookConditionalFormatPayload,
+    WorkbookDataValidationPayload, WorkbookDefinedNamePayload, WorkbookDocument,
+    WorkbookDrawingPayload, WorkbookEngine, WorkbookFilterPayload, WorkbookOutlinePayload,
+    WorkbookSheetPage, WorkbookStructureChange, WorkbookStructureMigrationPreview,
+    WorkbookStructurePayload, WorkbookTablePayload, WorkbookWritePayload,
 };
 use crate::formats::workbook_calculation::calculate_workbook;
 use crate::formats::workbook_formula::{
@@ -17,7 +18,9 @@ use crate::formats::workbook_formula::{
     validate_workbook_structure_change, WorkbookFormulaTranslation, MAX_FORMULA_TRANSLATIONS,
 };
 use crate::formats::workbook_ooxml::{
-    patch_workbook, patch_workbook_freeze_pane, patch_workbook_outline, patch_workbook_structure,
+    patch_workbook, patch_workbook_conditional_format, patch_workbook_data_validation,
+    patch_workbook_defined_name, patch_workbook_drawing, patch_workbook_filter,
+    patch_workbook_freeze_pane, patch_workbook_outline, patch_workbook_structure,
     patch_workbook_table, read_workbook_defined_names, read_workbook_linked_data,
     read_workbook_protection, read_workbook_sheet_layout, validate_workbook_package,
 };
@@ -223,8 +226,10 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             named_styles: layout.named_styles,
             freeze_pane: layout.freeze_pane,
             auto_filter: layout.auto_filter,
+            auto_filter_state: layout.auto_filter_state,
             tables: layout.tables,
             data_validations: layout.data_validations,
+            conditional_formats: layout.conditional_formats,
             drawings: layout.drawings,
             page_layout: layout.page_layout,
         })
@@ -406,6 +411,162 @@ pub async fn update_workbook_structure(
     })
     .await
     .map_err(|error| format!("XLSX 工作表结构写回任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn update_workbook_defined_name(
+    library_root: String,
+    path: String,
+    payload: WorkbookDefinedNamePayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("Failed to read XLSX metadata: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("The XLSX changed on disk. Reload it before editing defined names.".into());
+        }
+        let output = patch_workbook_defined_name(&source, &payload.change)?;
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("The saved XLSX cannot exceed 128 MB.".into());
+        }
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX defined-name write task failed: {error}"))?
+}
+
+#[tauri::command]
+pub async fn update_workbook_data_validation(
+    library_root: String,
+    path: String,
+    payload: WorkbookDataValidationPayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("Failed to read XLSX metadata: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err(
+                "The XLSX changed on disk. Reload it before editing data validation rules.".into(),
+            );
+        }
+        let output = patch_workbook_data_validation(&source, &payload.change)?;
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("The saved XLSX cannot exceed 128 MB.".into());
+        }
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX data-validation write task failed: {error}"))?
+}
+
+#[tauri::command]
+pub async fn update_workbook_conditional_format(
+    library_root: String,
+    path: String,
+    payload: WorkbookConditionalFormatPayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("Failed to read XLSX metadata: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err(
+                "The XLSX changed on disk. Reload it before editing conditional formatting.".into(),
+            );
+        }
+        let output = patch_workbook_conditional_format(&source, &payload.change)?;
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("The saved XLSX cannot exceed 128 MB.".into());
+        }
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX conditional-format write task failed: {error}"))?
+}
+
+#[tauri::command]
+pub async fn update_workbook_drawing(
+    library_root: String,
+    path: String,
+    payload: WorkbookDrawingPayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("Failed to read XLSX metadata: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err(
+                "The XLSX changed on disk. Reload it before editing Drawing objects.".into(),
+            );
+        }
+        let output = patch_workbook_drawing(&source, &payload.change)?;
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("The saved XLSX cannot exceed 128 MB.".into());
+        }
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX Drawing write task failed: {error}"))?
+}
+
+#[tauri::command]
+pub async fn update_workbook_filter(
+    library_root: String,
+    path: String,
+    payload: WorkbookFilterPayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("Failed to read XLSX metadata: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("The XLSX changed on disk. Reload it before editing filters.".into());
+        }
+        let output = patch_workbook_filter(&source, &payload.change)?;
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("The saved XLSX cannot exceed 128 MB.".into());
+        }
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX filter write task failed: {error}"))?
 }
 
 #[tauri::command]
@@ -595,7 +756,14 @@ mod tests {
     use super::*;
     use crate::formats::workbook::{
         WorkbookCellEdit, WorkbookCellStyleEdit, WorkbookColumnStateEdit, WorkbookColumnWidthEdit,
-        WorkbookMergeEdit, WorkbookOutlinePayload, WorkbookRowHeightEdit, WorkbookRowStateEdit,
+        WorkbookConditionalFormatAction, WorkbookConditionalFormatChange,
+        WorkbookConditionalFormatPayload, WorkbookConditionalFormatRule,
+        WorkbookConditionalFormatStyle, WorkbookDataValidation, WorkbookDataValidationAction,
+        WorkbookDataValidationChange, WorkbookDataValidationPayload, WorkbookDefinedNameAction,
+        WorkbookDefinedNameChange, WorkbookDefinedNamePayload, WorkbookDrawingAction,
+        WorkbookDrawingChange, WorkbookDrawingPayload, WorkbookFilterAction, WorkbookFilterChange,
+        WorkbookFilterPayload, WorkbookFilterTarget, WorkbookMergeEdit, WorkbookMergeRange,
+        WorkbookOutlinePayload, WorkbookRowHeightEdit, WorkbookRowStateEdit,
         WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructurePayload,
         WorkbookStylePatch, WorkbookWritePayload,
     };
@@ -798,6 +966,240 @@ mod tests {
         )
         .unwrap();
         (base, path)
+    }
+
+    #[test]
+    fn writes_filter_state_with_signature_protection() {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-xlsx-filter-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let root = base.join("library");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("filter.xlsx");
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_string(0, 0, "Name").unwrap();
+        sheet.write_string(0, 1, "Score").unwrap();
+        sheet.write_string(1, 0, "Alpha").unwrap();
+        sheet.write_number(1, 1, 2).unwrap();
+        sheet.write_string(2, 0, "Beta").unwrap();
+        sheet.write_number(2, 1, 1).unwrap();
+        sheet.autofilter(0, 0, 2, 1).unwrap();
+        workbook.save(&path).unwrap();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let change = WorkbookFilterChange {
+            sheet: "Data".into(),
+            target: WorkbookFilterTarget::Worksheet,
+            action: WorkbookFilterAction::Apply,
+            table_name: None,
+            range: WorkbookMergeRange {
+                top: 0,
+                bottom: 2,
+                left: 0,
+                right: 1,
+            },
+            filter_column: Some(0),
+            query: Some("Al".into()),
+            sort_column: Some(1),
+            sort_direction: Some("asc".into()),
+        };
+        let saved = tauri::async_runtime::block_on(update_workbook_filter(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookFilterPayload {
+                expected_signature: document.signature.clone(),
+                change: change.clone(),
+            },
+        ))
+        .unwrap();
+        assert_ne!(saved.signature, document.signature);
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Data", 0, 10)
+            .unwrap();
+        assert_eq!(page.auto_filter_state.query.as_deref(), Some("Al"));
+        let stale = tauri::async_runtime::block_on(update_workbook_filter(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookFilterPayload {
+                expected_signature: document.signature,
+                change,
+            },
+        ));
+        assert!(stale.unwrap_err().contains("changed on disk"));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn writes_defined_names_with_signature_protection() {
+        let (base, path) = fixture();
+        let root = base.join("library");
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let change = WorkbookDefinedNameChange {
+            action: WorkbookDefinedNameAction::Create,
+            name: "ProgressRange".into(),
+            new_name: None,
+            scope: None,
+            target_sheet: Some("进度".into()),
+            range: Some(WorkbookMergeRange {
+                top: 0,
+                bottom: 2,
+                left: 0,
+                right: 1,
+            }),
+        };
+        let saved = tauri::async_runtime::block_on(update_workbook_defined_name(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookDefinedNamePayload {
+                expected_signature: document.signature.clone(),
+                change: change.clone(),
+            },
+        ))
+        .unwrap();
+        assert!(saved
+            .defined_names
+            .iter()
+            .any(|item| item.name == "ProgressRange"));
+        let stale = tauri::async_runtime::block_on(update_workbook_defined_name(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookDefinedNamePayload {
+                expected_signature: document.signature,
+                change,
+            },
+        ));
+        assert!(stale.unwrap_err().contains("changed on disk"));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn writes_data_validation_rules_with_signature_protection() {
+        let (base, path) = fixture();
+        let root = base.join("library");
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let change = WorkbookDataValidationChange {
+            sheet: "进度".into(),
+            action: WorkbookDataValidationAction::Create,
+            validation_index: None,
+            validation: Some(WorkbookDataValidation {
+                ranges: vec![WorkbookMergeRange {
+                    top: 1,
+                    bottom: 2,
+                    left: 1,
+                    right: 1,
+                }],
+                kind: "custom".into(),
+                operator: None,
+                formula1: Some("B2>=0".into()),
+                formula2: None,
+                allow_blank: false,
+                show_error_message: true,
+                error_title: Some("Invalid progress".into()),
+                error: Some("Progress must be non-negative.".into()),
+                prompt_title: None,
+                prompt: None,
+            }),
+        };
+        let saved = tauri::async_runtime::block_on(update_workbook_data_validation(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookDataValidationPayload {
+                expected_signature: document.signature.clone(),
+                change: change.clone(),
+            },
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "进度", 0, 10)
+            .unwrap();
+        assert_ne!(saved.signature, document.signature);
+        assert_eq!(page.data_validations.len(), 1);
+        assert_eq!(page.data_validations[0].kind, "custom");
+        assert_eq!(page.data_validations[0].formula1.as_deref(), Some("B2>=0"));
+
+        let stale = tauri::async_runtime::block_on(update_workbook_data_validation(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookDataValidationPayload {
+                expected_signature: document.signature,
+                change,
+            },
+        ));
+        assert!(stale.unwrap_err().contains("changed on disk"));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn writes_conditional_formats_with_signature_protection() {
+        let (base, path) = fixture();
+        let root = base.join("library");
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let change = WorkbookConditionalFormatChange {
+            sheet: "进度".into(),
+            action: WorkbookConditionalFormatAction::Create,
+            group_index: None,
+            rule_index: None,
+            rule: Some(WorkbookConditionalFormatRule {
+                group_index: 0,
+                rule_index: 0,
+                ranges: vec![WorkbookMergeRange {
+                    top: 1,
+                    bottom: 2,
+                    left: 0,
+                    right: 0,
+                }],
+                kind: "cellIs".into(),
+                operator: Some("equal".into()),
+                formula1: Some("75".into()),
+                formula2: None,
+                priority: 0,
+                stop_if_true: true,
+                style: WorkbookConditionalFormatStyle {
+                    font_color: Some("#9C6500".into()),
+                    fill_color: Some("#FFEB9C".into()),
+                    bold: false,
+                },
+                color_scale: None,
+                data_bar: None,
+                icon_set: None,
+                editable: true,
+            }),
+        };
+        let saved = tauri::async_runtime::block_on(update_workbook_conditional_format(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookConditionalFormatPayload {
+                expected_signature: document.signature.clone(),
+                change: change.clone(),
+            },
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "进度", 0, 10)
+            .unwrap();
+        assert_ne!(saved.signature, document.signature);
+        assert_eq!(page.conditional_formats.len(), 2);
+        assert!(page
+            .conditional_formats
+            .iter()
+            .any(|rule| rule.formula1.as_deref() == Some("75")));
+
+        let stale = tauri::async_runtime::block_on(update_workbook_conditional_format(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookConditionalFormatPayload {
+                expected_signature: document.signature,
+                change,
+            },
+        ));
+        assert!(stale.unwrap_err().contains("changed on disk"));
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]
@@ -1499,6 +1901,100 @@ mod tests {
             zip_part(&before, "xl/tables/table1.xml"),
             zip_part(&fs::read(&path).unwrap(), "xl/tables/table1.xml")
         );
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn updates_drawing_and_chart_with_signature_protection() {
+        let (base, path) = compatibility_fixture_copy("drawing-update");
+        let root = base.join("library");
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Inventory", 0, 30)
+            .unwrap();
+        let drawing = page.drawings.iter().find(|item| item.editable).unwrap();
+        let change = WorkbookDrawingChange {
+            sheet: "Inventory".into(),
+            drawing_part: drawing.drawing_part.clone(),
+            anchor_index: drawing.anchor_index,
+            object_id: drawing.object_id.clone(),
+            action: WorkbookDrawingAction::UpdateMetadata,
+            name: Some("Inventory overview".into()),
+            description: Some("Updated locally".into()),
+            from: None,
+            to: None,
+            chart_title: None,
+            series_index: None,
+            series_categories: None,
+            series_values: None,
+        };
+        let saved = tauri::async_runtime::block_on(update_workbook_drawing(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookDrawingPayload {
+                expected_signature: document.signature.clone(),
+                change: change.clone(),
+            },
+        ))
+        .unwrap();
+        assert_ne!(saved.signature, document.signature);
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Inventory", 0, 30)
+            .unwrap();
+        assert!(page
+            .drawings
+            .iter()
+            .any(|item| item.name == "Inventory overview"
+                && item.description.as_deref() == Some("Updated locally")));
+        let chart_drawing = page
+            .drawings
+            .iter()
+            .find(|item| {
+                item.chart
+                    .as_ref()
+                    .is_some_and(|chart| chart.title_editable)
+            })
+            .unwrap();
+        let chart_saved = tauri::async_runtime::block_on(update_workbook_drawing(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookDrawingPayload {
+                expected_signature: saved.signature,
+                change: WorkbookDrawingChange {
+                    sheet: "Inventory".into(),
+                    drawing_part: chart_drawing.drawing_part.clone(),
+                    anchor_index: chart_drawing.anchor_index,
+                    object_id: chart_drawing.object_id.clone(),
+                    action: WorkbookDrawingAction::UpdateChartTitle,
+                    name: None,
+                    description: None,
+                    from: None,
+                    to: None,
+                    chart_title: Some("Inventory by location".into()),
+                    series_index: None,
+                    series_categories: None,
+                    series_values: None,
+                },
+            },
+        ))
+        .unwrap();
+        assert!(chart_saved.signature.len() > 10);
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Inventory", 0, 30)
+            .unwrap();
+        assert!(page.drawings.iter().any(|item| {
+            item.chart.as_ref().and_then(|chart| chart.title.as_deref())
+                == Some("Inventory by location")
+        }));
+        let stale = tauri::async_runtime::block_on(update_workbook_drawing(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookDrawingPayload {
+                expected_signature: document.signature,
+                change,
+            },
+        ));
+        assert!(stale.unwrap_err().contains("changed on disk"));
         fs::remove_dir_all(base).unwrap();
     }
 

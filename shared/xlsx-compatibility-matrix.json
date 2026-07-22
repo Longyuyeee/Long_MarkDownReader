@@ -57,10 +57,10 @@
       "label": "工作簿级与工作表级命名区域",
       "read": "supported",
       "view": "supported",
-      "edit": "planned",
+      "edit": "limited",
       "calculate": "supported",
-      "roundTrip": "preserved",
-      "evidence": "AmountRange/ReportWindow/Details!Codes fixtures + navigation/recalculation/preservation gates"
+      "roundTrip": "supported",
+      "evidence": "global/local single-A1 create/update/rename/delete tests + navigation/recalculation/signature/package gates"
     },
     {
       "id": "cell_formatting",
@@ -75,12 +75,12 @@
     {
       "id": "conditional_formatting",
       "label": "条件格式",
-      "read": "preserved",
-      "view": "planned",
-      "edit": "planned",
-      "calculate": "planned",
-      "roundTrip": "preserved",
-      "evidence": "conditionalFormatting byte-preservation test"
+      "read": "supported",
+      "view": "limited",
+      "edit": "limited",
+      "calculate": "limited",
+      "roundTrip": "supported",
+      "evidence": "numeric cellIs, bounded AND/OR/NOT multi-reference expressions with dependency-page loading, 2/3-color scales, standard data bars, and Excel 2007 standard 3/4/5 icon sets have evaluation and edit transaction tests; overlapping and same-sqref supported rules can be inspected, reordered, updated, deleted, split, recombined, and stopped with stopIfTrue; ranges, cross-sheet or unknown-function expressions, formula thresholds, custom mixed icons, x14-only families, and x14 advanced styles remain read-only and preserved"
     },
     {
       "id": "sheet_structure",
@@ -130,7 +130,7 @@
       "edit": "not_applicable",
       "calculate": "not_applicable",
       "roundTrip": "preserved",
-      "evidence": "AutoFilter/Table range driven session view; source row order is never rewritten"
+      "evidence": "AutoFilter/Table single-column contains filter and sort-state OOXML round-trip; source row order is never rewritten"
     },
     {
       "id": "excel_tables",
@@ -140,7 +140,7 @@
       "edit": "limited",
       "calculate": "limited",
       "roundTrip": "preserved",
-      "evidence": "InventoryTable read fixture + signature-protected create/resize package transaction and round-trip tests"
+      "evidence": "InventoryTable read fixture + signature-protected create/resize/rename/style/remove package transaction and round-trip tests"
     },
     {
       "id": "data_validation",
@@ -149,18 +149,18 @@
       "view": "supported",
       "edit": "limited",
       "calculate": "limited",
-      "roundTrip": "preserved",
-      "evidence": "literal list validation fixture + frontend/backend rejection + valid input round-trip"
+      "roundTrip": "supported",
+      "evidence": "literal/scalar enforcement + signature-protected list/whole/decimal/text-length/custom create/update/delete package round-trip tests"
     },
     {
       "id": "charts_and_drawings",
       "label": "图表、图片与绘图对象",
       "read": "supported",
       "view": "limited",
-      "edit": "planned",
+      "edit": "limited",
       "calculate": "not_applicable",
-      "roundTrip": "preserved",
-      "evidence": "chart/image fixture + relationship/anchor/series parser + object navigation + OOXML byte-preservation test"
+      "roundTrip": "supported",
+      "evidence": "chart/image fixture + stable drawing identity + signature-protected two-cell anchor metadata/move-resize + existing standard title/internal one-dimensional series-reference transactions + cache invalidation + local source-data preview + semantic/package regression"
     },
     {
       "id": "pivot_and_external_data",
