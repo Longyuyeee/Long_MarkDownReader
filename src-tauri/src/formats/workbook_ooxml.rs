@@ -1062,7 +1062,11 @@ pub fn read_workbook_defined_names(source: &[u8]) -> Result<Vec<WorkbookDefinedN
         .iter()
         .find(|entry| entry.name == "xl/workbook.xml")
         .ok_or("XLSX 缺少 xl/workbook.xml")?;
-    let mut reader = Reader::from_reader(workbook.data.as_slice());
+    read_workbook_defined_names_xml(&workbook.data)
+}
+
+fn read_workbook_defined_names_xml(xml: &[u8]) -> Result<Vec<WorkbookDefinedName>, String> {
+    let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(true);
     let mut buffer = Vec::new();
     let mut sheets = Vec::new();
@@ -2508,6 +2512,10 @@ pub fn read_workbook_sheet_layout(
         .iter()
         .find(|entry| &entry.name == sheet_path)
         .ok_or("XLSX 工作表部件缺失")?;
+    let workbook_xml = entries
+        .iter()
+        .find(|entry| entry.name == "xl/workbook.xml")
+        .ok_or("XLSX 缺少 xl/workbook.xml")?;
     let theme = entries
         .iter()
         .find(|entry| entry.name == "xl/theme/theme1.xml")
@@ -2523,7 +2531,7 @@ pub fn read_workbook_sheet_layout(
     let tables = read_sheet_tables(&entries, sheet_path, &sheet_xml.data)?;
     let drawings = read_sheet_drawings(&entries, sheet_path, &sheet_xml.data)?;
     let mut page_layout = parse_page_layout(&sheet_xml.data)?;
-    page_layout.print_area = read_workbook_defined_names(source)?
+    page_layout.print_area = read_workbook_defined_names_xml(&workbook_xml.data)?
         .into_iter()
         .find(|name| {
             name.name == "_xlnm.Print_Area"
