@@ -76,7 +76,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 
 - 前端生产构建、主题/格式/工作簿/XLSX 发布契约检查均通过。
 - Rust：S8-1B2B2 后共 137 项功能与性能测试；回归覆盖工作表内复杂载体、Table、Chart、Drawing anchors、calcChain、完整范围对象删除及真实包语义重读。
-- 本批本机在整机 CPU 持续约 100% 的资源竞争下测得 `inspect=601 ms / page=16,396 ms / patch=10,960 ms / total=27,958 ms`，功能回归全部通过但分页项超过 Debug 预算；上一无竞争基线为 `325 / 6,442 / 4,568 / 11,336 ms`。机器相关性能以推送后的 GitHub Quality Gate 独立 runner 为最终发布裁决。
+- 本批本机在整机 CPU 持续约 100% 的资源竞争下测得 `inspect=601 ms / page=16,396 ms / patch=10,960 ms / total=27,958 ms`，功能回归全部通过但分页项超过 Debug 预算；上一无竞争基线为 `325 / 6,442 / 4,568 / 11,336 ms`。去除分页路径的重复 ZIP 解包后，GitHub Quality Gate #29899168408 独立 runner 以 `296 / 6,842 / 5,105 / 12,244 ms` 通过全部预算。
 - 100 MiB PDF 范围读取基准：131 ms，仅读取约 256 KiB（目标小于 2 秒；不同机器会有波动）。
 - `npm audit --omit=dev`：0 个漏洞。
 
