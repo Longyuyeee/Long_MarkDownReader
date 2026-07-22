@@ -1,11 +1,12 @@
 use crate::formats::workbook::{
     WorkbookCellEdit, WorkbookCellStyle, WorkbookCellStyleEdit, WorkbookChart, WorkbookChartSeries,
-    WorkbookColumnWidth, WorkbookColumnWidthEdit, WorkbookDataConnection, WorkbookDataValidation,
-    WorkbookDefinedName, WorkbookDrawingAnchor, WorkbookDrawingObject, WorkbookExternalLink,
-    WorkbookFreezePane, WorkbookLinkedData, WorkbookMergeEdit, WorkbookMergeRange,
-    WorkbookNamedStyle, WorkbookPageLayout, WorkbookPageMargins, WorkbookPivotTable,
-    WorkbookPrintOptions, WorkbookProtection, WorkbookRangeReference, WorkbookRowHeight,
-    WorkbookRowHeightEdit, WorkbookSlicer, WorkbookTable,
+    WorkbookColumnState, WorkbookColumnStateEdit, WorkbookColumnWidth, WorkbookColumnWidthEdit,
+    WorkbookDataConnection, WorkbookDataValidation, WorkbookDefinedName, WorkbookDrawingAnchor,
+    WorkbookDrawingObject, WorkbookExternalLink, WorkbookFreezePane, WorkbookLinkedData,
+    WorkbookMergeEdit, WorkbookMergeRange, WorkbookNamedStyle, WorkbookPageLayout,
+    WorkbookPageMargins, WorkbookPivotTable, WorkbookPrintOptions, WorkbookProtection,
+    WorkbookRangeReference, WorkbookRowHeight, WorkbookRowHeightEdit, WorkbookRowState,
+    WorkbookRowStateEdit, WorkbookSlicer, WorkbookTable,
 };
 use crate::formats::workbook_formula::translate_formula;
 use crate::formats::workbook_styles::{
@@ -67,6 +68,8 @@ pub(crate) struct WorkbookSheetLayout {
     pub default_column_width: f64,
     pub row_heights: Vec<WorkbookRowHeight>,
     pub column_widths: Vec<WorkbookColumnWidth>,
+    pub row_states: Vec<WorkbookRowState>,
+    pub column_states: Vec<WorkbookColumnState>,
     pub merged_cells: Vec<WorkbookMergeRange>,
     pub freeze_pane: WorkbookFreezePane,
     pub auto_filter: Option<WorkbookMergeRange>,
@@ -183,6 +186,8 @@ struct SheetStructureSummary {
     default_column_width: f64,
     row_heights: Vec<WorkbookRowHeight>,
     column_widths: Vec<WorkbookColumnWidth>,
+    row_states: Vec<WorkbookRowState>,
+    column_states: Vec<WorkbookColumnState>,
     merged_cells: Vec<WorkbookMergeRange>,
     freeze_pane: WorkbookFreezePane,
     auto_filter: Option<WorkbookMergeRange>,
@@ -1142,6 +1147,8 @@ fn read_sheet_structure(
     let mut default_column_width = 8.43;
     let mut row_heights = Vec::new();
     let mut column_widths = Vec::new();
+    let mut row_states = Vec::new();
+    let mut column_states = Vec::new();
     let mut merged_cells = Vec::new();
     let mut freeze_pane = WorkbookFreezePane::default();
     let mut auto_filter = None;
@@ -1258,6 +1265,25 @@ fn read_sheet_structure(
                         row_heights.push(WorkbookRowHeight { row, height });
                     }
                 }
+                if let Some(row) = row {
+                    let hidden = bool_attribute(event, b"hidden", reader.decoder(), false)?;
+                    let collapsed = bool_attribute(event, b"collapsed", reader.decoder(), false)?;
+                    let outline_level = xml_value(event, b"outlineLevel", reader.decoder())?
+                        .and_then(|value| value.parse::<u8>().ok())
+                        .unwrap_or(0)
+                        .min(7);
+                    if row >= row_start
+                        && row < row_end
+                        && (hidden || collapsed || outline_level > 0)
+                    {
+                        row_states.push(WorkbookRowState {
+                            row,
+                            hidden,
+                            outline_level,
+                            collapsed,
+                        });
+                    }
+                }
             }
             Event::Start(ref event) | Event::Empty(ref event)
                 if event.local_name().as_ref() == b"col" =>
@@ -1276,6 +1302,31 @@ fn read_sheet_structure(
                                 start_column,
                                 end_column,
                                 width,
+                            });
+                        }
+                    }
+                }
+                if let (Some(min), Some(max)) = (min, max) {
+                    if min > 0 && max >= min {
+                        let start_column = min - 1;
+                        let end_column = (max - 1).min(max_columns.saturating_sub(1));
+                        let hidden = bool_attribute(event, b"hidden", reader.decoder(), false)?;
+                        let collapsed =
+                            bool_attribute(event, b"collapsed", reader.decoder(), false)?;
+                        let outline_level = xml_value(event, b"outlineLevel", reader.decoder())?
+                            .and_then(|value| value.parse::<u8>().ok())
+                            .unwrap_or(0)
+                            .min(7);
+                        if start_column <= end_column
+                            && start_column < max_columns
+                            && (hidden || collapsed || outline_level > 0)
+                        {
+                            column_states.push(WorkbookColumnState {
+                                start_column,
+                                end_column,
+                                hidden,
+                                outline_level,
+                                collapsed,
                             });
                         }
                     }
@@ -1308,12 +1359,16 @@ fn read_sheet_structure(
     }
     row_heights.sort_by_key(|item| item.row);
     column_widths.sort_by_key(|item| (item.start_column, item.end_column));
+    row_states.sort_by_key(|item| item.row);
+    column_states.sort_by_key(|item| (item.start_column, item.end_column));
     merged_cells.sort_by_key(|item| (item.top, item.left, item.bottom, item.right));
     Ok(SheetStructureSummary {
         default_row_height,
         default_column_width,
         row_heights,
         column_widths,
+        row_states,
+        column_states,
         merged_cells,
         freeze_pane,
         auto_filter,
@@ -2445,6 +2500,8 @@ pub fn read_workbook_sheet_layout(
         default_column_width: structure.default_column_width,
         row_heights: structure.row_heights,
         column_widths: structure.column_widths,
+        row_states: structure.row_states,
+        column_states: structure.column_states,
         merged_cells: structure.merged_cells,
         freeze_pane: structure.freeze_pane,
         auto_filter: structure.auto_filter,
@@ -3230,6 +3287,396 @@ fn patch_sheet_structure(
         return Err("XLSX 工作表缺少可写入的 sheetData".into());
     }
     Ok(writer.into_inner())
+}
+
+fn validate_row_state_edit(edit: &WorkbookRowStateEdit) -> Result<(), String> {
+    if edit.sheet.is_empty()
+        || edit.sheet.chars().count() > 31
+        || edit.row >= MAX_XLSX_ROWS
+        || edit.outline_level > 7
+    {
+        return Err("行隐藏分组编辑目标无效".into());
+    }
+    Ok(())
+}
+
+fn validate_column_state_edit(edit: &WorkbookColumnStateEdit) -> Result<(), String> {
+    if edit.sheet.is_empty()
+        || edit.sheet.chars().count() > 31
+        || edit.start_column > edit.end_column
+        || edit.end_column >= MAX_XLSX_COLUMNS
+        || edit.outline_level > 7
+    {
+        return Err("列隐藏分组编辑目标无效".into());
+    }
+    Ok(())
+}
+
+fn state_is_visible(hidden: bool, outline_level: u8, collapsed: bool) -> bool {
+    hidden || outline_level > 0 || collapsed
+}
+
+fn push_outline_attributes(
+    event: &mut BytesStart<'_>,
+    hidden: bool,
+    outline_level: u8,
+    collapsed: bool,
+) {
+    let outline_text = outline_level.to_string();
+    if hidden {
+        event.push_attribute(("hidden", "1"));
+    }
+    if outline_level > 0 {
+        event.push_attribute(("outlineLevel", outline_text.as_str()));
+    }
+    if collapsed {
+        event.push_attribute(("collapsed", "1"));
+    }
+}
+
+fn row_event_with_state(
+    original: &BytesStart<'_>,
+    edit: &WorkbookRowStateEdit,
+) -> Result<BytesStart<'static>, String> {
+    let mut row = BytesStart::new("row");
+    for attribute in original.attributes() {
+        let attribute = attribute.map_err(|error| format!("读取行状态属性失败: {error}"))?;
+        if !matches!(
+            attribute.key.as_ref(),
+            b"hidden" | b"outlineLevel" | b"collapsed"
+        ) {
+            row.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+        }
+    }
+    push_outline_attributes(&mut row, edit.hidden, edit.outline_level, edit.collapsed);
+    Ok(row.into_owned())
+}
+
+fn write_state_row(
+    writer: &mut Writer<Vec<u8>>,
+    edit: &WorkbookRowStateEdit,
+) -> Result<(), String> {
+    if !state_is_visible(edit.hidden, edit.outline_level, edit.collapsed) {
+        return Ok(());
+    }
+    let row_number = (edit.row + 1).to_string();
+    let mut event = BytesStart::new("row");
+    event.push_attribute(("r", row_number.as_str()));
+    push_outline_attributes(&mut event, edit.hidden, edit.outline_level, edit.collapsed);
+    writer
+        .write_event(Event::Empty(event))
+        .map_err(|error| format!("创建行隐藏分组状态失败: {error}"))
+}
+
+fn column_event_with_state(
+    original: Option<&BytesStart<'_>>,
+    start: usize,
+    end: usize,
+    edit: &WorkbookColumnStateEdit,
+) -> Result<BytesStart<'static>, String> {
+    let mut event = BytesStart::new("col");
+    if let Some(original) = original {
+        for attribute in original.attributes() {
+            let attribute = attribute.map_err(|error| format!("读取列状态属性失败: {error}"))?;
+            if !matches!(
+                attribute.key.as_ref(),
+                b"min" | b"max" | b"hidden" | b"outlineLevel" | b"collapsed"
+            ) {
+                event.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+            }
+        }
+    }
+    let min = (start + 1).to_string();
+    let max = (end + 1).to_string();
+    event.push_attribute(("min", min.as_str()));
+    event.push_attribute(("max", max.as_str()));
+    push_outline_attributes(&mut event, edit.hidden, edit.outline_level, edit.collapsed);
+    Ok(event.into_owned())
+}
+
+fn apply_column_state_edit(
+    records: Vec<ColumnRecord>,
+    edit: &WorkbookColumnStateEdit,
+) -> Result<Vec<ColumnRecord>, String> {
+    let mut output = Vec::with_capacity(records.len() + 3);
+    let mut cursor = edit.start_column;
+    for record in records {
+        if record.end < edit.start_column || record.start > edit.end_column {
+            output.push(record);
+            continue;
+        }
+        if record.start < edit.start_column {
+            output.push(ColumnRecord {
+                start: record.start,
+                end: edit.start_column - 1,
+                event: column_event(
+                    Some(&record.event),
+                    record.start,
+                    edit.start_column - 1,
+                    raw_f64_attribute(&record.event, b"width")?,
+                )?,
+            });
+        }
+        let overlap_start = record.start.max(edit.start_column);
+        let overlap_end = record.end.min(edit.end_column);
+        if cursor < overlap_start
+            && state_is_visible(edit.hidden, edit.outline_level, edit.collapsed)
+        {
+            output.push(ColumnRecord {
+                start: cursor,
+                end: overlap_start - 1,
+                event: column_event_with_state(None, cursor, overlap_start - 1, edit)?,
+            });
+        }
+        output.push(ColumnRecord {
+            start: overlap_start,
+            end: overlap_end,
+            event: column_event_with_state(Some(&record.event), overlap_start, overlap_end, edit)?,
+        });
+        cursor = overlap_end.saturating_add(1);
+        if record.end > edit.end_column {
+            output.push(ColumnRecord {
+                start: edit.end_column + 1,
+                end: record.end,
+                event: column_event(
+                    Some(&record.event),
+                    edit.end_column + 1,
+                    record.end,
+                    raw_f64_attribute(&record.event, b"width")?,
+                )?,
+            });
+        }
+    }
+    if cursor <= edit.end_column
+        && state_is_visible(edit.hidden, edit.outline_level, edit.collapsed)
+    {
+        output.push(ColumnRecord {
+            start: cursor,
+            end: edit.end_column,
+            event: column_event_with_state(None, cursor, edit.end_column, edit)?,
+        });
+    }
+    output.sort_by_key(|record| (record.start, record.end));
+    Ok(output)
+}
+
+fn patch_sheet_outline(
+    xml: &[u8],
+    row_edits: &[&WorkbookRowStateEdit],
+    column_edits: &[&WorkbookColumnStateEdit],
+) -> Result<Vec<u8>, String> {
+    let mut pending_rows = BTreeMap::new();
+    for edit in row_edits {
+        validate_row_state_edit(edit)?;
+        if pending_rows.insert(edit.row, *edit).is_some() {
+            return Err("保存请求包含重复行状态编辑".into());
+        }
+    }
+    let mut column_ranges = Vec::new();
+    let mut columns = read_column_records(xml)?;
+    for edit in column_edits {
+        validate_column_state_edit(edit)?;
+        if column_ranges
+            .iter()
+            .any(|(start, end)| *start <= edit.end_column && edit.start_column <= *end)
+        {
+            return Err("保存请求包含重叠列状态编辑".into());
+        }
+        column_ranges.push((edit.start_column, edit.end_column));
+        columns = apply_column_state_edit(columns, edit)?;
+    }
+
+    let has_columns = has_element(xml, b"cols")?;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 256));
+    let mut buffer = Vec::new();
+    let mut inside_sheet_data = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析工作表行列状态失败: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"cols" => {
+                skip_element(&mut reader, b"cols", &mut buffer)?;
+                write_columns(&mut writer, &columns)?;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"cols" => {
+                write_columns(&mut writer, &columns)?;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"sheetData" => {
+                if !has_columns && !columns.is_empty() {
+                    write_columns(&mut writer, &columns)?;
+                }
+                inside_sheet_data = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("写入工作表数据失败: {error}"))?;
+            }
+            Event::Start(ref start)
+                if inside_sheet_data && start.local_name().as_ref() == b"row" =>
+            {
+                let row = xml_value(start, b"r", reader.decoder())?
+                    .ok_or("工作表行缺少行号")?
+                    .parse::<usize>()
+                    .map_err(|_| "工作表行号无效")?
+                    .checked_sub(1)
+                    .ok_or("工作表行号无效")?;
+                let missing = pending_rows
+                    .range(..row)
+                    .map(|(row, _)| *row)
+                    .collect::<Vec<_>>();
+                for missing_row in missing {
+                    if let Some(edit) = pending_rows.remove(&missing_row) {
+                        write_state_row(&mut writer, edit)?;
+                    }
+                }
+                let replacement = pending_rows.remove(&row);
+                writer
+                    .write_event(Event::Start(if let Some(edit) = replacement {
+                        row_event_with_state(start, edit)?
+                    } else {
+                        start.to_owned().into_owned()
+                    }))
+                    .map_err(|error| format!("写入行状态失败: {error}"))?;
+            }
+            Event::Empty(ref start)
+                if inside_sheet_data && start.local_name().as_ref() == b"row" =>
+            {
+                let row = xml_value(start, b"r", reader.decoder())?
+                    .ok_or("工作表行缺少行号")?
+                    .parse::<usize>()
+                    .map_err(|_| "工作表行号无效")?
+                    .checked_sub(1)
+                    .ok_or("工作表行号无效")?;
+                let missing = pending_rows
+                    .range(..row)
+                    .map(|(row, _)| *row)
+                    .collect::<Vec<_>>();
+                for missing_row in missing {
+                    if let Some(edit) = pending_rows.remove(&missing_row) {
+                        write_state_row(&mut writer, edit)?;
+                    }
+                }
+                let replacement = pending_rows.remove(&row);
+                writer
+                    .write_event(Event::Empty(if let Some(edit) = replacement {
+                        row_event_with_state(start, edit)?
+                    } else {
+                        start.to_owned().into_owned()
+                    }))
+                    .map_err(|error| format!("写入空行状态失败: {error}"))?;
+            }
+            Event::End(ref end)
+                if inside_sheet_data && end.local_name().as_ref() == b"sheetData" =>
+            {
+                for (_, edit) in std::mem::take(&mut pending_rows) {
+                    write_state_row(&mut writer, edit)?;
+                }
+                inside_sheet_data = false;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束工作表数据失败: {error}"))?;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"sheetData" => {
+                if !has_columns && !columns.is_empty() {
+                    write_columns(&mut writer, &columns)?;
+                }
+                writer
+                    .write_event(Event::Start(start.to_owned()))
+                    .map_err(|error| format!("扩展工作表数据失败: {error}"))?;
+                for (_, edit) in std::mem::take(&mut pending_rows) {
+                    write_state_row(&mut writer, edit)?;
+                }
+                writer
+                    .write_event(Event::End(BytesEnd::new("sheetData")))
+                    .map_err(|error| format!("结束工作表数据失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制工作表行列状态失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !pending_rows.is_empty() {
+        return Err("XLSX 工作表缺少可写入的 sheetData".into());
+    }
+    Ok(writer.into_inner())
+}
+
+pub fn patch_workbook_outline(
+    source: &[u8],
+    row_edits: &[WorkbookRowStateEdit],
+    column_edits: &[WorkbookColumnStateEdit],
+) -> Result<Vec<u8>, String> {
+    if row_edits.is_empty() && column_edits.is_empty() {
+        return Err("没有需要保存的行列隐藏分组变更".into());
+    }
+    if row_edits.len() + column_edits.len() > MAX_STRUCTURE_EDITS {
+        return Err(format!("单次最多保存 {MAX_STRUCTURE_EDITS} 个行列状态变更"));
+    }
+    let mut entries = load_package(source)?;
+    let sheet_paths = workbook_sheet_paths(&entries)?;
+    let touched_sheets = row_edits
+        .iter()
+        .map(|edit| edit.sheet.as_str())
+        .chain(column_edits.iter().map(|edit| edit.sheet.as_str()))
+        .collect::<HashSet<_>>();
+    for sheet in touched_sheets {
+        let path = sheet_paths
+            .get(sheet)
+            .ok_or_else(|| format!("工作表不存在: {sheet}"))?;
+        let xml = entries
+            .iter()
+            .find(|entry| &entry.name == path)
+            .ok_or_else(|| format!("工作表部件不存在: {path}"))?;
+        if parse_page_layout(&xml.data)?.protection.enabled {
+            return Err(format!(
+                "工作表 {sheet} 已受保护；LongEdit 不会绕过 Excel 工作表保护"
+            ));
+        }
+    }
+    for edit in row_edits {
+        validate_row_state_edit(edit)?;
+    }
+    for edit in column_edits {
+        validate_column_state_edit(edit)?;
+    }
+    for entry in &mut entries {
+        let rows = row_edits
+            .iter()
+            .filter(|edit| sheet_paths.get(&edit.sheet) == Some(&entry.name))
+            .collect::<Vec<_>>();
+        let columns = column_edits
+            .iter()
+            .filter(|edit| sheet_paths.get(&edit.sheet) == Some(&entry.name))
+            .collect::<Vec<_>>();
+        if !rows.is_empty() || !columns.is_empty() {
+            entry.data = patch_sheet_outline(&entry.data, &rows, &columns)?;
+        }
+    }
+    let cursor = Cursor::new(Vec::with_capacity(source.len() + 256));
+    let mut output = ZipWriter::new(cursor);
+    for entry in entries {
+        let options = SimpleFileOptions::default().compression_method(entry.compression);
+        if entry.is_dir {
+            output
+                .add_directory(entry.name, options)
+                .map_err(|error| format!("写入 XLSX 目录失败: {error}"))?;
+        } else {
+            output
+                .start_file(entry.name, options)
+                .map_err(|error| format!("写入 XLSX 部件失败: {error}"))?;
+            output
+                .write_all(&entry.data)
+                .map_err(|error| format!("写入 XLSX 部件内容失败: {error}"))?;
+        }
+    }
+    output
+        .finish()
+        .map(|cursor| cursor.into_inner())
+        .map_err(|error| format!("完成行列隐藏分组写回失败: {error}"))
 }
 
 pub fn patch_workbook(

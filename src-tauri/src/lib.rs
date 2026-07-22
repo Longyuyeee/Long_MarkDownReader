@@ -53,7 +53,7 @@ use commands::table::{
 use commands::workbook::{
     get_workbook_capabilities, import_workbook_sheet, read_workbook_file, read_workbook_sheet,
     recalculate_workbook_formulas, translate_workbook_formulas, update_workbook_freeze_pane,
-    write_workbook_cells,
+    update_workbook_outline, write_workbook_cells,
 };
 use commands::workspace::{analyze_workspace_health, get_workspace_overview};
 use services::data_migration::check_and_migrate_data;
@@ -227,6 +227,7 @@ pub fn run() {
             translate_workbook_formulas,
             write_workbook_cells,
             update_workbook_freeze_pane,
+            update_workbook_outline,
             build_pdf_annotation_reference,
             analyze_graph_health,
             repair_graph_links,

@@ -31,6 +31,7 @@ pub struct WorkbookCapabilities {
     pub formula_recalculation: WorkbookCapabilityLevel,
     pub row_dimensions: WorkbookCapabilityLevel,
     pub column_dimensions: WorkbookCapabilityLevel,
+    pub row_column_outline: WorkbookCapabilityLevel,
     pub merged_cells: WorkbookCapabilityLevel,
     pub freeze_panes: WorkbookCapabilityLevel,
     pub sort_filter_view: WorkbookCapabilityLevel,
@@ -248,6 +249,8 @@ pub struct WorkbookSheetPage {
     pub default_column_width: f64,
     pub row_heights: Vec<WorkbookRowHeight>,
     pub column_widths: Vec<WorkbookColumnWidth>,
+    pub row_states: Vec<WorkbookRowState>,
+    pub column_states: Vec<WorkbookColumnState>,
     pub merged_cells: Vec<WorkbookMergeRange>,
     pub named_styles: Vec<WorkbookNamedStyle>,
     pub freeze_pane: WorkbookFreezePane,
@@ -417,6 +420,25 @@ pub struct WorkbookColumnWidth {
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct WorkbookRowState {
+    pub row: usize,
+    pub hidden: bool,
+    pub outline_level: u8,
+    pub collapsed: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookColumnState {
+    pub start_column: usize,
+    pub end_column: usize,
+    pub hidden: bool,
+    pub outline_level: u8,
+    pub collapsed: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WorkbookMergeRange {
     pub top: usize,
     pub bottom: usize,
@@ -487,6 +509,37 @@ pub struct WorkbookColumnWidthEdit {
     pub start_column: usize,
     pub end_column: usize,
     pub width: Option<f64>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookRowStateEdit {
+    pub sheet: String,
+    pub row: usize,
+    pub hidden: bool,
+    pub outline_level: u8,
+    pub collapsed: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookColumnStateEdit {
+    pub sheet: String,
+    pub start_column: usize,
+    pub end_column: usize,
+    pub hidden: bool,
+    pub outline_level: u8,
+    pub collapsed: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookOutlinePayload {
+    pub expected_signature: String,
+    #[serde(default)]
+    pub row_edits: Vec<WorkbookRowStateEdit>,
+    #[serde(default)]
+    pub column_edits: Vec<WorkbookColumnStateEdit>,
 }
 
 #[derive(Clone, Debug, Deserialize)]

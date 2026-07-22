@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-21",
+  "updatedAt": "2026-07-22",
   "engineId": "calamine-ooxml-ironcalc-v14",
   "compatibilityProfileId": "xlsx-progressive-editing-v1",
   "format": "xlsx",
@@ -84,13 +84,13 @@
     },
     {
       "id": "sheet_structure",
-      "label": "行高、列宽与合并区域",
+      "label": "行高、列宽、隐藏、分组与合并区域",
       "read": "supported",
       "view": "supported",
       "edit": "supported",
       "calculate": "not_applicable",
       "roundTrip": "supported",
-      "evidence": "structure edit and re-read tests"
+      "evidence": "dimension/merge tests + hidden/outline interval split and package-preservation tests"
     },
     {
       "id": "volatile_functions",

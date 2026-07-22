@@ -6,17 +6,17 @@ use crate::formats::table::{
 };
 use crate::formats::workbook::{
     WorkbookCalculationPayload, WorkbookCalculationResult, WorkbookCapabilities,
-    WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine, WorkbookSheetPage,
-    WorkbookWritePayload,
+    WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine,
+    WorkbookOutlinePayload, WorkbookSheetPage, WorkbookWritePayload,
 };
 use crate::formats::workbook_calculation::calculate_workbook;
 use crate::formats::workbook_formula::{
     translate_formula, WorkbookFormulaTranslation, MAX_FORMULA_TRANSLATIONS,
 };
 use crate::formats::workbook_ooxml::{
-    patch_workbook, patch_workbook_freeze_pane, read_workbook_defined_names,
-    read_workbook_linked_data, read_workbook_protection, read_workbook_sheet_layout,
-    validate_workbook_package,
+    patch_workbook, patch_workbook_freeze_pane, patch_workbook_outline,
+    read_workbook_defined_names, read_workbook_linked_data, read_workbook_protection,
+    read_workbook_sheet_layout, validate_workbook_package,
 };
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
@@ -100,6 +100,7 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             formula_recalculation: WorkbookCapabilityLevel::Supported,
             row_dimensions: WorkbookCapabilityLevel::Supported,
             column_dimensions: WorkbookCapabilityLevel::Supported,
+            row_column_outline: WorkbookCapabilityLevel::Supported,
             merged_cells: WorkbookCapabilityLevel::Supported,
             freeze_panes: WorkbookCapabilityLevel::Supported,
             sort_filter_view: WorkbookCapabilityLevel::Supported,
@@ -213,6 +214,8 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             default_column_width: layout.default_column_width,
             row_heights: layout.row_heights,
             column_widths: layout.column_widths,
+            row_states: layout.row_states,
+            column_states: layout.column_states,
             merged_cells: layout.merged_cells,
             named_styles: layout.named_styles,
             freeze_pane: layout.freeze_pane,
@@ -367,6 +370,33 @@ pub async fn update_workbook_freeze_pane(
     .map_err(|error| format!("冻结窗格写回任务失败: {error}"))?
 }
 
+#[tauri::command]
+pub async fn update_workbook_outline(
+    library_root: String,
+    path: String,
+    payload: WorkbookOutlinePayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再修改行列结构".into());
+        }
+        let output = patch_workbook_outline(&source, &payload.row_edits, &payload.column_edits)?;
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("行列隐藏分组写回任务失败: {error}"))?
+}
+
 fn sheet_to_table(source: &Path, sheet: &str) -> Result<PathBuf, String> {
     let mut workbook = open_xlsx(source)?;
     if !workbook.sheet_names().iter().any(|name| name == sheet) {
@@ -466,8 +496,9 @@ pub async fn import_workbook_sheet(
 mod tests {
     use super::*;
     use crate::formats::workbook::{
-        WorkbookCellEdit, WorkbookCellStyleEdit, WorkbookColumnWidthEdit, WorkbookMergeEdit,
-        WorkbookRowHeightEdit, WorkbookStylePatch, WorkbookWritePayload,
+        WorkbookCellEdit, WorkbookCellStyleEdit, WorkbookColumnStateEdit, WorkbookColumnWidthEdit,
+        WorkbookMergeEdit, WorkbookOutlinePayload, WorkbookRowHeightEdit, WorkbookRowStateEdit,
+        WorkbookStylePatch, WorkbookWritePayload,
     };
     use rust_xlsxwriter::{
         ConditionalFormatCell, ConditionalFormatCellRule, Format, Formula, Workbook,
@@ -1054,6 +1085,142 @@ mod tests {
                 .freeze_pane,
             crate::formats::workbook::WorkbookFreezePane::default()
         );
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn updates_row_column_visibility_and_outline_without_touching_other_parts() {
+        let (base, path) = compatibility_fixture_copy("row-column-outline");
+        let root = base.join("library");
+        let source = fs::read(&path).unwrap();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let updated = tauri::async_runtime::block_on(update_workbook_outline(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookOutlinePayload {
+                expected_signature: document.signature.clone(),
+                row_edits: vec![WorkbookRowStateEdit {
+                    sheet: "Summary".into(),
+                    row: 1,
+                    hidden: true,
+                    outline_level: 2,
+                    collapsed: false,
+                }],
+                column_edits: vec![WorkbookColumnStateEdit {
+                    sheet: "Summary".into(),
+                    start_column: 1,
+                    end_column: 2,
+                    hidden: false,
+                    outline_level: 1,
+                    collapsed: false,
+                }],
+            },
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Summary", 0, 10)
+            .unwrap();
+        assert_eq!(page.row_states.len(), 1);
+        assert!(page.row_states[0].hidden);
+        assert_eq!(page.row_states[0].outline_level, 2);
+        assert_eq!(page.column_states.len(), 2);
+        assert_eq!(page.column_states[0].start_column, 1);
+        assert_eq!(page.column_states[1].end_column, 2);
+        assert!(page
+            .column_states
+            .iter()
+            .all(|state| state.outline_level == 1));
+
+        let before = zip_parts(&source);
+        let after = zip_parts(&fs::read(&path).unwrap());
+        let changed = before
+            .iter()
+            .filter_map(|(name, bytes)| (after.get(name) != Some(bytes)).then_some(name.as_str()))
+            .collect::<Vec<_>>();
+        assert_eq!(changed, ["xl/worksheets/sheet1.xml"]);
+
+        let stale = tauri::async_runtime::block_on(update_workbook_outline(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookOutlinePayload {
+                expected_signature: document.signature,
+                row_edits: vec![WorkbookRowStateEdit {
+                    sheet: "Summary".into(),
+                    row: 1,
+                    hidden: false,
+                    outline_level: 0,
+                    collapsed: false,
+                }],
+                column_edits: vec![],
+            },
+        ));
+        assert!(stale.unwrap_err().contains("其他程序修改"));
+
+        let restored = tauri::async_runtime::block_on(update_workbook_outline(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookOutlinePayload {
+                expected_signature: updated.signature,
+                row_edits: vec![WorkbookRowStateEdit {
+                    sheet: "Summary".into(),
+                    row: 1,
+                    hidden: false,
+                    outline_level: 0,
+                    collapsed: false,
+                }],
+                column_edits: vec![WorkbookColumnStateEdit {
+                    sheet: "Summary".into(),
+                    start_column: 1,
+                    end_column: 2,
+                    hidden: false,
+                    outline_level: 0,
+                    collapsed: false,
+                }],
+            },
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Summary", 0, 10)
+            .unwrap();
+        assert!(page.row_states.is_empty());
+        assert!(page.column_states.is_empty());
+
+        let clean_bytes = fs::read(&path).unwrap();
+        let invalid_level = tauri::async_runtime::block_on(update_workbook_outline(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookOutlinePayload {
+                expected_signature: restored.signature.clone(),
+                row_edits: vec![WorkbookRowStateEdit {
+                    sheet: "Summary".into(),
+                    row: 1,
+                    hidden: false,
+                    outline_level: 8,
+                    collapsed: false,
+                }],
+                column_edits: vec![],
+            },
+        ));
+        assert!(invalid_level.unwrap_err().contains("目标无效"));
+        assert_eq!(fs::read(&path).unwrap(), clean_bytes);
+
+        let protected = tauri::async_runtime::block_on(update_workbook_outline(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookOutlinePayload {
+                expected_signature: restored.signature,
+                row_edits: vec![WorkbookRowStateEdit {
+                    sheet: "Protected".into(),
+                    row: 1,
+                    hidden: true,
+                    outline_level: 1,
+                    collapsed: false,
+                }],
+                column_edits: vec![],
+            },
+        ));
+        assert!(protected.unwrap_err().contains("已受保护"));
+        assert_eq!(fs::read(&path).unwrap(), clean_bytes);
         fs::remove_dir_all(base).unwrap();
     }
 

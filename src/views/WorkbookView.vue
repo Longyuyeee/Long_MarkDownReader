@@ -104,6 +104,13 @@
       <span class="toolbar-divider"></span>
       <button title="设置选中行的行高" :disabled="!selectedCell || saving" @click="setSelectedRowHeight">行高</button>
       <button title="设置选中列的列宽" :disabled="!selectedCell || saving" @click="setSelectedColumnWidth">列宽</button>
+      <select title="行列隐藏与分组" :disabled="!selectedAxis || saving || updatingStructure || Boolean(dirtyCount)" @change="applyAxisAction">
+        <option value="">行列操作…</option>
+        <option value="hide">隐藏所选</option>
+        <option value="show">取消隐藏</option>
+        <option value="group">建立分组</option>
+        <option value="ungroup">取消分组</option>
+      </select>
       <button title="合并选中的连续区域" :disabled="!canMergeSelection || saving" @click="mergeSelection">合并</button>
       <button title="取消当前合并区域" :disabled="!selectedMerge || saving" @click="unmergeSelection">取消合并</button>
       <span class="toolbar-divider"></span>
@@ -162,11 +169,11 @@
           <div class="sheet-canvas" :style="{ width: `${sheetWidth}px` }">
             <div class="sheet-header" :style="gridStyle">
               <div class="row-number corner" title="选择当前工作区" @pointerdown="selectAllCells">#</div>
-              <div v-for="column in canvasColumnCount" :key="column" class="column-header" :class="{ active: isColumnSelected(column - 1), frozen: column <= effectiveFreeze.columns }" :style="frozenColumnStyle(column - 1, true)" @pointerdown="selectColumn(column - 1, $event)">{{ columnLabel(column - 1) }}</div>
+              <div v-for="column in canvasColumnCount" :key="column" class="column-header" :class="{ active: isColumnSelected(column - 1), frozen: column <= effectiveFreeze.columns, hidden: columnState(column - 1).hidden, outlined: columnState(column - 1).outlineLevel }" :style="frozenColumnStyle(column - 1, true)" :title="axisStateTitle('column', column - 1)" @pointerdown="selectColumn(column - 1, $event)">{{ columnLabel(column - 1) }}</div>
             </div>
             <div class="virtual-sheet" :style="{ height: `${sheetHeight}px` }">
               <div v-for="row in visibleRows" :key="row.index" class="sheet-row" :style="[rowLayoutStyle(row.index), gridStyle]">
-                <div class="row-number" :class="{ active: isRowSelected(row.index) }" @pointerdown="selectRow(row.index, $event)">{{ row.index + 1 }}</div>
+                <div class="row-number" :class="{ active: isRowSelected(row.index), hidden: rowState(row.index).hidden, outlined: rowState(row.index).outlineLevel }" :title="axisStateTitle('row', row.index)" @pointerdown="selectRow(row.index, $event)">{{ row.index + 1 }}</div>
                 <div
                   v-for="column in canvasColumnCount"
                   :key="column"
@@ -291,6 +298,8 @@ interface WorkbookSheetPage {
   defaultColumnWidth: number
   rowHeights: WorkbookRowHeight[]
   columnWidths: WorkbookColumnWidth[]
+  rowStates: WorkbookRowState[]
+  columnStates: WorkbookColumnState[]
   mergedCells: WorkbookMergeRange[]
   namedStyles: WorkbookNamedStyle[]
   freezePane: WorkbookFreezePane
@@ -306,6 +315,10 @@ interface WorkbookCellEdit { sheet: string; row: number; column: number; input: 
 interface WorkbookCellStyleEdit { sheet: string; row: number; column: number; patch: WorkbookStylePatch }
 interface WorkbookRowHeightEdit { sheet: string; row: number; height: number | null }
 interface WorkbookColumnWidthEdit { sheet: string; startColumn: number; endColumn: number; width: number | null }
+interface WorkbookRowState { row: number; hidden: boolean; outlineLevel: number; collapsed: boolean }
+interface WorkbookColumnState { startColumn: number; endColumn: number; hidden: boolean; outlineLevel: number; collapsed: boolean }
+interface WorkbookRowStateEdit extends WorkbookRowState { sheet: string }
+interface WorkbookColumnStateEdit extends WorkbookColumnState { sheet: string }
 interface WorkbookMergeEdit extends WorkbookMergeRange { sheet: string; action: 'merge' | 'unmerge' }
 interface CellSelection { sheet: string; row: number; column: number }
 interface SelectionArea { top: number; bottom: number; left: number; right: number }
@@ -353,6 +366,8 @@ const dataViewLoading = ref(false)
 const dataViewPosition = ref(-1)
 const sourceRowHeights = ref(new Map<number, number>())
 const sourceColumnWidths = ref(new Map<number, number>())
+const sourceRowStates = ref(new Map<number, WorkbookRowState>())
+const sourceColumnStates = ref(new Map<number, WorkbookColumnState>())
 const sourceMergedCells = ref<WorkbookMergeRange[]>([])
 const undoStack = ref<EditAction[]>([])
 const redoStack = ref<EditAction[]>([])
@@ -422,14 +437,18 @@ const rowHeightPoints = (row: number) => {
   const draft = rowHeightDrafts.value.get(rowHeightKey(activeSheet.value, row))
   return draft === null ? (sheetInfo.value?.defaultRowHeight || 15) : (draft ?? sourceRowHeights.value.get(row) ?? sheetInfo.value?.defaultRowHeight ?? 15)
 }
-const rowPixelHeight = (row: number) => Math.max(MIN_ROW_PIXELS, rowHeightPoints(row) * 4 / 3 + 8)
+const emptyAxisState = { hidden: false, outlineLevel: 0, collapsed: false }
+const rowState = (row: number) => sourceRowStates.value.get(row) || { row, ...emptyAxisState }
+const columnState = (column: number) => sourceColumnStates.value.get(column) || { startColumn: column, endColumn: column, ...emptyAxisState }
+const rowPixelHeight = (row: number) => rowState(row).hidden ? 8 : Math.max(MIN_ROW_PIXELS, rowHeightPoints(row) * 4 / 3 + 8)
 const columnWidthUnits = (column: number) => {
   const draft = columnWidthDrafts.value.get(columnWidthKey(activeSheet.value, column))
   return draft === null ? (sheetInfo.value?.defaultColumnWidth || 8.43) : (draft ?? sourceColumnWidths.value.get(column) ?? sheetInfo.value?.defaultColumnWidth ?? 8.43)
 }
-const columnPixelWidth = (column: number) => Math.max(MIN_COLUMN_PIXELS, columnWidthUnits(column) * 7 + 5)
+const columnPixelWidth = (column: number) => columnState(column).hidden ? 12 : Math.max(MIN_COLUMN_PIXELS, columnWidthUnits(column) * 7 + 5)
 const customRowDeltas = computed(() => {
   const rows = new Set<number>(sourceRowHeights.value.keys())
+  sourceRowStates.value.forEach((state, row) => { if (state.hidden) rows.add(row) })
   for (const key of rowHeightDrafts.value.keys()) {
     const [sheet, row] = key.split('\u0000')
     if (sheet === activeSheet.value) rows.add(Number(row))
@@ -455,6 +474,13 @@ const dirtyCount = computed(() => drafts.value.size + styleDrafts.value.size + r
 const selectionBounds = computed(() => {
   const areas = selectionAreas.value
   return areas.length ? areas[areas.length - 1] : null
+})
+const selectedAxis = computed(() => {
+  const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
+  if (!area) return null
+  if (area.left === 0 && area.right === canvasColumnCount.value - 1 && !(area.top === 0 && area.bottom === canvasRowCount.value - 1)) return { kind: 'row' as const, start: area.top, end: area.bottom }
+  if (area.top === 0 && area.bottom === canvasRowCount.value - 1 && !(area.left === 0 && area.right === canvasColumnCount.value - 1)) return { kind: 'column' as const, start: area.left, end: area.right }
+  return null
 })
 const currentMergedRanges = computed(() => {
   const ranges = sourceMergedCells.value.map(range => ({ ...range }))
@@ -1061,6 +1087,45 @@ const setSelectedColumnWidth = () => {
   undoStack.value.push({ columnWidthChanges: changes })
   redoStack.value = []
 }
+const axisStateTitle = (kind: 'row' | 'column', index: number) => {
+  const state = kind === 'row' ? rowState(index) : columnState(index)
+  const label = kind === 'row' ? `第 ${index + 1} 行` : `${columnLabel(index)} 列`
+  const details = [state.hidden ? '已隐藏' : '', state.outlineLevel ? `${state.outlineLevel} 级分组` : ''].filter(Boolean)
+  return details.length ? `${label} · ${details.join(' · ')}` : label
+}
+const applyAxisAction = async (event: Event) => {
+  const select = event.target as HTMLSelectElement
+  const action = select.value as 'hide' | 'show' | 'group' | 'ungroup' | ''
+  select.value = ''
+  const axis = selectedAxis.value
+  if (!action || !axis || !workbook.value || updatingStructure.value || dirtyCount.value) return
+  if (axis.end - axis.start + 1 > MAX_BATCH_CELLS) return void message.error(`单次最多修改 ${MAX_BATCH_CELLS.toLocaleString()} 行或列`)
+  const rowEdits: WorkbookRowStateEdit[] = []
+  const columnEdits: WorkbookColumnStateEdit[] = []
+  for (let index = axis.start; index <= axis.end; index += 1) {
+    const current = axis.kind === 'row' ? rowState(index) : columnState(index)
+    const hidden = action === 'hide' ? true : action === 'show' ? false : current.hidden
+    const outlineLevel = action === 'group' ? Math.min(7, current.outlineLevel + 1) : action === 'ungroup' ? Math.max(0, current.outlineLevel - 1) : current.outlineLevel
+    const collapsed = outlineLevel ? current.collapsed : false
+    if (axis.kind === 'row') rowEdits.push({ sheet: activeSheet.value, row: index, hidden, outlineLevel, collapsed })
+    else columnEdits.push({ sheet: activeSheet.value, startColumn: index, endColumn: index, hidden, outlineLevel, collapsed })
+  }
+  updatingStructure.value = true
+  try {
+    const document = await invoke<WorkbookDocument>('update_workbook_outline', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: { expectedSignature: workbook.value.signature, rowEdits, columnEdits },
+    })
+    workbook.value = document
+    const sheet = activeSheet.value
+    generation += 1
+    activeSheet.value = ''
+    await selectSheet(sheet)
+    message.success(action === 'hide' ? '所选行列已隐藏' : action === 'show' ? '所选行列已显示' : action === 'group' ? '分组层级已增加' : '分组层级已减少')
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
+}
 const mergeSelection = () => {
   const area = canMergeSelection.value ? selectionBounds.value : null
   if (!area) return
@@ -1337,6 +1402,14 @@ const loadPage = async (offset: number) => {
       for (let column = item.startColumn; column <= item.endColumn && column < 256; column += 1) nextColumnWidths.set(column, item.width)
     })
     sourceColumnWidths.value = nextColumnWidths
+    const nextRowStates = new Map(sourceRowStates.value)
+    page.rowStates.forEach(item => nextRowStates.set(item.row, item))
+    sourceRowStates.value = nextRowStates
+    const nextColumnStates = new Map(sourceColumnStates.value)
+    page.columnStates.forEach(item => {
+      for (let column = item.startColumn; column <= item.endColumn && column < 256; column += 1) nextColumnStates.set(column, item)
+    })
+    sourceColumnStates.value = nextColumnStates
     const mergeMap = new Map(sourceMergedCells.value.map(range => [mergeKey(activeSheet.value, range), range]))
     page.mergedCells.forEach(range => mergeMap.set(mergeKey(activeSheet.value, range), range))
     sourceMergedCells.value = Array.from(mergeMap.values())
@@ -1361,6 +1434,8 @@ const selectSheet = async (sheet: string) => {
   loadedRows.value = new Map()
   sourceRowHeights.value = new Map()
   sourceColumnWidths.value = new Map()
+  sourceRowStates.value = new Map()
+  sourceColumnStates.value = new Map()
   sourceMergedCells.value = []
   filterQuery.value = ''
   filterColumn.value = -1
@@ -1705,6 +1780,7 @@ onBeforeUnmount(() => {
 .row-number { position: sticky; left: 0; z-index: 8; display: grid; place-items: center; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 91%, #d9e3ed); font-size: 8px; }
 .row-number:not(.corner),.column-header,.corner { cursor: pointer; user-select: none; }
 .row-number.active,.column-header.active { color: var(--theme-primary); background: color-mix(in srgb, var(--theme-card) 78%, var(--theme-primary)); }
+.row-number.outlined,.column-header.outlined { box-shadow: inset 3px 0 rgba(var(--theme-primary-rgb),.5); }.row-number.hidden,.column-header.hidden { overflow: hidden; color: transparent; background: color-mix(in srgb, var(--theme-card) 70%, var(--theme-primary)); }
 .corner { z-index: 24; }
 .column-header { display: grid; place-items: center; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 94%, #dce6ef); font-size: 9px; font-weight: 700; }
 .column-header.frozen,.workbook-cell.frozen { box-shadow: 1px 0 0 rgba(var(--theme-primary-rgb),.28); }
