@@ -3735,27 +3735,132 @@ pub fn patch_workbook_outline(
         .map_err(|error| format!("完成行列隐藏分组写回失败: {error}"))
 }
 
-fn migrated_row_index(row: usize, change: &WorkbookStructureChange) -> Option<usize> {
+fn migrated_axis_index(index: usize, change: &WorkbookStructureChange) -> Option<usize> {
+    let limit = match change.axis {
+        WorkbookStructureAxis::Row => MAX_XLSX_ROWS,
+        WorkbookStructureAxis::Column => MAX_XLSX_COLUMNS,
+    };
     match change.action {
         WorkbookStructureAction::Insert => {
-            if row < change.index {
-                Some(row)
+            if index < change.index {
+                Some(index)
             } else {
-                row.checked_add(change.count)
-                    .filter(|value| *value < MAX_XLSX_ROWS)
+                index
+                    .checked_add(change.count)
+                    .filter(|value| *value < limit)
             }
         }
         WorkbookStructureAction::Delete => {
             let end = change.index + change.count;
-            if row < change.index {
-                Some(row)
-            } else if row < end {
+            if index < change.index {
+                Some(index)
+            } else if index < end {
                 None
             } else {
-                Some(row - change.count)
+                Some(index - change.count)
             }
         }
     }
+}
+
+fn replace_column_range(
+    event: &BytesStart<'_>,
+    start: usize,
+    end: usize,
+) -> Result<BytesStart<'static>, String> {
+    let mut updated = BytesStart::new("col");
+    for attribute in event.attributes().with_checks(false) {
+        let attribute = attribute.map_err(|error| format!("解析列定义属性失败: {error}"))?;
+        if !matches!(attribute.key.as_ref(), b"min" | b"max") {
+            updated.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+        }
+    }
+    let min = (start + 1).to_string();
+    let max = (end + 1).to_string();
+    updated.push_attribute(("min", min.as_str()));
+    updated.push_attribute(("max", max.as_str()));
+    Ok(updated.into_owned())
+}
+
+fn migrate_column_records(
+    records: Vec<ColumnRecord>,
+    change: &WorkbookStructureChange,
+) -> Result<Vec<ColumnRecord>, String> {
+    if change.axis != WorkbookStructureAxis::Column {
+        return Ok(records);
+    }
+    let mut output = Vec::with_capacity(records.len() + 2);
+    let change_end = change.index + change.count;
+    for record in records {
+        match change.action {
+            WorkbookStructureAction::Insert if record.end < change.index => output.push(record),
+            WorkbookStructureAction::Insert if record.start >= change.index => {
+                let start = record
+                    .start
+                    .checked_add(change.count)
+                    .ok_or("列定义迁移越界")?;
+                let end = record
+                    .end
+                    .checked_add(change.count)
+                    .ok_or("列定义迁移越界")?;
+                if end >= MAX_XLSX_COLUMNS {
+                    return Err("列定义迁移超过 XLSX 列上限".into());
+                }
+                output.push(ColumnRecord {
+                    start,
+                    end,
+                    event: replace_column_range(&record.event, start, end)?,
+                });
+            }
+            WorkbookStructureAction::Insert => {
+                output.push(ColumnRecord {
+                    start: record.start,
+                    end: change.index - 1,
+                    event: replace_column_range(&record.event, record.start, change.index - 1)?,
+                });
+                let start = change.index + change.count;
+                let end = record.end + change.count;
+                if end >= MAX_XLSX_COLUMNS {
+                    return Err("列定义迁移超过 XLSX 列上限".into());
+                }
+                output.push(ColumnRecord {
+                    start,
+                    end,
+                    event: replace_column_range(&record.event, start, end)?,
+                });
+            }
+            WorkbookStructureAction::Delete if record.end < change.index => output.push(record),
+            WorkbookStructureAction::Delete if record.start >= change_end => {
+                let start = record.start - change.count;
+                let end = record.end - change.count;
+                output.push(ColumnRecord {
+                    start,
+                    end,
+                    event: replace_column_range(&record.event, start, end)?,
+                });
+            }
+            WorkbookStructureAction::Delete => {
+                if record.start < change.index {
+                    output.push(ColumnRecord {
+                        start: record.start,
+                        end: change.index - 1,
+                        event: replace_column_range(&record.event, record.start, change.index - 1)?,
+                    });
+                }
+                if record.end >= change_end {
+                    let start = change.index;
+                    let end = record.end - change.count;
+                    output.push(ColumnRecord {
+                        start,
+                        end,
+                        event: replace_column_range(&record.event, start, end)?,
+                    });
+                }
+            }
+        }
+    }
+    output.sort_by_key(|record| (record.start, record.end));
+    Ok(output)
 }
 
 fn replace_xml_attribute(
@@ -3805,22 +3910,28 @@ fn migrate_reference_list(
         .join(" "))
 }
 
-fn migrate_frozen_rows(rows: usize, change: &WorkbookStructureChange) -> Result<usize, String> {
+fn migrate_frozen_axis(
+    value: usize,
+    change: &WorkbookStructureChange,
+    limit: usize,
+    axis_name: &str,
+) -> Result<usize, String> {
     match change.action {
         WorkbookStructureAction::Insert => {
-            if change.index < rows {
-                rows.checked_add(change.count)
-                    .filter(|value| *value < MAX_XLSX_ROWS)
-                    .ok_or_else(|| "冻结窗格迁移超过 XLSX 行上限".into())
+            if change.index < value {
+                value
+                    .checked_add(change.count)
+                    .filter(|value| *value < limit)
+                    .ok_or_else(|| format!("冻结窗格迁移超过 XLSX {axis_name}上限"))
             } else {
-                Ok(rows)
+                Ok(value)
             }
         }
         WorkbookStructureAction::Delete => {
-            if change.index >= rows {
-                Ok(rows)
+            if change.index >= value {
+                Ok(value)
             } else {
-                Ok(rows - change.count.min(rows - change.index))
+                Ok(value - change.count.min(value - change.index))
             }
         }
     }
@@ -3835,11 +3946,16 @@ fn migrate_selection_cell(
     if migrated != "#REF!" {
         return Ok(migrated);
     }
-    let (_, column) = parse_cell_reference(reference)?;
-    cell_reference(change.index.min(MAX_XLSX_ROWS - 1), column)
+    let (row, column) = parse_cell_reference(reference)?;
+    match change.axis {
+        WorkbookStructureAxis::Row => cell_reference(change.index.min(MAX_XLSX_ROWS - 1), column),
+        WorkbookStructureAxis::Column => {
+            cell_reference(row, change.index.min(MAX_XLSX_COLUMNS - 1))
+        }
+    }
 }
 
-fn patch_table_row_structure(
+fn patch_table_structure(
     xml: &[u8],
     current_sheet: &str,
     change: &WorkbookStructureChange,
@@ -3862,6 +3978,15 @@ fn patch_table_row_structure(
                 let migrated = migrate_workbook_reference(&reference, Some(current_sheet), change)?;
                 if migrated == "#REF!" {
                     return Err("本次删除会完整移除 Excel 表格；请先将表格转换为普通区域".into());
+                }
+                if change.axis == WorkbookStructureAxis::Column {
+                    let original = parse_range_reference(&reference)?;
+                    let updated = parse_range_reference(&migrated)?;
+                    if original.right - original.left != updated.right - updated.left {
+                        return Err(
+                            "本次列插删会改变 Excel Table 列结构；请先将表格转换为普通区域".into(),
+                        );
+                    }
                 }
                 let updated = replace_xml_attribute(start, b"ref", &migrated, false)?;
                 writer
@@ -3913,16 +4038,17 @@ fn patch_table_row_structure(
     Ok(writer.into_inner())
 }
 
-fn patch_drawing_row_anchors(
-    xml: &[u8],
-    change: &WorkbookStructureChange,
-) -> Result<Vec<u8>, String> {
+fn patch_drawing_anchors(xml: &[u8], change: &WorkbookStructureChange) -> Result<Vec<u8>, String> {
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(false);
     let mut writer = Writer::new(Vec::with_capacity(xml.len() + 64));
     let mut buffer = Vec::new();
     let mut anchor_depth = 0usize;
-    let mut row_element = false;
+    let coordinate_name = match change.axis {
+        WorkbookStructureAxis::Row => b"row".as_slice(),
+        WorkbookStructureAxis::Column => b"col".as_slice(),
+    };
+    let mut coordinate_element = false;
     loop {
         let event = reader
             .read_event_into(&mut buffer)
@@ -3935,24 +4061,26 @@ fn patch_drawing_row_anchors(
                     .map_err(|error| format!("写入 Drawing 锚点节点失败: {error}"))?;
             }
             Event::Start(ref start)
-                if anchor_depth > 0 && start.local_name().as_ref() == b"row" =>
+                if anchor_depth > 0 && start.local_name().as_ref() == coordinate_name =>
             {
-                row_element = true;
+                coordinate_element = true;
                 writer
                     .write_event(event.into_owned())
                     .map_err(|error| format!("写入 Drawing 行锚点失败: {error}"))?;
             }
-            Event::Text(ref text) if row_element => {
-                let row = decode_xml_text(text, "Drawing 行锚点")?
+            Event::Text(ref text) if coordinate_element => {
+                let coordinate = decode_xml_text(text, "Drawing 锚点坐标")?
                     .parse::<usize>()
-                    .map_err(|_| "Drawing 行锚点不是有效整数")?;
-                let migrated = migrated_row_index(row, change).unwrap_or(change.index);
+                    .map_err(|_| "Drawing 锚点坐标不是有效整数")?;
+                let migrated = migrated_axis_index(coordinate, change).unwrap_or(change.index);
                 writer
                     .write_event(Event::Text(BytesText::new(&migrated.to_string())))
                     .map_err(|error| format!("写入迁移后的 Drawing 行锚点失败: {error}"))?;
             }
-            Event::End(ref end) if row_element && end.local_name().as_ref() == b"row" => {
-                row_element = false;
+            Event::End(ref end)
+                if coordinate_element && end.local_name().as_ref() == coordinate_name =>
+            {
+                coordinate_element = false;
                 writer
                     .write_event(event.into_owned())
                     .map_err(|error| format!("结束 Drawing 行锚点失败: {error}"))?;
@@ -4251,8 +4379,18 @@ fn patch_frozen_pane_event(
         }
         Ok(value as usize)
     };
-    let rows = migrate_frozen_rows(parse_split(b"ySplit")?, change)?;
-    let columns = parse_split(b"xSplit")?;
+    let original_rows = parse_split(b"ySplit")?;
+    let original_columns = parse_split(b"xSplit")?;
+    let rows = if change.axis == WorkbookStructureAxis::Row {
+        migrate_frozen_axis(original_rows, change, MAX_XLSX_ROWS, "行")?
+    } else {
+        original_rows
+    };
+    let columns = if change.axis == WorkbookStructureAxis::Column {
+        migrate_frozen_axis(original_columns, change, MAX_XLSX_COLUMNS, "列")?
+    } else {
+        original_columns
+    };
     if rows == 0 && columns == 0 {
         return Err("本次删除会完整移除冻结窗格，请先手动取消冻结".into());
     }
@@ -4265,13 +4403,19 @@ fn patch_frozen_pane_event(
     };
     let top_left = cell_reference(rows, columns)?;
     let rows_text = rows.to_string();
+    let columns_text = columns.to_string();
     let updated = replace_xml_attribute(event, b"ySplit", &rows_text, false)?;
+    let updated = replace_xml_attribute(&updated, b"xSplit", &columns_text, false)?;
     let updated = replace_xml_attribute(&updated, b"topLeftCell", &top_left, false)?;
     let updated = replace_xml_attribute(&updated, b"activePane", active_pane, false)?;
     Ok((updated, active_pane.into()))
 }
 
-fn validate_plain_row_structure_sheet(xml: &[u8], target_sheet: bool) -> Result<(), String> {
+fn validate_plain_structure_sheet(
+    xml: &[u8],
+    target_sheet: bool,
+    change: &WorkbookStructureChange,
+) -> Result<(), String> {
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(true);
     let mut buffer = Vec::new();
@@ -4288,16 +4432,22 @@ fn validate_plain_row_structure_sheet(xml: &[u8], target_sheet: bool) -> Result<
                     }
                     b"pivotTableParts" | b"pivotTablePart" => Some("数据透视表"),
                     b"ignoredErrors" | b"protectedRanges" | b"scenarios" | b"rowBreaks"
+                    | b"colBreaks"
                         if target_sheet =>
                     {
                         Some("带范围的工作表扩展结构")
+                    }
+                    b"filterColumn"
+                        if target_sheet && change.axis == WorkbookStructureAxis::Column =>
+                    {
+                        Some("活动筛选条件")
                     }
                     b"extLst" => Some("未知工作表扩展结构"),
                     _ => None,
                 };
                 if let Some(feature) = feature {
                     return Err(format!(
-                        "当前行结构事务暂不支持包含{feature}的目标工作表；请等待 S8-1B2B"
+                        "当前工作表结构事务暂不支持包含{feature}的目标工作表"
                     ));
                 }
             }
@@ -4330,13 +4480,20 @@ fn sheet_has_cells(xml: &[u8]) -> Result<bool, String> {
     }
 }
 
-fn patch_sheet_row_structure(
+fn patch_sheet_structure_axis(
     xml: &[u8],
     current_sheet: &str,
     change: &WorkbookStructureChange,
     target_sheet: bool,
 ) -> Result<Vec<u8>, String> {
     let target_has_cells = target_sheet && sheet_has_cells(xml)?;
+    let has_columns =
+        target_sheet && change.axis == WorkbookStructureAxis::Column && has_element(xml, b"cols")?;
+    let columns = if target_sheet && change.axis == WorkbookStructureAxis::Column {
+        migrate_column_records(read_column_records(xml)?, change)?
+    } else {
+        Vec::new()
+    };
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(false);
     let mut writer = Writer::new(Vec::with_capacity(xml.len() + 128));
@@ -4348,13 +4505,44 @@ fn patch_sheet_row_structure(
             .read_event_into(&mut buffer)
             .map_err(|error| format!("解析工作表行结构失败: {error}"))?;
         match event {
-            Event::Start(ref start) if target_sheet && start.local_name().as_ref() == b"row" => {
+            Event::Start(ref start)
+                if target_sheet
+                    && change.axis == WorkbookStructureAxis::Column
+                    && start.local_name().as_ref() == b"cols" =>
+            {
+                skip_element(&mut reader, b"cols", &mut buffer)?;
+                write_columns(&mut writer, &columns)?;
+            }
+            Event::Empty(ref start)
+                if target_sheet
+                    && change.axis == WorkbookStructureAxis::Column
+                    && start.local_name().as_ref() == b"cols" =>
+            {
+                write_columns(&mut writer, &columns)?;
+            }
+            Event::Start(ref start)
+                if target_sheet
+                    && change.axis == WorkbookStructureAxis::Column
+                    && start.local_name().as_ref() == b"sheetData" =>
+            {
+                if !has_columns && !columns.is_empty() {
+                    write_columns(&mut writer, &columns)?;
+                }
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("写入工作表数据失败: {error}"))?;
+            }
+            Event::Start(ref start)
+                if target_sheet
+                    && change.axis == WorkbookStructureAxis::Row
+                    && start.local_name().as_ref() == b"row" =>
+            {
                 let number = xml_value(start, b"r", reader.decoder())?
                     .ok_or("工作表行缺少行号")?
                     .parse::<usize>()
                     .map_err(|_| "工作表行号无效")?;
                 let row = number.checked_sub(1).ok_or("工作表行号无效")?;
-                let Some(migrated) = migrated_row_index(row, change) else {
+                let Some(migrated) = migrated_axis_index(row, change) else {
                     skip_element(&mut reader, b"row", &mut buffer)?;
                     buffer.clear();
                     continue;
@@ -4369,13 +4557,17 @@ fn patch_sheet_row_structure(
                     )?))
                     .map_err(|error| format!("写入迁移后的工作表行失败: {error}"))?;
             }
-            Event::Empty(ref start) if target_sheet && start.local_name().as_ref() == b"row" => {
+            Event::Empty(ref start)
+                if target_sheet
+                    && change.axis == WorkbookStructureAxis::Row
+                    && start.local_name().as_ref() == b"row" =>
+            {
                 let number = xml_value(start, b"r", reader.decoder())?
                     .ok_or("工作表行缺少行号")?
                     .parse::<usize>()
                     .map_err(|_| "工作表行号无效")?;
                 let row = number.checked_sub(1).ok_or("工作表行号无效")?;
-                if let Some(migrated) = migrated_row_index(row, change) {
+                if let Some(migrated) = migrated_axis_index(row, change) {
                     let replacement = (migrated + 1).to_string();
                     writer
                         .write_event(Event::Empty(replace_xml_attribute(
@@ -4388,13 +4580,32 @@ fn patch_sheet_row_structure(
                 }
             }
             Event::Start(ref start) | Event::Empty(ref start)
+                if target_sheet
+                    && change.axis == WorkbookStructureAxis::Column
+                    && start.local_name().as_ref() == b"row" =>
+            {
+                let number = xml_value(start, b"r", reader.decoder())?.ok_or("工作表行缺少行号")?;
+                let updated = replace_xml_attribute(start, b"r", &number, true)?;
+                writer
+                    .write_event(if matches!(event, Event::Start(_)) {
+                        Event::Start(updated)
+                    } else {
+                        Event::Empty(updated)
+                    })
+                    .map_err(|error| format!("写入列迁移后的工作表行失败: {error}"))?;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
                 if target_sheet && start.local_name().as_ref() == b"c" =>
             {
                 let reference =
                     xml_value(start, b"r", reader.decoder())?.ok_or("工作表单元格缺少坐标")?;
                 let migrated = migrate_workbook_reference(&reference, Some(current_sheet), change)?;
                 if migrated == "#REF!" {
-                    return Err(format!("工作表单元格坐标迁移失败: {reference}"));
+                    if matches!(event, Event::Start(_)) {
+                        skip_element(&mut reader, b"c", &mut buffer)?;
+                    }
+                    buffer.clear();
+                    continue;
                 }
                 let updated = replace_xml_attribute(start, b"r", &migrated, false)?;
                 let output = if matches!(event, Event::Start(_)) {
@@ -4628,7 +4839,7 @@ fn patch_sheet_row_structure(
             Event::Eof => break,
             _ => writer
                 .write_event(event.into_owned())
-                .map_err(|error| format!("复制工作表行结构失败: {error}"))?,
+                .map_err(|error| format!("复制工作表结构失败: {error}"))?,
         }
         buffer.clear();
     }
@@ -4752,14 +4963,11 @@ fn write_package(entries: Vec<PackageEntry>, capacity: usize) -> Result<Vec<u8>,
         .map_err(|error| format!("完成 XLSX 结构事务失败: {error}"))
 }
 
-pub fn patch_workbook_row_structure(
+pub fn patch_workbook_structure(
     source: &[u8],
     change: &WorkbookStructureChange,
 ) -> Result<Vec<u8>, String> {
     validate_workbook_structure_change(change)?;
-    if change.axis != WorkbookStructureAxis::Row {
-        return Err("S8-1B2A 当前仅支持行插入与行删除".into());
-    }
     let mut entries = load_package(source)?;
     let sheet_paths = workbook_sheet_paths(&entries)?;
     let target_path = sheet_paths
@@ -4798,7 +5006,7 @@ pub fn patch_workbook_row_structure(
             .iter()
             .find(|entry| &entry.name == path)
             .ok_or_else(|| format!("工作表部件不存在: {path}"))?;
-        validate_plain_row_structure_sheet(&xml.data, path == &target_path)
+        validate_plain_structure_sheet(&xml.data, path == &target_path, change)
             .map_err(|error| format!("工作表 {sheet}: {error}"))?;
     }
 
@@ -4810,14 +5018,14 @@ pub fn patch_workbook_row_structure(
         if path == &target_path {
             entry.data = remove_deleted_sheet_range_objects(&entry.data, sheet, change)?;
         }
-        entry.data = patch_sheet_row_structure(&entry.data, sheet, change, path == &target_path)?;
+        entry.data = patch_sheet_structure_axis(&entry.data, sheet, change, path == &target_path)?;
     }
     for entry in &mut entries {
         if let Some(sheet) = table_owners.get(&entry.name) {
-            entry.data = patch_table_row_structure(&entry.data, sheet, change)?;
+            entry.data = patch_table_structure(&entry.data, sheet, change)?;
         } else if let Some(sheet) = drawing_owners.get(&entry.name) {
             if sheet == &change.sheet {
-                entry.data = patch_drawing_row_anchors(&entry.data, change)?;
+                entry.data = patch_drawing_anchors(&entry.data, change)?;
             }
         } else if let Some(sheet) = chart_owners.get(&entry.name) {
             entry.data = patch_chart_row_formulas(&entry.data, sheet, change)?;
@@ -5044,9 +5252,9 @@ pub fn patch_workbook(
 #[cfg(test)]
 mod tests {
     use super::{
-        patch_calc_chain_rows, patch_sheet_row_structure, patch_workbook_row_structure,
+        patch_calc_chain_rows, patch_sheet_structure_axis, patch_workbook_structure,
         read_sheet_formulas, read_workbook_defined_names, read_workbook_sheet_layout,
-        validate_plain_row_structure_sheet, validate_workbook_package,
+        validate_plain_structure_sheet, validate_workbook_package,
     };
     use crate::formats::workbook::{
         WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructureChange,
@@ -5133,7 +5341,7 @@ mod tests {
             .unwrap();
         let source = workbook.save_to_buffer().unwrap();
 
-        let inserted = patch_workbook_row_structure(
+        let inserted = patch_workbook_structure(
             &source,
             &WorkbookStructureChange {
                 sheet: "Data".into(),
@@ -5171,7 +5379,7 @@ mod tests {
             "Data!$A$4:$A$5"
         );
 
-        let restored = patch_workbook_row_structure(
+        let restored = patch_workbook_structure(
             &inserted,
             &WorkbookStructureChange {
                 sheet: "Data".into(),
@@ -5190,6 +5398,148 @@ mod tests {
         assert!(restored_data.contains("ref=\"A4:B4\""));
         assert!(restored_data.contains("sqref=\"A2:A3\""));
         assert!(restored_summary.contains("Data!A2"));
+    }
+
+    #[test]
+    fn inserts_and_deletes_columns_with_layout_and_relationship_migration() {
+        let mut workbook = Workbook::new();
+        let data = workbook.add_worksheet();
+        data.set_name("Data").unwrap();
+        data.write_string(0, 0, "Category").unwrap();
+        data.write_number(0, 1, 10).unwrap();
+        data.write_number(0, 2, 20).unwrap();
+        data.write_string(1, 0, "Total").unwrap();
+        data.write_formula(1, 3, Formula::new("=SUM(B1:C1)").set_result("30"))
+            .unwrap();
+        data.set_column_width(1, 14).unwrap();
+        data.set_column_width(2, 16).unwrap();
+        data.set_freeze_panes(0, 2).unwrap();
+        data.autofilter(0, 0, 1, 2).unwrap();
+        data.merge_range(2, 1, 2, 2, "Merged", &Format::new())
+            .unwrap();
+        data.add_data_validation(
+            0,
+            1,
+            1,
+            2,
+            &DataValidation::new()
+                .allow_list_strings(&["10", "20"])
+                .unwrap(),
+        )
+        .unwrap();
+        let mut chart = Chart::new(ChartType::Column);
+        chart
+            .add_series()
+            .set_categories("Data!$A$1:$A$2")
+            .set_values("Data!$B$1:$B$2");
+        data.insert_chart(0, 4, &chart).unwrap();
+        let summary = workbook.add_worksheet();
+        summary.set_name("Summary").unwrap();
+        summary
+            .write_formula(0, 0, Formula::new("=Data!B1").set_result("10"))
+            .unwrap();
+        workbook
+            .define_name("DataColumns", "=Data!$B$1:$C$2")
+            .unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let source_layout = read_workbook_sheet_layout(&source, "Data", 0, 10, 10).unwrap();
+        let source_b_width = source_layout
+            .column_widths
+            .iter()
+            .find(|width| width.start_column == 1)
+            .unwrap()
+            .width;
+        let source_c_width = source_layout
+            .column_widths
+            .iter()
+            .find(|width| width.start_column == 2)
+            .unwrap()
+            .width;
+        let change = WorkbookStructureChange {
+            sheet: "Data".into(),
+            axis: WorkbookStructureAxis::Column,
+            action: WorkbookStructureAction::Insert,
+            index: 1,
+            count: 1,
+        };
+
+        let inserted = patch_workbook_structure(&source, &change).unwrap();
+        validate_workbook_package(&inserted).unwrap();
+        let data_xml = zip_text(&inserted, "xl/worksheets/sheet1.xml");
+        let summary_xml = zip_text(&inserted, "xl/worksheets/sheet2.xml");
+        let chart_xml = zip_text(&inserted, "xl/charts/chart1.xml");
+        let drawing_xml = zip_text(&inserted, "xl/drawings/drawing1.xml");
+        assert!(data_xml.contains("r=\"C1\""));
+        assert!(data_xml.contains("r=\"D1\""));
+        assert!(data_xml.contains("r=\"E2\""));
+        assert!(data_xml.contains("SUM(C1:D1)"));
+        assert!(data_xml.contains("ref=\"A1:D2\""));
+        assert!(data_xml.contains("ref=\"C3:D3\""));
+        assert!(data_xml.contains("sqref=\"C1:D2\""));
+        assert!(summary_xml.contains("Data!C1"));
+        assert!(chart_xml.contains("Data!$C$1:$C$2"));
+        assert!(drawing_xml.contains("<xdr:col>5</xdr:col>"));
+        let layout = read_workbook_sheet_layout(&inserted, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.freeze_pane.columns, 3);
+        assert!(layout
+            .column_widths
+            .iter()
+            .any(|width| width.start_column == 2
+                && (width.width - source_b_width).abs() < f64::EPSILON));
+        assert!(layout
+            .column_widths
+            .iter()
+            .any(|width| width.start_column == 3
+                && (width.width - source_c_width).abs() < f64::EPSILON));
+        assert_eq!(
+            read_workbook_defined_names(&inserted)
+                .unwrap()
+                .into_iter()
+                .find(|name| name.name == "DataColumns")
+                .unwrap()
+                .formula,
+            "Data!$C$1:$D$2"
+        );
+
+        let restored = patch_workbook_structure(
+            &inserted,
+            &WorkbookStructureChange {
+                action: WorkbookStructureAction::Delete,
+                ..change
+            },
+        )
+        .unwrap();
+        let restored_data = zip_text(&restored, "xl/worksheets/sheet1.xml");
+        let restored_summary = zip_text(&restored, "xl/worksheets/sheet2.xml");
+        assert!(restored_data.contains("r=\"B1\""));
+        assert!(restored_data.contains("r=\"D2\""));
+        assert!(restored_data.contains("SUM(B1:C1)"));
+        assert!(restored_data.contains("ref=\"B3:C3\""));
+        assert!(restored_summary.contains("Data!B1"));
+        let layout = read_workbook_sheet_layout(&restored, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.freeze_pane.columns, 2);
+    }
+
+    #[test]
+    fn rejects_unsafe_column_structure_carriers() {
+        let table = br#"<table ref="A1:B3"><autoFilter ref="A1:B3"/><tableColumns count="2"><tableColumn id="1" name="A"/><tableColumn id="2" name="B"/></tableColumns></table>"#;
+        let change = WorkbookStructureChange {
+            sheet: "Data".into(),
+            axis: WorkbookStructureAxis::Column,
+            action: WorkbookStructureAction::Insert,
+            index: 1,
+            count: 1,
+        };
+        assert!(super::patch_table_structure(table, "Data", &change)
+            .unwrap_err()
+            .contains("Table 列结构"));
+        assert!(validate_plain_structure_sheet(
+            br#"<worksheet><autoFilter ref="A1:B3"><filterColumn colId="0"/></autoFilter></worksheet>"#,
+            true,
+            &change,
+        )
+        .unwrap_err()
+        .contains("活动筛选条件"));
     }
 
     #[test]
@@ -5220,7 +5570,7 @@ mod tests {
             count: 1,
         };
         let output =
-            String::from_utf8(patch_sheet_row_structure(xml, "Data", &change, true).unwrap())
+            String::from_utf8(patch_sheet_structure_axis(xml, "Data", &change, true).unwrap())
                 .unwrap();
         assert!(output.contains("ySplit=\"2\""));
         assert!(output.contains("topLeftCell=\"A3\""));
@@ -5248,15 +5598,14 @@ mod tests {
             index: 0,
             count: 1,
         };
-        assert!(patch_workbook_row_structure(&source, &change)
-            .unwrap_err()
-            .contains("仅支持行插入与行删除"));
+        let column_output = patch_workbook_structure(&source, &change).unwrap();
+        assert!(zip_text(&column_output, "xl/worksheets/sheet1.xml").contains("ref=\"B2:C2\""));
         change.axis = WorkbookStructureAxis::Row;
-        let output = patch_workbook_row_structure(&source, &change).unwrap();
+        let output = patch_workbook_structure(&source, &change).unwrap();
         assert!(zip_text(&output, "xl/worksheets/sheet1.xml").contains("ref=\"A3:B3\""));
         change.action = WorkbookStructureAction::Delete;
         change.index = 1;
-        let deleted = patch_workbook_row_structure(&source, &change).unwrap();
+        let deleted = patch_workbook_structure(&source, &change).unwrap();
         let deleted_xml = zip_text(&deleted, "xl/worksheets/sheet1.xml");
         assert!(!deleted_xml.contains("mergeCells"));
 
@@ -5265,12 +5614,13 @@ mod tests {
         let source = workbook.save_to_buffer().unwrap();
         change.action = WorkbookStructureAction::Insert;
         change.index = 0;
-        let output = patch_workbook_row_structure(&source, &change).unwrap();
+        let output = patch_workbook_structure(&source, &change).unwrap();
         assert!(!zip_text(&output, "xl/worksheets/sheet1.xml").contains("ref=\"A2\""));
 
-        assert!(validate_plain_row_structure_sheet(
+        assert!(validate_plain_structure_sheet(
             br#"<worksheet><tableParts count="1"/></worksheet>"#,
             false,
+            &change,
         )
         .is_ok());
     }
@@ -5312,7 +5662,7 @@ mod tests {
             index: 1,
             count: 2,
         };
-        let output = patch_workbook_row_structure(&source, &change).unwrap();
+        let output = patch_workbook_structure(&source, &change).unwrap();
         validate_workbook_package(&output).unwrap();
         let table = zip_text(&output, "xl/tables/table1.xml");
         let chart = zip_text(&output, "xl/charts/chart1.xml");
@@ -5345,13 +5695,14 @@ mod tests {
             ..deleted
         };
         assert!(
-            super::patch_table_row_structure(table, "Data", &full_table_delete)
+            super::patch_table_structure(table, "Data", &full_table_delete)
                 .unwrap_err()
                 .contains("转换为普通区域")
         );
-        assert!(validate_plain_row_structure_sheet(
+        assert!(validate_plain_structure_sheet(
             br#"<worksheet><legacyDrawing r:id="rId1"/></worksheet>"#,
             true,
+            &full_table_delete,
         )
         .unwrap_err()
         .contains("批注"));
@@ -5382,7 +5733,7 @@ mod tests {
         };
         let pruned = super::remove_deleted_sheet_range_objects(xml, "Data", &change).unwrap();
         let output =
-            String::from_utf8(patch_sheet_row_structure(&pruned, "Data", &change, true).unwrap())
+            String::from_utf8(patch_sheet_structure_axis(&pruned, "Data", &change, true).unwrap())
                 .unwrap();
         assert!(!output.contains("autoFilter"));
         assert!(!output.contains("conditionalFormatting"));

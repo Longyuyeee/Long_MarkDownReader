@@ -82,9 +82,11 @@ for (const capability of ['printLayout', 'sheetProtection']) {
   if (fixture.currentEngineExpectations[capability] !== 'supported') fail(`${capability} fixture expectation drift`)
 }
 
-if (!view.includes('applyRowStructureAction') || !view.includes('整行插入与删除')) fail('whole-row structure toolbar entry missing')
-if (!view.includes("invoke<WorkbookDocument>('update_workbook_structure'") || !view.includes('expectedSignature: workbook.value.signature')) fail('signature-protected row structure transaction missing')
-if (!view.includes("if (dirtyCount.value) return void message.error") || !view.includes("title: `删除 ${count.toLocaleString()} 行？`")) fail('row structure draft guard or delete confirmation missing')
-if (!view.includes('restoreRowSelection') || !view.includes('recalculateLoadedFormulas(false)') || !/undoStack\.value = \[\]\s+redoStack\.value = \[\]\s+await restoreRowSelection/.test(view)) fail('row structure history reset/reload/recalculation workflow missing')
+if (!view.includes('applyStructureAction') || !view.includes('整行整列插入与删除')) fail('whole-row/column structure toolbar entry missing')
+if (!view.includes("invoke<WorkbookDocument>('update_workbook_structure'") || !view.includes('expectedSignature: workbook.value.signature')) fail('signature-protected axis structure transaction missing')
+if (!view.includes("if (dirtyCount.value) return void message.error") || !view.includes('不能安全迁移的复杂对象会拒绝事务')) fail('axis structure draft guard or delete confirmation missing')
+if (!view.includes('restoreAxisSelection') || !view.includes('recalculateLoadedFormulas(false)') || !/undoStack\.value = \[\]\s+redoStack\.value = \[\]\s+await restoreAxisSelection/.test(view)) fail('axis structure history reset/reload/recalculation workflow missing')
+if (!ooxml.includes('migrate_column_records') || !ooxml.includes('patch_drawing_anchors') || !ooxml.includes('Table 列结构')) fail('whole-column OOXML migration or explicit rejection evidence missing')
+if (!engine.includes('writes_row_and_column_structure_with_signature_protection')) fail('whole-column command transaction evidence missing')
 
 console.log(`Workbook contract OK: ${matrix.features.length} public capability rows`)

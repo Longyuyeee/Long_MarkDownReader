@@ -111,10 +111,10 @@
         <option value="group">建立分组</option>
         <option value="ungroup">取消分组</option>
       </select>
-      <select title="整行插入与删除" :disabled="selectedAxis?.kind !== 'row' || sheetProtected || saving || updatingStructure || Boolean(dirtyCount)" @change="applyRowStructureAction">
-        <option value="">整行操作…</option>
-        <option value="insert">在所选行上方插入</option>
-        <option value="delete">删除所选行</option>
+      <select title="整行整列插入与删除" :disabled="!selectedAxis || sheetProtected || saving || updatingStructure || Boolean(dirtyCount)" @change="applyStructureAction">
+        <option value="">整行整列操作…</option>
+        <option value="insert">{{ selectedAxis?.kind === 'column' ? '在所选列左侧插入' : '在所选行上方插入' }}</option>
+        <option value="delete">{{ selectedAxis?.kind === 'column' ? '删除所选列' : '删除所选行' }}</option>
       </select>
       <button title="合并选中的连续区域" :disabled="!canMergeSelection || saving" @click="mergeSelection">合并</button>
       <button title="取消当前合并区域" :disabled="!selectedMerge || saving" @click="unmergeSelection">取消合并</button>
@@ -326,7 +326,7 @@ interface WorkbookColumnState { startColumn: number; endColumn: number; hidden: 
 interface WorkbookRowStateEdit extends WorkbookRowState { sheet: string }
 interface WorkbookColumnStateEdit extends WorkbookColumnState { sheet: string }
 interface WorkbookMergeEdit extends WorkbookMergeRange { sheet: string; action: 'merge' | 'unmerge' }
-interface WorkbookStructureChange { sheet: string; axis: 'row'; action: 'insert' | 'delete'; index: number; count: number }
+interface WorkbookStructureChange { sheet: string; axis: 'row' | 'column'; action: 'insert' | 'delete'; index: number; count: number }
 interface CellSelection { sheet: string; row: number; column: number }
 interface SelectionArea { top: number; bottom: number; left: number; right: number }
 interface CellChange { key: string; before?: WorkbookCellEdit; after?: WorkbookCellEdit }
@@ -1133,29 +1133,34 @@ const applyAxisAction = async (event: Event) => {
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { updatingStructure.value = false }
 }
-const restoreRowSelection = async (sheet: string, row: number, count: number, action: 'insert' | 'delete') => {
+const restoreAxisSelection = async (sheet: string, axis: 'row' | 'column', index: number, count: number, action: 'insert' | 'delete') => {
   generation += 1
   activeSheet.value = ''
   await selectSheet(sheet)
-  const totalRows = sheetInfo.value?.totalRows || 0
-  const focusRow = action === 'delete' ? Math.min(row, Math.max(0, totalRows - 1)) : row
-  await loadPage(focusRow)
-  const bottom = action === 'insert'
-    ? Math.min(canvasRowCount.value - 1, focusRow + count - 1)
-    : focusRow
-  selectionAnchor.value = { sheet, row: focusRow, column: 0 }
-  selectionAreas.value = [{ top: focusRow, bottom, left: 0, right: canvasColumnCount.value - 1 }]
-  setSelectionFocus(focusRow, 0)
+  const total = axis === 'row' ? sheetInfo.value?.totalRows || 0 : sheetInfo.value?.totalColumns || 0
+  const canvasLimit = axis === 'row' ? canvasRowCount.value : canvasColumnCount.value
+  const focus = action === 'delete' ? Math.min(index, Math.max(0, total - 1), canvasLimit - 1) : Math.min(index, canvasLimit - 1)
+  if (axis === 'row') await loadPage(focus)
+  const end = action === 'insert' ? Math.min(canvasLimit - 1, focus + count - 1) : focus
+  const row = axis === 'row' ? focus : 0
+  const column = axis === 'column' ? focus : 0
+  selectionAnchor.value = { sheet, row, column }
+  selectionAreas.value = axis === 'row'
+    ? [{ top: focus, bottom: end, left: 0, right: canvasColumnCount.value - 1 }]
+    : [{ top: 0, bottom: canvasRowCount.value - 1, left: focus, right: end }]
+  setSelectionFocus(row, column)
   await nextTick()
-  scrollRef.value?.scrollTo({ top: Math.max(0, rowOffset(focusRow) - 38), behavior: 'smooth' })
+  scrollRef.value?.scrollTo(axis === 'row'
+    ? { top: Math.max(0, rowOffset(focus) - 38), behavior: 'smooth' }
+    : { left: Math.max(0, 52 + columnPixels.value.slice(0, focus).reduce((total, width) => total + width, 0) - 80), behavior: 'smooth' })
   await recalculateLoadedFormulas(false)
 }
-const commitRowStructure = async (action: 'insert' | 'delete', start: number, count: number) => {
+const commitStructure = async (axis: 'row' | 'column', action: 'insert' | 'delete', start: number, count: number) => {
   if (!workbook.value || updatingStructure.value) return
   updatingStructure.value = true
   const sheet = activeSheet.value
   try {
-    const change: WorkbookStructureChange = { sheet, axis: 'row', action, index: start, count }
+    const change: WorkbookStructureChange = { sheet, axis, action, index: start, count }
     const document = await invoke<WorkbookDocument>('update_workbook_structure', {
       libraryRoot: store.libraryPath,
       path: workbookPath.value,
@@ -1164,29 +1169,31 @@ const commitRowStructure = async (action: 'insert' | 'delete', start: number, co
     workbook.value = document
     undoStack.value = []
     redoStack.value = []
-    await restoreRowSelection(sheet, start, count, action)
-    message.success(action === 'insert' ? `已插入 ${count.toLocaleString()} 行` : `已删除 ${count.toLocaleString()} 行`)
+    await restoreAxisSelection(sheet, axis, start, count, action)
+    const axisLabel = axis === 'row' ? '行' : '列'
+    message.success(action === 'insert' ? `已插入 ${count.toLocaleString()} ${axisLabel}` : `已删除 ${count.toLocaleString()} ${axisLabel}`)
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { updatingStructure.value = false }
 }
-const applyRowStructureAction = (event: Event) => {
+const applyStructureAction = (event: Event) => {
   const select = event.target as HTMLSelectElement
   const action = select.value as 'insert' | 'delete' | ''
   select.value = ''
   commitFormulaInput()
   const axis = selectedAxis.value
-  if (!action || axis?.kind !== 'row' || !workbook.value || updatingStructure.value) return
-  if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改行结构')
+  if (!action || !axis || !workbook.value || updatingStructure.value) return
+  if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改行列结构')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   const count = axis.end - axis.start + 1
-  if (count > MAX_BATCH_CELLS) return void message.error(`单次最多插入或删除 ${MAX_BATCH_CELLS.toLocaleString()} 行`)
-  if (action === 'insert') return void commitRowStructure(action, axis.start, count)
+  const axisLabel = axis.kind === 'row' ? '行' : '列'
+  if (count > MAX_BATCH_CELLS) return void message.error(`单次最多插入或删除 ${MAX_BATCH_CELLS.toLocaleString()} ${axisLabel}`)
+  if (action === 'insert') return void commitStructure(axis.kind, action, axis.start, count)
   dialog.warning({
-    title: `删除 ${count.toLocaleString()} 行？`,
-    content: `将删除第 ${axis.start + 1}${count > 1 ? ` 至 ${axis.end + 1}` : ''} 行，并迁移公式、Table、图表和相关工作表结构。此操作保存后不能通过当前撤销栈恢复。`,
-    positiveText: '删除行',
+    title: `删除 ${count.toLocaleString()} ${axisLabel}？`,
+    content: `将删除第 ${axis.start + 1}${count > 1 ? ` 至 ${axis.end + 1}` : ''} ${axisLabel}，并迁移公式、Table、图表和相关工作表结构。不能安全迁移的复杂对象会拒绝事务；此操作保存后不能通过当前撤销栈恢复。`,
+    positiveText: `删除${axisLabel}`,
     negativeText: '取消',
-    onPositiveClick: () => commitRowStructure(action, axis.start, count),
+    onPositiveClick: () => commitStructure(axis.kind, action, axis.start, count),
   })
 }
 const mergeSelection = () => {

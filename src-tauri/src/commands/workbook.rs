@@ -16,9 +16,9 @@ use crate::formats::workbook_formula::{
     validate_workbook_structure_change, WorkbookFormulaTranslation, MAX_FORMULA_TRANSLATIONS,
 };
 use crate::formats::workbook_ooxml::{
-    patch_workbook, patch_workbook_freeze_pane, patch_workbook_outline,
-    patch_workbook_row_structure, read_workbook_defined_names, read_workbook_linked_data,
-    read_workbook_protection, read_workbook_sheet_layout, validate_workbook_package,
+    patch_workbook, patch_workbook_freeze_pane, patch_workbook_outline, patch_workbook_structure,
+    read_workbook_defined_names, read_workbook_linked_data, read_workbook_protection,
+    read_workbook_sheet_layout, validate_workbook_package,
 };
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
@@ -393,9 +393,9 @@ pub async fn update_workbook_structure(
             .metadata()
             .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
         if workbook_signature(&metadata, &source) != payload.expected_signature {
-            return Err("XLSX 已被其他程序修改，请重新加载后再修改行结构".into());
+            return Err("XLSX 已被其他程序修改，请重新加载后再修改行列结构".into());
         }
-        let output = patch_workbook_row_structure(&source, &payload.change)?;
+        let output = patch_workbook_structure(&source, &payload.change)?;
         if output.len() as u64 > MAX_WORKBOOK_BYTES {
             return Err("保存后的 XLSX 不能超过 128 MB".into());
         }
@@ -404,7 +404,7 @@ pub async fn update_workbook_structure(
         CalamineWorkbookEngine.inspect(&file)
     })
     .await
-    .map_err(|error| format!("XLSX 行结构写回任务失败: {error}"))?
+    .map_err(|error| format!("XLSX 工作表结构写回任务失败: {error}"))?
 }
 
 #[tauri::command]
@@ -613,7 +613,7 @@ mod tests {
     }
 
     #[test]
-    fn writes_plain_row_structure_with_signature_protection() {
+    fn writes_row_and_column_structure_with_signature_protection() {
         let base = std::env::temp_dir().join(format!(
             "longedit-xlsx-row-structure-{}-{}",
             std::process::id(),
@@ -677,6 +677,30 @@ mod tests {
         .unwrap();
         assert!(xml.contains("r=\"A3\""));
         assert!(xml.contains("SUM(A3:A4)"));
+
+        let column_saved = tauri::async_runtime::block_on(update_workbook_structure(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookStructurePayload {
+                expected_signature: saved.signature,
+                change: WorkbookStructureChange {
+                    sheet: "Data".into(),
+                    axis: WorkbookStructureAxis::Column,
+                    action: WorkbookStructureAction::Insert,
+                    index: 0,
+                    count: 1,
+                },
+            },
+        ))
+        .unwrap();
+        assert_ne!(column_saved.signature, document.signature);
+        let xml = String::from_utf8(zip_part(
+            &fs::read(&path).unwrap(),
+            "xl/worksheets/sheet1.xml",
+        ))
+        .unwrap();
+        assert!(xml.contains("r=\"B3\""));
+        assert!(xml.contains("SUM(B3:B4)"));
         fs::remove_dir_all(base).unwrap();
     }
 
