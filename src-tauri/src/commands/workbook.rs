@@ -7,11 +7,13 @@ use crate::formats::table::{
 use crate::formats::workbook::{
     WorkbookCalculationPayload, WorkbookCalculationResult, WorkbookCapabilities,
     WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine,
-    WorkbookOutlinePayload, WorkbookSheetPage, WorkbookWritePayload,
+    WorkbookOutlinePayload, WorkbookSheetPage, WorkbookStructureChange,
+    WorkbookStructureMigrationPreview, WorkbookWritePayload,
 };
 use crate::formats::workbook_calculation::calculate_workbook;
 use crate::formats::workbook_formula::{
-    translate_formula, WorkbookFormulaTranslation, MAX_FORMULA_TRANSLATIONS,
+    migrate_workbook_formula, migrate_workbook_reference, translate_formula,
+    validate_workbook_structure_change, WorkbookFormulaTranslation, MAX_FORMULA_TRANSLATIONS,
 };
 use crate::formats::workbook_ooxml::{
     patch_workbook, patch_workbook_freeze_pane, patch_workbook_outline,
@@ -244,6 +246,41 @@ pub fn translate_workbook_formulas(
         .into_iter()
         .map(|request| translate_formula(&request.formula, request.row_delta, request.column_delta))
         .collect()
+}
+
+#[tauri::command]
+pub fn preview_workbook_structure_migration(
+    change: WorkbookStructureChange,
+    current_sheet: String,
+    formulas: Vec<String>,
+    references: Vec<String>,
+) -> Result<WorkbookStructureMigrationPreview, String> {
+    validate_workbook_structure_change(&change)?;
+    if current_sheet.is_empty() || current_sheet.chars().count() > 31 {
+        return Err("当前工作表名称无效".into());
+    }
+    if formulas.is_empty() && references.is_empty() {
+        return Err("没有需要预览的公式或引用".into());
+    }
+    if formulas.len().saturating_add(references.len()) > MAX_FORMULA_TRANSLATIONS {
+        return Err(format!(
+            "单次最多迁移 {MAX_FORMULA_TRANSLATIONS} 个公式或引用"
+        ));
+    }
+    let formulas = formulas
+        .iter()
+        .map(|formula| migrate_workbook_formula(formula, &current_sheet, &change))
+        .collect::<Result<Vec<_>, _>>()?;
+    let references = references
+        .iter()
+        .map(|reference| {
+            migrate_workbook_reference(reference, Some(current_sheet.as_str()), &change)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(WorkbookStructureMigrationPreview {
+        formulas,
+        references,
+    })
 }
 
 #[tauri::command]
@@ -498,7 +535,7 @@ mod tests {
     use crate::formats::workbook::{
         WorkbookCellEdit, WorkbookCellStyleEdit, WorkbookColumnStateEdit, WorkbookColumnWidthEdit,
         WorkbookMergeEdit, WorkbookOutlinePayload, WorkbookRowHeightEdit, WorkbookRowStateEdit,
-        WorkbookStylePatch, WorkbookWritePayload,
+        WorkbookStructureAction, WorkbookStructureAxis, WorkbookStylePatch, WorkbookWritePayload,
     };
     use rust_xlsxwriter::{
         ConditionalFormatCell, ConditionalFormatCellRule, Format, Formula, Workbook,
@@ -506,6 +543,43 @@ mod tests {
     use std::collections::{BTreeMap, BTreeSet};
     use std::io::{Cursor, Read};
     use std::time::{Instant, SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn previews_bounded_workbook_structure_migrations() {
+        let change = WorkbookStructureChange {
+            sheet: "Data".into(),
+            axis: WorkbookStructureAxis::Row,
+            action: WorkbookStructureAction::Insert,
+            index: 1,
+            count: 2,
+        };
+        let preview = preview_workbook_structure_migration(
+            change.clone(),
+            "Data".into(),
+            vec!["=A2+Other!A2".into()],
+            vec!["A1:A3".into(), "Other!A1:A3".into()],
+        )
+        .unwrap();
+        assert_eq!(preview.formulas, ["=A4+Other!A2"]);
+        assert_eq!(preview.references, ["A1:A5", "Other!A1:A3"]);
+
+        assert!(preview_workbook_structure_migration(
+            change.clone(),
+            "Data".into(),
+            vec![],
+            vec![],
+        )
+        .unwrap_err()
+        .contains("没有需要预览"));
+        assert!(preview_workbook_structure_migration(
+            change,
+            "Data".into(),
+            vec!["=A1".into(); MAX_FORMULA_TRANSLATIONS + 1],
+            vec![],
+        )
+        .unwrap_err()
+        .contains("单次最多迁移"));
+    }
 
     fn fixture() -> (PathBuf, PathBuf) {
         let base = std::env::temp_dir().join(format!(

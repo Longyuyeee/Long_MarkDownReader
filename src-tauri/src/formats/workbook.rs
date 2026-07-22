@@ -542,6 +542,37 @@ pub struct WorkbookOutlinePayload {
     pub column_edits: Vec<WorkbookColumnStateEdit>,
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkbookStructureAxis {
+    Row,
+    Column,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkbookStructureAction {
+    Insert,
+    Delete,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookStructureChange {
+    pub sheet: String,
+    pub axis: WorkbookStructureAxis,
+    pub action: WorkbookStructureAction,
+    pub index: usize,
+    pub count: usize,
+}
+
+#[derive(Clone, Debug, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookStructureMigrationPreview {
+    pub formulas: Vec<String>,
+    pub references: Vec<String>,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkbookMergeEdit {

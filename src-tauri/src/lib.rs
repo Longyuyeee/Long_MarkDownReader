@@ -51,9 +51,10 @@ use commands::table::{
     create_table_file, export_table_file, import_table_file, read_table_file, write_table_file,
 };
 use commands::workbook::{
-    get_workbook_capabilities, import_workbook_sheet, read_workbook_file, read_workbook_sheet,
-    recalculate_workbook_formulas, translate_workbook_formulas, update_workbook_freeze_pane,
-    update_workbook_outline, write_workbook_cells,
+    get_workbook_capabilities, import_workbook_sheet, preview_workbook_structure_migration,
+    read_workbook_file, read_workbook_sheet, recalculate_workbook_formulas,
+    translate_workbook_formulas, update_workbook_freeze_pane, update_workbook_outline,
+    write_workbook_cells,
 };
 use commands::workspace::{analyze_workspace_health, get_workspace_overview};
 use services::data_migration::check_and_migrate_data;
@@ -225,6 +226,7 @@ pub fn run() {
             get_workbook_capabilities,
             recalculate_workbook_formulas,
             translate_workbook_formulas,
+            preview_workbook_structure_migration,
             write_workbook_cells,
             update_workbook_freeze_pane,
             update_workbook_outline,
