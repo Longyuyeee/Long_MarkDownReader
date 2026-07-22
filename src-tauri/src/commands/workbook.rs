@@ -8,7 +8,7 @@ use crate::formats::workbook::{
     WorkbookCalculationPayload, WorkbookCalculationResult, WorkbookCapabilities,
     WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine,
     WorkbookOutlinePayload, WorkbookSheetPage, WorkbookStructureChange,
-    WorkbookStructureMigrationPreview, WorkbookWritePayload,
+    WorkbookStructureMigrationPreview, WorkbookStructurePayload, WorkbookWritePayload,
 };
 use crate::formats::workbook_calculation::calculate_workbook;
 use crate::formats::workbook_formula::{
@@ -17,8 +17,8 @@ use crate::formats::workbook_formula::{
 };
 use crate::formats::workbook_ooxml::{
     patch_workbook, patch_workbook_freeze_pane, patch_workbook_outline,
-    read_workbook_defined_names, read_workbook_linked_data, read_workbook_protection,
-    read_workbook_sheet_layout, validate_workbook_package,
+    patch_workbook_row_structure, read_workbook_defined_names, read_workbook_linked_data,
+    read_workbook_protection, read_workbook_sheet_layout, validate_workbook_package,
 };
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
@@ -378,6 +378,36 @@ pub async fn write_workbook_cells(
 }
 
 #[tauri::command]
+pub async fn update_workbook_structure(
+    library_root: String,
+    path: String,
+    payload: WorkbookStructurePayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再修改行结构".into());
+        }
+        let output = patch_workbook_row_structure(&source, &payload.change)?;
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("保存后的 XLSX 不能超过 128 MB".into());
+        }
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX 行结构写回任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn update_workbook_freeze_pane(
     library_root: String,
     path: String,
@@ -535,7 +565,8 @@ mod tests {
     use crate::formats::workbook::{
         WorkbookCellEdit, WorkbookCellStyleEdit, WorkbookColumnStateEdit, WorkbookColumnWidthEdit,
         WorkbookMergeEdit, WorkbookOutlinePayload, WorkbookRowHeightEdit, WorkbookRowStateEdit,
-        WorkbookStructureAction, WorkbookStructureAxis, WorkbookStylePatch, WorkbookWritePayload,
+        WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructurePayload,
+        WorkbookStylePatch, WorkbookWritePayload,
     };
     use rust_xlsxwriter::{
         ConditionalFormatCell, ConditionalFormatCellRule, Format, Formula, Workbook,
@@ -579,6 +610,74 @@ mod tests {
         )
         .unwrap_err()
         .contains("单次最多迁移"));
+    }
+
+    #[test]
+    fn writes_plain_row_structure_with_signature_protection() {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-xlsx-row-structure-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let root = base.join("library");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("rows.xlsx");
+        let mut workbook = Workbook::new();
+        let data = workbook.add_worksheet();
+        data.set_name("Data").unwrap();
+        data.write_string(0, 0, "Header").unwrap();
+        data.write_number(1, 0, 10).unwrap();
+        data.write_number(2, 0, 20).unwrap();
+        data.write_formula(2, 1, Formula::new("=SUM(A2:A3)"))
+            .unwrap();
+        workbook.save(&path).unwrap();
+
+        let root_text = root.to_string_lossy().into_owned();
+        let path_text = path.to_string_lossy().into_owned();
+        let document = tauri::async_runtime::block_on(read_workbook_file(
+            root_text.clone(),
+            path_text.clone(),
+        ))
+        .unwrap();
+        let change = WorkbookStructureChange {
+            sheet: "Data".into(),
+            axis: WorkbookStructureAxis::Row,
+            action: WorkbookStructureAction::Insert,
+            index: 1,
+            count: 1,
+        };
+        let stale = tauri::async_runtime::block_on(update_workbook_structure(
+            root_text.clone(),
+            path_text.clone(),
+            WorkbookStructurePayload {
+                expected_signature: "stale".into(),
+                change: change.clone(),
+            },
+        ))
+        .unwrap_err();
+        assert!(stale.contains("其他程序修改"));
+
+        let saved = tauri::async_runtime::block_on(update_workbook_structure(
+            root_text,
+            path_text,
+            WorkbookStructurePayload {
+                expected_signature: document.signature.clone(),
+                change,
+            },
+        ))
+        .unwrap();
+        assert_ne!(saved.signature, document.signature);
+        let xml = String::from_utf8(zip_part(
+            &fs::read(&path).unwrap(),
+            "xl/worksheets/sheet1.xml",
+        ))
+        .unwrap();
+        assert!(xml.contains("r=\"A3\""));
+        assert!(xml.contains("SUM(A3:A4)"));
+        fs::remove_dir_all(base).unwrap();
     }
 
     fn fixture() -> (PathBuf, PathBuf) {

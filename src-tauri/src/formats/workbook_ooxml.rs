@@ -6,9 +6,13 @@ use crate::formats::workbook::{
     WorkbookMergeEdit, WorkbookMergeRange, WorkbookNamedStyle, WorkbookPageLayout,
     WorkbookPageMargins, WorkbookPivotTable, WorkbookPrintOptions, WorkbookProtection,
     WorkbookRangeReference, WorkbookRowHeight, WorkbookRowHeightEdit, WorkbookRowState,
-    WorkbookRowStateEdit, WorkbookSlicer, WorkbookTable,
+    WorkbookRowStateEdit, WorkbookSlicer, WorkbookStructureAction, WorkbookStructureAxis,
+    WorkbookStructureChange, WorkbookTable,
 };
-use crate::formats::workbook_formula::translate_formula;
+use crate::formats::workbook_formula::{
+    migrate_workbook_formula, migrate_workbook_reference, translate_formula,
+    validate_workbook_structure_change,
+};
 use crate::formats::workbook_styles::{
     parse_styles, read_sheet_style_ids, resolve_style_edits, ResolvedStyleEdit,
 };
@@ -3723,6 +3727,435 @@ pub fn patch_workbook_outline(
         .map_err(|error| format!("完成行列隐藏分组写回失败: {error}"))
 }
 
+fn migrated_row_index(row: usize, change: &WorkbookStructureChange) -> Option<usize> {
+    match change.action {
+        WorkbookStructureAction::Insert => {
+            if row < change.index {
+                Some(row)
+            } else {
+                row.checked_add(change.count)
+                    .filter(|value| *value < MAX_XLSX_ROWS)
+            }
+        }
+        WorkbookStructureAction::Delete => {
+            let end = change.index + change.count;
+            if row < change.index {
+                Some(row)
+            } else if row < end {
+                None
+            } else {
+                Some(row - change.count)
+            }
+        }
+    }
+}
+
+fn replace_xml_attribute(
+    event: &BytesStart<'_>,
+    key: &[u8],
+    value: &str,
+    remove_spans: bool,
+) -> Result<BytesStart<'static>, String> {
+    let name = String::from_utf8_lossy(event.name().as_ref()).into_owned();
+    let mut updated = BytesStart::new(name);
+    for attribute in event.attributes().with_checks(false) {
+        let attribute = attribute.map_err(|error| format!("解析 XLSX XML 属性失败: {error}"))?;
+        if attribute.key.as_ref() != key && (!remove_spans || attribute.key.as_ref() != b"spans") {
+            updated.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+        }
+    }
+    updated.push_attribute((key, value.as_bytes()));
+    Ok(updated.into_owned())
+}
+
+fn decode_xml_text(event: &BytesText<'_>, context: &str) -> Result<String, String> {
+    let decoded = event
+        .xml10_content()
+        .map_err(|error| format!("解码 {context} 失败: {error}"))?;
+    quick_xml::escape::unescape(&decoded)
+        .map(|value| value.into_owned())
+        .map_err(|error| format!("还原 {context} 失败: {error}"))
+}
+
+fn validate_plain_row_structure_sheet(xml: &[u8], target_sheet: bool) -> Result<(), String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析工作表结构失败: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event) => {
+                let feature = match event.local_name().as_ref() {
+                    b"sheetProtection" if target_sheet => Some("工作表保护"),
+                    b"pane" if target_sheet => Some("冻结或拆分窗格"),
+                    b"mergeCells" | b"mergeCell" if target_sheet => Some("合并单元格"),
+                    b"autoFilter" if target_sheet => Some("自动筛选"),
+                    b"dataValidations" | b"dataValidation" => Some("数据验证"),
+                    b"conditionalFormatting" => Some("条件格式"),
+                    b"hyperlinks" | b"hyperlink" => Some("超链接"),
+                    b"tableParts" | b"tablePart" => Some("Excel 表格"),
+                    b"drawing" | b"legacyDrawing" | b"picture" | b"oleObjects" | b"controls" => {
+                        Some("绘图、批注或嵌入对象")
+                    }
+                    b"pivotTableParts" | b"pivotTablePart" => Some("数据透视表"),
+                    b"ignoredErrors" | b"protectedRanges" | b"scenarios" | b"rowBreaks"
+                        if target_sheet =>
+                    {
+                        Some("带范围的工作表扩展结构")
+                    }
+                    b"extLst" => Some("未知工作表扩展结构"),
+                    _ => None,
+                };
+                if let Some(feature) = feature {
+                    return Err(format!(
+                        "当前行结构事务暂不支持包含{feature}的目标工作表；请等待 S8-1B2B"
+                    ));
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(())
+}
+
+fn sheet_has_cells(xml: &[u8]) -> Result<bool, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析工作表单元格失败: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"c" =>
+            {
+                return Ok(true);
+            }
+            Event::Eof => return Ok(false),
+            _ => {}
+        }
+        buffer.clear();
+    }
+}
+
+fn patch_sheet_row_structure(
+    xml: &[u8],
+    current_sheet: &str,
+    change: &WorkbookStructureChange,
+    target_sheet: bool,
+) -> Result<Vec<u8>, String> {
+    let target_has_cells = target_sheet && sheet_has_cells(xml)?;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 128));
+    let mut buffer = Vec::new();
+    let mut inside_formula = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析工作表行结构失败: {error}"))?;
+        match event {
+            Event::Start(ref start) if target_sheet && start.local_name().as_ref() == b"row" => {
+                let number = xml_value(start, b"r", reader.decoder())?
+                    .ok_or("工作表行缺少行号")?
+                    .parse::<usize>()
+                    .map_err(|_| "工作表行号无效")?;
+                let row = number.checked_sub(1).ok_or("工作表行号无效")?;
+                let Some(migrated) = migrated_row_index(row, change) else {
+                    skip_element(&mut reader, b"row", &mut buffer)?;
+                    buffer.clear();
+                    continue;
+                };
+                let replacement = (migrated + 1).to_string();
+                writer
+                    .write_event(Event::Start(replace_xml_attribute(
+                        start,
+                        b"r",
+                        &replacement,
+                        true,
+                    )?))
+                    .map_err(|error| format!("写入迁移后的工作表行失败: {error}"))?;
+            }
+            Event::Empty(ref start) if target_sheet && start.local_name().as_ref() == b"row" => {
+                let number = xml_value(start, b"r", reader.decoder())?
+                    .ok_or("工作表行缺少行号")?
+                    .parse::<usize>()
+                    .map_err(|_| "工作表行号无效")?;
+                let row = number.checked_sub(1).ok_or("工作表行号无效")?;
+                if let Some(migrated) = migrated_row_index(row, change) {
+                    let replacement = (migrated + 1).to_string();
+                    writer
+                        .write_event(Event::Empty(replace_xml_attribute(
+                            start,
+                            b"r",
+                            &replacement,
+                            true,
+                        )?))
+                        .map_err(|error| format!("写入迁移后的空工作表行失败: {error}"))?;
+                }
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if target_sheet && start.local_name().as_ref() == b"c" =>
+            {
+                let reference =
+                    xml_value(start, b"r", reader.decoder())?.ok_or("工作表单元格缺少坐标")?;
+                let migrated = migrate_workbook_reference(&reference, Some(current_sheet), change)?;
+                if migrated == "#REF!" {
+                    return Err(format!("工作表单元格坐标迁移失败: {reference}"));
+                }
+                let updated = replace_xml_attribute(start, b"r", &migrated, false)?;
+                let output = if matches!(event, Event::Start(_)) {
+                    Event::Start(updated)
+                } else {
+                    Event::Empty(updated)
+                };
+                writer
+                    .write_event(output)
+                    .map_err(|error| format!("写入迁移后的单元格坐标失败: {error}"))?;
+            }
+            Event::Empty(ref start)
+                if start.local_name().as_ref() == b"dimension" && target_sheet =>
+            {
+                let reference =
+                    xml_value(start, b"ref", reader.decoder())?.unwrap_or_else(|| "A1".into());
+                let migrated = if target_has_cells {
+                    migrate_workbook_reference(&reference, Some(current_sheet), change)?
+                } else {
+                    "A1".into()
+                };
+                let migrated = if migrated == "#REF!" { "A1" } else { &migrated };
+                writer
+                    .write_event(Event::Empty(replace_xml_attribute(
+                        start, b"ref", migrated, false,
+                    )?))
+                    .map_err(|error| format!("写入迁移后的工作表范围失败: {error}"))?;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"f" => {
+                inside_formula = true;
+                let updated = if target_sheet {
+                    if let Some(reference) = xml_value(start, b"ref", reader.decoder())? {
+                        let migrated =
+                            migrate_workbook_reference(&reference, Some(current_sheet), change)?;
+                        if migrated == "#REF!" {
+                            return Err("共享公式范围会被完整删除，当前事务已取消".into());
+                        }
+                        replace_xml_attribute(start, b"ref", &migrated, false)?
+                    } else {
+                        start.to_owned()
+                    }
+                } else {
+                    start.to_owned()
+                };
+                writer
+                    .write_event(Event::Start(updated))
+                    .map_err(|error| format!("写入公式节点失败: {error}"))?;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"f" => {
+                let updated = if target_sheet {
+                    if let Some(reference) = xml_value(start, b"ref", reader.decoder())? {
+                        let migrated =
+                            migrate_workbook_reference(&reference, Some(current_sheet), change)?;
+                        if migrated == "#REF!" {
+                            return Err("共享公式范围会被完整删除，当前事务已取消".into());
+                        }
+                        replace_xml_attribute(start, b"ref", &migrated, false)?
+                    } else {
+                        start.to_owned()
+                    }
+                } else {
+                    start.to_owned()
+                };
+                writer
+                    .write_event(Event::Empty(updated))
+                    .map_err(|error| format!("写入空公式节点失败: {error}"))?;
+            }
+            Event::Text(ref text) if inside_formula => {
+                let formula = decode_xml_text(text, "工作表公式")?;
+                let migrated =
+                    migrate_workbook_formula(&format!("={formula}"), current_sheet, change)?;
+                writer
+                    .write_event(Event::Text(BytesText::new(&migrated[1..])))
+                    .map_err(|error| format!("写入迁移后的工作表公式失败: {error}"))?;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"f" => {
+                inside_formula = false;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束工作表公式失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制工作表行结构失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn workbook_sheet_names(xml: &[u8]) -> Result<Vec<String>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut sheets = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析工作簿工作表列表失败: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"sheet" =>
+            {
+                sheets.push(
+                    xml_value(event, b"name", reader.decoder())?.ok_or("工作簿工作表缺少名称")?,
+                );
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(sheets)
+}
+
+fn patch_workbook_defined_name_formulas(
+    xml: &[u8],
+    change: &WorkbookStructureChange,
+) -> Result<Vec<u8>, String> {
+    let sheets = workbook_sheet_names(xml)?;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 128));
+    let mut buffer = Vec::new();
+    let mut defined_name_scope: Option<Option<String>> = None;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析工作簿定义名称失败: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"definedName" => {
+                let scope = xml_value(start, b"localSheetId", reader.decoder())?
+                    .map(|value| {
+                        let index = value.parse::<usize>().map_err(|_| "定义名称作用域无效")?;
+                        sheets
+                            .get(index)
+                            .cloned()
+                            .ok_or_else(|| "定义名称作用域越界".to_string())
+                    })
+                    .transpose()?;
+                defined_name_scope = Some(scope);
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("写入定义名称节点失败: {error}"))?;
+            }
+            Event::Text(ref text) if defined_name_scope.is_some() => {
+                let formula = decode_xml_text(text, "定义名称公式")?;
+                let current_sheet = defined_name_scope
+                    .as_ref()
+                    .and_then(|scope| scope.as_deref())
+                    .unwrap_or("");
+                let had_equals = formula.starts_with('=');
+                let normalized = if had_equals {
+                    formula.clone()
+                } else {
+                    format!("={formula}")
+                };
+                let migrated = migrate_workbook_formula(&normalized, current_sheet, change)?;
+                let output = if had_equals {
+                    &migrated
+                } else {
+                    &migrated[1..]
+                };
+                writer
+                    .write_event(Event::Text(BytesText::new(output)))
+                    .map_err(|error| format!("写入迁移后的定义名称失败: {error}"))?;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"definedName" => {
+                defined_name_scope = None;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束定义名称节点失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制工作簿定义名称失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn write_package(entries: Vec<PackageEntry>, capacity: usize) -> Result<Vec<u8>, String> {
+    let cursor = Cursor::new(Vec::with_capacity(capacity));
+    let mut output = ZipWriter::new(cursor);
+    for entry in entries {
+        let options = SimpleFileOptions::default().compression_method(entry.compression);
+        if entry.is_dir {
+            output
+                .add_directory(entry.name, options)
+                .map_err(|error| format!("写入 XLSX 目录失败: {error}"))?;
+        } else {
+            output
+                .start_file(entry.name, options)
+                .map_err(|error| format!("写入 XLSX 部件失败: {error}"))?;
+            output
+                .write_all(&entry.data)
+                .map_err(|error| format!("写入 XLSX 部件内容失败: {error}"))?;
+        }
+    }
+    output
+        .finish()
+        .map(|cursor| cursor.into_inner())
+        .map_err(|error| format!("完成 XLSX 结构事务失败: {error}"))
+}
+
+pub fn patch_workbook_row_structure(
+    source: &[u8],
+    change: &WorkbookStructureChange,
+) -> Result<Vec<u8>, String> {
+    validate_workbook_structure_change(change)?;
+    if change.axis != WorkbookStructureAxis::Row {
+        return Err("S8-1B2A 当前仅支持行插入与行删除".into());
+    }
+    let mut entries = load_package(source)?;
+    if entries.iter().any(|entry| entry.name == "xl/calcChain.xml") {
+        return Err("当前行结构事务暂不支持包含计算链的工作簿；请等待 S8-1B2B".into());
+    }
+    let sheet_paths = workbook_sheet_paths(&entries)?;
+    let target_path = sheet_paths
+        .get(&change.sheet)
+        .cloned()
+        .ok_or_else(|| format!("工作表不存在: {}", change.sheet))?;
+    for (sheet, path) in &sheet_paths {
+        let xml = entries
+            .iter()
+            .find(|entry| &entry.name == path)
+            .ok_or_else(|| format!("工作表部件不存在: {path}"))?;
+        validate_plain_row_structure_sheet(&xml.data, path == &target_path)
+            .map_err(|error| format!("工作表 {sheet}: {error}"))?;
+    }
+
+    for (sheet, path) in &sheet_paths {
+        let entry = entries
+            .iter_mut()
+            .find(|entry| &entry.name == path)
+            .ok_or_else(|| format!("工作表部件不存在: {path}"))?;
+        entry.data = patch_sheet_row_structure(&entry.data, sheet, change, path == &target_path)?;
+    }
+    let workbook = entries
+        .iter_mut()
+        .find(|entry| entry.name == "xl/workbook.xml")
+        .ok_or("XLSX 缺少 xl/workbook.xml")?;
+    workbook.data = patch_workbook_defined_name_formulas(&workbook.data, change)?;
+    write_package(entries, source.len() + 256)
+}
+
 pub fn patch_workbook(
     source: &[u8],
     edits: &[WorkbookCellEdit],
@@ -3933,7 +4366,29 @@ pub fn patch_workbook(
 
 #[cfg(test)]
 mod tests {
-    use super::read_sheet_formulas;
+    use super::{
+        patch_workbook_row_structure, read_sheet_formulas, read_workbook_defined_names,
+        validate_workbook_package,
+    };
+    use crate::formats::workbook::{
+        WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructureChange,
+    };
+    use rust_xlsxwriter::{
+        ConditionalFormatCell, ConditionalFormatCellRule, Format, Formula, Workbook,
+    };
+    use std::io::{Cursor, Read};
+    use zip::ZipArchive;
+
+    fn zip_text(source: &[u8], name: &str) -> String {
+        let mut archive = ZipArchive::new(Cursor::new(source)).unwrap();
+        let mut text = String::new();
+        archive
+            .by_name(name)
+            .unwrap()
+            .read_to_string(&mut text)
+            .unwrap();
+        text
+    }
 
     #[test]
     fn reads_regular_and_shared_formulas_for_requested_page() {
@@ -3955,5 +4410,120 @@ mod tests {
         let page = read_sheet_formulas(xml, 2, 3, 1).unwrap();
         assert_eq!(page.len(), 1);
         assert_eq!(page.get(&(2, 0)).map(String::as_str), Some("=B3+C3"));
+    }
+
+    #[test]
+    fn inserts_and_deletes_plain_rows_with_cross_sheet_reference_migration() {
+        let mut workbook = Workbook::new();
+        let data = workbook.add_worksheet();
+        data.set_name("Data").unwrap();
+        data.write_string(0, 0, "Header").unwrap();
+        data.write_number(1, 0, 10).unwrap();
+        data.write_number(2, 0, 20).unwrap();
+        data.write_formula(2, 1, Formula::new("=SUM(A2:A3)").set_result("30"))
+            .unwrap();
+        let summary = workbook.add_worksheet();
+        summary.set_name("Summary").unwrap();
+        summary
+            .write_formula(0, 0, Formula::new("=Data!A2").set_result("10"))
+            .unwrap();
+        workbook
+            .define_name("DataWindow", "=Data!$A$2:$A$3")
+            .unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+
+        let inserted = patch_workbook_row_structure(
+            &source,
+            &WorkbookStructureChange {
+                sheet: "Data".into(),
+                axis: WorkbookStructureAxis::Row,
+                action: WorkbookStructureAction::Insert,
+                index: 1,
+                count: 2,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&inserted).unwrap();
+        let data_xml = zip_text(&inserted, "xl/worksheets/sheet1.xml");
+        let summary_xml = zip_text(&inserted, "xl/worksheets/sheet2.xml");
+        assert!(data_xml.contains("r=\"A4\""));
+        assert!(data_xml.contains("r=\"A5\""));
+        assert!(data_xml.contains("r=\"B5\""));
+        assert!(data_xml.contains("SUM(A4:A5)"));
+        assert!(summary_xml.contains("Data!A4"));
+        assert_eq!(
+            read_workbook_defined_names(&inserted).unwrap()[0].formula,
+            "Data!$A$4:$A$5"
+        );
+
+        let restored = patch_workbook_row_structure(
+            &inserted,
+            &WorkbookStructureChange {
+                sheet: "Data".into(),
+                axis: WorkbookStructureAxis::Row,
+                action: WorkbookStructureAction::Delete,
+                index: 1,
+                count: 2,
+            },
+        )
+        .unwrap();
+        let restored_data = zip_text(&restored, "xl/worksheets/sheet1.xml");
+        let restored_summary = zip_text(&restored, "xl/worksheets/sheet2.xml");
+        assert!(restored_data.contains("r=\"A2\""));
+        assert!(restored_data.contains("SUM(A2:A3)"));
+        assert!(restored_summary.contains("Data!A2"));
+    }
+
+    #[test]
+    fn rejects_columns_and_complex_target_sheet_structures() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_string(0, 0, "A").unwrap();
+        sheet
+            .merge_range(1, 0, 1, 1, "Merged", &Format::new())
+            .unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let mut change = WorkbookStructureChange {
+            sheet: "Data".into(),
+            axis: WorkbookStructureAxis::Column,
+            action: WorkbookStructureAction::Insert,
+            index: 0,
+            count: 1,
+        };
+        assert!(patch_workbook_row_structure(&source, &change)
+            .unwrap_err()
+            .contains("仅支持行插入与行删除"));
+        change.axis = WorkbookStructureAxis::Row;
+        assert!(patch_workbook_row_structure(&source, &change)
+            .unwrap_err()
+            .contains("合并单元格"));
+
+        let mut workbook = Workbook::new();
+        let data = workbook.add_worksheet();
+        data.set_name("Data").unwrap();
+        data.write_string(0, 0, "A").unwrap();
+        let other = workbook.add_worksheet();
+        other.set_name("Other").unwrap();
+        other.write_number(0, 0, 1).unwrap();
+        other
+            .add_conditional_format(
+                0,
+                0,
+                0,
+                0,
+                &ConditionalFormatCell::new().set_rule(ConditionalFormatCellRule::GreaterThan(0)),
+            )
+            .unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        assert!(patch_workbook_row_structure(&source, &change)
+            .unwrap_err()
+            .contains("条件格式"));
+
+        let mut workbook = Workbook::new();
+        workbook.add_worksheet().set_name("Data").unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+        let output = patch_workbook_row_structure(&source, &change).unwrap();
+        assert!(!zip_text(&output, "xl/worksheets/sheet1.xml").contains("ref=\"A2\""));
     }
 }

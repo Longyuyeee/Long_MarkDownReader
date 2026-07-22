@@ -575,6 +575,13 @@ pub struct WorkbookStructureMigrationPreview {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct WorkbookStructurePayload {
+    pub expected_signature: String,
+    pub change: WorkbookStructureChange,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WorkbookMergeEdit {
     pub sheet: String,
     pub top: usize,
