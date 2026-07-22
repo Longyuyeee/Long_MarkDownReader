@@ -111,6 +111,11 @@
         <option value="group">建立分组</option>
         <option value="ungroup">取消分组</option>
       </select>
+      <select title="整行插入与删除" :disabled="selectedAxis?.kind !== 'row' || sheetProtected || saving || updatingStructure || Boolean(dirtyCount)" @change="applyRowStructureAction">
+        <option value="">整行操作…</option>
+        <option value="insert">在所选行上方插入</option>
+        <option value="delete">删除所选行</option>
+      </select>
       <button title="合并选中的连续区域" :disabled="!canMergeSelection || saving" @click="mergeSelection">合并</button>
       <button title="取消当前合并区域" :disabled="!selectedMerge || saving" @click="unmergeSelection">取消合并</button>
       <span class="toolbar-divider"></span>
@@ -158,10 +163,11 @@
       <div v-if="loading" class="workbook-state"><div class="loader"></div><strong>正在解析 XLSX 工作簿</strong></div>
       <div v-else-if="error" class="workbook-state error"><strong>无法打开工作簿</strong><p>{{ error }}</p><button @click="loadWorkbook">重试</button></div>
       <template v-else-if="workbook && sheetInfo">
-        <div v-if="dirtyCount || sheetInfo.truncatedColumns || pageLoading || calculationCount || calculationErrors" class="workbook-status">
+        <div v-if="dirtyCount || sheetInfo.truncatedColumns || pageLoading || updatingStructure || calculationCount || calculationErrors" class="workbook-status">
           <span v-if="dirtyCount">{{ dirtyCount }} 个更改项尚未保存</span>
           <span v-if="sheetInfo.truncatedColumns">当前显示前 {{ sheetInfo.returnedColumns }} 列</span>
           <span v-if="pageLoading">正在载入行数据…</span>
+          <span v-if="updatingStructure">正在更新工作表结构…</span>
           <span v-if="calculationCount">已重算 {{ calculationCount }} 个公式</span>
           <span v-if="calculationErrors" class="calculation-error">{{ calculationErrors }} 个公式错误</span>
         </div>
@@ -320,6 +326,7 @@ interface WorkbookColumnState { startColumn: number; endColumn: number; hidden: 
 interface WorkbookRowStateEdit extends WorkbookRowState { sheet: string }
 interface WorkbookColumnStateEdit extends WorkbookColumnState { sheet: string }
 interface WorkbookMergeEdit extends WorkbookMergeRange { sheet: string; action: 'merge' | 'unmerge' }
+interface WorkbookStructureChange { sheet: string; axis: 'row'; action: 'insert' | 'delete'; index: number; count: number }
 interface CellSelection { sheet: string; row: number; column: number }
 interface SelectionArea { top: number; bottom: number; left: number; right: number }
 interface CellChange { key: string; before?: WorkbookCellEdit; after?: WorkbookCellEdit }
@@ -1126,6 +1133,62 @@ const applyAxisAction = async (event: Event) => {
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { updatingStructure.value = false }
 }
+const restoreRowSelection = async (sheet: string, row: number, count: number, action: 'insert' | 'delete') => {
+  generation += 1
+  activeSheet.value = ''
+  await selectSheet(sheet)
+  const totalRows = sheetInfo.value?.totalRows || 0
+  const focusRow = action === 'delete' ? Math.min(row, Math.max(0, totalRows - 1)) : row
+  await loadPage(focusRow)
+  const bottom = action === 'insert'
+    ? Math.min(canvasRowCount.value - 1, focusRow + count - 1)
+    : focusRow
+  selectionAnchor.value = { sheet, row: focusRow, column: 0 }
+  selectionAreas.value = [{ top: focusRow, bottom, left: 0, right: canvasColumnCount.value - 1 }]
+  setSelectionFocus(focusRow, 0)
+  await nextTick()
+  scrollRef.value?.scrollTo({ top: Math.max(0, rowOffset(focusRow) - 38), behavior: 'smooth' })
+  await recalculateLoadedFormulas(false)
+}
+const commitRowStructure = async (action: 'insert' | 'delete', start: number, count: number) => {
+  if (!workbook.value || updatingStructure.value) return
+  updatingStructure.value = true
+  const sheet = activeSheet.value
+  try {
+    const change: WorkbookStructureChange = { sheet, axis: 'row', action, index: start, count }
+    const document = await invoke<WorkbookDocument>('update_workbook_structure', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: { expectedSignature: workbook.value.signature, change },
+    })
+    workbook.value = document
+    undoStack.value = []
+    redoStack.value = []
+    await restoreRowSelection(sheet, start, count, action)
+    message.success(action === 'insert' ? `已插入 ${count.toLocaleString()} 行` : `已删除 ${count.toLocaleString()} 行`)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
+}
+const applyRowStructureAction = (event: Event) => {
+  const select = event.target as HTMLSelectElement
+  const action = select.value as 'insert' | 'delete' | ''
+  select.value = ''
+  commitFormulaInput()
+  const axis = selectedAxis.value
+  if (!action || axis?.kind !== 'row' || !workbook.value || updatingStructure.value) return
+  if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改行结构')
+  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
+  const count = axis.end - axis.start + 1
+  if (count > MAX_BATCH_CELLS) return void message.error(`单次最多插入或删除 ${MAX_BATCH_CELLS.toLocaleString()} 行`)
+  if (action === 'insert') return void commitRowStructure(action, axis.start, count)
+  dialog.warning({
+    title: `删除 ${count.toLocaleString()} 行？`,
+    content: `将删除第 ${axis.start + 1}${count > 1 ? ` 至 ${axis.end + 1}` : ''} 行，并迁移公式、Table、图表和相关工作表结构。此操作保存后不能通过当前撤销栈恢复。`,
+    positiveText: '删除行',
+    negativeText: '取消',
+    onPositiveClick: () => commitRowStructure(action, axis.start, count),
+  })
+}
 const mergeSelection = () => {
   const area = canMergeSelection.value ? selectionBounds.value : null
   if (!area) return
@@ -1340,7 +1403,7 @@ const commitFill = async (source: SelectionArea | null, preview: SelectionArea |
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 
-const recalculateFormulas = async () => {
+const recalculateLoadedFormulas = async (notify: boolean) => {
   commitFormulaInput()
   if (!workbook.value || calculating.value) return
   const sheet = activeSheet.value
@@ -1355,7 +1418,10 @@ const recalculateFormulas = async () => {
   for (const [key, edit] of drafts.value) {
     if (edit.sheet === sheet && edit.kind === 'formula') targets.set(key, { sheet, row: edit.row, column: edit.column })
   }
-  if (!targets.size) return void message.info('当前已加载区域没有公式')
+  if (!targets.size) {
+    if (notify) message.info('当前已加载区域没有公式')
+    return
+  }
   if (targets.size > MAX_BATCH_CELLS) return void message.error(`单次最多重算 ${MAX_BATCH_CELLS.toLocaleString()} 个已加载公式`)
   const currentGeneration = generation
   calculating.value = true
@@ -1374,10 +1440,11 @@ const recalculateFormulas = async () => {
     calculationCount.value = result.evaluatedFormulaCount
     calculationErrors.value = result.diagnostics.length
     if (result.diagnostics.length) message.warning(`重算完成，发现 ${result.diagnostics.length} 个公式错误`)
-    else message.success(`已重算 ${result.evaluatedFormulaCount} 个公式`)
+    else if (notify) message.success(`已重算 ${result.evaluatedFormulaCount} 个公式`)
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { calculating.value = false }
 }
+const recalculateFormulas = () => recalculateLoadedFormulas(true)
 
 const loadPage = async (offset: number) => {
   if (!activeSheet.value || !workbook.value) return
