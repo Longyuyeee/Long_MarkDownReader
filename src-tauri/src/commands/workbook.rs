@@ -8,7 +8,8 @@ use crate::formats::workbook::{
     WorkbookCalculationPayload, WorkbookCalculationResult, WorkbookCapabilities,
     WorkbookCapabilityLevel, WorkbookCell, WorkbookDocument, WorkbookEngine,
     WorkbookOutlinePayload, WorkbookSheetPage, WorkbookStructureChange,
-    WorkbookStructureMigrationPreview, WorkbookStructurePayload, WorkbookWritePayload,
+    WorkbookStructureMigrationPreview, WorkbookStructurePayload, WorkbookTablePayload,
+    WorkbookWritePayload,
 };
 use crate::formats::workbook_calculation::calculate_workbook;
 use crate::formats::workbook_formula::{
@@ -17,8 +18,8 @@ use crate::formats::workbook_formula::{
 };
 use crate::formats::workbook_ooxml::{
     patch_workbook, patch_workbook_freeze_pane, patch_workbook_outline, patch_workbook_structure,
-    read_workbook_defined_names, read_workbook_linked_data, read_workbook_protection,
-    read_workbook_sheet_layout, validate_workbook_package,
+    patch_workbook_table, read_workbook_defined_names, read_workbook_linked_data,
+    read_workbook_protection, read_workbook_sheet_layout, validate_workbook_package,
 };
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
@@ -405,6 +406,36 @@ pub async fn update_workbook_structure(
     })
     .await
     .map_err(|error| format!("XLSX 工作表结构写回任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn update_workbook_table(
+    library_root: String,
+    path: String,
+    payload: WorkbookTablePayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("Failed to read XLSX metadata: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("The XLSX changed on disk. Reload it before editing the Table.".into());
+        }
+        let output = patch_workbook_table(&source, &payload.change)?;
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("The saved XLSX cannot exceed 128 MB.".into());
+        }
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX Table write task failed: {error}"))?
 }
 
 #[tauri::command]

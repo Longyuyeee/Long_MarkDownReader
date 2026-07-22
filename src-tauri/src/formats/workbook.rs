@@ -437,7 +437,7 @@ pub struct WorkbookColumnState {
     pub collapsed: bool,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkbookMergeRange {
     pub top: usize,
@@ -578,6 +578,30 @@ pub struct WorkbookStructureMigrationPreview {
 pub struct WorkbookStructurePayload {
     pub expected_signature: String,
     pub change: WorkbookStructureChange,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkbookTableAction {
+    Create,
+    Resize,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookTableChange {
+    pub sheet: String,
+    pub action: WorkbookTableAction,
+    pub table_name: String,
+    pub range: WorkbookMergeRange,
+    pub columns: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookTablePayload {
+    pub expected_signature: String,
+    pub change: WorkbookTableChange,
 }
 
 #[derive(Clone, Debug, Deserialize)]

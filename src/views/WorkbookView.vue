@@ -123,7 +123,9 @@
       <button title="取消当前工作表冻结窗格" :disabled="(!effectiveFreeze.rows && !effectiveFreeze.columns) || saving || updatingStructure || Boolean(dirtyCount)" @click="clearFreezePane">取消冻结</button>
     </div>
 
-    <div v-if="workbook && sheetInfo && (activeDataRegion || selectedValidation)" class="data-toolbar">
+    <div v-if="workbook && sheetInfo && (activeDataRegion || selectedValidation || tableSelection)" class="data-toolbar">
+      <button v-if="tableSelection && !selectedTable" title="从选区创建 Excel Table" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('create')">创建 Table</button>
+      <button v-if="tableSelection && selectedTable" title="把 Excel Table 调整到选区并同步表头" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('resize')">调整 Table</button>
       <template v-if="activeDataRegion">
         <strong>{{ activeDataRegion.label }}</strong>
         <select v-model.number="filterColumn" title="筛选字段" @focus="prepareDataView">
@@ -327,6 +329,7 @@ interface WorkbookRowStateEdit extends WorkbookRowState { sheet: string }
 interface WorkbookColumnStateEdit extends WorkbookColumnState { sheet: string }
 interface WorkbookMergeEdit extends WorkbookMergeRange { sheet: string; action: 'merge' | 'unmerge' }
 interface WorkbookStructureChange { sheet: string; axis: 'row' | 'column'; action: 'insert' | 'delete'; index: number; count: number }
+interface WorkbookTableChange { sheet: string; action: 'create' | 'resize'; tableName: string; range: WorkbookMergeRange; columns: string[] }
 interface CellSelection { sheet: string; row: number; column: number }
 interface SelectionArea { top: number; bottom: number; left: number; right: number }
 interface CellChange { key: string; before?: WorkbookCellEdit; after?: WorkbookCellEdit }
@@ -536,8 +539,19 @@ const validationLabel = (validation: WorkbookDataValidation) => {
   if (validation.kind === 'textLength') return `文本长度 ${validation.operator || 'between'}`
   return validation.kind
 }
+const tableSelection = computed(() => {
+  const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
+  if (!area || area.top >= area.bottom || area.left > area.right) return null
+  if (area.bottom >= canvasRowCount.value || area.right >= canvasColumnCount.value) return null
+  return area
+})
+const selectedTable = computed(() => {
+  const area = tableSelection.value
+  if (!area) return undefined
+  return sheetInfo.value?.tables.find(table => area.top <= table.range.bottom && table.range.top <= area.bottom && area.left <= table.range.right && table.range.left <= area.right)
+})
 const activeDataRegion = computed(() => {
-  const table = sheetInfo.value?.tables[0]
+  const table = selectedTable.value || sheetInfo.value?.tables[0]
   if (table) return { range: table.range, label: `Table · ${table.displayName}`, columns: table.columns }
   const range = sheetInfo.value?.autoFilter
   return range ? { range, label: '自动筛选区域', columns: [] as string[] } : undefined
@@ -1195,6 +1209,54 @@ const applyStructureAction = (event: Event) => {
     negativeText: '取消',
     onPositiveClick: () => commitStructure(axis.kind, action, axis.start, count),
   })
+}
+const restoreTableSelection = async (sheet: string, area: WorkbookMergeRange) => {
+  generation += 1
+  activeSheet.value = ''
+  await selectSheet(sheet)
+  await loadPage(area.top)
+  selectionAnchor.value = { sheet, row: area.top, column: area.left }
+  selectionAreas.value = [{ ...area }]
+  setSelectionFocus(area.top, area.left)
+  await recalculateLoadedFormulas(false)
+}
+const editSelectedTable = async (action: 'create' | 'resize') => {
+  commitFormulaInput()
+  const area = tableSelection.value
+  if (!area || !workbook.value || updatingStructure.value) return
+  if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑 Table')
+  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
+  const table = selectedTable.value
+  if (action === 'resize' && !table) return void message.error('请选择与目标 Table 相交的调整范围')
+  if (action === 'create' && table) return void message.error('选区与已有 Table 重叠')
+  const columns: string[] = []
+  for (let column = area.left; column <= area.right; column += 1) {
+    const header = cellAt(area.top, column)
+    if (header.formula) return void message.error('Table 表头不能使用公式')
+    const name = header.value.trim()
+    if (!name) return void message.error(`Table 表头 ${columnLabel(column)}${area.top + 1} 不能为空`)
+    columns.push(name)
+  }
+  if (new Set(columns.map(name => name.toLocaleLowerCase())).size !== columns.length) return void message.error('Table 表头不能重名')
+  const defaultName = table?.displayName || `Table${(sheetInfo.value?.tables.length || 0) + 1}`
+  const tableName = action === 'create' ? window.prompt('输入 Table 名称', defaultName)?.trim() : defaultName
+  if (!tableName) return
+  updatingStructure.value = true
+  try {
+    const change: WorkbookTableChange = { sheet: activeSheet.value, action, tableName, range: { ...area }, columns }
+    const document = await invoke<WorkbookDocument>('update_workbook_table', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: { expectedSignature: workbook.value.signature, change },
+    })
+    const sheet = activeSheet.value
+    workbook.value = document
+    undoStack.value = []
+    redoStack.value = []
+    await restoreTableSelection(sheet, area)
+    message.success(action === 'create' ? `已创建 Table ${tableName}` : `已调整 Table ${tableName}`)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
 }
 const mergeSelection = () => {
   const area = canMergeSelection.value ? selectionBounds.value : null

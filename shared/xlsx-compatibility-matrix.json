@@ -137,10 +137,10 @@
       "label": "Excel Table",
       "read": "supported",
       "view": "supported",
-      "edit": "planned",
+      "edit": "limited",
       "calculate": "limited",
       "roundTrip": "preserved",
-      "evidence": "InventoryTable relationship/range/column/style fixture + table part preservation test"
+      "evidence": "InventoryTable read fixture + signature-protected create/resize package transaction and round-trip tests"
     },
     {
       "id": "data_validation",

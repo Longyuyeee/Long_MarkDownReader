@@ -7,7 +7,7 @@ use crate::formats::workbook::{
     WorkbookPageMargins, WorkbookPivotTable, WorkbookPrintOptions, WorkbookProtection,
     WorkbookRangeReference, WorkbookRowHeight, WorkbookRowHeightEdit, WorkbookRowState,
     WorkbookRowStateEdit, WorkbookSlicer, WorkbookStructureAction, WorkbookStructureAxis,
-    WorkbookStructureChange, WorkbookTable,
+    WorkbookStructureChange, WorkbookTable, WorkbookTableAction, WorkbookTableChange,
 };
 use crate::formats::workbook_formula::{
     migrate_workbook_formula, migrate_workbook_reference, translate_formula,
@@ -4963,6 +4963,536 @@ fn write_package(entries: Vec<PackageEntry>, capacity: usize) -> Result<Vec<u8>,
         .map_err(|error| format!("完成 XLSX 结构事务失败: {error}"))
 }
 
+fn table_reference(range: &WorkbookMergeRange) -> Result<String, String> {
+    Ok(format!(
+        "{}:{}",
+        cell_reference(range.top, range.left)?,
+        cell_reference(range.bottom, range.right)?
+    ))
+}
+
+fn validate_table_change(change: &WorkbookTableChange) -> Result<(), String> {
+    let range = &change.range;
+    if range.top > range.bottom
+        || range.left > range.right
+        || range.bottom >= MAX_XLSX_ROWS
+        || range.right >= MAX_XLSX_COLUMNS
+    {
+        return Err("The Table range is outside the XLSX grid.".into());
+    }
+    if range.top == range.bottom {
+        return Err("A Table needs a header row and at least one data row.".into());
+    }
+    let width = range.right - range.left + 1;
+    if change.columns.len() != width {
+        return Err("The Table column count must match the selected range width.".into());
+    }
+    let name = change.table_name.trim();
+    if name.is_empty() || name.len() > 255 {
+        return Err("The Table name must contain 1 to 255 characters.".into());
+    }
+    let mut chars = name.chars();
+    if !chars
+        .next()
+        .is_some_and(|value| value.is_ascii_alphabetic() || matches!(value, '_' | '\\'))
+        || !chars.all(|value| value.is_ascii_alphanumeric() || matches!(value, '_' | '.'))
+    {
+        return Err(
+            "The Table name must start with a letter or underscore and contain no spaces.".into(),
+        );
+    }
+    if parse_cell_reference(name).is_ok() {
+        return Err("The Table name cannot be a cell reference.".into());
+    }
+    let mut column_names = HashSet::new();
+    for column in &change.columns {
+        let column = column.trim();
+        if column.is_empty() || column.len() > 255 {
+            return Err("Table headers must contain 1 to 255 characters.".into());
+        }
+        if !column_names.insert(column.to_lowercase()) {
+            return Err(format!("Table headers must be unique: {column}"));
+        }
+    }
+    Ok(())
+}
+
+fn table_root(xml: &[u8]) -> Result<(u32, String, WorkbookMergeRange, Option<String>), String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse Excel Table: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"table" =>
+            {
+                let id = xml_value(event, b"id", reader.decoder())?
+                    .ok_or("Excel Table is missing id")?
+                    .parse::<u32>()
+                    .map_err(|_| "Excel Table id is invalid")?;
+                let name = xml_value(event, b"displayName", reader.decoder())?
+                    .or(xml_value(event, b"name", reader.decoder())?)
+                    .ok_or("Excel Table is missing a name")?;
+                let range = parse_range_reference(
+                    &xml_value(event, b"ref", reader.decoder())?
+                        .ok_or("Excel Table is missing ref")?,
+                )?;
+                let style = read_table_style_name(xml)?;
+                return Ok((id, name, range, style));
+            }
+            Event::Eof => return Err("Excel Table is missing its root element.".into()),
+            _ => {}
+        }
+        buffer.clear();
+    }
+}
+
+fn read_table_style_name(xml: &[u8]) -> Result<Option<String>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse Excel Table style: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"tableStyleInfo" =>
+            {
+                return xml_value(event, b"name", reader.decoder());
+            }
+            Event::Eof => return Ok(None),
+            _ => {}
+        }
+        buffer.clear();
+    }
+}
+
+fn ensure_simple_resizable_table(xml: &[u8]) -> Result<(), String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to inspect Excel Table: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event) => {
+                match event.local_name().as_ref() {
+                    b"table"
+                        if bool_attribute(event, b"totalsRowShown", reader.decoder(), false)? =>
+                    {
+                        return Err("Tables with a totals row cannot be resized yet.".into());
+                    }
+                    b"filterColumn" => {
+                        return Err(
+                            "Tables with active filter criteria cannot be resized yet.".into()
+                        );
+                    }
+                    b"calculatedColumnFormula" | b"totalsRowFormula" => {
+                        return Err(
+                            "Tables with calculated or totals formulas cannot be resized yet."
+                                .into(),
+                        );
+                    }
+                    b"extLst" => {
+                        return Err(
+                            "Tables with extension metadata cannot be resized safely.".into()
+                        );
+                    }
+                    _ => {}
+                }
+            }
+            Event::Eof => return Ok(()),
+            _ => {}
+        }
+        buffer.clear();
+    }
+}
+
+fn build_table_xml(
+    id: u32,
+    name: &str,
+    range: &WorkbookMergeRange,
+    columns: &[String],
+    style_name: Option<&str>,
+) -> Result<Vec<u8>, String> {
+    let reference = table_reference(range)?;
+    let mut writer = Writer::new(Vec::new());
+    writer
+        .write_event(Event::Decl(quick_xml::events::BytesDecl::new(
+            "1.0",
+            Some("UTF-8"),
+            Some("yes"),
+        )))
+        .map_err(|error| format!("Failed to write Table declaration: {error}"))?;
+    let mut table = BytesStart::new("table");
+    let id_text = id.to_string();
+    table.push_attribute((
+        "xmlns",
+        "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+    ));
+    table.push_attribute(("id", id_text.as_str()));
+    table.push_attribute(("name", name));
+    table.push_attribute(("displayName", name));
+    table.push_attribute(("ref", reference.as_str()));
+    table.push_attribute(("totalsRowShown", "0"));
+    writer
+        .write_event(Event::Start(table))
+        .map_err(|error| format!("Failed to write Table: {error}"))?;
+    let mut filter = BytesStart::new("autoFilter");
+    filter.push_attribute(("ref", reference.as_str()));
+    writer
+        .write_event(Event::Empty(filter))
+        .map_err(|error| format!("Failed to write Table filter: {error}"))?;
+    let mut table_columns = BytesStart::new("tableColumns");
+    let count = columns.len().to_string();
+    table_columns.push_attribute(("count", count.as_str()));
+    writer
+        .write_event(Event::Start(table_columns))
+        .map_err(|error| format!("Failed to write Table columns: {error}"))?;
+    for (index, name) in columns.iter().enumerate() {
+        let mut column = BytesStart::new("tableColumn");
+        let id = (index + 1).to_string();
+        column.push_attribute(("id", id.as_str()));
+        column.push_attribute(("name", name.trim()));
+        writer
+            .write_event(Event::Empty(column))
+            .map_err(|error| format!("Failed to write Table column: {error}"))?;
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new("tableColumns")))
+        .map_err(|error| format!("Failed to finish Table columns: {error}"))?;
+    let mut style = BytesStart::new("tableStyleInfo");
+    style.push_attribute(("name", style_name.unwrap_or("TableStyleMedium2")));
+    style.push_attribute(("showFirstColumn", "0"));
+    style.push_attribute(("showLastColumn", "0"));
+    style.push_attribute(("showRowStripes", "1"));
+    style.push_attribute(("showColumnStripes", "0"));
+    writer
+        .write_event(Event::Empty(style))
+        .map_err(|error| format!("Failed to write Table style: {error}"))?;
+    writer
+        .write_event(Event::End(BytesEnd::new("table")))
+        .map_err(|error| format!("Failed to finish Table: {error}"))?;
+    Ok(writer.into_inner())
+}
+
+fn patch_relationships_with_table(
+    xml: &[u8],
+    relation_id: &str,
+    target: &str,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 180));
+    let mut buffer = Vec::new();
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse worksheet relationships: {error}"))?;
+        match event {
+            Event::End(ref end) if end.local_name().as_ref() == b"Relationships" => {
+                let mut relationship = BytesStart::new("Relationship");
+                relationship.push_attribute(("Id", relation_id));
+                relationship.push_attribute((
+                    "Type",
+                    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table",
+                ));
+                relationship.push_attribute(("Target", target));
+                writer
+                    .write_event(Event::Empty(relationship))
+                    .map_err(|error| format!("Failed to add Table relationship: {error}"))?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish relationships: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy relationships: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn new_table_relationships(relation_id: &str, target: &str) -> Vec<u8> {
+    format!("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"{relation_id}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/table\" Target=\"{target}\"/></Relationships>").into_bytes()
+}
+
+fn patch_sheet_with_table_part(xml: &[u8], relation_id: &str) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 120));
+    let mut buffer = Vec::new();
+    let mut has_parts = false;
+    let mut inserted = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse worksheet Table references: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"worksheet" => {
+                let mut root = start.to_owned();
+                if xml_value(start, b"xmlns:r", reader.decoder())?.is_none() {
+                    root.push_attribute((
+                        "xmlns:r",
+                        "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+                    ));
+                }
+                writer
+                    .write_event(Event::Start(root))
+                    .map_err(|error| format!("Failed to write worksheet root: {error}"))?;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"tableParts" => {
+                has_parts = true;
+                let count = xml_value(start, b"count", reader.decoder())?
+                    .and_then(|value| value.parse::<usize>().ok())
+                    .unwrap_or(0)
+                    + 1;
+                let updated = replace_xml_attribute(start, b"count", &count.to_string(), false)?;
+                writer
+                    .write_event(Event::Start(updated))
+                    .map_err(|error| format!("Failed to update Table reference count: {error}"))?;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"tableParts" => {
+                let mut part = BytesStart::new("tablePart");
+                part.push_attribute(("r:id", relation_id));
+                writer
+                    .write_event(Event::Empty(part))
+                    .map_err(|error| format!("Failed to add Table reference: {error}"))?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish Table references: {error}"))?;
+                inserted = true;
+            }
+            Event::Start(ref start)
+                if !has_parts && !inserted && start.local_name().as_ref() == b"extLst" =>
+            {
+                write_new_table_parts(&mut writer, relation_id)?;
+                inserted = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy worksheet extensions: {error}"))?;
+            }
+            Event::End(ref end)
+                if !has_parts && !inserted && end.local_name().as_ref() == b"worksheet" =>
+            {
+                write_new_table_parts(&mut writer, relation_id)?;
+                inserted = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish worksheet: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy worksheet: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !inserted {
+        return Err("Could not add the Table reference to the worksheet.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn write_new_table_parts(writer: &mut Writer<Vec<u8>>, relation_id: &str) -> Result<(), String> {
+    let mut parts = BytesStart::new("tableParts");
+    parts.push_attribute(("count", "1"));
+    writer
+        .write_event(Event::Start(parts))
+        .map_err(|error| format!("Failed to add Table references: {error}"))?;
+    let mut part = BytesStart::new("tablePart");
+    part.push_attribute(("r:id", relation_id));
+    writer
+        .write_event(Event::Empty(part))
+        .map_err(|error| format!("Failed to add Table reference: {error}"))?;
+    writer
+        .write_event(Event::End(BytesEnd::new("tableParts")))
+        .map_err(|error| format!("Failed to finish Table references: {error}"))
+}
+
+fn patch_content_types_with_table(xml: &[u8], part_name: &str) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 180));
+    let mut buffer = Vec::new();
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse content types: {error}"))?;
+        match event {
+            Event::End(ref end) if end.local_name().as_ref() == b"Types" => {
+                let mut item = BytesStart::new("Override");
+                item.push_attribute(("PartName", part_name));
+                item.push_attribute((
+                    "ContentType",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml",
+                ));
+                writer
+                    .write_event(Event::Empty(item))
+                    .map_err(|error| format!("Failed to add Table content type: {error}"))?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish content types: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy content types: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+pub fn patch_workbook_table(
+    source: &[u8],
+    change: &WorkbookTableChange,
+) -> Result<Vec<u8>, String> {
+    validate_table_change(change)?;
+    let mut entries = load_package(source)?;
+    let sheet_paths = workbook_sheet_paths(&entries)?;
+    let sheet_path = sheet_paths
+        .get(&change.sheet)
+        .cloned()
+        .ok_or_else(|| format!("Worksheet does not exist: {}", change.sheet))?;
+    let sheet_xml = entries
+        .iter()
+        .find(|entry| entry.name == sheet_path)
+        .ok_or("Worksheet part is missing")?
+        .data
+        .clone();
+    if has_element(&sheet_xml, b"sheetProtection")? {
+        return Err("The current Sheet is protected and its Tables cannot be edited.".into());
+    }
+    let structure = read_sheet_structure(&sheet_xml, 0, MAX_XLSX_ROWS, MAX_XLSX_COLUMNS)?;
+    if structure
+        .merged_cells
+        .iter()
+        .any(|range| ranges_overlap(range, &change.range))
+    {
+        return Err("A Table cannot overlap merged cells.".into());
+    }
+
+    let relationships = part_relationships(&entries, &sheet_path)?;
+    let mut max_id = 0u32;
+    let mut all_names = HashSet::new();
+    let mut target: Option<(String, u32, Option<String>)> = None;
+    for (path, xml) in entries
+        .iter()
+        .filter(|entry| entry.name.starts_with("xl/tables/") && entry.name.ends_with(".xml"))
+        .map(|entry| (entry.name.clone(), entry.data.as_slice()))
+    {
+        let (id, name, range, style) = table_root(xml)?;
+        max_id = max_id.max(id);
+        all_names.insert(name.to_lowercase());
+        if relationships.values().any(|value| value == &path) {
+            if name.eq_ignore_ascii_case(&change.table_name) {
+                target = Some((path.clone(), id, style));
+            } else if ranges_overlap(&range, &change.range) {
+                return Err(format!("The selected range overlaps Table {name}."));
+            }
+        }
+    }
+
+    match change.action {
+        WorkbookTableAction::Resize => {
+            let (path, id, style) = target.ok_or_else(|| {
+                format!(
+                    "Table does not exist on this worksheet: {}",
+                    change.table_name
+                )
+            })?;
+            let entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == path)
+                .ok_or("Table part is missing")?;
+            ensure_simple_resizable_table(&entry.data)?;
+            entry.data = build_table_xml(
+                id,
+                change.table_name.trim(),
+                &change.range,
+                &change.columns,
+                style.as_deref(),
+            )?;
+        }
+        WorkbookTableAction::Create => {
+            if all_names.contains(&change.table_name.trim().to_lowercase()) {
+                return Err(format!(
+                    "A Table named {} already exists.",
+                    change.table_name.trim()
+                ));
+            }
+            let id = max_id.checked_add(1).ok_or("Excel Table id overflow")?;
+            let mut number = 1usize;
+            let path = loop {
+                let candidate = format!("xl/tables/table{number}.xml");
+                if !entries.iter().any(|entry| entry.name == candidate) {
+                    break candidate;
+                }
+                number += 1;
+            };
+            let used_relation_ids = relationships.keys().cloned().collect::<HashSet<_>>();
+            let mut relation_number = 1usize;
+            let relation_id = loop {
+                let candidate = format!("rId{relation_number}");
+                if !used_relation_ids.contains(&candidate) {
+                    break candidate;
+                }
+                relation_number += 1;
+            };
+            let relation_path = {
+                let (directory, file) = sheet_path
+                    .rsplit_once('/')
+                    .ok_or("Worksheet path is invalid")?;
+                format!("{directory}/_rels/{file}.rels")
+            };
+            let target_path = format!("../tables/{}", path.rsplit('/').next().unwrap_or_default());
+            if let Some(entry) = entries.iter_mut().find(|entry| entry.name == relation_path) {
+                entry.data =
+                    patch_relationships_with_table(&entry.data, &relation_id, &target_path)?;
+            } else {
+                entries.push(PackageEntry {
+                    name: relation_path,
+                    is_dir: false,
+                    compression: CompressionMethod::Deflated,
+                    data: new_table_relationships(&relation_id, &target_path),
+                });
+            }
+            let sheet = entries
+                .iter_mut()
+                .find(|entry| entry.name == sheet_path)
+                .ok_or("Worksheet part is missing")?;
+            sheet.data = patch_sheet_with_table_part(&sheet.data, &relation_id)?;
+            let content_types = entries
+                .iter_mut()
+                .find(|entry| entry.name == "[Content_Types].xml")
+                .ok_or("XLSX is missing [Content_Types].xml")?;
+            content_types.data =
+                patch_content_types_with_table(&content_types.data, &format!("/{path}"))?;
+            entries.push(PackageEntry {
+                name: path,
+                is_dir: false,
+                compression: CompressionMethod::Deflated,
+                data: build_table_xml(
+                    id,
+                    change.table_name.trim(),
+                    &change.range,
+                    &change.columns,
+                    None,
+                )?,
+            });
+        }
+    }
+    write_package(entries, source.len() + 1024)
+}
+
 pub fn patch_workbook_structure(
     source: &[u8],
     change: &WorkbookStructureChange,
@@ -5253,11 +5783,12 @@ pub fn patch_workbook(
 mod tests {
     use super::{
         patch_calc_chain_rows, patch_sheet_structure_axis, patch_workbook_structure,
-        read_sheet_formulas, read_workbook_defined_names, read_workbook_sheet_layout,
-        validate_plain_structure_sheet, validate_workbook_package,
+        patch_workbook_table, read_sheet_formulas, read_workbook_defined_names,
+        read_workbook_sheet_layout, validate_plain_structure_sheet, validate_workbook_package,
     };
     use crate::formats::workbook::{
-        WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructureChange,
+        WorkbookMergeRange, WorkbookStructureAction, WorkbookStructureAxis,
+        WorkbookStructureChange, WorkbookTableAction, WorkbookTableChange,
     };
     use rust_xlsxwriter::{
         Chart, ChartType, ConditionalFormatCell, ConditionalFormatCellRule, DataValidation, Format,
@@ -5743,5 +6274,70 @@ mod tests {
         assert!(output.contains("dataValidation sqref=\"A3\""));
         assert_eq!(output.matches("<hyperlink ").count(), 1);
         assert!(output.contains("hyperlink ref=\"A3\" location=\"Data!A3\""));
+    }
+
+    #[test]
+    fn creates_and_resizes_excel_table_package_parts() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_string(0, 0, "Item").unwrap();
+        sheet.write_string(0, 1, "Amount").unwrap();
+        sheet.write_string(0, 2, "Region").unwrap();
+        sheet.write_string(1, 0, "A").unwrap();
+        sheet.write_number(1, 1, 10).unwrap();
+        sheet.write_string(1, 2, "East").unwrap();
+        sheet.write_string(2, 0, "B").unwrap();
+        sheet.write_number(2, 1, 20).unwrap();
+        sheet.write_string(2, 2, "West").unwrap();
+        let source = workbook.save_to_buffer().unwrap();
+
+        let created = patch_workbook_table(
+            &source,
+            &WorkbookTableChange {
+                sheet: "Data".into(),
+                action: WorkbookTableAction::Create,
+                table_name: "SalesTable".into(),
+                range: WorkbookMergeRange {
+                    top: 0,
+                    bottom: 2,
+                    left: 0,
+                    right: 1,
+                },
+                columns: vec!["Item".into(), "Amount".into()],
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&created).unwrap();
+        let layout = read_workbook_sheet_layout(&created, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.tables.len(), 1);
+        assert_eq!(layout.tables[0].display_name, "SalesTable");
+        assert_eq!(layout.tables[0].columns, vec!["Item", "Amount"]);
+        assert!(zip_text(&created, "xl/worksheets/sheet1.xml").contains("tableParts count=\"1\""));
+        assert!(zip_text(&created, "xl/worksheets/_rels/sheet1.xml.rels")
+            .contains("../tables/table1.xml"));
+        assert!(zip_text(&created, "[Content_Types].xml").contains("/xl/tables/table1.xml"));
+
+        let resized = patch_workbook_table(
+            &created,
+            &WorkbookTableChange {
+                sheet: "Data".into(),
+                action: WorkbookTableAction::Resize,
+                table_name: "SalesTable".into(),
+                range: WorkbookMergeRange {
+                    top: 0,
+                    bottom: 2,
+                    left: 0,
+                    right: 2,
+                },
+                columns: vec!["Item".into(), "Amount".into(), "Region".into()],
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&resized).unwrap();
+        let layout = read_workbook_sheet_layout(&resized, "Data", 0, 10, 10).unwrap();
+        assert_eq!(layout.tables[0].range.right, 2);
+        assert_eq!(layout.tables[0].columns, vec!["Item", "Amount", "Region"]);
+        assert!(zip_text(&resized, "xl/tables/table1.xml").contains("ref=\"A1:C3\""));
     }
 }

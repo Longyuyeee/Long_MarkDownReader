@@ -46,6 +46,9 @@ for (const id of ['freeze_panes', 'sort_filter_view', 'excel_tables', 'data_vali
 if (!ooxml.includes('patch_workbook_freeze_pane') || !engine.includes('update_workbook_freeze_pane') || !view.includes('setFreezePane')) fail('freeze pane read/write evidence missing')
 if (!view.includes('prepareDataView') || !view.includes('MAX_DATA_VIEW_ROWS')) fail('session sort/filter evidence missing')
 if (!ooxml.includes('read_sheet_tables') || !generator.includes('InventoryTable')) fail('Excel Table evidence missing')
+if (matrix.features.find(item => item.id === 'excel_tables')?.edit !== 'limited') fail('Excel Table S8-2A edit status drift')
+if (!ooxml.includes('patch_workbook_table') || !engine.includes('update_workbook_table') || !view.includes("invoke<WorkbookDocument>('update_workbook_table'")) fail('Excel Table create/resize transaction evidence missing')
+if (!ooxml.includes('creates_and_resizes_excel_table_package_parts') || !view.includes('editSelectedTable')) fail('Excel Table S8-2A round-trip or UI evidence missing')
 if (!ooxml.includes('validate_edit_against_rules') || !generator.includes('allow_list_strings')) fail('data validation evidence missing')
 for (const capability of ['freezePanes', 'sortFilterView', 'excelTables', 'dataValidation']) {
   if (fixture.currentEngineExpectations[capability] !== 'supported') fail(`${capability} fixture expectation drift`)
