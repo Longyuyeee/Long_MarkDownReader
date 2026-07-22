@@ -31,7 +31,7 @@
         <button @click="router.push({ name: 'LibraryMode' })"><span>Markdown</span><strong>{{ formatCount('markdown') }}</strong></button>
         <button @click="openFirstCanvas" :disabled="!canvasItems.length"><span>Canvas</span><strong>{{ formatCount('canvas') }}</strong></button>
         <button @click="scrollToTasks"><span>未完成任务</span><strong>{{ overview.tasks.length }}</strong></button>
-        <button @click="router.push({ name: 'Graph' })"><span>关系风险</span><strong>{{ healthRiskCount }}</strong></button>
+        <button @click="scrollToGovernance"><span>治理风险</span><strong>{{ healthRiskCount }}</strong></button>
       </section>
 
       <div v-if="error" class="workspace-alert"><AlertIcon /><span>{{ error }}</span><button @click="loadWorkspace">重试</button></div>
@@ -112,6 +112,10 @@
           </div>
           <div v-else class="empty-line">暂无智能集合</div>
         </section>
+
+        <section ref="governanceSection" class="workspace-section governance-section">
+          <WorkspaceHealthQueue :report="workspaceHealth" :error="workspaceHealthError" @open-file="openPath" @open-annotation="openAnnotation" />
+        </section>
       </div>
     </main>
 
@@ -137,6 +141,7 @@ import {
 } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 import { fileDisplayName, findFileFormat, routeForFile } from '../config/fileFormats'
+import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceHealthReport } from '../components/WorkspaceHealthQueue.vue'
 
 interface WorkspaceTask { title: string; path: string; relativePath: string; line: number; text: string }
 interface WorkspaceFile { title: string; path: string; relativePath: string; objectType: string; modifiedAt: number; size: number }
@@ -148,14 +153,17 @@ const router = useRouter()
 const store = useAppStore()
 const loading = ref(false)
 const error = ref('')
+const workspaceHealthError = ref('')
 const refreshedAt = ref(0)
 const tasksSection = ref<HTMLElement | null>(null)
+const governanceSection = ref<HTMLElement | null>(null)
 const overview = ref<WorkspaceOverview>({ totalFiles: 0, tasks: [], recentFiles: [], canvases: [], formatCounts: [] })
 const health = ref<GraphHealth>({ brokenLinks: [], ambiguousLinks: [], orphanNotes: [], scannedNotes: 0 })
 const indexStatus = ref<IndexStatus>({ state: 'missing', objectCount: 0, relationCount: 0 })
+const workspaceHealth = ref<WorkspaceHealthReport>({ duplicateGroups: [], unreferencedAnnotations: [], scannedFiles: 0, hashedFiles: 0, scannedAnnotations: 0, truncated: false })
 
 const indexLabel = computed(() => ({ missing: '索引未构建', building: '索引构建中', ready: '索引就绪', stale: '索引已过期', corrupt: '索引已损坏', error: '索引异常' }[indexStatus.value.state]))
-const healthRiskCount = computed(() => health.value.brokenLinks.length + health.value.ambiguousLinks.length + health.value.orphanNotes.length)
+const healthRiskCount = computed(() => health.value.brokenLinks.length + health.value.ambiguousLinks.length + health.value.orphanNotes.length + workspaceHealth.value.duplicateGroups.length + workspaceHealth.value.unreferencedAnnotations.length)
 const refreshedLabel = computed(() => refreshedAt.value ? new Date(refreshedAt.value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '尚未刷新')
 const starredItems = computed(() => store.starredFiles.slice(0, 6).map(path => ({ path })))
 const recentItems = computed(() => {
@@ -180,6 +188,7 @@ const displayName = (path: string, fallback?: string) => fileDisplayName(path) |
 const relativeLabel = (path: string) => path.replace(store.libraryPath, '').replace(/^[\\/]+/, '') || path
 const iconForPath = (path: string) => formatIcons[findFileFormat(path)?.id || ''] || FileIcon
 const scrollToTasks = () => tasksSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+const scrollToGovernance = () => governanceSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 const openFirstCanvas = () => {
   const firstCanvas = canvasItems.value[0]
   if (firstCanvas) openPath(firstCanvas.path)
@@ -196,19 +205,28 @@ const openPath = (path: string) => {
   else router.push(target)
 }
 
+const openAnnotation = (issue: WorkspaceAnnotationIssue) => router.push({
+  name: 'Pdf',
+  query: { path: issue.pdfPath, page: String(issue.page), annotation: issue.annotationId },
+})
+
 const loadWorkspace = async () => {
   if (!store.libraryPath || loading.value) return
   loading.value = true
   error.value = ''
-  const [overviewResult, healthResult, indexResult] = await Promise.allSettled([
+  workspaceHealthError.value = ''
+  const [overviewResult, healthResult, indexResult, workspaceHealthResult] = await Promise.allSettled([
     invoke<WorkspaceOverview>('get_workspace_overview', { libraryRoot: store.libraryPath }),
     invoke<GraphHealth>('analyze_graph_health', { libraryRoot: store.libraryPath }),
     invoke<IndexStatus>('get_knowledge_index_status', { libraryRoot: store.libraryPath }),
+    invoke<WorkspaceHealthReport>('analyze_workspace_health', { libraryRoot: store.libraryPath }),
   ])
   if (overviewResult.status === 'fulfilled') overview.value = overviewResult.value
   else error.value = `工作台概览不可用：${String(overviewResult.reason)}`
   if (healthResult.status === 'fulfilled') health.value = healthResult.value
   if (indexResult.status === 'fulfilled') indexStatus.value = indexResult.value
+  if (workspaceHealthResult.status === 'fulfilled') workspaceHealth.value = workspaceHealthResult.value
+  else workspaceHealthError.value = `治理扫描不可用：${String(workspaceHealthResult.reason)}`
   refreshedAt.value = Date.now()
   loading.value = false
 }
@@ -230,7 +248,7 @@ onMounted(async () => {
 .section-kicker { color: var(--theme-primary); font-size: 8px; font-weight: 800; }.workspace-signals { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }.signal { height: 27px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: var(--theme-border); border-radius: 5px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: 9px; }.signal svg { width: 13px; }.signal.index-ready { color: #168a52; }.signal.index-stale,.signal.index-corrupt,.signal.index-error { color: #b66d0d; }
 .metric-strip { display: grid; grid-template-columns: repeat(5,minmax(100px,1fr)); border-bottom: var(--theme-border); }.metric-strip button { min-height: 74px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; padding: 10px 16px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; }.metric-strip button:first-child { padding-left: 0; }.metric-strip button:last-child { border-right: 0; }.metric-strip button:hover { background: rgba(var(--theme-primary-rgb),.045); }.metric-strip span { color: var(--theme-text-secondary); font-size: 9px; }.metric-strip strong { font-size: 22px; font-weight: 680; }
 .workspace-alert { min-height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 10px; color: #a64d23; border-bottom: 1px solid rgba(166,77,35,.25); font-size: 10px; }.workspace-alert svg { width: 14px; }.workspace-alert span { flex: 1; }.workspace-alert button,.text-command { border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: 9px; }
-.workspace-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,.8fr); column-gap: 32px; }.workspace-section { min-width: 0; padding: 25px 0 28px; border-bottom: var(--theme-border); }.section-heading { min-height: 35px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }.section-heading h2 { margin: 3px 0 0; font-size: 14px; letter-spacing: 0; }.section-count { min-width: 24px; text-align: right; color: var(--theme-text-secondary); font-size: 11px; }
+.workspace-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,.8fr); column-gap: 32px; }.workspace-section { min-width: 0; padding: 25px 0 28px; border-bottom: var(--theme-border); }.governance-section { grid-column: 1 / -1; }.section-heading { min-height: 35px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }.section-heading h2 { margin: 3px 0 0; font-size: 14px; letter-spacing: 0; }.section-count { min-width: 24px; text-align: right; color: var(--theme-text-secondary); font-size: 11px; }
 .list-label { margin: 9px 0 5px; color: var(--theme-text-secondary); font-size: 8px; font-weight: 700; }.list-label:first-of-type { margin-top: 0; }.file-list,.task-list { display: grid; }.starred-list { margin-bottom: 15px; }.file-row { min-height: 51px; display: grid; grid-template-columns: 28px minmax(0,1fr) 18px; align-items: center; gap: 10px; padding: 6px 8px 6px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.file-row:hover { background: rgba(var(--theme-primary-rgb),.045); }.file-icon { width: 26px; height: 26px; display: grid; place-items: center; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); border-radius: 5px; }.file-icon svg,.file-action svg { width: 13px; }.file-copy { min-width: 0; display: grid; gap: 3px; }.file-copy strong,.task-list strong,.canvas-list strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.file-copy small,.task-list small,.canvas-list small { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 8px; }.file-action { color: var(--theme-text-secondary); }
 .health-grid { display: grid; grid-template-columns: repeat(3,1fr); border-top: var(--theme-border); border-bottom: var(--theme-border); }.health-grid button { min-height: 65px; display: grid; align-content: center; gap: 4px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: center; }.health-grid button:last-child { border-right: 0; }.health-grid span { color: var(--theme-text-secondary); font-size: 8px; }.health-grid strong { font-size: 17px; }.index-line { min-height: 54px; display: grid; grid-template-columns: 22px minmax(0,1fr) 24px; align-items: center; gap: 8px; border-bottom: var(--theme-border); }.index-line>svg { width: 16px; color: var(--theme-primary); }.index-line>div { display: grid; gap: 2px; }.index-line strong { font-size: 9px; }.index-line small { color: var(--theme-text-secondary); font-size: 8px; }.index-line button { border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.index-line button svg { width: 13px; }.format-line { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 10px; }.format-line span { display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: var(--theme-border); border-radius: 4px; font-size: 8px; }.format-line i { color: var(--theme-text-secondary); font-style: normal; }.format-line b { font-weight: 700; }
 .task-list button { min-height: 48px; display: grid; grid-template-columns: 16px minmax(0,1fr) 16px; align-items: center; gap: 9px; padding: 5px 8px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.task-list button:hover { background: rgba(var(--theme-primary-rgb),.045); }.task-list button>span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }.task-list svg { width: 13px; color: var(--theme-text-secondary); }.task-check { width: 11px; height: 11px; border: 1px solid var(--theme-text-secondary); border-radius: 2px; }

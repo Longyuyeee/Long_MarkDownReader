@@ -1,7 +1,9 @@
 use crate::formats::file_registry::file_format_for_path;
+use crate::formats::markdown::extract_pdf_reference_mentions;
+use crate::services::pdf_index::load_pdf_index;
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
@@ -11,6 +13,11 @@ const MAX_SCANNED_ENTRIES: usize = 100_000;
 const MAX_TASKS: usize = 24;
 const MAX_RECENT_FILES: usize = 8;
 const MAX_CANVASES: usize = 8;
+const MAX_DUPLICATE_FILE_BYTES: u64 = 64 * 1024 * 1024;
+const MAX_DUPLICATE_HASH_BYTES: u64 = 512 * 1024 * 1024;
+const MAX_DUPLICATE_GROUPS: usize = 24;
+const MAX_DUPLICATE_FILES_PER_GROUP: usize = 8;
+const MAX_UNREFERENCED_ANNOTATIONS: usize = 48;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -48,6 +55,35 @@ pub struct WorkspaceOverview {
     recent_files: Vec<WorkspaceFileSummary>,
     canvases: Vec<WorkspaceFileSummary>,
     format_counts: Vec<WorkspaceFormatCount>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceDuplicateGroup {
+    size: u64,
+    files: Vec<WorkspaceFileSummary>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceAnnotationIssue {
+    title: String,
+    pdf_path: String,
+    relative_path: String,
+    annotation_id: String,
+    page: u32,
+    text: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceHealthReport {
+    duplicate_groups: Vec<WorkspaceDuplicateGroup>,
+    unreferenced_annotations: Vec<WorkspaceAnnotationIssue>,
+    scanned_files: usize,
+    hashed_files: usize,
+    scanned_annotations: usize,
+    truncated: bool,
 }
 
 #[derive(Default)]
@@ -198,6 +234,174 @@ fn build_workspace_overview(root: &Path) -> WorkspaceOverview {
     }
 }
 
+fn query_value(uri: &str, key: &str) -> Option<String> {
+    uri.split_once('?')?.1.split('&').find_map(|field| {
+        let (field_key, value) = field.split_once('=')?;
+        (field_key == key)
+            .then(|| {
+                urlencoding::decode(value)
+                    .ok()
+                    .map(|value| value.into_owned())
+            })
+            .flatten()
+    })
+}
+
+fn annotation_references(files: &[WorkspaceFileSummary]) -> HashSet<(String, String)> {
+    let mut references = HashSet::new();
+    for file in files.iter().filter(|file| file.object_type == "markdown") {
+        if file.size > MAX_MARKDOWN_TASK_BYTES {
+            continue;
+        }
+        let Ok(content) = fs::read_to_string(&file.path) else {
+            continue;
+        };
+        for mention in extract_pdf_reference_mentions(&content) {
+            let Some(annotation_id) = query_value(&mention.syntax, "annotation") else {
+                continue;
+            };
+            references.insert((mention.target.to_lowercase(), annotation_id));
+        }
+    }
+    references
+}
+
+fn collect_unreferenced_annotations(
+    files: &[WorkspaceFileSummary],
+) -> (Vec<WorkspaceAnnotationIssue>, usize, bool) {
+    let references = annotation_references(files);
+    let mut issues = Vec::new();
+    let mut scanned_annotations = 0;
+    let mut truncated = false;
+    for file in files.iter().filter(|file| file.object_type == "pdf") {
+        let index = load_pdf_index(Path::new(&file.path));
+        for annotation in index.annotations {
+            scanned_annotations += 1;
+            let reference_key = (file.relative_path.to_lowercase(), annotation.id.clone());
+            if references.contains(&reference_key) {
+                continue;
+            }
+            if issues.len() >= MAX_UNREFERENCED_ANNOTATIONS {
+                truncated = true;
+                continue;
+            }
+            let text = annotation.text.trim();
+            issues.push(WorkspaceAnnotationIssue {
+                title: if text.is_empty() {
+                    format!("第 {} 页批注", annotation.page)
+                } else {
+                    text.chars().take(120).collect()
+                },
+                pdf_path: file.path.clone(),
+                relative_path: file.relative_path.clone(),
+                annotation_id: annotation.id,
+                page: annotation.page,
+                text: text.chars().take(220).collect(),
+            });
+        }
+    }
+    issues.sort_by(|left, right| {
+        left.relative_path
+            .cmp(&right.relative_path)
+            .then_with(|| left.page.cmp(&right.page))
+    });
+    (issues, scanned_annotations, truncated)
+}
+
+fn collect_duplicate_groups(
+    files: &[WorkspaceFileSummary],
+) -> (Vec<WorkspaceDuplicateGroup>, usize, bool) {
+    let mut by_size: HashMap<u64, Vec<WorkspaceFileSummary>> = HashMap::new();
+    for file in files {
+        if file.size > 0 && file.size <= MAX_DUPLICATE_FILE_BYTES {
+            by_size.entry(file.size).or_default().push(file.clone());
+        }
+    }
+    let mut candidates: Vec<_> = by_size
+        .into_iter()
+        .filter(|(_, files)| files.len() > 1)
+        .collect();
+    candidates.sort_by_key(|(size, _)| *size);
+
+    let mut total_hashed_bytes: u64 = 0;
+    let mut hashed_files = 0;
+    let mut groups = Vec::new();
+    let mut truncated = false;
+    for (size, mut same_size) in candidates {
+        same_size.sort_by(|left, right| left.relative_path.cmp(&right.relative_path));
+        let mut by_digest: HashMap<String, Vec<WorkspaceFileSummary>> = HashMap::new();
+        for file in same_size {
+            if total_hashed_bytes.saturating_add(size) > MAX_DUPLICATE_HASH_BYTES {
+                truncated = true;
+                continue;
+            }
+            let Ok(bytes) = fs::read(&file.path) else {
+                continue;
+            };
+            total_hashed_bytes += size;
+            hashed_files += 1;
+            by_digest
+                .entry(format!("{:x}", md5::compute(bytes)))
+                .or_default()
+                .push(file);
+        }
+        for mut digest_files in by_digest.into_values().filter(|files| files.len() > 1) {
+            if groups.len() >= MAX_DUPLICATE_GROUPS {
+                truncated = true;
+                continue;
+            }
+            digest_files.sort_by(|left, right| left.relative_path.cmp(&right.relative_path));
+            let Ok(anchor) = fs::read(&digest_files[0].path) else {
+                continue;
+            };
+            let mut exact = vec![digest_files[0].clone()];
+            for file in digest_files.into_iter().skip(1) {
+                if fs::read(&file.path)
+                    .map(|bytes| bytes == anchor)
+                    .unwrap_or(false)
+                {
+                    if exact.len() < MAX_DUPLICATE_FILES_PER_GROUP {
+                        exact.push(file);
+                    } else {
+                        truncated = true;
+                    }
+                }
+            }
+            if exact.len() > 1 {
+                groups.push(WorkspaceDuplicateGroup { size, files: exact });
+            }
+        }
+    }
+    groups.sort_by(|left, right| {
+        right.size.cmp(&left.size).then_with(|| {
+            left.files[0]
+                .relative_path
+                .cmp(&right.files[0].relative_path)
+        })
+    });
+    (groups, hashed_files, truncated)
+}
+
+fn build_workspace_health(root: &Path) -> WorkspaceHealthReport {
+    let mut scan = WorkspaceScan::default();
+    scan_directory(root, root, &mut scan);
+    let scanned_files = scan.files.len();
+    let (duplicate_groups, hashed_files, duplicate_truncated) =
+        collect_duplicate_groups(&scan.files);
+    let (unreferenced_annotations, scanned_annotations, annotation_truncated) =
+        collect_unreferenced_annotations(&scan.files);
+    WorkspaceHealthReport {
+        duplicate_groups,
+        unreferenced_annotations,
+        scanned_files,
+        hashed_files,
+        scanned_annotations,
+        truncated: scan.scanned_entries >= MAX_SCANNED_ENTRIES
+            || duplicate_truncated
+            || annotation_truncated,
+    }
+}
+
 #[tauri::command]
 pub async fn get_workspace_overview(library_root: String) -> Result<WorkspaceOverview, String> {
     let guard = WorkspaceGuard::new(library_root)?;
@@ -205,6 +409,17 @@ pub async fn get_workspace_overview(library_root: String) -> Result<WorkspaceOve
     tauri::async_runtime::spawn_blocking(move || build_workspace_overview(&root))
         .await
         .map_err(|error| format!("工作台概览任务失败: {error}"))
+}
+
+#[tauri::command]
+pub async fn analyze_workspace_health(
+    library_root: String,
+) -> Result<WorkspaceHealthReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let root = guard.root().to_path_buf();
+    tauri::async_runtime::spawn_blocking(move || build_workspace_health(&root))
+        .await
+        .map_err(|error| format!("工作区健康分析任务失败: {error}"))
 }
 
 #[cfg(test)]
@@ -244,6 +459,41 @@ mod tests {
             .format_counts
             .iter()
             .any(|item| item.object_type == "markdown" && item.count == 1));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn health_detects_exact_duplicates_and_unreferenced_annotations() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-workspace-health-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(root.join("research")).unwrap();
+        fs::write(root.join("copy-a.txt"), "exact duplicate").unwrap();
+        fs::write(root.join("copy-b.txt"), "exact duplicate").unwrap();
+        fs::write(root.join("different.txt"), "other content!!").unwrap();
+        fs::write(root.join("research").join("paper.pdf"), b"%PDF-health-test").unwrap();
+        fs::write(
+            root.join("research").join("paper.pdf.annotations.json"),
+            r#"{"schemaVersion":1,"source":{"pdfFile":"paper.pdf","size":16,"modifiedAt":1},"annotations":[{"id":"used","kind":"comment","page":1,"color":"yellow","rects":[],"quote":"","comment":"Referenced","createdAt":1,"updatedAt":1},{"id":"pending","kind":"comment","page":2,"color":"blue","rects":[],"quote":"","comment":"Needs review","createdAt":1,"updatedAt":1}]}"#,
+        )
+        .unwrap();
+        fs::write(
+            root.join("notes.md"),
+            "[source](longedit://pdf?path=research%2Fpaper.pdf&page=1&annotation=used)",
+        )
+        .unwrap();
+
+        let report = build_workspace_health(&root);
+        assert_eq!(report.duplicate_groups.len(), 1);
+        assert_eq!(report.duplicate_groups[0].files.len(), 2);
+        assert_eq!(report.scanned_annotations, 2);
+        assert_eq!(report.unreferenced_annotations.len(), 1);
+        assert_eq!(report.unreferenced_annotations[0].annotation_id, "pending");
         fs::remove_dir_all(root).unwrap();
     }
 }
