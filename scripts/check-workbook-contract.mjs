@@ -85,6 +85,6 @@ for (const capability of ['printLayout', 'sheetProtection']) {
 if (!view.includes('applyRowStructureAction') || !view.includes('整行插入与删除')) fail('whole-row structure toolbar entry missing')
 if (!view.includes("invoke<WorkbookDocument>('update_workbook_structure'") || !view.includes('expectedSignature: workbook.value.signature')) fail('signature-protected row structure transaction missing')
 if (!view.includes("if (dirtyCount.value) return void message.error") || !view.includes("title: `删除 ${count.toLocaleString()} 行？`")) fail('row structure draft guard or delete confirmation missing')
-if (!view.includes('restoreRowSelection') || !view.includes('recalculateLoadedFormulas(false)') || !view.includes('undoStack.value = []\n    redoStack.value = []\n    await restoreRowSelection')) fail('row structure history reset/reload/recalculation workflow missing')
+if (!view.includes('restoreRowSelection') || !view.includes('recalculateLoadedFormulas(false)') || !/undoStack\.value = \[\]\s+redoStack\.value = \[\]\s+await restoreRowSelection/.test(view)) fail('row structure history reset/reload/recalculation workflow missing')
 
 console.log(`Workbook contract OK: ${matrix.features.length} public capability rows`)
