@@ -70,7 +70,7 @@ use window_vibrancy::{apply_blur, apply_mica};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .manage(ExternalFileAccess::default())
         .manage(KnowledgeIndexRuntime::default())
         .plugin(tauri_plugin_fs::init())
@@ -80,8 +80,13 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--minimized"]),
         ))
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+        .plugin(tauri_plugin_opener::init());
+
+    #[cfg(debug_assertions)]
+    let builder = if std::env::var_os("LONGEDIT_E2E_LIBRARY").is_some() {
+        builder
+    } else {
+        builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             if let Some(win) = app.get_webview_window("main") {
                 let _ = win.unminimize();
                 let _ = win.show();
@@ -94,6 +99,24 @@ pub fn run() {
                 }
             }
         }))
+    };
+
+    #[cfg(not(debug_assertions))]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+        if let Some(win) = app.get_webview_window("main") {
+            let _ = win.unminimize();
+            let _ = win.show();
+            let _ = win.set_focus();
+        }
+        let access = app.state::<ExternalFileAccess>();
+        for argument in args.iter().skip(1) {
+            if let Ok(path) = access.authorize_markdown(argument.trim_matches('"')) {
+                let _ = app.emit("open-file", path.to_string_lossy().into_owned());
+            }
+        }
+    }));
+
+    builder
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {
                 if window.label() == "main" {

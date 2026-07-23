@@ -12,6 +12,20 @@ const ooxml = read('src-tauri/src/formats/workbook_ooxml.rs')
 const view = read('src/views/WorkbookView.vue')
 const conditionalExpression = read('src/utils/conditionalExpression.ts')
 const generator = read('src-tauri/examples/generate_workbook_fixture.rs')
+const chartGenerator = read('src-tauri/examples/generate_chart_visual_fixture.rs')
+const chartFixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/chart-visual-matrix.json'))
+const chartFixturePath = path.join(root, 'src-tauri/tests/fixtures/workbook', chartFixture.fixture)
+const configCommand = read('src-tauri/src/commands/config.rs')
+const chartVisualEvidence = [
+  'professional-light-column.jpg',
+  'professional-light-line.jpg',
+  'professional-light-pie.jpg',
+  'professional-light-scatter.jpg',
+  'professional-dark-column.jpg',
+  'high-contrast-column.jpg',
+  'desktop-edit-saved.jpg',
+  'desktop-reopen-verified.jpg',
+]
 
 const fail = message => { throw new Error(`Workbook contract: ${message}`) }
 if (matrix.schemaVersion !== 1 || matrix.format !== 'xlsx') fail('invalid matrix header')
@@ -75,9 +89,22 @@ for (const capability of ['freezePanes', 'sortFilterView', 'excelTables', 'dataV
   if (fixture.currentEngineExpectations[capability] !== 'supported') fail(`${capability} fixture expectation drift`)
 }
 const drawings = matrix.features.find(item => item.id === 'charts_and_drawings')
-if (!drawings || drawings.read !== 'supported' || drawings.view !== 'limited' || drawings.edit !== 'limited' || drawings.roundTrip !== 'supported') fail('charts_and_drawings S8-4D3 status drift')
+if (!drawings || drawings.read !== 'supported' || drawings.view !== 'limited' || drawings.edit !== 'limited' || drawings.roundTrip !== 'supported') fail('charts_and_drawings S8-4D4 status drift')
 if (!model.includes('pub drawings: Vec<WorkbookDrawingObject>') || !model.includes('pub drawing_part: String') || !model.includes('pub anchor_index: usize') || !model.includes('pub charts: WorkbookCapabilityLevel')) fail('drawing model/capability evidence missing')
 if (!ooxml.includes('read_sheet_drawings') || !ooxml.includes('parse_chart_part') || !ooxml.includes('patch_workbook_drawing') || !ooxml.includes('patch_chart_presentation_xml') || !ooxml.includes('patch_chart_data_labels_xml') || !ooxml.includes('patch_chart_series_name_xml') || !ooxml.includes('patch_chart_series_color_xml') || !ooxml.includes('updates_two_cell_drawing_metadata_and_anchor_without_rebuilding_chart_parts') || !ooxml.includes('updates_chart_title_and_internal_series_references_with_semantic_verification') || !ooxml.includes('creates_changes_and_deletes_standard_chart_lifecycle') || !ooxml.includes('keeps_advanced_point_data_labels_read_only')) fail('drawing S8-4D3 parser/transaction evidence missing')
+const expectedChartTypes = ['column', 'line', 'pie', 'scatter']
+if (chartFixture.sheet !== 'Chart Matrix' || chartFixture.charts.map(chart => chart.type).join(',') !== expectedChartTypes.join(',')) fail('S8-4D4 chart visual matrix contract drift')
+if (!fs.existsSync(chartFixturePath) || fs.statSync(chartFixturePath).size < 10_000) fail('S8-4D4 chart visual fixture is missing or incomplete')
+for (const chart of chartFixture.charts) {
+  if (!chart.title || !chart.legend || !Number.isInteger(chart.series) || chart.series < 1) fail(`S8-4D4 ${chart.type} fixture metadata is incomplete`)
+  if (!chartGenerator.includes(`ChartType::${chart.type[0].toUpperCase()}${chart.type.slice(1)}`)) fail(`S8-4D4 ${chart.type} generator evidence missing`)
+}
+if (!engine.includes('chart_visual_matrix_round_trips_through_command_boundary')) fail('S8-4D4 command round-trip evidence missing')
+if (!configCommand.includes('LONGEDIT_E2E_LIBRARY') || !configCommand.includes('#[cfg(debug_assertions)]')) fail('S8-4D4 isolated desktop harness evidence missing')
+for (const evidence of chartVisualEvidence) {
+  const evidencePath = path.join(root, 'docs/evidence/s8-4d4', evidence)
+  if (!fs.existsSync(evidencePath) || fs.statSync(evidencePath).size < 20_000) fail(`S8-4D4 visual evidence ${evidence} is missing or incomplete`)
+}
 if (!generator.includes('Chart::new') || !generator.includes('Image::new')) fail('chart/image fixture evidence missing')
 if (!view.includes('drawing-toolbar') || !view.includes('navigateDrawing') || !view.includes('editDrawingMetadata') || !view.includes('applyDrawingSelection') || !view.includes('editChartTitle') || !view.includes('editChartSeries') || !view.includes('editChartSeriesName') || !view.includes('applyChartSeriesColor') || !view.includes('chartThemePalette') || !view.includes('seriesColors') || !view.includes('categoryAxisTitle') || !view.includes('legendPosition') || !view.includes('createChartFromSelection') || !view.includes('changeSelectedChartType') || !view.includes('editChartAxes') || !view.includes('applyChartLegendPosition') || !view.includes('applyChartDataLabels') || !view.includes('deleteSelectedChart') || !view.includes('TableChartEditor') || !view.includes('loadChartPreview') || !view.includes("invoke<WorkbookDocument>('update_workbook_drawing'")) fail('drawing S8-4D3 selection/edit/preview evidence missing')
 if (fixture.documentFeatures.chart !== true || fixture.documentFeatures.image !== true || fixture.currentEngineExpectations.charts !== 'supported') fail('chart/image fixture expectation drift')

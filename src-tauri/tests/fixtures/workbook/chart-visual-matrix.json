@@ -1,0 +1,30 @@
+{
+  "fixture": "chart-visual-matrix.xlsx",
+  "sheet": "Chart Matrix",
+  "charts": [
+    {
+      "type": "column",
+      "title": "Quarterly revenue",
+      "legend": "bottom",
+      "series": 2
+    },
+    {
+      "type": "line",
+      "title": "Revenue trend",
+      "legend": "right",
+      "series": 1
+    },
+    {
+      "type": "pie",
+      "title": "Quarterly share",
+      "legend": "bottom",
+      "series": 1
+    },
+    {
+      "type": "scatter",
+      "title": "Correlation",
+      "legend": "top",
+      "series": 1
+    }
+  ]
+}

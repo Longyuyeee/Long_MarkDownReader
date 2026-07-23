@@ -173,6 +173,11 @@ fn validate_saved_searches(
 
 #[tauri::command]
 pub fn get_config(app_handle: tauri::AppHandle) -> AppConfig {
+    #[cfg(debug_assertions)]
+    if let Some(config) = debug_e2e_config() {
+        return config;
+    }
+
     let config_dir = match app_handle.path().app_config_dir() {
         Ok(directory) => directory,
         Err(_) => return get_default_config(&app_handle),
@@ -206,6 +211,33 @@ pub fn get_config(app_handle: tauri::AppHandle) -> AppConfig {
         }
     }
     config
+}
+
+#[cfg(debug_assertions)]
+fn debug_e2e_config() -> Option<AppConfig> {
+    let library_path = std::env::var("LONGEDIT_E2E_LIBRARY").ok()?;
+    if library_path.trim().is_empty() {
+        return None;
+    }
+
+    let theme = std::env::var("LONGEDIT_E2E_THEME").unwrap_or_else(|_| "white".into());
+    let visual_style = match theme.as_str() {
+        "dark" => "soft",
+        "contrast" => "sharp",
+        _ => "minimal",
+    }
+    .into();
+    Some(AppConfig {
+        libraries: vec![LibraryConfig {
+            name: "Chart visual matrix".into(),
+            path: library_path.clone(),
+            ..Default::default()
+        }],
+        active_library_path: library_path,
+        theme,
+        visual_style,
+        ..Default::default()
+    })
 }
 
 fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {

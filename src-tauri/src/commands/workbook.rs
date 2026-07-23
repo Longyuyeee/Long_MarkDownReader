@@ -968,6 +968,27 @@ mod tests {
         (base, path)
     }
 
+    fn chart_visual_fixture_copy(name: &str) -> (PathBuf, PathBuf) {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-chart-visual-{name}-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let root = base.join("library");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("chart-visual-matrix.xlsx");
+        fs::copy(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("tests/fixtures/workbook/chart-visual-matrix.xlsx"),
+            &path,
+        )
+        .unwrap();
+        (base, path)
+    }
+
     #[test]
     fn writes_filter_state_with_signature_protection() {
         let base = std::env::temp_dir().join(format!(
@@ -2011,6 +2032,99 @@ mod tests {
             },
         ));
         assert!(stale.unwrap_err().contains("changed on disk"));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn chart_visual_matrix_round_trips_through_command_boundary() {
+        let (base, path) = chart_visual_fixture_copy("round-trip");
+        let root = base.join("library");
+        let expected = [
+            ("column", "Quarterly revenue", "bottom", 2),
+            ("line", "Revenue trend", "right", 1),
+            ("pie", "Quarterly share", "bottom", 1),
+            ("scatter", "Correlation", "top", 1),
+        ];
+
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Chart Matrix", 0, 80)
+            .unwrap();
+        let charts = page
+            .drawings
+            .iter()
+            .filter_map(|drawing| drawing.chart.as_ref())
+            .collect::<Vec<_>>();
+        assert_eq!(charts.len(), expected.len());
+        for (chart_type, title, legend, series_count) in expected {
+            let chart = charts
+                .iter()
+                .find(|chart| chart.chart_type == chart_type)
+                .unwrap_or_else(|| panic!("missing {chart_type} chart"));
+            assert_eq!(chart.title.as_deref(), Some(title));
+            assert_eq!(chart.legend_position, legend);
+            assert_eq!(chart.series.len(), series_count);
+            assert!(chart.title_editable);
+        }
+
+        for (chart_type, _, _, _) in expected {
+            let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+            let page = CalamineWorkbookEngine
+                .read_sheet(&path, "Chart Matrix", 0, 80)
+                .unwrap();
+            let drawing = page
+                .drawings
+                .iter()
+                .find(|drawing| {
+                    drawing
+                        .chart
+                        .as_ref()
+                        .is_some_and(|chart| chart.chart_type == chart_type)
+                })
+                .unwrap();
+            let updated_title = format!("{chart_type} verified");
+            tauri::async_runtime::block_on(update_workbook_drawing(
+                root.to_string_lossy().into_owned(),
+                path.to_string_lossy().into_owned(),
+                WorkbookDrawingPayload {
+                    expected_signature: document.signature,
+                    change: WorkbookDrawingChange {
+                        sheet: "Chart Matrix".into(),
+                        drawing_part: drawing.drawing_part.clone(),
+                        anchor_index: drawing.anchor_index,
+                        object_id: drawing.object_id.clone(),
+                        action: WorkbookDrawingAction::UpdateChartTitle,
+                        name: None,
+                        description: None,
+                        from: None,
+                        to: None,
+                        chart_title: Some(updated_title.clone()),
+                        chart_type: None,
+                        category_axis_title: None,
+                        value_axis_title: None,
+                        legend_position: None,
+                        data_labels: None,
+                        series_name: None,
+                        series_color: None,
+                        source_range: None,
+                        series_index: None,
+                        series_categories: None,
+                        series_values: None,
+                    },
+                },
+            ))
+            .unwrap();
+
+            let reopened = CalamineWorkbookEngine
+                .read_sheet(&path, "Chart Matrix", 0, 80)
+                .unwrap();
+            assert!(reopened.drawings.iter().any(|drawing| {
+                drawing.chart.as_ref().is_some_and(|chart| {
+                    chart.chart_type == chart_type
+                        && chart.title.as_deref() == Some(updated_title.as_str())
+                })
+            }));
+        }
+
         fs::remove_dir_all(base).unwrap();
     }
 
