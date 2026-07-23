@@ -65,6 +65,7 @@ pub(super) fn chart_series_from_selection(
         series.push(WorkbookChartSeries {
             index: series.len(),
             name: Some(chart_range_formula(sheet, range.top, range.top, column)?),
+            name_editable: true,
             categories: Some(categories.clone()),
             values: Some(chart_range_formula(
                 sheet,

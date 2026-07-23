@@ -221,6 +221,7 @@
           <option v-for="series in selectedDrawing.chart.series" :key="series.index" :value="series.index">系列 {{ series.index + 1 }} · {{ series.name || '未命名' }}</option>
         </select>
         <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canEditChartSeries" @click="editChartSeries">编辑系列引用</button>
+        <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canEditChartSeriesName" @click="editChartSeriesName">编辑系列名称</button>
         <select v-if="selectedDrawing.chart" v-model="targetChartType" class="drawing-series-select" title="选择目标图表类型">
           <option value="column">柱形图</option>
           <option value="line">折线图</option>
@@ -238,6 +239,11 @@
           <option value="none">隐藏图例</option>
         </select>
         <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canApplyLegendPosition" @click="applyChartLegendPosition">应用图例</button>
+        <label v-if="selectedDrawing.chart" class="drawing-label-option"><input v-model="targetDataLabels.showValue" type="checkbox" />数值</label>
+        <label v-if="selectedDrawing.chart" class="drawing-label-option"><input v-model="targetDataLabels.showCategoryName" type="checkbox" />分类</label>
+        <label v-if="selectedDrawing.chart" class="drawing-label-option"><input v-model="targetDataLabels.showSeriesName" type="checkbox" />系列</label>
+        <label v-if="selectedDrawing.chart?.chartType === 'pie'" class="drawing-label-option"><input v-model="targetDataLabels.showPercent" type="checkbox" />百分比</label>
+        <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canApplyDataLabels" @click="applyChartDataLabels">应用标签</button>
         <button v-if="selectedDrawing.chart" class="drawing-action danger" :disabled="!canDeleteChart" @click="deleteSelectedChart">删除图表</button>
       </template>
       <em>{{ selectedDrawing && !selectedDrawing.editable ? '该对象不是标准双单元格锚点，当前只读' : '安全事务只修改目标对象；复杂图表结构继续只读' }}</em>
@@ -406,11 +412,12 @@ interface WorkbookConditionalIconSet { iconSet: string; thresholds: WorkbookCond
 interface WorkbookConditionalFormatRule { groupIndex: number; ruleIndex: number; ranges: WorkbookMergeRange[]; kind: string; operator?: string; formula1?: string; formula2?: string; priority: number; stopIfTrue: boolean; style: WorkbookConditionalFormatStyle; colorScale?: WorkbookConditionalColorScale; dataBar?: WorkbookConditionalDataBar; iconSet?: WorkbookConditionalIconSet; editable: boolean }
 interface WorkbookConditionalFormatChange { sheet: string; action: 'create' | 'update' | 'delete' | 'move_up' | 'move_down' | 'split' | 'merge'; groupIndex?: number; ruleIndex?: number; rule?: WorkbookConditionalFormatRule }
 interface WorkbookDrawingAnchor { row: number; column: number; rowOffset: number; columnOffset: number }
-interface WorkbookChartSeries { index: number; name?: string; categories?: string; values?: string; editable: boolean }
-interface WorkbookChart { chartType: string; title?: string; titleEditable: boolean; categoryAxisTitle?: string; valueAxisTitle?: string; legendPosition: 'none' | 'left' | 'right' | 'top' | 'bottom' | 'top_right'; presentationEditable: boolean; series: WorkbookChartSeries[] }
+interface WorkbookChartSeries { index: number; name?: string; nameEditable: boolean; categories?: string; values?: string; editable: boolean }
+interface WorkbookChartDataLabels { showValue: boolean; showCategoryName: boolean; showSeriesName: boolean; showPercent: boolean }
+interface WorkbookChart { chartType: string; title?: string; titleEditable: boolean; categoryAxisTitle?: string; valueAxisTitle?: string; legendPosition: 'none' | 'left' | 'right' | 'top' | 'bottom' | 'top_right'; presentationEditable: boolean; dataLabels: WorkbookChartDataLabels; dataLabelsEditable: boolean; series: WorkbookChartSeries[] }
 interface WorkbookDrawingObject { id: string; objectId: string; drawingPart: string; anchorIndex: number; anchorKind: string; name: string; description?: string; kind: string; from: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; part?: string; chart?: WorkbookChart; editable: boolean }
-interface WorkbookDrawingChange { sheet: string; drawingPart: string; anchorIndex: number; objectId: string; action: 'update_metadata' | 'move_resize' | 'update_chart_title' | 'update_chart_series' | 'create_chart' | 'delete_chart' | 'change_chart_type' | 'update_chart_presentation'; name?: string; description?: string; from?: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; chartTitle?: string; seriesIndex?: number; seriesCategories?: string; seriesValues?: string; chartType?: string; categoryAxisTitle?: string; valueAxisTitle?: string; legendPosition?: string; sourceRange?: WorkbookMergeRange }
-interface WorkbookChartPreview { headers: string[]; columnIds: string[]; columnTypes: string[]; rows: string[][]; rowIndices: number[]; config: { chartType: 'bar' | 'line' | 'pie' | 'scatter'; categoryColumn: string; valueColumn: string; seriesColumn: string; aggregation: 'sum'; nullStrategy: 'skip'; showLegend: boolean } }
+interface WorkbookDrawingChange { sheet: string; drawingPart: string; anchorIndex: number; objectId: string; action: 'update_metadata' | 'move_resize' | 'update_chart_title' | 'update_chart_series' | 'create_chart' | 'delete_chart' | 'change_chart_type' | 'update_chart_presentation' | 'update_chart_data_labels' | 'update_chart_series_name'; name?: string; description?: string; from?: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; chartTitle?: string; seriesIndex?: number; seriesName?: string; seriesCategories?: string; seriesValues?: string; chartType?: string; categoryAxisTitle?: string; valueAxisTitle?: string; legendPosition?: string; dataLabels?: WorkbookChartDataLabels; sourceRange?: WorkbookMergeRange }
+interface WorkbookChartPreview { headers: string[]; columnIds: string[]; columnTypes: string[]; rows: string[][]; rowIndices: number[]; config: { chartType: 'bar' | 'line' | 'pie' | 'scatter'; categoryColumn: string; valueColumn: string; seriesColumn: string; aggregation: 'sum'; nullStrategy: 'skip'; showLegend: boolean; dataLabels?: WorkbookChartDataLabels } }
 interface WorkbookPageMargins { left?: number; right?: number; top?: number; bottom?: number; header?: number; footer?: number }
 interface WorkbookPageSetup { orientation?: string; paperSize?: number; scale?: number; fitToWidth?: number; fitToHeight?: number; firstPageNumber?: number; horizontalDpi?: number; verticalDpi?: number; blackAndWhite: boolean; draft: boolean; fitToPage: boolean }
 interface WorkbookPrintOptions { gridLines: boolean; headings: boolean; horizontalCentered: boolean; verticalCentered: boolean }
@@ -547,6 +554,7 @@ const selectedChartSeriesIndex = ref(0)
 const newChartType = ref<'column' | 'line' | 'pie' | 'scatter'>('column')
 const targetChartType = ref<'column' | 'line' | 'pie' | 'scatter'>('column')
 const targetLegendPosition = ref<'none' | 'left' | 'right' | 'top' | 'bottom' | 'top_right'>('right')
+const targetDataLabels = ref<WorkbookChartDataLabels>({ showValue: false, showCategoryName: false, showSeriesName: false, showPercent: false })
 const chartPreview = ref<WorkbookChartPreview | null>(null)
 const chartPreviewLoading = ref(false)
 const chartPreviewError = ref('')
@@ -1631,6 +1639,7 @@ const canEditDrawing = computed(() => Boolean(selectedDrawing.value?.editable &&
 const canApplyDrawingSelection = computed(() => Boolean(canEditDrawing.value && selectionAreas.value.length === 1 && selectionBounds.value))
 const canEditChartTitle = computed(() => Boolean(canEditDrawing.value && selectedDrawing.value?.chart?.titleEditable))
 const canEditChartSeries = computed(() => Boolean(canEditDrawing.value && selectedChartSeries.value?.editable))
+const canEditChartSeriesName = computed(() => Boolean(canEditDrawing.value && selectedChartSeries.value?.nameEditable))
 const canCreateChart = computed(() => {
   const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
   if (!area || !workbook.value || saving.value || updatingStructure.value || sheetProtected.value || dirtyCount.value) return false
@@ -1654,6 +1663,12 @@ const canApplyLegendPosition = computed(() => Boolean(
   && selectedDrawing.value?.chart?.presentationEditable
   && selectedDrawing.value.chart.legendPosition !== targetLegendPosition.value,
 ))
+const canApplyDataLabels = computed(() => {
+  const chart = selectedDrawing.value?.chart
+  if (!canEditDrawing.value || !chart?.dataLabelsEditable) return false
+  return (Object.keys(targetDataLabels.value) as (keyof WorkbookChartDataLabels)[])
+    .some(key => targetDataLabels.value[key] !== chart.dataLabels[key])
+})
 const commitTableLifecycleChange = async (change: WorkbookTableChange, area: WorkbookMergeRange, success: string) => {
   if (!workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑 Table')
@@ -2748,7 +2763,10 @@ const loadChartPreview = async () => {
       try {
         const [categories, values] = await Promise.all([readChartReference(series.categories), readChartReference(series.values)])
         const count = Math.min(categories.length, values.length, 60 - rows.length)
-        const name = series.name || `系列 ${series.index + 1}`
+        let name = series.name || `系列 ${series.index + 1}`
+        if (series.name?.includes('!')) {
+          try { name = (await readChartReference(series.name))[0] || name } catch { /* Literal and unsupported names remain readable. */ }
+        }
         for (let index = 0; index < count; index += 1) rows.push([categories[index] || String(index + 1), values[index], name])
       } catch (cause) { failures.push(String(cause).replace(/^Error:\s*/, '')) }
     }
@@ -2767,7 +2785,16 @@ const loadChartPreview = async () => {
       columnTypes: [chartType === 'scatter' ? 'number' : 'text', 'number', 'text'],
       rows,
       rowIndices: rows.map((_, index) => index),
-      config: { chartType, categoryColumn: 'category', valueColumn: 'value', seriesColumn: 'series', aggregation: 'sum', nullStrategy: 'skip', showLegend: true },
+      config: {
+        chartType,
+        categoryColumn: 'category',
+        valueColumn: 'value',
+        seriesColumn: 'series',
+        aggregation: 'sum',
+        nullStrategy: 'skip',
+        showLegend: drawing.chart.legendPosition !== 'none',
+        dataLabels: { ...drawing.chart.dataLabels },
+      },
     }
   } catch (cause) {
     if (current === chartPreviewGeneration) chartPreviewError.value = String(cause).replace(/^Error:\s*/, '')
@@ -2887,6 +2914,19 @@ const applyChartLegendPosition = () => {
     '已更新图表图例位置',
   )
 }
+const applyChartDataLabels = () => {
+  const drawing = selectedDrawing.value
+  if (!drawing?.chart?.dataLabelsEditable || !canApplyDataLabels.value) return
+  const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
+  void commitDrawingChange({
+    sheet: activeSheet.value,
+    drawingPart: drawing.drawingPart,
+    anchorIndex: drawing.anchorIndex,
+    objectId: drawing.objectId,
+    action: 'update_chart_data_labels',
+    dataLabels: { ...targetDataLabels.value },
+  }, area, '已更新图表数据标签')
+}
 const deleteSelectedChart = () => {
   const drawing = selectedDrawing.value
   if (!drawing?.chart || !canDeleteChart.value) return
@@ -2979,6 +3019,23 @@ const editChartSeries = () => {
     seriesCategories: categories,
     seriesValues: values,
   }, area, `已更新系列 ${series.index + 1} 的引用`)
+}
+const editChartSeriesName = () => {
+  const drawing = selectedDrawing.value
+  const series = selectedChartSeries.value
+  if (!drawing?.chart || !series?.nameEditable || !canEditChartSeriesName.value) return
+  const seriesName = window.prompt('系列显示名称（留空可移除）', series.name || '')
+  if (seriesName === null || seriesName.trim() === (series.name || '')) return
+  const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
+  void commitDrawingChange({
+    sheet: activeSheet.value,
+    drawingPart: drawing.drawingPart,
+    anchorIndex: drawing.anchorIndex,
+    objectId: drawing.objectId,
+    action: 'update_chart_series_name',
+    seriesIndex: series.index,
+    seriesName,
+  }, area, '已更新图表系列名称')
 }
 const navigateDrawing = async (drawing: WorkbookDrawingObject) => {
   selectedDrawingId.value = drawing.id
@@ -3135,6 +3192,7 @@ watch(() => [selectedDrawingId.value, workbook.value?.signature || '', sheetInfo
   const chartType = selectedDrawing.value?.chart?.chartType
   targetChartType.value = chartType === 'line' || chartType === 'pie' || chartType === 'scatter' ? chartType : 'column'
   targetLegendPosition.value = selectedDrawing.value?.chart?.legendPosition || 'right'
+  targetDataLabels.value = { ...(selectedDrawing.value?.chart?.dataLabels || { showValue: false, showCategoryName: false, showSeriesName: false, showPercent: false }) }
   void loadChartPreview()
 })
 onBeforeRouteLeave(() => !dirtyCount.value || window.confirm(`还有 ${dirtyCount.value} 个单元格未保存，确定离开吗？`))
@@ -3227,6 +3285,8 @@ onBeforeUnmount(() => {
 .drawing-toolbar button.drawing-action.danger { color: var(--theme-danger); }
 .drawing-toolbar button.drawing-action:disabled { opacity: .45; cursor: default; }
 .drawing-series-select { width: 150px; height: 30px; flex: none; padding: 0 7px; border: 1px solid rgba(var(--theme-primary-rgb),.22); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); font-size: 9px; }
+.drawing-label-option { height: 30px; flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; color: var(--theme-text-secondary); }
+.drawing-label-option input { accent-color: var(--theme-primary); }
 .drawing-toolbar button span { grid-row: 1 / 3; padding: 3px 5px; border-radius: 4px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); font-size: 8px; }
 .drawing-toolbar button b,.drawing-toolbar button small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .drawing-toolbar button b { font-size: 9px; }

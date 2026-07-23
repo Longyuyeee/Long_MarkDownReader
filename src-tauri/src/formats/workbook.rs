@@ -481,9 +481,19 @@ pub struct WorkbookDrawingAnchor {
 pub struct WorkbookChartSeries {
     pub index: usize,
     pub name: Option<String>,
+    pub name_editable: bool,
     pub categories: Option<String>,
     pub values: Option<String>,
     pub editable: bool,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookChartDataLabels {
+    pub show_value: bool,
+    pub show_category_name: bool,
+    pub show_series_name: bool,
+    pub show_percent: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -496,6 +506,8 @@ pub struct WorkbookChart {
     pub value_axis_title: Option<String>,
     pub legend_position: String,
     pub presentation_editable: bool,
+    pub data_labels: WorkbookChartDataLabels,
+    pub data_labels_editable: bool,
     pub series: Vec<WorkbookChartSeries>,
 }
 
@@ -524,6 +536,8 @@ pub enum WorkbookDrawingAction {
     DeleteChart,
     ChangeChartType,
     UpdateChartPresentation,
+    UpdateChartDataLabels,
+    UpdateChartSeriesName,
     UpdateMetadata,
     MoveResize,
     UpdateChartTitle,
@@ -547,6 +561,8 @@ pub struct WorkbookDrawingChange {
     pub category_axis_title: Option<String>,
     pub value_axis_title: Option<String>,
     pub legend_position: Option<String>,
+    pub data_labels: Option<WorkbookChartDataLabels>,
+    pub series_name: Option<String>,
     pub source_range: Option<WorkbookMergeRange>,
     pub series_index: Option<usize>,
     pub series_categories: Option<String>,
