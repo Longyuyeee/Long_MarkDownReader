@@ -492,6 +492,10 @@ pub struct WorkbookChart {
     pub chart_type: String,
     pub title: Option<String>,
     pub title_editable: bool,
+    pub category_axis_title: Option<String>,
+    pub value_axis_title: Option<String>,
+    pub legend_position: String,
+    pub presentation_editable: bool,
     pub series: Vec<WorkbookChartSeries>,
 }
 
@@ -519,6 +523,7 @@ pub enum WorkbookDrawingAction {
     CreateChart,
     DeleteChart,
     ChangeChartType,
+    UpdateChartPresentation,
     UpdateMetadata,
     MoveResize,
     UpdateChartTitle,
@@ -539,6 +544,9 @@ pub struct WorkbookDrawingChange {
     pub to: Option<WorkbookDrawingAnchor>,
     pub chart_title: Option<String>,
     pub chart_type: Option<String>,
+    pub category_axis_title: Option<String>,
+    pub value_axis_title: Option<String>,
+    pub legend_position: Option<String>,
     pub source_range: Option<WorkbookMergeRange>,
     pub series_index: Option<usize>,
     pub series_categories: Option<String>,

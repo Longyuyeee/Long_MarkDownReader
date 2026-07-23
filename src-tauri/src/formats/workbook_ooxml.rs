@@ -3243,6 +3243,16 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
     let mut stack: Vec<String> = Vec::new();
     let mut chart_type = "unknown".to_string();
     let mut title_parts = Vec::new();
+    let mut category_axis_title_parts = Vec::new();
+    let mut value_axis_title_parts = Vec::new();
+    let mut category_axis_count = 0usize;
+    let mut value_axis_count = 0usize;
+    let mut next_scatter_axis = 0usize;
+    let mut active_axis: Option<bool> = None;
+    let mut legend_present = false;
+    let mut legend_position = "none".to_string();
+    let mut chart_type_count = 0usize;
+    let mut has_extensions = false;
     let mut series = Vec::new();
     let mut current_series: Option<WorkbookChartSeries> = None;
     loop {
@@ -3252,10 +3262,14 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
         {
             Event::Start(ref event) => {
                 let local = String::from_utf8_lossy(event.local_name().as_ref()).into_owned();
-                if chart_type == "unknown" {
-                    if let Some(value) = chart_type_from_name(event.local_name().as_ref()) {
+                if let Some(value) = chart_type_from_name(event.local_name().as_ref()) {
+                    chart_type_count += 1;
+                    if chart_type == "unknown" {
                         chart_type = value.into();
                     }
+                }
+                if local == "extLst" {
+                    has_extensions = true;
                 }
                 if local == "barDir" && chart_type == "bar" {
                     if let Some(value) = xml_value(event, b"val", reader.decoder())? {
@@ -3274,18 +3288,62 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
                         editable: false,
                     });
                 }
+                if local == "catAx" {
+                    category_axis_count += 1;
+                    active_axis = Some(true);
+                } else if local == "valAx" {
+                    if chart_type == "scatter" && next_scatter_axis == 0 {
+                        category_axis_count += 1;
+                        active_axis = Some(true);
+                    } else {
+                        value_axis_count += 1;
+                        active_axis = Some(false);
+                    }
+                    next_scatter_axis += usize::from(chart_type == "scatter");
+                } else if local == "legend" {
+                    legend_present = true;
+                    legend_position = "right".into();
+                }
+                if local == "legendPos" {
+                    if let Some(value) = xml_value(event, b"val", reader.decoder())? {
+                        legend_position = match value.as_str() {
+                            "l" => "left",
+                            "t" => "top",
+                            "b" => "bottom",
+                            "tr" => "top_right",
+                            _ => "right",
+                        }
+                        .into();
+                    }
+                }
                 stack.push(local);
             }
             Event::Empty(ref event) => {
                 let local = event.local_name();
-                if chart_type == "unknown" {
-                    if let Some(value) = chart_type_from_name(local.as_ref()) {
+                if let Some(value) = chart_type_from_name(local.as_ref()) {
+                    chart_type_count += 1;
+                    if chart_type == "unknown" {
                         chart_type = value.into();
                     }
+                }
+                if local.as_ref() == b"extLst" {
+                    has_extensions = true;
                 }
                 if local.as_ref() == b"barDir" && chart_type == "bar" {
                     if let Some(value) = xml_value(event, b"val", reader.decoder())? {
                         chart_type = if value == "col" { "column" } else { "bar" }.into();
+                    }
+                }
+                if local.as_ref() == b"legendPos" {
+                    if let Some(value) = xml_value(event, b"val", reader.decoder())? {
+                        legend_position = match value.as_str() {
+                            "l" => "left",
+                            "t" => "top",
+                            "b" => "bottom",
+                            "tr" => "top_right",
+                            _ => "right",
+                        }
+                        .into();
                     }
                 }
             }
@@ -3300,12 +3358,17 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
                     return Err("Excel 图表公式或文本过长".into());
                 }
                 let last = stack.last().map(String::as_str);
-                if stack.iter().any(|item| item == "title")
-                    && last == Some("t")
-                    && title_parts.iter().map(String::len).sum::<usize>() + value.len()
+                if stack.iter().any(|item| item == "title") && last == Some("t") {
+                    let parts = match active_axis {
+                        Some(true) => &mut category_axis_title_parts,
+                        Some(false) => &mut value_axis_title_parts,
+                        None => &mut title_parts,
+                    };
+                    if parts.iter().map(String::len).sum::<usize>() + value.len()
                         <= MAX_DRAWING_TEXT
-                {
-                    title_parts.push(value.clone());
+                    {
+                        parts.push(value.clone());
+                    }
                 }
                 if let Some(item) = current_series.as_mut() {
                     if last == Some("f") {
@@ -3342,6 +3405,9 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
                         series.push(item);
                     }
                 }
+                if matches!(event.local_name().as_ref(), b"catAx" | b"valAx") {
+                    active_axis = None;
+                }
                 stack.pop();
             }
             Event::Eof => break,
@@ -3350,10 +3416,26 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
         buffer.clear();
     }
     let title = (!title_parts.is_empty()).then(|| title_parts.join(""));
+    let category_axis_title =
+        (!category_axis_title_parts.is_empty()).then(|| category_axis_title_parts.join(""));
+    let value_axis_title =
+        (!value_axis_title_parts.is_empty()).then(|| value_axis_title_parts.join(""));
+    if !legend_present {
+        legend_position = "none".into();
+    }
+    let standard_axes = match chart_type.as_str() {
+        "column" | "bar" | "line" | "scatter" => category_axis_count == 1 && value_axis_count == 1,
+        "pie" => category_axis_count == 0 && value_axis_count == 0,
+        _ => false,
+    };
     Ok(WorkbookChart {
         chart_type,
         title_editable: title.is_some(),
         title,
+        category_axis_title,
+        value_axis_title,
+        legend_position,
+        presentation_editable: chart_type_count == 1 && !has_extensions && standard_axes,
         series,
     })
 }
@@ -3914,6 +3996,222 @@ fn patch_chart_title_xml(xml: &[u8], title: &str) -> Result<Vec<u8>, String> {
     }
     if patched == 0 {
         return Err("Only existing standard chart titles can be edited in this stage.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn chart_axis_title_fragment(title: &str) -> Result<Vec<u8>, String> {
+    let title = title.trim();
+    if title.chars().count() > MAX_DRAWING_TEXT {
+        return Err(format!(
+            "A chart axis title cannot exceed {MAX_DRAWING_TEXT} characters."
+        ));
+    }
+    if title.is_empty() {
+        return Ok(Vec::new());
+    }
+    let title = quick_xml::escape::escape(title);
+    Ok(format!(
+        "<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang=\"zh-CN\"/><a:t>{title}</a:t></a:r></a:p></c:rich></c:tx><c:layout/></c:title>"
+    )
+    .into_bytes())
+}
+
+fn chart_legend_fragment(position: &str) -> Result<Vec<u8>, String> {
+    let value = match position {
+        "none" => return Ok(Vec::new()),
+        "left" => "l",
+        "top" => "t",
+        "bottom" => "b",
+        "top_right" => "tr",
+        "right" => "r",
+        _ => return Err("Unsupported chart legend position.".into()),
+    };
+    Ok(format!("<c:legend><c:legendPos val=\"{value}\"/><c:layout/></c:legend>").into_bytes())
+}
+
+fn patch_chart_presentation_xml(
+    xml: &[u8],
+    chart_type: &str,
+    category_axis_title: &str,
+    value_axis_title: &str,
+    legend_position: &str,
+) -> Result<Vec<u8>, String> {
+    let category_title = chart_axis_title_fragment(category_axis_title)?;
+    let value_title = chart_axis_title_fragment(value_axis_title)?;
+    let legend = chart_legend_fragment(legend_position)?;
+    if chart_type == "pie" && (!category_title.is_empty() || !value_title.is_empty()) {
+        return Err("Pie charts do not have editable category or value axes.".into());
+    }
+
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(
+        xml.len() + category_title.len() + value_title.len() + legend.len(),
+    ));
+    let mut buffer = Vec::new();
+    let mut active_axis: Option<bool> = None;
+    let mut next_scatter_axis = 0usize;
+    let mut category_axis_count = 0usize;
+    let mut value_axis_count = 0usize;
+    let mut axis_title_handled = false;
+    let mut legend_handled = false;
+    let mut chart_depth = 0usize;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse chart presentation XML: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"chart" => {
+                chart_depth += 1;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy chart XML: {error}"))?;
+            }
+            Event::Start(ref start)
+                if matches!(start.local_name().as_ref(), b"catAx" | b"valAx") =>
+            {
+                let category = if start.local_name().as_ref() == b"catAx" {
+                    category_axis_count += 1;
+                    true
+                } else if chart_type == "scatter" && next_scatter_axis == 0 {
+                    next_scatter_axis += 1;
+                    category_axis_count += 1;
+                    true
+                } else {
+                    next_scatter_axis += usize::from(chart_type == "scatter");
+                    value_axis_count += 1;
+                    false
+                };
+                active_axis = Some(category);
+                axis_title_handled = false;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy chart axis XML: {error}"))?;
+            }
+            Event::Start(ref start)
+                if active_axis.is_some() && start.local_name().as_ref() == b"title" =>
+            {
+                let fragment = if active_axis == Some(true) {
+                    &category_title
+                } else {
+                    &value_title
+                };
+                skip_element(&mut reader, b"title", &mut buffer)?;
+                if !fragment.is_empty() {
+                    write_xml_fragment(&mut writer, fragment)?;
+                }
+                axis_title_handled = true;
+            }
+            Event::Empty(ref empty)
+                if active_axis.is_some() && empty.local_name().as_ref() == b"title" =>
+            {
+                let fragment = if active_axis == Some(true) {
+                    &category_title
+                } else {
+                    &value_title
+                };
+                if !fragment.is_empty() {
+                    write_xml_fragment(&mut writer, fragment)?;
+                }
+                axis_title_handled = true;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if active_axis.is_some()
+                    && !axis_title_handled
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"numFmt"
+                            | b"majorTickMark"
+                            | b"minorTickMark"
+                            | b"tickLblPos"
+                            | b"spPr"
+                            | b"txPr"
+                            | b"crossAx"
+                    ) =>
+            {
+                let fragment = if active_axis == Some(true) {
+                    &category_title
+                } else {
+                    &value_title
+                };
+                if !fragment.is_empty() {
+                    write_xml_fragment(&mut writer, fragment)?;
+                }
+                axis_title_handled = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy chart axis XML: {error}"))?;
+            }
+            Event::End(ref end) if matches!(end.local_name().as_ref(), b"catAx" | b"valAx") => {
+                if !axis_title_handled {
+                    let fragment = if active_axis == Some(true) {
+                        &category_title
+                    } else {
+                        &value_title
+                    };
+                    if !fragment.is_empty() {
+                        write_xml_fragment(&mut writer, fragment)?;
+                    }
+                }
+                active_axis = None;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish chart axis XML: {error}"))?;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"legend" => {
+                skip_element(&mut reader, b"legend", &mut buffer)?;
+                if !legend.is_empty() {
+                    write_xml_fragment(&mut writer, &legend)?;
+                }
+                legend_handled = true;
+            }
+            Event::Empty(ref empty) if empty.local_name().as_ref() == b"legend" => {
+                if !legend.is_empty() {
+                    write_xml_fragment(&mut writer, &legend)?;
+                }
+                legend_handled = true;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if chart_depth == 1
+                    && !legend_handled
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"plotVisOnly" | b"dispBlanksAs" | b"showDLblsOverMax" | b"extLst"
+                    ) =>
+            {
+                if !legend.is_empty() {
+                    write_xml_fragment(&mut writer, &legend)?;
+                }
+                legend_handled = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy chart tail XML: {error}"))?;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"chart" => {
+                if chart_depth == 1 && !legend_handled && !legend.is_empty() {
+                    write_xml_fragment(&mut writer, &legend)?;
+                    legend_handled = true;
+                }
+                chart_depth = chart_depth.saturating_sub(1);
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish chart XML: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy chart presentation XML: {error}"))?,
+        }
+        buffer.clear();
+    }
+    let valid_axes = match chart_type {
+        "column" | "bar" | "line" | "scatter" => category_axis_count == 1 && value_axis_count == 1,
+        "pie" => category_axis_count == 0 && value_axis_count == 0,
+        _ => false,
+    };
+    if !valid_axes {
+        return Err("Only standard single-axis charts can edit presentation settings.".into());
     }
     Ok(writer.into_inner())
 }
@@ -4823,6 +5121,56 @@ pub fn patch_workbook_drawing(
             let verified = parse_chart_part(&chart_entry.data)?;
             if verified.chart_type != chart_type || verified.series.len() != chart.series.len() {
                 return Err("The chart type change failed semantic verification.".into());
+            }
+        }
+        WorkbookDrawingAction::UpdateChartPresentation => {
+            let chart = target
+                .chart
+                .as_ref()
+                .ok_or("The selected Drawing object is not a chart.")?;
+            if !chart.presentation_editable {
+                return Err(
+                    "Only simple standard charts can edit axis titles and legend position.".into(),
+                );
+            }
+            let category_axis_title = change
+                .category_axis_title
+                .as_deref()
+                .ok_or("A category-axis title value is required.")?
+                .trim();
+            let value_axis_title = change
+                .value_axis_title
+                .as_deref()
+                .ok_or("A value-axis title value is required.")?
+                .trim();
+            let legend_position = change
+                .legend_position
+                .as_deref()
+                .ok_or("A legend position is required.")?;
+            let chart_part = target
+                .part
+                .as_deref()
+                .filter(|part| part.starts_with("xl/charts/") && part.ends_with(".xml"))
+                .ok_or("The chart part is missing or unsafe.")?;
+            let chart_entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == chart_part)
+                .ok_or("The chart part is missing.")?;
+            chart_entry.data = patch_chart_presentation_xml(
+                &chart_entry.data,
+                &chart.chart_type,
+                category_axis_title,
+                value_axis_title,
+                legend_position,
+            )?;
+            let verified = parse_chart_part(&chart_entry.data)?;
+            if verified.category_axis_title.as_deref()
+                != (!category_axis_title.is_empty()).then_some(category_axis_title)
+                || verified.value_axis_title.as_deref()
+                    != (!value_axis_title.is_empty()).then_some(value_axis_title)
+                || verified.legend_position != legend_position
+            {
+                return Err("The chart presentation settings failed semantic verification.".into());
             }
         }
         WorkbookDrawingAction::UpdateMetadata | WorkbookDrawingAction::MoveResize => {
@@ -13363,6 +13711,9 @@ mod tests {
                 to: None,
                 chart_title: None,
                 chart_type: None,
+                category_axis_title: None,
+                value_axis_title: None,
+                legend_position: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -13410,6 +13761,9 @@ mod tests {
                 to: Some(to.clone()),
                 chart_title: None,
                 chart_type: None,
+                category_axis_title: None,
+                value_axis_title: None,
+                legend_position: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -13442,6 +13796,9 @@ mod tests {
                 to: None,
                 chart_title: None,
                 chart_type: None,
+                category_axis_title: None,
+                value_axis_title: None,
+                legend_position: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -13491,6 +13848,9 @@ mod tests {
                 }),
                 chart_title: Some("Revenue trend".into()),
                 chart_type: Some("column".into()),
+                category_axis_title: None,
+                value_axis_title: None,
+                legend_position: None,
                 source_range: Some(WorkbookMergeRange {
                     top: 0,
                     bottom: 3,
@@ -13533,6 +13893,9 @@ mod tests {
                 to: None,
                 chart_title: None,
                 chart_type: Some("line".into()),
+                category_axis_title: None,
+                value_axis_title: None,
+                legend_position: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -13551,8 +13914,44 @@ mod tests {
             Some("line")
         );
 
-        let deleted = patch_workbook_drawing(
+        let presented = patch_workbook_drawing(
             &changed,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: drawing.drawing_part.clone(),
+                anchor_index: drawing.anchor_index,
+                object_id: drawing.object_id.clone(),
+                action: WorkbookDrawingAction::UpdateChartPresentation,
+                name: None,
+                description: None,
+                from: None,
+                to: None,
+                chart_title: None,
+                chart_type: None,
+                category_axis_title: Some("Month".into()),
+                value_axis_title: Some("Revenue".into()),
+                legend_position: Some("bottom".into()),
+                source_range: None,
+                series_index: None,
+                series_categories: None,
+                series_values: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&presented).unwrap();
+        let layout = read_workbook_sheet_layout(&presented, "Data", 0, 20, 20).unwrap();
+        let drawing = &layout.drawings[0];
+        let chart = drawing.chart.as_ref().unwrap();
+        assert_eq!(chart.title.as_deref(), Some("Revenue trend"));
+        assert_eq!(chart.category_axis_title.as_deref(), Some("Month"));
+        assert_eq!(chart.value_axis_title.as_deref(), Some("Revenue"));
+        assert_eq!(chart.legend_position, "bottom");
+        assert!(chart.presentation_editable);
+        assert_eq!(chart.series.len(), 1);
+        assert_eq!(chart.series[0].values.as_deref(), Some("Data!$B$2:$B$4"));
+
+        let deleted = patch_workbook_drawing(
+            &presented,
             &WorkbookDrawingChange {
                 sheet: "Data".into(),
                 drawing_part: drawing.drawing_part.clone(),
@@ -13565,6 +13964,9 @@ mod tests {
                 to: None,
                 chart_title: None,
                 chart_type: None,
+                category_axis_title: None,
+                value_axis_title: None,
+                legend_position: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -13626,6 +14028,9 @@ mod tests {
                 to: None,
                 chart_title: Some("Regional inventory".into()),
                 chart_type: None,
+                category_axis_title: None,
+                value_axis_title: None,
+                legend_position: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -13663,6 +14068,9 @@ mod tests {
                 to: None,
                 chart_title: None,
                 chart_type: None,
+                category_axis_title: None,
+                value_axis_title: None,
+                legend_position: None,
                 source_range: None,
                 series_index: Some(0),
                 series_categories: Some("Data!$A$2:$A$3".into()),
@@ -13698,6 +14106,9 @@ mod tests {
                 to: None,
                 chart_title: None,
                 chart_type: None,
+                category_axis_title: None,
+                value_axis_title: None,
+                legend_position: None,
                 source_range: None,
                 series_index: Some(0),
                 series_categories: Some("[External.xlsx]Data!$A$1:$A$2".into()),

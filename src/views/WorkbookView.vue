@@ -228,6 +228,16 @@
           <option value="scatter">散点图</option>
         </select>
         <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canChangeChartType" @click="changeSelectedChartType">切换类型</button>
+        <button v-if="selectedDrawing.chart && selectedDrawing.chart.chartType !== 'pie'" class="drawing-action" :disabled="!canEditChartAxes" @click="editChartAxes">编辑坐标轴</button>
+        <select v-if="selectedDrawing.chart" v-model="targetLegendPosition" class="drawing-series-select" title="选择图例位置">
+          <option value="right">图例：右侧</option>
+          <option value="left">图例：左侧</option>
+          <option value="top">图例：顶部</option>
+          <option value="bottom">图例：底部</option>
+          <option value="top_right">图例：右上</option>
+          <option value="none">隐藏图例</option>
+        </select>
+        <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canApplyLegendPosition" @click="applyChartLegendPosition">应用图例</button>
         <button v-if="selectedDrawing.chart" class="drawing-action danger" :disabled="!canDeleteChart" @click="deleteSelectedChart">删除图表</button>
       </template>
       <em>{{ selectedDrawing && !selectedDrawing.editable ? '该对象不是标准双单元格锚点，当前只读' : '安全事务只修改目标对象；复杂图表结构继续只读' }}</em>
@@ -397,9 +407,9 @@ interface WorkbookConditionalFormatRule { groupIndex: number; ruleIndex: number;
 interface WorkbookConditionalFormatChange { sheet: string; action: 'create' | 'update' | 'delete' | 'move_up' | 'move_down' | 'split' | 'merge'; groupIndex?: number; ruleIndex?: number; rule?: WorkbookConditionalFormatRule }
 interface WorkbookDrawingAnchor { row: number; column: number; rowOffset: number; columnOffset: number }
 interface WorkbookChartSeries { index: number; name?: string; categories?: string; values?: string; editable: boolean }
-interface WorkbookChart { chartType: string; title?: string; titleEditable: boolean; series: WorkbookChartSeries[] }
+interface WorkbookChart { chartType: string; title?: string; titleEditable: boolean; categoryAxisTitle?: string; valueAxisTitle?: string; legendPosition: 'none' | 'left' | 'right' | 'top' | 'bottom' | 'top_right'; presentationEditable: boolean; series: WorkbookChartSeries[] }
 interface WorkbookDrawingObject { id: string; objectId: string; drawingPart: string; anchorIndex: number; anchorKind: string; name: string; description?: string; kind: string; from: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; part?: string; chart?: WorkbookChart; editable: boolean }
-interface WorkbookDrawingChange { sheet: string; drawingPart: string; anchorIndex: number; objectId: string; action: 'update_metadata' | 'move_resize' | 'update_chart_title' | 'update_chart_series' | 'create_chart' | 'delete_chart' | 'change_chart_type'; name?: string; description?: string; from?: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; chartTitle?: string; seriesIndex?: number; seriesCategories?: string; seriesValues?: string; chartType?: string; sourceRange?: WorkbookMergeRange }
+interface WorkbookDrawingChange { sheet: string; drawingPart: string; anchorIndex: number; objectId: string; action: 'update_metadata' | 'move_resize' | 'update_chart_title' | 'update_chart_series' | 'create_chart' | 'delete_chart' | 'change_chart_type' | 'update_chart_presentation'; name?: string; description?: string; from?: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; chartTitle?: string; seriesIndex?: number; seriesCategories?: string; seriesValues?: string; chartType?: string; categoryAxisTitle?: string; valueAxisTitle?: string; legendPosition?: string; sourceRange?: WorkbookMergeRange }
 interface WorkbookChartPreview { headers: string[]; columnIds: string[]; columnTypes: string[]; rows: string[][]; rowIndices: number[]; config: { chartType: 'bar' | 'line' | 'pie' | 'scatter'; categoryColumn: string; valueColumn: string; seriesColumn: string; aggregation: 'sum'; nullStrategy: 'skip'; showLegend: boolean } }
 interface WorkbookPageMargins { left?: number; right?: number; top?: number; bottom?: number; header?: number; footer?: number }
 interface WorkbookPageSetup { orientation?: string; paperSize?: number; scale?: number; fitToWidth?: number; fitToHeight?: number; firstPageNumber?: number; horizontalDpi?: number; verticalDpi?: number; blackAndWhite: boolean; draft: boolean; fitToPage: boolean }
@@ -536,6 +546,7 @@ const selectedDrawingId = ref('')
 const selectedChartSeriesIndex = ref(0)
 const newChartType = ref<'column' | 'line' | 'pie' | 'scatter'>('column')
 const targetChartType = ref<'column' | 'line' | 'pie' | 'scatter'>('column')
+const targetLegendPosition = ref<'none' | 'left' | 'right' | 'top' | 'bottom' | 'top_right'>('right')
 const chartPreview = ref<WorkbookChartPreview | null>(null)
 const chartPreviewLoading = ref(false)
 const chartPreviewError = ref('')
@@ -1633,6 +1644,16 @@ const canChangeChartType = computed(() => {
   if (!canEditDrawing.value || !chart || !['column', 'bar', 'line', 'pie', 'scatter'].includes(chart.chartType)) return false
   return chart.chartType !== targetChartType.value && (targetChartType.value !== 'pie' || chart.series.length === 1)
 })
+const canEditChartAxes = computed(() => Boolean(
+  canEditDrawing.value
+  && selectedDrawing.value?.chart?.presentationEditable
+  && selectedDrawing.value.chart.chartType !== 'pie',
+))
+const canApplyLegendPosition = computed(() => Boolean(
+  canEditDrawing.value
+  && selectedDrawing.value?.chart?.presentationEditable
+  && selectedDrawing.value.chart.legendPosition !== targetLegendPosition.value,
+))
 const commitTableLifecycleChange = async (change: WorkbookTableChange, area: WorkbookMergeRange, success: string) => {
   if (!workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑 Table')
@@ -2826,6 +2847,46 @@ const changeSelectedChartType = () => {
     chartType: targetChartType.value,
   }, area, '已切换图表类型')
 }
+const commitChartPresentation = (
+  categoryAxisTitle: string,
+  valueAxisTitle: string,
+  legendPosition: WorkbookChart['legendPosition'],
+  success: string,
+) => {
+  const drawing = selectedDrawing.value
+  if (!drawing?.chart?.presentationEditable || !canEditDrawing.value) return
+  const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
+  void commitDrawingChange({
+    sheet: activeSheet.value,
+    drawingPart: drawing.drawingPart,
+    anchorIndex: drawing.anchorIndex,
+    objectId: drawing.objectId,
+    action: 'update_chart_presentation',
+    categoryAxisTitle,
+    valueAxisTitle,
+    legendPosition,
+  }, area, success)
+}
+const editChartAxes = () => {
+  const chart = selectedDrawing.value?.chart
+  if (!chart || !canEditChartAxes.value) return
+  const categoryAxisTitle = window.prompt('分类轴标题（留空可移除）', chart.categoryAxisTitle || '')
+  if (categoryAxisTitle === null) return
+  const valueAxisTitle = window.prompt('数值轴标题（留空可移除）', chart.valueAxisTitle || '')
+  if (valueAxisTitle === null) return
+  if (categoryAxisTitle.trim() === (chart.categoryAxisTitle || '') && valueAxisTitle.trim() === (chart.valueAxisTitle || '')) return
+  commitChartPresentation(categoryAxisTitle, valueAxisTitle, chart.legendPosition, '已更新图表坐标轴标题')
+}
+const applyChartLegendPosition = () => {
+  const chart = selectedDrawing.value?.chart
+  if (!chart || !canApplyLegendPosition.value) return
+  commitChartPresentation(
+    chart.categoryAxisTitle || '',
+    chart.valueAxisTitle || '',
+    targetLegendPosition.value,
+    '已更新图表图例位置',
+  )
+}
 const deleteSelectedChart = () => {
   const drawing = selectedDrawing.value
   if (!drawing?.chart || !canDeleteChart.value) return
@@ -3073,6 +3134,7 @@ watch(() => conditionalDependencyPageOffsets.value.join(','), () => {
 watch(() => [selectedDrawingId.value, workbook.value?.signature || '', sheetInfo.value?.sheet || ''], () => {
   const chartType = selectedDrawing.value?.chart?.chartType
   targetChartType.value = chartType === 'line' || chartType === 'pie' || chartType === 'scatter' ? chartType : 'column'
+  targetLegendPosition.value = selectedDrawing.value?.chart?.legendPosition || 'right'
   void loadChartPreview()
 })
 onBeforeRouteLeave(() => !dirtyCount.value || window.confirm(`还有 ${dirtyCount.value} 个单元格未保存，确定离开吗？`))
