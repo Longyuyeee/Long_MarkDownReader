@@ -13,10 +13,10 @@ use crate::formats::workbook::{
     WorkbookFilterTarget, WorkbookFreezePane, WorkbookHeaderFooterChange, WorkbookLinkedData,
     WorkbookMergeEdit, WorkbookMergeRange, WorkbookNamedStyle, WorkbookPageLayout,
     WorkbookPageLayoutChange, WorkbookPageMargins, WorkbookPivotTable, WorkbookPrintOptions,
-    WorkbookProtection, WorkbookRangeReference, WorkbookRowHeight, WorkbookRowHeightEdit,
-    WorkbookRowState, WorkbookRowStateEdit, WorkbookSlicer, WorkbookStructureAction,
-    WorkbookStructureAxis, WorkbookStructureChange, WorkbookTable, WorkbookTableAction,
-    WorkbookTableChange,
+    WorkbookPrintOptionsChange, WorkbookProtection, WorkbookRangeReference, WorkbookRowHeight,
+    WorkbookRowHeightEdit, WorkbookRowState, WorkbookRowStateEdit, WorkbookSlicer,
+    WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructureChange, WorkbookTable,
+    WorkbookTableAction, WorkbookTableChange,
 };
 use crate::formats::workbook_chart::{
     build_standard_chart_xml, chart_series_from_selection, supported_chart_type,
@@ -1472,6 +1472,8 @@ fn apply_page_layout_attributes(
                 parse_u32_value(xml_value(event, b"fitToHeight", decoder)?);
             result.setup.first_page_number =
                 parse_u32_value(xml_value(event, b"firstPageNumber", decoder)?);
+            result.setup.use_first_page_number =
+                bool_attribute(event, b"useFirstPageNumber", decoder, false)?;
             result.setup.horizontal_dpi =
                 parse_u32_value(xml_value(event, b"horizontalDpi", decoder)?);
             result.setup.vertical_dpi = parse_u32_value(xml_value(event, b"verticalDpi", decoder)?);
@@ -6449,6 +6451,8 @@ fn parse_page_layout(xml: &[u8]) -> Result<WorkbookPageLayout, String> {
                     parse_u32_value(xml_value(event, b"fitToHeight", reader.decoder())?);
                 result.setup.first_page_number =
                     parse_u32_value(xml_value(event, b"firstPageNumber", reader.decoder())?);
+                result.setup.use_first_page_number =
+                    bool_attribute(event, b"useFirstPageNumber", reader.decoder(), false)?;
                 result.setup.horizontal_dpi =
                     parse_u32_value(xml_value(event, b"horizontalDpi", reader.decoder())?);
                 result.setup.vertical_dpi =
@@ -7338,6 +7342,249 @@ pub fn patch_workbook_page_layout(
         return Err("页面布局写回后的语义校验失败".into());
     }
     write_package(entries, source.len() + 512)
+}
+
+fn validate_print_options_change(change: &WorkbookPrintOptionsChange) -> Result<(), String> {
+    if change.sheet.trim().is_empty() {
+        return Err("工作表名称不能为空".into());
+    }
+    if change
+        .first_page_number
+        .is_some_and(|number| !(1..=32_767).contains(&number))
+    {
+        return Err("首页页码必须在 1 到 32767 之间".into());
+    }
+    Ok(())
+}
+
+fn print_options_event(
+    original: Option<&BytesStart<'_>>,
+    change: &WorkbookPrintOptionsChange,
+) -> Result<BytesStart<'static>, String> {
+    let mut event = BytesStart::new("printOptions");
+    if let Some(original) = original {
+        for attribute in original.attributes().with_checks(false) {
+            let attribute = attribute.map_err(|error| format!("解析打印选项属性失败: {error}"))?;
+            if !matches!(
+                attribute.key.as_ref(),
+                b"gridLines" | b"headings" | b"horizontalCentered" | b"verticalCentered"
+            ) {
+                event.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+            }
+        }
+    }
+    for (name, enabled) in [
+        ("gridLines", change.grid_lines),
+        ("headings", change.headings),
+        ("horizontalCentered", change.horizontal_centered),
+        ("verticalCentered", change.vertical_centered),
+    ] {
+        event.push_attribute((name, if enabled { "1" } else { "0" }));
+    }
+    Ok(event.into_owned())
+}
+
+fn print_page_setup_event(
+    original: Option<&BytesStart<'_>>,
+    change: &WorkbookPrintOptionsChange,
+) -> Result<BytesStart<'static>, String> {
+    let mut event = BytesStart::new("pageSetup");
+    if let Some(original) = original {
+        for attribute in original.attributes().with_checks(false) {
+            let attribute = attribute.map_err(|error| format!("解析打印页面属性失败: {error}"))?;
+            if !matches!(
+                attribute.key.as_ref(),
+                b"blackAndWhite" | b"draft" | b"firstPageNumber" | b"useFirstPageNumber"
+            ) {
+                event.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+            }
+        }
+    }
+    event.push_attribute((
+        "blackAndWhite",
+        if change.black_and_white { "1" } else { "0" },
+    ));
+    event.push_attribute(("draft", if change.draft { "1" } else { "0" }));
+    if let Some(number) = change.first_page_number {
+        let number = number.to_string();
+        event.push_attribute(("firstPageNumber", number.as_str()));
+        event.push_attribute(("useFirstPageNumber", "1"));
+    } else {
+        event.push_attribute(("useFirstPageNumber", "0"));
+    }
+    Ok(event.into_owned())
+}
+
+fn patch_print_options_xml(
+    xml: &[u8],
+    change: &WorkbookPrintOptionsChange,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 160));
+    let mut buffer = Vec::new();
+    let mut wrote_options = false;
+    let mut wrote_setup = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析打印选项失败: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"printOptions" => {
+                writer
+                    .write_event(Event::Empty(print_options_event(Some(start), change)?))
+                    .map_err(|error| format!("写入打印选项失败: {error}"))?;
+                skip_element(&mut reader, b"printOptions", &mut buffer)?;
+                wrote_options = true;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"printOptions" => {
+                writer
+                    .write_event(Event::Empty(print_options_event(Some(start), change)?))
+                    .map_err(|error| format!("写入打印选项失败: {error}"))?;
+                wrote_options = true;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"pageSetup" => {
+                if !wrote_options {
+                    writer
+                        .write_event(Event::Empty(print_options_event(None, change)?))
+                        .map_err(|error| format!("新增打印选项失败: {error}"))?;
+                    wrote_options = true;
+                }
+                writer
+                    .write_event(Event::Empty(print_page_setup_event(Some(start), change)?))
+                    .map_err(|error| format!("写入打印页面属性失败: {error}"))?;
+                skip_element(&mut reader, b"pageSetup", &mut buffer)?;
+                wrote_setup = true;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"pageSetup" => {
+                if !wrote_options {
+                    writer
+                        .write_event(Event::Empty(print_options_event(None, change)?))
+                        .map_err(|error| format!("新增打印选项失败: {error}"))?;
+                    wrote_options = true;
+                }
+                writer
+                    .write_event(Event::Empty(print_page_setup_event(Some(start), change)?))
+                    .map_err(|error| format!("写入打印页面属性失败: {error}"))?;
+                wrote_setup = true;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if !wrote_options && start.local_name().as_ref() == b"pageMargins" =>
+            {
+                writer
+                    .write_event(Event::Empty(print_options_event(None, change)?))
+                    .map_err(|error| format!("新增打印选项失败: {error}"))?;
+                wrote_options = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制工作表 XML 失败: {error}"))?;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if (!wrote_options || !wrote_setup)
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"headerFooter"
+                            | b"rowBreaks"
+                            | b"colBreaks"
+                            | b"customProperties"
+                            | b"drawing"
+                            | b"legacyDrawing"
+                            | b"legacyDrawingHF"
+                            | b"picture"
+                            | b"oleObjects"
+                            | b"controls"
+                            | b"webPublishItems"
+                            | b"tableParts"
+                            | b"extLst"
+                    ) =>
+            {
+                if !wrote_options {
+                    writer
+                        .write_event(Event::Empty(print_options_event(None, change)?))
+                        .map_err(|error| format!("新增打印选项失败: {error}"))?;
+                    wrote_options = true;
+                }
+                if !wrote_setup {
+                    writer
+                        .write_event(Event::Empty(print_page_setup_event(None, change)?))
+                        .map_err(|error| format!("新增打印页面属性失败: {error}"))?;
+                    wrote_setup = true;
+                }
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制工作表 XML 失败: {error}"))?;
+            }
+            Event::End(ref end)
+                if end.local_name().as_ref() == b"worksheet"
+                    && (!wrote_options || !wrote_setup) =>
+            {
+                if !wrote_options {
+                    writer
+                        .write_event(Event::Empty(print_options_event(None, change)?))
+                        .map_err(|error| format!("新增打印选项失败: {error}"))?;
+                    wrote_options = true;
+                }
+                if !wrote_setup {
+                    writer
+                        .write_event(Event::Empty(print_page_setup_event(None, change)?))
+                        .map_err(|error| format!("新增打印页面属性失败: {error}"))?;
+                    wrote_setup = true;
+                }
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束工作表 XML 失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制工作表 XML 失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !wrote_options || !wrote_setup {
+        return Err("无法写入打印选项".into());
+    }
+    Ok(writer.into_inner())
+}
+
+pub fn patch_workbook_print_options(
+    source: &[u8],
+    change: &WorkbookPrintOptionsChange,
+) -> Result<Vec<u8>, String> {
+    validate_print_options_change(change)?;
+    let mut entries = load_package(source)?;
+    let paths = workbook_sheet_paths(&entries)?;
+    let sheet_path = paths
+        .get(change.sheet.trim())
+        .ok_or_else(|| format!("工作表不存在: {}", change.sheet))?
+        .clone();
+    let sheet_index = entries
+        .iter()
+        .position(|entry| entry.name == sheet_path)
+        .ok_or("工作表部件缺失")?;
+    if parse_page_layout(&entries[sheet_index].data)?
+        .protection
+        .enabled
+    {
+        return Err("受保护的工作表不能修改打印选项；LongEdit 不会绕过 Excel 保护".into());
+    }
+    entries[sheet_index].data = patch_print_options_xml(&entries[sheet_index].data, change)?;
+    let parsed = parse_page_layout(&entries[sheet_index].data)?;
+    let expected_options = WorkbookPrintOptions {
+        grid_lines: change.grid_lines,
+        headings: change.headings,
+        horizontal_centered: change.horizontal_centered,
+        vertical_centered: change.vertical_centered,
+    };
+    if parsed.options != expected_options
+        || parsed.setup.black_and_white != change.black_and_white
+        || parsed.setup.draft != change.draft
+        || parsed.setup.first_page_number != change.first_page_number
+        || parsed.setup.use_first_page_number != change.first_page_number.is_some()
+    {
+        return Err("打印选项写回后的语义校验失败".into());
+    }
+    write_package(entries, source.len() + 256)
 }
 
 fn validate_header_footer_change(change: &WorkbookHeaderFooterChange) -> Result<(), String> {

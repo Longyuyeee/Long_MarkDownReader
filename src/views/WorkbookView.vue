@@ -45,10 +45,12 @@
       <span v-if="sheetInfo.pageLayout.printArea">打印区域 {{ rangeLabel(sheetInfo.pageLayout.printArea) }}</span>
       <span v-if="sheetInfo.pageLayout.setup.orientation">{{ sheetInfo.pageLayout.setup.orientation === 'landscape' ? '横向' : '纵向' }} · 纸张 {{ sheetInfo.pageLayout.setup.paperSize || '默认' }}</span>
       <span v-if="sheetInfo.pageLayout.setup.fitToPage">适配 {{ sheetInfo.pageLayout.setup.fitToWidth ?? '默认' }} × {{ sheetInfo.pageLayout.setup.fitToHeight ?? '默认' }} 页</span>
+      <span v-if="hasStoredPrintOptions">{{ storedPrintOptionsSummary }}</span>
       <span v-if="hasStoredHeaderFooter" :title="storedHeaderFooterSummary">已配置页眉/页脚</span>
       <button title="把当前连续选区设为打印区域" :disabled="!canEditPrintArea || !pageLayoutSelection" @click="setSelectionAsPrintArea">设为打印区域</button>
       <button title="清除当前 Sheet 的打印区域" :disabled="!canEditPrintArea || !sheetInfo.pageLayout.printArea" @click="clearPrintArea">清除打印区域</button>
       <button title="编辑方向、纸张、缩放和页边距" :disabled="!canEditPageLayout" @click="pageLayoutModalOpen = true">页面设置</button>
+      <button title="编辑网格线、标题、居中和输出选项" :disabled="!canEditPageLayout" @click="printOptionsModalOpen = true">打印选项</button>
       <button title="编辑当前 Sheet 的页眉和页脚" :disabled="!canEditPageLayout" @click="headerFooterModalOpen = true">页眉页脚</button>
       <span v-if="workbook.protection.lockStructure">工作簿结构已锁定</span>
       <em v-if="sheetProtected">当前 Sheet 受保护，LongEdit 不会绕过密码或写入限制</em>
@@ -73,6 +75,37 @@
         <div class="page-layout-actions">
           <button @click="pageLayoutModalOpen = false">取消</button>
           <button class="primary" :disabled="!canEditPageLayout" @click="savePageLayout()">应用</button>
+        </div>
+      </template>
+    </n-modal>
+
+    <n-modal v-model:show="printOptionsModalOpen" preset="card" title="打印选项" class="print-options-modal">
+      <div class="print-options-panel">
+        <fieldset>
+          <legend>打印内容</legend>
+          <label><input v-model="printOptionsDraft.gridLines" type="checkbox">打印网格线</label>
+          <label><input v-model="printOptionsDraft.headings" type="checkbox">打印行列标题</label>
+        </fieldset>
+        <fieldset>
+          <legend>页面居中</legend>
+          <label><input v-model="printOptionsDraft.horizontalCentered" type="checkbox">水平居中</label>
+          <label><input v-model="printOptionsDraft.verticalCentered" type="checkbox">垂直居中</label>
+        </fieldset>
+        <fieldset>
+          <legend>输出方式</legend>
+          <label><input v-model="printOptionsDraft.blackAndWhite" type="checkbox">黑白打印</label>
+          <label><input v-model="printOptionsDraft.draft" type="checkbox">草稿质量</label>
+        </fieldset>
+        <fieldset class="first-page-option">
+          <legend>页码</legend>
+          <label><input v-model="printOptionsDraft.useFirstPageNumber" type="checkbox">指定首页页码</label>
+          <input v-model.number="printOptionsDraft.firstPageNumber" type="number" min="1" max="32767" :disabled="!printOptionsDraft.useFirstPageNumber" aria-label="首页页码">
+        </fieldset>
+      </div>
+      <template #footer>
+        <div class="page-layout-actions">
+          <button @click="printOptionsModalOpen = false">取消</button>
+          <button class="primary" :disabled="!canEditPageLayout" @click="savePrintOptions">应用</button>
         </div>
       </template>
     </n-modal>
@@ -488,8 +521,9 @@ interface WorkbookChartPreview { headers: string[]; columnIds: string[]; columnT
 interface WorkbookPageMargins { left?: number; right?: number; top?: number; bottom?: number; header?: number; footer?: number }
 type WorkbookPageMarginKey = keyof WorkbookPageMargins
 interface WorkbookPageLayoutDraft { printArea?: WorkbookMergeRange; orientation: 'portrait' | 'landscape'; paperSize: number; scalingMode: 'scale' | 'fit'; scale: number; fitToWidth: number; fitToHeight: number; margins: Record<WorkbookPageMarginKey, number> }
-interface WorkbookPageSetup { orientation?: string; paperSize?: number; scale?: number; fitToWidth?: number; fitToHeight?: number; firstPageNumber?: number; horizontalDpi?: number; verticalDpi?: number; blackAndWhite: boolean; draft: boolean; fitToPage: boolean }
+interface WorkbookPageSetup { orientation?: string; paperSize?: number; scale?: number; fitToWidth?: number; fitToHeight?: number; firstPageNumber?: number; useFirstPageNumber: boolean; horizontalDpi?: number; verticalDpi?: number; blackAndWhite: boolean; draft: boolean; fitToPage: boolean }
 interface WorkbookPrintOptions { gridLines: boolean; headings: boolean; horizontalCentered: boolean; verticalCentered: boolean }
+interface WorkbookPrintOptionsDraft extends WorkbookPrintOptions { blackAndWhite: boolean; draft: boolean; useFirstPageNumber: boolean; firstPageNumber: number }
 interface WorkbookHeaderFooter { oddHeader?: string; oddFooter?: string; evenHeader?: string; evenFooter?: string; firstHeader?: string; firstFooter?: string; differentOddEven: boolean; differentFirstPage: boolean; scaleWithDocument: boolean; alignWithMargins: boolean }
 interface WorkbookHeaderFooterDraft { oddHeader: string; oddFooter: string; evenHeader: string; evenFooter: string; firstHeader: string; firstFooter: string; differentOddEven: boolean; differentFirstPage: boolean; scaleWithDocument: boolean; alignWithMargins: boolean }
 interface WorkbookSheetProtection { enabled: boolean; passwordProtected: boolean; blockedActions: string[] }
@@ -780,6 +814,7 @@ const pageMarginFields: { key: WorkbookPageMarginKey; label: string }[] = [
   { key: 'footer', label: '页脚' },
 ]
 const pageLayoutModalOpen = ref(false)
+const printOptionsModalOpen = ref(false)
 const headerFooterModalOpen = ref(false)
 const headerFooterMode = ref<'odd' | 'even' | 'first'>('odd')
 const pageLayoutDraft = ref<WorkbookPageLayoutDraft>({
@@ -802,6 +837,16 @@ const headerFooterDraft = ref<WorkbookHeaderFooterDraft>({
   differentFirstPage: false,
   scaleWithDocument: true,
   alignWithMargins: true,
+})
+const printOptionsDraft = ref<WorkbookPrintOptionsDraft>({
+  gridLines: false,
+  headings: false,
+  horizontalCentered: false,
+  verticalCentered: false,
+  blackAndWhite: false,
+  draft: false,
+  useFirstPageNumber: false,
+  firstPageNumber: 1,
 })
 const activeHeaderFooterFields = computed(() => {
   const prefix = headerFooterMode.value === 'odd' ? 'odd' : headerFooterMode.value === 'even' ? 'even' : 'first'
@@ -829,6 +874,32 @@ const storedHeaderFooterSummary = computed(() => {
   if (!value) return ''
   return [value.oddHeader, value.oddFooter, value.evenHeader, value.evenFooter, value.firstHeader, value.firstFooter].filter(Boolean).join('\n')
 })
+const hasStoredPrintOptions = computed(() => {
+  const layout = sheetInfo.value?.pageLayout
+  return Boolean(layout && (
+    layout.options.gridLines
+    || layout.options.headings
+    || layout.options.horizontalCentered
+    || layout.options.verticalCentered
+    || layout.setup.blackAndWhite
+    || layout.setup.draft
+    || layout.setup.useFirstPageNumber
+  ))
+})
+const storedPrintOptionsSummary = computed(() => {
+  const layout = sheetInfo.value?.pageLayout
+  if (!layout) return ''
+  const labels = [
+    layout.options.gridLines && '网格线',
+    layout.options.headings && '行列标题',
+    layout.options.horizontalCentered && '水平居中',
+    layout.options.verticalCentered && '垂直居中',
+    layout.setup.blackAndWhite && '黑白',
+    layout.setup.draft && '草稿',
+    layout.setup.useFirstPageNumber && `首页 ${layout.setup.firstPageNumber || 1}`,
+  ].filter(Boolean)
+  return labels.length ? `打印 ${labels.join(' · ')}` : ''
+})
 const pageLayoutSelection = computed(() => {
   const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
   if (!area || area.bottom >= canvasRowCount.value || area.right >= canvasColumnCount.value) return null
@@ -855,6 +926,13 @@ const syncPageLayoutDraft = () => {
       header: layout.margins.header ?? 0.3,
       footer: layout.margins.footer ?? 0.3,
     },
+  }
+  printOptionsDraft.value = {
+    ...layout.options,
+    blackAndWhite: layout.setup.blackAndWhite,
+    draft: layout.setup.draft,
+    useFirstPageNumber: layout.setup.useFirstPageNumber,
+    firstPageNumber: layout.setup.firstPageNumber || 1,
   }
   const headerFooter = layout.headerFooter
   headerFooterDraft.value = {
@@ -2836,6 +2914,45 @@ const clearPrintArea = () => {
     onPositiveClick: () => savePageLayout(null),
   })
 }
+const savePrintOptions = async () => {
+  if (!workbook.value || !sheetInfo.value || !canEditPageLayout.value) return
+  const draft = printOptionsDraft.value
+  if (draft.useFirstPageNumber && (
+    !Number.isInteger(draft.firstPageNumber)
+    || draft.firstPageNumber < 1
+    || draft.firstPageNumber > 32767
+  )) {
+    return void message.error('首页页码必须是 1 到 32767 之间的整数')
+  }
+  updatingStructure.value = true
+  try {
+    const document = await invoke<WorkbookDocument>('update_workbook_print_options', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        change: {
+          sheet: activeSheet.value,
+          gridLines: draft.gridLines,
+          headings: draft.headings,
+          horizontalCentered: draft.horizontalCentered,
+          verticalCentered: draft.verticalCentered,
+          blackAndWhite: draft.blackAndWhite,
+          draft: draft.draft,
+          firstPageNumber: draft.useFirstPageNumber ? draft.firstPageNumber : undefined,
+        },
+      },
+    })
+    workbook.value = document
+    const sheet = activeSheet.value
+    generation += 1
+    activeSheet.value = ''
+    await selectSheet(sheet)
+    printOptionsModalOpen.value = false
+    message.success('打印选项已保存')
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
+}
 const saveHeaderFooter = async () => {
   if (!workbook.value || !sheetInfo.value || !canEditPageLayout.value) return
   const draft = headerFooterDraft.value
@@ -3574,6 +3691,14 @@ onBeforeUnmount(() => {
 .page-layout-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .page-layout-actions button { height: 32px; padding: 0 14px; border: 1px solid rgba(0,0,0,.14); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); cursor: pointer; }
 .page-layout-actions button.primary { color: #fff; border-color: var(--theme-primary); background: var(--theme-primary); }
+:deep(.print-options-modal) { width: min(680px, calc(100vw - 32px)); }
+.print-options-panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.print-options-panel fieldset { min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: 10px 14px; margin: 0; padding: 12px; border: 1px solid rgba(0,0,0,.12); border-radius: 6px; }
+.print-options-panel legend { padding: 0 5px; color: var(--theme-text-secondary); font-size: 10px; }
+.print-options-panel label { display: inline-flex; align-items: center; gap: 7px; color: var(--theme-text-secondary); font-size: 11px; }
+.print-options-panel .first-page-option { grid-template-columns: minmax(0, 1fr) 120px; }
+.print-options-panel .first-page-option > input { width: 100%; height: 32px; box-sizing: border-box; padding: 0 9px; border: 1px solid rgba(0,0,0,.14); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); }
+.print-options-panel .first-page-option > input:disabled { opacity: .5; }
 :deep(.header-footer-modal) { width: min(680px, calc(100vw - 32px)); }
 .header-footer-options { display: flex; flex-wrap: wrap; gap: 10px 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(0,0,0,.1); }
 .header-footer-options label { display: inline-flex; align-items: center; gap: 7px; color: var(--theme-text-secondary); font-size: 11px; }
@@ -3691,6 +3816,6 @@ onBeforeUnmount(() => {
 .workbook-state button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } }
+@media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } }
 @media (max-width: 900px) { .workbook-actions button:not(.primary):not(.icon-button) { display: none; } .workbook-title span { display: none; } }
 </style>

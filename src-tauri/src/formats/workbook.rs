@@ -325,6 +325,7 @@ pub struct WorkbookPageSetup {
     pub fit_to_width: Option<u32>,
     pub fit_to_height: Option<u32>,
     pub first_page_number: Option<u32>,
+    pub use_first_page_number: bool,
     pub horizontal_dpi: Option<u32>,
     pub vertical_dpi: Option<u32>,
     pub black_and_white: bool,
@@ -339,6 +340,26 @@ pub struct WorkbookPrintOptions {
     pub headings: bool,
     pub horizontal_centered: bool,
     pub vertical_centered: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPrintOptionsChange {
+    pub sheet: String,
+    pub grid_lines: bool,
+    pub headings: bool,
+    pub horizontal_centered: bool,
+    pub vertical_centered: bool,
+    pub black_and_white: bool,
+    pub draft: bool,
+    pub first_page_number: Option<u32>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPrintOptionsPayload {
+    pub expected_signature: String,
+    pub change: WorkbookPrintOptionsChange,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]

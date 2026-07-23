@@ -9,9 +9,9 @@ use crate::formats::workbook::{
     WorkbookCapabilityLevel, WorkbookCell, WorkbookConditionalFormatPayload,
     WorkbookDataValidationPayload, WorkbookDefinedNamePayload, WorkbookDocument,
     WorkbookDrawingPayload, WorkbookEngine, WorkbookFilterPayload, WorkbookHeaderFooterPayload,
-    WorkbookOutlinePayload, WorkbookPageLayoutPayload, WorkbookSheetPage, WorkbookStructureChange,
-    WorkbookStructureMigrationPreview, WorkbookStructurePayload, WorkbookTablePayload,
-    WorkbookWritePayload,
+    WorkbookOutlinePayload, WorkbookPageLayoutPayload, WorkbookPrintOptionsPayload,
+    WorkbookSheetPage, WorkbookStructureChange, WorkbookStructureMigrationPreview,
+    WorkbookStructurePayload, WorkbookTablePayload, WorkbookWritePayload,
 };
 use crate::formats::workbook_calculation::calculate_workbook;
 use crate::formats::workbook_formula::{
@@ -22,9 +22,9 @@ use crate::formats::workbook_ooxml::{
     patch_workbook, patch_workbook_conditional_format, patch_workbook_data_validation,
     patch_workbook_defined_name, patch_workbook_drawing, patch_workbook_filter,
     patch_workbook_freeze_pane, patch_workbook_header_footer, patch_workbook_outline,
-    patch_workbook_page_layout, patch_workbook_structure, patch_workbook_table,
-    read_workbook_defined_names, read_workbook_linked_data, read_workbook_protection,
-    read_workbook_sheet_layout, validate_workbook_package,
+    patch_workbook_page_layout, patch_workbook_print_options, patch_workbook_structure,
+    patch_workbook_table, read_workbook_defined_names, read_workbook_linked_data,
+    read_workbook_protection, read_workbook_sheet_layout, validate_workbook_package,
 };
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
@@ -692,6 +692,36 @@ pub async fn update_workbook_header_footer(
 }
 
 #[tauri::command]
+pub async fn update_workbook_print_options(
+    library_root: String,
+    path: String,
+    payload: WorkbookPrintOptionsPayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再修改打印选项".into());
+        }
+        let output = patch_workbook_print_options(&source, &payload.change)?;
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("保存后的 XLSX 不能超过 128 MB".into());
+        }
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX 打印选项写回任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn update_workbook_outline(
     library_root: String,
     path: String,
@@ -827,8 +857,9 @@ mod tests {
         WorkbookFilterPayload, WorkbookFilterTarget, WorkbookHeaderFooterChange,
         WorkbookHeaderFooterPayload, WorkbookMergeEdit, WorkbookMergeRange, WorkbookOutlinePayload,
         WorkbookPageLayoutChange, WorkbookPageLayoutPayload, WorkbookPageMarginsChange,
-        WorkbookRowHeightEdit, WorkbookRowStateEdit, WorkbookStructureAction,
-        WorkbookStructureAxis, WorkbookStructurePayload, WorkbookStylePatch, WorkbookWritePayload,
+        WorkbookPrintOptionsChange, WorkbookPrintOptionsPayload, WorkbookRowHeightEdit,
+        WorkbookRowStateEdit, WorkbookStructureAction, WorkbookStructureAxis,
+        WorkbookStructurePayload, WorkbookStylePatch, WorkbookWritePayload,
     };
     use rust_xlsxwriter::{
         ConditionalFormatCell, ConditionalFormatCellRule, Format, Formula, Workbook,
@@ -2408,6 +2439,113 @@ mod tests {
     }
 
     #[test]
+    fn print_options_round_trip_through_command_boundary() {
+        let (base, path) = compatibility_fixture_copy("print-options");
+        let root = base.join("library");
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let original_layout = CalamineWorkbookEngine
+            .read_sheet(&path, "Summary", 0, 80)
+            .unwrap()
+            .page_layout;
+        let rejected = tauri::async_runtime::block_on(update_workbook_print_options(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPrintOptionsPayload {
+                expected_signature: document.signature.clone(),
+                change: WorkbookPrintOptionsChange {
+                    sheet: "Summary".into(),
+                    grid_lines: true,
+                    headings: true,
+                    horizontal_centered: true,
+                    vertical_centered: false,
+                    black_and_white: true,
+                    draft: false,
+                    first_page_number: Some(32_768),
+                },
+            },
+        ));
+        assert!(rejected
+            .unwrap_err()
+            .contains("首页页码必须在 1 到 32767 之间"));
+
+        let saved = tauri::async_runtime::block_on(update_workbook_print_options(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPrintOptionsPayload {
+                expected_signature: document.signature,
+                change: WorkbookPrintOptionsChange {
+                    sheet: "Summary".into(),
+                    grid_lines: true,
+                    headings: true,
+                    horizontal_centered: true,
+                    vertical_centered: false,
+                    black_and_white: true,
+                    draft: true,
+                    first_page_number: Some(7),
+                },
+            },
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Summary", 0, 80)
+            .unwrap();
+        assert!(page.page_layout.options.grid_lines);
+        assert!(page.page_layout.options.headings);
+        assert!(page.page_layout.options.horizontal_centered);
+        assert!(!page.page_layout.options.vertical_centered);
+        assert!(page.page_layout.setup.black_and_white);
+        assert!(page.page_layout.setup.draft);
+        assert_eq!(page.page_layout.setup.first_page_number, Some(7));
+        assert!(page.page_layout.setup.use_first_page_number);
+        assert_eq!(page.page_layout.print_area, original_layout.print_area);
+        assert_eq!(page.page_layout.margins, original_layout.margins);
+        assert_eq!(
+            page.page_layout.setup.orientation,
+            original_layout.setup.orientation
+        );
+        assert_eq!(
+            page.page_layout.setup.paper_size,
+            original_layout.setup.paper_size
+        );
+        assert_eq!(
+            page.page_layout.header_footer,
+            original_layout.header_footer
+        );
+
+        tauri::async_runtime::block_on(update_workbook_print_options(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPrintOptionsPayload {
+                expected_signature: saved.signature,
+                change: WorkbookPrintOptionsChange {
+                    sheet: "Summary".into(),
+                    grid_lines: false,
+                    headings: false,
+                    horizontal_centered: false,
+                    vertical_centered: true,
+                    black_and_white: false,
+                    draft: false,
+                    first_page_number: None,
+                },
+            },
+        ))
+        .unwrap();
+        let cleared = CalamineWorkbookEngine
+            .read_sheet(&path, "Summary", 0, 80)
+            .unwrap()
+            .page_layout;
+        assert!(!cleared.options.grid_lines);
+        assert!(!cleared.options.headings);
+        assert!(!cleared.options.horizontal_centered);
+        assert!(cleared.options.vertical_centered);
+        assert!(!cleared.setup.black_and_white);
+        assert!(!cleared.setup.draft);
+        assert_eq!(cleared.setup.first_page_number, None);
+        assert!(!cleared.setup.use_first_page_number);
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
     fn preserves_chart_drawing_and_image_parts_when_editing_cells() {
         let (base, path) = compatibility_fixture_copy("drawings");
         let root = base.join("library");
@@ -2542,6 +2680,28 @@ mod tests {
             },
         ));
         assert!(header_footer_rejected
+            .unwrap_err()
+            .contains("不会绕过 Excel 保护"));
+        assert_eq!(fs::read(&path).unwrap(), before);
+
+        let print_options_rejected = tauri::async_runtime::block_on(update_workbook_print_options(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPrintOptionsPayload {
+                expected_signature: CalamineWorkbookEngine.inspect(&path).unwrap().signature,
+                change: WorkbookPrintOptionsChange {
+                    sheet: "Protected".into(),
+                    grid_lines: true,
+                    headings: true,
+                    horizontal_centered: true,
+                    vertical_centered: true,
+                    black_and_white: false,
+                    draft: false,
+                    first_page_number: None,
+                },
+            },
+        ));
+        assert!(print_options_rejected
             .unwrap_err()
             .contains("不会绕过 Excel 保护"));
         assert_eq!(fs::read(&path).unwrap(), before);
