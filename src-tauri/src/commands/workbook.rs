@@ -9,9 +9,15 @@ use crate::formats::workbook::{
     WorkbookCapabilityLevel, WorkbookCell, WorkbookConditionalFormatPayload,
     WorkbookDataValidationPayload, WorkbookDefinedNamePayload, WorkbookDocument,
     WorkbookDrawingPayload, WorkbookEngine, WorkbookFilterPayload, WorkbookHeaderFooterPayload,
-    WorkbookOutlinePayload, WorkbookPageLayoutPayload, WorkbookPrintOptionsPayload,
-    WorkbookSheetPage, WorkbookStructureChange, WorkbookStructureMigrationPreview,
-    WorkbookStructurePayload, WorkbookTablePayload, WorkbookWritePayload,
+    WorkbookOutlinePayload, WorkbookPageLayoutPayload, WorkbookPivotCacheRebuildPayload,
+    WorkbookPivotCacheRebuildResult, WorkbookPivotExpandedRebuildPayload,
+    WorkbookPivotExpandedRebuildResult, WorkbookPivotPreviewPayload, WorkbookPivotPreviewResult,
+    WorkbookPivotRebuildPlan, WorkbookPivotRebuildPlanPayload,
+    WorkbookPivotSynchronizedRebuildPayload, WorkbookPivotSynchronizedRebuildResult,
+    WorkbookPivotVariantVerificationPayload, WorkbookPivotVariantVerificationResult,
+    WorkbookPrintOptionsPayload, WorkbookSheetPage, WorkbookStructureChange,
+    WorkbookStructureMigrationPreview, WorkbookStructurePayload, WorkbookTablePayload,
+    WorkbookWritePayload,
 };
 use crate::formats::workbook_calculation::calculate_workbook;
 use crate::formats::workbook_formula::{
@@ -23,9 +29,13 @@ use crate::formats::workbook_ooxml::{
     patch_workbook_defined_name, patch_workbook_drawing, patch_workbook_filter,
     patch_workbook_freeze_pane, patch_workbook_header_footer, patch_workbook_outline,
     patch_workbook_page_layout, patch_workbook_print_options, patch_workbook_structure,
-    patch_workbook_table, read_workbook_defined_names, read_workbook_linked_data,
-    read_workbook_protection, read_workbook_sheet_layout, validate_workbook_package,
+    patch_workbook_table, plan_workbook_pivot_rebuild, read_workbook_defined_names,
+    read_workbook_linked_data, read_workbook_protection, read_workbook_sheet_layout,
+    rebuild_workbook_pivot_cache_isolated, rebuild_workbook_pivot_expanded_isolated,
+    rebuild_workbook_pivot_isolated, validate_workbook_package,
+    verify_workbook_pivot_variants_isolated,
 };
+use crate::formats::workbook_pivot::preview_pivot;
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -318,6 +328,195 @@ pub async fn recalculate_workbook_formulas(
     })
     .await
     .map_err(|error| format!("公式重算任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_workbook_pivot(
+    library_root: String,
+    path: String,
+    payload: WorkbookPivotPreviewPayload,
+) -> Result<WorkbookPivotPreviewResult, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再预览透视结果".into());
+        }
+        validate_workbook_package(&source)?;
+        let linked_data = read_workbook_linked_data(&source)?;
+        let pivot = linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == payload.pivot_part)
+            .ok_or("指定的透视表不存在或身份已变化")?;
+        preview_pivot(&source, pivot, payload.edits)
+    })
+    .await
+    .map_err(|error| format!("透视预览任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_workbook_pivot_rebuild(
+    library_root: String,
+    path: String,
+    payload: WorkbookPivotRebuildPlanPayload,
+) -> Result<WorkbookPivotRebuildPlan, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再生成透视重建影响清单".into());
+        }
+        validate_workbook_package(&source)?;
+        let linked_data = read_workbook_linked_data(&source)?;
+        let pivot = linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == payload.pivot_part)
+            .ok_or("指定的透视表不存在或身份已变化")?;
+        plan_workbook_pivot_rebuild(&source, pivot)
+    })
+    .await
+    .map_err(|error| format!("透视重建影响审计任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn rebuild_workbook_pivot_cache_isolated_copy(
+    library_root: String,
+    path: String,
+    payload: WorkbookPivotCacheRebuildPayload,
+) -> Result<WorkbookPivotCacheRebuildResult, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再执行隔离 Cache 重建".into());
+        }
+        validate_workbook_package(&source)?;
+        let linked_data = read_workbook_linked_data(&source)?;
+        let pivot = linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == payload.pivot_part)
+            .ok_or("指定的透视表不存在或身份已变化")?;
+        let (_, result) = rebuild_workbook_pivot_cache_isolated(&source, pivot)?;
+        Ok(result)
+    })
+    .await
+    .map_err(|error| format!("透视 Cache 隔离重建任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn rebuild_workbook_pivot_isolated_copy(
+    library_root: String,
+    path: String,
+    payload: WorkbookPivotSynchronizedRebuildPayload,
+) -> Result<WorkbookPivotSynchronizedRebuildResult, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再执行隔离同步重建".into());
+        }
+        validate_workbook_package(&source)?;
+        let linked_data = read_workbook_linked_data(&source)?;
+        let pivot = linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == payload.pivot_part)
+            .ok_or("指定的透视表不存在或身份已变化")?;
+        let (_, result) = rebuild_workbook_pivot_isolated(&source, pivot)?;
+        Ok(result)
+    })
+    .await
+    .map_err(|error| format!("透视表隔离同步重建任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn rebuild_workbook_pivot_expanded_isolated_copy(
+    library_root: String,
+    path: String,
+    payload: WorkbookPivotExpandedRebuildPayload,
+) -> Result<WorkbookPivotExpandedRebuildResult, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再执行隔离布局扩缩容".into());
+        }
+        validate_workbook_package(&source)?;
+        let linked_data = read_workbook_linked_data(&source)?;
+        let pivot = linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == payload.pivot_part)
+            .ok_or("指定的透视表不存在或身份已变化")?;
+        let (_, result) = rebuild_workbook_pivot_expanded_isolated(&source, pivot)?;
+        Ok(result)
+    })
+    .await
+    .map_err(|error| format!("透视表隔离布局扩缩容任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn verify_workbook_pivot_variants_isolated_copy(
+    library_root: String,
+    path: String,
+    payload: WorkbookPivotVariantVerificationPayload,
+) -> Result<WorkbookPivotVariantVerificationResult, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再验证聚合与布局变体".into());
+        }
+        validate_workbook_package(&source)?;
+        let linked_data = read_workbook_linked_data(&source)?;
+        let pivot = linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == payload.pivot_part)
+            .ok_or("指定的透视表不存在或身份已变化")?;
+        verify_workbook_pivot_variants_isolated(&source, pivot)
+    })
+    .await
+    .map_err(|error| format!("透视表聚合与布局变体隔离验证任务失败: {error}"))?
 }
 
 #[tauri::command]
@@ -857,10 +1056,10 @@ mod tests {
         WorkbookFilterPayload, WorkbookFilterTarget, WorkbookFormulaTarget,
         WorkbookHeaderFooterChange, WorkbookHeaderFooterPayload, WorkbookMergeEdit,
         WorkbookMergeRange, WorkbookOutlinePayload, WorkbookPageLayoutChange,
-        WorkbookPageLayoutPayload, WorkbookPageMarginsChange, WorkbookPrintOptionsChange,
-        WorkbookPrintOptionsPayload, WorkbookRowHeightEdit, WorkbookRowStateEdit,
-        WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructurePayload,
-        WorkbookStylePatch, WorkbookWritePayload,
+        WorkbookPageLayoutPayload, WorkbookPageMarginsChange, WorkbookPivotPreviewPayload,
+        WorkbookPrintOptionsChange, WorkbookPrintOptionsPayload, WorkbookRowHeightEdit,
+        WorkbookRowStateEdit, WorkbookStructureAction, WorkbookStructureAxis,
+        WorkbookStructurePayload, WorkbookStylePatch, WorkbookWritePayload,
     };
     use rust_xlsxwriter::{
         ConditionalFormatCell, ConditionalFormatCellRule, Format, Formula, Workbook,
@@ -1155,6 +1354,46 @@ mod tests {
                         row: 31,
                         column: 4,
                     },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 32,
+                        column: 4,
+                    },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 36,
+                        column: 4,
+                    },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 40,
+                        column: 4,
+                    },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 41,
+                        column: 4,
+                    },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 42,
+                        column: 4,
+                    },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 49,
+                        column: 4,
+                    },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 51,
+                        column: 4,
+                    },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 56,
+                        column: 4,
+                    },
                 ]
                 .into(),
             },
@@ -1166,9 +1405,99 @@ mod tests {
         assert_eq!(result.cells[4].kind, "text");
         assert_eq!(result.cells[5].value, "#N/A");
         assert_eq!(result.cells[6].value, "missing");
+        assert_eq!(result.cells[7].value, "50");
+        assert_eq!(result.cells[8].value, "45351");
+        assert_eq!(result.cells[9].value, "29");
+        assert_eq!(result.cells[10].value, "#VALUE!");
+        assert_eq!(result.cells[11].value, "200");
+        assert_eq!(result.cells[12].value, "#N/A");
+        assert_eq!(result.cells[13].value, "50");
+        assert_eq!(result.cells[14].value, "true");
         assert_eq!(result.diagnostics[0].category, "division_by_zero");
         assert_eq!(result.diagnostics[1].category, "name");
         assert_eq!(result.diagnostics[2].category, "not_available");
+        assert_eq!(result.diagnostics[3].category, "value");
+        assert_eq!(result.diagnostics[4].category, "not_available");
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn formula_calculation_command_rejects_external_workbook_offline() {
+        let (base, path) = compatibility_fixture_copy("external-calculation");
+        let root = path.parent().unwrap().to_string_lossy().into_owned();
+        let path_text = path.to_string_lossy().into_owned();
+        let document =
+            tauri::async_runtime::block_on(read_workbook_file(root.clone(), path_text.clone()))
+                .unwrap();
+        let error = tauri::async_runtime::block_on(recalculate_workbook_formulas(
+            root,
+            path_text,
+            WorkbookCalculationPayload {
+                expected_signature: document.signature,
+                edits: Vec::new(),
+                targets: vec![WorkbookFormulaTarget {
+                    sheet: "Inventory".into(),
+                    row: 0,
+                    column: 0,
+                }],
+            },
+        ))
+        .unwrap_err();
+        assert!(error.contains("保持离线"));
+        assert!(error.contains("外部工作簿链接"));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn pivot_preview_uses_unsaved_drafts_without_modifying_workbook() {
+        let (base, path) = compatibility_fixture_copy("pivot-preview");
+        let root = path.parent().unwrap().to_string_lossy().into_owned();
+        let path_text = path.to_string_lossy().into_owned();
+        let before = fs::read(&path).unwrap();
+        let document =
+            tauri::async_runtime::block_on(read_workbook_file(root.clone(), path_text.clone()))
+                .unwrap();
+        let pivot_part = document.linked_data.pivot_tables[0].part.clone();
+        let preview = tauri::async_runtime::block_on(preview_workbook_pivot(
+            root.clone(),
+            path_text.clone(),
+            WorkbookPivotPreviewPayload {
+                expected_signature: document.signature,
+                pivot_part: pivot_part.clone(),
+                edits: vec![WorkbookCellEdit {
+                    sheet: "Inventory".into(),
+                    row: 1,
+                    column: 1,
+                    input: "18".into(),
+                    kind: "number".into(),
+                }],
+            },
+        ))
+        .unwrap();
+        assert_eq!(preview.pivot_name, "InventoryPivot");
+        assert_eq!(preview.source_sheet, "Inventory");
+        assert_eq!(preview.source_range, "A1:C3");
+        assert_eq!(preview.source_row_count, 2);
+        assert_eq!(preview.applied_draft_count, 1);
+        assert_eq!(preview.groups.len(), 2);
+        assert_eq!(preview.groups[0].row_keys[0].value, "Keyboard");
+        assert_eq!(preview.groups[0].column_keys[0].value, "Hardware");
+        assert_eq!(preview.groups[0].measures[0].formatted_value, "18");
+        assert_eq!(preview.groups[1].measures[0].formatted_value, "30");
+        assert_eq!(fs::read(&path).unwrap(), before);
+
+        let stale = tauri::async_runtime::block_on(preview_workbook_pivot(
+            root,
+            path_text,
+            WorkbookPivotPreviewPayload {
+                expected_signature: "stale".into(),
+                pivot_part,
+                edits: Vec::new(),
+            },
+        ))
+        .unwrap_err();
+        assert!(stale.contains("其他程序修改"));
+        assert_eq!(fs::read(&path).unwrap(), before);
         fs::remove_dir_all(base).unwrap();
     }
 
@@ -1617,6 +1946,35 @@ mod tests {
         assert_eq!(pivot.source_sheet.as_deref(), Some("Inventory"));
         assert_eq!(pivot.source_range.as_deref(), Some("A1:C3"));
         assert!(pivot.refresh_on_load);
+        assert!(pivot.audit.rebuild_candidate);
+        assert_eq!(pivot.audit.status, "candidate_for_rebuild");
+        assert_eq!(pivot.audit.layout_range.as_deref(), Some("E2:G6"));
+        assert_eq!(pivot.audit.cache_field_count, 3);
+        assert_eq!(pivot.audit.cache_record_count, Some(2));
+        assert_eq!(pivot.audit.row_field_count, 1);
+        assert_eq!(pivot.audit.column_field_count, 1);
+        assert_eq!(pivot.audit.page_field_count, 0);
+        assert_eq!(pivot.audit.data_field_count, 1);
+        assert_eq!(pivot.audit.fields[0].name, "Product");
+        assert_eq!(pivot.audit.fields[0].role, "row");
+        assert_eq!(pivot.audit.fields[1].value_type, "number");
+        assert_eq!(pivot.audit.fields[2].role, "column");
+        assert_eq!(pivot.audit.data_fields[0].name, "Sum of Stock");
+        assert_eq!(pivot.audit.data_fields[0].aggregation, "sum");
+        assert!(pivot.audit.data_fields[0].supported);
+        assert!(pivot.audit.blockers.is_empty());
+        assert_eq!(pivot.audit.writeback.status, "blocked");
+        assert!(!pivot.audit.writeback.allowed);
+        assert!(!pivot.audit.writeback.pivot_field_items_complete);
+        assert!(!pivot.audit.writeback.row_items_complete);
+        assert!(!pivot.audit.writeback.column_items_complete);
+        assert!(!pivot.audit.writeback.output_cells_present);
+        assert!(pivot
+            .audit
+            .writeback
+            .blockers
+            .iter()
+            .any(|item| item.contains("输出区域")));
         assert_eq!(document.linked_data.slicers.len(), 1);
         assert_eq!(document.linked_data.slicers[0].name, "CategorySlicer");
         assert_eq!(
@@ -1642,6 +2000,18 @@ mod tests {
             "Warehouse fixture"
         );
         assert!(document.linked_data.connections[0].refresh_on_load);
+        assert_eq!(document.linked_data.summary.total_object_count, 4);
+        assert_eq!(document.linked_data.summary.local_pivot_count, 1);
+        assert_eq!(document.linked_data.summary.slicer_count, 1);
+        assert_eq!(document.linked_data.summary.external_link_count, 1);
+        assert_eq!(document.linked_data.summary.connection_count, 1);
+        assert_eq!(document.linked_data.summary.refresh_risk_count, 2);
+        assert_eq!(document.linked_data.policy.mode, "offline_read_only");
+        assert!(document.linked_data.policy.metadata_visible);
+        assert!(!document.linked_data.policy.refresh_allowed);
+        assert!(!document.linked_data.policy.object_editing_allowed);
+        assert!(!document.linked_data.policy.external_targets_followed);
+        assert!(!document.linked_data.policy.sensitive_fields_exposed);
         assert!(document.protection.enabled);
         assert!(document.protection.lock_structure);
         assert!(document.protection.password_protected);
@@ -1831,6 +2201,560 @@ mod tests {
             capabilities.xlsx_round_trip,
             WorkbookCapabilityLevel::Planned
         );
+    }
+
+    #[test]
+    fn apache_poi_producer_fixture_exposes_complete_and_blocked_pivot_shapes() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/workbook/pivot-producer-apache-poi.xlsx");
+        let source = fs::read(&path).unwrap();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        assert_eq!(document.linked_data.pivot_tables.len(), 2);
+
+        let complete = document
+            .linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.source_range.as_deref() == Some("A1:C4"))
+            .unwrap();
+        assert!(complete.audit.rebuild_candidate);
+        assert_eq!(complete.audit.writeback.status, "structure_candidate");
+        assert!(!complete.audit.writeback.allowed);
+        assert!(complete.audit.writeback.blockers.is_empty());
+        assert!(complete.audit.writeback.pivot_field_items_complete);
+        assert!(complete.audit.writeback.row_items_complete);
+        assert!(complete.audit.writeback.column_items_complete);
+        assert!(complete.audit.writeback.output_cells_present);
+
+        let page_filtered = document
+            .linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.audit.page_field_count == 1)
+            .unwrap();
+        assert_eq!(page_filtered.audit.writeback.status, "blocked");
+        assert!(!page_filtered.audit.writeback.allowed);
+        assert!(page_filtered
+            .audit
+            .writeback
+            .blockers
+            .iter()
+            .any(|item| item.contains("页面筛选")));
+
+        let output = patch_workbook(
+            &source,
+            &[WorkbookCellEdit {
+                sheet: "Tabelle1".into(),
+                row: 1,
+                column: 2,
+                input: "99".into(),
+                kind: "number".into(),
+            }],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap();
+        validate_workbook_package(&output).unwrap();
+        for part in [
+            "xl/pivotTables/pivotTable1.xml",
+            "xl/pivotTables/pivotTable2.xml",
+            "xl/pivotCache/pivotCacheDefinition1.xml",
+            "xl/pivotCache/pivotCacheDefinition2.xml",
+            "xl/pivotCache/pivotCacheRecords1.xml",
+            "xl/pivotCache/pivotCacheRecords2.xml",
+        ] {
+            assert_eq!(zip_part(&source, part), zip_part(&output, part), "{part}");
+        }
+        let linked_data = read_workbook_linked_data(&output).unwrap();
+        assert_eq!(linked_data.pivot_tables.len(), 2);
+        assert!(linked_data
+            .pivot_tables
+            .iter()
+            .any(|pivot| pivot.audit.writeback.status == "structure_candidate"));
+        assert!(linked_data
+            .pivot_tables
+            .iter()
+            .all(|pivot| !pivot.audit.writeback.allowed));
+    }
+
+    #[test]
+    fn pivot_rebuild_plan_isolatedly_maps_four_parts_and_rejects_unsafe_candidates() {
+        let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/workbook/pivot-producer-apache-poi.xlsx");
+        let source = fs::read(fixture).unwrap();
+        let base = std::env::temp_dir().join(format!(
+            "longedit-pivot-rebuild-plan-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let root = base.join("library");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("producer-pivot.xlsx");
+        fs::write(&path, &source).unwrap();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let complete = document
+            .linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.audit.writeback.status == "structure_candidate")
+            .unwrap();
+        let ready = tauri::async_runtime::block_on(preview_workbook_pivot_rebuild(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPivotRebuildPlanPayload {
+                expected_signature: document.signature.clone(),
+                pivot_part: complete.part.clone(),
+            },
+        ))
+        .unwrap();
+        assert_eq!(ready.status, "isolated_dry_run_ready");
+        assert_eq!(ready.execution, "temporary_copy_only");
+        assert!(!ready.writes_user_file);
+        assert!(ready.temporary_copy_verified);
+        assert_eq!(ready.source_package_digest, ready.isolated_package_digest);
+        assert_eq!(ready.affected_parts.len(), 4);
+        assert!(ready.preserved_part_count > ready.affected_parts.len());
+        assert_eq!(
+            ready
+                .affected_parts
+                .iter()
+                .map(|impact| impact.role.as_str())
+                .collect::<BTreeSet<_>>(),
+            BTreeSet::from([
+                "cache_definition",
+                "cache_records",
+                "output_worksheet",
+                "pivot_table",
+            ])
+        );
+        assert_eq!(fs::read(&path).unwrap(), source);
+
+        let rebuilt = tauri::async_runtime::block_on(rebuild_workbook_pivot_cache_isolated_copy(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPivotCacheRebuildPayload {
+                expected_signature: document.signature.clone(),
+                pivot_part: complete.part.clone(),
+            },
+        ))
+        .unwrap();
+        assert_eq!(rebuilt.status, "isolated_cache_rebuilt");
+        assert_eq!(rebuilt.execution, "temporary_copy_only");
+        assert!(!rebuilt.writes_user_file);
+        assert_eq!(rebuilt.source_record_count, 3);
+        assert_eq!(rebuilt.rebuilt_record_count, 3);
+        assert_eq!(rebuilt.rebuilt_parts.len(), 2);
+        assert!(rebuilt.package_valid);
+        assert!(rebuilt.semantic_reparse_valid);
+        assert!(rebuilt.untouched_parts_preserved);
+        assert_ne!(
+            rebuilt.source_package_digest,
+            rebuilt.isolated_package_digest
+        );
+        assert_eq!(
+            rebuilt
+                .fields
+                .iter()
+                .map(|field| (field.value_type.as_str(), field.record_encoding.as_str()))
+                .collect::<Vec<_>>(),
+            vec![
+                ("string", "shared_index"),
+                ("number", "direct"),
+                ("date", "shared_index"),
+            ]
+        );
+        assert_eq!(fs::read(&path).unwrap(), source);
+
+        let synchronized = tauri::async_runtime::block_on(rebuild_workbook_pivot_isolated_copy(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPivotSynchronizedRebuildPayload {
+                expected_signature: document.signature.clone(),
+                pivot_part: complete.part.clone(),
+            },
+        ))
+        .unwrap();
+        assert_eq!(synchronized.status, "isolated_pivot_rebuilt");
+        assert_eq!(synchronized.execution, "temporary_copy_only");
+        assert!(!synchronized.writes_user_file);
+        assert_eq!(synchronized.visible_row_item_count, 2);
+        assert_eq!(synchronized.visible_column_item_count, 2);
+        assert_eq!(synchronized.output_cell_count, 13);
+        assert_eq!(synchronized.rebuilt_parts.len(), 4);
+        assert!(synchronized.package_valid);
+        assert!(synchronized.semantic_reparse_valid);
+        assert!(synchronized.output_values_verified);
+        assert!(synchronized.untouched_parts_preserved);
+        assert_eq!(fs::read(&path).unwrap(), source);
+
+        let variants =
+            tauri::async_runtime::block_on(verify_workbook_pivot_variants_isolated_copy(
+                root.to_string_lossy().into_owned(),
+                path.to_string_lossy().into_owned(),
+                WorkbookPivotVariantVerificationPayload {
+                    expected_signature: document.signature.clone(),
+                    pivot_part: complete.part.clone(),
+                },
+            ))
+            .unwrap();
+        assert_eq!(variants.status, "isolated_variants_verified");
+        assert_eq!(variants.package_variant_count, 7);
+        assert_eq!(variants.semantic_variant_count, 3);
+        assert!(variants.package_variants_verified);
+        assert!(variants.semantic_variants_verified);
+        assert_eq!(
+            variants
+                .aggregation_variants
+                .iter()
+                .map(|variant| variant.aggregation.as_str())
+                .collect::<Vec<_>>(),
+            vec![
+                "sum",
+                "count",
+                "average",
+                "max",
+                "min",
+                "product",
+                "countNums",
+            ]
+        );
+        assert_eq!(
+            variants
+                .layout_variants
+                .iter()
+                .map(|variant| (
+                    variant.layout.as_str(),
+                    variant.row_field_count,
+                    variant.column_field_count,
+                    variant.data_field_count,
+                ))
+                .collect::<Vec<_>>(),
+            vec![
+                ("row_only", 1, 0, 1),
+                ("column_only", 0, 1, 1),
+                ("multi_measure", 1, 1, 3),
+            ]
+        );
+        assert_eq!(fs::read(&path).unwrap(), source);
+
+        let (isolated, _) = rebuild_workbook_pivot_cache_isolated(&source, complete).unwrap();
+        let cache_definition = String::from_utf8(zip_part(
+            &isolated,
+            "xl/pivotCache/pivotCacheDefinition1.xml",
+        ))
+        .unwrap();
+        assert!(cache_definition.contains("recordCount=\"3\""));
+        assert!(cache_definition.contains("maxDate=\"2022-01-03T00:00:00\""));
+        let cache_records =
+            String::from_utf8(zip_part(&isolated, "xl/pivotCache/pivotCacheRecords1.xml")).unwrap();
+        assert!(cache_records.contains("count=\"3\""));
+        assert!(cache_records.contains("<x v=\"0\"/><n v=\"1\"/><x v=\"0\"/>"));
+        let before_parts = zip_parts(&source);
+        let after_parts = zip_parts(&isolated);
+        for (part, before) in &before_parts {
+            if !rebuilt.rebuilt_parts.contains(part) {
+                assert_eq!(after_parts.get(part), Some(before), "{part}");
+            }
+        }
+        let (synchronized_isolated, synchronized_internal) =
+            rebuild_workbook_pivot_isolated(&source, complete).unwrap();
+        let pivot_xml = String::from_utf8(zip_part(
+            &synchronized_isolated,
+            "xl/pivotTables/pivotTable1.xml",
+        ))
+        .unwrap();
+        assert!(pivot_xml.contains("<rowItems count=\"3\"><i><x v=\"0\"/></i><i><x v=\"2\"/></i>"));
+        assert!(pivot_xml.contains("<colItems count=\"3\"><i><x v=\"0\"/></i><i><x v=\"2\"/></i>"));
+        let synchronized_parts = zip_parts(&synchronized_isolated);
+        for (part, before) in &before_parts {
+            if !synchronized_internal.rebuilt_parts.contains(part) {
+                assert_eq!(synchronized_parts.get(part), Some(before), "{part}");
+            }
+        }
+        let changed_measure = patch_workbook(
+            &source,
+            &[WorkbookCellEdit {
+                sheet: "Tabelle1".into(),
+                row: 1,
+                column: 1,
+                input: "10".into(),
+                kind: "number".into(),
+            }],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap();
+        let changed_linked = read_workbook_linked_data(&changed_measure).unwrap();
+        let changed_pivot = changed_linked
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == complete.part)
+            .unwrap();
+        let (changed_isolated, changed_result) =
+            rebuild_workbook_pivot_isolated(&changed_measure, changed_pivot).unwrap();
+        assert!(changed_result.output_values_verified);
+        let mut changed_workbook: Xlsx<_> =
+            calamine::open_workbook_from_rs(Cursor::new(changed_isolated)).unwrap();
+        let changed_output = changed_workbook.worksheet_range("Tabelle2").unwrap();
+        assert_eq!(changed_output.get_value((4, 1)), Some(&Data::Float(10.0)));
+        assert_eq!(changed_output.get_value((4, 3)), Some(&Data::Float(10.0)));
+        assert_eq!(changed_output.get_value((6, 1)), Some(&Data::Float(10.0)));
+        assert_eq!(changed_output.get_value((6, 3)), Some(&Data::Float(13.0)));
+
+        let expanded_source = patch_workbook(
+            &source,
+            &[
+                WorkbookCellEdit {
+                    sheet: "Tabelle1".into(),
+                    row: 2,
+                    column: 0,
+                    input: "new-row".into(),
+                    kind: "string".into(),
+                },
+                WorkbookCellEdit {
+                    sheet: "Tabelle1".into(),
+                    row: 2,
+                    column: 2,
+                    input: "44565".into(),
+                    kind: "number".into(),
+                },
+            ],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap();
+        let expanded_path = root.join("producer-pivot-expanded.xlsx");
+        fs::write(&expanded_path, &expanded_source).unwrap();
+        let expanded_document = CalamineWorkbookEngine.inspect(&expanded_path).unwrap();
+        let expanded_pivot = expanded_document
+            .linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == complete.part)
+            .unwrap();
+        let expanded_result =
+            tauri::async_runtime::block_on(rebuild_workbook_pivot_expanded_isolated_copy(
+                root.to_string_lossy().into_owned(),
+                expanded_path.to_string_lossy().into_owned(),
+                WorkbookPivotExpandedRebuildPayload {
+                    expected_signature: expanded_document.signature.clone(),
+                    pivot_part: expanded_pivot.part.clone(),
+                },
+            ))
+            .unwrap();
+        assert_eq!(expanded_result.status, "isolated_layout_resized");
+        assert_eq!(expanded_result.added_shared_item_count, 2);
+        assert_eq!(expanded_result.removed_shared_item_count, 2);
+        assert_eq!(expanded_result.visible_row_item_count, 3);
+        assert_eq!(expanded_result.visible_column_item_count, 3);
+        assert_eq!(expanded_result.old_output_range, "A3:D7");
+        assert_eq!(expanded_result.new_output_range, "A3:E8");
+        assert_eq!(expanded_result.output_cell_count, 25);
+        assert!(expanded_result.extended_style_cell_count > 0);
+        assert!(expanded_result.output_values_verified);
+        assert_eq!(fs::read(&expanded_path).unwrap(), expanded_source);
+        let (expanded_isolated, _) =
+            rebuild_workbook_pivot_expanded_isolated(&expanded_source, expanded_pivot).unwrap();
+        let expanded_definition = String::from_utf8(zip_part(
+            &expanded_isolated,
+            "xl/pivotCache/pivotCacheDefinition1.xml",
+        ))
+        .unwrap();
+        assert!(expanded_definition.contains("<s v=\"new-row\"/>"));
+        assert!(expanded_definition.contains("<d v=\"2022-01-04T00:00:00\"/>"));
+        let expanded_pivot_xml = String::from_utf8(zip_part(
+            &expanded_isolated,
+            "xl/pivotTables/pivotTable1.xml",
+        ))
+        .unwrap();
+        assert!(expanded_pivot_xml.contains("ref=\"A3:E8\""));
+        let mut expanded_workbook: Xlsx<_> =
+            calamine::open_workbook_from_rs(Cursor::new(expanded_isolated)).unwrap();
+        let expanded_output = expanded_workbook.worksheet_range("Tabelle2").unwrap();
+        assert_eq!(expanded_output.get_value((7, 4)), Some(&Data::Float(6.0)));
+
+        let shrunken_source = patch_workbook(
+            &source,
+            &[
+                WorkbookCellEdit {
+                    sheet: "Tabelle1".into(),
+                    row: 1,
+                    column: 0,
+                    input: "c".into(),
+                    kind: "string".into(),
+                },
+                WorkbookCellEdit {
+                    sheet: "Tabelle1".into(),
+                    row: 1,
+                    column: 2,
+                    input: "44564".into(),
+                    kind: "number".into(),
+                },
+            ],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap();
+        let shrunken_linked = read_workbook_linked_data(&shrunken_source).unwrap();
+        let shrunken_pivot = shrunken_linked
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == complete.part)
+            .unwrap();
+        let (shrunken_isolated, shrunken_result) =
+            rebuild_workbook_pivot_expanded_isolated(&shrunken_source, shrunken_pivot).unwrap();
+        assert_eq!(shrunken_result.added_shared_item_count, 0);
+        assert_eq!(shrunken_result.removed_shared_item_count, 2);
+        assert_eq!(shrunken_result.new_output_range, "A3:C6");
+        assert!(shrunken_result.cleared_stale_cell_count >= 7);
+        let mut shrunken_workbook: Xlsx<_> =
+            calamine::open_workbook_from_rs(Cursor::new(shrunken_isolated)).unwrap();
+        let shrunken_output = shrunken_workbook.worksheet_range("Tabelle2").unwrap();
+        assert_eq!(shrunken_output.get_value((5, 2)), Some(&Data::Float(4.0)));
+        assert_eq!(shrunken_output.get_value((6, 3)), None);
+        let unseen_dimension = patch_workbook(
+            &source,
+            &[WorkbookCellEdit {
+                sheet: "Tabelle1".into(),
+                row: 1,
+                column: 0,
+                input: "new-dimension".into(),
+                kind: "string".into(),
+            }],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap();
+        let unseen_linked = read_workbook_linked_data(&unseen_dimension).unwrap();
+        let unseen_pivot = unseen_linked
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == complete.part)
+            .unwrap();
+        let unseen_error =
+            rebuild_workbook_pivot_cache_isolated(&unseen_dimension, unseen_pivot).unwrap_err();
+        assert!(unseen_error.contains("未进入现有 sharedItems"));
+
+        let formula_source = patch_workbook(
+            &source,
+            &[WorkbookCellEdit {
+                sheet: "Tabelle1".into(),
+                row: 1,
+                column: 1,
+                input: "=40+2".into(),
+                kind: "formula".into(),
+            }],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap();
+        let formula_linked = read_workbook_linked_data(&formula_source).unwrap();
+        let formula_pivot = formula_linked
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == complete.part)
+            .unwrap();
+        let formula_error =
+            rebuild_workbook_pivot_cache_isolated(&formula_source, formula_pivot).unwrap_err();
+        assert!(formula_error.contains("来源区域公式"));
+
+        let mixed_source = patch_workbook(
+            &source,
+            &[WorkbookCellEdit {
+                sheet: "Tabelle1".into(),
+                row: 1,
+                column: 1,
+                input: "mixed".into(),
+                kind: "string".into(),
+            }],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap();
+        let mixed_linked = read_workbook_linked_data(&mixed_source).unwrap();
+        let mixed_pivot = mixed_linked
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == complete.part)
+            .unwrap();
+        let mixed_error =
+            rebuild_workbook_pivot_cache_isolated(&mixed_source, mixed_pivot).unwrap_err();
+        assert!(mixed_error.contains("混合类型"));
+
+        let blocked_pivot = document
+            .linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.audit.page_field_count == 1)
+            .unwrap();
+        let blocked = tauri::async_runtime::block_on(preview_workbook_pivot_rebuild(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPivotRebuildPlanPayload {
+                expected_signature: document.signature.clone(),
+                pivot_part: blocked_pivot.part.clone(),
+            },
+        ))
+        .unwrap();
+        assert_eq!(blocked.status, "blocked");
+        assert!(!blocked.writes_user_file);
+        assert!(blocked
+            .blockers
+            .iter()
+            .any(|blocker| blocker.contains("页面筛选")));
+        let blocked_rebuild =
+            tauri::async_runtime::block_on(rebuild_workbook_pivot_cache_isolated_copy(
+                root.to_string_lossy().into_owned(),
+                path.to_string_lossy().into_owned(),
+                WorkbookPivotCacheRebuildPayload {
+                    expected_signature: document.signature.clone(),
+                    pivot_part: blocked_pivot.part.clone(),
+                },
+            ))
+            .unwrap_err();
+        assert!(blocked_rebuild.contains("未通过隔离重建计划"));
+        let blocked_synchronized =
+            tauri::async_runtime::block_on(rebuild_workbook_pivot_isolated_copy(
+                root.to_string_lossy().into_owned(),
+                path.to_string_lossy().into_owned(),
+                WorkbookPivotSynchronizedRebuildPayload {
+                    expected_signature: document.signature.clone(),
+                    pivot_part: blocked_pivot.part.clone(),
+                },
+            ))
+            .unwrap_err();
+        assert!(blocked_synchronized.contains("未通过隔离重建计划"));
+        assert_eq!(fs::read(&path).unwrap(), source);
+
+        let stale = tauri::async_runtime::block_on(preview_workbook_pivot_rebuild(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPivotRebuildPlanPayload {
+                expected_signature: "stale".into(),
+                pivot_part: complete.part.clone(),
+            },
+        ))
+        .unwrap_err();
+        assert!(stale.contains("其他程序修改"));
+        assert_eq!(fs::read(&path).unwrap(), source);
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]
@@ -2668,6 +3592,8 @@ mod tests {
             "xl/media/image1.png",
             "xl/pivotTables/pivotTable1.xml",
             "xl/pivotCache/pivotCacheDefinition1.xml",
+            "xl/pivotCache/_rels/pivotCacheDefinition1.xml.rels",
+            "xl/pivotCache/pivotCacheRecords1.xml",
             "xl/slicers/slicer1.xml",
             "xl/externalLinks/externalLink1.xml",
             "xl/externalLinks/_rels/externalLink1.xml.rels",

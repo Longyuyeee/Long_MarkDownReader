@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-23T14:04:00.110Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
+  "scenarios": [
+    {
+      "id": "cloud-paper",
+      "name": "云白纸张",
+      "theme": "white",
+      "style": "airy",
+      "motion": "reduced",
+      "files": [
+        "cloud-paper-settings-1440x900.jpg",
+        "cloud-paper-workspace-1024x768.jpg",
+        "cloud-paper-mindmap-760x900.jpg"
+      ],
+      "finalState": {
+        "theme": "white",
+        "style": "airy",
+        "motion": "reduced",
+        "route": "#/graph?mode=mindmap",
+        "title": "Long编辑"
+      }
+    },
+    {
+      "id": "forest-green",
+      "name": "森林绿柔和",
+      "theme": "green",
+      "style": "soft",
+      "motion": "calm",
+      "files": [
+        "forest-green-settings-1440x900.jpg",
+        "forest-green-workspace-1024x768.jpg",
+        "forest-green-mindmap-760x900.jpg"
+      ],
+      "finalState": {
+        "theme": "green",
+        "style": "soft",
+        "motion": "calm",
+        "route": "#/graph?mode=mindmap",
+        "title": "Long编辑"
+      }
+    },
+    {
+      "id": "dark-neon",
+      "name": "暗夜绿光",
+      "theme": "dark",
+      "style": "neo",
+      "motion": "swift",
+      "files": [
+        "dark-neon-settings-1440x900.jpg",
+        "dark-neon-workspace-1024x768.jpg",
+        "dark-neon-mindmap-760x900.jpg"
+      ],
+      "finalState": {
+        "theme": "dark",
+        "style": "neo",
+        "motion": "swift",
+        "route": "#/graph?mode=mindmap",
+        "title": "Long编辑"
+      }
+    },
+    {
+      "id": "purple-dream",
+      "name": "紫梦幻境",
+      "theme": "purple",
+      "style": "glass",
+      "motion": "expressive",
+      "files": [
+        "purple-dream-settings-1440x900.jpg",
+        "purple-dream-workspace-1024x768.jpg",
+        "purple-dream-mindmap-760x900.jpg"
+      ],
+      "finalState": {
+        "theme": "purple",
+        "style": "glass",
+        "motion": "expressive",
+        "route": "#/graph?mode=mindmap",
+        "title": "Long编辑"
+      }
+    }
+  ]
+}

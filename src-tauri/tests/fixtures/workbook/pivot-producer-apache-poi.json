@@ -1,0 +1,21 @@
+{
+  "fixture": "pivot-producer-apache-poi.xlsx",
+  "purpose": "S8-7E1 real-producer PivotTable OOXML compatibility fixture",
+  "upstreamProject": "Apache POI",
+  "upstreamPath": "test-data/spreadsheet/ExcelPivotTableSample.xlsx",
+  "upstreamCommit": "3184a18b40caad5b63630a4379de34d50268f3c5",
+  "sourceUrl": "https://raw.githubusercontent.com/apache/poi/3184a18b40caad5b63630a4379de34d50268f3c5/test-data/spreadsheet/ExcelPivotTableSample.xlsx",
+  "sourcePage": "https://github.com/apache/poi/blob/3184a18b40caad5b63630a4379de34d50268f3c5/test-data/spreadsheet/ExcelPivotTableSample.xlsx",
+  "license": "Apache-2.0",
+  "licenseUrl": "https://github.com/apache/poi/blob/3184a18b40caad5b63630a4379de34d50268f3c5/legal/LICENSE",
+  "sha256": "F0EF1D61C9F3D8B27B18A876B8E24676314C6450ED64A725A7BFAA603FDD67E3",
+  "size": 19460,
+  "expected": {
+    "pivotTables": 2,
+    "worksheetSourcePivot": 1,
+    "namedSourcePivot": 1,
+    "structureCandidate": 1,
+    "pageFieldBlocked": 1,
+    "writebackAllowed": false
+  }
+}

@@ -37,8 +37,262 @@
       </button>
       <span v-if="workbook.linkedData.connections.length">数据连接 {{ workbook.linkedData.connections.length }}</span>
       <span v-if="workbook.linkedData.externalLinks.length">外部工作簿 {{ workbook.linkedData.externalLinks.length }}</span>
+      <button class="linked-data-overview" @click="linkedDataModalOpen = true">
+        查看审计详情<small>{{ workbook.linkedData.summary.totalObjectCount }} 个对象 · {{ workbook.linkedData.summary.refreshRiskCount }} 个刷新风险</small>
+      </button>
       <em v-if="workbook.linkedData.externalRelationshipCount">安全模式：已识别 {{ workbook.linkedData.externalRelationshipCount }} 个外部目标，未发起网络或文件访问</em>
     </div>
+
+    <n-modal v-if="workbook" v-model:show="linkedDataModalOpen" preset="card" title="高级数据对象审计" class="linked-data-modal">
+      <div class="linked-data-audit">
+        <section class="linked-data-policy">
+          <div>
+            <strong>离线只读模式</strong>
+            <p>显示脱敏结构元数据；不刷新缓存、不执行查询、不跟随外部目标，也不修改高级对象。</p>
+          </div>
+          <span>安全策略已生效</span>
+        </section>
+        <div class="linked-data-metrics">
+          <span><strong>{{ workbook.linkedData.summary.totalObjectCount }}</strong>高级对象</span>
+          <span><strong>{{ workbook.linkedData.summary.localPivotCount }}</strong>本地来源透视表</span>
+          <span><strong>{{ workbook.linkedData.summary.externalLinkCount + workbook.linkedData.summary.connectionCount }}</strong>外部来源对象</span>
+          <span :class="{ warning: workbook.linkedData.summary.refreshRiskCount }"><strong>{{ workbook.linkedData.summary.refreshRiskCount }}</strong>打开时刷新标记</span>
+        </div>
+        <section v-if="workbook.linkedData.pivotTables.length" class="linked-data-group">
+          <header><strong>数据透视表</strong><span>{{ workbook.linkedData.pivotTables.length }}</span></header>
+          <article v-for="pivot in workbook.linkedData.pivotTables" :key="pivot.part">
+            <div><strong>{{ pivot.name }}</strong><small>{{ pivot.sheet || '未绑定工作表' }} · Cache {{ pivot.cacheId ?? '—' }}</small></div>
+            <p>{{ pivot.sourceSheet ? `${pivot.sourceSheet}!${pivot.sourceRange || ''}` : pivot.connectionId ? `数据连接 ${pivot.connectionId}` : `来源类型 ${pivot.sourceType}` }}</p>
+            <span :class="{ warning: pivot.refreshOnLoad }">{{ pivot.refreshOnLoad ? '原文件要求打开时刷新；本次未执行' : '使用包内已有缓存' }}</span>
+            <div class="linked-data-actions">
+              <button v-if="pivot.sheet" @click="navigateLinkedSheet(pivot.sheet)">定位工作表</button>
+              <button
+                v-if="pivot.audit.rebuildCandidate"
+                :disabled="pivotPreviewLoading === pivot.part || pivot.audit.pageFieldCount > 0"
+                :title="pivot.audit.pageFieldCount ? '含筛选字段的透视表暂不进入内存预览' : '从工作表当前值和未保存草稿生成，不修改 XLSX'"
+                @click="previewLocalPivot(pivot)"
+              >{{ pivotPreviewLoading === pivot.part ? '计算中…' : '内存预览' }}</button>
+              <button
+                :disabled="pivotRebuildPlanLoading === pivot.part"
+                title="生成隔离重建影响清单；只验证临时内存副本，不修改用户文件"
+                @click="previewPivotRebuildPlan(pivot)"
+              >{{ pivotRebuildPlanLoading === pivot.part ? '审计中…' : '影响清单' }}</button>
+              <button
+                v-if="pivotRebuildPlans.get(pivot.part)?.status === 'isolated_dry_run_ready'"
+                :disabled="pivotCacheRebuildLoading === pivot.part"
+                title="仅在临时内存副本中重建 Cache Definition 与 Cache Records，不保存到用户文件"
+                @click="rebuildPivotCacheIsolated(pivot)"
+              >{{ pivotCacheRebuildLoading === pivot.part ? '重建中…' : '隔离重建 Cache' }}</button>
+              <button
+                v-if="pivotCacheRebuildResults.get(pivot.part)?.status === 'isolated_cache_rebuilt'"
+                :disabled="pivotSynchronizedRebuildLoading === pivot.part"
+                title="在同一临时副本中同步重建 Cache、Pivot items、行列项和输出区域，不保存到用户文件"
+                @click="rebuildPivotSynchronizedIsolated(pivot)"
+              >{{ pivotSynchronizedRebuildLoading === pivot.part ? '同步中…' : '隔离同步透视表' }}</button>
+              <button
+                v-if="pivotSynchronizedRebuildResults.get(pivot.part)?.status === 'isolated_pivot_rebuilt'"
+                :disabled="pivotExpandedRebuildLoading === pivot.part"
+                title="在临时副本中协调新增/删除 sharedItems、输出范围扩缩容、旧区域清理和样式延伸"
+                @click="rebuildPivotExpandedIsolated(pivot)"
+              >{{ pivotExpandedRebuildLoading === pivot.part ? '扩缩容中…' : '隔离验证布局扩缩容' }}</button>
+              <button
+                v-if="pivotExpandedRebuildResults.get(pivot.part)?.status === 'isolated_layout_resized'"
+                :disabled="pivotVariantVerificationLoading === pivot.part"
+                title="为七类聚合生成临时 Pivot 包，并验证单轴和多度量内存输出语义；不会保存到用户文件"
+                @click="verifyPivotVariantsIsolated(pivot)"
+              >{{ pivotVariantVerificationLoading === pivot.part ? '验证中…' : '隔离验证聚合与布局' }}</button>
+            </div>
+            <div class="pivot-audit-details">
+              <div class="pivot-audit-status" :class="{ candidate: pivot.audit.rebuildCandidate }">
+                <strong>{{ pivot.audit.rebuildCandidate ? '结构满足受限重建候选条件' : '仅可检查' }}</strong>
+                <span>{{ pivot.audit.rebuildCandidate ? '本阶段仍不执行刷新或写回' : pivot.audit.blockers.join('；') }}</span>
+              </div>
+              <div class="pivot-audit-facts">
+                <span>布局 {{ pivot.audit.layoutRange || '未声明' }}</span>
+                <span>缓存字段 {{ pivot.audit.cacheFieldCount }}</span>
+                <span>缓存记录 {{ pivot.audit.cacheRecordCount ?? '缺失' }}</span>
+                <span>行/列/筛选/值 {{ pivot.audit.rowFieldCount }}/{{ pivot.audit.columnFieldCount }}/{{ pivot.audit.pageFieldCount }}/{{ pivot.audit.dataFieldCount }}</span>
+              </div>
+              <section class="pivot-writeback-audit" :class="{ candidate: pivot.audit.writeback.status === 'structure_candidate' }">
+                <header>
+                  <strong>事务写回审计：{{ pivot.audit.writeback.status === 'structure_candidate' ? '结构候选' : '已阻断' }}</strong>
+                  <span>写回仍禁用</span>
+                </header>
+                <div>
+                  <span :class="{ pass: pivot.audit.writeback.pivotFieldItemsComplete }">字段项 {{ pivot.audit.writeback.pivotFieldItemsComplete ? '完整' : '缺失' }}</span>
+                  <span :class="{ pass: pivot.audit.writeback.rowItemsComplete }">行项 {{ pivot.audit.writeback.rowItemsComplete ? '完整' : '缺失' }}</span>
+                  <span :class="{ pass: pivot.audit.writeback.columnItemsComplete }">列项 {{ pivot.audit.writeback.columnItemsComplete ? '完整' : '缺失' }}</span>
+                  <span :class="{ pass: pivot.audit.writeback.outputCellsPresent }">输出单元格 {{ pivot.audit.writeback.outputCellsPresent ? '存在' : '缺失' }}</span>
+                </div>
+                <p v-if="pivot.audit.writeback.blockers.length">{{ pivot.audit.writeback.blockers.join('；') }}</p>
+                <p v-else>结构门禁已满足；仍需原子回滚、未触及部件保真和 Excel/LibreOffice 真实往返证据。</p>
+              </section>
+              <section v-if="pivotRebuildPlans.get(pivot.part)" class="pivot-rebuild-plan" :class="{ ready: pivotRebuildPlans.get(pivot.part)!.status === 'isolated_dry_run_ready' }">
+                <header>
+                  <div>
+                    <strong>隔离重建影响清单</strong>
+                    <small>{{ pivotRebuildPlans.get(pivot.part)!.status === 'isolated_dry_run_ready' ? 'Dry-run 已就绪' : '已阻断' }}</small>
+                  </div>
+                  <span>用户文件写入：禁用</span>
+                </header>
+                <div class="pivot-impact-parts">
+                  <span v-for="impact in pivotRebuildPlans.get(pivot.part)!.affectedParts" :key="impact.part">
+                    <strong>{{ impact.role }}</strong>
+                    <small>{{ impact.plannedAction }} · {{ impact.part }}</small>
+                  </span>
+                </div>
+                <div class="pivot-rebuild-gates">
+                  <span v-for="gate in pivotRebuildPlans.get(pivot.part)!.gates" :key="gate.id" :class="gate.status">{{ gate.id }} · {{ gate.status }}</span>
+                </div>
+                <p v-if="pivotRebuildPlans.get(pivot.part)!.blockers.length">{{ pivotRebuildPlans.get(pivot.part)!.blockers.join('；') }}</p>
+                <footer>临时副本摘要已校验；计划影响 {{ pivotRebuildPlans.get(pivot.part)!.affectedParts.length }} 个部件，保留 {{ pivotRebuildPlans.get(pivot.part)!.preservedPartCount }} 个部件。尚未执行实际重建、原子替换或桌面刷新。</footer>
+              </section>
+              <section v-if="pivotCacheRebuildResults.get(pivot.part)" class="pivot-cache-rebuild-result">
+                <header>
+                  <div>
+                    <strong>隔离 Cache 重建已通过</strong>
+                    <small>{{ pivotCacheRebuildResults.get(pivot.part)!.rebuiltRecordCount }} 条记录 · {{ pivotCacheRebuildResults.get(pivot.part)!.rebuiltParts.length }} 个重建部件</small>
+                  </div>
+                  <span>用户文件未修改</span>
+                </header>
+                <div class="pivot-cache-fields">
+                  <span v-for="field in pivotCacheRebuildResults.get(pivot.part)!.fields" :key="field.index">
+                    <strong>{{ field.name }}</strong>
+                    <small>{{ field.valueType }} · {{ field.recordEncoding }} · {{ field.sharedItemCount }} 个共享项</small>
+                  </span>
+                </div>
+                <div class="pivot-rebuild-gates">
+                  <span v-for="gate in pivotCacheRebuildResults.get(pivot.part)!.gates" :key="gate.id" :class="gate.status">{{ gate.id }} · {{ gate.status }}</span>
+                </div>
+                <footer>临时包已通过结构校验、语义复读和未触及部件保真；Pivot items、输出区域、原子替换及桌面往返仍未开放。</footer>
+              </section>
+              <section v-if="pivotSynchronizedRebuildResults.get(pivot.part)" class="pivot-synchronized-rebuild-result">
+                <header>
+                  <div>
+                    <strong>隔离透视表同步重建已通过</strong>
+                    <small>{{ pivotSynchronizedRebuildResults.get(pivot.part)!.rebuiltRecordCount }} 条记录 · {{ pivotSynchronizedRebuildResults.get(pivot.part)!.rebuiltParts.length }} 个同步部件</small>
+                  </div>
+                  <span>用户文件未修改</span>
+                </header>
+                <div class="pivot-sync-facts">
+                  <span>可见行项 {{ pivotSynchronizedRebuildResults.get(pivot.part)!.visibleRowItemCount }}</span>
+                  <span>可见列项 {{ pivotSynchronizedRebuildResults.get(pivot.part)!.visibleColumnItemCount }}</span>
+                  <span>输出单元格 {{ pivotSynchronizedRebuildResults.get(pivot.part)!.outputCellCount }}</span>
+                  <span>输出值复读 {{ pivotSynchronizedRebuildResults.get(pivot.part)!.outputValuesVerified ? '通过' : '失败' }}</span>
+                </div>
+                <div class="pivot-rebuild-gates">
+                  <span v-for="gate in pivotSynchronizedRebuildResults.get(pivot.part)!.gates" :key="gate.id" :class="gate.status">{{ gate.id }} · {{ gate.status }}</span>
+                </div>
+                <footer>Cache、字段 items、行列项与输出矩阵已在同一内存副本同步；原子替换和 Excel/LibreOffice 桌面往返仍未开放。</footer>
+              </section>
+              <section v-if="pivotExpandedRebuildResults.get(pivot.part)" class="pivot-expanded-rebuild-result">
+                <header>
+                  <div>
+                    <strong>隔离布局扩缩容已通过</strong>
+                    <small>{{ pivotExpandedRebuildResults.get(pivot.part)!.oldOutputRange }} → {{ pivotExpandedRebuildResults.get(pivot.part)!.newOutputRange }}</small>
+                  </div>
+                  <span>用户文件未修改</span>
+                </header>
+                <div class="pivot-sync-facts">
+                  <span>共享项 +{{ pivotExpandedRebuildResults.get(pivot.part)!.addedSharedItemCount }} / -{{ pivotExpandedRebuildResults.get(pivot.part)!.removedSharedItemCount }}</span>
+                  <span>输出单元格 {{ pivotExpandedRebuildResults.get(pivot.part)!.outputCellCount }}</span>
+                  <span>清理旧单元格 {{ pivotExpandedRebuildResults.get(pivot.part)!.clearedStaleCellCount }}</span>
+                  <span>延伸样式 {{ pivotExpandedRebuildResults.get(pivot.part)!.extendedStyleCellCount }}</span>
+                </div>
+                <div class="pivot-rebuild-gates">
+                  <span v-for="gate in pivotExpandedRebuildResults.get(pivot.part)!.gates" :key="gate.id" :class="gate.status">{{ gate.id }} · {{ gate.status }}</span>
+                </div>
+                <footer>sharedItems、Pivot items、行列映射、location 和工作表输出已协调验证；原子替换与真实桌面往返仍保持阻断。</footer>
+              </section>
+              <section v-if="pivotVariantVerificationResults.get(pivot.part)" class="pivot-variant-verification-result">
+                <header>
+                  <div>
+                    <strong>聚合与布局变体已通过</strong>
+                    <small>{{ pivotVariantVerificationResults.get(pivot.part)!.packageVariantCount }} 个临时包 · {{ pivotVariantVerificationResults.get(pivot.part)!.semanticVariantCount }} 个语义布局</small>
+                  </div>
+                  <span>用户文件未修改</span>
+                </header>
+                <div class="pivot-variant-grid">
+                  <span v-for="variant in pivotVariantVerificationResults.get(pivot.part)!.aggregationVariants" :key="variant.aggregation">
+                    <strong>{{ pivotAggregationLabel(variant.aggregation) }}</strong>
+                    <small>{{ variant.outputRange }} · {{ variant.outputCellCount }} 单元格</small>
+                  </span>
+                </div>
+                <div class="pivot-layout-variants">
+                  <span v-for="variant in pivotVariantVerificationResults.get(pivot.part)!.layoutVariants" :key="variant.layout">
+                    <strong>{{ pivotLayoutVariantLabel(variant.layout) }}</strong>
+                    <small>行/列/值 {{ variant.rowFieldCount }}/{{ variant.columnFieldCount }}/{{ variant.dataFieldCount }} · {{ variant.groupCount }} 组 · {{ variant.outputValueCount }} 个值</small>
+                  </span>
+                </div>
+                <div class="pivot-rebuild-gates">
+                  <span v-for="gate in pivotVariantVerificationResults.get(pivot.part)!.gates" :key="gate.id" :class="gate.status">{{ gate.id }} · {{ gate.status }}</span>
+                </div>
+                <footer>七类聚合已完成临时 OOXML 包重建与输出复读；单行轴、单列轴和三度量布局已通过真实来源内存语义验证。多层轴、页面筛选和文件替换仍阻断。</footer>
+              </section>
+              <div v-if="pivot.audit.fields.length" class="pivot-field-list">
+                <span v-for="field in pivot.audit.fields" :key="field.index">
+                  {{ field.name }} · {{ pivotFieldRoleLabel(field.role) }} · {{ pivotFieldTypeLabel(field.valueType) }}
+                </span>
+              </div>
+              <div v-if="pivot.audit.dataFields.length" class="pivot-data-fields">
+                <span v-for="field in pivot.audit.dataFields" :key="`${field.sourceIndex}-${field.name}`" :class="{ unsupported: !field.supported }">
+                  {{ field.name }}：{{ pivotAggregationLabel(field.aggregation) }}{{ field.supported ? '' : '（未验证）' }}
+                </span>
+              </div>
+              <section v-if="pivotPreviews.get(pivot.part)" class="pivot-preview-result">
+                <header>
+                  <div>
+                    <strong>内存聚合预览</strong>
+                    <small>{{ pivotPreviews.get(pivot.part)!.sourceSheet }}!{{ pivotPreviews.get(pivot.part)!.sourceRange }}</small>
+                  </div>
+                  <span>{{ pivotPreviews.get(pivot.part)!.sourceRowCount }} 条来源 · {{ pivotPreviews.get(pivot.part)!.groups.length }} 个分组 · {{ pivotPreviews.get(pivot.part)!.appliedDraftCount }} 个草稿</span>
+                </header>
+                <div class="pivot-preview-grid">
+                  <article v-for="(group, groupIndex) in pivotPreviews.get(pivot.part)!.groups" :key="groupIndex">
+                    <div>
+                      <strong>{{ pivotPreviewKeys(group.rowKeys, '全部行') }}</strong>
+                      <small>{{ pivotPreviewKeys(group.columnKeys, '全部列') }}</small>
+                    </div>
+                    <span v-for="measure in group.measures" :key="`${measure.sourceIndex}-${measure.name}`">
+                      {{ measure.name }} · {{ pivotAggregationLabel(measure.aggregation) }}
+                      <strong>{{ measure.formattedValue || '—' }}</strong>
+                      <small>{{ measure.contributingCount }} 个参与值</small>
+                    </span>
+                  </article>
+                </div>
+                <footer>预览只驻留内存；未覆盖工作表、Pivot Cache、透视定义或原文件。</footer>
+              </section>
+            </div>
+          </article>
+        </section>
+        <section v-if="workbook.linkedData.slicers.length" class="linked-data-group">
+          <header><strong>切片器</strong><span>{{ workbook.linkedData.slicers.length }}</span></header>
+          <article v-for="slicer in workbook.linkedData.slicers" :key="slicer.part">
+            <div><strong>{{ slicer.name }}</strong><small>{{ slicer.sheet || '未绑定工作表' }}</small></div>
+            <p>{{ slicer.cacheName ? `缓存 ${slicer.cacheName}` : '未公开缓存名称' }}</p>
+            <span>交互筛选未执行</span>
+            <button v-if="slicer.sheet" @click="navigateLinkedSheet(slicer.sheet)">定位工作表</button>
+          </article>
+        </section>
+        <section v-if="workbook.linkedData.connections.length" class="linked-data-group">
+          <header><strong>数据连接</strong><span>{{ workbook.linkedData.connections.length }}</span></header>
+          <article v-for="connection in workbook.linkedData.connections" :key="connection.id ?? connection.name">
+            <div><strong>{{ connection.name }}</strong><small>ID {{ connection.id ?? '—' }} · 类型 {{ connection.kind }}</small></div>
+            <p>连接字符串、命令、凭据和完整路径不会发送到界面。</p>
+            <span :class="{ warning: connection.refreshOnLoad }">{{ connection.refreshOnLoad ? '原文件要求刷新；LongEdit 已阻止' : '未请求刷新' }}</span>
+          </article>
+        </section>
+        <section v-if="workbook.linkedData.externalLinks.length" class="linked-data-group">
+          <header><strong>外部工作簿链接</strong><span>{{ workbook.linkedData.externalLinks.length }}</span></header>
+          <article v-for="link in workbook.linkedData.externalLinks" :key="link.part">
+            <div><strong>{{ link.kind === 'external_workbook' ? '外部工作簿' : link.kind }}</strong><small>{{ link.targetKind || '未知目标类别' }}</small></div>
+            <p>包内缓存项 {{ link.cachedItemCount }}；目标地址已脱敏且不会被跟随。</p>
+            <span>离线保真</span>
+          </article>
+        </section>
+      </div>
+      <template #footer><div class="page-layout-actions"><button @click="linkedDataModalOpen = false">关闭</button></div></template>
+    </n-modal>
 
     <div v-if="workbook && sheetInfo" class="page-layout-toolbar" aria-label="打印布局与保护状态">
       <strong><n-icon :component="PrinterIcon" />页面</strong>
@@ -447,11 +701,31 @@ import TableChartEditor from '../components/TableChartEditor.vue'
 
 interface WorkbookRangeReference { sheet: string; top: number; bottom: number; left: number; right: number }
 interface WorkbookDefinedName { name: string; formula: string; scope?: string; hidden: boolean; reference?: WorkbookRangeReference }
-interface WorkbookPivotTable { name: string; part: string; sheet?: string; cacheId?: number; sourceType: string; sourceSheet?: string; sourceRange?: string; connectionId?: number; refreshOnLoad: boolean }
+interface WorkbookPivotField { index: number; name: string; role: string; valueType: string }
+interface WorkbookPivotDataField { sourceIndex: number; name: string; aggregation: string; supported: boolean }
+interface WorkbookPivotWritebackAudit { status: string; allowed: boolean; blockers: string[]; pivotFieldItemsComplete: boolean; rowItemsComplete: boolean; columnItemsComplete: boolean; outputCellsPresent: boolean }
+interface WorkbookPivotAudit { status: string; rebuildCandidate: boolean; blockers: string[]; layoutRange?: string; cacheFieldCount: number; cacheRecordCount?: number; rowFieldCount: number; columnFieldCount: number; pageFieldCount: number; dataFieldCount: number; fields: WorkbookPivotField[]; dataFields: WorkbookPivotDataField[]; writeback: WorkbookPivotWritebackAudit }
+interface WorkbookPivotTable { name: string; part: string; sheet?: string; cacheId?: number; sourceType: string; sourceSheet?: string; sourceRange?: string; connectionId?: number; refreshOnLoad: boolean; audit: WorkbookPivotAudit }
+interface WorkbookPivotPreviewKey { fieldIndex: number; fieldName: string; value: string; kind: string }
+interface WorkbookPivotPreviewMeasure { sourceIndex: number; name: string; aggregation: string; value?: number | null; formattedValue: string; contributingCount: number }
+interface WorkbookPivotPreviewGroup { rowKeys: WorkbookPivotPreviewKey[]; columnKeys: WorkbookPivotPreviewKey[]; measures: WorkbookPivotPreviewMeasure[] }
+interface WorkbookPivotPreviewResult { pivotName: string; sourceSheet: string; sourceRange: string; sourceRowCount: number; appliedDraftCount: number; groups: WorkbookPivotPreviewGroup[] }
+interface WorkbookPivotRebuildImpact { part: string; role: string; plannedAction: string }
+interface WorkbookPivotRebuildGate { id: string; status: string }
+interface WorkbookPivotRebuildPlan { pivotName: string; status: string; execution: string; writesUserFile: boolean; temporaryCopyVerified: boolean; sourcePackageDigest: string; isolatedPackageDigest: string; sourceSheet?: string; sourceRange?: string; outputSheet?: string; outputRange?: string; affectedParts: WorkbookPivotRebuildImpact[]; preservedPartCount: number; blockers: string[]; gates: WorkbookPivotRebuildGate[] }
+interface WorkbookPivotCacheFieldRebuild { index: number; name: string; valueType: string; sharedItemCount: number; recordEncoding: string }
+interface WorkbookPivotCacheRebuildResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; sourceRecordCount: number; rebuiltRecordCount: number; rebuiltParts: string[]; preservedPartCount: number; sourcePackageDigest: string; isolatedPackageDigest: string; packageValid: boolean; semanticReparseValid: boolean; untouchedPartsPreserved: boolean; fields: WorkbookPivotCacheFieldRebuild[]; gates: WorkbookPivotRebuildGate[] }
+interface WorkbookPivotSynchronizedRebuildResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; sourceRecordCount: number; rebuiltRecordCount: number; visibleRowItemCount: number; visibleColumnItemCount: number; outputCellCount: number; rebuiltParts: string[]; preservedPartCount: number; sourcePackageDigest: string; isolatedPackageDigest: string; packageValid: boolean; semanticReparseValid: boolean; outputValuesVerified: boolean; untouchedPartsPreserved: boolean; fields: WorkbookPivotCacheFieldRebuild[]; gates: WorkbookPivotRebuildGate[] }
+interface WorkbookPivotExpandedRebuildResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; rebuiltRecordCount: number; addedSharedItemCount: number; removedSharedItemCount: number; visibleRowItemCount: number; visibleColumnItemCount: number; oldOutputRange: string; newOutputRange: string; outputCellCount: number; clearedStaleCellCount: number; extendedStyleCellCount: number; rebuiltParts: string[]; preservedPartCount: number; sourcePackageDigest: string; isolatedPackageDigest: string; packageValid: boolean; semanticReparseValid: boolean; outputValuesVerified: boolean; untouchedPartsPreserved: boolean; fields: WorkbookPivotCacheFieldRebuild[]; gates: WorkbookPivotRebuildGate[] }
+interface WorkbookPivotAggregationVariant { aggregation: string; status: string; outputRange: string; outputCellCount: number }
+interface WorkbookPivotLayoutVariant { layout: string; rowFieldCount: number; columnFieldCount: number; dataFieldCount: number; groupCount: number; measureCount: number; outputValueCount: number; status: string }
+interface WorkbookPivotVariantVerificationResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; aggregationVariants: WorkbookPivotAggregationVariant[]; layoutVariants: WorkbookPivotLayoutVariant[]; packageVariantCount: number; semanticVariantCount: number; sourcePackageDigest: string; packageVariantsVerified: boolean; semanticVariantsVerified: boolean; gates: WorkbookPivotRebuildGate[] }
 interface WorkbookSlicer { name: string; part: string; sheet?: string; cacheName?: string }
 interface WorkbookExternalLink { part: string; kind: string; cachedItemCount: number; targetKind?: string }
 interface WorkbookDataConnection { id?: number; name: string; kind: string; refreshOnLoad: boolean; background: boolean; saveData: boolean }
-interface WorkbookLinkedData { pivotTables: WorkbookPivotTable[]; slicers: WorkbookSlicer[]; externalLinks: WorkbookExternalLink[]; connections: WorkbookDataConnection[]; externalRelationshipCount: number }
+interface WorkbookLinkedDataSummary { totalObjectCount: number; localPivotCount: number; connectionBackedPivotCount: number; slicerCount: number; externalLinkCount: number; connectionCount: number; refreshRiskCount: number }
+interface WorkbookLinkedDataPolicy { mode: string; metadataVisible: boolean; refreshAllowed: boolean; objectEditingAllowed: boolean; externalTargetsFollowed: boolean; sensitiveFieldsExposed: boolean }
+interface WorkbookLinkedData { pivotTables: WorkbookPivotTable[]; slicers: WorkbookSlicer[]; externalLinks: WorkbookExternalLink[]; connections: WorkbookDataConnection[]; externalRelationshipCount: number; summary: WorkbookLinkedDataSummary; policy: WorkbookLinkedDataPolicy }
 interface WorkbookProtection { enabled: boolean; lockStructure: boolean; lockWindows: boolean; lockRevision: boolean; passwordProtected: boolean }
 interface WorkbookDocument { path: string; size: number; signature: string; sheets: string[]; definedNames: WorkbookDefinedName[]; linkedData: WorkbookLinkedData; protection: WorkbookProtection }
 interface WorkbookCellStyle {
@@ -677,6 +951,19 @@ const saving = ref(false)
 const calculating = ref(false)
 const error = ref('')
 const showFormulas = ref(false)
+const linkedDataModalOpen = ref(false)
+const pivotPreviews = ref(new Map<string, WorkbookPivotPreviewResult>())
+const pivotPreviewLoading = ref('')
+const pivotRebuildPlans = ref(new Map<string, WorkbookPivotRebuildPlan>())
+const pivotRebuildPlanLoading = ref('')
+const pivotCacheRebuildResults = ref(new Map<string, WorkbookPivotCacheRebuildResult>())
+const pivotCacheRebuildLoading = ref('')
+const pivotSynchronizedRebuildResults = ref(new Map<string, WorkbookPivotSynchronizedRebuildResult>())
+const pivotSynchronizedRebuildLoading = ref('')
+const pivotExpandedRebuildResults = ref(new Map<string, WorkbookPivotExpandedRebuildResult>())
+const pivotExpandedRebuildLoading = ref('')
+const pivotVariantVerificationResults = ref(new Map<string, WorkbookPivotVariantVerificationResult>())
+const pivotVariantVerificationLoading = ref('')
 const calculatedValues = ref(new Map<string, WorkbookCalculatedCell>())
 const calculationCount = ref(0)
 const calculationErrors = ref(0)
@@ -1257,10 +1544,154 @@ const drawingTooltip = (drawing: WorkbookDrawingObject) => {
 const pivotTooltip = (pivot: WorkbookPivotTable) => [
   `缓存 ${pivot.cacheId ?? '—'} · 来源 ${pivot.sourceType}`,
   pivot.sourceSheet ? `${pivot.sourceSheet}!${pivot.sourceRange || ''}` : '',
+  pivot.audit.rebuildCandidate ? '结构审计：受限重建候选（刷新仍禁用）' : `结构审计：${pivot.audit.blockers.join('；')}`,
   pivot.connectionId ? `连接 ${pivot.connectionId}` : '',
   pivot.refreshOnLoad ? '原文件要求打开时刷新；LongEdit 不会自动刷新' : '',
   `OOXML：${pivot.part}`,
 ].filter(Boolean).join('\n')
+const pivotFieldRoleLabel = (role: string) => ({ row: '行', column: '列', page: '筛选', data: '值', unused: '未使用' }[role] || role)
+const pivotFieldTypeLabel = (type: string) => ({ string: '文本', number: '数值', date: '日期', boolean: '布尔', error: '错误', blank: '空值', mixed: '混合', unknown: '未知类型' }[type] || type)
+const pivotAggregationLabel = (aggregation: string) => ({ sum: '求和', count: '计数', average: '平均值', max: '最大值', min: '最小值', product: '乘积', countNums: '数值计数' }[aggregation] || aggregation)
+const pivotLayoutVariantLabel = (layout: string) => ({ row_only: '单行轴', column_only: '单列轴', multi_measure: '多度量' }[layout] || layout)
+const pivotPreviewKeys = (keys: WorkbookPivotPreviewKey[], fallback: string) => keys.length ? keys.map(key => `${key.fieldName}：${key.value}`).join(' · ') : fallback
+const previewLocalPivot = async (pivot: WorkbookPivotTable) => {
+  if (!workbook.value || !pivot.audit.rebuildCandidate || pivotPreviewLoading.value) return
+  pivotPreviewLoading.value = pivot.part
+  try {
+    const preview = await invoke<WorkbookPivotPreviewResult>('preview_workbook_pivot', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        pivotPart: pivot.part,
+        edits: Array.from(drafts.value.values()),
+      },
+    })
+    const next = new Map(pivotPreviews.value)
+    next.set(pivot.part, preview)
+    pivotPreviews.value = next
+    message.success(`已生成 ${preview.groups.length} 个透视分组的内存预览`)
+  } catch (cause) {
+    message.error(String(cause).replace(/^Error:\s*/, ''))
+  } finally {
+    pivotPreviewLoading.value = ''
+  }
+}
+const previewPivotRebuildPlan = async (pivot: WorkbookPivotTable) => {
+  if (!workbook.value || pivotRebuildPlanLoading.value) return
+  pivotRebuildPlanLoading.value = pivot.part
+  try {
+    const plan = await invoke<WorkbookPivotRebuildPlan>('preview_workbook_pivot_rebuild', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        pivotPart: pivot.part,
+      },
+    })
+    const next = new Map(pivotRebuildPlans.value)
+    next.set(pivot.part, plan)
+    pivotRebuildPlans.value = next
+    if (plan.status === 'isolated_dry_run_ready') message.success(`已确认 ${plan.affectedParts.length} 个隔离重建影响部件`)
+    else message.warning('该透视表未通过隔离重建影响审计')
+  } catch (cause) {
+    message.error(String(cause).replace(/^Error:\s*/, ''))
+  } finally {
+    pivotRebuildPlanLoading.value = ''
+  }
+}
+const rebuildPivotCacheIsolated = async (pivot: WorkbookPivotTable) => {
+  if (!workbook.value || pivotCacheRebuildLoading.value || pivotRebuildPlans.value.get(pivot.part)?.status !== 'isolated_dry_run_ready') return
+  pivotCacheRebuildLoading.value = pivot.part
+  try {
+    const result = await invoke<WorkbookPivotCacheRebuildResult>('rebuild_workbook_pivot_cache_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        pivotPart: pivot.part,
+      },
+    })
+    const next = new Map(pivotCacheRebuildResults.value)
+    next.set(pivot.part, result)
+    pivotCacheRebuildResults.value = next
+    message.success(`隔离副本已重建 ${result.rebuiltRecordCount} 条 Pivot Cache 记录`)
+  } catch (cause) {
+    message.error(String(cause).replace(/^Error:\s*/, ''))
+  } finally {
+    pivotCacheRebuildLoading.value = ''
+  }
+}
+const rebuildPivotSynchronizedIsolated = async (pivot: WorkbookPivotTable) => {
+  if (!workbook.value || pivotSynchronizedRebuildLoading.value || pivotCacheRebuildResults.value.get(pivot.part)?.status !== 'isolated_cache_rebuilt') return
+  pivotSynchronizedRebuildLoading.value = pivot.part
+  try {
+    const result = await invoke<WorkbookPivotSynchronizedRebuildResult>('rebuild_workbook_pivot_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        pivotPart: pivot.part,
+      },
+    })
+    const next = new Map(pivotSynchronizedRebuildResults.value)
+    next.set(pivot.part, result)
+    pivotSynchronizedRebuildResults.value = next
+    message.success(`隔离副本已同步重建 ${result.outputCellCount} 个透视输出单元格`)
+  } catch (cause) {
+    message.error(String(cause).replace(/^Error:\s*/, ''))
+  } finally {
+    pivotSynchronizedRebuildLoading.value = ''
+  }
+}
+const rebuildPivotExpandedIsolated = async (pivot: WorkbookPivotTable) => {
+  if (!workbook.value || pivotExpandedRebuildLoading.value || pivotSynchronizedRebuildResults.value.get(pivot.part)?.status !== 'isolated_pivot_rebuilt') return
+  pivotExpandedRebuildLoading.value = pivot.part
+  try {
+    const result = await invoke<WorkbookPivotExpandedRebuildResult>('rebuild_workbook_pivot_expanded_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        pivotPart: pivot.part,
+      },
+    })
+    const next = new Map(pivotExpandedRebuildResults.value)
+    next.set(pivot.part, result)
+    pivotExpandedRebuildResults.value = next
+    message.success(`隔离布局已验证：${result.oldOutputRange} → ${result.newOutputRange}`)
+  } catch (cause) {
+    message.error(String(cause).replace(/^Error:\s*/, ''))
+  } finally {
+    pivotExpandedRebuildLoading.value = ''
+  }
+}
+const verifyPivotVariantsIsolated = async (pivot: WorkbookPivotTable) => {
+  if (!workbook.value || pivotVariantVerificationLoading.value || pivotExpandedRebuildResults.value.get(pivot.part)?.status !== 'isolated_layout_resized') return
+  pivotVariantVerificationLoading.value = pivot.part
+  try {
+    const result = await invoke<WorkbookPivotVariantVerificationResult>('verify_workbook_pivot_variants_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        pivotPart: pivot.part,
+      },
+    })
+    const next = new Map(pivotVariantVerificationResults.value)
+    next.set(pivot.part, result)
+    pivotVariantVerificationResults.value = next
+    message.success(`已验证 ${result.packageVariantCount} 类聚合和 ${result.semanticVariantCount} 种布局语义`)
+  } catch (cause) {
+    message.error(String(cause).replace(/^Error:\s*/, ''))
+  } finally {
+    pivotVariantVerificationLoading.value = ''
+  }
+}
+const navigateLinkedSheet = (sheet: string) => {
+  linkedDataModalOpen.value = false
+  void selectSheet(sheet)
+}
 const editKey = (sheet: string, row: number, column: number) => `${sheet}\u0000${row}\u0000${column}`
 const sourceCellAt = (row: number, column: number) => loadedRows.value.get(row)?.[column] || emptyCell
 const mergeStyle = (style: WorkbookCellStyle, patch?: WorkbookStylePatch): WorkbookCellStyle => patch ? {
@@ -1299,6 +1730,12 @@ const invalidateCalculation = () => {
   calculatedValues.value = new Map()
   calculationCount.value = 0
   calculationErrors.value = 0
+  pivotPreviews.value = new Map()
+  pivotRebuildPlans.value = new Map()
+  pivotCacheRebuildResults.value = new Map()
+  pivotSynchronizedRebuildResults.value = new Map()
+  pivotExpandedRebuildResults.value = new Map()
+  pivotVariantVerificationResults.value = new Map()
 }
 const originalInput = (cell: WorkbookCell) => cell.formula || cell.value || ''
 const isEditableCell = (row: number, column: number) => {
@@ -3673,6 +4110,118 @@ onBeforeUnmount(() => {
 .linked-data-toolbar > em { margin-left: auto; color: #9a641f; font-style: normal; }
 .linked-data-toolbar button { min-width: 155px; height: 32px; flex: none; display: flex; flex-direction: column; justify-content: center; padding: 3px 8px; border: 1px solid rgba(190,120,25,.2); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); text-align: left; font-size: 9px; cursor: pointer; }
 .linked-data-toolbar button small { max-width: 180px; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 8px; }
+.linked-data-toolbar .linked-data-overview { min-width: 150px; border-color: rgba(var(--theme-primary-rgb),.24); color: var(--theme-primary); }
+:deep(.linked-data-modal) { width: min(860px, calc(100vw - 32px)); }
+.linked-data-audit { display: grid; gap: 14px; max-height: min(680px, calc(100vh - 190px)); overflow-y: auto; padding-right: 3px; }
+.linked-data-policy { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 16px; border: 1px solid rgba(49,130,86,.22); border-radius: 8px; background: rgba(49,130,86,.07); }
+.linked-data-policy strong { color: #267347; font-size: 13px; }
+.linked-data-policy p { margin: 4px 0 0; color: var(--theme-text-secondary); font-size: 10px; line-height: 1.55; }
+.linked-data-policy > span { flex: none; padding: 5px 9px; border-radius: 99px; color: #267347; background: rgba(49,130,86,.12); font-size: 9px; font-weight: 700; }
+.linked-data-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.linked-data-metrics span { display: grid; gap: 3px; padding: 11px 12px; border: 1px solid rgba(0,0,0,.09); border-radius: 7px; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 96%, var(--theme-primary)); font-size: 9px; }
+.linked-data-metrics strong { color: var(--theme-text); font-size: 17px; }
+.linked-data-metrics span.warning strong { color: #a86416; }
+.linked-data-group { overflow: hidden; border: 1px solid rgba(0,0,0,.1); border-radius: 8px; background: var(--theme-card); }
+.linked-data-group > header { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-bottom: 1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.025); }
+.linked-data-group > header strong { font-size: 11px; }
+.linked-data-group > header span { min-width: 22px; padding: 3px 6px; border-radius: 99px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.09); text-align: center; font-size: 9px; }
+.linked-data-group article { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(180px, 1.35fr) minmax(150px, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid rgba(0,0,0,.07); }
+.linked-data-group article:last-child { border-bottom: 0; }
+.linked-data-group article > div { min-width: 0; display: grid; gap: 3px; }
+.linked-data-group article strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.linked-data-group article small,.linked-data-group article p,.linked-data-group article > span { margin: 0; color: var(--theme-text-secondary); font-size: 9px; line-height: 1.45; }
+.linked-data-group article > span { padding: 4px 7px; border-radius: 4px; background: rgba(49,130,86,.08); color: #267347; }
+.linked-data-group article > span.warning { color: #9a641f; background: rgba(190,120,25,.1); }
+.linked-data-group article > button { height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 5px; color: var(--theme-primary); background: var(--theme-card); font-size: 9px; cursor: pointer; }
+.linked-data-actions { display: flex !important; flex-wrap: wrap; gap: 5px !important; }
+.linked-data-actions button { height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 5px; color: var(--theme-primary); background: var(--theme-card); font-size: 9px; cursor: pointer; }
+.linked-data-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.linked-data-group article .pivot-audit-details { grid-column: 1 / -1; display: grid; gap: 8px; padding: 10px; border: 1px solid rgba(0,0,0,.08); border-radius: 6px; background: rgba(0,0,0,.018); }
+.pivot-audit-status { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 7px 9px; border-radius: 5px; color: #8c4f2a; background: rgba(180,85,45,.08); }
+.pivot-audit-status.candidate { color: #267347; background: rgba(49,130,86,.08); }
+.pivot-audit-status strong { flex: none; color: inherit !important; font-size: 9px !important; }
+.pivot-audit-status span { color: inherit; font-size: 8px; line-height: 1.45; }
+.pivot-audit-facts,.pivot-field-list,.pivot-data-fields { display: flex; flex-wrap: wrap; gap: 5px; }
+.pivot-audit-facts span,.pivot-field-list span,.pivot-data-fields span { padding: 4px 7px; border: 1px solid rgba(0,0,0,.07); border-radius: 4px; color: var(--theme-text-secondary); background: var(--theme-card); font-size: 8px; }
+.pivot-writeback-audit { display: grid; gap: 7px; padding: 8px 9px; border: 1px solid rgba(180,85,45,.16); border-radius: 5px; background: rgba(180,85,45,.035); }
+.pivot-writeback-audit.candidate { border-color: rgba(49,130,86,.18); background: rgba(49,130,86,.035); }
+.pivot-writeback-audit > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pivot-writeback-audit > header strong { color: #8c4f2a !important; font-size: 9px !important; }
+.pivot-writeback-audit.candidate > header strong { color: #267347 !important; }
+.pivot-writeback-audit > header span { padding: 2px 6px; border-radius: 999px; color: #8c4f2a; background: rgba(180,85,45,.1); font-size: 7px; }
+.pivot-writeback-audit > div { display: flex; flex-wrap: wrap; gap: 5px; }
+.pivot-writeback-audit > div span { padding: 3px 6px; border-radius: 4px; color: #8c4f2a; background: rgba(180,85,45,.08); font-size: 8px; }
+.pivot-writeback-audit > div span.pass { color: #267347; background: rgba(49,130,86,.08); }
+.pivot-writeback-audit > p { margin: 0; color: var(--theme-text-secondary); font-size: 8px; line-height: 1.5; }
+.pivot-rebuild-plan { overflow: hidden; display: grid; gap: 8px; padding: 9px; border: 1px solid rgba(180,85,45,.18); border-radius: 6px; background: rgba(180,85,45,.025); }
+.pivot-rebuild-plan.ready { border-color: rgba(49,130,86,.2); background: rgba(49,130,86,.025); }
+.pivot-rebuild-plan > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pivot-rebuild-plan > header > div { display: grid; gap: 2px; }
+.pivot-rebuild-plan > header strong { color: #8c4f2a !important; font-size: 9px !important; }
+.pivot-rebuild-plan.ready > header strong { color: #267347 !important; }
+.pivot-rebuild-plan > header small,.pivot-rebuild-plan > header > span,.pivot-rebuild-plan > p,.pivot-rebuild-plan > footer { color: var(--theme-text-secondary); font-size: 8px; line-height: 1.45; }
+.pivot-rebuild-plan > p,.pivot-rebuild-plan > footer { margin: 0; }
+.pivot-impact-parts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+.pivot-impact-parts > span { min-width: 0; display: grid; gap: 2px; padding: 6px 7px; border: 1px solid rgba(0,0,0,.07); border-radius: 4px; background: var(--theme-card); }
+.pivot-impact-parts strong { color: var(--theme-text) !important; font-size: 8px !important; }
+.pivot-impact-parts small { overflow: hidden; color: var(--theme-text-secondary); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.pivot-rebuild-gates { display: flex; flex-wrap: wrap; gap: 4px; }
+.pivot-rebuild-gates span { padding: 3px 5px; border-radius: 4px; color: #8c4f2a; background: rgba(180,85,45,.08); font-size: 7px; }
+.pivot-rebuild-gates span.passed { color: #267347; background: rgba(49,130,86,.08); }
+.pivot-rebuild-gates span.pending { color: #8d671f; background: rgba(190,140,35,.09); }
+.pivot-cache-rebuild-result { display: grid; gap: 8px; padding: 9px; border: 1px solid rgba(49,130,86,.22); border-radius: 6px; background: rgba(49,130,86,.03); }
+.pivot-cache-rebuild-result > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pivot-cache-rebuild-result > header > div { display: grid; gap: 2px; }
+.pivot-cache-rebuild-result > header strong { color: #267347 !important; font-size: 9px !important; }
+.pivot-cache-rebuild-result > header small,.pivot-cache-rebuild-result > header > span,.pivot-cache-rebuild-result > footer { color: var(--theme-text-secondary); font-size: 8px; line-height: 1.45; }
+.pivot-cache-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.pivot-cache-fields > span { min-width: 0; display: grid; gap: 2px; padding: 6px 7px; border: 1px solid rgba(49,130,86,.13); border-radius: 4px; background: var(--theme-card); }
+.pivot-cache-fields strong { color: var(--theme-text) !important; font-size: 8px !important; }
+.pivot-cache-fields small { overflow: hidden; color: var(--theme-text-secondary); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.pivot-cache-rebuild-result > footer { margin: 0; }
+.pivot-synchronized-rebuild-result { display: grid; gap: 8px; padding: 9px; border: 1px solid rgba(36,106,171,.24); border-radius: 6px; background: rgba(36,106,171,.04); }
+.pivot-synchronized-rebuild-result > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pivot-synchronized-rebuild-result > header > div { display: grid; gap: 2px; }
+.pivot-synchronized-rebuild-result > header strong { color: #246aab !important; font-size: 9px !important; }
+.pivot-synchronized-rebuild-result > header small,.pivot-synchronized-rebuild-result > header > span,.pivot-synchronized-rebuild-result > footer { color: var(--theme-text-secondary); font-size: 8px; line-height: 1.45; }
+.pivot-sync-facts { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 5px; }
+.pivot-sync-facts span { padding: 5px 6px; border-radius: 4px; background: var(--theme-bg-secondary); color: var(--theme-text-secondary); font-size: 8px; }
+.pivot-synchronized-rebuild-result > footer { margin: 0; }
+.pivot-expanded-rebuild-result { display: grid; gap: 8px; padding: 9px; border: 1px solid rgba(123,76,154,.24); border-radius: 6px; background: rgba(123,76,154,.04); }
+.pivot-expanded-rebuild-result > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pivot-expanded-rebuild-result > header > div { display: grid; gap: 2px; }
+.pivot-expanded-rebuild-result > header strong { color: #7b4c9a !important; font-size: 9px !important; }
+.pivot-expanded-rebuild-result > header small,.pivot-expanded-rebuild-result > header > span,.pivot-expanded-rebuild-result > footer { color: var(--theme-text-secondary); font-size: 8px; line-height: 1.45; }
+.pivot-expanded-rebuild-result > footer { margin: 0; }
+.pivot-variant-verification-result { display: grid; gap: 8px; padding: 9px; border: 1px solid rgba(23,125,128,.24); border-radius: 6px; background: rgba(23,125,128,.04); }
+.pivot-variant-verification-result > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pivot-variant-verification-result > header > div { display: grid; gap: 2px; }
+.pivot-variant-verification-result > header strong { color: #177d80 !important; font-size: 9px !important; }
+.pivot-variant-verification-result > header small,.pivot-variant-verification-result > header > span,.pivot-variant-verification-result > footer { color: var(--theme-text-secondary); font-size: 8px; line-height: 1.45; }
+.pivot-variant-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 5px; }
+.pivot-layout-variants { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 5px; }
+.pivot-variant-grid > span,.pivot-layout-variants > span { min-width: 0; display: grid; gap: 2px; padding: 6px 7px; border-radius: 4px; background: var(--theme-bg-secondary); }
+.pivot-variant-grid strong,.pivot-layout-variants strong { color: var(--theme-text) !important; font-size: 8px !important; }
+.pivot-variant-grid small,.pivot-layout-variants small { overflow: hidden; color: var(--theme-text-secondary); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.pivot-variant-verification-result > footer { margin: 0; }
+.pivot-field-list span { border-color: rgba(var(--theme-primary-rgb),.14); }
+.pivot-data-fields span { color: #267347; border-color: rgba(49,130,86,.18); background: rgba(49,130,86,.04); }
+.pivot-data-fields span.unsupported { color: #9a641f; border-color: rgba(190,120,25,.18); background: rgba(190,120,25,.05); }
+.pivot-preview-result { overflow: hidden; border: 1px solid rgba(var(--theme-primary-rgb),.18); border-radius: 6px; background: var(--theme-card); }
+.pivot-preview-result > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border-bottom: 1px solid rgba(var(--theme-primary-rgb),.12); background: rgba(var(--theme-primary-rgb),.045); }
+.pivot-preview-result > header > div { display: grid; gap: 2px; }
+.pivot-preview-result > header strong { color: var(--theme-primary) !important; font-size: 9px !important; }
+.pivot-preview-result > header small,.pivot-preview-result > header > span,.pivot-preview-result > footer { color: var(--theme-text-secondary); font-size: 8px; }
+.pivot-preview-grid { display: grid; }
+.linked-data-group article .pivot-preview-grid article { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1.4fr); gap: 10px; padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,.06); }
+.linked-data-group article .pivot-preview-grid article:last-child { border-bottom: 0; }
+.pivot-preview-grid article > div { display: grid; gap: 2px; }
+.pivot-preview-grid article > div strong { color: var(--theme-text) !important; font-size: 9px !important; }
+.pivot-preview-grid article > div small { color: var(--theme-text-secondary); font-size: 8px; }
+.pivot-preview-grid article > span { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 2px 8px; padding: 5px 7px; border-radius: 4px; color: var(--theme-text-secondary); background: rgba(49,130,86,.055); font-size: 8px; }
+.pivot-preview-grid article > span strong { color: #267347 !important; font-size: 11px !important; }
+.pivot-preview-grid article > span small { grid-column: 1 / -1; font-size: 7px; }
+.pivot-preview-result > footer { padding: 7px 10px; border-top: 1px solid rgba(0,0,0,.06); }
 .page-layout-toolbar { min-height: 34px; flex: none; display: flex; align-items: center; gap: 7px; padding: 3px 12px; overflow-x: auto; border-bottom: 1px solid rgba(0,0,0,.09); color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 94%, #dce8f7); font-size: 9px; }
 .page-layout-toolbar > * { flex: none; }
 .page-layout-toolbar strong { display: inline-flex; align-items: center; gap: 5px; color: var(--theme-primary); }
@@ -3816,6 +4365,6 @@ onBeforeUnmount(() => {
 .workbook-state button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } }
+@media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } .linked-data-policy { align-items: flex-start; flex-direction: column; } .linked-data-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .linked-data-group article { grid-template-columns: 1fr; gap: 6px; } .linked-data-group article > button { justify-self: start; } .pivot-audit-status,.pivot-rebuild-plan > header,.pivot-cache-rebuild-result > header,.pivot-synchronized-rebuild-result > header,.pivot-expanded-rebuild-result > header,.pivot-variant-verification-result > header { align-items: flex-start; flex-direction: column; gap: 4px; } .pivot-impact-parts,.pivot-cache-fields,.pivot-sync-facts,.pivot-variant-grid,.pivot-layout-variants { grid-template-columns: 1fr; } .pivot-preview-result > header { align-items: flex-start; flex-direction: column; } .linked-data-group article .pivot-preview-grid article { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .workbook-actions button:not(.primary):not(.icon-button) { display: none; } .workbook-title span { display: none; } }
 </style>

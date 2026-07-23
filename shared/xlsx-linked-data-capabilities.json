@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-24",
+  "mode": "offline_read_only",
+  "policy": {
+    "metadataVisible": true,
+    "refreshAllowed": false,
+    "objectEditingAllowed": false,
+    "externalTargetsFollowed": false,
+    "sensitiveFieldsExposed": false
+  },
+  "pivotAudit": {
+    "sourceScope": "local_worksheet_only",
+    "refreshExecution": "blocked",
+    "candidateStatus": "candidate_for_rebuild",
+    "inspectedStructures": [
+      "source_range",
+      "output_location",
+      "cache_fields",
+      "cache_records",
+      "row_fields",
+      "column_fields",
+      "page_fields",
+      "data_fields"
+    ],
+    "verifiedAggregations": [
+      "sum",
+      "count",
+      "average",
+      "max",
+      "min",
+      "product",
+      "countNums"
+    ],
+    "requiredGates": [
+      "source_semantics",
+      "aggregation_semantics",
+      "cache_rebuild",
+      "package_round_trip"
+    ],
+    "preview": {
+      "execution": "in_memory_only",
+      "sourceOfTruth": "current_worksheet_values",
+      "unsavedDrafts": "supported_non_formula",
+      "writesWorkbook": false,
+      "writesPivotCache": false,
+      "writesPivotDefinition": false,
+      "maxSourceRows": 50000,
+      "maxSourceColumns": 256,
+      "maxGroups": 10000,
+      "maxDraftEdits": 10000,
+      "pageFields": "blocked"
+    },
+    "writebackAudit": {
+      "execution": "blocked",
+      "statusValues": [
+        "blocked",
+        "structure_candidate"
+      ],
+      "inspectedStructures": [
+        "pivot_field_items",
+        "row_items",
+        "column_items",
+        "output_cells",
+        "page_fields"
+      ],
+      "requiredReleaseGates": [
+        "signature_check",
+        "impact_preview",
+        "atomic_replace",
+        "rollback",
+        "untouched_part_preservation",
+        "excel_or_libreoffice_round_trip"
+      ],
+      "structureCandidateEnablesWrite": false,
+      "fixtureExpectedStatus": "blocked",
+      "producerFixture": {
+        "stage": "S8-7E1",
+        "status": "structural_baseline_verified",
+        "path": "src-tauri/tests/fixtures/workbook/pivot-producer-apache-poi.xlsx",
+        "manifest": "src-tauri/tests/fixtures/workbook/pivot-producer-apache-poi.json",
+        "producerProvenance": "apache_poi_test_data_excel_pivot",
+        "sha256": "F0EF1D61C9F3D8B27B18A876B8E24676314C6450ED64A725A7BFAA603FDD67E3",
+        "pivotTables": 2,
+        "structureCandidates": 1,
+        "blockedPivots": 1,
+        "ordinaryCellPatchPreservesPivotParts": true,
+        "desktopRefreshSaveRoundTrip": "pending",
+        "writesEnabled": false
+      },
+      "isolatedRebuildPlan": {
+        "stage": "S8-7E2A",
+        "execution": "temporary_copy_only",
+        "statusValues": [
+          "blocked",
+          "isolated_dry_run_ready"
+        ],
+        "affectedRoles": [
+          "cache_definition",
+          "cache_records",
+          "pivot_table",
+          "output_worksheet"
+        ],
+        "signatureCheck": "required",
+        "temporaryCopyDigest": "must_match_source",
+        "writesUserFile": false,
+        "actualRebuild": "pending",
+        "atomicReplace": "blocked",
+        "desktopRefreshSaveRoundTrip": "pending"
+      },
+      "isolatedCacheRebuild": {
+        "stage": "S8-7E2B",
+        "execution": "temporary_copy_only",
+        "status": "isolated_cache_rebuilt",
+        "rebuiltRoles": [
+          "cache_definition",
+          "cache_records"
+        ],
+        "verifiedValueTypes": [
+          "string",
+          "number",
+          "date"
+        ],
+        "implementedButUnverifiedValueTypes": [
+          "boolean",
+          "error",
+          "blank"
+        ],
+        "formulaSources": "blocked",
+        "mixedTypeFields": "blocked",
+        "newSharedItems": "blocked_until_pivot_items_rebuild",
+        "packageValidation": "required",
+        "semanticReparse": "required",
+        "untouchedPartPreservation": "required",
+        "writesUserFile": false,
+        "pivotItemsRebuild": "completed_in_S8-7E2C",
+        "outputCellsRebuild": "completed_in_S8-7E2C",
+        "atomicReplace": "blocked",
+        "desktopRefreshSaveRoundTrip": "pending"
+      },
+      "isolatedSynchronizedRebuild": {
+        "stage": "S8-7E2C",
+        "execution": "temporary_copy_only",
+        "status": "isolated_pivot_rebuilt",
+        "rebuiltRoles": [
+          "cache_definition",
+          "cache_records",
+          "pivot_table",
+          "output_worksheet"
+        ],
+        "verifiedLayout": {
+          "rowFields": 1,
+          "columnFields": 1,
+          "dataFields": 1,
+          "pageFields": 0,
+          "aggregation": "sum",
+          "preservesHiddenItems": true,
+          "requiresExistingSharedItems": true
+        },
+        "synchronizedStructures": [
+          "pivot_field_items",
+          "row_items",
+          "column_items",
+          "output_cells",
+          "row_totals",
+          "column_totals",
+          "grand_total"
+        ],
+        "outputValueReparse": "required",
+        "packageValidation": "required",
+        "semanticReparse": "required",
+        "untouchedPartPreservation": "required",
+        "failureBehavior": "discard_temporary_copy",
+        "writesUserFile": false,
+        "multiAxisOrMultiMeasure": "blocked",
+        "newSharedItems": "completed_in_S8-7E2D",
+        "atomicReplace": "blocked",
+        "desktopRefreshSaveRoundTrip": "pending"
+      },
+      "isolatedLayoutResize": {
+        "stage": "S8-7E2D",
+        "execution": "temporary_copy_only",
+        "status": "isolated_layout_resized",
+        "verifiedLayout": {
+          "rowFields": 1,
+          "columnFields": 1,
+          "dataFields": 1,
+          "pageFields": 0,
+          "aggregation": "sum"
+        },
+        "synchronizedStructures": [
+          "cache_shared_items",
+          "cache_records",
+          "pivot_field_items",
+          "row_items",
+          "column_items",
+          "pivot_location",
+          "output_cells",
+          "stale_output_cleanup",
+          "style_extension"
+        ],
+        "newSharedItems": "supported_for_verified_axes",
+        "removedSharedItems": "supported_for_verified_axes",
+        "preservesExistingHiddenState": true,
+        "newItemsDefaultVisible": true,
+        "outputRangeResize": "supported",
+        "staleOutputCleanup": "required",
+        "styleExtension": "required",
+        "outputValueReparse": "required",
+        "packageValidation": "required",
+        "semanticReparse": "required",
+        "untouchedPartPreservation": "required",
+        "failureBehavior": "discard_temporary_copy",
+        "writesUserFile": false,
+        "multiAxisOrMultiMeasure": "semantic_validation_completed_in_S8-7E2E",
+        "atomicReplace": "blocked",
+        "desktopRefreshSaveRoundTrip": "pending"
+      },
+      "isolatedAggregationAndLayoutVariants": {
+        "stage": "S8-7E2E",
+        "execution": "temporary_copy_and_memory_only",
+        "status": "isolated_variants_verified",
+        "verifiedAggregations": [
+          "sum",
+          "count",
+          "average",
+          "max",
+          "min",
+          "product",
+          "countNums"
+        ],
+        "aggregationPackageRebuild": "verified_for_all_seven",
+        "semanticLayouts": {
+          "rowOnly": {
+            "rowFields": 1,
+            "columnFields": 0,
+            "dataFields": 1,
+            "status": "semantic_verified"
+          },
+          "columnOnly": {
+            "rowFields": 0,
+            "columnFields": 1,
+            "dataFields": 1,
+            "status": "semantic_verified"
+          },
+          "multiMeasure": {
+            "rowFields": 1,
+            "columnFields": 1,
+            "dataFields": 3,
+            "aggregations": ["sum", "count", "average"],
+            "status": "semantic_verified"
+          }
+        },
+        "requiredGates": [
+          "aggregation_variant_packages",
+          "non_sum_output_reparse",
+          "single_axis_semantics",
+          "multi_measure_semantics",
+          "package_validation",
+          "semantic_reparse",
+          "output_value_reparse",
+          "untouched_part_preservation",
+          "source_package_unchanged"
+        ],
+        "singleAxisPackageRewrite": "pending",
+        "multiMeasurePackageRewrite": "pending",
+        "failureBehavior": "discard_temporary_copy",
+        "writesUserFile": false,
+        "multiLevelAxis": "blocked",
+        "pageFields": "blocked",
+        "atomicReplace": "blocked",
+        "desktopRefreshSaveRoundTrip": "pending"
+      }
+    }
+  },
+  "objectTypes": [
+    {
+      "id": "pivot_table",
+      "read": "supported",
+      "navigate": "supported",
+      "refresh": "blocked",
+      "edit": "planned",
+      "preservation": "byte_verified"
+    },
+    {
+      "id": "slicer",
+      "read": "supported",
+      "navigate": "supported",
+      "refresh": "blocked",
+      "edit": "planned",
+      "preservation": "byte_verified"
+    },
+    {
+      "id": "external_workbook_link",
+      "read": "redacted",
+      "navigate": "blocked",
+      "refresh": "blocked",
+      "edit": "planned",
+      "preservation": "byte_verified"
+    },
+    {
+      "id": "data_connection",
+      "read": "redacted",
+      "navigate": "not_applicable",
+      "refresh": "blocked",
+      "edit": "planned",
+      "preservation": "byte_verified"
+    }
+  ],
+  "fixture": "src-tauri/tests/fixtures/workbook/compatibility-baseline.xlsx"
+}

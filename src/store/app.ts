@@ -5,6 +5,7 @@ import {
   THEME_EDITOR_BACKGROUNDS,
   getThemePreset,
   normalizeThemeName,
+  type ThemeMotionSpeed,
   type ThemeName,
   type VisualStyle,
 } from '../config/themePresets'
@@ -60,7 +61,7 @@ export const useAppStore = defineStore('app', {
     isTempDirty: false,
     isZen: false,
     visualStyle: 'soft' as VisualStyle,
-    motionSpeed: 'calm' as 'calm' | 'swift' | 'expressive' | 'reduced',
+    motionSpeed: 'calm' as ThemeMotionSpeed,
     aiEnabled: false,
     aiProvider: 'openai',
     aiEndpoint: 'https://api.openai.com/v1',
@@ -180,6 +181,7 @@ export const useAppStore = defineStore('app', {
         visualStyle: selected.style,
         codeTheme: selected.vditorCodeTheme,
         editorBgColor: THEME_MAP[selected.theme],
+        motionSpeed: selected.motionSpeed,
       })
     },
     async saveAiCredential(apiKey: string) {

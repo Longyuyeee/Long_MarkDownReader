@@ -114,7 +114,7 @@ const highlightMatch = (text: string, query: string): { text: string; highlight:
 const themeCommands = themePresets.map(preset => ({
   title: `应用主题：${preset.name}`,
   description: preset.description,
-  keywords: ['theme', '主题', preset.mode, ...preset.keywords].join(' '),
+  keywords: ['theme', '主题', preset.mode, preset.scenario, preset.tier, ...preset.keywords].join(' '),
   icon: CommandIcon,
   type: 'cmd',
   action: `theme-preset:${preset.id}`,

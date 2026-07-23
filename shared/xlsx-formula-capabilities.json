@@ -42,6 +42,26 @@
       "id": "lookup_reference",
       "status": "verified",
       "functions": ["VLOOKUP", "HLOOKUP", "INDEX", "MATCH"]
+    },
+    {
+      "id": "multi_criteria_aggregate",
+      "status": "verified",
+      "functions": ["SUMIFS", "COUNTIFS", "AVERAGEIFS"]
+    },
+    {
+      "id": "date",
+      "status": "verified",
+      "functions": ["DATE", "YEAR", "MONTH", "DAY"]
+    },
+    {
+      "id": "modern_lookup",
+      "status": "verified",
+      "functions": ["XLOOKUP"]
+    },
+    {
+      "id": "volatile",
+      "status": "verified",
+      "functions": ["OFFSET", "INDIRECT", "RAND", "RANDBETWEEN", "TODAY", "NOW"]
     }
   ],
   "errorContract": {
@@ -58,13 +78,52 @@
       "not-found-error",
       "IFERROR-recovery"
     ],
-    "criteriaScenarios": ["numeric-comparison", "single-character-wildcard"]
+    "criteriaScenarios": ["numeric-comparison", "single-character-wildcard"],
+    "modernScenarios": [
+      "exact-match",
+      "cross-sheet-range",
+      "text-result-type-preservation",
+      "not-found-fallback",
+      "not-found-error",
+      "IFERROR-recovery",
+      "reverse-search",
+      "wildcard-match",
+      "next-smaller-match",
+      "row-vector"
+    ]
+  },
+  "multiCriteriaContract": {
+    "verifiedScenarios": ["multiple-criteria", "cross-column-criteria", "no-match-zero"]
+  },
+  "dateContract": {
+    "dateSystem": "Excel-1900",
+    "verifiedScenarios": ["date-serial", "year-month-day-extraction", "leap-year", "invalid-input-error"]
+  },
+  "volatileContract": {
+    "recalculationMode": "explicit-request-only",
+    "resultPersistence": "in-memory-only",
+    "verifiedScenarios": [
+      "offset-range-reference",
+      "indirect-same-sheet-reference",
+      "indirect-cross-sheet-reference",
+      "unsaved-edit-dependency",
+      "random-unit-interval",
+      "random-inclusive-fixed-bound",
+      "UTC-clock-day-relation"
+    ],
+    "notEquivalentToExcelAutomaticRecalculation": true
+  },
+  "unsupportedCalculationBoundary": {
+    "arrayAndDynamicArrayPolicy": "reject-before-engine-import",
+    "externalWorkbookPolicy": "offline-reject-before-engine-import",
+    "preserveSourcePackage": true
   },
   "verifiedReferenceModes": ["same-sheet", "cross-sheet", "cross-sheet-range", "workbook-defined-name", "unsaved-edit-dependency"],
   "excludedFromContract": [
-    "XLOOKUP-and-modern-lookup-functions",
-    "multi-criteria-IFS-functions",
-    "volatile-function-recalculation-timing",
+    "XMATCH-and-other-modern-lookup-functions",
+    "XLOOKUP-array-return-and-spill-results",
+    "multi-criteria-range-mismatch-semantics",
+    "Excel-automatic-volatile-recalculation-timing",
     "dynamic-arrays-and-spill-ranges",
     "external-workbook-references",
     "Excel-complete-function-equivalence",

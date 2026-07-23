@@ -1,6 +1,6 @@
 # Long Markdown Reader 开发交接
 
-更新日期：2026-07-23
+更新日期：2026-07-24
 交接基线：专业知识工作区已进入 `main`，当前开发版本 `v0.7.0`
 
 ## 1. 新电脑快速恢复
@@ -69,7 +69,10 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/Knowledge_Workspace_Health.md`：重复文件、未处理批注、扫描预算和只读治理边界。
 - `docs/Workbook_Row_Column_Outline.md`：XLSX 行列隐藏、分组、可靠写回和保真边界。
 - `docs/Workbook_Structure_Migration.md`：XLSX 行列插删的坐标、范围、公式迁移规则和预览边界。
-- `docs/Formula_Calculation_Compatibility.md`：S8-6A～S8-6B 公式函数族、错误分类、查找语义、真实 fixture 和明确排除项。
+- `docs/Formula_Calculation_Compatibility.md`：S8-6A～S8-6D 公式函数族、错误分类、查找/日期语义、真实 fixture 和明确排除项。
+- `docs/XLSX_Advanced_Data_Object_Contract.md`：S8-7 高级对象离线策略、透视候选审计、内存聚合预览和写回门禁。
+- `docs/T8_1B_Theme_Desktop_Visual_Audit.md`：四套场景主题、真实 Tauri 三档尺寸证据、图谱紧凑布局修复和可重复截图脚本。
+- `docs/Development_Progress_Audit_2026-07-24.md`：当前完整候选能力、风险排序、发布门禁和 S8-7E2F～S8-8、G8、F8-1 后续顺序。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
 - `docs/Development_Stage_Audit_2026-07-20.md`：上一轮专业工作区阶段审计和交错排期基线。
 
@@ -78,16 +81,16 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 当前本地候选验证结果：
 
 - 前端生产构建、主题/格式/工作簿/XLSX 发布契约检查均通过；工作簿契约已覆盖 S8-2A 的 Table 创建/调整入口、签名事务、包级往返、历史清理、重载与重算。
-- Rust：S8-6B 共 172 项测试（171 项功能、1 项性能），全部通过；新增条件聚合、查找/引用、`#N/A` 分类和扩展 Tauri 命令边界回归。
-- 本批最终完整性能回归通过：`inspect=303 ms / page=2,685 ms / patch=5,012 ms / total=8,002 ms`，未放宽 `10000x12` 负载、时间或 5% 文件增长约束。Debug 构建仅优化 `quick-xml` 与 `miniz_oxide` 依赖，普通写回在不存在 `sheetProtection` 时跳过完整保护解析。
-- 100 MiB PDF 范围读取基准：503 ms，仅读取约 255.9 KiB（目标小于 2 秒；不同机器会有波动）。
+- Rust：S8-7E2E 共 194 项测试（193 项功能、1 项性能），全部通过；七类聚合分别完成临时 Pivot 包重建与输出复读，合并分组回归验证平均值、计数和乘积均从原始记录计算；单行轴、单列轴和三度量布局完成真实来源内存语义验证，成功/阻断路径原文件字节保持不变。
+- 本批最终完整性能回归通过：`inspect=124 ms / page=1,071 ms / patch=911 ms / total=2,107 ms`，未放宽 `10000x12` 负载、时间或 5% 文件增长约束。Debug 构建仅优化 `quick-xml` 与 `miniz_oxide` 依赖，普通写回在不存在 `sheetProtection` 时跳过完整保护解析。
+- 100 MiB PDF 范围读取基准：51 ms，仅读取约 255.9 KiB（目标小于 2 秒；不同机器会有波动）。
 - `npm audit --omit=dev`：0 个漏洞。
 
 Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能优化项，不是构建失败。
 
 ## 6. 下一阶段顺序
 
-2026-07-23 综合审计、风险排序、质量证据和后续阶段退出条件见 `docs/Development_Progress_Audit_2026-07-23.md`；历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1、I7-2、W7-1～W7-3、S8-1A～S8-6B；下一入口为 S8-6C 多条件聚合与非易失日期函数。按当前主线还剩 S8-6、S8-7、S8-8 三个主阶段域；另保留 G8 图谱产品化、T8-1 更多主题预设和 F8-1 下一种专业格式编辑器三条增强线。
+2026-07-24 综合审计、风险排序、质量证据和后续阶段退出条件见 `docs/Development_Progress_Audit_2026-07-24.md`；上一轮细节见 `docs/Development_Progress_Audit_2026-07-23.md`，历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1、I7-2、W7-1～W7-3、S8-1A～S8-6E、S8-7A～S8-7E2E 和 T8-1A～T8-1B；下一入口为 S8-7E2F 单轴与多度量完整隔离包重写。按当前主线还剩 S8-7、S8-8 两个主阶段域；另保留 G8 图谱产品化和 F8-1 下一种专业格式编辑器两条增强线。
 
 当前 `v0.7.0` 基线已完成知识库文件树的创建、移动、重命名、删除、排序、扫描和状态读取路径守卫，并修复旧 API Key 迁移失败丢失及远程 HTTP 传输风险。
 
@@ -144,9 +147,23 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 51. S8-5C 已完成：独立打印选项面板支持网格线、行列标题、水平/垂直居中、黑白、草稿和 1–32767 可选首页页码；事务覆盖创建、更新、清除、保护拒绝、包校验和语义重读，页面阶段收尾。
 52. S8-6A 已完成：机器清单固定 IronCalc 版本和显式内存重算模式；真实 XLSX 验证聚合、数学、逻辑、文本四族 16 个函数，以及除零、依赖错误传播、`IFERROR` 恢复、未知函数和稳定错误分类；命令边界与 workbook contract 已纳入门禁。
 53. S8-6B 已完成：真实矩阵新增条件聚合和查找数据 Sheet，验证 `SUMIF/COUNTIF/AVERAGEIF` 与 `VLOOKUP/HLOOKUP/INDEX/MATCH` 的精确/升序近似匹配、通配条件、文本结果保型、`#N/A` 和恢复路径；机器清单扩展为六族 23 个函数。
-54. 下一批 S8-6C：验证 `SUMIFS/COUNTIFS/AVERAGEIFS` 与 `DATE/YEAR/MONTH/DAY` 等非易失日期函数；`XLOOKUP`、动态数组、易失函数和外部引用继续独立验收。
+54. S8-6C 已完成：真实矩阵新增多条件聚合和日期场景，验证 `SUMIFS/COUNTIFS/AVERAGEIFS` 与 `DATE/YEAR/MONTH/DAY` 的多条件、无匹配、Excel 1900 日期序列、闰年和错误传播；机器清单扩展为八族 30 个函数、41 个场景。尺寸不一致的 `*IFS` 范围因依赖行为不等价而明确排除。
 55. S8-6 后续拆为 S8-6D 现代查找/引用与 S8-6E 数组、溢出、易失函数、外部引用分级验收；之后进入 S8-7 高级数据对象和 S8-8 发布审计。
-56. T7-1 的主题扩展框架已完成，但当前正式预设仍为 3 套；S8-6C 后安排 T8-1 场景化主题预设扩展。F7-2 已交付首个 OPML 新格式编辑器，F8-1 将先审计 SVG/Draw.io 往返能力，再决定下一种专业格式。
+56. S8-6D 已完成：`XLOOKUP` 进入第九个已验证函数族，真实矩阵扩展为 31 个函数、50 个场景；覆盖精确/近似、跨 Sheet、行向量、反向、通配、缺省值、`#N/A`、`IFERROR`、文本保型和草稿依赖重算。IronCalc 0.7.1 未实现 `XMATCH`，数组返回/溢出结果也未进入合同。
+57. S8-6E 已完成：显式内存重算开放 `OFFSET/INDIRECT/RAND/RANDBETWEEN/TODAY/NOW`，机器清单扩展为十族 37 个函数、56 个场景；数组/动态数组在计算前安全拒绝，外部工作簿链接保持离线拒绝，源公式、缓存和包保真不受影响。S8-6 公式语义阶段收尾，下一步进入 S8-7。
+58. S8-7A 已完成：新增高级对象机器合同、后端汇总/权威离线策略和工作簿专业审计面板；四类对象可查看安全元数据，本地对象可定位，刷新、编辑、外部跟随和敏感字段暴露继续禁止。下一步进入 S8-7B。
+59. S8-7B 已完成：本地透视表可审计输出布局、缓存字段/类型、Cache Records、字段角色和聚合；真实 fixture 与命令边界验证 `candidate_for_rebuild`，未知或不完整结构返回稳定阻断原因。刷新和写回仍禁止，下一步进入 S8-7C 内存聚合预览。
+60. S8-7C 已完成：候选本地透视表可从当前工作表值和未保存非公式草稿生成内存聚合预览；七种聚合、带类型分组、资源上限、签名冲突和文件字节不变已进入回归。工作表、Pivot Cache、透视定义和原文件均不写入，下一步进入 S8-7D 写回可行性审计。
+61. S8-7D 已完成：逐对象核对 Pivot Field items、`rowItems/colItems`、页面筛选和输出区域单元格，返回 `blocked/structure_candidate` 与稳定阻断原因；两种状态均不允许写回。当前兼容 fixture 因缺少字段项、行列项和输出单元格保持阻断，下一步进入 S8-7E 真实生产者 fixture 与隔离重建原型。
+62. S8-7E1 已完成：引入固定 Apache POI 上游提交、许可和 SHA-256 的真实 Excel Pivot fixture；一个本地范围对象通过完整结构审计，一个命名来源/页面筛选对象稳定阻断。普通单元格修改后两个 Pivot Table、两个 Cache Definition 和两个 Cache Records 部件逐字节不变。当前机器无 Excel/LibreOffice，桌面刷新保存往返仍待 S8-7E2 后补证，写回继续禁用。
+63. S8-7E2A 已完成：新增 `preview_workbook_pivot_rebuild` dry-run 命令和审计面板“影响清单”，精确映射 Cache Definition、Cache Records、Pivot Table、输出工作表四类计划影响部件。命令校验签名、内存隔离副本和摘要，不写用户文件；完整候选进入 `isolated_dry_run_ready`，命名来源/页面筛选对象稳定阻断。下一步 S8-7E2B 只在临时副本中实际重建 Cache。
+64. S8-7E2B 已完成：新增 `rebuild_workbook_pivot_cache_isolated_copy`，只在内存隔离副本中实际重建 Cache Definition 与 Cache Records；已验证字符串共享索引、数字直接值、日期共享索引，修正真实 fixture 的过期日期边界，并对包复读、对象语义、新摘要及未修改部件逐字节保真设置门禁。新共享项、公式来源、混合类型、页面筛选和过期签名稳定拒绝，用户文件始终不写入。下一步 S8-7E2C 同步重建 Pivot Field items、`rowItems/colItems` 与输出工作表。
+65. S8-7E2C 已完成：新增 `rebuild_workbook_pivot_isolated_copy`，在同一内存副本同步重建 Cache Definition、Cache Records、Pivot Table 和输出工作表；保持隐藏 items，重建行列项、明细、行列总计和总计。真实 fixture 验证 2×2 可见布局、13 个输出单元格及来源数值 1→10 后总计 4→13；包、对象语义、输出值和未触及部件保真全部通过，用户文件仍不写入。下一步 S8-7E2D 扩展新 sharedItems 与布局扩缩容。
+66. S8-7E2D 已完成：新增 `rebuild_workbook_pivot_expanded_isolated_copy`，根据当前源数据增删共享项并同步 Cache Records、Pivot items、`rowItems/colItems`、`location` 和输出区域；保持既有共享项顺序与隐藏状态，新项默认可见。真实 fixture 覆盖 `A3:D7 → A3:E8` 扩张和 `A3:D7 → A3:C6` 收缩，验证样式延伸、至少 7 个旧单元格清理、总计 6/4、包语义与未触及部件保真，用户文件仍不写入。下一步 S8-7E2E 验证聚合方式与布局变体。
+67. S8-7E2E 已完成：新增 `verify_workbook_pivot_variants_isolated_copy`；`sum/count/average/max/min/product/countNums` 七类聚合各自生成临时 Pivot 包并通过联合重建、包校验、对象语义和输出值复读。真实来源进一步验证单行轴、单列轴及 `sum/count/average` 三度量语义矩阵。界面展示 7 个包级变体和 3 个语义布局，用户文件仍不写入；下一步 S8-7E2F 完成单轴、多度量完整 OOXML 包重写。
+68. T7-1 的主题扩展框架已完成，但当前正式预设仍为 3 套；下一批进入 T8-1 场景化主题预设扩展。F7-2 已交付首个 OPML 新格式编辑器，F8-1 将先审计 SVG/Draw.io 往返能力，再决定下一种专业格式。
+69. T8-1A 已完成：七套发布预设分为 3 个核心 + 4 个场景方案，设置页区分正式与兼容组合，预设可同步动效节奏，注册表新增 WCAG AA 正文对比度和层级数量门禁。下一批 T8-1B 补齐四套场景预设的真实 Tauri 视觉矩阵。
+70. T8-1B 已完成：四套场景预设具备设置页 1440×900、工作台 1024×768、思维导图 760×900 共 12 张真实 Tauri WebView2 证据；修复紧凑图谱页头、工具栏溢出、筛选条和初始详情遮挡，并隔离 E2E 配置写入。
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 

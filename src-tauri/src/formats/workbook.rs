@@ -87,6 +87,31 @@ pub struct WorkbookLinkedData {
     pub external_links: Vec<WorkbookExternalLink>,
     pub connections: Vec<WorkbookDataConnection>,
     pub external_relationship_count: usize,
+    pub summary: WorkbookLinkedDataSummary,
+    pub policy: WorkbookLinkedDataPolicy,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookLinkedDataSummary {
+    pub total_object_count: usize,
+    pub local_pivot_count: usize,
+    pub connection_backed_pivot_count: usize,
+    pub slicer_count: usize,
+    pub external_link_count: usize,
+    pub connection_count: usize,
+    pub refresh_risk_count: usize,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookLinkedDataPolicy {
+    pub mode: String,
+    pub metadata_visible: bool,
+    pub refresh_allowed: bool,
+    pub object_editing_allowed: bool,
+    pub external_targets_followed: bool,
+    pub sensitive_fields_exposed: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -101,6 +126,295 @@ pub struct WorkbookPivotTable {
     pub source_range: Option<String>,
     pub connection_id: Option<u32>,
     pub refresh_on_load: bool,
+    pub audit: WorkbookPivotAudit,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotAudit {
+    pub status: String,
+    pub rebuild_candidate: bool,
+    pub blockers: Vec<String>,
+    pub layout_range: Option<String>,
+    pub cache_field_count: usize,
+    pub cache_record_count: Option<usize>,
+    pub row_field_count: usize,
+    pub column_field_count: usize,
+    pub page_field_count: usize,
+    pub data_field_count: usize,
+    pub fields: Vec<WorkbookPivotField>,
+    pub data_fields: Vec<WorkbookPivotDataField>,
+    pub writeback: WorkbookPivotWritebackAudit,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotWritebackAudit {
+    pub status: String,
+    pub allowed: bool,
+    pub blockers: Vec<String>,
+    pub pivot_field_items_complete: bool,
+    pub row_items_complete: bool,
+    pub column_items_complete: bool,
+    pub output_cells_present: bool,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotField {
+    pub index: usize,
+    pub name: String,
+    pub role: String,
+    pub value_type: String,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotDataField {
+    pub source_index: usize,
+    pub name: String,
+    pub aggregation: String,
+    pub supported: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotPreviewPayload {
+    pub expected_signature: String,
+    pub pivot_part: String,
+    #[serde(default)]
+    pub edits: Vec<WorkbookCellEdit>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotPreviewKey {
+    pub field_index: usize,
+    pub field_name: String,
+    pub value: String,
+    pub kind: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotPreviewMeasure {
+    pub source_index: usize,
+    pub name: String,
+    pub aggregation: String,
+    pub value: Option<f64>,
+    pub formatted_value: String,
+    pub contributing_count: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotPreviewGroup {
+    pub row_keys: Vec<WorkbookPivotPreviewKey>,
+    pub column_keys: Vec<WorkbookPivotPreviewKey>,
+    pub measures: Vec<WorkbookPivotPreviewMeasure>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotPreviewResult {
+    pub pivot_name: String,
+    pub source_sheet: String,
+    pub source_range: String,
+    pub source_row_count: usize,
+    pub applied_draft_count: usize,
+    pub groups: Vec<WorkbookPivotPreviewGroup>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotRebuildPlanPayload {
+    pub expected_signature: String,
+    pub pivot_part: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotRebuildImpact {
+    pub part: String,
+    pub role: String,
+    pub planned_action: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotRebuildGate {
+    pub id: String,
+    pub status: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotRebuildPlan {
+    pub pivot_name: String,
+    pub status: String,
+    pub execution: String,
+    pub writes_user_file: bool,
+    pub temporary_copy_verified: bool,
+    pub source_package_digest: String,
+    pub isolated_package_digest: String,
+    pub source_sheet: Option<String>,
+    pub source_range: Option<String>,
+    pub output_sheet: Option<String>,
+    pub output_range: Option<String>,
+    pub affected_parts: Vec<WorkbookPivotRebuildImpact>,
+    pub preserved_part_count: usize,
+    pub blockers: Vec<String>,
+    pub gates: Vec<WorkbookPivotRebuildGate>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotCacheRebuildPayload {
+    pub expected_signature: String,
+    pub pivot_part: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotCacheFieldRebuild {
+    pub index: usize,
+    pub name: String,
+    pub value_type: String,
+    pub shared_item_count: usize,
+    pub record_encoding: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotCacheRebuildResult {
+    pub pivot_name: String,
+    pub status: String,
+    pub execution: String,
+    pub writes_user_file: bool,
+    pub source_record_count: usize,
+    pub rebuilt_record_count: usize,
+    pub rebuilt_parts: Vec<String>,
+    pub preserved_part_count: usize,
+    pub source_package_digest: String,
+    pub isolated_package_digest: String,
+    pub package_valid: bool,
+    pub semantic_reparse_valid: bool,
+    pub untouched_parts_preserved: bool,
+    pub fields: Vec<WorkbookPivotCacheFieldRebuild>,
+    pub gates: Vec<WorkbookPivotRebuildGate>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotSynchronizedRebuildPayload {
+    pub expected_signature: String,
+    pub pivot_part: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotSynchronizedRebuildResult {
+    pub pivot_name: String,
+    pub status: String,
+    pub execution: String,
+    pub writes_user_file: bool,
+    pub source_record_count: usize,
+    pub rebuilt_record_count: usize,
+    pub visible_row_item_count: usize,
+    pub visible_column_item_count: usize,
+    pub output_cell_count: usize,
+    pub rebuilt_parts: Vec<String>,
+    pub preserved_part_count: usize,
+    pub source_package_digest: String,
+    pub isolated_package_digest: String,
+    pub package_valid: bool,
+    pub semantic_reparse_valid: bool,
+    pub output_values_verified: bool,
+    pub untouched_parts_preserved: bool,
+    pub fields: Vec<WorkbookPivotCacheFieldRebuild>,
+    pub gates: Vec<WorkbookPivotRebuildGate>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotExpandedRebuildPayload {
+    pub expected_signature: String,
+    pub pivot_part: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotExpandedRebuildResult {
+    pub pivot_name: String,
+    pub status: String,
+    pub execution: String,
+    pub writes_user_file: bool,
+    pub rebuilt_record_count: usize,
+    pub added_shared_item_count: usize,
+    pub removed_shared_item_count: usize,
+    pub visible_row_item_count: usize,
+    pub visible_column_item_count: usize,
+    pub old_output_range: String,
+    pub new_output_range: String,
+    pub output_cell_count: usize,
+    pub cleared_stale_cell_count: usize,
+    pub extended_style_cell_count: usize,
+    pub rebuilt_parts: Vec<String>,
+    pub preserved_part_count: usize,
+    pub source_package_digest: String,
+    pub isolated_package_digest: String,
+    pub package_valid: bool,
+    pub semantic_reparse_valid: bool,
+    pub output_values_verified: bool,
+    pub untouched_parts_preserved: bool,
+    pub fields: Vec<WorkbookPivotCacheFieldRebuild>,
+    pub gates: Vec<WorkbookPivotRebuildGate>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotVariantVerificationPayload {
+    pub expected_signature: String,
+    pub pivot_part: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotAggregationVariant {
+    pub aggregation: String,
+    pub status: String,
+    pub output_range: String,
+    pub output_cell_count: usize,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotLayoutVariant {
+    pub layout: String,
+    pub row_field_count: usize,
+    pub column_field_count: usize,
+    pub data_field_count: usize,
+    pub group_count: usize,
+    pub measure_count: usize,
+    pub output_value_count: usize,
+    pub status: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotVariantVerificationResult {
+    pub pivot_name: String,
+    pub status: String,
+    pub execution: String,
+    pub writes_user_file: bool,
+    pub aggregation_variants: Vec<WorkbookPivotAggregationVariant>,
+    pub layout_variants: Vec<WorkbookPivotLayoutVariant>,
+    pub package_variant_count: usize,
+    pub semantic_variant_count: usize,
+    pub source_package_digest: String,
+    pub package_variants_verified: bool,
+    pub semantic_variants_verified: bool,
+    pub gates: Vec<WorkbookPivotRebuildGate>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]

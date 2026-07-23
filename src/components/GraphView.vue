@@ -462,7 +462,10 @@ const loadGraph = async () => {
       ? graphData.value.nodes.find(node => node.id === route.query.root)
       : undefined
     const initialNode = requestedRoot || selectedNode.value || strongest
-    if (initialNode) selectedNode.value = initialNode
+    const compactViewport = window.matchMedia('(max-width: 900px)').matches
+    if (initialNode && (requestedRoot || selectedNode.value || !compactViewport)) {
+      selectedNode.value = initialNode
+    }
 
     if (route.query.mode === 'mindmap' && initialNode) {
       viewMode.value = 'mindmap'
@@ -1804,11 +1807,83 @@ canvas:active {
   50% { transform: scale(1.18); opacity: 1; }
 }
 
+@media (max-width: 900px) {
+  .graph-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 12px;
+    padding: 10px 12px 8px;
+  }
+
+  .back-btn {
+    padding: 7px 10px;
+  }
+
+  .header-title {
+    min-width: 0;
+    gap: 7px;
+  }
+
+  .header-title svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+
+  .graph-title,
+  .view-switch button,
+  .tutorial-btn,
+  .health-entry,
+  .graph-export-btn {
+    white-space: nowrap;
+  }
+
+  .graph-title {
+    overflow: hidden;
+    font-size: 15px;
+    text-overflow: ellipsis;
+  }
+
+  .graph-controls {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 3px;
+    scrollbar-width: thin;
+  }
+
+  .graph-controls > * {
+    flex: 0 0 auto;
+  }
+
+  .graph-search {
+    width: 142px;
+  }
+
+  .graph-options {
+    top: 102px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .node-details {
+    top: auto;
+    right: 12px;
+    bottom: 16px;
+    left: 12px;
+    width: auto;
+    max-height: 40vh;
+  }
+}
+
 @media (max-width: 640px) {
   .view-switch button { padding: 0 7px; }
   .graph-search { display: none; }
-  .graph-options { right: 12px; left: 12px; overflow-x: auto; }
-  .node-details { right: 12px; left: 12px; bottom: 16px; top: auto; width: auto; max-height: 50vh; }
   .tutorial-btn span { display: none; }
   .tutorial-btn { width: 36px; padding: 0; justify-content: center; }
   .health-entry { width: 36px; padding: 0; justify-content: center; font-size: 0; }

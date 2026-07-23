@@ -143,30 +143,40 @@
 
           <n-grid-item class="animate-item" style="--delay: 0.4s">
             <div class="section-title">外观主题</div>
-            <div class="theme-preset-grid">
-              <div
-                v-for="preset in themePresets"
-                :key="preset.id"
-                class="theme-preset-card"
-                :class="{ active: isPresetActive(preset) }"
-                @click="applyPreset(preset)"
-              >
-                <div class="preset-visual" :style="getPresetPreviewStyle(preset)">
-                  <div class="preset-window">
-                    <span></span><span></span><span></span>
-                    <div class="preset-sidebar"></div>
-                    <div class="preset-document"><i></i><i></i><i></i></div>
-                  </div>
-                  <div class="preset-icon">{{ preset.icon }}</div>
+            <section v-for="group in themePresetGroups" :key="group.id" class="theme-preset-group">
+              <div class="theme-preset-group-heading">
+                <div>
+                  <strong>{{ group.label }}</strong>
+                  <span>{{ group.description }}</span>
                 </div>
-                <div class="preset-name">{{ preset.name }}</div>
-                <div class="preset-desc">{{ preset.description }}</div>
-                <div class="preset-tags">
-                  <span class="tag">{{ getThemeLabel(preset.theme) }}</span>
-                  <span class="tag">{{ getStyleLabel(preset.style) }}</span>
+                <n-tag size="small" round :bordered="false">{{ group.presets.length }} 套</n-tag>
+              </div>
+              <div class="theme-preset-grid">
+                <div
+                  v-for="preset in group.presets"
+                  :key="preset.id"
+                  class="theme-preset-card"
+                  :class="{ active: isPresetActive(preset) }"
+                  @click="applyPreset(preset)"
+                >
+                  <div class="preset-visual" :style="getPresetPreviewStyle(preset)">
+                    <div class="preset-window">
+                      <span></span><span></span><span></span>
+                      <div class="preset-sidebar"></div>
+                      <div class="preset-document"><i></i><i></i><i></i></div>
+                    </div>
+                    <div class="preset-icon">{{ preset.icon }}</div>
+                  </div>
+                  <div class="preset-name">{{ preset.name }}</div>
+                  <div class="preset-desc">{{ preset.description }}</div>
+                  <div class="preset-tags">
+                    <span class="tag">{{ preset.scenario }}</span>
+                    <span class="tag">{{ getThemeLabel(preset.theme) }}</span>
+                    <span class="tag">{{ getStyleLabel(preset.style) }}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </section>
 
             <div class="section-title" style="margin-top: 32px;">高级定制</div>
             <n-form-item label="界面风格">
@@ -256,7 +266,7 @@ import { useMessage, useDialog, NTag, NInputGroup } from 'naive-ui'
 import { useAppStore, THEME_MAP } from '../store/app'
 import {
   THEME_EDITOR_BACKGROUNDS,
-  themePresets,
+  themePresetGroups,
   themeToneById,
   themeTones,
   type ThemeName,
@@ -498,6 +508,8 @@ const applyPreset = (preset: ThemePreset) => {
   store.theme = preset.theme
   store.visualStyle = preset.style
   store.codeTheme = preset.vditorCodeTheme
+  config.value.motionSpeed = preset.motionSpeed
+  store.motionSpeed = preset.motionSpeed
 
   // 更新编辑器背景色
   config.value.editorBgColor = THEME_EDITOR_BACKGROUNDS[preset.theme]
@@ -506,7 +518,10 @@ const applyPreset = (preset: ThemePreset) => {
 }
 
 const isPresetActive = (preset: ThemePreset): boolean => {
-  return config.value.theme === preset.theme && config.value.visualStyle === preset.style && config.value.codeTheme === preset.vditorCodeTheme
+  return config.value.theme === preset.theme
+    && config.value.visualStyle === preset.style
+    && config.value.codeTheme === preset.vditorCodeTheme
+    && config.value.motionSpeed === preset.motionSpeed
 }
 
 const getThemeLabel = (theme: ThemeName): string => themeToneById[theme].label
@@ -1042,11 +1057,38 @@ const setAsDefault = async () => {
 }
 
 /* 主题预设卡片网格 */
+.theme-preset-group {
+  margin-bottom: 24px;
+}
+
+.theme-preset-group-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.theme-preset-group-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.theme-preset-group-heading strong {
+  font-size: 14px;
+}
+
+.theme-preset-group-heading span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
 .theme-preset-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 .theme-preset-card {

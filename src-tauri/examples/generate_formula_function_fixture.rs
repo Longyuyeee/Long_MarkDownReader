@@ -11,6 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let header = Format::new().set_bold();
     sheet.write_with_format(0, 0, "Value", &header)?;
     sheet.write_with_format(0, 1, "Text", &header)?;
+    sheet.write_with_format(0, 2, "Region", &header)?;
     sheet.write_with_format(0, 3, "Case", &header)?;
     sheet.write_with_format(0, 4, "Formula result", &header)?;
     sheet.write_number(1, 0, 10)?;
@@ -18,6 +19,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     sheet.write_number(3, 0, 30)?;
     sheet.write_string(1, 1, " long edit ")?;
     sheet.write_string(2, 1, "workspace")?;
+    sheet.write_string(1, 2, "West")?;
+    sheet.write_string(2, 2, "East")?;
+    sheet.write_string(3, 2, "East")?;
     let _ = sheet;
 
     let lookup = workbook.add_worksheet();
@@ -125,6 +129,91 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "lookup_error_recovery",
             "=IFERROR(E31,\"missing\")",
             "missing",
+        ),
+        (
+            "multi_sumifs",
+            "=SUMIFS(A2:A4,A2:A4,\">=20\",C2:C4,\"East\")",
+            "50",
+        ),
+        (
+            "multi_countifs",
+            "=COUNTIFS(A2:A4,\">10\",C2:C4,\"East\")",
+            "2",
+        ),
+        (
+            "multi_averageifs",
+            "=AVERAGEIFS(A2:A4,C2:C4,\"East\",A2:A4,\"<30\")",
+            "20",
+        ),
+        (
+            "multi_no_match",
+            "=COUNTIFS(A2:A4,\">100\",C2:C4,\"East\")",
+            "0",
+        ),
+        ("date_create", "=DATE(2024,2,29)", "45351"),
+        ("date_year", "=YEAR(DATE(2024,2,29))", "2024"),
+        ("date_month", "=MONTH(DATE(2024,2,29))", "2"),
+        ("date_day", "=DAY(DATE(2024,2,29))", "29"),
+        ("date_leap_day", "=DAY(DATE(2024,3,0))", "29"),
+        ("date_error_propagation", "=YEAR(\"not-a-date\")", "#VALUE!"),
+        (
+            "xlookup_exact_number",
+            "=XLOOKUP(\"B\",'Lookup Data'!A2:A6,'Lookup Data'!B2:B6)",
+            "200",
+        ),
+        (
+            "xlookup_text_result",
+            "=XLOOKUP(\"D\",'Lookup Data'!A2:A6,'Lookup Data'!B2:B6)",
+            "400",
+        ),
+        (
+            "xlookup_not_found_fallback",
+            "=XLOOKUP(\"Z\",'Lookup Data'!A2:A6,'Lookup Data'!B2:B6,\"missing\")",
+            "missing",
+        ),
+        (
+            "xlookup_reverse_search",
+            "=XLOOKUP(\"East\",C2:C4,A2:A4,,0,-1)",
+            "30",
+        ),
+        (
+            "xlookup_wildcard",
+            "=XLOOKUP(\"C*\",'Lookup Data'!A2:A6,'Lookup Data'!B2:B6,,2)",
+            "300",
+        ),
+        (
+            "xlookup_next_smaller",
+            "=XLOOKUP(25,'Lookup Data'!E2:E5,'Lookup Data'!F2:F5,,-1)",
+            "Pro",
+        ),
+        (
+            "xlookup_row_vector",
+            "=XLOOKUP(\"C\",'Lookup Data'!A8:D8,'Lookup Data'!A9:D9)",
+            "300",
+        ),
+        (
+            "xlookup_not_found_error",
+            "=XLOOKUP(\"Z\",'Lookup Data'!A2:A6,'Lookup Data'!B2:B6)",
+            "#N/A",
+        ),
+        (
+            "xlookup_error_recovery",
+            "=IFERROR(E50,\"recovered\")",
+            "recovered",
+        ),
+        ("volatile_offset_range", "=SUM(OFFSET(A2,1,0,2,1))", "50"),
+        ("volatile_indirect_same_sheet", "=INDIRECT(\"A3\")", "20"),
+        (
+            "volatile_indirect_cross_sheet",
+            "=SUM(INDIRECT(\"'Lookup Data'!B4\"))",
+            "300",
+        ),
+        ("volatile_rand_bounds", "=AND(RAND()>=0,RAND()<1)", "TRUE"),
+        ("volatile_randbetween_fixed", "=RANDBETWEEN(5,5)", "5"),
+        (
+            "volatile_clock_relation",
+            "=AND(TODAY()<=NOW(),NOW()<TODAY()+1)",
+            "TRUE",
         ),
     ];
     for (index, (id, formula, cached_result)) in cases.iter().enumerate() {

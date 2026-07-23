@@ -221,12 +221,16 @@ fn debug_e2e_config() -> Option<AppConfig> {
     }
 
     let theme = std::env::var("LONGEDIT_E2E_THEME").unwrap_or_else(|_| "white".into());
-    let visual_style = match theme.as_str() {
-        "dark" => "soft",
-        "contrast" => "sharp",
-        _ => "minimal",
-    }
-    .into();
+    let visual_style = std::env::var("LONGEDIT_E2E_STYLE").unwrap_or_else(|_| {
+        match theme.as_str() {
+            "dark" => "soft",
+            "contrast" => "sharp",
+            _ => "minimal",
+        }
+        .into()
+    });
+    let code_theme = std::env::var("LONGEDIT_E2E_CODE_THEME").unwrap_or_else(|_| "github".into());
+    let motion_speed = std::env::var("LONGEDIT_E2E_MOTION").unwrap_or_else(|_| "calm".into());
     Some(AppConfig {
         libraries: vec![LibraryConfig {
             name: "Chart visual matrix".into(),
@@ -236,6 +240,8 @@ fn debug_e2e_config() -> Option<AppConfig> {
         active_library_path: library_path,
         theme,
         visual_style,
+        code_theme,
+        motion_speed,
         ..Default::default()
     })
 }
@@ -260,6 +266,11 @@ fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
 
 #[tauri::command]
 pub fn save_config(app_handle: tauri::AppHandle, mut config: AppConfig) -> Result<(), String> {
+    #[cfg(debug_assertions)]
+    if std::env::var_os("LONGEDIT_E2E_LIBRARY").is_some() {
+        return Ok(());
+    }
+
     let config_dir = app_handle
         .path()
         .app_config_dir()

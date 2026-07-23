@@ -12,7 +12,11 @@ use crate::formats::workbook::{
     WorkbookExternalLink, WorkbookFilterAction, WorkbookFilterChange, WorkbookFilterState,
     WorkbookFilterTarget, WorkbookFreezePane, WorkbookHeaderFooterChange, WorkbookLinkedData,
     WorkbookMergeEdit, WorkbookMergeRange, WorkbookNamedStyle, WorkbookPageLayout,
-    WorkbookPageLayoutChange, WorkbookPageMargins, WorkbookPivotTable, WorkbookPrintOptions,
+    WorkbookPageLayoutChange, WorkbookPageMargins, WorkbookPivotAggregationVariant,
+    WorkbookPivotCacheFieldRebuild, WorkbookPivotCacheRebuildResult,
+    WorkbookPivotExpandedRebuildResult, WorkbookPivotLayoutVariant, WorkbookPivotRebuildGate,
+    WorkbookPivotRebuildImpact, WorkbookPivotRebuildPlan, WorkbookPivotSynchronizedRebuildResult,
+    WorkbookPivotTable, WorkbookPivotVariantVerificationResult, WorkbookPrintOptions,
     WorkbookPrintOptionsChange, WorkbookProtection, WorkbookRangeReference, WorkbookRowHeight,
     WorkbookRowHeightEdit, WorkbookRowState, WorkbookRowStateEdit, WorkbookSlicer,
     WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructureChange, WorkbookTable,
@@ -25,8 +29,15 @@ use crate::formats::workbook_formula::{
     migrate_workbook_formula, migrate_workbook_reference, translate_formula,
     validate_workbook_structure_change,
 };
+use crate::formats::workbook_linked_data::{
+    build_workbook_linked_data, inspect_pivot_cache, inspect_pivot_table, PivotCacheAudit,
+};
+use crate::formats::workbook_pivot::{
+    preview_pivot, read_pivot_source_snapshot, MeasureAccumulator,
+};
 use crate::formats::workbook_styles::{parse_styles, resolve_style_edits, ResolvedStyleEdit};
-use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
+use calamine::{open_workbook_from_rs, Data, Reader as CalamineReader, Xlsx};
+use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::name::QName;
 use quick_xml::{Reader, Writer, XmlVersion};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -57,6 +68,7 @@ const MAX_CHART_SERIES: usize = 256;
 const MAX_DRAWING_TEXT: usize = 1_024;
 const MAX_LINKED_DATA_OBJECTS: usize = 4_096;
 const MAX_LINKED_DATA_TEXT: usize = 1_024;
+const MAX_PIVOT_CACHE_REBUILD_FIELDS: usize = 256;
 const MAX_HEADER_FOOTER_TEXT: usize = 8_192;
 const MAX_EDITABLE_HEADER_FOOTER_TEXT: usize = 255;
 const CELL_PATCH_DEFLATE_LEVEL: i64 = 4;
@@ -291,6 +303,20 @@ fn bool_attribute(
     Ok(xml_value(event, key, decoder)?
         .map(|value| matches!(value.as_str(), "1" | "true"))
         .unwrap_or(default))
+}
+
+fn usize_xml_attribute(
+    event: &BytesStart<'_>,
+    key: &[u8],
+    decoder: quick_xml::encoding::Decoder,
+) -> Result<Option<usize>, String> {
+    xml_value(event, key, decoder)?
+        .map(|value| {
+            value
+                .parse::<usize>()
+                .map_err(|_| format!("XML 属性 {} 不是有效非负整数", String::from_utf8_lossy(key)))
+        })
+        .transpose()
 }
 
 fn decode_contains_filter(value: &str) -> Option<String> {
@@ -5999,6 +6025,7 @@ struct PivotCacheMetadata {
     source_range: Option<String>,
     connection_id: Option<u32>,
     refresh_on_load: bool,
+    audit: PivotCacheAudit,
 }
 
 fn bounded_linked_data_text(value: String) -> Result<String, String> {
@@ -6110,6 +6137,59 @@ fn parse_pivot_cache_metadata(xml: &[u8]) -> Result<PivotCacheMetadata, String> 
     Ok(result)
 }
 
+fn pivot_layout_reference(xml: &[u8]) -> Result<Option<String>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析透视输出区域失败: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"location" =>
+            {
+                return xml_value(event, b"ref", reader.decoder());
+            }
+            Event::Eof => return Ok(None),
+            _ => {}
+        }
+        buffer.clear();
+    }
+}
+
+fn worksheet_cell_count_in_range(xml: &[u8], reference: &str) -> Result<usize, String> {
+    let range = parse_range_reference(reference)?;
+    let mut count = 0usize;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析透视输出单元格失败: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"c" =>
+            {
+                if let Some(reference) = xml_value(event, b"r", reader.decoder())? {
+                    let (row, column) = parse_cell_reference(&reference)?;
+                    if row >= range.top
+                        && row <= range.bottom
+                        && column >= range.left
+                        && column <= range.right
+                    {
+                        count = count.saturating_add(1);
+                    }
+                }
+            }
+            Event::Eof => return Ok(count),
+            _ => {}
+        }
+        buffer.clear();
+    }
+}
+
 pub fn read_workbook_linked_data(source: &[u8]) -> Result<WorkbookLinkedData, String> {
     let entries = load_package(source)?;
     let sheet_paths = workbook_sheet_paths(&entries)?;
@@ -6155,7 +6235,19 @@ pub fn read_workbook_linked_data(source: &[u8]) -> Result<WorkbookLinkedData, St
     let mut cache_metadata = HashMap::new();
     for (cache_id, path) in cache_parts {
         if let Some(entry) = entries.iter().find(|entry| entry.name == path) {
-            cache_metadata.insert(cache_id, parse_pivot_cache_metadata(&entry.data)?);
+            let mut metadata = parse_pivot_cache_metadata(&entry.data)?;
+            let records_path = part_relationships(&entries, &path)?
+                .into_values()
+                .find(|target| {
+                    target.starts_with("xl/pivotCache/pivotCacheRecords")
+                        && target.ends_with(".xml")
+                });
+            let records = records_path
+                .as_deref()
+                .and_then(|path| entries.iter().find(|candidate| candidate.name == path))
+                .map(|entry| entry.data.as_slice());
+            metadata.audit = inspect_pivot_cache(&entry.data, records)?;
+            cache_metadata.insert(cache_id, metadata);
         }
     }
 
@@ -6192,6 +6284,24 @@ pub fn read_workbook_linked_data(source: &[u8]) -> Result<WorkbookLinkedData, St
             buffer.clear();
         }
         let metadata = cache_id.and_then(|id| cache_metadata.get(&id));
+        let output_cell_count = part_sheets
+            .get(&entry.name)
+            .zip(pivot_layout_reference(&entry.data)?.as_deref())
+            .and_then(|(sheet, reference)| {
+                sheet_paths
+                    .get(sheet)
+                    .and_then(|path| entries.iter().find(|candidate| candidate.name == *path))
+                    .map(|sheet_entry| worksheet_cell_count_in_range(&sheet_entry.data, reference))
+            })
+            .transpose()?;
+        let audit = inspect_pivot_table(
+            &entry.data,
+            metadata.map_or("unknown", |item| item.source_type.as_str()),
+            metadata.and_then(|item| item.source_sheet.as_deref()),
+            metadata.and_then(|item| item.source_range.as_deref()),
+            metadata.map(|item| &item.audit),
+            output_cell_count,
+        )?;
         pivot_tables.push(WorkbookPivotTable {
             name: name.unwrap_or_else(|| entry.name.clone()),
             part: entry.name.clone(),
@@ -6204,6 +6314,7 @@ pub fn read_workbook_linked_data(source: &[u8]) -> Result<WorkbookLinkedData, St
             source_range: metadata.and_then(|item| item.source_range.clone()),
             connection_id: metadata.and_then(|item| item.connection_id),
             refresh_on_load: metadata.is_some_and(|item| item.refresh_on_load),
+            audit,
         });
     }
 
@@ -6340,13 +6451,2257 @@ pub fn read_workbook_linked_data(source: &[u8]) -> Result<WorkbookLinkedData, St
         }
     }
 
-    Ok(WorkbookLinkedData {
+    Ok(build_workbook_linked_data(
         pivot_tables,
         slicers,
         external_links,
         connections,
         external_relationship_count,
+    ))
+}
+
+pub fn plan_workbook_pivot_rebuild(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+) -> Result<WorkbookPivotRebuildPlan, String> {
+    validate_workbook_package(source)?;
+    let isolated = source.to_vec();
+    validate_workbook_package(&isolated)?;
+    let source_digest = format!("{:x}", md5::compute(source));
+    let isolated_digest = format!("{:x}", md5::compute(&isolated));
+    if source_digest != isolated_digest {
+        return Err("透视隔离副本与源包摘要不一致".into());
+    }
+
+    let entries = load_package(source)?;
+    let sheet_paths = workbook_sheet_paths(&entries)?;
+    let (output_sheet, output_sheet_part) = sheet_paths
+        .iter()
+        .find_map(|(sheet, part)| {
+            part_relationships(&entries, part)
+                .ok()?
+                .into_values()
+                .any(|target| target == pivot.part)
+                .then(|| (sheet.clone(), part.clone()))
+        })
+        .map_or((None, None), |(sheet, part)| (Some(sheet), Some(part)));
+
+    let workbook = entries
+        .iter()
+        .find(|entry| entry.name == "xl/workbook.xml")
+        .ok_or("XLSX 缺少 xl/workbook.xml")?;
+    let workbook_relations = part_relationships(&entries, "xl/workbook.xml")?;
+    let mut cache_definition_part = None;
+    let mut reader = Reader::from_reader(workbook.data.as_slice());
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析 Pivot Cache 影响范围失败: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"pivotCache" =>
+            {
+                let cache_id = parse_u32_value(xml_value(event, b"cacheId", reader.decoder())?);
+                let relation_id = xml_value(event, b"r:id", reader.decoder())?;
+                if cache_id == pivot.cache_id {
+                    cache_definition_part =
+                        relation_id.and_then(|id| workbook_relations.get(&id).cloned());
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    let cache_records_part = cache_definition_part
+        .as_deref()
+        .map(|part| part_relationships(&entries, part))
+        .transpose()?
+        .and_then(|relations| {
+            relations.into_values().find(|target| {
+                target.starts_with("xl/pivotCache/pivotCacheRecords") && target.ends_with(".xml")
+            })
+        });
+
+    let mut blockers = Vec::new();
+    if pivot.audit.writeback.status != "structure_candidate" {
+        blockers.push("透视表尚未通过完整写回结构审计".into());
+        blockers.extend(pivot.audit.writeback.blockers.iter().cloned());
+    }
+    if pivot.source_type != "worksheet"
+        || pivot.source_sheet.is_none()
+        || pivot.source_range.is_none()
+    {
+        blockers.push("隔离原型仅接受具有明确范围的本地工作表来源".into());
+    }
+    if pivot.audit.page_field_count > 0 {
+        blockers.push("隔离原型不支持页面筛选字段".into());
+    }
+    if cache_definition_part.is_none() {
+        blockers.push("无法定位 Pivot Cache Definition 部件".into());
+    }
+    if cache_records_part.is_none() {
+        blockers.push("无法定位 Pivot Cache Records 部件".into());
+    }
+    if output_sheet_part.is_none() {
+        blockers.push("无法定位透视输出工作表部件".into());
+    }
+
+    let mut affected_parts = Vec::new();
+    let mut add_impact = |part: Option<String>, role: &str, planned_action: &str| {
+        if let Some(part) = part {
+            if !affected_parts
+                .iter()
+                .any(|impact: &WorkbookPivotRebuildImpact| impact.part == part)
+            {
+                affected_parts.push(WorkbookPivotRebuildImpact {
+                    part,
+                    role: role.into(),
+                    planned_action: planned_action.into(),
+                });
+            }
+        }
+    };
+    add_impact(
+        cache_definition_part,
+        "cache_definition",
+        "rebuild_metadata",
+    );
+    add_impact(cache_records_part, "cache_records", "rebuild_records");
+    add_impact(
+        Some(pivot.part.clone()),
+        "pivot_table",
+        "rebuild_layout_items",
+    );
+    add_impact(
+        output_sheet_part,
+        "output_worksheet",
+        "replace_output_cells",
+    );
+    let all_parts_exist = affected_parts
+        .iter()
+        .all(|impact| entries.iter().any(|entry| entry.name == impact.part));
+    if !all_parts_exist {
+        blockers.push("影响清单包含不存在的 OOXML 部件".into());
+    }
+    if blockers.is_empty() && affected_parts.len() != 4 {
+        blockers.push("隔离原型要求四类影响部件完整且互不重复".into());
+    }
+    blockers.sort();
+    blockers.dedup();
+    let ready = blockers.is_empty();
+    let preserved_part_count = entries.len().saturating_sub(affected_parts.len());
+    let gate = |id: &str, status: &str| WorkbookPivotRebuildGate {
+        id: id.into(),
+        status: status.into(),
+    };
+
+    Ok(WorkbookPivotRebuildPlan {
+        pivot_name: pivot.name.clone(),
+        status: if ready {
+            "isolated_dry_run_ready".into()
+        } else {
+            "blocked".into()
+        },
+        execution: "temporary_copy_only".into(),
+        writes_user_file: false,
+        temporary_copy_verified: true,
+        source_package_digest: source_digest,
+        isolated_package_digest: isolated_digest,
+        source_sheet: pivot.source_sheet.clone(),
+        source_range: pivot.source_range.clone(),
+        output_sheet,
+        output_range: pivot.audit.layout_range.clone(),
+        affected_parts,
+        preserved_part_count,
+        blockers,
+        gates: vec![
+            gate("signature_check", "passed"),
+            gate("structure_audit", if ready { "passed" } else { "blocked" }),
+            gate("impact_inventory", if ready { "passed" } else { "blocked" }),
+            gate("temporary_copy_validation", "passed"),
+            gate("isolated_rebuild", "pending"),
+            gate("atomic_replace", "blocked"),
+            gate("rollback", "pending"),
+            gate("excel_or_libreoffice_round_trip", "pending"),
+        ],
     })
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct PivotCacheScalar {
+    kind: String,
+    value: String,
+}
+
+#[derive(Clone, Debug)]
+struct PivotCacheFieldTemplate {
+    name: String,
+    shared_items: Vec<PivotCacheScalar>,
+}
+
+fn pivot_cache_number(value: f64) -> Result<String, String> {
+    if !value.is_finite() {
+        return Err("Pivot Cache 不能包含非有限数值".into());
+    }
+    Ok(if value.fract() == 0.0 && value.abs() <= i64::MAX as f64 {
+        format!("{value:.0}")
+    } else {
+        value.to_string()
+    })
+}
+
+fn pivot_cache_scalar(value: &Data) -> Result<PivotCacheScalar, String> {
+    let (kind, value) = match value {
+        Data::Empty => ("m", String::new()),
+        Data::String(value) => ("s", value.clone()),
+        Data::Int(value) => ("n", value.to_string()),
+        Data::Float(value) => ("n", pivot_cache_number(*value)?),
+        Data::Bool(value) => ("b", if *value { "1" } else { "0" }.into()),
+        Data::DateTime(value) if value.is_datetime() => {
+            let (year, month, day, hour, minute, second, millis) = value.to_ymd_hms_milli();
+            let value = if millis > 0 {
+                format!(
+                    "{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{millis:03}"
+                )
+            } else {
+                format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}")
+            };
+            ("d", value)
+        }
+        Data::DateTime(_) | Data::DurationIso(_) => {
+            return Err("隔离 Cache 重建暂不支持持续时间字段".into());
+        }
+        Data::DateTimeIso(value) => ("d", value.clone()),
+        Data::Error(value) => ("e", value.to_string()),
+    };
+    Ok(PivotCacheScalar {
+        kind: kind.into(),
+        value,
+    })
+}
+
+fn parse_pivot_cache_field_templates(xml: &[u8]) -> Result<Vec<PivotCacheFieldTemplate>, String> {
+    let mut fields = Vec::new();
+    let mut current_field = None;
+    let mut inside_shared_items = false;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析 Pivot Cache 字段模板失败: {error}"))?
+        {
+            Event::Start(ref event) if event.local_name().as_ref() == b"cacheField" => {
+                if fields.len() >= MAX_PIVOT_CACHE_REBUILD_FIELDS {
+                    return Err("Pivot Cache 字段数量超过隔离重建上限".into());
+                }
+                fields.push(PivotCacheFieldTemplate {
+                    name: xml_value(event, b"name", reader.decoder())?
+                        .unwrap_or_else(|| format!("Field{}", fields.len() + 1)),
+                    shared_items: Vec::new(),
+                });
+                current_field = Some(fields.len() - 1);
+            }
+            Event::Empty(ref event) if event.local_name().as_ref() == b"cacheField" => {
+                fields.push(PivotCacheFieldTemplate {
+                    name: xml_value(event, b"name", reader.decoder())?
+                        .unwrap_or_else(|| format!("Field{}", fields.len() + 1)),
+                    shared_items: Vec::new(),
+                });
+            }
+            Event::Start(ref event) if event.local_name().as_ref() == b"sharedItems" => {
+                inside_shared_items = true;
+            }
+            Event::Empty(ref event) if event.local_name().as_ref() == b"sharedItems" => {}
+            Event::Start(ref event) | Event::Empty(ref event)
+                if inside_shared_items
+                    && matches!(
+                        event.local_name().as_ref(),
+                        b"s" | b"n" | b"d" | b"b" | b"e" | b"m"
+                    ) =>
+            {
+                let index = current_field.ok_or("Pivot Cache sharedItems 缺少所属字段")?;
+                let kind = String::from_utf8_lossy(event.local_name().as_ref()).into_owned();
+                let value = xml_value(event, b"v", reader.decoder())?.unwrap_or_default();
+                fields[index]
+                    .shared_items
+                    .push(PivotCacheScalar { kind, value });
+            }
+            Event::End(ref event) if event.local_name().as_ref() == b"sharedItems" => {
+                inside_shared_items = false;
+            }
+            Event::End(ref event) if event.local_name().as_ref() == b"cacheField" => {
+                current_field = None;
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(fields)
+}
+
+fn rebuild_pivot_cache_records(
+    rows: &[Vec<Data>],
+    fields: &[PivotCacheFieldTemplate],
+) -> Result<(Vec<u8>, Vec<WorkbookPivotCacheFieldRebuild>), String> {
+    let mut writer = Writer::new(Vec::new());
+    writer
+        .write_event(Event::Decl(BytesDecl::new(
+            "1.0",
+            Some("UTF-8"),
+            Some("yes"),
+        )))
+        .map_err(|error| format!("写入 Pivot Cache Records 声明失败: {error}"))?;
+    let mut root = BytesStart::new("pivotCacheRecords");
+    root.push_attribute((
+        "xmlns",
+        "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+    ));
+    let count = rows.len().to_string();
+    root.push_attribute(("count", count.as_str()));
+    writer
+        .write_event(Event::Start(root))
+        .map_err(|error| format!("写入 Pivot Cache Records 根节点失败: {error}"))?;
+    for row in rows {
+        if row.len() != fields.len() {
+            return Err("透视来源记录宽度与 Cache 字段数不一致".into());
+        }
+        writer
+            .write_event(Event::Start(BytesStart::new("r")))
+            .map_err(|error| format!("写入 Pivot Cache 记录失败: {error}"))?;
+        for (value, field) in row.iter().zip(fields.iter()) {
+            let scalar = pivot_cache_scalar(value)?;
+            let mut item = if field.shared_items.is_empty() {
+                BytesStart::new(scalar.kind.as_str())
+            } else {
+                let index = field
+                    .shared_items
+                    .iter()
+                    .position(|item| item == &scalar)
+                    .ok_or_else(|| {
+                        format!(
+                            "字段“{}”出现未进入现有 sharedItems 的新值；需先进入 Pivot items 重建阶段",
+                            field.name
+                        )
+                    })?;
+                let mut item = BytesStart::new("x");
+                let index = index.to_string();
+                item.push_attribute(("v", index.as_str()));
+                writer
+                    .write_event(Event::Empty(item))
+                    .map_err(|error| format!("写入 Pivot Cache 共享项索引失败: {error}"))?;
+                continue;
+            };
+            if scalar.kind != "m" {
+                item.push_attribute(("v", scalar.value.as_str()));
+            }
+            writer
+                .write_event(Event::Empty(item))
+                .map_err(|error| format!("写入 Pivot Cache 字段值失败: {error}"))?;
+        }
+        writer
+            .write_event(Event::End(BytesEnd::new("r")))
+            .map_err(|error| format!("结束 Pivot Cache 记录失败: {error}"))?;
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new("pivotCacheRecords")))
+        .map_err(|error| format!("结束 Pivot Cache Records 失败: {error}"))?;
+    let summaries = fields
+        .iter()
+        .enumerate()
+        .map(|(index, field)| WorkbookPivotCacheFieldRebuild {
+            index,
+            name: field.name.clone(),
+            value_type: rows
+                .iter()
+                .filter_map(|row| row.get(index))
+                .filter_map(|value| pivot_cache_scalar(value).ok())
+                .find(|value| value.kind != "m")
+                .map(|value| match value.kind.as_str() {
+                    "s" => "string",
+                    "n" => "number",
+                    "d" => "date",
+                    "b" => "boolean",
+                    "e" => "error",
+                    _ => "blank",
+                })
+                .unwrap_or("blank")
+                .into(),
+            shared_item_count: field.shared_items.len(),
+            record_encoding: if field.shared_items.is_empty() {
+                "direct".into()
+            } else {
+                "shared_index".into()
+            },
+        })
+        .collect();
+    Ok((writer.into_inner(), summaries))
+}
+
+fn rebuild_pivot_cache_definition(
+    xml: &[u8],
+    record_count: usize,
+    fields: &[PivotCacheFieldTemplate],
+    rows: &[Vec<Data>],
+    rewrite_shared_item_values: bool,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 64));
+    let mut buffer = Vec::new();
+    let mut current_field = None;
+    let mut field_index = 0usize;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析 Pivot Cache Definition 重建失败: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"pivotCacheDefinition" => {
+                let updated =
+                    replace_xml_attribute(start, b"recordCount", &record_count.to_string(), false)?;
+                writer
+                    .write_event(Event::Start(updated))
+                    .map_err(|error| format!("写入 Pivot Cache 记录计数失败: {error}"))?;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"cacheField" => {
+                current_field = Some(field_index);
+                field_index += 1;
+                writer
+                    .write_event(Event::Start(start.to_owned()))
+                    .map_err(|error| format!("复制 Pivot Cache 字段失败: {error}"))?;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"cacheField" => {
+                field_index += 1;
+                writer
+                    .write_event(Event::Empty(start.to_owned()))
+                    .map_err(|error| format!("复制 Pivot Cache 空字段失败: {error}"))?;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if start.local_name().as_ref() == b"sharedItems" =>
+            {
+                let original_is_start = matches!(event, Event::Start(_));
+                let index = current_field.ok_or("Pivot Cache sharedItems 缺少字段上下文")?;
+                let field = fields.get(index).ok_or("Pivot Cache 字段索引越界")?;
+                let mut updated = start.to_owned();
+                if !field.shared_items.is_empty() {
+                    updated = replace_xml_attribute(
+                        &updated,
+                        b"count",
+                        &field.shared_items.len().to_string(),
+                        false,
+                    )?;
+                }
+                let scalars = rows
+                    .iter()
+                    .filter_map(|row| row.get(index))
+                    .map(pivot_cache_scalar)
+                    .collect::<Result<Vec<_>, _>>()?;
+                let non_empty = scalars
+                    .iter()
+                    .filter(|value| value.kind != "m")
+                    .collect::<Vec<_>>();
+                if non_empty.iter().all(|value| value.kind == "n") && !non_empty.is_empty() {
+                    let mut values = non_empty
+                        .iter()
+                        .map(|value| value.value.parse::<f64>())
+                        .collect::<Result<Vec<_>, _>>()
+                        .map_err(|_| "Pivot Cache 数值元数据无效")?;
+                    values.sort_by(|left, right| left.total_cmp(right));
+                    updated = replace_xml_attribute(
+                        &updated,
+                        b"minValue",
+                        &pivot_cache_number(values[0])?,
+                        false,
+                    )?;
+                    updated = replace_xml_attribute(
+                        &updated,
+                        b"maxValue",
+                        &pivot_cache_number(*values.last().unwrap())?,
+                        false,
+                    )?;
+                }
+                if non_empty.iter().all(|value| value.kind == "d") && !non_empty.is_empty() {
+                    let mut values = non_empty
+                        .iter()
+                        .map(|value| value.value.as_str())
+                        .collect::<Vec<_>>();
+                    values.sort_unstable();
+                    updated = replace_xml_attribute(&updated, b"minDate", values[0], false)?;
+                    updated = replace_xml_attribute(
+                        &updated,
+                        b"maxDate",
+                        values.last().copied().unwrap(),
+                        false,
+                    )?;
+                }
+                if rewrite_shared_item_values && !field.shared_items.is_empty() {
+                    writer
+                        .write_event(Event::Start(updated))
+                        .map_err(|error| format!("写入 Pivot Cache sharedItems 失败: {error}"))?;
+                    for scalar in &field.shared_items {
+                        let mut item = BytesStart::new(scalar.kind.as_str());
+                        if scalar.kind != "m" {
+                            item.push_attribute(("v", scalar.value.as_str()));
+                        }
+                        writer.write_event(Event::Empty(item)).map_err(|error| {
+                            format!("写入 Pivot Cache shared item 失败: {error}")
+                        })?;
+                    }
+                    writer
+                        .write_event(Event::End(BytesEnd::new("sharedItems")))
+                        .map_err(|error| format!("结束 Pivot Cache sharedItems 失败: {error}"))?;
+                    if original_is_start {
+                        skip_xml_element(&mut reader, &mut buffer)?;
+                    }
+                    buffer.clear();
+                    continue;
+                } else {
+                    writer
+                        .write_event(if original_is_start {
+                            Event::Start(updated)
+                        } else {
+                            Event::Empty(updated)
+                        })
+                        .map_err(|error| {
+                            format!("写入 Pivot Cache sharedItems 元数据失败: {error}")
+                        })?;
+                }
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"cacheField" => {
+                current_field = None;
+                writer
+                    .write_event(Event::End(end.to_owned()))
+                    .map_err(|error| format!("结束 Pivot Cache 字段失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制 Pivot Cache Definition 失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if field_index != fields.len() {
+        return Err("Pivot Cache Definition 字段数量在重建时发生漂移".into());
+    }
+    Ok(writer.into_inner())
+}
+
+pub(crate) fn rebuild_workbook_pivot_cache_isolated(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+) -> Result<(Vec<u8>, WorkbookPivotCacheRebuildResult), String> {
+    let plan = plan_workbook_pivot_rebuild(source, pivot)?;
+    if plan.status != "isolated_dry_run_ready" {
+        return Err(format!(
+            "透视表未通过隔离重建计划：{}",
+            plan.blockers.join("；")
+        ));
+    }
+    let definition_part = plan
+        .affected_parts
+        .iter()
+        .find(|impact| impact.role == "cache_definition")
+        .map(|impact| impact.part.clone())
+        .ok_or("隔离计划缺少 Cache Definition 部件")?;
+    let records_part = plan
+        .affected_parts
+        .iter()
+        .find(|impact| impact.role == "cache_records")
+        .map(|impact| impact.part.clone())
+        .ok_or("隔离计划缺少 Cache Records 部件")?;
+    let snapshot = read_pivot_source_snapshot(source, pivot)?;
+    let mut entries = load_package(source)?;
+    let definition_index = entries
+        .iter()
+        .position(|entry| entry.name == definition_part)
+        .ok_or("Cache Definition 部件不存在")?;
+    let records_index = entries
+        .iter()
+        .position(|entry| entry.name == records_part)
+        .ok_or("Cache Records 部件不存在")?;
+    let fields = parse_pivot_cache_field_templates(&entries[definition_index].data)?;
+    if fields.len() != snapshot.headers.len()
+        || fields
+            .iter()
+            .zip(snapshot.headers.iter())
+            .any(|(field, header)| field.name.trim() != header.trim())
+    {
+        return Err("来源表头与 Cache Definition 字段模板不一致".into());
+    }
+    for (index, audit_field) in pivot.audit.fields.iter().enumerate() {
+        let kinds = snapshot
+            .rows
+            .iter()
+            .filter_map(|row| row.get(index))
+            .map(pivot_cache_scalar)
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .filter(|value| value.kind != "m")
+            .map(|value| value.kind)
+            .collect::<HashSet<_>>();
+        if kinds.len() > 1 {
+            return Err(format!(
+                "字段“{}”包含混合类型；隔离 Cache 重建要求单一稳定类型",
+                audit_field.name
+            ));
+        }
+        let actual_type = kinds
+            .iter()
+            .next()
+            .map_or("blank", |kind| match kind.as_str() {
+                "s" => "string",
+                "n" => "number",
+                "d" => "date",
+                "b" => "boolean",
+                "e" => "error",
+                _ => "unknown",
+            });
+        if !matches!(audit_field.value_type.as_str(), "unknown" | "mixed")
+            && audit_field.value_type != actual_type
+        {
+            return Err(format!(
+                "字段“{}”来源类型与 Cache Definition 不一致",
+                audit_field.name
+            ));
+        }
+    }
+    let (records_xml, field_summaries) = rebuild_pivot_cache_records(&snapshot.rows, &fields)?;
+    let definition_xml = rebuild_pivot_cache_definition(
+        &entries[definition_index].data,
+        snapshot.rows.len(),
+        &fields,
+        &snapshot.rows,
+        false,
+    )?;
+    entries[definition_index].data = definition_xml;
+    entries[records_index].data = records_xml;
+    let modified_paths = HashSet::from([definition_part.clone(), records_part.clone()]);
+    let isolated = write_package_preserving_unchanged(source, entries, &modified_paths)?;
+    validate_workbook_package(&isolated)?;
+    let linked = read_workbook_linked_data(&isolated)?;
+    let rebuilt = linked
+        .pivot_tables
+        .iter()
+        .find(|candidate| candidate.part == pivot.part)
+        .ok_or("隔离重建后透视表身份丢失")?;
+    let semantic_reparse_valid = rebuilt.audit.cache_record_count == Some(snapshot.rows.len())
+        && rebuilt.audit.writeback.status == "structure_candidate";
+    if !semantic_reparse_valid {
+        return Err("隔离 Cache 重建后的语义复读未通过".into());
+    }
+    let source_entries = load_package(source)?
+        .into_iter()
+        .map(|entry| (entry.name, entry.data))
+        .collect::<HashMap<_, _>>();
+    let isolated_entries = load_package(&isolated)?
+        .into_iter()
+        .map(|entry| (entry.name, entry.data))
+        .collect::<HashMap<_, _>>();
+    let untouched_parts_preserved = source_entries.iter().all(|(name, data)| {
+        modified_paths.contains(name)
+            || isolated_entries
+                .get(name)
+                .is_some_and(|candidate| candidate == data)
+    });
+    if !untouched_parts_preserved {
+        return Err("隔离 Cache 重建改写了影响清单外的部件".into());
+    }
+    let source_digest = format!("{:x}", md5::compute(source));
+    let isolated_digest = format!("{:x}", md5::compute(&isolated));
+    if source_digest == isolated_digest {
+        return Err("隔离 Cache 重建未产生新的包摘要".into());
+    }
+    let gate = |id: &str, status: &str| WorkbookPivotRebuildGate {
+        id: id.into(),
+        status: status.into(),
+    };
+    Ok((
+        isolated,
+        WorkbookPivotCacheRebuildResult {
+            pivot_name: pivot.name.clone(),
+            status: "isolated_cache_rebuilt".into(),
+            execution: "temporary_copy_only".into(),
+            writes_user_file: false,
+            source_record_count: pivot.audit.cache_record_count.unwrap_or_default(),
+            rebuilt_record_count: snapshot.rows.len(),
+            rebuilt_parts: vec![definition_part, records_part],
+            preserved_part_count: plan.preserved_part_count + 2,
+            source_package_digest: source_digest,
+            isolated_package_digest: isolated_digest,
+            package_valid: true,
+            semantic_reparse_valid,
+            untouched_parts_preserved,
+            fields: field_summaries,
+            gates: vec![
+                gate("signature_check", "passed"),
+                gate("impact_inventory", "passed"),
+                gate("cache_definition_rebuild", "passed"),
+                gate("cache_records_rebuild", "passed"),
+                gate("package_validation", "passed"),
+                gate("semantic_reparse", "passed"),
+                gate("untouched_part_preservation", "passed"),
+                gate("pivot_items_rebuild", "pending"),
+                gate("output_cells_rebuild", "pending"),
+                gate("atomic_replace", "blocked"),
+                gate("excel_or_libreoffice_round_trip", "pending"),
+            ],
+        },
+    ))
+}
+
+#[derive(Clone, Debug)]
+struct PivotAxisRebuildTemplate {
+    field_index: usize,
+    hidden: Vec<bool>,
+}
+
+#[derive(Clone, Debug)]
+struct PivotOutputLayout {
+    top: usize,
+    bottom: usize,
+    left: usize,
+    right: usize,
+    first_data_row: usize,
+    first_data_column: usize,
+}
+
+fn parse_pivot_axis_templates(
+    xml: &[u8],
+    pivot: &WorkbookPivotTable,
+    fields: &[PivotCacheFieldTemplate],
+) -> Result<
+    (
+        PivotAxisRebuildTemplate,
+        PivotAxisRebuildTemplate,
+        PivotOutputLayout,
+    ),
+    String,
+> {
+    if pivot.audit.row_field_count != 1
+        || pivot.audit.column_field_count != 1
+        || pivot.audit.data_field_count != 1
+        || pivot.audit.page_field_count != 0
+    {
+        return Err("隔离同步重建当前仅支持一个行字段、一个列字段、一个值字段且无页面筛选".into());
+    }
+    let row_field = pivot
+        .audit
+        .fields
+        .iter()
+        .find(|field| field.role == "row")
+        .map(|field| field.index)
+        .ok_or("透视表缺少唯一行字段")?;
+    let column_field = pivot
+        .audit
+        .fields
+        .iter()
+        .find(|field| field.role == "column")
+        .map(|field| field.index)
+        .ok_or("透视表缺少唯一列字段")?;
+    let data_field = pivot.audit.data_fields.first().ok_or("透视表缺少值字段")?;
+    if !data_field.supported {
+        return Err("隔离同步重建包含尚未验证的聚合方式".into());
+    }
+
+    let mut item_states = HashMap::<usize, HashMap<usize, bool>>::new();
+    let mut default_items = HashMap::<usize, usize>::new();
+    let mut pivot_field_index = 0usize;
+    let mut current_field = None;
+    let mut active_items_field = None;
+    let mut layout = None;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析 Pivot items 重建模板失败: {error}"))?
+        {
+            Event::Start(ref event) => match event.local_name().as_ref() {
+                b"pivotField" => {
+                    current_field = Some(pivot_field_index);
+                    pivot_field_index = pivot_field_index.saturating_add(1);
+                }
+                b"items" => active_items_field = current_field,
+                b"item" => {
+                    if let Some(field_index) = active_items_field {
+                        for attribute in event.attributes() {
+                            let attribute = attribute
+                                .map_err(|error| format!("读取 Pivot item 属性失败: {error}"))?;
+                            if !matches!(attribute.key.as_ref(), b"x" | b"h" | b"t") {
+                                return Err(
+                                    "Pivot item 包含尚未验证的扩展属性，隔离同步重建已阻断".into(),
+                                );
+                            }
+                        }
+                        if xml_value(event, b"t", reader.decoder())?.as_deref() == Some("default") {
+                            *default_items.entry(field_index).or_insert(0) += 1;
+                        } else {
+                            let index = usize_xml_attribute(event, b"x", reader.decoder())?
+                                .ok_or("Pivot item 缺少共享项索引")?;
+                            let hidden = bool_attribute(event, b"h", reader.decoder(), false)?;
+                            if item_states
+                                .entry(field_index)
+                                .or_default()
+                                .insert(index, hidden)
+                                .is_some()
+                            {
+                                return Err("Pivot item 共享项索引重复".into());
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            },
+            Event::Empty(ref event) => match event.local_name().as_ref() {
+                b"location" => {
+                    let reference =
+                        xml_value(event, b"ref", reader.decoder())?.ok_or("透视输出缺少范围")?;
+                    let mut parts = reference.split(':');
+                    let (top, left) = parse_cell_reference(parts.next().unwrap_or_default())?;
+                    let (bottom, right) = parse_cell_reference(parts.next().unwrap_or(&reference))?;
+                    if parts.next().is_some() || bottom < top || right < left {
+                        return Err("透视输出范围无效".into());
+                    }
+                    layout = Some(PivotOutputLayout {
+                        top,
+                        bottom,
+                        left,
+                        right,
+                        first_data_row: usize_xml_attribute(
+                            event,
+                            b"firstDataRow",
+                            reader.decoder(),
+                        )?
+                        .ok_or("透视输出缺少 firstDataRow")?,
+                        first_data_column: usize_xml_attribute(
+                            event,
+                            b"firstDataCol",
+                            reader.decoder(),
+                        )?
+                        .ok_or("透视输出缺少 firstDataCol")?,
+                    });
+                }
+                b"pivotField" => pivot_field_index = pivot_field_index.saturating_add(1),
+                b"items" => {}
+                b"item" => {
+                    if let Some(field_index) = active_items_field {
+                        for attribute in event.attributes() {
+                            let attribute = attribute
+                                .map_err(|error| format!("读取 Pivot item 属性失败: {error}"))?;
+                            if !matches!(attribute.key.as_ref(), b"x" | b"h" | b"t") {
+                                return Err(
+                                    "Pivot item 包含尚未验证的扩展属性，隔离同步重建已阻断".into(),
+                                );
+                            }
+                        }
+                        if xml_value(event, b"t", reader.decoder())?.as_deref() == Some("default") {
+                            *default_items.entry(field_index).or_insert(0) += 1;
+                        } else {
+                            let index = usize_xml_attribute(event, b"x", reader.decoder())?
+                                .ok_or("Pivot item 缺少共享项索引")?;
+                            let hidden = bool_attribute(event, b"h", reader.decoder(), false)?;
+                            if item_states
+                                .entry(field_index)
+                                .or_default()
+                                .insert(index, hidden)
+                                .is_some()
+                            {
+                                return Err("Pivot item 共享项索引重复".into());
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            },
+            Event::End(ref event) => match event.local_name().as_ref() {
+                b"items" => active_items_field = None,
+                b"pivotField" => current_field = None,
+                _ => {}
+            },
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    let axis = |field_index: usize| -> Result<PivotAxisRebuildTemplate, String> {
+        let field = fields
+            .get(field_index)
+            .ok_or("Pivot items 字段索引超出 Cache 字段范围")?;
+        if field.shared_items.is_empty() {
+            return Err("行列维度必须使用可验证的 sharedItems".into());
+        }
+        let states = item_states
+            .get(&field_index)
+            .ok_or("行列维度缺少 Pivot items")?;
+        if states.len() != field.shared_items.len()
+            || (0..field.shared_items.len()).any(|index| !states.contains_key(&index))
+            || default_items.get(&field_index).copied() != Some(1)
+        {
+            return Err("Pivot items 与 Cache sharedItems 未形成完整一一映射".into());
+        }
+        Ok(PivotAxisRebuildTemplate {
+            field_index,
+            hidden: (0..field.shared_items.len())
+                .map(|index| states[&index])
+                .collect(),
+        })
+    };
+    let layout = layout.ok_or("透视表缺少输出布局")?;
+    if layout.first_data_row != 2 || layout.first_data_column != 1 {
+        return Err("隔离同步重建当前只验证标准紧凑单值布局".into());
+    }
+    Ok((axis(row_field)?, axis(column_field)?, layout))
+}
+
+fn skip_xml_element(reader: &mut Reader<&[u8]>, buffer: &mut Vec<u8>) -> Result<(), String> {
+    let mut depth = 1usize;
+    buffer.clear();
+    while depth > 0 {
+        match reader
+            .read_event_into(buffer)
+            .map_err(|error| format!("跳过原 Pivot 布局节点失败: {error}"))?
+        {
+            Event::Start(_) => depth = depth.saturating_add(1),
+            Event::End(_) => depth = depth.saturating_sub(1),
+            Event::Eof => return Err("Pivot 布局 XML 意外结束".into()),
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(())
+}
+
+fn write_pivot_dimension_items(
+    writer: &mut Writer<Vec<u8>>,
+    template: &PivotAxisRebuildTemplate,
+) -> Result<(), String> {
+    let count = (template.hidden.len() + 1).to_string();
+    let mut items = BytesStart::new("items");
+    items.push_attribute(("count", count.as_str()));
+    writer
+        .write_event(Event::Start(items))
+        .map_err(|error| format!("写入 Pivot items 失败: {error}"))?;
+    for (index, hidden) in template.hidden.iter().enumerate() {
+        let index = index.to_string();
+        let mut item = BytesStart::new("item");
+        item.push_attribute(("x", index.as_str()));
+        if *hidden {
+            item.push_attribute(("h", "1"));
+        }
+        writer
+            .write_event(Event::Empty(item))
+            .map_err(|error| format!("写入 Pivot item 失败: {error}"))?;
+    }
+    let mut default_item = BytesStart::new("item");
+    default_item.push_attribute(("t", "default"));
+    writer
+        .write_event(Event::Empty(default_item))
+        .and_then(|_| writer.write_event(Event::End(BytesEnd::new("items"))))
+        .map_err(|error| format!("结束 Pivot items 失败: {error}"))
+}
+
+fn write_pivot_axis_items(
+    writer: &mut Writer<Vec<u8>>,
+    element: &str,
+    visible: &[usize],
+) -> Result<(), String> {
+    let count = (visible.len() + 1).to_string();
+    let mut items = BytesStart::new(element);
+    items.push_attribute(("count", count.as_str()));
+    writer
+        .write_event(Event::Start(items))
+        .map_err(|error| format!("写入 {element} 失败: {error}"))?;
+    for index in visible {
+        writer
+            .write_event(Event::Start(BytesStart::new("i")))
+            .map_err(|error| format!("写入 {element} 项失败: {error}"))?;
+        let index = index.to_string();
+        let mut value = BytesStart::new("x");
+        value.push_attribute(("v", index.as_str()));
+        writer
+            .write_event(Event::Empty(value))
+            .and_then(|_| writer.write_event(Event::End(BytesEnd::new("i"))))
+            .map_err(|error| format!("结束 {element} 项失败: {error}"))?;
+    }
+    let mut grand = BytesStart::new("i");
+    grand.push_attribute(("t", "grand"));
+    writer
+        .write_event(Event::Start(grand))
+        .and_then(|_| writer.write_event(Event::Empty(BytesStart::new("x"))))
+        .and_then(|_| writer.write_event(Event::End(BytesEnd::new("i"))))
+        .and_then(|_| writer.write_event(Event::End(BytesEnd::new(element))))
+        .map_err(|error| format!("结束 {element} 失败: {error}"))
+}
+
+fn rebuild_pivot_table_layout(
+    xml: &[u8],
+    row_axis: &PivotAxisRebuildTemplate,
+    column_axis: &PivotAxisRebuildTemplate,
+    output_layout: Option<&PivotOutputLayout>,
+) -> Result<Vec<u8>, String> {
+    let row_visible = row_axis
+        .hidden
+        .iter()
+        .enumerate()
+        .filter_map(|(index, hidden)| (!hidden).then_some(index))
+        .collect::<Vec<_>>();
+    let column_visible = column_axis
+        .hidden
+        .iter()
+        .enumerate()
+        .filter_map(|(index, hidden)| (!hidden).then_some(index))
+        .collect::<Vec<_>>();
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
+    let mut buffer = Vec::new();
+    let mut pivot_field_index = 0usize;
+    let mut current_field = None;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析 Pivot Table 重建布局失败: {error}"))?;
+        match event {
+            Event::Empty(ref start)
+                if start.local_name().as_ref() == b"location" && output_layout.is_some() =>
+            {
+                let layout = output_layout.unwrap();
+                let reference = format!(
+                    "{}:{}",
+                    cell_reference(layout.top, layout.left)?,
+                    cell_reference(layout.bottom, layout.right)?
+                );
+                let updated = replace_xml_attribute(start, b"ref", &reference, false)?;
+                writer
+                    .write_event(Event::Empty(updated))
+                    .map_err(|error| format!("写入 Pivot 输出范围失败: {error}"))?;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"pivotField" => {
+                current_field = Some(pivot_field_index);
+                pivot_field_index = pivot_field_index.saturating_add(1);
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制 pivotField 失败: {error}"))?;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"pivotField" => {
+                pivot_field_index = pivot_field_index.saturating_add(1);
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制 pivotField 失败: {error}"))?;
+            }
+            Event::Start(ref start)
+                if start.local_name().as_ref() == b"items"
+                    && current_field == Some(row_axis.field_index) =>
+            {
+                write_pivot_dimension_items(&mut writer, row_axis)?;
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Start(ref start)
+                if start.local_name().as_ref() == b"items"
+                    && current_field == Some(column_axis.field_index) =>
+            {
+                write_pivot_dimension_items(&mut writer, column_axis)?;
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Empty(ref start)
+                if start.local_name().as_ref() == b"items"
+                    && current_field == Some(row_axis.field_index) =>
+            {
+                write_pivot_dimension_items(&mut writer, row_axis)?;
+            }
+            Event::Empty(ref start)
+                if start.local_name().as_ref() == b"items"
+                    && current_field == Some(column_axis.field_index) =>
+            {
+                write_pivot_dimension_items(&mut writer, column_axis)?;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"rowItems" => {
+                write_pivot_axis_items(&mut writer, "rowItems", &row_visible)?;
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"colItems" => {
+                write_pivot_axis_items(&mut writer, "colItems", &column_visible)?;
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"rowItems" => {
+                write_pivot_axis_items(&mut writer, "rowItems", &row_visible)?;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"colItems" => {
+                write_pivot_axis_items(&mut writer, "colItems", &column_visible)?;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"pivotField" => {
+                current_field = None;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束 pivotField 失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制 Pivot Table 布局失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn pivot_axis_edit(
+    snapshot: &crate::formats::workbook_pivot::PivotSourceSnapshot,
+    field_index: usize,
+    scalar: &PivotCacheScalar,
+    row: usize,
+    column: usize,
+    sheet: &str,
+) -> Result<WorkbookCellEdit, String> {
+    let value = snapshot
+        .rows
+        .iter()
+        .filter_map(|record| record.get(field_index))
+        .find(|value| pivot_cache_scalar(value).ok().as_ref() == Some(scalar))
+        .ok_or("无法从来源记录恢复 Pivot 轴标签")?;
+    let (kind, input) = match value {
+        Data::String(value) => ("string", value.clone()),
+        Data::Int(value) => ("number", value.to_string()),
+        Data::Float(value) => ("number", pivot_cache_number(*value)?),
+        Data::Bool(value) => ("boolean", value.to_string()),
+        Data::DateTime(value) => ("number", pivot_cache_number(value.as_f64())?),
+        Data::DateTimeIso(value) => ("string", value.clone()),
+        Data::Empty => ("string", "(空白)".into()),
+        Data::Error(_) | Data::DurationIso(_) => {
+            return Err("隔离同步重建暂不支持该轴标签类型".into())
+        }
+    };
+    Ok(WorkbookCellEdit {
+        sheet: sheet.into(),
+        row,
+        column,
+        input,
+        kind: kind.into(),
+    })
+}
+
+fn pivot_measure_edit(
+    accumulator: MeasureAccumulator,
+    output_sheet: &str,
+    row: usize,
+    column: usize,
+) -> Result<WorkbookCellEdit, String> {
+    let measure = accumulator.finish();
+    Ok(match measure.value {
+        Some(value) => WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row,
+            column,
+            input: pivot_cache_number(value)?,
+            kind: "number".into(),
+        },
+        None => WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row,
+            column,
+            input: String::new(),
+            kind: "empty".into(),
+        },
+    })
+}
+
+fn build_pivot_output_edits(
+    snapshot: &crate::formats::workbook_pivot::PivotSourceSnapshot,
+    pivot: &WorkbookPivotTable,
+    fields: &[PivotCacheFieldTemplate],
+    row_axis: &PivotAxisRebuildTemplate,
+    column_axis: &PivotAxisRebuildTemplate,
+    layout: &PivotOutputLayout,
+    output_sheet: &str,
+    allow_resize: bool,
+) -> Result<(Vec<WorkbookCellEdit>, PivotOutputLayout), String> {
+    let row_visible = row_axis
+        .hidden
+        .iter()
+        .enumerate()
+        .filter_map(|(index, hidden)| (!hidden).then_some(index))
+        .collect::<Vec<_>>();
+    let column_visible = column_axis
+        .hidden
+        .iter()
+        .enumerate()
+        .filter_map(|(index, hidden)| (!hidden).then_some(index))
+        .collect::<Vec<_>>();
+    if row_visible.is_empty() || column_visible.is_empty() {
+        return Err("隔离同步重建要求至少一个可见行项和列项".into());
+    }
+    let data_start_row = layout
+        .top
+        .checked_add(layout.first_data_row)
+        .ok_or("透视输出行坐标溢出")?;
+    let data_start_column = layout
+        .left
+        .checked_add(layout.first_data_column)
+        .ok_or("透视输出列坐标溢出")?;
+    let new_bottom = data_start_row + row_visible.len();
+    let new_right = data_start_column + column_visible.len();
+    if !allow_resize && (layout.bottom != new_bottom || layout.right != new_right) {
+        return Err("透视输出声明范围与可见行列项数量不一致".into());
+    }
+    let data_field = pivot.audit.data_fields.first().ok_or("透视表缺少值字段")?;
+    let mut values = (0..row_visible.len())
+        .map(|_| {
+            (0..column_visible.len())
+                .map(|_| MeasureAccumulator::new(data_field))
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+    let mut row_totals = (0..row_visible.len())
+        .map(|_| MeasureAccumulator::new(data_field))
+        .collect::<Vec<_>>();
+    let mut column_totals = (0..column_visible.len())
+        .map(|_| MeasureAccumulator::new(data_field))
+        .collect::<Vec<_>>();
+    let mut grand_total = MeasureAccumulator::new(data_field);
+    let row_positions = row_visible
+        .iter()
+        .enumerate()
+        .map(|(position, index)| (*index, position))
+        .collect::<HashMap<_, _>>();
+    let column_positions = column_visible
+        .iter()
+        .enumerate()
+        .map(|(position, index)| (*index, position))
+        .collect::<HashMap<_, _>>();
+    for (source_row, record) in snapshot.rows.iter().enumerate() {
+        let row_scalar = pivot_cache_scalar(
+            record
+                .get(row_axis.field_index)
+                .ok_or("透视来源记录缺少行字段")?,
+        )?;
+        let column_scalar = pivot_cache_scalar(
+            record
+                .get(column_axis.field_index)
+                .ok_or("透视来源记录缺少列字段")?,
+        )?;
+        let row_index = fields[row_axis.field_index]
+            .shared_items
+            .iter()
+            .position(|item| item == &row_scalar)
+            .ok_or("行字段来源值不在 sharedItems 中")?;
+        let column_index = fields[column_axis.field_index]
+            .shared_items
+            .iter()
+            .position(|item| item == &column_scalar)
+            .ok_or("列字段来源值不在 sharedItems 中")?;
+        let (Some(row_position), Some(column_position)) = (
+            row_positions.get(&row_index),
+            column_positions.get(&column_index),
+        ) else {
+            continue;
+        };
+        let value = record
+            .get(data_field.source_index)
+            .ok_or("透视来源记录缺少值字段")?;
+        values[*row_position][*column_position].add(value, source_row + 1)?;
+        row_totals[*row_position].add(value, source_row + 1)?;
+        column_totals[*column_position].add(value, source_row + 1)?;
+        grand_total.add(value, source_row + 1)?;
+    }
+
+    let mut edits = Vec::new();
+    for (position, index) in column_visible.iter().enumerate() {
+        edits.push(pivot_axis_edit(
+            snapshot,
+            column_axis.field_index,
+            &fields[column_axis.field_index].shared_items[*index],
+            data_start_row - 1,
+            data_start_column + position,
+            output_sheet,
+        )?);
+    }
+    for (position, index) in row_visible.iter().enumerate() {
+        edits.push(pivot_axis_edit(
+            snapshot,
+            row_axis.field_index,
+            &fields[row_axis.field_index].shared_items[*index],
+            data_start_row + position,
+            layout.left,
+            output_sheet,
+        )?);
+    }
+    for (row, values) in values.iter().enumerate() {
+        for (column, value) in values.iter().cloned().enumerate() {
+            edits.push(pivot_measure_edit(
+                value,
+                output_sheet,
+                data_start_row + row,
+                data_start_column + column,
+            )?);
+        }
+        edits.push(pivot_measure_edit(
+            row_totals[row].clone(),
+            output_sheet,
+            data_start_row + row,
+            new_right,
+        )?);
+    }
+    for (column, value) in column_totals.into_iter().enumerate() {
+        edits.push(pivot_measure_edit(
+            value,
+            output_sheet,
+            new_bottom,
+            data_start_column + column,
+        )?);
+    }
+    edits.push(pivot_measure_edit(
+        grand_total,
+        output_sheet,
+        new_bottom,
+        new_right,
+    )?);
+    Ok((
+        edits,
+        PivotOutputLayout {
+            top: layout.top,
+            bottom: new_bottom,
+            left: layout.left,
+            right: new_right,
+            first_data_row: layout.first_data_row,
+            first_data_column: layout.first_data_column,
+        },
+    ))
+}
+
+fn verify_pivot_output_values(
+    source: &[u8],
+    output_sheet: &str,
+    edits: &[WorkbookCellEdit],
+) -> Result<bool, String> {
+    let mut workbook: Xlsx<_> = open_workbook_from_rs(Cursor::new(source))
+        .map_err(|error| format!("复读隔离透视输出失败: {error}"))?;
+    let values = workbook
+        .worksheet_range(output_sheet)
+        .map_err(|error| format!("读取隔离透视输出工作表失败: {error}"))?;
+    for edit in edits {
+        let actual = values
+            .get_value((edit.row as u32, edit.column as u32))
+            .cloned()
+            .unwrap_or(Data::Empty);
+        let matches = match edit.kind.as_str() {
+            "string" => matches!(actual, Data::String(ref value) if value == &edit.input),
+            "boolean" => {
+                matches!(actual, Data::Bool(value) if value == edit.input.eq_ignore_ascii_case("true"))
+            }
+            "number" => {
+                let expected = edit
+                    .input
+                    .parse::<f64>()
+                    .map_err(|_| "隔离透视输出验证数字无效")?;
+                let actual = match actual {
+                    Data::Int(value) => Some(value as f64),
+                    Data::Float(value) => Some(value),
+                    Data::DateTime(value) => Some(value.as_f64()),
+                    _ => None,
+                };
+                actual.is_some_and(|actual| (actual - expected).abs() <= 1e-9)
+            }
+            "empty" => matches!(actual, Data::Empty),
+            _ => false,
+        };
+        if !matches {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+pub(crate) fn rebuild_workbook_pivot_isolated(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+) -> Result<(Vec<u8>, WorkbookPivotSynchronizedRebuildResult), String> {
+    let plan = plan_workbook_pivot_rebuild(source, pivot)?;
+    let (cache_isolated, cache_result) = rebuild_workbook_pivot_cache_isolated(source, pivot)?;
+    let pivot_part = plan
+        .affected_parts
+        .iter()
+        .find(|impact| impact.role == "pivot_table")
+        .map(|impact| impact.part.clone())
+        .ok_or("隔离计划缺少 Pivot Table 部件")?;
+    let output_part = plan
+        .affected_parts
+        .iter()
+        .find(|impact| impact.role == "output_worksheet")
+        .map(|impact| impact.part.clone())
+        .ok_or("隔离计划缺少输出工作表部件")?;
+    let output_sheet = plan
+        .output_sheet
+        .as_deref()
+        .ok_or("隔离计划缺少输出工作表")?;
+    let definition_part = plan
+        .affected_parts
+        .iter()
+        .find(|impact| impact.role == "cache_definition")
+        .map(|impact| impact.part.clone())
+        .ok_or("隔离计划缺少 Cache Definition 部件")?;
+    let snapshot = read_pivot_source_snapshot(source, pivot)?;
+    let mut entries = load_package(&cache_isolated)?;
+    let definition_index = entries
+        .iter()
+        .position(|entry| entry.name == definition_part)
+        .ok_or("隔离包缺少 Cache Definition 部件")?;
+    let pivot_index = entries
+        .iter()
+        .position(|entry| entry.name == pivot_part)
+        .ok_or("隔离包缺少 Pivot Table 部件")?;
+    let output_index = entries
+        .iter()
+        .position(|entry| entry.name == output_part)
+        .ok_or("隔离包缺少输出工作表部件")?;
+    let fields = parse_pivot_cache_field_templates(&entries[definition_index].data)?;
+    let (row_axis, column_axis, layout) =
+        parse_pivot_axis_templates(&entries[pivot_index].data, pivot, &fields)?;
+    let (output_edits, rebuilt_layout) = build_pivot_output_edits(
+        &snapshot,
+        pivot,
+        &fields,
+        &row_axis,
+        &column_axis,
+        &layout,
+        output_sheet,
+        false,
+    )?;
+    let mut patches = SheetPatches::new();
+    for edit in &output_edits {
+        patches.entry(edit.row).or_default().insert(
+            edit.column,
+            CellPatch {
+                edit: Some(edit),
+                style_id: None,
+            },
+        );
+    }
+    entries[pivot_index].data = rebuild_pivot_table_layout(
+        &entries[pivot_index].data,
+        &row_axis,
+        &column_axis,
+        Some(&rebuilt_layout),
+    )?;
+    entries[output_index].data = patch_sheet_xml(&entries[output_index].data, &patches)?;
+    let modified_paths = plan
+        .affected_parts
+        .iter()
+        .map(|impact| impact.part.clone())
+        .collect::<HashSet<_>>();
+    let isolated = write_package_preserving_unchanged(source, entries, &modified_paths)?;
+    validate_workbook_package(&isolated)?;
+    let linked = read_workbook_linked_data(&isolated)?;
+    let rebuilt = linked
+        .pivot_tables
+        .iter()
+        .find(|candidate| candidate.part == pivot.part)
+        .ok_or("同步重建后透视表身份丢失")?;
+    let semantic_reparse_valid = rebuilt.audit.cache_record_count == Some(snapshot.rows.len())
+        && rebuilt.audit.writeback.status == "structure_candidate";
+    if !semantic_reparse_valid {
+        return Err("隔离同步重建后的语义复读未通过".into());
+    }
+    let output_values_verified =
+        verify_pivot_output_values(&isolated, output_sheet, &output_edits)?;
+    if !output_values_verified {
+        return Err("隔离同步重建后的输出值复读未通过".into());
+    }
+    let source_entries = load_package(source)?
+        .into_iter()
+        .map(|entry| (entry.name, entry.data))
+        .collect::<HashMap<_, _>>();
+    let isolated_entries = load_package(&isolated)?
+        .into_iter()
+        .map(|entry| (entry.name, entry.data))
+        .collect::<HashMap<_, _>>();
+    let untouched_parts_preserved = source_entries.iter().all(|(name, data)| {
+        modified_paths.contains(name)
+            || isolated_entries
+                .get(name)
+                .is_some_and(|candidate| candidate == data)
+    });
+    if !untouched_parts_preserved {
+        return Err("隔离同步重建改写了四类影响清单外的部件".into());
+    }
+    let source_digest = format!("{:x}", md5::compute(source));
+    let isolated_digest = format!("{:x}", md5::compute(&isolated));
+    if source_digest == isolated_digest {
+        return Err("隔离同步重建未产生新的包摘要".into());
+    }
+    let visible_row_item_count = row_axis.hidden.iter().filter(|hidden| !**hidden).count();
+    let visible_column_item_count = column_axis.hidden.iter().filter(|hidden| !**hidden).count();
+    let gate = |id: &str, status: &str| WorkbookPivotRebuildGate {
+        id: id.into(),
+        status: status.into(),
+    };
+    Ok((
+        isolated,
+        WorkbookPivotSynchronizedRebuildResult {
+            pivot_name: pivot.name.clone(),
+            status: "isolated_pivot_rebuilt".into(),
+            execution: "temporary_copy_only".into(),
+            writes_user_file: false,
+            source_record_count: cache_result.source_record_count,
+            rebuilt_record_count: cache_result.rebuilt_record_count,
+            visible_row_item_count,
+            visible_column_item_count,
+            output_cell_count: output_edits.len(),
+            rebuilt_parts: plan
+                .affected_parts
+                .iter()
+                .map(|impact| impact.part.clone())
+                .collect(),
+            preserved_part_count: plan.preserved_part_count,
+            source_package_digest: source_digest,
+            isolated_package_digest: isolated_digest,
+            package_valid: true,
+            semantic_reparse_valid,
+            output_values_verified,
+            untouched_parts_preserved,
+            fields: cache_result.fields,
+            gates: vec![
+                gate("signature_check", "passed"),
+                gate("impact_inventory", "passed"),
+                gate("cache_definition_rebuild", "passed"),
+                gate("cache_records_rebuild", "passed"),
+                gate("pivot_items_rebuild", "passed"),
+                gate("row_items_rebuild", "passed"),
+                gate("column_items_rebuild", "passed"),
+                gate("output_cells_rebuild", "passed"),
+                gate("package_validation", "passed"),
+                gate("semantic_reparse", "passed"),
+                gate("output_value_reparse", "passed"),
+                gate("untouched_part_preservation", "passed"),
+                gate("atomic_replace", "blocked"),
+                gate("excel_or_libreoffice_round_trip", "pending"),
+            ],
+        },
+    ))
+}
+
+fn reconcile_pivot_axis_shared_items(
+    snapshot: &crate::formats::workbook_pivot::PivotSourceSnapshot,
+    fields: &mut [PivotCacheFieldTemplate],
+    axis: &mut PivotAxisRebuildTemplate,
+) -> Result<(usize, usize), String> {
+    let field = fields
+        .get_mut(axis.field_index)
+        .ok_or("Pivot 轴字段索引超出 Cache 字段范围")?;
+    let mut source_items = Vec::<PivotCacheScalar>::new();
+    for record in &snapshot.rows {
+        let scalar = pivot_cache_scalar(
+            record
+                .get(axis.field_index)
+                .ok_or("透视来源记录缺少轴字段")?,
+        )?;
+        if !source_items.contains(&scalar) {
+            source_items.push(scalar);
+        }
+    }
+    if source_items.is_empty() {
+        return Err("透视轴字段没有可重建项".into());
+    }
+    let existing_kind = field
+        .shared_items
+        .iter()
+        .find(|item| item.kind != "m")
+        .map(|item| item.kind.as_str());
+    if let Some(existing_kind) = existing_kind {
+        if source_items
+            .iter()
+            .any(|item| item.kind != "m" && item.kind != existing_kind)
+        {
+            return Err("新增 Pivot sharedItem 与原字段类型不一致".into());
+        }
+    }
+    let old_items = field.shared_items.clone();
+    let old_hidden = axis.hidden.clone();
+    let mut reconciled = old_items
+        .iter()
+        .filter(|item| source_items.contains(item))
+        .cloned()
+        .collect::<Vec<_>>();
+    let removed = old_items.len().saturating_sub(reconciled.len());
+    let mut added = 0usize;
+    for item in source_items {
+        if !reconciled.contains(&item) {
+            reconciled.push(item);
+            added = added.saturating_add(1);
+        }
+    }
+    axis.hidden = reconciled
+        .iter()
+        .map(|item| {
+            old_items
+                .iter()
+                .position(|old| old == item)
+                .and_then(|index| old_hidden.get(index).copied())
+                .unwrap_or(false)
+        })
+        .collect();
+    field.shared_items = reconciled;
+    Ok((added, removed))
+}
+
+fn output_layout_reference(layout: &PivotOutputLayout) -> Result<String, String> {
+    Ok(format!(
+        "{}:{}",
+        cell_reference(layout.top, layout.left)?,
+        cell_reference(layout.bottom, layout.right)?
+    ))
+}
+
+fn read_pivot_output_labels(
+    source: &[u8],
+    output_sheet: &str,
+    layout: &PivotOutputLayout,
+    fallback_row_header: &str,
+) -> Result<(String, String, String), String> {
+    let mut workbook: Xlsx<_> = open_workbook_from_rs(Cursor::new(source))
+        .map_err(|error| format!("读取原透视输出标签失败: {error}"))?;
+    let values = workbook
+        .worksheet_range(output_sheet)
+        .map_err(|error| format!("读取原透视输出工作表失败: {error}"))?;
+    let header_row = layout.top + layout.first_data_row - 1;
+    let text_at = |row: usize, column: usize, fallback: &str| {
+        values
+            .get_value((row as u32, column as u32))
+            .filter(|value| !matches!(value, Data::Empty))
+            .map(ToString::to_string)
+            .unwrap_or_else(|| fallback.into())
+    };
+    Ok((
+        text_at(header_row, layout.left, fallback_row_header),
+        text_at(header_row, layout.right, "Grand Total"),
+        text_at(layout.bottom, layout.left, "Grand Total"),
+    ))
+}
+
+pub(crate) fn rebuild_workbook_pivot_expanded_isolated(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+) -> Result<(Vec<u8>, WorkbookPivotExpandedRebuildResult), String> {
+    let plan = plan_workbook_pivot_rebuild(source, pivot)?;
+    if plan.status != "isolated_dry_run_ready" {
+        return Err(format!(
+            "透视表未通过隔离扩缩容计划：{}",
+            plan.blockers.join("；")
+        ));
+    }
+    let part_for = |role: &str| {
+        plan.affected_parts
+            .iter()
+            .find(|impact| impact.role == role)
+            .map(|impact| impact.part.clone())
+            .ok_or_else(|| format!("隔离计划缺少 {role} 部件"))
+    };
+    let definition_part = part_for("cache_definition")?;
+    let records_part = part_for("cache_records")?;
+    let pivot_part = part_for("pivot_table")?;
+    let output_part = part_for("output_worksheet")?;
+    let output_sheet = plan
+        .output_sheet
+        .as_deref()
+        .ok_or("隔离计划缺少输出工作表")?;
+    let snapshot = read_pivot_source_snapshot(source, pivot)?;
+    let mut entries = load_package(source)?;
+    let definition_index = entries
+        .iter()
+        .position(|entry| entry.name == definition_part)
+        .ok_or("源包缺少 Cache Definition 部件")?;
+    let records_index = entries
+        .iter()
+        .position(|entry| entry.name == records_part)
+        .ok_or("源包缺少 Cache Records 部件")?;
+    let pivot_index = entries
+        .iter()
+        .position(|entry| entry.name == pivot_part)
+        .ok_or("源包缺少 Pivot Table 部件")?;
+    let output_index = entries
+        .iter()
+        .position(|entry| entry.name == output_part)
+        .ok_or("源包缺少输出工作表部件")?;
+    let mut fields = parse_pivot_cache_field_templates(&entries[definition_index].data)?;
+    if fields.len() != snapshot.headers.len()
+        || fields
+            .iter()
+            .zip(snapshot.headers.iter())
+            .any(|(field, header)| field.name.trim() != header.trim())
+    {
+        return Err("来源表头与 Cache Definition 字段模板不一致".into());
+    }
+    let (mut row_axis, mut column_axis, old_layout) =
+        parse_pivot_axis_templates(&entries[pivot_index].data, pivot, &fields)?;
+    let (row_added, row_removed) =
+        reconcile_pivot_axis_shared_items(&snapshot, &mut fields, &mut row_axis)?;
+    let (column_added, column_removed) =
+        reconcile_pivot_axis_shared_items(&snapshot, &mut fields, &mut column_axis)?;
+    let added_shared_item_count = row_added.saturating_add(column_added);
+    let removed_shared_item_count = row_removed.saturating_add(column_removed);
+
+    let (records_xml, field_summaries) = rebuild_pivot_cache_records(&snapshot.rows, &fields)?;
+    let definition_xml = rebuild_pivot_cache_definition(
+        &entries[definition_index].data,
+        snapshot.rows.len(),
+        &fields,
+        &snapshot.rows,
+        true,
+    )?;
+    let (mut output_edits, new_layout) = build_pivot_output_edits(
+        &snapshot,
+        pivot,
+        &fields,
+        &row_axis,
+        &column_axis,
+        &old_layout,
+        output_sheet,
+        true,
+    )?;
+    let row_field_name = fields
+        .get(row_axis.field_index)
+        .map(|field| field.name.as_str())
+        .unwrap_or("Row Labels");
+    let (row_header, grand_header, grand_row) =
+        read_pivot_output_labels(source, output_sheet, &old_layout, row_field_name)?;
+    let new_header_row = new_layout.top + new_layout.first_data_row - 1;
+    output_edits.extend([
+        WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row: new_header_row,
+            column: new_layout.left,
+            input: row_header,
+            kind: "string".into(),
+        },
+        WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row: new_header_row,
+            column: new_layout.right,
+            input: grand_header,
+            kind: "string".into(),
+        },
+        WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row: new_layout.bottom,
+            column: new_layout.left,
+            input: grand_row,
+            kind: "string".into(),
+        },
+    ]);
+    let desired_coordinates = output_edits
+        .iter()
+        .map(|edit| (edit.row, edit.column))
+        .collect::<HashSet<_>>();
+    let old_header_row = old_layout.top + old_layout.first_data_row - 1;
+    let stale_coordinates = (old_header_row..=old_layout.bottom)
+        .flat_map(|row| (old_layout.left..=old_layout.right).map(move |column| (row, column)))
+        .filter(|coordinate| !desired_coordinates.contains(coordinate))
+        .collect::<Vec<_>>();
+    let cleared_stale_cell_count = stale_coordinates.len();
+    let mut edit_map = BTreeMap::<(usize, usize), WorkbookCellEdit>::new();
+    for (row, column) in stale_coordinates {
+        edit_map.insert(
+            (row, column),
+            WorkbookCellEdit {
+                sheet: output_sheet.into(),
+                row,
+                column,
+                input: String::new(),
+                kind: "empty".into(),
+            },
+        );
+    }
+    for edit in output_edits {
+        edit_map.insert((edit.row, edit.column), edit);
+    }
+    let all_edits = edit_map.into_values().collect::<Vec<_>>();
+
+    let (_, old_styles) = read_sheet_formulas_and_style_ids(
+        &entries[output_index].data,
+        old_header_row,
+        old_layout.bottom + 1,
+        old_layout.right + 1,
+    )?;
+    let data_start_row = old_layout.top + old_layout.first_data_row;
+    let data_start_column = old_layout.left + old_layout.first_data_column;
+    let header_style = old_styles
+        .get(&(old_header_row, data_start_column))
+        .copied();
+    let header_total_style = old_styles
+        .get(&(old_header_row, old_layout.right))
+        .copied()
+        .or(header_style);
+    let row_label_style = old_styles.get(&(data_start_row, old_layout.left)).copied();
+    let grand_label_style = old_styles
+        .get(&(old_layout.bottom, old_layout.left))
+        .copied()
+        .or(row_label_style);
+    let value_style = old_styles
+        .get(&(data_start_row, data_start_column))
+        .copied();
+    let style_for = |edit: &WorkbookCellEdit| {
+        if edit.kind == "empty" {
+            None
+        } else if edit.row == new_header_row {
+            if edit.column == new_layout.right {
+                header_total_style
+            } else {
+                header_style
+            }
+        } else if edit.column == new_layout.left {
+            if edit.row == new_layout.bottom {
+                grand_label_style
+            } else {
+                row_label_style
+            }
+        } else {
+            value_style
+        }
+    };
+    let extended_style_cell_count = all_edits
+        .iter()
+        .filter(|edit| {
+            (edit.row > old_layout.bottom || edit.column > old_layout.right)
+                && style_for(edit).is_some()
+        })
+        .count();
+    let mut patches = SheetPatches::new();
+    for edit in &all_edits {
+        patches.entry(edit.row).or_default().insert(
+            edit.column,
+            CellPatch {
+                edit: Some(edit),
+                style_id: style_for(edit),
+            },
+        );
+    }
+    entries[definition_index].data = definition_xml;
+    entries[records_index].data = records_xml;
+    entries[pivot_index].data = rebuild_pivot_table_layout(
+        &entries[pivot_index].data,
+        &row_axis,
+        &column_axis,
+        Some(&new_layout),
+    )?;
+    entries[output_index].data = patch_sheet_xml(&entries[output_index].data, &patches)?;
+    let modified_paths = plan
+        .affected_parts
+        .iter()
+        .map(|impact| impact.part.clone())
+        .collect::<HashSet<_>>();
+    let isolated = write_package_preserving_unchanged(source, entries, &modified_paths)?;
+    validate_workbook_package(&isolated)?;
+    let linked = read_workbook_linked_data(&isolated)?;
+    let rebuilt = linked
+        .pivot_tables
+        .iter()
+        .find(|candidate| candidate.part == pivot.part)
+        .ok_or("扩缩容重建后透视表身份丢失")?;
+    let new_output_range = output_layout_reference(&new_layout)?;
+    let semantic_reparse_valid = rebuilt.audit.cache_record_count == Some(snapshot.rows.len())
+        && rebuilt.audit.layout_range.as_deref() == Some(new_output_range.as_str())
+        && rebuilt.audit.writeback.status == "structure_candidate";
+    if !semantic_reparse_valid {
+        return Err("隔离扩缩容重建后的语义复读未通过".into());
+    }
+    let output_values_verified = verify_pivot_output_values(&isolated, output_sheet, &all_edits)?;
+    if !output_values_verified {
+        return Err("隔离扩缩容重建后的输出值或旧区域清理复读未通过".into());
+    }
+    let source_entries = load_package(source)?
+        .into_iter()
+        .map(|entry| (entry.name, entry.data))
+        .collect::<HashMap<_, _>>();
+    let isolated_entries = load_package(&isolated)?
+        .into_iter()
+        .map(|entry| (entry.name, entry.data))
+        .collect::<HashMap<_, _>>();
+    let untouched_parts_preserved = source_entries.iter().all(|(name, data)| {
+        modified_paths.contains(name)
+            || isolated_entries
+                .get(name)
+                .is_some_and(|candidate| candidate == data)
+    });
+    if !untouched_parts_preserved {
+        return Err("隔离扩缩容重建改写了四类影响清单外的部件".into());
+    }
+    let source_digest = format!("{:x}", md5::compute(source));
+    let isolated_digest = format!("{:x}", md5::compute(&isolated));
+    if source_digest == isolated_digest {
+        return Err("隔离扩缩容重建未产生新的包摘要".into());
+    }
+    let visible_row_item_count = row_axis.hidden.iter().filter(|hidden| !**hidden).count();
+    let visible_column_item_count = column_axis.hidden.iter().filter(|hidden| !**hidden).count();
+    let gate = |id: &str, status: &str| WorkbookPivotRebuildGate {
+        id: id.into(),
+        status: status.into(),
+    };
+    Ok((
+        isolated,
+        WorkbookPivotExpandedRebuildResult {
+            pivot_name: pivot.name.clone(),
+            status: "isolated_layout_resized".into(),
+            execution: "temporary_copy_only".into(),
+            writes_user_file: false,
+            rebuilt_record_count: snapshot.rows.len(),
+            added_shared_item_count,
+            removed_shared_item_count,
+            visible_row_item_count,
+            visible_column_item_count,
+            old_output_range: output_layout_reference(&old_layout)?,
+            new_output_range,
+            output_cell_count: desired_coordinates.len(),
+            cleared_stale_cell_count,
+            extended_style_cell_count,
+            rebuilt_parts: plan
+                .affected_parts
+                .iter()
+                .map(|impact| impact.part.clone())
+                .collect(),
+            preserved_part_count: plan.preserved_part_count,
+            source_package_digest: source_digest,
+            isolated_package_digest: isolated_digest,
+            package_valid: true,
+            semantic_reparse_valid,
+            output_values_verified,
+            untouched_parts_preserved,
+            fields: field_summaries,
+            gates: vec![
+                gate("signature_check", "passed"),
+                gate("impact_inventory", "passed"),
+                gate("shared_items_reconcile", "passed"),
+                gate("cache_definition_rebuild", "passed"),
+                gate("cache_records_rebuild", "passed"),
+                gate("pivot_items_rebuild", "passed"),
+                gate("axis_items_rebuild", "passed"),
+                gate("location_resize", "passed"),
+                gate("stale_output_cleanup", "passed"),
+                gate("style_extension", "passed"),
+                gate("output_cells_rebuild", "passed"),
+                gate("package_validation", "passed"),
+                gate("semantic_reparse", "passed"),
+                gate("output_value_reparse", "passed"),
+                gate("untouched_part_preservation", "passed"),
+                gate("atomic_replace", "blocked"),
+                gate("excel_or_libreoffice_round_trip", "pending"),
+            ],
+        },
+    ))
+}
+
+fn rewrite_pivot_data_field_aggregation(xml: &[u8], aggregation: &str) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 32));
+    let mut buffer = Vec::new();
+    let mut rewritten = 0usize;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析聚合变体 Pivot 定义失败: {error}"))?;
+        match event {
+            Event::Start(ref start) | Event::Empty(ref start)
+                if start.local_name().as_ref() == b"dataField" =>
+            {
+                rewritten = rewritten.saturating_add(1);
+                let updated =
+                    replace_xml_attribute(start, b"subtotal", aggregation, false)?.into_owned();
+                let updated_event = if matches!(event, Event::Start(_)) {
+                    Event::Start(updated)
+                } else {
+                    Event::Empty(updated)
+                };
+                writer
+                    .write_event(updated_event)
+                    .map_err(|error| format!("写入聚合变体 Pivot 定义失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制聚合变体 Pivot 定义失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if rewritten != 1 {
+        return Err("聚合变体隔离验证当前要求恰好一个值字段".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn build_pivot_aggregation_variant_package(
+    source: &[u8],
+    pivot_part: &str,
+    aggregation: &str,
+) -> Result<Vec<u8>, String> {
+    let mut entries = load_package(source)?;
+    let pivot = entries
+        .iter_mut()
+        .find(|entry| entry.name == pivot_part)
+        .ok_or("聚合变体隔离包缺少 Pivot Table 部件")?;
+    pivot.data = rewrite_pivot_data_field_aggregation(&pivot.data, aggregation)?;
+    let modified_paths = HashSet::from([pivot_part.to_string()]);
+    write_package_preserving_unchanged(source, entries, &modified_paths)
+}
+
+fn verify_pivot_semantic_layout_variant(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+    layout: &str,
+    row_field_count: usize,
+    column_field_count: usize,
+    aggregations: &[&str],
+) -> Result<WorkbookPivotLayoutVariant, String> {
+    let mut variant = pivot.clone();
+    for field in &mut variant.audit.fields {
+        if field.role == "row" && row_field_count == 0 {
+            field.role = "unused".into();
+        }
+        if field.role == "column" && column_field_count == 0 {
+            field.role = "unused".into();
+        }
+    }
+    variant.audit.row_field_count = row_field_count;
+    variant.audit.column_field_count = column_field_count;
+    let template = variant
+        .audit
+        .data_fields
+        .first()
+        .cloned()
+        .ok_or("布局变体缺少值字段模板")?;
+    variant.audit.data_fields = aggregations
+        .iter()
+        .map(|aggregation| {
+            let mut field = template.clone();
+            field.aggregation = (*aggregation).into();
+            field.name = format!("{} ({aggregation})", template.name);
+            field
+        })
+        .collect();
+    variant.audit.data_field_count = variant.audit.data_fields.len();
+    let preview = preview_pivot(source, &variant, Vec::new())?;
+    let semantic_shape_valid = preview.groups.iter().all(|group| {
+        group.row_keys.len() == row_field_count
+            && group.column_keys.len() == column_field_count
+            && group.measures.len() == aggregations.len()
+            && group
+                .measures
+                .iter()
+                .zip(aggregations.iter())
+                .all(|(measure, aggregation)| measure.aggregation == *aggregation)
+    });
+    if preview.groups.is_empty() || !semantic_shape_valid {
+        return Err(format!("{layout} 布局变体的分组或度量语义未通过"));
+    }
+    Ok(WorkbookPivotLayoutVariant {
+        layout: layout.into(),
+        row_field_count,
+        column_field_count,
+        data_field_count: aggregations.len(),
+        group_count: preview.groups.len(),
+        measure_count: aggregations.len(),
+        output_value_count: preview.groups.len().saturating_mul(aggregations.len()),
+        status: "semantic_verified".into(),
+    })
+}
+
+pub(crate) fn verify_workbook_pivot_variants_isolated(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+) -> Result<WorkbookPivotVariantVerificationResult, String> {
+    if pivot.audit.row_field_count != 1
+        || pivot.audit.column_field_count != 1
+        || pivot.audit.data_field_count != 1
+        || pivot.audit.page_field_count != 0
+    {
+        return Err(
+            "聚合与布局变体隔离验证要求一个行字段、一个列字段、一个值字段且无页面筛选".into(),
+        );
+    }
+    let aggregations = [
+        "sum",
+        "count",
+        "average",
+        "max",
+        "min",
+        "product",
+        "countNums",
+    ];
+    let mut aggregation_variants = Vec::with_capacity(aggregations.len());
+    for aggregation in aggregations {
+        let variant_source =
+            build_pivot_aggregation_variant_package(source, &pivot.part, aggregation)?;
+        let linked = read_workbook_linked_data(&variant_source)?;
+        let variant_pivot = linked
+            .pivot_tables
+            .iter()
+            .find(|candidate| candidate.part == pivot.part)
+            .ok_or("聚合变体隔离包中的 Pivot 身份丢失")?;
+        if variant_pivot
+            .audit
+            .data_fields
+            .first()
+            .is_none_or(|field| field.aggregation != aggregation || !field.supported)
+        {
+            return Err(format!("{aggregation} 聚合变体语义复读失败"));
+        }
+        let (_, rebuilt) =
+            rebuild_workbook_pivot_expanded_isolated(&variant_source, variant_pivot)?;
+        if !rebuilt.package_valid
+            || !rebuilt.semantic_reparse_valid
+            || !rebuilt.output_values_verified
+            || !rebuilt.untouched_parts_preserved
+        {
+            return Err(format!("{aggregation} 聚合变体未通过隔离包完整门禁"));
+        }
+        aggregation_variants.push(WorkbookPivotAggregationVariant {
+            aggregation: aggregation.into(),
+            status: "package_verified".into(),
+            output_range: rebuilt.new_output_range,
+            output_cell_count: rebuilt.output_cell_count,
+        });
+    }
+
+    let layout_variants = vec![
+        verify_pivot_semantic_layout_variant(source, pivot, "row_only", 1, 0, &["sum"])?,
+        verify_pivot_semantic_layout_variant(source, pivot, "column_only", 0, 1, &["sum"])?,
+        verify_pivot_semantic_layout_variant(
+            source,
+            pivot,
+            "multi_measure",
+            1,
+            1,
+            &["sum", "count", "average"],
+        )?,
+    ];
+    let package_variants_verified = aggregation_variants.len() == aggregations.len()
+        && aggregation_variants
+            .iter()
+            .all(|variant| variant.status == "package_verified");
+    let semantic_variants_verified = layout_variants.len() == 3
+        && layout_variants
+            .iter()
+            .all(|variant| variant.status == "semantic_verified");
+    if !package_variants_verified || !semantic_variants_verified {
+        return Err("聚合与布局变体隔离验证未完整通过".into());
+    }
+    let gate = |id: &str, status: &str| WorkbookPivotRebuildGate {
+        id: id.into(),
+        status: status.into(),
+    };
+    Ok(WorkbookPivotVariantVerificationResult {
+        pivot_name: pivot.name.clone(),
+        status: "isolated_variants_verified".into(),
+        execution: "temporary_copy_and_memory_only".into(),
+        writes_user_file: false,
+        package_variant_count: aggregation_variants.len(),
+        semantic_variant_count: layout_variants.len(),
+        source_package_digest: format!("{:x}", md5::compute(source)),
+        aggregation_variants,
+        layout_variants,
+        package_variants_verified,
+        semantic_variants_verified,
+        gates: vec![
+            gate("signature_check", "passed"),
+            gate("aggregation_variant_packages", "passed"),
+            gate("non_sum_output_reparse", "passed"),
+            gate("single_axis_semantics", "passed"),
+            gate("multi_measure_semantics", "passed"),
+            gate("package_validation", "passed"),
+            gate("semantic_reparse", "passed"),
+            gate("output_value_reparse", "passed"),
+            gate("untouched_part_preservation", "passed"),
+            gate("source_package_unchanged", "passed"),
+            gate("atomic_replace", "blocked"),
+            gate("excel_or_libreoffice_round_trip", "pending"),
+        ],
+    })
+}
+
+pub fn validate_workbook_calculation_boundary(source: &[u8]) -> Result<(), String> {
+    let entries = load_package(source)?;
+    if entries.iter().any(|entry| {
+        entry.name.starts_with("xl/externalLinks/externalLink") && entry.name.ends_with(".xml")
+    }) {
+        return Err(
+            "公式重算保持离线：包含外部工作簿链接的 XLSX 只保留公式和缓存结果，不执行重算".into(),
+        );
+    }
+    for entry in entries
+        .iter()
+        .filter(|entry| entry.name.starts_with("xl/worksheets/") && entry.name.ends_with(".xml"))
+    {
+        let mut reader = Reader::from_reader(entry.data.as_slice());
+        let mut buffer = Vec::new();
+        let mut array_formula = false;
+        loop {
+            match reader
+                .read_event_into(&mut buffer)
+                .map_err(|error| format!("解析 Excel 数组公式边界失败: {error}"))?
+            {
+                Event::Start(ref event) if event.local_name().as_ref() == b"f" => {
+                    array_formula =
+                        xml_value(event, b"t", reader.decoder())?.as_deref() == Some("array");
+                    if array_formula
+                        && xml_value(event, b"ref", reader.decoder())?
+                            .is_some_and(|range| range.contains(':'))
+                    {
+                        return Err(
+                            "当前公式引擎不支持数组公式、动态数组和溢出区域；已保留原公式与缓存结果"
+                                .into(),
+                        );
+                    }
+                }
+                Event::Text(ref event) if array_formula => {
+                    let formula = event
+                        .decode()
+                        .map_err(|error| format!("解析 Excel 数组公式文本失败: {error}"))?
+                        .to_ascii_uppercase();
+                    if [
+                        "SEQUENCE(",
+                        "FILTER(",
+                        "UNIQUE(",
+                        "SORT(",
+                        "SORTBY(",
+                        "RANDARRAY(",
+                        "TOCOL(",
+                        "TOROW(",
+                        "TAKE(",
+                        "DROP(",
+                        "EXPAND(",
+                        "VSTACK(",
+                        "HSTACK(",
+                        "WRAPROWS(",
+                        "WRAPCOLS(",
+                    ]
+                    .iter()
+                    .any(|marker| formula.contains(marker))
+                    {
+                        return Err(
+                            "当前公式引擎不支持数组公式、动态数组和溢出区域；已保留原公式与缓存结果"
+                                .into(),
+                        );
+                    }
+                }
+                Event::End(ref event) if event.local_name().as_ref() == b"f" => {
+                    array_formula = false;
+                }
+                Event::Eof => break,
+                _ => {}
+            }
+            buffer.clear();
+        }
+    }
+    Ok(())
 }
 
 pub fn read_workbook_protection(source: &[u8]) -> Result<WorkbookProtection, String> {
@@ -14018,18 +16373,19 @@ pub fn patch_workbook(
 #[cfg(test)]
 mod tests {
     use super::{
-        parse_chart_part, patch_calc_chain_rows, patch_sheet_structure_axis,
-        patch_workbook_conditional_format, patch_workbook_data_validation,
-        patch_workbook_defined_name, patch_workbook_drawing, patch_workbook_filter,
-        patch_workbook_structure, patch_workbook_table, read_sheet_formulas,
-        read_workbook_defined_names, read_workbook_sheet_layout, validate_plain_structure_sheet,
+        build_pivot_aggregation_variant_package, parse_chart_part, patch_calc_chain_rows,
+        patch_sheet_structure_axis, patch_workbook_conditional_format,
+        patch_workbook_data_validation, patch_workbook_defined_name, patch_workbook_drawing,
+        patch_workbook_filter, patch_workbook_structure, patch_workbook_table, read_sheet_formulas,
+        read_workbook_defined_names, read_workbook_linked_data, read_workbook_sheet_layout,
+        rebuild_workbook_pivot_expanded_isolated, validate_plain_structure_sheet,
         validate_workbook_package,
     };
     use crate::formats::workbook::{
-        WorkbookChartDataLabels, WorkbookConditionalColorScale, WorkbookConditionalColorScalePoint,
-        WorkbookConditionalDataBar, WorkbookConditionalFormatAction,
-        WorkbookConditionalFormatChange, WorkbookConditionalFormatRule,
-        WorkbookConditionalFormatStyle, WorkbookConditionalIconSet,
+        WorkbookCellEdit, WorkbookChartDataLabels, WorkbookConditionalColorScale,
+        WorkbookConditionalColorScalePoint, WorkbookConditionalDataBar,
+        WorkbookConditionalFormatAction, WorkbookConditionalFormatChange,
+        WorkbookConditionalFormatRule, WorkbookConditionalFormatStyle, WorkbookConditionalIconSet,
         WorkbookConditionalIconThreshold, WorkbookConditionalThreshold, WorkbookDataValidation,
         WorkbookDataValidationAction, WorkbookDataValidationChange, WorkbookDefinedNameAction,
         WorkbookDefinedNameChange, WorkbookDrawingAction, WorkbookDrawingAnchor,
@@ -14037,6 +16393,7 @@ mod tests {
         WorkbookFilterTarget, WorkbookMergeRange, WorkbookStructureAction, WorkbookStructureAxis,
         WorkbookStructureChange, WorkbookTableAction, WorkbookTableChange,
     };
+    use calamine::{open_workbook_from_rs, Data, Reader as CalamineReader, Xlsx};
     use rust_xlsxwriter::{
         Chart, ChartType, ConditionalFormat2ColorScale, ConditionalFormatCell,
         ConditionalFormatCellRule, ConditionalFormatDataBar, ConditionalFormatFormula,
@@ -14062,6 +16419,87 @@ mod tests {
             .unwrap()
             .by_name(name)
             .is_ok()
+    }
+
+    #[test]
+    fn rebuilds_all_pivot_aggregations_from_raw_records_before_totals() {
+        const PIVOT_FIXTURE: &[u8] =
+            include_bytes!("../../tests/fixtures/workbook/pivot-producer-apache-poi.xlsx");
+        let collapsed = super::patch_workbook(
+            PIVOT_FIXTURE,
+            &[
+                WorkbookCellEdit {
+                    sheet: "Tabelle1".into(),
+                    row: 2,
+                    column: 0,
+                    input: "a".into(),
+                    kind: "string".into(),
+                },
+                WorkbookCellEdit {
+                    sheet: "Tabelle1".into(),
+                    row: 3,
+                    column: 0,
+                    input: "a".into(),
+                    kind: "string".into(),
+                },
+                WorkbookCellEdit {
+                    sheet: "Tabelle1".into(),
+                    row: 2,
+                    column: 2,
+                    input: "44562".into(),
+                    kind: "number".into(),
+                },
+                WorkbookCellEdit {
+                    sheet: "Tabelle1".into(),
+                    row: 3,
+                    column: 2,
+                    input: "44562".into(),
+                    kind: "number".into(),
+                },
+            ],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap();
+        let pivot_part = read_workbook_linked_data(&collapsed)
+            .unwrap()
+            .pivot_tables
+            .into_iter()
+            .find(|pivot| pivot.audit.writeback.status == "structure_candidate")
+            .unwrap()
+            .part;
+        for (aggregation, expected) in [
+            ("sum", 6.0),
+            ("count", 3.0),
+            ("average", 2.0),
+            ("max", 3.0),
+            ("min", 1.0),
+            ("product", 6.0),
+            ("countNums", 3.0),
+        ] {
+            let variant =
+                build_pivot_aggregation_variant_package(&collapsed, &pivot_part, aggregation)
+                    .unwrap();
+            let linked = read_workbook_linked_data(&variant).unwrap();
+            let pivot = linked
+                .pivot_tables
+                .iter()
+                .find(|pivot| pivot.part == pivot_part)
+                .unwrap();
+            let (rebuilt, result) =
+                rebuild_workbook_pivot_expanded_isolated(&variant, pivot).unwrap();
+            assert!(result.output_values_verified, "{aggregation}");
+            assert_eq!(result.new_output_range, "A3:C6", "{aggregation}");
+            let mut workbook: Xlsx<_> = open_workbook_from_rs(Cursor::new(rebuilt)).unwrap();
+            let output = workbook.worksheet_range("Tabelle2").unwrap();
+            assert_eq!(
+                output.get_value((5, 2)),
+                Some(&Data::Float(expected)),
+                "{aggregation}"
+            );
+        }
     }
 
     #[test]

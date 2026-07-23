@@ -50,7 +50,7 @@
       "edit": "supported",
       "calculate": "limited",
       "roundTrip": "supported",
-      "evidence": "S8-6A/S8-6B machine-readable inventory + real XLSX matrix for aggregate/math/logical/text/conditional-aggregate/lookup-reference functions + same-sheet/cross-sheet/named-range/unsaved-edit dependencies + classified cycle/error/not-found/unknown-function diagnostics"
+      "evidence": "S8-6A through S8-6D machine-readable inventory + real XLSX matrix for aggregate/math/logical/text/conditional-aggregate/lookup-reference/multi-criteria/date/modern-lookup functions + same-sheet/cross-sheet/named-range/unsaved-edit dependencies + classified cycle/error/not-found/unknown-function/invalid-date diagnostics"
     },
     {
       "id": "named_ranges",
@@ -98,9 +98,9 @@
       "read": "supported",
       "view": "supported",
       "edit": "supported",
-      "calculate": "planned",
+      "calculate": "limited",
       "roundTrip": "preserved",
-      "evidence": "calculation equivalence fixture not yet established"
+      "evidence": "S8-6E real XLSX fixture verifies OFFSET/INDIRECT/RAND/RANDBETWEEN/TODAY/NOW under explicit in-memory recalculation; Excel automatic timing is excluded"
     },
     {
       "id": "dynamic_arrays",
@@ -110,7 +110,7 @@
       "edit": "planned",
       "calculate": "planned",
       "roundTrip": "preserved",
-      "evidence": "OOXML parts preserved; spill semantics not implemented"
+      "evidence": "OOXML parts preserved; S8-6E calculation preflight rejects legacy array and known dynamic-array formulas before engine import; spill semantics not implemented"
     },
     {
       "id": "freeze_panes",
@@ -170,7 +170,7 @@
       "edit": "planned",
       "calculate": "planned",
       "roundTrip": "preserved",
-      "evidence": "pivot/cache/slicer/link/connection fixture + redacted structure inventory + no-follow external relationship policy + byte-preservation tests"
+      "evidence": "S8-7A/S8-7B/S8-7C/S8-7D/S8-7E1/S8-7E2A/S8-7E2B/S8-7E2C/S8-7E2D/S8-7E2E machine-readable offline/read-only object contract + pinned real-producer pivot fixture and hash + backend rebuild-candidate assessment and blockers + in-memory pivot aggregation preview from current worksheet values and non-formula drafts + seven verified aggregation semantics + writeback structure-readiness audit + signature-protected dry-run impact inventory for cache definition, cache records, pivot table and output worksheet + actual isolated-copy rebuild of cache definition and cache records + synchronized isolated rebuild of pivot field items, row/column items, output details and totals for one-row/one-column/one-measure layouts + verified shared-item addition/removal, pivot location expansion/contraction, stale-output cleanup and style extension + seven temporary-package aggregation rebuilds with output reparsing + row-only, column-only and three-measure semantic output verification + package/semantic/output-value/digest and untouched-part preservation gates with user-file writes disabled + professional audit panel + redacted structure inventory + no-follow external relationship policy + byte-preservation tests + offline calculation rejection"
     },
     {
       "id": "print_and_protection",

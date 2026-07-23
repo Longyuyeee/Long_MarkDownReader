@@ -10,5 +10,7 @@ pub mod workbook;
 pub mod workbook_calculation;
 mod workbook_chart;
 pub mod workbook_formula;
+pub mod workbook_linked_data;
 pub mod workbook_ooxml;
+pub mod workbook_pivot;
 pub mod workbook_styles;
