@@ -10,12 +10,13 @@ use crate::formats::workbook::{
     WorkbookDefinedName, WorkbookDefinedNameAction, WorkbookDefinedNameChange,
     WorkbookDrawingAction, WorkbookDrawingAnchor, WorkbookDrawingChange, WorkbookDrawingObject,
     WorkbookExternalLink, WorkbookFilterAction, WorkbookFilterChange, WorkbookFilterState,
-    WorkbookFilterTarget, WorkbookFreezePane, WorkbookLinkedData, WorkbookMergeEdit,
-    WorkbookMergeRange, WorkbookNamedStyle, WorkbookPageLayout, WorkbookPageLayoutChange,
-    WorkbookPageMargins, WorkbookPivotTable, WorkbookPrintOptions, WorkbookProtection,
-    WorkbookRangeReference, WorkbookRowHeight, WorkbookRowHeightEdit, WorkbookRowState,
-    WorkbookRowStateEdit, WorkbookSlicer, WorkbookStructureAction, WorkbookStructureAxis,
-    WorkbookStructureChange, WorkbookTable, WorkbookTableAction, WorkbookTableChange,
+    WorkbookFilterTarget, WorkbookFreezePane, WorkbookHeaderFooterChange, WorkbookLinkedData,
+    WorkbookMergeEdit, WorkbookMergeRange, WorkbookNamedStyle, WorkbookPageLayout,
+    WorkbookPageLayoutChange, WorkbookPageMargins, WorkbookPivotTable, WorkbookPrintOptions,
+    WorkbookProtection, WorkbookRangeReference, WorkbookRowHeight, WorkbookRowHeightEdit,
+    WorkbookRowState, WorkbookRowStateEdit, WorkbookSlicer, WorkbookStructureAction,
+    WorkbookStructureAxis, WorkbookStructureChange, WorkbookTable, WorkbookTableAction,
+    WorkbookTableChange,
 };
 use crate::formats::workbook_chart::{
     build_standard_chart_xml, chart_series_from_selection, supported_chart_type,
@@ -57,6 +58,7 @@ const MAX_DRAWING_TEXT: usize = 1_024;
 const MAX_LINKED_DATA_OBJECTS: usize = 4_096;
 const MAX_LINKED_DATA_TEXT: usize = 1_024;
 const MAX_HEADER_FOOTER_TEXT: usize = 8_192;
+const MAX_EDITABLE_HEADER_FOOTER_TEXT: usize = 255;
 const CELL_PATCH_DEFLATE_LEVEL: i64 = 4;
 
 struct PackageEntry {
@@ -7336,6 +7338,212 @@ pub fn patch_workbook_page_layout(
         return Err("页面布局写回后的语义校验失败".into());
     }
     write_package(entries, source.len() + 512)
+}
+
+fn validate_header_footer_change(change: &WorkbookHeaderFooterChange) -> Result<(), String> {
+    if change.sheet.trim().is_empty() {
+        return Err("工作表名称不能为空".into());
+    }
+    for (name, value) in [
+        ("奇数页页眉", &change.odd_header),
+        ("奇数页页脚", &change.odd_footer),
+        ("偶数页页眉", &change.even_header),
+        ("偶数页页脚", &change.even_footer),
+        ("首页页眉", &change.first_header),
+        ("首页页脚", &change.first_footer),
+    ] {
+        if value.chars().count() > MAX_EDITABLE_HEADER_FOOTER_TEXT {
+            return Err(format!(
+                "{name}不能超过 {MAX_EDITABLE_HEADER_FOOTER_TEXT} 个字符"
+            ));
+        }
+        if value
+            .chars()
+            .any(|character| character.is_control() && !matches!(character, '\t' | '\n' | '\r'))
+        {
+            return Err(format!("{name}包含不受支持的控制字符"));
+        }
+    }
+    Ok(())
+}
+
+fn header_footer_start_event(
+    original: Option<&BytesStart<'_>>,
+    change: &WorkbookHeaderFooterChange,
+) -> Result<BytesStart<'static>, String> {
+    let mut event = BytesStart::new("headerFooter");
+    if let Some(original) = original {
+        for attribute in original.attributes().with_checks(false) {
+            let attribute = attribute.map_err(|error| format!("解析页眉页脚属性失败: {error}"))?;
+            if !matches!(
+                attribute.key.as_ref(),
+                b"differentOddEven" | b"differentFirst" | b"scaleWithDoc" | b"alignWithMargins"
+            ) {
+                event.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+            }
+        }
+    }
+    event.push_attribute((
+        "differentOddEven",
+        if change.different_odd_even { "1" } else { "0" },
+    ));
+    event.push_attribute((
+        "differentFirst",
+        if change.different_first_page {
+            "1"
+        } else {
+            "0"
+        },
+    ));
+    event.push_attribute((
+        "scaleWithDoc",
+        if change.scale_with_document { "1" } else { "0" },
+    ));
+    event.push_attribute((
+        "alignWithMargins",
+        if change.align_with_margins { "1" } else { "0" },
+    ));
+    Ok(event.into_owned())
+}
+
+fn write_header_footer_element(
+    writer: &mut Writer<Vec<u8>>,
+    original: Option<&BytesStart<'_>>,
+    change: &WorkbookHeaderFooterChange,
+) -> Result<(), String> {
+    writer
+        .write_event(Event::Start(header_footer_start_event(original, change)?))
+        .map_err(|error| format!("写入页眉页脚失败: {error}"))?;
+    for (element, value) in [
+        ("oddHeader", &change.odd_header),
+        ("oddFooter", &change.odd_footer),
+        ("evenHeader", &change.even_header),
+        ("evenFooter", &change.even_footer),
+        ("firstHeader", &change.first_header),
+        ("firstFooter", &change.first_footer),
+    ] {
+        if value.is_empty() {
+            continue;
+        }
+        writer
+            .write_event(Event::Start(BytesStart::new(element)))
+            .and_then(|_| writer.write_event(Event::Text(BytesText::new(value))))
+            .and_then(|_| writer.write_event(Event::End(BytesEnd::new(element))))
+            .map_err(|error| format!("写入页眉页脚文本失败: {error}"))?;
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new("headerFooter")))
+        .map_err(|error| format!("结束页眉页脚失败: {error}"))
+}
+
+fn patch_header_footer_xml(
+    xml: &[u8],
+    change: &WorkbookHeaderFooterChange,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 256));
+    let mut buffer = Vec::new();
+    let mut inserted = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析页眉页脚失败: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"headerFooter" => {
+                write_header_footer_element(&mut writer, Some(start), change)?;
+                skip_element(&mut reader, b"headerFooter", &mut buffer)?;
+                inserted = true;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"headerFooter" => {
+                write_header_footer_element(&mut writer, Some(start), change)?;
+                inserted = true;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if !inserted
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"rowBreaks"
+                            | b"colBreaks"
+                            | b"customProperties"
+                            | b"drawing"
+                            | b"legacyDrawing"
+                            | b"legacyDrawingHF"
+                            | b"picture"
+                            | b"oleObjects"
+                            | b"controls"
+                            | b"webPublishItems"
+                            | b"tableParts"
+                            | b"extLst"
+                    ) =>
+            {
+                write_header_footer_element(&mut writer, None, change)?;
+                inserted = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制工作表 XML 失败: {error}"))?;
+            }
+            Event::End(ref end) if !inserted && end.local_name().as_ref() == b"worksheet" => {
+                write_header_footer_element(&mut writer, None, change)?;
+                inserted = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束工作表 XML 失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制工作表 XML 失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !inserted {
+        return Err("无法写入页眉页脚".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn normalized_header_footer_text(value: &str) -> Option<&str> {
+    (!value.is_empty()).then_some(value)
+}
+
+pub fn patch_workbook_header_footer(
+    source: &[u8],
+    change: &WorkbookHeaderFooterChange,
+) -> Result<Vec<u8>, String> {
+    validate_header_footer_change(change)?;
+    let mut entries = load_package(source)?;
+    let paths = workbook_sheet_paths(&entries)?;
+    let sheet_path = paths
+        .get(change.sheet.trim())
+        .ok_or_else(|| format!("工作表不存在: {}", change.sheet))?
+        .clone();
+    let sheet_index = entries
+        .iter()
+        .position(|entry| entry.name == sheet_path)
+        .ok_or("工作表部件缺失")?;
+    if parse_page_layout(&entries[sheet_index].data)?
+        .protection
+        .enabled
+    {
+        return Err("受保护的工作表不能修改页眉页脚；LongEdit 不会绕过 Excel 保护".into());
+    }
+    entries[sheet_index].data = patch_header_footer_xml(&entries[sheet_index].data, change)?;
+    let parsed = parse_page_layout(&entries[sheet_index].data)?.header_footer;
+    if parsed.odd_header.as_deref() != normalized_header_footer_text(&change.odd_header)
+        || parsed.odd_footer.as_deref() != normalized_header_footer_text(&change.odd_footer)
+        || parsed.even_header.as_deref() != normalized_header_footer_text(&change.even_header)
+        || parsed.even_footer.as_deref() != normalized_header_footer_text(&change.even_footer)
+        || parsed.first_header.as_deref() != normalized_header_footer_text(&change.first_header)
+        || parsed.first_footer.as_deref() != normalized_header_footer_text(&change.first_footer)
+        || parsed.different_odd_even != change.different_odd_even
+        || parsed.different_first_page != change.different_first_page
+        || parsed.scale_with_document != change.scale_with_document
+        || parsed.align_with_margins != change.align_with_margins
+    {
+        return Err("页眉页脚写回后的语义校验失败".into());
+    }
+    write_package(entries, source.len() + 384)
 }
 
 fn sheet_extent(xml: &[u8]) -> Result<(usize, usize), String> {

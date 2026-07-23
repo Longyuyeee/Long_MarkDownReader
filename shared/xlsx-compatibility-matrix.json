@@ -180,7 +180,7 @@
       "edit": "limited",
       "calculate": "not_applicable",
       "roundTrip": "supported",
-      "evidence": "print area/orientation/paper/margins/scale transaction + command round-trip + header-footer/protection read-only UI + protected-write rejection"
+      "evidence": "print area/orientation/paper/margins/scale + six standard header-footer text/flags transactions + command round-trip + protection read-only UI + protected-write rejection"
     }
   ]
 }

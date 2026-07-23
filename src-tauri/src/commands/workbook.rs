@@ -8,8 +8,8 @@ use crate::formats::workbook::{
     WorkbookCalculationPayload, WorkbookCalculationResult, WorkbookCapabilities,
     WorkbookCapabilityLevel, WorkbookCell, WorkbookConditionalFormatPayload,
     WorkbookDataValidationPayload, WorkbookDefinedNamePayload, WorkbookDocument,
-    WorkbookDrawingPayload, WorkbookEngine, WorkbookFilterPayload, WorkbookOutlinePayload,
-    WorkbookPageLayoutPayload, WorkbookSheetPage, WorkbookStructureChange,
+    WorkbookDrawingPayload, WorkbookEngine, WorkbookFilterPayload, WorkbookHeaderFooterPayload,
+    WorkbookOutlinePayload, WorkbookPageLayoutPayload, WorkbookSheetPage, WorkbookStructureChange,
     WorkbookStructureMigrationPreview, WorkbookStructurePayload, WorkbookTablePayload,
     WorkbookWritePayload,
 };
@@ -21,10 +21,10 @@ use crate::formats::workbook_formula::{
 use crate::formats::workbook_ooxml::{
     patch_workbook, patch_workbook_conditional_format, patch_workbook_data_validation,
     patch_workbook_defined_name, patch_workbook_drawing, patch_workbook_filter,
-    patch_workbook_freeze_pane, patch_workbook_outline, patch_workbook_page_layout,
-    patch_workbook_structure, patch_workbook_table, read_workbook_defined_names,
-    read_workbook_linked_data, read_workbook_protection, read_workbook_sheet_layout,
-    validate_workbook_package,
+    patch_workbook_freeze_pane, patch_workbook_header_footer, patch_workbook_outline,
+    patch_workbook_page_layout, patch_workbook_structure, patch_workbook_table,
+    read_workbook_defined_names, read_workbook_linked_data, read_workbook_protection,
+    read_workbook_sheet_layout, validate_workbook_package,
 };
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
@@ -662,6 +662,36 @@ pub async fn update_workbook_page_layout(
 }
 
 #[tauri::command]
+pub async fn update_workbook_header_footer(
+    library_root: String,
+    path: String,
+    payload: WorkbookHeaderFooterPayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再修改页眉页脚".into());
+        }
+        let output = patch_workbook_header_footer(&source, &payload.change)?;
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("保存后的 XLSX 不能超过 128 MB".into());
+        }
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX 页眉页脚写回任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn update_workbook_outline(
     library_root: String,
     path: String,
@@ -794,11 +824,11 @@ mod tests {
         WorkbookDataValidationChange, WorkbookDataValidationPayload, WorkbookDefinedNameAction,
         WorkbookDefinedNameChange, WorkbookDefinedNamePayload, WorkbookDrawingAction,
         WorkbookDrawingChange, WorkbookDrawingPayload, WorkbookFilterAction, WorkbookFilterChange,
-        WorkbookFilterPayload, WorkbookFilterTarget, WorkbookMergeEdit, WorkbookMergeRange,
-        WorkbookOutlinePayload, WorkbookPageLayoutChange, WorkbookPageLayoutPayload,
-        WorkbookPageMarginsChange, WorkbookRowHeightEdit, WorkbookRowStateEdit,
-        WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructurePayload,
-        WorkbookStylePatch, WorkbookWritePayload,
+        WorkbookFilterPayload, WorkbookFilterTarget, WorkbookHeaderFooterChange,
+        WorkbookHeaderFooterPayload, WorkbookMergeEdit, WorkbookMergeRange, WorkbookOutlinePayload,
+        WorkbookPageLayoutChange, WorkbookPageLayoutPayload, WorkbookPageMarginsChange,
+        WorkbookRowHeightEdit, WorkbookRowStateEdit, WorkbookStructureAction,
+        WorkbookStructureAxis, WorkbookStructurePayload, WorkbookStylePatch, WorkbookWritePayload,
     };
     use rust_xlsxwriter::{
         ConditionalFormatCell, ConditionalFormatCellRule, Format, Formula, Workbook,
@@ -2276,6 +2306,108 @@ mod tests {
     }
 
     #[test]
+    fn header_footer_round_trips_through_command_boundary() {
+        let (base, path) = chart_visual_fixture_copy("header-footer");
+        let root = base.join("library");
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let before = fs::read(&path).unwrap();
+        let rejected = tauri::async_runtime::block_on(update_workbook_header_footer(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookHeaderFooterPayload {
+                expected_signature: document.signature.clone(),
+                change: WorkbookHeaderFooterChange {
+                    sheet: "Chart Matrix".into(),
+                    odd_header: "x".repeat(256),
+                    odd_footer: String::new(),
+                    even_header: String::new(),
+                    even_footer: String::new(),
+                    first_header: String::new(),
+                    first_footer: String::new(),
+                    different_odd_even: false,
+                    different_first_page: false,
+                    scale_with_document: true,
+                    align_with_margins: true,
+                },
+            },
+        ));
+        assert!(rejected.unwrap_err().contains("不能超过 255 个字符"));
+        assert_eq!(fs::read(&path).unwrap(), before);
+        let saved = tauri::async_runtime::block_on(update_workbook_header_footer(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookHeaderFooterPayload {
+                expected_signature: document.signature,
+                change: WorkbookHeaderFooterChange {
+                    sheet: "Chart Matrix".into(),
+                    odd_header: "&L计划 <Q3>&C审计 && 复核&R&D".into(),
+                    odd_footer: "&C第 &P / &N 页".into(),
+                    even_header: "&L偶数页".into(),
+                    even_footer: "&R&F".into(),
+                    first_header: "&C首页".into(),
+                    first_footer: "&C内部资料".into(),
+                    different_odd_even: true,
+                    different_first_page: true,
+                    scale_with_document: false,
+                    align_with_margins: true,
+                },
+            },
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Chart Matrix", 0, 80)
+            .unwrap();
+        assert_eq!(
+            page.page_layout.header_footer.odd_header.as_deref(),
+            Some("&L计划 <Q3>&C审计 && 复核&R&D")
+        );
+        assert_eq!(
+            page.page_layout.header_footer.odd_footer.as_deref(),
+            Some("&C第 &P / &N 页")
+        );
+        assert!(page.page_layout.header_footer.different_odd_even);
+        assert!(page.page_layout.header_footer.different_first_page);
+        assert!(!page.page_layout.header_footer.scale_with_document);
+        assert!(page.page_layout.header_footer.align_with_margins);
+
+        tauri::async_runtime::block_on(update_workbook_header_footer(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookHeaderFooterPayload {
+                expected_signature: saved.signature,
+                change: WorkbookHeaderFooterChange {
+                    sheet: "Chart Matrix".into(),
+                    odd_header: String::new(),
+                    odd_footer: String::new(),
+                    even_header: String::new(),
+                    even_footer: String::new(),
+                    first_header: String::new(),
+                    first_footer: String::new(),
+                    different_odd_even: false,
+                    different_first_page: false,
+                    scale_with_document: true,
+                    align_with_margins: false,
+                },
+            },
+        ))
+        .unwrap();
+        let cleared = CalamineWorkbookEngine
+            .read_sheet(&path, "Chart Matrix", 0, 80)
+            .unwrap()
+            .page_layout
+            .header_footer;
+        assert_eq!(cleared.odd_header, None);
+        assert_eq!(cleared.odd_footer, None);
+        assert_eq!(cleared.even_header, None);
+        assert_eq!(cleared.first_footer, None);
+        assert!(!cleared.different_odd_even);
+        assert!(!cleared.different_first_page);
+        assert!(cleared.scale_with_document);
+        assert!(!cleared.align_with_margins);
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
     fn preserves_chart_drawing_and_image_parts_when_editing_cells() {
         let (base, path) = compatibility_fixture_copy("drawings");
         let root = base.join("library");
@@ -2387,6 +2519,31 @@ mod tests {
             },
         ));
         assert!(layout_rejected.unwrap_err().contains("不会绕过 Excel 保护"));
+        assert_eq!(fs::read(&path).unwrap(), before);
+
+        let header_footer_rejected = tauri::async_runtime::block_on(update_workbook_header_footer(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookHeaderFooterPayload {
+                expected_signature: CalamineWorkbookEngine.inspect(&path).unwrap().signature,
+                change: WorkbookHeaderFooterChange {
+                    sheet: "Protected".into(),
+                    odd_header: "&CProtected".into(),
+                    odd_footer: String::new(),
+                    even_header: String::new(),
+                    even_footer: String::new(),
+                    first_header: String::new(),
+                    first_footer: String::new(),
+                    different_odd_even: false,
+                    different_first_page: false,
+                    scale_with_document: true,
+                    align_with_margins: true,
+                },
+            },
+        ));
+        assert!(header_footer_rejected
+            .unwrap_err()
+            .contains("不会绕过 Excel 保护"));
         assert_eq!(fs::read(&path).unwrap(), before);
         fs::remove_dir_all(base).unwrap();
     }

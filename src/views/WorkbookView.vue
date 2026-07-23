@@ -45,10 +45,11 @@
       <span v-if="sheetInfo.pageLayout.printArea">打印区域 {{ rangeLabel(sheetInfo.pageLayout.printArea) }}</span>
       <span v-if="sheetInfo.pageLayout.setup.orientation">{{ sheetInfo.pageLayout.setup.orientation === 'landscape' ? '横向' : '纵向' }} · 纸张 {{ sheetInfo.pageLayout.setup.paperSize || '默认' }}</span>
       <span v-if="sheetInfo.pageLayout.setup.fitToPage">适配 {{ sheetInfo.pageLayout.setup.fitToWidth ?? '默认' }} × {{ sheetInfo.pageLayout.setup.fitToHeight ?? '默认' }} 页</span>
-      <span v-if="sheetInfo.pageLayout.headerFooter.oddHeader || sheetInfo.pageLayout.headerFooter.oddFooter" :title="`${sheetInfo.pageLayout.headerFooter.oddHeader || ''}\n${sheetInfo.pageLayout.headerFooter.oddFooter || ''}`">已配置页眉/页脚</span>
+      <span v-if="hasStoredHeaderFooter" :title="storedHeaderFooterSummary">已配置页眉/页脚</span>
       <button title="把当前连续选区设为打印区域" :disabled="!canEditPrintArea || !pageLayoutSelection" @click="setSelectionAsPrintArea">设为打印区域</button>
       <button title="清除当前 Sheet 的打印区域" :disabled="!canEditPrintArea || !sheetInfo.pageLayout.printArea" @click="clearPrintArea">清除打印区域</button>
       <button title="编辑方向、纸张、缩放和页边距" :disabled="!canEditPageLayout" @click="pageLayoutModalOpen = true">页面设置</button>
+      <button title="编辑当前 Sheet 的页眉和页脚" :disabled="!canEditPageLayout" @click="headerFooterModalOpen = true">页眉页脚</button>
       <span v-if="workbook.protection.lockStructure">工作簿结构已锁定</span>
       <em v-if="sheetProtected">当前 Sheet 受保护，LongEdit 不会绕过密码或写入限制</em>
     </div>
@@ -72,6 +73,31 @@
         <div class="page-layout-actions">
           <button @click="pageLayoutModalOpen = false">取消</button>
           <button class="primary" :disabled="!canEditPageLayout" @click="savePageLayout()">应用</button>
+        </div>
+      </template>
+    </n-modal>
+
+    <n-modal v-model:show="headerFooterModalOpen" preset="card" title="页眉页脚" class="header-footer-modal">
+      <div class="header-footer-options">
+        <label><input v-model="headerFooterDraft.differentOddEven" type="checkbox">奇偶页不同</label>
+        <label><input v-model="headerFooterDraft.differentFirstPage" type="checkbox">首页不同</label>
+        <label><input v-model="headerFooterDraft.scaleWithDocument" type="checkbox">随文档缩放</label>
+        <label><input v-model="headerFooterDraft.alignWithMargins" type="checkbox">与页边距对齐</label>
+      </div>
+      <div class="header-footer-modes" role="tablist" aria-label="页眉页脚页面类型">
+        <button :class="{ active: headerFooterMode === 'odd' }" @click="headerFooterMode = 'odd'">奇数页</button>
+        <button :class="{ active: headerFooterMode === 'even' }" :disabled="!headerFooterDraft.differentOddEven" @click="headerFooterMode = 'even'">偶数页</button>
+        <button :class="{ active: headerFooterMode === 'first' }" :disabled="!headerFooterDraft.differentFirstPage" @click="headerFooterMode = 'first'">首页</button>
+      </div>
+      <div class="header-footer-fields">
+        <label>页眉<textarea v-model="activeHeaderFooterFields.header" maxlength="255" rows="3"></textarea></label>
+        <label>页脚<textarea v-model="activeHeaderFooterFields.footer" maxlength="255" rows="3"></textarea></label>
+      </div>
+      <template #footer>
+        <div class="page-layout-actions">
+          <button :disabled="!hasHeaderFooterContent" @click="clearHeaderFooter">全部清空</button>
+          <button @click="headerFooterModalOpen = false">取消</button>
+          <button class="primary" :disabled="!canEditPageLayout" @click="saveHeaderFooter">应用</button>
         </div>
       </template>
     </n-modal>
@@ -465,6 +491,7 @@ interface WorkbookPageLayoutDraft { printArea?: WorkbookMergeRange; orientation:
 interface WorkbookPageSetup { orientation?: string; paperSize?: number; scale?: number; fitToWidth?: number; fitToHeight?: number; firstPageNumber?: number; horizontalDpi?: number; verticalDpi?: number; blackAndWhite: boolean; draft: boolean; fitToPage: boolean }
 interface WorkbookPrintOptions { gridLines: boolean; headings: boolean; horizontalCentered: boolean; verticalCentered: boolean }
 interface WorkbookHeaderFooter { oddHeader?: string; oddFooter?: string; evenHeader?: string; evenFooter?: string; firstHeader?: string; firstFooter?: string; differentOddEven: boolean; differentFirstPage: boolean; scaleWithDocument: boolean; alignWithMargins: boolean }
+interface WorkbookHeaderFooterDraft { oddHeader: string; oddFooter: string; evenHeader: string; evenFooter: string; firstHeader: string; firstFooter: string; differentOddEven: boolean; differentFirstPage: boolean; scaleWithDocument: boolean; alignWithMargins: boolean }
 interface WorkbookSheetProtection { enabled: boolean; passwordProtected: boolean; blockedActions: string[] }
 interface WorkbookPageLayout { printArea?: WorkbookMergeRange; margins: WorkbookPageMargins; setup: WorkbookPageSetup; options: WorkbookPrintOptions; headerFooter: WorkbookHeaderFooter; protection: WorkbookSheetProtection }
 interface WorkbookSheetPage {
@@ -753,6 +780,8 @@ const pageMarginFields: { key: WorkbookPageMarginKey; label: string }[] = [
   { key: 'footer', label: '页脚' },
 ]
 const pageLayoutModalOpen = ref(false)
+const headerFooterModalOpen = ref(false)
+const headerFooterMode = ref<'odd' | 'even' | 'first'>('odd')
 const pageLayoutDraft = ref<WorkbookPageLayoutDraft>({
   orientation: 'portrait',
   paperSize: 9,
@@ -761,6 +790,44 @@ const pageLayoutDraft = ref<WorkbookPageLayoutDraft>({
   fitToWidth: 1,
   fitToHeight: 0,
   margins: { left: 0.7, right: 0.7, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 },
+})
+const headerFooterDraft = ref<WorkbookHeaderFooterDraft>({
+  oddHeader: '',
+  oddFooter: '',
+  evenHeader: '',
+  evenFooter: '',
+  firstHeader: '',
+  firstFooter: '',
+  differentOddEven: false,
+  differentFirstPage: false,
+  scaleWithDocument: true,
+  alignWithMargins: true,
+})
+const activeHeaderFooterFields = computed(() => {
+  const prefix = headerFooterMode.value === 'odd' ? 'odd' : headerFooterMode.value === 'even' ? 'even' : 'first'
+  return {
+    get header() { return headerFooterDraft.value[`${prefix}Header` as keyof WorkbookHeaderFooterDraft] as string },
+    set header(value: string) { headerFooterDraft.value[`${prefix}Header` as 'oddHeader'] = value },
+    get footer() { return headerFooterDraft.value[`${prefix}Footer` as keyof WorkbookHeaderFooterDraft] as string },
+    set footer(value: string) { headerFooterDraft.value[`${prefix}Footer` as 'oddFooter'] = value },
+  }
+})
+const hasHeaderFooterContent = computed(() => [
+  headerFooterDraft.value.oddHeader,
+  headerFooterDraft.value.oddFooter,
+  headerFooterDraft.value.evenHeader,
+  headerFooterDraft.value.evenFooter,
+  headerFooterDraft.value.firstHeader,
+  headerFooterDraft.value.firstFooter,
+].some(Boolean))
+const hasStoredHeaderFooter = computed(() => {
+  const value = sheetInfo.value?.pageLayout.headerFooter
+  return Boolean(value && [value.oddHeader, value.oddFooter, value.evenHeader, value.evenFooter, value.firstHeader, value.firstFooter].some(Boolean))
+})
+const storedHeaderFooterSummary = computed(() => {
+  const value = sheetInfo.value?.pageLayout.headerFooter
+  if (!value) return ''
+  return [value.oddHeader, value.oddFooter, value.evenHeader, value.evenFooter, value.firstHeader, value.firstFooter].filter(Boolean).join('\n')
 })
 const pageLayoutSelection = computed(() => {
   const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
@@ -789,6 +856,21 @@ const syncPageLayoutDraft = () => {
       footer: layout.margins.footer ?? 0.3,
     },
   }
+  const headerFooter = layout.headerFooter
+  headerFooterDraft.value = {
+    oddHeader: headerFooter.oddHeader || '',
+    oddFooter: headerFooter.oddFooter || '',
+    evenHeader: headerFooter.evenHeader || '',
+    evenFooter: headerFooter.evenFooter || '',
+    firstHeader: headerFooter.firstHeader || '',
+    firstFooter: headerFooter.firstFooter || '',
+    differentOddEven: headerFooter.differentOddEven,
+    differentFirstPage: headerFooter.differentFirstPage,
+    scaleWithDocument: headerFooter.scaleWithDocument,
+    alignWithMargins: headerFooter.alignWithMargins,
+  }
+  if (!headerFooter.differentOddEven && headerFooterMode.value === 'even') headerFooterMode.value = 'odd'
+  if (!headerFooter.differentFirstPage && headerFooterMode.value === 'first') headerFooterMode.value = 'odd'
 }
 const containsCell = (range: WorkbookMergeRange, row: number, column: number) => row >= range.top && row <= range.bottom && column >= range.left && column <= range.right
 const tableAt = (row: number, column: number) => sheetInfo.value?.tables.find(table => containsCell(table.range, row, column))
@@ -2754,6 +2836,60 @@ const clearPrintArea = () => {
     onPositiveClick: () => savePageLayout(null),
   })
 }
+const saveHeaderFooter = async () => {
+  if (!workbook.value || !sheetInfo.value || !canEditPageLayout.value) return
+  const draft = headerFooterDraft.value
+  const values = [draft.oddHeader, draft.oddFooter, draft.evenHeader, draft.evenFooter, draft.firstHeader, draft.firstFooter]
+  if (values.some(value => [...value].length > 255)) {
+    return void message.error('每个页眉或页脚不能超过 255 个字符')
+  }
+  if (values.some(value => [...value].some(character => {
+    const code = character.charCodeAt(0)
+    return code < 32 && character !== '\t' && character !== '\n' && character !== '\r'
+  }))) {
+    return void message.error('页眉页脚包含不受支持的控制字符')
+  }
+  updatingStructure.value = true
+  try {
+    const document = await invoke<WorkbookDocument>('update_workbook_header_footer', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        change: {
+          sheet: activeSheet.value,
+          ...draft,
+        },
+      },
+    })
+    workbook.value = document
+    const sheet = activeSheet.value
+    generation += 1
+    activeSheet.value = ''
+    await selectSheet(sheet)
+    headerFooterModalOpen.value = false
+    message.success('页眉页脚已保存')
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
+}
+const clearHeaderFooter = () => {
+  if (!hasHeaderFooterContent.value || !canEditPageLayout.value) return
+  dialog.warning({
+    title: '清空页眉页脚？',
+    content: '将清空当前 Sheet 的奇数页、偶数页和首页页眉页脚文本。',
+    positiveText: '清空',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      headerFooterDraft.value.oddHeader = ''
+      headerFooterDraft.value.oddFooter = ''
+      headerFooterDraft.value.evenHeader = ''
+      headerFooterDraft.value.evenFooter = ''
+      headerFooterDraft.value.firstHeader = ''
+      headerFooterDraft.value.firstFooter = ''
+      return saveHeaderFooter()
+    },
+  })
+}
 const promptDefinedNameScope = (): string | undefined | null => {
   const input = window.prompt('输入作用域：填写“工作簿”创建全局名称，或填写一个工作表名称创建局部名称', '工作簿')
   if (input === null) return null
@@ -3355,6 +3491,12 @@ watch(workbookPath, () => {
   drafts.value = new Map(); styleDrafts.value = new Map(); rowHeightDrafts.value = new Map(); columnWidthDrafts.value = new Map(); mergeDrafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook()
 })
 watch(() => [sheetInfo.value?.sheet || '', workbook.value?.signature || ''], syncPageLayoutDraft, { immediate: true })
+watch(() => headerFooterDraft.value.differentOddEven, enabled => {
+  if (!enabled && headerFooterMode.value === 'even') headerFooterMode.value = 'odd'
+})
+watch(() => headerFooterDraft.value.differentFirstPage, enabled => {
+  if (!enabled && headerFooterMode.value === 'first') headerFooterMode.value = 'odd'
+})
 watch(scrollRef, element => {
   resizeObserver?.disconnect()
   if (element) { viewportHeight.value = element.clientHeight; resizeObserver?.observe(element) }
@@ -3432,6 +3574,17 @@ onBeforeUnmount(() => {
 .page-layout-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .page-layout-actions button { height: 32px; padding: 0 14px; border: 1px solid rgba(0,0,0,.14); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); cursor: pointer; }
 .page-layout-actions button.primary { color: #fff; border-color: var(--theme-primary); background: var(--theme-primary); }
+:deep(.header-footer-modal) { width: min(680px, calc(100vw - 32px)); }
+.header-footer-options { display: flex; flex-wrap: wrap; gap: 10px 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(0,0,0,.1); }
+.header-footer-options label { display: inline-flex; align-items: center; gap: 7px; color: var(--theme-text-secondary); font-size: 11px; }
+.header-footer-modes { display: inline-grid; grid-template-columns: repeat(3, minmax(82px, 1fr)); margin: 14px 0; border: 1px solid rgba(0,0,0,.14); border-radius: 6px; overflow: hidden; }
+.header-footer-modes button { height: 32px; padding: 0 14px; border: 0; border-right: 1px solid rgba(0,0,0,.12); color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; }
+.header-footer-modes button:last-child { border-right: 0; }
+.header-footer-modes button.active { color: #fff; background: var(--theme-primary); }
+.header-footer-modes button:disabled { cursor: not-allowed; opacity: .45; }
+.header-footer-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.header-footer-fields label { min-width: 0; display: grid; gap: 6px; color: var(--theme-text-secondary); font-size: 11px; }
+.header-footer-fields textarea { width: 100%; min-height: 84px; box-sizing: border-box; resize: vertical; padding: 9px; border: 1px solid rgba(0,0,0,.14); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); font: inherit; line-height: 1.5; }
 .formula-bar select { width: 150px; min-width: 120px; height: 100%; padding: 0 24px 0 10px; border: 0; border-right: 1px solid rgba(0,0,0,.08); outline: 0; color: var(--theme-text); background: transparent; font-size: 9px; }
 .formula-bar button { height: 25px; flex: none; margin-left: 4px; padding: 0 7px; border: 1px solid rgba(0,0,0,.1); border-radius: 4px; color: var(--theme-text-secondary); background: transparent; font-size: 8px; cursor: pointer; }
 .formula-bar button:disabled { opacity: .4; cursor: default; }
@@ -3538,6 +3691,6 @@ onBeforeUnmount(() => {
 .workbook-state button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } }
 @media (max-width: 900px) { .workbook-actions button:not(.primary):not(.icon-button) { display: none; } .workbook-title span { display: none; } }
 </style>

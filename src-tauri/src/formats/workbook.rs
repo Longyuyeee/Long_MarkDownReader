@@ -341,7 +341,7 @@ pub struct WorkbookPrintOptions {
     pub vertical_centered: bool,
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkbookHeaderFooter {
     pub odd_header: Option<String>,
@@ -354,6 +354,46 @@ pub struct WorkbookHeaderFooter {
     pub different_first_page: bool,
     pub scale_with_document: bool,
     pub align_with_margins: bool,
+}
+
+impl Default for WorkbookHeaderFooter {
+    fn default() -> Self {
+        Self {
+            odd_header: None,
+            odd_footer: None,
+            even_header: None,
+            even_footer: None,
+            first_header: None,
+            first_footer: None,
+            different_odd_even: false,
+            different_first_page: false,
+            scale_with_document: true,
+            align_with_margins: true,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookHeaderFooterChange {
+    pub sheet: String,
+    pub odd_header: String,
+    pub odd_footer: String,
+    pub even_header: String,
+    pub even_footer: String,
+    pub first_header: String,
+    pub first_footer: String,
+    pub different_odd_even: bool,
+    pub different_first_page: bool,
+    pub scale_with_document: bool,
+    pub align_with_margins: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookHeaderFooterPayload {
+    pub expected_signature: String,
+    pub change: WorkbookHeaderFooterChange,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
