@@ -56,6 +56,7 @@ const MAX_DRAWING_TEXT: usize = 1_024;
 const MAX_LINKED_DATA_OBJECTS: usize = 4_096;
 const MAX_LINKED_DATA_TEXT: usize = 1_024;
 const MAX_HEADER_FOOTER_TEXT: usize = 8_192;
+const CELL_PATCH_DEFLATE_LEVEL: i64 = 4;
 
 struct PackageEntry {
     name: String,
@@ -990,6 +991,12 @@ fn write_dimension(
 }
 
 fn validate_merged_cells(xml: &[u8], patches: &SheetPatches<'_>) -> Result<(), String> {
+    if !xml
+        .windows(b"mergeCell".len())
+        .any(|window| window == b"mergeCell")
+    {
+        return Ok(());
+    }
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(true);
     let mut buffer = Vec::new();
@@ -1175,6 +1182,16 @@ fn patch_sheet_xml(xml: &[u8], patches: &SheetPatches<'_>) -> Result<Vec<u8>, St
                 .write_event(event.into_owned())
                 .map_err(|error| format!("复制工作表 XML 失败: {error}"))?,
         }
+        if found_sheet_data && inside_sheet_data && pending.is_empty() {
+            // The remaining worksheet suffix is outside every requested patch and stays byte-identical.
+            let position = reader.buffer_position() as usize;
+            if position > xml.len() {
+                return Err("工作表 XML 读取位置无效".into());
+            }
+            let mut output = writer.into_inner();
+            output.extend_from_slice(&xml[position..]);
+            return Ok(output);
+        }
         buffer.clear();
     }
     if !found_sheet_data || !pending.is_empty() {
@@ -1184,6 +1201,13 @@ fn patch_sheet_xml(xml: &[u8], patches: &SheetPatches<'_>) -> Result<Vec<u8>, St
 }
 
 fn load_package(source: &[u8]) -> Result<Vec<PackageEntry>, String> {
+    load_package_selected(source, None)
+}
+
+fn load_package_selected(
+    source: &[u8],
+    selected_paths: Option<&HashSet<String>>,
+) -> Result<Vec<PackageEntry>, String> {
     let mut archive = ZipArchive::new(Cursor::new(source))
         .map_err(|error| format!("打开 XLSX 容器失败: {error}"))?;
     let mut entries = Vec::with_capacity(archive.len());
@@ -1206,8 +1230,10 @@ fn load_package(source: &[u8]) -> Result<Vec<PackageEntry>, String> {
             return Err("XLSX 解压后总大小不能超过 512 MB".into());
         }
         let mut data = Vec::new();
-        file.read_to_end(&mut data)
-            .map_err(|error| format!("读取 XLSX 部件内容失败: {error}"))?;
+        if selected_paths.is_none_or(|paths| paths.contains(file.name())) {
+            file.read_to_end(&mut data)
+                .map_err(|error| format!("读取 XLSX 部件内容失败: {error}"))?;
+        }
         entries.push(PackageEntry {
             name: file.name().to_string(),
             is_dir: file.is_dir(),
@@ -1216,6 +1242,32 @@ fn load_package(source: &[u8]) -> Result<Vec<PackageEntry>, String> {
         });
     }
     Ok(entries)
+}
+
+fn load_package_for_cell_patch(
+    source: &[u8],
+    touched_sheets: &HashSet<String>,
+    load_styles: bool,
+) -> Result<Vec<PackageEntry>, String> {
+    let mut selected = HashSet::from([
+        "xl/workbook.xml".to_string(),
+        "xl/_rels/workbook.xml.rels".to_string(),
+    ]);
+    let inventory = load_package_selected(source, Some(&selected))?;
+    let sheet_paths = workbook_sheet_paths(&inventory)?;
+    for sheet in touched_sheets {
+        selected.insert(
+            sheet_paths
+                .get(sheet)
+                .cloned()
+                .ok_or_else(|| format!("工作表不存在: {sheet}"))?,
+        );
+    }
+    if load_styles {
+        selected.insert("xl/styles.xml".into());
+        selected.insert("xl/theme/theme1.xml".into());
+    }
+    load_package_selected(source, Some(&selected))
 }
 
 pub(super) fn defined_name_reference(
@@ -5689,6 +5741,7 @@ pub fn patch_workbook_freeze_pane(
                 .add_directory(entry.name, options)
                 .map_err(|error| format!("写入 XLSX 目录失败: {error}"))?;
         } else {
+            // Preserve unchanged compressed streams instead of inflating and recompressing the package.
             output
                 .start_file(entry.name, options)
                 .map_err(|error| format!("写入 XLSX 部件失败: {error}"))?;
@@ -7943,6 +7996,61 @@ fn write_package(entries: Vec<PackageEntry>, capacity: usize) -> Result<Vec<u8>,
         .finish()
         .map(|cursor| cursor.into_inner())
         .map_err(|error| format!("完成 XLSX 结构事务失败: {error}"))
+}
+
+fn write_package_preserving_unchanged(
+    source: &[u8],
+    entries: Vec<PackageEntry>,
+    modified_paths: &HashSet<String>,
+) -> Result<Vec<u8>, String> {
+    let mut archive = ZipArchive::new(Cursor::new(source))
+        .map_err(|error| format!("打开 XLSX 原始包失败: {error}"))?;
+    let cursor = Cursor::new(Vec::with_capacity(source.len()));
+    let mut output = ZipWriter::new(cursor);
+    let mut entries = entries
+        .into_iter()
+        .map(|entry| (entry.name.clone(), entry))
+        .collect::<HashMap<_, _>>();
+
+    for index in 0..archive.len() {
+        let file = archive
+            .by_index(index)
+            .map_err(|error| format!("读取 XLSX 原始部件失败: {error}"))?;
+        let name = file.name().to_string();
+        let entry = entries
+            .remove(&name)
+            .ok_or_else(|| format!("XLSX 写回部件清单缺少: {name}"))?;
+        if modified_paths.contains(&name) {
+            drop(file);
+            let mut options = SimpleFileOptions::default().compression_method(entry.compression);
+            if entry.compression == CompressionMethod::Deflated {
+                options = options.compression_level(Some(CELL_PATCH_DEFLATE_LEVEL));
+            }
+            if entry.is_dir {
+                output
+                    .add_directory(entry.name, options)
+                    .map_err(|error| format!("写入 XLSX 目录失败: {error}"))?;
+            } else {
+                output
+                    .start_file(entry.name, options)
+                    .map_err(|error| format!("写入 XLSX 部件失败: {error}"))?;
+                output
+                    .write_all(&entry.data)
+                    .map_err(|error| format!("写入 XLSX 部件内容失败: {error}"))?;
+            }
+        } else {
+            output
+                .raw_copy_file(file)
+                .map_err(|error| format!("复制未修改 XLSX 部件失败: {error}"))?;
+        }
+    }
+    if !entries.is_empty() {
+        return Err("普通工作簿写回不允许隐式新增 XLSX 部件".into());
+    }
+    output
+        .finish()
+        .map(|cursor| cursor.into_inner())
+        .map_err(|error| format!("完成 XLSX 写回失败: {error}"))
 }
 
 fn table_reference(range: &WorkbookMergeRange) -> Result<String, String> {
@@ -11699,17 +11807,18 @@ pub fn patch_workbook(
         }
     }
 
-    let mut entries = load_package(source)?;
-    let sheet_paths = workbook_sheet_paths(&entries)?;
     let touched_sheets = edits
         .iter()
-        .map(|edit| edit.sheet.as_str())
-        .chain(style_edits.iter().map(|edit| edit.sheet.as_str()))
-        .chain(row_height_edits.iter().map(|edit| edit.sheet.as_str()))
-        .chain(column_width_edits.iter().map(|edit| edit.sheet.as_str()))
-        .chain(merge_edits.iter().map(|edit| edit.sheet.as_str()))
+        .map(|edit| edit.sheet.clone())
+        .chain(style_edits.iter().map(|edit| edit.sheet.clone()))
+        .chain(row_height_edits.iter().map(|edit| edit.sheet.clone()))
+        .chain(column_width_edits.iter().map(|edit| edit.sheet.clone()))
+        .chain(merge_edits.iter().map(|edit| edit.sheet.clone()))
         .collect::<HashSet<_>>();
-    for sheet in touched_sheets {
+    let mut entries =
+        load_package_for_cell_patch(source, &touched_sheets, !style_edits.is_empty())?;
+    let sheet_paths = workbook_sheet_paths(&entries)?;
+    for sheet in &touched_sheets {
         let path = sheet_paths
             .get(sheet)
             .ok_or_else(|| format!("工作表不存在: {sheet}"))?;
@@ -11735,6 +11844,13 @@ pub fn patch_workbook(
             .iter()
             .find(|entry| &entry.name == path)
             .ok_or_else(|| format!("工作表部件不存在: {path}"))?;
+        if !xml
+            .data
+            .windows(b"dataValidation".len())
+            .any(|window| window == b"dataValidation")
+        {
+            continue;
+        }
         let structure = read_sheet_structure(&xml.data, 0, MAX_XLSX_ROWS, MAX_XLSX_COLUMNS)?;
         for edit in sheet_edits {
             validate_edit_against_rules(edit, &structure.data_validations)?;
@@ -11758,6 +11874,7 @@ pub fn patch_workbook(
             return Err(format!("工作表不存在: {}", edit.sheet));
         }
     }
+    let mut modified_paths = HashSet::new();
     for entry in &mut entries {
         let row_edits = row_height_edits
             .iter()
@@ -11774,6 +11891,7 @@ pub fn patch_workbook(
         if !row_edits.is_empty() || !column_edits.is_empty() || !merge_edits.is_empty() {
             entry.data =
                 patch_sheet_structure(&entry.data, &row_edits, &column_edits, &merge_edits)?;
+            modified_paths.insert(entry.name.clone());
         }
     }
     let style_sheet_xml = style_edits
@@ -11807,6 +11925,7 @@ pub fn patch_workbook(
             .find(|entry| entry.name == "xl/styles.xml")
             .ok_or("XLSX 缺少 xl/styles.xml")?
             .data = updated;
+        modified_paths.insert("xl/styles.xml".into());
         resolved
     };
     let mut patches_by_path: HashMap<String, SheetPatches<'_>> = HashMap::new();
@@ -11845,33 +11964,14 @@ pub fn patch_workbook(
     for entry in &mut entries {
         if let Some(sheet_patches) = patches_by_path.remove(&entry.name) {
             entry.data = patch_sheet_xml(&entry.data, &sheet_patches)?;
+            modified_paths.insert(entry.name.clone());
         }
     }
     if !patches_by_path.is_empty() {
         return Err("XLSX 工作表部件缺失".into());
     }
 
-    let cursor = Cursor::new(Vec::with_capacity(source.len()));
-    let mut output = ZipWriter::new(cursor);
-    for entry in entries {
-        let options = SimpleFileOptions::default().compression_method(entry.compression);
-        if entry.is_dir {
-            output
-                .add_directory(entry.name, options)
-                .map_err(|error| format!("写入 XLSX 目录失败: {error}"))?;
-        } else {
-            output
-                .start_file(entry.name, options)
-                .map_err(|error| format!("写入 XLSX 部件失败: {error}"))?;
-            output
-                .write_all(&entry.data)
-                .map_err(|error| format!("写入 XLSX 部件内容失败: {error}"))?;
-        }
-    }
-    output
-        .finish()
-        .map(|cursor| cursor.into_inner())
-        .map_err(|error| format!("完成 XLSX 写回失败: {error}"))
+    write_package_preserving_unchanged(source, entries, &modified_paths)
 }
 
 #[cfg(test)]
