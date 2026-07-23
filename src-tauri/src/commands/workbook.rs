@@ -854,12 +854,13 @@ mod tests {
         WorkbookDataValidationChange, WorkbookDataValidationPayload, WorkbookDefinedNameAction,
         WorkbookDefinedNameChange, WorkbookDefinedNamePayload, WorkbookDrawingAction,
         WorkbookDrawingChange, WorkbookDrawingPayload, WorkbookFilterAction, WorkbookFilterChange,
-        WorkbookFilterPayload, WorkbookFilterTarget, WorkbookHeaderFooterChange,
-        WorkbookHeaderFooterPayload, WorkbookMergeEdit, WorkbookMergeRange, WorkbookOutlinePayload,
-        WorkbookPageLayoutChange, WorkbookPageLayoutPayload, WorkbookPageMarginsChange,
-        WorkbookPrintOptionsChange, WorkbookPrintOptionsPayload, WorkbookRowHeightEdit,
-        WorkbookRowStateEdit, WorkbookStructureAction, WorkbookStructureAxis,
-        WorkbookStructurePayload, WorkbookStylePatch, WorkbookWritePayload,
+        WorkbookFilterPayload, WorkbookFilterTarget, WorkbookFormulaTarget,
+        WorkbookHeaderFooterChange, WorkbookHeaderFooterPayload, WorkbookMergeEdit,
+        WorkbookMergeRange, WorkbookOutlinePayload, WorkbookPageLayoutChange,
+        WorkbookPageLayoutPayload, WorkbookPageMarginsChange, WorkbookPrintOptionsChange,
+        WorkbookPrintOptionsPayload, WorkbookRowHeightEdit, WorkbookRowStateEdit,
+        WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructurePayload,
+        WorkbookStylePatch, WorkbookWritePayload,
     };
     use rust_xlsxwriter::{
         ConditionalFormatCell, ConditionalFormatCellRule, Format, Formula, Workbook,
@@ -1081,6 +1082,68 @@ mod tests {
         )
         .unwrap();
         (base, path)
+    }
+
+    fn formula_function_fixture_copy(name: &str) -> (PathBuf, PathBuf) {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-formula-{name}-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let root = base.join("library");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("formula-function-matrix.xlsx");
+        fs::copy(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("tests/fixtures/workbook/formula-function-matrix.xlsx"),
+            &path,
+        )
+        .unwrap();
+        (base, path)
+    }
+
+    #[test]
+    fn formula_function_matrix_recalculates_through_command_boundary() {
+        let (base, path) = formula_function_fixture_copy("command");
+        let root = path.parent().unwrap().to_string_lossy().into_owned();
+        let path_text = path.to_string_lossy().into_owned();
+        let document =
+            tauri::async_runtime::block_on(read_workbook_file(root.clone(), path_text.clone()))
+                .unwrap();
+        let result = tauri::async_runtime::block_on(recalculate_workbook_formulas(
+            root,
+            path_text,
+            WorkbookCalculationPayload {
+                expected_signature: document.signature,
+                edits: Vec::new(),
+                targets: [
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 1,
+                        column: 4,
+                    },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 15,
+                        column: 4,
+                    },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 18,
+                        column: 4,
+                    },
+                ]
+                .into(),
+            },
+        ))
+        .unwrap();
+        assert_eq!(result.cells[0].value, "60");
+        assert_eq!(result.diagnostics[0].category, "division_by_zero");
+        assert_eq!(result.diagnostics[1].category, "name");
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]

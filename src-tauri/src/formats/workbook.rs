@@ -1063,6 +1063,7 @@ pub struct WorkbookCalculationDiagnostic {
     pub row: usize,
     pub column: usize,
     pub code: String,
+    pub category: String,
 }
 
 #[derive(Clone, Debug, Serialize)]

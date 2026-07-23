@@ -4,7 +4,9 @@ import path from 'node:path'
 const root = process.cwd()
 const read = file => fs.readFileSync(path.join(root, file), 'utf8')
 const matrix = JSON.parse(read('shared/xlsx-compatibility-matrix.json'))
+const formulaCapabilities = JSON.parse(read('shared/xlsx-formula-capabilities.json'))
 const fixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/compatibility-baseline.json'))
+const formulaFixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/formula-function-matrix.json'))
 const model = read('src-tauri/src/formats/workbook.rs')
 const engine = read('src-tauri/src/commands/workbook.rs')
 const calculation = read('src-tauri/src/formats/workbook_calculation.rs')
@@ -12,9 +14,11 @@ const ooxml = read('src-tauri/src/formats/workbook_ooxml.rs')
 const view = read('src/views/WorkbookView.vue')
 const conditionalExpression = read('src/utils/conditionalExpression.ts')
 const generator = read('src-tauri/examples/generate_workbook_fixture.rs')
+const formulaGenerator = read('src-tauri/examples/generate_formula_function_fixture.rs')
 const chartGenerator = read('src-tauri/examples/generate_chart_visual_fixture.rs')
 const chartFixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/chart-visual-matrix.json'))
 const chartFixturePath = path.join(root, 'src-tauri/tests/fixtures/workbook', chartFixture.fixture)
+const formulaFixturePath = path.join(root, 'src-tauri/tests/fixtures/workbook', formulaFixture.fixture)
 const configCommand = read('src-tauri/src/commands/config.rs')
 const chartVisualEvidence = [
   'professional-light-column.jpg',
@@ -52,6 +56,24 @@ if (!ooxml.includes('read_workbook_defined_names') || !view.includes('navigateDe
 if (!ooxml.includes('patch_workbook_defined_name') || !engine.includes('update_workbook_defined_name') || !view.includes("invoke<WorkbookDocument>('update_workbook_defined_name'")) fail('named range S8-3A transaction evidence missing')
 if (!ooxml.includes('refuses_to_rename_or_delete_referenced_defined_names') || !view.includes('createDefinedName') || !view.includes('updateDefinedNameRange')) fail('named range S8-3A safety/UI evidence missing')
 if (!calculation.includes('recalculates_formula_using_named_range')) fail('named range calculation evidence missing')
+if (formulaCapabilities.schemaVersion !== 1 || formulaCapabilities.engine.id !== 'ironcalc' || formulaCapabilities.engine.version !== '0.7.1') fail('S8-6A formula capability header drift')
+const verifiedFormulaFunctions = new Set(formulaCapabilities.families.flatMap(family => {
+  if (family.status !== 'verified' || !family.id || !family.functions.length) fail('S8-6A formula family is incomplete')
+  return family.functions
+}))
+if (!fs.existsSync(formulaFixturePath) || fs.statSync(formulaFixturePath).size < 5_000) fail('S8-6A formula fixture is missing or incomplete')
+for (const item of formulaFixture.cases) {
+  if (!item.id || !item.cell || !item.expectedValue || !item.expectedKind) fail('S8-6A formula fixture case is incomplete')
+  for (const fn of (item.function ?? '').split(',').filter(Boolean)) {
+    if (!verifiedFormulaFunctions.has(fn)) fail(`S8-6A ${fn} fixture function is not in the verified inventory`)
+    if (!formulaGenerator.includes(`${fn}(`)) fail(`S8-6A ${fn} generator evidence missing`)
+  }
+}
+for (const scenario of ['division-by-zero', 'dependent-error-propagation', 'IFERROR-recovery', 'unknown-function']) {
+  if (!formulaCapabilities.errorContract.verifiedScenarios.includes(scenario)) fail(`S8-6A ${scenario} error contract missing`)
+}
+if (!calculation.includes('recalculates_verified_function_families_from_real_xlsx_fixture') || !calculation.includes('classifies_formula_errors_and_preserves_dependency_propagation') || !calculation.includes('fn error_category')) fail('S8-6A calculation regression evidence missing')
+if (!engine.includes('formula_function_matrix_recalculates_through_command_boundary')) fail('S8-6A command-boundary evidence missing')
 if (!generator.includes('ExcelDateTime::from_ymd') || !generator.includes('#DIV/0!') || !generator.includes('define_name')) fail('S6-10 fixture evidence missing')
 for (const capability of ['namedRanges', 'dateTimeValues', 'errorValues']) {
   if (fixture.currentEngineExpectations[capability] !== 'supported') fail(`${capability} fixture expectation drift`)

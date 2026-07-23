@@ -608,7 +608,7 @@ interface EditAction { changes?: CellChange[]; styleChanges?: StyleChange[]; row
 interface FormulaTranslation { formula: string; rowDelta: number; columnDelta: number }
 interface WorkbookFormulaTarget { sheet: string; row: number; column: number }
 interface WorkbookCalculatedCell { sheet: string; row: number; column: number; value: string; formattedValue: string; kind: string }
-interface WorkbookCalculationDiagnostic { sheet: string; row: number; column: number; code: string }
+interface WorkbookCalculationDiagnostic { sheet: string; row: number; column: number; code: string; category: string }
 interface WorkbookCalculationResult { cells: WorkbookCalculatedCell[]; diagnostics: WorkbookCalculationDiagnostic[]; evaluatedFormulaCount: number }
 
 const PAGE_ROWS = 2_000

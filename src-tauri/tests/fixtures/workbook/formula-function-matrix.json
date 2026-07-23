@@ -1,0 +1,24 @@
+{
+  "fixture": "formula-function-matrix.xlsx",
+  "sheet": "Formula Matrix",
+  "cases": [
+    { "id": "aggregate_sum", "cell": "E2", "function": "SUM", "expectedValue": "60", "expectedKind": "number" },
+    { "id": "aggregate_average", "cell": "E3", "function": "AVERAGE", "expectedValue": "20", "expectedKind": "number" },
+    { "id": "aggregate_min", "cell": "E4", "function": "MIN", "expectedValue": "10", "expectedKind": "number" },
+    { "id": "aggregate_max", "cell": "E5", "function": "MAX", "expectedValue": "30", "expectedKind": "number" },
+    { "id": "aggregate_count", "cell": "E6", "function": "COUNT", "expectedValue": "3", "expectedKind": "number" },
+    { "id": "math_abs", "cell": "E7", "function": "ABS", "expectedValue": "12.5", "expectedKind": "number" },
+    { "id": "math_round", "cell": "E8", "function": "ROUND", "expectedValue": "12.35", "expectedKind": "number" },
+    { "id": "logical_if", "cell": "E9", "function": "IF", "expectedValue": "high", "expectedKind": "text" },
+    { "id": "logical_and", "cell": "E10", "function": "AND", "expectedValue": "true", "expectedKind": "boolean" },
+    { "id": "logical_or", "cell": "E11", "function": "OR", "expectedValue": "true", "expectedKind": "boolean" },
+    { "id": "logical_not", "cell": "E12", "function": "NOT", "expectedValue": "true", "expectedKind": "boolean" },
+    { "id": "text_concat", "cell": "E13", "function": "CONCAT", "expectedValue": "LongEdit", "expectedKind": "text" },
+    { "id": "text_len_trim", "cell": "E14", "function": "LEN,TRIM", "expectedValue": "9", "expectedKind": "number" },
+    { "id": "text_upper", "cell": "E15", "function": "UPPER", "expectedValue": "WORKSPACE", "expectedKind": "text" },
+    { "id": "error_division", "cell": "E16", "function": null, "expectedValue": "#DIV/0!", "expectedKind": "error", "diagnosticCategory": "division_by_zero" },
+    { "id": "error_propagation", "cell": "E17", "function": null, "expectedValue": "#DIV/0!", "expectedKind": "error", "diagnosticCategory": "division_by_zero" },
+    { "id": "error_recovery", "cell": "E18", "function": "IFERROR", "expectedValue": "recovered", "expectedKind": "text" },
+    { "id": "unknown_function", "cell": "E19", "function": null, "expectedValue": "#NAME?", "expectedKind": "error", "diagnosticCategory": "name" }
+  ]
+}

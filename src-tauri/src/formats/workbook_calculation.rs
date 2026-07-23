@@ -32,6 +32,19 @@ fn cell_value(value: CellValue) -> (String, &'static str) {
     }
 }
 
+fn error_category(code: &str) -> &'static str {
+    match code {
+        "#DIV/0!" => "division_by_zero",
+        "#NAME?" => "name",
+        "#VALUE!" => "value",
+        "#REF!" => "reference",
+        "#NUM!" => "number",
+        "#N/A" => "not_available",
+        "#CIRC!" => "circular",
+        _ => "other",
+    }
+}
+
 pub fn calculate_workbook(
     source: &[u8],
     workbook_name: &str,
@@ -98,6 +111,7 @@ pub fn calculate_workbook(
                 row: target.row,
                 column: target.column,
                 code: value.clone(),
+                category: error_category(&value).into(),
             });
         }
         cells.push(WorkbookCalculatedCell {
@@ -123,6 +137,9 @@ mod tests {
         WorkbookCalculationPayload, WorkbookCellEdit, WorkbookFormulaTarget,
     };
     use rust_xlsxwriter::{Formula, Workbook};
+
+    const FUNCTION_FIXTURE: &[u8] =
+        include_bytes!("../../tests/fixtures/workbook/formula-function-matrix.xlsx");
 
     fn workbook_bytes() -> Vec<u8> {
         let mut workbook = Workbook::new();
@@ -154,6 +171,14 @@ mod tests {
             sheet: "Data".into(),
             row,
             column: 1,
+        }
+    }
+
+    fn fixture_target(row: usize) -> WorkbookFormulaTarget {
+        WorkbookFormulaTarget {
+            sheet: "Formula Matrix".into(),
+            row,
+            column: 4,
         }
     }
 
@@ -203,6 +228,7 @@ mod tests {
         .unwrap();
         assert_eq!(result.cells[0].kind, "error");
         assert_eq!(result.diagnostics.len(), 1);
+        assert_eq!(result.diagnostics[0].category, "circular");
     }
 
     #[test]
@@ -225,6 +251,67 @@ mod tests {
         .unwrap();
         assert_eq!(result.cells[0].value, "50");
         assert!(result.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn recalculates_verified_function_families_from_real_xlsx_fixture() {
+        let result = calculate_workbook(
+            FUNCTION_FIXTURE,
+            "formula-function-matrix.xlsx",
+            WorkbookCalculationPayload {
+                expected_signature: String::new(),
+                edits: Vec::new(),
+                targets: (1..=14)
+                    .map(fixture_target)
+                    .chain([fixture_target(17)])
+                    .collect(),
+            },
+        )
+        .unwrap();
+        let expected = [
+            ("60", "number"),
+            ("20", "number"),
+            ("10", "number"),
+            ("30", "number"),
+            ("3", "number"),
+            ("12.5", "number"),
+            ("12.35", "number"),
+            ("high", "text"),
+            ("true", "boolean"),
+            ("true", "boolean"),
+            ("true", "boolean"),
+            ("LongEdit", "text"),
+            ("9", "number"),
+            ("WORKSPACE", "text"),
+            ("recovered", "text"),
+        ];
+        assert_eq!(result.cells.len(), expected.len());
+        for (cell, (value, kind)) in result.cells.iter().zip(expected) {
+            assert_eq!(cell.value, value);
+            assert_eq!(cell.kind, kind);
+        }
+        assert!(result.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn classifies_formula_errors_and_preserves_dependency_propagation() {
+        let result = calculate_workbook(
+            FUNCTION_FIXTURE,
+            "formula-function-matrix.xlsx",
+            WorkbookCalculationPayload {
+                expected_signature: String::new(),
+                edits: Vec::new(),
+                targets: [fixture_target(15), fixture_target(16), fixture_target(18)].into(),
+            },
+        )
+        .unwrap();
+        assert_eq!(result.cells[0].value, "#DIV/0!");
+        assert_eq!(result.cells[1].value, "#DIV/0!");
+        assert_eq!(result.cells[2].value, "#NAME?");
+        assert_eq!(result.diagnostics.len(), 3);
+        assert_eq!(result.diagnostics[0].category, "division_by_zero");
+        assert_eq!(result.diagnostics[1].category, "division_by_zero");
+        assert_eq!(result.diagnostics[2].category, "name");
     }
 
     #[test]

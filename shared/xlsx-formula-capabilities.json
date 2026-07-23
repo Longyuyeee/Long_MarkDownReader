@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-23",
+  "engine": {
+    "id": "ironcalc",
+    "version": "0.7.1",
+    "locale": "en",
+    "timezone": "UTC",
+    "mode": "explicit-in-memory-recalculation"
+  },
+  "statusDefinitions": {
+    "verified": "Executed through the LongEdit calculation boundary with a committed XLSX fixture and regression tests.",
+    "planned": "Not yet part of the public calculation contract."
+  },
+  "families": [
+    {
+      "id": "aggregate",
+      "status": "verified",
+      "functions": ["SUM", "AVERAGE", "MIN", "MAX", "COUNT"]
+    },
+    {
+      "id": "math",
+      "status": "verified",
+      "functions": ["ABS", "ROUND"]
+    },
+    {
+      "id": "logical",
+      "status": "verified",
+      "functions": ["IF", "AND", "OR", "NOT", "IFERROR"]
+    },
+    {
+      "id": "text",
+      "status": "verified",
+      "functions": ["CONCAT", "LEN", "TRIM", "UPPER"]
+    }
+  ],
+  "errorContract": {
+    "diagnosticPerRequestedErrorCell": true,
+    "categories": ["division_by_zero", "name", "value", "reference", "number", "not_available", "circular", "other"],
+    "verifiedScenarios": ["division-by-zero", "dependent-error-propagation", "IFERROR-recovery", "unknown-function"]
+  },
+  "verifiedReferenceModes": ["same-sheet", "cross-sheet", "workbook-defined-name", "unsaved-edit-dependency"],
+  "excludedFromContract": [
+    "volatile-function-recalculation-timing",
+    "dynamic-arrays-and-spill-ranges",
+    "external-workbook-references",
+    "Excel-complete-function-equivalence",
+    "calculation-cache-persistence"
+  ],
+  "fixture": "src-tauri/tests/fixtures/workbook/formula-function-matrix.xlsx"
+}
