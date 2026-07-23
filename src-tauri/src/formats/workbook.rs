@@ -516,6 +516,9 @@ pub struct WorkbookDrawingObject {
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkbookDrawingAction {
+    CreateChart,
+    DeleteChart,
+    ChangeChartType,
     UpdateMetadata,
     MoveResize,
     UpdateChartTitle,
@@ -535,6 +538,8 @@ pub struct WorkbookDrawingChange {
     pub from: Option<WorkbookDrawingAnchor>,
     pub to: Option<WorkbookDrawingAnchor>,
     pub chart_title: Option<String>,
+    pub chart_type: Option<String>,
+    pub source_range: Option<WorkbookMergeRange>,
     pub series_index: Option<usize>,
     pub series_categories: Option<String>,
     pub series_values: Option<String>,

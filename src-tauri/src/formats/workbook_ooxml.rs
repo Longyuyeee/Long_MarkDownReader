@@ -16,6 +16,9 @@ use crate::formats::workbook::{
     WorkbookSlicer, WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructureChange,
     WorkbookTable, WorkbookTableAction, WorkbookTableChange,
 };
+use crate::formats::workbook_chart::{
+    build_standard_chart_xml, chart_series_from_selection, supported_chart_type,
+};
 use crate::formats::workbook_formula::{
     migrate_workbook_formula, migrate_workbook_reference, translate_formula,
     validate_workbook_structure_change,
@@ -1215,7 +1218,10 @@ fn load_package(source: &[u8]) -> Result<Vec<PackageEntry>, String> {
     Ok(entries)
 }
 
-fn defined_name_reference(formula: &str, scope: Option<&str>) -> Option<WorkbookRangeReference> {
+pub(super) fn defined_name_reference(
+    formula: &str,
+    scope: Option<&str>,
+) -> Option<WorkbookRangeReference> {
     let formula = formula.trim().strip_prefix('=').unwrap_or(formula.trim());
     if formula.contains(['[', ']', ',', ';']) {
         return None;
@@ -3981,6 +3987,448 @@ fn patch_chart_series_xml(
     Ok(writer.into_inner())
 }
 
+const CHART_RELATIONSHIP_TYPE: &str =
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart";
+const DRAWING_RELATIONSHIP_TYPE: &str =
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing";
+const CHART_CONTENT_TYPE: &str =
+    "application/vnd.openxmlformats-officedocument.drawingml.chart+xml";
+const DRAWING_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.drawing+xml";
+
+fn relationship_part_path(source_path: &str) -> Result<String, String> {
+    let (directory, file) = source_path
+        .rsplit_once('/')
+        .ok_or("The OOXML source part path is invalid.")?;
+    Ok(format!("{directory}/_rels/{file}.rels"))
+}
+
+fn relationship_ids(xml: &[u8]) -> Result<HashSet<String>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut result = HashSet::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse OOXML relationships: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"Relationship" =>
+            {
+                if let Some(id) = xml_value(event, b"Id", reader.decoder())? {
+                    result.insert(id);
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(result)
+}
+
+fn next_relationship_id(xml: Option<&[u8]>) -> Result<String, String> {
+    let used = xml.map(relationship_ids).transpose()?.unwrap_or_default();
+    (1usize..)
+        .map(|number| format!("rId{number}"))
+        .find(|candidate| !used.contains(candidate))
+        .ok_or("Could not allocate an OOXML relationship id.".into())
+}
+
+fn append_relationship(
+    xml: &[u8],
+    relation_id: &str,
+    relationship_type: &str,
+    target: &str,
+) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 192));
+    let mut buffer = Vec::new();
+    let mut inserted = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse OOXML relationships: {error}"))?;
+        match event {
+            Event::End(ref end) if end.local_name().as_ref() == b"Relationships" => {
+                let mut relationship = BytesStart::new("Relationship");
+                relationship.push_attribute(("Id", relation_id));
+                relationship.push_attribute(("Type", relationship_type));
+                relationship.push_attribute(("Target", target));
+                writer
+                    .write_event(Event::Empty(relationship))
+                    .map_err(|error| format!("Failed to append an OOXML relationship: {error}"))?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish OOXML relationships: {error}"))?;
+                inserted = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy OOXML relationships: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !inserted {
+        return Err("The OOXML relationship root is missing.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn new_relationships(relation_id: &str, relationship_type: &str, target: &str) -> Vec<u8> {
+    format!(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"{relation_id}\" Type=\"{relationship_type}\" Target=\"{target}\"/></Relationships>"
+    )
+    .into_bytes()
+}
+
+fn remove_relationship(xml: &[u8], relation_id: &str) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
+    let mut buffer = Vec::new();
+    let mut removed = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse OOXML relationships: {error}"))?;
+        match event {
+            Event::Start(ref start)
+                if start.local_name().as_ref() == b"Relationship"
+                    && xml_value(start, b"Id", reader.decoder())?.as_deref()
+                        == Some(relation_id) =>
+            {
+                skip_element(&mut reader, b"Relationship", &mut buffer)?;
+                removed = true;
+            }
+            Event::Empty(ref start)
+                if start.local_name().as_ref() == b"Relationship"
+                    && xml_value(start, b"Id", reader.decoder())?.as_deref()
+                        == Some(relation_id) =>
+            {
+                removed = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy OOXML relationships: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !removed {
+        return Err("The target OOXML relationship is missing.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn append_content_type(xml: &[u8], part_name: &str, content_type: &str) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 192));
+    let mut buffer = Vec::new();
+    let mut exists = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse content types: {error}"))?;
+        match event {
+            Event::Start(ref start) | Event::Empty(ref start)
+                if start.local_name().as_ref() == b"Override"
+                    && xml_value(start, b"PartName", reader.decoder())?.as_deref()
+                        == Some(part_name) =>
+            {
+                exists = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy a content type: {error}"))?;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"Types" && !exists => {
+                let mut item = BytesStart::new("Override");
+                item.push_attribute(("PartName", part_name));
+                item.push_attribute(("ContentType", content_type));
+                writer
+                    .write_event(Event::Empty(item))
+                    .map_err(|error| format!("Failed to append a content type: {error}"))?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish content types: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy content types: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn write_xml_fragment(writer: &mut Writer<Vec<u8>>, fragment: &[u8]) -> Result<(), String> {
+    let mut reader = Reader::from_reader(fragment);
+    reader.config_mut().trim_text(false);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse an OOXML fragment: {error}"))?
+        {
+            Event::Eof => break,
+            event => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to write an OOXML fragment: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(())
+}
+
+fn drawing_anchor_xml(
+    relation_id: &str,
+    object_id: usize,
+    from: &WorkbookDrawingAnchor,
+    to: &WorkbookDrawingAnchor,
+) -> Vec<u8> {
+    format!(
+        "<xdr:twoCellAnchor><xdr:from><xdr:col>{}</xdr:col><xdr:colOff>{}</xdr:colOff><xdr:row>{}</xdr:row><xdr:rowOff>{}</xdr:rowOff></xdr:from><xdr:to><xdr:col>{}</xdr:col><xdr:colOff>{}</xdr:colOff><xdr:row>{}</xdr:row><xdr:rowOff>{}</xdr:rowOff></xdr:to><xdr:graphicFrame macro=\"\"><xdr:nvGraphicFramePr><xdr:cNvPr id=\"{object_id}\" name=\"Chart {object_id}\" descr=\"Chart created by LongEdit\"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr><xdr:xfrm/><a:graphic><a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/chart\"><c:chart xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" r:id=\"{relation_id}\"/></a:graphicData></a:graphic></xdr:graphicFrame><xdr:clientData/></xdr:twoCellAnchor>",
+        from.column,
+        from.column_offset,
+        from.row,
+        from.row_offset,
+        to.column,
+        to.column_offset,
+        to.row,
+        to.row_offset
+    )
+    .into_bytes()
+}
+
+fn append_drawing_anchor(xml: &[u8], anchor: &[u8]) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + anchor.len()));
+    let mut buffer = Vec::new();
+    let mut inserted = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse Drawing XML: {error}"))?;
+        match event {
+            Event::End(ref end) if end.local_name().as_ref() == b"wsDr" => {
+                write_xml_fragment(&mut writer, anchor)?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish Drawing XML: {error}"))?;
+                inserted = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy Drawing XML: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !inserted {
+        return Err("The Drawing root is missing.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn new_drawing(anchor: &[u8]) -> Result<Vec<u8>, String> {
+    let mut output = b"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><xdr:wsDr xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\">".to_vec();
+    output.extend_from_slice(anchor);
+    output.extend_from_slice(b"</xdr:wsDr>");
+    Ok(output)
+}
+
+fn patch_sheet_with_drawing(xml: &[u8], relation_id: &str) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 96));
+    let mut buffer = Vec::new();
+    let mut inserted = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse worksheet Drawing references: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"worksheet" => {
+                let mut root = start.to_owned();
+                if xml_value(start, b"xmlns:r", reader.decoder())?.is_none() {
+                    root.push_attribute((
+                        "xmlns:r",
+                        "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+                    ));
+                }
+                writer
+                    .write_event(Event::Start(root))
+                    .map_err(|error| format!("Failed to write the worksheet root: {error}"))?;
+            }
+            Event::Start(ref start)
+                if !inserted
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"legacyDrawing" | b"tableParts" | b"extLst"
+                    ) =>
+            {
+                let mut drawing = BytesStart::new("drawing");
+                drawing.push_attribute(("r:id", relation_id));
+                writer
+                    .write_event(Event::Empty(drawing))
+                    .map_err(|error| format!("Failed to add the Drawing reference: {error}"))?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy worksheet XML: {error}"))?;
+                inserted = true;
+            }
+            Event::End(ref end) if !inserted && end.local_name().as_ref() == b"worksheet" => {
+                let mut drawing = BytesStart::new("drawing");
+                drawing.push_attribute(("r:id", relation_id));
+                writer
+                    .write_event(Event::Empty(drawing))
+                    .map_err(|error| format!("Failed to add the Drawing reference: {error}"))?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish the worksheet: {error}"))?;
+                inserted = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy worksheet XML: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !inserted {
+        return Err("Could not add the Drawing reference to the worksheet.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn drawing_object_count_and_max_id(xml: &[u8]) -> Result<(usize, usize), String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut count = 0usize;
+    let mut max_id = 0usize;
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to inspect Drawing identities: {error}"))?
+        {
+            Event::Start(ref event)
+                if matches!(
+                    event.local_name().as_ref(),
+                    b"twoCellAnchor" | b"oneCellAnchor" | b"absoluteAnchor"
+                ) =>
+            {
+                count += 1;
+            }
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"cNvPr" =>
+            {
+                max_id = max_id.max(
+                    xml_value(event, b"id", reader.decoder())?
+                        .and_then(|value| value.parse().ok())
+                        .unwrap_or_default(),
+                );
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok((count, max_id))
+}
+
+fn remove_drawing_anchor(xml: &[u8], anchor_index: usize) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len()));
+    let mut buffer = Vec::new();
+    let mut next_anchor = 0usize;
+    let mut removed = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse Drawing XML: {error}"))?;
+        match event {
+            Event::Start(ref start)
+                if matches!(
+                    start.local_name().as_ref(),
+                    b"twoCellAnchor" | b"oneCellAnchor" | b"absoluteAnchor"
+                ) =>
+            {
+                let current = next_anchor;
+                next_anchor += 1;
+                if current == anchor_index {
+                    let name = start.local_name().as_ref().to_vec();
+                    skip_element(&mut reader, &name, &mut buffer)?;
+                    removed = true;
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("Failed to copy Drawing XML: {error}"))?;
+                }
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy Drawing XML: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !removed {
+        return Err("The target Drawing anchor is missing.".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn drawing_uses_relationship(xml: &[u8], relation_id: &str) -> Result<bool, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse Drawing XML: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event) => {
+                if xml_value(event, b"r:id", reader.decoder())?.as_deref() == Some(relation_id) {
+                    return Ok(true);
+                }
+            }
+            Event::Eof => return Ok(false),
+            _ => {}
+        }
+        buffer.clear();
+    }
+}
+
+fn chart_type_element_count(xml: &[u8]) -> Result<usize, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut count = 0usize;
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to inspect chart structure: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if chart_type_from_name(event.local_name().as_ref()).is_some() =>
+            {
+                count += 1;
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(count)
+}
+
 pub fn patch_workbook_drawing(
     source: &[u8],
     change: &WorkbookDrawingChange,
@@ -3999,6 +4447,218 @@ pub fn patch_workbook_drawing(
     if parse_page_layout(&sheet_xml)?.protection.enabled {
         return Err("The protected worksheet cannot modify Drawing objects.".into());
     }
+    if change.action == WorkbookDrawingAction::CreateChart {
+        let chart_type = change
+            .chart_type
+            .as_deref()
+            .ok_or("A chart type is required.")?;
+        supported_chart_type(chart_type)?;
+        let source_range = change
+            .source_range
+            .as_ref()
+            .ok_or("A source range is required to create a chart.")?;
+        let series = chart_series_from_selection(&change.sheet, source_range, chart_type)?;
+        let from = change
+            .from
+            .as_ref()
+            .ok_or("A chart start anchor is required.")?;
+        let to = change
+            .to
+            .as_ref()
+            .ok_or("A chart end anchor is required.")?;
+        validate_drawing_anchor(from, false)?;
+        validate_drawing_anchor(to, true)?;
+        if to.row <= from.row || to.column <= from.column {
+            return Err(
+                "The chart end anchor must be below and to the right of its start anchor.".into(),
+            );
+        }
+        let title = change
+            .chart_title
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .unwrap_or("Chart");
+        let chart_xml = build_standard_chart_xml(chart_type, Some(title), &series)?;
+        let mut chart_number = 1usize;
+        let chart_path = loop {
+            let candidate = format!("xl/charts/chart{chart_number}.xml");
+            if !entries.iter().any(|entry| entry.name == candidate) {
+                break candidate;
+            }
+            chart_number += 1;
+        };
+
+        let drawing_paths = part_relationships(&entries, &sheet_path)?
+            .into_values()
+            .filter(|path| path.starts_with("xl/drawings/") && path.ends_with(".xml"))
+            .collect::<Vec<_>>();
+        if drawing_paths.len() > 1 {
+            return Err(
+                "Worksheets with multiple Drawing parts cannot create charts safely yet.".into(),
+            );
+        }
+        let (drawing_path, drawing_xml, drawing_was_created) =
+            if let Some(path) = drawing_paths.first() {
+                let xml = entries
+                    .iter()
+                    .find(|entry| &entry.name == path)
+                    .map(|entry| entry.data.clone())
+                    .ok_or("The worksheet Drawing part is missing.")?;
+                (path.clone(), xml, false)
+            } else {
+                let mut drawing_number = 1usize;
+                let path = loop {
+                    let candidate = format!("xl/drawings/drawing{drawing_number}.xml");
+                    if !entries.iter().any(|entry| entry.name == candidate) {
+                        break candidate;
+                    }
+                    drawing_number += 1;
+                };
+                (path, Vec::new(), true)
+            };
+        let drawing_relationship_path = relationship_part_path(&drawing_path)?;
+        let drawing_relationship_xml = entries
+            .iter()
+            .find(|entry| entry.name == drawing_relationship_path)
+            .map(|entry| entry.data.as_slice());
+        let chart_relation_id = next_relationship_id(drawing_relationship_xml)?;
+        let (anchor_index, max_object_id) = if drawing_was_created {
+            (0, 0)
+        } else {
+            drawing_object_count_and_max_id(&drawing_xml)?
+        };
+        if anchor_index >= MAX_DRAWING_OBJECTS {
+            return Err(format!(
+                "A worksheet Drawing part cannot contain more than {MAX_DRAWING_OBJECTS} objects."
+            ));
+        }
+        let object_id = max_object_id
+            .checked_add(1)
+            .ok_or("The Drawing object id overflowed.")?;
+        let anchor = drawing_anchor_xml(&chart_relation_id, object_id, from, to);
+        let updated_drawing = if drawing_was_created {
+            new_drawing(&anchor)?
+        } else {
+            append_drawing_anchor(&drawing_xml, &anchor)?
+        };
+
+        let chart_target = format!(
+            "../charts/{}",
+            chart_path.rsplit('/').next().unwrap_or_default()
+        );
+        if let Some(entry) = entries
+            .iter_mut()
+            .find(|entry| entry.name == drawing_relationship_path)
+        {
+            entry.data = append_relationship(
+                &entry.data,
+                &chart_relation_id,
+                CHART_RELATIONSHIP_TYPE,
+                &chart_target,
+            )?;
+        } else {
+            entries.push(PackageEntry {
+                name: drawing_relationship_path.clone(),
+                is_dir: false,
+                compression: CompressionMethod::Deflated,
+                data: new_relationships(&chart_relation_id, CHART_RELATIONSHIP_TYPE, &chart_target),
+            });
+        }
+        if drawing_was_created {
+            let sheet_relationship_path = relationship_part_path(&sheet_path)?;
+            let sheet_relationship_xml = entries
+                .iter()
+                .find(|entry| entry.name == sheet_relationship_path)
+                .map(|entry| entry.data.as_slice());
+            let drawing_relation_id = next_relationship_id(sheet_relationship_xml)?;
+            let drawing_target = format!(
+                "../drawings/{}",
+                drawing_path.rsplit('/').next().unwrap_or_default()
+            );
+            if let Some(entry) = entries
+                .iter_mut()
+                .find(|entry| entry.name == sheet_relationship_path)
+            {
+                entry.data = append_relationship(
+                    &entry.data,
+                    &drawing_relation_id,
+                    DRAWING_RELATIONSHIP_TYPE,
+                    &drawing_target,
+                )?;
+            } else {
+                entries.push(PackageEntry {
+                    name: sheet_relationship_path,
+                    is_dir: false,
+                    compression: CompressionMethod::Deflated,
+                    data: new_relationships(
+                        &drawing_relation_id,
+                        DRAWING_RELATIONSHIP_TYPE,
+                        &drawing_target,
+                    ),
+                });
+            }
+            let sheet_entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == sheet_path)
+                .ok_or("The worksheet part is missing.")?;
+            sheet_entry.data = patch_sheet_with_drawing(&sheet_entry.data, &drawing_relation_id)?;
+            entries.push(PackageEntry {
+                name: drawing_path.clone(),
+                is_dir: false,
+                compression: CompressionMethod::Deflated,
+                data: updated_drawing,
+            });
+        } else {
+            let drawing_entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == drawing_path)
+                .ok_or("The Drawing part is missing.")?;
+            drawing_entry.data = updated_drawing;
+        }
+        let content_types = entries
+            .iter_mut()
+            .find(|entry| entry.name == "[Content_Types].xml")
+            .ok_or("XLSX is missing [Content_Types].xml")?;
+        if drawing_was_created {
+            content_types.data = append_content_type(
+                &content_types.data,
+                &format!("/{drawing_path}"),
+                DRAWING_CONTENT_TYPE,
+            )?;
+        }
+        content_types.data = append_content_type(
+            &content_types.data,
+            &format!("/{chart_path}"),
+            CHART_CONTENT_TYPE,
+        )?;
+        entries.push(PackageEntry {
+            name: chart_path.clone(),
+            is_dir: false,
+            compression: CompressionMethod::Deflated,
+            data: chart_xml,
+        });
+        let updated_sheet_xml = entries
+            .iter()
+            .find(|entry| entry.name == sheet_path)
+            .map(|entry| entry.data.as_slice())
+            .ok_or("The updated worksheet part is missing.")?;
+        let created = read_sheet_drawings(&entries, &sheet_path, updated_sheet_xml)?
+            .into_iter()
+            .find(|item| item.part.as_deref() == Some(chart_path.as_str()))
+            .ok_or("The created chart could not be read back.")?;
+        if created.object_id != object_id.to_string()
+            || created.anchor_index != anchor_index
+            || created
+                .chart
+                .as_ref()
+                .map(|chart| chart.chart_type.as_str())
+                != Some(chart_type)
+        {
+            return Err("The created chart failed semantic verification.".into());
+        }
+        return write_package(entries, source.len() + 4096);
+    }
     let target = read_sheet_drawings(&entries, &sheet_path, &sheet_xml)?
         .into_iter()
         .find(|item| {
@@ -4011,6 +4671,108 @@ pub fn patch_workbook_drawing(
         return Err("Only standard two-cell Drawing objects can be edited in this stage.".into());
     }
     match change.action {
+        WorkbookDrawingAction::DeleteChart => {
+            let chart_part = target
+                .part
+                .as_deref()
+                .filter(|part| part.starts_with("xl/charts/") && part.ends_with(".xml"))
+                .ok_or("The selected Drawing object is not a safe chart.")?
+                .to_string();
+            let drawing_relationship_path = relationship_part_path(&change.drawing_part)?;
+            let relation_id = part_relationships(&entries, &change.drawing_part)?
+                .into_iter()
+                .find_map(|(id, path)| (path == chart_part).then_some(id))
+                .ok_or("The chart relationship is missing.")?;
+            let drawing_entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == change.drawing_part)
+                .ok_or("The Drawing part is missing.")?;
+            drawing_entry.data = remove_drawing_anchor(&drawing_entry.data, change.anchor_index)?;
+            if !drawing_uses_relationship(&drawing_entry.data, &relation_id)? {
+                let relationship_entry = entries
+                    .iter_mut()
+                    .find(|entry| entry.name == drawing_relationship_path)
+                    .ok_or("The Drawing relationship part is missing.")?;
+                relationship_entry.data =
+                    remove_relationship(&relationship_entry.data, &relation_id)?;
+            }
+            let still_referenced = entries
+                .iter()
+                .filter(|entry| {
+                    entry.name.starts_with("xl/drawings/")
+                        && entry.name.ends_with(".xml")
+                        && !entry.name.contains("/_rels/")
+                })
+                .map(|entry| part_relationships(&entries, &entry.name))
+                .collect::<Result<Vec<_>, _>>()?
+                .into_iter()
+                .any(|relationships| relationships.into_values().any(|path| path == chart_part));
+            if !still_referenced {
+                entries.retain(|entry| entry.name != chart_part);
+                let content_types = entries
+                    .iter_mut()
+                    .find(|entry| entry.name == "[Content_Types].xml")
+                    .ok_or("XLSX is missing [Content_Types].xml")?;
+                content_types.data =
+                    remove_table_content_type(&content_types.data, &format!("/{chart_part}"))
+                        .map_err(|_| "The chart content type is missing.")?;
+            }
+            if read_sheet_drawings(&entries, &sheet_path, &sheet_xml)?
+                .iter()
+                .any(|item| {
+                    item.drawing_part == change.drawing_part && item.object_id == change.object_id
+                })
+            {
+                return Err("The chart deletion failed semantic verification.".into());
+            }
+        }
+        WorkbookDrawingAction::ChangeChartType => {
+            let chart_type = change
+                .chart_type
+                .as_deref()
+                .ok_or("A target chart type is required.")?;
+            supported_chart_type(chart_type)?;
+            let chart = target
+                .chart
+                .as_ref()
+                .ok_or("The selected Drawing object is not a chart.")?;
+            supported_chart_type(&chart.chart_type)
+                .map_err(|_| "The existing chart type cannot be rebuilt safely.")?;
+            if chart.series.is_empty()
+                || chart.series.iter().any(|series| !series.editable)
+                || (chart_type == "pie" && chart.series.len() != 1)
+            {
+                return Err(
+                    "Only simple standard charts with internal formula series can change type."
+                        .into(),
+                );
+            }
+            let chart_part = target
+                .part
+                .as_deref()
+                .filter(|part| part.starts_with("xl/charts/") && part.ends_with(".xml"))
+                .ok_or("The chart part is missing or unsafe.")?;
+            let chart_entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == chart_part)
+                .ok_or("The chart part is missing.")?;
+            if chart_type_element_count(&chart_entry.data)? != 1
+                || chart_entry
+                    .data
+                    .windows(b"extLst".len())
+                    .any(|window| window == b"extLst")
+            {
+                return Err(
+                    "Combination charts and charts with extensions cannot change type.".into(),
+                );
+            }
+            chart_entry.data =
+                build_standard_chart_xml(chart_type, chart.title.as_deref(), &chart.series)?;
+            let verified = parse_chart_part(&chart_entry.data)?;
+            if verified.chart_type != chart_type || verified.series.len() != chart.series.len() {
+                return Err("The chart type change failed semantic verification.".into());
+            }
+        }
         WorkbookDrawingAction::UpdateMetadata | WorkbookDrawingAction::MoveResize => {
             let drawing_entry = entries
                 .iter_mut()
@@ -4125,6 +4887,7 @@ pub fn patch_workbook_drawing(
                 return Err("The chart series references failed semantic verification.".into());
             }
         }
+        WorkbookDrawingAction::CreateChart => unreachable!("handled before target lookup"),
     }
     write_package(entries, source.len() + 512)
 }
@@ -10130,7 +10893,7 @@ fn defined_name_key_matches(item: &WorkbookDefinedName, name: &str, scope: Optio
     item.name.eq_ignore_ascii_case(name) && same_defined_name_scope(item.scope.as_deref(), scope)
 }
 
-fn absolute_cell_reference(row: usize, column: usize) -> Result<String, String> {
+pub(super) fn absolute_cell_reference(row: usize, column: usize) -> Result<String, String> {
     let reference = cell_reference(row, column)?;
     let split = reference
         .find(|character: char| character.is_ascii_digit())
@@ -12499,6 +13262,8 @@ mod tests {
                 from: None,
                 to: None,
                 chart_title: None,
+                chart_type: None,
+                source_range: None,
                 series_index: None,
                 series_categories: None,
                 series_values: None,
@@ -12544,6 +13309,8 @@ mod tests {
                 from: Some(from.clone()),
                 to: Some(to.clone()),
                 chart_title: None,
+                chart_type: None,
+                source_range: None,
                 series_index: None,
                 series_categories: None,
                 series_values: None,
@@ -12574,6 +13341,8 @@ mod tests {
                 from: None,
                 to: None,
                 chart_title: None,
+                chart_type: None,
+                source_range: None,
                 series_index: None,
                 series_categories: None,
                 series_values: None,
@@ -12581,6 +13350,138 @@ mod tests {
         )
         .unwrap_err();
         assert!(error.contains("no longer exists"));
+    }
+
+    #[test]
+    fn creates_changes_and_deletes_standard_chart_lifecycle() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_string(0, 0, "Month").unwrap();
+        sheet.write_string(0, 1, "Revenue").unwrap();
+        for (row, (month, revenue)) in [("Jan", 12.0), ("Feb", 18.0), ("Mar", 15.0)]
+            .into_iter()
+            .enumerate()
+        {
+            sheet.write_string((row + 1) as u32, 0, month).unwrap();
+            sheet.write_number((row + 1) as u32, 1, revenue).unwrap();
+        }
+        let source = workbook.save_to_buffer().unwrap();
+        let created = patch_workbook_drawing(
+            &source,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: String::new(),
+                anchor_index: 0,
+                object_id: String::new(),
+                action: WorkbookDrawingAction::CreateChart,
+                name: None,
+                description: None,
+                from: Some(WorkbookDrawingAnchor {
+                    row: 1,
+                    column: 3,
+                    row_offset: 0,
+                    column_offset: 0,
+                }),
+                to: Some(WorkbookDrawingAnchor {
+                    row: 16,
+                    column: 11,
+                    row_offset: 0,
+                    column_offset: 0,
+                }),
+                chart_title: Some("Revenue trend".into()),
+                chart_type: Some("column".into()),
+                source_range: Some(WorkbookMergeRange {
+                    top: 0,
+                    bottom: 3,
+                    left: 0,
+                    right: 1,
+                }),
+                series_index: None,
+                series_categories: None,
+                series_values: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&created).unwrap();
+        let layout = read_workbook_sheet_layout(&created, "Data", 0, 20, 20).unwrap();
+        assert_eq!(layout.drawings.len(), 1);
+        let drawing = &layout.drawings[0];
+        assert_eq!(drawing.anchor_kind, "two_cell");
+        let chart = drawing.chart.as_ref().unwrap();
+        assert_eq!(chart.chart_type, "column");
+        assert_eq!(chart.title.as_deref(), Some("Revenue trend"));
+        assert_eq!(chart.series.len(), 1);
+        assert_eq!(
+            chart.series[0].categories.as_deref(),
+            Some("Data!$A$2:$A$4")
+        );
+        assert_eq!(chart.series[0].values.as_deref(), Some("Data!$B$2:$B$4"));
+        let chart_path = drawing.part.clone().unwrap();
+
+        let changed = patch_workbook_drawing(
+            &created,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: drawing.drawing_part.clone(),
+                anchor_index: drawing.anchor_index,
+                object_id: drawing.object_id.clone(),
+                action: WorkbookDrawingAction::ChangeChartType,
+                name: None,
+                description: None,
+                from: None,
+                to: None,
+                chart_title: None,
+                chart_type: Some("line".into()),
+                source_range: None,
+                series_index: None,
+                series_categories: None,
+                series_values: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&changed).unwrap();
+        let layout = read_workbook_sheet_layout(&changed, "Data", 0, 20, 20).unwrap();
+        let drawing = &layout.drawings[0];
+        assert_eq!(
+            drawing
+                .chart
+                .as_ref()
+                .map(|chart| chart.chart_type.as_str()),
+            Some("line")
+        );
+
+        let deleted = patch_workbook_drawing(
+            &changed,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: drawing.drawing_part.clone(),
+                anchor_index: drawing.anchor_index,
+                object_id: drawing.object_id.clone(),
+                action: WorkbookDrawingAction::DeleteChart,
+                name: None,
+                description: None,
+                from: None,
+                to: None,
+                chart_title: None,
+                chart_type: None,
+                source_range: None,
+                series_index: None,
+                series_categories: None,
+                series_values: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&deleted).unwrap();
+        assert!(read_workbook_sheet_layout(&deleted, "Data", 0, 20, 20)
+            .unwrap()
+            .drawings
+            .is_empty());
+        assert!(!super::load_package(&deleted)
+            .unwrap()
+            .iter()
+            .any(|entry| entry.name == chart_path));
+        assert!(!zip_text(&deleted, "[Content_Types].xml").contains(&format!("/{chart_path}")));
     }
 
     #[test]
@@ -12624,6 +13525,8 @@ mod tests {
                 from: None,
                 to: None,
                 chart_title: Some("Regional inventory".into()),
+                chart_type: None,
+                source_range: None,
                 series_index: None,
                 series_categories: None,
                 series_values: None,
@@ -12659,6 +13562,8 @@ mod tests {
                 from: None,
                 to: None,
                 chart_title: None,
+                chart_type: None,
+                source_range: None,
                 series_index: Some(0),
                 series_categories: Some("Data!$A$2:$A$3".into()),
                 series_values: Some("Data!$B$2:$B$3".into()),
@@ -12692,6 +13597,8 @@ mod tests {
                 from: None,
                 to: None,
                 chart_title: None,
+                chart_type: None,
+                source_range: None,
                 series_index: Some(0),
                 series_categories: Some("[External.xlsx]Data!$A$1:$A$2".into()),
                 series_values: Some("Data!$B$1:$B$2".into()),

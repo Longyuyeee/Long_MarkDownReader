@@ -193,8 +193,15 @@
       </template>
     </div>
 
-    <div v-if="workbook && sheetInfo?.drawings.length" class="drawing-toolbar" aria-label="工作表绘图对象">
+    <div v-if="workbook && sheetInfo" class="drawing-toolbar" aria-label="工作表绘图对象">
       <strong>绘图对象 {{ sheetInfo.drawings.length }}</strong>
+      <select v-model="newChartType" class="drawing-series-select" title="选择要创建的图表类型">
+        <option value="column">柱形图</option>
+        <option value="line">折线图</option>
+        <option value="pie">饼图</option>
+        <option value="scatter">散点图</option>
+      </select>
+      <button class="drawing-action" :disabled="!canCreateChart" @click="createChartFromSelection">从选区创建图表</button>
       <button
         v-for="drawing in sheetInfo.drawings"
         :key="drawing.id"
@@ -214,6 +221,14 @@
           <option v-for="series in selectedDrawing.chart.series" :key="series.index" :value="series.index">系列 {{ series.index + 1 }} · {{ series.name || '未命名' }}</option>
         </select>
         <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canEditChartSeries" @click="editChartSeries">编辑系列引用</button>
+        <select v-if="selectedDrawing.chart" v-model="targetChartType" class="drawing-series-select" title="选择目标图表类型">
+          <option value="column">柱形图</option>
+          <option value="line">折线图</option>
+          <option value="pie">饼图</option>
+          <option value="scatter">散点图</option>
+        </select>
+        <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canChangeChartType" @click="changeSelectedChartType">切换类型</button>
+        <button v-if="selectedDrawing.chart" class="drawing-action danger" :disabled="!canDeleteChart" @click="deleteSelectedChart">删除图表</button>
       </template>
       <em>{{ selectedDrawing && !selectedDrawing.editable ? '该对象不是标准双单元格锚点，当前只读' : '安全事务只修改目标对象；复杂图表结构继续只读' }}</em>
     </div>
@@ -384,7 +399,7 @@ interface WorkbookDrawingAnchor { row: number; column: number; rowOffset: number
 interface WorkbookChartSeries { index: number; name?: string; categories?: string; values?: string; editable: boolean }
 interface WorkbookChart { chartType: string; title?: string; titleEditable: boolean; series: WorkbookChartSeries[] }
 interface WorkbookDrawingObject { id: string; objectId: string; drawingPart: string; anchorIndex: number; anchorKind: string; name: string; description?: string; kind: string; from: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; part?: string; chart?: WorkbookChart; editable: boolean }
-interface WorkbookDrawingChange { sheet: string; drawingPart: string; anchorIndex: number; objectId: string; action: 'update_metadata' | 'move_resize' | 'update_chart_title' | 'update_chart_series'; name?: string; description?: string; from?: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; chartTitle?: string; seriesIndex?: number; seriesCategories?: string; seriesValues?: string }
+interface WorkbookDrawingChange { sheet: string; drawingPart: string; anchorIndex: number; objectId: string; action: 'update_metadata' | 'move_resize' | 'update_chart_title' | 'update_chart_series' | 'create_chart' | 'delete_chart' | 'change_chart_type'; name?: string; description?: string; from?: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; chartTitle?: string; seriesIndex?: number; seriesCategories?: string; seriesValues?: string; chartType?: string; sourceRange?: WorkbookMergeRange }
 interface WorkbookChartPreview { headers: string[]; columnIds: string[]; columnTypes: string[]; rows: string[][]; rowIndices: number[]; config: { chartType: 'bar' | 'line' | 'pie' | 'scatter'; categoryColumn: string; valueColumn: string; seriesColumn: string; aggregation: 'sum'; nullStrategy: 'skip'; showLegend: boolean } }
 interface WorkbookPageMargins { left?: number; right?: number; top?: number; bottom?: number; header?: number; footer?: number }
 interface WorkbookPageSetup { orientation?: string; paperSize?: number; scale?: number; fitToWidth?: number; fitToHeight?: number; firstPageNumber?: number; horizontalDpi?: number; verticalDpi?: number; blackAndWhite: boolean; draft: boolean; fitToPage: boolean }
@@ -519,6 +534,8 @@ const redoStack = ref<EditAction[]>([])
 const selectedCell = ref<CellSelection | null>(null)
 const selectedDrawingId = ref('')
 const selectedChartSeriesIndex = ref(0)
+const newChartType = ref<'column' | 'line' | 'pie' | 'scatter'>('column')
+const targetChartType = ref<'column' | 'line' | 'pie' | 'scatter'>('column')
 const chartPreview = ref<WorkbookChartPreview | null>(null)
 const chartPreviewLoading = ref(false)
 const chartPreviewError = ref('')
@@ -1603,6 +1620,19 @@ const canEditDrawing = computed(() => Boolean(selectedDrawing.value?.editable &&
 const canApplyDrawingSelection = computed(() => Boolean(canEditDrawing.value && selectionAreas.value.length === 1 && selectionBounds.value))
 const canEditChartTitle = computed(() => Boolean(canEditDrawing.value && selectedDrawing.value?.chart?.titleEditable))
 const canEditChartSeries = computed(() => Boolean(canEditDrawing.value && selectedChartSeries.value?.editable))
+const canCreateChart = computed(() => {
+  const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
+  if (!area || !workbook.value || saving.value || updatingStructure.value || sheetProtected.value || dirtyCount.value) return false
+  const rows = area.bottom - area.top + 1
+  const columns = area.right - area.left + 1
+  return rows >= 2 && columns >= 2 && (newChartType.value !== 'pie' || columns === 2)
+})
+const canDeleteChart = computed(() => Boolean(canEditDrawing.value && selectedDrawing.value?.chart))
+const canChangeChartType = computed(() => {
+  const chart = selectedDrawing.value?.chart
+  if (!canEditDrawing.value || !chart || !['column', 'bar', 'line', 'pie', 'scatter'].includes(chart.chartType)) return false
+  return chart.chartType !== targetChartType.value && (targetChartType.value !== 'pie' || chart.series.length === 1)
+})
 const commitTableLifecycleChange = async (change: WorkbookTableChange, area: WorkbookMergeRange, success: string) => {
   if (!workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑 Table')
@@ -2722,13 +2752,14 @@ const loadChartPreview = async () => {
     if (current === chartPreviewGeneration) chartPreviewError.value = String(cause).replace(/^Error:\s*/, '')
   } finally { if (current === chartPreviewGeneration) chartPreviewLoading.value = false }
 }
-const commitDrawingChange = async (change: WorkbookDrawingChange, area: WorkbookMergeRange, success: string) => {
+const commitDrawingChange = async (change: WorkbookDrawingChange, area: WorkbookMergeRange, success: string, selectionMode: 'keep' | 'new' | 'clear' = 'keep') => {
   if (!workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑绘图对象')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   updatingStructure.value = true
   const sheet = activeSheet.value
   const drawingId = selectedDrawingId.value
+  const previousDrawingIds = new Set(sheetInfo.value?.drawings.map(drawing => drawing.id) || [])
   try {
     const document = await invoke<WorkbookDocument>('update_workbook_drawing', {
       libraryRoot: store.libraryPath,
@@ -2739,10 +2770,79 @@ const commitDrawingChange = async (change: WorkbookDrawingChange, area: Workbook
     undoStack.value = []
     redoStack.value = []
     await restoreTableSelection(sheet, area)
-    selectedDrawingId.value = drawingId
+    if (selectionMode === 'new') {
+      selectedDrawingId.value = sheetInfo.value?.drawings.find(drawing => drawing.chart && !previousDrawingIds.has(drawing.id))?.id || ''
+    } else {
+      selectedDrawingId.value = selectionMode === 'clear' ? '' : drawingId
+    }
     message.success(success)
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { updatingStructure.value = false }
+}
+const createChartFromSelection = () => {
+  const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
+  if (!area || !canCreateChart.value) return
+  const title = window.prompt('图表标题（最多 1024 个字符）', `${activeSheet.value} 图表`)?.trim()
+  if (!title) return
+  const from: WorkbookDrawingAnchor = {
+    row: area.top,
+    column: Math.min(area.right + 2, 16_383),
+    rowOffset: 0,
+    columnOffset: 0,
+  }
+  const to: WorkbookDrawingAnchor = {
+    row: Math.min(from.row + 16, 1_048_576),
+    column: Math.min(from.column + 8, 16_384),
+    rowOffset: 0,
+    columnOffset: 0,
+  }
+  if (to.row <= from.row || to.column <= from.column) {
+    message.error('当前选区太靠近工作表边界，无法放置图表')
+    return
+  }
+  void commitDrawingChange({
+    sheet: activeSheet.value,
+    drawingPart: '',
+    anchorIndex: 0,
+    objectId: '',
+    action: 'create_chart',
+    chartType: newChartType.value,
+    sourceRange: { ...area },
+    chartTitle: title,
+    from,
+    to,
+  }, area, '已从当前选区创建图表', 'new')
+}
+const changeSelectedChartType = () => {
+  const drawing = selectedDrawing.value
+  if (!drawing?.chart || !canChangeChartType.value) return
+  const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
+  void commitDrawingChange({
+    sheet: activeSheet.value,
+    drawingPart: drawing.drawingPart,
+    anchorIndex: drawing.anchorIndex,
+    objectId: drawing.objectId,
+    action: 'change_chart_type',
+    chartType: targetChartType.value,
+  }, area, '已切换图表类型')
+}
+const deleteSelectedChart = () => {
+  const drawing = selectedDrawing.value
+  if (!drawing?.chart || !canDeleteChart.value) return
+  const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
+  dialog.warning({
+    title: '删除当前图表？',
+    content: `将删除“${drawing.chart.title || drawing.name}”及其未被引用的图表部件。此操作不会删除源单元格数据。`,
+    positiveText: '删除图表',
+    negativeText: '取消',
+    onPositiveClick: () => commitDrawingChange({
+      sheet: activeSheet.value,
+      drawingPart: drawing.drawingPart,
+      anchorIndex: drawing.anchorIndex,
+      objectId: drawing.objectId,
+      action: 'delete_chart',
+    }, area, '已删除图表', 'clear'),
+  })
 }
 const editDrawingMetadata = () => {
   const drawing = selectedDrawing.value
@@ -2971,6 +3071,8 @@ watch(() => conditionalDependencyPageOffsets.value.join(','), () => {
   void loadConditionalDependencyPages(conditionalDependencyPageOffsets.value)
 })
 watch(() => [selectedDrawingId.value, workbook.value?.signature || '', sheetInfo.value?.sheet || ''], () => {
+  const chartType = selectedDrawing.value?.chart?.chartType
+  targetChartType.value = chartType === 'line' || chartType === 'pie' || chartType === 'scatter' ? chartType : 'column'
   void loadChartPreview()
 })
 onBeforeRouteLeave(() => !dirtyCount.value || window.confirm(`还有 ${dirtyCount.value} 个单元格未保存，确定离开吗？`))
@@ -3060,6 +3162,7 @@ onBeforeUnmount(() => {
 .drawing-toolbar button:hover { border-color: rgba(var(--theme-primary-rgb),.5); }
 .drawing-toolbar button.active { border-color: var(--theme-primary); box-shadow: inset 0 0 0 1px rgba(var(--theme-primary-rgb),.18); }
 .drawing-toolbar button.drawing-action { min-width: auto; height: 30px; display: inline-flex; padding: 0 9px; color: var(--theme-primary); }
+.drawing-toolbar button.drawing-action.danger { color: var(--theme-danger); }
 .drawing-toolbar button.drawing-action:disabled { opacity: .45; cursor: default; }
 .drawing-series-select { width: 150px; height: 30px; flex: none; padding: 0 7px; border: 1px solid rgba(var(--theme-primary-rgb),.22); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); font-size: 9px; }
 .drawing-toolbar button span { grid-row: 1 / 3; padding: 3px 5px; border-radius: 4px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); font-size: 8px; }
