@@ -1,6 +1,6 @@
 use crate::formats::workbook::{WorkbookChartSeries, WorkbookMergeRange};
 use crate::formats::workbook_ooxml::{absolute_cell_reference, defined_name_reference};
-use rust_xlsxwriter::{Chart, ChartType, Workbook};
+use rust_xlsxwriter::{Chart, ChartFormat, ChartLine, ChartSolidFill, ChartType, Workbook};
 use std::io::{Cursor, Read};
 use zip::ZipArchive;
 
@@ -66,6 +66,8 @@ pub(super) fn chart_series_from_selection(
             index: series.len(),
             name: Some(chart_range_formula(sheet, range.top, range.top, column)?),
             name_editable: true,
+            color: None,
+            color_editable: true,
             categories: Some(categories.clone()),
             values: Some(chart_range_formula(
                 sheet,
@@ -133,6 +135,11 @@ pub(super) fn build_standard_chart_xml(
         chart_series.set_categories(categories).set_values(values);
         if let Some(name) = item.name.as_deref() {
             chart_series.set_name(name);
+        }
+        if let Some(color) = item.color.as_deref() {
+            let fill = ChartSolidFill::new().set_color(color).clone();
+            let line = ChartLine::new().set_color(color).clone();
+            chart_series.set_format(ChartFormat::new().set_solid_fill(&fill).set_line(&line));
         }
     }
     workbook

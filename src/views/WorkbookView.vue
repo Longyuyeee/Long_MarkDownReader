@@ -222,6 +222,20 @@
         </select>
         <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canEditChartSeries" @click="editChartSeries">编辑系列引用</button>
         <button v-if="selectedDrawing.chart" class="drawing-action" :disabled="!canEditChartSeriesName" @click="editChartSeriesName">编辑系列名称</button>
+        <span v-if="selectedDrawing.chart" class="chart-color-controls" aria-label="系列颜色">
+          <button
+            v-for="color in chartThemePalette"
+            :key="color"
+            class="chart-color-swatch"
+            :class="{ active: targetSeriesColor.toUpperCase() === color.toUpperCase() }"
+            :style="{ backgroundColor: color }"
+            :title="`系列颜色 ${color}`"
+            :disabled="!canEditChartSeriesColor"
+            @click="targetSeriesColor = color"
+          ></button>
+          <input v-model="targetSeriesColor" type="color" title="自定义系列颜色" :disabled="!canEditChartSeriesColor" />
+          <button class="drawing-action" :disabled="!canApplyChartSeriesColor" @click="applyChartSeriesColor">应用颜色</button>
+        </span>
         <select v-if="selectedDrawing.chart" v-model="targetChartType" class="drawing-series-select" title="选择目标图表类型">
           <option value="column">柱形图</option>
           <option value="line">折线图</option>
@@ -342,6 +356,7 @@ import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
 import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Calculator as CalculatorIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
+import { getActiveThemeTone } from '../config/themePresets'
 import { conditionalExpressionReferences, evaluateConditionalExpression, parseConditionalExpression } from '../utils/conditionalExpression'
 import TableChartEditor from '../components/TableChartEditor.vue'
 
@@ -412,12 +427,12 @@ interface WorkbookConditionalIconSet { iconSet: string; thresholds: WorkbookCond
 interface WorkbookConditionalFormatRule { groupIndex: number; ruleIndex: number; ranges: WorkbookMergeRange[]; kind: string; operator?: string; formula1?: string; formula2?: string; priority: number; stopIfTrue: boolean; style: WorkbookConditionalFormatStyle; colorScale?: WorkbookConditionalColorScale; dataBar?: WorkbookConditionalDataBar; iconSet?: WorkbookConditionalIconSet; editable: boolean }
 interface WorkbookConditionalFormatChange { sheet: string; action: 'create' | 'update' | 'delete' | 'move_up' | 'move_down' | 'split' | 'merge'; groupIndex?: number; ruleIndex?: number; rule?: WorkbookConditionalFormatRule }
 interface WorkbookDrawingAnchor { row: number; column: number; rowOffset: number; columnOffset: number }
-interface WorkbookChartSeries { index: number; name?: string; nameEditable: boolean; categories?: string; values?: string; editable: boolean }
+interface WorkbookChartSeries { index: number; name?: string; nameEditable: boolean; color?: string; colorEditable: boolean; categories?: string; values?: string; editable: boolean }
 interface WorkbookChartDataLabels { showValue: boolean; showCategoryName: boolean; showSeriesName: boolean; showPercent: boolean }
 interface WorkbookChart { chartType: string; title?: string; titleEditable: boolean; categoryAxisTitle?: string; valueAxisTitle?: string; legendPosition: 'none' | 'left' | 'right' | 'top' | 'bottom' | 'top_right'; presentationEditable: boolean; dataLabels: WorkbookChartDataLabels; dataLabelsEditable: boolean; series: WorkbookChartSeries[] }
 interface WorkbookDrawingObject { id: string; objectId: string; drawingPart: string; anchorIndex: number; anchorKind: string; name: string; description?: string; kind: string; from: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; part?: string; chart?: WorkbookChart; editable: boolean }
-interface WorkbookDrawingChange { sheet: string; drawingPart: string; anchorIndex: number; objectId: string; action: 'update_metadata' | 'move_resize' | 'update_chart_title' | 'update_chart_series' | 'create_chart' | 'delete_chart' | 'change_chart_type' | 'update_chart_presentation' | 'update_chart_data_labels' | 'update_chart_series_name'; name?: string; description?: string; from?: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; chartTitle?: string; seriesIndex?: number; seriesName?: string; seriesCategories?: string; seriesValues?: string; chartType?: string; categoryAxisTitle?: string; valueAxisTitle?: string; legendPosition?: string; dataLabels?: WorkbookChartDataLabels; sourceRange?: WorkbookMergeRange }
-interface WorkbookChartPreview { headers: string[]; columnIds: string[]; columnTypes: string[]; rows: string[][]; rowIndices: number[]; config: { chartType: 'bar' | 'line' | 'pie' | 'scatter'; categoryColumn: string; valueColumn: string; seriesColumn: string; aggregation: 'sum'; nullStrategy: 'skip'; showLegend: boolean; dataLabels?: WorkbookChartDataLabels } }
+interface WorkbookDrawingChange { sheet: string; drawingPart: string; anchorIndex: number; objectId: string; action: 'update_metadata' | 'move_resize' | 'update_chart_title' | 'update_chart_series' | 'create_chart' | 'delete_chart' | 'change_chart_type' | 'update_chart_presentation' | 'update_chart_data_labels' | 'update_chart_series_name' | 'update_chart_series_color'; name?: string; description?: string; from?: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; chartTitle?: string; seriesIndex?: number; seriesName?: string; seriesColor?: string; seriesCategories?: string; seriesValues?: string; chartType?: string; categoryAxisTitle?: string; valueAxisTitle?: string; legendPosition?: string; dataLabels?: WorkbookChartDataLabels; sourceRange?: WorkbookMergeRange }
+interface WorkbookChartPreview { headers: string[]; columnIds: string[]; columnTypes: string[]; rows: string[][]; rowIndices: number[]; config: { chartType: 'bar' | 'line' | 'pie' | 'scatter'; categoryColumn: string; valueColumn: string; seriesColumn: string; aggregation: 'sum'; nullStrategy: 'skip'; showLegend: boolean; legendPosition: WorkbookChart['legendPosition']; categoryAxisTitle?: string; valueAxisTitle?: string; seriesColors: Record<string, string>; dataLabels?: WorkbookChartDataLabels } }
 interface WorkbookPageMargins { left?: number; right?: number; top?: number; bottom?: number; header?: number; footer?: number }
 interface WorkbookPageSetup { orientation?: string; paperSize?: number; scale?: number; fitToWidth?: number; fitToHeight?: number; firstPageNumber?: number; horizontalDpi?: number; verticalDpi?: number; blackAndWhite: boolean; draft: boolean; fitToPage: boolean }
 interface WorkbookPrintOptions { gridLines: boolean; headings: boolean; horizontalCentered: boolean; verticalCentered: boolean }
@@ -555,6 +570,7 @@ const newChartType = ref<'column' | 'line' | 'pie' | 'scatter'>('column')
 const targetChartType = ref<'column' | 'line' | 'pie' | 'scatter'>('column')
 const targetLegendPosition = ref<'none' | 'left' | 'right' | 'top' | 'bottom' | 'top_right'>('right')
 const targetDataLabels = ref<WorkbookChartDataLabels>({ showValue: false, showCategoryName: false, showSeriesName: false, showPercent: false })
+const targetSeriesColor = ref('#2A6FDB')
 const chartPreview = ref<WorkbookChartPreview | null>(null)
 const chartPreviewLoading = ref(false)
 const chartPreviewError = ref('')
@@ -1635,11 +1651,18 @@ const restoreTableSelection = async (sheet: string, area: WorkbookMergeRange) =>
 }
 const selectedDrawing = computed(() => sheetInfo.value?.drawings.find(drawing => drawing.id === selectedDrawingId.value))
 const selectedChartSeries = computed(() => selectedDrawing.value?.chart?.series.find(series => series.index === selectedChartSeriesIndex.value))
+const chartThemePalette = computed(() => getActiveThemeTone(store.theme).chartPalette)
 const canEditDrawing = computed(() => Boolean(selectedDrawing.value?.editable && workbook.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
 const canApplyDrawingSelection = computed(() => Boolean(canEditDrawing.value && selectionAreas.value.length === 1 && selectionBounds.value))
 const canEditChartTitle = computed(() => Boolean(canEditDrawing.value && selectedDrawing.value?.chart?.titleEditable))
 const canEditChartSeries = computed(() => Boolean(canEditDrawing.value && selectedChartSeries.value?.editable))
 const canEditChartSeriesName = computed(() => Boolean(canEditDrawing.value && selectedChartSeries.value?.nameEditable))
+const canEditChartSeriesColor = computed(() => Boolean(canEditDrawing.value && selectedChartSeries.value?.colorEditable))
+const canApplyChartSeriesColor = computed(() => Boolean(
+  canEditChartSeriesColor.value
+  && /^#[0-9A-F]{6}$/i.test(targetSeriesColor.value)
+  && targetSeriesColor.value.toUpperCase() !== selectedChartSeries.value?.color?.toUpperCase(),
+))
 const canCreateChart = computed(() => {
   const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
   if (!area || !workbook.value || saving.value || updatingStructure.value || sheetProtected.value || dirtyCount.value) return false
@@ -2758,6 +2781,7 @@ const loadChartPreview = async () => {
   try {
     const rows: string[][] = []
     const failures: string[] = []
+    const seriesColors: Record<string, string> = {}
     for (const series of drawing.chart.series.slice(0, 10)) {
       if (!series.categories || !series.values || rows.length >= 60) continue
       try {
@@ -2767,6 +2791,7 @@ const loadChartPreview = async () => {
         if (series.name?.includes('!')) {
           try { name = (await readChartReference(series.name))[0] || name } catch { /* Literal and unsupported names remain readable. */ }
         }
+        if (series.color) seriesColors[name] = series.color
         for (let index = 0; index < count; index += 1) rows.push([categories[index] || String(index + 1), values[index], name])
       } catch (cause) { failures.push(String(cause).replace(/^Error:\s*/, '')) }
     }
@@ -2793,6 +2818,10 @@ const loadChartPreview = async () => {
         aggregation: 'sum',
         nullStrategy: 'skip',
         showLegend: drawing.chart.legendPosition !== 'none',
+        legendPosition: drawing.chart.legendPosition,
+        categoryAxisTitle: drawing.chart.categoryAxisTitle,
+        valueAxisTitle: drawing.chart.valueAxisTitle,
+        seriesColors,
         dataLabels: { ...drawing.chart.dataLabels },
       },
     }
@@ -3037,6 +3066,21 @@ const editChartSeriesName = () => {
     seriesName,
   }, area, '已更新图表系列名称')
 }
+const applyChartSeriesColor = () => {
+  const drawing = selectedDrawing.value
+  const series = selectedChartSeries.value
+  if (!drawing?.chart || !series?.colorEditable || !canApplyChartSeriesColor.value) return
+  const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
+  void commitDrawingChange({
+    sheet: activeSheet.value,
+    drawingPart: drawing.drawingPart,
+    anchorIndex: drawing.anchorIndex,
+    objectId: drawing.objectId,
+    action: 'update_chart_series_color',
+    seriesIndex: series.index,
+    seriesColor: targetSeriesColor.value,
+  }, area, `已更新系列 ${series.index + 1} 的颜色`)
+}
 const navigateDrawing = async (drawing: WorkbookDrawingObject) => {
   selectedDrawingId.value = drawing.id
   selectedChartSeriesIndex.value = drawing.chart?.series[0]?.index || 0
@@ -3188,11 +3232,13 @@ watch(scrollRef, element => {
 watch(() => conditionalDependencyPageOffsets.value.join(','), () => {
   void loadConditionalDependencyPages(conditionalDependencyPageOffsets.value)
 })
-watch(() => [selectedDrawingId.value, workbook.value?.signature || '', sheetInfo.value?.sheet || ''], () => {
+watch(() => [selectedDrawingId.value, selectedChartSeriesIndex.value, workbook.value?.signature || '', sheetInfo.value?.sheet || ''], () => {
   const chartType = selectedDrawing.value?.chart?.chartType
   targetChartType.value = chartType === 'line' || chartType === 'pie' || chartType === 'scatter' ? chartType : 'column'
   targetLegendPosition.value = selectedDrawing.value?.chart?.legendPosition || 'right'
   targetDataLabels.value = { ...(selectedDrawing.value?.chart?.dataLabels || { showValue: false, showCategoryName: false, showSeriesName: false, showPercent: false }) }
+  const series = selectedChartSeries.value
+  targetSeriesColor.value = series?.color || chartThemePalette.value[series?.index || 0] || '#2A6FDB'
   void loadChartPreview()
 })
 onBeforeRouteLeave(() => !dirtyCount.value || window.confirm(`还有 ${dirtyCount.value} 个单元格未保存，确定离开吗？`))
@@ -3287,6 +3333,11 @@ onBeforeUnmount(() => {
 .drawing-series-select { width: 150px; height: 30px; flex: none; padding: 0 7px; border: 1px solid rgba(var(--theme-primary-rgb),.22); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); font-size: 9px; }
 .drawing-label-option { height: 30px; flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; color: var(--theme-text-secondary); }
 .drawing-label-option input { accent-color: var(--theme-primary); }
+.chart-color-controls { height: 30px; flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 0 5px; border: 1px solid rgba(var(--theme-primary-rgb),.16); border-radius: 5px; background: var(--theme-card); }
+.drawing-toolbar .chart-color-controls button.chart-color-swatch { width: 18px; min-width: 18px; height: 18px; display: block; padding: 0; border: 1px solid rgba(0,0,0,.16); border-radius: 4px; }
+.drawing-toolbar .chart-color-controls button.chart-color-swatch.active { box-shadow: 0 0 0 2px var(--theme-card), 0 0 0 3px var(--theme-primary); }
+.chart-color-controls input[type="color"] { width: 22px; height: 22px; padding: 1px; border: 1px solid rgba(0,0,0,.16); border-radius: 4px; background: transparent; cursor: pointer; }
+.chart-color-controls :disabled { opacity: .42; cursor: default; }
 .drawing-toolbar button span { grid-row: 1 / 3; padding: 3px 5px; border-radius: 4px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); font-size: 8px; }
 .drawing-toolbar button b,.drawing-toolbar button small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .drawing-toolbar button b { font-size: 9px; }

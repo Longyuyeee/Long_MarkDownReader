@@ -3237,6 +3237,30 @@ fn chart_type_from_name(name: &[u8]) -> Option<&'static str> {
     }
 }
 
+fn normalize_chart_series_color(value: &str) -> Result<String, String> {
+    let value = value.trim().trim_start_matches('#');
+    if value.len() != 6 || !value.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err("A chart series color must be a six-digit RGB value.".into());
+    }
+    Ok(format!("#{}", value.to_ascii_uppercase()))
+}
+
+fn chart_color_node_attributes_safe(event: &BytesStart<'_>) -> Result<bool, String> {
+    let local = event.local_name();
+    for attribute in event.attributes().with_checks(false) {
+        let attribute =
+            attribute.map_err(|error| format!("Failed to inspect chart color XML: {error}"))?;
+        let key = attribute.key.as_ref();
+        if key == b"xmlns" || key.starts_with(b"xmlns:") {
+            continue;
+        }
+        if local.as_ref() != b"srgbClr" || key != b"val" {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
 fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(true);
@@ -3258,7 +3282,13 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
     let mut data_labels_present = false;
     let mut data_labels_safe = true;
     let mut series = Vec::new();
+    let mut series_color_safety = Vec::new();
     let mut current_series: Option<WorkbookChartSeries> = None;
+    let mut current_series_color_safe = true;
+    let mut current_series_style_seen = false;
+    let mut current_series_style_depth = None;
+    let mut current_series_style_supported = true;
+    let mut current_series_style_colors = Vec::new();
     loop {
         match reader
             .read_event_into(&mut buffer)
@@ -3288,10 +3318,50 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
                         index: series.len(),
                         name: None,
                         name_editable: false,
+                        color: None,
+                        color_editable: false,
                         categories: None,
                         values: None,
                         editable: false,
                     });
+                    current_series_color_safe = true;
+                    current_series_style_seen = false;
+                    current_series_style_depth = None;
+                    current_series_style_supported = true;
+                    current_series_style_colors.clear();
+                }
+                if current_series.is_some() {
+                    let direct_series_style =
+                        local == "spPr" && stack.last().is_some_and(|parent| parent == "ser");
+                    if direct_series_style {
+                        if current_series_style_seen {
+                            current_series_color_safe = false;
+                        }
+                        current_series_style_seen = true;
+                        current_series_style_depth = Some(stack.len());
+                        current_series_style_supported = chart_color_node_attributes_safe(event)?;
+                        current_series_style_colors.clear();
+                    } else if current_series_style_depth.is_some() {
+                        if !matches!(local.as_str(), "solidFill" | "ln" | "srgbClr")
+                            || !chart_color_node_attributes_safe(event)?
+                        {
+                            current_series_style_supported = false;
+                        }
+                        if local == "srgbClr" {
+                            if let Some(value) = xml_value(event, b"val", reader.decoder())? {
+                                match normalize_chart_series_color(&value) {
+                                    Ok(color) => current_series_style_colors.push(color),
+                                    Err(_) => current_series_style_supported = false,
+                                }
+                            } else {
+                                current_series_style_supported = false;
+                            }
+                        }
+                    } else if local == "spPr"
+                        || matches!(local.as_str(), "dPt" | "trendline" | "errBars" | "extLst")
+                    {
+                        current_series_color_safe = false;
+                    }
                 }
                 if local == "catAx" {
                     category_axis_count += 1;
@@ -3354,6 +3424,39 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
                 }
                 if local.as_ref() == b"extLst" {
                     has_extensions = true;
+                }
+                if current_series.is_some() {
+                    let local_text = String::from_utf8_lossy(local.as_ref());
+                    let direct_series_style = local.as_ref() == b"spPr"
+                        && stack.last().is_some_and(|parent| parent == "ser");
+                    if direct_series_style {
+                        current_series_color_safe &=
+                            !current_series_style_seen && chart_color_node_attributes_safe(event)?;
+                        current_series_style_seen = true;
+                    } else if current_series_style_depth.is_some() {
+                        if !matches!(local.as_ref(), b"solidFill" | b"ln" | b"srgbClr")
+                            || !chart_color_node_attributes_safe(event)?
+                        {
+                            current_series_style_supported = false;
+                        }
+                        if local.as_ref() == b"srgbClr" {
+                            if let Some(value) = xml_value(event, b"val", reader.decoder())? {
+                                match normalize_chart_series_color(&value) {
+                                    Ok(color) => current_series_style_colors.push(color),
+                                    Err(_) => current_series_style_supported = false,
+                                }
+                            } else {
+                                current_series_style_supported = false;
+                            }
+                        }
+                    } else if local.as_ref() == b"spPr"
+                        || matches!(
+                            local_text.as_ref(),
+                            "dPt" | "trendline" | "errBars" | "extLst"
+                        )
+                    {
+                        current_series_color_safe = false;
+                    }
                 }
                 if local.as_ref() == b"barDir" && chart_type == "bar" {
                     if let Some(value) = xml_value(event, b"val", reader.decoder())? {
@@ -3440,6 +3543,25 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
                 }
             }
             Event::End(ref event) => {
+                if event.local_name().as_ref() == b"spPr"
+                    && current_series_style_depth.is_some_and(|depth| stack.len() == depth + 1)
+                {
+                    let uniform_color =
+                        current_series_style_colors
+                            .first()
+                            .cloned()
+                            .filter(|color| {
+                                current_series_style_colors
+                                    .iter()
+                                    .all(|candidate| candidate == color)
+                            });
+                    current_series_color_safe &= current_series_style_supported
+                        && (current_series_style_colors.is_empty() || uniform_color.is_some());
+                    if let (Some(item), Some(color)) = (current_series.as_mut(), uniform_color) {
+                        item.color = Some(color);
+                    }
+                    current_series_style_depth = None;
+                }
                 if event.local_name().as_ref() == b"ser" {
                     if let Some(mut item) = current_series.take() {
                         item.editable = item
@@ -3453,6 +3575,7 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
                                 .and_then(|formula| defined_name_reference(formula, None))
                                 .is_some();
                         series.push(item);
+                        series_color_safety.push(current_series_color_safe);
                     }
                 }
                 if matches!(event.local_name().as_ref(), b"catAx" | b"valAx") {
@@ -3482,8 +3605,10 @@ fn parse_chart_part(xml: &[u8]) -> Result<WorkbookChart, String> {
     if chart_type != "pie" && data_labels.show_percent {
         data_labels_safe = false;
     }
-    for item in &mut series {
+    for (index, item) in series.iter_mut().enumerate() {
         item.name_editable = standard_chart;
+        item.color_editable =
+            standard_chart && series_color_safety.get(index).copied().unwrap_or(false);
     }
     Ok(WorkbookChart {
         chart_type,
@@ -4553,6 +4678,127 @@ fn patch_chart_series_name_xml(
     Ok(writer.into_inner())
 }
 
+fn chart_series_color_fragment(color: &str) -> Result<Vec<u8>, String> {
+    let color = normalize_chart_series_color(color)?;
+    let rgb = color.trim_start_matches('#');
+    Ok(format!(
+        "<c:spPr xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><a:solidFill><a:srgbClr val=\"{rgb}\"/></a:solidFill><a:ln><a:solidFill><a:srgbClr val=\"{rgb}\"/></a:solidFill></a:ln></c:spPr>"
+    )
+    .into_bytes())
+}
+
+fn patch_chart_series_color_xml(
+    xml: &[u8],
+    series_index: usize,
+    color: &str,
+) -> Result<Vec<u8>, String> {
+    let fragment = chart_series_color_fragment(color)?;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + fragment.len()));
+    let mut buffer = Vec::new();
+    let mut stack: Vec<Vec<u8>> = Vec::new();
+    let mut next_series = 0usize;
+    let mut active_series = None;
+    let mut color_handled = false;
+    let mut target_found = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse chart series-color XML: {error}"))?;
+        let is_start_event = matches!(&event, Event::Start(_));
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"ser" => {
+                active_series = Some(next_series);
+                target_found |= next_series == series_index;
+                next_series += 1;
+                stack.push(b"ser".to_vec());
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy chart series XML: {error}"))?;
+            }
+            Event::Start(ref start)
+                if active_series == Some(series_index)
+                    && stack.last().is_some_and(|item| item.as_slice() == b"ser")
+                    && start.local_name().as_ref() == b"spPr" =>
+            {
+                skip_element(&mut reader, b"spPr", &mut buffer)?;
+                write_xml_fragment(&mut writer, &fragment)?;
+                color_handled = true;
+            }
+            Event::Empty(ref empty)
+                if active_series == Some(series_index)
+                    && stack.last().is_some_and(|item| item.as_slice() == b"ser")
+                    && empty.local_name().as_ref() == b"spPr" =>
+            {
+                write_xml_fragment(&mut writer, &fragment)?;
+                color_handled = true;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if active_series == Some(series_index)
+                    && stack.last().is_some_and(|item| item.as_slice() == b"ser")
+                    && !color_handled
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"invertIfNegative"
+                            | b"marker"
+                            | b"dPt"
+                            | b"dLbls"
+                            | b"trendline"
+                            | b"errBars"
+                            | b"cat"
+                            | b"val"
+                            | b"xVal"
+                            | b"yVal"
+                            | b"smooth"
+                            | b"extLst"
+                    ) =>
+            {
+                write_xml_fragment(&mut writer, &fragment)?;
+                color_handled = true;
+                if is_start_event {
+                    stack.push(start.local_name().as_ref().to_vec());
+                }
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy chart series content: {error}"))?;
+            }
+            Event::Start(ref start) => {
+                stack.push(start.local_name().as_ref().to_vec());
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to copy chart series-color XML: {error}"))?;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"ser" => {
+                if active_series == Some(series_index) && !color_handled {
+                    write_xml_fragment(&mut writer, &fragment)?;
+                    color_handled = true;
+                }
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish chart series XML: {error}"))?;
+                stack.pop();
+                active_series = None;
+            }
+            Event::End(_) => {
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("Failed to finish chart series-color XML: {error}"))?;
+                stack.pop();
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("Failed to copy chart series-color XML: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !target_found || !color_handled {
+        return Err("The selected standard chart series color could not be updated safely.".into());
+    }
+    Ok(writer.into_inner())
+}
+
 fn chart_series_context(stack: &[Vec<u8>]) -> Option<bool> {
     if stack
         .iter()
@@ -5578,6 +5824,49 @@ pub fn patch_workbook_drawing(
                 != expected
             {
                 return Err("The chart series name failed semantic verification.".into());
+            }
+        }
+        WorkbookDrawingAction::UpdateChartSeriesColor => {
+            let chart = target
+                .chart
+                .as_ref()
+                .ok_or("The selected Drawing object is not a chart.")?;
+            let series_index = change.series_index.ok_or("A chart series is required.")?;
+            let series = chart
+                .series
+                .iter()
+                .find(|item| item.index == series_index)
+                .ok_or("The selected chart series does not exist.")?;
+            if !series.color_editable {
+                return Err(
+                    "Only series with simple direct RGB formatting can change color.".into(),
+                );
+            }
+            let color = normalize_chart_series_color(
+                change
+                    .series_color
+                    .as_deref()
+                    .ok_or("A chart series color is required.")?,
+            )?;
+            let chart_part = target
+                .part
+                .as_deref()
+                .filter(|part| part.starts_with("xl/charts/") && part.ends_with(".xml"))
+                .ok_or("The chart part is missing or unsafe.")?;
+            let chart_entry = entries
+                .iter_mut()
+                .find(|entry| entry.name == chart_part)
+                .ok_or("The chart part is missing.")?;
+            chart_entry.data =
+                patch_chart_series_color_xml(&chart_entry.data, series_index, &color)?;
+            let verified = parse_chart_part(&chart_entry.data)?;
+            let updated = verified
+                .series
+                .iter()
+                .find(|item| item.index == series_index)
+                .ok_or("The updated chart series could not be read back.")?;
+            if updated.color.as_deref() != Some(color.as_str()) || !updated.color_editable {
+                return Err("The chart series color failed semantic verification.".into());
             }
         }
         WorkbookDrawingAction::UpdateMetadata | WorkbookDrawingAction::MoveResize => {
@@ -14124,6 +14413,7 @@ mod tests {
                 legend_position: None,
                 data_labels: None,
                 series_name: None,
+                series_color: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -14176,6 +14466,7 @@ mod tests {
                 legend_position: None,
                 data_labels: None,
                 series_name: None,
+                series_color: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -14213,6 +14504,7 @@ mod tests {
                 legend_position: None,
                 data_labels: None,
                 series_name: None,
+                series_color: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -14267,6 +14559,7 @@ mod tests {
                 legend_position: None,
                 data_labels: None,
                 series_name: None,
+                series_color: None,
                 source_range: Some(WorkbookMergeRange {
                     top: 0,
                     bottom: 3,
@@ -14314,6 +14607,7 @@ mod tests {
                 legend_position: None,
                 data_labels: None,
                 series_name: None,
+                series_color: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -14351,6 +14645,7 @@ mod tests {
                 legend_position: Some("bottom".into()),
                 data_labels: None,
                 series_name: None,
+                series_color: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -14389,6 +14684,7 @@ mod tests {
                 legend_position: None,
                 data_labels: None,
                 series_name: Some("Net revenue".into()),
+                series_color: None,
                 source_range: None,
                 series_index: Some(0),
                 series_categories: None,
@@ -14423,6 +14719,7 @@ mod tests {
                     show_percent: false,
                 }),
                 series_name: None,
+                series_color: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -14452,8 +14749,80 @@ mod tests {
         );
         assert!(chart.data_labels_editable);
 
-        let deleted = patch_workbook_drawing(
+        let colored = patch_workbook_drawing(
             &labeled,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: drawing.drawing_part.clone(),
+                anchor_index: drawing.anchor_index,
+                object_id: drawing.object_id.clone(),
+                action: WorkbookDrawingAction::UpdateChartSeriesColor,
+                name: None,
+                description: None,
+                from: None,
+                to: None,
+                chart_title: None,
+                chart_type: None,
+                category_axis_title: None,
+                value_axis_title: None,
+                legend_position: None,
+                data_labels: None,
+                series_name: None,
+                series_color: Some("#2a6fdb".into()),
+                source_range: None,
+                series_index: Some(0),
+                series_categories: None,
+                series_values: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&colored).unwrap();
+        let layout = read_workbook_sheet_layout(&colored, "Data", 0, 20, 20).unwrap();
+        let drawing = &layout.drawings[0];
+        let chart = drawing.chart.as_ref().unwrap();
+        assert_eq!(chart.series[0].color.as_deref(), Some("#2A6FDB"));
+        assert!(chart.series[0].color_editable);
+        assert_eq!(chart.series[0].name.as_deref(), Some("Net revenue"));
+        assert_eq!(chart.category_axis_title.as_deref(), Some("Month"));
+        assert!(chart.data_labels.show_value);
+
+        let retyped = patch_workbook_drawing(
+            &colored,
+            &WorkbookDrawingChange {
+                sheet: "Data".into(),
+                drawing_part: drawing.drawing_part.clone(),
+                anchor_index: drawing.anchor_index,
+                object_id: drawing.object_id.clone(),
+                action: WorkbookDrawingAction::ChangeChartType,
+                name: None,
+                description: None,
+                from: None,
+                to: None,
+                chart_title: None,
+                chart_type: Some("column".into()),
+                category_axis_title: None,
+                value_axis_title: None,
+                legend_position: None,
+                data_labels: None,
+                series_name: None,
+                series_color: None,
+                source_range: None,
+                series_index: None,
+                series_categories: None,
+                series_values: None,
+            },
+        )
+        .unwrap();
+        validate_workbook_package(&retyped).unwrap();
+        let layout = read_workbook_sheet_layout(&retyped, "Data", 0, 20, 20).unwrap();
+        let drawing = &layout.drawings[0];
+        let chart = drawing.chart.as_ref().unwrap();
+        assert_eq!(chart.chart_type, "column");
+        assert_eq!(chart.series[0].color.as_deref(), Some("#2A6FDB"));
+        assert!(chart.series[0].color_editable);
+
+        let deleted = patch_workbook_drawing(
+            &retyped,
             &WorkbookDrawingChange {
                 sheet: "Data".into(),
                 drawing_part: drawing.drawing_part.clone(),
@@ -14471,6 +14840,7 @@ mod tests {
                 legend_position: None,
                 data_labels: None,
                 series_name: None,
+                series_color: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -14493,13 +14863,14 @@ mod tests {
     #[test]
     fn keeps_advanced_point_data_labels_read_only() {
         let chart = parse_chart_part(
-            br#"<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart><c:plotArea><c:barChart><c:barDir val="col"/><c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:v>Revenue</c:v></c:tx><c:cat><c:strRef><c:f>Data!$A$1:$A$2</c:f></c:strRef></c:cat><c:val><c:numRef><c:f>Data!$B$1:$B$2</c:f></c:numRef></c:val></c:ser><c:dLbls><c:dLbl><c:idx val="0"/><c:tx><c:rich/></c:tx></c:dLbl><c:showVal val="1"/></c:dLbls><c:axId val="1"/><c:axId val="2"/></c:barChart><c:catAx></c:catAx><c:valAx></c:valAx></c:plotArea></c:chart></c:chartSpace>"#,
+            br#"<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><c:chart><c:plotArea><c:barChart><c:barDir val="col"/><c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:v>Revenue</c:v></c:tx><c:spPr><a:gradFill><a:gsLst/></a:gradFill></c:spPr><c:cat><c:strRef><c:f>Data!$A$1:$A$2</c:f></c:strRef></c:cat><c:val><c:numRef><c:f>Data!$B$1:$B$2</c:f></c:numRef></c:val></c:ser><c:dLbls><c:dLbl><c:idx val="0"/><c:tx><c:rich/></c:tx></c:dLbl><c:showVal val="1"/></c:dLbls><c:axId val="1"/><c:axId val="2"/></c:barChart><c:catAx></c:catAx><c:valAx></c:valAx></c:plotArea></c:chart></c:chartSpace>"#,
         )
         .unwrap();
         assert!(chart.presentation_editable);
         assert!(chart.data_labels.show_value);
         assert!(!chart.data_labels_editable);
         assert!(chart.series[0].name_editable);
+        assert!(!chart.series[0].color_editable);
     }
 
     #[test]
@@ -14549,6 +14920,7 @@ mod tests {
                 legend_position: None,
                 data_labels: None,
                 series_name: None,
+                series_color: None,
                 source_range: None,
                 series_index: None,
                 series_categories: None,
@@ -14591,6 +14963,7 @@ mod tests {
                 legend_position: None,
                 data_labels: None,
                 series_name: None,
+                series_color: None,
                 source_range: None,
                 series_index: Some(0),
                 series_categories: Some("Data!$A$2:$A$3".into()),
@@ -14631,6 +15004,7 @@ mod tests {
                 legend_position: None,
                 data_labels: None,
                 series_name: None,
+                series_color: None,
                 source_range: None,
                 series_index: Some(0),
                 series_categories: Some("[External.xlsx]Data!$A$1:$A$2".into()),

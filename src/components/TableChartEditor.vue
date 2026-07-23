@@ -67,7 +67,7 @@
       </div>
       <svg v-else viewBox="0 0 900 520" role="img" :aria-label="`${chartTypeLabel}，${dataSummary}`">
         <template v-if="config.chartType === 'pie'">
-          <g transform="translate(330 260)">
+          <g :transform="`translate(${pieCenter.x} ${pieCenter.y})`">
             <path v-for="slice in pieSlices" :key="slice.key" :d="slice.path" :fill="slice.color" stroke="var(--theme-card)" stroke-width="2">
               <title>{{ slice.label }}：{{ formatNumber(slice.value) }}（{{ formatPercent(slice.ratio) }}）</title>
             </path>
@@ -77,9 +77,9 @@
             <text text-anchor="middle" y="17" class="pie-caption">合计</text>
           </g>
           <g v-if="config.showLegend" class="legend pie-legend">
-            <g v-for="(slice, index) in pieSlices.slice(0, 14)" :key="slice.key" :transform="`translate(630 ${72 + index * 27})`">
-              <rect width="11" height="11" rx="2" :fill="slice.color" />
-              <text x="18" y="10">{{ shorten(slice.label, 22) }} · {{ formatPercent(slice.ratio) }}</text>
+            <g v-for="item in pieLegendItems" :key="item.slice.key" :transform="`translate(${item.x} ${item.y})`">
+              <rect width="11" height="11" rx="2" :fill="item.slice.color" />
+              <text x="18" y="10">{{ shorten(item.slice.label, 22) }} · {{ formatPercent(item.slice.ratio) }}</text>
             </g>
           </g>
         </template>
@@ -87,12 +87,12 @@
         <template v-else>
           <g class="grid-lines">
             <g v-for="tick in yTicks" :key="tick.value">
-              <line x1="82" x2="860" :y1="tick.y" :y2="tick.y" />
-              <text x="72" :y="tick.y + 4" text-anchor="end">{{ formatNumber(tick.value) }}</text>
+              <line :x1="plot.left" :x2="plot.right" :y1="tick.y" :y2="tick.y" />
+              <text :x="plot.left - 10" :y="tick.y + 4" text-anchor="end">{{ formatNumber(tick.value) }}</text>
             </g>
           </g>
-          <line class="axis" x1="82" x2="860" :y1="zeroY" :y2="zeroY" />
-          <line class="axis" x1="82" x2="82" y1="40" y2="454" />
+          <line class="axis" :x1="plot.left" :x2="plot.right" :y1="zeroY" :y2="zeroY" />
+          <line class="axis" :x1="plot.left" :x2="plot.left" :y1="plot.top" :y2="plot.bottom" />
 
           <g v-if="config.chartType === 'bar'">
             <rect v-for="bar in bars" :key="bar.key" :x="bar.x" :y="bar.y" :width="bar.width" :height="bar.height" rx="2" :fill="bar.color">
@@ -118,16 +118,18 @@
 
           <g class="x-labels">
             <template v-if="config.chartType === 'scatter'">
-              <text v-for="tick in xTicks" :key="tick.value" :x="tick.x" y="478" text-anchor="middle">{{ formatNumber(tick.value) }}</text>
+              <text v-for="tick in xTicks" :key="tick.value" :x="tick.x" :y="plot.bottom + 24" text-anchor="middle">{{ formatNumber(tick.value) }}</text>
             </template>
             <template v-else>
-              <text v-for="label in xLabels" :key="label.text" :x="label.x" y="478" text-anchor="middle">{{ shorten(label.text, 12) }}</text>
+              <text v-for="label in xLabels" :key="label.text" :x="label.x" :y="plot.bottom + 24" text-anchor="middle">{{ shorten(label.text, 12) }}</text>
             </template>
           </g>
-          <g v-if="config.showLegend && seriesNames.length > 1" class="legend">
-            <g v-for="(series, index) in seriesNames.slice(0, 10)" :key="series" :transform="`translate(${90 + (index % 5) * 154} ${18 + Math.floor(index / 5) * 20})`">
-              <rect width="10" height="10" rx="2" :fill="colorFor(series)" />
-              <text x="16" y="9">{{ shorten(series, 17) }}</text>
+          <text v-if="config.categoryAxisTitle" class="axis-title" :x="(plot.left + plot.right) / 2" :y="plot.bottom + 49" text-anchor="middle">{{ shorten(config.categoryAxisTitle, 42) }}</text>
+          <text v-if="config.valueAxisTitle" class="axis-title" :transform="`translate(${plot.left - 58} ${(plot.top + plot.bottom) / 2}) rotate(-90)`" text-anchor="middle">{{ shorten(config.valueAxisTitle, 36) }}</text>
+          <g v-if="config.showLegend && seriesNames.length" class="legend">
+            <g v-for="item in legendItems" :key="item.series" :transform="`translate(${item.x} ${item.y})`">
+              <rect width="10" height="10" rx="2" :fill="colorFor(item.series)" />
+              <text x="16" y="9">{{ shorten(item.series, 17) }}</text>
             </g>
           </g>
         </template>
@@ -144,6 +146,7 @@ import { getActiveThemeTone } from '../config/themePresets'
 type ChartType = 'bar' | 'line' | 'pie' | 'scatter'
 type Aggregation = 'count' | 'sum' | 'average'
 type NullStrategy = 'skip' | 'zero'
+type LegendPosition = 'none' | 'left' | 'right' | 'top' | 'bottom' | 'top_right'
 interface ChartConfig {
   chartType: ChartType
   categoryColumn?: string
@@ -152,6 +155,10 @@ interface ChartConfig {
   aggregation: Aggregation
   nullStrategy: NullStrategy
   showLegend: boolean
+  legendPosition?: LegendPosition
+  categoryAxisTitle?: string
+  valueAxisTitle?: string
+  seriesColors?: Record<string, string>
   dataLabels?: {
     showValue: boolean
     showCategoryName: boolean
@@ -177,9 +184,19 @@ const chartTypes: { value: ChartType; label: string; icon: string }[] = [
   { value: 'bar', label: '柱状', icon: '▥' }, { value: 'line', label: '折线', icon: '⌁' },
   { value: 'pie', label: '饼图', icon: '◕' }, { value: 'scatter', label: '散点', icon: '∴' },
 ]
-const plot = { left: 82, right: 860, top: 40, bottom: 454 }
-const plotWidth = plot.right - plot.left
-const plotHeight = plot.bottom - plot.top
+const legendPosition = computed<LegendPosition>(() => props.config.showLegend ? props.config.legendPosition || 'top' : 'none')
+const plot = computed(() => {
+  switch (legendPosition.value) {
+    case 'left': return { left: 220, right: 860, top: 40, bottom: 454 }
+    case 'right':
+    case 'top_right': return { left: 82, right: 700, top: 40, bottom: 454 }
+    case 'top': return { left: 82, right: 860, top: 62, bottom: 454 }
+    case 'bottom': return { left: 82, right: 860, top: 40, bottom: 360 }
+    default: return { left: 82, right: 860, top: 40, bottom: 454 }
+  }
+})
+const plotWidth = computed(() => plot.value.right - plot.value.left)
+const plotHeight = computed(() => plot.value.bottom - plot.value.top)
 const renderLimit = computed(() => props.config.chartType === 'scatter' ? 2_000 : props.config.chartType === 'pie' ? 40 : 60)
 const columnIndex = (id?: string) => id ? props.columnIds.indexOf(id) : -1
 const typeName = (type: string) => ({ integer: '整数', number: '数值', boolean: '布尔', date: '日期' }[type] || '文本')
@@ -259,11 +276,21 @@ const rawScatter = computed(() => {
   }).slice(0, renderLimit.value)
 })
 const seriesNames = computed(() => [...new Set((props.config.chartType === 'scatter' ? rawScatter.value : aggregated.value).map(item => item.series))])
-const colorFor = (series: string) => palette.value[Math.max(0, seriesNames.value.indexOf(series)) % palette.value.length]
+const colorFor = (series: string) => props.config.seriesColors?.[series]
+  || palette.value[Math.max(0, seriesNames.value.indexOf(series)) % palette.value.length]
+const legendItems = computed(() => seriesNames.value.slice(0, 10).map((series, index) => {
+  switch (legendPosition.value) {
+    case 'left': return { series, x: 20, y: 58 + index * 24 }
+    case 'right': return { series, x: 720, y: 58 + index * 24 }
+    case 'top_right': return { series, x: 720, y: 18 + index * 20 }
+    case 'bottom': return { series, x: 90 + (index % 5) * 154, y: 446 + Math.floor(index / 5) * 21 }
+    default: return { series, x: 90 + (index % 5) * 154, y: 18 + Math.floor(index / 5) * 20 }
+  }
+}))
 const values = computed(() => props.config.chartType === 'scatter' ? rawScatter.value.map(item => item.rawY) : aggregated.value.map(item => item.value))
 const yMin = computed(() => Math.min(0, ...values.value))
 const yMax = computed(() => Math.max(1, ...values.value))
-const yScale = (value: number) => plot.bottom - (value - yMin.value) / Math.max(1e-9, yMax.value - yMin.value) * plotHeight
+const yScale = (value: number) => plot.value.bottom - (value - yMin.value) / Math.max(1e-9, yMax.value - yMin.value) * plotHeight.value
 const zeroY = computed(() => yScale(0))
 const yTicks = computed(() => Array.from({ length: 6 }, (_, index) => {
   const value = yMin.value + (yMax.value - yMin.value) * index / 5
@@ -272,12 +299,12 @@ const yTicks = computed(() => Array.from({ length: 6 }, (_, index) => {
 
 const bars = computed(() => {
   const groups = Math.max(1, seriesNames.value.length)
-  const categoryWidth = plotWidth / Math.max(1, categories.value.length)
+  const categoryWidth = plotWidth.value / Math.max(1, categories.value.length)
   const width = Math.max(2, Math.min(42, categoryWidth * .72 / groups))
   return aggregated.value.map(item => {
     const category = categories.value.indexOf(item.category)
     const series = seriesNames.value.indexOf(item.series)
-    const x = plot.left + category * categoryWidth + (categoryWidth - width * groups) / 2 + series * width
+    const x = plot.value.left + category * categoryWidth + (categoryWidth - width * groups) / 2 + series * width
     const targetY = yScale(item.value)
     return { ...item, x, width: Math.max(1, width - 2), y: Math.min(zeroY.value, targetY), height: Math.max(1, Math.abs(targetY - zeroY.value)), color: colorFor(item.series) }
   })
@@ -287,18 +314,18 @@ const lines = computed(() => seriesNames.value.map(series => ({
   series, color: colorFor(series),
   points: categories.value.flatMap((category, index) => {
     const item = aggregated.value.find(point => point.category === category && point.series === series)
-    return item ? [{ ...item, x: plot.left + (index + .5) * plotWidth / Math.max(1, categories.value.length), y: yScale(item.value) }] : []
+    return item ? [{ ...item, x: plot.value.left + (index + .5) * plotWidth.value / Math.max(1, categories.value.length), y: yScale(item.value) }] : []
   }),
 })))
 const labeledLinePoints = <T extends { key: string }>(points: T[]) => showDataLabels.value && points.length <= 24 ? points : []
 const xLabels = computed(() => {
   const step = Math.max(1, Math.ceil(categories.value.length / 12))
-  return categories.value.flatMap((text, index) => index % step ? [] : [{ text, x: plot.left + (index + .5) * plotWidth / Math.max(1, categories.value.length) }])
+  return categories.value.flatMap((text, index) => index % step ? [] : [{ text, x: plot.value.left + (index + .5) * plotWidth.value / Math.max(1, categories.value.length) }])
 })
 
 const scatterXMin = computed(() => Math.min(...rawScatter.value.map(item => item.rawX), 0))
 const scatterXMax = computed(() => Math.max(...rawScatter.value.map(item => item.rawX), 1))
-const xScale = (value: number) => plot.left + (value - scatterXMin.value) / Math.max(1e-9, scatterXMax.value - scatterXMin.value) * plotWidth
+const xScale = (value: number) => plot.value.left + (value - scatterXMin.value) / Math.max(1e-9, scatterXMax.value - scatterXMin.value) * plotWidth.value
 const scatterPoints = computed(() => rawScatter.value.map(item => ({ ...item, x: xScale(item.rawX), y: yScale(item.rawY), color: colorFor(item.series) })))
 const labeledScatterPoints = computed(() => showDataLabels.value && scatterPoints.value.length <= 24 ? scatterPoints.value : [])
 const xTicks = computed(() => Array.from({ length: 6 }, (_, index) => {
@@ -320,10 +347,29 @@ const pieSlices = computed(() => {
     const x2 = Math.cos(next) * 170; const y2 = Math.sin(next) * 170
     const path = ratio >= .999999 ? 'M 0 -170 A 170 170 0 1 1 -0.01 -170 Z' : `M 0 0 L ${x1} ${y1} A 170 170 0 ${large} 1 ${x2} ${y2} Z`
     angle = next
-    return [{ ...item, label: item.series === '数据' ? item.category : `${item.category} · ${item.series}`, ratio, path, color: palette.value[index % palette.value.length], labelX: Math.cos(middle) * 116, labelY: Math.sin(middle) * 116 }]
+    return [{ ...item, label: item.series === '数据' ? item.category : `${item.category} · ${item.series}`, ratio, path, color: props.config.seriesColors?.[item.series] || palette.value[index % palette.value.length], labelX: Math.cos(middle) * 116, labelY: Math.sin(middle) * 116 }]
   })
 })
 const labeledPieSlices = computed(() => showDataLabels.value && pieSlices.value.length <= 14 ? pieSlices.value : [])
+const pieCenter = computed(() => {
+  switch (legendPosition.value) {
+    case 'left': return { x: 600, y: 260 }
+    case 'right': return { x: 300, y: 260 }
+    case 'top_right': return { x: 330, y: 285 }
+    case 'top': return { x: 450, y: 310 }
+    case 'bottom': return { x: 450, y: 205 }
+    default: return { x: 450, y: 260 }
+  }
+})
+const pieLegendItems = computed(() => pieSlices.value.slice(0, 14).map((slice, index) => {
+  switch (legendPosition.value) {
+    case 'left': return { slice, x: 18, y: 64 + index * 27 }
+    case 'right': return { slice, x: 620, y: 64 + index * 27 }
+    case 'top_right': return { slice, x: 670, y: 18 + index * 27 }
+    case 'bottom': return { slice, x: 24 + (index % 4) * 218, y: 420 + Math.floor(index / 4) * 24 }
+    default: return { slice, x: 24 + (index % 4) * 218, y: 20 + Math.floor(index / 4) * 24 }
+  }
+}))
 
 const hasRenderableData = computed(() => props.config.chartType === 'scatter' ? rawScatter.value.length > 0 : props.config.chartType === 'pie' ? pieSlices.value.length > 0 : aggregated.value.length > 0)
 const truncated = computed(() => props.config.chartType === 'scatter' ? rawScatter.value.length < props.rowIndices.length && props.rowIndices.length > renderLimit.value : aggregated.value.length >= renderLimit.value)
@@ -345,7 +391,7 @@ const chartTypeLabel = computed(() => chartTypes.find(item => item.value === pro
 .chart-settings footer { display: flex; flex-direction: column; gap: 4px; margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(0,0,0,.07); }.chart-settings footer small { color: #c17627; }
 .chart-preview { min-width: 0; min-height: 0; display: grid; place-items: center; padding: 20px; overflow: auto; }.chart-preview svg { width: min(100%, 1100px); min-width: 620px; max-height: 100%; padding: 8px; box-sizing: border-box; border: 1px solid rgba(0,0,0,.07); border-radius: 12px; background: var(--theme-card); box-shadow: 0 7px 28px rgba(34,58,82,.08); }
 .chart-empty { display: flex; flex-direction: column; align-items: center; gap: 7px; color: var(--theme-text-secondary); font-size: 10px; }.chart-empty strong { color: var(--theme-text); font-size: 13px; }
-.grid-lines line { stroke: rgba(0,0,0,.07); }.grid-lines text,.x-labels text,.legend text,.pie-caption { fill: var(--theme-text-secondary); font-size: 10px; }.axis { stroke: rgba(0,0,0,.24); stroke-width: 1; }.legend text { fill: var(--theme-text); }.pie-total { fill: var(--theme-text); font-size: 20px; font-weight: 700; }.pie-caption { font-size: 9px; }
+.grid-lines line { stroke: rgba(0,0,0,.07); }.grid-lines text,.x-labels text,.legend text,.pie-caption { fill: var(--theme-text-secondary); font-size: 10px; }.axis { stroke: rgba(0,0,0,.24); stroke-width: 1; }.axis-title { fill: var(--theme-text); font-size: 11px; font-weight: 600; }.legend text { fill: var(--theme-text); }.pie-total { fill: var(--theme-text); font-size: 20px; font-weight: 700; }.pie-caption { font-size: 9px; }
 .data-label { fill: var(--theme-text); font-size: 9px; font-weight: 600; paint-order: stroke; stroke: var(--theme-card); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
 @media (max-width: 860px) { .chart-editor { grid-template-columns: 190px minmax(0,1fr); }.chart-settings { padding: 11px; }.chart-preview { padding: 10px; } }
 </style>
