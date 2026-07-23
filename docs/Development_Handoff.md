@@ -69,7 +69,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/Knowledge_Workspace_Health.md`：重复文件、未处理批注、扫描预算和只读治理边界。
 - `docs/Workbook_Row_Column_Outline.md`：XLSX 行列隐藏、分组、可靠写回和保真边界。
 - `docs/Workbook_Structure_Migration.md`：XLSX 行列插删的坐标、范围、公式迁移规则和预览边界。
-- `docs/Formula_Calculation_Compatibility.md`：S8-6A 公式函数族、错误分类、真实 fixture 和明确排除项。
+- `docs/Formula_Calculation_Compatibility.md`：S8-6A～S8-6B 公式函数族、错误分类、查找语义、真实 fixture 和明确排除项。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
 - `docs/Development_Stage_Audit_2026-07-20.md`：上一轮专业工作区阶段审计和交错排期基线。
 
@@ -78,16 +78,16 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 当前本地候选验证结果：
 
 - 前端生产构建、主题/格式/工作簿/XLSX 发布契约检查均通过；工作簿契约已覆盖 S8-2A 的 Table 创建/调整入口、签名事务、包级往返、历史清理、重载与重算。
-- Rust：S8-6A 共 170 项测试（169 项功能、1 项性能），全部通过；新增真实公式 fixture 的四类函数族、错误传播/恢复/未知函数分类和 Tauri 命令边界回归。
-- 本批最终完整性能回归通过：`inspect=347 ms / page=2,953 ms / patch=2,760 ms / total=6,061 ms`，未放宽 `10000x12` 负载或时间约束。
-- 100 MiB PDF 范围读取基准：141 ms，仅读取约 255.9 KiB（目标小于 2 秒；不同机器会有波动）。
+- Rust：S8-6B 共 172 项测试（171 项功能、1 项性能），全部通过；新增条件聚合、查找/引用、`#N/A` 分类和扩展 Tauri 命令边界回归。
+- 本批最终完整性能回归通过：`inspect=303 ms / page=2,685 ms / patch=5,012 ms / total=8,002 ms`，未放宽 `10000x12` 负载、时间或 5% 文件增长约束。Debug 构建仅优化 `quick-xml` 与 `miniz_oxide` 依赖，普通写回在不存在 `sheetProtection` 时跳过完整保护解析。
+- 100 MiB PDF 范围读取基准：503 ms，仅读取约 255.9 KiB（目标小于 2 秒；不同机器会有波动）。
 - `npm audit --omit=dev`：0 个漏洞。
 
 Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能优化项，不是构建失败。
 
 ## 6. 下一阶段顺序
 
-2026-07-23 综合审计、风险排序、质量证据和后续阶段退出条件见 `docs/Development_Progress_Audit_2026-07-23.md`；历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1、I7-2、W7-1～W7-3、S8-1A～S8-6A；下一入口为 S8-6B 查找/引用与条件聚合函数族。
+2026-07-23 综合审计、风险排序、质量证据和后续阶段退出条件见 `docs/Development_Progress_Audit_2026-07-23.md`；历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1、I7-2、W7-1～W7-3、S8-1A～S8-6B；下一入口为 S8-6C 多条件聚合与非易失日期函数。
 
 当前 `v0.7.0` 基线已完成知识库文件树的创建、移动、重命名、删除、排序、扫描和状态读取路径守卫，并修复旧 API Key 迁移失败丢失及远程 HTTP 传输风险。
 
@@ -143,7 +143,8 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 50. S8-5B 已完成：独立页眉页脚面板支持奇数页、偶数页和首页六个标准文本及四个标准标志；每字段限制 255 字符，覆盖特殊字符、字段代码、清空、超长拒绝、保护拒绝、包校验和语义重读。
 51. S8-5C 已完成：独立打印选项面板支持网格线、行列标题、水平/垂直居中、黑白、草稿和 1–32767 可选首页页码；事务覆盖创建、更新、清除、保护拒绝、包校验和语义重读，页面阶段收尾。
 52. S8-6A 已完成：机器清单固定 IronCalc 版本和显式内存重算模式；真实 XLSX 验证聚合、数学、逻辑、文本四族 16 个函数，以及除零、依赖错误传播、`IFERROR` 恢复、未知函数和稳定错误分类；命令边界与 workbook contract 已纳入门禁。
-53. 下一批 S8-6B：验证查找/引用和条件聚合函数族，补精确/近似匹配、未找到值、空值与混合类型语义；动态数组、易失函数和外部引用继续独立验收。
+53. S8-6B 已完成：真实矩阵新增条件聚合和查找数据 Sheet，验证 `SUMIF/COUNTIF/AVERAGEIF` 与 `VLOOKUP/HLOOKUP/INDEX/MATCH` 的精确/升序近似匹配、通配条件、文本结果保型、`#N/A` 和恢复路径；机器清单扩展为六族 23 个函数。
+54. 下一批 S8-6C：验证 `SUMIFS/COUNTIFS/AVERAGEIFS` 与 `DATE/YEAR/MONTH/DAY` 等非易失日期函数；`XLOOKUP`、动态数组、易失函数和外部引用继续独立验收。
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 

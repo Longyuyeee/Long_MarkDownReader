@@ -58,15 +58,22 @@ if (!ooxml.includes('refuses_to_rename_or_delete_referenced_defined_names') || !
 if (!calculation.includes('recalculates_formula_using_named_range')) fail('named range calculation evidence missing')
 if (formulaCapabilities.schemaVersion !== 1 || formulaCapabilities.engine.id !== 'ironcalc' || formulaCapabilities.engine.version !== '0.7.1') fail('S8-6A formula capability header drift')
 const verifiedFormulaFunctions = new Set(formulaCapabilities.families.flatMap(family => {
-  if (family.status !== 'verified' || !family.id || !family.functions.length) fail('S8-6A formula family is incomplete')
+  if (family.status !== 'verified' || !family.id || !family.functions.length) fail('S8-6 formula family is incomplete')
   return family.functions
 }))
-if (!fs.existsSync(formulaFixturePath) || fs.statSync(formulaFixturePath).size < 5_000) fail('S8-6A formula fixture is missing or incomplete')
+for (const [familyId, functions] of Object.entries({
+  conditional_aggregate: ['SUMIF', 'COUNTIF', 'AVERAGEIF'],
+  lookup_reference: ['VLOOKUP', 'HLOOKUP', 'INDEX', 'MATCH'],
+})) {
+  const family = formulaCapabilities.families.find(item => item.id === familyId)
+  if (!family || family.status !== 'verified' || family.functions.join(',') !== functions.join(',')) fail(`S8-6B ${familyId} capability drift`)
+}
+if (!fs.existsSync(formulaFixturePath) || fs.statSync(formulaFixturePath).size < 5_000) fail('S8-6 formula fixture is missing or incomplete')
 for (const item of formulaFixture.cases) {
-  if (!item.id || !item.cell || !item.expectedValue || !item.expectedKind) fail('S8-6A formula fixture case is incomplete')
+  if (!item.id || !item.cell || !item.expectedValue || !item.expectedKind) fail('S8-6 formula fixture case is incomplete')
   for (const fn of (item.function ?? '').split(',').filter(Boolean)) {
-    if (!verifiedFormulaFunctions.has(fn)) fail(`S8-6A ${fn} fixture function is not in the verified inventory`)
-    if (!formulaGenerator.includes(`${fn}(`)) fail(`S8-6A ${fn} generator evidence missing`)
+    if (!verifiedFormulaFunctions.has(fn)) fail(`S8-6 ${fn} fixture function is not in the verified inventory`)
+    if (!formulaGenerator.includes(`${fn}(`)) fail(`S8-6 ${fn} generator evidence missing`)
   }
 }
 for (const scenario of ['division-by-zero', 'dependent-error-propagation', 'IFERROR-recovery', 'unknown-function']) {
@@ -74,6 +81,13 @@ for (const scenario of ['division-by-zero', 'dependent-error-propagation', 'IFER
 }
 if (!calculation.includes('recalculates_verified_function_families_from_real_xlsx_fixture') || !calculation.includes('classifies_formula_errors_and_preserves_dependency_propagation') || !calculation.includes('fn error_category')) fail('S8-6A calculation regression evidence missing')
 if (!engine.includes('formula_function_matrix_recalculates_through_command_boundary')) fail('S8-6A command-boundary evidence missing')
+for (const scenario of ['exact-match', 'ascending-approximate-match', 'cross-sheet-range', 'text-result-type-preservation', 'not-found-error', 'IFERROR-recovery']) {
+  if (!formulaCapabilities.lookupContract.verifiedScenarios.includes(scenario)) fail(`S8-6B ${scenario} lookup contract missing`)
+}
+for (const scenario of ['numeric-comparison', 'single-character-wildcard']) {
+  if (!formulaCapabilities.lookupContract.criteriaScenarios.includes(scenario)) fail(`S8-6B ${scenario} criteria contract missing`)
+}
+if (!calculation.includes('recalculates_verified_conditional_and_lookup_families') || !calculation.includes('classifies_lookup_not_found_as_not_available')) fail('S8-6B calculation regression evidence missing')
 if (!generator.includes('ExcelDateTime::from_ymd') || !generator.includes('#DIV/0!') || !generator.includes('define_name')) fail('S6-10 fixture evidence missing')
 for (const capability of ['namedRanges', 'dateTimeValues', 'errorValues']) {
   if (fixture.currentEngineExpectations[capability] !== 'supported') fail(`${capability} fixture expectation drift`)

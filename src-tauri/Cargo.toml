@@ -46,3 +46,9 @@ tauri-plugin-fs = "2.4.5"
 tauri-plugin-os = "2.3.2"
 tauri-plugin-autostart = "2"
 keyring = { version = "=3.6.3", features = ["apple-native", "windows-native", "sync-secret-service"] }
+
+[profile.dev.package.miniz_oxide]
+opt-level = 3
+
+[profile.dev.package.quick-xml]
+opt-level = 3

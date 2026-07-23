@@ -32,6 +32,16 @@
       "id": "text",
       "status": "verified",
       "functions": ["CONCAT", "LEN", "TRIM", "UPPER"]
+    },
+    {
+      "id": "conditional_aggregate",
+      "status": "verified",
+      "functions": ["SUMIF", "COUNTIF", "AVERAGEIF"]
+    },
+    {
+      "id": "lookup_reference",
+      "status": "verified",
+      "functions": ["VLOOKUP", "HLOOKUP", "INDEX", "MATCH"]
     }
   ],
   "errorContract": {
@@ -39,8 +49,21 @@
     "categories": ["division_by_zero", "name", "value", "reference", "number", "not_available", "circular", "other"],
     "verifiedScenarios": ["division-by-zero", "dependent-error-propagation", "IFERROR-recovery", "unknown-function"]
   },
-  "verifiedReferenceModes": ["same-sheet", "cross-sheet", "workbook-defined-name", "unsaved-edit-dependency"],
+  "lookupContract": {
+    "verifiedScenarios": [
+      "exact-match",
+      "ascending-approximate-match",
+      "cross-sheet-range",
+      "text-result-type-preservation",
+      "not-found-error",
+      "IFERROR-recovery"
+    ],
+    "criteriaScenarios": ["numeric-comparison", "single-character-wildcard"]
+  },
+  "verifiedReferenceModes": ["same-sheet", "cross-sheet", "cross-sheet-range", "workbook-defined-name", "unsaved-edit-dependency"],
   "excludedFromContract": [
+    "XLOOKUP-and-modern-lookup-functions",
+    "multi-criteria-IFS-functions",
     "volatile-function-recalculation-timing",
     "dynamic-arrays-and-spill-ranges",
     "external-workbook-references",

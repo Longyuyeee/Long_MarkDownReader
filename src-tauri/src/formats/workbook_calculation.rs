@@ -315,6 +315,60 @@ mod tests {
     }
 
     #[test]
+    fn recalculates_verified_conditional_and_lookup_families() {
+        let result = calculate_workbook(
+            FUNCTION_FIXTURE,
+            "formula-function-matrix.xlsx",
+            WorkbookCalculationPayload {
+                expected_signature: String::new(),
+                edits: Vec::new(),
+                targets: (19..=28)
+                    .map(fixture_target)
+                    .chain([fixture_target(29), fixture_target(31)])
+                    .collect(),
+            },
+        )
+        .unwrap();
+        let expected = [
+            ("50", "number"),
+            ("2", "number"),
+            ("25", "number"),
+            ("5", "number"),
+            ("200", "number"),
+            ("Pro", "text"),
+            ("300", "number"),
+            ("300", "number"),
+            ("3", "number"),
+            ("3", "number"),
+            ("400", "text"),
+            ("missing", "text"),
+        ];
+        assert_eq!(result.cells.len(), expected.len());
+        for (cell, (value, kind)) in result.cells.iter().zip(expected) {
+            assert_eq!(cell.value, value);
+            assert_eq!(cell.kind, kind);
+        }
+        assert!(result.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn classifies_lookup_not_found_as_not_available() {
+        let result = calculate_workbook(
+            FUNCTION_FIXTURE,
+            "formula-function-matrix.xlsx",
+            WorkbookCalculationPayload {
+                expected_signature: String::new(),
+                edits: Vec::new(),
+                targets: vec![fixture_target(30)],
+            },
+        )
+        .unwrap();
+        assert_eq!(result.cells[0].value, "#N/A");
+        assert_eq!(result.cells[0].kind, "error");
+        assert_eq!(result.diagnostics[0].category, "not_available");
+    }
+
+    #[test]
     fn rejects_duplicate_edits_and_unknown_sheets() {
         let edit = WorkbookCellEdit {
             sheet: "Data".into(),

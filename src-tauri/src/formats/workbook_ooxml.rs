@@ -8759,7 +8759,11 @@ pub fn patch_workbook_outline(
             .iter()
             .find(|entry| &entry.name == path)
             .ok_or_else(|| format!("工作表部件不存在: {path}"))?;
-        if parse_page_layout(&xml.data)?.protection.enabled {
+        let may_have_sheet_protection = xml
+            .data
+            .windows(b"sheetProtection".len())
+            .any(|window| window == b"sheetProtection");
+        if may_have_sheet_protection && parse_page_layout(&xml.data)?.protection.enabled {
             return Err(format!(
                 "工作表 {sheet} 已受保护；LongEdit 不会绕过 Excel 工作表保护"
             ));

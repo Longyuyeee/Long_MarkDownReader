@@ -19,6 +19,19 @@
     { "id": "error_division", "cell": "E16", "function": null, "expectedValue": "#DIV/0!", "expectedKind": "error", "diagnosticCategory": "division_by_zero" },
     { "id": "error_propagation", "cell": "E17", "function": null, "expectedValue": "#DIV/0!", "expectedKind": "error", "diagnosticCategory": "division_by_zero" },
     { "id": "error_recovery", "cell": "E18", "function": "IFERROR", "expectedValue": "recovered", "expectedKind": "text" },
-    { "id": "unknown_function", "cell": "E19", "function": null, "expectedValue": "#NAME?", "expectedKind": "error", "diagnosticCategory": "name" }
+    { "id": "unknown_function", "cell": "E19", "function": null, "expectedValue": "#NAME?", "expectedKind": "error", "diagnosticCategory": "name" },
+    { "id": "conditional_sumif", "cell": "E20", "function": "SUMIF", "expectedValue": "50", "expectedKind": "number" },
+    { "id": "conditional_countif", "cell": "E21", "function": "COUNTIF", "expectedValue": "2", "expectedKind": "number" },
+    { "id": "conditional_averageif", "cell": "E22", "function": "AVERAGEIF", "expectedValue": "25", "expectedKind": "number" },
+    { "id": "conditional_wildcard", "cell": "E23", "function": "COUNTIF", "expectedValue": "5", "expectedKind": "number" },
+    { "id": "lookup_vlookup_exact", "cell": "E24", "function": "VLOOKUP", "expectedValue": "200", "expectedKind": "number" },
+    { "id": "lookup_vlookup_approximate", "cell": "E25", "function": "VLOOKUP", "expectedValue": "Pro", "expectedKind": "text" },
+    { "id": "lookup_hlookup_exact", "cell": "E26", "function": "HLOOKUP", "expectedValue": "300", "expectedKind": "number" },
+    { "id": "lookup_index", "cell": "E27", "function": "INDEX", "expectedValue": "300", "expectedKind": "number" },
+    { "id": "lookup_match_exact", "cell": "E28", "function": "MATCH", "expectedValue": "3", "expectedKind": "number" },
+    { "id": "lookup_match_approximate", "cell": "E29", "function": "MATCH", "expectedValue": "3", "expectedKind": "number" },
+    { "id": "lookup_text_result", "cell": "E30", "function": "VLOOKUP", "expectedValue": "400", "expectedKind": "text" },
+    { "id": "lookup_not_found", "cell": "E31", "function": "VLOOKUP", "expectedValue": "#N/A", "expectedKind": "error", "diagnosticCategory": "not_available" },
+    { "id": "lookup_error_recovery", "cell": "E32", "function": "IFERROR", "expectedValue": "missing", "expectedKind": "text" }
   ]
 }

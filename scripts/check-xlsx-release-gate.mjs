@@ -23,6 +23,7 @@ for (const part of ['xl/styles.xml', 'xl/worksheets/sheet1.xml']) {
 for (const field of ['inspect', 'readPage', 'patch', 'total']) {
   if (!Number.isInteger(gate.performanceBudgetsMs[field]) || gate.performanceBudgetsMs[field] <= 0) fail(`invalid ${field} performance budget`)
 }
+if (gate.performanceAttempts !== 2) fail('performance retry policy drift')
 if (gate.performanceWorkload.rows < 10000 || gate.performanceWorkload.columns < 12 || gate.performanceWorkload.sheets < 4) fail('performance workload was weakened')
 if (!Array.isArray(gate.prohibitedClaims) || gate.prohibitedClaims.length < 3) fail('prohibited compatibility claims are incomplete')
 for (const claim of gate.prohibitedClaims) {

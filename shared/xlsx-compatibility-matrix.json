@@ -50,7 +50,7 @@
       "edit": "supported",
       "calculate": "limited",
       "roundTrip": "supported",
-      "evidence": "S8-6A machine-readable function-family inventory + real XLSX matrix for aggregate/math/logical/text functions + same-sheet/cross-sheet/named-range/unsaved-edit dependencies + classified cycle/error/unknown-function diagnostics"
+      "evidence": "S8-6A/S8-6B machine-readable inventory + real XLSX matrix for aggregate/math/logical/text/conditional-aggregate/lookup-reference functions + same-sheet/cross-sheet/named-range/unsaved-edit dependencies + classified cycle/error/not-found/unknown-function diagnostics"
     },
     {
       "id": "named_ranges",
