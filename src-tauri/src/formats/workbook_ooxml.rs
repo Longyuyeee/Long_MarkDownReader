@@ -11,11 +11,11 @@ use crate::formats::workbook::{
     WorkbookDrawingAction, WorkbookDrawingAnchor, WorkbookDrawingChange, WorkbookDrawingObject,
     WorkbookExternalLink, WorkbookFilterAction, WorkbookFilterChange, WorkbookFilterState,
     WorkbookFilterTarget, WorkbookFreezePane, WorkbookLinkedData, WorkbookMergeEdit,
-    WorkbookMergeRange, WorkbookNamedStyle, WorkbookPageLayout, WorkbookPageMargins,
-    WorkbookPivotTable, WorkbookPrintOptions, WorkbookProtection, WorkbookRangeReference,
-    WorkbookRowHeight, WorkbookRowHeightEdit, WorkbookRowState, WorkbookRowStateEdit,
-    WorkbookSlicer, WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructureChange,
-    WorkbookTable, WorkbookTableAction, WorkbookTableChange,
+    WorkbookMergeRange, WorkbookNamedStyle, WorkbookPageLayout, WorkbookPageLayoutChange,
+    WorkbookPageMargins, WorkbookPivotTable, WorkbookPrintOptions, WorkbookProtection,
+    WorkbookRangeReference, WorkbookRowHeight, WorkbookRowHeightEdit, WorkbookRowState,
+    WorkbookRowStateEdit, WorkbookSlicer, WorkbookStructureAction, WorkbookStructureAxis,
+    WorkbookStructureChange, WorkbookTable, WorkbookTableAction, WorkbookTableChange,
 };
 use crate::formats::workbook_chart::{
     build_standard_chart_xml, chart_series_from_selection, supported_chart_type,
@@ -6798,6 +6798,544 @@ pub fn patch_workbook_freeze_pane(
         .finish()
         .map(|cursor| cursor.into_inner())
         .map_err(|error| format!("完成冻结窗格写回失败: {error}"))
+}
+
+fn validate_page_layout_change(change: &WorkbookPageLayoutChange) -> Result<(), String> {
+    if !matches!(change.orientation.as_str(), "portrait" | "landscape") {
+        return Err("页面方向只支持 portrait 或 landscape".into());
+    }
+    if !matches!(change.paper_size, 1 | 5 | 8 | 9 | 11) {
+        return Err("纸张只支持 Letter、Legal、A3、A4 或 A5".into());
+    }
+    if let Some(range) = change.print_area.as_ref() {
+        if range.top > range.bottom
+            || range.left > range.right
+            || range.bottom >= MAX_XLSX_ROWS
+            || range.right >= MAX_XLSX_COLUMNS
+        {
+            return Err("打印区域超出 XLSX 网格".into());
+        }
+    }
+    for (name, value) in [
+        ("left", change.margins.left),
+        ("right", change.margins.right),
+        ("top", change.margins.top),
+        ("bottom", change.margins.bottom),
+        ("header", change.margins.header),
+        ("footer", change.margins.footer),
+    ] {
+        if !value.is_finite() || !(0.0..=10.0).contains(&value) {
+            return Err(format!("页边距 {name} 必须在 0 到 10 英寸之间"));
+        }
+    }
+    match (change.scale, change.fit_to_width, change.fit_to_height) {
+        (Some(scale), None, None) if (10..=400).contains(&scale) => {}
+        (None, Some(width), Some(height))
+            if width <= 100 && height <= 100 && (width > 0 || height > 0) => {}
+        _ => return Err("缩放必须使用 10–400% 或 0–100 页的适页设置".into()),
+    }
+    Ok(())
+}
+
+fn page_margins_event(change: &WorkbookPageLayoutChange) -> BytesStart<'static> {
+    let mut event = BytesStart::new("pageMargins");
+    let values = [
+        ("left", change.margins.left.to_string()),
+        ("right", change.margins.right.to_string()),
+        ("top", change.margins.top.to_string()),
+        ("bottom", change.margins.bottom.to_string()),
+        ("header", change.margins.header.to_string()),
+        ("footer", change.margins.footer.to_string()),
+    ];
+    for (name, value) in &values {
+        event.push_attribute((*name, value.as_str()));
+    }
+    event.into_owned()
+}
+
+fn page_setup_event(
+    original: Option<&BytesStart<'_>>,
+    change: &WorkbookPageLayoutChange,
+) -> Result<BytesStart<'static>, String> {
+    let mut event = BytesStart::new("pageSetup");
+    if let Some(original) = original {
+        for attribute in original.attributes().with_checks(false) {
+            let attribute = attribute.map_err(|error| format!("解析页面设置属性失败: {error}"))?;
+            if !matches!(
+                attribute.key.as_ref(),
+                b"orientation" | b"paperSize" | b"scale" | b"fitToWidth" | b"fitToHeight"
+            ) {
+                event.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+            }
+        }
+    }
+    let paper_size = change.paper_size.to_string();
+    event.push_attribute(("orientation", change.orientation.as_str()));
+    event.push_attribute(("paperSize", paper_size.as_str()));
+    if let Some(scale) = change.scale {
+        let scale = scale.to_string();
+        event.push_attribute(("scale", scale.as_str()));
+    } else {
+        let width = change.fit_to_width.unwrap_or_default().to_string();
+        let height = change.fit_to_height.unwrap_or_default().to_string();
+        event.push_attribute(("fitToWidth", width.as_str()));
+        event.push_attribute(("fitToHeight", height.as_str()));
+    }
+    Ok(event.into_owned())
+}
+
+fn page_setup_properties_event(
+    original: Option<&BytesStart<'_>>,
+    fit_to_page: bool,
+) -> Result<BytesStart<'static>, String> {
+    let mut event = BytesStart::new("pageSetUpPr");
+    if let Some(original) = original {
+        for attribute in original.attributes().with_checks(false) {
+            let attribute = attribute.map_err(|error| format!("解析页面设置属性失败: {error}"))?;
+            if attribute.key.as_ref() != b"fitToPage" {
+                event.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+            }
+        }
+    }
+    event.push_attribute(("fitToPage", if fit_to_page { "1" } else { "0" }));
+    Ok(event.into_owned())
+}
+
+fn patch_page_setup_properties_xml(xml: &[u8], fit_to_page: bool) -> Result<Vec<u8>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 80));
+    let mut buffer = Vec::new();
+    let mut inside_sheet_properties = false;
+    let mut found_sheet_properties = false;
+    let mut wrote_setup_properties = false;
+    let mut inserted_sheet_properties = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析页面设置属性失败: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"sheetPr" => {
+                found_sheet_properties = true;
+                inside_sheet_properties = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("写入页面设置属性失败: {error}"))?;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"sheetPr" => {
+                found_sheet_properties = true;
+                writer
+                    .write_event(Event::Start(start.to_owned().into_owned()))
+                    .map_err(|error| format!("写入页面设置属性失败: {error}"))?;
+                writer
+                    .write_event(Event::Empty(page_setup_properties_event(
+                        None,
+                        fit_to_page,
+                    )?))
+                    .map_err(|error| format!("写入页面设置属性失败: {error}"))?;
+                writer
+                    .write_event(Event::End(BytesEnd::new("sheetPr")))
+                    .map_err(|error| format!("写入页面设置属性失败: {error}"))?;
+                wrote_setup_properties = true;
+            }
+            Event::Start(ref start)
+                if inside_sheet_properties && start.local_name().as_ref() == b"pageSetUpPr" =>
+            {
+                writer
+                    .write_event(Event::Empty(page_setup_properties_event(
+                        Some(start),
+                        fit_to_page,
+                    )?))
+                    .map_err(|error| format!("更新页面设置属性失败: {error}"))?;
+                skip_element(&mut reader, b"pageSetUpPr", &mut buffer)?;
+                wrote_setup_properties = true;
+            }
+            Event::Empty(ref start)
+                if inside_sheet_properties && start.local_name().as_ref() == b"pageSetUpPr" =>
+            {
+                writer
+                    .write_event(Event::Empty(page_setup_properties_event(
+                        Some(start),
+                        fit_to_page,
+                    )?))
+                    .map_err(|error| format!("更新页面设置属性失败: {error}"))?;
+                wrote_setup_properties = true;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"sheetPr" => {
+                if !wrote_setup_properties {
+                    writer
+                        .write_event(Event::Empty(page_setup_properties_event(
+                            None,
+                            fit_to_page,
+                        )?))
+                        .map_err(|error| format!("新增页面设置属性失败: {error}"))?;
+                    wrote_setup_properties = true;
+                }
+                inside_sheet_properties = false;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束页面设置属性失败: {error}"))?;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if !found_sheet_properties
+                    && !inserted_sheet_properties
+                    && start.local_name().as_ref() != b"worksheet" =>
+            {
+                writer
+                    .write_event(Event::Start(BytesStart::new("sheetPr")))
+                    .map_err(|error| format!("新增工作表属性失败: {error}"))?;
+                writer
+                    .write_event(Event::Empty(page_setup_properties_event(
+                        None,
+                        fit_to_page,
+                    )?))
+                    .map_err(|error| format!("新增页面设置属性失败: {error}"))?;
+                writer
+                    .write_event(Event::End(BytesEnd::new("sheetPr")))
+                    .map_err(|error| format!("结束工作表属性失败: {error}"))?;
+                inserted_sheet_properties = true;
+                wrote_setup_properties = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制工作表 XML 失败: {error}"))?;
+            }
+            Event::End(ref end)
+                if end.local_name().as_ref() == b"worksheet"
+                    && !found_sheet_properties
+                    && !inserted_sheet_properties =>
+            {
+                writer
+                    .write_event(Event::Start(BytesStart::new("sheetPr")))
+                    .map_err(|error| format!("新增工作表属性失败: {error}"))?;
+                writer
+                    .write_event(Event::Empty(page_setup_properties_event(
+                        None,
+                        fit_to_page,
+                    )?))
+                    .map_err(|error| format!("新增页面设置属性失败: {error}"))?;
+                writer
+                    .write_event(Event::End(BytesEnd::new("sheetPr")))
+                    .map_err(|error| format!("结束工作表属性失败: {error}"))?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束工作表 XML 失败: {error}"))?;
+                inserted_sheet_properties = true;
+                wrote_setup_properties = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制工作表 XML 失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !wrote_setup_properties {
+        return Err("无法写入页面设置属性".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn patch_page_layout_xml(xml: &[u8], change: &WorkbookPageLayoutChange) -> Result<Vec<u8>, String> {
+    let with_properties = patch_page_setup_properties_xml(xml, change.scale.is_none())?;
+    let mut reader = Reader::from_reader(with_properties.as_slice());
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(with_properties.len() + 180));
+    let mut buffer = Vec::new();
+    let mut inserted = false;
+    let mut original_setup = None;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析页面布局失败: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"pageMargins" => {
+                skip_element(&mut reader, b"pageMargins", &mut buffer)?;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"pageMargins" => {}
+            Event::Start(ref start) if start.local_name().as_ref() == b"pageSetup" => {
+                original_setup = Some(start.to_owned().into_owned());
+                skip_element(&mut reader, b"pageSetup", &mut buffer)?;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"pageSetup" => {
+                original_setup = Some(start.to_owned().into_owned());
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if !inserted
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"headerFooter"
+                            | b"rowBreaks"
+                            | b"colBreaks"
+                            | b"customProperties"
+                            | b"drawing"
+                            | b"legacyDrawing"
+                            | b"legacyDrawingHF"
+                            | b"picture"
+                            | b"oleObjects"
+                            | b"controls"
+                            | b"webPublishItems"
+                            | b"tableParts"
+                            | b"extLst"
+                    ) =>
+            {
+                writer
+                    .write_event(Event::Empty(page_margins_event(change)))
+                    .map_err(|error| format!("写入页边距失败: {error}"))?;
+                writer
+                    .write_event(Event::Empty(page_setup_event(
+                        original_setup.as_ref(),
+                        change,
+                    )?))
+                    .map_err(|error| format!("写入页面设置失败: {error}"))?;
+                inserted = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制工作表 XML 失败: {error}"))?;
+            }
+            Event::End(ref end) if !inserted && end.local_name().as_ref() == b"worksheet" => {
+                writer
+                    .write_event(Event::Empty(page_margins_event(change)))
+                    .map_err(|error| format!("写入页边距失败: {error}"))?;
+                writer
+                    .write_event(Event::Empty(page_setup_event(
+                        original_setup.as_ref(),
+                        change,
+                    )?))
+                    .map_err(|error| format!("写入页面设置失败: {error}"))?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束工作表 XML 失败: {error}"))?;
+                inserted = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制工作表 XML 失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if !inserted {
+        return Err("无法写入页面布局".into());
+    }
+    Ok(writer.into_inner())
+}
+
+fn patch_print_area_xml(
+    xml: &[u8],
+    sheet: &str,
+    local_sheet_id: usize,
+    formula: Option<&str>,
+) -> Result<Vec<u8>, String> {
+    let defined_names = read_workbook_defined_names_xml(xml)?;
+    let target_exists = defined_names.iter().any(|name| {
+        name.name.eq_ignore_ascii_case("_xlnm.Print_Area") && name.scope.as_deref() == Some(sheet)
+    });
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 120));
+    let mut buffer = Vec::new();
+    let mut has_container = false;
+    let mut inserted = false;
+    let mut patched = false;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析打印区域定义失败: {error}"))?;
+        match event {
+            Event::Start(ref start) if start.local_name().as_ref() == b"definedNames" => {
+                has_container = true;
+                if formula.is_none() && target_exists && defined_names.len() == 1 {
+                    skip_element(&mut reader, b"definedNames", &mut buffer)?;
+                    patched = true;
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("复制定义名称失败: {error}"))?;
+                }
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"definedName" => {
+                let name = xml_value(start, b"name", reader.decoder())?;
+                let scope = xml_value(start, b"localSheetId", reader.decoder())?
+                    .and_then(|value| value.parse::<usize>().ok());
+                if name
+                    .as_deref()
+                    .is_some_and(|name| name.eq_ignore_ascii_case("_xlnm.Print_Area"))
+                    && scope == Some(local_sheet_id)
+                {
+                    if let Some(formula) = formula {
+                        writer
+                            .write_event(Event::Start(start.to_owned().into_owned()))
+                            .map_err(|error| format!("写入打印区域定义失败: {error}"))?;
+                        writer
+                            .write_event(Event::Text(BytesText::new(formula)))
+                            .map_err(|error| format!("写入打印区域范围失败: {error}"))?;
+                        writer
+                            .write_event(Event::End(BytesEnd::new("definedName")))
+                            .map_err(|error| format!("结束打印区域定义失败: {error}"))?;
+                    }
+                    skip_element(&mut reader, b"definedName", &mut buffer)?;
+                    patched = true;
+                    inserted = formula.is_some();
+                } else {
+                    writer
+                        .write_event(event.into_owned())
+                        .map_err(|error| format!("复制定义名称失败: {error}"))?;
+                }
+            }
+            Event::End(ref end)
+                if end.local_name().as_ref() == b"definedNames"
+                    && formula.is_some()
+                    && !inserted =>
+            {
+                write_defined_name(
+                    &mut writer,
+                    "_xlnm.Print_Area",
+                    Some(local_sheet_id),
+                    formula.unwrap(),
+                )?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束定义名称失败: {error}"))?;
+                inserted = true;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if !has_container
+                    && formula.is_some()
+                    && !inserted
+                    && matches!(
+                        start.local_name().as_ref(),
+                        b"calcPr"
+                            | b"oleSize"
+                            | b"customWorkbookViews"
+                            | b"pivotCaches"
+                            | b"extLst"
+                    ) =>
+            {
+                writer
+                    .write_event(Event::Start(BytesStart::new("definedNames")))
+                    .map_err(|error| format!("新增定义名称容器失败: {error}"))?;
+                write_defined_name(
+                    &mut writer,
+                    "_xlnm.Print_Area",
+                    Some(local_sheet_id),
+                    formula.unwrap(),
+                )?;
+                writer
+                    .write_event(Event::End(BytesEnd::new("definedNames")))
+                    .map_err(|error| format!("结束定义名称容器失败: {error}"))?;
+                inserted = true;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制工作簿 XML 失败: {error}"))?;
+            }
+            Event::End(ref end)
+                if end.local_name().as_ref() == b"workbook" && formula.is_some() && !inserted =>
+            {
+                writer
+                    .write_event(Event::Start(BytesStart::new("definedNames")))
+                    .map_err(|error| format!("新增定义名称容器失败: {error}"))?;
+                write_defined_name(
+                    &mut writer,
+                    "_xlnm.Print_Area",
+                    Some(local_sheet_id),
+                    formula.unwrap(),
+                )?;
+                writer
+                    .write_event(Event::End(BytesEnd::new("definedNames")))
+                    .map_err(|error| format!("结束定义名称容器失败: {error}"))?;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束工作簿 XML 失败: {error}"))?;
+                inserted = true;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制工作簿 XML 失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    if formula.is_some() && !inserted {
+        return Err("无法写入打印区域定义".into());
+    }
+    if formula.is_none() && target_exists && !patched {
+        return Err("无法清除打印区域定义".into());
+    }
+    Ok(writer.into_inner())
+}
+
+pub fn patch_workbook_page_layout(
+    source: &[u8],
+    change: &WorkbookPageLayoutChange,
+) -> Result<Vec<u8>, String> {
+    validate_page_layout_change(change)?;
+    let mut entries = load_package(source)?;
+    let paths = workbook_sheet_paths(&entries)?;
+    let sheet_path = paths
+        .get(change.sheet.trim())
+        .ok_or_else(|| format!("工作表不存在: {}", change.sheet))?
+        .clone();
+    let sheet_index = entries
+        .iter()
+        .position(|entry| entry.name == sheet_path)
+        .ok_or("工作表部件缺失")?;
+    if parse_page_layout(&entries[sheet_index].data)?
+        .protection
+        .enabled
+    {
+        return Err("受保护的工作表不能修改页面布局；LongEdit 不会绕过 Excel 保护".into());
+    }
+    let workbook_index = entries
+        .iter()
+        .position(|entry| entry.name == "xl/workbook.xml")
+        .ok_or("XLSX 缺少 xl/workbook.xml")?;
+    let workbook_xml = entries[workbook_index].data.clone();
+    let sheets = workbook_sheet_names(&workbook_xml)?;
+    let local_sheet_id = sheets
+        .iter()
+        .position(|sheet| sheet == change.sheet.trim())
+        .ok_or_else(|| format!("工作表不存在: {}", change.sheet))?;
+    let current_print_area = read_workbook_defined_names_xml(&workbook_xml)?
+        .into_iter()
+        .find(|name| {
+            name.name.eq_ignore_ascii_case("_xlnm.Print_Area")
+                && name.scope.as_deref() == Some(change.sheet.trim())
+        })
+        .and_then(|name| name.reference)
+        .map(|range| WorkbookMergeRange {
+            top: range.top,
+            bottom: range.bottom,
+            left: range.left,
+            right: range.right,
+        });
+    if read_workbook_protection(source)?.lock_structure && current_print_area != change.print_area {
+        return Err("工作簿结构已保护，不能修改打印区域定义".into());
+    }
+    let formula = change
+        .print_area
+        .as_ref()
+        .map(|range| defined_name_range_formula(change.sheet.trim(), range))
+        .transpose()?;
+    entries[sheet_index].data = patch_page_layout_xml(&entries[sheet_index].data, change)?;
+    if current_print_area != change.print_area {
+        entries[workbook_index].data = patch_print_area_xml(
+            &workbook_xml,
+            change.sheet.trim(),
+            local_sheet_id,
+            formula.as_deref(),
+        )?;
+    }
+    let parsed = parse_page_layout(&entries[sheet_index].data)?;
+    if parsed.setup.orientation.as_deref() != Some(change.orientation.as_str())
+        || parsed.setup.paper_size != Some(change.paper_size)
+        || parsed.margins.left != Some(change.margins.left)
+        || parsed.setup.scale != change.scale
+        || parsed.setup.fit_to_width != change.fit_to_width
+        || parsed.setup.fit_to_height != change.fit_to_height
+    {
+        return Err("页面布局写回后的语义校验失败".into());
+    }
+    write_package(entries, source.len() + 512)
 }
 
 fn sheet_extent(xml: &[u8]) -> Result<(usize, usize), String> {

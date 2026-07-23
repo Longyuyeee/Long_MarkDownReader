@@ -56,7 +56,8 @@ use commands::workbook::{
     translate_workbook_formulas, update_workbook_conditional_format,
     update_workbook_data_validation, update_workbook_defined_name, update_workbook_drawing,
     update_workbook_filter, update_workbook_freeze_pane, update_workbook_outline,
-    update_workbook_structure, update_workbook_table, write_workbook_cells,
+    update_workbook_page_layout, update_workbook_structure, update_workbook_table,
+    write_workbook_cells,
 };
 use commands::workspace::{analyze_workspace_health, get_workspace_overview};
 use services::data_migration::check_and_migrate_data;
@@ -254,6 +255,7 @@ pub fn run() {
             preview_workbook_structure_migration,
             write_workbook_cells,
             update_workbook_freeze_pane,
+            update_workbook_page_layout,
             update_workbook_outline,
             update_workbook_structure,
             update_workbook_table,

@@ -285,6 +285,37 @@ pub struct WorkbookPageMargins {
     pub footer: Option<f64>,
 }
 
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPageMarginsChange {
+    pub left: f64,
+    pub right: f64,
+    pub top: f64,
+    pub bottom: f64,
+    pub header: f64,
+    pub footer: f64,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPageLayoutChange {
+    pub sheet: String,
+    pub print_area: Option<WorkbookMergeRange>,
+    pub orientation: String,
+    pub paper_size: u32,
+    pub margins: WorkbookPageMarginsChange,
+    pub scale: Option<u32>,
+    pub fit_to_width: Option<u32>,
+    pub fit_to_height: Option<u32>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPageLayoutPayload {
+    pub expected_signature: String,
+    pub change: WorkbookPageLayoutChange,
+}
+
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkbookPageSetup {

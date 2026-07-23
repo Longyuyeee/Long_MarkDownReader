@@ -9,8 +9,9 @@ use crate::formats::workbook::{
     WorkbookCapabilityLevel, WorkbookCell, WorkbookConditionalFormatPayload,
     WorkbookDataValidationPayload, WorkbookDefinedNamePayload, WorkbookDocument,
     WorkbookDrawingPayload, WorkbookEngine, WorkbookFilterPayload, WorkbookOutlinePayload,
-    WorkbookSheetPage, WorkbookStructureChange, WorkbookStructureMigrationPreview,
-    WorkbookStructurePayload, WorkbookTablePayload, WorkbookWritePayload,
+    WorkbookPageLayoutPayload, WorkbookSheetPage, WorkbookStructureChange,
+    WorkbookStructureMigrationPreview, WorkbookStructurePayload, WorkbookTablePayload,
+    WorkbookWritePayload,
 };
 use crate::formats::workbook_calculation::calculate_workbook;
 use crate::formats::workbook_formula::{
@@ -20,9 +21,10 @@ use crate::formats::workbook_formula::{
 use crate::formats::workbook_ooxml::{
     patch_workbook, patch_workbook_conditional_format, patch_workbook_data_validation,
     patch_workbook_defined_name, patch_workbook_drawing, patch_workbook_filter,
-    patch_workbook_freeze_pane, patch_workbook_outline, patch_workbook_structure,
-    patch_workbook_table, read_workbook_defined_names, read_workbook_linked_data,
-    read_workbook_protection, read_workbook_sheet_layout, validate_workbook_package,
+    patch_workbook_freeze_pane, patch_workbook_outline, patch_workbook_page_layout,
+    patch_workbook_structure, patch_workbook_table, read_workbook_defined_names,
+    read_workbook_linked_data, read_workbook_protection, read_workbook_sheet_layout,
+    validate_workbook_package,
 };
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
@@ -630,6 +632,36 @@ pub async fn update_workbook_freeze_pane(
 }
 
 #[tauri::command]
+pub async fn update_workbook_page_layout(
+    library_root: String,
+    path: String,
+    payload: WorkbookPageLayoutPayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再修改页面布局".into());
+        }
+        let output = patch_workbook_page_layout(&source, &payload.change)?;
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("保存后的 XLSX 不能超过 128 MB".into());
+        }
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX 页面布局写回任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn update_workbook_outline(
     library_root: String,
     path: String,
@@ -763,7 +795,8 @@ mod tests {
         WorkbookDefinedNameChange, WorkbookDefinedNamePayload, WorkbookDrawingAction,
         WorkbookDrawingChange, WorkbookDrawingPayload, WorkbookFilterAction, WorkbookFilterChange,
         WorkbookFilterPayload, WorkbookFilterTarget, WorkbookMergeEdit, WorkbookMergeRange,
-        WorkbookOutlinePayload, WorkbookRowHeightEdit, WorkbookRowStateEdit,
+        WorkbookOutlinePayload, WorkbookPageLayoutChange, WorkbookPageLayoutPayload,
+        WorkbookPageMarginsChange, WorkbookRowHeightEdit, WorkbookRowStateEdit,
         WorkbookStructureAction, WorkbookStructureAxis, WorkbookStructurePayload,
         WorkbookStylePatch, WorkbookWritePayload,
     };
@@ -2129,6 +2162,120 @@ mod tests {
     }
 
     #[test]
+    fn page_layout_round_trips_through_command_boundary() {
+        let (base, path) = chart_visual_fixture_copy("page-layout");
+        let root = base.join("library");
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let print_area = WorkbookMergeRange {
+            top: 0,
+            bottom: 12,
+            left: 0,
+            right: 8,
+        };
+        let saved = tauri::async_runtime::block_on(update_workbook_page_layout(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPageLayoutPayload {
+                expected_signature: document.signature,
+                change: WorkbookPageLayoutChange {
+                    sheet: "Chart Matrix".into(),
+                    print_area: Some(print_area.clone()),
+                    orientation: "landscape".into(),
+                    paper_size: 9,
+                    margins: WorkbookPageMarginsChange {
+                        left: 0.4,
+                        right: 0.4,
+                        top: 0.6,
+                        bottom: 0.6,
+                        header: 0.2,
+                        footer: 0.2,
+                    },
+                    scale: Some(85),
+                    fit_to_width: None,
+                    fit_to_height: None,
+                },
+            },
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Chart Matrix", 0, 80)
+            .unwrap();
+        assert_eq!(page.page_layout.print_area, Some(print_area.clone()));
+        assert_eq!(
+            page.page_layout.setup.orientation.as_deref(),
+            Some("landscape")
+        );
+        assert_eq!(page.page_layout.setup.paper_size, Some(9));
+        assert_eq!(page.page_layout.setup.scale, Some(85));
+        assert!(!page.page_layout.setup.fit_to_page);
+        assert_eq!(page.page_layout.margins.left, Some(0.4));
+
+        let fitted = tauri::async_runtime::block_on(update_workbook_page_layout(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPageLayoutPayload {
+                expected_signature: saved.signature,
+                change: WorkbookPageLayoutChange {
+                    sheet: "Chart Matrix".into(),
+                    print_area: Some(print_area),
+                    orientation: "portrait".into(),
+                    paper_size: 1,
+                    margins: WorkbookPageMarginsChange {
+                        left: 0.7,
+                        right: 0.7,
+                        top: 0.75,
+                        bottom: 0.75,
+                        header: 0.3,
+                        footer: 0.3,
+                    },
+                    scale: None,
+                    fit_to_width: Some(1),
+                    fit_to_height: Some(0),
+                },
+            },
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Chart Matrix", 0, 80)
+            .unwrap();
+        assert!(page.page_layout.setup.fit_to_page);
+        assert_eq!(page.page_layout.setup.fit_to_width, Some(1));
+        assert_eq!(page.page_layout.setup.fit_to_height, Some(0));
+        assert_eq!(page.page_layout.setup.scale, None);
+
+        tauri::async_runtime::block_on(update_workbook_page_layout(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPageLayoutPayload {
+                expected_signature: fitted.signature,
+                change: WorkbookPageLayoutChange {
+                    sheet: "Chart Matrix".into(),
+                    print_area: None,
+                    orientation: "portrait".into(),
+                    paper_size: 1,
+                    margins: WorkbookPageMarginsChange {
+                        left: 0.7,
+                        right: 0.7,
+                        top: 0.75,
+                        bottom: 0.75,
+                        header: 0.3,
+                        footer: 0.3,
+                    },
+                    scale: None,
+                    fit_to_width: Some(1),
+                    fit_to_height: Some(0),
+                },
+            },
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Chart Matrix", 0, 80)
+            .unwrap();
+        assert_eq!(page.page_layout.print_area, None);
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
     fn preserves_chart_drawing_and_image_parts_when_editing_cells() {
         let (base, path) = compatibility_fixture_copy("drawings");
         let root = base.join("library");
@@ -2213,6 +2360,33 @@ mod tests {
         assert!(freeze_rejected
             .unwrap_err()
             .contains("不会绕过 Excel 工作表保护"));
+        assert_eq!(fs::read(&path).unwrap(), before);
+
+        let layout_rejected = tauri::async_runtime::block_on(update_workbook_page_layout(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPageLayoutPayload {
+                expected_signature: CalamineWorkbookEngine.inspect(&path).unwrap().signature,
+                change: WorkbookPageLayoutChange {
+                    sheet: "Protected".into(),
+                    print_area: None,
+                    orientation: "portrait".into(),
+                    paper_size: 9,
+                    margins: WorkbookPageMarginsChange {
+                        left: 0.7,
+                        right: 0.7,
+                        top: 0.75,
+                        bottom: 0.75,
+                        header: 0.3,
+                        footer: 0.3,
+                    },
+                    scale: Some(100),
+                    fit_to_width: None,
+                    fit_to_height: None,
+                },
+            },
+        ));
+        assert!(layout_rejected.unwrap_err().contains("不会绕过 Excel 保护"));
         assert_eq!(fs::read(&path).unwrap(), before);
         fs::remove_dir_all(base).unwrap();
     }

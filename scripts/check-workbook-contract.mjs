@@ -122,10 +122,10 @@ for (const capability of ['pivotTables', 'slicers', 'externalData']) {
   if (fixture.currentEngineExpectations[capability] !== 'supported') fail(`${capability} fixture expectation drift`)
 }
 const printProtection = matrix.features.find(item => item.id === 'print_and_protection')
-if (!printProtection || printProtection.read !== 'supported' || printProtection.view !== 'limited' || printProtection.edit !== 'planned' || printProtection.roundTrip !== 'preserved') fail('print_and_protection S6-14 status drift')
-if (!model.includes('pub page_layout: WorkbookPageLayout') || !model.includes('pub protection: WorkbookProtection') || !model.includes('pub sheet_protection: WorkbookCapabilityLevel')) fail('page/protection model evidence missing')
-if (!ooxml.includes('parse_page_layout') || !ooxml.includes('read_workbook_protection') || !engine.includes('refuses_to_edit_or_reconfigure_protected_sheet')) fail('page/protection backend evidence missing')
-if (!view.includes('page-layout-toolbar') || !view.includes('sheetProtected')) fail('page/protection frontend evidence missing')
+if (!printProtection || printProtection.read !== 'supported' || printProtection.view !== 'limited' || printProtection.edit !== 'limited' || printProtection.roundTrip !== 'supported') fail('print_and_protection S8-5A status drift')
+if (!model.includes('pub page_layout: WorkbookPageLayout') || !model.includes('pub protection: WorkbookProtection') || !model.includes('pub sheet_protection: WorkbookCapabilityLevel') || !model.includes('WorkbookPageLayoutPayload')) fail('page/protection model evidence missing')
+if (!ooxml.includes('parse_page_layout') || !ooxml.includes('read_workbook_protection') || !ooxml.includes('patch_workbook_page_layout') || !engine.includes('page_layout_round_trips_through_command_boundary') || !engine.includes('refuses_to_edit_or_reconfigure_protected_sheet')) fail('page/protection S8-5A backend evidence missing')
+if (!view.includes('page-layout-toolbar') || !view.includes('sheetProtected') || !view.includes('savePageLayout') || !view.includes("invoke<WorkbookDocument>('update_workbook_page_layout'")) fail('page/protection S8-5A frontend evidence missing')
 for (const feature of ['printArea', 'pageLayout', 'headerFooter', 'sheetProtection', 'workbookProtection']) {
   if (fixture.documentFeatures[feature] !== true) fail(`${feature} fixture evidence missing`)
 }

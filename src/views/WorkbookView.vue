@@ -40,15 +40,41 @@
       <em v-if="workbook.linkedData.externalRelationshipCount">安全模式：已识别 {{ workbook.linkedData.externalRelationshipCount }} 个外部目标，未发起网络或文件访问</em>
     </div>
 
-    <div v-if="workbook && sheetInfo && (hasPageLayout || sheetProtected || workbook.protection.enabled)" class="page-layout-toolbar" aria-label="打印布局与保护状态">
-      <strong>页面与保护</strong>
+    <div v-if="workbook && sheetInfo" class="page-layout-toolbar" aria-label="打印布局与保护状态">
+      <strong><n-icon :component="PrinterIcon" />页面</strong>
       <span v-if="sheetInfo.pageLayout.printArea">打印区域 {{ rangeLabel(sheetInfo.pageLayout.printArea) }}</span>
       <span v-if="sheetInfo.pageLayout.setup.orientation">{{ sheetInfo.pageLayout.setup.orientation === 'landscape' ? '横向' : '纵向' }} · 纸张 {{ sheetInfo.pageLayout.setup.paperSize || '默认' }}</span>
       <span v-if="sheetInfo.pageLayout.setup.fitToPage">适配 {{ sheetInfo.pageLayout.setup.fitToWidth ?? '默认' }} × {{ sheetInfo.pageLayout.setup.fitToHeight ?? '默认' }} 页</span>
       <span v-if="sheetInfo.pageLayout.headerFooter.oddHeader || sheetInfo.pageLayout.headerFooter.oddFooter" :title="`${sheetInfo.pageLayout.headerFooter.oddHeader || ''}\n${sheetInfo.pageLayout.headerFooter.oddFooter || ''}`">已配置页眉/页脚</span>
+      <button title="把当前连续选区设为打印区域" :disabled="!canEditPrintArea || !pageLayoutSelection" @click="setSelectionAsPrintArea">设为打印区域</button>
+      <button title="清除当前 Sheet 的打印区域" :disabled="!canEditPrintArea || !sheetInfo.pageLayout.printArea" @click="clearPrintArea">清除打印区域</button>
+      <button title="编辑方向、纸张、缩放和页边距" :disabled="!canEditPageLayout" @click="pageLayoutModalOpen = true">页面设置</button>
       <span v-if="workbook.protection.lockStructure">工作簿结构已锁定</span>
       <em v-if="sheetProtected">当前 Sheet 受保护，LongEdit 不会绕过密码或写入限制</em>
     </div>
+
+    <n-modal v-model:show="pageLayoutModalOpen" preset="card" title="页面设置" class="page-layout-modal">
+      <div class="page-layout-panel">
+        <label>方向<select v-model="pageLayoutDraft.orientation"><option value="portrait">纵向</option><option value="landscape">横向</option></select></label>
+        <label>纸张<select v-model.number="pageLayoutDraft.paperSize"><option :value="1">Letter</option><option :value="5">Legal</option><option :value="8">A3</option><option :value="9">A4</option><option :value="11">A5</option></select></label>
+        <label>缩放<select v-model="pageLayoutDraft.scalingMode"><option value="scale">百分比</option><option value="fit">适合页数</option></select></label>
+        <label v-if="pageLayoutDraft.scalingMode === 'scale'">比例<span><input v-model.number="pageLayoutDraft.scale" type="number" min="10" max="400" step="5">%</span></label>
+        <template v-else>
+          <label>适合宽度<span><input v-model.number="pageLayoutDraft.fitToWidth" type="number" min="0" max="100">页</span></label>
+          <label>适合高度<span><input v-model.number="pageLayoutDraft.fitToHeight" type="number" min="0" max="100">页</span></label>
+        </template>
+        <fieldset>
+          <legend>页边距（英寸）</legend>
+          <label v-for="field in pageMarginFields" :key="field.key">{{ field.label }}<input v-model.number="pageLayoutDraft.margins[field.key]" type="number" min="0" max="10" step="0.05"></label>
+        </fieldset>
+      </div>
+      <template #footer>
+        <div class="page-layout-actions">
+          <button @click="pageLayoutModalOpen = false">取消</button>
+          <button class="primary" :disabled="!canEditPageLayout" @click="savePageLayout()">应用</button>
+        </div>
+      </template>
+    </n-modal>
 
     <div v-if="workbook && sheetInfo" class="formula-bar">
       <select v-model.number="selectedDefinedNameIndex" title="跳转和管理命名区域" :disabled="!navigableDefinedNames.length" @change="navigateDefinedName">
@@ -354,7 +380,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSPro
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
-import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Calculator as CalculatorIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
+import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Calculator as CalculatorIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone } from '../config/themePresets'
 import { conditionalExpressionReferences, evaluateConditionalExpression, parseConditionalExpression } from '../utils/conditionalExpression'
@@ -434,6 +460,8 @@ interface WorkbookDrawingObject { id: string; objectId: string; drawingPart: str
 interface WorkbookDrawingChange { sheet: string; drawingPart: string; anchorIndex: number; objectId: string; action: 'update_metadata' | 'move_resize' | 'update_chart_title' | 'update_chart_series' | 'create_chart' | 'delete_chart' | 'change_chart_type' | 'update_chart_presentation' | 'update_chart_data_labels' | 'update_chart_series_name' | 'update_chart_series_color'; name?: string; description?: string; from?: WorkbookDrawingAnchor; to?: WorkbookDrawingAnchor; chartTitle?: string; seriesIndex?: number; seriesName?: string; seriesColor?: string; seriesCategories?: string; seriesValues?: string; chartType?: string; categoryAxisTitle?: string; valueAxisTitle?: string; legendPosition?: string; dataLabels?: WorkbookChartDataLabels; sourceRange?: WorkbookMergeRange }
 interface WorkbookChartPreview { headers: string[]; columnIds: string[]; columnTypes: string[]; rows: string[][]; rowIndices: number[]; config: { chartType: 'bar' | 'line' | 'pie' | 'scatter'; categoryColumn: string; valueColumn: string; seriesColumn: string; aggregation: 'sum'; nullStrategy: 'skip'; showLegend: boolean; legendPosition: WorkbookChart['legendPosition']; categoryAxisTitle?: string; valueAxisTitle?: string; seriesColors: Record<string, string>; dataLabels?: WorkbookChartDataLabels } }
 interface WorkbookPageMargins { left?: number; right?: number; top?: number; bottom?: number; header?: number; footer?: number }
+type WorkbookPageMarginKey = keyof WorkbookPageMargins
+interface WorkbookPageLayoutDraft { printArea?: WorkbookMergeRange; orientation: 'portrait' | 'landscape'; paperSize: number; scalingMode: 'scale' | 'fit'; scale: number; fitToWidth: number; fitToHeight: number; margins: Record<WorkbookPageMarginKey, number> }
 interface WorkbookPageSetup { orientation?: string; paperSize?: number; scale?: number; fitToWidth?: number; fitToHeight?: number; firstPageNumber?: number; horizontalDpi?: number; verticalDpi?: number; blackAndWhite: boolean; draft: boolean; fitToPage: boolean }
 interface WorkbookPrintOptions { gridLines: boolean; headings: boolean; horizontalCentered: boolean; verticalCentered: boolean }
 interface WorkbookHeaderFooter { oddHeader?: string; oddFooter?: string; evenHeader?: string; evenFooter?: string; firstHeader?: string; firstFooter?: string; differentOddEven: boolean; differentFirstPage: boolean; scaleWithDocument: boolean; alignWithMargins: boolean }
@@ -716,11 +744,52 @@ const selectedAddress = computed(() => {
 const selectedEditable = computed(() => selectedCell.value ? isEditableCell(selectedCell.value.row, selectedCell.value.column) : false)
 const effectiveFreeze = computed(() => sheetInfo.value?.freezePane || { rows: 0, columns: 0 })
 const sheetProtected = computed(() => Boolean(sheetInfo.value?.pageLayout.protection.enabled))
-const hasPageLayout = computed(() => {
-  const layout = sheetInfo.value?.pageLayout
-  if (!layout) return false
-  return Boolean(layout.printArea || layout.setup.orientation || layout.setup.paperSize || layout.headerFooter.oddHeader || layout.headerFooter.oddFooter || Object.values(layout.margins).some(value => value !== undefined))
+const pageMarginFields: { key: WorkbookPageMarginKey; label: string }[] = [
+  { key: 'left', label: '左' },
+  { key: 'right', label: '右' },
+  { key: 'top', label: '上' },
+  { key: 'bottom', label: '下' },
+  { key: 'header', label: '页眉' },
+  { key: 'footer', label: '页脚' },
+]
+const pageLayoutModalOpen = ref(false)
+const pageLayoutDraft = ref<WorkbookPageLayoutDraft>({
+  orientation: 'portrait',
+  paperSize: 9,
+  scalingMode: 'scale',
+  scale: 100,
+  fitToWidth: 1,
+  fitToHeight: 0,
+  margins: { left: 0.7, right: 0.7, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 },
 })
+const pageLayoutSelection = computed(() => {
+  const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
+  if (!area || area.bottom >= canvasRowCount.value || area.right >= canvasColumnCount.value) return null
+  return area
+})
+const canEditPageLayout = computed(() => Boolean(workbook.value && sheetInfo.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
+const canEditPrintArea = computed(() => Boolean(canEditPageLayout.value && !workbook.value?.protection.lockStructure))
+const syncPageLayoutDraft = () => {
+  const layout = sheetInfo.value?.pageLayout
+  if (!layout) return
+  pageLayoutDraft.value = {
+    printArea: layout.printArea ? { ...layout.printArea } : undefined,
+    orientation: layout.setup.orientation === 'landscape' ? 'landscape' : 'portrait',
+    paperSize: layout.setup.paperSize || 9,
+    scalingMode: layout.setup.fitToPage ? 'fit' : 'scale',
+    scale: layout.setup.scale || 100,
+    fitToWidth: layout.setup.fitToWidth ?? 1,
+    fitToHeight: layout.setup.fitToHeight ?? 0,
+    margins: {
+      left: layout.margins.left ?? 0.7,
+      right: layout.margins.right ?? 0.7,
+      top: layout.margins.top ?? 0.75,
+      bottom: layout.margins.bottom ?? 0.75,
+      header: layout.margins.header ?? 0.3,
+      footer: layout.margins.footer ?? 0.3,
+    },
+  }
+}
 const containsCell = (range: WorkbookMergeRange, row: number, column: number) => row >= range.top && row <= range.bottom && column >= range.left && column <= range.right
 const tableAt = (row: number, column: number) => sheetInfo.value?.tables.find(table => containsCell(table.range, row, column))
 const isTableHeader = (row: number, column: number) => Boolean(sheetInfo.value?.tables.some(table => row === table.range.top && column >= table.range.left && column <= table.range.right))
@@ -2625,6 +2694,66 @@ const setFreezePane = () => {
   void applyFreezePane(selectedCell.value.row, selectedCell.value.column)
 }
 const clearFreezePane = () => void applyFreezePane(0, 0)
+const savePageLayout = async (printArea: WorkbookMergeRange | null | undefined = pageLayoutDraft.value.printArea) => {
+  if (!workbook.value || !sheetInfo.value || !canEditPageLayout.value) return
+  const draft = pageLayoutDraft.value
+  const margins = Object.values(draft.margins)
+  if (margins.some(value => !Number.isFinite(value) || value < 0 || value > 10)) {
+    return void message.error('页边距必须在 0 到 10 英寸之间')
+  }
+  if (draft.scalingMode === 'scale' && (!Number.isInteger(draft.scale) || draft.scale < 10 || draft.scale > 400)) {
+    return void message.error('缩放比例必须是 10% 到 400% 的整数')
+  }
+  if (draft.scalingMode === 'fit' && (
+    !Number.isInteger(draft.fitToWidth) || !Number.isInteger(draft.fitToHeight)
+    || draft.fitToWidth < 0 || draft.fitToWidth > 100 || draft.fitToHeight < 0 || draft.fitToHeight > 100
+    || (!draft.fitToWidth && !draft.fitToHeight)
+  )) {
+    return void message.error('适合页数必须在 0 到 100 之间，宽或高至少一项大于 0')
+  }
+  updatingStructure.value = true
+  try {
+    const document = await invoke<WorkbookDocument>('update_workbook_page_layout', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        change: {
+          sheet: activeSheet.value,
+          printArea: printArea === null ? undefined : printArea,
+          orientation: draft.orientation,
+          paperSize: draft.paperSize,
+          margins: { ...draft.margins },
+          scale: draft.scalingMode === 'scale' ? draft.scale : undefined,
+          fitToWidth: draft.scalingMode === 'fit' ? draft.fitToWidth : undefined,
+          fitToHeight: draft.scalingMode === 'fit' ? draft.fitToHeight : undefined,
+        },
+      },
+    })
+    workbook.value = document
+    const sheet = activeSheet.value
+    generation += 1
+    activeSheet.value = ''
+    await selectSheet(sheet)
+    pageLayoutModalOpen.value = false
+    message.success('页面设置已保存')
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { updatingStructure.value = false }
+}
+const setSelectionAsPrintArea = () => {
+  if (!pageLayoutSelection.value || !canEditPrintArea.value) return
+  void savePageLayout({ ...pageLayoutSelection.value })
+}
+const clearPrintArea = () => {
+  if (!sheetInfo.value?.pageLayout.printArea || !canEditPrintArea.value) return
+  dialog.warning({
+    title: '清除打印区域？',
+    content: '将清除当前 Sheet 的打印区域定义，页面方向、纸张、缩放和页边距保持不变。',
+    positiveText: '清除',
+    negativeText: '取消',
+    onPositiveClick: () => savePageLayout(null),
+  })
+}
 const promptDefinedNameScope = (): string | undefined | null => {
   const input = window.prompt('输入作用域：填写“工作簿”创建全局名称，或填写一个工作表名称创建局部名称', '工作簿')
   if (input === null) return null
@@ -3225,6 +3354,7 @@ const stopCellSelection = () => {
 watch(workbookPath, () => {
   drafts.value = new Map(); styleDrafts.value = new Map(); rowHeightDrafts.value = new Map(); columnWidthDrafts.value = new Map(); mergeDrafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook()
 })
+watch(() => [sheetInfo.value?.sheet || '', workbook.value?.signature || ''], syncPageLayoutDraft, { immediate: true })
 watch(scrollRef, element => {
   resizeObserver?.disconnect()
   if (element) { viewportHeight.value = element.clientHeight; resizeObserver?.observe(element) }
@@ -3286,9 +3416,22 @@ onBeforeUnmount(() => {
 .linked-data-toolbar button small { max-width: 180px; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 8px; }
 .page-layout-toolbar { min-height: 34px; flex: none; display: flex; align-items: center; gap: 7px; padding: 3px 12px; overflow-x: auto; border-bottom: 1px solid rgba(0,0,0,.09); color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 94%, #dce8f7); font-size: 9px; }
 .page-layout-toolbar > * { flex: none; }
-.page-layout-toolbar strong { color: var(--theme-primary); }
+.page-layout-toolbar strong { display: inline-flex; align-items: center; gap: 5px; color: var(--theme-primary); }
 .page-layout-toolbar span { padding: 4px 7px; border-radius: 4px; background: rgba(var(--theme-primary-rgb),.07); }
+.page-layout-toolbar button { height: 26px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); font-size: 9px; cursor: pointer; }
+.page-layout-toolbar button:disabled { opacity: .45; cursor: default; }
 .page-layout-toolbar em { margin-left: auto; color: #b14545; font-style: normal; font-weight: 700; }
+:deep(.page-layout-modal) { width: min(680px, calc(100vw - 32px)); }
+.page-layout-panel { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.page-layout-panel > label { min-width: 0; display: grid; gap: 6px; color: var(--theme-text-secondary); font-size: 11px; }
+.page-layout-panel label > span { display: flex; align-items: center; gap: 6px; }
+.page-layout-panel select,.page-layout-panel input { width: 100%; height: 34px; box-sizing: border-box; padding: 0 9px; border: 1px solid rgba(0,0,0,.14); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); font-size: 11px; }
+.page-layout-panel fieldset { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px; margin: 0; padding: 12px; border: 1px solid rgba(0,0,0,.12); border-radius: 6px; }
+.page-layout-panel legend { padding: 0 5px; color: var(--theme-text-secondary); font-size: 10px; }
+.page-layout-panel fieldset label { display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: 7px; color: var(--theme-text-secondary); font-size: 10px; }
+.page-layout-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.page-layout-actions button { height: 32px; padding: 0 14px; border: 1px solid rgba(0,0,0,.14); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); cursor: pointer; }
+.page-layout-actions button.primary { color: #fff; border-color: var(--theme-primary); background: var(--theme-primary); }
 .formula-bar select { width: 150px; min-width: 120px; height: 100%; padding: 0 24px 0 10px; border: 0; border-right: 1px solid rgba(0,0,0,.08); outline: 0; color: var(--theme-text); background: transparent; font-size: 9px; }
 .formula-bar button { height: 25px; flex: none; margin-left: 4px; padding: 0 7px; border: 1px solid rgba(0,0,0,.1); border-radius: 4px; color: var(--theme-text-secondary); background: transparent; font-size: 8px; cursor: pointer; }
 .formula-bar button:disabled { opacity: .4; cursor: default; }
@@ -3395,5 +3538,6 @@ onBeforeUnmount(() => {
 .workbook-state button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .workbook-actions button:not(.primary):not(.icon-button) { display: none; } .workbook-title span { display: none; } }
 </style>
