@@ -8,6 +8,8 @@
 > 配套方案：[Professional_Knowledge_Workspace_Design.md](./Professional_Knowledge_Workspace_Design.md)
 >
 > 多格式管理补充基线：[Unified_File_Manager_Format_Requirements.md](./Unified_File_Manager_Format_Requirements.md)。该文档已重新对齐“在统一管理器内阅读和编辑 PDF、图表、思维导图、WPS/Office、TXT、JSON 及开发常用格式”的原始目标；涉及格式覆盖和后续优先级时，以该补充基线为准。
+>
+> 后续执行顺序与工程门禁：[Next_Development_Execution_Guide.md](./Next_Development_Execution_Guide.md)。
 
 ---
 
