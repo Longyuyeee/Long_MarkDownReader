@@ -20,10 +20,9 @@ use crate::formats::workbook_formula::{
     migrate_workbook_formula, migrate_workbook_reference, translate_formula,
     validate_workbook_structure_change,
 };
-use crate::formats::workbook_styles::{
-    parse_styles, read_sheet_style_ids, resolve_style_edits, ResolvedStyleEdit,
-};
+use crate::formats::workbook_styles::{parse_styles, resolve_style_edits, ResolvedStyleEdit};
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
+use quick_xml::name::QName;
 use quick_xml::{Reader, Writer, XmlVersion};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Cursor, Read, Write};
@@ -93,18 +92,25 @@ pub(crate) struct WorkbookSheetLayout {
     pub page_layout: WorkbookPageLayout,
 }
 
-fn read_sheet_formulas(
+fn read_sheet_formulas_and_style_ids(
     xml: &[u8],
     row_start: usize,
     row_end: usize,
     max_columns: usize,
-) -> Result<BTreeMap<(usize, usize), String>, String> {
+) -> Result<
+    (
+        BTreeMap<(usize, usize), String>,
+        HashMap<(usize, usize), usize>,
+    ),
+    String,
+> {
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(false);
     let mut buffer = Vec::new();
     let mut current_cell = None;
     let mut shared = HashMap::<String, ((usize, usize), String)>::new();
     let mut formulas = BTreeMap::new();
+    let mut style_ids = HashMap::new();
     loop {
         match reader
             .read_event_into(&mut buffer)
@@ -114,6 +120,37 @@ fn read_sheet_formulas(
                 current_cell = xml_value(event, b"r", reader.decoder())?
                     .map(|reference| parse_cell_reference(&reference))
                     .transpose()?;
+                if current_cell.is_some_and(|(row, _)| row >= row_end) {
+                    break;
+                }
+                if let Some(coordinate) = current_cell.filter(|(row, column)| {
+                    *row >= row_start && *row < row_end && *column < max_columns
+                }) {
+                    let style_id = xml_value(event, b"s", reader.decoder())?
+                        .and_then(|value| value.parse::<usize>().ok())
+                        .unwrap_or_default();
+                    if style_id > 0 {
+                        style_ids.insert(coordinate, style_id);
+                    }
+                }
+            }
+            Event::Empty(ref event) if event.local_name().as_ref() == b"c" => {
+                let coordinate = xml_value(event, b"r", reader.decoder())?
+                    .map(|reference| parse_cell_reference(&reference))
+                    .transpose()?;
+                if coordinate.is_some_and(|(row, _)| row >= row_end) {
+                    break;
+                }
+                if let Some(coordinate) = coordinate.filter(|(row, column)| {
+                    *row >= row_start && *row < row_end && *column < max_columns
+                }) {
+                    let style_id = xml_value(event, b"s", reader.decoder())?
+                        .and_then(|value| value.parse::<usize>().ok())
+                        .unwrap_or_default();
+                    if style_id > 0 {
+                        style_ids.insert(coordinate, style_id);
+                    }
+                }
             }
             Event::End(ref event) if event.local_name().as_ref() == b"c" => {
                 current_cell = None;
@@ -192,7 +229,18 @@ fn read_sheet_formulas(
         }
         buffer.clear();
     }
-    Ok(formulas)
+    Ok((formulas, style_ids))
+}
+
+#[cfg(test)]
+fn read_sheet_formulas(
+    xml: &[u8],
+    row_start: usize,
+    row_end: usize,
+    max_columns: usize,
+) -> Result<BTreeMap<(usize, usize), String>, String> {
+    read_sheet_formulas_and_style_ids(xml, row_start, row_end, max_columns)
+        .map(|(formulas, _)| formulas)
 }
 
 struct SheetStructureSummary {
@@ -207,6 +255,7 @@ struct SheetStructureSummary {
     auto_filter: Option<WorkbookMergeRange>,
     auto_filter_state: WorkbookFilterState,
     data_validations: Vec<WorkbookDataValidation>,
+    page_layout: WorkbookPageLayout,
 }
 
 fn parse_range_reference(reference: &str) -> Result<WorkbookMergeRange, String> {
@@ -1337,6 +1386,89 @@ fn row_structure_attributes(
     Ok(result)
 }
 
+fn apply_page_layout_attributes(
+    event: &BytesStart<'_>,
+    decoder: quick_xml::encoding::Decoder,
+    result: &mut WorkbookPageLayout,
+) -> Result<(), String> {
+    match event.local_name().as_ref() {
+        b"pageMargins" => {
+            result.margins = WorkbookPageMargins {
+                left: parse_f64_attribute(event, b"left", decoder)?,
+                right: parse_f64_attribute(event, b"right", decoder)?,
+                top: parse_f64_attribute(event, b"top", decoder)?,
+                bottom: parse_f64_attribute(event, b"bottom", decoder)?,
+                header: parse_f64_attribute(event, b"header", decoder)?,
+                footer: parse_f64_attribute(event, b"footer", decoder)?,
+            };
+        }
+        b"pageSetup" => {
+            result.setup.orientation = xml_value(event, b"orientation", decoder)?;
+            result.setup.paper_size = parse_u32_value(xml_value(event, b"paperSize", decoder)?);
+            result.setup.scale = parse_u32_value(xml_value(event, b"scale", decoder)?);
+            result.setup.fit_to_width = parse_u32_value(xml_value(event, b"fitToWidth", decoder)?);
+            result.setup.fit_to_height =
+                parse_u32_value(xml_value(event, b"fitToHeight", decoder)?);
+            result.setup.first_page_number =
+                parse_u32_value(xml_value(event, b"firstPageNumber", decoder)?);
+            result.setup.horizontal_dpi =
+                parse_u32_value(xml_value(event, b"horizontalDpi", decoder)?);
+            result.setup.vertical_dpi = parse_u32_value(xml_value(event, b"verticalDpi", decoder)?);
+            result.setup.black_and_white = bool_attribute(event, b"blackAndWhite", decoder, false)?;
+            result.setup.draft = bool_attribute(event, b"draft", decoder, false)?;
+        }
+        b"pageSetUpPr" => {
+            result.setup.fit_to_page = bool_attribute(event, b"fitToPage", decoder, false)?;
+        }
+        b"printOptions" => {
+            result.options = WorkbookPrintOptions {
+                grid_lines: bool_attribute(event, b"gridLines", decoder, false)?,
+                headings: bool_attribute(event, b"headings", decoder, false)?,
+                horizontal_centered: bool_attribute(event, b"horizontalCentered", decoder, false)?,
+                vertical_centered: bool_attribute(event, b"verticalCentered", decoder, false)?,
+            };
+        }
+        b"headerFooter" => {
+            result.header_footer.different_odd_even =
+                bool_attribute(event, b"differentOddEven", decoder, false)?;
+            result.header_footer.different_first_page =
+                bool_attribute(event, b"differentFirst", decoder, false)?;
+            result.header_footer.scale_with_document =
+                bool_attribute(event, b"scaleWithDoc", decoder, true)?;
+            result.header_footer.align_with_margins =
+                bool_attribute(event, b"alignWithMargins", decoder, true)?;
+        }
+        b"sheetProtection" => {
+            result.protection.enabled = bool_attribute(event, b"sheet", decoder, false)?;
+            result.protection.password_protected = xml_value(event, b"password", decoder)?
+                .is_some()
+                || xml_value(event, b"hashValue", decoder)?.is_some();
+            for (attribute, label) in [
+                (b"objects".as_slice(), "objects"),
+                (b"scenarios".as_slice(), "scenarios"),
+                (b"formatCells".as_slice(), "format_cells"),
+                (b"formatColumns".as_slice(), "format_columns"),
+                (b"formatRows".as_slice(), "format_rows"),
+                (b"insertColumns".as_slice(), "insert_columns"),
+                (b"insertRows".as_slice(), "insert_rows"),
+                (b"deleteColumns".as_slice(), "delete_columns"),
+                (b"deleteRows".as_slice(), "delete_rows"),
+                (b"sort".as_slice(), "sort"),
+                (b"autoFilter".as_slice(), "auto_filter"),
+                (b"pivotTables".as_slice(), "pivot_tables"),
+                (b"selectLockedCells".as_slice(), "select_locked_cells"),
+                (b"selectUnlockedCells".as_slice(), "select_unlocked_cells"),
+            ] {
+                if bool_attribute(event, attribute, decoder, false)? {
+                    result.protection.blocked_actions.push(label.into());
+                }
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
 fn read_sheet_structure(
     xml: &[u8],
     row_start: usize,
@@ -1356,6 +1488,7 @@ fn read_sheet_structure(
     let mut freeze_pane = WorkbookFreezePane::default();
     let mut auto_filter = None;
     let mut data_validations = Vec::new();
+    let mut page_layout = WorkbookPageLayout::default();
     let mut current_validation: Option<WorkbookDataValidation> = None;
     let mut validation_formula: Option<u8> = None;
     let mut validation_formula_text = String::new();
@@ -1486,9 +1619,39 @@ fn read_sheet_structure(
                 }
                 validation_formula = None;
             }
-            Event::Start(ref event) | Event::Empty(ref event)
-                if event.local_name().as_ref() == b"row" =>
-            {
+            Event::Start(ref event) if event.local_name().as_ref() == b"row" => {
+                let attributes = row_structure_attributes(event, reader.decoder())?;
+                if attributes.row.is_some_and(|row| row < row_start) {
+                    reader
+                        .read_to_end(event.name())
+                        .map_err(|error| format!("跳过分页前的工作表行失败: {error}"))?;
+                } else if attributes.row.is_some_and(|row| row >= row_end) {
+                    reader
+                        .read_to_end(event.name())
+                        .map_err(|error| format!("跳过分页后的工作表行失败: {error}"))?;
+                    reader
+                        .read_to_end(QName(b"sheetData"))
+                        .map_err(|error| format!("跳过分页后的单元格数据失败: {error}"))?;
+                } else {
+                    if let (Some(row), Some(height)) = (attributes.row, attributes.height) {
+                        if height.is_finite() && height > 0.0 {
+                            row_heights.push(WorkbookRowHeight { row, height });
+                        }
+                    }
+                    if let Some(row) = attributes.row {
+                        if attributes.hidden || attributes.collapsed || attributes.outline_level > 0
+                        {
+                            row_states.push(WorkbookRowState {
+                                row,
+                                hidden: attributes.hidden,
+                                outline_level: attributes.outline_level,
+                                collapsed: attributes.collapsed,
+                            });
+                        }
+                    }
+                }
+            }
+            Event::Empty(ref event) if event.local_name().as_ref() == b"row" => {
                 let attributes = row_structure_attributes(event, reader.decoder())?;
                 if let (Some(row), Some(height)) = (attributes.row, attributes.height) {
                     if row >= row_start && row < row_end && height.is_finite() && height > 0.0 {
@@ -1578,6 +1741,52 @@ fn read_sheet_structure(
                     });
                 }
             }
+            Event::Start(ref event)
+                if matches!(
+                    event.local_name().as_ref(),
+                    b"oddHeader"
+                        | b"oddFooter"
+                        | b"evenHeader"
+                        | b"evenFooter"
+                        | b"firstHeader"
+                        | b"firstFooter"
+                ) =>
+            {
+                let field = String::from_utf8_lossy(event.local_name().as_ref()).into_owned();
+                let value = reader
+                    .read_text(event.name())
+                    .map_err(|error| format!("读取 Excel 页眉页脚失败: {error}"))?
+                    .xml10_content()
+                    .map_err(|error| format!("解码 Excel 页眉页脚失败: {error}"))?;
+                let value = quick_xml::escape::unescape(&value)
+                    .map_err(|error| format!("还原 Excel 页眉页脚失败: {error}"))?
+                    .into_owned();
+                if value.chars().count() > MAX_HEADER_FOOTER_TEXT {
+                    return Err("Excel 页眉页脚文本过长".into());
+                }
+                match field.as_str() {
+                    "oddHeader" => page_layout.header_footer.odd_header = Some(value),
+                    "oddFooter" => page_layout.header_footer.odd_footer = Some(value),
+                    "evenHeader" => page_layout.header_footer.even_header = Some(value),
+                    "evenFooter" => page_layout.header_footer.even_footer = Some(value),
+                    "firstHeader" => page_layout.header_footer.first_header = Some(value),
+                    "firstFooter" => page_layout.header_footer.first_footer = Some(value),
+                    _ => {}
+                }
+            }
+            Event::Start(ref event) | Event::Empty(ref event)
+                if matches!(
+                    event.local_name().as_ref(),
+                    b"pageMargins"
+                        | b"pageSetup"
+                        | b"pageSetUpPr"
+                        | b"printOptions"
+                        | b"headerFooter"
+                        | b"sheetProtection"
+                ) =>
+            {
+                apply_page_layout_attributes(event, reader.decoder(), &mut page_layout)?;
+            }
             Event::Eof => break,
             _ => {}
         }
@@ -1605,6 +1814,7 @@ fn read_sheet_structure(
         auto_filter,
         auto_filter_state,
         data_validations,
+        page_layout,
     })
 }
 
@@ -2042,6 +2252,12 @@ fn read_conditional_formats(
     xml: &[u8],
     dxf_styles: &[WorkbookConditionalFormatStyle],
 ) -> Result<Vec<WorkbookConditionalFormatRule>, String> {
+    if !xml
+        .windows(b"conditionalFormatting".len())
+        .any(|window| window == b"conditionalFormatting")
+    {
+        return Ok(Vec::new());
+    }
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(false);
     let mut buffer = Vec::new();
@@ -2816,6 +3032,12 @@ fn read_sheet_tables(
     sheet_path: &str,
     sheet_xml: &[u8],
 ) -> Result<Vec<WorkbookTable>, String> {
+    if !sheet_xml
+        .windows(b"tablePart".len())
+        .any(|window| window == b"tablePart")
+    {
+        return Ok(Vec::new());
+    }
     let relationships = part_relationships(entries, sheet_path)?;
     let mut relation_ids = Vec::new();
     let mut reader = Reader::from_reader(sheet_xml);
@@ -3083,6 +3305,12 @@ fn read_sheet_drawings(
     sheet_path: &str,
     sheet_xml: &[u8],
 ) -> Result<Vec<WorkbookDrawingObject>, String> {
+    if !sheet_xml
+        .windows(b"drawing".len())
+        .any(|window| window == b"drawing")
+    {
+        return Ok(Vec::new());
+    }
     let sheet_relations = part_relationships(entries, sheet_path)?;
     let mut drawing_ids = Vec::new();
     let mut reader = Reader::from_reader(sheet_xml);
@@ -4301,6 +4529,26 @@ pub fn read_workbook_protection(source: &[u8]) -> Result<WorkbookProtection, Str
 }
 
 fn parse_page_layout(xml: &[u8]) -> Result<WorkbookPageLayout, String> {
+    const PAGE_LAYOUT_ELEMENTS: [&[u8]; 12] = [
+        b"pageMargins",
+        b"pageSetup",
+        b"pageSetUpPr",
+        b"printOptions",
+        b"headerFooter",
+        b"oddHeader",
+        b"oddFooter",
+        b"evenHeader",
+        b"evenFooter",
+        b"firstHeader",
+        b"firstFooter",
+        b"sheetProtection",
+    ];
+    if !PAGE_LAYOUT_ELEMENTS
+        .iter()
+        .any(|name| xml.windows(name.len()).any(|window| window == *name))
+    {
+        return Ok(WorkbookPageLayout::default());
+    }
     let mut result = WorkbookPageLayout::default();
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(true);
@@ -4310,6 +4558,11 @@ fn parse_page_layout(xml: &[u8]) -> Result<WorkbookPageLayout, String> {
             .read_event_into(&mut buffer)
             .map_err(|error| format!("解析 Excel 页面布局失败: {error}"))?
         {
+            Event::Start(ref event) if event.local_name().as_ref() == b"sheetData" => {
+                reader
+                    .read_to_end(event.name())
+                    .map_err(|error| format!("跳过 Excel 单元格数据失败: {error}"))?;
+            }
             Event::Start(ref event) | Event::Empty(ref event)
                 if event.local_name().as_ref() == b"pageMargins" =>
             {
@@ -4482,8 +4735,9 @@ pub fn read_workbook_sheet_layout(
     let conditional_dxf_styles = read_conditional_dxf_styles(&styles.data)?;
     let catalog = parse_styles(&styles.data, theme)?;
     let extent = sheet_extent(&sheet_xml.data)?;
-    let formulas = read_sheet_formulas(&sheet_xml.data, row_start, row_end, max_columns)?;
-    let styles = read_sheet_style_ids(&sheet_xml.data, row_start, row_end, max_columns)?
+    let (formulas, style_ids) =
+        read_sheet_formulas_and_style_ids(&sheet_xml.data, row_start, row_end, max_columns)?;
+    let styles = style_ids
         .into_iter()
         .map(|(coordinate, style_id)| (coordinate, catalog.public_style(style_id)))
         .collect();
@@ -4493,7 +4747,7 @@ pub fn read_workbook_sheet_layout(
     resolve_dynamic_color_scales(&sheet_xml.data, &mut conditional_formats)?;
     let tables = read_sheet_tables(&entries, sheet_path, &sheet_xml.data)?;
     let drawings = read_sheet_drawings(&entries, sheet_path, &sheet_xml.data)?;
-    let mut page_layout = parse_page_layout(&sheet_xml.data)?;
+    let mut page_layout = structure.page_layout.clone();
     page_layout.print_area = read_workbook_defined_names_xml(&workbook_xml.data)?
         .into_iter()
         .find(|name| {
