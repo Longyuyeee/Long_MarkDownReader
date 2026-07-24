@@ -1,0 +1,18 @@
+defaults: &defaults
+  owner: LongEdit
+  description: |
+    Daily file management
+    and basic editing.
+
+services:
+  - name: editor
+    <<: *defaults
+    enabled: true
+    ports: [80, 443]
+    metadata:
+      release: !channel stable
+---
+document: second
+items:
+  - alpha
+  - beta

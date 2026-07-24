@@ -71,6 +71,7 @@ use commands::workbook::{
     write_workbook_cells,
 };
 use commands::workspace::{analyze_workspace_health, get_workspace_overview};
+use commands::yaml::{analyze_yaml_source, write_yaml_source_document};
 use services::data_migration::check_and_migrate_data;
 use services::external_file_access::ExternalFileAccess;
 use services::knowledge_index::KnowledgeIndexRuntime;
@@ -237,6 +238,8 @@ pub fn run() {
             replace_json_scalar_source,
             transform_json_source,
             write_json_source_document,
+            analyze_yaml_source,
+            write_yaml_source_document,
             read_text_document,
             read_text_document_range,
             write_text_document,
