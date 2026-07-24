@@ -129,6 +129,7 @@ const getRouteLoadingLabel = (routeName: unknown) => {
     LibraryMode: '正在打开知识库',
     TextEditor: '正在打开文本编辑器',
     JsonEditor: '正在打开 JSON 工作区',
+    YamlEditor: '正在打开 YAML 工作区',
     TempMode: '正在载入文档',
     QuickNote: '正在打开快速笔记',
     Graph: '正在准备知识图谱',

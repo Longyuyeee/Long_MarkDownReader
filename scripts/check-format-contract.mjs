@@ -2,20 +2,23 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, formatCommands, jsonCommands, files, externalAccess, index, library, textEditor, jsonEditor, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, formatCommands, jsonCommands, yamlCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
   read('src-tauri/src/formats/text.rs'),
   read('src-tauri/src/formats/json.rs'),
+  read('src-tauri/src/formats/yaml.rs'),
   read('src-tauri/src/commands/formats.rs'),
   read('src-tauri/src/commands/json.rs'),
+  read('src-tauri/src/commands/yaml.rs'),
   read('src-tauri/src/commands/files.rs'),
   read('src-tauri/src/services/external_file_access.rs'),
   read('src-tauri/src/commands/index.rs'),
   read('src/views/LibraryMode.vue'),
   read('src/views/TextEditorView.vue'),
   read('src/views/JsonEditorView.vue'),
+  read('src/views/YamlEditorView.vue'),
   read('src/views/LogViewerView.vue'),
   read('src/components/WorkspaceTabs.vue'),
   read('src/router/index.ts'),
@@ -60,6 +63,20 @@ for (const id of ['json', 'jsonc']) {
     failures.push(`${id} source-edit contract is incomplete`)
   }
 }
+const yamlFormat = registry.formats?.find(format => format.id === 'yaml')
+if (!yamlFormat
+  || yamlFormat.routeName !== 'YamlEditor'
+  || yamlFormat.extensions?.join(',') !== '.yaml,.yml'
+  || yamlFormat.maxBytes !== 8 * 1024 * 1024
+  || yamlFormat.capabilities?.read !== 'supported'
+  || yamlFormat.capabilities?.edit !== 'supported'
+  || yamlFormat.capabilities?.create !== 'planned'
+  || yamlFormat.capabilities?.index !== 'supported'
+  || yamlFormat.adapters?.reader !== 'text'
+  || yamlFormat.adapters?.writer !== 'text'
+  || yamlFormat.adapters?.indexer !== 'text'
+  || yamlFormat.userCapability?.level !== 'basic-edit'
+  || yamlFormat.userCapability?.saveMode !== 'overwrite') failures.push('A4 YAML source-edit contract is incomplete')
 const opmlFormat = registry.formats?.find(format => format.id === 'opml')
 if (!opmlFormat || opmlFormat.routeName !== 'MindMap' || opmlFormat.adapters?.reader !== 'opml' || opmlFormat.adapters?.indexer !== 'opml') failures.push('OPML professional adapter is incomplete')
 const workbookFormat = registry.formats?.find(format => format.id === 'workbook')
@@ -202,6 +219,17 @@ requireText(jsonEditor, 'requestPropertyRemove', 'A3 tree object property remova
 requireText(jsonEditor, "'remove_json_array_item_source'", 'A3 tree array item removal must use the dedicated Rust command')
 requireText(jsonEditor, 'requestArrayRemove', 'A3 tree array item removal must require explicit confirmation')
 requireText(jsonEditor, 'analysis.value?.structureEditCandidate', 'A3 tree scalar controls must consume the fidelity gate')
+requireText(yamlKernel, 'MAX_YAML_SOURCE_BYTES', 'A4 YAML analysis must enforce a source budget')
+requireText(yamlKernel, 'MAX_YAML_NODES', 'A4 YAML analysis must enforce a node budget')
+requireText(yamlKernel, 'MarkedYamlOwned::load_from_str', 'A4 YAML analysis must use the authoritative parser')
+requireText(yamlCommands, '"invalid-yaml-save-blocked"', 'A4 YAML save must block invalid source by default')
+requireText(yamlCommands, 'write_registered_text_document', 'A4 YAML save must reuse the reliable text kernel')
+requireText(yamlEditor, "yaml()", 'A4 YAML workspace must provide language-aware source editing')
+requireText(yamlEditor, "'analyze_yaml_source'", 'A4 YAML workspace must consume authoritative analysis')
+requireText(yamlEditor, "'write_yaml_source_document'", 'A4 YAML workspace must use the guarded save command')
+requireText(yamlEditor, '<WorkspaceTabs', 'A4 YAML workspace must participate in unified session tabs')
+requireText(yamlEditor, 'outlineTruncated', 'A4 YAML workspace must expose bounded structure outlines')
+requireText(router, "name: 'YamlEditor'", 'A4 YAML workspace must have an independent route')
 const logFormat = registry.formats.find(format => format.id === 'log')
 if (!logFormat
   || logFormat.routeName !== 'LogViewer'

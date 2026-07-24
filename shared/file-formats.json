@@ -67,6 +67,19 @@
       "creation": null
     },
     {
+      "id": "yaml",
+      "label": "YAML",
+      "extensions": [".yaml", ".yml"],
+      "mimeTypes": ["application/yaml", "text/yaml", "application/x-yaml", "text/x-yaml"],
+      "routeName": "YamlEditor",
+      "maxBytes": 8388608,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "YAML 支持源码高亮与折叠、实时诊断、多文档结构提纲、草稿恢复、文本索引和带冲突保护的可靠保存；创建仍在后续批次。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
+      "creation": null
+    },
+    {
       "id": "canvas",
       "label": "JSON Canvas",
       "extensions": [".canvas"],

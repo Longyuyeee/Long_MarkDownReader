@@ -2,7 +2,7 @@ import registrySource from '../../shared/file-formats.json'
 
 export type CapabilityLevel = 'supported' | 'planned' | 'unsupported'
 export type ExternalFilePolicy = 'none' | 'import' | 'edit'
-export type EditorRouteName = 'LibraryMode' | 'TextEditor' | 'JsonEditor' | 'LogViewer' | 'Canvas' | 'Pdf' | 'Table' | 'Workbook' | 'Diagram' | 'MindMap'
+export type EditorRouteName = 'LibraryMode' | 'TextEditor' | 'JsonEditor' | 'YamlEditor' | 'LogViewer' | 'Canvas' | 'Pdf' | 'Table' | 'Workbook' | 'Diagram' | 'MindMap'
 export type UserCapabilityLevel = 'complete-edit' | 'basic-edit' | 'read-annotate' | 'preview-only' | 'external-open' | 'unsupported'
 export type SaveMode = 'overwrite' | 'bounded-overwrite' | 'sidecar' | 'copy' | 'none'
 

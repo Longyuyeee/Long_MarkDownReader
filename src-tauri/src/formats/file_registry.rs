@@ -274,4 +274,35 @@ mod tests {
             "log"
         );
     }
+
+    #[test]
+    fn yaml_format_is_basic_edit_searchable_and_routes_both_extensions() {
+        let format = file_format_by_id("yaml").unwrap();
+        assert!(format.capabilities.read.is_supported());
+        assert!(format.capabilities.edit.is_supported());
+        assert_eq!(format.capabilities.create, CapabilityLevel::Planned);
+        assert!(format.capabilities.index.is_supported());
+        assert_eq!(format.route_name, "YamlEditor");
+        assert_eq!(format.adapters.reader.as_deref(), Some("text"));
+        assert_eq!(format.adapters.writer.as_deref(), Some("text"));
+        assert_eq!(format.adapters.indexer.as_deref(), Some("text"));
+        assert_eq!(format.user_capability.level, UserCapabilityLevel::BasicEdit);
+        assert_eq!(format.user_capability.save_mode, SaveMode::Overwrite);
+        assert_eq!(
+            file_format_registry()
+                .unwrap()
+                .by_path("config/service.YAML")
+                .unwrap()
+                .id,
+            "yaml"
+        );
+        assert_eq!(
+            file_format_registry()
+                .unwrap()
+                .by_path("config/service.yml")
+                .unwrap()
+                .id,
+            "yaml"
+        );
+    }
 }
