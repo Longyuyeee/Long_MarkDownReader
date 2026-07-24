@@ -449,6 +449,32 @@ mod tests {
     }
 
     #[test]
+    fn yaml_template_creation_uses_registered_extension_and_valid_source() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-yaml-create-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let root_string = root.to_string_lossy().into_owned();
+        let path = tauri::async_runtime::block_on(create_format_file(
+            root_string,
+            None,
+            "yaml".into(),
+            None,
+            None,
+        ))
+        .unwrap();
+        assert!(path.ends_with("未命名配置.yaml"));
+        let content = fs::read_to_string(&path).unwrap();
+        assert!(crate::formats::yaml::analyze_yaml_source(&content).valid);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn plain_text_adapter_reads_bounded_ranges() {
         let root = std::env::temp_dir().join(format!(
             "longedit-format-range-{}-{}",

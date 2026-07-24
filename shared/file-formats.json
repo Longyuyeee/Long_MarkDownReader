@@ -73,11 +73,11 @@
       "mimeTypes": ["application/yaml", "text/yaml", "application/x-yaml", "text/x-yaml"],
       "routeName": "YamlEditor",
       "maxBytes": 8388608,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "YAML 支持源码高亮与折叠、实时诊断、多文档结构提纲、草稿恢复、文本索引和带冲突保护的可靠保存；创建仍在后续批次。" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "YAML 支持创建、源码高亮与折叠、实时诊断、多文档结构提纲、草稿恢复、文本索引和带冲突保护的可靠保存。" },
       "externalPolicy": "import",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".yaml", "defaultContent": "# YAML 文档\n\nname: 未命名\nitems: []\n", "defaultName": "未命名配置" }
     },
     {
       "id": "canvas",

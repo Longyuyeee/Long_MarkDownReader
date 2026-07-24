@@ -70,12 +70,14 @@ if (!yamlFormat
   || yamlFormat.maxBytes !== 8 * 1024 * 1024
   || yamlFormat.capabilities?.read !== 'supported'
   || yamlFormat.capabilities?.edit !== 'supported'
-  || yamlFormat.capabilities?.create !== 'planned'
+  || yamlFormat.capabilities?.create !== 'supported'
   || yamlFormat.capabilities?.index !== 'supported'
   || yamlFormat.adapters?.reader !== 'text'
   || yamlFormat.adapters?.writer !== 'text'
+  || yamlFormat.adapters?.creator !== 'text-template'
   || yamlFormat.adapters?.indexer !== 'text'
-  || yamlFormat.userCapability?.level !== 'basic-edit'
+  || yamlFormat.creation?.defaultExtension !== '.yaml'
+  || yamlFormat.userCapability?.level !== 'complete-edit'
   || yamlFormat.userCapability?.saveMode !== 'overwrite') failures.push('A4 YAML source-edit contract is incomplete')
 const opmlFormat = registry.formats?.find(format => format.id === 'opml')
 if (!opmlFormat || opmlFormat.routeName !== 'MindMap' || opmlFormat.adapters?.reader !== 'opml' || opmlFormat.adapters?.indexer !== 'opml') failures.push('OPML professional adapter is incomplete')
