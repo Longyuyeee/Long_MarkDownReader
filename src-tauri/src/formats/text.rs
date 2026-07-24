@@ -22,6 +22,12 @@ pub struct TextDocumentSnapshot {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct TextReadOptions {
+    pub encoding: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TextSavePolicy {
     pub expected_signature: Option<String>,
     pub encoding: Option<String>,
@@ -34,9 +40,18 @@ pub struct TextSavePolicy {
 pub struct TextEncodedDocument {
     pub bytes: Vec<u8>,
     pub expected_signature: Option<String>,
+    pub normalized_content: String,
+    pub encoding: String,
 }
 
 pub fn read_text_snapshot(path: &Path) -> Result<TextDocumentSnapshot, String> {
+    read_text_snapshot_with_options(path, None)
+}
+
+pub fn read_text_snapshot_with_options(
+    path: &Path,
+    options: Option<TextReadOptions>,
+) -> Result<TextDocumentSnapshot, String> {
     let metadata = path
         .metadata()
         .map_err(|error| format!("读取文本元数据失败: {error}"))?;
@@ -45,9 +60,16 @@ pub fn read_text_snapshot(path: &Path) -> Result<TextDocumentSnapshot, String> {
         return Err("文本文件包含 NUL 字节，已按二进制或损坏文本拒绝".into());
     }
     let bom = detect_bom(&bytes);
-    let mut detector = chardetng::EncodingDetector::new();
-    detector.feed(strip_known_bom(&bytes), true);
-    let encoding = detector.guess(None, true);
+    let selected_encoding = options
+        .and_then(|options| options.encoding)
+        .filter(|encoding| !encoding.trim().is_empty());
+    let encoding = if let Some(label) = selected_encoding.as_deref() {
+        Encoding::for_label(label.as_bytes()).ok_or_else(|| format!("不支持读取编码 {label}"))?
+    } else {
+        let mut detector = chardetng::EncodingDetector::new();
+        detector.feed(strip_known_bom(&bytes), true);
+        detector.guess(None, true)
+    };
     let (text, _, had_errors) = encoding.decode(&bytes);
     if had_errors {
         return Err(format!(
@@ -59,7 +81,7 @@ pub fn read_text_snapshot(path: &Path) -> Result<TextDocumentSnapshot, String> {
     let line_ending = detect_line_ending(&content);
     Ok(TextDocumentSnapshot {
         encoding: encoding.name().to_string(),
-        encoding_confidence: encoding_confidence(&bytes, encoding),
+        encoding_confidence: encoding_confidence(&bytes, encoding, selected_encoding.is_some()),
         bom: bom.into(),
         line_ending: line_ending.into(),
         has_final_newline: has_final_newline(&content),
@@ -107,6 +129,8 @@ pub fn encode_text_for_save(
     Ok(TextEncodedDocument {
         bytes,
         expected_signature: policy.expected_signature,
+        normalized_content: normalized,
+        encoding: encoding.name().to_string(),
     })
 }
 
@@ -180,8 +204,10 @@ fn normalize_line_endings(
     Ok(normalized.replace('\n', replacement))
 }
 
-fn encoding_confidence(bytes: &[u8], encoding: &'static Encoding) -> String {
-    if bytes.starts_with(&[0xEF, 0xBB, 0xBF]) || encoding == UTF_8 {
+fn encoding_confidence(bytes: &[u8], encoding: &'static Encoding, user_selected: bool) -> String {
+    if user_selected {
+        "user-selected".into()
+    } else if bytes.starts_with(&[0xEF, 0xBB, 0xBF]) || encoding == UTF_8 {
         "certain".into()
     } else {
         "detected".into()
@@ -258,6 +284,67 @@ mod tests {
         verify_current_signature(&path, encoded.expected_signature.as_deref()).unwrap();
         write_bytes(&path, &encoded.bytes).unwrap();
         assert_eq!(fs::read(&path).unwrap(), b"\xEF\xBB\xBFgamma\r\ndelta\r\n");
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn reads_and_preserves_gbk_when_user_selected() {
+        let gbk = Encoding::for_label(b"gbk").unwrap();
+        let (bytes, _, had_errors) = gbk.encode("中文\r\n");
+        assert!(!had_errors);
+        let path = fixture("gbk", &bytes);
+        let snapshot = read_text_snapshot_with_options(
+            &path,
+            Some(TextReadOptions {
+                encoding: Some("gbk".into()),
+            }),
+        )
+        .unwrap();
+        assert_eq!(snapshot.content, "中文\r\n");
+        assert_eq!(snapshot.encoding, "GBK");
+        assert_eq!(snapshot.encoding_confidence, "user-selected");
+        let encoded = encode_text_for_save(
+            &snapshot,
+            "中文二\n",
+            TextSavePolicy {
+                expected_signature: Some(snapshot.signature.clone()),
+                encoding: None,
+                bom: None,
+                line_ending: None,
+                has_final_newline: None,
+            },
+        )
+        .unwrap();
+        write_bytes(&path, &encoded.bytes).unwrap();
+        let reread = read_text_snapshot_with_options(
+            &path,
+            Some(TextReadOptions {
+                encoding: Some("gbk".into()),
+            }),
+        )
+        .unwrap();
+        assert_eq!(reread.content, "中文二\r\n");
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn can_convert_to_utf8_without_bom_explicitly() {
+        let path = fixture("convert", b"\xEF\xBB\xBFalpha\r\n");
+        let snapshot = read_text_snapshot(&path).unwrap();
+        let encoded = encode_text_for_save(
+            &snapshot,
+            "beta\n",
+            TextSavePolicy {
+                expected_signature: None,
+                encoding: Some("utf-8".into()),
+                bom: Some("none".into()),
+                line_ending: Some("lf".into()),
+                has_final_newline: Some(false),
+            },
+        )
+        .unwrap();
+        assert_eq!(encoded.normalized_content, "beta");
+        assert_eq!(encoded.bytes, b"beta");
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 

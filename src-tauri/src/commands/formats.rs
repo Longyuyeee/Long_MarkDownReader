@@ -2,8 +2,8 @@ use crate::formats::file_registry::{
     file_format_by_id, file_format_for_path, file_format_registry, FileFormatRegistry,
 };
 use crate::formats::text::{
-    encode_text_for_save, read_text_snapshot, verify_current_signature, TextDocumentSnapshot,
-    TextSavePolicy,
+    encode_text_for_save, read_text_snapshot, read_text_snapshot_with_options,
+    verify_current_signature, TextDocumentSnapshot, TextReadOptions, TextSavePolicy,
 };
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_utf8};
@@ -49,6 +49,7 @@ pub async fn read_text_document(
     library_root: String,
     path: String,
     format_id: String,
+    read_options: Option<TextReadOptions>,
 ) -> Result<TextDocumentSnapshot, String> {
     let format = ensure_capability(&format_id, "read")?;
     if format.adapters.reader.as_deref() != Some("text") {
@@ -68,7 +69,7 @@ pub async fn read_text_document(
             format.label, format.max_bytes
         ));
     }
-    read_text_snapshot(&path)
+    read_text_snapshot_with_options(&path, read_options)
 }
 
 #[tauri::command]
@@ -95,6 +96,9 @@ pub async fn write_text_document(
     ensure_matching_format(&path, &format_id)?;
     recover_interrupted_write(&path)?;
     let snapshot = read_text_snapshot(&path)?;
+    if let Some(reason) = snapshot.read_only_reason.as_deref() {
+        return Err(format!("文本文件只读，无法覆盖保存: {reason}"));
+    }
     let mut policy = save_policy.unwrap_or(TextSavePolicy {
         expected_signature: None,
         encoding: None,
@@ -114,7 +118,17 @@ pub async fn write_text_document(
     }
     verify_current_signature(&path, encoded.expected_signature.as_deref())?;
     write_bytes(&path, &encoded.bytes)?;
-    read_text_snapshot(&path)
+    let saved = read_text_snapshot_with_options(
+        &path,
+        Some(TextReadOptions {
+            encoding: Some(encoded.encoding.clone()),
+        }),
+    )
+    .or_else(|_| read_text_snapshot(&path))?;
+    if saved.content != encoded.normalized_content {
+        return Err("文本保存后重读验证失败，请检查编码或磁盘状态".into());
+    }
+    Ok(saved)
 }
 
 #[tauri::command]
@@ -207,6 +221,7 @@ mod tests {
             root_string.clone(),
             path.clone(),
             "plain-text".into(),
+            None,
         ))
         .unwrap();
         assert!(loaded.content.contains("Generic adapter fixture"));
@@ -225,6 +240,7 @@ mod tests {
             root_string,
             path,
             "markdown".into(),
+            None,
         ))
         .is_err());
         fs::remove_dir_all(root).unwrap();
