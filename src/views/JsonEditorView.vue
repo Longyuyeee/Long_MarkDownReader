@@ -19,6 +19,21 @@
         </div>
       </div>
       <div class="editor-actions">
+        <n-button quaternary circle size="small" title="搜索源码" :disabled="loading" @click="openSourceSearch">
+          <template #icon><n-icon :component="SearchIcon" /></template>
+        </n-button>
+        <n-button quaternary circle size="small" title="折叠全部" :disabled="loading" @click="foldSource">
+          <template #icon><n-icon :component="FoldIcon" /></template>
+        </n-button>
+        <n-button quaternary circle size="small" title="展开全部" :disabled="loading" @click="unfoldSource">
+          <template #icon><n-icon :component="UnfoldIcon" /></template>
+        </n-button>
+        <n-button quaternary circle size="small" title="格式化源码" :disabled="transformDisabled" @click="transformSource('pretty')">
+          <template #icon><n-icon :component="FormatIcon" /></template>
+        </n-button>
+        <n-button quaternary circle size="small" title="压缩源码" :disabled="transformDisabled" @click="transformSource('minify')">
+          <template #icon><n-icon :component="MinifyIcon" /></template>
+        </n-button>
         <n-button quaternary circle size="small" title="重新从磁盘读取" :disabled="loading || saving" @click="reloadFromDisk">
           <template #icon><n-icon :component="RefreshIcon" /></template>
         </n-button>
@@ -73,6 +88,39 @@
           </div>
         </div>
 
+        <section class="path-browser" aria-label="JSON Path 导航">
+          <div class="diagnostic-heading">
+            <strong>JSON Path</strong>
+            <span>{{ analysis?.paths.length ?? 0 }}{{ analysis?.pathsTruncated ? '+' : '' }}</span>
+          </div>
+          <n-input
+            v-model:value="pathQuery"
+            size="small"
+            clearable
+            placeholder="筛选路径或值"
+            aria-label="筛选 JSON Path"
+          >
+            <template #prefix><SearchIcon :size="14" /></template>
+          </n-input>
+          <div class="path-results">
+            <div
+              v-for="entry in filteredPaths"
+              :key="`${entry.path}-${entry.start}`"
+              class="path-item"
+            >
+              <button type="button" @click="revealSourceRange(entry)">
+                <code>{{ entry.path }}</code>
+                <small>{{ kindLabel(entry.kind) }} · 第 {{ entry.line }} 行</small>
+                <span>{{ entry.preview }}</span>
+              </button>
+              <n-button quaternary circle size="tiny" title="复制路径" @click="copyPath(entry.path)">
+                <template #icon><n-icon :component="CopyIcon" /></template>
+              </n-button>
+            </div>
+            <div v-if="!filteredPaths.length" class="empty-paths">没有匹配的路径</div>
+          </div>
+        </section>
+
         <div class="diagnostic-heading">
           <strong>诊断</strong>
           <span>{{ analysis?.diagnostics.length ?? 0 }}</span>
@@ -116,6 +164,8 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { basicSetup } from 'codemirror'
 import { json } from '@codemirror/lang-json'
+import { foldAll, unfoldAll } from '@codemirror/language'
+import { openSearchPanel } from '@codemirror/search'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useRoute, useRouter } from 'vue-router'
@@ -124,12 +174,18 @@ import {
   AlertCircle as AlertCircleIcon,
   AlertTriangle as AlertIcon,
   ArrowLeft as ArrowLeftIcon,
+  Braces as FormatIcon,
   CircleCheck as CircleCheckIcon,
+  Copy as CopyIcon,
   FileJson as FileJsonIcon,
+  FoldVertical as FoldIcon,
+  Minimize2 as MinifyIcon,
   RefreshCw as RefreshIcon,
   Save as SaveIcon,
+  Search as SearchIcon,
   ShieldAlert as ShieldAlertIcon,
   ShieldCheck as ShieldCheckIcon,
+  UnfoldVertical as UnfoldIcon,
 } from 'lucide-vue-next'
 import { findFileFormat } from '../config/fileFormats'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
@@ -167,7 +223,19 @@ interface JsonSourceAnalysis {
   duplicateKeyCount: number
   precisionSensitiveNumberCount: number
   structureEditCandidate: boolean
+  paths: JsonPathEntry[]
+  pathsTruncated: boolean
   diagnostics: JsonDiagnostic[]
+}
+
+interface JsonPathEntry {
+  path: string
+  kind: string
+  start: number
+  end: number
+  line: number
+  column: number
+  preview: string
 }
 
 const route = useRoute()
@@ -186,6 +254,8 @@ const saving = ref(false)
 const loadError = ref('')
 const analysis = ref<JsonSourceAnalysis | null>(null)
 const analysisPending = ref(false)
+const transformPending = ref(false)
+const pathQuery = ref('')
 const dirty = ref(false)
 const sourceContent = ref('')
 const sourceSize = ref(0)
@@ -198,6 +268,13 @@ const cursorLine = ref(1)
 const cursorColumn = ref(1)
 const lineCount = ref(1)
 const readOnly = computed(() => Boolean(readOnlyReason.value))
+const transformDisabled = computed(() => (
+  loading.value
+  || saving.value
+  || transformPending.value
+  || readOnly.value
+  || !analysis.value?.valid
+))
 let editor: EditorView | null = null
 let loadGeneration = 0
 let analysisGeneration = 0
@@ -221,6 +298,18 @@ const structureStatusText = computed(() => {
   if (analysis.value.duplicateKeyCount) risks.push(`${analysis.value.duplicateKeyCount} 个重复键`)
   if (analysis.value.precisionSensitiveNumberCount) risks.push(`${analysis.value.precisionSensitiveNumberCount} 个精度敏感数字`)
   return risks.length ? `${risks.join('、')}需要保留原始字面量` : '当前结构没有发现重复键或数字精度风险'
+})
+
+const filteredPaths = computed(() => {
+  const query = pathQuery.value.trim().toLocaleLowerCase()
+  const paths = analysis.value?.paths || []
+  if (!query) return paths.slice(0, 200)
+  return paths
+    .filter(entry => (
+      entry.path.toLocaleLowerCase().includes(query)
+      || entry.preview.toLocaleLowerCase().includes(query)
+    ))
+    .slice(0, 200)
 })
 
 const syncCurrentTab = (isDirty = dirty.value) => {
@@ -416,15 +505,70 @@ const byteOffsetToCodeUnit = (content: string, byteOffset: number) => {
   return new TextDecoder().decode(bytes.slice(0, Math.min(byteOffset, bytes.length))).length
 }
 
-const revealDiagnostic = (diagnostic: JsonDiagnostic) => {
+const revealSourceRange = (range: Pick<JsonDiagnostic, 'start' | 'end'>) => {
   if (!editor) return
-  const from = byteOffsetToCodeUnit(sourceContent.value, diagnostic.start)
-  const to = Math.max(from, byteOffsetToCodeUnit(sourceContent.value, diagnostic.end))
+  const from = byteOffsetToCodeUnit(sourceContent.value, range.start)
+  const to = Math.max(from, byteOffsetToCodeUnit(sourceContent.value, range.end))
   editor.dispatch({
     selection: { anchor: from, head: to },
     effects: EditorView.scrollIntoView(from, { y: 'center' }),
   })
   editor.focus()
+}
+
+const revealDiagnostic = (diagnostic: JsonDiagnostic) => revealSourceRange(diagnostic)
+const openSourceSearch = () => {
+  if (editor) openSearchPanel(editor)
+}
+const foldSource = () => {
+  if (editor) foldAll(editor)
+}
+const unfoldSource = () => {
+  if (editor) unfoldAll(editor)
+}
+const copyPath = async (path: string) => {
+  try {
+    await navigator.clipboard.writeText(path)
+    message.success('JSON Path 已复制')
+  } catch {
+    message.error('复制 JSON Path 失败')
+  }
+}
+
+const kindLabel = (kind: string) => ({
+  object: '对象',
+  array: '数组',
+  string: '字符串',
+  number: '数字',
+  boolean: '布尔值',
+  null: 'Null',
+}[kind] || kind)
+
+const transformSource = async (mode: 'pretty' | 'minify') => {
+  if (!editor || transformDisabled.value) return
+  transformPending.value = true
+  try {
+    const content = editor.state.doc.toString()
+    const transformed = await invoke<string>('transform_json_source', {
+      content,
+      jsonc: format.value?.id === 'jsonc',
+      mode,
+    })
+    if (transformed === content) {
+      message.info(mode === 'pretty' ? '源码已经是格式化状态' : '源码已经是压缩状态')
+      return
+    }
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: transformed },
+      selection: { anchor: 0 },
+      effects: EditorView.scrollIntoView(0),
+    })
+    message.success(mode === 'pretty' ? '源码已格式化，可撤销或保存' : '源码已压缩，可撤销或保存')
+  } catch (cause) {
+    message.error(`源码变换失败：${errorMessage(cause)}`)
+  } finally {
+    transformPending.value = false
+  }
 }
 
 const diagnosticTitle = (code: string) => ({
@@ -713,6 +857,73 @@ onBeforeUnmount(() => {
 
 .structure-status span {
   line-height: 1.5;
+}
+
+.path-browser {
+  margin-bottom: 18px;
+}
+
+.path-results {
+  max-height: 260px;
+  margin-top: 8px;
+  overflow-y: auto;
+  border-top: var(--theme-border);
+}
+
+.path-item {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 4px;
+  border-bottom: var(--theme-border);
+}
+
+.path-item > button {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 2px;
+  border: 0;
+  color: var(--theme-text);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.path-item > button:hover code,
+.path-item > button:focus-visible code {
+  color: var(--theme-primary);
+}
+
+.path-item > button:focus-visible {
+  outline: 1px solid var(--theme-primary);
+  outline-offset: -1px;
+}
+
+.path-item code,
+.path-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.path-item code {
+  color: var(--theme-primary);
+  font-size: 11px;
+}
+
+.path-item small,
+.path-item span,
+.empty-paths {
+  color: var(--theme-text-secondary);
+  font-size: 10px;
+}
+
+.empty-paths {
+  padding: 16px 0;
+  text-align: center;
 }
 
 .diagnostic-heading {

@@ -1,11 +1,14 @@
 use jsonc_parser::ast::Value;
 use jsonc_parser::common::Ranged;
+use jsonc_parser::tokens::{Token, TokenAndRange};
 use jsonc_parser::{parse_to_ast, CollectOptions, CommentCollectionStrategy, ParseOptions};
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 
 const MAX_JSON_SOURCE_BYTES: usize = 16 * 1024 * 1024;
 const MAX_JSON_NODES: usize = 200_000;
+const MAX_JSON_PATH_ENTRIES: usize = 20_000;
+const MAX_JSON_PATH_PREVIEW_CHARS: usize = 120;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -22,6 +25,18 @@ pub struct JsonDiagnostic {
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
+pub struct JsonPathEntry {
+    pub path: String,
+    pub kind: String,
+    pub start: usize,
+    pub end: usize,
+    pub line: usize,
+    pub column: usize,
+    pub preview: String,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct JsonSourceAnalysis {
     pub valid: bool,
     pub mode: String,
@@ -33,6 +48,8 @@ pub struct JsonSourceAnalysis {
     pub duplicate_key_count: usize,
     pub precision_sensitive_number_count: usize,
     pub structure_edit_candidate: bool,
+    pub paths: Vec<JsonPathEntry>,
+    pub paths_truncated: bool,
     pub diagnostics: Vec<JsonDiagnostic>,
 }
 
@@ -63,15 +80,7 @@ pub fn analyze_json_source(content: &str, jsonc: bool) -> JsonSourceAnalysis {
         );
     }
 
-    let parse_options = ParseOptions {
-        allow_comments: jsonc,
-        allow_trailing_commas: jsonc,
-        allow_loose_object_property_names: false,
-        allow_missing_commas: false,
-        allow_single_quoted_strings: false,
-        allow_hexadecimal_numbers: false,
-        allow_unary_plus_numbers: false,
-    };
+    let parse_options = parse_options(jsonc);
     let parsed = match parse_to_ast(
         content,
         &CollectOptions {
@@ -132,7 +141,16 @@ pub fn analyze_json_source(content: &str, jsonc: bool) -> JsonSourceAnalysis {
 
     let mut counters = AnalysisCounters::default();
     let mut diagnostics = Vec::new();
-    inspect_value(root, "$", 1, content, &mut counters, &mut diagnostics);
+    let mut paths = Vec::new();
+    inspect_value(
+        root,
+        "$",
+        1,
+        content,
+        &mut counters,
+        &mut diagnostics,
+        &mut paths,
+    );
     if counters.nodes > MAX_JSON_NODES {
         diagnostics.push(JsonDiagnostic {
             severity: "error".into(),
@@ -161,6 +179,8 @@ pub fn analyze_json_source(content: &str, jsonc: bool) -> JsonSourceAnalysis {
         structure_edit_candidate: valid
             && counters.duplicate_keys == 0
             && counters.precision_sensitive_numbers == 0,
+        paths_truncated: counters.nodes > paths.len(),
+        paths,
         diagnostics,
     }
 }
@@ -177,6 +197,8 @@ fn failed_analysis(mode: String, diagnostic: JsonDiagnostic) -> JsonSourceAnalys
         duplicate_key_count: 0,
         precision_sensitive_number_count: 0,
         structure_edit_candidate: false,
+        paths: Vec::new(),
+        paths_truncated: false,
         diagnostics: vec![diagnostic],
     }
 }
@@ -188,9 +210,23 @@ fn inspect_value(
     content: &str,
     counters: &mut AnalysisCounters,
     diagnostics: &mut Vec<JsonDiagnostic>,
+    paths: &mut Vec<JsonPathEntry>,
 ) {
     counters.nodes += 1;
     counters.max_depth = counters.max_depth.max(depth);
+    if paths.len() < MAX_JSON_PATH_ENTRIES {
+        let range = value.range();
+        let (line, column) = line_column(content, range.start);
+        paths.push(JsonPathEntry {
+            path: path.into(),
+            kind: value_kind(value).into(),
+            start: range.start,
+            end: range.end,
+            line,
+            column,
+            preview: source_preview(content, range.start, range.end),
+        });
+    }
     match value {
         Value::Object(object) => {
             let mut keys = HashMap::new();
@@ -225,6 +261,7 @@ fn inspect_value(
                     content,
                     counters,
                     diagnostics,
+                    paths,
                 );
             }
         }
@@ -237,6 +274,7 @@ fn inspect_value(
                     content,
                     counters,
                     diagnostics,
+                    paths,
                 );
             }
         }
@@ -257,6 +295,163 @@ fn inspect_value(
         }
         _ => {}
     }
+}
+
+fn parse_options(jsonc: bool) -> ParseOptions {
+    ParseOptions {
+        allow_comments: jsonc,
+        allow_trailing_commas: jsonc,
+        allow_loose_object_property_names: false,
+        allow_missing_commas: false,
+        allow_single_quoted_strings: false,
+        allow_hexadecimal_numbers: false,
+        allow_unary_plus_numbers: false,
+    }
+}
+
+fn source_preview(content: &str, start: usize, end: usize) -> String {
+    let collapsed = content[start.min(content.len())..end.min(content.len())]
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    let mut preview = collapsed
+        .chars()
+        .take(MAX_JSON_PATH_PREVIEW_CHARS)
+        .collect::<String>();
+    if collapsed.chars().count() > MAX_JSON_PATH_PREVIEW_CHARS {
+        preview.push('…');
+    }
+    preview
+}
+
+pub fn transform_json_source(content: &str, jsonc: bool, mode: &str) -> Result<String, String> {
+    if content.len() > MAX_JSON_SOURCE_BYTES {
+        return Err("JSON 源码超过格式化大小上限".into());
+    }
+    if !analyze_json_source(content, jsonc).valid {
+        return Err("JSON 源码存在语法错误，不能格式化或压缩".into());
+    }
+    let parsed = parse_to_ast(
+        content,
+        &CollectOptions {
+            comments: CommentCollectionStrategy::AsTokens,
+            tokens: true,
+        },
+        &parse_options(jsonc),
+    )
+    .map_err(|error| error.kind().to_string())?;
+    let tokens = parsed.tokens.unwrap_or_default();
+    match mode {
+        "pretty" => Ok(render_pretty(content, &tokens)),
+        "minify" => Ok(render_minified(content, &tokens)),
+        _ => Err("不支持的 JSON 源码变换模式".into()),
+    }
+}
+
+fn token_source<'a>(content: &'a str, token: &TokenAndRange<'_>) -> &'a str {
+    &content[token.range.start..token.range.end]
+}
+
+fn is_close(token: &Token<'_>) -> bool {
+    matches!(token, Token::CloseBrace | Token::CloseBracket)
+}
+
+fn append_indent(output: &mut String, indent: usize, line_start: &mut bool) {
+    if *line_start {
+        output.push_str(&"  ".repeat(indent));
+        *line_start = false;
+    }
+}
+
+fn newline(output: &mut String, line_start: &mut bool) {
+    while output.ends_with([' ', '\t']) {
+        output.pop();
+    }
+    if !output.ends_with('\n') {
+        output.push('\n');
+    }
+    *line_start = true;
+}
+
+fn render_pretty(content: &str, tokens: &[TokenAndRange<'_>]) -> String {
+    let mut output = String::with_capacity(content.len());
+    let mut indent = 0usize;
+    let mut line_start = true;
+
+    for (index, item) in tokens.iter().enumerate() {
+        let previous = index
+            .checked_sub(1)
+            .and_then(|index| tokens.get(index))
+            .map(|item| &item.token);
+        let next = tokens.get(index + 1).map(|item| &item.token);
+        match &item.token {
+            Token::OpenBrace | Token::OpenBracket => {
+                append_indent(&mut output, indent, &mut line_start);
+                output.push_str(token_source(content, item));
+                indent += 1;
+                if !next.is_some_and(is_close) {
+                    newline(&mut output, &mut line_start);
+                }
+            }
+            Token::CloseBrace | Token::CloseBracket => {
+                indent = indent.saturating_sub(1);
+                if !line_start && !matches!(previous, Some(Token::OpenBrace | Token::OpenBracket)) {
+                    newline(&mut output, &mut line_start);
+                }
+                append_indent(&mut output, indent, &mut line_start);
+                output.push_str(token_source(content, item));
+            }
+            Token::Comma => {
+                output.push(',');
+                if matches!(next, Some(Token::CommentLine(_) | Token::CommentBlock(_))) {
+                    output.push(' ');
+                } else {
+                    newline(&mut output, &mut line_start);
+                }
+            }
+            Token::Colon => output.push_str(": "),
+            Token::CommentLine(_) => {
+                append_indent(&mut output, indent, &mut line_start);
+                if !output.ends_with([' ', '\n']) {
+                    output.push(' ');
+                }
+                output.push_str(token_source(content, item).trim_end_matches(['\r', '\n']));
+                newline(&mut output, &mut line_start);
+            }
+            Token::CommentBlock(_) => {
+                append_indent(&mut output, indent, &mut line_start);
+                if !output.ends_with([' ', '\n']) {
+                    output.push(' ');
+                }
+                output.push_str(token_source(content, item));
+                if matches!(
+                    next,
+                    Some(Token::Comma | Token::CloseBrace | Token::CloseBracket)
+                ) {
+                    // Keep delimiters attached to their preceding value.
+                } else if next.is_some() {
+                    output.push(' ');
+                }
+            }
+            _ => {
+                append_indent(&mut output, indent, &mut line_start);
+                output.push_str(token_source(content, item));
+            }
+        }
+    }
+    newline(&mut output, &mut line_start);
+    output
+}
+
+fn render_minified(content: &str, tokens: &[TokenAndRange<'_>]) -> String {
+    let mut output = String::with_capacity(content.len());
+    for item in tokens {
+        output.push_str(token_source(content, item).trim_end_matches(['\r', '\n']));
+        if matches!(item.token, Token::CommentLine(_)) {
+            output.push('\n');
+        }
+    }
+    output
 }
 
 fn precision_sensitive(value: &str) -> bool {
@@ -289,10 +484,12 @@ fn precision_sensitive(value: &str) -> bool {
 }
 
 fn escape_path_key(key: &str) -> String {
-    if key
-        .chars()
-        .all(|character| character.is_ascii_alphanumeric() || character == '_' || character == '-')
-    {
+    let mut characters = key.chars();
+    let identifier = characters
+        .next()
+        .is_some_and(|character| character.is_ascii_alphabetic() || character == '_')
+        && characters.all(|character| character.is_ascii_alphanumeric() || character == '_');
+    if identifier {
         key.into()
     } else {
         format!("[\"{}\"]", key.replace('\\', "\\\\").replace('"', "\\\""))
@@ -353,6 +550,9 @@ mod tests {
         assert_eq!(analysis.property_count, 2);
         assert_eq!(analysis.max_depth, 4);
         assert!(analysis.structure_edit_candidate);
+        assert_eq!(analysis.paths[0].path, "$");
+        assert_eq!(analysis.paths[2].path, "$.rows[0]");
+        assert_eq!(analysis.paths[3].preview, "1.25");
     }
 
     #[test]
@@ -373,5 +573,62 @@ mod tests {
             .unwrap();
         assert_eq!((duplicate.line, duplicate.column), (2, 2));
         assert_eq!(duplicate.path.as_deref(), Some("$[\"键\"]"));
+    }
+
+    #[test]
+    fn pretty_and_minify_preserve_source_literals_and_duplicate_keys() {
+        let source = r#"{"id":9007199254740993,"id":-0,"escaped":"\u4e2d"}"#;
+        let pretty = transform_json_source(source, false, "pretty").unwrap();
+        assert!(pretty.contains("9007199254740993"));
+        assert!(pretty.contains(r#""escaped": "\u4e2d""#));
+        assert_eq!(pretty.matches(r#""id""#).count(), 2);
+        assert!(analyze_json_source(&pretty, false).valid);
+
+        let minified = transform_json_source(&pretty, false, "minify").unwrap();
+        assert_eq!(minified, source);
+    }
+
+    #[test]
+    fn jsonc_transform_preserves_comments_and_trailing_commas() {
+        let source = "{\n  // identity\n  \"name\": \"LongEdit\", /* retained */\n}\n";
+        let minified = transform_json_source(source, true, "minify").unwrap();
+        assert!(minified.contains("// identity\n"));
+        assert!(minified.contains("/* retained */"));
+        assert!(minified.ends_with(",/* retained */}"));
+        assert!(analyze_json_source(&minified, true).valid);
+
+        let pretty = transform_json_source(&minified, true, "pretty").unwrap();
+        assert!(pretty.contains("// identity"));
+        assert!(pretty.contains("/* retained */"));
+        assert!(analyze_json_source(&pretty, true).valid);
+    }
+
+    #[test]
+    fn transform_rejects_invalid_source_and_unknown_modes() {
+        assert!(transform_json_source("{", false, "pretty").is_err());
+        assert!(transform_json_source("{}", false, "other").is_err());
+    }
+
+    #[test]
+    fn pretty_keeps_nested_empty_containers_on_their_parent_indent() {
+        let pretty =
+            transform_json_source(r#"{"items":[{},[]],"tail":true}"#, false, "pretty").unwrap();
+        assert_eq!(
+            pretty,
+            "{\n  \"items\": [\n    {},\n    []\n  ],\n  \"tail\": true\n}\n"
+        );
+    }
+
+    #[test]
+    fn json_paths_use_bracket_notation_for_non_identifier_keys() {
+        let analysis = analyze_json_source(r#"{"safe_key":1,"a-b":2,"123":3}"#, false);
+        let paths = analysis
+            .paths
+            .iter()
+            .map(|entry| entry.path.as_str())
+            .collect::<Vec<_>>();
+        assert!(paths.contains(&"$.safe_key"));
+        assert!(paths.contains(&"$[\"a-b\"]"));
+        assert!(paths.contains(&"$[\"123\"]"));
     }
 }

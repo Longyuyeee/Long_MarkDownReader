@@ -1,10 +1,23 @@
 use crate::commands::formats::write_registered_text_document;
-use crate::formats::json::{analyze_json_source as analyze_source, JsonSourceAnalysis};
+use crate::formats::json::{
+    analyze_json_source as analyze_source, transform_json_source as transform_source,
+    JsonSourceAnalysis,
+};
 use crate::formats::text::{TextDocumentError, TextDocumentSnapshot};
 
 #[tauri::command]
 pub fn analyze_json_source(content: String, jsonc: bool) -> JsonSourceAnalysis {
     analyze_source(&content, jsonc)
+}
+
+#[tauri::command]
+pub fn transform_json_source(
+    content: String,
+    jsonc: bool,
+    mode: String,
+) -> Result<String, TextDocumentError> {
+    transform_source(&content, jsonc, &mode)
+        .map_err(|message| TextDocumentError::simple("json-transform-rejected", message))
 }
 
 #[tauri::command]
@@ -168,5 +181,15 @@ mod tests {
 
         assert_eq!(error.code, "specialized-writer-required");
         assert_eq!(fs::read_to_string(path).unwrap(), "{}\n");
+    }
+
+    #[test]
+    fn transform_command_returns_a_recoverable_editor_result() {
+        let transformed =
+            transform_json_source("{\"value\":1}".into(), false, "pretty".into()).unwrap();
+        assert_eq!(transformed, "{\n  \"value\": 1\n}\n");
+
+        let error = transform_json_source("{".into(), false, "pretty".into()).unwrap_err();
+        assert_eq!(error.code, "json-transform-rejected");
     }
 }
