@@ -41,6 +41,19 @@
       "creation": null
     },
     {
+      "id": "log",
+      "label": "日志",
+      "extensions": [".log"],
+      "mimeTypes": ["text/plain", "text/x-log"],
+      "routeName": "LogViewer",
+      "maxBytes": 1073741824,
+      "capabilities": { "read": "supported", "edit": "planned", "create": "unsupported", "index": "supported" },
+      "userCapability": { "level": "preview-only", "label": "只读日志", "saveMode": "none", "description": "日志使用独立只读工作面，支持受限范围读取、筛选、级别高亮和自动刷新；显式编辑将在后续门禁完成后开放。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": null, "creator": null, "indexer": "text" },
+      "creation": null
+    },
+    {
       "id": "jsonc",
       "label": "JSONC",
       "extensions": [".jsonc"],

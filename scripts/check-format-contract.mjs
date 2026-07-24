@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, formatCommands, jsonCommands, files, externalAccess, index, library, textEditor, jsonEditor, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, formatCommands, jsonCommands, files, externalAccess, index, library, textEditor, jsonEditor, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -16,6 +16,7 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, formatComma
   read('src/views/LibraryMode.vue'),
   read('src/views/TextEditorView.vue'),
   read('src/views/JsonEditorView.vue'),
+  read('src/views/LogViewerView.vue'),
   read('src/components/WorkspaceTabs.vue'),
   read('src/router/index.ts'),
   read('src/App.vue'),
@@ -201,6 +202,21 @@ requireText(jsonEditor, 'requestPropertyRemove', 'A3 tree object property remova
 requireText(jsonEditor, "'remove_json_array_item_source'", 'A3 tree array item removal must use the dedicated Rust command')
 requireText(jsonEditor, 'requestArrayRemove', 'A3 tree array item removal must require explicit confirmation')
 requireText(jsonEditor, 'analysis.value?.structureEditCandidate', 'A3 tree scalar controls must consume the fidelity gate')
+const logFormat = registry.formats.find(format => format.id === 'log')
+if (!logFormat
+  || logFormat.routeName !== 'LogViewer'
+  || logFormat.capabilities?.read !== 'supported'
+  || logFormat.capabilities?.edit !== 'planned'
+  || logFormat.capabilities?.index !== 'supported'
+  || logFormat.userCapability?.level !== 'preview-only'
+  || logFormat.userCapability?.saveMode !== 'none'
+  || logFormat.adapters?.reader !== 'text'
+  || logFormat.adapters?.writer !== null) failures.push('A4 LOG read-only format contract is incomplete')
+requireText(logViewer, "'read_text_document_range'", 'A4 LOG viewer must use bounded range reads')
+requireText(logViewer, 'readTailRange', 'A4 LOG viewer must enter large files from a bounded tail window')
+requireText(logViewer, 'pollForUpdates', 'A4 LOG viewer must refresh appended records')
+requireText(logViewer, 'LEVEL_PATTERNS', 'A4 LOG viewer must classify common log levels')
+requireText(logViewer, 'MAX_BUFFER_CHARS', 'A4 LOG viewer must bound its in-memory display buffer')
 requireText(library, '<WorkspaceTabs', 'Markdown workspace must consume unified session tabs')
 requireText(textEditor, '<WorkspaceTabs', 'TXT workspace must consume unified session tabs')
 requireText(workspaceTabs, 'routeForFile', 'unified tabs must route each registered format to its workspace')

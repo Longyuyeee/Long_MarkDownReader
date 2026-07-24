@@ -31,6 +31,11 @@ const routes = [
     component: () => import('../views/JsonEditorView.vue')
   },
   {
+    path: '/log',
+    name: 'LogViewer',
+    component: () => import('../views/LogViewerView.vue')
+  },
+  {
     path: '/quick-note',
     name: 'QuickNote',
     component: () => import('../views/QuickNote.vue')
