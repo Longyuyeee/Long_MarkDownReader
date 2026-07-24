@@ -26,6 +26,11 @@ const routes = [
     component: () => import('../views/TextEditorView.vue')
   },
   {
+    path: '/json',
+    name: 'JsonEditor',
+    component: () => import('../views/JsonEditorView.vue')
+  },
+  {
     path: '/quick-note',
     name: 'QuickNote',
     component: () => import('../views/QuickNote.vue')

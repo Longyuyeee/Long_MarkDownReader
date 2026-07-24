@@ -28,6 +28,32 @@
       "creation": { "defaultExtension": ".txt", "defaultContent": "", "defaultName": "未命名文本" }
     },
     {
+      "id": "json",
+      "label": "JSON",
+      "extensions": [".json"],
+      "mimeTypes": ["application/json"],
+      "routeName": "JsonEditor",
+      "maxBytes": 16777216,
+      "capabilities": { "read": "supported", "edit": "planned", "create": "planned", "index": "planned" },
+      "userCapability": { "level": "preview-only", "label": "源码预览", "saveMode": "none", "description": "普通 JSON 当前支持源码阅读和安全诊断；可靠保存与结构编辑将在 A3 后续批次开放。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": null, "creator": null, "indexer": null },
+      "creation": null
+    },
+    {
+      "id": "jsonc",
+      "label": "JSONC",
+      "extensions": [".jsonc"],
+      "mimeTypes": ["application/json", "application/jsonc"],
+      "routeName": "JsonEditor",
+      "maxBytes": 16777216,
+      "capabilities": { "read": "supported", "edit": "planned", "create": "planned", "index": "planned" },
+      "userCapability": { "level": "preview-only", "label": "源码预览", "saveMode": "none", "description": "JSONC 当前支持保留注释的源码阅读和安全诊断；可靠保存与结构编辑将在 A3 后续批次开放。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": null, "creator": null, "indexer": null },
+      "creation": null
+    },
+    {
       "id": "canvas",
       "label": "JSON Canvas",
       "extensions": [".canvas"],

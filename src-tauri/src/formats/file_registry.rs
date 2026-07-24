@@ -203,6 +203,8 @@ mod tests {
             registry.by_path("notes/readme.txt").unwrap().id,
             "plain-text"
         );
+        assert_eq!(registry.by_path("config.json").unwrap().id, "json");
+        assert_eq!(registry.by_path("settings.JSONC").unwrap().id, "jsonc");
         assert!(registry.by_path("note.md.exe").is_none());
     }
 
@@ -221,5 +223,32 @@ mod tests {
         assert_eq!(format.route_name, "TextEditor");
         assert_eq!(format.adapters.reader.as_deref(), Some("text"));
         assert_eq!(format.adapters.indexer.as_deref(), Some("text"));
+    }
+
+    #[test]
+    fn json_source_formats_are_read_only_and_preserve_compound_routing() {
+        for id in ["json", "jsonc"] {
+            let format = file_format_by_id(id).unwrap();
+            assert!(format.capabilities.read.is_supported());
+            assert_eq!(format.capabilities.edit, CapabilityLevel::Planned);
+            assert_eq!(format.capabilities.create, CapabilityLevel::Planned);
+            assert_eq!(format.route_name, "JsonEditor");
+            assert_eq!(format.adapters.reader.as_deref(), Some("text"));
+            assert!(format.adapters.writer.is_none());
+            assert_eq!(
+                format.user_capability.level,
+                UserCapabilityLevel::PreviewOnly
+            );
+            assert_eq!(format.user_capability.save_mode, SaveMode::None);
+        }
+
+        assert_eq!(
+            file_format_registry()
+                .unwrap()
+                .by_path("records.table.json")
+                .unwrap()
+                .id,
+            "table"
+        );
     }
 }
