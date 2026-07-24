@@ -465,6 +465,145 @@ pub fn rename_json_object_key_source(
     Ok(candidate)
 }
 
+pub fn append_json_object_property_source(
+    content: &str,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+    key: &str,
+    value: &str,
+) -> Result<String, String> {
+    if key.chars().count() > MAX_JSON_KEY_CHARS {
+        return Err(format!("对象键不能超过 {MAX_JSON_KEY_CHARS} 个字符"));
+    }
+    if start >= end
+        || end > content.len()
+        || !content.is_char_boundary(start)
+        || !content.is_char_boundary(end)
+    {
+        return Err("目标对象范围无效或已经过期".into());
+    }
+
+    let analysis = analyze_json_source(content, jsonc);
+    if !analysis.valid {
+        return Err("JSON 源码存在语法错误，不能新增对象属性".into());
+    }
+    if !analysis.structure_edit_candidate {
+        return Err("当前文档包含重复键或精度敏感数字，只能继续使用源码编辑".into());
+    }
+    let target = analysis
+        .paths
+        .iter()
+        .find(|entry| entry.start == start && entry.end == end && entry.kind == "object")
+        .ok_or_else(|| "目标对象不属于当前 JSON 分析结果".to_string())?;
+
+    let value = value.trim();
+    let value_analysis = analyze_json_source(value, false);
+    if !value_analysis.valid || !value_analysis.structure_edit_candidate {
+        return Err("属性值必须是可保真的单个严格 JSON 值".into());
+    }
+
+    let parsed = parse_to_ast(
+        content,
+        &CollectOptions {
+            comments: CommentCollectionStrategy::Separate,
+            tokens: false,
+        },
+        &parse_options(jsonc),
+    )
+    .map_err(|error| error.kind().to_string())?;
+    let root = parsed
+        .value
+        .as_ref()
+        .ok_or_else(|| "JSON 文档不能为空".to_string())?;
+    let object = find_value_by_range(root, target.start, target.end)
+        .and_then(|value| match value {
+            Value::Object(object) => Some(object),
+            _ => None,
+        })
+        .ok_or_else(|| "目标对象范围已经过期".to_string())?;
+    let close = end
+        .checked_sub(1)
+        .filter(|offset| content[*offset..end].starts_with('}'))
+        .ok_or_else(|| "目标对象缺少可识别的右花括号".to_string())?;
+
+    let encoded_key =
+        serde_json::to_string(key).map_err(|_| "对象键无法编码为 JSON 字符串".to_string())?;
+    let property = format!("{encoded_key}: {value}");
+    let (replace_start, replacement) = if let Some(last) = object.properties.last() {
+        let tail = &content[last.range.end..close];
+        let (trailing_comma, whitespace) = if let Some(rest) = tail.strip_prefix(',') {
+            if !rest.chars().all(char::is_whitespace) {
+                return Err("对象尾部逗号与右花括号之间存在注释，无法确定安全插入位置".into());
+            }
+            (true, rest)
+        } else {
+            if !tail.chars().all(char::is_whitespace) {
+                return Err("对象最后一个属性与右花括号之间存在注释，无法确定安全插入位置".into());
+            }
+            (false, tail)
+        };
+        let child_indent = if whitespace.contains('\n') { "  " } else { "" };
+        (
+            last.range.end,
+            format!(
+                ",{whitespace}{child_indent}{property}{}{whitespace}",
+                if trailing_comma { "," } else { "" }
+            ),
+        )
+    } else {
+        let whitespace = &content[start + 1..close];
+        if !whitespace.chars().all(char::is_whitespace) {
+            return Err("空对象内部包含注释，无法确定安全插入位置".into());
+        }
+        let child_indent = if whitespace.contains('\n') { "  " } else { "" };
+        (
+            start + 1,
+            format!(
+                "{whitespace}{child_indent}{property}{}",
+                if whitespace.contains('\n') {
+                    whitespace
+                } else {
+                    ""
+                }
+            ),
+        )
+    };
+
+    let mut candidate =
+        String::with_capacity(content.len() - (close - replace_start) + replacement.len());
+    candidate.push_str(&content[..replace_start]);
+    candidate.push_str(&replacement);
+    candidate.push_str(&content[close..]);
+    let candidate_analysis = analyze_json_source(&candidate, jsonc);
+    if !candidate_analysis.valid || !candidate_analysis.structure_edit_candidate {
+        return Err("新增属性后的 JSON 未通过完整结构与保真校验，请检查同级重复键".into());
+    }
+    Ok(candidate)
+}
+
+fn find_value_by_range<'a, 'b>(
+    value: &'b Value<'a>,
+    start: usize,
+    end: usize,
+) -> Option<&'b Value<'a>> {
+    let range = value.range();
+    if range.start == start && range.end == end {
+        return Some(value);
+    }
+    match value {
+        Value::Object(object) => object
+            .properties
+            .iter()
+            .find_map(|property| find_value_by_range(&property.value, start, end)),
+        Value::Array(array) => array
+            .elements
+            .iter()
+            .find_map(|element| find_value_by_range(element, start, end)),
+        _ => None,
+    }
+}
+
 fn token_source<'a>(content: &'a str, token: &TokenAndRange<'_>) -> &'a str {
     &content[token.range.start..token.range.end]
 }
@@ -877,6 +1016,87 @@ mod tests {
             key_start,
             key_end,
             &"x".repeat(MAX_JSON_KEY_CHARS + 1)
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn object_property_append_preserves_multiline_and_jsonc_trailing_comma_style() {
+        let source = "{\n  \"config\": {\n  },\n}\n";
+        let target = analyze_json_source(source, true)
+            .paths
+            .into_iter()
+            .find(|entry| entry.path == "$.config")
+            .unwrap();
+        let appended = append_json_object_property_source(
+            source,
+            true,
+            target.start,
+            target.end,
+            "显示名称",
+            r#"{"enabled":true}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            appended,
+            "{\n  \"config\": {\n    \"显示名称\": {\"enabled\":true}\n  },\n}\n"
+        );
+
+        let trailing = "{\n  \"first\": 1,\n}\n";
+        let root = &analyze_json_source(trailing, true).paths[0];
+        let appended =
+            append_json_object_property_source(trailing, true, root.start, root.end, "second", "2")
+                .unwrap();
+        assert_eq!(appended, "{\n  \"first\": 1,\n  \"second\": 2,\n}\n");
+    }
+
+    #[test]
+    fn object_property_append_handles_compact_objects_and_empty_keys() {
+        let source = r#"{"outer":{}}"#;
+        let target = &analyze_json_source(source, false).paths[1];
+        let appended = append_json_object_property_source(
+            source,
+            false,
+            target.start,
+            target.end,
+            "",
+            "[1,2]",
+        )
+        .unwrap();
+        assert_eq!(appended, r#"{"outer":{"": [1,2]}}"#);
+    }
+
+    #[test]
+    fn object_property_append_rejects_ambiguous_comments_duplicates_and_stale_ranges() {
+        let commented = r#"{"first":1 /* attached */}"#;
+        let root = &analyze_json_source(commented, true).paths[0];
+        assert!(append_json_object_property_source(
+            commented, true, root.start, root.end, "second", "2"
+        )
+        .is_err());
+
+        let source = r#"{"first":1}"#;
+        let root = &analyze_json_source(source, false).paths[0];
+        assert!(append_json_object_property_source(
+            source, false, root.start, root.end, "first", "2"
+        )
+        .is_err());
+        assert!(append_json_object_property_source(
+            source,
+            false,
+            root.start + 1,
+            root.end,
+            "second",
+            "2"
+        )
+        .is_err());
+        assert!(append_json_object_property_source(
+            source,
+            false,
+            root.start,
+            root.end,
+            "second",
+            "9007199254740993"
         )
         .is_err());
     }

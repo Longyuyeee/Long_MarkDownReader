@@ -116,6 +116,17 @@
               </button>
               <div class="tree-node-actions">
                 <n-button
+                  v-if="entry.kind === 'object'"
+                  quaternary
+                  circle
+                  size="tiny"
+                  title="新增对象属性"
+                  :disabled="propertyAppendDisabled"
+                  @click.stop="openPropertyAppend(entry)"
+                >
+                  <template #icon><n-icon :component="AddPropertyIcon" /></template>
+                </n-button>
+                <n-button
                   v-if="entry.keyStart !== undefined && entry.keyEnd !== undefined"
                   quaternary
                   circle
@@ -319,6 +330,52 @@
       </template>
     </n-modal>
 
+    <n-modal
+      v-model:show="propertyAppendVisible"
+      preset="card"
+      class="scalar-edit-dialog"
+      title="新增对象属性"
+      :mask-closable="!propertyAppendPending"
+      :closable="!propertyAppendPending"
+    >
+      <div class="scalar-edit-context">
+        <code>{{ propertyAppendEntry?.path }}</code>
+        <span>对象</span>
+      </div>
+      <div class="property-append-fields">
+        <n-input
+          v-model:value="propertyAppendKey"
+          :disabled="propertyAppendPending"
+          :maxlength="4096"
+          show-count
+          placeholder="属性名"
+          aria-label="JSON 对象属性名"
+          autofocus
+        />
+        <n-input
+          v-model:value="propertyAppendValue"
+          type="textarea"
+          :autosize="{ minRows: 3, maxRows: 8 }"
+          :disabled="propertyAppendPending"
+          placeholder="属性值，例如 null、42、&quot;text&quot;、[] 或 {}"
+          aria-label="JSON 对象属性值"
+        />
+      </div>
+      <template #footer>
+        <div class="scalar-edit-actions">
+          <n-button :disabled="propertyAppendPending" @click="propertyAppendVisible = false">取消</n-button>
+          <n-button
+            type="primary"
+            :loading="propertyAppendPending"
+            :disabled="propertyAppendKey.length > 4096 || !propertyAppendValue.trim()"
+            @click="applyPropertyAppend"
+          >
+            添加到草稿
+          </n-button>
+        </div>
+      </template>
+    </n-modal>
+
     <footer class="json-statusbar">
       <span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span>
       <span>{{ encoding.toUpperCase() }}</span>
@@ -356,6 +413,7 @@ import {
   FileJson as FileJsonIcon,
   FoldVertical as FoldIcon,
   KeyRound as RenameKeyIcon,
+  ListPlus as AddPropertyIcon,
   ListTree as TreeIcon,
   LocateFixed as LocateIcon,
   Minimize2 as MinifyIcon,
@@ -454,6 +512,12 @@ const keyRenamePending = ref(false)
 const keyRenameEntry = ref<JsonPathEntry | null>(null)
 const keyRenameValue = ref('')
 const keyRenameSource = ref('')
+const propertyAppendVisible = ref(false)
+const propertyAppendPending = ref(false)
+const propertyAppendEntry = ref<JsonPathEntry | null>(null)
+const propertyAppendKey = ref('')
+const propertyAppendValue = ref('null')
+const propertyAppendSource = ref('')
 const dirty = ref(false)
 const sourceContent = ref('')
 const sourceSize = ref(0)
@@ -489,6 +553,15 @@ const keyRenameDisabled = computed(() => (
   || saving.value
   || transformPending.value
   || keyRenamePending.value
+  || !analysis.value?.structureEditCandidate
+))
+const propertyAppendDisabled = computed(() => (
+  loading.value
+  || analysisPending.value
+  || readOnly.value
+  || saving.value
+  || transformPending.value
+  || propertyAppendPending.value
   || !analysis.value?.structureEditCandidate
 ))
 let editor: EditorView | null = null
@@ -717,6 +790,9 @@ const load = async (discardDraft = false) => {
   keyRenameVisible.value = false
   keyRenameEntry.value = null
   keyRenameSource.value = ''
+  propertyAppendVisible.value = false
+  propertyAppendEntry.value = null
+  propertyAppendSource.value = ''
   analysisGeneration += 1
   analysisPending.value = false
   clearAnalysisTimer()
@@ -802,6 +878,7 @@ const isScalarKind = (kind: string) => ['string', 'number', 'boolean', 'null'].i
 const openScalarEditor = (entry: JsonPathEntry) => {
   if (!editor || !isScalarKind(entry.kind) || scalarEditDisabled.value) return
   keyRenameVisible.value = false
+  propertyAppendVisible.value = false
   scalarEditEntry.value = entry
   scalarEditSource.value = editor.state.doc.toString()
   scalarEditValue.value = sourceRangeText(entry)
@@ -850,6 +927,7 @@ const openKeyRename = (entry: JsonPathEntry) => {
     || keyRenameDisabled.value
   ) return
   scalarEditVisible.value = false
+  propertyAppendVisible.value = false
   keyRenameEntry.value = entry
   keyRenameSource.value = editor.state.doc.toString()
   keyRenameValue.value = entry.label
@@ -888,6 +966,52 @@ const applyKeyRename = async () => {
     message.error(`对象键重命名失败：${errorMessage(cause)}`)
   } finally {
     keyRenamePending.value = false
+  }
+}
+
+const openPropertyAppend = (entry: JsonPathEntry) => {
+  if (!editor || entry.kind !== 'object' || propertyAppendDisabled.value) return
+  scalarEditVisible.value = false
+  keyRenameVisible.value = false
+  propertyAppendEntry.value = entry
+  propertyAppendKey.value = ''
+  propertyAppendValue.value = 'null'
+  propertyAppendSource.value = editor.state.doc.toString()
+  propertyAppendVisible.value = true
+}
+
+const applyPropertyAppend = async () => {
+  if (!editor || !propertyAppendEntry.value || propertyAppendPending.value) return
+  const current = editor.state.doc.toString()
+  if (current !== propertyAppendSource.value) {
+    message.warning('源码已发生变化，请重新选择对象')
+    propertyAppendVisible.value = false
+    return
+  }
+  const entry = propertyAppendEntry.value
+  propertyAppendPending.value = true
+  clearAnalysisTimer()
+  try {
+    const appended = await invoke<string>('append_json_object_property_source', {
+      content: current,
+      jsonc: format.value?.id === 'jsonc',
+      start: entry.start,
+      end: entry.end,
+      key: propertyAppendKey.value,
+      value: propertyAppendValue.value,
+    })
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: appended },
+      selection: { anchor: byteOffsetToCodeUnit(appended, entry.start) },
+    })
+    clearAnalysisTimer()
+    propertyAppendVisible.value = false
+    await analyzeContent(appended)
+    message.success('对象属性已添加，可撤销或保存')
+  } catch (cause) {
+    message.error(`新增对象属性失败：${errorMessage(cause)}`)
+  } finally {
+    propertyAppendPending.value = false
   }
 }
 
@@ -1302,6 +1426,11 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.property-append-fields {
+  display: grid;
+  gap: 10px;
 }
 
 .loading-state {

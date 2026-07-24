@@ -1,6 +1,7 @@
 use crate::commands::formats::write_registered_text_document;
 use crate::formats::json::{
     analyze_json_source as analyze_source,
+    append_json_object_property_source as append_object_property_source,
     rename_json_object_key_source as rename_object_key_source,
     replace_json_scalar_source as replace_scalar_source, transform_json_source as transform_source,
     JsonSourceAnalysis,
@@ -44,6 +45,19 @@ pub fn rename_json_object_key_source(
 ) -> Result<String, TextDocumentError> {
     rename_object_key_source(&content, jsonc, key_start, key_end, &new_key)
         .map_err(|message| TextDocumentError::simple("json-key-rename-rejected", message))
+}
+
+#[tauri::command]
+pub fn append_json_object_property_source(
+    content: String,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+    key: String,
+    value: String,
+) -> Result<String, TextDocumentError> {
+    append_object_property_source(&content, jsonc, start, end, &key, &value)
+        .map_err(|message| TextDocumentError::simple("json-property-append-rejected", message))
 }
 
 #[tauri::command]
@@ -252,5 +266,21 @@ mod tests {
         )
         .unwrap_err();
         assert_eq!(error.code, "json-key-rename-rejected");
+    }
+
+    #[test]
+    fn object_property_append_command_uses_stable_rejection_code() {
+        let content = r#"{"first":1}"#.to_string();
+        let root = analyze_source(&content, false).paths[0].clone();
+        let error = append_json_object_property_source(
+            content,
+            false,
+            root.start,
+            root.end,
+            "first".into(),
+            "2".into(),
+        )
+        .unwrap_err();
+        assert_eq!(error.code, "json-property-append-rejected");
     }
 }

@@ -43,8 +43,8 @@ use commands::index::{
     delete_knowledge_index, get_knowledge_index_status, rebuild_knowledge_index, search_knowledge,
 };
 use commands::json::{
-    analyze_json_source, rename_json_object_key_source, replace_json_scalar_source,
-    transform_json_source, write_json_source_document,
+    analyze_json_source, append_json_object_property_source, rename_json_object_key_source,
+    replace_json_scalar_source, transform_json_source, write_json_source_document,
 };
 use commands::mindmap::{create_canvas_from_opml, read_opml_file, write_opml_file};
 use commands::pdf::{
@@ -227,6 +227,7 @@ pub fn run() {
             write_markdown_file,
             get_file_format_registry,
             analyze_json_source,
+            append_json_object_property_source,
             rename_json_object_key_source,
             replace_json_scalar_source,
             transform_json_source,
