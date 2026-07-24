@@ -72,7 +72,9 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/Formula_Calculation_Compatibility.md`：S8-6A～S8-6D 公式函数族、错误分类、查找/日期语义、真实 fixture 和明确排除项。
 - `docs/XLSX_Advanced_Data_Object_Contract.md`：S8-7 高级对象离线策略、透视候选审计、内存聚合预览和写回门禁。
 - `docs/T8_1B_Theme_Desktop_Visual_Audit.md`：四套场景主题、真实 Tauri 三档尺寸证据、图谱紧凑布局修复和可重复截图脚本。
-- `docs/Development_Progress_Audit_2026-07-24.md`：当前完整候选能力、风险排序、发布门禁和 S8-7E2F～S8-8、G8、F8-1 后续顺序。
+- `docs/Development_Progress_Audit_2026-07-24.md`：当前完整候选能力、风险排序、发布门禁，以及合并后从 XLSX 专项收尾切换到统一文件管理 A0 主线的顺序。
+- `docs/Unified_File_Manager_Format_Requirements.md`：统一文件管理、常用格式阅读/基础编辑、安全保存和体系化管理的补充需求基线。
+- `docs/Next_Development_Execution_Guide.md`：A0～A5、PDF 页面编辑、DOCX/PPTX 基础工作面和体系化管理增强的后续执行指导。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
 - `docs/Development_Stage_Audit_2026-07-20.md`：上一轮专业工作区阶段审计和交错排期基线。
 
@@ -90,7 +92,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 ## 6. 下一阶段顺序
 
-2026-07-24 综合审计、风险排序、质量证据和后续阶段退出条件见 `docs/Development_Progress_Audit_2026-07-24.md`；上一轮细节见 `docs/Development_Progress_Audit_2026-07-23.md`，历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1、I7-2、W7-1～W7-3、S8-1A～S8-6E、S8-7A～S8-7E2E 和 T8-1A～T8-1B；下一入口为 S8-7E2F 单轴与多度量完整隔离包重写。按当前主线还剩 S8-7、S8-8 两个主阶段域；另保留 G8 图谱产品化和 F8-1 下一种专业格式编辑器两条增强线。
+2026-07-24 综合审计、风险排序、质量证据和后续阶段退出条件见 `docs/Development_Progress_Audit_2026-07-24.md`；上一轮细节见 `docs/Development_Progress_Audit_2026-07-23.md`，历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1、I7-2、W7-1～W7-3、S8-1A～S8-6E、S8-7A～S8-7E2E 和 T8-1A～T8-1B。合并后的当前主线已按 `Unified_File_Manager_Format_Requirements.md` 重新排序：下一入口为 **A0 格式契约和能力展示升级**，随后进入 A1 可靠文本读取与保存内核、A2 TXT 工作面和 A3 JSON/JSONC 工作面。S8-7E2F～S8-8 保留为 XLSX 专项回补队列；G8 图谱产品化和 F8-1 下一种专业格式编辑器继续作为增强线。
 
 当前 `v0.7.0` 基线已完成知识库文件树的创建、移动、重命名、删除、排序、扫描和状态读取路径守卫，并修复旧 API Key 迁移失败丢失及远程 HTTP 传输风险。
 
@@ -160,14 +162,14 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 64. S8-7E2B 已完成：新增 `rebuild_workbook_pivot_cache_isolated_copy`，只在内存隔离副本中实际重建 Cache Definition 与 Cache Records；已验证字符串共享索引、数字直接值、日期共享索引，修正真实 fixture 的过期日期边界，并对包复读、对象语义、新摘要及未修改部件逐字节保真设置门禁。新共享项、公式来源、混合类型、页面筛选和过期签名稳定拒绝，用户文件始终不写入。下一步 S8-7E2C 同步重建 Pivot Field items、`rowItems/colItems` 与输出工作表。
 65. S8-7E2C 已完成：新增 `rebuild_workbook_pivot_isolated_copy`，在同一内存副本同步重建 Cache Definition、Cache Records、Pivot Table 和输出工作表；保持隐藏 items，重建行列项、明细、行列总计和总计。真实 fixture 验证 2×2 可见布局、13 个输出单元格及来源数值 1→10 后总计 4→13；包、对象语义、输出值和未触及部件保真全部通过，用户文件仍不写入。下一步 S8-7E2D 扩展新 sharedItems 与布局扩缩容。
 66. S8-7E2D 已完成：新增 `rebuild_workbook_pivot_expanded_isolated_copy`，根据当前源数据增删共享项并同步 Cache Records、Pivot items、`rowItems/colItems`、`location` 和输出区域；保持既有共享项顺序与隐藏状态，新项默认可见。真实 fixture 覆盖 `A3:D7 → A3:E8` 扩张和 `A3:D7 → A3:C6` 收缩，验证样式延伸、至少 7 个旧单元格清理、总计 6/4、包语义与未触及部件保真，用户文件仍不写入。下一步 S8-7E2E 验证聚合方式与布局变体。
-67. S8-7E2E 已完成：新增 `verify_workbook_pivot_variants_isolated_copy`；`sum/count/average/max/min/product/countNums` 七类聚合各自生成临时 Pivot 包并通过联合重建、包校验、对象语义和输出值复读。真实来源进一步验证单行轴、单列轴及 `sum/count/average` 三度量语义矩阵。界面展示 7 个包级变体和 3 个语义布局，用户文件仍不写入；下一步 S8-7E2F 完成单轴、多度量完整 OOXML 包重写。
+67. S8-7E2E 已完成：新增 `verify_workbook_pivot_variants_isolated_copy`；`sum/count/average/max/min/product/countNums` 七类聚合各自生成临时 Pivot 包并通过联合重建、包校验、对象语义和输出值复读。真实来源进一步验证单行轴、单列轴及 `sum/count/average` 三度量语义矩阵。界面展示 7 个包级变体和 3 个语义布局，用户文件仍不写入；S8-7E2F 单轴、多度量完整 OOXML 包重写保留为 XLSX 专项回补队列。
 68. T7-1 的主题扩展框架已完成，但当前正式预设仍为 3 套；下一批进入 T8-1 场景化主题预设扩展。F7-2 已交付首个 OPML 新格式编辑器，F8-1 将先审计 SVG/Draw.io 往返能力，再决定下一种专业格式。
 69. T8-1A 已完成：七套发布预设分为 3 个核心 + 4 个场景方案，设置页区分正式与兼容组合，预设可同步动效节奏，注册表新增 WCAG AA 正文对比度和层级数量门禁。下一批 T8-1B 补齐四套场景预设的真实 Tauri 视觉矩阵。
 70. T8-1B 已完成：四套场景预设具备设置页 1440×900、工作台 1024×768、思维导图 760×900 共 12 张真实 Tauri WebView2 证据；修复紧凑图谱页头、工具栏溢出、筛选条和初始详情遮挡，并隔离 E2E 配置写入。
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
-开始新功能前先更新路线图中的需求状态与验收条件；每个阶段至少执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
+开始新功能前先更新路线图中的需求状态与验收条件。下一批从 A0 直接在 `main` 推进；每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
 
 ## 7. 已知边界与注意事项
 

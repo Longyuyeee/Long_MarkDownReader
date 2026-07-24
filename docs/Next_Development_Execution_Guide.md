@@ -83,7 +83,7 @@ flowchart LR
 - 默认分支工作树干净。
 - 当前 CI 全绿。
 - `shared/file-formats.json` 与前后端契约检查一致。
-- 建立新阶段分支，建议 `codex/unified-text-json`。
+- 默认分支 `main` 与远端保持一致；后续按当前团队约定直接在 `main` 推进、阶段收尾后提交并推送。
 
 ### S0-2：建立三项产品进度指标
 
