@@ -35,7 +35,7 @@
       "routeName": "JsonEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "planned" },
-      "userCapability": { "level": "basic-edit", "label": "源码编辑", "saveMode": "overwrite", "description": "普通 JSON 支持源码编辑、实时诊断、草稿恢复和签名保护的可靠保存；树形结构编辑仍在后续批次。" },
+      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "普通 JSON 支持源码编辑、实时诊断、草稿恢复、树形预览，以及受保护的标量、键、对象属性和数组项增删改；创建和索引仍在后续批次。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": null },
       "creation": null
@@ -61,7 +61,7 @@
       "routeName": "JsonEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "planned" },
-      "userCapability": { "level": "basic-edit", "label": "源码编辑", "saveMode": "overwrite", "description": "JSONC 支持保留注释的源码编辑、实时诊断、草稿恢复和签名保护保存；结构化写回仍保持禁用。" },
+      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "JSONC 支持保留注释的源码编辑、实时诊断、草稿恢复、树形预览和受保护的局部结构编辑；歧义注释、重复键和精度风险会阻断结构化写回。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": null },
       "creation": null
