@@ -358,6 +358,58 @@ pub fn transform_json_source(content: &str, jsonc: bool, mode: &str) -> Result<S
     }
 }
 
+pub fn replace_json_scalar_source(
+    content: &str,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+    replacement: &str,
+) -> Result<String, String> {
+    if start >= end
+        || end > content.len()
+        || !content.is_char_boundary(start)
+        || !content.is_char_boundary(end)
+    {
+        return Err("目标源码范围无效或已经过期".into());
+    }
+    let analysis = analyze_json_source(content, jsonc);
+    if !analysis.valid {
+        return Err("JSON 源码存在语法错误，不能执行树形修改".into());
+    }
+    if !analysis.structure_edit_candidate {
+        return Err("当前文档包含重复键或精度敏感数字，只能继续使用源码编辑".into());
+    }
+    let target = analysis
+        .paths
+        .iter()
+        .find(|entry| entry.start == start && entry.end == end)
+        .ok_or_else(|| "目标节点不属于当前 JSON 分析结果".to_string())?;
+    if matches!(target.kind.as_str(), "object" | "array") {
+        return Err("当前批次只允许替换字符串、数字、布尔值或 null".into());
+    }
+
+    let replacement_analysis = analyze_json_source(replacement, false);
+    if !replacement_analysis.valid
+        || !replacement_analysis.structure_edit_candidate
+        || matches!(
+            replacement_analysis.root_kind.as_deref(),
+            Some("object" | "array") | None
+        )
+    {
+        return Err("替换内容必须是可保真的单个 JSON 标量字面量".into());
+    }
+
+    let mut candidate = String::with_capacity(content.len() - (end - start) + replacement.len());
+    candidate.push_str(&content[..start]);
+    candidate.push_str(replacement);
+    candidate.push_str(&content[end..]);
+    let candidate_analysis = analyze_json_source(&candidate, jsonc);
+    if !candidate_analysis.valid || !candidate_analysis.structure_edit_candidate {
+        return Err("替换后的 JSON 未通过完整结构与保真校验".into());
+    }
+    Ok(candidate)
+}
+
 fn token_source<'a>(content: &'a str, token: &TokenAndRange<'_>) -> &'a str {
     &content[token.range.start..token.range.end]
 }
@@ -652,5 +704,72 @@ mod tests {
         assert!(paths.contains(&"$.safe_key"));
         assert!(paths.contains(&"$[\"a-b\"]"));
         assert!(paths.contains(&"$[\"123\"]"));
+    }
+
+    #[test]
+    fn scalar_replacement_uses_exact_utf8_ranges_and_preserves_jsonc_comments() {
+        let source = "{\n  // retained\n  \"名称\": \"旧值\",\n  \"enabled\": true,\n}\n";
+        let analysis = analyze_json_source(source, true);
+        let target = analysis
+            .paths
+            .iter()
+            .find(|entry| entry.path == "$[\"名称\"]")
+            .unwrap();
+        let replaced =
+            replace_json_scalar_source(source, true, target.start, target.end, "\"新值\"").unwrap();
+        assert!(replaced.contains("// retained"));
+        assert!(replaced.contains("\"名称\": \"新值\""));
+        assert!(replaced.ends_with(",\n}\n"));
+        assert!(analyze_json_source(&replaced, true).valid);
+    }
+
+    #[test]
+    fn scalar_replacement_allows_scalar_type_changes_without_object_conversion() {
+        let source = r#"{"value":false}"#;
+        let target = &analyze_json_source(source, false).paths[1];
+        let replaced =
+            replace_json_scalar_source(source, false, target.start, target.end, "null").unwrap();
+        assert_eq!(replaced, r#"{"value":null}"#);
+    }
+
+    #[test]
+    fn scalar_replacement_rejects_containers_invalid_ranges_and_complex_values() {
+        let source = r#"{"value":1}"#;
+        let analysis = analyze_json_source(source, false);
+        let root = &analysis.paths[0];
+        let scalar = &analysis.paths[1];
+        assert!(replace_json_scalar_source(source, false, root.start, root.end, "2").is_err());
+        assert!(
+            replace_json_scalar_source(source, false, scalar.start + 1, scalar.end, "2").is_err()
+        );
+        assert!(
+            replace_json_scalar_source(source, false, scalar.start, scalar.end, r#"{"x":2}"#)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn scalar_replacement_respects_duplicate_and_precision_gates() {
+        let duplicate = r#"{"id":1,"id":2}"#;
+        let duplicate_target = &analyze_json_source(duplicate, false).paths[1];
+        assert!(replace_json_scalar_source(
+            duplicate,
+            false,
+            duplicate_target.start,
+            duplicate_target.end,
+            "3"
+        )
+        .is_err());
+
+        let source = r#"{"id":1}"#;
+        let target = &analyze_json_source(source, false).paths[1];
+        assert!(replace_json_scalar_source(
+            source,
+            false,
+            target.start,
+            target.end,
+            "9007199254740993"
+        )
+        .is_err());
     }
 }

@@ -1,7 +1,7 @@
 use crate::commands::formats::write_registered_text_document;
 use crate::formats::json::{
-    analyze_json_source as analyze_source, transform_json_source as transform_source,
-    JsonSourceAnalysis,
+    analyze_json_source as analyze_source, replace_json_scalar_source as replace_scalar_source,
+    transform_json_source as transform_source, JsonSourceAnalysis,
 };
 use crate::formats::text::{TextDocumentError, TextDocumentSnapshot};
 
@@ -18,6 +18,18 @@ pub fn transform_json_source(
 ) -> Result<String, TextDocumentError> {
     transform_source(&content, jsonc, &mode)
         .map_err(|message| TextDocumentError::simple("json-transform-rejected", message))
+}
+
+#[tauri::command]
+pub fn replace_json_scalar_source(
+    content: String,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+    replacement: String,
+) -> Result<String, TextDocumentError> {
+    replace_scalar_source(&content, jsonc, start, end, &replacement)
+        .map_err(|message| TextDocumentError::simple("json-scalar-edit-rejected", message))
 }
 
 #[tauri::command]
@@ -191,5 +203,25 @@ mod tests {
 
         let error = transform_json_source("{".into(), false, "pretty".into()).unwrap_err();
         assert_eq!(error.code, "json-transform-rejected");
+    }
+
+    #[test]
+    fn scalar_edit_command_returns_validated_source_or_a_stable_error() {
+        let content = "{\"value\":1}".to_string();
+        let target = analyze_source(&content, false).paths[1].clone();
+        let replaced = replace_json_scalar_source(
+            content.clone(),
+            false,
+            target.start,
+            target.end,
+            "\"updated\"".into(),
+        )
+        .unwrap();
+        assert_eq!(replaced, "{\"value\":\"updated\"}");
+
+        let error =
+            replace_json_scalar_source(content, false, target.start, target.end, "{}".into())
+                .unwrap_err();
+        assert_eq!(error.code, "json-scalar-edit-rejected");
     }
 }

@@ -42,7 +42,10 @@ use commands::history::{
 use commands::index::{
     delete_knowledge_index, get_knowledge_index_status, rebuild_knowledge_index, search_knowledge,
 };
-use commands::json::{analyze_json_source, transform_json_source, write_json_source_document};
+use commands::json::{
+    analyze_json_source, replace_json_scalar_source, transform_json_source,
+    write_json_source_document,
+};
 use commands::mindmap::{create_canvas_from_opml, read_opml_file, write_opml_file};
 use commands::pdf::{
     build_pdf_annotation_reference, read_pdf_annotations, read_pdf_file, read_pdf_info,
@@ -224,6 +227,7 @@ pub fn run() {
             write_markdown_file,
             get_file_format_registry,
             analyze_json_source,
+            replace_json_scalar_source,
             transform_json_source,
             write_json_source_document,
             read_text_document,

@@ -115,6 +115,17 @@
                 <code>{{ entry.preview }}</code>
               </button>
               <div class="tree-node-actions">
+                <n-button
+                  v-if="isScalarKind(entry.kind)"
+                  quaternary
+                  circle
+                  size="tiny"
+                  title="编辑标量值"
+                  :disabled="scalarEditDisabled"
+                  @click.stop="openScalarEditor(entry)"
+                >
+                  <template #icon><n-icon :component="EditIcon" /></template>
+                </n-button>
                 <n-button quaternary circle size="tiny" title="定位到源码" @click.stop="showSourceRange(entry)">
                   <template #icon><n-icon :component="LocateIcon" /></template>
                 </n-button>
@@ -224,6 +235,42 @@
       </aside>
     </main>
 
+    <n-modal
+      v-model:show="scalarEditVisible"
+      preset="card"
+      class="scalar-edit-dialog"
+      title="编辑 JSON 标量"
+      :mask-closable="!scalarEditPending"
+      :closable="!scalarEditPending"
+    >
+      <div class="scalar-edit-context">
+        <code>{{ scalarEditEntry?.path }}</code>
+        <span>{{ kindLabel(scalarEditEntry?.kind || '') }}</span>
+      </div>
+      <n-input
+        v-model:value="scalarEditValue"
+        type="textarea"
+        :autosize="{ minRows: 3, maxRows: 8 }"
+        :disabled="scalarEditPending"
+        placeholder="输入 JSON 标量字面量"
+        aria-label="JSON 标量字面量"
+        autofocus
+      />
+      <template #footer>
+        <div class="scalar-edit-actions">
+          <n-button :disabled="scalarEditPending" @click="scalarEditVisible = false">取消</n-button>
+          <n-button
+            type="primary"
+            :loading="scalarEditPending"
+            :disabled="!scalarEditValue.trim()"
+            @click="applyScalarEdit"
+          >
+            应用到草稿
+          </n-button>
+        </div>
+      </template>
+    </n-modal>
+
     <footer class="json-statusbar">
       <span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span>
       <span>{{ encoding.toUpperCase() }}</span>
@@ -257,6 +304,7 @@ import {
   ClipboardCopy as CopyValueIcon,
   Code2 as SourceIcon,
   Copy as CopyIcon,
+  Pencil as EditIcon,
   FileJson as FileJsonIcon,
   FoldVertical as FoldIcon,
   ListTree as TreeIcon,
@@ -345,6 +393,11 @@ const viewMode = ref<'source' | 'tree'>('source')
 const collapsedTreeNodes = ref<Set<number>>(new Set())
 const selectedTreeStart = ref<number | null>(null)
 const MAX_TREE_RENDER_NODES = 2_000
+const scalarEditVisible = ref(false)
+const scalarEditPending = ref(false)
+const scalarEditEntry = ref<JsonPathEntry | null>(null)
+const scalarEditValue = ref('')
+const scalarEditSource = ref('')
 const dirty = ref(false)
 const sourceContent = ref('')
 const sourceSize = ref(0)
@@ -363,6 +416,15 @@ const transformDisabled = computed(() => (
   || transformPending.value
   || readOnly.value
   || !analysis.value?.valid
+))
+const scalarEditDisabled = computed(() => (
+  loading.value
+  || analysisPending.value
+  || readOnly.value
+  || saving.value
+  || transformPending.value
+  || scalarEditPending.value
+  || !analysis.value?.structureEditCandidate
 ))
 let editor: EditorView | null = null
 let loadGeneration = 0
@@ -584,6 +646,9 @@ const errorMessage = (cause: unknown) => {
 
 const load = async (discardDraft = false) => {
   const generation = ++loadGeneration
+  scalarEditVisible.value = false
+  scalarEditEntry.value = null
+  scalarEditSource.value = ''
   analysisGeneration += 1
   analysisPending.value = false
   clearAnalysisTimer()
@@ -661,6 +726,50 @@ const copySourceRange = async (entry: JsonPathEntry) => {
     message.success('节点源码已复制')
   } catch {
     message.error('复制节点源码失败')
+  }
+}
+
+const isScalarKind = (kind: string) => ['string', 'number', 'boolean', 'null'].includes(kind)
+
+const openScalarEditor = (entry: JsonPathEntry) => {
+  if (!editor || !isScalarKind(entry.kind) || scalarEditDisabled.value) return
+  scalarEditEntry.value = entry
+  scalarEditSource.value = editor.state.doc.toString()
+  scalarEditValue.value = sourceRangeText(entry)
+  scalarEditVisible.value = true
+}
+
+const applyScalarEdit = async () => {
+  if (!editor || !scalarEditEntry.value || scalarEditPending.value) return
+  const current = editor.state.doc.toString()
+  if (current !== scalarEditSource.value) {
+    message.warning('源码已发生变化，请重新选择节点')
+    scalarEditVisible.value = false
+    return
+  }
+  scalarEditPending.value = true
+  clearAnalysisTimer()
+  try {
+    const entry = scalarEditEntry.value
+    const replaced = await invoke<string>('replace_json_scalar_source', {
+      content: current,
+      jsonc: format.value?.id === 'jsonc',
+      start: entry.start,
+      end: entry.end,
+      replacement: scalarEditValue.value.trim(),
+    })
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: replaced },
+      selection: { anchor: byteOffsetToCodeUnit(replaced, entry.start) },
+    })
+    clearAnalysisTimer()
+    scalarEditVisible.value = false
+    await analyzeContent(replaced)
+    message.success('标量值已更新，可撤销或保存')
+  } catch (cause) {
+    message.error(`标量修改失败：${errorMessage(cause)}`)
+  } finally {
+    scalarEditPending.value = false
   }
 }
 
@@ -965,7 +1074,7 @@ onBeforeUnmount(() => {
   min-width: 560px;
   height: 38px;
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) 88px;
+  grid-template-columns: 22px minmax(0, 1fr) 116px;
   align-items: center;
   padding: 0 8px 0 calc(8px + var(--tree-depth) * 18px);
   border-bottom: 1px solid transparent;
@@ -1042,6 +1151,39 @@ onBeforeUnmount(() => {
   padding: 12px 16px;
   color: var(--theme-warning, #b77813);
   font-size: 11px;
+}
+
+.scalar-edit-dialog {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.scalar-edit-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.scalar-edit-context code {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--theme-primary);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scalar-edit-context span {
+  flex: 0 0 auto;
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+}
+
+.scalar-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .loading-state {
