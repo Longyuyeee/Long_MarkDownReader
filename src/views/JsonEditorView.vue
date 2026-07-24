@@ -10,18 +10,29 @@
         <FileJsonIcon :size="18" />
         <div class="document-title">
           <strong>{{ fileName }}</strong>
-          <span>{{ formatLabel }} · 源码预览</span>
+          <span>
+            {{ formatLabel }}
+            <template v-if="readOnly"> · 只读预览</template>
+            <template v-else-if="dirty"> · 未保存</template>
+            <template v-else> · 已同步</template>
+          </span>
         </div>
       </div>
-      <n-button quaternary circle size="small" title="重新读取并分析" :loading="loading" @click="load">
-        <template #icon><n-icon :component="RefreshIcon" /></template>
-      </n-button>
+      <div class="editor-actions">
+        <n-button quaternary circle size="small" title="重新从磁盘读取" :disabled="loading || saving" @click="reloadFromDisk">
+          <template #icon><n-icon :component="RefreshIcon" /></template>
+        </n-button>
+        <n-button type="primary" size="small" :disabled="loading || saving || readOnly || !dirty" @click="save()">
+          <template #icon><n-icon :component="SaveIcon" /></template>
+          {{ saving ? '保存中' : '保存' }}
+        </n-button>
+      </div>
     </header>
 
     <div v-if="loadError" class="load-error" role="alert">
       <AlertIcon :size="18" />
       <span>{{ loadError }}</span>
-      <n-button size="small" @click="load">重试</n-button>
+      <n-button size="small" @click="load(false)">重试</n-button>
     </div>
 
     <main v-else class="json-main">
@@ -38,7 +49,7 @@
           <div>
             <span class="section-label">解析状态</span>
             <strong :class="analysis?.valid ? 'valid' : 'invalid'">
-              {{ analysis?.valid ? '语法有效' : '需要修复' }}
+              {{ analysisPending ? '正在分析' : analysis?.valid ? '语法有效' : '需要修复' }}
             </strong>
           </div>
           <n-tag size="small" :bordered="false">{{ formatLabel }}</n-tag>
@@ -50,7 +61,7 @@
           <div><span>属性</span><strong>{{ analysis?.propertyCount ?? 0 }}</strong></div>
           <div><span>最大深度</span><strong>{{ analysis?.maxDepth ?? 0 }}</strong></div>
           <div><span>注释</span><strong>{{ analysis?.commentCount ?? 0 }}</strong></div>
-          <div><span>源码大小</span><strong>{{ formatBytes(snapshot?.size ?? 0) }}</strong></div>
+          <div><span>源码大小</span><strong>{{ formatBytes(sourceSize) }}</strong></div>
         </div>
 
         <div class="structure-status">
@@ -90,8 +101,8 @@
     </main>
 
     <footer class="json-statusbar">
-      <span>只读</span>
-      <span>{{ snapshot?.encoding?.toUpperCase() || 'UTF-8' }}</span>
+      <span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span>
+      <span>{{ encoding.toUpperCase() }}</span>
       <span>{{ lineCount }} 行</span>
       <span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span>
       <span v-if="format?.id === 'jsonc'">允许注释与尾随逗号</span>
@@ -102,11 +113,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { basicSetup } from 'codemirror'
 import { json } from '@codemirror/lang-json'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useRoute, useRouter } from 'vue-router'
+import { useDialog, useMessage } from 'naive-ui'
 import {
   AlertCircle as AlertCircleIcon,
   AlertTriangle as AlertIcon,
@@ -114,17 +127,21 @@ import {
   CircleCheck as CircleCheckIcon,
   FileJson as FileJsonIcon,
   RefreshCw as RefreshIcon,
+  Save as SaveIcon,
   ShieldAlert as ShieldAlertIcon,
   ShieldCheck as ShieldCheckIcon,
 } from 'lucide-vue-next'
 import { findFileFormat } from '../config/fileFormats'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
-import { useAppStore } from '../store/app'
+import { type TabInfo, useAppStore } from '../store/app'
 
 interface TextDocumentSnapshot {
   content: string
   encoding: string
+  signature: string
   size: number
+  modified: number
+  readOnlyReason?: string
   path: string
 }
 
@@ -156,20 +173,38 @@ interface JsonSourceAnalysis {
 const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
+const dialog = useDialog()
+const message = useMessage()
 const editorHost = ref<HTMLElement | null>(null)
 const jsonPath = computed(() => String(route.query.path || ''))
 const format = computed(() => findFileFormat(jsonPath.value))
 const formatLabel = computed(() => format.value?.label || 'JSON')
 const fileName = computed(() => jsonPath.value.split(/[\\/]/).pop() || '未命名 JSON')
+const currentTab = computed(() => store.tabs.find(tab => tab.path === jsonPath.value))
 const loading = ref(true)
+const saving = ref(false)
 const loadError = ref('')
-const snapshot = ref<TextDocumentSnapshot | null>(null)
 const analysis = ref<JsonSourceAnalysis | null>(null)
+const analysisPending = ref(false)
+const dirty = ref(false)
+const sourceContent = ref('')
+const sourceSize = ref(0)
+const signature = ref('')
+const encoding = ref('utf-8')
+const fileSize = ref(0)
+const modified = ref(0)
+const readOnlyReason = ref('')
 const cursorLine = ref(1)
 const cursorColumn = ref(1)
 const lineCount = ref(1)
+const readOnly = computed(() => Boolean(readOnlyReason.value))
 let editor: EditorView | null = null
 let loadGeneration = 0
+let analysisGeneration = 0
+let analysisTimer: ReturnType<typeof setTimeout> | null = null
+let applyingDocument = false
+let unlistenSave: (() => void) | null = null
+let unlistenRefresh: (() => void) | null = null
 
 const rootKindLabel = computed(() => ({
   object: '对象',
@@ -188,14 +223,76 @@ const structureStatusText = computed(() => {
   return risks.length ? `${risks.join('、')}需要保留原始字面量` : '当前结构没有发现重复键或数字精度风险'
 })
 
-const editorExtensions = () => [
+const syncCurrentTab = (isDirty = dirty.value) => {
+  if (!editor || !jsonPath.value) return
+  const tab = store.tabs.find(item => item.path === jsonPath.value)
+  if (!tab) return
+  tab.content = editor.state.doc.toString()
+  tab.isDirty = isDirty
+  tab.textSignature = signature.value
+  tab.textEncoding = encoding.value
+  tab.textReadOnlyReason = readOnlyReason.value
+  tab.textSize = fileSize.value
+  tab.textModified = modified.value
+}
+
+const registerCurrentTab = () => {
+  store.addTab({
+    id: jsonPath.value,
+    title: fileName.value,
+    path: jsonPath.value,
+    isDirty: dirty.value,
+  })
+  syncCurrentTab(dirty.value)
+}
+
+const clearAnalysisTimer = () => {
+  if (analysisTimer) clearTimeout(analysisTimer)
+  analysisTimer = null
+}
+
+const analyzeContent = async (content: string) => {
+  const generation = ++analysisGeneration
+  analysisPending.value = true
+  sourceSize.value = new TextEncoder().encode(content).length
+  try {
+    const result = await invoke<JsonSourceAnalysis>('analyze_json_source', {
+      content,
+      jsonc: format.value?.id === 'jsonc',
+    })
+    if (generation === analysisGeneration && sourceContent.value === content) analysis.value = result
+    return result
+  } finally {
+    if (generation === analysisGeneration) analysisPending.value = false
+  }
+}
+
+const scheduleAnalysis = () => {
+  clearAnalysisTimer()
+  const content = sourceContent.value
+  analysisTimer = setTimeout(() => {
+    void analyzeContent(content).catch(cause => {
+      message.error(`实时分析失败：${errorMessage(cause)}`)
+    })
+  }, 280)
+}
+
+const editorExtensions = (isReadOnly: boolean) => [
   basicSetup,
   json(),
-  EditorState.readOnly.of(true),
-  EditorView.editable.of(false),
+  EditorState.readOnly.of(isReadOnly),
+  EditorView.editable.of(!isReadOnly),
   EditorView.lineWrapping,
   EditorView.updateListener.of(update => {
-    if (update.docChanged) lineCount.value = update.state.doc.lines
+    if (update.docChanged) {
+      sourceContent.value = update.state.doc.toString()
+      lineCount.value = update.state.doc.lines
+      if (!applyingDocument) {
+        dirty.value = true
+        syncCurrentTab(true)
+        scheduleAnalysis()
+      }
+    }
     if (update.docChanged || update.selectionSet) {
       const position = update.state.selection.main.head
       const line = update.state.doc.lineAt(position)
@@ -235,17 +332,45 @@ const createEditor = () => {
   if (!editorHost.value) return
   editor?.destroy()
   editor = new EditorView({
-    state: EditorState.create({ doc: '', extensions: editorExtensions() }),
+    state: EditorState.create({ doc: '', extensions: editorExtensions(true) }),
     parent: editorHost.value,
   })
 }
 
-const replaceDocument = (content: string) => {
+const replaceDocument = (content: string, isReadOnly: boolean) => {
   if (!editor) return
-  editor.setState(EditorState.create({ doc: content, extensions: editorExtensions() }))
+  applyingDocument = true
+  editor.setState(EditorState.create({ doc: content, extensions: editorExtensions(isReadOnly) }))
+  applyingDocument = false
+  sourceContent.value = content
+  sourceSize.value = new TextEncoder().encode(content).length
   lineCount.value = editor.state.doc.lines
   cursorLine.value = 1
   cursorColumn.value = 1
+}
+
+const applySnapshot = async (loaded: TextDocumentSnapshot) => {
+  signature.value = loaded.signature
+  encoding.value = loaded.encoding
+  fileSize.value = loaded.size
+  modified.value = loaded.modified
+  readOnlyReason.value = loaded.readOnlyReason || ''
+  dirty.value = false
+  replaceDocument(loaded.content, Boolean(loaded.readOnlyReason))
+  registerCurrentTab()
+  await analyzeContent(loaded.content)
+}
+
+const restoreTabDraft = async (tab: TabInfo) => {
+  signature.value = tab.textSignature || ''
+  encoding.value = tab.textEncoding || 'utf-8'
+  fileSize.value = tab.textSize || 0
+  modified.value = tab.textModified || 0
+  readOnlyReason.value = tab.textReadOnlyReason || ''
+  dirty.value = true
+  replaceDocument(tab.content || '', Boolean(tab.textReadOnlyReason))
+  store.activateTab(tab.id)
+  await analyzeContent(tab.content || '')
 }
 
 const errorMessage = (cause: unknown) => {
@@ -254,8 +379,11 @@ const errorMessage = (cause: unknown) => {
   return value?.suggestion ? `${detail} · ${value.suggestion}` : detail
 }
 
-const load = async () => {
+const load = async (discardDraft = false) => {
   const generation = ++loadGeneration
+  analysisGeneration += 1
+  analysisPending.value = false
+  clearAnalysisTimer()
   loading.value = true
   loadError.value = ''
   analysis.value = null
@@ -263,26 +391,19 @@ const load = async () => {
     if (!jsonPath.value || !['json', 'jsonc'].includes(format.value?.id || '')) {
       throw new Error('当前路径不是已注册的 JSON 或 JSONC 文件')
     }
+    const draft = currentTab.value
+    if (!discardDraft && draft?.isDirty && draft.content !== undefined) {
+      await restoreTabDraft(draft)
+      return
+    }
     const loaded = await invoke<TextDocumentSnapshot>('read_text_document', {
       libraryRoot: store.libraryPath,
       path: jsonPath.value,
       formatId: format.value!.id,
       readOptions: undefined,
     })
-    const result = await invoke<JsonSourceAnalysis>('analyze_json_source', {
-      content: loaded.content,
-      jsonc: format.value!.id === 'jsonc',
-    })
     if (generation !== loadGeneration) return
-    snapshot.value = loaded
-    analysis.value = result
-    replaceDocument(loaded.content)
-    store.addTab({
-      id: jsonPath.value,
-      title: fileName.value,
-      path: jsonPath.value,
-      isDirty: false,
-    })
+    await applySnapshot(loaded)
   } catch (cause) {
     if (generation === loadGeneration) loadError.value = errorMessage(cause)
   } finally {
@@ -296,9 +417,9 @@ const byteOffsetToCodeUnit = (content: string, byteOffset: number) => {
 }
 
 const revealDiagnostic = (diagnostic: JsonDiagnostic) => {
-  if (!editor || !snapshot.value) return
-  const from = byteOffsetToCodeUnit(snapshot.value.content, diagnostic.start)
-  const to = Math.max(from, byteOffsetToCodeUnit(snapshot.value.content, diagnostic.end))
+  if (!editor) return
+  const from = byteOffsetToCodeUnit(sourceContent.value, diagnostic.start)
+  const to = Math.max(from, byteOffsetToCodeUnit(sourceContent.value, diagnostic.end))
   editor.dispatch({
     selection: { anchor: from, head: to },
     effects: EditorView.scrollIntoView(from, { y: 'center' }),
@@ -321,15 +442,95 @@ const formatBytes = (value: number) => {
   return `${(value / 1024 / 1024).toFixed(1)} MiB`
 }
 
-const leaveEditor = () => router.push({ name: 'LibraryMode' })
+const save = async (allowInvalid = false) => {
+  if (!editor || readOnly.value || !dirty.value || saving.value || !format.value) return
+  clearAnalysisTimer()
+  const content = editor.state.doc.toString()
+  saving.value = true
+  try {
+    const currentAnalysis = await analyzeContent(content)
+    if (!currentAnalysis.valid && !allowInvalid) {
+      dialog.warning({
+        title: '源码存在语法错误',
+        content: '覆盖保存会让磁盘上的 JSON 保持非法状态。可以继续编辑修复，或明确按当前源码保存。',
+        positiveText: '按源码保存',
+        negativeText: '继续编辑',
+        onPositiveClick: () => { void save(true) },
+      })
+      return
+    }
+    const saved = await invoke<TextDocumentSnapshot>('write_json_source_document', {
+      libraryRoot: store.libraryPath,
+      path: jsonPath.value,
+      formatId: format.value.id,
+      content,
+      expectedSignature: signature.value,
+      allowInvalid,
+    })
+    if (editor.state.doc.toString() === content) {
+      await applySnapshot(saved)
+    } else {
+      signature.value = saved.signature
+      encoding.value = saved.encoding
+      fileSize.value = saved.size
+      modified.value = saved.modified
+      dirty.value = true
+      syncCurrentTab(true)
+      scheduleAnalysis()
+    }
+    message.success(currentAnalysis.valid ? 'JSON 源码已安全保存' : '非法 JSON 已按源码保存')
+  } catch (cause) {
+    const error = cause as { code?: string }
+    if (error?.code === 'external-modified') {
+      dialog.warning({
+        title: '文件已在外部修改',
+        content: errorMessage(cause),
+        positiveText: '重新加载',
+        negativeText: '保留编辑内容',
+        onPositiveClick: () => { void load(true) },
+      })
+    } else {
+      message.error(`保存失败：${errorMessage(cause)}`)
+    }
+  } finally {
+    saving.value = false
+  }
+}
 
-watch(jsonPath, () => { void load() })
+const reloadFromDisk = async () => {
+  if (dirty.value && !window.confirm('重新读取会覆盖当前未保存的 JSON 源码，是否继续？')) return
+  await load(true)
+}
+
+const leaveEditor = () => router.push({ name: 'LibraryMode' })
+const handleKeydown = (event: KeyboardEvent) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+    event.preventDefault()
+    void save()
+  }
+}
+
+watch(jsonPath, (_, previousPath) => {
+  if (previousPath) syncCurrentTab(dirty.value)
+  void load()
+})
 onMounted(async () => {
   await nextTick()
   createEditor()
   await load()
+  window.addEventListener('keydown', handleKeydown)
+  unlistenSave = await listen('command-save', () => { void save() })
+  unlistenRefresh = await listen('command-refresh', () => { void reloadFromDisk() })
 })
-onBeforeUnmount(() => editor?.destroy())
+onBeforeUnmount(() => {
+  clearAnalysisTimer()
+  syncCurrentTab(dirty.value)
+  editor?.destroy()
+  editor = null
+  window.removeEventListener('keydown', handleKeydown)
+  unlistenSave?.()
+  unlistenRefresh?.()
+})
 </script>
 
 <style scoped>
@@ -361,6 +562,13 @@ onBeforeUnmount(() => editor?.destroy())
   display: flex;
   align-items: center;
   gap: 9px;
+}
+
+.editor-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .document-identity > svg {

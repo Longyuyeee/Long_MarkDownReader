@@ -226,20 +226,17 @@ mod tests {
     }
 
     #[test]
-    fn json_source_formats_are_read_only_and_preserve_compound_routing() {
+    fn json_source_formats_are_basic_edit_and_preserve_compound_routing() {
         for id in ["json", "jsonc"] {
             let format = file_format_by_id(id).unwrap();
             assert!(format.capabilities.read.is_supported());
-            assert_eq!(format.capabilities.edit, CapabilityLevel::Planned);
+            assert_eq!(format.capabilities.edit, CapabilityLevel::Supported);
             assert_eq!(format.capabilities.create, CapabilityLevel::Planned);
             assert_eq!(format.route_name, "JsonEditor");
             assert_eq!(format.adapters.reader.as_deref(), Some("text"));
-            assert!(format.adapters.writer.is_none());
-            assert_eq!(
-                format.user_capability.level,
-                UserCapabilityLevel::PreviewOnly
-            );
-            assert_eq!(format.user_capability.save_mode, SaveMode::None);
+            assert_eq!(format.adapters.writer.as_deref(), Some("text"));
+            assert_eq!(format.user_capability.level, UserCapabilityLevel::BasicEdit);
+            assert_eq!(format.user_capability.save_mode, SaveMode::Overwrite);
         }
 
         assert_eq!(

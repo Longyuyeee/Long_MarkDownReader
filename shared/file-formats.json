@@ -34,10 +34,10 @@
       "mimeTypes": ["application/json"],
       "routeName": "JsonEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "planned", "create": "planned", "index": "planned" },
-      "userCapability": { "level": "preview-only", "label": "源码预览", "saveMode": "none", "description": "普通 JSON 当前支持源码阅读和安全诊断；可靠保存与结构编辑将在 A3 后续批次开放。" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "planned" },
+      "userCapability": { "level": "basic-edit", "label": "源码编辑", "saveMode": "overwrite", "description": "普通 JSON 支持源码编辑、实时诊断、草稿恢复和签名保护的可靠保存；树形结构编辑仍在后续批次。" },
       "externalPolicy": "import",
-      "adapters": { "reader": "text", "writer": null, "creator": null, "indexer": null },
+      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": null },
       "creation": null
     },
     {
@@ -47,10 +47,10 @@
       "mimeTypes": ["application/json", "application/jsonc"],
       "routeName": "JsonEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "planned", "create": "planned", "index": "planned" },
-      "userCapability": { "level": "preview-only", "label": "源码预览", "saveMode": "none", "description": "JSONC 当前支持保留注释的源码阅读和安全诊断；可靠保存与结构编辑将在 A3 后续批次开放。" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "planned" },
+      "userCapability": { "level": "basic-edit", "label": "源码编辑", "saveMode": "overwrite", "description": "JSONC 支持保留注释的源码编辑、实时诊断、草稿恢复和签名保护保存；结构化写回仍保持禁用。" },
       "externalPolicy": "import",
-      "adapters": { "reader": "text", "writer": null, "creator": null, "indexer": null },
+      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": null },
       "creation": null
     },
     {

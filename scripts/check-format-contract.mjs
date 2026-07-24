@@ -2,13 +2,14 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, formatCommands, files, externalAccess, index, library, textEditor, jsonEditor, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, formatCommands, jsonCommands, files, externalAccess, index, library, textEditor, jsonEditor, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
   read('src-tauri/src/formats/text.rs'),
   read('src-tauri/src/formats/json.rs'),
   read('src-tauri/src/commands/formats.rs'),
+  read('src-tauri/src/commands/json.rs'),
   read('src-tauri/src/commands/files.rs'),
   read('src-tauri/src/services/external_file_access.rs'),
   read('src-tauri/src/commands/index.rs'),
@@ -54,8 +55,8 @@ if (!text || text.extensions?.[0] !== '.txt' || !Object.values(text.capabilities
 }
 for (const id of ['json', 'jsonc']) {
   const format = registry.formats?.find(candidate => candidate.id === id)
-  if (!format || format.routeName !== 'JsonEditor' || format.capabilities?.read !== 'supported' || format.capabilities?.edit !== 'planned' || format.adapters?.reader !== 'text' || format.adapters?.writer !== null || format.userCapability?.level !== 'preview-only' || format.userCapability?.saveMode !== 'none') {
-    failures.push(`${id} source-preview contract is incomplete`)
+  if (!format || format.routeName !== 'JsonEditor' || format.capabilities?.read !== 'supported' || format.capabilities?.edit !== 'supported' || format.capabilities?.create !== 'planned' || format.adapters?.reader !== 'text' || format.adapters?.writer !== 'text' || format.userCapability?.level !== 'basic-edit' || format.userCapability?.saveMode !== 'overwrite') {
+    failures.push(`${id} source-edit contract is incomplete`)
   }
 }
 const opmlFormat = registry.formats?.find(format => format.id === 'opml')
@@ -106,6 +107,13 @@ requireText(formatCommands, '文本保存后重读验证失败', 'generic text w
 requireText(formatCommands, 'read_external_text_document', 'A2 external TXT reads must use the generic text adapter')
 requireText(formatCommands, 'read_external_text_document_range', 'A2 external large TXT files must expose bounded range reads')
 requireText(formatCommands, 'write_external_text_document', 'A2 external TXT writes must use reliable text writes')
+requireText(formatCommands, '"specialized-writer-required"', 'A3 generic text writes must not bypass JSON validation')
+requireText(jsonCommands, 'write_json_source_document', 'A3 JSON source saves must use a dedicated command')
+requireText(jsonCommands, '"invalid-json-save-blocked"', 'A3 JSON saves must block invalid source by default')
+requireText(jsonCommands, 'allow_invalid', 'A3 JSON saves must require an explicit invalid-source override')
+requireText(jsonCommands, 'write_registered_text_document', 'A3 JSON saves must reuse reliable text writes internally')
+requireText(jsonCommands, 'expected_signature', 'A3 JSON saves must retain external conflict protection')
+requireText(jsonCommands, 'generic_text_writer_cannot_bypass_json_validation', 'A3 JSON validation bypass must have regression coverage')
 requireText(library, 'error?.suggestion', 'text workspace errors must surface structured recovery suggestions')
 requireText(library, "err?.code === 'read-too-large'", 'text workspace must route oversized files into range preview')
 requireText(library, 'textReadOnlyReason', 'text workspace must persist per-tab read-only downgrade state')
@@ -125,10 +133,18 @@ requireText(textEditor, 'scheduleAutoSave', 'A2 TXT editor must expose debounced
 requireText(textEditor, 'registerCurrentTab', 'A2 TXT editor must register with unified session tabs')
 requireText(textEditor, 'syncCurrentTab', 'A2 TXT drafts must survive workspace route changes')
 requireText(jsonEditor, "from '@codemirror/lang-json'", 'A3 JSON source view must use the CodeMirror JSON language package')
-requireText(jsonEditor, "EditorState.readOnly.of(true)", 'A3 first batch must keep JSON source read-only')
-requireText(jsonEditor, "EditorView.editable.of(false)", 'A3 first batch must not expose browser-side source mutation')
+requireText(jsonEditor, "EditorState.readOnly.of(isReadOnly)", 'A3 JSON source editing must retain file read-only enforcement')
+requireText(jsonEditor, "EditorView.editable.of(!isReadOnly)", 'A3 JSON source editing must only enable writable files')
 requireText(jsonEditor, "'analyze_json_source'", 'A3 JSON workspace must use authoritative Rust analysis')
 requireText(jsonEditor, "'read_text_document'", 'A3 JSON workspace must reuse the reliable text reader')
+requireText(jsonEditor, "'write_json_source_document'", 'A3 JSON workspace must use the dedicated validated writer')
+requireText(jsonEditor, 'scheduleAnalysis', 'A3 JSON workspace must debounce live Rust analysis')
+requireText(jsonEditor, 'restoreTabDraft', 'A3 JSON source drafts must survive workspace route changes')
+requireText(jsonEditor, 'syncCurrentTab', 'A3 JSON source drafts must participate in dirty-session coordination')
+requireText(jsonEditor, 'allowInvalid', 'A3 invalid source overwrite must require explicit confirmation')
+requireText(jsonEditor, "'external-modified'", 'A3 JSON saves must surface external signature conflicts')
+requireText(jsonEditor, "listen('command-save'", 'A3 JSON workspace must consume the global save command')
+requireText(jsonEditor, "listen('command-refresh'", 'A3 JSON workspace must consume the global refresh command')
 requireText(jsonEditor, '<WorkspaceTabs', 'A3 JSON workspace must consume unified session tabs')
 requireText(jsonEditor, 'byteOffsetToCodeUnit', 'A3 diagnostics must translate Rust byte offsets for CodeMirror')
 requireText(library, '<WorkspaceTabs', 'Markdown workspace must consume unified session tabs')

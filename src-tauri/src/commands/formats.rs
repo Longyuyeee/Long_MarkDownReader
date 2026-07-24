@@ -208,8 +208,7 @@ pub async fn read_text_document_range(
     read_resolved_text_document_range(&path, offset, length, read_options)
 }
 
-#[tauri::command]
-pub async fn write_text_document(
+pub(crate) async fn write_registered_text_document(
     library_root: String,
     path: String,
     format_id: String,
@@ -233,6 +232,32 @@ pub async fn write_text_document(
     ensure_matching_format(&path, &format_id)
         .map_err(|error| text_boundary_error("format-mismatch", error))?;
     write_resolved_text_document(&path, format, content, expected_signature, save_policy)
+}
+
+#[tauri::command]
+pub async fn write_text_document(
+    library_root: String,
+    path: String,
+    format_id: String,
+    content: String,
+    expected_signature: Option<String>,
+    save_policy: Option<TextSavePolicy>,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    if matches!(format_id.as_str(), "json" | "jsonc") {
+        return Err(TextDocumentError::simple(
+            "specialized-writer-required",
+            "JSON/JSONC 必须通过专用保存命令执行语法门禁",
+        ));
+    }
+    write_registered_text_document(
+        library_root,
+        path,
+        format_id,
+        content,
+        expected_signature,
+        save_policy,
+    )
+    .await
 }
 
 #[tauri::command]
