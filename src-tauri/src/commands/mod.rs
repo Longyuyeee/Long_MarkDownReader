@@ -16,4 +16,5 @@ pub mod system;
 pub mod table;
 pub mod workbook;
 pub mod workspace;
+pub mod xml;
 pub mod yaml;

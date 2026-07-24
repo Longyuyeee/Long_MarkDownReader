@@ -71,6 +71,7 @@ use commands::workbook::{
     write_workbook_cells,
 };
 use commands::workspace::{analyze_workspace_health, get_workspace_overview};
+use commands::xml::{analyze_xml_source, write_xml_source_document};
 use commands::yaml::{analyze_yaml_source, write_yaml_source_document};
 use services::data_migration::check_and_migrate_data;
 use services::external_file_access::ExternalFileAccess;
@@ -240,6 +241,8 @@ pub fn run() {
             write_json_source_document,
             analyze_yaml_source,
             write_yaml_source_document,
+            analyze_xml_source,
+            write_xml_source_document,
             read_text_document,
             read_text_document_range,
             write_text_document,

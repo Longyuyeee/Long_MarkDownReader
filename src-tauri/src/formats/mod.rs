@@ -16,4 +16,5 @@ pub mod workbook_linked_data;
 pub mod workbook_ooxml;
 pub mod workbook_pivot;
 pub mod workbook_styles;
+pub mod xml;
 pub mod yaml;
