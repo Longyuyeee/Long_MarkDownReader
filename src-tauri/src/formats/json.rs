@@ -1,5 +1,5 @@
 use jsonc_parser::ast::Value;
-use jsonc_parser::common::Ranged;
+use jsonc_parser::common::{Range, Ranged};
 use jsonc_parser::tokens::{Token, TokenAndRange};
 use jsonc_parser::{parse_to_ast, CollectOptions, CommentCollectionStrategy, ParseOptions};
 use serde::Serialize;
@@ -9,6 +9,7 @@ const MAX_JSON_SOURCE_BYTES: usize = 16 * 1024 * 1024;
 const MAX_JSON_NODES: usize = 200_000;
 const MAX_JSON_PATH_ENTRIES: usize = 20_000;
 const MAX_JSON_PATH_PREVIEW_CHARS: usize = 120;
+const MAX_JSON_KEY_CHARS: usize = 4_096;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -33,6 +34,8 @@ pub struct JsonPathEntry {
     pub child_count: usize,
     pub start: usize,
     pub end: usize,
+    pub key_start: Option<usize>,
+    pub key_end: Option<usize>,
     pub line: usize,
     pub column: usize,
     pub preview: String,
@@ -150,6 +153,7 @@ pub fn analyze_json_source(content: &str, jsonc: bool) -> JsonSourceAnalysis {
         "$",
         "$",
         1,
+        None,
         content,
         &mut counters,
         &mut diagnostics,
@@ -212,6 +216,7 @@ fn inspect_value(
     path: &str,
     label: &str,
     depth: usize,
+    key_range: Option<Range>,
     content: &str,
     counters: &mut AnalysisCounters,
     diagnostics: &mut Vec<JsonDiagnostic>,
@@ -230,6 +235,8 @@ fn inspect_value(
             child_count: value_child_count(value),
             start: range.start,
             end: range.end,
+            key_start: key_range.as_ref().map(|range| range.start),
+            key_end: key_range.as_ref().map(|range| range.end),
             line,
             column,
             preview: source_preview(content, range.start, range.end),
@@ -267,6 +274,7 @@ fn inspect_value(
                     &property_path,
                     key,
                     depth + 1,
+                    Some(property.name.range()),
                     content,
                     counters,
                     diagnostics,
@@ -281,6 +289,7 @@ fn inspect_value(
                     &format!("{path}[{index}]"),
                     &format!("[{index}]"),
                     depth + 1,
+                    None,
                     content,
                     counters,
                     diagnostics,
@@ -406,6 +415,52 @@ pub fn replace_json_scalar_source(
     let candidate_analysis = analyze_json_source(&candidate, jsonc);
     if !candidate_analysis.valid || !candidate_analysis.structure_edit_candidate {
         return Err("替换后的 JSON 未通过完整结构与保真校验".into());
+    }
+    Ok(candidate)
+}
+
+pub fn rename_json_object_key_source(
+    content: &str,
+    jsonc: bool,
+    key_start: usize,
+    key_end: usize,
+    new_key: &str,
+) -> Result<String, String> {
+    if new_key.chars().count() > MAX_JSON_KEY_CHARS {
+        return Err(format!("对象键不能超过 {MAX_JSON_KEY_CHARS} 个字符"));
+    }
+    if key_start >= key_end
+        || key_end > content.len()
+        || !content.is_char_boundary(key_start)
+        || !content.is_char_boundary(key_end)
+    {
+        return Err("目标对象键范围无效或已经过期".into());
+    }
+
+    let analysis = analyze_json_source(content, jsonc);
+    if !analysis.valid {
+        return Err("JSON 源码存在语法错误，不能执行对象键重命名".into());
+    }
+    if !analysis.structure_edit_candidate {
+        return Err("当前文档包含重复键或精度敏感数字，只能继续使用源码编辑".into());
+    }
+    analysis
+        .paths
+        .iter()
+        .find(|entry| entry.key_start == Some(key_start) && entry.key_end == Some(key_end))
+        .ok_or_else(|| "目标对象键不属于当前 JSON 分析结果".to_string())?;
+
+    let encoded_key =
+        serde_json::to_string(new_key).map_err(|_| "对象键无法编码为 JSON 字符串".to_string())?;
+    let mut candidate =
+        String::with_capacity(content.len() - (key_end - key_start) + encoded_key.len());
+    candidate.push_str(&content[..key_start]);
+    candidate.push_str(&encoded_key);
+    candidate.push_str(&content[key_end..]);
+
+    let candidate_analysis = analyze_json_source(&candidate, jsonc);
+    if !candidate_analysis.valid || !candidate_analysis.structure_edit_candidate {
+        return Err("重命名后的 JSON 未通过完整结构与保真校验，请检查同级重复键".into());
     }
     Ok(candidate)
 }
@@ -623,9 +678,16 @@ mod tests {
         assert_eq!(analysis.paths[0].path, "$");
         assert_eq!(analysis.paths[0].depth, 1);
         assert_eq!(analysis.paths[0].child_count, 1);
+        assert_eq!(analysis.paths[0].key_start, None);
+        assert_eq!(
+            &r#"{"rows":[{"value":1.25},null,true]}"#
+                [analysis.paths[1].key_start.unwrap()..analysis.paths[1].key_end.unwrap()],
+            "\"rows\""
+        );
         assert_eq!(analysis.paths[2].path, "$.rows[0]");
         assert_eq!(analysis.paths[2].label, "[0]");
         assert_eq!(analysis.paths[2].depth, 3);
+        assert_eq!(analysis.paths[2].key_start, None);
         assert_eq!(analysis.paths[3].preview, "1.25");
     }
 
@@ -769,6 +831,52 @@ mod tests {
             target.start,
             target.end,
             "9007199254740993"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn object_key_rename_uses_exact_utf8_range_and_preserves_jsonc_layout() {
+        let source = "{\n  // retained\n  \"名称\": \"值\",\n  \"tail\": true,\n}\n";
+        let target = analyze_json_source(source, true)
+            .paths
+            .into_iter()
+            .find(|entry| entry.path == "$[\"名称\"]")
+            .unwrap();
+        let renamed = rename_json_object_key_source(
+            source,
+            true,
+            target.key_start.unwrap(),
+            target.key_end.unwrap(),
+            "显示\n名称",
+        )
+        .unwrap();
+
+        assert!(renamed.contains("// retained"));
+        assert!(renamed.contains(r#""显示\n名称": "值""#));
+        assert!(renamed.ends_with(",\n}\n"));
+        assert!(analyze_json_source(&renamed, true).valid);
+    }
+
+    #[test]
+    fn object_key_rename_rejects_duplicate_stale_and_excessive_keys() {
+        let source = r#"{"first":1,"second":2}"#;
+        let target = &analyze_json_source(source, false).paths[1];
+        let key_start = target.key_start.unwrap();
+        let key_end = target.key_end.unwrap();
+        assert!(
+            rename_json_object_key_source(source, false, key_start, key_end, "second").is_err()
+        );
+        assert!(
+            rename_json_object_key_source(source, false, key_start + 1, key_end, "renamed")
+                .is_err()
+        );
+        assert!(rename_json_object_key_source(
+            source,
+            false,
+            key_start,
+            key_end,
+            &"x".repeat(MAX_JSON_KEY_CHARS + 1)
         )
         .is_err());
     }

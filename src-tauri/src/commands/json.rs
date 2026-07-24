@@ -1,7 +1,9 @@
 use crate::commands::formats::write_registered_text_document;
 use crate::formats::json::{
-    analyze_json_source as analyze_source, replace_json_scalar_source as replace_scalar_source,
-    transform_json_source as transform_source, JsonSourceAnalysis,
+    analyze_json_source as analyze_source,
+    rename_json_object_key_source as rename_object_key_source,
+    replace_json_scalar_source as replace_scalar_source, transform_json_source as transform_source,
+    JsonSourceAnalysis,
 };
 use crate::formats::text::{TextDocumentError, TextDocumentSnapshot};
 
@@ -30,6 +32,18 @@ pub fn replace_json_scalar_source(
 ) -> Result<String, TextDocumentError> {
     replace_scalar_source(&content, jsonc, start, end, &replacement)
         .map_err(|message| TextDocumentError::simple("json-scalar-edit-rejected", message))
+}
+
+#[tauri::command]
+pub fn rename_json_object_key_source(
+    content: String,
+    jsonc: bool,
+    key_start: usize,
+    key_end: usize,
+    new_key: String,
+) -> Result<String, TextDocumentError> {
+    rename_object_key_source(&content, jsonc, key_start, key_end, &new_key)
+        .map_err(|message| TextDocumentError::simple("json-key-rename-rejected", message))
 }
 
 #[tauri::command]
@@ -223,5 +237,20 @@ mod tests {
             replace_json_scalar_source(content, false, target.start, target.end, "{}".into())
                 .unwrap_err();
         assert_eq!(error.code, "json-scalar-edit-rejected");
+    }
+
+    #[test]
+    fn object_key_rename_command_uses_stable_rejection_code() {
+        let content = r#"{"first":1,"second":2}"#.to_string();
+        let target = analyze_source(&content, false).paths[1].clone();
+        let error = rename_json_object_key_source(
+            content,
+            false,
+            target.key_start.unwrap(),
+            target.key_end.unwrap(),
+            "second".into(),
+        )
+        .unwrap_err();
+        assert_eq!(error.code, "json-key-rename-rejected");
     }
 }

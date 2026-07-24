@@ -116,6 +116,17 @@
               </button>
               <div class="tree-node-actions">
                 <n-button
+                  v-if="entry.keyStart !== undefined && entry.keyEnd !== undefined"
+                  quaternary
+                  circle
+                  size="tiny"
+                  title="重命名对象键"
+                  :disabled="keyRenameDisabled"
+                  @click.stop="openKeyRename(entry)"
+                >
+                  <template #icon><n-icon :component="RenameKeyIcon" /></template>
+                </n-button>
+                <n-button
                   v-if="isScalarKind(entry.kind)"
                   quaternary
                   circle
@@ -271,6 +282,43 @@
       </template>
     </n-modal>
 
+    <n-modal
+      v-model:show="keyRenameVisible"
+      preset="card"
+      class="scalar-edit-dialog"
+      title="重命名对象键"
+      :mask-closable="!keyRenamePending"
+      :closable="!keyRenamePending"
+    >
+      <div class="scalar-edit-context">
+        <code>{{ keyRenameEntry?.path }}</code>
+        <span>对象属性</span>
+      </div>
+      <n-input
+        v-model:value="keyRenameValue"
+        :disabled="keyRenamePending"
+        :maxlength="4096"
+        show-count
+        placeholder="输入新的对象键"
+        aria-label="新的 JSON 对象键"
+        autofocus
+        @keyup.enter="applyKeyRename"
+      />
+      <template #footer>
+        <div class="scalar-edit-actions">
+          <n-button :disabled="keyRenamePending" @click="keyRenameVisible = false">取消</n-button>
+          <n-button
+            type="primary"
+            :loading="keyRenamePending"
+            :disabled="keyRenameValue.length > 4096"
+            @click="applyKeyRename"
+          >
+            应用到草稿
+          </n-button>
+        </div>
+      </template>
+    </n-modal>
+
     <footer class="json-statusbar">
       <span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span>
       <span>{{ encoding.toUpperCase() }}</span>
@@ -307,6 +355,7 @@ import {
   Pencil as EditIcon,
   FileJson as FileJsonIcon,
   FoldVertical as FoldIcon,
+  KeyRound as RenameKeyIcon,
   ListTree as TreeIcon,
   LocateFixed as LocateIcon,
   Minimize2 as MinifyIcon,
@@ -366,6 +415,8 @@ interface JsonPathEntry {
   childCount: number
   start: number
   end: number
+  keyStart?: number
+  keyEnd?: number
   line: number
   column: number
   preview: string
@@ -398,6 +449,11 @@ const scalarEditPending = ref(false)
 const scalarEditEntry = ref<JsonPathEntry | null>(null)
 const scalarEditValue = ref('')
 const scalarEditSource = ref('')
+const keyRenameVisible = ref(false)
+const keyRenamePending = ref(false)
+const keyRenameEntry = ref<JsonPathEntry | null>(null)
+const keyRenameValue = ref('')
+const keyRenameSource = ref('')
 const dirty = ref(false)
 const sourceContent = ref('')
 const sourceSize = ref(0)
@@ -424,6 +480,15 @@ const scalarEditDisabled = computed(() => (
   || saving.value
   || transformPending.value
   || scalarEditPending.value
+  || !analysis.value?.structureEditCandidate
+))
+const keyRenameDisabled = computed(() => (
+  loading.value
+  || analysisPending.value
+  || readOnly.value
+  || saving.value
+  || transformPending.value
+  || keyRenamePending.value
   || !analysis.value?.structureEditCandidate
 ))
 let editor: EditorView | null = null
@@ -649,6 +714,9 @@ const load = async (discardDraft = false) => {
   scalarEditVisible.value = false
   scalarEditEntry.value = null
   scalarEditSource.value = ''
+  keyRenameVisible.value = false
+  keyRenameEntry.value = null
+  keyRenameSource.value = ''
   analysisGeneration += 1
   analysisPending.value = false
   clearAnalysisTimer()
@@ -733,6 +801,7 @@ const isScalarKind = (kind: string) => ['string', 'number', 'boolean', 'null'].i
 
 const openScalarEditor = (entry: JsonPathEntry) => {
   if (!editor || !isScalarKind(entry.kind) || scalarEditDisabled.value) return
+  keyRenameVisible.value = false
   scalarEditEntry.value = entry
   scalarEditSource.value = editor.state.doc.toString()
   scalarEditValue.value = sourceRangeText(entry)
@@ -770,6 +839,55 @@ const applyScalarEdit = async () => {
     message.error(`标量修改失败：${errorMessage(cause)}`)
   } finally {
     scalarEditPending.value = false
+  }
+}
+
+const openKeyRename = (entry: JsonPathEntry) => {
+  if (
+    !editor
+    || entry.keyStart === undefined
+    || entry.keyEnd === undefined
+    || keyRenameDisabled.value
+  ) return
+  scalarEditVisible.value = false
+  keyRenameEntry.value = entry
+  keyRenameSource.value = editor.state.doc.toString()
+  keyRenameValue.value = entry.label
+  keyRenameVisible.value = true
+}
+
+const applyKeyRename = async () => {
+  if (!editor || !keyRenameEntry.value || keyRenamePending.value) return
+  const current = editor.state.doc.toString()
+  if (current !== keyRenameSource.value) {
+    message.warning('源码已发生变化，请重新选择对象键')
+    keyRenameVisible.value = false
+    return
+  }
+  const entry = keyRenameEntry.value
+  if (entry.keyStart === undefined || entry.keyEnd === undefined) return
+  keyRenamePending.value = true
+  clearAnalysisTimer()
+  try {
+    const renamed = await invoke<string>('rename_json_object_key_source', {
+      content: current,
+      jsonc: format.value?.id === 'jsonc',
+      keyStart: entry.keyStart,
+      keyEnd: entry.keyEnd,
+      newKey: keyRenameValue.value,
+    })
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: renamed },
+      selection: { anchor: byteOffsetToCodeUnit(renamed, entry.keyStart) },
+    })
+    clearAnalysisTimer()
+    keyRenameVisible.value = false
+    await analyzeContent(renamed)
+    message.success('对象键已重命名，可撤销或保存')
+  } catch (cause) {
+    message.error(`对象键重命名失败：${errorMessage(cause)}`)
+  } finally {
+    keyRenamePending.value = false
   }
 }
 
@@ -1074,7 +1192,7 @@ onBeforeUnmount(() => {
   min-width: 560px;
   height: 38px;
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) 116px;
+  grid-template-columns: 22px minmax(0, 1fr) 144px;
   align-items: center;
   padding: 0 8px 0 calc(8px + var(--tree-depth) * 18px);
   border-bottom: 1px solid transparent;
