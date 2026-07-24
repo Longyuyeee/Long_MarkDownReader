@@ -1,10 +1,13 @@
 use crate::formats::file_registry::{
     file_format_by_id, file_format_for_path, file_format_registry, FileFormatRegistry,
 };
-use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
+use crate::formats::text::{
+    encode_text_for_save, read_text_snapshot, verify_current_signature, TextDocumentSnapshot,
+    TextSavePolicy,
+};
+use crate::sanitize_filename;
+use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
-use crate::{sanitize_filename, FileContent};
-use chardetng::EncodingDetector;
 use std::fs;
 use std::path::Path;
 
@@ -46,7 +49,7 @@ pub async fn read_text_document(
     library_root: String,
     path: String,
     format_id: String,
-) -> Result<FileContent, String> {
+) -> Result<TextDocumentSnapshot, String> {
     let format = ensure_capability(&format_id, "read")?;
     if format.adapters.reader.as_deref() != Some("text") {
         return Err(format!("{} 不是通用文本读取格式", format.label));
@@ -65,16 +68,7 @@ pub async fn read_text_document(
             format.label, format.max_bytes
         ));
     }
-    let bytes = fs::read(&path).map_err(|error| format!("读取文件失败: {error}"))?;
-    let mut detector = EncodingDetector::new();
-    detector.feed(&bytes, true);
-    let encoding = detector.guess(None, true);
-    let (text, _, _) = encoding.decode(&bytes);
-    Ok(FileContent {
-        content: text.into_owned(),
-        encoding: encoding.name().to_string(),
-        path: path.to_string_lossy().into_owned(),
-    })
+    read_text_snapshot(&path)
 }
 
 #[tauri::command]
@@ -83,7 +77,9 @@ pub async fn write_text_document(
     path: String,
     format_id: String,
     content: String,
-) -> Result<(), String> {
+    expected_signature: Option<String>,
+    save_policy: Option<TextSavePolicy>,
+) -> Result<TextDocumentSnapshot, String> {
     let format = ensure_capability(&format_id, "edit")?;
     if format.adapters.writer.as_deref() != Some("text") {
         return Err(format!("{} 不是通用文本写入格式", format.label));
@@ -97,7 +93,28 @@ pub async fn write_text_document(
     let guard = WorkspaceGuard::new(library_root)?;
     let path = guard.resolve_for_write(path)?;
     ensure_matching_format(&path, &format_id)?;
-    write_utf8(path, &content)
+    recover_interrupted_write(&path)?;
+    let snapshot = read_text_snapshot(&path)?;
+    let mut policy = save_policy.unwrap_or(TextSavePolicy {
+        expected_signature: None,
+        encoding: None,
+        bom: None,
+        line_ending: None,
+        has_final_newline: None,
+    });
+    if policy.expected_signature.is_none() {
+        policy.expected_signature = expected_signature;
+    }
+    let encoded = encode_text_for_save(&snapshot, &content, policy)?;
+    if encoded.bytes.len() as u64 > format.max_bytes {
+        return Err(format!(
+            "{} 超过 {} 字节写入上限",
+            format.label, format.max_bytes
+        ));
+    }
+    verify_current_signature(&path, encoded.expected_signature.as_deref())?;
+    write_bytes(&path, &encoded.bytes)?;
+    read_text_snapshot(&path)
 }
 
 #[tauri::command]
@@ -193,14 +210,17 @@ mod tests {
         ))
         .unwrap();
         assert!(loaded.content.contains("Generic adapter fixture"));
-        tauri::async_runtime::block_on(write_text_document(
+        let saved = tauri::async_runtime::block_on(write_text_document(
             root_string.clone(),
             path.clone(),
             "plain-text".into(),
             "second line".into(),
+            Some(loaded.signature.clone()),
+            None,
         ))
         .unwrap();
-        assert_eq!(fs::read_to_string(&path).unwrap(), "second line");
+        assert_ne!(saved.signature, loaded.signature);
+        assert_eq!(fs::read_to_string(&path).unwrap(), "second line\r\n");
         assert!(tauri::async_runtime::block_on(read_text_document(
             root_string,
             path,

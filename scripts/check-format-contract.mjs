@@ -2,10 +2,12 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, files, externalAccess, index, library, canvas, mindmap, opml] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, formatCommands, files, externalAccess, index, library, canvas, mindmap, opml] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
+  read('src-tauri/src/formats/text.rs'),
+  read('src-tauri/src/commands/formats.rs'),
   read('src-tauri/src/commands/files.rs'),
   read('src-tauri/src/services/external_file_access.rs'),
   read('src-tauri/src/commands/index.rs'),
@@ -58,6 +60,13 @@ requireText(frontend, 'SORTED_FILE_FORMATS', 'frontend matching must use longest
 requireText(frontend, 'userCapability', 'frontend must expose user-visible capability tiers')
 requireText(rustRegistry, 'user_capability', 'Rust registry must expose user-visible capability tiers')
 requireText(rustRegistry, '.max_by_key(|(extension_len, _)| *extension_len)', 'Rust matching must prefer the longest extension')
+requireText(textKernel, 'TextDocumentSnapshot', 'A1 text kernel must expose reusable document snapshots')
+requireText(textKernel, 'expected_signature', 'A1 text saves must carry read signatures')
+requireText(textKernel, 'normalize_line_endings', 'A1 text saves must preserve newline policy')
+requireText(textKernel, 'detect_bom', 'A1 text reads must detect BOM policy')
+requireText(textKernel, 'verify_current_signature', 'A1 text saves must reject external modifications')
+requireText(formatCommands, 'read_text_snapshot', 'generic text reads must use A1 text snapshot kernel')
+requireText(formatCommands, 'encode_text_for_save', 'generic text writes must use A1 encoding-preserving kernel')
 requireText(files, 'file_format_registry()', 'workspace scanning must consume registry')
 requireText(externalAccess, 'file_format_for_path', 'external authorization must consume registry')
 requireText(index, 'format.adapters.indexer', 'index dispatch must consume registered adapters')
@@ -67,6 +76,8 @@ requireText(library, 'format-capability-badge', 'text workspace must display use
 requireText(library, 'format.userCapability.label', 'file tree must expose registered capability labels')
 requireText(library, "'read_text_document'", 'text reads must use the generic adapter')
 requireText(library, "'write_text_document'", 'text writes must use the generic adapter')
+requireText(library, 'expectedSignature', 'text workspace saves must pass snapshot signatures')
+requireText(library, 'text-snapshot-badge', 'text workspace must display A1 encoding/newline snapshot state')
 requireText(canvas, 'routeForFile(path)', 'Canvas file opening must use registered routing')
 requireText(mindmap, "'write_opml_file'", 'Mind map editor must use reliable OPML writer')
 requireText(mindmap, "'create_canvas_from_opml'", 'Mind map editor must expose Canvas projection')

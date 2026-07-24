@@ -390,6 +390,7 @@
             <span class="format-capability-badge" :class="`level-${activeDocumentFormat?.userCapability.level || 'unsupported'}`" :title="activeDocumentFormat?.userCapability.description">
               {{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}
             </span>
+            <span v-if="activeTextSnapshotLabel" class="text-snapshot-badge" :title="activeTextSnapshotTitle">{{ activeTextSnapshotLabel }}</span>
             <span>{{ wordCount }} 字 · 约 {{ Math.max(1, Math.ceil(wordCount / 300)) }} 分钟 · 行 {{ cursorLine }}:{{ cursorCol }}</span>
           </div>
           <div class="hidden-picker-trigger" style="position: absolute; opacity: 0; pointer-events: none;">
@@ -552,6 +553,20 @@ interface KnowledgeIndexStatus {
   error?: string
 }
 
+interface TextDocumentSnapshot {
+  content: string
+  encoding: string
+  encodingConfidence: string
+  bom: string
+  lineEnding: string
+  hasFinalNewline: boolean
+  signature: string
+  size: number
+  modified: number
+  readOnlyReason?: string
+  path: string
+}
+
 const message = useMessage()
 const dialog = useDialog()
 const store = useAppStore()
@@ -562,6 +577,19 @@ const activeDocumentFormat = computed(() => activeTabId.value ? findFileFormat(a
 const activeIsMarkdown = computed(() => activeDocumentFormat.value?.id === 'markdown')
 const activeMarkdownContent = computed(() => activeIsMarkdown.value ? tabs.value.find(tab => tab.id === activeTabId.value)?.content || '' : '')
 const activeFormatCanEdit = computed(() => activeDocumentFormat.value ? isFormatCapabilitySupported(activeDocumentFormat.value, 'edit') : false)
+const activeTextTab = computed(() => tabs.value.find(tab => tab.id === activeTabId.value))
+const activeTextSnapshotLabel = computed(() => {
+  const tab = activeTextTab.value
+  if (!tab?.textEncoding) return ''
+  const bom = tab.textBom && tab.textBom !== 'none' ? ` · ${tab.textBom.toUpperCase()} BOM` : ''
+  const lineEnding = tab.textLineEnding ? ` · ${tab.textLineEnding.toUpperCase()}` : ''
+  return `${tab.textEncoding}${bom}${lineEnding}`
+})
+const activeTextSnapshotTitle = computed(() => {
+  const tab = activeTextTab.value
+  if (!tab?.textSignature) return '尚未读取文本快照'
+  return `签名 ${tab.textSignature}`
+})
 const activeSaveTitle = computed(() => {
   if (!activeTabId.value) return '保存到磁盘 (Ctrl+S)'
   if (!activeFormatCanEdit.value) return `${activeDocumentFormat.value?.label || '当前格式'}不可覆盖保存`
@@ -1173,14 +1201,24 @@ const loadFileToEditor = async (path: string) => {
     })
   }
 
-  if (currentTab?.content) {
+  const applyTextSnapshot = (tab: typeof currentTab, snapshot: TextDocumentSnapshot) => {
+    if (!tab) return
+    tab.content = snapshot.content
+    tab.textSignature = snapshot.signature
+    tab.textEncoding = snapshot.encoding
+    tab.textBom = snapshot.bom
+    tab.textLineEnding = snapshot.lineEnding
+    tab.textHasFinalNewline = snapshot.hasFinalNewline
+  }
+
+  if (currentTab?.content !== undefined) {
     setEditorValue(currentTab.content)
   } else {
     try {
       const format = findFileFormat(path)
       if (!format || format.routeName !== 'LibraryMode') throw new Error('文件未注册为文本工作面格式')
-      const res = await invoke<{content: string}>('read_text_document', { libraryRoot: store.libraryPath, path, formatId: format.id })
-      if (currentTab) currentTab.content = res.content
+      const res = await invoke<TextDocumentSnapshot>('read_text_document', { libraryRoot: store.libraryPath, path, formatId: format.id })
+      applyTextSnapshot(currentTab, res)
       setEditorValue(res.content)
     } catch (err) { message.error("读取失败") }
   }
@@ -1577,7 +1615,19 @@ const triggerAutoSave = (content: string) => {
     const format = current ? findFileFormat(current.path) : undefined
     if (current && format?.routeName === 'LibraryMode') {
       try {
-        await invoke('write_text_document', { libraryRoot: store.libraryPath, path: current.path, formatId: format.id, content })
+        const saved = await invoke<TextDocumentSnapshot>('write_text_document', {
+          libraryRoot: store.libraryPath,
+          path: current.path,
+          formatId: format.id,
+          content,
+          expectedSignature: current.textSignature,
+        })
+        current.content = saved.content
+        current.textSignature = saved.signature
+        current.textEncoding = saved.encoding
+        current.textBom = saved.bom
+        current.textLineEnding = saved.lineEnding
+        current.textHasFinalNewline = saved.hasFinalNewline
         lastKnownModified = Math.floor(Date.now() / 1000)
       } catch (error) { console.error('Auto-save failed:', error) }
     }
@@ -1615,7 +1665,19 @@ const saveCurrentFile = async () => {
         })
       }
 
-      await invoke('write_text_document', { libraryRoot: store.libraryPath, path: t.path, formatId: format.id, content });
+      const saved = await invoke<TextDocumentSnapshot>('write_text_document', {
+        libraryRoot: store.libraryPath,
+        path: t.path,
+        formatId: format.id,
+        content,
+        expectedSignature: t.textSignature,
+      });
+      t.content = saved.content
+      t.textSignature = saved.signature
+      t.textEncoding = saved.encoding
+      t.textBom = saved.bom
+      t.textLineEnding = saved.lineEnding
+      t.textHasFinalNewline = saved.hasFinalNewline
       lastKnownModified = Math.floor(Date.now() / 1000)
       message.success('已安全保存');
       // Git 自动 commit（本地）
@@ -2964,6 +3026,16 @@ watch(activeTabId, (newId, oldId) => {
 .format-capability-badge.level-external-open,
 .format-capability-badge.level-unsupported {
   color: var(--theme-text-secondary);
+}
+
+.text-snapshot-badge {
+  max-width: 180px;
+  overflow: hidden;
+  padding-right: 6px;
+  border-right: var(--theme-border);
+  color: var(--theme-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .is-dark .word-count-info {

@@ -20,6 +20,11 @@ export interface TabInfo {
   path: string
   isDirty: boolean
   content?: string
+  textSignature?: string
+  textEncoding?: string
+  textBom?: string
+  textLineEnding?: string
+  textHasFinalNewline?: boolean
 }
 
 export interface LibraryConfig {
@@ -223,7 +228,12 @@ export const useAppStore = defineStore('app', {
       const idx = this.tabs.findIndex(t => t.path === tab.path)
       if (idx > -1) {
         const existing = this.tabs[idx]
-        if (tab.content) existing.content = tab.content
+        if (tab.content !== undefined) existing.content = tab.content
+        if (tab.textSignature !== undefined) existing.textSignature = tab.textSignature
+        if (tab.textEncoding !== undefined) existing.textEncoding = tab.textEncoding
+        if (tab.textBom !== undefined) existing.textBom = tab.textBom
+        if (tab.textLineEnding !== undefined) existing.textLineEnding = tab.textLineEnding
+        if (tab.textHasFinalNewline !== undefined) existing.textHasFinalNewline = tab.textHasFinalNewline
         const [removed] = this.tabs.splice(idx, 1)
         this.tabs.unshift(removed)
         if (this.activeTabId !== existing.id) {
