@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, formatCommands, files, externalAccess, index, library, canvas, mindmap, opml] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, formatCommands, files, externalAccess, index, library, textEditor, router, canvas, mindmap, opml] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -12,6 +12,8 @@ const [registryText, frontend, rustRegistry, textKernel, formatCommands, files, 
   read('src-tauri/src/services/external_file_access.rs'),
   read('src-tauri/src/commands/index.rs'),
   read('src/views/LibraryMode.vue'),
+  read('src/views/TextEditorView.vue'),
+  read('src/router/index.ts'),
   read('src/views/CanvasView.vue'),
   read('src/views/MindMapView.vue'),
   read('src-tauri/src/formats/opml.rs'),
@@ -41,7 +43,7 @@ for (const format of registry.formats || []) {
 }
 
 const text = registry.formats?.find(format => format.id === 'plain-text')
-if (!text || text.extensions?.[0] !== '.txt' || !Object.values(text.capabilities).every(level => level === 'supported') || text.adapters?.reader !== 'text' || text.adapters?.indexer !== 'text') {
+if (!text || text.extensions?.[0] !== '.txt' || !Object.values(text.capabilities).every(level => level === 'supported') || text.adapters?.reader !== 'text' || text.adapters?.indexer !== 'text' || text.routeName !== 'TextEditor' || text.userCapability?.level !== 'complete-edit') {
   failures.push('plain-text proof adapter is incomplete')
 }
 const opmlFormat = registry.formats?.find(format => format.id === 'opml')
@@ -86,6 +88,14 @@ requireText(library, 'error?.suggestion', 'text workspace errors must surface st
 requireText(library, "err?.code === 'read-too-large'", 'text workspace must route oversized files into range preview')
 requireText(library, 'textReadOnlyReason', 'text workspace must persist per-tab read-only downgrade state')
 requireText(library, 'loadNextTextRange', 'text workspace must allow incremental range loading')
+requireText(router, "name: 'TextEditor'", 'A2 TXT editor must have a dedicated lazy route')
+requireText(textEditor, "from 'codemirror'", 'A2 TXT editor must use the selected CodeMirror 6 engine')
+requireText(textEditor, 'openSearchPanel', 'A2 TXT editor must expose find and replace')
+requireText(textEditor, 'gotoLine', 'A2 TXT editor must expose line navigation')
+requireText(textEditor, "'read_text_document_range'", 'A2 TXT editor must consume A1 range reads')
+requireText(textEditor, "'write_text_document'", 'A2 TXT editor must consume A1 reliable writes')
+requireText(textEditor, 'expectedSignature', 'A2 TXT saves must retain external conflict protection')
+requireText(textEditor, 'readEncoding', 'A2 TXT editor must separate source decoding from save conversion')
 requireText(files, 'file_format_registry()', 'workspace scanning must consume registry')
 requireText(externalAccess, 'file_format_for_path', 'external authorization must consume registry')
 requireText(index, 'format.adapters.indexer', 'index dispatch must consume registered adapters')

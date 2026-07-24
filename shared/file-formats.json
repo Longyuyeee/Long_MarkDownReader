@@ -19,10 +19,10 @@
       "label": "纯文本",
       "extensions": [".txt"],
       "mimeTypes": ["text/plain"],
-      "routeName": "LibraryMode",
+      "routeName": "TextEditor",
       "maxBytes": 20971520,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "纯文本已有基础读写能力；编码、BOM、换行符和外部冲突保真将在 A1 完成。" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "纯文本使用独立工作面，支持查找替换、行号、编码与换行策略、冲突保护和大文件只读预览。" },
       "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text", "indexer": "text" },
       "creation": { "defaultExtension": ".txt", "defaultContent": "", "defaultName": "未命名文本" }

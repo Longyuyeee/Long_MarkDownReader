@@ -75,6 +75,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/Development_Progress_Audit_2026-07-24.md`：当前完整候选能力、风险排序、发布门禁，以及合并后从 XLSX 专项收尾切换到统一文件管理 A0 主线的顺序。
 - `docs/Unified_File_Manager_Format_Requirements.md`：统一文件管理、常用格式阅读/基础编辑、安全保存和体系化管理的补充需求基线。
 - `docs/Next_Development_Execution_Guide.md`：A0～A5、PDF 页面编辑、DOCX/PPTX 基础工作面和体系化管理增强的后续执行指导。
+- `docs/Text_Editor_Architecture_Decision.md`：A2 TXT 编辑器选型、CodeMirror 6 职责边界、大文件策略和后续扩展约束。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
 - `docs/Development_Stage_Audit_2026-07-20.md`：上一轮专业工作区阶段审计和交错排期基线。
 
@@ -88,6 +89,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - A1 收口批第一段：Library 文本工作面已提供编码菜单，可按 UTF-8/UTF-8 BOM/GBK/GB18030 重新读取或转换保存；读写调用分别传递 `readOptions` 与 `savePolicy`，并在每个标签记忆用户选择的读取编码。
 - A1 收口批第二段：新增 `TextDocumentError` 结构化错误，读写命令返回稳定错误码、可恢复标记和建议；新增 GB18030 扩展汉字 fixture，前端错误提示会展示恢复建议。
 - A1 收口批第三段：新增单次最大 1 MiB 的文本范围读取、多字节边界连续性测试和 `read_text_document_range` 命令；超过 20 MiB 完整编辑阈值时，Library 自动进入大文件只读预览，支持按需继续加载、按编码重读，并禁用保存与自动保存。
+- A2 第一批：采用 CodeMirror 6 并新增独立 TXT 工作面；已接通行号、查找替换、跳行、撤销重做、编码/BOM/换行保存策略、外部签名冲突和 A1 大文件范围模式，选型边界见 `docs/Text_Editor_Architecture_Decision.md`。
 - 前端生产构建、主题/格式/工作簿/XLSX 发布契约检查均通过；工作簿契约已覆盖 S8-2A 的 Table 创建/调整入口、签名事务、包级往返、历史清理、重载与重算。
 - Rust：S8-7E2E 共 194 项测试（193 项功能、1 项性能），全部通过；七类聚合分别完成临时 Pivot 包重建与输出复读，合并分组回归验证平均值、计数和乘积均从原始记录计算；单行轴、单列轴和三度量布局完成真实来源内存语义验证，成功/阻断路径原文件字节保持不变。
 - 本批最终完整性能回归通过：`inspect=124 ms / page=1,071 ms / patch=911 ms / total=2,107 ms`，未放宽 `10000x12` 负载、时间或 5% 文件增长约束。Debug 构建仅优化 `quick-xml` 与 `miniz_oxide` 依赖，普通写回在不存在 `sheetProtection` 时跳过完整保护解析。
@@ -98,7 +100,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 ## 6. 下一阶段顺序
 
-2026-07-24 综合审计、风险排序、质量证据和后续阶段退出条件见 `docs/Development_Progress_Audit_2026-07-24.md`；上一轮细节见 `docs/Development_Progress_Audit_2026-07-23.md`，历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1、I7-2、W7-1～W7-3、S8-1A～S8-6E、S8-7A～S8-7E2E、T8-1A～T8-1B、A0 格式契约和能力展示第一批，以及 A1 可靠文本读取与保存内核代码级范围。当前主线进入 **A2 统一 TXT 工作面**，随后是 A3 JSON/JSONC 工作面；A1 的真实 Tauri 大文件和进程级故障证据并入 A5。S8-7E2F～S8-8 保留为 XLSX 专项回补队列；G8 图谱产品化和 F8-1 下一种专业格式编辑器继续作为增强线。
+2026-07-24 综合审计、风险排序、质量证据和后续阶段退出条件见 `docs/Development_Progress_Audit_2026-07-24.md`；上一轮细节见 `docs/Development_Progress_Audit_2026-07-23.md`，历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1、I7-2、W7-1～W7-3、S8-1A～S8-6E、S8-7A～S8-7E2E、T8-1A～T8-1B、A0 第一批、A1 代码级范围和 A2 第一批。当前主线继续 **A2 TXT 工作面收口**，随后是 A3 JSON/JSONC 工作面；A1/A2 的真实 Tauri 大文件和进程级故障证据并入 A5。S8-7E2F～S8-8 保留为 XLSX 专项回补队列；G8 图谱产品化和 F8-1 下一种专业格式编辑器继续作为增强线。
 
 当前 `v0.7.0` 基线已完成知识库文件树的创建、移动、重命名、删除、排序、扫描和状态读取路径守卫，并修复旧 API Key 迁移失败丢失及远程 HTTP 传输风险。
 

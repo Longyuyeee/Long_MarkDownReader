@@ -21,6 +21,11 @@ const routes = [
     component: () => import('../views/LibraryMode.vue')
   },
   {
+    path: '/text',
+    name: 'TextEditor',
+    component: () => import('../views/TextEditorView.vue')
+  },
+  {
     path: '/quick-note',
     name: 'QuickNote',
     component: () => import('../views/QuickNote.vue')

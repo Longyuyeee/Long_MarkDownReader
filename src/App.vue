@@ -70,7 +70,7 @@ import { useRouter } from 'vue-router'
 import { listen, emit } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import { useAppStore } from './store/app'
-import { isExternallyEditable } from './config/fileFormats'
+import { isExternallyEditable, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 
 const osTheme = useOsTheme()
@@ -127,6 +127,7 @@ const getRouteLoadingLabel = (routeName: unknown) => {
   const labels: Record<string, string> = {
     WorkspaceHome: '正在准备工作台',
     LibraryMode: '正在打开知识库',
+    TextEditor: '正在打开文本编辑器',
     TempMode: '正在载入文档',
     QuickNote: '正在打开快速笔记',
     Graph: '正在准备知识图谱',
@@ -183,7 +184,8 @@ const handleCommand = async (item: any) => {
     else if (item.action === 'daily-note') emit('command-daily-note')
     else if (item.action.startsWith('theme-preset:')) await store.applyThemePreset(item.action.slice('theme-preset:'.length))
   } else if (item.type === 'file') {
-    router.push({ name: 'LibraryMode', query: { path: item.path } })
+    const target = routeForFile(item.path)
+    if (target) router.push(target)
   }
 }
 

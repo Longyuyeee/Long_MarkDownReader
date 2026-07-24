@@ -213,8 +213,12 @@ mod tests {
         assert!(format.capabilities.edit.is_supported());
         assert!(format.capabilities.create.is_supported());
         assert!(format.capabilities.index.is_supported());
-        assert_eq!(format.user_capability.level, UserCapabilityLevel::BasicEdit);
+        assert_eq!(
+            format.user_capability.level,
+            UserCapabilityLevel::CompleteEdit
+        );
         assert_eq!(format.user_capability.save_mode, SaveMode::Overwrite);
+        assert_eq!(format.route_name, "TextEditor");
         assert_eq!(format.adapters.reader.as_deref(), Some("text"));
         assert_eq!(format.adapters.indexer.as_deref(), Some("text"));
     }
