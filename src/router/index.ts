@@ -36,6 +36,11 @@ const routes = [
     component: () => import('../views/YamlEditorView.vue')
   },
   {
+    path: '/xml',
+    name: 'XmlEditor',
+    component: () => import('../views/XmlEditorView.vue')
+  },
+  {
     path: '/log',
     name: 'LogViewer',
     component: () => import('../views/LogViewerView.vue')

@@ -2,16 +2,18 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, formatCommands, jsonCommands, yamlCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
   read('src-tauri/src/formats/text.rs'),
   read('src-tauri/src/formats/json.rs'),
   read('src-tauri/src/formats/yaml.rs'),
+  read('src-tauri/src/formats/xml.rs'),
   read('src-tauri/src/commands/formats.rs'),
   read('src-tauri/src/commands/json.rs'),
   read('src-tauri/src/commands/yaml.rs'),
+  read('src-tauri/src/commands/xml.rs'),
   read('src-tauri/src/commands/files.rs'),
   read('src-tauri/src/services/external_file_access.rs'),
   read('src-tauri/src/commands/index.rs'),
@@ -19,6 +21,7 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src/views/TextEditorView.vue'),
   read('src/views/JsonEditorView.vue'),
   read('src/views/YamlEditorView.vue'),
+  read('src/views/XmlEditorView.vue'),
   read('src/views/LogViewerView.vue'),
   read('src/components/WorkspaceTabs.vue'),
   read('src/router/index.ts'),
@@ -79,6 +82,20 @@ if (!yamlFormat
   || yamlFormat.creation?.defaultExtension !== '.yaml'
   || yamlFormat.userCapability?.level !== 'complete-edit'
   || yamlFormat.userCapability?.saveMode !== 'overwrite') failures.push('A4 YAML source-edit contract is incomplete')
+const xmlFormat = registry.formats?.find(format => format.id === 'xml')
+if (!xmlFormat
+  || xmlFormat.routeName !== 'XmlEditor'
+  || xmlFormat.extensions?.join(',') !== '.xml'
+  || xmlFormat.maxBytes !== 8 * 1024 * 1024
+  || xmlFormat.capabilities?.read !== 'supported'
+  || xmlFormat.capabilities?.edit !== 'supported'
+  || xmlFormat.capabilities?.create !== 'planned'
+  || xmlFormat.capabilities?.index !== 'supported'
+  || xmlFormat.adapters?.reader !== 'text'
+  || xmlFormat.adapters?.writer !== 'text'
+  || xmlFormat.adapters?.indexer !== 'text'
+  || xmlFormat.userCapability?.level !== 'basic-edit'
+  || xmlFormat.userCapability?.saveMode !== 'overwrite') failures.push('A4 XML source-edit contract is incomplete')
 const opmlFormat = registry.formats?.find(format => format.id === 'opml')
 if (!opmlFormat || opmlFormat.routeName !== 'MindMap' || opmlFormat.adapters?.reader !== 'opml' || opmlFormat.adapters?.indexer !== 'opml') failures.push('OPML professional adapter is incomplete')
 const workbookFormat = registry.formats?.find(format => format.id === 'workbook')
@@ -232,6 +249,17 @@ requireText(yamlEditor, "'write_yaml_source_document'", 'A4 YAML workspace must 
 requireText(yamlEditor, '<WorkspaceTabs', 'A4 YAML workspace must participate in unified session tabs')
 requireText(yamlEditor, 'outlineTruncated', 'A4 YAML workspace must expose bounded structure outlines')
 requireText(router, "name: 'YamlEditor'", 'A4 YAML workspace must have an independent route')
+requireText(xmlKernel, 'MAX_XML_SOURCE_BYTES', 'A4 XML analysis must enforce a source budget')
+requireText(xmlKernel, 'MAX_XML_NODES', 'A4 XML analysis must enforce an element budget')
+requireText(xmlKernel, 'Event::DocType', 'A4 XML analysis must explicitly handle DTD input')
+requireText(xmlCommands, '"invalid-xml-save-blocked"', 'A4 XML save must block unsafe or invalid source by default')
+requireText(xmlCommands, 'write_registered_text_document', 'A4 XML save must reuse the reliable text kernel')
+requireText(xmlEditor, "xml()", 'A4 XML workspace must provide language-aware source editing')
+requireText(xmlEditor, "'analyze_xml_source'", 'A4 XML workspace must consume authoritative analysis')
+requireText(xmlEditor, "'write_xml_source_document'", 'A4 XML workspace must use the guarded save command')
+requireText(xmlEditor, '<WorkspaceTabs', 'A4 XML workspace must participate in unified session tabs')
+requireText(xmlEditor, 'outlineTruncated', 'A4 XML workspace must expose bounded structure outlines')
+requireText(router, "name: 'XmlEditor'", 'A4 XML workspace must have an independent route')
 const logFormat = registry.formats.find(format => format.id === 'log')
 if (!logFormat
   || logFormat.routeName !== 'LogViewer'

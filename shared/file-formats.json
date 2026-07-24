@@ -80,6 +80,19 @@
       "creation": { "defaultExtension": ".yaml", "defaultContent": "# YAML 文档\n\nname: 未命名\nitems: []\n", "defaultName": "未命名配置" }
     },
     {
+      "id": "xml",
+      "label": "XML",
+      "extensions": [".xml"],
+      "mimeTypes": ["application/xml", "text/xml"],
+      "routeName": "XmlEditor",
+      "maxBytes": 8388608,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "XML 支持源码高亮与折叠、实时安全校验、命名空间感知结构提纲、草稿恢复、文本索引和可靠保存；DOCTYPE 被安全阻断，创建与保真格式化仍在后续批次。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
+      "creation": null
+    },
+    {
       "id": "canvas",
       "label": "JSON Canvas",
       "extensions": [".canvas"],
