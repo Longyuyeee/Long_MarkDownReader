@@ -3,6 +3,7 @@ use crate::formats::json::{
     analyze_json_source as analyze_source,
     append_json_array_item_source as append_array_item_source,
     append_json_object_property_source as append_object_property_source,
+    remove_json_array_item_source as remove_array_item_source,
     remove_json_object_property_source as remove_object_property_source,
     rename_json_object_key_source as rename_object_key_source,
     replace_json_scalar_source as replace_scalar_source, transform_json_source as transform_source,
@@ -85,6 +86,17 @@ pub fn remove_json_object_property_source(
 ) -> Result<String, TextDocumentError> {
     remove_object_property_source(&content, jsonc, key_start, key_end, start, end)
         .map_err(|message| TextDocumentError::simple("json-property-remove-rejected", message))
+}
+
+#[tauri::command]
+pub fn remove_json_array_item_source(
+    content: String,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+) -> Result<String, TextDocumentError> {
+    remove_array_item_source(&content, jsonc, start, end)
+        .map_err(|message| TextDocumentError::simple("json-array-remove-rejected", message))
 }
 
 #[tauri::command]
@@ -335,5 +347,14 @@ mod tests {
         )
         .unwrap_err();
         assert_eq!(error.code, "json-property-remove-rejected");
+    }
+
+    #[test]
+    fn array_item_remove_command_uses_stable_rejection_code() {
+        let content = "[1]".to_string();
+        let target = analyze_source(&content, false).paths[1].clone();
+        let error = remove_json_array_item_source(content, false, target.start + 1, target.end)
+            .unwrap_err();
+        assert_eq!(error.code, "json-array-remove-rejected");
     }
 }

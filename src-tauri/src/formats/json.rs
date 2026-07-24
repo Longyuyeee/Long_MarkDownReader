@@ -36,6 +36,7 @@ pub struct JsonPathEntry {
     pub end: usize,
     pub key_start: Option<usize>,
     pub key_end: Option<usize>,
+    pub array_index: Option<usize>,
     pub line: usize,
     pub column: usize,
     pub preview: String,
@@ -154,6 +155,7 @@ pub fn analyze_json_source(content: &str, jsonc: bool) -> JsonSourceAnalysis {
         "$",
         1,
         None,
+        None,
         content,
         &mut counters,
         &mut diagnostics,
@@ -217,6 +219,7 @@ fn inspect_value(
     label: &str,
     depth: usize,
     key_range: Option<Range>,
+    array_index: Option<usize>,
     content: &str,
     counters: &mut AnalysisCounters,
     diagnostics: &mut Vec<JsonDiagnostic>,
@@ -237,6 +240,7 @@ fn inspect_value(
             end: range.end,
             key_start: key_range.as_ref().map(|range| range.start),
             key_end: key_range.as_ref().map(|range| range.end),
+            array_index,
             line,
             column,
             preview: source_preview(content, range.start, range.end),
@@ -275,6 +279,7 @@ fn inspect_value(
                     key,
                     depth + 1,
                     Some(property.name.range()),
+                    None,
                     content,
                     counters,
                     diagnostics,
@@ -290,6 +295,7 @@ fn inspect_value(
                     &format!("[{index}]"),
                     depth + 1,
                     None,
+                    Some(index),
                     content,
                     counters,
                     diagnostics,
@@ -804,10 +810,138 @@ pub fn remove_json_object_property_source(
     Ok(candidate)
 }
 
+pub fn remove_json_array_item_source(
+    content: &str,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+) -> Result<String, String> {
+    if start >= end
+        || end > content.len()
+        || !content.is_char_boundary(start)
+        || !content.is_char_boundary(end)
+    {
+        return Err("目标数组项范围无效或已经过期".into());
+    }
+
+    let analysis = analyze_json_source(content, jsonc);
+    if !analysis.valid {
+        return Err("JSON 源码存在语法错误，不能删除数组项".into());
+    }
+    if !analysis.structure_edit_candidate {
+        return Err("当前文档包含重复键或精度敏感数字，只能继续使用源码编辑".into());
+    }
+    analysis
+        .paths
+        .iter()
+        .find(|entry| entry.start == start && entry.end == end && entry.array_index.is_some())
+        .ok_or_else(|| "目标数组项不属于当前 JSON 分析结果".to_string())?;
+
+    let parsed = parse_to_ast(
+        content,
+        &CollectOptions {
+            comments: CommentCollectionStrategy::Separate,
+            tokens: false,
+        },
+        &parse_options(jsonc),
+    )
+    .map_err(|error| error.kind().to_string())?;
+    let root = parsed
+        .value
+        .as_ref()
+        .ok_or_else(|| "JSON 文档不能为空".to_string())?;
+    let (array, index) = find_array_item_by_range(root, start, end)
+        .ok_or_else(|| "目标数组项范围已经过期".to_string())?;
+    let item_range = array.elements[index].range();
+    let close = array
+        .range
+        .end
+        .checked_sub(1)
+        .filter(|offset| content[*offset..array.range.end].starts_with(']'))
+        .ok_or_else(|| "目标数组缺少可识别的右方括号".to_string())?;
+
+    if index == 0 {
+        if !content[array.range.start + 1..item_range.start]
+            .chars()
+            .all(char::is_whitespace)
+        {
+            return Err("目标数组项前存在邻接注释，无法确定注释归属".into());
+        }
+    } else {
+        let previous = array.elements[index - 1].range();
+        comma_followed_by_whitespace(&content[previous.end..item_range.start])
+            .ok_or_else(|| "目标数组项前存在邻接注释，无法确定注释归属".to_string())?;
+    }
+
+    let (replace_start, replace_end, replacement) =
+        if let Some(next) = array.elements.get(index + 1) {
+            let next_range = next.range();
+            comma_followed_by_whitespace(&content[item_range.end..next_range.start])
+                .ok_or_else(|| "目标数组项后存在邻接注释，无法确定注释归属".to_string())?;
+            (item_range.start, next_range.start, "")
+        } else {
+            let tail = &content[item_range.end..close];
+            let whitespace = if let Some(rest) = tail.strip_prefix(',') {
+                if !rest.chars().all(char::is_whitespace) {
+                    return Err("目标数组项后的尾随逗号附近存在注释，无法安全删除".into());
+                }
+                rest
+            } else {
+                if !tail.chars().all(char::is_whitespace) {
+                    return Err("目标数组项后存在邻接注释，无法确定注释归属".into());
+                }
+                tail
+            };
+            let remove_from = if index == 0 {
+                item_range.start
+            } else {
+                array.elements[index - 1].range().end
+            };
+            (remove_from, close, whitespace)
+        };
+
+    let mut candidate =
+        String::with_capacity(content.len() - (replace_end - replace_start) + replacement.len());
+    candidate.push_str(&content[..replace_start]);
+    candidate.push_str(replacement);
+    candidate.push_str(&content[replace_end..]);
+    let candidate_analysis = analyze_json_source(&candidate, jsonc);
+    if !candidate_analysis.valid || !candidate_analysis.structure_edit_candidate {
+        return Err("删除数组项后的 JSON 未通过完整结构与保真校验".into());
+    }
+    Ok(candidate)
+}
+
 fn comma_followed_by_whitespace(value: &str) -> Option<&str> {
     value
         .strip_prefix(',')
         .filter(|rest| rest.chars().all(char::is_whitespace))
+}
+
+fn find_array_item_by_range<'a, 'b>(
+    value: &'b Value<'a>,
+    start: usize,
+    end: usize,
+) -> Option<(&'b jsonc_parser::ast::Array<'a>, usize)> {
+    match value {
+        Value::Object(object) => object
+            .properties
+            .iter()
+            .find_map(|property| find_array_item_by_range(&property.value, start, end)),
+        Value::Array(array) => {
+            if let Some(index) = array.elements.iter().position(|element| {
+                let range = element.range();
+                range.start == start && range.end == end
+            }) {
+                return Some((array, index));
+            }
+            array
+                .elements
+                .iter()
+                .find_map(|element| find_array_item_by_range(element, start, end))
+        }
+        _ => None,
+    }
 }
 
 fn find_object_property_by_ranges<'a, 'b>(
@@ -1076,6 +1210,7 @@ mod tests {
         assert_eq!(analysis.paths[0].depth, 1);
         assert_eq!(analysis.paths[0].child_count, 1);
         assert_eq!(analysis.paths[0].key_start, None);
+        assert_eq!(analysis.paths[0].array_index, None);
         assert_eq!(
             &r#"{"rows":[{"value":1.25},null,true]}"#
                 [analysis.paths[1].key_start.unwrap()..analysis.paths[1].key_end.unwrap()],
@@ -1085,6 +1220,7 @@ mod tests {
         assert_eq!(analysis.paths[2].label, "[0]");
         assert_eq!(analysis.paths[2].depth, 3);
         assert_eq!(analysis.paths[2].key_start, None);
+        assert_eq!(analysis.paths[2].array_index, Some(0));
         assert_eq!(analysis.paths[3].preview, "1.25");
     }
 
@@ -1537,5 +1673,72 @@ mod tests {
             target.end,
         )
         .is_err());
+    }
+
+    #[test]
+    fn array_item_remove_handles_first_middle_last_and_only_items() {
+        let source = "[\n  1,\n  2,\n  3,\n]\n";
+        let analysis = analyze_json_source(source, true);
+        for (path, expected) in [
+            ("$[0]", "[\n  2,\n  3,\n]\n"),
+            ("$[1]", "[\n  1,\n  3,\n]\n"),
+            ("$[2]", "[\n  1,\n  2\n]\n"),
+        ] {
+            let target = analysis
+                .paths
+                .iter()
+                .find(|entry| entry.path == path)
+                .unwrap();
+            let removed =
+                remove_json_array_item_source(source, true, target.start, target.end).unwrap();
+            assert_eq!(removed, expected);
+        }
+
+        let only = "[true]";
+        let target = &analyze_json_source(only, false).paths[1];
+        let removed = remove_json_array_item_source(only, false, target.start, target.end).unwrap();
+        assert_eq!(removed, "[]");
+    }
+
+    #[test]
+    fn array_item_remove_preserves_unrelated_nested_values() {
+        let source = r#"{"items":[{"keep":[1,2]},{"remove":true},{"tail":null}]}"#;
+        let target = analyze_json_source(source, false)
+            .paths
+            .into_iter()
+            .find(|entry| entry.path == "$.items[1]")
+            .unwrap();
+        let removed =
+            remove_json_array_item_source(source, false, target.start, target.end).unwrap();
+        assert_eq!(removed, r#"{"items":[{"keep":[1,2]},{"tail":null}]}"#);
+    }
+
+    #[test]
+    fn array_item_remove_rejects_adjacent_comments_root_and_stale_ranges() {
+        for (source, path) in [
+            (r#"[1, /* belongs where */ 2]"#, "$[0]"),
+            (r#"[1 /* attached */, 2]"#, "$[0]"),
+        ] {
+            let target = analyze_json_source(source, true)
+                .paths
+                .into_iter()
+                .find(|entry| entry.path == path)
+                .unwrap();
+            assert!(remove_json_array_item_source(source, true, target.start, target.end).is_err());
+        }
+
+        let source = "[1]";
+        let analysis = analyze_json_source(source, false);
+        assert!(remove_json_array_item_source(
+            source,
+            false,
+            analysis.paths[0].start,
+            analysis.paths[0].end
+        )
+        .is_err());
+        let target = &analysis.paths[1];
+        assert!(
+            remove_json_array_item_source(source, false, target.start + 1, target.end).is_err()
+        );
     }
 }
