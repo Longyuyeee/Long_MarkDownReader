@@ -159,6 +159,17 @@
                 >
                   <template #icon><n-icon :component="EditIcon" /></template>
                 </n-button>
+                <n-button
+                  v-if="entry.keyStart !== undefined && entry.keyEnd !== undefined"
+                  quaternary
+                  circle
+                  size="tiny"
+                  title="删除对象属性"
+                  :disabled="propertyRemoveDisabled"
+                  @click.stop="requestPropertyRemove(entry)"
+                >
+                  <template #icon><n-icon :component="RemovePropertyIcon" /></template>
+                </n-button>
                 <n-button quaternary circle size="tiny" title="定位到源码" @click.stop="showSourceRange(entry)">
                   <template #icon><n-icon :component="LocateIcon" /></template>
                 </n-button>
@@ -469,6 +480,7 @@ import {
   Search as SearchIcon,
   ShieldAlert as ShieldAlertIcon,
   ShieldCheck as ShieldCheckIcon,
+  Trash2 as RemovePropertyIcon,
   UnfoldVertical as UnfoldIcon,
 } from 'lucide-vue-next'
 import { findFileFormat } from '../config/fileFormats'
@@ -570,6 +582,7 @@ const arrayAppendPending = ref(false)
 const arrayAppendEntry = ref<JsonPathEntry | null>(null)
 const arrayAppendValue = ref('null')
 const arrayAppendSource = ref('')
+const propertyRemovePendingStart = ref<number | null>(null)
 const dirty = ref(false)
 const sourceContent = ref('')
 const sourceSize = ref(0)
@@ -623,6 +636,15 @@ const arrayAppendDisabled = computed(() => (
   || saving.value
   || transformPending.value
   || arrayAppendPending.value
+  || !analysis.value?.structureEditCandidate
+))
+const propertyRemoveDisabled = computed(() => (
+  loading.value
+  || analysisPending.value
+  || readOnly.value
+  || saving.value
+  || transformPending.value
+  || propertyRemovePendingStart.value !== null
   || !analysis.value?.structureEditCandidate
 ))
 let editor: EditorView | null = null
@@ -857,6 +879,7 @@ const load = async (discardDraft = false) => {
   arrayAppendVisible.value = false
   arrayAppendEntry.value = null
   arrayAppendSource.value = ''
+  propertyRemovePendingStart.value = null
   analysisGeneration += 1
   analysisPending.value = false
   clearAnalysisTimer()
@@ -1124,6 +1147,60 @@ const applyArrayAppend = async () => {
     message.error(`追加数组项失败：${errorMessage(cause)}`)
   } finally {
     arrayAppendPending.value = false
+  }
+}
+
+const requestPropertyRemove = (entry: JsonPathEntry) => {
+  if (
+    !editor
+    || entry.keyStart === undefined
+    || entry.keyEnd === undefined
+    || propertyRemoveDisabled.value
+  ) return
+  const source = editor.state.doc.toString()
+  dialog.warning({
+    title: '删除对象属性',
+    content: `将从草稿中删除 ${entry.path} 及其完整值。`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: () => applyPropertyRemove(entry, source),
+  })
+}
+
+const applyPropertyRemove = async (entry: JsonPathEntry, source: string) => {
+  if (
+    !editor
+    || entry.keyStart === undefined
+    || entry.keyEnd === undefined
+    || propertyRemovePendingStart.value !== null
+  ) return
+  const current = editor.state.doc.toString()
+  if (current !== source) {
+    message.warning('源码已发生变化，请重新选择对象属性')
+    return
+  }
+  propertyRemovePendingStart.value = entry.start
+  clearAnalysisTimer()
+  try {
+    const removed = await invoke<string>('remove_json_object_property_source', {
+      content: current,
+      jsonc: format.value?.id === 'jsonc',
+      keyStart: entry.keyStart,
+      keyEnd: entry.keyEnd,
+      start: entry.start,
+      end: entry.end,
+    })
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: removed },
+      selection: { anchor: byteOffsetToCodeUnit(removed, entry.start) },
+    })
+    clearAnalysisTimer()
+    await analyzeContent(removed)
+    message.success('对象属性已删除，可撤销或保存')
+  } catch (cause) {
+    message.error(`删除对象属性失败：${errorMessage(cause)}`)
+  } finally {
+    propertyRemovePendingStart.value = null
   }
 }
 
@@ -1428,7 +1505,7 @@ onBeforeUnmount(() => {
   min-width: 560px;
   height: 38px;
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) 144px;
+  grid-template-columns: 22px minmax(0, 1fr) 172px;
   align-items: center;
   padding: 0 8px 0 calc(8px + var(--tree-depth) * 18px);
   border-bottom: 1px solid transparent;

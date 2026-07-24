@@ -44,8 +44,8 @@ use commands::index::{
 };
 use commands::json::{
     analyze_json_source, append_json_array_item_source, append_json_object_property_source,
-    rename_json_object_key_source, replace_json_scalar_source, transform_json_source,
-    write_json_source_document,
+    remove_json_object_property_source, rename_json_object_key_source, replace_json_scalar_source,
+    transform_json_source, write_json_source_document,
 };
 use commands::mindmap::{create_canvas_from_opml, read_opml_file, write_opml_file};
 use commands::pdf::{
@@ -230,6 +230,7 @@ pub fn run() {
             analyze_json_source,
             append_json_array_item_source,
             append_json_object_property_source,
+            remove_json_object_property_source,
             rename_json_object_key_source,
             replace_json_scalar_source,
             transform_json_source,
