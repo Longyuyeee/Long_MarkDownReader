@@ -25,6 +25,7 @@ export interface TabInfo {
   textBom?: string
   textLineEnding?: string
   textHasFinalNewline?: boolean
+  textReadEncoding?: string
 }
 
 export interface LibraryConfig {
@@ -234,6 +235,7 @@ export const useAppStore = defineStore('app', {
         if (tab.textBom !== undefined) existing.textBom = tab.textBom
         if (tab.textLineEnding !== undefined) existing.textLineEnding = tab.textLineEnding
         if (tab.textHasFinalNewline !== undefined) existing.textHasFinalNewline = tab.textHasFinalNewline
+        if (tab.textReadEncoding !== undefined) existing.textReadEncoding = tab.textReadEncoding
         const [removed] = this.tabs.splice(idx, 1)
         this.tabs.unshift(removed)
         if (this.activeTabId !== existing.id) {

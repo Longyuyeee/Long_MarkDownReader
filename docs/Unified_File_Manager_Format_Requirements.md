@@ -246,7 +246,7 @@ DOCX/PPTX 必须先完成真实文档兼容矩阵和“只读保真—基础编�
 
 ## 7. 当前能力结论
 
-当前产品已经具备较好的 PDF 阅读批注、Mermaid、JSON Canvas、OPML、CSV/TSV、Open Table 和渐进式 XLSX 编辑能力，也已支持基础 `.txt`。
+当前产品已经具备较好的 PDF 阅读批注、Mermaid、JSON Canvas、OPML、CSV/TSV、Open Table 和渐进式 XLSX 编辑能力，也已支持基础 `.txt`。A1 文本内核已具备快照签名、编码/BOM/换行保真、显式编码重读/转换保存入口、只读阻断和写后重读验证；完整 TXT 工作面仍需补搜索替换、大文件降级和更细结构化错误。
 
 当前主要缺口是：
 

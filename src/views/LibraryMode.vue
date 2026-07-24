@@ -369,6 +369,11 @@
             <n-button quaternary circle size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit" :title="activeSaveTitle">
               <template #icon><n-icon :component="SaveIcon" /></template>
             </n-button>
+            <n-dropdown trigger="click" :options="textEncodingMenuOptions" @select="handleTextEncodingAction" v-if="activeTabId && activeDocumentFormat?.routeName === 'LibraryMode'">
+              <n-button quaternary circle size="small" title="文本编码">
+                <template #icon><n-icon :component="LanguagesIcon" /></template>
+              </n-button>
+            </n-dropdown>
             <n-dropdown trigger="click" :options="exportOptions" @select="handleExport" v-if="activeTabId">
               <n-button quaternary circle size="small" title="导出">
                 <template #icon><n-icon :component="DownloadIcon" /></template>
@@ -501,11 +506,11 @@ import {
   Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
   Database as DatabaseIcon, LayoutDashboard as DashboardIcon, ListFilter as CollectionIcon,
-  BookmarkPlus as BookmarkAddIcon
+  BookmarkPlus as BookmarkAddIcon, Languages as LanguagesIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
-import { useAppStore, THEME_MAP, type SavedSearchConfig } from '../store/app'
+import { useAppStore, THEME_MAP, type SavedSearchConfig, type TabInfo } from '../store/app'
 import { isActiveThemeDark } from '../config/themePresets'
 import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
@@ -567,6 +572,33 @@ interface TextDocumentSnapshot {
   path: string
 }
 
+interface TextReadOptions {
+  encoding?: string
+}
+
+interface TextSavePolicy {
+  expectedSignature?: string
+  encoding?: string
+  bom?: string
+  lineEnding?: string
+  hasFinalNewline?: boolean
+}
+
+interface TextEncodingPreset {
+  label: string
+  encoding: string
+  bom: 'none' | 'utf-8'
+}
+
+const TEXT_ENCODING_PRESETS: TextEncodingPreset[] = [
+  { label: 'UTF-8', encoding: 'utf-8', bom: 'none' },
+  { label: 'UTF-8 BOM', encoding: 'utf-8', bom: 'utf-8' },
+  { label: 'GBK', encoding: 'gbk', bom: 'none' },
+  { label: 'GB18030', encoding: 'gb18030', bom: 'none' },
+]
+
+const encodingLabel = (encoding: string) => TEXT_ENCODING_PRESETS.find(preset => preset.encoding === encoding)?.label || encoding.toUpperCase()
+
 const message = useMessage()
 const dialog = useDialog()
 const store = useAppStore()
@@ -588,13 +620,33 @@ const activeTextSnapshotLabel = computed(() => {
 const activeTextSnapshotTitle = computed(() => {
   const tab = activeTextTab.value
   if (!tab?.textSignature) return '尚未读取文本快照'
-  return `签名 ${tab.textSignature}`
+  const confidence = tab.textReadEncoding ? ` · 用户选择 ${encodingLabel(tab.textReadEncoding)}` : ''
+  return `签名 ${tab.textSignature}${confidence}`
 })
 const activeSaveTitle = computed(() => {
   if (!activeTabId.value) return '保存到磁盘 (Ctrl+S)'
   if (!activeFormatCanEdit.value) return `${activeDocumentFormat.value?.label || '当前格式'}不可覆盖保存`
   return `保存到磁盘 (Ctrl+S) · ${activeDocumentFormat.value?.userCapability.label || '可编辑'}`
 })
+const textEncodingMenuOptions = computed(() => [
+  {
+    label: '按编码重新读取',
+    key: 'read-group',
+    children: TEXT_ENCODING_PRESETS.map(preset => ({
+      label: preset.label,
+      key: `read:${preset.encoding}`,
+    })),
+  },
+  {
+    label: '转换保存为',
+    key: 'save-group',
+    disabled: !activeFormatCanEdit.value,
+    children: TEXT_ENCODING_PRESETS.map(preset => ({
+      label: preset.label,
+      key: `save:${preset.encoding}:${preset.bom}`,
+    })),
+  },
+])
 const openEmbeddedTableChart = (path: string) => router.push({ name: 'Table', query: { path } })
 
 // 统一错误处理辅助函数
@@ -833,6 +885,7 @@ let vditor: any = null
 let isVditorReady = false
 let lastLoadedPath = ''
 let lastKnownModified = 0
+let suppressEditorInput = false
 
 // 常量定义
 const SCROLL_DEBOUNCE_MS = 50
@@ -1187,10 +1240,13 @@ const loadFileToEditor = async (path: string) => {
   const currentTab = tabs.value.find(t => t.path === path)
   
   const setEditorValue = (content: string) => {
+    suppressEditorInput = true
     vditor.setValue(content)
+    setTimeout(() => { suppressEditorInput = false }, 0)
     fetchHistory()
     nextTick(() => { 
       setTimeout(() => { 
+        if (currentTab) currentTab.isDirty = false
         lastLoadedPath = path;
         invoke<any>('get_file_stats', { libraryRoot: store.libraryPath, path }).then(s => { lastKnownModified = s.modified }).catch(() => {})
         syncOutlineManual();
@@ -1201,14 +1257,16 @@ const loadFileToEditor = async (path: string) => {
     })
   }
 
-  const applyTextSnapshot = (tab: typeof currentTab, snapshot: TextDocumentSnapshot) => {
+  const applyTextSnapshot = (tab: typeof currentTab, snapshot: TextDocumentSnapshot, readEncoding?: string) => {
     if (!tab) return
     tab.content = snapshot.content
+    tab.isDirty = false
     tab.textSignature = snapshot.signature
     tab.textEncoding = snapshot.encoding
     tab.textBom = snapshot.bom
     tab.textLineEnding = snapshot.lineEnding
     tab.textHasFinalNewline = snapshot.hasFinalNewline
+    tab.textReadEncoding = readEncoding
   }
 
   if (currentTab?.content !== undefined) {
@@ -1217,11 +1275,23 @@ const loadFileToEditor = async (path: string) => {
     try {
       const format = findFileFormat(path)
       if (!format || format.routeName !== 'LibraryMode') throw new Error('文件未注册为文本工作面格式')
-      const res = await invoke<TextDocumentSnapshot>('read_text_document', { libraryRoot: store.libraryPath, path, formatId: format.id })
-      applyTextSnapshot(currentTab, res)
+      const readOptions = currentTab?.textReadEncoding ? { encoding: currentTab.textReadEncoding } : undefined
+      const res = await invoke<TextDocumentSnapshot>('read_text_document', { libraryRoot: store.libraryPath, path, formatId: format.id, readOptions })
+      applyTextSnapshot(currentTab, res, currentTab?.textReadEncoding)
       setEditorValue(res.content)
     } catch (err) { message.error("读取失败") }
   }
+}
+
+const updateTabFromTextSnapshot = (tab: TabInfo, snapshot: TextDocumentSnapshot, readEncoding?: string) => {
+  tab.content = snapshot.content
+  tab.isDirty = false
+  tab.textSignature = snapshot.signature
+  tab.textEncoding = snapshot.encoding
+  tab.textBom = snapshot.bom
+  tab.textLineEnding = snapshot.lineEnding
+  tab.textHasFinalNewline = snapshot.hasFinalNewline
+  tab.textReadEncoding = readEncoding
 }
 
 const virtualDrag = reactive({ 
@@ -1615,12 +1685,14 @@ const triggerAutoSave = (content: string) => {
     const format = current ? findFileFormat(current.path) : undefined
     if (current && format?.routeName === 'LibraryMode') {
       try {
+        const savePolicy = current.textReadEncoding ? { encoding: current.textReadEncoding } : undefined
         const saved = await invoke<TextDocumentSnapshot>('write_text_document', {
           libraryRoot: store.libraryPath,
           path: current.path,
           formatId: format.id,
           content,
           expectedSignature: current.textSignature,
+          savePolicy,
         })
         current.content = saved.content
         current.textSignature = saved.signature
@@ -1628,6 +1700,7 @@ const triggerAutoSave = (content: string) => {
         current.textBom = saved.bom
         current.textLineEnding = saved.lineEnding
         current.textHasFinalNewline = saved.hasFinalNewline
+        current.isDirty = false
         lastKnownModified = Math.floor(Date.now() / 1000)
       } catch (error) { console.error('Auto-save failed:', error) }
     }
@@ -1645,7 +1718,16 @@ const refreshCurrentFile = async () => {
   }
 }
 
-const saveCurrentFile = async () => {
+type TextSaveOptions = { savePolicy?: TextSavePolicy; successMessage?: string }
+
+const normalizeTextSaveOptions = (options: unknown): TextSaveOptions => {
+  if (!options || typeof options !== 'object') return {}
+  if ('savePolicy' in options || 'successMessage' in options) return options as TextSaveOptions
+  return {}
+}
+
+const saveCurrentFile = async (options: unknown = {}) => {
+  const saveOptions = normalizeTextSaveOptions(options)
   if (!vditor || !activeTabId.value) return; const t = tabs.value.find(item => item.id === activeTabId.value)
   if (t) { 
     try { 
@@ -1665,21 +1747,23 @@ const saveCurrentFile = async () => {
         })
       }
 
+      const savePolicy = saveOptions.savePolicy || (t.textReadEncoding ? { encoding: t.textReadEncoding } : undefined)
       const saved = await invoke<TextDocumentSnapshot>('write_text_document', {
         libraryRoot: store.libraryPath,
         path: t.path,
         formatId: format.id,
         content,
         expectedSignature: t.textSignature,
+        savePolicy,
       });
-      t.content = saved.content
-      t.textSignature = saved.signature
-      t.textEncoding = saved.encoding
-      t.textBom = saved.bom
-      t.textLineEnding = saved.lineEnding
-      t.textHasFinalNewline = saved.hasFinalNewline
+      updateTabFromTextSnapshot(t, saved, savePolicy?.encoding || t.textReadEncoding)
+      if (vditor.getValue() !== saved.content) {
+        suppressEditorInput = true
+        vditor.setValue(saved.content)
+        setTimeout(() => { suppressEditorInput = false }, 0)
+      }
       lastKnownModified = Math.floor(Date.now() / 1000)
-      message.success('已安全保存');
+      message.success(saveOptions.successMessage || '已安全保存');
       // Git 自动 commit（本地）
       if (currentLibGitEnabled.value) {
         invoke('git_commit', { libraryPath: store.libraryPath, message: `更新: ${t.title}` }).catch(() => {})
@@ -1779,8 +1863,13 @@ const initVditor = () => {
         '|', { name: 'both', tip: '双栏预览' }, { name: 'preview', tip: '预览' }, { name: 'edit-mode', tip: '切换编辑模式' }
       ],
       input: (val) => { 
+        if (suppressEditorInput) {
+          wordCount.value = val.length
+          return
+        }
         const cur = tabs.value.find(t => t.id === activeTabId.value); 
         if (cur) {
+          cur.isDirty = true
           triggerAutoSave(val); 
           store.updateTabContent(cur.path, val);
         }
@@ -2093,6 +2182,61 @@ const refreshKnowledgeIndexStatus = async () => {
     knowledgeIndexStatus.value = await invoke<KnowledgeIndexStatus>('get_knowledge_index_status', { libraryRoot: store.libraryPath })
   } catch (error) {
     knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'error', error: String(error) }
+  }
+}
+
+const reloadTextWithEncoding = async (encoding: string) => {
+  if (!vditor || !activeTabId.value) return
+  const tab = tabs.value.find(item => item.id === activeTabId.value)
+  if (!tab) return
+  const format = findFileFormat(tab.path)
+  if (!format || format.routeName !== 'LibraryMode') return
+  const run = async () => {
+    try {
+      const readOptions: TextReadOptions = { encoding }
+      const snapshot = await invoke<TextDocumentSnapshot>('read_text_document', {
+        libraryRoot: store.libraryPath,
+        path: tab.path,
+        formatId: format.id,
+        readOptions,
+      })
+      updateTabFromTextSnapshot(tab, snapshot, encoding)
+      suppressEditorInput = true
+      vditor.setValue(snapshot.content)
+      setTimeout(() => { suppressEditorInput = false }, 0)
+      lastKnownModified = Math.floor(Date.now() / 1000)
+      message.success(`已按 ${encodingLabel(encoding)} 重新读取`)
+    } catch (e: any) {
+      handleError(e, '编码重读失败', 'reloadTextWithEncoding')
+    }
+  }
+  if (tab.isDirty) {
+    dialog.warning({
+      title: '重新读取会覆盖未保存内容',
+      content: '当前编辑区存在未保存修改。继续后会从磁盘按所选编码重新读取。',
+      positiveText: '继续重读',
+      negativeText: '取消',
+      onPositiveClick: () => { void run() },
+    })
+  } else {
+    await run()
+  }
+}
+
+const saveTextWithEncoding = async (encoding: string, bom: 'none' | 'utf-8') => {
+  const label = TEXT_ENCODING_PRESETS.find(preset => preset.encoding === encoding && preset.bom === bom)?.label || encodingLabel(encoding)
+  await saveCurrentFile({
+    savePolicy: { encoding, bom },
+    successMessage: `已转换保存为 ${label}`,
+  })
+}
+
+const handleTextEncodingAction = (key: string) => {
+  const [action, encoding, bom] = key.split(':')
+  if (action === 'read' && encoding) {
+    void reloadTextWithEncoding(encoding)
+  } else if (action === 'save' && encoding && (bom === 'none' || bom === 'utf-8')) {
+    void saveTextWithEncoding(encoding, bom)
   }
 }
 const rebuildKnowledgeIndex = async () => {
