@@ -18,14 +18,28 @@
           </span>
         </div>
       </div>
+      <n-button-group size="small" class="view-switch" aria-label="JSON 视图">
+        <n-button :type="viewMode === 'source' ? 'primary' : 'default'" @click="viewMode = 'source'">
+          <template #icon><n-icon :component="SourceIcon" /></template>
+          源码
+        </n-button>
+        <n-button
+          :type="viewMode === 'tree' ? 'primary' : 'default'"
+          :disabled="!analysis?.valid"
+          @click="viewMode = 'tree'"
+        >
+          <template #icon><n-icon :component="TreeIcon" /></template>
+          树形
+        </n-button>
+      </n-button-group>
       <div class="editor-actions">
-        <n-button quaternary circle size="small" title="搜索源码" :disabled="loading" @click="openSourceSearch">
+        <n-button quaternary circle size="small" title="搜索源码" :disabled="loading || viewMode !== 'source'" @click="openSourceSearch">
           <template #icon><n-icon :component="SearchIcon" /></template>
         </n-button>
-        <n-button quaternary circle size="small" title="折叠全部" :disabled="loading" @click="foldSource">
+        <n-button quaternary circle size="small" title="折叠全部" :disabled="loading || viewMode !== 'source'" @click="foldSource">
           <template #icon><n-icon :component="FoldIcon" /></template>
         </n-button>
-        <n-button quaternary circle size="small" title="展开全部" :disabled="loading" @click="unfoldSource">
+        <n-button quaternary circle size="small" title="展开全部" :disabled="loading || viewMode !== 'source'" @click="unfoldSource">
           <template #icon><n-icon :component="UnfoldIcon" /></template>
         </n-button>
         <n-button quaternary circle size="small" title="格式化源码" :disabled="transformDisabled" @click="transformSource('pretty')">
@@ -51,12 +65,74 @@
     </div>
 
     <main v-else class="json-main">
-      <section class="source-pane" aria-label="JSON 源码">
+      <section class="source-pane" :aria-label="viewMode === 'source' ? 'JSON 源码' : 'JSON 树形预览'">
         <div v-if="loading" class="loading-state">
           <n-spin size="small" />
           <span>正在读取并分析</span>
         </div>
-        <div ref="editorHost" class="editor-host"></div>
+        <div v-show="viewMode === 'source'" ref="editorHost" class="editor-host"></div>
+        <div v-if="viewMode === 'tree'" class="tree-pane">
+          <header class="tree-toolbar">
+            <div>
+              <strong>结构预览</strong>
+              <span>{{ analysis?.paths.length ?? 0 }} 个节点</span>
+            </div>
+            <div>
+              <n-button quaternary circle size="small" title="折叠全部节点" @click="collapseAllTree">
+                <template #icon><n-icon :component="FoldIcon" /></template>
+              </n-button>
+              <n-button quaternary circle size="small" title="展开全部节点" @click="expandAllTree">
+                <template #icon><n-icon :component="UnfoldIcon" /></template>
+              </n-button>
+            </div>
+          </header>
+          <div class="tree-rows" role="tree" aria-label="JSON 节点">
+            <div
+              v-for="entry in visibleTreePaths"
+              :key="`${entry.path}-${entry.start}`"
+              class="tree-row"
+              :class="{ selected: selectedTreeStart === entry.start }"
+              :style="{ '--tree-depth': Math.min(entry.depth - 1, 16) }"
+              role="treeitem"
+              :aria-level="entry.depth"
+              :aria-expanded="entry.childCount ? !collapsedTreeNodes.has(entry.start) : undefined"
+              @click="selectedTreeStart = entry.start"
+            >
+              <button
+                v-if="entry.childCount"
+                class="tree-toggle"
+                type="button"
+                :title="collapsedTreeNodes.has(entry.start) ? '展开节点' : '折叠节点'"
+                @click.stop="toggleTreeNode(entry.start)"
+              >
+                <ChevronRightIcon v-if="collapsedTreeNodes.has(entry.start)" :size="15" />
+                <ChevronDownIcon v-else :size="15" />
+              </button>
+              <span v-else class="tree-toggle-spacer"></span>
+              <button class="tree-node-main" type="button" @dblclick="showSourceRange(entry)">
+                <strong>{{ entry.label }}</strong>
+                <small>{{ kindLabel(entry.kind) }}<template v-if="entry.childCount"> · {{ entry.childCount }} 项</template></small>
+                <code>{{ entry.preview }}</code>
+              </button>
+              <div class="tree-node-actions">
+                <n-button quaternary circle size="tiny" title="定位到源码" @click.stop="showSourceRange(entry)">
+                  <template #icon><n-icon :component="LocateIcon" /></template>
+                </n-button>
+                <n-button quaternary circle size="tiny" title="复制节点值" @click.stop="copySourceRange(entry)">
+                  <template #icon><n-icon :component="CopyValueIcon" /></template>
+                </n-button>
+                <n-button quaternary circle size="tiny" title="复制 JSON Path" @click.stop="copyPath(entry.path)">
+                  <template #icon><n-icon :component="CopyIcon" /></template>
+                </n-button>
+              </div>
+            </div>
+            <div v-if="treeView.truncated || analysis?.pathsTruncated" class="tree-limit-note">
+              <template v-if="analysis?.pathsTruncated">节点目录已达到 20,000 项分析上限。</template>
+              <template v-if="treeView.truncated">当前层级仅渲染前 2,000 个可见节点。</template>
+              请折叠节点或使用 JSON Path 筛选定位其余内容
+            </div>
+          </div>
+        </div>
       </section>
 
       <aside class="analysis-pane" aria-label="JSON 诊断">
@@ -175,10 +251,16 @@ import {
   AlertTriangle as AlertIcon,
   ArrowLeft as ArrowLeftIcon,
   Braces as FormatIcon,
+  ChevronDown as ChevronDownIcon,
+  ChevronRight as ChevronRightIcon,
   CircleCheck as CircleCheckIcon,
+  ClipboardCopy as CopyValueIcon,
+  Code2 as SourceIcon,
   Copy as CopyIcon,
   FileJson as FileJsonIcon,
   FoldVertical as FoldIcon,
+  ListTree as TreeIcon,
+  LocateFixed as LocateIcon,
   Minimize2 as MinifyIcon,
   RefreshCw as RefreshIcon,
   Save as SaveIcon,
@@ -230,7 +312,10 @@ interface JsonSourceAnalysis {
 
 interface JsonPathEntry {
   path: string
+  label: string
   kind: string
+  depth: number
+  childCount: number
   start: number
   end: number
   line: number
@@ -256,6 +341,10 @@ const analysis = ref<JsonSourceAnalysis | null>(null)
 const analysisPending = ref(false)
 const transformPending = ref(false)
 const pathQuery = ref('')
+const viewMode = ref<'source' | 'tree'>('source')
+const collapsedTreeNodes = ref<Set<number>>(new Set())
+const selectedTreeStart = ref<number | null>(null)
+const MAX_TREE_RENDER_NODES = 2_000
 const dirty = ref(false)
 const sourceContent = ref('')
 const sourceSize = ref(0)
@@ -312,6 +401,26 @@ const filteredPaths = computed(() => {
     .slice(0, 200)
 })
 
+const treeView = computed(() => {
+  const paths = analysis.value?.paths || []
+  const ancestors: JsonPathEntry[] = []
+  const visible: JsonPathEntry[] = []
+  for (const entry of paths) {
+    while (ancestors.length && ancestors[ancestors.length - 1].depth >= entry.depth) {
+      ancestors.pop()
+    }
+    if (!ancestors.some(ancestor => collapsedTreeNodes.value.has(ancestor.start))) {
+      visible.push(entry)
+    }
+    ancestors.push(entry)
+  }
+  return {
+    entries: visible.slice(0, MAX_TREE_RENDER_NODES),
+    truncated: visible.length > MAX_TREE_RENDER_NODES,
+  }
+})
+const visibleTreePaths = computed(() => treeView.value.entries)
+
 const syncCurrentTab = (isDirty = dirty.value) => {
   if (!editor || !jsonPath.value) return
   const tab = store.tabs.find(item => item.path === jsonPath.value)
@@ -349,7 +458,10 @@ const analyzeContent = async (content: string) => {
       content,
       jsonc: format.value?.id === 'jsonc',
     })
-    if (generation === analysisGeneration && sourceContent.value === content) analysis.value = result
+    if (generation === analysisGeneration && sourceContent.value === content) {
+      analysis.value = result
+      if (!result.valid) viewMode.value = 'source'
+    }
     return result
   } finally {
     if (generation === analysisGeneration) analysisPending.value = false
@@ -376,6 +488,8 @@ const editorExtensions = (isReadOnly: boolean) => [
     if (update.docChanged) {
       sourceContent.value = update.state.doc.toString()
       lineCount.value = update.state.doc.lines
+      collapsedTreeNodes.value = new Set()
+      selectedTreeStart.value = null
       if (!applyingDocument) {
         dirty.value = true
         syncCurrentTab(true)
@@ -533,6 +647,46 @@ const copyPath = async (path: string) => {
   } catch {
     message.error('复制 JSON Path 失败')
   }
+}
+
+const sourceRangeText = (range: Pick<JsonPathEntry, 'start' | 'end'>) => {
+  const from = byteOffsetToCodeUnit(sourceContent.value, range.start)
+  const to = byteOffsetToCodeUnit(sourceContent.value, range.end)
+  return sourceContent.value.slice(from, to)
+}
+
+const copySourceRange = async (entry: JsonPathEntry) => {
+  try {
+    await navigator.clipboard.writeText(sourceRangeText(entry))
+    message.success('节点源码已复制')
+  } catch {
+    message.error('复制节点源码失败')
+  }
+}
+
+const showSourceRange = async (entry: JsonPathEntry) => {
+  viewMode.value = 'source'
+  await nextTick()
+  revealSourceRange(entry)
+}
+
+const toggleTreeNode = (start: number) => {
+  const next = new Set(collapsedTreeNodes.value)
+  if (next.has(start)) next.delete(start)
+  else next.add(start)
+  collapsedTreeNodes.value = next
+}
+
+const collapseAllTree = () => {
+  collapsedTreeNodes.value = new Set(
+    (analysis.value?.paths || [])
+      .filter(entry => entry.childCount > 0)
+      .map(entry => entry.start),
+  )
+}
+
+const expandAllTree = () => {
+  collapsedTreeNodes.value = new Set()
 }
 
 const kindLabel = (kind: string) => ({
@@ -715,6 +869,10 @@ onBeforeUnmount(() => {
   gap: 6px;
 }
 
+.view-switch {
+  flex: 0 0 auto;
+}
+
 .document-identity > svg {
   flex: 0 0 auto;
   color: var(--theme-primary);
@@ -759,6 +917,131 @@ onBeforeUnmount(() => {
 .editor-host {
   width: 100%;
   height: 100%;
+}
+
+.tree-pane {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--theme-bg);
+}
+
+.tree-toolbar {
+  flex: 0 0 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px;
+  border-bottom: var(--theme-border);
+  background: var(--theme-surface);
+}
+
+.tree-toolbar > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.tree-toolbar strong {
+  font-size: 12px;
+}
+
+.tree-toolbar span {
+  color: var(--theme-text-secondary);
+  font-size: 10px;
+}
+
+.tree-rows {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 6px 0 24px;
+}
+
+.tree-row {
+  min-width: 560px;
+  height: 38px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 88px;
+  align-items: center;
+  padding: 0 8px 0 calc(8px + var(--tree-depth) * 18px);
+  border-bottom: 1px solid transparent;
+}
+
+.tree-row:hover,
+.tree-row.selected {
+  background: var(--theme-surface-2);
+}
+
+.tree-row.selected {
+  border-bottom-color: rgba(var(--theme-primary-rgb), 0.2);
+}
+
+.tree-toggle,
+.tree-node-main {
+  border: 0;
+  color: var(--theme-text);
+  background: transparent;
+  cursor: pointer;
+}
+
+.tree-toggle {
+  width: 22px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.tree-toggle-spacer {
+  width: 22px;
+}
+
+.tree-node-main {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(80px, 0.6fr) 90px minmax(120px, 1.4fr);
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+  padding: 0 8px;
+  text-align: left;
+}
+
+.tree-node-main strong,
+.tree-node-main code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-node-main strong {
+  font-size: 12px;
+}
+
+.tree-node-main small {
+  color: var(--theme-text-secondary);
+  font-size: 10px;
+}
+
+.tree-node-main code {
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+}
+
+.tree-node-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.tree-limit-note {
+  padding: 12px 16px;
+  color: var(--theme-warning, #b77813);
+  font-size: 11px;
 }
 
 .loading-state {
@@ -1033,6 +1316,23 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 780px) {
+  .view-switch {
+    margin-left: auto;
+  }
+
+  .json-toolbar {
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    height: auto;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  .editor-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
   .json-main {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(260px, 1fr) minmax(180px, 42%);

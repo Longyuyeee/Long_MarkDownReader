@@ -27,7 +27,10 @@ pub struct JsonDiagnostic {
 #[serde(rename_all = "camelCase")]
 pub struct JsonPathEntry {
     pub path: String,
+    pub label: String,
     pub kind: String,
+    pub depth: usize,
+    pub child_count: usize,
     pub start: usize,
     pub end: usize,
     pub line: usize,
@@ -145,6 +148,7 @@ pub fn analyze_json_source(content: &str, jsonc: bool) -> JsonSourceAnalysis {
     inspect_value(
         root,
         "$",
+        "$",
         1,
         content,
         &mut counters,
@@ -206,6 +210,7 @@ fn failed_analysis(mode: String, diagnostic: JsonDiagnostic) -> JsonSourceAnalys
 fn inspect_value(
     value: &Value<'_>,
     path: &str,
+    label: &str,
     depth: usize,
     content: &str,
     counters: &mut AnalysisCounters,
@@ -219,7 +224,10 @@ fn inspect_value(
         let (line, column) = line_column(content, range.start);
         paths.push(JsonPathEntry {
             path: path.into(),
+            label: label.into(),
             kind: value_kind(value).into(),
+            depth,
+            child_count: value_child_count(value),
             start: range.start,
             end: range.end,
             line,
@@ -257,6 +265,7 @@ fn inspect_value(
                 inspect_value(
                     &property.value,
                     &property_path,
+                    key,
                     depth + 1,
                     content,
                     counters,
@@ -270,6 +279,7 @@ fn inspect_value(
                 inspect_value(
                     element,
                     &format!("{path}[{index}]"),
+                    &format!("[{index}]"),
                     depth + 1,
                     content,
                     counters,
@@ -517,6 +527,14 @@ fn value_kind(value: &Value<'_>) -> &'static str {
     }
 }
 
+fn value_child_count(value: &Value<'_>) -> usize {
+    match value {
+        Value::Object(object) => object.properties.len(),
+        Value::Array(array) => array.elements.len(),
+        _ => 0,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -551,7 +569,11 @@ mod tests {
         assert_eq!(analysis.max_depth, 4);
         assert!(analysis.structure_edit_candidate);
         assert_eq!(analysis.paths[0].path, "$");
+        assert_eq!(analysis.paths[0].depth, 1);
+        assert_eq!(analysis.paths[0].child_count, 1);
         assert_eq!(analysis.paths[2].path, "$.rows[0]");
+        assert_eq!(analysis.paths[2].label, "[0]");
+        assert_eq!(analysis.paths[2].depth, 3);
         assert_eq!(analysis.paths[3].preview, "1.25");
     }
 
