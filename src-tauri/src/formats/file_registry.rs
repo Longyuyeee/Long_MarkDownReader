@@ -18,6 +18,36 @@ impl CapabilityLevel {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum UserCapabilityLevel {
+    CompleteEdit,
+    BasicEdit,
+    ReadAnnotate,
+    PreviewOnly,
+    ExternalOpen,
+    Unsupported,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum SaveMode {
+    Overwrite,
+    BoundedOverwrite,
+    Sidecar,
+    Copy,
+    None,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FileFormatUserCapability {
+    pub level: UserCapabilityLevel,
+    pub label: String,
+    pub save_mode: SaveMode,
+    pub description: String,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct FileFormatCapabilities {
     pub read: CapabilityLevel,
@@ -53,23 +83,10 @@ pub struct FileFormatDefinition {
     pub route_name: String,
     pub max_bytes: u64,
     pub capabilities: FileFormatCapabilities,
+    pub user_capability: FileFormatUserCapability,
     pub external_policy: String,
     pub adapters: FileFormatAdapters,
     pub creation: Option<FileFormatCreation>,
-}
-
-impl FileFormatDefinition {
-    pub fn matches_path(&self, path: impl AsRef<Path>) -> bool {
-        let name = path
-            .as_ref()
-            .file_name()
-            .and_then(|value| value.to_str())
-            .unwrap_or_default()
-            .to_lowercase();
-        self.extensions
-            .iter()
-            .any(|extension| name.ends_with(extension))
-    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -89,7 +106,7 @@ impl FileFormatRegistry {
     }
 
     pub fn validate(&self) -> Result<(), String> {
-        if self.schema_version != 1 {
+        if self.schema_version != 2 {
             return Err(format!("不支持的文件格式契约版本 {}", self.schema_version));
         }
         let mut ids = HashSet::new();
@@ -98,7 +115,10 @@ impl FileFormatRegistry {
             if format.id.trim().is_empty() || !ids.insert(format.id.as_str()) {
                 return Err(format!("文件格式 ID 重复或为空: {}", format.id));
             }
-            if format.extensions.is_empty() || format.max_bytes == 0 {
+            if format.extensions.is_empty()
+                || format.max_bytes == 0
+                || format.user_capability.label.trim().is_empty()
+            {
                 return Err(format!("文件格式契约不完整: {}", format.id));
             }
             for extension in &format.extensions {
@@ -125,9 +145,23 @@ impl FileFormatRegistry {
     }
 
     pub fn by_path(&self, path: impl AsRef<Path>) -> Option<&FileFormatDefinition> {
+        let name = path
+            .as_ref()
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or_default()
+            .to_lowercase();
         self.formats
             .iter()
-            .find(|format| format.matches_path(path.as_ref()))
+            .flat_map(|format| {
+                format
+                    .extensions
+                    .iter()
+                    .filter(|extension| name.ends_with(extension.as_str()))
+                    .map(move |extension| (extension.len(), format))
+            })
+            .max_by_key(|(extension_len, _)| *extension_len)
+            .map(|(_, format)| format)
     }
 }
 
@@ -159,8 +193,12 @@ mod tests {
     #[test]
     fn shared_registry_is_valid_and_matches_compound_extensions() {
         let registry = file_format_registry().unwrap();
-        assert_eq!(registry.schema_version, 1);
+        assert_eq!(registry.schema_version, 2);
         assert_eq!(registry.by_path("DATA.TABLE.JSON").unwrap().id, "table");
+        assert_eq!(
+            registry.by_path("notes/archive.TABLE.JSON").unwrap().id,
+            "table"
+        );
         assert_eq!(
             registry.by_path("notes/readme.txt").unwrap().id,
             "plain-text"
@@ -175,6 +213,8 @@ mod tests {
         assert!(format.capabilities.edit.is_supported());
         assert!(format.capabilities.create.is_supported());
         assert!(format.capabilities.index.is_supported());
+        assert_eq!(format.user_capability.level, UserCapabilityLevel::BasicEdit);
+        assert_eq!(format.user_capability.save_mode, SaveMode::Overwrite);
         assert_eq!(format.adapters.reader.as_deref(), Some("text"));
         assert_eq!(format.adapters.indexer.as_deref(), Some("text"));
     }

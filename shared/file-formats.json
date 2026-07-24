@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "formats": [
     {
       "id": "markdown",
@@ -9,6 +9,7 @@
       "routeName": "LibraryMode",
       "maxBytes": 20971520,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "Markdown 可阅读、编辑、创建、索引并可靠保存。" },
       "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text", "indexer": "markdown" },
       "creation": { "defaultExtension": ".md", "defaultContent": "", "defaultName": "未命名" }
@@ -21,6 +22,7 @@
       "routeName": "LibraryMode",
       "maxBytes": 20971520,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "纯文本已有基础读写能力；编码、BOM、换行符和外部冲突保真将在 A1 完成。" },
       "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text", "indexer": "text" },
       "creation": { "defaultExtension": ".txt", "defaultContent": "", "defaultName": "未命名文本" }
@@ -33,6 +35,7 @@
       "routeName": "Canvas",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "JSON Canvas 使用开放事实源，可编辑、创建、索引并可靠保存。" },
       "externalPolicy": "import",
       "adapters": { "reader": "canvas", "writer": "canvas", "creator": "text-template", "indexer": "json-text" },
       "creation": { "defaultExtension": ".canvas", "defaultContent": "{\n  \"nodes\": [],\n  \"edges\": []\n}\n", "defaultName": "未命名画布" }
@@ -45,6 +48,7 @@
       "routeName": "Pdf",
       "maxBytes": 536870912,
       "capabilities": { "read": "supported", "edit": "unsupported", "create": "unsupported", "index": "supported" },
+      "userCapability": { "level": "read-annotate", "label": "阅读/批注", "saveMode": "sidecar", "description": "PDF 原文只读，批注、OCR 和引用写入 sidecar。" },
       "externalPolicy": "import",
       "adapters": { "reader": "pdf", "writer": null, "creator": null, "indexer": "pdf" },
       "creation": null
@@ -57,6 +61,7 @@
       "routeName": "Table",
       "maxBytes": 67108864,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "CSV/TSV 和开放表格可编辑、创建、索引并可靠保存。" },
       "externalPolicy": "import",
       "adapters": { "reader": "table", "writer": "table", "creator": "table", "indexer": "table" },
       "creation": { "defaultExtension": ".table.json", "defaultContent": null, "defaultName": "未命名数据表" }
@@ -69,6 +74,7 @@
       "routeName": "Workbook",
       "maxBytes": 134217728,
       "capabilities": { "read": "supported", "edit": "supported", "create": "unsupported", "index": "planned" },
+      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "bounded-overwrite", "description": "XLSX 仅开放已验证的渐进式编辑子集，高级对象分级只读保真。" },
       "externalPolicy": "import",
       "adapters": { "reader": "workbook", "writer": "workbook", "creator": null, "indexer": null },
       "creation": null
@@ -81,6 +87,7 @@
       "routeName": "Diagram",
       "maxBytes": 2097152,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "Mermaid 源码是可编辑事实源，可预览、导出、索引并保存。" },
       "externalPolicy": "import",
       "adapters": { "reader": "diagram", "writer": "diagram", "creator": "text-template", "indexer": "text" },
       "creation": { "defaultExtension": ".mmd", "defaultContent": "flowchart TD\n  A[开始] --> B[结束]\n", "defaultName": "未命名图表" }
@@ -93,6 +100,7 @@
       "routeName": "MindMap",
       "maxBytes": 8388608,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "OPML 树形与思维导图双视图共享开放事实源，可编辑、创建、索引并保存。" },
       "externalPolicy": "import",
       "adapters": { "reader": "opml", "writer": "opml", "creator": "text-template", "indexer": "opml" },
       "creation": { "defaultExtension": ".opml", "defaultContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<opml version=\"2.0\">\n  <head><title>未命名思维导图</title></head>\n  <body>\n    <outline text=\"中心主题\" _longeditId=\"root\"/>\n  </body>\n</opml>\n", "defaultName": "未命名思维导图" }

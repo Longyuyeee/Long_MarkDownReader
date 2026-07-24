@@ -366,7 +366,7 @@
             <n-button quaternary circle size="small" @click="refreshCurrentFile" :disabled="!activeTabId" title="从磁盘同步内容">
               <template #icon><n-icon :component="RefreshIcon" /></template>
             </n-button>
-            <n-button quaternary circle size="small" @click="saveCurrentFile" :disabled="!activeTabId" title="保存到磁盘 (Ctrl+S)">
+            <n-button quaternary circle size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit" :title="activeSaveTitle">
               <template #icon><n-icon :component="SaveIcon" /></template>
             </n-button>
             <n-dropdown trigger="click" :options="exportOptions" @select="handleExport" v-if="activeTabId">
@@ -387,7 +387,10 @@
             </div>
           </div>
           <div class="word-count-info" v-if="activeTabId">
-            {{ wordCount }} 字 · 约 {{ Math.max(1, Math.ceil(wordCount / 300)) }} 分钟 · 行 {{ cursorLine }}:{{ cursorCol }}
+            <span class="format-capability-badge" :class="`level-${activeDocumentFormat?.userCapability.level || 'unsupported'}`" :title="activeDocumentFormat?.userCapability.description">
+              {{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}
+            </span>
+            <span>{{ wordCount }} 字 · 约 {{ Math.max(1, Math.ceil(wordCount / 300)) }} 分钟 · 行 {{ cursorLine }}:{{ cursorCol }}</span>
           </div>
           <div class="hidden-picker-trigger" style="position: absolute; opacity: 0; pointer-events: none;">
             <n-color-picker 
@@ -519,6 +522,7 @@ import {
   fileDisplayName,
   findFileFormat,
   findFileFormatById,
+  isFormatCapabilitySupported,
   knownFileExtension,
   routeForFile,
 } from '../config/fileFormats'
@@ -557,6 +561,12 @@ const route = useRoute()
 const activeDocumentFormat = computed(() => activeTabId.value ? findFileFormat(activeTabId.value) : undefined)
 const activeIsMarkdown = computed(() => activeDocumentFormat.value?.id === 'markdown')
 const activeMarkdownContent = computed(() => activeIsMarkdown.value ? tabs.value.find(tab => tab.id === activeTabId.value)?.content || '' : '')
+const activeFormatCanEdit = computed(() => activeDocumentFormat.value ? isFormatCapabilitySupported(activeDocumentFormat.value, 'edit') : false)
+const activeSaveTitle = computed(() => {
+  if (!activeTabId.value) return '保存到磁盘 (Ctrl+S)'
+  if (!activeFormatCanEdit.value) return `${activeDocumentFormat.value?.label || '当前格式'}不可覆盖保存`
+  return `保存到磁盘 (Ctrl+S) · ${activeDocumentFormat.value?.userCapability.label || '可编辑'}`
+})
 const openEmbeddedTableChart = (path: string) => router.push({ name: 'Table', query: { path } })
 
 // 统一错误处理辅助函数
@@ -1095,7 +1105,14 @@ const loadDirectory = async (path: string): Promise<TreeOption[]> => {
     label: entry.is_dir ? entry.name : fileDisplayName(entry.name),
     key: entry.path,
     isLeaf: !entry.is_dir,
-    prefix: () => h(entry.is_dir ? FolderIcon : FileIcon, { size: 14, style: 'opacity: 0.6' })
+    prefix: () => {
+      const format = entry.is_dir ? undefined : findFileFormat(entry.path)
+      return h(entry.is_dir ? FolderIcon : FileIcon, {
+        size: 14,
+        style: 'opacity: 0.6',
+        title: format ? `${format.label} · ${format.userCapability.label}` : undefined,
+      })
+    }
   }))
 }
 
@@ -1586,6 +1603,7 @@ const saveCurrentFile = async () => {
       
       const format = findFileFormat(t.path)
       if (!format || format.routeName !== 'LibraryMode') throw new Error('当前文件没有文本写入适配器')
+      if (!isFormatCapabilitySupported(format, 'edit')) throw new Error(`${format.label} 不支持覆盖保存`)
       if (format.id === 'markdown') {
         const assetPattern = /https?:\/\/asset\.localhost\/[^"'\)\s]+/g
         content = content.replace(assetPattern, (match: string) => {
@@ -2905,15 +2923,47 @@ watch(activeTabId, (newId, oldId) => {
 }
 
 .word-count-info {
+  display: inline-flex;
+  max-width: min(520px, 42vw);
+  align-items: center;
+  gap: 6px;
   font-size: 10px;
   opacity: 0.4;
   font-weight: 700;
-  pointer-events: none;
   background: rgba(0, 0, 0, 0.05);
   padding: 1px 6px;
   border-radius: var(--theme-radius-sm);
   transition: all 0.3s ease;
   animation: countFadeIn 0.5s var(--ease-premium);
+}
+
+.word-count-info > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.format-capability-badge {
+  min-width: 0;
+  max-width: 190px;
+  overflow: hidden;
+  padding-right: 6px;
+  border-right: var(--theme-border);
+  color: var(--theme-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.format-capability-badge.level-basic-edit,
+.format-capability-badge.level-read-annotate {
+  color: var(--theme-primary);
+}
+
+.format-capability-badge.level-preview-only,
+.format-capability-badge.level-external-open,
+.format-capability-badge.level-unsupported {
+  color: var(--theme-text-secondary);
 }
 
 .is-dark .word-count-info {

@@ -20,12 +20,15 @@ const failures = []
 const ids = new Set()
 const extensions = new Set()
 const levels = new Set(['supported', 'planned', 'unsupported'])
+const userCapabilityLevels = new Set(['complete-edit', 'basic-edit', 'read-annotate', 'preview-only', 'external-open', 'unsupported'])
+const saveModes = new Set(['overwrite', 'bounded-overwrite', 'sidecar', 'copy', 'none'])
 
-if (registry.schemaVersion !== 1 || !Array.isArray(registry.formats)) failures.push('registry schema must be version 1')
+if (registry.schemaVersion !== 2 || !Array.isArray(registry.formats)) failures.push('registry schema must be version 2')
 for (const format of registry.formats || []) {
   if (!format.id || ids.has(format.id)) failures.push(`duplicate or empty format id: ${format.id}`)
   ids.add(format.id)
   if (!format.routeName || !format.maxBytes || !format.adapters || !format.capabilities) failures.push(`incomplete format: ${format.id}`)
+  if (!format.userCapability || !userCapabilityLevels.has(format.userCapability.level) || !saveModes.has(format.userCapability.saveMode) || !format.userCapability.label || !format.userCapability.description) failures.push(`invalid user capability: ${format.id}`)
   for (const extension of format.extensions || []) {
     if (!extension.startsWith('.') || extension !== extension.toLowerCase() || extensions.has(extension)) failures.push(`invalid or duplicate extension: ${extension}`)
     extensions.add(extension)
@@ -43,15 +46,25 @@ const opmlFormat = registry.formats?.find(format => format.id === 'opml')
 if (!opmlFormat || opmlFormat.routeName !== 'MindMap' || opmlFormat.adapters?.reader !== 'opml' || opmlFormat.adapters?.indexer !== 'opml') failures.push('OPML professional adapter is incomplete')
 const workbookFormat = registry.formats?.find(format => format.id === 'workbook')
 if (!workbookFormat || workbookFormat.maxBytes !== 128 * 1024 * 1024) failures.push('workbook size limit must match the 128 MB backend budget')
+if (workbookFormat?.userCapability?.level !== 'basic-edit' || workbookFormat?.userCapability?.saveMode !== 'bounded-overwrite') failures.push('workbook must be displayed as bounded basic editing')
+const pdfFormat = registry.formats?.find(format => format.id === 'pdf')
+if (pdfFormat?.userCapability?.level !== 'read-annotate' || pdfFormat?.userCapability?.saveMode !== 'sidecar') failures.push('PDF must be displayed as read/annotate sidecar mode')
 
 const requireText = (source, value, message) => { if (!source.includes(value)) failures.push(message) }
 const forbid = (source, pattern, message) => { if (pattern.test(source)) failures.push(message) }
 requireText(frontend, "../../shared/file-formats.json", 'frontend must consume shared registry')
 requireText(rustRegistry, '../../../shared/file-formats.json', 'Rust must consume shared registry')
+requireText(frontend, 'SORTED_FILE_FORMATS', 'frontend matching must use longest-extension sorted formats')
+requireText(frontend, 'userCapability', 'frontend must expose user-visible capability tiers')
+requireText(rustRegistry, 'user_capability', 'Rust registry must expose user-visible capability tiers')
+requireText(rustRegistry, '.max_by_key(|(extension_len, _)| *extension_len)', 'Rust matching must prefer the longest extension')
 requireText(files, 'file_format_registry()', 'workspace scanning must consume registry')
 requireText(externalAccess, 'file_format_for_path', 'external authorization must consume registry')
 requireText(index, 'format.adapters.indexer', 'index dispatch must consume registered adapters')
 requireText(library, 'CREATABLE_FILE_FORMATS', 'creation menu must derive from registry')
+requireText(library, 'activeFormatCanEdit', 'text workspace save action must consume format edit capability')
+requireText(library, 'format-capability-badge', 'text workspace must display user-visible capability tiers')
+requireText(library, 'format.userCapability.label', 'file tree must expose registered capability labels')
 requireText(library, "'read_text_document'", 'text reads must use the generic adapter')
 requireText(library, "'write_text_document'", 'text writes must use the generic adapter')
 requireText(canvas, 'routeForFile(path)', 'Canvas file opening must use registered routing')
@@ -65,5 +78,5 @@ if (failures.length) {
   console.error(`File format contract check failed:\n- ${failures.join('\n- ')}`)
   process.exitCode = 1
 } else {
-  console.log(`File format contract check passed: ${registry.formats.length} formats, ${extensions.size} extensions, shared frontend/Rust registry.`)
+  console.log(`File format contract check passed: schema v${registry.schemaVersion}, ${registry.formats.length} formats, ${extensions.size} extensions, user capability tiers, longest-extension routing.`)
 }

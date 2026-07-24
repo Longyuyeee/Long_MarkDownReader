@@ -3,6 +3,8 @@ import registrySource from '../../shared/file-formats.json'
 export type CapabilityLevel = 'supported' | 'planned' | 'unsupported'
 export type ExternalFilePolicy = 'none' | 'import' | 'edit'
 export type EditorRouteName = 'LibraryMode' | 'Canvas' | 'Pdf' | 'Table' | 'Workbook' | 'Diagram' | 'MindMap'
+export type UserCapabilityLevel = 'complete-edit' | 'basic-edit' | 'read-annotate' | 'preview-only' | 'external-open' | 'unsupported'
+export type SaveMode = 'overwrite' | 'bounded-overwrite' | 'sidecar' | 'copy' | 'none'
 
 export interface FileFormatCapabilities {
   read: CapabilityLevel
@@ -24,6 +26,13 @@ export interface FileFormatCreation {
   defaultName: string
 }
 
+export interface FileFormatUserCapability {
+  level: UserCapabilityLevel
+  label: string
+  saveMode: SaveMode
+  description: string
+}
+
 export interface FileFormatDefinition {
   id: string
   label: string
@@ -32,6 +41,7 @@ export interface FileFormatDefinition {
   routeName: EditorRouteName
   maxBytes: number
   capabilities: FileFormatCapabilities
+  userCapability: FileFormatUserCapability
   externalPolicy: ExternalFilePolicy
   adapters: FileFormatAdapters
   creation: FileFormatCreation | null
@@ -41,15 +51,20 @@ interface FileFormatRegistry { schemaVersion: number; formats: FileFormatDefinit
 
 const registry = registrySource as FileFormatRegistry
 const supported = (level: CapabilityLevel) => level === 'supported'
+const userCapabilityLevels = new Set<UserCapabilityLevel>(['complete-edit', 'basic-edit', 'read-annotate', 'preview-only', 'external-open', 'unsupported'])
+const saveModes = new Set<SaveMode>(['overwrite', 'bounded-overwrite', 'sidecar', 'copy', 'none'])
 
 const validateRegistry = () => {
-  if (registry.schemaVersion !== 1) throw new Error(`Unsupported file format registry schema ${registry.schemaVersion}`)
+  if (registry.schemaVersion !== 2) throw new Error(`Unsupported file format registry schema ${registry.schemaVersion}`)
   const ids = new Set<string>()
   const extensions = new Set<string>()
   for (const format of registry.formats) {
     if (ids.has(format.id)) throw new Error(`Duplicate file format id ${format.id}`)
     ids.add(format.id)
-    if (!format.extensions.length || !format.routeName || format.maxBytes <= 0) throw new Error(`Incomplete file format ${format.id}`)
+    if (!format.extensions.length || !format.routeName || format.maxBytes <= 0 || !format.userCapability) throw new Error(`Incomplete file format ${format.id}`)
+    if (!userCapabilityLevels.has(format.userCapability.level) || !saveModes.has(format.userCapability.saveMode) || !format.userCapability.label) {
+      throw new Error(`Invalid user capability contract ${format.id}`)
+    }
     for (const extension of format.extensions) {
       if (!extension.startsWith('.') || extension !== extension.toLowerCase()) throw new Error(`Invalid extension ${extension}`)
       if (extensions.has(extension)) throw new Error(`Duplicate extension ${extension}`)
@@ -64,11 +79,18 @@ validateRegistry()
 
 export const FILE_FORMAT_SCHEMA_VERSION = registry.schemaVersion
 export const FILE_FORMATS: readonly FileFormatDefinition[] = Object.freeze(registry.formats)
+export const SORTED_FILE_FORMATS: readonly FileFormatDefinition[] = Object.freeze(
+  [...registry.formats].sort((left, right) => {
+    const leftLongest = Math.max(...left.extensions.map(extension => extension.length))
+    const rightLongest = Math.max(...right.extensions.map(extension => extension.length))
+    return rightLongest - leftLongest || left.id.localeCompare(right.id)
+  }),
+)
 export const CREATABLE_FILE_FORMATS = FILE_FORMATS.filter(format => supported(format.capabilities.create))
 
 export const findFileFormat = (path: string) => {
   const lowerPath = path.toLowerCase()
-  return FILE_FORMATS.find(format => format.extensions.some(extension => lowerPath.endsWith(extension)))
+  return SORTED_FILE_FORMATS.find(format => format.extensions.some(extension => lowerPath.endsWith(extension)))
 }
 
 export const findFileFormatById = (id: string) => FILE_FORMATS.find(format => format.id === id)
