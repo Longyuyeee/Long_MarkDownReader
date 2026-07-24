@@ -1,7 +1,8 @@
 # A4 格式能力连续开发交接
 
-更新日期：2026-07-24  
-分支：`codex/a4-format-closure`  
+更新日期：2026-07-24
+
+分支：`codex/a4-format-closure`
 基线：`main` / `3270248`
 
 ## 本轮已完成
