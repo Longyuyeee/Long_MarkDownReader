@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, formatCommands, files, externalAccess, index, library, textEditor, router, canvas, mindmap, opml] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, formatCommands, files, externalAccess, index, library, textEditor, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -14,6 +14,9 @@ const [registryText, frontend, rustRegistry, textKernel, formatCommands, files, 
   read('src/views/LibraryMode.vue'),
   read('src/views/TextEditorView.vue'),
   read('src/router/index.ts'),
+  read('src/App.vue'),
+  read('src/store/app.ts'),
+  read('src/views/SettingsView.vue'),
   read('src/views/CanvasView.vue'),
   read('src/views/MindMapView.vue'),
   read('src-tauri/src/formats/opml.rs'),
@@ -84,6 +87,9 @@ requireText(formatCommands, 'read_text_document_range', 'generic text reads must
 requireText(formatCommands, 'encode_text_for_save', 'generic text writes must use A1 encoding-preserving kernel')
 requireText(formatCommands, '文本文件只读，无法覆盖保存', 'generic text writes must block read-only files before overwrite')
 requireText(formatCommands, '文本保存后重读验证失败', 'generic text writes must verify content after reread')
+requireText(formatCommands, 'read_external_text_document', 'A2 external TXT reads must use the generic text adapter')
+requireText(formatCommands, 'read_external_text_document_range', 'A2 external large TXT files must expose bounded range reads')
+requireText(formatCommands, 'write_external_text_document', 'A2 external TXT writes must use reliable text writes')
 requireText(library, 'error?.suggestion', 'text workspace errors must surface structured recovery suggestions')
 requireText(library, "err?.code === 'read-too-large'", 'text workspace must route oversized files into range preview')
 requireText(library, 'textReadOnlyReason', 'text workspace must persist per-tab read-only downgrade state')
@@ -96,6 +102,14 @@ requireText(textEditor, "'read_text_document_range'", 'A2 TXT editor must consum
 requireText(textEditor, "'write_text_document'", 'A2 TXT editor must consume A1 reliable writes')
 requireText(textEditor, 'expectedSignature', 'A2 TXT saves must retain external conflict protection')
 requireText(textEditor, 'readEncoding', 'A2 TXT editor must separate source decoding from save conversion')
+requireText(textEditor, "'read_external_text_document'", 'A2 TXT editor must support authorized external reads')
+requireText(textEditor, "'write_external_text_document'", 'A2 TXT editor must support authorized external writes')
+requireText(textEditor, 'scheduleAutoSave', 'A2 TXT editor must expose debounced auto-save')
+requireText(textEditor, 'recordRecentFile', 'A2 TXT editor must participate in recent-file state')
+requireText(app, "'pick_external_editable_file'", 'external picker must accept every registered editable text format')
+requireText(app, "external: '1'", 'external TXT routes must retain their authorization context')
+requireText(appStore, 'textAutoSaveEnabled', 'TXT auto-save preference must be persisted')
+requireText(settings, 'TXT 自动保存', 'TXT auto-save preference must be user configurable')
 requireText(files, 'file_format_registry()', 'workspace scanning must consume registry')
 requireText(externalAccess, 'file_format_for_path', 'external authorization must consume registry')
 requireText(index, 'format.adapters.indexer', 'index dispatch must consume registered adapters')

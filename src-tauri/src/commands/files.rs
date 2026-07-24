@@ -1,5 +1,5 @@
 use crate::commands::history::history_dir;
-use crate::formats::file_registry::file_format_registry;
+use crate::formats::file_registry::{file_format_for_path, file_format_registry};
 use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -294,7 +294,10 @@ pub async fn read_external_markdown_file(
     access: State<'_, ExternalFileAccess>,
     path: String,
 ) -> Result<FileContent, String> {
-    let path = access.resolve_markdown(path)?;
+    let path = access.resolve_editable(path)?;
+    if file_format_for_path(&path)?.id != "markdown" {
+        return Err("外部 Markdown 命令只接受 .md 文件".into());
+    }
     read_markdown(path)
 }
 
@@ -304,20 +307,34 @@ pub async fn write_external_markdown_file(
     path: String,
     content: String,
 ) -> Result<(), String> {
-    let path = access.resolve_markdown(path)?;
+    let path = access.resolve_editable(path)?;
+    if file_format_for_path(&path)?.id != "markdown" {
+        return Err("外部 Markdown 命令只接受 .md 文件".into());
+    }
     write_utf8(path, &content)
 }
 
 #[tauri::command]
-pub async fn pick_external_markdown_file(
+pub async fn pick_external_editable_file(
     app_handle: tauri::AppHandle,
     access: State<'_, ExternalFileAccess>,
 ) -> Result<Option<String>, String> {
+    let extensions: Vec<&str> = file_format_registry()?
+        .formats
+        .iter()
+        .filter(|format| format.external_policy == "edit")
+        .flat_map(|format| {
+            format
+                .extensions
+                .iter()
+                .map(|extension| extension.trim_start_matches('.'))
+        })
+        .collect();
     let selected = app_handle
         .dialog()
         .file()
-        .set_title("Open Markdown file")
-        .add_filter("Markdown", &["md"])
+        .set_title("打开可编辑文本文件")
+        .add_filter("可编辑文本", &extensions)
         .blocking_pick_file();
     let Some(selected) = selected else {
         return Ok(None);
@@ -325,7 +342,7 @@ pub async fn pick_external_markdown_file(
     let path = selected
         .into_path()
         .map_err(|error| format!("Invalid selected path: {error}"))?;
-    let path = access.authorize_markdown(path)?;
+    let path = access.authorize_editable(path)?;
     Ok(Some(path.to_string_lossy().into_owned()))
 }
 

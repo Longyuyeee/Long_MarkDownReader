@@ -64,6 +64,9 @@
                   <template #suffix>分钟</template>
                 </n-input-number>
               </n-form-item>
+              <n-form-item label="TXT 自动保存">
+                <n-switch v-model:value="config.textAutoSaveEnabled" />
+              </n-form-item>
               <n-form-item label="最大保留历史版本数">
                 <n-input-number v-model:value="config.maxHistoryCount" :min="1" :max="50" />
               </n-form-item>
@@ -338,6 +341,7 @@ const config = ref({
   editorMode: store.editorMode,
   editorBgColor: store.editorBgColor,
   autoSaveInterval: store.autoSaveInterval,
+  textAutoSaveEnabled: store.textAutoSaveEnabled,
   maxHistoryCount: store.maxHistoryCount,
   isAutostart: store.isAutostart,
   exitStrategy: store.exitStrategy,
@@ -388,6 +392,7 @@ onMounted(async () => {
     editorMode: store.editorMode,
     editorBgColor: store.editorBgColor,
     autoSaveInterval: store.autoSaveInterval,
+    textAutoSaveEnabled: store.textAutoSaveEnabled,
     maxHistoryCount: store.maxHistoryCount,
     isAutostart: store.isAutostart,
     exitStrategy: store.exitStrategy,

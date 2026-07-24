@@ -64,6 +64,7 @@ export const useAppStore = defineStore('app', {
     libraries: [] as LibraryConfig[],
     activeLibraryPath: '',
     autoSaveInterval: 3,
+    textAutoSaveEnabled: true,
     maxHistoryCount: 10,
     isAutostart: false,
     isDefaultEditor: false,
@@ -100,6 +101,7 @@ export const useAppStore = defineStore('app', {
         this.editorBgColor = config.editorBgColor || ''
         this.heroIcon = config.heroIcon || 'BookOpen'
         this.autoSaveInterval = config.autoSaveInterval || 3
+        this.textAutoSaveEnabled = config.textAutoSaveEnabled !== false
         this.maxHistoryCount = config.maxHistoryCount || 10
         this.exitStrategy = config.exitStrategy || 'ask'
         this.visualStyle = config.visualStyle || 'soft'
@@ -170,6 +172,7 @@ export const useAppStore = defineStore('app', {
         editorBgColor: this.editorBgColor,
         heroIcon: this.heroIcon,
         autoSaveInterval: this.autoSaveInterval,
+        textAutoSaveEnabled: this.textAutoSaveEnabled,
         maxHistoryCount: this.maxHistoryCount,
         isAutostart: this.isAutostart,
         exitStrategy: this.exitStrategy,
@@ -256,6 +259,13 @@ export const useAppStore = defineStore('app', {
       // 最近文件追踪
       this.recentFiles = this.recentFiles.filter(f => f.path !== tab.path)
       this.recentFiles.unshift({ title: tab.title, path: tab.path })
+      if (this.recentFiles.length > 10) this.recentFiles = this.recentFiles.slice(0, 10)
+      this.saveTabsState()
+    },
+    recordRecentFile(file: { title: string; path: string }) {
+      if (!file.path) return
+      this.recentFiles = this.recentFiles.filter(item => item.path !== file.path)
+      this.recentFiles.unshift(file)
       if (this.recentFiles.length > 10) this.recentFiles = this.recentFiles.slice(0, 10)
       this.saveTabsState()
     },

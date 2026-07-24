@@ -50,6 +50,7 @@ pub struct AppConfig {
     pub editor_bg_color: String,
     pub hero_icon: String,
     pub auto_save_interval: u32,
+    pub text_auto_save_enabled: bool,
     pub max_history_count: u32,
     pub is_autostart: bool,
     #[serde(default = "default_exit_strategy")]
@@ -105,6 +106,7 @@ impl Default for AppConfig {
             editor_bg_color: String::new(),
             hero_icon: "BookOpen".into(),
             auto_save_interval: 3,
+            text_auto_save_enabled: true,
             max_history_count: 10,
             is_autostart: false,
             exit_strategy: default_exit_strategy(),
@@ -323,6 +325,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(legacy.ai_api_key, "legacy-value");
+        assert!(legacy.text_auto_save_enabled);
     }
 
     #[test]

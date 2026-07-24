@@ -169,9 +169,22 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
   if (e.key === 'F11') { e.preventDefault(); store.toggleZen() }
 }
 
+const routeExternalFile = async (filePath: string) => {
+  const cleanPath = filePath.replace(/^"|"$/g, '')
+  const target = routeForFile(cleanPath)
+  if (target?.name === 'TextEditor') {
+    await router.push({
+      name: 'TextEditor',
+      query: { path: cleanPath, external: '1', t: Date.now() },
+    })
+    return
+  }
+  await router.push({ name: 'TempMode', query: { path: cleanPath, t: Date.now() } })
+}
+
 const openExternalFile = async () => {
-  const filePath = await invoke<string | null>('pick_external_markdown_file')
-  if (filePath) await router.push({ name: 'TempMode', query: { path: filePath, t: Date.now() } })
+  const filePath = await invoke<string | null>('pick_external_editable_file')
+  if (filePath) await routeExternalFile(filePath)
 }
 
 const handleCommand = async (item: any) => {
@@ -235,8 +248,7 @@ onMounted(async () => {
   unlistenOpenFile = await listen<string>('open-file', async (event) => {
     const filePath = event.payload
     if (isExternallyEditable(filePath)) {
-      const cleanPath = filePath.replace(/^"|"$/g, '')
-      router.push({ name: 'TempMode', query: { path: cleanPath, t: Date.now() } })
+      await routeExternalFile(filePath)
     }
   })
 
@@ -244,8 +256,7 @@ onMounted(async () => {
     const args = await invoke<string[]>('get_launch_args')
     const filePath = args.find(arg => isExternallyEditable(arg.replace(/^"|"$/g, '')))
     if (filePath) {
-      const cleanPath = filePath.replace(/^"|"$/g, '')
-      router.push({ name: 'TempMode', query: { path: cleanPath } })
+      await routeExternalFile(filePath)
     }
   } catch (_) { /* launch args unavailable, not critical */ }
 

@@ -18,13 +18,14 @@ use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
     export_markdown_file, export_to_html, get_external_image_base64, get_file_stats,
     get_folder_order, get_image_base64, get_launch_args, import_to_library, move_item, move_items,
-    pick_external_markdown_file, read_external_markdown_file, read_markdown_file, rename_item,
+    pick_external_editable_file, read_external_markdown_file, read_markdown_file, rename_item,
     save_folder_order, scan_directory, write_external_markdown_file, write_markdown_file,
 };
 pub(crate) use commands::files::{sanitize_filename, FileContent, FileEntry};
 use commands::formats::{
-    create_format_file, get_file_format_registry, read_text_document, read_text_document_range,
-    write_text_document,
+    create_format_file, get_file_format_registry, read_external_text_document,
+    read_external_text_document_range, read_text_document, read_text_document_range,
+    write_external_text_document, write_text_document,
 };
 use commands::git::{git_commit, git_init, git_pull, git_push, git_status};
 pub(crate) use commands::graph::GraphData;
@@ -99,7 +100,7 @@ pub fn run() {
             }
             let access = app.state::<ExternalFileAccess>();
             for argument in args.iter().skip(1) {
-                if let Ok(path) = access.authorize_markdown(argument.trim_matches('"')) {
+                if let Ok(path) = access.authorize_editable(argument.trim_matches('"')) {
                     let _ = app.emit("open-file", path.to_string_lossy().into_owned());
                 }
             }
@@ -115,7 +116,7 @@ pub fn run() {
         }
         let access = app.state::<ExternalFileAccess>();
         for argument in args.iter().skip(1) {
-            if let Ok(path) = access.authorize_markdown(argument.trim_matches('"')) {
+            if let Ok(path) = access.authorize_editable(argument.trim_matches('"')) {
                 let _ = app.emit("open-file", path.to_string_lossy().into_owned());
             }
         }
@@ -147,7 +148,7 @@ pub fn run() {
             let args: Vec<String> = std::env::args().collect();
             let access = app.state::<ExternalFileAccess>();
             for argument in args.iter().skip(1) {
-                let _ = access.authorize_markdown(argument.trim_matches('"'));
+                let _ = access.authorize_editable(argument.trim_matches('"'));
             }
             if !args.contains(&"--minimized".to_string()) {
                 let _ = window.show();
@@ -224,13 +225,16 @@ pub fn run() {
             read_text_document,
             read_text_document_range,
             write_text_document,
+            read_external_text_document,
+            read_external_text_document_range,
+            write_external_text_document,
             create_format_file,
             read_opml_file,
             write_opml_file,
             create_canvas_from_opml,
             read_external_markdown_file,
             write_external_markdown_file,
-            pick_external_markdown_file,
+            pick_external_editable_file,
             export_markdown_file,
             export_external_to_html,
             read_canvas_file,

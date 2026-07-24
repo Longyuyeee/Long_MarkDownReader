@@ -32,7 +32,7 @@
         <n-button quaternary circle size="small" title="重新从磁盘读取" :disabled="loading || saving" @click="reloadCurrentEncoding">
           <template #icon><n-icon :component="RefreshIcon" /></template>
         </n-button>
-        <n-button type="primary" size="small" :disabled="loading || saving || readOnly || !dirty" @click="save">
+        <n-button type="primary" size="small" :disabled="loading || saving || readOnly || !dirty" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
           {{ saving ? '保存中' : '保存' }}
         </n-button>
@@ -70,6 +70,10 @@
       <label class="newline-option">
         <input v-model="saveFinalNewline" type="checkbox" :disabled="loading || readOnly" @change="markPolicyDirty">
         <span>末尾换行</span>
+      </label>
+      <label class="autosave-option">
+        <span>自动保存</span>
+        <n-switch v-model:value="textAutoSaveEnabled" size="small" :disabled="readOnly" />
       </label>
       <span v-if="encodingConfidence" class="confidence-label">{{ confidenceLabel }}</span>
       <span v-if="readOnlyReason" class="readonly-label">{{ readOnlyLabel }}</span>
@@ -179,8 +183,13 @@ const message = useMessage()
 const dialog = useDialog()
 const editorHost = ref<HTMLElement | null>(null)
 const textPath = computed(() => String(route.query.path || ''))
+const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => textPath.value.split(/[\\/]/).pop() || '未命名文本')
 const format = computed(() => findFileFormat(textPath.value))
+const textAutoSaveEnabled = computed({
+  get: () => store.textAutoSaveEnabled,
+  set: (value: boolean) => { void store.updateConfig({ textAutoSaveEnabled: value }) },
+})
 const loading = ref(true)
 const saving = ref(false)
 const loadingRange = ref(false)
@@ -208,6 +217,7 @@ const readOnlyCompartment = new Compartment()
 let editor: EditorView | null = null
 let applyingDocument = false
 let loadGeneration = 0
+let autoSaveTimer: ReturnType<typeof setTimeout> | null = null
 
 const readOnly = computed(() => Boolean(readOnlyReason.value))
 const rangeMode = computed(() => readOnlyReason.value === 'large-file-range')
@@ -218,6 +228,17 @@ const confidenceLabel = computed(() => ({
   detected: '编码自动检测',
   'user-selected': '编码由用户指定',
 }[encodingConfidence.value] || encodingConfidence.value))
+
+const clearAutoSave = () => {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer)
+  autoSaveTimer = null
+}
+
+const scheduleAutoSave = () => {
+  clearAutoSave()
+  if (!textAutoSaveEnabled.value || loading.value || readOnly.value) return
+  autoSaveTimer = setTimeout(() => { void save(true) }, 1500)
+}
 
 const normalizeEncoding = (value: string) => {
   const normalized = value.toLowerCase()
@@ -236,7 +257,10 @@ const editorExtensions = (isReadOnly: boolean) => [
     if (update.docChanged) {
       characterCount.value = update.state.doc.length
       lineCount.value = update.state.doc.lines
-      if (!applyingDocument) dirty.value = true
+      if (!applyingDocument) {
+        dirty.value = true
+        scheduleAutoSave()
+      }
     }
     if (update.docChanged || update.selectionSet) {
       const position = update.state.selection.main.head
@@ -308,6 +332,7 @@ const replaceDocument = (content: string, isReadOnly: boolean) => {
   cursorLine.value = 1
   cursorColumn.value = 1
   dirty.value = false
+  clearAutoSave()
 }
 
 const applySnapshot = (snapshot: TextDocumentSnapshot) => {
@@ -363,29 +388,37 @@ const errorMessage = (cause: unknown) => {
   return error?.suggestion ? `${detail} · ${error.suggestion}` : detail
 }
 
-const readRange = (offset: number, encoding?: string) => invoke<TextDocumentRangeSnapshot>('read_text_document_range', {
-  libraryRoot: store.libraryPath,
-  path: textPath.value,
-  formatId: format.value?.id,
-  offset,
-  length: RANGE_BYTES,
-  readOptions: encoding ? { encoding } : undefined,
-})
+const readRange = (offset: number, encoding?: string) => invoke<TextDocumentRangeSnapshot>(
+  isExternal.value ? 'read_external_text_document_range' : 'read_text_document_range',
+  {
+    ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+    path: textPath.value,
+    formatId: format.value?.id,
+    offset,
+    length: RANGE_BYTES,
+    readOptions: encoding ? { encoding } : undefined,
+  },
+)
 
 const load = async (encoding?: string) => {
   const generation = ++loadGeneration
+  clearAutoSave()
   loading.value = true
   loadError.value = ''
   try {
     if (!textPath.value || format.value?.id !== 'plain-text') throw new Error('当前路径不是已注册的纯文本文件')
-    const snapshot = await invoke<TextDocumentSnapshot>('read_text_document', {
-      libraryRoot: store.libraryPath,
+    const snapshot = await invoke<TextDocumentSnapshot>(
+      isExternal.value ? 'read_external_text_document' : 'read_text_document',
+      {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: textPath.value,
       formatId: format.value.id,
       readOptions: encoding ? { encoding } : undefined,
-    })
+      },
+    )
     if (generation !== loadGeneration) return
     applySnapshot(snapshot)
+    if (!isExternal.value) store.recordRecentFile({ title: fileName.value, path: textPath.value })
   } catch (cause) {
     const error = cause as TextDocumentError
     if (error?.code === 'read-too-large') {
@@ -393,6 +426,7 @@ const load = async (encoding?: string) => {
         const snapshot = await readRange(0, encoding)
         if (generation !== loadGeneration) return
         applyRangeSnapshot(snapshot, true)
+        if (!isExternal.value) store.recordRecentFile({ title: fileName.value, path: textPath.value })
         message.warning('文件超过完整编辑上限，已进入只读范围模式')
       } catch (rangeError) {
         if (generation === loadGeneration) loadError.value = errorMessage(rangeError)
@@ -418,15 +452,19 @@ const loadNextRange = async () => {
   }
 }
 
-const save = async () => {
+const save = async (isAutoSave = false) => {
   if (!editor || readOnly.value || !dirty.value || saving.value || !format.value) return
+  clearAutoSave()
   saving.value = true
+  const content = editor.state.doc.toString()
   try {
-    const snapshot = await invoke<TextDocumentSnapshot>('write_text_document', {
-      libraryRoot: store.libraryPath,
+    const snapshot = await invoke<TextDocumentSnapshot>(
+      isExternal.value ? 'write_external_text_document' : 'write_text_document',
+      {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: textPath.value,
       formatId: format.value.id,
-      content: editor.state.doc.toString(),
+      content,
       expectedSignature: signature.value,
       savePolicy: {
         expectedSignature: signature.value,
@@ -435,9 +473,18 @@ const save = async () => {
         lineEnding: saveLineEnding.value,
         hasFinalNewline: saveFinalNewline.value,
       },
-    })
-    applySnapshot(snapshot)
-    message.success('文本已安全保存')
+      },
+    )
+    if (editor.state.doc.toString() === content) {
+      applySnapshot(snapshot)
+    } else {
+      signature.value = snapshot.signature
+      fileSize.value = snapshot.size
+      modified.value = snapshot.modified
+      dirty.value = true
+      scheduleAutoSave()
+    }
+    if (!isAutoSave) message.success('文本已安全保存')
   } catch (cause) {
     const error = cause as TextDocumentError
     if (error?.code === 'external-modified') {
@@ -465,7 +512,10 @@ const reloadCurrentEncoding = async () => {
 }
 
 const markPolicyDirty = () => {
-  if (!loading.value && !readOnly.value) dirty.value = true
+  if (!loading.value && !readOnly.value) {
+    dirty.value = true
+    scheduleAutoSave()
+  }
 }
 
 const runUndo = () => { if (editor) undo(editor) }
@@ -494,9 +544,15 @@ const formatBytes = (value: number) => {
 watch(saveEncoding, value => {
   if (value !== 'utf-8') saveBom.value = 'none'
 })
-watch(textPath, () => { void load() })
+watch(textAutoSaveEnabled, enabled => {
+  if (enabled && dirty.value) scheduleAutoSave()
+  else clearAutoSave()
+})
+watch([textPath, isExternal], () => { void load() })
 onBeforeRouteLeave(() => mayLeave())
-onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
+onBeforeRouteUpdate((to, from) => (
+  to.query.path === from.query.path && to.query.external === from.query.external
+) || mayLeave())
 onMounted(async () => {
   createEditor()
   await nextTick()
@@ -505,6 +561,7 @@ onMounted(async () => {
   window.addEventListener('beforeunload', beforeUnload)
 })
 onBeforeUnmount(() => {
+  clearAutoSave()
   editor?.destroy()
   editor = null
   window.removeEventListener('keydown', handleKeydown)

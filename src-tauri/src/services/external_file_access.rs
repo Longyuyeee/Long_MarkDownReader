@@ -5,14 +5,14 @@ use std::sync::Mutex;
 
 #[derive(Debug, Default)]
 pub struct ExternalFileAccess {
-    authorized_markdown: Mutex<HashSet<PathBuf>>,
+    authorized_editable: Mutex<HashSet<PathBuf>>,
     authorized_imports: Mutex<HashSet<PathBuf>>,
 }
 
 impl ExternalFileAccess {
-    pub fn authorize_markdown(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
-        let resolved = resolve_markdown(path.as_ref())?;
-        self.authorized_markdown
+    pub fn authorize_editable(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
+        let resolved = resolve_editable(path.as_ref())?;
+        self.authorized_editable
             .lock()
             .map_err(|_| "External file authorization state is unavailable".to_string())?
             .insert(resolved.clone());
@@ -23,10 +23,10 @@ impl ExternalFileAccess {
         Ok(resolved)
     }
 
-    pub fn resolve_markdown(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
-        let resolved = resolve_markdown(path.as_ref())?;
+    pub fn resolve_editable(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
+        let resolved = resolve_editable(path.as_ref())?;
         let is_authorized = self
-            .authorized_markdown
+            .authorized_editable
             .lock()
             .map_err(|_| "External file authorization state is unavailable".to_string())?
             .contains(&resolved);
@@ -35,6 +35,14 @@ impl ExternalFileAccess {
         } else {
             Err("This external file has not been authorized by the user".into())
         }
+    }
+
+    pub fn resolve_markdown(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
+        let resolved = self.resolve_editable(path)?;
+        if file_format_for_path(&resolved)?.id != "markdown" {
+            return Err("This operation only accepts authorized Markdown files".into());
+        }
+        Ok(resolved)
     }
 
     pub fn authorize_import(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
@@ -64,7 +72,7 @@ impl ExternalFileAccess {
     }
 }
 
-fn resolve_markdown(path: &Path) -> Result<PathBuf, String> {
+fn resolve_editable(path: &Path) -> Result<PathBuf, String> {
     let resolved = path
         .canonicalize()
         .map_err(|error| format!("External file is unavailable: {error}"))?;
@@ -111,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    fn only_resolves_explicitly_authorized_markdown_files() {
+    fn only_resolves_explicitly_authorized_editable_files() {
         let directory = fixture("authorization");
         let authorized = directory.join("authorized.md");
         let unrelated = directory.join("unrelated.md");
@@ -119,10 +127,10 @@ mod tests {
         fs::write(&unrelated, "unrelated").unwrap();
 
         let access = ExternalFileAccess::default();
-        assert!(access.resolve_markdown(&authorized).is_err());
-        let canonical = access.authorize_markdown(&authorized).unwrap();
-        assert_eq!(access.resolve_markdown(&authorized).unwrap(), canonical);
-        assert!(access.resolve_markdown(&unrelated).is_err());
+        assert!(access.resolve_editable(&authorized).is_err());
+        let canonical = access.authorize_editable(&authorized).unwrap();
+        assert_eq!(access.resolve_editable(&authorized).unwrap(), canonical);
+        assert!(access.resolve_editable(&unrelated).is_err());
 
         fs::remove_dir_all(directory).unwrap();
     }
@@ -134,9 +142,11 @@ mod tests {
         fs::write(&text_file, "text").unwrap();
 
         let access = ExternalFileAccess::default();
-        assert!(access.authorize_markdown(&text_file).is_ok());
+        assert!(access.authorize_editable(&text_file).is_ok());
+        assert!(access.resolve_editable(&text_file).is_ok());
+        assert!(access.resolve_markdown(&text_file).is_err());
         assert!(access
-            .authorize_markdown(directory.join("missing.md"))
+            .authorize_editable(directory.join("missing.md"))
             .is_err());
 
         fs::remove_dir_all(directory).unwrap();
