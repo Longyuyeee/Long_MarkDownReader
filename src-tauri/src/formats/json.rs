@@ -582,6 +582,116 @@ pub fn append_json_object_property_source(
     Ok(candidate)
 }
 
+pub fn append_json_array_item_source(
+    content: &str,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+    value: &str,
+) -> Result<String, String> {
+    if start >= end
+        || end > content.len()
+        || !content.is_char_boundary(start)
+        || !content.is_char_boundary(end)
+    {
+        return Err("目标数组范围无效或已经过期".into());
+    }
+
+    let analysis = analyze_json_source(content, jsonc);
+    if !analysis.valid {
+        return Err("JSON 源码存在语法错误，不能追加数组项".into());
+    }
+    if !analysis.structure_edit_candidate {
+        return Err("当前文档包含重复键或精度敏感数字，只能继续使用源码编辑".into());
+    }
+    let target = analysis
+        .paths
+        .iter()
+        .find(|entry| entry.start == start && entry.end == end && entry.kind == "array")
+        .ok_or_else(|| "目标数组不属于当前 JSON 分析结果".to_string())?;
+
+    let value = value.trim();
+    let value_analysis = analyze_json_source(value, false);
+    if !value_analysis.valid || !value_analysis.structure_edit_candidate {
+        return Err("数组项必须是可保真的单个严格 JSON 值".into());
+    }
+
+    let parsed = parse_to_ast(
+        content,
+        &CollectOptions {
+            comments: CommentCollectionStrategy::Separate,
+            tokens: false,
+        },
+        &parse_options(jsonc),
+    )
+    .map_err(|error| error.kind().to_string())?;
+    let root = parsed
+        .value
+        .as_ref()
+        .ok_or_else(|| "JSON 文档不能为空".to_string())?;
+    let array = find_value_by_range(root, target.start, target.end)
+        .and_then(|value| match value {
+            Value::Array(array) => Some(array),
+            _ => None,
+        })
+        .ok_or_else(|| "目标数组范围已经过期".to_string())?;
+    let close = end
+        .checked_sub(1)
+        .filter(|offset| content[*offset..end].starts_with(']'))
+        .ok_or_else(|| "目标数组缺少可识别的右方括号".to_string())?;
+
+    let (replace_start, replacement) = if let Some(last) = array.elements.last() {
+        let tail = &content[last.range().end..close];
+        let (trailing_comma, whitespace) = if let Some(rest) = tail.strip_prefix(',') {
+            if !rest.chars().all(char::is_whitespace) {
+                return Err("数组尾部逗号与右方括号之间存在注释，无法确定安全插入位置".into());
+            }
+            (true, rest)
+        } else {
+            if !tail.chars().all(char::is_whitespace) {
+                return Err("数组最后一项与右方括号之间存在注释，无法确定安全插入位置".into());
+            }
+            (false, tail)
+        };
+        let child_indent = if whitespace.contains('\n') { "  " } else { "" };
+        (
+            last.range().end,
+            format!(
+                ",{whitespace}{child_indent}{value}{}{whitespace}",
+                if trailing_comma { "," } else { "" }
+            ),
+        )
+    } else {
+        let whitespace = &content[start + 1..close];
+        if !whitespace.chars().all(char::is_whitespace) {
+            return Err("空数组内部包含注释，无法确定安全插入位置".into());
+        }
+        let child_indent = if whitespace.contains('\n') { "  " } else { "" };
+        (
+            start + 1,
+            format!(
+                "{whitespace}{child_indent}{value}{}",
+                if whitespace.contains('\n') {
+                    whitespace
+                } else {
+                    ""
+                }
+            ),
+        )
+    };
+
+    let mut candidate =
+        String::with_capacity(content.len() - (close - replace_start) + replacement.len());
+    candidate.push_str(&content[..replace_start]);
+    candidate.push_str(&replacement);
+    candidate.push_str(&content[close..]);
+    let candidate_analysis = analyze_json_source(&candidate, jsonc);
+    if !candidate_analysis.valid || !candidate_analysis.structure_edit_candidate {
+        return Err("追加数组项后的 JSON 未通过完整结构与保真校验".into());
+    }
+    Ok(candidate)
+}
+
 fn find_value_by_range<'a, 'b>(
     value: &'b Value<'a>,
     start: usize,
@@ -1096,6 +1206,65 @@ mod tests {
             root.start,
             root.end,
             "second",
+            "9007199254740993"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn array_item_append_preserves_multiline_and_jsonc_trailing_comma_style() {
+        let source = "{\n  \"items\": [\n  ],\n}\n";
+        let target = analyze_json_source(source, true)
+            .paths
+            .into_iter()
+            .find(|entry| entry.path == "$.items")
+            .unwrap();
+        let appended = append_json_array_item_source(
+            source,
+            true,
+            target.start,
+            target.end,
+            r#"{"enabled":true}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            appended,
+            "{\n  \"items\": [\n    {\"enabled\":true}\n  ],\n}\n"
+        );
+
+        let trailing = "[\n  1,\n]\n";
+        let root = &analyze_json_source(trailing, true).paths[0];
+        let appended =
+            append_json_array_item_source(trailing, true, root.start, root.end, "\"two\"").unwrap();
+        assert_eq!(appended, "[\n  1,\n  \"two\",\n]\n");
+    }
+
+    #[test]
+    fn array_item_append_handles_compact_nested_arrays() {
+        let source = r#"{"items":[]}"#;
+        let target = &analyze_json_source(source, false).paths[1];
+        let appended =
+            append_json_array_item_source(source, false, target.start, target.end, "[1,2]")
+                .unwrap();
+        assert_eq!(appended, r#"{"items":[[1,2]]}"#);
+    }
+
+    #[test]
+    fn array_item_append_rejects_ambiguous_comments_stale_ranges_and_precision_risks() {
+        let commented = r#"[1 /* attached */]"#;
+        let root = &analyze_json_source(commented, true).paths[0];
+        assert!(append_json_array_item_source(commented, true, root.start, root.end, "2").is_err());
+
+        let source = "[1]";
+        let root = &analyze_json_source(source, false).paths[0];
+        assert!(
+            append_json_array_item_source(source, false, root.start + 1, root.end, "2").is_err()
+        );
+        assert!(append_json_array_item_source(
+            source,
+            false,
+            root.start,
+            root.end,
             "9007199254740993"
         )
         .is_err());

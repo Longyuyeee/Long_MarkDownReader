@@ -1,6 +1,7 @@
 use crate::commands::formats::write_registered_text_document;
 use crate::formats::json::{
     analyze_json_source as analyze_source,
+    append_json_array_item_source as append_array_item_source,
     append_json_object_property_source as append_object_property_source,
     rename_json_object_key_source as rename_object_key_source,
     replace_json_scalar_source as replace_scalar_source, transform_json_source as transform_source,
@@ -58,6 +59,18 @@ pub fn append_json_object_property_source(
 ) -> Result<String, TextDocumentError> {
     append_object_property_source(&content, jsonc, start, end, &key, &value)
         .map_err(|message| TextDocumentError::simple("json-property-append-rejected", message))
+}
+
+#[tauri::command]
+pub fn append_json_array_item_source(
+    content: String,
+    jsonc: bool,
+    start: usize,
+    end: usize,
+    value: String,
+) -> Result<String, TextDocumentError> {
+    append_array_item_source(&content, jsonc, start, end, &value)
+        .map_err(|message| TextDocumentError::simple("json-array-append-rejected", message))
 }
 
 #[tauri::command]
@@ -282,5 +295,15 @@ mod tests {
         )
         .unwrap_err();
         assert_eq!(error.code, "json-property-append-rejected");
+    }
+
+    #[test]
+    fn array_item_append_command_uses_stable_rejection_code() {
+        let content = "[1]".to_string();
+        let root = analyze_source(&content, false).paths[0].clone();
+        let error =
+            append_json_array_item_source(content, false, root.start + 1, root.end, "2".into())
+                .unwrap_err();
+        assert_eq!(error.code, "json-array-append-rejected");
     }
 }

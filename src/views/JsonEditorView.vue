@@ -127,6 +127,17 @@
                   <template #icon><n-icon :component="AddPropertyIcon" /></template>
                 </n-button>
                 <n-button
+                  v-if="entry.kind === 'array'"
+                  quaternary
+                  circle
+                  size="tiny"
+                  title="追加数组项"
+                  :disabled="arrayAppendDisabled"
+                  @click.stop="openArrayAppend(entry)"
+                >
+                  <template #icon><n-icon :component="AddPropertyIcon" /></template>
+                </n-button>
+                <n-button
                   v-if="entry.keyStart !== undefined && entry.keyEnd !== undefined"
                   quaternary
                   circle
@@ -376,6 +387,42 @@
       </template>
     </n-modal>
 
+    <n-modal
+      v-model:show="arrayAppendVisible"
+      preset="card"
+      class="scalar-edit-dialog"
+      title="追加数组项"
+      :mask-closable="!arrayAppendPending"
+      :closable="!arrayAppendPending"
+    >
+      <div class="scalar-edit-context">
+        <code>{{ arrayAppendEntry?.path }}</code>
+        <span>数组</span>
+      </div>
+      <n-input
+        v-model:value="arrayAppendValue"
+        type="textarea"
+        :autosize="{ minRows: 3, maxRows: 8 }"
+        :disabled="arrayAppendPending"
+        placeholder="数组项，例如 null、42、&quot;text&quot;、[] 或 {}"
+        aria-label="新的 JSON 数组项"
+        autofocus
+      />
+      <template #footer>
+        <div class="scalar-edit-actions">
+          <n-button :disabled="arrayAppendPending" @click="arrayAppendVisible = false">取消</n-button>
+          <n-button
+            type="primary"
+            :loading="arrayAppendPending"
+            :disabled="!arrayAppendValue.trim()"
+            @click="applyArrayAppend"
+          >
+            添加到草稿
+          </n-button>
+        </div>
+      </template>
+    </n-modal>
+
     <footer class="json-statusbar">
       <span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span>
       <span>{{ encoding.toUpperCase() }}</span>
@@ -518,6 +565,11 @@ const propertyAppendEntry = ref<JsonPathEntry | null>(null)
 const propertyAppendKey = ref('')
 const propertyAppendValue = ref('null')
 const propertyAppendSource = ref('')
+const arrayAppendVisible = ref(false)
+const arrayAppendPending = ref(false)
+const arrayAppendEntry = ref<JsonPathEntry | null>(null)
+const arrayAppendValue = ref('null')
+const arrayAppendSource = ref('')
 const dirty = ref(false)
 const sourceContent = ref('')
 const sourceSize = ref(0)
@@ -562,6 +614,15 @@ const propertyAppendDisabled = computed(() => (
   || saving.value
   || transformPending.value
   || propertyAppendPending.value
+  || !analysis.value?.structureEditCandidate
+))
+const arrayAppendDisabled = computed(() => (
+  loading.value
+  || analysisPending.value
+  || readOnly.value
+  || saving.value
+  || transformPending.value
+  || arrayAppendPending.value
   || !analysis.value?.structureEditCandidate
 ))
 let editor: EditorView | null = null
@@ -793,6 +854,9 @@ const load = async (discardDraft = false) => {
   propertyAppendVisible.value = false
   propertyAppendEntry.value = null
   propertyAppendSource.value = ''
+  arrayAppendVisible.value = false
+  arrayAppendEntry.value = null
+  arrayAppendSource.value = ''
   analysisGeneration += 1
   analysisPending.value = false
   clearAnalysisTimer()
@@ -879,6 +943,7 @@ const openScalarEditor = (entry: JsonPathEntry) => {
   if (!editor || !isScalarKind(entry.kind) || scalarEditDisabled.value) return
   keyRenameVisible.value = false
   propertyAppendVisible.value = false
+  arrayAppendVisible.value = false
   scalarEditEntry.value = entry
   scalarEditSource.value = editor.state.doc.toString()
   scalarEditValue.value = sourceRangeText(entry)
@@ -928,6 +993,7 @@ const openKeyRename = (entry: JsonPathEntry) => {
   ) return
   scalarEditVisible.value = false
   propertyAppendVisible.value = false
+  arrayAppendVisible.value = false
   keyRenameEntry.value = entry
   keyRenameSource.value = editor.state.doc.toString()
   keyRenameValue.value = entry.label
@@ -973,6 +1039,7 @@ const openPropertyAppend = (entry: JsonPathEntry) => {
   if (!editor || entry.kind !== 'object' || propertyAppendDisabled.value) return
   scalarEditVisible.value = false
   keyRenameVisible.value = false
+  arrayAppendVisible.value = false
   propertyAppendEntry.value = entry
   propertyAppendKey.value = ''
   propertyAppendValue.value = 'null'
@@ -1012,6 +1079,51 @@ const applyPropertyAppend = async () => {
     message.error(`新增对象属性失败：${errorMessage(cause)}`)
   } finally {
     propertyAppendPending.value = false
+  }
+}
+
+const openArrayAppend = (entry: JsonPathEntry) => {
+  if (!editor || entry.kind !== 'array' || arrayAppendDisabled.value) return
+  scalarEditVisible.value = false
+  keyRenameVisible.value = false
+  propertyAppendVisible.value = false
+  arrayAppendEntry.value = entry
+  arrayAppendValue.value = 'null'
+  arrayAppendSource.value = editor.state.doc.toString()
+  arrayAppendVisible.value = true
+}
+
+const applyArrayAppend = async () => {
+  if (!editor || !arrayAppendEntry.value || arrayAppendPending.value) return
+  const current = editor.state.doc.toString()
+  if (current !== arrayAppendSource.value) {
+    message.warning('源码已发生变化，请重新选择数组')
+    arrayAppendVisible.value = false
+    return
+  }
+  const entry = arrayAppendEntry.value
+  arrayAppendPending.value = true
+  clearAnalysisTimer()
+  try {
+    const appended = await invoke<string>('append_json_array_item_source', {
+      content: current,
+      jsonc: format.value?.id === 'jsonc',
+      start: entry.start,
+      end: entry.end,
+      value: arrayAppendValue.value,
+    })
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: appended },
+      selection: { anchor: byteOffsetToCodeUnit(appended, entry.start) },
+    })
+    clearAnalysisTimer()
+    arrayAppendVisible.value = false
+    await analyzeContent(appended)
+    message.success('数组项已追加，可撤销或保存')
+  } catch (cause) {
+    message.error(`追加数组项失败：${errorMessage(cause)}`)
+  } finally {
+    arrayAppendPending.value = false
   }
 }
 
