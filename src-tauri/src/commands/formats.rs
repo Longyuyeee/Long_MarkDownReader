@@ -475,6 +475,32 @@ mod tests {
     }
 
     #[test]
+    fn xml_template_creation_uses_registered_extension_and_safe_source() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-xml-create-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let root_string = root.to_string_lossy().into_owned();
+        let path = tauri::async_runtime::block_on(create_format_file(
+            root_string,
+            None,
+            "xml".into(),
+            None,
+            None,
+        ))
+        .unwrap();
+        assert!(path.ends_with("未命名 XML.xml"));
+        let content = fs::read_to_string(&path).unwrap();
+        assert!(crate::formats::xml::analyze_xml_source(&content).valid);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn plain_text_adapter_reads_bounded_ranges() {
         let root = std::env::temp_dir().join(format!(
             "longedit-format-range-{}-{}",

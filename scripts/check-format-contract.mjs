@@ -89,12 +89,14 @@ if (!xmlFormat
   || xmlFormat.maxBytes !== 8 * 1024 * 1024
   || xmlFormat.capabilities?.read !== 'supported'
   || xmlFormat.capabilities?.edit !== 'supported'
-  || xmlFormat.capabilities?.create !== 'planned'
+  || xmlFormat.capabilities?.create !== 'supported'
   || xmlFormat.capabilities?.index !== 'supported'
   || xmlFormat.adapters?.reader !== 'text'
   || xmlFormat.adapters?.writer !== 'text'
+  || xmlFormat.adapters?.creator !== 'text-template'
   || xmlFormat.adapters?.indexer !== 'text'
-  || xmlFormat.userCapability?.level !== 'basic-edit'
+  || xmlFormat.creation?.defaultExtension !== '.xml'
+  || xmlFormat.userCapability?.level !== 'complete-edit'
   || xmlFormat.userCapability?.saveMode !== 'overwrite') failures.push('A4 XML source-edit contract is incomplete')
 const opmlFormat = registry.formats?.find(format => format.id === 'opml')
 if (!opmlFormat || opmlFormat.routeName !== 'MindMap' || opmlFormat.adapters?.reader !== 'opml' || opmlFormat.adapters?.indexer !== 'opml') failures.push('OPML professional adapter is incomplete')
