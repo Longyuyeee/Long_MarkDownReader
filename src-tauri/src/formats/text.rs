@@ -6,6 +6,43 @@ use std::time::UNIX_EPOCH;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct TextDocumentError {
+    pub code: String,
+    pub message: String,
+    pub recoverable: bool,
+    pub suggestion: Option<String>,
+}
+
+impl TextDocumentError {
+    pub fn new(
+        code: impl Into<String>,
+        message: impl Into<String>,
+        recoverable: bool,
+        suggestion: Option<String>,
+    ) -> Self {
+        Self {
+            code: code.into(),
+            message: message.into(),
+            recoverable,
+            suggestion,
+        }
+    }
+
+    pub fn simple(code: impl Into<String>, message: impl Into<String>) -> Self {
+        Self::new(code, message, false, None)
+    }
+
+    pub fn recoverable(
+        code: impl Into<String>,
+        message: impl Into<String>,
+        suggestion: impl Into<String>,
+    ) -> Self {
+        Self::new(code, message, true, Some(suggestion.into()))
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TextDocumentSnapshot {
     pub content: String,
     pub encoding: String,
@@ -44,27 +81,41 @@ pub struct TextEncodedDocument {
     pub encoding: String,
 }
 
-pub fn read_text_snapshot(path: &Path) -> Result<TextDocumentSnapshot, String> {
+pub fn read_text_snapshot(path: &Path) -> Result<TextDocumentSnapshot, TextDocumentError> {
     read_text_snapshot_with_options(path, None)
 }
 
 pub fn read_text_snapshot_with_options(
     path: &Path,
     options: Option<TextReadOptions>,
-) -> Result<TextDocumentSnapshot, String> {
-    let metadata = path
-        .metadata()
-        .map_err(|error| format!("读取文本元数据失败: {error}"))?;
-    let bytes = fs::read(path).map_err(|error| format!("读取文本文件失败: {error}"))?;
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    let metadata = path.metadata().map_err(|error| {
+        TextDocumentError::simple(
+            "metadata-read-failed",
+            format!("读取文本元数据失败: {error}"),
+        )
+    })?;
+    let bytes = fs::read(path).map_err(|error| {
+        TextDocumentError::simple("read-failed", format!("读取文本文件失败: {error}"))
+    })?;
     if bytes.contains(&0) {
-        return Err("文本文件包含 NUL 字节，已按二进制或损坏文本拒绝".into());
+        return Err(TextDocumentError::simple(
+            "nul-bytes",
+            "文本文件包含 NUL 字节，已按二进制或损坏文本拒绝",
+        ));
     }
     let bom = detect_bom(&bytes);
     let selected_encoding = options
         .and_then(|options| options.encoding)
         .filter(|encoding| !encoding.trim().is_empty());
     let encoding = if let Some(label) = selected_encoding.as_deref() {
-        Encoding::for_label(label.as_bytes()).ok_or_else(|| format!("不支持读取编码 {label}"))?
+        Encoding::for_label(label.as_bytes()).ok_or_else(|| {
+            TextDocumentError::recoverable(
+                "unsupported-read-encoding",
+                format!("不支持读取编码 {label}"),
+                "请选择 UTF-8、GBK、GB18030 等受支持编码",
+            )
+        })?
     } else {
         let mut detector = chardetng::EncodingDetector::new();
         detector.feed(strip_known_bom(&bytes), true);
@@ -72,9 +123,13 @@ pub fn read_text_snapshot_with_options(
     };
     let (text, _, had_errors) = encoding.decode(&bytes);
     if had_errors {
-        return Err(format!(
-            "无法可靠按 {} 解码该文本，请先选择编码或使用外部工具修复",
-            encoding.name()
+        return Err(TextDocumentError::recoverable(
+            "decode-failed",
+            format!(
+                "无法可靠按 {} 解码该文本，请先选择编码或使用外部工具修复",
+                encoding.name()
+            ),
+            "尝试在文本编码菜单中按其他编码重新读取",
         ));
     }
     let content = text.into_owned();
@@ -98,10 +153,15 @@ pub fn encode_text_for_save(
     current: &TextDocumentSnapshot,
     content: &str,
     policy: TextSavePolicy,
-) -> Result<TextEncodedDocument, String> {
+) -> Result<TextEncodedDocument, TextDocumentError> {
     let encoding_name = policy.encoding.as_deref().unwrap_or(&current.encoding);
-    let encoding = Encoding::for_label(encoding_name.as_bytes())
-        .ok_or_else(|| format!("不支持写回编码 {encoding_name}"))?;
+    let encoding = Encoding::for_label(encoding_name.as_bytes()).ok_or_else(|| {
+        TextDocumentError::recoverable(
+            "unsupported-write-encoding",
+            format!("不支持写回编码 {encoding_name}"),
+            "请选择 UTF-8、GBK、GB18030 等受支持编码",
+        )
+    })?;
     let line_ending = policy
         .line_ending
         .as_deref()
@@ -113,17 +173,33 @@ pub fn encode_text_for_save(
     let normalized = normalize_line_endings(content, line_ending, has_final_newline)?;
     let (encoded, _, had_errors) = encoding.encode(&normalized);
     if had_errors {
-        return Err(format!(
-            "当前内容包含无法写回 {} 编码的字符；请转换为 UTF-8 或删除这些字符",
-            encoding.name()
+        return Err(TextDocumentError::recoverable(
+            "encode-failed",
+            format!(
+                "当前内容包含无法写回 {} 编码的字符；请转换为 UTF-8 或删除这些字符",
+                encoding.name()
+            ),
+            "转换保存为 UTF-8，或移除当前目标编码无法表示的字符",
         ));
     }
     let mut bytes = Vec::with_capacity(encoded.len() + 3);
     match bom {
         "utf-8" if encoding == UTF_8 => bytes.extend_from_slice(&[0xEF, 0xBB, 0xBF]),
         "none" => {}
-        "utf-8" => return Err("UTF-8 BOM 只能用于 UTF-8 编码文本".into()),
-        other => return Err(format!("暂不支持写回 {other} BOM")),
+        "utf-8" => {
+            return Err(TextDocumentError::recoverable(
+                "invalid-bom-policy",
+                "UTF-8 BOM 只能用于 UTF-8 编码文本",
+                "为非 UTF-8 编码选择无 BOM 保存",
+            ))
+        }
+        other => {
+            return Err(TextDocumentError::recoverable(
+                "unsupported-bom-policy",
+                format!("暂不支持写回 {other} BOM"),
+                "请选择无 BOM 或 UTF-8 BOM",
+            ))
+        }
     }
     bytes.extend_from_slice(&encoded);
     Ok(TextEncodedDocument {
@@ -137,19 +213,31 @@ pub fn encode_text_for_save(
 pub fn verify_current_signature(
     path: &Path,
     expected_signature: Option<&str>,
-) -> Result<(), String> {
+) -> Result<(), TextDocumentError> {
     let Some(expected_signature) = expected_signature else {
         return Ok(());
     };
-    let metadata = path
-        .metadata()
-        .map_err(|error| format!("读取保存前文本元数据失败: {error}"))?;
-    let bytes = fs::read(path).map_err(|error| format!("读取保存前文本失败: {error}"))?;
+    let metadata = path.metadata().map_err(|error| {
+        TextDocumentError::simple(
+            "metadata-read-failed",
+            format!("读取保存前文本元数据失败: {error}"),
+        )
+    })?;
+    let bytes = fs::read(path).map_err(|error| {
+        TextDocumentError::simple(
+            "read-before-save-failed",
+            format!("读取保存前文本失败: {error}"),
+        )
+    })?;
     let current = file_signature(&metadata, &bytes);
     if current == expected_signature {
         Ok(())
     } else {
-        Err("文本文件已被其他程序修改，请重新加载后再保存".into())
+        Err(TextDocumentError::recoverable(
+            "external-modified",
+            "文本文件已被其他程序修改，请重新加载后再保存",
+            "先重新加载磁盘内容，再决定是否重新应用当前修改",
+        ))
     }
 }
 
@@ -187,12 +275,18 @@ fn normalize_line_endings(
     content: &str,
     line_ending: &str,
     has_final_newline: bool,
-) -> Result<String, String> {
+) -> Result<String, TextDocumentError> {
     let replacement = match line_ending {
         "lf" => "\n",
         "crlf" => "\r\n",
         "cr" => "\r",
-        other => return Err(format!("不支持的换行符策略 {other}")),
+        other => {
+            return Err(TextDocumentError::recoverable(
+                "unsupported-line-ending",
+                format!("不支持的换行符策略 {other}"),
+                "请选择 LF、CRLF 或 CR",
+            ))
+        }
     };
     let mut normalized = content.replace("\r\n", "\n").replace('\r', "\n");
     while normalized.ends_with('\n') {
@@ -328,6 +422,46 @@ mod tests {
     }
 
     #[test]
+    fn reads_and_preserves_gb18030_when_user_selected() {
+        let gb18030 = Encoding::for_label(b"gb18030").unwrap();
+        let (bytes, _, had_errors) = gb18030.encode("中文𠀀\r\n末行");
+        assert!(!had_errors);
+        let path = fixture("gb18030", &bytes);
+        let snapshot = read_text_snapshot_with_options(
+            &path,
+            Some(TextReadOptions {
+                encoding: Some("gb18030".into()),
+            }),
+        )
+        .unwrap();
+        assert_eq!(snapshot.content, "中文𠀀\r\n末行");
+        assert_eq!(snapshot.encoding, "gb18030");
+        assert_eq!(snapshot.encoding_confidence, "user-selected");
+        let encoded = encode_text_for_save(
+            &snapshot,
+            "中文𠀀\n末行二",
+            TextSavePolicy {
+                expected_signature: Some(snapshot.signature.clone()),
+                encoding: Some("gb18030".into()),
+                bom: Some("none".into()),
+                line_ending: None,
+                has_final_newline: None,
+            },
+        )
+        .unwrap();
+        write_bytes(&path, &encoded.bytes).unwrap();
+        let reread = read_text_snapshot_with_options(
+            &path,
+            Some(TextReadOptions {
+                encoding: Some("gb18030".into()),
+            }),
+        )
+        .unwrap();
+        assert_eq!(reread.content, "中文𠀀\r\n末行二");
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
     fn can_convert_to_utf8_without_bom_explicitly() {
         let path = fixture("convert", b"\xEF\xBB\xBFalpha\r\n");
         let snapshot = read_text_snapshot(&path).unwrap();
@@ -354,14 +488,32 @@ mod tests {
         let snapshot = read_text_snapshot(&path).unwrap();
         fs::write(&path, b"external").unwrap();
         let error = verify_current_signature(&path, Some(&snapshot.signature)).unwrap_err();
-        assert!(error.contains("其他程序修改"));
+        assert_eq!(error.code, "external-modified");
+        assert!(error.message.contains("其他程序修改"));
+        assert!(error.recoverable);
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]
     fn rejects_nul_bytes() {
         let path = fixture("nul", b"alpha\0beta");
-        assert!(read_text_snapshot(&path).is_err());
+        let error = read_text_snapshot(&path).unwrap_err();
+        assert_eq!(error.code, "nul-bytes");
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn returns_structured_error_for_unsupported_encoding() {
+        let path = fixture("unsupported-encoding", b"alpha");
+        let error = read_text_snapshot_with_options(
+            &path,
+            Some(TextReadOptions {
+                encoding: Some("x-longedit-unknown".into()),
+            }),
+        )
+        .unwrap_err();
+        assert_eq!(error.code, "unsupported-read-encoding");
+        assert!(error.recoverable);
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 }

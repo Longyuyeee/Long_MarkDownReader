@@ -3,7 +3,8 @@ use crate::formats::file_registry::{
 };
 use crate::formats::text::{
     encode_text_for_save, read_text_snapshot, read_text_snapshot_with_options,
-    verify_current_signature, TextDocumentSnapshot, TextReadOptions, TextSavePolicy,
+    verify_current_signature, TextDocumentError, TextDocumentSnapshot, TextReadOptions,
+    TextSavePolicy,
 };
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_utf8};
@@ -39,6 +40,10 @@ fn ensure_matching_format(path: &Path, format_id: &str) -> Result<(), String> {
     }
 }
 
+fn text_boundary_error(code: &str, message: impl Into<String>) -> TextDocumentError {
+    TextDocumentError::simple(code, message.into())
+}
+
 #[tauri::command]
 pub fn get_file_format_registry() -> Result<FileFormatRegistry, String> {
     Ok(file_format_registry()?.clone())
@@ -50,23 +55,35 @@ pub async fn read_text_document(
     path: String,
     format_id: String,
     read_options: Option<TextReadOptions>,
-) -> Result<TextDocumentSnapshot, String> {
-    let format = ensure_capability(&format_id, "read")?;
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    let format = ensure_capability(&format_id, "read")
+        .map_err(|error| text_boundary_error("format-read-unsupported", error))?;
     if format.adapters.reader.as_deref() != Some("text") {
-        return Err(format!("{} 不是通用文本读取格式", format.label));
+        return Err(text_boundary_error(
+            "adapter-mismatch",
+            format!("{} 不是通用文本读取格式", format.label),
+        ));
     }
-    let guard = WorkspaceGuard::new(library_root)?;
-    let path = guard.resolve_existing(path)?;
+    let guard = WorkspaceGuard::new(library_root)
+        .map_err(|error| text_boundary_error("workspace-root-invalid", error))?;
+    let path = guard
+        .resolve_existing(path)
+        .map_err(|error| text_boundary_error("path-outside-workspace", error))?;
     if !path.is_file() {
-        return Err("目标必须是文件".into());
+        return Err(text_boundary_error("target-not-file", "目标必须是文件"));
     }
-    ensure_matching_format(&path, &format_id)?;
-    recover_interrupted_write(&path)?;
-    let metadata = path.metadata().map_err(|error| error.to_string())?;
+    ensure_matching_format(&path, &format_id)
+        .map_err(|error| text_boundary_error("format-mismatch", error))?;
+    recover_interrupted_write(&path)
+        .map_err(|error| text_boundary_error("recovery-failed", error))?;
+    let metadata = path
+        .metadata()
+        .map_err(|error| text_boundary_error("metadata-read-failed", error.to_string()))?;
     if metadata.len() > format.max_bytes {
-        return Err(format!(
-            "{} 超过 {} 字节读取上限",
-            format.label, format.max_bytes
+        return Err(TextDocumentError::recoverable(
+            "read-too-large",
+            format!("{} 超过 {} 字节读取上限", format.label, format.max_bytes),
+            "使用大文件只读范围模式打开，或在外部工具中拆分文件",
         ));
     }
     read_text_snapshot_with_options(&path, read_options)
@@ -80,24 +97,38 @@ pub async fn write_text_document(
     content: String,
     expected_signature: Option<String>,
     save_policy: Option<TextSavePolicy>,
-) -> Result<TextDocumentSnapshot, String> {
-    let format = ensure_capability(&format_id, "edit")?;
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    let format = ensure_capability(&format_id, "edit")
+        .map_err(|error| text_boundary_error("format-edit-unsupported", error))?;
     if format.adapters.writer.as_deref() != Some("text") {
-        return Err(format!("{} 不是通用文本写入格式", format.label));
-    }
-    if content.len() as u64 > format.max_bytes {
-        return Err(format!(
-            "{} 超过 {} 字节写入上限",
-            format.label, format.max_bytes
+        return Err(text_boundary_error(
+            "adapter-mismatch",
+            format!("{} 不是通用文本写入格式", format.label),
         ));
     }
-    let guard = WorkspaceGuard::new(library_root)?;
-    let path = guard.resolve_for_write(path)?;
-    ensure_matching_format(&path, &format_id)?;
-    recover_interrupted_write(&path)?;
+    if content.len() as u64 > format.max_bytes {
+        return Err(TextDocumentError::recoverable(
+            "write-too-large",
+            format!("{} 超过 {} 字节写入上限", format.label, format.max_bytes),
+            "减少文本内容，或等待大文件范围写入能力完成后再处理",
+        ));
+    }
+    let guard = WorkspaceGuard::new(library_root)
+        .map_err(|error| text_boundary_error("workspace-root-invalid", error))?;
+    let path = guard
+        .resolve_for_write(path)
+        .map_err(|error| text_boundary_error("path-outside-workspace", error))?;
+    ensure_matching_format(&path, &format_id)
+        .map_err(|error| text_boundary_error("format-mismatch", error))?;
+    recover_interrupted_write(&path)
+        .map_err(|error| text_boundary_error("recovery-failed", error))?;
     let snapshot = read_text_snapshot(&path)?;
     if let Some(reason) = snapshot.read_only_reason.as_deref() {
-        return Err(format!("文本文件只读，无法覆盖保存: {reason}"));
+        return Err(TextDocumentError::recoverable(
+            "read-only",
+            format!("文本文件只读，无法覆盖保存: {reason}"),
+            "调整文件权限，或另存为可写副本",
+        ));
     }
     let mut policy = save_policy.unwrap_or(TextSavePolicy {
         expected_signature: None,
@@ -111,13 +142,15 @@ pub async fn write_text_document(
     }
     let encoded = encode_text_for_save(&snapshot, &content, policy)?;
     if encoded.bytes.len() as u64 > format.max_bytes {
-        return Err(format!(
-            "{} 超过 {} 字节写入上限",
-            format.label, format.max_bytes
+        return Err(TextDocumentError::recoverable(
+            "encoded-write-too-large",
+            format!("{} 超过 {} 字节写入上限", format.label, format.max_bytes),
+            "选择更紧凑的编码或减少文本内容",
         ));
     }
     verify_current_signature(&path, encoded.expected_signature.as_deref())?;
-    write_bytes(&path, &encoded.bytes)?;
+    write_bytes(&path, &encoded.bytes)
+        .map_err(|error| text_boundary_error("write-failed", error))?;
     let saved = read_text_snapshot_with_options(
         &path,
         Some(TextReadOptions {
@@ -126,7 +159,11 @@ pub async fn write_text_document(
     )
     .or_else(|_| read_text_snapshot(&path))?;
     if saved.content != encoded.normalized_content {
-        return Err("文本保存后重读验证失败，请检查编码或磁盘状态".into());
+        return Err(TextDocumentError::recoverable(
+            "post-write-verify-failed",
+            "文本保存后重读验证失败，请检查编码或磁盘状态",
+            "请重新加载文件并检查磁盘状态后再保存",
+        ));
     }
     Ok(saved)
 }

@@ -653,7 +653,8 @@ const openEmbeddedTableChart = (path: string) => router.push({ name: 'Table', qu
 const handleError = (error: any, userMessage: string, logContext?: string) => {
   const errorMsg = error?.message || error?.toString() || '未知错误'
   console.error(`[${logContext || 'Error'}]`, errorMsg, error)
-  message.error(`${userMessage}: ${errorMsg}`)
+  const suggestion = error?.suggestion ? ` · ${error.suggestion}` : ''
+  message.error(`${userMessage}: ${errorMsg}${suggestion}`)
 }
 
 const activeSidebarTab = ref<'files' | 'quick' | 'collections' | 'tags' | 'outline' | 'links' | 'history'>('files')
