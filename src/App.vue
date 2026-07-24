@@ -228,6 +228,10 @@ const closeWindow = async () => {
     showExitModal.value = true 
   }
 }
+const confirmDiscardUnsaved = () => {
+  const dirtyCount = store.tabs.filter(tab => tab.isDirty).length + (store.isTempDirty ? 1 : 0)
+  return dirtyCount === 0 || window.confirm(`仍有 ${dirtyCount} 个文档包含未保存修改，彻底退出后将丢失，是否继续？`)
+}
 const handleHide = () => { 
   if (dontAskAgain.value) {
     store.updateConfig({ exitStrategy: 'minimize' })
@@ -236,10 +240,17 @@ const handleHide = () => {
   appWindow.hide() 
 }
 const handleExit = () => { 
+  if (!confirmDiscardUnsaved()) return
   if (dontAskAgain.value) {
     store.updateConfig({ exitStrategy: 'quit' })
   }
   invoke('exit_app') 
+}
+
+const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+  if (!store.tabs.some(tab => tab.isDirty) && !store.isTempDirty) return
+  event.preventDefault()
+  event.returnValue = ''
 }
 
 onMounted(async () => {
@@ -261,11 +272,13 @@ onMounted(async () => {
   } catch (_) { /* launch args unavailable, not critical */ }
 
   window.addEventListener('keydown', handleGlobalKeydown)
+  window.addEventListener('beforeunload', handleBeforeUnload)
   finishRouteLoading()
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown)
+  window.removeEventListener('beforeunload', handleBeforeUnload)
   if (unlistenOpenFile) unlistenOpenFile()
   if (routeLoadingTimer) clearTimeout(routeLoadingTimer)
   removeBeforeEach()

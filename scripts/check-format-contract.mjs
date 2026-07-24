@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, formatCommands, files, externalAccess, index, library, textEditor, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, formatCommands, files, externalAccess, index, library, textEditor, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -13,6 +13,7 @@ const [registryText, frontend, rustRegistry, textKernel, formatCommands, files, 
   read('src-tauri/src/commands/index.rs'),
   read('src/views/LibraryMode.vue'),
   read('src/views/TextEditorView.vue'),
+  read('src/components/WorkspaceTabs.vue'),
   read('src/router/index.ts'),
   read('src/App.vue'),
   read('src/store/app.ts'),
@@ -105,7 +106,14 @@ requireText(textEditor, 'readEncoding', 'A2 TXT editor must separate source deco
 requireText(textEditor, "'read_external_text_document'", 'A2 TXT editor must support authorized external reads')
 requireText(textEditor, "'write_external_text_document'", 'A2 TXT editor must support authorized external writes')
 requireText(textEditor, 'scheduleAutoSave', 'A2 TXT editor must expose debounced auto-save')
-requireText(textEditor, 'recordRecentFile', 'A2 TXT editor must participate in recent-file state')
+requireText(textEditor, 'registerCurrentTab', 'A2 TXT editor must register with unified session tabs')
+requireText(textEditor, 'syncCurrentTab', 'A2 TXT drafts must survive workspace route changes')
+requireText(library, '<WorkspaceTabs', 'Markdown workspace must consume unified session tabs')
+requireText(textEditor, '<WorkspaceTabs', 'TXT workspace must consume unified session tabs')
+requireText(workspaceTabs, 'routeForFile', 'unified tabs must route each registered format to its workspace')
+requireText(workspaceTabs, 'tab.isDirty', 'unified tabs must confirm before discarding dirty drafts')
+requireText(appStore, '.filter(tab => !tab.external)', 'external authorization tabs must not survive process restart')
+requireText(app, 'confirmDiscardUnsaved', 'application exit must coordinate dirty session tabs')
 requireText(app, "'pick_external_editable_file'", 'external picker must accept every registered editable text format')
 requireText(app, "external: '1'", 'external TXT routes must retain their authorization context')
 requireText(appStore, 'textAutoSaveEnabled', 'TXT auto-save preference must be persisted')

@@ -30,6 +30,13 @@ export interface TabInfo {
   textRangeNextOffset?: number
   textRangeEof?: boolean
   textSize?: number
+  textModified?: number
+  textEncodingConfidence?: string
+  textSaveEncoding?: string
+  textSaveBom?: string
+  textSaveLineEnding?: string
+  textSaveFinalNewline?: boolean
+  external?: boolean
 }
 
 export interface LibraryConfig {
@@ -247,6 +254,13 @@ export const useAppStore = defineStore('app', {
         if (tab.textRangeNextOffset !== undefined) existing.textRangeNextOffset = tab.textRangeNextOffset
         if (tab.textRangeEof !== undefined) existing.textRangeEof = tab.textRangeEof
         if (tab.textSize !== undefined) existing.textSize = tab.textSize
+        if (tab.textModified !== undefined) existing.textModified = tab.textModified
+        if (tab.textEncodingConfidence !== undefined) existing.textEncodingConfidence = tab.textEncodingConfidence
+        if (tab.textSaveEncoding !== undefined) existing.textSaveEncoding = tab.textSaveEncoding
+        if (tab.textSaveBom !== undefined) existing.textSaveBom = tab.textSaveBom
+        if (tab.textSaveLineEnding !== undefined) existing.textSaveLineEnding = tab.textSaveLineEnding
+        if (tab.textSaveFinalNewline !== undefined) existing.textSaveFinalNewline = tab.textSaveFinalNewline
+        if (tab.external !== undefined) existing.external = tab.external
         const [removed] = this.tabs.splice(idx, 1)
         this.tabs.unshift(removed)
         if (this.activeTabId !== existing.id) {
@@ -257,9 +271,11 @@ export const useAppStore = defineStore('app', {
         this.activeTabId = tab.id
       }
       // 最近文件追踪
-      this.recentFiles = this.recentFiles.filter(f => f.path !== tab.path)
-      this.recentFiles.unshift({ title: tab.title, path: tab.path })
-      if (this.recentFiles.length > 10) this.recentFiles = this.recentFiles.slice(0, 10)
+      if (!tab.external) {
+        this.recentFiles = this.recentFiles.filter(f => f.path !== tab.path)
+        this.recentFiles.unshift({ title: tab.title, path: tab.path })
+        if (this.recentFiles.length > 10) this.recentFiles = this.recentFiles.slice(0, 10)
+      }
       this.saveTabsState()
     },
     recordRecentFile(file: { title: string; path: string }) {
@@ -273,10 +289,18 @@ export const useAppStore = defineStore('app', {
       const tab = this.tabs.find(t => t.path === path)
       if (tab) tab.content = content
     },
+    activateTab(tabId: string | null) {
+      if (tabId && !this.tabs.some(tab => tab.id === tabId)) return
+      this.activeTabId = tabId
+      this.saveTabsState()
+    },
     removeTab(tabId: string) {
-      this.tabs = this.tabs.filter(t => t.id !== tabId)
+      const index = this.tabs.findIndex(tab => tab.id === tabId)
+      if (index < 0) return
+      const nextActiveId = this.tabs[index + 1]?.id || this.tabs[index - 1]?.id || null
+      this.tabs.splice(index, 1)
       if (this.activeTabId === tabId) {
-        this.activeTabId = this.tabs.length > 0 ? this.tabs[this.tabs.length - 1].id : null
+        this.activeTabId = nextActiveId
       }
       this.saveTabsState()
     },
@@ -294,9 +318,20 @@ export const useAppStore = defineStore('app', {
     },
     saveTabsState() {
       try {
+        const persistentTabs = this.tabs
+          .filter(tab => !tab.external)
+          .map(tab => ({
+            id: tab.id,
+            title: tab.title,
+            path: tab.path,
+            isDirty: false,
+          }))
+        const persistentActiveTabId = persistentTabs.some(tab => tab.id === this.activeTabId)
+          ? this.activeTabId
+          : (persistentTabs[0]?.id || null)
         const state = {
-          tabs: this.tabs.map(t => ({ id: t.id, title: t.title, path: t.path, isDirty: t.isDirty })),
-          activeTabId: this.activeTabId,
+          tabs: persistentTabs,
+          activeTabId: persistentActiveTabId,
           recentFiles: this.recentFiles,
           starredFiles: this.starredFiles
         }
@@ -309,8 +344,12 @@ export const useAppStore = defineStore('app', {
         if (!raw) return
         const state = JSON.parse(raw)
         if (state.tabs && Array.isArray(state.tabs)) {
-          this.tabs = state.tabs.filter((t: any) => t.path)
-          this.activeTabId = state.activeTabId || (this.tabs.length > 0 ? this.tabs[this.tabs.length - 1].id : null)
+          this.tabs = state.tabs
+            .filter((tab: any) => tab.path && !tab.external)
+            .map((tab: any) => ({ ...tab, isDirty: false }))
+          this.activeTabId = this.tabs.some(tab => tab.id === state.activeTabId)
+            ? state.activeTabId
+            : (this.tabs[0]?.id || null)
         }
         if (state.recentFiles && Array.isArray(state.recentFiles)) {
           this.recentFiles = state.recentFiles

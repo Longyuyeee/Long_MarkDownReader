@@ -343,24 +343,8 @@
 
     <!-- 中间编辑区 -->
     <div class="editor-main" :class="{ 'zen-mode': store.isZen }">
-      <div class="tabs-bar" v-if="!store.isZen && tabs.length > 0">
-        <div class="tab-scroller" ref="tabsScrollRef" @wheel="handleTabsWheel">
-          <transition-group name="tab-list">
-            <div 
-              v-for="tab in tabs" 
-              :key="tab.id" 
-              class="tab-pill" 
-              :class="{ active: activeTabId === tab.id }" 
-              @click="store.addTab(tab)"
-              :ref="(el) => { if (activeTabId === tab.id) activeTabRef = el as HTMLElement }"
-            >
-              <n-icon :component="FileIcon" class="pill-icon" />
-              <span class="pill-text">{{ tab.title }}</span>
-              <span class="pill-dirty-dot" v-if="tab.isDirty" title="有未保存的修改"></span>
-              <n-icon :component="CloseIcon" class="pill-close" @click.stop="closeTab(tab.id)" />
-            </div>
-          </transition-group>
-        </div>
+      <div class="tabs-bar" v-if="!store.isZen && store.tabs.length > 0">
+        <WorkspaceTabs />
         <div class="tab-actions">
           <div class="action-btn-group">
             <n-button quaternary circle size="small" @click="refreshCurrentFile" :disabled="!activeTabId" title="从磁盘同步内容">
@@ -519,6 +503,7 @@ import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
 import LocalGraph from '../components/LocalGraph.vue'
 import MarkdownChartEmbeds from '../components/MarkdownChartEmbeds.vue'
+import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
@@ -620,7 +605,8 @@ const encodingLabel = (encoding: string) => TEXT_ENCODING_PRESETS.find(preset =>
 const message = useMessage()
 const dialog = useDialog()
 const store = useAppStore()
-const { tabs, activeTabId } = storeToRefs(store)
+const { tabs: allTabs, activeTabId } = storeToRefs(store)
+const tabs = computed(() => allTabs.value.filter(tab => findFileFormat(tab.path)?.routeName === 'LibraryMode'))
 const router = useRouter()
 const route = useRoute()
 const activeDocumentFormat = computed(() => activeTabId.value ? findFileFormat(activeTabId.value) : undefined)
@@ -861,29 +847,7 @@ const editorWidthMode = ref<'narrow' | 'medium' | 'wide'>(
 watch(editorWidthMode, (v) => { localStorage.setItem('longedit_editor_width', v) })
 const sidebarWidth = ref(260)
 const activeResizer = ref<'sidebar' | null>(null)
-const tabsScrollRef = ref<HTMLElement | null>(null)
-const activeTabRef = ref<HTMLElement | null>(null)
 const treeInstRef = ref<any>(null)
-
-const scrollActiveTabIntoView = () => {
-  if (!activeTabRef.value || !tabsScrollRef.value) return
-  const container = tabsScrollRef.value
-  const tab = activeTabRef.value
-  
-  const containerRect = container.getBoundingClientRect()
-  const tabRect = tab.getBoundingClientRect()
-  
-  // 只有当标签不在可视区域内时才滚动
-  if (tabRect.left < containerRect.left) {
-    container.scrollTo({ left: container.scrollLeft - (containerRect.left - tabRect.left) - 20, behavior: 'smooth' })
-  } else if (tabRect.right > containerRect.right) {
-    container.scrollTo({ left: container.scrollLeft + (tabRect.right - containerRect.right) + 20, behavior: 'smooth' })
-  }
-}
-
-watch(activeTabId, () => {
-  nextTick(() => { setTimeout(() => { scrollActiveTabIntoView() }, SCROLL_DEBOUNCE_MS) })
-})
 const treeData = ref<TreeOption[]>([])
 const searchQuery = ref('')
 const searchObjectTypes = ref<string[]>([])
@@ -917,7 +881,6 @@ let lastKnownModified = 0
 let suppressEditorInput = false
 
 // 常量定义
-const SCROLL_DEBOUNCE_MS = 50
 const AUTO_SAVE_DELAY_MS = 2000
 const EDITOR_MODE_SYNC_DELAY_MS = 300
 const IMAGE_FIX_DELAY_MS = 300
@@ -1784,7 +1747,6 @@ const applyRename = async () => {
   try { let finalName = renameState.newName; const extension = knownFileExtension(renameState.oldPath); if (extension && !finalName.toLowerCase().endsWith(extension)) finalName += extension; await invoke('rename_item', { libraryRoot: store.libraryPath, oldPath: renameState.oldPath, newName: finalName }); const parentPath = renameState.oldPath.substring(0, Math.max(renameState.oldPath.lastIndexOf('\\'), renameState.oldPath.lastIndexOf('/'))); await refreshNode(parentPath || store.libraryPath); renameState.show = false; message.success('修改成功') } catch (e) { message.error('重命名失败') }
 }
 
-const closeTab = (id: string) => store.removeTab(id)
 let autoSaveTimer: any = null
 const triggerAutoSave = (content: string) => {
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
@@ -2050,7 +2012,6 @@ const initVditor = () => {
   } catch (e) { editorLoading.value = false }
 }
 
-const handleTabsWheel = (e: WheelEvent) => { if (tabsScrollRef.value) tabsScrollRef.value.scrollLeft += e.deltaY }
 const handleKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'F2' && selectedKeys.value.length > 0) { const p = selectedKeys.value[0]; renameState.oldPath = p; let name = p.split(/[\\/]/).pop() || ''; name = name.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid))$/i, ''); renameState.newName = name; renameState.show = true }
   if (e.key === 'Delete' && selectedKeys.value.length > 0) deleteAction(selectedKeys.value)
@@ -2110,7 +2071,11 @@ const handleExportHtml = async () => {
 }
 
 onMounted(async () => {
-  await store.loadConfig(); window.addEventListener('keydown', handleKeyDown)
+  await store.loadConfig()
+  if (activeTabId.value && findFileFormat(activeTabId.value)?.routeName !== 'LibraryMode') {
+    store.activateTab(tabs.value[0]?.id || null)
+  }
+  window.addEventListener('keydown', handleKeyDown)
   applyRouteSearch()
   if (store.libraryPath) { await refreshLibrary(); fetchLibStats(); fetchAllTags(); void refreshKnowledgeIndexStatus() }
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
@@ -2425,7 +2390,7 @@ watch(searchQuery, (q) => {
 watch(activeTabId, (newId, oldId) => { 
   if (newId && newId !== oldId) { 
     const t = tabs.value.find(item => item.id === newId); 
-    if (t) loadFileToEditor(t.path) 
+    if (t && findFileFormat(t.path)?.routeName === 'LibraryMode') loadFileToEditor(t.path)
     if (activeSidebarTab.value === 'links') fetchLinks()
 
     // 侧边栏自动同步逻辑
@@ -3197,30 +3162,6 @@ watch(activeTabId, (newId, oldId) => {
 
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
 .tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; gap: 12px; }
-.tab-scroller { flex: 1; height: 40px; display: flex; gap: 8px; align-items: center; overflow-x: auto; scrollbar-width: none; }
-.tab-pill { height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: rgba(0, 0, 0, 0.03); border-radius: var(--theme-radius); transition: all 0.3s var(--ease-premium); white-space: nowrap; max-width: 200px; min-width: 0; flex-shrink: 0; }
-.tab-pill:hover { background: rgba(0, 0, 0, 0.06); transform: translateY(-1px); }
-.tab-pill.active {
-  background: var(--custom-editor-bg);
-  color: var(--theme-primary);
-  box-shadow: var(--theme-shadow-sm);
-}
-.is-dark .tab-pill.active {
-  box-shadow: var(--theme-shadow-sm);
-}
-
-.pill-text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pill-dirty-dot {
-  width: 6px; height: 6px; min-width: 6px;
-  background: var(--theme-primary, #007aff);
-  border-radius: 50%; opacity: 0.8;
-}
 
 .tab-actions {
   display: flex;
@@ -3365,12 +3306,6 @@ watch(activeTabId, (newId, oldId) => {
 
   .tabs-bar {
     padding: 8px 8px 0 !important;
-  }
-
-  .tab-pill {
-    max-width: 150px !important;
-    padding: 0 10px !important;
-    font-size: 12px !important;
   }
 
   .sidebar-header {

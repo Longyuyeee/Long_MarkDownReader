@@ -1,5 +1,6 @@
 <template>
   <div class="text-workspace">
+    <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
     <header class="text-toolbar">
       <div class="document-identity">
         <n-button quaternary circle size="small" title="返回知识库" @click="leaveEditor">
@@ -119,7 +120,7 @@ import { undo, redo } from '@codemirror/commands'
 import { openSearchPanel, gotoLine } from '@codemirror/search'
 import { Compartment, EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
 import {
   ArrowLeft as ArrowLeftIcon,
@@ -131,7 +132,8 @@ import {
   Undo2 as UndoIcon,
 } from 'lucide-vue-next'
 import { findFileFormat } from '../config/fileFormats'
-import { useAppStore } from '../store/app'
+import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import { type TabInfo, useAppStore } from '../store/app'
 
 interface TextDocumentError {
   code?: string
@@ -190,6 +192,7 @@ const textAutoSaveEnabled = computed({
   get: () => store.textAutoSaveEnabled,
   set: (value: boolean) => { void store.updateConfig({ textAutoSaveEnabled: value }) },
 })
+const currentTab = computed(() => store.tabs.find(tab => tab.path === textPath.value))
 const loading = ref(true)
 const saving = ref(false)
 const loadingRange = ref(false)
@@ -246,6 +249,58 @@ const normalizeEncoding = (value: string) => {
   return 'utf-8'
 }
 
+const syncCurrentTab = (isDirty = dirty.value) => {
+  if (!editor || !textPath.value) return
+  const tab = store.tabs.find(item => item.path === textPath.value)
+  if (!tab) return
+  tab.content = editor.state.doc.toString()
+  tab.isDirty = isDirty
+  tab.textSignature = signature.value
+  tab.textEncoding = detectedEncoding.value
+  tab.textEncodingConfidence = encodingConfidence.value
+  tab.textReadEncoding = sourceEncoding.value
+  tab.textSaveEncoding = saveEncoding.value
+  tab.textSaveBom = saveBom.value
+  tab.textSaveLineEnding = saveLineEnding.value
+  tab.textSaveFinalNewline = saveFinalNewline.value
+  tab.textReadOnlyReason = readOnlyReason.value
+  tab.textRangeNextOffset = rangeNextOffset.value
+  tab.textRangeEof = rangeEof.value
+  tab.textSize = fileSize.value
+  tab.textModified = modified.value
+}
+
+const registerCurrentTab = () => {
+  store.addTab({
+    id: textPath.value,
+    title: fileName.value,
+    path: textPath.value,
+    isDirty: dirty.value,
+    external: isExternal.value,
+  })
+  syncCurrentTab(dirty.value)
+}
+
+const restoreTabDraft = (tab: TabInfo) => {
+  signature.value = tab.textSignature || ''
+  detectedEncoding.value = tab.textEncoding || 'utf-8'
+  encodingConfidence.value = tab.textEncodingConfidence || ''
+  sourceEncoding.value = normalizeEncoding(tab.textReadEncoding || tab.textEncoding || 'utf-8')
+  readEncoding.value = sourceEncoding.value
+  saveEncoding.value = normalizeEncoding(tab.textSaveEncoding || sourceEncoding.value)
+  saveBom.value = tab.textSaveBom === 'utf-8' ? 'utf-8' : 'none'
+  saveLineEnding.value = (tab.textSaveLineEnding || tab.textLineEnding || 'lf') as 'lf' | 'crlf' | 'cr'
+  saveFinalNewline.value = tab.textSaveFinalNewline ?? tab.textHasFinalNewline ?? false
+  fileSize.value = tab.textSize || 0
+  modified.value = tab.textModified || 0
+  readOnlyReason.value = tab.textReadOnlyReason || ''
+  rangeNextOffset.value = tab.textRangeNextOffset || 0
+  rangeEof.value = tab.textRangeEof ?? true
+  replaceDocument(tab.content || '', Boolean(tab.textReadOnlyReason))
+  dirty.value = true
+  store.activateTab(tab.id)
+}
+
 const editorExtensions = (isReadOnly: boolean) => [
   basicSetup,
   readOnlyCompartment.of([
@@ -259,6 +314,7 @@ const editorExtensions = (isReadOnly: boolean) => [
       lineCount.value = update.state.doc.lines
       if (!applyingDocument) {
         dirty.value = true
+        syncCurrentTab(true)
         scheduleAutoSave()
       }
     }
@@ -351,6 +407,7 @@ const applySnapshot = (snapshot: TextDocumentSnapshot) => {
   rangeNextOffset.value = snapshot.size
   rangeEof.value = true
   replaceDocument(snapshot.content, Boolean(snapshot.readOnlyReason))
+  registerCurrentTab()
 }
 
 const applyRangeSnapshot = (snapshot: TextDocumentRangeSnapshot, replace: boolean) => {
@@ -380,6 +437,7 @@ const applyRangeSnapshot = (snapshot: TextDocumentRangeSnapshot, replace: boolea
     applyingDocument = false
     dirty.value = false
   }
+  registerCurrentTab()
 }
 
 const errorMessage = (cause: unknown) => {
@@ -407,6 +465,11 @@ const load = async (encoding?: string) => {
   loadError.value = ''
   try {
     if (!textPath.value || format.value?.id !== 'plain-text') throw new Error('当前路径不是已注册的纯文本文件')
+    const draft = currentTab.value
+    if (draft?.isDirty && draft.content !== undefined) {
+      restoreTabDraft(draft)
+      return
+    }
     const snapshot = await invoke<TextDocumentSnapshot>(
       isExternal.value ? 'read_external_text_document' : 'read_text_document',
       {
@@ -418,7 +481,6 @@ const load = async (encoding?: string) => {
     )
     if (generation !== loadGeneration) return
     applySnapshot(snapshot)
-    if (!isExternal.value) store.recordRecentFile({ title: fileName.value, path: textPath.value })
   } catch (cause) {
     const error = cause as TextDocumentError
     if (error?.code === 'read-too-large') {
@@ -426,7 +488,6 @@ const load = async (encoding?: string) => {
         const snapshot = await readRange(0, encoding)
         if (generation !== loadGeneration) return
         applyRangeSnapshot(snapshot, true)
-        if (!isExternal.value) store.recordRecentFile({ title: fileName.value, path: textPath.value })
         message.warning('文件超过完整编辑上限，已进入只读范围模式')
       } catch (rangeError) {
         if (generation === loadGeneration) loadError.value = errorMessage(rangeError)
@@ -482,6 +543,7 @@ const save = async (isAutoSave = false) => {
       fileSize.value = snapshot.size
       modified.value = snapshot.modified
       dirty.value = true
+      syncCurrentTab(true)
       scheduleAutoSave()
     }
     if (!isAutoSave) message.success('文本已安全保存')
@@ -514,6 +576,7 @@ const reloadCurrentEncoding = async () => {
 const markPolicyDirty = () => {
   if (!loading.value && !readOnly.value) {
     dirty.value = true
+    syncCurrentTab(true)
     scheduleAutoSave()
   }
 }
@@ -522,13 +585,7 @@ const runUndo = () => { if (editor) undo(editor) }
 const runRedo = () => { if (editor) redo(editor) }
 const openFind = () => { if (editor) { openSearchPanel(editor); editor.focus() } }
 const openGoToLine = () => { if (editor) { gotoLine(editor); editor.focus() } }
-const mayLeave = () => !dirty.value || window.confirm('当前文本有未保存修改，确定离开吗？')
 const leaveEditor = () => { void router.push('/library') }
-const beforeUnload = (event: BeforeUnloadEvent) => {
-  if (!dirty.value) return
-  event.preventDefault()
-  event.returnValue = ''
-}
 const handleKeydown = (event: KeyboardEvent) => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
     event.preventDefault()
@@ -549,23 +606,17 @@ watch(textAutoSaveEnabled, enabled => {
   else clearAutoSave()
 })
 watch([textPath, isExternal], () => { void load() })
-onBeforeRouteLeave(() => mayLeave())
-onBeforeRouteUpdate((to, from) => (
-  to.query.path === from.query.path && to.query.external === from.query.external
-) || mayLeave())
 onMounted(async () => {
   createEditor()
   await nextTick()
   await load()
   window.addEventListener('keydown', handleKeydown)
-  window.addEventListener('beforeunload', beforeUnload)
 })
 onBeforeUnmount(() => {
   clearAutoSave()
   editor?.destroy()
   editor = null
   window.removeEventListener('keydown', handleKeydown)
-  window.removeEventListener('beforeunload', beforeUnload)
 })
 </script>
 
@@ -573,7 +624,7 @@ onBeforeUnmount(() => {
 .text-workspace {
   height: 100%;
   display: grid;
-  grid-template-rows: 48px 38px minmax(0, 1fr) 28px;
+  grid-template-rows: auto 48px 38px minmax(0, 1fr) 28px;
   color: var(--theme-text);
   background: var(--theme-bg);
 }
@@ -723,7 +774,7 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 760px) {
-  .text-workspace { grid-template-rows: 48px auto minmax(0, 1fr) 32px; }
+  .text-workspace { grid-template-rows: auto 48px auto minmax(0, 1fr) 32px; }
   .format-bar { min-height: 42px; padding: 6px 10px; gap: 8px; overflow-x: auto; }
   .format-bar label > span:first-child, .confidence-label { display: none; }
   .document-title strong { max-width: 32vw; }
