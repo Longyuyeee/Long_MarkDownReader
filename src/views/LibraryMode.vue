@@ -396,6 +396,9 @@
               {{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}
             </span>
             <span v-if="activeTextSnapshotLabel" class="text-snapshot-badge" :title="activeTextSnapshotTitle">{{ activeTextSnapshotLabel }}</span>
+            <n-button v-if="activeTextTab?.textReadOnlyReason && !activeTextTab.textRangeEof" text size="tiny" @click="loadNextTextRange">
+              继续加载
+            </n-button>
             <span>{{ wordCount }} 字 · 约 {{ Math.max(1, Math.ceil(wordCount / 300)) }} 分钟 · 行 {{ cursorLine }}:{{ cursorCol }}</span>
           </div>
           <div class="hidden-picker-trigger" style="position: absolute; opacity: 0; pointer-events: none;">
@@ -572,6 +575,21 @@ interface TextDocumentSnapshot {
   path: string
 }
 
+interface TextDocumentRangeSnapshot {
+  content: string
+  encoding: string
+  encodingConfidence: string
+  bom: string
+  lineEnding: string
+  offset: number
+  nextOffset: number
+  eof: boolean
+  size: number
+  modified: number
+  readOnlyReason: string
+  path: string
+}
+
 interface TextReadOptions {
   encoding?: string
 }
@@ -608,23 +626,33 @@ const route = useRoute()
 const activeDocumentFormat = computed(() => activeTabId.value ? findFileFormat(activeTabId.value) : undefined)
 const activeIsMarkdown = computed(() => activeDocumentFormat.value?.id === 'markdown')
 const activeMarkdownContent = computed(() => activeIsMarkdown.value ? tabs.value.find(tab => tab.id === activeTabId.value)?.content || '' : '')
-const activeFormatCanEdit = computed(() => activeDocumentFormat.value ? isFormatCapabilitySupported(activeDocumentFormat.value, 'edit') : false)
 const activeTextTab = computed(() => tabs.value.find(tab => tab.id === activeTabId.value))
+const activeFormatCanEdit = computed(() => Boolean(
+  activeDocumentFormat.value
+  && isFormatCapabilitySupported(activeDocumentFormat.value, 'edit')
+  && !activeTextTab.value?.textReadOnlyReason,
+))
 const activeTextSnapshotLabel = computed(() => {
   const tab = activeTextTab.value
   if (!tab?.textEncoding) return ''
   const bom = tab.textBom && tab.textBom !== 'none' ? ` · ${tab.textBom.toUpperCase()} BOM` : ''
   const lineEnding = tab.textLineEnding ? ` · ${tab.textLineEnding.toUpperCase()}` : ''
-  return `${tab.textEncoding}${bom}${lineEnding}`
+  const readOnly = tab.textReadOnlyReason ? ' · 大文件只读' : ''
+  return `${tab.textEncoding}${bom}${lineEnding}${readOnly}`
 })
 const activeTextSnapshotTitle = computed(() => {
   const tab = activeTextTab.value
+  if (tab?.textReadOnlyReason) {
+    const loaded = tab.textRangeNextOffset || 0
+    return `大文件范围预览 · 已加载 ${loaded} / ${tab.textSize || 0} 字节`
+  }
   if (!tab?.textSignature) return '尚未读取文本快照'
   const confidence = tab.textReadEncoding ? ` · 用户选择 ${encodingLabel(tab.textReadEncoding)}` : ''
   return `签名 ${tab.textSignature}${confidence}`
 })
 const activeSaveTitle = computed(() => {
   if (!activeTabId.value) return '保存到磁盘 (Ctrl+S)'
+  if (activeTextTab.value?.textReadOnlyReason) return '大文件范围预览为只读模式'
   if (!activeFormatCanEdit.value) return `${activeDocumentFormat.value?.label || '当前格式'}不可覆盖保存`
   return `保存到磁盘 (Ctrl+S) · ${activeDocumentFormat.value?.userCapability.label || '可编辑'}`
 })
@@ -1240,10 +1268,14 @@ const loadFileToEditor = async (path: string) => {
   if (!vditor || !path) return; lastLoadedPath = '' 
   const currentTab = tabs.value.find(t => t.path === path)
   
-  const setEditorValue = (content: string) => {
+  const setEditorValue = (content: string, readOnly = false) => {
     suppressEditorInput = true
     vditor.setValue(content)
-    setTimeout(() => { suppressEditorInput = false }, 0)
+    setTimeout(() => {
+      suppressEditorInput = false
+      if (readOnly) vditor?.disabled()
+      else vditor?.enable()
+    }, 0)
     fetchHistory()
     nextTick(() => { 
       setTimeout(() => { 
@@ -1268,10 +1300,14 @@ const loadFileToEditor = async (path: string) => {
     tab.textLineEnding = snapshot.lineEnding
     tab.textHasFinalNewline = snapshot.hasFinalNewline
     tab.textReadEncoding = readEncoding
+    tab.textReadOnlyReason = undefined
+    tab.textRangeNextOffset = undefined
+    tab.textRangeEof = undefined
+    tab.textSize = snapshot.size
   }
 
   if (currentTab?.content !== undefined) {
-    setEditorValue(currentTab.content)
+    setEditorValue(currentTab.content, Boolean(currentTab.textReadOnlyReason))
   } else {
     try {
       const format = findFileFormat(path)
@@ -1280,7 +1316,19 @@ const loadFileToEditor = async (path: string) => {
       const res = await invoke<TextDocumentSnapshot>('read_text_document', { libraryRoot: store.libraryPath, path, formatId: format.id, readOptions })
       applyTextSnapshot(currentTab, res, currentTab?.textReadEncoding)
       setEditorValue(res.content)
-    } catch (err) { message.error("读取失败") }
+    } catch (err: any) {
+      if (err?.code === 'read-too-large' && currentTab) {
+        try {
+          const preview = await readLargeTextPreview(currentTab, 0, currentTab.textReadEncoding)
+          setEditorValue(preview.content, true)
+          message.warning('文件超过完整编辑上限，已进入大文件只读预览')
+        } catch (previewError: any) {
+          handleError(previewError, '大文件预览失败', 'loadFileToEditor')
+        }
+      } else {
+        handleError(err, '读取失败', 'loadFileToEditor')
+      }
+    }
   }
 }
 
@@ -1293,6 +1341,66 @@ const updateTabFromTextSnapshot = (tab: TabInfo, snapshot: TextDocumentSnapshot,
   tab.textLineEnding = snapshot.lineEnding
   tab.textHasFinalNewline = snapshot.hasFinalNewline
   tab.textReadEncoding = readEncoding
+  tab.textReadOnlyReason = undefined
+  tab.textRangeNextOffset = undefined
+  tab.textRangeEof = undefined
+  tab.textSize = snapshot.size
+}
+
+const applyTextRangeSnapshot = (tab: TabInfo, snapshot: TextDocumentRangeSnapshot, readEncoding?: string) => {
+  tab.content = snapshot.content
+  tab.isDirty = false
+  tab.textSignature = undefined
+  tab.textEncoding = snapshot.encoding
+  if (snapshot.offset === 0) {
+    tab.textBom = snapshot.bom
+    tab.textLineEnding = snapshot.lineEnding
+  }
+  tab.textHasFinalNewline = undefined
+  tab.textReadEncoding = readEncoding || snapshot.encoding
+  tab.textReadOnlyReason = snapshot.readOnlyReason
+  tab.textRangeNextOffset = snapshot.nextOffset
+  tab.textRangeEof = snapshot.eof
+  tab.textSize = snapshot.size
+}
+
+const readLargeTextPreview = async (tab: TabInfo, offset: number, readEncoding?: string) => {
+  const format = findFileFormat(tab.path)
+  if (!format || format.routeName !== 'LibraryMode') throw new Error('文件未注册为文本工作面格式')
+  const readOptions = readEncoding ? { encoding: readEncoding } : undefined
+  const snapshot = await invoke<TextDocumentRangeSnapshot>('read_text_document_range', {
+    libraryRoot: store.libraryPath,
+    path: tab.path,
+    formatId: format.id,
+    offset,
+    length: 512 * 1024,
+    readOptions,
+  })
+  applyTextRangeSnapshot(tab, snapshot, readEncoding)
+  return snapshot
+}
+
+const loadNextTextRange = async () => {
+  if (!vditor || !activeTextTab.value?.textReadOnlyReason || activeTextTab.value.textRangeEof) return
+  const tab = activeTextTab.value
+  try {
+    const existingContent = tab.content || ''
+    const snapshot = await readLargeTextPreview(
+      tab,
+      tab.textRangeNextOffset || 0,
+      tab.textReadEncoding || tab.textEncoding,
+    )
+    const combined = existingContent + snapshot.content
+    tab.content = combined
+    suppressEditorInput = true
+    vditor.setValue(combined)
+    setTimeout(() => {
+      suppressEditorInput = false
+      vditor?.disabled()
+    }, 0)
+  } catch (error: any) {
+    handleError(error, '继续加载失败', 'loadNextTextRange')
+  }
 }
 
 const virtualDrag = reactive({ 
@@ -1685,6 +1793,7 @@ const triggerAutoSave = (content: string) => {
     const current = tabs.value.find(tab => tab.id === activeTabId.value)
     const format = current ? findFileFormat(current.path) : undefined
     if (current && format?.routeName === 'LibraryMode') {
+      if (current.textReadOnlyReason) return
       try {
         const savePolicy = current.textReadEncoding ? { encoding: current.textReadEncoding } : undefined
         const saved = await invoke<TextDocumentSnapshot>('write_text_document', {
@@ -1732,6 +1841,7 @@ const saveCurrentFile = async (options: unknown = {}) => {
   if (!vditor || !activeTabId.value) return; const t = tabs.value.find(item => item.id === activeTabId.value)
   if (t) { 
     try { 
+      if (t.textReadOnlyReason) throw new Error('大文件范围预览为只读模式，不能覆盖保存')
       let content = vditor.getValue(); 
       
       const format = findFileFormat(t.path)
@@ -2195,6 +2305,17 @@ const reloadTextWithEncoding = async (encoding: string) => {
   const run = async () => {
     try {
       const readOptions: TextReadOptions = { encoding }
+      if (tab.textReadOnlyReason) {
+        const preview = await readLargeTextPreview(tab, 0, encoding)
+        suppressEditorInput = true
+        vditor.setValue(preview.content)
+        setTimeout(() => {
+          suppressEditorInput = false
+          vditor?.disabled()
+        }, 0)
+        message.success(`已按 ${encodingLabel(encoding)} 重新读取大文件首段`)
+        return
+      }
       const snapshot = await invoke<TextDocumentSnapshot>('read_text_document', {
         libraryRoot: store.libraryPath,
         path: tab.path,

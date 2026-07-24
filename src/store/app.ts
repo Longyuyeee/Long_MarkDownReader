@@ -26,6 +26,10 @@ export interface TabInfo {
   textLineEnding?: string
   textHasFinalNewline?: boolean
   textReadEncoding?: string
+  textReadOnlyReason?: string
+  textRangeNextOffset?: number
+  textRangeEof?: boolean
+  textSize?: number
 }
 
 export interface LibraryConfig {
@@ -236,6 +240,10 @@ export const useAppStore = defineStore('app', {
         if (tab.textLineEnding !== undefined) existing.textLineEnding = tab.textLineEnding
         if (tab.textHasFinalNewline !== undefined) existing.textHasFinalNewline = tab.textHasFinalNewline
         if (tab.textReadEncoding !== undefined) existing.textReadEncoding = tab.textReadEncoding
+        if (tab.textReadOnlyReason !== undefined) existing.textReadOnlyReason = tab.textReadOnlyReason
+        if (tab.textRangeNextOffset !== undefined) existing.textRangeNextOffset = tab.textRangeNextOffset
+        if (tab.textRangeEof !== undefined) existing.textRangeEof = tab.textRangeEof
+        if (tab.textSize !== undefined) existing.textSize = tab.textSize
         const [removed] = this.tabs.splice(idx, 1)
         this.tabs.unshift(removed)
         if (this.activeTabId !== existing.id) {

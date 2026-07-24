@@ -2,9 +2,10 @@ use crate::formats::file_registry::{
     file_format_by_id, file_format_for_path, file_format_registry, FileFormatRegistry,
 };
 use crate::formats::text::{
-    encode_text_for_save, read_text_snapshot, read_text_snapshot_with_options,
-    verify_current_signature, TextDocumentError, TextDocumentSnapshot, TextReadOptions,
-    TextSavePolicy,
+    encode_text_for_save, read_text_range_with_options, read_text_snapshot,
+    read_text_snapshot_with_options, verify_current_signature, TextDocumentError,
+    TextDocumentRangeSnapshot, TextDocumentSnapshot, TextReadOptions, TextSavePolicy,
+    DEFAULT_TEXT_RANGE_BYTES,
 };
 use crate::sanitize_filename;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_utf8};
@@ -87,6 +88,43 @@ pub async fn read_text_document(
         ));
     }
     read_text_snapshot_with_options(&path, read_options)
+}
+
+#[tauri::command]
+pub async fn read_text_document_range(
+    library_root: String,
+    path: String,
+    format_id: String,
+    offset: u64,
+    length: Option<u64>,
+    read_options: Option<TextReadOptions>,
+) -> Result<TextDocumentRangeSnapshot, TextDocumentError> {
+    let format = ensure_capability(&format_id, "read")
+        .map_err(|error| text_boundary_error("format-read-unsupported", error))?;
+    if format.adapters.reader.as_deref() != Some("text") {
+        return Err(text_boundary_error(
+            "adapter-mismatch",
+            format!("{} 不是通用文本读取格式", format.label),
+        ));
+    }
+    let guard = WorkspaceGuard::new(library_root)
+        .map_err(|error| text_boundary_error("workspace-root-invalid", error))?;
+    let path = guard
+        .resolve_existing(path)
+        .map_err(|error| text_boundary_error("path-outside-workspace", error))?;
+    if !path.is_file() {
+        return Err(text_boundary_error("target-not-file", "目标必须是文件"));
+    }
+    ensure_matching_format(&path, &format_id)
+        .map_err(|error| text_boundary_error("format-mismatch", error))?;
+    recover_interrupted_write(&path)
+        .map_err(|error| text_boundary_error("recovery-failed", error))?;
+    read_text_range_with_options(
+        &path,
+        offset,
+        length.unwrap_or(DEFAULT_TEXT_RANGE_BYTES),
+        read_options,
+    )
 }
 
 #[tauri::command]
@@ -280,6 +318,34 @@ mod tests {
             None,
         ))
         .is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn plain_text_adapter_reads_bounded_ranges() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-format-range-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("large.txt");
+        fs::write(&path, "alpha 中文 beta\nsecond line\n").unwrap();
+        let first = tauri::async_runtime::block_on(read_text_document_range(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            "plain-text".into(),
+            0,
+            Some(10),
+            None,
+        ))
+        .unwrap();
+        assert_eq!(first.offset, 0);
+        assert!(first.next_offset <= 10);
+        assert!(!first.eof);
         fs::remove_dir_all(root).unwrap();
     }
 }

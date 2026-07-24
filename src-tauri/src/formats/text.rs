@@ -1,8 +1,14 @@
 use encoding_rs::{Encoding, UTF_8};
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use std::time::UNIX_EPOCH;
+
+pub const DEFAULT_TEXT_RANGE_BYTES: u64 = 512 * 1024;
+pub const MAX_TEXT_RANGE_BYTES: u64 = 1024 * 1024;
+const TEXT_RANGE_DECODE_TAIL_BYTES: u64 = 4;
+const TEXT_ENCODING_DETECTION_SAMPLE_BYTES: u64 = 64 * 1024;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -54,6 +60,23 @@ pub struct TextDocumentSnapshot {
     pub size: u64,
     pub modified: u128,
     pub read_only_reason: Option<String>,
+    pub path: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TextDocumentRangeSnapshot {
+    pub content: String,
+    pub encoding: String,
+    pub encoding_confidence: String,
+    pub bom: String,
+    pub line_ending: String,
+    pub offset: u64,
+    pub next_offset: u64,
+    pub eof: bool,
+    pub size: u64,
+    pub modified: u128,
+    pub read_only_reason: String,
     pub path: String,
 }
 
@@ -144,6 +167,128 @@ pub fn read_text_snapshot_with_options(
         size: metadata.len(),
         modified: modified_nanos(&metadata),
         read_only_reason: metadata.permissions().readonly().then(|| "readonly".into()),
+        path: path.to_string_lossy().into_owned(),
+        content,
+    })
+}
+
+pub fn read_text_range_with_options(
+    path: &Path,
+    offset: u64,
+    length: u64,
+    options: Option<TextReadOptions>,
+) -> Result<TextDocumentRangeSnapshot, TextDocumentError> {
+    if length == 0 || length > MAX_TEXT_RANGE_BYTES {
+        return Err(TextDocumentError::recoverable(
+            "range-length-invalid",
+            format!("文本范围长度必须在 1 到 {MAX_TEXT_RANGE_BYTES} 字节之间"),
+            "缩小单次读取范围后重试",
+        ));
+    }
+    let metadata = path.metadata().map_err(|error| {
+        TextDocumentError::simple(
+            "metadata-read-failed",
+            format!("读取文本元数据失败: {error}"),
+        )
+    })?;
+    if offset > metadata.len() {
+        return Err(TextDocumentError::recoverable(
+            "range-offset-invalid",
+            format!("文本范围起点 {offset} 已超过文件大小 {}", metadata.len()),
+            "从上一次返回的 nextOffset 继续读取",
+        ));
+    }
+
+    let selected_encoding = options
+        .and_then(|options| options.encoding)
+        .filter(|encoding| !encoding.trim().is_empty());
+    if offset > 0 && selected_encoding.is_none() {
+        return Err(TextDocumentError::recoverable(
+            "range-encoding-required",
+            "继续读取文本范围时必须沿用首段确定的编码",
+            "将首段返回的 encoding 作为 readOptions.encoding 传入",
+        ));
+    }
+
+    let mut file = fs::File::open(path).map_err(|error| {
+        TextDocumentError::simple("read-failed", format!("打开文本文件失败: {error}"))
+    })?;
+    file.seek(SeekFrom::Start(offset)).map_err(|error| {
+        TextDocumentError::simple("range-seek-failed", format!("定位文本范围失败: {error}"))
+    })?;
+    let available = metadata.len().saturating_sub(offset);
+    let decode_length = length.saturating_add(TEXT_RANGE_DECODE_TAIL_BYTES);
+    let read_length = if offset == 0 && selected_encoding.is_none() {
+        available.min(decode_length.max(TEXT_ENCODING_DETECTION_SAMPLE_BYTES))
+    } else {
+        available.min(decode_length)
+    };
+    let mut bytes = Vec::with_capacity(read_length as usize);
+    file.take(read_length)
+        .read_to_end(&mut bytes)
+        .map_err(|error| {
+            TextDocumentError::simple("range-read-failed", format!("读取文本范围失败: {error}"))
+        })?;
+    if bytes.contains(&0) {
+        return Err(TextDocumentError::simple(
+            "nul-bytes",
+            "文本范围包含 NUL 字节，已按二进制或损坏文本拒绝",
+        ));
+    }
+
+    let encoding = if let Some(label) = selected_encoding.as_deref() {
+        Encoding::for_label(label.as_bytes()).ok_or_else(|| {
+            TextDocumentError::recoverable(
+                "unsupported-read-encoding",
+                format!("不支持读取编码 {label}"),
+                "请选择 UTF-8、GBK、GB18030 等受支持编码",
+            )
+        })?
+    } else {
+        let mut detector = chardetng::EncodingDetector::new();
+        detector.feed(strip_known_bom(&bytes), true);
+        detector.guess(None, true)
+    };
+
+    let preferred_length = bytes.len().min(length as usize);
+    let minimum_length = preferred_length.saturating_sub(TEXT_RANGE_DECODE_TAIL_BYTES as usize);
+    let decoded = (minimum_length..=preferred_length)
+        .rev()
+        .filter(|candidate_length| *candidate_length > 0 || bytes.is_empty())
+        .chain((preferred_length + 1)..=bytes.len())
+        .find_map(|candidate_length| {
+            let (text, _, had_errors) = encoding.decode(&bytes[..candidate_length]);
+            (!had_errors).then(|| (text.into_owned(), candidate_length))
+        })
+        .ok_or_else(|| {
+            TextDocumentError::recoverable(
+                "decode-failed",
+                format!("无法可靠按 {} 解码文本范围", encoding.name()),
+                "尝试选择其他编码重新读取首段",
+            )
+        })?;
+    let (content, consumed_bytes) = decoded;
+    let next_offset = offset + consumed_bytes as u64;
+
+    Ok(TextDocumentRangeSnapshot {
+        encoding: encoding.name().to_string(),
+        encoding_confidence: encoding_confidence(
+            &bytes[..consumed_bytes],
+            encoding,
+            selected_encoding.is_some(),
+        ),
+        bom: if offset == 0 {
+            detect_bom(&bytes).into()
+        } else {
+            "none".into()
+        },
+        line_ending: detect_line_ending(&content).into(),
+        offset,
+        next_offset,
+        eof: next_offset >= metadata.len(),
+        size: metadata.len(),
+        modified: modified_nanos(&metadata),
+        read_only_reason: "large-file-range".into(),
         path: path.to_string_lossy().into_owned(),
         content,
     })
@@ -513,6 +658,37 @@ mod tests {
         )
         .unwrap_err();
         assert_eq!(error.code, "unsupported-read-encoding");
+        assert!(error.recoverable);
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn reads_multibyte_text_in_contiguous_ranges() {
+        let content = "中文 alpha beta\nsecond line\n";
+        let path = fixture("range", content.as_bytes());
+        let first = read_text_range_with_options(&path, 0, 1, None).unwrap();
+        assert!(first.next_offset > 0);
+        assert!(!first.eof);
+        let second = read_text_range_with_options(
+            &path,
+            first.next_offset,
+            MAX_TEXT_RANGE_BYTES,
+            Some(TextReadOptions {
+                encoding: Some(first.encoding.clone()),
+            }),
+        )
+        .unwrap();
+        assert_eq!(format!("{}{}", first.content, second.content), content);
+        assert!(second.eof);
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn rejects_unbounded_text_range_requests() {
+        let path = fixture("range-limit", b"alpha");
+        let error =
+            read_text_range_with_options(&path, 0, MAX_TEXT_RANGE_BYTES + 1, None).unwrap_err();
+        assert_eq!(error.code, "range-length-invalid");
         assert!(error.recoverable);
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
