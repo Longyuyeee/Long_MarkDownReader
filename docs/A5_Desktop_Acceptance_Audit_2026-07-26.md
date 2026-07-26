@@ -30,10 +30,11 @@ npm run audit:a5-desktop
 npm run check:a5-desktop-evidence
 ```
 
-门禁结果为 **16/16 项通过，10 张真实 Tauri 截图通过机器校验**。
+门禁结果为 **18/18 项通过，10 张真实 Tauri 截图通过机器校验**。
 
 | 验收域 | 真实桌面结果 | 证据 |
 |---|---|---|
+| Library 右侧结构 | 日常格式保留左侧管理器并嵌入右侧；JSON/Text 标签互切不离开 Library | `configuration-and-code-save-reopen.jpg` |
 | 普通文本/INI | 编辑、保存、离开并重开成功 | `text-save-and-reopen.jpg` |
 | 外部修改冲突 | 保存被签名冲突阻断；选择重新加载后读取磁盘版本，不恢复旧草稿 | `external-conflict-detected.jpg` |
 | `.env` | 首次遮罩、明确确认后显示、再次遮罩成功；正文标记不泄漏到界面 | `env-default-masked.jpg` |
@@ -46,6 +47,8 @@ npm run check:a5-desktop-evidence
 | 进程重启 | 杀掉第一轮真实应用进程，以同一隔离配置重启，从最近文件重新打开日志 | `restart-recent-file-restored.jpg` |
 
 机器清单位于 `docs/evidence/a5-stage-a/audit-manifest.json`。门禁同时校验运行环境标识、检查项集合、截图数量与大小、大文件 24 MiB/512 KiB 事实以及真实进程重启时间。
+
+右侧统一工作区的根因、空间模式和视觉合同见 `docs/Library_Right_Pane_Workspace_Audit_2026-07-26.md`。
 
 ## 3. 本阶段发现并修复的问题
 
@@ -89,7 +92,7 @@ JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存�
 - 主题、格式、A5 桌面证据、工作簿和 XLSX 发布契约通过；
 - Rust 功能测试 `271/271` 通过；
 - Rust 复杂工作簿性能测试 `1/1` 通过；
-- 100 MiB PDF 范围读取只请求约 `255.9 KiB`，本机约 `62 ms`；
+- 100 MiB PDF 范围读取只请求约 `255.9 KiB`，本机约 `53 ms`；
 - 生产依赖审计 `0` 个漏洞。
 
 现存非阻断项仍是 Vite 的少量大分包警告。它属于后续性能优化，不影响本阶段正确性结论。

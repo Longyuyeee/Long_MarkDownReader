@@ -291,7 +291,7 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import { useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
 import { isActiveThemeDark } from '../config/themePresets'
-import { routeForFile } from '../config/fileFormats'
+import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import TableChartEmbed from '../components/TableChartEmbed.vue'
 import MermaidDiagramEmbed from '../components/MermaidDiagramEmbed.vue'
 
@@ -1226,7 +1226,9 @@ const openNode = async (node: CanvasNode) => {
   if (node.type === 'file' && node.file) {
     const path = resolveFilePath(node.file)
     const target = routeForFile(path)
-    if (target) router.push(target)
+    if (opensInLibraryShell(findFileFormat(path))) {
+      router.push({ name: 'LibraryMode', query: { path } })
+    } else if (target) router.push(target)
     else message.warning('该文件格式尚未注册工作面')
   } else if (node.type === 'link' && node.url) {
     try { await openUrl(node.url) } catch { message.error('无法打开该链接') }

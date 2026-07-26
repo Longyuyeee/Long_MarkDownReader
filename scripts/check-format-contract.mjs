@@ -359,6 +359,8 @@ requireText(library, '<component :is="activeEmbeddedEditor"', 'library mode must
 requireText(library, 'library-embedded-editor', 'embedded editors must use the shared visual shell')
 requireText(library, 'opensInLibraryShell(format)', 'library file selection must retain the management shell')
 requireText(workspaceTabs, 'opensInLibraryShell', 'unified tabs must retain the library shell for managed files')
+requireText(app, 'opensInLibraryShell', 'command palette file results must retain the library shell')
+requireText(canvas, 'opensInLibraryShell', 'canvas file nodes must retain the library shell for daily formats')
 requireText(workspaceTabs, 'tab.isDirty', 'unified tabs must confirm before discarding dirty drafts')
 requireText(appStore, '.filter(tab => !tab.external)', 'external authorization tabs must not survive process restart')
 requireText(app, 'confirmDiscardUnsaved', 'application exit must coordinate dirty session tabs')

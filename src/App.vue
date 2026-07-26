@@ -70,7 +70,7 @@ import { useRouter } from 'vue-router'
 import { listen, emit } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import { useAppStore } from './store/app'
-import { isExternallyEditable, routeForFile } from './config/fileFormats'
+import { findFileFormat, isExternallyEditable, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 
 const osTheme = useOsTheme()
@@ -202,7 +202,9 @@ const handleCommand = async (item: any) => {
     else if (item.action.startsWith('theme-preset:')) await store.applyThemePreset(item.action.slice('theme-preset:'.length))
   } else if (item.type === 'file') {
     const target = routeForFile(item.path)
-    if (target) router.push(target)
+    if (opensInLibraryShell(findFileFormat(item.path))) {
+      router.push({ name: 'LibraryMode', query: { path: item.path } })
+    } else if (target) router.push(target)
   }
 }
 

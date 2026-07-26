@@ -3,7 +3,7 @@
 更新日期：2026-07-26
 交接基线：当前开发版本 `v0.7.0`；A4 统一格式与 A5 核心真实桌面验收已在 `codex/a4-format-closure` 收口，Draft PR #6 等待审阅；下一主线为 G8 知识图谱产品化
 
-> 最新桌面收口结论、16 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；A4 的 29 类格式/61 个扩展名矩阵见 `docs/A4_Format_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
+> 最新桌面收口结论、18 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；A4 的 29 类格式/61 个扩展名矩阵见 `docs/A4_Format_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 ## 1. 新电脑快速恢复
 
@@ -47,7 +47,7 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - YAML、XML、TOML、INI/CONF/CFG、Properties、`.editorconfig`、`.gitignore` 已进入统一管理与可靠基础编辑。
 - `.env` 系列默认遮罩且后端排除全文索引/知识图谱；必须在当前文件显式确认后才能显示和编辑原值。
 - 常见 JavaScript/TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 和 Web 源文件支持语法高亮、搜索与轻量可靠编辑，但不提供 IDE 执行、调试或语言服务。
-- A5 已用真实 Tauri Debug/WebView2 自动化完成 16 项检查和 10 张证据图，覆盖文本、JSON、YAML/XML/TOML、Properties、TypeScript、`.env`、大文件、日志轮转、外部冲突和进程重启后的最近文件恢复。
+- A5 已用真实 Tauri Debug/WebView2 自动化完成 18 项检查和 10 张证据图，覆盖 Library 右侧嵌入、跨格式标签切换、文本、JSON、YAML/XML/TOML、Properties、TypeScript、`.env`、大文件、日志轮转、外部冲突和进程重启后的最近文件恢复。
 
 ## 3. 后端结构
 
@@ -82,6 +82,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/Unified_File_Manager_Format_Requirements.md`：统一文件管理、常用格式阅读/基础编辑、安全保存和体系化管理的补充需求基线。
 - `docs/Next_Development_Execution_Guide.md`：A0～A5、PDF 页面编辑、DOCX/PPTX 基础工作面和体系化管理增强的后续执行指导。
 - `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`：阶段 A 桌面级收口、真实证据矩阵、能力边界和 G8 图谱产品化入口。
+- `docs/Library_Right_Pane_Workspace_Audit_2026-07-26.md`：知识库内嵌/外部独立空间模式、视觉尺度和路由入口合同。
 - `docs/Text_Editor_Architecture_Decision.md`：A2 TXT 编辑器选型、CodeMirror 6 职责边界、大文件策略和后续扩展约束。
 - `docs/JSON_Editor_Architecture_Decision.md`：A3 JSON/JSONC 解析器、源码事实源、注释/重复键/高精度边界和分批开放门禁。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。

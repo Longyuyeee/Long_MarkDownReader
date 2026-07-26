@@ -3309,6 +3309,13 @@ watch(activeTabId, (newId, oldId) => {
 .library-embedded-editor :deep(.cm-editor) {
   font-size: 13px;
 }
+.library-embedded-editor :deep(.yaml-toolbar),
+.library-embedded-editor :deep(.xml-workspace > .toolbar),
+.library-embedded-editor :deep(.workspace > header) {
+  min-height: 48px;
+  padding-right: 12px;
+  padding-left: 12px;
+}
 .library-embedded-editor :deep(.document-title strong),
 .library-embedded-editor :deep(.document-identity strong),
 .library-embedded-editor :deep(.identity strong) {

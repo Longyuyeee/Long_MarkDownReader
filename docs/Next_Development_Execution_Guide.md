@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5 已完成核心收口，16 项真实 Tauri 桌面检查进入 CI。下一开发入口调整为 G8 知识图谱产品化，随后按本文既定顺序进入 PDF 页面编辑、DOCX/PPTX 基础工作面和统一管理增强。最新判定见 [A5 真实桌面验收收口审计](./A5_Desktop_Acceptance_Audit_2026-07-26.md)。
+> 当前状态：A0～A5 已完成核心收口，18 项真实 Tauri 桌面检查进入 CI。日常编辑器已统一回到 Library 右侧；下一开发入口调整为 G8 知识图谱产品化，随后按本文既定顺序进入 PDF 页面编辑、DOCX/PPTX 基础工作面和统一管理增强。最新判定见 [A5 真实桌面验收收口审计](./A5_Desktop_Acceptance_Audit_2026-07-26.md)。
 
 ## 1. 指导目标
 
@@ -553,7 +553,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 11. `E` WPS、OpenDocument、旧版 Office、SVG、Draw.io 和更多代码格式。
 12. `F` 高级等价与 AI 增强。
 
-当前进度（2026-07-26）：**A0～A5 核心范围已完成**。A5 已在隔离的真实 Tauri Debug/WebView2 中完成 16 项检查和 10 张机器校验证据，阶段 A 可以退出。
+当前进度（2026-07-26）：**A0～A5 核心范围已完成**。A5 已在隔离的真实 Tauri Debug/WebView2 中完成 18 项检查和 10 张机器校验证据；TXT/JSON/YAML/XML/TOML/LOG 等日常工作面统一嵌入 Library 右侧，阶段 A 可以退出。
 
 当前 **A3 JSON/JSONC 已收口**：树形视图在精确 AST 范围、重复键、数字精度和 JSONC 保真门禁下开放标量替换、对象键重命名、对象/数组追加和删除；A5 进一步证明非法 JSON 默认不会覆盖最后合法磁盘版本，修复后可以可靠保存。
 
