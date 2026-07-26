@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -11,11 +11,13 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src-tauri/src/formats/yaml.rs'),
   read('src-tauri/src/formats/xml.rs'),
   read('src-tauri/src/formats/toml.rs'),
+  read('src-tauri/src/formats/docx.rs'),
   read('src-tauri/src/commands/formats.rs'),
   read('src-tauri/src/commands/json.rs'),
   read('src-tauri/src/commands/yaml.rs'),
   read('src-tauri/src/commands/xml.rs'),
   read('src-tauri/src/commands/toml.rs'),
+  read('src-tauri/src/commands/docx.rs'),
   read('src-tauri/src/commands/files.rs'),
   read('src-tauri/src/services/external_file_access.rs'),
   read('src-tauri/src/commands/index.rs'),
@@ -25,6 +27,7 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src/views/YamlEditorView.vue'),
   read('src/views/XmlEditorView.vue'),
   read('src/views/TomlEditorView.vue'),
+  read('src/views/DocxReaderView.vue'),
   read('src/views/LogViewerView.vue'),
   read('src/components/WorkspaceTabs.vue'),
   read('src/router/index.ts'),
@@ -160,6 +163,21 @@ if (!workbookFormat || workbookFormat.maxBytes !== 128 * 1024 * 1024) failures.p
 if (workbookFormat?.userCapability?.level !== 'basic-edit' || workbookFormat?.userCapability?.saveMode !== 'bounded-overwrite') failures.push('workbook must be displayed as bounded basic editing')
 const pdfFormat = registry.formats?.find(format => format.id === 'pdf')
 if (pdfFormat?.userCapability?.level !== 'read-annotate' || pdfFormat?.userCapability?.saveMode !== 'sidecar') failures.push('PDF must be displayed as read/annotate sidecar mode')
+const docxFormat = registry.formats?.find(format => format.id === 'docx')
+if (!docxFormat
+  || docxFormat.routeName !== 'DocxEditor'
+  || docxFormat.extensions?.join(',') !== '.docx'
+  || docxFormat.maxBytes !== 64 * 1024 * 1024
+  || docxFormat.capabilities?.read !== 'supported'
+  || docxFormat.capabilities?.edit !== 'planned'
+  || docxFormat.capabilities?.create !== 'unsupported'
+  || docxFormat.capabilities?.index !== 'planned'
+  || docxFormat.adapters?.reader !== 'docx'
+  || docxFormat.adapters?.writer !== null
+  || docxFormat.adapters?.creator !== null
+  || docxFormat.adapters?.indexer !== null
+  || docxFormat.userCapability?.level !== 'preview-only'
+  || docxFormat.userCapability?.saveMode !== 'none') failures.push('C1 DOCX structured read-only contract is incomplete')
 
 const requireText = (source, value, message) => { if (!source.includes(value)) failures.push(message) }
 const forbid = (source, pattern, message) => { if (pattern.test(source)) failures.push(message) }
@@ -333,6 +351,25 @@ requireText(tomlEditor, "'analyze_toml_source'", 'A4 TOML workspace must consume
 requireText(tomlEditor, "'write_toml_source_document'", 'A4 TOML workspace must use guarded saving')
 requireText(tomlEditor, '<WorkspaceTabs', 'A4 TOML workspace must participate in unified tabs')
 requireText(router, "name: 'TomlEditor'", 'A4 TOML workspace must have an independent route')
+requireText(docxKernel, 'MAX_DOCX_FILE_BYTES', 'C1 DOCX parser must enforce the registered file budget')
+requireText(docxKernel, 'MAX_DOCX_UNCOMPRESSED_BYTES', 'C1 DOCX parser must enforce an OOXML expansion budget')
+requireText(docxKernel, 'MAX_DOCX_BLOCKS', 'C1 DOCX parser must enforce a structured block budget')
+requireText(docxKernel, 'word/document.xml', 'C1 DOCX parser must require the main OOXML document part')
+requireText(docxKernel, 'Event::DocType', 'C1 DOCX parser must reject XML document types')
+requireText(docxKernel, 'tracked_changes', 'C1 DOCX compatibility profile must expose tracked changes')
+requireText(docxKernel, 'content_controls', 'C1 DOCX compatibility profile must expose content controls')
+requireText(docxKernel, 'unknown_word_parts', 'C1 DOCX compatibility profile must expose unknown Word parts')
+requireText(docxKernel, 'parses_headings_paragraphs_lists_tables_images_and_breaks', 'C1 DOCX parser must have structured content regression coverage')
+requireText(docxKernel, 'reports_advanced_read_only_features_without_dropping_visible_text', 'C1 DOCX parser must retain visible text while profiling advanced objects')
+requireText(docxCommands, 'read_docx_document', 'C1 DOCX must expose a dedicated read command')
+requireText(docxCommands, 'resolve_existing_file(path, &["docx"])', 'C1 DOCX command must enforce workspace authorization and extension')
+requireText(docxReader, '结构化阅读', 'C1 DOCX workspace must identify its bounded reading capability')
+requireText(docxReader, '原文件只读', 'C1 DOCX workspace must state the original file is read-only')
+requireText(docxReader, '文档目录', 'C1 DOCX workspace must expose a heading outline')
+requireText(docxReader, '搜索 DOCX 正文', 'C1 DOCX workspace must expose in-document search')
+requireText(docxReader, '兼容画像', 'C1 DOCX workspace must expose its compatibility profile')
+requireText(docxReader, '当前不写回 DOCX', 'C1 DOCX workspace must state the write boundary')
+requireText(router, "name: 'DocxEditor'", 'C1 DOCX workspace must have a restorable route')
 const logFormat = registry.formats.find(format => format.id === 'log')
 if (!logFormat
   || logFormat.routeName !== 'LogViewer'
@@ -352,7 +389,7 @@ requireText(library, '<WorkspaceTabs', 'Markdown workspace must consume unified 
 requireText(textEditor, '<WorkspaceTabs', 'TXT workspace must consume unified session tabs')
 requireText(workspaceTabs, 'routeForFile', 'unified tabs must route each registered format to its workspace')
 requireText(frontend, 'LIBRARY_EMBEDDED_EDITOR_ROUTES', 'daily source editors must declare the shared library-shell contract')
-for (const routeName of ['TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'TomlEditor', 'LogViewer']) {
+for (const routeName of ['TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'TomlEditor', 'DocxEditor', 'LogViewer']) {
   requireText(frontend, `'${routeName}'`, `${routeName} must remain registered for right-pane embedding`)
 }
 requireText(library, '<component :is="activeEmbeddedEditor"', 'library mode must mount daily source editors in its right pane')

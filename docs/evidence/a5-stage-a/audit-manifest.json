@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-07-26T17:11:24.777Z",
+  "capturedAt": "2026-07-26T17:32:39.546Z",
   "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
   "sourceUrl": "http://127.0.0.1:9000/#/workspace",
   "fixtureLocation": "isolated temporary workspace",
@@ -59,6 +59,10 @@
     },
     {
       "id": "g8-canvas-object-context",
+      "status": "passed"
+    },
+    {
+      "id": "c1-docx-structured-reading",
       "status": "passed"
     },
     {
@@ -151,6 +155,7 @@
     "b1b-pdf-reliable-save-reopen.jpg",
     "g8-table-object-context.jpg",
     "g8-canvas-object-context.jpg",
+    "c1-docx-structured-reading.jpg",
     "text-save-and-reopen.jpg",
     "external-conflict-detected.jpg",
     "env-default-masked.jpg",
@@ -162,5 +167,5 @@
     "log-append-and-rotation.jpg",
     "restart-recent-file-restored.jpg"
   ],
-  "restartVerifiedAt": "2026-07-26T17:11:32.903Z"
+  "restartVerifiedAt": "2026-07-26T17:32:46.717Z"
 }

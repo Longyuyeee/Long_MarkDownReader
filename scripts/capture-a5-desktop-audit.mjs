@@ -187,6 +187,7 @@ const envFile = path.join(library, '.env')
 const jsonFile = path.join(library, 'damaged.json')
 const largeFile = path.join(library, 'large.txt')
 const logFile = path.join(library, 'runtime.log')
+const docxFile = path.join(library, 'C1 Product Brief.docx')
 const relationSourceFile = path.join(library, 'G8 Source.md')
 const relationPlanFile = path.join(library, 'G8 Plan.opml')
 const relationTagFile = path.join(library, 'G8 Tag Source.md')
@@ -390,6 +391,26 @@ await waitFor(
 checks.push({ id: 'g8-canvas-object-context', status: 'passed' })
 await capture('g8-canvas-object-context.jpg')
 await clickText('.relation-context-panel > header button', '')
+
+await navigate(routeFor('docx', docxFile), '.docx-workspace')
+await waitFor(
+  `document.querySelector('.library-mode') !== null
+    && document.querySelector('.library-embedded-editor .docx-workspace') !== null
+    && document.querySelector('.sidebar')?.getBoundingClientRect().width > 180
+    && document.querySelector('.docx-page')?.textContent?.includes('DOCX Daily Management') === true
+    && document.querySelector('.docx-outline')?.textContent?.includes('Product Brief') === true
+    && document.querySelector('.docx-table-wrap')?.textContent?.includes('Structured reading') === true`,
+  'DOCX structured reading inside the library shell',
+  180,
+)
+await setInput('.docx-search input', 'Daily Management')
+await waitFor(
+  `document.querySelectorAll('.docx-page .search-hit').length === 1
+    && document.querySelector('.compatibility-warning') !== null`,
+  'DOCX search location and advanced-object warning',
+)
+checks.push({ id: 'c1-docx-structured-reading', status: 'passed' })
+await capture('c1-docx-structured-reading.jpg')
 
 await navigate(routeFor('text', serviceIni), '.text-workspace')
 const embeddedShellState = await evaluate(`({
@@ -651,6 +672,7 @@ const evidenceFiles = [
   'b1b-pdf-reliable-save-reopen.jpg',
   'g8-table-object-context.jpg',
   'g8-canvas-object-context.jpg',
+  'c1-docx-structured-reading.jpg',
   'text-save-and-reopen.jpg',
   'external-conflict-detected.jpg',
   'env-default-masked.jpg',

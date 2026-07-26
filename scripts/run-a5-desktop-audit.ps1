@@ -49,6 +49,95 @@ $utf8 = [System.Text.UTF8Encoding]::new($false)
 [System.IO.File]::WriteAllText((Join-Path $library "G8 Tag Peer.md"), "# G8 Tag Peer`n`n#G8SharedContext`n", $utf8)
 [System.IO.File]::WriteAllText((Join-Path $library "G8 Metrics.table.json"), '{"schemaVersion":1,"kind":"longedit.table","data":{"columns":[{"id":"topic","name":"Topic","type":"text"},{"id":"value","name":"Value","type":"number"}],"rows":[{"id":"row-1","values":{"topic":"Graph","value":"8"}}]},"views":[{"id":"grid","name":"Data grid","kind":"grid","config":{"filter":"","frozenColumns":1,"columnWidths":{"topic":160,"value":100}}},{"id":"chart","name":"Relation Coverage","kind":"chart","config":{"categoryColumn":"topic","valueColumn":"value","chartType":"bar"}}],"activeView":"grid"}', $utf8)
 [System.IO.File]::WriteAllText((Join-Path $library "G8 Board.canvas"), '{"nodes":[{"id":"idea","type":"text","text":"Relation productization","x":0,"y":0,"width":240,"height":120},{"id":"metrics","type":"file","file":"G8 Metrics.table.json","longeditViewId":"chart","x":320,"y":0,"width":240,"height":120}],"edges":[{"id":"edge-1","fromNode":"idea","toNode":"metrics","relationType":"supports"}]}', $utf8)
+
+Add-Type -AssemblyName System.IO.Compression
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+function Add-DocxTextEntry(
+  [System.IO.Compression.ZipArchive]$Archive,
+  [string]$Name,
+  [string]$Content
+) {
+  $entry = $Archive.CreateEntry($Name, [System.IO.Compression.CompressionLevel]::Optimal)
+  $stream = $entry.Open()
+  $writer = [System.IO.StreamWriter]::new($stream, $utf8)
+  try {
+    $writer.Write($Content)
+  }
+  finally {
+    $writer.Dispose()
+  }
+}
+
+function Add-DocxBytesEntry(
+  [System.IO.Compression.ZipArchive]$Archive,
+  [string]$Name,
+  [byte[]]$Content
+) {
+  $entry = $Archive.CreateEntry($Name, [System.IO.Compression.CompressionLevel]::Optimal)
+  $stream = $entry.Open()
+  try {
+    $stream.Write($Content, 0, $Content.Length)
+  }
+  finally {
+    $stream.Dispose()
+  }
+}
+
+$docxFixture = Join-Path $library "C1 Product Brief.docx"
+if (Test-Path -LiteralPath $docxFixture -PathType Leaf) {
+  Remove-Item -LiteralPath $docxFixture -Force
+}
+$docxArchive = [System.IO.Compression.ZipFile]::Open(
+  $docxFixture,
+  [System.IO.Compression.ZipArchiveMode]::Create
+)
+try {
+  Add-DocxTextEntry $docxArchive "[Content_Types].xml" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="png" ContentType="image/png"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>
+'@
+  Add-DocxTextEntry $docxArchive "docProps/core.xml" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <dc:creator>LongEdit C1 Audit</dc:creator>
+</cp:coreProperties>
+'@
+  Add-DocxTextEntry $docxArchive "docProps/app.xml" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties">
+  <Application>Microsoft Office Word compatible fixture</Application>
+</Properties>
+'@
+  Add-DocxTextEntry $docxArchive "word/document.xml" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <w:body>
+    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Product Brief</w:t></w:r></w:p>
+    <w:p><w:r><w:t>DOCX Daily Management keeps Word content inside the original Library work area.</w:t></w:r></w:p>
+    <w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>Review structured content and compatibility warnings.</w:t></w:r></w:p>
+    <w:tbl>
+      <w:tr><w:tc><w:p><w:r><w:t>Capability</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Status</w:t></w:r></w:p></w:tc></w:tr>
+      <w:tr><w:tc><w:p><w:r><w:t>Structured reading</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Available</w:t></w:r></w:p></w:tc></w:tr>
+    </w:tbl>
+    <w:p><w:ins><w:r><w:t>Tracked text remains visible and read-only.</w:t></w:r></w:ins><w:r><w:drawing><a:graphic/></w:drawing></w:r></w:p>
+    <w:p><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText>DATE</w:instrText></w:r></w:p>
+  </w:body>
+</w:document>
+'@
+  Add-DocxTextEntry $docxArchive "word/comments.xml" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>
+'@
+  Add-DocxBytesEntry $docxArchive "word/media/image1.png" ([Convert]::FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nH0AAAAASUVORK5CYII="))
+}
+finally {
+  $docxArchive.Dispose()
+}
+
 $indexCommandSource = Get-Content -Raw -Encoding UTF8 (Join-Path $workspace "src-tauri\src\commands\index.rs")
 $pdfFixtureMatch = [regex]::Match($indexCommandSource, 'const TWO_PAGE_PDF: &str = "([^"]+)";')
 if (-not $pdfFixtureMatch.Success) {

@@ -14,6 +14,7 @@ use commands::diagram::{
     analyze_diagram_source, create_diagram_file, read_diagram_file, update_diagram_element,
     write_diagram_file,
 };
+use commands::docx::read_docx_document;
 use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
     export_markdown_file, export_to_html, get_external_image_base64, get_file_stats,
@@ -269,6 +270,7 @@ pub fn run() {
             write_diagram_file,
             analyze_diagram_source,
             update_diagram_element,
+            read_docx_document,
             read_pdf_file,
             read_pdf_info,
             read_pdf_range,

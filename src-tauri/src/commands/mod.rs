@@ -2,6 +2,7 @@ pub mod ai;
 pub mod canvas;
 pub mod config;
 pub mod diagram;
+pub mod docx;
 pub mod files;
 pub mod formats;
 pub mod git;

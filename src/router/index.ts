@@ -51,6 +51,11 @@ const routes = [
     component: () => import('../views/LogViewerView.vue')
   },
   {
+    path: '/docx',
+    name: 'DocxEditor',
+    component: () => import('../views/DocxReaderView.vue')
+  },
+  {
     path: '/quick-note',
     name: 'QuickNote',
     component: () => import('../views/QuickNote.vue')

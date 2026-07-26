@@ -1,5 +1,6 @@
 pub mod canvas;
 pub mod diagram;
+pub mod docx;
 pub mod file_registry;
 pub mod json;
 pub mod markdown;
