@@ -1,7 +1,9 @@
 # Long Markdown Reader 开发交接
 
-更新日期：2026-07-24
-交接基线：专业知识工作区已进入 `main`，当前开发版本 `v0.7.0`；A0 格式契约和能力展示第一批已在 `main` 开始收口
+更新日期：2026-07-26
+交接基线：当前开发版本 `v0.7.0`；A4 统一格式阶段已在 `codex/a4-format-closure` 完成代码级收口，等待 Draft PR #6 审阅与 A5 真实桌面验收
+
+> 最新收口结论、29 类格式/61 个扩展名矩阵和下一阶段顺序见 `docs/A4_Format_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 ## 1. 新电脑快速恢复
 
@@ -42,6 +44,9 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - XLSX 多工作表预览、空白/已有基础单元格编辑、连续/多区域、TSV 剪贴板、基础样式、公式重算、行高列宽和合并/取消合并，支持冲突检测及 OOXML 局部可靠写回；可将工作表转换为开放表格。
 - PDF 分段读取、阅读、标注、OCR sidecar、全文索引和图谱关系。
 - API Key 使用 Windows 系统凭据存储；旧配置中的明文 Key 会一次性迁移并清除。
+- YAML、XML、TOML、INI/CONF/CFG、Properties、`.editorconfig`、`.gitignore` 已进入统一管理与可靠基础编辑。
+- `.env` 系列默认遮罩且后端排除全文索引/知识图谱；必须在当前文件显式确认后才能显示和编辑原值。
+- 常见 JavaScript/TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 和 Web 源文件支持语法高亮、搜索与轻量可靠编辑，但不提供 IDE 执行、调试或语言服务。
 
 ## 3. 后端结构
 
