@@ -28,6 +28,19 @@
       "creation": { "defaultExtension": ".txt", "defaultContent": "", "defaultName": "未命名文本" }
     },
     {
+      "id": "env",
+      "label": "环境变量",
+      "extensions": [".env"],
+      "mimeTypes": ["text/plain", "application/x-env"],
+      "routeName": "TextEditor",
+      "maxBytes": 2097152,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "unsupported" },
+      "userCapability": { "level": "basic-edit", "label": "受保护编辑", "saveMode": "overwrite", "description": ".env 默认遮罩变量值并排除全文索引、知识图谱与遥测；仅在当前文件显式确认后显示和编辑原值。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": null },
+      "creation": { "defaultExtension": ".env", "defaultContent": "# 环境变量\nAPP_ENV=development\n", "defaultName": "未命名环境变量" }
+    },
+    {
       "id": "json",
       "label": "JSON",
       "extensions": [".json"],

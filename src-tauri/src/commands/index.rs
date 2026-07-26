@@ -1,4 +1,4 @@
-use crate::formats::file_registry::file_format_for_path;
+use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::knowledge_index::{
@@ -225,6 +225,7 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
             || name.ends_with(".assets")
             || name.ends_with(".annotations.json")
             || name.ends_with(".ocr.json")
+            || is_sensitive_path(&path)
         {
             continue;
         }
@@ -597,6 +598,30 @@ mod tests {
                 && result.match_kind == "body"
                 && result.context.contains("Generic adapter evidence")
         }));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn live_search_excludes_env_and_suspected_credential_files() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("longedit-sensitive-index-test-{nonce}"));
+        fs::create_dir_all(&root).unwrap();
+        fs::write(root.join(".env"), "API_TOKEN=unique-env-secret").unwrap();
+        fs::write(
+            root.join("service-credentials.yaml"),
+            "password: unique-credential-secret",
+        )
+        .unwrap();
+        fs::write(root.join("service.yaml"), "name: visible-service-setting").unwrap();
+
+        assert!(search_workspace(&root, "unique-env-secret", None).is_empty());
+        assert!(search_workspace(&root, "unique-credential-secret", None).is_empty());
+        assert!(search_workspace(&root, "visible-service-setting", None)
+            .iter()
+            .any(|result| result.object_type == "yaml"));
         fs::remove_dir_all(root).unwrap();
     }
 

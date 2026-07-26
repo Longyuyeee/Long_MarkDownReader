@@ -9,7 +9,7 @@
         <div class="document-title">
           <strong :title="textPath">{{ fileName }}</strong>
           <span>
-            纯文本
+            {{ format?.label || '文本' }}
             <template v-if="readOnlyReason"> · 只读预览</template>
             <template v-else-if="dirty"> · 未保存</template>
             <template v-else> · 已同步</template>
@@ -18,6 +18,16 @@
       </div>
 
       <div class="editor-actions">
+        <n-button
+          v-if="isSensitiveEnv"
+          secondary
+          size="small"
+          :type="sensitiveValuesHidden ? 'warning' : 'default'"
+          :disabled="loading || saving"
+          @click="sensitiveValuesHidden ? revealSensitiveValues() : hideSensitiveValues()"
+        >
+          {{ sensitiveValuesHidden ? '显示并编辑变量值' : '重新遮罩变量值' }}
+        </n-button>
         <n-button quaternary circle size="small" title="撤销" :disabled="loading || readOnly" @click="runUndo">
           <template #icon><n-icon :component="UndoIcon" /></template>
         </n-button>
@@ -188,6 +198,7 @@ const textPath = computed(() => String(route.query.path || ''))
 const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => textPath.value.split(/[\\/]/).pop() || '未命名文本')
 const format = computed(() => findFileFormat(textPath.value))
+const isSensitiveEnv = computed(() => format.value?.id === 'env')
 const textAutoSaveEnabled = computed({
   get: () => store.textAutoSaveEnabled,
   set: (value: boolean) => { void store.updateConfig({ textAutoSaveEnabled: value }) },
@@ -210,6 +221,7 @@ const saveFinalNewline = ref(false)
 const fileSize = ref(0)
 const modified = ref(0)
 const readOnlyReason = ref('')
+const sensitiveRevealed = ref(false)
 const rangeNextOffset = ref(0)
 const rangeEof = ref(true)
 const cursorLine = ref(1)
@@ -223,8 +235,12 @@ let loadGeneration = 0
 let autoSaveTimer: ReturnType<typeof setTimeout> | null = null
 
 const readOnly = computed(() => Boolean(readOnlyReason.value))
+const sensitiveValuesHidden = computed(() => isSensitiveEnv.value && !sensitiveRevealed.value)
 const rangeMode = computed(() => readOnlyReason.value === 'large-file-range')
-const readOnlyLabel = computed(() => rangeMode.value ? '大文件范围模式' : '文件只读')
+const readOnlyLabel = computed(() => {
+  if (readOnlyReason.value === 'sensitive-values-hidden') return '敏感值已遮罩且不会进入索引'
+  return rangeMode.value ? '大文件范围模式' : '文件只读'
+})
 const displayEncoding = computed(() => detectedEncoding.value || saveEncoding.value.toUpperCase())
 const confidenceLabel = computed(() => ({
   certain: '编码已确认',
@@ -391,6 +407,16 @@ const replaceDocument = (content: string, isReadOnly: boolean) => {
   clearAutoSave()
 }
 
+const maskEnvValues = (content: string) => content
+  .split(/\r?\n/)
+  .map(line => {
+    if (!line.trim() || line.trimStart().startsWith('#')) return line
+    const match = line.match(/^(\s*(?:export\s+)?[^#=\s]+\s*=\s*)(.*)$/)
+    if (!match || !match[2].trim()) return line
+    return `${match[1]}••••••`
+  })
+  .join('\n')
+
 const applySnapshot = (snapshot: TextDocumentSnapshot) => {
   signature.value = snapshot.signature
   detectedEncoding.value = snapshot.encoding
@@ -403,10 +429,15 @@ const applySnapshot = (snapshot: TextDocumentSnapshot) => {
   saveFinalNewline.value = snapshot.hasFinalNewline
   fileSize.value = snapshot.size
   modified.value = snapshot.modified
-  readOnlyReason.value = snapshot.readOnlyReason || ''
+  readOnlyReason.value = sensitiveValuesHidden.value
+    ? 'sensitive-values-hidden'
+    : (snapshot.readOnlyReason || '')
   rangeNextOffset.value = snapshot.size
   rangeEof.value = true
-  replaceDocument(snapshot.content, Boolean(snapshot.readOnlyReason))
+  replaceDocument(
+    sensitiveValuesHidden.value ? maskEnvValues(snapshot.content) : snapshot.content,
+    Boolean(readOnlyReason.value),
+  )
   registerCurrentTab()
 }
 
@@ -464,7 +495,11 @@ const load = async (encoding?: string) => {
   loading.value = true
   loadError.value = ''
   try {
-    if (!textPath.value || format.value?.id !== 'plain-text') throw new Error('当前路径不是已注册的纯文本文件')
+    if (
+      !textPath.value
+      || format.value?.routeName !== 'TextEditor'
+      || format.value.adapters.reader !== 'text'
+    ) throw new Error('当前路径不是已注册的文本工作区文件')
     const draft = currentTab.value
     if (draft?.isDirty && draft.content !== undefined) {
       restoreTabDraft(draft)
@@ -585,6 +620,26 @@ const runUndo = () => { if (editor) undo(editor) }
 const runRedo = () => { if (editor) redo(editor) }
 const openFind = () => { if (editor) { openSearchPanel(editor); editor.focus() } }
 const openGoToLine = () => { if (editor) { gotoLine(editor); editor.focus() } }
+const revealSensitiveValues = () => {
+  dialog.warning({
+    title: '显示敏感变量值？',
+    content: '原值只在当前文件工作面中显示。该文件仍不会进入全文索引或知识图谱，请确认周围环境安全。',
+    positiveText: '显示并允许编辑',
+    negativeText: '保持遮罩',
+    onPositiveClick: () => {
+      sensitiveRevealed.value = true
+      void load(readEncoding.value)
+    },
+  })
+}
+const hideSensitiveValues = () => {
+  if (dirty.value) {
+    message.warning('请先保存或撤销当前修改，再重新遮罩变量值')
+    return
+  }
+  sensitiveRevealed.value = false
+  void load(readEncoding.value)
+}
 const leaveEditor = () => { void router.push('/library') }
 const handleKeydown = (event: KeyboardEvent) => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
@@ -605,7 +660,12 @@ watch(textAutoSaveEnabled, enabled => {
   if (enabled && dirty.value) scheduleAutoSave()
   else clearAutoSave()
 })
-watch([textPath, isExternal], () => { void load() })
+watch([textPath, isExternal], () => {
+  sensitiveRevealed.value = Boolean(
+    isSensitiveEnv.value && store.tabs.find(tab => tab.path === textPath.value)?.isDirty,
+  )
+  void load()
+})
 onMounted(async () => {
   createEditor()
   await nextTick()

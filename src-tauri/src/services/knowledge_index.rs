@@ -1,5 +1,5 @@
 use crate::commands::graph::GraphData;
-use crate::formats::file_registry::file_format_for_path;
+use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::pdf_index::load_pdf_index;
@@ -192,7 +192,7 @@ fn collect_sources_recursive(workspace: &Path, directory: &Path, sources: &mut V
         }
         let path = entry.path();
         let name = path.file_name().unwrap_or_default().to_string_lossy();
-        if name.starts_with('.') || name.ends_with(".assets") {
+        if name.starts_with('.') || name.ends_with(".assets") || is_sensitive_path(&path) {
             continue;
         }
         if path.is_dir() {
@@ -277,6 +277,9 @@ fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<Ind
             continue;
         }
         let path = workspace.join(source.path.replace('/', std::path::MAIN_SEPARATOR_STR));
+        if is_sensitive_path(&path) {
+            continue;
+        }
         let Ok(format) = file_format_for_path(&path) else {
             continue;
         };
@@ -392,6 +395,9 @@ pub fn snapshot_from_graph(workspace: &Path, graph: GraphData) -> KnowledgeIndex
             continue;
         }
         let path = workspace.join(source.path.replace('/', std::path::MAIN_SEPARATOR_STR));
+        if is_sensitive_path(&path) {
+            continue;
+        }
         let path_string = path.to_string_lossy().into_owned();
         if indexed_paths.contains(&path_string) {
             continue;
@@ -649,6 +655,47 @@ mod tests {
         )
         .unwrap();
         assert_eq!(inspect_index(&cache, &workspace, &runtime).state, "corrupt");
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn sensitive_files_never_enter_index_sources_or_search_segments() {
+        let (base, workspace, _) = fixture("sensitive-exclusion");
+        fs::write(
+            workspace.join("public.yaml"),
+            "message: searchable-public-value",
+        )
+        .unwrap();
+        fs::write(
+            workspace.join("deploy-secrets.yaml"),
+            "password: never-index-this-secret",
+        )
+        .unwrap();
+        fs::write(workspace.join(".env"), "API_TOKEN=never-index-this-env").unwrap();
+
+        let snapshot = snapshot_from_graph(
+            &workspace,
+            GraphData {
+                nodes: Vec::new(),
+                edges: Vec::new(),
+            },
+        );
+        assert!(snapshot
+            .sources
+            .iter()
+            .any(|source| source.path == "public.yaml"));
+        assert!(!snapshot
+            .sources
+            .iter()
+            .any(|source| source.path.contains("secret") || source.path.contains(".env")));
+        assert!(snapshot
+            .search_segments
+            .iter()
+            .any(|segment| segment.text.contains("searchable-public-value")));
+        assert!(!snapshot.search_segments.iter().any(|segment| {
+            segment.text.contains("never-index-this-secret")
+                || segment.text.contains("never-index-this-env")
+        }));
         fs::remove_dir_all(base).unwrap();
     }
 }

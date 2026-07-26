@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -34,6 +34,7 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src/views/CanvasView.vue'),
   read('src/views/MindMapView.vue'),
   read('src-tauri/src/formats/opml.rs'),
+  read('src-tauri/src/services/knowledge_index.rs'),
 ])
 
 const registry = JSON.parse(registryText)
@@ -69,6 +70,16 @@ for (const id of ['json', 'jsonc']) {
     failures.push(`${id} source-edit contract is incomplete`)
   }
 }
+const envFormat = registry.formats?.find(format => format.id === 'env')
+if (!envFormat
+  || envFormat.routeName !== 'TextEditor'
+  || envFormat.capabilities?.read !== 'supported'
+  || envFormat.capabilities?.edit !== 'supported'
+  || envFormat.capabilities?.index !== 'unsupported'
+  || envFormat.adapters?.reader !== 'text'
+  || envFormat.adapters?.writer !== 'text'
+  || envFormat.adapters?.indexer !== null
+  || envFormat.userCapability?.level !== 'basic-edit') failures.push('A4 ENV protected-edit contract is incomplete')
 const yamlFormat = registry.formats?.find(format => format.id === 'yaml')
 if (!yamlFormat
   || yamlFormat.routeName !== 'YamlEditor'
@@ -130,6 +141,11 @@ requireText(frontend, 'SORTED_FILE_FORMATS', 'frontend matching must use longest
 requireText(frontend, 'userCapability', 'frontend must expose user-visible capability tiers')
 requireText(rustRegistry, 'user_capability', 'Rust registry must expose user-visible capability tiers')
 requireText(rustRegistry, '.max_by_key(|(extension_len, _)| *extension_len)', 'Rust matching must prefer the longest extension')
+requireText(rustRegistry, 'is_sensitive_path', 'A4 must define one backend sensitive-path policy')
+requireText(textEditor, 'maskEnvValues', 'A4 ENV workspace must mask values by default')
+requireText(textEditor, '显示并允许编辑', 'A4 ENV workspace must require explicit per-file reveal')
+requireText(index, 'is_sensitive_path(&path)', 'live search must reject sensitive paths')
+requireText(knowledgeIndex, 'is_sensitive_path(&path)', 'persistent index must reject sensitive paths')
 requireText(textKernel, 'TextDocumentSnapshot', 'A1 text kernel must expose reusable document snapshots')
 requireText(textKernel, 'TextDocumentRangeSnapshot', 'A1 text kernel must expose bounded range snapshots')
 requireText(textKernel, 'TextDocumentError', 'A1 text kernel must expose structured text errors')

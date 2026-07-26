@@ -186,6 +186,40 @@ pub fn file_format_for_path(
         .ok_or_else(|| "文件格式未在工作区契约中注册".to_string())
 }
 
+pub fn is_sensitive_path(path: impl AsRef<Path>) -> bool {
+    let name = path
+        .as_ref()
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    if name == ".env" || name.starts_with(".env.") {
+        return true;
+    }
+    if matches!(
+        name.as_str(),
+        "id_rsa"
+            | "id_dsa"
+            | "id_ecdsa"
+            | "id_ed25519"
+            | "credentials"
+            | "credentials.json"
+            | "credentials.yaml"
+            | "credentials.yml"
+            | "secrets.json"
+            | "secrets.yaml"
+            | "secrets.yml"
+    ) {
+        return true;
+    }
+    let stem = name
+        .rsplit_once('.')
+        .map(|(value, _)| value)
+        .unwrap_or(name.as_str());
+    stem.split(|character: char| !character.is_ascii_alphanumeric())
+        .any(|part| matches!(part, "credential" | "credentials" | "secret" | "secrets"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -368,5 +402,22 @@ mod tests {
             UserCapabilityLevel::CompleteEdit
         );
         assert_eq!(file_format_for_path("config/app.TOML").unwrap().id, "toml");
+    }
+
+    #[test]
+    fn sensitive_paths_cover_env_and_explicit_credential_names_without_broad_false_positives() {
+        for path in [
+            ".env",
+            "config/.env.production",
+            "credentials.json",
+            "deploy-secrets.yaml",
+            "keys/client_credentials.yml",
+            ".ssh/id_ed25519",
+        ] {
+            assert!(is_sensitive_path(path), "{path} should be sensitive");
+        }
+        for path in ["secretary-notes.md", "tokenizer.rs", "credentialing.md"] {
+            assert!(!is_sensitive_path(path), "{path} should remain indexable");
+        }
     }
 }
