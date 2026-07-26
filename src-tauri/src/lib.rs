@@ -58,6 +58,7 @@ use commands::system::{check_association_status, exit_app, get_url_title, set_as
 use commands::table::{
     create_table_file, export_table_file, import_table_file, read_table_file, write_table_file,
 };
+use commands::toml::{analyze_toml_source, write_toml_source_document};
 use commands::workbook::{
     get_workbook_capabilities, import_workbook_sheet, preview_workbook_pivot,
     preview_workbook_pivot_rebuild, preview_workbook_structure_migration, read_workbook_file,
@@ -243,6 +244,8 @@ pub fn run() {
             write_yaml_source_document,
             analyze_xml_source,
             write_xml_source_document,
+            analyze_toml_source,
+            write_toml_source_document,
             read_text_document,
             read_text_document_range,
             write_text_document,

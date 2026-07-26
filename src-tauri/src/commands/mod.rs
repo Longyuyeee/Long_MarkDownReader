@@ -14,6 +14,7 @@ pub mod pdf;
 pub mod search;
 pub mod system;
 pub mod table;
+pub mod toml;
 pub mod workbook;
 pub mod workspace;
 pub mod xml;

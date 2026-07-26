@@ -1,0 +1,14 @@
+title = "LongEdit"
+enabled = true
+
+[database.connection]
+host = "localhost"
+port = 5432
+
+[[servers]]
+host = "alpha.example"
+roles = ["api", "worker"]
+
+[[servers]]
+host = "beta.example"
+roles = ["worker"]

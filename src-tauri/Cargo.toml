@@ -49,6 +49,7 @@ tauri-plugin-autostart = "2"
 keyring = { version = "=3.6.3", features = ["apple-native", "windows-native", "sync-secret-service"] }
 saphyr = "=0.0.11"
 saphyr-parser = "=0.0.11"
+toml_edit = "=0.25.13"
 
 [profile.dev.package.miniz_oxide]
 opt-level = 3
