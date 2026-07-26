@@ -114,25 +114,69 @@ try {
 '@
   Add-DocxTextEntry $docxArchive "word/document.xml" @'
 <?xml version="1.0" encoding="UTF-8"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <w:body>
-    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Product Brief</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="BriefHeading"/></w:pPr><w:r><w:t>Product Brief</w:t></w:r></w:p>
     <w:p><w:r><w:t>DOCX Daily Management keeps Word content inside the original Library work area.</w:t></w:r></w:p>
     <w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>Review structured content and compatibility warnings.</w:t></w:r></w:p>
     <w:tbl>
       <w:tr><w:tc><w:p><w:r><w:t>Capability</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Status</w:t></w:r></w:p></w:tc></w:tr>
       <w:tr><w:tc><w:p><w:r><w:t>Structured reading</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Available</w:t></w:r></w:p></w:tc></w:tr>
     </w:tbl>
-    <w:p><w:ins><w:r><w:t>Tracked text remains visible and read-only.</w:t></w:r></w:ins><w:r><w:drawing><a:graphic/></w:drawing></w:r></w:p>
+    <w:p><w:ins><w:r><w:t>Tracked text remains visible and read-only.</w:t></w:r></w:ins><w:r><w:drawing><a:graphic><a:blip r:embed="rId5"/></a:graphic></w:drawing></w:r></w:p>
     <w:p><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText>DATE</w:instrText></w:r></w:p>
   </w:body>
 </w:document>
+'@
+  Add-DocxTextEntry $docxArchive "word/styles.xml" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:style w:type="paragraph" w:styleId="BriefHeading"><w:name w:val="Product section"/><w:basedOn w:val="Heading1"/></w:style>
+</w:styles>
+'@
+  Add-DocxTextEntry $docxArchive "word/numbering.xml" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0"><w:numFmt w:val="bullet"/></w:lvl></w:abstractNum>
+  <w:num w:numId="1"><w:abstractNumId w:val="1"/></w:num>
+</w:numbering>
+'@
+  Add-DocxTextEntry $docxArchive "word/_rels/document.xml.rels" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/>
+</Relationships>
 '@
   Add-DocxTextEntry $docxArchive "word/comments.xml" @'
 <?xml version="1.0" encoding="UTF-8"?>
 <w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>
 '@
-  Add-DocxBytesEntry $docxArchive "word/media/image1.png" ([Convert]::FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nH0AAAAASUVORK5CYII="))
+  Add-Type -AssemblyName System.Drawing
+  $mediaBitmap = [System.Drawing.Bitmap]::new(480, 150)
+  $mediaGraphics = [System.Drawing.Graphics]::FromImage($mediaBitmap)
+  $mediaStream = [System.IO.MemoryStream]::new()
+  try {
+    $mediaGraphics.Clear([System.Drawing.Color]::FromArgb(235, 243, 255))
+    $mediaPen = [System.Drawing.Pen]::new([System.Drawing.Color]::FromArgb(67, 114, 196), 4)
+    $mediaFont = [System.Drawing.Font]::new("Segoe UI", 22, [System.Drawing.FontStyle]::Bold)
+    $mediaBrush = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(35, 62, 112))
+    try {
+      $mediaGraphics.DrawRectangle($mediaPen, 2, 2, 475, 145)
+      $mediaGraphics.DrawString("DOCX embedded media", $mediaFont, $mediaBrush, 62, 53)
+      $mediaBitmap.Save($mediaStream, [System.Drawing.Imaging.ImageFormat]::Png)
+      Add-DocxBytesEntry $docxArchive "word/media/image1.png" $mediaStream.ToArray()
+    }
+    finally {
+      $mediaPen.Dispose()
+      $mediaFont.Dispose()
+      $mediaBrush.Dispose()
+    }
+  }
+  finally {
+    $mediaGraphics.Dispose()
+    $mediaBitmap.Dispose()
+    $mediaStream.Dispose()
+  }
 }
 finally {
   $docxArchive.Dispose()

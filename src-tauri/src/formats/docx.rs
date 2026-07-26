@@ -1,7 +1,7 @@
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::{Reader, XmlVersion};
 use serde::Serialize;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::io::{Cursor, Read};
 use zip::ZipArchive;
 
@@ -27,8 +27,11 @@ pub struct DocxBlock {
     pub text: String,
     pub level: Option<u8>,
     pub list_level: Option<u8>,
+    pub list_kind: Option<String>,
+    pub style_id: Option<String>,
     pub rows: Vec<DocxTableRow>,
     pub image_count: usize,
+    pub image_parts: Vec<String>,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -49,6 +52,9 @@ pub struct DocxCompatibilityProfile {
     pub list_item_count: usize,
     pub table_count: usize,
     pub image_count: usize,
+    pub renderable_image_count: usize,
+    pub style_count: usize,
+    pub numbering_definition_count: usize,
     pub header_count: usize,
     pub footer_count: usize,
     pub footnotes: bool,
@@ -78,7 +84,9 @@ struct ParagraphState {
     text: String,
     style: Option<String>,
     list_level: Option<u8>,
+    num_id: Option<String>,
     image_count: usize,
+    image_parts: Vec<String>,
 }
 
 #[derive(Default)]
@@ -118,6 +126,9 @@ fn normalized_text(value: &str) -> String {
 fn heading_level(style: Option<&str>) -> Option<u8> {
     let style = style?.trim();
     let lower = style.to_ascii_lowercase();
+    if lower == "title" || style == "标题" {
+        return Some(1);
+    }
     let digits = lower
         .strip_prefix("heading")
         .or_else(|| lower.strip_prefix("title"))
@@ -128,6 +139,238 @@ fn heading_level(style: Option<&str>) -> Option<u8> {
         .parse::<u8>()
         .ok()
         .filter(|level| (1..=9).contains(level))
+}
+
+#[derive(Default)]
+struct DocxStyleInfo {
+    name: Option<String>,
+    based_on: Option<String>,
+    outline_level: Option<u8>,
+}
+
+fn parse_styles(bytes: Option<&[u8]>) -> Result<HashMap<String, DocxStyleInfo>, String> {
+    let Some(bytes) = bytes else {
+        return Ok(HashMap::new());
+    };
+    let mut reader = Reader::from_reader(bytes);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut styles = HashMap::new();
+    let mut current: Option<(String, DocxStyleInfo)> = None;
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("DOCX styles.xml 损坏: {error}"))?
+        {
+            Event::Start(ref event) if event.local_name().as_ref() == b"style" => {
+                let style_type = attribute_value(event, b"type", reader.decoder())?;
+                let style_id = attribute_value(event, b"styleId", reader.decoder())?;
+                current = if style_type.as_deref() == Some("paragraph") {
+                    style_id.map(|id| (id, DocxStyleInfo::default()))
+                } else {
+                    None
+                };
+            }
+            Event::Start(ref event) | Event::Empty(ref event) => {
+                if let Some((_, info)) = current.as_mut() {
+                    match event.local_name().as_ref() {
+                        b"name" => info.name = attribute_value(event, b"val", reader.decoder())?,
+                        b"basedOn" => {
+                            info.based_on = attribute_value(event, b"val", reader.decoder())?
+                        }
+                        b"outlineLvl" => {
+                            info.outline_level = attribute_value(event, b"val", reader.decoder())?
+                                .and_then(|value| value.parse::<u8>().ok())
+                                .filter(|level| *level < 9)
+                                .map(|level| level + 1);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            Event::End(event) if event.local_name().as_ref() == b"style" => {
+                if let Some((id, info)) = current.take() {
+                    styles.insert(id, info);
+                }
+            }
+            Event::DocType(_) => return Err("DOCX styles.xml 不允许 DOCTYPE".into()),
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(styles)
+}
+
+fn resolved_heading_level(
+    style_id: Option<&str>,
+    styles: &HashMap<String, DocxStyleInfo>,
+) -> Option<u8> {
+    let mut current = style_id?;
+    let mut visited = HashSet::new();
+    for _ in 0..16 {
+        if !visited.insert(current.to_string()) {
+            return None;
+        }
+        if let Some(level) = heading_level(Some(current)) {
+            return Some(level);
+        }
+        let Some(style) = styles.get(current) else {
+            return None;
+        };
+        if let Some(level) = style.outline_level {
+            return Some(level);
+        }
+        if let Some(level) = heading_level(style.name.as_deref()) {
+            return Some(level);
+        }
+        let Some(parent) = style.based_on.as_deref() else {
+            return None;
+        };
+        current = parent;
+    }
+    None
+}
+
+fn parse_numbering(bytes: Option<&[u8]>) -> Result<HashMap<(String, u8), String>, String> {
+    let Some(bytes) = bytes else {
+        return Ok(HashMap::new());
+    };
+    let mut reader = Reader::from_reader(bytes);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut current_abstract: Option<String> = None;
+    let mut current_level: Option<u8> = None;
+    let mut abstract_levels: HashMap<(String, u8), String> = HashMap::new();
+    let mut current_num: Option<String> = None;
+    let mut num_to_abstract = HashMap::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("DOCX numbering.xml 损坏: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event) => {
+                match event.local_name().as_ref() {
+                    b"abstractNum" => {
+                        current_abstract =
+                            attribute_value(event, b"abstractNumId", reader.decoder())?
+                    }
+                    b"lvl" => {
+                        current_level = attribute_value(event, b"ilvl", reader.decoder())?
+                            .and_then(|value| value.parse::<u8>().ok());
+                    }
+                    b"numFmt" => {
+                        if let (Some(abstract_id), Some(level), Some(format)) = (
+                            current_abstract.as_ref(),
+                            current_level,
+                            attribute_value(event, b"val", reader.decoder())?,
+                        ) {
+                            let kind = if format.eq_ignore_ascii_case("bullet") {
+                                "bullet"
+                            } else {
+                                "ordered"
+                            };
+                            abstract_levels.insert((abstract_id.clone(), level), kind.to_string());
+                        }
+                    }
+                    b"num" => current_num = attribute_value(event, b"numId", reader.decoder())?,
+                    b"abstractNumId" => {
+                        if let (Some(num_id), Some(abstract_id)) = (
+                            current_num.as_ref(),
+                            attribute_value(event, b"val", reader.decoder())?,
+                        ) {
+                            num_to_abstract.insert(num_id.clone(), abstract_id);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            Event::End(event) => match event.local_name().as_ref() {
+                b"abstractNum" => current_abstract = None,
+                b"lvl" => current_level = None,
+                b"num" => current_num = None,
+                _ => {}
+            },
+            Event::DocType(_) => return Err("DOCX numbering.xml 不允许 DOCTYPE".into()),
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    let mut numbering = HashMap::new();
+    for (num_id, abstract_id) in num_to_abstract {
+        for ((candidate, level), kind) in &abstract_levels {
+            if candidate == &abstract_id {
+                numbering.insert((num_id.clone(), *level), kind.clone());
+            }
+        }
+    }
+    Ok(numbering)
+}
+
+fn resolve_document_relationship_target(target: &str) -> Option<String> {
+    let target = target.replace('\\', "/");
+    let mut segments = if target.starts_with('/') {
+        Vec::new()
+    } else {
+        vec!["word".to_string()]
+    };
+    for segment in target.trim_start_matches('/').split('/') {
+        match segment {
+            "" | "." => {}
+            ".." => {
+                if segments.len() <= 1 {
+                    return None;
+                }
+                segments.pop();
+            }
+            value => segments.push(value.to_string()),
+        }
+    }
+    let resolved = segments.join("/");
+    if resolved.starts_with("word/media/") {
+        Some(resolved)
+    } else {
+        None
+    }
+}
+
+fn parse_document_relationships(bytes: Option<&[u8]>) -> Result<HashMap<String, String>, String> {
+    let Some(bytes) = bytes else {
+        return Ok(HashMap::new());
+    };
+    let mut reader = Reader::from_reader(bytes);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut relationships = HashMap::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("DOCX document.xml.rels 损坏: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"Relationship" =>
+            {
+                let external = attribute_value(event, b"TargetMode", reader.decoder())?
+                    .is_some_and(|mode| mode.eq_ignore_ascii_case("external"));
+                if !external {
+                    if let (Some(id), Some(target)) = (
+                        attribute_value(event, b"Id", reader.decoder())?,
+                        attribute_value(event, b"Target", reader.decoder())?,
+                    ) {
+                        if let Some(target) = resolve_document_relationship_target(&target) {
+                            relationships.insert(id, target);
+                        }
+                    }
+                }
+            }
+            Event::DocType(_) => return Err("DOCX document.xml.rels 不允许 DOCTYPE".into()),
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(relationships)
 }
 
 fn read_zip_part(
@@ -190,6 +433,25 @@ fn append_text(target: &mut String, value: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn capture_image_part(
+    paragraph: &mut Option<ParagraphState>,
+    event: &BytesStart<'_>,
+    decoder: quick_xml::encoding::Decoder,
+    relationships: &HashMap<String, String>,
+) -> Result<(), String> {
+    let Some(paragraph) = paragraph.as_mut() else {
+        return Ok(());
+    };
+    let relationship_id =
+        attribute_value(event, b"embed", decoder)?.or(attribute_value(event, b"id", decoder)?);
+    if let Some(part) = relationship_id.and_then(|id| relationships.get(&id).cloned()) {
+        if !paragraph.image_parts.contains(&part) {
+            paragraph.image_parts.push(part);
+        }
+    }
+    Ok(())
+}
+
 fn finalize_paragraph(
     paragraph: ParagraphState,
     table: &mut Option<TableState>,
@@ -197,6 +459,8 @@ fn finalize_paragraph(
     headings: &mut Vec<DocxHeading>,
     paragraph_count: &mut usize,
     list_item_count: &mut usize,
+    styles: &HashMap<String, DocxStyleInfo>,
+    numbering: &HashMap<(String, u8), String>,
 ) -> Result<(), String> {
     let text = normalized_text(&paragraph.text);
     if let Some(table) = table.as_mut() {
@@ -215,7 +479,14 @@ fn finalize_paragraph(
         return Err("DOCX 结构超过 50,000 个可见块安全上限".into());
     }
     *paragraph_count += 1;
-    let level = heading_level(paragraph.style.as_deref());
+    let level = resolved_heading_level(paragraph.style.as_deref(), styles);
+    let list_kind = paragraph
+        .num_id
+        .as_ref()
+        .zip(paragraph.list_level)
+        .and_then(|(num_id, list_level)| numbering.get(&(num_id.clone(), list_level)))
+        .cloned()
+        .or_else(|| paragraph.list_level.map(|_| "bullet".to_string()));
     let kind = if level.is_some() {
         "heading"
     } else if paragraph.list_level.is_some() {
@@ -240,8 +511,11 @@ fn finalize_paragraph(
         text,
         level,
         list_level: paragraph.list_level,
+        list_kind,
+        style_id: paragraph.style,
         rows: Vec::new(),
         image_count: paragraph.image_count,
+        image_parts: paragraph.image_parts,
     });
     Ok(())
 }
@@ -280,6 +554,12 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
 
     let producer = simple_property(&mut archive, "docProps/core.xml", b"creator")?;
     let application = simple_property(&mut archive, "docProps/app.xml", b"Application")?;
+    let styles_xml = read_zip_part(&mut archive, "word/styles.xml", false)?;
+    let numbering_xml = read_zip_part(&mut archive, "word/numbering.xml", false)?;
+    let relationships_xml = read_zip_part(&mut archive, "word/_rels/document.xml.rels", false)?;
+    let styles = parse_styles(styles_xml.as_deref())?;
+    let numbering = parse_numbering(numbering_xml.as_deref())?;
+    let relationships = parse_document_relationships(relationships_xml.as_deref())?;
     let document_xml =
         read_zip_part(&mut archive, "word/document.xml", true)?.ok_or("DOCX 主文档部件缺失")?;
 
@@ -321,10 +601,18 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                             .and_then(|value| value.parse::<u8>().ok());
                     }
                 }
+                b"numId" => {
+                    if let Some(paragraph) = paragraph.as_mut() {
+                        paragraph.num_id = attribute_value(event, b"val", reader.decoder())?;
+                    }
+                }
                 b"drawing" | b"pict" => {
                     if let Some(paragraph) = paragraph.as_mut() {
                         paragraph.image_count += 1;
                     }
+                }
+                b"blip" | b"imagedata" => {
+                    capture_image_part(&mut paragraph, event, reader.decoder(), &relationships)?;
                 }
                 b"tbl" => table = Some(TableState::default()),
                 b"tr" => {
@@ -358,10 +646,18 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                             .and_then(|value| value.parse::<u8>().ok());
                     }
                 }
+                b"numId" => {
+                    if let Some(paragraph) = paragraph.as_mut() {
+                        paragraph.num_id = attribute_value(event, b"val", reader.decoder())?;
+                    }
+                }
                 b"drawing" | b"pict" => {
                     if let Some(paragraph) = paragraph.as_mut() {
                         paragraph.image_count += 1;
                     }
+                }
+                b"blip" | b"imagedata" => {
+                    capture_image_part(&mut paragraph, event, reader.decoder(), &relationships)?;
                 }
                 b"tab" => {
                     if let Some(paragraph) = paragraph.as_mut() {
@@ -400,6 +696,8 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                             &mut headings,
                             &mut paragraph_count,
                             &mut list_item_count,
+                            &styles,
+                            &numbering,
                         )?;
                     }
                 }
@@ -441,8 +739,11 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                                 .join(" "),
                             level: None,
                             list_level: None,
+                            list_kind: None,
+                            style_id: None,
                             rows: table.rows,
                             image_count: 0,
+                            image_parts: Vec::new(),
                         });
                     }
                 }
@@ -459,6 +760,11 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
         .iter()
         .filter(|name| name.starts_with("word/media/") && !name.ends_with('/'))
         .count();
+    let renderable_image_count = blocks
+        .iter()
+        .flat_map(|block| block.image_parts.iter())
+        .collect::<HashSet<_>>()
+        .len();
     let known_word_roots = [
         "word/document.xml",
         "word/styles.xml",
@@ -495,6 +801,9 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
         list_item_count,
         table_count,
         image_count,
+        renderable_image_count,
+        style_count: styles.len(),
+        numbering_definition_count: numbering.len(),
         header_count: names
             .iter()
             .filter(|name| name.starts_with("word/header") && name.ends_with(".xml"))
@@ -616,6 +925,50 @@ mod tests {
     }
 
     #[test]
+    fn resolves_inherited_heading_numbering_and_internal_image_relationships() {
+        let source = fixture(
+            r#"<?xml version="1.0"?><w:document xmlns:w="w" xmlns:r="r" xmlns:a="a"><w:body>
+            <w:p><w:pPr><w:pStyle w:val="CustomHeading"/></w:pPr><w:r><w:t>Inherited heading</w:t></w:r></w:p>
+            <w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="7"/></w:numPr></w:pPr><w:r><w:t>Bullet item</w:t></w:r></w:p>
+            <w:p><w:r><w:drawing><a:blip r:embed="rId5"/></w:drawing></w:r></w:p>
+            </w:body></w:document>"#,
+            &[
+                (
+                    "word/styles.xml",
+                    r#"<w:styles xmlns:w="w"><w:style w:type="paragraph" w:styleId="CustomHeading"><w:name w:val="Project section"/><w:basedOn w:val="Heading2"/></w:style></w:styles>"#,
+                ),
+                (
+                    "word/numbering.xml",
+                    r#"<w:numbering xmlns:w="w"><w:abstractNum w:abstractNumId="3"><w:lvl w:ilvl="0"><w:numFmt w:val="bullet"/></w:lvl></w:abstractNum><w:num w:numId="7"><w:abstractNumId w:val="3"/></w:num></w:numbering>"#,
+                ),
+                (
+                    "word/_rels/document.xml.rels",
+                    r#"<Relationships><Relationship Id="rId5" Target="media/image1.png"/><Relationship Id="external" TargetMode="External" Target="https://example.com/image.png"/></Relationships>"#,
+                ),
+                ("word/media/image1.png", "image"),
+            ],
+        );
+        let model = parse_docx(&source).unwrap();
+        assert_eq!(model.headings[0].text, "Inherited heading");
+        assert_eq!(model.headings[0].level, 2);
+        let list = model
+            .blocks
+            .iter()
+            .find(|block| block.kind == "list-item")
+            .unwrap();
+        assert_eq!(list.list_kind.as_deref(), Some("bullet"));
+        let image = model
+            .blocks
+            .iter()
+            .find(|block| block.kind == "image")
+            .unwrap();
+        assert_eq!(image.image_parts, ["word/media/image1.png"]);
+        assert_eq!(model.compatibility.renderable_image_count, 1);
+        assert_eq!(model.compatibility.style_count, 1);
+        assert_eq!(model.compatibility.numbering_definition_count, 1);
+    }
+
+    #[test]
     fn reports_advanced_read_only_features_without_dropping_visible_text() {
         let source = fixture(
             r#"<?xml version="1.0"?><w:document xmlns:w="w" xmlns:m="m"><w:body>
@@ -650,9 +1003,20 @@ mod tests {
     #[test]
     fn rejects_non_docx_doctype_and_unsafe_package_shape() {
         assert!(parse_docx(b"not a zip").unwrap_err().contains("ZIP"));
-        let missing = fixture("<root/>", &[]);
-        let mut archive = ZipArchive::new(Cursor::new(&missing)).unwrap();
-        assert!(archive.by_name("word/document.xml").is_ok());
+        let mut missing_output = Cursor::new(Vec::new());
+        {
+            let mut zip = ZipWriter::new(&mut missing_output);
+            zip.start_file(
+                "[Content_Types].xml",
+                SimpleFileOptions::default().compression_method(CompressionMethod::Deflated),
+            )
+            .unwrap();
+            zip.write_all(b"<Types/>").unwrap();
+            zip.finish().unwrap();
+        }
+        assert!(parse_docx(&missing_output.into_inner())
+            .unwrap_err()
+            .contains("完整"));
         let doctype = fixture(
             r#"<!DOCTYPE x [<!ENTITY y "boom">]><w:document xmlns:w="w"><w:body><w:p><w:r><w:t>&y;</w:t></w:r></w:p></w:body></w:document>"#,
             &[],

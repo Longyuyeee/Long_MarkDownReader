@@ -347,7 +347,7 @@
       "routeName": "DocxEditor",
       "maxBytes": 67108864,
       "capabilities": { "read": "supported", "edit": "planned", "create": "unsupported", "index": "planned" },
-      "userCapability": { "level": "preview-only", "label": "结构化阅读", "saveMode": "none", "description": "DOCX 支持标题、段落、列表、表格、图片占位、目录和搜索；高级对象明确提示，当前不写回原文档。" },
+      "userCapability": { "level": "preview-only", "label": "结构化阅读", "saveMode": "none", "description": "DOCX 支持标题、段落、编号列表、表格、受限图片预览、目录和搜索；高级对象明确提示，当前不写回原文档。" },
       "externalPolicy": "import",
       "adapters": { "reader": "docx", "writer": null, "creator": null, "indexer": null },
       "creation": null

@@ -42,7 +42,7 @@ npm run check:a5-desktop-evidence
 | PDF B1A 隔离副本验证 | 页面计划在内存中生成可复读 PDF；结构、文本页序和源字节通过复核，仍不提供保存 | `b1a-pdf-isolated-copy-verification.jpg` |
 | PDF B1B 可靠另存 | 原子创建同目录新副本，磁盘复读后由 PDF.js 打开；源文件逐字节不变 | `b1b-pdf-reliable-save-reopen.jpg` |
 | PDF B1C 兼容画像 | 原工作面显示版本、xref、压缩对象、页面继承与无文本页画像 | `b1c-pdf-compatibility-profile.jpg` |
-| DOCX C0/C1 首批 | 在原 Library 右侧显示目录、结构化正文、表格、搜索定位、兼容画像和高级对象只读警告 | `c1-docx-structured-reading.jpg` |
+| DOCX C1-2A | 在原 Library 右侧显示目录、继承标题、编号列表、结构化正文、表格、受限真实图片、搜索定位、兼容画像和高级对象只读警告 | `c1-docx-structured-reading.jpg` |
 | 普通文本/INI | 编辑、保存、离开并重开成功 | `text-save-and-reopen.jpg` |
 | 外部修改冲突 | 保存被签名冲突阻断；选择重新加载后读取磁盘版本，不恢复旧草稿 | `external-conflict-detected.jpg` |
 | `.env` | 首次遮罩、明确确认后显示、再次遮罩成功；正文标记不泄漏到界面 | `env-default-masked.jpg` |
@@ -65,6 +65,7 @@ PDF B1A 的引擎决策、许可证、风险矩阵、隔离生成与下一门槛
 PDF B1B 的无覆盖写入、落盘复读、桌面重开和 B1C 入口见 `docs/B1B_PDF_Reliable_Save_Audit_2026-07-27.md`。
 PDF B1C 的对象流、页面继承、扫描页、风险阻断矩阵与 DOCX 入口见 `docs/B1C_PDF_Compatibility_Closure_Audit_2026-07-27.md`。
 DOCX C0/C1 首批的解析预算、结构模型、工作面设计、明确边界和后续收口顺序见 `docs/C0_C1_DOCX_Structured_Reading_Audit_2026-07-27.md`。
+DOCX C1-2A 的样式继承、列表编号、内部图片关系、媒体安全预算与真实生产者缺口见 `docs/C1_2A_DOCX_Styles_Numbering_Media_Audit_2026-07-27.md`。
 
 ## 3. 本阶段发现并修复的问题
 
@@ -106,9 +107,9 @@ JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存�
 
 - Vue 类型检查与 Vite 生产构建通过；
 - 主题、格式、A5 桌面证据、工作簿和 XLSX 发布契约通过；
-- Rust 功能测试 `292/292` 通过，性能测试 `1/1` 通过；
+- Rust 功能测试 `294/294` 通过，性能测试 `1/1` 通过；
 - Rust 复杂工作簿性能测试 `1/1` 通过；
-- 100 MiB PDF 范围读取只请求约 `255.9 KiB`，本轮本机约 `58 ms`；
+- 100 MiB PDF 范围读取只请求约 `255.9 KiB`，本轮本机约 `54 ms`；
 - 生产依赖审计 `0` 个漏洞。
 
 现存非阻断项仍是 Vite 的少量大分包警告。它属于后续性能优化，不影响本阶段正确性结论。
@@ -144,7 +145,7 @@ JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存�
 2. **PDF B1A（已完成）**：写入引擎/许可证审计、风险阻断和签名保护的内存隔离副本复读验证；
 3. **PDF B1B（已完成）**：只新建、原子无覆盖写入、落盘复读和 PDF.js 重开；
 4. **PDF B1C（已完成）**：复杂生产者、页面继承、扫描页和高风险阻断兼容矩阵；
-5. **DOCX C0/C1（首批已交付，继续收口）**：右侧只读工作面、目录、文内搜索和兼容画像已交付；下一步建立三类真实生产者 fixture，补样式、媒体、批注和全局索引；
+5. **DOCX C1-2A（已交付，继续收口）**：右侧只读工作面、目录、文内搜索、样式继承、列表编号、受限真实媒体和兼容画像已交付；下一步建立三类真实生产者 fixture，补页眉页脚、脚注、批注和全局索引；
 6. WPS `.wps/.et/.dps` 先做规范、许可与转换保真审计，无法证明可靠时只提供外部打开或受控副本转换；
 7. 统一批处理、元数据、工作区健康和发布矩阵。
 

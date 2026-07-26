@@ -42,11 +42,11 @@
     </div>
 
     <template v-else-if="report">
-      <section v-if="report.model.warnings.length" class="compatibility-warning">
+      <section v-if="allWarnings.length" class="compatibility-warning">
         <ShieldAlertIcon :size="17" />
         <div>
           <strong>高级对象保持只读</strong>
-          <span>{{ report.model.warnings.join(' · ') }}</span>
+          <span>{{ allWarnings.join(' · ') }}</span>
         </div>
       </section>
 
@@ -102,7 +102,7 @@
                 :class="{ 'search-hit': matchIds.has(block.id) }"
                 :style="{ paddingLeft: `${Math.min(5, block.listLevel || 0) * 20}px` }"
               >
-                <span>•</span><p>{{ block.text }}</p>
+                <span>{{ block.listKind === 'ordered' ? '1.' : '•' }}</span><p>{{ block.text }}</p>
               </div>
               <div
                 v-else-if="block.kind === 'table'"
@@ -124,8 +124,18 @@
                 class="docx-block docx-image-placeholder"
                 :class="{ 'search-hit': matchIds.has(block.id) }"
               >
-                <ImageIcon :size="22" />
-                <span>{{ block.imageCount }} 个图片对象</span>
+                <template v-if="mediaFor(block).length">
+                  <img
+                    v-for="media in mediaFor(block)"
+                    :key="media.partName"
+                    :src="media.dataUrl"
+                    :alt="media.partName.split('/').pop() || 'DOCX 图片'"
+                  />
+                </template>
+                <template v-else>
+                  <ImageIcon :size="22" />
+                  <span>{{ block.imageCount }} 个图片对象</span>
+                </template>
               </div>
               <div
                 v-else
@@ -134,7 +144,15 @@
                 :class="{ 'search-hit': matchIds.has(block.id) }"
               >
                 <p>{{ block.text }}</p>
-                <span v-if="block.imageCount" class="inline-image-note">
+                <div v-if="mediaFor(block).length" class="inline-images">
+                  <img
+                    v-for="media in mediaFor(block)"
+                    :key="media.partName"
+                    :src="media.dataUrl"
+                    :alt="media.partName.split('/').pop() || 'DOCX 图片'"
+                  />
+                </div>
+                <span v-if="block.imageCount > mediaFor(block).length" class="inline-image-note">
                   <ImageIcon :size="13" /> {{ block.imageCount }} 个内嵌图片对象
                 </span>
               </div>
@@ -149,6 +167,7 @@
           <span>{{ formatBytes(report.size) }}</span>
           <span>{{ report.model.blocks.length }} 个结构块</span>
           <span>{{ report.model.plainText.length.toLocaleString() }} 字符</span>
+          <span>{{ report.media.length }}/{{ profile.renderableImageCount }} 张图片已安全预览</span>
         </div>
         <div>
           <LockIcon :size="13" />
@@ -182,8 +201,11 @@ interface DocxBlock {
   text: string
   level?: number | null
   listLevel?: number | null
+  listKind?: 'bullet' | 'ordered' | null
+  styleId?: string | null
   rows: Array<{ cells: string[] }>
   imageCount: number
+  imageParts: string[]
 }
 interface DocxProfile {
   producer?: string | null
@@ -193,6 +215,9 @@ interface DocxProfile {
   listItemCount: number
   tableCount: number
   imageCount: number
+  renderableImageCount: number
+  styleCount: number
+  numberingDefinitionCount: number
   headerCount: number
   footerCount: number
   footnotes: boolean
@@ -205,6 +230,12 @@ interface DocxProfile {
   embeddedObjects: boolean
   altChunks: boolean
   unknownWordParts: string[]
+}
+interface DocxMediaPreview {
+  partName: string
+  mimeType: string
+  size: number
+  dataUrl: string
 }
 interface DocxReadReport {
   path: string
@@ -219,6 +250,8 @@ interface DocxReadReport {
     compatibility: DocxProfile
     warnings: string[]
   }
+  media: DocxMediaPreview[]
+  mediaWarnings: string[]
 }
 
 const route = useRoute()
@@ -232,6 +265,13 @@ const matchIndex = ref(-1)
 const docxPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const fileName = computed(() => docxPath.value.split(/[\\/]/).pop() || '未命名.docx')
 const profile = computed(() => report.value?.model.compatibility as DocxProfile)
+const mediaByPart = computed(() => new Map(
+  (report.value?.media || []).map(media => [media.partName, media]),
+))
+const allWarnings = computed(() => [
+  ...(report.value?.model.warnings || []),
+  ...(report.value?.mediaWarnings || []),
+])
 const matches = computed(() => {
   const needle = query.value.trim().toLocaleLowerCase()
   if (!needle || !report.value) return []
@@ -257,10 +297,16 @@ const packageFeatureLabel = computed(() => {
   if (value.contentControls) features.push('内容控件')
   if (value.equations) features.push('公式')
   if (value.embeddedObjects) features.push('嵌入对象')
-  return features.length ? `只读识别：${features.join(' · ')}` : '未检测到首批模型外的高风险对象'
+  const packageSummary = `样式 ${value.styleCount} · 编号 ${value.numberingDefinitionCount} · 可预览图片 ${value.renderableImageCount}`
+  return features.length
+    ? `${packageSummary} · 只读识别：${features.join(' · ')}`
+    : `${packageSummary} · 未检测到首批模型外的高风险对象`
 })
 
 const headingTag = (level?: number | null) => `h${Math.min(6, Math.max(1, level || 1))}`
+const mediaFor = (block: DocxBlock) => block.imageParts
+  .map(part => mediaByPart.value.get(part))
+  .filter((media): media is DocxMediaPreview => Boolean(media))
 const formatBytes = (bytes: number) => bytes < 1024 * 1024
   ? `${Math.max(1, Math.round(bytes / 1024))} KiB`
   : `${(bytes / 1024 / 1024).toFixed(1)} MiB`
@@ -350,7 +396,9 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .docx-table-wrap { margin: 14px 0; overflow: auto; }
 .docx-table-wrap table { width: 100%; border-collapse: collapse; }
 .docx-table-wrap td { min-width: 80px; padding: 7px 9px; border: 1px solid var(--border-color); vertical-align: top; }
-.docx-image-placeholder { min-height: 100px; margin: 14px 0; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed var(--border-color); color: var(--text-muted); background: var(--bg-secondary); }
+.docx-image-placeholder { min-height: 100px; margin: 14px 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; border: 1px dashed var(--border-color); color: var(--text-muted); background: var(--bg-secondary); }
+.docx-image-placeholder img, .inline-images img { display: block; max-width: 100%; max-height: 520px; object-fit: contain; }
+.inline-images { margin: 10px 0; display: grid; gap: 8px; justify-items: start; }
 .empty-document { padding: 80px 20px; text-align: center; color: var(--text-muted); }
 .docx-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: 10px; }
 .docx-status > div { gap: 10px; }

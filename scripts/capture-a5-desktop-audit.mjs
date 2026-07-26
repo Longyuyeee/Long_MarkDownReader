@@ -399,7 +399,9 @@ await waitFor(
     && document.querySelector('.sidebar')?.getBoundingClientRect().width > 180
     && document.querySelector('.docx-page')?.textContent?.includes('DOCX Daily Management') === true
     && document.querySelector('.docx-outline')?.textContent?.includes('Product Brief') === true
-    && document.querySelector('.docx-table-wrap')?.textContent?.includes('Structured reading') === true`,
+    && document.querySelector('.docx-table-wrap')?.textContent?.includes('Structured reading') === true
+    && document.querySelector('.docx-list-item > span')?.textContent?.trim() === '•'
+    && document.querySelector('.docx-page img[src^="data:image/png;base64,"]')?.naturalWidth === 480`,
   'DOCX structured reading inside the library shell',
   180,
 )
