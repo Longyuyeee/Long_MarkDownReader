@@ -4,7 +4,7 @@
       <div class="toolbar-leading">
         <button class="icon-btn" title="返回知识库" @click="router.push('/library')">←</button>
         <button class="icon-btn" :class="{ active: sidebarOpen }" title="缩略图与目录" @click="sidebarOpen = !sidebarOpen">☰</button>
-        <div class="document-title"><strong>{{ fileName }}</strong><span v-if="pdfDocument">{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template></span></div>
+        <div class="document-title"><strong>{{ fileName }}<i v-if="pagePlanDirty" class="page-plan-dirty">页面草稿</i></strong><span v-if="pdfDocument">{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template></span></div>
       </div>
       <div v-if="pdfDocument" class="toolbar-center">
         <button class="icon-btn" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
@@ -25,18 +25,20 @@
         <button class="icon-btn" title="放大" @click="changeScale(0.1)">＋</button>
         <button class="fit-btn" :class="{ active: fitWidth }" @click="toggleFitWidth">适合宽度</button>
         <button class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" title="离线识别扫描页" @click="openOcrPanel">OCR</button>
+        <button class="fit-btn" :class="{ active: sidebarTab === 'organize' }" title="非破坏式页面整理预览" @click="openPageOrganizer">页面整理</button>
         <button class="fit-btn" :class="{ active: areaMode }" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode">区域批注</button>
         <button class="fit-btn" :disabled="!annotationWritable" title="为当前页添加评论" @click="createPageComment">页评论</button>
       </div>
     </header>
 
     <main class="pdf-workspace">
-      <aside v-if="sidebarOpen && pdfDocument" class="pdf-sidebar">
+      <aside v-if="sidebarOpen && pdfDocument" class="pdf-sidebar" :class="{ 'organize-open': sidebarTab === 'organize' }">
         <div class="sidebar-switch">
           <button :class="{ active: sidebarTab === 'thumbnails' }" @click="sidebarTab = 'thumbnails'">缩略图</button>
           <button :class="{ active: sidebarTab === 'outline' }" @click="sidebarTab = 'outline'">目录</button>
           <button :class="{ active: sidebarTab === 'annotations' }" @click="sidebarTab = 'annotations'">批注 {{ annotations.length || '' }}</button>
           <button :class="{ active: sidebarTab === 'ocr' }" @click="sidebarTab = 'ocr'">OCR {{ ocrDocument?.pages.length || '' }}</button>
+          <button :class="{ active: sidebarTab === 'organize' }" @click="sidebarTab = 'organize'">页面</button>
         </div>
         <div v-if="sidebarTab === 'thumbnails'" class="thumbnail-list">
           <button v-for="page in pdfDocument.numPages" :key="page" :class="['thumbnail-item', { active: page === currentPage }]" @click="goToPage(page)">
@@ -67,6 +69,50 @@
           </div>
           <div v-if="referenceNotice" class="annotation-alert">{{ referenceNotice }}</div>
           <div v-if="annotationDocument" class="annotation-save-state" :class="{ error: annotationSaveError }">{{ annotationSaveError || (annotationSaving ? '正在保存批注…' : annotationDirty ? '等待保存…' : '批注已保存到 sidecar') }}</div>
+        </div>
+        <div v-else-if="sidebarTab === 'organize'" class="page-organizer">
+          <div class="page-plan-summary">
+            <div><strong>页面整理草稿</strong><span>{{ pagePlanStatus }}</span></div>
+            <p>旋转、排序和排除仅在内存中预览，不会修改源 PDF。可靠另存将在 B1 开放。</p>
+            <div class="page-plan-history">
+              <button :disabled="!pagePlanUndo.length" title="撤销 Ctrl+Z" @click="undoPagePlan">撤销</button>
+              <button :disabled="!pagePlanRedo.length" title="重做 Ctrl+Y" @click="redoPagePlan">重做</button>
+              <button :disabled="!pagePlanDirty" @click="resetPagePlan">重置</button>
+            </div>
+          </div>
+          <div class="page-plan-list">
+            <article
+              v-for="(entry, index) in pagePlan"
+              :key="entry.id"
+              :class="{ active: activePagePlanId === entry.id, removed: entry.removed }"
+              :data-source-page="entry.sourcePage"
+            >
+              <button class="page-plan-preview" @click="selectPagePlanEntry(entry)">
+                <PdfPage
+                  :document="pdfDocument"
+                  :page-number="entry.sourcePage"
+                  :rotation="entry.rotation"
+                  :scale="thumbnailScale"
+                  :placeholder-width="basePage.width"
+                  :placeholder-height="basePage.height"
+                  thumbnail
+                />
+                <span>{{ entry.removed ? '已排除' : `新第 ${visiblePageNumber(entry.id)} 页` }} · 原第 {{ entry.sourcePage }} 页</span>
+                <small v-if="entry.rotation">{{ entry.rotation }}°</small>
+              </button>
+              <div class="page-plan-actions">
+                <button title="向左旋转 90°" @click="rotatePlanEntry(entry.id, -90)">↶</button>
+                <button title="向右旋转 90°" @click="rotatePlanEntry(entry.id, 90)">↷</button>
+                <button :disabled="index === 0" title="向前移动" @click="movePlanEntry(entry.id, -1)">↑</button>
+                <button :disabled="index === pagePlan.length - 1" title="向后移动" @click="movePlanEntry(entry.id, 1)">↓</button>
+                <button
+                  :class="{ restore: entry.removed }"
+                  :disabled="!entry.removed && visiblePagePlan.length <= 1"
+                  @click="togglePlanEntry(entry.id)"
+                >{{ entry.removed ? '恢复' : '排除' }}</button>
+              </div>
+            </article>
+          </div>
         </div>
         <div v-else class="ocr-panel">
           <div class="ocr-summary">
@@ -138,7 +184,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage } from 'naive-ui'
-import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist'
@@ -151,6 +197,15 @@ import type { PdfAnnotation, PdfAnnotationColor, PdfAnnotationDocument, PdfAnnot
 import type { PdfOcrDocument, PdfOcrPage, PdfOcrTaskState } from '../types/pdfOcr'
 import { createOfflineOcrWorker } from '../utils/pdfOcr'
 import { TauriPdfRangeTransport, type PdfReadDescriptor } from '../utils/tauriPdfRangeTransport'
+import {
+  clonePdfPagePlan,
+  createPdfPagePlan,
+  movePdfPage,
+  rotatePdfPage,
+  setPdfPageRemoved,
+  summarizePdfPagePlan,
+  type PdfPagePlanEntry,
+} from '../utils/pdfPagePlan'
 import type { Worker as TesseractWorker } from 'tesseract.js'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
@@ -174,7 +229,7 @@ const pageInput = ref(1)
 const scale = ref(1)
 const fitWidth = ref(false)
 const sidebarOpen = ref(true)
-const sidebarTab = ref<'thumbnails' | 'outline' | 'annotations' | 'ocr'>('thumbnails')
+const sidebarTab = ref<'thumbnails' | 'outline' | 'annotations' | 'ocr' | 'organize'>('thumbnails')
 const outline = ref<OutlineEntry[]>([])
 const outlineLoading = ref(false)
 const basePage = ref({ width: 612, height: 792 })
@@ -205,6 +260,10 @@ const ocrProgressStatus = ref('')
 const ocrError = ref('')
 const ocrSourceChanged = ref(false)
 const selectionTool = ref({ show: false, page: 0, quote: '', rects: [] as PdfAnnotationRect[], x: 0, y: 0 })
+const pagePlan = ref<PdfPagePlanEntry[]>([])
+const pagePlanUndo = ref<PdfPagePlanEntry[][]>([])
+const pagePlanRedo = ref<PdfPagePlanEntry[][]>([])
+const activePagePlanId = ref('')
 let loadingTask: PDFDocumentLoadingTask | null = null
 let rangeTransport: TauriPdfRangeTransport | null = null
 let loadStartedAt = 0
@@ -258,6 +317,18 @@ const annotationsByPage = computed(() => {
     result.set(annotation.page, pageAnnotations)
   }
   return result
+})
+const visiblePagePlan = computed(() => pagePlan.value.filter(entry => !entry.removed))
+const pagePlanSummary = computed(() => summarizePdfPagePlan(pagePlan.value))
+const pagePlanDirty = computed(() => pagePlanSummary.value.changed > 0)
+const pagePlanStatus = computed(() => {
+  if (!pagePlanDirty.value) return `${pagePlan.value.length} 页 · 尚未调整`
+  const parts = [
+    pagePlanSummary.value.rotated ? `旋转 ${pagePlanSummary.value.rotated}` : '',
+    pagePlanSummary.value.moved ? `改序 ${pagePlanSummary.value.moved}` : '',
+    pagePlanSummary.value.removed ? `排除 ${pagePlanSummary.value.removed}` : '',
+  ].filter(Boolean)
+  return `${visiblePagePlan.value.length}/${pagePlan.value.length} 页 · ${parts.join(' · ')}`
 })
 const sortedOcrPages = computed(() => [...(ocrDocument.value?.pages || [])].sort((a, b) => a.page - b.page))
 const ocrBusy = computed(() => ocrTaskState.value === 'preparing' || ocrTaskState.value === 'running')
@@ -369,6 +440,72 @@ const loadOcrDocument = async (document: PDFDocumentProxy) => {
 const openOcrPanel = () => {
   sidebarOpen.value = true
   sidebarTab.value = 'ocr'
+}
+
+const initializePagePlan = (pageCount: number) => {
+  pagePlan.value = createPdfPagePlan(pageCount)
+  pagePlanUndo.value = []
+  pagePlanRedo.value = []
+  activePagePlanId.value = pagePlan.value[0]?.id || ''
+}
+
+const openPageOrganizer = () => {
+  sidebarOpen.value = true
+  sidebarTab.value = 'organize'
+  if (!activePagePlanId.value) activePagePlanId.value = pagePlan.value[0]?.id || ''
+}
+
+const commitPagePlan = (next: PdfPagePlanEntry[], activeId?: string) => {
+  if (JSON.stringify(next) === JSON.stringify(pagePlan.value)) return
+  pagePlanUndo.value = [...pagePlanUndo.value.slice(-59), clonePdfPagePlan(pagePlan.value)]
+  pagePlanRedo.value = []
+  pagePlan.value = next
+  if (activeId) activePagePlanId.value = activeId
+}
+
+const rotatePlanEntry = (id: string, delta: -90 | 90) => {
+  commitPagePlan(rotatePdfPage(pagePlan.value, id, delta), id)
+}
+
+const movePlanEntry = (id: string, offset: -1 | 1) => {
+  commitPagePlan(movePdfPage(pagePlan.value, id, offset), id)
+}
+
+const togglePlanEntry = (id: string) => {
+  const entry = pagePlan.value.find(item => item.id === id)
+  if (!entry || (!entry.removed && visiblePagePlan.value.length <= 1)) return
+  commitPagePlan(setPdfPageRemoved(pagePlan.value, id, !entry.removed), id)
+}
+
+const undoPagePlan = () => {
+  const previous = pagePlanUndo.value[pagePlanUndo.value.length - 1]
+  if (!previous) return
+  pagePlanRedo.value = [...pagePlanRedo.value.slice(-59), clonePdfPagePlan(pagePlan.value)]
+  pagePlan.value = clonePdfPagePlan(previous)
+  pagePlanUndo.value = pagePlanUndo.value.slice(0, -1)
+}
+
+const redoPagePlan = () => {
+  const next = pagePlanRedo.value[pagePlanRedo.value.length - 1]
+  if (!next) return
+  pagePlanUndo.value = [...pagePlanUndo.value.slice(-59), clonePdfPagePlan(pagePlan.value)]
+  pagePlan.value = clonePdfPagePlan(next)
+  pagePlanRedo.value = pagePlanRedo.value.slice(0, -1)
+}
+
+const resetPagePlan = () => {
+  if (!pdfDocument.value || !pagePlanDirty.value) return
+  commitPagePlan(createPdfPagePlan(pdfDocument.value.numPages), pagePlan.value[0]?.id)
+}
+
+const selectPagePlanEntry = (entry: PdfPagePlanEntry) => {
+  activePagePlanId.value = entry.id
+  goToPage(entry.sourcePage)
+}
+
+const visiblePageNumber = (id: string) => {
+  const index = visiblePagePlan.value.findIndex(entry => entry.id === id)
+  return index < 0 ? '—' : index + 1
 }
 
 const persistOcrDocument = async () => {
@@ -801,6 +938,10 @@ const loadPdf = async () => {
   ocrTaskState.value = 'idle'
   ocrError.value = ''
   ocrSourceChanged.value = false
+  pagePlan.value = []
+  pagePlanUndo.value = []
+  pagePlanRedo.value = []
+  activePagePlanId.value = ''
   dismissSelectionTool()
   clearTextState()
   await loadingTask?.destroy()
@@ -855,6 +996,7 @@ const loadPdf = async () => {
     }
     const document = await loadingTask.promise
     pdfDocument.value = document
+    initializePagePlan(document.numPages)
     const firstPage = await document.getPage(1)
     const viewport = firstPage.getViewport({ scale: 1 })
     basePage.value = { width: viewport.width, height: viewport.height }
@@ -928,6 +1070,19 @@ const handleKeydown = (event: KeyboardEvent) => {
     dismissSelectionTool()
   }
   if (!(event.ctrlKey || event.metaKey)) return
+  const target = event.target as HTMLElement | null
+  const editingText = Boolean(target?.closest('input, textarea, [contenteditable="true"]'))
+  if (sidebarTab.value === 'organize' && !editingText && event.key.toLowerCase() === 'z') {
+    event.preventDefault()
+    if (event.shiftKey) redoPagePlan()
+    else undoPagePlan()
+    return
+  }
+  if (sidebarTab.value === 'organize' && !editingText && event.key.toLowerCase() === 'y') {
+    event.preventDefault()
+    redoPagePlan()
+    return
+  }
   if (event.key.toLowerCase() === 'f') { event.preventDefault(); searchInputRef.value?.focus(); searchInputRef.value?.select(); return }
   if (event.key === '=' || event.key === '+') { event.preventDefault(); changeScale(0.1) }
   if (event.key === '-') { event.preventDefault(); changeScale(-0.1) }
@@ -935,6 +1090,12 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 const handleResize = () => { if (fitWidth.value) applyFitWidth() }
+const mayDiscardPagePlan = () => !pagePlanDirty.value || window.confirm('PDF 页面整理草稿尚未生成新文件，离开后将丢失。确定离开吗？')
+const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
+  if (!pagePlanDirty.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
 watch([pdfPath, () => store.libraryPath], loadPdf)
 watch([() => route.query.page, () => route.query.annotation], () => {
   if (pdfDocument.value && annotationDocument.value) focusRequestedReference()
@@ -943,7 +1104,13 @@ watch(searchQuery, () => {
   window.clearTimeout(searchTimer)
   searchTimer = window.setTimeout(runSearch, 220)
 })
-onMounted(() => { loadPdf(); window.addEventListener('resize', handleResize) })
+onBeforeRouteLeave(() => mayDiscardPagePlan())
+onBeforeRouteUpdate((to, from) => String(to.query.path || '') === String(from.query.path || '') || mayDiscardPagePlan())
+onMounted(() => {
+  loadPdf()
+  window.addEventListener('resize', handleResize)
+  window.addEventListener('beforeunload', warnPagePlanBeforeUnload)
+})
 onBeforeUnmount(async () => {
   await cancelOcr()
   savePosition()
@@ -953,6 +1120,7 @@ onBeforeUnmount(async () => {
   searchGeneration++
   cancelAnimationFrame(scrollFrame)
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('beforeunload', warnPagePlanBeforeUnload)
   await persistAnnotations()
   await loadingTask?.destroy()
   rangeTransport?.abort()
@@ -986,7 +1154,8 @@ onBeforeUnmount(async () => {
 .page-jump input { width: 42px; border: 0; outline: 0; color: var(--theme-text); background: transparent; text-align: right; }
 .pdf-workspace { min-height: 0; flex: 1; display: flex; }
 .pdf-sidebar { width: 220px; flex: none; display: flex; flex-direction: column; border-right: 1px solid rgba(0,0,0,.1); background: color-mix(in srgb, var(--theme-card) 96%, #d9dde3); }
-.sidebar-switch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 9px; border-bottom: 1px solid rgba(0,0,0,.07); }
+.pdf-sidebar.organize-open { width: 272px; }
+.sidebar-switch { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; padding: 9px; border-bottom: 1px solid rgba(0,0,0,.07); }
 .sidebar-switch button { height: 28px; border: 0; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 10px; }
 .sidebar-switch button.active { color: #fff; background: var(--theme-primary); }
 .thumbnail-list,.outline-list { min-height: 0; flex: 1; overflow: auto; padding: 12px; }
@@ -1012,6 +1181,23 @@ onBeforeUnmount(async () => {
 .ocr-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }.ocr-actions button,.ocr-progress button { min-height: 30px; border: 1px solid rgba(var(--theme-primary-rgb),.25); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 9px; }
 .ocr-progress { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; padding: 9px; border-radius: 7px; background: rgba(0,0,0,.035); font-size: 9px; }.ocr-progress progress { width: 100%; accent-color: var(--theme-primary); }.ocr-progress small,.ocr-note { color: var(--theme-text-secondary); font-size: 8px; }
 .ocr-page-list { display: flex; flex-direction: column; gap: 6px; }.ocr-page-list button { display: flex; flex-direction: column; gap: 5px; padding: 8px; border: 1px solid rgba(0,0,0,.08); border-radius: 7px; color: var(--theme-text); background: rgba(255,255,255,.4); cursor: pointer; text-align: left; }.ocr-page-list button > span { display: flex; justify-content: space-between; font-size: 9px; }.ocr-page-list i { color: var(--theme-primary); font-style: normal; }.ocr-page-list small { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: 8px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.page-plan-dirty { display: inline-flex; margin-left: 7px; padding: 2px 5px; border-radius: 999px; color: #9a5a00; background: #fff0c7; font-size: 8px; font-style: normal; font-weight: 650; vertical-align: 1px; }
+.page-organizer { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.page-plan-summary { flex: none; padding: 10px; border-bottom: 1px solid rgba(0,0,0,.08); background: rgba(var(--theme-primary-rgb),.035); }
+.page-plan-summary > div:first-child { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.page-plan-summary strong { font-size: 11px; }.page-plan-summary span { color: var(--theme-primary); font-size: 8px; }
+.page-plan-summary p { margin: 7px 0; color: var(--theme-text-secondary); font-size: 8px; line-height: 1.5; }
+.page-plan-history { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.page-plan-history button,.page-plan-actions button { min-height: 26px; padding: 3px 6px; border: 1px solid rgba(0,0,0,.1); border-radius: 5px; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; font-size: 8px; }
+.page-plan-history button:hover,.page-plan-actions button:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.35); }
+.page-plan-history button:disabled,.page-plan-actions button:disabled { cursor: default; opacity: .35; }
+.page-plan-list { min-height: 0; flex: 1; overflow: auto; padding: 9px; }
+.page-plan-list article { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 34px; gap: 6px; margin-bottom: 8px; padding: 7px; border: 1px solid rgba(0,0,0,.09); border-radius: 8px; background: rgba(255,255,255,.46); }
+.page-plan-list article.active { border-color: rgba(var(--theme-primary-rgb),.45); box-shadow: 0 0 0 1px rgba(var(--theme-primary-rgb),.08); }
+.page-plan-list article.removed { opacity: .58; background: repeating-linear-gradient(-45deg,rgba(0,0,0,.025),rgba(0,0,0,.025) 5px,transparent 5px,transparent 10px); }
+.page-plan-preview { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; font-size: 8px; }
+.page-plan-preview > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.page-plan-preview > small { position: absolute; top: 10px; left: 10px; padding: 2px 4px; border-radius: 4px; color: #fff; background: rgba(20,42,67,.8); font-size: 7px; }
+.page-plan-actions { display: flex; flex-direction: column; gap: 4px; }.page-plan-actions button { width: 34px; padding: 0; font-size: 12px; }.page-plan-actions button:last-child { color: #b34a40; font-size: 8px; }.page-plan-actions button.restore { color: #257747; }
 .selection-annotation-tool { position: fixed; z-index: 50; height: 36px; display: flex; align-items: center; gap: 7px; padding: 0 8px; border: 1px solid rgba(0,0,0,.14); border-radius: 9px; color: #e8edf3; background: #252a31; box-shadow: 0 10px 30px rgba(0,0,0,.28); font-size: 9px; }
 .selection-annotation-tool .comment-selection { height: 24px; padding: 0 8px; border: 0; border-radius: 5px; color: #fff; background: #506073; cursor: pointer; font-size: 9px; }.selection-annotation-tool .close-selection { width: 22px; height: 22px; padding: 0; border: 0; color: #bbc4cf; background: transparent; cursor: pointer; font-size: 16px; }
 .area-mode-hint { position: fixed; right: 18px; bottom: 18px; z-index: 40; padding: 9px 13px; border: 1px solid rgba(0,122,255,.28); border-radius: 8px; color: #fff; background: rgba(20,42,67,.92); box-shadow: 0 6px 20px rgba(0,0,0,.2); font-size: 10px; }

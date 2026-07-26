@@ -292,8 +292,43 @@ await waitFor(
   'PDF incoming relation context',
   180,
 )
+await waitFor(
+  `document.querySelector('.toolbar-actions .fit-btn[title="非破坏式页面整理预览"]') !== null
+    && document.querySelectorAll('.page-shell canvas').length === 2`,
+  'PDF pages and organizer ready',
+  240,
+)
 checks.push({ id: 'g8-pdf-object-context', status: 'passed' })
 await capture('g8-pdf-object-context.jpg')
+await clickText('.relation-context-panel > header button', '')
+
+await clickText('.toolbar-actions .fit-btn[title="非破坏式页面整理预览"]', '')
+await waitFor(`document.querySelector('.page-organizer') !== null`, 'PDF page organizer')
+await clickText('.page-plan-list article[data-source-page="1"] .page-plan-actions button', '↷')
+await clickText('.page-plan-list article[data-source-page="1"] .page-plan-actions button', '↓')
+await clickText('.page-plan-list article[data-source-page="1"] .page-plan-actions button', '排除')
+await waitFor(
+  `(() => {
+    const entries = [...document.querySelectorAll('.page-plan-list article')]
+    const source = document.querySelector('.page-plan-list article[data-source-page="1"]')
+    return entries[1] === source
+      && source?.classList.contains('removed')
+      && source?.textContent?.includes('90°')
+      && document.querySelector('.page-plan-summary')?.textContent?.includes('排除 1')
+  })()`,
+  'PDF page rotate reorder and removal preview',
+  180,
+)
+await clickText('.page-plan-history button', '撤销')
+await waitFor(`document.querySelector('.page-plan-list article[data-source-page="1"]')?.classList.contains('removed') === false`, 'PDF page plan undo')
+await clickText('.page-plan-history button', '重做')
+await waitFor(`document.querySelector('.page-plan-list article[data-source-page="1"]')?.classList.contains('removed') === true`, 'PDF page plan redo')
+checks.push({ id: 'b0-pdf-page-plan-preview', status: 'passed' })
+await capture('b0-pdf-page-plan-preview.jpg')
+await clickText('.page-plan-history button', '重置')
+await waitFor(`document.querySelector('.page-plan-dirty') === null`, 'PDF page plan reset')
+await clickText('.relation-context-trigger', '关系上下文')
+await waitFor(`document.querySelector('.relation-context-panel') !== null`, 'PDF relation context reopen')
 
 await navigate(`#/table?path=${encodeURIComponent(relationTableFile)}`, '.table-view')
 await waitFor(
@@ -572,6 +607,7 @@ const evidenceFiles = [
   'g8-opml-planning-context.jpg',
   'g8-tag-and-collection-context.jpg',
   'g8-pdf-object-context.jpg',
+  'b0-pdf-page-plan-preview.jpg',
   'g8-table-object-context.jpg',
   'g8-canvas-object-context.jpg',
   'text-save-and-reopen.jpg',

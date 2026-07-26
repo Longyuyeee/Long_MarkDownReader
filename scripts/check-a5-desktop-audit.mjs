@@ -32,6 +32,7 @@ const requiredChecks = new Set([
   'g8-opml-planning-context',
   'g8-tag-and-collection-context',
   'g8-pdf-object-context',
+  'b0-pdf-page-plan-preview',
   'g8-table-object-context',
   'g8-canvas-object-context',
 ])
@@ -55,8 +56,8 @@ if (!largeCheck?.displayState?.includes('512.0 KiB') || !largeCheck?.displayStat
 
 const evidenceFiles = manifest.evidenceFiles || []
 if (!manifest.restartVerifiedAt) failures.push('A5 evidence must record process restart verification time')
-if (evidenceFiles.length !== 20 || new Set(evidenceFiles).size !== evidenceFiles.length) {
-  failures.push('A5/G8 evidence manifest must list twenty unique screenshots')
+if (evidenceFiles.length !== 21 || new Set(evidenceFiles).size !== evidenceFiles.length) {
+  failures.push('A5/G8/B0 evidence manifest must list twenty-one unique screenshots')
 }
 for (const file of evidenceFiles) {
   const resolved = path.resolve(new URL(file, evidenceRoot).pathname.replace(/^\/([A-Za-z]:)/, '$1'))
@@ -94,9 +95,10 @@ if (!capture.includes('A5_PRIVATE_ENV_MARKER')
   || !capture.includes('g8-opml-planning-context')
   || !capture.includes('g8-tag-and-collection-context')
   || !capture.includes('g8-pdf-object-context')
+  || !capture.includes('b0-pdf-page-plan-preview')
   || !capture.includes('g8-table-object-context')
   || !capture.includes('g8-canvas-object-context')) {
-  failures.push('A5/G8 capture must exercise the library shell, relation summaries and cross-format context, saved collections, planning hierarchy, sensitive search exclusion, conflict reload, and invalid JSON protection')
+  failures.push('A5/G8/B0 capture must exercise the library shell, relation summaries, cross-format context, PDF page planning, saved collections, planning hierarchy, sensitive search exclusion, conflict reload, and invalid JSON protection')
 }
 
 if (failures.length) {

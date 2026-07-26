@@ -57,6 +57,7 @@ const props = defineProps<{
   annotations?: PdfAnnotation[]
   activeAnnotationId?: string
   areaMode?: boolean
+  rotation?: number
 }>()
 const emit = defineEmits<{
   needText: [page: number]
@@ -80,11 +81,15 @@ let textLayer: TextLayer | null = null
 let lastViewport: PageViewport | null = null
 let renderGeneration = 0
 
-const hostStyle = computed(() => ({
-  width: `${actualWidth.value || props.placeholderWidth * props.scale}px`,
-  height: `${actualHeight.value || props.placeholderHeight * props.scale}px`,
-}))
 const annotations = computed(() => props.annotations || [])
+const normalizedRotation = computed(() => ((props.rotation || 0) % 360 + 360) % 360)
+const placeholderSize = computed(() => normalizedRotation.value % 180 === 0
+  ? { width: props.placeholderWidth, height: props.placeholderHeight }
+  : { width: props.placeholderHeight, height: props.placeholderWidth })
+const hostStyle = computed(() => ({
+  width: `${actualWidth.value || placeholderSize.value.width * props.scale}px`,
+  height: `${actualHeight.value || placeholderSize.value.height * props.scale}px`,
+}))
 
 const annotationRectStyle = (rect: PdfAnnotationRect) => ({
   left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.width * 100}%`, height: `${rect.height * 100}%`,
@@ -129,7 +134,7 @@ const renderPage = async () => {
   try {
     const page = await props.document.getPage(props.pageNumber)
     if (generation !== renderGeneration) return
-    const viewport = page.getViewport({ scale: props.scale })
+    const viewport = page.getViewport({ scale: props.scale, rotation: (page.rotate + normalizedRotation.value) % 360 })
     lastViewport = viewport
     const dpr = Math.min(window.devicePixelRatio || 1, props.thumbnail ? 1.25 : 2)
     actualWidth.value = viewport.width
@@ -233,6 +238,7 @@ const releasePage = () => {
 }
 
 watch(() => props.scale, invalidate)
+watch(() => props.rotation, invalidate)
 watch(() => props.document, invalidate)
 watch(() => props.textContent, () => { if (rendered.value) renderTextLayer() })
 watch([() => props.matches, () => props.activeMatchId], applySearchHighlights, { deep: true })

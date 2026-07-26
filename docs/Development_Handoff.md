@@ -1,9 +1,9 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-26
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A 和 G8-2B 已完成；Draft PR #6 等待审阅；下一主线为 B0 PDF 页面模型与非破坏式操作预览
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B 和 PDF B0 已完成；Draft PR #6 等待审阅；下一主线为 B1A PDF 写入引擎与隔离副本决策
 
-> 最新桌面收口结论、28 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；G8-2B 专项和原始需求重排见 `docs/G8_2B_Relation_Context_Closure_Audit_2026-07-26.md`；A4 的 29 类格式/61 个扩展名矩阵见 `docs/A4_Format_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
+> 最新桌面收口结论、29 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；PDF B0 页面整理边界见 `docs/B0_PDF_Page_Plan_Audit_2026-07-27.md`；G8-2B 专项和原始需求重排见 `docs/G8_2B_Relation_Context_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 ## 1. 新电脑快速恢复
 
@@ -46,11 +46,12 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - CSV/TSV 和开放 `.table.json` 表格编辑、图表、仪表盘、Markdown/Canvas 嵌入。
 - XLSX 多工作表预览、空白/已有基础单元格编辑、连续/多区域、TSV 剪贴板、基础样式、公式重算、行高列宽和合并/取消合并，支持冲突检测及 OOXML 局部可靠写回；可将工作表转换为开放表格。
 - PDF 分段读取、阅读、标注、OCR sidecar、全文索引和图谱关系。
+- PDF B0 已提供旋转、改序、排除页面的内存草稿、原页映射、60 步撤销/重做、至少保留一页及离开保护；尚不能生成新 PDF。
 - API Key 使用 Windows 系统凭据存储；旧配置中的明文 Key 会一次性迁移并清除。
 - YAML、XML、TOML、INI/CONF/CFG、Properties、`.editorconfig`、`.gitignore` 已进入统一管理与可靠基础编辑。
 - `.env` 系列默认遮罩且后端排除全文索引/知识图谱；必须在当前文件显式确认后才能显示和编辑原值。
 - 常见 JavaScript/TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 和 Web 源文件支持语法高亮、搜索与轻量可靠编辑，但不提供 IDE 执行、调试或语言服务。
-- A5/G8 已用真实 Tauri Debug/WebView2 自动化完成 28 项检查和 20 张证据图，覆盖关系摘要、标签/集合、Markdown/PDF/Table/Canvas/OPML 关系侧栏和居中图谱导航。
+- A5/G8/B0 已用真实 Tauri Debug/WebView2 自动化完成 29 项检查和 21 张证据图，覆盖关系摘要、标签/集合、跨格式关系侧栏、居中图谱导航和 PDF 页面整理草稿。
 
 ## 3. 后端结构
 
@@ -138,7 +139,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 ## 6. 下一阶段顺序
 
-当前权威顺序：**PDF 页面实用编辑 → DOCX 基础工作面 → PPTX 基础工作面 → WPS/OpenDocument/旧版 Office 格式与转换审计 → 统一管理和发布矩阵增强**。G8-2B 已完成，G8-3～G8-5 转为并行增强队列，不再阻塞用户最初要求的专业格式能力。下一开发入口为 B0 PDF 页面模型与非破坏式旋转、排序、删除预览。
+当前权威顺序：**PDF 页面实用编辑 → DOCX 基础工作面 → PPTX 基础工作面 → WPS/OpenDocument/旧版 Office 格式与转换审计 → 统一管理和发布矩阵增强**。PDF B0 已完成非破坏式旋转、改序和排除草稿；下一开发入口为 B1A 写入引擎、许可证、保真矩阵和隔离副本验证。默认覆盖源 PDF 继续禁止。
 
 以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 

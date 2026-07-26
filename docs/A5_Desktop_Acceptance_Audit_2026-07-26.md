@@ -1,6 +1,6 @@
 # A5 真实桌面验收收口审计
 
-更新日期：2026-07-26
+更新日期：2026-07-27
 
 开发分支：`codex/a4-format-closure`
 
@@ -30,7 +30,7 @@ npm run audit:a5-desktop
 npm run check:a5-desktop-evidence
 ```
 
-阶段 A 收口后，G8-1/G8-2A/G8-2B 继续复用同一真实桌面回归框架。当前门禁结果为 **28/28 项通过，20 张真实 Tauri 截图通过机器校验**。
+阶段 A 收口后，G8-1/G8-2A/G8-2B 和 PDF B0 继续复用同一真实桌面回归框架。当前门禁结果为 **29/29 项通过，21 张真实 Tauri 截图通过机器校验**。
 
 | 验收域 | 真实桌面结果 | 证据 |
 |---|---|---|
@@ -38,6 +38,7 @@ npm run check:a5-desktop-evidence
 | G8-1 关系摘要 | 当前文件、工作台最近文件和搜索结果显示关系摘要；点击后图谱以目标文件居中 | `g8-current-file-relation-summary.jpg`、`g8-workspace-relation-summary.jpg`、`g8-search-relation-summary.jpg`、`g8-centered-graph-navigation.jpg` |
 | G8-2A 关系上下文 | Markdown 显示事实链接与原文证据；OPML 显示规划层级；共享侧栏不离开当前工作面 | `g8-file-relation-context.jpg`、`g8-opml-planning-context.jpg` |
 | G8-2B 上下文补全 | 同标签与智能集合进入侧栏；PDF、Table、Canvas 的真实对象关系和定位进入桌面门禁 | `g8-tag-and-collection-context.jpg`、`g8-pdf-object-context.jpg`、`g8-table-object-context.jpg`、`g8-canvas-object-context.jpg` |
+| PDF B0 页面整理草稿 | 两页 PDF 完成旋转、改序、排除、撤销、重做和重置；源文件保持只读 | `b0-pdf-page-plan-preview.jpg` |
 | 普通文本/INI | 编辑、保存、离开并重开成功 | `text-save-and-reopen.jpg` |
 | 外部修改冲突 | 保存被签名冲突阻断；选择重新加载后读取磁盘版本，不恢复旧草稿 | `external-conflict-detected.jpg` |
 | `.env` | 首次遮罩、明确确认后显示、再次遮罩成功；正文标记不泄漏到界面 | `env-default-masked.jpg` |
@@ -55,6 +56,7 @@ npm run check:a5-desktop-evidence
 G8-1 的目标、路径身份修复、关系摘要合同和边界见 `docs/G8_1_Relation_Summary_Product_Audit_2026-07-26.md`。
 G8-2A 的统一侧栏、分类、证据、生命周期修复和边界见 `docs/G8_2A_File_Relation_Context_Audit_2026-07-26.md`。
 G8-2B 的同标签、智能集合、有界缓存、专业格式证据和需求重排见 `docs/G8_2B_Relation_Context_Closure_Audit_2026-07-26.md`。
+PDF B0 的页面身份、非破坏式计划、历史、离开保护和未开放写回边界见 `docs/B0_PDF_Page_Plan_Audit_2026-07-27.md`。
 
 ## 3. 本阶段发现并修复的问题
 
@@ -77,12 +79,12 @@ G8-2B 的同标签、智能集合、有界缓存、专业格式证据和需求�
 - TXT、常见配置、代码文本、JSON/JSONC、YAML、XML、TOML 的可靠基础编辑；
 - `.env` 默认遮罩和后端索引隔离；
 - LOG 有界只读、筛选、追尾、自动刷新和轮转；
-- PDF 阅读/批注/OCR、Mermaid 图表、OPML 思维导图、JSON Canvas、开放表格和渐进式 XLSX 能力继续有效；
+- PDF 阅读/批注/OCR和页面整理草稿、Mermaid 图表、OPML 思维导图、JSON Canvas、开放表格和渐进式 XLSX 能力继续有效；
 - 29 类格式、61 个扩展名由共享注册表统一声明能力与路由。
 
 ### 仍不能宣称
 
-- PDF 正文排版编辑或页面内容重写；
+- PDF 页面草稿已经能够生成或可靠另存为新 PDF，以及 PDF 正文排版编辑；
 - DOCX/PPTX/WPS 私有格式的内置可靠编辑；
 - 完整 Excel 等价、完整 IDE、任意私有思维导图格式等价；
 - 安装包升级/卸载、系统文件关联、所有 Windows 版本和硬件组合已经完成发布矩阵；
@@ -92,7 +94,7 @@ JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存�
 
 ## 5. 全量质量门禁
 
-2026-07-26 最终执行 `npm run ci:check`：
+2026-07-27 最终执行 `npm run ci:check`：
 
 - Vue 类型检查与 Vite 生产构建通过；
 - 主题、格式、A5 桌面证据、工作簿和 XLSX 发布契约通过；
@@ -117,25 +119,26 @@ JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存�
 
 ## 7. 下一阶段开发顺序
 
-### G8：知识图谱产品化与存在感
+### 已收口的 G8：知识图谱产品化与存在感
 
-这是下一主线，直接回应“知识图谱能力弱、使用时感知不到”的核心反馈。
+该主线已完成当前存在感收口，直接回应“知识图谱能力弱、使用时感知不到”的核心反馈。
 
 1. **G8-1 默认工作台关系摘要（已完成）**：最近文件、当前文件和搜索结果直接展示关联数量、关系类型、孤立风险和一键进入局部图谱。
 2. **G8-2A 文件关系上下文基础（已完成）**：共享侧栏已覆盖各文件工作面，提供方向、分类、对象定位、原文证据和未提取状态。
-3. **G8-2B 上下文补全与性能收口（已完成）**：同标签/同集合上下文、有界缓存及 PDF/Table/Canvas 真实桌面定位证据均已交付；28 项真实桌面门禁已覆盖。
+3. **G8-2B 上下文补全与性能收口（已完成）**：同标签/同集合上下文、有界缓存及 PDF/Table/Canvas 真实桌面定位证据均已交付。
 4. **G8-3～G8-5（转增强队列）**：搜索关系解释、代码/配置关系提取和图谱—思维导图协同继续保留，但不再阻塞原始专业格式目标。
 
 退出条件：用户不进入独立图谱页，也能在默认工作台、搜索和文件工作面看到并使用关系；图谱从“单独的可视化功能”变成跨格式管理导航层。
 
 ### 当前专业格式主线
 
-1. PDF 页面旋转、排序、删除、提取、合并、拆分与安全另存；
-2. DOCX/PPTX 先读后编，按公开 OOXML 兼容矩阵开放基础子集；
-3. WPS `.wps/.et/.dps` 先做规范、许可与转换保真审计，无法证明可靠时只提供外部打开或受控副本转换；
-4. 统一批处理、元数据、工作区健康和发布矩阵。
+1. **PDF B0（已完成）**：页面旋转、排序、排除的内存草稿、撤销/重做和离开保护；29 项真实桌面门禁已覆盖；
+2. **PDF B1（下一步）**：写入引擎审计、隔离副本验证与安全另存；
+3. DOCX/PPTX 先读后编，按公开 OOXML 兼容矩阵开放基础子集；
+4. WPS `.wps/.et/.dps` 先做规范、许可与转换保真审计，无法证明可靠时只提供外部打开或受控副本转换；
+5. 统一批处理、元数据、工作区健康和发布矩阵。
 
-权威执行顺序和能力事实见 `docs/G8_2B_Relation_Context_Closure_Audit_2026-07-26.md`。
+权威执行顺序和能力事实见 `docs/B0_PDF_Page_Plan_Audit_2026-07-27.md`。
 
 ## 8. 关键提交
 
