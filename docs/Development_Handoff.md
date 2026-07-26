@@ -1,9 +1,9 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-27
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B 已完成；Draft PR #6 等待审阅；下一主线为 B1C PDF 复杂兼容矩阵收口
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C 已完成；Draft PR #6 等待审阅；下一主线为 C0/C1 DOCX 兼容矩阵与只读工作面
 
-> 最新桌面收口结论、31 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；PDF B1B 无覆盖另存与重开边界见 `docs/B1B_PDF_Reliable_Save_Audit_2026-07-27.md`；G8-2B 专项和原始需求重排见 `docs/G8_2B_Relation_Context_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
+> 最新桌面收口结论、32 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；PDF B1C 兼容矩阵与 DOCX 入口见 `docs/B1C_PDF_Compatibility_Closure_Audit_2026-07-27.md`；G8-2B 专项和原始需求重排见 `docs/G8_2B_Relation_Context_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 ## 1. 新电脑快速恢复
 
@@ -46,12 +46,12 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - CSV/TSV 和开放 `.table.json` 表格编辑、图表、仪表盘、Markdown/Canvas 嵌入。
 - XLSX 多工作表预览、空白/已有基础单元格编辑、连续/多区域、TSV 剪贴板、基础样式、公式重算、行高列宽和合并/取消合并，支持冲突检测及 OOXML 局部可靠写回；可将工作表转换为开放表格。
 - PDF 分段读取、阅读、标注、OCR sidecar、全文索引和图谱关系。
-- PDF B0 已提供旋转、改序、排除页面的内存草稿、原页映射、60 步撤销/重做、至少保留一页及离开保护；B1A 已完成隔离验证；B1B 已能原子创建同目录新副本、落盘复读并由 PDF.js 重开，仍禁止覆盖源文件或已有目标。
+- PDF B0/B1A/B1B/B1C 已完成页面草稿、隔离验证、原子无覆盖另存、PDF.js 重开和复杂兼容矩阵；对象流、页面继承和扫描页进入安全子集，高风险对象稳定阻断，仍禁止覆盖源文件或已有目标。
 - API Key 使用 Windows 系统凭据存储；旧配置中的明文 Key 会一次性迁移并清除。
 - YAML、XML、TOML、INI/CONF/CFG、Properties、`.editorconfig`、`.gitignore` 已进入统一管理与可靠基础编辑。
 - `.env` 系列默认遮罩且后端排除全文索引/知识图谱；必须在当前文件显式确认后才能显示和编辑原值。
 - 常见 JavaScript/TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 和 Web 源文件支持语法高亮、搜索与轻量可靠编辑，但不提供 IDE 执行、调试或语言服务。
-- A5/G8/B0/B1A/B1B 已用真实 Tauri Debug/WebView2 自动化完成 31 项检查和 23 张证据图，覆盖关系摘要、标签/集合、跨格式关系侧栏、居中图谱导航、PDF 页面整理、隔离验证及可靠另存重开。
+- A5/G8/B0/B1A/B1B/B1C 已用真实 Tauri Debug/WebView2 自动化完成 32 项检查和 24 张证据图，覆盖关系摘要、标签/集合、跨格式关系侧栏、居中图谱导航、PDF 页面整理、隔离验证、兼容画像及可靠另存重开。
 
 ## 3. 后端结构
 
@@ -132,14 +132,14 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - 前端生产构建、主题/格式/工作簿/XLSX 发布契约检查均通过；工作簿契约已覆盖 S8-2A 的 Table 创建/调整入口、签名事务、包级往返、历史清理、重载与重算。
 - Rust：S8-7E2E 共 194 项测试（193 项功能、1 项性能），全部通过；七类聚合分别完成临时 Pivot 包重建与输出复读，合并分组回归验证平均值、计数和乘积均从原始记录计算；单行轴、单列轴和三度量布局完成真实来源内存语义验证，成功/阻断路径原文件字节保持不变。
 - 本批最终完整性能回归通过：`inspect=124 ms / page=1,071 ms / patch=911 ms / total=2,107 ms`，未放宽 `10000x12` 负载、时间或 5% 文件增长约束。Debug 构建仅优化 `quick-xml` 与 `miniz_oxide` 依赖，普通写回在不存在 `sheetProtection` 时跳过完整保护解析。
-- 当前完整门禁：Rust 功能测试 `283/283`、性能测试 `1/1`、真实 Tauri 检查 `31/31`，23 张截图证据通过；100 MiB PDF 范围读取本轮 55 ms，仅读取约 255.9 KiB（目标小于 2 秒；不同机器会有波动）。
+- 当前完整门禁：Rust 功能测试 `289/289`、性能测试 `1/1`、真实 Tauri 检查 `32/32`，24 张截图证据通过；100 MiB PDF 范围读取本轮 59 ms，仅读取约 255.9 KiB（目标小于 2 秒；不同机器会有波动）。
 - `npm audit --omit=dev`：0 个漏洞。
 
 Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能优化项，不是构建失败。
 
 ## 6. 下一阶段顺序
 
-当前权威顺序：**PDF 页面实用编辑 → DOCX 基础工作面 → PPTX 基础工作面 → WPS/OpenDocument/旧版 Office 格式与转换审计 → 统一管理和发布矩阵增强**。PDF B0/B1A/B1B 已完成页面草稿、隔离验证和可靠另存；下一开发入口为 B1C 复杂生产者、页面继承、扫描页和高风险阻断兼容矩阵。默认覆盖源 PDF 或已有目标继续禁止。
+当前权威顺序：**DOCX 基础工作面 → PPTX 基础工作面 → WPS/OpenDocument/旧版 Office 格式与转换审计 → 统一管理和发布矩阵增强**。PDF B0/B1A/B1B/B1C 已完成页面草稿、隔离验证、可靠另存和兼容矩阵，页面基础编辑阶段收口；下一开发入口为 C0/C1 DOCX 生产者 fixture 与只读工作面。PDF 合并、拆分和插页转入增强队列。
 
 以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 
@@ -220,7 +220,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
-开始新功能前先更新路线图中的需求状态与验收条件。下一批在当前 `codex/a4-format-closure` 分支推进 B1C；每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
+开始新功能前先更新路线图中的需求状态与验收条件。下一批在当前 `codex/a4-format-closure` 分支推进 C0/C1 DOCX；每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
 
 ## 7. 已知边界与注意事项
 

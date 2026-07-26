@@ -95,6 +95,7 @@
                 <strong>隔离副本验证通过</strong>
                 <span>{{ pagePlanVerification.outputPages }} 页 · {{ formatBytes(pagePlanVerification.outputBytes) }} · 源文件未修改</span>
                 <small>结构复读、文本页序与旋转映射均已核验；可靠另存只创建同目录新文件。</small>
+                <small>{{ pdfCompatibilityLabel(pagePlanVerification.compatibility) }}</small>
                 <div class="page-plan-save">
                   <label>
                     <span>新副本文件名</span>
@@ -265,6 +266,14 @@ interface PdfIsolatedPagePlanReport {
   textOrderVerified: boolean
   sourceUnchanged: boolean
   pageMapping: Array<{ outputPage: number; sourcePage: number; rotation: number }>
+  compatibility: {
+    pdfVersion: string
+    producer?: string | null
+    xrefKind: 'stream' | 'table'
+    compressedObjects: number
+    inheritedPageValues: number
+    textlessPages?: number | null
+  }
 }
 interface PdfSavedPagePlanReport {
   status: 'saved_verified'
@@ -632,6 +641,18 @@ const verifyPagePlan = async () => {
   } finally {
     pagePlanVerifying.value = false
   }
+}
+
+const pdfCompatibilityLabel = (profile: PdfIsolatedPagePlanReport['compatibility']) => {
+  const details = [
+    `PDF ${profile.pdfVersion}`,
+    profile.xrefKind === 'stream' ? '交叉引用流' : '传统交叉引用表',
+  ]
+  if (profile.compressedObjects) details.push(`${profile.compressedObjects} 个压缩对象`)
+  if (profile.inheritedPageValues) details.push(`${profile.inheritedPageValues} 项页面树继承`)
+  if (profile.textlessPages) details.push(`${profile.textlessPages} 个无文本页`)
+  if (profile.producer) details.push(profile.producer)
+  return `兼容矩阵：${details.join(' · ')}`
 }
 
 const savePagePlanCopy = async () => {

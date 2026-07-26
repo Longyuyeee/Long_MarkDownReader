@@ -331,12 +331,15 @@ await clickText('.page-plan-verify', '验证隔离副本')
 await waitFor(
   `document.querySelector('.page-plan-verification')?.textContent?.includes('隔离副本验证通过') === true
     && document.querySelector('.page-plan-verification')?.textContent?.includes('源文件未修改') === true
-    && document.querySelector('.page-plan-verification')?.textContent?.includes('可靠另存只创建同目录新文件') === true`,
+    && document.querySelector('.page-plan-verification')?.textContent?.includes('可靠另存只创建同目录新文件') === true
+    && document.querySelector('.page-plan-verification')?.textContent?.includes('兼容矩阵：PDF') === true`,
   'PDF isolated-copy generation and reparse verification',
   240,
 )
 checks.push({ id: 'b1a-pdf-isolated-copy-verification', status: 'passed' })
 await capture('b1a-pdf-isolated-copy-verification.jpg')
+checks.push({ id: 'b1c-pdf-compatibility-profile', status: 'passed' })
+await capture('b1c-pdf-compatibility-profile.jpg')
 await setInput('.page-plan-save input[aria-label="PDF 新副本文件名"]', 'G8 Research Saved.pdf')
 await clickText('.page-plan-save button', '另存新 PDF 并打开')
 await waitFor(
@@ -644,6 +647,7 @@ const evidenceFiles = [
   'g8-pdf-object-context.jpg',
   'b0-pdf-page-plan-preview.jpg',
   'b1a-pdf-isolated-copy-verification.jpg',
+  'b1c-pdf-compatibility-profile.jpg',
   'b1b-pdf-reliable-save-reopen.jpg',
   'g8-table-object-context.jpg',
   'g8-canvas-object-context.jpg',

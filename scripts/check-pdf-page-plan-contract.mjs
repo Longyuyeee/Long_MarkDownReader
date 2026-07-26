@@ -99,4 +99,23 @@ for (const text of [
   '可靠另存不会覆盖现有文件',
 ]) requireText(reliableWrite, text, `B1B no-clobber write contract missing: ${text}`)
 
-console.log('PDF B0/B1A/B1B contract passed: immutable planning, isolated verification, atomic no-clobber save, disk reopen checks, and no source overwrite.')
+for (const text of [
+  '兼容矩阵',
+  'pdfCompatibilityLabel',
+  'compressedObjects',
+  'inheritedPageValues',
+  'textlessPages',
+]) requireText(view, text, `B1C PDF compatibility UI contract missing: ${text}`)
+
+for (const text of [
+  'PdfPagePlanCompatibilityProfile',
+  'normalized_pdf_page_text',
+  'XrefEntry::Compressed',
+  'b1c_accepts_modern_object_and_xref_streams_from_multiple_producers',
+  'b1c_materializes_inherited_boxes_resources_and_rotation',
+  'b1c_accepts_textless_scanned_pages_and_reliable_save',
+  'b1c_high_risk_compatibility_matrix_is_stably_blocked',
+  'b1c_encrypted_pdf_and_resource_limits_are_blocked_before_output',
+]) requireText(pdfCommands, text, `B1C PDF backend compatibility gate missing: ${text}`)
+
+console.log('PDF B0/B1A/B1B/B1C contract passed: immutable planning, isolated verification, atomic no-clobber save, compatibility profiling, scan normalization, stable blockers, and no source overwrite.')

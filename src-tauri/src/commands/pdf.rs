@@ -7,6 +7,7 @@ use crate::formats::pdf_ocr::{
 };
 use crate::services::reliable_write::{recover_interrupted_write, write_new_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
+use lopdf::xref::{XrefEntry, XrefType};
 use lopdf::{dictionary, Dictionary, Document, Object, ObjectId};
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
@@ -215,6 +216,17 @@ pub struct PdfIsolatedPageMapping {
 
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct PdfPagePlanCompatibilityProfile {
+    pub pdf_version: String,
+    pub producer: Option<String>,
+    pub xref_kind: String,
+    pub compressed_objects: usize,
+    pub inherited_page_values: usize,
+    pub textless_pages: Option<usize>,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PdfIsolatedPagePlanReport {
     pub status: String,
     pub engine: String,
@@ -232,6 +244,7 @@ pub struct PdfIsolatedPagePlanReport {
     pub text_order_verified: bool,
     pub source_unchanged: bool,
     pub page_mapping: Vec<PdfIsolatedPageMapping>,
+    pub compatibility: PdfPagePlanCompatibilityProfile,
 }
 
 #[derive(Clone, Debug, serde::Serialize)]
@@ -345,6 +358,54 @@ fn inherited_page_value(document: &Document, page_id: ObjectId, key: &[u8]) -> O
             .ok()?;
     }
     None
+}
+
+fn pdf_producer(document: &Document) -> Option<String> {
+    let info = document.trailer.get(b"Info").ok()?;
+    let dictionary = document.dereference(info).ok()?.1.as_dict().ok()?;
+    let producer = dictionary.get(b"Producer").ok()?.as_str().ok()?;
+    Some(String::from_utf8_lossy(producer).into_owned())
+}
+
+fn pdf_compatibility_profile(document: &Document) -> PdfPagePlanCompatibilityProfile {
+    let inherited_page_values = document
+        .get_pages()
+        .values()
+        .filter_map(|page_id| {
+            let page = document.get_dictionary(*page_id).ok()?;
+            Some(
+                [b"Resources".as_slice(), b"MediaBox", b"CropBox", b"Rotate"]
+                    .into_iter()
+                    .filter(|key| {
+                        !page.has(key) && inherited_page_value(document, *page_id, key).is_some()
+                    })
+                    .count(),
+            )
+        })
+        .sum();
+    PdfPagePlanCompatibilityProfile {
+        pdf_version: document.version.clone(),
+        producer: pdf_producer(document),
+        xref_kind: match document.reference_table.cross_reference_type {
+            XrefType::CrossReferenceStream => "stream",
+            XrefType::CrossReferenceTable => "table",
+        }
+        .into(),
+        compressed_objects: document
+            .reference_table
+            .entries
+            .values()
+            .filter(|entry| matches!(entry, XrefEntry::Compressed { .. }))
+            .count(),
+        inherited_page_values,
+        textless_pages: None,
+    }
+}
+
+fn normalized_pdf_page_text(mut pages: Vec<String>, page_count: usize) -> Vec<String> {
+    pages.resize(page_count, String::new());
+    pages.truncate(page_count);
+    pages
 }
 
 fn normalized_rotation(value: i64) -> i16 {
@@ -471,7 +532,33 @@ fn build_pdf_page_plan_isolated(
     let mut document =
         Document::load_mem(&source).map_err(|error| format!("PDF 结构解析失败: {error}"))?;
     let source_pages = document.get_pages().len();
+    let compatibility = pdf_compatibility_profile(&document);
+    if document.is_encrypted() {
+        return Ok((
+            PdfIsolatedPagePlanReport {
+                status: "blocked".into(),
+                engine: "lopdf 0.42.0 (MIT)".into(),
+                source_signature: actual_signature,
+                source_pages,
+                output_pages: 0,
+                rotated_pages: 0,
+                reordered: false,
+                removed_pages: 0,
+                blockers: vec!["encrypted_pdf_unverified".into()],
+                source_digest,
+                output_digest: None,
+                output_bytes: 0,
+                structural_reparse_verified: false,
+                text_order_verified: false,
+                source_unchanged: true,
+                page_mapping: Vec::new(),
+                compatibility,
+            },
+            None,
+        ));
+    }
     validate_pdf_page_plan(&plan, source_pages)?;
+    let mut compatibility = compatibility;
     let desired_source_pages: Vec<u32> = plan
         .iter()
         .filter(|item| !item.removed)
@@ -502,12 +589,22 @@ fn build_pdf_page_plan_isolated(
         text_order_verified: false,
         source_unchanged: true,
         page_mapping: Vec::new(),
+        compatibility: compatibility.clone(),
     };
     if !blockers.is_empty() {
         return Ok((blocked_report(blockers), None));
     }
-    let source_text = pdf_extract::extract_text_from_mem_by_pages(&source)
-        .map_err(|error| format!("源 PDF 文本复读失败: {error}"))?;
+    let source_text = normalized_pdf_page_text(
+        pdf_extract::extract_text_from_mem_by_pages(&source)
+            .map_err(|error| format!("源 PDF 文本复读失败: {error}"))?,
+        source_pages,
+    );
+    compatibility.textless_pages = Some(
+        source_text
+            .iter()
+            .filter(|page| page.trim().is_empty())
+            .count(),
+    );
     let mapping = apply_pdf_page_plan(&mut document, &plan)?;
     let mut output = Vec::new();
     document
@@ -549,8 +646,11 @@ fn build_pdf_page_plan_isolated(
             ));
         }
     }
-    let output_text = pdf_extract::extract_text_from_mem_by_pages(&output)
-        .map_err(|error| format!("隔离 PDF 文本复读失败: {error}"))?;
+    let output_text = normalized_pdf_page_text(
+        pdf_extract::extract_text_from_mem_by_pages(&output)
+            .map_err(|error| format!("隔离 PDF 文本复读失败: {error}"))?,
+        mapping.len(),
+    );
     let expected_text: Vec<String> = mapping
         .iter()
         .map(|item| {
@@ -587,6 +687,7 @@ fn build_pdf_page_plan_isolated(
         text_order_verified,
         source_unchanged,
         page_mapping: mapping,
+        compatibility,
     };
     Ok((report, Some(output)))
 }
@@ -652,8 +753,11 @@ fn save_pdf_page_plan_copy_to_path(
     if actual_output_digest != expected_output_digest {
         return Err("页面计划或隔离输出已变化，请重新验证后再另存".into());
     }
-    let expected_text = pdf_extract::extract_text_from_mem_by_pages(&output)
-        .map_err(|error| format!("保存前文本复读失败: {error}"))?;
+    let expected_text = normalized_pdf_page_text(
+        pdf_extract::extract_text_from_mem_by_pages(&output)
+            .map_err(|error| format!("保存前文本复读失败: {error}"))?,
+        isolated_report.output_pages,
+    );
     write_new_bytes(target_path, &output)?;
 
     let saved = fs::read(target_path)
@@ -669,8 +773,11 @@ fn save_pdf_page_plan_copy_to_path(
     if !structural_reopen_verified {
         return Err("目标已创建，但重开页数与页面计划不一致".into());
     }
-    let saved_text = pdf_extract::extract_text_from_mem_by_pages(&saved)
-        .map_err(|error| format!("目标已创建，但文本复读失败: {error}"))?;
+    let saved_text = normalized_pdf_page_text(
+        pdf_extract::extract_text_from_mem_by_pages(&saved)
+            .map_err(|error| format!("目标已创建，但文本复读失败: {error}"))?,
+        isolated_report.output_pages,
+    );
     let text_reopen_verified = saved_text == expected_text;
     if !text_reopen_verified {
         return Err("目标已创建，但重开文本页序与页面计划不一致".into());
@@ -957,7 +1064,7 @@ mod tests {
     use super::*;
     use crate::formats::pdf_annotations::{PdfAnnotation, PdfAnnotationKind, PdfAnnotationRect};
     use crate::formats::pdf_ocr::PdfOcrPage;
-    use lopdf::{Stream, StringFormat};
+    use lopdf::{EncryptionState, EncryptionVersion, Permissions, Stream, StringFormat};
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -1033,6 +1140,64 @@ mod tests {
             Object::String(b"isolated".to_vec(), StringFormat::Literal),
         );
         document.compress();
+        let mut bytes = Vec::new();
+        document.save_to(&mut bytes).unwrap();
+        fs::write(path, &bytes).unwrap();
+        bytes
+    }
+
+    fn set_pdf_producer(document: &mut Document, producer: &str) {
+        let info_id = document.add_object(dictionary! {
+            "Producer" => Object::String(producer.as_bytes().to_vec(), StringFormat::Literal),
+        });
+        document.trailer.set("Info", Object::Reference(info_id));
+    }
+
+    fn write_scan_pdf(path: &Path) -> Vec<u8> {
+        let mut document = Document::with_version("1.7");
+        let pages_id = document.new_object_id();
+        let image_id = document.add_object(Stream::new(
+            dictionary! {
+                "Type" => "XObject",
+                "Subtype" => "Image",
+                "Width" => 1,
+                "Height" => 1,
+                "ColorSpace" => "DeviceGray",
+                "BitsPerComponent" => 8,
+            },
+            vec![128],
+        ));
+        let resources_id = document.add_object(dictionary! {
+            "XObject" => dictionary! { "Im1" => Object::Reference(image_id) },
+        });
+        let mut page_ids = Vec::new();
+        for _ in 0..2 {
+            let content_id = document.add_object(Stream::new(
+                Dictionary::new(),
+                b"q 200 0 0 100 0 0 cm /Im1 Do Q".to_vec(),
+            ));
+            page_ids.push(document.add_object(dictionary! {
+                "Type" => "Page",
+                "Parent" => Object::Reference(pages_id),
+                "MediaBox" => vec![0.into(), 0.into(), 400.into(), 200.into()],
+                "Resources" => Object::Reference(resources_id),
+                "Contents" => Object::Reference(content_id),
+            }));
+        }
+        document.objects.insert(
+            pages_id,
+            Object::Dictionary(dictionary! {
+                "Type" => "Pages",
+                "Kids" => page_ids.iter().copied().map(Object::Reference).collect::<Vec<_>>(),
+                "Count" => page_ids.len() as i64,
+            }),
+        );
+        let catalog_id = document.add_object(dictionary! {
+            "Type" => "Catalog",
+            "Pages" => Object::Reference(pages_id),
+        });
+        document.trailer.set("Root", Object::Reference(catalog_id));
+        set_pdf_producer(&mut document, "LongEdit Scan Fixture");
         let mut bytes = Vec::new();
         document.save_to(&mut bytes).unwrap();
         fs::write(path, &bytes).unwrap();
@@ -1118,6 +1283,139 @@ mod tests {
     }
 
     #[test]
+    fn b1c_accepts_modern_object_and_xref_streams_from_multiple_producers() {
+        let workspace = TestWorkspace::new();
+        for (index, (version, producer, modern)) in [
+            ("1.4", "Legacy Producer Fixture", false),
+            ("1.7", "Modern Producer Fixture", true),
+            ("2.0", "PDF 2 Producer Fixture", false),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let pdf = workspace.root.join(format!("producer-{index}.pdf"));
+            write_two_page_pdf(&pdf);
+            let mut document = Document::load(&pdf).unwrap();
+            document.version = version.into();
+            set_pdf_producer(&mut document, producer);
+            let mut bytes = Vec::new();
+            if modern {
+                document.save_modern(&mut bytes).unwrap();
+            } else {
+                document.save_to(&mut bytes).unwrap();
+            }
+            fs::write(&pdf, &bytes).unwrap();
+
+            let signature = pdf_signature(&pdf.metadata().unwrap());
+            let (report, output) = build_pdf_page_plan_isolated(
+                &pdf,
+                &signature,
+                pdf_plan(&[(2, 90, false), (1, 0, true)]),
+            )
+            .unwrap();
+            assert_eq!(report.status, "isolated_verified");
+            assert_eq!(report.compatibility.pdf_version, version);
+            assert_eq!(report.compatibility.producer.as_deref(), Some(producer));
+            if modern {
+                assert_eq!(report.compatibility.xref_kind, "stream");
+                assert!(report.compatibility.compressed_objects > 0);
+            }
+            assert!(output.is_some());
+        }
+    }
+
+    #[test]
+    fn b1c_materializes_inherited_boxes_resources_and_rotation() {
+        let workspace = TestWorkspace::new();
+        let pdf = workspace.root.join("inherited.pdf");
+        write_two_page_pdf(&pdf);
+        let mut document = Document::load(&pdf).unwrap();
+        let pages_id = document
+            .catalog()
+            .unwrap()
+            .get(b"Pages")
+            .unwrap()
+            .as_reference()
+            .unwrap();
+        let page_ids: Vec<ObjectId> = document.get_pages().into_values().collect();
+        let resources = document
+            .get_dictionary(page_ids[0])
+            .unwrap()
+            .get(b"Resources")
+            .unwrap()
+            .clone();
+        for page_id in &page_ids {
+            let page = document.get_dictionary_mut(*page_id).unwrap();
+            page.remove(b"Resources");
+            page.remove(b"MediaBox");
+        }
+        let pages = document.get_dictionary_mut(pages_id).unwrap();
+        pages.set("Resources", resources);
+        pages.set(
+            "MediaBox",
+            Object::Array(vec![0.into(), 0.into(), 500.into(), 300.into()]),
+        );
+        pages.set(
+            "CropBox",
+            Object::Array(vec![20.into(), 10.into(), 480.into(), 290.into()]),
+        );
+        pages.set("Rotate", Object::Integer(90));
+        document.save(&pdf).unwrap();
+
+        let signature = pdf_signature(&pdf.metadata().unwrap());
+        let (report, output) = build_pdf_page_plan_isolated(
+            &pdf,
+            &signature,
+            pdf_plan(&[(2, 90, false), (1, 0, true)]),
+        )
+        .unwrap();
+        let output = output.unwrap();
+        assert_eq!(report.status, "isolated_verified");
+        assert_eq!(report.compatibility.inherited_page_values, 8);
+
+        let verified = Document::load_mem(&output).unwrap();
+        let page_id = verified.get_pages()[&1];
+        let page = verified.get_dictionary(page_id).unwrap();
+        for key in [b"Resources".as_slice(), b"MediaBox", b"CropBox", b"Rotate"] {
+            assert!(
+                page.has(key),
+                "output page must materialize inherited {key:?}"
+            );
+        }
+        assert_eq!(page.get(b"Rotate").unwrap().as_i64().unwrap(), 180);
+        assert_eq!(page.get(b"MediaBox").unwrap().as_array().unwrap().len(), 4);
+    }
+
+    #[test]
+    fn b1c_accepts_textless_scanned_pages_and_reliable_save() {
+        let workspace = TestWorkspace::new();
+        let pdf = workspace.root.join("scan-source.pdf");
+        let target = workspace.root.join("scan-saved.pdf");
+        let original = write_scan_pdf(&pdf);
+        let signature = pdf_signature(&pdf.metadata().unwrap());
+        let plan = pdf_plan(&[(2, 90, false), (1, 0, true)]);
+        let (report, output) =
+            build_pdf_page_plan_isolated(&pdf, &signature, plan.clone()).unwrap();
+        assert_eq!(report.status, "isolated_verified");
+        assert_eq!(report.compatibility.textless_pages, Some(2));
+        assert!(report.text_order_verified);
+        assert!(output.is_some());
+
+        let saved = save_pdf_page_plan_copy_to_path(
+            &pdf,
+            &target,
+            &signature,
+            report.output_digest.as_deref().unwrap(),
+            plan,
+        )
+        .unwrap();
+        assert_eq!(saved.status, "saved_verified");
+        assert!(saved.text_reopen_verified);
+        assert_eq!(Document::load(&target).unwrap().get_pages().len(), 1);
+        assert_eq!(fs::read(&pdf).unwrap(), original);
+    }
+
+    #[test]
     fn isolated_page_plan_blocks_unverified_interactive_pdf_features() {
         let workspace = TestWorkspace::new();
         let pdf = workspace.root.join("form.pdf");
@@ -1142,6 +1440,183 @@ mod tests {
         assert!(output.is_none());
         assert!(report.source_unchanged);
         assert_eq!(fs::read(&pdf).unwrap(), source);
+    }
+
+    #[test]
+    fn b1c_high_risk_compatibility_matrix_is_stably_blocked() {
+        let workspace = TestWorkspace::new();
+        let cases = [
+            ("acroform", "acroform_unverified"),
+            ("portfolio", "pdf_portfolio_unverified"),
+            ("embedded", "embedded_files_unverified"),
+            ("signature", "digital_signature_unverified"),
+            ("outline", "outline_migration_unverified"),
+            ("labels", "page_labels_migration_unverified"),
+            ("tagged", "tagged_structure_migration_unverified"),
+            ("destinations", "named_destinations_migration_unverified"),
+        ];
+        for (case, expected_blocker) in cases {
+            let pdf = workspace.root.join(format!("{case}.pdf"));
+            write_two_page_pdf(&pdf);
+            let mut document = Document::load(&pdf).unwrap();
+            match case {
+                "acroform" => document
+                    .catalog_mut()
+                    .unwrap()
+                    .set("AcroForm", Object::Dictionary(Dictionary::new())),
+                "portfolio" => document
+                    .catalog_mut()
+                    .unwrap()
+                    .set("Collection", Object::Dictionary(Dictionary::new())),
+                "embedded" => document.catalog_mut().unwrap().set(
+                    "Names",
+                    Object::Dictionary(dictionary! {
+                        "EmbeddedFiles" => Object::Dictionary(Dictionary::new()),
+                    }),
+                ),
+                "signature" => {
+                    document.add_object(dictionary! { "Type" => "Sig" });
+                }
+                "outline" => document
+                    .catalog_mut()
+                    .unwrap()
+                    .set("Outlines", Object::Dictionary(Dictionary::new())),
+                "labels" => document
+                    .catalog_mut()
+                    .unwrap()
+                    .set("PageLabels", Object::Dictionary(Dictionary::new())),
+                "tagged" => document
+                    .catalog_mut()
+                    .unwrap()
+                    .set("StructTreeRoot", Object::Dictionary(Dictionary::new())),
+                "destinations" => document.catalog_mut().unwrap().set(
+                    "Names",
+                    Object::Dictionary(dictionary! {
+                        "Dests" => Object::Dictionary(Dictionary::new()),
+                    }),
+                ),
+                _ => unreachable!(),
+            }
+            document.save(&pdf).unwrap();
+            let source = fs::read(&pdf).unwrap();
+            let signature = pdf_signature(&pdf.metadata().unwrap());
+            let (report, output) = build_pdf_page_plan_isolated(
+                &pdf,
+                &signature,
+                pdf_plan(&[(2, 0, false), (1, 0, false)]),
+            )
+            .unwrap();
+            assert_eq!(report.status, "blocked", "{case}");
+            assert!(
+                report
+                    .blockers
+                    .iter()
+                    .any(|value| value == expected_blocker),
+                "{case}: {:?}",
+                report.blockers
+            );
+            assert!(output.is_none());
+            assert!(report.source_unchanged);
+            assert_eq!(fs::read(&pdf).unwrap(), source);
+        }
+    }
+
+    #[test]
+    fn b1c_structural_carriers_allow_rotation_only_but_block_page_migration() {
+        let workspace = TestWorkspace::new();
+        let pdf = workspace.root.join("outline-rotation.pdf");
+        write_two_page_pdf(&pdf);
+        let mut document = Document::load(&pdf).unwrap();
+        document
+            .catalog_mut()
+            .unwrap()
+            .set("Outlines", Object::Dictionary(Dictionary::new()));
+        document.save(&pdf).unwrap();
+        let signature = pdf_signature(&pdf.metadata().unwrap());
+
+        let (rotation_report, rotation_output) = build_pdf_page_plan_isolated(
+            &pdf,
+            &signature,
+            pdf_plan(&[(1, 90, false), (2, 0, false)]),
+        )
+        .unwrap();
+        assert_eq!(rotation_report.status, "isolated_verified");
+        assert!(rotation_output.is_some());
+
+        let (migration_report, migration_output) = build_pdf_page_plan_isolated(
+            &pdf,
+            &signature,
+            pdf_plan(&[(2, 0, false), (1, 0, false)]),
+        )
+        .unwrap();
+        assert_eq!(migration_report.status, "blocked");
+        assert!(migration_report
+            .blockers
+            .contains(&"outline_migration_unverified".into()));
+        assert!(migration_output.is_none());
+    }
+
+    #[test]
+    fn b1c_encrypted_pdf_and_resource_limits_are_blocked_before_output() {
+        let workspace = TestWorkspace::new();
+        let encrypted = workspace.root.join("encrypted.pdf");
+        write_two_page_pdf(&encrypted);
+        let mut document = Document::load(&encrypted).unwrap();
+        let file_id = Object::String(
+            b"longedit-b1c-encrypted-fixture".to_vec(),
+            StringFormat::Hexadecimal,
+        );
+        document
+            .trailer
+            .set("ID", Object::Array(vec![file_id.clone(), file_id]));
+        let state = EncryptionState::try_from(EncryptionVersion::V1 {
+            document: &document,
+            owner_password: "owner",
+            user_password: "user",
+            permissions: Permissions::default(),
+        })
+        .unwrap();
+        document.encrypt(&state).unwrap();
+        document.save(&encrypted).unwrap();
+        let source = fs::read(&encrypted).unwrap();
+        let signature = pdf_signature(&encrypted.metadata().unwrap());
+        let (report, output) = build_pdf_page_plan_isolated(
+            &encrypted,
+            &signature,
+            pdf_plan(&[(1, 90, false), (2, 0, false)]),
+        )
+        .unwrap();
+        assert_eq!(report.status, "blocked");
+        assert!(report.blockers.contains(&"encrypted_pdf_unverified".into()));
+        assert!(output.is_none());
+        assert_eq!(fs::read(&encrypted).unwrap(), source);
+
+        let oversized = workspace.root.join("oversized.pdf");
+        let oversized_file = File::create(&oversized).unwrap();
+        oversized_file
+            .set_len(MAX_PDF_ISOLATED_INPUT_BYTES + 1)
+            .unwrap();
+        let oversized_signature = pdf_signature(&oversized.metadata().unwrap());
+        let error = build_pdf_page_plan_isolated(
+            &oversized,
+            &oversized_signature,
+            pdf_plan(&[(1, 0, false)]),
+        )
+        .unwrap_err();
+        assert!(error.contains("128 MB"));
+
+        let excessive_plan = (1..=MAX_PDF_PAGE_PLAN_ITEMS as u32 + 1)
+            .map(|source_page| PdfPagePlanItem {
+                source_page,
+                rotation: 0,
+                removed: false,
+            })
+            .collect::<Vec<_>>();
+        assert!(
+            validate_pdf_page_plan(&excessive_plan, excessive_plan.len())
+                .unwrap_err()
+                .contains("20000")
+        );
     }
 
     #[test]

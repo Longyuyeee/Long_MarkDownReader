@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1、G8-2A、G8-2B 和 PDF B0 已完成，29 项真实 Tauri 桌面检查进入 CI。下一开发入口为 B1A PDF 写入引擎与隔离副本决策，随后按 PDF B1B～B3、DOCX、PPTX 和 WPS/开放办公格式推进；G8-3～G8-5 转为增强队列。最新判定见 [B0 PDF 页面整理草稿审计](./B0_PDF_Page_Plan_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B 和 PDF B0/B1A/B1B/B1C 已完成，32 项真实 Tauri 桌面检查进入 CI。PDF 页面基础编辑阶段已收口，下一开发入口为 C0/C1 DOCX 兼容矩阵与只读工作面；G8-3～G8-5 及 PDF 合并、拆分、插页转入增强队列。最新判定见 [B1C PDF 兼容矩阵收口审计](./B1C_PDF_Compatibility_Closure_Audit_2026-07-27.md)。
 
 ## 1. 指导目标
 
@@ -548,17 +548,17 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 4. `A3` JSON/JSONC 工作面。
 5. `A4` LOG、YAML、XML、TOML 和配置格式。
 6. `A5` 真实桌面验收与阶段审计。
-7. `B0～B3` PDF 页面级编辑。
+7. `B0～B1C` PDF 页面基础编辑；B2/B3 增强操作进入回补队列。
 8. `C0～C2` DOCX 只读与基础编辑。
 9. `C3～C5` PPTX 只读与基础编辑。
 10. `D1～D4` 统一管理闭环补强。
 11. `E` WPS、OpenDocument、旧版 Office、SVG、Draw.io 和更多代码格式。
 12. `F` 高级等价与 AI 增强。
 
-当前进度（2026-07-27）：**A0～A5、G8-1、G8-2A、G8-2B 和 PDF B0 已完成**。A5/G8/B0 已在隔离的真实 Tauri Debug/WebView2 中完成 29 项检查和 21 张机器校验证据；PDF 已具备内存页面整理草稿，但尚无生成新 PDF 的写回能力。
+当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B 和 PDF B0/B1A/B1B/B1C 已完成**。真实 Tauri Debug/WebView2 门禁为 32 项检查和 24 张机器校验证据；PDF 已具备安全子集内的页面计划、隔离验证、可靠另存、重开和兼容画像。
 
 当前 **A3 JSON/JSONC 已收口**：树形视图在精确 AST 范围、重复键、数字精度和 JSONC 保真门禁下开放标量替换、对象键重命名、对象/数组追加和删除；A5 进一步证明非法 JSON 默认不会覆盖最后合法磁盘版本，修复后可以可靠保存。
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。下一步从 **B1A PDF 写入引擎与隔离副本决策**继续，再依次完成 B1B～B3、DOCX、PPTX 和 WPS/开放办公格式审计。G8-3～G8-5 转为增强队列，不再阻塞原始专业格式需求。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。下一步从 **C0/C1 DOCX 兼容矩阵与只读工作面**继续，再依次完成 DOCX 基础编辑、PPTX 和 WPS/开放办公格式审计。G8-3～G8-5 与 PDF B2/B3 增强操作不再阻塞原始专业格式需求。
