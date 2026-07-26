@@ -15,10 +15,11 @@
     "audit:a5-desktop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-a5-desktop-audit.ps1",
     "check:theme-contract": "node scripts/check-theme-contract.mjs",
     "check:format-contract": "node scripts/check-format-contract.mjs",
+    "check:graph-product-contract": "node scripts/check-graph-product-contract.mjs",
     "check:a5-desktop-evidence": "node scripts/check-a5-desktop-audit.mjs",
     "check:workbook-contract": "node scripts/check-workbook-contract.mjs",
     "check:xlsx-release-gate": "node scripts/check-xlsx-release-gate.mjs",
-    "ci:check": "npm run build && npm run check:theme-contract && npm run check:format-contract && npm run check:a5-desktop-evidence && npm run check:workbook-contract && npm run check:xlsx-release-gate && npm run test:rust && npm run benchmark:pdf-range && npm run audit:prod",
+    "ci:check": "npm run build && npm run check:theme-contract && npm run check:format-contract && npm run check:graph-product-contract && npm run check:a5-desktop-evidence && npm run check:workbook-contract && npm run check:xlsx-release-gate && npm run test:rust && npm run benchmark:pdf-range && npm run audit:prod",
     "preview": "vite preview",
     "tauri": "tauri"
   },

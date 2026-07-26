@@ -187,7 +187,52 @@ const envFile = path.join(library, '.env')
 const jsonFile = path.join(library, 'damaged.json')
 const largeFile = path.join(library, 'large.txt')
 const logFile = path.join(library, 'runtime.log')
+const relationSourceFile = path.join(library, 'G8 Source.md')
 const checks = []
+
+await navigate(routeFor('library', relationSourceFile), '.library-mode')
+await waitFor(
+  `document.querySelector('.active-relation-summary')?.textContent?.includes('1') === true
+    && document.querySelector('.active-relation-summary')?.textContent?.includes('关系') === true`,
+  'current file relation summary',
+  180,
+)
+checks.push({ id: 'g8-current-file-relation-summary', status: 'passed' })
+await capture('g8-current-file-relation-summary.jpg')
+await clickText('.active-relation-summary', '关系')
+await waitFor(
+  `location.hash.startsWith('#/graph?root=')
+    && document.querySelector('.node-details h3')?.textContent?.includes('G8 Source') === true`,
+  'centered graph navigation',
+  180,
+)
+await waitFor(`document.querySelector('.page-loader') === null`, 'centered graph route loading overlay')
+await delay(350)
+checks.push({ id: 'g8-centered-graph-navigation', status: 'passed' })
+await capture('g8-centered-graph-navigation.jpg')
+
+await navigate('#/workspace', '.workspace-home')
+await waitFor(
+  `[...document.querySelectorAll('.file-row')].some(row =>
+    row.textContent?.includes('G8 Source') && row.querySelector('.relation-summary')?.textContent?.includes('1')
+  )`,
+  'workspace recent file relation summary',
+  180,
+)
+checks.push({ id: 'g8-workspace-relation-summary', status: 'passed' })
+await capture('g8-workspace-relation-summary.jpg')
+
+await navigate('#/library', '.library-mode')
+const g8SearchInput = '.search-area input[placeholder="搜索文档..."]'
+await setInput(g8SearchInput, 'G8_RELATION_SEARCH_MARKER')
+await waitFor(
+  `document.querySelector('.knowledge-search-result')?.textContent?.includes('G8_RELATION_SEARCH_MARKER') === true
+    && document.querySelector('.knowledge-search-result .relation-summary')?.textContent?.includes('1') === true`,
+  'search result relation summary',
+  180,
+)
+checks.push({ id: 'g8-search-relation-summary', status: 'passed' })
+await capture('g8-search-relation-summary.jpg')
 
 await navigate(routeFor('text', serviceIni), '.text-workspace')
 const embeddedShellState = await evaluate(`({
@@ -435,6 +480,10 @@ checks.push({ id: 'log-append-refresh', status: 'passed' })
 checks.push({ id: 'log-rotation-reload', status: 'passed' })
 
 const evidenceFiles = [
+  'g8-current-file-relation-summary.jpg',
+  'g8-centered-graph-navigation.jpg',
+  'g8-workspace-relation-summary.jpg',
+  'g8-search-relation-summary.jpg',
   'text-save-and-reopen.jpg',
   'external-conflict-detected.jpg',
   'env-default-masked.jpg',

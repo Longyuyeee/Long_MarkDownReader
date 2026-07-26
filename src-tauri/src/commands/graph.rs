@@ -10,18 +10,32 @@ use crate::services::reliable_write::write_utf8;
 use crate::services::workspace_guard::WorkspaceGuard;
 use chardetng::EncodingDetector;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
 static RE_TAG: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(r"(?:^|\s)#([^\s#`\[\]()]+)").unwrap());
+const MAX_RELATION_SUMMARY_PATHS: usize = 100;
 
 #[derive(Serialize, Clone)]
 pub struct GraphData {
     pub(crate) nodes: Vec<GraphNode>,
     pub(crate) edges: Vec<GraphEdge>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphRelationSummary {
+    pub path: String,
+    pub node_id: String,
+    pub relation_count: usize,
+    pub incoming_count: usize,
+    pub outgoing_count: usize,
+    pub related_count: usize,
+    pub relation_types: Vec<String>,
+    pub isolated: bool,
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -250,6 +264,83 @@ pub async fn build_local_graph(
         &center.to_string_lossy(),
         depth,
     ))
+}
+
+pub(crate) fn relation_summaries(
+    graph: &GraphData,
+    selected_paths: &[String],
+) -> Vec<GraphRelationSummary> {
+    let selected: HashSet<&str> = selected_paths.iter().map(String::as_str).collect();
+    graph
+        .nodes
+        .iter()
+        .filter(|node| selected.contains(node.path.as_str()))
+        .map(|node| {
+            let mut relation_count = 0;
+            let mut incoming_count = 0;
+            let mut outgoing_count = 0;
+            let mut related_count = 0;
+            let mut relation_types = BTreeSet::new();
+            for edge in graph
+                .edges
+                .iter()
+                .filter(|edge| edge.source == node.id || edge.target == node.id)
+            {
+                relation_count += 1;
+                relation_types.insert(edge.relation_type.clone());
+                if edge.directed {
+                    if edge.source == node.id {
+                        outgoing_count += 1;
+                    }
+                    if edge.target == node.id {
+                        incoming_count += 1;
+                    }
+                } else {
+                    related_count += 1;
+                }
+            }
+            GraphRelationSummary {
+                path: node.path.clone(),
+                node_id: node.id.clone(),
+                relation_count,
+                incoming_count,
+                outgoing_count,
+                related_count,
+                relation_types: relation_types.into_iter().collect(),
+                isolated: relation_count == 0,
+            }
+        })
+        .collect()
+}
+
+#[tauri::command]
+pub async fn summarize_graph_relations(
+    library_root: String,
+    paths: Vec<String>,
+) -> Result<Vec<GraphRelationSummary>, String> {
+    if paths.len() > MAX_RELATION_SUMMARY_PATHS {
+        return Err(format!(
+            "单次最多查询 {MAX_RELATION_SUMMARY_PATHS} 个文件的关系摘要"
+        ));
+    }
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let mut requested_paths = HashMap::new();
+    for path in paths {
+        let resolved = guard.resolve_existing(&path)?;
+        if !resolved.is_file() {
+            return Err("关系摘要目标必须是文件".into());
+        }
+        requested_paths.insert(resolved.to_string_lossy().into_owned(), path);
+    }
+    let graph = build_link_graph(guard.root().to_string_lossy().into_owned()).await?;
+    let canonical_paths: Vec<String> = requested_paths.keys().cloned().collect();
+    let mut summaries = relation_summaries(&graph, &canonical_paths);
+    for summary in &mut summaries {
+        if let Some(requested) = requested_paths.get(&summary.path) {
+            summary.path = requested.clone();
+        }
+    }
+    Ok(summaries)
 }
 
 fn build_filename_index(dir: &Path, index: &mut HashMap<String, Vec<String>>) {
@@ -1955,6 +2046,83 @@ mod tests {
         let value = serde_json::to_value(&merged[0]).unwrap();
         assert_eq!(value["relationType"], "links-to");
         assert_eq!(value["mentions"][0]["line"], 1);
+    }
+
+    #[test]
+    fn relation_summary_distinguishes_direction_types_and_isolation() {
+        let graph = GraphData {
+            nodes: vec![
+                graph_node("source"),
+                graph_node("target"),
+                graph_node("peer"),
+                graph_node("isolated"),
+            ],
+            edges: vec![
+                GraphEdge::test_edge("source", "target"),
+                GraphEdge {
+                    source: "source".into(),
+                    target: "peer".into(),
+                    relation_type: "related".into(),
+                    directed: false,
+                    mentions: Vec::new(),
+                },
+            ],
+        };
+        let paths = vec![
+            "source".to_string(),
+            "target".to_string(),
+            "isolated".to_string(),
+        ];
+        let summaries = relation_summaries(&graph, &paths);
+        let source = summaries.iter().find(|item| item.path == "source").unwrap();
+        assert_eq!(source.relation_count, 2);
+        assert_eq!(source.outgoing_count, 1);
+        assert_eq!(source.incoming_count, 0);
+        assert_eq!(source.related_count, 1);
+        assert_eq!(source.relation_types, vec!["links-to", "related"]);
+        assert!(!source.isolated);
+
+        let target = summaries.iter().find(|item| item.path == "target").unwrap();
+        assert_eq!(target.relation_count, 1);
+        assert_eq!(target.incoming_count, 1);
+        assert_eq!(target.outgoing_count, 0);
+
+        let isolated = summaries
+            .iter()
+            .find(|item| item.path == "isolated")
+            .unwrap();
+        assert_eq!(isolated.relation_count, 0);
+        assert!(isolated.isolated);
+    }
+
+    #[test]
+    fn relation_summary_only_returns_requested_graph_nodes() {
+        let graph = GraphData {
+            nodes: vec![graph_node("one"), graph_node("two")],
+            edges: vec![GraphEdge::test_edge("one", "two")],
+        };
+        let summaries = relation_summaries(&graph, &["two".to_string(), "outside".to_string()]);
+        assert_eq!(summaries.len(), 1);
+        assert_eq!(summaries[0].path, "two");
+    }
+
+    #[test]
+    fn relation_summary_command_normalizes_workspace_paths_and_preserves_requested_identity() {
+        let (base, root) = fixture("relation-summary-command");
+        let source = root.join("Source.md");
+        let target = root.join("Target.md");
+        fs::write(&source, "# Source\n\n[[Target]]\n").unwrap();
+        fs::write(&target, "# Target\n").unwrap();
+        let summaries = tauri::async_runtime::block_on(summarize_graph_relations(
+            root.to_string_lossy().into_owned(),
+            vec![source.to_string_lossy().into_owned()],
+        ))
+        .unwrap();
+        assert_eq!(summaries.len(), 1);
+        assert_eq!(summaries[0].path, source.to_string_lossy());
+        assert_eq!(summaries[0].relation_count, 1);
+        assert_eq!(summaries[0].outgoing_count, 1);
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]

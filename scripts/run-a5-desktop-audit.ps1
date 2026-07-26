@@ -38,6 +38,8 @@ $utf8 = [System.Text.UTF8Encoding]::new($false)
 [System.IO.File]::WriteAllText((Join-Path $library ".env"), "API_TOKEN=A5_PRIVATE_ENV_MARKER`nEMPTY_VALUE=`n", $utf8)
 [System.IO.File]::WriteAllText((Join-Path $library "runtime.log"), "2026-07-26 12:00:00 INFO initial-log-entry`n", $utf8)
 [System.IO.File]::WriteAllText((Join-Path $library "damaged.json"), "{`"valid`":true}`n", $utf8)
+[System.IO.File]::WriteAllText((Join-Path $library "G8 Source.md"), "# G8 Source`n`n[[G8 Target]]`n`nG8_RELATION_SEARCH_MARKER`n", $utf8)
+[System.IO.File]::WriteAllText((Join-Path $library "G8 Target.md"), "# G8 Target`n", $utf8)
 
 $largePath = Join-Path $library "large.txt"
 $largeStream = [System.IO.StreamWriter]::new($largePath, $false, $utf8)

@@ -30,11 +30,12 @@ npm run audit:a5-desktop
 npm run check:a5-desktop-evidence
 ```
 
-门禁结果为 **18/18 项通过，10 张真实 Tauri 截图通过机器校验**。
+阶段 A 收口后，G8-1 继续复用同一真实桌面回归框架。当前门禁结果为 **22/22 项通过，14 张真实 Tauri 截图通过机器校验**。
 
 | 验收域 | 真实桌面结果 | 证据 |
 |---|---|---|
 | Library 右侧结构 | 日常格式保留左侧管理器并嵌入右侧；JSON/Text 标签互切不离开 Library | `configuration-and-code-save-reopen.jpg` |
+| G8-1 关系摘要 | 当前文件、工作台最近文件和搜索结果显示关系摘要；点击后图谱以目标文件居中 | `g8-current-file-relation-summary.jpg`、`g8-workspace-relation-summary.jpg`、`g8-search-relation-summary.jpg`、`g8-centered-graph-navigation.jpg` |
 | 普通文本/INI | 编辑、保存、离开并重开成功 | `text-save-and-reopen.jpg` |
 | 外部修改冲突 | 保存被签名冲突阻断；选择重新加载后读取磁盘版本，不恢复旧草稿 | `external-conflict-detected.jpg` |
 | `.env` | 首次遮罩、明确确认后显示、再次遮罩成功；正文标记不泄漏到界面 | `env-default-masked.jpg` |
@@ -49,6 +50,7 @@ npm run check:a5-desktop-evidence
 机器清单位于 `docs/evidence/a5-stage-a/audit-manifest.json`。门禁同时校验运行环境标识、检查项集合、截图数量与大小、大文件 24 MiB/512 KiB 事实以及真实进程重启时间。
 
 右侧统一工作区的根因、空间模式和视觉合同见 `docs/Library_Right_Pane_Workspace_Audit_2026-07-26.md`。
+G8-1 的目标、路径身份修复、关系摘要合同和边界见 `docs/G8_1_Relation_Summary_Product_Audit_2026-07-26.md`。
 
 ## 3. 本阶段发现并修复的问题
 
@@ -80,7 +82,7 @@ npm run check:a5-desktop-evidence
 - DOCX/PPTX/WPS 私有格式的内置可靠编辑；
 - 完整 Excel 等价、完整 IDE、任意私有思维导图格式等价；
 - 安装包升级/卸载、系统文件关联、所有 Windows 版本和硬件组合已经完成发布矩阵；
-- 知识图谱已经具备足够强的默认入口、上下文解释和代码语义关系。
+- 知识图谱已经具备完整的跨格式上下文侧栏、搜索关系解释和代码语义关系。
 
 JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存”的专业编辑逃生口；默认第一次保存不会覆盖最后合法版本。该行为必须继续在界面上清楚表达。
 
@@ -90,9 +92,9 @@ JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存�
 
 - Vue 类型检查与 Vite 生产构建通过；
 - 主题、格式、A5 桌面证据、工作簿和 XLSX 发布契约通过；
-- Rust 功能测试 `271/271` 通过；
+- Rust 功能测试 `274/274` 通过，性能测试 `1/1` 通过；
 - Rust 复杂工作簿性能测试 `1/1` 通过；
-- 100 MiB PDF 范围读取只请求约 `255.9 KiB`，本机约 `53 ms`；
+- 100 MiB PDF 范围读取只请求约 `255.9 KiB`，本轮本机约 `67 ms`；
 - 生产依赖审计 `0` 个漏洞。
 
 现存非阻断项仍是 Vite 的少量大分包警告。它属于后续性能优化，不影响本阶段正确性结论。
@@ -115,7 +117,7 @@ JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存�
 
 这是下一主线，直接回应“知识图谱能力弱、使用时感知不到”的核心反馈。
 
-1. **G8-1 默认工作台关系摘要**：最近文件、当前文件和搜索结果直接展示关联数量、关系类型、孤立风险和一键进入局部图谱。
+1. **G8-1 默认工作台关系摘要（已完成）**：最近文件、当前文件和搜索结果直接展示关联数量、关系类型、孤立风险和一键进入局部图谱；22 项真实桌面门禁已覆盖。
 2. **G8-2 文件上下文侧栏**：在 Markdown、PDF、OPML、Canvas、Table 及开发文本工作面统一提供出链、入链、同标签和结构关系，不要求用户先离开当前工作。
 3. **G8-3 搜索关系预览**：搜索结果显示“为什么相关”、命中对象和相邻对象，并可保存为动态关系集合。
 4. **G8-4 代码/配置关系提取**：先支持 import、相对路径、配置键引用和数据文件引用；所有关系必须携带来源证据与置信度，不执行代码。

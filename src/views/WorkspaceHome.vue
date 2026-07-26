@@ -42,20 +42,26 @@
           <template v-if="starredItems.length">
             <div class="list-label">已收藏</div>
             <div class="file-list starred-list">
-              <button v-for="item in starredItems" :key="item.path" class="file-row" @click="openPath(item.path)">
-                <span class="file-icon"><StarIcon /></span>
-                <span class="file-copy"><strong>{{ displayName(item.path) }}</strong><small>{{ relativeLabel(item.path) }}</small></span>
-                <span class="file-action"><ArrowIcon /></span>
-              </button>
+              <div v-for="item in starredItems" :key="item.path" class="file-row">
+                <button class="file-open" @click="openPath(item.path)">
+                  <span class="file-icon"><StarIcon /></span>
+                  <span class="file-copy"><strong>{{ displayName(item.path) }}</strong><small>{{ relativeLabel(item.path) }}</small></span>
+                  <span class="file-action"><ArrowIcon /></span>
+                </button>
+                <RelationSummaryBadge v-if="relationSummary(item.path)" :summary="relationSummary(item.path)!" compact @open="openRelationGraph(item.path)" />
+              </div>
             </div>
           </template>
           <div class="list-label">最近使用</div>
           <div v-if="recentItems.length" class="file-list">
-            <button v-for="item in recentItems" :key="item.path" class="file-row" @click="openPath(item.path)">
-              <span class="file-icon"><component :is="iconForPath(item.path)" /></span>
-              <span class="file-copy"><strong>{{ displayName(item.path, item.title) }}</strong><small>{{ relativeLabel(item.path) }}</small></span>
-              <span class="file-action"><ArrowIcon /></span>
-            </button>
+            <div v-for="item in recentItems" :key="item.path" class="file-row">
+              <button class="file-open" @click="openPath(item.path)">
+                <span class="file-icon"><component :is="iconForPath(item.path)" /></span>
+                <span class="file-copy"><strong>{{ displayName(item.path, item.title) }}</strong><small>{{ relativeLabel(item.path) }}</small></span>
+                <span class="file-action"><ArrowIcon /></span>
+              </button>
+              <RelationSummaryBadge v-if="relationSummary(item.path)" :summary="relationSummary(item.path)!" compact @open="openRelationGraph(item.path)" />
+            </div>
           </div>
           <div v-else class="empty-line">暂无最近文件</div>
         </section>
@@ -141,6 +147,7 @@ import {
 } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 import { fileDisplayName, findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
+import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
 import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceHealthReport } from '../components/WorkspaceHealthQueue.vue'
 
 interface WorkspaceTask { title: string; path: string; relativePath: string; line: number; text: string }
@@ -161,19 +168,26 @@ const overview = ref<WorkspaceOverview>({ totalFiles: 0, tasks: [], recentFiles:
 const health = ref<GraphHealth>({ brokenLinks: [], ambiguousLinks: [], orphanNotes: [], scannedNotes: 0 })
 const indexStatus = ref<IndexStatus>({ state: 'missing', objectCount: 0, relationCount: 0 })
 const workspaceHealth = ref<WorkspaceHealthReport>({ duplicateGroups: [], unreferencedAnnotations: [], scannedFiles: 0, hashedFiles: 0, scannedAnnotations: 0, truncated: false })
+const relationSummaries = ref<Record<string, GraphRelationSummary>>({})
 
 const indexLabel = computed(() => ({ missing: '索引未构建', building: '索引构建中', ready: '索引就绪', stale: '索引已过期', corrupt: '索引已损坏', error: '索引异常' }[indexStatus.value.state]))
 const healthRiskCount = computed(() => health.value.brokenLinks.length + health.value.ambiguousLinks.length + health.value.orphanNotes.length + workspaceHealth.value.duplicateGroups.length + workspaceHealth.value.unreferencedAnnotations.length)
 const refreshedLabel = computed(() => refreshedAt.value ? new Date(refreshedAt.value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '尚未刷新')
 const starredItems = computed(() => store.starredFiles.slice(0, 6).map(path => ({ path })))
+const pathIdentity = (path: string) => path.replace(/^\\\\\?\\/, '').replace(/\\/g, '/').toLocaleLowerCase()
+const displayPath = (path: string) => path.replace(/^\\\\\?\\/, '')
 const recentItems = computed(() => {
   const combined = [...store.recentFiles, ...overview.value.recentFiles]
-  return combined.filter((item, index) => combined.findIndex(candidate => candidate.path === item.path) === index).slice(0, 8)
+  return combined
+    .filter((item, index) => combined.findIndex(candidate => pathIdentity(candidate.path) === pathIdentity(item.path)) === index)
+    .slice(0, 8)
 })
 const canvasItems = computed(() => {
   const starred = store.starredFiles.filter(path => findFileFormat(path)?.id === 'canvas').map(path => ({ path, title: fileDisplayName(path) }))
   const combined = [...starred, ...overview.value.canvases]
-  return combined.filter((item, index) => combined.findIndex(candidate => candidate.path === item.path) === index).slice(0, 8)
+  return combined
+    .filter((item, index) => combined.findIndex(candidate => pathIdentity(candidate.path) === pathIdentity(item.path)) === index)
+    .slice(0, 8)
 })
 const savedSearches = computed(() => store.savedSearches
   .filter(search => search.libraryPath === store.libraryPath)
@@ -185,7 +199,10 @@ const formatIcons: Record<string, typeof FileIcon> = { table: TableIcon, workboo
 const formatCount = (id: string) => overview.value.formatCounts.find(item => item.objectType === id)?.count || 0
 const formatLabel = (id: string) => formatLabels[id] || id
 const displayName = (path: string, fallback?: string) => fileDisplayName(path) || fallback || path.split(/[\\/]/).pop() || path
-const relativeLabel = (path: string) => path.replace(store.libraryPath, '').replace(/^[\\/]+/, '') || path
+const relativeLabel = (path: string) => {
+  const visible = displayPath(path)
+  return visible.replace(displayPath(store.libraryPath), '').replace(/^[\\/]+/, '') || visible
+}
 const iconForPath = (path: string) => formatIcons[findFileFormat(path)?.id || ''] || FileIcon
 const scrollToTasks = () => tasksSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 const scrollToGovernance = () => governanceSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -197,6 +214,28 @@ const openSavedSearch = (query: string, objectTypes: string[]) => router.push({
   name: 'LibraryMode',
   query: { search: query, ...(objectTypes.length ? { types: objectTypes.join(',') } : {}) },
 })
+const relationSummary = (path: string) => relationSummaries.value[path]
+const openRelationGraph = (path: string) => {
+  const summary = relationSummary(path)
+  if (summary) router.push({ name: 'Graph', query: { root: summary.nodeId } })
+}
+
+const loadRelationSummaries = async () => {
+  const paths = [...new Set([...starredItems.value, ...recentItems.value].map(item => item.path))].slice(0, 100)
+  if (!store.libraryPath || !paths.length) {
+    relationSummaries.value = {}
+    return
+  }
+  try {
+    const summaries = await invoke<GraphRelationSummary[]>('summarize_graph_relations', {
+      libraryRoot: store.libraryPath,
+      paths,
+    })
+    relationSummaries.value = Object.fromEntries(summaries.map(summary => [summary.path, summary]))
+  } catch {
+    relationSummaries.value = {}
+  }
+}
 
 const openPath = (path: string) => {
   const target = routeForFile(path)
@@ -227,6 +266,7 @@ const loadWorkspace = async () => {
   if (indexResult.status === 'fulfilled') indexStatus.value = indexResult.value
   if (workspaceHealthResult.status === 'fulfilled') workspaceHealth.value = workspaceHealthResult.value
   else workspaceHealthError.value = `治理扫描不可用：${String(workspaceHealthResult.reason)}`
+  await loadRelationSummaries()
   refreshedAt.value = Date.now()
   loading.value = false
 }
@@ -249,7 +289,7 @@ onMounted(async () => {
 .metric-strip { display: grid; grid-template-columns: repeat(5,minmax(100px,1fr)); border-bottom: var(--theme-border); }.metric-strip button { min-height: 74px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; padding: 10px 16px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; }.metric-strip button:first-child { padding-left: 0; }.metric-strip button:last-child { border-right: 0; }.metric-strip button:hover { background: rgba(var(--theme-primary-rgb),.045); }.metric-strip span { color: var(--theme-text-secondary); font-size: 9px; }.metric-strip strong { font-size: 22px; font-weight: 680; }
 .workspace-alert { min-height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 10px; color: #a64d23; border-bottom: 1px solid rgba(166,77,35,.25); font-size: 10px; }.workspace-alert svg { width: 14px; }.workspace-alert span { flex: 1; }.workspace-alert button,.text-command { border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: 9px; }
 .workspace-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,.8fr); column-gap: 32px; }.workspace-section { min-width: 0; padding: 25px 0 28px; border-bottom: var(--theme-border); }.governance-section { grid-column: 1 / -1; }.section-heading { min-height: 35px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }.section-heading h2 { margin: 3px 0 0; font-size: 14px; letter-spacing: 0; }.section-count { min-width: 24px; text-align: right; color: var(--theme-text-secondary); font-size: 11px; }
-.list-label { margin: 9px 0 5px; color: var(--theme-text-secondary); font-size: 8px; font-weight: 700; }.list-label:first-of-type { margin-top: 0; }.file-list,.task-list { display: grid; }.starred-list { margin-bottom: 15px; }.file-row { min-height: 51px; display: grid; grid-template-columns: 28px minmax(0,1fr) 18px; align-items: center; gap: 10px; padding: 6px 8px 6px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.file-row:hover { background: rgba(var(--theme-primary-rgb),.045); }.file-icon { width: 26px; height: 26px; display: grid; place-items: center; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); border-radius: 5px; }.file-icon svg,.file-action svg { width: 13px; }.file-copy { min-width: 0; display: grid; gap: 3px; }.file-copy strong,.task-list strong,.canvas-list strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.file-copy small,.task-list small,.canvas-list small { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 8px; }.file-action { color: var(--theme-text-secondary); }
+.list-label { margin: 9px 0 5px; color: var(--theme-text-secondary); font-size: 8px; font-weight: 700; }.list-label:first-of-type { margin-top: 0; }.file-list,.task-list { display: grid; }.starred-list { margin-bottom: 15px; }.file-row { min-height: 51px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; padding-right: 8px; border-top: var(--theme-border); }.file-row:hover { background: rgba(var(--theme-primary-rgb),.045); }.file-open { min-width: 0; min-height: 50px; display: grid; grid-template-columns: 28px minmax(0,1fr) 18px; align-items: center; gap: 10px; padding: 6px 0; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.file-icon { width: 26px; height: 26px; display: grid; place-items: center; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); border-radius: 5px; }.file-icon svg,.file-action svg { width: 13px; }.file-copy { min-width: 0; display: grid; gap: 3px; }.file-copy strong,.task-list strong,.canvas-list strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.file-copy small,.task-list small,.canvas-list small { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 8px; }.file-action { color: var(--theme-text-secondary); }
 .health-grid { display: grid; grid-template-columns: repeat(3,1fr); border-top: var(--theme-border); border-bottom: var(--theme-border); }.health-grid button { min-height: 65px; display: grid; align-content: center; gap: 4px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: center; }.health-grid button:last-child { border-right: 0; }.health-grid span { color: var(--theme-text-secondary); font-size: 8px; }.health-grid strong { font-size: 17px; }.index-line { min-height: 54px; display: grid; grid-template-columns: 22px minmax(0,1fr) 24px; align-items: center; gap: 8px; border-bottom: var(--theme-border); }.index-line>svg { width: 16px; color: var(--theme-primary); }.index-line>div { display: grid; gap: 2px; }.index-line strong { font-size: 9px; }.index-line small { color: var(--theme-text-secondary); font-size: 8px; }.index-line button { border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.index-line button svg { width: 13px; }.format-line { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 10px; }.format-line span { display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: var(--theme-border); border-radius: 4px; font-size: 8px; }.format-line i { color: var(--theme-text-secondary); font-style: normal; }.format-line b { font-weight: 700; }
 .task-list button { min-height: 48px; display: grid; grid-template-columns: 16px minmax(0,1fr) 16px; align-items: center; gap: 9px; padding: 5px 8px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.task-list button:hover { background: rgba(var(--theme-primary-rgb),.045); }.task-list button>span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }.task-list svg { width: 13px; color: var(--theme-text-secondary); }.task-check { width: 11px; height: 11px; border: 1px solid var(--theme-text-secondary); border-radius: 2px; }
 .canvas-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }.canvas-list button { min-height: 58px; display: grid; grid-template-columns: 24px minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 8px; border: var(--theme-border); border-radius: 6px; color: var(--theme-text); background: var(--theme-surface); cursor: pointer; text-align: left; }.canvas-list button:hover { border-color: rgba(var(--theme-primary-rgb),.35); }.canvas-list button>svg { width: 15px; color: var(--theme-primary); }.canvas-list button>span { min-width: 0; display: grid; gap: 3px; }.canvas-list button>svg:last-child { width: 12px; color: var(--theme-text-secondary); }

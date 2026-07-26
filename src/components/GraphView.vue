@@ -173,7 +173,7 @@
           <strong>{{ hoveredNode.title }}</strong>
           <small>{{ objectTypeLabel(hoveredNode.objectType) }}</small>
         </div>
-        <span class="tip-path">{{ hoveredNode.locationLabel || hoveredNode.path }}</span>
+        <span class="tip-path">{{ hoveredNode.locationLabel || displayWorkspacePath(hoveredNode.path) }}</span>
         <div class="tooltip-hint">双击打开 · 拖拽移动</div>
       </div>
     </transition>
@@ -182,7 +182,7 @@
         <button class="details-close" @click="selectedNode = null" aria-label="关闭节点详情">×</button>
         <span class="details-kicker">节点详情</span>
         <h3>{{ selectedNode.title }}</h3>
-        <p class="details-path">{{ selectedNode.path }}<template v-if="selectedNode.locationLabel"> · {{ selectedNode.locationLabel }}</template></p>
+        <p class="details-path">{{ displayWorkspacePath(selectedNode.path) }}<template v-if="selectedNode.locationLabel"> · {{ selectedNode.locationLabel }}</template></p>
         <div class="details-metrics">
           <div><strong>{{ nodeDegree(selectedNode.id) }}</strong><span>关系</span></div>
           <div><strong>{{ incomingCount(selectedNode.id) }}</strong><span>反向链接</span></div>
@@ -628,23 +628,25 @@ const objectTypeLabel = (type: string) => ({
   pdf: 'PDF 资料', pdf_annotation: 'PDF 批注', table: '数据表', table_view: '表格视图',
   canvas: 'Canvas 画布', canvas_node: 'Canvas 节点', opml: '思维导图', opml_node: '思维导图主题', markdown: 'Markdown 笔记'
 }[type] || type)
+const displayWorkspacePath = (path: string) => path.replace(/^\\\\\?\\/, '')
 const openNode = (node: GraphNode) => {
   const locator = node.locator
+  const path = displayWorkspacePath(node.path)
   if (node.objectType === 'pdf' || node.objectType === 'pdf_annotation') {
-    return router.push({ name: 'Pdf', query: { path: node.path, page: locator?.page, annotation: locator?.objectId } })
+    return router.push({ name: 'Pdf', query: { path, page: locator?.page, annotation: locator?.objectId } })
   }
   if (node.objectType === 'table' || node.objectType === 'table_view') {
-    return router.push({ name: 'Table', query: { path: node.path, view: locator?.objectId } })
+    return router.push({ name: 'Table', query: { path, view: locator?.objectId } })
   }
   if (node.objectType === 'canvas' || node.objectType === 'canvas_node') {
-    return router.push({ name: 'Canvas', query: { path: node.path, node: locator?.objectId } })
+    return router.push({ name: 'Canvas', query: { path, node: locator?.objectId } })
   }
   if (node.objectType === 'opml' || node.objectType === 'opml_node') {
-    return router.push({ name: 'MindMap', query: { path: node.path, node: locator?.objectId } })
+    return router.push({ name: 'MindMap', query: { path, node: locator?.objectId } })
   }
-  return router.push({ name: 'LibraryMode', query: { path: node.path } })
+  return router.push({ name: 'LibraryMode', query: { path } })
 }
-const openPath = (path: string) => router.push({ name: 'LibraryMode', query: { path } })
+const openPath = (path: string) => router.push({ name: 'LibraryMode', query: { path: displayWorkspacePath(path) } })
 const handleHealthRepaired = () => loadGraph()
 
 const sendToCanvas = async (node: GraphNode) => {
@@ -722,6 +724,7 @@ const simulate = () => {
   }
 
   // 引力
+  const desiredLinkDistance = 120
   for (const e of edges) {
     const s = nodeMap.get(e.source)
     const t = nodeMap.get(e.target)
@@ -729,7 +732,7 @@ const simulate = () => {
     const dx = (t.x || 0) - (s.x || 0)
     const dy = (t.y || 0) - (s.y || 0)
     const dist = Math.sqrt(dx * dx + dy * dy) || 1
-    const f = dist * 0.015
+    const f = (dist - desiredLinkDistance) * 0.015
     s.vx = (s.vx || 0) + (dx / dist) * f
     s.vy = (s.vy || 0) + (dy / dist) * f
     t.vx = (t.vx || 0) - (dx / dist) * f

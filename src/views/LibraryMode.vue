@@ -84,11 +84,14 @@
                 <div v-else-if="searchQuery.trim()" class="knowledge-search-results">
                   <div v-if="knowledgeSearchRunning" class="knowledge-search-state">正在搜索 Markdown、Canvas、PDF 与数据表…</div>
                   <div v-else-if="!visibleKnowledgeSearchResults.length" class="knowledge-search-state">没有找到匹配内容</div>
-                  <button v-for="(result, index) in visibleKnowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.annotationId || index}`" class="knowledge-search-result" @click="openKnowledgeSearchResult(result)">
-                    <span class="knowledge-result-head"><strong>{{ result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '') }}</strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
-                    <span class="knowledge-result-context">{{ result.context }}</span>
-                    <small v-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
-                  </button>
+                  <div v-for="(result, index) in visibleKnowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.annotationId || index}`" class="knowledge-search-result">
+                    <button class="knowledge-result-open" @click="openKnowledgeSearchResult(result)">
+                      <span class="knowledge-result-head"><strong>{{ result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '') }}</strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
+                      <span class="knowledge-result-context">{{ result.context }}</span>
+                      <small v-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
+                    </button>
+                    <RelationSummaryBadge v-if="relationSummary(result.path)" :summary="relationSummary(result.path)!" compact @open="openRelationGraph(result.path)" />
+                  </div>
                 </div>
                 <n-tree 
                   v-else
@@ -345,6 +348,12 @@
     <div class="editor-main" :class="{ 'zen-mode': store.isZen }">
       <div class="tabs-bar" v-if="!store.isZen && store.tabs.length > 0">
         <WorkspaceTabs />
+        <RelationSummaryBadge
+          v-if="activeRelationSummary"
+          class="active-relation-summary"
+          :summary="activeRelationSummary"
+          @open="openActiveRelationGraph"
+        />
         <div v-if="!activeEmbeddedEditor" class="tab-actions">
           <div class="action-btn-group">
             <n-button quaternary circle size="small" @click="refreshCurrentFile" :disabled="!activeTabId" title="从磁盘同步内容">
@@ -506,6 +515,7 @@ import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
 import LocalGraph from '../components/LocalGraph.vue'
 import MarkdownChartEmbeds from '../components/MarkdownChartEmbeds.vue'
+import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -873,6 +883,8 @@ const searchObjectTypes = ref<string[]>([])
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
 const knowledgeSearchRunning = ref(false)
 let knowledgeSearchGeneration = 0
+let relationSummaryGeneration = 0
+const relationSummaries = ref<Record<string, GraphRelationSummary>>({})
 const knowledgeIndexStatus = ref<KnowledgeIndexStatus>({
   state: 'missing', schemaVersion: 1, sourceCount: 0, objectCount: 0,
   relationCount: 0, progress: 0, cacheBytes: 0,
@@ -884,6 +896,37 @@ const searchFormatOptions = FILE_FORMATS
 const visibleKnowledgeSearchResults = computed(() => searchObjectTypes.value.length
   ? knowledgeSearchResults.value.filter(result => searchObjectTypes.value.includes(result.objectType))
   : knowledgeSearchResults.value)
+const relationSummary = (path: string) => relationSummaries.value[path]
+const activeRelationSummary = computed(() => activeTabId.value ? relationSummary(activeTabId.value) : undefined)
+const refreshRelationSummaries = async () => {
+  const generation = ++relationSummaryGeneration
+  const paths = [...new Set([
+    ...(activeTabId.value ? [activeTabId.value] : []),
+    ...knowledgeSearchResults.value.map(result => result.path),
+  ])].slice(0, 100)
+  if (!store.libraryPath || !paths.length) {
+    relationSummaries.value = {}
+    return
+  }
+  try {
+    const summaries = await invoke<GraphRelationSummary[]>('summarize_graph_relations', {
+      libraryRoot: store.libraryPath,
+      paths,
+    })
+    if (generation === relationSummaryGeneration) {
+      relationSummaries.value = Object.fromEntries(summaries.map(summary => [summary.path, summary]))
+    }
+  } catch {
+    if (generation === relationSummaryGeneration) relationSummaries.value = {}
+  }
+}
+const openRelationGraph = (path: string) => {
+  const summary = relationSummary(path)
+  if (summary) router.push({ name: 'Graph', query: { root: summary.nodeId } })
+}
+const openActiveRelationGraph = () => {
+  if (activeTabId.value) openRelationGraph(activeTabId.value)
+}
 const librarySavedSearches = computed(() => store.savedSearches
   .filter(search => search.libraryPath === store.libraryPath)
   .sort((left, right) => right.createdAt - left.createdAt))
@@ -1158,6 +1201,7 @@ const handleNodeSelect = (keys: string[]) => {
     }
     const title = fileDisplayName(lastKey) || format.label
     store.addTab({ id: lastKey, title, path: lastKey, isDirty: false })
+    void refreshRelationSummaries()
   } else if (format) {
     router.push({ name: format.routeName, query: { path: lastKey } })
   }
@@ -2372,7 +2416,19 @@ const deleteKnowledgeIndex = async () => {
   finally { knowledgeIndexBusy.value = false }
 }
 
-watch(() => store.libraryPath, (newPath) => { if (newPath) { searchQuery.value = ''; searchObjectTypes.value = []; refreshLibrary(); fetchLibStats(); fetchAllTags(); refreshGitStatus(); void refreshKnowledgeIndexStatus() } })
+watch(() => store.libraryPath, (newPath) => {
+  relationSummaries.value = {}
+  if (newPath) {
+    searchQuery.value = ''
+    searchObjectTypes.value = []
+    refreshLibrary()
+    fetchLibStats()
+    fetchAllTags()
+    refreshGitStatus()
+    void refreshKnowledgeIndexStatus()
+    void refreshRelationSummaries()
+  }
+})
 // 从设置页返回后刷新 Git 状态
 watch(() => store.libraries, () => { nextTick(() => refreshGitStatus()) }, { deep: true })
 
@@ -2384,6 +2440,7 @@ watch(searchQuery, (q) => {
   if (!q.trim()) {
     knowledgeSearchResults.value = []
     knowledgeSearchRunning.value = false
+    void refreshRelationSummaries()
     refreshLibrary()
     return
   }
@@ -2403,6 +2460,7 @@ watch(searchQuery, (q) => {
         if (generation !== knowledgeSearchGeneration) return
         knowledgeSearchResults.value = results
       }
+      await refreshRelationSummaries()
     } catch (e) {
       if (generation === knowledgeSearchGeneration) knowledgeSearchResults.value = []
     } finally {
@@ -2415,6 +2473,7 @@ watch(activeTabId, (newId, oldId) => {
     const t = tabs.value.find(item => item.id === newId); 
     if (t && findFileFormat(t.path)?.routeName === 'LibraryMode') loadFileToEditor(t.path)
     if (activeSidebarTab.value === 'links') fetchLinks()
+    void refreshRelationSummaries()
 
     // 侧边栏自动同步逻辑
     selectedKeys.value = [newId]
@@ -2677,8 +2736,9 @@ watch(activeTabId, (newId, oldId) => {
 .tags-search { margin-bottom: 6px; }
 .knowledge-search-results { display: flex; flex-direction: column; gap: 6px; padding: 6px 8px 14px; overflow-y: auto; }
 .knowledge-search-state { padding: 24px 10px; color: var(--theme-text-secondary); font-size: 11px; text-align: center; line-height: 1.6; }
-.knowledge-search-result { display: flex; flex-direction: column; gap: 5px; width: 100%; padding: 9px 10px; border: 1px solid rgba(0,0,0,.07); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: rgba(var(--theme-primary-rgb),.035); cursor: pointer; text-align: left; }
+.knowledge-search-result { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 6px; width: 100%; padding: 4px 6px 4px 0; border: 1px solid rgba(0,0,0,.07); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: rgba(var(--theme-primary-rgb),.035); }
 .knowledge-search-result:hover { border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }
+.knowledge-result-open { min-width: 0; display: flex; flex-direction: column; gap: 5px; padding: 5px 4px 5px 10px; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; }
 .knowledge-result-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.knowledge-result-head strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }.knowledge-result-head i { flex: none; color: var(--theme-primary); font-size: 8px; font-style: normal; font-weight: 700; }
 .knowledge-result-context { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: 9px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.knowledge-search-result small { color: var(--theme-primary); font-size: 8px; }
 .knowledge-index-strip { min-height: 30px; display: grid; grid-template-columns:16px minmax(0,auto) minmax(0,1fr) auto; align-items:center; gap:6px; padding:0 8px 0 12px; border-bottom:var(--theme-border); color:var(--theme-text-secondary); background:var(--theme-surface); font-size:9px; }
@@ -3185,6 +3245,7 @@ watch(activeTabId, (newId, oldId) => {
 
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
 .tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; gap: 12px; }
+.active-relation-summary { flex: none; }
 
 .tab-actions {
   display: flex;
