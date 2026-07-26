@@ -40,6 +40,7 @@ $utf8 = [System.Text.UTF8Encoding]::new($false)
 [System.IO.File]::WriteAllText((Join-Path $library "damaged.json"), "{`"valid`":true}`n", $utf8)
 [System.IO.File]::WriteAllText((Join-Path $library "G8 Source.md"), "# G8 Source`n`n[[G8 Target]]`n`nG8_RELATION_SEARCH_MARKER`n", $utf8)
 [System.IO.File]::WriteAllText((Join-Path $library "G8 Target.md"), "# G8 Target`n", $utf8)
+[System.IO.File]::WriteAllText((Join-Path $library "G8 Plan.opml"), "<?xml version=`"1.0`" encoding=`"UTF-8`"?><opml version=`"2.0`"><head><title>G8 Planning</title></head><body><outline text=`"Goal`" _longeditId=`"goal`"><outline text=`"Evidence`" _longeditId=`"evidence`"/></outline></body></opml>", $utf8)
 
 $largePath = Join-Path $library "large.txt"
 $largeStream = [System.IO.StreamWriter]::new($largePath, $false, $utf8)

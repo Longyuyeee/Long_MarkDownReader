@@ -18,6 +18,7 @@ use std::sync::LazyLock;
 static RE_TAG: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(r"(?:^|\s)#([^\s#`\[\]()]+)").unwrap());
 const MAX_RELATION_SUMMARY_PATHS: usize = 100;
+const MAX_RELATION_CONTEXT_ITEMS: usize = 80;
 
 #[derive(Serialize, Clone)]
 pub struct GraphData {
@@ -38,6 +39,47 @@ pub struct GraphRelationSummary {
     pub isolated: bool,
 }
 
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphRelationEvidence {
+    pub context: String,
+    pub line: usize,
+    pub syntax: String,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphContextNode {
+    pub id: String,
+    pub title: String,
+    pub path: String,
+    pub object_type: String,
+    pub location_label: Option<String>,
+    pub locator: Option<GraphObjectLocator>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphContextRelation {
+    pub source: GraphContextNode,
+    pub target: GraphContextNode,
+    pub relation_type: String,
+    pub relation_class: String,
+    pub direction: String,
+    pub directed: bool,
+    pub evidence: Vec<GraphRelationEvidence>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphRelationContext {
+    pub path: String,
+    pub node: Option<GraphContextNode>,
+    pub relations: Vec<GraphContextRelation>,
+    pub indexed: bool,
+    pub truncated: bool,
+}
+
 #[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct GraphNode {
@@ -56,7 +98,7 @@ pub struct GraphNode {
     pub(crate) location_label: Option<String>,
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GraphObjectLocator {
     pub(crate) kind: String,
@@ -341,6 +383,122 @@ pub async fn summarize_graph_relations(
         }
     }
     Ok(summaries)
+}
+
+fn context_node(node: &GraphNode, center_path: &str, requested_path: &str) -> GraphContextNode {
+    GraphContextNode {
+        id: node.id.clone(),
+        title: node.title.clone(),
+        path: if node.path == center_path {
+            requested_path.to_string()
+        } else {
+            node.path.clone()
+        },
+        object_type: node.object_type.clone(),
+        location_label: node.location_label.clone(),
+        locator: node.locator.clone(),
+    }
+}
+
+fn relation_class(edge: &GraphEdge, source: &GraphNode, target: &GraphNode) -> String {
+    if source.object_type.starts_with("opml") || target.object_type.starts_with("opml") {
+        "planning".into()
+    } else if matches!(edge.relation_type.as_str(), "contains" | "embeds") {
+        "structure".into()
+    } else if !edge.mentions.is_empty() {
+        "fact".into()
+    } else {
+        "semantic".into()
+    }
+}
+
+pub(crate) fn relation_context(
+    graph: &GraphData,
+    center_path: &str,
+    requested_path: &str,
+) -> GraphRelationContext {
+    let node_by_id: HashMap<&str, &GraphNode> = graph
+        .nodes
+        .iter()
+        .map(|node| (node.id.as_str(), node))
+        .collect();
+    let root = graph
+        .nodes
+        .iter()
+        .find(|node| node.id == center_path && node.parent_id.is_none());
+    let scope: HashSet<&str> = graph
+        .nodes
+        .iter()
+        .filter(|node| node.path == center_path)
+        .map(|node| node.id.as_str())
+        .collect();
+    let mut relations = Vec::new();
+    let mut truncated = false;
+    for edge in graph
+        .edges
+        .iter()
+        .filter(|edge| scope.contains(edge.source.as_str()) || scope.contains(edge.target.as_str()))
+    {
+        if relations.len() >= MAX_RELATION_CONTEXT_ITEMS {
+            truncated = true;
+            break;
+        }
+        let (Some(source), Some(target)) = (
+            node_by_id.get(edge.source.as_str()).copied(),
+            node_by_id.get(edge.target.as_str()).copied(),
+        ) else {
+            continue;
+        };
+        let direction = if !edge.directed {
+            "related"
+        } else if scope.contains(edge.source.as_str()) && scope.contains(edge.target.as_str()) {
+            "internal"
+        } else if scope.contains(edge.source.as_str()) {
+            "outgoing"
+        } else {
+            "incoming"
+        };
+        relations.push(GraphContextRelation {
+            source: context_node(source, center_path, requested_path),
+            target: context_node(target, center_path, requested_path),
+            relation_type: edge.relation_type.clone(),
+            relation_class: relation_class(edge, source, target),
+            direction: direction.into(),
+            directed: edge.directed,
+            evidence: edge
+                .mentions
+                .iter()
+                .take(3)
+                .map(|mention| GraphRelationEvidence {
+                    context: mention.context.clone(),
+                    line: mention.line,
+                    syntax: mention.syntax.clone(),
+                })
+                .collect(),
+        });
+    }
+    GraphRelationContext {
+        path: requested_path.to_string(),
+        node: root.map(|node| context_node(node, center_path, requested_path)),
+        relations,
+        indexed: root.is_some(),
+        truncated,
+    }
+}
+
+#[tauri::command]
+pub async fn get_graph_relation_context(
+    library_root: String,
+    path: String,
+) -> Result<GraphRelationContext, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let resolved = guard.resolve_existing(&path)?;
+    if !resolved.is_file() {
+        return Err("关系上下文目标必须是文件".into());
+    }
+    let canonical_path = resolved.to_string_lossy().into_owned();
+    let graph = build_link_graph(guard.root().to_string_lossy().into_owned()).await?;
+    Ok(relation_context(&graph, &canonical_path, &path))
 }
 
 fn build_filename_index(dir: &Path, index: &mut HashMap<String, Vec<String>>) {
@@ -2104,6 +2262,53 @@ mod tests {
         let summaries = relation_summaries(&graph, &["two".to_string(), "outside".to_string()]);
         assert_eq!(summaries.len(), 1);
         assert_eq!(summaries[0].path, "two");
+    }
+
+    #[test]
+    fn relation_context_explains_fact_structure_and_planning_relations() {
+        let mut source = graph_node("source");
+        let target = graph_node("target");
+        let mut opml = graph_node("outline");
+        opml.object_type = "opml".into();
+        let mut topic = graph_node("topic");
+        topic.path = "outline".into();
+        topic.object_type = "opml_node".into();
+        topic.parent_id = Some("outline".into());
+        let mention = extract_wikilink_mentions("Evidence: [[target]]").remove(0);
+        source.search_text = "Evidence".into();
+        let graph = GraphData {
+            nodes: vec![source, target, opml, topic],
+            edges: vec![
+                GraphEdge::wikilink("source".into(), "target".into(), mention),
+                GraphEdge::structural("outline".into(), "topic".into(), "contains"),
+            ],
+        };
+        let source_context = relation_context(&graph, "source", "Source.md");
+        assert!(source_context.indexed);
+        assert_eq!(source_context.path, "Source.md");
+        assert_eq!(source_context.relations[0].relation_class, "fact");
+        assert_eq!(source_context.relations[0].direction, "outgoing");
+        assert_eq!(source_context.relations[0].evidence[0].line, 1);
+
+        let outline_context = relation_context(&graph, "outline", "Outline.opml");
+        assert_eq!(outline_context.relations[0].relation_class, "planning");
+        assert_eq!(outline_context.relations[0].direction, "internal");
+    }
+
+    #[test]
+    fn relation_context_returns_safe_unindexed_state_for_managed_formats() {
+        let context = relation_context(
+            &GraphData {
+                nodes: Vec::new(),
+                edges: Vec::new(),
+            },
+            "Config.json",
+            "Config.json",
+        );
+        assert!(!context.indexed);
+        assert!(context.node.is_none());
+        assert!(context.relations.is_empty());
+        assert!(!context.truncated);
     }
 
     #[test]

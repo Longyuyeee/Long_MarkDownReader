@@ -188,6 +188,7 @@ const jsonFile = path.join(library, 'damaged.json')
 const largeFile = path.join(library, 'large.txt')
 const logFile = path.join(library, 'runtime.log')
 const relationSourceFile = path.join(library, 'G8 Source.md')
+const relationPlanFile = path.join(library, 'G8 Plan.opml')
 const checks = []
 
 await navigate(routeFor('library', relationSourceFile), '.library-mode')
@@ -199,7 +200,18 @@ await waitFor(
 )
 checks.push({ id: 'g8-current-file-relation-summary', status: 'passed' })
 await capture('g8-current-file-relation-summary.jpg')
-await clickText('.active-relation-summary', '关系')
+await clickText('.relation-context-trigger', '关系上下文')
+await waitFor(
+  `document.querySelector('.relation-context-panel')?.textContent?.includes('G8 Source') === true
+    && document.querySelector('.relation-context-panel')?.textContent?.includes('G8 Target') === true
+    && document.querySelector('.relation-context-panel')?.textContent?.includes('事实') === true
+    && document.querySelector('.relation-context-panel blockquote')?.textContent?.includes('[[G8 Target]]') === true`,
+  'file relation context with evidence',
+  180,
+)
+checks.push({ id: 'g8-file-relation-context', status: 'passed' })
+await capture('g8-file-relation-context.jpg')
+await clickText('.context-actions button', '以当前文件为中心')
 await waitFor(
   `location.hash.startsWith('#/graph?root=')
     && document.querySelector('.node-details h3')?.textContent?.includes('G8 Source') === true`,
@@ -233,6 +245,22 @@ await waitFor(
 )
 checks.push({ id: 'g8-search-relation-summary', status: 'passed' })
 await capture('g8-search-relation-summary.jpg')
+
+await navigate(`#/mindmap?path=${encodeURIComponent(relationPlanFile)}`, '.mindmap-page')
+await waitFor(`document.querySelector('.relation-context-trigger') !== null`, 'OPML relation context entry')
+if (!(await evaluate(`document.querySelector('.relation-context-panel') !== null`))) {
+  await clickText('.relation-context-trigger', '关系上下文')
+}
+await waitFor(
+  `document.querySelector('.relation-context-panel')?.textContent?.includes('G8 Planning') === true
+    && document.querySelector('.relation-context-panel')?.textContent?.includes('规划') === true
+    && document.querySelector('.relation-context-panel')?.textContent?.includes('Evidence') === true`,
+  'OPML planning relation context',
+  180,
+)
+checks.push({ id: 'g8-opml-planning-context', status: 'passed' })
+await capture('g8-opml-planning-context.jpg')
+await clickText('.relation-context-panel > header button', '')
 
 await navigate(routeFor('text', serviceIni), '.text-workspace')
 const embeddedShellState = await evaluate(`({
@@ -484,6 +512,8 @@ const evidenceFiles = [
   'g8-centered-graph-navigation.jpg',
   'g8-workspace-relation-summary.jpg',
   'g8-search-relation-summary.jpg',
+  'g8-file-relation-context.jpg',
+  'g8-opml-planning-context.jpg',
   'text-save-and-reopen.jpg',
   'external-conflict-detected.jpg',
   'env-default-masked.jpg',

@@ -1,0 +1,251 @@
+<template>
+  <div v-if="libraryRoot && filePath" class="relation-context-host" :class="{ open }">
+    <button
+      class="relation-context-trigger"
+      type="button"
+      :aria-expanded="open"
+      aria-controls="file-relation-context"
+      title="在当前工作面查看文件关系"
+      @click="toggle"
+    >
+      <NetworkIcon />
+      <span>关系上下文</span>
+      <b v-if="context?.relations.length">{{ context.relations.length }}</b>
+    </button>
+    <aside v-if="open" id="file-relation-context" class="relation-context-panel" aria-label="文件关系上下文">
+      <header>
+        <div>
+          <small>文件上下文</small>
+          <strong>{{ context?.node?.title || displayName }}</strong>
+          <span>{{ context?.node ? objectTypeLabel(context.node.objectType) : '当前格式尚未进入图谱索引' }}</span>
+        </div>
+        <button type="button" aria-label="关闭关系上下文" @click="open = false">×</button>
+      </header>
+
+      <div class="context-actions">
+        <button type="button" :disabled="!context?.node" @click="openCenteredGraph">
+          <NetworkIcon />以当前文件为中心
+        </button>
+        <button type="button" :disabled="loading" @click="loadContext">
+          <RefreshIcon />刷新
+        </button>
+      </div>
+
+      <div v-if="loading" class="context-state" role="status">正在分析关系…</div>
+      <div v-else-if="error" class="context-state error">
+        <strong>关系上下文暂不可用</strong>
+        <span>{{ error }}</span>
+        <button type="button" @click="loadContext">重试</button>
+      </div>
+      <div v-else-if="context && !context.indexed" class="context-state empty">
+        <strong>尚未提取这种格式的关系</strong>
+        <span>文件仍可正常管理和编辑；后续关系提取不会执行其中的代码或配置。</span>
+      </div>
+      <template v-else-if="context">
+        <nav class="context-filters" aria-label="关系类别">
+          <button
+            v-for="item in filters"
+            :key="item.id"
+            type="button"
+            :class="{ active: filter === item.id }"
+            @click="filter = item.id"
+          >{{ item.label }} <b>{{ item.count }}</b></button>
+        </nav>
+        <div v-if="visibleRelations.length" class="relation-list">
+          <article v-for="(relation, index) in visibleRelations" :key="relationKey(relation, index)" class="relation-card">
+            <div class="relation-meta">
+              <span :class="`class-${relation.relationClass}`">{{ relationClassLabel(relation.relationClass) }}</span>
+              <b>{{ relationTypeLabel(relation.relationType) }}</b>
+              <small>{{ directionLabel(relation.direction) }}</small>
+            </div>
+            <button class="relation-route" type="button" @click="openNode(focusNode(relation))">
+              <span>{{ relation.source.title }}</span>
+              <ArrowRightIcon v-if="relation.directed" />
+              <MinusIcon v-else />
+              <span>{{ relation.target.title }}</span>
+            </button>
+            <p v-if="focusNode(relation).locationLabel">{{ focusNode(relation).locationLabel }}</p>
+            <blockquote v-if="relation.evidence[0]">
+              <span>{{ relation.evidence[0].context }}</span>
+              <small>第 {{ relation.evidence[0].line }} 行 · {{ relation.evidence[0].syntax }}</small>
+            </blockquote>
+          </article>
+        </div>
+        <div v-else class="context-state empty">
+          <strong>{{ filter === 'all' ? '当前文件还没有关系' : '没有这一类关系' }}</strong>
+          <span>{{ filter === 'all' ? '可以通过双向链接、批注、视图、画布节点或思维导图层级建立上下文。' : '切换“全部”查看其他关系。' }}</span>
+        </div>
+        <footer v-if="context.truncated">仅展示前 80 条关系；完整网络请进入知识图谱。</footer>
+      </template>
+    </aside>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { invoke } from '@tauri-apps/api/core'
+import { useRouter } from 'vue-router'
+import { ArrowRight as ArrowRightIcon, Minus as MinusIcon, Network as NetworkIcon, RefreshCw as RefreshIcon } from 'lucide-vue-next'
+
+interface GraphObjectLocator { kind: string; objectId: string; page?: number }
+interface GraphContextNode {
+  id: string
+  title: string
+  path: string
+  objectType: string
+  locationLabel?: string
+  locator?: GraphObjectLocator
+}
+interface GraphRelationEvidence { context: string; line: number; syntax: string }
+interface GraphContextRelation {
+  source: GraphContextNode
+  target: GraphContextNode
+  relationType: string
+  relationClass: 'fact' | 'structure' | 'planning' | 'semantic'
+  direction: 'incoming' | 'outgoing' | 'internal' | 'related'
+  directed: boolean
+  evidence: GraphRelationEvidence[]
+}
+interface GraphRelationContext {
+  path: string
+  node?: GraphContextNode
+  relations: GraphContextRelation[]
+  indexed: boolean
+  truncated: boolean
+}
+
+const props = defineProps<{ libraryRoot: string; filePath: string }>()
+const router = useRouter()
+const open = ref(sessionStorage.getItem('longedit.relation-context.open') === 'true')
+const loading = ref(false)
+const error = ref('')
+const context = ref<GraphRelationContext>()
+const filter = ref<'all' | 'fact' | 'structure' | 'planning' | 'semantic'>('all')
+let requestId = 0
+
+const displayPath = (path: string) => path.replace(/^\\\\\?\\/, '')
+const displayName = computed(() => displayPath(props.filePath).split(/[\\/]/).pop() || '当前文件')
+const visibleRelations = computed(() => context.value?.relations.filter(item => filter.value === 'all' || item.relationClass === filter.value) || [])
+const filters = computed(() => {
+  const relations = context.value?.relations || []
+  return [
+    { id: 'all' as const, label: '全部', count: relations.length },
+    { id: 'fact' as const, label: '事实', count: relations.filter(item => item.relationClass === 'fact').length },
+    { id: 'structure' as const, label: '结构', count: relations.filter(item => item.relationClass === 'structure').length },
+    { id: 'planning' as const, label: '规划', count: relations.filter(item => item.relationClass === 'planning').length },
+    { id: 'semantic' as const, label: '语义', count: relations.filter(item => item.relationClass === 'semantic').length },
+  ].filter(item => item.id === 'all' || item.count)
+})
+
+const loadContext = async () => {
+  if (!props.libraryRoot || !props.filePath) return
+  const currentRequest = ++requestId
+  loading.value = true
+  error.value = ''
+  try {
+    const result = await invoke<GraphRelationContext>('get_graph_relation_context', {
+      libraryRoot: props.libraryRoot,
+      path: props.filePath,
+    })
+    if (currentRequest === requestId) context.value = result
+  } catch (reason) {
+    if (currentRequest === requestId) {
+      context.value = undefined
+      error.value = String(reason)
+    }
+  } finally {
+    if (currentRequest === requestId) loading.value = false
+  }
+}
+
+const toggle = () => {
+  open.value = !open.value
+  sessionStorage.setItem('longedit.relation-context.open', String(open.value))
+  if (open.value) void loadContext()
+}
+const relationKey = (relation: GraphContextRelation, index: number) => `${relation.source.id}:${relation.target.id}:${relation.relationType}:${index}`
+const focusNode = (relation: GraphContextRelation) => {
+  const currentId = context.value?.node?.id
+  if (relation.source.id === currentId) return relation.target
+  if (relation.target.id === currentId) return relation.source
+  if (displayPath(relation.source.path) === displayPath(props.filePath)
+    && displayPath(relation.target.path) !== displayPath(relation.source.path)) return relation.target
+  return relation.target
+}
+const openCenteredGraph = () => {
+  if (context.value?.node) router.push({ name: 'Graph', query: { root: context.value.node.id } })
+}
+const openNode = (node: GraphContextNode) => {
+  const path = displayPath(node.path)
+  if (node.objectType === 'pdf' || node.objectType === 'pdf_annotation') {
+    return router.push({ name: 'Pdf', query: { path, page: node.locator?.page, annotation: node.locator?.objectId } })
+  }
+  if (node.objectType === 'table' || node.objectType === 'table_view') {
+    return router.push({ name: 'Table', query: { path, view: node.locator?.objectId } })
+  }
+  if (node.objectType === 'canvas' || node.objectType === 'canvas_node') {
+    return router.push({ name: 'Canvas', query: { path, node: node.locator?.objectId } })
+  }
+  if (node.objectType === 'opml' || node.objectType === 'opml_node') {
+    return router.push({ name: 'MindMap', query: { path, node: node.locator?.objectId } })
+  }
+  return router.push({ name: 'LibraryMode', query: { path } })
+}
+const objectTypeLabel = (type: string) => ({
+  markdown: 'Markdown 笔记', pdf: 'PDF 文档', table: '数据表', canvas: 'Canvas 画布', opml: 'OPML 思维导图',
+}[type] || type)
+const relationClassLabel = (value: string) => ({ fact: '事实', structure: '结构', planning: '规划', semantic: '语义' }[value] || value)
+const relationTypeLabel = (value: string) => ({
+  'links-to': '链接到', related: '相关', contains: '包含', embeds: '嵌入', annotates: '批注引用',
+  supports: '支持', contradicts: '反驳', depends_on: '依赖', derived_from: '源自',
+}[value] || value)
+const directionLabel = (value: string) => ({ incoming: '入链', outgoing: '出链', internal: '文件内部', related: '双向' }[value] || value)
+
+watch(() => [props.libraryRoot, props.filePath] as const, () => {
+  context.value = undefined
+  error.value = ''
+  filter.value = 'all'
+  if (open.value) void loadContext()
+}, { immediate: true })
+</script>
+
+<style scoped>
+.relation-context-host { position: fixed; z-index: 780; top: 76px; right: 0; bottom: 14px; pointer-events: none; }
+.relation-context-trigger { pointer-events: auto; position: absolute; top: 18px; right: 0; min-height: 34px; display: flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid rgba(var(--theme-primary-rgb), .24); border-right: 0; border-radius: 10px 0 0 10px; color: var(--theme-primary); background: var(--theme-surface); box-shadow: var(--theme-shadow-sm); font-size: 11px; cursor: pointer; white-space: nowrap; }
+.relation-context-host.open .relation-context-trigger { right: 326px; }
+.relation-context-trigger svg { width: 15px; }
+.relation-context-trigger b { min-width: 17px; padding: 1px 5px; border-radius: 999px; background: rgba(var(--theme-primary-rgb), .12); font-size: 9px; }
+.relation-context-panel { pointer-events: auto; width: 326px; height: 100%; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--theme-border); border-right: 0; border-radius: 14px 0 0 14px; background: var(--theme-surface); box-shadow: -14px 16px 42px rgba(15, 23, 42, .16); color: var(--theme-text); }
+.relation-context-panel > header { display: flex; justify-content: space-between; gap: 12px; padding: 17px 16px 13px; border-bottom: 1px solid var(--theme-border); }
+.relation-context-panel > header div { display: grid; min-width: 0; gap: 3px; }
+.relation-context-panel > header small { color: var(--theme-primary); font-size: 9px; letter-spacing: .12em; }
+.relation-context-panel > header strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.relation-context-panel > header span { color: var(--theme-text-secondary); font-size: 10px; }
+.relation-context-panel > header button { align-self: start; border: 0; background: transparent; color: var(--theme-text-secondary); font-size: 20px; cursor: pointer; }
+.context-actions { display: flex; gap: 7px; padding: 10px 12px; border-bottom: 1px solid var(--theme-border); }
+.context-actions button, .context-state button { display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px; border: 1px solid var(--theme-border); border-radius: 7px; background: var(--theme-surface-muted); color: var(--theme-text); font-size: 10px; cursor: pointer; }
+.context-actions button:first-child { color: var(--theme-primary); }
+.context-actions svg { width: 13px; }
+.context-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.context-filters { display: flex; gap: 5px; padding: 9px 12px; overflow-x: auto; border-bottom: 1px solid var(--theme-border); }
+.context-filters button { display: flex; gap: 4px; padding: 4px 7px; border: 1px solid transparent; border-radius: 999px; color: var(--theme-text-secondary); background: transparent; font-size: 9px; cursor: pointer; white-space: nowrap; }
+.context-filters button.active { border-color: rgba(var(--theme-primary-rgb), .24); color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .07); }
+.relation-list { flex: 1; overflow: auto; padding: 10px 12px 18px; }
+.relation-card { padding: 10px; border: 1px solid var(--theme-border); border-radius: 9px; background: var(--theme-surface-muted); }
+.relation-card + .relation-card { margin-top: 8px; }
+.relation-meta { display: flex; align-items: center; gap: 5px; font-size: 8px; }
+.relation-meta span { padding: 2px 5px; border-radius: 4px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .08); }
+.relation-meta .class-planning { color: #8b5cf6; background: rgba(139, 92, 246, .1); }
+.relation-meta .class-structure { color: #0284c7; background: rgba(2, 132, 199, .1); }
+.relation-meta small { margin-left: auto; color: var(--theme-text-secondary); }
+.relation-route { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 14px minmax(0, 1fr); align-items: center; gap: 5px; margin-top: 8px; padding: 0; border: 0; background: transparent; color: var(--theme-text); text-align: left; cursor: pointer; }
+.relation-route span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.relation-route svg { width: 12px; color: var(--theme-primary); }
+.relation-card p { margin: 5px 0 0; color: var(--theme-text-secondary); font-size: 9px; }
+.relation-card blockquote { display: grid; gap: 4px; margin: 8px 0 0; padding: 7px 8px; border-left: 2px solid rgba(var(--theme-primary-rgb), .35); color: var(--theme-text-secondary); background: rgba(var(--theme-primary-rgb), .035); font-size: 9px; }
+.relation-card blockquote small { opacity: .78; }
+.context-state { display: grid; place-content: center; gap: 7px; min-height: 150px; padding: 24px; color: var(--theme-text-secondary); text-align: center; font-size: 10px; }
+.context-state strong { color: var(--theme-text); font-size: 12px; }
+.context-state.error strong { color: var(--theme-danger, #dc2626); }
+.relation-context-panel > footer { padding: 8px 12px; border-top: 1px solid var(--theme-border); color: var(--theme-text-secondary); font-size: 9px; }
+</style>

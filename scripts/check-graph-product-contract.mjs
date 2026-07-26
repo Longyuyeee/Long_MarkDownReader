@@ -2,10 +2,12 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [graphCommand, tauriLib, badge, workspace, library, graphView] = await Promise.all([
+const [graphCommand, tauriLib, badge, contextPanel, app, workspace, library, graphView] = await Promise.all([
   read('src-tauri/src/commands/graph.rs'),
   read('src-tauri/src/lib.rs'),
   read('src/components/RelationSummaryBadge.vue'),
+  read('src/components/FileRelationContext.vue'),
+  read('src/App.vue'),
   read('src/views/WorkspaceHome.vue'),
   read('src/views/LibraryMode.vue'),
   read('src/components/GraphView.vue'),
@@ -37,10 +39,28 @@ requireText(library, "query: { root: summary.nodeId }", 'library summaries must 
 requireText(graphView, 'route.query.root', 'the graph workspace must consume centered navigation')
 requireText(graphView, 'displayWorkspacePath', 'the graph workspace must not expose Windows internal path prefixes')
 requireText(graphView, 'desiredLinkDistance', 'the graph layout must preserve a readable linked-node distance')
+requireText(graphCommand, 'MAX_RELATION_CONTEXT_ITEMS', 'G8-2 relation context must remain bounded')
+requireText(graphCommand, 'GraphRelationContext', 'G8-2 must expose a typed relation context')
+requireText(graphCommand, 'GraphRelationEvidence', 'G8-2 must preserve source evidence')
+requireText(graphCommand, '"planning"', 'G8-2 must distinguish planning hierarchy')
+requireText(graphCommand, '"structure"', 'G8-2 must distinguish structural relations')
+requireText(graphCommand, '"fact"', 'G8-2 must distinguish evidence-backed facts')
+requireText(graphCommand, 'relation_context_explains_fact_structure_and_planning_relations', 'G8-2 relation semantics must have Rust regression coverage')
+requireText(graphCommand, 'relation_context_returns_safe_unindexed_state_for_managed_formats', 'G8-2 must cover formats without extractors without inventing relations')
+requireText(tauriLib, 'get_graph_relation_context', 'G8-2 context command must be registered with Tauri')
+requireText(contextPanel, "'get_graph_relation_context'", 'G8-2 file context must consume the typed backend command')
+requireText(contextPanel, 'relationClassLabel', 'G8-2 UI must explain relation classes')
+requireText(contextPanel, 'relation.evidence[0].context', 'G8-2 UI must expose relation evidence')
+requireText(contextPanel, '以当前文件为中心', 'G8-2 context must preserve centered graph navigation')
+requireText(contextPanel, '尚未提取这种格式的关系', 'G8-2 must state unsupported extraction honestly')
+requireText(app, '<FileRelationContext', 'G8-2 context must be mounted at the shared application workspace layer')
+for (const route of ['LibraryMode', 'TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'TomlEditor', 'Pdf', 'Table', 'Canvas', 'MindMap']) {
+  requireText(app, `'${route}'`, `G8-2 shared context route coverage is missing ${route}`)
+}
 
 if (failures.length) {
   console.error(`Graph product contract check failed:\n- ${failures.join('\n- ')}`)
   process.exitCode = 1
 } else {
-  console.log('Graph product contract check passed: bounded summaries, workspace/current/search visibility, and centered navigation.')
+  console.log('Graph product contract check passed: bounded summaries, typed cross-format context, evidence, relation classes, and centered navigation.')
 }

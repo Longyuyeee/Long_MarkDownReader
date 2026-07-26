@@ -24,6 +24,11 @@
               </div>
             </transition>
           </router-view>
+          <FileRelationContext
+            v-if="activeContextPath"
+            :library-root="store.libraryPath"
+            :file-path="activeContextPath"
+          />
           <transition name="page-loader-fade">
             <div v-if="routeLoading" class="page-loader" role="status" aria-live="polite">
               <div class="page-loader-mark" aria-hidden="true">
@@ -69,6 +74,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
 import { listen, emit } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
+import FileRelationContext from './components/FileRelationContext.vue'
 import { useAppStore } from './store/app'
 import { findFileFormat, isExternallyEditable, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
@@ -76,6 +82,16 @@ import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePrese
 const osTheme = useOsTheme()
 const router = useRouter()
 const store = useAppStore()
+const relationContextRoutes = new Set([
+  'LibraryMode', 'TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'TomlEditor',
+  'LogViewer', 'Pdf', 'Table', 'Canvas', 'MindMap',
+])
+const activeContextPath = computed(() => {
+  const route = router.currentRoute.value
+  return relationContextRoutes.has(String(route.name)) && typeof route.query.path === 'string'
+    ? route.query.path
+    : ''
+})
 
 const systemDark = computed(() => osTheme.value === 'dark')
 const isDark = computed(() => isDarkTheme(store.theme, systemDark.value))

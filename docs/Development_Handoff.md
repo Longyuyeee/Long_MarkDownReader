@@ -1,9 +1,9 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-26
-交接基线：当前开发版本 `v0.7.0`；A4/A5 已收口，G8-1 关系摘要产品化已完成；Draft PR #6 等待审阅；下一主线为 G8-2 文件上下文侧栏
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1 和 G8-2A 已完成；Draft PR #6 等待审阅；下一主线为 G8-2B 上下文补全与性能收口
 
-> 最新桌面收口结论、22 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；G8-1 专项见 `docs/G8_1_Relation_Summary_Product_Audit_2026-07-26.md`；A4 的 29 类格式/61 个扩展名矩阵见 `docs/A4_Format_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
+> 最新桌面收口结论、24 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；G8-2A 专项见 `docs/G8_2A_File_Relation_Context_Audit_2026-07-26.md`；A4 的 29 类格式/61 个扩展名矩阵见 `docs/A4_Format_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 ## 1. 新电脑快速恢复
 
@@ -39,6 +39,7 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - Markdown 编辑、双向链接、反向链接、标签、历史版本和 Git 同步。
 - 全局/局部知识图谱、图谱健康检查、关系筛选、链接修复与图谱到 Canvas 转换。
 - G8-1 已把关系数量、入链/出链、孤立风险和局部图谱入口放进默认工作台、当前文件和全文搜索结果。
+- G8-2A 已提供跨工作面共享关系侧栏，显示事实/结构/规划/语义分类、方向、定位和原文证据；未提取格式明确降级。
 - JSON Canvas 可视化编辑，以及 Markdown、文件、Mermaid、表格图表等节点。
 - Mermaid Diagram Studio，支持结构化编辑、预览与 SVG/PNG 导出。
 - CSV/TSV 和开放 `.table.json` 表格编辑、图表、仪表盘、Markdown/Canvas 嵌入。
@@ -48,7 +49,7 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - YAML、XML、TOML、INI/CONF/CFG、Properties、`.editorconfig`、`.gitignore` 已进入统一管理与可靠基础编辑。
 - `.env` 系列默认遮罩且后端排除全文索引/知识图谱；必须在当前文件显式确认后才能显示和编辑原值。
 - 常见 JavaScript/TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 和 Web 源文件支持语法高亮、搜索与轻量可靠编辑，但不提供 IDE 执行、调试或语言服务。
-- A5/G8 已用真实 Tauri Debug/WebView2 自动化完成 22 项检查和 14 张证据图，除阶段 A 原有范围外，新增当前文件、工作台、搜索关系摘要和居中图谱导航。
+- A5/G8 已用真实 Tauri Debug/WebView2 自动化完成 24 项检查和 16 张证据图，覆盖关系摘要、Markdown 证据侧栏、OPML 规划层级和居中图谱导航。
 
 ## 3. 后端结构
 
@@ -129,14 +130,14 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - 前端生产构建、主题/格式/工作簿/XLSX 发布契约检查均通过；工作簿契约已覆盖 S8-2A 的 Table 创建/调整入口、签名事务、包级往返、历史清理、重载与重算。
 - Rust：S8-7E2E 共 194 项测试（193 项功能、1 项性能），全部通过；七类聚合分别完成临时 Pivot 包重建与输出复读，合并分组回归验证平均值、计数和乘积均从原始记录计算；单行轴、单列轴和三度量布局完成真实来源内存语义验证，成功/阻断路径原文件字节保持不变。
 - 本批最终完整性能回归通过：`inspect=124 ms / page=1,071 ms / patch=911 ms / total=2,107 ms`，未放宽 `10000x12` 负载、时间或 5% 文件增长约束。Debug 构建仅优化 `quick-xml` 与 `miniz_oxide` 依赖，普通写回在不存在 `sheetProtection` 时跳过完整保护解析。
-- 100 MiB PDF 范围读取基准：本轮 67 ms，仅读取约 255.9 KiB（目标小于 2 秒；不同机器会有波动）。
+- 100 MiB PDF 范围读取基准：本轮 71 ms，仅读取约 255.9 KiB（目标小于 2 秒；不同机器会有波动）。
 - `npm audit --omit=dev`：0 个漏洞。
 
 Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能优化项，不是构建失败。
 
 ## 6. 下一阶段顺序
 
-当前权威顺序：**G8 知识图谱产品化 → PDF 页面实用编辑 → DOCX/PPTX 基础工作面 → WPS 格式与转换审计 → 统一管理和发布矩阵增强**。G8-1 已完成，下一批 G8-2 抽取并接入跨格式文件上下文侧栏，随后推进搜索关系解释、代码/配置关系提取及图谱—思维导图协同。具体退出条件见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`。
+当前权威顺序：**G8 知识图谱产品化 → PDF 页面实用编辑 → DOCX/PPTX 基础工作面 → WPS 格式与转换审计 → 统一管理和发布矩阵增强**。G8-2A 已完成，下一批 G8-2B 补充同标签/同集合关系、有界缓存和专业格式定位证据，随后推进搜索关系解释、代码/配置关系提取及图谱—思维导图协同。
 
 以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 
