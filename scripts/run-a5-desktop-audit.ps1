@@ -41,6 +41,17 @@ $utf8 = [System.Text.UTF8Encoding]::new($false)
 [System.IO.File]::WriteAllText((Join-Path $library "G8 Source.md"), "# G8 Source`n`n[[G8 Target]]`n`nG8_RELATION_SEARCH_MARKER`n", $utf8)
 [System.IO.File]::WriteAllText((Join-Path $library "G8 Target.md"), "# G8 Target`n", $utf8)
 [System.IO.File]::WriteAllText((Join-Path $library "G8 Plan.opml"), "<?xml version=`"1.0`" encoding=`"UTF-8`"?><opml version=`"2.0`"><head><title>G8 Planning</title></head><body><outline text=`"Goal`" _longeditId=`"goal`"><outline text=`"Evidence`" _longeditId=`"evidence`"/></outline></body></opml>", $utf8)
+[System.IO.File]::WriteAllText((Join-Path $library "G8 Tag Source.md"), "# G8 Tag Source`n`n#G8SharedContext`n`nG8_TAG_COLLECTION_MARKER`n", $utf8)
+[System.IO.File]::WriteAllText((Join-Path $library "G8 Tag Peer.md"), "# G8 Tag Peer`n`n#G8SharedContext`n", $utf8)
+[System.IO.File]::WriteAllText((Join-Path $library "G8 Metrics.table.json"), '{"schemaVersion":1,"kind":"longedit.table","data":{"columns":[{"id":"topic","name":"Topic","type":"text"},{"id":"value","name":"Value","type":"number"}],"rows":[{"id":"row-1","values":{"topic":"Graph","value":"8"}}]},"views":[{"id":"grid","name":"Data grid","kind":"grid","config":{"filter":"","frozenColumns":1,"columnWidths":{"topic":160,"value":100}}},{"id":"chart","name":"Relation Coverage","kind":"chart","config":{"categoryColumn":"topic","valueColumn":"value","chartType":"bar"}}],"activeView":"grid"}', $utf8)
+[System.IO.File]::WriteAllText((Join-Path $library "G8 Board.canvas"), '{"nodes":[{"id":"idea","type":"text","text":"Relation productization","x":0,"y":0,"width":240,"height":120},{"id":"metrics","type":"file","file":"G8 Metrics.table.json","longeditViewId":"chart","x":320,"y":0,"width":240,"height":120}],"edges":[{"id":"edge-1","fromNode":"idea","toNode":"metrics","relationType":"supports"}]}', $utf8)
+$indexCommandSource = Get-Content -Raw -Encoding UTF8 (Join-Path $workspace "src-tauri\src\commands\index.rs")
+$pdfFixtureMatch = [regex]::Match($indexCommandSource, 'const TWO_PAGE_PDF: &str = "([^"]+)";')
+if (-not $pdfFixtureMatch.Success) {
+  throw "Unable to locate the versioned PDF fixture"
+}
+[System.IO.File]::WriteAllBytes((Join-Path $library "G8 Research.pdf"), [Convert]::FromBase64String($pdfFixtureMatch.Groups[1].Value))
+[System.IO.File]::WriteAllText((Join-Path $library "G8 PDF Note.md"), "# G8 PDF Note`n`n[研究资料](longedit://pdf?path=G8%20Research.pdf&page=1)`n", $utf8)
 
 $largePath = Join-Path $library "large.txt"
 $largeStream = [System.IO.StreamWriter]::new($largePath, $false, $utf8)

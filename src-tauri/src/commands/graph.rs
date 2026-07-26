@@ -477,6 +477,49 @@ pub(crate) fn relation_context(
                 .collect(),
         });
     }
+    if let Some(root) = root {
+        let root_tags: HashMap<String, String> = root
+            .tags
+            .iter()
+            .map(|tag| (tag.to_lowercase(), tag.clone()))
+            .collect();
+        if !root_tags.is_empty() {
+            for peer in graph.nodes.iter().filter(|node| {
+                node.parent_id.is_none() && node.id != root.id && !node.tags.is_empty()
+            }) {
+                let shared: Vec<String> = peer
+                    .tags
+                    .iter()
+                    .filter_map(|tag| root_tags.get(&tag.to_lowercase()).cloned())
+                    .collect();
+                if shared.is_empty() {
+                    continue;
+                }
+                if relations.len() >= MAX_RELATION_CONTEXT_ITEMS {
+                    truncated = true;
+                    break;
+                }
+                let syntax = shared
+                    .iter()
+                    .map(|tag| format!("#{tag}"))
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                relations.push(GraphContextRelation {
+                    source: context_node(root, center_path, requested_path),
+                    target: context_node(peer, center_path, requested_path),
+                    relation_type: "shares-tag".into(),
+                    relation_class: "semantic".into(),
+                    direction: "related".into(),
+                    directed: false,
+                    evidence: vec![GraphRelationEvidence {
+                        context: format!("共同标签：{syntax}"),
+                        line: 0,
+                        syntax,
+                    }],
+                });
+            }
+        }
+    }
     GraphRelationContext {
         path: requested_path.to_string(),
         node: root.map(|node| context_node(node, center_path, requested_path)),
@@ -2309,6 +2352,28 @@ mod tests {
         assert!(context.node.is_none());
         assert!(context.relations.is_empty());
         assert!(!context.truncated);
+    }
+
+    #[test]
+    fn relation_context_adds_case_insensitive_shared_tag_peers() {
+        let mut source = graph_node("source");
+        source.tags = vec!["Research".into(), "图谱".into()];
+        let mut peer = graph_node("peer");
+        peer.tags = vec!["research".into()];
+        let unrelated = graph_node("unrelated");
+        let context = relation_context(
+            &GraphData {
+                nodes: vec![source, peer, unrelated],
+                edges: Vec::new(),
+            },
+            "source",
+            "Source.md",
+        );
+        assert_eq!(context.relations.len(), 1);
+        assert_eq!(context.relations[0].relation_type, "shares-tag");
+        assert_eq!(context.relations[0].relation_class, "semantic");
+        assert_eq!(context.relations[0].target.id, "peer");
+        assert_eq!(context.relations[0].evidence[0].syntax, "#Research");
     }
 
     #[test]

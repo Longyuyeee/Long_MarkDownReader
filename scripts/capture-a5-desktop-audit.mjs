@@ -189,6 +189,10 @@ const largeFile = path.join(library, 'large.txt')
 const logFile = path.join(library, 'runtime.log')
 const relationSourceFile = path.join(library, 'G8 Source.md')
 const relationPlanFile = path.join(library, 'G8 Plan.opml')
+const relationTagFile = path.join(library, 'G8 Tag Source.md')
+const relationPdfFile = path.join(library, 'G8 Research.pdf')
+const relationTableFile = path.join(library, 'G8 Metrics.table.json')
+const relationCanvasFile = path.join(library, 'G8 Board.canvas')
 const checks = []
 
 await navigate(routeFor('library', relationSourceFile), '.library-mode')
@@ -246,6 +250,25 @@ await waitFor(
 checks.push({ id: 'g8-search-relation-summary', status: 'passed' })
 await capture('g8-search-relation-summary.jpg')
 
+await setInput(g8SearchInput, 'G8_TAG_COLLECTION_MARKER')
+await waitFor(
+  `document.querySelector('.knowledge-search-result')?.textContent?.includes('G8_TAG_COLLECTION_MARKER') === true`,
+  'tag collection search result',
+)
+await clickText('button[title="保存当前搜索"]', '')
+await waitFor(`document.body.innerText.includes('已保存为智能集合')`, 'G8 saved collection confirmation')
+await waitFor(`!document.body.innerText.includes('已保存为智能集合')`, 'G8 saved collection toast dismissal', 80)
+await navigate(routeFor('library', relationTagFile), '.library-mode')
+await waitFor(
+  `document.querySelector('.relation-context-panel')?.textContent?.includes('共同标签') === true
+    && document.querySelector('.relation-context-panel')?.textContent?.includes('G8 Tag Peer') === true
+    && document.querySelector('.collection-memberships')?.textContent?.includes('所属智能集合') === true`,
+  'shared tag and saved collection context',
+  180,
+)
+checks.push({ id: 'g8-tag-and-collection-context', status: 'passed' })
+await capture('g8-tag-and-collection-context.jpg')
+
 await navigate(`#/mindmap?path=${encodeURIComponent(relationPlanFile)}`, '.mindmap-page')
 await waitFor(`document.querySelector('.relation-context-trigger') !== null`, 'OPML relation context entry')
 if (!(await evaluate(`document.querySelector('.relation-context-panel') !== null`))) {
@@ -260,6 +283,39 @@ await waitFor(
 )
 checks.push({ id: 'g8-opml-planning-context', status: 'passed' })
 await capture('g8-opml-planning-context.jpg')
+
+await navigate(`#/pdf?path=${encodeURIComponent(relationPdfFile)}`, '.pdf-view')
+await waitFor(
+  `document.querySelector('.relation-context-panel')?.textContent?.includes('G8 Research') === true
+    && document.querySelector('.relation-context-panel')?.textContent?.includes('G8 PDF Note') === true
+    && document.querySelector('.relation-context-panel')?.textContent?.includes('入链') === true`,
+  'PDF incoming relation context',
+  180,
+)
+checks.push({ id: 'g8-pdf-object-context', status: 'passed' })
+await capture('g8-pdf-object-context.jpg')
+
+await navigate(`#/table?path=${encodeURIComponent(relationTableFile)}`, '.table-view')
+await waitFor(
+  `document.querySelector('.relation-context-panel')?.textContent?.includes('G8 Metrics') === true
+    && document.querySelector('.relation-context-panel')?.textContent?.includes('Relation Coverage') === true
+    && document.querySelector('.relation-context-panel')?.textContent?.includes('结构') === true`,
+  'Table view relation context',
+  180,
+)
+checks.push({ id: 'g8-table-object-context', status: 'passed' })
+await capture('g8-table-object-context.jpg')
+
+await navigate(`#/canvas?path=${encodeURIComponent(relationCanvasFile)}`, '.canvas-page')
+await waitFor(
+  `document.querySelector('.relation-context-panel')?.textContent?.includes('G8 Board') === true
+    && document.querySelector('.relation-context-panel')?.textContent?.includes('G8 Metrics.table.json') === true
+    && document.querySelector('.relation-context-panel')?.textContent?.includes('结构') === true`,
+  'Canvas object relation context',
+  180,
+)
+checks.push({ id: 'g8-canvas-object-context', status: 'passed' })
+await capture('g8-canvas-object-context.jpg')
 await clickText('.relation-context-panel > header button', '')
 
 await navigate(routeFor('text', serviceIni), '.text-workspace')
@@ -514,6 +570,10 @@ const evidenceFiles = [
   'g8-search-relation-summary.jpg',
   'g8-file-relation-context.jpg',
   'g8-opml-planning-context.jpg',
+  'g8-tag-and-collection-context.jpg',
+  'g8-pdf-object-context.jpg',
+  'g8-table-object-context.jpg',
+  'g8-canvas-object-context.jpg',
   'text-save-and-reopen.jpg',
   'external-conflict-detected.jpg',
   'env-default-masked.jpg',

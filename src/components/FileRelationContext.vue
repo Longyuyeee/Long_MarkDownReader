@@ -26,7 +26,7 @@
         <button type="button" :disabled="!context?.node" @click="openCenteredGraph">
           <NetworkIcon />以当前文件为中心
         </button>
-        <button type="button" :disabled="loading" @click="loadContext">
+        <button type="button" :disabled="loading" @click="loadContext(true)">
           <RefreshIcon />刷新
         </button>
       </div>
@@ -35,13 +35,19 @@
       <div v-else-if="error" class="context-state error">
         <strong>关系上下文暂不可用</strong>
         <span>{{ error }}</span>
-        <button type="button" @click="loadContext">重试</button>
+        <button type="button" @click="loadContext(true)">重试</button>
       </div>
       <div v-else-if="context && !context.indexed" class="context-state empty">
         <strong>尚未提取这种格式的关系</strong>
         <span>文件仍可正常管理和编辑；后续关系提取不会执行其中的代码或配置。</span>
       </div>
       <template v-else-if="context">
+        <section v-if="collectionMemberships.length" class="collection-memberships">
+          <small>所属智能集合</small>
+          <button v-for="collection in collectionMemberships" :key="collection.id" type="button" @click="openCollection(collection)">
+            {{ collection.name }}
+          </button>
+        </section>
         <nav class="context-filters" aria-label="关系类别">
           <button
             v-for="item in filters"
@@ -67,7 +73,7 @@
             <p v-if="focusNode(relation).locationLabel">{{ focusNode(relation).locationLabel }}</p>
             <blockquote v-if="relation.evidence[0]">
               <span>{{ relation.evidence[0].context }}</span>
-              <small>第 {{ relation.evidence[0].line }} 行 · {{ relation.evidence[0].syntax }}</small>
+              <small><template v-if="relation.evidence[0].line">第 {{ relation.evidence[0].line }} 行 · </template>{{ relation.evidence[0].syntax }}</small>
             </blockquote>
           </article>
         </div>
@@ -86,6 +92,8 @@ import { computed, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
 import { ArrowRight as ArrowRightIcon, Minus as MinusIcon, Network as NetworkIcon, RefreshCw as RefreshIcon } from 'lucide-vue-next'
+import { useAppStore, type SavedSearchConfig } from '../store/app'
+import { clearRelationContextCache, getRelationContextCache, setRelationContextCache } from '../services/relationContextCache'
 
 interface GraphObjectLocator { kind: string; objectId: string; page?: number }
 interface GraphContextNode {
@@ -113,15 +121,19 @@ interface GraphRelationContext {
   indexed: boolean
   truncated: boolean
 }
+interface KnowledgeSearchResult { path: string; objectType: string }
 
 const props = defineProps<{ libraryRoot: string; filePath: string }>()
 const router = useRouter()
+const store = useAppStore()
 const open = ref(sessionStorage.getItem('longedit.relation-context.open') === 'true')
 const loading = ref(false)
 const error = ref('')
 const context = ref<GraphRelationContext>()
 const filter = ref<'all' | 'fact' | 'structure' | 'planning' | 'semantic'>('all')
+const collectionMemberships = ref<SavedSearchConfig[]>([])
 let requestId = 0
+let membershipRequestId = 0
 
 const displayPath = (path: string) => path.replace(/^\\\\\?\\/, '')
 const displayName = computed(() => displayPath(props.filePath).split(/[\\/]/).pop() || '当前文件')
@@ -137,8 +149,55 @@ const filters = computed(() => {
   ].filter(item => item.id === 'all' || item.count)
 })
 
-const loadContext = async () => {
+const samePath = (left: string, right: string) => displayPath(left).replace(/\\/g, '/').toLowerCase() === displayPath(right).replace(/\\/g, '/').toLowerCase()
+const loadCollectionMemberships = async (force = false) => {
+  const currentRequest = ++membershipRequestId
+  const libraryRoot = props.libraryRoot
+  const filePath = props.filePath
+  const saved = store.savedSearches
+    .filter(item => samePath(item.libraryPath, libraryRoot))
+    .slice(0, 8)
+  if (!saved.length) {
+    if (currentRequest === membershipRequestId) collectionMemberships.value = []
+    return
+  }
+  if (!force) {
+    const cached = getRelationContextCache<SavedSearchConfig[]>(libraryRoot, filePath, 'collections')
+    if (cached) {
+      if (currentRequest === membershipRequestId) collectionMemberships.value = cached
+      return
+    }
+  }
+  const memberships = (await Promise.all(saved.map(async collection => {
+    try {
+      const results = await invoke<KnowledgeSearchResult[]>('search_knowledge', {
+        libraryRoot,
+        query: collection.query,
+      })
+      const matches = results.some(result => samePath(result.path, filePath)
+        && (!collection.objectTypes.length || collection.objectTypes.includes(result.objectType)))
+      return matches ? collection : undefined
+    } catch {
+      return undefined
+    }
+  }))).filter((item): item is SavedSearchConfig => Boolean(item))
+  setRelationContextCache(libraryRoot, filePath, memberships, 'collections')
+  if (currentRequest === membershipRequestId
+    && samePath(props.libraryRoot, libraryRoot)
+    && samePath(props.filePath, filePath)) collectionMemberships.value = memberships
+}
+const loadContext = async (force = false) => {
   if (!props.libraryRoot || !props.filePath) return
+  if (force) clearRelationContextCache(props.libraryRoot, props.filePath)
+  else {
+    const cached = getRelationContextCache<GraphRelationContext>(props.libraryRoot, props.filePath)
+    if (cached) {
+      context.value = cached
+      error.value = ''
+      void loadCollectionMemberships()
+      return
+    }
+  }
   const currentRequest = ++requestId
   loading.value = true
   error.value = ''
@@ -147,7 +206,11 @@ const loadContext = async () => {
       libraryRoot: props.libraryRoot,
       path: props.filePath,
     })
-    if (currentRequest === requestId) context.value = result
+    if (currentRequest === requestId) {
+      context.value = result
+      setRelationContextCache(props.libraryRoot, props.filePath, result)
+      void loadCollectionMemberships(force)
+    }
   } catch (reason) {
     if (currentRequest === requestId) {
       context.value = undefined
@@ -175,6 +238,13 @@ const focusNode = (relation: GraphContextRelation) => {
 const openCenteredGraph = () => {
   if (context.value?.node) router.push({ name: 'Graph', query: { root: context.value.node.id } })
 }
+const openCollection = (collection: SavedSearchConfig) => router.push({
+  name: 'LibraryMode',
+  query: {
+    search: collection.query,
+    types: collection.objectTypes.length ? collection.objectTypes.join(',') : undefined,
+  },
+})
 const openNode = (node: GraphContextNode) => {
   const path = displayPath(node.path)
   if (node.objectType === 'pdf' || node.objectType === 'pdf_annotation') {
@@ -197,13 +267,15 @@ const objectTypeLabel = (type: string) => ({
 const relationClassLabel = (value: string) => ({ fact: '事实', structure: '结构', planning: '规划', semantic: '语义' }[value] || value)
 const relationTypeLabel = (value: string) => ({
   'links-to': '链接到', related: '相关', contains: '包含', embeds: '嵌入', annotates: '批注引用',
-  supports: '支持', contradicts: '反驳', depends_on: '依赖', derived_from: '源自',
+  'shares-tag': '共同标签', supports: '支持', contradicts: '反驳', depends_on: '依赖', derived_from: '源自',
 }[value] || value)
 const directionLabel = (value: string) => ({ incoming: '入链', outgoing: '出链', internal: '文件内部', related: '双向' }[value] || value)
 
 watch(() => [props.libraryRoot, props.filePath] as const, () => {
+  membershipRequestId += 1
   context.value = undefined
   error.value = ''
+  collectionMemberships.value = []
   filter.value = 'all'
   if (open.value) void loadContext()
 }, { immediate: true })
@@ -228,6 +300,9 @@ watch(() => [props.libraryRoot, props.filePath] as const, () => {
 .context-actions svg { width: 13px; }
 .context-actions button:disabled { opacity: .45; cursor: not-allowed; }
 .context-filters { display: flex; gap: 5px; padding: 9px 12px; overflow-x: auto; border-bottom: 1px solid var(--theme-border); }
+.collection-memberships { display: flex; align-items: center; gap: 5px; padding: 8px 12px; overflow-x: auto; border-bottom: 1px solid var(--theme-border); }
+.collection-memberships small { flex: none; color: var(--theme-text-secondary); font-size: 8px; }
+.collection-memberships button { flex: none; padding: 3px 7px; border: 1px solid rgba(var(--theme-primary-rgb), .18); border-radius: 999px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .055); font-size: 9px; cursor: pointer; }
 .context-filters button { display: flex; gap: 4px; padding: 4px 7px; border: 1px solid transparent; border-radius: 999px; color: var(--theme-text-secondary); background: transparent; font-size: 9px; cursor: pointer; white-space: nowrap; }
 .context-filters button.active { border-color: rgba(var(--theme-primary-rgb), .24); color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .07); }
 .relation-list { flex: 1; overflow: auto; padding: 10px 12px 18px; }

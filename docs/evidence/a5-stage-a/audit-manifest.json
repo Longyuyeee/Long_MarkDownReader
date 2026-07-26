@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-07-26T14:54:24.152Z",
+  "capturedAt": "2026-07-26T15:24:12.011Z",
   "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
-  "sourceUrl": "http://127.0.0.1:9000/",
+  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
   "fixtureLocation": "isolated temporary workspace",
   "checks": [
     {
@@ -26,7 +26,23 @@
       "status": "passed"
     },
     {
+      "id": "g8-tag-and-collection-context",
+      "status": "passed"
+    },
+    {
       "id": "g8-opml-planning-context",
+      "status": "passed"
+    },
+    {
+      "id": "g8-pdf-object-context",
+      "status": "passed"
+    },
+    {
+      "id": "g8-table-object-context",
+      "status": "passed"
+    },
+    {
+      "id": "g8-canvas-object-context",
       "status": "passed"
     },
     {
@@ -111,6 +127,10 @@
     "g8-search-relation-summary.jpg",
     "g8-file-relation-context.jpg",
     "g8-opml-planning-context.jpg",
+    "g8-tag-and-collection-context.jpg",
+    "g8-pdf-object-context.jpg",
+    "g8-table-object-context.jpg",
+    "g8-canvas-object-context.jpg",
     "text-save-and-reopen.jpg",
     "external-conflict-detected.jpg",
     "env-default-masked.jpg",
@@ -122,5 +142,5 @@
     "log-append-and-rotation.jpg",
     "restart-recent-file-restored.jpg"
   ],
-  "restartVerifiedAt": "2026-07-26T14:54:31.496Z"
+  "restartVerifiedAt": "2026-07-26T15:24:18.778Z"
 }

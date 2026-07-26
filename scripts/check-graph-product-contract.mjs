@@ -2,11 +2,12 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [graphCommand, tauriLib, badge, contextPanel, app, workspace, library, graphView] = await Promise.all([
+const [graphCommand, tauriLib, badge, contextPanel, contextCache, app, workspace, library, graphView] = await Promise.all([
   read('src-tauri/src/commands/graph.rs'),
   read('src-tauri/src/lib.rs'),
   read('src/components/RelationSummaryBadge.vue'),
   read('src/components/FileRelationContext.vue'),
+  read('src/services/relationContextCache.ts'),
   read('src/App.vue'),
   read('src/views/WorkspaceHome.vue'),
   read('src/views/LibraryMode.vue'),
@@ -54,6 +55,13 @@ requireText(contextPanel, 'relation.evidence[0].context', 'G8-2 UI must expose r
 requireText(contextPanel, '以当前文件为中心', 'G8-2 context must preserve centered graph navigation')
 requireText(contextPanel, '尚未提取这种格式的关系', 'G8-2 must state unsupported extraction honestly')
 requireText(app, '<FileRelationContext', 'G8-2 context must be mounted at the shared application workspace layer')
+requireText(graphCommand, '"shares-tag"', 'G8-2B must expose same-tag peers without inventing file links')
+requireText(graphCommand, 'relation_context_adds_case_insensitive_shared_tag_peers', 'G8-2B shared tags must have Rust regression coverage')
+requireText(contextPanel, 'collectionMemberships', 'G8-2B must expose saved collection membership in file context')
+requireText(contextPanel, "'search_knowledge'", 'G8-2B collection membership must consume bounded knowledge search')
+requireText(contextCache, 'MAX_CONTEXT_CACHE_ENTRIES = 32', 'G8-2B context cache must have an explicit entry bound')
+requireText(contextCache, 'CONTEXT_CACHE_TTL_MS = 30_000', 'G8-2B context cache must expire quickly')
+requireText(contextCache, 'clearRelationContextCache', 'G8-2B context cache must support explicit refresh invalidation')
 for (const route of ['LibraryMode', 'TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'TomlEditor', 'Pdf', 'Table', 'Canvas', 'MindMap']) {
   requireText(app, `'${route}'`, `G8-2 shared context route coverage is missing ${route}`)
 }

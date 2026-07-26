@@ -30,6 +30,10 @@ const requiredChecks = new Set([
   'g8-search-relation-summary',
   'g8-file-relation-context',
   'g8-opml-planning-context',
+  'g8-tag-and-collection-context',
+  'g8-pdf-object-context',
+  'g8-table-object-context',
+  'g8-canvas-object-context',
 ])
 
 if (manifest.schemaVersion !== 1) failures.push('A5 evidence manifest must use schema version 1')
@@ -51,8 +55,8 @@ if (!largeCheck?.displayState?.includes('512.0 KiB') || !largeCheck?.displayStat
 
 const evidenceFiles = manifest.evidenceFiles || []
 if (!manifest.restartVerifiedAt) failures.push('A5 evidence must record process restart verification time')
-if (evidenceFiles.length !== 16 || new Set(evidenceFiles).size !== evidenceFiles.length) {
-  failures.push('A5/G8 evidence manifest must list sixteen unique screenshots')
+if (evidenceFiles.length !== 20 || new Set(evidenceFiles).size !== evidenceFiles.length) {
+  failures.push('A5/G8 evidence manifest must list twenty unique screenshots')
 }
 for (const file of evidenceFiles) {
   const resolved = path.resolve(new URL(file, evidenceRoot).pathname.replace(/^\/([A-Za-z]:)/, '$1'))
@@ -87,8 +91,12 @@ if (!capture.includes('A5_PRIVATE_ENV_MARKER')
   || !capture.includes('library-shell-embedded-formats')
   || !capture.includes('g8-centered-graph-navigation')
   || !capture.includes('g8-file-relation-context')
-  || !capture.includes('g8-opml-planning-context')) {
-  failures.push('A5/G8 capture must exercise the library shell, relation summaries and context, planning hierarchy, sensitive search exclusion, conflict reload, and invalid JSON protection')
+  || !capture.includes('g8-opml-planning-context')
+  || !capture.includes('g8-tag-and-collection-context')
+  || !capture.includes('g8-pdf-object-context')
+  || !capture.includes('g8-table-object-context')
+  || !capture.includes('g8-canvas-object-context')) {
+  failures.push('A5/G8 capture must exercise the library shell, relation summaries and cross-format context, saved collections, planning hierarchy, sensitive search exclusion, conflict reload, and invalid JSON protection')
 }
 
 if (failures.length) {
