@@ -93,6 +93,19 @@
       "creation": { "defaultExtension": ".xml", "defaultContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<document>\n  <item>未命名内容</item>\n</document>\n", "defaultName": "未命名 XML" }
     },
     {
+      "id": "toml",
+      "label": "TOML",
+      "extensions": [".toml"],
+      "mimeTypes": ["application/toml", "text/toml"],
+      "routeName": "TomlEditor",
+      "maxBytes": 8388608,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "TOML 支持创建、语法高亮、实时诊断、键路径提纲、草稿恢复、文本索引和带冲突保护的可靠保存。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".toml", "defaultContent": "title = \"未命名配置\"\n\n[settings]\nenabled = true\n", "defaultName": "未命名配置" }
+    },
+    {
       "id": "canvas",
       "label": "JSON Canvas",
       "extensions": [".canvas"],

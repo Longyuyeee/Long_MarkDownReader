@@ -501,6 +501,32 @@ mod tests {
     }
 
     #[test]
+    fn toml_template_creation_is_registered_and_valid() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-toml-create-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let path = tauri::async_runtime::block_on(create_format_file(
+            root.to_string_lossy().into_owned(),
+            None,
+            "toml".into(),
+            None,
+            None,
+        ))
+        .unwrap();
+        assert!(path.ends_with("未命名配置.toml"));
+        assert!(
+            crate::formats::toml::analyze_toml_source(&fs::read_to_string(&path).unwrap()).valid
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn plain_text_adapter_reads_bounded_ranges() {
         let root = std::env::temp_dir().join(format!(
             "longedit-format-range-{}-{}",

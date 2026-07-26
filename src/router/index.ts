@@ -41,6 +41,11 @@ const routes = [
     component: () => import('../views/XmlEditorView.vue')
   },
   {
+    path: '/toml',
+    name: 'TomlEditor',
+    component: () => import('../views/TomlEditorView.vue')
+  },
+  {
     path: '/log',
     name: 'LogViewer',
     component: () => import('../views/LogViewerView.vue')

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -10,10 +10,12 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src-tauri/src/formats/json.rs'),
   read('src-tauri/src/formats/yaml.rs'),
   read('src-tauri/src/formats/xml.rs'),
+  read('src-tauri/src/formats/toml.rs'),
   read('src-tauri/src/commands/formats.rs'),
   read('src-tauri/src/commands/json.rs'),
   read('src-tauri/src/commands/yaml.rs'),
   read('src-tauri/src/commands/xml.rs'),
+  read('src-tauri/src/commands/toml.rs'),
   read('src-tauri/src/commands/files.rs'),
   read('src-tauri/src/services/external_file_access.rs'),
   read('src-tauri/src/commands/index.rs'),
@@ -22,6 +24,7 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src/views/JsonEditorView.vue'),
   read('src/views/YamlEditorView.vue'),
   read('src/views/XmlEditorView.vue'),
+  read('src/views/TomlEditorView.vue'),
   read('src/views/LogViewerView.vue'),
   read('src/components/WorkspaceTabs.vue'),
   read('src/router/index.ts'),
@@ -98,6 +101,19 @@ if (!xmlFormat
   || xmlFormat.creation?.defaultExtension !== '.xml'
   || xmlFormat.userCapability?.level !== 'complete-edit'
   || xmlFormat.userCapability?.saveMode !== 'overwrite') failures.push('A4 XML source-edit contract is incomplete')
+const tomlFormat = registry.formats?.find(format => format.id === 'toml')
+if (!tomlFormat
+  || tomlFormat.routeName !== 'TomlEditor'
+  || tomlFormat.capabilities?.read !== 'supported'
+  || tomlFormat.capabilities?.edit !== 'supported'
+  || tomlFormat.capabilities?.create !== 'supported'
+  || tomlFormat.capabilities?.index !== 'supported'
+  || tomlFormat.adapters?.reader !== 'text'
+  || tomlFormat.adapters?.writer !== 'text'
+  || tomlFormat.adapters?.creator !== 'text-template'
+  || tomlFormat.adapters?.indexer !== 'text'
+  || tomlFormat.creation?.defaultExtension !== '.toml'
+  || tomlFormat.userCapability?.level !== 'complete-edit') failures.push('A4 TOML complete-edit contract is incomplete')
 const opmlFormat = registry.formats?.find(format => format.id === 'opml')
 if (!opmlFormat || opmlFormat.routeName !== 'MindMap' || opmlFormat.adapters?.reader !== 'opml' || opmlFormat.adapters?.indexer !== 'opml') failures.push('OPML professional adapter is incomplete')
 const workbookFormat = registry.formats?.find(format => format.id === 'workbook')
@@ -262,6 +278,13 @@ requireText(xmlEditor, "'write_xml_source_document'", 'A4 XML workspace must use
 requireText(xmlEditor, '<WorkspaceTabs', 'A4 XML workspace must participate in unified session tabs')
 requireText(xmlEditor, 'outlineTruncated', 'A4 XML workspace must expose bounded structure outlines')
 requireText(router, "name: 'XmlEditor'", 'A4 XML workspace must have an independent route')
+requireText(tomlKernel, 'DocumentMut::from_str', 'A4 TOML analysis must use the format-preserving parser')
+requireText(tomlCommands, '"invalid-toml-save-blocked"', 'A4 TOML save must block invalid source by default')
+requireText(tomlEditor, 'StreamLanguage.define(toml)', 'A4 TOML workspace must provide syntax highlighting')
+requireText(tomlEditor, "'analyze_toml_source'", 'A4 TOML workspace must consume authoritative analysis')
+requireText(tomlEditor, "'write_toml_source_document'", 'A4 TOML workspace must use guarded saving')
+requireText(tomlEditor, '<WorkspaceTabs', 'A4 TOML workspace must participate in unified tabs')
+requireText(router, "name: 'TomlEditor'", 'A4 TOML workspace must have an independent route')
 const logFormat = registry.formats.find(format => format.id === 'log')
 if (!logFormat
   || logFormat.routeName !== 'LogViewer'
