@@ -11,6 +11,11 @@ const requiredChecks = new Set([
   'env-mask-reveal-remask',
   'json-invalid-save-protected',
   'json-repair-save',
+  'properties-save-reopen',
+  'source-code-save-reopen',
+  'yaml-save-reopen',
+  'xml-save-reopen',
+  'toml-save-reopen',
   'env-search-exclusion',
   'saved-search-collection',
   'large-text-bounded-readonly',
@@ -38,8 +43,8 @@ if (!largeCheck?.displayState?.includes('512.0 KiB') || !largeCheck?.displayStat
 
 const evidenceFiles = manifest.evidenceFiles || []
 if (!manifest.restartVerifiedAt) failures.push('A5 evidence must record process restart verification time')
-if (evidenceFiles.length !== 8 || new Set(evidenceFiles).size !== evidenceFiles.length) {
-  failures.push('A5 evidence manifest must list eight unique screenshots')
+if (evidenceFiles.length !== 10 || new Set(evidenceFiles).size !== evidenceFiles.length) {
+  failures.push('A5 evidence manifest must list ten unique screenshots')
 }
 for (const file of evidenceFiles) {
   const resolved = path.resolve(new URL(file, evidenceRoot).pathname.replace(/^\/([A-Za-z]:)/, '$1'))

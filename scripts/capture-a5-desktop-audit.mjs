@@ -167,6 +167,11 @@ await waitFor(`document.querySelector('.page-loader') === null`, 'desktop app in
 await delay(1000)
 
 const serviceIni = path.join(library, 'service.ini')
+const propertiesFile = path.join(library, 'application.properties')
+const sourceFile = path.join(library, 'index-proof.ts')
+const yamlFile = path.join(library, 'settings.yaml')
+const xmlFile = path.join(library, 'layout.xml')
+const tomlFile = path.join(library, 'project.toml')
 const envFile = path.join(library, '.env')
 const jsonFile = path.join(library, 'damaged.json')
 const largeFile = path.join(library, 'large.txt')
@@ -264,6 +269,64 @@ checks.push({ id: 'json-invalid-save-protected', status: 'passed' })
 checks.push({ id: 'json-repair-save', status: 'passed' })
 await waitFor(`!document.body.innerText.includes('JSON 源码已安全保存')`, 'JSON save toast dismissal')
 
+const saveAndReopen = async ({ route, file, workspaceSelector, content, marker, checkId }) => {
+  await navigate(routeFor(route, file), workspaceSelector)
+  await waitFor(`document.querySelector('.cm-content') !== null`, `${checkId} editor`)
+  await setEditorText(content)
+  await clickText('button', '保存')
+  await waitForFile(file, value => value.includes(marker), `${checkId} disk save`)
+  await navigate('#/workspace', '.workspace-home')
+  await navigate(routeFor(route, file), workspaceSelector)
+  await waitFor(
+    `document.querySelector('.cm-content')?.textContent?.includes(${JSON.stringify(marker)}) === true`,
+    `${checkId} route reopen`,
+  )
+  checks.push({ id: checkId, status: 'passed' })
+}
+
+await saveAndReopen({
+  route: 'text',
+  file: propertiesFile,
+  workspaceSelector: '.text-workspace',
+  content: 'app.name=A5_PROPERTIES_SAVED\nfeature.audit=true',
+  marker: 'A5_PROPERTIES_SAVED',
+  checkId: 'properties-save-reopen',
+})
+await saveAndReopen({
+  route: 'text',
+  file: sourceFile,
+  workspaceSelector: '.text-workspace',
+  content: "export const A5_PUBLIC_CODE_MARKER = 'searchable'\nexport const A5_TS_SAVED = true",
+  marker: 'A5_TS_SAVED',
+  checkId: 'source-code-save-reopen',
+})
+await capture('configuration-and-code-save-reopen.jpg')
+await saveAndReopen({
+  route: 'yaml',
+  file: yamlFile,
+  workspaceSelector: '.yaml-workspace',
+  content: 'service:\n  name: A5_YAML_SAVED',
+  marker: 'A5_YAML_SAVED',
+  checkId: 'yaml-save-reopen',
+})
+await saveAndReopen({
+  route: 'xml',
+  file: xmlFile,
+  workspaceSelector: '.xml-workspace',
+  content: '<?xml version="1.0" encoding="UTF-8"?>\n<service status="A5_XML_SAVED" />',
+  marker: 'A5_XML_SAVED',
+  checkId: 'xml-save-reopen',
+})
+await saveAndReopen({
+  route: 'toml',
+  file: tomlFile,
+  workspaceSelector: '.workspace',
+  content: '[service]\nname = "A5_TOML_SAVED"',
+  marker: 'A5_TOML_SAVED',
+  checkId: 'toml-save-reopen',
+})
+await capture('structured-formats-save-reopen.jpg')
+
 await navigate('#/library', '.library-mode')
 const searchInput = '.search-area input[placeholder="搜索文档..."]'
 await setInput(searchInput, 'A5_PUBLIC_CODE_MARKER')
@@ -334,6 +397,8 @@ const evidenceFiles = [
   'external-conflict-detected.jpg',
   'env-default-masked.jpg',
   'json-invalid-save-protected.jpg',
+  'configuration-and-code-save-reopen.jpg',
+  'structured-formats-save-reopen.jpg',
   'env-search-excluded.jpg',
   'large-text-bounded-readonly.jpg',
   'log-append-and-rotation.jpg',
