@@ -140,7 +140,7 @@ import {
   Star as StarIcon, Workflow as DiagramIcon,
 } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
-import { fileDisplayName, findFileFormat, routeForFile } from '../config/fileFormats'
+import { fileDisplayName, findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceHealthReport } from '../components/WorkspaceHealthQueue.vue'
 
 interface WorkspaceTask { title: string; path: string; relativePath: string; line: number; text: string }
@@ -201,7 +201,7 @@ const openSavedSearch = (query: string, objectTypes: string[]) => router.push({
 const openPath = (path: string) => {
   const target = routeForFile(path)
   if (!target) return
-  if (target.name === 'LibraryMode') router.push({ name: 'LibraryMode', query: { path } })
+  if (opensInLibraryShell(findFileFormat(path))) router.push({ name: 'LibraryMode', query: { path } })
   else router.push(target)
 }
 

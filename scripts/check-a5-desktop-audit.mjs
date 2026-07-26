@@ -7,10 +7,12 @@ const manifest = JSON.parse(await fs.readFile(new URL('audit-manifest.json', evi
 const failures = []
 const requiredChecks = new Set([
   'text-save-reopen',
+  'library-shell-embedded-formats',
   'external-conflict-reload',
   'env-mask-reveal-remask',
   'json-invalid-save-protected',
   'json-repair-save',
+  'embedded-tab-switch-preserves-shell',
   'properties-save-reopen',
   'source-code-save-reopen',
   'yaml-save-reopen',
@@ -75,8 +77,9 @@ if (!runner.includes('$restartedApp') || !restart.includes('restart-recent-file-
 }
 if (!capture.includes('A5_PRIVATE_ENV_MARKER')
   || !capture.includes('external-conflict-reload')
-  || !capture.includes('json-invalid-save-protected')) {
-  failures.push('A5 capture must exercise sensitive search exclusion, conflict reload, and invalid JSON protection')
+  || !capture.includes('json-invalid-save-protected')
+  || !capture.includes('library-shell-embedded-formats')) {
+  failures.push('A5 capture must exercise the library shell, sensitive search exclusion, conflict reload, and invalid JSON protection')
 }
 
 if (failures.length) {

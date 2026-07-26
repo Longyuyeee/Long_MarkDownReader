@@ -79,6 +79,20 @@ validateRegistry()
 
 export const FILE_FORMAT_SCHEMA_VERSION = registry.schemaVersion
 export const FILE_FORMATS: readonly FileFormatDefinition[] = Object.freeze(registry.formats)
+export const LIBRARY_EMBEDDED_EDITOR_ROUTES: readonly EditorRouteName[] = Object.freeze([
+  'TextEditor',
+  'JsonEditor',
+  'YamlEditor',
+  'XmlEditor',
+  'TomlEditor',
+  'LogViewer',
+])
+const libraryEmbeddedEditorRoutes = new Set<EditorRouteName>(LIBRARY_EMBEDDED_EDITOR_ROUTES)
+
+export const isLibraryEmbeddedEditorRoute = (routeName: EditorRouteName) => libraryEmbeddedEditorRoutes.has(routeName)
+export const opensInLibraryShell = (format: FileFormatDefinition | undefined) => Boolean(
+  format && (format.routeName === 'LibraryMode' || isLibraryEmbeddedEditorRoute(format.routeName)),
+)
 export const SORTED_FILE_FORMATS: readonly FileFormatDefinition[] = Object.freeze(
   [...registry.formats].sort((left, right) => {
     const leftLongest = Math.max(...left.extensions.map(extension => extension.length))

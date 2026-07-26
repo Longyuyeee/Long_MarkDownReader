@@ -1,10 +1,14 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-07-26T13:50:56.759Z",
+  "capturedAt": "2026-07-26T14:08:51.323Z",
   "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
   "sourceUrl": "http://127.0.0.1:9000/#/workspace",
   "fixtureLocation": "isolated temporary workspace",
   "checks": [
+    {
+      "id": "library-shell-embedded-formats",
+      "status": "passed"
+    },
     {
       "id": "text-save-reopen",
       "status": "passed"
@@ -23,6 +27,10 @@
     },
     {
       "id": "json-repair-save",
+      "status": "passed"
+    },
+    {
+      "id": "embedded-tab-switch-preserves-shell",
       "status": "passed"
     },
     {
@@ -56,7 +64,7 @@
     {
       "id": "large-text-bounded-readonly",
       "status": "passed",
-      "renderedCharacters": 3604,
+      "renderedCharacters": 884,
       "displayState": "行 1，列 1 7490 行 524,288 字符 UTF-8 CRLF 24.0 MiB 512.0 KiB / 24.0 MiB 继续加载"
     },
     {
@@ -84,5 +92,5 @@
     "log-append-and-rotation.jpg",
     "restart-recent-file-restored.jpg"
   ],
-  "restartVerifiedAt": "2026-07-26T13:51:04.470Z"
+  "restartVerifiedAt": "2026-07-26T14:08:58.631Z"
 }

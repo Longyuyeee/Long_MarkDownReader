@@ -351,6 +351,14 @@ requireText(logViewer, 'MAX_BUFFER_CHARS', 'A4 LOG viewer must bound its in-memo
 requireText(library, '<WorkspaceTabs', 'Markdown workspace must consume unified session tabs')
 requireText(textEditor, '<WorkspaceTabs', 'TXT workspace must consume unified session tabs')
 requireText(workspaceTabs, 'routeForFile', 'unified tabs must route each registered format to its workspace')
+requireText(frontend, 'LIBRARY_EMBEDDED_EDITOR_ROUTES', 'daily source editors must declare the shared library-shell contract')
+for (const routeName of ['TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'TomlEditor', 'LogViewer']) {
+  requireText(frontend, `'${routeName}'`, `${routeName} must remain registered for right-pane embedding`)
+}
+requireText(library, '<component :is="activeEmbeddedEditor"', 'library mode must mount daily source editors in its right pane')
+requireText(library, 'library-embedded-editor', 'embedded editors must use the shared visual shell')
+requireText(library, 'opensInLibraryShell(format)', 'library file selection must retain the management shell')
+requireText(workspaceTabs, 'opensInLibraryShell', 'unified tabs must retain the library shell for managed files')
 requireText(workspaceTabs, 'tab.isDirty', 'unified tabs must confirm before discarding dirty drafts')
 requireText(appStore, '.filter(tab => !tab.external)', 'external authorization tabs must not survive process restart')
 requireText(app, 'confirmDiscardUnsaved', 'application exit must coordinate dirty session tabs')

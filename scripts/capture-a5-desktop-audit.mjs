@@ -61,7 +61,7 @@ const waitForFile = async (file, predicate, description, attempts = 100) => {
   throw new Error(`Timed out waiting for ${description}`)
 }
 
-const routeFor = (route, file) => `#/${route}?path=${encodeURIComponent(file)}`
+const routeFor = (_route, file) => `#/library?path=${encodeURIComponent(file)}`
 const navigate = async (hash, selector) => {
   await evaluate(`location.hash = ${JSON.stringify(hash)}`)
   await waitFor(`document.querySelector(${JSON.stringify(selector)}) !== null`, selector)
@@ -79,6 +79,17 @@ const clickText = async (selector, text) => {
     return true
   })()`)
   if (!clicked) throw new Error(`Unable to click ${selector} containing ${text}`)
+}
+
+const activateWorkspaceTab = async title => {
+  const clicked = await evaluate(`(() => {
+    const tab = [...document.querySelectorAll('.tabs-bar .workspace-tab')]
+      .find(element => element.textContent?.includes(${JSON.stringify(title)}))
+    if (!tab) return false
+    tab.click()
+    return true
+  })()`)
+  if (!clicked) throw new Error(`Unable to activate workspace tab ${title}`)
 }
 
 const setInput = async (selector, value) => {
@@ -179,6 +190,22 @@ const logFile = path.join(library, 'runtime.log')
 const checks = []
 
 await navigate(routeFor('text', serviceIni), '.text-workspace')
+const embeddedShellState = await evaluate(`({
+  library: document.querySelector('.library-mode') !== null,
+  sidebarWidth: document.querySelector('.sidebar')?.getBoundingClientRect().width,
+  embedded: document.querySelector('.library-embedded-editor .text-workspace') !== null,
+  nestedTabsDisplay: (() => {
+    const tabs = document.querySelector('.library-embedded-editor .workspace-tabs')
+    return tabs ? getComputedStyle(tabs).display : 'absent'
+  })()
+})`)
+if (!embeddedShellState.library
+  || embeddedShellState.sidebarWidth < 180
+  || !embeddedShellState.embedded
+  || embeddedShellState.nestedTabsDisplay !== 'none') {
+  throw new Error(`Text workspace did not remain inside the library shell: ${JSON.stringify(embeddedShellState)}`)
+}
+checks.push({ id: 'library-shell-embedded-formats', status: 'passed' })
 const savedText = '[service]\nname=desktop-saved\nmode=a5'
 await setEditorText(savedText)
 await clickText('.editor-actions button', '保存')
@@ -268,6 +295,21 @@ await waitForFile(jsonFile, content => content.includes('"valid": true'), 'repai
 checks.push({ id: 'json-invalid-save-protected', status: 'passed' })
 checks.push({ id: 'json-repair-save', status: 'passed' })
 await waitFor(`!document.body.innerText.includes('JSON 源码已安全保存')`, 'JSON save toast dismissal')
+await activateWorkspaceTab('service')
+await waitFor(
+  `location.hash.startsWith('#/library?path=')
+    && document.querySelector('.library-embedded-editor .text-workspace') !== null
+    && document.querySelector('.sidebar')?.getBoundingClientRect().width > 180`,
+  'embedded text tab switch',
+)
+await activateWorkspaceTab('damaged')
+await waitFor(
+  `location.hash.startsWith('#/library?path=')
+    && document.querySelector('.library-embedded-editor .json-workspace') !== null
+    && document.querySelector('.sidebar')?.getBoundingClientRect().width > 180`,
+  'embedded JSON tab switch',
+)
+checks.push({ id: 'embedded-tab-switch-preserves-shell', status: 'passed' })
 
 const saveAndReopen = async ({ route, file, workspaceSelector, content, marker, checkId }) => {
   await navigate(routeFor(route, file), workspaceSelector)

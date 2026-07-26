@@ -345,7 +345,7 @@
     <div class="editor-main" :class="{ 'zen-mode': store.isZen }">
       <div class="tabs-bar" v-if="!store.isZen && store.tabs.length > 0">
         <WorkspaceTabs />
-        <div class="tab-actions">
+        <div v-if="!activeEmbeddedEditor" class="tab-actions">
           <div class="action-btn-group">
             <n-button quaternary circle size="small" @click="refreshCurrentFile" :disabled="!activeTabId" title="从磁盘同步内容">
               <template #icon><n-icon :component="RefreshIcon" /></template>
@@ -396,21 +396,24 @@
       </div>
       
       <div class="editor-viewport" :class="'editor-width-' + editorWidthMode" :style="{ '--custom-editor-bg': store.editorBgColor || 'transparent' }">
-        <div v-if="editorLoading && tabs.length > 0" class="editor-loading">
+        <div v-if="activeEmbeddedEditor && activeTabId" class="library-embedded-editor">
+          <component :is="activeEmbeddedEditor" :key="activeTabId" />
+        </div>
+        <div v-if="!activeEmbeddedEditor && editorLoading && tabs.length > 0" class="editor-loading">
           <n-spin size="large">
             <template #description>同步中...</template>
           </n-spin>
         </div>
-        <div v-show="tabs.length > 0" id="vditor-lib" class="vditor-instance"></div>
+        <div v-show="!activeEmbeddedEditor && tabs.length > 0" id="vditor-lib" class="vditor-instance"></div>
         <MarkdownChartEmbeds
-          v-if="activeIsMarkdown && activeMarkdownContent && activeTabId"
+          v-if="!activeEmbeddedEditor && activeIsMarkdown && activeMarkdownContent && activeTabId"
           :markdown="activeMarkdownContent"
           :library-root="store.libraryPath"
           :host-path="activeTabId"
           @open="openEmbeddedTableChart"
         />
         
-        <div v-if="tabs.length === 0" class="hero-viewport">
+        <div v-if="!activeEmbeddedEditor && tabs.length === 0" class="hero-viewport">
           <div class="ambient-glow">
             <div class="blob blob-1"></div>
             <div class="blob blob-2"></div>
@@ -482,7 +485,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch, reactive, h, onUnmounted, nextTick, computed } from 'vue'
+import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
@@ -517,7 +520,9 @@ import {
   findFileFormat,
   findFileFormatById,
   isFormatCapabilitySupported,
+  isLibraryEmbeddedEditorRoute,
   knownFileExtension,
+  opensInLibraryShell,
   routeForFile,
 } from '../config/fileFormats'
 
@@ -610,6 +615,20 @@ const tabs = computed(() => allTabs.value.filter(tab => findFileFormat(tab.path)
 const router = useRouter()
 const route = useRoute()
 const activeDocumentFormat = computed(() => activeTabId.value ? findFileFormat(activeTabId.value) : undefined)
+const embeddedEditorComponents = {
+  TextEditor: defineAsyncComponent(() => import('./TextEditorView.vue')),
+  JsonEditor: defineAsyncComponent(() => import('./JsonEditorView.vue')),
+  YamlEditor: defineAsyncComponent(() => import('./YamlEditorView.vue')),
+  XmlEditor: defineAsyncComponent(() => import('./XmlEditorView.vue')),
+  TomlEditor: defineAsyncComponent(() => import('./TomlEditorView.vue')),
+  LogViewer: defineAsyncComponent(() => import('./LogViewerView.vue')),
+}
+const activeEmbeddedEditor = computed(() => {
+  const routeName = activeDocumentFormat.value?.routeName
+  return routeName && isLibraryEmbeddedEditorRoute(routeName)
+    ? embeddedEditorComponents[routeName as keyof typeof embeddedEditorComponents]
+    : null
+})
 const activeIsMarkdown = computed(() => activeDocumentFormat.value?.id === 'markdown')
 const activeMarkdownContent = computed(() => activeIsMarkdown.value ? tabs.value.find(tab => tab.id === activeTabId.value)?.content || '' : '')
 const activeTextTab = computed(() => tabs.value.find(tab => tab.id === activeTabId.value))
@@ -1132,7 +1151,11 @@ const handleNodeSelect = (keys: string[]) => {
   if (keys.length === 0) return
   const lastKey = keys[keys.length - 1]
   const format = lastKey ? findFileFormat(lastKey) : undefined
-  if (format?.routeName === 'LibraryMode') {
+  if (format && opensInLibraryShell(format)) {
+    if (route.name !== 'LibraryMode' || route.query.path !== lastKey) {
+      void router.replace({ name: 'LibraryMode', query: { path: lastKey } })
+      return
+    }
     const title = fileDisplayName(lastKey) || format.label
     store.addTab({ id: lastKey, title, path: lastKey, isDirty: false })
   } else if (format) {
@@ -1156,7 +1179,7 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
     })
   } else {
     const target = routeForFile(result.path)
-    if (target?.name === 'LibraryMode') handleNodeSelect([result.path])
+    if (opensInLibraryShell(findFileFormat(result.path))) handleNodeSelect([result.path])
     else if (target) router.push(target)
   }
 }
@@ -2072,7 +2095,7 @@ const handleExportHtml = async () => {
 
 onMounted(async () => {
   await store.loadConfig()
-  if (activeTabId.value && findFileFormat(activeTabId.value)?.routeName !== 'LibraryMode') {
+  if (activeTabId.value && !opensInLibraryShell(findFileFormat(activeTabId.value))) {
     store.activateTab(tabs.value[0]?.id || null)
   }
   window.addEventListener('keydown', handleKeyDown)
@@ -2238,7 +2261,7 @@ watch(() => route.query.path, (path) => {
   if (typeof path !== 'string' || !path) return
   const format = findFileFormat(path)
   if (!format) return
-  if (format.routeName === 'LibraryMode') handleNodeSelect([path])
+  if (opensInLibraryShell(format)) handleNodeSelect([path])
   else router.replace({ name: format.routeName, query: { path } })
 }, { immediate: true })
 const applyRouteSearch = () => {
@@ -3256,6 +3279,49 @@ watch(activeTabId, (newId, oldId) => {
 
 .editor-viewport { flex: 1; position: relative; background: #fff; border-radius: var(--theme-radius) var(--theme-radius) 0 0; overflow: visible; display: flex; flex-direction: column; min-height: 0; z-index: 10; }
 .is-dark .editor-viewport { background: #1c1c1e; }
+.library-embedded-editor {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  border: var(--theme-border);
+  border-bottom: 0;
+  border-radius: var(--theme-radius) var(--theme-radius) 0 0;
+  color: var(--theme-text);
+  background: var(--theme-bg);
+  font-family: inherit;
+  font-size: 12px;
+}
+.library-embedded-editor :deep(> *) {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  border-radius: inherit;
+  font-family: inherit;
+}
+.library-embedded-editor :deep(.workspace-tabs),
+.library-embedded-editor :deep([title="返回知识库"]) {
+  display: none !important;
+}
+.library-embedded-editor :deep(.cm-editor) {
+  font-size: 13px;
+}
+.library-embedded-editor :deep(.document-title strong),
+.library-embedded-editor :deep(.document-identity strong),
+.library-embedded-editor :deep(.identity strong) {
+  font-size: 12px;
+  font-weight: 650;
+}
+.library-embedded-editor :deep(.document-title span),
+.library-embedded-editor :deep(.document-identity span),
+.library-embedded-editor :deep(.identity span),
+.library-embedded-editor :deep(.status-bar),
+.library-embedded-editor :deep(footer) {
+  font-size: 11px;
+}
 .vditor-instance { flex: 1; height: 0; overflow: visible !important; }
 
 :deep(.vditor-wysiwyg), :deep(.vditor-preview), :deep(.vditor-panel), :deep(.vditor-reset) { background-color: var(--custom-editor-bg) !important; }

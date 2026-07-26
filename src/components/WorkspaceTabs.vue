@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { FileText as FileTextIcon, X as XIcon } from 'lucide-vue-next'
-import { routeForFile } from '../config/fileFormats'
+import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import { type TabInfo, useAppStore } from '../store/app'
 
 const router = useRouter()
@@ -37,8 +37,8 @@ const store = useAppStore()
 const routeToTab = async (tab: TabInfo) => {
   const target = routeForFile(tab.path)
   if (!target) return
-  if (target.name === 'LibraryMode') {
-    await router.push({ name: 'LibraryMode' })
+  if (!tab.external && opensInLibraryShell(findFileFormat(tab.path))) {
+    await router.push({ name: 'LibraryMode', query: { path: tab.path } })
   } else {
     await router.push({
       ...target,
@@ -51,8 +51,8 @@ const routeToTab = async (tab: TabInfo) => {
 }
 
 const activate = async (tab: TabInfo) => {
-  store.activateTab(tab.id)
   await routeToTab(tab)
+  store.activateTab(tab.id)
 }
 
 const close = async (tab: TabInfo) => {

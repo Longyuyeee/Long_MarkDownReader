@@ -88,8 +88,9 @@ const clicked = await evaluate(`(() => {
 })()`)
 if (!clicked) throw new Error('Persisted recent file could not be opened')
 await waitFor(
-  `location.hash.startsWith('#/log?path=')
-    && document.querySelector('.log-workspace') !== null
+  `location.hash.startsWith('#/library?path=')
+    && document.querySelector('.library-embedded-editor .log-workspace') !== null
+    && document.querySelector('.sidebar')?.getBoundingClientRect().width > 180
     && document.body.innerText.includes('A5_ROTATED_LOG_MARKER')`,
   'recent log reopened after process restart',
 )
