@@ -73,11 +73,34 @@
         <div v-else-if="sidebarTab === 'organize'" class="page-organizer">
           <div class="page-plan-summary">
             <div><strong>页面整理草稿</strong><span>{{ pagePlanStatus }}</span></div>
-            <p>旋转、排序和排除仅在内存中预览，不会修改源 PDF。可靠另存将在 B1 开放。</p>
+            <p>旋转、排序和排除先在内存中预览；“验证隔离副本”会生成临时字节并复读，不写回源 PDF。</p>
             <div class="page-plan-history">
               <button :disabled="!pagePlanUndo.length" title="撤销 Ctrl+Z" @click="undoPagePlan">撤销</button>
               <button :disabled="!pagePlanRedo.length" title="重做 Ctrl+Y" @click="redoPagePlan">重做</button>
               <button :disabled="!pagePlanDirty" @click="resetPagePlan">重置</button>
+            </div>
+            <button class="page-plan-verify" :disabled="!pagePlanDirty || pagePlanVerifying" @click="verifyPagePlan">
+              {{ pagePlanVerifying ? '正在生成并复读…' : '验证隔离副本' }}
+            </button>
+            <div
+              v-if="pagePlanVerification || pagePlanVerificationError"
+              class="page-plan-verification"
+              :class="{ blocked: pagePlanVerification?.status === 'blocked' || pagePlanVerificationError }"
+            >
+              <template v-if="pagePlanVerification?.status === 'isolated_verified'">
+                <strong>隔离副本验证通过</strong>
+                <span>{{ pagePlanVerification.outputPages }} 页 · {{ formatBytes(pagePlanVerification.outputBytes) }} · 源文件未修改</span>
+                <small>结构复读、文本页序与旋转映射均已核验；当前仍不提供覆盖保存。</small>
+              </template>
+              <template v-else-if="pagePlanVerification">
+                <strong>检测到高风险 PDF 特性，已阻断</strong>
+                <span>{{ pagePlanVerification.blockers.map(pdfPlanBlockerLabel).join(' · ') }}</span>
+                <small>未生成输出，也未修改源文件。请保留原件并等待对应保真迁移能力。</small>
+              </template>
+              <template v-else>
+                <strong>隔离副本验证失败</strong>
+                <span>{{ pagePlanVerificationError }}</span>
+              </template>
             </div>
           </div>
           <div class="page-plan-list">
@@ -211,6 +234,24 @@ import type { Worker as TesseractWorker } from 'tesseract.js'
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
 interface OutlineEntry { title: string; depth: number; destination: string | unknown[] | null }
+interface PdfIsolatedPagePlanReport {
+  status: 'isolated_verified' | 'blocked'
+  engine: string
+  sourceSignature: string
+  sourcePages: number
+  outputPages: number
+  rotatedPages: number
+  reordered: boolean
+  removedPages: number
+  blockers: string[]
+  sourceDigest: string
+  outputDigest?: string | null
+  outputBytes: number
+  structuralReparseVerified: boolean
+  textOrderVerified: boolean
+  sourceUnchanged: boolean
+  pageMapping: Array<{ outputPage: number; sourcePage: number; rotation: number }>
+}
 const POSITION_KEY = 'longedit.pdf.positions.v1'
 const route = useRoute()
 const router = useRouter()
@@ -264,6 +305,10 @@ const pagePlan = ref<PdfPagePlanEntry[]>([])
 const pagePlanUndo = ref<PdfPagePlanEntry[][]>([])
 const pagePlanRedo = ref<PdfPagePlanEntry[][]>([])
 const activePagePlanId = ref('')
+const pdfSourceSignature = ref('')
+const pagePlanVerification = ref<PdfIsolatedPagePlanReport | null>(null)
+const pagePlanVerificationError = ref('')
+const pagePlanVerifying = ref(false)
 let loadingTask: PDFDocumentLoadingTask | null = null
 let rangeTransport: TauriPdfRangeTransport | null = null
 let loadStartedAt = 0
@@ -330,6 +375,19 @@ const pagePlanStatus = computed(() => {
   ].filter(Boolean)
   return `${visiblePagePlan.value.length}/${pagePlan.value.length} 页 · ${parts.join(' · ')}`
 })
+const pdfPlanBlockerLabels: Record<string, string> = {
+  encrypted_pdf_unverified: '加密文档',
+  digital_signature_unverified: '数字签名',
+  acroform_unverified: '交互表单',
+  pdf_portfolio_unverified: 'PDF 文件包',
+  embedded_files_unverified: '嵌入附件',
+  outline_migration_unverified: '目录迁移',
+  page_labels_migration_unverified: '页码标签迁移',
+  tagged_structure_migration_unverified: '无障碍结构迁移',
+  named_destinations_migration_unverified: '命名目标迁移',
+}
+const pdfPlanBlockerLabel = (blocker: string) => pdfPlanBlockerLabels[blocker] || blocker
+const formatBytes = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
 const sortedOcrPages = computed(() => [...(ocrDocument.value?.pages || [])].sort((a, b) => a.page - b.page))
 const ocrBusy = computed(() => ocrTaskState.value === 'preparing' || ocrTaskState.value === 'running')
 const ocrOverallProgress = computed(() => {
@@ -447,6 +505,8 @@ const initializePagePlan = (pageCount: number) => {
   pagePlanUndo.value = []
   pagePlanRedo.value = []
   activePagePlanId.value = pagePlan.value[0]?.id || ''
+  pagePlanVerification.value = null
+  pagePlanVerificationError.value = ''
 }
 
 const openPageOrganizer = () => {
@@ -460,6 +520,8 @@ const commitPagePlan = (next: PdfPagePlanEntry[], activeId?: string) => {
   pagePlanUndo.value = [...pagePlanUndo.value.slice(-59), clonePdfPagePlan(pagePlan.value)]
   pagePlanRedo.value = []
   pagePlan.value = next
+  pagePlanVerification.value = null
+  pagePlanVerificationError.value = ''
   if (activeId) activePagePlanId.value = activeId
 }
 
@@ -483,6 +545,8 @@ const undoPagePlan = () => {
   pagePlanRedo.value = [...pagePlanRedo.value.slice(-59), clonePdfPagePlan(pagePlan.value)]
   pagePlan.value = clonePdfPagePlan(previous)
   pagePlanUndo.value = pagePlanUndo.value.slice(0, -1)
+  pagePlanVerification.value = null
+  pagePlanVerificationError.value = ''
 }
 
 const redoPagePlan = () => {
@@ -491,6 +555,8 @@ const redoPagePlan = () => {
   pagePlanUndo.value = [...pagePlanUndo.value.slice(-59), clonePdfPagePlan(pagePlan.value)]
   pagePlan.value = clonePdfPagePlan(next)
   pagePlanRedo.value = pagePlanRedo.value.slice(0, -1)
+  pagePlanVerification.value = null
+  pagePlanVerificationError.value = ''
 }
 
 const resetPagePlan = () => {
@@ -506,6 +572,29 @@ const selectPagePlanEntry = (entry: PdfPagePlanEntry) => {
 const visiblePageNumber = (id: string) => {
   const index = visiblePagePlan.value.findIndex(entry => entry.id === id)
   return index < 0 ? '—' : index + 1
+}
+
+const verifyPagePlan = async () => {
+  if (!pagePlanDirty.value || !pdfSourceSignature.value || pagePlanVerifying.value) return
+  pagePlanVerifying.value = true
+  pagePlanVerification.value = null
+  pagePlanVerificationError.value = ''
+  try {
+    pagePlanVerification.value = await invoke<PdfIsolatedPagePlanReport>('preview_pdf_page_plan_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      expectedSignature: pdfSourceSignature.value,
+      plan: pagePlan.value.map(entry => ({
+        sourcePage: entry.sourcePage,
+        rotation: entry.rotation,
+        removed: entry.removed,
+      })),
+    })
+  } catch (cause) {
+    pagePlanVerificationError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pagePlanVerifying.value = false
+  }
 }
 
 const persistOcrDocument = async () => {
@@ -942,6 +1031,9 @@ const loadPdf = async () => {
   pagePlanUndo.value = []
   pagePlanRedo.value = []
   activePagePlanId.value = ''
+  pdfSourceSignature.value = ''
+  pagePlanVerification.value = null
+  pagePlanVerificationError.value = ''
   dismissSelectionTool()
   clearTextState()
   await loadingTask?.destroy()
@@ -956,6 +1048,7 @@ const loadPdf = async () => {
   }
   try {
     const descriptor = await invoke<PdfReadDescriptor>('read_pdf_info', { libraryRoot: store.libraryPath, path: pdfPath.value })
+    pdfSourceSignature.value = descriptor.signature
     if (descriptor.fullData) {
       loadMode.value = 'full'
       loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(descriptor.fullData), useWasm: false })
@@ -1191,6 +1284,8 @@ onBeforeUnmount(async () => {
 .page-plan-history button,.page-plan-actions button { min-height: 26px; padding: 3px 6px; border: 1px solid rgba(0,0,0,.1); border-radius: 5px; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; font-size: 8px; }
 .page-plan-history button:hover,.page-plan-actions button:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.35); }
 .page-plan-history button:disabled,.page-plan-actions button:disabled { cursor: default; opacity: .35; }
+.page-plan-verify { width: 100%; min-height: 30px; margin-top: 7px; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 9px; font-weight: 650; }.page-plan-verify:disabled { cursor: default; opacity: .42; }
+.page-plan-verification { display: flex; flex-direction: column; gap: 3px; margin-top: 7px; padding: 8px; border: 1px solid rgba(43,125,78,.22); border-radius: 7px; color: #2b6f49; background: rgba(43,125,78,.07); }.page-plan-verification.blocked { border-color: rgba(184,76,62,.22); color: #a03f34; background: rgba(184,76,62,.07); }.page-plan-verification strong { font-size: 9px; }.page-plan-verification span,.page-plan-verification small { color: inherit; font-size: 8px; line-height: 1.45; }
 .page-plan-list { min-height: 0; flex: 1; overflow: auto; padding: 9px; }
 .page-plan-list article { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 34px; gap: 6px; margin-bottom: 8px; padding: 7px; border: 1px solid rgba(0,0,0,.09); border-radius: 8px; background: rgba(255,255,255,.46); }
 .page-plan-list article.active { border-color: rgba(var(--theme-primary-rgb),.45); box-shadow: 0 0 0 1px rgba(var(--theme-primary-rgb),.08); }

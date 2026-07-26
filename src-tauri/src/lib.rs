@@ -51,8 +51,9 @@ use commands::json::{
 };
 use commands::mindmap::{create_canvas_from_opml, read_opml_file, write_opml_file};
 use commands::pdf::{
-    build_pdf_annotation_reference, read_pdf_annotations, read_pdf_file, read_pdf_info,
-    read_pdf_ocr, read_pdf_range, write_pdf_annotations, write_pdf_ocr,
+    build_pdf_annotation_reference, preview_pdf_page_plan_isolated_copy, read_pdf_annotations,
+    read_pdf_file, read_pdf_info, read_pdf_ocr, read_pdf_range, write_pdf_annotations,
+    write_pdf_ocr,
 };
 use commands::search::{get_all_tags, search_all_libraries, search_by_tag, search_library};
 use commands::system::{check_association_status, exit_app, get_url_title, set_as_default_handler};
@@ -271,6 +272,7 @@ pub fn run() {
             read_pdf_file,
             read_pdf_info,
             read_pdf_range,
+            preview_pdf_page_plan_isolated_copy,
             read_pdf_annotations,
             write_pdf_annotations,
             read_pdf_ocr,

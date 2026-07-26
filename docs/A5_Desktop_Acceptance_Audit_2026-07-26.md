@@ -30,7 +30,7 @@ npm run audit:a5-desktop
 npm run check:a5-desktop-evidence
 ```
 
-阶段 A 收口后，G8-1/G8-2A/G8-2B 和 PDF B0 继续复用同一真实桌面回归框架。当前门禁结果为 **29/29 项通过，21 张真实 Tauri 截图通过机器校验**。
+阶段 A 收口后，G8-1/G8-2A/G8-2B 和 PDF B0/B1A 继续复用同一真实桌面回归框架。当前门禁结果为 **30/30 项通过，22 张真实 Tauri 截图通过机器校验**。
 
 | 验收域 | 真实桌面结果 | 证据 |
 |---|---|---|
@@ -39,6 +39,7 @@ npm run check:a5-desktop-evidence
 | G8-2A 关系上下文 | Markdown 显示事实链接与原文证据；OPML 显示规划层级；共享侧栏不离开当前工作面 | `g8-file-relation-context.jpg`、`g8-opml-planning-context.jpg` |
 | G8-2B 上下文补全 | 同标签与智能集合进入侧栏；PDF、Table、Canvas 的真实对象关系和定位进入桌面门禁 | `g8-tag-and-collection-context.jpg`、`g8-pdf-object-context.jpg`、`g8-table-object-context.jpg`、`g8-canvas-object-context.jpg` |
 | PDF B0 页面整理草稿 | 两页 PDF 完成旋转、改序、排除、撤销、重做和重置；源文件保持只读 | `b0-pdf-page-plan-preview.jpg` |
+| PDF B1A 隔离副本验证 | 页面计划在内存中生成可复读 PDF；结构、文本页序和源字节通过复核，仍不提供保存 | `b1a-pdf-isolated-copy-verification.jpg` |
 | 普通文本/INI | 编辑、保存、离开并重开成功 | `text-save-and-reopen.jpg` |
 | 外部修改冲突 | 保存被签名冲突阻断；选择重新加载后读取磁盘版本，不恢复旧草稿 | `external-conflict-detected.jpg` |
 | `.env` | 首次遮罩、明确确认后显示、再次遮罩成功；正文标记不泄漏到界面 | `env-default-masked.jpg` |
@@ -57,6 +58,7 @@ G8-1 的目标、路径身份修复、关系摘要合同和边界见 `docs/G8_1_
 G8-2A 的统一侧栏、分类、证据、生命周期修复和边界见 `docs/G8_2A_File_Relation_Context_Audit_2026-07-26.md`。
 G8-2B 的同标签、智能集合、有界缓存、专业格式证据和需求重排见 `docs/G8_2B_Relation_Context_Closure_Audit_2026-07-26.md`。
 PDF B0 的页面身份、非破坏式计划、历史、离开保护和未开放写回边界见 `docs/B0_PDF_Page_Plan_Audit_2026-07-27.md`。
+PDF B1A 的引擎决策、许可证、风险矩阵、隔离生成与下一门槛见 `docs/B1A_PDF_Isolated_Write_Engine_Audit_2026-07-27.md`。
 
 ## 3. 本阶段发现并修复的问题
 
@@ -84,7 +86,7 @@ PDF B0 的页面身份、非破坏式计划、历史、离开保护和未开放�
 
 ### 仍不能宣称
 
-- PDF 页面草稿已经能够生成或可靠另存为新 PDF，以及 PDF 正文排版编辑；
+- PDF 页面草稿已经能够可靠另存为磁盘新文件，以及 PDF 正文排版编辑；
 - DOCX/PPTX/WPS 私有格式的内置可靠编辑；
 - 完整 Excel 等价、完整 IDE、任意私有思维导图格式等价；
 - 安装包升级/卸载、系统文件关联、所有 Windows 版本和硬件组合已经完成发布矩阵；
@@ -98,9 +100,9 @@ JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存�
 
 - Vue 类型检查与 Vite 生产构建通过；
 - 主题、格式、A5 桌面证据、工作簿和 XLSX 发布契约通过；
-- Rust 功能测试 `277/277` 通过，性能测试 `1/1` 通过；
+- Rust 功能测试 `280/280` 通过，性能测试 `1/1` 通过；
 - Rust 复杂工作簿性能测试 `1/1` 通过；
-- 100 MiB PDF 范围读取只请求约 `255.9 KiB`，本轮本机约 `54 ms`；
+- 100 MiB PDF 范围读取只请求约 `255.9 KiB`，本轮本机约 `59 ms`；
 - 生产依赖审计 `0` 个漏洞。
 
 现存非阻断项仍是 Vite 的少量大分包警告。它属于后续性能优化，不影响本阶段正确性结论。
@@ -132,13 +134,14 @@ JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存�
 
 ### 当前专业格式主线
 
-1. **PDF B0（已完成）**：页面旋转、排序、排除的内存草稿、撤销/重做和离开保护；29 项真实桌面门禁已覆盖；
-2. **PDF B1（下一步）**：写入引擎审计、隔离副本验证与安全另存；
-3. DOCX/PPTX 先读后编，按公开 OOXML 兼容矩阵开放基础子集；
-4. WPS `.wps/.et/.dps` 先做规范、许可与转换保真审计，无法证明可靠时只提供外部打开或受控副本转换；
-5. 统一批处理、元数据、工作区健康和发布矩阵。
+1. **PDF B0（已完成）**：页面旋转、排序、排除的内存草稿、撤销/重做和离开保护；
+2. **PDF B1A（已完成）**：写入引擎/许可证审计、风险阻断和签名保护的内存隔离副本复读验证；
+3. **PDF B1B（下一步）**：只另存新文件、可靠落盘、重新打开和独立阅读器交叉验证；
+4. DOCX/PPTX 先读后编，按公开 OOXML 兼容矩阵开放基础子集；
+5. WPS `.wps/.et/.dps` 先做规范、许可与转换保真审计，无法证明可靠时只提供外部打开或受控副本转换；
+6. 统一批处理、元数据、工作区健康和发布矩阵。
 
-权威执行顺序和能力事实见 `docs/B0_PDF_Page_Plan_Audit_2026-07-27.md`。
+权威执行顺序和能力事实见 `docs/B1A_PDF_Isolated_Write_Engine_Audit_2026-07-27.md`。
 
 ## 8. 关键提交
 

@@ -42,7 +42,7 @@ const requireText = (source, text, message) => {
 
 for (const text of [
   '页面整理草稿',
-  '仅在内存中预览',
+  '先在内存中预览',
   'pagePlanUndo',
   'pagePlanRedo',
   'visiblePagePlan.length <= 1',
@@ -56,4 +56,22 @@ if (/write_pdf_(pages?|document)|save_pdf_(pages?|document)/.test(pdfCommands)) 
   throw new Error('B0 must not expose a PDF rewrite command before B1 reliable-save gates exist')
 }
 
-console.log('PDF B0 page plan contract passed: immutable rotation/order/removal, history UI, leave guards, and no source rewrite.')
+for (const text of [
+  '验证隔离副本',
+  'preview_pdf_page_plan_isolated_copy',
+  'expectedSignature',
+  '源文件未修改',
+  '当前仍不提供覆盖保存',
+]) requireText(view, text, `B1A PDF isolated-copy contract missing: ${text}`)
+
+for (const text of [
+  'MAX_PDF_ISOLATED_INPUT_BYTES',
+  'pdf_plan_blockers',
+  'digital_signature_unverified',
+  'acroform_unverified',
+  'structural_reparse_verified',
+  'text_order_verified',
+  'source_unchanged',
+]) requireText(pdfCommands, text, `B1A PDF backend safety gate missing: ${text}`)
+
+console.log('PDF B0/B1A contract passed: immutable planning, history/leave guards, signature-protected isolated generation, risk blockers, reparse verification, and no source rewrite.')

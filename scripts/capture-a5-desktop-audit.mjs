@@ -325,6 +325,16 @@ await clickText('.page-plan-history button', '重做')
 await waitFor(`document.querySelector('.page-plan-list article[data-source-page="1"]')?.classList.contains('removed') === true`, 'PDF page plan redo')
 checks.push({ id: 'b0-pdf-page-plan-preview', status: 'passed' })
 await capture('b0-pdf-page-plan-preview.jpg')
+await clickText('.page-plan-verify', '验证隔离副本')
+await waitFor(
+  `document.querySelector('.page-plan-verification')?.textContent?.includes('隔离副本验证通过') === true
+    && document.querySelector('.page-plan-verification')?.textContent?.includes('源文件未修改') === true
+    && document.querySelector('.page-plan-verification')?.textContent?.includes('当前仍不提供覆盖保存') === true`,
+  'PDF isolated-copy generation and reparse verification',
+  240,
+)
+checks.push({ id: 'b1a-pdf-isolated-copy-verification', status: 'passed' })
+await capture('b1a-pdf-isolated-copy-verification.jpg')
 await clickText('.page-plan-history button', '重置')
 await waitFor(`document.querySelector('.page-plan-dirty') === null`, 'PDF page plan reset')
 await clickText('.relation-context-trigger', '关系上下文')
@@ -608,6 +618,7 @@ const evidenceFiles = [
   'g8-tag-and-collection-context.jpg',
   'g8-pdf-object-context.jpg',
   'b0-pdf-page-plan-preview.jpg',
+  'b1a-pdf-isolated-copy-verification.jpg',
   'g8-table-object-context.jpg',
   'g8-canvas-object-context.jpg',
   'text-save-and-reopen.jpg',

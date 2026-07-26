@@ -1,9 +1,9 @@
 # Long Markdown Reader 开发交接
 
-更新日期：2026-07-26
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B 和 PDF B0 已完成；Draft PR #6 等待审阅；下一主线为 B1A PDF 写入引擎与隔离副本决策
+更新日期：2026-07-27
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A 已完成；Draft PR #6 等待审阅；下一主线为 B1B PDF 可靠另存与重开
 
-> 最新桌面收口结论、29 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；PDF B0 页面整理边界见 `docs/B0_PDF_Page_Plan_Audit_2026-07-27.md`；G8-2B 专项和原始需求重排见 `docs/G8_2B_Relation_Context_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
+> 最新桌面收口结论、30 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；PDF B1A 引擎、风险和隔离验证边界见 `docs/B1A_PDF_Isolated_Write_Engine_Audit_2026-07-27.md`；G8-2B 专项和原始需求重排见 `docs/G8_2B_Relation_Context_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 ## 1. 新电脑快速恢复
 
@@ -46,12 +46,12 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - CSV/TSV 和开放 `.table.json` 表格编辑、图表、仪表盘、Markdown/Canvas 嵌入。
 - XLSX 多工作表预览、空白/已有基础单元格编辑、连续/多区域、TSV 剪贴板、基础样式、公式重算、行高列宽和合并/取消合并，支持冲突检测及 OOXML 局部可靠写回；可将工作表转换为开放表格。
 - PDF 分段读取、阅读、标注、OCR sidecar、全文索引和图谱关系。
-- PDF B0 已提供旋转、改序、排除页面的内存草稿、原页映射、60 步撤销/重做、至少保留一页及离开保护；尚不能生成新 PDF。
+- PDF B0 已提供旋转、改序、排除页面的内存草稿、原页映射、60 步撤销/重做、至少保留一页及离开保护；B1A 已能在签名保护的内存隔离副本中执行计划并复核结构、页序、旋转、文本和源字节，尚不能保存到磁盘。
 - API Key 使用 Windows 系统凭据存储；旧配置中的明文 Key 会一次性迁移并清除。
 - YAML、XML、TOML、INI/CONF/CFG、Properties、`.editorconfig`、`.gitignore` 已进入统一管理与可靠基础编辑。
 - `.env` 系列默认遮罩且后端排除全文索引/知识图谱；必须在当前文件显式确认后才能显示和编辑原值。
 - 常见 JavaScript/TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 和 Web 源文件支持语法高亮、搜索与轻量可靠编辑，但不提供 IDE 执行、调试或语言服务。
-- A5/G8/B0 已用真实 Tauri Debug/WebView2 自动化完成 29 项检查和 21 张证据图，覆盖关系摘要、标签/集合、跨格式关系侧栏、居中图谱导航和 PDF 页面整理草稿。
+- A5/G8/B0/B1A 已用真实 Tauri Debug/WebView2 自动化完成 30 项检查和 22 张证据图，覆盖关系摘要、标签/集合、跨格式关系侧栏、居中图谱导航、PDF 页面整理草稿和隔离副本验证。
 
 ## 3. 后端结构
 

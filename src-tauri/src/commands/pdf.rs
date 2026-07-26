@@ -7,6 +7,9 @@ use crate::formats::pdf_ocr::{
 };
 use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
+use lopdf::{dictionary, Dictionary, Document, Object, ObjectId};
+use sha2::{Digest, Sha256};
+use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
@@ -18,6 +21,9 @@ pub const MAX_PDF_FULL_READ_BYTES: u64 = 4 * 1024 * 1024;
 pub const PDF_INITIAL_BYTES: u64 = 256 * 1024;
 pub const PDF_RANGE_CHUNK_BYTES: u64 = 256 * 1024;
 pub const MAX_PDF_RANGE_BYTES: u64 = 1024 * 1024;
+pub const MAX_PDF_ISOLATED_INPUT_BYTES: u64 = 128 * 1024 * 1024;
+pub const MAX_PDF_ISOLATED_OUTPUT_BYTES: usize = 256 * 1024 * 1024;
+pub const MAX_PDF_PAGE_PLAN_ITEMS: usize = 20_000;
 
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -189,6 +195,400 @@ pub async fn read_pdf_file(library_root: String, path: String) -> Result<Vec<u8>
         ));
     }
     fs::read(file_path).map_err(|error| format!("读取 PDF 失败: {}", error))
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfPagePlanItem {
+    pub source_page: u32,
+    pub rotation: i16,
+    pub removed: bool,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfIsolatedPageMapping {
+    pub output_page: u32,
+    pub source_page: u32,
+    pub rotation: i16,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfIsolatedPagePlanReport {
+    pub status: String,
+    pub engine: String,
+    pub source_signature: String,
+    pub source_pages: usize,
+    pub output_pages: usize,
+    pub rotated_pages: usize,
+    pub reordered: bool,
+    pub removed_pages: usize,
+    pub blockers: Vec<String>,
+    pub source_digest: String,
+    pub output_digest: Option<String>,
+    pub output_bytes: usize,
+    pub structural_reparse_verified: bool,
+    pub text_order_verified: bool,
+    pub source_unchanged: bool,
+    pub page_mapping: Vec<PdfIsolatedPageMapping>,
+}
+
+fn object_dictionary(object: &Object) -> Option<&Dictionary> {
+    match object {
+        Object::Dictionary(dictionary) => Some(dictionary),
+        Object::Stream(stream) => Some(&stream.dict),
+        _ => None,
+    }
+}
+
+fn named_dictionary<'a>(document: &'a Document, key: &[u8]) -> Option<&'a Dictionary> {
+    let catalog = document.catalog().ok()?;
+    let value = catalog.get(key).ok()?;
+    document.dereference(value).ok()?.1.as_dict().ok()
+}
+
+fn pdf_plan_blockers(document: &Document, structural_change: bool) -> Vec<String> {
+    let mut blockers = Vec::new();
+    if document.is_encrypted() {
+        blockers.push("encrypted_pdf_unverified".into());
+    }
+    let signature = document.objects.values().any(|object| {
+        object_dictionary(object).is_some_and(|dictionary| {
+            dictionary
+                .get(b"Type")
+                .and_then(Object::as_name)
+                .is_ok_and(|value| value == b"Sig")
+                || dictionary
+                    .get(b"FT")
+                    .and_then(Object::as_name)
+                    .is_ok_and(|value| value == b"Sig")
+        })
+    });
+    if signature
+        || document
+            .catalog()
+            .is_ok_and(|catalog| catalog.has(b"Perms"))
+    {
+        blockers.push("digital_signature_unverified".into());
+    }
+    if document
+        .catalog()
+        .is_ok_and(|catalog| catalog.has(b"AcroForm"))
+    {
+        blockers.push("acroform_unverified".into());
+    }
+    if document
+        .catalog()
+        .is_ok_and(|catalog| catalog.has(b"Collection"))
+    {
+        blockers.push("pdf_portfolio_unverified".into());
+    }
+    if named_dictionary(document, b"Names").is_some_and(|names| names.has(b"EmbeddedFiles")) {
+        blockers.push("embedded_files_unverified".into());
+    }
+    if structural_change {
+        if document
+            .catalog()
+            .is_ok_and(|catalog| catalog.has(b"Outlines"))
+        {
+            blockers.push("outline_migration_unverified".into());
+        }
+        if document
+            .catalog()
+            .is_ok_and(|catalog| catalog.has(b"PageLabels"))
+        {
+            blockers.push("page_labels_migration_unverified".into());
+        }
+        if document
+            .catalog()
+            .is_ok_and(|catalog| catalog.has(b"StructTreeRoot"))
+        {
+            blockers.push("tagged_structure_migration_unverified".into());
+        }
+        if named_dictionary(document, b"Names").is_some_and(|names| names.has(b"Dests")) {
+            blockers.push("named_destinations_migration_unverified".into());
+        }
+    }
+    blockers.sort();
+    blockers.dedup();
+    blockers
+}
+
+fn inherited_page_value(document: &Document, page_id: ObjectId, key: &[u8]) -> Option<Object> {
+    let mut current = page_id;
+    let mut visited = HashSet::new();
+    while visited.insert(current) {
+        let dictionary = document.get_dictionary(current).ok()?;
+        if let Ok(value) = dictionary.get(key) {
+            return Some(value.clone());
+        }
+        current = dictionary
+            .get(b"Parent")
+            .and_then(Object::as_reference)
+            .ok()?;
+    }
+    None
+}
+
+fn normalized_rotation(value: i64) -> i16 {
+    (((value % 360) + 360) % 360) as i16
+}
+
+fn validate_pdf_page_plan(plan: &[PdfPagePlanItem], source_pages: usize) -> Result<(), String> {
+    if source_pages == 0 || source_pages > MAX_PDF_PAGE_PLAN_ITEMS {
+        return Err(format!(
+            "PDF 页数必须在 1～{} 之间",
+            MAX_PDF_PAGE_PLAN_ITEMS
+        ));
+    }
+    if plan.len() != source_pages {
+        return Err("页面计划必须精确包含每个源页面一次".into());
+    }
+    let mut seen = HashSet::new();
+    for item in plan {
+        if item.source_page == 0
+            || item.source_page as usize > source_pages
+            || !seen.insert(item.source_page)
+        {
+            return Err("页面计划包含重复或越界的源页码".into());
+        }
+        if !matches!(item.rotation, 0 | 90 | 180 | 270) {
+            return Err("页面旋转必须为 0、90、180 或 270 度".into());
+        }
+    }
+    if plan.iter().all(|item| item.removed) {
+        return Err("页面计划必须至少保留一页".into());
+    }
+    Ok(())
+}
+
+fn apply_pdf_page_plan(
+    document: &mut Document,
+    plan: &[PdfPagePlanItem],
+) -> Result<Vec<PdfIsolatedPageMapping>, String> {
+    let source_pages = document.get_pages();
+    let desired: Vec<(PdfPagePlanItem, ObjectId, Vec<(&'static [u8], Object)>)> = plan
+        .iter()
+        .filter(|item| !item.removed)
+        .map(|item| {
+            let page_id = source_pages
+                .get(&item.source_page)
+                .copied()
+                .ok_or_else(|| format!("源第 {} 页不存在", item.source_page))?;
+            let inherited = [b"Resources".as_slice(), b"MediaBox", b"CropBox", b"Rotate"]
+                .into_iter()
+                .filter_map(|key| {
+                    inherited_page_value(document, page_id, key).map(|value| (key, value))
+                })
+                .collect();
+            Ok((item.clone(), page_id, inherited))
+        })
+        .collect::<Result<_, String>>()?;
+    let pages_id = document.new_object_id();
+    for (item, page_id, inherited) in &desired {
+        let original_rotation = inherited
+            .iter()
+            .find(|(key, _)| *key == b"Rotate")
+            .and_then(|(_, value)| value.as_i64().ok())
+            .unwrap_or(0);
+        let page = document
+            .get_dictionary_mut(*page_id)
+            .map_err(|error| format!("读取源第 {} 页失败: {error}", item.source_page))?;
+        for (key, value) in inherited {
+            if !page.has(key) {
+                page.set(*key, value.clone());
+            }
+        }
+        page.set("Parent", Object::Reference(pages_id));
+        page.set(
+            "Rotate",
+            Object::Integer(normalized_rotation(original_rotation + item.rotation as i64) as i64),
+        );
+    }
+    let kids: Vec<Object> = desired
+        .iter()
+        .map(|(_, page_id, _)| Object::Reference(*page_id))
+        .collect();
+    document.objects.insert(
+        pages_id,
+        Object::Dictionary(dictionary! {
+            "Type" => "Pages",
+            "Kids" => kids,
+            "Count" => desired.len() as i64,
+        }),
+    );
+    document
+        .catalog_mut()
+        .map_err(|error| format!("PDF Catalog 无效: {error}"))?
+        .set("Pages", Object::Reference(pages_id));
+    document.prune_objects();
+    Ok(desired
+        .iter()
+        .enumerate()
+        .map(|(index, (item, _, _))| PdfIsolatedPageMapping {
+            output_page: index as u32 + 1,
+            source_page: item.source_page,
+            rotation: item.rotation,
+        })
+        .collect())
+}
+
+fn build_pdf_page_plan_isolated(
+    pdf_path: &Path,
+    expected_signature: &str,
+    plan: Vec<PdfPagePlanItem>,
+) -> Result<(PdfIsolatedPagePlanReport, Option<Vec<u8>>), String> {
+    let metadata = pdf_path
+        .metadata()
+        .map_err(|error| format!("读取 PDF 元数据失败: {error}"))?;
+    validate_pdf_size(metadata.len())?;
+    if metadata.len() > MAX_PDF_ISOLATED_INPUT_BYTES {
+        return Err("隔离页面操作目前只支持不超过 128 MB 的 PDF".into());
+    }
+    let actual_signature = pdf_signature(&metadata);
+    if actual_signature != expected_signature {
+        return Err("PDF 已被外部修改，请重新打开后再验证页面计划".into());
+    }
+    let source = fs::read(pdf_path).map_err(|error| format!("读取 PDF 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let mut document =
+        Document::load_mem(&source).map_err(|error| format!("PDF 结构解析失败: {error}"))?;
+    let source_pages = document.get_pages().len();
+    validate_pdf_page_plan(&plan, source_pages)?;
+    let desired_source_pages: Vec<u32> = plan
+        .iter()
+        .filter(|item| !item.removed)
+        .map(|item| item.source_page)
+        .collect();
+    let reordered = desired_source_pages != (1..=source_pages as u32).collect::<Vec<_>>();
+    let removed_pages = plan.iter().filter(|item| item.removed).count();
+    let rotated_pages = plan
+        .iter()
+        .filter(|item| !item.removed && item.rotation != 0)
+        .count();
+    let structural_change = reordered || removed_pages > 0;
+    let blockers = pdf_plan_blockers(&document, structural_change);
+    let blocked_report = |blockers: Vec<String>| PdfIsolatedPagePlanReport {
+        status: "blocked".into(),
+        engine: "lopdf 0.42.0 (MIT)".into(),
+        source_signature: actual_signature.clone(),
+        source_pages,
+        output_pages: desired_source_pages.len(),
+        rotated_pages,
+        reordered,
+        removed_pages,
+        blockers,
+        source_digest: source_digest.clone(),
+        output_digest: None,
+        output_bytes: 0,
+        structural_reparse_verified: false,
+        text_order_verified: false,
+        source_unchanged: true,
+        page_mapping: Vec::new(),
+    };
+    if !blockers.is_empty() {
+        return Ok((blocked_report(blockers), None));
+    }
+    let source_text = pdf_extract::extract_text_from_mem_by_pages(&source)
+        .map_err(|error| format!("源 PDF 文本复读失败: {error}"))?;
+    let mapping = apply_pdf_page_plan(&mut document, &plan)?;
+    let mut output = Vec::new();
+    document
+        .save_to(&mut output)
+        .map_err(|error| format!("隔离 PDF 生成失败: {error}"))?;
+    if output.len() > MAX_PDF_ISOLATED_OUTPUT_BYTES {
+        return Err("隔离 PDF 超过 256 MB 输出上限".into());
+    }
+    let verified =
+        Document::load_mem(&output).map_err(|error| format!("隔离 PDF 结构复读失败: {error}"))?;
+    if verified.get_pages().len() != mapping.len() {
+        return Err("隔离 PDF 复读页数与页面计划不一致".into());
+    }
+    let source_verified =
+        Document::load_mem(&source).map_err(|error| format!("源 PDF 结构复读失败: {error}"))?;
+    let source_verified_pages = source_verified.get_pages();
+    let verified_pages = verified.get_pages();
+    for mapping_item in &mapping {
+        let page_id = verified_pages
+            .get(&mapping_item.output_page)
+            .copied()
+            .ok_or("隔离 PDF 输出页缺失")?;
+        let rotation = inherited_page_value(&verified, page_id, b"Rotate")
+            .and_then(|value| value.as_i64().ok())
+            .map(normalized_rotation)
+            .unwrap_or(0);
+        let source_page_id = source_verified_pages
+            .get(&mapping_item.source_page)
+            .copied()
+            .ok_or("源 PDF 复读页缺失")?;
+        let source_rotation = inherited_page_value(&source_verified, source_page_id, b"Rotate")
+            .and_then(|value| value.as_i64().ok())
+            .map(normalized_rotation)
+            .unwrap_or(0);
+        if rotation != normalized_rotation(source_rotation as i64 + mapping_item.rotation as i64) {
+            return Err(format!(
+                "隔离 PDF 第 {} 页旋转复读不一致",
+                mapping_item.output_page
+            ));
+        }
+    }
+    let output_text = pdf_extract::extract_text_from_mem_by_pages(&output)
+        .map_err(|error| format!("隔离 PDF 文本复读失败: {error}"))?;
+    let expected_text: Vec<String> = mapping
+        .iter()
+        .map(|item| {
+            source_text
+                .get(item.source_page.saturating_sub(1) as usize)
+                .cloned()
+                .unwrap_or_default()
+        })
+        .collect();
+    let text_order_verified = output_text == expected_text;
+    if !text_order_verified {
+        return Err("隔离 PDF 文本页顺序与页面计划不一致".into());
+    }
+    let source_after = fs::read(pdf_path).map_err(|error| format!("复核源 PDF 失败: {error}"))?;
+    let source_unchanged = source_after == source
+        && pdf_signature(&pdf_path.metadata().map_err(|e| e.to_string())?) == actual_signature;
+    if !source_unchanged {
+        return Err("隔离页面操作意外改变了源 PDF".into());
+    }
+    let report = PdfIsolatedPagePlanReport {
+        status: "isolated_verified".into(),
+        engine: "lopdf 0.42.0 (MIT)".into(),
+        source_signature: actual_signature,
+        source_pages,
+        output_pages: mapping.len(),
+        rotated_pages,
+        reordered,
+        removed_pages,
+        blockers: Vec::new(),
+        source_digest,
+        output_digest: Some(format!("{:x}", Sha256::digest(&output))),
+        output_bytes: output.len(),
+        structural_reparse_verified: true,
+        text_order_verified,
+        source_unchanged,
+        page_mapping: mapping,
+    };
+    Ok((report, Some(output)))
+}
+
+#[tauri::command]
+pub async fn preview_pdf_page_plan_isolated_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    plan: Vec<PdfPagePlanItem>,
+) -> Result<PdfIsolatedPagePlanReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let pdf_path = guard.resolve_existing_file(path, &["pdf"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        build_pdf_page_plan_isolated(&pdf_path, &expected_signature, plan).map(|(report, _)| report)
+    })
+    .await
+    .map_err(|error| format!("PDF 隔离页面计划任务失败: {error}"))?
 }
 
 fn annotation_path(pdf_path: &Path) -> Result<PathBuf, String> {
@@ -402,6 +802,7 @@ mod tests {
     use super::*;
     use crate::formats::pdf_annotations::{PdfAnnotation, PdfAnnotationKind, PdfAnnotationRect};
     use crate::formats::pdf_ocr::PdfOcrPage;
+    use lopdf::{Stream, StringFormat};
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -434,6 +835,66 @@ mod tests {
         }
     }
 
+    fn write_two_page_pdf(path: &Path) -> Vec<u8> {
+        let mut document = Document::with_version("1.5");
+        let pages_id = document.new_object_id();
+        let font_id = document.add_object(dictionary! {
+            "Type" => "Font",
+            "Subtype" => "Type1",
+            "BaseFont" => "Helvetica",
+        });
+        let resources_id = document.add_object(dictionary! {
+            "Font" => dictionary! { "F1" => Object::Reference(font_id) },
+        });
+        let mut page_ids = Vec::new();
+        for text in ["First Page Alpha", "Second Page Beta"] {
+            let content = format!("BT /F1 12 Tf 40 250 Td ({text}) Tj ET");
+            let content_id =
+                document.add_object(Stream::new(Dictionary::new(), content.into_bytes()));
+            let page_id = document.add_object(dictionary! {
+                "Type" => "Page",
+                "Parent" => Object::Reference(pages_id),
+                "MediaBox" => vec![0.into(), 0.into(), 300.into(), 300.into()],
+                "Resources" => Object::Reference(resources_id),
+                "Contents" => Object::Reference(content_id),
+            });
+            page_ids.push(page_id);
+        }
+        document.objects.insert(
+            pages_id,
+            Object::Dictionary(dictionary! {
+                "Type" => "Pages",
+                "Kids" => page_ids.iter().copied().map(Object::Reference).collect::<Vec<_>>(),
+                "Count" => page_ids.len() as i64,
+            }),
+        );
+        let catalog_id = document.add_object(dictionary! {
+            "Type" => "Catalog",
+            "Pages" => Object::Reference(pages_id),
+        });
+        document.trailer.set("Root", Object::Reference(catalog_id));
+        document.trailer.set(
+            "TestMarker",
+            Object::String(b"isolated".to_vec(), StringFormat::Literal),
+        );
+        document.compress();
+        let mut bytes = Vec::new();
+        document.save_to(&mut bytes).unwrap();
+        fs::write(path, &bytes).unwrap();
+        bytes
+    }
+
+    fn pdf_plan(source_pages: &[(u32, i16, bool)]) -> Vec<PdfPagePlanItem> {
+        source_pages
+            .iter()
+            .map(|(source_page, rotation, removed)| PdfPagePlanItem {
+                source_page: *source_page,
+                rotation: *rotation,
+                removed: *removed,
+            })
+            .collect()
+    }
+
     #[test]
     fn reads_pdf_inside_library_and_rejects_other_extensions() {
         let workspace = TestWorkspace::new();
@@ -463,6 +924,95 @@ mod tests {
             workspace.root_string(),
             outside.to_string_lossy().into_owned()
         ))
+        .is_err());
+    }
+
+    #[test]
+    fn isolated_page_plan_reorders_rotates_removes_and_preserves_source() {
+        let workspace = TestWorkspace::new();
+        let pdf = workspace.root.join("source.pdf");
+        let original = write_two_page_pdf(&pdf);
+        let signature = pdf_signature(&pdf.metadata().unwrap());
+        let plan = pdf_plan(&[(2, 90, false), (1, 0, true)]);
+        let (report, output) = build_pdf_page_plan_isolated(&pdf, &signature, plan).unwrap();
+        let output = output.expect("verified plan must produce isolated bytes");
+
+        assert_eq!(report.status, "isolated_verified");
+        assert_eq!(report.source_pages, 2);
+        assert_eq!(report.output_pages, 1);
+        assert_eq!(report.rotated_pages, 1);
+        assert!(report.reordered);
+        assert_eq!(report.removed_pages, 1);
+        assert!(report.structural_reparse_verified);
+        assert!(report.text_order_verified);
+        assert!(report.source_unchanged);
+        assert_eq!(report.page_mapping[0].source_page, 2);
+        assert_eq!(report.page_mapping[0].rotation, 90);
+        assert_eq!(fs::read(&pdf).unwrap(), original);
+
+        let output_document = Document::load_mem(&output).unwrap();
+        let output_page = output_document.get_pages()[&1];
+        let rotation = inherited_page_value(&output_document, output_page, b"Rotate")
+            .unwrap()
+            .as_i64()
+            .unwrap();
+        assert_eq!(rotation, 90);
+        let output_text = pdf_extract::extract_text_from_mem_by_pages(&output).unwrap();
+        assert_eq!(output_text.len(), 1);
+        assert!(output_text[0].contains("Second Page Beta"));
+    }
+
+    #[test]
+    fn isolated_page_plan_blocks_unverified_interactive_pdf_features() {
+        let workspace = TestWorkspace::new();
+        let pdf = workspace.root.join("form.pdf");
+        write_two_page_pdf(&pdf);
+        let mut document = Document::load(&pdf).unwrap();
+        document
+            .catalog_mut()
+            .unwrap()
+            .set("AcroForm", Object::Dictionary(Dictionary::new()));
+        document.save(&pdf).unwrap();
+        let source = fs::read(&pdf).unwrap();
+        let signature = pdf_signature(&pdf.metadata().unwrap());
+        let (report, output) = build_pdf_page_plan_isolated(
+            &pdf,
+            &signature,
+            pdf_plan(&[(2, 0, false), (1, 0, false)]),
+        )
+        .unwrap();
+
+        assert_eq!(report.status, "blocked");
+        assert!(report.blockers.contains(&"acroform_unverified".into()));
+        assert!(output.is_none());
+        assert!(report.source_unchanged);
+        assert_eq!(fs::read(&pdf).unwrap(), source);
+    }
+
+    #[test]
+    fn isolated_page_plan_rejects_stale_or_invalid_plans() {
+        let workspace = TestWorkspace::new();
+        let pdf = workspace.root.join("invalid.pdf");
+        write_two_page_pdf(&pdf);
+        let signature = pdf_signature(&pdf.metadata().unwrap());
+
+        assert!(build_pdf_page_plan_isolated(
+            &pdf,
+            "stale-signature",
+            pdf_plan(&[(1, 0, false), (2, 0, false)]),
+        )
+        .is_err());
+        assert!(build_pdf_page_plan_isolated(
+            &pdf,
+            &signature,
+            pdf_plan(&[(1, 0, false), (1, 0, false)]),
+        )
+        .is_err());
+        assert!(build_pdf_page_plan_isolated(
+            &pdf,
+            &signature,
+            pdf_plan(&[(1, 0, true), (2, 0, true)]),
+        )
         .is_err());
     }
 
