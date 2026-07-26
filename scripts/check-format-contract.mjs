@@ -80,6 +80,20 @@ if (!envFormat
   || envFormat.adapters?.writer !== 'text'
   || envFormat.adapters?.indexer !== null
   || envFormat.userCapability?.level !== 'basic-edit') failures.push('A4 ENV protected-edit contract is incomplete')
+for (const id of ['ini', 'properties', 'editorconfig', 'gitignore']) {
+  const format = registry.formats?.find(candidate => candidate.id === id)
+  const indexed = id === 'ini' || id === 'properties'
+  if (!format
+    || format.routeName !== 'TextEditor'
+    || format.capabilities?.read !== 'supported'
+    || format.capabilities?.edit !== 'supported'
+    || format.capabilities?.create !== 'supported'
+    || (format.capabilities?.index === 'supported') !== indexed
+    || format.adapters?.reader !== 'text'
+    || format.adapters?.writer !== 'text'
+    || Boolean(format.adapters?.indexer) !== indexed
+    || format.userCapability?.level !== 'complete-edit') failures.push(`A4 ${id} text-workspace contract is incomplete`)
+}
 const yamlFormat = registry.formats?.find(format => format.id === 'yaml')
 if (!yamlFormat
   || yamlFormat.routeName !== 'YamlEditor'

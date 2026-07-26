@@ -363,7 +363,14 @@ pub async fn create_format_file(
     if !directory.is_dir() {
         return Err("创建目标必须是目录".into());
     }
-    let base_name = sanitize_filename(&prefix.unwrap_or_else(|| creation.default_name.clone()));
+    let canonical_dotfile = prefix.is_none()
+        && creation.default_name == creation.default_extension
+        && creation.default_extension.starts_with('.');
+    let base_name = if canonical_dotfile {
+        creation.default_name.clone()
+    } else {
+        sanitize_filename(&prefix.unwrap_or_else(|| creation.default_name.clone()))
+    };
     if base_name.is_empty() {
         return Err("文件名不能为空".into());
     }
@@ -373,19 +380,27 @@ pub async fn create_format_file(
     if body.len() as u64 > format.max_bytes {
         return Err(format!("{} 模板超过大小限制", format.label));
     }
-    let mut index = 0;
-    let path = loop {
-        let suffix = if index == 0 {
-            String::new()
-        } else {
-            format!(" {index}")
-        };
-        let candidate =
-            directory.join(format!("{base_name}{suffix}{}", creation.default_extension));
-        if !candidate.exists() {
-            break candidate;
+    let path = if canonical_dotfile {
+        let candidate = directory.join(&base_name);
+        if candidate.exists() {
+            return Err(format!("{} 已存在", creation.default_extension));
         }
-        index += 1;
+        candidate
+    } else {
+        let mut index = 0;
+        loop {
+            let suffix = if index == 0 {
+                String::new()
+            } else {
+                format!(" {index}")
+            };
+            let candidate =
+                directory.join(format!("{base_name}{suffix}{}", creation.default_extension));
+            if !candidate.exists() {
+                break candidate;
+            }
+            index += 1;
+        }
     };
     let path = guard.resolve_for_write(path)?;
     ensure_matching_format(&path, &format_id)?;
@@ -523,6 +538,43 @@ mod tests {
         assert!(
             crate::formats::toml::analyze_toml_source(&fs::read_to_string(&path).unwrap()).valid
         );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn canonical_dotfile_templates_create_exact_names_and_never_duplicate() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-dotfile-create-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let root_string = root.to_string_lossy().into_owned();
+        for (format_id, name) in [
+            ("editorconfig", ".editorconfig"),
+            ("gitignore", ".gitignore"),
+        ] {
+            let path = tauri::async_runtime::block_on(create_format_file(
+                root_string.clone(),
+                None,
+                format_id.into(),
+                None,
+                None,
+            ))
+            .unwrap();
+            assert_eq!(Path::new(&path).file_name().unwrap(), name);
+            assert!(tauri::async_runtime::block_on(create_format_file(
+                root_string.clone(),
+                None,
+                format_id.into(),
+                None,
+                None,
+            ))
+            .is_err());
+        }
         fs::remove_dir_all(root).unwrap();
     }
 

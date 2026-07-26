@@ -420,4 +420,23 @@ mod tests {
             assert!(!is_sensitive_path(path), "{path} should remain indexable");
         }
     }
+
+    #[test]
+    fn common_configuration_formats_use_the_reliable_text_workspace() {
+        for (path, id, indexed) in [
+            ("settings.INI", "ini", true),
+            ("service.conf", "ini", true),
+            ("application.properties", "properties", true),
+            (".editorconfig", "editorconfig", false),
+            (".gitignore", "gitignore", false),
+            (".env.production", "env", false),
+        ] {
+            let format = file_format_for_path(path).unwrap();
+            assert_eq!(format.id, id);
+            assert_eq!(format.route_name, "TextEditor");
+            assert_eq!(format.adapters.reader.as_deref(), Some("text"));
+            assert_eq!(format.adapters.writer.as_deref(), Some("text"));
+            assert_eq!(format.capabilities.index.is_supported(), indexed);
+        }
+    }
 }

@@ -30,7 +30,7 @@
     {
       "id": "env",
       "label": "环境变量",
-      "extensions": [".env"],
+      "extensions": [".env", ".env.local", ".env.development", ".env.production", ".env.test"],
       "mimeTypes": ["text/plain", "application/x-env"],
       "routeName": "TextEditor",
       "maxBytes": 2097152,
@@ -39,6 +39,58 @@
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": null },
       "creation": { "defaultExtension": ".env", "defaultContent": "# 环境变量\nAPP_ENV=development\n", "defaultName": "未命名环境变量" }
+    },
+    {
+      "id": "ini",
+      "label": "INI / CONF 配置",
+      "extensions": [".ini", ".conf", ".cfg"],
+      "mimeTypes": ["text/plain", "text/x-ini"],
+      "routeName": "TextEditor",
+      "maxBytes": 8388608,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "INI、CONF 与 CFG 可创建、查找替换、编辑、全文索引，并保留原始编码和换行策略可靠保存。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".ini", "defaultContent": "[settings]\nenabled=true\n", "defaultName": "未命名配置" }
+    },
+    {
+      "id": "properties",
+      "label": "Java Properties",
+      "extensions": [".properties"],
+      "mimeTypes": ["text/plain", "text/x-java-properties"],
+      "routeName": "TextEditor",
+      "maxBytes": 8388608,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "Java Properties 可创建、查找替换、编辑、全文索引，并保留原始编码和换行策略可靠保存。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".properties", "defaultContent": "# Properties\napp.name=LongEdit\n", "defaultName": "未命名属性配置" }
+    },
+    {
+      "id": "editorconfig",
+      "label": "EditorConfig",
+      "extensions": [".editorconfig"],
+      "mimeTypes": ["text/plain", "text/x-editorconfig"],
+      "routeName": "TextEditor",
+      "maxBytes": 2097152,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "unsupported" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "EditorConfig 可在文件树中识别、创建和可靠编辑；点文件不进入全文索引和知识图谱。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": null },
+      "creation": { "defaultExtension": ".editorconfig", "defaultContent": "root = true\n\n[*]\ncharset = utf-8\nend_of_line = lf\ninsert_final_newline = true\n", "defaultName": ".editorconfig" }
+    },
+    {
+      "id": "gitignore",
+      "label": "Git 忽略规则",
+      "extensions": [".gitignore"],
+      "mimeTypes": ["text/plain", "text/x-git-ignore"],
+      "routeName": "TextEditor",
+      "maxBytes": 2097152,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "unsupported" },
+      "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "Git 忽略规则可在文件树中识别、创建和可靠编辑；点文件不进入全文索引和知识图谱。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": null },
+      "creation": { "defaultExtension": ".gitignore", "defaultContent": "node_modules/\ndist/\n.env\n", "defaultName": ".gitignore" }
     },
     {
       "id": "json",
