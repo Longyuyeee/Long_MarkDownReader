@@ -51,7 +51,7 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - YAML、XML、TOML、INI/CONF/CFG、Properties、`.editorconfig`、`.gitignore` 已进入统一管理与可靠基础编辑。
 - `.env` 系列默认遮罩且后端排除全文索引/知识图谱；必须在当前文件显式确认后才能显示和编辑原值。
 - 常见 JavaScript/TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 和 Web 源文件支持语法高亮、搜索与轻量可靠编辑，但不提供 IDE 执行、调试或语言服务。
-- DOCX C0/C1 首批已接入共享注册、WorkspaceGuard 与有界 OOXML 解析；原 Library 右侧工作面支持标题、段落、列表、表格、图片占位、目录、文内搜索和高级对象兼容画像，原文件只读。
+- DOCX C1-2A 已接入共享注册、WorkspaceGuard 与有界 OOXML 解析；原 Library 右侧工作面支持标题、段落、列表、表格、样式/编号语义、受限内部图片预览、目录、文内搜索和高级对象兼容画像，原文件只读。
 - DOCX C1-2A 已解析 `styles.xml`、`numbering.xml` 和内部文档关系；白名单图片经过单图 4 MiB、总量 12 MiB、32 张和文件签名门禁后可在原右侧工作面真实显示。当前电脑无 Word/WPS/LibreOffice，真实三生产者 fixture 仍是外部门槛。
 - A5/G8/B0/B1A/B1B/B1C/C1 已用真实 Tauri Debug/WebView2 自动化完成 33 项检查和 25 张证据图，覆盖关系摘要、标签/集合、跨格式关系侧栏、居中图谱导航、PDF 页面整理、DOCX 结构化阅读、兼容画像及可靠另存重开。
 
@@ -85,6 +85,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/XLSX_Advanced_Data_Object_Contract.md`：S8-7 高级对象离线策略、透视候选审计、内存聚合预览和写回门禁。
 - `docs/T8_1B_Theme_Desktop_Visual_Audit.md`：四套场景主题、真实 Tauri 三档尺寸证据、图谱紧凑布局修复和可重复截图脚本。
 - `docs/Development_Progress_Audit_2026-07-24.md`：当前完整候选能力、风险排序、发布门禁，以及合并后从 XLSX 专项收尾切换到统一文件管理 A0 主线的顺序。
+- `docs/Development_Progress_and_Direction_Audit_2026-07-27.md`：当前 30 类格式/62 个扩展名的能力分层、原始需求对齐、关键缺口和 DOCX～发布矩阵退出条件；这是最新综合审计入口。
 - `docs/Unified_File_Manager_Format_Requirements.md`：统一文件管理、常用格式阅读/基础编辑、安全保存和体系化管理的补充需求基线。
 - `docs/Next_Development_Execution_Guide.md`：A0～A5、PDF 页面编辑、DOCX/PPTX 基础工作面和体系化管理增强的后续执行指导。
 - `docs/C0_C1_DOCX_Structured_Reading_Audit_2026-07-27.md`：DOCX 首批结构化阅读、安全预算、兼容画像、桌面证据、明确边界和后续收口顺序。
@@ -143,11 +144,11 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 ## 6. 下一阶段顺序
 
-当前权威顺序：**DOCX 基础工作面 → PPTX 基础工作面 → WPS/OpenDocument/旧版 Office 格式与转换审计 → 统一管理和发布矩阵增强**。PDF 页面基础编辑阶段已收口；DOCX C1-2A 已交付，下一开发入口为 C0-2 三类真实生产者 fixture 与 C1-2B 页眉页脚、脚注、批注和索引收口，完成保真证据后才进入 C2。PDF 合并、拆分和插页转入增强队列。
+当前权威顺序：**DOCX 基础工作面 → PPTX 基础工作面 → WPS/OpenDocument/旧版 Office 格式与转换审计 → 统一管理和发布矩阵增强**。PDF 页面基础编辑阶段已收口；DOCX C1-2A 已交付，下一开发入口为 C1-2B 页眉页脚、脚注/尾注、批注、版式和索引收口，并行准备 C0-2 三类真实生产者 fixture，完成保真证据后才进入 C2。PDF 合并、拆分和插页转入增强队列。
 
 以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 
-2026-07-24 暂停点状态、质量证据、风险和逐批退出条件见 `docs/Development_Pause_Audit_2026-07-24.md`；综合审计见 `docs/Development_Progress_Audit_2026-07-24.md`，上一轮细节见 `docs/Development_Progress_Audit_2026-07-23.md`，历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1、I7-2、W7-1～W7-3、S8-1A～S8-6E、S8-7A～S8-7E2E、T8-1A～T8-1B、A0 第一批、A1、A2 代码级范围、A3 第六批第五段和 A4 第一批第一段。当前主线暂停在 **A4 YAML 源码编辑与校验开始前**；YAML 仅完成解析器与高亮依赖选型调研，未提交半成品依赖或实现。日志显式编辑、JSON 创建和索引继续作为计划能力，A1～A4 的真实 Tauri 大文件、自动刷新和进程级故障证据并入 A5。S8-7E2F～S8-8 保留为 XLSX 专项回补队列；G8 图谱产品化和 F8-1 下一种专业格式编辑器继续作为增强线。
+2026-07-24 暂停点状态、质量证据、风险和逐批退出条件见 `docs/Development_Pause_Audit_2026-07-24.md`；当时的综合审计见 `docs/Development_Progress_Audit_2026-07-24.md`，上一轮细节见 `docs/Development_Progress_Audit_2026-07-23.md`，历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。这些文档记录的是 A4 开始前的历史状态；A4/A5、G8、PDF B0～B1C 和 DOCX C1-2A 后续均已完成，不得再把“A4 YAML 开始前”当作当前恢复点。S8-7E2F～S8-8 继续保留为 XLSX 专项回补队列。
 
 当前 `v0.7.0` 基线已完成知识库文件树的创建、移动、重命名、删除、排序、扫描和状态读取路径守卫，并修复旧 API Key 迁移失败丢失及远程 HTTP 传输风险。
 

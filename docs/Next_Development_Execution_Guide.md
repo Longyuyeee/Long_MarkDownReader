@@ -2,7 +2,7 @@
 
 > 文档类型：可执行开发指导
 > 版本：1.0
-> 更新日期：2026-07-26
+> 更新日期：2026-07-27
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
@@ -551,16 +551,30 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 5. `A4` LOG、YAML、XML、TOML 和配置格式。
 6. `A5` 真实桌面验收与阶段审计。
 7. `B0～B1C` PDF 页面基础编辑；B2/B3 增强操作进入回补队列。
-8. `C0～C2` DOCX 只读与基础编辑。
-9. `C3～C5` PPTX 只读与基础编辑。
-10. `D1～D4` 统一管理闭环补强。
-11. `E` WPS、OpenDocument、旧版 Office、SVG、Draw.io 和更多代码格式。
-12. `F` 高级等价与 AI 增强。
+8. `C1-2B` DOCX 页眉页脚、脚注/批注、版式和全局索引收口。
+9. `C0-2` Word/WPS/LibreOffice 三类真实生产者 fixture 与重开矩阵。
+10. `C2A～C2E` DOCX 隔离补丁、受限编辑、可靠另存与生产者重开。
+11. `C3～C5` PPTX 只读与基础编辑。
+12. `D1～D4` Office 格式的最近、收藏、标签、集合、索引和关系管理补强。
+13. `E` WPS、OpenDocument、旧版 Office、SVG 和 Draw.io 的规范/许可/转换审计与分级支持。
+14. `R` 安装包、文件关联、升级、卸载和多机器发布矩阵。
+15. `F` PDF 合并拆分、知识图谱深层语义、XLSX 高级等价与 AI 增强。
 
-当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B 和 PDF B0/B1A/B1B/B1C 已完成，DOCX C0/C1 首批已交付**。真实 Tauri Debug/WebView2 门禁为 33 项检查和 25 张机器校验证据；PDF 已具备安全子集内的页面计划、隔离验证、可靠另存、重开和兼容画像，DOCX 已具备原 Library 右侧的结构化只读工作面。
+当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C 和 DOCX C1-2A 已完成**。真实 Tauri Debug/WebView2 门禁为 33 项检查和 25 张机器校验证据；PDF 已具备安全子集内的页面计划、隔离验证、可靠另存、重开和兼容画像，DOCX 已具备原 Library 右侧的结构化只读工作面、样式/编号语义和受限内部图片预览。
 
 当前 **A3 JSON/JSONC 已收口**：树形视图在精确 AST 范围、重复键、数字精度和 JSONC 保真门禁下开放标量替换、对象键重命名、对象/数组追加和删除；A5 进一步证明非法 JSON 默认不会覆盖最后合法磁盘版本，修复后可以可靠保存。
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。下一步从 **C0-2 DOCX 真实生产者矩阵与 C1-2B 只读内容/索引收口**继续，完成证据后再进入 DOCX 基础编辑、PPTX 和 WPS/开放办公格式审计。G8-3～G8-5 与 PDF B2/B3 增强操作不再阻塞原始专业格式需求。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。下一步从 **C1-2B DOCX 只读内容/索引收口**继续，并行准备 **C0-2 DOCX 真实生产者矩阵**；完成证据后再进入 C2A～C2E DOCX 基础编辑、C3～C5 PPTX 和 WPS/开放办公格式审计。G8-3～G8-5 与 PDF B2/B3 增强操作不再阻塞原始专业格式需求。
+
+当前批次的强制退出条件：
+
+1. C1-2B 必须覆盖页眉、页脚、脚注、尾注和批注正文，搜索结果可以定位到标题、段落或表格。
+2. 合并单元格、分页符和未支持对象必须有回归与显式占位，不得静默丢失。
+3. DOCX 继续在 Library 右侧打开，并复用全局字体、字号、间距和主题变量。
+4. C0-2 必须使用 Microsoft Word、WPS、LibreOffice 真实生成且许可可再分发的文件；合成 fixture 不得冒充兼容完成。
+5. 在三类真实生产者读取和重开证据完成前，不得开放覆盖原 DOCX 的写回。
+6. 每个批次都必须更新能力注册表、真实桌面清单、阶段审计和 `Development_Handoff.md`。
+
+更完整的能力分层、风险和 C1-2B～发布矩阵退出条件见 [`Development_Progress_and_Direction_Audit_2026-07-27.md`](./Development_Progress_and_Direction_Audit_2026-07-27.md)。
