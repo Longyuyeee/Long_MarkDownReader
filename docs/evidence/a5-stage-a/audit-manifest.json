@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-07-26T13:36:56.744Z",
+  "capturedAt": "2026-07-26T13:46:51.717Z",
   "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
-  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
+  "sourceUrl": "http://127.0.0.1:9000/#/",
   "fixtureLocation": "isolated temporary workspace",
   "checks": [
     {
@@ -15,6 +15,14 @@
     },
     {
       "id": "env-mask-reveal-remask",
+      "status": "passed"
+    },
+    {
+      "id": "json-invalid-save-protected",
+      "status": "passed"
+    },
+    {
+      "id": "json-repair-save",
       "status": "passed"
     },
     {
@@ -38,14 +46,21 @@
     {
       "id": "log-rotation-reload",
       "status": "passed"
+    },
+    {
+      "id": "restart-recent-file-reopen",
+      "status": "passed"
     }
   ],
   "evidenceFiles": [
     "text-save-and-reopen.jpg",
     "external-conflict-detected.jpg",
     "env-default-masked.jpg",
+    "json-invalid-save-protected.jpg",
     "env-search-excluded.jpg",
     "large-text-bounded-readonly.jpg",
-    "log-append-and-rotation.jpg"
-  ]
+    "log-append-and-rotation.jpg",
+    "restart-recent-file-restored.jpg"
+  ],
+  "restartVerifiedAt": "2026-07-26T13:46:58.826Z"
 }

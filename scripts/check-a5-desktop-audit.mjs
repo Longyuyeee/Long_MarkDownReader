@@ -9,11 +9,14 @@ const requiredChecks = new Set([
   'text-save-reopen',
   'external-conflict-reload',
   'env-mask-reveal-remask',
+  'json-invalid-save-protected',
+  'json-repair-save',
   'env-search-exclusion',
   'saved-search-collection',
   'large-text-bounded-readonly',
   'log-append-refresh',
   'log-rotation-reload',
+  'restart-recent-file-reopen',
 ])
 
 if (manifest.schemaVersion !== 1) failures.push('A5 evidence manifest must use schema version 1')
@@ -34,8 +37,9 @@ if (!largeCheck?.displayState?.includes('512.0 KiB') || !largeCheck?.displayStat
 }
 
 const evidenceFiles = manifest.evidenceFiles || []
-if (evidenceFiles.length !== 6 || new Set(evidenceFiles).size !== evidenceFiles.length) {
-  failures.push('A5 evidence manifest must list six unique screenshots')
+if (!manifest.restartVerifiedAt) failures.push('A5 evidence must record process restart verification time')
+if (evidenceFiles.length !== 8 || new Set(evidenceFiles).size !== evidenceFiles.length) {
+  failures.push('A5 evidence manifest must list eight unique screenshots')
 }
 for (const file of evidenceFiles) {
   const resolved = path.resolve(new URL(file, evidenceRoot).pathname.replace(/^\/([A-Za-z]:)/, '$1'))
@@ -54,14 +58,20 @@ for (const file of evidenceFiles) {
 
 const runner = await fs.readFile(new URL('scripts/run-a5-desktop-audit.ps1', root), 'utf8')
 const capture = await fs.readFile(new URL('scripts/capture-a5-desktop-audit.mjs', root), 'utf8')
+const restart = await fs.readFile(new URL('scripts/verify-a5-desktop-restart.mjs', root), 'utf8')
 if (!runner.includes('WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS')) {
   failures.push('A5 runner must launch the real WebView2 debug endpoint')
 }
 if (!runner.includes('LONGEDIT_E2E_LIBRARY')) {
   failures.push('A5 runner must isolate the desktop workspace')
 }
-if (!capture.includes('A5_PRIVATE_ENV_MARKER') || !capture.includes('external-conflict-reload')) {
-  failures.push('A5 capture must exercise sensitive search exclusion and conflict reload')
+if (!runner.includes('$restartedApp') || !restart.includes('restart-recent-file-reopen')) {
+  failures.push('A5 runner must verify a recent file through a real process restart')
+}
+if (!capture.includes('A5_PRIVATE_ENV_MARKER')
+  || !capture.includes('external-conflict-reload')
+  || !capture.includes('json-invalid-save-protected')) {
+  failures.push('A5 capture must exercise sensitive search exclusion, conflict reload, and invalid JSON protection')
 }
 
 if (failures.length) {

@@ -96,6 +96,23 @@ try {
     }
     Wait-ForPort -Port 9333 -Listening $false
   }
+
+  $restartedApp = Start-Process -FilePath (Join-Path $workspace "src-tauri\target\debug\tauri-app.exe") `
+    -WorkingDirectory (Join-Path $workspace "src-tauri") `
+    -PassThru
+  try {
+    Wait-ForPort -Port 9333 -Listening $true
+    & node (Join-Path $workspace "scripts\verify-a5-desktop-restart.mjs")
+    if ($LASTEXITCODE -ne 0) {
+      throw "A5 desktop restart verification failed"
+    }
+  }
+  finally {
+    if ($restartedApp -and -not $restartedApp.HasExited) {
+      Stop-Process -Id $restartedApp.Id -Force
+    }
+    Wait-ForPort -Port 9333 -Listening $false
+  }
 }
 finally {
   if ($vite -and -not $vite.HasExited) {

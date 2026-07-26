@@ -162,9 +162,13 @@ await send('Emulation.setDeviceMetricsOverride', {
   deviceScaleFactor: 1,
   mobile: false,
 })
+await waitFor(`document.querySelector('#app')?.children.length > 0`, 'desktop app bootstrap')
+await waitFor(`document.querySelector('.page-loader') === null`, 'desktop app initial route')
+await delay(1000)
 
 const serviceIni = path.join(library, 'service.ini')
 const envFile = path.join(library, '.env')
+const jsonFile = path.join(library, 'damaged.json')
 const largeFile = path.join(library, 'large.txt')
 const logFile = path.join(library, 'runtime.log')
 const checks = []
@@ -229,6 +233,36 @@ await waitFor(
   'ENV remasked state',
 )
 checks.push({ id: 'env-mask-reveal-remask', status: 'passed' })
+
+await navigate(routeFor('json', jsonFile), '.json-workspace')
+const validJson = '{\n  "valid": true\n}'
+const invalidJson = '{\n  "valid": true,\n  "broken":\n}'
+await setEditorText(invalidJson)
+await waitFor(
+  `document.querySelector('.analysis-pane')?.textContent?.includes('语法错误') === true`,
+  'invalid JSON diagnostic',
+)
+await clickText('.editor-actions button', '保存')
+await waitFor(
+  `document.querySelector('.n-dialog')?.textContent?.includes('源码存在语法错误') === true`,
+  'invalid JSON save protection',
+)
+const diskAfterBlockedJsonSave = await fs.readFile(jsonFile, 'utf8')
+if (diskAfterBlockedJsonSave.trim() !== '{"valid":true}') {
+  throw new Error(`Invalid JSON overwrote the last valid disk version: ${diskAfterBlockedJsonSave}`)
+}
+await capture('json-invalid-save-protected.jpg')
+await clickText('.n-dialog button', '继续编辑')
+await setEditorText(validJson)
+await waitFor(
+  `document.querySelector('.analysis-pane')?.textContent?.includes('语法错误') === false`,
+  'repaired JSON analysis',
+)
+await clickText('.editor-actions button', '保存')
+await waitForFile(jsonFile, content => content.includes('"valid": true'), 'repaired JSON save')
+checks.push({ id: 'json-invalid-save-protected', status: 'passed' })
+checks.push({ id: 'json-repair-save', status: 'passed' })
+await waitFor(`!document.body.innerText.includes('JSON 源码已安全保存')`, 'JSON save toast dismissal')
 
 await navigate('#/library', '.library-mode')
 const searchInput = '.search-area input[placeholder="搜索文档..."]'
@@ -299,6 +333,7 @@ const evidenceFiles = [
   'text-save-and-reopen.jpg',
   'external-conflict-detected.jpg',
   'env-default-masked.jpg',
+  'json-invalid-save-protected.jpg',
   'env-search-excluded.jpg',
   'large-text-bounded-readonly.jpg',
   'log-append-and-rotation.jpg',
