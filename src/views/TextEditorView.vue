@@ -524,7 +524,7 @@ const readRange = (offset: number, encoding?: string) => invoke<TextDocumentRang
   },
 )
 
-const load = async (encoding?: string) => {
+const load = async (encoding?: string, discardDraft = false) => {
   const generation = ++loadGeneration
   clearAutoSave()
   loading.value = true
@@ -536,7 +536,7 @@ const load = async (encoding?: string) => {
       || format.value.adapters.reader !== 'text'
     ) throw new Error('当前路径不是已注册的文本工作区文件')
     const draft = currentTab.value
-    if (draft?.isDirty && draft.content !== undefined) {
+    if (!discardDraft && draft?.isDirty && draft.content !== undefined) {
       restoreTabDraft(draft)
       return
     }
@@ -625,7 +625,7 @@ const save = async (isAutoSave = false) => {
         content: errorMessage(cause),
         positiveText: '重新加载',
         negativeText: '保留编辑内容',
-        onPositiveClick: () => { void load(sourceEncoding.value) },
+        onPositiveClick: () => { void load(sourceEncoding.value, true) },
       })
     } else {
       message.error(`保存失败：${errorMessage(cause)}`)
@@ -640,7 +640,7 @@ const reloadCurrentEncoding = async () => {
     readEncoding.value = sourceEncoding.value
     return
   }
-  await load(readEncoding.value)
+  await load(readEncoding.value, true)
 }
 
 const markPolicyDirty = () => {

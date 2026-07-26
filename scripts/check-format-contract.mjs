@@ -174,6 +174,8 @@ requireText(textEditor, 'maskEnvValues', 'A4 ENV workspace must mask values by d
 requireText(textEditor, '显示并允许编辑', 'A4 ENV workspace must require explicit per-file reveal')
 requireText(textEditor, 'StreamLanguage.define', 'A4 code workspace must apply registered syntax highlighting')
 requireText(textEditor, "extension === '.ps1'", 'A4 code workspace must select language modes by extension')
+requireText(textEditor, 'discardDraft = false', 'A5 explicit reload must be able to discard an in-memory draft')
+requireText(textEditor, 'load(sourceEncoding.value, true)', 'A5 external-conflict reload must read the disk version')
 requireText(index, 'is_sensitive_path(&path)', 'live search must reject sensitive paths')
 requireText(knowledgeIndex, 'is_sensitive_path(&path)', 'persistent index must reject sensitive paths')
 requireText(textKernel, 'TextDocumentSnapshot', 'A1 text kernel must expose reusable document snapshots')
