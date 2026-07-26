@@ -1,9 +1,9 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-26
-交接基线：当前开发版本 `v0.7.0`；A4 统一格式阶段已在 `codex/a4-format-closure` 完成代码级收口，等待 Draft PR #6 审阅与 A5 真实桌面验收
+交接基线：当前开发版本 `v0.7.0`；A4 统一格式与 A5 核心真实桌面验收已在 `codex/a4-format-closure` 收口，Draft PR #6 等待审阅；下一主线为 G8 知识图谱产品化
 
-> 最新收口结论、29 类格式/61 个扩展名矩阵和下一阶段顺序见 `docs/A4_Format_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
+> 最新桌面收口结论、16 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；A4 的 29 类格式/61 个扩展名矩阵见 `docs/A4_Format_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 ## 1. 新电脑快速恢复
 
@@ -47,6 +47,7 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - YAML、XML、TOML、INI/CONF/CFG、Properties、`.editorconfig`、`.gitignore` 已进入统一管理与可靠基础编辑。
 - `.env` 系列默认遮罩且后端排除全文索引/知识图谱；必须在当前文件显式确认后才能显示和编辑原值。
 - 常见 JavaScript/TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 和 Web 源文件支持语法高亮、搜索与轻量可靠编辑，但不提供 IDE 执行、调试或语言服务。
+- A5 已用真实 Tauri Debug/WebView2 自动化完成 16 项检查和 10 张证据图，覆盖文本、JSON、YAML/XML/TOML、Properties、TypeScript、`.env`、大文件、日志轮转、外部冲突和进程重启后的最近文件恢复。
 
 ## 3. 后端结构
 
@@ -80,6 +81,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/Development_Progress_Audit_2026-07-24.md`：当前完整候选能力、风险排序、发布门禁，以及合并后从 XLSX 专项收尾切换到统一文件管理 A0 主线的顺序。
 - `docs/Unified_File_Manager_Format_Requirements.md`：统一文件管理、常用格式阅读/基础编辑、安全保存和体系化管理的补充需求基线。
 - `docs/Next_Development_Execution_Guide.md`：A0～A5、PDF 页面编辑、DOCX/PPTX 基础工作面和体系化管理增强的后续执行指导。
+- `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`：阶段 A 桌面级收口、真实证据矩阵、能力边界和 G8 图谱产品化入口。
 - `docs/Text_Editor_Architecture_Decision.md`：A2 TXT 编辑器选型、CodeMirror 6 职责边界、大文件策略和后续扩展约束。
 - `docs/JSON_Editor_Architecture_Decision.md`：A3 JSON/JSONC 解析器、源码事实源、注释/重复键/高精度边界和分批开放门禁。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
@@ -131,6 +133,10 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能优化项，不是构建失败。
 
 ## 6. 下一阶段顺序
+
+当前权威顺序：**G8 知识图谱产品化 → PDF 页面实用编辑 → DOCX/PPTX 基础工作面 → WPS 格式与转换审计 → 统一管理和发布矩阵增强**。G8 第一批先把关系摘要放进默认工作台、搜索结果和文件上下文侧栏，再扩展代码/配置关系提取及图谱—思维导图协同。具体退出条件见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`。
+
+以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 
 2026-07-24 暂停点状态、质量证据、风险和逐批退出条件见 `docs/Development_Pause_Audit_2026-07-24.md`；综合审计见 `docs/Development_Progress_Audit_2026-07-24.md`，上一轮细节见 `docs/Development_Progress_Audit_2026-07-23.md`，历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。当前工作区已完成 S6-8、T7-1、F7-1、S6-9、F7-2、S6-10～S6-15、G7-2、G7-3、I7-1、I7-2、W7-1～W7-3、S8-1A～S8-6E、S8-7A～S8-7E2E、T8-1A～T8-1B、A0 第一批、A1、A2 代码级范围、A3 第六批第五段和 A4 第一批第一段。当前主线暂停在 **A4 YAML 源码编辑与校验开始前**；YAML 仅完成解析器与高亮依赖选型调研，未提交半成品依赖或实现。日志显式编辑、JSON 创建和索引继续作为计划能力，A1～A4 的真实 Tauri 大文件、自动刷新和进程级故障证据并入 A5。S8-7E2F～S8-8 保留为 XLSX 专项回补队列；G8 图谱产品化和 F8-1 下一种专业格式编辑器继续作为增强线。
 
