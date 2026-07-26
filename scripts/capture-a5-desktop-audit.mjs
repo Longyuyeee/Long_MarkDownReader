@@ -191,8 +191,10 @@ const relationSourceFile = path.join(library, 'G8 Source.md')
 const relationPlanFile = path.join(library, 'G8 Plan.opml')
 const relationTagFile = path.join(library, 'G8 Tag Source.md')
 const relationPdfFile = path.join(library, 'G8 Research.pdf')
+const relationPdfSavedFile = path.join(library, 'G8 Research Saved.pdf')
 const relationTableFile = path.join(library, 'G8 Metrics.table.json')
 const relationCanvasFile = path.join(library, 'G8 Board.canvas')
+const relationPdfOriginal = await fs.readFile(relationPdfFile)
 const checks = []
 
 await navigate(routeFor('library', relationSourceFile), '.library-mode')
@@ -329,18 +331,41 @@ await clickText('.page-plan-verify', '验证隔离副本')
 await waitFor(
   `document.querySelector('.page-plan-verification')?.textContent?.includes('隔离副本验证通过') === true
     && document.querySelector('.page-plan-verification')?.textContent?.includes('源文件未修改') === true
-    && document.querySelector('.page-plan-verification')?.textContent?.includes('当前仍不提供覆盖保存') === true`,
+    && document.querySelector('.page-plan-verification')?.textContent?.includes('可靠另存只创建同目录新文件') === true`,
   'PDF isolated-copy generation and reparse verification',
   240,
 )
 checks.push({ id: 'b1a-pdf-isolated-copy-verification', status: 'passed' })
 await capture('b1a-pdf-isolated-copy-verification.jpg')
-await clickText('.page-plan-history button', '重置')
-await waitFor(`document.querySelector('.page-plan-dirty') === null`, 'PDF page plan reset')
-await clickText('.relation-context-trigger', '关系上下文')
-await waitFor(`document.querySelector('.relation-context-panel') !== null`, 'PDF relation context reopen')
+await setInput('.page-plan-save input[aria-label="PDF 新副本文件名"]', 'G8 Research Saved.pdf')
+await clickText('.page-plan-save button', '另存新 PDF 并打开')
+await waitFor(
+  `document.querySelector('.document-title strong')?.textContent?.includes('G8 Research Saved') === true
+    && document.querySelectorAll('.page-shell').length === 1
+    && document.querySelectorAll('.page-shell canvas').length === 1
+    && document.querySelector('.pdf-state') === null
+    && document.querySelector('.page-plan-saved')?.textContent?.includes('可靠副本已落盘并重开') === true
+    && document.querySelector('.page-plan-saved')?.textContent?.includes('源文件未修改') === true
+    && document.querySelector('.page-plan-dirty') === null`,
+  'PDF reliable save and reopened copy',
+  240,
+)
+await delay(500)
+const [relationPdfAfter, relationPdfSaved] = await Promise.all([
+  fs.readFile(relationPdfFile),
+  fs.readFile(relationPdfSavedFile),
+])
+if (!relationPdfAfter.equals(relationPdfOriginal)) throw new Error('PDF reliable save changed source bytes')
+if (relationPdfSaved.length < 500 || !relationPdfSaved.subarray(0, 5).equals(Buffer.from('%PDF-'))) {
+  throw new Error('PDF reliable save did not create a valid-looking target')
+}
+checks.push({ id: 'b1b-pdf-reliable-save-reopen', status: 'passed' })
+await capture('b1b-pdf-reliable-save-reopen.jpg')
 
 await navigate(`#/table?path=${encodeURIComponent(relationTableFile)}`, '.table-view')
+if (!(await evaluate(`document.querySelector('.relation-context-panel') !== null`))) {
+  await clickText('.relation-context-trigger', '关系上下文')
+}
 await waitFor(
   `document.querySelector('.relation-context-panel')?.textContent?.includes('G8 Metrics') === true
     && document.querySelector('.relation-context-panel')?.textContent?.includes('Relation Coverage') === true
@@ -619,6 +644,7 @@ const evidenceFiles = [
   'g8-pdf-object-context.jpg',
   'b0-pdf-page-plan-preview.jpg',
   'b1a-pdf-isolated-copy-verification.jpg',
+  'b1b-pdf-reliable-save-reopen.jpg',
   'g8-table-object-context.jpg',
   'g8-canvas-object-context.jpg',
   'text-save-and-reopen.jpg',

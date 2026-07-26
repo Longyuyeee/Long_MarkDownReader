@@ -34,6 +34,7 @@ const requiredChecks = new Set([
   'g8-pdf-object-context',
   'b0-pdf-page-plan-preview',
   'b1a-pdf-isolated-copy-verification',
+  'b1b-pdf-reliable-save-reopen',
   'g8-table-object-context',
   'g8-canvas-object-context',
 ])
@@ -57,8 +58,8 @@ if (!largeCheck?.displayState?.includes('512.0 KiB') || !largeCheck?.displayStat
 
 const evidenceFiles = manifest.evidenceFiles || []
 if (!manifest.restartVerifiedAt) failures.push('A5 evidence must record process restart verification time')
-if (evidenceFiles.length !== 22 || new Set(evidenceFiles).size !== evidenceFiles.length) {
-  failures.push('A5/G8/B0/B1A evidence manifest must list twenty-two unique screenshots')
+if (evidenceFiles.length !== 23 || new Set(evidenceFiles).size !== evidenceFiles.length) {
+  failures.push('A5/G8/B0/B1A/B1B evidence manifest must list twenty-three unique screenshots')
 }
 for (const file of evidenceFiles) {
   const resolved = path.resolve(new URL(file, evidenceRoot).pathname.replace(/^\/([A-Za-z]:)/, '$1'))
@@ -98,9 +99,10 @@ if (!capture.includes('A5_PRIVATE_ENV_MARKER')
   || !capture.includes('g8-pdf-object-context')
   || !capture.includes('b0-pdf-page-plan-preview')
   || !capture.includes('b1a-pdf-isolated-copy-verification')
+  || !capture.includes('b1b-pdf-reliable-save-reopen')
   || !capture.includes('g8-table-object-context')
   || !capture.includes('g8-canvas-object-context')) {
-  failures.push('A5/G8/B0/B1A capture must exercise the library shell, relation summaries, cross-format context, PDF page planning and isolated verification, saved collections, planning hierarchy, sensitive search exclusion, conflict reload, and invalid JSON protection')
+  failures.push('A5/G8/B0/B1A/B1B capture must exercise the library shell, relation summaries, cross-format context, PDF page planning, isolated verification and reliable save/reopen, saved collections, planning hierarchy, sensitive search exclusion, conflict reload, and invalid JSON protection')
 }
 
 if (failures.length) {

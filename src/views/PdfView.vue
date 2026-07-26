@@ -72,8 +72,12 @@
         </div>
         <div v-else-if="sidebarTab === 'organize'" class="page-organizer">
           <div class="page-plan-summary">
-            <div><strong>页面整理草稿</strong><span>{{ pagePlanStatus }}</span></div>
-            <p>旋转、排序和排除先在内存中预览；“验证隔离副本”会生成临时字节并复读，不写回源 PDF。</p>
+            <div v-if="savedCopyNotice?.path === pdfPath" class="page-plan-saved">
+              <strong>可靠副本已落盘并重开</strong>
+              <span>{{ savedCopyNotice.pages }} 页 · {{ formatBytes(savedCopyNotice.bytes) }} · 源文件未修改</span>
+            </div>
+            <div class="page-plan-heading"><strong>页面整理草稿</strong><span>{{ pagePlanStatus }}</span></div>
+            <p>旋转、排序和排除先在内存中预览；验证通过后只能在源文件同目录创建新副本，不会覆盖任何 PDF。</p>
             <div class="page-plan-history">
               <button :disabled="!pagePlanUndo.length" title="撤销 Ctrl+Z" @click="undoPagePlan">撤销</button>
               <button :disabled="!pagePlanRedo.length" title="重做 Ctrl+Y" @click="redoPagePlan">重做</button>
@@ -90,7 +94,17 @@
               <template v-if="pagePlanVerification?.status === 'isolated_verified'">
                 <strong>隔离副本验证通过</strong>
                 <span>{{ pagePlanVerification.outputPages }} 页 · {{ formatBytes(pagePlanVerification.outputBytes) }} · 源文件未修改</span>
-                <small>结构复读、文本页序与旋转映射均已核验；当前仍不提供覆盖保存。</small>
+                <small>结构复读、文本页序与旋转映射均已核验；可靠另存只创建同目录新文件。</small>
+                <div class="page-plan-save">
+                  <label>
+                    <span>新副本文件名</span>
+                    <input v-model="pagePlanCopyName" maxlength="180" aria-label="PDF 新副本文件名" @keydown.enter.prevent="savePagePlanCopy"/>
+                  </label>
+                  <button :disabled="pagePlanSaving || !pagePlanCopyName.trim()" @click="savePagePlanCopy">
+                    {{ pagePlanSaving ? '正在落盘并重开…' : '另存新 PDF 并打开' }}
+                  </button>
+                  <small v-if="pagePlanSaveError">{{ pagePlanSaveError }}</small>
+                </div>
               </template>
               <template v-else-if="pagePlanVerification">
                 <strong>检测到高风险 PDF 特性，已阻断</strong>
@@ -252,6 +266,19 @@ interface PdfIsolatedPagePlanReport {
   sourceUnchanged: boolean
   pageMapping: Array<{ outputPage: number; sourcePage: number; rotation: number }>
 }
+interface PdfSavedPagePlanReport {
+  status: 'saved_verified'
+  engine: string
+  targetPath: string
+  targetSignature: string
+  targetDigest: string
+  sourceSignature: string
+  sourceUnchanged: boolean
+  outputPages: number
+  outputBytes: number
+  structuralReopenVerified: boolean
+  textReopenVerified: boolean
+}
 const POSITION_KEY = 'longedit.pdf.positions.v1'
 const route = useRoute()
 const router = useRouter()
@@ -309,6 +336,10 @@ const pdfSourceSignature = ref('')
 const pagePlanVerification = ref<PdfIsolatedPagePlanReport | null>(null)
 const pagePlanVerificationError = ref('')
 const pagePlanVerifying = ref(false)
+const pagePlanCopyName = ref('')
+const pagePlanSaving = ref(false)
+const pagePlanSaveError = ref('')
+const savedCopyNotice = ref<{ path: string; pages: number; bytes: number } | null>(null)
 let loadingTask: PDFDocumentLoadingTask | null = null
 let rangeTransport: TauriPdfRangeTransport | null = null
 let loadStartedAt = 0
@@ -507,6 +538,8 @@ const initializePagePlan = (pageCount: number) => {
   activePagePlanId.value = pagePlan.value[0]?.id || ''
   pagePlanVerification.value = null
   pagePlanVerificationError.value = ''
+  pagePlanCopyName.value = `${fileName.value}-页面整理.pdf`
+  pagePlanSaveError.value = ''
 }
 
 const openPageOrganizer = () => {
@@ -522,6 +555,7 @@ const commitPagePlan = (next: PdfPagePlanEntry[], activeId?: string) => {
   pagePlan.value = next
   pagePlanVerification.value = null
   pagePlanVerificationError.value = ''
+  pagePlanSaveError.value = ''
   if (activeId) activePagePlanId.value = activeId
 }
 
@@ -547,6 +581,7 @@ const undoPagePlan = () => {
   pagePlanUndo.value = pagePlanUndo.value.slice(0, -1)
   pagePlanVerification.value = null
   pagePlanVerificationError.value = ''
+  pagePlanSaveError.value = ''
 }
 
 const redoPagePlan = () => {
@@ -557,6 +592,7 @@ const redoPagePlan = () => {
   pagePlanRedo.value = pagePlanRedo.value.slice(0, -1)
   pagePlanVerification.value = null
   pagePlanVerificationError.value = ''
+  pagePlanSaveError.value = ''
 }
 
 const resetPagePlan = () => {
@@ -579,6 +615,7 @@ const verifyPagePlan = async () => {
   pagePlanVerifying.value = true
   pagePlanVerification.value = null
   pagePlanVerificationError.value = ''
+  pagePlanSaveError.value = ''
   try {
     pagePlanVerification.value = await invoke<PdfIsolatedPagePlanReport>('preview_pdf_page_plan_isolated_copy', {
       libraryRoot: store.libraryPath,
@@ -594,6 +631,53 @@ const verifyPagePlan = async () => {
     pagePlanVerificationError.value = String(cause).replace(/^Error:\s*/, '')
   } finally {
     pagePlanVerifying.value = false
+  }
+}
+
+const savePagePlanCopy = async () => {
+  const verification = pagePlanVerification.value
+  if (
+    verification?.status !== 'isolated_verified'
+    || !verification.outputDigest
+    || !pagePlanCopyName.value.trim()
+    || pagePlanSaving.value
+  ) return
+  pagePlanSaving.value = true
+  pagePlanSaveError.value = ''
+  try {
+    const saved = await invoke<PdfSavedPagePlanReport>('save_pdf_page_plan_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      targetFileName: pagePlanCopyName.value.trim(),
+      expectedSignature: pdfSourceSignature.value,
+      expectedOutputDigest: verification.outputDigest,
+      plan: pagePlan.value.map(entry => ({
+        sourcePage: entry.sourcePage,
+        rotation: entry.rotation,
+        removed: entry.removed,
+      })),
+    })
+    if (
+      saved.status !== 'saved_verified'
+      || !saved.sourceUnchanged
+      || !saved.structuralReopenVerified
+      || !saved.textReopenVerified
+    ) throw new Error('保存结果未通过完整复读')
+    pagePlan.value = createPdfPagePlan(pdfDocument.value?.numPages || 0)
+    pagePlanUndo.value = []
+    pagePlanRedo.value = []
+    pagePlanVerification.value = null
+    savedCopyNotice.value = {
+      path: saved.targetPath,
+      pages: saved.outputPages,
+      bytes: saved.outputBytes,
+    }
+    message.success(`已可靠另存并验证：${pagePlanCopyName.value.trim()}`)
+    await router.replace({ path: '/pdf', query: { path: saved.targetPath } })
+  } catch (cause) {
+    pagePlanSaveError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pagePlanSaving.value = false
   }
 }
 
@@ -1034,6 +1118,8 @@ const loadPdf = async () => {
   pdfSourceSignature.value = ''
   pagePlanVerification.value = null
   pagePlanVerificationError.value = ''
+  pagePlanCopyName.value = ''
+  pagePlanSaveError.value = ''
   dismissSelectionTool()
   clearTextState()
   await loadingTask?.destroy()
@@ -1277,7 +1363,8 @@ onBeforeUnmount(async () => {
 .page-plan-dirty { display: inline-flex; margin-left: 7px; padding: 2px 5px; border-radius: 999px; color: #9a5a00; background: #fff0c7; font-size: 8px; font-style: normal; font-weight: 650; vertical-align: 1px; }
 .page-organizer { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .page-plan-summary { flex: none; padding: 10px; border-bottom: 1px solid rgba(0,0,0,.08); background: rgba(var(--theme-primary-rgb),.035); }
-.page-plan-summary > div:first-child { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.page-plan-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.page-plan-saved { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; margin-bottom: 8px; padding: 7px; border: 1px solid rgba(43,125,78,.22); border-radius: 7px; color: #2b6f49; background: rgba(43,125,78,.07); }.page-plan-saved strong { font-size: 9px; }.page-plan-saved span { color: inherit; font-size: 8px; }
 .page-plan-summary strong { font-size: 11px; }.page-plan-summary span { color: var(--theme-primary); font-size: 8px; }
 .page-plan-summary p { margin: 7px 0; color: var(--theme-text-secondary); font-size: 8px; line-height: 1.5; }
 .page-plan-history { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
@@ -1286,6 +1373,7 @@ onBeforeUnmount(async () => {
 .page-plan-history button:disabled,.page-plan-actions button:disabled { cursor: default; opacity: .35; }
 .page-plan-verify { width: 100%; min-height: 30px; margin-top: 7px; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 9px; font-weight: 650; }.page-plan-verify:disabled { cursor: default; opacity: .42; }
 .page-plan-verification { display: flex; flex-direction: column; gap: 3px; margin-top: 7px; padding: 8px; border: 1px solid rgba(43,125,78,.22); border-radius: 7px; color: #2b6f49; background: rgba(43,125,78,.07); }.page-plan-verification.blocked { border-color: rgba(184,76,62,.22); color: #a03f34; background: rgba(184,76,62,.07); }.page-plan-verification strong { font-size: 9px; }.page-plan-verification span,.page-plan-verification small { color: inherit; font-size: 8px; line-height: 1.45; }
+.page-plan-save { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; padding-top: 6px; border-top: 1px solid rgba(43,125,78,.16); }.page-plan-save label { display: flex; flex-direction: column; gap: 3px; }.page-plan-save input { width: 100%; height: 28px; padding: 0 7px; box-sizing: border-box; border: 1px solid rgba(0,0,0,.12); border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--theme-card); font-size: 8px; }.page-plan-save input:focus { border-color: rgba(var(--theme-primary-rgb),.45); }.page-plan-save button { min-height: 29px; border: 0; border-radius: 6px; color: #fff; background: var(--theme-primary); cursor: pointer; font-size: 9px; font-weight: 650; }.page-plan-save button:disabled { cursor: default; opacity: .42; }.page-plan-save > small { color: #a03f34; }
 .page-plan-list { min-height: 0; flex: 1; overflow: auto; padding: 9px; }
 .page-plan-list article { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 34px; gap: 6px; margin-bottom: 8px; padding: 7px; border: 1px solid rgba(0,0,0,.09); border-radius: 8px; background: rgba(255,255,255,.46); }
 .page-plan-list article.active { border-color: rgba(var(--theme-primary-rgb),.45); box-shadow: 0 0 0 1px rgba(var(--theme-primary-rgb),.08); }

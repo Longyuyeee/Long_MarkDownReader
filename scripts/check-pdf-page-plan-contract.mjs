@@ -4,11 +4,12 @@ import ts from 'typescript'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [planSource, view, pageComponent, pdfCommands] = await Promise.all([
+const [planSource, view, pageComponent, pdfCommands, reliableWrite] = await Promise.all([
   read('src/utils/pdfPagePlan.ts'),
   read('src/views/PdfView.vue'),
   read('src/components/PdfPage.vue'),
   read('src-tauri/src/commands/pdf.rs'),
+  read('src-tauri/src/services/reliable_write.rs'),
 ])
 
 const transpiled = ts.transpileModule(planSource, {
@@ -52,8 +53,8 @@ for (const text of [
 
 requireText(pageComponent, 'rotation?: number', 'PDF preview must accept a non-destructive relative rotation')
 requireText(pageComponent, 'page.rotate + normalizedRotation.value', 'PDF preview must preserve the source page rotation')
-if (/write_pdf_(pages?|document)|save_pdf_(pages?|document)/.test(pdfCommands)) {
-  throw new Error('B0 must not expose a PDF rewrite command before B1 reliable-save gates exist')
+if (/overwrite_pdf|write_pdf_document/.test(pdfCommands)) {
+  throw new Error('PDF page planning must not expose a source-document overwrite command')
 }
 
 for (const text of [
@@ -61,7 +62,7 @@ for (const text of [
   'preview_pdf_page_plan_isolated_copy',
   'expectedSignature',
   '源文件未修改',
-  '当前仍不提供覆盖保存',
+  '不会覆盖任何 PDF',
 ]) requireText(view, text, `B1A PDF isolated-copy contract missing: ${text}`)
 
 for (const text of [
@@ -74,4 +75,28 @@ for (const text of [
   'source_unchanged',
 ]) requireText(pdfCommands, text, `B1A PDF backend safety gate missing: ${text}`)
 
-console.log('PDF B0/B1A contract passed: immutable planning, history/leave guards, signature-protected isolated generation, risk blockers, reparse verification, and no source rewrite.')
+for (const text of [
+  '另存新 PDF 并打开',
+  'save_pdf_page_plan_copy',
+  'expectedOutputDigest',
+  'targetFileName',
+  'saved_verified',
+]) requireText(view, text, `B1B PDF reliable-save UI contract missing: ${text}`)
+
+for (const text of [
+  'save_pdf_page_plan_copy',
+  'validate_pdf_copy_file_name',
+  'expected_output_digest',
+  '目标文件已存在；可靠另存不会覆盖现有文件',
+  'structural_reopen_verified',
+  'text_reopen_verified',
+]) requireText(pdfCommands, text, `B1B PDF backend gate missing: ${text}`)
+
+for (const text of [
+  'write_new_bytes',
+  'create_new(true)',
+  'hard_link',
+  '可靠另存不会覆盖现有文件',
+]) requireText(reliableWrite, text, `B1B no-clobber write contract missing: ${text}`)
+
+console.log('PDF B0/B1A/B1B contract passed: immutable planning, isolated verification, atomic no-clobber save, disk reopen checks, and no source overwrite.')

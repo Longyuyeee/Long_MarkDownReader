@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-07-26T16:30:38.216Z",
+  "capturedAt": "2026-07-26T16:54:37.040Z",
   "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
   "sourceUrl": "http://127.0.0.1:9000/",
   "fixtureLocation": "isolated temporary workspace",
@@ -43,6 +43,10 @@
     },
     {
       "id": "b1a-pdf-isolated-copy-verification",
+      "status": "passed"
+    },
+    {
+      "id": "b1b-pdf-reliable-save-reopen",
       "status": "passed"
     },
     {
@@ -139,6 +143,7 @@
     "g8-pdf-object-context.jpg",
     "b0-pdf-page-plan-preview.jpg",
     "b1a-pdf-isolated-copy-verification.jpg",
+    "b1b-pdf-reliable-save-reopen.jpg",
     "g8-table-object-context.jpg",
     "g8-canvas-object-context.jpg",
     "text-save-and-reopen.jpg",
@@ -152,5 +157,5 @@
     "log-append-and-rotation.jpg",
     "restart-recent-file-restored.jpg"
   ],
-  "restartVerifiedAt": "2026-07-26T16:30:45.625Z"
+  "restartVerifiedAt": "2026-07-26T16:54:44.342Z"
 }

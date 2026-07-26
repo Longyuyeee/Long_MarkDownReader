@@ -13,6 +13,49 @@ pub fn write_bytes(path: impl AsRef<Path>, content: &[u8]) -> Result<(), String>
     write_bytes_impl(path.as_ref(), content, false)
 }
 
+pub fn write_new_bytes(path: impl AsRef<Path>, content: &[u8]) -> Result<(), String> {
+    let _guard = WRITE_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let path = path.as_ref();
+    let parent = path.parent().ok_or("写入目标没有父目录")?;
+    if !parent.is_dir() {
+        return Err("写入目标的父目录不存在".into());
+    }
+    let temp = sidecar_path(path, "longedit-new")?;
+    if temp.exists() {
+        fs::remove_file(&temp).map_err(|error| format!("无法清理旧新建临时文件: {error}"))?;
+    }
+    if path.exists() {
+        return Err("目标文件已存在；可靠另存不会覆盖现有文件".into());
+    }
+    let mut file = OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(&temp)
+        .map_err(|error| format!("无法创建同目录新建临时文件: {error}"))?;
+    if let Err(error) = file.write_all(content).and_then(|_| file.sync_all()) {
+        drop(file);
+        let _ = fs::remove_file(&temp);
+        return Err(format!("新建临时文件写入或同步失败: {error}"));
+    }
+    drop(file);
+
+    if let Err(error) = fs::hard_link(&temp, path) {
+        let _ = fs::remove_file(&temp);
+        if path.exists() {
+            return Err("目标文件已存在；可靠另存不会覆盖现有文件".into());
+        }
+        return Err(format!("无法原子创建新文件: {error}"));
+    }
+    fs::remove_file(&temp).map_err(|error| format!("无法清理新建临时文件: {error}"))?;
+    if let Ok(target) = OpenOptions::new().read(true).open(path) {
+        let _ = target.sync_all();
+    }
+    sync_parent(parent);
+    Ok(())
+}
+
 pub fn recover_interrupted_write(path: impl AsRef<Path>) -> Result<(), String> {
     let _guard = WRITE_LOCK
         .lock()
@@ -204,6 +247,20 @@ mod tests {
         }
         let result = fs::read_to_string(&target).unwrap();
         assert!(expected_payloads.contains(&result));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn creates_new_file_without_overwriting_existing_target() {
+        let root = fixture("new-only");
+        let target = root.join("copy.pdf");
+        write_new_bytes(&target, b"%PDF-new").unwrap();
+        assert_eq!(fs::read(&target).unwrap(), b"%PDF-new");
+        assert!(!sidecar_path(&target, "longedit-new").unwrap().exists());
+
+        let error = write_new_bytes(&target, b"%PDF-replacement").unwrap_err();
+        assert!(error.contains("不会覆盖"));
+        assert_eq!(fs::read(&target).unwrap(), b"%PDF-new");
         fs::remove_dir_all(root).unwrap();
     }
 }

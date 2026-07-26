@@ -5,7 +5,7 @@ use crate::formats::pdf_annotations::{
 use crate::formats::pdf_ocr::{
     validate_pdf_ocr, PdfOcrDocument, PdfOcrSource, MAX_OCR_SIDECAR_BYTES,
 };
-use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
+use crate::services::reliable_write::{recover_interrupted_write, write_new_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
 use lopdf::{dictionary, Dictionary, Document, Object, ObjectId};
 use sha2::{Digest, Sha256};
@@ -232,6 +232,22 @@ pub struct PdfIsolatedPagePlanReport {
     pub text_order_verified: bool,
     pub source_unchanged: bool,
     pub page_mapping: Vec<PdfIsolatedPageMapping>,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfSavedPagePlanReport {
+    pub status: String,
+    pub engine: String,
+    pub target_path: String,
+    pub target_signature: String,
+    pub target_digest: String,
+    pub source_signature: String,
+    pub source_unchanged: bool,
+    pub output_pages: usize,
+    pub output_bytes: usize,
+    pub structural_reopen_verified: bool,
+    pub text_reopen_verified: bool,
 }
 
 fn object_dictionary(object: &Object) -> Option<&Dictionary> {
@@ -575,6 +591,118 @@ fn build_pdf_page_plan_isolated(
     Ok((report, Some(output)))
 }
 
+fn validate_pdf_copy_file_name(file_name: &str) -> Result<String, String> {
+    let file_name = file_name.trim();
+    if file_name.is_empty() || file_name.chars().count() > 180 {
+        return Err("副本文件名必须为 1～180 个字符".into());
+    }
+    if file_name.chars().any(|value| {
+        value.is_control() || matches!(value, '/' | '\\' | '<' | '>' | ':' | '"' | '|' | '?' | '*')
+    }) || file_name.ends_with(' ')
+        || file_name.ends_with('.')
+    {
+        return Err("副本文件名包含路径、控制字符或 Windows 不允许的字符".into());
+    }
+    let path = Path::new(file_name);
+    if !path
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_some_and(|value| value.eq_ignore_ascii_case("pdf"))
+        || path.file_stem().is_none_or(|value| value.is_empty())
+    {
+        return Err("副本文件名必须以 .pdf 结尾".into());
+    }
+    Ok(file_name.to_string())
+}
+
+fn save_pdf_page_plan_copy_to_path(
+    source_path: &Path,
+    target_path: &Path,
+    expected_signature: &str,
+    expected_output_digest: &str,
+    plan: Vec<PdfPagePlanItem>,
+) -> Result<PdfSavedPagePlanReport, String> {
+    if target_path == source_path {
+        return Err("可靠另存禁止覆盖源 PDF".into());
+    }
+    if target_path.exists() {
+        return Err("目标文件已存在；可靠另存不会覆盖现有文件".into());
+    }
+    let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
+    if expected_output_digest.len() != 64
+        || !expected_output_digest
+            .bytes()
+            .all(|value| value.is_ascii_hexdigit())
+    {
+        return Err("隔离验证摘要无效，请重新验证页面计划".into());
+    }
+    let (isolated_report, output) =
+        build_pdf_page_plan_isolated(source_path, expected_signature, plan)?;
+    if isolated_report.status != "isolated_verified" {
+        return Err(format!(
+            "页面计划包含尚未验证的 PDF 特性：{}",
+            isolated_report.blockers.join(", ")
+        ));
+    }
+    let output = output.ok_or("隔离验证未生成可保存字节")?;
+    let actual_output_digest = isolated_report
+        .output_digest
+        .as_deref()
+        .ok_or("隔离验证缺少输出摘要")?;
+    if actual_output_digest != expected_output_digest {
+        return Err("页面计划或隔离输出已变化，请重新验证后再另存".into());
+    }
+    let expected_text = pdf_extract::extract_text_from_mem_by_pages(&output)
+        .map_err(|error| format!("保存前文本复读失败: {error}"))?;
+    write_new_bytes(target_path, &output)?;
+
+    let saved = fs::read(target_path)
+        .map_err(|error| format!("目标已创建，但无法复读保存字节: {error}"))?;
+    let target_digest = format!("{:x}", Sha256::digest(&saved));
+    if saved != output || target_digest != expected_output_digest {
+        return Err("目标已创建，但落盘字节与验证副本不一致；请保留文件并人工检查".into());
+    }
+    let saved_document = Document::load_mem(&saved)
+        .map_err(|error| format!("目标已创建，但 PDF 结构复读失败: {error}"))?;
+    let structural_reopen_verified =
+        saved_document.get_pages().len() == isolated_report.output_pages;
+    if !structural_reopen_verified {
+        return Err("目标已创建，但重开页数与页面计划不一致".into());
+    }
+    let saved_text = pdf_extract::extract_text_from_mem_by_pages(&saved)
+        .map_err(|error| format!("目标已创建，但文本复读失败: {error}"))?;
+    let text_reopen_verified = saved_text == expected_text;
+    if !text_reopen_verified {
+        return Err("目标已创建，但重开文本页序与页面计划不一致".into());
+    }
+    let source_metadata = source_path
+        .metadata()
+        .map_err(|error| format!("目标已创建，但源 PDF 元数据复核失败: {error}"))?;
+    let source_after =
+        fs::read(source_path).map_err(|error| format!("目标已创建，但源 PDF 复核失败: {error}"))?;
+    let source_unchanged = pdf_signature(&source_metadata) == expected_signature
+        && format!("{:x}", Sha256::digest(&source_after)) == isolated_report.source_digest;
+    if !source_unchanged {
+        return Err("目标已创建，但检测到源 PDF 同时发生变化；请重新打开源文件".into());
+    }
+    let target_metadata = target_path
+        .metadata()
+        .map_err(|error| format!("读取已保存 PDF 元数据失败: {error}"))?;
+    Ok(PdfSavedPagePlanReport {
+        status: "saved_verified".into(),
+        engine: isolated_report.engine,
+        target_path: target_path.to_string_lossy().into_owned(),
+        target_signature: pdf_signature(&target_metadata),
+        target_digest,
+        source_signature: isolated_report.source_signature,
+        source_unchanged,
+        output_pages: isolated_report.output_pages,
+        output_bytes: saved.len(),
+        structural_reopen_verified,
+        text_reopen_verified,
+    })
+}
+
 #[tauri::command]
 pub async fn preview_pdf_page_plan_isolated_copy(
     library_root: String,
@@ -589,6 +717,33 @@ pub async fn preview_pdf_page_plan_isolated_copy(
     })
     .await
     .map_err(|error| format!("PDF 隔离页面计划任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn save_pdf_page_plan_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_signature: String,
+    expected_output_digest: String,
+    plan: Vec<PdfPagePlanItem>,
+) -> Result<PdfSavedPagePlanReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pdf"])?;
+    let target_file_name = validate_pdf_copy_file_name(&target_file_name)?;
+    let target_path =
+        guard.resolve_file_for_write(source_path.with_file_name(target_file_name), &["pdf"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_pdf_page_plan_copy_to_path(
+            &source_path,
+            &target_path,
+            &expected_signature,
+            &expected_output_digest,
+            plan,
+        )
+    })
+    .await
+    .map_err(|error| format!("PDF 可靠另存任务失败: {error}"))?
 }
 
 fn annotation_path(pdf_path: &Path) -> Result<PathBuf, String> {
@@ -1014,6 +1169,101 @@ mod tests {
             pdf_plan(&[(1, 0, true), (2, 0, true)]),
         )
         .is_err());
+    }
+
+    #[test]
+    fn reliable_page_plan_save_creates_verified_copy_and_never_overwrites() {
+        let workspace = TestWorkspace::new();
+        let source = workspace.root.join("source.pdf");
+        let original = write_two_page_pdf(&source);
+        let signature = pdf_signature(&source.metadata().unwrap());
+        let plan = pdf_plan(&[(2, 90, false), (1, 0, true)]);
+        let (preview, _) = build_pdf_page_plan_isolated(&source, &signature, plan.clone()).unwrap();
+        let expected_digest = preview.output_digest.unwrap();
+        let target = workspace.root.join("source-页面整理.pdf");
+
+        let saved = save_pdf_page_plan_copy_to_path(
+            &source,
+            &target,
+            &signature,
+            &expected_digest,
+            plan.clone(),
+        )
+        .unwrap();
+        assert_eq!(saved.status, "saved_verified");
+        assert_eq!(saved.target_path, target.to_string_lossy());
+        assert_eq!(saved.target_digest, expected_digest);
+        assert_eq!(saved.output_pages, 1);
+        assert!(saved.structural_reopen_verified);
+        assert!(saved.text_reopen_verified);
+        assert!(saved.source_unchanged);
+        assert_eq!(fs::read(&source).unwrap(), original);
+        let saved_bytes = fs::read(&target).unwrap();
+        assert!(pdf_extract::extract_text_from_mem(&saved_bytes)
+            .unwrap()
+            .contains("Second Page Beta"));
+
+        let overwrite_error = save_pdf_page_plan_copy_to_path(
+            &source,
+            &target,
+            &signature,
+            &expected_digest,
+            plan.clone(),
+        )
+        .unwrap_err();
+        assert!(overwrite_error.contains("不会覆盖"));
+        assert_eq!(fs::read(&target).unwrap(), saved_bytes);
+        assert!(save_pdf_page_plan_copy_to_path(
+            &source,
+            &source,
+            &signature,
+            &expected_digest,
+            plan,
+        )
+        .unwrap_err()
+        .contains("禁止覆盖源"));
+        assert_eq!(fs::read(&source).unwrap(), original);
+    }
+
+    #[test]
+    fn reliable_page_plan_save_requires_current_preview_digest_and_safe_name() {
+        let workspace = TestWorkspace::new();
+        let source = workspace.root.join("source.pdf");
+        write_two_page_pdf(&source);
+        let signature = pdf_signature(&source.metadata().unwrap());
+        let plan = pdf_plan(&[(1, 0, false), (2, 90, false)]);
+        let target = workspace.root.join("copy.pdf");
+
+        assert!(save_pdf_page_plan_copy_to_path(
+            &source,
+            &target,
+            &signature,
+            &"0".repeat(64),
+            plan,
+        )
+        .unwrap_err()
+        .contains("重新验证"));
+        assert!(!target.exists());
+        assert_eq!(
+            validate_pdf_copy_file_name("  日常资料-页面整理.PDF  ").unwrap(),
+            "日常资料-页面整理.PDF"
+        );
+        for invalid in [
+            "source.pdf",
+            "../copy.pdf",
+            "folder/copy.pdf",
+            "copy?.pdf",
+            "copy.txt",
+            ".pdf",
+        ] {
+            if invalid == "source.pdf" {
+                continue;
+            }
+            assert!(
+                validate_pdf_copy_file_name(invalid).is_err(),
+                "{invalid} should be rejected"
+            );
+        }
     }
 
     #[test]

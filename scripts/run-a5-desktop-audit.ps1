@@ -27,6 +27,10 @@ $webviewData = Join-Path $auditRoot "webview-$runId"
 New-Item -ItemType Directory -Path $library -Force | Out-Null
 New-Item -ItemType Directory -Path $webviewData -Force | Out-Null
 New-Item -ItemType Directory -Path $output -Force | Out-Null
+$savedPdfFixture = Join-Path $library "G8 Research Saved.pdf"
+if (Test-Path -LiteralPath $savedPdfFixture -PathType Leaf) {
+  Remove-Item -LiteralPath $savedPdfFixture -Force
+}
 
 $utf8 = [System.Text.UTF8Encoding]::new($false)
 [System.IO.File]::WriteAllText((Join-Path $library "service.ini"), "[service]`nname=initial`n", $utf8)
