@@ -598,6 +598,17 @@ mod tests {
                 && result.match_kind == "body"
                 && result.context.contains("Generic adapter evidence")
         }));
+        fs::write(
+            root.join("index-proof.ts"),
+            "export const searchableCodeEvidence = 'registered code adapter';",
+        )
+        .unwrap();
+        let code_results = search_workspace(&root, "searchablecodeevidence", None);
+        assert!(code_results.iter().any(|result| {
+            result.object_type == "typescript"
+                && result.match_kind == "body"
+                && result.context.contains("searchableCodeEvidence")
+        }));
         fs::remove_dir_all(root).unwrap();
     }
 

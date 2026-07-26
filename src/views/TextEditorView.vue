@@ -130,6 +130,17 @@ import { undo, redo } from '@codemirror/commands'
 import { openSearchPanel, gotoLine } from '@codemirror/search'
 import { Compartment, EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
+import { StreamLanguage, type StreamParser } from '@codemirror/language'
+import { javascript, typescript } from '@codemirror/legacy-modes/mode/javascript'
+import { python } from '@codemirror/legacy-modes/mode/python'
+import { rust } from '@codemirror/legacy-modes/mode/rust'
+import { go } from '@codemirror/legacy-modes/mode/go'
+import { c, cpp, csharp, java, kotlin } from '@codemirror/legacy-modes/mode/clike'
+import { shell } from '@codemirror/legacy-modes/mode/shell'
+import { powerShell } from '@codemirror/legacy-modes/mode/powershell'
+import { standardSQL } from '@codemirror/legacy-modes/mode/sql'
+import { css, less, sCSS } from '@codemirror/legacy-modes/mode/css'
+import { html } from '@codemirror/legacy-modes/mode/xml'
 import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
 import {
@@ -317,8 +328,32 @@ const restoreTabDraft = (tab: TabInfo) => {
   store.activateTab(tab.id)
 }
 
+const codeLanguage = (): StreamParser<unknown> | null => {
+  const lowerPath = textPath.value.toLowerCase()
+  const extension = lowerPath.match(/\.[^.\\/]+$/)?.[0] || ''
+  if (['.ts', '.tsx', '.mts', '.cts'].includes(extension)) return typescript
+  if (['.js', '.jsx', '.mjs', '.cjs'].includes(extension)) return javascript
+  if (extension === '.py') return python
+  if (extension === '.rs') return rust
+  if (extension === '.go') return go
+  if (extension === '.java') return java
+  if (['.kt', '.kts'].includes(extension)) return kotlin
+  if (['.cpp', '.cc', '.cxx', '.hpp'].includes(extension)) return cpp
+  if (extension === '.cs') return csharp
+  if (['.c', '.h'].includes(extension)) return c
+  if (extension === '.ps1') return powerShell
+  if (['.sh', '.bash', '.zsh'].includes(extension)) return shell
+  if (extension === '.sql') return standardSQL
+  if (extension === '.scss') return sCSS
+  if (extension === '.less') return less
+  if (extension === '.css') return css
+  if (['.html', '.htm', '.vue'].includes(extension)) return html
+  return null
+}
+
 const editorExtensions = (isReadOnly: boolean) => [
   basicSetup,
+  ...(codeLanguage() ? [StreamLanguage.define(codeLanguage()!)] : []),
   readOnlyCompartment.of([
     EditorState.readOnly.of(isReadOnly),
     EditorView.editable.of(!isReadOnly),

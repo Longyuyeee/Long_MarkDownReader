@@ -439,4 +439,32 @@ mod tests {
             assert_eq!(format.capabilities.index.is_supported(), indexed);
         }
     }
+
+    #[test]
+    fn common_source_code_formats_are_lightweight_editable_and_searchable() {
+        for (path, id) in [
+            ("app.JS", "javascript"),
+            ("component.tsx", "typescript"),
+            ("tool.py", "python"),
+            ("main.rs", "rust"),
+            ("server.go", "go"),
+            ("Main.java", "jvm-code"),
+            ("native.cpp", "c-family"),
+            ("deploy.ps1", "shell"),
+            ("query.sql", "sql"),
+            ("Panel.vue", "web-source"),
+        ] {
+            let format = file_format_for_path(path).unwrap();
+            assert_eq!(format.id, id);
+            assert_eq!(format.route_name, "TextEditor");
+            assert!(format.capabilities.read.is_supported());
+            assert!(format.capabilities.edit.is_supported());
+            assert!(format.capabilities.index.is_supported());
+            assert_eq!(format.capabilities.create, CapabilityLevel::Planned);
+            assert_eq!(format.user_capability.level, UserCapabilityLevel::BasicEdit);
+            assert_eq!(format.adapters.reader.as_deref(), Some("text"));
+            assert_eq!(format.adapters.writer.as_deref(), Some("text"));
+            assert_eq!(format.adapters.indexer.as_deref(), Some("text"));
+        }
+    }
 }

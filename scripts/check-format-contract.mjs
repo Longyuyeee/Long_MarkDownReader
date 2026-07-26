@@ -94,6 +94,20 @@ for (const id of ['ini', 'properties', 'editorconfig', 'gitignore']) {
     || Boolean(format.adapters?.indexer) !== indexed
     || format.userCapability?.level !== 'complete-edit') failures.push(`A4 ${id} text-workspace contract is incomplete`)
 }
+for (const id of ['javascript', 'typescript', 'python', 'rust', 'go', 'jvm-code', 'c-family', 'shell', 'sql', 'web-source']) {
+  const format = registry.formats?.find(candidate => candidate.id === id)
+  if (!format
+    || format.routeName !== 'TextEditor'
+    || format.capabilities?.read !== 'supported'
+    || format.capabilities?.edit !== 'supported'
+    || format.capabilities?.create !== 'planned'
+    || format.capabilities?.index !== 'supported'
+    || format.adapters?.reader !== 'text'
+    || format.adapters?.writer !== 'text'
+    || format.adapters?.creator !== null
+    || format.adapters?.indexer !== 'text'
+    || format.userCapability?.level !== 'basic-edit') failures.push(`A4 ${id} lightweight-code contract is incomplete`)
+}
 const yamlFormat = registry.formats?.find(format => format.id === 'yaml')
 if (!yamlFormat
   || yamlFormat.routeName !== 'YamlEditor'
@@ -158,6 +172,8 @@ requireText(rustRegistry, '.max_by_key(|(extension_len, _)| *extension_len)', 'R
 requireText(rustRegistry, 'is_sensitive_path', 'A4 must define one backend sensitive-path policy')
 requireText(textEditor, 'maskEnvValues', 'A4 ENV workspace must mask values by default')
 requireText(textEditor, '显示并允许编辑', 'A4 ENV workspace must require explicit per-file reveal')
+requireText(textEditor, 'StreamLanguage.define', 'A4 code workspace must apply registered syntax highlighting')
+requireText(textEditor, "extension === '.ps1'", 'A4 code workspace must select language modes by extension')
 requireText(index, 'is_sensitive_path(&path)', 'live search must reject sensitive paths')
 requireText(knowledgeIndex, 'is_sensitive_path(&path)', 'persistent index must reject sensitive paths')
 requireText(textKernel, 'TextDocumentSnapshot', 'A1 text kernel must expose reusable document snapshots')
