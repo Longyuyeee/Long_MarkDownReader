@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-26T13:36:56.744Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
+  "fixtureLocation": "isolated temporary workspace",
+  "checks": [
+    {
+      "id": "text-save-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "external-conflict-reload",
+      "status": "passed"
+    },
+    {
+      "id": "env-mask-reveal-remask",
+      "status": "passed"
+    },
+    {
+      "id": "env-search-exclusion",
+      "status": "passed"
+    },
+    {
+      "id": "saved-search-collection",
+      "status": "passed"
+    },
+    {
+      "id": "large-text-bounded-readonly",
+      "status": "passed",
+      "renderedCharacters": 3604,
+      "displayState": "行 1，列 1 7490 行 524,288 字符 UTF-8 CRLF 24.0 MiB 512.0 KiB / 24.0 MiB 继续加载"
+    },
+    {
+      "id": "log-append-refresh",
+      "status": "passed"
+    },
+    {
+      "id": "log-rotation-reload",
+      "status": "passed"
+    }
+  ],
+  "evidenceFiles": [
+    "text-save-and-reopen.jpg",
+    "external-conflict-detected.jpg",
+    "env-default-masked.jpg",
+    "env-search-excluded.jpg",
+    "large-text-bounded-readonly.jpg",
+    "log-append-and-rotation.jpg"
+  ]
+}
