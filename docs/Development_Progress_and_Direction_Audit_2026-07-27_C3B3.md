@@ -1,6 +1,6 @@
 # LongEdit C3B3 后开发进度与方向审计
 
-> 后续状态：C3C1～C3C3 已完成共享索引、精确定位、PPTX 文件/幻灯片 KnowledgeObject、`contains` 关系和共享对象上下文；当前入口已推进到 C3C4。最新审计见 [C3C3 PPTX 知识对象与关系审计](./C3C3_PPTX_Knowledge_Object_Relation_Audit_2026-07-27.md)。
+> 后续状态：C3C1～C3C4 已完成共享索引、精确定位、PPTX 文件/幻灯片 KnowledgeObject、`contains` 关系、共享对象上下文和索引完整生命周期；C3C 已收口，当前入口已推进到 C3D。最新审计见 [C3C4 PPTX 索引与桌面综合收口审计](./C3C4_PPTX_Index_Desktop_Closure_Audit_2026-07-27.md)。
 
 审计日期：2026-07-27
 

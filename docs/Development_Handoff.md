@@ -1,11 +1,11 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-27
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3B3 及 C3C1～C3C3 已完成；下一批为 C3C4 PPTX 索引与桌面综合收口
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3B3 及 C3C1～C3C4 已完成；下一批为 C3D PPTX 生产者与桌面兼容矩阵收口
 
-> 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；C3C2、C3C3 各增加 3 项真实 PPTX 检查和 2 张截图。PPTX 已完成共享索引、精确定位、文件/幻灯片对象和共享关系上下文；索引/桌面综合收口、WPS Presentation 与基础编辑仍未完成。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
+> 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；C3C2、C3C3 各增加 3 项检查和 2 张截图，C3C4 增加 5 项检查和 4 张截图。PPTX 已完成共享索引、精确定位、文件/幻灯片对象、共享关系上下文以及索引缺失/过期/删除安全回退；WPS Presentation 与基础编辑仍未完成。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
-> 当前阶段以 `docs/C3C3_PPTX_Knowledge_Object_Relation_Audit_2026-07-27.md` 为最新交付审计；C3C～C5 和 PPTX 后续格式方向继续以 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md` 为总体基线。
+> 当前阶段以 `docs/C3C4_PPTX_Index_Desktop_Closure_Audit_2026-07-27.md` 为最新交付审计；C3D～C5 和 PPTX 后续格式方向继续以 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md` 为总体基线。
 
 ## 1. 新电脑快速恢复
 
@@ -74,6 +74,7 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - C3C1 已建立共享 PPTX 搜索段，覆盖文件名、幻灯片标题/正文、对象文本/替代文本/表格和备注；持久化索引与实时扫描消费同一生成器并通过真实 PowerPoint/LibreOffice fixture、结果一致性和源字节不变回归。注册表索引能力已提升为 `supported / pptx`，PPTX 仍严格只读。
 - C3C2 已让 Library 搜索结果在右侧 PPTX 工作区精确定位幻灯片、对象和备注；支持缩略图滚动、对象持续高亮、备注面板、重复定位令牌和异步竞态仲裁。真实 Tauri 审计同时修复了 PPTX 阅读命令未注册 `WorkspaceGuard` 的装配错误。
 - C3C3 已让 PPTX 文件和幻灯片进入统一 KnowledgeObject 与图谱快照，生成文件→幻灯片 `contains` 关系；当前幻灯片复用共享关系侧栏并可作为图谱中心，切换缩略图实时同步上下文，仍保持 Library 右侧内嵌与源文件只读。
+- C3C4 已完成 PPTX 索引缺失、重建、过期、删除与源文件删除全生命周期回归；Library 可见过期状态并安全实时回退，资源上限和真实桌面搜索→关系→图谱→返回链路均已验证。C3C 整体收口。
 - A5/G8/B0/B1A/B1B/B1C/C0/C1/C2E 已用真实 Tauri Debug/WebView2 自动化完成 36 项检查和 28 张证据图。
 
 ## 3. 后端结构
@@ -134,6 +135,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/C3C1_PPTX_Index_Core_Audit_2026-07-27.md`：PPTX 共享搜索段、持久化索引/实时扫描一致性、稳定定位元数据、源文件不变证明和 C3C2 入口。
 - `docs/C3C2_PPTX_Precise_Locator_Audit_2026-07-27.md`：Library 内嵌搜索定位、幻灯片/对象/备注消费、重复令牌、请求级工作区守卫修复和真实桌面证据。
 - `docs/C3C3_PPTX_Knowledge_Object_Relation_Audit_2026-07-27.md`：PPTX 文件/幻灯片对象、`contains` 关系、对象级共享关系侧栏、图谱回流和真实桌面证据。
+- `docs/C3C4_PPTX_Index_Desktop_Closure_Audit_2026-07-27.md`：PPTX 索引完整生命周期、资源上限、过期可见状态、实时回退和真实桌面综合闭环。
 - `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`：C3B3 后总体进度、C3C 索引/定位/关系架构审计、C3D～C5 阶段拆分和后续格式方向。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
 - `docs/Development_Stage_Audit_2026-07-20.md`：上一轮专业工作区阶段审计和交错排期基线。

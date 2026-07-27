@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3B3 与 C3C1～C3C3 已完成。下一开发入口为 C3C4 PPTX 索引与桌面综合收口。最新判定见 [C3C3 PPTX 知识对象与关系审计](./C3C3_PPTX_Knowledge_Object_Relation_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3B3 与 C3C1～C3C4 已完成。下一开发入口为 C3D PPTX 生产者与桌面兼容矩阵收口。最新判定见 [C3C4 PPTX 索引与桌面综合收口审计](./C3C4_PPTX_Index_Desktop_Closure_Audit_2026-07-27.md)。
 
 ## 1. 指导目标
 
@@ -386,8 +386,8 @@ DOCX 样本覆盖段落、标题、列表、表格、图片、分页、页眉页
    - C3C1（已完成）：共享 PPTX 搜索段生成器，同时接入持久化索引和实时扫描降级。
    - C3C2（已完成）：全局搜索精确定位幻灯片/对象/备注，支持重复定位、缩略图滚动和对象高亮。
    - C3C3（已完成）：PPTX 文件/幻灯片 KnowledgeObject、`contains` 关系、对象级共享关系侧栏和图谱回流。
-   - C3C4（下一阶段）：索引删除/重建、过期降级、资源上限、真实 fixture 与桌面综合链路证据。
-3. C3D：WPS Presentation 第三生产者、PowerPoint/WPS/LibreOffice 统一矩阵和真实 Tauri 多尺寸视觉矩阵。
+   - C3C4（已完成）：索引删除/重建、过期降级、资源上限、真实 fixture 与桌面综合链路证据。
+3. C3D（下一阶段）：WPS Presentation 第三生产者、PowerPoint/WPS/LibreOffice 统一矩阵和真实 Tauri 多尺寸视觉矩阵。
 4. C3B～C3D 全部完成后，才可宣告缩略图、放映、搜索和高级对象只读边界收口。
 
 ### C4：PPTX 基础编辑
@@ -572,7 +572,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C3B3 与 C3C1～C3C3 已完成结构化只读、视觉渲染、统一索引、精确定位和对象关系，下一步进入 **C3C4 PPTX 索引与桌面综合收口**。DOCX 原件覆盖与 PPTX 所有写回继续禁止。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C3B3 与 C3C1～C3C4 已完成结构化只读、视觉渲染、统一索引、精确定位、对象关系和索引生命周期闭环，下一步进入 **C3D PPTX 生产者与桌面兼容矩阵收口**。DOCX 原件覆盖与 PPTX 所有写回继续禁止。
 
 当前批次的强制退出条件：
 

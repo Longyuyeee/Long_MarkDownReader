@@ -822,6 +822,104 @@ mod tests {
     }
 
     #[test]
+    fn pptx_index_lifecycle_rebuilds_falls_back_and_removes_deleted_objects() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let base = std::env::temp_dir().join(format!("longedit-pptx-lifecycle-{nonce}"));
+        let root = base.join("workspace");
+        let cache = base.join("cache");
+        fs::create_dir_all(&root).unwrap();
+        fs::create_dir_all(&cache).unwrap();
+        let presentation = root.join("lifecycle.pptx");
+        fs::write(
+            &presentation,
+            include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx"),
+        )
+        .unwrap();
+        let runtime = KnowledgeIndexRuntime::default();
+
+        let graph = tauri::async_runtime::block_on(crate::commands::graph::build_link_graph(
+            root.to_string_lossy().into_owned(),
+        ))
+        .unwrap();
+        let snapshot = snapshot_from_graph(&root, graph);
+        write_snapshot(&cache, &root, &snapshot).unwrap();
+        let ready = inspect_index(&cache, &root, &runtime);
+        assert_eq!(ready.state, "ready");
+        assert_eq!(
+            snapshot
+                .objects
+                .iter()
+                .filter(|object| object.object_type == "pptx_slide")
+                .count(),
+            3
+        );
+        assert_eq!(
+            snapshot
+                .relations
+                .iter()
+                .filter(|relation| relation.relation_type == "contains")
+                .count(),
+            3
+        );
+
+        fs::write(
+            &presentation,
+            include_bytes!("../../../fixtures/pptx/producers/libreoffice-impress.pptx"),
+        )
+        .unwrap();
+        assert_eq!(inspect_index(&cache, &root, &runtime).state, "stale");
+        assert!(read_ready_snapshot(&cache, &root, false).is_none());
+        assert!(search_workspace(
+            &root,
+            "libreoffice impress producer fixture",
+            Some((&cache, false)),
+        )
+        .iter()
+        .any(|result| result.object_type == "pptx"));
+
+        let rebuilt_graph = tauri::async_runtime::block_on(
+            crate::commands::graph::build_link_graph(root.to_string_lossy().into_owned()),
+        )
+        .unwrap();
+        let rebuilt = snapshot_from_graph(&root, rebuilt_graph);
+        write_snapshot(&cache, &root, &rebuilt).unwrap();
+        assert_eq!(inspect_index(&cache, &root, &runtime).state, "ready");
+        assert!(read_ready_snapshot(&cache, &root, false).is_some());
+
+        fs::remove_file(&presentation).unwrap();
+        assert_eq!(inspect_index(&cache, &root, &runtime).state, "stale");
+        assert!(search_workspace(
+            &root,
+            "libreoffice impress producer fixture",
+            Some((&cache, false)),
+        )
+        .iter()
+        .all(|result| result.object_type != "pptx"));
+        let empty_graph = tauri::async_runtime::block_on(crate::commands::graph::build_link_graph(
+            root.to_string_lossy().into_owned(),
+        ))
+        .unwrap();
+        let empty_snapshot = snapshot_from_graph(&root, empty_graph);
+        write_snapshot(&cache, &root, &empty_snapshot).unwrap();
+        assert_eq!(inspect_index(&cache, &root, &runtime).state, "ready");
+        assert!(empty_snapshot
+            .objects
+            .iter()
+            .all(|object| object.object_type != "pptx" && object.object_type != "pptx_slide"));
+        assert!(empty_snapshot
+            .relations
+            .iter()
+            .all(|relation| relation.relation_type != "contains"));
+
+        delete_index(&cache, &root).unwrap();
+        assert_eq!(inspect_index(&cache, &root, &runtime).state, "missing");
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
     fn searches_table_titles_and_cell_content() {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)

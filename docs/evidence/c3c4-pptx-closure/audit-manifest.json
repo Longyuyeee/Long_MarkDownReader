@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-27T13:32:44.651Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
+  "fixtureLocation": "isolated temporary workspace",
+  "checks": [
+    {
+      "id": "missing-index-uses-live-pptx-fallback",
+      "status": "passed"
+    },
+    {
+      "id": "rebuild-persists-pptx-objects-and-relations",
+      "status": "passed"
+    },
+    {
+      "id": "search-locator-relation-graph-return-closes",
+      "status": "passed"
+    },
+    {
+      "id": "stale-index-is-visible-and-falls-back-live",
+      "status": "passed"
+    },
+    {
+      "id": "deleted-index-falls-back-with-source-bytes-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "pptx-index-ready-search.jpg",
+    "pptx-slide-centered-graph.jpg",
+    "pptx-index-stale-live-fallback.jpg",
+    "pptx-index-deleted-live-fallback.jpg"
+  ]
+}

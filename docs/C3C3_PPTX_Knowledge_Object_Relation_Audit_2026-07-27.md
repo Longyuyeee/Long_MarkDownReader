@@ -1,5 +1,7 @@
 # LongEdit C3C3 PPTX 知识对象与关系审计
 
+> 后续状态：C3C4 已完成索引完整生命周期、资源上限和真实桌面综合闭环，C3C 阶段已经收口。最新审计见 [C3C4 PPTX 索引与桌面综合收口审计](./C3C4_PPTX_Index_Desktop_Closure_Audit_2026-07-27.md)。
+
 审计日期：2026-07-27
 
 阶段：C3C3

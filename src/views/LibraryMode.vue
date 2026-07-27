@@ -2185,6 +2185,7 @@ onMounted(async () => {
   unlistenDailyNote = await listen('command-daily-note', createDailyNote)
   // 外部文件变更检测：窗口获焦时检查活跃文件是否被外部修改
   unlistenFocus = await getCurrentWindow().listen('tauri://focus', async () => {
+    void refreshKnowledgeIndexStatus()
     if (!activeTabId.value || !lastKnownModified) return
     try {
       const stats = await invoke<any>('get_file_stats', { libraryRoot: store.libraryPath, path: activeTabId.value })
@@ -2492,6 +2493,7 @@ watch(searchQuery, (q) => {
         const results = await invoke<KnowledgeSearchResult[]>('search_knowledge', { libraryRoot: store.libraryPath, query: q })
         if (generation !== knowledgeSearchGeneration) return
         knowledgeSearchResults.value = results
+        void refreshKnowledgeIndexStatus()
       }
       await refreshRelationSummaries()
     } catch (e) {

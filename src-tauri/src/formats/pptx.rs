@@ -1939,6 +1939,32 @@ mod tests {
     }
 
     #[test]
+    fn rejects_presentations_beyond_the_slide_resource_limit() {
+        let slide_ids = (0..=MAX_PPTX_SLIDES)
+            .map(|index| format!(r#"<p:sldId id="{}" r:id="rId{}"/>"#, 256 + index, index + 1))
+            .collect::<String>();
+        let presentation = format!(
+            r#"<p:presentation xmlns:p="p" xmlns:r="r"><p:sldIdLst>{slide_ids}</p:sldIdLst></p:presentation>"#
+        );
+        let mut output = Cursor::new(Vec::new());
+        {
+            let mut writer = zip::ZipWriter::new(&mut output);
+            let options = SimpleFileOptions::default();
+            writer.start_file("ppt/presentation.xml", options).unwrap();
+            writer.write_all(presentation.as_bytes()).unwrap();
+            writer
+                .start_file("ppt/_rels/presentation.xml.rels", options)
+                .unwrap();
+            writer
+                .write_all(br#"<Relationships xmlns="r"></Relationships>"#)
+                .unwrap();
+            writer.finish().unwrap();
+        }
+        let error = parse_pptx(&output.into_inner()).unwrap_err();
+        assert!(error.contains("超过 2,000 页上限"), "{error}");
+    }
+
+    #[test]
     fn expands_group_coordinates_and_preserves_crop_transparency_and_mixed_text() {
         let xml = br#"<p:sld xmlns:p="p" xmlns:a="a" xmlns:r="r"><p:cSld><p:spTree>
             <p:grpSp><p:nvGrpSpPr><p:cNvPr id="10" name="Scaled group"/></p:nvGrpSpPr>
