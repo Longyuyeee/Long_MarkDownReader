@@ -1,5 +1,7 @@
 # LongEdit 开发进度与后续方向综合审计
 
+> 状态说明：本文保留 `fe4d1f3` 时点的历史审计内容。PPTX C3A 与 C3B1～C3B3 后的最新事实和开发入口已由 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md` 取代；不得再把本文中的“PPTX 尚未进入实现”或旧测试数字视为当前状态。
+
 > 审计日期：2026-07-27
 > 审计基线：`codex/a4-format-closure` / `fe4d1f3`
 > 文档性质：当前能力事实、原始需求对齐、后续开发与验收基线

@@ -1,9 +1,11 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-27
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A 及 C3B1～C3B3 已完成；当前直接在 `main` 推进，下一阶段为 C3C PPTX 索引与管理闭环
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A 及 C3B1～C3B3 已完成；当前直接在 `main` 推进，下一批为 C3C1 PPTX 索引内核
 
 > 最新桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3B3 已完成连接线/自由形状/基础表格分级渲染、复杂对象类型卡面和复用真实对象画布的缩略图，见 `docs/C3B3_PPTX_Object_Rendering_and_Thumbnail_Audit_2026-07-27.md`。复杂旋转/渐变、完整自由形状/表格等价、C3 全局索引、WPS Presentation 与 PPTX 专项桌面矩阵仍未完成。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
+
+> C3B3 后综合进度、C3C 架构缺口、C3D～C5 退出条件和 PPTX 后续格式方向，统一以 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md` 为最新审计基线。
 
 ## 1. 新电脑快速恢复
 
@@ -126,6 +128,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/C3B1_PPTX_Theme_and_Basic_Style_Audit_2026-07-27.md`：PPTX 主题/母版/布局背景继承、基础对象与文字样式、真实 fixture 回归及 C3B2～C3D 退出条件。
 - `docs/C3B2_PPTX_Group_Image_and_Color_Audit_2026-07-27.md`：PPTX 组合子对象/坐标、图片裁剪透明度、颜色变换、混合文本降级和 C3B3 后续边界。
 - `docs/C3B3_PPTX_Object_Rendering_and_Thumbnail_Audit_2026-07-27.md`：PPTX 连接线/自由形状/基础表格、复杂对象分级卡面、共享对象渲染器、真实画布缩略图和 C3C/C3D 后续边界。
+- `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`：C3B3 后总体进度、C3C 索引/定位/关系架构审计、C3D～C5 阶段拆分和后续格式方向。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
 - `docs/Development_Stage_Audit_2026-07-20.md`：上一轮专业工作区阶段审计和交错排期基线。
 
@@ -257,7 +260,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
-开始新功能前先更新路线图中的需求状态与验收条件。下一批直接在 `main` 推进 C3C：建立 PPTX 可重建索引适配器、幻灯片/备注/对象文本定位，并接入全局搜索、最近、收藏、集合和共享关系侧栏。之后进入 C3D，补齐 WPS Presentation 第三生产者和真实 Tauri 三生产者、多尺寸视觉矩阵，再进入 C4 编辑。每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
+开始新功能前先更新路线图中的需求状态与验收条件。下一批直接在 `main` 推进 C3C1：建立共享 PPTX 搜索段生成器，同时接入持久化索引与实时扫描降级，并为幻灯片正文、对象文本和备注输出稳定定位元数据；全部验证到位后再把注册表索引能力提升为 `supported`。随后依次完成 C3C2 精确导航、C3C3 对象/关系、C3C4 桌面收口，再进入 C3D、C4 和 C5。每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
 
 ## 7. 已知边界与注意事项
 
