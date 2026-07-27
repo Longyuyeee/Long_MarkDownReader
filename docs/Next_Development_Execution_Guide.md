@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A Microsoft Word 生产者切片和 C2A 隔离包补丁底座已完成。下一开发入口为 C0-2B/C WPS 与 LibreOffice 真实生产者矩阵；外部环境不可用时推进仍不返回可保存包的 C2B 隔离语义补丁。最新判定见 [C2A 专项审计](./C2A_DOCX_Isolated_Package_Patch_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A Microsoft Word 生产者切片及 C2A/C2B 隔离补丁已完成。下一开发入口为 C0-2B/C WPS 与 LibreOffice 真实生产者矩阵；外部环境不可用时推进仍不返回可保存包的 C2C 列表/表格隔离语义补丁。最新判定见 [C2B 专项审计](./C2B_DOCX_Paragraph_Heading_Isolated_Edit_Audit_2026-07-27.md)。
 
 ## 1. 指导目标
 
@@ -357,7 +357,7 @@ DOCX 样本覆盖段落、标题、列表、表格、图片、分页、页眉页
 
 ### C1：DOCX 只读工作面
 
-当前进度：C1-2B 已完成安全 OOXML 解析、标题/段落/列表/表格、样式/编号/图片、页眉页脚、脚注、尾注、批注正文、正文引用、全局索引、对象定位、合并单元格和分页/版式摘要；C0-2 生产者矩阵完成 1/3，C2A 隔离包补丁底座已完成。
+当前进度：C1-2B 已完成安全 OOXML 读取与版式；C0-2 生产者矩阵完成 1/3；C2A 包级隔离底座和 C2B 普通段落/标题隔离语义补丁已完成，C2 进度为 2/5。
 
 1. 基于现有 ZIP 与 XML 安全边界解析 OOXML 包。
 2. 读取文档顺序、段落、标题、列表、表格、图片和基础样式。
@@ -560,13 +560,13 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 14. `R` 安装包、文件关联、升级、卸载和多机器发布矩阵。
 15. `F` PDF 合并拆分、知识图谱深层语义、XLSX 高级等价与 AI 增强。
 
-当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A 和 C2A 已完成**。真实 Tauri Debug/WebView2 门禁为 35 项检查和 27 张机器校验证据，已经覆盖 Microsoft Word 真实生产者文件、合并单元格、分页、横向双栏节摘要和附属内容搜索；C2A 是无 UI 的命令与内核门禁。
+当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A、C2A 和 C2B 已完成**。真实 Tauri Debug/WebView2 门禁为 35 项检查和 27 张机器校验证据；C2A/C2B 是无 UI 的命令与内核门禁。
 
 当前 **A3 JSON/JSONC 已收口**：树形视图在精确 AST 范围、重复键、数字精度和 JSONC 保真门禁下开放标量替换、对象键重命名、对象/数组追加和删除；A5 进一步证明非法 JSON 默认不会覆盖最后合法磁盘版本，修复后可以可靠保存。
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。C0-2A Microsoft Word 与 C2A 隔离包补丁已完成，下一步进入 **C0-2B/C WPS 与 LibreOffice 真实生产者矩阵**；若外部环境暂不可用，可推进严格隔离的 **C2B 普通段落/标题语义补丁**，但不得返回可保存包或开放原件覆盖。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。C0-2A Microsoft Word 与 C2A/C2B 隔离补丁已完成，下一步进入 **C0-2B/C WPS 与 LibreOffice 真实生产者矩阵**；若外部环境暂不可用，可推进严格隔离的 **C2C 列表/表格语义补丁**，但不得返回可保存包或开放原件覆盖。
 
 当前批次的强制退出条件：
 

@@ -1,6 +1,7 @@
 use crate::formats::docx::{parse_docx, DocxDocumentModel, MAX_DOCX_FILE_BYTES};
 use crate::formats::docx_patch::{
-    build_docx_document_patch_isolated, docx_document_part_digest, DocxIsolatedPatchReport,
+    build_docx_document_patch_isolated, build_docx_text_patch_isolated, docx_document_part_digest,
+    inspect_docx_editable_text_targets, DocxEditableTextTarget, DocxIsolatedPatchReport,
 };
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
@@ -34,6 +35,7 @@ pub struct DocxReadReport {
     pub modified: u64,
     pub signature: String,
     pub document_part_digest: String,
+    pub editable_text_targets: Vec<DocxEditableTextTarget>,
     pub read_only: bool,
     pub model: DocxDocumentModel,
     pub media: Vec<DocxMediaPreview>,
@@ -184,6 +186,7 @@ fn read_docx_path(path: &Path) -> Result<DocxReadReport, String> {
     let source = fs::read(path).map_err(|error| format!("读取 DOCX 失败: {error}"))?;
     let model = parse_docx(&source)?;
     let document_part_digest = docx_document_part_digest(&source)?;
+    let editable_text_targets = inspect_docx_editable_text_targets(&source, &model)?;
     let (media, media_warnings) = extract_media_previews(&source, &model)?;
     let modified = metadata
         .modified()
@@ -197,6 +200,7 @@ fn read_docx_path(path: &Path) -> Result<DocxReadReport, String> {
         modified,
         signature: file_signature(&metadata),
         document_part_digest,
+        editable_text_targets,
         read_only: true,
         model,
         media,
@@ -204,12 +208,14 @@ fn read_docx_path(path: &Path) -> Result<DocxReadReport, String> {
     })
 }
 
-fn preview_docx_patch_path(
+fn preview_docx_isolated_path<F>(
     path: &Path,
     expected_signature: &str,
-    expected_part_digest: &str,
-    replacement_xml: &str,
-) -> Result<DocxIsolatedPatchReport, String> {
+    build: F,
+) -> Result<DocxIsolatedPatchReport, String>
+where
+    F: FnOnce(&[u8]) -> Result<(DocxIsolatedPatchReport, Vec<u8>), String>,
+{
     let metadata = path
         .metadata()
         .map_err(|error| format!("读取 DOCX 元数据失败: {error}"))?;
@@ -222,8 +228,7 @@ fn preview_docx_patch_path(
     }
     let source = fs::read(path).map_err(|error| format!("读取 DOCX 失败: {error}"))?;
     let source_digest = format!("{:x}", Sha256::digest(&source));
-    let (mut report, output) =
-        build_docx_document_patch_isolated(&source, expected_part_digest, replacement_xml)?;
+    let (mut report, output) = build(&source)?;
 
     let temporary = TemporaryDocxCopy::create(&output)?;
     let reopened =
@@ -245,6 +250,29 @@ fn preview_docx_patch_path(
         return Err("隔离补丁验证期间源 DOCX 发生变化，请重新打开".into());
     }
     Ok(report)
+}
+
+fn preview_docx_patch_path(
+    path: &Path,
+    expected_signature: &str,
+    expected_part_digest: &str,
+    replacement_xml: &str,
+) -> Result<DocxIsolatedPatchReport, String> {
+    preview_docx_isolated_path(path, expected_signature, |source| {
+        build_docx_document_patch_isolated(source, expected_part_digest, replacement_xml)
+    })
+}
+
+fn preview_docx_text_patch_path(
+    path: &Path,
+    expected_signature: &str,
+    target_id: &str,
+    expected_text_digest: &str,
+    replacement_text: &str,
+) -> Result<DocxIsolatedPatchReport, String> {
+    preview_docx_isolated_path(path, expected_signature, |source| {
+        build_docx_text_patch_isolated(source, target_id, expected_text_digest, replacement_text)
+    })
 }
 
 #[tauri::command]
@@ -279,6 +307,30 @@ pub async fn preview_docx_package_patch_isolated_copy(
     })
     .await
     .map_err(|error| format!("DOCX 隔离补丁任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_docx_text_patch_isolated_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    target_id: String,
+    expected_text_digest: String,
+    replacement_text: String,
+) -> Result<DocxIsolatedPatchReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let document = guard.resolve_existing_file(path, &["docx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_docx_text_patch_path(
+            &document,
+            &expected_signature,
+            &target_id,
+            &expected_text_digest,
+            &replacement_text,
+        )
+    })
+    .await
+    .map_err(|error| format!("DOCX C2B 文本补丁任务失败: {error}"))?
 }
 
 #[cfg(test)]
@@ -351,6 +403,29 @@ mod tests {
                 .unwrap_err()
                 .contains("外部修改")
         );
+
+        let model = parse_docx(&source).unwrap();
+        let targets = inspect_docx_editable_text_targets(&source, &model).unwrap();
+        let target = targets
+            .iter()
+            .find(|target| target.text == "Microsoft Word Producer Fixture")
+            .unwrap();
+        let text_report = preview_docx_text_patch_path(
+            &path,
+            &signature,
+            &target.id,
+            &target.expected_text_digest,
+            "Microsoft Word Isolated Text Fixture",
+        )
+        .unwrap();
+        assert_eq!(
+            text_report.engine,
+            "LongEdit C2B isolated paragraph text patch"
+        );
+        assert!(text_report.semantic_reparse_verified);
+        assert!(text_report.temporary_copy_reopen_verified);
+        assert!(text_report.source_unchanged);
+        assert_eq!(fs::read(&path).unwrap(), source);
 
         fs::remove_dir_all(base).unwrap();
     }

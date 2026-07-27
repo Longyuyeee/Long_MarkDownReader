@@ -354,6 +354,13 @@ interface DocxReadReport {
   modified: number
   signature: string
   documentPartDigest: string
+  editableTextTargets: Array<{
+    id: string
+    blockId: string
+    kind: 'paragraph' | 'heading'
+    text: string
+    expectedTextDigest: string
+  }>
   readOnly: boolean
   model: {
     blocks: DocxBlock[]

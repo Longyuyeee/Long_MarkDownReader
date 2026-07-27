@@ -1,4 +1,4 @@
-use quick_xml::events::{BytesStart, Event};
+use quick_xml::events::{BytesRef, BytesStart, Event};
 use quick_xml::{Reader, XmlVersion};
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
@@ -227,6 +227,24 @@ fn normalized_text(value: &str) -> String {
         .join(" ")
         .trim()
         .to_string()
+}
+
+fn decoded_xml_reference(reference: &BytesRef<'_>) -> Result<char, String> {
+    if let Some(value) = reference
+        .resolve_char_ref()
+        .map_err(|error| format!("DOCX XML 字符引用损坏: {error}"))?
+    {
+        return Ok(value);
+    }
+    let reference: &[u8] = reference;
+    match reference {
+        b"amp" => Ok('&'),
+        b"lt" => Ok('<'),
+        b"gt" => Ok('>'),
+        b"quot" => Ok('"'),
+        b"apos" => Ok('\''),
+        _ => Err("DOCX XML 包含未声明的实体引用".into()),
+    }
 }
 
 fn heading_level(style: Option<&str>) -> Option<u8> {
@@ -1377,6 +1395,12 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                     append_text(&mut paragraph.text, &value)?;
                 }
             }
+            Event::GeneralRef(reference) if in_text => {
+                let value = decoded_xml_reference(&reference)?;
+                if let Some(paragraph) = paragraph.as_mut() {
+                    append_text(&mut paragraph.text, &value.to_string())?;
+                }
+            }
             Event::End(event) => match event.local_name().as_ref() {
                 b"t" => in_text = false,
                 b"p" => {
@@ -1911,6 +1935,17 @@ mod tests {
             .plain_text
             .contains("Microsoft Word footnote evidence"));
         assert!(model.plain_text.contains("Microsoft Word endnote evidence"));
+    }
+
+    #[test]
+    fn preserves_predefined_and_numeric_xml_references_in_visible_text() {
+        let source = fixture(
+            r#"<?xml version="1.0"?><w:document xmlns:w="w"><w:body><w:p><w:r><w:t>Research &amp; review &lt;safe&gt; &#x4E2D;&#25991;</w:t></w:r></w:p></w:body></w:document>"#,
+            &[],
+        );
+        let model = parse_docx(&source).unwrap();
+        assert_eq!(model.blocks[0].text, "Research & review <safe> 中文");
+        assert!(model.plain_text.contains("Research & review <safe> 中文"));
     }
 
     #[test]
