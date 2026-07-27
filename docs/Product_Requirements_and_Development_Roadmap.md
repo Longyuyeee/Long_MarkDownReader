@@ -1600,7 +1600,7 @@ S8-7E2E 功能验收完成。下一步进入 S8-7E2F：把单轴和多度量语�
 - 修复 760px 图谱标题竖排、工具栏拥挤、筛选条错位和初始详情遮挡画布；紧凑页头、横向工具栏与窄宽度初始详情策略进入门禁。
 - Debug E2E 模式禁止配置落盘，并支持独立指定 theme、style、code theme 和 motion，避免视觉审计污染用户配置。
 
-T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7D 高级数据对象审计、本地透视预览和事务写回可行性门禁已完成，S8-7E1 已建立真实生产者结构基线，S8-7E2A 已交付签名保护的隔离影响清单，S8-7E2B 已完成临时副本 Cache 重建，S8-7E2C 已完成四部件隔离同步重建，S8-7E2D 已完成 sharedItems 与输出布局扩缩容，S8-7E2E 已完成七类聚合包级重建和单轴/多度量语义矩阵。S8-7E2F 单轴与多度量完整隔离包重写保留为 XLSX 专项回补队列；A0～A5、G8、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D 已交付，当前实际开发入口为 **C4A PPTX 隔离编辑与包差异基线**；三生产者与桌面矩阵见 `docs/C3D_PPTX_Producer_and_Visual_Closure_Audit_2026-07-27.md`。
+T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7D 高级数据对象审计、本地透视预览和事务写回可行性门禁已完成，S8-7E1 已建立真实生产者结构基线，S8-7E2A 已交付签名保护的隔离影响清单，S8-7E2B 已完成临时副本 Cache 重建，S8-7E2C 已完成四部件隔离同步重建，S8-7E2D 已完成 sharedItems 与输出布局扩缩容，S8-7E2E 已完成七类聚合包级重建和单轴/多度量语义矩阵。S8-7E2F 单轴与多度量完整隔离包重写保留为 XLSX 专项回补队列；A0～A5、G8、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A 已交付，当前实际开发入口为 **C4B PPTX 单文本对象与演讲者备注隔离补丁**；最新判定见 `docs/C4A_PPTX_Isolated_Edit_Baseline_Audit_2026-07-27.md`。
 
 后续阶段顺序以 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`、`docs/Unified_File_Manager_Format_Requirements.md` 和 `docs/Next_Development_Execution_Guide.md` 为当前主线：C3C/C3D PPTX 只读收口 → C4 基础编辑 → C5 桌面验收 → WPS/OpenDocument/旧版 Office → 管理和发布矩阵。历史 S8 编号保留用于 XLSX 渐进式兼容追踪。
 

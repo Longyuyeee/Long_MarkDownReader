@@ -1,11 +1,11 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-27
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3D 已完成；下一批为 C4A PPTX 隔离编辑与包差异基线
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A 已完成；下一批为 C4B PPTX 单文本对象与演讲者备注隔离补丁
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；C3C2、C3C3 各增加 3 项检查和 2 张截图，C3C4 增加 5 项检查和 4 张截图，C3D 增加 8 项检查和 5 张截图。PPTX C3 结构化只读、三生产者、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；基础编辑与可靠另存仍未完成。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
-> 当前阶段以 `docs/C3D_PPTX_Producer_and_Visual_Closure_Audit_2026-07-27.md` 为最新交付审计；C4～C5 和 PPTX 后续格式方向继续以 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md` 为总体基线。
+> 当前阶段以 `docs/C4A_PPTX_Isolated_Edit_Baseline_Audit_2026-07-27.md` 为最新交付审计；C4A 已建立签名握手、内存/临时副本、逐部件 SHA-256 差异与源文件不变证明，未开放用户文件写入。C4B～C5 和 PPTX 后续格式方向继续以 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md` 为总体基线。
 
 ## 1. 新电脑快速恢复
 

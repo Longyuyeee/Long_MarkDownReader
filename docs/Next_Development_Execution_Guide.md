@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D 已完成。下一开发入口为 C4A PPTX 隔离编辑与包差异基线。最新判定见 [C3D PPTX 生产者与桌面视觉收口审计](./C3D_PPTX_Producer_and_Visual_Closure_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A 已完成。下一开发入口为 C4B PPTX 单文本对象与演讲者备注隔离补丁。最新判定见 [C4A PPTX 隔离编辑基线审计](./C4A_PPTX_Isolated_Edit_Baseline_Audit_2026-07-27.md)。
 
 ## 1. 指导目标
 
@@ -572,7 +572,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C3D 已完成结构化只读、视觉渲染、统一索引、精确定位、对象关系、索引生命周期和三生产者桌面矩阵，下一步进入 **C4A PPTX 隔离编辑与包差异基线**。DOCX 原件覆盖与 PPTX 所有写回继续禁止。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C3D 已完成结构化只读、视觉渲染、统一索引、精确定位、对象关系、索引生命周期和三生产者桌面矩阵，C4A 已完成签名握手、隔离副本、逐部件差异和源文件不变证明，下一步进入 **C4B PPTX 单文本对象与演讲者备注隔离补丁**。DOCX 原件覆盖与 PPTX 所有写回继续禁止。
 
 当前批次的强制退出条件：
 

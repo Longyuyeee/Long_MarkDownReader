@@ -60,7 +60,7 @@ use commands::pdf::{
     read_pdf_file, read_pdf_info, read_pdf_ocr, read_pdf_range, save_pdf_page_plan_copy,
     write_pdf_annotations, write_pdf_ocr,
 };
-use commands::pptx::read_pptx_presentation;
+use commands::pptx::{audit_pptx_edit_baseline, read_pptx_presentation};
 use commands::search::{get_all_tags, search_all_libraries, search_by_tag, search_library};
 use commands::system::{check_association_status, exit_app, get_url_title, set_as_default_handler};
 use commands::table::{
@@ -292,6 +292,7 @@ pub fn run() {
             read_pdf_ocr,
             write_pdf_ocr,
             read_pptx_presentation,
+            audit_pptx_edit_baseline,
             read_table_file,
             write_table_file,
             create_table_file,

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-27T14:09:31.587Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/",
+  "fixtureLocation": "isolated temporary workspace",
+  "producer": "wps-presentation",
+  "viewportMatrix": [
+    "1280x820",
+    "960x720"
+  ],
+  "checks": [
+    {
+      "id": "edit-preparation-remains-in-library-reader",
+      "status": "passed"
+    },
+    {
+      "id": "isolated-baseline-visible-and-verified",
+      "status": "passed"
+    },
+    {
+      "id": "responsive-details-panel-without-overflow",
+      "status": "passed"
+    },
+    {
+      "id": "wps-source-bytes-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "c4a-edit-baseline-1280.jpg",
+    "c4a-edit-baseline-960.jpg"
+  ]
+}

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, docxPatchKernel, pptxKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, pptxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, pptxReader, pptxObjectContent, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, docxPatchKernel, pptxKernel, pptxEditKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, pptxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, pptxReader, pptxObjectContent, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -14,6 +14,7 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src-tauri/src/formats/docx.rs'),
   read('src-tauri/src/formats/docx_patch.rs'),
   read('src-tauri/src/formats/pptx.rs'),
+  read('src-tauri/src/formats/pptx_edit.rs'),
   read('src-tauri/src/commands/formats.rs'),
   read('src-tauri/src/commands/json.rs'),
   read('src-tauri/src/commands/yaml.rs'),
@@ -475,6 +476,11 @@ requireText(pptxKernel, 'PptxSearchSegment', 'C3C1 PPTX parser must expose stabl
 requireText(pptxKernel, 'pptx_search_segments', 'C3C1 PPTX search text must use one shared generator')
 requireText(pptxKernel, 'pptx_slide_location_label', 'C3C3 PPTX search and graph objects must share one slide location label')
 requireText(pptxKernel, 'builds_stable_search_segments_for_titles_objects_and_notes', 'C3C1 PPTX search segments must cover titles, objects, and notes')
+requireText(pptxEditKernel, 'PptxEditBaselineReport', 'C4A must expose a structured isolated edit baseline report')
+requireText(pptxEditKernel, 'source.to_vec()', 'C4A must start from an exact in-memory package clone')
+requireText(pptxEditKernel, 'source_parts == isolated_parts', 'C4A must compare every OOXML part by name, size, and digest')
+requireText(pptxEditKernel, 'editing_enabled: false', 'C4A must keep editing disabled until a later isolated patch stage')
+requireText(pptxEditKernel, 'c4a_preserves_every_part_for_all_real_producers', 'C4A must regress package preservation across all three producers')
 requireText(knowledgeIndex, 'build_pptx_index_segments', 'C3C1 persistent index must consume shared PPTX search segments')
 requireText(index, 'build_pptx_index_segments', 'C3C1 live fallback must consume shared PPTX search segments')
 requireText(index, 'indexes_pptx_slides_objects_and_notes_consistently', 'C3C1 must regress ready-index and live-fallback consistency')
@@ -492,6 +498,12 @@ requireText(pptxReader, 'route-target-object', 'C3C2 PPTX workspace must highlig
 requireText(pptxReader, "route.query.matchKind === 'notes'", 'C3C2 notes results must reveal the details panel')
 requireText(pptxReader, 'setRelationObjectFocus', 'C3C3 PPTX slide selection must update the shared relation context')
 requireText(pptxCommands, 'read_pptx_presentation', 'C3A PPTX reader command must remain registered')
+requireText(pptxCommands, 'audit_pptx_edit_baseline', 'C4A must expose an isolated edit-baseline audit command')
+requireText(pptxCommands, 'TemporaryPptxCopy::create', 'C4A must materialize and reopen a temporary PPTX copy')
+requireText(pptxCommands, 'source_after == source', 'C4A must prove the source PPTX remains byte-identical')
+requireText(pptxCommands, 'expected_signature', 'C4A must reject stale source snapshots')
+requireText(pptxReader, 'prepareEditBaseline', 'C4A PPTX workspace must expose edit preparation inside the existing reader')
+requireText(pptxReader, 'C4A 仅建立保护基线', 'C4A UI must disclose that editing and source writing remain disabled')
 requireText(pptxCommands, 'WorkspaceGuard::new(&library_root)', 'C3C2 PPTX reader must create its workspace guard per request')
 requireText(pptxReader, 'libraryRoot: store.libraryPath', 'C3C2 PPTX workspace must provide the guarded library root')
 if (pptxCommands.includes('write_pptx') || pptxCommands.includes('save_pptx')) failures.push('C3A must not expose PPTX write commands')

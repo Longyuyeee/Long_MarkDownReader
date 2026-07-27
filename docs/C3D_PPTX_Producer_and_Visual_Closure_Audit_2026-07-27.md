@@ -122,6 +122,8 @@ npm run check:c3d-pptx-producer-visual-evidence
 
 ## 6. 下一开发入口
 
+> 后续状态：C4A 已完成签名握手、内存/临时隔离副本、逐 OOXML 部件 SHA-256 差异与源文件不变证明。下一入口已推进到 C4B，详见 [C4A PPTX 隔离编辑基线审计](./C4A_PPTX_Isolated_Edit_Baseline_Audit_2026-07-27.md)。
+
 下一阶段为 **C4 PPTX 基础编辑**，按安全垂直切片推进：
 
 1. C4A：审计并建立只作用于内存/临时副本的 OOXML 包差异、签名和未修改部件 raw-copy 基线；

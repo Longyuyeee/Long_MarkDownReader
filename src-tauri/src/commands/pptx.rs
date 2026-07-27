@@ -1,12 +1,16 @@
 use crate::formats::pptx::{parse_pptx, PptxPresentationModel, MAX_PPTX_FILE_BYTES};
+use crate::formats::pptx_edit::{build_pptx_edit_baseline, PptxEditBaselineReport};
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::fs;
-use std::io::{Cursor, Read};
+use std::fs::OpenOptions;
+use std::io::{Cursor, Read, Write};
 use std::path::Path;
-use std::time::UNIX_EPOCH;
+use std::path::PathBuf;
+use std::time::{SystemTime, UNIX_EPOCH};
 use zip::ZipArchive;
 
 const MAX_PPTX_MEDIA_PREVIEWS: usize = 48;
@@ -28,10 +32,55 @@ pub struct PptxReadReport {
     pub path: String,
     pub size: u64,
     pub modified: u64,
+    pub signature: String,
     pub read_only: bool,
     pub model: PptxPresentationModel,
     pub media: Vec<PptxMediaPreview>,
     pub media_warnings: Vec<String>,
+}
+
+struct TemporaryPptxCopy {
+    path: PathBuf,
+}
+
+impl TemporaryPptxCopy {
+    fn create(bytes: &[u8]) -> Result<Self, String> {
+        let path = std::env::temp_dir().join(format!(
+            "longedit-pptx-c4a-{}-{}.pptx",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map_err(|error| format!("创建 PPTX 临时副本时间戳失败: {error}"))?
+                .as_nanos()
+        ));
+        let mut file = OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .open(&path)
+            .map_err(|error| format!("创建 PPTX 临时副本失败: {error}"))?;
+        if let Err(error) = file.write_all(bytes).and_then(|_| file.sync_all()) {
+            drop(file);
+            let _ = fs::remove_file(&path);
+            return Err(format!("写入 PPTX 临时副本失败: {error}"));
+        }
+        Ok(Self { path })
+    }
+}
+
+impl Drop for TemporaryPptxCopy {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.path);
+    }
+}
+
+fn file_signature(metadata: &fs::Metadata) -> String {
+    let modified = metadata
+        .modified()
+        .ok()
+        .and_then(|value| value.duration_since(UNIX_EPOCH).ok())
+        .map(|value| value.as_nanos())
+        .unwrap_or_default();
+    format!("{}:{modified}", metadata.len())
 }
 
 fn media_mime(part_name: &str) -> Option<&'static str> {
@@ -144,11 +193,55 @@ fn read_pptx_path(path: &Path) -> Result<PptxReadReport, String> {
         path: path.to_string_lossy().into_owned(),
         size: metadata.len(),
         modified,
+        signature: file_signature(&metadata),
         read_only: true,
         model,
         media,
         media_warnings,
     })
+}
+
+fn audit_pptx_edit_baseline_path(
+    path: &Path,
+    expected_signature: &str,
+) -> Result<PptxEditBaselineReport, String> {
+    let metadata = path
+        .metadata()
+        .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_PPTX_FILE_BYTES {
+        return Err("PPTX 文件超过 96 MiB C4A 审计上限".into());
+    }
+    let actual_signature = file_signature(&metadata);
+    if actual_signature != expected_signature {
+        return Err("PPTX 已被外部修改，请重新打开后再建立编辑基线".into());
+    }
+
+    let source = fs::read(path).map_err(|error| format!("读取 PPTX 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let (mut report, isolated) = build_pptx_edit_baseline(&source, actual_signature.clone())?;
+
+    let temporary = TemporaryPptxCopy::create(&isolated)?;
+    let reopened =
+        fs::read(&temporary.path).map_err(|error| format!("复读 PPTX 临时副本失败: {error}"))?;
+    if reopened != isolated
+        || format!("{:x}", Sha256::digest(&reopened)) != report.isolated_package_digest
+    {
+        return Err("PPTX 临时副本复读字节与隔离输出不一致".into());
+    }
+    parse_pptx(&reopened).map_err(|error| format!("PPTX 临时副本结构重开失败: {error}"))?;
+    report.temporary_copy_reopen_verified = true;
+
+    let source_after = fs::read(path).map_err(|error| format!("复核源 PPTX 失败: {error}"))?;
+    let metadata_after = path
+        .metadata()
+        .map_err(|error| format!("复核源 PPTX 元数据失败: {error}"))?;
+    report.source_unchanged = source_after == source
+        && format!("{:x}", Sha256::digest(&source_after)) == source_digest
+        && file_signature(&metadata_after) == actual_signature;
+    if !report.source_unchanged {
+        return Err("C4A 隔离基线审计期间源 PPTX 发生变化".into());
+    }
+    Ok(report)
 }
 
 #[tauri::command]
@@ -161,6 +254,21 @@ pub async fn read_pptx_presentation(
     tauri::async_runtime::spawn_blocking(move || read_pptx_path(&presentation))
         .await
         .map_err(|error| format!("PPTX 读取任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn audit_pptx_edit_baseline(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+) -> Result<PptxEditBaselineReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let presentation = guard.resolve_existing_file(path, &["pptx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        audit_pptx_edit_baseline_path(&presentation, &expected_signature)
+    })
+    .await
+    .map_err(|error| format!("PPTX C4A 编辑基线任务失败: {error}"))?
 }
 
 #[cfg(test)]
@@ -194,6 +302,34 @@ mod tests {
         assert_eq!(report.model.slides.len(), 3);
         assert_eq!(report.model.slides[0].title, "PowerPoint Producer Fixture");
         assert_eq!(fs::read(&path).unwrap(), fixture);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn c4a_command_verifies_temporary_copy_and_keeps_source_unchanged() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("longedit-pptx-c4a-command-{nonce}"));
+        fs::create_dir_all(&root).unwrap();
+        let fixture =
+            include_bytes!("../../../fixtures/pptx/producers/wps-presentation.pptx").to_vec();
+        let path = root.join("presentation.pptx");
+        fs::write(&path, &fixture).unwrap();
+        let signature = file_signature(&path.metadata().unwrap());
+
+        let report = audit_pptx_edit_baseline_path(&path, &signature).unwrap();
+        assert_eq!(report.status, "isolated_baseline_verified");
+        assert!(report.temporary_copy_reopen_verified);
+        assert!(report.source_unchanged);
+        assert!(report.changed_parts.is_empty());
+        assert!(!report.editing_enabled);
+        assert_eq!(fs::read(&path).unwrap(), fixture);
+        assert!(audit_pptx_edit_baseline_path(&path, "stale-signature")
+            .unwrap_err()
+            .contains("外部修改"));
+
         fs::remove_dir_all(root).unwrap();
     }
 }

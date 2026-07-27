@@ -1,6 +1,6 @@
 # LongEdit C3B3 后开发进度与方向审计
 
-> 后续状态：C3C1～C3C4 已完成索引与知识管理闭环；C3D 已补齐 WPS Presentation，使三生产者达到 3/3，并完成三尺寸、两主题真实桌面矩阵。C3 只读阶段已收口，当前入口推进到 C4A。最新审计见 [C3D PPTX 生产者与桌面视觉收口审计](./C3D_PPTX_Producer_and_Visual_Closure_Audit_2026-07-27.md)。
+> 后续状态：C3C1～C3C4 已完成索引与知识管理闭环；C3D 已补齐 WPS Presentation，使三生产者达到 3/3，并完成三尺寸、两主题真实桌面矩阵；C4A 已完成签名握手、隔离副本、逐部件差异与源文件不变证明。当前入口推进到 C4B。最新审计见 [C4A PPTX 隔离编辑基线审计](./C4A_PPTX_Isolated_Edit_Baseline_Audit_2026-07-27.md)。
 
 审计日期：2026-07-27
 

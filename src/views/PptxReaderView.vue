@@ -29,6 +29,16 @@
           <PlayIcon :size="16" />
           <span>放映</span>
         </button>
+        <button
+          type="button"
+          :disabled="!report || baselineLoading"
+          :class="{ active: Boolean(editBaseline) }"
+          title="验证隔离编辑基线"
+          @click="prepareEditBaseline"
+        >
+          <LockKeyholeIcon :size="16" :class="{ spin: baselineLoading }" />
+          <span>{{ baselineLoading ? '验证中' : '编辑准备' }}</span>
+        </button>
         <button type="button" :class="{ active: showDetails }" title="备注与兼容画像" @click="showDetails = !showDetails">
           <PanelRightIcon :size="16" />
         </button>
@@ -108,6 +118,29 @@
       </main>
 
       <aside v-if="showDetails" class="pptx-details">
+        <section class="edit-baseline">
+          <header>
+            <LockKeyholeIcon :size="15" />
+            <strong>编辑安全基线</strong>
+            <span v-if="editBaseline" class="verified-badge">已验证</span>
+          </header>
+          <template v-if="editBaseline">
+            <dl>
+              <div><dt>隔离方式</dt><dd>内存 + 临时副本</dd></div>
+              <div><dt>OOXML 部件</dt><dd>{{ editBaseline.partCount }}</dd></div>
+              <div><dt>候选编辑部件</dt><dd>{{ editBaseline.editableCandidateParts.length }}</dd></div>
+              <div><dt>原样保全部件</dt><dd>{{ editBaseline.unchangedPartCount }}</dd></div>
+              <div><dt>临时副本复读</dt><dd>{{ editBaseline.temporaryCopyReopenVerified ? '通过' : '未通过' }}</dd></div>
+              <div><dt>源文件写入</dt><dd>{{ editBaseline.writesUserFile ? '是' : '否' }}</dd></div>
+            </dl>
+            <p class="baseline-digest" :title="editBaseline.sourcePackageDigest">
+              SHA-256 · {{ editBaseline.sourcePackageDigest.slice(0, 16) }}…
+            </p>
+            <p class="muted">C4A 仅建立保护基线；文本和备注修改将在 C4B 隔离补丁中开放。</p>
+          </template>
+          <p v-else-if="baselineError" class="baseline-error">{{ baselineError }}</p>
+          <p v-else class="muted">尚未启动编辑。验证后仍保持只读，不会写入当前 PPTX。</p>
+        </section>
         <section>
           <header>
             <MessageSquareTextIcon :size="15" />
@@ -147,6 +180,7 @@
     <footer v-if="report" class="pptx-status">
       <span>{{ report.model.slides.length }} 张幻灯片 · {{ formatBytes(report.size) }}</span>
       <span v-if="routeTargetLabel" class="route-target-status" aria-live="polite">已定位：{{ routeTargetLabel }}</span>
+      <span v-else-if="editBaseline" class="baseline-status">C4A 编辑隔离基线已验证 · 原文件未修改</span>
       <span>{{ activeSlide?.objects.length || 0 }} 个当前页对象</span>
     </footer>
 
@@ -193,6 +227,7 @@ import {
   ChevronUp as ChevronUpIcon,
   EyeOff as EyeOffIcon,
   LoaderCircle as LoaderCircleIcon,
+  LockKeyhole as LockKeyholeIcon,
   MessageSquareText as MessageSquareTextIcon,
   PanelRight as PanelRightIcon,
   Play as PlayIcon,
@@ -304,6 +339,7 @@ interface PptxReadReport {
   path: string
   size: number
   modified: number
+  signature: string
   readOnly: boolean
   model: {
     width: number
@@ -315,6 +351,22 @@ interface PptxReadReport {
   }
   media: Array<{ partName: string; dataUrl: string }>
   mediaWarnings: string[]
+}
+interface PptxEditBaselineReport {
+  status: string
+  sourcePackageDigest: string
+  isolatedPackageDigest: string
+  partCount: number
+  unchangedPartCount: number
+  editableCandidateParts: string[]
+  changedParts: string[]
+  exactPackageCopyVerified: boolean
+  unchangedPartsVerified: boolean
+  structuralReparseVerified: boolean
+  temporaryCopyReopenVerified: boolean
+  sourceUnchanged: boolean
+  writesUserFile: boolean
+  editingEnabled: boolean
 }
 interface SearchMatch {
   slideIndex: number
@@ -331,6 +383,9 @@ const searchQuery = ref('')
 const activeMatch = ref(0)
 const showDetails = ref(true)
 const presenting = ref(false)
+const baselineLoading = ref(false)
+const baselineError = ref('')
+const editBaseline = ref<PptxEditBaselineReport>()
 const slideStripRef = ref<HTMLElement>()
 const routeTargetSlideIndex = ref(-1)
 const routeTargetObjectId = ref('')
@@ -490,10 +545,44 @@ const moveSearch = (direction: -1 | 1) => {
   activeMatch.value = (activeMatch.value + direction + matches.value.length) % matches.value.length
   selectSlide(matches.value[activeMatch.value].slideIndex)
 }
+const prepareEditBaseline = async () => {
+  if (!report.value || baselineLoading.value) return
+  baselineLoading.value = true
+  baselineError.value = ''
+  try {
+    const baseline = await invoke<PptxEditBaselineReport>('audit_pptx_edit_baseline', {
+      libraryRoot: store.libraryPath,
+      path: pptxPath.value,
+      expectedSignature: report.value.signature,
+    })
+    if (
+      !baseline.exactPackageCopyVerified
+      || !baseline.unchangedPartsVerified
+      || !baseline.structuralReparseVerified
+      || !baseline.temporaryCopyReopenVerified
+      || !baseline.sourceUnchanged
+      || baseline.writesUserFile
+      || baseline.editingEnabled
+      || baseline.changedParts.length
+    ) {
+      throw new Error('PPTX 编辑隔离基线未通过完整保护门禁')
+    }
+    editBaseline.value = baseline
+    showDetails.value = true
+  } catch (error) {
+    editBaseline.value = undefined
+    baselineError.value = String(error)
+    showDetails.value = true
+  } finally {
+    baselineLoading.value = false
+  }
+}
 const loadPresentation = async () => {
   if (!pptxPath.value || loading.value) return
   loading.value = true
   loadError.value = ''
+  editBaseline.value = undefined
+  baselineError.value = ''
   try {
     report.value = await invoke<PptxReadReport>('read_pptx_presentation', {
       libraryRoot: store.libraryPath,
@@ -596,6 +685,10 @@ onBeforeUnmount(() => {
 .pptx-details dt { color: var(--text-muted); }
 .pptx-details dd { margin: 0; text-align: right; }
 .pptx-details ul { margin: 0; padding-left: 17px; color: var(--text-secondary); line-height: 1.55; }
+.edit-baseline .verified-badge { margin-left: auto; padding: 2px 6px; border-radius: 999px; color: var(--success-color); background: color-mix(in srgb, var(--success-color) 12%, transparent); font-size: 10px; }
+.baseline-digest { margin: 9px 0 6px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 10px; word-break: break-all; }
+.baseline-error { margin: 0; color: var(--error-color); line-height: 1.5; }
+.baseline-status { color: var(--success-color); }
 .pptx-status { min-height: 28px; padding: 0 12px; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: 10px; }
 .route-target-status { overflow: hidden; color: var(--primary-color); text-overflow: ellipsis; white-space: nowrap; }
 .presenter { position: fixed; z-index: 10000; inset: 0; display: grid; place-items: center; background: #101215; }
