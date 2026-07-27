@@ -1,6 +1,6 @@
 # LongEdit C3B3 后开发进度与方向审计
 
-> 后续状态：C3C1～C3C4 已完成共享索引、精确定位、PPTX 文件/幻灯片 KnowledgeObject、`contains` 关系、共享对象上下文和索引完整生命周期；C3C 已收口，当前入口已推进到 C3D。最新审计见 [C3C4 PPTX 索引与桌面综合收口审计](./C3C4_PPTX_Index_Desktop_Closure_Audit_2026-07-27.md)。
+> 后续状态：C3C1～C3C4 已完成索引与知识管理闭环；C3D 已补齐 WPS Presentation，使三生产者达到 3/3，并完成三尺寸、两主题真实桌面矩阵。C3 只读阶段已收口，当前入口推进到 C4A。最新审计见 [C3D PPTX 生产者与桌面视觉收口审计](./C3D_PPTX_Producer_and_Visual_Closure_Audit_2026-07-27.md)。
 
 审计日期：2026-07-27
 

@@ -1,5 +1,7 @@
 # LongEdit C3C4 PPTX 索引与桌面综合收口审计
 
+> 后续状态：C3D 已完成 WPS Presentation 真实生产者、3/3 矩阵及多尺寸、多主题桌面视觉收口；C3 只读阶段已经完成。最新审计见 [C3D PPTX 生产者与桌面视觉收口审计](./C3D_PPTX_Producer_and_Visual_Closure_Audit_2026-07-27.md)。
+
 审计日期：2026-07-27
 
 阶段：C3C4

@@ -1,11 +1,11 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-27
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3B3 及 C3C1～C3C4 已完成；下一批为 C3D PPTX 生产者与桌面兼容矩阵收口
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3D 已完成；下一批为 C4A PPTX 隔离编辑与包差异基线
 
-> 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；C3C2、C3C3 各增加 3 项检查和 2 张截图，C3C4 增加 5 项检查和 4 张截图。PPTX 已完成共享索引、精确定位、文件/幻灯片对象、共享关系上下文以及索引缺失/过期/删除安全回退；WPS Presentation 与基础编辑仍未完成。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
+> 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；C3C2、C3C3 各增加 3 项检查和 2 张截图，C3C4 增加 5 项检查和 4 张截图，C3D 增加 8 项检查和 5 张截图。PPTX C3 结构化只读、三生产者、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；基础编辑与可靠另存仍未完成。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
-> 当前阶段以 `docs/C3C4_PPTX_Index_Desktop_Closure_Audit_2026-07-27.md` 为最新交付审计；C3D～C5 和 PPTX 后续格式方向继续以 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md` 为总体基线。
+> 当前阶段以 `docs/C3D_PPTX_Producer_and_Visual_Closure_Audit_2026-07-27.md` 为最新交付审计；C4～C5 和 PPTX 后续格式方向继续以 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md` 为总体基线。
 
 ## 1. 新电脑快速恢复
 
@@ -67,7 +67,7 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - C2E0 当时增加只读保存准备报告，检查源签名、隔离输出摘要、目标占用、源覆盖和三类生产者证据；该历史阶段固定阻断且证明未尝试写入，阶段完成时 C2 为 4/5。
 - C2E 已完成用户可见的文本/基础样式/图片替代文本单次编辑、摘要握手、原子无覆盖另存、落盘结构/语义复读和源字节复核；同一输出已由 Word、WPS、LibreOffice 复开，C2 进度为 5/5。
 - C3A 已完成 PPTX 有界 OOXML 读取、幻灯片顺序、文本/图片/基础对象坐标、备注、搜索定位、兼容画像和只读放映；原件没有任何写回命令。
-- C3A 真实生产者矩阵当前为 2/3：PowerPoint 16 与 LibreOffice Impress 26.2 已由原程序复开并进入 Rust 回归；WPS Presentation 因当前环境未安装而明确保持待补，C3 整体仍为部分完成。
+- C3D 已补齐 WPS Presentation 12.1 真实生成、隐私清理、原程序复开与 Rust 回读，PowerPoint/WPS/LibreOffice 矩阵达到 3/3；三尺寸、两主题桌面矩阵同时修复中窄屏备注隐藏和窄屏放映裁切，C3 只读阶段整体收口。
 - C3B1 已接通 `slide -> layout -> master -> theme` 视觉继承链，解析页面背景、主题颜色/字体、对象填充/描边/旋转和基础文字样式，并由主舞台、缩略导航和只读放映消费；C3B 整体仍为部分完成。
 - C3B2 已展开组合子对象并恢复组内坐标，解析图片裁剪/透明度和常用颜色变换；混合文本不再错误套用单一运行样式，而是带警告安全降级。该批完成时 C3B 仍为部分完成。
 - C3B3 已完成连接线、自由形状、基础表格和复杂图形框架的分级只读呈现；主画布、缩略图和放映共用真实对象渲染组件。C3B 只读视觉实现已收口，C3 整体仍为部分完成。
@@ -136,6 +136,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/C3C2_PPTX_Precise_Locator_Audit_2026-07-27.md`：Library 内嵌搜索定位、幻灯片/对象/备注消费、重复令牌、请求级工作区守卫修复和真实桌面证据。
 - `docs/C3C3_PPTX_Knowledge_Object_Relation_Audit_2026-07-27.md`：PPTX 文件/幻灯片对象、`contains` 关系、对象级共享关系侧栏、图谱回流和真实桌面证据。
 - `docs/C3C4_PPTX_Index_Desktop_Closure_Audit_2026-07-27.md`：PPTX 索引完整生命周期、资源上限、过期可见状态、实时回退和真实桌面综合闭环。
+- `docs/C3D_PPTX_Producer_and_Visual_Closure_Audit_2026-07-27.md`：WPS 真实生产者、三生产者矩阵、三尺寸/两主题桌面证据、中窄屏备注和全窗口放映修复。
 - `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`：C3B3 后总体进度、C3C 索引/定位/关系架构审计、C3D～C5 阶段拆分和后续格式方向。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
 - `docs/Development_Stage_Audit_2026-07-20.md`：上一轮专业工作区阶段审计和交错排期基线。

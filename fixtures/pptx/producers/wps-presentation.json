@@ -1,0 +1,30 @@
+{
+    "schemaVersion":  1,
+    "id":  "wps-presentation",
+    "file":  "wps-presentation.pptx",
+    "producer":  "WPS Presentation",
+    "productVersion":  "12.1.0.26895",
+    "fileVersion":  "12.1.0.26895",
+    "generatedAt":  "2026-07-27T13:41:55.5737464Z",
+    "generatedBy":  "scripts/generate-c3d-wps-pptx-fixture.ps1",
+    "sha256":  "1bbb8343566166a351ff37054cfbb91ad61122930fb2e3f588e9658afda59f9a",
+    "redistributable":  true,
+    "privacyNormalization":  "Local author fields and the installation-specific WPS application suffix were replaced after WPS saved the package; the final package was scanned for local paths and external relationships.",
+    "expected":  {
+                     "slideCount":  3,
+                     "text":  true,
+                     "images":  true,
+                     "shapes":  true,
+                     "groups":  true,
+                     "connectors":  true,
+                     "tables":  true,
+                     "notes":  true,
+                     "animations":  false,
+                     "themes":  true
+                 },
+    "verification":  {
+                         "producerReopen":  "verified",
+                         "method":  "New isolated KWPP.Application instance opened the sanitized PPTX read-only and recovered the expected slide title.",
+                         "expectedTitle":  "WPS Presentation Producer Fixture"
+                     }
+}

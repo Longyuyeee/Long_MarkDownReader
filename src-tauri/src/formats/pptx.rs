@@ -190,6 +190,23 @@ fn pptx_object_search_text(object: &PptxObject) -> String {
     parts.join("\n")
 }
 
+fn normalize_pptx_producer(application: Option<&str>) -> Option<String> {
+    let application = application?.trim();
+    if application.is_empty() {
+        return None;
+    }
+    let normalized = application.to_ascii_lowercase();
+    if normalized.contains("libreoffice") {
+        Some("LibreOffice Impress".into())
+    } else if normalized.contains("wps") || application.contains("演示") {
+        Some("WPS Presentation".into())
+    } else if normalized.contains("powerpoint") {
+        Some("Microsoft PowerPoint".into())
+    } else {
+        Some(application.to_string())
+    }
+}
+
 pub fn pptx_search_segments(model: &PptxPresentationModel) -> Vec<PptxSearchSegment> {
     let mut segments = Vec::new();
     for (index, slide) in model.slides.iter().enumerate() {
@@ -1695,7 +1712,7 @@ pub fn parse_pptx(bytes: &[u8]) -> Result<PptxPresentationModel, String> {
         .map(|xml| app_property(xml, b"Application"))
         .transpose()?
         .flatten();
-    let producer = application.clone();
+    let producer = normalize_pptx_producer(application.as_deref());
     let chart_count = part_names
         .iter()
         .filter(|part| part.starts_with("ppt/charts/") && part.ends_with(".xml"))
@@ -2110,7 +2127,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_real_powerpoint_and_libreoffice_producer_fixtures() {
+    fn parses_all_real_pptx_producer_fixtures() {
         let fixtures = [
             (
                 "Microsoft PowerPoint",
@@ -2118,6 +2135,13 @@ mod tests {
                     .as_slice(),
                 3,
                 "PowerPoint Producer Fixture",
+            ),
+            (
+                "WPS Presentation",
+                include_bytes!("../../../fixtures/pptx/producers/wps-presentation.pptx")
+                    .as_slice(),
+                3,
+                "WPS Presentation Producer Fixture",
             ),
             (
                 "LibreOffice Impress",
@@ -2133,6 +2157,11 @@ mod tests {
             });
             assert_eq!(model.slides.len(), expected_slides, "{producer}");
             assert!(model.plain_text.contains(expected_text), "{producer}");
+            assert_eq!(
+                model.compatibility.producer.as_deref(),
+                Some(producer),
+                "{producer}"
+            );
             assert!(model.compatibility.theme_count >= 1, "{producer}");
             assert!(model.compatibility.master_count >= 1, "{producer}");
             assert!(model.compatibility.notes_count >= 1, "{producer}");
@@ -2168,6 +2197,31 @@ mod tests {
                         .iter()
                         .any(|object| object.kind == "group" && object.child_count >= 2)),
                     "PowerPoint group boundary must retain child count"
+                );
+            }
+            if producer == "WPS Presentation" {
+                assert!(
+                    model
+                        .slides
+                        .iter()
+                        .any(|slide| slide.objects.iter().any(|object| {
+                            object.kind == "group" && object.child_count >= 2
+                        })),
+                    "WPS group boundary must retain child count"
+                );
+                assert!(
+                    model.slides.iter().any(|slide| slide
+                        .objects
+                        .iter()
+                        .any(|object| object.kind == "connector")),
+                    "WPS connector must remain addressable"
+                );
+                assert!(
+                    model.slides.iter().any(|slide| slide
+                        .objects
+                        .iter()
+                        .any(|object| object.graphic_type.as_deref() == Some("table"))),
+                    "WPS table must remain structurally readable"
                 );
             }
         }

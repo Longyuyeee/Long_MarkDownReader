@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-27T13:54:09.182Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
+  "fixtureLocation": "isolated temporary workspace",
+  "producerCount": 3,
+  "viewportMatrix": [
+    "1280x820",
+    "960x720",
+    "760x720"
+  ],
+  "themeMatrix": [
+    "professional-light",
+    "professional-dark"
+  ],
+  "checks": [
+    {
+      "id": "three-producers-open-in-library-without-overflow",
+      "status": "passed",
+      "producers": [
+        "microsoft-powerpoint-16",
+        "wps-presentation",
+        "libreoffice-impress"
+      ]
+    },
+    {
+      "id": "wps-group-connector-table-render",
+      "status": "passed"
+    },
+    {
+      "id": "wps-note-search-locates-in-library",
+      "status": "passed"
+    },
+    {
+      "id": "wps-compact-dark-slideshow-renders",
+      "status": "passed"
+    },
+    {
+      "id": "wps-reopen-restores-structured-workspace",
+      "status": "passed"
+    },
+    {
+      "id": "microsoft-powerpoint-16-source-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    },
+    {
+      "id": "wps-presentation-source-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    },
+    {
+      "id": "libreoffice-impress-source-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "powerpoint-library-1280.jpg",
+    "wps-objects-library-1280.jpg",
+    "libreoffice-library-1280.jpg",
+    "wps-search-notes-960.jpg",
+    "wps-slideshow-dark-760.jpg"
+  ]
+}

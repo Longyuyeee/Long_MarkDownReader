@@ -150,34 +150,36 @@
       <span>{{ activeSlide?.objects.length || 0 }} 个当前页对象</span>
     </footer>
 
-    <div v-if="presenting && activeSlide" class="presenter" role="dialog" aria-modal="true" @keydown.left="previousSlide" @keydown.right="nextSlide">
-      <button type="button" title="退出放映" @click="presenting = false">
-        <XIcon :size="20" />
-      </button>
-      <div class="presenter-slide" :style="slideStyle(activeSlide)">
-        <div
-          v-for="object in activeSlide.objects"
-          :key="`present-${object.id || object.name}`"
-          class="slide-object"
-          :class="[object.kind, { 'expanded-group': object.kind === 'group' && object.childCount > 0 }]"
-          :style="objectStyle(object)"
-        >
-          <PptxObjectContent
-            :object="object"
-            :media-src="mediaByPart[object.mediaPart || '']"
-          />
+    <Teleport to="body">
+      <div v-if="presenting && activeSlide" class="presenter" role="dialog" aria-modal="true" @keydown.left="previousSlide" @keydown.right="nextSlide">
+        <button type="button" title="退出放映" @click="presenting = false">
+          <XIcon :size="20" />
+        </button>
+        <div class="presenter-slide" :style="slideStyle(activeSlide)">
+          <div
+            v-for="object in activeSlide.objects"
+            :key="`present-${object.id || object.name}`"
+            class="slide-object"
+            :class="[object.kind, { 'expanded-group': object.kind === 'group' && object.childCount > 0 }]"
+            :style="objectStyle(object)"
+          >
+            <PptxObjectContent
+              :object="object"
+              :media-src="mediaByPart[object.mediaPart || '']"
+            />
+          </div>
+        </div>
+        <div class="presenter-controls">
+          <button type="button" :disabled="activeSlideIndex === 0" title="上一张" @click="previousSlide">
+            <ChevronLeftIcon :size="22" />
+          </button>
+          <span>{{ activeSlideIndex + 1 }} / {{ slideCount }}</span>
+          <button type="button" :disabled="activeSlideIndex === slideCount - 1" title="下一张" @click="nextSlide">
+            <ChevronRightIcon :size="22" />
+          </button>
         </div>
       </div>
-      <div class="presenter-controls">
-        <button type="button" :disabled="activeSlideIndex === 0" title="上一张" @click="previousSlide">
-          <ChevronLeftIcon :size="22" />
-        </button>
-        <span>{{ activeSlideIndex + 1 }} / {{ slideCount }}</span>
-        <button type="button" :disabled="activeSlideIndex === slideCount - 1" title="下一张" @click="nextSlide">
-          <ChevronRightIcon :size="22" />
-        </button>
-      </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
@@ -617,8 +619,16 @@ onBeforeUnmount(() => {
   100% { filter: none; }
 }
 @media (max-width: 1050px) {
-  .pptx-layout.details-open { grid-template-columns: 170px minmax(0, 1fr); }
-  .pptx-layout.details-open .pptx-details { display: none; }
+  .pptx-layout.details-open { position: relative; grid-template-columns: 170px minmax(0, 1fr); }
+  .pptx-layout.details-open .pptx-details {
+    position: absolute;
+    z-index: 4;
+    inset: 0 0 0 auto;
+    width: min(280px, calc(100% - 170px));
+    box-sizing: border-box;
+    display: block;
+    box-shadow: -12px 0 28px rgba(0,0,0,.16);
+  }
 }
 @media (max-width: 760px) {
   .pptx-toolbar { align-items: flex-start; flex-direction: column; }
@@ -626,6 +636,7 @@ onBeforeUnmount(() => {
   .pptx-search { min-width: 0; flex: 1; }
   .toolbar-actions > button span { display: none; }
   .pptx-layout, .pptx-layout.details-open { grid-template-columns: 118px minmax(0, 1fr); }
+  .pptx-layout.details-open .pptx-details { width: min(270px, calc(100% - 118px)); }
   .pptx-stage { padding: 14px; }
 }
 </style>
