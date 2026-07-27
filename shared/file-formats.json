@@ -346,10 +346,10 @@
       "mimeTypes": ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
       "routeName": "DocxEditor",
       "maxBytes": 67108864,
-      "capabilities": { "read": "supported", "edit": "planned", "create": "unsupported", "index": "supported" },
-      "userCapability": { "level": "preview-only", "label": "结构化阅读", "saveMode": "none", "description": "DOCX 支持标题、段落、编号列表、表格、受限图片、页眉页脚、脚注、尾注与批注只读呈现，并接入全文索引和对象定位；当前不写回原文档。" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "unsupported", "index": "supported" },
+      "userCapability": { "level": "basic-edit", "label": "基础编辑副本", "saveMode": "copy", "description": "DOCX 支持结构化阅读、搜索和受限的文本、基础字符样式及图片说明编辑；编辑结果只可靠另存为同目录新副本，原文档始终只读。" },
       "externalPolicy": "import",
-      "adapters": { "reader": "docx", "writer": null, "creator": null, "indexer": "docx" },
+      "adapters": { "reader": "docx", "writer": "docx", "creator": null, "indexer": "docx" },
       "creation": null
     },
     {

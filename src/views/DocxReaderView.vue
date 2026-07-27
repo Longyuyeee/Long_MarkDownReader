@@ -5,7 +5,7 @@
         <FileTextIcon :size="18" />
         <div class="document-title">
           <strong :title="docxPath">{{ fileName }}</strong>
-          <span>Word 文档 · 结构化阅读 · 原文件只读</span>
+          <span>Word 文档 · 基础编辑副本 · 原文件只读</span>
         </div>
       </div>
       <div class="toolbar-actions">
@@ -27,6 +27,15 @@
         </button>
         <button type="button" :disabled="loading" title="重新读取" @click="load">
           <RefreshIcon :size="15" />
+        </button>
+        <button
+          type="button"
+          :disabled="!editableTargetCount"
+          :class="{ active: editorOpen }"
+          title="基础编辑并另存副本"
+          @click="editorOpen = !editorOpen"
+        >
+          <FilePenLineIcon :size="15" />
         </button>
       </div>
     </header>
@@ -50,7 +59,7 @@
         </div>
       </section>
 
-      <div class="docx-layout">
+      <div class="docx-layout" :class="{ 'editor-open': editorOpen }">
         <aside class="docx-outline">
           <div class="outline-heading">
             <strong>文档目录</strong>
@@ -229,6 +238,119 @@
             </section>
           </article>
         </main>
+
+        <aside v-if="editorOpen" class="docx-editor" aria-label="DOCX 基础编辑副本">
+          <header>
+            <div>
+              <strong>基础编辑副本</strong>
+              <span>一次编辑生成一个新 DOCX</span>
+            </div>
+            <button type="button" title="关闭编辑面板" @click="editorOpen = false">
+              <XIcon :size="15" />
+            </button>
+          </header>
+
+          <div class="edit-mode-tabs" role="tablist" aria-label="编辑类型">
+            <button
+              type="button"
+              :class="{ active: editMode === 'text' }"
+              :disabled="!report.editableTextTargets.length"
+              @click="editMode = 'text'"
+            >文本</button>
+            <button
+              type="button"
+              :class="{ active: editMode === 'style' }"
+              :disabled="!report.editableStyleTargets.length"
+              @click="editMode = 'style'"
+            >样式</button>
+            <button
+              type="button"
+              :class="{ active: editMode === 'imageAltText' }"
+              :disabled="!report.editableImageTargets.length"
+              @click="editMode = 'imageAltText'"
+            >图片说明</button>
+          </div>
+
+          <label class="edit-field">
+            <span>编辑目标</span>
+            <select v-model="selectedTargetId">
+              <option v-for="target in activeTargets" :key="target.id" :value="target.id">
+                {{ targetLabel(target) }}
+              </option>
+            </select>
+          </label>
+
+          <label v-if="editMode === 'text'" class="edit-field">
+            <span>替换文本</span>
+            <textarea v-model="replacementText" maxlength="32767" rows="7"></textarea>
+          </label>
+
+          <div v-else-if="editMode === 'style'" class="edit-field">
+            <span>基础字符样式</span>
+            <div class="style-controls">
+              <button
+                type="button"
+                :class="{ active: draftBold }"
+                title="粗体"
+                aria-label="粗体"
+                @click="draftBold = !draftBold"
+              ><b>B</b></button>
+              <button
+                type="button"
+                :class="{ active: draftItalic }"
+                title="斜体"
+                aria-label="斜体"
+                @click="draftItalic = !draftItalic"
+              ><i>I</i></button>
+              <button
+                type="button"
+                :class="{ active: draftUnderline }"
+                title="下划线"
+                aria-label="下划线"
+                @click="draftUnderline = !draftUnderline"
+              ><u>U</u></button>
+            </div>
+          </div>
+
+          <label v-else class="edit-field">
+            <span>图片替代文本</span>
+            <textarea v-model="replacementAltText" maxlength="1024" rows="5"></textarea>
+          </label>
+
+          <button
+            type="button"
+            class="verify-edit"
+            :disabled="!canPreviewEdit || previewing"
+            @click="previewEdit"
+          >
+            <ShieldCheckIcon :size="15" />
+            {{ previewing ? '正在生成并复读…' : '验证隔离副本' }}
+          </button>
+
+          <div v-if="previewReport || editError" class="edit-verification" :class="{ error: editError }">
+            <template v-if="previewReport">
+              <strong>隔离验证通过</strong>
+              <span>{{ formatBytes(previewReport.outputBytes) }} · 仅修改 {{ previewReport.changedParts.join('、') }}</span>
+              <small>未编辑 OOXML 部件逐字节保持，源文件未修改。</small>
+            </template>
+            <template v-else>
+              <strong>验证未通过</strong>
+              <span>{{ editError }}</span>
+            </template>
+          </div>
+
+          <div v-if="previewReport" class="copy-save">
+            <label class="edit-field">
+              <span>新副本文件名</span>
+              <input v-model="copyFileName" maxlength="255" @keydown.enter.prevent="saveCopy" />
+            </label>
+            <button type="button" :disabled="saving || !copyFileName.trim()" @click="saveCopy">
+              <SaveIcon :size="15" />
+              {{ saving ? '正在落盘并重开…' : '另存新 DOCX 并打开' }}
+            </button>
+            <small v-if="saveError">{{ saveError }}</small>
+          </div>
+        </aside>
       </div>
 
       <footer class="docx-status">
@@ -241,7 +363,7 @@
         </div>
         <div>
           <LockIcon :size="13" />
-          <span>当前不写回 DOCX；C2 仅开放经保真验证的基础编辑子集</span>
+          <span>原件始终只读；经保真验证的基础编辑仅创建同目录新副本</span>
         </div>
       </footer>
     </template>
@@ -251,20 +373,25 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useRoute } from 'vue-router'
+import { useMessage } from 'naive-ui'
+import { useRoute, useRouter } from 'vue-router'
 import {
   AlertTriangle as AlertIcon,
   BookOpenText as BookOpenTextIcon,
   ChevronDown as ChevronDownIcon,
   ChevronUp as ChevronUpIcon,
+  FilePenLine as FilePenLineIcon,
   FileText as FileTextIcon,
   Image as ImageIcon,
   LocateFixed as LocateFixedIcon,
   Lock as LockIcon,
   MessageSquareText as MessageSquareTextIcon,
   RefreshCw as RefreshIcon,
+  Save as SaveIcon,
   Search as SearchIcon,
+  ShieldCheck as ShieldCheckIcon,
   ShieldAlert as ShieldAlertIcon,
+  X as XIcon,
 } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 
@@ -396,14 +523,59 @@ interface DocxReadReport {
   media: DocxMediaPreview[]
   mediaWarnings: string[]
 }
+interface DocxPatchPreviewReport {
+  status: string
+  outputDigest: string
+  outputBytes: number
+  changedParts: string[]
+  unchangedPartsVerified: boolean
+  structuralReparseVerified: boolean
+  semanticReparseVerified: boolean
+  sourceUnchanged: boolean
+}
+interface DocxSavedCopyReport {
+  status: string
+  targetPath: string
+  outputBytes: number
+  sourceUnchanged: boolean
+  unchangedPartsVerified: boolean
+  structuralReopenVerified: boolean
+  semanticReopenVerified: boolean
+  producerEvidence: string[]
+}
+type DocxTextTarget = DocxReadReport['editableTextTargets'][number]
+type DocxStyleTarget = DocxReadReport['editableStyleTargets'][number]
+type DocxImageTarget = DocxReadReport['editableImageTargets'][number]
+type DocxEditableTarget = DocxTextTarget | DocxStyleTarget | DocxImageTarget
+type DocxEditMode = 'text' | 'style' | 'imageAltText'
+type DocxPatchOperation =
+  | { kind: 'text'; targetId: string; expectedTextDigest: string; replacementText: string }
+  | { kind: 'style'; targetId: string; expectedStyleDigest: string; bold: boolean; italic: boolean; underline: boolean }
+  | { kind: 'imageAltText'; targetId: string; expectedMetadataDigest: string; replacementAltText: string }
 
 const route = useRoute()
+const router = useRouter()
+const message = useMessage()
 const store = useAppStore()
 const report = ref<DocxReadReport | null>(null)
 const loading = ref(false)
 const loadError = ref('')
 const query = ref('')
 const matchIndex = ref(-1)
+const editorOpen = ref(false)
+const editMode = ref<DocxEditMode>('text')
+const selectedTargetId = ref('')
+const replacementText = ref('')
+const replacementAltText = ref('')
+const draftBold = ref(false)
+const draftItalic = ref(false)
+const draftUnderline = ref(false)
+const previewing = ref(false)
+const previewReport = ref<DocxPatchPreviewReport | null>(null)
+const editError = ref('')
+const copyFileName = ref('')
+const saving = ref(false)
+const saveError = ref('')
 
 const docxPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const routeLocator = computed(() => typeof route.query.locator === 'string' ? route.query.locator : '')
@@ -454,6 +626,61 @@ const packageFeatureLabel = computed(() => {
     ? `${packageSummary} · 只读识别：${features.join(' · ')}`
     : `${packageSummary} · 未检测到首批模型外的高风险对象`
 })
+const editableTargetCount = computed(() => {
+  const value = report.value
+  return value
+    ? value.editableTextTargets.length + value.editableStyleTargets.length + value.editableImageTargets.length
+    : 0
+})
+const activeTargets = computed<DocxEditableTarget[]>(() => {
+  if (!report.value) return []
+  if (editMode.value === 'style') return report.value.editableStyleTargets
+  if (editMode.value === 'imageAltText') return report.value.editableImageTargets
+  return report.value.editableTextTargets
+})
+const selectedTarget = computed(() => activeTargets.value.find(target => target.id === selectedTargetId.value))
+const currentOperation = computed<DocxPatchOperation | null>(() => {
+  const target = selectedTarget.value
+  if (!target) return null
+  if (editMode.value === 'text' && 'expectedTextDigest' in target) {
+    return {
+      kind: 'text',
+      targetId: target.id,
+      expectedTextDigest: target.expectedTextDigest,
+      replacementText: replacementText.value,
+    }
+  }
+  if (editMode.value === 'style' && 'expectedStyleDigest' in target) {
+    return {
+      kind: 'style',
+      targetId: target.id,
+      expectedStyleDigest: target.expectedStyleDigest,
+      bold: draftBold.value,
+      italic: draftItalic.value,
+      underline: draftUnderline.value,
+    }
+  }
+  if (editMode.value === 'imageAltText' && 'expectedMetadataDigest' in target) {
+    return {
+      kind: 'imageAltText',
+      targetId: target.id,
+      expectedMetadataDigest: target.expectedMetadataDigest,
+      replacementAltText: replacementAltText.value,
+    }
+  }
+  return null
+})
+const canPreviewEdit = computed(() => {
+  const target = selectedTarget.value
+  if (!target || !currentOperation.value) return false
+  if (editMode.value === 'text' && 'text' in target) return replacementText.value !== target.text
+  if (editMode.value === 'style' && 'bold' in target) {
+    return draftBold.value !== target.bold
+      || draftItalic.value !== target.italic
+      || draftUnderline.value !== target.underline
+  }
+  return 'altText' in target && replacementAltText.value !== target.altText
+})
 
 const headingTag = (level?: number | null) => `h${Math.min(6, Math.max(1, level || 1))}`
 const twipsToCentimeters = (twips?: number | null) => twips
@@ -479,6 +706,111 @@ const relatedMetadata = (item: DocxRelatedContent) => {
 const formatBytes = (bytes: number) => bytes < 1024 * 1024
   ? `${Math.max(1, Math.round(bytes / 1024))} KiB`
   : `${(bytes / 1024 / 1024).toFixed(1)} MiB`
+const targetLabel = (target: DocxEditableTarget) => {
+  if ('imagePart' in target) return target.name || target.imagePart
+  const location = target.kind === 'table-cell'
+    ? `表格 R${(target.rowIndex || 0) + 1}C${(target.columnIndex || 0) + 1}`
+    : ({ paragraph: '段落', heading: '标题', 'list-item': '列表' } as const)[target.kind]
+  const summary = target.text.trim().replace(/\s+/g, ' ') || '空文本'
+  return `${location} · ${summary.slice(0, 42)}`
+}
+const resetTargetDraft = () => {
+  const target = selectedTarget.value
+  if (!target) return
+  if ('expectedTextDigest' in target) replacementText.value = target.text
+  if ('expectedStyleDigest' in target) {
+    draftBold.value = target.bold
+    draftItalic.value = target.italic
+    draftUnderline.value = target.underline
+  }
+  if ('expectedMetadataDigest' in target) replacementAltText.value = target.altText
+}
+const invalidatePreview = () => {
+  previewReport.value = null
+  editError.value = ''
+  saveError.value = ''
+}
+const previewEdit = async () => {
+  const operation = currentOperation.value
+  if (!operation || !report.value || !canPreviewEdit.value || previewing.value) return
+  previewing.value = true
+  invalidatePreview()
+  try {
+    const base = {
+      libraryRoot: store.libraryPath,
+      path: docxPath.value,
+      expectedSignature: report.value.signature,
+    }
+    if (operation.kind === 'text') {
+      previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_text_patch_isolated_copy', {
+        ...base,
+        targetId: operation.targetId,
+        expectedTextDigest: operation.expectedTextDigest,
+        replacementText: operation.replacementText,
+      })
+    } else if (operation.kind === 'style') {
+      previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_style_patch_isolated_copy', {
+        ...base,
+        targetId: operation.targetId,
+        expectedStyleDigest: operation.expectedStyleDigest,
+        bold: operation.bold,
+        italic: operation.italic,
+        underline: operation.underline,
+      })
+    } else {
+      previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_image_alt_text_patch_isolated_copy', {
+        ...base,
+        targetId: operation.targetId,
+        expectedMetadataDigest: operation.expectedMetadataDigest,
+        replacementAltText: operation.replacementAltText,
+      })
+    }
+    if (
+      previewReport.value.status !== 'isolated_verified'
+      || !previewReport.value.unchangedPartsVerified
+      || !previewReport.value.structuralReparseVerified
+      || !previewReport.value.semanticReparseVerified
+      || !previewReport.value.sourceUnchanged
+    ) throw new Error('隔离副本未通过完整保真验证')
+  } catch (cause) {
+    previewReport.value = null
+    editError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    previewing.value = false
+  }
+}
+const saveCopy = async () => {
+  const preview = previewReport.value
+  const operation = currentOperation.value
+  if (!preview || !operation || !report.value || !copyFileName.value.trim() || saving.value) return
+  saving.value = true
+  saveError.value = ''
+  try {
+    const saved = await invoke<DocxSavedCopyReport>('save_docx_patch_copy', {
+      libraryRoot: store.libraryPath,
+      path: docxPath.value,
+      targetFileName: copyFileName.value.trim(),
+      expectedSignature: report.value.signature,
+      expectedOutputDigest: preview.outputDigest,
+      operation,
+    })
+    if (
+      saved.status !== 'saved_verified'
+      || !saved.sourceUnchanged
+      || !saved.unchangedPartsVerified
+      || !saved.structuralReopenVerified
+      || !saved.semanticReopenVerified
+      || saved.producerEvidence.length !== 3
+    ) throw new Error('保存结果未通过完整复读与生产者门禁')
+    message.success(`已可靠另存并验证：${copyFileName.value.trim()}`)
+    const routeName = route.name === 'LibraryMode' ? 'LibraryMode' : 'DocxEditor'
+    await router.replace({ name: routeName, query: { path: saved.targetPath } })
+  } catch (cause) {
+    saveError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    saving.value = false
+  }
+}
 const scrollToBlock = async (id: string) => {
   await nextTick()
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -500,6 +832,23 @@ const load = async () => {
       libraryRoot: store.libraryPath,
       path: docxPath.value,
     })
+    const baseName = fileName.value.replace(/\.docx$/i, '')
+    copyFileName.value = `${baseName}-LongEdit副本.docx`
+    const availableMode = report.value.editableTextTargets.length
+      ? 'text'
+      : report.value.editableStyleTargets.length
+        ? 'style'
+        : 'imageAltText'
+    editMode.value = availableMode
+    selectedTargetId.value = (
+      availableMode === 'text'
+        ? report.value.editableTextTargets[0]
+        : availableMode === 'style'
+          ? report.value.editableStyleTargets[0]
+          : report.value.editableImageTargets[0]
+    )?.id || ''
+    resetTargetDraft()
+    invalidatePreview()
     scrollToRouteLocator()
   } catch (cause) {
     report.value = null
@@ -517,6 +866,19 @@ watch(docxPath, () => {
 watch(matches, value => {
   matchIndex.value = value.length ? 0 : -1
 })
+watch(editMode, () => {
+  selectedTargetId.value = activeTargets.value[0]?.id || ''
+  resetTargetDraft()
+  invalidatePreview()
+})
+watch(selectedTargetId, () => {
+  resetTargetDraft()
+  invalidatePreview()
+})
+watch(
+  [replacementText, replacementAltText, draftBold, draftItalic, draftUnderline],
+  invalidatePreview,
+)
 watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocator)
 </script>
 
@@ -531,6 +893,7 @@ watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocato
 .toolbar-actions { gap: 5px; }
 .toolbar-actions button { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; }
 .toolbar-actions button:disabled { opacity: .4; cursor: default; }
+.toolbar-actions button.active { border-color: var(--primary-color); color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 10%, var(--bg-primary)); }
 .docx-search { height: 29px; gap: 6px; padding: 0 8px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-secondary); }
 .docx-search input { width: 150px; border: 0; outline: 0; color: inherit; background: transparent; font: inherit; }
 .docx-search span { color: var(--text-muted); font-size: 11px; }
@@ -542,6 +905,7 @@ watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocato
 .compatibility-warning strong { font-size: 12px; }
 .compatibility-warning span { color: var(--text-secondary); font-size: 11px; }
 .docx-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 230px minmax(0, 1fr); }
+.docx-layout.editor-open { grid-template-columns: 210px minmax(0, 1fr) 310px; }
 .docx-outline { overflow: auto; padding: 12px 10px; border-right: 1px solid var(--border-color); background: var(--bg-primary); }
 .outline-heading { padding: 0 5px 8px; display: flex; justify-content: space-between; }
 .outline-heading span, .outline-empty { color: var(--text-muted); font-size: 11px; }
@@ -592,11 +956,46 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .related-item-heading strong { font-size: 12px; }
 .related-item p { margin: 6px 0; line-height: 1.65; white-space: pre-wrap; }
 .empty-document { padding: 80px 20px; text-align: center; color: var(--text-muted); }
+.docx-editor { min-width: 0; overflow: auto; padding: 14px; border-left: 1px solid var(--border-color); background: var(--bg-primary); }
+.docx-editor > header { margin-bottom: 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.docx-editor > header div { display: flex; flex-direction: column; gap: 2px; }
+.docx-editor > header strong { font-size: 13px; }
+.docx-editor > header span { color: var(--text-muted); font-size: 10px; }
+.docx-editor > header button { width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 5px; color: var(--text-secondary); background: transparent; cursor: pointer; }
+.docx-editor > header button:hover { background: var(--hover-bg); }
+.edit-mode-tabs { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
+.edit-mode-tabs button { min-height: 30px; border: 0; border-right: 1px solid var(--border-color); color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; font: inherit; font-size: 11px; }
+.edit-mode-tabs button:last-child { border-right: 0; }
+.edit-mode-tabs button.active { color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 10%, var(--bg-primary)); }
+.edit-mode-tabs button:disabled { opacity: .4; cursor: default; }
+.edit-field { margin-top: 13px; display: flex; flex-direction: column; gap: 6px; }
+.edit-field > span { color: var(--text-secondary); font-size: 11px; font-weight: 600; }
+.edit-field select, .edit-field textarea, .edit-field input { width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; outline: 0; color: var(--text-primary); background: var(--bg-secondary); font: inherit; }
+.edit-field select, .edit-field input { height: 32px; padding: 0 8px; }
+.edit-field textarea { min-height: 92px; padding: 8px; resize: vertical; line-height: 1.55; }
+.edit-field select:focus, .edit-field textarea:focus, .edit-field input:focus { border-color: var(--primary-color); }
+.style-controls { display: flex; gap: 5px; }
+.style-controls button { width: 32px; height: 30px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; }
+.style-controls button.active { border-color: var(--primary-color); color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 10%, var(--bg-primary)); }
+.verify-edit, .copy-save > button { width: 100%; min-height: 34px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--primary-color); border-radius: 6px; color: #fff; background: var(--primary-color); cursor: pointer; font: inherit; font-weight: 600; }
+.verify-edit:disabled, .copy-save > button:disabled { opacity: .45; cursor: default; }
+.edit-verification { margin-top: 12px; padding: 9px; display: flex; flex-direction: column; gap: 4px; border-left: 3px solid #2c9b68; background: color-mix(in srgb, #2c9b68 8%, var(--bg-primary)); }
+.edit-verification.error { border-color: var(--error-color); background: color-mix(in srgb, var(--error-color) 7%, var(--bg-primary)); }
+.edit-verification strong { font-size: 11px; }
+.edit-verification span, .edit-verification small, .copy-save > small { color: var(--text-muted); font-size: 10px; line-height: 1.5; }
+.copy-save { margin-top: 12px; padding-top: 1px; border-top: 1px solid var(--border-color); }
+.copy-save > small { display: block; margin-top: 7px; color: var(--error-color); }
 .docx-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: 10px; }
 .docx-status > div { gap: 10px; }
 @media (max-width: 820px) {
   .docx-layout { grid-template-columns: 180px minmax(0, 1fr); }
+  .docx-layout.editor-open { grid-template-columns: minmax(0, 1fr) 280px; }
+  .docx-layout.editor-open .docx-outline { display: none; }
   .docx-page { padding: 42px 36px; }
   .docx-search input { width: 105px; }
+}
+@media (min-width: 821px) and (max-width: 1180px) {
+  .docx-layout.editor-open { grid-template-columns: minmax(0, 1fr) 300px; }
+  .docx-layout.editor-open .docx-outline { display: none; }
 }
 </style>

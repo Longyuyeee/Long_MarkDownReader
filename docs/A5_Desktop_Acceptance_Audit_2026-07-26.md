@@ -30,7 +30,7 @@ npm run audit:a5-desktop
 npm run check:a5-desktop-evidence
 ```
 
-阶段 A 收口后，G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C 和 DOCX C0-2A/C1-2B 继续复用同一真实桌面回归框架。当前门禁结果为 **35/35 项通过，27 张真实 Tauri 截图通过机器校验**。
+阶段 A 收口后，G8、PDF B0～B1C 和 DOCX C0～C2E 继续复用同一真实桌面回归框架。当前门禁结果为 **36/36 项通过，28 张真实 Tauri 截图通过机器校验**。
 
 | 验收域 | 真实桌面结果 | 证据 |
 |---|---|---|
@@ -45,6 +45,7 @@ npm run check:a5-desktop-evidence
 | DOCX C1-2A | 在原 Library 右侧显示目录、继承标题、编号列表、结构化正文、表格、受限真实图片、搜索定位、兼容画像和高级对象只读警告 | `c1-docx-structured-reading.jpg` |
 | DOCX C1-2B2 | 在真实 WebView2 中显示横向/纵向合并单元格、分页、横向双栏节摘要，并搜索定位批注附属内容 | `c1-docx-layout-and-related-content.jpg` |
 | DOCX C0-2A | 在真实 WebView2 中打开 Microsoft Word 16 生产者文件，验证生产者、合并表格、横向双栏、媒体和批注搜索 | `c0-word-producer-reading.jpg` |
+| DOCX C2E | 编辑真实 Word 生产者安全文本目标，隔离验证后原子另存并在应用内重开；源字节不变，同一输出由 Word/WPS/LibreOffice 复开 | `c2e-docx-reliable-save-reopen.jpg`、`c2e-docx-producer-reopen.json` |
 | 普通文本/INI | 编辑、保存、离开并重开成功 | `text-save-and-reopen.jpg` |
 | 外部修改冲突 | 保存被签名冲突阻断；选择重新加载后读取磁盘版本，不恢复旧草稿 | `external-conflict-detected.jpg` |
 | `.env` | 首次遮罩、明确确认后显示、再次遮罩成功；正文标记不泄漏到界面 | `env-default-masked.jpg` |
@@ -92,12 +93,12 @@ DOCX C0-2A 的 Microsoft Word 真实生产者版本、隐私处理、重开、�
 - `.env` 默认遮罩和后端索引隔离；
 - LOG 有界只读、筛选、追尾、自动刷新和轮转；
 - PDF 阅读/批注/OCR、页面整理及可靠另存安全子集、Mermaid 图表、OPML 思维导图、JSON Canvas、开放表格和渐进式 XLSX 能力继续有效；
-- 30 类格式、62 个扩展名由共享注册表统一声明能力与路由；DOCX 当前声明为结构化只读。
+- 30 类格式、62 个扩展名由共享注册表统一声明能力与路由；DOCX 当前声明为基础编辑副本。
 
 ### 仍不能宣称
 
 - PDF 已达到任意复杂对象保真或正文排版编辑；
-- DOCX/PPTX/WPS 私有格式的内置可靠编辑；DOCX 当前仅达到结构化只读首批；
+- 完整 DOCX/PPTX/WPS 私有格式排版等价；DOCX 当前只达到经验证安全子集的基础编辑副本；
 - 完整 Excel 等价、完整 IDE、任意私有思维导图格式等价；
 - 安装包升级/卸载、系统文件关联、所有 Windows 版本和硬件组合已经完成发布矩阵；
 - 知识图谱已经具备完整代码语义提取或图谱—思维导图双向协同。
@@ -110,9 +111,9 @@ JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存�
 
 - Vue 类型检查与 Vite 生产构建通过；
 - 主题、格式、A5 桌面证据、工作簿和 XLSX 发布契约通过；
-- Rust 功能测试 `294/294` 通过，性能测试 `1/1` 通过；
+- Rust 功能测试 `314/314` 通过，性能测试 `1/1` 通过；
 - Rust 复杂工作簿性能测试 `1/1` 通过；
-- 100 MiB PDF 范围读取只请求约 `255.9 KiB`，本轮本机约 `54 ms`；
+- 100 MiB PDF 范围读取只请求约 `255.9 KiB`，本轮本机约 `709 ms`；
 - 生产依赖审计 `0` 个漏洞。
 
 现存非阻断项仍是 Vite 的少量大分包警告。它属于后续性能优化，不影响本阶段正确性结论。

@@ -169,15 +169,15 @@ if (!docxFormat
   || docxFormat.extensions?.join(',') !== '.docx'
   || docxFormat.maxBytes !== 64 * 1024 * 1024
   || docxFormat.capabilities?.read !== 'supported'
-  || docxFormat.capabilities?.edit !== 'planned'
+  || docxFormat.capabilities?.edit !== 'supported'
   || docxFormat.capabilities?.create !== 'unsupported'
   || docxFormat.capabilities?.index !== 'supported'
   || docxFormat.adapters?.reader !== 'docx'
-  || docxFormat.adapters?.writer !== null
+  || docxFormat.adapters?.writer !== 'docx'
   || docxFormat.adapters?.creator !== null
   || docxFormat.adapters?.indexer !== 'docx'
-  || docxFormat.userCapability?.level !== 'preview-only'
-  || docxFormat.userCapability?.saveMode !== 'none') failures.push('C1 DOCX structured read-only contract is incomplete')
+  || docxFormat.userCapability?.level !== 'basic-edit'
+  || docxFormat.userCapability?.saveMode !== 'copy') failures.push('C2E DOCX basic copy-edit contract is incomplete')
 
 const requireText = (source, value, message) => { if (!source.includes(value)) failures.push(message) }
 const forbid = (source, pattern, message) => { if (pattern.test(source)) failures.push(message) }
@@ -418,20 +418,24 @@ requireText(docxCommands, 'editable_style_targets', 'C2D read reports must publi
 requireText(docxCommands, 'editable_image_targets', 'C2D read reports must publish safe inline image targets')
 requireText(docxCommands, 'preview_docx_style_patch_isolated_copy', 'C2D must expose an isolated basic style preview command')
 requireText(docxCommands, 'preview_docx_image_alt_text_patch_isolated_copy', 'C2D must expose an isolated image alt-text preview command')
-requireText(docxCommands, 'DocxSaveReadinessReport', 'C2E must expose a structured read-only save readiness report')
-requireText(docxCommands, 'audit_docx_save_readiness', 'C2E must expose a read-only save readiness command')
-requireText(docxCommands, 'blocked_readiness_only', 'C2E readiness must remain blocked until producer evidence is complete')
+requireText(docxCommands, 'DocxSaveReadinessReport', 'C2E must retain its structured save readiness report')
+requireText(docxCommands, 'audit_docx_save_readiness', 'C2E must retain its save readiness command')
+requireText(docxCommands, 'ready_to_save_copy', 'C2E readiness must only permit copy saving after all blockers clear')
 requireText(docxCommands, 'fixtures/docx/producers/matrix.json', 'C2E readiness must consume the producer matrix fact source')
 requireText(docxCommands, 'producer_evidence_missing:{producer}', 'C2E must report each missing producer from the matrix')
 requireText(docxCommands, 'write_attempted: false', 'C2E readiness must prove that it never attempts a write')
 requireText(docxCommands, 'c2e_save_readiness_reports_conflicts_without_writing_files', 'C2E must regress source, target, and no-write gates')
-if (docxCommands.includes('save_docx') || docxCommands.includes('write_docx')) failures.push('C2B/C2C/C2D/C2E0 must not expose DOCX save or source overwrite commands')
-requireText(docxReader, '结构化阅读', 'C1 DOCX workspace must identify its bounded reading capability')
+requireText(docxCommands, 'save_docx_patch_copy', 'C2E must expose reliable save-as-copy without source overwrite')
+requireText(docxCommands, 'write_new_bytes', 'C2E must use atomic create-new reliable writing')
+requireText(docxCommands, 'c2e_reliably_saves_and_reopens_all_three_producer_copies', 'C2E must regress all producer copies')
+if (docxCommands.includes('write_docx') || docxCommands.includes('save_docx_overwrite')) failures.push('C2E must not expose DOCX source overwrite commands')
+requireText(docxReader, '基础编辑副本', 'C2E DOCX workspace must identify its bounded editing capability')
 requireText(docxReader, '原文件只读', 'C1 DOCX workspace must state the original file is read-only')
 requireText(docxReader, '文档目录', 'C1 DOCX workspace must expose a heading outline')
 requireText(docxReader, '搜索 DOCX 正文', 'C1 DOCX workspace must expose in-document search')
 requireText(docxReader, '兼容画像', 'C1 DOCX workspace must expose its compatibility profile')
-requireText(docxReader, '当前不写回 DOCX', 'C1 DOCX workspace must state the write boundary')
+requireText(docxReader, '原件始终只读', 'C2E DOCX workspace must state the no-overwrite boundary')
+requireText(docxReader, 'save_docx_patch_copy', 'C2E DOCX workspace must expose reliable save-as-copy')
 requireText(docxReader, 'media.dataUrl', 'C1-2A DOCX workspace must render verified embedded media')
 requireText(docxReader, 'numberingDefinitionCount', 'C1-2A DOCX workspace must expose numbering resolution in its compatibility profile')
 requireText(docxReader, 'cell.columnSpan', 'C1-2B2 DOCX workspace must render horizontal table merges')

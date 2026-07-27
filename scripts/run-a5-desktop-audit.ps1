@@ -220,6 +220,10 @@ if (-not (Test-Path -LiteralPath $wordProducerFixture -PathType Leaf)) {
   throw "C0-2A Microsoft Word producer fixture is missing"
 }
 Copy-Item -LiteralPath $wordProducerFixture -Destination (Join-Path $library "C0 Microsoft Word Fixture.docx") -Force
+$docxReliableCopy = Join-Path $library "C2E Reliable Copy.docx"
+if (Test-Path -LiteralPath $docxReliableCopy -PathType Leaf) {
+  Remove-Item -LiteralPath $docxReliableCopy -Force
+}
 
 $indexCommandSource = Get-Content -Raw -Encoding UTF8 (Join-Path $workspace "src-tauri\src\commands\index.rs")
 $pdfFixtureMatch = [regex]::Match($indexCommandSource, 'const TWO_PAGE_PDF: &str = "([^"]+)";')
@@ -281,6 +285,12 @@ try {
     & node (Join-Path $workspace "scripts\capture-a5-desktop-audit.mjs")
     if ($LASTEXITCODE -ne 0) {
       throw "A5 desktop audit capture failed"
+    }
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $workspace "scripts\verify-c2e-docx-producer-reopen.ps1") `
+      -DocumentPath (Join-Path $library "C2E Reliable Copy.docx") `
+      -ReportPath (Join-Path $output "c2e-docx-producer-reopen.json")
+    if ($LASTEXITCODE -ne 0) {
+      throw "C2E DOCX producer reopen verification failed"
     }
   }
   finally {

@@ -6,9 +6,10 @@ use crate::formats::docx_patch::{
     inspect_docx_editable_text_targets, DocxEditableImageTarget, DocxEditableStyleTarget,
     DocxEditableTextTarget, DocxIsolatedPatchReport,
 };
+use crate::services::reliable_write::write_new_bytes;
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::fs::{self, OpenOptions};
@@ -64,6 +65,57 @@ pub struct DocxSaveReadinessReport {
     pub write_attempted: bool,
     pub source_unchanged: bool,
     pub target_unchanged: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(tag = "kind")]
+pub enum DocxPatchOperation {
+    #[serde(rename = "text")]
+    Text {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedTextDigest")]
+        expected_text_digest: String,
+        #[serde(rename = "replacementText")]
+        replacement_text: String,
+    },
+    #[serde(rename = "style")]
+    Style {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedStyleDigest")]
+        expected_style_digest: String,
+        bold: bool,
+        italic: bool,
+        underline: bool,
+    },
+    #[serde(rename = "imageAltText")]
+    ImageAltText {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedMetadataDigest")]
+        expected_metadata_digest: String,
+        #[serde(rename = "replacementAltText")]
+        replacement_alt_text: String,
+    },
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocxSavedCopyReport {
+    pub status: String,
+    pub engine: String,
+    pub target_path: String,
+    pub target_signature: String,
+    pub target_digest: String,
+    pub source_signature: String,
+    pub source_unchanged: bool,
+    pub output_bytes: usize,
+    pub changed_parts: Vec<String>,
+    pub unchanged_parts_verified: bool,
+    pub structural_reopen_verified: bool,
+    pub semantic_reopen_verified: bool,
+    pub producer_evidence: Vec<String>,
 }
 
 struct TemporaryDocxCopy {
@@ -408,6 +460,164 @@ fn docx_producer_evidence() -> Result<(Vec<String>, Vec<String>), String> {
     Ok((verified, missing))
 }
 
+fn build_docx_operation(
+    source: &[u8],
+    operation: &DocxPatchOperation,
+) -> Result<(DocxIsolatedPatchReport, Vec<u8>), String> {
+    match operation {
+        DocxPatchOperation::Text {
+            target_id,
+            expected_text_digest,
+            replacement_text,
+        } => build_docx_text_patch_isolated(
+            source,
+            target_id,
+            expected_text_digest,
+            replacement_text,
+        ),
+        DocxPatchOperation::Style {
+            target_id,
+            expected_style_digest,
+            bold,
+            italic,
+            underline,
+        } => build_docx_style_patch_isolated(
+            source,
+            target_id,
+            expected_style_digest,
+            *bold,
+            *italic,
+            *underline,
+        ),
+        DocxPatchOperation::ImageAltText {
+            target_id,
+            expected_metadata_digest,
+            replacement_alt_text,
+        } => build_docx_image_alt_text_patch_isolated(
+            source,
+            target_id,
+            expected_metadata_digest,
+            replacement_alt_text,
+        ),
+    }
+}
+
+fn remove_created_docx_if_exact(path: &Path, expected: &[u8]) {
+    if fs::read(path).is_ok_and(|bytes| bytes == expected) {
+        let _ = fs::remove_file(path);
+    }
+}
+
+fn save_docx_patch_copy_to_path(
+    source_path: &Path,
+    target_path: &Path,
+    expected_signature: &str,
+    expected_output_digest: &str,
+    operation: &DocxPatchOperation,
+) -> Result<DocxSavedCopyReport, String> {
+    if target_path == source_path {
+        return Err("可靠另存禁止覆盖源 DOCX".into());
+    }
+    if target_path.exists() {
+        return Err("目标文件已存在；可靠另存不会覆盖现有文件".into());
+    }
+    let (producer_evidence, missing_producer_evidence) = docx_producer_evidence()?;
+    if !missing_producer_evidence.is_empty() {
+        return Err(format!(
+            "DOCX 生产者重开证据尚未齐全: {}",
+            missing_producer_evidence.join(", ")
+        ));
+    }
+    let metadata = source_path
+        .metadata()
+        .map_err(|error| format!("读取 DOCX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_DOCX_FILE_BYTES {
+        return Err("DOCX 文件超过 64 MiB 可靠另存上限".into());
+    }
+    let source_signature = file_signature(&metadata);
+    if source_signature != expected_signature {
+        return Err("DOCX 已被外部修改，请重新打开后再保存副本".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 DOCX 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let (patch_report, output) = build_docx_operation(&source, operation)?;
+    let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
+    if patch_report.output_digest != expected_output_digest {
+        return Err("DOCX 编辑内容或隔离输出已变化，请重新验证后再另存".into());
+    }
+    if !patch_report.unchanged_parts_verified
+        || !patch_report.structural_reparse_verified
+        || !patch_report.semantic_reparse_verified
+    {
+        return Err("DOCX 隔离补丁未通过完整保真与语义复读".into());
+    }
+
+    let source_before_write =
+        fs::read(source_path).map_err(|error| format!("保存前复核源 DOCX 失败: {error}"))?;
+    let metadata_before_write = source_path
+        .metadata()
+        .map_err(|error| format!("保存前复核源 DOCX 元数据失败: {error}"))?;
+    if source_before_write != source
+        || file_signature(&metadata_before_write) != source_signature
+        || format!("{:x}", Sha256::digest(&source_before_write)) != source_digest
+    {
+        return Err("DOCX 在隔离验证期间发生变化，请重新打开后再保存".into());
+    }
+
+    write_new_bytes(target_path, &output)?;
+    let verification = (|| -> Result<(String, String), String> {
+        let saved = fs::read(target_path)
+            .map_err(|error| format!("目标已创建，但无法复读保存字节: {error}"))?;
+        let target_digest = format!("{:x}", Sha256::digest(&saved));
+        if saved != output || target_digest != patch_report.output_digest {
+            return Err("目标落盘字节与隔离验证输出不一致".into());
+        }
+        parse_docx(&saved).map_err(|error| format!("目标 DOCX 结构复读失败: {error}"))?;
+        let (_, semantic_output) = build_docx_operation(&source, operation)?;
+        if semantic_output != saved {
+            return Err("目标 DOCX 语义复读结果与已验证补丁不一致".into());
+        }
+        let source_after =
+            fs::read(source_path).map_err(|error| format!("复核源 DOCX 失败: {error}"))?;
+        let source_metadata_after = source_path
+            .metadata()
+            .map_err(|error| format!("复核源 DOCX 元数据失败: {error}"))?;
+        if source_after != source
+            || file_signature(&source_metadata_after) != source_signature
+            || format!("{:x}", Sha256::digest(&source_after)) != source_digest
+        {
+            return Err("源 DOCX 在另存期间发生变化".into());
+        }
+        let target_metadata = target_path
+            .metadata()
+            .map_err(|error| format!("读取已保存 DOCX 元数据失败: {error}"))?;
+        Ok((target_digest, file_signature(&target_metadata)))
+    })();
+    let (target_digest, target_signature) = match verification {
+        Ok(value) => value,
+        Err(error) => {
+            remove_created_docx_if_exact(target_path, &output);
+            return Err(format!("可靠另存验证失败，已清理未验收副本: {error}"));
+        }
+    };
+
+    Ok(DocxSavedCopyReport {
+        status: "saved_verified".into(),
+        engine: patch_report.engine,
+        target_path: target_path.to_string_lossy().into_owned(),
+        target_signature,
+        target_digest,
+        source_signature,
+        source_unchanged: true,
+        output_bytes: output.len(),
+        changed_parts: patch_report.changed_parts,
+        unchanged_parts_verified: true,
+        structural_reopen_verified: true,
+        semantic_reopen_verified: true,
+        producer_evidence,
+    })
+}
+
 fn audit_docx_save_readiness_path(
     source_path: &Path,
     target_path: &Path,
@@ -452,8 +662,6 @@ fn audit_docx_save_readiness_path(
             .iter()
             .map(|producer| format!("producer_evidence_missing:{producer}")),
     );
-    blockers.push("docx_save_command_not_enabled".into());
-
     let source_after =
         fs::read(source_path).map_err(|error| format!("复核源 DOCX 失败: {error}"))?;
     let source_metadata_after = source_path
@@ -469,7 +677,11 @@ fn audit_docx_save_readiness_path(
     }
 
     Ok(DocxSaveReadinessReport {
-        status: "blocked_readiness_only".into(),
+        status: if blockers.is_empty() {
+            "ready_to_save_copy".into()
+        } else {
+            "blocked".into()
+        },
         source_signature,
         source_signature_current,
         source_digest,
@@ -619,6 +831,33 @@ pub async fn audit_docx_save_readiness(
     })
     .await
     .map_err(|error| format!("DOCX C2E 保存准备审计任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn save_docx_patch_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_signature: String,
+    expected_output_digest: String,
+    operation: DocxPatchOperation,
+) -> Result<DocxSavedCopyReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["docx"])?;
+    let target_file_name = validate_docx_copy_file_name(&target_file_name)?;
+    let target_path =
+        guard.resolve_file_for_write(source_path.with_file_name(target_file_name), &["docx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_docx_patch_copy_to_path(
+            &source_path,
+            &target_path,
+            &expected_signature,
+            &expected_output_digest,
+            &operation,
+        )
+    })
+    .await
+    .map_err(|error| format!("DOCX C2E 可靠另存任务失败: {error}"))?
 }
 
 #[cfg(test)]
@@ -810,7 +1049,7 @@ mod tests {
         let ready =
             audit_docx_save_readiness_path(&source_path, &target_path, &signature, &output_digest)
                 .unwrap();
-        assert_eq!(ready.status, "blocked_readiness_only");
+        assert_eq!(ready.status, "ready_to_save_copy");
         assert!(ready.source_signature_current);
         assert!(!ready.target_exists);
         assert!(!ready.target_is_source);
@@ -822,9 +1061,7 @@ mod tests {
             ["microsoft-word-16", "wps-writer", "libreoffice-writer"]
         );
         assert!(ready.missing_producer_evidence.is_empty());
-        assert!(ready
-            .blockers
-            .contains(&"docx_save_command_not_enabled".into()));
+        assert!(ready.blockers.is_empty());
         assert!(!target_path.exists());
         assert_eq!(fs::read(&source_path).unwrap(), source);
 
@@ -854,6 +1091,143 @@ mod tests {
             "invalid-digest",
         )
         .is_err());
+        assert_eq!(fs::read(&source_path).unwrap(), source);
+
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn c2e_reliably_saves_and_reopens_all_three_producer_copies() {
+        let fixtures: [(&str, &[u8]); 3] = [
+            (
+                "word",
+                include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx"),
+            ),
+            (
+                "wps",
+                include_bytes!("../../../fixtures/docx/producers/wps-writer.docx"),
+            ),
+            (
+                "libreoffice",
+                include_bytes!("../../../fixtures/docx/producers/libreoffice-writer.docx"),
+            ),
+        ];
+        let base = std::env::temp_dir().join(format!(
+            "longedit-docx-c2e-save-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&base).unwrap();
+
+        for (producer, source) in fixtures {
+            let source_path = base.join(format!("{producer}-source.docx"));
+            let target_path = base.join(format!("{producer}-copy.docx"));
+            fs::write(&source_path, source).unwrap();
+            let signature = file_signature(&source_path.metadata().unwrap());
+            let model = parse_docx(source).unwrap();
+            let target = inspect_docx_editable_text_targets(source, &model)
+                .unwrap()
+                .into_iter()
+                .next()
+                .expect("producer fixture must expose a safe text target");
+            let replacement = format!("LongEdit C2E {producer} verified copy");
+            let operation = DocxPatchOperation::Text {
+                target_id: target.id,
+                expected_text_digest: target.expected_text_digest,
+                replacement_text: replacement.clone(),
+            };
+            let (preview, _) = build_docx_operation(source, &operation).unwrap();
+            let saved = save_docx_patch_copy_to_path(
+                &source_path,
+                &target_path,
+                &signature,
+                &preview.output_digest,
+                &operation,
+            )
+            .unwrap();
+
+            assert_eq!(saved.status, "saved_verified");
+            assert!(saved.source_unchanged);
+            assert!(saved.unchanged_parts_verified);
+            assert!(saved.structural_reopen_verified);
+            assert!(saved.semantic_reopen_verified);
+            assert_eq!(
+                saved.producer_evidence,
+                ["microsoft-word-16", "wps-writer", "libreoffice-writer"]
+            );
+            assert!(target_path.exists());
+            assert_eq!(fs::read(&source_path).unwrap(), source);
+            assert!(parse_docx(&fs::read(&target_path).unwrap())
+                .unwrap()
+                .plain_text
+                .contains(&replacement));
+
+            let occupied_error = save_docx_patch_copy_to_path(
+                &source_path,
+                &target_path,
+                &signature,
+                &preview.output_digest,
+                &operation,
+            )
+            .unwrap_err();
+            assert!(occupied_error.contains("不会覆盖"));
+        }
+
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn c2e_rejects_stale_preview_and_source_overwrite_without_writing() {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-docx-c2e-conflict-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&base).unwrap();
+        let source_path = base.join("source.docx");
+        let target_path = base.join("copy.docx");
+        let source =
+            include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx").to_vec();
+        fs::write(&source_path, &source).unwrap();
+        let signature = file_signature(&source_path.metadata().unwrap());
+        let model = parse_docx(&source).unwrap();
+        let target = inspect_docx_editable_text_targets(&source, &model)
+            .unwrap()
+            .into_iter()
+            .next()
+            .unwrap();
+        let operation = DocxPatchOperation::Text {
+            target_id: target.id,
+            expected_text_digest: target.expected_text_digest,
+            replacement_text: "LongEdit conflict gate".into(),
+        };
+        let (preview, _) = build_docx_operation(&source, &operation).unwrap();
+
+        assert!(save_docx_patch_copy_to_path(
+            &source_path,
+            &target_path,
+            &signature,
+            &"0".repeat(64),
+            &operation,
+        )
+        .unwrap_err()
+        .contains("已变化"));
+        assert!(!target_path.exists());
+        assert!(save_docx_patch_copy_to_path(
+            &source_path,
+            &source_path,
+            &signature,
+            &preview.output_digest,
+            &operation,
+        )
+        .unwrap_err()
+        .contains("禁止覆盖"));
         assert_eq!(fs::read(&source_path).unwrap(), source);
 
         fs::remove_dir_all(base).unwrap();

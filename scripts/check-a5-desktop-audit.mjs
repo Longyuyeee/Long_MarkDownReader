@@ -40,6 +40,7 @@ const requiredChecks = new Set([
   'g8-canvas-object-context',
   'c1-docx-structured-reading',
   'c1-docx-layout-and-related-content',
+  'c2e-docx-reliable-save-reopen',
   'c0-word-producer-reading',
 ])
 
@@ -62,8 +63,8 @@ if (!largeCheck?.displayState?.includes('512.0 KiB') || !largeCheck?.displayStat
 
 const evidenceFiles = manifest.evidenceFiles || []
 if (!manifest.restartVerifiedAt) failures.push('A5 evidence must record process restart verification time')
-if (evidenceFiles.length !== 27 || new Set(evidenceFiles).size !== evidenceFiles.length) {
-  failures.push('A5/G8/B0/B1A/B1B/B1C/C0/C1 evidence manifest must list twenty-seven unique screenshots')
+if (evidenceFiles.length !== 28 || new Set(evidenceFiles).size !== evidenceFiles.length) {
+  failures.push('A5/G8/B0/B1A/B1B/B1C/C0/C1/C2E evidence manifest must list twenty-eight unique screenshots')
 }
 for (const file of evidenceFiles) {
   const resolved = path.resolve(new URL(file, evidenceRoot).pathname.replace(/^\/([A-Za-z]:)/, '$1'))
@@ -109,8 +110,19 @@ if (!capture.includes('A5_PRIVATE_ENV_MARKER')
   || !capture.includes('g8-canvas-object-context')
   || !capture.includes('c1-docx-structured-reading')
   || !capture.includes('c1-docx-layout-and-related-content')
+  || !capture.includes('c2e-docx-reliable-save-reopen')
   || !capture.includes('c0-word-producer-reading')) {
   failures.push('A5/G8/B0/B1A/B1B/B1C/C1 capture must exercise the library shell, relation summaries, cross-format context, PDF page planning, DOCX structured reading, isolated verification, compatibility profiling and reliable save/reopen, saved collections, planning hierarchy, sensitive search exclusion, conflict reload, and invalid JSON protection')
+}
+
+const c2eProducerReport = JSON.parse(await fs.readFile(new URL('c2e-docx-producer-reopen.json', evidenceRoot), 'utf8'))
+if (c2eProducerReport.schemaVersion !== 1
+  || c2eProducerReport.status !== 'verified'
+  || c2eProducerReport.sourceMarker !== 'C2E Desktop Verified Text'
+  || !['microsoft-word-16', 'wps-writer', 'libreoffice-writer'].every(
+    id => c2eProducerReport.producers?.some(producer => producer.id === id && producer.reopenVerified === true),
+  )) {
+  failures.push('C2E producer report must prove that Word, WPS, and LibreOffice reopened the saved LongEdit copy')
 }
 
 if (failures.length) {

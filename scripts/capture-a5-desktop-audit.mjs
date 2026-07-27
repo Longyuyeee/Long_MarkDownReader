@@ -132,6 +132,7 @@ const setEditorText = async text => {
       const editor = document.querySelector('.cm-content')
       editor?.focus()
       return document.activeElement === editor
+        || editor?.closest('.cm-editor')?.classList.contains('cm-focused') === true
     })()`,
     'CodeMirror input focus',
     80,
@@ -212,6 +213,7 @@ const largeFile = path.join(library, 'large.txt')
 const logFile = path.join(library, 'runtime.log')
 const docxFile = path.join(library, 'C1 Product Brief.docx')
 const wordProducerDocxFile = path.join(library, 'C0 Microsoft Word Fixture.docx')
+const docxSavedCopyFile = path.join(library, 'C2E Reliable Copy.docx')
 const relationSourceFile = path.join(library, 'G8 Source.md')
 const relationPlanFile = path.join(library, 'G8 Plan.opml')
 const relationTagFile = path.join(library, 'G8 Tag Source.md')
@@ -466,6 +468,46 @@ await waitFor(
 )
 checks.push({ id: 'c0-word-producer-reading', status: 'passed' })
 await capture('c0-word-producer-reading.jpg')
+const docxSourceBefore = await fs.readFile(wordProducerDocxFile)
+await evaluate(`document.querySelector('button[title="基础编辑并另存副本"]')?.click()`)
+await waitFor(`document.querySelector('.docx-editor') !== null`, 'DOCX basic edit panel')
+const docxTargetText = 'C2E Desktop Verified Text'
+const docxDraftChanged = await evaluate(`(() => {
+  const textarea = document.querySelector('.docx-editor textarea')
+  if (!(textarea instanceof HTMLTextAreaElement)) return false
+  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
+  setter?.call(textarea, ${JSON.stringify(docxTargetText)})
+  textarea.dispatchEvent(new Event('input', { bubbles: true }))
+  textarea.dispatchEvent(new Event('change', { bubbles: true }))
+  return true
+})()`)
+if (!docxDraftChanged) throw new Error('Unable to edit the C2E DOCX text target')
+await clickText('.verify-edit', '验证隔离副本')
+await waitFor(
+  `document.querySelector('.edit-verification')?.textContent?.includes('隔离验证通过') === true`,
+  'DOCX isolated edit verification',
+  300,
+)
+await setInput('.copy-save input', path.basename(docxSavedCopyFile))
+await clickText('.copy-save > button', '另存新 DOCX 并打开')
+await waitFor(
+  `document.querySelector('.document-title strong')?.textContent?.includes('C2E Reliable Copy.docx') === true
+    && document.querySelector('.docx-page')?.textContent?.includes(${JSON.stringify(docxTargetText)}) === true`,
+  'DOCX reliable save and reopened copy',
+  300,
+)
+const [docxSourceAfter, docxSavedCopy] = await Promise.all([
+  fs.readFile(wordProducerDocxFile),
+  fs.readFile(docxSavedCopyFile),
+])
+if (!docxSourceAfter.equals(docxSourceBefore)) throw new Error('DOCX reliable save changed source bytes')
+if (docxSavedCopy.length < 500 || docxSavedCopy[0] !== 0x50 || docxSavedCopy[1] !== 0x4b) {
+  throw new Error('DOCX reliable save did not create a valid-looking OOXML package')
+}
+checks.push({ id: 'c2e-docx-reliable-save-reopen', status: 'passed' })
+await waitFor(`document.querySelector('.page-loader') === null`, 'DOCX saved-copy indexing overlay')
+await delay(500)
+await capture('c2e-docx-reliable-save-reopen.jpg')
 
 await navigate(routeFor('text', serviceIni), '.text-workspace')
 const embeddedShellState = await evaluate(`({
@@ -640,7 +682,7 @@ await saveAndReopen({
 await saveAndReopen({
   route: 'toml',
   file: tomlFile,
-  workspaceSelector: '.workspace',
+  workspaceSelector: '.toml-workspace',
   content: '[service]\nname = "A5_TOML_SAVED"',
   marker: 'A5_TOML_SAVED',
   checkId: 'toml-save-reopen',
@@ -729,6 +771,7 @@ const evidenceFiles = [
   'g8-canvas-object-context.jpg',
   'c1-docx-structured-reading.jpg',
   'c1-docx-layout-and-related-content.jpg',
+  'c2e-docx-reliable-save-reopen.jpg',
   'c0-word-producer-reading.jpg',
   'text-save-and-reopen.jpg',
   'external-conflict-detected.jpg',

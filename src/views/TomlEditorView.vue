@@ -1,5 +1,5 @@
 <template>
-  <div class="workspace">
+  <div class="workspace toml-workspace">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
     <header>
       <div class="identity">
