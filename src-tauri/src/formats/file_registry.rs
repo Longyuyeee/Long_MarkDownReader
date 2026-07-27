@@ -467,4 +467,21 @@ mod tests {
             assert_eq!(format.adapters.indexer.as_deref(), Some("text"));
         }
     }
+
+    #[test]
+    fn pptx_is_structured_read_only_and_globally_indexed() {
+        let format = file_format_for_path("roadmap.pptx").unwrap();
+        assert_eq!(format.id, "pptx");
+        assert_eq!(format.route_name, "PptxReader");
+        assert!(format.capabilities.read.is_supported());
+        assert_eq!(format.capabilities.edit, CapabilityLevel::Planned);
+        assert!(format.capabilities.index.is_supported());
+        assert_eq!(
+            format.user_capability.level,
+            UserCapabilityLevel::PreviewOnly
+        );
+        assert_eq!(format.adapters.reader.as_deref(), Some("pptx"));
+        assert_eq!(format.adapters.indexer.as_deref(), Some("pptx"));
+        assert!(format.adapters.writer.is_none());
+    }
 }

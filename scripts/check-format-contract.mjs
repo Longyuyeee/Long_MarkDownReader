@@ -190,11 +190,11 @@ if (!pptxFormat
   || pptxFormat.capabilities?.read !== 'supported'
   || pptxFormat.capabilities?.edit !== 'planned'
   || pptxFormat.capabilities?.create !== 'unsupported'
-  || pptxFormat.capabilities?.index !== 'planned'
+  || pptxFormat.capabilities?.index !== 'supported'
   || pptxFormat.adapters?.reader !== 'pptx'
   || pptxFormat.adapters?.writer !== null
   || pptxFormat.adapters?.creator !== null
-  || pptxFormat.adapters?.indexer !== null
+  || pptxFormat.adapters?.indexer !== 'pptx'
   || pptxFormat.userCapability?.level !== 'preview-only'
   || pptxFormat.userCapability?.saveMode !== 'none') failures.push('C3A PPTX structured read-only contract is incomplete')
 
@@ -470,6 +470,12 @@ requireText(pptxKernel, 'PptxTable', 'C3B3 PPTX parser must expose basic table s
 requireText(pptxKernel, 'line_dash', 'C3B3 PPTX parser must preserve connector styling')
 requireText(pptxKernel, 'graphic_type', 'C3B3 PPTX parser must classify complex graphic frames')
 requireText(pptxKernel, 'parses_connectors_custom_shapes_tables_and_typed_graphic_frames', 'C3B3 PPTX parser must verify object tiers')
+requireText(pptxKernel, 'PptxSearchSegment', 'C3C1 PPTX parser must expose stable search segment metadata')
+requireText(pptxKernel, 'pptx_search_segments', 'C3C1 PPTX search text must use one shared generator')
+requireText(pptxKernel, 'builds_stable_search_segments_for_titles_objects_and_notes', 'C3C1 PPTX search segments must cover titles, objects, and notes')
+requireText(knowledgeIndex, 'build_pptx_index_segments', 'C3C1 persistent index must consume shared PPTX search segments')
+requireText(index, 'build_pptx_index_segments', 'C3C1 live fallback must consume shared PPTX search segments')
+requireText(index, 'indexes_pptx_slides_objects_and_notes_consistently', 'C3C1 must regress ready-index and live-fallback consistency')
 requireText(pptxCommands, 'read_pptx_presentation', 'C3A PPTX reader command must remain registered')
 if (pptxCommands.includes('write_pptx') || pptxCommands.includes('save_pptx')) failures.push('C3A must not expose PPTX write commands')
 requireText(pptxReader, '结构化只读', 'C3A PPTX workspace must identify its read-only capability')

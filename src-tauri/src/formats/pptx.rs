@@ -141,6 +141,109 @@ pub struct PptxPresentationModel {
     pub warnings: Vec<String>,
 }
 
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxSearchSegment {
+    pub match_kind: String,
+    pub text: String,
+    pub slide_number: u32,
+    pub locator_kind: String,
+    pub locator_object_id: String,
+    pub location_label: String,
+}
+
+fn pptx_object_search_text(object: &PptxObject) -> String {
+    let mut parts = Vec::new();
+    if !object.text.trim().is_empty() {
+        parts.push(object.text.trim().to_string());
+    }
+    if let Some(alt_text) = object
+        .alt_text
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+    {
+        parts.push(alt_text.trim().to_string());
+    }
+    if let Some(table) = &object.table {
+        let table_text = table
+            .rows
+            .iter()
+            .flat_map(|row| row.cells.iter())
+            .map(|cell| cell.text.trim())
+            .filter(|value| !value.is_empty())
+            .collect::<Vec<_>>()
+            .join("\n");
+        if !table_text.is_empty() {
+            parts.push(table_text);
+        }
+    }
+    parts.sort();
+    parts.dedup();
+    parts.join("\n")
+}
+
+pub fn pptx_search_segments(model: &PptxPresentationModel) -> Vec<PptxSearchSegment> {
+    let mut segments = Vec::new();
+    for (index, slide) in model.slides.iter().enumerate() {
+        let slide_number = (index + 1) as u32;
+        let slide_label = if slide.hidden {
+            format!("幻灯片 {slide_number}（隐藏）：{}", slide.title)
+        } else {
+            format!("幻灯片 {slide_number}：{}", slide.title)
+        };
+        if !slide.title.trim().is_empty() {
+            segments.push(PptxSearchSegment {
+                match_kind: "slide-title".into(),
+                text: slide.title.clone(),
+                slide_number,
+                locator_kind: "pptx-slide".into(),
+                locator_object_id: slide.id.clone(),
+                location_label: slide_label.clone(),
+            });
+        }
+        if !slide.text.trim().is_empty() {
+            segments.push(PptxSearchSegment {
+                match_kind: "body".into(),
+                text: slide.text.clone(),
+                slide_number,
+                locator_kind: "pptx-slide".into(),
+                locator_object_id: slide.id.clone(),
+                location_label: slide_label.clone(),
+            });
+        }
+        for object in &slide.objects {
+            let text = pptx_object_search_text(object);
+            if text.is_empty() {
+                continue;
+            }
+            let object_label = if object.name.trim().is_empty() {
+                format!("幻灯片 {slide_number} · 对象 {}", object.id)
+            } else {
+                format!("幻灯片 {slide_number} · {}", object.name)
+            };
+            segments.push(PptxSearchSegment {
+                match_kind: "object".into(),
+                text,
+                slide_number,
+                locator_kind: "pptx-object".into(),
+                locator_object_id: object.id.clone(),
+                location_label: object_label,
+            });
+        }
+        if !slide.notes.trim().is_empty() {
+            segments.push(PptxSearchSegment {
+                match_kind: "notes".into(),
+                text: slide.notes.clone(),
+                slide_number,
+                locator_kind: "pptx-slide".into(),
+                locator_object_id: slide.id.clone(),
+                location_label: format!("幻灯片 {slide_number} · 备注"),
+            });
+        }
+    }
+    segments
+}
+
 #[derive(Clone, Debug)]
 struct Relationship {
     target: String,
@@ -2038,5 +2141,55 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn builds_stable_search_segments_for_titles_objects_and_notes() {
+        let bytes = include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx");
+        let model = parse_pptx(bytes).unwrap();
+        let segments = pptx_search_segments(&model);
+
+        let slide_title = segments
+            .iter()
+            .find(|segment| {
+                segment.match_kind == "slide-title"
+                    && segment.text.contains("PowerPoint Producer Fixture")
+            })
+            .unwrap();
+        assert_eq!(slide_title.slide_number, 1);
+        assert_eq!(slide_title.locator_kind, "pptx-slide");
+        assert_eq!(slide_title.locator_object_id, model.slides[0].id);
+
+        let object = segments
+            .iter()
+            .find(|segment| {
+                segment.match_kind == "object" && segment.text.contains("Structured slide reading")
+            })
+            .unwrap();
+        assert_eq!(object.slide_number, 1);
+        assert_eq!(object.locator_kind, "pptx-object");
+        assert!(!object.locator_object_id.is_empty());
+        assert!(object.location_label.starts_with("幻灯片 1 ·"));
+
+        let notes = segments
+            .iter()
+            .find(|segment| {
+                segment.match_kind == "notes" && segment.text.contains("speaker note evidence")
+            })
+            .unwrap();
+        assert_eq!(notes.slide_number, 1);
+        assert_eq!(notes.locator_kind, "pptx-slide");
+        assert_eq!(notes.location_label, "幻灯片 1 · 备注");
+
+        let libreoffice = parse_pptx(include_bytes!(
+            "../../../fixtures/pptx/producers/libreoffice-impress.pptx"
+        ))
+        .unwrap();
+        assert!(pptx_search_segments(&libreoffice).iter().any(|segment| {
+            segment
+                .text
+                .contains("LibreOffice Impress Producer Fixture")
+                && segment.locator_kind == "pptx-slide"
+        }));
     }
 }

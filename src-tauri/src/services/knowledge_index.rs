@@ -2,6 +2,7 @@ use crate::commands::graph::GraphData;
 use crate::formats::docx::parse_docx;
 use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
 use crate::formats::opml::{opml_search_text, parse_opml};
+use crate::formats::pptx::{parse_pptx, pptx_search_segments};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::reliable_write::write_utf8;
@@ -247,6 +248,46 @@ fn source_title(path: &Path) -> String {
         .into_owned()
 }
 
+pub(crate) fn build_pptx_index_segments(
+    title: &str,
+    path: &str,
+    object_type: &str,
+    bytes: &[u8],
+) -> Result<Vec<IndexedSearchSegment>, String> {
+    let model = parse_pptx(bytes)?;
+    let mut segments = vec![IndexedSearchSegment {
+        title: title.into(),
+        path: path.into(),
+        object_type: object_type.into(),
+        match_kind: "title".into(),
+        text: String::new(),
+        page: None,
+        annotation_id: None,
+        locator_kind: None,
+        locator_object_id: None,
+        location_label: None,
+        extraction_failed: false,
+    }];
+    segments.extend(
+        pptx_search_segments(&model)
+            .into_iter()
+            .map(|segment| IndexedSearchSegment {
+                title: title.into(),
+                path: path.into(),
+                object_type: object_type.into(),
+                match_kind: segment.match_kind,
+                text: segment.text,
+                page: Some(segment.slide_number),
+                annotation_id: None,
+                locator_kind: Some(segment.locator_kind),
+                locator_object_id: Some(segment.locator_object_id),
+                location_label: Some(segment.location_label),
+                extraction_failed: false,
+            }),
+    );
+    Ok(segments)
+}
+
 fn decode_searchable_text(path: &Path, indexer: &str) -> Option<String> {
     let bytes = path
         .metadata()
@@ -417,6 +458,18 @@ fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<Ind
                         extraction_failed: false,
                     });
                 }
+            }
+        } else if indexer == "pptx" {
+            if let Some(pptx_segments) = path
+                .metadata()
+                .ok()
+                .filter(|metadata| metadata.len() <= format.max_bytes)
+                .and_then(|_| fs::read(&path).ok())
+                .and_then(|bytes| {
+                    build_pptx_index_segments(&title, &path_string, &format.id, &bytes).ok()
+                })
+            {
+                segments.extend(pptx_segments);
             }
         } else if matches!(
             indexer,

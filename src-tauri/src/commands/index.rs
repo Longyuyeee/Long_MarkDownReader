@@ -3,8 +3,9 @@ use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::knowledge_index::{
-    delete_index, inspect_index, read_ready_snapshot, snapshot_from_graph, write_snapshot,
-    IndexedSearchSegment, KnowledgeIndexRuntime, KnowledgeIndexStatus,
+    build_pptx_index_segments, delete_index, inspect_index, read_ready_snapshot,
+    snapshot_from_graph, write_snapshot, IndexedSearchSegment, KnowledgeIndexRuntime,
+    KnowledgeIndexStatus,
 };
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -192,8 +193,12 @@ fn search_segments(segments: &[IndexedSearchSegment], query: &str) -> Vec<Knowle
             "annotation" => 90,
             "ocr" => 75,
             "related" => 75,
+            "slide-title" => 80,
+            "notes" => 75,
+            "object" => 70,
             "body" if segment.object_type == "pdf" => 70,
             "body" if segment.object_type == "docx" => 70,
+            "body" if segment.object_type == "pptx" => 70,
             _ => 60,
         };
         results.push(KnowledgeSearchResult {
@@ -407,6 +412,18 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     score: 75,
                     extraction_failed: false,
                 });
+            }
+        } else if indexer == "pptx" {
+            let pptx_segments = path
+                .metadata()
+                .ok()
+                .filter(|metadata| metadata.len() <= format.max_bytes)
+                .and_then(|_| fs::read(&path).ok())
+                .and_then(|bytes| {
+                    build_pptx_index_segments(&title, &path_string, &format.id, &bytes).ok()
+                });
+            if let Some(pptx_segments) = pptx_segments {
+                results.extend(search_segments(&pptx_segments, query));
             }
         } else if matches!(
             indexer,
@@ -668,6 +685,96 @@ mod tests {
             result.match_kind == "related"
                 && result.locator_object_id.as_deref() == Some("docx-related-1")
         }));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn indexes_pptx_slides_objects_and_notes_consistently() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let base = std::env::temp_dir().join(format!("longedit-pptx-index-{nonce}"));
+        let root = base.join("workspace");
+        let cache = base.join("cache");
+        fs::create_dir_all(&root).unwrap();
+        fs::create_dir_all(&cache).unwrap();
+        let source =
+            include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx");
+        let presentation = root.join("planning.pptx");
+        fs::write(&presentation, source).unwrap();
+
+        let live_title = search_workspace(&root, "powerpoint producer fixture", None);
+        assert!(live_title.iter().any(|result| {
+            result.object_type == "pptx"
+                && result.match_kind == "slide-title"
+                && result.page == Some(1)
+                && result.locator_kind.as_deref() == Some("pptx-slide")
+                && result
+                    .location_label
+                    .as_deref()
+                    .is_some_and(|label| label.starts_with("幻灯片 1"))
+        }));
+        let live_object = search_workspace(&root, "structured slide reading", None);
+        assert!(live_object.iter().any(|result| {
+            result.match_kind == "object"
+                && result.page == Some(1)
+                && result.locator_kind.as_deref() == Some("pptx-object")
+                && result.locator_object_id.as_deref() == Some("3")
+        }));
+        let live_notes = search_workspace(&root, "speaker note evidence", None);
+        assert!(live_notes.iter().any(|result| {
+            result.match_kind == "notes"
+                && result.page == Some(1)
+                && result.locator_kind.as_deref() == Some("pptx-slide")
+                && result.location_label.as_deref() == Some("幻灯片 1 · 备注")
+        }));
+
+        let snapshot = snapshot_from_graph(
+            &root,
+            GraphData {
+                nodes: Vec::new(),
+                edges: Vec::new(),
+            },
+        );
+        assert!(snapshot.search_segments.iter().any(|segment| {
+            segment.object_type == "pptx"
+                && segment.match_kind == "object"
+                && segment.locator_object_id.as_deref() == Some("3")
+        }));
+        write_snapshot(&cache, &root, &snapshot).unwrap();
+        for query in [
+            "powerpoint producer fixture",
+            "structured slide reading",
+            "speaker note evidence",
+        ] {
+            let live = search_workspace(&root, query, None)
+                .into_iter()
+                .map(|result| {
+                    (
+                        result.match_kind,
+                        result.page,
+                        result.locator_kind,
+                        result.locator_object_id,
+                        result.location_label,
+                    )
+                })
+                .collect::<Vec<_>>();
+            let indexed = search_workspace(&root, query, Some((&cache, false)))
+                .into_iter()
+                .map(|result| {
+                    (
+                        result.match_kind,
+                        result.page,
+                        result.locator_kind,
+                        result.locator_object_id,
+                        result.location_label,
+                    )
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(indexed, live, "{query}");
+        }
+        assert_eq!(fs::read(&presentation).unwrap(), source);
         fs::remove_dir_all(base).unwrap();
     }
 
