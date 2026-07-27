@@ -5,7 +5,7 @@
 > 结论：通过；PPTX 已从“仅隔离编辑预览”进入“经验证的基础编辑副本”
 > 下一入口：C4E PowerPoint / WPS Presentation / LibreOffice Impress 输出副本复开矩阵
 
-> 后续状态：C4E 已完成 PowerPoint 12.0 与 WPS Presentation 12.1 的真实输出复开，矩阵为 2/3；LibreOffice Impress 因当前机器未安装保持 pending。最新见 [C4E PPTX 输出副本外部生产者复开审计](./C4E_PPTX_Output_Producer_Reopen_Audit_2026-07-27.md)。
+> 后续状态：C4E 已完成 PowerPoint 12.0、WPS Presentation 12.1 与 LibreOffice Impress 26.2.4.2 的真实输出复开，矩阵为 3/3；下一入口为 C5A 隔离图片替换。最新见 [C4E PPTX 输出副本外部生产者复开审计](./C4E_PPTX_Output_Producer_Reopen_Audit_2026-07-27.md)。
 
 ## 1. 目标与需求对齐
 

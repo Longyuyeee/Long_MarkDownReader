@@ -3,6 +3,7 @@ param(
   [string]$OutputDirectory,
   [Parameter(Mandatory = $true)]
   [string]$ReportPath,
+  [string]$LibreOfficePath,
   [switch]$RequireComplete
 )
 
@@ -90,11 +91,12 @@ function Test-ComPresentation {
 
 function Test-LibreOfficePresentation {
   $candidates = @(
+    $LibreOfficePath,
     "C:\Program Files\LibreOffice\program\soffice.com",
     "C:\Program Files\LibreOffice\program\soffice.exe",
     "C:\Program Files (x86)\LibreOffice\program\soffice.com",
     "C:\Program Files (x86)\LibreOffice\program\soffice.exe"
-  )
+  ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
   $soffice = $candidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
   if (-not $soffice) {
     return [ordered]@{

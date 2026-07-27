@@ -1,11 +1,11 @@
 {
     "schemaVersion":  1,
     "stage":  "C4E",
-    "verifiedAt":  "2026-07-27T15:38:05.9659464Z",
-    "status":  "partial",
-    "verifiedCount":  2,
+    "verifiedAt":  "2026-07-27T16:33:57.0659612Z",
+    "status":  "verified",
+    "verifiedCount":  3,
     "requiredCount":  3,
-    "complete":  false,
+    "complete":  true,
     "requiredProducerIds":  [
                                 "microsoft-powerpoint",
                                 "wps-presentation",
@@ -51,10 +51,10 @@
                       {
                           "id":  "libreoffice-impress",
                           "producer":  "LibreOffice Impress",
-                          "status":  "pending",
-                          "version":  null,
-                          "method":  null,
-                          "evidenceDependency":  "LibreOffice Impress is not installed on this audit machine."
+                          "status":  "verified",
+                          "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                          "method":  "An isolated headless LibreOffice profile opened and rendered all three C4E PPTX outputs to non-empty PDF files.",
+                          "evidenceDependency":  null
                       }
                   ]
 }
