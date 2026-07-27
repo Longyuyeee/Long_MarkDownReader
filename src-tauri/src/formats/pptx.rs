@@ -27,6 +27,30 @@ pub struct PptxTextStyle {
     pub opacity: Option<u32>,
 }
 
+#[derive(Clone, Debug, Default, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxTableCell {
+    pub text: String,
+    pub grid_span: Option<u32>,
+    pub row_span: Option<u32>,
+    pub horizontal_merge: bool,
+    pub vertical_merge: bool,
+}
+
+#[derive(Clone, Debug, Default, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxTableRow {
+    pub height: Option<i64>,
+    pub cells: Vec<PptxTableCell>,
+}
+
+#[derive(Clone, Debug, Default, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxTable {
+    pub column_widths: Vec<i64>,
+    pub rows: Vec<PptxTableRow>,
+}
+
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct PptxObject {
@@ -59,6 +83,14 @@ pub struct PptxObject {
     pub child_count: usize,
     pub text_run_count: usize,
     pub mixed_text_style: bool,
+    pub flip_horizontal: bool,
+    pub flip_vertical: bool,
+    pub line_dash: Option<String>,
+    pub line_head: Option<String>,
+    pub line_tail: Option<String>,
+    pub graphic_type: Option<String>,
+    pub related_part: Option<String>,
+    pub table: Option<PptxTable>,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -165,6 +197,16 @@ struct ObjectState {
     first_run_style: Option<PptxTextStyle>,
     text_run_count: usize,
     mixed_text_style: bool,
+    flip_horizontal: bool,
+    flip_vertical: bool,
+    line_dash: Option<String>,
+    line_head: Option<String>,
+    line_tail: Option<String>,
+    graphic_type: Option<String>,
+    graphic_relationship_id: Option<String>,
+    table: Option<PptxTable>,
+    current_table_row: Option<PptxTableRow>,
+    current_table_cell: Option<PptxTableCell>,
 }
 
 fn attribute_value(
@@ -705,6 +747,7 @@ fn update_object_event(
         }
         b"ph" => state.placeholder_type = attribute_value(event, b"type", decoder)?,
         b"prstGeom" => state.shape_type = attribute_value(event, b"prst", decoder)?,
+        b"custGeom" => state.shape_type = Some("custom".into()),
         b"off" => {
             state.x = parse_i64(attribute_value(event, b"x", decoder)?);
             state.y = parse_i64(attribute_value(event, b"y", decoder)?);
@@ -721,7 +764,13 @@ fn update_object_event(
             state.child_width = parse_i64(attribute_value(event, b"cx", decoder)?);
             state.child_height = parse_i64(attribute_value(event, b"cy", decoder)?);
         }
-        b"xfrm" => state.rotation = parse_i64(attribute_value(event, b"rot", decoder)?),
+        b"xfrm" => {
+            state.rotation = parse_i64(attribute_value(event, b"rot", decoder)?);
+            state.flip_horizontal =
+                parse_bool(attribute_value(event, b"flipH", decoder)?).unwrap_or(false);
+            state.flip_vertical =
+                parse_bool(attribute_value(event, b"flipV", decoder)?).unwrap_or(false);
+        }
         b"blip" => state.relationship_id = attribute_value(event, b"embed", decoder)?,
         b"srcRect" => {
             state.crop_left = parse_i64(attribute_value(event, b"l", decoder)?);
@@ -735,6 +784,62 @@ fn update_object_event(
         }
         b"ln" => {
             state.line_width = parse_i64(attribute_value(event, b"w", decoder)?);
+        }
+        b"prstDash" => state.line_dash = attribute_value(event, b"val", decoder)?,
+        b"headEnd" => state.line_head = attribute_value(event, b"type", decoder)?,
+        b"tailEnd" => state.line_tail = attribute_value(event, b"type", decoder)?,
+        b"tbl" => {
+            state.graphic_type = Some("table".into());
+            state.table = Some(PptxTable::default());
+        }
+        b"gridCol" => {
+            if let (Some(table), Some(width)) = (
+                state.table.as_mut(),
+                parse_i64(attribute_value(event, b"w", decoder)?),
+            ) {
+                table.column_widths.push(width);
+            }
+        }
+        b"tr" if state.table.is_some() => {
+            state.current_table_row = Some(PptxTableRow {
+                height: parse_i64(attribute_value(event, b"h", decoder)?),
+                cells: Vec::new(),
+            });
+        }
+        b"tc" if state.current_table_row.is_some() => {
+            state.current_table_cell = Some(PptxTableCell {
+                grid_span: parse_u32(attribute_value(event, b"gridSpan", decoder)?),
+                row_span: parse_u32(attribute_value(event, b"rowSpan", decoder)?),
+                horizontal_merge: parse_bool(attribute_value(event, b"hMerge", decoder)?)
+                    .unwrap_or(false),
+                vertical_merge: parse_bool(attribute_value(event, b"vMerge", decoder)?)
+                    .unwrap_or(false),
+                ..PptxTableCell::default()
+            });
+        }
+        b"chart" => {
+            state.graphic_type = Some("chart".into());
+            state.graphic_relationship_id = attribute_value(event, b"id", decoder)?;
+        }
+        b"relIds" => {
+            state.graphic_type = Some("smartArt".into());
+            state.graphic_relationship_id = attribute_value(event, b"dm", decoder)?;
+        }
+        b"oleObj" => {
+            state.graphic_type = Some("embedded".into());
+            state.graphic_relationship_id = attribute_value(event, b"id", decoder)?;
+        }
+        b"videoFile" => {
+            state.graphic_type = Some("video".into());
+            state.graphic_relationship_id = attribute_value(event, b"link", decoder)?;
+        }
+        b"audioFile" => {
+            state.graphic_type = Some("audio".into());
+            state.graphic_relationship_id = attribute_value(event, b"link", decoder)?;
+        }
+        b"media" => {
+            state.graphic_type = Some("media".into());
+            state.graphic_relationship_id = attribute_value(event, b"embed", decoder)?;
         }
         b"noFill"
             if stack.iter().any(|value| value == "spPr")
@@ -1011,10 +1116,40 @@ fn finalize_object(
         .and_then(|id| relationships.get(id))
         .filter(|relationship| relationship.relation_type.ends_with("/image"))
         .map(|relationship| relationship.target.clone());
+    let graphic_relationship = state
+        .graphic_relationship_id
+        .as_ref()
+        .and_then(|id| relationships.get(id));
+    if state.graphic_type.as_deref() != Some("table") {
+        state.graphic_type = graphic_relationship
+            .map(|relationship| {
+                if relationship.relation_type.ends_with("/chart") {
+                    "chart"
+                } else if relationship.relation_type.ends_with("/diagramData") {
+                    "smartArt"
+                } else if relationship.relation_type.ends_with("/video") {
+                    "video"
+                } else if relationship.relation_type.ends_with("/audio") {
+                    "audio"
+                } else if relationship.relation_type.ends_with("/oleObject")
+                    || relationship.relation_type.ends_with("/package")
+                {
+                    "embedded"
+                } else {
+                    "unknown"
+                }
+                .into()
+            })
+            .or(state.graphic_type);
+    }
+    let related_part = graphic_relationship.map(|relationship| relationship.target.clone());
     let kind = match state.root_name.as_str() {
         "pic" => "picture",
         "grpSp" => "group",
+        "cxnSp" => "connector",
         "graphicFrame" => "graphic",
+        _ if state.shape_type.as_deref() == Some("line") => "connector",
+        _ if state.shape_type.as_deref() == Some("custom") => "custom",
         _ if !state.text.trim().is_empty() => "text",
         _ => "shape",
     };
@@ -1048,6 +1183,14 @@ fn finalize_object(
         child_count: state.child_count,
         text_run_count: state.text_run_count,
         mixed_text_style: state.mixed_text_style,
+        flip_horizontal: state.flip_horizontal,
+        flip_vertical: state.flip_vertical,
+        line_dash: state.line_dash,
+        line_head: state.line_head,
+        line_tail: state.line_tail,
+        graphic_type: state.graphic_type,
+        related_part,
+        table: state.table,
     }
 }
 
@@ -1080,7 +1223,7 @@ fn parse_slide(
                 if name == b"timing" {
                     has_animation = true;
                 }
-                if matches!(name, b"sp" | b"pic" | b"grpSp" | b"graphicFrame") {
+                if matches!(name, b"sp" | b"pic" | b"grpSp" | b"graphicFrame" | b"cxnSp") {
                     let parent_group_id = object_stack
                         .iter()
                         .rev()
@@ -1132,6 +1275,12 @@ fn parse_slide(
                         state.text.push('\n');
                     }
                     state.text.push_str(&value);
+                    if let Some(cell) = state.current_table_cell.as_mut() {
+                        if !cell.text.is_empty() && !value.trim().is_empty() {
+                            cell.text.push('\n');
+                        }
+                        cell.text.push_str(&value);
+                    }
                 }
             }
             Ok(Event::End(event)) => {
@@ -1151,6 +1300,26 @@ fn parse_slide(
                             state.first_run_style = Some(state.current_run_style.clone());
                         }
                         state.in_run = false;
+                    }
+                }
+                if end_name == b"tc" {
+                    if let Some(state) = object_stack.last_mut() {
+                        if let (Some(row), Some(mut cell)) = (
+                            state.current_table_row.as_mut(),
+                            state.current_table_cell.take(),
+                        ) {
+                            cell.text = cell.text.trim().into();
+                            row.cells.push(cell);
+                        }
+                    }
+                }
+                if end_name == b"tr" {
+                    if let Some(state) = object_stack.last_mut() {
+                        if let (Some(table), Some(row)) =
+                            (state.table.as_mut(), state.current_table_row.take())
+                        {
+                            table.rows.push(row);
+                        }
                     }
                 }
                 let should_finalize = object_stack.last().is_some_and(|state| {
@@ -1178,8 +1347,11 @@ fn parse_slide(
             Err(error) => return Err(format!("PPTX 幻灯片 XML 损坏: {error}")),
         }
     }
-    if objects.iter().any(|object| object.kind == "graphic") {
-        warnings.push("图表、SmartArt 或其他图形框架当前只显示占位".into());
+    if objects
+        .iter()
+        .any(|object| object.kind == "graphic" && object.graphic_type.as_deref() != Some("table"))
+    {
+        warnings.push("图表、SmartArt、媒体和嵌入对象当前按类型分级只读呈现".into());
     }
     if objects.iter().any(|object| object.mixed_text_style) {
         warnings.push("混合文本样式已安全降级为基础文本框样式".into());
@@ -1473,7 +1645,7 @@ pub fn parse_pptx(bytes: &[u8]) -> Result<PptxPresentationModel, String> {
     let shape_count = slides
         .iter()
         .flat_map(|slide| slide.objects.iter())
-        .filter(|object| object.kind == "shape")
+        .filter(|object| matches!(object.kind.as_str(), "shape" | "connector" | "custom"))
         .count();
     let group_count = slides
         .iter()
@@ -1493,7 +1665,7 @@ pub fn parse_pptx(bytes: &[u8]) -> Result<PptxPresentationModel, String> {
         .join("\n");
     let mut warnings = Vec::new();
     if chart_count + smart_art_count + embedded_object_count > 0 {
-        warnings.push("图表、SmartArt 和嵌入对象只读保真，当前仅显示兼容占位".into());
+        warnings.push("图表、SmartArt 和嵌入对象当前按类型分级只读呈现，不执行外部内容".into());
     }
     if animation_count > 0 {
         warnings.push("动画和切换保留在原包中，当前放映不执行动画".into());
@@ -1742,6 +1914,66 @@ mod tests {
             .as_deref(),
             Some("#C0C0C0")
         );
+    }
+
+    #[test]
+    fn parses_connectors_custom_shapes_tables_and_typed_graphic_frames() {
+        let xml = br#"<p:sld xmlns:p="p" xmlns:a="a" xmlns:r="r" xmlns:c="c"><p:cSld><p:spTree>
+          <p:cxnSp><p:nvCxnSpPr><p:cNvPr id="20" name="Arrow connector"/></p:nvCxnSpPr>
+            <p:spPr><a:xfrm flipV="1"><a:off x="100" y="200"/><a:ext cx="300" cy="400"/></a:xfrm><a:prstGeom prst="line"/><a:ln w="12700"><a:prstDash val="dash"/><a:headEnd type="oval"/><a:tailEnd type="triangle"/></a:ln></p:spPr>
+          </p:cxnSp>
+          <p:sp><p:nvSpPr><p:cNvPr id="21" name="Freeform"/></p:nvSpPr><p:spPr><a:xfrm><a:off x="500" y="600"/><a:ext cx="700" cy="800"/></a:xfrm><a:custGeom/></p:spPr></p:sp>
+          <p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="22" name="Basic table"/></p:nvGraphicFramePr><p:xfrm><a:off x="1000" y="1200"/><a:ext cx="3000" cy="1600"/></p:xfrm>
+            <a:graphic><a:graphicData><a:tbl><a:tblGrid><a:gridCol w="1000"/><a:gridCol w="2000"/></a:tblGrid>
+              <a:tr h="800"><a:tc gridSpan="2"><a:txBody><a:p><a:r><a:t>Header</a:t></a:r></a:p></a:txBody></a:tc><a:tc hMerge="1"><a:txBody><a:p/></a:txBody></a:tc></a:tr>
+              <a:tr h="800"><a:tc><a:txBody><a:p><a:r><a:t>A</a:t></a:r></a:p></a:txBody></a:tc><a:tc><a:txBody><a:p><a:r><a:t>B</a:t></a:r></a:p></a:txBody></a:tc></a:tr>
+            </a:tbl></a:graphicData></a:graphic>
+          </p:graphicFrame>
+          <p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="23" name="Revenue chart"/></p:nvGraphicFramePr><p:xfrm><a:off x="4500" y="1200"/><a:ext cx="3000" cy="1600"/></p:xfrm><a:graphic><a:graphicData><c:chart r:id="rIdChart"/></a:graphicData></a:graphic></p:graphicFrame>
+        </p:spTree></p:cSld></p:sld>"#;
+        let relationships = HashMap::from([(
+            "rIdChart".into(),
+            Relationship {
+                target: "ppt/charts/chart1.xml".into(),
+                relation_type:
+                    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart"
+                        .into(),
+            },
+        )]);
+        let (objects, _, _, warnings) = parse_slide(
+            xml,
+            &relationships,
+            &ThemeData::default(),
+            &default_color_map(),
+        )
+        .unwrap();
+
+        let connector = objects.iter().find(|object| object.id == "20").unwrap();
+        assert_eq!(connector.kind, "connector");
+        assert!(connector.flip_vertical);
+        assert_eq!(connector.line_dash.as_deref(), Some("dash"));
+        assert_eq!(connector.line_head.as_deref(), Some("oval"));
+        assert_eq!(connector.line_tail.as_deref(), Some("triangle"));
+
+        let custom = objects.iter().find(|object| object.id == "21").unwrap();
+        assert_eq!(custom.kind, "custom");
+        assert_eq!(custom.shape_type.as_deref(), Some("custom"));
+
+        let table = objects.iter().find(|object| object.id == "22").unwrap();
+        assert_eq!(table.graphic_type.as_deref(), Some("table"));
+        let table = table.table.as_ref().unwrap();
+        assert_eq!(table.column_widths, vec![1000, 2000]);
+        assert_eq!(table.rows.len(), 2);
+        assert_eq!(table.rows[0].cells[0].text, "Header");
+        assert_eq!(table.rows[0].cells[0].grid_span, Some(2));
+        assert!(table.rows[0].cells[1].horizontal_merge);
+
+        let chart = objects.iter().find(|object| object.id == "23").unwrap();
+        assert_eq!(chart.graphic_type.as_deref(), Some("chart"));
+        assert_eq!(chart.related_part.as_deref(), Some("ppt/charts/chart1.xml"));
+        assert!(warnings
+            .iter()
+            .any(|warning| warning.contains("按类型分级只读呈现")));
     }
 
     #[test]

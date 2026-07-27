@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, docxPatchKernel, pptxKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, pptxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, pptxReader, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, docxPatchKernel, pptxKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, pptxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, pptxReader, pptxObjectContent, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -32,6 +32,7 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src/views/TomlEditorView.vue'),
   read('src/views/DocxReaderView.vue'),
   read('src/views/PptxReaderView.vue'),
+  read('src/components/pptx/PptxObjectContent.vue'),
   read('src/views/LogViewerView.vue'),
   read('src/components/WorkspaceTabs.vue'),
   read('src/router/index.ts'),
@@ -465,6 +466,10 @@ requireText(pptxKernel, 'MAX_PPTX_UNCOMPRESSED_BYTES', 'C3A PPTX parser must bou
 requireText(pptxKernel, 'parse_relationships', 'C3A PPTX parser must resolve OOXML relationships')
 requireText(pptxKernel, 'unknown_presentation_parts', 'C3A PPTX parser must expose unknown-part fidelity risk')
 requireText(pptxKernel, 'parses_real_powerpoint_and_libreoffice_producer_fixtures', 'C3A PPTX parser must reopen real producer fixtures')
+requireText(pptxKernel, 'PptxTable', 'C3B3 PPTX parser must expose basic table structure')
+requireText(pptxKernel, 'line_dash', 'C3B3 PPTX parser must preserve connector styling')
+requireText(pptxKernel, 'graphic_type', 'C3B3 PPTX parser must classify complex graphic frames')
+requireText(pptxKernel, 'parses_connectors_custom_shapes_tables_and_typed_graphic_frames', 'C3B3 PPTX parser must verify object tiers')
 requireText(pptxCommands, 'read_pptx_presentation', 'C3A PPTX reader command must remain registered')
 if (pptxCommands.includes('write_pptx') || pptxCommands.includes('save_pptx')) failures.push('C3A must not expose PPTX write commands')
 requireText(pptxReader, '结构化只读', 'C3A PPTX workspace must identify its read-only capability')
@@ -472,6 +477,11 @@ requireText(pptxReader, '搜索 PPTX 文本与备注', 'C3A PPTX workspace must 
 requireText(pptxReader, '放映', 'C3A PPTX workspace must expose read-only presentation mode')
 requireText(pptxReader, '兼容画像', 'C3A PPTX workspace must expose its compatibility profile')
 requireText(pptxReader, 'mediaByPart', 'C3A PPTX workspace must render verified embedded media')
+requireText(pptxReader, 'v-for="object in slide.objects"', 'C3B3 PPTX thumbnails must reuse parsed slide objects')
+requireText(pptxReader, '<PptxObjectContent', 'C3B3 PPTX canvases must use the shared object renderer')
+requireText(pptxObjectContent, 'object.graphicType === \'table\'', 'C3B3 PPTX renderer must render basic tables')
+requireText(pptxObjectContent, 'graphicLabel', 'C3B3 PPTX renderer must present typed read-only graphic cards')
+requireText(pptxObjectContent, 'connectorStyle', 'C3B3 PPTX renderer must present connector geometry and styling')
 requireText(router, "name: 'PptxReader'", 'C3A PPTX workspace must have a restorable route')
 const logFormat = registry.formats.find(format => format.id === 'log')
 if (!logFormat

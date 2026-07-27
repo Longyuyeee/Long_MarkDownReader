@@ -59,10 +59,22 @@
           @click="selectSlide(index)"
         >
           <span class="slide-number">{{ index + 1 }}</span>
-          <span class="thumbnail" :style="{ aspectRatio: slideRatio, backgroundColor: slide.backgroundColor }">
-            <strong>{{ slide.title }}</strong>
-            <small>{{ slide.text }}</small>
-          </span>
+          <div class="thumbnail" :style="{ aspectRatio: slideRatio, backgroundColor: slide.backgroundColor }">
+            <div
+              v-for="object in slide.objects"
+              :key="`thumb-${object.id || object.name}`"
+              class="slide-object"
+              :class="[object.kind, { 'expanded-group': object.kind === 'group' && object.childCount > 0 }]"
+              :style="objectStyle(object)"
+            >
+              <PptxObjectContent
+                :object="object"
+                :media-src="mediaByPart[object.mediaPart || '']"
+                compact
+              />
+            </div>
+            <small v-if="!slide.objects.length">{{ slide.title }}</small>
+          </div>
           <EyeOffIcon v-if="slide.hidden" :size="12" class="hidden-mark" />
         </button>
       </aside>
@@ -81,16 +93,10 @@
               :style="objectStyle(object)"
               :title="object.altText || object.name"
             >
-              <img
-                v-if="object.kind === 'picture' && mediaByPart[object.mediaPart || '']"
-                :src="mediaByPart[object.mediaPart || '']"
-                :alt="object.altText || object.name"
-                :style="imageStyle(object)"
-              >
-              <ImageIcon v-else-if="object.kind === 'picture'" :size="26" />
-              <span v-else-if="object.kind === 'graphic'">复杂图形</span>
-              <span v-else-if="object.kind === 'group' && !object.childCount">组合对象</span>
-              <p v-else-if="object.text">{{ object.text }}</p>
+              <PptxObjectContent
+                :object="object"
+                :media-src="mediaByPart[object.mediaPart || '']"
+              />
             </div>
           </template>
           <div v-if="!activeSlide.objects.length" class="empty-slide">空白幻灯片</div>
@@ -151,16 +157,10 @@
           :class="[object.kind, { 'expanded-group': object.kind === 'group' && object.childCount > 0 }]"
           :style="objectStyle(object)"
         >
-          <img
-            v-if="object.kind === 'picture' && mediaByPart[object.mediaPart || '']"
-            :src="mediaByPart[object.mediaPart || '']"
-            :alt="object.altText || object.name"
-            :style="imageStyle(object)"
-          >
-          <ImageIcon v-else-if="object.kind === 'picture'" :size="32" />
-          <span v-else-if="object.kind === 'graphic'">复杂图形</span>
-          <span v-else-if="object.kind === 'group' && !object.childCount">组合对象</span>
-          <p v-else-if="object.text">{{ object.text }}</p>
+          <PptxObjectContent
+            :object="object"
+            :media-src="mediaByPart[object.mediaPart || '']"
+          />
         </div>
       </div>
       <div class="presenter-controls">
@@ -185,7 +185,6 @@ import {
   ChevronRight as ChevronRightIcon,
   ChevronUp as ChevronUpIcon,
   EyeOff as EyeOffIcon,
-  Image as ImageIcon,
   LoaderCircle as LoaderCircleIcon,
   MessageSquareText as MessageSquareTextIcon,
   PanelRight as PanelRightIcon,
@@ -198,6 +197,7 @@ import {
 } from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import PptxObjectContent from '../components/pptx/PptxObjectContent.vue'
 import { useAppStore } from '../store/app'
 
 interface PptxObject {
@@ -240,6 +240,26 @@ interface PptxObject {
   childCount: number
   textRunCount: number
   mixedTextStyle: boolean
+  flipHorizontal: boolean
+  flipVertical: boolean
+  lineDash?: string
+  lineHead?: string
+  lineTail?: string
+  graphicType?: string
+  relatedPart?: string
+  table?: {
+    columnWidths: number[]
+    rows: Array<{
+      height?: number
+      cells: Array<{
+        text: string
+        gridSpan?: number
+        rowSpan?: number
+        horizontalMerge: boolean
+        verticalMerge: boolean
+      }>
+    }>
+  }
 }
 interface PptxSlide {
   id: string
@@ -359,42 +379,29 @@ const colorWithOpacity = (color: string, opacity?: number) => {
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`
 }
 
-const imageStyle = (object: PptxObject) => {
-  const style: Record<string, string> = {}
-  if (object.imageOpacity != null) style.opacity = `${Math.max(0, Math.min(1, object.imageOpacity / 100000))}`
-  const left = Math.max(0, object.cropLeft || 0)
-  const top = Math.max(0, object.cropTop || 0)
-  const right = Math.max(0, object.cropRight || 0)
-  const bottom = Math.max(0, object.cropBottom || 0)
-  const visibleWidth = 100000 - left - right
-  const visibleHeight = 100000 - top - bottom
-  if (visibleWidth > 0 && visibleHeight > 0 && (left || top || right || bottom)) {
-    style.position = 'absolute'
-    style.left = `${-left / visibleWidth * 100}%`
-    style.top = `${-top / visibleHeight * 100}%`
-    style.width = `${100000 / visibleWidth * 100}%`
-    style.height = `${100000 / visibleHeight * 100}%`
-    style.objectFit = 'fill'
-  }
-  return style
-}
-
 const objectStyle = (object: PptxObject) => {
   const model = report.value?.model
   const style: Record<string, string> = {}
   if (model && object.x != null && object.y != null && object.width != null && object.height != null) {
+    const minimumSize = object.kind === 'connector' ? 0.1 : 2
     style.left = `${Math.max(0, object.x / model.width * 100)}%`
     style.top = `${Math.max(0, object.y / model.height * 100)}%`
-    style.width = `${Math.max(2, object.width / model.width * 100)}%`
-    style.height = `${Math.max(2, object.height / model.height * 100)}%`
+    style.width = `${Math.max(minimumSize, object.width / model.width * 100)}%`
+    style.height = `${Math.max(minimumSize, object.height / model.height * 100)}%`
   }
   if (object.rotation != null) style.transform = `rotate(${object.rotation / 60000}deg)`
   if (object.noFill) style.backgroundColor = 'transparent'
   else if (object.fillColor) style.backgroundColor = colorWithOpacity(object.fillColor, object.fillOpacity)
   if (object.lineColor) {
-    style.borderColor = colorWithOpacity(object.lineColor, object.lineOpacity)
-    style.borderStyle = 'solid'
-    style.borderWidth = `${Math.max(1, Math.min(12, (object.lineWidth || 9525) / 9525))}px`
+    const lineColor = colorWithOpacity(object.lineColor, object.lineOpacity)
+    const lineWidth = `${Math.max(1, Math.min(12, (object.lineWidth || 9525) / 9525))}px`
+    style['--connector-color'] = lineColor
+    style['--connector-width'] = lineWidth
+    if (object.kind !== 'connector') {
+      style.borderColor = lineColor
+      style.borderStyle = 'solid'
+      style.borderWidth = lineWidth
+    }
   }
   const text = object.textStyle
   if (!object.mixedTextStyle && text?.fontSizeHundredthPoints && model?.height) {
@@ -490,17 +497,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 .slide-strip > button.active { border-color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 8%, transparent); }
 .slide-strip > button.hit:not(.active)::after { content: ''; position: absolute; right: 7px; top: 7px; width: 5px; height: 5px; border-radius: 50%; background: #d69b18; }
 .slide-number { position: absolute; left: 6px; top: 9px; color: var(--text-muted); font-size: 10px; }
-.thumbnail { box-sizing: border-box; padding: 9px; display: flex; flex-direction: column; gap: 4px; overflow: hidden; border: 1px solid var(--border-color); background: #fff; color: #20242b; box-shadow: 0 2px 7px rgba(0,0,0,.08); text-align: left; }
+.thumbnail { position: relative; box-sizing: border-box; padding: 0; display: block; overflow: hidden; container-type: size; border: 1px solid var(--border-color); background: #fff; color: #20242b; box-shadow: 0 2px 7px rgba(0,0,0,.08); text-align: left; }
 .thumbnail strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.thumbnail small { max-height: 34px; overflow: hidden; font-size: 7px; line-height: 1.35; white-space: pre-line; }
+.thumbnail > small { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; padding: 8px; font-size: 7px; line-height: 1.35; }
 .hidden-mark { position: absolute; right: 10px; bottom: 10px; color: var(--text-muted); }
 .pptx-stage { min-width: 0; overflow: auto; padding: 28px; display: grid; place-items: center; background: color-mix(in srgb, var(--bg-secondary) 78%, #526073); }
 .slide-canvas, .presenter-slide { position: relative; width: min(100%, 1100px); overflow: hidden; container-type: size; background: #fff; color: #1e232b; box-shadow: 0 12px 38px rgba(0,0,0,.22); }
 .slide-object { position: absolute; box-sizing: border-box; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: clamp(8px, 3.5cqh, 25px); white-space: pre-wrap; transform-origin: center; }
 .slide-object p { width: 100%; margin: 0; padding: 2%; box-sizing: border-box; font: inherit; color: inherit; text-align: inherit; line-height: 1.25; }
-.slide-object img { width: 100%; height: 100%; display: block; object-fit: contain; }
 .slide-object.shape { border: 1px solid #8b97a8; background: #edf2f8; }
-.slide-object.picture:not(:has(img)), .slide-object.graphic, .slide-object.group { border: 1px dashed #8b97a8; color: #697586; background: #f5f7fa; font-size: 11px; }
+.slide-object.custom { border: 1px dashed #8b97a8; color: #526071; background: #edf2f8; }
+.slide-object.picture:not(:has(img)), .slide-object.group { border: 1px dashed #8b97a8; color: #697586; background: #f5f7fa; font-size: 11px; }
+.slide-object.connector { overflow: visible; }
 .slide-object.group.expanded-group { pointer-events: none; border: 0; background: transparent; }
 .slide-object.search-hit { outline: 4px solid rgba(230, 168, 24, .75); outline-offset: 2px; }
 .empty-slide { position: absolute; inset: 0; display: grid; place-items: center; color: #8a939e; }
