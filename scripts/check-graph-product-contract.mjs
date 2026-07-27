@@ -62,6 +62,14 @@ requireText(contextPanel, "'search_knowledge'", 'G8-2B collection membership mus
 requireText(contextCache, 'MAX_CONTEXT_CACHE_ENTRIES = 32', 'G8-2B context cache must have an explicit entry bound')
 requireText(contextCache, 'CONTEXT_CACHE_TTL_MS = 30_000', 'G8-2B context cache must expire quickly')
 requireText(contextCache, 'clearRelationContextCache', 'G8-2B context cache must support explicit refresh invalidation')
+requireText(graphCommand, 'add_pptx_document', 'C3C3 must add PPTX files and slides to the unified graph')
+requireText(graphCommand, 'object_type: "pptx_slide"', 'C3C3 must expose PPTX slides as knowledge objects')
+requireText(graphCommand, 'pptx_file_and_slides_are_stable_graph_and_index_objects', 'C3C3 graph and persistent-index identity must have Rust regression coverage')
+requireText(graphCommand, 'focus_locator_object_id', 'C3C3 relation context must support object-level focus')
+requireText(contextPanel, 'focusLocatorObjectId', 'C3C3 shared relation UI must request object-focused context')
+requireText(contextPanel, "node.objectType === 'pptx_slide'", 'C3C3 relation UI must navigate back to PPTX slides')
+requireText(app, ':focus-locator-object-id', 'C3C3 shared application shell must forward object focus')
+requireText(graphView, "node.objectType === 'pptx_slide'", 'C3C3 graph nodes must navigate to the shared PPTX workspace')
 for (const route of ['LibraryMode', 'TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'TomlEditor', 'Pdf', 'Table', 'Canvas', 'MindMap']) {
   requireText(app, `'${route}'`, `G8-2 shared context route coverage is missing ${route}`)
 }

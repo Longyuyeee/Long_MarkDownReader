@@ -626,7 +626,8 @@ const focusFirstMatch = () => {
 
 const objectTypeLabel = (type: string) => ({
   pdf: 'PDF 资料', pdf_annotation: 'PDF 批注', table: '数据表', table_view: '表格视图',
-  canvas: 'Canvas 画布', canvas_node: 'Canvas 节点', opml: '思维导图', opml_node: '思维导图主题', markdown: 'Markdown 笔记'
+  canvas: 'Canvas 画布', canvas_node: 'Canvas 节点', opml: '思维导图', opml_node: '思维导图主题',
+  pptx: 'PowerPoint 演示', pptx_slide: 'PowerPoint 幻灯片', markdown: 'Markdown 笔记'
 }[type] || type)
 const displayWorkspacePath = (path: string) => path.replace(/^\\\\\?\\/, '')
 const openNode = (node: GraphNode) => {
@@ -643,6 +644,19 @@ const openNode = (node: GraphNode) => {
   }
   if (node.objectType === 'opml' || node.objectType === 'opml_node') {
     return router.push({ name: 'MindMap', query: { path, node: locator?.objectId } })
+  }
+  if (node.objectType === 'pptx_slide') {
+    return router.push({
+      name: 'LibraryMode',
+      query: {
+        path,
+        slide: locator?.page,
+        locatorKind: 'pptx-slide',
+        locator: locator?.objectId,
+        locationLabel: node.locationLabel || undefined,
+        locatorToken: String(Date.now()),
+      },
+    })
   }
   return router.push({ name: 'LibraryMode', query: { path } })
 }

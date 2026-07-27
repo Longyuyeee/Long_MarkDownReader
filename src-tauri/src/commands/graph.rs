@@ -4,6 +4,7 @@ use crate::formats::markdown::{
     WikilinkMention,
 };
 use crate::formats::opml::{parse_opml, OpmlNode};
+use crate::formats::pptx::{parse_pptx, pptx_search_segments, pptx_slide_location_label};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::reliable_write::write_utf8;
@@ -412,26 +413,58 @@ fn relation_class(edge: &GraphEdge, source: &GraphNode, target: &GraphNode) -> S
     }
 }
 
+#[cfg(test)]
 pub(crate) fn relation_context(
     graph: &GraphData,
     center_path: &str,
     requested_path: &str,
+) -> GraphRelationContext {
+    relation_context_for_locator(graph, center_path, requested_path, None, None, None)
+}
+
+fn relation_context_for_locator(
+    graph: &GraphData,
+    center_path: &str,
+    requested_path: &str,
+    focus_locator_kind: Option<&str>,
+    focus_locator_object_id: Option<&str>,
+    focus_locator_page: Option<u32>,
 ) -> GraphRelationContext {
     let node_by_id: HashMap<&str, &GraphNode> = graph
         .nodes
         .iter()
         .map(|node| (node.id.as_str(), node))
         .collect();
-    let root = graph
-        .nodes
-        .iter()
-        .find(|node| node.id == center_path && node.parent_id.is_none());
-    let scope: HashSet<&str> = graph
-        .nodes
-        .iter()
-        .filter(|node| node.path == center_path)
-        .map(|node| node.id.as_str())
-        .collect();
+    let focus = graph.nodes.iter().find(|node| {
+        if node.path != center_path {
+            return false;
+        }
+        let Some(locator) = node.locator.as_ref() else {
+            return false;
+        };
+        let exact = focus_locator_kind.is_some_and(|kind| locator.kind == kind)
+            && focus_locator_object_id.is_some_and(|object_id| locator.object_id == object_id);
+        let page_fallback = node.object_type == "pptx_slide"
+            && focus_locator_page.is_some()
+            && locator.page == focus_locator_page;
+        exact || page_fallback
+    });
+    let root = focus.or_else(|| {
+        graph
+            .nodes
+            .iter()
+            .find(|node| node.id == center_path && node.parent_id.is_none())
+    });
+    let scope: HashSet<&str> = if let Some(focus) = focus {
+        HashSet::from([focus.id.as_str()])
+    } else {
+        graph
+            .nodes
+            .iter()
+            .filter(|node| node.path == center_path)
+            .map(|node| node.id.as_str())
+            .collect()
+    };
     let mut relations = Vec::new();
     let mut truncated = false;
     for edge in graph
@@ -533,6 +566,9 @@ pub(crate) fn relation_context(
 pub async fn get_graph_relation_context(
     library_root: String,
     path: String,
+    focus_locator_kind: Option<String>,
+    focus_locator_object_id: Option<String>,
+    focus_locator_page: Option<u32>,
 ) -> Result<GraphRelationContext, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
     let resolved = guard.resolve_existing(&path)?;
@@ -541,7 +577,14 @@ pub async fn get_graph_relation_context(
     }
     let canonical_path = resolved.to_string_lossy().into_owned();
     let graph = build_link_graph(guard.root().to_string_lossy().into_owned()).await?;
-    Ok(relation_context(&graph, &canonical_path, &path))
+    Ok(relation_context_for_locator(
+        &graph,
+        &canonical_path,
+        &path,
+        focus_locator_kind.as_deref(),
+        focus_locator_object_id.as_deref(),
+        focus_locator_page,
+    ))
 }
 
 fn build_filename_index(dir: &Path, index: &mut HashMap<String, Vec<String>>) {
@@ -620,6 +663,8 @@ fn build_graph_recursive(
             add_canvas_document(library_root, &path, &name, nodes, edges, node_ids);
         } else if name.to_lowercase().ends_with(".opml") {
             add_opml_document(library_root, &path, &name, nodes, edges, node_ids);
+        } else if name.to_lowercase().ends_with(".pptx") {
+            add_pptx_document(library_root, &path, &name, nodes, edges, node_ids);
         }
     }
 }
@@ -1082,6 +1127,101 @@ fn add_opml_node(
             edges,
             node_ids,
         );
+    }
+}
+
+fn add_pptx_document(
+    library_root: &Path,
+    path: &Path,
+    name: &str,
+    nodes: &mut Vec<GraphNode>,
+    edges: &mut Vec<GraphEdge>,
+    node_ids: &mut HashSet<String>,
+) {
+    let Ok(bytes) = fs::read(path) else {
+        return;
+    };
+    let Ok(model) = parse_pptx(&bytes) else {
+        return;
+    };
+    let path_string = path.to_string_lossy().into_owned();
+    if !node_ids.insert(path_string.clone()) {
+        return;
+    }
+    let metadata = fs::metadata(path).ok();
+    let modified_at = modified_timestamp(metadata);
+    let directory = relative_directory(path, library_root);
+    let title = name
+        .rsplit_once('.')
+        .map(|(stem, _)| stem)
+        .unwrap_or(name)
+        .to_string();
+    nodes.push(GraphNode {
+        id: path_string.clone(),
+        title,
+        path: path_string.clone(),
+        size: ((bytes.len() as f64 / 100_000.0) + 8.0).clamp(8.0, 24.0),
+        tags: Vec::new(),
+        directory: directory.clone(),
+        modified_at,
+        object_type: "pptx".into(),
+        search_text: model.plain_text.chars().take(12_000).collect(),
+        content_signature: Some(format!("{:x}", md5::compute(&bytes))),
+        parent_id: None,
+        locator: None,
+        location_label: None,
+    });
+
+    let mut search_text_by_slide: HashMap<u32, Vec<String>> = HashMap::new();
+    for segment in pptx_search_segments(&model) {
+        search_text_by_slide
+            .entry(segment.slide_number)
+            .or_default()
+            .push(segment.text);
+    }
+    for (index, slide) in model.slides.iter().enumerate() {
+        let slide_number = (index + 1) as u32;
+        let object_id = knowledge_object_id(&path_string, "pptx_slide", &slide.id);
+        if !node_ids.insert(object_id.clone()) {
+            continue;
+        }
+        let title = if slide.title.trim().is_empty() {
+            format!("幻灯片 {slide_number}")
+        } else {
+            slide.title.clone()
+        };
+        let location_label = pptx_slide_location_label(slide, slide_number);
+        let search_text = search_text_by_slide
+            .remove(&slide_number)
+            .unwrap_or_default()
+            .join("\n")
+            .chars()
+            .take(12_000)
+            .collect();
+        nodes.push(GraphNode {
+            id: object_id.clone(),
+            title,
+            path: path_string.clone(),
+            size: 8.0,
+            tags: Vec::new(),
+            directory: directory.clone(),
+            modified_at,
+            object_type: "pptx_slide".into(),
+            search_text,
+            content_signature: None,
+            parent_id: Some(path_string.clone()),
+            locator: Some(GraphObjectLocator {
+                kind: "pptx-slide".into(),
+                object_id: slide.id.clone(),
+                page: Some(slide_number),
+            }),
+            location_label: Some(location_label),
+        });
+        edges.push(GraphEdge::structural(
+            path_string.clone(),
+            object_id,
+            "contains",
+        ));
     }
 }
 
@@ -2520,6 +2660,94 @@ mod tests {
         assert!(graph.edges.iter().any(|edge| edge.source == evidence.id
             && edge.target == conclusion.id
             && edge.relation_type == "contains"));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn pptx_file_and_slides_are_stable_graph_and_index_objects() {
+        let (base, root) = fixture("pptx-objects");
+        let source =
+            include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx");
+        let path = root.join("Roadmap.pptx");
+        fs::write(&path, source).unwrap();
+
+        let graph =
+            tauri::async_runtime::block_on(build_link_graph(root.to_string_lossy().into_owned()))
+                .unwrap();
+        let document = graph
+            .nodes
+            .iter()
+            .find(|node| node.object_type == "pptx")
+            .unwrap();
+        let slides = graph
+            .nodes
+            .iter()
+            .filter(|node| node.object_type == "pptx_slide")
+            .collect::<Vec<_>>();
+        assert_eq!(slides.len(), 3);
+        assert!(document.search_text.contains("PowerPoint Producer Fixture"));
+        assert!(slides.iter().all(|slide| {
+            slide.parent_id.as_deref() == Some(document.id.as_str())
+                && slide.locator.as_ref().is_some_and(|locator| {
+                    locator.kind == "pptx-slide"
+                        && locator.page.is_some()
+                        && !locator.object_id.is_empty()
+                })
+                && slide
+                    .location_label
+                    .as_deref()
+                    .is_some_and(|label| label.starts_with("幻灯片 "))
+        }));
+        assert_eq!(
+            graph
+                .edges
+                .iter()
+                .filter(|edge| {
+                    edge.source == document.id
+                        && edge.relation_type == "contains"
+                        && slides.iter().any(|slide| slide.id == edge.target)
+                })
+                .count(),
+            3
+        );
+
+        let first_locator = slides[0].locator.as_ref().unwrap();
+        let focused = relation_context_for_locator(
+            &graph,
+            &document.path,
+            &document.path,
+            Some(&first_locator.kind),
+            Some(&first_locator.object_id),
+            first_locator.page,
+        );
+        assert_eq!(focused.node.as_ref().unwrap().id, slides[0].id);
+        assert_eq!(focused.relations.len(), 1);
+        assert_eq!(focused.relations[0].relation_type, "contains");
+        assert_eq!(focused.relations[0].direction, "incoming");
+
+        let snapshot = crate::services::knowledge_index::snapshot_from_graph(&root, graph.clone());
+        for node in std::iter::once(document).chain(slides.iter().copied()) {
+            assert!(snapshot.objects.iter().any(|object| {
+                object.id == node.id
+                    && object.object_type == node.object_type
+                    && object.locator_object_id
+                        == node
+                            .locator
+                            .as_ref()
+                            .map(|locator| locator.object_id.clone())
+            }));
+        }
+        assert_eq!(
+            snapshot
+                .relations
+                .iter()
+                .filter(|relation| {
+                    relation.source == document.id && relation.relation_type == "contains"
+                })
+                .count(),
+            3
+        );
+        assert_eq!(fs::read(&path).unwrap(), source);
         fs::remove_dir_all(base).unwrap();
     }
 }

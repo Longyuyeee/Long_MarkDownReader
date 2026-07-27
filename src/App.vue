@@ -28,6 +28,9 @@
             v-if="activeContextPath"
             :library-root="store.libraryPath"
             :file-path="activeContextPath"
+            :focus-locator-kind="activeContextFocus?.locatorKind"
+            :focus-locator-object-id="activeContextFocus?.locatorObjectId"
+            :focus-locator-page="activeContextFocus?.locatorPage"
           />
           <transition name="page-loader-fade">
             <div v-if="routeLoading" class="page-loader" role="status" aria-live="polite">
@@ -91,6 +94,16 @@ const activeContextPath = computed(() => {
   return relationContextRoutes.has(String(route.name)) && typeof route.query.path === 'string'
     ? route.query.path
     : ''
+})
+const normalizeContextPath = (value: string) => value
+  .replace(/^\\\\\?\\/, '')
+  .replace(/\\/g, '/')
+  .toLocaleLowerCase()
+const activeContextFocus = computed(() => {
+  const focus = store.relationObjectFocus
+  return focus && normalizeContextPath(focus.path) === normalizeContextPath(activeContextPath.value)
+    ? focus
+    : null
 })
 
 const systemDark = computed(() => osTheme.value === 'dark')

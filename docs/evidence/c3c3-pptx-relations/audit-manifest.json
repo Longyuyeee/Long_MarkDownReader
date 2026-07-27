@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-27T13:17:34.360Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
+  "fixtureLocation": "isolated temporary workspace",
+  "checks": [
+    {
+      "id": "pptx-slide-is-a-knowledge-object",
+      "status": "passed"
+    },
+    {
+      "id": "slide-selection-updates-shared-relation-context",
+      "status": "passed"
+    },
+    {
+      "id": "slide-centered-graph-action-and-source-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "pptx-slide-1-relation-context.jpg",
+    "pptx-slide-2-relation-context.jpg"
+  ]
+}

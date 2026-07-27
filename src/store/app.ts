@@ -56,6 +56,13 @@ export interface SavedSearchConfig {
   createdAt: number
 }
 
+export interface RelationObjectFocus {
+  path: string
+  locatorKind: string
+  locatorObjectId: string
+  locatorPage?: number
+}
+
 const TABS_STORAGE_KEY = 'longedit_tabs_state'
 
 export const useAppStore = defineStore('app', {
@@ -88,6 +95,7 @@ export const useAppStore = defineStore('app', {
     recentFiles: [] as { title: string; path: string }[],
     starredFiles: [] as string[],
     savedSearches: [] as SavedSearchConfig[],
+    relationObjectFocus: null as RelationObjectFocus | null,
   }),
   getters: {
     libraryPath: (state) => state.activeLibraryPath,
@@ -97,6 +105,12 @@ export const useAppStore = defineStore('app', {
     }
   },
   actions: {
+    setRelationObjectFocus(focus: RelationObjectFocus) {
+      this.relationObjectFocus = focus
+    },
+    clearRelationObjectFocus(path?: string) {
+      if (!path || this.relationObjectFocus?.path === path) this.relationObjectFocus = null
+    },
     async loadConfig() {
       try {
         const config = await invoke<any>('get_config')
@@ -146,6 +160,7 @@ export const useAppStore = defineStore('app', {
       if (patch.activeLibraryPath !== undefined && patch.activeLibraryPath !== this.activeLibraryPath) {
         this.tabs = []
         this.activeTabId = null
+        this.relationObjectFocus = null
         this.clearTabsState()
       }
 

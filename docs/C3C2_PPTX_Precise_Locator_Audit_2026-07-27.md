@@ -6,6 +6,8 @@
 
 阶段目标：让全局搜索结果在 Library 右侧 PPTX 工作区精确定位幻灯片、对象和备注
 
+> 后续状态：C3C3 已完成 PPTX 文件/幻灯片 KnowledgeObject、`contains` 关系、对象级共享关系侧栏和图谱回流。最新入口见 [C3C3 PPTX 知识对象与关系审计](./C3C3_PPTX_Knowledge_Object_Relation_Audit_2026-07-27.md)。
+
 ## 1. 阶段结论
 
 C3C2 已完成。C3C1 生成的 `pptx-slide` / `pptx-object` 元数据现在已经形成可见、可重复的用户闭环：

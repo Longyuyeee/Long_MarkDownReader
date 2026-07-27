@@ -437,9 +437,20 @@ const clearRouteTarget = () => {
   routeTargetObjectId.value = ''
   routeTargetLabel.value = ''
 }
+const syncRelationFocus = (index: number) => {
+  const slide = report.value?.model.slides[index]
+  if (!slide || !pptxPath.value) return
+  store.setRelationObjectFocus({
+    path: pptxPath.value,
+    locatorKind: 'pptx-slide',
+    locatorObjectId: slide.id,
+    locatorPage: index + 1,
+  })
+}
 const selectSlide = (index: number, preserveRouteTarget = false) => {
   if (!preserveRouteTarget) clearRouteTarget()
   activeSlideIndex.value = Math.max(0, Math.min(index, (report.value?.model.slides.length || 1) - 1))
+  syncRelationFocus(activeSlideIndex.value)
 }
 const previousSlide = () => selectSlide(activeSlideIndex.value - 1)
 const nextSlide = () => selectSlide(activeSlideIndex.value + 1)
@@ -487,6 +498,7 @@ const loadPresentation = async () => {
       path: pptxPath.value,
     })
     activeSlideIndex.value = Math.min(activeSlideIndex.value, Math.max(0, report.value.model.slides.length - 1))
+    syncRelationFocus(activeSlideIndex.value)
     await applyRouteLocator()
   } catch (error) {
     report.value = undefined
@@ -521,7 +533,10 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
   loadPresentation()
 })
-onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+  store.clearRelationObjectFocus()
+})
 </script>
 
 <style scoped>

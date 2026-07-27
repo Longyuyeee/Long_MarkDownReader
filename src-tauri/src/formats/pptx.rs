@@ -152,6 +152,14 @@ pub struct PptxSearchSegment {
     pub location_label: String,
 }
 
+pub fn pptx_slide_location_label(slide: &PptxSlide, slide_number: u32) -> String {
+    if slide.hidden {
+        format!("幻灯片 {slide_number}（隐藏）：{}", slide.title)
+    } else {
+        format!("幻灯片 {slide_number}：{}", slide.title)
+    }
+}
+
 fn pptx_object_search_text(object: &PptxObject) -> String {
     let mut parts = Vec::new();
     if !object.text.trim().is_empty() {
@@ -186,11 +194,7 @@ pub fn pptx_search_segments(model: &PptxPresentationModel) -> Vec<PptxSearchSegm
     let mut segments = Vec::new();
     for (index, slide) in model.slides.iter().enumerate() {
         let slide_number = (index + 1) as u32;
-        let slide_label = if slide.hidden {
-            format!("幻灯片 {slide_number}（隐藏）：{}", slide.title)
-        } else {
-            format!("幻灯片 {slide_number}：{}", slide.title)
-        };
+        let slide_label = pptx_slide_location_label(slide, slide_number);
         if !slide.title.trim().is_empty() {
             segments.push(PptxSearchSegment {
                 match_kind: "slide-title".into(),

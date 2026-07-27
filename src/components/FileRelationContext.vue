@@ -15,7 +15,7 @@
     <aside v-if="open" id="file-relation-context" class="relation-context-panel" aria-label="文件关系上下文">
       <header>
         <div>
-          <small>文件上下文</small>
+          <small>{{ context?.node?.objectType === 'pptx_slide' ? '幻灯片上下文' : '文件上下文' }}</small>
           <strong>{{ context?.node?.title || displayName }}</strong>
           <span>{{ context?.node ? objectTypeLabel(context.node.objectType) : '当前格式尚未进入图谱索引' }}</span>
         </div>
@@ -24,7 +24,7 @@
 
       <div class="context-actions">
         <button type="button" :disabled="!context?.node" @click="openCenteredGraph">
-          <NetworkIcon />以当前文件为中心
+          <NetworkIcon />{{ context?.node?.objectType === 'pptx_slide' ? '以当前幻灯片为中心' : '以当前文件为中心' }}
         </button>
         <button type="button" :disabled="loading" @click="loadContext(true)">
           <RefreshIcon />刷新
@@ -123,7 +123,13 @@ interface GraphRelationContext {
 }
 interface KnowledgeSearchResult { path: string; objectType: string }
 
-const props = defineProps<{ libraryRoot: string; filePath: string }>()
+const props = defineProps<{
+  libraryRoot: string
+  filePath: string
+  focusLocatorKind?: string
+  focusLocatorObjectId?: string
+  focusLocatorPage?: number
+}>()
 const router = useRouter()
 const store = useAppStore()
 const open = ref(sessionStorage.getItem('longedit.relation-context.open') === 'true')
@@ -137,6 +143,12 @@ let membershipRequestId = 0
 
 const displayPath = (path: string) => path.replace(/^\\\\\?\\/, '')
 const displayName = computed(() => displayPath(props.filePath).split(/[\\/]/).pop() || '当前文件')
+const contextCacheScope = computed(() => [
+  'context',
+  props.focusLocatorKind || 'file',
+  props.focusLocatorObjectId || '',
+  props.focusLocatorPage || 0,
+].join(':'))
 const visibleRelations = computed(() => context.value?.relations.filter(item => filter.value === 'all' || item.relationClass === filter.value) || [])
 const filters = computed(() => {
   const relations = context.value?.relations || []
@@ -190,7 +202,11 @@ const loadContext = async (force = false) => {
   if (!props.libraryRoot || !props.filePath) return
   if (force) clearRelationContextCache(props.libraryRoot, props.filePath)
   else {
-    const cached = getRelationContextCache<GraphRelationContext>(props.libraryRoot, props.filePath)
+    const cached = getRelationContextCache<GraphRelationContext>(
+      props.libraryRoot,
+      props.filePath,
+      contextCacheScope.value,
+    )
     if (cached) {
       context.value = cached
       error.value = ''
@@ -205,10 +221,18 @@ const loadContext = async (force = false) => {
     const result = await invoke<GraphRelationContext>('get_graph_relation_context', {
       libraryRoot: props.libraryRoot,
       path: props.filePath,
+      focusLocatorKind: props.focusLocatorKind,
+      focusLocatorObjectId: props.focusLocatorObjectId,
+      focusLocatorPage: props.focusLocatorPage,
     })
     if (currentRequest === requestId) {
       context.value = result
-      setRelationContextCache(props.libraryRoot, props.filePath, result)
+      setRelationContextCache(
+        props.libraryRoot,
+        props.filePath,
+        result,
+        contextCacheScope.value,
+      )
       void loadCollectionMemberships(force)
     }
   } catch (reason) {
@@ -245,6 +269,7 @@ const openCollection = (collection: SavedSearchConfig) => router.push({
     types: collection.objectTypes.length ? collection.objectTypes.join(',') : undefined,
   },
 })
+let relationNavigationSequence = 0
 const openNode = (node: GraphContextNode) => {
   const path = displayPath(node.path)
   if (node.objectType === 'pdf' || node.objectType === 'pdf_annotation') {
@@ -259,10 +284,31 @@ const openNode = (node: GraphContextNode) => {
   if (node.objectType === 'opml' || node.objectType === 'opml_node') {
     return router.push({ name: 'MindMap', query: { path, node: node.locator?.objectId } })
   }
+  if (node.objectType === 'pptx_slide') {
+    store.setRelationObjectFocus({
+      path,
+      locatorKind: 'pptx-slide',
+      locatorObjectId: node.locator?.objectId || '',
+      locatorPage: node.locator?.page,
+    })
+    return router.push({
+      name: 'LibraryMode',
+      query: {
+        path,
+        slide: node.locator?.page,
+        locatorKind: 'pptx-slide',
+        locator: node.locator?.objectId,
+        locationLabel: node.locationLabel,
+        locatorToken: `${Date.now()}-${++relationNavigationSequence}`,
+      },
+    })
+  }
+  if (node.objectType === 'pptx') store.clearRelationObjectFocus()
   return router.push({ name: 'LibraryMode', query: { path } })
 }
 const objectTypeLabel = (type: string) => ({
   markdown: 'Markdown 笔记', pdf: 'PDF 文档', table: '数据表', canvas: 'Canvas 画布', opml: 'OPML 思维导图',
+  pptx: 'PowerPoint 演示', pptx_slide: 'PowerPoint 幻灯片',
 }[type] || type)
 const relationClassLabel = (value: string) => ({ fact: '事实', structure: '结构', planning: '规划', semantic: '语义' }[value] || value)
 const relationTypeLabel = (value: string) => ({
@@ -271,7 +317,13 @@ const relationTypeLabel = (value: string) => ({
 }[value] || value)
 const directionLabel = (value: string) => ({ incoming: '入链', outgoing: '出链', internal: '文件内部', related: '双向' }[value] || value)
 
-watch(() => [props.libraryRoot, props.filePath] as const, () => {
+watch(() => [
+  props.libraryRoot,
+  props.filePath,
+  props.focusLocatorKind,
+  props.focusLocatorObjectId,
+  props.focusLocatorPage,
+] as const, () => {
   membershipRequestId += 1
   context.value = undefined
   error.value = ''
