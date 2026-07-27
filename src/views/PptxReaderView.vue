@@ -298,6 +298,54 @@
             <p v-else class="muted">没有符合规则的单一内嵌图片目标。</p>
           </div>
         </section>
+        <section v-if="verifiedPreview && verifiedOperation" class="reliable-save-copy" data-testid="c4d-save-panel">
+          <header>
+            <SaveIcon :size="15" />
+            <strong>C4D 可靠另存副本</strong>
+            <span v-if="savedCopyReport" class="verified-badge">已保存</span>
+          </header>
+          <p class="save-summary">
+            {{ verifiedPreview.operationLabel }}已完成隔离验证，仅变化
+            {{ verifiedPreview.changedParts.length }} 个 OOXML 部件。
+          </p>
+          <label>
+            <span>新副本文件名</span>
+            <input
+              v-model="copyFileName"
+              data-testid="c4d-copy-file-name"
+              maxlength="255"
+              :disabled="Boolean(savedCopyReport)"
+              @keydown.enter.prevent="savePptxCopy"
+            >
+          </label>
+          <button
+            type="button"
+            data-testid="c4d-save-copy"
+            :disabled="savingCopy || !validCopyFileName || Boolean(savedCopyReport)"
+            @click="savePptxCopy"
+          >
+            <LoaderCircleIcon v-if="savingCopy" :size="14" class="spin" />
+            <SaveIcon v-else :size="14" />
+            {{ savingCopy ? '正在落盘并复读' : '原子另存并验证' }}
+          </button>
+          <p class="muted">只创建同目录新文件，不覆盖源文件或已有目标；外部生产者复开将在 C4E 完成。</p>
+          <p v-if="saveCopyError" class="baseline-error">{{ saveCopyError }}</p>
+          <dl v-if="savedCopyReport" class="patch-report c4d-save-report">
+            <div><dt>保存模式</dt><dd>新副本</dd></div>
+            <div><dt>结构复开</dt><dd>{{ savedCopyReport.structuralReopenVerified ? '通过' : '未通过' }}</dd></div>
+            <div><dt>语义复开</dt><dd>{{ savedCopyReport.semanticReopenVerified ? '通过' : '未通过' }}</dd></div>
+            <div><dt>源文件不变</dt><dd>{{ savedCopyReport.sourceUnchanged ? '是' : '否' }}</dd></div>
+          </dl>
+          <button
+            v-if="savedCopyReport"
+            type="button"
+            class="open-saved-copy"
+            data-testid="c4d-open-copy"
+            @click="openSavedPptxCopy"
+          >
+            打开已验证副本
+          </button>
+        </section>
         <section>
           <header>
             <MessageSquareTextIcon :size="15" />
@@ -337,6 +385,7 @@
     <footer v-if="report" class="pptx-status">
       <span>{{ report.model.slides.length }} 张幻灯片 · {{ formatBytes(report.size) }}</span>
       <span v-if="routeTargetLabel" class="route-target-status" aria-live="polite">已定位：{{ routeTargetLabel }}</span>
+      <span v-else-if="savedCopyReport" class="baseline-status">C4D 新副本已可靠保存 · 原文件未修改</span>
       <span v-else-if="stylePatchReport || altTextPatchReport" class="baseline-status">C4C 隔离补丁已验证 · 原文件未修改</span>
       <span v-else-if="textPatchReport" class="baseline-status">C4B 隔离补丁已验证 · 原文件未修改</span>
       <span v-else-if="editBaseline" class="baseline-status">C4A 编辑隔离基线已验证 · 原文件未修改</span>
@@ -395,12 +444,14 @@ import {
   Play as PlayIcon,
   Presentation as PresentationIcon,
   RefreshCw as RefreshCwIcon,
+  Save as SaveIcon,
   Search as SearchIcon,
   ShieldCheck as ShieldCheckIcon,
   X as XIcon,
 } from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useMessage } from 'naive-ui'
+import { useRoute, useRouter } from 'vue-router'
 import PptxObjectContent from '../components/pptx/PptxObjectContent.vue'
 import { useAppStore } from '../store/app'
 import { resolvePptxRouteLocator } from '../utils/pptxLocator'
@@ -548,6 +599,8 @@ interface PptxEditableTextTarget {
 }
 interface PptxIsolatedTextPatchReport {
   status: string
+  outputDigest: string
+  outputBytes: number
   targetId: string
   targetKind: string
   targetPart: string
@@ -593,6 +646,8 @@ interface PptxEditableAltTextTarget {
 }
 interface PptxIsolatedMetadataPatchReport {
   status: string
+  outputDigest: string
+  outputBytes: number
   operation: 'character-style' | 'picture-alt-text'
   targetId: string
   targetKind: string
@@ -606,12 +661,63 @@ interface PptxIsolatedMetadataPatchReport {
   sourceUnchanged: boolean
   writesUserFile: boolean
 }
+type PptxPatchOperation =
+  | {
+    kind: 'text'
+    targetId: string
+    expectedTextDigest: string
+    expectedPartDigest: string
+    replacementText: string
+  }
+  | {
+    kind: 'style'
+    targetId: string
+    expectedStyleDigest: string
+    expectedPartDigest: string
+    fontSizeHundredthPoints: number
+    fontFamily: string
+    color: string
+    bold: boolean
+    italic: boolean
+    underline: boolean
+    alignment: PptxEditableStyleTarget['alignment']
+  }
+  | {
+    kind: 'imageAltText'
+    targetId: string
+    expectedMetadataDigest: string
+    expectedPartDigest: string
+    altText: string
+  }
+interface PptxVerifiedPreview {
+  outputDigest: string
+  outputBytes: number
+  changedParts: string[]
+  operationLabel: string
+}
+interface PptxSavedCopyReport {
+  status: string
+  saveMode: 'copy'
+  operationKind: string
+  targetPath: string
+  targetDigest: string
+  sourceUnchanged: boolean
+  outputBytes: number
+  changedParts: string[]
+  unchangedPartsVerified: boolean
+  structuralReopenVerified: boolean
+  semanticReopenVerified: boolean
+  producerMatrixBaseline: string[]
+  externalProducerReopenRequired: boolean
+}
 interface SearchMatch {
   slideIndex: number
   objectId?: string
 }
 
 const route = useRoute()
+const router = useRouter()
+const message = useMessage()
 const store = useAppStore()
 const report = ref<PptxReadReport>()
 const loading = ref(false)
@@ -645,6 +751,12 @@ const altTextValue = ref('')
 const altTextPatchLoading = ref(false)
 const altTextPatchError = ref('')
 const altTextPatchReport = ref<PptxIsolatedMetadataPatchReport>()
+const verifiedOperation = ref<PptxPatchOperation>()
+const verifiedPreview = ref<PptxVerifiedPreview>()
+const copyFileName = ref('')
+const savingCopy = ref(false)
+const saveCopyError = ref('')
+const savedCopyReport = ref<PptxSavedCopyReport>()
 const slideStripRef = ref<HTMLElement>()
 const routeTargetSlideIndex = ref(-1)
 const routeTargetObjectId = ref('')
@@ -688,6 +800,14 @@ const validStyleForm = computed(() => (
   && /^#[0-9a-f]{6}$/i.test(styleColor.value)
   && styleFormChanged.value
 ))
+const validCopyFileName = computed(() => {
+  const value = copyFileName.value.trim()
+  return value.length > 5
+    && value.length <= 255
+    && /\.pptx$/i.test(value)
+    && !/[\\/:*?"<>|\u0000-\u001f]/.test(value)
+    && !/[ .]$/.test(value)
+})
 const activeSlide = computed(() => report.value?.model.slides[activeSlideIndex.value])
 const slideCount = computed(() => report.value?.model.slides.length || 0)
 const slideRatio = computed(() => {
@@ -881,6 +1001,12 @@ const prepareEditBaseline = async () => {
     stylePatchError.value = ''
     altTextPatchReport.value = undefined
     altTextPatchError.value = ''
+    const baseName = fileName.value.replace(/\.pptx$/i, '')
+    copyFileName.value = `${baseName}-LongEdit副本.pptx`
+    verifiedOperation.value = undefined
+    verifiedPreview.value = undefined
+    savedCopyReport.value = undefined
+    saveCopyError.value = ''
     showDetails.value = true
   } catch (error) {
     editBaseline.value = undefined
@@ -890,9 +1016,16 @@ const prepareEditBaseline = async () => {
     baselineLoading.value = false
   }
 }
+const clearSaveCandidate = () => {
+  verifiedOperation.value = undefined
+  verifiedPreview.value = undefined
+  savedCopyReport.value = undefined
+  saveCopyError.value = ''
+}
 const clearTextPatchResult = () => {
   textPatchReport.value = undefined
   textPatchError.value = ''
+  clearSaveCandidate()
 }
 const previewTextPatch = async () => {
   const target = selectedEditTarget.value
@@ -900,6 +1033,7 @@ const previewTextPatch = async () => {
   textPatchLoading.value = true
   textPatchError.value = ''
   textPatchReport.value = undefined
+  clearSaveCandidate()
   try {
     const patch = await invoke<PptxIsolatedTextPatchReport>('preview_pptx_text_patch_isolated_copy', {
       libraryRoot: store.libraryPath,
@@ -923,6 +1057,21 @@ const previewTextPatch = async () => {
       throw new Error('PPTX C4B 隔离补丁未通过单部件保护门禁')
     }
     textPatchReport.value = patch
+    verifiedOperation.value = {
+      kind: 'text',
+      targetId: target.id,
+      expectedTextDigest: target.expectedTextDigest,
+      expectedPartDigest: target.expectedPartDigest,
+      replacementText: replacementText.value,
+    }
+    verifiedPreview.value = {
+      outputDigest: patch.outputDigest,
+      outputBytes: patch.outputBytes,
+      changedParts: patch.changedParts,
+      operationLabel: target.kind === 'speaker-notes' ? '演讲者备注' : '幻灯片文本',
+    }
+    savedCopyReport.value = undefined
+    saveCopyError.value = ''
   } catch (error) {
     textPatchError.value = String(error)
   } finally {
@@ -940,6 +1089,7 @@ const syncStyleForm = () => {
   styleAlignment.value = target?.alignment || 'left'
   stylePatchReport.value = undefined
   stylePatchError.value = ''
+  clearSaveCandidate()
 }
 const previewStylePatch = async () => {
   const target = selectedStyleTarget.value
@@ -947,6 +1097,7 @@ const previewStylePatch = async () => {
   stylePatchLoading.value = true
   stylePatchError.value = ''
   stylePatchReport.value = undefined
+  clearSaveCandidate()
   try {
     const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_style_patch_isolated_copy', {
       libraryRoot: store.libraryPath,
@@ -977,6 +1128,27 @@ const previewStylePatch = async () => {
       throw new Error('PPTX C4C 样式补丁未通过单部件保护门禁')
     }
     stylePatchReport.value = patch
+    verifiedOperation.value = {
+      kind: 'style',
+      targetId: target.id,
+      expectedStyleDigest: target.expectedStyleDigest,
+      expectedPartDigest: target.expectedPartDigest,
+      fontSizeHundredthPoints: Math.round(styleFontSizePt.value * 100),
+      fontFamily: styleFontFamily.value.trim(),
+      color: styleColor.value.slice(1).toUpperCase(),
+      bold: styleBold.value,
+      italic: styleItalic.value,
+      underline: styleUnderline.value,
+      alignment: styleAlignment.value,
+    }
+    verifiedPreview.value = {
+      outputDigest: patch.outputDigest,
+      outputBytes: patch.outputBytes,
+      changedParts: patch.changedParts,
+      operationLabel: target.kind === 'shape-text-style' ? '形状文本样式' : '文本框样式',
+    }
+    savedCopyReport.value = undefined
+    saveCopyError.value = ''
   } catch (error) {
     stylePatchError.value = String(error)
   } finally {
@@ -989,6 +1161,7 @@ const previewAltTextPatch = async () => {
   altTextPatchLoading.value = true
   altTextPatchError.value = ''
   altTextPatchReport.value = undefined
+  clearSaveCandidate()
   try {
     const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_alt_text_patch_isolated_copy', {
       libraryRoot: store.libraryPath,
@@ -1013,11 +1186,75 @@ const previewAltTextPatch = async () => {
       throw new Error('PPTX C4C 替代文本补丁未通过单部件保护门禁')
     }
     altTextPatchReport.value = patch
+    verifiedOperation.value = {
+      kind: 'imageAltText',
+      targetId: target.id,
+      expectedMetadataDigest: target.expectedMetadataDigest,
+      expectedPartDigest: target.expectedPartDigest,
+      altText: altTextValue.value,
+    }
+    verifiedPreview.value = {
+      outputDigest: patch.outputDigest,
+      outputBytes: patch.outputBytes,
+      changedParts: patch.changedParts,
+      operationLabel: '图片替代文本',
+    }
+    savedCopyReport.value = undefined
+    saveCopyError.value = ''
   } catch (error) {
     altTextPatchError.value = String(error)
   } finally {
     altTextPatchLoading.value = false
   }
+}
+const savePptxCopy = async () => {
+  const preview = verifiedPreview.value
+  const operation = verifiedOperation.value
+  if (
+    !preview
+    || !operation
+    || !report.value
+    || !validCopyFileName.value
+    || savingCopy.value
+  ) return
+  savingCopy.value = true
+  saveCopyError.value = ''
+  savedCopyReport.value = undefined
+  try {
+    const saved = await invoke<PptxSavedCopyReport>('save_pptx_patch_copy', {
+      libraryRoot: store.libraryPath,
+      path: pptxPath.value,
+      targetFileName: copyFileName.value.trim(),
+      expectedSignature: report.value.signature,
+      expectedOutputDigest: preview.outputDigest,
+      operation,
+    })
+    if (
+      saved.status !== 'saved_verified'
+      || saved.saveMode !== 'copy'
+      || !saved.sourceUnchanged
+      || saved.changedParts.length !== 1
+      || !saved.unchangedPartsVerified
+      || !saved.structuralReopenVerified
+      || !saved.semanticReopenVerified
+      || saved.producerMatrixBaseline.length !== 3
+      || !saved.externalProducerReopenRequired
+    ) {
+      throw new Error('PPTX C4D 保存结果未通过无覆盖、复读与源文件保护门禁')
+    }
+    savedCopyReport.value = saved
+    message.success(`已可靠另存并验证：${copyFileName.value.trim()}`)
+  } catch (error) {
+    saveCopyError.value = String(error).replace(/^Error:\s*/, '')
+  } finally {
+    savingCopy.value = false
+  }
+}
+const openSavedPptxCopy = async () => {
+  const saved = savedCopyReport.value
+  if (!saved) return
+  const routeName = route.name === 'LibraryMode' ? 'LibraryMode' : 'PptxReader'
+  await router.replace({ name: routeName, query: { path: saved.targetPath } })
 }
 const loadPresentation = async () => {
   if (!pptxPath.value || loading.value) return
@@ -1036,6 +1273,10 @@ const loadPresentation = async () => {
   altTextValue.value = ''
   altTextPatchReport.value = undefined
   altTextPatchError.value = ''
+  verifiedOperation.value = undefined
+  verifiedPreview.value = undefined
+  savedCopyReport.value = undefined
+  saveCopyError.value = ''
   try {
     report.value = await invoke<PptxReadReport>('read_pptx_presentation', {
       libraryRoot: store.libraryPath,
@@ -1068,16 +1309,19 @@ watch(
   () => {
     stylePatchReport.value = undefined
     stylePatchError.value = ''
+    clearSaveCandidate()
   },
 )
 watch(selectedAltTextTargetId, () => {
   altTextValue.value = selectedAltTextTarget.value?.altText || ''
   altTextPatchReport.value = undefined
   altTextPatchError.value = ''
+  clearSaveCandidate()
 })
 watch(altTextValue, () => {
   altTextPatchReport.value = undefined
   altTextPatchError.value = ''
+  clearSaveCandidate()
 })
 watch(matches, value => {
   activeMatch.value = 0
@@ -1163,11 +1407,18 @@ onBeforeUnmount(() => {
 .baseline-digest { margin: 9px 0 6px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 10px; word-break: break-all; }
 .baseline-error { margin: 0; color: var(--error-color); line-height: 1.5; }
 .baseline-status { color: var(--success-color); }
-.isolated-text-patch label, .isolated-metadata-patch label { display: grid; gap: 5px; margin-bottom: 9px; color: var(--text-muted); font-size: 11px; }
-.isolated-text-patch select, .isolated-text-patch textarea, .isolated-metadata-patch select, .isolated-metadata-patch textarea, .isolated-metadata-patch input { width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 5px; outline: none; color: var(--text-primary); background: var(--bg-secondary); font: inherit; }
-.isolated-text-patch select, .isolated-metadata-patch select, .isolated-metadata-patch input { height: 30px; padding: 0 7px; }
+.isolated-text-patch label, .isolated-metadata-patch label, .reliable-save-copy label { display: grid; gap: 5px; margin-bottom: 9px; color: var(--text-muted); font-size: 11px; }
+.isolated-text-patch select, .isolated-text-patch textarea, .isolated-metadata-patch select, .isolated-metadata-patch textarea, .isolated-metadata-patch input, .reliable-save-copy input { width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 5px; outline: none; color: var(--text-primary); background: var(--bg-secondary); font: inherit; }
+.isolated-text-patch select, .isolated-metadata-patch select, .isolated-metadata-patch input, .reliable-save-copy input { height: 30px; padding: 0 7px; }
 .isolated-text-patch textarea, .isolated-metadata-patch textarea { min-height: 64px; padding: 7px; resize: vertical; line-height: 1.45; }
-.isolated-text-patch select:focus, .isolated-text-patch textarea:focus, .isolated-metadata-patch select:focus, .isolated-metadata-patch textarea:focus, .isolated-metadata-patch input:focus { border-color: var(--primary-color); }
+.isolated-text-patch select:focus, .isolated-text-patch textarea:focus, .isolated-metadata-patch select:focus, .isolated-metadata-patch textarea:focus, .isolated-metadata-patch input:focus, .reliable-save-copy input:focus { border-color: var(--primary-color); }
+.reliable-save-copy input:disabled { opacity: .65; cursor: default; }
+.save-summary { margin: 0 0 9px; color: var(--text-secondary); line-height: 1.55; }
+.reliable-save-copy > button { min-height: 30px; padding: 0 9px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid var(--primary-color); border-radius: 5px; color: var(--primary-color); background: transparent; cursor: pointer; font: inherit; font-size: 11px; }
+.reliable-save-copy > button:hover:not(:disabled) { background: color-mix(in srgb, var(--primary-color) 9%, transparent); }
+.reliable-save-copy > button:disabled { opacity: .45; cursor: default; }
+.reliable-save-copy .muted { margin: 8px 0 0; font-size: 10px; line-height: 1.5; }
+.reliable-save-copy .open-saved-copy { margin-top: 9px; color: var(--success-color); border-color: var(--success-color); }
 .c4c-block + .c4c-block { margin-top: 13px; padding-top: 12px; border-top: 1px dashed var(--border-color); }
 .c4c-block h4 { margin: 0 0 9px; display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 11px; }
 .style-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 0 7px; }

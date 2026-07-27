@@ -4,9 +4,10 @@ use crate::formats::pptx_edit::{
     build_pptx_text_patch_isolated, PptxEditBaselineReport, PptxIsolatedMetadataPatchReport,
     PptxIsolatedTextPatchReport,
 };
+use crate::services::reliable_write::write_new_bytes;
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::fs;
@@ -41,6 +42,83 @@ pub struct PptxReadReport {
     pub model: PptxPresentationModel,
     pub media: Vec<PptxMediaPreview>,
     pub media_warnings: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(tag = "kind")]
+pub enum PptxPatchOperation {
+    #[serde(rename = "text")]
+    Text {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedTextDigest")]
+        expected_text_digest: String,
+        #[serde(rename = "expectedPartDigest")]
+        expected_part_digest: String,
+        #[serde(rename = "replacementText")]
+        replacement_text: String,
+    },
+    #[serde(rename = "style")]
+    Style {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedStyleDigest")]
+        expected_style_digest: String,
+        #[serde(rename = "expectedPartDigest")]
+        expected_part_digest: String,
+        #[serde(rename = "fontSizeHundredthPoints")]
+        font_size_hundredth_points: u32,
+        #[serde(rename = "fontFamily")]
+        font_family: String,
+        color: String,
+        bold: bool,
+        italic: bool,
+        underline: bool,
+        alignment: String,
+    },
+    #[serde(rename = "imageAltText")]
+    ImageAltText {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedMetadataDigest")]
+        expected_metadata_digest: String,
+        #[serde(rename = "expectedPartDigest")]
+        expected_part_digest: String,
+        #[serde(rename = "altText")]
+        alt_text: String,
+    },
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxSavedCopyReport {
+    pub status: String,
+    pub engine: String,
+    pub save_mode: String,
+    pub operation_kind: String,
+    pub target_path: String,
+    pub target_signature: String,
+    pub target_digest: String,
+    pub source_signature: String,
+    pub source_unchanged: bool,
+    pub output_bytes: usize,
+    pub changed_parts: Vec<String>,
+    pub unchanged_parts_verified: bool,
+    pub structural_reopen_verified: bool,
+    pub semantic_reopen_verified: bool,
+    pub producer_matrix_baseline: Vec<String>,
+    pub external_producer_reopen_required: bool,
+}
+
+struct BuiltPptxOperation {
+    engine: String,
+    operation_kind: String,
+    output_digest: String,
+    changed_parts: Vec<String>,
+    unchanged_parts_verified: bool,
+    structural_reparse_verified: bool,
+    semantic_reparse_verified: bool,
+    output: Vec<u8>,
 }
 
 struct TemporaryPptxCopy {
@@ -338,6 +416,250 @@ fn preview_pptx_metadata_patch_path(
     Ok(report)
 }
 
+fn build_pptx_operation(
+    source: &[u8],
+    operation: &PptxPatchOperation,
+) -> Result<BuiltPptxOperation, String> {
+    match operation {
+        PptxPatchOperation::Text {
+            target_id,
+            expected_text_digest,
+            expected_part_digest,
+            replacement_text,
+        } => {
+            let (report, output) = build_pptx_text_patch_isolated(
+                source,
+                target_id,
+                expected_text_digest,
+                expected_part_digest,
+                replacement_text,
+            )?;
+            Ok(BuiltPptxOperation {
+                engine: report.engine,
+                operation_kind: report.target_kind,
+                output_digest: report.output_digest,
+                changed_parts: report.changed_parts,
+                unchanged_parts_verified: report.unchanged_parts_verified,
+                structural_reparse_verified: report.structural_reparse_verified,
+                semantic_reparse_verified: report.semantic_reparse_verified,
+                output,
+            })
+        }
+        PptxPatchOperation::Style {
+            target_id,
+            expected_style_digest,
+            expected_part_digest,
+            font_size_hundredth_points,
+            font_family,
+            color,
+            bold,
+            italic,
+            underline,
+            alignment,
+        } => {
+            let (report, output) = build_pptx_style_patch_isolated(
+                source,
+                target_id,
+                expected_style_digest,
+                expected_part_digest,
+                *font_size_hundredth_points,
+                font_family,
+                color,
+                *bold,
+                *italic,
+                *underline,
+                alignment,
+            )?;
+            Ok(BuiltPptxOperation {
+                engine: report.engine,
+                operation_kind: report.target_kind,
+                output_digest: report.output_digest,
+                changed_parts: report.changed_parts,
+                unchanged_parts_verified: report.unchanged_parts_verified,
+                structural_reparse_verified: report.structural_reparse_verified,
+                semantic_reparse_verified: report.semantic_reparse_verified,
+                output,
+            })
+        }
+        PptxPatchOperation::ImageAltText {
+            target_id,
+            expected_metadata_digest,
+            expected_part_digest,
+            alt_text,
+        } => {
+            let (report, output) = build_pptx_alt_text_patch_isolated(
+                source,
+                target_id,
+                expected_metadata_digest,
+                expected_part_digest,
+                alt_text,
+            )?;
+            Ok(BuiltPptxOperation {
+                engine: report.engine,
+                operation_kind: report.target_kind,
+                output_digest: report.output_digest,
+                changed_parts: report.changed_parts,
+                unchanged_parts_verified: report.unchanged_parts_verified,
+                structural_reparse_verified: report.structural_reparse_verified,
+                semantic_reparse_verified: report.semantic_reparse_verified,
+                output,
+            })
+        }
+    }
+}
+
+fn validate_pptx_copy_file_name(file_name: &str) -> Result<String, String> {
+    let file_name = file_name.trim();
+    if file_name.is_empty() || file_name.len() > 255 {
+        return Err("PPTX 副本文件名不能为空或超过 255 个字符".into());
+    }
+    if file_name.chars().any(|value| {
+        value.is_control() || matches!(value, '/' | '\\' | '<' | '>' | ':' | '"' | '|' | '?' | '*')
+    }) || file_name.ends_with(' ')
+        || file_name.ends_with('.')
+    {
+        return Err("PPTX 副本文件名包含路径、控制字符或 Windows 不允许的字符".into());
+    }
+    let path = Path::new(file_name);
+    if !path
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_some_and(|value| value.eq_ignore_ascii_case("pptx"))
+        || path.file_stem().is_none_or(|value| value.is_empty())
+    {
+        return Err("PPTX 副本文件名必须以 .pptx 结尾".into());
+    }
+    Ok(file_name.to_string())
+}
+
+fn remove_created_pptx_if_exact(path: &Path, expected: &[u8]) {
+    if fs::read(path).is_ok_and(|bytes| bytes == expected) {
+        let _ = fs::remove_file(path);
+    }
+}
+
+fn save_pptx_patch_copy_to_path(
+    source_path: &Path,
+    target_path: &Path,
+    expected_signature: &str,
+    expected_output_digest: &str,
+    operation: &PptxPatchOperation,
+) -> Result<PptxSavedCopyReport, String> {
+    if target_path == source_path {
+        return Err("可靠另存禁止覆盖源 PPTX".into());
+    }
+    if target_path.exists() {
+        return Err("目标文件已存在；可靠另存不会覆盖现有文件".into());
+    }
+    let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
+    if expected_output_digest.len() != 64
+        || !expected_output_digest
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit())
+    {
+        return Err("PPTX 隔离预览摘要无效".into());
+    }
+
+    let metadata = source_path
+        .metadata()
+        .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_PPTX_FILE_BYTES {
+        return Err("PPTX 文件超过 96 MiB 可靠另存上限".into());
+    }
+    let source_signature = file_signature(&metadata);
+    if source_signature != expected_signature {
+        return Err("PPTX 已被外部修改，请重新打开后再保存副本".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 PPTX 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let built = build_pptx_operation(&source, operation)?;
+    if built.output_digest != expected_output_digest {
+        return Err("PPTX 编辑内容或隔离输出已变化，请重新验证后再另存".into());
+    }
+    if !built.unchanged_parts_verified
+        || !built.structural_reparse_verified
+        || !built.semantic_reparse_verified
+        || built.changed_parts.len() != 1
+    {
+        return Err("PPTX 隔离补丁未通过单部件保真与语义复读".into());
+    }
+
+    let source_before_write =
+        fs::read(source_path).map_err(|error| format!("保存前复核源 PPTX 失败: {error}"))?;
+    let metadata_before_write = source_path
+        .metadata()
+        .map_err(|error| format!("保存前复核源 PPTX 元数据失败: {error}"))?;
+    if source_before_write != source
+        || file_signature(&metadata_before_write) != source_signature
+        || format!("{:x}", Sha256::digest(&source_before_write)) != source_digest
+    {
+        return Err("PPTX 在隔离验证期间发生变化，请重新打开后再保存".into());
+    }
+
+    write_new_bytes(target_path, &built.output)?;
+    let verification = (|| -> Result<(String, String), String> {
+        let saved = fs::read(target_path)
+            .map_err(|error| format!("目标已创建，但无法复读保存字节: {error}"))?;
+        let target_digest = format!("{:x}", Sha256::digest(&saved));
+        if saved != built.output || target_digest != built.output_digest {
+            return Err("目标落盘字节与隔离验证输出不一致".into());
+        }
+        parse_pptx(&saved).map_err(|error| format!("目标 PPTX 结构复读失败: {error}"))?;
+        let semantic = build_pptx_operation(&source, operation)?;
+        if semantic.output != saved
+            || !semantic.semantic_reparse_verified
+            || semantic.changed_parts != built.changed_parts
+        {
+            return Err("目标 PPTX 语义复读结果与已验证补丁不一致".into());
+        }
+        let source_after =
+            fs::read(source_path).map_err(|error| format!("复核源 PPTX 失败: {error}"))?;
+        let source_metadata_after = source_path
+            .metadata()
+            .map_err(|error| format!("复核源 PPTX 元数据失败: {error}"))?;
+        if source_after != source
+            || file_signature(&source_metadata_after) != source_signature
+            || format!("{:x}", Sha256::digest(&source_after)) != source_digest
+        {
+            return Err("源 PPTX 在另存期间发生变化".into());
+        }
+        let target_metadata = target_path
+            .metadata()
+            .map_err(|error| format!("读取已保存 PPTX 元数据失败: {error}"))?;
+        Ok((target_digest, file_signature(&target_metadata)))
+    })();
+    let (target_digest, target_signature) = match verification {
+        Ok(value) => value,
+        Err(error) => {
+            remove_created_pptx_if_exact(target_path, &built.output);
+            return Err(format!("可靠另存验证失败，已清理未验收副本: {error}"));
+        }
+    };
+
+    Ok(PptxSavedCopyReport {
+        status: "saved_verified".into(),
+        engine: built.engine,
+        save_mode: "copy".into(),
+        operation_kind: built.operation_kind,
+        target_path: target_path.to_string_lossy().into_owned(),
+        target_signature,
+        target_digest,
+        source_signature,
+        source_unchanged: true,
+        output_bytes: built.output.len(),
+        changed_parts: built.changed_parts,
+        unchanged_parts_verified: true,
+        structural_reopen_verified: true,
+        semantic_reopen_verified: true,
+        producer_matrix_baseline: vec![
+            "microsoft-powerpoint-16".into(),
+            "wps-presentation".into(),
+            "libreoffice-impress".into(),
+        ],
+        external_producer_reopen_required: true,
+    })
+}
+
 #[tauri::command]
 pub async fn read_pptx_presentation(
     library_root: String,
@@ -456,6 +778,33 @@ pub async fn preview_pptx_alt_text_patch_isolated_copy(
     })
     .await
     .map_err(|error| format!("PPTX C4C 隔离图片替代文本补丁任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn save_pptx_patch_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_signature: String,
+    expected_output_digest: String,
+    operation: PptxPatchOperation,
+) -> Result<PptxSavedCopyReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pptx"])?;
+    let target_file_name = validate_pptx_copy_file_name(&target_file_name)?;
+    let target_path =
+        guard.resolve_file_for_write(source_path.with_file_name(target_file_name), &["pptx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_pptx_patch_copy_to_path(
+            &source_path,
+            &target_path,
+            &expected_signature,
+            &expected_output_digest,
+            &operation,
+        )
+    })
+    .await
+    .map_err(|error| format!("PPTX C4D 可靠另存任务失败: {error}"))?
 }
 
 #[cfg(test)]
@@ -612,6 +961,218 @@ mod tests {
         assert!(!alt_report.writes_user_file);
         assert_eq!(fs::read(&path).unwrap(), fixture);
 
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn c4d_saves_text_copy_for_all_real_producers_without_overwrite() {
+        let fixtures: [(&str, &[u8]); 3] = [
+            (
+                "powerpoint",
+                include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx"),
+            ),
+            (
+                "wps",
+                include_bytes!("../../../fixtures/pptx/producers/wps-presentation.pptx"),
+            ),
+            (
+                "libreoffice",
+                include_bytes!("../../../fixtures/pptx/producers/libreoffice-impress.pptx"),
+            ),
+        ];
+        let root = std::env::temp_dir().join(format!(
+            "longedit-pptx-c4d-producers-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+
+        for (producer, source) in fixtures {
+            let source_path = root.join(format!("{producer}-source.pptx"));
+            let target_path = root.join(format!("{producer}-copy.pptx"));
+            fs::write(&source_path, source).unwrap();
+            let signature = file_signature(&source_path.metadata().unwrap());
+            let (baseline, _) = build_pptx_edit_baseline(source, signature.clone()).unwrap();
+            let target = baseline.editable_text_targets.first().unwrap();
+            let replacement = format!("LongEdit C4D {producer} verified copy");
+            let operation = PptxPatchOperation::Text {
+                target_id: target.id.clone(),
+                expected_text_digest: target.expected_text_digest.clone(),
+                expected_part_digest: target.expected_part_digest.clone(),
+                replacement_text: replacement.clone(),
+            };
+            let preview = build_pptx_operation(source, &operation).unwrap();
+            let saved = save_pptx_patch_copy_to_path(
+                &source_path,
+                &target_path,
+                &signature,
+                &preview.output_digest,
+                &operation,
+            )
+            .unwrap_or_else(|error| panic!("{producer}: {error}"));
+            assert_eq!(saved.status, "saved_verified", "{producer}");
+            assert_eq!(saved.save_mode, "copy", "{producer}");
+            assert!(saved.source_unchanged, "{producer}");
+            assert!(saved.unchanged_parts_verified, "{producer}");
+            assert!(saved.structural_reopen_verified, "{producer}");
+            assert!(saved.semantic_reopen_verified, "{producer}");
+            assert!(saved.external_producer_reopen_required, "{producer}");
+            assert_eq!(saved.producer_matrix_baseline.len(), 3, "{producer}");
+            assert_eq!(fs::read(&source_path).unwrap(), source, "{producer}");
+            assert!(parse_pptx(&fs::read(&target_path).unwrap())
+                .unwrap()
+                .plain_text
+                .contains(&replacement));
+
+            assert!(save_pptx_patch_copy_to_path(
+                &source_path,
+                &target_path,
+                &signature,
+                &preview.output_digest,
+                &operation,
+            )
+            .unwrap_err()
+            .contains("不会覆盖"));
+        }
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn c4d_saves_notes_style_and_alt_text_operations_with_semantic_reopen() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-pptx-c4d-operations-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let source =
+            include_bytes!("../../../fixtures/pptx/producers/wps-presentation.pptx").to_vec();
+        let source_path = root.join("source.pptx");
+        fs::write(&source_path, &source).unwrap();
+        let signature = file_signature(&source_path.metadata().unwrap());
+        let (baseline, _) = build_pptx_edit_baseline(&source, signature.clone()).unwrap();
+
+        let notes = baseline.editable_notes_targets.first().unwrap();
+        let style = baseline.editable_style_targets.first().unwrap();
+        let alt = baseline.editable_alt_text_targets.first().unwrap();
+        let operations = vec![
+            (
+                "notes",
+                PptxPatchOperation::Text {
+                    target_id: notes.id.clone(),
+                    expected_text_digest: notes.expected_text_digest.clone(),
+                    expected_part_digest: notes.expected_part_digest.clone(),
+                    replacement_text: "LongEdit C4D saved speaker notes".into(),
+                },
+            ),
+            (
+                "style",
+                PptxPatchOperation::Style {
+                    target_id: style.id.clone(),
+                    expected_style_digest: style.expected_style_digest.clone(),
+                    expected_part_digest: style.expected_part_digest.clone(),
+                    font_size_hundredth_points: 2_400,
+                    font_family: "Aptos".into(),
+                    color: "2F6FED".into(),
+                    bold: !style.bold,
+                    italic: true,
+                    underline: true,
+                    alignment: "center".into(),
+                },
+            ),
+            (
+                "alt",
+                PptxPatchOperation::ImageAltText {
+                    target_id: alt.id.clone(),
+                    expected_metadata_digest: alt.expected_metadata_digest.clone(),
+                    expected_part_digest: alt.expected_part_digest.clone(),
+                    alt_text: "LongEdit C4D saved accessible picture".into(),
+                },
+            ),
+        ];
+        for (name, operation) in operations {
+            let target_path = root.join(format!("{name}-copy.pptx"));
+            let preview = build_pptx_operation(&source, &operation).unwrap();
+            let saved = save_pptx_patch_copy_to_path(
+                &source_path,
+                &target_path,
+                &signature,
+                &preview.output_digest,
+                &operation,
+            )
+            .unwrap_or_else(|error| panic!("{name}: {error}"));
+            assert!(saved.semantic_reopen_verified, "{name}");
+            assert_eq!(saved.changed_parts.len(), 1, "{name}");
+            assert!(target_path.exists(), "{name}");
+            assert_eq!(fs::read(&source_path).unwrap(), source, "{name}");
+        }
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn c4d_rejects_stale_preview_source_overwrite_and_unsafe_name() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-pptx-c4d-conflicts-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let source =
+            include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx")
+                .to_vec();
+        let source_path = root.join("source.pptx");
+        let target_path = root.join("copy.pptx");
+        fs::write(&source_path, &source).unwrap();
+        let signature = file_signature(&source_path.metadata().unwrap());
+        let (baseline, _) = build_pptx_edit_baseline(&source, signature.clone()).unwrap();
+        let target = baseline.editable_text_targets.first().unwrap();
+        let operation = PptxPatchOperation::Text {
+            target_id: target.id.clone(),
+            expected_text_digest: target.expected_text_digest.clone(),
+            expected_part_digest: target.expected_part_digest.clone(),
+            replacement_text: "LongEdit C4D conflict gate".into(),
+        };
+        let preview = build_pptx_operation(&source, &operation).unwrap();
+
+        assert!(save_pptx_patch_copy_to_path(
+            &source_path,
+            &target_path,
+            &signature,
+            &"0".repeat(64),
+            &operation,
+        )
+        .unwrap_err()
+        .contains("已变化"));
+        assert!(!target_path.exists());
+        assert!(save_pptx_patch_copy_to_path(
+            &source_path,
+            &source_path,
+            &signature,
+            &preview.output_digest,
+            &operation,
+        )
+        .unwrap_err()
+        .contains("禁止覆盖"));
+        assert!(save_pptx_patch_copy_to_path(
+            &source_path,
+            &target_path,
+            "stale-signature",
+            &preview.output_digest,
+            &operation,
+        )
+        .unwrap_err()
+        .contains("外部修改"));
+        assert!(validate_pptx_copy_file_name("../escape.pptx").is_err());
+        assert_eq!(fs::read(&source_path).unwrap(), source);
         fs::remove_dir_all(root).unwrap();
     }
 }

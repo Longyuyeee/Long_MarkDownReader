@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-27T15:19:54.716Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
+  "fixtureLocation": "isolated temporary workspace",
+  "producer": "wps-presentation",
+  "viewportMatrix": [
+    "1280x820",
+    "960x720"
+  ],
+  "saveMode": "copy",
+  "sourceOverwriteAllowed": false,
+  "externalProducerReopenRequired": true,
+  "checks": [
+    {
+      "id": "verified-preview-unlocks-save-copy",
+      "status": "passed"
+    },
+    {
+      "id": "atomic-create-new-copy-succeeds",
+      "status": "passed"
+    },
+    {
+      "id": "structural-reopen-verified",
+      "status": "passed"
+    },
+    {
+      "id": "semantic-reopen-verified",
+      "status": "passed"
+    },
+    {
+      "id": "saved-target-locked-against-repeat-overwrite",
+      "status": "passed"
+    },
+    {
+      "id": "saved-copy-reopens-in-library-workspace",
+      "status": "passed"
+    },
+    {
+      "id": "compact-library-workspace-without-overflow",
+      "status": "passed"
+    },
+    {
+      "id": "wps-source-bytes-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "c4d-save-copy-verified-1280.jpg",
+    "c4d-reopened-copy-960.jpg"
+  ]
+}

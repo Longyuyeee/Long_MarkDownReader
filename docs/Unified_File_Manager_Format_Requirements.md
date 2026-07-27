@@ -3,7 +3,7 @@
 > 文档类型：产品需求补充与后续开发基线
 > 版本：1.0
 > 更新日期：2026-07-27
-> 状态：基础需求保持有效；当前能力与后续主线以 [C3D PPTX 生产者与桌面视觉收口审计](./C3D_PPTX_Producer_and_Visual_Closure_Audit_2026-07-27.md) 和 [C3B3 后综合审计](./Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md) 为准
+> 状态：基础需求保持有效；当前能力与后续主线以 [C4D PPTX 可靠另存副本专业审计](./C4D_PPTX_Reliable_Save_Copy_Audit_2026-07-27.md) 和 [C3B3 后综合审计](./Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md) 为准
 > 执行指导：[后续开发步骤与执行指导](./Next_Development_Execution_Guide.md)
 
 ## 0. 不可偏离的基础需求
@@ -255,10 +255,10 @@ DOCX/PPTX 必须先完成真实文档兼容矩阵和“只读保真—基础编�
 1. 知识图谱日常存在感阶段已收口：工作台、搜索和文件上下文均可见，支持同标签、智能集合、跨格式证据和对象定位；代码语义与脑图协同保留为增强项。
 2. 日志保持有界只读策略，尚未开放显式编辑。
 3. PDF 页面基础编辑已完成旋转、改序、排除、隔离验证、可靠另存和复杂兼容矩阵；正文排版、表单/签名及合并/拆分/插页仍属于高级或增强能力。
-4. DOCX 已达到结构化阅读、索引、受限基础编辑和可靠另存副本；PPTX 已完成 C3D 结构化只读与知识管理，在 C4A 建立原件保护基线，并在 C4B 完成安全单文本对象和演讲者备注的隔离补丁。PPTX 保存、多段复杂文本与完整排版编辑、WPS 原生格式、旧版 Office 和 OpenDocument 尚未支持。
+4. DOCX 已达到结构化阅读、索引、受限基础编辑和可靠另存副本；PPTX 已完成 C3D 结构化只读与知识管理，并在 C4A～C4D 完成文本、备注、基础样式、形状文本和图片替代文本的受限编辑及可靠新副本。PPTX 外部三生产者输出复开、多段复杂文本与完整排版编辑、WPS 原生格式、旧版 Office 和 OpenDocument 尚未支持。
 5. 安装包、文件关联、升级/卸载和多机器矩阵仍属于发布专项。
 
-2026-07-27 的权威主线现为：**PPTX → WPS/OpenDocument/旧版 Office → 统一发布矩阵**。PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4C 已交付；下一步进入 C4D PPTX 冲突检测、可靠无覆盖另存与写后语义复读。
+2026-07-27 的权威主线现为：**PPTX → WPS/OpenDocument/旧版 Office → 统一发布矩阵**。PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4D 已交付；下一步进入 C4E PowerPoint/WPS Presentation/LibreOffice Impress 输出副本复开矩阵。
 
 后续验收不以“某个高级内核完成”为产品整体完成依据。只有当用户可以在统一管理器中完成常用文件的发现、阅读、基础修改、安全保存、再次查找和关系组织，才视为基础需求闭环。
 

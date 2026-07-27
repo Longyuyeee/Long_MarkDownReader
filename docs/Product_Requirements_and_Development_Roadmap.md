@@ -238,7 +238,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 | FR-DEV-001 | P2 | 常见代码与工程文件阅读编辑 | 部分完成 | A4 已交付 YAML/XML/TOML、常见配置和代表性代码格式的可靠轻量编辑，`.env` 默认遮罩且不索引，`.log` 提供有界只读、筛选、追尾和轮转；日志显式编辑、代码执行、调试和语言服务不在当前范围 |
 | FR-PDF-008 | P1 | PDF 页面级编辑 | 部分完成 | B0～B1C 已完成旋转、改序、排除、隔离副本验证、可靠另存、重开和兼容画像；提取、合并、拆分、插页进入增强队列，失败不破坏源文件 |
 | FR-OFFICE-001 | P1 | DOCX 阅读与基础编辑 | 已完成 | C0～C2E 已完成结构化阅读、索引、受限文本/样式/图片说明编辑、可靠另存和 Word/WPS/LibreOffice 输出复开；完整排版等价不在本阶段 |
-| FR-OFFICE-002 | P1 | PPTX 阅读与基础编辑 | 部分完成 | C3A～C3D 已完成安全结构读取、视觉/对象渲染、全局可重建索引及完整生命周期、Library 内精确定位、文件/幻灯片对象、`contains` 关系、共享对象上下文、备注、只读放映和 PowerPoint/WPS/LibreOffice 3/3 证据；C4 编辑与可靠另存待完成 |
+| FR-OFFICE-002 | P1 | PPTX 阅读与基础编辑 | 部分完成 | C3A～C3D 已完成安全阅读、索引、定位、关系和 PowerPoint/WPS/LibreOffice 3/3 输入证据；C4A～C4D 已完成文本/备注、基础样式、形状文本、图片替代文本及可靠无覆盖新副本；C4E 外部三生产者输出复开与 C5 更高风险对象编辑待完成 |
 | FR-OFFICE-003 | P2 | WPS、旧版 Office 与 OpenDocument | 未开始 | `.wps/.et/.dps/.doc/.xls/.ppt/.odt/.ods/.odp` 完成识别、许可/规范审计和分级预览或安全转换，不虚假声明原格式完整编辑 |
 | FR-MANAGER-001 | P1 | 统一格式能力展示与降级 | 已完成 | schema v2、能力等级、保存模式、最长扩展名路由、Library 文件树/状态栏、右侧工作面标签、最近文件、外部打开和 TXT/JSON/开发格式降级均已接通；新格式继续复用该契约 |
 | FR-THEME-001 | P1 | 扩展主题预设系统 | 已完成 | 唯一注册表驱动设置、命令、编辑器和图表消费者；3 个核心 + 4 个场景预设、持久化、动效、WCAG AA 门禁和 12 张真实 Tauri 三档尺寸证据已建立 |
@@ -416,7 +416,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 | 软件内编辑图表 | FR-DIAGRAM-001～004、FR-DATA-004～005 | Table 图表编辑与 Markdown/Canvas 实时引用完成 | v0.10.0～v1.0.0 |
 | 软件内处理 Excel | FR-DATA-001～009 | CSV/Table 闭环与渐进式 XLSX 编辑完成；总体 Excel 等价仍部分完成 | v0.10.0～v1.0.0 |
 | 软件内处理 PDF | FR-PDF-001～008 | 阅读、搜索、批注、引用、索引、图谱和离线 OCR 闭环完成；页面整理安全子集部分完成 | v0.9.0～v1.0.0 |
-| 软件内处理 WPS/Office | FR-OFFICE-001～003 | DOCX C0～C2E 基础编辑副本已完成；PPTX、WPS/OpenDocument/旧版 Office 待完成 | v1.0.0 |
+| 软件内处理 WPS/Office | FR-OFFICE-001～003 | DOCX C0～C2E 已完成；PPTX C4D 已达到受限基础编辑与可靠副本，C4E/C5 及 WPS/OpenDocument/旧版 Office 待完成 | v1.0.0 |
 | 专业管理系统 | FR-INDEX-001～004、FR-WB-001～003 | 统一索引、专业主页、动态集合与健康治理已完成 | v0.7.0～v1.0.0 |
 
 ## 11. 迭代实施记录
