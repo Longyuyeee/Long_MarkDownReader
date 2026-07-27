@@ -817,8 +817,11 @@ mod tests {
         assert!(!ready.write_attempted);
         assert!(ready.source_unchanged);
         assert!(ready.target_unchanged);
-        assert_eq!(ready.producer_evidence, ["microsoft-word-16"]);
-        assert_eq!(ready.missing_producer_evidence, ["wps", "libreoffice"]);
+        assert_eq!(
+            ready.producer_evidence,
+            ["microsoft-word-16", "libreoffice-writer"]
+        );
+        assert_eq!(ready.missing_producer_evidence, ["wps"]);
         assert!(ready
             .blockers
             .contains(&"docx_save_command_not_enabled".into()));

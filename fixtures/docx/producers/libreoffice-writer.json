@@ -1,0 +1,28 @@
+{
+    "schemaVersion":  1,
+    "id":  "libreoffice-writer",
+    "file":  "libreoffice-writer.docx",
+    "producer":  "LibreOffice Writer",
+    "productVersion":  "26.2.4.2",
+    "fileVersion":  "26.2.4.2",
+    "generatedAt":  "2026-07-27T06:29:49.9166927Z",
+    "generator":  "scripts/generate-c0-libreoffice-docx-fixture.ps1",
+    "privacyNormalization":  "The Flat ODF source assigns the project audit identity before Writer export; the final OOXML package is scanned for local usernames, temporary paths, and external relationships.",
+    "producerReopenVerified":  true,
+    "sha256":  "a549705f8650065a1fbb7111b598b5ae509f0b387ec58db47547f7445e26dea3",
+    "redistribution":  "Project-authored text and image generated locally; safe to redistribute with this repository.",
+    "expected":  {
+                     "heading":  "LibreOffice Writer Producer Fixture",
+                     "listItems":  2,
+                     "tables":  1,
+                     "mergedCellsMinimum":  0,
+                     "pageBreaksMinimum":  1,
+                     "sectionsMinimum":  1,
+                     "headersMinimum":  0,
+                     "footersMinimum":  0,
+                     "footnotes":  false,
+                     "endnotes":  false,
+                     "comments":  false,
+                     "images":  1
+                 }
+}

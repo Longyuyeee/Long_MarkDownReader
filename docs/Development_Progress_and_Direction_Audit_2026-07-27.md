@@ -163,9 +163,9 @@ C1-2A、C1-2B1 与 C1-2B2 已经完成：
 尚未完成：
 
 - 任何 DOCX 写回；
-- Microsoft Word 真实生产者已完成；WPS、LibreOffice 两类兼容矩阵仍待完成。
+- Microsoft Word 与 LibreOffice Writer 真实生产者已完成；仅 WPS Writer 兼容证据仍待完成。
 
-当前开发机未安装 Word、WPS 或 LibreOffice。现有合成 fixture 只能证明解析器边界，不能替代真实生产者证据，也不能据此开放编辑。
+当前开发机已具备 Microsoft Word 与 LibreOffice Writer 真实生产者证据，WPS Writer 环境仍缺失。现有合成 fixture 只能证明解析器边界，不能替代剩余的 WPS 真实生产者证据，也不能据此开放保存。
 
 ## 5. 关键缺口与风险
 
@@ -197,7 +197,7 @@ C1-2B1 已完成附属正文、引用绑定、全局索引和对象定位；C1-2
 
 ### 阶段 2：C0-2 三类真实生产者矩阵
 
-当前进度为 1/3：C0-2A Microsoft Word 已完成真实生成、隐私匿名化、Word 重开、SHA-256 清单与 Rust 解析回归；C0-2B WPS 和 C0-2C LibreOffice 仍待真实环境。
+当前进度为 2/3：C0-2A Microsoft Word 已完成真实生成、隐私匿名化、Word 重开、SHA-256 清单与 Rust 解析回归；C0-2C LibreOffice Writer `26.2.4.2` 已完成真实导出、隐私/外链扫描、LibreOffice 重开、SHA-256 清单与 Rust 解析回归；仅 C0-2B WPS 待真实环境。
 
 交付：
 
@@ -250,7 +250,7 @@ C1-2B1 已完成附属正文、引用绑定、全局索引和对象定位；C1-2
 
 ## 7. 下一开发批次
 
-下一批仍需完成 **C0-2B/C WPS 与 LibreOffice 真实生产者矩阵**。三生产者统一清单、哈希、隐私、重开和防伪 CI 接入门禁已建立，但真实证据仍为 1/3；C2E 可靠另存与生产者重开继续由外部环境证据阻断，不得返回可保存包或替换用户原件。
+下一批需完成 **C0-2B WPS Writer 真实生产者证据**。三生产者统一清单、哈希、隐私、重开和防伪 CI 接入门禁已建立，真实证据为 2/3；C2E 可靠另存与三生产者重开继续由 WPS 外部环境证据阻断，不得返回可保存包或替换用户原件。
 
 本批最小交付包：
 

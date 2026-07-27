@@ -1938,7 +1938,7 @@ mod tests {
     }
 
     #[test]
-    fn tracks_pending_docx_producers_without_promoting_missing_evidence() {
+    fn tracks_verified_and_pending_docx_producer_evidence() {
         let matrix: serde_json::Value =
             serde_json::from_str(include_str!("../../../fixtures/docx/producers/matrix.json"))
                 .unwrap();
@@ -1950,13 +1950,36 @@ mod tests {
         assert_eq!(producers[1]["id"], "wps-writer");
         assert_eq!(producers[1]["status"], "pending");
         assert_eq!(producers[2]["id"], "libreoffice-writer");
-        assert_eq!(producers[2]["status"], "pending");
+        assert_eq!(producers[2]["status"], "verified");
         assert!(producers[1]["evidenceDependency"]
             .as_str()
             .is_some_and(|value| !value.is_empty()));
-        assert!(producers[2]["evidenceDependency"]
-            .as_str()
-            .is_some_and(|value| !value.is_empty()));
+        assert!(producers[2]["evidenceDependency"].is_null());
+    }
+
+    #[test]
+    fn reads_versioned_libreoffice_writer_producer_fixture() {
+        let source = include_bytes!("../../../fixtures/docx/producers/libreoffice-writer.docx");
+        let model = parse_docx(source).unwrap();
+        assert!(model
+            .compatibility
+            .application
+            .as_deref()
+            .is_some_and(|value| value.contains("LibreOffice")));
+        assert_eq!(
+            model.compatibility.producer.as_deref(),
+            Some("LongEdit C0-2C Audit")
+        );
+        assert!(model
+            .headings
+            .iter()
+            .any(|heading| heading.text == "LibreOffice Writer Producer Fixture"));
+        assert_eq!(model.compatibility.list_item_count, 2);
+        assert_eq!(model.compatibility.table_count, 1);
+        assert!(model.compatibility.page_break_count >= 1);
+        assert!(model.compatibility.section_count >= 1);
+        assert_eq!(model.compatibility.image_count, 1);
+        assert_eq!(model.compatibility.renderable_image_count, 1);
     }
 
     #[test]

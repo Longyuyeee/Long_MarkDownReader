@@ -25,10 +25,10 @@
     {
       "id": "libreoffice-writer",
       "producer": "LibreOffice Writer",
-      "status": "pending",
+      "status": "verified",
       "manifest": "libreoffice-writer.json",
       "fixture": "libreoffice-writer.docx",
-      "evidenceDependency": "A real LibreOffice Writer installation is required to create and reopen the project-authored fixture."
+      "evidenceDependency": null
     }
   ]
 }

@@ -4,7 +4,7 @@
 >
 > 阶段范围：WPS Writer 与 LibreOffice Writer 真实生产者证据接入框架
 >
-> 结论：接入门禁已完成；真实生产者矩阵仍为 1/3，C0-2B 与 C0-2C 尚未完成
+> 结论：接入门禁与 C0-2C 已完成；真实生产者矩阵为 2/3，仅 C0-2B WPS Writer 待完成
 
 ## 1. 本批目标
 
@@ -24,7 +24,7 @@
 | --- | --- | --- |
 | `microsoft-word-16` | Microsoft Word | `verified` |
 | `wps-writer` | WPS Writer | `pending` |
-| `libreoffice-writer` | LibreOffice Writer | `pending` |
+| `libreoffice-writer` | LibreOffice Writer | `verified` |
 
 `pending` 条目必须声明真实环境依赖，且不能携带未验证的同名清单或 fixture。`verified` 条目必须同时具备清单和 DOCX。
 
@@ -61,15 +61,15 @@ C2E0 `audit_docx_save_readiness` 不再硬编码生产者状态，而是读取�
 - `missingProducerEvidence`
 - `producer_evidence_missing:*` blockers
 
-Rust 回归固定验证当前状态为 Word `verified`、WPS/LibreOffice `pending`，防止缺失证据被误提升。
+Rust 回归固定验证当前状态为 Word/LibreOffice `verified`、WPS `pending`，防止缺失证据被误提升。
 
 ## 5. 当前判定
 
 当前矩阵门禁输出：
 
-`DOCX producer matrix gate passed: 1/3 verified; pending: wps-writer, libreoffice-writer`
+`DOCX producer matrix gate passed: 2/3 verified; pending: wps-writer`
 
-这表示证据接入框架有效，不表示兼容矩阵完成。下一步仍需分别在真实 WPS Writer 和 LibreOffice Writer 环境中：
+LibreOffice Writer `26.2.4.2` 已完成真实导出、隐私扫描、原程序重开、哈希清单与 Rust 解析回归，详见 `docs/C0_2C_LibreOffice_Writer_Producer_Fixture_Audit_2026-07-27.md`。下一步仅需在真实 WPS Writer 环境中：
 
 1. 创建项目自有内容的 DOCX；
 2. 完成隐私匿名化；
@@ -77,13 +77,13 @@ Rust 回归固定验证当前状态为 Word `verified`、WPS/LibreOffice `pendin
 4. 生成版本、哈希、许可和结构清单；
 5. 将矩阵状态改为 `verified` 并通过解析、隔离补丁、桌面和 CI 回归。
 
-C0-2B/C 完成前，C2E 可靠另存和用户可见 DOCX 保存继续阻断。
+C0-2B 完成前，C2E 可靠另存和用户可见 DOCX 保存继续阻断。
 
 ## 6. 最终仓库门禁
 
 - DOCX 相关定向回归 `11/11` 通过；
-- DOCX 生产者矩阵门禁通过并报告 `1/3 verified`；
-- Rust 功能测试 `310/310` 通过，性能测试 `1/1` 通过；
+- DOCX 生产者矩阵门禁通过并报告 `2/3 verified`；
+- Rust 功能测试 `311/311` 通过，性能测试 `1/1` 通过；
 - 前端生产构建、Vue 类型检查和全部契约检查通过；
 - 真实 Tauri 桌面证据检查 `35/35` 通过，27 张截图证据完整；
 - 生产依赖审计为 0 个漏洞；

@@ -144,7 +144,7 @@ A3 采用源码事实源：CodeMirror 负责编辑，Rust `jsonc-parser` 负责�
 | 格式 | 扩展名 | 近期目标 | 当前状态 |
 |---|---|---|---|
 | Excel 工作簿 | `.xlsx` | 多 Sheet 阅读和渐进式专业编辑；高级对象分级保真 | 部分完成，已有较强基础编辑 |
-| Word 文档 | `.docx` | 阅读、目录、搜索、复制、批注；段落、标题、列表、表格、图片和基础样式编辑 | C1-2B、C0-2A Microsoft Word 生产者及 C2A～C2D 隔离补丁已交付；WPS/LibreOffice 生产者矩阵和用户编辑未完成 |
+| Word 文档 | `.docx` | 阅读、目录、搜索、复制、批注；段落、标题、列表、表格、图片和基础样式编辑 | C1-2B、C0-2A Microsoft Word、C0-2C LibreOffice Writer 及 C2A～C2D 隔离补丁已交付；仅 WPS 生产者证据和用户编辑未完成 |
 | PowerPoint 演示 | `.pptx` | 缩略图、放映、搜索；文本、图片、形状和页面顺序基础编辑 | 未开始 |
 
 DOCX/PPTX 必须先完成真实文档兼容矩阵和“只读保真—基础编辑—完整编辑”分级。无法安全往返的对象必须保持原包不变或阻止写回，不能通过重新生成整份文档造成高级内容丢失。
@@ -227,7 +227,7 @@ DOCX/PPTX 必须先完成真实文档兼容矩阵和“只读保真—基础编�
 
 ### 阶段 C：DOCX/PPTX 基础工作面（P1）
 
-1. DOCX C1-2B 已完成结构化阅读与版式；C0-2B/C 已建立三生产者接入门禁但真实证据仍为 1/3；C2A～C2D 已完成隔离补丁，C2E0 已完成不写文件的保存准备门禁，下一步补齐真实生产者矩阵并收口 C2E。
+1. DOCX C1-2B 已完成结构化阅读与版式；三生产者接入门禁已建立且真实证据为 2/3，仅 WPS 待补；C2A～C2D 已完成隔离补丁，C2E0 已完成不写文件的保存准备门禁，下一步补齐 WPS 证据并收口 C2E。
 2. PPTX 缩略图、放映、搜索和基础对象编辑。
 3. 建立 WPS、Office 和 LibreOffice 三类生产者兼容矩阵。
 
@@ -258,7 +258,7 @@ DOCX/PPTX 必须先完成真实文档兼容矩阵和“只读保真—基础编�
 4. DOCX 已达到 C1-2B 结构化只读、索引与基础版式工作面，并完成 C2A～C2D 隔离补丁和 C2E0 只读保存准备门禁；用户可见 DOCX 编辑/写回、PPTX、WPS 原生格式、旧版 Office 和 OpenDocument 尚未支持。
 5. 安装包、文件关联、升级/卸载和多机器矩阵仍属于发布专项。
 
-2026-07-27 的权威主线现为：**DOCX → PPTX → WPS/OpenDocument/旧版 Office → 统一发布矩阵**。PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A Microsoft Word 生产者、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已交付；下一步完成 C0-2B/C WPS 与 LibreOffice 生产者矩阵。
+2026-07-27 的权威主线现为：**DOCX → PPTX → WPS/OpenDocument/旧版 Office → 统一发布矩阵**。PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A Microsoft Word、C0-2C LibreOffice Writer、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已交付；下一步完成 C0-2B WPS Writer 生产者证据。
 
 后续验收不以“某个高级内核完成”为产品整体完成依据。只有当用户可以在统一管理器中完成常用文件的发现、阅读、基础修改、安全保存、再次查找和关系组织，才视为基础需求闭环。
 

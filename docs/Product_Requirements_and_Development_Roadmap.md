@@ -237,7 +237,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 | FR-JSON-001 | P1 | 通用 JSON/JSONC 工作面 | 进行中 | A3/A5 已完成源码工具、实时 Rust 校验、有界 JSON Path、树形预览、受门禁结构编辑、可重建索引、可靠保存和真实桌面重开；软件内创建待后续批次 |
 | FR-DEV-001 | P2 | 常见代码与工程文件阅读编辑 | 部分完成 | A4 已交付 YAML/XML/TOML、常见配置和代表性代码格式的可靠轻量编辑，`.env` 默认遮罩且不索引，`.log` 提供有界只读、筛选、追尾和轮转；日志显式编辑、代码执行、调试和语言服务不在当前范围 |
 | FR-PDF-008 | P1 | PDF 页面级编辑 | 部分完成 | B0～B1C 已完成旋转、改序、排除、隔离副本验证、可靠另存、重开和兼容画像；提取、合并、拆分、插页进入增强队列，失败不破坏源文件 |
-| FR-OFFICE-001 | P1 | DOCX 阅读与基础编辑 | 进行中 | C1-2B、C0-2A Microsoft Word 生产者、C0-2B/C 三生产者接入门禁、C2A～C2D 隔离补丁及 C2E0 已完成；WPS/LibreOffice 真实证据及 C2E 可靠另存闭环待完成 |
+| FR-OFFICE-001 | P1 | DOCX 阅读与基础编辑 | 进行中 | C1-2B、C0-2A Microsoft Word、C0-2C LibreOffice Writer、三生产者接入门禁、C2A～C2D 隔离补丁及 C2E0 已完成；WPS 真实证据及 C2E 可靠另存闭环待完成 |
 | FR-OFFICE-002 | P1 | PPTX 阅读与基础编辑 | 未开始 | 支持缩略图、放映、搜索及文本、图片、形状和页面顺序基础编辑；高级对象只读保真 |
 | FR-OFFICE-003 | P2 | WPS、旧版 Office 与 OpenDocument | 未开始 | `.wps/.et/.dps/.doc/.xls/.ppt/.odt/.ods/.odp` 完成识别、许可/规范审计和分级预览或安全转换，不虚假声明原格式完整编辑 |
 | FR-MANAGER-001 | P1 | 统一格式能力展示与降级 | 已完成 | schema v2、能力等级、保存模式、最长扩展名路由、Library 文件树/状态栏、右侧工作面标签、最近文件、外部打开和 TXT/JSON/开发格式降级均已接通；新格式继续复用该契约 |
@@ -396,7 +396,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 - XLSX 已形成渐进式编辑与分层保真门禁，但完整公式、图表、透视、打印和总体往返等价仍未完成。
 - 本地索引仍采用全量重建，尚未实现文件级增量更新。
 - 知识健康已覆盖断链、歧义、孤立笔记、精确重复文件、未处理 PDF 批注和索引状态；治理结果保持只读并可精确回到源对象。
-- DOCX C1-2B 已达到附属正文、全局索引、合并单元格、分页/版式与真实桌面闭环；C0-2A Microsoft Word 生产者及 C2A～C2D 隔离补丁已完成，WPS/LibreOffice 与用户可见基础编辑尚未完成。
+- DOCX C1-2B 已达到附属正文、全局索引、合并单元格、分页/版式与真实桌面闭环；C0-2A Microsoft Word、C0-2C LibreOffice Writer 及 C2A～C2D 隔离补丁已完成，WPS 与用户可见基础编辑尚未完成。
 - 真实桌面 E2E 已建立阶段性门禁；跨格式持续视觉回归和发布机矩阵仍需产品化。
 
 ### 9.3 尚未进入实现
@@ -1532,7 +1532,7 @@ S8-7D 功能验收完成。下一步进入 S8-7E：获取真实 Excel/LibreOffic
 - 引入 Apache POI 官方测试数据中的真实 Excel Pivot fixture，固定上游提交、Apache-2.0 许可、文件大小和 SHA-256，避免后续样例静默漂移。
 - 样例中的工作表范围透视表通过字段项、行列项和输出单元格审计，进入 `structure_candidate`；命名来源且带页面筛选的透视表保持 `blocked`。
 - 普通单元格补丁后，两个 Pivot Table、两个 Cache Definition 和两个 Cache Records 部件逐字节不变，包校验和再次解析通过。
-- 当前环境没有可自动化的 Excel/LibreOffice，因此桌面刷新、保存、重开证据仍为 `pending`；所有写回继续禁用。
+- 本阶段执行时没有可自动化的 Excel/LibreOffice，因此该 XLSX 桌面刷新、保存、重开证据仍为 `pending`；后续安装 LibreOffice 不会自动提升这项独立 XLSX 证据，所有相关写回继续禁用。
 
 S8-7E1 功能验收完成。下一步进入 S8-7E2：在临时副本中建立影响清单和隔离重建原型，先覆盖单个本地工作表来源、无页面筛选对象；任何失败必须丢弃副本，且不增加用户文件写回命令。
 
@@ -1600,7 +1600,7 @@ S8-7E2E 功能验收完成。下一步进入 S8-7E2F：把单轴和多度量语�
 - 修复 760px 图谱标题竖排、工具栏拥挤、筛选条错位和初始详情遮挡画布；紧凑页头、横向工具栏与窄宽度初始详情策略进入门禁。
 - Debug E2E 模式禁止配置落盘，并支持独立指定 theme、style、code theme 和 motion，避免视觉审计污染用户配置。
 
-T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7D 高级数据对象审计、本地透视预览和事务写回可行性门禁已完成，S8-7E1 已建立真实生产者结构基线，S8-7E2A 已交付签名保护的隔离影响清单，S8-7E2B 已完成临时副本 Cache 重建，S8-7E2C 已完成四部件隔离同步重建，S8-7E2D 已完成 sharedItems 与输出布局扩缩容，S8-7E2E 已完成七类聚合包级重建和单轴/多度量语义矩阵。S8-7E2F 单轴与多度量完整隔离包重写保留为 XLSX 专项回补队列；A0～A5、G8、PDF B0～B1C、DOCX C1-2B、C0-2A Microsoft Word 生产者、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已交付，当前实际开发入口为 **C0-2B/C WPS 与 LibreOffice 生产者矩阵**。
+T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7D 高级数据对象审计、本地透视预览和事务写回可行性门禁已完成，S8-7E1 已建立真实生产者结构基线，S8-7E2A 已交付签名保护的隔离影响清单，S8-7E2B 已完成临时副本 Cache 重建，S8-7E2C 已完成四部件隔离同步重建，S8-7E2D 已完成 sharedItems 与输出布局扩缩容，S8-7E2E 已完成七类聚合包级重建和单轴/多度量语义矩阵。S8-7E2F 单轴与多度量完整隔离包重写保留为 XLSX 专项回补队列；A0～A5、G8、PDF B0～B1C、DOCX C1-2B、C0-2A Microsoft Word、C0-2C LibreOffice Writer、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已交付，当前实际开发入口为 **C0-2B WPS Writer 生产者证据**。
 
 后续阶段顺序以 `docs/Development_Progress_and_Direction_Audit_2026-07-27.md`、`docs/Unified_File_Manager_Format_Requirements.md` 和 `docs/Next_Development_Execution_Guide.md` 为当前主线：C0-2 DOCX 真实生产者证据 → C2 DOCX 基础编辑 → PPTX → WPS/OpenDocument/旧版 Office → 管理和发布矩阵。历史 S8 编号保留用于 XLSX 渐进式兼容追踪。
 

@@ -2,7 +2,7 @@
 
 > 审计日期：2026-07-27
 > 阶段范围：C0-2 三类 DOCX 真实生产者矩阵的 Microsoft Word 切片
-> 结论：C0-2A 已完成；C0-2 整体仍需 WPS 与 LibreOffice 两类真实生产者
+> 结论：C0-2A 已完成；后续 C0-2C LibreOffice 已完成，当前 C0-2 为 2/3，仅剩 WPS
 
 ## 1. 生产环境
 
@@ -87,14 +87,14 @@ Rust 回归：
 
 ## 5. 阶段判定与下一步
 
-C0-2 当前进度为 **1/3**：
+C0-2A 本批完成时进度为 **1/3**；后续 C0-2C 已把当前进度提升到 **2/3**：
 
 | 生产者 | 状态 |
 | --- | --- |
 | Microsoft Word | 已完成生成、匿名化、Word 重开、哈希和 LongEdit 解析回归 |
 | WPS Writer | 当前机器未安装，待真实环境 |
-| LibreOffice Writer | 当前机器未安装，待真实环境 |
+| LibreOffice Writer | 后续 C0-2C 已完成真实导出、隐私扫描、LibreOffice 重开、哈希和 LongEdit 解析回归 |
 
-三生产者统一接入门禁已建立，见 `C0_2BC_DOCX_Producer_Matrix_Intake_Gate_Audit_2026-07-27.md`。下一步优先获取 WPS Writer 环境完成 C0-2B，再获取 LibreOffice Writer 环境完成 C0-2C。两类真实文件未完成前，不得宣布 C0-2 收口，也不得开放覆盖用户 DOCX 原件的写回。
+三生产者统一接入门禁已建立，见 `C0_2BC_DOCX_Producer_Matrix_Intake_Gate_Audit_2026-07-27.md`。下一步优先获取 WPS Writer 环境完成 C0-2B。WPS 真实文件未完成前，不得宣布 C0-2 收口，也不得开放覆盖用户 DOCX 原件的写回。
 
-若外部环境暂不可用，可以开始 C2A 的内存/临时副本 OOXML 补丁和包差异审计，但所有用户文件替换入口继续阻断。
+C2A～C2D 隔离补丁与 C2E0 只读保存准备门禁已经完成；WPS 证据补齐前，所有用户文件替换入口继续阻断。
