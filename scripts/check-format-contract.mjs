@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, docxPatchKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, docxPatchKernel, pptxKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, pptxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, pptxReader, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -13,12 +13,14 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src-tauri/src/formats/toml.rs'),
   read('src-tauri/src/formats/docx.rs'),
   read('src-tauri/src/formats/docx_patch.rs'),
+  read('src-tauri/src/formats/pptx.rs'),
   read('src-tauri/src/commands/formats.rs'),
   read('src-tauri/src/commands/json.rs'),
   read('src-tauri/src/commands/yaml.rs'),
   read('src-tauri/src/commands/xml.rs'),
   read('src-tauri/src/commands/toml.rs'),
   read('src-tauri/src/commands/docx.rs'),
+  read('src-tauri/src/commands/pptx.rs'),
   read('src-tauri/src/commands/files.rs'),
   read('src-tauri/src/services/external_file_access.rs'),
   read('src-tauri/src/commands/index.rs'),
@@ -29,6 +31,7 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src/views/XmlEditorView.vue'),
   read('src/views/TomlEditorView.vue'),
   read('src/views/DocxReaderView.vue'),
+  read('src/views/PptxReaderView.vue'),
   read('src/views/LogViewerView.vue'),
   read('src/components/WorkspaceTabs.vue'),
   read('src/router/index.ts'),
@@ -178,6 +181,21 @@ if (!docxFormat
   || docxFormat.adapters?.indexer !== 'docx'
   || docxFormat.userCapability?.level !== 'basic-edit'
   || docxFormat.userCapability?.saveMode !== 'copy') failures.push('C2E DOCX basic copy-edit contract is incomplete')
+const pptxFormat = registry.formats?.find(format => format.id === 'pptx')
+if (!pptxFormat
+  || pptxFormat.routeName !== 'PptxReader'
+  || pptxFormat.extensions?.join(',') !== '.pptx'
+  || pptxFormat.maxBytes !== 96 * 1024 * 1024
+  || pptxFormat.capabilities?.read !== 'supported'
+  || pptxFormat.capabilities?.edit !== 'planned'
+  || pptxFormat.capabilities?.create !== 'unsupported'
+  || pptxFormat.capabilities?.index !== 'planned'
+  || pptxFormat.adapters?.reader !== 'pptx'
+  || pptxFormat.adapters?.writer !== null
+  || pptxFormat.adapters?.creator !== null
+  || pptxFormat.adapters?.indexer !== null
+  || pptxFormat.userCapability?.level !== 'preview-only'
+  || pptxFormat.userCapability?.saveMode !== 'none') failures.push('C3A PPTX structured read-only contract is incomplete')
 
 const requireText = (source, value, message) => { if (!source.includes(value)) failures.push(message) }
 const forbid = (source, pattern, message) => { if (pattern.test(source)) failures.push(message) }
@@ -443,6 +461,18 @@ requireText(docxReader, 'cell.rowSpan', 'C1-2B2 DOCX workspace must render verti
 requireText(docxReader, 'docx-page-break', 'C1-2B2 DOCX workspace must render pagination markers')
 requireText(docxReader, 'docx-layout-summary', 'C1-2B2 DOCX workspace must expose section layout summaries')
 requireText(router, "name: 'DocxEditor'", 'C1 DOCX workspace must have a restorable route')
+requireText(pptxKernel, 'MAX_PPTX_UNCOMPRESSED_BYTES', 'C3A PPTX parser must bound expanded package bytes')
+requireText(pptxKernel, 'parse_relationships', 'C3A PPTX parser must resolve OOXML relationships')
+requireText(pptxKernel, 'unknown_presentation_parts', 'C3A PPTX parser must expose unknown-part fidelity risk')
+requireText(pptxKernel, 'parses_real_powerpoint_and_libreoffice_producer_fixtures', 'C3A PPTX parser must reopen real producer fixtures')
+requireText(pptxCommands, 'read_pptx_presentation', 'C3A PPTX reader command must remain registered')
+if (pptxCommands.includes('write_pptx') || pptxCommands.includes('save_pptx')) failures.push('C3A must not expose PPTX write commands')
+requireText(pptxReader, '结构化只读', 'C3A PPTX workspace must identify its read-only capability')
+requireText(pptxReader, '搜索 PPTX 文本与备注', 'C3A PPTX workspace must expose in-presentation search')
+requireText(pptxReader, '放映', 'C3A PPTX workspace must expose read-only presentation mode')
+requireText(pptxReader, '兼容画像', 'C3A PPTX workspace must expose its compatibility profile')
+requireText(pptxReader, 'mediaByPart', 'C3A PPTX workspace must render verified embedded media')
+requireText(router, "name: 'PptxReader'", 'C3A PPTX workspace must have a restorable route')
 const logFormat = registry.formats.find(format => format.id === 'log')
 if (!logFormat
   || logFormat.routeName !== 'LogViewer'
@@ -462,7 +492,7 @@ requireText(library, '<WorkspaceTabs', 'Markdown workspace must consume unified 
 requireText(textEditor, '<WorkspaceTabs', 'TXT workspace must consume unified session tabs')
 requireText(workspaceTabs, 'routeForFile', 'unified tabs must route each registered format to its workspace')
 requireText(frontend, 'LIBRARY_EMBEDDED_EDITOR_ROUTES', 'daily source editors must declare the shared library-shell contract')
-for (const routeName of ['TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'TomlEditor', 'DocxEditor', 'LogViewer']) {
+for (const routeName of ['TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'TomlEditor', 'DocxEditor', 'PptxReader', 'LogViewer']) {
   requireText(frontend, `'${routeName}'`, `${routeName} must remain registered for right-pane embedding`)
 }
 requireText(library, '<component :is="activeEmbeddedEditor"', 'library mode must mount daily source editors in its right pane')

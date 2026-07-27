@@ -56,6 +56,11 @@ const routes = [
     component: () => import('../views/DocxReaderView.vue')
   },
   {
+    path: '/pptx',
+    name: 'PptxReader',
+    component: () => import('../views/PptxReaderView.vue')
+  },
+  {
     path: '/quick-note',
     name: 'QuickNote',
     component: () => import('../views/QuickNote.vue')

@@ -1,0 +1,27 @@
+{
+    "schemaVersion":  1,
+    "id":  "libreoffice-impress",
+    "file":  "libreoffice-impress.pptx",
+    "producer":  "LibreOffice Impress",
+    "productVersion":  "26.2.4.2",
+    "fileVersion":  "26.2.4.2",
+    "generatedAt":  "2026-07-27T08:32:55.5732519Z",
+    "generatedBy":  "scripts/generate-c3-libreoffice-pptx-fixture.ps1",
+    "sha256":  "4ef5578bd9657eb7b1a04fa8c7ffb5eb7c2fc4046f49608ed7a0fff75d8c2140",
+    "redistributable":  true,
+    "expected":  {
+                     "slideCount":  2,
+                     "text":  true,
+                     "images":  true,
+                     "shapes":  true,
+                     "groups":  false,
+                     "notes":  true,
+                     "animations":  false,
+                     "themes":  true
+                 },
+    "verification":  {
+                         "producerReopen":  "verified",
+                         "method":  "LibreOffice headless PDF export",
+                         "expectedTitle":  "LibreOffice Impress Producer Fixture"
+                     }
+}

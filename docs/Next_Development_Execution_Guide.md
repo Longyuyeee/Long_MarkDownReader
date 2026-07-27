@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E 已完成。下一开发入口为 C3 PPTX 只读工作面。最新判定见 [C2E DOCX 审计](./C2E_DOCX_Reliable_Save_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E 与 PPTX C3A 已完成。下一开发入口为 C3B PPTX 视觉继承与对象渲染。最新判定见 [C3A PPTX 审计](./C3A_PPTX_Structured_Readonly_Audit_2026-07-27.md)。
 
 ## 1. 指导目标
 
@@ -379,10 +379,12 @@ DOCX 样本覆盖段落、标题、列表、表格、图片、分页、页眉页
 
 ### C3：PPTX 只读工作面
 
-1. 幻灯片缩略图和顺序。
-2. 基础文本、图片、形状和主题背景预览。
-3. 放映模式、页面跳转、备注和搜索。
-4. 搜索结果定位到幻灯片和对象。
+当前进度：C3A 已完成安全解包、真实顺序、基础文本/图片/对象坐标、备注、搜索定位、兼容画像、只读放映，以及 PowerPoint/LibreOffice 2/3 生产者证据；C3 整体仍为部分完成。
+
+1. C3B：主题、母版、布局、背景、基础文本样式、图片裁剪和组合子对象的分级视觉继承。
+2. C3C：PPTX 全局索引、对象定位、最近/收藏/集合与关系管理。
+3. C3D：WPS Presentation 第三生产者、真实 Tauri 三生产者和多尺寸视觉矩阵。
+4. C3B～C3D 全部完成后，才可宣告缩略图、放映、搜索和高级对象只读边界收口。
 
 ### C4：PPTX 基础编辑
 
@@ -566,7 +568,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存、写后复读、三生产者复开和真实桌面闭环，下一步进入 **C3 PPTX 只读工作面**；DOCX 原件覆盖继续禁止。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A 已完成结构化只读工作面和 2/3 生产者证据，下一步进入 **C3B PPTX 视觉继承与对象渲染**。DOCX 原件覆盖与 PPTX 所有写回继续禁止。
 
 当前批次的强制退出条件：
 

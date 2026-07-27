@@ -637,6 +637,7 @@ const embeddedEditorComponents = {
   TomlEditor: defineAsyncComponent(() => import('./TomlEditorView.vue')),
   LogViewer: defineAsyncComponent(() => import('./LogViewerView.vue')),
   DocxEditor: defineAsyncComponent(() => import('./DocxReaderView.vue')),
+  PptxReader: defineAsyncComponent(() => import('./PptxReaderView.vue')),
 }
 const activeEmbeddedEditor = computed(() => {
   const routeName = activeDocumentFormat.value?.routeName

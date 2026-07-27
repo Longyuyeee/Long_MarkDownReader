@@ -353,6 +353,19 @@
       "creation": null
     },
     {
+      "id": "pptx",
+      "label": "PowerPoint 演示",
+      "extensions": [".pptx"],
+      "mimeTypes": ["application/vnd.openxmlformats-officedocument.presentationml.presentation"],
+      "routeName": "PptxReader",
+      "maxBytes": 100663296,
+      "capabilities": { "read": "supported", "edit": "planned", "create": "unsupported", "index": "planned" },
+      "userCapability": { "level": "preview-only", "label": "结构化只读", "saveMode": "none", "description": "PPTX 支持安全结构读取、幻灯片顺序、基础文本与图片预览、备注、搜索定位和只读放映；动画、母版、图表、SmartArt 与未知对象不执行也不写回。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "pptx", "writer": null, "creator": null, "indexer": null },
+      "creation": null
+    },
+    {
       "id": "workbook",
       "label": "Excel 工作簿",
       "extensions": [".xlsx"],

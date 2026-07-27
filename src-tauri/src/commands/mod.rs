@@ -12,6 +12,7 @@ pub mod index;
 pub mod json;
 pub mod mindmap;
 pub mod pdf;
+pub mod pptx;
 pub mod search;
 pub mod system;
 pub mod table;

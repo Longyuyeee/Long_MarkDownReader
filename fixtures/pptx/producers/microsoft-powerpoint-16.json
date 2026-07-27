@@ -1,0 +1,26 @@
+{
+    "schemaVersion":  1,
+    "id":  "microsoft-powerpoint-16",
+    "file":  "microsoft-powerpoint-16.pptx",
+    "producer":  "Microsoft PowerPoint",
+    "productVersion":  "16.0.20131.20154",
+    "fileVersion":  "16.0.20131.20154",
+    "generatedAt":  "2026-07-27T08:57:00.6206718Z",
+    "generatedBy":  "scripts/generate-c3-powerpoint-pptx-fixture.ps1",
+    "sha256":  "858acb4e2d6841b4f0a8ea066d9a8cb3b08bc89ef69a6143216c3bcec39ae82f",
+    "redistributable":  true,
+    "expected":  {
+                     "slideCount":  3,
+                     "text":  true,
+                     "images":  true,
+                     "shapes":  true,
+                     "groups":  true,
+                     "notes":  true,
+                     "animations":  true,
+                     "themes":  true
+                 },
+    "verification":  {
+                         "producerReopen":  "verified",
+                         "expectedTitle":  "PowerPoint Producer Fixture"
+                     }
+}

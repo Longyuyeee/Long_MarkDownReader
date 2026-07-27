@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "stage": "C3A",
+  "requiredProducerIds": [
+    "microsoft-powerpoint-16",
+    "wps-presentation",
+    "libreoffice-impress"
+  ],
+  "verifiedCount": 2,
+  "requiredCount": 3,
+  "complete": false,
+  "producers": [
+    {
+      "id": "microsoft-powerpoint-16",
+      "producer": "Microsoft PowerPoint",
+      "status": "verified",
+      "manifest": "microsoft-powerpoint-16.json",
+      "fixture": "microsoft-powerpoint-16.pptx",
+      "evidenceDependency": null
+    },
+    {
+      "id": "wps-presentation",
+      "producer": "WPS Presentation",
+      "status": "pending",
+      "manifest": null,
+      "fixture": null,
+      "evidenceDependency": "Requires a redistributable PPTX saved and reopened by WPS Presentation."
+    },
+    {
+      "id": "libreoffice-impress",
+      "producer": "LibreOffice Impress",
+      "status": "verified",
+      "manifest": "libreoffice-impress.json",
+      "fixture": "libreoffice-impress.pptx",
+      "evidenceDependency": null
+    }
+  ]
+}

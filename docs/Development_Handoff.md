@@ -1,9 +1,9 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-27
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2 三生产者矩阵及 C2A～C2E 安全基础编辑已完成；当前直接在 `main` 推进，下一阶段为 C3 PPTX 只读工作面
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E 及 PPTX C3A 结构化只读工作面已完成；当前直接在 `main` 推进，下一阶段为 C3B PPTX 视觉继承与对象渲染
 
-> 最新桌面门禁为 36 项真实 Tauri 检查和 28 张截图；DOCX C2E 可靠另存、源文件保护及 Word/WPS/LibreOffice 输出复开见 `docs/C2E_DOCX_Reliable_Save_Audit_2026-07-27.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
+> 最新桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3A 已新增安全解析、只读工作面和 PowerPoint/LibreOffice 2/3 生产者证据，见 `docs/C3A_PPTX_Structured_Readonly_Audit_2026-07-27.md`。WPS Presentation 与 C3 视觉/索引/桌面收口仍未完成。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 ## 1. 新电脑快速恢复
 
@@ -64,6 +64,8 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - C2D 已为安全单运行文本增加粗体/斜体/单下划线隔离补丁，并为单个正文内嵌图片增加替代文本补丁；复杂运行、浮动图片和媒体二进制继续只读，C2 进度为 4/5。
 - C2E0 当时增加只读保存准备报告，检查源签名、隔离输出摘要、目标占用、源覆盖和三类生产者证据；该历史阶段固定阻断且证明未尝试写入，阶段完成时 C2 为 4/5。
 - C2E 已完成用户可见的文本/基础样式/图片替代文本单次编辑、摘要握手、原子无覆盖另存、落盘结构/语义复读和源字节复核；同一输出已由 Word、WPS、LibreOffice 复开，C2 进度为 5/5。
+- C3A 已完成 PPTX 有界 OOXML 读取、幻灯片顺序、文本/图片/基础对象坐标、备注、搜索定位、兼容画像和只读放映；原件没有任何写回命令。
+- C3A 真实生产者矩阵当前为 2/3：PowerPoint 16 与 LibreOffice Impress 26.2 已由原程序复开并进入 Rust 回归；WPS Presentation 因当前环境未安装而明确保持待补，C3 整体仍为部分完成。
 - A5/G8/B0/B1A/B1B/B1C/C0/C1/C2E 已用真实 Tauri Debug/WebView2 自动化完成 36 项检查和 28 张证据图。
 
 ## 3. 后端结构
@@ -117,6 +119,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/C2D_DOCX_Style_Image_Isolated_Edit_Audit_2026-07-27.md`：基础字符样式、内嵌图片替代文本、复杂运行/浮动图片拒绝和媒体字节保真。
 - `docs/C2E0_DOCX_Save_Readiness_Gate_Audit_2026-07-27.md`：DOCX 源冲突、目标占用、生产者证据缺口和不写入保存准备门禁。
 - `docs/C2E_DOCX_Reliable_Save_Audit_2026-07-27.md`：DOCX 基础编辑副本、原子无覆盖创建、落盘复读、源文件保护和三生产者输出复开。
+- `docs/C3A_PPTX_Structured_Readonly_Audit_2026-07-27.md`：PPTX 安全解析、结构化只读工作面、2/3 真实生产者矩阵、明确边界和 C3B～C3D 收口顺序。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
 - `docs/Development_Stage_Audit_2026-07-20.md`：上一轮专业工作区阶段审计和交错排期基线。
 
@@ -248,7 +251,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
-开始新功能前先更新路线图中的需求状态与验收条件。下一批直接在 `main` 推进 C3 PPTX 只读工作面，先建立三生产者 fixture 和只读保真边界，再接缩略图、搜索与对象定位。每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
+开始新功能前先更新路线图中的需求状态与验收条件。下一批直接在 `main` 推进 C3B PPTX 主题/母版/布局继承和基础对象视觉渲染；同时在具备 WPS Presentation 的环境补齐第三生产者 fixture。随后完成 C3C 全局索引/管理闭环和 C3D 真实桌面三生产者收口，再进入 C4 编辑。每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
 
 ## 7. 已知边界与注意事项
 

@@ -8,6 +8,7 @@ pub mod markdown;
 pub mod opml;
 pub mod pdf_annotations;
 pub mod pdf_ocr;
+pub mod pptx;
 pub mod table;
 pub mod text;
 pub mod toml;
