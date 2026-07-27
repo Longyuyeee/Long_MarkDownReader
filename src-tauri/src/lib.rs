@@ -15,9 +15,9 @@ use commands::diagram::{
     write_diagram_file,
 };
 use commands::docx::{
-    preview_docx_image_alt_text_patch_isolated_copy, preview_docx_package_patch_isolated_copy,
-    preview_docx_style_patch_isolated_copy, preview_docx_text_patch_isolated_copy,
-    read_docx_document,
+    audit_docx_save_readiness, preview_docx_image_alt_text_patch_isolated_copy,
+    preview_docx_package_patch_isolated_copy, preview_docx_style_patch_isolated_copy,
+    preview_docx_text_patch_isolated_copy, read_docx_document,
 };
 use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
@@ -279,6 +279,7 @@ pub fn run() {
             preview_docx_text_patch_isolated_copy,
             preview_docx_style_patch_isolated_copy,
             preview_docx_image_alt_text_patch_isolated_copy,
+            audit_docx_save_readiness,
             read_pdf_file,
             read_pdf_info,
             read_pdf_range,

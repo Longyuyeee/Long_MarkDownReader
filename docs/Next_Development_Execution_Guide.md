@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A Microsoft Word 生产者切片及 C2A/C2B/C2C/C2D 隔离补丁已完成。下一开发入口为 C0-2B/C WPS 与 LibreOffice 真实生产者矩阵；外部环境不可用时仅进行 C2E 冲突检测、可靠另存与生产者重开的只读设计和门禁审计。最新判定见 [C2D 专项审计](./C2D_DOCX_Style_Image_Isolated_Edit_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A Microsoft Word 生产者切片、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已完成。下一开发入口为 C0-2B/C WPS 与 LibreOffice 真实生产者矩阵。最新判定见 [C2E0 专项审计](./C2E0_DOCX_Save_Readiness_Gate_Audit_2026-07-27.md)。
 
 ## 1. 指导目标
 
@@ -566,7 +566,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。C0-2A Microsoft Word 与 C2A～C2D 隔离补丁已完成，下一步进入 **C0-2B/C WPS 与 LibreOffice 真实生产者矩阵**；若外部环境暂不可用，仅进行 **C2E 只读设计与门禁审计**，不得返回可保存包或开放原件覆盖。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。C0-2A Microsoft Word、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已完成，下一步进入 **C0-2B/C WPS 与 LibreOffice 真实生产者矩阵**；环境补齐前不得返回可保存包或开放原件覆盖。
 
 当前批次的强制退出条件：
 
