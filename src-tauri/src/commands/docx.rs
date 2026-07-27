@@ -819,9 +819,9 @@ mod tests {
         assert!(ready.target_unchanged);
         assert_eq!(
             ready.producer_evidence,
-            ["microsoft-word-16", "libreoffice-writer"]
+            ["microsoft-word-16", "wps-writer", "libreoffice-writer"]
         );
-        assert_eq!(ready.missing_producer_evidence, ["wps"]);
+        assert!(ready.missing_producer_evidence.is_empty());
         assert!(ready
             .blockers
             .contains(&"docx_save_command_not_enabled".into()));

@@ -17,10 +17,10 @@
     {
       "id": "wps-writer",
       "producer": "WPS Writer",
-      "status": "pending",
+      "status": "verified",
       "manifest": "wps-writer.json",
       "fixture": "wps-writer.docx",
-      "evidenceDependency": "A real WPS Writer installation is required to create and reopen the project-authored fixture."
+      "evidenceDependency": null
     },
     {
       "id": "libreoffice-writer",

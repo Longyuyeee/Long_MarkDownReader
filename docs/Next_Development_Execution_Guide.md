@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A Microsoft Word、C0-2C LibreOffice Writer、三生产者接入门禁、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已完成。下一开发入口为真实 WPS Writer 生产者证据。最新判定见 [C0-2C LibreOffice 审计](./C0_2C_LibreOffice_Writer_Producer_Fixture_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2 Word/WPS/LibreOffice 三生产者矩阵、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已完成。下一开发入口为 C2E DOCX 可靠另存闭环。最新判定见 [C0-2B WPS 审计](./C0_2B_WPS_Writer_Producer_Fixture_Audit_2026-07-27.md)。
 
 ## 1. 指导目标
 
@@ -357,7 +357,7 @@ DOCX 样本覆盖段落、标题、列表、表格、图片、分页、页眉页
 
 ### C1：DOCX 只读工作面
 
-当前进度：C1-2B 已完成安全 OOXML 读取与版式；C0-2 生产者矩阵完成 2/3，仅 WPS 待补；C2A 包级隔离底座、C2B 普通段落/标题、C2C 列表/表格和 C2D 字符样式/图片元数据隔离语义补丁已完成，C2 进度为 4/5。
+当前进度：C1-2B 已完成安全 OOXML 读取与版式；C0-2 生产者矩阵完成 3/3；C2A 包级隔离底座、C2B 普通段落/标题、C2C 列表/表格和 C2D 字符样式/图片元数据隔离语义补丁已完成，C2 进度为 4/5，下一步完成 C2E。
 
 1. 基于现有 ZIP 与 XML 安全边界解析 OOXML 包。
 2. 读取文档顺序、段落、标题、列表、表格、图片和基础样式。
@@ -560,13 +560,13 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 14. `R` 安装包、文件关联、升级、卸载和多机器发布矩阵。
 15. `F` PDF 合并拆分、知识图谱深层语义、XLSX 高级等价与 AI 增强。
 
-当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A、C0-2C、三生产者接入门禁、C2A～C2D 和 C2E0 已完成**。真实生产者证据为 2/3，仅 WPS 待补；真实 Tauri Debug/WebView2 门禁为 35 项检查和 27 张机器校验证据。
+当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2 三生产者矩阵、C2A～C2D 和 C2E0 已完成**。真实生产者证据为 3/3；真实 Tauri Debug/WebView2 门禁为 35 项检查和 27 张机器校验证据。
 
 当前 **A3 JSON/JSONC 已收口**：树形视图在精确 AST 范围、重复键、数字精度和 JSONC 保真门禁下开放标量替换、对象键重命名、对象/数组追加和删除；A5 进一步证明非法 JSON 默认不会覆盖最后合法磁盘版本，修复后可以可靠保存。
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。C0-2A Microsoft Word、C0-2C LibreOffice Writer、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已完成，下一步进入 **C0-2B WPS Writer 真实生产者证据**；WPS 证据补齐前不得返回可保存包或开放原件覆盖。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。C0-2 Word/WPS/LibreOffice 三生产者矩阵、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已完成，下一步进入 **C2E DOCX 可靠另存闭环**；写入、复读和三生产者重开完成前不得开放原件覆盖。
 
 当前批次的强制退出条件：
 

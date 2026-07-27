@@ -1938,7 +1938,7 @@ mod tests {
     }
 
     #[test]
-    fn tracks_verified_and_pending_docx_producer_evidence() {
+    fn tracks_complete_docx_producer_evidence() {
         let matrix: serde_json::Value =
             serde_json::from_str(include_str!("../../../fixtures/docx/producers/matrix.json"))
                 .unwrap();
@@ -1948,13 +1948,36 @@ mod tests {
         assert_eq!(producers[0]["id"], "microsoft-word-16");
         assert_eq!(producers[0]["status"], "verified");
         assert_eq!(producers[1]["id"], "wps-writer");
-        assert_eq!(producers[1]["status"], "pending");
+        assert_eq!(producers[1]["status"], "verified");
         assert_eq!(producers[2]["id"], "libreoffice-writer");
         assert_eq!(producers[2]["status"], "verified");
-        assert!(producers[1]["evidenceDependency"]
-            .as_str()
-            .is_some_and(|value| !value.is_empty()));
+        assert!(producers[1]["evidenceDependency"].is_null());
         assert!(producers[2]["evidenceDependency"].is_null());
+    }
+
+    #[test]
+    fn reads_versioned_wps_writer_producer_fixture() {
+        let source = include_bytes!("../../../fixtures/docx/producers/wps-writer.docx");
+        let model = parse_docx(source).unwrap();
+        assert!(model
+            .compatibility
+            .application
+            .as_deref()
+            .is_some_and(|value| value.starts_with("WPS Office_12.1.0.26895")));
+        assert_eq!(
+            model.compatibility.producer.as_deref(),
+            Some("LongEdit C0-2B Audit")
+        );
+        assert!(model
+            .headings
+            .iter()
+            .any(|heading| heading.text == "WPS Writer Producer Fixture"));
+        assert_eq!(model.compatibility.list_item_count, 2);
+        assert_eq!(model.compatibility.table_count, 1);
+        assert!(model.compatibility.page_break_count >= 1);
+        assert!(model.compatibility.section_count >= 1);
+        assert_eq!(model.compatibility.image_count, 1);
+        assert_eq!(model.compatibility.renderable_image_count, 1);
     }
 
     #[test]

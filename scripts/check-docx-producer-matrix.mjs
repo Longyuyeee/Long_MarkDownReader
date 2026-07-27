@@ -117,4 +117,4 @@ if (failures.length) {
 
 const verified = entries.filter(entry => entry.status === 'verified')
 const pending = entries.filter(entry => entry.status === 'pending').map(entry => entry.id)
-console.log(`DOCX producer matrix gate passed: ${verified.length}/${requiredIds.length} verified; pending: ${pending.join(', ')}`)
+console.log(`DOCX producer matrix gate passed: ${verified.length}/${requiredIds.length} verified; pending: ${pending.join(', ') || 'none'}`)

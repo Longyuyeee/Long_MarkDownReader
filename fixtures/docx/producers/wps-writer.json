@@ -1,0 +1,28 @@
+{
+    "schemaVersion":  1,
+    "id":  "wps-writer",
+    "file":  "wps-writer.docx",
+    "producer":  "WPS Writer",
+    "productVersion":  "12.1.0.26895",
+    "fileVersion":  "12.1.0.26895",
+    "generatedAt":  "2026-07-27T06:49:03.9282570Z",
+    "generator":  "scripts/generate-c0-wps-docx-fixture.ps1",
+    "privacyNormalization":  "After WPS saved the package, local author fields were replaced with the project audit identity and the installation-specific suffix was removed from the WPS application marker; the final package was scanned for local paths and external relationships.",
+    "producerReopenVerified":  true,
+    "sha256":  "0da9fad1284dcddc27689f381c26fd7f52d82f154e8a5cf152faebb7b206868b",
+    "redistribution":  "Project-authored text and image generated locally; safe to redistribute with this repository.",
+    "expected":  {
+                     "heading":  "WPS Writer Producer Fixture",
+                     "listItems":  2,
+                     "tables":  1,
+                     "mergedCellsMinimum":  0,
+                     "pageBreaksMinimum":  1,
+                     "sectionsMinimum":  1,
+                     "headersMinimum":  0,
+                     "footersMinimum":  0,
+                     "footnotes":  false,
+                     "endnotes":  false,
+                     "comments":  false,
+                     "images":  1
+                 }
+}
