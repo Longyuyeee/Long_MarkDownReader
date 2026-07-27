@@ -353,6 +353,7 @@ interface DocxReadReport {
   size: number
   modified: number
   signature: string
+  documentPartDigest: string
   readOnly: boolean
   model: {
     blocks: DocxBlock[]

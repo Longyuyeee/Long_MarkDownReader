@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, docxPatchKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -13,6 +13,7 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src-tauri/src/formats/xml.rs'),
   read('src-tauri/src/formats/toml.rs'),
   read('src-tauri/src/formats/docx.rs'),
+  read('src-tauri/src/formats/docx_patch.rs'),
   read('src-tauri/src/commands/formats.rs'),
   read('src-tauri/src/commands/json.rs'),
   read('src-tauri/src/commands/yaml.rs'),
@@ -374,11 +375,22 @@ requireText(docxKernel, 'vMerge', 'C1-2B2 DOCX parser must preserve vertical tab
 requireText(docxKernel, 'sectPr', 'C1-2B2 DOCX parser must model section layout properties')
 requireText(docxKernel, 'parses_merged_cells_page_breaks_and_section_layout', 'C1-2B2 layout semantics must have regression coverage')
 requireText(docxKernel, 'reads_versioned_microsoft_word_producer_fixture', 'C0-2A Microsoft Word producer fixture must have parser regression coverage')
+requireText(docxPatchKernel, 'DOCX_EDITABLE_DOCUMENT_PART', 'C2A must restrict the prototype patch to the main document part')
+requireText(docxPatchKernel, 'raw_copy_file', 'C2A must raw-copy every unmodified OOXML part')
+requireText(docxPatchKernel, 'changed_parts != [DOCX_EDITABLE_DOCUMENT_PART.to_string()]', 'C2A must enforce an exact package-difference allowlist')
+requireText(docxPatchKernel, 'parse_docx(&output)', 'C2A must structurally reread isolated output')
+requireText(docxPatchKernel, 'patches_real_word_fixture_and_preserves_every_other_part', 'C2A must verify package preservation against the real Word fixture')
+requireText(docxPatchKernel, 'rejects_stale_digest_unsafe_xml_and_oversized_patch', 'C2A must cover stale, unsafe, and oversized patch rejection')
 requireText(docxCommands, 'read_docx_document', 'C1 DOCX must expose a dedicated read command')
 requireText(docxCommands, 'resolve_existing_file(path, &["docx"])', 'C1 DOCX command must enforce workspace authorization and extension')
 requireText(docxCommands, 'MAX_DOCX_MEDIA_BYTES', 'C1-2A DOCX media preview must enforce a per-image budget')
 requireText(docxCommands, 'MAX_DOCX_MEDIA_TOTAL_BYTES', 'C1-2A DOCX media preview must enforce a total budget')
 requireText(docxCommands, 'valid_media_signature', 'C1-2A DOCX media preview must verify image signatures')
+requireText(docxCommands, 'document_part_digest', 'C2A reads must expose the guarded target-part digest')
+requireText(docxCommands, 'preview_docx_package_patch_isolated_copy', 'C2A must expose an isolated preview command without a save command')
+requireText(docxCommands, 'TemporaryDocxCopy::create', 'C2A must materialize and reopen a temporary copy')
+requireText(docxCommands, 'source_after == source', 'C2A must prove that preview leaves the source DOCX unchanged')
+requireText(docxCommands, 'previews_c2a_patch_through_temporary_copy_without_changing_source', 'C2A command boundary must have source-preservation regression coverage')
 requireText(docxReader, '结构化阅读', 'C1 DOCX workspace must identify its bounded reading capability')
 requireText(docxReader, '原文件只读', 'C1 DOCX workspace must state the original file is read-only')
 requireText(docxReader, '文档目录', 'C1 DOCX workspace must expose a heading outline')
