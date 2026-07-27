@@ -59,7 +59,7 @@
           @click="selectSlide(index)"
         >
           <span class="slide-number">{{ index + 1 }}</span>
-          <span class="thumbnail" :style="{ aspectRatio: slideRatio }">
+          <span class="thumbnail" :style="{ aspectRatio: slideRatio, backgroundColor: slide.backgroundColor }">
             <strong>{{ slide.title }}</strong>
             <small>{{ slide.text }}</small>
           </span>
@@ -71,7 +71,7 @@
         <div
           v-if="activeSlide"
           class="slide-canvas"
-          :style="{ aspectRatio: slideRatio }"
+          :style="slideStyle(activeSlide)"
           :aria-label="`幻灯片 ${activeSlideIndex + 1}：${activeSlide.title}`"
         >
           <template v-for="object in activeSlide.objects" :key="object.id || object.name">
@@ -142,7 +142,7 @@
       <button type="button" title="退出放映" @click="presenting = false">
         <XIcon :size="20" />
       </button>
-      <div class="presenter-slide" :style="{ aspectRatio: slideRatio }">
+      <div class="presenter-slide" :style="slideStyle(activeSlide)">
         <div
           v-for="object in activeSlide.objects"
           :key="`present-${object.id || object.name}`"
@@ -210,6 +210,21 @@ interface PptxObject {
   y?: number
   width?: number
   height?: number
+  rotation?: number
+  fillColor?: string
+  lineColor?: string
+  lineWidth?: number
+  noFill: boolean
+  textStyle: {
+    fontSizeHundredthPoints?: number
+    fontFamily?: string
+    color?: string
+    bold?: boolean
+    italic?: boolean
+    underline?: boolean
+    alignment?: string
+    verticalAnchor?: string
+  }
 }
 interface PptxSlide {
   id: string
@@ -219,6 +234,9 @@ interface PptxSlide {
   notes: string
   hidden: boolean
   hasBackground: boolean
+  backgroundColor: string
+  backgroundSource: string
+  themeName?: string
   objects: PptxObject[]
   warnings: string[]
 }
@@ -312,17 +330,45 @@ const formatBytes = (bytes: number) => bytes < 1024 * 1024
   ? `${(bytes / 1024).toFixed(1)} KiB`
   : `${(bytes / 1024 / 1024).toFixed(1)} MiB`
 
+const slideStyle = (slide: PptxSlide) => ({
+  aspectRatio: slideRatio.value,
+  backgroundColor: slide.backgroundColor || '#FFFFFF',
+})
+
 const objectStyle = (object: PptxObject) => {
   const model = report.value?.model
-  if (!model || object.x == null || object.y == null || object.width == null || object.height == null) {
-    return {}
+  const style: Record<string, string> = {}
+  if (model && object.x != null && object.y != null && object.width != null && object.height != null) {
+    style.left = `${Math.max(0, object.x / model.width * 100)}%`
+    style.top = `${Math.max(0, object.y / model.height * 100)}%`
+    style.width = `${Math.max(2, object.width / model.width * 100)}%`
+    style.height = `${Math.max(2, object.height / model.height * 100)}%`
   }
-  return {
-    left: `${Math.max(0, object.x / model.width * 100)}%`,
-    top: `${Math.max(0, object.y / model.height * 100)}%`,
-    width: `${Math.max(2, object.width / model.width * 100)}%`,
-    height: `${Math.max(2, object.height / model.height * 100)}%`,
+  if (object.rotation != null) style.transform = `rotate(${object.rotation / 60000}deg)`
+  if (object.noFill) style.backgroundColor = 'transparent'
+  else if (object.fillColor) style.backgroundColor = object.fillColor
+  if (object.lineColor) {
+    style.borderColor = object.lineColor
+    style.borderStyle = 'solid'
+    style.borderWidth = `${Math.max(1, Math.min(12, (object.lineWidth || 9525) / 9525))}px`
   }
+  const text = object.textStyle
+  if (text?.fontSizeHundredthPoints && model?.height) {
+    const relativeHeight = text.fontSizeHundredthPoints / 100 * 12700 / model.height * 100
+    style.fontSize = `clamp(8px, ${relativeHeight}cqh, 72px)`
+  }
+  if (text?.fontFamily) style.fontFamily = `"${text.fontFamily.replace(/"/g, '')}", sans-serif`
+  if (text?.color) style.color = text.color
+  if (text?.bold != null) style.fontWeight = text.bold ? '700' : '400'
+  if (text?.italic != null) style.fontStyle = text.italic ? 'italic' : 'normal'
+  if (text?.underline != null) style.textDecoration = text.underline ? 'underline' : 'none'
+  if (text?.alignment) style.textAlign = text.alignment
+  if (text?.verticalAnchor) {
+    style.alignItems = text.verticalAnchor === 'top'
+      ? 'flex-start'
+      : text.verticalAnchor === 'bottom' ? 'flex-end' : 'center'
+  }
+  return style
 }
 
 const selectSlide = (index: number) => {
@@ -405,9 +451,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 .thumbnail small { max-height: 34px; overflow: hidden; font-size: 7px; line-height: 1.35; white-space: pre-line; }
 .hidden-mark { position: absolute; right: 10px; bottom: 10px; color: var(--text-muted); }
 .pptx-stage { min-width: 0; overflow: auto; padding: 28px; display: grid; place-items: center; background: color-mix(in srgb, var(--bg-secondary) 78%, #526073); }
-.slide-canvas, .presenter-slide { position: relative; width: min(100%, 1100px); overflow: hidden; background: #fff; color: #1e232b; box-shadow: 0 12px 38px rgba(0,0,0,.22); }
-.slide-object { position: absolute; box-sizing: border-box; overflow: hidden; display: flex; align-items: center; justify-content: center; white-space: pre-wrap; }
-.slide-object p { width: 100%; margin: 0; padding: 2%; box-sizing: border-box; font-size: clamp(8px, 1.4vw, 25px); line-height: 1.25; }
+.slide-canvas, .presenter-slide { position: relative; width: min(100%, 1100px); overflow: hidden; container-type: size; background: #fff; color: #1e232b; box-shadow: 0 12px 38px rgba(0,0,0,.22); }
+.slide-object { position: absolute; box-sizing: border-box; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: clamp(8px, 3.5cqh, 25px); white-space: pre-wrap; transform-origin: center; }
+.slide-object p { width: 100%; margin: 0; padding: 2%; box-sizing: border-box; font: inherit; color: inherit; text-align: inherit; line-height: 1.25; }
 .slide-object img { width: 100%; height: 100%; display: block; object-fit: contain; }
 .slide-object.shape { border: 1px solid #8b97a8; background: #edf2f8; }
 .slide-object.picture:not(:has(img)), .slide-object.graphic, .slide-object.group { border: 1px dashed #8b97a8; color: #697586; background: #f5f7fa; font-size: 11px; }
