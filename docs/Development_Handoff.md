@@ -1,11 +1,11 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-27
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E 已完成；C4E 输出复开矩阵已由 PowerPoint/WPS/LibreOffice 关闭至 `3/3 verified`，下一批为 C5A 隔离图片替换
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E 已完成；C5A1 隔离图片替换、可靠新副本和真实桌面审计已完成，下一批为 C5A2 三生产者输出复开
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
-> 当前阶段以 `docs/C4E_PPTX_Output_Producer_Reopen_Audit_2026-07-27.md` 为最新交付审计；三个 C4D 输出副本已由 PowerPoint 12.0、WPS Presentation 12.1 和 LibreOffice Impress 26.2.4.2 真实复开，C4E 已完成。下一批进入 C5A 隔离图片替换，继续只生成新副本。
+> 当前阶段以 `docs/C5A1_PPTX_Isolated_Image_Replacement_Audit_2026-07-28.md` 为最新交付审计；C5A1 已在原有右侧 PPTX 工作区完成单引用 PNG/JPEG 替换、单媒体部件差异、可靠新副本、应用内重开和 9 项真实桌面检查。下一批使用 PowerPoint/WPS/LibreOffice 复开 `c5a-image-copy.pptx`，达到 3/3 前不进入形状增删。
 
 ## 1. 新电脑快速恢复
 
@@ -139,6 +139,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/C3D_PPTX_Producer_and_Visual_Closure_Audit_2026-07-27.md`：WPS 真实生产者、三生产者矩阵、三尺寸/两主题桌面证据、中窄屏备注和全窗口放映修复。
 - `docs/C4D_PPTX_Reliable_Save_Copy_Audit_2026-07-27.md`：PPTX 统一受限操作、原子无覆盖新副本、写后结构/语义复读、源文件保护和真实桌面重开证据。
 - `docs/C4E_PPTX_Output_Producer_Reopen_Audit_2026-07-27.md`：三个真实输出副本、PowerPoint/WPS/LibreOffice 外部复开和 3/3 发布门禁。
+- `docs/C5A1_PPTX_Isolated_Image_Replacement_Audit_2026-07-28.md`：单引用 PNG/JPEG 安全目标、单媒体部件隔离替换、可靠新副本、真实桌面证据和 C5A2 外部复开入口。
 - `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`：C3B3 后总体进度、C3C 索引/定位/关系架构审计、C3D～C5 阶段拆分和后续格式方向。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
 - `docs/Development_Stage_Audit_2026-07-20.md`：上一轮专业工作区阶段审计和交错排期基线。

@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-27T16:58:00.249Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
+  "fixtureLocation": "isolated temporary workspace",
+  "producer": "wps-presentation",
+  "viewportMatrix": [
+    "1280x820",
+    "960x720"
+  ],
+  "saveMode": "copy",
+  "sourceOverwriteAllowed": false,
+  "replacementMimeType": "image/png",
+  "replacementBytes": 2963,
+  "outputBytes": 92106,
+  "outputSha256": "ad25ec6bfb35c5db2f250db160c3c89ee3bacdec88a4bb557c315c93f912bcc3",
+  "externalProducerReopenRequired": true,
+  "checks": [
+    {
+      "id": "unshared-png-jpeg-targets-only",
+      "status": "passed"
+    },
+    {
+      "id": "same-format-bounded-file-selection",
+      "status": "passed"
+    },
+    {
+      "id": "single-media-part-preview-verified",
+      "status": "passed"
+    },
+    {
+      "id": "preview-reports-no-source-write",
+      "status": "passed"
+    },
+    {
+      "id": "atomic-create-new-copy-succeeds",
+      "status": "passed"
+    },
+    {
+      "id": "structural-and-semantic-reopen-verified",
+      "status": "passed"
+    },
+    {
+      "id": "saved-copy-reopens-in-library-workspace",
+      "status": "passed"
+    },
+    {
+      "id": "compact-library-workspace-without-overflow",
+      "status": "passed"
+    },
+    {
+      "id": "wps-source-bytes-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "c5a-image-preview-1280.jpg",
+    "c5a-reopened-copy-960.jpg"
+  ]
+}

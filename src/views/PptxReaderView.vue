@@ -300,6 +300,61 @@
             <p v-else class="muted">没有符合规则的单一内嵌图片目标。</p>
           </div>
         </section>
+        <section v-if="editBaseline" class="isolated-metadata-patch" data-testid="c5a-image-panel">
+          <header>
+            <ImageIcon :size="15" />
+            <strong>C5A 隔离图片替换</strong>
+            <span v-if="imagePatchReport" class="verified-badge">已通过</span>
+          </header>
+          <template v-if="safeImageTargets.length">
+            <label>
+              <span>单引用图片目标</span>
+              <select v-model="selectedImageTargetId" data-testid="c5a-image-target">
+                <option v-for="target in safeImageTargets" :key="target.id" :value="target.id">
+                  幻灯片 {{ target.slideNumber }} · {{ target.objectName }} · {{ target.mimeType.replace('image/', '').toUpperCase() }}
+                </option>
+              </select>
+            </label>
+            <label>
+              <span>同格式替换图片（最大 8 MiB）</span>
+              <input
+                data-testid="c5a-image-file"
+                type="file"
+                :accept="selectedImageTarget?.mimeType"
+                @change="selectReplacementImage"
+              >
+            </label>
+            <div v-if="replacementImagePreview" class="image-replacement-preview">
+              <img :src="replacementImagePreview" alt="待替换图片预览">
+              <div>
+                <strong>{{ replacementImageName }}</strong>
+                <small>{{ formatBytes(replacementImageBytes) }} · {{ replacementImageMime }}</small>
+                <small>仅替换 {{ selectedImageTarget?.partName }}</small>
+              </div>
+            </div>
+            <div class="patch-actions">
+              <small>共享图片、格式变化和新增关系均会被拒绝</small>
+              <button
+                type="button"
+                data-testid="c5a-image-preview"
+                :disabled="imagePatchLoading || !replacementImageBase64"
+                @click="previewImagePatch"
+              >
+                <LoaderCircleIcon v-if="imagePatchLoading" :size="13" class="spin" />
+                <ShieldCheckIcon v-else :size="13" />
+                {{ imagePatchLoading ? '验证中' : '验证隔离替换' }}
+              </button>
+            </div>
+            <p v-if="imagePatchError" class="baseline-error">{{ imagePatchError }}</p>
+            <dl v-if="imagePatchReport" class="patch-report image-patch-report">
+              <div><dt>变化部件</dt><dd>{{ imagePatchReport.changedParts.length }}</dd></div>
+              <div><dt>其余部件保全</dt><dd>{{ imagePatchReport.unchangedPartCount }}</dd></div>
+              <div><dt>语义复读</dt><dd>{{ imagePatchReport.semanticReparseVerified ? '通过' : '未通过' }}</dd></div>
+              <div><dt>源文件写入</dt><dd>{{ imagePatchReport.writesUserFile ? '是' : '否' }}</dd></div>
+            </dl>
+          </template>
+          <p v-else class="muted">没有符合“PNG/JPEG 且仅被一个对象引用”的安全图片目标。</p>
+        </section>
         <section v-if="verifiedPreview && verifiedOperation" class="reliable-save-copy" data-testid="c4d-save-panel">
           <header>
             <SaveIcon :size="15" />
@@ -586,6 +641,7 @@ interface PptxEditBaselineReport {
   editableNotesTargets: PptxEditableTextTarget[]
   editableStyleTargets: PptxEditableStyleTarget[]
   editableAltTextTargets: PptxEditableAltTextTarget[]
+  editableImageTargets: PptxEditableImageTarget[]
 }
 interface PptxEditableTextTarget {
   id: string
@@ -646,11 +702,25 @@ interface PptxEditableAltTextTarget {
   expectedMetadataDigest: string
   expectedPartDigest: string
 }
+interface PptxEditableImageTarget {
+  id: string
+  kind: 'picture-binary'
+  slideNumber: number
+  slideId: string
+  objectId: string
+  objectName: string
+  partName: string
+  mimeType: 'image/png' | 'image/jpeg'
+  sourceBytes: number
+  referenceCount: number
+  expectedMediaDigest: string
+  expectedPartDigest: string
+}
 interface PptxIsolatedMetadataPatchReport {
   status: string
   outputDigest: string
   outputBytes: number
-  operation: 'character-style' | 'picture-alt-text'
+  operation: 'character-style' | 'picture-alt-text' | 'picture-binary'
   targetId: string
   targetKind: string
   targetPart: string
@@ -690,6 +760,14 @@ type PptxPatchOperation =
     expectedMetadataDigest: string
     expectedPartDigest: string
     altText: string
+  }
+  | {
+    kind: 'imageBinary'
+    targetId: string
+    expectedMediaDigest: string
+    expectedPartDigest: string
+    replacementMimeType: PptxEditableImageTarget['mimeType']
+    replacementBase64: string
   }
 interface PptxVerifiedPreview {
   outputDigest: string
@@ -753,6 +831,15 @@ const altTextValue = ref('')
 const altTextPatchLoading = ref(false)
 const altTextPatchError = ref('')
 const altTextPatchReport = ref<PptxIsolatedMetadataPatchReport>()
+const selectedImageTargetId = ref('')
+const replacementImageName = ref('')
+const replacementImageMime = ref('')
+const replacementImageBase64 = ref('')
+const replacementImagePreview = ref('')
+const replacementImageBytes = ref(0)
+const imagePatchLoading = ref(false)
+const imagePatchError = ref('')
+const imagePatchReport = ref<PptxIsolatedMetadataPatchReport>()
 const verifiedOperation = ref<PptxPatchOperation>()
 const verifiedPreview = ref<PptxVerifiedPreview>()
 const copyFileName = ref('')
@@ -780,6 +867,10 @@ const selectedStyleTarget = computed(() => safeStyleTargets.value.find(
 const safeAltTextTargets = computed(() => editBaseline.value?.editableAltTextTargets || [])
 const selectedAltTextTarget = computed(() => safeAltTextTargets.value.find(
   target => target.id === selectedAltTextTargetId.value,
+))
+const safeImageTargets = computed(() => editBaseline.value?.editableImageTargets || [])
+const selectedImageTarget = computed(() => safeImageTargets.value.find(
+  target => target.id === selectedImageTargetId.value,
 ))
 const styleFormChanged = computed(() => {
   const target = selectedStyleTarget.value
@@ -999,10 +1090,15 @@ const prepareEditBaseline = async () => {
       target => target.slideNumber === activeSlideIndex.value + 1,
     ) || baseline.editableAltTextTargets[0]
     selectedAltTextTargetId.value = altTarget?.id || ''
+    const imageTarget = baseline.editableImageTargets.find(
+      target => target.slideNumber === activeSlideIndex.value + 1,
+    ) || baseline.editableImageTargets[0]
+    selectedImageTargetId.value = imageTarget?.id || ''
     stylePatchReport.value = undefined
     stylePatchError.value = ''
     altTextPatchReport.value = undefined
     altTextPatchError.value = ''
+    clearReplacementImage()
     const baseName = fileName.value.replace(/\.pptx$/i, '')
     copyFileName.value = `${baseName}-LongEdit副本.pptx`
     verifiedOperation.value = undefined
@@ -1209,6 +1305,109 @@ const previewAltTextPatch = async () => {
     altTextPatchLoading.value = false
   }
 }
+const clearReplacementImage = () => {
+  replacementImageName.value = ''
+  replacementImageMime.value = ''
+  replacementImageBase64.value = ''
+  replacementImagePreview.value = ''
+  replacementImageBytes.value = 0
+  imagePatchReport.value = undefined
+  imagePatchError.value = ''
+  clearSaveCandidate()
+}
+const selectReplacementImage = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  clearReplacementImage()
+  if (!file) return
+  const target = selectedImageTarget.value
+  if (!target) {
+    imagePatchError.value = '请先选择安全图片目标'
+    input.value = ''
+    return
+  }
+  if (file.type !== target.mimeType) {
+    imagePatchError.value = `替换图片必须保持 ${target.mimeType} 格式`
+    input.value = ''
+    return
+  }
+  if (!file.size || file.size > 8 * 1024 * 1024) {
+    imagePatchError.value = '替换图片必须大于 0 字节且不超过 8 MiB'
+    input.value = ''
+    return
+  }
+  const reader = new FileReader()
+  reader.onerror = () => {
+    imagePatchError.value = '无法读取替换图片'
+  }
+  reader.onload = () => {
+    const dataUrl = typeof reader.result === 'string' ? reader.result : ''
+    const marker = ';base64,'
+    const offset = dataUrl.indexOf(marker)
+    if (offset < 0 || !dataUrl.startsWith(`data:${target.mimeType}`)) {
+      imagePatchError.value = '替换图片编码无效'
+      return
+    }
+    replacementImageName.value = file.name
+    replacementImageMime.value = file.type
+    replacementImageBase64.value = dataUrl.slice(offset + marker.length)
+    replacementImagePreview.value = dataUrl
+    replacementImageBytes.value = file.size
+  }
+  reader.readAsDataURL(file)
+}
+const previewImagePatch = async () => {
+  const target = selectedImageTarget.value
+  if (!report.value || !target || !replacementImageBase64.value || imagePatchLoading.value) return
+  imagePatchLoading.value = true
+  imagePatchError.value = ''
+  imagePatchReport.value = undefined
+  clearSaveCandidate()
+  try {
+    const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_image_patch_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: pptxPath.value,
+      expectedSignature: report.value.signature,
+      targetId: target.id,
+      expectedMediaDigest: target.expectedMediaDigest,
+      expectedPartDigest: target.expectedPartDigest,
+      replacementMimeType: replacementImageMime.value,
+      replacementBase64: replacementImageBase64.value,
+    })
+    if (
+      patch.operation !== 'picture-binary'
+      || patch.changedParts.length !== 1
+      || patch.changedParts[0] !== target.partName
+      || !patch.unchangedPartsVerified
+      || !patch.structuralReparseVerified
+      || !patch.semanticReparseVerified
+      || !patch.temporaryCopyReopenVerified
+      || !patch.sourceUnchanged
+      || patch.writesUserFile
+    ) {
+      throw new Error('PPTX C5A 图片替换未通过单媒体部件保护门禁')
+    }
+    imagePatchReport.value = patch
+    verifiedOperation.value = {
+      kind: 'imageBinary',
+      targetId: target.id,
+      expectedMediaDigest: target.expectedMediaDigest,
+      expectedPartDigest: target.expectedPartDigest,
+      replacementMimeType: target.mimeType,
+      replacementBase64: replacementImageBase64.value,
+    }
+    verifiedPreview.value = {
+      outputDigest: patch.outputDigest,
+      outputBytes: patch.outputBytes,
+      changedParts: patch.changedParts,
+      operationLabel: '图片二进制',
+    }
+  } catch (error) {
+    imagePatchError.value = String(error).replace(/^Error:\s*/, '')
+  } finally {
+    imagePatchLoading.value = false
+  }
+}
 const savePptxCopy = async () => {
   const preview = verifiedPreview.value
   const operation = verifiedOperation.value
@@ -1275,6 +1474,8 @@ const loadPresentation = async () => {
   altTextValue.value = ''
   altTextPatchReport.value = undefined
   altTextPatchError.value = ''
+  selectedImageTargetId.value = ''
+  clearReplacementImage()
   verifiedOperation.value = undefined
   verifiedPreview.value = undefined
   savedCopyReport.value = undefined
@@ -1325,6 +1526,7 @@ watch(altTextValue, () => {
   altTextPatchError.value = ''
   clearSaveCandidate()
 })
+watch(selectedImageTargetId, clearReplacementImage)
 watch(matches, value => {
   activeMatch.value = 0
   if (value.length) selectSlide(value[0].slideIndex)
@@ -1428,6 +1630,12 @@ onBeforeUnmount(() => {
 .style-toggles { margin: 0 0 9px; display: flex; flex-wrap: wrap; gap: 5px 10px; }
 .style-toggles label { margin: 0; display: inline-flex; align-items: center; gap: 4px; color: var(--text-secondary); }
 .style-toggles input { width: 14px; height: 14px; padding: 0; accent-color: var(--primary-color); }
+.image-replacement-preview { margin: 0 0 9px; padding: 7px; display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 8px; align-items: center; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); }
+.image-replacement-preview img { width: 54px; height: 42px; object-fit: contain; border-radius: 3px; background: var(--bg-primary); }
+.image-replacement-preview div { min-width: 0; display: grid; gap: 2px; }
+.image-replacement-preview strong, .image-replacement-preview small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.image-replacement-preview strong { font-size: 11px; }
+.image-replacement-preview small { color: var(--text-muted); font-size: 9px; }
 .patch-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .patch-actions small { color: var(--text-muted); font-size: 9px; }
 .patch-actions button { min-height: 28px; padding: 0 8px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--primary-color); border-radius: 5px; color: var(--primary-color); background: transparent; cursor: pointer; font: inherit; font-size: 11px; }

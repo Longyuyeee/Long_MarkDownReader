@@ -1,6 +1,6 @@
 # LongEdit C3B3 后开发进度与方向审计
 
-> 后续状态：本文正文保留 C3B3 时点的历史拆分。C3C1～C3C4、C3D、C4A～C4E 现已完成；C4E 输出复开矩阵已由 PowerPoint/WPS/LibreOffice 验证至 3/3。当前入口为 C5A 隔离图片替换，最新事实见 [C4E PPTX 输出副本外部生产者复开审计](./C4E_PPTX_Output_Producer_Reopen_Audit_2026-07-27.md)。
+> 后续状态：本文正文保留 C3B3 时点的历史拆分。C3C1～C3C4、C3D、C4A～C4E 现已完成；C5A1 已完成隔离图片替换、可靠新副本和真实桌面审计。当前入口为 C5A2 三生产者输出复开，最新事实见 [C5A1 PPTX 隔离图片替换审计](./C5A1_PPTX_Isolated_Image_Replacement_Audit_2026-07-28.md)。
 
 审计日期：2026-07-27
 

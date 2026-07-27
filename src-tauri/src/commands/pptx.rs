@@ -1,8 +1,8 @@
 use crate::formats::pptx::{parse_pptx, PptxPresentationModel, MAX_PPTX_FILE_BYTES};
 use crate::formats::pptx_edit::{
-    build_pptx_alt_text_patch_isolated, build_pptx_edit_baseline, build_pptx_style_patch_isolated,
-    build_pptx_text_patch_isolated, PptxEditBaselineReport, PptxIsolatedMetadataPatchReport,
-    PptxIsolatedTextPatchReport,
+    build_pptx_alt_text_patch_isolated, build_pptx_edit_baseline, build_pptx_image_patch_isolated,
+    build_pptx_style_patch_isolated, build_pptx_text_patch_isolated, PptxEditBaselineReport,
+    PptxIsolatedMetadataPatchReport, PptxIsolatedTextPatchReport,
 };
 use crate::services::reliable_write::write_new_bytes;
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -21,6 +21,7 @@ use zip::ZipArchive;
 const MAX_PPTX_MEDIA_PREVIEWS: usize = 48;
 const MAX_PPTX_MEDIA_BYTES: u64 = 6 * 1024 * 1024;
 const MAX_PPTX_MEDIA_TOTAL_BYTES: u64 = 24 * 1024 * 1024;
+const MAX_PPTX_REPLACEMENT_BASE64_CHARS: usize = 11_184_812;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -86,6 +87,19 @@ pub enum PptxPatchOperation {
         expected_part_digest: String,
         #[serde(rename = "altText")]
         alt_text: String,
+    },
+    #[serde(rename = "imageBinary")]
+    ImageBinary {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedMediaDigest")]
+        expected_media_digest: String,
+        #[serde(rename = "expectedPartDigest")]
+        expected_part_digest: String,
+        #[serde(rename = "replacementMimeType")]
+        replacement_mime_type: String,
+        #[serde(rename = "replacementBase64")]
+        replacement_base64: String,
     },
 }
 
@@ -185,6 +199,15 @@ fn valid_media_signature(bytes: &[u8], mime: &str) -> bool {
         "image/bmp" => bytes.starts_with(b"BM"),
         _ => false,
     }
+}
+
+fn decode_pptx_replacement_image(value: &str) -> Result<Vec<u8>, String> {
+    if value.is_empty() || value.len() > MAX_PPTX_REPLACEMENT_BASE64_CHARS {
+        return Err("PPTX C5A 图片数据为空或超过 8 MiB 上限".into());
+    }
+    general_purpose::STANDARD
+        .decode(value)
+        .map_err(|_| "PPTX C5A 图片数据不是有效 Base64".into())
 }
 
 fn extract_media_previews(
@@ -505,6 +528,33 @@ fn build_pptx_operation(
                 output,
             })
         }
+        PptxPatchOperation::ImageBinary {
+            target_id,
+            expected_media_digest,
+            expected_part_digest,
+            replacement_mime_type,
+            replacement_base64,
+        } => {
+            let replacement = decode_pptx_replacement_image(replacement_base64)?;
+            let (report, output) = build_pptx_image_patch_isolated(
+                source,
+                target_id,
+                expected_media_digest,
+                expected_part_digest,
+                replacement_mime_type,
+                &replacement,
+            )?;
+            Ok(BuiltPptxOperation {
+                engine: report.engine,
+                operation_kind: report.target_kind,
+                output_digest: report.output_digest,
+                changed_parts: report.changed_parts,
+                unchanged_parts_verified: report.unchanged_parts_verified,
+                structural_reparse_verified: report.structural_reparse_verified,
+                semantic_reparse_verified: report.semantic_reparse_verified,
+                output,
+            })
+        }
     }
 }
 
@@ -781,6 +831,36 @@ pub async fn preview_pptx_alt_text_patch_isolated_copy(
 }
 
 #[tauri::command]
+pub async fn preview_pptx_image_patch_isolated_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    target_id: String,
+    expected_media_digest: String,
+    expected_part_digest: String,
+    replacement_mime_type: String,
+    replacement_base64: String,
+) -> Result<PptxIsolatedMetadataPatchReport, String> {
+    let replacement = decode_pptx_replacement_image(&replacement_base64)?;
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let presentation = guard.resolve_existing_file(path, &["pptx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_pptx_metadata_patch_path(&presentation, &expected_signature, "C5A", |source| {
+            build_pptx_image_patch_isolated(
+                source,
+                &target_id,
+                &expected_media_digest,
+                &expected_part_digest,
+                &replacement_mime_type,
+                &replacement,
+            )
+        })
+    })
+    .await
+    .map_err(|error| format!("PPTX C5A 隔离图片替换任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn save_pptx_patch_copy(
     library_root: String,
     path: String,
@@ -811,6 +891,14 @@ pub async fn save_pptx_patch_copy(
 mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn read_test_zip_part(source: &[u8], part_name: &str) -> Vec<u8> {
+        let mut archive = ZipArchive::new(Cursor::new(source)).unwrap();
+        let mut part = archive.by_name(part_name).unwrap();
+        let mut bytes = Vec::with_capacity(part.size() as usize);
+        part.read_to_end(&mut bytes).unwrap();
+        bytes
+    }
 
     #[test]
     fn media_signature_allowlist_rejects_mismatches() {
@@ -1061,6 +1149,10 @@ mod tests {
         let notes = baseline.editable_notes_targets.first().unwrap();
         let style = baseline.editable_style_targets.first().unwrap();
         let alt = baseline.editable_alt_text_targets.first().unwrap();
+        let image = baseline.editable_image_targets.first().unwrap();
+        let mut replacement_image = read_test_zip_part(&source, &image.part_name);
+        let replacement_index = replacement_image.len() / 2;
+        replacement_image[replacement_index] ^= 0x01;
         let operations = vec![
             (
                 "notes",
@@ -1093,6 +1185,16 @@ mod tests {
                     expected_metadata_digest: alt.expected_metadata_digest.clone(),
                     expected_part_digest: alt.expected_part_digest.clone(),
                     alt_text: "LongEdit C4D saved accessible picture".into(),
+                },
+            ),
+            (
+                "image",
+                PptxPatchOperation::ImageBinary {
+                    target_id: image.id.clone(),
+                    expected_media_digest: image.expected_media_digest.clone(),
+                    expected_part_digest: image.expected_part_digest.clone(),
+                    replacement_mime_type: image.mime_type.clone(),
+                    replacement_base64: general_purpose::STANDARD.encode(&replacement_image),
                 },
             ),
         ];

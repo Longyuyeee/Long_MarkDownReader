@@ -10,6 +10,7 @@ use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
 const MAX_PPTX_EDITABLE_TEXT_CHARS: usize = 32_767;
 const MAX_PPTX_ALT_TEXT_CHARS: usize = 1_024;
+const MAX_PPTX_REPLACEMENT_IMAGE_BYTES: usize = 8 * 1024 * 1024;
 const PPTX_PATCH_DEFLATE_LEVEL: i64 = 4;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -50,6 +51,7 @@ pub struct PptxEditBaselineReport {
     pub editable_notes_targets: Vec<PptxEditableTextTarget>,
     pub editable_style_targets: Vec<PptxEditableStyleTarget>,
     pub editable_alt_text_targets: Vec<PptxEditableAltTextTarget>,
+    pub editable_image_targets: Vec<PptxEditableImageTarget>,
     pub parts: Vec<PptxPackagePartSnapshot>,
 }
 
@@ -125,6 +127,23 @@ pub struct PptxEditableAltTextTarget {
     pub object_name: String,
     pub alt_text: String,
     pub expected_metadata_digest: String,
+    pub expected_part_digest: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxEditableImageTarget {
+    pub id: String,
+    pub kind: String,
+    pub slide_number: usize,
+    pub slide_id: String,
+    pub object_id: String,
+    pub object_name: String,
+    pub part_name: String,
+    pub mime_type: String,
+    pub source_bytes: usize,
+    pub reference_count: usize,
+    pub expected_media_digest: String,
     pub expected_part_digest: String,
 }
 
@@ -1173,6 +1192,82 @@ pub fn inspect_pptx_editable_alt_text_targets(
         .collect())
 }
 
+fn editable_image_mime(part_name: &str) -> Option<&'static str> {
+    match part_name.rsplit('.').next()?.to_ascii_lowercase().as_str() {
+        "png" => Some("image/png"),
+        "jpg" | "jpeg" => Some("image/jpeg"),
+        _ => None,
+    }
+}
+
+fn valid_replacement_image(bytes: &[u8], mime_type: &str) -> bool {
+    if bytes.is_empty() || bytes.len() > MAX_PPTX_REPLACEMENT_IMAGE_BYTES {
+        return false;
+    }
+    match mime_type {
+        "image/png" => bytes.len() >= 24 && bytes.starts_with(b"\x89PNG\r\n\x1a\n"),
+        "image/jpeg" => {
+            bytes.len() >= 4
+                && bytes.starts_with(&[0xff, 0xd8, 0xff])
+                && bytes.ends_with(&[0xff, 0xd9])
+        }
+        _ => false,
+    }
+}
+
+pub fn inspect_pptx_editable_image_targets(
+    source: &[u8],
+) -> Result<Vec<PptxEditableImageTarget>, String> {
+    let model = parse_pptx(source)?;
+    let mut reference_counts = BTreeMap::<String, usize>::new();
+    for object in model.slides.iter().flat_map(|slide| slide.objects.iter()) {
+        if let Some(part_name) = object.media_part.as_ref() {
+            *reference_counts.entry(part_name.clone()).or_default() += 1;
+        }
+    }
+
+    let mut targets = Vec::new();
+    for (slide_index, slide) in model.slides.iter().enumerate() {
+        for object in &slide.objects {
+            let Some(part_name) = object.media_part.as_ref() else {
+                continue;
+            };
+            let reference_count = reference_counts.get(part_name).copied().unwrap_or_default();
+            let Some(mime_type) = editable_image_mime(part_name) else {
+                continue;
+            };
+            if object.kind != "picture" || reference_count != 1 {
+                continue;
+            }
+            let media = read_part(source, part_name)?;
+            if !valid_replacement_image(&media, mime_type) {
+                continue;
+            }
+            let media_digest = digest(&media);
+            targets.push(PptxEditableImageTarget {
+                id: format!(
+                    "pptx-image-{}-{}-{}",
+                    slide_index + 1,
+                    object.id,
+                    &digest(part_name.as_bytes())[..10]
+                ),
+                kind: "picture-binary".into(),
+                slide_number: slide_index + 1,
+                slide_id: slide.id.clone(),
+                object_id: object.id.clone(),
+                object_name: object.name.clone(),
+                part_name: part_name.clone(),
+                mime_type: mime_type.into(),
+                source_bytes: media.len(),
+                reference_count,
+                expected_media_digest: media_digest.clone(),
+                expected_part_digest: media_digest,
+            });
+        }
+    }
+    Ok(targets)
+}
+
 fn rewrite_package_part(
     source: &[u8],
     target_part: &str,
@@ -1728,6 +1823,90 @@ pub fn build_pptx_alt_text_patch_isolated(
     ))
 }
 
+pub fn build_pptx_image_patch_isolated(
+    source: &[u8],
+    target_id: &str,
+    expected_media_digest: &str,
+    expected_part_digest: &str,
+    replacement_mime_type: &str,
+    replacement: &[u8],
+) -> Result<(PptxIsolatedMetadataPatchReport, Vec<u8>), String> {
+    let expected_media_digest = expected_media_digest.trim().to_ascii_lowercase();
+    let expected_part_digest = expected_part_digest.trim().to_ascii_lowercase();
+    if !valid_sha256(&expected_media_digest) || !valid_sha256(&expected_part_digest) {
+        return Err("PPTX C5A 图片目标摘要无效".into());
+    }
+    let target = inspect_pptx_editable_image_targets(source)?
+        .into_iter()
+        .find(|target| target.id == target_id)
+        .ok_or("PPTX C5A 图片目标不存在、被共享或不再安全")?;
+    if target.expected_media_digest != expected_media_digest
+        || target.expected_part_digest != expected_part_digest
+    {
+        return Err("PPTX C5A 图片部件已变化，请重新建立编辑基线".into());
+    }
+    if replacement_mime_type != target.mime_type {
+        return Err("PPTX C5A 只允许使用与原图片相同的 PNG/JPEG 格式".into());
+    }
+    if !valid_replacement_image(replacement, replacement_mime_type) {
+        return Err("PPTX C5A 替换图片必须是 1～8 MiB 内的有效 PNG/JPEG".into());
+    }
+    if digest(replacement) == target.expected_media_digest {
+        return Err("PPTX C5A 替换图片与原图片相同".into());
+    }
+
+    let output = rewrite_package_part(source, &target.part_name, replacement)?;
+    let (source_parts, output_parts, changed_parts) =
+        verify_isolated_part_change(source, &output, &target.part_name)?;
+    parse_pptx(&output).map_err(|error| format!("PPTX C5A 图片替换输出结构复读失败: {error}"))?;
+    let replacement_digest = digest(replacement);
+    let semantic_reparse_verified = inspect_pptx_editable_image_targets(&output)?
+        .into_iter()
+        .any(|reopened| {
+            reopened.id == target.id
+                && reopened.part_name == target.part_name
+                && reopened.mime_type == target.mime_type
+                && reopened.reference_count == 1
+                && reopened.expected_media_digest == replacement_digest
+        });
+    if !semantic_reparse_verified {
+        return Err("PPTX C5A 图片替换输出语义复读失败".into());
+    }
+    let source_part_digest = source_parts
+        .get(&target.part_name)
+        .cloned()
+        .ok_or("PPTX C5A 源图片部件摘要缺失")?;
+    let output_part_digest = output_parts
+        .get(&target.part_name)
+        .cloned()
+        .ok_or("PPTX C5A 输出图片部件摘要缺失")?;
+
+    Ok((
+        PptxIsolatedMetadataPatchReport {
+            status: "isolated_image_patch_verified".into(),
+            engine: "LongEdit C5A isolated PPTX picture binary patch".into(),
+            operation: "picture-binary".into(),
+            target_id: target.id,
+            target_kind: target.kind,
+            target_part: target.part_name,
+            source_digest: digest(source),
+            output_digest: digest(&output),
+            source_part_digest,
+            output_part_digest,
+            changed_parts,
+            unchanged_part_count: source_parts.len().saturating_sub(1),
+            unchanged_parts_verified: true,
+            structural_reparse_verified: true,
+            semantic_reparse_verified,
+            temporary_copy_reopen_verified: false,
+            source_unchanged: false,
+            writes_user_file: false,
+            output_bytes: output.len(),
+        },
+        output,
+    ))
+}
+
 pub fn build_pptx_edit_baseline(
     source: &[u8],
     source_signature: String,
@@ -1763,6 +1942,7 @@ pub fn build_pptx_edit_baseline(
         inspect_pptx_editable_text_targets(source)?;
     let editable_style_targets = inspect_pptx_editable_style_targets(source)?;
     let editable_alt_text_targets = inspect_pptx_editable_alt_text_targets(source)?;
+    let editable_image_targets = inspect_pptx_editable_image_targets(source)?;
 
     Ok((
         PptxEditBaselineReport {
@@ -1787,11 +1967,12 @@ pub fn build_pptx_edit_baseline(
             temporary_copy_reopen_verified: false,
             source_unchanged: false,
             editing_enabled: false,
-            next_stage: "C4C isolated character-style and picture alt-text patch".into(),
+            next_stage: "C5A isolated picture binary replacement".into(),
             editable_text_targets,
             editable_notes_targets,
             editable_style_targets,
             editable_alt_text_targets,
+            editable_image_targets,
             parts: source_parts,
         },
         isolated,
@@ -1801,6 +1982,117 @@ pub fn build_pptx_edit_baseline(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn c5a_replaces_one_unshared_image_part_for_all_real_producers() {
+        let fixtures: [(&str, &[u8]); 3] = [
+            (
+                "powerpoint",
+                include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx"),
+            ),
+            (
+                "wps",
+                include_bytes!("../../../fixtures/pptx/producers/wps-presentation.pptx"),
+            ),
+            (
+                "libreoffice",
+                include_bytes!("../../../fixtures/pptx/producers/libreoffice-impress.pptx"),
+            ),
+        ];
+
+        for (producer, source) in fixtures {
+            let target = inspect_pptx_editable_image_targets(source)
+                .unwrap_or_else(|error| panic!("{producer} targets: {error}"))
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| panic!("{producer} has no safe image target"));
+            assert_eq!(target.reference_count, 1, "{producer}");
+            assert!(matches!(
+                target.mime_type.as_str(),
+                "image/png" | "image/jpeg"
+            ));
+            let mut replacement = read_part(source, &target.part_name).unwrap();
+            let mutation_index = replacement.len() / 2;
+            replacement[mutation_index] ^= 0x01;
+            let (report, output) = build_pptx_image_patch_isolated(
+                source,
+                &target.id,
+                &target.expected_media_digest,
+                &target.expected_part_digest,
+                &target.mime_type,
+                &replacement,
+            )
+            .unwrap_or_else(|error| panic!("{producer}: {error}"));
+            assert_eq!(report.operation, "picture-binary", "{producer}");
+            assert_eq!(
+                report.changed_parts,
+                [target.part_name.clone()],
+                "{producer}"
+            );
+            assert!(report.unchanged_parts_verified, "{producer}");
+            assert!(report.structural_reparse_verified, "{producer}");
+            assert!(report.semantic_reparse_verified, "{producer}");
+            assert!(!report.writes_user_file, "{producer}");
+            assert_ne!(output, source, "{producer}");
+        }
+    }
+
+    #[test]
+    fn c5a_rejects_stale_digest_mime_change_oversize_and_noop() {
+        let source =
+            include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx");
+        let target = inspect_pptx_editable_image_targets(source)
+            .unwrap()
+            .into_iter()
+            .next()
+            .unwrap();
+        let original = read_part(source, &target.part_name).unwrap();
+        assert!(build_pptx_image_patch_isolated(
+            source,
+            &target.id,
+            &"0".repeat(64),
+            &target.expected_part_digest,
+            &target.mime_type,
+            &original,
+        )
+        .unwrap_err()
+        .contains("已变化"));
+        let different_mime = if target.mime_type == "image/png" {
+            "image/jpeg"
+        } else {
+            "image/png"
+        };
+        assert!(build_pptx_image_patch_isolated(
+            source,
+            &target.id,
+            &target.expected_media_digest,
+            &target.expected_part_digest,
+            different_mime,
+            &original,
+        )
+        .unwrap_err()
+        .contains("相同"));
+        assert!(build_pptx_image_patch_isolated(
+            source,
+            &target.id,
+            &target.expected_media_digest,
+            &target.expected_part_digest,
+            &target.mime_type,
+            &vec![0; MAX_PPTX_REPLACEMENT_IMAGE_BYTES + 1],
+        )
+        .unwrap_err()
+        .contains("8 MiB"));
+        assert!(build_pptx_image_patch_isolated(
+            source,
+            &target.id,
+            &target.expected_media_digest,
+            &target.expected_part_digest,
+            &target.mime_type,
+            &original,
+        )
+        .unwrap_err()
+        .contains("相同"));
+    }
 
     #[test]
     fn c4a_preserves_every_part_for_all_real_producers() {

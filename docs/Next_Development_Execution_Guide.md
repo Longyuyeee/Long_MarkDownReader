@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E 已完成；C4E PowerPoint/WPS/LibreOffice 输出复开矩阵为 3/3。下一开发入口为 C5A 隔离图片替换。最新判定见 [C4E PPTX 输出副本外部生产者复开审计](./C4E_PPTX_Output_Producer_Reopen_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E 已完成；C5A1 已完成隔离图片替换、可靠新副本和真实桌面审计。下一开发入口为 C5A2 PowerPoint/WPS/LibreOffice 输出复开。最新判定见 [C5A1 PPTX 隔离图片替换审计](./C5A1_PPTX_Isolated_Image_Replacement_Audit_2026-07-28.md)。
 
 ## 1. 指导目标
 
@@ -398,7 +398,8 @@ DOCX 样本覆盖段落、标题、列表、表格、图片、分页、页眉页
 - C4D：原子无覆盖新副本、源冲突、预览摘要握手、写后结构和语义复读；
 - C4E1/C4E2：三种操作输出样本，以及 PowerPoint/WPS 的真实只读复开；
 - C4E3（已完成）：LibreOffice Impress 隔离复开，并以 `-RequireComplete` 关闭 3/3 门禁；
-- C5A（下一步）：在隔离补丁和新副本边界内实现受限图片二进制替换。
+- C5A1（已完成）：在隔离补丁和新副本边界内实现受限图片二进制替换；
+- C5A2（下一步）：用 PowerPoint/WPS/LibreOffice 复开图片替换副本并关闭 3/3 输出门禁。
 
 首批只开放：
 
@@ -580,7 +581,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C3D 已完成结构化只读与知识管理，C4A～C4D 已完成受限编辑和可靠新副本；C4E 已由 PowerPoint 12.0、WPS Presentation 12.1、LibreOffice Impress 26.2.4.2 复开三个输出并达到 3/3。下一步执行 **C5A 隔离图片替换**。仍只允许新副本，不开放源文件覆盖，也不把 PPTX 描述为完整 PowerPoint 等价。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C3D 已完成结构化只读与知识管理，C4A～C4E 已完成受限编辑、可靠新副本及三生产者复开；C5A1 已完成单引用 PNG/JPEG 隔离替换和桌面证据。下一步执行 **C5A2 图片输出三生产者复开**。仍只允许新副本，不开放源文件覆盖，也不把 PPTX 描述为完整 PowerPoint 等价。
 
 当前批次的强制退出条件：
 
