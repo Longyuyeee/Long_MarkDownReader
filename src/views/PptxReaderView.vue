@@ -50,12 +50,14 @@
       </div>
     </div>
     <div v-else-if="report" class="pptx-layout" :class="{ 'details-open': showDetails }">
-      <aside class="slide-strip" aria-label="幻灯片缩略图">
+      <aside ref="slideStripRef" class="slide-strip" aria-label="幻灯片缩略图">
         <button
           v-for="(slide, index) in report.model.slides"
           :key="slide.id"
           type="button"
-          :class="{ active: index === activeSlideIndex, hit: matchedSlideIndexes.has(index) }"
+          :data-slide-id="slide.id"
+          :data-slide-index="index"
+          :class="{ active: index === activeSlideIndex, hit: matchedSlideIndexes.has(index), 'route-target': index === routeTargetSlideIndex }"
           @click="selectSlide(index)"
         >
           <span class="slide-number">{{ index + 1 }}</span>
@@ -83,13 +85,15 @@
         <div
           v-if="activeSlide"
           class="slide-canvas"
+          :class="{ 'route-target-slide': activeSlideIndex === routeTargetSlideIndex }"
           :style="slideStyle(activeSlide)"
           :aria-label="`幻灯片 ${activeSlideIndex + 1}：${activeSlide.title}`"
         >
           <template v-for="object in activeSlide.objects" :key="object.id || object.name">
             <div
               class="slide-object"
-              :class="[object.kind, { 'search-hit': matchedObjectIds.has(object.id), 'expanded-group': object.kind === 'group' && object.childCount > 0 }]"
+              :data-object-id="object.id"
+              :class="[object.kind, { 'search-hit': matchedObjectIds.has(object.id), 'route-target-object': routeTargetObjectId === object.id, 'expanded-group': object.kind === 'group' && object.childCount > 0 }]"
               :style="objectStyle(object)"
               :title="object.altText || object.name"
             >
@@ -142,6 +146,7 @@
 
     <footer v-if="report" class="pptx-status">
       <span>{{ report.model.slides.length }} 张幻灯片 · {{ formatBytes(report.size) }}</span>
+      <span v-if="routeTargetLabel" class="route-target-status" aria-live="polite">已定位：{{ routeTargetLabel }}</span>
       <span>{{ activeSlide?.objects.length || 0 }} 个当前页对象</span>
     </footer>
 
@@ -199,6 +204,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import PptxObjectContent from '../components/pptx/PptxObjectContent.vue'
 import { useAppStore } from '../store/app'
+import { resolvePptxRouteLocator } from '../utils/pptxLocator'
 
 interface PptxObject {
   id: string
@@ -323,6 +329,10 @@ const searchQuery = ref('')
 const activeMatch = ref(0)
 const showDetails = ref(true)
 const presenting = ref(false)
+const slideStripRef = ref<HTMLElement>()
+const routeTargetSlideIndex = ref(-1)
+const routeTargetObjectId = ref('')
+const routeTargetLabel = ref('')
 const pptxPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const fileName = computed(() => pptxPath.value.split(/[\\/]/).pop() || '未命名.pptx')
 const profile = computed(() => report.value?.model.compatibility as PptxProfile)
@@ -422,11 +432,46 @@ const objectStyle = (object: PptxObject) => {
   return style
 }
 
-const selectSlide = (index: number) => {
+const clearRouteTarget = () => {
+  routeTargetSlideIndex.value = -1
+  routeTargetObjectId.value = ''
+  routeTargetLabel.value = ''
+}
+const selectSlide = (index: number, preserveRouteTarget = false) => {
+  if (!preserveRouteTarget) clearRouteTarget()
   activeSlideIndex.value = Math.max(0, Math.min(index, (report.value?.model.slides.length || 1) - 1))
 }
 const previousSlide = () => selectSlide(activeSlideIndex.value - 1)
 const nextSlide = () => selectSlide(activeSlideIndex.value + 1)
+const routeString = (value: unknown) => typeof value === 'string' ? value : ''
+let routeLocatorRun = 0
+const applyRouteLocator = async () => {
+  const run = ++routeLocatorRun
+  clearRouteTarget()
+  if (!report.value?.model.slides.length) return
+  const slides = report.value.model.slides
+  const locatorKind = routeString(route.query.locatorKind)
+  const locator = routeString(route.query.locator)
+  const target = resolvePptxRouteLocator(slides, {
+    slide: routeString(route.query.slide),
+    locatorKind,
+    locator,
+  })
+  if (!target) return
+
+  await nextTick()
+  if (run !== routeLocatorRun) return
+  selectSlide(target.slideIndex, true)
+  routeTargetSlideIndex.value = target.slideIndex
+  routeTargetObjectId.value = target.objectId
+  routeTargetLabel.value = routeString(route.query.locationLabel) || `幻灯片 ${target.slideIndex + 1}`
+  if (route.query.matchKind === 'notes') showDetails.value = true
+  await nextTick()
+  if (run !== routeLocatorRun) return
+  slideStripRef.value
+    ?.querySelector<HTMLElement>(`[data-slide-index="${target.slideIndex}"]`)
+    ?.scrollIntoView({ block: 'nearest' })
+}
 const moveSearch = (direction: -1 | 1) => {
   if (!matches.value.length) return
   activeMatch.value = (activeMatch.value + direction + matches.value.length) % matches.value.length
@@ -437,8 +482,12 @@ const loadPresentation = async () => {
   loading.value = true
   loadError.value = ''
   try {
-    report.value = await invoke<PptxReadReport>('read_pptx_presentation', { path: pptxPath.value })
+    report.value = await invoke<PptxReadReport>('read_pptx_presentation', {
+      libraryRoot: store.libraryPath,
+      path: pptxPath.value,
+    })
     activeSlideIndex.value = Math.min(activeSlideIndex.value, Math.max(0, report.value.model.slides.length - 1))
+    await applyRouteLocator()
   } catch (error) {
     report.value = undefined
     loadError.value = String(error)
@@ -458,6 +507,10 @@ watch(matches, value => {
   if (value.length) selectSlide(value[0].slideIndex)
 })
 watch(pptxPath, () => loadPresentation())
+watch(
+  () => [route.query.slide, route.query.locatorKind, route.query.locator, route.query.locatorToken],
+  applyRouteLocator,
+)
 watch(presenting, async value => {
   if (value) {
     await nextTick()
@@ -495,6 +548,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 .slide-strip > button { position: relative; width: 100%; padding: 6px 6px 6px 24px; display: block; border: 1px solid transparent; border-radius: 5px; color: inherit; background: transparent; cursor: pointer; }
 .slide-strip > button:hover { background: var(--hover-bg); }
 .slide-strip > button.active { border-color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 8%, transparent); }
+.slide-strip > button.route-target { animation: route-target-pulse 1.15s ease-out; }
 .slide-strip > button.hit:not(.active)::after { content: ''; position: absolute; right: 7px; top: 7px; width: 5px; height: 5px; border-radius: 50%; background: #d69b18; }
 .slide-number { position: absolute; left: 6px; top: 9px; color: var(--text-muted); font-size: 10px; }
 .thumbnail { position: relative; box-sizing: border-box; padding: 0; display: block; overflow: hidden; container-type: size; border: 1px solid var(--border-color); background: #fff; color: #20242b; box-shadow: 0 2px 7px rgba(0,0,0,.08); text-align: left; }
@@ -511,6 +565,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 .slide-object.connector { overflow: visible; }
 .slide-object.group.expanded-group { pointer-events: none; border: 0; background: transparent; }
 .slide-object.search-hit { outline: 4px solid rgba(230, 168, 24, .75); outline-offset: 2px; }
+.slide-canvas.route-target-slide { animation: route-target-canvas 1.15s ease-out; }
+.slide-object.route-target-object { z-index: 2; outline: 4px solid var(--primary-color); outline-offset: 3px; animation: route-target-object 1.15s ease-out; }
+.slide-object.route-target-object::after { content: ''; position: absolute; pointer-events: none; inset: 0; border: 3px solid var(--primary-color); background: color-mix(in srgb, var(--primary-color) 12%, transparent); }
 .empty-slide { position: absolute; inset: 0; display: grid; place-items: center; color: #8a939e; }
 .pptx-details { min-width: 0; overflow: auto; padding: 13px; border-left: 1px solid var(--border-color); background: var(--bg-primary); }
 .pptx-details section { padding: 0 0 14px; margin: 0 0 14px; border-bottom: 1px solid var(--border-color); }
@@ -523,6 +580,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 .pptx-details dd { margin: 0; text-align: right; }
 .pptx-details ul { margin: 0; padding-left: 17px; color: var(--text-secondary); line-height: 1.55; }
 .pptx-status { min-height: 28px; padding: 0 12px; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: 10px; }
+.route-target-status { overflow: hidden; color: var(--primary-color); text-overflow: ellipsis; white-space: nowrap; }
 .presenter { position: fixed; z-index: 10000; inset: 0; display: grid; place-items: center; background: #101215; }
 .presenter > button { position: absolute; z-index: 2; top: 14px; right: 14px; width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 5px; color: #fff; background: rgba(255,255,255,.12); cursor: pointer; }
 .presenter-slide { width: min(92vw, calc(86vh * var(--slide-ratio, 1.777))); max-height: 86vh; box-shadow: none; }
@@ -531,6 +589,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 .presenter-controls button:disabled { opacity: .3; }
 .spin { animation: spin .9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes route-target-pulse {
+  0% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 55%, transparent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes route-target-canvas {
+  0% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary-color) 60%, transparent), 0 12px 38px rgba(0,0,0,.22); }
+  100% { box-shadow: 0 12px 38px rgba(0,0,0,.22); }
+}
+@keyframes route-target-object {
+  0% { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--primary-color) 75%, transparent)); }
+  100% { filter: none; }
+}
 @media (max-width: 1050px) {
   .pptx-layout.details-open { grid-template-columns: 170px minmax(0, 1fr); }
   .pptx-layout.details-open .pptx-details { display: none; }

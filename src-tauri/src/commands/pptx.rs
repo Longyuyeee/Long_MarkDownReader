@@ -153,9 +153,10 @@ fn read_pptx_path(path: &Path) -> Result<PptxReadReport, String> {
 
 #[tauri::command]
 pub async fn read_pptx_presentation(
+    library_root: String,
     path: String,
-    guard: tauri::State<'_, WorkspaceGuard>,
 ) -> Result<PptxReadReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
     let presentation = guard.resolve_existing_file(path, &["pptx"])?;
     tauri::async_runtime::spawn_blocking(move || read_pptx_path(&presentation))
         .await
@@ -165,11 +166,34 @@ pub async fn read_pptx_presentation(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn media_signature_allowlist_rejects_mismatches() {
         assert!(valid_media_signature(b"\x89PNG\r\n\x1a\nrest", "image/png"));
         assert!(!valid_media_signature(b"not png", "image/png"));
         assert_eq!(media_mime("ppt/media/image1.svg"), None);
+    }
+
+    #[test]
+    fn per_request_workspace_guard_reads_pptx_without_managed_state() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("longedit-pptx-command-{nonce}"));
+        fs::create_dir_all(&root).unwrap();
+        let fixture =
+            include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx");
+        let path = root.join("presentation.pptx");
+        fs::write(&path, fixture).unwrap();
+
+        let guard = WorkspaceGuard::new(&root).unwrap();
+        let resolved = guard.resolve_existing_file(&path, &["pptx"]).unwrap();
+        let report = read_pptx_path(&resolved).unwrap();
+        assert_eq!(report.model.slides.len(), 3);
+        assert_eq!(report.model.slides[0].title, "PowerPoint Producer Fixture");
+        assert_eq!(fs::read(&path).unwrap(), fixture);
+        fs::remove_dir_all(root).unwrap();
     }
 }

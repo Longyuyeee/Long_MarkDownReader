@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-27T12:57:18.536Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
+  "fixtureLocation": "isolated temporary workspace",
+  "checks": [
+    {
+      "id": "pptx-search-opens-in-library-workspace",
+      "status": "passed"
+    },
+    {
+      "id": "pptx-object-location-and-repeat-token",
+      "status": "passed",
+      "firstToken": "1785157034822-1",
+      "secondToken": "1785157036193-2"
+    },
+    {
+      "id": "pptx-notes-location-and-source-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "pptx-object-search-location.jpg",
+    "pptx-notes-search-location.jpg"
+  ]
+}

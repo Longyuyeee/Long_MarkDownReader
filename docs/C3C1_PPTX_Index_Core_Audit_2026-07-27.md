@@ -4,6 +4,8 @@
 > 开发分支：`codex/c3c1-pptx-index`
 > 阶段目标：共享 PPTX 搜索段、持久化索引与实时扫描一致性
 
+> 后续更新：C3C2 精确定位已经完成，最新交付证据与下一入口见 [`C3C2_PPTX_Precise_Locator_Audit_2026-07-27.md`](./C3C2_PPTX_Precise_Locator_Audit_2026-07-27.md)。
+
 ## 1. 阶段结论
 
 C3C1 已完成。PPTX 已从“工作面内搜索”提升为可进入统一、可删除和可重建的全局知识索引。

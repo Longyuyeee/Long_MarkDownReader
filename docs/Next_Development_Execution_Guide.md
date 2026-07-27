@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3B3 与 C3C1 已完成。下一开发入口为 C3C2 PPTX 精确定位。最新判定见 [C3C1 PPTX 索引审计](./C3C1_PPTX_Index_Core_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3B3 与 C3C1/C3C2 已完成。下一开发入口为 C3C3 PPTX 对象与关系。最新判定见 [C3C2 PPTX 精确定位审计](./C3C2_PPTX_Precise_Locator_Audit_2026-07-27.md)。
 
 ## 1. 指导目标
 
@@ -379,13 +379,13 @@ DOCX 样本覆盖段落、标题、列表、表格、图片、分页、页眉页
 
 ### C3：PPTX 只读工作面
 
-当前进度：C3A、C3B1～C3B3 与 C3C1 已完成安全解包、真实顺序、主题/母版/布局视觉继承、组合与图片样式、连接线/自由形状/基础表格、复杂对象分级卡面、真实对象缩略图、备注、全局可重建索引、兼容画像、只读放映，以及 PowerPoint/LibreOffice 2/3 生产者证据；C3 整体仍为部分完成。
+当前进度：C3A、C3B1～C3B3 与 C3C1/C3C2 已完成安全解包、真实顺序、视觉继承、对象渲染、真实对象缩略图、备注、全局可重建索引、搜索精确定位、兼容画像、只读放映，以及 PowerPoint/LibreOffice 2/3 生产者证据；C3 整体仍为部分完成。
 
 1. C3B（已完成）：主题、母版、布局、背景、基础文本样式、图片裁剪、组合子对象、对象分级渲染和真实对象缩略图。
 2. C3C（进行中）：PPTX 全局索引、对象定位、最近/收藏/集合与关系管理。
    - C3C1（已完成）：共享 PPTX 搜索段生成器，同时接入持久化索引和实时扫描降级。
-   - C3C2（下一阶段）：全局搜索精确定位幻灯片/对象，阅读器消费稳定定位参数。
-   - C3C3：PPTX 文件/幻灯片 KnowledgeObject、`contains` 关系和共享关系侧栏。
+   - C3C2（已完成）：全局搜索精确定位幻灯片/对象/备注，支持重复定位、缩略图滚动和对象高亮。
+   - C3C3（下一阶段）：PPTX 文件/幻灯片 KnowledgeObject、`contains` 关系和共享关系侧栏。
    - C3C4：索引重建、过期降级、资源上限、真实 fixture 与桌面定位证据。
 3. C3D：WPS Presentation 第三生产者、PowerPoint/WPS/LibreOffice 统一矩阵和真实 Tauri 多尺寸视觉矩阵。
 4. C3B～C3D 全部完成后，才可宣告缩略图、放映、搜索和高级对象只读边界收口。
@@ -566,21 +566,21 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 14. `R` 安装包、文件关联、升级、卸载和多机器发布矩阵。
 15. `F` PDF 合并拆分、知识图谱深层语义、XLSX 高级等价与 AI 增强。
 
-当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3B3 与 C3C1 已完成**。DOCX 输出已通过 Word/WPS/LibreOffice 复开；PPTX 已进入统一可重建索引但仍严格只读；真实 Tauri Debug/WebView2 门禁为 36 项检查和 28 张机器校验证据。
+当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3B3 与 C3C1/C3C2 已完成**。DOCX 输出已通过 Word/WPS/LibreOffice 复开；PPTX 已进入统一可重建索引并支持 Library 内精确定位但仍严格只读；基础桌面门禁为 36 项/28 张证据，C3C2 专项为 3 项/2 张证据。
 
 当前 **A3 JSON/JSONC 已收口**：树形视图在精确 AST 范围、重复键、数字精度和 JSONC 保真门禁下开放标量替换、对象键重命名、对象/数组追加和删除；A5 进一步证明非法 JSON 默认不会覆盖最后合法磁盘版本，修复后可以可靠保存。
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C3B3 与 C3C1 已完成结构化只读、视觉渲染和统一索引，下一步进入 **C3C2 PPTX 精确定位**。DOCX 原件覆盖与 PPTX 所有写回继续禁止。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C3B3 与 C3C1/C3C2 已完成结构化只读、视觉渲染、统一索引和精确定位，下一步进入 **C3C3 PPTX 对象与关系**。DOCX 原件覆盖与 PPTX 所有写回继续禁止。
 
 当前批次的强制退出条件：
 
-1. Library 搜索结果必须识别 `pptx-slide` 和 `pptx-object`，并携带页序、稳定 ID 与一次性定位令牌。
-2. PPTX 阅读器必须选择目标幻灯片、滚动缩略图并在对象命中时提供可见高亮。
-3. 重复点击相同搜索结果仍必须重新触发定位，不能被路由复用静默吞掉。
-4. 标题、正文、对象、备注、隐藏页和重复定位必须进入自动回归。
-5. PPTX 继续在 Library 右侧打开并保持原件只读，不得借定位功能提前增加写回。
-6. 本批必须补充真实 Tauri 搜索定位证据，并更新能力注册表、阶段审计和 `Development_Handoff.md`。
+1. 图谱构建必须生成 PPTX 文件对象和稳定的幻灯片对象。
+2. 文件到幻灯片必须形成 `contains` 关系，位置标签与搜索定位合同一致。
+3. 当前 PPTX 文件和幻灯片必须复用共享关系侧栏，不创建专属孤岛。
+4. 实时图谱与持久化索引必须保持对象 ID 和关系语义一致。
+5. 真实 PowerPoint/LibreOffice fixture、源字节不变和资源上限必须进入回归。
+6. PPTX 继续在 Library 右侧打开并保持原件只读，不得借关系功能提前增加写回。
 
-本阶段索引合同和下一定位批次见 [`C3C1_PPTX_Index_Core_Audit_2026-07-27.md`](./C3C1_PPTX_Index_Core_Audit_2026-07-27.md)；C3C～发布矩阵总体顺序见 [`Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`](./Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md)。
+本阶段定位合同和下一对象关系批次见 [`C3C2_PPTX_Precise_Locator_Audit_2026-07-27.md`](./C3C2_PPTX_Precise_Locator_Audit_2026-07-27.md)；C3C～发布矩阵总体顺序见 [`Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`](./Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md)。

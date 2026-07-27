@@ -88,7 +88,8 @@
                     <button class="knowledge-result-open" @click="openKnowledgeSearchResult(result)">
                       <span class="knowledge-result-head"><strong>{{ result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '') }}</strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
                       <span class="knowledge-result-context">{{ result.context }}</span>
-                      <small v-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
+                      <small v-if="result.objectType === 'pptx' && result.locationLabel">{{ result.locationLabel }}</small>
+                      <small v-else-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
                       <small v-else-if="result.locationLabel">{{ result.locationLabel }}</small>
                     </button>
                     <RelationSummaryBadge v-if="relationSummary(result.path)" :summary="relationSummary(result.path)!" compact @open="openRelationGraph(result.path)" />
@@ -542,7 +543,7 @@ interface KnowledgeSearchResult {
   title: string
   path: string
   objectType: string
-  matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'related' | 'tag'
+  matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'related' | 'tag' | 'slide-title' | 'object' | 'notes'
   context: string
   page?: number
   annotationId?: string
@@ -1214,8 +1215,12 @@ const handleNodeSelect = (keys: string[]) => {
 }
 
 const searchKindLabel = (kind: KnowledgeSearchResult['matchKind']) => ({
-  title: '标题', body: '正文', ocr: 'OCR', annotation: '批注', related: '附属内容', tag: '标签',
+  title: '标题', 'slide-title': '幻灯片标题', body: '正文', object: '对象', notes: '备注',
+  ocr: 'OCR', annotation: '批注', related: '附属内容', tag: '标签',
 }[kind])
+
+let knowledgeLocatorSequence = 0
+const nextKnowledgeLocatorToken = () => `${Date.now()}-${++knowledgeLocatorSequence}`
 
 const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
   if (result.objectType === 'pdf') {
@@ -1233,7 +1238,20 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
       query: {
         path: result.path,
         ...(result.locatorObjectId ? { locator: result.locatorObjectId } : {}),
-        locatorToken: String(Date.now()),
+        locatorToken: nextKnowledgeLocatorToken(),
+      },
+    })
+  } else if (result.objectType === 'pptx') {
+    void router.replace({
+      name: 'LibraryMode',
+      query: {
+        path: result.path,
+        ...(result.page ? { slide: String(result.page) } : {}),
+        ...(result.locatorKind ? { locatorKind: result.locatorKind } : {}),
+        ...(result.locatorObjectId ? { locator: result.locatorObjectId } : {}),
+        ...(result.locationLabel ? { locationLabel: result.locationLabel } : {}),
+        matchKind: result.matchKind,
+        locatorToken: nextKnowledgeLocatorToken(),
       },
     })
   } else {
