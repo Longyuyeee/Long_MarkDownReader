@@ -98,6 +98,9 @@ try {
   <Default Extension="xml" ContentType="application/xml"/>
   <Default Extension="png" ContentType="image/png"/>
   <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/comments.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"/>
+  <Override PartName="/word/footnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/>
+  <Override PartName="/word/endnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml"/>
 </Types>
 '@
   Add-DocxTextEntry $docxArchive "docProps/core.xml" @'
@@ -117,14 +120,22 @@ try {
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <w:body>
     <w:p><w:pPr><w:pStyle w:val="BriefHeading"/></w:pPr><w:r><w:t>Product Brief</w:t></w:r></w:p>
-    <w:p><w:r><w:t>DOCX Daily Management keeps Word content inside the original Library work area.</w:t></w:r></w:p>
+    <w:p><w:commentRangeStart w:id="7"/><w:r><w:t>DOCX Daily Management keeps Word content inside the original Library work area.</w:t></w:r><w:commentRangeEnd w:id="7"/><w:r><w:commentReference w:id="7"/></w:r></w:p>
     <w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>Review structured content and compatibility warnings.</w:t></w:r></w:p>
     <w:tbl>
-      <w:tr><w:tc><w:p><w:r><w:t>Capability</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Status</w:t></w:r></w:p></w:tc></w:tr>
-      <w:tr><w:tc><w:p><w:r><w:t>Structured reading</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Available</w:t></w:r></w:p></w:tc></w:tr>
+      <w:tr><w:tc><w:tcPr><w:gridSpan w:val="2"/></w:tcPr><w:p><w:r><w:t>Capability matrix</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:vMerge w:val="restart"/></w:tcPr><w:p><w:r><w:t>Status</w:t></w:r></w:p></w:tc></w:tr>
+      <w:tr><w:tc><w:p><w:r><w:t>Structured reading</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Available</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:vMerge/></w:tcPr><w:p/></w:tc></w:tr>
     </w:tbl>
+    <w:p><w:r><w:t>Before explicit page break.</w:t><w:br w:type="page"/><w:lastRenderedPageBreak/><w:t>After explicit page break.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>Related note anchors</w:t><w:footnoteReference w:id="2"/><w:endnoteReference w:id="4"/></w:r></w:p>
     <w:p><w:ins><w:r><w:t>Tracked text remains visible and read-only.</w:t></w:r></w:ins><w:r><w:drawing><a:graphic><a:blip r:embed="rId5"/></a:graphic></w:drawing></w:r></w:p>
     <w:p><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText>DATE</w:instrText></w:r></w:p>
+    <w:sectPr>
+      <w:type w:val="continuous"/>
+      <w:pgSz w:w="15840" w:h="12240" w:orient="landscape"/>
+      <w:pgMar w:top="1440" w:right="1080" w:bottom="1440" w:left="1080" w:header="720" w:footer="720"/>
+      <w:cols w:num="2"/>
+    </w:sectPr>
   </w:body>
 </w:document>
 '@
@@ -149,7 +160,29 @@ try {
 '@
   Add-DocxTextEntry $docxArchive "word/comments.xml" @'
 <?xml version="1.0" encoding="UTF-8"?>
-<w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>
+<w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:comment w:id="7" w:author="C1 Reviewer" w:date="2026-07-27"><w:p><w:r><w:t>C1-2B review evidence</w:t></w:r></w:p></w:comment>
+</w:comments>
+'@
+  Add-DocxTextEntry $docxArchive "word/footnotes.xml" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<w:footnotes xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:footnote w:id="2"><w:p><w:r><w:t>C1-2B footnote evidence</w:t></w:r></w:p></w:footnote>
+</w:footnotes>
+'@
+  Add-DocxTextEntry $docxArchive "word/endnotes.xml" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<w:endnotes xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:endnote w:id="4"><w:p><w:r><w:t>C1-2B endnote evidence</w:t></w:r></w:p></w:endnote>
+</w:endnotes>
+'@
+  Add-DocxTextEntry $docxArchive "word/header1.xml" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>C1-2B header evidence</w:t></w:r></w:p></w:hdr>
+'@
+  Add-DocxTextEntry $docxArchive "word/footer1.xml" @'
+<?xml version="1.0" encoding="UTF-8"?>
+<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>C1-2B footer evidence</w:t></w:r></w:p></w:ftr>
 '@
   Add-Type -AssemblyName System.Drawing
   $mediaBitmap = [System.Drawing.Bitmap]::new(480, 150)

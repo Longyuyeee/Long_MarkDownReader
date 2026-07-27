@@ -237,7 +237,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 | FR-JSON-001 | P1 | 通用 JSON/JSONC 工作面 | 进行中 | A3/A5 已完成源码工具、实时 Rust 校验、有界 JSON Path、树形预览、受门禁结构编辑、可重建索引、可靠保存和真实桌面重开；软件内创建待后续批次 |
 | FR-DEV-001 | P2 | 常见代码与工程文件阅读编辑 | 部分完成 | A4 已交付 YAML/XML/TOML、常见配置和代表性代码格式的可靠轻量编辑，`.env` 默认遮罩且不索引，`.log` 提供有界只读、筛选、追尾和轮转；日志显式编辑、代码执行、调试和语言服务不在当前范围 |
 | FR-PDF-008 | P1 | PDF 页面级编辑 | 部分完成 | B0～B1C 已完成旋转、改序、排除、隔离副本验证、可靠另存、重开和兼容画像；提取、合并、拆分、插页进入增强队列，失败不破坏源文件 |
-| FR-OFFICE-001 | P1 | DOCX 阅读与基础编辑 | 进行中 | C1-2B1 已完成 Library 右侧结构化阅读、样式/编号/图片、页眉页脚、脚注、尾注、批注正文、全局索引和对象定位；合并单元格、分页/版式、真实桌面证据、三生产者矩阵与 C2 可靠基础编辑待完成 |
+| FR-OFFICE-001 | P1 | DOCX 阅读与基础编辑 | 进行中 | C1-2B 已完成 Library 右侧结构化阅读、样式/编号/图片、附属内容、合并单元格、分页/版式、全局索引、对象定位和真实桌面证据；三生产者矩阵与 C2 可靠基础编辑待完成 |
 | FR-OFFICE-002 | P1 | PPTX 阅读与基础编辑 | 未开始 | 支持缩略图、放映、搜索及文本、图片、形状和页面顺序基础编辑；高级对象只读保真 |
 | FR-OFFICE-003 | P2 | WPS、旧版 Office 与 OpenDocument | 未开始 | `.wps/.et/.dps/.doc/.xls/.ppt/.odt/.ods/.odp` 完成识别、许可/规范审计和分级预览或安全转换，不虚假声明原格式完整编辑 |
 | FR-MANAGER-001 | P1 | 统一格式能力展示与降级 | 已完成 | schema v2、能力等级、保存模式、最长扩展名路由、Library 文件树/状态栏、右侧工作面标签、最近文件、外部打开和 TXT/JSON/开发格式降级均已接通；新格式继续复用该契约 |
@@ -389,7 +389,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 - `WorkspaceGuard`、可靠写入、外部文件授权、凭据库和依赖漏洞治理。
 - PDF 页面旋转、改序、排除、隔离验证和可靠另存安全子集。
 - DOCX C1-2B1 结构化只读工作面、样式/编号/图片、附属正文、全局索引、对象定位和兼容画像。
-- 当前 Rust 单元测试、前端生产构建、契约门禁和真实 Tauri Debug/WebView2 33 项检查、25 张截图通过。
+- 当前 Rust 单元测试、前端生产构建、契约门禁和真实 Tauri Debug/WebView2 34 项检查、26 张截图通过。
 
 ### 9.2 已完成原型但仍需产品化
 
@@ -1600,9 +1600,9 @@ S8-7E2E 功能验收完成。下一步进入 S8-7E2F：把单轴和多度量语�
 - 修复 760px 图谱标题竖排、工具栏拥挤、筛选条错位和初始详情遮挡画布；紧凑页头、横向工具栏与窄宽度初始详情策略进入门禁。
 - Debug E2E 模式禁止配置落盘，并支持独立指定 theme、style、code theme 和 motion，避免视觉审计污染用户配置。
 
-T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7D 高级数据对象审计、本地透视预览和事务写回可行性门禁已完成，S8-7E1 已建立真实生产者结构基线，S8-7E2A 已交付签名保护的隔离影响清单，S8-7E2B 已完成临时副本 Cache 重建，S8-7E2C 已完成四部件隔离同步重建，S8-7E2D 已完成 sharedItems 与输出布局扩缩容，S8-7E2E 已完成七类聚合包级重建和单轴/多度量语义矩阵。S8-7E2F 单轴与多度量完整隔离包重写保留为 XLSX 专项回补队列；A0～A5、G8、PDF B0～B1C 和 DOCX C1-2B1 已交付，当前实际开发入口为 **C1-2B2 DOCX 表格合并、分页/版式、桌面证据与 C0-2 真实生产者矩阵**。
+T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7D 高级数据对象审计、本地透视预览和事务写回可行性门禁已完成，S8-7E1 已建立真实生产者结构基线，S8-7E2A 已交付签名保护的隔离影响清单，S8-7E2B 已完成临时副本 Cache 重建，S8-7E2C 已完成四部件隔离同步重建，S8-7E2D 已完成 sharedItems 与输出布局扩缩容，S8-7E2E 已完成七类聚合包级重建和单轴/多度量语义矩阵。S8-7E2F 单轴与多度量完整隔离包重写保留为 XLSX 专项回补队列；A0～A5、G8、PDF B0～B1C 和 DOCX C1-2B 已交付，当前实际开发入口为 **C0-2 DOCX 真实生产者矩阵**，并可在严格隔离边界内并行准备 C2A。
 
-后续阶段顺序以 `docs/Development_Progress_and_Direction_Audit_2026-07-27.md`、`docs/Unified_File_Manager_Format_Requirements.md` 和 `docs/Next_Development_Execution_Guide.md` 为当前主线：DOCX C1-2B2 与真实生产者证据 → DOCX 基础编辑 → PPTX → WPS/OpenDocument/旧版 Office → 管理和发布矩阵。历史 S8 编号保留用于 XLSX 渐进式兼容追踪。
+后续阶段顺序以 `docs/Development_Progress_and_Direction_Audit_2026-07-27.md`、`docs/Unified_File_Manager_Format_Requirements.md` 和 `docs/Next_Development_Execution_Guide.md` 为当前主线：C0-2 DOCX 真实生产者证据 → C2 DOCX 基础编辑 → PPTX → WPS/OpenDocument/旧版 Office → 管理和发布矩阵。历史 S8 编号保留用于 XLSX 渐进式兼容追踪。
 
 ## 12. 需求变更流程
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-07-26T17:48:06.289Z",
+  "capturedAt": "2026-07-27T02:51:44.165Z",
   "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
   "sourceUrl": "http://127.0.0.1:9000/#/workspace",
   "fixtureLocation": "isolated temporary workspace",
@@ -63,6 +63,10 @@
     },
     {
       "id": "c1-docx-structured-reading",
+      "status": "passed"
+    },
+    {
+      "id": "c1-docx-layout-and-related-content",
       "status": "passed"
     },
     {
@@ -156,6 +160,7 @@
     "g8-table-object-context.jpg",
     "g8-canvas-object-context.jpg",
     "c1-docx-structured-reading.jpg",
+    "c1-docx-layout-and-related-content.jpg",
     "text-save-and-reopen.jpg",
     "external-conflict-detected.jpg",
     "env-default-masked.jpg",
@@ -167,5 +172,5 @@
     "log-append-and-rotation.jpg",
     "restart-recent-file-restored.jpg"
   ],
-  "restartVerifiedAt": "2026-07-26T17:48:13.406Z"
+  "restartVerifiedAt": "2026-07-27T02:52:04.865Z"
 }

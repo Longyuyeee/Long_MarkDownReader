@@ -17,8 +17,18 @@ const MAX_DOCX_RELATED_TEXT_CHARS: usize = 500_000;
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
+pub struct DocxTableCell {
+    pub text: String,
+    pub column_span: u16,
+    pub row_span: u16,
+    pub continuation: bool,
+    pub vertical_merge: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct DocxTableRow {
-    pub cells: Vec<String>,
+    pub cells: Vec<DocxTableCell>,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -61,6 +71,24 @@ pub struct DocxRelatedContent {
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
+pub struct DocxSectionSummary {
+    pub id: String,
+    pub after_block_id: Option<String>,
+    pub break_type: String,
+    pub orientation: String,
+    pub page_width_twips: Option<u32>,
+    pub page_height_twips: Option<u32>,
+    pub margin_top_twips: Option<u32>,
+    pub margin_right_twips: Option<u32>,
+    pub margin_bottom_twips: Option<u32>,
+    pub margin_left_twips: Option<u32>,
+    pub header_distance_twips: Option<u32>,
+    pub footer_distance_twips: Option<u32>,
+    pub column_count: u16,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct DocxCompatibilityProfile {
     pub producer: Option<String>,
     pub application: Option<String>,
@@ -72,6 +100,10 @@ pub struct DocxCompatibilityProfile {
     pub renderable_image_count: usize,
     pub style_count: usize,
     pub numbering_definition_count: usize,
+    pub merged_cell_count: usize,
+    pub page_break_count: usize,
+    pub rendered_page_break_count: usize,
+    pub section_count: usize,
     pub header_count: usize,
     pub footer_count: usize,
     pub footnotes: bool,
@@ -92,6 +124,7 @@ pub struct DocxDocumentModel {
     pub blocks: Vec<DocxBlock>,
     pub headings: Vec<DocxHeading>,
     pub related_content: Vec<DocxRelatedContent>,
+    pub sections: Vec<DocxSectionSummary>,
     pub plain_text: String,
     pub compatibility: DocxCompatibilityProfile,
     pub warnings: Vec<String>,
@@ -106,15 +139,59 @@ struct ParagraphState {
     image_count: usize,
     image_parts: Vec<String>,
     related_content_ids: Vec<String>,
+    page_break_before: bool,
+    page_break_count: usize,
+    rendered_page_break_count: usize,
+}
+
+#[derive(Default)]
+struct TableCellState {
+    text: String,
+    column_span: u16,
+    vertical_merge: Option<String>,
 }
 
 #[derive(Default)]
 struct TableState {
     rows: Vec<DocxTableRow>,
-    current_row: Vec<String>,
-    current_cell: String,
+    current_row: Vec<DocxTableCell>,
+    current_cell: TableCellState,
     in_cell: bool,
     related_content_ids: Vec<String>,
+}
+
+struct SectionState {
+    after_block_number: usize,
+    break_type: String,
+    orientation: Option<String>,
+    page_width_twips: Option<u32>,
+    page_height_twips: Option<u32>,
+    margin_top_twips: Option<u32>,
+    margin_right_twips: Option<u32>,
+    margin_bottom_twips: Option<u32>,
+    margin_left_twips: Option<u32>,
+    header_distance_twips: Option<u32>,
+    footer_distance_twips: Option<u32>,
+    column_count: u16,
+}
+
+impl SectionState {
+    fn new(after_block_number: usize) -> Self {
+        Self {
+            after_block_number,
+            break_type: "nextPage".into(),
+            orientation: None,
+            page_width_twips: None,
+            page_height_twips: None,
+            margin_top_twips: None,
+            margin_right_twips: None,
+            margin_bottom_twips: None,
+            margin_left_twips: None,
+            header_distance_twips: None,
+            footer_distance_twips: None,
+            column_count: 1,
+        }
+    }
 }
 
 #[derive(Default)]
@@ -773,6 +850,84 @@ fn capture_image_part(
     Ok(())
 }
 
+fn parse_u32_attribute(
+    event: &BytesStart<'_>,
+    key: &[u8],
+    decoder: quick_xml::encoding::Decoder,
+) -> Result<Option<u32>, String> {
+    Ok(attribute_value(event, key, decoder)?.and_then(|value| value.parse::<u32>().ok()))
+}
+
+fn push_break_block(blocks: &mut Vec<DocxBlock>, kind: &str) -> Result<(), String> {
+    if blocks.len() >= MAX_DOCX_BLOCKS {
+        return Err("DOCX 结构超过 50,000 个可见块安全上限".into());
+    }
+    blocks.push(DocxBlock {
+        id: format!("docx-block-{}", blocks.len() + 1),
+        kind: kind.into(),
+        text: String::new(),
+        level: None,
+        list_level: None,
+        list_kind: None,
+        style_id: None,
+        rows: Vec::new(),
+        image_count: 0,
+        image_parts: Vec::new(),
+        related_content_ids: Vec::new(),
+    });
+    Ok(())
+}
+
+fn resolve_table_merges(rows: &mut [DocxTableRow]) -> usize {
+    let mut active: HashMap<usize, (usize, usize)> = HashMap::new();
+    for row_index in 0..rows.len() {
+        let mut column = 0_usize;
+        let descriptors = rows[row_index]
+            .cells
+            .iter()
+            .enumerate()
+            .map(|(cell_index, cell)| {
+                let descriptor = (
+                    cell_index,
+                    column,
+                    cell.column_span.max(1) as usize,
+                    cell.vertical_merge.clone(),
+                );
+                column += descriptor.2;
+                descriptor
+            })
+            .collect::<Vec<_>>();
+        let mut next_active = HashMap::new();
+        for (cell_index, start_column, column_span, merge) in descriptors {
+            match merge.as_deref() {
+                Some("restart") => {
+                    rows[row_index].cells[cell_index].continuation = false;
+                    rows[row_index].cells[cell_index].row_span = 1;
+                    for grid_column in start_column..start_column + column_span {
+                        next_active.insert(grid_column, (row_index, cell_index));
+                    }
+                }
+                Some("continue") => {
+                    if let Some(&(start_row, start_cell)) = active.get(&start_column) {
+                        rows[row_index].cells[cell_index].continuation = true;
+                        rows[start_row].cells[start_cell].row_span =
+                            rows[start_row].cells[start_cell].row_span.saturating_add(1);
+                        for grid_column in start_column..start_column + column_span {
+                            next_active.insert(grid_column, (start_row, start_cell));
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        active = next_active;
+    }
+    rows.iter()
+        .flat_map(|row| row.cells.iter())
+        .filter(|cell| !cell.continuation && (cell.column_span > 1 || cell.row_span > 1))
+        .count()
+}
+
 fn finalize_paragraph(
     paragraph: ParagraphState,
     table: &mut Option<TableState>,
@@ -791,14 +946,23 @@ fn finalize_paragraph(
             }
         }
         if table.in_cell && !text.is_empty() {
-            if !table.current_cell.is_empty() {
-                table.current_cell.push('\n');
+            if !table.current_cell.text.is_empty() {
+                table.current_cell.text.push('\n');
             }
-            table.current_cell.push_str(&text);
+            table.current_cell.text.push_str(&text);
         }
         return Ok(());
     }
+    if paragraph.page_break_before {
+        push_break_block(blocks, "page-break")?;
+    }
     if text.is_empty() && paragraph.image_count == 0 {
+        for _ in 0..paragraph.page_break_count {
+            push_break_block(blocks, "page-break")?;
+        }
+        for _ in 0..paragraph.rendered_page_break_count {
+            push_break_block(blocks, "rendered-page-break")?;
+        }
         return Ok(());
     }
     if blocks.len() >= MAX_DOCX_BLOCKS {
@@ -844,6 +1008,12 @@ fn finalize_paragraph(
         image_parts: paragraph.image_parts,
         related_content_ids: paragraph.related_content_ids,
     });
+    for _ in 0..paragraph.page_break_count {
+        push_break_block(blocks, "page-break")?;
+    }
+    for _ in 0..paragraph.rendered_page_break_count {
+        push_break_block(blocks, "rendered-page-break")?;
+    }
     Ok(())
 }
 
@@ -902,6 +1072,11 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
     let mut list_item_count = 0;
     let mut table_count = 0;
     let mut table_cells = 0;
+    let mut merged_cell_count = 0;
+    let mut page_break_count = 0;
+    let mut rendered_page_break_count = 0;
+    let mut section: Option<SectionState> = None;
+    let mut section_states = Vec::new();
     let mut tracked_changes = false;
     let mut fields = false;
     let mut content_controls = false;
@@ -958,8 +1133,94 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                 }
                 b"tc" => {
                     if let Some(table) = table.as_mut() {
-                        table.current_cell.clear();
+                        table.current_cell = TableCellState {
+                            column_span: 1,
+                            ..TableCellState::default()
+                        };
                         table.in_cell = true;
+                    }
+                }
+                b"gridSpan" => {
+                    if let Some(table) = table.as_mut().filter(|table| table.in_cell) {
+                        table.current_cell.column_span =
+                            parse_u32_attribute(event, b"val", reader.decoder())?
+                                .unwrap_or(1)
+                                .clamp(1, 256) as u16;
+                    }
+                }
+                b"vMerge" => {
+                    if let Some(table) = table.as_mut().filter(|table| table.in_cell) {
+                        table.current_cell.vertical_merge = Some(
+                            attribute_value(event, b"val", reader.decoder())?
+                                .unwrap_or_else(|| "continue".into()),
+                        );
+                    }
+                }
+                b"pageBreakBefore" => {
+                    if let Some(paragraph) = paragraph.as_mut() {
+                        if !paragraph.page_break_before {
+                            paragraph.page_break_before = true;
+                            page_break_count += 1;
+                        }
+                    }
+                }
+                b"br" => {
+                    if attribute_value(event, b"type", reader.decoder())?.as_deref() == Some("page")
+                    {
+                        if let Some(paragraph) = paragraph.as_mut() {
+                            paragraph.page_break_count += 1;
+                            page_break_count += 1;
+                        }
+                    }
+                }
+                b"lastRenderedPageBreak" => {
+                    if let Some(paragraph) = paragraph.as_mut() {
+                        paragraph.rendered_page_break_count += 1;
+                        rendered_page_break_count += 1;
+                    }
+                }
+                b"sectPr" => {
+                    section = Some(SectionState::new(
+                        blocks.len() + usize::from(paragraph.is_some()),
+                    ));
+                }
+                b"type" => {
+                    if let Some(section) = section.as_mut() {
+                        if let Some(value) = attribute_value(event, b"val", reader.decoder())? {
+                            section.break_type = value;
+                        }
+                    }
+                }
+                b"pgSz" => {
+                    if let Some(section) = section.as_mut() {
+                        section.page_width_twips =
+                            parse_u32_attribute(event, b"w", reader.decoder())?;
+                        section.page_height_twips =
+                            parse_u32_attribute(event, b"h", reader.decoder())?;
+                        section.orientation = attribute_value(event, b"orient", reader.decoder())?;
+                    }
+                }
+                b"pgMar" => {
+                    if let Some(section) = section.as_mut() {
+                        section.margin_top_twips =
+                            parse_u32_attribute(event, b"top", reader.decoder())?;
+                        section.margin_right_twips =
+                            parse_u32_attribute(event, b"right", reader.decoder())?;
+                        section.margin_bottom_twips =
+                            parse_u32_attribute(event, b"bottom", reader.decoder())?;
+                        section.margin_left_twips =
+                            parse_u32_attribute(event, b"left", reader.decoder())?;
+                        section.header_distance_twips =
+                            parse_u32_attribute(event, b"header", reader.decoder())?;
+                        section.footer_distance_twips =
+                            parse_u32_attribute(event, b"footer", reader.decoder())?;
+                    }
+                }
+                b"cols" => {
+                    if let Some(section) = section.as_mut() {
+                        section.column_count = parse_u32_attribute(event, b"num", reader.decoder())?
+                            .unwrap_or(1)
+                            .clamp(1, 64) as u16;
                     }
                 }
                 b"ins" | b"del" | b"moveFrom" | b"moveTo" => tracked_changes = true,
@@ -1009,10 +1270,96 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                         append_text(&mut paragraph.text, "\t")?;
                     }
                 }
-                b"br" | b"cr" => {
+                b"br" => {
+                    if let Some(paragraph) = paragraph.as_mut() {
+                        if attribute_value(event, b"type", reader.decoder())?.as_deref()
+                            == Some("page")
+                        {
+                            paragraph.page_break_count += 1;
+                            page_break_count += 1;
+                        } else {
+                            append_text(&mut paragraph.text, "\n")?;
+                        }
+                    }
+                }
+                b"cr" => {
                     if let Some(paragraph) = paragraph.as_mut() {
                         append_text(&mut paragraph.text, "\n")?;
                     }
+                }
+                b"gridSpan" => {
+                    if let Some(table) = table.as_mut().filter(|table| table.in_cell) {
+                        table.current_cell.column_span =
+                            parse_u32_attribute(event, b"val", reader.decoder())?
+                                .unwrap_or(1)
+                                .clamp(1, 256) as u16;
+                    }
+                }
+                b"vMerge" => {
+                    if let Some(table) = table.as_mut().filter(|table| table.in_cell) {
+                        table.current_cell.vertical_merge = Some(
+                            attribute_value(event, b"val", reader.decoder())?
+                                .unwrap_or_else(|| "continue".into()),
+                        );
+                    }
+                }
+                b"pageBreakBefore" => {
+                    if let Some(paragraph) = paragraph.as_mut() {
+                        if !paragraph.page_break_before {
+                            paragraph.page_break_before = true;
+                            page_break_count += 1;
+                        }
+                    }
+                }
+                b"lastRenderedPageBreak" => {
+                    if let Some(paragraph) = paragraph.as_mut() {
+                        paragraph.rendered_page_break_count += 1;
+                        rendered_page_break_count += 1;
+                    }
+                }
+                b"type" => {
+                    if let Some(section) = section.as_mut() {
+                        if let Some(value) = attribute_value(event, b"val", reader.decoder())? {
+                            section.break_type = value;
+                        }
+                    }
+                }
+                b"pgSz" => {
+                    if let Some(section) = section.as_mut() {
+                        section.page_width_twips =
+                            parse_u32_attribute(event, b"w", reader.decoder())?;
+                        section.page_height_twips =
+                            parse_u32_attribute(event, b"h", reader.decoder())?;
+                        section.orientation = attribute_value(event, b"orient", reader.decoder())?;
+                    }
+                }
+                b"pgMar" => {
+                    if let Some(section) = section.as_mut() {
+                        section.margin_top_twips =
+                            parse_u32_attribute(event, b"top", reader.decoder())?;
+                        section.margin_right_twips =
+                            parse_u32_attribute(event, b"right", reader.decoder())?;
+                        section.margin_bottom_twips =
+                            parse_u32_attribute(event, b"bottom", reader.decoder())?;
+                        section.margin_left_twips =
+                            parse_u32_attribute(event, b"left", reader.decoder())?;
+                        section.header_distance_twips =
+                            parse_u32_attribute(event, b"header", reader.decoder())?;
+                        section.footer_distance_twips =
+                            parse_u32_attribute(event, b"footer", reader.decoder())?;
+                    }
+                }
+                b"cols" => {
+                    if let Some(section) = section.as_mut() {
+                        section.column_count = parse_u32_attribute(event, b"num", reader.decoder())?
+                            .unwrap_or(1)
+                            .clamp(1, 64) as u16;
+                    }
+                }
+                b"sectPr" => {
+                    section_states.push(SectionState::new(
+                        blocks.len() + usize::from(paragraph.is_some()),
+                    ));
                 }
                 b"ins" | b"del" | b"moveFrom" | b"moveTo" => tracked_changes = true,
                 b"fldChar" | b"instrText" | b"fldSimple" => fields = true,
@@ -1048,8 +1395,14 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                 }
                 b"tc" => {
                     if let Some(table) = table.as_mut() {
-                        table.current_row.push(normalized_text(&table.current_cell));
-                        table.current_cell.clear();
+                        let current_cell = std::mem::take(&mut table.current_cell);
+                        table.current_row.push(DocxTableCell {
+                            text: normalized_text(&current_cell.text),
+                            column_span: current_cell.column_span.max(1),
+                            row_span: 1,
+                            continuation: false,
+                            vertical_merge: current_cell.vertical_merge,
+                        });
                         table.in_cell = false;
                         table_cells += 1;
                         if table_cells > MAX_DOCX_TABLE_CELLS {
@@ -1067,11 +1420,12 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                     }
                 }
                 b"tbl" => {
-                    if let Some(table) = table.take() {
+                    if let Some(mut table) = table.take() {
                         if blocks.len() >= MAX_DOCX_BLOCKS {
                             return Err("DOCX 结构超过 50,000 个可见块安全上限".into());
                         }
                         table_count += 1;
+                        merged_cell_count += resolve_table_merges(&mut table.rows);
                         blocks.push(DocxBlock {
                             id: format!("docx-block-{}", blocks.len() + 1),
                             kind: "table".into(),
@@ -1079,7 +1433,7 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                                 .rows
                                 .iter()
                                 .flat_map(|row| row.cells.iter())
-                                .cloned()
+                                .map(|cell| cell.text.clone())
                                 .collect::<Vec<_>>()
                                 .join(" "),
                             level: None,
@@ -1093,6 +1447,11 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                         });
                     }
                 }
+                b"sectPr" => {
+                    if let Some(section) = section.take() {
+                        section_states.push(section);
+                    }
+                }
                 _ => {}
             },
             Event::DocType(_) => return Err("DOCX XML 不允许 DOCTYPE".into()),
@@ -1101,6 +1460,38 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
         }
         buffer.clear();
     }
+
+    let sections = section_states
+        .into_iter()
+        .enumerate()
+        .map(|(index, section)| {
+            let orientation = section.orientation.unwrap_or_else(|| {
+                match (section.page_width_twips, section.page_height_twips) {
+                    (Some(width), Some(height)) if width > height => "landscape".into(),
+                    _ => "portrait".into(),
+                }
+            });
+            DocxSectionSummary {
+                id: format!("docx-section-{}", index + 1),
+                after_block_id: section
+                    .after_block_number
+                    .checked_sub(1)
+                    .and_then(|index| blocks.get(index))
+                    .map(|block| block.id.clone()),
+                break_type: section.break_type,
+                orientation,
+                page_width_twips: section.page_width_twips,
+                page_height_twips: section.page_height_twips,
+                margin_top_twips: section.margin_top_twips,
+                margin_right_twips: section.margin_right_twips,
+                margin_bottom_twips: section.margin_bottom_twips,
+                margin_left_twips: section.margin_left_twips,
+                header_distance_twips: section.header_distance_twips,
+                footer_distance_twips: section.footer_distance_twips,
+                column_count: section.column_count,
+            }
+        })
+        .collect::<Vec<_>>();
 
     let mut related_content = parse_related_content(&mut archive, &names)?;
     let related_lookup = related_content
@@ -1182,6 +1573,10 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
         renderable_image_count,
         style_count: styles.len(),
         numbering_definition_count: numbering.len(),
+        merged_cell_count,
+        page_break_count,
+        rendered_page_break_count,
+        section_count: sections.len(),
         header_count: names
             .iter()
             .filter(|name| name.starts_with("word/header") && name.ends_with(".xml"))
@@ -1229,6 +1624,7 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
         blocks,
         headings,
         related_content,
+        sections,
         plain_text,
         compatibility,
         warnings,
@@ -1298,7 +1694,14 @@ mod tests {
             .iter()
             .find(|block| block.kind == "table")
             .unwrap();
-        assert_eq!(table.rows[0].cells, ["A1", "B1"]);
+        assert_eq!(
+            table.rows[0]
+                .cells
+                .iter()
+                .map(|cell| cell.text.as_str())
+                .collect::<Vec<_>>(),
+            ["A1", "B1"]
+        );
         assert_eq!(model.compatibility.table_count, 1);
         assert_eq!(model.compatibility.image_count, 1);
         assert!(model.plain_text.contains("First paragraph line"));
@@ -1346,6 +1749,67 @@ mod tests {
         assert_eq!(model.compatibility.renderable_image_count, 1);
         assert_eq!(model.compatibility.style_count, 1);
         assert_eq!(model.compatibility.numbering_definition_count, 1);
+    }
+
+    #[test]
+    fn parses_merged_cells_page_breaks_and_section_layout() {
+        let source = fixture(
+            r#"<?xml version="1.0"?><w:document xmlns:w="w"><w:body>
+            <w:tbl>
+              <w:tr>
+                <w:tc><w:tcPr><w:gridSpan w:val="2"/></w:tcPr><w:p><w:r><w:t>Merged heading</w:t></w:r></w:p></w:tc>
+                <w:tc><w:tcPr><w:vMerge w:val="restart"/></w:tcPr><w:p><w:r><w:t>Owner</w:t></w:r></w:p></w:tc>
+              </w:tr>
+              <w:tr>
+                <w:tc><w:p><w:r><w:t>A</w:t></w:r></w:p></w:tc>
+                <w:tc><w:p><w:r><w:t>B</w:t></w:r></w:p></w:tc>
+                <w:tc><w:tcPr><w:vMerge/></w:tcPr><w:p/></w:tc>
+              </w:tr>
+            </w:tbl>
+            <w:p><w:pPr><w:pageBreakBefore/></w:pPr><w:r><w:t>First page</w:t><w:br w:type="page"/><w:lastRenderedPageBreak/><w:t>Second page</w:t></w:r></w:p>
+            <w:sectPr>
+              <w:type w:val="continuous"/>
+              <w:pgSz w:w="15840" w:h="12240" w:orient="landscape"/>
+              <w:pgMar w:top="1440" w:right="1080" w:bottom="1440" w:left="1080" w:header="720" w:footer="720"/>
+              <w:cols w:num="2"/>
+            </w:sectPr>
+            </w:body></w:document>"#,
+            &[],
+        );
+        let model = parse_docx(&source).unwrap();
+        let table = model
+            .blocks
+            .iter()
+            .find(|block| block.kind == "table")
+            .unwrap();
+        assert_eq!(table.rows[0].cells[0].column_span, 2);
+        assert_eq!(table.rows[0].cells[1].row_span, 2);
+        assert!(table.rows[1].cells[2].continuation);
+        assert_eq!(model.compatibility.merged_cell_count, 2);
+        assert_eq!(model.compatibility.page_break_count, 2);
+        assert_eq!(model.compatibility.rendered_page_break_count, 1);
+        assert_eq!(
+            model
+                .blocks
+                .iter()
+                .filter(|block| block.kind == "page-break")
+                .count(),
+            2
+        );
+        assert_eq!(
+            model
+                .blocks
+                .iter()
+                .filter(|block| block.kind == "rendered-page-break")
+                .count(),
+            1
+        );
+        assert_eq!(model.sections.len(), 1);
+        assert_eq!(model.sections[0].orientation, "landscape");
+        assert_eq!(model.sections[0].break_type, "continuous");
+        assert_eq!(model.sections[0].column_count, 2);
+        assert_eq!(model.sections[0].margin_left_twips, Some(1080));
+        assert_eq!(model.compatibility.section_count, 1);
     }
 
     #[test]

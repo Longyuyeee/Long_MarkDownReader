@@ -78,6 +78,14 @@
               <span><b>{{ profile.listItemCount }}</b>列表</span>
               <span><b>{{ profile.tableCount }}</b>表格</span>
               <span><b>{{ profile.imageCount }}</b>图片</span>
+              <span><b>{{ profile.mergedCellCount }}</b>合并单元格</span>
+              <span><b>{{ profile.pageBreakCount }}</b>分页符</span>
+            </div>
+            <div v-if="report.model.sections.length" class="docx-layout-summary">
+              <strong>页面布局</strong>
+              <span v-for="section in report.model.sections" :key="section.id">
+                {{ sectionSummary(section) }}
+              </span>
             </div>
             <small>{{ packageFeatureLabel }}</small>
           </div>
@@ -113,10 +121,26 @@
                 <table>
                   <tbody>
                     <tr v-for="(row, rowIndex) in block.rows" :key="rowIndex">
-                      <td v-for="(cell, cellIndex) in row.cells" :key="cellIndex">{{ cell }}</td>
+                      <template v-for="(cell, cellIndex) in row.cells" :key="cellIndex">
+                        <td
+                          v-if="!cell.continuation"
+                          :colspan="cell.columnSpan"
+                          :rowspan="cell.rowSpan"
+                        >
+                          {{ cell.text }}
+                        </td>
+                      </template>
                     </tr>
                   </tbody>
                 </table>
+              </div>
+              <div
+                v-else-if="block.kind === 'page-break' || block.kind === 'rendered-page-break'"
+                :id="block.id"
+                class="docx-block docx-page-break"
+                :class="{ rendered: block.kind === 'rendered-page-break' }"
+              >
+                <span>{{ block.kind === 'page-break' ? '分页符' : '渲染分页位置' }}</span>
               </div>
               <div
                 v-else-if="block.kind === 'image'"
@@ -246,16 +270,38 @@ import { useAppStore } from '../store/app'
 
 interface DocxBlock {
   id: string
-  kind: 'paragraph' | 'heading' | 'list-item' | 'table' | 'image'
+  kind: 'paragraph' | 'heading' | 'list-item' | 'table' | 'image' | 'page-break' | 'rendered-page-break'
   text: string
   level?: number | null
   listLevel?: number | null
   listKind?: 'bullet' | 'ordered' | null
   styleId?: string | null
-  rows: Array<{ cells: string[] }>
+  rows: Array<{ cells: DocxTableCell[] }>
   imageCount: number
   imageParts: string[]
   relatedContentIds: string[]
+}
+interface DocxTableCell {
+  text: string
+  columnSpan: number
+  rowSpan: number
+  continuation: boolean
+  verticalMerge?: 'restart' | 'continue' | null
+}
+interface DocxSectionSummary {
+  id: string
+  afterBlockId?: string | null
+  breakType: string
+  orientation: string
+  pageWidthTwips?: number | null
+  pageHeightTwips?: number | null
+  marginTopTwips?: number | null
+  marginRightTwips?: number | null
+  marginBottomTwips?: number | null
+  marginLeftTwips?: number | null
+  headerDistanceTwips?: number | null
+  footerDistanceTwips?: number | null
+  columnCount: number
 }
 interface DocxRelatedContent {
   id: string
@@ -279,6 +325,10 @@ interface DocxProfile {
   renderableImageCount: number
   styleCount: number
   numberingDefinitionCount: number
+  mergedCellCount: number
+  pageBreakCount: number
+  renderedPageBreakCount: number
+  sectionCount: number
   headerCount: number
   footerCount: number
   footnotes: boolean
@@ -308,6 +358,7 @@ interface DocxReadReport {
     blocks: DocxBlock[]
     headings: Array<{ blockId: string; text: string; level: number }>
     relatedContent: DocxRelatedContent[]
+    sections: DocxSectionSummary[]
     plainText: string
     compatibility: DocxProfile
     warnings: string[]
@@ -368,13 +419,23 @@ const packageFeatureLabel = computed(() => {
   if (value.contentControls) features.push('内容控件')
   if (value.equations) features.push('公式')
   if (value.embeddedObjects) features.push('嵌入对象')
-  const packageSummary = `样式 ${value.styleCount} · 编号 ${value.numberingDefinitionCount} · 可预览图片 ${value.renderableImageCount}`
+  const packageSummary = `样式 ${value.styleCount} · 编号 ${value.numberingDefinitionCount} · 节 ${value.sectionCount} · 可预览图片 ${value.renderableImageCount}`
   return features.length
     ? `${packageSummary} · 只读识别：${features.join(' · ')}`
     : `${packageSummary} · 未检测到首批模型外的高风险对象`
 })
 
 const headingTag = (level?: number | null) => `h${Math.min(6, Math.max(1, level || 1))}`
+const twipsToCentimeters = (twips?: number | null) => twips
+  ? `${(twips / 1440 * 2.54).toFixed(1)} cm`
+  : '未声明'
+const sectionSummary = (section: DocxSectionSummary) => {
+  const orientation = section.orientation === 'landscape' ? '横向' : '纵向'
+  const size = section.pageWidthTwips && section.pageHeightTwips
+    ? `${twipsToCentimeters(section.pageWidthTwips)} × ${twipsToCentimeters(section.pageHeightTwips)}`
+    : '默认纸张'
+  return `${orientation} · ${size} · ${section.columnCount} 栏 · ${section.breakType}`
+}
 const mediaFor = (block: DocxBlock) => block.imageParts
   .map(part => mediaByPart.value.get(part))
   .filter((media): media is DocxMediaPreview => Boolean(media))
@@ -463,6 +524,9 @@ watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocato
 .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
 .metric-grid span { padding: 5px; border-radius: 5px; background: var(--bg-primary); color: var(--text-secondary); font-size: 10px; }
 .metric-grid b { margin-right: 3px; color: var(--text-primary); font-size: 12px; }
+.docx-layout-summary { padding-top: 7px; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--border-color); }
+.docx-layout-summary strong { font-size: 11px; }
+.docx-layout-summary span { color: var(--text-muted); font-size: 10px; line-height: 1.45; }
 .docx-stage { overflow: auto; padding: 24px; background: color-mix(in srgb, var(--bg-secondary) 88%, #7f8da3); }
 .docx-page { width: min(760px, calc(100% - 24px)); min-height: 960px; margin: 0 auto; padding: 64px 70px; box-sizing: border-box; border: 1px solid var(--border-color); box-shadow: 0 8px 26px rgba(0,0,0,.12); background: var(--bg-primary); }
 .docx-block { scroll-margin: 90px; border-radius: 4px; transition: background .15s ease; }
@@ -479,6 +543,9 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .docx-table-wrap { margin: 14px 0; overflow: auto; }
 .docx-table-wrap table { width: 100%; border-collapse: collapse; }
 .docx-table-wrap td { min-width: 80px; padding: 7px 9px; border: 1px solid var(--border-color); vertical-align: top; }
+.docx-page-break { height: 32px; margin: 20px 0; display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 10px; }
+.docx-page-break::before, .docx-page-break::after { content: ''; flex: 1; border-top: 1px dashed var(--border-color); }
+.docx-page-break.rendered { opacity: .68; }
 .docx-image-placeholder { min-height: 100px; margin: 14px 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; border: 1px dashed var(--border-color); color: var(--text-muted); background: var(--bg-secondary); }
 .docx-image-placeholder img, .inline-images img { display: block; max-width: 100%; max-height: 520px; object-fit: contain; }
 .inline-images { margin: 10px 0; display: grid; gap: 8px; justify-items: start; }

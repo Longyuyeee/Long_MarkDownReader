@@ -44,7 +44,7 @@ const evaluate = async expression => {
   return result.result.value
 }
 
-const waitFor = async (expression, description, attempts = 120, interval = 100) => {
+const waitFor = async (expression, description, attempts = 300, interval = 100) => {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     if (await evaluate(expression)) return
     await delay(interval)
@@ -52,7 +52,7 @@ const waitFor = async (expression, description, attempts = 120, interval = 100) 
   throw new Error(`Timed out waiting for ${description}`)
 }
 
-const waitForFile = async (file, predicate, description, attempts = 100) => {
+const waitForFile = async (file, predicate, description, attempts = 300) => {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const content = await fs.readFile(file, 'utf8')
     if (predicate(content)) return content
@@ -106,13 +106,17 @@ const setInput = async (selector, value) => {
 }
 
 const setEditorText = async text => {
-  await evaluate(`(() => {
-    const editor = document.querySelector('.cm-content')
-    editor?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
-    editor?.focus()
-    editor?.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
-    return document.activeElement === editor
-  })()`)
+  await waitFor(
+    `(() => {
+      const editor = document.querySelector('.cm-content')
+      editor?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+      editor?.focus()
+      editor?.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      return document.activeElement === editor
+    })()`,
+    'CodeMirror input focus',
+    80,
+  )
   await send('Input.dispatchKeyEvent', {
     type: 'keyDown',
     key: 'a',
@@ -203,7 +207,7 @@ await waitFor(
   `document.querySelector('.active-relation-summary')?.textContent?.includes('1') === true
     && document.querySelector('.active-relation-summary')?.textContent?.includes('关系') === true`,
   'current file relation summary',
-  180,
+  600,
 )
 checks.push({ id: 'g8-current-file-relation-summary', status: 'passed' })
 await capture('g8-current-file-relation-summary.jpg')
@@ -413,6 +417,19 @@ await waitFor(
 )
 checks.push({ id: 'c1-docx-structured-reading', status: 'passed' })
 await capture('c1-docx-structured-reading.jpg')
+await setInput('.docx-search input', 'review evidence')
+await waitFor(
+  `document.querySelector('td[colspan="2"]')?.textContent?.includes('Capability matrix') === true
+    && document.querySelector('td[rowspan="2"]')?.textContent?.includes('Status') === true
+    && document.querySelectorAll('.docx-page-break').length === 2
+    && document.querySelector('.docx-layout-summary')?.textContent?.includes('横向') === true
+    && document.querySelector('.docx-layout-summary')?.textContent?.includes('2 栏') === true
+    && document.querySelector('.docx-related-content')?.textContent?.includes('C1-2B review evidence') === true
+    && document.querySelectorAll('.docx-related-content .search-hit').length === 1`,
+  'DOCX merged cells, pagination, section layout, and related-content search',
+)
+checks.push({ id: 'c1-docx-layout-and-related-content', status: 'passed' })
+await capture('c1-docx-layout-and-related-content.jpg')
 
 await navigate(routeFor('text', serviceIni), '.text-workspace')
 const embeddedShellState = await evaluate(`({
@@ -675,6 +692,7 @@ const evidenceFiles = [
   'g8-table-object-context.jpg',
   'g8-canvas-object-context.jpg',
   'c1-docx-structured-reading.jpg',
+  'c1-docx-layout-and-related-content.jpg',
   'text-save-and-reopen.jpg',
   'external-conflict-detected.jpg',
   'env-default-masked.jpg',

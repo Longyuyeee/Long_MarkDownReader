@@ -30,7 +30,7 @@ npm run audit:a5-desktop
 npm run check:a5-desktop-evidence
 ```
 
-阶段 A 收口后，G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C 和 DOCX C0/C1 首批继续复用同一真实桌面回归框架。当前门禁结果为 **33/33 项通过，25 张真实 Tauri 截图通过机器校验**。
+阶段 A 收口后，G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C 和 DOCX C1-2B 继续复用同一真实桌面回归框架。当前门禁结果为 **34/34 项通过，26 张真实 Tauri 截图通过机器校验**。
 
 | 验收域 | 真实桌面结果 | 证据 |
 |---|---|---|
@@ -43,6 +43,7 @@ npm run check:a5-desktop-evidence
 | PDF B1B 可靠另存 | 原子创建同目录新副本，磁盘复读后由 PDF.js 打开；源文件逐字节不变 | `b1b-pdf-reliable-save-reopen.jpg` |
 | PDF B1C 兼容画像 | 原工作面显示版本、xref、压缩对象、页面继承与无文本页画像 | `b1c-pdf-compatibility-profile.jpg` |
 | DOCX C1-2A | 在原 Library 右侧显示目录、继承标题、编号列表、结构化正文、表格、受限真实图片、搜索定位、兼容画像和高级对象只读警告 | `c1-docx-structured-reading.jpg` |
+| DOCX C1-2B2 | 在真实 WebView2 中显示横向/纵向合并单元格、分页、横向双栏节摘要，并搜索定位批注附属内容 | `c1-docx-layout-and-related-content.jpg` |
 | 普通文本/INI | 编辑、保存、离开并重开成功 | `text-save-and-reopen.jpg` |
 | 外部修改冲突 | 保存被签名冲突阻断；选择重新加载后读取磁盘版本，不恢复旧草稿 | `external-conflict-detected.jpg` |
 | `.env` | 首次遮罩、明确确认后显示、再次遮罩成功；正文标记不泄漏到界面 | `env-default-masked.jpg` |
@@ -65,7 +66,7 @@ PDF B1A 的引擎决策、许可证、风险矩阵、隔离生成与下一门槛
 PDF B1B 的无覆盖写入、落盘复读、桌面重开和 B1C 入口见 `docs/B1B_PDF_Reliable_Save_Audit_2026-07-27.md`。
 PDF B1C 的对象流、页面继承、扫描页、风险阻断矩阵与 DOCX 入口见 `docs/B1C_PDF_Compatibility_Closure_Audit_2026-07-27.md`。
 DOCX C0/C1 首批的解析预算、结构模型、工作面设计、明确边界和后续收口顺序见 `docs/C0_C1_DOCX_Structured_Reading_Audit_2026-07-27.md`。
-DOCX C1-2A 的样式继承、列表编号、内部图片关系、媒体安全预算与真实生产者缺口见 `docs/C1_2A_DOCX_Styles_Numbering_Media_Audit_2026-07-27.md`。
+DOCX C1-2B 的最终只读收口、版式桌面证据与真实生产者缺口见 `docs/C1_2B2_DOCX_Layout_Desktop_Audit_2026-07-27.md`。
 
 ## 3. 本阶段发现并修复的问题
 
@@ -145,7 +146,7 @@ JSON、YAML、XML、TOML 仍保留“明确二次确认后按非法源码保存�
 2. **PDF B1A（已完成）**：写入引擎/许可证审计、风险阻断和签名保护的内存隔离副本复读验证；
 3. **PDF B1B（已完成）**：只新建、原子无覆盖写入、落盘复读和 PDF.js 重开；
 4. **PDF B1C（已完成）**：复杂生产者、页面继承、扫描页和高风险阻断兼容矩阵；
-5. **DOCX C1-2A（已交付，继续收口）**：右侧只读工作面、目录、文内搜索、样式继承、列表编号、受限真实媒体和兼容画像已交付；下一步建立三类真实生产者 fixture，补页眉页脚、脚注、批注和全局索引；
+5. **DOCX C1-2B（已收口）**：右侧只读工作面、目录、文内/全局搜索、样式/编号、内部媒体、附属内容、合并表格、分页和节版式已交付；下一步建立三类真实生产者 fixture；
 6. WPS `.wps/.et/.dps` 先做规范、许可与转换保真审计，无法证明可靠时只提供外部打开或受控副本转换；
 7. 统一批处理、元数据、工作区健康和发布矩阵。
 

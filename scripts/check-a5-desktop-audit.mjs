@@ -39,6 +39,7 @@ const requiredChecks = new Set([
   'g8-table-object-context',
   'g8-canvas-object-context',
   'c1-docx-structured-reading',
+  'c1-docx-layout-and-related-content',
 ])
 
 if (manifest.schemaVersion !== 1) failures.push('A5 evidence manifest must use schema version 1')
@@ -60,8 +61,8 @@ if (!largeCheck?.displayState?.includes('512.0 KiB') || !largeCheck?.displayStat
 
 const evidenceFiles = manifest.evidenceFiles || []
 if (!manifest.restartVerifiedAt) failures.push('A5 evidence must record process restart verification time')
-if (evidenceFiles.length !== 25 || new Set(evidenceFiles).size !== evidenceFiles.length) {
-  failures.push('A5/G8/B0/B1A/B1B/B1C/C1 evidence manifest must list twenty-five unique screenshots')
+if (evidenceFiles.length !== 26 || new Set(evidenceFiles).size !== evidenceFiles.length) {
+  failures.push('A5/G8/B0/B1A/B1B/B1C/C1 evidence manifest must list twenty-six unique screenshots')
 }
 for (const file of evidenceFiles) {
   const resolved = path.resolve(new URL(file, evidenceRoot).pathname.replace(/^\/([A-Za-z]:)/, '$1'))
@@ -105,7 +106,8 @@ if (!capture.includes('A5_PRIVATE_ENV_MARKER')
   || !capture.includes('b1b-pdf-reliable-save-reopen')
   || !capture.includes('g8-table-object-context')
   || !capture.includes('g8-canvas-object-context')
-  || !capture.includes('c1-docx-structured-reading')) {
+  || !capture.includes('c1-docx-structured-reading')
+  || !capture.includes('c1-docx-layout-and-related-content')) {
   failures.push('A5/G8/B0/B1A/B1B/B1C/C1 capture must exercise the library shell, relation summaries, cross-format context, PDF page planning, DOCX structured reading, isolated verification, compatibility profiling and reliable save/reopen, saved collections, planning hierarchy, sensitive search exclusion, conflict reload, and invalid JSON protection')
 }
 
