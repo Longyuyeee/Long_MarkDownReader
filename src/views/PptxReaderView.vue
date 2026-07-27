@@ -136,7 +136,7 @@
             <p class="baseline-digest" :title="editBaseline.sourcePackageDigest">
               SHA-256 · {{ editBaseline.sourcePackageDigest.slice(0, 16) }}…
             </p>
-            <p class="muted">C4A 仅建立保护基线；文本和备注修改将在 C4B 隔离补丁中开放。</p>
+            <p class="muted">C4A 仅建立保护基线、不写入当前文件；该基线已复用到 C4B 文本与 C4C 样式/替代文本隔离预览。</p>
           </template>
           <p v-else-if="baselineError" class="baseline-error">{{ baselineError }}</p>
           <p v-else class="muted">尚未启动编辑。验证后仍保持只读，不会写入当前 PPTX。</p>
@@ -191,6 +191,113 @@
           </template>
           <p v-else class="muted">此演示文稿没有符合 C4B 保守规则的单文本目标。</p>
         </section>
+        <section v-if="editBaseline" class="isolated-metadata-patch" data-testid="c4c-patch-panel">
+          <header>
+            <PaletteIcon :size="15" />
+            <strong>C4C 样式与无障碍预览</strong>
+            <span v-if="stylePatchReport || altTextPatchReport" class="verified-badge">已通过</span>
+          </header>
+          <div class="c4c-block">
+            <h4>单运行字符样式</h4>
+            <template v-if="safeStyleTargets.length">
+              <label>
+                <span>形状文本目标</span>
+                <select v-model="selectedStyleTargetId" data-testid="c4c-style-target">
+                  <option v-for="target in safeStyleTargets" :key="target.id" :value="target.id">
+                    幻灯片 {{ target.slideNumber }} · {{ target.kind === 'shape-text-style' ? '形状' : '文本框' }} · {{ target.objectName }}
+                  </option>
+                </select>
+              </label>
+              <div class="style-grid">
+                <label>
+                  <span>字号（pt）</span>
+                  <input v-model.number="styleFontSizePt" data-testid="c4c-font-size" type="number" min="1" max="4000" step="0.5">
+                </label>
+                <label>
+                  <span>字体</span>
+                  <input v-model="styleFontFamily" data-testid="c4c-font-family" maxlength="100">
+                </label>
+                <label>
+                  <span>颜色</span>
+                  <input v-model="styleColor" data-testid="c4c-color" type="color">
+                </label>
+                <label>
+                  <span>对齐</span>
+                  <select v-model="styleAlignment" data-testid="c4c-alignment">
+                    <option value="left">左对齐</option>
+                    <option value="center">居中</option>
+                    <option value="right">右对齐</option>
+                    <option value="justify">两端对齐</option>
+                  </select>
+                </label>
+              </div>
+              <div class="style-toggles">
+                <label><input v-model="styleBold" type="checkbox">粗体</label>
+                <label><input v-model="styleItalic" type="checkbox">斜体</label>
+                <label><input v-model="styleUnderline" type="checkbox">下划线</label>
+              </div>
+              <div class="patch-actions">
+                <small>单运行、单段落 · 不写入当前文件</small>
+                <button
+                  type="button"
+                  data-testid="c4c-style-preview"
+                  :disabled="stylePatchLoading || !validStyleForm"
+                  @click="previewStylePatch"
+                >
+                  <LoaderCircleIcon v-if="stylePatchLoading" :size="13" class="spin" />
+                  <ShieldCheckIcon v-else :size="13" />
+                  {{ stylePatchLoading ? '验证中' : '验证样式补丁' }}
+                </button>
+              </div>
+              <p v-if="stylePatchError" class="baseline-error">{{ stylePatchError }}</p>
+              <dl v-if="stylePatchReport" class="patch-report style-patch-report">
+                <div><dt>目标类型</dt><dd>{{ selectedStyleTarget?.kind === 'shape-text-style' ? '形状文本' : '文本框' }}</dd></div>
+                <div><dt>变化部件</dt><dd>{{ stylePatchReport.changedParts.length }}</dd></div>
+                <div><dt>语义复读</dt><dd>{{ stylePatchReport.semanticReparseVerified ? '通过' : '未通过' }}</dd></div>
+                <div><dt>源文件写入</dt><dd>{{ stylePatchReport.writesUserFile ? '是' : '否' }}</dd></div>
+              </dl>
+            </template>
+            <p v-else class="muted">没有符合单运行、单段落规则的安全样式目标。</p>
+          </div>
+          <div class="c4c-block">
+            <h4><ImageIcon :size="13" /> 图片替代文本</h4>
+            <template v-if="safeAltTextTargets.length">
+              <label>
+                <span>内嵌图片目标</span>
+                <select v-model="selectedAltTextTargetId" data-testid="c4c-alt-target">
+                  <option v-for="target in safeAltTextTargets" :key="target.id" :value="target.id">
+                    幻灯片 {{ target.slideNumber }} · {{ target.objectName }}
+                  </option>
+                </select>
+              </label>
+              <label>
+                <span>替代文本（留空可清除）</span>
+                <textarea v-model="altTextValue" data-testid="c4c-alt-text" rows="3" maxlength="1024" />
+              </label>
+              <div class="patch-actions">
+                <small>{{ altTextValue.length }}/1024 · 图片字节保持不变</small>
+                <button
+                  type="button"
+                  data-testid="c4c-alt-preview"
+                  :disabled="altTextPatchLoading || altTextValue === selectedAltTextTarget?.altText"
+                  @click="previewAltTextPatch"
+                >
+                  <LoaderCircleIcon v-if="altTextPatchLoading" :size="13" class="spin" />
+                  <ShieldCheckIcon v-else :size="13" />
+                  {{ altTextPatchLoading ? '验证中' : '验证替代文本' }}
+                </button>
+              </div>
+              <p v-if="altTextPatchError" class="baseline-error">{{ altTextPatchError }}</p>
+              <dl v-if="altTextPatchReport" class="patch-report alt-patch-report">
+                <div><dt>变化部件</dt><dd>{{ altTextPatchReport.changedParts.length }}</dd></div>
+                <div><dt>其余部件保全</dt><dd>{{ altTextPatchReport.unchangedPartCount }}</dd></div>
+                <div><dt>语义复读</dt><dd>{{ altTextPatchReport.semanticReparseVerified ? '通过' : '未通过' }}</dd></div>
+                <div><dt>源文件写入</dt><dd>{{ altTextPatchReport.writesUserFile ? '是' : '否' }}</dd></div>
+              </dl>
+            </template>
+            <p v-else class="muted">没有符合规则的单一内嵌图片目标。</p>
+          </div>
+        </section>
         <section>
           <header>
             <MessageSquareTextIcon :size="15" />
@@ -230,6 +337,7 @@
     <footer v-if="report" class="pptx-status">
       <span>{{ report.model.slides.length }} 张幻灯片 · {{ formatBytes(report.size) }}</span>
       <span v-if="routeTargetLabel" class="route-target-status" aria-live="polite">已定位：{{ routeTargetLabel }}</span>
+      <span v-else-if="stylePatchReport || altTextPatchReport" class="baseline-status">C4C 隔离补丁已验证 · 原文件未修改</span>
       <span v-else-if="textPatchReport" class="baseline-status">C4B 隔离补丁已验证 · 原文件未修改</span>
       <span v-else-if="editBaseline" class="baseline-status">C4A 编辑隔离基线已验证 · 原文件未修改</span>
       <span>{{ activeSlide?.objects.length || 0 }} 个当前页对象</span>
@@ -277,10 +385,12 @@ import {
   ChevronRight as ChevronRightIcon,
   ChevronUp as ChevronUpIcon,
   EyeOff as EyeOffIcon,
+  Image as ImageIcon,
   LoaderCircle as LoaderCircleIcon,
   LockKeyhole as LockKeyholeIcon,
   MessageSquareText as MessageSquareTextIcon,
   PanelRight as PanelRightIcon,
+  Palette as PaletteIcon,
   PenLine as PenLineIcon,
   Play as PlayIcon,
   Presentation as PresentationIcon,
@@ -421,6 +531,8 @@ interface PptxEditBaselineReport {
   editingEnabled: boolean
   editableTextTargets: PptxEditableTextTarget[]
   editableNotesTargets: PptxEditableTextTarget[]
+  editableStyleTargets: PptxEditableStyleTarget[]
+  editableAltTextTargets: PptxEditableAltTextTarget[]
 }
 interface PptxEditableTextTarget {
   id: string
@@ -436,6 +548,52 @@ interface PptxEditableTextTarget {
 }
 interface PptxIsolatedTextPatchReport {
   status: string
+  targetId: string
+  targetKind: string
+  targetPart: string
+  changedParts: string[]
+  unchangedPartCount: number
+  unchangedPartsVerified: boolean
+  structuralReparseVerified: boolean
+  semanticReparseVerified: boolean
+  temporaryCopyReopenVerified: boolean
+  sourceUnchanged: boolean
+  writesUserFile: boolean
+}
+interface PptxEditableStyleTarget {
+  id: string
+  kind: 'text-box-style' | 'shape-text-style'
+  slideNumber: number
+  slideId: string
+  partName: string
+  objectId: string
+  objectName: string
+  text: string
+  fontSizeHundredthPoints?: number
+  fontFamily?: string
+  color?: string
+  bold: boolean
+  italic: boolean
+  underline: boolean
+  alignment: 'left' | 'center' | 'right' | 'justify'
+  expectedStyleDigest: string
+  expectedPartDigest: string
+}
+interface PptxEditableAltTextTarget {
+  id: string
+  kind: 'picture-alt-text'
+  slideNumber: number
+  slideId: string
+  partName: string
+  objectId: string
+  objectName: string
+  altText: string
+  expectedMetadataDigest: string
+  expectedPartDigest: string
+}
+interface PptxIsolatedMetadataPatchReport {
+  status: string
+  operation: 'character-style' | 'picture-alt-text'
   targetId: string
   targetKind: string
   targetPart: string
@@ -471,6 +629,22 @@ const replacementText = ref('')
 const textPatchLoading = ref(false)
 const textPatchError = ref('')
 const textPatchReport = ref<PptxIsolatedTextPatchReport>()
+const selectedStyleTargetId = ref('')
+const styleFontSizePt = ref(18)
+const styleFontFamily = ref('Aptos')
+const styleColor = ref('#000000')
+const styleBold = ref(false)
+const styleItalic = ref(false)
+const styleUnderline = ref(false)
+const styleAlignment = ref<PptxEditableStyleTarget['alignment']>('left')
+const stylePatchLoading = ref(false)
+const stylePatchError = ref('')
+const stylePatchReport = ref<PptxIsolatedMetadataPatchReport>()
+const selectedAltTextTargetId = ref('')
+const altTextValue = ref('')
+const altTextPatchLoading = ref(false)
+const altTextPatchError = ref('')
+const altTextPatchReport = ref<PptxIsolatedMetadataPatchReport>()
 const slideStripRef = ref<HTMLElement>()
 const routeTargetSlideIndex = ref(-1)
 const routeTargetObjectId = ref('')
@@ -484,6 +658,35 @@ const safeEditTargets = computed(() => [
 ])
 const selectedEditTarget = computed(() => safeEditTargets.value.find(
   target => target.id === selectedEditTargetId.value,
+))
+const safeStyleTargets = computed(() => editBaseline.value?.editableStyleTargets || [])
+const selectedStyleTarget = computed(() => safeStyleTargets.value.find(
+  target => target.id === selectedStyleTargetId.value,
+))
+const safeAltTextTargets = computed(() => editBaseline.value?.editableAltTextTargets || [])
+const selectedAltTextTarget = computed(() => safeAltTextTargets.value.find(
+  target => target.id === selectedAltTextTargetId.value,
+))
+const styleFormChanged = computed(() => {
+  const target = selectedStyleTarget.value
+  if (!target) return false
+  return Math.round(styleFontSizePt.value * 100) !== target.fontSizeHundredthPoints
+    || styleFontFamily.value.trim() !== (target.fontFamily || '')
+    || styleColor.value.slice(1).toUpperCase() !== (target.color || '')
+    || styleBold.value !== target.bold
+    || styleItalic.value !== target.italic
+    || styleUnderline.value !== target.underline
+    || styleAlignment.value !== target.alignment
+})
+const validStyleForm = computed(() => (
+  Number.isFinite(styleFontSizePt.value)
+  && styleFontSizePt.value >= 1
+  && styleFontSizePt.value <= 4000
+  && styleFontFamily.value.trim().length > 0
+  && styleFontFamily.value.length <= 100
+  && !/[<>"'&\u0000-\u001f]/.test(styleFontFamily.value)
+  && /^#[0-9a-f]{6}$/i.test(styleColor.value)
+  && styleFormChanged.value
 ))
 const activeSlide = computed(() => report.value?.model.slides[activeSlideIndex.value])
 const slideCount = computed(() => report.value?.model.slides.length || 0)
@@ -666,6 +869,18 @@ const prepareEditBaseline = async () => {
     replacementText.value = preferred?.text || ''
     textPatchReport.value = undefined
     textPatchError.value = ''
+    const styleTarget = baseline.editableStyleTargets.find(
+      target => target.slideNumber === activeSlideIndex.value + 1,
+    ) || baseline.editableStyleTargets[0]
+    selectedStyleTargetId.value = styleTarget?.id || ''
+    const altTarget = baseline.editableAltTextTargets.find(
+      target => target.slideNumber === activeSlideIndex.value + 1,
+    ) || baseline.editableAltTextTargets[0]
+    selectedAltTextTargetId.value = altTarget?.id || ''
+    stylePatchReport.value = undefined
+    stylePatchError.value = ''
+    altTextPatchReport.value = undefined
+    altTextPatchError.value = ''
     showDetails.value = true
   } catch (error) {
     editBaseline.value = undefined
@@ -714,6 +929,96 @@ const previewTextPatch = async () => {
     textPatchLoading.value = false
   }
 }
+const syncStyleForm = () => {
+  const target = selectedStyleTarget.value
+  styleFontSizePt.value = (target?.fontSizeHundredthPoints || 1800) / 100
+  styleFontFamily.value = target?.fontFamily || 'Aptos'
+  styleColor.value = `#${target?.color || '000000'}`
+  styleBold.value = target?.bold || false
+  styleItalic.value = target?.italic || false
+  styleUnderline.value = target?.underline || false
+  styleAlignment.value = target?.alignment || 'left'
+  stylePatchReport.value = undefined
+  stylePatchError.value = ''
+}
+const previewStylePatch = async () => {
+  const target = selectedStyleTarget.value
+  if (!report.value || !target || !validStyleForm.value || stylePatchLoading.value) return
+  stylePatchLoading.value = true
+  stylePatchError.value = ''
+  stylePatchReport.value = undefined
+  try {
+    const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_style_patch_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: pptxPath.value,
+      expectedSignature: report.value.signature,
+      targetId: target.id,
+      expectedStyleDigest: target.expectedStyleDigest,
+      expectedPartDigest: target.expectedPartDigest,
+      fontSizeHundredthPoints: Math.round(styleFontSizePt.value * 100),
+      fontFamily: styleFontFamily.value.trim(),
+      color: styleColor.value.slice(1).toUpperCase(),
+      bold: styleBold.value,
+      italic: styleItalic.value,
+      underline: styleUnderline.value,
+      alignment: styleAlignment.value,
+    })
+    if (
+      patch.operation !== 'character-style'
+      || patch.changedParts.length !== 1
+      || patch.changedParts[0] !== target.partName
+      || !patch.unchangedPartsVerified
+      || !patch.structuralReparseVerified
+      || !patch.semanticReparseVerified
+      || !patch.temporaryCopyReopenVerified
+      || !patch.sourceUnchanged
+      || patch.writesUserFile
+    ) {
+      throw new Error('PPTX C4C 样式补丁未通过单部件保护门禁')
+    }
+    stylePatchReport.value = patch
+  } catch (error) {
+    stylePatchError.value = String(error)
+  } finally {
+    stylePatchLoading.value = false
+  }
+}
+const previewAltTextPatch = async () => {
+  const target = selectedAltTextTarget.value
+  if (!report.value || !target || altTextPatchLoading.value) return
+  altTextPatchLoading.value = true
+  altTextPatchError.value = ''
+  altTextPatchReport.value = undefined
+  try {
+    const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_alt_text_patch_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: pptxPath.value,
+      expectedSignature: report.value.signature,
+      targetId: target.id,
+      expectedMetadataDigest: target.expectedMetadataDigest,
+      expectedPartDigest: target.expectedPartDigest,
+      altText: altTextValue.value,
+    })
+    if (
+      patch.operation !== 'picture-alt-text'
+      || patch.changedParts.length !== 1
+      || patch.changedParts[0] !== target.partName
+      || !patch.unchangedPartsVerified
+      || !patch.structuralReparseVerified
+      || !patch.semanticReparseVerified
+      || !patch.temporaryCopyReopenVerified
+      || !patch.sourceUnchanged
+      || patch.writesUserFile
+    ) {
+      throw new Error('PPTX C4C 替代文本补丁未通过单部件保护门禁')
+    }
+    altTextPatchReport.value = patch
+  } catch (error) {
+    altTextPatchError.value = String(error)
+  } finally {
+    altTextPatchLoading.value = false
+  }
+}
 const loadPresentation = async () => {
   if (!pptxPath.value || loading.value) return
   loading.value = true
@@ -724,6 +1029,13 @@ const loadPresentation = async () => {
   replacementText.value = ''
   textPatchReport.value = undefined
   textPatchError.value = ''
+  selectedStyleTargetId.value = ''
+  stylePatchReport.value = undefined
+  stylePatchError.value = ''
+  selectedAltTextTargetId.value = ''
+  altTextValue.value = ''
+  altTextPatchReport.value = undefined
+  altTextPatchError.value = ''
   try {
     report.value = await invoke<PptxReadReport>('read_pptx_presentation', {
       libraryRoot: store.libraryPath,
@@ -749,6 +1061,23 @@ const handleKeydown = (event: KeyboardEvent) => {
 watch(selectedEditTargetId, () => {
   replacementText.value = selectedEditTarget.value?.text || ''
   clearTextPatchResult()
+})
+watch(selectedStyleTargetId, syncStyleForm)
+watch(
+  [styleFontSizePt, styleFontFamily, styleColor, styleBold, styleItalic, styleUnderline, styleAlignment],
+  () => {
+    stylePatchReport.value = undefined
+    stylePatchError.value = ''
+  },
+)
+watch(selectedAltTextTargetId, () => {
+  altTextValue.value = selectedAltTextTarget.value?.altText || ''
+  altTextPatchReport.value = undefined
+  altTextPatchError.value = ''
+})
+watch(altTextValue, () => {
+  altTextPatchReport.value = undefined
+  altTextPatchError.value = ''
 })
 watch(matches, value => {
   activeMatch.value = 0
@@ -830,15 +1159,22 @@ onBeforeUnmount(() => {
 .pptx-details dt { color: var(--text-muted); }
 .pptx-details dd { margin: 0; text-align: right; }
 .pptx-details ul { margin: 0; padding-left: 17px; color: var(--text-secondary); line-height: 1.55; }
-.edit-baseline .verified-badge { margin-left: auto; padding: 2px 6px; border-radius: 999px; color: var(--success-color); background: color-mix(in srgb, var(--success-color) 12%, transparent); font-size: 10px; }
+.pptx-details .verified-badge { margin-left: auto; padding: 2px 6px; border-radius: 999px; color: var(--success-color); background: color-mix(in srgb, var(--success-color) 12%, transparent); font-size: 10px; }
 .baseline-digest { margin: 9px 0 6px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 10px; word-break: break-all; }
 .baseline-error { margin: 0; color: var(--error-color); line-height: 1.5; }
 .baseline-status { color: var(--success-color); }
-.isolated-text-patch label { display: grid; gap: 5px; margin-bottom: 9px; color: var(--text-muted); font-size: 11px; }
-.isolated-text-patch select, .isolated-text-patch textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 5px; outline: none; color: var(--text-primary); background: var(--bg-secondary); font: inherit; }
-.isolated-text-patch select { height: 30px; padding: 0 7px; }
-.isolated-text-patch textarea { min-height: 64px; padding: 7px; resize: vertical; line-height: 1.45; }
-.isolated-text-patch select:focus, .isolated-text-patch textarea:focus { border-color: var(--primary-color); }
+.isolated-text-patch label, .isolated-metadata-patch label { display: grid; gap: 5px; margin-bottom: 9px; color: var(--text-muted); font-size: 11px; }
+.isolated-text-patch select, .isolated-text-patch textarea, .isolated-metadata-patch select, .isolated-metadata-patch textarea, .isolated-metadata-patch input { width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 5px; outline: none; color: var(--text-primary); background: var(--bg-secondary); font: inherit; }
+.isolated-text-patch select, .isolated-metadata-patch select, .isolated-metadata-patch input { height: 30px; padding: 0 7px; }
+.isolated-text-patch textarea, .isolated-metadata-patch textarea { min-height: 64px; padding: 7px; resize: vertical; line-height: 1.45; }
+.isolated-text-patch select:focus, .isolated-text-patch textarea:focus, .isolated-metadata-patch select:focus, .isolated-metadata-patch textarea:focus, .isolated-metadata-patch input:focus { border-color: var(--primary-color); }
+.c4c-block + .c4c-block { margin-top: 13px; padding-top: 12px; border-top: 1px dashed var(--border-color); }
+.c4c-block h4 { margin: 0 0 9px; display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 11px; }
+.style-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 0 7px; }
+.style-grid input[type="color"] { padding: 3px; cursor: pointer; }
+.style-toggles { margin: 0 0 9px; display: flex; flex-wrap: wrap; gap: 5px 10px; }
+.style-toggles label { margin: 0; display: inline-flex; align-items: center; gap: 4px; color: var(--text-secondary); }
+.style-toggles input { width: 14px; height: 14px; padding: 0; accent-color: var(--primary-color); }
 .patch-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .patch-actions small { color: var(--text-muted); font-size: 9px; }
 .patch-actions button { min-height: 28px; padding: 0 8px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--primary-color); border-radius: 5px; color: var(--primary-color); background: transparent; cursor: pointer; font: inherit; font-size: 11px; }
