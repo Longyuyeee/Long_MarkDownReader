@@ -4,7 +4,7 @@
 > 文档版本：1.1
 > 建立日期：2026-07-18  
 > 产品基线：LongEdit v0.7.0
-> 文档状态：需求基线；当前能力与执行顺序以 [2026-07-27 综合审计](./Development_Progress_and_Direction_Audit_2026-07-27.md) 为准
+> 文档状态：需求基线；当前能力、未完成边界与执行顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准
 > 配套方案：[Professional_Knowledge_Workspace_Design.md](./Professional_Knowledge_Workspace_Design.md)
 >
 > 多格式管理补充基线：[Unified_File_Manager_Format_Requirements.md](./Unified_File_Manager_Format_Requirements.md)。该文档已重新对齐“在统一管理器内阅读和编辑 PDF、图表、思维导图、WPS/Office、TXT、JSON 及开发常用格式”的原始目标；涉及格式覆盖和后续优先级时，以该补充基线为准。

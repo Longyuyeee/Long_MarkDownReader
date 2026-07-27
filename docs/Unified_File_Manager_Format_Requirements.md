@@ -2,8 +2,8 @@
 
 > 文档类型：产品需求补充与后续开发基线
 > 版本：1.0
-> 更新日期：2026-07-27
-> 状态：基础需求保持有效；当前能力与后续主线以 [C4D PPTX 可靠另存副本专业审计](./C4D_PPTX_Reliable_Save_Copy_Audit_2026-07-27.md) 和 [C3B3 后综合审计](./Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md) 为准
+> 更新日期：2026-07-28
+> 状态：基础需求保持有效；当前能力、未完成边界和后续收口主线以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准
 > 执行指导：[后续开发步骤与执行指导](./Next_Development_Execution_Guide.md)
 
 ## 0. 不可偏离的基础需求

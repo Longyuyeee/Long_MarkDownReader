@@ -1,12 +1,12 @@
 # LongEdit 后续开发步骤与执行指导
 
 > 文档类型：可执行开发指导
-> 版本：1.0
-> 更新日期：2026-07-27
+> 版本：1.1
+> 更新日期：2026-07-28
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E 已完成；C5A1 已完成隔离图片替换、可靠新副本和真实桌面审计。下一开发入口为 C5A2 PowerPoint/WPS/LibreOffice 输出复开。最新判定见 [C5A1 PPTX 隔离图片替换审计](./C5A1_PPTX_Isolated_Image_Replacement_Audit_2026-07-28.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E 已完成；C5A1 已完成隔离图片替换、可靠新副本和真实桌面审计。下一开发入口为 C5A2 PowerPoint/WPS/LibreOffice 输出复开。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
 
 ## 1. 指导目标
 

@@ -1,11 +1,13 @@
 # Long Markdown Reader 开发交接
 
-更新日期：2026-07-27
+更新日期：2026-07-28
 交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E 已完成；C5A1 隔离图片替换、可靠新副本和真实桌面审计已完成，下一批为 C5A2 三生产者输出复开
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
-> 当前阶段以 `docs/C5A1_PPTX_Isolated_Image_Replacement_Audit_2026-07-28.md` 为最新交付审计；C5A1 已在原有右侧 PPTX 工作区完成单引用 PNG/JPEG 替换、单媒体部件差异、可靠新副本、应用内重开和 9 项真实桌面检查。下一批使用 PowerPoint/WPS/LibreOffice 复开 `c5a-image-copy.pptx`，达到 3/3 前不进入形状增删。
+> 当前能力边界、初始需求对齐度和后续收口顺序以 [`Development_Status_and_Closure_Plan_Audit_2026-07-28.md`](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为权威入口。项目已进入基础需求收口期，但尚不能宣称所有初始需求 100% 完成。
+
+> 当前阶段交付证据见 `docs/C5A1_PPTX_Isolated_Image_Replacement_Audit_2026-07-28.md`；C5A1 已在原有右侧 PPTX 工作区完成单引用 PNG/JPEG 替换、单媒体部件差异、可靠新副本、应用内重开和 9 项真实桌面检查。下一批使用 PowerPoint/WPS/LibreOffice 复开 `c5a-image-copy.pptx`，达到 3/3 前不进入形状增删。
 
 ## 1. 新电脑快速恢复
 
