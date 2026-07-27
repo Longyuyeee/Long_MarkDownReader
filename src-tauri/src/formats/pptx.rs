@@ -24,6 +24,7 @@ pub struct PptxTextStyle {
     pub underline: Option<bool>,
     pub alignment: Option<String>,
     pub vertical_anchor: Option<String>,
+    pub opacity: Option<u32>,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -46,6 +47,18 @@ pub struct PptxObject {
     pub line_width: Option<i64>,
     pub no_fill: bool,
     pub text_style: PptxTextStyle,
+    pub fill_opacity: Option<u32>,
+    pub line_opacity: Option<u32>,
+    pub image_opacity: Option<u32>,
+    pub crop_left: Option<i64>,
+    pub crop_top: Option<i64>,
+    pub crop_right: Option<i64>,
+    pub crop_bottom: Option<i64>,
+    pub parent_group_id: Option<String>,
+    pub group_level: usize,
+    pub child_count: usize,
+    pub text_run_count: usize,
+    pub mixed_text_style: bool,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -133,6 +146,25 @@ struct ObjectState {
     fill_explicit: bool,
     line_explicit: bool,
     text_style: PptxTextStyle,
+    fill_opacity: Option<u32>,
+    line_opacity: Option<u32>,
+    image_opacity: Option<u32>,
+    crop_left: Option<i64>,
+    crop_top: Option<i64>,
+    crop_right: Option<i64>,
+    crop_bottom: Option<i64>,
+    child_x: Option<i64>,
+    child_y: Option<i64>,
+    child_width: Option<i64>,
+    child_height: Option<i64>,
+    parent_group_id: Option<String>,
+    group_level: usize,
+    child_count: usize,
+    in_run: bool,
+    current_run_style: PptxTextStyle,
+    first_run_style: Option<PptxTextStyle>,
+    text_run_count: usize,
+    mixed_text_style: bool,
 }
 
 fn attribute_value(
@@ -173,6 +205,110 @@ fn normalize_hex_color(value: &str) -> Option<String> {
     } else {
         None
     }
+}
+
+fn parse_hex_rgb(color: &str) -> Option<(f64, f64, f64)> {
+    let value = color.trim_start_matches('#');
+    if value.len() != 6 {
+        return None;
+    }
+    Some((
+        u8::from_str_radix(&value[0..2], 16).ok()? as f64 / 255.0,
+        u8::from_str_radix(&value[2..4], 16).ok()? as f64 / 255.0,
+        u8::from_str_radix(&value[4..6], 16).ok()? as f64 / 255.0,
+    ))
+}
+
+fn format_hex_rgb(red: f64, green: f64, blue: f64) -> String {
+    format!(
+        "#{:02X}{:02X}{:02X}",
+        (red.clamp(0.0, 1.0) * 255.0).round() as u8,
+        (green.clamp(0.0, 1.0) * 255.0).round() as u8,
+        (blue.clamp(0.0, 1.0) * 255.0).round() as u8
+    )
+}
+
+fn rgb_to_hsl(red: f64, green: f64, blue: f64) -> (f64, f64, f64) {
+    let maximum = red.max(green).max(blue);
+    let minimum = red.min(green).min(blue);
+    let lightness = (maximum + minimum) / 2.0;
+    if (maximum - minimum).abs() < f64::EPSILON {
+        return (0.0, 0.0, lightness);
+    }
+    let delta = maximum - minimum;
+    let saturation = if lightness > 0.5 {
+        delta / (2.0 - maximum - minimum)
+    } else {
+        delta / (maximum + minimum)
+    };
+    let mut hue = if (maximum - red).abs() < f64::EPSILON {
+        (green - blue) / delta + if green < blue { 6.0 } else { 0.0 }
+    } else if (maximum - green).abs() < f64::EPSILON {
+        (blue - red) / delta + 2.0
+    } else {
+        (red - green) / delta + 4.0
+    };
+    hue /= 6.0;
+    (hue, saturation, lightness)
+}
+
+fn hue_to_rgb(p: f64, q: f64, mut hue: f64) -> f64 {
+    if hue < 0.0 {
+        hue += 1.0;
+    }
+    if hue > 1.0 {
+        hue -= 1.0;
+    }
+    if hue < 1.0 / 6.0 {
+        p + (q - p) * 6.0 * hue
+    } else if hue < 0.5 {
+        q
+    } else if hue < 2.0 / 3.0 {
+        p + (q - p) * (2.0 / 3.0 - hue) * 6.0
+    } else {
+        p
+    }
+}
+
+fn hsl_to_rgb(hue: f64, saturation: f64, lightness: f64) -> (f64, f64, f64) {
+    if saturation.abs() < f64::EPSILON {
+        return (lightness, lightness, lightness);
+    }
+    let q = if lightness < 0.5 {
+        lightness * (1.0 + saturation)
+    } else {
+        lightness + saturation - lightness * saturation
+    };
+    let p = 2.0 * lightness - q;
+    (
+        hue_to_rgb(p, q, hue + 1.0 / 3.0),
+        hue_to_rgb(p, q, hue),
+        hue_to_rgb(p, q, hue - 1.0 / 3.0),
+    )
+}
+
+fn apply_color_transform(color: &str, transform: &[u8], value: u32) -> Option<String> {
+    let (red, green, blue) = parse_hex_rgb(color)?;
+    let factor = value.min(100_000) as f64 / 100_000.0;
+    let (red, green, blue) = match transform {
+        b"shade" => (red * factor, green * factor, blue * factor),
+        b"tint" => (
+            1.0 - (1.0 - red) * factor,
+            1.0 - (1.0 - green) * factor,
+            1.0 - (1.0 - blue) * factor,
+        ),
+        b"lumMod" | b"lumOff" => {
+            let (hue, saturation, lightness) = rgb_to_hsl(red, green, blue);
+            let lightness = if transform == b"lumMod" {
+                lightness * factor
+            } else {
+                lightness + factor
+            };
+            hsl_to_rgb(hue, saturation, lightness.clamp(0.0, 1.0))
+        }
+        _ => return None,
+    };
+    Some(format_hex_rgb(red, green, blue))
 }
 
 fn default_color_map() -> HashMap<String, String> {
@@ -335,32 +471,44 @@ fn parse_background_color(
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(true);
     let mut stack: Vec<String> = Vec::new();
+    let mut color = None;
     loop {
         match reader.read_event() {
             Ok(Event::Start(event)) => {
                 let name = String::from_utf8_lossy(event.local_name().as_ref()).into_owned();
                 if stack.iter().any(|value| value == "bg")
                     && matches!(name.as_str(), "srgbClr" | "sysClr" | "schemeClr")
+                    && color.is_none()
                 {
-                    if let Some(color) =
-                        color_from_event(&event, theme, color_map, reader.decoder())?
-                    {
-                        return Ok(Some(color));
+                    color = color_from_event(&event, theme, color_map, reader.decoder())?;
+                } else if stack.iter().any(|value| value == "bg")
+                    && matches!(name.as_str(), "shade" | "tint" | "lumMod" | "lumOff")
+                {
+                    if let (Some(current), Some(value)) = (
+                        color.as_deref(),
+                        parse_u32(attribute_value(&event, b"val", reader.decoder())?),
+                    ) {
+                        color = apply_color_transform(current, name.as_bytes(), value);
                     }
                 }
                 stack.push(name);
             }
             Ok(Event::Empty(event)) => {
+                let name = event.local_name();
+                let name = name.as_ref();
                 if stack.iter().any(|value| value == "bg")
-                    && matches!(
-                        event.local_name().as_ref(),
-                        b"srgbClr" | b"sysClr" | b"schemeClr"
-                    )
+                    && matches!(name, b"srgbClr" | b"sysClr" | b"schemeClr")
+                    && color.is_none()
                 {
-                    if let Some(color) =
-                        color_from_event(&event, theme, color_map, reader.decoder())?
-                    {
-                        return Ok(Some(color));
+                    color = color_from_event(&event, theme, color_map, reader.decoder())?;
+                } else if stack.iter().any(|value| value == "bg")
+                    && matches!(name, b"shade" | b"tint" | b"lumMod" | b"lumOff")
+                {
+                    if let (Some(current), Some(value)) = (
+                        color.as_deref(),
+                        parse_u32(attribute_value(&event, b"val", reader.decoder())?),
+                    ) {
+                        color = apply_color_transform(current, name, value);
                     }
                 }
             }
@@ -372,7 +520,7 @@ fn parse_background_color(
             Err(error) => return Err(format!("PPTX background XML is invalid: {error}")),
         }
     }
-    Ok(None)
+    Ok(color)
 }
 
 fn relationship_id(
@@ -561,12 +709,30 @@ fn update_object_event(
             state.x = parse_i64(attribute_value(event, b"x", decoder)?);
             state.y = parse_i64(attribute_value(event, b"y", decoder)?);
         }
+        b"chOff" => {
+            state.child_x = parse_i64(attribute_value(event, b"x", decoder)?);
+            state.child_y = parse_i64(attribute_value(event, b"y", decoder)?);
+        }
         b"ext" => {
             state.width = parse_i64(attribute_value(event, b"cx", decoder)?);
             state.height = parse_i64(attribute_value(event, b"cy", decoder)?);
         }
+        b"chExt" => {
+            state.child_width = parse_i64(attribute_value(event, b"cx", decoder)?);
+            state.child_height = parse_i64(attribute_value(event, b"cy", decoder)?);
+        }
         b"xfrm" => state.rotation = parse_i64(attribute_value(event, b"rot", decoder)?),
         b"blip" => state.relationship_id = attribute_value(event, b"embed", decoder)?,
+        b"srcRect" => {
+            state.crop_left = parse_i64(attribute_value(event, b"l", decoder)?);
+            state.crop_top = parse_i64(attribute_value(event, b"t", decoder)?);
+            state.crop_right = parse_i64(attribute_value(event, b"r", decoder)?);
+            state.crop_bottom = parse_i64(attribute_value(event, b"b", decoder)?);
+        }
+        b"alphaModFix" if stack.iter().any(|value| value == "blip") => {
+            state.image_opacity =
+                parse_u32(attribute_value(event, b"amt", decoder)?).map(|value| value.min(100_000));
+        }
         b"ln" => {
             state.line_width = parse_i64(attribute_value(event, b"w", decoder)?);
         }
@@ -581,15 +747,27 @@ fn update_object_event(
         b"rPr" | b"defRPr" | b"endParaRPr" => {
             if let Some(value) = parse_u32(attribute_value(event, b"sz", decoder)?) {
                 state.text_style.font_size_hundredth_points = Some(value);
+                if state.in_run {
+                    state.current_run_style.font_size_hundredth_points = Some(value);
+                }
             }
             if let Some(value) = parse_bool(attribute_value(event, b"b", decoder)?) {
                 state.text_style.bold = Some(value);
+                if state.in_run {
+                    state.current_run_style.bold = Some(value);
+                }
             }
             if let Some(value) = parse_bool(attribute_value(event, b"i", decoder)?) {
                 state.text_style.italic = Some(value);
+                if state.in_run {
+                    state.current_run_style.italic = Some(value);
+                }
             }
             if let Some(value) = attribute_value(event, b"u", decoder)? {
                 state.text_style.underline = Some(value != "none");
+                if state.in_run {
+                    state.current_run_style.underline = Some(value != "none");
+                }
             }
         }
         b"latin"
@@ -598,12 +776,16 @@ fn update_object_event(
                 .any(|value| matches!(value.as_str(), "rPr" | "defRPr" | "endParaRPr")) =>
         {
             if let Some(value) = attribute_value(event, b"typeface", decoder)? {
-                state.text_style.font_family = match value.as_str() {
+                let font_family = match value.as_str() {
                     "+mj-lt" => theme.major_font.clone(),
                     "+mn-lt" => theme.minor_font.clone(),
                     _ if value.is_empty() => None,
                     _ => Some(value),
                 };
+                state.text_style.font_family = font_family.clone();
+                if state.in_run {
+                    state.current_run_style.font_family = font_family;
+                }
             }
         }
         b"pPr" => {
@@ -655,7 +837,10 @@ fn update_object_event(
                     && stack.iter().any(|value| value == "solidFill")
                     && !in_line;
                 if in_text_style {
-                    state.text_style.color = Some(color);
+                    state.text_style.color = Some(color.clone());
+                    if state.in_run {
+                        state.current_run_style.color = Some(color);
+                    }
                 } else if in_line {
                     if !state.line_explicit || !stack.iter().any(|value| value == "lnRef") {
                         state.line_color = Some(color);
@@ -670,15 +855,156 @@ fn update_object_event(
                 }
             }
         }
+        b"shade" | b"tint" | b"lumMod" | b"lumOff" => {
+            if let Some(value) = parse_u32(attribute_value(event, b"val", decoder)?) {
+                let in_text_style = stack.iter().any(|value| {
+                    matches!(value.as_str(), "rPr" | "defRPr" | "endParaRPr" | "fontRef")
+                });
+                let in_line = stack.iter().any(|value| value == "ln")
+                    || stack.iter().any(|value| value == "lnRef");
+                let in_fill = stack.iter().any(|value| value == "solidFill")
+                    || stack.iter().any(|value| value == "fillRef");
+                if in_text_style {
+                    if let Some(color) = state
+                        .text_style
+                        .color
+                        .as_deref()
+                        .and_then(|color| apply_color_transform(color, name, value))
+                    {
+                        state.text_style.color = Some(color.clone());
+                        if state.in_run {
+                            state.current_run_style.color = Some(color);
+                        }
+                    }
+                } else if in_line {
+                    if let Some(color) = state
+                        .line_color
+                        .as_deref()
+                        .and_then(|color| apply_color_transform(color, name, value))
+                    {
+                        state.line_color = Some(color);
+                    }
+                } else if in_fill {
+                    if let Some(color) = state
+                        .fill_color
+                        .as_deref()
+                        .and_then(|color| apply_color_transform(color, name, value))
+                    {
+                        state.fill_color = Some(color);
+                    }
+                }
+            }
+        }
+        b"alpha" | b"alphaMod" => {
+            if let Some(value) = parse_u32(attribute_value(event, b"val", decoder)?) {
+                let value = value.min(100_000);
+                let in_text_style = stack.iter().any(|value| {
+                    matches!(value.as_str(), "rPr" | "defRPr" | "endParaRPr" | "fontRef")
+                });
+                let in_line = stack.iter().any(|value| value == "ln")
+                    || stack.iter().any(|value| value == "lnRef");
+                let in_fill = stack.iter().any(|value| value == "solidFill")
+                    || stack.iter().any(|value| value == "fillRef");
+                let current = |existing: Option<u32>| {
+                    if name == b"alphaMod" {
+                        existing.unwrap_or(100_000).saturating_mul(value) / 100_000
+                    } else {
+                        value
+                    }
+                };
+                if stack.iter().any(|value| value == "blip") {
+                    state.image_opacity = Some(current(state.image_opacity));
+                } else if in_text_style {
+                    let opacity = current(state.text_style.opacity);
+                    state.text_style.opacity = Some(opacity);
+                    if state.in_run {
+                        state.current_run_style.opacity = Some(opacity);
+                    }
+                } else if in_line {
+                    state.line_opacity = Some(current(state.line_opacity));
+                } else if in_fill {
+                    state.fill_opacity = Some(current(state.fill_opacity));
+                }
+            }
+        }
         _ => {}
     }
     Ok(())
 }
 
+fn transform_axis(
+    value: Option<i64>,
+    size: Option<i64>,
+    group_offset: Option<i64>,
+    group_size: Option<i64>,
+    child_offset: Option<i64>,
+    child_size: Option<i64>,
+) -> (Option<i64>, Option<i64>) {
+    let (
+        Some(value),
+        Some(size),
+        Some(group_offset),
+        Some(group_size),
+        Some(child_offset),
+        Some(child_size),
+    ) = (
+        value,
+        size,
+        group_offset,
+        group_size,
+        child_offset,
+        child_size,
+    )
+    else {
+        return (value, size);
+    };
+    if child_size <= 0 {
+        return (Some(value), Some(size));
+    }
+    let transformed_value = group_offset as i128
+        + (value as i128 - child_offset as i128) * group_size as i128 / child_size as i128;
+    let transformed_size = size as i128 * group_size as i128 / child_size as i128;
+    (
+        i64::try_from(transformed_value).ok(),
+        i64::try_from(transformed_size).ok(),
+    )
+}
+
+fn apply_group_transforms(state: &mut ObjectState, groups: &[ObjectState]) {
+    for group in groups
+        .iter()
+        .rev()
+        .filter(|group| group.root_name == "grpSp")
+    {
+        let (x, width) = transform_axis(
+            state.x,
+            state.width,
+            group.x,
+            group.width,
+            group.child_x,
+            group.child_width,
+        );
+        let (y, height) = transform_axis(
+            state.y,
+            state.height,
+            group.y,
+            group.height,
+            group.child_y,
+            group.child_height,
+        );
+        state.x = x;
+        state.y = y;
+        state.width = width;
+        state.height = height;
+    }
+}
+
 fn finalize_object(
-    state: ObjectState,
+    mut state: ObjectState,
     relationships: &HashMap<String, Relationship>,
+    groups: &[ObjectState],
 ) -> PptxObject {
+    apply_group_transforms(&mut state, groups);
     let media_part = state
         .relationship_id
         .as_ref()
@@ -710,6 +1036,18 @@ fn finalize_object(
         line_width: state.line_width,
         no_fill: state.no_fill,
         text_style: state.text_style,
+        fill_opacity: state.fill_opacity,
+        line_opacity: state.line_opacity,
+        image_opacity: state.image_opacity,
+        crop_left: state.crop_left,
+        crop_top: state.crop_top,
+        crop_right: state.crop_right,
+        crop_bottom: state.crop_bottom,
+        parent_group_id: state.parent_group_id,
+        group_level: state.group_level,
+        child_count: state.child_count,
+        text_run_count: state.text_run_count,
+        mixed_text_style: state.mixed_text_style,
     }
 }
 
@@ -722,7 +1060,7 @@ fn parse_slide(
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(false);
     let mut depth = 0_usize;
-    let mut current: Option<ObjectState> = None;
+    let mut object_stack: Vec<ObjectState> = Vec::new();
     let mut objects = Vec::new();
     let mut in_text = false;
     let mut has_background = false;
@@ -742,14 +1080,29 @@ fn parse_slide(
                 if name == b"timing" {
                     has_animation = true;
                 }
-                if current.is_none() && matches!(name, b"sp" | b"pic" | b"grpSp" | b"graphicFrame")
-                {
-                    current = Some(ObjectState {
+                if matches!(name, b"sp" | b"pic" | b"grpSp" | b"graphicFrame") {
+                    let parent_group_id = object_stack
+                        .iter()
+                        .rev()
+                        .find(|state| state.root_name == "grpSp")
+                        .map(|state| state.id.clone())
+                        .filter(|id| !id.is_empty());
+                    let group_level = object_stack
+                        .iter()
+                        .filter(|state| state.root_name == "grpSp")
+                        .count();
+                    object_stack.push(ObjectState {
                         root_name: String::from_utf8_lossy(name).into_owned(),
                         depth,
+                        parent_group_id,
+                        group_level,
                         ..ObjectState::default()
                     });
-                } else if let Some(state) = current.as_mut() {
+                } else if let Some(state) = object_stack.last_mut() {
+                    if name == b"r" {
+                        state.in_run = true;
+                        state.current_run_style = PptxTextStyle::default();
+                    }
                     update_object_event(state, &event, &stack, theme, color_map, reader.decoder())?;
                     if name == b"t" {
                         in_text = true;
@@ -766,12 +1119,12 @@ fn parse_slide(
                 if name == b"timing" {
                     has_animation = true;
                 }
-                if let Some(state) = current.as_mut() {
+                if let Some(state) = object_stack.last_mut() {
                     update_object_event(state, &event, &stack, theme, color_map, reader.decoder())?;
                 }
             }
             Ok(Event::Text(event)) if in_text => {
-                if let Some(state) = current.as_mut() {
+                if let Some(state) = object_stack.last_mut() {
                     let value = event
                         .decode()
                         .map_err(|error| format!("PPTX 幻灯片文本解码失败: {error}"))?;
@@ -782,16 +1135,37 @@ fn parse_slide(
                 }
             }
             Ok(Event::End(event)) => {
-                if event.local_name().as_ref() == b"t" {
+                let end_name = event.local_name();
+                let end_name = end_name.as_ref();
+                if end_name == b"t" {
                     in_text = false;
                 }
-                let should_finalize = current.as_ref().is_some_and(|state| {
-                    state.depth == depth
-                        && event.local_name().as_ref() == state.root_name.as_bytes()
+                if end_name == b"r" {
+                    if let Some(state) = object_stack.last_mut().filter(|state| state.in_run) {
+                        state.text_run_count += 1;
+                        if let Some(first) = &state.first_run_style {
+                            if first != &state.current_run_style {
+                                state.mixed_text_style = true;
+                            }
+                        } else {
+                            state.first_run_style = Some(state.current_run_style.clone());
+                        }
+                        state.in_run = false;
+                    }
+                }
+                let should_finalize = object_stack.last().is_some_and(|state| {
+                    state.depth == depth && end_name == state.root_name.as_bytes()
                 });
                 if should_finalize {
-                    let state = current.take().expect("checked object state");
-                    objects.push(finalize_object(state, relationships));
+                    let state = object_stack.pop().expect("checked object state");
+                    if let Some(parent) = object_stack
+                        .iter_mut()
+                        .rev()
+                        .find(|parent| parent.root_name == "grpSp")
+                    {
+                        parent.child_count += 1;
+                    }
+                    objects.push(finalize_object(state, relationships, &object_stack));
                     if objects.len() > MAX_PPTX_OBJECTS {
                         return Err("PPTX 对象数量超过 100,000 上限".into());
                     }
@@ -806,6 +1180,15 @@ fn parse_slide(
     }
     if objects.iter().any(|object| object.kind == "graphic") {
         warnings.push("图表、SmartArt 或其他图形框架当前只显示占位".into());
+    }
+    if objects.iter().any(|object| object.mixed_text_style) {
+        warnings.push("混合文本样式已安全降级为基础文本框样式".into());
+    }
+    if objects
+        .iter()
+        .any(|object| object.kind == "group" && object.rotation.is_some_and(|value| value != 0))
+    {
+        warnings.push("旋转组合对象的子对象坐标当前仅近似呈现".into());
     }
     if has_animation {
         warnings.push("动画和切换只读保真，当前不执行".into());
@@ -1277,6 +1660,91 @@ mod tests {
     }
 
     #[test]
+    fn expands_group_coordinates_and_preserves_crop_transparency_and_mixed_text() {
+        let xml = br#"<p:sld xmlns:p="p" xmlns:a="a" xmlns:r="r"><p:cSld><p:spTree>
+            <p:grpSp><p:nvGrpSpPr><p:cNvPr id="10" name="Scaled group"/></p:nvGrpSpPr>
+              <p:grpSpPr><a:xfrm><a:off x="1000" y="2000"/><a:ext cx="4000" cy="2000"/><a:chOff x="0" y="0"/><a:chExt cx="2000" cy="1000"/></a:xfrm></p:grpSpPr>
+              <p:sp><p:nvSpPr><p:cNvPr id="11" name="Scaled child"/></p:nvSpPr>
+                <p:spPr><a:xfrm><a:off x="500" y="250"/><a:ext cx="1000" cy="500"/></a:xfrm><a:solidFill><a:schemeClr val="accent1"><a:shade val="50000"/><a:alpha val="75000"/></a:schemeClr></a:solidFill></p:spPr>
+                <p:txBody><a:p><a:r><a:rPr sz="1000"/><a:t>First</a:t></a:r><a:r><a:rPr sz="2000" b="1"/><a:t>Second</a:t></a:r></a:p></p:txBody>
+              </p:sp>
+            </p:grpSp>
+            <p:pic><p:nvPicPr><p:cNvPr id="12" name="Cropped image"/></p:nvPicPr>
+              <p:blipFill><a:blip r:embed="rIdImage"><a:alphaModFix amt="50000"/></a:blip><a:srcRect l="10000" t="20000" r="30000" b="0"/></p:blipFill>
+              <p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1000" cy="1000"/></a:xfrm></p:spPr>
+            </p:pic>
+        </p:spTree></p:cSld></p:sld>"#;
+        let relationships = HashMap::from([(
+            "rIdImage".into(),
+            Relationship {
+                target: "ppt/media/crop.png".into(),
+                relation_type:
+                    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
+                        .into(),
+            },
+        )]);
+        let theme = ThemeData {
+            colors: HashMap::from([("accent1".into(), "#808080".into())]),
+            ..ThemeData::default()
+        };
+        let (objects, _, _, warnings) =
+            parse_slide(xml, &relationships, &theme, &default_color_map()).unwrap();
+
+        let child = objects.iter().find(|object| object.id == "11").unwrap();
+        assert_eq!(
+            (child.x, child.y, child.width, child.height),
+            (Some(2000), Some(2500), Some(2000), Some(1000))
+        );
+        assert_eq!(child.parent_group_id.as_deref(), Some("10"));
+        assert_eq!(child.group_level, 1);
+        assert_eq!(child.fill_color.as_deref(), Some("#404040"));
+        assert_eq!(child.fill_opacity, Some(75_000));
+        assert_eq!(child.text_run_count, 2);
+        assert!(child.mixed_text_style);
+
+        let group = objects.iter().find(|object| object.id == "10").unwrap();
+        assert_eq!(group.child_count, 1);
+        let picture = objects.iter().find(|object| object.id == "12").unwrap();
+        assert_eq!(picture.image_opacity, Some(50_000));
+        assert_eq!(
+            (
+                picture.crop_left,
+                picture.crop_top,
+                picture.crop_right,
+                picture.crop_bottom
+            ),
+            (Some(10_000), Some(20_000), Some(30_000), Some(0))
+        );
+        assert!(warnings.iter().any(|warning| warning.contains("混合文本")));
+    }
+
+    #[test]
+    fn applies_ooxml_color_transforms_in_document_order() {
+        assert_eq!(
+            apply_color_transform("#808080", b"shade", 50_000).as_deref(),
+            Some("#404040")
+        );
+        assert_eq!(
+            apply_color_transform("#808080", b"tint", 50_000).as_deref(),
+            Some("#C0C0C0")
+        );
+        assert_eq!(
+            apply_color_transform("#808080", b"lumMod", 50_000).as_deref(),
+            Some("#404040")
+        );
+        assert_eq!(
+            parse_background_color(
+                br#"<p:cSld xmlns:p="p" xmlns:a="a"><p:bg><p:bgPr><a:solidFill><a:srgbClr val="808080"><a:tint val="50000"/></a:srgbClr></a:solidFill></p:bgPr></p:bg></p:cSld>"#,
+                &ThemeData::default(),
+                &default_color_map(),
+            )
+            .unwrap()
+            .as_deref(),
+            Some("#C0C0C0")
+        );
+    }
+
+    #[test]
     fn parses_real_powerpoint_and_libreoffice_producer_fixtures() {
         let fixtures = [
             (
@@ -1319,6 +1787,24 @@ mod tests {
                         || object.text_style.font_size_hundredth_points.is_some())),
                 "{producer}"
             );
+            if producer == "Microsoft PowerPoint" {
+                assert!(
+                    model
+                        .slides
+                        .iter()
+                        .any(|slide| slide.objects.iter().any(|object| {
+                            object.parent_group_id.is_some() && object.group_level >= 1
+                        })),
+                    "PowerPoint group children must be expanded"
+                );
+                assert!(
+                    model.slides.iter().any(|slide| slide
+                        .objects
+                        .iter()
+                        .any(|object| object.kind == "group" && object.child_count >= 2)),
+                    "PowerPoint group boundary must retain child count"
+                );
+            }
         }
     }
 }

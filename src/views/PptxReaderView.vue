@@ -77,7 +77,7 @@
           <template v-for="object in activeSlide.objects" :key="object.id || object.name">
             <div
               class="slide-object"
-              :class="[object.kind, { 'search-hit': matchedObjectIds.has(object.id) }]"
+              :class="[object.kind, { 'search-hit': matchedObjectIds.has(object.id), 'expanded-group': object.kind === 'group' && object.childCount > 0 }]"
               :style="objectStyle(object)"
               :title="object.altText || object.name"
             >
@@ -85,10 +85,11 @@
                 v-if="object.kind === 'picture' && mediaByPart[object.mediaPart || '']"
                 :src="mediaByPart[object.mediaPart || '']"
                 :alt="object.altText || object.name"
+                :style="imageStyle(object)"
               >
               <ImageIcon v-else-if="object.kind === 'picture'" :size="26" />
               <span v-else-if="object.kind === 'graphic'">复杂图形</span>
-              <span v-else-if="object.kind === 'group'">组合对象</span>
+              <span v-else-if="object.kind === 'group' && !object.childCount">组合对象</span>
               <p v-else-if="object.text">{{ object.text }}</p>
             </div>
           </template>
@@ -147,17 +148,18 @@
           v-for="object in activeSlide.objects"
           :key="`present-${object.id || object.name}`"
           class="slide-object"
-          :class="object.kind"
+          :class="[object.kind, { 'expanded-group': object.kind === 'group' && object.childCount > 0 }]"
           :style="objectStyle(object)"
         >
           <img
             v-if="object.kind === 'picture' && mediaByPart[object.mediaPart || '']"
             :src="mediaByPart[object.mediaPart || '']"
             :alt="object.altText || object.name"
+            :style="imageStyle(object)"
           >
           <ImageIcon v-else-if="object.kind === 'picture'" :size="32" />
           <span v-else-if="object.kind === 'graphic'">复杂图形</span>
-          <span v-else-if="object.kind === 'group'">组合对象</span>
+          <span v-else-if="object.kind === 'group' && !object.childCount">组合对象</span>
           <p v-else-if="object.text">{{ object.text }}</p>
         </div>
       </div>
@@ -224,7 +226,20 @@ interface PptxObject {
     underline?: boolean
     alignment?: string
     verticalAnchor?: string
+    opacity?: number
   }
+  fillOpacity?: number
+  lineOpacity?: number
+  imageOpacity?: number
+  cropLeft?: number
+  cropTop?: number
+  cropRight?: number
+  cropBottom?: number
+  parentGroupId?: string
+  groupLevel: number
+  childCount: number
+  textRunCount: number
+  mixedTextStyle: boolean
 }
 interface PptxSlide {
   id: string
@@ -335,6 +350,35 @@ const slideStyle = (slide: PptxSlide) => ({
   backgroundColor: slide.backgroundColor || '#FFFFFF',
 })
 
+const colorWithOpacity = (color: string, opacity?: number) => {
+  if (opacity == null || opacity >= 100000 || !/^#[\da-f]{6}$/i.test(color)) return color
+  const alpha = Math.max(0, Math.min(1, opacity / 100000))
+  const red = Number.parseInt(color.slice(1, 3), 16)
+  const green = Number.parseInt(color.slice(3, 5), 16)
+  const blue = Number.parseInt(color.slice(5, 7), 16)
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`
+}
+
+const imageStyle = (object: PptxObject) => {
+  const style: Record<string, string> = {}
+  if (object.imageOpacity != null) style.opacity = `${Math.max(0, Math.min(1, object.imageOpacity / 100000))}`
+  const left = Math.max(0, object.cropLeft || 0)
+  const top = Math.max(0, object.cropTop || 0)
+  const right = Math.max(0, object.cropRight || 0)
+  const bottom = Math.max(0, object.cropBottom || 0)
+  const visibleWidth = 100000 - left - right
+  const visibleHeight = 100000 - top - bottom
+  if (visibleWidth > 0 && visibleHeight > 0 && (left || top || right || bottom)) {
+    style.position = 'absolute'
+    style.left = `${-left / visibleWidth * 100}%`
+    style.top = `${-top / visibleHeight * 100}%`
+    style.width = `${100000 / visibleWidth * 100}%`
+    style.height = `${100000 / visibleHeight * 100}%`
+    style.objectFit = 'fill'
+  }
+  return style
+}
+
 const objectStyle = (object: PptxObject) => {
   const model = report.value?.model
   const style: Record<string, string> = {}
@@ -346,22 +390,22 @@ const objectStyle = (object: PptxObject) => {
   }
   if (object.rotation != null) style.transform = `rotate(${object.rotation / 60000}deg)`
   if (object.noFill) style.backgroundColor = 'transparent'
-  else if (object.fillColor) style.backgroundColor = object.fillColor
+  else if (object.fillColor) style.backgroundColor = colorWithOpacity(object.fillColor, object.fillOpacity)
   if (object.lineColor) {
-    style.borderColor = object.lineColor
+    style.borderColor = colorWithOpacity(object.lineColor, object.lineOpacity)
     style.borderStyle = 'solid'
     style.borderWidth = `${Math.max(1, Math.min(12, (object.lineWidth || 9525) / 9525))}px`
   }
   const text = object.textStyle
-  if (text?.fontSizeHundredthPoints && model?.height) {
+  if (!object.mixedTextStyle && text?.fontSizeHundredthPoints && model?.height) {
     const relativeHeight = text.fontSizeHundredthPoints / 100 * 12700 / model.height * 100
     style.fontSize = `clamp(8px, ${relativeHeight}cqh, 72px)`
   }
-  if (text?.fontFamily) style.fontFamily = `"${text.fontFamily.replace(/"/g, '')}", sans-serif`
-  if (text?.color) style.color = text.color
-  if (text?.bold != null) style.fontWeight = text.bold ? '700' : '400'
-  if (text?.italic != null) style.fontStyle = text.italic ? 'italic' : 'normal'
-  if (text?.underline != null) style.textDecoration = text.underline ? 'underline' : 'none'
+  if (!object.mixedTextStyle && text?.fontFamily) style.fontFamily = `"${text.fontFamily.replace(/"/g, '')}", sans-serif`
+  if (!object.mixedTextStyle && text?.color) style.color = colorWithOpacity(text.color, text.opacity)
+  if (!object.mixedTextStyle && text?.bold != null) style.fontWeight = text.bold ? '700' : '400'
+  if (!object.mixedTextStyle && text?.italic != null) style.fontStyle = text.italic ? 'italic' : 'normal'
+  if (!object.mixedTextStyle && text?.underline != null) style.textDecoration = text.underline ? 'underline' : 'none'
   if (text?.alignment) style.textAlign = text.alignment
   if (text?.verticalAnchor) {
     style.alignItems = text.verticalAnchor === 'top'
@@ -457,6 +501,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 .slide-object img { width: 100%; height: 100%; display: block; object-fit: contain; }
 .slide-object.shape { border: 1px solid #8b97a8; background: #edf2f8; }
 .slide-object.picture:not(:has(img)), .slide-object.graphic, .slide-object.group { border: 1px dashed #8b97a8; color: #697586; background: #f5f7fa; font-size: 11px; }
+.slide-object.group.expanded-group { pointer-events: none; border: 0; background: transparent; }
 .slide-object.search-hit { outline: 4px solid rgba(230, 168, 24, .75); outline-offset: 2px; }
 .empty-slide { position: absolute; inset: 0; display: grid; place-items: center; color: #8a939e; }
 .pptx-details { min-width: 0; overflow: auto; padding: 13px; border-left: 1px solid var(--border-color); background: var(--bg-primary); }
