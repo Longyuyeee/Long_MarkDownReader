@@ -357,9 +357,11 @@ interface DocxReadReport {
   editableTextTargets: Array<{
     id: string
     blockId: string
-    kind: 'paragraph' | 'heading'
+    kind: 'paragraph' | 'heading' | 'list-item' | 'table-cell'
     text: string
     expectedTextDigest: string
+    rowIndex: number | null
+    columnIndex: number | null
   }>
   readOnly: boolean
   model: {

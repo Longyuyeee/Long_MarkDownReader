@@ -21,6 +21,8 @@ pub struct DocxEditableTextTarget {
     pub kind: String,
     pub text: String,
     pub expected_text_digest: String,
+    pub row_index: Option<usize>,
+    pub column_index: Option<usize>,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -52,6 +54,9 @@ struct ParagraphTextSpan {
     start: usize,
     end: usize,
     safe: bool,
+    table_index: Option<usize>,
+    row_index: Option<usize>,
+    column_index: Option<usize>,
 }
 
 #[derive(Default)]
@@ -62,6 +67,9 @@ struct ParagraphScanState {
     text_element_count: usize,
     safe: bool,
     in_text: bool,
+    table_index: Option<usize>,
+    row_index: Option<usize>,
+    column_index: Option<usize>,
 }
 
 fn digest(bytes: &[u8]) -> String {
@@ -95,8 +103,7 @@ pub fn docx_document_part_digest(source: &[u8]) -> Result<String, String> {
 fn forbidden_text_carrier(name: &[u8]) -> bool {
     matches!(
         name,
-        b"numPr"
-            | b"ins"
+        b"ins"
             | b"del"
             | b"moveFrom"
             | b"moveTo"
@@ -134,10 +141,14 @@ fn scan_document_paragraphs(document_xml: &[u8]) -> Result<Vec<ParagraphTextSpan
     let mut buffer = Vec::new();
     let mut in_body = false;
     let mut table_depth = 0_usize;
+    let mut table_number = 0_usize;
+    let mut row_number = 0_usize;
+    let mut cell_number = 0_usize;
     let mut sdt_depth = 0_usize;
     let mut paragraph_number = 0_usize;
     let mut current: Option<ParagraphScanState> = None;
     let mut spans = Vec::new();
+    let mut cell_paragraph_counts = BTreeMap::new();
 
     loop {
         match reader
@@ -149,13 +160,40 @@ fn scan_document_paragraphs(document_xml: &[u8]) -> Result<Vec<ParagraphTextSpan
                 let name = name.as_ref();
                 match name {
                     b"body" => in_body = true,
-                    b"tbl" => table_depth += 1,
+                    b"tbl" => {
+                        if table_depth == 0 {
+                            table_number += 1;
+                            row_number = 0;
+                        }
+                        table_depth += 1;
+                    }
+                    b"tr" if table_depth == 1 => {
+                        row_number += 1;
+                        cell_number = 0;
+                    }
+                    b"tc" if table_depth == 1 => cell_number += 1,
                     b"sdt" => sdt_depth += 1,
-                    b"p" if in_body && table_depth == 0 => {
+                    b"p" if in_body => {
                         paragraph_number += 1;
+                        let in_simple_table_cell =
+                            table_depth == 1 && row_number > 0 && cell_number > 0;
+                        let (table_index, row_index, column_index) = if in_simple_table_cell {
+                            let coordinates = (table_number - 1, row_number - 1, cell_number - 1);
+                            *cell_paragraph_counts.entry(coordinates).or_insert(0_usize) += 1;
+                            (
+                                Some(coordinates.0),
+                                Some(coordinates.1),
+                                Some(coordinates.2),
+                            )
+                        } else {
+                            (None, None, None)
+                        };
                         current = Some(ParagraphScanState {
                             paragraph_index: paragraph_number,
-                            safe: sdt_depth == 0,
+                            safe: sdt_depth == 0 && (table_depth == 0 || in_simple_table_cell),
+                            table_index,
+                            row_index,
+                            column_index,
                             ..Default::default()
                         });
                     }
@@ -253,6 +291,9 @@ fn scan_document_paragraphs(document_xml: &[u8]) -> Result<Vec<ParagraphTextSpan
                                 start,
                                 end,
                                 safe: paragraph.safe && paragraph.text_element_count == 1,
+                                table_index: paragraph.table_index,
+                                row_index: paragraph.row_index,
+                                column_index: paragraph.column_index,
                             });
                         }
                     }
@@ -270,6 +311,15 @@ fn scan_document_paragraphs(document_xml: &[u8]) -> Result<Vec<ParagraphTextSpan
         }
         buffer.clear();
     }
+    for span in &mut spans {
+        if let (Some(table), Some(row), Some(column)) =
+            (span.table_index, span.row_index, span.column_index)
+        {
+            span.safe &= cell_paragraph_counts
+                .get(&(table, row, column))
+                .is_some_and(|count| *count == 1);
+        }
+    }
     Ok(spans)
 }
 
@@ -283,6 +333,57 @@ fn editable_targets_with_spans(
     let mut targets = Vec::new();
 
     for paragraph in paragraphs {
+        if let (Some(table_index), Some(row_index), Some(column_index)) = (
+            paragraph.table_index,
+            paragraph.row_index,
+            paragraph.column_index,
+        ) {
+            let Some(block) = model
+                .blocks
+                .iter()
+                .filter(|block| block.kind == "table")
+                .nth(table_index)
+            else {
+                continue;
+            };
+            let Some(cell) = block
+                .rows
+                .get(row_index)
+                .and_then(|row| row.cells.get(column_index))
+            else {
+                continue;
+            };
+            if !paragraph.safe
+                || paragraph.text.is_empty()
+                || cell.text != paragraph.text
+                || cell.continuation
+                || cell.column_span != 1
+                || cell.row_span != 1
+            {
+                continue;
+            }
+            let text_digest = digest(paragraph.text.as_bytes());
+            targets.push((
+                DocxEditableTextTarget {
+                    id: format!(
+                        "docx-table-{}-r{}-c{}-{}",
+                        table_index + 1,
+                        row_index + 1,
+                        column_index + 1,
+                        &text_digest[..12]
+                    ),
+                    block_id: block.id.clone(),
+                    kind: "table-cell".into(),
+                    text: paragraph.text.clone(),
+                    expected_text_digest: text_digest,
+                    row_index: Some(row_index),
+                    column_index: Some(column_index),
+                },
+                paragraph,
+            ));
+            continue;
+        }
+
         let Some((offset, block)) =
             model.blocks[block_cursor..]
                 .iter()
@@ -299,7 +400,7 @@ fn editable_targets_with_spans(
         block_cursor += offset + 1;
         if !paragraph.safe
             || paragraph.text.is_empty()
-            || !matches!(block.kind.as_str(), "paragraph" | "heading")
+            || !matches!(block.kind.as_str(), "paragraph" | "heading" | "list-item")
         {
             continue;
         }
@@ -315,6 +416,8 @@ fn editable_targets_with_spans(
                 kind: block.kind.clone(),
                 text: paragraph.text.clone(),
                 expected_text_digest: text_digest,
+                row_index: None,
+                column_index: None,
             },
             paragraph,
         ));
@@ -523,12 +626,19 @@ pub fn build_docx_text_patch_isolated(
     let semantic_match = output_targets.iter().any(|candidate| {
         candidate.block_id == target.block_id
             && candidate.kind == target.kind
+            && candidate.row_index == target.row_index
+            && candidate.column_index == target.column_index
             && candidate.text == replacement_text
     });
     if !semantic_match {
-        return Err("DOCX C2B 隔离输出语义复读与目标文本不一致".into());
+        return Err("DOCX C2B/C2C 隔离输出语义复读与目标文本不一致".into());
     }
-    report.engine = "LongEdit C2B isolated paragraph text patch".into();
+    report.engine = if matches!(target.kind.as_str(), "list-item" | "table-cell") {
+        "LongEdit C2C isolated structured text patch"
+    } else {
+        "LongEdit C2B isolated paragraph text patch"
+    }
+    .into();
     report.semantic_target_id = Some(target.id);
     report.semantic_kind = Some(target.kind);
     report.semantic_reparse_verified = true;
@@ -607,22 +717,52 @@ mod tests {
         let source = include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx");
         let model = parse_docx(source).unwrap();
         let targets = inspect_docx_editable_text_targets(source, &model).unwrap();
+        let narrative_targets = targets
+            .iter()
+            .filter(|target| matches!(target.kind.as_str(), "paragraph" | "heading"))
+            .collect::<Vec<_>>();
 
-        assert!(targets.iter().any(|target| {
+        assert!(narrative_targets.iter().any(|target| {
             target.kind == "heading" && target.text == "Microsoft Word Producer Fixture"
         }));
-        assert!(targets
+        assert!(narrative_targets
             .iter()
             .any(|target| target.text == "Before explicit page break."));
-        assert!(!targets.iter().any(|target| target.text
+        assert!(!narrative_targets.iter().any(|target| target.text
             == "This document was created and saved by Microsoft Word for LongEdit compatibility auditing."));
-        assert!(!targets
-            .iter()
-            .any(|target| target.text == "Structured reading"));
-        assert!(targets.iter().all(|target| {
+        assert!(narrative_targets.iter().all(|target| {
             matches!(target.kind.as_str(), "paragraph" | "heading")
                 && target.expected_text_digest.len() == 64
+                && target.row_index.is_none()
+                && target.column_index.is_none()
         }));
+    }
+
+    #[test]
+    fn lists_safe_list_items_and_unmerged_single_paragraph_table_cells() {
+        let source = include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx");
+        let model = parse_docx(source).unwrap();
+        let targets = inspect_docx_editable_text_targets(source, &model).unwrap();
+
+        let list = targets
+            .iter()
+            .find(|target| target.kind == "list-item" && target.text == "Structured reading")
+            .unwrap();
+        assert!(list.row_index.is_none());
+        assert!(list.column_index.is_none());
+
+        let cell = targets
+            .iter()
+            .find(|target| target.kind == "table-cell" && target.text == "Available")
+            .unwrap();
+        assert_eq!(cell.row_index, Some(1));
+        assert_eq!(cell.column_index, Some(1));
+        assert!(!targets
+            .iter()
+            .any(|target| target.kind == "table-cell" && target.text == "Capability matrix"));
+        assert!(!targets
+            .iter()
+            .any(|target| target.kind == "table-cell" && target.text == "Status"));
     }
 
     #[test]
@@ -677,5 +817,41 @@ mod tests {
         )
         .unwrap_err()
         .contains("控制字符"));
+    }
+
+    #[test]
+    fn patches_list_and_table_cell_targets_with_coordinate_stability() {
+        let source = include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx");
+        let model = parse_docx(source).unwrap();
+        let targets = inspect_docx_editable_text_targets(source, &model).unwrap();
+
+        for (kind, original, replacement) in [
+            ("list-item", "Structured reading", "Structured editing"),
+            ("table-cell", "Available", "Audited"),
+        ] {
+            let target = targets
+                .iter()
+                .find(|target| target.kind == kind && target.text == original)
+                .unwrap();
+            let (report, output) = build_docx_text_patch_isolated(
+                source,
+                &target.id,
+                &target.expected_text_digest,
+                replacement,
+            )
+            .unwrap();
+            assert!(report.semantic_reparse_verified);
+            assert_eq!(report.semantic_kind.as_deref(), Some(kind));
+            let output_model = parse_docx(&output).unwrap();
+            let output_targets =
+                inspect_docx_editable_text_targets(&output, &output_model).unwrap();
+            assert!(output_targets.iter().any(|candidate| {
+                candidate.block_id == target.block_id
+                    && candidate.kind == kind
+                    && candidate.row_index == target.row_index
+                    && candidate.column_index == target.column_index
+                    && candidate.text == replacement
+            }));
+        }
     }
 }

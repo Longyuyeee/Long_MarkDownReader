@@ -1,7 +1,7 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-27
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A Microsoft Word 生产者切片及 C2A/C2B 隔离补丁已完成；当前直接在 `main` 推进，下一阶段为 C0-2B/C WPS 与 LibreOffice 生产者矩阵，外部环境不可用时推进 C2C 列表/表格隔离语义补丁
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A Microsoft Word 生产者切片及 C2A/C2B/C2C 隔离补丁已完成；当前直接在 `main` 推进，下一阶段为 C0-2B/C WPS 与 LibreOffice 生产者矩阵，外部环境不可用时推进 C2D 基础字符样式与受限图片隔离编辑
 
 > 最新桌面门禁为 35 项真实 Tauri 检查和 27 张截图；DOCX C0-2A Word 生产者证据见 `docs/C0_2A_Microsoft_Word_Producer_Fixture_Audit_2026-07-27.md`，C2B 最新边界见 `docs/C2B_DOCX_Paragraph_Heading_Isolated_Edit_Audit_2026-07-27.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
@@ -56,7 +56,8 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - DOCX C1-2B 已解析页眉、页脚、脚注、尾注、批注、合并单元格、分页和基础节版式，建立正文引用双向定位并接入全局索引；原件继续只读。
 - C0-2A 已由 Microsoft Word `16.0.20131` 真实创建并保存版本化 DOCX，完成隐私匿名化、Word 只读重开、SHA-256 清单和 Rust 解析回归；当前机器仍无 WPS/LibreOffice，C0-2 进度为 1/3。
 - C2A 已建立 `word/document.xml` 单部件隔离补丁、文件签名/部件摘要双门禁、未修改部件 raw-copy、包差异白名单、临时副本复读和源文件不变证明；没有保存命令或用户编辑入口；该阶段完成时 C2 进度为 1/5，当前进度见下方 C2B 条目。
-- C2B 已为安全普通段落和标题建立目标清单、文本摘要握手、精确 `<w:t>` 字节补丁、XML 实体往返与写后语义复读；复杂载体保持只读，仍没有保存命令或 UI 编辑入口，C2 进度为 2/5。
+- C2B 已为安全普通段落和标题建立目标清单、文本摘要握手、精确 `<w:t>` 字节补丁、XML 实体往返与写后语义复读；复杂载体保持只读，仍没有保存命令或 UI 编辑入口；该阶段完成时 C2 进度为 2/5，当前进度见下方 C2C 条目。
+- C2C 已将安全列表项和单段落非合并表格单元格加入目标清单；表格目标绑定正文表格块及零基行列坐标，多段落、合并、续格、嵌套和复杂载体继续只读，C2 进度为 3/5。
 - A5/G8/B0/B1A/B1B/B1C/C0/C1 已用真实 Tauri Debug/WebView2 自动化完成 35 项检查和 27 张证据图，新增验证 Microsoft Word 真实生产者文件的应用内读取与搜索。
 
 ## 3. 后端结构
@@ -103,6 +104,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/JSON_Editor_Architecture_Decision.md`：A3 JSON/JSONC 解析器、源码事实源、注释/重复键/高精度边界和分批开放门禁。
 - `docs/C2A_DOCX_Isolated_Package_Patch_Audit_2026-07-27.md`：DOCX 单部件隔离补丁、包差异、临时副本重开和禁止原件写回边界。
 - `docs/C2B_DOCX_Paragraph_Heading_Isolated_Edit_Audit_2026-07-27.md`：安全段落/标题目标枚举、精确文本补丁、语义复读和复杂对象拒绝边界。
+- `docs/C2C_DOCX_List_Table_Isolated_Edit_Audit_2026-07-27.md`：安全列表项、表格行列坐标、单段落非合并门禁和写后坐标稳定性。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
 - `docs/Development_Stage_Audit_2026-07-20.md`：上一轮专业工作区阶段审计和交错排期基线。
 
@@ -146,14 +148,14 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - 前端生产构建、主题/格式/工作簿/XLSX 发布契约检查均通过；工作簿契约已覆盖 S8-2A 的 Table 创建/调整入口、签名事务、包级往返、历史清理、重载与重算。
 - Rust：S8-7E2E 共 194 项测试（193 项功能、1 项性能），全部通过；七类聚合分别完成临时 Pivot 包重建与输出复读，合并分组回归验证平均值、计数和乘积均从原始记录计算；单行轴、单列轴和三度量布局完成真实来源内存语义验证，成功/阻断路径原文件字节保持不变。
 - 本批最终完整性能回归通过：`inspect=124 ms / page=1,071 ms / patch=911 ms / total=2,107 ms`，未放宽 `10000x12` 负载、时间或 5% 文件增长约束。Debug 构建仅优化 `quick-xml` 与 `miniz_oxide` 依赖，普通写回在不存在 `sheetProtection` 时跳过完整保护解析。
-- 当前完整门禁：303 项 Rust 功能测试、1 项性能测试、真实 Tauri 检查 `35/35` 和 27 张截图证据通过；生产依赖 0 漏洞，Tauri Debug 构建成功。本批结果见 C2B 专项审计及本次提交记录。
+- 当前完整门禁：305 项 Rust 功能测试、1 项性能测试、真实 Tauri 检查 `35/35` 和 27 张截图证据通过；生产依赖 0 漏洞，Tauri Debug 构建成功。本批结果见 C2C 专项审计及本次提交记录。
 - `npm audit --omit=dev`：0 个漏洞。
 
 Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能优化项，不是构建失败。
 
 ## 6. 下一阶段顺序
 
-当前权威顺序：**C0-2B/C WPS 与 LibreOffice 生产者矩阵 → C2 DOCX 安全基础编辑 → PPTX 基础工作面 → WPS/OpenDocument/旧版 Office 格式与转换审计 → 统一管理和发布矩阵增强**。C1-2B、C0-2A、C2A 与 C2B 已收口；缺少 WPS/LibreOffice 环境时，可继续推进 C2C 的列表/表格隔离语义补丁，但不得返回可保存包或替换用户原件。
+当前权威顺序：**C0-2B/C WPS 与 LibreOffice 生产者矩阵 → C2 DOCX 安全基础编辑 → PPTX 基础工作面 → WPS/OpenDocument/旧版 Office 格式与转换审计 → 统一管理和发布矩阵增强**。C1-2B、C0-2A、C2A、C2B 与 C2C 已收口；缺少 WPS/LibreOffice 环境时，可继续推进 C2D 的基础字符样式与受限图片隔离编辑，但不得返回可保存包或替换用户原件。
 
 以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 
@@ -234,7 +236,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
-开始新功能前先更新路线图中的需求状态与验收条件。下一批直接在 `main` 推进 C0-2B/C；外部环境不可用时推进严格隔离的 C2C。每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
+开始新功能前先更新路线图中的需求状态与验收条件。下一批直接在 `main` 推进 C0-2B/C；外部环境不可用时推进严格隔离的 C2D。每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
 
 ## 7. 已知边界与注意事项
 

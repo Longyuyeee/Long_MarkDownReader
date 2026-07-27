@@ -427,6 +427,28 @@ mod tests {
         assert!(text_report.source_unchanged);
         assert_eq!(fs::read(&path).unwrap(), source);
 
+        let table_target = targets
+            .iter()
+            .find(|target| target.kind == "table-cell" && target.text == "Available")
+            .unwrap();
+        let table_report = preview_docx_text_patch_path(
+            &path,
+            &signature,
+            &table_target.id,
+            &table_target.expected_text_digest,
+            "Audited",
+        )
+        .unwrap();
+        assert_eq!(
+            table_report.engine,
+            "LongEdit C2C isolated structured text patch"
+        );
+        assert_eq!(table_report.semantic_kind.as_deref(), Some("table-cell"));
+        assert!(table_report.semantic_reparse_verified);
+        assert!(table_report.temporary_copy_reopen_verified);
+        assert!(table_report.source_unchanged);
+        assert_eq!(fs::read(&path).unwrap(), source);
+
         fs::remove_dir_all(base).unwrap();
     }
 }
