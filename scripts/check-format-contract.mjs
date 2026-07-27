@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
@@ -39,6 +40,9 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src-tauri/src/formats/opml.rs'),
   read('src-tauri/src/services/knowledge_index.rs'),
 ])
+const wordProducerManifest = JSON.parse(await read('fixtures/docx/producers/microsoft-word-16.json'))
+const wordProducerFixture = await readFile(new URL('fixtures/docx/producers/microsoft-word-16.docx', root))
+const wordProducerHash = createHash('sha256').update(wordProducerFixture).digest('hex')
 
 const registry = JSON.parse(registryText)
 const failures = []
@@ -369,6 +373,7 @@ requireText(docxKernel, 'gridSpan', 'C1-2B2 DOCX parser must preserve horizontal
 requireText(docxKernel, 'vMerge', 'C1-2B2 DOCX parser must preserve vertical table merges')
 requireText(docxKernel, 'sectPr', 'C1-2B2 DOCX parser must model section layout properties')
 requireText(docxKernel, 'parses_merged_cells_page_breaks_and_section_layout', 'C1-2B2 layout semantics must have regression coverage')
+requireText(docxKernel, 'reads_versioned_microsoft_word_producer_fixture', 'C0-2A Microsoft Word producer fixture must have parser regression coverage')
 requireText(docxCommands, 'read_docx_document', 'C1 DOCX must expose a dedicated read command')
 requireText(docxCommands, 'resolve_existing_file(path, &["docx"])', 'C1 DOCX command must enforce workspace authorization and extension')
 requireText(docxCommands, 'MAX_DOCX_MEDIA_BYTES', 'C1-2A DOCX media preview must enforce a per-image budget')
@@ -386,6 +391,14 @@ requireText(docxReader, 'cell.columnSpan', 'C1-2B2 DOCX workspace must render ho
 requireText(docxReader, 'cell.rowSpan', 'C1-2B2 DOCX workspace must render vertical table merges')
 requireText(docxReader, 'docx-page-break', 'C1-2B2 DOCX workspace must render pagination markers')
 requireText(docxReader, 'docx-layout-summary', 'C1-2B2 DOCX workspace must expose section layout summaries')
+if (wordProducerManifest.schemaVersion !== 1
+  || wordProducerManifest.producer !== 'Microsoft Word'
+  || wordProducerManifest.file !== 'microsoft-word-16.docx'
+  || wordProducerManifest.sha256 !== wordProducerHash
+  || !wordProducerManifest.privacyNormalization
+  || wordProducerFixture.length < 20_000) {
+  failures.push('C0-2A Microsoft Word fixture manifest, hash, privacy record, or package is invalid')
+}
 requireText(router, "name: 'DocxEditor'", 'C1 DOCX workspace must have a restorable route')
 const logFormat = registry.formats.find(format => format.id === 'log')
 if (!logFormat

@@ -215,6 +215,12 @@ finally {
   $docxArchive.Dispose()
 }
 
+$wordProducerFixture = Join-Path $workspace "fixtures\docx\producers\microsoft-word-16.docx"
+if (-not (Test-Path -LiteralPath $wordProducerFixture -PathType Leaf)) {
+  throw "C0-2A Microsoft Word producer fixture is missing"
+}
+Copy-Item -LiteralPath $wordProducerFixture -Destination (Join-Path $library "C0 Microsoft Word Fixture.docx") -Force
+
 $indexCommandSource = Get-Content -Raw -Encoding UTF8 (Join-Path $workspace "src-tauri\src\commands\index.rs")
 $pdfFixtureMatch = [regex]::Match($indexCommandSource, 'const TWO_PAGE_PDF: &str = "([^"]+)";')
 if (-not $pdfFixtureMatch.Success) {

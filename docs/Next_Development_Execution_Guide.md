@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C 和 DOCX C1-2B 已完成。下一开发入口为 C0-2 三类真实生产者矩阵；没有真实办公软件时可在不替换用户原件的边界内并行准备 C2A。最新判定见 [DOCX C1-2B2 专项审计](./C1_2B2_DOCX_Layout_Desktop_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B 和 C0-2A Microsoft Word 生产者切片已完成。下一开发入口为 C0-2B/C WPS 与 LibreOffice 真实生产者矩阵；外部环境不可用时可在不替换用户原件的边界内并行准备 C2A。最新判定见 [C0-2A Microsoft Word 专项审计](./C0_2A_Microsoft_Word_Producer_Fixture_Audit_2026-07-27.md)。
 
 ## 1. 指导目标
 
@@ -560,13 +560,13 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 14. `R` 安装包、文件关联、升级、卸载和多机器发布矩阵。
 15. `F` PDF 合并拆分、知识图谱深层语义、XLSX 高级等价与 AI 增强。
 
-当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C 和 DOCX C1-2B 已完成**。真实 Tauri Debug/WebView2 门禁为 34 项检查和 26 张机器校验证据，已经覆盖合并单元格、分页、横向双栏节摘要和附属内容搜索。
+当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B 和 C0-2A 已完成**。真实 Tauri Debug/WebView2 门禁为 35 项检查和 27 张机器校验证据，已经覆盖 Microsoft Word 真实生产者文件、合并单元格、分页、横向双栏节摘要和附属内容搜索。
 
 当前 **A3 JSON/JSONC 已收口**：树形视图在精确 AST 范围、重复键、数字精度和 JSONC 保真门禁下开放标量替换、对象键重命名、对象/数组追加和删除；A5 进一步证明非法 JSON 默认不会覆盖最后合法磁盘版本，修复后可以可靠保存。
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。下一步进入 **C0-2 DOCX 真实生产者矩阵**；若外部环境暂不可用，可并行推进严格隔离的 **C2A OOXML 补丁与包差异原型**，但不得开放原件覆盖。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。C0-2A Microsoft Word 已完成，下一步进入 **C0-2B/C WPS 与 LibreOffice 真实生产者矩阵**；若外部环境暂不可用，可并行推进严格隔离的 **C2A OOXML 补丁与包差异原型**，但不得开放原件覆盖。
 
 当前批次的强制退出条件：
 

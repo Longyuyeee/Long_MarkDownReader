@@ -1876,6 +1876,44 @@ mod tests {
     }
 
     #[test]
+    fn reads_versioned_microsoft_word_producer_fixture() {
+        let source = include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx");
+        let model = parse_docx(source).unwrap();
+        assert_eq!(
+            model.compatibility.application.as_deref(),
+            Some("Microsoft Office Word")
+        );
+        assert_eq!(
+            model.compatibility.producer.as_deref(),
+            Some("LongEdit C0-2A Audit")
+        );
+        assert!(model
+            .headings
+            .iter()
+            .any(|heading| heading.text == "Microsoft Word Producer Fixture"));
+        assert_eq!(model.compatibility.list_item_count, 2);
+        assert_eq!(model.compatibility.table_count, 1);
+        assert!(model.compatibility.merged_cell_count >= 2);
+        assert!(model.compatibility.page_break_count >= 1);
+        assert!(model.compatibility.rendered_page_break_count >= 1);
+        assert!(model.compatibility.section_count >= 1);
+        assert_eq!(model.sections[0].orientation, "landscape");
+        assert_eq!(model.sections[0].column_count, 2);
+        assert!(model.compatibility.header_count >= 1);
+        assert!(model.compatibility.footer_count >= 1);
+        assert!(model.compatibility.footnotes);
+        assert!(model.compatibility.endnotes);
+        assert!(model.compatibility.comments);
+        assert_eq!(model.compatibility.image_count, 1);
+        assert_eq!(model.compatibility.renderable_image_count, 1);
+        assert!(model.plain_text.contains("Microsoft Word comment evidence"));
+        assert!(model
+            .plain_text
+            .contains("Microsoft Word footnote evidence"));
+        assert!(model.plain_text.contains("Microsoft Word endnote evidence"));
+    }
+
+    #[test]
     fn rejects_non_docx_doctype_and_unsafe_package_shape() {
         assert!(parse_docx(b"not a zip").unwrap_err().contains("ZIP"));
         let mut missing_output = Cursor::new(Vec::new());

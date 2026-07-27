@@ -30,7 +30,7 @@ npm run audit:a5-desktop
 npm run check:a5-desktop-evidence
 ```
 
-阶段 A 收口后，G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C 和 DOCX C1-2B 继续复用同一真实桌面回归框架。当前门禁结果为 **34/34 项通过，26 张真实 Tauri 截图通过机器校验**。
+阶段 A 收口后，G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C 和 DOCX C0-2A/C1-2B 继续复用同一真实桌面回归框架。当前门禁结果为 **35/35 项通过，27 张真实 Tauri 截图通过机器校验**。
 
 | 验收域 | 真实桌面结果 | 证据 |
 |---|---|---|
@@ -44,6 +44,7 @@ npm run check:a5-desktop-evidence
 | PDF B1C 兼容画像 | 原工作面显示版本、xref、压缩对象、页面继承与无文本页画像 | `b1c-pdf-compatibility-profile.jpg` |
 | DOCX C1-2A | 在原 Library 右侧显示目录、继承标题、编号列表、结构化正文、表格、受限真实图片、搜索定位、兼容画像和高级对象只读警告 | `c1-docx-structured-reading.jpg` |
 | DOCX C1-2B2 | 在真实 WebView2 中显示横向/纵向合并单元格、分页、横向双栏节摘要，并搜索定位批注附属内容 | `c1-docx-layout-and-related-content.jpg` |
+| DOCX C0-2A | 在真实 WebView2 中打开 Microsoft Word 16 生产者文件，验证生产者、合并表格、横向双栏、媒体和批注搜索 | `c0-word-producer-reading.jpg` |
 | 普通文本/INI | 编辑、保存、离开并重开成功 | `text-save-and-reopen.jpg` |
 | 外部修改冲突 | 保存被签名冲突阻断；选择重新加载后读取磁盘版本，不恢复旧草稿 | `external-conflict-detected.jpg` |
 | `.env` | 首次遮罩、明确确认后显示、再次遮罩成功；正文标记不泄漏到界面 | `env-default-masked.jpg` |
@@ -67,6 +68,7 @@ PDF B1B 的无覆盖写入、落盘复读、桌面重开和 B1C 入口见 `docs/
 PDF B1C 的对象流、页面继承、扫描页、风险阻断矩阵与 DOCX 入口见 `docs/B1C_PDF_Compatibility_Closure_Audit_2026-07-27.md`。
 DOCX C0/C1 首批的解析预算、结构模型、工作面设计、明确边界和后续收口顺序见 `docs/C0_C1_DOCX_Structured_Reading_Audit_2026-07-27.md`。
 DOCX C1-2B 的最终只读收口、版式桌面证据与真实生产者缺口见 `docs/C1_2B2_DOCX_Layout_Desktop_Audit_2026-07-27.md`。
+DOCX C0-2A 的 Microsoft Word 真实生产者版本、隐私处理、重开、哈希和解析证据见 `docs/C0_2A_Microsoft_Word_Producer_Fixture_Audit_2026-07-27.md`。
 
 ## 3. 本阶段发现并修复的问题
 

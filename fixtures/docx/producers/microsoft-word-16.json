@@ -1,0 +1,28 @@
+{
+    "schemaVersion":  1,
+    "id":  "microsoft-word-16",
+    "file":  "microsoft-word-16.docx",
+    "producer":  "Microsoft Word",
+    "productVersion":  "16.0.20131.20154",
+    "fileVersion":  "16.0.20131.20154",
+    "generatedAt":  "2026-07-27T03:24:01.9559533Z",
+    "generator":  "scripts/generate-c0-word-docx-fixture.ps1",
+    "privacyNormalization":  "After Word saved the package, only local author and initials strings in XML metadata were replaced with the project audit identity.",
+    "producerReopenVerified":  true,
+    "sha256":  "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+    "redistribution":  "Project-authored text and image generated locally; safe to redistribute with this repository.",
+    "expected":  {
+                     "heading":  "Microsoft Word Producer Fixture",
+                     "listItems":  2,
+                     "tables":  1,
+                     "mergedCellsMinimum":  2,
+                     "pageBreaksMinimum":  1,
+                     "sectionsMinimum":  1,
+                     "headersMinimum":  1,
+                     "footersMinimum":  1,
+                     "footnotes":  true,
+                     "endnotes":  true,
+                     "comments":  true,
+                     "images":  1
+                 }
+}

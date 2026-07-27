@@ -106,12 +106,31 @@ const setInput = async (selector, value) => {
 }
 
 const setEditorText = async text => {
+  const editorPoint = await evaluate(`(() => {
+    const editor = document.querySelector('.cm-content')
+    if (!editor) return null
+    const rect = editor.getBoundingClientRect()
+    return { x: rect.left + Math.min(24, rect.width / 2), y: rect.top + Math.min(24, rect.height / 2) }
+  })()`)
+  if (!editorPoint) throw new Error('CodeMirror input surface is missing')
+  await send('Input.dispatchMouseEvent', {
+    type: 'mousePressed',
+    x: editorPoint.x,
+    y: editorPoint.y,
+    button: 'left',
+    clickCount: 1,
+  })
+  await send('Input.dispatchMouseEvent', {
+    type: 'mouseReleased',
+    x: editorPoint.x,
+    y: editorPoint.y,
+    button: 'left',
+    clickCount: 1,
+  })
   await waitFor(
     `(() => {
       const editor = document.querySelector('.cm-content')
-      editor?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
       editor?.focus()
-      editor?.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
       return document.activeElement === editor
     })()`,
     'CodeMirror input focus',
@@ -192,6 +211,7 @@ const jsonFile = path.join(library, 'damaged.json')
 const largeFile = path.join(library, 'large.txt')
 const logFile = path.join(library, 'runtime.log')
 const docxFile = path.join(library, 'C1 Product Brief.docx')
+const wordProducerDocxFile = path.join(library, 'C0 Microsoft Word Fixture.docx')
 const relationSourceFile = path.join(library, 'G8 Source.md')
 const relationPlanFile = path.join(library, 'G8 Plan.opml')
 const relationTagFile = path.join(library, 'G8 Tag Source.md')
@@ -430,6 +450,22 @@ await waitFor(
 )
 checks.push({ id: 'c1-docx-layout-and-related-content', status: 'passed' })
 await capture('c1-docx-layout-and-related-content.jpg')
+await navigate(routeFor('docx', wordProducerDocxFile), '.docx-workspace')
+await setInput('.docx-search input', 'comment evidence')
+await waitFor(
+  `document.querySelector('.compatibility-card')?.textContent?.includes('Microsoft Office Word') === true
+    && document.querySelector('.docx-page')?.textContent?.includes('Microsoft Word Producer Fixture') === true
+    && document.querySelector('td[colspan="2"]') !== null
+    && document.querySelector('td[rowspan="2"]') !== null
+    && document.querySelector('.docx-layout-summary')?.textContent?.includes('横向') === true
+    && document.querySelector('.docx-layout-summary')?.textContent?.includes('2 栏') === true
+    && document.querySelector('.docx-page img[src^="data:image/png;base64,"]')?.naturalWidth === 520
+    && document.querySelector('.docx-related-content')?.textContent?.includes('Microsoft Word comment evidence') === true
+    && document.querySelectorAll('.docx-related-content .search-hit').length === 1`,
+  'Microsoft Word producer fixture in the DOCX workspace',
+)
+checks.push({ id: 'c0-word-producer-reading', status: 'passed' })
+await capture('c0-word-producer-reading.jpg')
 
 await navigate(routeFor('text', serviceIni), '.text-workspace')
 const embeddedShellState = await evaluate(`({
@@ -693,6 +729,7 @@ const evidenceFiles = [
   'g8-canvas-object-context.jpg',
   'c1-docx-structured-reading.jpg',
   'c1-docx-layout-and-related-content.jpg',
+  'c0-word-producer-reading.jpg',
   'text-save-and-reopen.jpg',
   'external-conflict-detected.jpg',
   'env-default-masked.jpg',
