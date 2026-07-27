@@ -543,6 +543,11 @@ requireText(pptxReader, 'preview_pptx_alt_text_patch_isolated_copy', 'C4C worksp
 requireText(pptxReader, 'C4D 可靠另存副本', 'C4D save controls must remain inside the existing PPTX details panel')
 requireText(pptxReader, 'save_pptx_patch_copy', 'C4D workspace must invoke only the reliable save-copy command')
 requireText(pptxReader, '不覆盖源文件或已有目标', 'C4D UI must disclose its no-overwrite boundary')
+requireText(await read('scripts/verify-c4e-pptx-producer-reopen.ps1'), 'PowerPoint.Application', 'C4E must retain real Microsoft PowerPoint output reopen automation')
+requireText(await read('scripts/verify-c4e-pptx-producer-reopen.ps1'), 'KWPP.Application', 'C4E must retain real WPS Presentation output reopen automation')
+requireText(await read('scripts/verify-c4e-pptx-producer-reopen.ps1'), '--convert-to", "pdf"', 'C4E must retain isolated LibreOffice Impress reopen/render automation')
+requireText(await read('scripts/verify-c4e-pptx-producer-reopen.ps1'), 'RequireComplete', 'C4E must expose an explicit 3/3 release gate')
+requireText(await read('scripts/check-c4e-pptx-output-reopen.mjs'), "producerById.get('wps-presentation')?.status !== 'verified'", 'C4E1 must preserve real WPS output reopen evidence')
 requireText(pptxCommands, 'WorkspaceGuard::new(&library_root)', 'C3C2 PPTX reader must create its workspace guard per request')
 requireText(pptxReader, 'libraryRoot: store.libraryPath', 'C3C2 PPTX workspace must provide the guarded library root')
 for (const forbiddenPptxWrite of ['write_pptx', 'overwrite_pptx', 'save_pptx_overwrite']) {

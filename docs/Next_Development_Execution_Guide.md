@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4D 已完成。下一开发入口为 C4E PowerPoint/WPS Presentation/LibreOffice Impress 输出副本复开矩阵。最新判定见 [C4D PPTX 可靠另存副本专业审计](./C4D_PPTX_Reliable_Save_Copy_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4D 已完成；C4E 已完成 PowerPoint/WPS 输出复开，矩阵为 2/3。下一开发入口为 C4E3 LibreOffice Impress 输出复开。最新判定见 [C4E PPTX 输出副本外部生产者复开审计](./C4E_PPTX_Output_Producer_Reopen_Audit_2026-07-27.md)。
 
 ## 1. 指导目标
 
@@ -392,6 +392,13 @@ DOCX 样本覆盖段落、标题、列表、表格、图片、分页、页眉页
 
 ### C4：PPTX 基础编辑
 
+当前交付：
+
+- C4A～C4C：安全文本、备注、基础字符样式、形状文本和图片替代文本隔离预览；
+- C4D：原子无覆盖新副本、源冲突、预览摘要握手、写后结构和语义复读；
+- C4E1/C4E2：三种操作输出样本，以及 PowerPoint/WPS 的真实只读复开；
+- C4E3（下一步）：LibreOffice Impress 隔离复开并以 `-RequireComplete` 关闭 3/3 门禁。
+
 首批只开放：
 
 - 文本内容及基础字号、颜色和对齐。
@@ -572,7 +579,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C3D 已完成结构化只读、视觉渲染、统一索引、精确定位、对象关系、索引生命周期和三生产者桌面矩阵，C4A～C4C 已完成受限编辑与隔离预览，C4D 已完成原子无覆盖新副本、写后结构/语义复读和真实桌面重开。下一步进入 **C4E 三类外部演示生产者输出副本复开矩阵**。C4E 完成前只允许新副本，不开放源文件覆盖，也不把 PPTX 描述为完整 PowerPoint 等价。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C3D 已完成结构化只读与知识管理，C4A～C4D 已完成受限编辑和可靠新副本；C4E 已由 PowerPoint 12.0、WPS Presentation 12.1 复开三个输出，LibreOffice Impress pending。下一步执行 **C4E3 LibreOffice 输出复开并关闭 3/3 门禁**。C4E 完成前只允许新副本，不开放源文件覆盖，也不把 PPTX 描述为完整 PowerPoint 等价。
 
 当前批次的强制退出条件：
 

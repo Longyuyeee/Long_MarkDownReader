@@ -1,0 +1,60 @@
+{
+    "schemaVersion":  1,
+    "stage":  "C4E",
+    "verifiedAt":  "2026-07-27T15:38:05.9659464Z",
+    "status":  "partial",
+    "verifiedCount":  2,
+    "requiredCount":  3,
+    "complete":  false,
+    "requiredProducerIds":  [
+                                "microsoft-powerpoint",
+                                "wps-presentation",
+                                "libreoffice-impress"
+                            ],
+    "outputs":  [
+                    {
+                        "operation":  "text",
+                        "file":  "c4e-text-copy.pptx",
+                        "sha256":  "4097dc1f7353fc8bed27aa26170406e5b202dfbadd27d9e6f5a4b2b98266cff4",
+                        "bytes":  94590
+                    },
+                    {
+                        "operation":  "style",
+                        "file":  "c4e-style-copy.pptx",
+                        "sha256":  "00fee5961f68aaac8a8ff68537a6b95e0e0d9e8e632ef364b796c8a86660d662",
+                        "bytes":  94634
+                    },
+                    {
+                        "operation":  "imageAltText",
+                        "file":  "c4e-alt-text-copy.pptx",
+                        "sha256":  "1261dfa332a507c79a8f08199bf08e82f40f53fdd4cb776a19e538ab6e8c7529",
+                        "bytes":  94594
+                    }
+                ],
+    "producers":  [
+                      {
+                          "id":  "microsoft-powerpoint",
+                          "producer":  "Microsoft PowerPoint",
+                          "status":  "verified",
+                          "version":  "12.0",
+                          "method":  "A new isolated PowerPoint.Application instance opened all three outputs read-only and recovered text, 24 pt Aptos #2f6fed centered shape text, picture alt text, and the 3-slide structure.",
+                          "evidenceDependency":  null
+                      },
+                      {
+                          "id":  "wps-presentation",
+                          "producer":  "WPS Presentation",
+                          "status":  "verified",
+                          "version":  "12.1.0.26895",
+                          "method":  "A new isolated KWPP.Application instance opened all three outputs read-only and recovered text, 24 pt Aptos #2f6fed centered shape text, picture alt text, and the 3-slide structure.",
+                          "evidenceDependency":  null
+                      },
+                      {
+                          "id":  "libreoffice-impress",
+                          "producer":  "LibreOffice Impress",
+                          "status":  "pending",
+                          "version":  null,
+                          "method":  null,
+                          "evidenceDependency":  "LibreOffice Impress is not installed on this audit machine."
+                      }
+                  ]
+}

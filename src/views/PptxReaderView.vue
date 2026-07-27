@@ -150,7 +150,7 @@
           <template v-if="safeEditTargets.length">
             <label>
               <span>安全编辑目标</span>
-              <select v-model="selectedEditTargetId">
+              <select v-model="selectedEditTargetId" data-testid="c4b-text-target">
                 <option v-for="target in safeEditTargets" :key="target.id" :value="target.id">
                   幻灯片 {{ target.slideNumber }} · {{ target.kind === 'speaker-notes' ? '备注' : target.objectName }}
                 </option>
@@ -160,6 +160,7 @@
               <span>隔离替换文本</span>
               <textarea
                 v-model="replacementText"
+                data-testid="c4b-text-value"
                 rows="3"
                 maxlength="32767"
                 placeholder="输入单行替换文本"
@@ -170,6 +171,7 @@
               <small>{{ replacementText.length }}/32767 · 不写入当前文件</small>
               <button
                 type="button"
+                data-testid="c4b-text-preview"
                 :disabled="textPatchLoading || !replacementText.trim() || /[\r\n\t]/.test(replacementText)"
                 @click="previewTextPatch"
               >
