@@ -15,7 +15,8 @@ use commands::diagram::{
     write_diagram_file,
 };
 use commands::docx::{
-    preview_docx_package_patch_isolated_copy, preview_docx_text_patch_isolated_copy,
+    preview_docx_image_alt_text_patch_isolated_copy, preview_docx_package_patch_isolated_copy,
+    preview_docx_style_patch_isolated_copy, preview_docx_text_patch_isolated_copy,
     read_docx_document,
 };
 use commands::files::{
@@ -276,6 +277,8 @@ pub fn run() {
             read_docx_document,
             preview_docx_package_patch_isolated_copy,
             preview_docx_text_patch_isolated_copy,
+            preview_docx_style_patch_isolated_copy,
+            preview_docx_image_alt_text_patch_isolated_copy,
             read_pdf_file,
             read_pdf_info,
             read_pdf_range,

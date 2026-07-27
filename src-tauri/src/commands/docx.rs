@@ -1,7 +1,10 @@
 use crate::formats::docx::{parse_docx, DocxDocumentModel, MAX_DOCX_FILE_BYTES};
 use crate::formats::docx_patch::{
-    build_docx_document_patch_isolated, build_docx_text_patch_isolated, docx_document_part_digest,
-    inspect_docx_editable_text_targets, DocxEditableTextTarget, DocxIsolatedPatchReport,
+    build_docx_document_patch_isolated, build_docx_image_alt_text_patch_isolated,
+    build_docx_style_patch_isolated, build_docx_text_patch_isolated, docx_document_part_digest,
+    inspect_docx_editable_image_targets, inspect_docx_editable_style_targets,
+    inspect_docx_editable_text_targets, DocxEditableImageTarget, DocxEditableStyleTarget,
+    DocxEditableTextTarget, DocxIsolatedPatchReport,
 };
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
@@ -36,6 +39,8 @@ pub struct DocxReadReport {
     pub signature: String,
     pub document_part_digest: String,
     pub editable_text_targets: Vec<DocxEditableTextTarget>,
+    pub editable_style_targets: Vec<DocxEditableStyleTarget>,
+    pub editable_image_targets: Vec<DocxEditableImageTarget>,
     pub read_only: bool,
     pub model: DocxDocumentModel,
     pub media: Vec<DocxMediaPreview>,
@@ -187,6 +192,8 @@ fn read_docx_path(path: &Path) -> Result<DocxReadReport, String> {
     let model = parse_docx(&source)?;
     let document_part_digest = docx_document_part_digest(&source)?;
     let editable_text_targets = inspect_docx_editable_text_targets(&source, &model)?;
+    let editable_style_targets = inspect_docx_editable_style_targets(&source, &model)?;
+    let editable_image_targets = inspect_docx_editable_image_targets(&source, &model)?;
     let (media, media_warnings) = extract_media_previews(&source, &model)?;
     let modified = metadata
         .modified()
@@ -201,6 +208,8 @@ fn read_docx_path(path: &Path) -> Result<DocxReadReport, String> {
         signature: file_signature(&metadata),
         document_part_digest,
         editable_text_targets,
+        editable_style_targets,
+        editable_image_targets,
         read_only: true,
         model,
         media,
@@ -275,6 +284,44 @@ fn preview_docx_text_patch_path(
     })
 }
 
+fn preview_docx_style_patch_path(
+    path: &Path,
+    expected_signature: &str,
+    target_id: &str,
+    expected_style_digest: &str,
+    bold: bool,
+    italic: bool,
+    underline: bool,
+) -> Result<DocxIsolatedPatchReport, String> {
+    preview_docx_isolated_path(path, expected_signature, |source| {
+        build_docx_style_patch_isolated(
+            source,
+            target_id,
+            expected_style_digest,
+            bold,
+            italic,
+            underline,
+        )
+    })
+}
+
+fn preview_docx_image_alt_text_patch_path(
+    path: &Path,
+    expected_signature: &str,
+    target_id: &str,
+    expected_metadata_digest: &str,
+    replacement_alt_text: &str,
+) -> Result<DocxIsolatedPatchReport, String> {
+    preview_docx_isolated_path(path, expected_signature, |source| {
+        build_docx_image_alt_text_patch_isolated(
+            source,
+            target_id,
+            expected_metadata_digest,
+            replacement_alt_text,
+        )
+    })
+}
+
 #[tauri::command]
 pub async fn read_docx_document(
     library_root: String,
@@ -331,6 +378,58 @@ pub async fn preview_docx_text_patch_isolated_copy(
     })
     .await
     .map_err(|error| format!("DOCX C2B 文本补丁任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_docx_style_patch_isolated_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    target_id: String,
+    expected_style_digest: String,
+    bold: bool,
+    italic: bool,
+    underline: bool,
+) -> Result<DocxIsolatedPatchReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let document = guard.resolve_existing_file(path, &["docx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_docx_style_patch_path(
+            &document,
+            &expected_signature,
+            &target_id,
+            &expected_style_digest,
+            bold,
+            italic,
+            underline,
+        )
+    })
+    .await
+    .map_err(|error| format!("DOCX C2D 字符样式补丁任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_docx_image_alt_text_patch_isolated_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    target_id: String,
+    expected_metadata_digest: String,
+    replacement_alt_text: String,
+) -> Result<DocxIsolatedPatchReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let document = guard.resolve_existing_file(path, &["docx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_docx_image_alt_text_patch_path(
+            &document,
+            &expected_signature,
+            &target_id,
+            &expected_metadata_digest,
+            &replacement_alt_text,
+        )
+    })
+    .await
+    .map_err(|error| format!("DOCX C2D 图片替代文本补丁任务失败: {error}"))?
 }
 
 #[cfg(test)]
@@ -447,6 +546,52 @@ mod tests {
         assert!(table_report.semantic_reparse_verified);
         assert!(table_report.temporary_copy_reopen_verified);
         assert!(table_report.source_unchanged);
+        assert_eq!(fs::read(&path).unwrap(), source);
+
+        let style_target = inspect_docx_editable_style_targets(&source, &model)
+            .unwrap()
+            .into_iter()
+            .find(|target| target.text == "Microsoft Word Producer Fixture")
+            .unwrap();
+        let style_report = preview_docx_style_patch_path(
+            &path,
+            &signature,
+            &style_target.id,
+            &style_target.expected_style_digest,
+            true,
+            true,
+            false,
+        )
+        .unwrap();
+        assert_eq!(
+            style_report.engine,
+            "LongEdit C2D isolated basic character style patch"
+        );
+        assert!(style_report.semantic_reparse_verified);
+        assert!(style_report.temporary_copy_reopen_verified);
+        assert!(style_report.source_unchanged);
+        assert_eq!(fs::read(&path).unwrap(), source);
+
+        let image_target = inspect_docx_editable_image_targets(&source, &model)
+            .unwrap()
+            .into_iter()
+            .next()
+            .unwrap();
+        let image_report = preview_docx_image_alt_text_patch_path(
+            &path,
+            &signature,
+            &image_target.id,
+            &image_target.expected_metadata_digest,
+            "Command boundary fixture",
+        )
+        .unwrap();
+        assert_eq!(
+            image_report.engine,
+            "LongEdit C2D isolated inline image alt-text patch"
+        );
+        assert!(image_report.semantic_reparse_verified);
+        assert!(image_report.temporary_copy_reopen_verified);
+        assert!(image_report.source_unchanged);
         assert_eq!(fs::read(&path).unwrap(), source);
 
         fs::remove_dir_all(base).unwrap();

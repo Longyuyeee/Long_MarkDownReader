@@ -363,6 +363,26 @@ interface DocxReadReport {
     rowIndex: number | null
     columnIndex: number | null
   }>
+  editableStyleTargets: Array<{
+    id: string
+    blockId: string
+    kind: 'paragraph' | 'heading' | 'list-item' | 'table-cell'
+    text: string
+    bold: boolean
+    italic: boolean
+    underline: boolean
+    expectedStyleDigest: string
+    rowIndex: number | null
+    columnIndex: number | null
+  }>
+  editableImageTargets: Array<{
+    id: string
+    blockId: string
+    imagePart: string
+    name: string
+    altText: string
+    expectedMetadataDigest: string
+  }>
   readOnly: boolean
   model: {
     blocks: DocxBlock[]
