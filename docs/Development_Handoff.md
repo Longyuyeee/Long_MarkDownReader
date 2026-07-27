@@ -1,9 +1,9 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-27
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C 已完成，DOCX C1-2A 样式/编号/媒体阅读已交付；Draft PR #6 等待审阅；下一主线为 C0-2 真实生产者矩阵与 C1-2B 只读内容/索引收口
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C 已完成，DOCX C1-2A 与 C1-2B1 已交付；当前直接在 `main` 推进，下一切片为 C1-2B2 表格合并、分页与基础版式摘要
 
-> 最新桌面收口结论、33 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；DOCX C1-2A 样式、编号与媒体边界见 `docs/C1_2A_DOCX_Styles_Numbering_Media_Audit_2026-07-27.md`；G8-2B 专项和原始需求重排见 `docs/G8_2B_Relation_Context_Closure_Audit_2026-07-26.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
+> 最新桌面收口结论、33 项真实 Tauri 检查和下一阶段顺序见 `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`；DOCX C1-2B1 附属内容与索引边界见 `docs/C1_2B1_DOCX_Related_Content_Index_Audit_2026-07-27.md`。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 ## 1. 新电脑快速恢复
 
@@ -53,6 +53,7 @@ Debug 构建输出位于 `src-tauri/target/debug/tauri-app.exe`，该目录属�
 - 常见 JavaScript/TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 和 Web 源文件支持语法高亮、搜索与轻量可靠编辑，但不提供 IDE 执行、调试或语言服务。
 - DOCX C1-2A 已接入共享注册、WorkspaceGuard 与有界 OOXML 解析；原 Library 右侧工作面支持标题、段落、列表、表格、样式/编号语义、受限内部图片预览、目录、文内搜索和高级对象兼容画像，原文件只读。
 - DOCX C1-2A 已解析 `styles.xml`、`numbering.xml` 和内部文档关系；白名单图片经过单图 4 MiB、总量 12 MiB、32 张和文件签名门禁后可在原右侧工作面真实显示。当前电脑无 Word/WPS/LibreOffice，真实三生产者 fixture 仍是外部门槛。
+- DOCX C1-2B1 已解析页眉、页脚、脚注、尾注和批注正文，建立正文引用双向定位，并接入实时与持久化全局索引；合并单元格、分页/版式及本批真实桌面截图仍待 C1-2B2。
 - A5/G8/B0/B1A/B1B/B1C/C1 已用真实 Tauri Debug/WebView2 自动化完成 33 项检查和 25 张证据图，覆盖关系摘要、标签/集合、跨格式关系侧栏、居中图谱导航、PDF 页面整理、DOCX 结构化阅读、兼容画像及可靠另存重开。
 
 ## 3. 后端结构
@@ -90,6 +91,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/Next_Development_Execution_Guide.md`：A0～A5、PDF 页面编辑、DOCX/PPTX 基础工作面和体系化管理增强的后续执行指导。
 - `docs/C0_C1_DOCX_Structured_Reading_Audit_2026-07-27.md`：DOCX 首批结构化阅读、安全预算、兼容画像、桌面证据、明确边界和后续收口顺序。
 - `docs/C1_2A_DOCX_Styles_Numbering_Media_Audit_2026-07-27.md`：DOCX 样式继承、列表编号、内部媒体关系、安全预览门禁和真实生产者缺口。
+- `docs/C1_2B1_DOCX_Related_Content_Index_Audit_2026-07-27.md`：DOCX 附属内容、正文引用、全局索引、对象定位、安全预算和 C1-2B 剩余边界。
 - `docs/A5_Desktop_Acceptance_Audit_2026-07-26.md`：阶段 A 桌面级收口、真实证据矩阵、能力边界和 G8 图谱产品化入口。
 - `docs/Library_Right_Pane_Workspace_Audit_2026-07-26.md`：知识库内嵌/外部独立空间模式、视觉尺度和路由入口合同。
 - `docs/Text_Editor_Architecture_Decision.md`：A2 TXT 编辑器选型、CodeMirror 6 职责边界、大文件策略和后续扩展约束。
@@ -137,14 +139,14 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - 前端生产构建、主题/格式/工作簿/XLSX 发布契约检查均通过；工作簿契约已覆盖 S8-2A 的 Table 创建/调整入口、签名事务、包级往返、历史清理、重载与重算。
 - Rust：S8-7E2E 共 194 项测试（193 项功能、1 项性能），全部通过；七类聚合分别完成临时 Pivot 包重建与输出复读，合并分组回归验证平均值、计数和乘积均从原始记录计算；单行轴、单列轴和三度量布局完成真实来源内存语义验证，成功/阻断路径原文件字节保持不变。
 - 本批最终完整性能回归通过：`inspect=124 ms / page=1,071 ms / patch=911 ms / total=2,107 ms`，未放宽 `10000x12` 负载、时间或 5% 文件增长约束。Debug 构建仅优化 `quick-xml` 与 `miniz_oxide` 依赖，普通写回在不存在 `sheetProtection` 时跳过完整保护解析。
-- 当前完整门禁：Rust 功能测试 `294/294`、性能测试 `1/1`、真实 Tauri 检查 `33/33`，25 张截图证据通过；100 MiB PDF 范围读取本轮 54 ms，仅读取约 255.9 KiB（目标小于 2 秒；不同机器会有波动）。
+- 当前完整门禁：Rust 功能测试 `295/295`、性能测试 `1/1`、真实 Tauri 检查 `33/33`，25 张截图证据通过；100 MiB PDF 范围读取本轮 104 ms，仅读取约 255.9 KiB（目标小于 2 秒；不同机器会有波动）。
 - `npm audit --omit=dev`：0 个漏洞。
 
 Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能优化项，不是构建失败。
 
 ## 6. 下一阶段顺序
 
-当前权威顺序：**DOCX 基础工作面 → PPTX 基础工作面 → WPS/OpenDocument/旧版 Office 格式与转换审计 → 统一管理和发布矩阵增强**。PDF 页面基础编辑阶段已收口；DOCX C1-2A 已交付，下一开发入口为 C1-2B 页眉页脚、脚注/尾注、批注、版式和索引收口，并行准备 C0-2 三类真实生产者 fixture，完成保真证据后才进入 C2。PDF 合并、拆分和插页转入增强队列。
+当前权威顺序：**DOCX 基础工作面 → PPTX 基础工作面 → WPS/OpenDocument/旧版 Office 格式与转换审计 → 统一管理和发布矩阵增强**。PDF 页面基础编辑阶段已收口；DOCX C1-2B1 已交付附属正文与索引，下一开发入口为 C1-2B2 合并单元格、分页、版式和桌面证据收口，并行准备 C0-2 三类真实生产者 fixture，完成保真证据后才进入 C2。
 
 以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 
@@ -225,7 +227,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
-开始新功能前先更新路线图中的需求状态与验收条件。下一批在当前 `codex/a4-format-closure` 分支推进 C0-2/C1-2B DOCX 收口；每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
+开始新功能前先更新路线图中的需求状态与验收条件。下一批直接在 `main` 推进 C1-2B2 与 C0-2 DOCX 收口；每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`，涉及桌面端注册或 Rust 命令变更时再执行完整 Tauri 构建。
 
 ## 7. 已知边界与注意事项
 

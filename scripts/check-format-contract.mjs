@@ -171,11 +171,11 @@ if (!docxFormat
   || docxFormat.capabilities?.read !== 'supported'
   || docxFormat.capabilities?.edit !== 'planned'
   || docxFormat.capabilities?.create !== 'unsupported'
-  || docxFormat.capabilities?.index !== 'planned'
+  || docxFormat.capabilities?.index !== 'supported'
   || docxFormat.adapters?.reader !== 'docx'
   || docxFormat.adapters?.writer !== null
   || docxFormat.adapters?.creator !== null
-  || docxFormat.adapters?.indexer !== null
+  || docxFormat.adapters?.indexer !== 'docx'
   || docxFormat.userCapability?.level !== 'preview-only'
   || docxFormat.userCapability?.saveMode !== 'none') failures.push('C1 DOCX structured read-only contract is incomplete')
 
@@ -417,6 +417,10 @@ requireText(settings, 'TXT 自动保存', 'TXT auto-save preference must be user
 requireText(files, 'file_format_registry()', 'workspace scanning must consume registry')
 requireText(externalAccess, 'file_format_for_path', 'external authorization must consume registry')
 requireText(index, 'format.adapters.indexer', 'index dispatch must consume registered adapters')
+requireText(index, 'indexer == "docx"', 'DOCX live search must consume the dedicated parser')
+requireText(knowledgeIndex, 'indexer == "docx"', 'DOCX snapshot indexing must consume the dedicated parser')
+requireText(docxReader, 'report.model.relatedContent', 'DOCX reader must render parsed related content')
+requireText(docxReader, 'route.query.locator', 'DOCX reader must consume object locators from global search')
 requireText(library, 'CREATABLE_FILE_FORMATS', 'creation menu must derive from registry')
 requireText(library, 'activeFormatCanEdit', 'text workspace save action must consume format edit capability')
 requireText(library, 'format-capability-badge', 'text workspace must display user-visible capability tiers')

@@ -1,4 +1,5 @@
 use crate::commands::graph::GraphData;
+use crate::formats::docx::parse_docx;
 use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
@@ -64,6 +65,12 @@ pub struct IndexedSearchSegment {
     pub text: String,
     pub page: Option<u32>,
     pub annotation_id: Option<String>,
+    #[serde(default)]
+    pub locator_kind: Option<String>,
+    #[serde(default)]
+    pub locator_object_id: Option<String>,
+    #[serde(default)]
+    pub location_label: Option<String>,
     pub extraction_failed: bool,
 }
 
@@ -298,6 +305,9 @@ fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<Ind
                 text: String::new(),
                 page: None,
                 annotation_id: None,
+                locator_kind: None,
+                locator_object_id: None,
+                location_label: None,
                 extraction_failed: index.extraction_failed,
             });
             for (page, text) in index.pages.into_iter().enumerate() {
@@ -310,6 +320,9 @@ fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<Ind
                         text,
                         page: Some((page + 1) as u32),
                         annotation_id: None,
+                        locator_kind: None,
+                        locator_object_id: None,
+                        location_label: None,
                         extraction_failed: index.extraction_failed,
                     });
                 }
@@ -323,6 +336,9 @@ fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<Ind
                     text: page.text,
                     page: Some(page.page),
                     annotation_id: None,
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
                     extraction_failed: index.extraction_failed,
                 });
             }
@@ -335,8 +351,72 @@ fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<Ind
                     text: annotation.text,
                     page: Some(annotation.page),
                     annotation_id: Some(annotation.id),
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
                     extraction_failed: index.extraction_failed,
                 });
+            }
+        } else if indexer == "docx" {
+            let model = path
+                .metadata()
+                .ok()
+                .filter(|metadata| metadata.len() <= format.max_bytes)
+                .and_then(|_| fs::read(&path).ok())
+                .and_then(|bytes| parse_docx(&bytes).ok());
+            if let Some(model) = model {
+                segments.push(IndexedSearchSegment {
+                    title: title.clone(),
+                    path: path_string.clone(),
+                    object_type: format.id.clone(),
+                    match_kind: "title".into(),
+                    text: String::new(),
+                    page: None,
+                    annotation_id: None,
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
+                    extraction_failed: false,
+                });
+                for (index, block) in model.blocks.into_iter().enumerate() {
+                    if block.text.trim().is_empty() {
+                        continue;
+                    }
+                    let location_label = match block.kind.as_str() {
+                        "heading" => format!("标题：{}", block.text),
+                        "table" => format!("表格 {}", index + 1),
+                        "list-item" => format!("列表项 {}", index + 1),
+                        _ => format!("段落 {}", index + 1),
+                    };
+                    segments.push(IndexedSearchSegment {
+                        title: title.clone(),
+                        path: path_string.clone(),
+                        object_type: format.id.clone(),
+                        match_kind: "body".into(),
+                        text: block.text,
+                        page: None,
+                        annotation_id: None,
+                        locator_kind: Some("docx-block".into()),
+                        locator_object_id: Some(block.id),
+                        location_label: Some(location_label),
+                        extraction_failed: false,
+                    });
+                }
+                for item in model.related_content {
+                    segments.push(IndexedSearchSegment {
+                        title: title.clone(),
+                        path: path_string.clone(),
+                        object_type: format.id.clone(),
+                        match_kind: "related".into(),
+                        text: item.text,
+                        page: None,
+                        annotation_id: None,
+                        locator_kind: Some(format!("docx-{}", item.kind)),
+                        locator_object_id: Some(item.id),
+                        location_label: Some(item.label),
+                        extraction_failed: false,
+                    });
+                }
             }
         } else if matches!(
             indexer,
@@ -351,6 +431,9 @@ fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<Ind
                     text,
                     page: None,
                     annotation_id: None,
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
                     extraction_failed: false,
                 });
             }

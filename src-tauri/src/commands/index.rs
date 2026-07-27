@@ -1,3 +1,4 @@
+use crate::formats::docx::parse_docx;
 use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
@@ -108,6 +109,9 @@ pub struct KnowledgeSearchResult {
     pub context: String,
     pub page: Option<u32>,
     pub annotation_id: Option<String>,
+    pub locator_kind: Option<String>,
+    pub locator_object_id: Option<String>,
+    pub location_label: Option<String>,
     pub score: u32,
     pub extraction_failed: bool,
 }
@@ -162,6 +166,9 @@ fn search_segments(segments: &[IndexedSearchSegment], query: &str) -> Vec<Knowle
                 },
                 page: None,
                 annotation_id: None,
+                locator_kind: None,
+                locator_object_id: None,
+                location_label: None,
                 score: 100,
                 extraction_failed: segment.extraction_failed,
             });
@@ -184,7 +191,9 @@ fn search_segments(segments: &[IndexedSearchSegment], query: &str) -> Vec<Knowle
         let score = match segment.match_kind.as_str() {
             "annotation" => 90,
             "ocr" => 75,
+            "related" => 75,
             "body" if segment.object_type == "pdf" => 70,
+            "body" if segment.object_type == "docx" => 70,
             _ => 60,
         };
         results.push(KnowledgeSearchResult {
@@ -195,6 +204,9 @@ fn search_segments(segments: &[IndexedSearchSegment], query: &str) -> Vec<Knowle
             context,
             page: segment.page,
             annotation_id: segment.annotation_id.clone(),
+            locator_kind: segment.locator_kind.clone(),
+            locator_object_id: segment.locator_object_id.clone(),
+            location_label: segment.location_label.clone(),
             score,
             extraction_failed: segment.extraction_failed,
         });
@@ -260,6 +272,9 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     },
                     page: None,
                     annotation_id: None,
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
                     score: 100,
                     extraction_failed: index.extraction_failed,
                 });
@@ -278,6 +293,9 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     context: snippet(&annotation.text),
                     page: Some(annotation.page),
                     annotation_id: Some(annotation.id.clone()),
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
                     score: 90,
                     extraction_failed: index.extraction_failed,
                 });
@@ -295,6 +313,9 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     context,
                     page: Some((page_index + 1) as u32),
                     annotation_id: None,
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
                     score: 70,
                     extraction_failed: index.extraction_failed,
                 });
@@ -310,8 +331,81 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     context,
                     page: Some(page),
                     annotation_id: None,
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
                     score: 75,
                     extraction_failed: index.extraction_failed,
+                });
+            }
+        } else if indexer == "docx" {
+            let model = path
+                .metadata()
+                .ok()
+                .filter(|metadata| metadata.len() <= format.max_bytes)
+                .and_then(|_| fs::read(&path).ok())
+                .and_then(|bytes| parse_docx(&bytes).ok());
+            let Some(model) = model else {
+                continue;
+            };
+            if title_matches {
+                results.push(KnowledgeSearchResult {
+                    title: title.clone(),
+                    path: path_string.clone(),
+                    object_type: format.id.clone(),
+                    match_kind: "title".into(),
+                    context: "文件名匹配".into(),
+                    page: None,
+                    annotation_id: None,
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
+                    score: 100,
+                    extraction_failed: false,
+                });
+            }
+            if let Some((index, block, context)) =
+                model.blocks.iter().enumerate().find_map(|(index, block)| {
+                    text_match_context(&block.text, query).map(|context| (index, block, context))
+                })
+            {
+                let location_label = match block.kind.as_str() {
+                    "heading" => format!("标题：{}", block.text),
+                    "table" => format!("表格 {}", index + 1),
+                    "list-item" => format!("列表项 {}", index + 1),
+                    _ => format!("段落 {}", index + 1),
+                };
+                results.push(KnowledgeSearchResult {
+                    title: title.clone(),
+                    path: path_string.clone(),
+                    object_type: format.id.clone(),
+                    match_kind: "body".into(),
+                    context,
+                    page: None,
+                    annotation_id: None,
+                    locator_kind: Some("docx-block".into()),
+                    locator_object_id: Some(block.id.clone()),
+                    location_label: Some(location_label),
+                    score: 70,
+                    extraction_failed: false,
+                });
+            }
+            if let Some((item, context)) = model.related_content.iter().find_map(|item| {
+                text_match_context(&item.text, query).map(|context| (item, context))
+            }) {
+                results.push(KnowledgeSearchResult {
+                    title,
+                    path: path_string,
+                    object_type: format.id.clone(),
+                    match_kind: "related".into(),
+                    context,
+                    page: None,
+                    annotation_id: None,
+                    locator_kind: Some(format!("docx-{}", item.kind)),
+                    locator_object_id: Some(item.id.clone()),
+                    location_label: Some(item.label.clone()),
+                    score: 75,
+                    extraction_failed: false,
                 });
             }
         } else if matches!(
@@ -352,6 +446,9 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     context: context.unwrap_or_else(|| "文件名匹配".into()),
                     page: None,
                     annotation_id: None,
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
                     score: if title_matches { 100 } else { 60 },
                     extraction_failed: false,
                 });
@@ -404,9 +501,40 @@ mod tests {
     use crate::commands::graph::GraphData;
     use crate::services::pdf_index::clear_pdf_index_cache;
     use base64::{engine::general_purpose, Engine as _};
+    use std::io::{Cursor, Write};
     use std::time::{SystemTime, UNIX_EPOCH};
+    use zip::write::SimpleFileOptions;
+    use zip::{CompressionMethod, ZipWriter};
 
     const TWO_PAGE_PDF: &str = "JVBERi0xLjMKJZOMi54gUmVwb3J0TGFiIEdlbmVyYXRlZCBQREYgZG9jdW1lbnQgKG9wZW5zb3VyY2UpCjEgMCBvYmoKPDwKL0YxIDIgMCBSCj4+CmVuZG9iagoyIDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhIC9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nIC9OYW1lIC9GMSAvU3VidHlwZSAvVHlwZTEgL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDggMCBSIC9NZWRpYUJveCBbIDAgMCAzMDAgMzAwIF0gL1BhcmVudCA3IDAgUiAvUmVzb3VyY2VzIDw8Ci9Gb250IDEgMCBSIC9Qcm9jU2V0IFsgL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSSBdCj4+IC9Sb3RhdGUgMCAvVHJhbnMgPDwKCj4+IAogIC9UeXBlIC9QYWdlCj4+CmVuZG9iago0IDAgb2JqCjw8Ci9Db250ZW50cyA5IDAgUiAvTWVkaWFCb3ggWyAwIDAgMzAwIDMwMCBdIC9QYXJlbnQgNyAwIFIgL1Jlc291cmNlcyA8PAovRm9udCAxIDAgUiAvUHJvY1NldCBbIC9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUkgXQo+PiAvUm90YXRlIDAgL1RyYW5zIDw8Cgo+PiAKICAvVHlwZSAvUGFnZQo+PgplbmRvYmoKNSAwIG9iago8PAovUGFnZU1vZGUgL1VzZU5vbmUgL1BhZ2VzIDcgMCBSIC9UeXBlIC9DYXRhbG9nCj4+CmVuZG9iago2IDAgb2JqCjw8Ci9BdXRob3IgKGFub255bW91cykgL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MDcxOTAxNTkyNSswOCcwMCcpIC9DcmVhdG9yIChhbm9ueW1vdXMpIC9LZXl3b3JkcyAoKSAvTW9kRGF0ZSAoRDoyMDI2MDcxOTAxNTkyNSswOCcwMCcpIC9Qcm9kdWNlciAoUmVwb3J0TGFiIFBERiBMaWJyYXJ5IC0gXChvcGVuc291cmNlXCkpIAogIC9TdWJqZWN0ICh1bnNwZWNpZmllZCkgL1RpdGxlICh1bnRpdGxlZCkgL1RyYXBwZWQgL0ZhbHNlCj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Db3VudCAyIC9LaWRzIFsgMyAwIFIgNCAwIFIgXSAvVHlwZSAvUGFnZXMKPj4KZW5kb2JqCjggMCBvYmoKPDwKL0xlbmd0aCA5Ngo+PgpzdHJlYW0KMSAwIDAgMSAwIDAgY20gIEJUIC9GMSAxMiBUZiAxNC40IFRMIEVUCkJUIDEgMCAwIDEgNDAgMjUwIFRtIChLbm93bGVkZ2UgR3JhcGggQWxwaGEpIFRqIFQqIEVUCiAKZW5kc3RyZWFtCmVuZG9iago5IDAgb2JqCjw8Ci9MZW5ndGggOTEKPj4Kc3RyZWFtCjEgMCAwIDEgMCAwIGNtICBCVCAvRjEgMTIgVGYgMTQuNCBUTCBFVApCVCAxIDAgMCAxIDQwIDI1MCBUbSAoU2Vjb25kIFBhZ2UgQmV0YSkgVGogVCogRVQKIAplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCAxMAowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwNjEgMDAwMDAgbiAKMDAwMDAwMDA5MiAwMDAwMCBuIAowMDAwMDAwMTk5IDAwMDAwIG4gCjAwMDAwMDAzOTIgMDAwMDAgbiAKMDAwMDAwMDU4NSAwMDAwMCBuIAowMDAwMDAwNjUzIDAwMDAwIG4gCjAwMDAwMDA5MTQgMDAwMDAgbiAKMDAwMDAwMDk3OSAwMDAwMCBuIAowMDAwMDAxMTI0IDAwMDAwIG4gCnRyYWlsZXIKPDwKL0lEIApbPDg3ZGQ4ZDI4MmYyODI4ZmFkMDdiZjc2YTE0NjRkYzM0Pjw4N2RkOGQyODJmMjgyOGZhZDA3YmY3NmExNDY0ZGMzND5dCiUgUmVwb3J0TGFiIGdlbmVyYXRlZCBQREYgZG9jdW1lbnQgLS0gZGlnZXN0IChvcGVuc291cmNlKQoKL0luZm8gNiAwIFIKL1Jvb3QgNSAwIFIKL1NpemUgMTAKPj4Kc3RhcnR4cmVmCjEyNjQKJSVFT0YK";
+
+    fn docx_fixture() -> Vec<u8> {
+        let mut output = Cursor::new(Vec::new());
+        {
+            let mut zip = ZipWriter::new(&mut output);
+            let options =
+                SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+            for (name, content) in [
+                (
+                    "[Content_Types].xml",
+                    r#"<Types><Override PartName="/word/document.xml"/></Types>"#,
+                ),
+                (
+                    "word/document.xml",
+                    r#"<w:document xmlns:w="w"><w:body><w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Indexed project heading</w:t></w:r></w:p><w:p><w:commentRangeStart w:id="3"/><w:r><w:t>Searchable DOCX paragraph</w:t><w:commentReference w:id="3"/></w:r></w:p></w:body></w:document>"#,
+                ),
+                (
+                    "word/comments.xml",
+                    r#"<w:comments xmlns:w="w"><w:comment w:id="3" w:author="Reviewer"><w:p><w:r><w:t>Unique review evidence</w:t></w:r></w:p></w:comment></w:comments>"#,
+                ),
+            ] {
+                zip.start_file(name, options).unwrap();
+                zip.write_all(content.as_bytes()).unwrap();
+            }
+            zip.finish().unwrap();
+        }
+        output.into_inner()
+    }
 
     #[test]
     fn searches_pdf_pages_and_annotations_with_locations() {
@@ -493,6 +621,54 @@ mod tests {
             .any(|result| result.match_kind == "ocr" && result.page == Some(1)));
         let _ = fs::remove_dir_all(root);
         clear_pdf_index_cache();
+    }
+
+    #[test]
+    fn indexes_docx_blocks_and_related_content_with_locators() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let base = std::env::temp_dir().join(format!("longedit-docx-index-{nonce}"));
+        let root = base.join("workspace");
+        let cache = base.join("cache");
+        fs::create_dir_all(&root).unwrap();
+        fs::create_dir_all(&cache).unwrap();
+        fs::write(root.join("review.docx"), docx_fixture()).unwrap();
+
+        let live_body = search_workspace(&root, "searchable docx paragraph", None);
+        assert!(live_body.iter().any(|result| {
+            result.object_type == "docx"
+                && result.match_kind == "body"
+                && result.locator_kind.as_deref() == Some("docx-block")
+                && result.locator_object_id.as_deref() == Some("docx-block-2")
+        }));
+        let live_comment = search_workspace(&root, "unique review evidence", None);
+        assert!(live_comment.iter().any(|result| {
+            result.match_kind == "related"
+                && result.locator_kind.as_deref() == Some("docx-comment")
+                && result.location_label.as_deref() == Some("批注 3")
+        }));
+
+        let snapshot = snapshot_from_graph(
+            &root,
+            GraphData {
+                nodes: Vec::new(),
+                edges: Vec::new(),
+            },
+        );
+        assert!(snapshot.search_segments.iter().any(|segment| {
+            segment.object_type == "docx"
+                && segment.locator_object_id.as_deref() == Some("docx-block-2")
+        }));
+        write_snapshot(&cache, &root, &snapshot).unwrap();
+        let indexed_comment =
+            search_workspace(&root, "unique review evidence", Some((&cache, false)));
+        assert!(indexed_comment.iter().any(|result| {
+            result.match_kind == "related"
+                && result.locator_object_id.as_deref() == Some("docx-related-1")
+        }));
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]

@@ -156,8 +156,53 @@
                   <ImageIcon :size="13" /> {{ block.imageCount }} 个内嵌图片对象
                 </span>
               </div>
+              <div v-if="relatedFor(block).length" class="related-links">
+                <button
+                  v-for="item in relatedFor(block)"
+                  :key="item.id"
+                  type="button"
+                  :title="`定位到${item.label}`"
+                  @click="scrollToBlock(item.id)"
+                >
+                  <MessageSquareTextIcon v-if="item.kind === 'comment'" :size="12" />
+                  <BookOpenTextIcon v-else :size="12" />
+                  {{ item.label }}
+                </button>
+              </div>
             </template>
             <div v-if="!report.model.blocks.length" class="empty-document">文档没有可显示的正文块。</div>
+
+            <section v-if="report.model.relatedContent.length" class="docx-related-content">
+              <header>
+                <h2>附属内容</h2>
+                <span>页眉、页脚、脚注、尾注与批注均保持只读</span>
+              </header>
+              <article
+                v-for="item in report.model.relatedContent"
+                :id="item.id"
+                :key="item.id"
+                class="related-item"
+                :class="{ 'search-hit': matchIds.has(item.id) }"
+              >
+                <div class="related-item-heading">
+                  <strong>{{ item.label }}</strong>
+                  <span>{{ relatedMetadata(item) }}</span>
+                </div>
+                <p>{{ item.text }}</p>
+                <div v-if="item.anchorBlockIds.length" class="related-anchors">
+                  <button
+                    v-for="(anchorId, anchorIndex) in item.anchorBlockIds"
+                    :key="anchorId"
+                    type="button"
+                    :title="`定位到正文引用 ${anchorIndex + 1}`"
+                    @click="scrollToBlock(anchorId)"
+                  >
+                    <LocateFixedIcon :size="12" />
+                    正文引用 {{ anchorIndex + 1 }}
+                  </button>
+                </div>
+              </article>
+            </section>
           </article>
         </main>
       </div>
@@ -166,6 +211,7 @@
         <div>
           <span>{{ formatBytes(report.size) }}</span>
           <span>{{ report.model.blocks.length }} 个结构块</span>
+          <span>{{ report.model.relatedContent.length }} 项附属内容</span>
           <span>{{ report.model.plainText.length.toLocaleString() }} 字符</span>
           <span>{{ report.media.length }}/{{ profile.renderableImageCount }} 张图片已安全预览</span>
         </div>
@@ -184,11 +230,14 @@ import { invoke } from '@tauri-apps/api/core'
 import { useRoute } from 'vue-router'
 import {
   AlertTriangle as AlertIcon,
+  BookOpenText as BookOpenTextIcon,
   ChevronDown as ChevronDownIcon,
   ChevronUp as ChevronUpIcon,
   FileText as FileTextIcon,
   Image as ImageIcon,
+  LocateFixed as LocateFixedIcon,
   Lock as LockIcon,
+  MessageSquareText as MessageSquareTextIcon,
   RefreshCw as RefreshIcon,
   Search as SearchIcon,
   ShieldAlert as ShieldAlertIcon,
@@ -206,6 +255,18 @@ interface DocxBlock {
   rows: Array<{ cells: string[] }>
   imageCount: number
   imageParts: string[]
+  relatedContentIds: string[]
+}
+interface DocxRelatedContent {
+  id: string
+  kind: 'header' | 'footer' | 'footnote' | 'endnote' | 'comment'
+  label: string
+  text: string
+  sourcePart: string
+  referenceId?: string | null
+  author?: string | null
+  date?: string | null
+  anchorBlockIds: string[]
 }
 interface DocxProfile {
   producer?: string | null
@@ -246,6 +307,7 @@ interface DocxReadReport {
   model: {
     blocks: DocxBlock[]
     headings: Array<{ blockId: string; text: string; level: number }>
+    relatedContent: DocxRelatedContent[]
     plainText: string
     compatibility: DocxProfile
     warnings: string[]
@@ -263,10 +325,14 @@ const query = ref('')
 const matchIndex = ref(-1)
 
 const docxPath = computed(() => String(route.query.path || store.activeTabId || ''))
+const routeLocator = computed(() => typeof route.query.locator === 'string' ? route.query.locator : '')
 const fileName = computed(() => docxPath.value.split(/[\\/]/).pop() || '未命名.docx')
 const profile = computed(() => report.value?.model.compatibility as DocxProfile)
 const mediaByPart = computed(() => new Map(
   (report.value?.media || []).map(media => [media.partName, media]),
+))
+const relatedById = computed(() => new Map(
+  (report.value?.model.relatedContent || []).map(item => [item.id, item]),
 ))
 const allWarnings = computed(() => [
   ...(report.value?.model.warnings || []),
@@ -275,7 +341,10 @@ const allWarnings = computed(() => [
 const matches = computed(() => {
   const needle = query.value.trim().toLocaleLowerCase()
   if (!needle || !report.value) return []
-  return report.value.model.blocks.filter(block => block.text.toLocaleLowerCase().includes(needle))
+  return [
+    ...report.value.model.blocks,
+    ...report.value.model.relatedContent,
+  ].filter(item => item.text.toLocaleLowerCase().includes(needle))
 })
 const matchIds = computed(() => new Set(matches.value.map(block => block.id)))
 const searchPositionLabel = computed(() => matches.value.length
@@ -290,8 +359,10 @@ const packageFeatureLabel = computed(() => {
   const value = profile.value
   if (!value) return ''
   const features = []
-  if (value.headerCount || value.footerCount) features.push(`页眉/页脚 ${value.headerCount}/${value.footerCount}`)
-  if (value.comments) features.push('批注')
+  if (value.headerCount || value.footerCount) features.push(`已读取页眉/页脚 ${value.headerCount}/${value.footerCount}`)
+  if (value.footnotes) features.push('已读取脚注')
+  if (value.endnotes) features.push('已读取尾注')
+  if (value.comments) features.push('已读取批注')
   if (value.trackedChanges) features.push('修订')
   if (value.fields) features.push('域')
   if (value.contentControls) features.push('内容控件')
@@ -307,12 +378,22 @@ const headingTag = (level?: number | null) => `h${Math.min(6, Math.max(1, level 
 const mediaFor = (block: DocxBlock) => block.imageParts
   .map(part => mediaByPart.value.get(part))
   .filter((media): media is DocxMediaPreview => Boolean(media))
+const relatedFor = (block: DocxBlock) => block.relatedContentIds
+  .map(id => relatedById.value.get(id))
+  .filter((item): item is DocxRelatedContent => Boolean(item))
+const relatedMetadata = (item: DocxRelatedContent) => {
+  const details = [item.author, item.date, item.sourcePart].filter(Boolean)
+  return details.join(' · ')
+}
 const formatBytes = (bytes: number) => bytes < 1024 * 1024
   ? `${Math.max(1, Math.round(bytes / 1024))} KiB`
   : `${(bytes / 1024 / 1024).toFixed(1)} MiB`
 const scrollToBlock = async (id: string) => {
   await nextTick()
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
+const scrollToRouteLocator = () => {
+  if (routeLocator.value) void scrollToBlock(routeLocator.value)
 }
 const moveSearch = (direction: -1 | 1) => {
   if (!matches.value.length) return
@@ -328,6 +409,7 @@ const load = async () => {
       libraryRoot: store.libraryPath,
       path: docxPath.value,
     })
+    scrollToRouteLocator()
   } catch (cause) {
     report.value = null
     loadError.value = String(cause).replace(/^Error:\s*/, '')
@@ -344,6 +426,7 @@ watch(docxPath, () => {
 watch(matches, value => {
   matchIndex.value = value.length ? 0 : -1
 })
+watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocator)
 </script>
 
 <style scoped>
@@ -399,6 +482,18 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .docx-image-placeholder { min-height: 100px; margin: 14px 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; border: 1px dashed var(--border-color); color: var(--text-muted); background: var(--bg-secondary); }
 .docx-image-placeholder img, .inline-images img { display: block; max-width: 100%; max-height: 520px; object-fit: contain; }
 .inline-images { margin: 10px 0; display: grid; gap: 8px; justify-items: start; }
+.related-links, .related-anchors { display: flex; flex-wrap: wrap; gap: 5px; }
+.related-links { margin: 4px 0 10px; }
+.related-links button, .related-anchors button { min-height: 24px; padding: 3px 7px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; font: inherit; font-size: 10px; }
+.related-links button:hover, .related-anchors button:hover { border-color: var(--primary-color); color: var(--primary-color); }
+.docx-related-content { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border-color); }
+.docx-related-content > header { margin-bottom: 16px; }
+.docx-related-content h2 { margin: 0 0 4px; font-size: 17px; }
+.docx-related-content > header span, .related-item-heading span { color: var(--text-muted); font-size: 10px; }
+.related-item { scroll-margin: 90px; padding: 11px 0; border-bottom: 1px solid var(--border-color); }
+.related-item-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.related-item-heading strong { font-size: 12px; }
+.related-item p { margin: 6px 0; line-height: 1.65; white-space: pre-wrap; }
 .empty-document { padding: 80px 20px; text-align: center; color: var(--text-muted); }
 .docx-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: 10px; }
 .docx-status > div { gap: 10px; }

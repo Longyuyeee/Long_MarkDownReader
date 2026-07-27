@@ -12,6 +12,8 @@ const MAX_DOCX_XML_BYTES: u64 = 32 * 1024 * 1024;
 const MAX_DOCX_BLOCKS: usize = 50_000;
 const MAX_DOCX_TEXT_CHARS: usize = 2_000_000;
 const MAX_DOCX_TABLE_CELLS: usize = 100_000;
+const MAX_DOCX_RELATED_ITEMS: usize = 10_000;
+const MAX_DOCX_RELATED_TEXT_CHARS: usize = 500_000;
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -32,6 +34,7 @@ pub struct DocxBlock {
     pub rows: Vec<DocxTableRow>,
     pub image_count: usize,
     pub image_parts: Vec<String>,
+    pub related_content_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -40,6 +43,20 @@ pub struct DocxHeading {
     pub block_id: String,
     pub text: String,
     pub level: u8,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DocxRelatedContent {
+    pub id: String,
+    pub kind: String,
+    pub label: String,
+    pub text: String,
+    pub source_part: String,
+    pub reference_id: Option<String>,
+    pub author: Option<String>,
+    pub date: Option<String>,
+    pub anchor_block_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -74,6 +91,7 @@ pub struct DocxCompatibilityProfile {
 pub struct DocxDocumentModel {
     pub blocks: Vec<DocxBlock>,
     pub headings: Vec<DocxHeading>,
+    pub related_content: Vec<DocxRelatedContent>,
     pub plain_text: String,
     pub compatibility: DocxCompatibilityProfile,
     pub warnings: Vec<String>,
@@ -87,6 +105,7 @@ struct ParagraphState {
     num_id: Option<String>,
     image_count: usize,
     image_parts: Vec<String>,
+    related_content_ids: Vec<String>,
 }
 
 #[derive(Default)]
@@ -95,6 +114,16 @@ struct TableState {
     current_row: Vec<String>,
     current_cell: String,
     in_cell: bool,
+    related_content_ids: Vec<String>,
+}
+
+#[derive(Default)]
+struct RelatedItemState {
+    reference_id: Option<String>,
+    author: Option<String>,
+    date: Option<String>,
+    text: String,
+    in_text: bool,
 }
 
 fn attribute_value(
@@ -433,6 +462,298 @@ fn append_text(target: &mut String, value: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn append_related_text(
+    target: &mut String,
+    value: &str,
+    total_chars: &mut usize,
+) -> Result<(), String> {
+    let added = value.chars().count();
+    if total_chars.saturating_add(added) > MAX_DOCX_RELATED_TEXT_CHARS {
+        return Err("DOCX 页眉、注释等附属文本超过 500,000 字符安全上限".into());
+    }
+    target.push_str(value);
+    *total_chars += added;
+    Ok(())
+}
+
+fn append_paragraph_separator(target: &mut String, total_chars: &mut usize) -> Result<(), String> {
+    if !target.is_empty() && !target.ends_with('\n') {
+        append_related_text(target, "\n", total_chars)?;
+    }
+    Ok(())
+}
+
+fn related_reference_key(kind: &str, reference_id: &str) -> String {
+    format!("{kind}:{reference_id}")
+}
+
+fn capture_related_reference(
+    paragraph: &mut Option<ParagraphState>,
+    event: &BytesStart<'_>,
+    decoder: quick_xml::encoding::Decoder,
+    kind: &str,
+) -> Result<(), String> {
+    let Some(paragraph) = paragraph.as_mut() else {
+        return Ok(());
+    };
+    let Some(reference_id) = attribute_value(event, b"id", decoder)? else {
+        return Ok(());
+    };
+    let key = related_reference_key(kind, &reference_id);
+    if !paragraph.related_content_ids.contains(&key) {
+        paragraph.related_content_ids.push(key);
+    }
+    Ok(())
+}
+
+fn parse_flat_related_part(
+    bytes: &[u8],
+    kind: &str,
+    label: String,
+    source_part: String,
+    total_chars: &mut usize,
+) -> Result<Option<DocxRelatedContent>, String> {
+    let mut reader = Reader::from_reader(bytes);
+    reader.config_mut().trim_text(false);
+    let mut buffer = Vec::new();
+    let mut text = String::new();
+    let mut in_text = false;
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("DOCX 附属部件 {source_part} 损坏: {error}"))?
+        {
+            Event::Start(event) if event.local_name().as_ref() == b"t" => in_text = true,
+            Event::Empty(event) => match event.local_name().as_ref() {
+                b"tab" => append_related_text(&mut text, "\t", total_chars)?,
+                b"br" | b"cr" => append_related_text(&mut text, "\n", total_chars)?,
+                _ => {}
+            },
+            Event::Text(value) if in_text => {
+                let value = value
+                    .xml10_content()
+                    .map_err(|error| format!("DOCX 附属部件 {source_part} 文本损坏: {error}"))?;
+                append_related_text(&mut text, &value, total_chars)?;
+            }
+            Event::End(event) => match event.local_name().as_ref() {
+                b"t" => in_text = false,
+                b"p" => append_paragraph_separator(&mut text, total_chars)?,
+                _ => {}
+            },
+            Event::DocType(_) => {
+                return Err(format!("DOCX 附属部件 {source_part} 不允许 DOCTYPE"));
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    let text = text.trim().to_string();
+    if text.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some(DocxRelatedContent {
+        id: String::new(),
+        kind: kind.into(),
+        label,
+        text,
+        source_part,
+        reference_id: None,
+        author: None,
+        date: None,
+        anchor_block_ids: Vec::new(),
+    }))
+}
+
+fn parse_item_related_part(
+    bytes: &[u8],
+    kind: &str,
+    item_element: &[u8],
+    label_prefix: &str,
+    source_part: &str,
+    total_chars: &mut usize,
+) -> Result<Vec<DocxRelatedContent>, String> {
+    let mut reader = Reader::from_reader(bytes);
+    reader.config_mut().trim_text(false);
+    let mut buffer = Vec::new();
+    let mut current: Option<RelatedItemState> = None;
+    let mut items = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("DOCX 附属部件 {source_part} 损坏: {error}"))?
+        {
+            Event::Start(ref event) if event.local_name().as_ref() == item_element => {
+                if items.len() >= MAX_DOCX_RELATED_ITEMS {
+                    return Err("DOCX 脚注、尾注或批注超过 10,000 项安全上限".into());
+                }
+                let reference_id = attribute_value(event, b"id", reader.decoder())?;
+                let is_separator = attribute_value(event, b"type", reader.decoder())?.is_some()
+                    || reference_id
+                        .as_deref()
+                        .is_some_and(|id| id.starts_with('-'));
+                current = if is_separator {
+                    None
+                } else {
+                    Some(RelatedItemState {
+                        reference_id,
+                        author: attribute_value(event, b"author", reader.decoder())?,
+                        date: attribute_value(event, b"date", reader.decoder())?,
+                        ..RelatedItemState::default()
+                    })
+                };
+            }
+            Event::Start(event) if event.local_name().as_ref() == b"t" => {
+                if let Some(current) = current.as_mut() {
+                    current.in_text = true;
+                }
+            }
+            Event::Empty(event) => {
+                if let Some(current) = current.as_mut() {
+                    match event.local_name().as_ref() {
+                        b"tab" => {
+                            append_related_text(&mut current.text, "\t", total_chars)?;
+                        }
+                        b"br" | b"cr" => {
+                            append_related_text(&mut current.text, "\n", total_chars)?;
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            Event::Text(value) => {
+                if let Some(current) = current.as_mut().filter(|item| item.in_text) {
+                    let value = value.xml10_content().map_err(|error| {
+                        format!("DOCX 附属部件 {source_part} 文本损坏: {error}")
+                    })?;
+                    append_related_text(&mut current.text, &value, total_chars)?;
+                }
+            }
+            Event::End(event) if event.local_name().as_ref() == b"t" => {
+                if let Some(current) = current.as_mut() {
+                    current.in_text = false;
+                }
+            }
+            Event::End(event) if event.local_name().as_ref() == b"p" => {
+                if let Some(current) = current.as_mut() {
+                    append_paragraph_separator(&mut current.text, total_chars)?;
+                }
+            }
+            Event::End(event) if event.local_name().as_ref() == item_element => {
+                if let Some(current) = current.take() {
+                    let text = current.text.trim().to_string();
+                    if !text.is_empty() {
+                        let reference_label = current.reference_id.as_deref().unwrap_or("未编号");
+                        items.push(DocxRelatedContent {
+                            id: String::new(),
+                            kind: kind.into(),
+                            label: format!("{label_prefix} {reference_label}"),
+                            text,
+                            source_part: source_part.into(),
+                            reference_id: current.reference_id,
+                            author: current.author,
+                            date: current.date,
+                            anchor_block_ids: Vec::new(),
+                        });
+                    }
+                }
+            }
+            Event::DocType(_) => {
+                return Err(format!("DOCX 附属部件 {source_part} 不允许 DOCTYPE"));
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(items)
+}
+
+fn parse_related_content(
+    archive: &mut ZipArchive<Cursor<&[u8]>>,
+    names: &HashSet<String>,
+) -> Result<Vec<DocxRelatedContent>, String> {
+    let mut related = Vec::new();
+    let mut total_chars = 0;
+    let mut headers = names
+        .iter()
+        .filter(|name| name.starts_with("word/header") && name.ends_with(".xml"))
+        .cloned()
+        .collect::<Vec<_>>();
+    let mut footers = names
+        .iter()
+        .filter(|name| name.starts_with("word/footer") && name.ends_with(".xml"))
+        .cloned()
+        .collect::<Vec<_>>();
+    headers.sort();
+    footers.sort();
+
+    for (index, part) in headers.into_iter().enumerate() {
+        if let Some(bytes) = read_zip_part(archive, &part, false)? {
+            if let Some(item) = parse_flat_related_part(
+                &bytes,
+                "header",
+                format!("页眉 {}", index + 1),
+                part,
+                &mut total_chars,
+            )? {
+                related.push(item);
+            }
+        }
+    }
+    for (index, part) in footers.into_iter().enumerate() {
+        if let Some(bytes) = read_zip_part(archive, &part, false)? {
+            if let Some(item) = parse_flat_related_part(
+                &bytes,
+                "footer",
+                format!("页脚 {}", index + 1),
+                part,
+                &mut total_chars,
+            )? {
+                related.push(item);
+            }
+        }
+    }
+    for (part, kind, element, label) in [
+        (
+            "word/footnotes.xml",
+            "footnote",
+            b"footnote".as_slice(),
+            "脚注",
+        ),
+        (
+            "word/endnotes.xml",
+            "endnote",
+            b"endnote".as_slice(),
+            "尾注",
+        ),
+        (
+            "word/comments.xml",
+            "comment",
+            b"comment".as_slice(),
+            "批注",
+        ),
+    ] {
+        if let Some(bytes) = read_zip_part(archive, part, false)? {
+            related.extend(parse_item_related_part(
+                &bytes,
+                kind,
+                element,
+                label,
+                part,
+                &mut total_chars,
+            )?);
+        }
+    }
+    if related.len() > MAX_DOCX_RELATED_ITEMS {
+        return Err("DOCX 附属内容超过 10,000 项安全上限".into());
+    }
+    for (index, item) in related.iter_mut().enumerate() {
+        item.id = format!("docx-related-{}", index + 1);
+    }
+    Ok(related)
+}
+
 fn capture_image_part(
     paragraph: &mut Option<ParagraphState>,
     event: &BytesStart<'_>,
@@ -464,6 +785,11 @@ fn finalize_paragraph(
 ) -> Result<(), String> {
     let text = normalized_text(&paragraph.text);
     if let Some(table) = table.as_mut() {
+        for reference in paragraph.related_content_ids {
+            if !table.related_content_ids.contains(&reference) {
+                table.related_content_ids.push(reference);
+            }
+        }
         if table.in_cell && !text.is_empty() {
             if !table.current_cell.is_empty() {
                 table.current_cell.push('\n');
@@ -516,6 +842,7 @@ fn finalize_paragraph(
         rows: Vec::new(),
         image_count: paragraph.image_count,
         image_parts: paragraph.image_parts,
+        related_content_ids: paragraph.related_content_ids,
     });
     Ok(())
 }
@@ -614,6 +941,15 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                 b"blip" | b"imagedata" => {
                     capture_image_part(&mut paragraph, event, reader.decoder(), &relationships)?;
                 }
+                b"commentRangeStart" | b"commentReference" => {
+                    capture_related_reference(&mut paragraph, event, reader.decoder(), "comment")?;
+                }
+                b"footnoteReference" => {
+                    capture_related_reference(&mut paragraph, event, reader.decoder(), "footnote")?;
+                }
+                b"endnoteReference" => {
+                    capture_related_reference(&mut paragraph, event, reader.decoder(), "endnote")?;
+                }
                 b"tbl" => table = Some(TableState::default()),
                 b"tr" => {
                     if let Some(table) = table.as_mut() {
@@ -658,6 +994,15 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                 }
                 b"blip" | b"imagedata" => {
                     capture_image_part(&mut paragraph, event, reader.decoder(), &relationships)?;
+                }
+                b"commentRangeStart" | b"commentReference" => {
+                    capture_related_reference(&mut paragraph, event, reader.decoder(), "comment")?;
+                }
+                b"footnoteReference" => {
+                    capture_related_reference(&mut paragraph, event, reader.decoder(), "footnote")?;
+                }
+                b"endnoteReference" => {
+                    capture_related_reference(&mut paragraph, event, reader.decoder(), "endnote")?;
                 }
                 b"tab" => {
                     if let Some(paragraph) = paragraph.as_mut() {
@@ -744,6 +1089,7 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
                             rows: table.rows,
                             image_count: 0,
                             image_parts: Vec::new(),
+                            related_content_ids: table.related_content_ids,
                         });
                     }
                 }
@@ -754,6 +1100,38 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
             _ => {}
         }
         buffer.clear();
+    }
+
+    let mut related_content = parse_related_content(&mut archive, &names)?;
+    let related_lookup = related_content
+        .iter()
+        .filter_map(|item| {
+            item.reference_id.as_deref().map(|reference| {
+                (
+                    related_reference_key(&item.kind, reference),
+                    item.id.clone(),
+                )
+            })
+        })
+        .collect::<HashMap<_, _>>();
+    let mut anchors: HashMap<String, Vec<String>> = HashMap::new();
+    for block in &mut blocks {
+        block.related_content_ids = block
+            .related_content_ids
+            .iter()
+            .filter_map(|key| related_lookup.get(key).cloned())
+            .collect();
+        block.related_content_ids.sort();
+        block.related_content_ids.dedup();
+        for related_id in &block.related_content_ids {
+            anchors
+                .entry(related_id.clone())
+                .or_default()
+                .push(block.id.clone());
+        }
+    }
+    for item in &mut related_content {
+        item.anchor_block_ids = anchors.remove(&item.id).unwrap_or_default();
     }
 
     let image_count = names
@@ -831,7 +1209,7 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
         warnings.push("检测到域代码；当前仅展示已有结果，不计算或写回域".into());
     }
     if compatibility.comments {
-        warnings.push("检测到批注；批注内容和锚点尚未进入首批阅读模型".into());
+        warnings.push("检测到批注；正文和锚点以只读方式展示，不开放回复或写回".into());
     }
     if compatibility.content_controls
         || compatibility.embedded_objects
@@ -843,12 +1221,14 @@ pub fn parse_docx(source: &[u8]) -> Result<DocxDocumentModel, String> {
     let plain_text = blocks
         .iter()
         .map(|block| block.text.as_str())
+        .chain(related_content.iter().map(|item| item.text.as_str()))
         .filter(|text| !text.is_empty())
         .collect::<Vec<_>>()
         .join("\n");
     Ok(DocxDocumentModel {
         blocks,
         headings,
+        related_content,
         plain_text,
         compatibility,
         warnings,
@@ -972,13 +1352,30 @@ mod tests {
     fn reports_advanced_read_only_features_without_dropping_visible_text() {
         let source = fixture(
             r#"<?xml version="1.0"?><w:document xmlns:w="w" xmlns:m="m"><w:body>
-            <w:sdt><w:sdtContent><w:p><w:ins><w:r><w:t>Tracked visible text</w:t></w:r></w:ins><w:fldSimple w:instr="DATE"/></w:p></w:sdtContent></w:sdt>
+            <w:sdt><w:sdtContent><w:p><w:commentRangeStart w:id="7"/><w:ins><w:r><w:t>Tracked visible text</w:t></w:r></w:ins><w:r><w:footnoteReference w:id="2"/><w:endnoteReference w:id="4"/><w:commentReference w:id="7"/></w:r><w:fldSimple w:instr="DATE"/></w:p></w:sdtContent></w:sdt>
             <w:p><m:oMath/><w:object/><w:altChunk/></w:p>
             </w:body></w:document>"#,
             &[
-                ("word/comments.xml", "<comments/>"),
-                ("word/header1.xml", "<hdr/>"),
-                ("word/footer1.xml", "<ftr/>"),
+                (
+                    "word/comments.xml",
+                    r#"<w:comments xmlns:w="w"><w:comment w:id="7" w:author="Reviewer" w:date="2026-07-27"><w:p><w:r><w:t>Review this sentence</w:t></w:r></w:p></w:comment></w:comments>"#,
+                ),
+                (
+                    "word/footnotes.xml",
+                    r#"<w:footnotes xmlns:w="w"><w:footnote w:id="-1" w:type="separator"><w:p><w:r><w:t>ignored</w:t></w:r></w:p></w:footnote><w:footnote w:id="2"><w:p><w:r><w:t>Footnote body</w:t></w:r></w:p></w:footnote></w:footnotes>"#,
+                ),
+                (
+                    "word/endnotes.xml",
+                    r#"<w:endnotes xmlns:w="w"><w:endnote w:id="4"><w:p><w:r><w:t>Endnote body</w:t></w:r></w:p></w:endnote></w:endnotes>"#,
+                ),
+                (
+                    "word/header1.xml",
+                    r#"<w:hdr xmlns:w="w"><w:p><w:r><w:t>Project header</w:t></w:r></w:p></w:hdr>"#,
+                ),
+                (
+                    "word/footer1.xml",
+                    r#"<w:ftr xmlns:w="w"><w:p><w:r><w:t>Page footer</w:t></w:r></w:p></w:ftr>"#,
+                ),
                 ("word/customUnknown.xml", "<unknown/>"),
             ],
         );
@@ -987,12 +1384,26 @@ mod tests {
         assert!(model.compatibility.tracked_changes);
         assert!(model.compatibility.fields);
         assert!(model.compatibility.comments);
+        assert!(model.compatibility.footnotes);
+        assert!(model.compatibility.endnotes);
         assert!(model.compatibility.content_controls);
         assert!(model.compatibility.equations);
         assert!(model.compatibility.embedded_objects);
         assert!(model.compatibility.alt_chunks);
         assert_eq!(model.compatibility.header_count, 1);
         assert_eq!(model.compatibility.footer_count, 1);
+        assert_eq!(model.related_content.len(), 5);
+        let comment = model
+            .related_content
+            .iter()
+            .find(|item| item.kind == "comment")
+            .unwrap();
+        assert_eq!(comment.text, "Review this sentence");
+        assert_eq!(comment.author.as_deref(), Some("Reviewer"));
+        assert_eq!(comment.anchor_block_ids, ["docx-block-1"]);
+        assert!(model.blocks[0].related_content_ids.contains(&comment.id));
+        assert!(model.plain_text.contains("Project header"));
+        assert!(model.plain_text.contains("Footnote body"));
         assert_eq!(
             model.compatibility.unknown_word_parts,
             ["word/customUnknown.xml"]

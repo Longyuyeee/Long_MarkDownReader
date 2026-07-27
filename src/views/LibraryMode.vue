@@ -82,13 +82,14 @@
                   </n-empty>
                 </div>
                 <div v-else-if="searchQuery.trim()" class="knowledge-search-results">
-                  <div v-if="knowledgeSearchRunning" class="knowledge-search-state">正在搜索 Markdown、Canvas、PDF 与数据表…</div>
+                  <div v-if="knowledgeSearchRunning" class="knowledge-search-state">正在搜索工作区已索引内容…</div>
                   <div v-else-if="!visibleKnowledgeSearchResults.length" class="knowledge-search-state">没有找到匹配内容</div>
-                  <div v-for="(result, index) in visibleKnowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.annotationId || index}`" class="knowledge-search-result">
+                  <div v-for="(result, index) in visibleKnowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.locatorObjectId || result.annotationId || index}`" class="knowledge-search-result">
                     <button class="knowledge-result-open" @click="openKnowledgeSearchResult(result)">
                       <span class="knowledge-result-head"><strong>{{ result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '') }}</strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
                       <span class="knowledge-result-context">{{ result.context }}</span>
                       <small v-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
+                      <small v-else-if="result.locationLabel">{{ result.locationLabel }}</small>
                     </button>
                     <RelationSummaryBadge v-if="relationSummary(result.path)" :summary="relationSummary(result.path)!" compact @open="openRelationGraph(result.path)" />
                   </div>
@@ -541,10 +542,13 @@ interface KnowledgeSearchResult {
   title: string
   path: string
   objectType: string
-  matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'tag'
+  matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'related' | 'tag'
   context: string
   page?: number
   annotationId?: string
+  locatorKind?: string
+  locatorObjectId?: string
+  locationLabel?: string
   score: number
   extractionFailed: boolean
 }
@@ -1209,7 +1213,7 @@ const handleNodeSelect = (keys: string[]) => {
 }
 
 const searchKindLabel = (kind: KnowledgeSearchResult['matchKind']) => ({
-  title: '标题', body: '正文', ocr: 'OCR', annotation: '批注', tag: '标签',
+  title: '标题', body: '正文', ocr: 'OCR', annotation: '批注', related: '附属内容', tag: '标签',
 }[kind])
 
 const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
@@ -1220,6 +1224,15 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
         path: result.path,
         ...(result.page ? { page: String(result.page) } : {}),
         ...(result.annotationId ? { annotation: result.annotationId } : {}),
+      },
+    })
+  } else if (result.objectType === 'docx') {
+    void router.replace({
+      name: 'LibraryMode',
+      query: {
+        path: result.path,
+        ...(result.locatorObjectId ? { locator: result.locatorObjectId } : {}),
+        locatorToken: String(Date.now()),
       },
     })
   } else {
