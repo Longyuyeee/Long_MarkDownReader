@@ -95,6 +95,6 @@ C0-2 当前进度为 **1/3**：
 | WPS Writer | 当前机器未安装，待真实环境 |
 | LibreOffice Writer | 当前机器未安装，待真实环境 |
 
-下一步优先获取 WPS Writer 环境完成 C0-2B，再获取 LibreOffice Writer 环境完成 C0-2C。两类真实文件未完成前，不得宣布 C0-2 收口，也不得开放覆盖用户 DOCX 原件的写回。
+三生产者统一接入门禁已建立，见 `C0_2BC_DOCX_Producer_Matrix_Intake_Gate_Audit_2026-07-27.md`。下一步优先获取 WPS Writer 环境完成 C0-2B，再获取 LibreOffice Writer 环境完成 C0-2C。两类真实文件未完成前，不得宣布 C0-2 收口，也不得开放覆盖用户 DOCX 原件的写回。
 
 若外部环境暂不可用，可以开始 C2A 的内存/临时副本 OOXML 补丁和包差异审计，但所有用户文件替换入口继续阻断。

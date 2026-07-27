@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A Microsoft Word 生产者切片、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已完成。下一开发入口为 C0-2B/C WPS 与 LibreOffice 真实生产者矩阵。最新判定见 [C2E0 专项审计](./C2E0_DOCX_Save_Readiness_Gate_Audit_2026-07-27.md)。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A Microsoft Word 生产者切片、C0-2B/C 三生产者接入门禁、C2A～C2D 隔离补丁及 C2E0 只读保存准备门禁已完成。下一开发入口仍为真实 WPS 与 LibreOffice 生产者证据。最新判定见 [C0-2B/C 接入门禁审计](./C0_2BC_DOCX_Producer_Matrix_Intake_Gate_Audit_2026-07-27.md)。
 
 ## 1. 指导目标
 
@@ -560,7 +560,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 14. `R` 安装包、文件关联、升级、卸载和多机器发布矩阵。
 15. `F` PDF 合并拆分、知识图谱深层语义、XLSX 高级等价与 AI 增强。
 
-当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A、C2A、C2B、C2C 和 C2D 已完成**。真实 Tauri Debug/WebView2 门禁为 35 项检查和 27 张机器校验证据；C2A～C2D 是无 UI 的命令与内核门禁。
+当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0/B1A/B1B/B1C、DOCX C1-2B、C0-2A、C0-2B/C 接入门禁、C2A～C2D 和 C2E0 已完成**。真实生产者证据仍为 1/3；真实 Tauri Debug/WebView2 门禁为 35 项检查和 27 张机器校验证据。
 
 当前 **A3 JSON/JSONC 已收口**：树形视图在精确 AST 范围、重复键、数字精度和 JSONC 保真门禁下开放标量替换、对象键重命名、对象/数组追加和删除；A5 进一步证明非法 JSON 默认不会覆盖最后合法磁盘版本，修复后可以可靠保存。
 

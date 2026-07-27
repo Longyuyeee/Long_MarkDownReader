@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "requiredProducerIds": [
+    "microsoft-word-16",
+    "wps-writer",
+    "libreoffice-writer"
+  ],
+  "producers": [
+    {
+      "id": "microsoft-word-16",
+      "producer": "Microsoft Word",
+      "status": "verified",
+      "manifest": "microsoft-word-16.json",
+      "fixture": "microsoft-word-16.docx",
+      "evidenceDependency": null
+    },
+    {
+      "id": "wps-writer",
+      "producer": "WPS Writer",
+      "status": "pending",
+      "manifest": "wps-writer.json",
+      "fixture": "wps-writer.docx",
+      "evidenceDependency": "A real WPS Writer installation is required to create and reopen the project-authored fixture."
+    },
+    {
+      "id": "libreoffice-writer",
+      "producer": "LibreOffice Writer",
+      "status": "pending",
+      "manifest": "libreoffice-writer.json",
+      "fixture": "libreoffice-writer.docx",
+      "evidenceDependency": "A real LibreOffice Writer installation is required to create and reopen the project-authored fixture."
+    }
+  ]
+}

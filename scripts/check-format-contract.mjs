@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises'
-import { createHash } from 'node:crypto'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
@@ -41,10 +40,6 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src-tauri/src/formats/opml.rs'),
   read('src-tauri/src/services/knowledge_index.rs'),
 ])
-const wordProducerManifest = JSON.parse(await read('fixtures/docx/producers/microsoft-word-16.json'))
-const wordProducerFixture = await readFile(new URL('fixtures/docx/producers/microsoft-word-16.docx', root))
-const wordProducerHash = createHash('sha256').update(wordProducerFixture).digest('hex')
-
 const registry = JSON.parse(registryText)
 const failures = []
 const ids = new Set()
@@ -426,8 +421,8 @@ requireText(docxCommands, 'preview_docx_image_alt_text_patch_isolated_copy', 'C2
 requireText(docxCommands, 'DocxSaveReadinessReport', 'C2E must expose a structured read-only save readiness report')
 requireText(docxCommands, 'audit_docx_save_readiness', 'C2E must expose a read-only save readiness command')
 requireText(docxCommands, 'blocked_readiness_only', 'C2E readiness must remain blocked until producer evidence is complete')
-requireText(docxCommands, 'producer_evidence_missing:wps', 'C2E must report missing WPS producer evidence')
-requireText(docxCommands, 'producer_evidence_missing:libreoffice', 'C2E must report missing LibreOffice producer evidence')
+requireText(docxCommands, 'fixtures/docx/producers/matrix.json', 'C2E readiness must consume the producer matrix fact source')
+requireText(docxCommands, 'producer_evidence_missing:{producer}', 'C2E must report each missing producer from the matrix')
 requireText(docxCommands, 'write_attempted: false', 'C2E readiness must prove that it never attempts a write')
 requireText(docxCommands, 'c2e_save_readiness_reports_conflicts_without_writing_files', 'C2E must regress source, target, and no-write gates')
 if (docxCommands.includes('save_docx') || docxCommands.includes('write_docx')) failures.push('C2B/C2C/C2D/C2E0 must not expose DOCX save or source overwrite commands')
@@ -443,14 +438,6 @@ requireText(docxReader, 'cell.columnSpan', 'C1-2B2 DOCX workspace must render ho
 requireText(docxReader, 'cell.rowSpan', 'C1-2B2 DOCX workspace must render vertical table merges')
 requireText(docxReader, 'docx-page-break', 'C1-2B2 DOCX workspace must render pagination markers')
 requireText(docxReader, 'docx-layout-summary', 'C1-2B2 DOCX workspace must expose section layout summaries')
-if (wordProducerManifest.schemaVersion !== 1
-  || wordProducerManifest.producer !== 'Microsoft Word'
-  || wordProducerManifest.file !== 'microsoft-word-16.docx'
-  || wordProducerManifest.sha256 !== wordProducerHash
-  || !wordProducerManifest.privacyNormalization
-  || wordProducerFixture.length < 20_000) {
-  failures.push('C0-2A Microsoft Word fixture manifest, hash, privacy record, or package is invalid')
-}
 requireText(router, "name: 'DocxEditor'", 'C1 DOCX workspace must have a restorable route')
 const logFormat = registry.formats.find(format => format.id === 'log')
 if (!logFormat

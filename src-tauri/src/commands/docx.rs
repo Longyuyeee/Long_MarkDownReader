@@ -382,6 +382,32 @@ fn read_optional_file_state(path: &Path) -> Result<Option<(u64, String)>, String
     )))
 }
 
+fn docx_producer_evidence() -> Result<(Vec<String>, Vec<String>), String> {
+    let matrix: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/docx/producers/matrix.json"))
+            .map_err(|error| format!("读取 DOCX 生产者矩阵失败: {error}"))?;
+    let producers = matrix["producers"]
+        .as_array()
+        .ok_or("DOCX 生产者矩阵缺少 producers")?;
+    let mut verified = Vec::new();
+    let mut missing = Vec::new();
+    for producer in producers {
+        let id = producer["id"]
+            .as_str()
+            .ok_or("DOCX 生产者矩阵包含无效 id")?;
+        match producer["status"].as_str() {
+            Some("verified") => verified.push(id.to_string()),
+            Some("pending") => missing.push(match id {
+                "wps-writer" => "wps".into(),
+                "libreoffice-writer" => "libreoffice".into(),
+                value => value.to_string(),
+            }),
+            _ => return Err(format!("DOCX 生产者矩阵包含无效状态: {id}")),
+        }
+    }
+    Ok((verified, missing))
+}
+
 fn audit_docx_save_readiness_path(
     source_path: &Path,
     target_path: &Path,
@@ -420,8 +446,12 @@ fn audit_docx_save_readiness_path(
     if target_before.is_some() {
         blockers.push("target_already_exists".into());
     }
-    blockers.push("producer_evidence_missing:wps".into());
-    blockers.push("producer_evidence_missing:libreoffice".into());
+    let (producer_evidence, missing_producer_evidence) = docx_producer_evidence()?;
+    blockers.extend(
+        missing_producer_evidence
+            .iter()
+            .map(|producer| format!("producer_evidence_missing:{producer}")),
+    );
     blockers.push("docx_save_command_not_enabled".into());
 
     let source_after =
@@ -447,8 +477,8 @@ fn audit_docx_save_readiness_path(
         target_path: target_path.to_string_lossy().into_owned(),
         target_exists: target_before.is_some(),
         target_is_source,
-        producer_evidence: vec!["microsoft-word-16".into()],
-        missing_producer_evidence: vec!["wps".into(), "libreoffice".into()],
+        producer_evidence,
+        missing_producer_evidence,
         blockers,
         write_attempted: false,
         source_unchanged,

@@ -1938,6 +1938,28 @@ mod tests {
     }
 
     #[test]
+    fn tracks_pending_docx_producers_without_promoting_missing_evidence() {
+        let matrix: serde_json::Value =
+            serde_json::from_str(include_str!("../../../fixtures/docx/producers/matrix.json"))
+                .unwrap();
+        assert_eq!(matrix["schemaVersion"], 1);
+        let producers = matrix["producers"].as_array().unwrap();
+        assert_eq!(producers.len(), 3);
+        assert_eq!(producers[0]["id"], "microsoft-word-16");
+        assert_eq!(producers[0]["status"], "verified");
+        assert_eq!(producers[1]["id"], "wps-writer");
+        assert_eq!(producers[1]["status"], "pending");
+        assert_eq!(producers[2]["id"], "libreoffice-writer");
+        assert_eq!(producers[2]["status"], "pending");
+        assert!(producers[1]["evidenceDependency"]
+            .as_str()
+            .is_some_and(|value| !value.is_empty()));
+        assert!(producers[2]["evidenceDependency"]
+            .as_str()
+            .is_some_and(|value| !value.is_empty()));
+    }
+
+    #[test]
     fn preserves_predefined_and_numeric_xml_references_in_visible_text() {
         let source = fixture(
             r#"<?xml version="1.0"?><w:document xmlns:w="w"><w:body><w:p><w:r><w:t>Research &amp; review &lt;safe&gt; &#x4E2D;&#25991;</w:t></w:r></w:p></w:body></w:document>"#,
