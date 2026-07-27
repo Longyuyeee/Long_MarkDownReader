@@ -141,6 +141,56 @@
           <p v-else-if="baselineError" class="baseline-error">{{ baselineError }}</p>
           <p v-else class="muted">尚未启动编辑。验证后仍保持只读，不会写入当前 PPTX。</p>
         </section>
+        <section v-if="editBaseline" class="isolated-text-patch">
+          <header>
+            <PenLineIcon :size="15" />
+            <strong>C4B 隔离文本预览</strong>
+            <span v-if="textPatchReport" class="verified-badge">已通过</span>
+          </header>
+          <template v-if="safeEditTargets.length">
+            <label>
+              <span>安全编辑目标</span>
+              <select v-model="selectedEditTargetId">
+                <option v-for="target in safeEditTargets" :key="target.id" :value="target.id">
+                  幻灯片 {{ target.slideNumber }} · {{ target.kind === 'speaker-notes' ? '备注' : target.objectName }}
+                </option>
+              </select>
+            </label>
+            <label>
+              <span>隔离替换文本</span>
+              <textarea
+                v-model="replacementText"
+                rows="3"
+                maxlength="32767"
+                placeholder="输入单行替换文本"
+                @input="clearTextPatchResult"
+              />
+            </label>
+            <div class="patch-actions">
+              <small>{{ replacementText.length }}/32767 · 不写入当前文件</small>
+              <button
+                type="button"
+                :disabled="textPatchLoading || !replacementText.trim() || /[\r\n\t]/.test(replacementText)"
+                @click="previewTextPatch"
+              >
+                <LoaderCircleIcon v-if="textPatchLoading" :size="13" class="spin" />
+                <ShieldCheckIcon v-else :size="13" />
+                {{ textPatchLoading ? '验证中' : '验证隔离补丁' }}
+              </button>
+            </div>
+            <p v-if="textPatchError" class="baseline-error">{{ textPatchError }}</p>
+            <dl v-if="textPatchReport" class="patch-report">
+              <div><dt>变化部件</dt><dd>{{ textPatchReport.changedParts.length }}</dd></div>
+              <div><dt>其余部件保全</dt><dd>{{ textPatchReport.unchangedPartCount }}</dd></div>
+              <div><dt>语义复读</dt><dd>{{ textPatchReport.semanticReparseVerified ? '通过' : '未通过' }}</dd></div>
+              <div><dt>源文件写入</dt><dd>{{ textPatchReport.writesUserFile ? '是' : '否' }}</dd></div>
+            </dl>
+            <p v-if="textPatchReport" class="baseline-digest" :title="textPatchReport.targetPart">
+              单部件白名单 · {{ textPatchReport.targetPart }}
+            </p>
+          </template>
+          <p v-else class="muted">此演示文稿没有符合 C4B 保守规则的单文本目标。</p>
+        </section>
         <section>
           <header>
             <MessageSquareTextIcon :size="15" />
@@ -180,6 +230,7 @@
     <footer v-if="report" class="pptx-status">
       <span>{{ report.model.slides.length }} 张幻灯片 · {{ formatBytes(report.size) }}</span>
       <span v-if="routeTargetLabel" class="route-target-status" aria-live="polite">已定位：{{ routeTargetLabel }}</span>
+      <span v-else-if="textPatchReport" class="baseline-status">C4B 隔离补丁已验证 · 原文件未修改</span>
       <span v-else-if="editBaseline" class="baseline-status">C4A 编辑隔离基线已验证 · 原文件未修改</span>
       <span>{{ activeSlide?.objects.length || 0 }} 个当前页对象</span>
     </footer>
@@ -230,6 +281,7 @@ import {
   LockKeyhole as LockKeyholeIcon,
   MessageSquareText as MessageSquareTextIcon,
   PanelRight as PanelRightIcon,
+  PenLine as PenLineIcon,
   Play as PlayIcon,
   Presentation as PresentationIcon,
   RefreshCw as RefreshCwIcon,
@@ -367,6 +419,34 @@ interface PptxEditBaselineReport {
   sourceUnchanged: boolean
   writesUserFile: boolean
   editingEnabled: boolean
+  editableTextTargets: PptxEditableTextTarget[]
+  editableNotesTargets: PptxEditableTextTarget[]
+}
+interface PptxEditableTextTarget {
+  id: string
+  kind: 'slide-text' | 'speaker-notes'
+  slideNumber: number
+  slideId: string
+  partName: string
+  objectId: string
+  objectName: string
+  text: string
+  expectedTextDigest: string
+  expectedPartDigest: string
+}
+interface PptxIsolatedTextPatchReport {
+  status: string
+  targetId: string
+  targetKind: string
+  targetPart: string
+  changedParts: string[]
+  unchangedPartCount: number
+  unchangedPartsVerified: boolean
+  structuralReparseVerified: boolean
+  semanticReparseVerified: boolean
+  temporaryCopyReopenVerified: boolean
+  sourceUnchanged: boolean
+  writesUserFile: boolean
 }
 interface SearchMatch {
   slideIndex: number
@@ -386,6 +466,11 @@ const presenting = ref(false)
 const baselineLoading = ref(false)
 const baselineError = ref('')
 const editBaseline = ref<PptxEditBaselineReport>()
+const selectedEditTargetId = ref('')
+const replacementText = ref('')
+const textPatchLoading = ref(false)
+const textPatchError = ref('')
+const textPatchReport = ref<PptxIsolatedTextPatchReport>()
 const slideStripRef = ref<HTMLElement>()
 const routeTargetSlideIndex = ref(-1)
 const routeTargetObjectId = ref('')
@@ -393,6 +478,13 @@ const routeTargetLabel = ref('')
 const pptxPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const fileName = computed(() => pptxPath.value.split(/[\\/]/).pop() || '未命名.pptx')
 const profile = computed(() => report.value?.model.compatibility as PptxProfile)
+const safeEditTargets = computed(() => [
+  ...(editBaseline.value?.editableTextTargets || []),
+  ...(editBaseline.value?.editableNotesTargets || []),
+])
+const selectedEditTarget = computed(() => safeEditTargets.value.find(
+  target => target.id === selectedEditTargetId.value,
+))
 const activeSlide = computed(() => report.value?.model.slides[activeSlideIndex.value])
 const slideCount = computed(() => report.value?.model.slides.length || 0)
 const slideRatio = computed(() => {
@@ -568,6 +660,12 @@ const prepareEditBaseline = async () => {
       throw new Error('PPTX 编辑隔离基线未通过完整保护门禁')
     }
     editBaseline.value = baseline
+    const targets = [...baseline.editableTextTargets, ...baseline.editableNotesTargets]
+    const preferred = targets.find(target => target.slideNumber === activeSlideIndex.value + 1) || targets[0]
+    selectedEditTargetId.value = preferred?.id || ''
+    replacementText.value = preferred?.text || ''
+    textPatchReport.value = undefined
+    textPatchError.value = ''
     showDetails.value = true
   } catch (error) {
     editBaseline.value = undefined
@@ -577,12 +675,55 @@ const prepareEditBaseline = async () => {
     baselineLoading.value = false
   }
 }
+const clearTextPatchResult = () => {
+  textPatchReport.value = undefined
+  textPatchError.value = ''
+}
+const previewTextPatch = async () => {
+  const target = selectedEditTarget.value
+  if (!report.value || !target || textPatchLoading.value) return
+  textPatchLoading.value = true
+  textPatchError.value = ''
+  textPatchReport.value = undefined
+  try {
+    const patch = await invoke<PptxIsolatedTextPatchReport>('preview_pptx_text_patch_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: pptxPath.value,
+      expectedSignature: report.value.signature,
+      targetId: target.id,
+      expectedTextDigest: target.expectedTextDigest,
+      expectedPartDigest: target.expectedPartDigest,
+      replacementText: replacementText.value,
+    })
+    if (
+      patch.changedParts.length !== 1
+      || patch.changedParts[0] !== target.partName
+      || !patch.unchangedPartsVerified
+      || !patch.structuralReparseVerified
+      || !patch.semanticReparseVerified
+      || !patch.temporaryCopyReopenVerified
+      || !patch.sourceUnchanged
+      || patch.writesUserFile
+    ) {
+      throw new Error('PPTX C4B 隔离补丁未通过单部件保护门禁')
+    }
+    textPatchReport.value = patch
+  } catch (error) {
+    textPatchError.value = String(error)
+  } finally {
+    textPatchLoading.value = false
+  }
+}
 const loadPresentation = async () => {
   if (!pptxPath.value || loading.value) return
   loading.value = true
   loadError.value = ''
   editBaseline.value = undefined
   baselineError.value = ''
+  selectedEditTargetId.value = ''
+  replacementText.value = ''
+  textPatchReport.value = undefined
+  textPatchError.value = ''
   try {
     report.value = await invoke<PptxReadReport>('read_pptx_presentation', {
       libraryRoot: store.libraryPath,
@@ -605,6 +746,10 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'ArrowRight' || event.key === ' ') nextSlide()
 }
 
+watch(selectedEditTargetId, () => {
+  replacementText.value = selectedEditTarget.value?.text || ''
+  clearTextPatchResult()
+})
 watch(matches, value => {
   activeMatch.value = 0
   if (value.length) selectSlide(value[0].slideIndex)
@@ -689,6 +834,17 @@ onBeforeUnmount(() => {
 .baseline-digest { margin: 9px 0 6px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 10px; word-break: break-all; }
 .baseline-error { margin: 0; color: var(--error-color); line-height: 1.5; }
 .baseline-status { color: var(--success-color); }
+.isolated-text-patch label { display: grid; gap: 5px; margin-bottom: 9px; color: var(--text-muted); font-size: 11px; }
+.isolated-text-patch select, .isolated-text-patch textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 5px; outline: none; color: var(--text-primary); background: var(--bg-secondary); font: inherit; }
+.isolated-text-patch select { height: 30px; padding: 0 7px; }
+.isolated-text-patch textarea { min-height: 64px; padding: 7px; resize: vertical; line-height: 1.45; }
+.isolated-text-patch select:focus, .isolated-text-patch textarea:focus { border-color: var(--primary-color); }
+.patch-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.patch-actions small { color: var(--text-muted); font-size: 9px; }
+.patch-actions button { min-height: 28px; padding: 0 8px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--primary-color); border-radius: 5px; color: var(--primary-color); background: transparent; cursor: pointer; font: inherit; font-size: 11px; }
+.patch-actions button:hover:not(:disabled) { background: color-mix(in srgb, var(--primary-color) 9%, transparent); }
+.patch-actions button:disabled { opacity: .45; cursor: default; }
+.patch-report { margin-top: 9px !important; padding-top: 6px; border-top: 1px dashed var(--border-color); }
 .pptx-status { min-height: 28px; padding: 0 12px; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: 10px; }
 .route-target-status { overflow: hidden; color: var(--primary-color); text-overflow: ellipsis; white-space: nowrap; }
 .presenter { position: fixed; z-index: 10000; inset: 0; display: grid; place-items: center; background: #101215; }

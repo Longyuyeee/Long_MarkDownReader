@@ -1,5 +1,8 @@
 use crate::formats::pptx::{parse_pptx, PptxPresentationModel, MAX_PPTX_FILE_BYTES};
-use crate::formats::pptx_edit::{build_pptx_edit_baseline, PptxEditBaselineReport};
+use crate::formats::pptx_edit::{
+    build_pptx_edit_baseline, build_pptx_text_patch_isolated, PptxEditBaselineReport,
+    PptxIsolatedTextPatchReport,
+};
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
 use serde::Serialize;
@@ -244,6 +247,55 @@ fn audit_pptx_edit_baseline_path(
     Ok(report)
 }
 
+fn preview_pptx_text_patch_path(
+    path: &Path,
+    expected_signature: &str,
+    target_id: &str,
+    expected_text_digest: &str,
+    expected_part_digest: &str,
+    replacement_text: &str,
+) -> Result<PptxIsolatedTextPatchReport, String> {
+    let metadata = path
+        .metadata()
+        .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_PPTX_FILE_BYTES {
+        return Err("PPTX 文件超过 96 MiB C4B 隔离补丁上限".into());
+    }
+    let actual_signature = file_signature(&metadata);
+    if actual_signature != expected_signature {
+        return Err("PPTX 已被外部修改，请重新打开后再预览编辑".into());
+    }
+    let source = fs::read(path).map_err(|error| format!("读取 PPTX 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let (mut report, output) = build_pptx_text_patch_isolated(
+        &source,
+        target_id,
+        expected_text_digest,
+        expected_part_digest,
+        replacement_text,
+    )?;
+    let temporary = TemporaryPptxCopy::create(&output)?;
+    let reopened = fs::read(&temporary.path)
+        .map_err(|error| format!("复读 PPTX C4B 临时副本失败: {error}"))?;
+    if reopened != output || format!("{:x}", Sha256::digest(&reopened)) != report.output_digest {
+        return Err("PPTX C4B 临时副本复读字节与隔离输出不一致".into());
+    }
+    parse_pptx(&reopened).map_err(|error| format!("PPTX C4B 临时副本结构重开失败: {error}"))?;
+    report.temporary_copy_reopen_verified = true;
+
+    let source_after = fs::read(path).map_err(|error| format!("复核源 PPTX 失败: {error}"))?;
+    let metadata_after = path
+        .metadata()
+        .map_err(|error| format!("复核源 PPTX 元数据失败: {error}"))?;
+    report.source_unchanged = source_after == source
+        && format!("{:x}", Sha256::digest(&source_after)) == source_digest
+        && file_signature(&metadata_after) == actual_signature;
+    if !report.source_unchanged {
+        return Err("C4B 隔离补丁预览期间源 PPTX 发生变化".into());
+    }
+    Ok(report)
+}
+
 #[tauri::command]
 pub async fn read_pptx_presentation(
     library_root: String,
@@ -269,6 +321,32 @@ pub async fn audit_pptx_edit_baseline(
     })
     .await
     .map_err(|error| format!("PPTX C4A 编辑基线任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_pptx_text_patch_isolated_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    target_id: String,
+    expected_text_digest: String,
+    expected_part_digest: String,
+    replacement_text: String,
+) -> Result<PptxIsolatedTextPatchReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let presentation = guard.resolve_existing_file(path, &["pptx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_pptx_text_patch_path(
+            &presentation,
+            &expected_signature,
+            &target_id,
+            &expected_text_digest,
+            &expected_part_digest,
+            &replacement_text,
+        )
+    })
+    .await
+    .map_err(|error| format!("PPTX C4B 隔离文本补丁任务失败: {error}"))?
 }
 
 #[cfg(test)]
@@ -329,6 +407,42 @@ mod tests {
         assert!(audit_pptx_edit_baseline_path(&path, "stale-signature")
             .unwrap_err()
             .contains("外部修改"));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn c4b_command_previews_text_patch_without_changing_source() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("longedit-pptx-c4b-command-{nonce}"));
+        fs::create_dir_all(&root).unwrap();
+        let fixture =
+            include_bytes!("../../../fixtures/pptx/producers/wps-presentation.pptx").to_vec();
+        let path = root.join("presentation.pptx");
+        fs::write(&path, &fixture).unwrap();
+        let signature = file_signature(&path.metadata().unwrap());
+        let (baseline, _) = build_pptx_edit_baseline(&fixture, signature.clone()).unwrap();
+        let target = baseline.editable_text_targets.first().unwrap();
+
+        let report = preview_pptx_text_patch_path(
+            &path,
+            &signature,
+            &target.id,
+            &target.expected_text_digest,
+            &target.expected_part_digest,
+            "LongEdit C4B isolated preview",
+        )
+        .unwrap();
+        assert_eq!(report.status, "isolated_text_patch_verified");
+        assert_eq!(report.changed_parts, [target.part_name.clone()]);
+        assert!(report.temporary_copy_reopen_verified);
+        assert!(report.semantic_reparse_verified);
+        assert!(report.source_unchanged);
+        assert!(!report.writes_user_file);
+        assert_eq!(fs::read(&path).unwrap(), fixture);
 
         fs::remove_dir_all(root).unwrap();
     }
