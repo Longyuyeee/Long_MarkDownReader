@@ -55,7 +55,10 @@ cargo test --manifest-path src-tauri/Cargo.toml formats::odt --lib
 - 100 MiB PDF 范围基准：`115 ms`，单次请求约 `255.9 KiB`
 - 生产依赖审计：`0` 漏洞
 
-本检查点没有伪造 ODT 桌面截图：由于发布门禁未通过，`.odt` 尚未注册为产品能力。真实桌面打开、搜索和定位证据属于门禁关闭后的验收项。GitHub Quality Gate 在推送后回填。
+本检查点没有伪造 ODT 桌面截图：由于发布门禁未通过，`.odt` 尚未注册为产品能力。真实桌面打开、搜索和定位证据属于门禁关闭后的验收项。
+
+实现提交 `afb26ec` 的 GitHub Quality Gate 已通过：
+<https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30342388476>
 
 ## 5. 下一步
 
