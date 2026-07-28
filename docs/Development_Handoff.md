@@ -1,15 +1,17 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-28
-交接基线：当前开发版本 `v0.7.0`；A3R、A4/A5、G8-1、G8-2A、G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0、E1A 已完成；下一批为 E1B ODT 只读预览与索引
+交接基线：当前开发版本 `v0.7.0`；A3R、A4/A5、G8-1、G8-2A、G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0、E1A 已完成；E1B 解析、工作面与索引实现完成，但 Word/WPS 生产者门禁未通过，下一批只收口 E1B 门禁
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 > 当前能力边界、初始需求对齐度和后续收口顺序以 [`Development_Status_and_Closure_Plan_Audit_2026-07-28.md`](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为权威入口。项目已进入基础需求收口期，但尚不能宣称所有初始需求 100% 完成。
 
-> 当前阶段交付证据见 `docs/E1A_ODF_Package_Verifier_Audit_2026-07-28.md`；E1A 已完成三种 ODF 根类型、八项资源限制、路径/XML 防线、五类风险报告和 9 项专项 Rust 回归，并以 `shared/odf-package-contract.json` 固定未开放产品能力。下一批只进入 E1B ODT 只读预览与索引。
+> 当前阶段交付证据见 `docs/E1B_ODT_Read_Index_Checkpoint_Audit_2026-07-28.md`。E1B 已完成有界语义解析、WorkspaceGuard 只读命令、Library 工作面、双索引和定位代码，LibreOffice 真实 fixture 已通过；Microsoft Word ODT 过滤器持续等待，WPS 缺少 ODF add-in 并生成错误 OLE 文件。`.odt` 仍未进入共享格式注册表，下一批只关闭这两个生产者门禁。
 
 > E1A 完整 `ci:check` 通过 Rust 功能测试 `363/363`、性能测试 `1/1`，生产依赖审计为 `0` 漏洞；ODF 仍未进入产品格式注册表。
+
+> E1B 检查点完整 `ci:check` 通过 Rust 功能测试 `366/366`、性能测试 `1/1`，生产依赖审计为 `0` 漏洞；LibreOffice ODT 已通过真实解析与同生产者重开，Word/WPS 门禁状态由 `shared/odt-read-contract.json` 固定。
 
 > A3R 专项真实桌面门禁为 8 项检查和 4 张截图；完整 `ci:check` 通过 Rust 功能测试 `354/354`、性能测试 `1/1`，生产依赖审计为 `0` 漏洞。
 

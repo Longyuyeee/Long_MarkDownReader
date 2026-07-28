@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "stage": "E1B",
+  "complete": false,
+  "implementationComplete": true,
+  "releaseGatePassed": false,
+  "nextStage": "E1B-producer-gate-closure",
+  "productExposure": {
+    "registeredAsSupported": false,
+    "commandImplemented": true,
+    "uiImplemented": true,
+    "indexImplemented": true,
+    "writeEnabled": false
+  },
+  "semanticCoverage": [
+    "heading",
+    "paragraph",
+    "list-item",
+    "table",
+    "internal-image",
+    "metadata"
+  ],
+  "limits": {
+    "fileBytes": 67108864,
+    "blocks": 50000,
+    "textChars": 8000000,
+    "tableRows": 50000,
+    "tableCells": 100000,
+    "repeat": 1024,
+    "imageReferences": 256,
+    "previewImages": 32,
+    "previewImageBytes": 4194304,
+    "previewTotalBytes": 12582912
+  },
+  "riskPolicy": {
+    "encrypted-content": "block",
+    "digital-signature": "report-and-ignore",
+    "script-or-macro": "report-and-ignore",
+    "external-link": "report-and-ignore",
+    "embedded-object": "report-and-ignore"
+  },
+  "locatorKind": "odt-block",
+  "producerGate": {
+    "required": [
+      "microsoft-word-16",
+      "wps-writer",
+      "libreoffice-writer"
+    ],
+    "verified": [
+      "libreoffice-writer"
+    ],
+    "blocked": {
+      "microsoft-word-16": "word-odt-save-filter-timeout",
+      "wps-writer": "wps-odf-add-in-missing-invalid-ole-output-rejected"
+    }
+  }
+}

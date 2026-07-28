@@ -166,6 +166,7 @@ const getRouteLoadingLabel = (routeName: unknown) => {
     Graph: '正在准备知识图谱',
     Canvas: '正在打开知识画布',
     Pdf: '正在打开 PDF',
+    OdtReader: '正在解析 ODT 文档',
     Table: '正在打开数据表',
     Workbook: '正在解析 XLSX 工作簿',
     Diagram: '正在打开 Mermaid 图表工作室',

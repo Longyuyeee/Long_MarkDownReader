@@ -643,6 +643,7 @@ const embeddedEditorComponents = {
   TomlEditor: defineAsyncComponent(() => import('./TomlEditorView.vue')),
   LogViewer: defineAsyncComponent(() => import('./LogViewerView.vue')),
   DocxEditor: defineAsyncComponent(() => import('./DocxReaderView.vue')),
+  OdtReader: defineAsyncComponent(() => import('./OdtReaderView.vue')),
   PptxReader: defineAsyncComponent(() => import('./PptxReaderView.vue')),
 }
 const activeEmbeddedEditor = computed(() => {
@@ -1237,7 +1238,7 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
         ...(result.annotationId ? { annotation: result.annotationId } : {}),
       },
     })
-  } else if (result.objectType === 'docx') {
+  } else if (result.objectType === 'docx' || result.objectType === 'odt') {
     void router.replace({
       name: 'LibraryMode',
       query: {

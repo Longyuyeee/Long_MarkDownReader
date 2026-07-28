@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "stage": "E1B",
+  "requiredProducerIds": [
+    "microsoft-word-16",
+    "wps-writer",
+    "libreoffice-writer"
+  ],
+  "producers": [
+    {
+      "id": "microsoft-word-16",
+      "producer": "Microsoft Word",
+      "status": "blocked",
+      "manifest": null,
+      "fixture": null,
+      "blocker": "word-odt-save-filter-timeout"
+    },
+    {
+      "id": "wps-writer",
+      "producer": "WPS Writer",
+      "status": "blocked",
+      "manifest": null,
+      "fixture": null,
+      "blocker": "wps-odf-add-in-missing-invalid-ole-output-rejected"
+    },
+    {
+      "id": "libreoffice-writer",
+      "producer": "LibreOffice Writer",
+      "status": "verified",
+      "manifest": "libreoffice-writer.json",
+      "fixture": "libreoffice-writer.odt",
+      "blocker": null
+    }
+  ]
+}

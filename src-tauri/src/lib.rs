@@ -55,6 +55,7 @@ use commands::json::{
     write_json_source_document,
 };
 use commands::mindmap::{create_canvas_from_opml, read_opml_file, write_opml_file};
+use commands::odt::read_odt_document;
 use commands::pdf::{
     build_pdf_annotation_reference, preview_pdf_insert_isolated_copy,
     preview_pdf_merge_isolated_copy, preview_pdf_page_plan_isolated_copy,
@@ -284,6 +285,7 @@ pub fn run() {
             analyze_diagram_source,
             update_diagram_element,
             read_docx_document,
+            read_odt_document,
             preview_docx_package_patch_isolated_copy,
             preview_docx_text_patch_isolated_copy,
             preview_docx_style_patch_isolated_copy,

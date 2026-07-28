@@ -2,7 +2,7 @@
 
 > 审计日期：2026-07-28
 > 产品基线：LongEdit `v0.7.0`
-> 代码基线：`cd5c61d docs: complete office format compatibility audit` + E1A 当前批次
+> 代码基线：E1A 已完成 + E1B 实现完成/生产者门禁未收口检查点
 > 开发分支：`main`
 > GitHub PR：[Longyuyeee/Long_MarkDownReader#7](https://github.com/Longyuyeee/Long_MarkDownReader/pull/7)（已合并）
 > 文档地位：本文件是 2026-07-28 起判断“当前做到了什么、还缺什么、下一步做什么”的权威入口；历史分批审计继续作为证据，不覆盖本文结论。
@@ -13,7 +13,7 @@
 
 > **核心架构与多数高频路径已经可用，项目已进入基础需求收口期；但所有初始需求尚未 100% 对齐，不能宣传为完整 PDF、Office、WPS 或 Excel 等价编辑器。**
 
-`main` 已快进吸收 PR #7 的全部成果。PPTX C5D、PDF B2A/B2B/B2C、A3R 和 E0 已收口；E1A 进一步完成 ODT/ODS/ODP 共用包验证器、八项资源预算、五类风险报告和恶意包回归，且未提前登记产品支持。下一项唯一开发入口是 E1B ODT 只读预览与索引。
+`main` 已快进吸收 PR #7 的全部成果。PPTX C5D、PDF B2A/B2B/B2C、A3R、E0 和 E1A 已收口。E1B 的 ODT 解析器、只读命令、Library 工作面、双索引与定位代码已经完成，LibreOffice 真实 fixture 通过；但 Word ODT 过滤器阻塞、WPS 缺 ODF add-in，三生产者发布门禁未通过，因此 `.odt` 仍未登记。下一项唯一入口是 E1B 生产者门禁收口。
 
 ### 1.1 对最初需求的总体判断
 
@@ -137,7 +137,7 @@
 E0 已完成格式规范、转换器、许可证、包体积、安全边界和真实 fixture 决策。机器事实源为 `shared/office-compatibility-audit.json`，专项结论见 `docs/E0_Office_Format_and_Conversion_Decision_Audit_2026-07-28.md`。后续严格按以下切片推进：
 
 1. **E1A（已完成）**：`.odt/.ods/.odp` 共用的 ODF 包验证器和风险报告，只建立可信读取边界。
-2. **E1B（下一批）**：`.odt` 只读语义预览、索引、定位和统一管理闭环。
+2. **E1B（实现完成，门禁未收口）**：`.odt` 只读语义预览、索引与定位代码已完成；下一批只修复 Word/WPS 生产者环境并完成桌面证据，门禁通过前不登记产品支持。
 3. **E1C**：`.ods/.odp` 结构预览、索引及 LibreOffice/WPS 真实生产者矩阵。
 4. **E2A**：外部应用能力探测与统一外部打开，不依赖固定安装路径。
 5. **E2B/E2C**：先 `.doc`、后 `.xls/.ppt` 的用户确认隔离转换；只生成新副本并验证源摘要不变。
@@ -192,16 +192,17 @@ P1 收口后再排期：
 
 ## 8. 当前立即执行项
 
-下一次开发提交只处理 **E1B ODT 只读预览与索引**：
+下一次开发提交只处理 **E1B ODT 生产者门禁收口**：
 
-1. 在 WorkspaceGuard 下读取 `.odt`，所有输入先通过 E1A 包验证器。
-2. 建立标题、段落、列表、基础表格和内部图片的有界语义模型；加密/主动内容稳定降级。
-3. 接入原 Library 右侧阅读工作面、文内搜索、定位、全文索引和最近记录。
-4. 建立 LibreOffice、WPS Writer、Microsoft Word 三生产者真实 ODT fixture 与摘要清单。
-5. 只有真实文件打开、搜索、定位和桌面证据完成后才登记 `.odt` 为只读支持；不做写回。
+1. 修复 Microsoft Word OpenDocument Text 导出过滤器的持续等待问题。
+2. 为 WPS Writer 安装匹配版本的 ODF add-in，拒绝任何非 `PK` ZIP 的伪 ODT。
+3. 补齐 Word/WPS 真实 fixture、摘要、隐私扫描和同生产者重开。
+4. 完成真实桌面打开、搜索、定位、明暗主题和紧凑窗口证据。
+5. 三生产者全部通过后才登记 `.odt` 为 `preview-only`；不做写回，也不提前进入 E1C。
 
 ## 9. 证据索引
 
+- [E1B ODT 只读预览与索引检查点审计](./E1B_ODT_Read_Index_Checkpoint_Audit_2026-07-28.md)
 - [E1A OpenDocument 包验证器阶段审计](./E1A_ODF_Package_Verifier_Audit_2026-07-28.md)
 - [E0 WPS、OpenDocument 与旧版 Office 格式/转换决策审计](./E0_Office_Format_and_Conversion_Decision_Audit_2026-07-28.md)
 - [A3R JSON/JSONC 软件内创建阶段审计](./A3R_JSON_JSONC_Creation_Audit_2026-07-28.md)

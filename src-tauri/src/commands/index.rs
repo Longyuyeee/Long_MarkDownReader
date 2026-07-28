@@ -1,5 +1,6 @@
 use crate::formats::docx::parse_docx;
 use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
+use crate::formats::odt::parse_odt;
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::knowledge_index::{
@@ -410,6 +411,58 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     locator_object_id: Some(item.id.clone()),
                     location_label: Some(item.label.clone()),
                     score: 75,
+                    extraction_failed: false,
+                });
+            }
+        } else if indexer == "odt" {
+            let model = path
+                .metadata()
+                .ok()
+                .filter(|metadata| metadata.len() <= format.max_bytes)
+                .and_then(|_| fs::read(&path).ok())
+                .and_then(|bytes| parse_odt(&bytes).ok());
+            let Some(model) = model else {
+                continue;
+            };
+            if title_matches {
+                results.push(KnowledgeSearchResult {
+                    title: title.clone(),
+                    path: path_string.clone(),
+                    object_type: format.id.clone(),
+                    match_kind: "title".into(),
+                    context: "文件名匹配".into(),
+                    page: None,
+                    annotation_id: None,
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
+                    score: 100,
+                    extraction_failed: false,
+                });
+            }
+            if let Some((index, block, context)) =
+                model.blocks.iter().enumerate().find_map(|(index, block)| {
+                    text_match_context(&block.text, query).map(|context| (index, block, context))
+                })
+            {
+                let location_label = match block.kind.as_str() {
+                    "heading" => format!("标题：{}", block.text),
+                    "table" => format!("表格 {}", index + 1),
+                    "list-item" => format!("列表项 {}", index + 1),
+                    _ => format!("段落 {}", index + 1),
+                };
+                results.push(KnowledgeSearchResult {
+                    title,
+                    path: path_string,
+                    object_type: format.id.clone(),
+                    match_kind: "body".into(),
+                    context,
+                    page: None,
+                    annotation_id: None,
+                    locator_kind: Some("odt-block".into()),
+                    locator_object_id: Some(block.id.clone()),
+                    location_label: Some(location_label),
+                    score: 70,
                     extraction_failed: false,
                 });
             }

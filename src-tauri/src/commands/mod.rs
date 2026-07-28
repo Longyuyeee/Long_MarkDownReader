@@ -11,6 +11,7 @@ pub mod history;
 pub mod index;
 pub mod json;
 pub mod mindmap;
+pub mod odt;
 pub mod pdf;
 pub mod pptx;
 pub mod search;
