@@ -2,7 +2,7 @@
 
 > 审计日期：2026-07-28
 > 产品基线：LongEdit `v0.7.0`
-> 代码基线：`84892da test: close PPTX image output reopen matrix` + C5B 当前批次
+> 代码基线：`b0d1d61 feat: add safe PPTX basic shape lifecycle` + C5C 当前批次
 > 开发分支：`main`
 > GitHub PR：[Longyuyeee/Long_MarkDownReader#7](https://github.com/Longyuyeee/Long_MarkDownReader/pull/7)（已合并）
 > 文档地位：本文件是 2026-07-28 起判断“当前做到了什么、还缺什么、下一步做什么”的权威入口；历史分批审计继续作为证据，不覆盖本文结论。
@@ -13,7 +13,7 @@
 
 > **核心架构与多数高频路径已经可用，项目已进入基础需求收口期；但所有初始需求尚未 100% 对齐，不能宣传为完整 PDF、Office、WPS 或 Excel 等价编辑器。**
 
-`main` 已快进吸收 PR #7 的全部成果。C5A1/C5A2 已关闭图片替换；C5B 又完成白名单矩形、椭圆和线条的安全新增/删除、真实 Tauri/WebView2 桌面审计，以及 PowerPoint、WPS Presentation 和 LibreOffice Impress 3/3 输出复开。下一项唯一开发入口是 C5C 幻灯片生命周期。
+`main` 已快进吸收 PR #7 的全部成果。C5A1/C5A2 已关闭图片替换，C5B 已关闭白名单基础形状增删；C5C 又完成幻灯片新增、复制、删除和排序、真实 Tauri/WebView2 桌面审计，以及 PowerPoint、WPS Presentation 和 LibreOffice Impress 3/3 输出复开。下一项唯一开发入口是 C5D PPTX 发布收口。
 
 ### 1.1 对最初需求的总体判断
 
@@ -50,7 +50,7 @@
 | XLSX | 部分完成但基础能力较强 | 多工作表、区域和 TSV 粘贴、基础格式、公式重算、行列尺寸、合并、结构操作、冲突检测、OOXML 局部可靠写回 | Pivot、外部数据、复杂绘图对象和完整 Excel/LibreOffice 等价往返不在当前基础闭环 |
 | PDF | 部分完成 | 阅读、分段、批注、OCR sidecar、全文索引、关系管理、页面旋转/排序/排除的安全子集和可靠另存 | 合并、拆分、插入页面仍是基础收口缺口；表单、正文/排版编辑、签名等属于后续高级能力 |
 | DOCX | 基础编辑完成 | 结构化阅读、样式/列表/表格/附属内容/图片、搜索定位、受限文本与基础样式编辑、可靠新副本、Word/WPS/LibreOffice 复开 | 修订、域、复杂分页和高级排版不在基础能力范围 |
-| PPTX | 部分完成 | 结构化阅读、真实生产者输入、缩略图/放映、搜索定位、知识关系、文本/样式/替代文本编辑、可靠新副本、单引用 PNG/JPEG 替换、白名单基础形状增删及三生产者复开 | 幻灯片增删/复制/排序尚未完成 |
+| PPTX | 基础编辑实现完成，待发布收口 | 结构化阅读、真实生产者输入、缩略图/放映、搜索定位、知识关系、文本/样式/替代文本编辑、可靠新副本、单引用 PNG/JPEG 替换、白名单基础形状增删、幻灯片增删/复制/排序及三生产者复开 | C5D 尚需统一能力注册表、发布矩阵和公开边界 |
 | WPS 原生 `.wps/.et/.dps` | 未开始 | 可通过 WPS 验证 OOXML 输出兼容性 | 尚无原生识别、预览、安全转换或编辑闭环 |
 | 旧版 Office `.doc/.xls/.ppt` | 未开始 | 无 | 计划先做外部打开和显式转换，不承诺原生编辑 |
 | OpenDocument `.odt/.ods/.odp` | 未开始 | LibreOffice 已用于 OOXML 生产者验证 | 尚无产品内阅读、搜索或安全转换闭环 |
@@ -80,8 +80,7 @@
 
 ### 4.1 P0：阻断当前 PPTX 阶段收口
 
-1. 幻灯片新增/复制/删除/排序尚未实现。
-2. `shared/file-formats.json` 仍把 PPTX 标注为 `preview-only / none`。这是当前有意保守但已经落后于实际子能力的注册表状态；只能在 C5 全部门禁完成后统一升级为经过验证的 `basic-edit / copy`，避免提前宣传。
+1. `shared/file-formats.json` 仍把 PPTX 标注为 `preview-only / none`，已经落后于 C4/C5 的真实受限编辑能力。C5D 必须统一升级为经过验证的 `basic-edit / copy`，并同步界面和发布矩阵。
 
 ### 4.2 P1：阻断“初始基础需求总体收口”
 
@@ -108,8 +107,8 @@
 |---|---|---|
 | C5A2（已完成） | 对 C5A1 图片替换输出做三生产者复开 | PowerPoint、WPS、LibreOffice 3/3 可打开；目标图片可解码；哈希前后不变；证据已入库 |
 | C5B（已完成） | 基础矩形、椭圆和线条的安全新增/删除 | 只修改白名单幻灯片部件；源文件不变；4 份新副本应用内重开；复杂对象明确只读；PowerPoint/WPS/LibreOffice 3/3 复开 |
-| C5C（下一步） | 幻灯片新增、复制、删除和排序 | 正确维护关系、内容类型和顺序；未编辑幻灯片保真；应用内和三生产者重开 |
-| C5D | PPTX 阶段发布收口 | 注册表升级为真实能力等级；界面和文档统一写“基础编辑”；正常/紧凑桌面矩阵通过；完整 CI 通过 |
+| C5C（已完成） | 幻灯片新增、复制、删除和排序 | 正确维护关系、内容类型和顺序；复制备注和未编辑部件保真；4 份可靠副本通过应用内及三生产者重开 |
+| C5D（下一步） | PPTX 阶段发布收口 | 注册表升级为真实能力等级；界面和文档统一写“基础编辑”；正常/紧凑与明/暗桌面矩阵通过；完整 CI 通过 |
 
 已关闭的 C5A2 固定验证对象：
 
@@ -192,13 +191,13 @@ P1 收口后再排期：
 
 ## 8. 当前立即执行项
 
-下一次开发提交只处理 **C5B PPTX 基础形状安全新增/删除**：
+下一次开发提交只处理 **C5D PPTX 阶段发布收口**：
 
-1. 先限定矩形、椭圆和线条三类白名单形状，不开放组合、图表、SmartArt、OLE 或动画对象。
-2. 建立稳定目标身份、包部件影响清单、源签名和冲突门禁。
-3. 新增操作只写目标幻灯片 XML；删除操作只允许无共享关系的白名单基础形状。
-4. 继续使用原子无覆盖新副本，验证源文件字节不变、未触及部件保真和应用内语义复读。
-5. 完成 PowerPoint/WPS/LibreOffice 三生产者输出复开、真实桌面证据和完整 CI 后，再进入 C5C。
+1. 将 PPTX 注册能力从 `preview-only / none` 对齐到已验证的 `basic-edit / copy`。
+2. 在能力说明中明确文本、样式、替代文本、单引用图片、白名单基础形状和页面生命周期子集。
+3. 继续明确母版、动画、SmartArt、复杂图表和源文件覆盖不受支持。
+4. 完成正常/紧凑与明/暗主题发布抽样、统一发布矩阵和完整 CI。
+5. C5D 单独审计、提交、推送并等待 GitHub Quality Gate 后，PPTX 基础阶段收尾。
 
 ## 9. 证据索引
 
@@ -207,6 +206,7 @@ P1 收口后再排期：
 - [后续开发步骤与执行指导](./Next_Development_Execution_Guide.md)
 - [开发交接](./Development_Handoff.md)
 - [C5A2 PPTX 图片输出三生产者复开审计](./C5A2_PPTX_Image_Output_Producer_Reopen_Audit_2026-07-28.md)
+- [C5C PPTX 幻灯片生命周期审计](./C5C_PPTX_Slide_Lifecycle_Audit_2026-07-28.md)
 - [C5A1 PPTX 隔离图片替换审计](./C5A1_PPTX_Isolated_Image_Replacement_Audit_2026-07-28.md)
 - [C4E PPTX 三生产者输出复开审计](./C4E_PPTX_Output_Producer_Reopen_Audit_2026-07-27.md)
 - [C2E DOCX 可靠保存与输出复开审计](./C2E_DOCX_Reliable_Save_Audit_2026-07-27.md)

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-28T03:25:31.375Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/",
+  "fixtureLocation": "isolated temporary workspace",
+  "producer": "wps-presentation",
+  "viewportMatrix": [
+    "1280x820",
+    "960x720"
+  ],
+  "saveMode": "copy",
+  "sourceOverwriteAllowed": false,
+  "operations": [
+    "add",
+    "copy",
+    "delete",
+    "reorder"
+  ],
+  "externalProducerReopenRequired": true,
+  "outputs": [
+    {
+      "operation": "add",
+      "file": "c5c-add-copy.pptx",
+      "bytes": 95297,
+      "sha256": "448170430cbd33ca522e6da2128cb7bd5d3d9d4aaf5e8d18088ab950387367a4"
+    },
+    {
+      "operation": "copy",
+      "file": "c5c-copy-copy.pptx",
+      "bytes": 96886,
+      "sha256": "3bbcc26cf0e8174ff6031f9ccaea6425ef322dea6359685af41b41997e5b1a2a"
+    },
+    {
+      "operation": "delete",
+      "file": "c5c-delete-copy.pptx",
+      "bytes": 92333,
+      "sha256": "e71d129e5f651871245ea2648d9831658d6232bc357a3c81525dc131fbb4c927"
+    },
+    {
+      "operation": "reorder",
+      "file": "c5c-reorder-copy.pptx",
+      "bytes": 94588,
+      "sha256": "ea942a924b2708c752d8448ee2cb6c593c1607e8af66ec85f989e0f0875d2718"
+    }
+  ],
+  "checks": [
+    {
+      "id": "four-slide-lifecycle-modes",
+      "status": "passed"
+    },
+    {
+      "id": "safe-target-enumeration",
+      "status": "passed"
+    },
+    {
+      "id": "relationship-and-content-type-whitelist",
+      "status": "passed"
+    },
+    {
+      "id": "notes-preserving-copy",
+      "status": "passed"
+    },
+    {
+      "id": "identity-preserving-reorder",
+      "status": "passed"
+    },
+    {
+      "id": "preview-reports-no-source-write",
+      "status": "passed"
+    },
+    {
+      "id": "four-atomic-create-new-copies",
+      "status": "passed"
+    },
+    {
+      "id": "structural-and-semantic-reopen-verified",
+      "status": "passed"
+    },
+    {
+      "id": "compact-library-workspace-without-overflow",
+      "status": "passed"
+    },
+    {
+      "id": "wps-source-bytes-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "c5c-add-preview-1280.jpg",
+    "c5c-reorder-preview-1280.jpg",
+    "c5c-copy-reopen-960.jpg"
+  ]
+}

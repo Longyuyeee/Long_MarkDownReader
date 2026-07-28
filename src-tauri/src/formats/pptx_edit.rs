@@ -3,7 +3,7 @@ use quick_xml::events::{BytesStart, Event};
 use quick_xml::{Reader, XmlVersion};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Cursor, Read, Write};
 use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipArchive, ZipWriter};
@@ -54,6 +54,7 @@ pub struct PptxEditBaselineReport {
     pub editable_image_targets: Vec<PptxEditableImageTarget>,
     pub editable_shape_slides: Vec<PptxEditableShapeSlide>,
     pub editable_shape_targets: Vec<PptxEditableShapeTarget>,
+    pub editable_slide_targets: Vec<PptxEditableSlideTarget>,
     pub parts: Vec<PptxPackagePartSnapshot>,
 }
 
@@ -179,6 +180,49 @@ pub struct PptxEditableShapeTarget {
     pub expected_part_digest: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxEditableSlideTarget {
+    pub id: String,
+    pub slide_number: usize,
+    pub slide_id: String,
+    pub relationship_id: String,
+    pub part_name: String,
+    pub title: String,
+    pub hidden: bool,
+    pub safe_copy: bool,
+    pub safe_delete: bool,
+    pub blockers: Vec<String>,
+    pub expected_slide_digest: String,
+    pub expected_presentation_digest: String,
+    pub expected_relationships_digest: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxSlideLifecycleReport {
+    pub status: String,
+    pub engine: String,
+    pub operation: String,
+    pub target_id: String,
+    pub source_digest: String,
+    pub output_digest: String,
+    pub changed_parts: Vec<String>,
+    pub added_parts: Vec<String>,
+    pub removed_parts: Vec<String>,
+    pub unchanged_part_count: usize,
+    pub unchanged_parts_verified: bool,
+    pub structural_reparse_verified: bool,
+    pub semantic_reparse_verified: bool,
+    pub temporary_copy_reopen_verified: bool,
+    pub source_unchanged: bool,
+    pub writes_user_file: bool,
+    pub output_bytes: usize,
+    pub slide_count_before: usize,
+    pub slide_count_after: usize,
+    pub resulting_slide_ids: Vec<String>,
+}
+
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PptxIsolatedMetadataPatchReport {
@@ -253,6 +297,54 @@ struct ShapeLifecycleScan {
     has_relationship: bool,
     has_connection: bool,
     is_text_box: bool,
+}
+
+#[derive(Clone, Debug)]
+struct SlideIdEntry {
+    slide_id: String,
+    relationship_id: String,
+    hidden: bool,
+    start: usize,
+    end: usize,
+}
+
+#[derive(Clone, Debug)]
+struct RelationshipEntry {
+    id: String,
+    relation_type: String,
+    target: String,
+    target_mode: Option<String>,
+    start: usize,
+    end: usize,
+}
+
+#[derive(Clone, Debug)]
+struct OverrideEntry {
+    part_name: String,
+    start: usize,
+    end: usize,
+}
+
+#[derive(Clone, Debug)]
+struct XmlListScan<T> {
+    entries: Vec<T>,
+    insertion_offset: usize,
+}
+
+#[derive(Clone, Debug)]
+struct SlideLifecycleTargetInternal {
+    target: PptxEditableSlideTarget,
+    notes_part: Option<String>,
+    notes_relationship_part: Option<String>,
+    slide_relationship_part: String,
+    layout_target: String,
+}
+
+#[derive(Default)]
+struct PackageMutation {
+    replacements: BTreeMap<String, Vec<u8>>,
+    additions: BTreeMap<String, Vec<u8>>,
+    removals: BTreeSet<String>,
 }
 
 struct SlideShapeScan {
@@ -2474,6 +2566,1235 @@ pub fn build_pptx_shape_delete_isolated(
     ))
 }
 
+fn attribute_value_exact(
+    event: &BytesStart<'_>,
+    key: &[u8],
+    decoder: quick_xml::encoding::Decoder,
+) -> Result<Option<String>, String> {
+    for attribute in event.attributes().with_checks(false) {
+        let attribute = attribute.map_err(|error| format!("PPTX C5C XML 属性损坏: {error}"))?;
+        if attribute.key.as_ref() == key {
+            return attribute
+                .decoded_and_normalized_value(XmlVersion::Implicit1_0, decoder)
+                .map(|value| Some(value.into_owned()))
+                .map_err(|error| format!("PPTX C5C XML 属性解码失败: {error}"));
+        }
+    }
+    Ok(None)
+}
+
+fn end_tag_start(
+    buffer_position: u64,
+    event: &quick_xml::events::BytesEnd<'_>,
+) -> Result<usize, String> {
+    let end = usize::try_from(buffer_position).map_err(|_| "PPTX C5C XML 范围超出平台上限")?;
+    end.checked_sub(event.name().as_ref().len().saturating_add(3))
+        .ok_or_else(|| "PPTX C5C XML 结束标签范围无效".into())
+}
+
+fn scan_slide_id_list(xml: &[u8]) -> Result<XmlListScan<SlideIdEntry>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut in_list = false;
+    let mut entries = Vec::new();
+    let mut insertion_offset = None;
+    loop {
+        match reader
+            .read_event()
+            .map_err(|error| format!("PPTX C5C presentation.xml 损坏: {error}"))?
+        {
+            Event::Start(event) if event.local_name().as_ref() == b"sldIdLst" => {
+                if in_list {
+                    return Err("PPTX C5C 检测到嵌套的幻灯片顺序列表".into());
+                }
+                in_list = true;
+            }
+            Event::Empty(event) if in_list && event.local_name().as_ref() == b"sldId" => {
+                let slide_id = attribute_value_exact(&event, b"id", reader.decoder())?
+                    .ok_or("PPTX C5C 幻灯片缺少 id")?;
+                let relationship_id = attribute_value_exact(&event, b"r:id", reader.decoder())?
+                    .ok_or("PPTX C5C 幻灯片缺少 r:id")?;
+                let hidden = attribute_value_exact(&event, b"show", reader.decoder())?
+                    .is_some_and(|value| value == "0" || value.eq_ignore_ascii_case("false"));
+                let (start, end) = empty_tag_span(reader.buffer_position(), &event)?;
+                entries.push(SlideIdEntry {
+                    slide_id,
+                    relationship_id,
+                    hidden,
+                    start,
+                    end,
+                });
+            }
+            Event::Start(event) if in_list && event.local_name().as_ref() == b"sldId" => {
+                return Err("PPTX C5C 不支持非空的 p:sldId 元素".into());
+            }
+            Event::End(event) if event.local_name().as_ref() == b"sldIdLst" => {
+                if !in_list || insertion_offset.is_some() {
+                    return Err("PPTX C5C 幻灯片顺序列表边界无效".into());
+                }
+                insertion_offset = Some(end_tag_start(reader.buffer_position(), &event)?);
+                in_list = false;
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    let insertion_offset = insertion_offset.ok_or("PPTX C5C presentation.xml 缺少 p:sldIdLst")?;
+    if entries.is_empty() {
+        return Err("PPTX C5C 演示文稿至少需要一张幻灯片".into());
+    }
+    let mut slide_ids = BTreeSet::new();
+    let mut relationship_ids = BTreeSet::new();
+    for entry in &entries {
+        if entry.slide_id.parse::<u32>().is_err()
+            || !slide_ids.insert(entry.slide_id.clone())
+            || !relationship_ids.insert(entry.relationship_id.clone())
+        {
+            return Err("PPTX C5C 幻灯片 id 或关系 id 无效/重复".into());
+        }
+    }
+    Ok(XmlListScan {
+        entries,
+        insertion_offset,
+    })
+}
+
+fn scan_relationship_list(xml: &[u8]) -> Result<XmlListScan<RelationshipEntry>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut entries = Vec::new();
+    let mut insertion_offset = None;
+    loop {
+        match reader
+            .read_event()
+            .map_err(|error| format!("PPTX C5C 关系 XML 损坏: {error}"))?
+        {
+            Event::Empty(event) if event.local_name().as_ref() == b"Relationship" => {
+                let id = attribute_value_exact(&event, b"Id", reader.decoder())?
+                    .ok_or("PPTX C5C 关系缺少 Id")?;
+                let relation_type = attribute_value_exact(&event, b"Type", reader.decoder())?
+                    .ok_or("PPTX C5C 关系缺少 Type")?;
+                let target = attribute_value_exact(&event, b"Target", reader.decoder())?
+                    .ok_or("PPTX C5C 关系缺少 Target")?;
+                let target_mode = attribute_value_exact(&event, b"TargetMode", reader.decoder())?;
+                let (start, end) = empty_tag_span(reader.buffer_position(), &event)?;
+                entries.push(RelationshipEntry {
+                    id,
+                    relation_type,
+                    target,
+                    target_mode,
+                    start,
+                    end,
+                });
+            }
+            Event::Start(event) if event.local_name().as_ref() == b"Relationship" => {
+                return Err("PPTX C5C 不支持非空 Relationship 元素".into());
+            }
+            Event::End(event) if event.local_name().as_ref() == b"Relationships" => {
+                insertion_offset = Some(end_tag_start(reader.buffer_position(), &event)?);
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    let insertion_offset = insertion_offset.ok_or("PPTX C5C 关系 XML 缺少 Relationships 根元素")?;
+    let mut ids = BTreeSet::new();
+    if entries.iter().any(|entry| !ids.insert(entry.id.clone())) {
+        return Err("PPTX C5C 关系 XML 包含重复 Id".into());
+    }
+    Ok(XmlListScan {
+        entries,
+        insertion_offset,
+    })
+}
+
+fn scan_content_type_overrides(xml: &[u8]) -> Result<XmlListScan<OverrideEntry>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut entries = Vec::new();
+    let mut insertion_offset = None;
+    loop {
+        match reader
+            .read_event()
+            .map_err(|error| format!("PPTX C5C [Content_Types].xml 损坏: {error}"))?
+        {
+            Event::Empty(event) if event.local_name().as_ref() == b"Override" => {
+                let part_name = attribute_value_exact(&event, b"PartName", reader.decoder())?
+                    .ok_or("PPTX C5C 内容类型覆盖缺少 PartName")?;
+                let (start, end) = empty_tag_span(reader.buffer_position(), &event)?;
+                entries.push(OverrideEntry {
+                    part_name,
+                    start,
+                    end,
+                });
+            }
+            Event::Start(event) if event.local_name().as_ref() == b"Override" => {
+                return Err("PPTX C5C 不支持非空 Override 元素".into());
+            }
+            Event::End(event) if event.local_name().as_ref() == b"Types" => {
+                insertion_offset = Some(end_tag_start(reader.buffer_position(), &event)?);
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    let insertion_offset =
+        insertion_offset.ok_or("PPTX C5C [Content_Types].xml 缺少 Types 根元素")?;
+    let mut names = BTreeSet::new();
+    if entries
+        .iter()
+        .any(|entry| !names.insert(entry.part_name.clone()))
+    {
+        return Err("PPTX C5C 内容类型覆盖包含重复 PartName".into());
+    }
+    Ok(XmlListScan {
+        entries,
+        insertion_offset,
+    })
+}
+
+fn xml_attribute(value: &str) -> String {
+    quick_xml::escape::escape(value).into_owned()
+}
+
+fn relationship_xml(
+    id: &str,
+    relation_type: &str,
+    target: &str,
+    target_mode: Option<&str>,
+) -> String {
+    let target_mode = target_mode
+        .map(|value| format!(" TargetMode=\"{}\"", xml_attribute(value)))
+        .unwrap_or_default();
+    format!(
+        "<Relationship Id=\"{}\" Type=\"{}\" Target=\"{}\"{target_mode}/>",
+        xml_attribute(id),
+        xml_attribute(relation_type),
+        xml_attribute(target)
+    )
+}
+
+fn splice_xml(xml: &[u8], replacements: Vec<(usize, usize, String)>) -> Result<Vec<u8>, String> {
+    apply_xml_replacements(xml, replacements)
+        .map_err(|error| format!("PPTX C5C XML 补丁失败: {error}"))
+}
+
+fn relationship_part_source(part_name: &str) -> Option<String> {
+    let (parent, file) = part_name.rsplit_once("/_rels/")?;
+    let file = file.strip_suffix(".rels")?;
+    Some(format!("{parent}/{file}"))
+}
+
+fn resolve_relative_part(base_part: &str, target: &str) -> Option<String> {
+    if target.contains('\\') || target.contains(':') || target.starts_with("//") {
+        return None;
+    }
+    let mut segments = if target.starts_with('/') {
+        Vec::new()
+    } else {
+        base_part
+            .rsplit_once('/')
+            .map(|(parent, _)| parent.split('/').collect::<Vec<_>>())
+            .unwrap_or_default()
+    };
+    for segment in target.trim_start_matches('/').split('/') {
+        match segment {
+            "" | "." => {}
+            ".." => {
+                segments.pop()?;
+            }
+            value => segments.push(value),
+        }
+    }
+    Some(segments.join("/"))
+}
+
+fn next_numbered_part(
+    parts: &BTreeSet<String>,
+    prefix: &str,
+    suffix: &str,
+) -> Result<(u32, String), String> {
+    let maximum = parts
+        .iter()
+        .filter_map(|name| {
+            name.strip_prefix(prefix)
+                .and_then(|value| value.strip_suffix(suffix))
+                .and_then(|value| value.parse::<u32>().ok())
+        })
+        .max()
+        .unwrap_or(0);
+    let next = maximum
+        .checked_add(1)
+        .ok_or("PPTX C5C 部件编号已达到上限")?;
+    let part_name = format!("{prefix}{next}{suffix}");
+    if parts.contains(&part_name) {
+        return Err("PPTX C5C 新部件名称冲突".into());
+    }
+    Ok((next, part_name))
+}
+
+fn next_relationship_id(entries: &[RelationshipEntry]) -> Result<String, String> {
+    let maximum = entries
+        .iter()
+        .filter_map(|entry| entry.id.strip_prefix("rId")?.parse::<u32>().ok())
+        .max()
+        .unwrap_or(0);
+    let next = maximum
+        .checked_add(1)
+        .ok_or("PPTX C5C 关系编号已达到上限")?;
+    let id = format!("rId{next}");
+    if entries.iter().any(|entry| entry.id == id) {
+        return Err("PPTX C5C 新关系 Id 冲突".into());
+    }
+    Ok(id)
+}
+
+fn next_slide_id(entries: &[SlideIdEntry]) -> Result<String, String> {
+    entries
+        .iter()
+        .map(|entry| entry.slide_id.parse::<u32>())
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|_| "PPTX C5C 幻灯片 id 不是数字".to_string())?
+        .into_iter()
+        .max()
+        .unwrap_or(255)
+        .max(255)
+        .checked_add(1)
+        .map(|value| value.to_string())
+        .ok_or_else(|| "PPTX C5C 幻灯片 id 已达到上限".into())
+}
+
+fn rewrite_package(source: &[u8], mutation: &PackageMutation) -> Result<Vec<u8>, String> {
+    if mutation
+        .replacements
+        .keys()
+        .any(|name| mutation.removals.contains(name) || mutation.additions.contains_key(name))
+        || mutation
+            .additions
+            .keys()
+            .any(|name| mutation.removals.contains(name))
+    {
+        return Err("PPTX C5C 包事务包含冲突的部件操作".into());
+    }
+    let mut archive = ZipArchive::new(Cursor::new(source))
+        .map_err(|error| format!("打开 PPTX C5C 原始包失败: {error}"))?;
+    let output = Cursor::new(Vec::with_capacity(source.len()));
+    let mut writer = ZipWriter::new(output);
+    let mut replaced = BTreeSet::new();
+    let mut removed = BTreeSet::new();
+    let mut existing = BTreeSet::new();
+    for index in 0..archive.len() {
+        let file = archive
+            .by_index(index)
+            .map_err(|error| format!("读取 PPTX C5C 原始部件失败: {error}"))?;
+        let name = file.name().replace('\\', "/");
+        if !existing.insert(name.clone()) {
+            return Err(format!("PPTX C5C 原始包包含重复部件: {name}"));
+        }
+        if mutation.additions.contains_key(&name) {
+            return Err(format!("PPTX C5C 新增部件已存在: {name}"));
+        }
+        if mutation.removals.contains(&name) {
+            removed.insert(name);
+            continue;
+        }
+        if let Some(replacement) = mutation.replacements.get(&name) {
+            let compression = file.compression();
+            drop(file);
+            let mut options = SimpleFileOptions::default().compression_method(compression);
+            if compression == CompressionMethod::Deflated {
+                options = options.compression_level(Some(PPTX_PATCH_DEFLATE_LEVEL));
+            }
+            writer
+                .start_file(&name, options)
+                .map_err(|error| format!("创建 PPTX C5C 替换部件 {name} 失败: {error}"))?;
+            writer
+                .write_all(replacement)
+                .map_err(|error| format!("写入 PPTX C5C 替换部件 {name} 失败: {error}"))?;
+            replaced.insert(name);
+        } else {
+            writer
+                .raw_copy_file(file)
+                .map_err(|error| format!("原样复制未修改 PPTX 部件失败: {error}"))?;
+        }
+    }
+    if replaced.len() != mutation.replacements.len() || removed.len() != mutation.removals.len() {
+        return Err("PPTX C5C 替换或删除目标部件缺失".into());
+    }
+    for (name, bytes) in &mutation.additions {
+        let options = SimpleFileOptions::default()
+            .compression_method(CompressionMethod::Deflated)
+            .compression_level(Some(PPTX_PATCH_DEFLATE_LEVEL));
+        writer
+            .start_file(name, options)
+            .map_err(|error| format!("创建 PPTX C5C 新部件 {name} 失败: {error}"))?;
+        writer
+            .write_all(bytes)
+            .map_err(|error| format!("写入 PPTX C5C 新部件 {name} 失败: {error}"))?;
+    }
+    writer
+        .finish()
+        .map(|cursor| cursor.into_inner())
+        .map_err(|error| format!("完成 PPTX C5C 包事务失败: {error}"))
+}
+
+fn verify_package_mutation(
+    source: &[u8],
+    output: &[u8],
+    mutation: &PackageMutation,
+) -> Result<(Vec<String>, Vec<String>, Vec<String>, usize), String> {
+    let source_parts = inspect_package_parts(source)?
+        .into_iter()
+        .map(|part| (part.part_name, part.digest))
+        .collect::<BTreeMap<_, _>>();
+    let output_parts = inspect_package_parts(output)?
+        .into_iter()
+        .map(|part| (part.part_name, part.digest))
+        .collect::<BTreeMap<_, _>>();
+    let changed_parts = source_parts
+        .iter()
+        .filter_map(|(name, source_digest)| {
+            output_parts
+                .get(name)
+                .is_some_and(|output_digest| output_digest != source_digest)
+                .then_some(name.clone())
+        })
+        .collect::<Vec<_>>();
+    let added_parts = output_parts
+        .keys()
+        .filter(|name| !source_parts.contains_key(*name))
+        .cloned()
+        .collect::<Vec<_>>();
+    let removed_parts = source_parts
+        .keys()
+        .filter(|name| !output_parts.contains_key(*name))
+        .cloned()
+        .collect::<Vec<_>>();
+    if changed_parts.iter().cloned().collect::<BTreeSet<_>>()
+        != mutation.replacements.keys().cloned().collect()
+        || added_parts.iter().cloned().collect::<BTreeSet<_>>()
+            != mutation.additions.keys().cloned().collect()
+        || removed_parts.iter().cloned().collect::<BTreeSet<_>>() != mutation.removals
+    {
+        return Err(format!(
+            "PPTX C5C 包差异白名单失败: changed=[{}], added=[{}], removed=[{}]",
+            changed_parts.join(", "),
+            added_parts.join(", "),
+            removed_parts.join(", ")
+        ));
+    }
+    let unchanged_part_count = source_parts
+        .iter()
+        .filter(|(name, source_digest)| output_parts.get(*name) == Some(*source_digest))
+        .count();
+    Ok((
+        changed_parts,
+        added_parts,
+        removed_parts,
+        unchanged_part_count,
+    ))
+}
+
+fn inspect_pptx_slide_targets_internal(
+    source: &[u8],
+) -> Result<Vec<SlideLifecycleTargetInternal>, String> {
+    let model = parse_pptx(source)?;
+    let presentation = read_part(source, "ppt/presentation.xml")?;
+    let presentation_relationships = read_part(source, "ppt/_rels/presentation.xml.rels")?;
+    let slide_list = scan_slide_id_list(&presentation)?;
+    let relationship_list = scan_relationship_list(&presentation_relationships)?;
+    if slide_list.entries.len() != model.slides.len() {
+        return Err("PPTX C5C 幻灯片顺序与结构化复读数量不一致".into());
+    }
+    let relationship_by_id = relationship_list
+        .entries
+        .iter()
+        .map(|entry| (entry.id.as_str(), entry))
+        .collect::<BTreeMap<_, _>>();
+    let package_parts = inspect_package_parts(source)?;
+    let part_names = package_parts
+        .iter()
+        .map(|part| part.part_name.clone())
+        .collect::<BTreeSet<_>>();
+    let content_types = read_part(source, "[Content_Types].xml")?;
+    let content_type_list = scan_content_type_overrides(&content_types)?;
+    let override_names = content_type_list
+        .entries
+        .iter()
+        .map(|entry| entry.part_name.trim_start_matches('/').to_string())
+        .collect::<BTreeSet<_>>();
+    let presentation_digest = digest(&presentation);
+    let relationships_digest = digest(&presentation_relationships);
+
+    let relationship_parts = part_names
+        .iter()
+        .filter(|name| name.ends_with(".rels"))
+        .filter_map(|name| {
+            relationship_part_source(name).map(|source_part| (name.clone(), source_part))
+        })
+        .collect::<Vec<_>>();
+    let mut targets = Vec::with_capacity(slide_list.entries.len());
+    for (index, entry) in slide_list.entries.iter().enumerate() {
+        let mut blockers = Vec::new();
+        let presentation_relation = relationship_by_id
+            .get(entry.relationship_id.as_str())
+            .ok_or_else(|| format!("PPTX C5C 幻灯片关系缺失: {}", entry.relationship_id))?;
+        if !presentation_relation.relation_type.ends_with("/slide")
+            || presentation_relation.target_mode.is_some()
+        {
+            return Err("PPTX C5C 幻灯片顺序引用了非内部 slide 关系".into());
+        }
+        let part_name =
+            resolve_relative_part("ppt/presentation.xml", &presentation_relation.target)
+                .ok_or("PPTX C5C 幻灯片目标路径无效")?;
+        let slide = model.slides.get(index).ok_or("PPTX C5C 结构化幻灯片缺失")?;
+        if slide.id != entry.slide_id || slide.part_name != part_name {
+            return Err("PPTX C5C 幻灯片身份与结构化复读不一致".into());
+        }
+        let slide_bytes = read_part(source, &part_name)?;
+        let slide_relationship_part = relationship_part(&part_name)?;
+        let slide_relationship_bytes = read_part(source, &slide_relationship_part)?;
+        let slide_relationships = scan_relationship_list(&slide_relationship_bytes)?;
+        let mut layout_target = None;
+        let mut notes_part = None;
+        for relation in &slide_relationships.entries {
+            if relation.target_mode.is_some() {
+                blockers.push(format!("外部关系 {}", relation.id));
+                continue;
+            }
+            if relation.relation_type.ends_with("/slideLayout") {
+                if layout_target.replace(relation.target.clone()).is_some() {
+                    blockers.push("多个版式关系".into());
+                }
+            } else if relation.relation_type.ends_with("/notesSlide") {
+                let resolved = resolve_relative_part(&part_name, &relation.target)
+                    .ok_or("PPTX C5C 备注目标路径无效")?;
+                if notes_part.replace(resolved).is_some() {
+                    blockers.push("多个备注关系".into());
+                }
+            } else if !relation.relation_type.ends_with("/image") {
+                blockers.push(format!("非白名单关系 {}", relation.relation_type));
+            }
+        }
+        let layout_target = layout_target.ok_or("PPTX C5C 幻灯片缺少版式关系")?;
+        let notes_relationship_part = notes_part
+            .as_ref()
+            .map(|part| relationship_part(part))
+            .transpose()?;
+        if !override_names.contains(&part_name) {
+            blockers.push("幻灯片内容类型缺失".into());
+        }
+        if let Some(notes_part) = &notes_part {
+            if !part_names.contains(notes_part) || !override_names.contains(notes_part) {
+                blockers.push("备注部件或内容类型缺失".into());
+            }
+            let notes_rels = relationship_part(notes_part)?;
+            if !part_names.contains(&notes_rels) {
+                blockers.push("备注关系部件缺失".into());
+            } else {
+                let entries = scan_relationship_list(&read_part(source, &notes_rels)?)?;
+                let slide_backlinks = entries
+                    .entries
+                    .iter()
+                    .filter(|relation| relation.relation_type.ends_with("/slide"))
+                    .collect::<Vec<_>>();
+                if slide_backlinks.len() != 1
+                    || resolve_relative_part(notes_part, &slide_backlinks[0].target).as_deref()
+                        != Some(part_name.as_str())
+                    || entries.entries.iter().any(|relation| {
+                        relation.target_mode.is_some()
+                            || (!relation.relation_type.ends_with("/slide")
+                                && !relation.relation_type.ends_with("/notesMaster"))
+                    })
+                {
+                    blockers.push("备注回链或关系超出白名单".into());
+                }
+            }
+        }
+        for (relationship_part_name, relationship_source) in &relationship_parts {
+            let relationships =
+                scan_relationship_list(&read_part(source, relationship_part_name)?)?;
+            for relation in relationships.entries {
+                if relation.target_mode.is_some()
+                    || resolve_relative_part(relationship_source, &relation.target).as_deref()
+                        != Some(part_name.as_str())
+                {
+                    continue;
+                }
+                let allowed_presentation = relationship_source == "ppt/presentation.xml"
+                    && relation.id == entry.relationship_id;
+                let allowed_notes = notes_part
+                    .as_ref()
+                    .is_some_and(|notes| notes == relationship_source)
+                    && relation.relation_type.ends_with("/slide");
+                if !allowed_presentation && !allowed_notes {
+                    blockers.push(format!("被其他部件引用: {relationship_source}"));
+                }
+            }
+        }
+        blockers.sort();
+        blockers.dedup();
+        let safe_copy = blockers.is_empty();
+        let safe_delete = safe_copy && slide_list.entries.len() > 1;
+        if slide_list.entries.len() == 1 {
+            blockers.push("演示文稿必须至少保留一张幻灯片".into());
+        }
+        targets.push(SlideLifecycleTargetInternal {
+            target: PptxEditableSlideTarget {
+                id: format!("slide-lifecycle:{}:{}", entry.slide_id, part_name),
+                slide_number: index + 1,
+                slide_id: entry.slide_id.clone(),
+                relationship_id: entry.relationship_id.clone(),
+                part_name: part_name.clone(),
+                title: slide.title.clone(),
+                hidden: entry.hidden,
+                safe_copy,
+                safe_delete,
+                blockers,
+                expected_slide_digest: digest(&slide_bytes),
+                expected_presentation_digest: presentation_digest.clone(),
+                expected_relationships_digest: relationships_digest.clone(),
+            },
+            notes_part,
+            notes_relationship_part,
+            slide_relationship_part,
+            layout_target,
+        });
+    }
+    Ok(targets)
+}
+
+pub fn inspect_pptx_editable_slide_targets(
+    source: &[u8],
+) -> Result<Vec<PptxEditableSlideTarget>, String> {
+    Ok(inspect_pptx_slide_targets_internal(source)?
+        .into_iter()
+        .map(|target| target.target)
+        .collect())
+}
+
+fn validate_slide_target_digests(
+    target: &PptxEditableSlideTarget,
+    expected_slide_digest: &str,
+    expected_presentation_digest: &str,
+    expected_relationships_digest: &str,
+) -> Result<(), String> {
+    let expected_slide_digest = expected_slide_digest.trim().to_ascii_lowercase();
+    let expected_presentation_digest = expected_presentation_digest.trim().to_ascii_lowercase();
+    let expected_relationships_digest = expected_relationships_digest.trim().to_ascii_lowercase();
+    if !valid_sha256(&expected_slide_digest)
+        || !valid_sha256(&expected_presentation_digest)
+        || !valid_sha256(&expected_relationships_digest)
+        || target.expected_slide_digest != expected_slide_digest
+        || target.expected_presentation_digest != expected_presentation_digest
+        || target.expected_relationships_digest != expected_relationships_digest
+    {
+        return Err("PPTX C5C 幻灯片或演示文稿已变化，请重新建立编辑基线".into());
+    }
+    Ok(())
+}
+
+fn content_type_override(part_name: &str, content_type: &str) -> String {
+    format!(
+        "<Override PartName=\"/{}\" ContentType=\"{}\"/>",
+        xml_attribute(part_name),
+        xml_attribute(content_type)
+    )
+}
+
+fn blank_slide_xml() -> Vec<u8> {
+    br#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>"#.to_vec()
+}
+
+fn finalize_slide_lifecycle(
+    source: &[u8],
+    mutation: PackageMutation,
+    operation: &str,
+    target_id: String,
+    expected_slide_ids: Vec<String>,
+    slide_count_before: usize,
+) -> Result<(PptxSlideLifecycleReport, Vec<u8>), String> {
+    let output = rewrite_package(source, &mutation)?;
+    let (changed_parts, added_parts, removed_parts, unchanged_part_count) =
+        verify_package_mutation(source, &output, &mutation)?;
+    let reopened =
+        parse_pptx(&output).map_err(|error| format!("PPTX C5C 输出结构复读失败: {error}"))?;
+    let resulting_slide_ids = reopened
+        .slides
+        .iter()
+        .map(|slide| slide.id.clone())
+        .collect::<Vec<_>>();
+    let semantic_reparse_verified = resulting_slide_ids == expected_slide_ids;
+    if !semantic_reparse_verified {
+        return Err(format!(
+            "PPTX C5C 输出顺序复读失败: expected=[{}], actual=[{}]",
+            expected_slide_ids.join(", "),
+            resulting_slide_ids.join(", ")
+        ));
+    }
+    Ok((
+        PptxSlideLifecycleReport {
+            status: "isolated_slide_lifecycle_verified".into(),
+            engine: "LongEdit C5C isolated PPTX slide lifecycle".into(),
+            operation: operation.into(),
+            target_id,
+            source_digest: digest(source),
+            output_digest: digest(&output),
+            changed_parts,
+            added_parts,
+            removed_parts,
+            unchanged_part_count,
+            unchanged_parts_verified: true,
+            structural_reparse_verified: true,
+            semantic_reparse_verified,
+            temporary_copy_reopen_verified: false,
+            source_unchanged: false,
+            writes_user_file: false,
+            output_bytes: output.len(),
+            slide_count_before,
+            slide_count_after: reopened.slides.len(),
+            resulting_slide_ids,
+        },
+        output,
+    ))
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn build_pptx_slide_add_isolated(
+    source: &[u8],
+    after_target_id: &str,
+    expected_slide_digest: &str,
+    expected_presentation_digest: &str,
+    expected_relationships_digest: &str,
+) -> Result<(PptxSlideLifecycleReport, Vec<u8>), String> {
+    let targets = inspect_pptx_slide_targets_internal(source)?;
+    let target = targets
+        .iter()
+        .find(|target| target.target.id == after_target_id)
+        .ok_or("PPTX C5C 新增位置不存在")?;
+    validate_slide_target_digests(
+        &target.target,
+        expected_slide_digest,
+        expected_presentation_digest,
+        expected_relationships_digest,
+    )?;
+    let presentation = read_part(source, "ppt/presentation.xml")?;
+    let presentation_relationships = read_part(source, "ppt/_rels/presentation.xml.rels")?;
+    let content_types = read_part(source, "[Content_Types].xml")?;
+    let slide_list = scan_slide_id_list(&presentation)?;
+    let relationship_list = scan_relationship_list(&presentation_relationships)?;
+    let content_type_list = scan_content_type_overrides(&content_types)?;
+    let part_names = inspect_package_parts(source)?
+        .into_iter()
+        .map(|part| part.part_name)
+        .collect::<BTreeSet<_>>();
+    let (_, new_slide_part) = next_numbered_part(&part_names, "ppt/slides/slide", ".xml")?;
+    let new_slide_relationship_part = relationship_part(&new_slide_part)?;
+    if part_names.contains(&new_slide_relationship_part) {
+        return Err("PPTX C5C 新幻灯片关系部件冲突".into());
+    }
+    let new_relationship_id = next_relationship_id(&relationship_list.entries)?;
+    let new_slide_id = next_slide_id(&slide_list.entries)?;
+    let target_entry = slide_list
+        .entries
+        .iter()
+        .find(|entry| entry.slide_id == target.target.slide_id)
+        .ok_or("PPTX C5C 新增位置身份失效")?;
+    let new_slide_id_xml = format!(
+        "<p:sldId id=\"{}\" r:id=\"{}\"/>",
+        new_slide_id, new_relationship_id
+    );
+    let new_presentation = splice_xml(
+        &presentation,
+        vec![(target_entry.end, target_entry.end, new_slide_id_xml)],
+    )?;
+    let slide_target = new_slide_part
+        .strip_prefix("ppt/")
+        .ok_or("PPTX C5C 新幻灯片路径无效")?;
+    let new_presentation_relationships = splice_xml(
+        &presentation_relationships,
+        vec![(
+            relationship_list.insertion_offset,
+            relationship_list.insertion_offset,
+            relationship_xml(
+                &new_relationship_id,
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide",
+                slide_target,
+                None,
+            ),
+        )],
+    )?;
+    let new_content_types = splice_xml(
+        &content_types,
+        vec![(
+            content_type_list.insertion_offset,
+            content_type_list.insertion_offset,
+            content_type_override(
+                &new_slide_part,
+                "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
+            ),
+        )],
+    )?;
+    let slide_relationships = format!(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">{}</Relationships>",
+        relationship_xml(
+            "rId1",
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout",
+            &target.layout_target,
+            None,
+        )
+    )
+    .into_bytes();
+    let mut mutation = PackageMutation::default();
+    mutation
+        .replacements
+        .insert("ppt/presentation.xml".into(), new_presentation);
+    mutation.replacements.insert(
+        "ppt/_rels/presentation.xml.rels".into(),
+        new_presentation_relationships,
+    );
+    mutation
+        .replacements
+        .insert("[Content_Types].xml".into(), new_content_types);
+    mutation.additions.insert(new_slide_part, blank_slide_xml());
+    mutation
+        .additions
+        .insert(new_slide_relationship_part, slide_relationships);
+    let mut expected_ids = slide_list
+        .entries
+        .iter()
+        .map(|entry| entry.slide_id.clone())
+        .collect::<Vec<_>>();
+    expected_ids.insert(target.target.slide_number, new_slide_id);
+    finalize_slide_lifecycle(
+        source,
+        mutation,
+        "slide-add",
+        target.target.id.clone(),
+        expected_ids,
+        slide_list.entries.len(),
+    )
+}
+
+fn replace_relationship_entry_target(
+    xml: &[u8],
+    relation: &RelationshipEntry,
+    target: &str,
+) -> Result<Vec<u8>, String> {
+    splice_xml(
+        xml,
+        vec![(
+            relation.start,
+            relation.end,
+            relationship_xml(
+                &relation.id,
+                &relation.relation_type,
+                target,
+                relation.target_mode.as_deref(),
+            ),
+        )],
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn build_pptx_slide_copy_isolated(
+    source: &[u8],
+    target_id: &str,
+    expected_slide_digest: &str,
+    expected_presentation_digest: &str,
+    expected_relationships_digest: &str,
+) -> Result<(PptxSlideLifecycleReport, Vec<u8>), String> {
+    let targets = inspect_pptx_slide_targets_internal(source)?;
+    let target = targets
+        .iter()
+        .find(|target| target.target.id == target_id)
+        .ok_or("PPTX C5C 复制目标不存在")?;
+    if !target.target.safe_copy {
+        return Err(format!(
+            "PPTX C5C 复制目标不安全: {}",
+            target.target.blockers.join("；")
+        ));
+    }
+    validate_slide_target_digests(
+        &target.target,
+        expected_slide_digest,
+        expected_presentation_digest,
+        expected_relationships_digest,
+    )?;
+    let presentation = read_part(source, "ppt/presentation.xml")?;
+    let presentation_relationships = read_part(source, "ppt/_rels/presentation.xml.rels")?;
+    let content_types = read_part(source, "[Content_Types].xml")?;
+    let slide_list = scan_slide_id_list(&presentation)?;
+    let relationship_list = scan_relationship_list(&presentation_relationships)?;
+    let content_type_list = scan_content_type_overrides(&content_types)?;
+    let part_names = inspect_package_parts(source)?
+        .into_iter()
+        .map(|part| part.part_name)
+        .collect::<BTreeSet<_>>();
+    let (_, new_slide_part) = next_numbered_part(&part_names, "ppt/slides/slide", ".xml")?;
+    let new_slide_relationship_part = relationship_part(&new_slide_part)?;
+    let new_relationship_id = next_relationship_id(&relationship_list.entries)?;
+    let new_slide_id = next_slide_id(&slide_list.entries)?;
+    let target_entry = slide_list
+        .entries
+        .iter()
+        .find(|entry| entry.slide_id == target.target.slide_id)
+        .ok_or("PPTX C5C 复制目标身份失效")?;
+    let hidden = if target.target.hidden {
+        " show=\"0\""
+    } else {
+        ""
+    };
+    let new_presentation = splice_xml(
+        &presentation,
+        vec![(
+            target_entry.end,
+            target_entry.end,
+            format!(
+                "<p:sldId id=\"{}\" r:id=\"{}\"{hidden}/>",
+                new_slide_id, new_relationship_id
+            ),
+        )],
+    )?;
+    let slide_target = new_slide_part
+        .strip_prefix("ppt/")
+        .ok_or("PPTX C5C 新幻灯片路径无效")?;
+    let new_presentation_relationships = splice_xml(
+        &presentation_relationships,
+        vec![(
+            relationship_list.insertion_offset,
+            relationship_list.insertion_offset,
+            relationship_xml(
+                &new_relationship_id,
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide",
+                slide_target,
+                None,
+            ),
+        )],
+    )?;
+    let source_slide = read_part(source, &target.target.part_name)?;
+    let source_slide_relationships = read_part(source, &target.slide_relationship_part)?;
+    let source_slide_relationship_list = scan_relationship_list(&source_slide_relationships)?;
+    let mut new_slide_relationships = source_slide_relationships.clone();
+    let mut new_notes = None;
+    if let Some(notes_part) = &target.notes_part {
+        let (_, new_notes_part) =
+            next_numbered_part(&part_names, "ppt/notesSlides/notesSlide", ".xml")?;
+        let new_notes_relationship_part = relationship_part(&new_notes_part)?;
+        let notes_relation = source_slide_relationship_list
+            .entries
+            .iter()
+            .find(|entry| entry.relation_type.ends_with("/notesSlide"))
+            .ok_or("PPTX C5C 源幻灯片备注关系缺失")?;
+        let new_notes_target = format!(
+            "../notesSlides/{}",
+            new_notes_part
+                .rsplit_once('/')
+                .map(|(_, file)| file)
+                .ok_or("PPTX C5C 新备注路径无效")?
+        );
+        new_slide_relationships = replace_relationship_entry_target(
+            &source_slide_relationships,
+            notes_relation,
+            &new_notes_target,
+        )?;
+        let source_notes = read_part(source, notes_part)?;
+        let source_notes_relationship_part = target
+            .notes_relationship_part
+            .as_ref()
+            .ok_or("PPTX C5C 源备注关系部件缺失")?;
+        let source_notes_relationships = read_part(source, source_notes_relationship_part)?;
+        let source_notes_relationship_list = scan_relationship_list(&source_notes_relationships)?;
+        let slide_backlink = source_notes_relationship_list
+            .entries
+            .iter()
+            .find(|entry| entry.relation_type.ends_with("/slide"))
+            .ok_or("PPTX C5C 源备注缺少幻灯片回链")?;
+        let new_slide_target = format!(
+            "../slides/{}",
+            new_slide_part
+                .rsplit_once('/')
+                .map(|(_, file)| file)
+                .ok_or("PPTX C5C 新幻灯片路径无效")?
+        );
+        let new_notes_relationships = replace_relationship_entry_target(
+            &source_notes_relationships,
+            slide_backlink,
+            &new_slide_target,
+        )?;
+        new_notes = Some((
+            new_notes_part,
+            source_notes,
+            new_notes_relationship_part,
+            new_notes_relationships,
+        ));
+    }
+    let mut content_type_insertions = content_type_override(
+        &new_slide_part,
+        "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
+    );
+    if let Some((new_notes_part, _, _, _)) = &new_notes {
+        content_type_insertions.push_str(&content_type_override(
+            new_notes_part,
+            "application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml",
+        ));
+    }
+    let new_content_types = splice_xml(
+        &content_types,
+        vec![(
+            content_type_list.insertion_offset,
+            content_type_list.insertion_offset,
+            content_type_insertions,
+        )],
+    )?;
+    let mut mutation = PackageMutation::default();
+    mutation
+        .replacements
+        .insert("ppt/presentation.xml".into(), new_presentation);
+    mutation.replacements.insert(
+        "ppt/_rels/presentation.xml.rels".into(),
+        new_presentation_relationships,
+    );
+    mutation
+        .replacements
+        .insert("[Content_Types].xml".into(), new_content_types);
+    mutation.additions.insert(new_slide_part, source_slide);
+    mutation
+        .additions
+        .insert(new_slide_relationship_part, new_slide_relationships);
+    if let Some((notes_part, notes, notes_rels_part, notes_rels)) = new_notes {
+        mutation.additions.insert(notes_part, notes);
+        mutation.additions.insert(notes_rels_part, notes_rels);
+    }
+    let mut expected_ids = slide_list
+        .entries
+        .iter()
+        .map(|entry| entry.slide_id.clone())
+        .collect::<Vec<_>>();
+    expected_ids.insert(target.target.slide_number, new_slide_id.clone());
+    let (report, output) = finalize_slide_lifecycle(
+        source,
+        mutation,
+        "slide-copy",
+        target.target.id.clone(),
+        expected_ids,
+        slide_list.entries.len(),
+    )?;
+    let reopened = parse_pptx(&output)?;
+    let source_slide_model = reopened
+        .slides
+        .get(target.target.slide_number.saturating_sub(1))
+        .ok_or("PPTX C5C 复制后源幻灯片复读缺失")?;
+    let copied_slide_model = reopened
+        .slides
+        .get(target.target.slide_number)
+        .ok_or("PPTX C5C 复制后新幻灯片复读缺失")?;
+    if copied_slide_model.id != new_slide_id
+        || copied_slide_model.title != source_slide_model.title
+        || copied_slide_model.text != source_slide_model.text
+        || copied_slide_model.notes != source_slide_model.notes
+        || copied_slide_model.objects != source_slide_model.objects
+    {
+        return Err("PPTX C5C 复制页内容或备注语义复读不一致".into());
+    }
+    Ok((report, output))
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn build_pptx_slide_delete_isolated(
+    source: &[u8],
+    target_id: &str,
+    expected_slide_digest: &str,
+    expected_presentation_digest: &str,
+    expected_relationships_digest: &str,
+) -> Result<(PptxSlideLifecycleReport, Vec<u8>), String> {
+    let targets = inspect_pptx_slide_targets_internal(source)?;
+    let target = targets
+        .iter()
+        .find(|target| target.target.id == target_id)
+        .ok_or("PPTX C5C 删除目标不存在")?;
+    if !target.target.safe_delete {
+        return Err(format!(
+            "PPTX C5C 删除目标不安全: {}",
+            target.target.blockers.join("；")
+        ));
+    }
+    validate_slide_target_digests(
+        &target.target,
+        expected_slide_digest,
+        expected_presentation_digest,
+        expected_relationships_digest,
+    )?;
+    let presentation = read_part(source, "ppt/presentation.xml")?;
+    let presentation_relationships = read_part(source, "ppt/_rels/presentation.xml.rels")?;
+    let content_types = read_part(source, "[Content_Types].xml")?;
+    let slide_list = scan_slide_id_list(&presentation)?;
+    let relationship_list = scan_relationship_list(&presentation_relationships)?;
+    let content_type_list = scan_content_type_overrides(&content_types)?;
+    let target_entry = slide_list
+        .entries
+        .iter()
+        .find(|entry| entry.slide_id == target.target.slide_id)
+        .ok_or("PPTX C5C 删除目标身份失效")?;
+    let target_relationship = relationship_list
+        .entries
+        .iter()
+        .find(|entry| entry.id == target.target.relationship_id)
+        .ok_or("PPTX C5C 删除目标关系失效")?;
+    let mut content_type_removals = vec![target.target.part_name.clone()];
+    if let Some(notes_part) = &target.notes_part {
+        content_type_removals.push(notes_part.clone());
+    }
+    let content_type_replacements = content_type_removals
+        .iter()
+        .map(|part_name| {
+            let entry = content_type_list
+                .entries
+                .iter()
+                .find(|entry| entry.part_name.trim_start_matches('/') == part_name)
+                .ok_or_else(|| format!("PPTX C5C 删除内容类型缺失: {part_name}"))?;
+            Ok((entry.start, entry.end, String::new()))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let new_presentation = splice_xml(
+        &presentation,
+        vec![(target_entry.start, target_entry.end, String::new())],
+    )?;
+    let new_presentation_relationships = splice_xml(
+        &presentation_relationships,
+        vec![(
+            target_relationship.start,
+            target_relationship.end,
+            String::new(),
+        )],
+    )?;
+    let new_content_types = splice_xml(&content_types, content_type_replacements)?;
+    let mut mutation = PackageMutation::default();
+    mutation
+        .replacements
+        .insert("ppt/presentation.xml".into(), new_presentation);
+    mutation.replacements.insert(
+        "ppt/_rels/presentation.xml.rels".into(),
+        new_presentation_relationships,
+    );
+    mutation
+        .replacements
+        .insert("[Content_Types].xml".into(), new_content_types);
+    mutation.removals.insert(target.target.part_name.clone());
+    mutation
+        .removals
+        .insert(target.slide_relationship_part.clone());
+    if let Some(notes_part) = &target.notes_part {
+        mutation.removals.insert(notes_part.clone());
+    }
+    if let Some(notes_relationship_part) = &target.notes_relationship_part {
+        mutation.removals.insert(notes_relationship_part.clone());
+    }
+    let expected_ids = slide_list
+        .entries
+        .iter()
+        .filter(|entry| entry.slide_id != target.target.slide_id)
+        .map(|entry| entry.slide_id.clone())
+        .collect::<Vec<_>>();
+    finalize_slide_lifecycle(
+        source,
+        mutation,
+        "slide-delete",
+        target.target.id.clone(),
+        expected_ids,
+        slide_list.entries.len(),
+    )
+}
+
+pub fn build_pptx_slide_reorder_isolated(
+    source: &[u8],
+    ordered_target_ids: &[String],
+    expected_presentation_digest: &str,
+) -> Result<(PptxSlideLifecycleReport, Vec<u8>), String> {
+    let expected_presentation_digest = expected_presentation_digest.trim().to_ascii_lowercase();
+    let targets = inspect_pptx_slide_targets_internal(source)?;
+    if !valid_sha256(&expected_presentation_digest)
+        || targets.first().is_none_or(|target| {
+            target.target.expected_presentation_digest != expected_presentation_digest
+        })
+    {
+        return Err("PPTX C5C 演示文稿顺序已变化，请重新建立编辑基线".into());
+    }
+    if ordered_target_ids.len() != targets.len() {
+        return Err("PPTX C5C 排序必须包含全部幻灯片且只出现一次".into());
+    }
+    let target_by_id = targets
+        .iter()
+        .map(|target| (target.target.id.as_str(), target))
+        .collect::<BTreeMap<_, _>>();
+    let mut seen = BTreeSet::new();
+    let ordered_targets = ordered_target_ids
+        .iter()
+        .map(|id| {
+            if !seen.insert(id.as_str()) {
+                return Err("PPTX C5C 排序包含重复幻灯片".to_string());
+            }
+            target_by_id
+                .get(id.as_str())
+                .copied()
+                .ok_or_else(|| "PPTX C5C 排序包含未知幻灯片".to_string())
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let current_ids = targets
+        .iter()
+        .map(|target| target.target.id.as_str())
+        .collect::<Vec<_>>();
+    if ordered_target_ids
+        .iter()
+        .map(String::as_str)
+        .eq(current_ids.iter().copied())
+    {
+        return Err("PPTX C5C 新顺序与当前顺序相同".into());
+    }
+    let presentation = read_part(source, "ppt/presentation.xml")?;
+    let slide_list = scan_slide_id_list(&presentation)?;
+    let entry_by_slide_id = slide_list
+        .entries
+        .iter()
+        .map(|entry| (entry.slide_id.as_str(), entry))
+        .collect::<BTreeMap<_, _>>();
+    let first_start = slide_list
+        .entries
+        .first()
+        .map(|entry| entry.start)
+        .ok_or("PPTX C5C 幻灯片顺序列表为空")?;
+    let mut ordered_xml = String::new();
+    for target in &ordered_targets {
+        let entry = entry_by_slide_id
+            .get(target.target.slide_id.as_str())
+            .ok_or("PPTX C5C 幻灯片顺序身份失效")?;
+        ordered_xml.push_str(
+            std::str::from_utf8(&presentation[entry.start..entry.end])
+                .map_err(|_| "PPTX C5C 幻灯片顺序 XML 不是 UTF-8")?,
+        );
+    }
+    let new_presentation = splice_xml(
+        &presentation,
+        vec![(first_start, slide_list.insertion_offset, ordered_xml)],
+    )?;
+    let mut mutation = PackageMutation::default();
+    mutation
+        .replacements
+        .insert("ppt/presentation.xml".into(), new_presentation);
+    let expected_ids = ordered_targets
+        .iter()
+        .map(|target| target.target.slide_id.clone())
+        .collect::<Vec<_>>();
+    finalize_slide_lifecycle(
+        source,
+        mutation,
+        "slide-reorder",
+        "presentation-slide-order".into(),
+        expected_ids,
+        slide_list.entries.len(),
+    )
+}
+
 pub fn build_pptx_edit_baseline(
     source: &[u8],
     source_signature: String,
@@ -2512,6 +3833,7 @@ pub fn build_pptx_edit_baseline(
     let editable_image_targets = inspect_pptx_editable_image_targets(source)?;
     let (editable_shape_slides, editable_shape_targets) =
         inspect_pptx_editable_shape_targets(source)?;
+    let editable_slide_targets = inspect_pptx_editable_slide_targets(source)?;
 
     Ok((
         PptxEditBaselineReport {
@@ -2544,6 +3866,7 @@ pub fn build_pptx_edit_baseline(
             editable_image_targets,
             editable_shape_slides,
             editable_shape_targets,
+            editable_slide_targets,
             parts: source_parts,
         },
         isolated,
@@ -3080,5 +4403,150 @@ mod tests {
         )
         .unwrap_err()
         .contains("安全字符"));
+    }
+
+    #[test]
+    fn c5c_manages_slide_lifecycle_for_all_real_producers() {
+        for (producer, source) in real_producer_fixtures() {
+            let original = parse_pptx(source).unwrap();
+            let targets = inspect_pptx_editable_slide_targets(source)
+                .unwrap_or_else(|error| panic!("{producer} targets: {error}"));
+            assert_eq!(targets.len(), original.slides.len(), "{producer}");
+            assert!(targets.iter().all(|target| target.safe_copy), "{producer}");
+            assert!(
+                targets.iter().all(|target| target.safe_delete),
+                "{producer}"
+            );
+
+            let first = targets.first().unwrap();
+            let (add_report, added) = build_pptx_slide_add_isolated(
+                source,
+                &first.id,
+                &first.expected_slide_digest,
+                &first.expected_presentation_digest,
+                &first.expected_relationships_digest,
+            )
+            .unwrap_or_else(|error| panic!("{producer} add: {error}"));
+            assert_eq!(add_report.operation, "slide-add");
+            assert_eq!(add_report.slide_count_after, original.slides.len() + 1);
+            assert_eq!(add_report.changed_parts.len(), 3);
+            assert_eq!(add_report.added_parts.len(), 2);
+            assert!(add_report.removed_parts.is_empty());
+            assert!(add_report.unchanged_parts_verified);
+            assert_eq!(
+                parse_pptx(&added).unwrap().slides.len(),
+                original.slides.len() + 1
+            );
+
+            let copy_target = targets.last().unwrap();
+            let (copy_report, copied) = build_pptx_slide_copy_isolated(
+                source,
+                &copy_target.id,
+                &copy_target.expected_slide_digest,
+                &copy_target.expected_presentation_digest,
+                &copy_target.expected_relationships_digest,
+            )
+            .unwrap_or_else(|error| panic!("{producer} copy: {error}"));
+            assert_eq!(copy_report.operation, "slide-copy");
+            assert_eq!(copy_report.slide_count_after, original.slides.len() + 1);
+            assert_eq!(copy_report.changed_parts.len(), 3);
+            assert_eq!(copy_report.added_parts.len(), 4);
+            assert!(copy_report.removed_parts.is_empty());
+            let copied_model = parse_pptx(&copied).unwrap();
+            assert_eq!(
+                copied_model.slides[copy_target.slide_number].notes,
+                original.slides[copy_target.slide_number - 1].notes,
+                "{producer} copied notes"
+            );
+
+            let delete_target = targets.last().unwrap();
+            let (delete_report, deleted) = build_pptx_slide_delete_isolated(
+                source,
+                &delete_target.id,
+                &delete_target.expected_slide_digest,
+                &delete_target.expected_presentation_digest,
+                &delete_target.expected_relationships_digest,
+            )
+            .unwrap_or_else(|error| panic!("{producer} delete: {error}"));
+            assert_eq!(delete_report.operation, "slide-delete");
+            assert_eq!(delete_report.slide_count_after, original.slides.len() - 1);
+            assert_eq!(delete_report.changed_parts.len(), 3);
+            assert_eq!(delete_report.removed_parts.len(), 4);
+            assert!(delete_report.added_parts.is_empty());
+            assert!(
+                parse_pptx(&deleted)
+                    .unwrap()
+                    .slides
+                    .iter()
+                    .all(|slide| slide.id != delete_target.slide_id),
+                "{producer} deleted identity"
+            );
+
+            let ordered_target_ids = targets
+                .iter()
+                .rev()
+                .map(|target| target.id.clone())
+                .collect::<Vec<_>>();
+            let (reorder_report, reordered) = build_pptx_slide_reorder_isolated(
+                source,
+                &ordered_target_ids,
+                &first.expected_presentation_digest,
+            )
+            .unwrap_or_else(|error| panic!("{producer} reorder: {error}"));
+            assert_eq!(reorder_report.operation, "slide-reorder");
+            assert_eq!(reorder_report.changed_parts, ["ppt/presentation.xml"]);
+            assert!(reorder_report.added_parts.is_empty());
+            assert!(reorder_report.removed_parts.is_empty());
+            assert_eq!(
+                parse_pptx(&reordered)
+                    .unwrap()
+                    .slides
+                    .iter()
+                    .map(|slide| slide.id.clone())
+                    .collect::<Vec<_>>(),
+                targets
+                    .iter()
+                    .rev()
+                    .map(|target| target.slide_id.clone())
+                    .collect::<Vec<_>>(),
+                "{producer} reordered identities"
+            );
+        }
+    }
+
+    #[test]
+    fn c5c_rejects_stale_and_ambiguous_slide_operations() {
+        let source =
+            include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx");
+        let targets = inspect_pptx_editable_slide_targets(source).unwrap();
+        let first = targets.first().unwrap();
+        assert!(build_pptx_slide_add_isolated(
+            source,
+            &first.id,
+            &"0".repeat(64),
+            &first.expected_presentation_digest,
+            &first.expected_relationships_digest,
+        )
+        .unwrap_err()
+        .contains("已变化"));
+        let duplicate_order = vec![first.id.clone(); targets.len()];
+        assert!(build_pptx_slide_reorder_isolated(
+            source,
+            &duplicate_order,
+            &first.expected_presentation_digest,
+        )
+        .unwrap_err()
+        .contains("重复"));
+        let unchanged_order = targets
+            .iter()
+            .map(|target| target.id.clone())
+            .collect::<Vec<_>>();
+        assert!(build_pptx_slide_reorder_isolated(
+            source,
+            &unchanged_order,
+            &first.expected_presentation_digest,
+        )
+        .unwrap_err()
+        .contains("相同"));
     }
 }

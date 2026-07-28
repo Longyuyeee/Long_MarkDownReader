@@ -1,13 +1,13 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-28
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E、C5A1/C5A2/C5B 已完成；下一批为 C5C 幻灯片生命周期
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E、C5A1/C5A2/C5B/C5C 已完成；下一批为 C5D PPTX 发布收口
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 > 当前能力边界、初始需求对齐度和后续收口顺序以 [`Development_Status_and_Closure_Plan_Audit_2026-07-28.md`](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为权威入口。项目已进入基础需求收口期，但尚不能宣称所有初始需求 100% 完成。
 
-> 当前阶段交付证据见 `docs/C5B_PPTX_Basic_Shape_Lifecycle_Audit_2026-07-28.md`；C5B 已完成白名单矩形、椭圆和线条的安全新增/删除、4 份可靠新副本、真实桌面重开，以及 PowerPoint/WPS/LibreOffice 3/3 外部复开和哈希不变证明。下一批进入 C5C 幻灯片新增/复制/删除/排序。
+> 当前阶段交付证据见 `docs/C5C_PPTX_Slide_Lifecycle_Audit_2026-07-28.md`；C5C 已完成幻灯片新增、复制、删除和排序、4 份可靠新副本、真实桌面重开，以及 PowerPoint/WPS/LibreOffice 3/3 外部复开和哈希不变证明。下一批进入 C5D 能力注册表与发布矩阵收口。
 
 ## 1. 新电脑快速恢复
 
@@ -276,7 +276,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
-下一批推进 C5C：实现幻灯片新增、复制、删除和排序，正确维护 `presentation.xml`、关系、内容类型和顺序，保留未编辑幻灯片及未知部件，并建立可靠新副本、应用内复读和三生产者复开门禁。完成后进入 C5D PPTX 能力注册表和发布矩阵收口；每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`。
+下一批推进 C5D：将 PPTX 注册表、界面文案、需求文档和发布矩阵统一对齐为经过验证的 `basic-edit / copy`，明确受支持子集与高级只读边界，并完成正常/紧凑、明/暗主题抽样及完整 `npm run ci:check`。C5D 不新增高风险 OOXML 编辑类型。
 
 ## 7. 已知边界与注意事项
 

@@ -455,6 +455,88 @@
             <div><dt>源文件写入</dt><dd>{{ shapePatchReport.writesUserFile ? '是' : '否' }}</dd></div>
           </dl>
         </section>
+        <section v-if="editBaseline" class="isolated-metadata-patch" data-testid="c5c-slide-panel">
+          <header>
+            <PresentationIcon :size="15" />
+            <strong>C5C 幻灯片管理</strong>
+            <span v-if="slideLifecycleReport" class="verified-badge">已通过</span>
+          </header>
+          <div class="slide-lifecycle-mode" role="tablist" aria-label="幻灯片操作">
+            <button
+              v-for="mode in slideLifecycleModes"
+              :key="mode.value"
+              type="button"
+              role="tab"
+              :aria-selected="slideLifecycleMode === mode.value"
+              :class="{ active: slideLifecycleMode === mode.value }"
+              :data-testid="`c5c-${mode.value}-mode`"
+              :title="mode.label"
+              @click="slideLifecycleMode = mode.value"
+            >
+              <component :is="mode.icon" :size="13" />
+              <span>{{ mode.label }}</span>
+            </button>
+          </div>
+          <template v-if="safeSlideTargets.length">
+            <label v-if="slideLifecycleMode !== 'reorder'">
+              <span>目标幻灯片</span>
+              <select v-model="selectedSlideLifecycleTargetId" data-testid="c5c-slide-target">
+                <option
+                  v-for="target in availableSlideLifecycleTargets"
+                  :key="target.id"
+                  :value="target.id"
+                >
+                  幻灯片 {{ target.slideNumber }} · {{ target.title || '无标题' }}
+                </option>
+              </select>
+            </label>
+            <div v-else class="slide-order-list" data-testid="c5c-slide-order">
+              <div v-for="(targetId, index) in slideOrderTargetIds" :key="targetId">
+                <span>{{ index + 1 }}</span>
+                <strong>{{ slideTargetById[targetId]?.title || '无标题' }}</strong>
+                <button
+                  type="button"
+                  title="上移"
+                  :disabled="index === 0"
+                  :data-testid="`c5c-order-up-${index}`"
+                  @click="moveSlideOrder(index, -1)"
+                >
+                  <ChevronUpIcon :size="14" />
+                </button>
+                <button
+                  type="button"
+                  title="下移"
+                  :disabled="index === slideOrderTargetIds.length - 1"
+                  :data-testid="`c5c-order-down-${index}`"
+                  @click="moveSlideOrder(index, 1)"
+                >
+                  <ChevronDownIcon :size="14" />
+                </button>
+              </div>
+            </div>
+            <div class="patch-actions">
+              <small>{{ slideLifecycleHint }}</small>
+              <button
+                type="button"
+                data-testid="c5c-slide-preview"
+                :disabled="slideLifecycleLoading || !validSlideLifecycleOperation"
+                @click="previewSlideLifecycle"
+              >
+                <LoaderCircleIcon v-if="slideLifecycleLoading" :size="13" class="spin" />
+                <ShieldCheckIcon v-else :size="13" />
+                {{ slideLifecycleLoading ? '验证中' : '验证操作' }}
+              </button>
+            </div>
+            <p v-if="slideLifecycleError" class="baseline-error">{{ slideLifecycleError }}</p>
+            <dl v-if="slideLifecycleReport" class="patch-report">
+              <div><dt>页数变化</dt><dd>{{ slideLifecycleReport.slideCountBefore }} → {{ slideLifecycleReport.slideCountAfter }}</dd></div>
+              <div><dt>修改部件</dt><dd>{{ slideLifecycleReport.changedParts.length }}</dd></div>
+              <div><dt>新增 / 删除</dt><dd>{{ slideLifecycleReport.addedParts.length }} / {{ slideLifecycleReport.removedParts.length }}</dd></div>
+              <div><dt>语义复读</dt><dd>{{ slideLifecycleReport.semanticReparseVerified ? '通过' : '未通过' }}</dd></div>
+            </dl>
+          </template>
+          <p v-else class="muted">没有通过 C5C 关系与部件边界审计的幻灯片。</p>
+        </section>
         <section v-if="verifiedPreview && verifiedOperation" class="reliable-save-copy" data-testid="c4d-save-panel">
           <header>
             <SaveIcon :size="15" />
@@ -586,6 +668,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import {
   AlertTriangle as AlertTriangleIcon,
+  Copy as CopyIcon,
   ChevronDown as ChevronDownIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
@@ -599,6 +682,7 @@ import {
   Palette as PaletteIcon,
   PenLine as PenLineIcon,
   Play as PlayIcon,
+  Plus as PlusIcon,
   Presentation as PresentationIcon,
   RefreshCw as RefreshCwIcon,
   Save as SaveIcon,
@@ -746,6 +830,7 @@ interface PptxEditBaselineReport {
   editableImageTargets: PptxEditableImageTarget[]
   editableShapeSlides: PptxEditableShapeSlide[]
   editableShapeTargets: PptxEditableShapeTarget[]
+  editableSlideTargets: PptxEditableSlideTarget[]
 }
 interface PptxEditableTextTarget {
   id: string
@@ -844,6 +929,41 @@ interface PptxEditableShapeTarget {
   expectedShapeDigest: string
   expectedPartDigest: string
 }
+interface PptxEditableSlideTarget {
+  id: string
+  slideNumber: number
+  slideId: string
+  relationshipId: string
+  partName: string
+  title: string
+  hidden: boolean
+  safeCopy: boolean
+  safeDelete: boolean
+  blockers: string[]
+  expectedSlideDigest: string
+  expectedPresentationDigest: string
+  expectedRelationshipsDigest: string
+}
+interface PptxSlideLifecycleReport {
+  status: string
+  operation: 'slide-add' | 'slide-copy' | 'slide-delete' | 'slide-reorder'
+  targetId: string
+  outputDigest: string
+  outputBytes: number
+  changedParts: string[]
+  addedParts: string[]
+  removedParts: string[]
+  unchangedPartCount: number
+  unchangedPartsVerified: boolean
+  structuralReparseVerified: boolean
+  semanticReparseVerified: boolean
+  temporaryCopyReopenVerified: boolean
+  sourceUnchanged: boolean
+  writesUserFile: boolean
+  slideCountBefore: number
+  slideCountAfter: number
+  resultingSlideIds: string[]
+}
 interface PptxIsolatedMetadataPatchReport {
   status: string
   outputDigest: string
@@ -915,6 +1035,18 @@ type PptxPatchOperation =
     targetId: string
     expectedShapeDigest: string
     expectedPartDigest: string
+  }
+  | {
+    kind: 'slideAdd' | 'slideCopy' | 'slideDelete'
+    targetId: string
+    expectedSlideDigest: string
+    expectedPresentationDigest: string
+    expectedRelationshipsDigest: string
+  }
+  | {
+    kind: 'slideReorder'
+    orderedTargetIds: string[]
+    expectedPresentationDigest: string
   }
 interface PptxVerifiedPreview {
   outputDigest: string
@@ -1001,6 +1133,19 @@ const shapeLineWidthPt = ref(2)
 const shapePatchLoading = ref(false)
 const shapePatchError = ref('')
 const shapePatchReport = ref<PptxIsolatedMetadataPatchReport>()
+type SlideLifecycleMode = 'add' | 'copy' | 'delete' | 'reorder'
+const slideLifecycleModes = [
+  { value: 'add', label: '新增', icon: PlusIcon },
+  { value: 'copy', label: '复制', icon: CopyIcon },
+  { value: 'delete', label: '删除', icon: Trash2Icon },
+  { value: 'reorder', label: '排序', icon: ChevronUpIcon },
+] as const
+const slideLifecycleMode = ref<SlideLifecycleMode>('add')
+const selectedSlideLifecycleTargetId = ref('')
+const slideOrderTargetIds = ref<string[]>([])
+const slideLifecycleLoading = ref(false)
+const slideLifecycleError = ref('')
+const slideLifecycleReport = ref<PptxSlideLifecycleReport>()
 const verifiedOperation = ref<PptxPatchOperation>()
 const verifiedPreview = ref<PptxVerifiedPreview>()
 const copyFileName = ref('')
@@ -1041,6 +1186,36 @@ const safeShapeTargets = computed(() => editBaseline.value?.editableShapeTargets
 const selectedShapeTarget = computed(() => safeShapeTargets.value.find(
   target => target.id === selectedShapeTargetId.value,
 ))
+const safeSlideTargets = computed(() => editBaseline.value?.editableSlideTargets || [])
+const slideTargetById = computed<Record<string, PptxEditableSlideTarget>>(() => Object.fromEntries(
+  safeSlideTargets.value.map(target => [target.id, target]),
+))
+const availableSlideLifecycleTargets = computed(() => safeSlideTargets.value.filter(target => (
+  slideLifecycleMode.value === 'copy'
+    ? target.safeCopy
+    : slideLifecycleMode.value === 'delete'
+      ? target.safeDelete
+      : true
+)))
+const selectedSlideLifecycleTarget = computed(() => availableSlideLifecycleTargets.value.find(
+  target => target.id === selectedSlideLifecycleTargetId.value,
+))
+const originalSlideOrderTargetIds = computed(() => safeSlideTargets.value.map(target => target.id))
+const slideOrderChanged = computed(() => (
+  slideOrderTargetIds.value.length === originalSlideOrderTargetIds.value.length
+  && slideOrderTargetIds.value.some((targetId, index) => targetId !== originalSlideOrderTargetIds.value[index])
+))
+const validSlideLifecycleOperation = computed(() => (
+  slideLifecycleMode.value === 'reorder'
+    ? slideOrderChanged.value
+    : Boolean(selectedSlideLifecycleTarget.value)
+))
+const slideLifecycleHint = computed(() => {
+  if (slideLifecycleMode.value === 'add') return '在所选页后新增空白页并继承版式'
+  if (slideLifecycleMode.value === 'copy') return '复制页面、关系和独立备注'
+  if (slideLifecycleMode.value === 'delete') return '删除页面及其独占备注部件'
+  return '只重排 presentation.xml 中的页面身份'
+})
 const emuPerCm = 360000
 const shapeGeometry = computed(() => ({
   x: Math.round(shapeXCm.value * emuPerCm),
@@ -1308,6 +1483,13 @@ const prepareEditBaseline = async () => {
     selectedShapeTargetId.value = shapeTarget?.id || ''
     shapePatchReport.value = undefined
     shapePatchError.value = ''
+    const slideTarget = baseline.editableSlideTargets.find(
+      target => target.slideNumber === activeSlideIndex.value + 1,
+    ) || baseline.editableSlideTargets[0]
+    selectedSlideLifecycleTargetId.value = slideTarget?.id || ''
+    slideOrderTargetIds.value = baseline.editableSlideTargets.map(target => target.id)
+    slideLifecycleReport.value = undefined
+    slideLifecycleError.value = ''
     stylePatchReport.value = undefined
     stylePatchError.value = ''
     altTextPatchReport.value = undefined
@@ -1726,6 +1908,94 @@ const previewShapeDelete = async () => {
     shapePatchLoading.value = false
   }
 }
+const clearSlideLifecycle = () => {
+  slideLifecycleReport.value = undefined
+  slideLifecycleError.value = ''
+  clearSaveCandidate()
+}
+const moveSlideOrder = (index: number, direction: -1 | 1) => {
+  const nextIndex = index + direction
+  if (nextIndex < 0 || nextIndex >= slideOrderTargetIds.value.length) return
+  const nextOrder = [...slideOrderTargetIds.value]
+  ;[nextOrder[index], nextOrder[nextIndex]] = [nextOrder[nextIndex], nextOrder[index]]
+  slideOrderTargetIds.value = nextOrder
+}
+const buildSlideLifecycleOperation = (): PptxPatchOperation | undefined => {
+  if (slideLifecycleMode.value === 'reorder') {
+    const expectedPresentationDigest = safeSlideTargets.value[0]?.expectedPresentationDigest
+    if (!expectedPresentationDigest || !slideOrderChanged.value) return undefined
+    return {
+      kind: 'slideReorder',
+      orderedTargetIds: [...slideOrderTargetIds.value],
+      expectedPresentationDigest,
+    }
+  }
+  const target = selectedSlideLifecycleTarget.value
+  if (!target) return undefined
+  const kind = slideLifecycleMode.value === 'add'
+    ? 'slideAdd'
+    : slideLifecycleMode.value === 'copy'
+      ? 'slideCopy'
+      : 'slideDelete'
+  return {
+    kind,
+    targetId: target.id,
+    expectedSlideDigest: target.expectedSlideDigest,
+    expectedPresentationDigest: target.expectedPresentationDigest,
+    expectedRelationshipsDigest: target.expectedRelationshipsDigest,
+  }
+}
+const previewSlideLifecycle = async () => {
+  const operation = buildSlideLifecycleOperation()
+  if (!report.value || !operation || slideLifecycleLoading.value) return
+  slideLifecycleLoading.value = true
+  clearSlideLifecycle()
+  try {
+    const patch = await invoke<PptxSlideLifecycleReport>('preview_pptx_slide_lifecycle_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: pptxPath.value,
+      expectedSignature: report.value.signature,
+      operation,
+    })
+    const expectedOperation = `slide-${slideLifecycleMode.value}` as PptxSlideLifecycleReport['operation']
+    const expectedSlideCount = patch.slideCountBefore
+      + (slideLifecycleMode.value === 'add' || slideLifecycleMode.value === 'copy' ? 1 : 0)
+      - (slideLifecycleMode.value === 'delete' ? 1 : 0)
+    const affectedParts = [...patch.changedParts, ...patch.addedParts, ...patch.removedParts]
+    if (
+      patch.operation !== expectedOperation
+      || patch.slideCountAfter !== expectedSlideCount
+      || !affectedParts.length
+      || new Set(affectedParts).size !== affectedParts.length
+      || !patch.unchangedPartsVerified
+      || !patch.structuralReparseVerified
+      || !patch.semanticReparseVerified
+      || !patch.temporaryCopyReopenVerified
+      || !patch.sourceUnchanged
+      || patch.writesUserFile
+    ) {
+      throw new Error('PPTX C5C 幻灯片操作未通过部件白名单与语义复读门禁')
+    }
+    slideLifecycleReport.value = patch
+    verifiedOperation.value = operation
+    verifiedPreview.value = {
+      outputDigest: patch.outputDigest,
+      outputBytes: patch.outputBytes,
+      changedParts: affectedParts.sort(),
+      operationLabel: slideLifecycleMode.value === 'add'
+        ? '新增幻灯片'
+        : slideLifecycleMode.value === 'copy'
+          ? '复制幻灯片'
+          : slideLifecycleMode.value === 'delete'
+            ? '删除幻灯片'
+            : '重排幻灯片',
+    }
+  } catch (error) {
+    slideLifecycleError.value = String(error).replace(/^Error:\s*/, '')
+  } finally {
+    slideLifecycleLoading.value = false
+  }
+}
 const savePptxCopy = async () => {
   const preview = verifiedPreview.value
   const operation = verifiedOperation.value
@@ -1752,7 +2022,8 @@ const savePptxCopy = async () => {
       saved.status !== 'saved_verified'
       || saved.saveMode !== 'copy'
       || !saved.sourceUnchanged
-      || saved.changedParts.length !== 1
+      || saved.changedParts.length !== preview.changedParts.length
+      || saved.changedParts.some(part => !preview.changedParts.includes(part))
       || !saved.unchangedPartsVerified
       || !saved.structuralReopenVerified
       || !saved.semanticReopenVerified
@@ -1798,6 +2069,10 @@ const loadPresentation = async () => {
   selectedShapeTargetId.value = ''
   shapePatchReport.value = undefined
   shapePatchError.value = ''
+  selectedSlideLifecycleTargetId.value = ''
+  slideOrderTargetIds.value = []
+  slideLifecycleReport.value = undefined
+  slideLifecycleError.value = ''
   verifiedOperation.value = undefined
   verifiedPreview.value = undefined
   savedCopyReport.value = undefined
@@ -1865,6 +2140,21 @@ watch(
   ],
   clearShapePatch,
 )
+watch(
+  [slideLifecycleMode, selectedSlideLifecycleTargetId, slideOrderTargetIds],
+  () => {
+    if (
+      slideLifecycleMode.value !== 'reorder'
+      && !availableSlideLifecycleTargets.value.some(
+        target => target.id === selectedSlideLifecycleTargetId.value,
+      )
+    ) {
+      selectedSlideLifecycleTargetId.value = availableSlideLifecycleTargets.value[0]?.id || ''
+    }
+    clearSlideLifecycle()
+  },
+  { deep: true },
+)
 watch(activeSlideIndex, slideIndex => {
   if (!editBaseline.value) return
   const slideNumber = slideIndex + 1
@@ -1872,6 +2162,12 @@ watch(activeSlideIndex, slideIndex => {
   if (shapeSlide) selectedShapeSlideId.value = shapeSlide.id
   const shapeTarget = safeShapeTargets.value.find(target => target.slideNumber === slideNumber)
   if (shapeTarget) selectedShapeTargetId.value = shapeTarget.id
+  const slideTarget = availableSlideLifecycleTargets.value.find(
+    target => target.slideNumber === slideNumber,
+  )
+  if (slideTarget && slideLifecycleMode.value !== 'reorder') {
+    selectedSlideLifecycleTargetId.value = slideTarget.id
+  }
 })
 watch(matches, value => {
   activeMatch.value = 0
@@ -1976,6 +2272,16 @@ onBeforeUnmount(() => {
 .shape-mode { height: 30px; margin: 0 0 9px; padding: 2px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); }
 .shape-mode button { border: 0; border-radius: 3px; color: var(--text-muted); background: transparent; cursor: pointer; font: inherit; font-size: 11px; }
 .shape-mode button.active { color: var(--text-primary); background: var(--bg-primary); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.slide-lifecycle-mode { min-height: 32px; margin: 0 0 9px; padding: 2px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); }
+.slide-lifecycle-mode button { min-width: 0; min-height: 26px; padding: 0 3px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; border: 0; border-radius: 3px; color: var(--text-muted); background: transparent; cursor: pointer; font: inherit; font-size: 10px; }
+.slide-lifecycle-mode button.active { color: var(--text-primary); background: var(--bg-primary); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.slide-order-list { margin: 0 0 9px; border-top: 1px solid var(--border-color); }
+.slide-order-list > div { min-height: 32px; display: grid; grid-template-columns: 22px minmax(0, 1fr) 28px 28px; align-items: center; gap: 4px; border-bottom: 1px solid var(--border-color); }
+.slide-order-list span { color: var(--text-muted); font-size: 10px; }
+.slide-order-list strong { overflow: hidden; color: var(--text-secondary); font-size: 11px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.slide-order-list button { width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 4px; color: var(--text-muted); background: transparent; cursor: pointer; }
+.slide-order-list button:hover:not(:disabled) { color: var(--text-primary); background: var(--bg-secondary); }
+.slide-order-list button:disabled { opacity: .3; cursor: default; }
 .shape-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 7px; }
 .shape-grid input[type="color"] { padding: 3px; cursor: pointer; }
 .shape-grid .shape-line-width { grid-column: 1 / -1; }

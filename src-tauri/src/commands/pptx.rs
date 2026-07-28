@@ -1,9 +1,11 @@
 use crate::formats::pptx::{parse_pptx, PptxPresentationModel, MAX_PPTX_FILE_BYTES};
 use crate::formats::pptx_edit::{
     build_pptx_alt_text_patch_isolated, build_pptx_edit_baseline, build_pptx_image_patch_isolated,
-    build_pptx_shape_add_isolated, build_pptx_shape_delete_isolated,
-    build_pptx_style_patch_isolated, build_pptx_text_patch_isolated, PptxEditBaselineReport,
-    PptxIsolatedMetadataPatchReport, PptxIsolatedTextPatchReport,
+    build_pptx_shape_add_isolated, build_pptx_shape_delete_isolated, build_pptx_slide_add_isolated,
+    build_pptx_slide_copy_isolated, build_pptx_slide_delete_isolated,
+    build_pptx_slide_reorder_isolated, build_pptx_style_patch_isolated,
+    build_pptx_text_patch_isolated, PptxEditBaselineReport, PptxIsolatedMetadataPatchReport,
+    PptxIsolatedTextPatchReport, PptxSlideLifecycleReport,
 };
 use crate::services::reliable_write::write_new_bytes;
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -129,6 +131,46 @@ pub enum PptxPatchOperation {
         expected_shape_digest: String,
         #[serde(rename = "expectedPartDigest")]
         expected_part_digest: String,
+    },
+    #[serde(rename = "slideAdd")]
+    SlideAdd {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedSlideDigest")]
+        expected_slide_digest: String,
+        #[serde(rename = "expectedPresentationDigest")]
+        expected_presentation_digest: String,
+        #[serde(rename = "expectedRelationshipsDigest")]
+        expected_relationships_digest: String,
+    },
+    #[serde(rename = "slideCopy")]
+    SlideCopy {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedSlideDigest")]
+        expected_slide_digest: String,
+        #[serde(rename = "expectedPresentationDigest")]
+        expected_presentation_digest: String,
+        #[serde(rename = "expectedRelationshipsDigest")]
+        expected_relationships_digest: String,
+    },
+    #[serde(rename = "slideDelete")]
+    SlideDelete {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedSlideDigest")]
+        expected_slide_digest: String,
+        #[serde(rename = "expectedPresentationDigest")]
+        expected_presentation_digest: String,
+        #[serde(rename = "expectedRelationshipsDigest")]
+        expected_relationships_digest: String,
+    },
+    #[serde(rename = "slideReorder")]
+    SlideReorder {
+        #[serde(rename = "orderedTargetIds")]
+        ordered_target_ids: Vec<String>,
+        #[serde(rename = "expectedPresentationDigest")]
+        expected_presentation_digest: String,
     },
 }
 
@@ -468,6 +510,120 @@ fn preview_pptx_metadata_patch_path(
     Ok(report)
 }
 
+fn preview_pptx_slide_lifecycle_path(
+    path: &Path,
+    expected_signature: &str,
+    operation: &PptxPatchOperation,
+) -> Result<PptxSlideLifecycleReport, String> {
+    let metadata = path
+        .metadata()
+        .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_PPTX_FILE_BYTES {
+        return Err("PPTX 文件超过 96 MiB C5C 隔离补丁上限".into());
+    }
+    let actual_signature = file_signature(&metadata);
+    if actual_signature != expected_signature {
+        return Err("PPTX 已被外部修改，请重新打开后再预览编辑".into());
+    }
+    let source = fs::read(path).map_err(|error| format!("读取 PPTX 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let (mut report, output) = build_pptx_slide_lifecycle_operation(&source, operation)?;
+    let temporary = TemporaryPptxCopy::create(&output)?;
+    let reopened = fs::read(&temporary.path)
+        .map_err(|error| format!("复读 PPTX C5C 临时副本失败: {error}"))?;
+    if reopened != output || format!("{:x}", Sha256::digest(&reopened)) != report.output_digest {
+        return Err("PPTX C5C 临时副本复读字节与隔离输出不一致".into());
+    }
+    parse_pptx(&reopened).map_err(|error| format!("PPTX C5C 临时副本结构重开失败: {error}"))?;
+    report.temporary_copy_reopen_verified = true;
+
+    let source_after = fs::read(path).map_err(|error| format!("复核源 PPTX 失败: {error}"))?;
+    let metadata_after = path
+        .metadata()
+        .map_err(|error| format!("复核源 PPTX 元数据失败: {error}"))?;
+    report.source_unchanged = source_after == source
+        && format!("{:x}", Sha256::digest(&source_after)) == source_digest
+        && file_signature(&metadata_after) == actual_signature;
+    if !report.source_unchanged {
+        return Err("C5C 隔离补丁预览期间源 PPTX 发生变化".into());
+    }
+    Ok(report)
+}
+
+fn build_pptx_slide_lifecycle_operation(
+    source: &[u8],
+    operation: &PptxPatchOperation,
+) -> Result<(PptxSlideLifecycleReport, Vec<u8>), String> {
+    match operation {
+        PptxPatchOperation::SlideAdd {
+            target_id,
+            expected_slide_digest,
+            expected_presentation_digest,
+            expected_relationships_digest,
+        } => build_pptx_slide_add_isolated(
+            source,
+            target_id,
+            expected_slide_digest,
+            expected_presentation_digest,
+            expected_relationships_digest,
+        ),
+        PptxPatchOperation::SlideCopy {
+            target_id,
+            expected_slide_digest,
+            expected_presentation_digest,
+            expected_relationships_digest,
+        } => build_pptx_slide_copy_isolated(
+            source,
+            target_id,
+            expected_slide_digest,
+            expected_presentation_digest,
+            expected_relationships_digest,
+        ),
+        PptxPatchOperation::SlideDelete {
+            target_id,
+            expected_slide_digest,
+            expected_presentation_digest,
+            expected_relationships_digest,
+        } => build_pptx_slide_delete_isolated(
+            source,
+            target_id,
+            expected_slide_digest,
+            expected_presentation_digest,
+            expected_relationships_digest,
+        ),
+        PptxPatchOperation::SlideReorder {
+            ordered_target_ids,
+            expected_presentation_digest,
+        } => build_pptx_slide_reorder_isolated(
+            source,
+            ordered_target_ids,
+            expected_presentation_digest,
+        ),
+        _ => Err("PPTX C5C 预览只接受幻灯片生命周期操作".into()),
+    }
+}
+
+fn slide_lifecycle_to_built(
+    report: PptxSlideLifecycleReport,
+    output: Vec<u8>,
+) -> BuiltPptxOperation {
+    let mut changed_parts = report.changed_parts.clone();
+    changed_parts.extend(report.added_parts.iter().cloned());
+    changed_parts.extend(report.removed_parts.iter().cloned());
+    changed_parts.sort();
+    changed_parts.dedup();
+    BuiltPptxOperation {
+        engine: report.engine,
+        operation_kind: report.operation,
+        output_digest: report.output_digest,
+        changed_parts,
+        unchanged_parts_verified: report.unchanged_parts_verified,
+        structural_reparse_verified: report.structural_reparse_verified,
+        semantic_reparse_verified: report.semantic_reparse_verified,
+        output,
+    }
+}
+
 fn build_pptx_operation(
     source: &[u8],
     operation: &PptxPatchOperation,
@@ -642,6 +798,13 @@ fn build_pptx_operation(
                 output,
             })
         }
+        operation @ (PptxPatchOperation::SlideAdd { .. }
+        | PptxPatchOperation::SlideCopy { .. }
+        | PptxPatchOperation::SlideDelete { .. }
+        | PptxPatchOperation::SlideReorder { .. }) => {
+            let (report, output) = build_pptx_slide_lifecycle_operation(source, operation)?;
+            Ok(slide_lifecycle_to_built(report, output))
+        }
     }
 }
 
@@ -716,9 +879,8 @@ fn save_pptx_patch_copy_to_path(
     if !built.unchanged_parts_verified
         || !built.structural_reparse_verified
         || !built.semantic_reparse_verified
-        || built.changed_parts.len() != 1
     {
-        return Err("PPTX 隔离补丁未通过单部件保真与语义复读".into());
+        return Err("PPTX 隔离补丁未通过部件保真与语义复读".into());
     }
 
     let source_before_write =
@@ -1010,6 +1172,22 @@ pub async fn preview_pptx_shape_delete_isolated_copy(
     })
     .await
     .map_err(|error| format!("PPTX C5B 隔离形状删除任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_pptx_slide_lifecycle_isolated_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    operation: PptxPatchOperation,
+) -> Result<PptxSlideLifecycleReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let presentation = guard.resolve_existing_file(path, &["pptx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_pptx_slide_lifecycle_path(&presentation, &expected_signature, &operation)
+    })
+    .await
+    .map_err(|error| format!("PPTX C5C 幻灯片生命周期任务失败: {error}"))?
 }
 
 #[tauri::command]
@@ -1450,6 +1628,111 @@ mod tests {
                 .count(),
             0
         );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn c5c_previews_and_saves_slide_lifecycle_copies_with_semantic_reopen() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-pptx-c5c-slides-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let source =
+            include_bytes!("../../../fixtures/pptx/producers/wps-presentation.pptx").to_vec();
+        let source_path = root.join("source.pptx");
+        fs::write(&source_path, &source).unwrap();
+        let signature = file_signature(&source_path.metadata().unwrap());
+        let (baseline, _) = build_pptx_edit_baseline(&source, signature.clone()).unwrap();
+        let first = baseline.editable_slide_targets.first().unwrap();
+        let last = baseline.editable_slide_targets.last().unwrap();
+        let reversed_ids = baseline
+            .editable_slide_targets
+            .iter()
+            .rev()
+            .map(|target| target.id.clone())
+            .collect::<Vec<_>>();
+        let operations = vec![
+            (
+                "add",
+                PptxPatchOperation::SlideAdd {
+                    target_id: first.id.clone(),
+                    expected_slide_digest: first.expected_slide_digest.clone(),
+                    expected_presentation_digest: first.expected_presentation_digest.clone(),
+                    expected_relationships_digest: first.expected_relationships_digest.clone(),
+                },
+                4,
+            ),
+            (
+                "copy",
+                PptxPatchOperation::SlideCopy {
+                    target_id: first.id.clone(),
+                    expected_slide_digest: first.expected_slide_digest.clone(),
+                    expected_presentation_digest: first.expected_presentation_digest.clone(),
+                    expected_relationships_digest: first.expected_relationships_digest.clone(),
+                },
+                4,
+            ),
+            (
+                "delete",
+                PptxPatchOperation::SlideDelete {
+                    target_id: last.id.clone(),
+                    expected_slide_digest: last.expected_slide_digest.clone(),
+                    expected_presentation_digest: last.expected_presentation_digest.clone(),
+                    expected_relationships_digest: last.expected_relationships_digest.clone(),
+                },
+                2,
+            ),
+            (
+                "reorder",
+                PptxPatchOperation::SlideReorder {
+                    ordered_target_ids: reversed_ids,
+                    expected_presentation_digest: first.expected_presentation_digest.clone(),
+                },
+                3,
+            ),
+        ];
+
+        for (name, operation, expected_slide_count) in operations {
+            let preview =
+                preview_pptx_slide_lifecycle_path(&source_path, &signature, &operation).unwrap();
+            assert!(preview.temporary_copy_reopen_verified, "{name}");
+            assert!(preview.source_unchanged, "{name}");
+            let target_path = root.join(format!("{name}-copy.pptx"));
+            let saved = save_pptx_patch_copy_to_path(
+                &source_path,
+                &target_path,
+                &signature,
+                &preview.output_digest,
+                &operation,
+            )
+            .unwrap_or_else(|error| panic!("{name}: {error}"));
+            assert!(saved.semantic_reopen_verified, "{name}");
+            assert!(saved.unchanged_parts_verified, "{name}");
+            assert_eq!(
+                saved.changed_parts.len(),
+                preview.changed_parts.len()
+                    + preview.added_parts.len()
+                    + preview.removed_parts.len(),
+                "{name}"
+            );
+            let reopened = parse_pptx(&fs::read(&target_path).unwrap()).unwrap();
+            assert_eq!(reopened.slides.len(), expected_slide_count, "{name}");
+            assert_eq!(
+                reopened
+                    .slides
+                    .iter()
+                    .map(|slide| slide.id.clone())
+                    .collect::<Vec<_>>(),
+                preview.resulting_slide_ids,
+                "{name}"
+            );
+            assert_eq!(fs::read(&source_path).unwrap(), source, "{name}");
+        }
         fs::remove_dir_all(root).unwrap();
     }
 

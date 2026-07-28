@@ -1,0 +1,166 @@
+{
+    "schemaVersion":  1,
+    "stage":  "C5C",
+    "verifiedAt":  "2026-07-28T03:32:43.5404886Z",
+    "status":  "verified",
+    "verifiedCount":  3,
+    "requiredCount":  3,
+    "complete":  true,
+    "requiredProducerIds":  [
+                                "microsoft-powerpoint",
+                                "wps-presentation",
+                                "libreoffice-impress"
+                            ],
+    "operations":  [
+                       "add",
+                       "copy",
+                       "delete",
+                       "reorder"
+                   ],
+    "outputs":  [
+                    {
+                        "operation":  "add",
+                        "file":  "c5c-add-copy.pptx",
+                        "bytes":  95297,
+                        "sha256Before":  "448170430cbd33ca522e6da2128cb7bd5d3d9d4aaf5e8d18088ab950387367a4",
+                        "sha256After":  "448170430cbd33ca522e6da2128cb7bd5d3d9d4aaf5e8d18088ab950387367a4",
+                        "sourceUnchanged":  true
+                    },
+                    {
+                        "operation":  "copy",
+                        "file":  "c5c-copy-copy.pptx",
+                        "bytes":  96886,
+                        "sha256Before":  "3bbcc26cf0e8174ff6031f9ccaea6425ef322dea6359685af41b41997e5b1a2a",
+                        "sha256After":  "3bbcc26cf0e8174ff6031f9ccaea6425ef322dea6359685af41b41997e5b1a2a",
+                        "sourceUnchanged":  true
+                    },
+                    {
+                        "operation":  "delete",
+                        "file":  "c5c-delete-copy.pptx",
+                        "bytes":  92333,
+                        "sha256Before":  "e71d129e5f651871245ea2648d9831658d6232bc357a3c81525dc131fbb4c927",
+                        "sha256After":  "e71d129e5f651871245ea2648d9831658d6232bc357a3c81525dc131fbb4c927",
+                        "sourceUnchanged":  true
+                    },
+                    {
+                        "operation":  "reorder",
+                        "file":  "c5c-reorder-copy.pptx",
+                        "bytes":  94588,
+                        "sha256Before":  "ea942a924b2708c752d8448ee2cb6c593c1607e8af66ec85f989e0f0875d2718",
+                        "sha256After":  "ea942a924b2708c752d8448ee2cb6c593c1607e8af66ec85f989e0f0875d2718",
+                        "sourceUnchanged":  true
+                    }
+                ],
+    "producers":  [
+                      {
+                          "id":  "microsoft-powerpoint",
+                          "producer":  "Microsoft PowerPoint",
+                          "status":  "verified",
+                          "version":  "16.0",
+                          "method":  "An isolated PowerPoint.Application instance opened all four C5C outputs read-only, verified slide counts and order, and confirmed copied notes.",
+                          "outputs":  [
+                                          {
+                                              "operation":  "add",
+                                              "file":  "c5c-add-copy.pptx",
+                                              "slideCount":  4,
+                                              "firstSlideText":  "WPS Presentation Producer Fixture | Structured slide reading\rSearch and precise positioning\rRead-only compatibility boundary | WPS shape",
+                                              "copiedNotesPreserved":  null
+                                          },
+                                          {
+                                              "operation":  "copy",
+                                              "file":  "c5c-copy-copy.pptx",
+                                              "slideCount":  4,
+                                              "firstSlideText":  "WPS Presentation Producer Fixture | Structured slide reading\rSearch and precise positioning\rRead-only compatibility boundary | WPS shape",
+                                              "copiedNotesPreserved":  true
+                                          },
+                                          {
+                                              "operation":  "delete",
+                                              "file":  "c5c-delete-copy.pptx",
+                                              "slideCount":  2,
+                                              "firstSlideText":  "WPS images and relationships",
+                                              "copiedNotesPreserved":  null
+                                          },
+                                          {
+                                              "operation":  "reorder",
+                                              "file":  "c5c-reorder-copy.pptx",
+                                              "slideCount":  3,
+                                              "firstSlideText":  "WPS images and relationships",
+                                              "copiedNotesPreserved":  null
+                                          }
+                                      ],
+                          "evidenceDependency":  null
+                      },
+                      {
+                          "id":  "wps-presentation",
+                          "producer":  "WPS Presentation",
+                          "status":  "verified",
+                          "version":  "12.1.0.26895",
+                          "method":  "An isolated KWPP.Application instance opened all four C5C outputs read-only, verified slide counts and order, and confirmed copied notes.",
+                          "outputs":  [
+                                          {
+                                              "operation":  "add",
+                                              "file":  "c5c-add-copy.pptx",
+                                              "slideCount":  4,
+                                              "firstSlideText":  "WPS Presentation Producer Fixture | Structured slide reading\rSearch and precise positioning\rRead-only compatibility boundary | WPS shape",
+                                              "copiedNotesPreserved":  null
+                                          },
+                                          {
+                                              "operation":  "copy",
+                                              "file":  "c5c-copy-copy.pptx",
+                                              "slideCount":  4,
+                                              "firstSlideText":  "WPS Presentation Producer Fixture | Structured slide reading\rSearch and precise positioning\rRead-only compatibility boundary | WPS shape",
+                                              "copiedNotesPreserved":  true
+                                          },
+                                          {
+                                              "operation":  "delete",
+                                              "file":  "c5c-delete-copy.pptx",
+                                              "slideCount":  2,
+                                              "firstSlideText":  "WPS images and relationships",
+                                              "copiedNotesPreserved":  null
+                                          },
+                                          {
+                                              "operation":  "reorder",
+                                              "file":  "c5c-reorder-copy.pptx",
+                                              "slideCount":  3,
+                                              "firstSlideText":  "WPS images and relationships",
+                                              "copiedNotesPreserved":  null
+                                          }
+                                      ],
+                          "evidenceDependency":  null
+                      },
+                      {
+                          "id":  "libreoffice-impress",
+                          "producer":  "LibreOffice Impress",
+                          "status":  "verified",
+                          "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                          "method":  "An isolated headless LibreOffice profile opened and rendered all four C5C outputs; pdfinfo verified each page count.",
+                          "outputs":  [
+                                          {
+                                              "operation":  "add",
+                                              "file":  "c5c-add-copy.pptx",
+                                              "slideCount":  4,
+                                              "renderedPdfBytes":  54886
+                                          },
+                                          {
+                                              "operation":  "copy",
+                                              "file":  "c5c-copy-copy.pptx",
+                                              "slideCount":  4,
+                                              "renderedPdfBytes":  56434
+                                          },
+                                          {
+                                              "operation":  "delete",
+                                              "file":  "c5c-delete-copy.pptx",
+                                              "slideCount":  2,
+                                              "renderedPdfBytes":  49581
+                                          },
+                                          {
+                                              "operation":  "reorder",
+                                              "file":  "c5c-reorder-copy.pptx",
+                                              "slideCount":  3,
+                                              "renderedPdfBytes":  54363
+                                          }
+                                      ],
+                          "evidenceDependency":  null
+                      }
+                  ]
+}
