@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成；E1B 的 ODT 解析、只读工作面、双索引与定位实现完成，LibreOffice 与 Microsoft Word 真实 fixture 已通过，WPS 生产者门禁仍阻断，`.odt` 尚未登记。下一入口只处理 E1B 的 WPS 生产者门禁。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
+> 当前状态：A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成；E1B 的 ODT 解析、只读工作面、双索引与定位实现完成，LibreOffice 与 Microsoft Word 真实 fixture 已通过，WPS 生产者门禁仍阻断，`.odt` 尚未登记。下一入口只处理 E1B 的 WPS 生产者门禁。基础版本剩余 7 个门禁和完整 Excel 等价 X1～X5 计划以 [2026-07-28 开发进度复审与后续计划](./Development_Audit_and_Next_Plan_2026-07-28.md) 为准；详细能力边界见 [当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md)。
 
 ## 1. 指导目标
 
@@ -579,21 +579,20 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 14. `R` 安装包、文件关联、升级、卸载和多机器发布矩阵。
 15. `F` PDF 合并拆分、知识图谱深层语义、XLSX 高级等价与 AI 增强。
 
-当前进度（2026-07-27）：**A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3B3 与 C3C1～C3C3 已完成**。DOCX 输出已通过 Word/WPS/LibreOffice 复开；PPTX 已进入统一可重建索引、支持 Library 内精确定位，并具有文件/幻灯片对象和关系上下文，但仍严格只读；基础桌面门禁为 36 项/28 张证据，C3C2 与 C3C3 专项各为 3 项/2 张证据。
+当前进度（2026-07-28）：**A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成**。E1B 实现完成且生产者门禁为 2/3；基础版本还剩 E1B、E1C、E2A、E2B、E2C、E3、R 共 7 个门禁。
 
 当前 **A3/A3R JSON/JSONC 已收口**：树形视图在精确 AST 范围、重复键、数字精度和 JSONC 保真门禁下开放标量替换、对象键重命名、对象/数组追加和删除；A3R 进一步完成软件内创建、原子无覆盖、首次保存/重开、索引搜索和最近记录真实桌面闭环。
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E、PPTX C3A～C5D、PDF B2A～B2C、A3R、E0 和 E1A 已完成。下一步只执行 **E1B ODT 只读预览与索引**；所有输入先经过 E1A，再接语义阅读与统一管理，不包含写回。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。下一步只执行 **E1B WPS ODT 生产者门禁收口**；解析、只读工作面和索引不重复开发，所有输入继续先经过 E1A，不包含写回。
 
 当前批次的强制退出条件：
 
-1. 图谱构建必须生成 PPTX 文件对象和稳定的幻灯片对象。
-2. 文件到幻灯片必须形成 `contains` 关系，位置标签与搜索定位合同一致。
-3. 当前 PPTX 文件和幻灯片必须复用共享关系侧栏，不创建专属孤岛。
-4. 实时图谱与持久化索引必须保持对象 ID 和关系语义一致。
-5. 真实 PowerPoint/LibreOffice fixture、源字节不变和资源上限必须进入回归。
-6. PPTX 继续在 Library 右侧打开并保持原件只读，不得借关系功能提前增加写回。
+1. WPS ODF 组件来源、版本和安装状态可审计，不接受改后缀或伪 OLE 输出。
+2. WPS 真实 ODT fixture 固定来源与 SHA-256，并通过隐私、资源预算、E1A 包验证和 E1B 语义复读。
+3. WPS 原生复开与 LongEdit 桌面打开、搜索、定位、正常/紧凑和明/暗证据齐全。
+4. Word/WPS/LibreOffice 达到 3/3 后才登记 `.odt` 为 `preview-only`，保持 `write=false`。
+5. 完整 CI 和 GitHub Quality Gate 通过后才进入 E1C。
 
-本阶段对象关系合同和下一收口批次见 [`C3C3_PPTX_Knowledge_Object_Relation_Audit_2026-07-27.md`](./C3C3_PPTX_Knowledge_Object_Relation_Audit_2026-07-27.md)；C3C～发布矩阵总体顺序见 [`Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`](./Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md)。
+本次恢复入口和后续阶段见 [`Development_Audit_and_Next_Plan_2026-07-28.md`](./Development_Audit_and_Next_Plan_2026-07-28.md)；ODT 当前机器事实见 [`shared/odt-read-contract.json`](../shared/odt-read-contract.json)。

@@ -239,7 +239,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 | FR-PDF-008 | P1 | PDF 页面级编辑 | 基础子集已完成 | B0～B2C 已完成旋转、改序、排除、按页范围提取、多文件有序合并、指定位置插页、隔离副本验证、可靠另存、重开和兼容画像；高级正文/表单/签名不在本阶段，失败不破坏源文件 |
 | FR-OFFICE-001 | P1 | DOCX 阅读与基础编辑 | 已完成 | C0～C2E 已完成结构化阅读、索引、受限文本/样式/图片说明编辑、可靠另存和 Word/WPS/LibreOffice 输出复开；完整排版等价不在本阶段 |
 | FR-OFFICE-002 | P1 | PPTX 阅读与基础编辑 | 已完成 | C3A～C5D 已完成安全阅读、知识管理、受限文本/图片/形状/页面生命周期编辑、可靠新副本、外部 3/3 复开及 `basic-edit / copy` 发布矩阵 |
-| FR-OFFICE-003 | P2 | WPS、旧版 Office 与 OpenDocument | 未开始 | `.wps/.et/.dps/.doc/.xls/.ppt/.odt/.ods/.odp` 完成识别、许可/规范审计和分级预览或安全转换，不虚假声明原格式完整编辑 |
+| FR-OFFICE-003 | P2 | WPS、旧版 Office 与 OpenDocument | 进行中 | E0/E1A 已完成；E1B ODT 解析、只读工作面、索引和定位实现完成，Word/LibreOffice 生产者通过，WPS 门禁及 E1C/E2/E3 尚待完成；不虚假声明原格式完整编辑 |
 | FR-MANAGER-001 | P1 | 统一格式能力展示与降级 | 已完成 | schema v2、能力等级、保存模式、最长扩展名路由、Library 文件树/状态栏、右侧工作面标签、最近文件、外部打开和 TXT/JSON/开发格式降级均已接通；新格式继续复用该契约 |
 | FR-THEME-001 | P1 | 扩展主题预设系统 | 已完成 | 唯一注册表驱动设置、命令、编辑器和图表消费者；3 个核心 + 4 个场景预设、持久化、动效、WCAG AA 门禁和 12 张真实 Tauri 三档尺寸证据已建立 |
 | FR-WB-001 | P2 | 专业主页/工作台 | 已完成 | 展示最近、收藏、待办、知识库健康度和常用 Canvas |
@@ -1600,9 +1600,9 @@ S8-7E2E 功能验收完成。下一步进入 S8-7E2F：把单轴和多度量语�
 - 修复 760px 图谱标题竖排、工具栏拥挤、筛选条错位和初始详情遮挡画布；紧凑页头、横向工具栏与窄宽度初始详情策略进入门禁。
 - Debug E2E 模式禁止配置落盘，并支持独立指定 theme、style、code theme 和 motion，避免视觉审计污染用户配置。
 
-T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7E2E 已完成高级数据对象审计与隔离重建矩阵。S8-7E2F 保留为 XLSX 专项回补队列；A0～A5、A3R、G8、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D 已交付，当前实际开发入口为 **E0 WPS/OpenDocument/旧版 Office 格式与转换审计**；最新判定见 `docs/A3R_JSON_JSONC_Creation_Audit_2026-07-28.md`。
+T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7E2E 已完成高级数据对象审计与隔离重建矩阵。S8-7E2F～S8-8 保留为完整 Excel 等价专项主线；A0～A5、A3R、G8、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已交付。E1B 的 ODT 解析、只读工作面、双索引和定位实现完成，Word/LibreOffice 生产者通过，当前实际开发入口为 **E1B WPS ODT 生产者门禁收口**；最新阶段计数见 `docs/Development_Audit_and_Next_Plan_2026-07-28.md`。
 
-后续阶段顺序以 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`、`docs/Unified_File_Manager_Format_Requirements.md` 和 `docs/Next_Development_Execution_Guide.md` 为当前主线：C3C/C3D PPTX 只读收口 → C4 基础编辑 → C5 桌面验收 → WPS/OpenDocument/旧版 Office → 管理和发布矩阵。历史 S8 编号保留用于 XLSX 渐进式兼容追踪。
+后续基础版本顺序以 `docs/Development_Audit_and_Next_Plan_2026-07-28.md` 和 `docs/Next_Development_Execution_Guide.md` 为当前主线：E1B → E1C → E2A → E2B → E2C → E3 → R。基础版本关闭后继续 X1～X5 / S8-7E2F～S8-8 的完整 Excel 等价专项；历史审计继续用于追溯，不再作为恢复入口。
 
 ## 12. 需求变更流程
 
@@ -1636,4 +1636,4 @@ T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7
 - 实际代码和自动化测试负责证明“已经完成”。
 - 每个里程碑结束时更新版本、状态和追踪矩阵。
 
-统一文件管理阶段 A、G8-1/G8-2A/G8-2B 与 **PDF B0/B1A/B1B/B1C 页面基础编辑已完成**。PDF 工作面现可完成旋转、改序、排除、隔离验证、兼容画像、原子无覆盖另存和应用内重开；对象流、页面继承、扫描页和高风险阻断均有回归证据。真实 Tauri 自动化现以 32 项检查和 24 张截图进入 `ci:check`。当前开发入口为 **C0/C1 DOCX 兼容矩阵与只读工作面**，随后推进 DOCX 基础编辑、PPTX、WPS/OpenDocument/旧版 Office；G8-3～G8-5、PDF 合并/拆分/插页和 S8-7E2F 保留为增强或专项回补队列。详细结论见 `docs/B1C_PDF_Compatibility_Closure_Audit_2026-07-27.md`。
+统一文件管理阶段 A、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成。当前开发入口为 **E1B WPS ODT 生产者门禁收口**；基础版本还剩 E1B、E1C、E2A、E2B、E2C、E3、R 七个门禁。完整 Excel 等价仍是长期必达主线，在基础版本 R 后按 X1～X5 / S8-7E2F～S8-8 继续推进。详细结论见 `docs/Development_Audit_and_Next_Plan_2026-07-28.md`。

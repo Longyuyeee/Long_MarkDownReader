@@ -202,7 +202,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 ## 6. 下一阶段顺序
 
-当前权威顺序：**E1B ODT 只读/索引 → E1C ODS/ODP 只读/索引 → E2 外部打开与旧版 Office 隔离转换 → E3 WPS 原生 fixture 门禁 → 统一发布矩阵**。E0/E1A、A3R、PDF B2、DOCX C2 和 PPTX C5 已收口；高风险交换格式继续只生成可靠新副本。
+当前权威顺序：**E1B WPS 生产者门禁 → E1C ODS/ODP 只读/索引 → E2A 外部打开 → E2B DOC 隔离转换 → E2C XLS/PPT 隔离转换 → E3 WPS 原生 fixture/外部打开 → R 统一发布矩阵**。基础版本还剩这 7 个产品门禁；E0/E1A、A3R、PDF B2、DOCX C2 和 PPTX C5 已收口，高风险交换格式继续只生成可靠新副本。最新阶段计数、最初三项需求对齐和 Excel 专业等价 X1～X5 计划见 `docs/Development_Audit_and_Next_Plan_2026-07-28.md`。
 
 以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 
@@ -277,7 +277,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 65. S8-7E2C 已完成：新增 `rebuild_workbook_pivot_isolated_copy`，在同一内存副本同步重建 Cache Definition、Cache Records、Pivot Table 和输出工作表；保持隐藏 items，重建行列项、明细、行列总计和总计。真实 fixture 验证 2×2 可见布局、13 个输出单元格及来源数值 1→10 后总计 4→13；包、对象语义、输出值和未触及部件保真全部通过，用户文件仍不写入。下一步 S8-7E2D 扩展新 sharedItems 与布局扩缩容。
 66. S8-7E2D 已完成：新增 `rebuild_workbook_pivot_expanded_isolated_copy`，根据当前源数据增删共享项并同步 Cache Records、Pivot items、`rowItems/colItems`、`location` 和输出区域；保持既有共享项顺序与隐藏状态，新项默认可见。真实 fixture 覆盖 `A3:D7 → A3:E8` 扩张和 `A3:D7 → A3:C6` 收缩，验证样式延伸、至少 7 个旧单元格清理、总计 6/4、包语义与未触及部件保真，用户文件仍不写入。下一步 S8-7E2E 验证聚合方式与布局变体。
 67. S8-7E2E 已完成：新增 `verify_workbook_pivot_variants_isolated_copy`；`sum/count/average/max/min/product/countNums` 七类聚合各自生成临时 Pivot 包并通过联合重建、包校验、对象语义和输出值复读。真实来源进一步验证单行轴、单列轴及 `sum/count/average` 三度量语义矩阵。界面展示 7 个包级变体和 3 个语义布局，用户文件仍不写入；S8-7E2F 单轴、多度量完整 OOXML 包重写保留为 XLSX 专项回补队列。
-68. T7-1 的主题扩展框架已完成，但当前正式预设仍为 3 套；下一批进入 T8-1 场景化主题预设扩展。F7-2 已交付首个 OPML 新格式编辑器，F8-1 将先审计 SVG/Draw.io 往返能力，再决定下一种专业格式。
+68. T7-1 已建立主题扩展框架；该历史检查点当时有 3 套正式预设，随后 T8-1 已扩展并验收为 3 套核心 + 4 套场景预设。F7-2 已交付首个 OPML 新格式编辑器，后续 JSON/JSONC 与多类文本/配置格式也已进入统一工作面。
 69. T8-1A 已完成：七套发布预设分为 3 个核心 + 4 个场景方案，设置页区分正式与兼容组合，预设可同步动效节奏，注册表新增 WCAG AA 正文对比度和层级数量门禁。下一批 T8-1B 补齐四套场景预设的真实 Tauri 视觉矩阵。
 70. T8-1B 已完成：四套场景预设具备设置页 1440×900、工作台 1024×768、思维导图 760×900 共 12 张真实 Tauri WebView2 证据；修复紧凑图谱页头、工具栏溢出、筛选条和初始详情遮挡，并隔离 E2E 配置写入。
 
