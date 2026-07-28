@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-28T06:17:03.906Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "fixtureLocation": "isolated temporary workspace",
+  "formats": [
+    "json",
+    "jsonc"
+  ],
+  "initialContent": "{}\n",
+  "createdFiles": [
+    "未命名数据.json",
+    "未命名数据 1.json",
+    "未命名配置.jsonc"
+  ],
+  "jsonSha256": "75a00d3814c4a7ccfa80448d6a9d141d5f9b61537d7df4bb41b221da996c9870",
+  "jsoncSha256": "38b3df7d802e135168a9e0e6922ed97a17ad4ef0fe41c13f311b3900ef7b589c",
+  "firstFilePreservedAfterDuplicateCreate": true,
+  "viewportMatrix": [
+    "1280x820",
+    "960x720"
+  ],
+  "checks": [
+    {
+      "id": "unified-create-menu-lists-json-and-jsonc",
+      "status": "passed"
+    },
+    {
+      "id": "minimum-valid-json-template-opens-specialized-workspace",
+      "status": "passed"
+    },
+    {
+      "id": "first-edit-save-and-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "duplicate-name-does-not-overwrite",
+      "status": "passed"
+    },
+    {
+      "id": "jsonc-comment-and-trailing-comma-fidelity",
+      "status": "passed"
+    },
+    {
+      "id": "json-content-search-result",
+      "status": "passed"
+    },
+    {
+      "id": "json-and-jsonc-recent-management",
+      "status": "passed"
+    },
+    {
+      "id": "normal-and-compact-layouts",
+      "status": "passed"
+    }
+  ],
+  "evidenceFiles": [
+    "a3r-create-options-1280.jpg",
+    "a3r-json-saved-tree-1280.jpg",
+    "a3r-json-search-960.jpg",
+    "a3r-json-recent-capability-960.jpg"
+  ]
+}

@@ -229,11 +229,11 @@
       "mimeTypes": ["application/json"],
       "routeName": "JsonEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "planned" },
-      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "普通 JSON 支持源码编辑、实时诊断、草稿恢复、树形预览，以及受保护的标量、键、对象属性和数组项增删改；创建和索引仍在后续批次。" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "普通 JSON 支持软件内创建、源码编辑、实时诊断、草稿恢复、树形预览、文本索引，以及受保护的标量、键、对象属性和数组项增删改。" },
       "externalPolicy": "import",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": null },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".json", "defaultContent": "{}\n", "defaultName": "未命名数据" }
     },
     {
       "id": "log",
@@ -255,11 +255,11 @@
       "mimeTypes": ["application/json", "application/jsonc"],
       "routeName": "JsonEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "planned" },
-      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "JSONC 支持保留注释的源码编辑、实时诊断、草稿恢复、树形预览和受保护的局部结构编辑；歧义注释、重复键和精度风险会阻断结构化写回。" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "JSONC 支持软件内创建、保留注释的源码编辑、实时诊断、草稿恢复、树形预览、文本索引和受保护的局部结构编辑；歧义注释、重复键和精度风险会阻断结构化写回。" },
       "externalPolicy": "import",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": null },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".jsonc", "defaultContent": "{}\n", "defaultName": "未命名配置" }
     },
     {
       "id": "yaml",

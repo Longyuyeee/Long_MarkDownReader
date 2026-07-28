@@ -234,7 +234,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 | FR-INDEX-004 | P1 | 文件类型注册与统一打开路由 | 已完成 | 新格式通过适配器注册，不继续向 LibraryMode 堆充分支 |
 | FR-FORMAT-001 | P1 | 新文件格式编辑器扩展框架 | 已完成 | 每种新格式声明扩展名、能力、路由、权限和索引适配器，并可独立按需加载 |
 | FR-TEXT-001 | P1 | 统一开发文本工作面 | 已完成 | CodeMirror 6 独立工作面、编码/换行策略、签名冲突、大文件范围、最近文件、系统外部打开、自动保存和统一标签均已交付；A5 已完成真实 Tauri 保存重开、冲突、大文件与进程重启验收 |
-| FR-JSON-001 | P1 | 通用 JSON/JSONC 工作面 | 进行中 | A3/A5 已完成源码工具、实时 Rust 校验、有界 JSON Path、树形预览、受门禁结构编辑、可重建索引、可靠保存和真实桌面重开；软件内创建待后续批次 |
+| FR-JSON-001 | P1 | 通用 JSON/JSONC 工作面 | 已完成 | A3/A5/A3R 已完成统一创建、源码工具、实时 Rust 校验、有界 JSON Path、树形预览、受门禁结构编辑、可重建索引、可靠保存、真实桌面重开、搜索和最近记录 |
 | FR-DEV-001 | P2 | 常见代码与工程文件阅读编辑 | 部分完成 | A4 已交付 YAML/XML/TOML、常见配置和代表性代码格式的可靠轻量编辑，`.env` 默认遮罩且不索引，`.log` 提供有界只读、筛选、追尾和轮转；日志显式编辑、代码执行、调试和语言服务不在当前范围 |
 | FR-PDF-008 | P1 | PDF 页面级编辑 | 基础子集已完成 | B0～B2C 已完成旋转、改序、排除、按页范围提取、多文件有序合并、指定位置插页、隔离副本验证、可靠另存、重开和兼容画像；高级正文/表单/签名不在本阶段，失败不破坏源文件 |
 | FR-OFFICE-001 | P1 | DOCX 阅读与基础编辑 | 已完成 | C0～C2E 已完成结构化阅读、索引、受限文本/样式/图片说明编辑、可靠另存和 Word/WPS/LibreOffice 输出复开；完整排版等价不在本阶段 |
@@ -1600,7 +1600,7 @@ S8-7E2E 功能验收完成。下一步进入 S8-7E2F：把单轴和多度量语�
 - 修复 760px 图谱标题竖排、工具栏拥挤、筛选条错位和初始详情遮挡画布；紧凑页头、横向工具栏与窄宽度初始详情策略进入门禁。
 - Debug E2E 模式禁止配置落盘，并支持独立指定 theme、style、code theme 和 motion，避免视觉审计污染用户配置。
 
-T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7E2E 已完成高级数据对象审计与隔离重建矩阵。S8-7E2F 保留为 XLSX 专项回补队列；A0～A5、G8、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D 已交付，当前实际开发入口为 **A3R JSON/JSONC 软件内创建**；最新判定见 `docs/B2C_PDF_Page_Insertion_Audit_2026-07-28.md`。
+T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7E2E 已完成高级数据对象审计与隔离重建矩阵。S8-7E2F 保留为 XLSX 专项回补队列；A0～A5、A3R、G8、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D 已交付，当前实际开发入口为 **E0 WPS/OpenDocument/旧版 Office 格式与转换审计**；最新判定见 `docs/A3R_JSON_JSONC_Creation_Audit_2026-07-28.md`。
 
 后续阶段顺序以 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`、`docs/Unified_File_Manager_Format_Requirements.md` 和 `docs/Next_Development_Execution_Guide.md` 为当前主线：C3C/C3D PPTX 只读收口 → C4 基础编辑 → C5 桌面验收 → WPS/OpenDocument/旧版 Office → 管理和发布矩阵。历史 S8 编号保留用于 XLSX 渐进式兼容追踪。
 

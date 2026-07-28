@@ -9,7 +9,7 @@ use crate::formats::text::{
 };
 use crate::sanitize_filename;
 use crate::services::external_file_access::ExternalFileAccess;
-use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_utf8};
+use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_new_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use std::fs;
 use std::path::Path;
@@ -404,7 +404,7 @@ pub async fn create_format_file(
     };
     let path = guard.resolve_for_write(path)?;
     ensure_matching_format(&path, &format_id)?;
-    write_utf8(&path, &body)?;
+    write_new_bytes(&path, body.as_bytes())?;
     Ok(path.to_string_lossy().into_owned())
 }
 
@@ -486,6 +486,51 @@ mod tests {
         assert!(path.ends_with("未命名配置.yaml"));
         let content = fs::read_to_string(&path).unwrap();
         assert!(crate::formats::yaml::analyze_yaml_source(&content).valid);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn json_templates_are_valid_indexable_and_never_overwrite_existing_files() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-json-create-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let root_string = root.to_string_lossy().into_owned();
+
+        for (format_id, expected_name) in
+            [("json", "未命名数据.json"), ("jsonc", "未命名配置.jsonc")]
+        {
+            let first = tauri::async_runtime::block_on(create_format_file(
+                root_string.clone(),
+                None,
+                format_id.into(),
+                None,
+                None,
+            ))
+            .unwrap();
+            assert_eq!(Path::new(&first).file_name().unwrap(), expected_name);
+            let content = fs::read_to_string(&first).unwrap();
+            assert!(
+                crate::formats::json::analyze_json_source(&content, format_id == "jsonc").valid
+            );
+
+            let second = tauri::async_runtime::block_on(create_format_file(
+                root_string.clone(),
+                None,
+                format_id.into(),
+                None,
+                None,
+            ))
+            .unwrap();
+            assert_ne!(first, second);
+            assert_eq!(fs::read_to_string(&first).unwrap(), content);
+        }
+
         fs::remove_dir_all(root).unwrap();
     }
 

@@ -268,10 +268,17 @@ mod tests {
             let format = file_format_by_id(id).unwrap();
             assert!(format.capabilities.read.is_supported());
             assert_eq!(format.capabilities.edit, CapabilityLevel::Supported);
-            assert_eq!(format.capabilities.create, CapabilityLevel::Planned);
+            assert_eq!(format.capabilities.create, CapabilityLevel::Supported);
+            assert_eq!(format.capabilities.index, CapabilityLevel::Supported);
             assert_eq!(format.route_name, "JsonEditor");
             assert_eq!(format.adapters.reader.as_deref(), Some("text"));
             assert_eq!(format.adapters.writer.as_deref(), Some("text"));
+            assert_eq!(format.adapters.creator.as_deref(), Some("text-template"));
+            assert_eq!(format.adapters.indexer.as_deref(), Some("text"));
+            assert_eq!(
+                format.creation.as_ref().unwrap().default_content.as_deref(),
+                Some("{}\n")
+            );
             assert_eq!(format.user_capability.level, UserCapabilityLevel::BasicEdit);
             assert_eq!(format.user_capability.save_mode, SaveMode::Overwrite);
         }

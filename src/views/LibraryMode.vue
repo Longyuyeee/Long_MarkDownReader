@@ -42,7 +42,7 @@
                 </div>
                 <div class="toolbar-area">
                   <n-dropdown trigger="click" :options="templateOptions" @select="handleTemplateCreate">
-                    <n-button quaternary circle size="small" title="新建笔记或画布">
+                    <n-button data-testid="library-create-menu" quaternary circle size="small" title="新建笔记或画布">
                       <template #icon><n-icon :component="PlusIcon" /></template>
                     </n-button>
                   </n-dropdown>

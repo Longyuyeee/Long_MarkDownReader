@@ -74,8 +74,9 @@ if (!text || text.extensions?.[0] !== '.txt' || !Object.values(text.capabilities
 }
 for (const id of ['json', 'jsonc']) {
   const format = registry.formats?.find(candidate => candidate.id === id)
-  if (!format || format.routeName !== 'JsonEditor' || format.capabilities?.read !== 'supported' || format.capabilities?.edit !== 'supported' || format.capabilities?.create !== 'planned' || format.adapters?.reader !== 'text' || format.adapters?.writer !== 'text' || format.userCapability?.level !== 'basic-edit' || format.userCapability?.saveMode !== 'overwrite') {
-    failures.push(`${id} source-edit contract is incomplete`)
+  const expectedExtension = `.${id}`
+  if (!format || format.routeName !== 'JsonEditor' || !Object.values(format.capabilities || {}).every(level => level === 'supported') || format.adapters?.reader !== 'text' || format.adapters?.writer !== 'text' || format.adapters?.creator !== 'text-template' || format.adapters?.indexer !== 'text' || format.creation?.defaultExtension !== expectedExtension || format.creation?.defaultContent !== '{}\n' || format.userCapability?.level !== 'basic-edit' || format.userCapability?.saveMode !== 'overwrite') {
+    failures.push(`${id} create/edit/index contract is incomplete`)
   }
 }
 const envFormat = registry.formats?.find(format => format.id === 'env')
@@ -288,6 +289,8 @@ requireText(jsonCommands, 'write_registered_text_document', 'A3 JSON saves must 
 requireText(jsonCommands, 'expected_signature', 'A3 JSON saves must retain external conflict protection')
 requireText(jsonCommands, 'generic_text_writer_cannot_bypass_json_validation', 'A3 JSON validation bypass must have regression coverage')
 requireText(jsonCommands, 'transform_json_source', 'A3 JSON formatting must use the dedicated Rust transform command')
+requireText(formatCommands, 'write_new_bytes(&path, body.as_bytes())', 'A3R registered creation must atomically create without overwriting')
+requireText(formatCommands, 'json_templates_are_valid_indexable_and_never_overwrite_existing_files', 'A3R JSON/JSONC creation must have validity and duplicate-name regression coverage')
 requireText(jsonCommands, '"json-scalar-edit-rejected"', 'A3 scalar edits must expose a stable rejection code')
 requireText(jsonCommands, '"json-key-rename-rejected"', 'A3 object key edits must expose a stable rejection code')
 requireText(jsonCommands, '"json-property-append-rejected"', 'A3 object property appends must expose a stable rejection code')

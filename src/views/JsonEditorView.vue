@@ -1,5 +1,5 @@
 <template>
-  <div class="json-workspace">
+  <div class="json-workspace" data-testid="json-workspace">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
 
     <header class="json-toolbar">
@@ -51,7 +51,7 @@
         <n-button quaternary circle size="small" title="重新从磁盘读取" :disabled="loading || saving" @click="reloadFromDisk">
           <template #icon><n-icon :component="RefreshIcon" /></template>
         </n-button>
-        <n-button type="primary" size="small" :disabled="loading || saving || readOnly || !dirty" @click="save()">
+        <n-button data-testid="json-save" type="primary" size="small" :disabled="loading || saving || readOnly || !dirty" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
           {{ saving ? '保存中' : '保存' }}
         </n-button>

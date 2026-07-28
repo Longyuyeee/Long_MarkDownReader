@@ -258,7 +258,7 @@ DOCX/PPTX 必须先完成真实文档兼容矩阵和“只读保真—基础编�
 4. DOCX 已达到结构化阅读、索引、受限基础编辑和可靠另存副本；PPTX 已完成 C3A～C5D 基础阶段并统一为 `basic-edit / copy`。PPTX 多段复杂文本与完整排版、母版、动画、SmartArt、复杂图表，以及 WPS 原生格式、旧版 Office 和 OpenDocument 尚未支持。
 5. 安装包、文件关联、升级/卸载和多机器矩阵仍属于发布专项。
 
-2026-07-28 的权威主线现为：**A3R JSON/JSONC 软件内创建 → WPS/OpenDocument/旧版 Office → 统一发布矩阵**。PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D 已交付；PDF 日常页面操作阶段已收口，下一步进入 A3R。
+2026-07-28 的权威主线现为：**E0 WPS/OpenDocument/旧版 Office 格式与转换审计 → 分级最小闭环 → 统一发布矩阵**。A3R、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D 已交付；JSON/JSONC 已完成软件内创建、保存重开、搜索和最近记录闭环。
 
 后续验收不以“某个高级内核完成”为产品整体完成依据。只有当用户可以在统一管理器中完成常用文件的发现、阅读、基础修改、安全保存、再次查找和关系组织，才视为基础需求闭环。
 
