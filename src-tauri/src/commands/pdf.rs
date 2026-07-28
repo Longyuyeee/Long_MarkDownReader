@@ -440,6 +440,90 @@ fn validate_pdf_page_plan(plan: &[PdfPagePlanItem], source_pages: usize) -> Resu
     Ok(())
 }
 
+fn pdf_page_range_plan(
+    source_pages: usize,
+    selected_pages: &[u32],
+) -> Result<Vec<PdfPagePlanItem>, String> {
+    if source_pages < 2 || source_pages > MAX_PDF_PAGE_PLAN_ITEMS {
+        return Err(format!(
+            "PDF 页数必须在 2～{} 之间才能提取",
+            MAX_PDF_PAGE_PLAN_ITEMS
+        ));
+    }
+    if selected_pages.is_empty() {
+        return Err("提取范围必须至少包含一页".into());
+    }
+    let mut seen = HashSet::new();
+    for page in selected_pages {
+        if *page == 0 || *page as usize > source_pages {
+            return Err(format!("提取页码必须在 1～{} 之间", source_pages));
+        }
+        if !seen.insert(*page) {
+            return Err(format!("提取范围包含重复页码 {}", page));
+        }
+    }
+    if selected_pages.len() == source_pages
+        && selected_pages
+            .iter()
+            .enumerate()
+            .all(|(index, page)| *page as usize == index + 1)
+    {
+        return Err("提取范围必须排除至少一页，完整复制请使用页面整理".into());
+    }
+
+    Ok(selected_pages
+        .iter()
+        .copied()
+        .map(|source_page| PdfPagePlanItem {
+            source_page,
+            rotation: 0,
+            removed: false,
+        })
+        .chain(
+            (1..=source_pages as u32)
+                .filter(|page| !seen.contains(page))
+                .map(|source_page| PdfPagePlanItem {
+                    source_page,
+                    rotation: 0,
+                    removed: true,
+                }),
+        )
+        .collect())
+}
+
+fn pdf_page_range_plan_for_path(
+    pdf_path: &Path,
+    expected_signature: &str,
+    selected_pages: &[u32],
+) -> Result<Vec<PdfPagePlanItem>, String> {
+    let metadata = pdf_path
+        .metadata()
+        .map_err(|error| format!("读取 PDF 元数据失败: {error}"))?;
+    validate_pdf_size(metadata.len())?;
+    if metadata.len() > MAX_PDF_ISOLATED_INPUT_BYTES {
+        return Err("页面提取目前只支持不超过 128 MB 的 PDF".into());
+    }
+    if pdf_signature(&metadata) != expected_signature {
+        return Err("PDF 已被外部修改，请重新打开后再提取页面".into());
+    }
+    let source = fs::read(pdf_path).map_err(|error| format!("读取 PDF 失败: {error}"))?;
+    let document =
+        Document::load_mem(&source).map_err(|error| format!("PDF 结构解析失败: {error}"))?;
+    if document.is_encrypted() {
+        return Ok(Vec::new());
+    }
+    pdf_page_range_plan(document.get_pages().len(), selected_pages)
+}
+
+fn build_pdf_page_range_extract_isolated(
+    pdf_path: &Path,
+    expected_signature: &str,
+    selected_pages: Vec<u32>,
+) -> Result<(PdfIsolatedPagePlanReport, Option<Vec<u8>>), String> {
+    let plan = pdf_page_range_plan_for_path(pdf_path, expected_signature, &selected_pages)?;
+    build_pdf_page_plan_isolated(pdf_path, expected_signature, plan)
+}
+
 fn apply_pdf_page_plan(
     document: &mut Document,
     plan: &[PdfPagePlanItem],
@@ -827,6 +911,23 @@ pub async fn preview_pdf_page_plan_isolated_copy(
 }
 
 #[tauri::command]
+pub async fn preview_pdf_page_range_extract_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    pages: Vec<u32>,
+) -> Result<PdfIsolatedPagePlanReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let pdf_path = guard.resolve_existing_file(path, &["pdf"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        build_pdf_page_range_extract_isolated(&pdf_path, &expected_signature, pages)
+            .map(|(report, _)| report)
+    })
+    .await
+    .map_err(|error| format!("PDF 页面提取预览任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn save_pdf_page_plan_copy(
     library_root: String,
     path: String,
@@ -851,6 +952,34 @@ pub async fn save_pdf_page_plan_copy(
     })
     .await
     .map_err(|error| format!("PDF 可靠另存任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn save_pdf_page_range_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_signature: String,
+    expected_output_digest: String,
+    pages: Vec<u32>,
+) -> Result<PdfSavedPagePlanReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pdf"])?;
+    let target_file_name = validate_pdf_copy_file_name(&target_file_name)?;
+    let target_path =
+        guard.resolve_file_for_write(source_path.with_file_name(target_file_name), &["pdf"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let plan = pdf_page_range_plan_for_path(&source_path, &expected_signature, &pages)?;
+        save_pdf_page_plan_copy_to_path(
+            &source_path,
+            &target_path,
+            &expected_signature,
+            &expected_output_digest,
+            plan,
+        )
+    })
+    .await
+    .map_err(|error| format!("PDF 页面提取可靠另存任务失败: {error}"))?
 }
 
 fn annotation_path(pdf_path: &Path) -> Result<PathBuf, String> {
@@ -1213,6 +1342,66 @@ mod tests {
                 removed: *removed,
             })
             .collect()
+    }
+
+    #[test]
+    fn b2a_page_range_plan_preserves_requested_order_and_rejects_invalid_ranges() {
+        let plan = pdf_page_range_plan(5, &[2, 4, 5]).unwrap();
+        assert_eq!(
+            plan.iter()
+                .map(|item| (item.source_page, item.removed))
+                .collect::<Vec<_>>(),
+            vec![(2, false), (4, false), (5, false), (1, true), (3, true)]
+        );
+        assert!(pdf_page_range_plan(5, &[]).is_err());
+        assert!(pdf_page_range_plan(5, &[2, 2]).is_err());
+        assert!(pdf_page_range_plan(5, &[0]).is_err());
+        assert!(pdf_page_range_plan(5, &[6]).is_err());
+        assert!(pdf_page_range_plan(5, &[1, 2, 3, 4, 5]).is_err());
+    }
+
+    #[test]
+    fn b2a_extracts_selected_pages_to_verified_copy_without_touching_source() {
+        let workspace = TestWorkspace::new();
+        let source = workspace.root.join("source.pdf");
+        let original = write_two_page_pdf(&source);
+        let signature = pdf_signature(&source.metadata().unwrap());
+        let (preview, output) =
+            build_pdf_page_range_extract_isolated(&source, &signature, vec![2]).unwrap();
+        let output = output.expect("verified extraction must produce isolated bytes");
+        assert_eq!(preview.status, "isolated_verified");
+        assert_eq!(preview.source_pages, 2);
+        assert_eq!(preview.output_pages, 1);
+        assert_eq!(preview.removed_pages, 1);
+        assert_eq!(preview.page_mapping[0].source_page, 2);
+        assert!(preview.source_unchanged);
+        assert!(pdf_extract::extract_text_from_mem(&output)
+            .unwrap()
+            .contains("Second Page Beta"));
+
+        let target = workspace.root.join("source-extracted.pdf");
+        let saved = save_pdf_page_plan_copy_to_path(
+            &source,
+            &target,
+            &signature,
+            preview.output_digest.as_deref().unwrap(),
+            pdf_page_range_plan(2, &[2]).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(saved.output_pages, 1);
+        assert!(saved.structural_reopen_verified);
+        assert!(saved.text_reopen_verified);
+        assert!(saved.source_unchanged);
+        assert_eq!(fs::read(&source).unwrap(), original);
+        assert!(save_pdf_page_plan_copy_to_path(
+            &source,
+            &target,
+            &signature,
+            &saved.target_digest,
+            pdf_page_range_plan(2, &[2]).unwrap(),
+        )
+        .unwrap_err()
+        .contains("不会覆盖"));
     }
 
     #[test]

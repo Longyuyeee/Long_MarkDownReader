@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-28T04:31:13.009Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/",
+  "fixtureLocation": "isolated temporary workspace",
+  "sourcePages": 2,
+  "selectedPages": [
+    2
+  ],
+  "outputPages": 1,
+  "sourceOverwriteAllowed": false,
+  "sourceSha256": "95ecbdfed40fdc86f6cc8d22fdacad6f24f417fac74fb173364547fec2771667",
+  "outputSha256": "5fba67afdce21174185987f7f38b828abdf4d2e860e95a3af0996ccb30015447",
+  "outputBytes": 1108,
+  "viewportMatrix": [
+    "1280x820",
+    "960x720"
+  ],
+  "checks": [
+    {
+      "id": "range-expression-applies-one-page-plan",
+      "status": "passed"
+    },
+    {
+      "id": "dedicated-extraction-preview-verified",
+      "status": "passed"
+    },
+    {
+      "id": "atomic-create-new-save",
+      "status": "passed"
+    },
+    {
+      "id": "saved-output-reopens-with-one-page",
+      "status": "passed"
+    },
+    {
+      "id": "normal-and-compact-layouts-without-overflow",
+      "status": "passed"
+    },
+    {
+      "id": "source-pdf-bytes-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "b2a-range-plan-1280.jpg",
+    "b2a-isolated-preview-1280.jpg",
+    "b2a-saved-reopen-960.jpg"
+  ]
+}

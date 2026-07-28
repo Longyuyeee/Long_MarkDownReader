@@ -23,11 +23,11 @@
         <button class="icon-btn" title="缩小" @click="changeScale(-0.1)">−</button>
         <button class="scale-label" title="恢复 100%" @click="setScale(1)">{{ Math.round(scale * 100) }}%</button>
         <button class="icon-btn" title="放大" @click="changeScale(0.1)">＋</button>
-        <button class="fit-btn" :class="{ active: fitWidth }" @click="toggleFitWidth">适合宽度</button>
-        <button class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" title="离线识别扫描页" @click="openOcrPanel">OCR</button>
-        <button class="fit-btn" :class="{ active: sidebarTab === 'organize' }" title="非破坏式页面整理预览" @click="openPageOrganizer">页面整理</button>
-        <button class="fit-btn" :class="{ active: areaMode }" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode">区域批注</button>
-        <button class="fit-btn" :disabled="!annotationWritable" title="为当前页添加评论" @click="createPageComment">页评论</button>
+        <button class="fit-btn" :class="{ active: fitWidth }" title="适合宽度" @click="toggleFitWidth"><Columns3Icon :size="14"/><span class="action-label">适合宽度</span></button>
+        <button class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" title="离线识别扫描页" @click="openOcrPanel"><ScanTextIcon :size="14"/><span class="action-label">OCR</span></button>
+        <button class="fit-btn" :class="{ active: sidebarTab === 'organize' }" title="非破坏式页面整理预览" @click="openPageOrganizer"><ListOrderedIcon :size="14"/><span class="action-label">页面整理</span></button>
+        <button class="fit-btn" :class="{ active: areaMode }" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
+        <button class="fit-btn" :disabled="!annotationWritable" title="为当前页添加评论" @click="createPageComment"><MessageSquareTextIcon :size="14"/><span class="action-label">页评论</span></button>
       </div>
     </header>
 
@@ -77,6 +77,21 @@
               <span>{{ savedCopyNotice.pages }} 页 · {{ formatBytes(savedCopyNotice.bytes) }} · 源文件未修改</span>
             </div>
             <div class="page-plan-heading"><strong>页面整理草稿</strong><span>{{ pagePlanStatus }}</span></div>
+            <div class="page-range-extract" data-testid="b2a-page-range">
+              <label>
+                <span>按范围提取页面</span>
+                <input
+                  v-model="pageRangeInput"
+                  data-testid="b2a-page-range-input"
+                  maxlength="512"
+                  placeholder="例如 1-3,5,8-10"
+                  @keydown.enter.prevent="applyPageRangeExtraction"
+                >
+              </label>
+              <small>保留填写顺序；只生成同目录新 PDF，源文件始终不变。</small>
+              <button data-testid="b2a-page-range-apply" @click="applyPageRangeExtraction">应用提取范围</button>
+              <small v-if="pageRangeError" class="page-range-error">{{ pageRangeError }}</small>
+            </div>
             <p>旋转、排序和排除先在内存中预览；验证通过后只能在源文件同目录创建新副本，不会覆盖任何 PDF。</p>
             <div class="page-plan-history">
               <button :disabled="!pagePlanUndo.length" title="撤销 Ctrl+Z" @click="undoPagePlan">撤销</button>
@@ -84,7 +99,7 @@
               <button :disabled="!pagePlanDirty" @click="resetPagePlan">重置</button>
             </div>
             <button class="page-plan-verify" :disabled="!pagePlanDirty || pagePlanVerifying" @click="verifyPagePlan">
-              {{ pagePlanVerifying ? '正在生成并复读…' : '验证隔离副本' }}
+              {{ pagePlanVerifying ? '正在生成并复读…' : pagePlanMode === 'extract' ? '验证提取副本' : '验证隔离副本' }}
             </button>
             <div
               v-if="pagePlanVerification || pagePlanVerificationError"
@@ -92,7 +107,7 @@
               :class="{ blocked: pagePlanVerification?.status === 'blocked' || pagePlanVerificationError }"
             >
               <template v-if="pagePlanVerification?.status === 'isolated_verified'">
-                <strong>隔离副本验证通过</strong>
+                <strong>{{ pagePlanMode === 'extract' ? '提取副本验证通过' : '隔离副本验证通过' }}</strong>
                 <span>{{ pagePlanVerification.outputPages }} 页 · {{ formatBytes(pagePlanVerification.outputBytes) }} · 源文件未修改</span>
                 <small>结构复读、文本页序与旋转映射均已核验；可靠另存只创建同目录新文件。</small>
                 <small>{{ pdfCompatibilityLabel(pagePlanVerification.compatibility) }}</small>
@@ -102,7 +117,7 @@
                     <input v-model="pagePlanCopyName" maxlength="180" aria-label="PDF 新副本文件名" @keydown.enter.prevent="savePagePlanCopy"/>
                   </label>
                   <button :disabled="pagePlanSaving || !pagePlanCopyName.trim()" @click="savePagePlanCopy">
-                    {{ pagePlanSaving ? '正在落盘并重开…' : '另存新 PDF 并打开' }}
+                    {{ pagePlanSaving ? '正在落盘并重开…' : pagePlanMode === 'extract' ? '提取为新 PDF 并打开' : '另存新 PDF 并打开' }}
                   </button>
                   <small v-if="pagePlanSaveError">{{ pagePlanSaveError }}</small>
                 </div>
@@ -227,6 +242,13 @@ import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist'
 import type { TextContent } from 'pdfjs-dist/types/src/display/api'
+import {
+  Columns3Icon,
+  ListOrderedIcon,
+  MessageSquareTextIcon,
+  ScanLineIcon,
+  ScanTextIcon,
+} from 'lucide-vue-next'
 import PdfPage from '../components/PdfPage.vue'
 import { useAppStore } from '../store/app'
 import { buildPdfPageText, findPdfPageMatches, type PdfSearchMatch } from '../utils/pdfText'
@@ -237,8 +259,10 @@ import { createOfflineOcrWorker } from '../utils/pdfOcr'
 import { TauriPdfRangeTransport, type PdfReadDescriptor } from '../utils/tauriPdfRangeTransport'
 import {
   clonePdfPagePlan,
+  createPdfExtractionPlan,
   createPdfPagePlan,
   movePdfPage,
+  parsePdfPageRange,
   rotatePdfPage,
   setPdfPageRemoved,
   summarizePdfPagePlan,
@@ -349,6 +373,10 @@ const pagePlanCopyName = ref('')
 const pagePlanSaving = ref(false)
 const pagePlanSaveError = ref('')
 const savedCopyNotice = ref<{ path: string; pages: number; bytes: number } | null>(null)
+const pagePlanMode = ref<'organize' | 'extract'>('organize')
+const pageRangeInput = ref('')
+const pageRangePages = ref<number[]>([])
+const pageRangeError = ref('')
 let loadingTask: PDFDocumentLoadingTask | null = null
 let rangeTransport: TauriPdfRangeTransport | null = null
 let loadStartedAt = 0
@@ -407,6 +435,9 @@ const visiblePagePlan = computed(() => pagePlan.value.filter(entry => !entry.rem
 const pagePlanSummary = computed(() => summarizePdfPagePlan(pagePlan.value))
 const pagePlanDirty = computed(() => pagePlanSummary.value.changed > 0)
 const pagePlanStatus = computed(() => {
+  if (pagePlanMode.value === 'extract' && pageRangePages.value.length) {
+    return `提取 ${pageRangePages.value.length}/${pagePlan.value.length} 页`
+  }
   if (!pagePlanDirty.value) return `${pagePlan.value.length} 页 · 尚未调整`
   const parts = [
     pagePlanSummary.value.rotated ? `旋转 ${pagePlanSummary.value.rotated}` : '',
@@ -549,6 +580,10 @@ const initializePagePlan = (pageCount: number) => {
   pagePlanVerificationError.value = ''
   pagePlanCopyName.value = `${fileName.value}-页面整理.pdf`
   pagePlanSaveError.value = ''
+  pagePlanMode.value = 'organize'
+  pageRangeInput.value = pageCount > 1 ? '1' : ''
+  pageRangePages.value = []
+  pageRangeError.value = ''
 }
 
 const openPageOrganizer = () => {
@@ -557,7 +592,11 @@ const openPageOrganizer = () => {
   if (!activePagePlanId.value) activePagePlanId.value = pagePlan.value[0]?.id || ''
 }
 
-const commitPagePlan = (next: PdfPagePlanEntry[], activeId?: string) => {
+const commitPagePlan = (
+  next: PdfPagePlanEntry[],
+  activeId?: string,
+  mode: 'organize' | 'extract' = 'organize',
+) => {
   if (JSON.stringify(next) === JSON.stringify(pagePlan.value)) return
   pagePlanUndo.value = [...pagePlanUndo.value.slice(-59), clonePdfPagePlan(pagePlan.value)]
   pagePlanRedo.value = []
@@ -565,7 +604,23 @@ const commitPagePlan = (next: PdfPagePlanEntry[], activeId?: string) => {
   pagePlanVerification.value = null
   pagePlanVerificationError.value = ''
   pagePlanSaveError.value = ''
+  pagePlanMode.value = mode
+  if (mode === 'organize') pageRangePages.value = []
   if (activeId) activePagePlanId.value = activeId
+}
+
+const applyPageRangeExtraction = () => {
+  if (!pdfDocument.value) return
+  pageRangeError.value = ''
+  try {
+    const pages = parsePdfPageRange(pageRangeInput.value, pdfDocument.value.numPages)
+    const next = createPdfExtractionPlan(pdfDocument.value.numPages, pages)
+    pageRangePages.value = pages
+    pagePlanCopyName.value = `${fileName.value}-页面提取.pdf`
+    commitPagePlan(next, `pdf-source-page-${pages[0]}`, 'extract')
+  } catch (cause) {
+    pageRangeError.value = cause instanceof Error ? cause.message : String(cause)
+  }
 }
 
 const rotatePlanEntry = (id: string, delta: -90 | 90) => {
@@ -591,6 +646,8 @@ const undoPagePlan = () => {
   pagePlanVerification.value = null
   pagePlanVerificationError.value = ''
   pagePlanSaveError.value = ''
+  pagePlanMode.value = 'organize'
+  pageRangePages.value = []
 }
 
 const redoPagePlan = () => {
@@ -602,11 +659,14 @@ const redoPagePlan = () => {
   pagePlanVerification.value = null
   pagePlanVerificationError.value = ''
   pagePlanSaveError.value = ''
+  pagePlanMode.value = 'organize'
+  pageRangePages.value = []
 }
 
 const resetPagePlan = () => {
   if (!pdfDocument.value || !pagePlanDirty.value) return
   commitPagePlan(createPdfPagePlan(pdfDocument.value.numPages), pagePlan.value[0]?.id)
+  pagePlanCopyName.value = `${fileName.value}-页面整理.pdf`
 }
 
 const selectPagePlanEntry = (entry: PdfPagePlanEntry) => {
@@ -626,15 +686,23 @@ const verifyPagePlan = async () => {
   pagePlanVerificationError.value = ''
   pagePlanSaveError.value = ''
   try {
-    pagePlanVerification.value = await invoke<PdfIsolatedPagePlanReport>('preview_pdf_page_plan_isolated_copy', {
+    const command = pagePlanMode.value === 'extract'
+      ? 'preview_pdf_page_range_extract_copy'
+      : 'preview_pdf_page_plan_isolated_copy'
+    const payload = pagePlanMode.value === 'extract'
+      ? { pages: pageRangePages.value }
+      : {
+          plan: pagePlan.value.map(entry => ({
+            sourcePage: entry.sourcePage,
+            rotation: entry.rotation,
+            removed: entry.removed,
+          })),
+        }
+    pagePlanVerification.value = await invoke<PdfIsolatedPagePlanReport>(command, {
       libraryRoot: store.libraryPath,
       path: pdfPath.value,
       expectedSignature: pdfSourceSignature.value,
-      plan: pagePlan.value.map(entry => ({
-        sourcePage: entry.sourcePage,
-        rotation: entry.rotation,
-        removed: entry.removed,
-      })),
+      ...payload,
     })
   } catch (cause) {
     pagePlanVerificationError.value = String(cause).replace(/^Error:\s*/, '')
@@ -666,17 +734,25 @@ const savePagePlanCopy = async () => {
   pagePlanSaving.value = true
   pagePlanSaveError.value = ''
   try {
-    const saved = await invoke<PdfSavedPagePlanReport>('save_pdf_page_plan_copy', {
+    const command = pagePlanMode.value === 'extract'
+      ? 'save_pdf_page_range_copy'
+      : 'save_pdf_page_plan_copy'
+    const payload = pagePlanMode.value === 'extract'
+      ? { pages: pageRangePages.value }
+      : {
+          plan: pagePlan.value.map(entry => ({
+            sourcePage: entry.sourcePage,
+            rotation: entry.rotation,
+            removed: entry.removed,
+          })),
+        }
+    const saved = await invoke<PdfSavedPagePlanReport>(command, {
       libraryRoot: store.libraryPath,
       path: pdfPath.value,
       targetFileName: pagePlanCopyName.value.trim(),
       expectedSignature: pdfSourceSignature.value,
       expectedOutputDigest: verification.outputDigest,
-      plan: pagePlan.value.map(entry => ({
-        sourcePage: entry.sourcePage,
-        rotation: entry.rotation,
-        removed: entry.removed,
-      })),
+      ...payload,
     })
     if (
       saved.status !== 'saved_verified'
@@ -1342,7 +1418,7 @@ onBeforeUnmount(async () => {
 .icon-btn:hover,.icon-btn.active,.fit-btn:hover,.fit-btn.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.4); background: rgba(var(--theme-primary-rgb),.09); }
 .icon-btn:disabled { cursor: default; opacity: .35; }
 .scale-label { min-width: 54px; font-size: 11px; }
-.fit-btn { padding: 0 10px; font-size: 10px; font-weight: 650; }
+.fit-btn { flex: none; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; font-size: 10px; font-weight: 650; }
 .pdf-search { height: 32px; width: 184px; display: flex; align-items: center; gap: 4px; padding: 0 5px 0 9px; box-sizing: border-box; border: 1px solid rgba(0,0,0,.09); border-radius: 7px; color: var(--theme-text-secondary); background: rgba(0,0,0,.025); }
 .pdf-search.active { width: 280px; border-color: rgba(var(--theme-primary-rgb),.35); background: rgba(var(--theme-primary-rgb),.055); }
 .pdf-search input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--theme-text); background: transparent; font-size: 10px; }
@@ -1387,6 +1463,11 @@ onBeforeUnmount(async () => {
 .page-plan-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .page-plan-saved { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; margin-bottom: 8px; padding: 7px; border: 1px solid rgba(43,125,78,.22); border-radius: 7px; color: #2b6f49; background: rgba(43,125,78,.07); }.page-plan-saved strong { font-size: 9px; }.page-plan-saved span { color: inherit; font-size: 8px; }
 .page-plan-summary strong { font-size: 11px; }.page-plan-summary span { color: var(--theme-primary); font-size: 8px; }
+.page-range-extract { display: grid; gap: 5px; margin-top: 8px; padding: 8px 0; border-top: 1px solid rgba(0,0,0,.08); border-bottom: 1px solid rgba(0,0,0,.08); }
+.page-range-extract label { display: grid; gap: 4px; }.page-range-extract label span { color: var(--theme-text); font-size: 9px; font-weight: 650; }
+.page-range-extract input { width: 100%; height: 28px; box-sizing: border-box; padding: 0 7px; border: 1px solid rgba(0,0,0,.12); border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--theme-card); font-size: 9px; }.page-range-extract input:focus { border-color: rgba(var(--theme-primary-rgb),.45); }
+.page-range-extract button { min-height: 28px; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 9px; font-weight: 650; }
+.page-range-extract small { color: var(--theme-text-secondary); font-size: 8px; line-height: 1.4; }.page-range-extract .page-range-error { color: #a03f34; }
 .page-plan-summary p { margin: 7px 0; color: var(--theme-text-secondary); font-size: 8px; line-height: 1.5; }
 .page-plan-history { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
 .page-plan-history button,.page-plan-actions button { min-height: 26px; padding: 3px 6px; border: 1px solid rgba(0,0,0,.1); border-radius: 5px; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; font-size: 8px; }
@@ -1415,6 +1496,6 @@ onBeforeUnmount(async () => {
 .pdf-state.error button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 980px) { .pdf-search { width: 150px; }.pdf-search.active { width: 220px; }.document-title strong { max-width: 160px; } }
+@media (max-width: 980px) { .pdf-search { width: 150px; }.pdf-search.active { width: 220px; }.document-title strong { max-width: 160px; }.toolbar-actions .fit-btn { width: 32px; padding: 0; }.toolbar-actions .fit-btn .action-label { display: none; } }
 @media (max-width: 760px) { .pdf-toolbar { grid-template-columns: 1fr auto; }.toolbar-center { order: 3; grid-column: 1 / -1; justify-content: center; padding-bottom: 7px; }.pdf-sidebar { width: 176px; }.fit-btn,.scale-label { display: none; }.pdf-search { width: 130px; }.pdf-search.active { width: 190px; } }
 </style>

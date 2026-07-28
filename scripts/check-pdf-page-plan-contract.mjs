@@ -36,6 +36,14 @@ assert.deepEqual(plan.summarizePdfPagePlan(removed), {
   removed: 1,
   changed: 4,
 })
+assert.deepEqual(plan.parsePdfPageRange('1-2, 4', 5), [1, 2, 4])
+assert.deepEqual(
+  plan.createPdfExtractionPlan(5, [2, 4]).map(entry => [entry.sourcePage, entry.removed]),
+  [[2, false], [4, false], [1, true], [3, true], [5, true]],
+)
+for (const invalid of ['', '0', '6', '3-1', '1,1', '1,,2', '1-5']) {
+  assert.throws(() => plan.parsePdfPageRange(invalid, 5))
+}
 
 const requireText = (source, text, message) => {
   if (!source.includes(text)) throw new Error(message)
@@ -118,4 +126,22 @@ for (const text of [
   'b1c_encrypted_pdf_and_resource_limits_are_blocked_before_output',
 ]) requireText(pdfCommands, text, `B1C PDF backend compatibility gate missing: ${text}`)
 
-console.log('PDF B0/B1A/B1B/B1C contract passed: immutable planning, isolated verification, atomic no-clobber save, compatibility profiling, scan normalization, stable blockers, and no source overwrite.')
+for (const text of [
+  '按范围提取页面',
+  'parsePdfPageRange',
+  'createPdfExtractionPlan',
+  'preview_pdf_page_range_extract_copy',
+  'save_pdf_page_range_copy',
+  '提取为新 PDF 并打开',
+  '源文件始终不变',
+]) requireText(view, text, `B2A PDF page-range extraction UI contract missing: ${text}`)
+
+for (const text of [
+  'pdf_page_range_plan',
+  'preview_pdf_page_range_extract_copy',
+  'save_pdf_page_range_copy',
+  'b2a_page_range_plan_preserves_requested_order_and_rejects_invalid_ranges',
+  'b2a_extracts_selected_pages_to_verified_copy_without_touching_source',
+]) requireText(pdfCommands, text, `B2A PDF page-range backend contract missing: ${text}`)
+
+console.log('PDF B0-B2A contract passed: immutable planning, isolated verification, atomic no-clobber save, compatibility profiling, stable blockers, page-range extraction, and no source overwrite.')

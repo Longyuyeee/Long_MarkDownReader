@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C5D 已完成；PPTX 已统一为 `basic-edit / copy` 并通过正常/紧凑、明/暗真实桌面发布矩阵。下一开发入口为 B2A PDF 拆分/提取。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B2A、DOCX C0～C2E、PPTX C3A～C5D 已完成；B2A 已通过显式页范围、隔离验证、可靠新文件、应用内重开和源文件不变门禁。下一开发入口为 B2B PDF 合并。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
 
 ## 1. 指导目标
 
@@ -316,7 +316,7 @@ B1A 开发前必须输出写入引擎 ADR：
 按风险从低到高交付：
 
 1. 旋转页面。
-2. 提取页面并另存。
+2. 提取页面并另存（B2A 已完成）。
 3. 页面排序。
 4. 删除页面。
 5. 拆分 PDF。
@@ -584,7 +584,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C5D 已完成结构化阅读、知识管理、受限基础编辑、可靠新副本、三生产者复开和发布收口。下一步执行 **B2A PDF 拆分/提取**，仍只创建新文件，不覆盖源 PDF，也不把页面操作描述为完整 PDF 正文编辑。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 和 PPTX C3A～C5D 已完成；PDF B2A 已完成按范围提取、隔离验证、可靠新文件、应用内重开和源文件不变门禁。下一步执行 **B2B PDF 合并**，仍只创建新文件，不覆盖源 PDF，也不把页面操作描述为完整 PDF 正文编辑。
 
 当前批次的强制退出条件：
 
