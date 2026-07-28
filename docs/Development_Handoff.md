@@ -12,6 +12,7 @@
 > E1A 完整 `ci:check` 通过 Rust 功能测试 `363/363`、性能测试 `1/1`，生产依赖审计为 `0` 漏洞；ODF 仍未进入产品格式注册表。
 
 > E1B 生产者门禁 2/3 检查点完整 `ci:check` 通过 Rust 功能测试 `367/367`、性能测试 `1/1`，生产依赖审计为 `0` 漏洞；LibreOffice 与 Microsoft Word ODT 已通过真实解析和同生产者重开，WPS 单点阻断状态由 `shared/odt-read-contract.json` 固定。
+> 实现提交 `4a2d009` 的 GitHub Quality Gate 已通过：<https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30346127166>。
 
 > A3R 专项真实桌面门禁为 8 项检查和 4 张截图；完整 `ci:check` 通过 Rust 功能测试 `354/354`、性能测试 `1/1`，生产依赖审计为 `0` 漏洞。
 

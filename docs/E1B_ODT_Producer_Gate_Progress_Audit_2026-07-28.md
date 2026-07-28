@@ -51,6 +51,9 @@ Microsoft Word 生产者已从阻断改为通过。当前 E1B 只剩 WPS Writer 
 - 100 MiB PDF 范围基准：`205 ms`，单次请求约 `255.9 KiB`
 - 生产依赖审计：`0` 漏洞
 
+实现提交 `4a2d009` 的 GitHub Quality Gate 已通过：
+<https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30346127166>
+
 ## 下一入口
 
 1. 获取与 WPS Writer `12.1.0.26895` 明确匹配且来源可信的 ODF 组件，或在另一台已具备原生 ODT 能力的 WPS 环境生成 fixture。
