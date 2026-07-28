@@ -2,7 +2,7 @@
 
 > 审计日期：2026-07-28
 > 产品基线：LongEdit `v0.7.0`
-> 代码基线：`22d81eb feat: complete JSON creation workflow` + E0 当前批次
+> 代码基线：`cd5c61d docs: complete office format compatibility audit` + E1A 当前批次
 > 开发分支：`main`
 > GitHub PR：[Longyuyeee/Long_MarkDownReader#7](https://github.com/Longyuyeee/Long_MarkDownReader/pull/7)（已合并）
 > 文档地位：本文件是 2026-07-28 起判断“当前做到了什么、还缺什么、下一步做什么”的权威入口；历史分批审计继续作为证据，不覆盖本文结论。
@@ -13,7 +13,7 @@
 
 > **核心架构与多数高频路径已经可用，项目已进入基础需求收口期；但所有初始需求尚未 100% 对齐，不能宣传为完整 PDF、Office、WPS 或 Excel 等价编辑器。**
 
-`main` 已快进吸收 PR #7 的全部成果。PPTX C5D、PDF B2A/B2B/B2C 和 A3R 已收口；E0 已完成九类 WPS/OpenDocument/旧版 Office 格式的规范、转换器、许可证、安全边界与 fixture 决策，并以机器契约锁定源文件保护策略。下一项唯一开发入口是 E1A OpenDocument 包验证器。
+`main` 已快进吸收 PR #7 的全部成果。PPTX C5D、PDF B2A/B2B/B2C、A3R 和 E0 已收口；E1A 进一步完成 ODT/ODS/ODP 共用包验证器、八项资源预算、五类风险报告和恶意包回归，且未提前登记产品支持。下一项唯一开发入口是 E1B ODT 只读预览与索引。
 
 ### 1.1 对最初需求的总体判断
 
@@ -53,7 +53,7 @@
 | PPTX | 基础编辑完成 | 结构化阅读、真实生产者输入、缩略图/放映、搜索定位、知识关系、文本/样式/替代文本编辑、可靠新副本、单引用 PNG/JPEG 替换、白名单基础形状增删、幻灯片增删/复制/排序、三生产者复开及统一能力展示 | 母版、动画、SmartArt、复杂图表和未知对象继续只读，不宣称完整 PowerPoint 等价 |
 | WPS 原生 `.wps/.et/.dps` | E0 审计完成、实现未开始 | 已固定真实 fixture、外部打开和转换资格门禁；WPS 可作为真实生产者 | 尚无产品识别或预览；公开稳定转换契约未确认，不承诺原生转换/编辑 |
 | 旧版 Office `.doc/.xls/.ppt` | E0 审计完成、实现未开始 | 已固定 OLE CFB 风险边界、外部打开和显式隔离转换路线 | E2 尚未交付；不承诺原生编辑或无损转换 |
-| OpenDocument `.odt/.ods/.odp` | E0 审计完成、E1 待开发 | 已选择 ODF 1.3 原生有界只读路线，固定包验证、预览/索引和 fixture 门禁 | 尚未进入产品注册表；下一批先完成 E1A 包验证器 |
+| OpenDocument `.odt/.ods/.odp` | E1A 包验证完成、产品闭环未开始 | ODF 1.3 首项/MIME/manifest 一致性、八项资源预算、路径/XML 安全和五类风险报告已进入机器门禁 | 尚未进入产品注册表；下一批 E1B 完成 ODT 只读预览、索引和真实生产者闭环 |
 
 ## 3. 可以宣传与不能宣传的能力边界
 
@@ -136,8 +136,8 @@
 
 E0 已完成格式规范、转换器、许可证、包体积、安全边界和真实 fixture 决策。机器事实源为 `shared/office-compatibility-audit.json`，专项结论见 `docs/E0_Office_Format_and_Conversion_Decision_Audit_2026-07-28.md`。后续严格按以下切片推进：
 
-1. **E1A**：`.odt/.ods/.odp` 共用的 ODF 包验证器和风险报告，只建立可信读取边界。
-2. **E1B**：`.odt` 只读语义预览、索引、定位和统一管理闭环。
+1. **E1A（已完成）**：`.odt/.ods/.odp` 共用的 ODF 包验证器和风险报告，只建立可信读取边界。
+2. **E1B（下一批）**：`.odt` 只读语义预览、索引、定位和统一管理闭环。
 3. **E1C**：`.ods/.odp` 结构预览、索引及 LibreOffice/WPS 真实生产者矩阵。
 4. **E2A**：外部应用能力探测与统一外部打开，不依赖固定安装路径。
 5. **E2B/E2C**：先 `.doc`、后 `.xls/.ppt` 的用户确认隔离转换；只生成新副本并验证源摘要不变。
@@ -192,16 +192,17 @@ P1 收口后再排期：
 
 ## 8. 当前立即执行项
 
-下一次开发提交只处理 **E1A OpenDocument 包验证器**：
+下一次开发提交只处理 **E1B ODT 只读预览与索引**：
 
-1. 为 `.odt/.ods/.odp` 建立扩展名、ZIP magic、首项 `mimetype`、根媒体类型和 manifest 一致性校验。
-2. 加入输入大小、条目数、累计解压量、压缩比、路径穿越、重复路径和 XML 深度/实体门禁。
-3. 返回加密、签名、脚本/宏、外部关系和嵌入对象的结构化风险报告，不执行或跟随内容。
-4. 建立最小、损坏、伪装、压缩炸弹、加密和外部关系 fixture；证明源文件不变。
-5. 本批仍不登记 `supported`、不做 UI/索引/写回；E1A 门禁通过后再进入 E1B。
+1. 在 WorkspaceGuard 下读取 `.odt`，所有输入先通过 E1A 包验证器。
+2. 建立标题、段落、列表、基础表格和内部图片的有界语义模型；加密/主动内容稳定降级。
+3. 接入原 Library 右侧阅读工作面、文内搜索、定位、全文索引和最近记录。
+4. 建立 LibreOffice、WPS Writer、Microsoft Word 三生产者真实 ODT fixture 与摘要清单。
+5. 只有真实文件打开、搜索、定位和桌面证据完成后才登记 `.odt` 为只读支持；不做写回。
 
 ## 9. 证据索引
 
+- [E1A OpenDocument 包验证器阶段审计](./E1A_ODF_Package_Verifier_Audit_2026-07-28.md)
 - [E0 WPS、OpenDocument 与旧版 Office 格式/转换决策审计](./E0_Office_Format_and_Conversion_Decision_Audit_2026-07-28.md)
 - [A3R JSON/JSONC 软件内创建阶段审计](./A3R_JSON_JSONC_Creation_Audit_2026-07-28.md)
 - [B2C PDF 插入页面阶段审计](./B2C_PDF_Page_Insertion_Audit_2026-07-28.md)

@@ -1,13 +1,15 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-28
-交接基线：当前开发版本 `v0.7.0`；A3R、A4/A5、G8-1、G8-2A、G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 已完成；下一批为 E1A OpenDocument 包验证器
+交接基线：当前开发版本 `v0.7.0`；A3R、A4/A5、G8-1、G8-2A、G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0、E1A 已完成；下一批为 E1B ODT 只读预览与索引
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 > 当前能力边界、初始需求对齐度和后续收口顺序以 [`Development_Status_and_Closure_Plan_Audit_2026-07-28.md`](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为权威入口。项目已进入基础需求收口期，但尚不能宣称所有初始需求 100% 完成。
 
-> 当前阶段交付证据见 `docs/E0_Office_Format_and_Conversion_Decision_Audit_2026-07-28.md`；E0 已完成九格式规范/容器、转换器、许可证、包体积、安全策略与真实 fixture 计划，并以 `shared/office-compatibility-audit.json` 固定实施顺序。下一批只进入 E1A ODF 包验证器。
+> 当前阶段交付证据见 `docs/E1A_ODF_Package_Verifier_Audit_2026-07-28.md`；E1A 已完成三种 ODF 根类型、八项资源限制、路径/XML 防线、五类风险报告和 9 项专项 Rust 回归，并以 `shared/odf-package-contract.json` 固定未开放产品能力。下一批只进入 E1B ODT 只读预览与索引。
+
+> E1A 完整 `ci:check` 通过 Rust 功能测试 `363/363`、性能测试 `1/1`，生产依赖审计为 `0` 漏洞；ODF 仍未进入产品格式注册表。
 
 > A3R 专项真实桌面门禁为 8 项检查和 4 张截图；完整 `ci:check` 通过 Rust 功能测试 `354/354`、性能测试 `1/1`，生产依赖审计为 `0` 漏洞。
 
@@ -197,7 +199,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 ## 6. 下一阶段顺序
 
-当前权威顺序：**E1A ODF 包验证 → E1B ODT 只读/索引 → E1C ODS/ODP 只读/索引 → E2 外部打开与旧版 Office 隔离转换 → E3 WPS 原生 fixture 门禁 → 统一发布矩阵**。E0、A3R、PDF B2、DOCX C2 和 PPTX C5 已收口；高风险交换格式继续只生成可靠新副本。
+当前权威顺序：**E1B ODT 只读/索引 → E1C ODS/ODP 只读/索引 → E2 外部打开与旧版 Office 隔离转换 → E3 WPS 原生 fixture 门禁 → 统一发布矩阵**。E0/E1A、A3R、PDF B2、DOCX C2 和 PPTX C5 已收口；高风险交换格式继续只生成可靠新副本。
 
 以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 
@@ -278,7 +280,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
-PDF B2A/B2B/B2C 已完成：可按显式页范围提取页面、将 2～16 个 Library PDF 显式排序后合并，也可把另一 PDF 的指定页面插到页前、页后或末尾；复用 B0～B1C 页面计划、兼容画像与安全另存内核，并验证跨输入页序、文本、页面几何、应用内重开、全部源文件不变及复杂/加密输入阻断。A3R 也已完成 JSON/JSONC 软件内创建与管理闭环；E0 已固定九格式决策矩阵，下一批推进 E1A ODF 包验证器。
+PDF B2A/B2B/B2C 已完成：可按显式页范围提取页面、将 2～16 个 Library PDF 显式排序后合并，也可把另一 PDF 的指定页面插到页前、页后或末尾；复用 B0～B1C 页面计划、兼容画像与安全另存内核，并验证跨输入页序、文本、页面几何、应用内重开、全部源文件不变及复杂/加密输入阻断。A3R 也已完成 JSON/JSONC 软件内创建与管理闭环；E0/E1A 已固定九格式路线及 ODF 可信包边界，下一批推进 E1B ODT 只读预览与索引。
 
 ## 7. 已知边界与注意事项
 

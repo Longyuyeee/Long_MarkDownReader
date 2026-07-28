@@ -67,4 +67,4 @@ if (matrix.implementationOrder?.[0] !== 'E1A-odf-package-verifier' || matrix.imp
   fail('implementation order drift')
 }
 
-console.log('E0 Office compatibility audit OK: 9/9 decisions, source-preserving policy locked, next E1A')
+console.log('E0 Office compatibility audit OK: 9/9 decisions, source-preserving policy locked, implementation order starts at E1A')

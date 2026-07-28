@@ -5,6 +5,8 @@ pub mod docx_patch;
 pub mod file_registry;
 pub mod json;
 pub mod markdown;
+#[allow(dead_code)]
+pub mod odf;
 pub mod opml;
 pub mod pdf_annotations;
 pub mod pdf_ocr;

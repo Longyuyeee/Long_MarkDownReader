@@ -1,12 +1,12 @@
 # LongEdit 后续开发步骤与执行指导
 
 > 文档类型：可执行开发指导
-> 版本：1.2
+> 版本：1.3
 > 更新日期：2026-07-28
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D 和 E0 已完成；E0 已固定九格式决策矩阵、转换器/许可证边界、源文件保护策略与真实 fixture 计划。下一开发入口为 E1A OpenDocument 包验证器。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
+> 当前状态：A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成；E1A 已固定 ODF 包一致性、八项资源预算、五类风险报告和未开放产品能力。下一开发入口为 E1B ODT 只读预览与索引。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
 
 ## 1. 指导目标
 
@@ -465,8 +465,8 @@ DOCX 样本覆盖段落、标题、列表、表格、图片、分页、页眉页
 
 E0 格式与转换审计已经完成，后续格式广度按机器矩阵 `shared/office-compatibility-audit.json` 依次推进：
 
-1. E1A：`.odt/.ods/.odp` 共用 ODF 包验证器与风险报告。
-2. E1B：`.odt` 只读阅读、搜索、定位和统一管理闭环。
+1. E1A（已完成）：`.odt/.ods/.odp` 共用 ODF 包验证器与风险报告。
+2. E1B（下一批）：`.odt` 只读阅读、搜索、定位和统一管理闭环。
 3. E1C：`.ods/.odp` 只读结构预览、搜索和真实生产者矩阵。
 4. E2A：外部应用能力发现和统一外部打开。
 5. E2B/E2C：`.doc` 先行，随后 `.xls/.ppt` 的显式隔离转换。
@@ -585,7 +585,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E、PPTX C3A～C5D、PDF B2A～B2C、A3R 和 E0 已完成。下一步只执行 **E1A OpenDocument 包验证器**；先关闭可信容器边界，再进入 ODT 预览/索引，不跨批登记格式支持。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E、PPTX C3A～C5D、PDF B2A～B2C、A3R、E0 和 E1A 已完成。下一步只执行 **E1B ODT 只读预览与索引**；所有输入先经过 E1A，再接语义阅读与统一管理，不包含写回。
 
 当前批次的强制退出条件：
 

@@ -3,7 +3,7 @@
 > 审计日期：2026-07-28
 > 产品基线：LongEdit `v0.7.0`
 > 代码基线：`22d81eb feat: complete JSON creation workflow` + 本批 E0 契约
-> 阶段状态：E0 已完成；下一开发入口为 E1A OpenDocument 包验证器
+> 阶段状态：E0 已完成；E1A 后续已完成，当前开发入口为 E1B ODT 只读预览与索引
 
 ## 1. 结论
 
@@ -93,7 +93,7 @@ LibreOffice 官方参数支持 `--headless`、`--convert-to`、`--outdir` 和隔
 7. **E3**：WPS 原生 fixture 门禁；先交付识别/外部打开，转换须另行通过资格审计。
 8. **R**：统一发布格式矩阵与桌面抽样，关闭基础版本格式广度阻断项。
 
-E1A 是唯一下一开发入口。它只建立可信包边界，不在同一批引入 UI、索引或写回。
+E1A 已在后续批次完成可信包边界，且没有引入 UI、索引或写回。当前唯一入口为 E1B ODT 只读预览与索引，详见 `E1A_ODF_Package_Verifier_Audit_2026-07-28.md`。
 
 ## 7. 规范与官方资料
 

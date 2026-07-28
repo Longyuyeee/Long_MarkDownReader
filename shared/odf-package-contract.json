@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "stage": "E1A",
+  "complete": true,
+  "nextStage": "E1B-odt-read-index",
+  "productExposure": {
+    "registeredAsSupported": false,
+    "commandExposed": false,
+    "uiExposed": false,
+    "indexEnabled": false,
+    "writeEnabled": false
+  },
+  "formats": [
+    {
+      "id": "odt",
+      "extension": ".odt",
+      "rootMime": "application/vnd.oasis.opendocument.text"
+    },
+    {
+      "id": "ods",
+      "extension": ".ods",
+      "rootMime": "application/vnd.oasis.opendocument.spreadsheet"
+    },
+    {
+      "id": "odp",
+      "extension": ".odp",
+      "rootMime": "application/vnd.oasis.opendocument.presentation"
+    }
+  ],
+  "limits": {
+    "fileBytes": 67108864,
+    "entryCount": 4096,
+    "uncompressedBytes": 268435456,
+    "xmlEntryBytes": 16777216,
+    "xmlTotalBytes": 67108864,
+    "compressionRatio": 200,
+    "xmlDepth": 256,
+    "xmlEvents": 1000000
+  },
+  "requiredRejections": [
+    "non-zip",
+    "unknown-expected-extension",
+    "mimetype-not-first",
+    "mimetype-compressed-or-extra-field",
+    "extension-mimetype-mismatch",
+    "manifest-root-mime-mismatch",
+    "missing-manifest-or-content",
+    "unsafe-path",
+    "duplicate-or-case-conflicting-path",
+    "duplicate-manifest-entry",
+    "file-budget",
+    "entry-budget",
+    "uncompressed-budget",
+    "xml-entry-budget",
+    "xml-total-budget",
+    "compression-ratio-budget",
+    "xml-depth-budget",
+    "xml-event-budget",
+    "doctype",
+    "undeclared-entity"
+  ],
+  "riskCodes": [
+    "digital-signature",
+    "embedded-object",
+    "encrypted-content",
+    "external-link",
+    "script-or-macro"
+  ],
+  "fixturePolicy": {
+    "syntheticSecurityFixtures": true,
+    "realProducerFixturesDeferredTo": ["E1B", "E1C"],
+    "sourceBytesMustRemainUnchanged": true,
+    "executeEmbeddedContent": false,
+    "followExternalLinks": false
+  }
+}
