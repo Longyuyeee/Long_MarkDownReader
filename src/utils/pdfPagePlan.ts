@@ -57,6 +57,33 @@ export const parsePdfPageRange = (value: string, pageCount: number): number[] =>
   return pages
 }
 
+export const parsePdfInsertionPageRange = (value: string): number[] => {
+  const source = value.trim()
+  if (!source) throw new Error('请输入要插入的来源页码')
+  if (source.length > 512) throw new Error('页码范围表达式过长')
+
+  const pages: number[] = []
+  const seen = new Set<number>()
+  for (const rawSegment of source.split(',')) {
+    const segment = rawSegment.trim()
+    const match = /^(\d+)(?:\s*-\s*(\d+))?$/.exec(segment)
+    if (!match) throw new Error(`页码范围格式无效：${segment || '空项'}`)
+    const start = Number(match[1])
+    const end = Number(match[2] || match[1])
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 1 || end < 1) {
+      throw new Error('来源页码必须是正整数')
+    }
+    if (start > end) throw new Error(`页码范围必须按升序填写：${segment}`)
+    if (end - start + pages.length >= 20_000) throw new Error('一次最多选择 20,000 个来源页')
+    for (let page = start; page <= end; page += 1) {
+      if (seen.has(page)) throw new Error(`页码重复：${page}`)
+      seen.add(page)
+      pages.push(page)
+    }
+  }
+  return pages
+}
+
 export const createPdfExtractionPlan = (
   pageCount: number,
   selectedPages: number[],

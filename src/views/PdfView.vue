@@ -77,6 +77,90 @@
               <span>{{ savedCopyNotice.pages }} 页 · {{ formatBytes(savedCopyNotice.bytes) }} · 源文件未修改</span>
             </div>
             <div class="page-plan-heading"><strong>页面整理草稿</strong><span>{{ pagePlanStatus }}</span></div>
+            <section class="pdf-insert-panel" data-testid="b2c-pdf-insert">
+              <div class="pdf-merge-heading">
+                <strong>插入其他 PDF 页面</strong>
+                <span v-if="pdfInsertSourcePath">{{ mergeFileName(pdfInsertSourcePath) }}</span>
+              </div>
+              <div class="pdf-merge-add">
+                <input
+                  v-model="pdfInsertPathInput"
+                  data-testid="b2c-pdf-insert-path"
+                  maxlength="1024"
+                  aria-label="插页来源 PDF 路径"
+                  placeholder="输入库内来源 PDF 路径"
+                  @keydown.enter.prevent="setPdfInsertSourcePath"
+                >
+                <button data-testid="b2c-pdf-insert-add" :disabled="pdfInsertAdding || !pdfInsertPathInput.trim()" @click="setPdfInsertSourcePath">使用</button>
+                <button class="pdf-merge-pick" title="选择插页来源 PDF" :disabled="pdfInsertAdding" @click="pickPdfInsertSource">
+                  <FolderOpenIcon :size="14"/>
+                </button>
+              </div>
+              <div v-if="pdfInsertSourcePath" class="pdf-insert-source">
+                <span :title="pdfInsertSourcePath">{{ mergeFileName(pdfInsertSourcePath) }}</span>
+                <button title="移除插页来源" @click="clearPdfInsertSource">×</button>
+              </div>
+              <label class="pdf-insert-range">
+                <span>来源页范围</span>
+                <input
+                  v-model="pdfInsertRangeInput"
+                  data-testid="b2c-pdf-insert-range"
+                  maxlength="512"
+                  placeholder="例如 1-3,5"
+                  @input="invalidatePdfInsertVerification"
+                >
+              </label>
+              <div class="pdf-insert-position">
+                <label>
+                  <span>目标页</span>
+                  <input
+                    v-model.number="pdfInsertAnchorPage"
+                    data-testid="b2c-pdf-insert-anchor"
+                    type="number"
+                    min="1"
+                    :max="pdfDocument?.numPages || 1"
+                    :disabled="pdfInsertPosition === 'end'"
+                    @input="invalidatePdfInsertVerification"
+                  >
+                </label>
+                <div class="pdf-insert-segments" aria-label="插入位置">
+                  <button :class="{ active: pdfInsertPosition === 'before' }" @click="setPdfInsertPosition('before')">页前</button>
+                  <button :class="{ active: pdfInsertPosition === 'after' }" @click="setPdfInsertPosition('after')">页后</button>
+                  <button :class="{ active: pdfInsertPosition === 'end' }" @click="setPdfInsertPosition('end')">末尾</button>
+                </div>
+              </div>
+              <small>保留来源页填写顺序；只创建新文件，当前 PDF 和来源 PDF 均不修改。</small>
+              <small v-if="pdfInsertError" class="pdf-merge-error">{{ pdfInsertError }}</small>
+              <button
+                class="pdf-merge-verify"
+                data-testid="b2c-pdf-insert-verify"
+                :disabled="!pdfInsertSourcePath || !pdfInsertRangeInput.trim() || pdfInsertVerifying"
+                @click="verifyPdfInsert"
+              >
+                {{ pdfInsertVerifying ? '正在隔离插入并复读…' : '验证插页副本' }}
+              </button>
+              <div
+                v-if="pdfInsertVerification"
+                class="pdf-merge-verification"
+                :class="{ blocked: pdfInsertVerification.status === 'blocked' }"
+              >
+                <template v-if="pdfInsertVerification.status === 'isolated_verified'">
+                  <strong>插页副本验证通过</strong>
+                  <span>插入 {{ pdfInsertVerification.sourcePages.length }} 页 · 输出 {{ pdfInsertVerification.outputPages }} 页 · {{ formatBytes(pdfInsertVerification.outputBytes) }}</span>
+                  <small>插入点、页序、尺寸、旋转和文本复读通过；两份源文件未修改。</small>
+                  <div class="pdf-merge-save">
+                    <input v-model="pdfInsertCopyName" maxlength="180" aria-label="PDF 插页文件名" @keydown.enter.prevent="savePdfInsertCopy">
+                    <button :disabled="pdfInsertSaving || !pdfInsertCopyName.trim()" @click="savePdfInsertCopy">
+                      {{ pdfInsertSaving ? '正在落盘并重开…' : '插入为新 PDF 并打开' }}
+                    </button>
+                  </div>
+                </template>
+                <template v-else>
+                  <strong>当前输入不能安全插页</strong>
+                  <span>{{ pdfInsertVerification.blockers.map(pdfInsertBlockerLabel).join(' · ') }}</span>
+                </template>
+              </div>
+            </section>
             <section class="pdf-merge-panel" data-testid="b2b-pdf-merge">
               <div class="pdf-merge-heading">
                 <strong>合并多个 PDF</strong>
@@ -331,6 +415,7 @@ import {
   createPdfExtractionPlan,
   createPdfPagePlan,
   movePdfPage,
+  parsePdfInsertionPageRange,
   parsePdfPageRange,
   rotatePdfPage,
   setPdfPageRemoved,
@@ -422,6 +507,38 @@ interface PdfSavedMergeReport {
   textReopenVerified: boolean
   pageGeometryVerified: boolean
 }
+interface PdfIsolatedInsertReport {
+  status: 'isolated_verified' | 'blocked'
+  engine: string
+  base: PdfIsolatedMergeReport['inputs'][number]
+  source: PdfIsolatedMergeReport['inputs'][number]
+  sourcePages: number[]
+  insertAfterPage: number
+  outputPages: number
+  blockers: string[]
+  outputDigest?: string | null
+  outputBytes: number
+  structuralReparseVerified: boolean
+  textOrderVerified: boolean
+  pageGeometryVerified: boolean
+  sourcesUnchanged: boolean
+  pageMapping: Array<{ outputPage: number; sourceKind: 'base' | 'insert'; sourcePage: number }>
+}
+interface PdfSavedInsertReport {
+  status: 'saved_verified'
+  engine: string
+  targetPath: string
+  targetSignature: string
+  targetDigest: string
+  sourcesUnchanged: boolean
+  insertedPages: number
+  insertAfterPage: number
+  outputPages: number
+  outputBytes: number
+  structuralReopenVerified: boolean
+  textReopenVerified: boolean
+  pageGeometryVerified: boolean
+}
 const POSITION_KEY = 'longedit.pdf.positions.v1'
 const route = useRoute()
 const router = useRouter()
@@ -495,6 +612,18 @@ const pdfMergeVerifying = ref(false)
 const pdfMergeCopyName = ref('')
 const pdfMergeSaving = ref(false)
 const pdfMergeError = ref('')
+const pdfInsertPathInput = ref('')
+const pdfInsertSourcePath = ref('')
+const pdfInsertSourceSignature = ref('')
+const pdfInsertRangeInput = ref('1')
+const pdfInsertAnchorPage = ref(1)
+const pdfInsertPosition = ref<'before' | 'after' | 'end'>('after')
+const pdfInsertAdding = ref(false)
+const pdfInsertVerification = ref<PdfIsolatedInsertReport | null>(null)
+const pdfInsertVerifying = ref(false)
+const pdfInsertCopyName = ref('')
+const pdfInsertSaving = ref(false)
+const pdfInsertError = ref('')
 let loadingTask: PDFDocumentLoadingTask | null = null
 let rangeTransport: TauriPdfRangeTransport | null = null
 let loadStartedAt = 0
@@ -553,7 +682,8 @@ const visiblePagePlan = computed(() => pagePlan.value.filter(entry => !entry.rem
 const pagePlanSummary = computed(() => summarizePdfPagePlan(pagePlan.value))
 const pagePlanDirty = computed(() => pagePlanSummary.value.changed > 0)
 const pdfMergeDirty = computed(() => pdfMergeInputs.value.length > 1)
-const pdfWorkspaceDirty = computed(() => pagePlanDirty.value || pdfMergeDirty.value)
+const pdfInsertDirty = computed(() => Boolean(pdfInsertSourcePath.value))
+const pdfWorkspaceDirty = computed(() => pagePlanDirty.value || pdfMergeDirty.value || pdfInsertDirty.value)
 const pagePlanStatus = computed(() => {
   if (pagePlanMode.value === 'extract' && pageRangePages.value.length) {
     return `提取 ${pageRangePages.value.length}/${pagePlan.value.length} 页`
@@ -581,6 +711,11 @@ const pdfPlanBlockerLabel = (blocker: string) => pdfPlanBlockerLabels[blocker] |
 const pdfMergeBlockerLabel = (blocker: string) => {
   const match = /^input_(\d+):(.+)$/.exec(blocker)
   return match ? `输入 ${match[1]}：${pdfPlanBlockerLabel(match[2])}` : pdfPlanBlockerLabel(blocker)
+}
+const pdfInsertBlockerLabel = (blocker: string) => {
+  const match = /^(base|source):(.+)$/.exec(blocker)
+  if (!match) return pdfPlanBlockerLabel(blocker)
+  return `${match[1] === 'base' ? '当前文件' : '来源文件'}：${pdfPlanBlockerLabel(match[2])}`
 }
 const formatBytes = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
 const sortedOcrPages = computed(() => [...(ocrDocument.value?.pages || [])].sort((a, b) => a.page - b.page))
@@ -696,6 +831,151 @@ const openOcrPanel = () => {
 }
 
 const mergeFileName = (path: string) => path.split(/[\\/]/).pop() || path
+
+const invalidatePdfInsertVerification = () => {
+  pdfInsertVerification.value = null
+  pdfInsertError.value = ''
+}
+
+const addPdfInsertSourcePath = async (path: string) => {
+  const candidate = path.trim()
+  if (!candidate) return
+  const normalized = candidate.replace(/\\/g, '/').toLocaleLowerCase()
+  const current = pdfPath.value.replace(/\\/g, '/').toLocaleLowerCase()
+  if (normalized === current) throw new Error('插页来源必须是另一份 PDF')
+  const descriptor = await invoke<PdfReadDescriptor>('read_pdf_info', {
+    libraryRoot: store.libraryPath,
+    path: candidate,
+  })
+  pdfInsertSourcePath.value = candidate
+  pdfInsertSourceSignature.value = descriptor.signature
+  pdfInsertPathInput.value = ''
+  pdfInsertRangeInput.value = '1'
+  invalidatePdfInsertVerification()
+}
+
+const setPdfInsertSourcePath = async () => {
+  if (pdfInsertAdding.value || !pdfInsertPathInput.value.trim()) return
+  pdfInsertAdding.value = true
+  pdfInsertError.value = ''
+  try {
+    await addPdfInsertSourcePath(pdfInsertPathInput.value)
+  } catch (cause) {
+    pdfInsertError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfInsertAdding.value = false
+  }
+}
+
+const pickPdfInsertSource = async () => {
+  if (pdfInsertAdding.value) return
+  pdfInsertAdding.value = true
+  pdfInsertError.value = ''
+  try {
+    const { open } = await import('@tauri-apps/plugin-dialog')
+    const selected = await open({
+      title: '选择插页来源 PDF',
+      multiple: false,
+      directory: false,
+      filters: [{ name: 'PDF 文档', extensions: ['pdf'] }],
+    })
+    if (selected && !Array.isArray(selected)) await addPdfInsertSourcePath(selected)
+  } catch (cause) {
+    pdfInsertError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfInsertAdding.value = false
+  }
+}
+
+const clearPdfInsertSource = () => {
+  pdfInsertSourcePath.value = ''
+  pdfInsertSourceSignature.value = ''
+  pdfInsertPathInput.value = ''
+  pdfInsertVerification.value = null
+  pdfInsertError.value = ''
+}
+
+const setPdfInsertPosition = (position: 'before' | 'after' | 'end') => {
+  pdfInsertPosition.value = position
+  invalidatePdfInsertVerification()
+}
+
+const pdfInsertBoundary = () => {
+  const pages = pdfDocument.value?.numPages || 0
+  if (pdfInsertPosition.value === 'end') return pages
+  const anchor = Number(pdfInsertAnchorPage.value)
+  if (!Number.isInteger(anchor) || anchor < 1 || anchor > pages) {
+    throw new Error(`目标页必须在 1-${pages} 之间`)
+  }
+  return pdfInsertPosition.value === 'before' ? anchor - 1 : anchor
+}
+
+const verifyPdfInsert = async () => {
+  if (!pdfInsertSourcePath.value || !pdfInsertSourceSignature.value || pdfInsertVerifying.value) return
+  pdfInsertVerifying.value = true
+  pdfInsertVerification.value = null
+  pdfInsertError.value = ''
+  try {
+    const sourcePages = parsePdfInsertionPageRange(pdfInsertRangeInput.value)
+    pdfInsertVerification.value = await invoke<PdfIsolatedInsertReport>('preview_pdf_insert_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      expectedSignature: pdfSourceSignature.value,
+      sourcePath: pdfInsertSourcePath.value,
+      sourceExpectedSignature: pdfInsertSourceSignature.value,
+      sourcePages,
+      insertAfterPage: pdfInsertBoundary(),
+    })
+  } catch (cause) {
+    pdfInsertError.value = cause instanceof Error ? cause.message : String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfInsertVerifying.value = false
+  }
+}
+
+const savePdfInsertCopy = async () => {
+  const verification = pdfInsertVerification.value
+  if (
+    verification?.status !== 'isolated_verified'
+    || !verification.outputDigest
+    || !pdfInsertCopyName.value.trim()
+    || pdfInsertSaving.value
+  ) return
+  pdfInsertSaving.value = true
+  pdfInsertError.value = ''
+  try {
+    const saved = await invoke<PdfSavedInsertReport>('save_pdf_insert_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      targetFileName: pdfInsertCopyName.value.trim(),
+      expectedSignature: pdfSourceSignature.value,
+      expectedOutputDigest: verification.outputDigest,
+      sourcePath: pdfInsertSourcePath.value,
+      sourceExpectedSignature: pdfInsertSourceSignature.value,
+      sourcePages: verification.sourcePages,
+      insertAfterPage: verification.insertAfterPage,
+    })
+    if (
+      saved.status !== 'saved_verified'
+      || !saved.sourcesUnchanged
+      || !saved.structuralReopenVerified
+      || !saved.textReopenVerified
+      || !saved.pageGeometryVerified
+    ) throw new Error('插页保存结果未通过完整复读')
+    savedCopyNotice.value = {
+      path: saved.targetPath,
+      pages: saved.outputPages,
+      bytes: saved.outputBytes,
+    }
+    clearPdfInsertSource()
+    message.success(`已可靠插入并验证：${pdfInsertCopyName.value.trim()}`)
+    await router.replace({ path: '/pdf', query: { path: saved.targetPath } })
+  } catch (cause) {
+    pdfInsertError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfInsertSaving.value = false
+  }
+}
 
 const initializePdfMergeInputs = (signature: string) => {
   pdfMergeInputs.value = pdfPath.value && signature
@@ -1490,6 +1770,15 @@ const loadPdf = async () => {
   pdfMergeVerification.value = null
   pdfMergeCopyName.value = ''
   pdfMergeError.value = ''
+  pdfInsertPathInput.value = ''
+  pdfInsertSourcePath.value = ''
+  pdfInsertSourceSignature.value = ''
+  pdfInsertRangeInput.value = '1'
+  pdfInsertAnchorPage.value = 1
+  pdfInsertPosition.value = 'after'
+  pdfInsertVerification.value = null
+  pdfInsertCopyName.value = ''
+  pdfInsertError.value = ''
   dismissSelectionTool()
   clearTextState()
   await loadingTask?.destroy()
@@ -1553,6 +1842,8 @@ const loadPdf = async () => {
     const restored = Math.max(1, Math.min(document.numPages, requestedPage() || readPositions()[positionId()] || 1))
     currentPage.value = restored
     pageInput.value = restored
+    pdfInsertAnchorPage.value = restored
+    pdfInsertCopyName.value = `${fileName.value}-插页.pdf`
     loading.value = false
     await nextTick()
     if (fitWidth.value) applyFitWidth()
@@ -1737,10 +2028,13 @@ onBeforeUnmount(async () => {
 .page-plan-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .page-plan-saved { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; margin-bottom: 8px; padding: 7px; border: 1px solid rgba(43,125,78,.22); border-radius: 7px; color: #2b6f49; background: rgba(43,125,78,.07); }.page-plan-saved strong { font-size: 9px; }.page-plan-saved span { color: inherit; font-size: 8px; }
 .page-plan-summary strong { font-size: 11px; }.page-plan-summary span { color: var(--theme-primary); font-size: 8px; }
-.pdf-merge-panel { display: grid; gap: 6px; margin-top: 8px; padding: 8px 0; border-top: 1px solid rgba(0,0,0,.08); border-bottom: 1px solid rgba(0,0,0,.08); }
+.pdf-merge-panel,.pdf-insert-panel { display: grid; gap: 6px; margin-top: 8px; padding: 8px 0; border-top: 1px solid rgba(0,0,0,.08); border-bottom: 1px solid rgba(0,0,0,.08); }
 .pdf-merge-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.pdf-merge-heading strong { color: var(--theme-text); font-size: 9px; }.pdf-merge-heading span { color: var(--theme-text-secondary); font-size: 8px; }
 .pdf-merge-add { display: grid; grid-template-columns: minmax(0,1fr) auto 30px; gap: 4px; }.pdf-merge-add input { min-width: 0; height: 28px; box-sizing: border-box; padding: 0 7px; border: 1px solid rgba(0,0,0,.12); border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--theme-card); font-size: 8px; }.pdf-merge-add input:focus { border-color: rgba(var(--theme-primary-rgb),.45); }.pdf-merge-add button { height: 28px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.25); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font-size: 8px; font-weight: 650; }.pdf-merge-add button:disabled { cursor: default; opacity: .4; }.pdf-merge-add .pdf-merge-pick { display: grid; width: 30px; padding: 0; place-items: center; }
-.pdf-merge-panel > small { color: var(--theme-text-secondary); font-size: 8px; line-height: 1.4; }.pdf-merge-panel > .pdf-merge-error { color: #a03f34; }
+.pdf-merge-panel > small,.pdf-insert-panel > small { color: var(--theme-text-secondary); font-size: 8px; line-height: 1.4; }.pdf-merge-error { color: #a03f34 !important; }
+.pdf-insert-source { display: grid; grid-template-columns: minmax(0,1fr) 24px; align-items: center; gap: 4px; min-height: 27px; padding-left: 7px; border-left: 2px solid var(--theme-primary); background: rgba(0,0,0,.025); }.pdf-insert-source span { overflow: hidden; color: var(--theme-text); text-overflow: ellipsis; white-space: nowrap; }.pdf-insert-source button { width: 21px; height: 21px; padding: 0; border: 1px solid rgba(0,0,0,.08); border-radius: 4px; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; }
+.pdf-insert-range { display: grid; gap: 4px; }.pdf-insert-range span,.pdf-insert-position label span { color: var(--theme-text); font-size: 8px; font-weight: 650; }.pdf-insert-range input,.pdf-insert-position input { width: 100%; height: 27px; box-sizing: border-box; padding: 0 7px; border: 1px solid rgba(0,0,0,.12); border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--theme-card); font-size: 8px; }.pdf-insert-range input:focus,.pdf-insert-position input:focus { border-color: rgba(var(--theme-primary-rgb),.45); }
+.pdf-insert-position { display: grid; grid-template-columns: 62px minmax(0,1fr); align-items: end; gap: 5px; }.pdf-insert-position label { display: grid; gap: 4px; }.pdf-insert-segments { display: grid; grid-template-columns: repeat(3,1fr); height: 27px; }.pdf-insert-segments button { min-width: 0; padding: 0 4px; border: 1px solid rgba(0,0,0,.11); border-right-width: 0; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; font-size: 8px; }.pdf-insert-segments button:first-child { border-radius: 5px 0 0 5px; }.pdf-insert-segments button:last-child { border-right-width: 1px; border-radius: 0 5px 5px 0; }.pdf-insert-segments button.active { color: #fff; border-color: var(--theme-primary); background: var(--theme-primary); }
 .pdf-merge-list { display: grid; gap: 3px; max-height: 128px; overflow: auto; }.pdf-merge-list article { display: grid; grid-template-columns: 18px minmax(0,1fr) auto auto; align-items: center; gap: 4px; min-height: 28px; padding: 0 4px; border-left: 2px solid transparent; background: rgba(0,0,0,.025); }.pdf-merge-list article.current { border-left-color: var(--theme-primary); }.pdf-merge-order { color: var(--theme-text-secondary); font-size: 8px; text-align: center; }.pdf-merge-name { overflow: hidden; color: var(--theme-text); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }.pdf-merge-current { color: var(--theme-primary); font-size: 7px; font-weight: 650; }
 .pdf-merge-actions { display: flex; gap: 2px; }.pdf-merge-actions button { width: 21px; height: 21px; padding: 0; border: 1px solid rgba(0,0,0,.08); border-radius: 4px; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; font-size: 10px; }.pdf-merge-actions button:disabled { cursor: default; opacity: .28; }
 .pdf-merge-verify { min-height: 29px; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 9px; font-weight: 650; }.pdf-merge-verify:disabled { cursor: default; opacity: .4; }

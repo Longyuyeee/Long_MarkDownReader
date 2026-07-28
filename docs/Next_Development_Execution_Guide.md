@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B2B、DOCX C0～C2E、PPTX C3A～C5D 已完成；B2B 已通过多输入显式排序、隔离合并、可靠新文件、应用内重开和全部源文件不变门禁。下一开发入口为 B2C PDF 插入页面。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D 已完成；B2C 已通过来源页范围、明确插入边界、隔离验证、可靠新文件、应用内重开和两份源文件不变门禁，PDF B2 日常页面操作阶段收口。下一开发入口为 A3R JSON/JSONC 软件内创建。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
 
 ## 1. 指导目标
 
@@ -321,7 +321,7 @@ B1A 开发前必须输出写入引擎 ADR：
 4. 删除页面。
 5. 拆分 PDF。
 6. 合并 PDF（B2B 已完成）。
-7. 插入其他 PDF 页面。
+7. 插入其他 PDF 页面（B2C 已完成）。
 
 每个操作都要覆盖撤销计划、另存、覆盖冲突、重开和索引刷新。
 
@@ -584,7 +584,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 和 PPTX C3A～C5D 已完成；PDF B2A/B2B 已完成按范围提取、多文件有序合并、隔离验证、可靠新文件、应用内重开和全部源文件不变门禁。下一步执行 **B2C PDF 插入页面**，仍只创建新文件，不覆盖源 PDF，也不把页面操作描述为完整 PDF 正文编辑。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E、PPTX C3A～C5D 和 PDF B2A～B2C 已完成；PDF 已通过按范围提取、多文件有序合并、指定位置插页、隔离验证、可靠新文件、应用内重开和全部源文件不变门禁。下一步执行 **A3R JSON/JSONC 软件内创建**；PDF 页面操作仍只创建新文件，不把它描述为完整 PDF 正文编辑。
 
 当前批次的强制退出条件：
 

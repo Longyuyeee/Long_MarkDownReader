@@ -167,4 +167,24 @@ for (const text of [
   'b2b_rejects_duplicate_stale_and_encrypted_merge_inputs',
 ]) requireText(pdfCommands, text, `B2B PDF merge backend contract missing: ${text}`)
 
-console.log('PDF B0-B2B contract passed: immutable planning, isolated verification, atomic no-clobber save, compatibility profiling, page-range extraction, ordered multi-file merge, and source safety.')
+for (const text of [
+  '插入其他 PDF 页面',
+  'parsePdfInsertionPageRange',
+  'preview_pdf_insert_isolated_copy',
+  'save_pdf_insert_copy',
+  '插入为新 PDF 并打开',
+  '两份源文件未修改',
+]) requireText(view, text, `B2C PDF insert UI contract missing: ${text}`)
+
+for (const text of [
+  'validate_pdf_insert_plan',
+  'compose_pdf_documents',
+  'build_pdf_insert_isolated',
+  'preview_pdf_insert_isolated_copy',
+  'save_pdf_insert_copy',
+  '可靠插页禁止覆盖当前或来源 PDF',
+  'b2c_inserts_selected_source_pages_at_verified_boundary_without_touching_sources',
+  'b2c_rejects_invalid_changed_and_encrypted_insert_sources',
+]) requireText(pdfCommands, text, `B2C PDF insert backend contract missing: ${text}`)
+
+console.log('PDF B0-B2C contract passed: immutable planning, isolated verification, atomic no-clobber save, compatibility profiling, page-range extraction, ordered merge, positioned page insertion, and source safety.')
