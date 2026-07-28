@@ -10,10 +10,10 @@
     {
       "id": "microsoft-word-16",
       "producer": "Microsoft Word",
-      "status": "blocked",
-      "manifest": null,
-      "fixture": null,
-      "blocker": "word-odt-save-filter-timeout"
+      "status": "verified",
+      "manifest": "microsoft-word-16.json",
+      "fixture": "microsoft-word-16.odt",
+      "blocker": null
     },
     {
       "id": "wps-writer",

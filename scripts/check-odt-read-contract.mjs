@@ -75,11 +75,19 @@ for (const id of required) {
   const manifest = JSON.parse(read(`fixtures/odt/producers/${producer.manifest}`))
   const bytes = fs.readFileSync(fixturePath)
   const digest = crypto.createHash('sha256').update(bytes).digest('hex')
-  if (manifest.sha256 !== digest || manifest.size !== bytes.length
+  if (manifest.schemaVersion !== 1 || manifest.stage !== 'E1B' || manifest.id !== id
+    || manifest.file !== producer.fixture || manifest.sourceFixture !== `${id}.docx`
+    || typeof manifest.expectedText !== 'string' || !manifest.expectedText
+    || manifest.sha256 !== digest || manifest.size !== bytes.length
     || !manifest.nativeOdtSave || !manifest.sameProducerReopenVerified || !manifest.privacySanitized) {
     fail(`verified producer manifest drift: ${id}`)
   }
   if (bytes[0] !== 0x50 || bytes[1] !== 0x4b) fail(`verified producer is not ZIP: ${id}`)
+  if (!bytes.includes(Buffer.from('application/vnd.oasis.opendocument.text'))) {
+    fail(`verified producer ODT mimetype missing: ${id}`)
+  }
 }
 
-console.log('E1B ODT checkpoint OK: implementation complete, LibreOffice fixture verified, Word/WPS producer gate blocked, product exposure disabled')
+const verifiedCount = matrix.producers.filter(producer => producer.status === 'verified').length
+const blockedIds = matrix.producers.filter(producer => producer.status === 'blocked').map(producer => producer.id)
+console.log(`E1B ODT checkpoint OK: implementation complete, ${verifiedCount}/${required.length} producer fixtures verified, blocked: ${blockedIds.join(', ') || 'none'}, product exposure disabled`)

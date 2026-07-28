@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成；E1B 的 ODT 解析、只读工作面、双索引与定位实现完成，LibreOffice 真实 fixture 通过，但 Word/WPS 生产者门禁未收口，`.odt` 尚未登记。下一入口只处理 E1B 生产者门禁。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
+> 当前状态：A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成；E1B 的 ODT 解析、只读工作面、双索引与定位实现完成，LibreOffice 与 Microsoft Word 真实 fixture 已通过，WPS 生产者门禁仍阻断，`.odt` 尚未登记。下一入口只处理 E1B 的 WPS 生产者门禁。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
 
 ## 1. 指导目标
 
@@ -466,7 +466,7 @@ DOCX 样本覆盖段落、标题、列表、表格、图片、分页、页眉页
 E0 格式与转换审计已经完成，后续格式广度按机器矩阵 `shared/office-compatibility-audit.json` 依次推进：
 
 1. E1A（已完成）：`.odt/.ods/.odp` 共用 ODF 包验证器与风险报告。
-2. E1B（实现完成，门禁未收口）：下一批修复 Word ODT 导出过滤器、安装 WPS ODF add-in，补齐两套真实 fixture 与桌面证据后才登记产品支持。
+2. E1B（实现完成，门禁 2/3）：Word/LibreOffice ODT 真实 fixture 已通过；下一批只获取可信且匹配当前版本的 WPS ODF 组件，补齐 WPS fixture 与桌面证据后才登记产品支持。
 3. E1C：`.ods/.odp` 只读结构预览、搜索和真实生产者矩阵。
 4. E2A：外部应用能力发现和统一外部打开。
 5. E2B/E2C：`.doc` 先行，随后 `.xls/.ppt` 的显式隔离转换。

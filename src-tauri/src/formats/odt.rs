@@ -621,4 +621,23 @@ mod tests {
             .as_deref()
             .is_some_and(|value| value.contains("LibreOffice")));
     }
+
+    #[test]
+    fn parses_real_microsoft_word_producer_fixture() {
+        let model = parse_odt(include_bytes!(
+            "../../../fixtures/odt/producers/microsoft-word-16.odt"
+        ))
+        .unwrap();
+        assert!(model.plain_text.contains("Microsoft Word Producer Fixture"));
+        assert!(!model.headings.is_empty());
+        assert!(model.blocks.iter().any(|block| block.kind == "table"));
+        assert!(model
+            .blocks
+            .iter()
+            .any(|block| !block.image_parts.is_empty()));
+        assert!(model
+            .generator
+            .as_deref()
+            .is_some_and(|value| value.contains("MicrosoftWord")));
+    }
 }
