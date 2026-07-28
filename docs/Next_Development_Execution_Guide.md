@@ -1,12 +1,12 @@
 # LongEdit 后续开发步骤与执行指导
 
 > 文档类型：可执行开发指导
-> 版本：1.1
+> 版本：1.2
 > 更新日期：2026-07-28
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D 已完成；A3R 已通过统一新建、最小合法模板、原子无覆盖、保存重开、索引搜索和最近记录门禁。下一开发入口为 E0 WPS/OpenDocument/旧版 Office 格式与转换审计。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
+> 当前状态：A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D 和 E0 已完成；E0 已固定九格式决策矩阵、转换器/许可证边界、源文件保护策略与真实 fixture 计划。下一开发入口为 E1A OpenDocument 包验证器。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
 
 ## 1. 指导目标
 
@@ -463,14 +463,15 @@ DOCX 样本覆盖段落、标题、列表、表格、图片、分页、页眉页
 
 ## 8. 阶段 E：格式广度
 
-在 A～D 的 P1 闭环稳定后依次推进：
+E0 格式与转换审计已经完成，后续格式广度按机器矩阵 `shared/office-compatibility-audit.json` 依次推进：
 
-1. SVG 预览与基础编辑。
-2. Draw.io 许可、嵌入和往返审计。
-3. `.odt/.ods/.odp` 阅读与搜索。
-4. `.wps/.et/.dps` 识别、预览或安全转换。
-5. `.doc/.xls/.ppt` 外部打开和显式转换。
-6. 更广泛的代码格式语法高亮与符号大纲。
+1. E1A：`.odt/.ods/.odp` 共用 ODF 包验证器与风险报告。
+2. E1B：`.odt` 只读阅读、搜索、定位和统一管理闭环。
+3. E1C：`.ods/.odp` 只读结构预览、搜索和真实生产者矩阵。
+4. E2A：外部应用能力发现和统一外部打开。
+5. E2B/E2C：`.doc` 先行，随后 `.xls/.ppt` 的显式隔离转换。
+6. E3：`.wps/.et/.dps` 真实 fixture、识别与外部打开；转换资格单独验收。
+7. R 之后再排 SVG 基础编辑、Draw.io 往返和更广泛代码符号大纲，不挤占当前 P1 格式闭环。
 
 每个格式仍执行同一垂直切片，不允许一次性只添加扩展名白名单。
 
@@ -584,7 +585,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E、PPTX C3A～C5D、PDF B2A～B2C 和 A3R 已完成。下一步执行 **E0 WPS/OpenDocument/旧版 Office 格式与转换审计**；先形成规范、许可、转换器与安全决策矩阵，再选择最小实现切片。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E、PPTX C3A～C5D、PDF B2A～B2C、A3R 和 E0 已完成。下一步只执行 **E1A OpenDocument 包验证器**；先关闭可信容器边界，再进入 ODT 预览/索引，不跨批登记格式支持。
 
 当前批次的强制退出条件：
 

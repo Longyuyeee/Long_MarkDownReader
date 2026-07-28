@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "stage": "E0",
+  "auditedAt": "2026-07-28",
+  "complete": true,
+  "targetExtensions": [".odt", ".ods", ".odp", ".wps", ".et", ".dps", ".doc", ".xls", ".ppt"],
+  "sourcePolicy": {
+    "automaticConversion": false,
+    "overwriteSource": false,
+    "overwriteExistingTarget": false,
+    "executeEmbeddedContent": false,
+    "followExternalRelationships": false,
+    "requireExplicitUserAction": true,
+    "requireSourceDigestUnchanged": true,
+    "requireOutputStructuralReopen": true
+  },
+  "implementationOrder": [
+    "E1A-odf-package-verifier",
+    "E1B-odt-read-index",
+    "E1C-ods-odp-read-index",
+    "E2A-external-application-capability",
+    "E2B-legacy-office-isolated-conversion-pilot",
+    "E2C-legacy-office-format-expansion",
+    "E3-wps-native-fixture-gate",
+    "R-unified-release-matrix"
+  ],
+  "converterCandidates": [
+    {
+      "id": "native-odf-reader",
+      "disposition": "selected",
+      "distribution": "in-process",
+      "license": "MIT (existing zip 7.2.0 and quick-xml 0.41.0 dependencies)",
+      "bundleImpact": "reuse-pinned-zip-and-xml-dependencies",
+      "scope": [".odt", ".ods", ".odp"],
+      "notes": "Read-only package validation, semantic preview and indexing only; writing is outside E1."
+    },
+    {
+      "id": "libreoffice-external",
+      "disposition": "qualified-for-pilot",
+      "distribution": "user-installed-optional-capability",
+      "license": "MPL-2.0 and component licenses",
+      "bundleImpact": "not-bundled; local installation measured at 662.8 MiB",
+      "scope": [".odt", ".ods", ".odp", ".doc", ".xls", ".ppt"],
+      "notes": "Discovery must use registry, executable probing or an explicit user-selected path. Conversion requires an isolated profile, timeout, output allowlist and structural reopen."
+    },
+    {
+      "id": "microsoft-office-automation",
+      "disposition": "not-selected",
+      "distribution": "user-installed",
+      "license": "proprietary",
+      "bundleImpact": "not-bundled",
+      "scope": [".doc", ".xls", ".ppt"],
+      "notes": "Useful as a fixture producer and reopen oracle, but unsuitable as the first unattended conversion dependency."
+    },
+    {
+      "id": "wps-private-cli",
+      "disposition": "blocked-undocumented-contract",
+      "distribution": "user-installed",
+      "license": "proprietary",
+      "bundleImpact": "not-bundled; local installation measured at 1375.6 MiB",
+      "scope": [".wps", ".et", ".dps"],
+      "notes": "Local executables exist, but E0 found no public stable conversion CLI contract. They must not be invoked by product code without a separately qualified contract."
+    }
+  ],
+  "formats": [
+    {
+      "id": "odt",
+      "extension": ".odt",
+      "family": "opendocument",
+      "container": "zip-xml",
+      "rootMime": "application/vnd.oasis.opendocument.text",
+      "specification": "OASIS OpenDocument 1.3",
+      "e0Disposition": "native-read-index-planned",
+      "firstImplementation": "E1A/E1B",
+      "initialProductLevel": "read-only-preview-and-index",
+      "conversion": "optional-explicit-only",
+      "risks": ["zip-bomb", "encrypted-entry", "signature", "script-or-macro", "external-link", "embedded-object"],
+      "fixtureProfiles": ["minimal", "styles-lists-tables-images", "external-link", "embedded-object", "encrypted", "signed"]
+    },
+    {
+      "id": "ods",
+      "extension": ".ods",
+      "family": "opendocument",
+      "container": "zip-xml",
+      "rootMime": "application/vnd.oasis.opendocument.spreadsheet",
+      "specification": "OASIS OpenDocument 1.3",
+      "e0Disposition": "native-read-index-planned",
+      "firstImplementation": "E1A/E1C",
+      "initialProductLevel": "read-only-preview-and-index",
+      "conversion": "optional-explicit-only",
+      "risks": ["zip-bomb", "encrypted-entry", "signature", "formula", "script-or-macro", "external-link", "embedded-object"],
+      "fixtureProfiles": ["minimal", "multi-sheet-formulas-styles", "external-link", "embedded-object", "encrypted", "signed"]
+    },
+    {
+      "id": "odp",
+      "extension": ".odp",
+      "family": "opendocument",
+      "container": "zip-xml",
+      "rootMime": "application/vnd.oasis.opendocument.presentation",
+      "specification": "OASIS OpenDocument 1.3",
+      "e0Disposition": "native-read-index-planned",
+      "firstImplementation": "E1A/E1C",
+      "initialProductLevel": "read-only-preview-and-index",
+      "conversion": "optional-explicit-only",
+      "risks": ["zip-bomb", "encrypted-entry", "signature", "script-or-macro", "external-link", "embedded-object", "media"],
+      "fixtureProfiles": ["minimal", "slides-notes-images-shapes", "external-link", "embedded-object", "encrypted", "signed"]
+    },
+    {
+      "id": "wps",
+      "extension": ".wps",
+      "family": "wps-native",
+      "container": "undocumented-or-version-dependent",
+      "rootMime": null,
+      "specification": "no-qualified-public-format-specification-found-in-E0",
+      "e0Disposition": "recognize-and-external-open-planned",
+      "firstImplementation": "E3",
+      "initialProductLevel": "external-open",
+      "conversion": "blocked-until-real-fixture-qualification",
+      "risks": ["unknown-container", "encrypted-content", "macro-or-active-content", "external-link", "embedded-object", "converter-contract"],
+      "fixtureProfiles": ["plain", "styles-tables-images", "external-link", "embedded-object", "encrypted"]
+    },
+    {
+      "id": "et",
+      "extension": ".et",
+      "family": "wps-native",
+      "container": "undocumented-or-version-dependent",
+      "rootMime": null,
+      "specification": "no-qualified-public-format-specification-found-in-E0",
+      "e0Disposition": "recognize-and-external-open-planned",
+      "firstImplementation": "E3",
+      "initialProductLevel": "external-open",
+      "conversion": "blocked-until-real-fixture-qualification",
+      "risks": ["unknown-container", "encrypted-content", "formula", "macro-or-active-content", "external-link", "embedded-object", "converter-contract"],
+      "fixtureProfiles": ["plain", "multi-sheet-formulas-styles", "external-link", "embedded-object", "encrypted"]
+    },
+    {
+      "id": "dps",
+      "extension": ".dps",
+      "family": "wps-native",
+      "container": "undocumented-or-version-dependent",
+      "rootMime": null,
+      "specification": "no-qualified-public-format-specification-found-in-E0",
+      "e0Disposition": "recognize-and-external-open-planned",
+      "firstImplementation": "E3",
+      "initialProductLevel": "external-open",
+      "conversion": "blocked-until-real-fixture-qualification",
+      "risks": ["unknown-container", "encrypted-content", "macro-or-active-content", "external-link", "embedded-object", "media", "converter-contract"],
+      "fixtureProfiles": ["plain", "slides-notes-images-shapes", "external-link", "embedded-object", "encrypted"]
+    },
+    {
+      "id": "doc",
+      "extension": ".doc",
+      "family": "legacy-microsoft-office",
+      "container": "ole-compound-binary",
+      "rootMime": null,
+      "specification": "Microsoft MS-DOC",
+      "e0Disposition": "external-open-and-isolated-conversion-planned",
+      "firstImplementation": "E2A/E2B",
+      "initialProductLevel": "external-open",
+      "conversion": "explicit-new-copy-after-preflight",
+      "risks": ["malformed-cfb", "encrypted-content", "vba", "ole-object", "external-link", "converter-fidelity"],
+      "fixtureProfiles": ["plain", "styles-lists-tables-images", "external-link", "ole-object", "vba", "encrypted"]
+    },
+    {
+      "id": "xls",
+      "extension": ".xls",
+      "family": "legacy-microsoft-office",
+      "container": "ole-compound-binary",
+      "rootMime": null,
+      "specification": "Microsoft MS-XLS",
+      "e0Disposition": "external-open-and-isolated-conversion-planned",
+      "firstImplementation": "E2A/E2C",
+      "initialProductLevel": "external-open",
+      "conversion": "explicit-new-copy-after-preflight",
+      "risks": ["malformed-cfb", "encrypted-content", "formula", "vba", "ole-object", "external-link", "converter-fidelity"],
+      "fixtureProfiles": ["plain", "multi-sheet-formulas-styles", "external-link", "ole-object", "vba", "encrypted"]
+    },
+    {
+      "id": "ppt",
+      "extension": ".ppt",
+      "family": "legacy-microsoft-office",
+      "container": "ole-compound-binary",
+      "rootMime": null,
+      "specification": "Microsoft MS-PPT",
+      "e0Disposition": "external-open-and-isolated-conversion-planned",
+      "firstImplementation": "E2A/E2C",
+      "initialProductLevel": "external-open",
+      "conversion": "explicit-new-copy-after-preflight",
+      "risks": ["malformed-cfb", "encrypted-content", "vba", "ole-object", "external-link", "media", "converter-fidelity"],
+      "fixtureProfiles": ["plain", "slides-notes-images-shapes", "external-link", "ole-object", "vba", "encrypted"]
+    }
+  ],
+  "sources": [
+    "https://docs.oasis-open.org/office/OpenDocument/v1.3/OpenDocument-v1.3-part2-packages.html",
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/ccd7b486-7881-484c-a137-51170af7cc22",
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/b0bd153a-9fad-456e-ac69-af652e6ef021",
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-ppt/546cbcd8-473c-4425-be4e-ebbf7d4d7430",
+    "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cfb/53989ce4-7b05-4f8d-829b-d08d6148375b",
+    "https://help.libreoffice.org/latest/en-US/text/shared/guide/start_parameters.html",
+    "https://www.libreoffice.org/licenses/",
+    "https://help.wps.com/articles/system-requirements-for-wps-office/"
+  ]
+}
