@@ -1,13 +1,13 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-28
-交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E、C5A1/C5A2 已完成；下一批为 C5B 基础形状增删
+交接基线：当前开发版本 `v0.7.0`；A4/A5、G8-1、G8-2A、G8-2B、PDF B0/B1A/B1B/B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E、C5A1/C5A2/C5B 已完成；下一批为 C5C 幻灯片生命周期
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 > 当前能力边界、初始需求对齐度和后续收口顺序以 [`Development_Status_and_Closure_Plan_Audit_2026-07-28.md`](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为权威入口。项目已进入基础需求收口期，但尚不能宣称所有初始需求 100% 完成。
 
-> 当前阶段交付证据见 `docs/C5A2_PPTX_Image_Output_Producer_Reopen_Audit_2026-07-28.md`；C5A1 已完成单引用 PNG/JPEG 替换、单媒体部件差异、可靠新副本和应用内重开，C5A2 已完成 PowerPoint/WPS/LibreOffice 3/3 外部复开及哈希不变证明。下一批进入 C5B 基础矩形、椭圆和线条的安全新增/删除。
+> 当前阶段交付证据见 `docs/C5B_PPTX_Basic_Shape_Lifecycle_Audit_2026-07-28.md`；C5B 已完成白名单矩形、椭圆和线条的安全新增/删除、4 份可靠新副本、真实桌面重开，以及 PowerPoint/WPS/LibreOffice 3/3 外部复开和哈希不变证明。下一批进入 C5C 幻灯片新增/复制/删除/排序。
 
 ## 1. 新电脑快速恢复
 
@@ -143,6 +143,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/C4E_PPTX_Output_Producer_Reopen_Audit_2026-07-27.md`：三个真实输出副本、PowerPoint/WPS/LibreOffice 外部复开和 3/3 发布门禁。
 - `docs/C5A1_PPTX_Isolated_Image_Replacement_Audit_2026-07-28.md`：单引用 PNG/JPEG 安全目标、单媒体部件隔离替换、可靠新副本、真实桌面证据和 C5A2 外部复开入口。
 - `docs/C5A2_PPTX_Image_Output_Producer_Reopen_Audit_2026-07-28.md`：图片替换输出的 PowerPoint/WPS/LibreOffice 3/3 复开、目标图片解码和只读哈希证明。
+- `docs/C5B_PPTX_Basic_Shape_Lifecycle_Audit_2026-07-28.md`：白名单基础形状新增/删除、可靠新副本、真实桌面证据和三生产者输出复开。
 - `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`：C3B3 后总体进度、C3C 索引/定位/关系架构审计、C3D～C5 阶段拆分和后续格式方向。
 - `docs/Development_Stage_Audit_2026-07-22.md`：当前阶段审计、设计对齐、Table 子阶段收尾和 Excel 等价后续七个主阶段。
 - `docs/Development_Stage_Audit_2026-07-20.md`：上一轮专业工作区阶段审计和交错排期基线。
@@ -275,7 +276,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
-下一批推进 C5B：只对白名单矩形、椭圆和线条实现安全新增/删除，建立目标身份、包影响清单、源签名、可靠新副本、应用内复读和三生产者复开门禁。完成后再进入 C5C 幻灯片新增/复制/删除/排序；每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`。
+下一批推进 C5C：实现幻灯片新增、复制、删除和排序，正确维护 `presentation.xml`、关系、内容类型和顺序，保留未编辑幻灯片及未知部件，并建立可靠新副本、应用内复读和三生产者复开门禁。完成后进入 C5D PPTX 能力注册表和发布矩阵收口；每个阶段至少执行相关契约检查，高风险或发布候选执行 `npm run ci:check`。
 
 ## 7. 已知边界与注意事项
 

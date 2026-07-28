@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-28T02:21:04.180Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
+  "fixtureLocation": "isolated temporary workspace",
+  "producer": "wps-presentation",
+  "viewportMatrix": [
+    "1280x820",
+    "960x720"
+  ],
+  "saveMode": "copy",
+  "sourceOverwriteAllowed": false,
+  "allowedShapeTypes": [
+    "rectangle",
+    "ellipse",
+    "line"
+  ],
+  "externalProducerReopenRequired": true,
+  "outputs": [
+    {
+      "operation": "rectangle",
+      "file": "c5b-rectangle-copy.pptx",
+      "bytes": 94663,
+      "sha256": "3e037c5d147596f095cd793e2fb8225108cfd30354e516cd3704fedc136185d3"
+    },
+    {
+      "operation": "ellipse",
+      "file": "c5b-ellipse-copy.pptx",
+      "bytes": 94667,
+      "sha256": "4fe7ce554bf69e7ebbd3fa371d8b324f6d78b17f5b217aadfc8bc3d6e9c7dc0d"
+    },
+    {
+      "operation": "line",
+      "file": "c5b-line-copy.pptx",
+      "bytes": 94660,
+      "sha256": "cf7765a2a314ca597519ba1cececab59f62cfa790a9a988c430a2ff09d1f8649"
+    },
+    {
+      "operation": "delete",
+      "file": "c5b-delete-copy.pptx",
+      "bytes": 94589,
+      "sha256": "826a5e916889c20e4e501a6c222311fe2d37f8aa1a9f3d2e76b753318e4c651f"
+    }
+  ],
+  "checks": [
+    {
+      "id": "three-shape-types-enumerated",
+      "status": "passed"
+    },
+    {
+      "id": "bounded-geometry-and-style-controls",
+      "status": "passed"
+    },
+    {
+      "id": "single-slide-part-add-preview",
+      "status": "passed"
+    },
+    {
+      "id": "safe-delete-target-enumeration",
+      "status": "passed"
+    },
+    {
+      "id": "single-slide-part-delete-preview",
+      "status": "passed"
+    },
+    {
+      "id": "preview-reports-no-source-write",
+      "status": "passed"
+    },
+    {
+      "id": "four-atomic-create-new-copies",
+      "status": "passed"
+    },
+    {
+      "id": "structural-and-semantic-reopen-verified",
+      "status": "passed"
+    },
+    {
+      "id": "compact-library-workspace-without-overflow",
+      "status": "passed"
+    },
+    {
+      "id": "wps-source-bytes-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "c5b-rectangle-preview-1280.jpg",
+    "c5b-rectangle-reopen-960.jpg",
+    "c5b-delete-preview-1280.jpg"
+  ]
+}

@@ -355,6 +355,106 @@
           </template>
           <p v-else class="muted">没有符合“PNG/JPEG 且仅被一个对象引用”的安全图片目标。</p>
         </section>
+        <section v-if="editBaseline" class="isolated-metadata-patch" data-testid="c5b-shape-panel">
+          <header>
+            <ShapesIcon :size="15" />
+            <strong>C5B 基础形状</strong>
+            <span v-if="shapePatchReport" class="verified-badge">已通过</span>
+          </header>
+          <div class="shape-mode" role="tablist" aria-label="形状操作">
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="shapeMode === 'add'"
+              :class="{ active: shapeMode === 'add' }"
+              data-testid="c5b-shape-add-mode"
+              @click="shapeMode = 'add'"
+            >
+              新增
+            </button>
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="shapeMode === 'delete'"
+              :class="{ active: shapeMode === 'delete' }"
+              data-testid="c5b-shape-delete-mode"
+              @click="shapeMode = 'delete'"
+            >
+              删除
+            </button>
+          </div>
+          <template v-if="shapeMode === 'add'">
+            <label>
+              <span>目标幻灯片</span>
+              <select v-model="selectedShapeSlideId" data-testid="c5b-shape-slide">
+                <option v-for="target in safeShapeSlides" :key="target.id" :value="target.id">
+                  幻灯片 {{ target.slideNumber }} · 新对象 ID {{ target.nextObjectId }}
+                </option>
+              </select>
+            </label>
+            <label>
+              <span>形状类型</span>
+              <select v-model="shapeType" data-testid="c5b-shape-type">
+                <option value="rectangle">矩形</option>
+                <option value="ellipse">椭圆</option>
+                <option value="line">线条</option>
+              </select>
+            </label>
+            <div class="shape-grid">
+              <label><span>X（cm）</span><input v-model.number="shapeXCm" type="number" min="0" step="0.1"></label>
+              <label><span>Y（cm）</span><input v-model.number="shapeYCm" type="number" min="0" step="0.1"></label>
+              <label><span>宽（cm）</span><input v-model.number="shapeWidthCm" type="number" min="0.1" step="0.1"></label>
+              <label><span>高（cm）</span><input v-model.number="shapeHeightCm" type="number" min="0.1" step="0.1"></label>
+              <label><span>填充</span><input v-model="shapeFillColor" type="color"></label>
+              <label><span>描边</span><input v-model="shapeLineColor" type="color"></label>
+              <label class="shape-line-width"><span>线宽（pt）</span><input v-model.number="shapeLineWidthPt" type="number" min="1" max="20" step="0.5"></label>
+            </div>
+            <div class="patch-actions">
+              <small>只修改 {{ selectedShapeSlide?.partName || '目标幻灯片 XML' }}</small>
+              <button
+                type="button"
+                data-testid="c5b-shape-add-preview"
+                :disabled="shapePatchLoading || !validShapeAddForm"
+                @click="previewShapeAdd"
+              >
+                <LoaderCircleIcon v-if="shapePatchLoading" :size="13" class="spin" />
+                <ShieldCheckIcon v-else :size="13" />
+                {{ shapePatchLoading ? '验证中' : '验证新增' }}
+              </button>
+            </div>
+          </template>
+          <template v-else-if="safeShapeTargets.length">
+            <label>
+              <span>安全删除目标</span>
+              <select v-model="selectedShapeTargetId" data-testid="c5b-shape-delete-target">
+                <option v-for="target in safeShapeTargets" :key="target.id" :value="target.id">
+                  幻灯片 {{ target.slideNumber }} · {{ target.objectName }} · {{ shapeLabel(target.shapeType) }}
+                </option>
+              </select>
+            </label>
+            <div class="patch-actions">
+              <small>含文本、关系、组合或连接端点的对象不会列出</small>
+              <button
+                type="button"
+                data-testid="c5b-shape-delete-preview"
+                :disabled="shapePatchLoading || !selectedShapeTarget"
+                @click="previewShapeDelete"
+              >
+                <LoaderCircleIcon v-if="shapePatchLoading" :size="13" class="spin" />
+                <Trash2Icon v-else :size="13" />
+                {{ shapePatchLoading ? '验证中' : '验证删除' }}
+              </button>
+            </div>
+          </template>
+          <p v-else class="muted">没有符合根层、无文本、无关系规则的安全删除目标。</p>
+          <p v-if="shapePatchError" class="baseline-error">{{ shapePatchError }}</p>
+          <dl v-if="shapePatchReport" class="patch-report">
+            <div><dt>操作</dt><dd>{{ shapePatchReport.operation === 'basic-shape-add' ? '新增' : '删除' }}</dd></div>
+            <div><dt>变化部件</dt><dd>{{ shapePatchReport.changedParts.length }}</dd></div>
+            <div><dt>语义复读</dt><dd>{{ shapePatchReport.semanticReparseVerified ? '通过' : '未通过' }}</dd></div>
+            <div><dt>源文件写入</dt><dd>{{ shapePatchReport.writesUserFile ? '是' : '否' }}</dd></div>
+          </dl>
+        </section>
         <section v-if="verifiedPreview && verifiedOperation" class="reliable-save-copy" data-testid="c4d-save-panel">
           <header>
             <SaveIcon :size="15" />
@@ -503,7 +603,9 @@ import {
   RefreshCw as RefreshCwIcon,
   Save as SaveIcon,
   Search as SearchIcon,
+  Shapes as ShapesIcon,
   ShieldCheck as ShieldCheckIcon,
+  Trash2 as Trash2Icon,
   X as XIcon,
 } from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -642,6 +744,8 @@ interface PptxEditBaselineReport {
   editableStyleTargets: PptxEditableStyleTarget[]
   editableAltTextTargets: PptxEditableAltTextTarget[]
   editableImageTargets: PptxEditableImageTarget[]
+  editableShapeSlides: PptxEditableShapeSlide[]
+  editableShapeTargets: PptxEditableShapeTarget[]
 }
 interface PptxEditableTextTarget {
   id: string
@@ -716,11 +820,35 @@ interface PptxEditableImageTarget {
   expectedMediaDigest: string
   expectedPartDigest: string
 }
+interface PptxEditableShapeSlide {
+  id: string
+  slideNumber: number
+  slideId: string
+  partName: string
+  nextObjectId: number
+  expectedPartDigest: string
+}
+interface PptxEditableShapeTarget {
+  id: string
+  kind: 'basic-shape-delete'
+  slideNumber: number
+  slideId: string
+  partName: string
+  objectId: string
+  objectName: string
+  shapeType: 'rect' | 'ellipse' | 'line'
+  x: number
+  y: number
+  width: number
+  height: number
+  expectedShapeDigest: string
+  expectedPartDigest: string
+}
 interface PptxIsolatedMetadataPatchReport {
   status: string
   outputDigest: string
   outputBytes: number
-  operation: 'character-style' | 'picture-alt-text' | 'picture-binary'
+  operation: 'character-style' | 'picture-alt-text' | 'picture-binary' | 'basic-shape-add' | 'basic-shape-delete'
   targetId: string
   targetKind: string
   targetPart: string
@@ -768,6 +896,25 @@ type PptxPatchOperation =
     expectedPartDigest: string
     replacementMimeType: PptxEditableImageTarget['mimeType']
     replacementBase64: string
+  }
+  | {
+    kind: 'shapeAdd'
+    slideTargetId: string
+    expectedPartDigest: string
+    shapeType: 'rectangle' | 'ellipse' | 'line'
+    x: number
+    y: number
+    width: number
+    height: number
+    fillColor: string
+    lineColor: string
+    lineWidth: number
+  }
+  | {
+    kind: 'shapeDelete'
+    targetId: string
+    expectedShapeDigest: string
+    expectedPartDigest: string
   }
 interface PptxVerifiedPreview {
   outputDigest: string
@@ -840,6 +987,20 @@ const replacementImageBytes = ref(0)
 const imagePatchLoading = ref(false)
 const imagePatchError = ref('')
 const imagePatchReport = ref<PptxIsolatedMetadataPatchReport>()
+const shapeMode = ref<'add' | 'delete'>('add')
+const selectedShapeSlideId = ref('')
+const selectedShapeTargetId = ref('')
+const shapeType = ref<'rectangle' | 'ellipse' | 'line'>('rectangle')
+const shapeXCm = ref(2.54)
+const shapeYCm = ref(2.54)
+const shapeWidthCm = ref(7.62)
+const shapeHeightCm = ref(3.81)
+const shapeFillColor = ref('#DDEEFF')
+const shapeLineColor = ref('#2255AA')
+const shapeLineWidthPt = ref(2)
+const shapePatchLoading = ref(false)
+const shapePatchError = ref('')
+const shapePatchReport = ref<PptxIsolatedMetadataPatchReport>()
 const verifiedOperation = ref<PptxPatchOperation>()
 const verifiedPreview = ref<PptxVerifiedPreview>()
 const copyFileName = ref('')
@@ -872,6 +1033,44 @@ const safeImageTargets = computed(() => editBaseline.value?.editableImageTargets
 const selectedImageTarget = computed(() => safeImageTargets.value.find(
   target => target.id === selectedImageTargetId.value,
 ))
+const safeShapeSlides = computed(() => editBaseline.value?.editableShapeSlides || [])
+const selectedShapeSlide = computed(() => safeShapeSlides.value.find(
+  target => target.id === selectedShapeSlideId.value,
+))
+const safeShapeTargets = computed(() => editBaseline.value?.editableShapeTargets || [])
+const selectedShapeTarget = computed(() => safeShapeTargets.value.find(
+  target => target.id === selectedShapeTargetId.value,
+))
+const emuPerCm = 360000
+const shapeGeometry = computed(() => ({
+  x: Math.round(shapeXCm.value * emuPerCm),
+  y: Math.round(shapeYCm.value * emuPerCm),
+  width: Math.round(shapeWidthCm.value * emuPerCm),
+  height: Math.round(shapeHeightCm.value * emuPerCm),
+  lineWidth: Math.round(shapeLineWidthPt.value * 12700),
+}))
+const validShapeAddForm = computed(() => {
+  const model = report.value?.model
+  const geometry = shapeGeometry.value
+  return Boolean(
+    model
+    && selectedShapeSlide.value
+    && Number.isFinite(geometry.x)
+    && Number.isFinite(geometry.y)
+    && Number.isFinite(geometry.width)
+    && Number.isFinite(geometry.height)
+    && geometry.x >= 0
+    && geometry.y >= 0
+    && geometry.width > 0
+    && geometry.height > 0
+    && geometry.x + geometry.width <= model.width
+    && geometry.y + geometry.height <= model.height
+    && geometry.lineWidth >= 12700
+    && geometry.lineWidth <= 254000
+    && /^#[0-9a-f]{6}$/i.test(shapeFillColor.value)
+    && /^#[0-9a-f]{6}$/i.test(shapeLineColor.value),
+  )
+})
 const styleFormChanged = computed(() => {
   const target = selectedStyleTarget.value
   if (!target) return false
@@ -939,6 +1138,11 @@ const allWarnings = computed(() => Array.from(new Set([
 const formatBytes = (bytes: number) => bytes < 1024 * 1024
   ? `${(bytes / 1024).toFixed(1)} KiB`
   : `${(bytes / 1024 / 1024).toFixed(1)} MiB`
+const shapeLabel = (type: PptxEditableShapeTarget['shapeType']) => ({
+  rect: '矩形',
+  ellipse: '椭圆',
+  line: '线条',
+}[type])
 
 const slideStyle = (slide: PptxSlide) => ({
   aspectRatio: slideRatio.value,
@@ -1094,6 +1298,16 @@ const prepareEditBaseline = async () => {
       target => target.slideNumber === activeSlideIndex.value + 1,
     ) || baseline.editableImageTargets[0]
     selectedImageTargetId.value = imageTarget?.id || ''
+    const shapeSlide = baseline.editableShapeSlides.find(
+      target => target.slideNumber === activeSlideIndex.value + 1,
+    ) || baseline.editableShapeSlides[0]
+    selectedShapeSlideId.value = shapeSlide?.id || ''
+    const shapeTarget = baseline.editableShapeTargets.find(
+      target => target.slideNumber === activeSlideIndex.value + 1,
+    ) || baseline.editableShapeTargets[0]
+    selectedShapeTargetId.value = shapeTarget?.id || ''
+    shapePatchReport.value = undefined
+    shapePatchError.value = ''
     stylePatchReport.value = undefined
     stylePatchError.value = ''
     altTextPatchReport.value = undefined
@@ -1408,6 +1622,110 @@ const previewImagePatch = async () => {
     imagePatchLoading.value = false
   }
 }
+const clearShapePatch = () => {
+  shapePatchReport.value = undefined
+  shapePatchError.value = ''
+  clearSaveCandidate()
+}
+const previewShapeAdd = async () => {
+  const target = selectedShapeSlide.value
+  if (!report.value || !target || !validShapeAddForm.value || shapePatchLoading.value) return
+  const geometry = shapeGeometry.value
+  shapePatchLoading.value = true
+  clearShapePatch()
+  try {
+    const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_shape_add_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: pptxPath.value,
+      expectedSignature: report.value.signature,
+      slideTargetId: target.id,
+      expectedPartDigest: target.expectedPartDigest,
+      shapeType: shapeType.value,
+      ...geometry,
+      fillColor: shapeFillColor.value.slice(1).toUpperCase(),
+      lineColor: shapeLineColor.value.slice(1).toUpperCase(),
+    })
+    if (
+      patch.operation !== 'basic-shape-add'
+      || patch.changedParts.length !== 1
+      || patch.changedParts[0] !== target.partName
+      || !patch.unchangedPartsVerified
+      || !patch.structuralReparseVerified
+      || !patch.semanticReparseVerified
+      || !patch.temporaryCopyReopenVerified
+      || !patch.sourceUnchanged
+      || patch.writesUserFile
+    ) {
+      throw new Error('PPTX C5B 形状新增未通过单幻灯片部件保护门禁')
+    }
+    shapePatchReport.value = patch
+    verifiedOperation.value = {
+      kind: 'shapeAdd',
+      slideTargetId: target.id,
+      expectedPartDigest: target.expectedPartDigest,
+      shapeType: shapeType.value,
+      ...geometry,
+      fillColor: shapeFillColor.value.slice(1).toUpperCase(),
+      lineColor: shapeLineColor.value.slice(1).toUpperCase(),
+    }
+    verifiedPreview.value = {
+      outputDigest: patch.outputDigest,
+      outputBytes: patch.outputBytes,
+      changedParts: patch.changedParts,
+      operationLabel: `新增${shapeType.value === 'rectangle' ? '矩形' : shapeType.value === 'ellipse' ? '椭圆' : '线条'}`,
+    }
+  } catch (error) {
+    shapePatchError.value = String(error).replace(/^Error:\s*/, '')
+  } finally {
+    shapePatchLoading.value = false
+  }
+}
+const previewShapeDelete = async () => {
+  const target = selectedShapeTarget.value
+  if (!report.value || !target || shapePatchLoading.value) return
+  shapePatchLoading.value = true
+  clearShapePatch()
+  try {
+    const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_shape_delete_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      path: pptxPath.value,
+      expectedSignature: report.value.signature,
+      targetId: target.id,
+      expectedShapeDigest: target.expectedShapeDigest,
+      expectedPartDigest: target.expectedPartDigest,
+    })
+    if (
+      patch.operation !== 'basic-shape-delete'
+      || patch.changedParts.length !== 1
+      || patch.changedParts[0] !== target.partName
+      || !patch.unchangedPartsVerified
+      || !patch.structuralReparseVerified
+      || !patch.semanticReparseVerified
+      || !patch.temporaryCopyReopenVerified
+      || !patch.sourceUnchanged
+      || patch.writesUserFile
+    ) {
+      throw new Error('PPTX C5B 形状删除未通过单幻灯片部件保护门禁')
+    }
+    shapePatchReport.value = patch
+    verifiedOperation.value = {
+      kind: 'shapeDelete',
+      targetId: target.id,
+      expectedShapeDigest: target.expectedShapeDigest,
+      expectedPartDigest: target.expectedPartDigest,
+    }
+    verifiedPreview.value = {
+      outputDigest: patch.outputDigest,
+      outputBytes: patch.outputBytes,
+      changedParts: patch.changedParts,
+      operationLabel: `删除${shapeLabel(target.shapeType)}`,
+    }
+  } catch (error) {
+    shapePatchError.value = String(error).replace(/^Error:\s*/, '')
+  } finally {
+    shapePatchLoading.value = false
+  }
+}
 const savePptxCopy = async () => {
   const preview = verifiedPreview.value
   const operation = verifiedOperation.value
@@ -1476,6 +1794,10 @@ const loadPresentation = async () => {
   altTextPatchError.value = ''
   selectedImageTargetId.value = ''
   clearReplacementImage()
+  selectedShapeSlideId.value = ''
+  selectedShapeTargetId.value = ''
+  shapePatchReport.value = undefined
+  shapePatchError.value = ''
   verifiedOperation.value = undefined
   verifiedPreview.value = undefined
   savedCopyReport.value = undefined
@@ -1527,6 +1849,30 @@ watch(altTextValue, () => {
   clearSaveCandidate()
 })
 watch(selectedImageTargetId, clearReplacementImage)
+watch(
+  [
+    shapeMode,
+    selectedShapeSlideId,
+    selectedShapeTargetId,
+    shapeType,
+    shapeXCm,
+    shapeYCm,
+    shapeWidthCm,
+    shapeHeightCm,
+    shapeFillColor,
+    shapeLineColor,
+    shapeLineWidthPt,
+  ],
+  clearShapePatch,
+)
+watch(activeSlideIndex, slideIndex => {
+  if (!editBaseline.value) return
+  const slideNumber = slideIndex + 1
+  const shapeSlide = safeShapeSlides.value.find(target => target.slideNumber === slideNumber)
+  if (shapeSlide) selectedShapeSlideId.value = shapeSlide.id
+  const shapeTarget = safeShapeTargets.value.find(target => target.slideNumber === slideNumber)
+  if (shapeTarget) selectedShapeTargetId.value = shapeTarget.id
+})
 watch(matches, value => {
   activeMatch.value = 0
   if (value.length) selectSlide(value[0].slideIndex)
@@ -1627,6 +1973,12 @@ onBeforeUnmount(() => {
 .c4c-block h4 { margin: 0 0 9px; display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 11px; }
 .style-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 0 7px; }
 .style-grid input[type="color"] { padding: 3px; cursor: pointer; }
+.shape-mode { height: 30px; margin: 0 0 9px; padding: 2px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); }
+.shape-mode button { border: 0; border-radius: 3px; color: var(--text-muted); background: transparent; cursor: pointer; font: inherit; font-size: 11px; }
+.shape-mode button.active { color: var(--text-primary); background: var(--bg-primary); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.shape-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 7px; }
+.shape-grid input[type="color"] { padding: 3px; cursor: pointer; }
+.shape-grid .shape-line-width { grid-column: 1 / -1; }
 .style-toggles { margin: 0 0 9px; display: flex; flex-wrap: wrap; gap: 5px 10px; }
 .style-toggles label { margin: 0; display: inline-flex; align-items: center; gap: 4px; color: var(--text-secondary); }
 .style-toggles input { width: 14px; height: 14px; padding: 0; accent-color: var(--primary-color); }

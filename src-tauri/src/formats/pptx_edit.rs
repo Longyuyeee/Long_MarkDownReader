@@ -52,6 +52,8 @@ pub struct PptxEditBaselineReport {
     pub editable_style_targets: Vec<PptxEditableStyleTarget>,
     pub editable_alt_text_targets: Vec<PptxEditableAltTextTarget>,
     pub editable_image_targets: Vec<PptxEditableImageTarget>,
+    pub editable_shape_slides: Vec<PptxEditableShapeSlide>,
+    pub editable_shape_targets: Vec<PptxEditableShapeTarget>,
     pub parts: Vec<PptxPackagePartSnapshot>,
 }
 
@@ -147,6 +149,36 @@ pub struct PptxEditableImageTarget {
     pub expected_part_digest: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxEditableShapeSlide {
+    pub id: String,
+    pub slide_number: usize,
+    pub slide_id: String,
+    pub part_name: String,
+    pub next_object_id: u32,
+    pub expected_part_digest: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxEditableShapeTarget {
+    pub id: String,
+    pub kind: String,
+    pub slide_number: usize,
+    pub slide_id: String,
+    pub part_name: String,
+    pub object_id: String,
+    pub object_name: String,
+    pub shape_type: String,
+    pub x: i64,
+    pub y: i64,
+    pub width: i64,
+    pub height: i64,
+    pub expected_shape_digest: String,
+    pub expected_part_digest: String,
+}
+
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PptxIsolatedMetadataPatchReport {
@@ -198,6 +230,35 @@ struct EditableAltTextTargetSpan {
     metadata_tag_span: (usize, usize),
     metadata_tag_name: String,
     metadata_attributes: Vec<(String, String)>,
+}
+
+#[derive(Clone, Debug)]
+struct EditableShapeTargetSpan {
+    target: PptxEditableShapeTarget,
+    start: usize,
+    end: usize,
+}
+
+#[derive(Default)]
+struct ShapeLifecycleScan {
+    root_name: String,
+    depth: usize,
+    start: usize,
+    end: usize,
+    object_id: String,
+    object_name: String,
+    shape_type: String,
+    has_text_body: bool,
+    has_placeholder: bool,
+    has_relationship: bool,
+    has_connection: bool,
+    is_text_box: bool,
+}
+
+struct SlideShapeScan {
+    insertion_offset: usize,
+    next_object_id: u32,
+    shapes: Vec<ShapeLifecycleScan>,
 }
 
 #[derive(Default)]
@@ -1268,6 +1329,243 @@ pub fn inspect_pptx_editable_image_targets(
     Ok(targets)
 }
 
+fn update_shape_lifecycle_scan(
+    shape: &mut ShapeLifecycleScan,
+    event: &BytesStart<'_>,
+    decoder: quick_xml::encoding::Decoder,
+) -> Result<(), String> {
+    let name = event.local_name();
+    match name.as_ref() {
+        b"cNvPr" => {
+            shape.object_id = attribute_value(event, b"id", decoder)?.unwrap_or_default();
+            shape.object_name = attribute_value(event, b"name", decoder)?.unwrap_or_default();
+        }
+        b"cNvSpPr" => {
+            shape.is_text_box = attribute_value(event, b"txBox", decoder)?.as_deref() == Some("1");
+        }
+        b"prstGeom" => {
+            shape.shape_type = attribute_value(event, b"prst", decoder)?.unwrap_or_default();
+        }
+        b"custGeom" => shape.shape_type = "custom".into(),
+        b"txBody" => shape.has_text_body = true,
+        b"ph" => shape.has_placeholder = true,
+        b"stCxn" | b"endCxn" => shape.has_connection = true,
+        _ => {}
+    }
+    for attribute in event.attributes().with_checks(false) {
+        let attribute = attribute.map_err(|error| format!("PPTX C5B XML 属性损坏: {error}"))?;
+        let key = attribute.key.as_ref();
+        if matches!(key, b"r:id" | b"r:embed" | b"r:link") {
+            shape.has_relationship = true;
+        }
+    }
+    Ok(())
+}
+
+fn scan_slide_shape_lifecycle(xml: &[u8]) -> Result<SlideShapeScan, String> {
+    let xml_text = std::str::from_utf8(xml).map_err(|_| "PPTX C5B 幻灯片 XML 必须是 UTF-8")?;
+    if !xml_text.contains("xmlns:p=") || !xml_text.contains("xmlns:a=") {
+        return Err("PPTX C5B 仅支持声明标准 p/a 命名空间前缀的幻灯片".into());
+    }
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut depth = 0_usize;
+    let mut sp_tree_depth = None;
+    let mut insertion_offset = None;
+    let mut current: Option<ShapeLifecycleScan> = None;
+    let mut shapes = Vec::new();
+    let mut object_ids = BTreeMap::<u32, usize>::new();
+
+    loop {
+        match reader
+            .read_event()
+            .map_err(|error| format!("PPTX C5B 幻灯片 XML 损坏: {error}"))?
+        {
+            Event::Start(ref event) => {
+                depth += 1;
+                let name = event.local_name();
+                let name = name.as_ref();
+                if name == b"cNvPr" {
+                    let id = attribute_value(event, b"id", reader.decoder())?
+                        .ok_or("PPTX C5B 对象缺少 cNvPr id")?
+                        .parse::<u32>()
+                        .map_err(|_| "PPTX C5B 只支持数值型 cNvPr id")?;
+                    if object_ids.insert(id, 1).is_some() {
+                        return Err(format!("PPTX C5B 幻灯片对象 id 重复: {id}"));
+                    }
+                }
+                if name == b"spTree" {
+                    if sp_tree_depth.replace(depth).is_some() {
+                        return Err("PPTX C5B 幻灯片包含多个形状树".into());
+                    }
+                } else if current.is_none()
+                    && sp_tree_depth.is_some_and(|tree_depth| depth == tree_depth + 1)
+                    && matches!(name, b"sp" | b"cxnSp")
+                {
+                    let (start, _) = opening_tag_span(reader.buffer_position(), event)?;
+                    current = Some(ShapeLifecycleScan {
+                        root_name: String::from_utf8_lossy(name).into_owned(),
+                        depth,
+                        start,
+                        ..Default::default()
+                    });
+                } else if let Some(shape) = current.as_mut() {
+                    update_shape_lifecycle_scan(shape, event, reader.decoder())?;
+                }
+            }
+            Event::Empty(ref event) => {
+                let name = event.local_name();
+                if name.as_ref() == b"cNvPr" {
+                    let id = attribute_value(event, b"id", reader.decoder())?
+                        .ok_or("PPTX C5B 对象缺少 cNvPr id")?
+                        .parse::<u32>()
+                        .map_err(|_| "PPTX C5B 只支持数值型 cNvPr id")?;
+                    if object_ids.insert(id, 1).is_some() {
+                        return Err(format!("PPTX C5B 幻灯片对象 id 重复: {id}"));
+                    }
+                }
+                if let Some(shape) = current.as_mut() {
+                    update_shape_lifecycle_scan(shape, event, reader.decoder())?;
+                }
+            }
+            Event::End(ref event) => {
+                let name = event.local_name();
+                let name = name.as_ref();
+                if current
+                    .as_ref()
+                    .is_some_and(|shape| shape.depth == depth && shape.root_name.as_bytes() == name)
+                {
+                    let mut shape = current.take().expect("shape exists");
+                    shape.end = usize::try_from(reader.buffer_position())
+                        .map_err(|_| "PPTX C5B 形状范围超过平台上限")?;
+                    shapes.push(shape);
+                }
+                if name == b"spTree" && sp_tree_depth == Some(depth) {
+                    let end = usize::try_from(reader.buffer_position())
+                        .map_err(|_| "PPTX C5B 形状树范围超过平台上限")?;
+                    let qualified_name_len = event.name().as_ref().len();
+                    insertion_offset = Some(
+                        end.checked_sub(qualified_name_len.saturating_add(3))
+                            .ok_or("PPTX C5B 形状树结束范围无效")?,
+                    );
+                    sp_tree_depth = None;
+                }
+                depth = depth.saturating_sub(1);
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    if current.is_some() {
+        return Err("PPTX C5B 形状节点未闭合".into());
+    }
+    let insertion_offset = insertion_offset.ok_or("PPTX C5B 幻灯片缺少形状树")?;
+    let max_object_id = object_ids.keys().next_back().copied().unwrap_or(0);
+    let next_object_id = max_object_id
+        .checked_add(1)
+        .ok_or("PPTX C5B 对象 id 已达到上限")?;
+    Ok(SlideShapeScan {
+        insertion_offset,
+        next_object_id,
+        shapes,
+    })
+}
+
+fn editable_shape_targets_with_spans(
+    source: &[u8],
+) -> Result<(Vec<PptxEditableShapeSlide>, Vec<EditableShapeTargetSpan>), String> {
+    let model = parse_pptx(source)?;
+    let mut slides = Vec::new();
+    let mut targets = Vec::new();
+    for (slide_index, slide) in model.slides.iter().enumerate() {
+        let xml = read_part(source, &slide.part_name)?;
+        let scan = scan_slide_shape_lifecycle(&xml)?;
+        let part_digest = digest(&xml);
+        slides.push(PptxEditableShapeSlide {
+            id: format!("pptx-shape-slide-{}-{}", slide_index + 1, slide.id),
+            slide_number: slide_index + 1,
+            slide_id: slide.id.clone(),
+            part_name: slide.part_name.clone(),
+            next_object_id: scan.next_object_id,
+            expected_part_digest: part_digest.clone(),
+        });
+        for scanned in scan.shapes {
+            let Some(object) = slide.objects.iter().find(|object| {
+                object.id == scanned.object_id
+                    && object.parent_group_id.is_none()
+                    && object.group_level == 0
+            }) else {
+                continue;
+            };
+            if scanned.has_text_body
+                || scanned.has_placeholder
+                || scanned.has_relationship
+                || scanned.has_connection
+                || scanned.is_text_box
+                || !matches!(scanned.shape_type.as_str(), "rect" | "ellipse" | "line")
+                || !matches!(object.kind.as_str(), "shape" | "connector")
+                || !object.text.is_empty()
+                || object.media_part.is_some()
+                || object.related_part.is_some()
+                || object.child_count != 0
+                || object.rotation.is_some_and(|value| value != 0)
+                || object.flip_horizontal
+                || object.flip_vertical
+            {
+                continue;
+            }
+            let (Some(x), Some(y), Some(width), Some(height)) =
+                (object.x, object.y, object.width, object.height)
+            else {
+                continue;
+            };
+            if x < 0 || y < 0 || width <= 0 || height <= 0 {
+                continue;
+            }
+            let shape_digest = digest(
+                xml.get(scanned.start..scanned.end)
+                    .ok_or("PPTX C5B 形状范围无效")?,
+            );
+            targets.push(EditableShapeTargetSpan {
+                target: PptxEditableShapeTarget {
+                    id: format!(
+                        "pptx-shape-{}-{}-{}",
+                        slide_index + 1,
+                        object.id,
+                        &shape_digest[..10]
+                    ),
+                    kind: "basic-shape-delete".into(),
+                    slide_number: slide_index + 1,
+                    slide_id: slide.id.clone(),
+                    part_name: slide.part_name.clone(),
+                    object_id: object.id.clone(),
+                    object_name: object.name.clone(),
+                    shape_type: scanned.shape_type,
+                    x,
+                    y,
+                    width,
+                    height,
+                    expected_shape_digest: shape_digest,
+                    expected_part_digest: part_digest.clone(),
+                },
+                start: scanned.start,
+                end: scanned.end,
+            });
+        }
+    }
+    Ok((slides, targets))
+}
+
+pub fn inspect_pptx_editable_shape_targets(
+    source: &[u8],
+) -> Result<(Vec<PptxEditableShapeSlide>, Vec<PptxEditableShapeTarget>), String> {
+    let (slides, targets) = editable_shape_targets_with_spans(source)?;
+    Ok((
+        slides,
+        targets.into_iter().map(|target| target.target).collect(),
+    ))
+}
+
 fn rewrite_package_part(
     source: &[u8],
     target_part: &str,
@@ -1907,6 +2205,275 @@ pub fn build_pptx_image_patch_isolated(
     ))
 }
 
+fn valid_shape_color(value: &str) -> bool {
+    value.len() == 6 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
+}
+
+fn shape_preset(shape_type: &str) -> Option<(&'static str, &'static str)> {
+    match shape_type {
+        "rectangle" => Some(("rect", "Rectangle")),
+        "ellipse" => Some(("ellipse", "Ellipse")),
+        "line" => Some(("line", "Line")),
+        _ => None,
+    }
+}
+
+fn validate_shape_geometry(
+    presentation_width: i64,
+    presentation_height: i64,
+    x: i64,
+    y: i64,
+    width: i64,
+    height: i64,
+    line_width: i64,
+) -> Result<(), String> {
+    if x < 0
+        || y < 0
+        || width <= 0
+        || height <= 0
+        || x.checked_add(width)
+            .is_none_or(|right| right > presentation_width)
+        || y.checked_add(height)
+            .is_none_or(|bottom| bottom > presentation_height)
+    {
+        return Err("PPTX C5B 形状必须完整位于幻灯片范围内".into());
+    }
+    if !(12_700..=254_000).contains(&line_width) {
+        return Err("PPTX C5B 描边宽度必须在 1～20 pt 之间".into());
+    }
+    Ok(())
+}
+
+fn build_basic_shape_xml(
+    object_id: u32,
+    shape_type: &str,
+    x: i64,
+    y: i64,
+    width: i64,
+    height: i64,
+    fill_color: &str,
+    line_color: &str,
+    line_width: i64,
+) -> Result<(String, String, String), String> {
+    let (preset, label) = shape_preset(shape_type).ok_or("PPTX C5B 只允许矩形、椭圆和线条")?;
+    let fill_color = fill_color.trim().to_ascii_uppercase();
+    let line_color = line_color.trim().to_ascii_uppercase();
+    if !valid_shape_color(&fill_color) || !valid_shape_color(&line_color) {
+        return Err("PPTX C5B 填充和描边颜色必须是 6 位十六进制颜色".into());
+    }
+    let name = format!("LongEdit {label} {object_id}");
+    let fill = if preset == "line" {
+        "<a:noFill/>".to_string()
+    } else {
+        format!("<a:solidFill><a:srgbClr val=\"{fill_color}\"/></a:solidFill>")
+    };
+    let xml = format!(
+        "<p:sp><p:nvSpPr><p:cNvPr id=\"{object_id}\" name=\"{name}\"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x=\"{x}\" y=\"{y}\"/><a:ext cx=\"{width}\" cy=\"{height}\"/></a:xfrm><a:prstGeom prst=\"{preset}\"><a:avLst/></a:prstGeom>{fill}<a:ln w=\"{line_width}\"><a:solidFill><a:srgbClr val=\"{line_color}\"/></a:solidFill></a:ln></p:spPr></p:sp>"
+    );
+    Ok((xml, name, preset.into()))
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn build_pptx_shape_add_isolated(
+    source: &[u8],
+    slide_target_id: &str,
+    expected_part_digest: &str,
+    shape_type: &str,
+    x: i64,
+    y: i64,
+    width: i64,
+    height: i64,
+    fill_color: &str,
+    line_color: &str,
+    line_width: i64,
+) -> Result<(PptxIsolatedMetadataPatchReport, Vec<u8>), String> {
+    let expected_part_digest = expected_part_digest.trim().to_ascii_lowercase();
+    if !valid_sha256(&expected_part_digest) {
+        return Err("PPTX C5B 幻灯片部件摘要无效".into());
+    }
+    let model = parse_pptx(source)?;
+    let (slides, _) = inspect_pptx_editable_shape_targets(source)?;
+    let target = slides
+        .into_iter()
+        .find(|target| target.id == slide_target_id)
+        .ok_or("PPTX C5B 幻灯片新增目标不存在")?;
+    if target.expected_part_digest != expected_part_digest {
+        return Err("PPTX C5B 幻灯片已变化，请重新建立编辑基线".into());
+    }
+    validate_shape_geometry(model.width, model.height, x, y, width, height, line_width)?;
+    let source_part = read_part(source, &target.part_name)?;
+    let scan = scan_slide_shape_lifecycle(&source_part)?;
+    if scan.next_object_id != target.next_object_id {
+        return Err("PPTX C5B 下一对象 id 已变化，请重新建立编辑基线".into());
+    }
+    let (shape_xml, object_name, preset) = build_basic_shape_xml(
+        target.next_object_id,
+        shape_type,
+        x,
+        y,
+        width,
+        height,
+        fill_color,
+        line_color,
+        line_width,
+    )?;
+    let mut replacement = Vec::with_capacity(source_part.len() + shape_xml.len());
+    replacement.extend_from_slice(&source_part[..scan.insertion_offset]);
+    replacement.extend_from_slice(shape_xml.as_bytes());
+    replacement.extend_from_slice(&source_part[scan.insertion_offset..]);
+
+    let output = rewrite_package_part(source, &target.part_name, &replacement)?;
+    let (source_parts, output_parts, changed_parts) =
+        verify_isolated_part_change(source, &output, &target.part_name)?;
+    let reopened = parse_pptx(&output)
+        .map_err(|error| format!("PPTX C5B 形状新增输出结构复读失败: {error}"))?;
+    let object_id = target.next_object_id.to_string();
+    let expected_fill = format!("#{}", fill_color.trim().to_ascii_uppercase());
+    let expected_line = format!("#{}", line_color.trim().to_ascii_uppercase());
+    let reopened_object = reopened
+        .slides
+        .get(target.slide_number.saturating_sub(1))
+        .and_then(|slide| slide.objects.iter().find(|object| object.id == object_id));
+    let semantic_reparse_verified = reopened_object.is_some_and(|object| {
+        object.name == object_name
+            && object.shape_type.as_deref() == Some(preset.as_str())
+            && object.x == Some(x)
+            && object.y == Some(y)
+            && object.width == Some(width)
+            && object.height == Some(height)
+            && object.line_color.as_deref() == Some(expected_line.as_str())
+            && object.line_width == Some(line_width)
+            && if preset == "line" {
+                object.kind == "connector" && object.no_fill
+            } else {
+                object.kind == "shape"
+                    && object.fill_color.as_deref() == Some(expected_fill.as_str())
+            }
+    });
+    if !semantic_reparse_verified {
+        return Err(format!(
+            "PPTX C5B 形状新增输出语义复读失败: {:?}",
+            reopened_object
+        ));
+    }
+    let source_part_digest = source_parts
+        .get(&target.part_name)
+        .cloned()
+        .ok_or("PPTX C5B 源幻灯片部件摘要缺失")?;
+    let output_part_digest = output_parts
+        .get(&target.part_name)
+        .cloned()
+        .ok_or("PPTX C5B 输出幻灯片部件摘要缺失")?;
+    Ok((
+        PptxIsolatedMetadataPatchReport {
+            status: "isolated_shape_add_verified".into(),
+            engine: "LongEdit C5B isolated PPTX basic-shape add".into(),
+            operation: "basic-shape-add".into(),
+            target_id: target.id,
+            target_kind: shape_type.into(),
+            target_part: target.part_name,
+            source_digest: digest(source),
+            output_digest: digest(&output),
+            source_part_digest,
+            output_part_digest,
+            changed_parts,
+            unchanged_part_count: source_parts.len().saturating_sub(1),
+            unchanged_parts_verified: true,
+            structural_reparse_verified: true,
+            semantic_reparse_verified,
+            temporary_copy_reopen_verified: false,
+            source_unchanged: false,
+            writes_user_file: false,
+            output_bytes: output.len(),
+        },
+        output,
+    ))
+}
+
+pub fn build_pptx_shape_delete_isolated(
+    source: &[u8],
+    target_id: &str,
+    expected_shape_digest: &str,
+    expected_part_digest: &str,
+) -> Result<(PptxIsolatedMetadataPatchReport, Vec<u8>), String> {
+    let expected_shape_digest = expected_shape_digest.trim().to_ascii_lowercase();
+    let expected_part_digest = expected_part_digest.trim().to_ascii_lowercase();
+    if !valid_sha256(&expected_shape_digest) || !valid_sha256(&expected_part_digest) {
+        return Err("PPTX C5B 形状删除目标摘要无效".into());
+    }
+    let (_, targets) = editable_shape_targets_with_spans(source)?;
+    let target = targets
+        .into_iter()
+        .find(|target| target.target.id == target_id)
+        .ok_or("PPTX C5B 形状删除目标不存在或不再安全")?;
+    if target.target.expected_shape_digest != expected_shape_digest
+        || target.target.expected_part_digest != expected_part_digest
+    {
+        return Err("PPTX C5B 形状或幻灯片已变化，请重新建立编辑基线".into());
+    }
+    let source_part = read_part(source, &target.target.part_name)?;
+    if digest(
+        source_part
+            .get(target.start..target.end)
+            .ok_or("PPTX C5B 形状删除范围无效")?,
+    ) != expected_shape_digest
+    {
+        return Err("PPTX C5B 形状删除范围摘要不一致".into());
+    }
+    let mut replacement = Vec::with_capacity(source_part.len() - (target.end - target.start));
+    replacement.extend_from_slice(&source_part[..target.start]);
+    replacement.extend_from_slice(&source_part[target.end..]);
+    let output = rewrite_package_part(source, &target.target.part_name, &replacement)?;
+    let (source_parts, output_parts, changed_parts) =
+        verify_isolated_part_change(source, &output, &target.target.part_name)?;
+    let reopened = parse_pptx(&output)
+        .map_err(|error| format!("PPTX C5B 形状删除输出结构复读失败: {error}"))?;
+    let semantic_reparse_verified = reopened
+        .slides
+        .get(target.target.slide_number.saturating_sub(1))
+        .is_some_and(|slide| {
+            !slide
+                .objects
+                .iter()
+                .any(|object| object.id == target.target.object_id)
+        });
+    if !semantic_reparse_verified {
+        return Err("PPTX C5B 形状删除输出语义复读失败".into());
+    }
+    let source_part_digest = source_parts
+        .get(&target.target.part_name)
+        .cloned()
+        .ok_or("PPTX C5B 源幻灯片部件摘要缺失")?;
+    let output_part_digest = output_parts
+        .get(&target.target.part_name)
+        .cloned()
+        .ok_or("PPTX C5B 输出幻灯片部件摘要缺失")?;
+    Ok((
+        PptxIsolatedMetadataPatchReport {
+            status: "isolated_shape_delete_verified".into(),
+            engine: "LongEdit C5B isolated PPTX basic-shape delete".into(),
+            operation: "basic-shape-delete".into(),
+            target_id: target.target.id,
+            target_kind: target.target.shape_type,
+            target_part: target.target.part_name,
+            source_digest: digest(source),
+            output_digest: digest(&output),
+            source_part_digest,
+            output_part_digest,
+            changed_parts,
+            unchanged_part_count: source_parts.len().saturating_sub(1),
+            unchanged_parts_verified: true,
+            structural_reparse_verified: true,
+            semantic_reparse_verified,
+            temporary_copy_reopen_verified: false,
+            source_unchanged: false,
+            writes_user_file: false,
+            output_bytes: output.len(),
+        },
+        output,
+    ))
+}
+
 pub fn build_pptx_edit_baseline(
     source: &[u8],
     source_signature: String,
@@ -1943,6 +2510,8 @@ pub fn build_pptx_edit_baseline(
     let editable_style_targets = inspect_pptx_editable_style_targets(source)?;
     let editable_alt_text_targets = inspect_pptx_editable_alt_text_targets(source)?;
     let editable_image_targets = inspect_pptx_editable_image_targets(source)?;
+    let (editable_shape_slides, editable_shape_targets) =
+        inspect_pptx_editable_shape_targets(source)?;
 
     Ok((
         PptxEditBaselineReport {
@@ -1973,6 +2542,8 @@ pub fn build_pptx_edit_baseline(
             editable_style_targets,
             editable_alt_text_targets,
             editable_image_targets,
+            editable_shape_slides,
+            editable_shape_targets,
             parts: source_parts,
         },
         isolated,
@@ -1983,9 +2554,8 @@ pub fn build_pptx_edit_baseline(
 mod tests {
     use super::*;
 
-    #[test]
-    fn c5a_replaces_one_unshared_image_part_for_all_real_producers() {
-        let fixtures: [(&str, &[u8]); 3] = [
+    fn real_producer_fixtures() -> [(&'static str, &'static [u8]); 3] {
+        [
             (
                 "powerpoint",
                 include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx"),
@@ -1998,9 +2568,165 @@ mod tests {
                 "libreoffice",
                 include_bytes!("../../../fixtures/pptx/producers/libreoffice-impress.pptx"),
             ),
-        ];
+        ]
+    }
 
-        for (producer, source) in fixtures {
+    #[test]
+    fn c5b_adds_and_deletes_basic_shapes_for_all_real_producers() {
+        for (producer, source) in real_producer_fixtures() {
+            let original_model =
+                parse_pptx(source).unwrap_or_else(|error| panic!("{producer}: {error}"));
+            let (slides, safe_deletions) = inspect_pptx_editable_shape_targets(source)
+                .unwrap_or_else(|error| panic!("{producer} targets: {error}"));
+            assert_eq!(slides.len(), original_model.slides.len(), "{producer}");
+            assert!(safe_deletions.iter().all(|target| {
+                matches!(target.shape_type.as_str(), "rect" | "ellipse" | "line")
+            }));
+            let slide = slides.first().expect("fixture slide");
+
+            for shape_type in ["rectangle", "ellipse", "line"] {
+                let (add_report, added) = build_pptx_shape_add_isolated(
+                    source,
+                    &slide.id,
+                    &slide.expected_part_digest,
+                    shape_type,
+                    914_400,
+                    914_400,
+                    2_743_200,
+                    1_371_600,
+                    "DDEEFF",
+                    "2255AA",
+                    25_400,
+                )
+                .unwrap_or_else(|error| panic!("{producer} {shape_type} add: {error}"));
+                assert_eq!(add_report.operation, "basic-shape-add", "{producer}");
+                assert_eq!(add_report.changed_parts, [slide.part_name.clone()]);
+                assert!(add_report.unchanged_parts_verified);
+                assert!(add_report.structural_reparse_verified);
+                assert!(add_report.semantic_reparse_verified);
+
+                let (_, added_targets) = inspect_pptx_editable_shape_targets(&added)
+                    .unwrap_or_else(|error| panic!("{producer} added targets: {error}"));
+                let preset = shape_preset(shape_type).unwrap().0;
+                let added_target = added_targets
+                    .iter()
+                    .find(|target| {
+                        target.object_name.starts_with("LongEdit ") && target.shape_type == preset
+                    })
+                    .unwrap_or_else(|| panic!("{producer} {shape_type} delete target"));
+                let (delete_report, deleted) = build_pptx_shape_delete_isolated(
+                    &added,
+                    &added_target.id,
+                    &added_target.expected_shape_digest,
+                    &added_target.expected_part_digest,
+                )
+                .unwrap_or_else(|error| panic!("{producer} {shape_type} delete: {error}"));
+                assert_eq!(delete_report.operation, "basic-shape-delete");
+                assert_eq!(delete_report.changed_parts, [slide.part_name.clone()]);
+                assert!(delete_report.unchanged_parts_verified);
+                assert!(delete_report.structural_reparse_verified);
+                assert!(delete_report.semantic_reparse_verified);
+                assert_eq!(
+                    read_part(&deleted, &slide.part_name).unwrap(),
+                    read_part(source, &slide.part_name).unwrap(),
+                    "{producer} {shape_type} slide bytes after add/delete"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn c5b_rejects_stale_unsafe_and_out_of_bounds_shape_operations() {
+        let source = include_bytes!("../../../fixtures/pptx/producers/wps-presentation.pptx");
+        let (slides, safe_targets) = inspect_pptx_editable_shape_targets(source).unwrap();
+        let slide = slides.first().unwrap();
+        assert!(build_pptx_shape_add_isolated(
+            source,
+            &slide.id,
+            &"0".repeat(64),
+            "rectangle",
+            10,
+            10,
+            100,
+            100,
+            "DDEEFF",
+            "2255AA",
+            12_700,
+        )
+        .unwrap_err()
+        .contains("已变化"));
+        assert!(build_pptx_shape_add_isolated(
+            source,
+            &slide.id,
+            &slide.expected_part_digest,
+            "triangle",
+            10,
+            10,
+            100,
+            100,
+            "DDEEFF",
+            "2255AA",
+            12_700,
+        )
+        .unwrap_err()
+        .contains("矩形、椭圆和线条"));
+        assert!(build_pptx_shape_add_isolated(
+            source,
+            &slide.id,
+            &slide.expected_part_digest,
+            "rectangle",
+            10,
+            10,
+            i64::MAX,
+            100,
+            "DDEEFF",
+            "2255AA",
+            12_700,
+        )
+        .unwrap_err()
+        .contains("幻灯片范围"));
+        assert!(build_pptx_shape_add_isolated(
+            source,
+            &slide.id,
+            &slide.expected_part_digest,
+            "rectangle",
+            10,
+            10,
+            100,
+            100,
+            "not-a-color",
+            "2255AA",
+            12_700,
+        )
+        .unwrap_err()
+        .contains("十六进制"));
+        assert!(safe_targets.iter().all(|target| {
+            let object = parse_pptx(source).unwrap().slides[target.slide_number - 1]
+                .objects
+                .iter()
+                .find(|object| object.id == target.object_id)
+                .cloned()
+                .unwrap();
+            object.text.is_empty()
+                && object.parent_group_id.is_none()
+                && object.media_part.is_none()
+                && object.related_part.is_none()
+        }));
+        if let Some(target) = safe_targets.first() {
+            assert!(build_pptx_shape_delete_isolated(
+                source,
+                &target.id,
+                &"0".repeat(64),
+                &target.expected_part_digest,
+            )
+            .unwrap_err()
+            .contains("已变化"));
+        }
+    }
+
+    #[test]
+    fn c5a_replaces_one_unshared_image_part_for_all_real_producers() {
+        for (producer, source) in real_producer_fixtures() {
             let target = inspect_pptx_editable_image_targets(source)
                 .unwrap_or_else(|error| panic!("{producer} targets: {error}"))
                 .into_iter()

@@ -1,0 +1,210 @@
+{
+    "schemaVersion":  1,
+    "stage":  "C5B",
+    "verifiedAt":  "2026-07-28T02:26:08.8254838Z",
+    "status":  "verified",
+    "verifiedCount":  3,
+    "requiredCount":  3,
+    "complete":  true,
+    "requiredProducerIds":  [
+                                "microsoft-powerpoint",
+                                "wps-presentation",
+                                "libreoffice-impress"
+                            ],
+    "operations":  [
+                       "rectangle",
+                       "ellipse",
+                       "line",
+                       "delete"
+                   ],
+    "outputs":  [
+                    {
+                        "operation":  "rectangle",
+                        "file":  "c5b-rectangle-copy.pptx",
+                        "bytes":  94663,
+                        "sha256Before":  "3e037c5d147596f095cd793e2fb8225108cfd30354e516cd3704fedc136185d3",
+                        "sha256After":  "3e037c5d147596f095cd793e2fb8225108cfd30354e516cd3704fedc136185d3",
+                        "sourceUnchanged":  true
+                    },
+                    {
+                        "operation":  "ellipse",
+                        "file":  "c5b-ellipse-copy.pptx",
+                        "bytes":  94667,
+                        "sha256Before":  "4fe7ce554bf69e7ebbd3fa371d8b324f6d78b17f5b217aadfc8bc3d6e9c7dc0d",
+                        "sha256After":  "4fe7ce554bf69e7ebbd3fa371d8b324f6d78b17f5b217aadfc8bc3d6e9c7dc0d",
+                        "sourceUnchanged":  true
+                    },
+                    {
+                        "operation":  "line",
+                        "file":  "c5b-line-copy.pptx",
+                        "bytes":  94660,
+                        "sha256Before":  "cf7765a2a314ca597519ba1cececab59f62cfa790a9a988c430a2ff09d1f8649",
+                        "sha256After":  "cf7765a2a314ca597519ba1cececab59f62cfa790a9a988c430a2ff09d1f8649",
+                        "sourceUnchanged":  true
+                    },
+                    {
+                        "operation":  "delete",
+                        "file":  "c5b-delete-copy.pptx",
+                        "bytes":  94589,
+                        "sha256Before":  "826a5e916889c20e4e501a6c222311fe2d37f8aa1a9f3d2e76b753318e4c651f",
+                        "sha256After":  "826a5e916889c20e4e501a6c222311fe2d37f8aa1a9f3d2e76b753318e4c651f",
+                        "sourceUnchanged":  true
+                    }
+                ],
+    "producers":  [
+                      {
+                          "id":  "microsoft-powerpoint",
+                          "producer":  "Microsoft PowerPoint",
+                          "status":  "verified",
+                          "version":  "16.0",
+                          "method":  "An isolated PowerPoint.Application instance opened all four C5B outputs read-only, retained 3 slides, recovered each added shape with valid geometry, and confirmed the delete output contains no LongEdit shape.",
+                          "outputs":  [
+                                          {
+                                              "operation":  "rectangle",
+                                              "file":  "c5b-rectangle-copy.pptx",
+                                              "slideCount":  3,
+                                              "longEditShapes":  [
+                                                                     {
+                                                                         "slideNumber":  1,
+                                                                         "name":  "LongEdit Rectangle 5",
+                                                                         "type":  1,
+                                                                         "width":  216,
+                                                                         "height":  108
+                                                                     }
+                                                                 ]
+                                          },
+                                          {
+                                              "operation":  "ellipse",
+                                              "file":  "c5b-ellipse-copy.pptx",
+                                              "slideCount":  3,
+                                              "longEditShapes":  [
+                                                                     {
+                                                                         "slideNumber":  1,
+                                                                         "name":  "LongEdit Ellipse 5",
+                                                                         "type":  1,
+                                                                         "width":  216,
+                                                                         "height":  108
+                                                                     }
+                                                                 ]
+                                          },
+                                          {
+                                              "operation":  "line",
+                                              "file":  "c5b-line-copy.pptx",
+                                              "slideCount":  3,
+                                              "longEditShapes":  [
+                                                                     {
+                                                                         "slideNumber":  1,
+                                                                         "name":  "LongEdit Line 5",
+                                                                         "type":  9,
+                                                                         "width":  216,
+                                                                         "height":  108
+                                                                     }
+                                                                 ]
+                                          },
+                                          {
+                                              "operation":  "delete",
+                                              "file":  "c5b-delete-copy.pptx",
+                                              "slideCount":  3,
+                                              "longEditShapes":  [
+
+                                                                 ]
+                                          }
+                                      ],
+                          "evidenceDependency":  null
+                      },
+                      {
+                          "id":  "wps-presentation",
+                          "producer":  "WPS Presentation",
+                          "status":  "verified",
+                          "version":  "12.1.0.26895",
+                          "method":  "An isolated KWPP.Application instance opened all four C5B outputs read-only, retained 3 slides, recovered each added shape with valid geometry, and confirmed the delete output contains no LongEdit shape.",
+                          "outputs":  [
+                                          {
+                                              "operation":  "rectangle",
+                                              "file":  "c5b-rectangle-copy.pptx",
+                                              "slideCount":  3,
+                                              "longEditShapes":  [
+                                                                     {
+                                                                         "slideNumber":  1,
+                                                                         "name":  "LongEdit Rectangle 5",
+                                                                         "type":  1,
+                                                                         "width":  216,
+                                                                         "height":  108
+                                                                     }
+                                                                 ]
+                                          },
+                                          {
+                                              "operation":  "ellipse",
+                                              "file":  "c5b-ellipse-copy.pptx",
+                                              "slideCount":  3,
+                                              "longEditShapes":  [
+                                                                     {
+                                                                         "slideNumber":  1,
+                                                                         "name":  "LongEdit Ellipse 5",
+                                                                         "type":  1,
+                                                                         "width":  216,
+                                                                         "height":  108
+                                                                     }
+                                                                 ]
+                                          },
+                                          {
+                                              "operation":  "line",
+                                              "file":  "c5b-line-copy.pptx",
+                                              "slideCount":  3,
+                                              "longEditShapes":  [
+                                                                     {
+                                                                         "slideNumber":  1,
+                                                                         "name":  "LongEdit Line 5",
+                                                                         "type":  9,
+                                                                         "width":  216,
+                                                                         "height":  108
+                                                                     }
+                                                                 ]
+                                          },
+                                          {
+                                              "operation":  "delete",
+                                              "file":  "c5b-delete-copy.pptx",
+                                              "slideCount":  3,
+                                              "longEditShapes":  [
+
+                                                                 ]
+                                          }
+                                      ],
+                          "evidenceDependency":  null
+                      },
+                      {
+                          "id":  "libreoffice-impress",
+                          "producer":  "LibreOffice Impress",
+                          "status":  "verified",
+                          "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                          "method":  "An isolated headless LibreOffice profile opened and rendered all four C5B outputs to non-empty PDFs.",
+                          "outputs":  [
+                                          {
+                                              "operation":  "rectangle",
+                                              "file":  "c5b-rectangle-copy.pptx",
+                                              "slideCount":  3,
+                                              "renderedPdfBytes":  54606
+                                          },
+                                          {
+                                              "operation":  "ellipse",
+                                              "file":  "c5b-ellipse-copy.pptx",
+                                              "slideCount":  3,
+                                              "renderedPdfBytes":  54819
+                                          },
+                                          {
+                                              "operation":  "line",
+                                              "file":  "c5b-line-copy.pptx",
+                                              "slideCount":  3,
+                                              "renderedPdfBytes":  54566
+                                          },
+                                          {
+                                              "operation":  "delete",
+                                              "file":  "c5b-delete-copy.pptx",
+                                              "slideCount":  3,
+                                              "renderedPdfBytes":  54340
+                                          }
+                                      ],
+                          "evidenceDependency":  null
+                      }
+                  ]
+}

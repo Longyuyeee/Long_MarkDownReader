@@ -1,6 +1,7 @@
 use crate::formats::pptx::{parse_pptx, PptxPresentationModel, MAX_PPTX_FILE_BYTES};
 use crate::formats::pptx_edit::{
     build_pptx_alt_text_patch_isolated, build_pptx_edit_baseline, build_pptx_image_patch_isolated,
+    build_pptx_shape_add_isolated, build_pptx_shape_delete_isolated,
     build_pptx_style_patch_isolated, build_pptx_text_patch_isolated, PptxEditBaselineReport,
     PptxIsolatedMetadataPatchReport, PptxIsolatedTextPatchReport,
 };
@@ -100,6 +101,34 @@ pub enum PptxPatchOperation {
         replacement_mime_type: String,
         #[serde(rename = "replacementBase64")]
         replacement_base64: String,
+    },
+    #[serde(rename = "shapeAdd")]
+    ShapeAdd {
+        #[serde(rename = "slideTargetId")]
+        slide_target_id: String,
+        #[serde(rename = "expectedPartDigest")]
+        expected_part_digest: String,
+        #[serde(rename = "shapeType")]
+        shape_type: String,
+        x: i64,
+        y: i64,
+        width: i64,
+        height: i64,
+        #[serde(rename = "fillColor")]
+        fill_color: String,
+        #[serde(rename = "lineColor")]
+        line_color: String,
+        #[serde(rename = "lineWidth")]
+        line_width: i64,
+    },
+    #[serde(rename = "shapeDelete")]
+    ShapeDelete {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedShapeDigest")]
+        expected_shape_digest: String,
+        #[serde(rename = "expectedPartDigest")]
+        expected_part_digest: String,
     },
 }
 
@@ -555,6 +584,64 @@ fn build_pptx_operation(
                 output,
             })
         }
+        PptxPatchOperation::ShapeAdd {
+            slide_target_id,
+            expected_part_digest,
+            shape_type,
+            x,
+            y,
+            width,
+            height,
+            fill_color,
+            line_color,
+            line_width,
+        } => {
+            let (report, output) = build_pptx_shape_add_isolated(
+                source,
+                slide_target_id,
+                expected_part_digest,
+                shape_type,
+                *x,
+                *y,
+                *width,
+                *height,
+                fill_color,
+                line_color,
+                *line_width,
+            )?;
+            Ok(BuiltPptxOperation {
+                engine: report.engine,
+                operation_kind: report.operation,
+                output_digest: report.output_digest,
+                changed_parts: report.changed_parts,
+                unchanged_parts_verified: report.unchanged_parts_verified,
+                structural_reparse_verified: report.structural_reparse_verified,
+                semantic_reparse_verified: report.semantic_reparse_verified,
+                output,
+            })
+        }
+        PptxPatchOperation::ShapeDelete {
+            target_id,
+            expected_shape_digest,
+            expected_part_digest,
+        } => {
+            let (report, output) = build_pptx_shape_delete_isolated(
+                source,
+                target_id,
+                expected_shape_digest,
+                expected_part_digest,
+            )?;
+            Ok(BuiltPptxOperation {
+                engine: report.engine,
+                operation_kind: report.operation,
+                output_digest: report.output_digest,
+                changed_parts: report.changed_parts,
+                unchanged_parts_verified: report.unchanged_parts_verified,
+                structural_reparse_verified: report.structural_reparse_verified,
+                semantic_reparse_verified: report.semantic_reparse_verified,
+                output,
+            })
+        }
     }
 }
 
@@ -858,6 +945,71 @@ pub async fn preview_pptx_image_patch_isolated_copy(
     })
     .await
     .map_err(|error| format!("PPTX C5A 隔离图片替换任务失败: {error}"))?
+}
+
+#[tauri::command]
+#[allow(clippy::too_many_arguments)]
+pub async fn preview_pptx_shape_add_isolated_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    slide_target_id: String,
+    expected_part_digest: String,
+    shape_type: String,
+    x: i64,
+    y: i64,
+    width: i64,
+    height: i64,
+    fill_color: String,
+    line_color: String,
+    line_width: i64,
+) -> Result<PptxIsolatedMetadataPatchReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let presentation = guard.resolve_existing_file(path, &["pptx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_pptx_metadata_patch_path(&presentation, &expected_signature, "C5B", |source| {
+            build_pptx_shape_add_isolated(
+                source,
+                &slide_target_id,
+                &expected_part_digest,
+                &shape_type,
+                x,
+                y,
+                width,
+                height,
+                &fill_color,
+                &line_color,
+                line_width,
+            )
+        })
+    })
+    .await
+    .map_err(|error| format!("PPTX C5B 隔离形状新增任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_pptx_shape_delete_isolated_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    target_id: String,
+    expected_shape_digest: String,
+    expected_part_digest: String,
+) -> Result<PptxIsolatedMetadataPatchReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let presentation = guard.resolve_existing_file(path, &["pptx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_pptx_metadata_patch_path(&presentation, &expected_signature, "C5B", |source| {
+            build_pptx_shape_delete_isolated(
+                source,
+                &target_id,
+                &expected_shape_digest,
+                &expected_part_digest,
+            )
+        })
+    })
+    .await
+    .map_err(|error| format!("PPTX C5B 隔离形状删除任务失败: {error}"))?
 }
 
 #[tauri::command]
@@ -1214,6 +1366,90 @@ mod tests {
             assert!(target_path.exists(), "{name}");
             assert_eq!(fs::read(&source_path).unwrap(), source, "{name}");
         }
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn c5b_saves_shape_add_and_delete_copies_with_semantic_reopen() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-pptx-c5b-shapes-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let source =
+            include_bytes!("../../../fixtures/pptx/producers/wps-presentation.pptx").to_vec();
+        let source_path = root.join("source.pptx");
+        let added_path = root.join("shape-add-copy.pptx");
+        let deleted_path = root.join("shape-delete-copy.pptx");
+        fs::write(&source_path, &source).unwrap();
+        let source_signature = file_signature(&source_path.metadata().unwrap());
+        let (baseline, _) = build_pptx_edit_baseline(&source, source_signature.clone()).unwrap();
+        let slide = baseline.editable_shape_slides.first().unwrap();
+        let add_operation = PptxPatchOperation::ShapeAdd {
+            slide_target_id: slide.id.clone(),
+            expected_part_digest: slide.expected_part_digest.clone(),
+            shape_type: "rectangle".into(),
+            x: 914_400,
+            y: 914_400,
+            width: 2_743_200,
+            height: 1_371_600,
+            fill_color: "DDEEFF".into(),
+            line_color: "2255AA".into(),
+            line_width: 25_400,
+        };
+        let add_preview = build_pptx_operation(&source, &add_operation).unwrap();
+        let add_saved = save_pptx_patch_copy_to_path(
+            &source_path,
+            &added_path,
+            &source_signature,
+            &add_preview.output_digest,
+            &add_operation,
+        )
+        .unwrap();
+        assert_eq!(add_saved.operation_kind, "basic-shape-add");
+        assert!(add_saved.semantic_reopen_verified);
+        assert_eq!(fs::read(&source_path).unwrap(), source);
+
+        let added = fs::read(&added_path).unwrap();
+        let added_signature = file_signature(&added_path.metadata().unwrap());
+        let (added_baseline, _) =
+            build_pptx_edit_baseline(&added, added_signature.clone()).unwrap();
+        let shape = added_baseline
+            .editable_shape_targets
+            .iter()
+            .find(|target| target.object_name.starts_with("LongEdit Rectangle"))
+            .unwrap();
+        let delete_operation = PptxPatchOperation::ShapeDelete {
+            target_id: shape.id.clone(),
+            expected_shape_digest: shape.expected_shape_digest.clone(),
+            expected_part_digest: shape.expected_part_digest.clone(),
+        };
+        let delete_preview = build_pptx_operation(&added, &delete_operation).unwrap();
+        let delete_saved = save_pptx_patch_copy_to_path(
+            &added_path,
+            &deleted_path,
+            &added_signature,
+            &delete_preview.output_digest,
+            &delete_operation,
+        )
+        .unwrap();
+        assert_eq!(delete_saved.operation_kind, "basic-shape-delete");
+        assert!(delete_saved.semantic_reopen_verified);
+        assert_eq!(fs::read(&added_path).unwrap(), added);
+        assert_eq!(
+            parse_pptx(&fs::read(&deleted_path).unwrap())
+                .unwrap()
+                .slides[0]
+                .objects
+                .iter()
+                .filter(|object| object.name.starts_with("LongEdit Rectangle"))
+                .count(),
+            0
+        );
         fs::remove_dir_all(root).unwrap();
     }
 
