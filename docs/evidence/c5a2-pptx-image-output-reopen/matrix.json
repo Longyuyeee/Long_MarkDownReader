@@ -1,0 +1,62 @@
+{
+    "schemaVersion":  1,
+    "stage":  "C5A2",
+    "verifiedAt":  "2026-07-28T01:27:52.4395107Z",
+    "status":  "verified",
+    "verifiedCount":  3,
+    "requiredCount":  3,
+    "complete":  true,
+    "requiredProducerIds":  [
+                                "microsoft-powerpoint",
+                                "wps-presentation",
+                                "libreoffice-impress"
+                            ],
+    "output":  {
+                   "file":  "c5a-image-copy.pptx",
+                   "bytes":  92106,
+                   "sha256Before":  "ad25ec6bfb35c5db2f250db160c3c89ee3bacdec88a4bb557c315c93f912bcc3",
+                   "sha256After":  "ad25ec6bfb35c5db2f250db160c3c89ee3bacdec88a4bb557c315c93f912bcc3",
+                   "sourceUnchanged":  true,
+                   "changedPackagePart":  "ppt/media/image1.png",
+                   "targetSlideNumber":  2,
+                   "targetShapeName":  "WPS producer image"
+               },
+    "producers":  [
+                      {
+                          "id":  "microsoft-powerpoint",
+                          "producer":  "Microsoft PowerPoint",
+                          "status":  "verified",
+                          "version":  "16.0",
+                          "method":  "An isolated PowerPoint.Application instance opened the C5A image output read-only, retained 3 slides, recovered the named embedded picture on slide 2, and exported the decoded picture to PNG.",
+                          "slideCount":  3,
+                          "targetShapeName":  "WPS producer image",
+                          "targetShapeType":  13,
+                          "exportedImageBytes":  42663,
+                          "evidenceDependency":  null
+                      },
+                      {
+                          "id":  "wps-presentation",
+                          "producer":  "WPS Presentation",
+                          "status":  "verified",
+                          "version":  "12.1.0.26895",
+                          "method":  "An isolated KWPP.Application instance opened the C5A image output read-only, retained 3 slides, recovered the named embedded picture on slide 2, and exported the decoded picture to PNG.",
+                          "slideCount":  3,
+                          "targetShapeName":  "WPS producer image",
+                          "targetShapeType":  13,
+                          "exportedImageBytes":  2963,
+                          "evidenceDependency":  null
+                      },
+                      {
+                          "id":  "libreoffice-impress",
+                          "producer":  "LibreOffice Impress",
+                          "status":  "verified",
+                          "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                          "method":  "An isolated headless LibreOffice profile opened the C5A image output and rendered all slides, including the replacement image, to a non-empty PDF.",
+                          "slideCount":  3,
+                          "targetShapeName":  "WPS producer image",
+                          "targetShapeType":  "rendered-picture",
+                          "exportedImageBytes":  53313,
+                          "evidenceDependency":  null
+                      }
+                  ]
+}

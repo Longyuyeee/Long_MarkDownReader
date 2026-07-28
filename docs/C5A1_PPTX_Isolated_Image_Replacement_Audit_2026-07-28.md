@@ -3,7 +3,7 @@
 > 审计日期：2026-07-28
 > 阶段状态：C5A1 已完成；C5A 整体部分完成
 > 当前能力：安全目标枚举、隔离预览、可靠新副本、应用内复开
-> 下一入口：C5A2 PowerPoint / WPS Presentation / LibreOffice Impress 输出复开
+> 后续状态：C5A2 PowerPoint / WPS Presentation / LibreOffice Impress 3/3 输出复开已完成；当前入口为 C5B
 
 ## 1. 目标与结论
 
@@ -114,7 +114,9 @@ Rust 定向回归覆盖三类真实生产者输入：
 
 ## 5. 能力边界与下一步
 
-C5A1 证明 LongEdit 可以安全生成图片替换副本并由自身复读，但应用内复读不能替代外部 Office 软件验收。因此 C5A 尚不能标记为整体完成。
+C5A1 证明 LongEdit 可以安全生成图片替换副本并由自身复读，但应用内复读不能替代外部 Office 软件验收。因此本文完成时 C5A 尚不能标记为整体完成。
+
+> 后续状态：C5A2 已于 2026-07-28 完成 PowerPoint、WPS Presentation 和 LibreOffice Impress 3/3 输出复开，详见 [`C5A2_PPTX_Image_Output_Producer_Reopen_Audit_2026-07-28.md`](./C5A2_PPTX_Image_Output_Producer_Reopen_Audit_2026-07-28.md)。C5A 现已整体收口，下一入口为 C5B。
 
 C5A2 必须：
 
