@@ -404,6 +404,11 @@
             />
           </div>
         </div>
+        <div v-else-if="activeTabId" class="embedded-format-capability">
+          <span class="format-capability-badge" :class="`level-${activeDocumentFormat?.userCapability.level || 'unsupported'}`" :title="activeDocumentFormat?.userCapability.description">
+            {{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}
+          </span>
+        </div>
       </div>
       
       <div class="editor-viewport" :class="'editor-width-' + editorWidthMode" :style="{ '--custom-editor-bg': store.editorBgColor || 'transparent' }">
@@ -3281,6 +3286,21 @@ watch(activeTabId, (newId, oldId) => {
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
 .tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; gap: 12px; }
 .active-relation-summary { flex: none; }
+.embedded-format-capability {
+  display: flex;
+  min-width: 0;
+  flex: none;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.embedded-format-capability .format-capability-badge {
+  max-width: min(220px, 24vw);
+  padding-right: 0;
+  border-right: 0;
+}
 
 .tab-actions {
   display: flex;

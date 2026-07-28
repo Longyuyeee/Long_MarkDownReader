@@ -189,15 +189,20 @@ if (!pptxFormat
   || pptxFormat.extensions?.join(',') !== '.pptx'
   || pptxFormat.maxBytes !== 96 * 1024 * 1024
   || pptxFormat.capabilities?.read !== 'supported'
-  || pptxFormat.capabilities?.edit !== 'planned'
+  || pptxFormat.capabilities?.edit !== 'supported'
   || pptxFormat.capabilities?.create !== 'unsupported'
   || pptxFormat.capabilities?.index !== 'supported'
   || pptxFormat.adapters?.reader !== 'pptx'
-  || pptxFormat.adapters?.writer !== null
+  || pptxFormat.adapters?.writer !== 'pptx'
   || pptxFormat.adapters?.creator !== null
   || pptxFormat.adapters?.indexer !== 'pptx'
-  || pptxFormat.userCapability?.level !== 'preview-only'
-  || pptxFormat.userCapability?.saveMode !== 'none') failures.push('C3A PPTX structured read-only contract is incomplete')
+  || pptxFormat.userCapability?.level !== 'basic-edit'
+  || pptxFormat.userCapability?.label !== '基础编辑副本'
+  || pptxFormat.userCapability?.saveMode !== 'copy'
+  || !pptxFormat.userCapability?.description?.includes('单引用 PNG/JPEG')
+  || !pptxFormat.userCapability?.description?.includes('幻灯片新增/复制/删除/排序')
+  || !pptxFormat.userCapability?.description?.includes('原演示文稿始终只读')
+  || !pptxFormat.userCapability?.description?.includes('母版、动画、SmartArt、复杂图表')) failures.push('C5D PPTX basic copy-edit contract is incomplete')
 
 const requireText = (source, value, message) => { if (!source.includes(value)) failures.push(message) }
 const forbid = (source, pattern, message) => { if (pattern.test(source)) failures.push(message) }
@@ -205,7 +210,9 @@ requireText(frontend, "../../shared/file-formats.json", 'frontend must consume s
 requireText(rustRegistry, '../../../shared/file-formats.json', 'Rust must consume shared registry')
 requireText(frontend, 'SORTED_FILE_FORMATS', 'frontend matching must use longest-extension sorted formats')
 requireText(frontend, 'userCapability', 'frontend must expose user-visible capability tiers')
+requireText(frontend, 'supported(format.capabilities.edit) !== Boolean(format.adapters.writer)', 'frontend registry must keep edit capability and writer adapters aligned')
 requireText(rustRegistry, 'user_capability', 'Rust registry must expose user-visible capability tiers')
+requireText(rustRegistry, 'format.capabilities.edit.is_supported() != format.adapters.writer.is_some()', 'Rust registry must keep edit capability and writer adapters aligned')
 requireText(rustRegistry, '.max_by_key(|(extension_len, _)| *extension_len)', 'Rust matching must prefer the longest extension')
 requireText(rustRegistry, 'is_sensitive_path', 'A4 must define one backend sensitive-path policy')
 requireText(textEditor, 'maskEnvValues', 'A4 ENV workspace must mask values by default')
@@ -544,7 +551,8 @@ requireText(pptxCommands, 'parse_pptx(&saved)', 'C4D must structurally reopen th
 requireText(pptxCommands, 'remove_created_pptx_if_exact', 'C4D must clean only its exact failed output')
 requireText(pptxCommands, 'external_producer_reopen_required: true', 'C4D must explicitly defer external producer reopen to C4E')
 requireText(pptxReader, 'prepareEditBaseline', 'C4A PPTX workspace must expose edit preparation inside the existing reader')
-requireText(pptxReader, 'C4A 仅建立保护基线', 'C4A UI must disclose that editing and source writing remain disabled')
+requireText(pptxReader, '所有操作均在隔离副本中验证', 'C5D UI must disclose the isolated edit boundary')
+requireText(pptxReader, '源 PPTX 始终只读', 'C5D UI must disclose that the source presentation remains read-only')
 requireText(pptxReader, 'C4B 隔离文本预览', 'C4B controls must remain inside the existing PPTX details panel')
 requireText(pptxReader, 'preview_pptx_text_patch_isolated_copy', 'C4B workspace must invoke only the isolated preview command')
 requireText(pptxReader, 'C4C 样式与无障碍预览', 'C4C controls must remain inside the existing PPTX details panel')
@@ -574,7 +582,7 @@ requireText(pptxReader, 'libraryRoot: store.libraryPath', 'C3C2 PPTX workspace m
 for (const forbiddenPptxWrite of ['write_pptx', 'overwrite_pptx', 'save_pptx_overwrite']) {
   if (pptxCommands.includes(forbiddenPptxWrite)) failures.push(`C4D must not expose unsafe PPTX write command: ${forbiddenPptxWrite}`)
 }
-requireText(pptxReader, '结构化只读', 'C3A PPTX workspace must identify its read-only capability')
+requireText(pptxReader, '基础编辑副本 · 原文件不写回', 'C5D PPTX workspace must identify its bounded copy-edit capability')
 requireText(pptxReader, '搜索 PPTX 文本与备注', 'C3A PPTX workspace must expose in-presentation search')
 requireText(pptxReader, '放映', 'C3A PPTX workspace must expose read-only presentation mode')
 requireText(pptxReader, '兼容画像', 'C3A PPTX workspace must expose its compatibility profile')

@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-28T04:03:17.245Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:9000/#/workspace",
+  "fixtureLocation": "isolated temporary workspace",
+  "producer": "wps-presentation",
+  "capability": {
+    "edit": "supported",
+    "level": "basic-edit",
+    "label": "基础编辑副本",
+    "saveMode": "copy",
+    "writer": "pptx"
+  },
+  "viewportMatrix": [
+    "normal-1280x820",
+    "compact-960x720"
+  ],
+  "themeMatrix": [
+    "professional-light",
+    "professional-dark"
+  ],
+  "sourceSha256": "1bbb8343566166a351ff37054cfbb91ad61122930fb2e3f588e9658afda59f9a",
+  "sourceOverwriteAllowed": false,
+  "scenarios": [
+    {
+      "preset": "professional-light",
+      "theme": "white",
+      "width": 1280,
+      "height": 820,
+      "mode": "normal",
+      "file": "professional-light-normal-1280.jpg",
+      "status": "passed",
+      "state": {
+        "theme": "white",
+        "badge": "PowerPoint 演示 · 基础编辑副本",
+        "identity": "wps-presentation.pptx基础编辑副本 · 原文件不写回",
+        "safety": "编辑安全基线尚未启动编辑。源 PPTX 始终只读，编辑结果仅可另存为同目录新副本。",
+        "workspaceOverflow": false,
+        "shellOverflow": false,
+        "viewportOverflow": false,
+        "width": 1280
+      }
+    },
+    {
+      "preset": "professional-light",
+      "theme": "white",
+      "width": 960,
+      "height": 720,
+      "mode": "compact",
+      "file": "professional-light-compact-960.jpg",
+      "status": "passed",
+      "state": {
+        "theme": "white",
+        "badge": "PowerPoint 演示 · 基础编辑副本",
+        "identity": "wps-presentation.pptx基础编辑副本 · 原文件不写回",
+        "safety": "编辑安全基线尚未启动编辑。源 PPTX 始终只读，编辑结果仅可另存为同目录新副本。",
+        "workspaceOverflow": false,
+        "shellOverflow": false,
+        "viewportOverflow": false,
+        "width": 960
+      }
+    },
+    {
+      "preset": "professional-dark",
+      "theme": "dark",
+      "width": 1280,
+      "height": 820,
+      "mode": "normal",
+      "file": "professional-dark-normal-1280.jpg",
+      "status": "passed",
+      "state": {
+        "theme": "dark",
+        "badge": "PowerPoint 演示 · 基础编辑副本",
+        "identity": "wps-presentation.pptx基础编辑副本 · 原文件不写回",
+        "safety": "编辑安全基线尚未启动编辑。源 PPTX 始终只读，编辑结果仅可另存为同目录新副本。",
+        "workspaceOverflow": false,
+        "shellOverflow": false,
+        "viewportOverflow": false,
+        "width": 1280
+      }
+    },
+    {
+      "preset": "professional-dark",
+      "theme": "dark",
+      "width": 960,
+      "height": 720,
+      "mode": "compact",
+      "file": "professional-dark-compact-960.jpg",
+      "status": "passed",
+      "state": {
+        "theme": "dark",
+        "badge": "PowerPoint 演示 · 基础编辑副本",
+        "identity": "wps-presentation.pptx基础编辑副本 · 原文件不写回",
+        "safety": "编辑安全基线尚未启动编辑。源 PPTX 始终只读，编辑结果仅可另存为同目录新副本。",
+        "workspaceOverflow": false,
+        "shellOverflow": false,
+        "viewportOverflow": false,
+        "width": 960
+      }
+    }
+  ],
+  "checks": [
+    {
+      "id": "registry-basic-copy-edit",
+      "status": "passed",
+      "capability": {
+        "edit": "supported",
+        "level": "basic-edit",
+        "label": "基础编辑副本",
+        "saveMode": "copy",
+        "writer": "pptx"
+      }
+    },
+    {
+      "id": "workspace-capability-and-source-boundary",
+      "status": "passed"
+    },
+    {
+      "id": "normal-and-compact-layouts-without-overflow",
+      "status": "passed"
+    },
+    {
+      "id": "professional-light-and-dark-themes",
+      "status": "passed"
+    },
+    {
+      "id": "wps-source-bytes-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "professional-light-normal-1280.jpg",
+    "professional-light-compact-960.jpg",
+    "professional-dark-normal-1280.jpg",
+    "professional-dark-compact-960.jpg"
+  ]
+}

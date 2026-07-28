@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E、C5A1/C5A2/C5B/C5C 已完成；图片替换、白名单基础形状及页面生命周期输出均已通过 PowerPoint/WPS/LibreOffice 3/3 复开。下一开发入口为 C5D PPTX 发布收口。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
+> 当前状态：A0～A5、G8-1/G8-2A/G8-2B、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C5D 已完成；PPTX 已统一为 `basic-edit / copy` 并通过正常/紧凑、明/暗真实桌面发布矩阵。下一开发入口为 B2A PDF 拆分/提取。总体完成度、能力边界和 P0～P2 收口顺序以 [2026-07-28 当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为准。
 
 ## 1. 指导目标
 
@@ -402,7 +402,7 @@ DOCX 样本覆盖段落、标题、列表、表格、图片、分页、页眉页
 - C5A2（已完成）：用 PowerPoint/WPS/LibreOffice 复开图片替换副本，直接解码目标图片或隔离渲染，并关闭 3/3 输出门禁；
 - C5B（已完成）：对白名单矩形、椭圆和线条实现安全新增/删除，4 份输出通过应用内重开及 PowerPoint/WPS/LibreOffice 3/3 复开；
 - C5C（已完成）：实现幻灯片新增、复制、删除和排序，维护演示文稿顺序、关系、内容类型和独占备注，并通过外部 3/3 复开。
-- C5D（下一步）：统一 PPTX 能力注册表、发布矩阵、界面和文档边界，完成发布尺寸与主题抽样及完整 CI。
+- C5D（已完成）：统一 PPTX 能力注册表、发布矩阵、界面和文档边界，正常/紧凑与明/暗真实桌面矩阵进入 CI。
 
 首批只开放：
 
@@ -584,7 +584,7 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 
 当前 **A4 已收口**：LOG、YAML、XML、TOML、INI/CONF/CFG、Properties、点配置、`.env` 和代表性代码格式进入统一注册、工作面与安全边界；真实桌面已验证 YAML/XML/TOML、Properties 和 TypeScript 保存重开，以及日志追加/轮转。
 
-历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C3D 已完成结构化只读与知识管理，C4A～C4E 已完成受限编辑、可靠新副本及三生产者复开；C5A1/C5A2、C5B、C5C 已分别关闭图片替换、基础形状和页面生命周期。下一步执行 **C5D PPTX 发布收口**。仍只允许新副本，不开放源文件覆盖，也不把 PPTX 描述为完整 PowerPoint 等价。
+历史暂停点审计（2026-07-24）仅用于追溯，不再作为恢复入口。DOCX C2E 已完成可靠另存；PPTX C3A～C5D 已完成结构化阅读、知识管理、受限基础编辑、可靠新副本、三生产者复开和发布收口。下一步执行 **B2A PDF 拆分/提取**，仍只创建新文件，不覆盖源 PDF，也不把页面操作描述为完整 PDF 正文编辑。
 
 当前批次的强制退出条件：
 

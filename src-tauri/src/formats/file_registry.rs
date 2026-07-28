@@ -129,6 +129,9 @@ impl FileFormatRegistry {
                     return Err(format!("文件扩展名无效或重复: {extension}"));
                 }
             }
+            if format.capabilities.edit.is_supported() != format.adapters.writer.is_some() {
+                return Err(format!("编辑能力与适配器不一致: {}", format.id));
+            }
             let has_creation = format.creation.is_some() && format.adapters.creator.is_some();
             if format.capabilities.create.is_supported() != has_creation {
                 return Err(format!("创建能力与适配器不一致: {}", format.id));
@@ -469,19 +472,19 @@ mod tests {
     }
 
     #[test]
-    fn pptx_is_structured_read_only_and_globally_indexed() {
+    fn pptx_is_basic_copy_edit_and_globally_indexed() {
         let format = file_format_for_path("roadmap.pptx").unwrap();
         assert_eq!(format.id, "pptx");
         assert_eq!(format.route_name, "PptxReader");
         assert!(format.capabilities.read.is_supported());
-        assert_eq!(format.capabilities.edit, CapabilityLevel::Planned);
+        assert!(format.capabilities.edit.is_supported());
+        assert_eq!(format.capabilities.create, CapabilityLevel::Unsupported);
         assert!(format.capabilities.index.is_supported());
-        assert_eq!(
-            format.user_capability.level,
-            UserCapabilityLevel::PreviewOnly
-        );
+        assert_eq!(format.user_capability.level, UserCapabilityLevel::BasicEdit);
+        assert_eq!(format.user_capability.save_mode, SaveMode::Copy);
         assert_eq!(format.adapters.reader.as_deref(), Some("pptx"));
+        assert_eq!(format.adapters.writer.as_deref(), Some("pptx"));
         assert_eq!(format.adapters.indexer.as_deref(), Some("pptx"));
-        assert!(format.adapters.writer.is_none());
+        assert!(format.adapters.creator.is_none());
     }
 }

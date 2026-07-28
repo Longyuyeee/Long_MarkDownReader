@@ -238,7 +238,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 | FR-DEV-001 | P2 | 常见代码与工程文件阅读编辑 | 部分完成 | A4 已交付 YAML/XML/TOML、常见配置和代表性代码格式的可靠轻量编辑，`.env` 默认遮罩且不索引，`.log` 提供有界只读、筛选、追尾和轮转；日志显式编辑、代码执行、调试和语言服务不在当前范围 |
 | FR-PDF-008 | P1 | PDF 页面级编辑 | 部分完成 | B0～B1C 已完成旋转、改序、排除、隔离副本验证、可靠另存、重开和兼容画像；提取、合并、拆分、插页进入增强队列，失败不破坏源文件 |
 | FR-OFFICE-001 | P1 | DOCX 阅读与基础编辑 | 已完成 | C0～C2E 已完成结构化阅读、索引、受限文本/样式/图片说明编辑、可靠另存和 Word/WPS/LibreOffice 输出复开；完整排版等价不在本阶段 |
-| FR-OFFICE-002 | P1 | PPTX 阅读与基础编辑 | 实现完成，待发布收口 | C3A～C4E 已完成安全阅读、知识管理与受限文本/样式编辑；C5A～C5C 已完成单引用图片、白名单基础形状和页面生命周期，应用内及外部 3/3 复开通过；C5D 待统一注册表和发布矩阵 |
+| FR-OFFICE-002 | P1 | PPTX 阅读与基础编辑 | 已完成 | C3A～C5D 已完成安全阅读、知识管理、受限文本/图片/形状/页面生命周期编辑、可靠新副本、外部 3/3 复开及 `basic-edit / copy` 发布矩阵 |
 | FR-OFFICE-003 | P2 | WPS、旧版 Office 与 OpenDocument | 未开始 | `.wps/.et/.dps/.doc/.xls/.ppt/.odt/.ods/.odp` 完成识别、许可/规范审计和分级预览或安全转换，不虚假声明原格式完整编辑 |
 | FR-MANAGER-001 | P1 | 统一格式能力展示与降级 | 已完成 | schema v2、能力等级、保存模式、最长扩展名路由、Library 文件树/状态栏、右侧工作面标签、最近文件、外部打开和 TXT/JSON/开发格式降级均已接通；新格式继续复用该契约 |
 | FR-THEME-001 | P1 | 扩展主题预设系统 | 已完成 | 唯一注册表驱动设置、命令、编辑器和图表消费者；3 个核心 + 4 个场景预设、持久化、动效、WCAG AA 门禁和 12 张真实 Tauri 三档尺寸证据已建立 |
@@ -401,7 +401,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 
 ### 9.3 尚未进入实现
 
-- PPTX 应用内阅读与基础编辑。
+- PPTX 母版、动画、SmartArt、复杂图表和完整 PowerPoint 等价编辑。
 - WPS/OpenDocument/旧版 Office 的分级预览、转换或编辑方案。
 - 安装、文件关联、升级、卸载和多机器发布矩阵。
 - 1.0 之外的实时多人协作和云端事实源。
@@ -416,7 +416,7 @@ LongEdit 不再仅定位为 Markdown 编辑器。电子表格方向以完整 Exc
 | 软件内编辑图表 | FR-DIAGRAM-001～004、FR-DATA-004～005 | Table 图表编辑与 Markdown/Canvas 实时引用完成 | v0.10.0～v1.0.0 |
 | 软件内处理 Excel | FR-DATA-001～009 | CSV/Table 闭环与渐进式 XLSX 编辑完成；总体 Excel 等价仍部分完成 | v0.10.0～v1.0.0 |
 | 软件内处理 PDF | FR-PDF-001～008 | 阅读、搜索、批注、引用、索引、图谱和离线 OCR 闭环完成；页面整理安全子集部分完成 | v0.9.0～v1.0.0 |
-| 软件内处理 WPS/Office | FR-OFFICE-001～003 | DOCX C0～C2E 已完成；PPTX C4E～C5C 已关闭受限编辑、图片、形状、页面生命周期和三生产者复开；C5D 及 WPS/OpenDocument/旧版 Office 待完成 | v1.0.0 |
+| 软件内处理 WPS/Office | FR-OFFICE-001～003 | DOCX C0～C2E、PPTX C3A～C5D 已完成基础阶段；WPS/OpenDocument/旧版 Office 待完成 | v1.0.0 |
 | 专业管理系统 | FR-INDEX-001～004、FR-WB-001～003 | 统一索引、专业主页、动态集合与健康治理已完成 | v0.7.0～v1.0.0 |
 
 ## 11. 迭代实施记录
@@ -1600,7 +1600,7 @@ S8-7E2E 功能验收完成。下一步进入 S8-7E2F：把单轴和多度量语�
 - 修复 760px 图谱标题竖排、工具栏拥挤、筛选条错位和初始详情遮挡画布；紧凑页头、横向工具栏与窄宽度初始详情策略进入门禁。
 - Debug E2E 模式禁止配置落盘，并支持独立指定 theme、style、code theme 和 motion，避免视觉审计污染用户配置。
 
-T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7E2E 已完成高级数据对象审计与隔离重建矩阵。S8-7E2F 保留为 XLSX 专项回补队列；A0～A5、G8、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C3D、C4A～C4E、C5A1/C5A2/C5B/C5C 已交付，当前实际开发入口为 **C5D PPTX 发布收口**；最新判定见 `docs/C5C_PPTX_Slide_Lifecycle_Audit_2026-07-28.md`。
+T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7E2E 已完成高级数据对象审计与隔离重建矩阵。S8-7E2F 保留为 XLSX 专项回补队列；A0～A5、G8、PDF B0～B1C、DOCX C0～C2E、PPTX C3A～C5D 已交付，当前实际开发入口为 **B2A PDF 拆分/提取**；最新判定见 `docs/C5D_PPTX_Release_Closure_Audit_2026-07-28.md`。
 
 后续阶段顺序以 `docs/Development_Progress_and_Direction_Audit_2026-07-27_C3B3.md`、`docs/Unified_File_Manager_Format_Requirements.md` 和 `docs/Next_Development_Execution_Guide.md` 为当前主线：C3C/C3D PPTX 只读收口 → C4 基础编辑 → C5 桌面验收 → WPS/OpenDocument/旧版 Office → 管理和发布矩阵。历史 S8 编号保留用于 XLSX 渐进式兼容追踪。
 

@@ -5,7 +5,7 @@
         <PresentationIcon :size="18" />
         <div>
           <strong :title="pptxPath">{{ fileName }}</strong>
-          <span>结构化只读 · 原文件不写回</span>
+          <span>基础编辑副本 · 原文件不写回</span>
         </div>
       </div>
       <div class="toolbar-actions">
@@ -136,10 +136,10 @@
             <p class="baseline-digest" :title="editBaseline.sourcePackageDigest">
               SHA-256 · {{ editBaseline.sourcePackageDigest.slice(0, 16) }}…
             </p>
-            <p class="muted">C4A 仅建立保护基线、不写入当前文件；该基线已复用到 C4B 文本与 C4C 样式/替代文本隔离预览。</p>
+            <p class="muted">保护基线覆盖文本/备注、基础字符样式、图片替代文本与替换、基础形状和幻灯片生命周期编辑；所有操作均在隔离副本中验证。</p>
           </template>
           <p v-else-if="baselineError" class="baseline-error">{{ baselineError }}</p>
-          <p v-else class="muted">尚未启动编辑。验证后仍保持只读，不会写入当前 PPTX。</p>
+          <p v-else class="muted">尚未启动编辑。源 PPTX 始终只读，编辑结果仅可另存为同目录新副本。</p>
         </section>
         <section v-if="editBaseline" class="isolated-text-patch">
           <header>
@@ -567,7 +567,7 @@
             <SaveIcon v-else :size="14" />
             {{ savingCopy ? '正在落盘并复读' : '原子另存并验证' }}
           </button>
-          <p class="muted">只创建同目录新文件，不覆盖源文件或已有目标；外部生产者复开将在 C4E 完成。</p>
+          <p class="muted">只创建同目录新文件，不覆盖源文件或已有目标；输出已通过 PowerPoint、WPS 与 LibreOffice 复开验证。</p>
           <p v-if="saveCopyError" class="baseline-error">{{ saveCopyError }}</p>
           <dl v-if="savedCopyReport" class="patch-report c4d-save-report">
             <div><dt>保存模式</dt><dd>新副本</dd></div>

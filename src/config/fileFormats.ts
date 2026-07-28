@@ -70,6 +70,7 @@ const validateRegistry = () => {
       if (extensions.has(extension)) throw new Error(`Duplicate extension ${extension}`)
       extensions.add(extension)
     }
+    if (supported(format.capabilities.edit) !== Boolean(format.adapters.writer)) throw new Error(`Invalid edit contract ${format.id}`)
     if (supported(format.capabilities.create) !== Boolean(format.creation && format.adapters.creator)) throw new Error(`Invalid creation contract ${format.id}`)
     if (supported(format.capabilities.index) !== Boolean(format.adapters.indexer)) throw new Error(`Invalid index contract ${format.id}`)
   }
