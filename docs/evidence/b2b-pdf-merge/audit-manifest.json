@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-28T05:08:04.233Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "fixtureLocation": "isolated temporary workspace",
+  "inputOrder": [
+    "B2B Secondary.pdf",
+    "B2B Primary.pdf"
+  ],
+  "inputPages": [
+    2,
+    2
+  ],
+  "outputPages": 4,
+  "sourceOverwriteAllowed": false,
+  "primarySha256": "95ecbdfed40fdc86f6cc8d22fdacad6f24f417fac74fb173364547fec2771667",
+  "secondarySha256": "b44652692fc1b2b5b29f65fe822bb1c07804c59fb6919781dcbba6f656a0bb30",
+  "outputSha256": "c82d430b6fb71c1c8f2e50bb3068fcd6c9dbb6ca555e932d1341ee6e34d74172",
+  "outputBytes": 1853,
+  "viewportMatrix": [
+    "1280x820",
+    "960x720"
+  ],
+  "checks": [
+    {
+      "id": "multiple-library-inputs-added",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-input-order-applied",
+      "status": "passed"
+    },
+    {
+      "id": "isolated-merge-verified",
+      "status": "passed"
+    },
+    {
+      "id": "atomic-create-new-save",
+      "status": "passed"
+    },
+    {
+      "id": "four-page-output-reopened",
+      "status": "passed"
+    },
+    {
+      "id": "normal-and-compact-layouts-without-overflow",
+      "status": "passed"
+    },
+    {
+      "id": "all-source-pdf-bytes-unchanged",
+      "status": "passed",
+      "primaryUnchanged": true,
+      "secondaryUnchanged": true
+    }
+  ],
+  "evidenceFiles": [
+    "b2b-ordered-inputs-1280.jpg",
+    "b2b-isolated-merge-1280.jpg",
+    "b2b-saved-reopen-960.jpg"
+  ]
+}

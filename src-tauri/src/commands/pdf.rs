@@ -25,6 +25,7 @@ pub const MAX_PDF_RANGE_BYTES: u64 = 1024 * 1024;
 pub const MAX_PDF_ISOLATED_INPUT_BYTES: u64 = 128 * 1024 * 1024;
 pub const MAX_PDF_ISOLATED_OUTPUT_BYTES: usize = 256 * 1024 * 1024;
 pub const MAX_PDF_PAGE_PLAN_ITEMS: usize = 20_000;
+pub const MAX_PDF_MERGE_INPUTS: usize = 16;
 
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -263,6 +264,75 @@ pub struct PdfSavedPagePlanReport {
     pub text_reopen_verified: bool,
 }
 
+#[derive(Clone, Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfMergeInputRequest {
+    pub path: String,
+    pub expected_signature: String,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfMergeInputSummary {
+    pub path: String,
+    pub file_name: String,
+    pub signature: String,
+    pub digest: String,
+    pub pages: usize,
+    pub bytes: usize,
+    pub blockers: Vec<String>,
+    pub compatibility: PdfPagePlanCompatibilityProfile,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfMergePageMapping {
+    pub output_page: u32,
+    pub input_index: usize,
+    pub source_page: u32,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfIsolatedMergeReport {
+    pub status: String,
+    pub engine: String,
+    pub inputs: Vec<PdfMergeInputSummary>,
+    pub output_pages: usize,
+    pub blockers: Vec<String>,
+    pub output_digest: Option<String>,
+    pub output_bytes: usize,
+    pub structural_reparse_verified: bool,
+    pub text_order_verified: bool,
+    pub page_geometry_verified: bool,
+    pub sources_unchanged: bool,
+    pub page_mapping: Vec<PdfMergePageMapping>,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfSavedMergeReport {
+    pub status: String,
+    pub engine: String,
+    pub target_path: String,
+    pub target_signature: String,
+    pub target_digest: String,
+    pub sources_unchanged: bool,
+    pub input_count: usize,
+    pub output_pages: usize,
+    pub output_bytes: usize,
+    pub structural_reopen_verified: bool,
+    pub text_reopen_verified: bool,
+    pub page_geometry_verified: bool,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct PdfPageGeometry {
+    media_box: Option<[f32; 4]>,
+    crop_box: Option<[f32; 4]>,
+    rotation: i16,
+}
+
 fn object_dictionary(object: &Object) -> Option<&Dictionary> {
     match object {
         Object::Dictionary(dictionary) => Some(dictionary),
@@ -412,6 +482,63 @@ fn normalized_rotation(value: i64) -> i16 {
     (((value % 360) + 360) % 360) as i16
 }
 
+fn object_number(value: &Object) -> Option<f32> {
+    match value {
+        Object::Integer(value) => Some(*value as f32),
+        Object::Real(value) => Some(*value),
+        _ => None,
+    }
+}
+
+fn resolved_page_box(document: &Document, page_id: ObjectId, key: &[u8]) -> Option<[f32; 4]> {
+    let value = inherited_page_value(document, page_id, key)?;
+    let value = document.dereference(&value).ok()?.1;
+    let values = value.as_array().ok()?;
+    if values.len() != 4 {
+        return None;
+    }
+    Some([
+        object_number(&values[0])?,
+        object_number(&values[1])?,
+        object_number(&values[2])?,
+        object_number(&values[3])?,
+    ])
+}
+
+fn pdf_page_geometry(document: &Document, page_id: ObjectId) -> PdfPageGeometry {
+    PdfPageGeometry {
+        media_box: resolved_page_box(document, page_id, b"MediaBox"),
+        crop_box: resolved_page_box(document, page_id, b"CropBox"),
+        rotation: inherited_page_value(document, page_id, b"Rotate")
+            .and_then(|value| value.as_i64().ok())
+            .map(normalized_rotation)
+            .unwrap_or(0),
+    }
+}
+
+fn materialize_pdf_page_inheritance(
+    document: &mut Document,
+    page_id: ObjectId,
+) -> Result<(), String> {
+    let inherited = [b"Resources".as_slice(), b"MediaBox", b"CropBox", b"Rotate"]
+        .into_iter()
+        .filter_map(|key| {
+            (!document
+                .get_dictionary(page_id)
+                .is_ok_and(|page| page.has(key)))
+            .then(|| inherited_page_value(document, page_id, key).map(|value| (key, value)))
+            .flatten()
+        })
+        .collect::<Vec<_>>();
+    let page = document
+        .get_dictionary_mut(page_id)
+        .map_err(|error| format!("PDF 页面对象无效: {error}"))?;
+    for (key, value) in inherited {
+        page.set(key, value);
+    }
+    Ok(())
+}
+
 fn validate_pdf_page_plan(plan: &[PdfPagePlanItem], source_pages: usize) -> Result<(), String> {
     if source_pages == 0 || source_pages > MAX_PDF_PAGE_PLAN_ITEMS {
         return Err(format!(
@@ -522,6 +649,279 @@ fn build_pdf_page_range_extract_isolated(
 ) -> Result<(PdfIsolatedPagePlanReport, Option<Vec<u8>>), String> {
     let plan = pdf_page_range_plan_for_path(pdf_path, expected_signature, &selected_pages)?;
     build_pdf_page_plan_isolated(pdf_path, expected_signature, plan)
+}
+
+fn resolve_pdf_merge_inputs(
+    guard: &WorkspaceGuard,
+    inputs: Vec<PdfMergeInputRequest>,
+) -> Result<Vec<(PathBuf, String)>, String> {
+    if !(2..=MAX_PDF_MERGE_INPUTS).contains(&inputs.len()) {
+        return Err(format!(
+            "PDF 合并必须选择 2～{} 个输入文件",
+            MAX_PDF_MERGE_INPUTS
+        ));
+    }
+    let mut seen = HashSet::new();
+    inputs
+        .into_iter()
+        .map(|input| {
+            let path = guard.resolve_existing_file(input.path, &["pdf"])?;
+            if !seen.insert(path.clone()) {
+                return Err("PDF 合并输入不能重复".into());
+            }
+            if input.expected_signature.trim().is_empty() {
+                return Err("PDF 合并输入缺少内容签名，请重新添加".into());
+            }
+            Ok((path, input.expected_signature))
+        })
+        .collect()
+}
+
+fn merge_pdf_documents(
+    documents: &mut [Document],
+) -> Result<(Document, Vec<PdfMergePageMapping>, Vec<PdfPageGeometry>), String> {
+    let version = documents
+        .iter()
+        .map(|document| document.version.as_str())
+        .max()
+        .unwrap_or("1.5")
+        .to_string();
+    let mut output = Document::with_version(version);
+    let pages_id = output.new_object_id();
+    let catalog_id = output.new_object_id();
+    let mut next_object_id = output.max_id + 1;
+    let mut page_objects = Vec::new();
+    let mut mapping = Vec::new();
+    let mut expected_geometry = Vec::new();
+
+    for (input_index, document) in documents.iter_mut().enumerate() {
+        document.renumber_objects_with(next_object_id);
+        next_object_id = document.max_id.saturating_add(1);
+        let pages = document.get_pages();
+        for (source_page, page_id) in pages {
+            materialize_pdf_page_inheritance(document, page_id)?;
+            expected_geometry.push(pdf_page_geometry(document, page_id));
+            let mut page = document
+                .get_dictionary(page_id)
+                .map_err(|error| format!("PDF 页面对象无效: {error}"))?
+                .clone();
+            page.set("Parent", Object::Reference(pages_id));
+            page_objects.push((page_id, Object::Dictionary(page)));
+            mapping.push(PdfMergePageMapping {
+                output_page: mapping.len() as u32 + 1,
+                input_index: input_index + 1,
+                source_page,
+            });
+        }
+        for (object_id, object) in std::mem::take(&mut document.objects) {
+            match object.type_name().unwrap_or(b"") {
+                b"Catalog" | b"Pages" | b"Page" | b"Outlines" | b"Outline" => {}
+                _ => {
+                    output.objects.insert(object_id, object);
+                }
+            }
+        }
+    }
+
+    for (object_id, page) in &page_objects {
+        output.objects.insert(*object_id, page.clone());
+    }
+    output.objects.insert(
+        pages_id,
+        Object::Dictionary(dictionary! {
+            "Type" => "Pages",
+            "Kids" => page_objects
+                .iter()
+                .map(|(object_id, _)| Object::Reference(*object_id))
+                .collect::<Vec<_>>(),
+            "Count" => page_objects.len() as i64,
+        }),
+    );
+    output.objects.insert(
+        catalog_id,
+        Object::Dictionary(dictionary! {
+            "Type" => "Catalog",
+            "Pages" => Object::Reference(pages_id),
+        }),
+    );
+    output.trailer.set("Root", Object::Reference(catalog_id));
+    output.max_id = output
+        .objects
+        .keys()
+        .map(|(object_id, _)| *object_id)
+        .max()
+        .unwrap_or(output.max_id);
+    output.prune_objects();
+    Ok((output, mapping, expected_geometry))
+}
+
+fn build_pdf_merge_isolated(
+    resolved_inputs: Vec<(PathBuf, String)>,
+) -> Result<(PdfIsolatedMergeReport, Option<Vec<u8>>), String> {
+    let mut documents = Vec::with_capacity(resolved_inputs.len());
+    let mut source_bytes = Vec::with_capacity(resolved_inputs.len());
+    let mut summaries = Vec::with_capacity(resolved_inputs.len());
+    let mut expected_text = Vec::new();
+    let mut total_input_bytes = 0u64;
+    let mut total_pages = 0usize;
+
+    for (path, expected_signature) in &resolved_inputs {
+        let metadata = path
+            .metadata()
+            .map_err(|error| format!("读取合并输入元数据失败: {error}"))?;
+        validate_pdf_size(metadata.len())?;
+        total_input_bytes = total_input_bytes
+            .checked_add(metadata.len())
+            .ok_or("PDF 合并输入大小溢出")?;
+        if total_input_bytes > MAX_PDF_ISOLATED_INPUT_BYTES {
+            return Err("PDF 合并输入总大小不能超过 128 MB".into());
+        }
+        let signature = pdf_signature(&metadata);
+        if signature != *expected_signature {
+            return Err(format!(
+                "PDF 合并输入已被外部修改：{}",
+                path.file_name()
+                    .and_then(|value| value.to_str())
+                    .unwrap_or("未知文件")
+            ));
+        }
+        let bytes = fs::read(path).map_err(|error| format!("读取合并输入失败: {error}"))?;
+        let digest = format!("{:x}", Sha256::digest(&bytes));
+        let document = Document::load_mem(&bytes)
+            .map_err(|error| format!("PDF 合并输入结构解析失败: {error}"))?;
+        let pages = document.get_pages().len();
+        let blockers = pdf_plan_blockers(&document, true);
+        if pages == 0 && blockers.is_empty() {
+            return Err("PDF 合并输入没有可读取页面".into());
+        }
+        total_pages = total_pages.checked_add(pages).ok_or("PDF 合并页数溢出")?;
+        if total_pages > MAX_PDF_PAGE_PLAN_ITEMS {
+            return Err(format!(
+                "PDF 合并总页数必须在 1～{} 之间",
+                MAX_PDF_PAGE_PLAN_ITEMS
+            ));
+        }
+        let mut compatibility = pdf_compatibility_profile(&document);
+        if blockers.is_empty() {
+            let text = normalized_pdf_page_text(
+                pdf_extract::extract_text_from_mem_by_pages(&bytes)
+                    .map_err(|error| format!("PDF 合并输入文本复读失败: {error}"))?,
+                pages,
+            );
+            compatibility.textless_pages =
+                Some(text.iter().filter(|page| page.trim().is_empty()).count());
+            expected_text.extend(text);
+        }
+        summaries.push(PdfMergeInputSummary {
+            path: path.to_string_lossy().into_owned(),
+            file_name: path
+                .file_name()
+                .and_then(|value| value.to_str())
+                .unwrap_or("PDF")
+                .to_string(),
+            signature,
+            digest,
+            pages,
+            bytes: bytes.len(),
+            blockers,
+            compatibility,
+        });
+        source_bytes.push(bytes);
+        documents.push(document);
+    }
+
+    let blockers = summaries
+        .iter()
+        .enumerate()
+        .flat_map(|(index, input)| {
+            input
+                .blockers
+                .iter()
+                .map(move |blocker| format!("input_{}:{blocker}", index + 1))
+        })
+        .collect::<Vec<_>>();
+    let sources_unchanged =
+        resolved_inputs
+            .iter()
+            .zip(&source_bytes)
+            .all(|((path, signature), before)| {
+                path.metadata().is_ok_and(|metadata| {
+                    pdf_signature(&metadata) == *signature
+                        && fs::read(path).is_ok_and(|after| after == *before)
+                })
+            });
+    if !sources_unchanged {
+        return Err("PDF 合并验证期间有输入文件发生变化".into());
+    }
+    if !blockers.is_empty() {
+        return Ok((
+            PdfIsolatedMergeReport {
+                status: "blocked".into(),
+                engine: "lopdf 0.42.0 (MIT)".into(),
+                inputs: summaries,
+                output_pages: total_pages,
+                blockers,
+                output_digest: None,
+                output_bytes: 0,
+                structural_reparse_verified: false,
+                text_order_verified: false,
+                page_geometry_verified: false,
+                sources_unchanged,
+                page_mapping: Vec::new(),
+            },
+            None,
+        ));
+    }
+
+    let (mut merged, mapping, expected_geometry) = merge_pdf_documents(&mut documents)?;
+    let mut output = Vec::new();
+    merged
+        .save_to(&mut output)
+        .map_err(|error| format!("隔离 PDF 合并生成失败: {error}"))?;
+    if output.len() > MAX_PDF_ISOLATED_OUTPUT_BYTES {
+        return Err("合并 PDF 超过 256 MB 输出上限".into());
+    }
+    let verified =
+        Document::load_mem(&output).map_err(|error| format!("合并 PDF 结构复读失败: {error}"))?;
+    let verified_pages = verified.get_pages();
+    let structural_reparse_verified = verified_pages.len() == total_pages;
+    if !structural_reparse_verified {
+        return Err("合并 PDF 复读页数与输入总页数不一致".into());
+    }
+    let output_text = normalized_pdf_page_text(
+        pdf_extract::extract_text_from_mem_by_pages(&output)
+            .map_err(|error| format!("合并 PDF 文本复读失败: {error}"))?,
+        total_pages,
+    );
+    let text_order_verified = output_text == expected_text;
+    if !text_order_verified {
+        return Err("合并 PDF 文本页序与输入顺序不一致".into());
+    }
+    let actual_geometry = verified_pages
+        .values()
+        .map(|page_id| pdf_page_geometry(&verified, *page_id))
+        .collect::<Vec<_>>();
+    let page_geometry_verified = actual_geometry == expected_geometry;
+    if !page_geometry_verified {
+        return Err("合并 PDF 页面尺寸或旋转复读不一致".into());
+    }
+    Ok((
+        PdfIsolatedMergeReport {
+            status: "isolated_verified".into(),
+            engine: "lopdf 0.42.0 (MIT)".into(),
+            inputs: summaries,
+            output_pages: total_pages,
+            blockers: Vec::new(),
+            output_digest: Some(format!("{:x}", Sha256::digest(&output))),
+            output_bytes: output.len(),
+            structural_reparse_verified,
+            text_order_verified,
+            page_geometry_verified,
+            sources_unchanged,
+            page_mapping: mapping,
+        },
+        Some(output),
+    ))
 }
 
 fn apply_pdf_page_plan(
@@ -982,6 +1382,154 @@ pub async fn save_pdf_page_range_copy(
     .map_err(|error| format!("PDF 页面提取可靠另存任务失败: {error}"))?
 }
 
+fn save_pdf_merge_copy_to_path(
+    resolved_inputs: Vec<(PathBuf, String)>,
+    target_path: &Path,
+    expected_output_digest: &str,
+) -> Result<PdfSavedMergeReport, String> {
+    if resolved_inputs.iter().any(|(path, _)| path == target_path) {
+        return Err("可靠合并禁止覆盖任一源 PDF".into());
+    }
+    if target_path.exists() {
+        return Err("目标文件已存在；可靠合并不会覆盖现有文件".into());
+    }
+    let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
+    if expected_output_digest.len() != 64
+        || !expected_output_digest
+            .bytes()
+            .all(|value| value.is_ascii_hexdigit())
+    {
+        return Err("隔离合并摘要无效，请重新验证输入顺序".into());
+    }
+    let (report, output) = build_pdf_merge_isolated(resolved_inputs.clone())?;
+    if report.status != "isolated_verified" {
+        return Err(format!(
+            "合并输入包含尚未验证的 PDF 特性：{}",
+            report.blockers.join(", ")
+        ));
+    }
+    let output = output.ok_or("隔离合并未生成可保存字节")?;
+    if report.output_digest.as_deref() != Some(expected_output_digest.as_str()) {
+        return Err("PDF 输入、顺序或隔离输出已变化，请重新验证后再保存".into());
+    }
+    write_new_bytes(target_path, &output)?;
+    let saved = fs::read(target_path)
+        .map_err(|error| format!("目标已创建，但无法复读保存字节: {error}"))?;
+    let target_digest = format!("{:x}", Sha256::digest(&saved));
+    if saved != output || target_digest != expected_output_digest {
+        return Err("目标已创建，但落盘字节与验证合并副本不一致；请保留文件并人工检查".into());
+    }
+    let saved_document = Document::load_mem(&saved)
+        .map_err(|error| format!("目标已创建，但合并 PDF 结构复读失败: {error}"))?;
+    let structural_reopen_verified = saved_document.get_pages().len() == report.output_pages;
+    if !structural_reopen_verified {
+        return Err("目标已创建，但重开页数与合并计划不一致".into());
+    }
+    let saved_text = normalized_pdf_page_text(
+        pdf_extract::extract_text_from_mem_by_pages(&saved)
+            .map_err(|error| format!("目标已创建，但合并文本复读失败: {error}"))?,
+        report.output_pages,
+    );
+    let rebuilt_text = normalized_pdf_page_text(
+        pdf_extract::extract_text_from_mem_by_pages(&output)
+            .map_err(|error| format!("保存前合并文本复读失败: {error}"))?,
+        report.output_pages,
+    );
+    let text_reopen_verified = saved_text == rebuilt_text;
+    if !text_reopen_verified {
+        return Err("目标已创建，但重开文本页序与合并计划不一致".into());
+    }
+    let saved_geometry = saved_document
+        .get_pages()
+        .values()
+        .map(|page_id| pdf_page_geometry(&saved_document, *page_id))
+        .collect::<Vec<_>>();
+    let output_document =
+        Document::load_mem(&output).map_err(|error| format!("保存前合并结构复读失败: {error}"))?;
+    let output_geometry = output_document
+        .get_pages()
+        .values()
+        .map(|page_id| pdf_page_geometry(&output_document, *page_id))
+        .collect::<Vec<_>>();
+    let page_geometry_verified = saved_geometry == output_geometry;
+    if !page_geometry_verified {
+        return Err("目标已创建，但重开页面尺寸或旋转不一致".into());
+    }
+    let sources_unchanged =
+        resolved_inputs
+            .iter()
+            .zip(&report.inputs)
+            .all(|((path, signature), input)| {
+                path.metadata().is_ok_and(|metadata| {
+                    pdf_signature(&metadata) == *signature
+                        && fs::read(path).is_ok_and(|bytes| {
+                            format!("{:x}", Sha256::digest(bytes)) == input.digest
+                        })
+                })
+            });
+    if !sources_unchanged {
+        return Err("目标已创建，但检测到合并输入同时发生变化；请重新检查源文件".into());
+    }
+    let target_metadata = target_path
+        .metadata()
+        .map_err(|error| format!("读取已保存合并 PDF 元数据失败: {error}"))?;
+    Ok(PdfSavedMergeReport {
+        status: "saved_verified".into(),
+        engine: report.engine,
+        target_path: target_path.to_string_lossy().into_owned(),
+        target_signature: pdf_signature(&target_metadata),
+        target_digest,
+        sources_unchanged,
+        input_count: report.inputs.len(),
+        output_pages: report.output_pages,
+        output_bytes: saved.len(),
+        structural_reopen_verified,
+        text_reopen_verified,
+        page_geometry_verified,
+    })
+}
+
+#[tauri::command]
+pub async fn preview_pdf_merge_isolated_copy(
+    library_root: String,
+    inputs: Vec<PdfMergeInputRequest>,
+) -> Result<PdfIsolatedMergeReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let resolved_inputs = resolve_pdf_merge_inputs(&guard, inputs)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        build_pdf_merge_isolated(resolved_inputs).map(|(report, _)| report)
+    })
+    .await
+    .map_err(|error| format!("PDF 隔离合并任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn save_pdf_merge_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_output_digest: String,
+    inputs: Vec<PdfMergeInputRequest>,
+) -> Result<PdfSavedMergeReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let anchor_path = guard.resolve_existing_file(path, &["pdf"])?;
+    let resolved_inputs = resolve_pdf_merge_inputs(&guard, inputs)?;
+    if !resolved_inputs
+        .iter()
+        .any(|(input_path, _)| input_path == &anchor_path)
+    {
+        return Err("PDF 合并输入必须包含当前打开的文件".into());
+    }
+    let target_file_name = validate_pdf_copy_file_name(&target_file_name)?;
+    let target_path =
+        guard.resolve_file_for_write(anchor_path.with_file_name(target_file_name), &["pdf"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_pdf_merge_copy_to_path(resolved_inputs, &target_path, &expected_output_digest)
+    })
+    .await
+    .map_err(|error| format!("PDF 合并可靠保存任务失败: {error}"))?
+}
+
 fn annotation_path(pdf_path: &Path) -> Result<PathBuf, String> {
     let name = pdf_path
         .file_name()
@@ -1275,6 +1823,54 @@ mod tests {
         bytes
     }
 
+    fn write_single_page_pdf(
+        path: &Path,
+        text: &str,
+        width: i64,
+        height: i64,
+        rotation: i64,
+    ) -> Vec<u8> {
+        let mut document = Document::with_version("1.6");
+        let pages_id = document.new_object_id();
+        let font_id = document.add_object(dictionary! {
+            "Type" => "Font",
+            "Subtype" => "Type1",
+            "BaseFont" => "Helvetica",
+        });
+        let resources_id = document.add_object(dictionary! {
+            "Font" => dictionary! { "F1" => Object::Reference(font_id) },
+        });
+        let content_id = document.add_object(Stream::new(
+            Dictionary::new(),
+            format!("BT /F1 12 Tf 40 250 Td ({text}) Tj ET").into_bytes(),
+        ));
+        let page_id = document.add_object(dictionary! {
+            "Type" => "Page",
+            "Parent" => Object::Reference(pages_id),
+            "MediaBox" => vec![0.into(), 0.into(), width.into(), height.into()],
+            "Resources" => Object::Reference(resources_id),
+            "Contents" => Object::Reference(content_id),
+            "Rotate" => rotation,
+        });
+        document.objects.insert(
+            pages_id,
+            Object::Dictionary(dictionary! {
+                "Type" => "Pages",
+                "Kids" => vec![Object::Reference(page_id)],
+                "Count" => 1,
+            }),
+        );
+        let catalog_id = document.add_object(dictionary! {
+            "Type" => "Catalog",
+            "Pages" => Object::Reference(pages_id),
+        });
+        document.trailer.set("Root", Object::Reference(catalog_id));
+        let mut bytes = Vec::new();
+        document.save_to(&mut bytes).unwrap();
+        fs::write(path, &bytes).unwrap();
+        bytes
+    }
+
     fn set_pdf_producer(document: &mut Document, producer: &str) {
         let info_id = document.add_object(dictionary! {
             "Producer" => Object::String(producer.as_bytes().to_vec(), StringFormat::Literal),
@@ -1402,6 +1998,128 @@ mod tests {
         )
         .unwrap_err()
         .contains("不会覆盖"));
+    }
+
+    #[test]
+    fn b2b_merges_ordered_inputs_to_verified_copy_without_touching_sources() {
+        let workspace = TestWorkspace::new();
+        let first = workspace.root.join("first.pdf");
+        let second = workspace.root.join("second.pdf");
+        let first_bytes = write_two_page_pdf(&first);
+        let second_bytes = write_single_page_pdf(&second, "Merge Gamma", 420, 240, 90);
+        let first_signature = pdf_signature(&first.metadata().unwrap());
+        let second_signature = pdf_signature(&second.metadata().unwrap());
+        let inputs = vec![
+            (second.clone(), second_signature.clone()),
+            (first.clone(), first_signature.clone()),
+        ];
+
+        let (preview, output) = build_pdf_merge_isolated(inputs.clone()).unwrap();
+        let output = output.expect("verified merge must produce isolated bytes");
+        assert_eq!(preview.status, "isolated_verified");
+        assert_eq!(preview.inputs.len(), 2);
+        assert_eq!(preview.output_pages, 3);
+        assert!(preview.structural_reparse_verified);
+        assert!(preview.text_order_verified);
+        assert!(preview.page_geometry_verified);
+        assert!(preview.sources_unchanged);
+        assert_eq!(
+            preview
+                .page_mapping
+                .iter()
+                .map(|item| (item.output_page, item.input_index, item.source_page))
+                .collect::<Vec<_>>(),
+            vec![(1, 1, 1), (2, 2, 1), (3, 2, 2)]
+        );
+        let output_text = pdf_extract::extract_text_from_mem_by_pages(&output).unwrap();
+        assert!(output_text[0].contains("Merge Gamma"));
+        assert!(output_text[1].contains("First Page Alpha"));
+        assert!(output_text[2].contains("Second Page Beta"));
+
+        let target = workspace.root.join("merged.pdf");
+        let saved =
+            save_pdf_merge_copy_to_path(inputs, &target, preview.output_digest.as_deref().unwrap())
+                .unwrap();
+        assert_eq!(saved.input_count, 2);
+        assert_eq!(saved.output_pages, 3);
+        assert!(saved.structural_reopen_verified);
+        assert!(saved.text_reopen_verified);
+        assert!(saved.page_geometry_verified);
+        assert!(saved.sources_unchanged);
+        assert_eq!(fs::read(&first).unwrap(), first_bytes);
+        assert_eq!(fs::read(&second).unwrap(), second_bytes);
+        assert!(save_pdf_merge_copy_to_path(
+            vec![(second, second_signature), (first, first_signature),],
+            &target,
+            &saved.target_digest,
+        )
+        .unwrap_err()
+        .contains("不会覆盖"));
+    }
+
+    #[test]
+    fn b2b_rejects_duplicate_stale_and_encrypted_merge_inputs() {
+        let workspace = TestWorkspace::new();
+        let first = workspace.root.join("first.pdf");
+        let second = workspace.root.join("second.pdf");
+        write_two_page_pdf(&first);
+        write_single_page_pdf(&second, "Merge Delta", 300, 300, 0);
+        let guard = WorkspaceGuard::new(workspace.root_string()).unwrap();
+        let first_signature = pdf_signature(&first.metadata().unwrap());
+        assert!(resolve_pdf_merge_inputs(
+            &guard,
+            vec![
+                PdfMergeInputRequest {
+                    path: first.to_string_lossy().into_owned(),
+                    expected_signature: first_signature.clone(),
+                },
+                PdfMergeInputRequest {
+                    path: first.to_string_lossy().into_owned(),
+                    expected_signature: first_signature.clone(),
+                },
+            ],
+        )
+        .unwrap_err()
+        .contains("不能重复"));
+        assert!(build_pdf_merge_isolated(vec![
+            (first.clone(), "stale".into()),
+            (second.clone(), pdf_signature(&second.metadata().unwrap()),),
+        ])
+        .unwrap_err()
+        .contains("外部修改"));
+
+        let encrypted = workspace.root.join("encrypted.pdf");
+        write_two_page_pdf(&encrypted);
+        let mut encrypted_document = Document::load(&encrypted).unwrap();
+        let file_id = Object::String(
+            b"longedit-b2b-encrypted-fixture".to_vec(),
+            StringFormat::Hexadecimal,
+        );
+        encrypted_document
+            .trailer
+            .set("ID", Object::Array(vec![file_id.clone(), file_id]));
+        let state = EncryptionState::try_from(EncryptionVersion::V1 {
+            document: &encrypted_document,
+            owner_password: "owner",
+            user_password: "user",
+            permissions: Permissions::default(),
+        })
+        .unwrap();
+        encrypted_document.encrypt(&state).unwrap();
+        encrypted_document.save(&encrypted).unwrap();
+        let (blocked, output) = build_pdf_merge_isolated(vec![
+            (first, first_signature),
+            (
+                encrypted.clone(),
+                pdf_signature(&encrypted.metadata().unwrap()),
+            ),
+        ])
+        .unwrap();
+        assert_eq!(blocked.status, "blocked");
+        assert!(blocked
+            .blockers
+            .contains(&"input_2:encrypted_pdf_unverified".into()));
+        assert!(output.is_none());
     }
 
     #[test]

@@ -56,10 +56,10 @@ use commands::json::{
 };
 use commands::mindmap::{create_canvas_from_opml, read_opml_file, write_opml_file};
 use commands::pdf::{
-    build_pdf_annotation_reference, preview_pdf_page_plan_isolated_copy,
-    preview_pdf_page_range_extract_copy, read_pdf_annotations, read_pdf_file, read_pdf_info,
-    read_pdf_ocr, read_pdf_range, save_pdf_page_plan_copy, save_pdf_page_range_copy,
-    write_pdf_annotations, write_pdf_ocr,
+    build_pdf_annotation_reference, preview_pdf_merge_isolated_copy,
+    preview_pdf_page_plan_isolated_copy, preview_pdf_page_range_extract_copy, read_pdf_annotations,
+    read_pdf_file, read_pdf_info, read_pdf_ocr, read_pdf_range, save_pdf_merge_copy,
+    save_pdf_page_plan_copy, save_pdf_page_range_copy, write_pdf_annotations, write_pdf_ocr,
 };
 use commands::pptx::{
     audit_pptx_edit_baseline, preview_pptx_alt_text_patch_isolated_copy,
@@ -296,6 +296,8 @@ pub fn run() {
             save_pdf_page_plan_copy,
             preview_pdf_page_range_extract_copy,
             save_pdf_page_range_copy,
+            preview_pdf_merge_isolated_copy,
+            save_pdf_merge_copy,
             read_pdf_annotations,
             write_pdf_annotations,
             read_pdf_ocr,

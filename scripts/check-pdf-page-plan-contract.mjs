@@ -144,4 +144,27 @@ for (const text of [
   'b2a_extracts_selected_pages_to_verified_copy_without_touching_source',
 ]) requireText(pdfCommands, text, `B2A PDF page-range backend contract missing: ${text}`)
 
-console.log('PDF B0-B2A contract passed: immutable planning, isolated verification, atomic no-clobber save, compatibility profiling, stable blockers, page-range extraction, and no source overwrite.')
+for (const text of [
+  '合并多个 PDF',
+  'pickPdfMergeInputs',
+  'movePdfMergeInput',
+  'preview_pdf_merge_isolated_copy',
+  'save_pdf_merge_copy',
+  '合并为新 PDF 并打开',
+  '全部源文件未修改',
+]) requireText(view, text, `B2B PDF merge UI contract missing: ${text}`)
+
+for (const text of [
+  'MAX_PDF_MERGE_INPUTS',
+  'merge_pdf_documents',
+  'materialize_pdf_page_inheritance',
+  'page_geometry_verified',
+  'preview_pdf_merge_isolated_copy',
+  'save_pdf_merge_copy',
+  'PDF 合并输入不能重复',
+  '可靠合并不会覆盖现有文件',
+  'b2b_merges_ordered_inputs_to_verified_copy_without_touching_sources',
+  'b2b_rejects_duplicate_stale_and_encrypted_merge_inputs',
+]) requireText(pdfCommands, text, `B2B PDF merge backend contract missing: ${text}`)
+
+console.log('PDF B0-B2B contract passed: immutable planning, isolated verification, atomic no-clobber save, compatibility profiling, page-range extraction, ordered multi-file merge, and source safety.')

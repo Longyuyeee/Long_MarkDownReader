@@ -4,7 +4,7 @@
       <div class="toolbar-leading">
         <button class="icon-btn" title="返回知识库" @click="router.push('/library')">←</button>
         <button class="icon-btn" :class="{ active: sidebarOpen }" title="缩略图与目录" @click="sidebarOpen = !sidebarOpen">☰</button>
-        <div class="document-title"><strong>{{ fileName }}<i v-if="pagePlanDirty" class="page-plan-dirty">页面草稿</i></strong><span v-if="pdfDocument">{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template></span></div>
+        <div class="document-title"><strong>{{ fileName }}<i v-if="pdfWorkspaceDirty" class="page-plan-dirty">页面草稿</i></strong><span v-if="pdfDocument">{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template></span></div>
       </div>
       <div v-if="pdfDocument" class="toolbar-center">
         <button class="icon-btn" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
@@ -77,6 +77,74 @@
               <span>{{ savedCopyNotice.pages }} 页 · {{ formatBytes(savedCopyNotice.bytes) }} · 源文件未修改</span>
             </div>
             <div class="page-plan-heading"><strong>页面整理草稿</strong><span>{{ pagePlanStatus }}</span></div>
+            <section class="pdf-merge-panel" data-testid="b2b-pdf-merge">
+              <div class="pdf-merge-heading">
+                <strong>合并多个 PDF</strong>
+                <span>{{ pdfMergeInputs.length }}/16 个输入</span>
+              </div>
+              <div class="pdf-merge-add">
+                <input
+                  v-model="pdfMergePathInput"
+                  data-testid="b2b-pdf-merge-path"
+                  maxlength="1024"
+                  aria-label="库内 PDF 路径"
+                  placeholder="输入库内 PDF 路径"
+                  @keydown.enter.prevent="addPdfMergePathInput"
+                >
+                <button data-testid="b2b-pdf-merge-add" :disabled="pdfMergeAdding || !pdfMergePathInput.trim()" @click="addPdfMergePathInput">添加</button>
+                <button class="pdf-merge-pick" title="选择多个库内 PDF" :disabled="pdfMergeAdding || pdfMergeInputs.length >= 16" @click="pickPdfMergeInputs">
+                  <FolderOpenIcon :size="14"/>
+                </button>
+              </div>
+              <small>当前 PDF 始终保留；按列表顺序合并，只在当前目录创建新文件。</small>
+              <div class="pdf-merge-list">
+                <article
+                  v-for="(input, index) in pdfMergeInputs"
+                  :key="input.path"
+                  :data-merge-index="index + 1"
+                  :class="{ current: input.path === pdfPath }"
+                >
+                  <span class="pdf-merge-order">{{ index + 1 }}</span>
+                  <span class="pdf-merge-name" :title="input.path">{{ mergeFileName(input.path) }}</span>
+                  <span v-if="input.path === pdfPath" class="pdf-merge-current">当前</span>
+                  <div class="pdf-merge-actions">
+                    <button title="向前移动" :disabled="index === 0" @click="movePdfMergeInput(index, -1)">↑</button>
+                    <button title="向后移动" :disabled="index === pdfMergeInputs.length - 1" @click="movePdfMergeInput(index, 1)">↓</button>
+                    <button title="移除" :disabled="input.path === pdfPath" @click="removePdfMergeInput(index)">×</button>
+                  </div>
+                </article>
+              </div>
+              <small v-if="pdfMergeError" class="pdf-merge-error">{{ pdfMergeError }}</small>
+              <button
+                class="pdf-merge-verify"
+                data-testid="b2b-pdf-merge-verify"
+                :disabled="pdfMergeInputs.length < 2 || pdfMergeVerifying"
+                @click="verifyPdfMerge"
+              >
+                {{ pdfMergeVerifying ? '正在隔离合并并复读…' : '验证合并副本' }}
+              </button>
+              <div
+                v-if="pdfMergeVerification"
+                class="pdf-merge-verification"
+                :class="{ blocked: pdfMergeVerification.status === 'blocked' }"
+              >
+                <template v-if="pdfMergeVerification.status === 'isolated_verified'">
+                  <strong>合并副本验证通过</strong>
+                  <span>{{ pdfMergeVerification.inputs.length }} 个文件 · {{ pdfMergeVerification.outputPages }} 页 · {{ formatBytes(pdfMergeVerification.outputBytes) }}</span>
+                  <small>页序、尺寸、旋转和文本复读通过；全部源文件未修改。</small>
+                  <div class="pdf-merge-save">
+                    <input v-model="pdfMergeCopyName" maxlength="180" aria-label="PDF 合并文件名" @keydown.enter.prevent="savePdfMergeCopy">
+                    <button :disabled="pdfMergeSaving || !pdfMergeCopyName.trim()" @click="savePdfMergeCopy">
+                      {{ pdfMergeSaving ? '正在落盘并重开…' : '合并为新 PDF 并打开' }}
+                    </button>
+                  </div>
+                </template>
+                <template v-else>
+                  <strong>当前输入不能安全合并</strong>
+                  <span>{{ pdfMergeVerification.blockers.map(pdfMergeBlockerLabel).join(' · ') }}</span>
+                </template>
+              </div>
+            </section>
             <div class="page-range-extract" data-testid="b2a-page-range">
               <label>
                 <span>按范围提取页面</span>
@@ -244,6 +312,7 @@ import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist'
 import type { TextContent } from 'pdfjs-dist/types/src/display/api'
 import {
   Columns3Icon,
+  FolderOpenIcon,
   ListOrderedIcon,
   MessageSquareTextIcon,
   ScanLineIcon,
@@ -312,6 +381,47 @@ interface PdfSavedPagePlanReport {
   structuralReopenVerified: boolean
   textReopenVerified: boolean
 }
+interface PdfMergeInput {
+  path: string
+  expectedSignature: string
+}
+interface PdfIsolatedMergeReport {
+  status: 'isolated_verified' | 'blocked'
+  engine: string
+  inputs: Array<{
+    path: string
+    fileName: string
+    signature: string
+    digest: string
+    pages: number
+    bytes: number
+    blockers: string[]
+    compatibility: PdfIsolatedPagePlanReport['compatibility']
+  }>
+  outputPages: number
+  blockers: string[]
+  outputDigest?: string | null
+  outputBytes: number
+  structuralReparseVerified: boolean
+  textOrderVerified: boolean
+  pageGeometryVerified: boolean
+  sourcesUnchanged: boolean
+  pageMapping: Array<{ outputPage: number; inputIndex: number; sourcePage: number }>
+}
+interface PdfSavedMergeReport {
+  status: 'saved_verified'
+  engine: string
+  targetPath: string
+  targetSignature: string
+  targetDigest: string
+  sourcesUnchanged: boolean
+  inputCount: number
+  outputPages: number
+  outputBytes: number
+  structuralReopenVerified: boolean
+  textReopenVerified: boolean
+  pageGeometryVerified: boolean
+}
 const POSITION_KEY = 'longedit.pdf.positions.v1'
 const route = useRoute()
 const router = useRouter()
@@ -377,6 +487,14 @@ const pagePlanMode = ref<'organize' | 'extract'>('organize')
 const pageRangeInput = ref('')
 const pageRangePages = ref<number[]>([])
 const pageRangeError = ref('')
+const pdfMergeInputs = ref<PdfMergeInput[]>([])
+const pdfMergePathInput = ref('')
+const pdfMergeAdding = ref(false)
+const pdfMergeVerification = ref<PdfIsolatedMergeReport | null>(null)
+const pdfMergeVerifying = ref(false)
+const pdfMergeCopyName = ref('')
+const pdfMergeSaving = ref(false)
+const pdfMergeError = ref('')
 let loadingTask: PDFDocumentLoadingTask | null = null
 let rangeTransport: TauriPdfRangeTransport | null = null
 let loadStartedAt = 0
@@ -434,6 +552,8 @@ const annotationsByPage = computed(() => {
 const visiblePagePlan = computed(() => pagePlan.value.filter(entry => !entry.removed))
 const pagePlanSummary = computed(() => summarizePdfPagePlan(pagePlan.value))
 const pagePlanDirty = computed(() => pagePlanSummary.value.changed > 0)
+const pdfMergeDirty = computed(() => pdfMergeInputs.value.length > 1)
+const pdfWorkspaceDirty = computed(() => pagePlanDirty.value || pdfMergeDirty.value)
 const pagePlanStatus = computed(() => {
   if (pagePlanMode.value === 'extract' && pageRangePages.value.length) {
     return `提取 ${pageRangePages.value.length}/${pagePlan.value.length} 页`
@@ -458,6 +578,10 @@ const pdfPlanBlockerLabels: Record<string, string> = {
   named_destinations_migration_unverified: '命名目标迁移',
 }
 const pdfPlanBlockerLabel = (blocker: string) => pdfPlanBlockerLabels[blocker] || blocker
+const pdfMergeBlockerLabel = (blocker: string) => {
+  const match = /^input_(\d+):(.+)$/.exec(blocker)
+  return match ? `输入 ${match[1]}：${pdfPlanBlockerLabel(match[2])}` : pdfPlanBlockerLabel(blocker)
+}
 const formatBytes = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
 const sortedOcrPages = computed(() => [...(ocrDocument.value?.pages || [])].sort((a, b) => a.page - b.page))
 const ocrBusy = computed(() => ocrTaskState.value === 'preparing' || ocrTaskState.value === 'running')
@@ -569,6 +693,150 @@ const loadOcrDocument = async (document: PDFDocumentProxy) => {
 const openOcrPanel = () => {
   sidebarOpen.value = true
   sidebarTab.value = 'ocr'
+}
+
+const mergeFileName = (path: string) => path.split(/[\\/]/).pop() || path
+
+const initializePdfMergeInputs = (signature: string) => {
+  pdfMergeInputs.value = pdfPath.value && signature
+    ? [{ path: pdfPath.value, expectedSignature: signature }]
+    : []
+  pdfMergePathInput.value = ''
+  pdfMergeVerification.value = null
+  pdfMergeCopyName.value = `${fileName.value}-合并.pdf`
+  pdfMergeError.value = ''
+}
+
+const invalidatePdfMergeVerification = () => {
+  pdfMergeVerification.value = null
+  pdfMergeError.value = ''
+}
+
+const addPdfMergeInputPath = async (path: string) => {
+  const candidate = path.trim()
+  if (!candidate) return
+  if (pdfMergeInputs.value.length >= 16) throw new Error('一次最多合并 16 个 PDF')
+  const normalized = candidate.replace(/\\/g, '/').toLocaleLowerCase()
+  if (pdfMergeInputs.value.some(input => input.path.replace(/\\/g, '/').toLocaleLowerCase() === normalized)) {
+    throw new Error('这个 PDF 已在合并列表中')
+  }
+  const descriptor = await invoke<PdfReadDescriptor>('read_pdf_info', {
+    libraryRoot: store.libraryPath,
+    path: candidate,
+  })
+  pdfMergeInputs.value = [...pdfMergeInputs.value, {
+    path: candidate,
+    expectedSignature: descriptor.signature,
+  }]
+  invalidatePdfMergeVerification()
+}
+
+const addPdfMergePathInput = async () => {
+  if (pdfMergeAdding.value || !pdfMergePathInput.value.trim()) return
+  pdfMergeAdding.value = true
+  pdfMergeError.value = ''
+  try {
+    await addPdfMergeInputPath(pdfMergePathInput.value)
+    pdfMergePathInput.value = ''
+  } catch (cause) {
+    pdfMergeError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfMergeAdding.value = false
+  }
+}
+
+const pickPdfMergeInputs = async () => {
+  if (pdfMergeAdding.value || pdfMergeInputs.value.length >= 16) return
+  pdfMergeAdding.value = true
+  pdfMergeError.value = ''
+  try {
+    const { open } = await import('@tauri-apps/plugin-dialog')
+    const selected = await open({
+      title: '选择要合并的库内 PDF',
+      multiple: true,
+      directory: false,
+      filters: [{ name: 'PDF 文档', extensions: ['pdf'] }],
+    })
+    const paths = selected ? (Array.isArray(selected) ? selected : [selected]) : []
+    for (const path of paths) await addPdfMergeInputPath(path)
+  } catch (cause) {
+    pdfMergeError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfMergeAdding.value = false
+  }
+}
+
+const movePdfMergeInput = (index: number, offset: -1 | 1) => {
+  const target = index + offset
+  if (target < 0 || target >= pdfMergeInputs.value.length) return
+  const next = [...pdfMergeInputs.value]
+  ;[next[index], next[target]] = [next[target], next[index]]
+  pdfMergeInputs.value = next
+  invalidatePdfMergeVerification()
+}
+
+const removePdfMergeInput = (index: number) => {
+  if (pdfMergeInputs.value[index]?.path === pdfPath.value) return
+  pdfMergeInputs.value = pdfMergeInputs.value.filter((_, inputIndex) => inputIndex !== index)
+  invalidatePdfMergeVerification()
+}
+
+const verifyPdfMerge = async () => {
+  if (pdfMergeInputs.value.length < 2 || pdfMergeVerifying.value) return
+  pdfMergeVerifying.value = true
+  pdfMergeVerification.value = null
+  pdfMergeError.value = ''
+  try {
+    pdfMergeVerification.value = await invoke<PdfIsolatedMergeReport>('preview_pdf_merge_isolated_copy', {
+      libraryRoot: store.libraryPath,
+      inputs: pdfMergeInputs.value,
+    })
+  } catch (cause) {
+    pdfMergeError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfMergeVerifying.value = false
+  }
+}
+
+const savePdfMergeCopy = async () => {
+  const verification = pdfMergeVerification.value
+  if (
+    verification?.status !== 'isolated_verified'
+    || !verification.outputDigest
+    || !pdfMergeCopyName.value.trim()
+    || pdfMergeSaving.value
+  ) return
+  pdfMergeSaving.value = true
+  pdfMergeError.value = ''
+  try {
+    const saved = await invoke<PdfSavedMergeReport>('save_pdf_merge_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      targetFileName: pdfMergeCopyName.value.trim(),
+      expectedOutputDigest: verification.outputDigest,
+      inputs: pdfMergeInputs.value,
+    })
+    if (
+      saved.status !== 'saved_verified'
+      || !saved.sourcesUnchanged
+      || !saved.structuralReopenVerified
+      || !saved.textReopenVerified
+      || !saved.pageGeometryVerified
+    ) throw new Error('合并保存结果未通过完整复读')
+    savedCopyNotice.value = {
+      path: saved.targetPath,
+      pages: saved.outputPages,
+      bytes: saved.outputBytes,
+    }
+    pdfMergeInputs.value = []
+    pdfMergeVerification.value = null
+    message.success(`已可靠合并并验证：${pdfMergeCopyName.value.trim()}`)
+    await router.replace({ path: '/pdf', query: { path: saved.targetPath } })
+  } catch (cause) {
+    pdfMergeError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfMergeSaving.value = false
+  }
 }
 
 const initializePagePlan = (pageCount: number) => {
@@ -1217,6 +1485,11 @@ const loadPdf = async () => {
   pagePlanVerificationError.value = ''
   pagePlanCopyName.value = ''
   pagePlanSaveError.value = ''
+  pdfMergeInputs.value = []
+  pdfMergePathInput.value = ''
+  pdfMergeVerification.value = null
+  pdfMergeCopyName.value = ''
+  pdfMergeError.value = ''
   dismissSelectionTool()
   clearTextState()
   await loadingTask?.destroy()
@@ -1232,6 +1505,7 @@ const loadPdf = async () => {
   try {
     const descriptor = await invoke<PdfReadDescriptor>('read_pdf_info', { libraryRoot: store.libraryPath, path: pdfPath.value })
     pdfSourceSignature.value = descriptor.signature
+    initializePdfMergeInputs(descriptor.signature)
     if (descriptor.fullData) {
       loadMode.value = 'full'
       loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(descriptor.fullData), useWasm: false })
@@ -1366,9 +1640,9 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 const handleResize = () => { if (fitWidth.value) applyFitWidth() }
-const mayDiscardPagePlan = () => !pagePlanDirty.value || window.confirm('PDF 页面整理草稿尚未生成新文件，离开后将丢失。确定离开吗？')
+const mayDiscardPagePlan = () => !pdfWorkspaceDirty.value || window.confirm('PDF 页面整理或合并草稿尚未生成新文件，离开后将丢失。确定离开吗？')
 const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
-  if (!pagePlanDirty.value) return
+  if (!pdfWorkspaceDirty.value) return
   event.preventDefault()
   event.returnValue = ''
 }
@@ -1459,10 +1733,19 @@ onBeforeUnmount(async () => {
 .ocr-page-list { display: flex; flex-direction: column; gap: 6px; }.ocr-page-list button { display: flex; flex-direction: column; gap: 5px; padding: 8px; border: 1px solid rgba(0,0,0,.08); border-radius: 7px; color: var(--theme-text); background: rgba(255,255,255,.4); cursor: pointer; text-align: left; }.ocr-page-list button > span { display: flex; justify-content: space-between; font-size: 9px; }.ocr-page-list i { color: var(--theme-primary); font-style: normal; }.ocr-page-list small { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: 8px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .page-plan-dirty { display: inline-flex; margin-left: 7px; padding: 2px 5px; border-radius: 999px; color: #9a5a00; background: #fff0c7; font-size: 8px; font-style: normal; font-weight: 650; vertical-align: 1px; }
 .page-organizer { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.page-plan-summary { flex: none; padding: 10px; border-bottom: 1px solid rgba(0,0,0,.08); background: rgba(var(--theme-primary-rgb),.035); }
+.page-plan-summary { max-height: min(68%,520px); flex: none; overflow: auto; padding: 10px; border-bottom: 1px solid rgba(0,0,0,.08); background: rgba(var(--theme-primary-rgb),.035); }
 .page-plan-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .page-plan-saved { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; margin-bottom: 8px; padding: 7px; border: 1px solid rgba(43,125,78,.22); border-radius: 7px; color: #2b6f49; background: rgba(43,125,78,.07); }.page-plan-saved strong { font-size: 9px; }.page-plan-saved span { color: inherit; font-size: 8px; }
 .page-plan-summary strong { font-size: 11px; }.page-plan-summary span { color: var(--theme-primary); font-size: 8px; }
+.pdf-merge-panel { display: grid; gap: 6px; margin-top: 8px; padding: 8px 0; border-top: 1px solid rgba(0,0,0,.08); border-bottom: 1px solid rgba(0,0,0,.08); }
+.pdf-merge-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.pdf-merge-heading strong { color: var(--theme-text); font-size: 9px; }.pdf-merge-heading span { color: var(--theme-text-secondary); font-size: 8px; }
+.pdf-merge-add { display: grid; grid-template-columns: minmax(0,1fr) auto 30px; gap: 4px; }.pdf-merge-add input { min-width: 0; height: 28px; box-sizing: border-box; padding: 0 7px; border: 1px solid rgba(0,0,0,.12); border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--theme-card); font-size: 8px; }.pdf-merge-add input:focus { border-color: rgba(var(--theme-primary-rgb),.45); }.pdf-merge-add button { height: 28px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.25); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font-size: 8px; font-weight: 650; }.pdf-merge-add button:disabled { cursor: default; opacity: .4; }.pdf-merge-add .pdf-merge-pick { display: grid; width: 30px; padding: 0; place-items: center; }
+.pdf-merge-panel > small { color: var(--theme-text-secondary); font-size: 8px; line-height: 1.4; }.pdf-merge-panel > .pdf-merge-error { color: #a03f34; }
+.pdf-merge-list { display: grid; gap: 3px; max-height: 128px; overflow: auto; }.pdf-merge-list article { display: grid; grid-template-columns: 18px minmax(0,1fr) auto auto; align-items: center; gap: 4px; min-height: 28px; padding: 0 4px; border-left: 2px solid transparent; background: rgba(0,0,0,.025); }.pdf-merge-list article.current { border-left-color: var(--theme-primary); }.pdf-merge-order { color: var(--theme-text-secondary); font-size: 8px; text-align: center; }.pdf-merge-name { overflow: hidden; color: var(--theme-text); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }.pdf-merge-current { color: var(--theme-primary); font-size: 7px; font-weight: 650; }
+.pdf-merge-actions { display: flex; gap: 2px; }.pdf-merge-actions button { width: 21px; height: 21px; padding: 0; border: 1px solid rgba(0,0,0,.08); border-radius: 4px; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; font-size: 10px; }.pdf-merge-actions button:disabled { cursor: default; opacity: .28; }
+.pdf-merge-verify { min-height: 29px; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 9px; font-weight: 650; }.pdf-merge-verify:disabled { cursor: default; opacity: .4; }
+.pdf-merge-verification { display: flex; flex-direction: column; gap: 3px; padding: 7px; border-left: 2px solid #2f9b63; color: #2b6f49; background: rgba(43,125,78,.06); }.pdf-merge-verification.blocked { border-left-color: #b45d4f; color: #943f35; background: rgba(180,93,79,.06); }.pdf-merge-verification strong { font-size: 9px; }.pdf-merge-verification span,.pdf-merge-verification small { color: inherit; font-size: 8px; line-height: 1.4; }
+.pdf-merge-save { display: grid; gap: 4px; margin-top: 4px; padding-top: 5px; border-top: 1px solid rgba(43,125,78,.16); }.pdf-merge-save input { width: 100%; height: 27px; box-sizing: border-box; padding: 0 7px; border: 1px solid rgba(0,0,0,.12); border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--theme-card); font-size: 8px; }.pdf-merge-save button { min-height: 28px; border: 0; border-radius: 5px; color: #fff; background: var(--theme-primary); cursor: pointer; font-size: 9px; font-weight: 650; }.pdf-merge-save button:disabled { cursor: default; opacity: .42; }
 .page-range-extract { display: grid; gap: 5px; margin-top: 8px; padding: 8px 0; border-top: 1px solid rgba(0,0,0,.08); border-bottom: 1px solid rgba(0,0,0,.08); }
 .page-range-extract label { display: grid; gap: 4px; }.page-range-extract label span { color: var(--theme-text); font-size: 9px; font-weight: 650; }
 .page-range-extract input { width: 100%; height: 28px; box-sizing: border-box; padding: 0 7px; border: 1px solid rgba(0,0,0,.12); border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--theme-card); font-size: 9px; }.page-range-extract input:focus { border-color: rgba(var(--theme-primary-rgb),.45); }
