@@ -8,7 +8,16 @@ $script:MaxBundleBytes = 80MB
 
 function Get-LowerSha256 {
   param([Parameter(Mandatory)][string]$Path)
-  (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+  $stream = [System.IO.File]::OpenRead($Path)
+  $algorithm = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    $digest = $algorithm.ComputeHash($stream)
+    ([System.BitConverter]::ToString($digest)).Replace("-", "").ToLowerInvariant()
+  }
+  finally {
+    $algorithm.Dispose()
+    $stream.Dispose()
+  }
 }
 
 function Read-ZipEntryText {

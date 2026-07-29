@@ -70,6 +70,19 @@ function Assert-Rejected {
   }
 }
 
+function Get-TestSha256 {
+  param([string]$Path)
+  $stream = [System.IO.File]::OpenRead($Path)
+  $algorithm = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    ([System.BitConverter]::ToString($algorithm.ComputeHash($stream))).Replace("-", "").ToLowerInvariant()
+  }
+  finally {
+    $algorithm.Dispose()
+    $stream.Dispose()
+  }
+}
+
 try {
   New-Item -ItemType Directory -Path $source | Out-Null
   New-TestOdt
@@ -82,7 +95,7 @@ try {
     producer = "WPS Writer"
     productVersion = "test-ready-build"
     generatedAt = "2026-07-29T00:00:00Z"
-    sha256 = (Get-FileHash -LiteralPath $fixture -Algorithm SHA256).Hash.ToLowerInvariant()
+    sha256 = Get-TestSha256 $fixture
     size = (Get-Item -LiteralPath $fixture).Length
     sourceFixture = "wps-writer.docx"
     expectedText = "WPS Writer Producer Fixture"
