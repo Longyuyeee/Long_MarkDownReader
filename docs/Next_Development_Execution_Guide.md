@@ -684,3 +684,19 @@ npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip
 ```
 
 提交 `s8-7e3g-microsoft-excel.xlsx` 与达到 `3/3 verified` 的 matrix 后，再进入多层轴可靠新副本白名单评估。原文件覆盖、已有目标覆盖、Page Fields、外部数据和切片器不属于该白名单。
+
+# 2026-07-30 最新执行入口：S8-7E3G Excel 三成员证据包
+
+本机 `Excel.Application` 被 WPS COM 兼容服务器接管，不能执行 Microsoft Excel 证据。不要在本机直接运行 `-Producer microsoft-excel`，也不要把应用自报名称当作身份依据。
+
+下一步按两台机器执行：
+
+1. 在确认安装真实 Microsoft Excel 的机器拉取当前提交。
+2. 运行 `npm run audit:s8-7e3g-excel-environment`，必须得到 `available`。
+3. 运行 `npm run export:s8-7e3g-excel-evidence -- -OutputPath <handoff.zip>`。
+4. 通过可信渠道把 ZIP 传回当前开发机。
+5. 人工确认产出机器身份后运行 `npm run import:s8-7e3g-excel-evidence -- -BundlePath <handoff.zip>`。
+6. 更新能力合同为 `3/3`，运行完整 `ci:check`。
+7. 进入多层轴可靠新副本白名单评估；不开放原文件覆盖。
+
+ZIP 必须只有 `manifest.json`、`producer.json` 和 `s8-7e3g-microsoft-excel.xlsx`。导入器拒绝额外成员、摘要漂移、基线不一致、生命周期缺失、语义复读失败和已有证据覆盖。

@@ -1,0 +1,27 @@
+{
+    "schemaVersion":  1,
+    "stage":  "S8-7E3G-D",
+    "checkedAt":  "2026-07-29T18:03:17.2581094Z",
+    "status":  "compatible_server_not_microsoft_excel",
+    "trustedMicrosoftExcelAvailable":  false,
+    "progId":  "Excel.Application",
+    "clsid":  "{00024500-0000-0000-C000-000000000046}",
+    "localServer":  "C:\\Users\\Administrator\\AppData\\Local\\Kingsoft\\WPS Office\\1210~1.268\\office6\\et.exe /Automation",
+    "identity":  {
+                     "name":  "Microsoft Excel",
+                     "version":  "12.0",
+                     "build":  "26895",
+                     "path":  "C:\\Users\\Administrator\\AppData\\Local\\Kingsoft\\WPS Office\\1210~1.268\\office6",
+                     "productCode":  "{90120000-0011-0000-0000-0000000FF1CE}"
+                 },
+    "activationError":  null,
+    "openedWorkbook":  false,
+    "writesUserFile":  false,
+    "requiredIdentityGates":  [
+                                  "excel_com_activation",
+                                  "local_server_is_excel_exe",
+                                  "application_path_is_microsoft_office",
+                                  "local_server_is_not_kingsoft_or_wps"
+                              ],
+    "nextAction":  "export_evidence_on_trusted_microsoft_excel_machine"
+}

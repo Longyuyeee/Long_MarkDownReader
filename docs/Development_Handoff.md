@@ -412,3 +412,9 @@ S8-7E3G 已改为可增量执行的生产者矩阵。本机 WPS Spreadsheets `12
 LibreOffice Calc `26.2.5.2 / cd7284b4cbbfeb507e630c1aac019f4157393acb` 已通过隔离 UNO 运行时完成多层轴 Pivot 刷新、保存、退出、独立配置新进程重开和 LongEdit 反向复读。matrix 当前为 `partial / 2/3`；WPS 与 LibreOffice 均保持 `MultiAxisPivot`、双层行列轴、`A3:I12`、80 个输出单元格、16 个预览分组和 Grand Total `424`。
 
 下一步只补 Microsoft Excel。具备 Excel 的机器直接运行 `scripts/verify-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.ps1 -Producer microsoft-excel`，提交 Excel 输出与更新后的 matrix，再运行完整 `audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip`。达到 3/3 前可靠新副本继续阻断；达到 3/3 后也只进入白名单评估，不自动开放原文件覆盖。详细审计见 [`S8_7E3G_C_XLSX_Pivot_Multi_Axis_LibreOffice_Round_Trip_Audit_2026-07-30.md`](./S8_7E3G_C_XLSX_Pivot_Multi_Axis_LibreOffice_Round_Trip_Audit_2026-07-30.md)。
+
+# 2026-07-30 交接快照：S8-7E3G-D Excel 身份与证据交接已完成
+
+本机标准 `Excel.Application` CLSID 实际被 WPS `et.exe /Automation` 接管；应用自报 `Microsoft Excel 12.0/26895`，路径却属于 Kingsoft，因此不能作为 Microsoft Excel 证据。新增环境审计与验证器身份门禁，要求 LocalServer 为 Microsoft Office `EXCEL.EXE` 且明确拒绝 Kingsoft/WPS/`et.exe`。当前 matrix 保持 `partial / 2/3`。
+
+最后一项证据现在使用固定三成员 ZIP 交接：可信 Excel 机器运行 `npm run export:s8-7e3g-excel-evidence -- -OutputPath <zip>`；当前开发机人工确认产出来源后运行 `npm run import:s8-7e3g-excel-evidence -- -BundlePath <zip>`。导入绑定 LongEdit 基线摘要、校验生命周期与快照、再次执行 LongEdit 复读、拒绝覆盖并在失败时保持 matrix 不变。详细审计见 [`S8_7E3G_D_XLSX_Pivot_Excel_Identity_and_Evidence_Handoff_Audit_2026-07-30.md`](./S8_7E3G_D_XLSX_Pivot_Excel_Identity_and_Evidence_Handoff_Audit_2026-07-30.md)。

@@ -10,7 +10,6 @@ $workspace = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $baseline = Join-Path $workspace "fixtures\xlsx\output-reopen\s8-7e3g-longedit-multi-axis.xlsx"
 $output = Join-Path $workspace "fixtures\xlsx\output-reopen"
 $report = Join-Path $workspace "docs\evidence\s8-7e3g-xlsx-pivot-multi-axis-roundtrip\matrix.json"
-$excelPath = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE"
 if ([string]::IsNullOrWhiteSpace($LibreOfficeRoot)) {
   $LibreOfficeRoot = if ([string]::IsNullOrWhiteSpace($env:LONGEDIT_LIBREOFFICE_ROOT)) {
     "C:\Program Files\LibreOffice\program"
@@ -80,6 +79,44 @@ function Test-ComProgId {
     return $null -ne $type
   }
   catch { return $false }
+}
+
+function Get-TrustedMicrosoftExcelServer {
+  $clsid = "{00024500-0000-0000-C000-000000000046}"
+  $registryPaths = @(
+    "Registry::HKEY_CLASSES_ROOT\CLSID\$clsid\LocalServer32",
+    "Registry::HKEY_CLASSES_ROOT\WOW6432Node\CLSID\$clsid\LocalServer32"
+  )
+  $command = $null
+  foreach ($registryPath in $registryPaths) {
+    $entry = Get-ItemProperty -Path $registryPath -ErrorAction SilentlyContinue
+    if ($entry -and $entry.'(default)') {
+      $command = [string]$entry.'(default)'
+      break
+    }
+  }
+  $executable = $null
+  if ($command -match '^\s*"([^"]+EXCEL\.EXE)"') {
+    $executable = $matches[1]
+  } elseif ($command -match '^\s*(.+?EXCEL\.EXE)(?:\s|$)') {
+    $executable = $matches[1].Trim()
+  }
+  $trusted = -not [string]::IsNullOrWhiteSpace($executable) -and
+    (Test-Path -LiteralPath $executable -PathType Leaf) -and
+    $command -notmatch '(?i)kingsoft|WPS Office|\\et\.exe' -and
+    $executable -match '(?i)Microsoft Office'
+  return [ordered]@{
+    trusted = $trusted
+    executable = $executable
+    localServer = $command
+    status = if ($trusted) { "available" } elseif ($command -match '(?i)kingsoft|WPS Office|\\et\.exe') {
+      "compatible_server_not_microsoft_excel"
+    } elseif ($command) {
+      "untrusted_identity"
+    } else {
+      "missing"
+    }
+  }
 }
 
 function Test-LongEditReparse {
@@ -280,8 +317,9 @@ function Invoke-LibreOfficePivotRoundTrip {
   }
 }
 
+$excelEnvironment = Get-TrustedMicrosoftExcelServer
 $availability = [ordered]@{
-  "microsoft-excel" = (Test-Path -LiteralPath $excelPath -PathType Leaf) -and (Test-ComProgId "Excel.Application")
+  "microsoft-excel" = $excelEnvironment.trusted -and (Test-ComProgId "Excel.Application")
   "wps-spreadsheets" = Test-ComProgId "KET.Application"
   "libreoffice-calc" = (Test-Path -LiteralPath $soffice -PathType Leaf) -and
     (Test-Path -LiteralPath $libreOfficePython -PathType Leaf) -and
@@ -331,8 +369,14 @@ $matrix.environment.microsoftExcel.status = if ($availability["microsoft-excel"]
 } elseif ($existing["microsoft-excel"].status -eq "verified") {
   "verified_evidence"
 } else {
-  "missing"
+  $excelEnvironment.status
 }
+$matrix.environment.microsoftExcel.evidence = if ($availability["microsoft-excel"]) {
+  "Trusted Microsoft Excel COM local server verified"
+} else {
+  "Excel.Application is unavailable or does not resolve to a trusted Microsoft Office EXCEL.EXE local server"
+}
+$matrix.environment.microsoftExcel | Add-Member -NotePropertyName localServer -NotePropertyValue $excelEnvironment.localServer -Force
 $matrix.environment.wpsSpreadsheets.status = if ($availability["wps-spreadsheets"]) {
   "available"
 } elseif ($existing["wps-spreadsheets"].status -eq "verified") {

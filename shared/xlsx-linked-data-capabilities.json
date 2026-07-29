@@ -655,6 +655,23 @@
           "libreoffice-calc"
         ],
         "producerRoundTrip": "partial_2_of_3",
+        "excelEvidenceHandoff": {
+          "stage": "S8-7E3G-D",
+          "status": "ready",
+          "environmentStatus": "compatible_server_not_microsoft_excel",
+          "environmentReport": "docs/evidence/s8-7e3g-xlsx-pivot-multi-axis-roundtrip/excel-environment.json",
+          "exportScript": "scripts/export-s8-7e3g-excel-evidence-bundle.ps1",
+          "importScript": "scripts/import-s8-7e3g-excel-evidence-bundle.ps1",
+          "requiredBundleMembers": [
+            "manifest.json",
+            "producer.json",
+            "s8-7e3g-microsoft-excel.xlsx"
+          ],
+          "trustedMachineConfirmationRequired": true,
+          "baselineDigestBound": true,
+          "longEditSemanticReparseRequired": true,
+          "existingEvidenceOverwrite": "blocked"
+        },
         "reliableCopySave": "blocked",
         "writesUserFile": false,
         "sourceOverwrite": "blocked",

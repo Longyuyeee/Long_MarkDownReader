@@ -35,8 +35,9 @@
     "environment":  {
                         "checkedAt":  "2026-07-30",
                         "microsoftExcel":  {
-                                               "status":  "missing",
-                                               "evidence":  "EXCEL.EXE not found in PATH or common Microsoft Office install roots"
+                                               "status":  "compatible_server_not_microsoft_excel",
+                                               "evidence":  "Excel.Application resolves to WPS et.exe and is rejected by the Microsoft Excel identity gate",
+                                               "localServer":  "C:\\Users\\Administrator\\AppData\\Local\\Kingsoft\\WPS Office\\1210~1.268\\office6\\et.exe /Automation"
                                            },
                         "wpsSpreadsheets":  {
                                                 "status":  "available",
