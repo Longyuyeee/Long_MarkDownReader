@@ -147,3 +147,9 @@ S8-7E3F 已把 XLSX 多层行轴 + 多层列轴 Pivot 从结构审计推进到�
 S8-7E3G 已完成预检前置：新增多层轴生产者审计副本生成入口，固定 LongEdit 基线 `fixtures/xlsx/output-reopen/s8-7e3g-longedit-multi-axis.xlsx`，并登记 `blocked_preflight` matrix。当前本机只发现 WPS Spreadsheets，未发现 Microsoft Excel 与 LibreOffice Calc，因此三生产者矩阵仍为 `0/3`，可靠保存继续阻断。
 
 下一入口为 S8-7E3G 完整矩阵：在具备 Excel/WPS/LibreOffice 的机器上运行 `npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip`，补齐刷新、保存、退出、新进程重开和无修复提示证据。详细证据见 [`S8_7E3G_XLSX_Pivot_Multi_Axis_Producer_Preflight_Audit_2026-07-30.md`](./S8_7E3G_XLSX_Pivot_Multi_Axis_Producer_Preflight_Audit_2026-07-30.md)。
+
+# 2026-07-30 当前状态快照：S8-7E3G-B 已推进到 1/3
+
+生产者审计已支持按可用环境增量执行。本机 WPS Spreadsheets `12.0/26895` 已对多层轴 Pivot 完成刷新、保存、应用退出、独立重开和 LongEdit 反向复读；输出 `s8-7e3g-wps-spreadsheets.xlsx` 保持 `MultiAxisPivot`、双层行列轴、`A3:I12` 与 Grand Total `424`，未观察到修复提示。
+
+当前 matrix 为 `partial` / `1/3`。下一步只补 Microsoft Excel 和 LibreOffice Calc 两项真实证据，达到 `3/3` 后再评估多层轴同目录可靠新副本。原文件覆盖、已有目标覆盖、Page Fields、外部数据和切片器继续阻断。详细证据见 [`S8_7E3G_B_XLSX_Pivot_Multi_Axis_WPS_Round_Trip_Audit_2026-07-30.md`](./S8_7E3G_B_XLSX_Pivot_Multi_Axis_WPS_Round_Trip_Audit_2026-07-30.md)。

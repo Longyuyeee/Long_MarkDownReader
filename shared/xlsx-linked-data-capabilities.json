@@ -634,8 +634,8 @@
       },
       "multiLevelAxisProducerRoundTrip": {
         "stage": "S8-7E3G",
-        "execution": "producer_roundtrip_preflight",
-        "status": "blocked_preflight",
+        "execution": "incremental_producer_roundtrip",
+        "status": "partial",
         "matrix": "docs/evidence/s8-7e3g-xlsx-pivot-multi-axis-roundtrip/matrix.json",
         "baselineFile": "fixtures/xlsx/output-reopen/s8-7e3g-longedit-multi-axis.xlsx",
         "baselineStatus": "audit_copy_verified",
@@ -648,9 +648,12 @@
           "wps-spreadsheets",
           "libreoffice-calc"
         ],
-        "verifiedProducerCount": 0,
+        "verifiedProducerCount": 1,
         "requiredProducerCount": 3,
-        "producerRoundTrip": "pending_environment",
+        "verifiedProducerIds": [
+          "wps-spreadsheets"
+        ],
+        "producerRoundTrip": "partial_1_of_3",
         "reliableCopySave": "blocked",
         "writesUserFile": false,
         "sourceOverwrite": "blocked",

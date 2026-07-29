@@ -76,3 +76,7 @@ npm.cmd run ci:check
 ```
 
 完整 CI 结果：Rust 功能测试 `373 passed`，性能测试 `1 passed`，PDF Range 基准 `100 MiB / 160 ms`，生产依赖审计 `0 vulnerabilities`。Vite chunk size warning 与 Windows incremental compilation directory cleanup warning 为既有非阻断提示。
+
+## 7. 后续进展
+
+S8-7E3G-B 已在本机完成 WPS Spreadsheets 真实往返，matrix 从 `blocked_preflight / 0/3` 推进为 `partial / 1/3`。后续状态与执行入口以 [`S8_7E3G_B_XLSX_Pivot_Multi_Axis_WPS_Round_Trip_Audit_2026-07-30.md`](./S8_7E3G_B_XLSX_Pivot_Multi_Axis_WPS_Round_Trip_Audit_2026-07-30.md) 为准。

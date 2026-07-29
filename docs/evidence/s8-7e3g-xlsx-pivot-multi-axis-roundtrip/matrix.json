@@ -1,99 +1,156 @@
 {
-  "schemaVersion": 1,
-  "stage": "S8-7E3G",
-  "status": "blocked_preflight",
-  "complete": false,
-  "verifiedCount": 0,
-  "requiredCount": 3,
-  "requiredProducerIds": [
-    "microsoft-excel",
-    "wps-spreadsheets",
-    "libreoffice-calc"
-  ],
-  "sourceOverwriteAllowed": false,
-  "reliableSaveAllowed": false,
-  "baseline": {
-    "id": "longedit-multi-axis",
-    "status": "audit_copy_verified",
-    "stage": "S8-7E3G-A",
-    "file": "s8-7e3g-longedit-multi-axis.xlsx",
-    "bytes": 12503,
-    "sha256": "a060ff1dbd708618217e9cbb442e25a2a4e74efd1c01d64ef3d5cafaafef3736",
-    "pivotName": "MultiAxisPivot",
-    "outputRange": "A3:I12",
-    "outputCellCount": 80,
-    "previewGroupCount": 16,
-    "rowFieldCount": 2,
-    "columnFieldCount": 2,
-    "dataFieldCount": 1,
-    "pageFieldCount": 0,
-    "grandTotal": 424,
-    "saveMode": "producer_roundtrip_input_only",
-    "sourceOverwriteAllowed": false,
-    "reliableSaveAllowed": false
-  },
-  "environment": {
-    "checkedAt": "2026-07-30",
-    "microsoftExcel": {
-      "status": "missing",
-      "evidence": "EXCEL.EXE not found in PATH or common Microsoft Office install roots"
-    },
-    "wpsSpreadsheets": {
-      "status": "available",
-      "executables": [
-        "C:\\Users\\Administrator\\AppData\\Local\\Kingsoft\\WPS Office\\12.1.0.26375\\office6\\et.exe",
-        "C:\\Users\\Administrator\\AppData\\Local\\Kingsoft\\WPS Office\\12.1.0.26895\\office6\\et.exe"
-      ]
-    },
-    "libreOfficeCalc": {
-      "status": "missing",
-      "evidence": "soffice.exe not found in PATH or common LibreOffice install roots"
-    }
-  },
-  "producers": [
-    {
-      "id": "microsoft-excel",
-      "status": "pending_environment",
-      "requiredGates": [
-        "open_baseline",
-        "refresh",
-        "save",
-        "quit_process",
-        "reopen_in_new_process",
-        "verify_no_repair_prompt",
-        "reparse_longedit_semantics"
-      ]
-    },
-    {
-      "id": "wps-spreadsheets",
-      "status": "pending_full_matrix",
-      "requiredGates": [
-        "open_baseline",
-        "refresh",
-        "save",
-        "quit_process",
-        "reopen_in_new_process",
-        "verify_no_repair_prompt",
-        "reparse_longedit_semantics"
-      ]
-    },
-    {
-      "id": "libreoffice-calc",
-      "status": "pending_environment",
-      "requiredGates": [
-        "open_baseline",
-        "refresh",
-        "save",
-        "quit_process",
-        "reopen_in_new_process",
-        "verify_no_repair_prompt",
-        "reparse_longedit_semantics"
-      ]
-    }
-  ],
-  "blockedUntil": [
-    "microsoft_excel_available",
-    "libreoffice_calc_available",
-    "three_producer_roundtrip_verified"
-  ]
+    "schemaVersion":  1,
+    "stage":  "S8-7E3G",
+    "status":  "partial",
+    "complete":  false,
+    "verifiedCount":  1,
+    "requiredCount":  3,
+    "requiredProducerIds":  [
+                                "microsoft-excel",
+                                "wps-spreadsheets",
+                                "libreoffice-calc"
+                            ],
+    "sourceOverwriteAllowed":  false,
+    "reliableSaveAllowed":  false,
+    "baseline":  {
+                     "id":  "longedit-multi-axis",
+                     "status":  "audit_copy_verified",
+                     "stage":  "S8-7E3G-A",
+                     "file":  "s8-7e3g-longedit-multi-axis.xlsx",
+                     "bytes":  12503,
+                     "sha256":  "a060ff1dbd708618217e9cbb442e25a2a4e74efd1c01d64ef3d5cafaafef3736",
+                     "pivotName":  "MultiAxisPivot",
+                     "outputRange":  "A3:I12",
+                     "outputCellCount":  80,
+                     "previewGroupCount":  16,
+                     "rowFieldCount":  2,
+                     "columnFieldCount":  2,
+                     "dataFieldCount":  1,
+                     "pageFieldCount":  0,
+                     "grandTotal":  424,
+                     "saveMode":  "producer_roundtrip_input_only",
+                     "sourceOverwriteAllowed":  false,
+                     "reliableSaveAllowed":  false
+                 },
+    "environment":  {
+                        "checkedAt":  "2026-07-30",
+                        "microsoftExcel":  {
+                                               "status":  "missing",
+                                               "evidence":  "EXCEL.EXE not found in PATH or common Microsoft Office install roots"
+                                           },
+                        "wpsSpreadsheets":  {
+                                                "status":  "available",
+                                                "executables":  [
+                                                                    "C:\\Users\\Administrator\\AppData\\Local\\Kingsoft\\WPS Office\\12.1.0.26375\\office6\\et.exe",
+                                                                    "C:\\Users\\Administrator\\AppData\\Local\\Kingsoft\\WPS Office\\12.1.0.26895\\office6\\et.exe"
+                                                                ]
+                                            },
+                        "libreOfficeCalc":  {
+                                                "status":  "missing",
+                                                "evidence":  "soffice.exe not found in PATH or common LibreOffice install roots"
+                                            }
+                    },
+    "producers":  [
+                      {
+                          "id":  "microsoft-excel",
+                          "status":  "pending_environment",
+                          "requiredGates":  [
+                                                "open_baseline",
+                                                "refresh",
+                                                "save",
+                                                "quit_process",
+                                                "reopen_in_new_process",
+                                                "verify_no_repair_prompt",
+                                                "reparse_longedit_semantics"
+                                            ]
+                      },
+                      {
+                          "id":  "wps-spreadsheets",
+                          "producer":  "WPS Spreadsheets",
+                          "status":  "verified",
+                          "version":  "12.0",
+                          "build":  "26895",
+                          "method":  "Writable COM refresh/save followed by application quit, independent read-only reopen, and LongEdit semantic reparse.",
+                          "completedGates":  [
+                                                 "open_baseline",
+                                                 "refresh",
+                                                 "save",
+                                                 "quit_process",
+                                                 "reopen_in_new_process",
+                                                 "verify_no_repair_prompt",
+                                                 "reparse_longedit_semantics"
+                                             ],
+                          "refreshSucceeded":  true,
+                          "saveSucceeded":  true,
+                          "processRestarted":  true,
+                          "sessionHandles":  [
+                                                 3412764,
+                                                 1181620
+                                             ],
+                          "reopenVerified":  true,
+                          "repairPromptObserved":  false,
+                          "longEditReparse":  {
+                                                  "status":  "verified",
+                                                  "pivotName":  "MultiAxisPivot",
+                                                  "outputRange":  "A3:I12",
+                                                  "outputCellCount":  80,
+                                                  "previewGroupCount":  16
+                                              },
+                          "before":  {
+                                         "pivotCount":  1,
+                                         "pivotName":  "MultiAxisPivot",
+                                         "outputRange":  "A3:I12",
+                                         "rowFieldCount":  2,
+                                         "columnFieldCount":  2,
+                                         "dataFieldCount":  1,
+                                         "pageFieldCount":  0,
+                                         "keyCell":  "I12",
+                                         "keyValue":  424
+                                     },
+                          "afterSave":  {
+                                            "pivotCount":  1,
+                                            "pivotName":  "MultiAxisPivot",
+                                            "outputRange":  "A3:I12",
+                                            "rowFieldCount":  2,
+                                            "columnFieldCount":  2,
+                                            "dataFieldCount":  1,
+                                            "pageFieldCount":  0,
+                                            "keyCell":  "I12",
+                                            "keyValue":  424
+                                        },
+                          "afterReopen":  {
+                                              "pivotCount":  1,
+                                              "pivotName":  "MultiAxisPivot",
+                                              "outputRange":  "A3:I12",
+                                              "rowFieldCount":  2,
+                                              "columnFieldCount":  2,
+                                              "dataFieldCount":  1,
+                                              "pageFieldCount":  0,
+                                              "keyCell":  "I12",
+                                              "keyValue":  424
+                                          },
+                          "outputFile":  "s8-7e3g-wps-spreadsheets.xlsx",
+                          "outputSha256":  "b554a1329e3d3ceb1be0212994eb68429cb8df6210d5e6928d1f7f1fcae35e4a",
+                          "outputBytes":  14492
+                      },
+                      {
+                          "id":  "libreoffice-calc",
+                          "status":  "pending_environment",
+                          "requiredGates":  [
+                                                "open_baseline",
+                                                "refresh",
+                                                "save",
+                                                "quit_process",
+                                                "reopen_in_new_process",
+                                                "verify_no_repair_prompt",
+                                                "reparse_longedit_semantics"
+                                            ]
+                      }
+                  ],
+    "blockedUntil":  [
+                         "microsoft_excel_available",
+                         "libreoffice_calc_available",
+                         "three_producer_roundtrip_verified"
+                     ],
+    "verifiedAt":  "2026-07-29T17:36:05.3153908Z"
 }

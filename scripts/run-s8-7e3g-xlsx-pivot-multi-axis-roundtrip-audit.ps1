@@ -28,9 +28,8 @@ finally {
   }
 }
 
-& node (Join-Path $workspace "scripts\check-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.mjs")
-if ($LASTEXITCODE -ne 0) { throw "S8-7E3G multi-axis Pivot preflight check failed" }
+& (Join-Path $workspace "scripts\verify-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.ps1") -Producer available -RequireComplete:$RequireComplete
+if ($LASTEXITCODE -ne 0) { throw "S8-7E3G multi-axis Pivot producer verification failed" }
 
-if ($RequireComplete) {
-  throw "S8-7E3G complete producer round-trip is not available on this machine: Excel and LibreOffice are missing. Use the fixed LongEdit baseline and matrix contract on a 3-producer workstation."
-}
+& node (Join-Path $workspace "scripts\check-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.mjs")
+if ($LASTEXITCODE -ne 0) { throw "S8-7E3G multi-axis Pivot matrix check failed" }

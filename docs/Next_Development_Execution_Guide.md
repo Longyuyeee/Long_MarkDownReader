@@ -653,3 +653,17 @@ npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip
 ```
 
 执行后应把 `docs/evidence/s8-7e3g-xlsx-pivot-multi-axis-roundtrip/matrix.json` 从 `blocked_preflight` 更新为真实 `verified` 结果，并提交三生产者输出副本。稳定前不得开放多层轴可靠保存。
+
+# 2026-07-30 最新执行入口：S8-7E3G 增量补齐 2/3、3/3
+
+S8-7E3G-B 已完成 WPS Spreadsheets 的真实生产者往返，matrix 当前为 `partial` / `1/3`。生产者验证器现在允许按环境逐项补证，不再要求同一次执行必须同时发现三套软件。
+
+下一步执行顺序：
+
+1. 在安装 Microsoft Excel 的机器运行 `scripts/verify-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.ps1 -Producer microsoft-excel`。
+2. 在安装 LibreOffice Calc 的机器运行同一脚本并指定 `-Producer libreoffice-calc`。
+3. 提交对应的 `s8-7e3g-<producer>.xlsx` 与更新后的 matrix。
+4. 运行 `npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip`，确认最终 `3/3`。
+5. 只有三生产者均保持 `MultiAxisPivot`、双层行列轴、`A3:I12`、80 个输出单元格、16 个预览分组和 Grand Total `424`，且无修复提示，才进入可靠新副本白名单评估。
+
+当前机器可以重复执行 `npm run audit:s8-7e3g-xlsx-pivot-multi-axis-available` 验证已安装生产者。未达到 `3/3` 时，可靠新副本、原文件覆盖、已有目标覆盖、Page Fields、外部数据和切片器均不得开放。

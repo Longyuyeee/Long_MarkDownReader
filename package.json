@@ -36,6 +36,7 @@
     "audit:s8-7e3b-xlsx-pivot-roundtrip": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-s8-7e3b-xlsx-pivot-roundtrip-audit.ps1 -RequireComplete",
     "audit:s8-7e3c-xlsx-pivot-layout-roundtrip": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-s8-7e3c-xlsx-pivot-layout-roundtrip-audit.ps1 -RequireComplete",
     "audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-s8-7e3g-xlsx-pivot-multi-axis-roundtrip-audit.ps1 -RequireComplete",
+    "audit:s8-7e3g-xlsx-pivot-multi-axis-available": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-s8-7e3g-xlsx-pivot-multi-axis-roundtrip-audit.ps1",
     "check:theme-contract": "node scripts/check-theme-contract.mjs",
     "check:format-contract": "node scripts/check-format-contract.mjs",
     "check:docx-producer-matrix": "node scripts/check-docx-producer-matrix.mjs",

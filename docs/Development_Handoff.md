@@ -400,3 +400,9 @@ Microsoft Excel 真实 fixture 已固定 `Region/City` 双层行轴和 `Year/Qua
 已新增 `multi_axis` 审计副本生成入口，并固定 LongEdit 基线 `fixtures/xlsx/output-reopen/s8-7e3g-longedit-multi-axis.xlsx`。E3G matrix 位于 `docs/evidence/s8-7e3g-xlsx-pivot-multi-axis-roundtrip/matrix.json`，当前状态为 `blocked_preflight` / `0/3`，原因是本机仅发现 WPS Spreadsheets，未发现 Microsoft Excel 与 LibreOffice Calc。
 
 下一台具备三生产者的机器应直接运行 `npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip`，补齐 Excel/WPS/LibreOffice 的刷新、保存、退出和新进程重开证据。未达到 3/3 前，可靠保存和原文件覆盖继续阻断。
+
+# 2026-07-30 交接快照：S8-7E3G-B 已完成 WPS 往返
+
+S8-7E3G 已改为可增量执行的生产者矩阵。本机 WPS Spreadsheets `12.0/26895` 已对固定 LongEdit 多层轴基线完成刷新、保存、退出、新会话重开和 LongEdit 反向复读；`MultiAxisPivot`、双层行列轴、`A3:I12` 与 `I12=424` 均保持稳定。证据输出为 `fixtures/xlsx/output-reopen/s8-7e3g-wps-spreadsheets.xlsx`，matrix 已由 `0/3 blocked_preflight` 更新为 `1/3 partial`。
+
+当前可用生产者可运行 `npm run audit:s8-7e3g-xlsx-pivot-multi-axis-available`；三生产者完整门禁仍运行 `npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip`。下一台具备 Excel 或 LibreOffice 的机器可以用 `scripts/verify-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.ps1 -Producer <id>` 增量补证。只有达到 3/3 后才评估多层轴可靠新副本；原文件覆盖、已有目标覆盖、Page Fields、外部数据和切片器继续阻断。详细审计见 [`S8_7E3G_B_XLSX_Pivot_Multi_Axis_WPS_Round_Trip_Audit_2026-07-30.md`](./S8_7E3G_B_XLSX_Pivot_Multi_Axis_WPS_Round_Trip_Audit_2026-07-30.md)。
