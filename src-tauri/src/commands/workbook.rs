@@ -512,6 +512,39 @@ pub fn generate_workbook_pivot_multi_axis_audit_copy(
     serde_json::to_string_pretty(&report).map_err(|error| error.to_string())
 }
 
+pub fn generate_workbook_array_audit_report(source_path: &Path) -> Result<String, String> {
+    ensure_workbook(source_path)?;
+    let source = fs::read(source_path)
+        .map_err(|error| format!("Failed to read XLSX array audit source: {error}"))?;
+    validate_workbook_package(&source)?;
+    let layout = read_workbook_sheet_layout(&source, "Array Boundary", 0, 16, 16)?;
+    let array_formulas = layout
+        .array_formulas
+        .iter()
+        .map(|formula| {
+            serde_json::json!({
+                "kind": formula.kind,
+                "anchorRow": formula.anchor_row,
+                "anchorColumn": formula.anchor_column,
+                "range": formula.range,
+                "formula": formula.formula,
+                "declaredCellCount": formula.declared_cell_count,
+                "calculationStatus": formula.calculation_status,
+                "writeStatus": formula.write_status,
+            })
+        })
+        .collect::<Vec<_>>();
+    serde_json::to_string(&serde_json::json!({
+        "schemaVersion": 1,
+        "stage": "X3-B5",
+        "status": "array_semantics_verified",
+        "sheet": "Array Boundary",
+        "arrayDeclarationCount": array_formulas.len(),
+        "arrayFormulas": array_formulas,
+    }))
+    .map_err(|error| format!("Failed to serialize XLSX array audit report: {error}"))
+}
+
 fn generate_workbook_pivot_variant_audit_copy(
     source_path: &Path,
     target_path: &Path,
@@ -2954,6 +2987,22 @@ mod tests {
         assert_eq!(fs::read(&path).unwrap(), source);
         assert!(target.exists());
         fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn array_audit_report_reuses_product_semantics_for_external_evidence() {
+        let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/workbook/array-formula-wps-spreadsheets.xlsx");
+        let report = generate_workbook_array_audit_report(&fixture).unwrap();
+        let report: serde_json::Value = serde_json::from_str(&report).unwrap();
+        assert_eq!(report["stage"], "X3-B5");
+        assert_eq!(report["status"], "array_semantics_verified");
+        assert_eq!(report["sheet"], "Array Boundary");
+        assert_eq!(report["arrayDeclarationCount"], 2);
+        assert_eq!(report["arrayFormulas"][0]["kind"], "legacy_array");
+        assert_eq!(report["arrayFormulas"][1]["kind"], "dynamic_array");
+        assert_eq!(report["arrayFormulas"][0]["range"]["left"], 1);
+        assert_eq!(report["arrayFormulas"][1]["range"]["left"], 3);
     }
 
     #[test]

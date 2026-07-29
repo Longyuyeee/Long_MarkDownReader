@@ -125,7 +125,7 @@
     "notEquivalentToExcelAutomaticRecalculation": true
   },
   "arrayFormulaReadContract": {
-    "stage": "X3-B4",
+    "stage": "X3-B5",
     "status": "partial_producer_matrix",
     "ooxmlFormulaType": "array",
     "recognizedKinds": ["legacy_array", "dynamic_array"],
@@ -157,7 +157,25 @@
     "desktopEvidenceChecks": 12,
     "desktopEvidenceScreenshots": 2,
     "realOfficeProducerEvidence": true,
-    "fullProducerMatrixVerified": false
+    "fullProducerMatrixVerified": false,
+    "producerEvidenceHandoff": {
+      "status": "ready",
+      "supportedProducerIds": ["microsoft-excel", "libreoffice-calc"],
+      "bundleMembers": ["manifest.json", "producer.json", "array-formula-{producerId}.xlsx"],
+      "trustedMachineConfirmationRequired": true,
+      "baselineDigestBound": true,
+      "producerIdentityBound": true,
+      "independentProcessReopenRequired": true,
+      "longEditSemanticReparseRequired": true,
+      "existingEvidenceOverwrite": "blocked",
+      "rejectionValidation": {
+        "status": "verified",
+        "verifiedCaseCount": 5,
+        "cases": ["extra_member", "baseline_drift", "missing_gate", "output_digest_drift", "producer_identity_spoof"],
+        "matrixUnchangedOnFailure": true,
+        "targetsAbsentOnFailure": true
+      }
+    }
   },
   "unsupportedCalculationBoundary": {
     "arrayAndDynamicArrayPolicy": "reject-before-engine-import",

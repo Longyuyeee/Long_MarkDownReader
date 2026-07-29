@@ -15,6 +15,8 @@
 
 > X3-B4 已完成：基于 WPS 往返样本派生受控诊断 fixture，在真实 Tauri 专业明/暗主题中分别点击并定位外来公式冲突 `D3` 与标准错误缓存 `D4`；12 项检查、2 张截图通过，源字节不变。诊断总数保留，地址最多返回 256 个并在右侧工作面显式提示截断。生产者矩阵仍为 `partial 1/3`，数组计算与写回继续阻断。下一代码阶段为 X3-B5 的 Excel/LibreOffice 外部证据交接包。详见 [`X3_B4_XLSX_Array_Conflict_Desktop_Closure_Audit_2026-07-30.md`](./X3_B4_XLSX_Array_Conflict_Desktop_Closure_Audit_2026-07-30.md)。
 
+> X3-B5 已完成：正版 Microsoft Excel 与 LibreOffice Calc 可在各自可信机器上对固定数组基线执行原生保存、退出、独立进程复开和 LongEdit 语义复读，并导出固定三成员证据包；导入端绑定基线摘要、生产者身份、生命周期、输出摘要和项目自身解析结果，拒绝覆盖既有证据。5/5 伪造/损坏包均确认不会修改矩阵、能力契约或创建目标；合法 TEMP 隔离包已验证可原子提升到 2/3。完整 `ci:check` 通过 Rust 功能测试 `383/383`、性能测试 `1/1`、PDF 100 MiB 范围基准约 `50 ms`，生产依赖审计为 `0` 漏洞。当前机器没有两套可信生产者，因此矩阵如实保持 `partial 1/3`，公开能力仍为只读受限，数组计算和写回继续阻断。详见 [`X3_B5_XLSX_Array_Producer_Evidence_Handoff_Audit_2026-07-30.md`](./X3_B5_XLSX_Array_Producer_Evidence_Handoff_Audit_2026-07-30.md)。
+
 > 当前阶段交付证据见 `docs/E1B_ODT_Read_Index_Checkpoint_Audit_2026-07-28.md` 和 `docs/E1B_ODT_Producer_Gate_Progress_Audit_2026-07-28.md`。E1B 已完成有界语义解析、WorkspaceGuard 只读命令、Library 工作面、双索引和定位代码；LibreOffice 与 Microsoft Word 真实 fixture 已通过。Word 原阻塞已定位为 ODT 格式兼容性模态提示并完成受控保存、关闭和原生重开；WPS 缺少可验证的 ODF 组件并生成错误 OLE 文件。`.odt` 仍未进入共享格式注册表，下一批只关闭 WPS 生产者门禁。
 
 > 2026-07-29 又完成 E1B Word/LibreOffice 真实 Tauri 桌面子门禁：正常/紧凑、专业明/暗、文内搜索、`odt-block` 路由定位和源字节不变共 8 项检查、4 张截图通过。证据见 `docs/E1B_ODT_Desktop_Evidence_Audit_2026-07-29.md`；该结果不改变 WPS blocked 和 `.odt` 未注册边界。

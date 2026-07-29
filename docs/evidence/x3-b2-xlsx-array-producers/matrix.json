@@ -1,7 +1,7 @@
 {
     "schemaVersion":  1,
-    "stage":  "X3-B2",
-    "updatedAt":  "2026-07-29T18:51:18Z",
+    "stage":  "X3-B5",
+    "updatedAt":  "2026-07-29T19:46:14Z",
     "status":  "partial",
     "verifiedProducers":  1,
     "requiredProducers":  3,
@@ -43,5 +43,20 @@
                                                                "WPS Spreadsheets native save and independent reopen",
                                                                "LibreOffice Calc native save and independent reopen"
                                                            ]
+                        },
+    "evidenceHandoff":  {
+                            "status":  "ready",
+                            "supportedProducerIds":  [
+                                                           "microsoft-excel",
+                                                           "libreoffice-calc"
+                                                       ],
+                            "trustedMachineConfirmationRequired":  true,
+                            "exactBundleMemberCount":  3,
+                            "baselineDigestBound":  true,
+                            "producerIdentityBound":  true,
+                            "independentProcessReopenRequired":  true,
+                            "longEditSemanticReparseRequired":  true,
+                            "existingEvidenceOverwrite":  "blocked",
+                            "verifiedRejectionCases":  5
                         }
 }

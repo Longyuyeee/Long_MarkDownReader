@@ -90,8 +90,9 @@ use commands::workbook::{
     write_workbook_cells,
 };
 pub use commands::workbook::{
-    generate_workbook_pivot_aggregation_audit_copy, generate_workbook_pivot_audit_copy,
-    generate_workbook_pivot_layout_audit_copy, generate_workbook_pivot_multi_axis_audit_copy,
+    generate_workbook_array_audit_report, generate_workbook_pivot_aggregation_audit_copy,
+    generate_workbook_pivot_audit_copy, generate_workbook_pivot_layout_audit_copy,
+    generate_workbook_pivot_multi_axis_audit_copy,
 };
 use commands::workspace::{analyze_workspace_health, get_workspace_overview};
 use commands::xml::{analyze_xml_source, write_xml_source_document};
