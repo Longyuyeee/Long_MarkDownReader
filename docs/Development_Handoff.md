@@ -293,6 +293,7 @@ WPS 桌面补录代码已准备完成：真实 `wps-writer.odt` 到位后，同�
 71. S8-7E3A 已完成：标准本地 Pivot 在隔离布局验证后可可靠另存为同目录新 `.xlsx`；事务绑定源签名和隔离输出摘要，拒绝源覆盖、已有目标、旧状态、路径片段和未保存草稿，写后复读 OOXML/Pivot 语义并再次确认源字节不变。下一步 S8-7E3B 补齐 Excel/LibreOffice/WPS 真实刷新保存重开矩阵。
 72. S8-7E3B 已完成：LongEdit 标准 Pivot 新副本已由 Microsoft Excel `16.0/20228`、WPS Spreadsheets `12.0/26895`、LibreOffice Calc `26.2.4.2` 分别刷新、保存、退出进程并新进程重开；3/3 均保持 `PivotTable1`、`A3:D7`、`D7=4`，三份输出再由 LongEdit 反向复读。下一步 S8-7E3C 逐项扩展单轴和多度量新副本白名单。
 73. S8-7E3C 已完成：单行轴、单列轴和三度量均进入可靠新副本白名单；隐藏项与生产者原生多级表头已修正，Excel/WPS/LibreOffice 9/9 往返通过，十二份 XLSX 由 LongEdit 反向确认 `PivotTable1`、字段来源和聚合。下一步 S8-7E3D 扩展其余单度量聚合。
+74. S8-7E3D 已完成：`count/average/max/min/product/countNums` 六种单度量聚合均进入可靠新副本白名单；修正跨分组 `max/min/product` 总计，Excel/WPS/LibreOffice 18/18 往返与 OOXML `subtotal` 复读通过，二十四份 XLSX 由 LongEdit 反向复读。下一步 S8-7E3E 审计多层轴并建立隔离包原型。
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
@@ -359,3 +360,11 @@ E1B 发布门禁已升级为 `checkpoint` / `released-preview` 双状态机器�
 真实生产者审计修正了 E2F 的隐藏项和表头假设：基准范围现为 `A3:B6`、`A3:D5`、`A3:J8`。LibreOffice 单列轴会规范化为 `A3:C5`，但保存与新进程重开保持一致，总计语义不变；不宣传跨生产者坐标完全一致。
 
 下一入口为 S8-7E3D：逐项评估 `count/average/max/min/product/countNums` 单度量可靠新副本。原件覆盖、已有目标替换、多层轴、页面字段、切片器和外部连接继续阻断。详细证据见 [`S8_7E3C_XLSX_Pivot_Layout_Copy_Round_Trip_Audit_2026-07-29.md`](./S8_7E3C_XLSX_Pivot_Layout_Copy_Round_Trip_Audit_2026-07-29.md)。
+
+## 15. S8-7E3D Pivot 聚合新副本恢复点
+
+`count/average/max/min/product/countNums` 六种单度量聚合已进入摘要绑定的同目录可靠新副本白名单。六份 LongEdit 基线与十八份 Excel/WPS/LibreOffice 输出已版本化；矩阵 18/18，且每份回存文件都复读 `pivotTable1.xml` 的 `subtotal`，防止聚合静默降级。
+
+本阶段修正跨分组 Grand Total：`average` 加权、`max/min` 取极值、`product` 求积。LongEdit 基线为 `A3:D6`，三生产者刷新后规范化为稳定的 `A3:D7`；聚合、字段来源和总计保持不变。
+
+下一入口为 S8-7E3E 多层轴真实 fixture、结构审计和隔离包原型。页面字段、切片器、外部连接、已有目标覆盖和原件覆盖继续阻断。详细证据见 [`S8_7E3D_XLSX_Pivot_Aggregation_Copy_Round_Trip_Audit_2026-07-29.md`](./S8_7E3D_XLSX_Pivot_Aggregation_Copy_Round_Trip_Audit_2026-07-29.md)。

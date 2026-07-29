@@ -467,6 +467,58 @@
         "multiLevelAxis": "blocked",
         "pageFields": "blocked",
         "externalData": "blocked"
+      },
+      "aggregationVariantCopySave": {
+        "stage": "S8-7E3D",
+        "execution": "same_directory_new_copy_only",
+        "status": "verified",
+        "matrix": "docs/evidence/s8-7e3d-xlsx-pivot-aggregation-roundtrip/matrix.json",
+        "requiredAggregationIds": [
+          "count",
+          "average",
+          "max",
+          "min",
+          "product",
+          "countNums"
+        ],
+        "requiredProducerIds": [
+          "microsoft-excel",
+          "wps-spreadsheets",
+          "libreoffice-calc"
+        ],
+        "verifiedRoundTrips": 18,
+        "requiredRoundTrips": 18,
+        "baselineRange": "A3:D6",
+        "baselineKeyCell": "D6",
+        "producerNormalizedRange": "A3:D7",
+        "producerNormalizedKeyCell": "D7",
+        "keyValues": {
+          "count": 2,
+          "average": 2,
+          "max": 3,
+          "min": 1,
+          "product": 3,
+          "countNums": 2
+        },
+        "workflow": [
+          "create_digest_bound_aggregation_copy",
+          "refresh_in_desktop_producer",
+          "save_xlsx",
+          "quit_process",
+          "reopen_in_new_process",
+          "reparse_ooxml_subtotal",
+          "verify_normalized_semantics",
+          "reparse_in_longedit"
+        ],
+        "producerNormalizationAllowed": true,
+        "normalizedStateMustSurviveProcessRestart": true,
+        "aggregationTokenMustRemainStable": true,
+        "repairPromptObserved": false,
+        "sourceOverwrite": "blocked",
+        "existingTargetOverwrite": "blocked",
+        "multiLevelAxis": "blocked",
+        "pageFields": "blocked",
+        "externalData": "blocked"
       }
     }
   },

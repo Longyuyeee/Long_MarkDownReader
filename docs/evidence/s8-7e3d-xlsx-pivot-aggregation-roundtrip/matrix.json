@@ -1,0 +1,931 @@
+{
+    "schemaVersion":  1,
+    "stage":  "S8-7E3D",
+    "verifiedAt":  "2026-07-29T09:43:54.4153604Z",
+    "status":  "verified",
+    "complete":  true,
+    "verifiedCount":  18,
+    "outcomeCount":  18,
+    "requiredCount":  18,
+    "reliableCopyWhitelist":  [
+                                  "count",
+                                  "average",
+                                  "max",
+                                  "min",
+                                  "product",
+                                  "countNums"
+                              ],
+    "blockedAggregations":  [
+
+                            ],
+    "requiredAggregationIds":  [
+                                   "count",
+                                   "average",
+                                   "max",
+                                   "min",
+                                   "product",
+                                   "countNums"
+                               ],
+    "requiredProducerIds":  [
+                                "microsoft-excel",
+                                "wps-spreadsheets",
+                                "libreoffice-calc"
+                            ],
+    "sourceOverwriteAllowed":  false,
+    "aggregations":  [
+                         {
+                             "id":  "count",
+                             "status":  "verified",
+                             "verifiedProducerCount":  3,
+                             "outputRange":  "A3:D6",
+                             "keyCell":  "D6",
+                             "keyValue":  2,
+                             "source":  {
+                                            "file":  "s8-7e3d-longedit-count.xlsx",
+                                            "sha256":  "90cb2771787796f3fc3166e67d977a434f829e2e3ddc61a4b9ec9510b622dff5",
+                                            "bytes":  17543,
+                                            "saveMode":  "LongEdit verified aggregation new copy",
+                                            "sourceOverwriteAllowed":  false
+                                        },
+                             "producers":  [
+                                               {
+                                                   "id":  "microsoft-excel",
+                                                   "producer":  "Microsoft Excel",
+                                                   "status":  "verified",
+                                                   "version":  "16.0",
+                                                   "build":  "20228",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          3217068,
+                                                                          3020536
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "count",
+                                                   "aggregationAfterSave":  "count",
+                                                   "aggregationAfterReopen":  "count",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  2
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  2
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  2
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-count-microsoft-excel.xlsx",
+                                                   "outputSha256":  "6ec017210c0130401f11b2a1e17ba43a6f5df8fe03de76911811e32d70d370d1",
+                                                   "outputBytes":  19499
+                                               },
+                                               {
+                                                   "id":  "wps-spreadsheets",
+                                                   "producer":  "WPS Spreadsheets",
+                                                   "status":  "verified",
+                                                   "version":  "12.0",
+                                                   "build":  "26895",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          2234788,
+                                                                          1907268
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "count",
+                                                   "aggregationAfterSave":  "count",
+                                                   "aggregationAfterReopen":  "count",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  2
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  2
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  2
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-count-wps-spreadsheets.xlsx",
+                                                   "outputSha256":  "8c61caa8cb97269ea5241c9192b834c92d3e10e191dfbf32c72054d3858f9bd2",
+                                                   "outputBytes":  19164
+                                               },
+                                               {
+                                                   "id":  "libreoffice-calc",
+                                                   "producer":  "LibreOffice Calc",
+                                                   "status":  "verified",
+                                                   "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                                                   "build":  null,
+                                                   "method":  "Isolated UNO refresh/store, second-profile reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionProcessIds":  [
+                                                                             26516,
+                                                                             28368
+                                                                         ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "count",
+                                                   "aggregationAfterSave":  "count",
+                                                   "aggregationAfterReopen":  "count",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D7",
+                                                                  "keyCell":  "D7",
+                                                                  "keyValue":  2.0
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  2.0
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  2.0
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-count-libreoffice-calc.xlsx",
+                                                   "outputSha256":  "44f9f76b702a662f4d65084d8cc90b1cf27d177b62802c75aee61a5e76e335b6",
+                                                   "outputBytes":  16809
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "average",
+                             "status":  "verified",
+                             "verifiedProducerCount":  3,
+                             "outputRange":  "A3:D6",
+                             "keyCell":  "D6",
+                             "keyValue":  2,
+                             "source":  {
+                                            "file":  "s8-7e3d-longedit-average.xlsx",
+                                            "sha256":  "681957eec8a6169a96a765f1fef14c3704c1a998d1fb7e502ce33ca2c791c522",
+                                            "bytes":  17551,
+                                            "saveMode":  "LongEdit verified aggregation new copy",
+                                            "sourceOverwriteAllowed":  false
+                                        },
+                             "producers":  [
+                                               {
+                                                   "id":  "microsoft-excel",
+                                                   "producer":  "Microsoft Excel",
+                                                   "status":  "verified",
+                                                   "version":  "16.0",
+                                                   "build":  "20228",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          2693554,
+                                                                          1644766
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "average",
+                                                   "aggregationAfterSave":  "average",
+                                                   "aggregationAfterReopen":  "average",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  2
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  2
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  2
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-average-microsoft-excel.xlsx",
+                                                   "outputSha256":  "6c5c225a58ea5e21ceb6517ab74581dd07baa813d4228c571099213c00259e57",
+                                                   "outputBytes":  19501
+                                               },
+                                               {
+                                                   "id":  "wps-spreadsheets",
+                                                   "producer":  "WPS Spreadsheets",
+                                                   "status":  "verified",
+                                                   "version":  "12.0",
+                                                   "build":  "26895",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          5511038,
+                                                                          3938546
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "average",
+                                                   "aggregationAfterSave":  "average",
+                                                   "aggregationAfterReopen":  "average",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  2
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  2
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  2
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-average-wps-spreadsheets.xlsx",
+                                                   "outputSha256":  "1a5579d0677d3343b716a51af51a8d0a3af90668f5f5701dd40724b87efa89ba",
+                                                   "outputBytes":  19169
+                                               },
+                                               {
+                                                   "id":  "libreoffice-calc",
+                                                   "producer":  "LibreOffice Calc",
+                                                   "status":  "verified",
+                                                   "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                                                   "build":  null,
+                                                   "method":  "Isolated UNO refresh/store, second-profile reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionProcessIds":  [
+                                                                             34132,
+                                                                             52940
+                                                                         ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "average",
+                                                   "aggregationAfterSave":  "average",
+                                                   "aggregationAfterReopen":  "average",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D7",
+                                                                  "keyCell":  "D7",
+                                                                  "keyValue":  2.0
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  2.0
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  2.0
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-average-libreoffice-calc.xlsx",
+                                                   "outputSha256":  "e5e0c947954be370daf18448b709f0121f32b714cf1227c2e620176ef8f6c626",
+                                                   "outputBytes":  16817
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "max",
+                             "status":  "verified",
+                             "verifiedProducerCount":  3,
+                             "outputRange":  "A3:D6",
+                             "keyCell":  "D6",
+                             "keyValue":  3,
+                             "source":  {
+                                            "file":  "s8-7e3d-longedit-max.xlsx",
+                                            "sha256":  "66eb9dbbdae65a81c6ebac3790663fb81f5547d2656fcaa6adb27490e24501e9",
+                                            "bytes":  17545,
+                                            "saveMode":  "LongEdit verified aggregation new copy",
+                                            "sourceOverwriteAllowed":  false
+                                        },
+                             "producers":  [
+                                               {
+                                                   "id":  "microsoft-excel",
+                                                   "producer":  "Microsoft Excel",
+                                                   "status":  "verified",
+                                                   "version":  "16.0",
+                                                   "build":  "20228",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          14030312,
+                                                                          19469562
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "max",
+                                                   "aggregationAfterSave":  "max",
+                                                   "aggregationAfterReopen":  "max",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  3
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  3
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  3
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-max-microsoft-excel.xlsx",
+                                                   "outputSha256":  "eee69155bb41ee5432dcef084e0736afa2ebec5a92b26f2da6dd1801b3c2c411",
+                                                   "outputBytes":  19494
+                                               },
+                                               {
+                                                   "id":  "wps-spreadsheets",
+                                                   "producer":  "WPS Spreadsheets",
+                                                   "status":  "verified",
+                                                   "version":  "12.0",
+                                                   "build":  "26895",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          4396760,
+                                                                          2496532
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "max",
+                                                   "aggregationAfterSave":  "max",
+                                                   "aggregationAfterReopen":  "max",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  3
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  3
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  3
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-max-wps-spreadsheets.xlsx",
+                                                   "outputSha256":  "a2527380e719c148239f14a2d15f1cffeba76badc8ff977c2dd8b1db23842454",
+                                                   "outputBytes":  19163
+                                               },
+                                               {
+                                                   "id":  "libreoffice-calc",
+                                                   "producer":  "LibreOffice Calc",
+                                                   "status":  "verified",
+                                                   "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                                                   "build":  null,
+                                                   "method":  "Isolated UNO refresh/store, second-profile reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionProcessIds":  [
+                                                                             36800,
+                                                                             42524
+                                                                         ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "max",
+                                                   "aggregationAfterSave":  "max",
+                                                   "aggregationAfterReopen":  "max",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D7",
+                                                                  "keyCell":  "D7",
+                                                                  "keyValue":  3.0
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  3.0
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  3.0
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-max-libreoffice-calc.xlsx",
+                                                   "outputSha256":  "2a002daef8e23e5e9650146330a1ae15523a87457cc3cf0f311dd46d4b20d7bc",
+                                                   "outputBytes":  16810
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "min",
+                             "status":  "verified",
+                             "verifiedProducerCount":  3,
+                             "outputRange":  "A3:D6",
+                             "keyCell":  "D6",
+                             "keyValue":  1,
+                             "source":  {
+                                            "file":  "s8-7e3d-longedit-min.xlsx",
+                                            "sha256":  "dcf6534be0442f841542ff4e5d1ed803bab50629bb538a46250222e35be024b3",
+                                            "bytes":  17545,
+                                            "saveMode":  "LongEdit verified aggregation new copy",
+                                            "sourceOverwriteAllowed":  false
+                                        },
+                             "producers":  [
+                                               {
+                                                   "id":  "microsoft-excel",
+                                                   "producer":  "Microsoft Excel",
+                                                   "status":  "verified",
+                                                   "version":  "16.0",
+                                                   "build":  "20228",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          5314976,
+                                                                          14817792
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "min",
+                                                   "aggregationAfterSave":  "min",
+                                                   "aggregationAfterReopen":  "min",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  1
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  1
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  1
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-min-microsoft-excel.xlsx",
+                                                   "outputSha256":  "52029e3bd129afa12753e767f5086586630105767269700e261dea801357aae7",
+                                                   "outputBytes":  19490
+                                               },
+                                               {
+                                                   "id":  "wps-spreadsheets",
+                                                   "producer":  "WPS Spreadsheets",
+                                                   "status":  "verified",
+                                                   "version":  "12.0",
+                                                   "build":  "26895",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          1776310,
+                                                                          9312326
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "min",
+                                                   "aggregationAfterSave":  "min",
+                                                   "aggregationAfterReopen":  "min",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  1
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  1
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  1
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-min-wps-spreadsheets.xlsx",
+                                                   "outputSha256":  "d9dd108ca873563ca410f1010ee5920e063e052c10d5491ef5385c050d9192a8",
+                                                   "outputBytes":  19166
+                                               },
+                                               {
+                                                   "id":  "libreoffice-calc",
+                                                   "producer":  "LibreOffice Calc",
+                                                   "status":  "verified",
+                                                   "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                                                   "build":  null,
+                                                   "method":  "Isolated UNO refresh/store, second-profile reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionProcessIds":  [
+                                                                             5836,
+                                                                             45556
+                                                                         ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "min",
+                                                   "aggregationAfterSave":  "min",
+                                                   "aggregationAfterReopen":  "min",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D7",
+                                                                  "keyCell":  "D7",
+                                                                  "keyValue":  1.0
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  1.0
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  1.0
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-min-libreoffice-calc.xlsx",
+                                                   "outputSha256":  "8899243b865967e88a825da4dd9f603df587c758fac1dee286598060958788ef",
+                                                   "outputBytes":  16811
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "product",
+                             "status":  "verified",
+                             "verifiedProducerCount":  3,
+                             "outputRange":  "A3:D6",
+                             "keyCell":  "D6",
+                             "keyValue":  3,
+                             "source":  {
+                                            "file":  "s8-7e3d-longedit-product.xlsx",
+                                            "sha256":  "2b1cef388805a78b859a4021f21ed62a79bb233586ef12ed834e35898439e1dd",
+                                            "bytes":  17551,
+                                            "saveMode":  "LongEdit verified aggregation new copy",
+                                            "sourceOverwriteAllowed":  false
+                                        },
+                             "producers":  [
+                                               {
+                                                   "id":  "microsoft-excel",
+                                                   "producer":  "Microsoft Excel",
+                                                   "status":  "verified",
+                                                   "version":  "16.0",
+                                                   "build":  "20228",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          7674268,
+                                                                          9705180
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "product",
+                                                   "aggregationAfterSave":  "product",
+                                                   "aggregationAfterReopen":  "product",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  3
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  3
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  3
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-product-microsoft-excel.xlsx",
+                                                   "outputSha256":  "ee7de939ba1d5ab903f7ec571e15702cfdf0e82fe01619e8e60aa69ae890ba47",
+                                                   "outputBytes":  19492
+                                               },
+                                               {
+                                                   "id":  "wps-spreadsheets",
+                                                   "producer":  "WPS Spreadsheets",
+                                                   "status":  "verified",
+                                                   "version":  "12.0",
+                                                   "build":  "26895",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          5576612,
+                                                                          5838782
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "product",
+                                                   "aggregationAfterSave":  "product",
+                                                   "aggregationAfterReopen":  "product",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  3
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  3
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  3
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-product-wps-spreadsheets.xlsx",
+                                                   "outputSha256":  "3f1d5c6a2ed1d0e45f1754ca43173afd354a4eb39b5ec8abb334ccf6821621e4",
+                                                   "outputBytes":  19176
+                                               },
+                                               {
+                                                   "id":  "libreoffice-calc",
+                                                   "producer":  "LibreOffice Calc",
+                                                   "status":  "verified",
+                                                   "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                                                   "build":  null,
+                                                   "method":  "Isolated UNO refresh/store, second-profile reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionProcessIds":  [
+                                                                             2448,
+                                                                             54800
+                                                                         ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "product",
+                                                   "aggregationAfterSave":  "product",
+                                                   "aggregationAfterReopen":  "product",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D7",
+                                                                  "keyCell":  "D7",
+                                                                  "keyValue":  3.0
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  3.0
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  3.0
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-product-libreoffice-calc.xlsx",
+                                                   "outputSha256":  "a60268af23e9c34875d720b352d727b84897cb05b00d0c75a891c98c742e4e69",
+                                                   "outputBytes":  16816
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "countNums",
+                             "status":  "verified",
+                             "verifiedProducerCount":  3,
+                             "outputRange":  "A3:D6",
+                             "keyCell":  "D6",
+                             "keyValue":  2,
+                             "source":  {
+                                            "file":  "s8-7e3d-longedit-countNums.xlsx",
+                                            "sha256":  "cb80a707752984328031ad990d2b0c2de7aa3f3fe43e80f49849f91b6bc666e1",
+                                            "bytes":  17551,
+                                            "saveMode":  "LongEdit verified aggregation new copy",
+                                            "sourceOverwriteAllowed":  false
+                                        },
+                             "producers":  [
+                                               {
+                                                   "id":  "microsoft-excel",
+                                                   "producer":  "Microsoft Excel",
+                                                   "status":  "verified",
+                                                   "version":  "16.0",
+                                                   "build":  "20228",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          3414222,
+                                                                          24843976
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "countNums",
+                                                   "aggregationAfterSave":  "countNums",
+                                                   "aggregationAfterReopen":  "countNums",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  2
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  2
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  2
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-countNums-microsoft-excel.xlsx",
+                                                   "outputSha256":  "357757fdacfb3c7f07dda7461e5ec23c69d4f74f5877fe03ba2ee8b5d2be760a",
+                                                   "outputBytes":  20082
+                                               },
+                                               {
+                                                   "id":  "wps-spreadsheets",
+                                                   "producer":  "WPS Spreadsheets",
+                                                   "status":  "verified",
+                                                   "version":  "12.0",
+                                                   "build":  "26895",
+                                                   "method":  "Writable COM refresh/save followed by application quit, independent reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionHandles":  [
+                                                                          2169154,
+                                                                          5773172
+                                                                      ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "countNums",
+                                                   "aggregationAfterSave":  "countNums",
+                                                   "aggregationAfterReopen":  "countNums",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D6",
+                                                                  "keyCell":  "D6",
+                                                                  "keyValue":  2
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  2
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  2
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-countNums-wps-spreadsheets.xlsx",
+                                                   "outputSha256":  "0a1b351eb0305c7c98b85fff070fc97ca477f4ea0e939c13104bf6b02bd8ca51",
+                                                   "outputBytes":  19174
+                                               },
+                                               {
+                                                   "id":  "libreoffice-calc",
+                                                   "producer":  "LibreOffice Calc",
+                                                   "status":  "verified",
+                                                   "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                                                   "build":  null,
+                                                   "method":  "Isolated UNO refresh/store, second-profile reopen, and OOXML subtotal reparse.",
+                                                   "refreshSucceeded":  true,
+                                                   "saveSucceeded":  true,
+                                                   "processRestarted":  true,
+                                                   "sessionProcessIds":  [
+                                                                             55432,
+                                                                             55868
+                                                                         ],
+                                                   "reopenVerified":  true,
+                                                   "aggregationBefore":  "countNums",
+                                                   "aggregationAfterSave":  "countNums",
+                                                   "aggregationAfterReopen":  "countNums",
+                                                   "repairPromptObserved":  false,
+                                                   "before":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D7",
+                                                                  "keyCell":  "D7",
+                                                                  "keyValue":  2.0
+                                                              },
+                                                   "afterSave":  {
+                                                                     "pivotCount":  1,
+                                                                     "pivotName":  "PivotTable1",
+                                                                     "outputRange":  "A3:D7",
+                                                                     "keyCell":  "D7",
+                                                                     "keyValue":  2.0
+                                                                 },
+                                                   "afterReopen":  {
+                                                                       "pivotCount":  1,
+                                                                       "pivotName":  "PivotTable1",
+                                                                       "outputRange":  "A3:D7",
+                                                                       "keyCell":  "D7",
+                                                                       "keyValue":  2.0
+                                                                   },
+                                                   "outputFile":  "s8-7e3d-countNums-libreoffice-calc.xlsx",
+                                                   "outputSha256":  "e84b8e4c7db928691cabf24442f9ea16d53a27e9cf9ada1aa714df31ac673b96",
+                                                   "outputBytes":  16815
+                                               }
+                                           ]
+                         }
+                     ]
+}

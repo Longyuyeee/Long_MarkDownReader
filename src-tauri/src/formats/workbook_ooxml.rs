@@ -8399,60 +8399,6 @@ pub(crate) fn rebuild_workbook_pivot_expanded_isolated(
     ))
 }
 
-fn rewrite_pivot_data_field_aggregation(xml: &[u8], aggregation: &str) -> Result<Vec<u8>, String> {
-    let mut reader = Reader::from_reader(xml);
-    reader.config_mut().trim_text(false);
-    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 32));
-    let mut buffer = Vec::new();
-    let mut rewritten = 0usize;
-    loop {
-        let event = reader
-            .read_event_into(&mut buffer)
-            .map_err(|error| format!("解析聚合变体 Pivot 定义失败: {error}"))?;
-        match event {
-            Event::Start(ref start) | Event::Empty(ref start)
-                if start.local_name().as_ref() == b"dataField" =>
-            {
-                rewritten = rewritten.saturating_add(1);
-                let updated =
-                    replace_xml_attribute(start, b"subtotal", aggregation, false)?.into_owned();
-                let updated_event = if matches!(event, Event::Start(_)) {
-                    Event::Start(updated)
-                } else {
-                    Event::Empty(updated)
-                };
-                writer
-                    .write_event(updated_event)
-                    .map_err(|error| format!("写入聚合变体 Pivot 定义失败: {error}"))?;
-            }
-            Event::Eof => break,
-            _ => writer
-                .write_event(event.into_owned())
-                .map_err(|error| format!("复制聚合变体 Pivot 定义失败: {error}"))?,
-        }
-        buffer.clear();
-    }
-    if rewritten != 1 {
-        return Err("聚合变体隔离验证当前要求恰好一个值字段".into());
-    }
-    Ok(writer.into_inner())
-}
-
-fn build_pivot_aggregation_variant_package(
-    source: &[u8],
-    pivot_part: &str,
-    aggregation: &str,
-) -> Result<Vec<u8>, String> {
-    let mut entries = load_package(source)?;
-    let pivot = entries
-        .iter_mut()
-        .find(|entry| entry.name == pivot_part)
-        .ok_or("聚合变体隔离包缺少 Pivot Table 部件")?;
-    pivot.data = rewrite_pivot_data_field_aggregation(&pivot.data, aggregation)?;
-    let modified_paths = HashSet::from([pivot_part.to_string()]);
-    write_package_preserving_unchanged(source, entries, &modified_paths)
-}
-
 fn pivot_layout_variant(
     pivot: &WorkbookPivotTable,
     row_field_count: usize,
@@ -9068,12 +9014,17 @@ fn build_pivot_layout_output_edits(
                         / count as f64
                 })
             }
-            _ => {
+            aggregation => {
                 let values = measures
                     .iter()
                     .filter_map(|measure| measure.value)
                     .collect::<Vec<_>>();
-                (!values.is_empty()).then(|| values.iter().sum())
+                (!values.is_empty()).then(|| match aggregation {
+                    "max" => values.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+                    "min" => values.iter().copied().fold(f64::INFINITY, f64::min),
+                    "product" => values.iter().product(),
+                    _ => values.iter().sum(),
+                })
             }
         }
     };
@@ -9397,6 +9348,49 @@ pub(crate) fn rebuild_workbook_pivot_layout_variant_isolated(
     Ok((isolated, result))
 }
 
+pub(crate) fn rebuild_workbook_pivot_aggregation_variant_isolated(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+    aggregation: &str,
+) -> Result<(Vec<u8>, WorkbookPivotAggregationVariant), String> {
+    if !matches!(
+        aggregation,
+        "sum" | "count" | "average" | "max" | "min" | "product" | "countNums"
+    ) {
+        return Err(format!("Pivot 聚合新副本不支持 {aggregation}"));
+    }
+    if pivot.audit.row_field_count != 1
+        || pivot.audit.column_field_count != 1
+        || pivot.audit.data_field_count != 1
+        || pivot.audit.page_field_count != 0
+        || pivot
+            .audit
+            .data_fields
+            .first()
+            .is_none_or(|field| field.aggregation != "sum" || !field.supported)
+    {
+        return Err(
+            "Pivot 聚合新副本要求一个行字段、一个列字段、一个 sum 值字段且无页面筛选的标准来源"
+                .into(),
+        );
+    }
+    verify_pivot_semantic_layout_variant(source, pivot, aggregation, 1, 1, &[aggregation])?;
+    let variant = pivot_layout_variant(pivot, 1, 1, &[aggregation])?;
+    let (isolated, output_range, output_cell_count, styled_output_cell_count) =
+        build_pivot_layout_variant_package(source, pivot, &variant)?;
+    Ok((
+        isolated.clone(),
+        WorkbookPivotAggregationVariant {
+            aggregation: aggregation.into(),
+            status: "package_verified".into(),
+            output_range,
+            output_cell_count,
+            styled_output_cell_count,
+            isolated_package_digest: format!("{:x}", md5::compute(&isolated)),
+        },
+    ))
+}
+
 pub(crate) fn verify_workbook_pivot_variants_isolated(
     source: &[u8],
     pivot: &WorkbookPivotTable,
@@ -9421,37 +9415,9 @@ pub(crate) fn verify_workbook_pivot_variants_isolated(
     ];
     let mut aggregation_variants = Vec::with_capacity(aggregations.len());
     for aggregation in aggregations {
-        let variant_source =
-            build_pivot_aggregation_variant_package(source, &pivot.part, aggregation)?;
-        let linked = read_workbook_linked_data(&variant_source)?;
-        let variant_pivot = linked
-            .pivot_tables
-            .iter()
-            .find(|candidate| candidate.part == pivot.part)
-            .ok_or("聚合变体隔离包中的 Pivot 身份丢失")?;
-        if variant_pivot
-            .audit
-            .data_fields
-            .first()
-            .is_none_or(|field| field.aggregation != aggregation || !field.supported)
-        {
-            return Err(format!("{aggregation} 聚合变体语义复读失败"));
-        }
-        let (_, rebuilt) =
-            rebuild_workbook_pivot_expanded_isolated(&variant_source, variant_pivot)?;
-        if !rebuilt.package_valid
-            || !rebuilt.semantic_reparse_valid
-            || !rebuilt.output_values_verified
-            || !rebuilt.untouched_parts_preserved
-        {
-            return Err(format!("{aggregation} 聚合变体未通过隔离包完整门禁"));
-        }
-        aggregation_variants.push(WorkbookPivotAggregationVariant {
-            aggregation: aggregation.into(),
-            status: "package_verified".into(),
-            output_range: rebuilt.new_output_range,
-            output_cell_count: rebuilt.output_cell_count,
-        });
+        let (_, result) =
+            rebuild_workbook_pivot_aggregation_variant_isolated(source, pivot, aggregation)?;
+        aggregation_variants.push(result);
     }
 
     let layout_specs = [
@@ -17259,12 +17225,12 @@ pub fn patch_workbook(
 #[cfg(test)]
 mod tests {
     use super::{
-        build_pivot_aggregation_variant_package, parse_chart_part, patch_calc_chain_rows,
-        patch_sheet_structure_axis, patch_workbook_conditional_format,
-        patch_workbook_data_validation, patch_workbook_defined_name, patch_workbook_drawing,
-        patch_workbook_filter, patch_workbook_structure, patch_workbook_table, read_sheet_formulas,
+        parse_chart_part, patch_calc_chain_rows, patch_sheet_structure_axis,
+        patch_workbook_conditional_format, patch_workbook_data_validation,
+        patch_workbook_defined_name, patch_workbook_drawing, patch_workbook_filter,
+        patch_workbook_structure, patch_workbook_table, read_sheet_formulas,
         read_workbook_defined_names, read_workbook_linked_data, read_workbook_sheet_layout,
-        rebuild_workbook_pivot_expanded_isolated, validate_plain_structure_sheet,
+        rebuild_workbook_pivot_aggregation_variant_isolated, validate_plain_structure_sheet,
         validate_workbook_package,
     };
     use crate::formats::workbook::{
@@ -17349,13 +17315,12 @@ mod tests {
             &[],
         )
         .unwrap();
-        let pivot_part = read_workbook_linked_data(&collapsed)
+        let pivot = read_workbook_linked_data(&collapsed)
             .unwrap()
             .pivot_tables
             .into_iter()
             .find(|pivot| pivot.audit.writeback.status == "structure_candidate")
-            .unwrap()
-            .part;
+            .unwrap();
         for (aggregation, expected) in [
             ("sum", 6.0),
             ("count", 3.0),
@@ -17365,23 +17330,17 @@ mod tests {
             ("product", 6.0),
             ("countNums", 3.0),
         ] {
-            let variant =
-                build_pivot_aggregation_variant_package(&collapsed, &pivot_part, aggregation)
-                    .unwrap();
-            let linked = read_workbook_linked_data(&variant).unwrap();
-            let pivot = linked
-                .pivot_tables
-                .iter()
-                .find(|pivot| pivot.part == pivot_part)
-                .unwrap();
-            let (rebuilt, result) =
-                rebuild_workbook_pivot_expanded_isolated(&variant, pivot).unwrap();
-            assert!(result.output_values_verified, "{aggregation}");
-            assert_eq!(result.new_output_range, "A3:C6", "{aggregation}");
+            let (rebuilt, result) = rebuild_workbook_pivot_aggregation_variant_isolated(
+                &collapsed,
+                &pivot,
+                aggregation,
+            )
+            .unwrap();
+            assert_eq!(result.output_range, "A3:C5", "{aggregation}");
             let mut workbook: Xlsx<_> = open_workbook_from_rs(Cursor::new(rebuilt)).unwrap();
             let output = workbook.worksheet_range("Tabelle2").unwrap();
             assert_eq!(
-                output.get_value((5, 2)),
+                output.get_value((4, 2)),
                 Some(&Data::Float(expected)),
                 "{aggregation}"
             );

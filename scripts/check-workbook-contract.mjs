@@ -22,6 +22,7 @@ const pivotProducerAudit = read('scripts/verify-s8-7e3b-xlsx-pivot-roundtrip.ps1
 const pivotLibreOfficeAudit = read('scripts/verify-s8-7e3b-libreoffice-pivot.py')
 const pivotLayoutProducerAudit = read('scripts/verify-s8-7e3c-xlsx-pivot-layout-roundtrip.ps1')
 const pivotLayoutLibreOfficeAudit = read('scripts/verify-s8-7e3c-libreoffice-pivot.py')
+const pivotAggregationProducerAudit = read('scripts/verify-s8-7e3d-xlsx-pivot-aggregation-roundtrip.ps1')
 const view = read('src/views/WorkbookView.vue')
 const conditionalExpression = read('src/utils/conditionalExpression.ts')
 const generator = read('src-tauri/examples/generate_workbook_fixture.rs')
@@ -271,6 +272,17 @@ for (const step of ['create_digest_bound_layout_copy', 'refresh_in_desktop_produ
 }
 if (!fs.existsSync(path.join(root, pivotLayoutCopySave.matrix)) || !engine.includes('pivot_layout_producer_round_trip_outputs_reopen_with_stable_semantics') || !ooxml.includes('rebuild_workbook_pivot_layout_variant_isolated')) fail('S8-7E3C reverse-reopen evidence missing')
 if (!pivotLayoutProducerAudit.includes('Excel.Application') || !pivotLayoutProducerAudit.includes('KET.Application') || !pivotLayoutProducerAudit.includes('normalized Pivot state changed after process restart') || !pivotLayoutLibreOfficeAudit.includes('pivot.refresh()')) fail('S8-7E3C producer automation evidence missing')
+const pivotAggregationCopySave = pivotWritebackAudit.aggregationVariantCopySave
+if (!pivotAggregationCopySave || pivotAggregationCopySave.stage !== 'S8-7E3D' || pivotAggregationCopySave.status !== 'verified' || pivotAggregationCopySave.verifiedRoundTrips !== 18 || pivotAggregationCopySave.requiredRoundTrips !== 18) fail('S8-7E3D aggregation save matrix policy drift')
+if (pivotAggregationCopySave.requiredAggregationIds?.join(',') !== 'count,average,max,min,product,countNums' || pivotAggregationCopySave.requiredProducerIds?.join(',') !== 'microsoft-excel,wps-spreadsheets,libreoffice-calc') fail('S8-7E3D required matrix drift')
+if (pivotAggregationCopySave.baselineRange !== 'A3:D6' || pivotAggregationCopySave.baselineKeyCell !== 'D6' || pivotAggregationCopySave.producerNormalizedRange !== 'A3:D7' || pivotAggregationCopySave.producerNormalizedKeyCell !== 'D7') fail('S8-7E3D normalized range contract drift')
+if (Object.entries({ count: 2, average: 2, max: 3, min: 1, product: 3, countNums: 2 }).some(([aggregation, value]) => pivotAggregationCopySave.keyValues?.[aggregation] !== value)) fail('S8-7E3D aggregation totals drift')
+if (pivotAggregationCopySave.producerNormalizationAllowed !== true || pivotAggregationCopySave.normalizedStateMustSurviveProcessRestart !== true || pivotAggregationCopySave.aggregationTokenMustRemainStable !== true || pivotAggregationCopySave.repairPromptObserved !== false || pivotAggregationCopySave.sourceOverwrite !== 'blocked' || pivotAggregationCopySave.existingTargetOverwrite !== 'blocked' || pivotAggregationCopySave.multiLevelAxis !== 'blocked' || pivotAggregationCopySave.pageFields !== 'blocked' || pivotAggregationCopySave.externalData !== 'blocked') fail('S8-7E3D release boundary drift')
+for (const step of ['create_digest_bound_aggregation_copy', 'refresh_in_desktop_producer', 'save_xlsx', 'quit_process', 'reopen_in_new_process', 'reparse_ooxml_subtotal', 'verify_normalized_semantics', 'reparse_in_longedit']) {
+  if (!pivotAggregationCopySave.workflow?.includes(step)) fail(`S8-7E3D workflow step ${step} missing`)
+}
+if (!fs.existsSync(path.join(root, pivotAggregationCopySave.matrix)) || !engine.includes('pivot_aggregation_producer_round_trip_outputs_reopen_with_stable_semantics') || !ooxml.includes('rebuild_workbook_pivot_aggregation_variant_isolated')) fail('S8-7E3D reverse-reopen evidence missing')
+if (!pivotAggregationProducerAudit.includes('Get-PivotAggregationToken') || !pivotAggregationProducerAudit.includes('Excel.Application') || !pivotAggregationProducerAudit.includes('KET.Application') || !pivotAggregationProducerAudit.includes('aggregationAfterReopen')) fail('S8-7E3D producer automation evidence missing')
 if (!fs.existsSync(path.join(root, linkedDataCapabilities.fixture))) fail('S8-7A linked data fixture missing')
 if (!fixture.documentFeatures.pivotCacheRecords || fixture.currentEngineExpectations.pivotAudit !== 'supported') fail('S8-7B fixture audit expectation missing')
 if (!model.includes('pub summary: WorkbookLinkedDataSummary') || !model.includes('pub policy: WorkbookLinkedDataPolicy')) fail('S8-7A linked data model summary missing')

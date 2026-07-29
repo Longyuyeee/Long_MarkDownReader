@@ -77,7 +77,8 @@ use commands::table::{
 };
 use commands::toml::{analyze_toml_source, write_toml_source_document};
 pub use commands::workbook::{
-    generate_workbook_pivot_audit_copy, generate_workbook_pivot_layout_audit_copy,
+    generate_workbook_pivot_aggregation_audit_copy, generate_workbook_pivot_audit_copy,
+    generate_workbook_pivot_layout_audit_copy,
 };
 use commands::workbook::{
     get_workbook_capabilities, import_workbook_sheet, preview_workbook_pivot,
