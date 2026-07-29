@@ -6,7 +6,9 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：E1B WPS 生产者门禁仍受外部环境阻断，`.odt` 尚未登记。等待可信 WPS ODF 环境期间，完整 Excel 等价 X1 / S8-7E2F 与 X2 的 S8-7E3A～E3E 已完成；标准、三种布局和六种额外单度量聚合均可可靠另存同目录新副本，生产者矩阵分别为 3/3、9/9 与 18/18；双层行列轴真实 fixture、结构审计和临时 Cache 包已验证。下一入口为 S8-7E3F 多层轴定义与层级输出临时包重建；原件覆盖继续阻断。
+> 2026-07-30 权威执行入口：[当前开发情况与后续计划综合审计](./Development_Status_and_Next_Plan_Audit_2026-07-30.md)。下一代码阶段为 **F1 / E2A 外部应用能力发现与统一外部打开**，随后按 E3 → E2B/E2C → E1C 补齐 WPS 原生、旧版 Office 与 OpenDocument 的日常格式覆盖。E1B WPS ODT 保持 2/3、X3-B6 数组生产者矩阵保持 1/3，作为外部环境门禁并行等待；不得伪造关闭。下文较早的“下一入口”只保留为阶段追溯，不覆盖本段。
+
+> 路线调整原因：日常管理、文本/开发格式、PDF、图表、Canvas/OPML、知识图谱和现代 Office 基础工作面已形成主干；当前最影响初始需求完整度的是 `.wps/.et/.dps`、`.doc/.xls/.ppt`、`.odt/.ods/.odp` 的识别、右侧能力说明、外部打开与安全转换闭环。继续开发 Excel 深度能力时，必须证明其优先级不高于上述日常覆盖缺口。
 
 > 2026-07-30 最新入口：X3-B1 数组公式只读边界已完成。下一批执行 X3-B2：收集 Excel/WPS/LibreOffice 原生样本，审计生产者 OOXML 差异，增加声明范围、缓存覆盖和潜在 spill 占用冲突的只读诊断；不得提前开放数组写回或本地计算。执行细节见 `X3_B1_XLSX_Array_Formula_Readonly_Boundary_Audit_2026-07-30.md`。
 
