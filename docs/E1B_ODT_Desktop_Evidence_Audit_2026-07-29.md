@@ -11,6 +11,8 @@
 
 本批没有绕过 WPS 门禁，也没有提前把 `.odt` 登记为受支持格式。WPS `12.1.0.26895` 仍因缺少可信 ODF 组件而生成 OLE 复合文档，因此 E1B 保持 2/3。
 
+2026-07-29 后续批次已把本流水线升级为 `checkpoint` / `closure-candidate` 双状态：当前证据继续保持两生产者检查点；真实 WPS fixture 及 manifest 通过 SHA-256 接纳合同后，会自动追加 WPS 搜索和定位证据。详见 [E1B WPS 关闭自动化审计](./E1B_WPS_Closure_Automation_Audit_2026-07-29.md)。
+
 ## 2. 真实桌面矩阵
 
 证据清单：`docs/evidence/e1b-odt-desktop/audit-manifest.json`

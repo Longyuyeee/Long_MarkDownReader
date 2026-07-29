@@ -11,6 +11,8 @@
 
 > 2026-07-29 又完成 E1B Word/LibreOffice 真实 Tauri 桌面子门禁：正常/紧凑、专业明/暗、文内搜索、`odt-block` 路由定位和源字节不变共 8 项检查、4 张截图通过。证据见 `docs/E1B_ODT_Desktop_Evidence_Audit_2026-07-29.md`；该结果不改变 WPS blocked 和 `.odt` 未注册边界。
 
+> 同日完成 WPS 关闭候选自动接入：桌面审计现在区分 `checkpoint` 与 `closure-candidate`，只有 WPS fixture/manifest 成对存在且原生保存、同生产者复开、隐私净化、大小和 SHA-256 全部匹配，才追加 WPS 明色搜索与暗色紧凑定位证据。详细合同见 `docs/E1B_WPS_Closure_Automation_Audit_2026-07-29.md`。
+
 > E1A 完整 `ci:check` 通过 Rust 功能测试 `363/363`、性能测试 `1/1`，生产依赖审计为 `0` 漏洞；ODF 仍未进入产品格式注册表。
 
 > E1B 生产者门禁 2/3 检查点完整 `ci:check` 通过 Rust 功能测试 `367/367`、性能测试 `1/1`，生产依赖审计为 `0` 漏洞；LibreOffice 与 Microsoft Word ODT 已通过真实解析和同生产者重开，WPS 单点阻断状态由 `shared/odt-read-contract.json` 固定。
@@ -209,6 +211,8 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 2026-07-29 已完成 E1B WPS ODF 环境门禁加固：`scripts/audit-e1b-wps-odf-environment.ps1` 以隔离 `SaveAs2(..., 23)` 探测固定 WPS `12.1.0.26895` 的 0 个文件转换器、0 个 ODF 组件和 OLE 复合文档输出；证据为 `fixtures/odt/producers/wps-writer-blocker.json`。fixture 生成器现在先做强制预检并在净化前后验证 ODT ZIP，阻断时无无效 fixture 或临时目录残留。E1B 仍为 2/3，`.odt` 仍未注册；详细审计见 `docs/E1B_WPS_ODF_Environment_Gate_Audit_2026-07-29.md`。
 
 2026-07-29 已完成 E1B 当前可执行桌面证据：`npm.cmd run audit:e1b-odt-desktop` 使用 `tauri.e2e.conf.json` 在隔离工作区驱动真实 WebView2，Word/LibreOffice 的两档布局、两套专业主题、搜索和精确定位均通过，清单为 `docs/evidence/e1b-odt-desktop/audit-manifest.json`。下一步只在可信 WPS ODF 环境到位后生成 WPS fixture、补录 WPS 桌面场景、达到 3/3 后登记 `.odt` 为 `preview-only`。
+
+WPS 桌面补录代码已准备完成：真实 `wps-writer.odt` 到位后，同一命令会自动验证 manifest/SHA-256 并生成三生产者 6 场景 `closure-candidate` 清单，无需再手工改桌面脚本。当前仍不得把“自动化就绪”写成“WPS 已通过”。
 
 以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 

@@ -1,10 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "E1B",
-  "capturedAt": "2026-07-29T02:25:30.452Z",
+  "capturedAt": "2026-07-29T02:48:30.968Z",
   "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
   "sourceUrl": "http://127.0.0.1:14200/",
   "fixtureLocation": "isolated temporary workspace",
+  "gateMode": "checkpoint",
   "producerMatrix": [
     "microsoft-word-16",
     "libreoffice-writer"
@@ -97,7 +98,7 @@
   ],
   "checks": [
     {
-      "id": "trusted-producers-open-read-only",
+      "id": "available-producers-open-read-only",
       "status": "passed",
       "producers": [
         "microsoft-word-16",

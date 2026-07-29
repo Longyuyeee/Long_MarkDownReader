@@ -34,6 +34,33 @@ foreach ($entry in $fixtureMap.GetEnumerator()) {
   Copy-Item -LiteralPath $source -Destination $destination -Force
   $auditFiles[$entry.Key] = $destination
 }
+$wpsFixture = Join-Path $fixtureRoot "wps-writer.odt"
+$wpsManifest = Join-Path $fixtureRoot "wps-writer.json"
+if ((Test-Path -LiteralPath $wpsFixture -PathType Leaf) -xor (Test-Path -LiteralPath $wpsManifest -PathType Leaf)) {
+  throw "E1B WPS fixture and manifest must either both exist or both remain absent"
+}
+if ((Test-Path -LiteralPath $wpsFixture -PathType Leaf) -and (Test-Path -LiteralPath $wpsManifest -PathType Leaf)) {
+  $wpsEvidence = Get-Content -LiteralPath $wpsManifest -Raw | ConvertFrom-Json
+  $wpsDigest = (Get-FileHash -LiteralPath $wpsFixture -Algorithm SHA256).Hash.ToLowerInvariant()
+  if ($wpsEvidence.schemaVersion -ne 1 `
+    -or $wpsEvidence.stage -ne "E1B" `
+    -or $wpsEvidence.id -ne "wps-writer" `
+    -or $wpsEvidence.file -ne "wps-writer.odt" `
+    -or $wpsEvidence.producer -ne "WPS Writer" `
+    -or [string]::IsNullOrWhiteSpace([string]$wpsEvidence.productVersion) `
+    -or $wpsEvidence.sourceFixture -ne "wps-writer.docx" `
+    -or $wpsEvidence.expectedText -ne "WPS Writer Producer Fixture" `
+    -or -not $wpsEvidence.nativeOdtSave `
+    -or -not $wpsEvidence.sameProducerReopenVerified `
+    -or -not $wpsEvidence.privacySanitized `
+    -or $wpsEvidence.sha256 -ne $wpsDigest `
+    -or [int64]$wpsEvidence.size -ne (Get-Item -LiteralPath $wpsFixture).Length) {
+    throw "E1B WPS fixture manifest failed the producer evidence contract"
+  }
+  $wpsDestination = Join-Path $library "wps-writer.odt"
+  Copy-Item -LiteralPath $wpsFixture -Destination $wpsDestination -Force
+  $auditFiles.WPS = $wpsDestination
+}
 
 $viteOut = Join-Path $auditRoot "vite.stdout.log"
 $viteErr = Join-Path $auditRoot "vite.stderr.log"
@@ -71,6 +98,7 @@ try {
     $env:LONGEDIT_E1B_APP_ORIGIN = "http://127.0.0.1:$appPort"
     $env:LONGEDIT_E1B_WORD = $auditFiles.WORD
     $env:LONGEDIT_E1B_LIBREOFFICE = $auditFiles.LIBREOFFICE
+    $env:LONGEDIT_E1B_WPS = if ($auditFiles.ContainsKey("WPS")) { $auditFiles.WPS } else { "" }
     $env:LONGEDIT_E1B_AUDIT_OUTPUT = $output
     & node (Join-Path $workspace "scripts\capture-e1b-odt-desktop-audit.mjs")
     if ($LASTEXITCODE -ne 0) { throw "E1B desktop audit capture failed" }

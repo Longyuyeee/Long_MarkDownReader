@@ -17,7 +17,19 @@ const fixtures = [
     title: 'LibreOffice Writer Producer Fixture',
   },
 ]
+const wpsPath = process.env.LONGEDIT_E1B_WPS
+if (wpsPath) {
+  fixtures.splice(1, 0, {
+    id: 'wps-writer',
+    file: path.resolve(wpsPath),
+    title: 'WPS Writer Producer Fixture',
+  })
+}
 if (fixtures.some(fixture => !fixture.file)) throw new Error('E1B producer fixture paths are required')
+const fixtureById = new Map(fixtures.map(fixture => [fixture.id, fixture]))
+const wordFixture = fixtureById.get('microsoft-word-16')
+const libreOfficeFixture = fixtureById.get('libreoffice-writer')
+const wpsFixture = fixtureById.get('wps-writer')
 
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 const targets = await fetch(`${endpoint}/json`).then(response => response.json())
@@ -161,6 +173,12 @@ const assertCentered = async selector => {
 }
 
 await fs.mkdir(output, { recursive: true })
+if (!wpsFixture) {
+  await Promise.all([
+    'wps-light-normal-search-1280.jpg',
+    'wps-dark-compact-locator-760.jpg',
+  ].map(file => fs.rm(path.join(output, file), { force: true })))
+}
 await send('Page.enable')
 await send('Runtime.enable')
 await resize(1280, 820)
@@ -170,7 +188,7 @@ const originals = new Map(await Promise.all(fixtures.map(async fixture => [fixtu
 const scenarios = []
 
 await applyPreset('professional-light', 'white')
-await openFixture(fixtures[0])
+await openFixture(wordFixture)
 scenarios.push({
   id: 'word-light-normal-open',
   status: 'passed',
@@ -180,7 +198,7 @@ scenarios.push({
 await capture(scenarios.at(-1).file)
 
 await resize(760, 720)
-await openFixture(fixtures[1])
+await openFixture(libreOfficeFixture)
 scenarios.push({
   id: 'libreoffice-light-compact-open',
   status: 'passed',
@@ -191,7 +209,7 @@ await capture(scenarios.at(-1).file)
 
 await applyPreset('professional-dark', 'dark')
 await resize(1280, 820)
-await openFixture(fixtures[0])
+await openFixture(wordFixture)
 await setInput('[data-testid="e1b-odt-search"]', 'After explicit page break.')
 await waitFor(
   `document.querySelector('[data-testid="e1b-odt-search-count"]')?.textContent === '1/1'
@@ -209,7 +227,7 @@ scenarios.push({
 await capture(scenarios.at(-1).file)
 
 await resize(760, 720)
-await openFixture(fixtures[1], 'odt-block-7')
+await openFixture(libreOfficeFixture, 'odt-block-7')
 await waitFor(
   `document.querySelector('#odt-block-7.route-locator-target')?.textContent?.includes('After explicit page break.') === true`,
   'LibreOffice ODT route locator',
@@ -222,6 +240,47 @@ scenarios.push({
   file: 'libreoffice-dark-compact-locator-760.jpg',
 })
 await capture(scenarios.at(-1).file)
+
+if (wpsFixture) {
+  await applyPreset('professional-light', 'white')
+  await resize(1280, 820)
+  await openFixture(wpsFixture)
+  await setInput('[data-testid="e1b-odt-search"]', wpsFixture.title)
+  await waitFor(
+    `document.querySelector('[data-testid="e1b-odt-search-count"]')?.textContent === '1/1'
+      && document.querySelector('.odt-block.current-search-hit')?.textContent?.includes(${JSON.stringify(wpsFixture.title)}) === true`,
+    'WPS ODT search result',
+  )
+  await evaluate(`document.querySelector('[data-testid="e1b-odt-search-next"]')?.click()`)
+  scenarios.push({
+    id: 'wps-light-normal-search',
+    status: 'passed',
+    state: await assertWorkspace('white', 1280, false),
+    target: await assertCentered('.odt-block.current-search-hit'),
+    file: 'wps-light-normal-search-1280.jpg',
+  })
+  await capture(scenarios.at(-1).file)
+
+  const locatorId = await evaluate(`(() => [...document.querySelectorAll('.odt-block')]
+    .find(block => block.textContent?.includes('After explicit page break.'))?.id || '')()`)
+  if (!locatorId.startsWith('odt-block-')) throw new Error('WPS ODT precise locator target was not found')
+  await applyPreset('professional-dark', 'dark')
+  await resize(760, 720)
+  await openFixture(wpsFixture, locatorId)
+  await waitFor(
+    `document.querySelector('#' + CSS.escape(${JSON.stringify(locatorId)}) + '.route-locator-target')?.textContent?.includes('After explicit page break.') === true`,
+    'WPS ODT route locator',
+  )
+  scenarios.push({
+    id: 'wps-dark-compact-locator',
+    status: 'passed',
+    state: await assertWorkspace('dark', 760, true),
+    target: await assertCentered(`#${locatorId}.route-locator-target`),
+    locatorId,
+    file: 'wps-dark-compact-locator-760.jpg',
+  })
+  await capture(scenarios.at(-1).file)
+}
 
 const sourceChecks = []
 for (const fixture of fixtures) {
@@ -239,7 +298,7 @@ const registry = JSON.parse(await fs.readFile(path.resolve('shared/file-formats.
 const odtRegistered = registry.formats.some(format => format.extensions.includes('.odt'))
 if (odtRegistered) throw new Error('.odt must remain unregistered before the E1B producer gate closes')
 const checks = [
-  { id: 'trusted-producers-open-read-only', status: 'passed', producers: fixtures.map(fixture => fixture.id) },
+  { id: 'available-producers-open-read-only', status: 'passed', producers: fixtures.map(fixture => fixture.id) },
   { id: 'normal-and-compact-layouts-without-overflow', status: 'passed' },
   { id: 'professional-light-and-dark-themes', status: 'passed' },
   { id: 'document-search-centers-exact-block', status: 'passed' },
@@ -247,6 +306,12 @@ const checks = [
   { id: 'product-exposure-remains-disabled', status: 'passed', odtRegistered },
   ...sourceChecks,
 ]
+if (wpsFixture) {
+  checks.push(
+    { id: 'wps-document-search-centers-exact-block', status: 'passed' },
+    { id: 'wps-route-locator-centers-exact-block', status: 'passed', locatorKind: 'odt-block' },
+  )
+}
 await fs.writeFile(path.join(output, 'audit-manifest.json'), `${JSON.stringify({
   schemaVersion: 1,
   stage: 'E1B',
@@ -254,6 +319,7 @@ await fs.writeFile(path.join(output, 'audit-manifest.json'), `${JSON.stringify({
   environment: 'Tauri Debug WebView2 via Chrome DevTools Protocol',
   sourceUrl: target.url,
   fixtureLocation: 'isolated temporary workspace',
+  gateMode: wpsFixture ? 'closure-candidate' : 'checkpoint',
   producerMatrix: fixtures.map(fixture => fixture.id),
   viewportMatrix: ['normal-1280x820', 'compact-760x720'],
   themeMatrix: ['professional-light', 'professional-dark'],

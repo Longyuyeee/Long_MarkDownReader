@@ -15,6 +15,7 @@ LongEdit 已完成统一文件管理、文本与开发格式工作面、JSON/JSO
 - **E1B 已接近完成**：ODT 解析、只读工作面、搜索索引和定位代码已完成；Word、LibreOffice 真实生产者通过，WPS 因当前环境缺少可信 ODF 组件仍阻断；`.odt` 因此尚未登记。
 - **2026-07-29 已完成 WPS 环境门禁加固**：隔离预检固定了 WPS `12.1.0.26895` 的 0 转换器、0 ODF 组件和 OLE 错误输出证据；fixture 生成器现在会先验证 ZIP、失败后无残留。该进展提高了门禁可靠性，但没有把 2/3 误记为完成。
 - **2026-07-29 已完成当前可执行的 E1B 桌面证据**：Word/LibreOffice 在真实 Tauri 中通过正常/紧凑、专业明/暗、文内搜索、`odt-block` 精确定位和源字节不变共 8 项检查、4 张截图。E1B 现在只剩 WPS 环境、WPS fixture/桌面补录和 3/3 后的只读注册。
+- **2026-07-29 已完成 WPS 关闭候选自动接入**：桌面审计支持 `checkpoint` / `closure-candidate` 双状态；未来只有 WPS fixture 与 manifest 的原生保存、原生复开、隐私净化、大小和 SHA-256 全部通过，才自动加入三生产者矩阵并追加 WPS 搜索/定位证据。
 - **完整 Excel 等价编辑器仍是长期必达主线**，没有取消；当前只能宣传“XLSX 渐进式编辑（以公开兼容性矩阵为准）”。
 - **新的文件格式编辑器目标已形成连续交付**：OPML、JSON/JSONC、YAML/XML/TOML、配置和代码格式已进入统一工作面；当前剩余重点是 ODF、旧版 Office 和 WPS 原生格式的分级支持。
 - **更多主题预设的当前承诺已完成**：正式发布范围为 3 套核心 + 4 套场景预设，并有 12 张真实 Tauri 视觉证据；后续主题扩充属于增强项，不阻断基础版本。
@@ -74,6 +75,8 @@ LongEdit 已完成统一文件管理、文本与开发格式工作面、JSON/JSO
 
 当前可执行的桌面子门禁已经关闭；证据见 [E1B ODT 桌面证据审计](./E1B_ODT_Desktop_Evidence_Audit_2026-07-29.md)。在 WPS 外部环境未变化时，不重复实现 E1B 解析、工作面或 Word/LibreOffice 证据，也不提前进入 E1C。
 
+WPS fixture 到位后的桌面接入也已自动化，见 [E1B WPS 关闭自动化审计](./E1B_WPS_Closure_Automation_Audit_2026-07-29.md)。当前真正剩余的是外部 WPS ODF 能力本身、由该环境生成的真实 fixture，以及 3/3 证据完成后的注册审查。
+
 ## 6. 风险与审计纪律
 
 - WPS 环境缺少可信 ODF 组件是外部环境阻断，不用伪造文件、改后缀或降低验证标准关闭门禁。
@@ -88,6 +91,7 @@ LongEdit 已完成统一文件管理、文本与开发格式工作面、JSON/JSO
 - [E1B ODT 生产者门禁 2/3 进展审计](./E1B_ODT_Producer_Gate_Progress_Audit_2026-07-28.md)
 - [E1B WPS ODF 环境门禁加固审计](./E1B_WPS_ODF_Environment_Gate_Audit_2026-07-29.md)
 - [E1B ODT 桌面证据审计](./E1B_ODT_Desktop_Evidence_Audit_2026-07-29.md)
+- [E1B WPS 关闭自动化审计](./E1B_WPS_Closure_Automation_Audit_2026-07-29.md)
 - [当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md)
 - [XLSX 高级数据对象合同](./XLSX_Advanced_Data_Object_Contract.md)
 - [XLSX 公开兼容性矩阵](./XLSX_Public_Compatibility_Matrix.md)

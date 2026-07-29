@@ -14,6 +14,8 @@ const persistentIndex = read('src-tauri/src/services/knowledge_index.rs')
 const view = read('src/views/OdtReaderView.vue')
 const fixtureGenerator = read('scripts/generate-e1b-odt-producer-fixtures.ps1')
 const desktopEvidenceChecker = read('scripts/check-e1b-odt-desktop-audit.mjs')
+const desktopEvidenceRunner = read('scripts/run-e1b-odt-desktop-audit.ps1')
+const desktopEvidenceCapture = read('scripts/capture-e1b-odt-desktop-audit.mjs')
 const fail = message => { throw new Error(`E1B ODT read contract: ${message}`) }
 
 if (contract.schemaVersion !== 1 || contract.stage !== 'E1B') fail('invalid stage header')
@@ -69,6 +71,17 @@ if (contract.desktopEvidence?.verified !== true
   || !contract.desktopEvidence?.locatorVerified
   || !desktopEvidenceChecker.includes('Tauri Debug WebView2 via Chrome DevTools Protocol')) {
   fail('desktop visual evidence drift')
+}
+if (contract.wpsClosureAutomation?.ready !== true
+  || contract.wpsClosureAutomation?.fixtureAdmission !== 'manifest-and-sha256'
+  || contract.wpsClosureAutomation?.desktopGateModes?.join(',') !== 'checkpoint,closure-candidate'
+  || contract.wpsClosureAutomation?.requiredClosureEvidence?.join(',') !== 'native-odt-save,same-producer-reopen,privacy-sanitized,desktop-search,desktop-locator,source-unchanged'
+  || !desktopEvidenceRunner.includes('Get-FileHash -LiteralPath $wpsFixture -Algorithm SHA256')
+  || !desktopEvidenceRunner.includes('LONGEDIT_E1B_WPS')
+  || !desktopEvidenceCapture.includes("'wps-light-normal-search'")
+  || !desktopEvidenceCapture.includes("'wps-dark-compact-locator'")
+  || !desktopEvidenceChecker.includes("'closure-candidate'")) {
+  fail('WPS closure automation drift')
 }
 
 const generatorSection = (start, end) => {

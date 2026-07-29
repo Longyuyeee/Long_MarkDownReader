@@ -58,6 +58,22 @@
     "searchVerified": true,
     "locatorVerified": true
   },
+  "wpsClosureAutomation": {
+    "ready": true,
+    "fixtureAdmission": "manifest-and-sha256",
+    "desktopGateModes": [
+      "checkpoint",
+      "closure-candidate"
+    ],
+    "requiredClosureEvidence": [
+      "native-odt-save",
+      "same-producer-reopen",
+      "privacy-sanitized",
+      "desktop-search",
+      "desktop-locator",
+      "source-unchanged"
+    ]
+  },
   "producerGate": {
     "required": [
       "microsoft-word-16",
