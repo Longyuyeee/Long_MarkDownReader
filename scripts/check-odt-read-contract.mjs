@@ -127,18 +127,41 @@ for (const id of required) {
     }
     const blockerEvidenceSource = read(`fixtures/odt/producers/${producer.blockerEvidence}`)
     const blockerEvidence = JSON.parse(blockerEvidenceSource)
-    if (blockerEvidence.schemaVersion !== 1 || blockerEvidence.stage !== 'E1B'
+    if (blockerEvidence.schemaVersion !== 2 || blockerEvidence.stage !== 'E1B'
       || blockerEvidence.producerId !== id || blockerEvidence.status !== 'blocked'
       || blockerEvidence.blocker !== producer.blocker
       || blockerEvidence.comProgId !== 'KWPS.Application'
+      || blockerEvidence.comTypeLibrary?.id?.toLowerCase() !== '{00020905-0000-4b30-a977-d214852036ff}'
+      || blockerEvidence.comTypeLibrary?.version !== '3.0'
+      || blockerEvidence.comTypeLibrary?.file?.toLowerCase() !== 'wpsapi.dll'
+      || blockerEvidence.comTypeLibrary?.saveFormatName !== 'wdFormatOpenDocumentText'
+      || blockerEvidence.comTypeLibrary?.saveFormatSymbolPresent !== true
+      || blockerEvidence.comTypeLibrary?.saveFormatValue !== 23
       || !Number.isInteger(blockerEvidence.registeredFileConverters)
       || blockerEvidence.registeredFileConverters !== 0
       || blockerEvidence.odfNamedComponentCount !== 0
-      || blockerEvidence.saveProbe?.sourceFixture !== 'wps-writer.docx'
-      || blockerEvidence.saveProbe?.requestedFileFormat !== 23
-      || blockerEvidence.saveProbe?.outputKind !== 'ole-compound-document'
-      || !blockerEvidence.saveProbe?.outputHeader?.startsWith('d0 cf 11 e0')
-      || !blockerEvidence.saveProbe?.tempOutputDeleted) {
+      || blockerEvidence.saveProbeSource?.sourceFixture !== 'wps-writer.docx'
+      || blockerEvidence.saveProbes?.length !== 3
+      || blockerEvidence.saveProbes.some(probe =>
+        probe.outputKind === 'odt-zip'
+        || !probe.tempOutputDeleted
+        || (probe.outputKind !== 'missing' && !probe.outputHeader)
+      )
+      || blockerEvidence.saveProbes[0]?.name !== 'save-as2-format-23'
+      || blockerEvidence.saveProbes[0]?.method !== 'SaveAs2'
+      || blockerEvidence.saveProbes[0]?.requestedFileFormat !== 23
+      || blockerEvidence.saveProbes[0]?.outputKind !== 'ole-compound-document'
+      || !blockerEvidence.saveProbes[0]?.outputHeader?.startsWith('d0 cf 11 e0')
+      || blockerEvidence.saveProbes[1]?.name !== 'save-as-format-23'
+      || blockerEvidence.saveProbes[1]?.method !== 'SaveAs'
+      || blockerEvidence.saveProbes[1]?.requestedFileFormat !== 23
+      || blockerEvidence.saveProbes[1]?.outputKind !== 'ole-compound-document'
+      || !blockerEvidence.saveProbes[1]?.outputHeader?.startsWith('d0 cf 11 e0')
+      || blockerEvidence.saveProbes[2]?.name !== 'save-as2-extension-inference'
+      || blockerEvidence.saveProbes[2]?.method !== 'SaveAs2'
+      || blockerEvidence.saveProbes[2]?.requestedFileFormat !== null
+      || blockerEvidence.saveProbes[2]?.outputKind !== 'non-odt-zip'
+      || !blockerEvidence.saveProbes[2]?.outputHeader?.startsWith('50 4b')) {
       fail(`blocked producer machine evidence drift: ${id}`)
     }
     for (const sensitiveValue of [process.env.USERNAME, process.env.USERPROFILE, root]) {

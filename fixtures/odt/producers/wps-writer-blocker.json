@@ -1,22 +1,60 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "stage": "E1B",
   "producerId": "wps-writer",
-  "auditedAt": "2026-07-29T03:31:16.0869465Z",
+  "auditedAt": "2026-07-29T04:09:31.8962788Z",
   "status": "blocked",
   "blocker": "wps-odf-add-in-missing-invalid-ole-output-rejected",
   "productVersion": "12,1,0,26895",
   "build": "12.1.0.26895",
   "comProgId": "KWPS.Application",
+  "comTypeLibrary": {
+    "id": "{00020905-0000-4b30-A977-D214852036FF}",
+    "version": "3.0",
+    "file": "wpsapi.dll",
+    "saveFormatName": "wdFormatOpenDocumentText",
+    "saveFormatSymbolPresent": true,
+    "saveFormatValue": 23
+  },
   "registeredFileConverters": 0,
   "odfNamedComponentCount": 0,
   "odfNamedComponents": [],
-  "saveProbe": {
-    "sourceFixture": "wps-writer.docx",
-    "requestedFileFormat": 23,
-    "outputKind": "ole-compound-document",
-    "outputHeader": "d0 cf 11 e0 a1 b1 1a e1",
-    "outputBytes": 86016,
-    "tempOutputDeleted": true
-  }
+  "saveProbeSource": {
+    "sourceFixture": "wps-writer.docx"
+  },
+  "saveProbes": [
+    {
+      "name": "save-as2-format-23",
+      "method": "SaveAs2",
+      "requestedFileFormat": 23,
+      "outputKind": "ole-compound-document",
+      "outputHeader": "d0 cf 11 e0 a1 b1 1a e1",
+      "outputBytes": 86016,
+      "exceptionType": null,
+      "exceptionHResult": null,
+      "tempOutputDeleted": true
+    },
+    {
+      "name": "save-as-format-23",
+      "method": "SaveAs",
+      "requestedFileFormat": 23,
+      "outputKind": "ole-compound-document",
+      "outputHeader": "d0 cf 11 e0 a1 b1 1a e1",
+      "outputBytes": 86016,
+      "exceptionType": null,
+      "exceptionHResult": null,
+      "tempOutputDeleted": true
+    },
+    {
+      "name": "save-as2-extension-inference",
+      "method": "SaveAs2",
+      "requestedFileFormat": null,
+      "outputKind": "non-odt-zip",
+      "outputHeader": "50 4b 03 04 0a 00 00 00",
+      "outputBytes": 84515,
+      "exceptionType": null,
+      "exceptionHResult": null,
+      "tempOutputDeleted": true
+    }
+  ]
 }

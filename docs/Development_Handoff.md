@@ -314,3 +314,15 @@ E1B 发布门禁已升级为 `checkpoint` / `released-preview` 双状态机器�
 当前机器 WPS 仍输出 OLE，不能本机生成合格 ODT。具备可信 WPS ODF 能力的机器现在可以运行 `generate-e1b-odt-producer-fixtures.ps1 -Producer wps` 后使用 `export-e1b-wps-closure-bundle.ps1` 导出固定三成员关闭包；本机使用 `import-e1b-wps-closure-bundle.ps1` 校验固定 DOCX 源摘要、容器和两层 manifest 后导入。导入不会自动修改生产者矩阵或注册表，仍须先完成桌面 `closure-candidate`。
 
 完整命令、正反例和信任边界见 [`E1B_WPS_Portable_Closure_Handoff_Audit_2026-07-29.md`](./E1B_WPS_Portable_Closure_Handoff_Audit_2026-07-29.md)。来源不明的 ZIP 即使摘要自洽也不得接纳。
+
+## 10. E1B WPS 最终能力诊断
+
+2026-07-29 已排除 WPS COM 格式编号误用：本机 `wpsapi.dll` TypeLib 明确注册
+`wdFormatOpenDocumentText=23`，但 `SaveAs2(23)` 与 `SaveAs(23)` 均生成 OLE，省略格式的扩展名
+推断则生成缺少 ODT `mimetype` 的非 ODT ZIP。环境审计已升级为 schema v2 和三路径保存矩阵，
+`check:odt-read-contract` 会固定校验 TypeLib、输出容器和逐项清理状态。
+
+当前结论是 WPS `12.1.0.26895` 没有可工作的 ODT 写出链路，不是 LongEdit 枚举错误。本机诊断
+到此收口，后续只接受具备原生 ODT 保存和重开能力的可信 WPS 环境通过严格跨机器交接包补齐
+第 3 个生产者；在此之前 E1B 继续保持 2/3，不进入 E1C。详细证据与官方资料复核见
+[`E1B_WPS_ODF_Final_Capability_Diagnosis_Audit_2026-07-29.md`](./E1B_WPS_ODF_Final_Capability_Diagnosis_Audit_2026-07-29.md)。
