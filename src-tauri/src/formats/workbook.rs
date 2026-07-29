@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::path::Path;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
@@ -676,6 +677,11 @@ pub struct WorkbookArrayFormula {
     pub occupied_cell_count: usize,
     pub missing_cached_cell_count: usize,
     pub foreign_formula_cell_count: usize,
+    pub cached_value_types: BTreeMap<String, usize>,
+    pub error_cache_count: usize,
+    pub error_cache_cells: Vec<String>,
+    pub conflict_cells: Vec<String>,
+    pub diagnostic_cells_truncated: bool,
     pub spill_status: String,
     pub calculation_status: String,
     pub write_status: String,

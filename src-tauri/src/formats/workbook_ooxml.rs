@@ -51,6 +51,7 @@ const MAX_CELL_TEXT: usize = 32_767;
 const MAX_FORMULA_TEXT: usize = 8_192;
 const MAX_ARRAY_FORMULAS: usize = 1_024;
 const MAX_ARRAY_FORMULA_CELLS: usize = 1_000_000;
+const MAX_ARRAY_DIAGNOSTIC_CELLS: usize = 256;
 const MAX_XLSX_ROWS: usize = 1_048_576;
 const MAX_XLSX_COLUMNS: usize = 16_384;
 const MAX_STRUCTURE_EDITS: usize = 10_000;
@@ -138,6 +139,24 @@ fn is_dynamic_array_formula(formula: &str) -> bool {
     .any(|marker| normalized.contains(marker))
 }
 
+fn empty_array_cache_type_counts() -> BTreeMap<String, usize> {
+    ["number", "text", "boolean", "error", "date", "other"]
+        .into_iter()
+        .map(|kind| (kind.into(), 0))
+        .collect()
+}
+
+fn array_cache_value_kind(cell_type: Option<&str>) -> &'static str {
+    match cell_type {
+        None | Some("n") => "number",
+        Some("s" | "str" | "inlineStr") => "text",
+        Some("b") => "boolean",
+        Some("e") => "error",
+        Some("d") => "date",
+        _ => "other",
+    }
+}
+
 fn read_array_formulas(xml: &[u8]) -> Result<Vec<WorkbookArrayFormula>, String> {
     let mut reader = Reader::from_reader(xml);
     reader.config_mut().trim_text(false);
@@ -223,6 +242,11 @@ fn read_array_formulas(xml: &[u8]) -> Result<Vec<WorkbookArrayFormula>, String> 
                     occupied_cell_count: 0,
                     missing_cached_cell_count: cell_count,
                     foreign_formula_cell_count: 0,
+                    cached_value_types: empty_array_cache_type_counts(),
+                    error_cache_count: 0,
+                    error_cache_cells: Vec::new(),
+                    conflict_cells: Vec::new(),
+                    diagnostic_cells_truncated: false,
                     spill_status: if dynamic {
                         "cache_pending".into()
                     } else {
@@ -262,6 +286,7 @@ fn read_array_formulas(xml: &[u8]) -> Result<Vec<WorkbookArrayFormula>, String> 
     reader.config_mut().trim_text(false);
     buffer.clear();
     current_cell = None;
+    let mut current_cell_type = None;
     loop {
         match reader
             .read_event_into(&mut buffer)
@@ -271,6 +296,7 @@ fn read_array_formulas(xml: &[u8]) -> Result<Vec<WorkbookArrayFormula>, String> 
                 current_cell = xml_value(event, b"r", reader.decoder())?
                     .map(|reference| parse_cell_reference(&reference))
                     .transpose()?;
+                current_cell_type = xml_value(event, b"t", reader.decoder())?;
                 if let Some((row, column)) = current_cell {
                     if let Some(ranges) = ranges_by_row.get(&row) {
                         for &(left, right, index) in ranges {
@@ -295,9 +321,11 @@ fn read_array_formulas(xml: &[u8]) -> Result<Vec<WorkbookArrayFormula>, String> 
                     }
                 }
                 current_cell = None;
+                current_cell_type = None;
             }
             Event::End(ref event) if event.local_name().as_ref() == b"c" => {
                 current_cell = None;
+                current_cell_type = None;
             }
             Event::Start(ref event) | Event::Empty(ref event)
                 if event.local_name().as_ref() == b"v" =>
@@ -307,6 +335,23 @@ fn read_array_formulas(xml: &[u8]) -> Result<Vec<WorkbookArrayFormula>, String> 
                         for &(left, right, index) in ranges {
                             if column >= left && column <= right {
                                 formulas[index].cached_cell_count += 1;
+                                let kind = array_cache_value_kind(current_cell_type.as_deref());
+                                *formulas[index]
+                                    .cached_value_types
+                                    .entry(kind.into())
+                                    .or_default() += 1;
+                                if kind == "error" {
+                                    formulas[index].error_cache_count += 1;
+                                    if formulas[index].error_cache_cells.len()
+                                        < MAX_ARRAY_DIAGNOSTIC_CELLS
+                                    {
+                                        formulas[index]
+                                            .error_cache_cells
+                                            .push(cell_reference(row, column)?);
+                                    } else {
+                                        formulas[index].diagnostic_cells_truncated = true;
+                                    }
+                                }
                             }
                         }
                     }
@@ -324,6 +369,14 @@ fn read_array_formulas(xml: &[u8]) -> Result<Vec<WorkbookArrayFormula>, String> 
                                     != (formulas[index].anchor_row, formulas[index].anchor_column)
                             {
                                 formulas[index].foreign_formula_cell_count += 1;
+                                if formulas[index].conflict_cells.len() < MAX_ARRAY_DIAGNOSTIC_CELLS
+                                {
+                                    formulas[index]
+                                        .conflict_cells
+                                        .push(cell_reference(row, column)?);
+                                } else {
+                                    formulas[index].diagnostic_cells_truncated = true;
+                                }
                             }
                         }
                     }
@@ -18727,6 +18780,10 @@ mod tests {
         assert_eq!(legacy.occupied_cell_count, 3);
         assert_eq!(legacy.missing_cached_cell_count, 0);
         assert_eq!(legacy.foreign_formula_cell_count, 0);
+        assert_eq!(legacy.cached_value_types["number"], 3);
+        assert_eq!(legacy.error_cache_count, 0);
+        assert!(legacy.error_cache_cells.is_empty());
+        assert!(legacy.conflict_cells.is_empty());
         assert_eq!(legacy.spill_status, "not_applicable");
         assert_eq!(legacy.calculation_status, "blocked");
         assert_eq!(legacy.write_status, "blocked");
@@ -18742,6 +18799,8 @@ mod tests {
         assert_eq!(dynamic.occupied_cell_count, 3);
         assert_eq!(dynamic.missing_cached_cell_count, 0);
         assert_eq!(dynamic.foreign_formula_cell_count, 0);
+        assert_eq!(dynamic.cached_value_types["number"], 3);
+        assert_eq!(dynamic.error_cache_count, 0);
         assert_eq!(dynamic.spill_status, "cached_complete");
         assert_eq!(md5::compute(FIXTURE), source_hash);
     }
@@ -18757,6 +18816,9 @@ mod tests {
         assert_eq!(layout.array_formulas[0].cached_cell_count, 3);
         assert_eq!(layout.array_formulas[1].kind, "dynamic_array");
         assert_eq!(layout.array_formulas[1].cached_cell_count, 3);
+        assert_eq!(layout.array_formulas[1].cached_value_types["number"], 3);
+        assert_eq!(layout.array_formulas[1].error_cache_count, 0);
+        assert!(layout.array_formulas[1].conflict_cells.is_empty());
         assert_eq!(layout.array_formulas[1].spill_status, "cached_complete");
         assert_eq!(layout.formulas.get(&(1, 1)).unwrap(), "=A2:A4*2");
         assert_eq!(
@@ -18775,12 +18837,18 @@ mod tests {
         let error = read_array_formulas(oversized).unwrap_err();
         assert!(error.contains("1000000"));
 
-        let conflict = br#"<worksheet><sheetData><row r="1"><c r="A1" cm="1"><f t="array" ref="A1:A3">SEQUENCE(3)</f><v>1</v></c></row><row r="2"><c r="A2"><f>1+1</f><v>2</v></c></row><row r="3"><c r="A3"/></row></sheetData></worksheet>"#;
+        let conflict = br#"<worksheet><sheetData><row r="1"><c r="A1" cm="1"><f t="array" ref="A1:A3">SEQUENCE(3)</f><v>1</v></c></row><row r="2"><c r="A2" t="e"><f>1+1</f><v>#SPILL!</v></c></row><row r="3"><c r="A3"/></row></sheetData></worksheet>"#;
         let formulas = read_array_formulas(conflict).unwrap();
         assert_eq!(formulas[0].occupied_cell_count, 3);
         assert_eq!(formulas[0].cached_cell_count, 2);
         assert_eq!(formulas[0].missing_cached_cell_count, 1);
         assert_eq!(formulas[0].foreign_formula_cell_count, 1);
+        assert_eq!(formulas[0].cached_value_types["number"], 1);
+        assert_eq!(formulas[0].cached_value_types["error"], 1);
+        assert_eq!(formulas[0].error_cache_count, 1);
+        assert_eq!(formulas[0].error_cache_cells, ["A2"]);
+        assert_eq!(formulas[0].conflict_cells, ["A2"]);
+        assert!(!formulas[0].diagnostic_cells_truncated);
         assert_eq!(formulas[0].spill_status, "potential_conflict");
     }
 

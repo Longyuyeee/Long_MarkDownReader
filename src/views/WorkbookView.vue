@@ -476,13 +476,19 @@
       <span v-if="selectedArrayFormula">
         {{ selectedArrayFormula.kind === 'dynamic_array' ? '动态数组' : '传统数组' }}
         {{ rangeLabel(selectedArrayFormula.range) }} · 缓存 {{ selectedArrayFormula.cachedCellCount }}/{{ selectedArrayFormula.declaredCellCount }}
-        · {{ spillStatusLabel(selectedArrayFormula.spillStatus) }}
+        · {{ cacheTypeSummary(selectedArrayFormula) }} · {{ spillStatusLabel(selectedArrayFormula.spillStatus) }}
       </span>
       <span v-else>
         {{ sheetInfo.arrayFormulas.filter(item => item.spillStatus === 'potential_conflict').length
           ? `发现 ${sheetInfo.arrayFormulas.filter(item => item.spillStatus === 'potential_conflict').length} 处潜在占用冲突`
           : '可查看缓存完整度；编辑、填充、结构迁移和本地重算已安全阻止' }}
       </span>
+      <button v-if="selectedArrayFormula?.conflictCells.length" class="diagnostic-link warning" @click="navigateArrayDiagnosticCell(selectedArrayFormula.conflictCells[0])">
+        定位冲突 {{ selectedArrayFormula.conflictCells[0] }}
+      </button>
+      <button v-if="selectedArrayFormula?.errorCacheCells.length" class="diagnostic-link" @click="navigateArrayDiagnosticCell(selectedArrayFormula.errorCacheCells[0])">
+        定位错误缓存 {{ selectedArrayFormula.errorCacheCells[0] }}
+      </button>
     </div>
 
     <div v-if="workbook && sheetInfo" class="format-toolbar" :class="{ protected: sheetProtected }" aria-label="单元格格式">
@@ -726,6 +732,7 @@
                       formula: Boolean(cellAt(row.index, column - 1).formula),
                       'array-formula-anchor': isArrayFormulaAnchor(row.index, column - 1),
                       'array-formula-range': Boolean(arrayFormulaAt(row.index, column - 1)),
+                      'array-formula-conflict': isArrayFormulaConflict(row.index, column - 1),
                       selected: isSelected(row.index, column - 1),
                       'in-range': isInSelection(row.index, column - 1),
                       'fill-preview': isInFillPreview(row.index, column - 1),
@@ -879,7 +886,7 @@ interface WorkbookHeaderFooter { oddHeader?: string; oddFooter?: string; evenHea
 interface WorkbookHeaderFooterDraft { oddHeader: string; oddFooter: string; evenHeader: string; evenFooter: string; firstHeader: string; firstFooter: string; differentOddEven: boolean; differentFirstPage: boolean; scaleWithDocument: boolean; alignWithMargins: boolean }
 interface WorkbookSheetProtection { enabled: boolean; passwordProtected: boolean; blockedActions: string[] }
 interface WorkbookPageLayout { printArea?: WorkbookMergeRange; margins: WorkbookPageMargins; setup: WorkbookPageSetup; options: WorkbookPrintOptions; headerFooter: WorkbookHeaderFooter; protection: WorkbookSheetProtection }
-interface WorkbookArrayFormula { kind: 'legacy_array' | 'dynamic_array'; anchorRow: number; anchorColumn: number; range: WorkbookMergeRange; formula: string; declaredCellCount: number; cachedCellCount: number; occupiedCellCount: number; missingCachedCellCount: number; foreignFormulaCellCount: number; spillStatus: 'not_applicable' | 'cached_complete' | 'cache_incomplete' | 'potential_conflict'; calculationStatus: 'blocked'; writeStatus: 'blocked'; blocker: string }
+interface WorkbookArrayFormula { kind: 'legacy_array' | 'dynamic_array'; anchorRow: number; anchorColumn: number; range: WorkbookMergeRange; formula: string; declaredCellCount: number; cachedCellCount: number; occupiedCellCount: number; missingCachedCellCount: number; foreignFormulaCellCount: number; cachedValueTypes: Record<'number' | 'text' | 'boolean' | 'error' | 'date' | 'other', number>; errorCacheCount: number; errorCacheCells: string[]; conflictCells: string[]; diagnosticCellsTruncated: boolean; spillStatus: 'not_applicable' | 'cached_complete' | 'cache_incomplete' | 'potential_conflict'; calculationStatus: 'blocked'; writeStatus: 'blocked'; blocker: string }
 interface WorkbookSheetPage {
   sheet: string
   rowOffset: number
@@ -1610,6 +1617,13 @@ const spillStatusLabel = (status: WorkbookArrayFormula['spillStatus']) => ({
   cache_incomplete: '缓存不完整',
   potential_conflict: '潜在占用冲突',
 }[status])
+const cacheTypeSummary = (item: WorkbookArrayFormula) => {
+  const labels: Record<keyof WorkbookArrayFormula['cachedValueTypes'], string> = { number: '数值', text: '文本', boolean: '布尔', error: '错误', date: '日期', other: '其他' }
+  const parts = (Object.entries(item.cachedValueTypes) as [keyof WorkbookArrayFormula['cachedValueTypes'], number][])
+    .filter(([, count]) => count > 0)
+    .map(([kind, count]) => `${labels[kind]} ${count}`)
+  return parts.length ? parts.join(' / ') : '无缓存值'
+}
 const drawingKindLabel = (drawing: WorkbookDrawingObject) => {
   if (drawing.kind === 'chart') return drawing.chart?.chartType === 'column' ? '柱形图' : `${drawing.chart?.chartType || '未知'}图表`
   if (drawing.kind === 'image') return '图片'
@@ -1987,6 +2001,10 @@ const isArrayFormulaAnchor = (row: number, column: number) => {
   const item = arrayFormulaAt(row, column)
   return Boolean(item && item.anchorRow === row && item.anchorColumn === column)
 }
+const isArrayFormulaConflict = (row: number, column: number) => {
+  const address = `${columnLabel(column)}${row + 1}`
+  return Boolean(arrayFormulaAt(row, column)?.conflictCells.includes(address))
+}
 const selectedArrayFormula = computed(() => selectedCell.value ? arrayFormulaAt(selectedCell.value.row, selectedCell.value.column) : undefined)
 const mergeAt = (row: number, column: number) => currentMergedRanges.value.find(range => row >= range.top && row <= range.bottom && column >= range.left && column <= range.right)
 const isMergedAnchor = (row: number, column: number) => {
@@ -2029,7 +2047,7 @@ const cellTitle = (row: number, column: number) => {
   const validationText = validation ? `\n数据验证：${validationLabel(validation)}${validation.prompt ? `\n${validation.prompt}` : ''}` : ''
   const arrayFormula = arrayFormulaAt(row, column)
   const arrayText = arrayFormula
-    ? `\n${arrayFormula.kind === 'dynamic_array' ? '动态数组' : '传统数组'}：${rangeLabel(arrayFormula.range)}\n缓存：${arrayFormula.cachedCellCount}/${arrayFormula.declaredCellCount}；${spillStatusLabel(arrayFormula.spillStatus)}\n${arrayFormula.blocker}`
+    ? `\n${arrayFormula.kind === 'dynamic_array' ? '动态数组' : '传统数组'}：${rangeLabel(arrayFormula.range)}\n缓存：${arrayFormula.cachedCellCount}/${arrayFormula.declaredCellCount}；${cacheTypeSummary(arrayFormula)}；${spillStatusLabel(arrayFormula.spillStatus)}${arrayFormula.conflictCells.length ? `\n冲突：${arrayFormula.conflictCells.join(', ')}${arrayFormula.diagnosticCellsTruncated ? '…' : ''}` : ''}${arrayFormula.errorCacheCells.length ? `\n错误缓存：${arrayFormula.errorCacheCells.join(', ')}${arrayFormula.diagnosticCellsTruncated ? '…' : ''}` : ''}\n${arrayFormula.blocker}`
     : ''
   return (cell.formula ? `${columnLabel(column)}${row + 1}\n公式：${cell.formula}\n结果：${cell.value || '等待外部公式引擎重算'}` : cell.value) + validationText + arrayText
 }
@@ -3821,6 +3839,25 @@ const navigateArrayFormula = async (event: Event) => {
   })
   select.value = ''
 }
+const navigateArrayDiagnosticCell = async (address: string) => {
+  const match = /^([A-Z]+)([1-9]\d*)$/.exec(address)
+  if (!match) return
+  let column = 0
+  for (const character of match[1]) column = column * 26 + character.charCodeAt(0) - 64
+  column -= 1
+  const row = Number(match[2]) - 1
+  if (column < 0 || column >= canvasColumnCount.value || row < 0) return
+  await loadPage(row)
+  selectionAnchor.value = { sheet: activeSheet.value, row, column }
+  selectionAreas.value = [{ top: row, bottom: row, left: column, right: column }]
+  setSelectionFocus(row, column)
+  await nextTick()
+  scrollRef.value?.scrollTo({
+    top: Math.max(0, rowOffset(row) - 38),
+    left: Math.max(0, 52 + columnPixels.value.slice(0, column).reduce((total, width) => total + width, 0) - 80),
+    behavior: 'smooth',
+  })
+}
 const chartColumnIndex = (label: string) => {
   let result = 0
   for (const character of label.toUpperCase()) result = result * 26 + character.charCodeAt(0) - 64
@@ -4547,6 +4584,8 @@ onBeforeUnmount(() => {
 .array-formula-strip strong { flex: none; color: #5b5fc7; font-size: 9px; }
 .array-formula-strip select { max-width: 230px; height: 23px; border: 1px solid rgba(99,102,241,.25); border-radius: 4px; color: var(--theme-text); background: var(--theme-card); font-size: 9px; }
 .array-formula-strip span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.array-formula-strip .diagnostic-link { height: 22px; flex: none; padding: 0 7px; border: 1px solid rgba(99,102,241,.3); border-radius: 4px; color: #5b5fc7; background: var(--theme-card); font-size: 8px; cursor: pointer; }
+.array-formula-strip .diagnostic-link.warning { border-color: rgba(220,38,38,.35); color: #b91c1c; }
 .format-toolbar { min-height: 40px; flex: none; display: flex; align-items: center; gap: 5px; padding: 4px 12px; overflow-x: auto; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); }
 .format-toolbar select,.format-toolbar input,.format-toolbar button { flex: none; height: 30px; box-sizing: border-box; border: 1px solid rgba(0,0,0,.1); border-radius: 5px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 96%, #dce6ef); font-size: 9px; }
 .format-toolbar select { min-width: 92px; padding: 0 24px 0 8px; }
@@ -4639,6 +4678,7 @@ onBeforeUnmount(() => {
 .workbook-cell.formula { color: #436fb7; }
 .workbook-cell.array-formula-range { background-image: linear-gradient(rgba(99,102,241,.07), rgba(99,102,241,.07)); cursor: not-allowed; }
 .workbook-cell.array-formula-anchor { box-shadow: inset 0 0 0 1px rgba(99,102,241,.6); }
+.workbook-cell.array-formula-conflict { background-image: repeating-linear-gradient(135deg, rgba(220,38,38,.12), rgba(220,38,38,.12) 4px, rgba(99,102,241,.05) 4px, rgba(99,102,241,.05) 8px); box-shadow: inset 0 0 0 1px rgba(220,38,38,.65); }
 .workbook-cell.cell-error { color: #d24e4e; }
 .workbook-cell.cell-number,.workbook-cell.cell-integer { text-align: right; font-variant-numeric: tabular-nums; }
 .workbook-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--theme-text-secondary); }

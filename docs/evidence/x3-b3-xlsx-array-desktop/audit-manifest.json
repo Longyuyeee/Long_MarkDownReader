@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "stage": "X3-B3",
+  "capturedAt": "2026-07-29T19:07:03.712Z",
+  "source": "src-tauri/tests/fixtures/workbook/array-formula-wps-spreadsheets.xlsx",
+  "sourceSha256": "7a2bccb243561fd7e5b6c8f944b4c480379c2b62dcb6f944b4cd67e6bac9f6e0",
+  "sourceUnchanged": true,
+  "checks": [
+    "professional-light-theme",
+    "dynamic-cache-type-summary",
+    "dynamic-array-anchor-selection",
+    "array-calculation-and-edit-blocked",
+    "light-layout-contained",
+    "professional-dark-theme",
+    "legacy-cache-type-summary",
+    "legacy-array-anchor-selection",
+    "compact-layout-contained",
+    "source-fixture-byte-unchanged"
+  ],
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 800,
+      "theme": "professional-light",
+      "focus": "dynamic-array"
+    },
+    {
+      "width": 1024,
+      "height": 720,
+      "theme": "professional-dark",
+      "focus": "legacy-array"
+    }
+  ],
+  "evidenceFiles": [
+    "professional-light-dynamic-array-1280.jpg",
+    "professional-dark-legacy-array-1024.jpg"
+  ],
+  "boundaries": {
+    "expectedSpillCalculation": false,
+    "arrayWriteback": false,
+    "conflictFixtureVisualEvidence": false
+  }
+}

@@ -6,6 +6,8 @@ X3-B1 adds a separate read-only array-formula contract. The workbook surface can
 
 X3-B2 extends that read-only contract with serialized occupancy, missing-cache, foreign-formula and potential-conflict diagnostics. WPS Spreadsheets 12.0/26895 has passed native save, application exit, independent reopen and LongEdit semantic reread; the producer matrix remains partial at 1/3 because genuine Excel and LibreOffice Calc are unavailable in the current environment.
 
+X3-B3 adds cached-value type distribution, bounded error-cache addresses and concrete foreign-formula conflict addresses. The existing right-side workbook surface can locate the first diagnostic cell, and real Tauri light/dark evidence verifies both legacy and dynamic declarations without changing the source bytes. This remains serialized OOXML diagnosis only: expected spill calculation and array writeback are still blocked.
+
 S8-6A through S8-6F establish a project-owned formula calculation baseline on top of IronCalc 0.8.0. Calculation is explicit, in memory, and uses the `en` locale with the `UTC` timezone. It does not write calculated caches back to the XLSX package.
 
 The machine-readable source of truth is `shared/xlsx-formula-capabilities.json`. A function is public only when it appears in a `verified` family and is exercised by the committed `formula-function-matrix.xlsx` fixture through both the calculation module and the Tauri command boundary.

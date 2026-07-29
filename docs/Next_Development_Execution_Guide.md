@@ -12,6 +12,8 @@
 
 > X3-B2 WPS 检查点已完成：当前生产者矩阵 `partial 1/3`，spill 诊断代码已进入产品路径。下一代码入口为 X3-B3 的缓存值类型、错误缓存、具体冲突地址和桌面视觉证据；Excel/LibreOffice 环境到位时优先补齐 X3-B2 的剩余 `2/3`，不得将 WPS 兼容层自报的 `Microsoft Excel` 身份计入 Excel。
 
+> X3-B3 已完成：模型、OOXML 读取器和原有右侧 XLSX 工作面已支持缓存类型统计、错误缓存地址、具体冲突地址和定位；专业明/暗主题真实桌面证据通过 10 项检查，源字节不变。下一代码入口为 X3-B4：构造受控错误缓存/外来公式冲突 fixture，在桌面端验证警示样式、地址按钮和滚动定位；仍不得开放 spill 计算、数组公式写回或把 `potential_conflict` 宣称为 Excel `#SPILL!` 等价结果。
+
 > 2026-07-29 更新：WPS ODF 环境预检、阻断机器证据和失败清理已进入合同；当前 WPS `12.1.0.26895` 仍输出 OLE 而不是 ODT ZIP，E1B 保持 2/3。恢复时先运行 `npm.cmd run audit:e1b-wps-odf-environment`，不得重复尝试旧 ODF add-in 或绕过门禁。
 
 > 2026-07-29 桌面更新：Word/LibreOffice 已通过真实 Tauri 的正常/紧凑、专业明/暗、搜索、精确定位和源字节不变门禁。当前可执行代码工作已收口；下一动作是获得可信 WPS ODF 环境，生成 WPS fixture 并补入同一桌面矩阵，3/3 后才注册 `.odt`。

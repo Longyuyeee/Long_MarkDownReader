@@ -11,6 +11,8 @@
 
 > X3-B2 最新检查点：spill 只读诊断已增加缓存完整度、序列化占用和外来公式冲突信号；WPS Spreadsheets `12.0/26895` 已完成真实打开、另存、应用退出、独立复开和 LongEdit 反向复读，生产者矩阵为 `partial 1/3`。Excel 与 LibreOffice 因本机环境缺失仍待补，能力继续标记为受限。详见 [`X3_B2_XLSX_Array_Producer_and_Spill_Diagnostic_Audit_2026-07-30.md`](./X3_B2_XLSX_Array_Producer_and_Spill_Diagnostic_Audit_2026-07-30.md)。
 
+> X3-B3 已完成：数组公式诊断新增缓存值类型分布、错误缓存地址、具体冲突地址和一键定位；功能继续位于原有右侧 XLSX 工作面，没有新增独立页面。真实 Tauri 专业明/暗主题、1280/1024 视口共 10 项检查和 2 张截图通过，源 XLSX 字节不变。计算与数组写回仍阻断，生产者矩阵仍为 `partial 1/3`。下一代码阶段为 X3-B4 的可控冲突/错误 fixture 桌面定位闭环；外部环境到位时补齐 Excel/LibreOffice。详见 [`X3_B3_XLSX_Array_Cache_and_Conflict_Locator_Audit_2026-07-30.md`](./X3_B3_XLSX_Array_Cache_and_Conflict_Locator_Audit_2026-07-30.md)。
+
 > 当前阶段交付证据见 `docs/E1B_ODT_Read_Index_Checkpoint_Audit_2026-07-28.md` 和 `docs/E1B_ODT_Producer_Gate_Progress_Audit_2026-07-28.md`。E1B 已完成有界语义解析、WorkspaceGuard 只读命令、Library 工作面、双索引和定位代码；LibreOffice 与 Microsoft Word 真实 fixture 已通过。Word 原阻塞已定位为 ODT 格式兼容性模态提示并完成受控保存、关闭和原生重开；WPS 缺少可验证的 ODF 组件并生成错误 OLE 文件。`.odt` 仍未进入共享格式注册表，下一批只关闭 WPS 生产者门禁。
 
 > 2026-07-29 又完成 E1B Word/LibreOffice 真实 Tauri 桌面子门禁：正常/紧凑、专业明/暗、文内搜索、`odt-block` 路由定位和源字节不变共 8 项检查、4 张截图通过。证据见 `docs/E1B_ODT_Desktop_Evidence_Audit_2026-07-29.md`；该结果不改变 WPS blocked 和 `.odt` 未注册边界。

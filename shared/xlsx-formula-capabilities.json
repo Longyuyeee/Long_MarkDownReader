@@ -125,16 +125,19 @@
     "notEquivalentToExcelAutomaticRecalculation": true
   },
   "arrayFormulaReadContract": {
-    "stage": "X3-B2",
+    "stage": "X3-B3",
     "status": "partial_producer_matrix",
     "ooxmlFormulaType": "array",
     "recognizedKinds": ["legacy_array", "dynamic_array"],
-    "visibleFields": ["anchor", "range", "formula", "declaredCellCount", "cachedCellCount", "occupiedCellCount", "missingCachedCellCount", "foreignFormulaCellCount", "spillStatus", "blocker"],
+    "visibleFields": ["anchor", "range", "formula", "declaredCellCount", "cachedCellCount", "occupiedCellCount", "missingCachedCellCount", "foreignFormulaCellCount", "cachedValueTypes", "errorCacheCount", "errorCacheCells", "conflictCells", "diagnosticCellsTruncated", "spillStatus", "blocker"],
     "spillDiagnostics": {
       "mode": "serialized-cache-only",
       "statuses": ["not_applicable", "cached_complete", "cache_incomplete", "potential_conflict"],
       "doesNotCalculateExpectedSpill": true,
-      "potentialConflictSignal": "non-anchor formula inside declared array range"
+      "potentialConflictSignal": "non-anchor formula inside declared array range",
+      "cacheValueTypes": ["number", "text", "boolean", "error", "date", "other"],
+      "diagnosticAddressLimitPerFormula": 256,
+      "conflictAndErrorAddressesLocatable": true
     },
     "calculationPolicy": "blocked",
     "contentWritePolicy": "blocked-inside-declared-range",
@@ -147,6 +150,9 @@
     "verifiedProducerCount": 1,
     "requiredProducerCount": 3,
     "verifiedProducerFixture": "src-tauri/tests/fixtures/workbook/array-formula-wps-spreadsheets.xlsx",
+    "desktopEvidence": "docs/evidence/x3-b3-xlsx-array-desktop/audit-manifest.json",
+    "desktopEvidenceChecks": 10,
+    "desktopEvidenceScreenshots": 2,
     "realOfficeProducerEvidence": true,
     "fullProducerMatrixVerified": false
   },
