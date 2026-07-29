@@ -116,7 +116,7 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - `docs/Knowledge_Workspace_Health.md`：重复文件、未处理批注、扫描预算和只读治理边界。
 - `docs/Workbook_Row_Column_Outline.md`：XLSX 行列隐藏、分组、可靠写回和保真边界。
 - `docs/Workbook_Structure_Migration.md`：XLSX 行列插删的坐标、范围、公式迁移规则和预览边界。
-- `docs/Formula_Calculation_Compatibility.md`：S8-6A～S8-6D 公式函数族、错误分类、查找/日期语义、真实 fixture 和明确排除项。
+- `docs/Formula_Calculation_Compatibility.md`：S8-6A～S8-6F 公式函数族、错误分类、查找/日期语义、真实 fixture 和明确排除项。
 - `docs/XLSX_Advanced_Data_Object_Contract.md`：S8-7 高级对象离线策略、透视候选审计、内存聚合预览和写回门禁。
 - `docs/T8_1B_Theme_Desktop_Visual_Audit.md`：四套场景主题、真实 Tauri 三档尺寸证据、图谱紧凑布局修复和可重复截图脚本。
 - `docs/Development_Progress_Audit_2026-07-24.md`：当前完整候选能力、风险排序、发布门禁，以及合并后从 XLSX 专项收尾切换到统一文件管理 A0 主线的顺序。
@@ -295,6 +295,7 @@ WPS 桌面补录代码已准备完成：真实 `wps-writer.odt` 到位后，同�
 73. S8-7E3C 已完成：单行轴、单列轴和三度量均进入可靠新副本白名单；隐藏项与生产者原生多级表头已修正，Excel/WPS/LibreOffice 9/9 往返通过，十二份 XLSX 由 LongEdit 反向确认 `PivotTable1`、字段来源和聚合。下一步 S8-7E3D 扩展其余单度量聚合。
 74. S8-7E3D 已完成：`count/average/max/min/product/countNums` 六种单度量聚合均进入可靠新副本白名单；修正跨分组 `max/min/product` 总计，Excel/WPS/LibreOffice 18/18 往返与 OOXML `subtotal` 复读通过，二十四份 XLSX 由 LongEdit 反向复读。下一步 S8-7E3E 审计多层轴并建立隔离包原型。
 75. S8-7E3E 已完成：由 Microsoft Excel `16.0/20228` 生成并独立重开双层行轴、双层列轴真实 fixture；新增多层轴隔离审计命令，解码 `r` 前缀压缩项并验证双轴各 4 条明细、2 条父级小计、1 条总计及 16 个预览分组。临时包只重建 Cache Definition/Records，Pivot Definition 和输出 Worksheet 逐字节保持不变，用户文件不写入。下一步 S8-7E3F 在临时包中完整重建多层轴定义与层级输出。
+76. X3-A / S8-6F 已完成：IronCalc 固定升级至 `0.8.0`，真实 XLSX 公式矩阵扩展为 38 个函数、64 个场景；标量 `XMATCH` 的精确、反向、通配、相邻值、横向量、`#N/A`、恢复和未保存依赖重算通过模块与 Tauri 命令门禁。动态数组、数组常量、正则模式、外部工作簿计算和缓存写回继续阻断。
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 

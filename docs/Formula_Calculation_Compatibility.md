@@ -2,7 +2,7 @@
 
 ## Current Contract
 
-S8-6A through S8-6E establish a project-owned formula calculation baseline on top of IronCalc 0.7.1. Calculation is explicit, in memory, and uses the `en` locale with the `UTC` timezone. It does not write calculated caches back to the XLSX package.
+S8-6A through S8-6F establish a project-owned formula calculation baseline on top of IronCalc 0.8.0. Calculation is explicit, in memory, and uses the `en` locale with the `UTC` timezone. It does not write calculated caches back to the XLSX package.
 
 The machine-readable source of truth is `shared/xlsx-formula-capabilities.json`. A function is public only when it appears in a `verified` family and is exercised by the committed `formula-function-matrix.xlsx` fixture through both the calculation module and the Tauri command boundary.
 
@@ -18,7 +18,7 @@ Verified families:
 | Lookup and reference | `VLOOKUP`, `HLOOKUP`, `INDEX`, `MATCH` |
 | Multi-criteria aggregate | `SUMIFS`, `COUNTIFS`, `AVERAGEIFS` |
 | Date | `DATE`, `YEAR`, `MONTH`, `DAY` |
-| Modern lookup | `XLOOKUP` |
+| Modern lookup | `XLOOKUP`, `XMATCH` |
 | Volatile | `OFFSET`, `INDIRECT`, `RAND`, `RANDBETWEEN`, `TODAY`, `NOW` |
 
 Reference regressions cover same-sheet and cross-sheet references, workbook defined names, and dependency updates from unsaved cell edits.
@@ -31,6 +31,8 @@ S8-6D adds scalar `XLOOKUP` results. The real fixture covers exact and next-smal
 
 S8-6E adds a deliberately limited volatile subset. `OFFSET` and `INDIRECT` cover same-sheet, cross-sheet and unsaved dependency scenarios; `RAND` is verified only to return a value in `[0,1)`, `RANDBETWEEN` uses inclusive bounds, and the UTC `TODAY`/`NOW` relationship is verified. These functions run only when the user requests recalculation, their results remain in memory, and the contract does not claim Excel-equivalent automatic recalculation timing.
 
+X3-A / S8-6F upgrades the pinned engine to IronCalc 0.8.0 and adds scalar `XMATCH`. The committed XLSX matrix covers exact lookup, forward wildcard lookup, reverse search, next-smaller and next-larger modes, row vectors, default `#N/A`, `IFERROR` recovery, and recalculation after an unsaved dependency edit. Array constants, regex mode and dynamic-array return semantics are not part of the public contract.
+
 Before IronCalc import, the calculation boundary rejects workbooks containing multi-cell legacy array formulas, known dynamic-array functions, or real external-workbook link parts. Rejection does not modify the source package: the existing formula text and cached result remain available through normal workbook reading.
 
 ## Error Semantics
@@ -41,7 +43,7 @@ The stable categories are `division_by_zero`, `name`, `value`, `reference`, `num
 
 ## Explicit Exclusions
 
-This baseline is not an Excel-complete formula claim. `XMATCH` and other unverified modern lookup functions, `XLOOKUP` array-return/spill results, mismatched-range `*IFS` semantics, Excel-equivalent automatic volatile timing, array formulas, dynamic arrays and spill ranges, external workbook calculation, complete range/operator equivalence, every IronCalc function, and calculated-cache persistence remain outside the public contract.
+This baseline is not an Excel-complete formula claim. Unverified modern lookup functions, `XMATCH` array constants/regex mode, `XLOOKUP` array-return/spill results, mismatched-range `*IFS` semantics, Excel-equivalent automatic volatile timing, array formulas, dynamic arrays and spill ranges, external workbook calculation, complete range/operator equivalence, every IronCalc function, and calculated-cache persistence remain outside the public contract.
 
 ## Reproduction
 

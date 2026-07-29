@@ -3,7 +3,7 @@
   "updatedAt": "2026-07-23",
   "engine": {
     "id": "ironcalc",
-    "version": "0.7.1",
+    "version": "0.8.0",
     "locale": "en",
     "timezone": "UTC",
     "mode": "explicit-in-memory-recalculation"
@@ -56,7 +56,7 @@
     {
       "id": "modern_lookup",
       "status": "verified",
-      "functions": ["XLOOKUP"]
+      "functions": ["XLOOKUP", "XMATCH"]
     },
     {
       "id": "volatile",
@@ -90,6 +90,17 @@
       "wildcard-match",
       "next-smaller-match",
       "row-vector"
+    ],
+    "xmatchScenarios": [
+      "exact-match",
+      "reverse-search",
+      "wildcard-match",
+      "next-smaller-match",
+      "next-larger-match",
+      "row-vector",
+      "not-found-error",
+      "IFERROR-recovery",
+      "unsaved-edit-dependency"
     ]
   },
   "multiCriteriaContract": {
@@ -120,7 +131,7 @@
   },
   "verifiedReferenceModes": ["same-sheet", "cross-sheet", "cross-sheet-range", "workbook-defined-name", "unsaved-edit-dependency"],
   "excludedFromContract": [
-    "XMATCH-and-other-modern-lookup-functions",
+    "other-unverified-modern-lookup-functions",
     "XLOOKUP-array-return-and-spill-results",
     "multi-criteria-range-mismatch-semantics",
     "Excel-automatic-volatile-recalculation-timing",

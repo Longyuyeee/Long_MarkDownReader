@@ -3,7 +3,7 @@ use crate::formats::workbook::{
     WorkbookCalculationResult,
 };
 use crate::formats::workbook_ooxml::{validate_edit, validate_workbook_calculation_boundary};
-use ironcalc::base::{cell::CellValue, Model};
+use ironcalc::base::{cell::CellValue, expressions::types::Area, Model};
 use ironcalc::import::load_from_xlsx_bytes;
 use std::collections::{HashMap, HashSet};
 
@@ -81,7 +81,13 @@ pub fn calculate_workbook(
         let row = i32::try_from(edit.row + 1).map_err(|_| "重算行坐标溢出")?;
         let column = i32::try_from(edit.column + 1).map_err(|_| "重算列坐标溢出")?;
         if edit.kind == "empty" {
-            model.cell_clear_contents(sheet, row, column)?;
+            model.range_clear_contents(&Area {
+                sheet,
+                row,
+                column,
+                width: 1,
+                height: 1,
+            })?;
         } else {
             model.set_user_input(sheet, row, column, edit.input)?;
         }
@@ -556,6 +562,78 @@ mod tests {
         .unwrap();
         assert_eq!(result.cells[0].value, "85");
         assert_eq!(result.cells[1].value, "45");
+        assert!(result.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn recalculates_verified_xmatch_scenarios() {
+        let result = calculate_workbook(
+            FUNCTION_FIXTURE,
+            "formula-function-matrix.xlsx",
+            WorkbookCalculationPayload {
+                expected_signature: String::new(),
+                edits: Vec::new(),
+                targets: (57..=62)
+                    .map(fixture_target)
+                    .chain([fixture_target(64)])
+                    .collect(),
+            },
+        )
+        .unwrap();
+        let expected = [
+            ("3", "number"),
+            ("3", "number"),
+            ("3", "number"),
+            ("3", "number"),
+            ("4", "number"),
+            ("3", "number"),
+            ("recovered", "text"),
+        ];
+        assert_eq!(result.cells.len(), expected.len());
+        for (cell, (value, kind)) in result.cells.iter().zip(expected) {
+            assert_eq!(cell.value, value);
+            assert_eq!(cell.kind, kind);
+        }
+        assert!(result.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn classifies_xmatch_not_found_as_not_available() {
+        let result = calculate_workbook(
+            FUNCTION_FIXTURE,
+            "formula-function-matrix.xlsx",
+            WorkbookCalculationPayload {
+                expected_signature: String::new(),
+                edits: Vec::new(),
+                targets: vec![fixture_target(63)],
+            },
+        )
+        .unwrap();
+        assert_eq!(result.cells[0].value, "#N/A");
+        assert_eq!(result.cells[0].kind, "error");
+        assert_eq!(result.diagnostics[0].category, "not_available");
+    }
+
+    #[test]
+    fn recalculates_xmatch_with_unsaved_dependency_edit() {
+        let result = calculate_workbook(
+            FUNCTION_FIXTURE,
+            "formula-function-matrix.xlsx",
+            WorkbookCalculationPayload {
+                expected_signature: String::new(),
+                edits: vec![WorkbookCellEdit {
+                    sheet: "Formula Matrix".into(),
+                    row: 3,
+                    column: 2,
+                    input: "West".into(),
+                    kind: "string".into(),
+                }],
+                targets: vec![fixture_target(58)],
+            },
+        )
+        .unwrap();
+        assert_eq!(result.cells[0].value, "2");
+        assert_eq!(result.cells[0].kind, "number");
         assert!(result.diagnostics.is_empty());
     }
 

@@ -57,6 +57,14 @@
     { "id": "volatile_indirect_cross_sheet", "cell": "E54", "function": "SUM,INDIRECT", "expectedValue": "300", "expectedKind": "number" },
     { "id": "volatile_rand_bounds", "cell": "E55", "function": "AND,RAND", "expectedValue": "true", "expectedKind": "boolean" },
     { "id": "volatile_randbetween_fixed", "cell": "E56", "function": "RANDBETWEEN", "expectedValue": "5", "expectedKind": "number" },
-    { "id": "volatile_clock_relation", "cell": "E57", "function": "AND,TODAY,NOW", "expectedValue": "true", "expectedKind": "boolean" }
+    { "id": "volatile_clock_relation", "cell": "E57", "function": "AND,TODAY,NOW", "expectedValue": "true", "expectedKind": "boolean" },
+    { "id": "xmatch_exact", "cell": "E58", "function": "XMATCH", "expectedValue": "3", "expectedKind": "number" },
+    { "id": "xmatch_reverse_search", "cell": "E59", "function": "XMATCH", "expectedValue": "3", "expectedKind": "number" },
+    { "id": "xmatch_wildcard", "cell": "E60", "function": "XMATCH", "expectedValue": "3", "expectedKind": "number" },
+    { "id": "xmatch_next_smaller", "cell": "E61", "function": "XMATCH", "expectedValue": "3", "expectedKind": "number" },
+    { "id": "xmatch_next_larger", "cell": "E62", "function": "XMATCH", "expectedValue": "4", "expectedKind": "number" },
+    { "id": "xmatch_row_vector", "cell": "E63", "function": "XMATCH", "expectedValue": "3", "expectedKind": "number" },
+    { "id": "xmatch_not_found", "cell": "E64", "function": "XMATCH", "expectedValue": "#N/A", "expectedKind": "error", "diagnosticCategory": "not_available" },
+    { "id": "xmatch_error_recovery", "cell": "E65", "function": "IFERROR", "expectedValue": "recovered", "expectedKind": "text" }
   ]
 }

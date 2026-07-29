@@ -29,6 +29,7 @@ const view = read('src/views/WorkbookView.vue')
 const conditionalExpression = read('src/utils/conditionalExpression.ts')
 const generator = read('src-tauri/examples/generate_workbook_fixture.rs')
 const formulaGenerator = read('src-tauri/examples/generate_formula_function_fixture.rs')
+const cargoManifest = read('src-tauri/Cargo.toml')
 const chartGenerator = read('src-tauri/examples/generate_chart_visual_fixture.rs')
 const chartFixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/chart-visual-matrix.json'))
 const chartFixturePath = path.join(root, 'src-tauri/tests/fixtures/workbook', chartFixture.fixture)
@@ -70,7 +71,8 @@ if (!ooxml.includes('read_workbook_defined_names') || !view.includes('navigateDe
 if (!ooxml.includes('patch_workbook_defined_name') || !engine.includes('update_workbook_defined_name') || !view.includes("invoke<WorkbookDocument>('update_workbook_defined_name'")) fail('named range S8-3A transaction evidence missing')
 if (!ooxml.includes('refuses_to_rename_or_delete_referenced_defined_names') || !view.includes('createDefinedName') || !view.includes('updateDefinedNameRange')) fail('named range S8-3A safety/UI evidence missing')
 if (!calculation.includes('recalculates_formula_using_named_range')) fail('named range calculation evidence missing')
-if (formulaCapabilities.schemaVersion !== 1 || formulaCapabilities.engine.id !== 'ironcalc' || formulaCapabilities.engine.version !== '0.7.1') fail('S8-6A formula capability header drift')
+if (formulaCapabilities.schemaVersion !== 1 || formulaCapabilities.engine.id !== 'ironcalc' || formulaCapabilities.engine.version !== '0.8.0') fail('S8-6F formula capability header drift')
+if (!cargoManifest.includes('ironcalc = "=0.8.0"')) fail('S8-6F IronCalc dependency pin drift')
 const verifiedFormulaFunctions = new Set(formulaCapabilities.families.flatMap(family => {
   if (family.status !== 'verified' || !family.id || !family.functions.length) fail('S8-6 formula family is incomplete')
   return family.functions
@@ -80,7 +82,7 @@ for (const [familyId, functions] of Object.entries({
   lookup_reference: ['VLOOKUP', 'HLOOKUP', 'INDEX', 'MATCH'],
   multi_criteria_aggregate: ['SUMIFS', 'COUNTIFS', 'AVERAGEIFS'],
   date: ['DATE', 'YEAR', 'MONTH', 'DAY'],
-  modern_lookup: ['XLOOKUP'],
+  modern_lookup: ['XLOOKUP', 'XMATCH'],
   volatile: ['OFFSET', 'INDIRECT', 'RAND', 'RANDBETWEEN', 'TODAY', 'NOW'],
 })) {
   const family = formulaCapabilities.families.find(item => item.id === familyId)
@@ -117,10 +119,14 @@ if (!calculation.includes('recalculates_verified_multi_criteria_and_date_familie
 for (const scenario of ['exact-match', 'cross-sheet-range', 'text-result-type-preservation', 'not-found-fallback', 'not-found-error', 'IFERROR-recovery', 'reverse-search', 'wildcard-match', 'next-smaller-match', 'row-vector']) {
   if (!formulaCapabilities.lookupContract.modernScenarios.includes(scenario)) fail(`S8-6D ${scenario} modern lookup contract missing`)
 }
-for (const exclusion of ['XMATCH-and-other-modern-lookup-functions', 'XLOOKUP-array-return-and-spill-results']) {
+for (const exclusion of ['other-unverified-modern-lookup-functions', 'XLOOKUP-array-return-and-spill-results']) {
   if (!formulaCapabilities.excludedFromContract.includes(exclusion)) fail(`S8-6D ${exclusion} exclusion missing`)
 }
 if (!calculation.includes('recalculates_verified_xlookup_scenarios') || !calculation.includes('classifies_xlookup_not_found_as_not_available') || !calculation.includes('recalculates_xlookup_with_unsaved_dependency_edit')) fail('S8-6D calculation regression evidence missing')
+for (const scenario of ['exact-match', 'reverse-search', 'wildcard-match', 'next-smaller-match', 'next-larger-match', 'row-vector', 'not-found-error', 'IFERROR-recovery', 'unsaved-edit-dependency']) {
+  if (!formulaCapabilities.lookupContract.xmatchScenarios.includes(scenario)) fail(`S8-6F ${scenario} XMATCH contract missing`)
+}
+if (!calculation.includes('recalculates_verified_xmatch_scenarios') || !calculation.includes('classifies_xmatch_not_found_as_not_available') || !calculation.includes('recalculates_xmatch_with_unsaved_dependency_edit')) fail('S8-6F XMATCH calculation regression evidence missing')
 for (const scenario of ['offset-range-reference', 'indirect-same-sheet-reference', 'indirect-cross-sheet-reference', 'unsaved-edit-dependency', 'random-unit-interval', 'random-inclusive-fixed-bound', 'UTC-clock-day-relation']) {
   if (!formulaCapabilities.volatileContract.verifiedScenarios.includes(scenario)) fail(`S8-6E ${scenario} volatile contract missing`)
 }

@@ -50,7 +50,7 @@
       "edit": "supported",
       "calculate": "limited",
       "roundTrip": "supported",
-      "evidence": "S8-6A through S8-6D machine-readable inventory + real XLSX matrix for aggregate/math/logical/text/conditional-aggregate/lookup-reference/multi-criteria/date/modern-lookup functions + same-sheet/cross-sheet/named-range/unsaved-edit dependencies + classified cycle/error/not-found/unknown-function/invalid-date diagnostics"
+      "evidence": "S8-6A through S8-6F machine-readable inventory + real XLSX matrix for aggregate/math/logical/text/conditional-aggregate/lookup-reference/multi-criteria/date/modern-lookup/volatile functions, including scalar XLOOKUP and XMATCH + same-sheet/cross-sheet/named-range/unsaved-edit dependencies + classified cycle/error/not-found/unknown-function/invalid-date diagnostics"
     },
     {
       "id": "named_ranges",

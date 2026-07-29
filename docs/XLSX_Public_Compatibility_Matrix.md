@@ -20,7 +20,7 @@
 | 文本、数值、布尔 | 支持 | 支持 | 不适用 | 支持 | 支持空白单元格创建和区域批量编辑 |
 | 日期、日期时间 | 支持 | 计划 | 受限 | 支持 | 保留 Excel 序列与数字格式；当前不接受日期类型写入 |
 | 错误值 | 支持 | 计划 | 支持 | 支持 | 显示 `#DIV/0!` 等值；公式重算错误返回原始代码和稳定错误类别的逐格诊断 |
-| 常规公式 | 支持 | 支持 | 受限 | 支持 | S8-6A～S8-6E 已验证十个函数族、37 个函数和 56 个真实场景，以及同 Sheet、跨 Sheet、命名区域、草稿依赖、错误传播和循环诊断；不承诺全部 Excel 函数 |
+| 常规公式 | 支持 | 支持 | 受限 | 支持 | S8-6A～S8-6F 已验证十个函数族、38 个函数和 64 个真实场景，包括标量 `XLOOKUP/XMATCH`、同 Sheet、跨 Sheet、命名区域、草稿依赖、错误传播和循环诊断；不承诺全部 Excel 函数 |
 | 命名区域 | 支持 | 受限 | 支持 | 支持 | 读取全局/Sheet 作用域并从名称框跳转；安全单一 A1 区域支持创建、更新引用、改名和删除；隐藏/系统名称只读，被公式引用的名称拒绝改名或删除 |
 | 单元格样式 | 支持 | 支持 | 不适用 | 支持 | 已覆盖命名样式、主题/索引色、分边框和自定义数字格式 |
 | 条件格式 | 支持读取、受限显示 | 受限 | 受限 | 支持 | `cellIs`、有界 `AND/OR/NOT` 多 A1 引用表达式、num/min/max/percent/percentile 色阶、标准数据条和 Excel 2007 标准 3/4/5 图标集可执行并编辑；重叠及同范围受支持规则可切换、排序、更新、删除、拆分、组合并管理 `stopIfTrue`；区域/跨 Sheet/未知函数表达式、公式阈值、自定义混合图标和 `x14:` 高级样式只读保真 |
@@ -37,11 +37,11 @@
 
 ### S8-6A 公式函数族与错误传播
 
-机器事实源 `shared/xlsx-formula-capabilities.json` 固定 IronCalc 0.7.1、`en` locale、`UTC` 时区和显式内存重算模式。只有同时进入该清单、真实 `formula-function-matrix.xlsx` fixture、计算模块回归和 Tauri 命令边界回归的函数，才属于公开可计算子集。
+机器事实源 `shared/xlsx-formula-capabilities.json` 固定 IronCalc 0.8.0、`en` locale、`UTC` 时区和显式内存重算模式。只有同时进入该清单、真实 `formula-function-matrix.xlsx` fixture、计算模块回归和 Tauri 命令边界回归的函数，才属于公开可计算子集。
 
-首批已验证 `SUM/AVERAGE/MIN/MAX/COUNT`、`ABS/ROUND`、`IF/AND/OR/NOT/IFERROR`、`CONCAT/LEN/TRIM/UPPER`，后续批次扩展到 37 个函数。错误基线覆盖直接除零、依赖传播、恢复和未知函数；诊断增加稳定类别。重算结果只驻留内存，不写回 XLSX 缓存。S8-6E 对易失函数只承诺显式重算，对动态数组和外部工作簿计算执行安全拒绝；Excel 自动时机、溢出语义和外部数据访问继续排除。完整契约见 `Formula_Calculation_Compatibility.md`。
+首批已验证 `SUM/AVERAGE/MIN/MAX/COUNT`、`ABS/ROUND`、`IF/AND/OR/NOT/IFERROR`、`CONCAT/LEN/TRIM/UPPER`，后续批次扩展到 38 个函数。错误基线覆盖直接除零、依赖传播、恢复和未知函数；诊断增加稳定类别。重算结果只驻留内存，不写回 XLSX 缓存。S8-6E 对易失函数只承诺显式重算，对动态数组和外部工作簿计算执行安全拒绝；Excel 自动时机、溢出语义和外部数据访问继续排除。完整契约见 `Formula_Calculation_Compatibility.md`。
 
-S8-6B 新增 `SUMIF/COUNTIF/AVERAGEIF` 与 `VLOOKUP/HLOOKUP/INDEX/MATCH`。S8-6C 新增 `SUMIFS/COUNTIFS/AVERAGEIFS` 与 `DATE/YEAR/MONTH/DAY`。S8-6D 新增标量结果 `XLOOKUP`。真实 fixture 覆盖精确/近似、跨 Sheet、行向量、反向与通配查找、文本结果类型保持、缺省值、未找到时的 `#N/A`、草稿依赖重算，以及此前的多条件和日期语义。`XMATCH`、其他现代查找函数、`XLOOKUP` 数组返回/溢出结果和尺寸不一致的 `*IFS` 范围语义继续等待独立证据。
+S8-6B 新增 `SUMIF/COUNTIF/AVERAGEIF` 与 `VLOOKUP/HLOOKUP/INDEX/MATCH`。S8-6C 新增 `SUMIFS/COUNTIFS/AVERAGEIFS` 与 `DATE/YEAR/MONTH/DAY`。S8-6D 新增标量结果 `XLOOKUP`，X3-A / S8-6F 新增标量 `XMATCH`。真实 fixture 覆盖精确/近似、跨 Sheet、行向量、反向与通配查找、相邻值模式、文本结果类型保持、缺省值、未找到时的 `#N/A`、恢复及草稿依赖重算。其他现代查找函数、`XMATCH` 数组常量/正则模式、`XLOOKUP` 数组返回/溢出结果和尺寸不一致的 `*IFS` 范围语义继续等待独立证据。
 
 ## 3. S6-10 命名区域契约
 

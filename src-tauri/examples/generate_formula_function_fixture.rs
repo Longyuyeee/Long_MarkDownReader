@@ -215,6 +215,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "=AND(TODAY()<=NOW(),NOW()<TODAY()+1)",
             "TRUE",
         ),
+        ("xmatch_exact", "=XMATCH(\"C\",'Lookup Data'!A2:A6)", "3"),
+        ("xmatch_reverse_search", "=XMATCH(\"East\",C2:C4,0,-1)", "3"),
+        (
+            "xmatch_wildcard",
+            "=XMATCH(\"C*\",'Lookup Data'!A2:A6,2)",
+            "3",
+        ),
+        (
+            "xmatch_next_smaller",
+            "=XMATCH(25,'Lookup Data'!E2:E5,-1)",
+            "3",
+        ),
+        (
+            "xmatch_next_larger",
+            "=XMATCH(25,'Lookup Data'!E2:E5,1)",
+            "4",
+        ),
+        (
+            "xmatch_row_vector",
+            "=XMATCH(\"C\",'Lookup Data'!A8:D8)",
+            "3",
+        ),
+        (
+            "xmatch_not_found",
+            "=XMATCH(\"Z\",'Lookup Data'!A2:A6)",
+            "#N/A",
+        ),
+        (
+            "xmatch_error_recovery",
+            "=IFERROR(E64,\"recovered\")",
+            "recovered",
+        ),
     ];
     for (index, (id, formula, cached_result)) in cases.iter().enumerate() {
         let row = u32::try_from(index + 1)?;

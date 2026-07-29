@@ -1963,6 +1963,21 @@ mod tests {
                         row: 56,
                         column: 4,
                     },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 57,
+                        column: 4,
+                    },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 63,
+                        column: 4,
+                    },
+                    WorkbookFormulaTarget {
+                        sheet: "Formula Matrix".into(),
+                        row: 64,
+                        column: 4,
+                    },
                 ]
                 .into(),
             },
@@ -1982,11 +1997,15 @@ mod tests {
         assert_eq!(result.cells[12].value, "#N/A");
         assert_eq!(result.cells[13].value, "50");
         assert_eq!(result.cells[14].value, "true");
+        assert_eq!(result.cells[15].value, "3");
+        assert_eq!(result.cells[16].value, "#N/A");
+        assert_eq!(result.cells[17].value, "recovered");
         assert_eq!(result.diagnostics[0].category, "division_by_zero");
         assert_eq!(result.diagnostics[1].category, "name");
         assert_eq!(result.diagnostics[2].category, "not_available");
         assert_eq!(result.diagnostics[3].category, "value");
         assert_eq!(result.diagnostics[4].category, "not_available");
+        assert_eq!(result.diagnostics[5].category, "not_available");
         fs::remove_dir_all(base).unwrap();
     }
 
