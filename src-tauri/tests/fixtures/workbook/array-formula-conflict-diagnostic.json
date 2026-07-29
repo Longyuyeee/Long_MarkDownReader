@@ -1,0 +1,24 @@
+{
+    "schemaVersion":  1,
+    "stage":  "X3-B4",
+    "producerClass":  "controlled-diagnostic-derivative",
+    "sourceFixture":  "array-formula-wps-spreadsheets.xlsx",
+    "fixture":  "array-formula-conflict-diagnostic.xlsx",
+    "sha256":  "06e51f646ef4cf62e73b34ee77c622d55725d929b81e6319c6400004e8afce21",
+    "sheet":  "Array Boundary",
+    "arrayRange":  "D2:D4",
+    "expectedSpillStatus":  "potential_conflict",
+    "expectedConflictCells":  [
+                                  "D3"
+                              ],
+    "expectedErrorCacheCells":  [
+                                    "D4"
+                                ],
+    "expectedErrorCacheValue":  "#DIV/0!",
+    "expectedCachedValueTypes":  {
+                                     "number":  2,
+                                     "error":  1
+                                 },
+    "expectedSourceUnchanged":  true,
+    "privacyReviewed":  true
+}

@@ -125,7 +125,7 @@
     "notEquivalentToExcelAutomaticRecalculation": true
   },
   "arrayFormulaReadContract": {
-    "stage": "X3-B3",
+    "stage": "X3-B4",
     "status": "partial_producer_matrix",
     "ooxmlFormulaType": "array",
     "recognizedKinds": ["legacy_array", "dynamic_array"],
@@ -137,7 +137,9 @@
       "potentialConflictSignal": "non-anchor formula inside declared array range",
       "cacheValueTypes": ["number", "text", "boolean", "error", "date", "other"],
       "diagnosticAddressLimitPerFormula": 256,
-      "conflictAndErrorAddressesLocatable": true
+      "conflictAndErrorAddressesLocatable": true,
+      "truncationVisible": true,
+      "distinctConflictAndErrorLocatorEvidence": true
     },
     "calculationPolicy": "blocked",
     "contentWritePolicy": "blocked-inside-declared-range",
@@ -150,8 +152,9 @@
     "verifiedProducerCount": 1,
     "requiredProducerCount": 3,
     "verifiedProducerFixture": "src-tauri/tests/fixtures/workbook/array-formula-wps-spreadsheets.xlsx",
-    "desktopEvidence": "docs/evidence/x3-b3-xlsx-array-desktop/audit-manifest.json",
-    "desktopEvidenceChecks": 10,
+    "controlledDiagnosticFixture": "src-tauri/tests/fixtures/workbook/array-formula-conflict-diagnostic.xlsx",
+    "desktopEvidence": "docs/evidence/x3-b4-xlsx-array-conflict-desktop/audit-manifest.json",
+    "desktopEvidenceChecks": 12,
     "desktopEvidenceScreenshots": 2,
     "realOfficeProducerEvidence": true,
     "fullProducerMatrixVerified": false

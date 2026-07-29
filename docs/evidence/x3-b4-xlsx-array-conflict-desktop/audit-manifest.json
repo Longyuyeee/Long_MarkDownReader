@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "stage": "X3-B4",
+  "capturedAt": "2026-07-29T19:30:29.376Z",
+  "source": "src-tauri/tests/fixtures/workbook/array-formula-conflict-diagnostic.xlsx",
+  "sourceSha256": "06e51f646ef4cf62e73b34ee77c622d55725d929b81e6319c6400004e8afce21",
+  "sourceUnchanged": true,
+  "checks": [
+    "professional-light-theme",
+    "conflict-cache-summary",
+    "distinct-diagnostic-buttons",
+    "array-calculation-and-edit-blocked",
+    "conflict-address-exact-location",
+    "light-layout-contained",
+    "professional-dark-theme",
+    "error-cache-address-exact-location",
+    "error-and-conflict-addresses-remain-distinct",
+    "diagnostic-buttons-remain-visible",
+    "compact-layout-contained",
+    "source-fixture-byte-unchanged"
+  ],
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 800,
+      "theme": "professional-light",
+      "focus": "conflict-D3"
+    },
+    {
+      "width": 1024,
+      "height": 720,
+      "theme": "professional-dark",
+      "focus": "error-cache-D4"
+    }
+  ],
+  "evidenceFiles": [
+    "professional-light-conflict-d3-1280.jpg",
+    "professional-dark-error-cache-d4-1024.jpg"
+  ],
+  "boundaries": {
+    "expectedSpillCalculation": false,
+    "arrayWriteback": false,
+    "conflictFixtureVisualEvidence": true,
+    "addressTruncationCoveredByRustAndUiContract": true
+  }
+}

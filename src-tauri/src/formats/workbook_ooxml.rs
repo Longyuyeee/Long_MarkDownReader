@@ -18718,7 +18718,7 @@ mod tests {
         patch_workbook_filter, patch_workbook_structure, patch_workbook_table, read_array_formulas,
         read_sheet_formulas, read_workbook_defined_names, read_workbook_linked_data,
         read_workbook_sheet_layout, rebuild_workbook_pivot_aggregation_variant_isolated,
-        validate_plain_structure_sheet, validate_workbook_package,
+        validate_plain_structure_sheet, validate_workbook_package, MAX_ARRAY_DIAGNOSTIC_CELLS,
     };
     use crate::formats::workbook::{
         WorkbookCellEdit, WorkbookChartDataLabels, WorkbookConditionalColorScale,
@@ -18829,6 +18829,28 @@ mod tests {
     }
 
     #[test]
+    fn reads_controlled_array_conflict_and_error_cache_fixture() {
+        const FIXTURE: &[u8] =
+            include_bytes!("../../tests/fixtures/workbook/array-formula-conflict-diagnostic.xlsx");
+        let source_hash = md5::compute(FIXTURE);
+        validate_workbook_package(FIXTURE).unwrap();
+        let layout = read_workbook_sheet_layout(FIXTURE, "Array Boundary", 0, 10, 16).unwrap();
+        let dynamic = &layout.array_formulas[1];
+
+        assert_eq!(dynamic.kind, "dynamic_array");
+        assert_eq!(dynamic.cached_cell_count, 3);
+        assert_eq!(dynamic.cached_value_types["number"], 2);
+        assert_eq!(dynamic.cached_value_types["error"], 1);
+        assert_eq!(dynamic.error_cache_count, 1);
+        assert_eq!(dynamic.error_cache_cells, ["D4"]);
+        assert_eq!(dynamic.foreign_formula_cell_count, 1);
+        assert_eq!(dynamic.conflict_cells, ["D3"]);
+        assert!(!dynamic.diagnostic_cells_truncated);
+        assert_eq!(dynamic.spill_status, "potential_conflict");
+        assert_eq!(md5::compute(FIXTURE), source_hash);
+    }
+
+    #[test]
     fn array_formula_inventory_ignores_scalar_formulas_and_limits_declared_cells() {
         let scalar = br#"<worksheet><sheetData><row r="1"><c r="A1"><f>XMATCH(1,B1:B3)</f><v>1</v></c></row></sheetData></worksheet>"#;
         assert!(read_array_formulas(scalar).unwrap().is_empty());
@@ -18850,6 +18872,31 @@ mod tests {
         assert_eq!(formulas[0].conflict_cells, ["A2"]);
         assert!(!formulas[0].diagnostic_cells_truncated);
         assert_eq!(formulas[0].spill_status, "potential_conflict");
+    }
+
+    #[test]
+    fn bounds_array_formula_diagnostic_addresses_without_hiding_totals() {
+        let mut xml = String::from(
+            r#"<worksheet><sheetData><row r="1"><c r="A1" t="e"><f t="array" ref="A1:A258">SEQUENCE(258)</f><v>#SPILL!</v></c></row>"#,
+        );
+        for row in 2..=258 {
+            xml.push_str(&format!(
+                r#"<row r="{row}"><c r="A{row}" t="e"><f>1+1</f><v>#SPILL!</v></c></row>"#
+            ));
+        }
+        xml.push_str("</sheetData></worksheet>");
+
+        let formulas = read_array_formulas(xml.as_bytes()).unwrap();
+        let dynamic = &formulas[0];
+        assert_eq!(dynamic.error_cache_count, 258);
+        assert_eq!(dynamic.foreign_formula_cell_count, 257);
+        assert_eq!(dynamic.error_cache_cells.len(), MAX_ARRAY_DIAGNOSTIC_CELLS);
+        assert_eq!(dynamic.conflict_cells.len(), MAX_ARRAY_DIAGNOSTIC_CELLS);
+        assert_eq!(dynamic.error_cache_cells.first().unwrap(), "A1");
+        assert_eq!(dynamic.error_cache_cells.last().unwrap(), "A256");
+        assert_eq!(dynamic.conflict_cells.first().unwrap(), "A2");
+        assert_eq!(dynamic.conflict_cells.last().unwrap(), "A257");
+        assert!(dynamic.diagnostic_cells_truncated);
     }
 
     #[test]

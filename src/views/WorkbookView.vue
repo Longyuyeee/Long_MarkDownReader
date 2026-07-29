@@ -489,6 +489,9 @@
       <button v-if="selectedArrayFormula?.errorCacheCells.length" class="diagnostic-link" @click="navigateArrayDiagnosticCell(selectedArrayFormula.errorCacheCells[0])">
         定位错误缓存 {{ selectedArrayFormula.errorCacheCells[0] }}
       </button>
+      <span v-if="selectedArrayFormula?.diagnosticCellsTruncated" class="diagnostic-truncated">
+        诊断地址已截断（最多显示 256 个）
+      </span>
     </div>
 
     <div v-if="workbook && sheetInfo" class="format-toolbar" :class="{ protected: sheetProtected }" aria-label="单元格格式">
@@ -4586,6 +4589,7 @@ onBeforeUnmount(() => {
 .array-formula-strip span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .array-formula-strip .diagnostic-link { height: 22px; flex: none; padding: 0 7px; border: 1px solid rgba(99,102,241,.3); border-radius: 4px; color: #5b5fc7; background: var(--theme-card); font-size: 8px; cursor: pointer; }
 .array-formula-strip .diagnostic-link.warning { border-color: rgba(220,38,38,.35); color: #b91c1c; }
+.array-formula-strip .diagnostic-truncated { flex: none; color: #b45309; font-size: 8px; }
 .format-toolbar { min-height: 40px; flex: none; display: flex; align-items: center; gap: 5px; padding: 4px 12px; overflow-x: auto; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); }
 .format-toolbar select,.format-toolbar input,.format-toolbar button { flex: none; height: 30px; box-sizing: border-box; border: 1px solid rgba(0,0,0,.1); border-radius: 5px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 96%, #dce6ef); font-size: 9px; }
 .format-toolbar select { min-width: 92px; padding: 0 24px 0 8px; }
