@@ -15,6 +15,8 @@
 
 `main` 已快进吸收 PR #7 的全部成果。PPTX C5D、PDF B2A/B2B/B2C、A3R、E0 和 E1A 已收口。E1B 的 ODT 解析器、只读命令、Library 工作面、双索引与定位代码已经完成；LibreOffice 与 Microsoft Word 真实 fixture 已通过。Word 原阻塞已定位为未被 `DisplayAlerts=0` 抑制的格式兼容性提示，现已完成真实保存、关闭和 Word 原生重开；WPS 仍缺可验证的 ODF 组件，因此三生产者发布门禁仍未通过，`.odt` 继续未登记。下一项唯一入口是 E1B 的 WPS 生产者门禁收口。
 
+2026-07-29 已进一步完成 WPS ODF 环境门禁加固：隔离探测确认当前 WPS `12.1.0.26895` 注册转换器为 0、ODF 命名组件为 0，`SaveAs2(..., 23)` 生成 OLE 而非 ODT ZIP；机器证据、强制预检和失败清理已进入合同。该批次没有改变 E1B 2/3 状态。
+
 ### 1.1 对最初需求的总体判断
 
 | 最初目标 | 当前判断 | 说明 |
@@ -204,6 +206,7 @@ P1 收口后再排期：
 ## 9. 证据索引
 
 - [2026-07-28 开发进度复审与后续计划](./Development_Audit_and_Next_Plan_2026-07-28.md)
+- [2026-07-29 E1B WPS ODF 环境门禁加固审计](./E1B_WPS_ODF_Environment_Gate_Audit_2026-07-29.md)
 - [E1B ODT 只读预览与索引检查点审计](./E1B_ODT_Read_Index_Checkpoint_Audit_2026-07-28.md)
 - [E1B ODT 生产者门禁 2/3 进展审计](./E1B_ODT_Producer_Gate_Progress_Audit_2026-07-28.md)
 - [E1A OpenDocument 包验证器阶段审计](./E1A_ODF_Package_Verifier_Audit_2026-07-28.md)

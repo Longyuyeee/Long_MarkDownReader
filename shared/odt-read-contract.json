@@ -52,6 +52,9 @@
     ],
     "blocked": {
       "wps-writer": "wps-odf-add-in-missing-invalid-ole-output-rejected"
+    },
+    "blockerEvidence": {
+      "wps-writer": "fixtures/odt/producers/wps-writer-blocker.json"
     }
   }
 }

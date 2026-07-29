@@ -12,6 +12,7 @@ const command = read('src-tauri/src/commands/odt.rs')
 const indexCommand = read('src-tauri/src/commands/index.rs')
 const persistentIndex = read('src-tauri/src/services/knowledge_index.rs')
 const view = read('src/views/OdtReaderView.vue')
+const fixtureGenerator = read('scripts/generate-e1b-odt-producer-fixtures.ps1')
 const fail = message => { throw new Error(`E1B ODT read contract: ${message}`) }
 
 if (contract.schemaVersion !== 1 || contract.stage !== 'E1B') fail('invalid stage header')
@@ -59,6 +60,32 @@ if (!parser.includes('inspect_odf_package(source, ".odt")')
   fail('read, risk, UI, or locator implementation evidence missing')
 }
 
+const generatorSection = (start, end) => {
+  const startIndex = fixtureGenerator.indexOf(`function ${start}`)
+  const endIndex = fixtureGenerator.indexOf(end, startIndex)
+  if (startIndex < 0 || endIndex < 0) fail(`fixture generator section missing: ${start}`)
+  return fixtureGenerator.slice(startIndex, endIndex)
+}
+for (const [name, end] of [
+  ['Export-WordOdt', 'function Export-WpsOdt'],
+  ['Export-WpsOdt', 'function Invoke-LibreOffice'],
+  ['Export-LibreOfficeOdt', '\ntry {']
+]) {
+  const section = generatorSection(name, end)
+  const firstPackageCheck = section.indexOf('Test-OdtPackage $output $expected')
+  const sanitizer = section.indexOf('& $metadataSanitizer -Path $output')
+  const secondPackageCheck = section.indexOf('Test-OdtPackage $output $expected', firstPackageCheck + 1)
+  if (firstPackageCheck < 0 || sanitizer < firstPackageCheck || secondPackageCheck < sanitizer) {
+    fail(`fixture validation order drift: ${name}`)
+  }
+}
+const wpsGenerator = generatorSection('Export-WpsOdt', 'function Invoke-LibreOffice')
+if (!fixtureGenerator.includes('audit-e1b-wps-odf-environment.ps1')
+  || wpsGenerator.indexOf('& $wpsEnvironmentAuditor -RequireReady') < 0
+  || wpsGenerator.indexOf('& $wpsEnvironmentAuditor -RequireReady') > wpsGenerator.indexOf('New-Object -ComObject KWPS.Application')) {
+  fail('WPS ODF preflight drift')
+}
+
 const required = ['microsoft-word-16', 'wps-writer', 'libreoffice-writer']
 if (matrix.requiredProducerIds?.join(',') !== required.join(',')) fail('producer inventory drift')
 for (const id of required) {
@@ -66,11 +93,35 @@ for (const id of required) {
   const producer = matrix.producers?.find(candidate => candidate.id === id)
   if (!producer || producer.status !== expectedStatus) fail(`producer status drift: ${id}`)
   if (expectedStatus === 'blocked') {
-    if (producer.fixture || producer.manifest || producer.blocker !== contract.producerGate.blocked[id]) {
+    if (producer.fixture || producer.manifest || !producer.blockerEvidence
+      || producer.blocker !== contract.producerGate.blocked[id]
+      || `fixtures/odt/producers/${producer.blockerEvidence}` !== contract.producerGate.blockerEvidence?.[id]) {
       fail(`blocked producer evidence drift: ${id}`)
+    }
+    const blockerEvidenceSource = read(`fixtures/odt/producers/${producer.blockerEvidence}`)
+    const blockerEvidence = JSON.parse(blockerEvidenceSource)
+    if (blockerEvidence.schemaVersion !== 1 || blockerEvidence.stage !== 'E1B'
+      || blockerEvidence.producerId !== id || blockerEvidence.status !== 'blocked'
+      || blockerEvidence.blocker !== producer.blocker
+      || blockerEvidence.comProgId !== 'KWPS.Application'
+      || !Number.isInteger(blockerEvidence.registeredFileConverters)
+      || blockerEvidence.registeredFileConverters !== 0
+      || blockerEvidence.odfNamedComponentCount !== 0
+      || blockerEvidence.saveProbe?.sourceFixture !== 'wps-writer.docx'
+      || blockerEvidence.saveProbe?.requestedFileFormat !== 23
+      || blockerEvidence.saveProbe?.outputKind !== 'ole-compound-document'
+      || !blockerEvidence.saveProbe?.outputHeader?.startsWith('d0 cf 11 e0')
+      || !blockerEvidence.saveProbe?.tempOutputDeleted) {
+      fail(`blocked producer machine evidence drift: ${id}`)
+    }
+    for (const sensitiveValue of [process.env.USERNAME, process.env.USERPROFILE, root]) {
+      if (sensitiveValue && blockerEvidenceSource.toLowerCase().includes(sensitiveValue.toLowerCase())) {
+        fail(`blocked producer evidence leaks local identity or path: ${id}`)
+      }
     }
     continue
   }
+  if (producer.blockerEvidence) fail(`verified producer retains blocker evidence: ${id}`)
   const fixturePath = path.join(root, 'fixtures/odt/producers', producer.fixture)
   const manifest = JSON.parse(read(`fixtures/odt/producers/${producer.manifest}`))
   const bytes = fs.readFileSync(fixturePath)

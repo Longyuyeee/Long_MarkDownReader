@@ -60,6 +60,7 @@
     "check:office-compatibility-audit": "node scripts/check-office-compatibility-audit.mjs",
     "check:odf-package-contract": "node scripts/check-odf-package-contract.mjs",
     "check:odt-read-contract": "node scripts/check-odt-read-contract.mjs",
+    "audit:e1b-wps-odf-environment": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/audit-e1b-wps-odf-environment.ps1",
     "check:graph-product-contract": "node scripts/check-graph-product-contract.mjs",
     "check:pdf-page-plan-contract": "node scripts/check-pdf-page-plan-contract.mjs",
     "check:a5-desktop-evidence": "node scripts/check-a5-desktop-audit.mjs",

@@ -204,6 +204,8 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 当前权威顺序：**E1B WPS 生产者门禁 → E1C ODS/ODP 只读/索引 → E2A 外部打开 → E2B DOC 隔离转换 → E2C XLS/PPT 隔离转换 → E3 WPS 原生 fixture/外部打开 → R 统一发布矩阵**。基础版本还剩这 7 个产品门禁；E0/E1A、A3R、PDF B2、DOCX C2 和 PPTX C5 已收口，高风险交换格式继续只生成可靠新副本。最新阶段计数、最初三项需求对齐和 Excel 专业等价 X1～X5 计划见 `docs/Development_Audit_and_Next_Plan_2026-07-28.md`。
 
+2026-07-29 已完成 E1B WPS ODF 环境门禁加固：`scripts/audit-e1b-wps-odf-environment.ps1` 以隔离 `SaveAs2(..., 23)` 探测固定 WPS `12.1.0.26895` 的 0 个文件转换器、0 个 ODF 组件和 OLE 复合文档输出；证据为 `fixtures/odt/producers/wps-writer-blocker.json`。fixture 生成器现在先做强制预检并在净化前后验证 ODT ZIP，阻断时无无效 fixture 或临时目录残留。E1B 仍为 2/3，`.odt` 仍未注册；详细审计见 `docs/E1B_WPS_ODF_Environment_Gate_Audit_2026-07-29.md`。
+
 以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 
 2026-07-24 暂停点状态、质量证据、风险和逐批退出条件见 `docs/Development_Pause_Audit_2026-07-24.md`；当时的综合审计见 `docs/Development_Progress_Audit_2026-07-24.md`，上一轮细节见 `docs/Development_Progress_Audit_2026-07-23.md`，历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。这些文档记录的是 A4 开始前的历史状态；A4/A5、G8、PDF B0～B1C 和 DOCX C1-2A 后续均已完成，不得再把“A4 YAML 开始前”当作当前恢复点。S8-7E2F～S8-8 继续保留为 XLSX 专项回补队列。

@@ -1600,7 +1600,7 @@ S8-7E2E 功能验收完成。下一步进入 S8-7E2F：把单轴和多度量语�
 - 修复 760px 图谱标题竖排、工具栏拥挤、筛选条错位和初始详情遮挡画布；紧凑页头、横向工具栏与窄宽度初始详情策略进入门禁。
 - Debug E2E 模式禁止配置落盘，并支持独立指定 theme、style、code theme 和 motion，避免视觉审计污染用户配置。
 
-T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7E2E 已完成高级数据对象审计与隔离重建矩阵。S8-7E2F～S8-8 保留为完整 Excel 等价专项主线；A0～A5、A3R、G8、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已交付。E1B 的 ODT 解析、只读工作面、双索引和定位实现完成，Word/LibreOffice 生产者通过，当前实际开发入口为 **E1B WPS ODT 生产者门禁收口**；最新阶段计数见 `docs/Development_Audit_and_Next_Plan_2026-07-28.md`。
+T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7E2E 已完成高级数据对象审计与隔离重建矩阵。S8-7E2F～S8-8 保留为完整 Excel 等价专项主线；A0～A5、A3R、G8、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已交付。E1B 的 ODT 解析、只读工作面、双索引和定位实现完成，Word/LibreOffice 生产者通过；2026-07-29 又完成 WPS ODF 隔离预检、阻断证据和失败清理，但当前 WPS 仍输出 OLE，生产者门禁保持 2/3。当前实际开发入口仍为 **E1B WPS ODT 生产者门禁收口**；最新阶段计数见 `docs/Development_Audit_and_Next_Plan_2026-07-28.md`，环境门禁见 `docs/E1B_WPS_ODF_Environment_Gate_Audit_2026-07-29.md`。
 
 后续基础版本顺序以 `docs/Development_Audit_and_Next_Plan_2026-07-28.md` 和 `docs/Next_Development_Execution_Guide.md` 为当前主线：E1B → E1C → E2A → E2B → E2C → E3 → R。基础版本关闭后继续 X1～X5 / S8-7E2F～S8-8 的完整 Excel 等价专项；历史审计继续用于追溯，不再作为恢复入口。
 

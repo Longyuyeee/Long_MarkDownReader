@@ -13,6 +13,7 @@
       "status": "verified",
       "manifest": "microsoft-word-16.json",
       "fixture": "microsoft-word-16.odt",
+      "blockerEvidence": null,
       "blocker": null
     },
     {
@@ -21,6 +22,7 @@
       "status": "blocked",
       "manifest": null,
       "fixture": null,
+      "blockerEvidence": "wps-writer-blocker.json",
       "blocker": "wps-odf-add-in-missing-invalid-ole-output-rejected"
     },
     {
@@ -29,6 +31,7 @@
       "status": "verified",
       "manifest": "libreoffice-writer.json",
       "fixture": "libreoffice-writer.odt",
+      "blockerEvidence": null,
       "blocker": null
     }
   ]

@@ -8,6 +8,8 @@
 
 > 当前状态：A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成；E1B 的 ODT 解析、只读工作面、双索引与定位实现完成，LibreOffice 与 Microsoft Word 真实 fixture 已通过，WPS 生产者门禁仍阻断，`.odt` 尚未登记。下一入口只处理 E1B 的 WPS 生产者门禁。基础版本剩余 7 个门禁和完整 Excel 等价 X1～X5 计划以 [2026-07-28 开发进度复审与后续计划](./Development_Audit_and_Next_Plan_2026-07-28.md) 为准；详细能力边界见 [当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md)。
 
+> 2026-07-29 更新：WPS ODF 环境预检、阻断机器证据和失败清理已进入合同；当前 WPS `12.1.0.26895` 仍输出 OLE 而不是 ODT ZIP，E1B 保持 2/3。恢复时先运行 `npm.cmd run audit:e1b-wps-odf-environment`，不得重复尝试旧 ODF add-in 或绕过门禁。
+
 ## 1. 指导目标
 
 本文档把“覆盖日常管理和基础编辑，并把内容进行成体系管理”的基础需求拆成可连续交付的开发步骤。后续开发不再按单一技术模块无限深入，而是按用户可以完成的完整任务闭环推进：

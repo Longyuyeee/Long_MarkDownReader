@@ -9,6 +9,7 @@ $sourceRoot = Join-Path $workspace "fixtures\docx\producers"
 $fixtureRoot = Join-Path $workspace "fixtures\odt\producers"
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("longedit-e1b-odt-" + [guid]::NewGuid().ToString("N"))
 $metadataSanitizer = Join-Path $PSScriptRoot "sanitize-odt-metadata.ps1"
+$wpsEnvironmentAuditor = Join-Path $PSScriptRoot "audit-e1b-wps-odf-environment.ps1"
 New-Item -ItemType Directory -Path $fixtureRoot, $tempRoot -Force | Out-Null
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -132,6 +133,7 @@ function Export-WordOdt {
     Close-ComObject $word
     $word = $null
 
+    Test-OdtPackage $output $expected
     & $metadataSanitizer -Path $output
     Test-OdtPackage $output $expected
     Test-PackagePrivacy $output @($env:USERNAME, $env:USERPROFILE, $localName, $tempRoot)
@@ -170,6 +172,7 @@ function Export-WpsOdt {
   $localName = ""
   $build = ""
   try {
+    & $wpsEnvironmentAuditor -RequireReady
     $wps = New-Object -ComObject KWPS.Application
     $wps.Visible = $false
     $wps.DisplayAlerts = 0
@@ -184,6 +187,7 @@ function Export-WpsOdt {
     Close-ComObject $wps
     $wps = $null
 
+    Test-OdtPackage $output $expected
     & $metadataSanitizer -Path $output
     Test-OdtPackage $output $expected
     Test-PackagePrivacy $output @($env:USERNAME, $env:USERPROFILE, $localName, $tempRoot)
@@ -238,6 +242,7 @@ function Export-LibreOfficeOdt {
     "-env:UserInstallation=$profileUri",
     "--convert-to", "odt:writer8", "--outdir", $fixtureRoot, $source
   ) "convert"
+  Test-OdtPackage $output $expected
   & $metadataSanitizer -Path $output
   Test-OdtPackage $output $expected
   Test-PackagePrivacy $output @($env:USERNAME, $env:USERPROFILE, $tempRoot)

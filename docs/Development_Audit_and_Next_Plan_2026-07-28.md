@@ -13,6 +13,7 @@ LongEdit 已完成统一文件管理、文本与开发格式工作面、JSON/JSO
 
 - **基础版本收口尚余 7 个门禁**：E1B、E1C、E2A、E2B、E2C、E3、R。
 - **E1B 已接近完成**：ODT 解析、只读工作面、搜索索引和定位代码已完成；Word、LibreOffice 真实生产者通过，WPS 因当前环境缺少可信 ODF 组件仍阻断；`.odt` 因此尚未登记。
+- **2026-07-29 已完成 WPS 环境门禁加固**：隔离预检固定了 WPS `12.1.0.26895` 的 0 转换器、0 ODF 组件和 OLE 错误输出证据；fixture 生成器现在会先验证 ZIP、失败后无残留。该进展提高了门禁可靠性，但没有把 2/3 误记为完成。
 - **完整 Excel 等价编辑器仍是长期必达主线**，没有取消；当前只能宣传“XLSX 渐进式编辑（以公开兼容性矩阵为准）”。
 - **新的文件格式编辑器目标已形成连续交付**：OPML、JSON/JSONC、YAML/XML/TOML、配置和代码格式已进入统一工作面；当前剩余重点是 ODF、旧版 Office 和 WPS 原生格式的分级支持。
 - **更多主题预设的当前承诺已完成**：正式发布范围为 3 套核心 + 4 套场景预设，并有 12 张真实 Tauri 视觉证据；后续主题扩充属于增强项，不阻断基础版本。
@@ -68,6 +69,8 @@ LongEdit 已完成统一文件管理、文本与开发格式工作面、JSON/JSO
 4. 三生产者 3/3 通过后，才更新 `shared/odt-read-contract.json` 和 `shared/file-formats.json`，登记 `.odt` 为只读预览且 `write=false`。
 5. E1B 完成后进入 E1C，不提前实现 ODT 写回，也不绕过注册表直接暴露格式。
 
+当前环境可先运行 `npm.cmd run audit:e1b-wps-odf-environment` 复核；详细证据见 [E1B WPS ODF 环境门禁加固审计](./E1B_WPS_ODF_Environment_Gate_Audit_2026-07-29.md)。
+
 ## 6. 风险与审计纪律
 
 - WPS 环境缺少可信 ODF 组件是外部环境阻断，不用伪造文件、改后缀或降低验证标准关闭门禁。
@@ -80,6 +83,7 @@ LongEdit 已完成统一文件管理、文本与开发格式工作面、JSON/JSO
 
 - [`shared/odt-read-contract.json`](../shared/odt-read-contract.json)
 - [E1B ODT 生产者门禁 2/3 进展审计](./E1B_ODT_Producer_Gate_Progress_Audit_2026-07-28.md)
+- [E1B WPS ODF 环境门禁加固审计](./E1B_WPS_ODF_Environment_Gate_Audit_2026-07-29.md)
 - [当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md)
 - [XLSX 高级数据对象合同](./XLSX_Advanced_Data_Object_Contract.md)
 - [XLSX 公开兼容性矩阵](./XLSX_Public_Compatibility_Matrix.md)

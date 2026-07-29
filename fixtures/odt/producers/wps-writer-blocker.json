@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "stage": "E1B",
+  "producerId": "wps-writer",
+  "auditedAt": "2026-07-29T01:26:14.6491298Z",
+  "status": "blocked",
+  "blocker": "wps-odf-add-in-missing-invalid-ole-output-rejected",
+  "productVersion": "12,1,0,26895",
+  "build": "12.1.0.26895",
+  "comProgId": "KWPS.Application",
+  "registeredFileConverters": 0,
+  "odfNamedComponentCount": 0,
+  "odfNamedComponents": [],
+  "saveProbe": {
+    "sourceFixture": "wps-writer.docx",
+    "requestedFileFormat": 23,
+    "outputKind": "ole-compound-document",
+    "outputHeader": "d0 cf 11 e0 a1 b1 1a e1",
+    "outputBytes": 86016,
+    "tempOutputDeleted": true
+  }
+}
