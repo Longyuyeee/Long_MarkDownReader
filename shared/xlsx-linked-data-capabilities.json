@@ -365,7 +365,45 @@
         "multiLevelAxis": "blocked",
         "pageFields": "blocked",
         "externalData": "blocked",
-        "desktopProducerRoundTrip": "pending"
+        "desktopProducerRoundTrip": "verified_in_S8-7E3B"
+      },
+      "desktopProducerRoundTrip": {
+        "stage": "S8-7E3B",
+        "status": "verified",
+        "matrix": "docs/evidence/s8-7e3b-xlsx-pivot-roundtrip/matrix.json",
+        "baseline": "fixtures/xlsx/output-reopen/s8-7e3b-longedit-pivot-copy.xlsx",
+        "requiredProducerIds": [
+          "microsoft-excel",
+          "wps-spreadsheets",
+          "libreoffice-calc"
+        ],
+        "verifiedProducerCount": 3,
+        "requiredProducerCount": 3,
+        "workflow": [
+          "open_longedit_copy",
+          "refresh_standard_pivot",
+          "save_xlsx",
+          "quit_process",
+          "reopen_in_new_process",
+          "verify_pivot_identity",
+          "verify_output_range",
+          "verify_output_value",
+          "reparse_in_longedit"
+        ],
+        "verifiedLayout": {
+          "rowFields": 1,
+          "columnFields": 1,
+          "dataFields": 1,
+          "aggregation": "sum",
+          "pageFields": 0,
+          "outputRange": "A3:D7",
+          "keyCell": "D7",
+          "keyValue": 4
+        },
+        "repairPromptObserved": false,
+        "sourceOverwrite": "blocked",
+        "existingTargetOverwrite": "blocked",
+        "expandedSaveWhitelist": false
       }
     }
   },

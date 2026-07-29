@@ -76,6 +76,7 @@ use commands::table::{
     create_table_file, export_table_file, import_table_file, read_table_file, write_table_file,
 };
 use commands::toml::{analyze_toml_source, write_toml_source_document};
+pub use commands::workbook::generate_workbook_pivot_audit_copy;
 use commands::workbook::{
     get_workbook_capabilities, import_workbook_sheet, preview_workbook_pivot,
     preview_workbook_pivot_rebuild, preview_workbook_structure_migration, read_workbook_file,

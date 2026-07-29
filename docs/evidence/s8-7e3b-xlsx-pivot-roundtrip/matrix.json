@@ -1,0 +1,150 @@
+{
+    "schemaVersion":  1,
+    "stage":  "S8-7E3B",
+    "verifiedAt":  "2026-07-29T06:13:59.3968893Z",
+    "status":  "verified",
+    "complete":  true,
+    "verifiedCount":  3,
+    "requiredCount":  3,
+    "requiredProducerIds":  [
+                                "microsoft-excel",
+                                "wps-spreadsheets",
+                                "libreoffice-calc"
+                            ],
+    "source":  {
+                   "file":  "s8-7e3b-longedit-pivot-copy.xlsx",
+                   "sha256":  "ee487bd068d61d116b23f140d0c4ad80b1a3ea8f1c079b50291e5e974a9c8426",
+                   "bytes":  17424,
+                   "saveMode":  "LongEdit verified new copy",
+                   "sourceOverwriteAllowed":  false,
+                   "pivotName":  "PivotTable1",
+                   "outputRange":  "A3:D7",
+                   "keyCell":  "D7",
+                   "keyValue":  4
+               },
+    "producers":  [
+                      {
+                          "id":  "microsoft-excel",
+                          "producer":  "Microsoft Excel",
+                          "status":  "verified",
+                          "version":  "16.0",
+                          "build":  "20228",
+                          "method":  "A writable COM session refreshed PivotTable1 and saved the XLSX; the COM server was quit and released before a new read-only session reopened and rechecked the Pivot.",
+                          "refreshSucceeded":  true,
+                          "saveSucceeded":  true,
+                          "processRestarted":  true,
+                          "sessionHandles":  [
+                                                 10683288,
+                                                 10032372
+                                             ],
+                          "reopenVerified":  true,
+                          "repairPromptObserved":  false,
+                          "before":  {
+                                         "pivotCount":  1,
+                                         "pivotName":  "PivotTable1",
+                                         "outputRange":  "A3:D7",
+                                         "keyCell":  "D7",
+                                         "keyValue":  4
+                                     },
+                          "afterSave":  {
+                                            "pivotCount":  1,
+                                            "pivotName":  "PivotTable1",
+                                            "outputRange":  "A3:D7",
+                                            "keyCell":  "D7",
+                                            "keyValue":  4
+                                        },
+                          "afterReopen":  {
+                                              "pivotCount":  1,
+                                              "pivotName":  "PivotTable1",
+                                              "outputRange":  "A3:D7",
+                                              "keyCell":  "D7",
+                                              "keyValue":  4
+                                          },
+                          "outputFile":  "s8-7e3b-microsoft-excel.xlsx",
+                          "outputSha256":  "c77346c44e16e77ae19e50eb2477177bc2a3b892e9095015950212daae93713f",
+                          "outputBytes":  19457
+                      },
+                      {
+                          "id":  "wps-spreadsheets",
+                          "producer":  "WPS Spreadsheets",
+                          "status":  "verified",
+                          "version":  "12.0",
+                          "build":  "26895",
+                          "method":  "A writable COM session refreshed PivotTable1 and saved the XLSX; the COM server was quit and released before a new read-only session reopened and rechecked the Pivot.",
+                          "refreshSucceeded":  true,
+                          "saveSucceeded":  true,
+                          "processRestarted":  true,
+                          "sessionHandles":  [
+                                                 62980764,
+                                                 1250654
+                                             ],
+                          "reopenVerified":  true,
+                          "repairPromptObserved":  false,
+                          "before":  {
+                                         "pivotCount":  1,
+                                         "pivotName":  "PivotTable1",
+                                         "outputRange":  "A3:D7",
+                                         "keyCell":  "D7",
+                                         "keyValue":  4
+                                     },
+                          "afterSave":  {
+                                            "pivotCount":  1,
+                                            "pivotName":  "PivotTable1",
+                                            "outputRange":  "A3:D7",
+                                            "keyCell":  "D7",
+                                            "keyValue":  4
+                                        },
+                          "afterReopen":  {
+                                              "pivotCount":  1,
+                                              "pivotName":  "PivotTable1",
+                                              "outputRange":  "A3:D7",
+                                              "keyCell":  "D7",
+                                              "keyValue":  4
+                                          },
+                          "outputFile":  "s8-7e3b-wps-spreadsheets.xlsx",
+                          "outputSha256":  "db60e05029c4eebcd2ee447c0993ffc03aa935fb7d62cf92cf16339fb3b9af5f",
+                          "outputBytes":  19143
+                      },
+                      {
+                          "id":  "libreoffice-calc",
+                          "producer":  "LibreOffice Calc",
+                          "status":  "verified",
+                          "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                          "build":  null,
+                          "method":  "An isolated UNO process refreshed the DataPilot table, calculated, and stored the XLSX; a second isolated profile and process reopened and rechecked the Pivot.",
+                          "refreshSucceeded":  true,
+                          "saveSucceeded":  true,
+                          "processRestarted":  true,
+                          "sessionProcessIds":  [
+                                                    18324,
+                                                    49016
+                                                ],
+                          "reopenVerified":  true,
+                          "repairPromptObserved":  false,
+                          "before":  {
+                                         "pivotCount":  1,
+                                         "pivotName":  "PivotTable1",
+                                         "outputRange":  "A3:D7",
+                                         "keyCell":  "D7",
+                                         "keyValue":  4.0
+                                     },
+                          "afterSave":  {
+                                            "pivotCount":  1,
+                                            "pivotName":  "PivotTable1",
+                                            "outputRange":  "A3:D7",
+                                            "keyCell":  "D7",
+                                            "keyValue":  4.0
+                                        },
+                          "afterReopen":  {
+                                              "pivotCount":  1,
+                                              "pivotName":  "PivotTable1",
+                                              "outputRange":  "A3:D7",
+                                              "keyCell":  "D7",
+                                              "keyValue":  4.0
+                                          },
+                          "outputFile":  "s8-7e3b-libreoffice-calc.xlsx",
+                          "outputSha256":  "d19c66ef0c52757dfc1a31ef9929f986381fb25d6e075ee3b1a7c0232b68f97f",
+                          "outputBytes":  16794
+                      }
+                  ]
+}

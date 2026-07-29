@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：E1B WPS 生产者门禁仍受外部环境阻断，`.odt` 尚未登记。等待可信 WPS ODF 环境期间，完整 Excel 等价 X1 / S8-7E2F 和 X2 首批 S8-7E3A 已完成；标准本地 Pivot 可可靠另存同目录新副本。下一入口为 S8-7E3B 的 Excel/LibreOffice/WPS 真实刷新保存重开矩阵，多度量保存和原件覆盖继续阻断。
+> 当前状态：E1B WPS 生产者门禁仍受外部环境阻断，`.odt` 尚未登记。等待可信 WPS ODF 环境期间，完整 Excel 等价 X1 / S8-7E2F 与 X2 的 S8-7E3A/E3B 已完成；标准本地 Pivot 可可靠另存同目录新副本，并通过 Excel/WPS/LibreOffice 3/3 真实刷新保存重开。下一入口为 S8-7E3C，逐项扩展单轴和多度量新副本白名单；原件覆盖继续阻断。
 
 > 2026-07-29 更新：WPS ODF 环境预检、阻断机器证据和失败清理已进入合同；当前 WPS `12.1.0.26895` 仍输出 OLE 而不是 ODT ZIP，E1B 保持 2/3。恢复时先运行 `npm.cmd run audit:e1b-wps-odf-environment`，不得重复尝试旧 ODF add-in 或绕过门禁。
 

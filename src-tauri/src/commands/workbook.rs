@@ -243,6 +243,64 @@ fn save_workbook_pivot_copy_to_path(
     })
 }
 
+pub fn generate_workbook_pivot_audit_copy(
+    source_path: &Path,
+    target_path: &Path,
+) -> Result<String, String> {
+    let source_parent = source_path
+        .parent()
+        .ok_or("S8-7E3B audit source has no parent directory")?
+        .canonicalize()
+        .map_err(|error| error.to_string())?;
+    let target_parent = target_path
+        .parent()
+        .ok_or("S8-7E3B audit target has no parent directory")?
+        .canonicalize()
+        .map_err(|error| error.to_string())?;
+    if source_parent != target_parent {
+        return Err("S8-7E3B audit copy must use the source directory".into());
+    }
+    ensure_workbook(source_path)?;
+    let source = fs::read(source_path).map_err(|error| error.to_string())?;
+    validate_workbook_package(&source)?;
+    let document = CalamineWorkbookEngine.inspect(source_path)?;
+    let candidates = document
+        .linked_data
+        .pivot_tables
+        .iter()
+        .filter(|pivot| {
+            pivot.audit.writeback.status == "structure_candidate"
+                && pivot.audit.row_field_count == 1
+                && pivot.audit.column_field_count == 1
+                && pivot.audit.data_field_count == 1
+                && pivot.audit.page_field_count == 0
+                && pivot
+                    .audit
+                    .data_fields
+                    .first()
+                    .is_some_and(|field| field.aggregation == "sum" && field.supported)
+        })
+        .collect::<Vec<_>>();
+    if candidates.len() != 1 {
+        return Err(format!(
+            "S8-7E3B audit copy requires exactly one standard local Pivot candidate; found {}",
+            candidates.len()
+        ));
+    }
+    let pivot = candidates[0];
+    let (_, isolated) = rebuild_workbook_pivot_expanded_isolated(&source, pivot)?;
+    let saved = save_workbook_pivot_copy_to_path(
+        source_path,
+        target_path,
+        &WorkbookPivotSaveCopyPayload {
+            expected_signature: document.signature,
+            expected_output_digest: isolated.isolated_package_digest,
+            pivot_part: pivot.part.clone(),
+        },
+    )?;
+    serde_json::to_string_pretty(&saved).map_err(|error| error.to_string())
+}
+
 fn open_xlsx(path: &Path) -> Result<Xlsx<std::io::BufReader<fs::File>>, String> {
     ensure_workbook(path)?;
     open_workbook(path).map_err(|error| format!("解析 XLSX 失败: {}", error))
@@ -2808,6 +2866,15 @@ mod tests {
             .iter()
             .any(|pivot| pivot.part == expanded_pivot.part
                 && pivot.audit.layout_range.as_deref() == Some("A3:E8")));
+        let audit_copy_path = root.join("producer-pivot-audit-copy.xlsx");
+        let audit_copy_report =
+            generate_workbook_pivot_audit_copy(&expanded_path, &audit_copy_path).unwrap();
+        assert!(audit_copy_report.contains("\"status\": \"saved_verified\""));
+        assert!(audit_copy_path.exists());
+        let cross_directory_error =
+            generate_workbook_pivot_audit_copy(&expanded_path, &base.join("cross-copy.xlsx"))
+                .unwrap_err();
+        assert!(cross_directory_error.contains("source directory"));
         let occupied_error = save_workbook_pivot_copy_to_path(
             &expanded_path,
             &saved_copy_path,
@@ -3051,6 +3118,58 @@ mod tests {
         assert!(stale.contains("其他程序修改"));
         assert_eq!(fs::read(&path).unwrap(), source);
         fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn pivot_producer_round_trip_outputs_reopen_with_stable_semantics() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("fixtures/xlsx/output-reopen");
+        for file_name in [
+            "s8-7e3b-longedit-pivot-copy.xlsx",
+            "s8-7e3b-microsoft-excel.xlsx",
+            "s8-7e3b-wps-spreadsheets.xlsx",
+            "s8-7e3b-libreoffice-calc.xlsx",
+        ] {
+            let bytes = fs::read(root.join(file_name)).unwrap();
+            validate_workbook_package(&bytes).unwrap();
+            let linked = read_workbook_linked_data(&bytes).unwrap();
+            assert_eq!(linked.pivot_tables.len(), 2, "{file_name}");
+            assert!(
+                linked
+                    .pivot_tables
+                    .iter()
+                    .any(|candidate| candidate.audit.page_field_count == 1),
+                "{file_name}"
+            );
+            let pivot = linked
+                .pivot_tables
+                .iter()
+                .find(|candidate| {
+                    candidate.name == "PivotTable1"
+                        && candidate.sheet.as_deref() == Some("Tabelle2")
+                })
+                .unwrap();
+            assert_eq!(pivot.audit.layout_range.as_deref(), Some("A3:D7"));
+            assert_eq!(pivot.audit.row_field_count, 1);
+            assert_eq!(pivot.audit.column_field_count, 1);
+            assert_eq!(pivot.audit.data_field_count, 1);
+            assert_eq!(pivot.audit.page_field_count, 0);
+            assert!(pivot
+                .audit
+                .data_fields
+                .first()
+                .is_some_and(|field| field.aggregation == "sum" && field.supported));
+            let mut workbook: Xlsx<_> =
+                calamine::open_workbook_from_rs(Cursor::new(bytes)).unwrap();
+            let output = workbook.worksheet_range("Tabelle2").unwrap();
+            assert!(
+                matches!(output.get_value((6, 3)), Some(Data::Float(value)) if *value == 4.0)
+                    || matches!(output.get_value((6, 3)), Some(Data::Int(4))),
+                "{file_name}"
+            );
+        }
     }
 
     #[test]

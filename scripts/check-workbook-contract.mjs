@@ -17,6 +17,9 @@ const linkedDataEngine = read('src-tauri/src/formats/workbook_linked_data.rs')
 const pivotPreviewEngine = read('src-tauri/src/formats/workbook_pivot.rs')
 const ooxml = read('src-tauri/src/formats/workbook_ooxml.rs')
 const tauriLib = read('src-tauri/src/lib.rs')
+const pivotAuditCli = read('src-tauri/src/bin/xlsx-pivot-audit-copy.rs')
+const pivotProducerAudit = read('scripts/verify-s8-7e3b-xlsx-pivot-roundtrip.ps1')
+const pivotLibreOfficeAudit = read('scripts/verify-s8-7e3b-libreoffice-pivot.py')
 const view = read('src/views/WorkbookView.vue')
 const conditionalExpression = read('src/utils/conditionalExpression.ts')
 const generator = read('src-tauri/examples/generate_workbook_fixture.rs')
@@ -245,7 +248,17 @@ if (pivotCopySave.verifiedLayout?.rowFields !== 1 || pivotCopySave.verifiedLayou
 for (const gate of ['source_signature', 'isolated_output_digest', 'target_absent', 'atomic_new_file_create', 'target_byte_reparse', 'package_validation', 'semantic_reparse', 'output_value_reparse', 'untouched_part_preservation', 'source_package_unchanged', 'exact_failure_cleanup']) {
   if (!pivotCopySave.requiredGates?.includes(gate)) fail(`S8-7E3A required gate ${gate} missing`)
 }
-if (pivotCopySave.targetScope !== 'same_directory_xlsx' || pivotCopySave.opensSavedCopy !== true || pivotCopySave.sourceOverwrite !== 'blocked' || pivotCopySave.existingTargetOverwrite !== 'blocked' || pivotCopySave.unsavedDrafts !== 'blocked' || pivotCopySave.multiMeasureSave !== 'blocked' || pivotCopySave.multiLevelAxis !== 'blocked' || pivotCopySave.pageFields !== 'blocked' || pivotCopySave.externalData !== 'blocked' || pivotCopySave.desktopProducerRoundTrip !== 'pending') fail('S8-7E3A release boundary drift')
+if (pivotCopySave.targetScope !== 'same_directory_xlsx' || pivotCopySave.opensSavedCopy !== true || pivotCopySave.sourceOverwrite !== 'blocked' || pivotCopySave.existingTargetOverwrite !== 'blocked' || pivotCopySave.unsavedDrafts !== 'blocked' || pivotCopySave.multiMeasureSave !== 'blocked' || pivotCopySave.multiLevelAxis !== 'blocked' || pivotCopySave.pageFields !== 'blocked' || pivotCopySave.externalData !== 'blocked' || pivotCopySave.desktopProducerRoundTrip !== 'verified_in_S8-7E3B') fail('S8-7E3A release boundary drift')
+const pivotProducerRoundTrip = pivotWritebackAudit.desktopProducerRoundTrip
+if (!pivotProducerRoundTrip || pivotProducerRoundTrip.stage !== 'S8-7E3B' || pivotProducerRoundTrip.status !== 'verified' || pivotProducerRoundTrip.verifiedProducerCount !== 3 || pivotProducerRoundTrip.requiredProducerCount !== 3) fail('S8-7E3B producer matrix policy drift')
+if (pivotProducerRoundTrip.requiredProducerIds?.join(',') !== 'microsoft-excel,wps-spreadsheets,libreoffice-calc' || pivotProducerRoundTrip.repairPromptObserved !== false || pivotProducerRoundTrip.sourceOverwrite !== 'blocked' || pivotProducerRoundTrip.existingTargetOverwrite !== 'blocked' || pivotProducerRoundTrip.expandedSaveWhitelist !== false) fail('S8-7E3B release boundary drift')
+if (pivotProducerRoundTrip.verifiedLayout?.rowFields !== 1 || pivotProducerRoundTrip.verifiedLayout?.columnFields !== 1 || pivotProducerRoundTrip.verifiedLayout?.dataFields !== 1 || pivotProducerRoundTrip.verifiedLayout?.aggregation !== 'sum' || pivotProducerRoundTrip.verifiedLayout?.pageFields !== 0 || pivotProducerRoundTrip.verifiedLayout?.outputRange !== 'A3:D7' || pivotProducerRoundTrip.verifiedLayout?.keyCell !== 'D7' || pivotProducerRoundTrip.verifiedLayout?.keyValue !== 4) fail('S8-7E3B verified layout drift')
+for (const step of ['open_longedit_copy', 'refresh_standard_pivot', 'save_xlsx', 'quit_process', 'reopen_in_new_process', 'verify_pivot_identity', 'verify_output_range', 'verify_output_value', 'reparse_in_longedit']) {
+  if (!pivotProducerRoundTrip.workflow?.includes(step)) fail(`S8-7E3B workflow step ${step} missing`)
+}
+if (!fs.existsSync(path.join(root, pivotProducerRoundTrip.matrix)) || !fs.existsSync(path.join(root, pivotProducerRoundTrip.baseline))) fail('S8-7E3B evidence or baseline missing')
+if (!engine.includes('pub fn generate_workbook_pivot_audit_copy') || !engine.includes('pivot_producer_round_trip_outputs_reopen_with_stable_semantics') || !tauriLib.includes('pub use commands::workbook::generate_workbook_pivot_audit_copy')) fail('S8-7E3B LongEdit audit-copy or reverse-reopen evidence missing')
+if (!pivotAuditCli.includes('generate_workbook_pivot_audit_copy') || !pivotProducerAudit.includes('Excel.Application') || !pivotProducerAudit.includes('KET.Application') || !pivotProducerAudit.includes('processRestarted = $true') || !pivotLibreOfficeAudit.includes('pivot.refresh()')) fail('S8-7E3B producer automation evidence missing')
 if (!fs.existsSync(path.join(root, linkedDataCapabilities.fixture))) fail('S8-7A linked data fixture missing')
 if (!fixture.documentFeatures.pivotCacheRecords || fixture.currentEngineExpectations.pivotAudit !== 'supported') fail('S8-7B fixture audit expectation missing')
 if (!model.includes('pub summary: WorkbookLinkedDataSummary') || !model.includes('pub policy: WorkbookLinkedDataPolicy')) fail('S8-7A linked data model summary missing')

@@ -291,6 +291,7 @@ WPS 桌面补录代码已准备完成：真实 `wps-writer.odt` 到位后，同�
 69. T8-1A 已完成：七套发布预设分为 3 个核心 + 4 个场景方案，设置页区分正式与兼容组合，预设可同步动效节奏，注册表新增 WCAG AA 正文对比度和层级数量门禁。下一批 T8-1B 补齐四套场景预设的真实 Tauri 视觉矩阵。
 70. T8-1B 已完成：四套场景预设具备设置页 1440×900、工作台 1024×768、思维导图 760×900 共 12 张真实 Tauri WebView2 证据；修复紧凑图谱页头、工具栏溢出、筛选条和初始详情遮挡，并隔离 E2E 配置写入。
 71. S8-7E3A 已完成：标准本地 Pivot 在隔离布局验证后可可靠另存为同目录新 `.xlsx`；事务绑定源签名和隔离输出摘要，拒绝源覆盖、已有目标、旧状态、路径片段和未保存草稿，写后复读 OOXML/Pivot 语义并再次确认源字节不变。下一步 S8-7E3B 补齐 Excel/LibreOffice/WPS 真实刷新保存重开矩阵。
+72. S8-7E3B 已完成：LongEdit 标准 Pivot 新副本已由 Microsoft Excel `16.0/20228`、WPS Spreadsheets `12.0/26895`、LibreOffice Calc `26.2.4.2` 分别刷新、保存、退出进程并新进程重开；3/3 均保持 `PivotTable1`、`A3:D7`、`D7=4`，三份输出再由 LongEdit 反向复读。下一步 S8-7E3C 逐项扩展单轴和多度量新副本白名单。
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
@@ -341,3 +342,11 @@ E1B 发布门禁已升级为 `checkpoint` / `released-preview` 双状态机器�
 本地完整门禁已通过：前端生产构建、工作簿契约与全部格式证据检查通过，Rust 功能测试 367/367、性能测试 1/1，生产依赖审计为 0 个漏洞。远端 GitHub Quality Gate 以本恢复点提交后的运行记录为准。
 
 下一阶段为 S8-7E3B 真实生产者往返矩阵。多度量和单轴布局虽然已通过隔离包验证，但尚未进入保存白名单；原件覆盖、已有目标替换、页面字段、多层轴、切片器和外部连接继续阻断。详细证据见 [`S8_7E3A_XLSX_Pivot_Reliable_Copy_Save_Audit_2026-07-29.md`](./S8_7E3A_XLSX_Pivot_Reliable_Copy_Save_Audit_2026-07-29.md)。
+
+## 13. S8-7E3B Pivot 三生产者往返恢复点
+
+标准本地 Pivot 的 LongEdit 新副本已通过 Excel、WPS、LibreOffice 3/3 真实刷新、保存、进程退出和新进程重开。每个生产者使用独立副本，均保持 `PivotTable1`、`A3:D7` 和 `D7=4`；版本、会话/进程证据、输出长度和 SHA-256 位于 `docs/evidence/s8-7e3b-xlsx-pivot-roundtrip/matrix.json`。Rust 回归继续从 LongEdit 一侧复读全部四份 XLSX。
+
+本地完整门禁已通过：前端生产构建和全部格式/证据合同通过，Rust 功能测试 368/368、性能测试 1/1，生产依赖审计为 0 个漏洞。远端 GitHub Quality Gate 以本恢复点提交后的运行记录为准。
+
+下一入口为 S8-7E3C：依次评估单行轴、单列轴和三度量可靠新副本，并为每个开放候选重复 3/3 生产者往返。原件覆盖、已有目标替换、多层轴、页面字段、切片器和外部连接继续阻断。详细证据见 [`S8_7E3B_XLSX_Pivot_Producer_Round_Trip_Audit_2026-07-29.md`](./S8_7E3B_XLSX_Pivot_Producer_Round_Trip_Audit_2026-07-29.md)。
