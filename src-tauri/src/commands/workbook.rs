@@ -11,7 +11,8 @@ use crate::formats::workbook::{
     WorkbookDrawingPayload, WorkbookEngine, WorkbookFilterPayload, WorkbookHeaderFooterPayload,
     WorkbookOutlinePayload, WorkbookPageLayoutPayload, WorkbookPivotCacheRebuildPayload,
     WorkbookPivotCacheRebuildResult, WorkbookPivotExpandedRebuildPayload,
-    WorkbookPivotExpandedRebuildResult, WorkbookPivotPreviewPayload, WorkbookPivotPreviewResult,
+    WorkbookPivotExpandedRebuildResult, WorkbookPivotMultiAxisAuditPayload,
+    WorkbookPivotMultiAxisAuditResult, WorkbookPivotPreviewPayload, WorkbookPivotPreviewResult,
     WorkbookPivotRebuildPlan, WorkbookPivotRebuildPlanPayload, WorkbookPivotSaveCopyPayload,
     WorkbookPivotSavedCopyResult, WorkbookPivotSynchronizedRebuildPayload,
     WorkbookPivotSynchronizedRebuildResult, WorkbookPivotVariantVerificationPayload,
@@ -25,16 +26,16 @@ use crate::formats::workbook_formula::{
     validate_workbook_structure_change, WorkbookFormulaTranslation, MAX_FORMULA_TRANSLATIONS,
 };
 use crate::formats::workbook_ooxml::{
-    patch_workbook, patch_workbook_conditional_format, patch_workbook_data_validation,
-    patch_workbook_defined_name, patch_workbook_drawing, patch_workbook_filter,
-    patch_workbook_freeze_pane, patch_workbook_header_footer, patch_workbook_outline,
-    patch_workbook_page_layout, patch_workbook_print_options, patch_workbook_structure,
-    patch_workbook_table, plan_workbook_pivot_rebuild, read_workbook_defined_names,
-    read_workbook_linked_data, read_workbook_protection, read_workbook_sheet_layout,
-    rebuild_workbook_pivot_aggregation_variant_isolated, rebuild_workbook_pivot_cache_isolated,
-    rebuild_workbook_pivot_expanded_isolated, rebuild_workbook_pivot_isolated,
-    rebuild_workbook_pivot_layout_variant_isolated, validate_workbook_package,
-    verify_workbook_pivot_variants_isolated,
+    audit_workbook_pivot_multi_axis_isolated, patch_workbook, patch_workbook_conditional_format,
+    patch_workbook_data_validation, patch_workbook_defined_name, patch_workbook_drawing,
+    patch_workbook_filter, patch_workbook_freeze_pane, patch_workbook_header_footer,
+    patch_workbook_outline, patch_workbook_page_layout, patch_workbook_print_options,
+    patch_workbook_structure, patch_workbook_table, plan_workbook_pivot_rebuild,
+    read_workbook_defined_names, read_workbook_linked_data, read_workbook_protection,
+    read_workbook_sheet_layout, rebuild_workbook_pivot_aggregation_variant_isolated,
+    rebuild_workbook_pivot_cache_isolated, rebuild_workbook_pivot_expanded_isolated,
+    rebuild_workbook_pivot_isolated, rebuild_workbook_pivot_layout_variant_isolated,
+    validate_workbook_package, verify_workbook_pivot_variants_isolated,
 };
 use crate::formats::workbook_pivot::preview_pivot;
 use crate::sanitize_filename;
@@ -793,6 +794,40 @@ pub async fn rebuild_workbook_pivot_cache_isolated_copy(
     })
     .await
     .map_err(|error| format!("透视 Cache 隔离重建任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn audit_workbook_pivot_multi_axis_isolated_copy(
+    library_root: String,
+    path: String,
+    payload: WorkbookPivotMultiAxisAuditPayload,
+) -> Result<WorkbookPivotMultiAxisAuditResult, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("Failed to read XLSX metadata: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err(
+                "XLSX changed after loading; reload before running the multi-axis audit".into(),
+            );
+        }
+        validate_workbook_package(&source)?;
+        let linked_data = read_workbook_linked_data(&source)?;
+        let pivot = linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.part == payload.pivot_part)
+            .ok_or("The selected Pivot table no longer exists")?;
+        let (_, result) = audit_workbook_pivot_multi_axis_isolated(&source, pivot)?;
+        Ok(result)
+    })
+    .await
+    .map_err(|error| format!("Multi-axis Pivot audit task failed: {error}"))?
 }
 
 #[tauri::command]
@@ -2667,6 +2702,61 @@ mod tests {
             .pivot_tables
             .iter()
             .all(|pivot| !pivot.audit.writeback.allowed));
+    }
+
+    #[test]
+    fn multi_axis_audit_command_verifies_fixture_without_writing_the_user_file() {
+        let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/workbook/pivot-multi-axis-microsoft-excel.xlsx");
+        let source = fs::read(fixture).unwrap();
+        let base = std::env::temp_dir().join(format!(
+            "longedit-pivot-multi-axis-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let root = base.join("library");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("multi-axis.xlsx");
+        fs::write(&path, &source).unwrap();
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let pivot = document
+            .linked_data
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.name == "MultiAxisPivot")
+            .unwrap();
+        let result = tauri::async_runtime::block_on(audit_workbook_pivot_multi_axis_isolated_copy(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPivotMultiAxisAuditPayload {
+                expected_signature: document.signature,
+                pivot_part: pivot.part.clone(),
+            },
+        ))
+        .unwrap();
+        assert_eq!(result.status, "multi_axis_structure_verified");
+        assert_eq!(result.preview_group_count, 16);
+        assert_eq!(result.row_axis.field_indices, [0, 1]);
+        assert_eq!(result.column_axis.field_indices, [2, 3]);
+        assert!(result.pivot_definition_preserved);
+        assert!(result.output_worksheet_preserved);
+        assert_eq!(fs::read(&path).unwrap(), source);
+
+        let stale = tauri::async_runtime::block_on(audit_workbook_pivot_multi_axis_isolated_copy(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookPivotMultiAxisAuditPayload {
+                expected_signature: "stale".into(),
+                pivot_part: pivot.part.clone(),
+            },
+        ))
+        .unwrap_err();
+        assert!(stale.contains("changed after loading"));
+        assert_eq!(fs::read(&path).unwrap(), source);
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]

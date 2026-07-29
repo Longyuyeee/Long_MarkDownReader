@@ -306,6 +306,46 @@ pub struct WorkbookPivotCacheRebuildResult {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotMultiAxisAuditPayload {
+    pub expected_signature: String,
+    pub pivot_part: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotAxisHierarchyAudit {
+    pub field_indices: Vec<usize>,
+    pub field_names: Vec<String>,
+    pub detail_item_count: usize,
+    pub subtotal_item_count: usize,
+    pub grand_total_item_count: usize,
+    pub compressed_item_count: usize,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotMultiAxisAuditResult {
+    pub pivot_name: String,
+    pub status: String,
+    pub execution: String,
+    pub writes_user_file: bool,
+    pub source_record_count: usize,
+    pub preview_group_count: usize,
+    pub row_axis: WorkbookPivotAxisHierarchyAudit,
+    pub column_axis: WorkbookPivotAxisHierarchyAudit,
+    pub rebuilt_parts: Vec<String>,
+    pub source_package_digest: String,
+    pub isolated_package_digest: String,
+    pub package_valid: bool,
+    pub semantic_reparse_valid: bool,
+    pub pivot_definition_preserved: bool,
+    pub output_worksheet_preserved: bool,
+    pub untouched_parts_preserved: bool,
+    pub gates: Vec<WorkbookPivotRebuildGate>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WorkbookPivotSynchronizedRebuildPayload {
     pub expected_signature: String,
     pub pivot_part: String,

@@ -23,6 +23,8 @@ const pivotLibreOfficeAudit = read('scripts/verify-s8-7e3b-libreoffice-pivot.py'
 const pivotLayoutProducerAudit = read('scripts/verify-s8-7e3c-xlsx-pivot-layout-roundtrip.ps1')
 const pivotLayoutLibreOfficeAudit = read('scripts/verify-s8-7e3c-libreoffice-pivot.py')
 const pivotAggregationProducerAudit = read('scripts/verify-s8-7e3d-xlsx-pivot-aggregation-roundtrip.ps1')
+const pivotMultiAxisFixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/pivot-multi-axis-microsoft-excel.json'))
+const pivotMultiAxisGenerator = read('scripts/generate-s8-7e3e-xlsx-pivot-multi-axis-fixture.ps1')
 const view = read('src/views/WorkbookView.vue')
 const conditionalExpression = read('src/utils/conditionalExpression.ts')
 const generator = read('src-tauri/examples/generate_workbook_fixture.rs')
@@ -283,6 +285,24 @@ for (const step of ['create_digest_bound_aggregation_copy', 'refresh_in_desktop_
 }
 if (!fs.existsSync(path.join(root, pivotAggregationCopySave.matrix)) || !engine.includes('pivot_aggregation_producer_round_trip_outputs_reopen_with_stable_semantics') || !ooxml.includes('rebuild_workbook_pivot_aggregation_variant_isolated')) fail('S8-7E3D reverse-reopen evidence missing')
 if (!pivotAggregationProducerAudit.includes('Get-PivotAggregationToken') || !pivotAggregationProducerAudit.includes('Excel.Application') || !pivotAggregationProducerAudit.includes('KET.Application') || !pivotAggregationProducerAudit.includes('aggregationAfterReopen')) fail('S8-7E3D producer automation evidence missing')
+const pivotMultiLevelAxisPrototype = pivotWritebackAudit.multiLevelAxisPrototype
+if (!pivotMultiLevelAxisPrototype || pivotMultiLevelAxisPrototype.stage !== 'S8-7E3E' || pivotMultiLevelAxisPrototype.execution !== 'temporary_copy_only' || pivotMultiLevelAxisPrototype.status !== 'multi_axis_structure_verified') fail('S8-7E3E multi-axis prototype policy drift')
+const multiAxisLayout = pivotMultiLevelAxisPrototype.verifiedLayout
+if (!multiAxisLayout || multiAxisLayout.rowFields !== 2 || multiAxisLayout.columnFields !== 2 || multiAxisLayout.dataFields !== 1 || multiAxisLayout.pageFields !== 0 || multiAxisLayout.sourceRecordCount !== 16 || multiAxisLayout.previewGroupCount !== 16 || multiAxisLayout.outputRange !== 'A3:I12' || multiAxisLayout.grandTotal !== 424) fail('S8-7E3E verified layout drift')
+for (const structure of ['pivot_field_items', 'row_fields', 'column_fields', 'compressed_row_items', 'compressed_column_items', 'detail_items', 'parent_subtotals', 'grand_totals', 'multi_axis_preview_groups', 'cache_definition', 'cache_records']) {
+  if (!pivotMultiLevelAxisPrototype.verifiedStructures?.includes(structure)) fail(`S8-7E3E verified structure ${structure} missing`)
+}
+for (const gate of ['signature_check', 'multi_axis_field_inventory', 'compressed_hierarchy_decode', 'detail_subtotal_grand_total_audit', 'multi_axis_preview_semantics', 'cache_definition_rebuild', 'cache_records_rebuild', 'package_validation', 'semantic_reparse', 'pivot_definition_preservation', 'output_worksheet_preservation', 'source_package_unchanged']) {
+  if (!pivotMultiLevelAxisPrototype.requiredGates?.includes(gate)) fail(`S8-7E3E required gate ${gate} missing`)
+}
+if (pivotMultiLevelAxisPrototype.pivotDefinition !== 'byte_preserved' || pivotMultiLevelAxisPrototype.outputWorksheet !== 'byte_preserved' || pivotMultiLevelAxisPrototype.multiAxisOutputRebuild !== 'pending' || pivotMultiLevelAxisPrototype.reliableCopySave !== 'blocked' || pivotMultiLevelAxisPrototype.producerRoundTrip !== 'pending' || pivotMultiLevelAxisPrototype.writesUserFile !== false || pivotMultiLevelAxisPrototype.sourceOverwrite !== 'blocked' || pivotMultiLevelAxisPrototype.pageFields !== 'blocked' || pivotMultiLevelAxisPrototype.externalData !== 'blocked') fail('S8-7E3E release boundary drift')
+if (pivotMultiAxisFixture.schemaVersion !== 1 || pivotMultiAxisFixture.stage !== 'S8-7E3E' || pivotMultiAxisFixture.producer !== 'Microsoft Excel' || pivotMultiAxisFixture.rowFields?.join(',') !== 'Region,City' || pivotMultiAxisFixture.columnFields?.join(',') !== 'Year,Quarter' || pivotMultiAxisFixture.previewGroupCount !== 16 || pivotMultiAxisFixture.grandTotal !== 424 || pivotMultiAxisFixture.independentReopenVerified !== true || pivotMultiAxisFixture.writesEnabled !== false) fail('S8-7E3E fixture manifest drift')
+const pivotMultiAxisFixturePath = path.join(root, pivotMultiLevelAxisPrototype.fixturePath)
+if (!fs.existsSync(pivotMultiAxisFixturePath) || fs.statSync(pivotMultiAxisFixturePath).size !== pivotMultiAxisFixture.size) fail('S8-7E3E fixture missing or size drift')
+const pivotMultiAxisSha256 = createHash('sha256').update(fs.readFileSync(pivotMultiAxisFixturePath)).digest('hex').toUpperCase()
+if (pivotMultiAxisSha256 !== pivotMultiAxisFixture.sha256) fail('S8-7E3E fixture hash drift')
+if (!pivotMultiAxisGenerator.includes('Excel.Application') || !pivotMultiAxisGenerator.includes('RowFields().Count') || !pivotMultiAxisGenerator.includes('ColumnFields().Count') || !pivotMultiAxisGenerator.includes('independently reopening producer workbook')) fail('S8-7E3E producer generator evidence missing')
+if (!model.includes('WorkbookPivotMultiAxisAuditResult') || !ooxml.includes('audit_workbook_pivot_multi_axis_isolated') || !engine.includes('audit_workbook_pivot_multi_axis_isolated_copy') || !tauriLib.includes('audit_workbook_pivot_multi_axis_isolated_copy')) fail('S8-7E3E isolated audit command evidence missing')
 if (!fs.existsSync(path.join(root, linkedDataCapabilities.fixture))) fail('S8-7A linked data fixture missing')
 if (!fixture.documentFeatures.pivotCacheRecords || fixture.currentEngineExpectations.pivotAudit !== 'supported') fail('S8-7B fixture audit expectation missing')
 if (!model.includes('pub summary: WorkbookLinkedDataSummary') || !model.includes('pub policy: WorkbookLinkedDataPolicy')) fail('S8-7A linked data model summary missing')

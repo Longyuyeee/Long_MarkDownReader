@@ -519,6 +519,60 @@
         "multiLevelAxis": "blocked",
         "pageFields": "blocked",
         "externalData": "blocked"
+      },
+      "multiLevelAxisPrototype": {
+        "stage": "S8-7E3E",
+        "execution": "temporary_copy_only",
+        "status": "multi_axis_structure_verified",
+        "fixtureManifest": "src-tauri/tests/fixtures/workbook/pivot-multi-axis-microsoft-excel.json",
+        "fixturePath": "src-tauri/tests/fixtures/workbook/pivot-multi-axis-microsoft-excel.xlsx",
+        "producer": "Microsoft Excel",
+        "verifiedLayout": {
+          "rowFields": 2,
+          "columnFields": 2,
+          "dataFields": 1,
+          "pageFields": 0,
+          "sourceRecordCount": 16,
+          "previewGroupCount": 16,
+          "outputRange": "A3:I12",
+          "grandTotal": 424
+        },
+        "verifiedStructures": [
+          "pivot_field_items",
+          "row_fields",
+          "column_fields",
+          "compressed_row_items",
+          "compressed_column_items",
+          "detail_items",
+          "parent_subtotals",
+          "grand_totals",
+          "multi_axis_preview_groups",
+          "cache_definition",
+          "cache_records"
+        ],
+        "requiredGates": [
+          "signature_check",
+          "multi_axis_field_inventory",
+          "compressed_hierarchy_decode",
+          "detail_subtotal_grand_total_audit",
+          "multi_axis_preview_semantics",
+          "cache_definition_rebuild",
+          "cache_records_rebuild",
+          "package_validation",
+          "semantic_reparse",
+          "pivot_definition_preservation",
+          "output_worksheet_preservation",
+          "source_package_unchanged"
+        ],
+        "pivotDefinition": "byte_preserved",
+        "outputWorksheet": "byte_preserved",
+        "multiAxisOutputRebuild": "pending",
+        "reliableCopySave": "blocked",
+        "producerRoundTrip": "pending",
+        "writesUserFile": false,
+        "sourceOverwrite": "blocked",
+        "pageFields": "blocked",
+        "externalData": "blocked"
       }
     }
   },

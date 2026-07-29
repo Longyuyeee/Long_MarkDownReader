@@ -128,3 +128,9 @@ S8-7E3C 已完成单行轴、单列轴和三度量可靠新副本，修正隐藏
 `count/average/max/min/product/countNums` 六种单度量聚合已进入可靠新副本白名单。实现修正跨分组 `max/min/product` 总计，Excel/WPS/LibreOffice 的刷新、保存、退出和新进程重开矩阵为 18/18；六份 LongEdit 基线和十八份生产者输出均复读 Pivot 身份、聚合 token、字段来源和关键总计。
 
 下一批为 S8-7E3E 多层轴真实 fixture、结构审计和隔离包原型；该阶段不直接开放保存。页面字段、切片器、外部数据、已有目标覆盖和原件覆盖继续阻断。
+
+## 12. 2026-07-29 增量审计：S8-7E3E
+
+S8-7E3E 已完成 Microsoft Excel 双层行轴、双层列轴真实 fixture 和独立进程重开。LongEdit 新增多层轴隔离审计命令，可验证字段顺序、sharedItems、`r` 前缀压缩明细、父级小计、Grand Total 和 16 个当前源表值分组；临时包只重建 Cache Definition/Records，Pivot Definition、输出 Worksheet、其他部件和用户文件保持不变。
+
+下一批为 S8-7E3F 多层轴定义与层级输出临时包重建：升级有序轴模板，编码压缩 `rowItems/colItems`，重建表头、明细、小计和总计，并覆盖数值变化及类别扩缩容。S8-7E3F 不开放可靠保存；三生产者往返和可靠新副本白名单留到 S8-7E3G。

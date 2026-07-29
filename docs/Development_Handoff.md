@@ -294,6 +294,7 @@ WPS 桌面补录代码已准备完成：真实 `wps-writer.odt` 到位后，同�
 72. S8-7E3B 已完成：LongEdit 标准 Pivot 新副本已由 Microsoft Excel `16.0/20228`、WPS Spreadsheets `12.0/26895`、LibreOffice Calc `26.2.4.2` 分别刷新、保存、退出进程并新进程重开；3/3 均保持 `PivotTable1`、`A3:D7`、`D7=4`，三份输出再由 LongEdit 反向复读。下一步 S8-7E3C 逐项扩展单轴和多度量新副本白名单。
 73. S8-7E3C 已完成：单行轴、单列轴和三度量均进入可靠新副本白名单；隐藏项与生产者原生多级表头已修正，Excel/WPS/LibreOffice 9/9 往返通过，十二份 XLSX 由 LongEdit 反向确认 `PivotTable1`、字段来源和聚合。下一步 S8-7E3D 扩展其余单度量聚合。
 74. S8-7E3D 已完成：`count/average/max/min/product/countNums` 六种单度量聚合均进入可靠新副本白名单；修正跨分组 `max/min/product` 总计，Excel/WPS/LibreOffice 18/18 往返与 OOXML `subtotal` 复读通过，二十四份 XLSX 由 LongEdit 反向复读。下一步 S8-7E3E 审计多层轴并建立隔离包原型。
+75. S8-7E3E 已完成：由 Microsoft Excel `16.0/20228` 生成并独立重开双层行轴、双层列轴真实 fixture；新增多层轴隔离审计命令，解码 `r` 前缀压缩项并验证双轴各 4 条明细、2 条父级小计、1 条总计及 16 个预览分组。临时包只重建 Cache Definition/Records，Pivot Definition 和输出 Worksheet 逐字节保持不变，用户文件不写入。下一步 S8-7E3F 在临时包中完整重建多层轴定义与层级输出。
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
@@ -368,3 +369,11 @@ E1B 发布门禁已升级为 `checkpoint` / `released-preview` 双状态机器�
 本阶段修正跨分组 Grand Total：`average` 加权、`max/min` 取极值、`product` 求积。LongEdit 基线为 `A3:D6`，三生产者刷新后规范化为稳定的 `A3:D7`；聚合、字段来源和总计保持不变。
 
 下一入口为 S8-7E3E 多层轴真实 fixture、结构审计和隔离包原型。页面字段、切片器、外部连接、已有目标覆盖和原件覆盖继续阻断。详细证据见 [`S8_7E3D_XLSX_Pivot_Aggregation_Copy_Round_Trip_Audit_2026-07-29.md`](./S8_7E3D_XLSX_Pivot_Aggregation_Copy_Round_Trip_Audit_2026-07-29.md)。
+
+## 16. S8-7E3E Pivot 多层轴结构恢复点
+
+Microsoft Excel 真实 fixture 已固定 `Region/City` 双层行轴和 `Year/Quarter` 双层列轴。LongEdit 可解码 Excel 的 `r` 前缀压缩层级项，验证双轴明细、父级小计和总计，并从当前源表值生成 16 个完整层级组合。
+
+`audit_workbook_pivot_multi_axis_isolated_copy` 只在内存临时包中重建 Cache Definition 与 Cache Records；包、对象语义和预览分组复读通过，Pivot Definition、输出 Worksheet 和其他未触及部件逐字节不变。命令绑定源签名，成功和旧签名路径均不修改用户文件。
+
+下一入口为 S8-7E3F：把轴模板扩展为有序多层模型，完整重建压缩 `rowItems/colItems` 与层级输出，再覆盖数值变化、类别扩缩容、旧单元格清理和样式延伸。S8-7E3F 仍不开放可靠保存；生产者往返与白名单留到 S8-7E3G。详细证据见 [`S8_7E3E_XLSX_Pivot_Multi_Axis_Structure_Prototype_Audit_2026-07-29.md`](./S8_7E3E_XLSX_Pivot_Multi_Axis_Structure_Prototype_Audit_2026-07-29.md)。

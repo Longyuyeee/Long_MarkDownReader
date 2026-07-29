@@ -81,16 +81,17 @@ pub use commands::workbook::{
     generate_workbook_pivot_layout_audit_copy,
 };
 use commands::workbook::{
-    get_workbook_capabilities, import_workbook_sheet, preview_workbook_pivot,
-    preview_workbook_pivot_rebuild, preview_workbook_structure_migration, read_workbook_file,
-    read_workbook_sheet, rebuild_workbook_pivot_cache_isolated_copy,
-    rebuild_workbook_pivot_expanded_isolated_copy, rebuild_workbook_pivot_isolated_copy,
-    recalculate_workbook_formulas, save_workbook_pivot_copy, translate_workbook_formulas,
-    update_workbook_conditional_format, update_workbook_data_validation,
-    update_workbook_defined_name, update_workbook_drawing, update_workbook_filter,
-    update_workbook_freeze_pane, update_workbook_header_footer, update_workbook_outline,
-    update_workbook_page_layout, update_workbook_print_options, update_workbook_structure,
-    update_workbook_table, verify_workbook_pivot_variants_isolated_copy, write_workbook_cells,
+    audit_workbook_pivot_multi_axis_isolated_copy, get_workbook_capabilities,
+    import_workbook_sheet, preview_workbook_pivot, preview_workbook_pivot_rebuild,
+    preview_workbook_structure_migration, read_workbook_file, read_workbook_sheet,
+    rebuild_workbook_pivot_cache_isolated_copy, rebuild_workbook_pivot_expanded_isolated_copy,
+    rebuild_workbook_pivot_isolated_copy, recalculate_workbook_formulas, save_workbook_pivot_copy,
+    translate_workbook_formulas, update_workbook_conditional_format,
+    update_workbook_data_validation, update_workbook_defined_name, update_workbook_drawing,
+    update_workbook_filter, update_workbook_freeze_pane, update_workbook_header_footer,
+    update_workbook_outline, update_workbook_page_layout, update_workbook_print_options,
+    update_workbook_structure, update_workbook_table, verify_workbook_pivot_variants_isolated_copy,
+    write_workbook_cells,
 };
 use commands::workspace::{analyze_workspace_health, get_workspace_overview};
 use commands::xml::{analyze_xml_source, write_xml_source_document};
@@ -334,6 +335,7 @@ pub fn run() {
             preview_workbook_pivot,
             preview_workbook_pivot_rebuild,
             rebuild_workbook_pivot_cache_isolated_copy,
+            audit_workbook_pivot_multi_axis_isolated_copy,
             rebuild_workbook_pivot_isolated_copy,
             rebuild_workbook_pivot_expanded_isolated_copy,
             save_workbook_pivot_copy,

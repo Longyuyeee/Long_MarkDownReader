@@ -13,8 +13,9 @@ use crate::formats::workbook::{
     WorkbookFilterTarget, WorkbookFreezePane, WorkbookHeaderFooterChange, WorkbookLinkedData,
     WorkbookMergeEdit, WorkbookMergeRange, WorkbookNamedStyle, WorkbookPageLayout,
     WorkbookPageLayoutChange, WorkbookPageMargins, WorkbookPivotAggregationVariant,
-    WorkbookPivotCacheFieldRebuild, WorkbookPivotCacheRebuildResult,
-    WorkbookPivotExpandedRebuildResult, WorkbookPivotLayoutVariant, WorkbookPivotRebuildGate,
+    WorkbookPivotAxisHierarchyAudit, WorkbookPivotCacheFieldRebuild,
+    WorkbookPivotCacheRebuildResult, WorkbookPivotExpandedRebuildResult,
+    WorkbookPivotLayoutVariant, WorkbookPivotMultiAxisAuditResult, WorkbookPivotRebuildGate,
     WorkbookPivotRebuildImpact, WorkbookPivotRebuildPlan, WorkbookPivotSynchronizedRebuildResult,
     WorkbookPivotTable, WorkbookPivotVariantVerificationResult, WorkbookPrintOptions,
     WorkbookPrintOptionsChange, WorkbookProtection, WorkbookRangeReference, WorkbookRowHeight,
@@ -7150,6 +7151,333 @@ pub(crate) fn rebuild_workbook_pivot_cache_isolated(
                 gate("output_cells_rebuild", "pending"),
                 gate("atomic_replace", "blocked"),
                 gate("excel_or_libreoffice_round_trip", "pending"),
+            ],
+        },
+    ))
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct PivotHierarchyAudit {
+    field_indices: Vec<usize>,
+    field_names: Vec<String>,
+    detail_item_count: usize,
+    subtotal_item_count: usize,
+    grand_total_item_count: usize,
+    compressed_item_count: usize,
+}
+
+#[derive(Debug)]
+struct PivotHierarchyItem {
+    kind: String,
+    repeat: usize,
+    values: Vec<usize>,
+}
+
+fn parse_pivot_hierarchy_axis(
+    xml: &[u8],
+    fields: &[PivotCacheFieldTemplate],
+    fields_element: &[u8],
+    items_element: &[u8],
+) -> Result<PivotHierarchyAudit, String> {
+    let mut field_indices = Vec::new();
+    let mut items = Vec::<PivotHierarchyItem>::new();
+    let mut in_fields = false;
+    let mut in_items = false;
+    let mut current_item = None::<PivotHierarchyItem>;
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("Failed to parse multi-axis Pivot hierarchy: {error}"))?
+        {
+            Event::Start(ref event) if event.local_name().as_ref() == fields_element => {
+                in_fields = true;
+            }
+            Event::Start(ref event) if event.local_name().as_ref() == items_element => {
+                in_items = true;
+            }
+            Event::Start(ref event) if in_items && event.local_name().as_ref() == b"i" => {
+                if current_item.is_some() {
+                    return Err("Nested Pivot hierarchy items are not supported".into());
+                }
+                current_item = Some(PivotHierarchyItem {
+                    kind: xml_value(event, b"t", reader.decoder())?.unwrap_or_default(),
+                    repeat: usize_xml_attribute(event, b"r", reader.decoder())?.unwrap_or_default(),
+                    values: Vec::new(),
+                });
+            }
+            Event::Empty(ref event) if in_fields && event.local_name().as_ref() == b"field" => {
+                field_indices.push(
+                    usize_xml_attribute(event, b"x", reader.decoder())?
+                        .ok_or("Pivot hierarchy field is missing its cache index")?,
+                );
+            }
+            Event::Empty(ref event) if in_items && event.local_name().as_ref() == b"x" => {
+                current_item
+                    .as_mut()
+                    .ok_or("Pivot hierarchy value appears outside an item")?
+                    .values
+                    .push(usize_xml_attribute(event, b"v", reader.decoder())?.unwrap_or_default());
+            }
+            Event::Empty(ref event) if in_items && event.local_name().as_ref() == b"i" => {
+                items.push(PivotHierarchyItem {
+                    kind: xml_value(event, b"t", reader.decoder())?.unwrap_or_default(),
+                    repeat: usize_xml_attribute(event, b"r", reader.decoder())?.unwrap_or_default(),
+                    values: Vec::new(),
+                });
+            }
+            Event::End(ref event) if event.local_name().as_ref() == b"i" && in_items => {
+                items.push(
+                    current_item
+                        .take()
+                        .ok_or("Pivot hierarchy item ended without a start")?,
+                );
+            }
+            Event::End(ref event) if event.local_name().as_ref() == fields_element => {
+                in_fields = false;
+            }
+            Event::End(ref event) if event.local_name().as_ref() == items_element => {
+                in_items = false;
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    if field_indices.len() < 2 {
+        return Err("Multi-axis hierarchy audit requires at least two fields on each axis".into());
+    }
+    let field_names = field_indices
+        .iter()
+        .map(|index| {
+            fields
+                .get(*index)
+                .map(|field| field.name.clone())
+                .ok_or("Pivot hierarchy field index exceeds the cache field inventory")
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut previous = Vec::<usize>::new();
+    let mut seen_details = HashSet::<Vec<usize>>::new();
+    let mut detail_item_count = 0usize;
+    let mut subtotal_item_count = 0usize;
+    let mut grand_total_item_count = 0usize;
+    let mut compressed_item_count = 0usize;
+    for item in items {
+        match item.kind.as_str() {
+            "" => {
+                if item.repeat > previous.len()
+                    || item.repeat + item.values.len() != field_indices.len()
+                {
+                    return Err("Pivot hierarchy detail item has an invalid compressed key".into());
+                }
+                let mut decoded = previous[..item.repeat].to_vec();
+                decoded.extend(item.values);
+                for (level, shared_index) in decoded.iter().enumerate() {
+                    let field = &fields[field_indices[level]];
+                    if *shared_index >= field.shared_items.len() {
+                        return Err("Pivot hierarchy item exceeds cache sharedItems".into());
+                    }
+                }
+                if !seen_details.insert(decoded.clone()) {
+                    return Err("Pivot hierarchy contains a duplicate detail key".into());
+                }
+                if item.repeat > 0 {
+                    compressed_item_count += 1;
+                }
+                previous = decoded;
+                detail_item_count += 1;
+            }
+            "default" => {
+                if item.repeat + item.values.len() >= field_indices.len() {
+                    return Err("Pivot hierarchy subtotal does not identify a parent level".into());
+                }
+                subtotal_item_count += 1;
+            }
+            "grand" => {
+                if item.values.len() > 1 || item.values.iter().any(|value| *value != 0) {
+                    return Err(
+                        "Pivot hierarchy grand total contains a non-placeholder item value".into(),
+                    );
+                }
+                grand_total_item_count += 1;
+            }
+            kind => return Err(format!("Unsupported Pivot hierarchy item type: {kind}")),
+        }
+    }
+    if detail_item_count == 0
+        || subtotal_item_count == 0
+        || grand_total_item_count != 1
+        || seen_details.len() != detail_item_count
+    {
+        return Err("Pivot hierarchy is missing detail, subtotal, or grand-total structure".into());
+    }
+    Ok(PivotHierarchyAudit {
+        field_indices,
+        field_names,
+        detail_item_count,
+        subtotal_item_count,
+        grand_total_item_count,
+        compressed_item_count,
+    })
+}
+
+fn public_hierarchy_audit(value: PivotHierarchyAudit) -> WorkbookPivotAxisHierarchyAudit {
+    WorkbookPivotAxisHierarchyAudit {
+        field_indices: value.field_indices,
+        field_names: value.field_names,
+        detail_item_count: value.detail_item_count,
+        subtotal_item_count: value.subtotal_item_count,
+        grand_total_item_count: value.grand_total_item_count,
+        compressed_item_count: value.compressed_item_count,
+    }
+}
+
+pub(crate) fn audit_workbook_pivot_multi_axis_isolated(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+) -> Result<(Vec<u8>, WorkbookPivotMultiAxisAuditResult), String> {
+    if pivot.audit.row_field_count < 2
+        || pivot.audit.column_field_count < 2
+        || pivot.audit.data_field_count != 1
+        || pivot.audit.page_field_count != 0
+    {
+        return Err(
+            "Multi-axis prototype requires at least two row fields, two column fields, one data field, and no page fields"
+                .into(),
+        );
+    }
+    let plan = plan_workbook_pivot_rebuild(source, pivot)?;
+    let pivot_part = plan
+        .affected_parts
+        .iter()
+        .find(|impact| impact.role == "pivot_table")
+        .map(|impact| impact.part.clone())
+        .ok_or("Multi-axis audit plan is missing the Pivot definition part")?;
+    let output_part = plan
+        .affected_parts
+        .iter()
+        .find(|impact| impact.role == "output_worksheet")
+        .map(|impact| impact.part.clone())
+        .ok_or("Multi-axis audit plan is missing the output worksheet part")?;
+    let definition_part = plan
+        .affected_parts
+        .iter()
+        .find(|impact| impact.role == "cache_definition")
+        .map(|impact| impact.part.clone())
+        .ok_or("Multi-axis audit plan is missing the cache definition part")?;
+    let source_entries = load_package(source)?
+        .into_iter()
+        .map(|entry| (entry.name, entry.data))
+        .collect::<HashMap<_, _>>();
+    let fields = parse_pivot_cache_field_templates(
+        source_entries
+            .get(&definition_part)
+            .ok_or("Multi-axis audit package is missing the cache definition")?,
+    )?;
+    let pivot_xml = source_entries
+        .get(&pivot_part)
+        .ok_or("Multi-axis audit package is missing the Pivot definition")?;
+    let row_axis = parse_pivot_hierarchy_axis(pivot_xml, &fields, b"rowFields", b"rowItems")?;
+    let column_axis = parse_pivot_hierarchy_axis(pivot_xml, &fields, b"colFields", b"colItems")?;
+    let preview = preview_pivot(source, pivot, Vec::new())?;
+    if preview.groups.is_empty()
+        || preview.groups.iter().any(|group| {
+            group.row_keys.len() != row_axis.field_indices.len()
+                || group.column_keys.len() != column_axis.field_indices.len()
+                || group.measures.len() != 1
+        })
+    {
+        return Err("Multi-axis preview did not preserve all hierarchy levels".into());
+    }
+
+    let (isolated, cache_result) = rebuild_workbook_pivot_cache_isolated(source, pivot)?;
+    let isolated_entries = load_package(&isolated)?
+        .into_iter()
+        .map(|entry| (entry.name, entry.data))
+        .collect::<HashMap<_, _>>();
+    let pivot_definition_preserved =
+        source_entries.get(&pivot_part) == isolated_entries.get(&pivot_part);
+    let output_worksheet_preserved =
+        source_entries.get(&output_part) == isolated_entries.get(&output_part);
+    if !pivot_definition_preserved || !output_worksheet_preserved {
+        return Err(
+            "Multi-axis cache prototype changed the Pivot definition or output worksheet".into(),
+        );
+    }
+    let isolated_fields = parse_pivot_cache_field_templates(
+        isolated_entries
+            .get(&definition_part)
+            .ok_or("Multi-axis isolated package is missing the cache definition")?,
+    )?;
+    let isolated_pivot_xml = isolated_entries
+        .get(&pivot_part)
+        .ok_or("Multi-axis isolated package is missing the Pivot definition")?;
+    let isolated_row = parse_pivot_hierarchy_axis(
+        isolated_pivot_xml,
+        &isolated_fields,
+        b"rowFields",
+        b"rowItems",
+    )?;
+    let isolated_column = parse_pivot_hierarchy_axis(
+        isolated_pivot_xml,
+        &isolated_fields,
+        b"colFields",
+        b"colItems",
+    )?;
+    let isolated_linked = read_workbook_linked_data(&isolated)?;
+    let isolated_pivot = isolated_linked
+        .pivot_tables
+        .iter()
+        .find(|candidate| candidate.part == pivot.part)
+        .ok_or("Multi-axis Pivot identity was lost in the isolated package")?;
+    let isolated_preview = preview_pivot(&isolated, isolated_pivot, Vec::new())?;
+    let semantic_reparse_valid = isolated_row == row_axis
+        && isolated_column == column_axis
+        && isolated_preview.groups == preview.groups
+        && isolated_pivot.audit.writeback.status == "structure_candidate";
+    if !semantic_reparse_valid {
+        return Err("Multi-axis hierarchy or preview semantics drifted after cache rebuild".into());
+    }
+    let gate = |id: &str, status: &str| WorkbookPivotRebuildGate {
+        id: id.into(),
+        status: status.into(),
+    };
+    Ok((
+        isolated,
+        WorkbookPivotMultiAxisAuditResult {
+            pivot_name: pivot.name.clone(),
+            status: "multi_axis_structure_verified".into(),
+            execution: "temporary_copy_only".into(),
+            writes_user_file: false,
+            source_record_count: cache_result.rebuilt_record_count,
+            preview_group_count: preview.groups.len(),
+            row_axis: public_hierarchy_audit(row_axis),
+            column_axis: public_hierarchy_audit(column_axis),
+            rebuilt_parts: cache_result.rebuilt_parts,
+            source_package_digest: cache_result.source_package_digest,
+            isolated_package_digest: cache_result.isolated_package_digest,
+            package_valid: cache_result.package_valid,
+            semantic_reparse_valid,
+            pivot_definition_preserved,
+            output_worksheet_preserved,
+            untouched_parts_preserved: cache_result.untouched_parts_preserved,
+            gates: vec![
+                gate("signature_check", "passed"),
+                gate("multi_axis_field_inventory", "passed"),
+                gate("compressed_hierarchy_decode", "passed"),
+                gate("detail_subtotal_grand_total_audit", "passed"),
+                gate("multi_axis_preview_semantics", "passed"),
+                gate("cache_definition_rebuild", "passed"),
+                gate("cache_records_rebuild", "passed"),
+                gate("package_validation", "passed"),
+                gate("semantic_reparse", "passed"),
+                gate("pivot_definition_preservation", "passed"),
+                gate("output_worksheet_preservation", "passed"),
+                gate("multi_axis_output_rebuild", "pending"),
+                gate("atomic_replace", "blocked"),
+                gate("producer_round_trip", "pending"),
             ],
         },
     ))
@@ -17225,10 +17553,10 @@ pub fn patch_workbook(
 #[cfg(test)]
 mod tests {
     use super::{
-        parse_chart_part, patch_calc_chain_rows, patch_sheet_structure_axis,
-        patch_workbook_conditional_format, patch_workbook_data_validation,
-        patch_workbook_defined_name, patch_workbook_drawing, patch_workbook_filter,
-        patch_workbook_structure, patch_workbook_table, read_sheet_formulas,
+        audit_workbook_pivot_multi_axis_isolated, parse_chart_part, patch_calc_chain_rows,
+        patch_sheet_structure_axis, patch_workbook_conditional_format,
+        patch_workbook_data_validation, patch_workbook_defined_name, patch_workbook_drawing,
+        patch_workbook_filter, patch_workbook_structure, patch_workbook_table, read_sheet_formulas,
         read_workbook_defined_names, read_workbook_linked_data, read_workbook_sheet_layout,
         rebuild_workbook_pivot_aggregation_variant_isolated, validate_plain_structure_sheet,
         validate_workbook_package,
@@ -17271,6 +17599,55 @@ mod tests {
             .unwrap()
             .by_name(name)
             .is_ok()
+    }
+
+    #[test]
+    fn audits_real_multi_axis_pivot_hierarchy_in_an_isolated_cache_package() {
+        const FIXTURE: &[u8] =
+            include_bytes!("../../tests/fixtures/workbook/pivot-multi-axis-microsoft-excel.xlsx");
+        validate_workbook_package(FIXTURE).unwrap();
+        let linked = read_workbook_linked_data(FIXTURE).unwrap();
+        let pivot = linked
+            .pivot_tables
+            .iter()
+            .find(|pivot| pivot.name == "MultiAxisPivot")
+            .unwrap();
+        assert_eq!(pivot.audit.writeback.status, "structure_candidate");
+        assert_eq!(pivot.audit.row_field_count, 2);
+        assert_eq!(pivot.audit.column_field_count, 2);
+        assert_eq!(pivot.audit.data_field_count, 1);
+        assert_eq!(pivot.audit.page_field_count, 0);
+
+        let (isolated, result) = audit_workbook_pivot_multi_axis_isolated(FIXTURE, pivot).unwrap();
+        assert_eq!(result.status, "multi_axis_structure_verified");
+        assert_eq!(result.execution, "temporary_copy_only");
+        assert!(!result.writes_user_file);
+        assert_eq!(result.source_record_count, 16);
+        assert_eq!(result.preview_group_count, 16);
+        assert_eq!(result.row_axis.field_names, ["Region", "City"]);
+        assert_eq!(result.row_axis.detail_item_count, 4);
+        assert_eq!(result.row_axis.subtotal_item_count, 2);
+        assert_eq!(result.row_axis.grand_total_item_count, 1);
+        assert_eq!(result.row_axis.compressed_item_count, 2);
+        assert_eq!(result.column_axis.field_names, ["Year", "Quarter"]);
+        assert_eq!(result.column_axis.detail_item_count, 4);
+        assert_eq!(result.column_axis.subtotal_item_count, 2);
+        assert_eq!(result.column_axis.grand_total_item_count, 1);
+        assert_eq!(result.column_axis.compressed_item_count, 2);
+        assert!(result.package_valid);
+        assert!(result.semantic_reparse_valid);
+        assert!(result.pivot_definition_preserved);
+        assert!(result.output_worksheet_preserved);
+        assert!(result.untouched_parts_preserved);
+        assert_ne!(result.source_package_digest, result.isolated_package_digest);
+        assert_eq!(FIXTURE.len(), 14_433);
+
+        let mut workbook: Xlsx<_> = open_workbook_from_rs(Cursor::new(isolated)).unwrap();
+        let output = workbook.worksheet_range("Pivot").unwrap();
+        assert!(
+            matches!(output.get_value((11, 8)), Some(Data::Float(value)) if *value == 424.0)
+                || matches!(output.get_value((11, 8)), Some(Data::Int(424)))
+        );
     }
 
     #[test]
