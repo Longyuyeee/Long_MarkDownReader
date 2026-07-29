@@ -240,12 +240,29 @@
                   <span v-for="variant in pivotVariantVerificationResults.get(pivot.part)!.layoutVariants" :key="variant.layout">
                     <strong>{{ pivotLayoutVariantLabel(variant.layout) }}</strong>
                     <small>行/列/值 {{ variant.rowFieldCount }}/{{ variant.columnFieldCount }}/{{ variant.dataFieldCount }} · {{ variant.outputRange }} · {{ variant.outputCellCount }} 单元格 · {{ variant.styledOutputCellCount }} 个样式复读</small>
+                    <input
+                      :value="pivotCopyFileNames.get(pivotLayoutCopyKey(pivot.part, variant.layout)) || ''"
+                      maxlength="255"
+                      :aria-label="`${pivotLayoutVariantLabel(variant.layout)}新副本文件名`"
+                      :disabled="pivotSaveCopyLoading === pivotLayoutCopyKey(pivot.part, variant.layout)"
+                      @input="setPivotCopyFileName(pivotLayoutCopyKey(pivot.part, variant.layout), ($event.target as HTMLInputElement).value)"
+                      @keydown.enter.prevent="savePivotLayoutCopy(pivot, variant)"
+                    />
+                    <button
+                      :disabled="pivotSaveCopyLoading === pivotLayoutCopyKey(pivot.part, variant.layout) || !pivotCopyFileNames.get(pivotLayoutCopyKey(pivot.part, variant.layout))?.trim() || Boolean(dirtyCount)"
+                      title="只在同目录创建经过复读验证的新 XLSX"
+                      @click="savePivotLayoutCopy(pivot, variant)"
+                    >
+                      <n-icon :component="SaveIcon" />
+                      {{ pivotSaveCopyLoading === pivotLayoutCopyKey(pivot.part, variant.layout) ? '验证中…' : '另存并打开' }}
+                    </button>
+                    <small v-if="pivotSavedCopyResults.get(pivotLayoutCopyKey(pivot.part, variant.layout))" class="saved">已可靠保存 · 源文件未修改</small>
                   </span>
                 </div>
                 <div class="pivot-rebuild-gates">
                   <span v-for="gate in pivotVariantVerificationResults.get(pivot.part)!.gates" :key="gate.id" :class="gate.status">{{ gate.id }} · {{ gate.status }}</span>
                 </div>
-                <footer>七类聚合与三种布局均已完成临时 OOXML 包重写、语义、输出值和样式复读；多层轴、页面筛选和文件替换仍阻断。</footer>
+                <footer>七类聚合与三种布局均已完成 OOXML 复读；三种布局可靠新副本已通过 Excel/WPS/LibreOffice 9/9 往返，多层轴、页面筛选和原件覆盖仍阻断。</footer>
               </section>
               <div v-if="pivot.audit.fields.length" class="pivot-field-list">
                 <span v-for="field in pivot.audit.fields" :key="field.index">
@@ -735,7 +752,7 @@ interface WorkbookPivotCacheFieldRebuild { index: number; name: string; valueTyp
 interface WorkbookPivotCacheRebuildResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; sourceRecordCount: number; rebuiltRecordCount: number; rebuiltParts: string[]; preservedPartCount: number; sourcePackageDigest: string; isolatedPackageDigest: string; packageValid: boolean; semanticReparseValid: boolean; untouchedPartsPreserved: boolean; fields: WorkbookPivotCacheFieldRebuild[]; gates: WorkbookPivotRebuildGate[] }
 interface WorkbookPivotSynchronizedRebuildResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; sourceRecordCount: number; rebuiltRecordCount: number; visibleRowItemCount: number; visibleColumnItemCount: number; outputCellCount: number; rebuiltParts: string[]; preservedPartCount: number; sourcePackageDigest: string; isolatedPackageDigest: string; packageValid: boolean; semanticReparseValid: boolean; outputValuesVerified: boolean; untouchedPartsPreserved: boolean; fields: WorkbookPivotCacheFieldRebuild[]; gates: WorkbookPivotRebuildGate[] }
 interface WorkbookPivotExpandedRebuildResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; rebuiltRecordCount: number; addedSharedItemCount: number; removedSharedItemCount: number; visibleRowItemCount: number; visibleColumnItemCount: number; oldOutputRange: string; newOutputRange: string; outputCellCount: number; clearedStaleCellCount: number; extendedStyleCellCount: number; rebuiltParts: string[]; preservedPartCount: number; sourcePackageDigest: string; isolatedPackageDigest: string; packageValid: boolean; semanticReparseValid: boolean; outputValuesVerified: boolean; untouchedPartsPreserved: boolean; fields: WorkbookPivotCacheFieldRebuild[]; gates: WorkbookPivotRebuildGate[] }
-interface WorkbookPivotSavedCopyResult { status: string; saveMode: string; pivotName: string; targetPath: string; targetSignature: string; targetDigest: string; sourceSignature: string; sourceDigest: string; sourceUnchanged: boolean; outputBytes: number; outputRange: string; outputCellCount: number; changedParts: string[]; structuralReopenVerified: boolean; semanticReopenVerified: boolean; outputValuesVerified: boolean; untouchedPartsPreserved: boolean }
+interface WorkbookPivotSavedCopyResult { status: string; saveMode: string; layoutVariant: string; pivotName: string; targetPath: string; targetSignature: string; targetDigest: string; sourceSignature: string; sourceDigest: string; sourceUnchanged: boolean; outputBytes: number; outputRange: string; outputCellCount: number; changedParts: string[]; structuralReopenVerified: boolean; semanticReopenVerified: boolean; outputValuesVerified: boolean; untouchedPartsPreserved: boolean }
 interface WorkbookPivotAggregationVariant { aggregation: string; status: string; outputRange: string; outputCellCount: number }
 interface WorkbookPivotLayoutVariant { layout: string; rowFieldCount: number; columnFieldCount: number; dataFieldCount: number; groupCount: number; measureCount: number; outputValueCount: number; outputRange: string; outputCellCount: number; styledOutputCellCount: number; isolatedPackageDigest: string; status: string }
 interface WorkbookPivotVariantVerificationResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; aggregationVariants: WorkbookPivotAggregationVariant[]; layoutVariants: WorkbookPivotLayoutVariant[]; packageVariantCount: number; layoutPackageVariantCount: number; semanticVariantCount: number; sourcePackageDigest: string; packageVariantsVerified: boolean; semanticVariantsVerified: boolean; gates: WorkbookPivotRebuildGate[] }
@@ -1693,9 +1710,10 @@ const rebuildPivotExpandedIsolated = async (pivot: WorkbookPivotTable) => {
     pivotExpandedRebuildLoading.value = ''
   }
 }
-const setPivotCopyFileName = (pivotPart: string, value: string) => {
+const pivotLayoutCopyKey = (pivotPart: string, layout: string) => `${pivotPart}\u0000${layout}`
+const setPivotCopyFileName = (key: string, value: string) => {
   const next = new Map(pivotCopyFileNames.value)
-  next.set(pivotPart, value)
+  next.set(key, value)
   pivotCopyFileNames.value = next
 }
 const savePivotCopy = async (pivot: WorkbookPivotTable) => {
@@ -1718,6 +1736,7 @@ const savePivotCopy = async (pivot: WorkbookPivotTable) => {
     if (
       saved.status !== 'saved_verified'
       || saved.saveMode !== 'new_copy_only'
+      || saved.layoutVariant !== 'standard'
       || !saved.sourceUnchanged
       || !saved.structuralReopenVerified
       || !saved.semanticReopenVerified
@@ -1726,6 +1745,47 @@ const savePivotCopy = async (pivot: WorkbookPivotTable) => {
     ) throw new Error('Pivot 新副本未通过完整写后复读')
     const next = new Map(pivotSavedCopyResults.value)
     next.set(pivot.part, saved)
+    pivotSavedCopyResults.value = next
+    message.success(`已可靠另存并验证：${targetFileName}`)
+    await router.replace({ query: { path: saved.targetPath } })
+  } catch (cause) {
+    message.error(String(cause).replace(/^Error:\s*/, ''))
+  } finally {
+    pivotSaveCopyLoading.value = ''
+  }
+}
+const savePivotLayoutCopy = async (pivot: WorkbookPivotTable, variant: WorkbookPivotLayoutVariant) => {
+  const key = pivotLayoutCopyKey(pivot.part, variant.layout)
+  const targetFileName = pivotCopyFileNames.value.get(key)?.trim()
+  if (!workbook.value || !targetFileName || pivotSaveCopyLoading.value) return
+  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的工作簿更改')
+  pivotSaveCopyLoading.value = key
+  try {
+    const saved = await invoke<WorkbookPivotSavedCopyResult>('save_workbook_pivot_copy', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      targetFileName,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        expectedOutputDigest: variant.isolatedPackageDigest,
+        pivotPart: pivot.part,
+        layoutVariant: variant.layout,
+      },
+    })
+    if (
+      saved.status !== 'saved_verified'
+      || saved.saveMode !== 'new_copy_only'
+      || saved.layoutVariant !== variant.layout
+      || saved.outputRange !== variant.outputRange
+      || saved.outputCellCount !== variant.outputCellCount
+      || !saved.sourceUnchanged
+      || !saved.structuralReopenVerified
+      || !saved.semanticReopenVerified
+      || !saved.outputValuesVerified
+      || !saved.untouchedPartsPreserved
+    ) throw new Error('Pivot 布局新副本未通过完整写后复读')
+    const next = new Map(pivotSavedCopyResults.value)
+    next.set(key, saved)
     pivotSavedCopyResults.value = next
     message.success(`已可靠另存并验证：${targetFileName}`)
     await router.replace({ query: { path: saved.targetPath } })
@@ -1750,6 +1810,13 @@ const verifyPivotVariantsIsolated = async (pivot: WorkbookPivotTable) => {
     const next = new Map(pivotVariantVerificationResults.value)
     next.set(pivot.part, result)
     pivotVariantVerificationResults.value = next
+    const names = new Map(pivotCopyFileNames.value)
+    const baseName = fileName.value.replace(/\.xlsx$/i, '')
+    for (const variant of result.layoutVariants) {
+      const key = pivotLayoutCopyKey(pivot.part, variant.layout)
+      if (!names.has(key)) names.set(key, `${baseName}-Pivot-${variant.layout}.xlsx`)
+    }
+    pivotCopyFileNames.value = names
     message.success(`已验证 ${result.packageVariantCount} 个临时包，其中 ${result.layoutPackageVariantCount} 个布局包`)
   } catch (cause) {
     message.error(String(cause).replace(/^Error:\s*/, ''))
@@ -4279,6 +4346,9 @@ onBeforeUnmount(() => {
 .pivot-variant-grid > span,.pivot-layout-variants > span { min-width: 0; display: grid; gap: 2px; padding: 6px 7px; border-radius: 4px; background: var(--theme-bg-secondary); }
 .pivot-variant-grid strong,.pivot-layout-variants strong { color: var(--theme-text) !important; font-size: 8px !important; }
 .pivot-variant-grid small,.pivot-layout-variants small { overflow: hidden; color: var(--theme-text-secondary); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.pivot-layout-variants input { min-width: 0; width: 100%; height: 25px; margin-top: 4px; padding: 0 6px; border: 1px solid var(--theme-border); border-radius: 4px; background: var(--theme-bg-primary); color: var(--theme-text-primary); font-size: 8px; }
+.pivot-layout-variants button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 25px; margin-top: 2px; }
+.pivot-layout-variants small.saved { color: var(--theme-success); }
 .pivot-variant-verification-result > footer { margin: 0; }
 .pivot-field-list span { border-color: rgba(var(--theme-primary-rgb),.14); }
 .pivot-data-fields span { color: #267347; border-color: rgba(49,130,86,.18); background: rgba(49,130,86,.04); }

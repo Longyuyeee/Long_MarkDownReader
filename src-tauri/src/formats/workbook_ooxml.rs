@@ -8476,12 +8476,25 @@ fn pivot_layout_variant(
         .first()
         .cloned()
         .ok_or("布局变体缺少值字段模板")?;
+    let count_source = variant
+        .audit
+        .fields
+        .iter()
+        .find(|field| field.role == "row")
+        .map(|field| (field.index, field.name.clone()));
     variant.audit.data_fields = aggregations
         .iter()
         .map(|aggregation| {
             let mut field = template.clone();
             field.aggregation = (*aggregation).into();
-            field.name = format!("{} ({aggregation})", template.name);
+            if aggregations.len() > 1 && *aggregation == "count" {
+                if let Some((source_index, source_name)) = &count_source {
+                    field.source_index = *source_index;
+                    field.name = format!("{source_name} ({aggregation})");
+                }
+            } else {
+                field.name = format!("{} ({aggregation})", template.name);
+            }
             field
         })
         .collect();
@@ -8533,7 +8546,7 @@ fn pivot_field_for_layout(
     field_index: usize,
     row_field: Option<usize>,
     column_field: Option<usize>,
-    data_field: usize,
+    data_fields: &[usize],
 ) -> Result<BytesStart<'static>, String> {
     let name = String::from_utf8_lossy(start.name().as_ref()).into_owned();
     let mut updated = BytesStart::new(name);
@@ -8549,7 +8562,7 @@ fn pivot_field_for_layout(
     } else if column_field == Some(field_index) {
         updated.push_attribute(("axis", "axisCol"));
     }
-    if field_index == data_field {
+    if data_fields.contains(&field_index) {
         updated.push_attribute(("dataField", "1"));
     }
     Ok(updated.into_owned())
@@ -8669,12 +8682,15 @@ fn rewrite_pivot_layout_variant_xml(
 ) -> Result<Vec<u8>, String> {
     let row_field = (variant.audit.row_field_count == 1).then_some(row_axis.field_index);
     let column_field = (variant.audit.column_field_count == 1).then_some(column_axis.field_index);
-    let data_field = variant
+    let data_fields = variant
         .audit
         .data_fields
-        .first()
+        .iter()
         .map(|field| field.source_index)
-        .ok_or("布局变体缺少值字段")?;
+        .collect::<Vec<_>>();
+    if data_fields.is_empty() {
+        return Err("布局变体缺少值字段".into());
+    }
     let row_visible = row_axis
         .hidden
         .iter()
@@ -8724,7 +8740,7 @@ fn rewrite_pivot_layout_variant_xml(
                     pivot_field_index,
                     row_field,
                     column_field,
-                    data_field,
+                    &data_fields,
                 )?;
                 pivot_field_index = pivot_field_index.saturating_add(1);
                 let updated = if matches!(event, Event::Start(_)) {
@@ -8836,40 +8852,80 @@ fn preview_measure_edit(
     })
 }
 
+fn pivot_preview_value_from_data(value: &Data) -> Result<String, String> {
+    Ok(match value {
+        Data::Empty => "(空白)".into(),
+        Data::String(value) => value.clone(),
+        Data::Int(value) => value.to_string(),
+        Data::Float(value) => pivot_cache_number(*value)?,
+        Data::Bool(value) => value.to_string(),
+        Data::DateTime(value) => value.to_string(),
+        Data::DateTimeIso(value) | Data::DurationIso(value) => value.clone(),
+        Data::Error(value) => value.to_string(),
+    })
+}
+
+fn pivot_visible_axis_values(
+    snapshot: &crate::formats::workbook_pivot::PivotSourceSnapshot,
+    axis: &PivotAxisRebuildTemplate,
+    fields: &[PivotCacheFieldTemplate],
+) -> Result<HashSet<String>, String> {
+    let field = fields
+        .get(axis.field_index)
+        .ok_or("Pivot 可见轴字段不存在")?;
+    let mut visible = HashSet::new();
+    for record in &snapshot.rows {
+        let value = record
+            .get(axis.field_index)
+            .ok_or("Pivot 来源记录缺少可见轴字段")?;
+        let scalar = pivot_cache_scalar(value)?;
+        let index = field
+            .shared_items
+            .iter()
+            .position(|item| item == &scalar)
+            .ok_or("Pivot 可见轴值不在 sharedItems 中")?;
+        if axis.hidden.get(index) == Some(&false) {
+            visible.insert(pivot_preview_value_from_data(value)?);
+        }
+    }
+    Ok(visible)
+}
+
 fn build_pivot_layout_output_edits(
     source: &[u8],
     pivot: &WorkbookPivotTable,
     output_sheet: &str,
     top: usize,
     left: usize,
+    row_axis: &PivotAxisRebuildTemplate,
+    column_axis: &PivotAxisRebuildTemplate,
+    fields: &[PivotCacheFieldTemplate],
 ) -> Result<(Vec<WorkbookCellEdit>, PivotOutputLayout), String> {
     let row_count = pivot.audit.row_field_count;
     let column_count = pivot.audit.column_field_count;
-    let aggregations = pivot
-        .audit
-        .data_fields
-        .iter()
-        .map(|field| field.aggregation.as_str())
-        .collect::<Vec<_>>();
+    let snapshot = read_pivot_source_snapshot(source, pivot)?;
+    let visible_row_values = pivot_visible_axis_values(&snapshot, row_axis, fields)?;
+    let visible_column_values = pivot_visible_axis_values(&snapshot, column_axis, fields)?;
     let main = preview_pivot(source, pivot, Vec::new())?;
-    let row_totals = preview_pivot(
-        source,
-        &pivot_layout_variant(pivot, row_count, 0, &aggregations)?,
-        Vec::new(),
-    )?;
-    let column_totals = preview_pivot(
-        source,
-        &pivot_layout_variant(pivot, 0, column_count, &aggregations)?,
-        Vec::new(),
-    )?;
-    let grand = preview_pivot(
-        source,
-        &pivot_layout_variant(pivot, 0, 0, &aggregations)?,
-        Vec::new(),
-    )?;
     let mut row_keys = Vec::<(String, String)>::new();
     let mut column_keys = Vec::<(String, String)>::new();
-    for group in &main.groups {
+    let visible_groups = main
+        .groups
+        .iter()
+        .filter(|group| {
+            (row_count == 0
+                || group
+                    .row_keys
+                    .first()
+                    .is_some_and(|key| visible_row_values.contains(&key.value)))
+                && (column_count == 0
+                    || group
+                        .column_keys
+                        .first()
+                        .is_some_and(|key| visible_column_values.contains(&key.value)))
+        })
+        .collect::<Vec<_>>();
+    for group in &visible_groups {
         let row_key = pivot_preview_key(&group.row_keys);
         if row_count > 0 && !row_keys.iter().any(|(key, _)| key == &row_key) {
             row_keys.push((row_key, pivot_preview_label(&group.row_keys, "Values")));
@@ -8899,60 +8955,127 @@ fn build_pivot_layout_output_edits(
     } else {
         detail_column_count
     };
-    let data_start_row = top + 1;
+    let header_row_count = if row_count == 0 {
+        2
+    } else if column_count > 0 && measure_count > 1 {
+        3
+    } else {
+        1
+    };
+    let data_start_row = top + header_row_count;
     let data_start_column = left + 1;
     let bottom = data_start_row + row_keys.len() - 1 + usize::from(row_count > 0);
     let right = left + total_column_count;
     let mut edits = Vec::new();
-    edits.push(WorkbookCellEdit {
-        sheet: output_sheet.into(),
-        row: top,
-        column: left,
-        input: if row_count > 0 {
-            "Row Labels".into()
-        } else {
-            "Values".into()
-        },
-        kind: "string".into(),
-    });
-    for (column_position, (_, column_label)) in column_keys.iter().enumerate() {
-        for (measure_position, measure) in pivot.audit.data_fields.iter().enumerate() {
-            edits.push(WorkbookCellEdit {
-                sheet: output_sheet.into(),
-                row: top,
-                column: data_start_column + column_position * measure_count + measure_position,
-                input: if column_count > 0 {
-                    format!("{column_label} · {}", measure.name)
+    for header_offset in 0..header_row_count {
+        for column in left..=right {
+            let value_column = column.saturating_sub(data_start_column);
+            let input = if header_row_count == 1 {
+                if column == left {
+                    "Row Labels".into()
                 } else {
-                    measure.name.clone()
-                },
-                kind: "string".into(),
-            });
-        }
-    }
-    if column_count > 0 {
-        for (measure_position, measure) in pivot.audit.data_fields.iter().enumerate() {
+                    pivot
+                        .audit
+                        .data_fields
+                        .get(value_column)
+                        .map(|measure| measure.name.clone())
+                        .unwrap_or_default()
+                }
+            } else if header_offset == 0 {
+                if column == data_start_column {
+                    "Column Labels".into()
+                } else {
+                    String::new()
+                }
+            } else if header_row_count == 2 {
+                if column == left {
+                    String::new()
+                } else if value_column < detail_column_count {
+                    column_keys
+                        .get(value_column / measure_count)
+                        .map(|(_, label)| label.clone())
+                        .unwrap_or_default()
+                } else {
+                    "Grand Total".into()
+                }
+            } else if header_offset == 1 {
+                if column == left {
+                    String::new()
+                } else if value_column < detail_column_count
+                    && value_column.is_multiple_of(measure_count)
+                {
+                    column_keys
+                        .get(value_column / measure_count)
+                        .map(|(_, label)| label.clone())
+                        .unwrap_or_default()
+                } else if value_column >= detail_column_count {
+                    pivot
+                        .audit
+                        .data_fields
+                        .get(value_column - detail_column_count)
+                        .map(|measure| format!("Grand Total · {}", measure.name))
+                        .unwrap_or_default()
+                } else {
+                    String::new()
+                }
+            } else if column == left {
+                "Row Labels".into()
+            } else {
+                pivot
+                    .audit
+                    .data_fields
+                    .get(value_column % measure_count)
+                    .map(|measure| measure.name.clone())
+                    .unwrap_or_default()
+            };
             edits.push(WorkbookCellEdit {
                 sheet: output_sheet.into(),
-                row: top,
-                column: data_start_column + detail_column_count + measure_position,
-                input: format!("Grand Total · {}", measure.name),
-                kind: "string".into(),
+                row: top + header_offset,
+                column,
+                kind: if input.is_empty() {
+                    "empty".into()
+                } else {
+                    "string".into()
+                },
+                input,
             });
         }
     }
-    let value_for = |groups: &[crate::formats::workbook::WorkbookPivotPreviewGroup],
-                     row_key: &str,
-                     column_key: &str,
-                     measure_index: usize| {
-        groups
+    let value_for = |row_key: Option<&str>, column_key: Option<&str>, measure_index: usize| {
+        let measures = visible_groups
             .iter()
-            .find(|group| {
-                pivot_preview_key(&group.row_keys) == row_key
-                    && pivot_preview_key(&group.column_keys) == column_key
+            .filter(|group| {
+                row_key.is_none_or(|key| pivot_preview_key(&group.row_keys) == key)
+                    && column_key.is_none_or(|key| pivot_preview_key(&group.column_keys) == key)
             })
-            .and_then(|group| group.measures.get(measure_index))
-            .and_then(|measure| measure.value)
+            .filter_map(|group| group.measures.get(measure_index))
+            .collect::<Vec<_>>();
+        match pivot.audit.data_fields[measure_index].aggregation.as_str() {
+            "average" => {
+                let count = measures
+                    .iter()
+                    .map(|measure| measure.contributing_count)
+                    .sum::<usize>();
+                (count > 0).then(|| {
+                    measures
+                        .iter()
+                        .filter_map(|measure| {
+                            measure
+                                .value
+                                .map(|value| value * measure.contributing_count as f64)
+                        })
+                        .sum::<f64>()
+                        / count as f64
+                })
+            }
+            _ => {
+                let values = measures
+                    .iter()
+                    .filter_map(|measure| measure.value)
+                    .collect::<Vec<_>>();
+                (!values.is_empty()).then(|| values.iter().sum())
+            }
+        }
     };
     for (row_position, (row_key, row_label)) in row_keys.iter().enumerate() {
         let row = data_start_row + row_position;
@@ -8960,13 +9083,17 @@ fn build_pivot_layout_output_edits(
             sheet: output_sheet.into(),
             row,
             column: left,
-            input: row_label.clone(),
+            input: if row_count == 0 {
+                pivot.audit.data_fields[0].name.clone()
+            } else {
+                row_label.clone()
+            },
             kind: "string".into(),
         });
         for (column_position, (column_key, _)) in column_keys.iter().enumerate() {
             for measure_position in 0..measure_count {
                 edits.push(preview_measure_edit(
-                    value_for(&main.groups, row_key, column_key, measure_position),
+                    value_for(Some(row_key), Some(column_key), measure_position),
                     output_sheet,
                     row,
                     data_start_column + column_position * measure_count + measure_position,
@@ -8976,7 +9103,7 @@ fn build_pivot_layout_output_edits(
         if column_count > 0 {
             for measure_position in 0..measure_count {
                 edits.push(preview_measure_edit(
-                    value_for(&row_totals.groups, row_key, "", measure_position),
+                    value_for(Some(row_key), None, measure_position),
                     output_sheet,
                     row,
                     data_start_column + detail_column_count + measure_position,
@@ -8995,7 +9122,7 @@ fn build_pivot_layout_output_edits(
         for (column_position, (column_key, _)) in column_keys.iter().enumerate() {
             for measure_position in 0..measure_count {
                 edits.push(preview_measure_edit(
-                    value_for(&column_totals.groups, "", column_key, measure_position),
+                    value_for(None, Some(column_key), measure_position),
                     output_sheet,
                     bottom,
                     data_start_column + column_position * measure_count + measure_position,
@@ -9005,7 +9132,7 @@ fn build_pivot_layout_output_edits(
         if column_count > 0 {
             for measure_position in 0..measure_count {
                 edits.push(preview_measure_edit(
-                    value_for(&grand.groups, "", "", measure_position),
+                    value_for(None, None, measure_position),
                     output_sheet,
                     bottom,
                     data_start_column + detail_column_count + measure_position,
@@ -9020,7 +9147,7 @@ fn build_pivot_layout_output_edits(
             bottom,
             left,
             right,
-            first_data_row: 1,
+            first_data_row: header_row_count,
             first_data_column: 1,
         },
     ))
@@ -9068,6 +9195,9 @@ fn build_pivot_layout_variant_package(
         output_sheet,
         old_layout.top,
         old_layout.left,
+        &row_axis,
+        &column_axis,
+        &fields,
     )?;
     let desired = output_edits
         .iter()
@@ -9222,6 +9352,51 @@ fn build_pivot_layout_variant_package(
     ))
 }
 
+pub(crate) fn rebuild_workbook_pivot_layout_variant_isolated(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+    layout: &str,
+) -> Result<(Vec<u8>, WorkbookPivotLayoutVariant), String> {
+    let (row_fields, column_fields, aggregations) = match layout {
+        "row_only" => (1, 0, vec!["sum"]),
+        "column_only" => (0, 1, vec!["sum"]),
+        "multi_measure" => (1, 1, vec!["sum", "count", "average"]),
+        _ => return Err(format!("Pivot 布局新副本不支持 {layout}")),
+    };
+    if pivot.audit.row_field_count != 1
+        || pivot.audit.column_field_count != 1
+        || pivot.audit.data_field_count != 1
+        || pivot.audit.page_field_count != 0
+        || pivot
+            .audit
+            .data_fields
+            .first()
+            .is_none_or(|field| field.aggregation != "sum" || !field.supported)
+    {
+        return Err(
+            "Pivot 布局新副本要求一个行字段、一个列字段、一个 sum 值字段且无页面筛选的标准来源"
+                .into(),
+        );
+    }
+    let mut result = verify_pivot_semantic_layout_variant(
+        source,
+        pivot,
+        layout,
+        row_fields,
+        column_fields,
+        &aggregations,
+    )?;
+    let variant = pivot_layout_variant(pivot, row_fields, column_fields, &aggregations)?;
+    let (isolated, output_range, output_cell_count, styled_output_cell_count) =
+        build_pivot_layout_variant_package(source, pivot, &variant)?;
+    result.output_range = output_range;
+    result.output_cell_count = output_cell_count;
+    result.styled_output_cell_count = styled_output_cell_count;
+    result.isolated_package_digest = format!("{:x}", md5::compute(&isolated));
+    result.status = "package_verified".into();
+    Ok((isolated, result))
+}
+
 pub(crate) fn verify_workbook_pivot_variants_isolated(
     source: &[u8],
     pivot: &WorkbookPivotTable,
@@ -9286,22 +9461,8 @@ pub(crate) fn verify_workbook_pivot_variants_isolated(
     ];
     let mut layout_variants = Vec::with_capacity(layout_specs.len());
     for (layout, row_fields, column_fields, aggregations) in layout_specs {
-        let mut result = verify_pivot_semantic_layout_variant(
-            source,
-            pivot,
-            layout,
-            row_fields,
-            column_fields,
-            &aggregations,
-        )?;
-        let variant = pivot_layout_variant(pivot, row_fields, column_fields, &aggregations)?;
-        let (isolated, output_range, output_cell_count, styled_output_cell_count) =
-            build_pivot_layout_variant_package(source, pivot, &variant)?;
-        result.output_range = output_range;
-        result.output_cell_count = output_cell_count;
-        result.styled_output_cell_count = styled_output_cell_count;
-        result.isolated_package_digest = format!("{:x}", md5::compute(&isolated));
-        result.status = "package_verified".into();
+        let _ = (row_fields, column_fields, aggregations);
+        let (_, result) = rebuild_workbook_pivot_layout_variant_isolated(source, pivot, layout)?;
         layout_variants.push(result);
     }
     let package_variants_verified = aggregation_variants.len() == aggregations.len()

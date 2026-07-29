@@ -32,8 +32,8 @@ use crate::formats::workbook_ooxml::{
     patch_workbook_table, plan_workbook_pivot_rebuild, read_workbook_defined_names,
     read_workbook_linked_data, read_workbook_protection, read_workbook_sheet_layout,
     rebuild_workbook_pivot_cache_isolated, rebuild_workbook_pivot_expanded_isolated,
-    rebuild_workbook_pivot_isolated, validate_workbook_package,
-    verify_workbook_pivot_variants_isolated,
+    rebuild_workbook_pivot_isolated, rebuild_workbook_pivot_layout_variant_isolated,
+    validate_workbook_package, verify_workbook_pivot_variants_isolated,
 };
 use crate::formats::workbook_pivot::preview_pivot;
 use crate::sanitize_filename;
@@ -101,6 +101,18 @@ fn remove_created_workbook_if_exact(path: &Path, expected: &[u8]) {
     }
 }
 
+fn pivot_copy_layout_spec(
+    layout: Option<&str>,
+) -> Result<(&'static str, usize, usize, &'static [&'static str]), String> {
+    match layout.unwrap_or("standard") {
+        "standard" => Ok(("standard", 1, 1, &["sum"])),
+        "row_only" => Ok(("row_only", 1, 0, &["sum"])),
+        "column_only" => Ok(("column_only", 0, 1, &["sum"])),
+        "multi_measure" => Ok(("multi_measure", 1, 1, &["sum", "count", "average"])),
+        other => Err(format!("Pivot 可靠另存不支持布局 {other}")),
+    }
+}
+
 fn save_workbook_pivot_copy_to_path(
     source_path: &Path,
     target_path: &Path,
@@ -130,6 +142,8 @@ fn save_workbook_pivot_copy_to_path(
         .iter()
         .find(|pivot| pivot.part == payload.pivot_part)
         .ok_or("指定的透视表不存在或身份已变化")?;
+    let (layout_variant, row_field_count, column_field_count, aggregations) =
+        pivot_copy_layout_spec(payload.layout_variant.as_deref())?;
     if pivot.audit.row_field_count != 1
         || pivot.audit.column_field_count != 1
         || pivot.audit.data_field_count != 1
@@ -141,20 +155,48 @@ fn save_workbook_pivot_copy_to_path(
             .is_none_or(|field| field.aggregation != "sum" || !field.supported)
     {
         return Err(
-            "Pivot 新副本首批仅支持一个行字段、一个列字段、一个 sum 值字段且无页面筛选".into(),
+            "Pivot 可靠另存要求一个行字段、一个列字段、一个 sum 值字段且无页面筛选的标准来源"
+                .into(),
         );
     }
-    let (output, rebuilt) = rebuild_workbook_pivot_expanded_isolated(&source, pivot)?;
+    let (output, output_digest, output_range, output_cell_count, changed_parts) =
+        if layout_variant == "standard" {
+            let (output, rebuilt) = rebuild_workbook_pivot_expanded_isolated(&source, pivot)?;
+            if !rebuilt.package_valid
+                || !rebuilt.semantic_reparse_valid
+                || !rebuilt.output_values_verified
+                || !rebuilt.untouched_parts_preserved
+            {
+                return Err("Pivot 隔离输出未通过完整结构、语义、输出值和保真门禁".into());
+            }
+            (
+                output,
+                rebuilt.isolated_package_digest,
+                rebuilt.new_output_range,
+                rebuilt.output_cell_count,
+                rebuilt.rebuilt_parts,
+            )
+        } else {
+            let (output, rebuilt) =
+                rebuild_workbook_pivot_layout_variant_isolated(&source, pivot, layout_variant)?;
+            let plan = plan_workbook_pivot_rebuild(&source, pivot)?;
+            let changed_parts = plan
+                .affected_parts
+                .iter()
+                .filter(|impact| matches!(impact.role.as_str(), "pivot_table" | "output_worksheet"))
+                .map(|impact| impact.part.clone())
+                .collect();
+            (
+                output,
+                rebuilt.isolated_package_digest,
+                rebuilt.output_range,
+                rebuilt.output_cell_count,
+                changed_parts,
+            )
+        };
     let expected_output_digest = payload.expected_output_digest.trim().to_ascii_lowercase();
-    if rebuilt.isolated_package_digest != expected_output_digest {
+    if output_digest != expected_output_digest {
         return Err("Pivot 来源或隔离输出已变化，请重新执行布局扩缩容验证".into());
-    }
-    if !rebuilt.package_valid
-        || !rebuilt.semantic_reparse_valid
-        || !rebuilt.output_values_verified
-        || !rebuilt.untouched_parts_preserved
-    {
-        return Err("Pivot 隔离输出未通过完整结构、语义、输出值和保真门禁".into());
     }
 
     let source_before_write =
@@ -174,7 +216,7 @@ fn save_workbook_pivot_copy_to_path(
         let saved = fs::read(target_path)
             .map_err(|error| format!("目标已创建，但无法复读保存字节: {error}"))?;
         let target_digest = format!("{:x}", md5::compute(&saved));
-        if saved != output || target_digest != rebuilt.isolated_package_digest {
+        if saved != output || target_digest != output_digest {
             return Err("目标落盘字节与隔离验证输出不一致".into());
         }
         validate_workbook_package(&saved)
@@ -185,16 +227,17 @@ fn save_workbook_pivot_copy_to_path(
             .iter()
             .find(|candidate| candidate.part == pivot.part)
             .ok_or("目标 XLSX 中的 Pivot 身份丢失")?;
-        if saved_pivot.audit.layout_range.as_deref() != Some(rebuilt.new_output_range.as_str())
-            || saved_pivot.audit.row_field_count != 1
-            || saved_pivot.audit.column_field_count != 1
-            || saved_pivot.audit.data_field_count != 1
+        if saved_pivot.audit.layout_range.as_deref() != Some(output_range.as_str())
+            || saved_pivot.audit.row_field_count != row_field_count
+            || saved_pivot.audit.column_field_count != column_field_count
+            || saved_pivot.audit.data_field_count != aggregations.len()
             || saved_pivot.audit.page_field_count != 0
             || saved_pivot
                 .audit
                 .data_fields
-                .first()
-                .is_none_or(|field| field.aggregation != "sum" || !field.supported)
+                .iter()
+                .zip(aggregations.iter())
+                .any(|(field, aggregation)| field.aggregation != *aggregation || !field.supported)
         {
             return Err("目标 XLSX 的 Pivot 语义复读与已验证输出不一致".into());
         }
@@ -225,6 +268,7 @@ fn save_workbook_pivot_copy_to_path(
     Ok(WorkbookPivotSavedCopyResult {
         status: "saved_verified".into(),
         save_mode: "new_copy_only".into(),
+        layout_variant: layout_variant.into(),
         pivot_name: pivot.name.clone(),
         target_path: target_path.to_string_lossy().into_owned(),
         target_signature,
@@ -233,9 +277,9 @@ fn save_workbook_pivot_copy_to_path(
         source_digest,
         source_unchanged: true,
         output_bytes: output.len(),
-        output_range: rebuilt.new_output_range,
-        output_cell_count: rebuilt.output_cell_count,
-        changed_parts: rebuilt.rebuilt_parts,
+        output_range,
+        output_cell_count,
+        changed_parts,
         structural_reopen_verified: true,
         semantic_reopen_verified: true,
         output_values_verified: true,
@@ -247,18 +291,27 @@ pub fn generate_workbook_pivot_audit_copy(
     source_path: &Path,
     target_path: &Path,
 ) -> Result<String, String> {
+    generate_workbook_pivot_layout_audit_copy(source_path, target_path, "standard")
+}
+
+pub fn generate_workbook_pivot_layout_audit_copy(
+    source_path: &Path,
+    target_path: &Path,
+    layout: &str,
+) -> Result<String, String> {
+    let (layout, _, _, _) = pivot_copy_layout_spec(Some(layout))?;
     let source_parent = source_path
         .parent()
-        .ok_or("S8-7E3B audit source has no parent directory")?
+        .ok_or("Pivot audit source has no parent directory")?
         .canonicalize()
         .map_err(|error| error.to_string())?;
     let target_parent = target_path
         .parent()
-        .ok_or("S8-7E3B audit target has no parent directory")?
+        .ok_or("Pivot audit target has no parent directory")?
         .canonicalize()
         .map_err(|error| error.to_string())?;
     if source_parent != target_parent {
-        return Err("S8-7E3B audit copy must use the source directory".into());
+        return Err("Pivot audit copy must use the source directory".into());
     }
     ensure_workbook(source_path)?;
     let source = fs::read(source_path).map_err(|error| error.to_string())?;
@@ -283,19 +336,28 @@ pub fn generate_workbook_pivot_audit_copy(
         .collect::<Vec<_>>();
     if candidates.len() != 1 {
         return Err(format!(
-            "S8-7E3B audit copy requires exactly one standard local Pivot candidate; found {}",
+            "Pivot audit copy requires exactly one standard local Pivot candidate; found {}",
             candidates.len()
         ));
     }
     let pivot = candidates[0];
-    let (_, isolated) = rebuild_workbook_pivot_expanded_isolated(&source, pivot)?;
+    let output_digest = if layout == "standard" {
+        rebuild_workbook_pivot_expanded_isolated(&source, pivot)?
+            .1
+            .isolated_package_digest
+    } else {
+        rebuild_workbook_pivot_layout_variant_isolated(&source, pivot, layout)?
+            .1
+            .isolated_package_digest
+    };
     let saved = save_workbook_pivot_copy_to_path(
         source_path,
         target_path,
         &WorkbookPivotSaveCopyPayload {
             expected_signature: document.signature,
-            expected_output_digest: isolated.isolated_package_digest,
+            expected_output_digest: output_digest,
             pivot_part: pivot.part.clone(),
+            layout_variant: (layout != "standard").then(|| layout.into()),
         },
     )?;
     serde_json::to_string_pretty(&saved).map_err(|error| error.to_string())
@@ -2702,9 +2764,9 @@ mod tests {
                 ))
                 .collect::<Vec<_>>(),
             vec![
-                ("row_only", "package_verified", "A3:B7", 10),
-                ("column_only", "package_verified", "A3:E4", 10),
-                ("multi_measure", "package_verified", "A3:M7", 65),
+                ("row_only", "package_verified", "A3:B6", 8),
+                ("column_only", "package_verified", "A3:D5", 12),
+                ("multi_measure", "package_verified", "A3:J8", 60),
             ]
         );
         assert!(variants
@@ -2712,6 +2774,40 @@ mod tests {
             .iter()
             .all(|variant| variant.styled_output_cell_count > 0
                 && !variant.isolated_package_digest.is_empty()));
+        for variant in &variants.layout_variants {
+            let target = root.join(format!("pivot-{}-copy.xlsx", variant.layout));
+            let saved = save_workbook_pivot_copy_to_path(
+                &path,
+                &target,
+                &WorkbookPivotSaveCopyPayload {
+                    expected_signature: document.signature.clone(),
+                    expected_output_digest: variant.isolated_package_digest.clone(),
+                    pivot_part: complete.part.clone(),
+                    layout_variant: Some(variant.layout.clone()),
+                },
+            )
+            .unwrap();
+            assert_eq!(saved.status, "saved_verified");
+            assert_eq!(saved.layout_variant, variant.layout);
+            assert_eq!(saved.output_range, variant.output_range);
+            assert_eq!(saved.output_cell_count, variant.output_cell_count);
+            assert_eq!(saved.changed_parts.len(), 2);
+            assert!(saved.source_unchanged);
+            let saved_bytes = fs::read(target).unwrap();
+            validate_workbook_package(&saved_bytes).unwrap();
+            let linked = read_workbook_linked_data(&saved_bytes).unwrap();
+            let saved_pivot = linked
+                .pivot_tables
+                .iter()
+                .find(|pivot| pivot.part == complete.part)
+                .unwrap();
+            assert_eq!(saved_pivot.audit.row_field_count, variant.row_field_count);
+            assert_eq!(
+                saved_pivot.audit.column_field_count,
+                variant.column_field_count
+            );
+            assert_eq!(saved_pivot.audit.data_field_count, variant.data_field_count);
+        }
         assert_eq!(fs::read(&path).unwrap(), source);
 
         let (isolated, _) = rebuild_workbook_pivot_cache_isolated(&source, complete).unwrap();
@@ -2842,6 +2938,7 @@ mod tests {
                 expected_signature: expanded_document.signature.clone(),
                 expected_output_digest: expanded_result.isolated_package_digest.clone(),
                 pivot_part: expanded_pivot.part.clone(),
+                layout_variant: None,
             },
         )
         .unwrap();
@@ -2882,6 +2979,7 @@ mod tests {
                 expected_signature: expanded_document.signature.clone(),
                 expected_output_digest: expanded_result.isolated_package_digest.clone(),
                 pivot_part: expanded_pivot.part.clone(),
+                layout_variant: None,
             },
         )
         .unwrap_err();
@@ -2894,6 +2992,7 @@ mod tests {
                 expected_signature: "stale".into(),
                 expected_output_digest: expanded_result.isolated_package_digest.clone(),
                 pivot_part: expanded_pivot.part.clone(),
+                layout_variant: None,
             },
         )
         .unwrap_err();
@@ -2907,6 +3006,7 @@ mod tests {
                 expected_signature: expanded_document.signature.clone(),
                 expected_output_digest: "changed".into(),
                 pivot_part: expanded_pivot.part.clone(),
+                layout_variant: None,
             },
         )
         .unwrap_err();
@@ -2921,6 +3021,7 @@ mod tests {
                 expected_signature: expanded_document.signature.clone(),
                 expected_output_digest: expanded_result.isolated_package_digest.clone(),
                 pivot_part: expanded_pivot.part.clone(),
+                layout_variant: None,
             },
         )
         .unwrap_err();
@@ -3169,6 +3270,73 @@ mod tests {
                     || matches!(output.get_value((6, 3)), Some(Data::Int(4))),
                 "{file_name}"
             );
+        }
+    }
+
+    #[test]
+    fn pivot_layout_producer_round_trip_outputs_reopen_with_stable_semantics() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("fixtures/xlsx/output-reopen");
+        let layouts = [
+            ("row_only", 1, 0, vec![("sum", 1)], "A3:B6", "A3:B6"),
+            ("column_only", 0, 1, vec![("sum", 1)], "A3:D5", "A3:C5"),
+            (
+                "multi_measure",
+                1,
+                1,
+                vec![("sum", 1), ("count", 0), ("average", 1)],
+                "A3:J8",
+                "A3:J8",
+            ),
+        ];
+        for (layout, row_fields, column_fields, measures, expected_range, libreoffice_range) in
+            layouts
+        {
+            for producer in [
+                "longedit",
+                "microsoft-excel",
+                "wps-spreadsheets",
+                "libreoffice-calc",
+            ] {
+                let file_name = if producer == "longedit" {
+                    format!("s8-7e3c-longedit-{layout}.xlsx")
+                } else {
+                    format!("s8-7e3c-{layout}-{producer}.xlsx")
+                };
+                let bytes = fs::read(root.join(&file_name)).unwrap();
+                validate_workbook_package(&bytes).unwrap();
+                let linked = read_workbook_linked_data(&bytes).unwrap();
+                let pivot = linked
+                    .pivot_tables
+                    .iter()
+                    .find(|pivot| pivot.name == "PivotTable1")
+                    .unwrap_or_else(|| panic!("{file_name} lost PivotTable1"));
+                assert_eq!(pivot.audit.row_field_count, row_fields, "{file_name}");
+                assert_eq!(pivot.audit.column_field_count, column_fields, "{file_name}");
+                assert_eq!(pivot.audit.data_field_count, measures.len(), "{file_name}");
+                assert_eq!(pivot.audit.page_field_count, 0, "{file_name}");
+                assert_eq!(
+                    pivot.audit.layout_range.as_deref(),
+                    Some(if producer == "libreoffice-calc" {
+                        libreoffice_range
+                    } else {
+                        expected_range
+                    }),
+                    "{file_name}"
+                );
+                assert_eq!(
+                    pivot
+                        .audit
+                        .data_fields
+                        .iter()
+                        .map(|field| (field.aggregation.as_str(), field.source_index))
+                        .collect::<Vec<_>>(),
+                    measures,
+                    "{file_name}"
+                );
+            }
         }
     }
 

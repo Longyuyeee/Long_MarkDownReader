@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：E1B WPS 生产者门禁仍受外部环境阻断，`.odt` 尚未登记。等待可信 WPS ODF 环境期间，完整 Excel 等价 X1 / S8-7E2F 与 X2 的 S8-7E3A/E3B 已完成；标准本地 Pivot 可可靠另存同目录新副本，并通过 Excel/WPS/LibreOffice 3/3 真实刷新保存重开。下一入口为 S8-7E3C，逐项扩展单轴和多度量新副本白名单；原件覆盖继续阻断。
+> 当前状态：E1B WPS 生产者门禁仍受外部环境阻断，`.odt` 尚未登记。等待可信 WPS ODF 环境期间，完整 Excel 等价 X1 / S8-7E2F 与 X2 的 S8-7E3A～E3C 已完成；标准和三种布局 Pivot 可可靠另存同目录新副本，生产者矩阵分别为 3/3 与 9/9。下一入口为 S8-7E3D，逐项扩展其余单度量聚合；原件覆盖继续阻断。
 
 > 2026-07-29 更新：WPS ODF 环境预检、阻断机器证据和失败清理已进入合同；当前 WPS `12.1.0.26895` 仍输出 OLE 而不是 ODT ZIP，E1B 保持 2/3。恢复时先运行 `npm.cmd run audit:e1b-wps-odf-environment`，不得重复尝试旧 ODF add-in 或绕过门禁。
 
@@ -620,3 +620,14 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 若当前开发机的 `audit:e1b-wps-odf-environment` 继续 blocked，可在另一台具备可信 WPS ODF 能力的机器生成 fixture，并使用 `export-e1b-wps-closure-bundle.ps1 -OutputPath <handoff.zip>` 导出。当前开发机使用 `import-e1b-wps-closure-bundle.ps1 -BundlePath <handoff.zip>` 导入。
 
 交接包必须来自已确认的机器和可信传输渠道。导入器会绑定固定 DOCX 源摘要、拒绝非三成员 ZIP、路径穿越、摘要漂移和覆盖，但 SHA-256 本身不是产出机器身份证明。导入后仍按“桌面关闭候选 → 原子发布 → 完整质量门禁”的顺序执行。
+
+## S8-7E3D 当前执行入口
+
+S8-7E3C 已完成三种布局可靠新副本和 9/9 生产者矩阵。下一步只推进其余单度量聚合：
+
+1. 以标准双轴单度量本地 Pivot 为来源，逐项生成 `count/average/max/min/product/countNums` 隔离包。
+2. 每项绑定源签名和独立输出摘要，只允许同目录不存在的新 `.xlsx`。
+3. 每个开放候选分别执行 Excel、WPS、LibreOffice 刷新、保存、退出和新进程重开。
+4. 生产者可规范化显示范围，但对象身份、聚合、字段来源、总计和重开状态必须由 LongEdit 反向复读。
+5. 任一生产者改变聚合语义时，该候选保持阻断；不得通过降低到“文件能打开”放宽门禁。
+6. 原件覆盖、已有目标覆盖、多层轴、页面字段、切片器和外部连接继续阻断。

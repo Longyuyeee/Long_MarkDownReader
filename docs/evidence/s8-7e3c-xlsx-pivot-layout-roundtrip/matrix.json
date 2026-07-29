@@ -1,0 +1,439 @@
+{
+    "schemaVersion":  1,
+    "stage":  "S8-7E3C",
+    "verifiedAt":  "2026-07-29T07:22:48.3874230Z",
+    "status":  "verified",
+    "complete":  true,
+    "verifiedCount":  9,
+    "requiredCount":  9,
+    "requiredLayoutIds":  [
+                              "row_only",
+                              "column_only",
+                              "multi_measure"
+                          ],
+    "requiredProducerIds":  [
+                                "microsoft-excel",
+                                "wps-spreadsheets",
+                                "libreoffice-calc"
+                            ],
+    "sourceOverwriteAllowed":  false,
+    "layouts":  [
+                    {
+                        "id":  "row_only",
+                        "status":  "verified",
+                        "outputRange":  "A3:B6",
+                        "keyCell":  "B6",
+                        "keyValue":  4,
+                        "source":  {
+                                       "file":  "s8-7e3c-longedit-row_only.xlsx",
+                                       "sha256":  "8f8cceaaf3e416d2c01b7ce252c91bc907286118445c3659efbf7702eba9e082",
+                                       "bytes":  17524,
+                                       "saveMode":  "LongEdit verified layout new copy",
+                                       "sourceOverwriteAllowed":  false
+                                   },
+                        "producers":  [
+                                          {
+                                              "id":  "microsoft-excel",
+                                              "producer":  "Microsoft Excel",
+                                              "status":  "verified",
+                                              "version":  "16.0",
+                                              "build":  "20228",
+                                              "method":  "Writable COM refresh/save followed by application quit and independent read-only reopen.",
+                                              "refreshSucceeded":  true,
+                                              "saveSucceeded":  true,
+                                              "processRestarted":  true,
+                                              "sessionHandles":  [
+                                                                     41026262,
+                                                                     52957660
+                                                                 ],
+                                              "reopenVerified":  true,
+                                              "repairPromptObserved":  false,
+                                              "before":  {
+                                                             "pivotCount":  1,
+                                                             "pivotName":  "PivotTable1",
+                                                             "outputRange":  "A3:B6",
+                                                             "keyCell":  "B6",
+                                                             "keyValue":  4
+                                                         },
+                                              "afterSave":  {
+                                                                "pivotCount":  1,
+                                                                "pivotName":  "PivotTable1",
+                                                                "outputRange":  "A3:B6",
+                                                                "keyCell":  "B6",
+                                                                "keyValue":  4
+                                                            },
+                                              "afterReopen":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:B6",
+                                                                  "keyCell":  "B6",
+                                                                  "keyValue":  4
+                                                              },
+                                              "outputFile":  "s8-7e3c-row_only-microsoft-excel.xlsx",
+                                              "outputSha256":  "f3407915bdfd6f25eb9017d1713297c608af529bd27874e64bc64c04b7d7dc74",
+                                              "outputBytes":  19400
+                                          },
+                                          {
+                                              "id":  "wps-spreadsheets",
+                                              "producer":  "WPS Spreadsheets",
+                                              "status":  "verified",
+                                              "version":  "12.0",
+                                              "build":  "26895",
+                                              "method":  "Writable COM refresh/save followed by application quit and independent read-only reopen.",
+                                              "refreshSucceeded":  true,
+                                              "saveSucceeded":  true,
+                                              "processRestarted":  true,
+                                              "sessionHandles":  [
+                                                                     69341746,
+                                                                     14025132
+                                                                 ],
+                                              "reopenVerified":  true,
+                                              "repairPromptObserved":  false,
+                                              "before":  {
+                                                             "pivotCount":  1,
+                                                             "pivotName":  "PivotTable1",
+                                                             "outputRange":  "A3:B6",
+                                                             "keyCell":  "B6",
+                                                             "keyValue":  4
+                                                         },
+                                              "afterSave":  {
+                                                                "pivotCount":  1,
+                                                                "pivotName":  "PivotTable1",
+                                                                "outputRange":  "A3:B6",
+                                                                "keyCell":  "B6",
+                                                                "keyValue":  4
+                                                            },
+                                              "afterReopen":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:B6",
+                                                                  "keyCell":  "B6",
+                                                                  "keyValue":  4
+                                                              },
+                                              "outputFile":  "s8-7e3c-row_only-wps-spreadsheets.xlsx",
+                                              "outputSha256":  "2baeecd32d6640e4377cdd33c8fde16cc97cd4075738401f195f7409042b2de9",
+                                              "outputBytes":  19109
+                                          },
+                                          {
+                                              "id":  "libreoffice-calc",
+                                              "producer":  "LibreOffice Calc",
+                                              "status":  "verified",
+                                              "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                                              "build":  null,
+                                              "method":  "Isolated UNO refresh/store followed by a second profile and process reopen.",
+                                              "refreshSucceeded":  true,
+                                              "saveSucceeded":  true,
+                                              "processRestarted":  true,
+                                              "sessionProcessIds":  [
+                                                                        13100,
+                                                                        25464
+                                                                    ],
+                                              "reopenVerified":  true,
+                                              "repairPromptObserved":  false,
+                                              "before":  {
+                                                             "pivotCount":  1,
+                                                             "pivotName":  "PivotTable1",
+                                                             "outputRange":  "A3:B6",
+                                                             "keyCell":  "B6",
+                                                             "keyValue":  4.0
+                                                         },
+                                              "afterSave":  {
+                                                                "pivotCount":  1,
+                                                                "pivotName":  "PivotTable1",
+                                                                "outputRange":  "A3:B6",
+                                                                "keyCell":  "B6",
+                                                                "keyValue":  4.0
+                                                            },
+                                              "afterReopen":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:B6",
+                                                                  "keyCell":  "B6",
+                                                                  "keyValue":  4.0
+                                                              },
+                                              "outputFile":  "s8-7e3c-row_only-libreoffice-calc.xlsx",
+                                              "outputSha256":  "e3825d91f0066835b39ed3233dc1af018dfe499e480c6f4fb43ee3ac43eaf4ad",
+                                              "outputBytes":  16606
+                                          }
+                                      ]
+                    },
+                    {
+                        "id":  "column_only",
+                        "status":  "verified",
+                        "outputRange":  "A3:D5",
+                        "keyCell":  "D5",
+                        "keyValue":  4,
+                        "source":  {
+                                       "file":  "s8-7e3c-longedit-column_only.xlsx",
+                                       "sha256":  "48ecd061fce07e69e22cd568d20237b355f780439359330f9006a0adba9f7e33",
+                                       "bytes":  17531,
+                                       "saveMode":  "LongEdit verified layout new copy",
+                                       "sourceOverwriteAllowed":  false
+                                   },
+                        "producers":  [
+                                          {
+                                              "id":  "microsoft-excel",
+                                              "producer":  "Microsoft Excel",
+                                              "status":  "verified",
+                                              "version":  "16.0",
+                                              "build":  "20228",
+                                              "method":  "Writable COM refresh/save followed by application quit and independent read-only reopen.",
+                                              "refreshSucceeded":  true,
+                                              "saveSucceeded":  true,
+                                              "processRestarted":  true,
+                                              "sessionHandles":  [
+                                                                     7345564,
+                                                                     46207484
+                                                                 ],
+                                              "reopenVerified":  true,
+                                              "repairPromptObserved":  false,
+                                              "before":  {
+                                                             "pivotCount":  1,
+                                                             "pivotName":  "PivotTable1",
+                                                             "outputRange":  "A3:D5",
+                                                             "keyCell":  "D5",
+                                                             "keyValue":  4
+                                                         },
+                                              "afterSave":  {
+                                                                "pivotCount":  1,
+                                                                "pivotName":  "PivotTable1",
+                                                                "outputRange":  "A3:D5",
+                                                                "keyCell":  "D5",
+                                                                "keyValue":  4
+                                                            },
+                                              "afterReopen":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D5",
+                                                                  "keyCell":  "D5",
+                                                                  "keyValue":  4
+                                                              },
+                                              "outputFile":  "s8-7e3c-column_only-microsoft-excel.xlsx",
+                                              "outputSha256":  "9d53d8e6857d0c37de8794f93f6600e5fa2748c849cba1550c0a143bfe1f6da7",
+                                              "outputBytes":  19378
+                                          },
+                                          {
+                                              "id":  "wps-spreadsheets",
+                                              "producer":  "WPS Spreadsheets",
+                                              "status":  "verified",
+                                              "version":  "12.0",
+                                              "build":  "26895",
+                                              "method":  "Writable COM refresh/save followed by application quit and independent read-only reopen.",
+                                              "refreshSucceeded":  true,
+                                              "saveSucceeded":  true,
+                                              "processRestarted":  true,
+                                              "sessionHandles":  [
+                                                                     53548064,
+                                                                     27069862
+                                                                 ],
+                                              "reopenVerified":  true,
+                                              "repairPromptObserved":  false,
+                                              "before":  {
+                                                             "pivotCount":  1,
+                                                             "pivotName":  "PivotTable1",
+                                                             "outputRange":  "A3:D5",
+                                                             "keyCell":  "D5",
+                                                             "keyValue":  4
+                                                         },
+                                              "afterSave":  {
+                                                                "pivotCount":  1,
+                                                                "pivotName":  "PivotTable1",
+                                                                "outputRange":  "A3:D5",
+                                                                "keyCell":  "D5",
+                                                                "keyValue":  4
+                                                            },
+                                              "afterReopen":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:D5",
+                                                                  "keyCell":  "D5",
+                                                                  "keyValue":  4
+                                                              },
+                                              "outputFile":  "s8-7e3c-column_only-wps-spreadsheets.xlsx",
+                                              "outputSha256":  "e90cbcf26227d08941434934c31ac203b8a10d2e31b3baf2d558876765105397",
+                                              "outputBytes":  19105
+                                          },
+                                          {
+                                              "id":  "libreoffice-calc",
+                                              "producer":  "LibreOffice Calc",
+                                              "status":  "verified",
+                                              "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                                              "build":  null,
+                                              "method":  "Isolated UNO refresh/store followed by a second profile and process reopen.",
+                                              "refreshSucceeded":  true,
+                                              "saveSucceeded":  true,
+                                              "processRestarted":  true,
+                                              "sessionProcessIds":  [
+                                                                        51516,
+                                                                        30896
+                                                                    ],
+                                              "reopenVerified":  true,
+                                              "repairPromptObserved":  false,
+                                              "before":  {
+                                                             "pivotCount":  1,
+                                                             "pivotName":  "PivotTable1",
+                                                             "outputRange":  "A3:C5",
+                                                             "keyCell":  "C5",
+                                                             "keyValue":  4.0
+                                                         },
+                                              "afterSave":  {
+                                                                "pivotCount":  1,
+                                                                "pivotName":  "PivotTable1",
+                                                                "outputRange":  "A3:C5",
+                                                                "keyCell":  "C5",
+                                                                "keyValue":  4.0
+                                                            },
+                                              "afterReopen":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:C5",
+                                                                  "keyCell":  "C5",
+                                                                  "keyValue":  4.0
+                                                              },
+                                              "outputFile":  "s8-7e3c-column_only-libreoffice-calc.xlsx",
+                                              "outputSha256":  "62a681fb2552b9de14a51fc2c75ef4b1261c820735a825e35d27c309c8f74d43",
+                                              "outputBytes":  16678
+                                          }
+                                      ]
+                    },
+                    {
+                        "id":  "multi_measure",
+                        "status":  "verified",
+                        "outputRange":  "A3:J8",
+                        "keyCell":  "J8",
+                        "keyValue":  2,
+                        "source":  {
+                                       "file":  "s8-7e3c-longedit-multi_measure.xlsx",
+                                       "sha256":  "cee678b1f072ceb1ddfa47b261e8fcac2f4cc7ce9807983dbfc81442cb398665",
+                                       "bytes":  17816,
+                                       "saveMode":  "LongEdit verified layout new copy",
+                                       "sourceOverwriteAllowed":  false
+                                   },
+                        "producers":  [
+                                          {
+                                              "id":  "microsoft-excel",
+                                              "producer":  "Microsoft Excel",
+                                              "status":  "verified",
+                                              "version":  "16.0",
+                                              "build":  "20228",
+                                              "method":  "Writable COM refresh/save followed by application quit and independent read-only reopen.",
+                                              "refreshSucceeded":  true,
+                                              "saveSucceeded":  true,
+                                              "processRestarted":  true,
+                                              "sessionHandles":  [
+                                                                     35455242,
+                                                                     42603128
+                                                                 ],
+                                              "reopenVerified":  true,
+                                              "repairPromptObserved":  false,
+                                              "before":  {
+                                                             "pivotCount":  1,
+                                                             "pivotName":  "PivotTable1",
+                                                             "outputRange":  "A3:J8",
+                                                             "keyCell":  "J8",
+                                                             "keyValue":  2
+                                                         },
+                                              "afterSave":  {
+                                                                "pivotCount":  1,
+                                                                "pivotName":  "PivotTable1",
+                                                                "outputRange":  "A3:J8",
+                                                                "keyCell":  "J8",
+                                                                "keyValue":  2
+                                                            },
+                                              "afterReopen":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:J8",
+                                                                  "keyCell":  "J8",
+                                                                  "keyValue":  2
+                                                              },
+                                              "outputFile":  "s8-7e3c-multi_measure-microsoft-excel.xlsx",
+                                              "outputSha256":  "d31316ed66ffeaea7bb78769568ab18d7848b70d42071d052801aba8116f3cc3",
+                                              "outputBytes":  19793
+                                          },
+                                          {
+                                              "id":  "wps-spreadsheets",
+                                              "producer":  "WPS Spreadsheets",
+                                              "status":  "verified",
+                                              "version":  "12.0",
+                                              "build":  "26895",
+                                              "method":  "Writable COM refresh/save followed by application quit and independent read-only reopen.",
+                                              "refreshSucceeded":  true,
+                                              "saveSucceeded":  true,
+                                              "processRestarted":  true,
+                                              "sessionHandles":  [
+                                                                     39781246,
+                                                                     49416846
+                                                                 ],
+                                              "reopenVerified":  true,
+                                              "repairPromptObserved":  false,
+                                              "before":  {
+                                                             "pivotCount":  1,
+                                                             "pivotName":  "PivotTable1",
+                                                             "outputRange":  "A3:J8",
+                                                             "keyCell":  "J8",
+                                                             "keyValue":  2
+                                                         },
+                                              "afterSave":  {
+                                                                "pivotCount":  1,
+                                                                "pivotName":  "PivotTable1",
+                                                                "outputRange":  "A3:J8",
+                                                                "keyCell":  "J8",
+                                                                "keyValue":  2
+                                                            },
+                                              "afterReopen":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:J8",
+                                                                  "keyCell":  "J8",
+                                                                  "keyValue":  2
+                                                              },
+                                              "outputFile":  "s8-7e3c-multi_measure-wps-spreadsheets.xlsx",
+                                              "outputSha256":  "de6d9f77bc0ff0e721693b8b9e352733f9f032f8afc7f60df7e1d2e580ba7320",
+                                              "outputBytes":  19464
+                                          },
+                                          {
+                                              "id":  "libreoffice-calc",
+                                              "producer":  "LibreOffice Calc",
+                                              "status":  "verified",
+                                              "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                                              "build":  null,
+                                              "method":  "Isolated UNO refresh/store followed by a second profile and process reopen.",
+                                              "refreshSucceeded":  true,
+                                              "saveSucceeded":  true,
+                                              "processRestarted":  true,
+                                              "sessionProcessIds":  [
+                                                                        27020,
+                                                                        33504
+                                                                    ],
+                                              "reopenVerified":  true,
+                                              "repairPromptObserved":  false,
+                                              "before":  {
+                                                             "pivotCount":  1,
+                                                             "pivotName":  "PivotTable1",
+                                                             "outputRange":  "A3:J8",
+                                                             "keyCell":  "J8",
+                                                             "keyValue":  2.0
+                                                         },
+                                              "afterSave":  {
+                                                                "pivotCount":  1,
+                                                                "pivotName":  "PivotTable1",
+                                                                "outputRange":  "A3:J8",
+                                                                "keyCell":  "J8",
+                                                                "keyValue":  2.0
+                                                            },
+                                              "afterReopen":  {
+                                                                  "pivotCount":  1,
+                                                                  "pivotName":  "PivotTable1",
+                                                                  "outputRange":  "A3:J8",
+                                                                  "keyCell":  "J8",
+                                                                  "keyValue":  2.0
+                                                              },
+                                              "outputFile":  "s8-7e3c-multi_measure-libreoffice-calc.xlsx",
+                                              "outputSha256":  "fd600d34082fefcff80565e5a52de456fc6495490840890e0082ac2623c5c1c8",
+                                              "outputBytes":  17262
+                                          }
+                                      ]
+                    }
+                ]
+}

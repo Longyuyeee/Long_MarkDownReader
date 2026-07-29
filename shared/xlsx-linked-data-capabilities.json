@@ -269,7 +269,7 @@
         "multiLevelAxis": "blocked",
         "pageFields": "blocked",
         "atomicReplace": "blocked",
-        "desktopRefreshSaveRoundTrip": "pending"
+        "desktopRefreshSaveRoundTrip": "verified_in_S8-7E3C"
       },
       "isolatedLayoutPackageVariants": {
         "stage": "S8-7E2F",
@@ -281,15 +281,15 @@
             "rowFields": 1,
             "columnFields": 0,
             "dataFields": 1,
-            "outputRange": "A3:B7",
-            "outputCellCount": 10
+            "outputRange": "A3:B6",
+            "outputCellCount": 8
           },
           "columnOnly": {
             "rowFields": 0,
             "columnFields": 1,
             "dataFields": 1,
-            "outputRange": "A3:E4",
-            "outputCellCount": 10
+            "outputRange": "A3:D5",
+            "outputCellCount": 12
           },
           "multiMeasure": {
             "rowFields": 1,
@@ -300,8 +300,8 @@
               "count",
               "average"
             ],
-            "outputRange": "A3:M7",
-            "outputCellCount": 65,
+            "outputRange": "A3:J8",
+            "outputCellCount": 60,
             "dataAxisField": -2
           }
         },
@@ -330,7 +330,7 @@
         "multiLevelAxis": "blocked",
         "pageFields": "blocked",
         "atomicReplace": "blocked",
-        "desktopRefreshSaveRoundTrip": "pending"
+        "desktopRefreshSaveRoundTrip": "verified_in_S8-7E3C"
       },
       "verifiedPivotCopySave": {
         "stage": "S8-7E3A",
@@ -361,7 +361,7 @@
         "sourceOverwrite": "blocked",
         "existingTargetOverwrite": "blocked",
         "unsavedDrafts": "blocked",
-        "multiMeasureSave": "blocked",
+        "multiMeasureSave": "verified_in_S8-7E3C",
         "multiLevelAxis": "blocked",
         "pageFields": "blocked",
         "externalData": "blocked",
@@ -404,6 +404,69 @@
         "sourceOverwrite": "blocked",
         "existingTargetOverwrite": "blocked",
         "expandedSaveWhitelist": false
+      },
+      "layoutVariantCopySave": {
+        "stage": "S8-7E3C",
+        "execution": "same_directory_new_copy_only",
+        "status": "verified",
+        "matrix": "docs/evidence/s8-7e3c-xlsx-pivot-layout-roundtrip/matrix.json",
+        "requiredLayoutIds": [
+          "row_only",
+          "column_only",
+          "multi_measure"
+        ],
+        "requiredProducerIds": [
+          "microsoft-excel",
+          "wps-spreadsheets",
+          "libreoffice-calc"
+        ],
+        "verifiedRoundTrips": 9,
+        "requiredRoundTrips": 9,
+        "layouts": {
+          "rowOnly": {
+            "rowFields": 1,
+            "columnFields": 0,
+            "dataFields": 1,
+            "aggregations": ["sum"],
+            "outputRange": "A3:B6",
+            "outputCellCount": 8
+          },
+          "columnOnly": {
+            "rowFields": 0,
+            "columnFields": 1,
+            "dataFields": 1,
+            "aggregations": ["sum"],
+            "outputRange": "A3:D5",
+            "outputCellCount": 12,
+            "libreOfficeNormalizedRange": "A3:C5"
+          },
+          "multiMeasure": {
+            "rowFields": 1,
+            "columnFields": 1,
+            "dataFields": 3,
+            "aggregations": ["sum", "count", "average"],
+            "sourceFields": [1, 0, 1],
+            "outputRange": "A3:J8",
+            "outputCellCount": 60
+          }
+        },
+        "workflow": [
+          "create_digest_bound_layout_copy",
+          "refresh_in_desktop_producer",
+          "save_xlsx",
+          "quit_process",
+          "reopen_in_new_process",
+          "verify_normalized_semantics",
+          "reparse_ooxml_identity_and_fields_in_longedit"
+        ],
+        "producerNormalizationAllowed": true,
+        "normalizedStateMustSurviveProcessRestart": true,
+        "repairPromptObserved": false,
+        "sourceOverwrite": "blocked",
+        "existingTargetOverwrite": "blocked",
+        "multiLevelAxis": "blocked",
+        "pageFields": "blocked",
+        "externalData": "blocked"
       }
     }
   },

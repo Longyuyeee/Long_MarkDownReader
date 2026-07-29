@@ -292,6 +292,7 @@ WPS 桌面补录代码已准备完成：真实 `wps-writer.odt` 到位后，同�
 70. T8-1B 已完成：四套场景预设具备设置页 1440×900、工作台 1024×768、思维导图 760×900 共 12 张真实 Tauri WebView2 证据；修复紧凑图谱页头、工具栏溢出、筛选条和初始详情遮挡，并隔离 E2E 配置写入。
 71. S8-7E3A 已完成：标准本地 Pivot 在隔离布局验证后可可靠另存为同目录新 `.xlsx`；事务绑定源签名和隔离输出摘要，拒绝源覆盖、已有目标、旧状态、路径片段和未保存草稿，写后复读 OOXML/Pivot 语义并再次确认源字节不变。下一步 S8-7E3B 补齐 Excel/LibreOffice/WPS 真实刷新保存重开矩阵。
 72. S8-7E3B 已完成：LongEdit 标准 Pivot 新副本已由 Microsoft Excel `16.0/20228`、WPS Spreadsheets `12.0/26895`、LibreOffice Calc `26.2.4.2` 分别刷新、保存、退出进程并新进程重开；3/3 均保持 `PivotTable1`、`A3:D7`、`D7=4`，三份输出再由 LongEdit 反向复读。下一步 S8-7E3C 逐项扩展单轴和多度量新副本白名单。
+73. S8-7E3C 已完成：单行轴、单列轴和三度量均进入可靠新副本白名单；隐藏项与生产者原生多级表头已修正，Excel/WPS/LibreOffice 9/9 往返通过，十二份 XLSX 由 LongEdit 反向确认 `PivotTable1`、字段来源和聚合。下一步 S8-7E3D 扩展其余单度量聚合。
 
 S8-5C 的真实 Tauri 隔离运行已确认面板布局和七项控件可见；桌面点击保存重开因用户两次停止自动化而未继续，等价保存 payload 已由真实兼容 fixture 的命令边界往返、清除和页面对象保真回归覆盖。
 
@@ -331,7 +332,7 @@ E1B 发布门禁已升级为 `checkpoint` / `released-preview` 双状态机器�
 
 ## 11. S8-7E2F Pivot 布局包恢复点
 
-2026-07-29 已完成单行轴、单列轴和 `sum/count/average` 多度量的完整隔离 OOXML 包重写。三种布局分别复读 `A3:B7`、`A3:E4`、`A3:M7`，同步验证 Pivot 字段/轴项/数据伪轴、输出值、旧范围清理和输出样式；与七类聚合包合计 10 个临时包。所有结果均在内存中验证后丢弃，命令边界确认源文件字节不变。
+2026-07-29 已完成单行轴、单列轴和 `sum/count/average` 多度量的完整隔离 OOXML 包重写。S8-7E3C 的生产者审计进一步修正隐藏项过滤和原生表头，三种布局现复读 `A3:B6`、`A3:D5`、`A3:J8`，同步验证 Pivot 字段/轴项/数据伪轴、输出值、旧范围清理和输出样式。
 
 该恢复点之后，S8-7E3A 已完成标准 Pivot 可靠新副本；下一入口更新为 S8-7E3B 真实生产者刷新保存往返。多层轴、页面字段、切片器、外部连接和原件覆盖继续阻断。E2F 完整范围见 [`S8_7E2F_XLSX_Pivot_Layout_Package_Rewrite_Audit_2026-07-29.md`](./S8_7E2F_XLSX_Pivot_Layout_Package_Rewrite_Audit_2026-07-29.md)。
 
@@ -350,3 +351,11 @@ E1B 发布门禁已升级为 `checkpoint` / `released-preview` 双状态机器�
 本地完整门禁已通过：前端生产构建和全部格式/证据合同通过，Rust 功能测试 368/368、性能测试 1/1，生产依赖审计为 0 个漏洞。远端 GitHub Quality Gate 以本恢复点提交后的运行记录为准。
 
 下一入口为 S8-7E3C：依次评估单行轴、单列轴和三度量可靠新副本，并为每个开放候选重复 3/3 生产者往返。原件覆盖、已有目标替换、多层轴、页面字段、切片器和外部连接继续阻断。详细证据见 [`S8_7E3B_XLSX_Pivot_Producer_Round_Trip_Audit_2026-07-29.md`](./S8_7E3B_XLSX_Pivot_Producer_Round_Trip_Audit_2026-07-29.md)。
+
+## 14. S8-7E3C Pivot 布局新副本恢复点
+
+单行轴、单列轴和 `sum(Field2)/count(Field1)/average(Field2)` 三度量已进入可靠新副本白名单。三份 LongEdit 基准与九份 Excel/WPS/LibreOffice 输出均已版本化；桌面刷新、保存、退出和新进程重开矩阵为 9/9，Rust 从 LongEdit 一侧反向复读十二份 XLSX 的 `PivotTable1`、字段来源和聚合。
+
+真实生产者审计修正了 E2F 的隐藏项和表头假设：基准范围现为 `A3:B6`、`A3:D5`、`A3:J8`。LibreOffice 单列轴会规范化为 `A3:C5`，但保存与新进程重开保持一致，总计语义不变；不宣传跨生产者坐标完全一致。
+
+下一入口为 S8-7E3D：逐项评估 `count/average/max/min/product/countNums` 单度量可靠新副本。原件覆盖、已有目标替换、多层轴、页面字段、切片器和外部连接继续阻断。详细证据见 [`S8_7E3C_XLSX_Pivot_Layout_Copy_Round_Trip_Audit_2026-07-29.md`](./S8_7E3C_XLSX_Pivot_Layout_Copy_Round_Trip_Audit_2026-07-29.md)。

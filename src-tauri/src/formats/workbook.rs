@@ -377,6 +377,8 @@ pub struct WorkbookPivotSaveCopyPayload {
     pub expected_signature: String,
     pub expected_output_digest: String,
     pub pivot_part: String,
+    #[serde(default)]
+    pub layout_variant: Option<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -384,6 +386,7 @@ pub struct WorkbookPivotSaveCopyPayload {
 pub struct WorkbookPivotSavedCopyResult {
     pub status: String,
     pub save_mode: String,
+    pub layout_variant: String,
     pub pivot_name: String,
     pub target_path: String,
     pub target_signature: String,
