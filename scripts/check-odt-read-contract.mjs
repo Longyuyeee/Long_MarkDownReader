@@ -13,6 +13,7 @@ const indexCommand = read('src-tauri/src/commands/index.rs')
 const persistentIndex = read('src-tauri/src/services/knowledge_index.rs')
 const view = read('src/views/OdtReaderView.vue')
 const fixtureGenerator = read('scripts/generate-e1b-odt-producer-fixtures.ps1')
+const desktopEvidenceChecker = read('scripts/check-e1b-odt-desktop-audit.mjs')
 const fail = message => { throw new Error(`E1B ODT read contract: ${message}`) }
 
 if (contract.schemaVersion !== 1 || contract.stage !== 'E1B') fail('invalid stage header')
@@ -58,6 +59,16 @@ if (!parser.includes('inspect_odf_package(source, ".odt")')
   || !indexCommand.includes('"odt-block"')
   || !persistentIndex.includes('"odt-block"')) {
   fail('read, risk, UI, or locator implementation evidence missing')
+}
+if (contract.desktopEvidence?.verified !== true
+  || contract.desktopEvidence?.manifest !== 'docs/evidence/e1b-odt-desktop/audit-manifest.json'
+  || contract.desktopEvidence?.producers?.join(',') !== 'microsoft-word-16,libreoffice-writer'
+  || contract.desktopEvidence?.layouts?.join(',') !== 'normal,compact'
+  || contract.desktopEvidence?.themes?.join(',') !== 'professional-light,professional-dark'
+  || !contract.desktopEvidence?.searchVerified
+  || !contract.desktopEvidence?.locatorVerified
+  || !desktopEvidenceChecker.includes('Tauri Debug WebView2 via Chrome DevTools Protocol')) {
+  fail('desktop visual evidence drift')
 }
 
 const generatorSection = (start, end) => {

@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "stage": "E1B",
+  "capturedAt": "2026-07-29T02:25:30.452Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceUrl": "http://127.0.0.1:14200/",
+  "fixtureLocation": "isolated temporary workspace",
+  "producerMatrix": [
+    "microsoft-word-16",
+    "libreoffice-writer"
+  ],
+  "viewportMatrix": [
+    "normal-1280x820",
+    "compact-760x720"
+  ],
+  "themeMatrix": [
+    "professional-light",
+    "professional-dark"
+  ],
+  "productExposure": "preview-route-only-unregistered",
+  "writeEnabled": false,
+  "scenarios": [
+    {
+      "id": "word-light-normal-open",
+      "status": "passed",
+      "state": {
+        "theme": "white",
+        "width": 1280,
+        "viewportOverflow": false,
+        "workspaceOverflow": false,
+        "stageWidth": 1050,
+        "pageWidth": 760,
+        "outlineVisible": true,
+        "readOnlyLabel": true
+      },
+      "file": "word-light-normal-open-1280.jpg"
+    },
+    {
+      "id": "libreoffice-light-compact-open",
+      "status": "passed",
+      "state": {
+        "theme": "white",
+        "width": 760,
+        "viewportOverflow": false,
+        "workspaceOverflow": false,
+        "stageWidth": 760,
+        "pageWidth": 680,
+        "outlineVisible": false,
+        "readOnlyLabel": true
+      },
+      "file": "libreoffice-light-compact-open-760.jpg"
+    },
+    {
+      "id": "word-dark-normal-search",
+      "status": "passed",
+      "state": {
+        "theme": "dark",
+        "width": 1280,
+        "viewportOverflow": false,
+        "workspaceOverflow": false,
+        "stageWidth": 1050,
+        "pageWidth": 760,
+        "outlineVisible": true,
+        "readOnlyLabel": true
+      },
+      "target": {
+        "targetTop": 503.375,
+        "targetBottom": 526.125,
+        "center": 514.75,
+        "stageTop": 84,
+        "stageBottom": 792
+      },
+      "file": "word-dark-normal-search-1280.jpg"
+    },
+    {
+      "id": "libreoffice-dark-compact-locator",
+      "status": "passed",
+      "state": {
+        "theme": "dark",
+        "width": 760,
+        "viewportOverflow": false,
+        "workspaceOverflow": false,
+        "stageWidth": 760,
+        "pageWidth": 680,
+        "outlineVisible": false,
+        "readOnlyLabel": true
+      },
+      "target": {
+        "targetTop": 401.375,
+        "targetBottom": 424.125,
+        "center": 412.75,
+        "stageTop": 134,
+        "stageBottom": 692
+      },
+      "file": "libreoffice-dark-compact-locator-760.jpg"
+    }
+  ],
+  "checks": [
+    {
+      "id": "trusted-producers-open-read-only",
+      "status": "passed",
+      "producers": [
+        "microsoft-word-16",
+        "libreoffice-writer"
+      ]
+    },
+    {
+      "id": "normal-and-compact-layouts-without-overflow",
+      "status": "passed"
+    },
+    {
+      "id": "professional-light-and-dark-themes",
+      "status": "passed"
+    },
+    {
+      "id": "document-search-centers-exact-block",
+      "status": "passed"
+    },
+    {
+      "id": "route-locator-centers-exact-block",
+      "status": "passed",
+      "locatorKind": "odt-block"
+    },
+    {
+      "id": "product-exposure-remains-disabled",
+      "status": "passed",
+      "odtRegistered": false
+    },
+    {
+      "id": "microsoft-word-16-source-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true,
+      "sha256": "056f6fd259946921755709db4d355a12f4e93ed79cc37bd62bbf991e1d9acc7e"
+    },
+    {
+      "id": "libreoffice-writer-source-unchanged",
+      "status": "passed",
+      "sourceUnchanged": true,
+      "sha256": "d2697c317503084f4f3cd319a5879309856bf329994b43f1056a895008e43404"
+    }
+  ],
+  "evidenceFiles": [
+    "word-light-normal-open-1280.jpg",
+    "libreoffice-light-compact-open-760.jpg",
+    "word-dark-normal-search-1280.jpg",
+    "libreoffice-dark-compact-locator-760.jpg"
+  ]
+}

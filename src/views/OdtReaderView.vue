@@ -1,5 +1,5 @@
 <template>
-  <section class="odt-workspace">
+  <section class="odt-workspace" data-testid="e1b-odt-workspace">
     <header class="odt-toolbar">
       <div class="document-identity">
         <FileText :size="18" aria-hidden="true" />
@@ -11,13 +11,13 @@
       <div class="toolbar-actions">
         <label class="odt-search">
           <Search :size="14" aria-hidden="true" />
-          <input v-model="query" type="search" placeholder="搜索文档" />
-          <span>{{ matches.length ? `${matchIndex + 1}/${matches.length}` : '0' }}</span>
+          <input v-model="query" data-testid="e1b-odt-search" type="search" placeholder="搜索文档" />
+          <span data-testid="e1b-odt-search-count">{{ matches.length ? `${matchIndex + 1}/${matches.length}` : '0' }}</span>
         </label>
-        <button :disabled="!matches.length" title="上一个匹配" @click="moveMatch(-1)">
+        <button data-testid="e1b-odt-search-previous" :disabled="!matches.length" title="上一个匹配" @click="moveMatch(-1)">
           <ChevronUp :size="15" />
         </button>
-        <button :disabled="!matches.length" title="下一个匹配" @click="moveMatch(1)">
+        <button data-testid="e1b-odt-search-next" :disabled="!matches.length" title="下一个匹配" @click="moveMatch(1)">
           <ChevronDown :size="15" />
         </button>
         <button :disabled="loading" title="重新读取" @click="load">
@@ -61,7 +61,7 @@
           </div>
         </aside>
 
-        <main class="odt-stage">
+        <main class="odt-stage" data-testid="e1b-odt-stage">
           <article class="odt-page">
             <template v-for="block in report.model.blocks" :key="block.id">
               <component
@@ -69,20 +69,20 @@
                 v-if="block.kind === 'heading'"
                 :id="block.id"
                 class="odt-block odt-heading"
-                :class="{ 'search-hit': matchIds.has(block.id) }"
+                :class="blockStateClasses(block.id)"
               >{{ block.text }}</component>
               <div
                 v-else-if="block.kind === 'list-item'"
                 :id="block.id"
                 class="odt-block odt-list-item"
-                :class="{ 'search-hit': matchIds.has(block.id) }"
+                :class="blockStateClasses(block.id)"
                 :style="{ paddingLeft: `${Math.min(block.listLevel || 1, 8) * 14}px` }"
               ><span>•</span><p>{{ block.text }}</p></div>
               <div
                 v-else-if="block.kind === 'table'"
                 :id="block.id"
                 class="odt-block odt-table-wrap"
-                :class="{ 'search-hit': matchIds.has(block.id) }"
+                :class="blockStateClasses(block.id)"
               >
                 <table>
                   <tbody>
@@ -101,7 +101,7 @@
                 v-else
                 :id="block.id"
                 class="odt-block odt-paragraph"
-                :class="{ 'search-hit': matchIds.has(block.id) }"
+                :class="blockStateClasses(block.id)"
               >
                 <p>{{ block.text }}</p>
                 <div v-if="block.imageParts.length" class="odt-images">
@@ -192,6 +192,13 @@ const matches = computed(() => {
   return report.value.model.blocks.filter(block => block.text.toLocaleLowerCase().includes(needle))
 })
 const matchIds = computed(() => new Set(matches.value.map(block => block.id)))
+const currentMatchId = computed(() => matches.value[matchIndex.value]?.id || '')
+const routeLocatorId = computed(() => typeof route.query.locator === 'string' ? route.query.locator : '')
+const blockStateClasses = (id: string) => ({
+  'search-hit': matchIds.value.has(id),
+  'current-search-hit': currentMatchId.value === id,
+  'route-locator-target': routeLocatorId.value === id,
+})
 
 const formatBytes = (value: number) => {
   if (value < 1024) return `${value} B`
@@ -268,20 +275,22 @@ watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocato
 .odt-outline nav { display: flex; flex-direction: column; gap: 2px; }
 .odt-outline nav button { padding: 6px 8px; border: 0; border-radius: 5px; overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); background: transparent; cursor: pointer; font: inherit; }
 .odt-outline nav button:hover { background: var(--hover-bg); color: var(--text-primary); }
-.odt-outline nav button span { margin-right: 5px; color: var(--primary-color); font-size: 10px; }
+.odt-outline nav button span { margin-right: 5px; color: var(--theme-primary); font-size: 10px; }
 .package-summary { margin-top: 18px; padding-top: 12px; display: flex; flex-direction: column; gap: 5px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 10px; }
 .package-summary div { display: flex; align-items: center; gap: 6px; color: var(--text-primary); font-size: 11px; }
 .odt-stage { overflow: auto; padding: 24px; background: color-mix(in srgb, var(--bg-secondary) 88%, #7f8da3); }
 .odt-page { width: min(760px, calc(100% - 24px)); min-height: 960px; margin: 0 auto; padding: 64px 70px; box-sizing: border-box; border: 1px solid var(--border-color); box-shadow: 0 8px 26px rgba(0,0,0,.12); background: var(--bg-primary); }
 .odt-block { scroll-margin: 90px; border-radius: 4px; transition: background .15s ease; }
 .odt-block.search-hit { background: color-mix(in srgb, #f0bd3e 23%, transparent); }
+.odt-block.current-search-hit, .odt-block.route-locator-target { outline: 2px solid var(--theme-primary); outline-offset: 3px; }
+.odt-block.route-locator-target { background: rgba(var(--theme-primary-rgb), .18); }
 .odt-heading { margin: 1.3em 0 .55em; line-height: 1.3; }
 h1.odt-heading { font-size: 25px; } h2.odt-heading { font-size: 21px; } h3.odt-heading { font-size: 18px; }
 h4.odt-heading, h5.odt-heading, h6.odt-heading { font-size: 15px; }
 .odt-paragraph { margin: .55em 0; line-height: 1.75; white-space: pre-wrap; }
 .odt-paragraph p, .odt-list-item p { margin: 0; }
 .odt-list-item { margin: .38em 0; display: flex; gap: 8px; line-height: 1.65; }
-.odt-list-item > span { color: var(--primary-color); }
+.odt-list-item > span { color: var(--theme-primary); }
 .odt-table-wrap { margin: 14px 0; overflow: auto; }
 .odt-table-wrap table { width: 100%; border-collapse: collapse; }
 .odt-table-wrap td { min-width: 80px; padding: 7px 9px; border: 1px solid var(--border-color); vertical-align: top; white-space: pre-wrap; }

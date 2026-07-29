@@ -40,6 +40,24 @@
     "embedded-object": "report-and-ignore"
   },
   "locatorKind": "odt-block",
+  "desktopEvidence": {
+    "verified": true,
+    "manifest": "docs/evidence/e1b-odt-desktop/audit-manifest.json",
+    "producers": [
+      "microsoft-word-16",
+      "libreoffice-writer"
+    ],
+    "layouts": [
+      "normal",
+      "compact"
+    ],
+    "themes": [
+      "professional-light",
+      "professional-dark"
+    ],
+    "searchVerified": true,
+    "locatorVerified": true
+  },
   "producerGate": {
     "required": [
       "microsoft-word-16",
