@@ -165,3 +165,9 @@ LibreOffice Calc `26.2.5.2` 已在校验官方 MSI 后通过隔离管理映像�
 深度环境审计确认 `Excel.Application` 标准 CLSID 被 WPS `et.exe /Automation` 接管，应用自报 Microsoft Excel 但路径和构建均属于 Kingsoft。验证器已增加真实 LocalServer 身份门禁，避免把 WPS 重复计入 Excel。
 
 最后 1/3 已建立固定三成员证据包导出/导入流程：可信 Excel 机器负责真实往返与导出，当前开发机负责固定成员、摘要、基线、生命周期、Pivot 快照和 LongEdit 反向复读校验；失败不创建输出、不改变 matrix。当前能力仍为 `2/3 partial`，可靠新副本及所有覆盖能力继续阻断。详细证据见 [`S8_7E3G_D_XLSX_Pivot_Excel_Identity_and_Evidence_Handoff_Audit_2026-07-30.md`](./S8_7E3G_D_XLSX_Pivot_Excel_Identity_and_Evidence_Handoff_Audit_2026-07-30.md)。
+
+# 2026-07-30 当前状态快照：S8-7E3G-E 证据协议拒绝矩阵已收口
+
+Excel 三成员证据包已增加真实环境身份、producer 版本/构建和输出摘要绑定。自动拒绝矩阵覆盖额外成员、基线漂移、生命周期缺失和输出摘要篡改，4/4 均验证失败不创建 Excel 输出且 matrix 摘要不变，并已进入 `ci:check`。
+
+当前仍需外部真实 Microsoft Excel 才能完成 3/3。拒绝测试不产生有效证据，多层轴可靠新副本、原文件覆盖、已有目标覆盖、Page Fields、外部数据和切片器继续阻断。详细证据见 [`S8_7E3G_E_XLSX_Pivot_Excel_Evidence_Protocol_Hardening_Audit_2026-07-30.md`](./S8_7E3G_E_XLSX_Pivot_Excel_Evidence_Protocol_Hardening_Audit_2026-07-30.md)。

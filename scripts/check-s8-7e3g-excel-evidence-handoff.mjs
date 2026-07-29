@@ -13,6 +13,7 @@ const environmentAudit = read('scripts/audit-s8-7e3g-excel-environment.ps1')
 const verifier = read('scripts/verify-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.ps1')
 const exporter = read('scripts/export-s8-7e3g-excel-evidence-bundle.ps1')
 const importer = read('scripts/import-s8-7e3g-excel-evidence-bundle.ps1')
+const rejectionMatrix = read('scripts/test-s8-7e3g-excel-evidence-bundle-rejections.ps1')
 
 if (environment.schemaVersion !== 1 || environment.stage !== 'S8-7E3G-D') failures.push('Excel environment report identity drifted')
 if (environment.status !== 'compatible_server_not_microsoft_excel' || environment.trustedMicrosoftExcelAvailable !== false) {
@@ -45,11 +46,14 @@ for (const token of ['Excel.Application', 'LocalServer32', 'compatible_server_no
 for (const token of ['Get-TrustedMicrosoftExcelServer', 'EXCEL\\.EXE', 'kingsoft|WPS Office|\\\\et\\.exe', 'compatible_server_not_microsoft_excel']) {
   if (!verifier.includes(token)) failures.push(`Excel verifier identity token missing: ${token}`)
 }
-for (const token of ['trustedMicrosoftExcelAvailable', 'verify-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.ps1', 'manifest.json', 'producer.json', 'CreateNew', 'trustedMachineConfirmationRequired']) {
+for (const token of ['trustedMicrosoftExcelAvailable', 'producerEnvironment', 'verify-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.ps1', 'manifest.json', 'producer.json', 'CreateNew', 'trustedMachineConfirmationRequired']) {
   if (!exporter.includes(token)) failures.push(`Excel evidence exporter token missing: ${token}`)
 }
-for (const token of ['ZipArchive', 'requiredMembers', 'Refusing to overwrite existing Microsoft Excel evidence', 'baseline.sha256', 'completedGates', 'xlsx-pivot-audit-copy', 'File]::Replace', 'verifiedCount = 3']) {
+for (const token of ['ZipArchive', 'requiredMembers', 'Refusing to overwrite existing Microsoft Excel evidence', 'producerEnvironment', 'trusted Microsoft Excel identity', 'baseline.sha256', 'completedGates', 'producer output binding drifted', 'xlsx-pivot-audit-copy', 'File]::Replace', 'verifiedCount = 3']) {
   if (!importer.includes(token)) failures.push(`Excel evidence importer token missing: ${token}`)
+}
+for (const token of ['extra_member', 'baseline_drift', 'missing_gate', 'output_digest_drift', 'changed the matrix', 'created a target']) {
+  if (!rejectionMatrix.includes(token)) failures.push(`Excel evidence rejection matrix token missing: ${token}`)
 }
 
 const handoff = capabilities.pivotAudit?.writebackAudit?.multiLevelAxisProducerRoundTrip?.excelEvidenceHandoff
@@ -57,13 +61,21 @@ if (handoff?.stage !== 'S8-7E3G-D' || handoff?.status !== 'ready' || handoff?.en
   failures.push('Excel evidence handoff capability state drifted')
 }
 if (handoff?.requiredBundleMembers?.join(',') !== 'manifest.json,producer.json,s8-7e3g-microsoft-excel.xlsx' ||
-    handoff?.trustedMachineConfirmationRequired !== true || handoff?.baselineDigestBound !== true ||
+    handoff?.trustedMachineConfirmationRequired !== true || handoff?.producerIdentityBound !== true || handoff?.baselineDigestBound !== true ||
     handoff?.longEditSemanticReparseRequired !== true || handoff?.existingEvidenceOverwrite !== 'blocked') {
   failures.push('Excel evidence handoff capability boundary drifted')
+}
+const rejectionValidation = handoff?.rejectionValidation
+if (rejectionValidation?.stage !== 'S8-7E3G-E' || rejectionValidation?.status !== 'verified' ||
+    rejectionValidation?.verifiedCaseCount !== 4 ||
+    rejectionValidation?.cases?.join(',') !== 'extra_member,baseline_drift,missing_gate,output_digest_drift' ||
+    rejectionValidation?.matrixUnchangedOnFailure !== true || rejectionValidation?.targetAbsentOnFailure !== true) {
+  failures.push('Excel evidence rejection matrix capability drifted')
 }
 if (!packageJson.scripts?.['audit:s8-7e3g-excel-environment'] ||
     !packageJson.scripts?.['export:s8-7e3g-excel-evidence'] ||
     !packageJson.scripts?.['import:s8-7e3g-excel-evidence'] ||
+    !packageJson.scripts?.['check:s8-7e3g-excel-evidence-rejections'] ||
     !packageJson.scripts?.['check:s8-7e3g-excel-evidence-handoff']) {
   failures.push('Excel evidence handoff npm commands are missing')
 }

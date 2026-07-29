@@ -418,3 +418,9 @@ LibreOffice Calc `26.2.5.2 / cd7284b4cbbfeb507e630c1aac019f4157393acb` 已通过
 本机标准 `Excel.Application` CLSID 实际被 WPS `et.exe /Automation` 接管；应用自报 `Microsoft Excel 12.0/26895`，路径却属于 Kingsoft，因此不能作为 Microsoft Excel 证据。新增环境审计与验证器身份门禁，要求 LocalServer 为 Microsoft Office `EXCEL.EXE` 且明确拒绝 Kingsoft/WPS/`et.exe`。当前 matrix 保持 `partial / 2/3`。
 
 最后一项证据现在使用固定三成员 ZIP 交接：可信 Excel 机器运行 `npm run export:s8-7e3g-excel-evidence -- -OutputPath <zip>`；当前开发机人工确认产出来源后运行 `npm run import:s8-7e3g-excel-evidence -- -BundlePath <zip>`。导入绑定 LongEdit 基线摘要、校验生命周期与快照、再次执行 LongEdit 复读、拒绝覆盖并在失败时保持 matrix 不变。详细审计见 [`S8_7E3G_D_XLSX_Pivot_Excel_Identity_and_Evidence_Handoff_Audit_2026-07-30.md`](./S8_7E3G_D_XLSX_Pivot_Excel_Identity_and_Evidence_Handoff_Audit_2026-07-30.md)。
+
+# 2026-07-30 交接快照：S8-7E3G-E Excel 证据协议已加固
+
+Excel 三成员包现已绑定环境身份、producer 版本/构建和输出摘要。新增 CI 自动拒绝矩阵，覆盖额外 ZIP 成员、LongEdit 基线漂移、生命周期门禁缺失和输出摘要篡改；4/4 均确认失败时不创建 Excel 输出且 matrix 字节不变。
+
+当前仍是 `2/3 partial`，没有真实 Excel 证据。下一台可信 Excel 机器继续按 `audit environment → export bundle → 可信传输 → import bundle` 执行。拒绝测试中的 `synthetic-rejection-only` 数据只用于失败路径，绝不能登记为生产者证据。详细审计见 [`S8_7E3G_E_XLSX_Pivot_Excel_Evidence_Protocol_Hardening_Audit_2026-07-30.md`](./S8_7E3G_E_XLSX_Pivot_Excel_Evidence_Protocol_Hardening_Audit_2026-07-30.md)。

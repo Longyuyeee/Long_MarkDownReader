@@ -50,6 +50,14 @@ try {
     status = "excel_evidence_bundle"
     createdAt = [DateTime]::UtcNow.ToString("o")
     sourceCommit = ([string](& git -C $workspace rev-parse HEAD)).Trim()
+    producerEnvironment = [ordered]@{
+      status = $environment.status
+      trustedMicrosoftExcelAvailable = $environment.trustedMicrosoftExcelAvailable
+      progId = $environment.progId
+      clsid = $environment.clsid
+      localServer = $environment.localServer
+      identity = $environment.identity
+    }
     baseline = [ordered]@{
       file = "s8-7e3g-longedit-multi-axis.xlsx"
       bytes = (Get-Item -LiteralPath $baseline).Length

@@ -67,6 +67,20 @@ try {
       $manifest.sourceOverwriteAllowed -ne $false -or $manifest.reliableSaveAllowed -ne $false) {
     throw "Excel evidence manifest safety boundary drifted"
   }
+  if ([string]$manifest.sourceCommit -notmatch '^[0-9a-fA-F]{40}$') {
+    throw "Excel evidence manifest source commit is invalid"
+  }
+  $producerEnvironment = $manifest.producerEnvironment
+  $environmentIdentityText = "$($producerEnvironment.localServer) $($producerEnvironment.identity.path)"
+  if ($producerEnvironment.status -ne "available" -or
+      $producerEnvironment.trustedMicrosoftExcelAvailable -ne $true -or
+      $producerEnvironment.progId -ne "Excel.Application" -or
+      $producerEnvironment.clsid -ne "{00024500-0000-0000-C000-000000000046}" -or
+      $producerEnvironment.localServer -notmatch '(?i)EXCEL\.EXE' -or
+      $producerEnvironment.identity.path -notmatch '(?i)Microsoft Office' -or
+      $environmentIdentityText -match '(?i)kingsoft|WPS Office|\\et\.exe') {
+    throw "Excel evidence manifest does not contain a trusted Microsoft Excel identity"
+  }
   $baselineHash = (Get-FileHash -LiteralPath $baseline -Algorithm SHA256).Hash.ToLowerInvariant()
   if ($manifest.baseline.sha256 -ne $baselineHash -or
       [long]$manifest.baseline.bytes -ne (Get-Item -LiteralPath $baseline).Length) {
@@ -83,6 +97,9 @@ try {
     }
   }
   if ($producer.id -ne "microsoft-excel" -or $producer.status -ne "verified" -or
+      $producer.producer -ne "Microsoft Excel" -or
+      $producer.version -ne $producerEnvironment.identity.version -or
+      $producer.build -ne $producerEnvironment.identity.build -or
       $producer.refreshSucceeded -ne $true -or $producer.saveSucceeded -ne $true -or
       $producer.processRestarted -ne $true -or $producer.reopenVerified -ne $true -or
       $producer.repairPromptObserved -ne $false) {
@@ -99,6 +116,11 @@ try {
         $snapshot.keyCell -ne "I12" -or [double]$snapshot.keyValue -ne 424) {
       throw "Microsoft Excel producer snapshot drifted: $snapshotName"
     }
+  }
+  if ($producer.outputFile -ne "s8-7e3g-microsoft-excel.xlsx" -or
+      [long]$producer.outputBytes -ne (Get-Item -LiteralPath $outputPath).Length -or
+      $producer.outputSha256 -ne (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToLowerInvariant()) {
+    throw "Microsoft Excel producer output binding drifted"
   }
 
   $reparseTarget = Join-Path $auditRoot "longedit-reparse.xlsx"

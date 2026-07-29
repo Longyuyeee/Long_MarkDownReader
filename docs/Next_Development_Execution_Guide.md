@@ -700,3 +700,15 @@ npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip
 7. 进入多层轴可靠新副本白名单评估；不开放原文件覆盖。
 
 ZIP 必须只有 `manifest.json`、`producer.json` 和 `s8-7e3g-microsoft-excel.xlsx`。导入器拒绝额外成员、摘要漂移、基线不一致、生命周期缺失、语义复读失败和已有证据覆盖。
+
+# 2026-07-30 最新执行入口：S8-7E3G-E 加固后的 Excel 交接
+
+Excel 证据包除固定三成员外，还必须满足 manifest 内环境身份、producer 版本/构建和 output 摘要三方一致。执行步骤不变：
+
+1. 可信 Excel 机器运行环境审计，必须为 `available`。
+2. 导出三成员 ZIP。
+3. 人工确认机器和传输来源。
+4. 当前开发机导入。
+5. 更新 `3/3` 能力合同并运行完整 CI。
+
+当前 CI 会自动运行 `check:s8-7e3g-excel-evidence-rejections`，四类损坏包必须全部安全拒绝。若拒绝矩阵失败，不得导入任何外部证据包。

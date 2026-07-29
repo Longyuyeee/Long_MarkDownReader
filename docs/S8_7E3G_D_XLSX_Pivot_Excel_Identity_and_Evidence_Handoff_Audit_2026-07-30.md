@@ -141,3 +141,7 @@ npm.cmd run check:s8-7e3g-xlsx-pivot-multi-axis-roundtrip
 npm.cmd run check:workbook-contract
 npm.cmd run ci:check
 ```
+
+## 8. 后续进展
+
+S8-7E3G-E 已把 Excel 环境身份写入 manifest，并增加 producer/output 绑定与 4/4 损坏证据包自动拒绝矩阵。后续以 [`S8_7E3G_E_XLSX_Pivot_Excel_Evidence_Protocol_Hardening_Audit_2026-07-30.md`](./S8_7E3G_E_XLSX_Pivot_Excel_Evidence_Protocol_Hardening_Audit_2026-07-30.md) 为准。

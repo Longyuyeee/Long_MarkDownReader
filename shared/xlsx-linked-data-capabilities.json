@@ -668,9 +668,24 @@
             "s8-7e3g-microsoft-excel.xlsx"
           ],
           "trustedMachineConfirmationRequired": true,
+          "producerIdentityBound": true,
           "baselineDigestBound": true,
           "longEditSemanticReparseRequired": true,
-          "existingEvidenceOverwrite": "blocked"
+          "existingEvidenceOverwrite": "blocked",
+          "rejectionValidation": {
+            "stage": "S8-7E3G-E",
+            "status": "verified",
+            "script": "scripts/test-s8-7e3g-excel-evidence-bundle-rejections.ps1",
+            "verifiedCaseCount": 4,
+            "cases": [
+              "extra_member",
+              "baseline_drift",
+              "missing_gate",
+              "output_digest_drift"
+            ],
+            "matrixUnchangedOnFailure": true,
+            "targetAbsentOnFailure": true
+          }
         },
         "reliableCopySave": "blocked",
         "writesUserFile": false,
