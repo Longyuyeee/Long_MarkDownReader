@@ -406,3 +406,9 @@ Microsoft Excel 真实 fixture 已固定 `Region/City` 双层行轴和 `Year/Qua
 S8-7E3G 已改为可增量执行的生产者矩阵。本机 WPS Spreadsheets `12.0/26895` 已对固定 LongEdit 多层轴基线完成刷新、保存、退出、新会话重开和 LongEdit 反向复读；`MultiAxisPivot`、双层行列轴、`A3:I12` 与 `I12=424` 均保持稳定。证据输出为 `fixtures/xlsx/output-reopen/s8-7e3g-wps-spreadsheets.xlsx`，matrix 已由 `0/3 blocked_preflight` 更新为 `1/3 partial`。
 
 当前可用生产者可运行 `npm run audit:s8-7e3g-xlsx-pivot-multi-axis-available`；三生产者完整门禁仍运行 `npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip`。下一台具备 Excel 或 LibreOffice 的机器可以用 `scripts/verify-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.ps1 -Producer <id>` 增量补证。只有达到 3/3 后才评估多层轴可靠新副本；原文件覆盖、已有目标覆盖、Page Fields、外部数据和切片器继续阻断。详细审计见 [`S8_7E3G_B_XLSX_Pivot_Multi_Axis_WPS_Round_Trip_Audit_2026-07-30.md`](./S8_7E3G_B_XLSX_Pivot_Multi_Axis_WPS_Round_Trip_Audit_2026-07-30.md)。
+
+# 2026-07-30 交接快照：S8-7E3G-C 已完成 LibreOffice 往返
+
+LibreOffice Calc `26.2.5.2 / cd7284b4cbbfeb507e630c1aac019f4157393acb` 已通过隔离 UNO 运行时完成多层轴 Pivot 刷新、保存、退出、独立配置新进程重开和 LongEdit 反向复读。matrix 当前为 `partial / 2/3`；WPS 与 LibreOffice 均保持 `MultiAxisPivot`、双层行列轴、`A3:I12`、80 个输出单元格、16 个预览分组和 Grand Total `424`。
+
+下一步只补 Microsoft Excel。具备 Excel 的机器直接运行 `scripts/verify-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.ps1 -Producer microsoft-excel`，提交 Excel 输出与更新后的 matrix，再运行完整 `audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip`。达到 3/3 前可靠新副本继续阻断；达到 3/3 后也只进入白名单评估，不自动开放原文件覆盖。详细审计见 [`S8_7E3G_C_XLSX_Pivot_Multi_Axis_LibreOffice_Round_Trip_Audit_2026-07-30.md`](./S8_7E3G_C_XLSX_Pivot_Multi_Axis_LibreOffice_Round_Trip_Audit_2026-07-30.md)。

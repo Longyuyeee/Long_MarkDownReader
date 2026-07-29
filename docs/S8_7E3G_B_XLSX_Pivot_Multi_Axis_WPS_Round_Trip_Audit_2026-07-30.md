@@ -43,8 +43,8 @@ npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip
 - 版本：`12.0`
 - 构建：`26895`
 - 输出：`fixtures/xlsx/output-reopen/s8-7e3g-wps-spreadsheets.xlsx`
-- 字节数：`14492`
-- SHA-256：`b554a1329e3d3ceb1be0212994eb68429cb8df6210d5e6928d1f7f1fcae35e4a`
+- 字节数：`14498`
+- SHA-256：`df2bd4c9a65405ddcf8220e8ff3f038fb159215240c4739d12fa1ab93b99b990`
 - 刷新：通过
 - 保存：通过
 - 应用退出后新会话重开：通过
@@ -100,3 +100,7 @@ npm.cmd run check:workbook-contract
 ```
 
 完整质量门禁以本次提交前的 `npm.cmd run ci:check` 结果为准。
+
+## 7. 后续进展
+
+S8-7E3G-C 已完成 LibreOffice Calc 往返，matrix 当前为 `partial / 2/3`。WPS 输出在统一字段计数合同下重新生成，以上摘要已同步为当前固定证据。后续以 [`S8_7E3G_C_XLSX_Pivot_Multi_Axis_LibreOffice_Round_Trip_Audit_2026-07-30.md`](./S8_7E3G_C_XLSX_Pivot_Multi_Axis_LibreOffice_Round_Trip_Audit_2026-07-30.md) 为准。

@@ -1,6 +1,7 @@
 param(
   [ValidateSet("available", "all", "microsoft-excel", "wps-spreadsheets", "libreoffice-calc")]
   [string]$Producer = "available",
+  [string]$LibreOfficeRoot = "",
   [switch]$RequireComplete
 )
 
@@ -10,9 +11,16 @@ $baseline = Join-Path $workspace "fixtures\xlsx\output-reopen\s8-7e3g-longedit-m
 $output = Join-Path $workspace "fixtures\xlsx\output-reopen"
 $report = Join-Path $workspace "docs\evidence\s8-7e3g-xlsx-pivot-multi-axis-roundtrip\matrix.json"
 $excelPath = "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE"
-$libreOfficeRoot = "C:\Program Files\LibreOffice\program"
-$soffice = Join-Path $libreOfficeRoot "soffice.com"
-$libreOfficePython = Join-Path $libreOfficeRoot "python.exe"
+if ([string]::IsNullOrWhiteSpace($LibreOfficeRoot)) {
+  $LibreOfficeRoot = if ([string]::IsNullOrWhiteSpace($env:LONGEDIT_LIBREOFFICE_ROOT)) {
+    "C:\Program Files\LibreOffice\program"
+  } else {
+    $env:LONGEDIT_LIBREOFFICE_ROOT
+  }
+}
+$LibreOfficeRoot = [System.IO.Path]::GetFullPath($LibreOfficeRoot)
+$soffice = Join-Path $LibreOfficeRoot "soffice.com"
+$libreOfficePython = Join-Path $LibreOfficeRoot "python.exe"
 $libreOfficeVerifier = Join-Path $workspace "scripts\verify-s8-7e3g-libreoffice-pivot.py"
 
 foreach ($requiredPath in @($baseline, $report)) {
@@ -97,6 +105,10 @@ function Test-LongEditReparse {
       outputRange = [string]$result.outputRange
       outputCellCount = [int]$result.outputCellCount
       previewGroupCount = [int]$result.previewGroupCount
+      rowFieldCount = [int]$result.rowFieldCount
+      columnFieldCount = [int]$result.columnFieldCount
+      dataFieldCount = [int]$result.dataFieldCount
+      pageFieldCount = [int]$result.pageFieldCount
     }
   }
   finally {
@@ -314,9 +326,38 @@ $matrix.complete = $verifiedCount -eq 3
 $matrix.verifiedCount = $verifiedCount
 $matrix | Add-Member -NotePropertyName verifiedAt -NotePropertyValue ([DateTime]::UtcNow.ToString("o")) -Force
 $matrix.producers = @($producerEntries)
-$matrix.environment.microsoftExcel.status = if ($availability["microsoft-excel"]) { "available" } else { "missing" }
-$matrix.environment.wpsSpreadsheets.status = if ($availability["wps-spreadsheets"]) { "available" } else { "missing" }
-$matrix.environment.libreOfficeCalc.status = if ($availability["libreoffice-calc"]) { "available" } else { "missing" }
+$matrix.environment.microsoftExcel.status = if ($availability["microsoft-excel"]) {
+  "available"
+} elseif ($existing["microsoft-excel"].status -eq "verified") {
+  "verified_evidence"
+} else {
+  "missing"
+}
+$matrix.environment.wpsSpreadsheets.status = if ($availability["wps-spreadsheets"]) {
+  "available"
+} elseif ($existing["wps-spreadsheets"].status -eq "verified") {
+  "verified_evidence"
+} else {
+  "missing"
+}
+$matrix.environment.libreOfficeCalc.status = if ($availability["libreoffice-calc"]) {
+  "available"
+} elseif ($existing["libreoffice-calc"].status -eq "verified") {
+  "verified_evidence"
+} else {
+  "missing"
+}
+$matrix.environment.checkedAt = [DateTime]::Now.ToString("yyyy-MM-dd")
+if ($availability["libreoffice-calc"]) {
+  $matrix.environment.libreOfficeCalc.evidence = "LibreOffice Calc detected and executed through the audited soffice/UNO runtime"
+  $matrix.environment.libreOfficeCalc | Add-Member -NotePropertyName executable -NotePropertyValue $soffice -Force
+}
+$blockedUntil = @()
+if ($existing["microsoft-excel"].status -ne "verified") { $blockedUntil += "microsoft_excel_available" }
+if ($existing["wps-spreadsheets"].status -ne "verified") { $blockedUntil += "wps_spreadsheets_available" }
+if ($existing["libreoffice-calc"].status -ne "verified") { $blockedUntil += "libreoffice_calc_available" }
+if ($verifiedCount -ne 3) { $blockedUntil += "three_producer_roundtrip_verified" }
+$matrix.blockedUntil = @($blockedUntil)
 
 [System.IO.File]::WriteAllText(
   $report,

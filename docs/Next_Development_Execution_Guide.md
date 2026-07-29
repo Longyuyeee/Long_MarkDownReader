@@ -667,3 +667,20 @@ S8-7E3G-B 已完成 WPS Spreadsheets 的真实生产者往返，matrix 当前为
 5. 只有三生产者均保持 `MultiAxisPivot`、双层行列轴、`A3:I12`、80 个输出单元格、16 个预览分组和 Grand Total `424`，且无修复提示，才进入可靠新副本白名单评估。
 
 当前机器可以重复执行 `npm run audit:s8-7e3g-xlsx-pivot-multi-axis-available` 验证已安装生产者。未达到 `3/3` 时，可靠新副本、原文件覆盖、已有目标覆盖、Page Fields、外部数据和切片器均不得开放。
+
+# 2026-07-30 最新执行入口：S8-7E3G 补齐 Microsoft Excel 3/3
+
+S8-7E3G-C 已完成 LibreOffice Calc，生产者矩阵当前为 `2/3`：
+
+- WPS Spreadsheets：verified
+- LibreOffice Calc：verified
+- Microsoft Excel：pending_environment
+
+下一步只在具备 Microsoft Excel 的机器执行：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.ps1 -Producer microsoft-excel
+npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip
+```
+
+提交 `s8-7e3g-microsoft-excel.xlsx` 与达到 `3/3 verified` 的 matrix 后，再进入多层轴可靠新副本白名单评估。原文件覆盖、已有目标覆盖、Page Fields、外部数据和切片器不属于该白名单。

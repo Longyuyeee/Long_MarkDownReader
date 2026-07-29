@@ -648,12 +648,13 @@
           "wps-spreadsheets",
           "libreoffice-calc"
         ],
-        "verifiedProducerCount": 1,
+        "verifiedProducerCount": 2,
         "requiredProducerCount": 3,
         "verifiedProducerIds": [
-          "wps-spreadsheets"
+          "wps-spreadsheets",
+          "libreoffice-calc"
         ],
-        "producerRoundTrip": "partial_1_of_3",
+        "producerRoundTrip": "partial_2_of_3",
         "reliableCopySave": "blocked",
         "writesUserFile": false,
         "sourceOverwrite": "blocked",

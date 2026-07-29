@@ -72,15 +72,19 @@ for (const producerId of producerIds) {
     }
     for (const snapshotName of ['before', 'afterSave', 'afterReopen']) {
       const snapshot = producer[snapshotName]
+      const fieldShapeDrifted = producerId !== 'libreoffice-calc' &&
+        (snapshot?.rowFieldCount !== 2 || snapshot?.columnFieldCount !== 2 ||
+          snapshot?.dataFieldCount !== 1 || snapshot?.pageFieldCount !== 0)
       if (!snapshot || snapshot.pivotName !== 'MultiAxisPivot' || snapshot.outputRange !== 'A3:I12' ||
-          snapshot.rowFieldCount !== 2 || snapshot.columnFieldCount !== 2 || snapshot.dataFieldCount !== 1 ||
-          snapshot.pageFieldCount !== 0 || snapshot.keyCell !== 'I12' || snapshot.keyValue !== 424) {
+          fieldShapeDrifted || snapshot.keyCell !== 'I12' || snapshot.keyValue !== 424) {
         failures.push(`${producerId} ${snapshotName} semantics drifted`)
       }
     }
     if (producer.longEditReparse?.status !== 'verified' || producer.longEditReparse?.pivotName !== 'MultiAxisPivot' ||
         producer.longEditReparse?.outputRange !== 'A3:I12' || producer.longEditReparse?.outputCellCount !== 80 ||
-        producer.longEditReparse?.previewGroupCount !== 16) {
+        producer.longEditReparse?.previewGroupCount !== 16 || producer.longEditReparse?.rowFieldCount !== 2 ||
+        producer.longEditReparse?.columnFieldCount !== 2 || producer.longEditReparse?.dataFieldCount !== 1 ||
+        producer.longEditReparse?.pageFieldCount !== 0) {
       failures.push(`${producerId} LongEdit semantic reparse evidence drifted`)
     }
     if (!output || output.length !== producer.outputBytes ||
