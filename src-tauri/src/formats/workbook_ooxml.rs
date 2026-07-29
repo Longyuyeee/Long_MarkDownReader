@@ -7160,6 +7160,7 @@ pub(crate) fn rebuild_workbook_pivot_cache_isolated(
 struct PivotHierarchyAudit {
     field_indices: Vec<usize>,
     field_names: Vec<String>,
+    detail_keys: Vec<Vec<usize>>,
     detail_item_count: usize,
     subtotal_item_count: usize,
     grand_total_item_count: usize,
@@ -7260,6 +7261,7 @@ fn parse_pivot_hierarchy_axis(
         .collect::<Result<Vec<_>, _>>()?;
     let mut previous = Vec::<usize>::new();
     let mut seen_details = HashSet::<Vec<usize>>::new();
+    let mut detail_keys = Vec::<Vec<usize>>::new();
     let mut detail_item_count = 0usize;
     let mut subtotal_item_count = 0usize;
     let mut grand_total_item_count = 0usize;
@@ -7287,6 +7289,7 @@ fn parse_pivot_hierarchy_axis(
                     compressed_item_count += 1;
                 }
                 previous = decoded;
+                detail_keys.push(previous.clone());
                 detail_item_count += 1;
             }
             "default" => {
@@ -7316,6 +7319,7 @@ fn parse_pivot_hierarchy_axis(
     Ok(PivotHierarchyAudit {
         field_indices,
         field_names,
+        detail_keys,
         detail_item_count,
         subtotal_item_count,
         grand_total_item_count,
@@ -7332,6 +7336,729 @@ fn public_hierarchy_audit(value: PivotHierarchyAudit) -> WorkbookPivotAxisHierar
         grand_total_item_count: value.grand_total_item_count,
         compressed_item_count: value.compressed_item_count,
     }
+}
+
+#[derive(Clone, Debug)]
+struct PivotMultiAxisTemplate {
+    field_indices: Vec<usize>,
+    detail_keys: Vec<Vec<usize>>,
+}
+
+#[derive(Clone, Debug)]
+enum PivotMultiAxisOutputItem {
+    Detail(Vec<usize>),
+    Subtotal(Vec<usize>),
+    Grand,
+}
+
+fn common_prefix_len(left: &[usize], right: &[usize]) -> usize {
+    left.iter()
+        .zip(right.iter())
+        .take_while(|(left, right)| left == right)
+        .count()
+}
+
+fn pivot_scalar_label(scalar: &PivotCacheScalar) -> String {
+    match scalar.kind.as_str() {
+        "m" => "(空白)".into(),
+        "b" if scalar.value == "1" => "TRUE".into(),
+        "b" if scalar.value == "0" => "FALSE".into(),
+        _ => scalar.value.clone(),
+    }
+}
+
+fn pivot_scalar_edit(
+    scalar: &PivotCacheScalar,
+    sheet: &str,
+    row: usize,
+    column: usize,
+) -> WorkbookCellEdit {
+    WorkbookCellEdit {
+        sheet: sheet.into(),
+        row,
+        column,
+        input: pivot_scalar_label(scalar),
+        kind: if scalar.kind == "n" {
+            "number".into()
+        } else if scalar.kind == "b" {
+            "boolean".into()
+        } else if scalar.kind == "m" {
+            "string".into()
+        } else {
+            "string".into()
+        },
+    }
+}
+
+fn multi_axis_key_label(
+    key: &[usize],
+    fields: &[PivotCacheFieldTemplate],
+    field_indices: &[usize],
+) -> Result<String, String> {
+    let labels = key
+        .iter()
+        .enumerate()
+        .map(|(level, shared_index)| {
+            let field = fields
+                .get(field_indices[level])
+                .ok_or("多层轴字段索引超出 Cache 字段范围")?;
+            let scalar = field
+                .shared_items
+                .get(*shared_index)
+                .ok_or("多层轴共享项索引超出 Cache 字段范围")?;
+            Ok(pivot_scalar_label(scalar))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(labels.join(" / "))
+}
+
+fn build_multi_axis_template_from_source(
+    snapshot: &crate::formats::workbook_pivot::PivotSourceSnapshot,
+    fields: &[PivotCacheFieldTemplate],
+    field_indices: &[usize],
+) -> Result<PivotMultiAxisTemplate, String> {
+    if field_indices.len() < 2 {
+        return Err("多层轴模板至少需要两个字段".into());
+    }
+    let mut detail_keys = Vec::<Vec<usize>>::new();
+    for record in &snapshot.rows {
+        let mut key = Vec::with_capacity(field_indices.len());
+        for field_index in field_indices {
+            let scalar =
+                pivot_cache_scalar(record.get(*field_index).ok_or("多层轴来源记录缺少字段")?)?;
+            let shared_index = fields
+                .get(*field_index)
+                .ok_or("多层轴字段索引超出 Cache 字段范围")?
+                .shared_items
+                .iter()
+                .position(|item| item == &scalar)
+                .ok_or("多层轴来源值不在 sharedItems 中")?;
+            key.push(shared_index);
+        }
+        if !detail_keys.contains(&key) {
+            detail_keys.push(key);
+        }
+    }
+    if detail_keys.is_empty() {
+        return Err("多层轴没有可重建明细项".into());
+    }
+    Ok(PivotMultiAxisTemplate {
+        field_indices: field_indices.to_vec(),
+        detail_keys,
+    })
+}
+
+fn parse_pivot_output_layout(xml: &[u8]) -> Result<PivotOutputLayout, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析 Pivot 输出布局失败: {error}"))?
+        {
+            Event::Empty(ref event) if event.local_name().as_ref() == b"location" => {
+                let reference =
+                    xml_value(event, b"ref", reader.decoder())?.ok_or("Pivot 输出缺少范围")?;
+                let mut parts = reference.split(':');
+                let (top, left) = parse_cell_reference(parts.next().unwrap_or_default())?;
+                let (bottom, right) = parse_cell_reference(parts.next().unwrap_or(&reference))?;
+                if parts.next().is_some() || bottom < top || right < left {
+                    return Err("Pivot 输出范围无效".into());
+                }
+                return Ok(PivotOutputLayout {
+                    top,
+                    bottom,
+                    left,
+                    right,
+                    first_data_row: usize_xml_attribute(event, b"firstDataRow", reader.decoder())?
+                        .ok_or("Pivot 输出缺少 firstDataRow")?,
+                    first_data_column: usize_xml_attribute(
+                        event,
+                        b"firstDataCol",
+                        reader.decoder(),
+                    )?
+                    .ok_or("Pivot 输出缺少 firstDataCol")?,
+                });
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Err("Pivot 表缺少输出布局".into())
+}
+
+fn multi_axis_output_items(detail_keys: &[Vec<usize>]) -> Vec<PivotMultiAxisOutputItem> {
+    let mut items = Vec::new();
+    let mut current_parent: Option<Vec<usize>> = None;
+    for key in detail_keys {
+        let parent = key[..key.len().saturating_sub(1)].to_vec();
+        if current_parent
+            .as_ref()
+            .is_some_and(|current| current != &parent)
+        {
+            items.push(PivotMultiAxisOutputItem::Subtotal(
+                current_parent.take().unwrap(),
+            ));
+        }
+        current_parent = Some(parent);
+        items.push(PivotMultiAxisOutputItem::Detail(key.clone()));
+    }
+    if let Some(parent) = current_parent {
+        items.push(PivotMultiAxisOutputItem::Subtotal(parent));
+    }
+    items.push(PivotMultiAxisOutputItem::Grand);
+    items
+}
+
+fn write_pivot_hierarchy_x(writer: &mut Writer<Vec<u8>>, value: usize) -> Result<(), String> {
+    let mut x = BytesStart::new("x");
+    if value != 0 {
+        let value = value.to_string();
+        x.push_attribute(("v", value.as_str()));
+        writer
+            .write_event(Event::Empty(x))
+            .map_err(|error| format!("写入多层轴项坐标失败: {error}"))
+    } else {
+        writer
+            .write_event(Event::Empty(x))
+            .map_err(|error| format!("写入多层轴项坐标失败: {error}"))
+    }
+}
+
+fn write_pivot_hierarchy_items(
+    writer: &mut Writer<Vec<u8>>,
+    element: &str,
+    template: &PivotMultiAxisTemplate,
+) -> Result<(), String> {
+    let items = multi_axis_output_items(&template.detail_keys);
+    let count = items.len().to_string();
+    let mut container = BytesStart::new(element);
+    container.push_attribute(("count", count.as_str()));
+    writer
+        .write_event(Event::Start(container))
+        .map_err(|error| format!("写入 {element} 失败: {error}"))?;
+    let mut previous = Vec::<usize>::new();
+    for item in items {
+        match item {
+            PivotMultiAxisOutputItem::Detail(key) => {
+                let repeat = common_prefix_len(&previous, &key);
+                let mut start = BytesStart::new("i");
+                if repeat > 0 {
+                    let repeat_text = repeat.to_string();
+                    start.push_attribute(("r", repeat_text.as_str()));
+                    writer
+                        .write_event(Event::Start(start))
+                        .map_err(|error| format!("写入 {element} 压缩明细项失败: {error}"))?;
+                } else {
+                    writer
+                        .write_event(Event::Start(start))
+                        .map_err(|error| format!("写入 {element} 明细项失败: {error}"))?;
+                }
+                for value in key.iter().skip(repeat) {
+                    write_pivot_hierarchy_x(writer, *value)?;
+                }
+                writer
+                    .write_event(Event::End(BytesEnd::new("i")))
+                    .map_err(|error| format!("结束 {element} 明细项失败: {error}"))?;
+                previous = key;
+            }
+            PivotMultiAxisOutputItem::Subtotal(prefix) => {
+                let mut start = BytesStart::new("i");
+                start.push_attribute(("t", "default"));
+                writer
+                    .write_event(Event::Start(start))
+                    .map_err(|error| format!("写入 {element} 父级小计失败: {error}"))?;
+                for value in prefix {
+                    write_pivot_hierarchy_x(writer, value)?;
+                }
+                writer
+                    .write_event(Event::End(BytesEnd::new("i")))
+                    .map_err(|error| format!("结束 {element} 父级小计失败: {error}"))?;
+            }
+            PivotMultiAxisOutputItem::Grand => {
+                let mut grand = BytesStart::new("i");
+                grand.push_attribute(("t", "grand"));
+                writer
+                    .write_event(Event::Start(grand))
+                    .and_then(|_| writer.write_event(Event::Empty(BytesStart::new("x"))))
+                    .and_then(|_| writer.write_event(Event::End(BytesEnd::new("i"))))
+                    .map_err(|error| format!("写入 {element} 总计项失败: {error}"))?;
+            }
+        }
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new(element)))
+        .map_err(|error| format!("结束 {element} 失败: {error}"))
+}
+
+fn write_pivot_multi_axis_fields(
+    writer: &mut Writer<Vec<u8>>,
+    element: &str,
+    field_indices: &[usize],
+) -> Result<(), String> {
+    let count = field_indices.len().to_string();
+    let mut fields = BytesStart::new(element);
+    fields.push_attribute(("count", count.as_str()));
+    writer
+        .write_event(Event::Start(fields))
+        .map_err(|error| format!("写入 {element} 失败: {error}"))?;
+    for field_index in field_indices {
+        let value = field_index.to_string();
+        let mut field = BytesStart::new("field");
+        field.push_attribute(("x", value.as_str()));
+        writer
+            .write_event(Event::Empty(field))
+            .map_err(|error| format!("写入 {element} 字段失败: {error}"))?;
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new(element)))
+        .map_err(|error| format!("结束 {element} 失败: {error}"))
+}
+
+fn rebuild_pivot_table_multi_axis_layout(
+    xml: &[u8],
+    fields: &[PivotCacheFieldTemplate],
+    row_axis: &PivotMultiAxisTemplate,
+    column_axis: &PivotMultiAxisTemplate,
+    output_layout: &PivotOutputLayout,
+) -> Result<Vec<u8>, String> {
+    let row_fields = row_axis
+        .field_indices
+        .iter()
+        .copied()
+        .collect::<HashSet<_>>();
+    let column_fields = column_axis
+        .field_indices
+        .iter()
+        .copied()
+        .collect::<HashSet<_>>();
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 512));
+    let mut buffer = Vec::new();
+    let mut pivot_field_index = 0usize;
+    let mut current_field = None;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析多层 Pivot Table 布局失败: {error}"))?;
+        match event {
+            Event::Empty(ref start) if start.local_name().as_ref() == b"location" => {
+                let reference = output_layout_reference(output_layout)?;
+                let updated = replace_xml_attribute(start, b"ref", &reference, false)?;
+                let updated = replace_xml_attribute(
+                    &updated,
+                    b"firstDataRow",
+                    &output_layout.first_data_row.to_string(),
+                    false,
+                )?;
+                let updated = replace_xml_attribute(
+                    &updated,
+                    b"firstDataCol",
+                    &output_layout.first_data_column.to_string(),
+                    false,
+                )?;
+                writer
+                    .write_event(Event::Empty(updated))
+                    .map_err(|error| format!("写入多层 Pivot 输出范围失败: {error}"))?;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"pivotField" => {
+                current_field = Some(pivot_field_index);
+                pivot_field_index = pivot_field_index.saturating_add(1);
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制多层 pivotField 失败: {error}"))?;
+            }
+            Event::Empty(ref start) if start.local_name().as_ref() == b"pivotField" => {
+                pivot_field_index = pivot_field_index.saturating_add(1);
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("复制多层 pivotField 失败: {error}"))?;
+            }
+            Event::Start(ref start)
+                if start.local_name().as_ref() == b"items"
+                    && current_field.is_some_and(|field| {
+                        row_fields.contains(&field) || column_fields.contains(&field)
+                    }) =>
+            {
+                let field_index = current_field.expect("checked above");
+                let item_count = fields
+                    .get(field_index)
+                    .ok_or("多层 Pivot 字段索引超出 Cache 字段范围")?
+                    .shared_items
+                    .len();
+                write_pivot_dimension_items(
+                    &mut writer,
+                    &PivotAxisRebuildTemplate {
+                        field_index,
+                        hidden: vec![false; item_count],
+                    },
+                )?;
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"rowFields" => {
+                write_pivot_multi_axis_fields(&mut writer, "rowFields", &row_axis.field_indices)?;
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"colFields" => {
+                write_pivot_multi_axis_fields(
+                    &mut writer,
+                    "colFields",
+                    &column_axis.field_indices,
+                )?;
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"rowItems" => {
+                write_pivot_hierarchy_items(&mut writer, "rowItems", row_axis)?;
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"colItems" => {
+                write_pivot_hierarchy_items(&mut writer, "colItems", column_axis)?;
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::End(ref end) if end.local_name().as_ref() == b"pivotField" => {
+                current_field = None;
+                writer
+                    .write_event(event.into_owned())
+                    .map_err(|error| format!("结束多层 pivotField 失败: {error}"))?;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制多层 Pivot Table 布局失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn multi_axis_item_matches(key: &[usize], item: &PivotMultiAxisOutputItem) -> bool {
+    match item {
+        PivotMultiAxisOutputItem::Detail(candidate) => candidate == key,
+        PivotMultiAxisOutputItem::Subtotal(prefix) => key.starts_with(prefix),
+        PivotMultiAxisOutputItem::Grand => true,
+    }
+}
+
+fn multi_axis_item_label(
+    item: &PivotMultiAxisOutputItem,
+    fields: &[PivotCacheFieldTemplate],
+    field_indices: &[usize],
+) -> Result<String, String> {
+    match item {
+        PivotMultiAxisOutputItem::Detail(key) => multi_axis_key_label(key, fields, field_indices),
+        PivotMultiAxisOutputItem::Subtotal(prefix) => Ok(format!(
+            "{} Total",
+            multi_axis_key_label(prefix, fields, field_indices)?
+        )),
+        PivotMultiAxisOutputItem::Grand => Ok("Grand Total".into()),
+    }
+}
+
+#[allow(dead_code)]
+fn multi_axis_aggregate_edit(
+    snapshot: &crate::formats::workbook_pivot::PivotSourceSnapshot,
+    pivot: &WorkbookPivotTable,
+    row_axis: &PivotMultiAxisTemplate,
+    column_axis: &PivotMultiAxisTemplate,
+    row_item: &PivotMultiAxisOutputItem,
+    column_item: &PivotMultiAxisOutputItem,
+    output_sheet: &str,
+    row: usize,
+    column: usize,
+) -> Result<WorkbookCellEdit, String> {
+    let data_field = pivot.audit.data_fields.first().ok_or("透视表缺少值字段")?;
+    let mut accumulator = MeasureAccumulator::new(data_field);
+    let mut matched = false;
+    for (source_row, record) in snapshot.rows.iter().enumerate() {
+        let row_key = row_axis
+            .field_indices
+            .iter()
+            .map(|field_index| {
+                let scalar = pivot_cache_scalar(
+                    record.get(*field_index).ok_or("多层行轴来源记录缺少字段")?,
+                )?;
+                Ok(scalar)
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        let column_key = column_axis
+            .field_indices
+            .iter()
+            .map(|field_index| {
+                let scalar = pivot_cache_scalar(
+                    record.get(*field_index).ok_or("多层列轴来源记录缺少字段")?,
+                )?;
+                Ok(scalar)
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        let row_indices = row_key
+            .iter()
+            .enumerate()
+            .map(|(level, scalar)| {
+                let field_index = row_axis.field_indices[level];
+                fields_shared_item_index(record, field_index, scalar)
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        let column_indices = column_key
+            .iter()
+            .enumerate()
+            .map(|(level, scalar)| {
+                let field_index = column_axis.field_indices[level];
+                fields_shared_item_index(record, field_index, scalar)
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        if multi_axis_item_matches(&row_indices, row_item)
+            && multi_axis_item_matches(&column_indices, column_item)
+        {
+            let value = record
+                .get(data_field.source_index)
+                .ok_or("多层透视来源记录缺少值字段")?;
+            accumulator.add(value, source_row + 1)?;
+            matched = true;
+        }
+    }
+    if matched {
+        pivot_measure_edit(accumulator, output_sheet, row, column)
+    } else {
+        Ok(WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row,
+            column,
+            input: String::new(),
+            kind: "empty".into(),
+        })
+    }
+}
+
+#[allow(dead_code)]
+fn fields_shared_item_index(
+    _record: &[Data],
+    _field_index: usize,
+    _scalar: &PivotCacheScalar,
+) -> Result<usize, String> {
+    unreachable!("replaced by closure in build_pivot_multi_axis_output_edits")
+}
+
+fn build_pivot_multi_axis_output_edits(
+    snapshot: &crate::formats::workbook_pivot::PivotSourceSnapshot,
+    pivot: &WorkbookPivotTable,
+    fields: &[PivotCacheFieldTemplate],
+    row_axis: &PivotMultiAxisTemplate,
+    column_axis: &PivotMultiAxisTemplate,
+    layout: &PivotOutputLayout,
+    output_sheet: &str,
+) -> Result<(Vec<WorkbookCellEdit>, PivotOutputLayout), String> {
+    let row_items = multi_axis_output_items(&row_axis.detail_keys);
+    let column_items = multi_axis_output_items(&column_axis.detail_keys);
+    let header_rows = column_axis.field_indices.len() + 1;
+    let first_data_column = row_axis.field_indices.len();
+    let data_start_row = layout.top + header_rows;
+    let data_start_column = layout.left + first_data_column;
+    let new_bottom = data_start_row + row_items.len() - 1;
+    let new_right = data_start_column + column_items.len() - 1;
+    let mut edits = Vec::new();
+    for (level, field_index) in column_axis.field_indices.iter().enumerate() {
+        edits.push(WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row: layout.top + level,
+            column: layout.left,
+            input: fields
+                .get(*field_index)
+                .map(|field| field.name.clone())
+                .unwrap_or_else(|| "Column Labels".into()),
+            kind: "string".into(),
+        });
+        for (position, item) in column_items.iter().enumerate() {
+            let column = data_start_column + position;
+            let edit = match item {
+                PivotMultiAxisOutputItem::Detail(key) => fields
+                    .get(column_axis.field_indices[level])
+                    .and_then(|field| field.shared_items.get(key[level]))
+                    .map(|scalar| {
+                        pivot_scalar_edit(scalar, output_sheet, layout.top + level, column)
+                    })
+                    .ok_or("多层列轴标签超出 Cache 字段范围")?,
+                PivotMultiAxisOutputItem::Subtotal(prefix) if level + 1 == prefix.len() => {
+                    WorkbookCellEdit {
+                        sheet: output_sheet.into(),
+                        row: layout.top + level,
+                        column,
+                        input: "Total".into(),
+                        kind: "string".into(),
+                    }
+                }
+                PivotMultiAxisOutputItem::Grand if level == 0 => WorkbookCellEdit {
+                    sheet: output_sheet.into(),
+                    row: layout.top + level,
+                    column,
+                    input: "Grand Total".into(),
+                    kind: "string".into(),
+                },
+                _ => WorkbookCellEdit {
+                    sheet: output_sheet.into(),
+                    row: layout.top + level,
+                    column,
+                    input: String::new(),
+                    kind: "empty".into(),
+                },
+            };
+            edits.push(edit);
+        }
+    }
+    for (level, field_index) in row_axis.field_indices.iter().enumerate() {
+        edits.push(WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row: layout.top + header_rows - 1,
+            column: layout.left + level,
+            input: fields
+                .get(*field_index)
+                .map(|field| field.name.clone())
+                .unwrap_or_else(|| "Row Labels".into()),
+            kind: "string".into(),
+        });
+    }
+    for (row_position, item) in row_items.iter().enumerate() {
+        let row = data_start_row + row_position;
+        match item {
+            PivotMultiAxisOutputItem::Detail(key) => {
+                for (level, shared_index) in key.iter().enumerate() {
+                    let field = fields
+                        .get(row_axis.field_indices[level])
+                        .ok_or("多层行轴字段索引超出 Cache 字段范围")?;
+                    let scalar = field
+                        .shared_items
+                        .get(*shared_index)
+                        .ok_or("多层行轴标签超出 Cache 字段范围")?;
+                    edits.push(pivot_scalar_edit(
+                        scalar,
+                        output_sheet,
+                        row,
+                        layout.left + level,
+                    ));
+                }
+            }
+            PivotMultiAxisOutputItem::Subtotal(prefix) => {
+                edits.push(WorkbookCellEdit {
+                    sheet: output_sheet.into(),
+                    row,
+                    column: layout.left,
+                    input: multi_axis_item_label(item, fields, &row_axis.field_indices)?,
+                    kind: "string".into(),
+                });
+                for level in 1..row_axis.field_indices.len() {
+                    edits.push(WorkbookCellEdit {
+                        sheet: output_sheet.into(),
+                        row,
+                        column: layout.left + level,
+                        input: String::new(),
+                        kind: if level < prefix.len() {
+                            "string"
+                        } else {
+                            "empty"
+                        }
+                        .into(),
+                    });
+                }
+            }
+            PivotMultiAxisOutputItem::Grand => {
+                edits.push(WorkbookCellEdit {
+                    sheet: output_sheet.into(),
+                    row,
+                    column: layout.left,
+                    input: "Grand Total".into(),
+                    kind: "string".into(),
+                });
+            }
+        }
+        for (column_position, column_item) in column_items.iter().enumerate() {
+            let data_field = pivot.audit.data_fields.first().ok_or("透视表缺少值字段")?;
+            let mut accumulator = MeasureAccumulator::new(data_field);
+            let mut matched = false;
+            for (source_row, record) in snapshot.rows.iter().enumerate() {
+                let row_key = row_axis
+                    .field_indices
+                    .iter()
+                    .map(|field_index| {
+                        let scalar = pivot_cache_scalar(
+                            record
+                                .get(*field_index)
+                                .ok_or_else(|| "多层行轴来源记录缺少字段".to_string())?,
+                        )?;
+                        fields
+                            .get(*field_index)
+                            .ok_or_else(|| "多层行轴字段索引超出 Cache 字段范围".to_string())?
+                            .shared_items
+                            .iter()
+                            .position(|item| item == &scalar)
+                            .ok_or_else(|| "多层行轴来源值不在 sharedItems 中".to_string())
+                    })
+                    .collect::<Result<Vec<_>, String>>()?;
+                let column_key = column_axis
+                    .field_indices
+                    .iter()
+                    .map(|field_index| {
+                        let scalar = pivot_cache_scalar(
+                            record
+                                .get(*field_index)
+                                .ok_or_else(|| "多层列轴来源记录缺少字段".to_string())?,
+                        )?;
+                        fields
+                            .get(*field_index)
+                            .ok_or_else(|| "多层列轴字段索引超出 Cache 字段范围".to_string())?
+                            .shared_items
+                            .iter()
+                            .position(|item| item == &scalar)
+                            .ok_or_else(|| "多层列轴来源值不在 sharedItems 中".to_string())
+                    })
+                    .collect::<Result<Vec<_>, String>>()?;
+                if multi_axis_item_matches(&row_key, item)
+                    && multi_axis_item_matches(&column_key, column_item)
+                {
+                    accumulator.add(
+                        record
+                            .get(data_field.source_index)
+                            .ok_or("多层透视来源记录缺少值字段")?,
+                        source_row + 1,
+                    )?;
+                    matched = true;
+                }
+            }
+            edits.push(if matched {
+                pivot_measure_edit(
+                    accumulator,
+                    output_sheet,
+                    row,
+                    data_start_column + column_position,
+                )?
+            } else {
+                WorkbookCellEdit {
+                    sheet: output_sheet.into(),
+                    row,
+                    column: data_start_column + column_position,
+                    input: String::new(),
+                    kind: "empty".into(),
+                }
+            });
+        }
+    }
+    Ok((
+        edits,
+        PivotOutputLayout {
+            top: layout.top,
+            bottom: new_bottom,
+            left: layout.left,
+            right: new_right,
+            first_data_row: header_rows,
+            first_data_column,
+        },
+    ))
 }
 
 pub(crate) fn audit_workbook_pivot_multi_axis_isolated(
@@ -7392,20 +8119,75 @@ pub(crate) fn audit_workbook_pivot_multi_axis_isolated(
         return Err("Multi-axis preview did not preserve all hierarchy levels".into());
     }
 
-    let (isolated, cache_result) = rebuild_workbook_pivot_cache_isolated(source, pivot)?;
+    let (cache_isolated, cache_result) = rebuild_workbook_pivot_cache_isolated(source, pivot)?;
+    let mut entries = load_package(&cache_isolated)?;
+    let definition_index = entries
+        .iter()
+        .position(|entry| entry.name == definition_part)
+        .ok_or("Multi-axis isolated package is missing the cache definition")?;
+    let pivot_index = entries
+        .iter()
+        .position(|entry| entry.name == pivot_part)
+        .ok_or("Multi-axis isolated package is missing the Pivot definition")?;
+    let output_index = entries
+        .iter()
+        .position(|entry| entry.name == output_part)
+        .ok_or("Multi-axis isolated package is missing the output worksheet")?;
+    let isolated_fields = parse_pivot_cache_field_templates(&entries[definition_index].data)?;
+    let old_layout = parse_pivot_output_layout(&entries[pivot_index].data)?;
+    let row_template = build_multi_axis_template_from_source(
+        &read_pivot_source_snapshot(source, pivot)?,
+        &isolated_fields,
+        &row_axis.field_indices,
+    )?;
+    let column_template = build_multi_axis_template_from_source(
+        &read_pivot_source_snapshot(source, pivot)?,
+        &isolated_fields,
+        &column_axis.field_indices,
+    )?;
+    let output_sheet = plan
+        .output_sheet
+        .as_deref()
+        .ok_or("Multi-axis audit plan is missing the output sheet name")?;
+    let snapshot = read_pivot_source_snapshot(source, pivot)?;
+    let (output_edits, output_layout) = build_pivot_multi_axis_output_edits(
+        &snapshot,
+        pivot,
+        &isolated_fields,
+        &row_template,
+        &column_template,
+        &old_layout,
+        output_sheet,
+    )?;
+    let mut patches = SheetPatches::new();
+    for edit in &output_edits {
+        patches.entry(edit.row).or_default().insert(
+            edit.column,
+            CellPatch {
+                edit: Some(edit),
+                style_id: None,
+            },
+        );
+    }
+    entries[pivot_index].data = rebuild_pivot_table_multi_axis_layout(
+        &entries[pivot_index].data,
+        &isolated_fields,
+        &row_template,
+        &column_template,
+        &output_layout,
+    )?;
+    entries[output_index].data = patch_sheet_xml(&entries[output_index].data, &patches)?;
+    let modified_paths = plan
+        .affected_parts
+        .iter()
+        .map(|impact| impact.part.clone())
+        .collect::<HashSet<_>>();
+    let isolated = write_package_preserving_unchanged(source, entries, &modified_paths)?;
+    validate_workbook_package(&isolated)?;
     let isolated_entries = load_package(&isolated)?
         .into_iter()
         .map(|entry| (entry.name, entry.data))
         .collect::<HashMap<_, _>>();
-    let pivot_definition_preserved =
-        source_entries.get(&pivot_part) == isolated_entries.get(&pivot_part);
-    let output_worksheet_preserved =
-        source_entries.get(&output_part) == isolated_entries.get(&output_part);
-    if !pivot_definition_preserved || !output_worksheet_preserved {
-        return Err(
-            "Multi-axis cache prototype changed the Pivot definition or output worksheet".into(),
-        );
-    }
     let isolated_fields = parse_pivot_cache_field_templates(
         isolated_entries
             .get(&definition_part)
@@ -7433,13 +8215,36 @@ pub(crate) fn audit_workbook_pivot_multi_axis_isolated(
         .find(|candidate| candidate.part == pivot.part)
         .ok_or("Multi-axis Pivot identity was lost in the isolated package")?;
     let isolated_preview = preview_pivot(&isolated, isolated_pivot, Vec::new())?;
-    let semantic_reparse_valid = isolated_row == row_axis
-        && isolated_column == column_axis
+    let semantic_reparse_valid = isolated_row.field_indices == row_template.field_indices
+        && isolated_row.detail_keys == row_template.detail_keys
+        && isolated_row.detail_item_count == row_template.detail_keys.len()
+        && isolated_column.field_indices == column_template.field_indices
+        && isolated_column.detail_keys == column_template.detail_keys
+        && isolated_column.detail_item_count == column_template.detail_keys.len()
         && isolated_preview.groups == preview.groups
         && isolated_pivot.audit.writeback.status == "structure_candidate";
     if !semantic_reparse_valid {
         return Err("Multi-axis hierarchy or preview semantics drifted after cache rebuild".into());
     }
+    let output_values_verified =
+        verify_pivot_output_values(&isolated, output_sheet, &output_edits)?;
+    if !output_values_verified {
+        return Err("Multi-axis output values drifted after isolated rebuild".into());
+    }
+    let untouched_parts_preserved = source_entries.iter().all(|(name, data)| {
+        modified_paths.contains(name)
+            || isolated_entries
+                .get(name)
+                .is_some_and(|candidate| candidate == data)
+    });
+    if !untouched_parts_preserved {
+        return Err(
+            "Multi-axis isolated rebuild changed a part outside the impact inventory".into(),
+        );
+    }
+    let pivot_definition_preserved = false;
+    let output_worksheet_preserved = false;
+    let isolated_package_digest = format!("{:x}", md5::compute(&isolated));
     let gate = |id: &str, status: &str| WorkbookPivotRebuildGate {
         id: id.into(),
         status: status.into(),
@@ -7448,21 +8253,27 @@ pub(crate) fn audit_workbook_pivot_multi_axis_isolated(
         isolated,
         WorkbookPivotMultiAxisAuditResult {
             pivot_name: pivot.name.clone(),
-            status: "multi_axis_structure_verified".into(),
+            status: "multi_axis_output_rebuilt".into(),
             execution: "temporary_copy_only".into(),
             writes_user_file: false,
             source_record_count: cache_result.rebuilt_record_count,
             preview_group_count: preview.groups.len(),
+            output_range: output_layout_reference(&output_layout)?,
+            output_cell_count: output_edits.len(),
             row_axis: public_hierarchy_audit(row_axis),
             column_axis: public_hierarchy_audit(column_axis),
-            rebuilt_parts: cache_result.rebuilt_parts,
+            rebuilt_parts: plan
+                .affected_parts
+                .iter()
+                .map(|impact| impact.part.clone())
+                .collect(),
             source_package_digest: cache_result.source_package_digest,
-            isolated_package_digest: cache_result.isolated_package_digest,
-            package_valid: cache_result.package_valid,
+            isolated_package_digest,
+            package_valid: true,
             semantic_reparse_valid,
             pivot_definition_preserved,
             output_worksheet_preserved,
-            untouched_parts_preserved: cache_result.untouched_parts_preserved,
+            untouched_parts_preserved,
             gates: vec![
                 gate("signature_check", "passed"),
                 gate("multi_axis_field_inventory", "passed"),
@@ -7473,9 +8284,10 @@ pub(crate) fn audit_workbook_pivot_multi_axis_isolated(
                 gate("cache_records_rebuild", "passed"),
                 gate("package_validation", "passed"),
                 gate("semantic_reparse", "passed"),
-                gate("pivot_definition_preservation", "passed"),
-                gate("output_worksheet_preservation", "passed"),
-                gate("multi_axis_output_rebuild", "pending"),
+                gate("pivot_definition_rebuild", "passed"),
+                gate("output_worksheet_rebuild", "passed"),
+                gate("multi_axis_output_rebuild", "passed"),
+                gate("output_value_reparse", "passed"),
                 gate("atomic_replace", "blocked"),
                 gate("producer_round_trip", "pending"),
             ],
@@ -8144,7 +8956,10 @@ fn verify_pivot_output_values(
             _ => false,
         };
         if !matches {
-            return Ok(false);
+            return Err(format!(
+                "Pivot output mismatch at R{}C{}: expected {} {:?}, got {:?}",
+                edit.row, edit.column, edit.kind, edit.input, actual
+            ));
         }
     }
     Ok(true)
@@ -17619,11 +18434,13 @@ mod tests {
         assert_eq!(pivot.audit.page_field_count, 0);
 
         let (isolated, result) = audit_workbook_pivot_multi_axis_isolated(FIXTURE, pivot).unwrap();
-        assert_eq!(result.status, "multi_axis_structure_verified");
+        assert_eq!(result.status, "multi_axis_output_rebuilt");
         assert_eq!(result.execution, "temporary_copy_only");
         assert!(!result.writes_user_file);
         assert_eq!(result.source_record_count, 16);
         assert_eq!(result.preview_group_count, 16);
+        assert_eq!(result.output_range, "A3:I12");
+        assert_eq!(result.output_cell_count, 80);
         assert_eq!(result.row_axis.field_names, ["Region", "City"]);
         assert_eq!(result.row_axis.detail_item_count, 4);
         assert_eq!(result.row_axis.subtotal_item_count, 2);
@@ -17636,8 +18453,8 @@ mod tests {
         assert_eq!(result.column_axis.compressed_item_count, 2);
         assert!(result.package_valid);
         assert!(result.semantic_reparse_valid);
-        assert!(result.pivot_definition_preserved);
-        assert!(result.output_worksheet_preserved);
+        assert!(!result.pivot_definition_preserved);
+        assert!(!result.output_worksheet_preserved);
         assert!(result.untouched_parts_preserved);
         assert_ne!(result.source_package_digest, result.isolated_package_digest);
         assert_eq!(FIXTURE.len(), 14_433);

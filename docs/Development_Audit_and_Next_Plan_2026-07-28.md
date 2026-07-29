@@ -134,3 +134,10 @@ S8-7E3C 已完成单行轴、单列轴和三度量可靠新副本，修正隐藏
 S8-7E3E 已完成 Microsoft Excel 双层行轴、双层列轴真实 fixture 和独立进程重开。LongEdit 新增多层轴隔离审计命令，可验证字段顺序、sharedItems、`r` 前缀压缩明细、父级小计、Grand Total 和 16 个当前源表值分组；临时包只重建 Cache Definition/Records，Pivot Definition、输出 Worksheet、其他部件和用户文件保持不变。
 
 下一批为 S8-7E3F 多层轴定义与层级输出临时包重建：升级有序轴模板，编码压缩 `rowItems/colItems`，重建表头、明细、小计和总计，并覆盖数值变化及类别扩缩容。S8-7E3F 不开放可靠保存；三生产者往返和可靠新副本白名单留到 S8-7E3G。
+# 2026-07-30 当前状态快照：S8-7E3F 已完成
+
+S8-7E3F 已把 XLSX 多层行轴 + 多层列轴 Pivot 从结构审计推进到临时包内同步重建。当前 `audit_workbook_pivot_multi_axis_isolated_copy` 返回 `multi_axis_output_rebuilt`，在不写用户原文件的前提下重建 Cache Definition/Records、Pivot Definition、压缩 `rowItems/colItems` 和输出 Worksheet。
+
+固定证据：Microsoft Excel 真实 fixture，`Region/City` 双层行轴、`Year/Quarter` 双层列轴、16 个预览分组、输出范围 `A3:I12`、80 个输出单元格、Grand Total `424`。新增门禁包括 `pivot_definition_rebuild`、`output_worksheet_rebuild`、`multi_axis_output_rebuild` 和 `output_value_reparse`。
+
+仍然阻断：原文件覆盖、已有目标覆盖、Page Fields、外部连接、切片器、多层轴可靠保存白名单。下一入口更新为 S8-7E3G：执行 Excel/WPS/LibreOffice 真实刷新、保存、退出和新进程重开；只有三生产者语义稳定且无修复提示后，才评估同目录可靠新副本。详细证据见 [`S8_7E3F_XLSX_Pivot_Multi_Axis_Output_Rebuild_Audit_2026-07-30.md`](./S8_7E3F_XLSX_Pivot_Multi_Axis_Output_Rebuild_Audit_2026-07-30.md)。

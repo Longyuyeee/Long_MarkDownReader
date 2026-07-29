@@ -331,6 +331,8 @@ pub struct WorkbookPivotMultiAxisAuditResult {
     pub writes_user_file: bool,
     pub source_record_count: usize,
     pub preview_group_count: usize,
+    pub output_range: String,
+    pub output_cell_count: usize,
     pub row_axis: WorkbookPivotAxisHierarchyAudit,
     pub column_axis: WorkbookPivotAxisHierarchyAudit,
     pub rebuilt_parts: Vec<String>,

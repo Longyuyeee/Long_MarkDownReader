@@ -389,3 +389,8 @@ Microsoft Excel 真实 fixture 已固定 `Region/City` 双层行轴和 `Year/Qua
 5. S8-7E3F 只做隔离包，不开放保存；完成后进入 S8-7E3G，再做 Excel/WPS/LibreOffice 往返并评估可靠新副本。
 
 继续保持阻断：页面字段、切片器、外部连接、已有目标覆盖和原件覆盖。
+# 2026-07-30 交接快照：S8-7E3F 已收口
+
+当前 `main` 已推进到 S8-7E3F：XLSX 多层行轴 + 多层列轴 Pivot 可以在临时包中同步重建 Cache Definition/Records、Pivot Definition、压缩 `rowItems/colItems` 和输出 Worksheet。审计命令返回 `multi_axis_output_rebuilt`，输出范围 `A3:I12`，输出单元格 `80`，Grand Total `424`，成功路径和旧签名拒绝路径均不修改用户原文件。
+
+下一步直接进入 S8-7E3G：对 S8-7E3F 的隔离输出包执行 Excel/WPS/LibreOffice 三生产者刷新、保存、退出和新进程重开，验证无修复提示和语义稳定；稳定前不开放多层轴可靠保存，更不开放原文件覆盖。

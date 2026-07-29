@@ -2737,12 +2737,14 @@ mod tests {
             },
         ))
         .unwrap();
-        assert_eq!(result.status, "multi_axis_structure_verified");
+        assert_eq!(result.status, "multi_axis_output_rebuilt");
         assert_eq!(result.preview_group_count, 16);
+        assert_eq!(result.output_range, "A3:I12");
+        assert_eq!(result.output_cell_count, 80);
         assert_eq!(result.row_axis.field_indices, [0, 1]);
         assert_eq!(result.column_axis.field_indices, [2, 3]);
-        assert!(result.pivot_definition_preserved);
-        assert!(result.output_worksheet_preserved);
+        assert!(!result.pivot_definition_preserved);
+        assert!(!result.output_worksheet_preserved);
         assert_eq!(fs::read(&path).unwrap(), source);
 
         let stale = tauri::async_runtime::block_on(audit_workbook_pivot_multi_axis_isolated_copy(
