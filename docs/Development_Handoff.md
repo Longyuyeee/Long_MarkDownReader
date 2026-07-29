@@ -302,3 +302,9 @@ PDF B2A/B2B/B2C 已完成：可按显式页范围提取页面、将 2～16 个 L
 - PDF 标注和 OCR 使用 sidecar 文件，不直接重写原 PDF。
 - OPML 主题、Canvas 节点、PDF 批注和 Table 视图已是全局图谱中的独立对象；本地索引支持持久化全量重建、签名失效检测和页级跨格式全文搜索，尚未实现文件级增量更新。
 - 不要提交 `.claude/settings.local.json`、系统凭据、知识库内容、`dist/` 或 `src-tauri/target/`。
+
+## 8. 2026-07-29 E1B 发布状态机恢复点
+
+E1B 发布门禁已升级为 `checkpoint` / `released-preview` 双状态机器，并加入内存正反例验证。当前仍严格保持 `checkpoint`：Word 与 LibreOffice 已验证，WPS 有真实机器阻断证据，`.odt` 未注册且 `write=false`。
+
+后续不得分步或提前暴露 `.odt`。只有 WPS 真实 fixture、同生产者复开和三生产者 `closure-candidate` 桌面证据全部到位，才能在同一提交中把生产者矩阵、`shared/odt-read-contract.json` 和 `shared/file-formats.json` 原子切换为只读发布态；精确合同与反例见 [`E1B_ODT_Release_State_Machine_Audit_2026-07-29.md`](./E1B_ODT_Release_State_Machine_Audit_2026-07-29.md)。

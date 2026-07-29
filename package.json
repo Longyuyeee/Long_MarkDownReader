@@ -60,7 +60,7 @@
     "check:a3r-json-creation-evidence": "node scripts/check-a3r-json-creation-audit.mjs",
     "check:office-compatibility-audit": "node scripts/check-office-compatibility-audit.mjs",
     "check:odf-package-contract": "node scripts/check-odf-package-contract.mjs",
-    "check:odt-read-contract": "node scripts/check-odt-read-contract.mjs",
+    "check:odt-read-contract": "node scripts/check-odt-release-state-machine.mjs && node scripts/check-odt-read-contract.mjs",
     "check:e1b-odt-desktop-evidence": "node scripts/check-e1b-odt-desktop-audit.mjs",
     "audit:e1b-wps-odf-environment": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/audit-e1b-wps-odf-environment.ps1",
     "check:graph-product-contract": "node scripts/check-graph-product-contract.mjs",

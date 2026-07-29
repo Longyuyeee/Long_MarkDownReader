@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises'
+import { ODT_PREVIEW_FORMAT } from './odt-release-state-machine.mjs'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
@@ -204,6 +205,10 @@ if (!pptxFormat
   || !pptxFormat.userCapability?.description?.includes('幻灯片新增/复制/删除/排序')
   || !pptxFormat.userCapability?.description?.includes('原演示文稿始终只读')
   || !pptxFormat.userCapability?.description?.includes('母版、动画、SmartArt、复杂图表')) failures.push('C5D PPTX basic copy-edit contract is incomplete')
+const odtFormat = registry.formats?.find(format => format.id === 'odt' || format.extensions?.includes('.odt'))
+if (odtFormat && JSON.stringify(odtFormat) !== JSON.stringify(ODT_PREVIEW_FORMAT)) {
+  failures.push('E1B ODT registration must match the exact preview-only contract')
+}
 
 const requireText = (source, value, message) => { if (!source.includes(value)) failures.push(message) }
 const forbid = (source, pattern, message) => { if (pattern.test(source)) failures.push(message) }

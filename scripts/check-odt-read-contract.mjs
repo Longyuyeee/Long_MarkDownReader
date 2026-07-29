@@ -1,12 +1,14 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { validateOdtReleaseState } from './odt-release-state-machine.mjs'
 
 const root = process.cwd()
 const read = file => fs.readFileSync(path.join(root, file), 'utf8')
 const contract = JSON.parse(read('shared/odt-read-contract.json'))
 const matrix = JSON.parse(read('fixtures/odt/producers/matrix.json'))
 const registry = JSON.parse(read('shared/file-formats.json'))
+const desktopManifest = JSON.parse(read('docs/evidence/e1b-odt-desktop/audit-manifest.json'))
 const parser = read('src-tauri/src/formats/odt.rs')
 const command = read('src-tauri/src/commands/odt.rs')
 const indexCommand = read('src-tauri/src/commands/index.rs')
@@ -19,18 +21,8 @@ const desktopEvidenceCapture = read('scripts/capture-e1b-odt-desktop-audit.mjs')
 const fail = message => { throw new Error(`E1B ODT read contract: ${message}`) }
 
 if (contract.schemaVersion !== 1 || contract.stage !== 'E1B') fail('invalid stage header')
-if (contract.complete || !contract.implementationComplete || contract.releaseGatePassed) {
-  fail('checkpoint completion state drift')
-}
-if (contract.nextStage !== 'E1B-producer-gate-closure') fail('next stage drift')
-if (registry.formats.some(format => format.extensions.includes('.odt'))) {
-  fail('.odt must remain unregistered until the producer gate passes')
-}
-for (const field of ['commandImplemented', 'uiImplemented', 'indexImplemented']) {
-  if (contract.productExposure?.[field] !== true) fail(`${field} evidence missing`)
-}
-if (contract.productExposure?.registeredAsSupported || contract.productExposure?.writeEnabled) {
-  fail('product exposure or write boundary drift')
+for (const failure of validateOdtReleaseState({ contract, matrix, registry, desktopManifest })) {
+  fail(failure)
 }
 
 const limits = {
@@ -64,7 +56,6 @@ if (!parser.includes('inspect_odf_package(source, ".odt")')
 }
 if (contract.desktopEvidence?.verified !== true
   || contract.desktopEvidence?.manifest !== 'docs/evidence/e1b-odt-desktop/audit-manifest.json'
-  || contract.desktopEvidence?.producers?.join(',') !== 'microsoft-word-16,libreoffice-writer'
   || contract.desktopEvidence?.layouts?.join(',') !== 'normal,compact'
   || contract.desktopEvidence?.themes?.join(',') !== 'professional-light,professional-dark'
   || !contract.desktopEvidence?.searchVerified
@@ -165,4 +156,4 @@ for (const id of required) {
 
 const verifiedCount = matrix.producers.filter(producer => producer.status === 'verified').length
 const blockedIds = matrix.producers.filter(producer => producer.status === 'blocked').map(producer => producer.id)
-console.log(`E1B ODT checkpoint OK: implementation complete, ${verifiedCount}/${required.length} producer fixtures verified, blocked: ${blockedIds.join(', ') || 'none'}, product exposure disabled`)
+console.log(`E1B ODT ${contract.releaseState} OK: implementation complete, ${verifiedCount}/${required.length} producer fixtures verified, blocked: ${blockedIds.join(', ') || 'none'}, write disabled`)

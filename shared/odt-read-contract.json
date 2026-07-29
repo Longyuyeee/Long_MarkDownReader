@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "E1B",
+  "releaseState": "checkpoint",
   "complete": false,
   "implementationComplete": true,
   "releaseGatePassed": false,
@@ -73,6 +74,17 @@
       "desktop-locator",
       "source-unchanged"
     ]
+  },
+  "releaseTransition": {
+    "from": "checkpoint",
+    "to": "released-preview",
+    "requirements": [
+      "three-producer-fixtures-verified",
+      "closure-candidate-desktop-evidence-passed",
+      "preview-only-registry-entry-exact",
+      "write-capability-disabled"
+    ],
+    "nextStage": "E1C"
   },
   "producerGate": {
     "required": [

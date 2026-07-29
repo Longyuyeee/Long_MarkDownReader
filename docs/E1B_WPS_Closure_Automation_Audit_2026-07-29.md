@@ -61,3 +61,7 @@ npm.cmd run check:e1b-odt-desktop-evidence
 ```
 
 只有环境预检 ready、WPS 原生 ODT 保存与复开通过、桌面清单进入 `closure-candidate` 且三生产者证据完整后，才能审查生产者矩阵和产品注册表变更。自动化就绪不等于 WPS 门禁通过。
+
+## 6. 后续发布状态机
+
+关闭候选自动化之后，发布控制已进一步固化为双状态机器。当前 `checkpoint` 和未来 `released-preview` 都有独立正例，提前注册、误开写能力和生产者状态不同步有反例门禁。三生产者证据到位后必须原子更新矩阵、阶段合同和精确只读注册表，不再依赖人工检查中间态。详见 [`E1B_ODT_Release_State_Machine_Audit_2026-07-29.md`](./E1B_ODT_Release_State_Machine_Audit_2026-07-29.md)。

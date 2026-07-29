@@ -602,3 +602,15 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 5. 完整 CI 和 GitHub Quality Gate 通过后才进入 E1C。
 
 本次恢复入口和后续阶段见 [`Development_Audit_and_Next_Plan_2026-07-28.md`](./Development_Audit_and_Next_Plan_2026-07-28.md)；ODT 当前机器事实见 [`shared/odt-read-contract.json`](../shared/odt-read-contract.json)。
+
+### E1B 原子发布步骤（2026-07-29 补充）
+
+`check:odt-read-contract` 现已覆盖 `checkpoint` 与 `released-preview` 两种合法状态，并拒绝中间态。WPS 证据到位后必须在同一批完成：
+
+1. 将 WPS 生产者从 blocked 改为 verified，删除 blocker 引用并校验真实 fixture manifest。
+2. 提交三生产者 `closure-candidate` 桌面证据。
+3. 将阶段合同切换为 `released-preview`、`complete=true`、`releaseGatePassed=true`、`nextStage=E1C`。
+4. 按 `scripts/odt-release-state-machine.mjs` 的唯一合同登记 `.odt`；保持 `preview-only` 和 `write=false`。
+5. 运行完整 `ci:check` 并等待 GitHub Quality Gate 通过。
+
+不得先登记扩展名再补证据，也不得把只读 ODT 实现解释为 ODT 编辑能力。专项审计见 [`E1B_ODT_Release_State_Machine_Audit_2026-07-29.md`](./E1B_ODT_Release_State_Machine_Audit_2026-07-29.md)。

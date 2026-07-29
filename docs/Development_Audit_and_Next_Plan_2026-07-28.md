@@ -97,3 +97,14 @@ WPS fixture 到位后的桌面接入也已自动化，见 [E1B WPS 关闭自动�
 - [XLSX 公开兼容性矩阵](./XLSX_Public_Compatibility_Matrix.md)
 - [主题预设契约与视觉回归矩阵](./Theme_Preset_Contract_and_Visual_Matrix.md)
 - [产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
+
+## 8. 2026-07-29 增量审计：E1B 发布状态机
+
+E1B 的实现完成度和阶段计数不变，仍为生产者门禁 2/3、基础版本剩余 7 个门禁。本批完成最后一项可在 WPS 外部能力到位前预先建设的工程控制：
+
+- 阶段合同显式声明 `releaseState=checkpoint`。
+- CI 同时证明当前 2/3 检查点合法、未来 3/3 只读发布态合法。
+- 提前登记 `.odt`、开放 writer、生产者/证据/合同不同步均被拒绝。
+- 未来发布条目固定为 `preview-only`、`saveMode=none`、`edit/create=unsupported`、`write=false`。
+
+下一步仍是获得可信 WPS ODT fixture 和关闭候选桌面证据；完成后原子切换到 `released-preview` 并进入 E1C。专项依据见 [`E1B_ODT_Release_State_Machine_Audit_2026-07-29.md`](./E1B_ODT_Release_State_Machine_Audit_2026-07-29.md)。
