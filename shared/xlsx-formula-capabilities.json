@@ -125,11 +125,17 @@
     "notEquivalentToExcelAutomaticRecalculation": true
   },
   "arrayFormulaReadContract": {
-    "stage": "X3-B1",
-    "status": "verified",
+    "stage": "X3-B2",
+    "status": "partial_producer_matrix",
     "ooxmlFormulaType": "array",
     "recognizedKinds": ["legacy_array", "dynamic_array"],
-    "visibleFields": ["anchor", "range", "formula", "declaredCellCount", "cachedCellCount", "blocker"],
+    "visibleFields": ["anchor", "range", "formula", "declaredCellCount", "cachedCellCount", "occupiedCellCount", "missingCachedCellCount", "foreignFormulaCellCount", "spillStatus", "blocker"],
+    "spillDiagnostics": {
+      "mode": "serialized-cache-only",
+      "statuses": ["not_applicable", "cached_complete", "cache_incomplete", "potential_conflict"],
+      "doesNotCalculateExpectedSpill": true,
+      "potentialConflictSignal": "non-anchor formula inside declared array range"
+    },
     "calculationPolicy": "blocked",
     "contentWritePolicy": "blocked-inside-declared-range",
     "structureWritePolicy": "blocked-on-containing-sheet",
@@ -137,7 +143,12 @@
     "maxDeclaredCellsPerSheet": 1000000,
     "fixture": "src-tauri/tests/fixtures/workbook/array-formula-boundary.xlsx",
     "fixtureProducerClass": "library-generated",
-    "realOfficeProducerEvidence": false
+    "producerMatrix": "docs/evidence/x3-b2-xlsx-array-producers/matrix.json",
+    "verifiedProducerCount": 1,
+    "requiredProducerCount": 3,
+    "verifiedProducerFixture": "src-tauri/tests/fixtures/workbook/array-formula-wps-spreadsheets.xlsx",
+    "realOfficeProducerEvidence": true,
+    "fullProducerMatrixVerified": false
   },
   "unsupportedCalculationBoundary": {
     "arrayAndDynamicArrayPolicy": "reject-before-engine-import",

@@ -1,0 +1,28 @@
+{
+    "schemaVersion":  1,
+    "stage":  "X3-B2",
+    "producer":  "WPS Spreadsheets",
+    "producerClass":  "real-desktop-producer-round-trip",
+    "applicationName":  "Microsoft Excel",
+    "automationProgId":  "KET.Application",
+    "executablePath":  "C:\\Users\\Administrator\\AppData\\Local\\Kingsoft\\WPS Office\\12.1.0.26895\\office6\\et.exe",
+    "version":  "12.0",
+    "build":  "26895",
+    "sourceFixture":  "array-formula-boundary.xlsx",
+    "fixture":  "array-formula-wps-spreadsheets.xlsx",
+    "sha256":  "7a2bccb243561fd7e5b6c8f944b4c480379c2b62dcb6f944b4cd67e6bac9f6e0",
+    "savedAsXlsx":  true,
+    "applicationExitedBeforeReopen":  true,
+    "independentNativeReopen":  true,
+    "reopenedSheet":  "Array Boundary",
+    "arrayDeclarationCount":  2,
+    "expectedKinds":  [
+                          "legacy_array",
+                          "dynamic_array"
+                      ],
+    "expectedRanges":  [
+                           "B2:B4",
+                           "D2:D4"
+                       ],
+    "privacyReviewed":  true
+}

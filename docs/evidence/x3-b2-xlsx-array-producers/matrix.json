@@ -1,0 +1,47 @@
+{
+    "schemaVersion":  1,
+    "stage":  "X3-B2",
+    "updatedAt":  "2026-07-29T18:51:18Z",
+    "status":  "partial",
+    "verifiedProducers":  1,
+    "requiredProducers":  3,
+    "sourceFixture":  "src-tauri/tests/fixtures/workbook/array-formula-boundary.xlsx",
+    "producers":  [
+                      {
+                          "id":  "microsoft-excel",
+                          "producer":  "Microsoft Excel",
+                          "status":  "blocked_environment",
+                          "evidence":  "No genuine Microsoft Office EXCEL.EXE installation; Excel.Application is not accepted without LocalServer identity verification."
+                      },
+                      {
+                          "id":  "wps-spreadsheets",
+                          "producer":  "WPS Spreadsheets",
+                          "status":  "verified",
+                          "version":  "12.0",
+                          "build":  "26895",
+                          "automationProgId":  "KET.Application",
+                          "executablePath":  "C:\\Users\\Administrator\\AppData\\Local\\Kingsoft\\WPS Office\\12.1.0.26895\\office6\\et.exe",
+                          "fixture":  "src-tauri/tests/fixtures/workbook/array-formula-wps-spreadsheets.xlsx",
+                          "manifest":  "src-tauri/tests/fixtures/workbook/array-formula-wps-spreadsheets.json",
+                          "nativeSave":  true,
+                          "independentReopen":  true,
+                          "longEditSemanticRead":  "verified-by-rust-regression"
+                      },
+                      {
+                          "id":  "libreoffice-calc",
+                          "producer":  "LibreOffice Calc",
+                          "status":  "blocked_environment",
+                          "evidence":  "No soffice.exe installation was found on this machine."
+                      }
+                  ],
+    "releaseBoundary":  {
+                            "readViewStatus":  "limited",
+                            "editStatus":  "blocked",
+                            "calculationStatus":  "blocked",
+                            "promoteToSupportedRequires":  [
+                                                               "Microsoft Excel native save and independent reopen",
+                                                               "WPS Spreadsheets native save and independent reopen",
+                                                               "LibreOffice Calc native save and independent reopen"
+                                                           ]
+                        }
+}

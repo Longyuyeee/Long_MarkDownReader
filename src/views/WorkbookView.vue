@@ -476,8 +476,13 @@
       <span v-if="selectedArrayFormula">
         {{ selectedArrayFormula.kind === 'dynamic_array' ? '动态数组' : '传统数组' }}
         {{ rangeLabel(selectedArrayFormula.range) }} · 缓存 {{ selectedArrayFormula.cachedCellCount }}/{{ selectedArrayFormula.declaredCellCount }}
+        · {{ spillStatusLabel(selectedArrayFormula.spillStatus) }}
       </span>
-      <span v-else>可查看缓存结果；编辑、填充、结构迁移和本地重算已安全阻止</span>
+      <span v-else>
+        {{ sheetInfo.arrayFormulas.filter(item => item.spillStatus === 'potential_conflict').length
+          ? `发现 ${sheetInfo.arrayFormulas.filter(item => item.spillStatus === 'potential_conflict').length} 处潜在占用冲突`
+          : '可查看缓存完整度；编辑、填充、结构迁移和本地重算已安全阻止' }}
+      </span>
     </div>
 
     <div v-if="workbook && sheetInfo" class="format-toolbar" :class="{ protected: sheetProtected }" aria-label="单元格格式">
@@ -874,7 +879,7 @@ interface WorkbookHeaderFooter { oddHeader?: string; oddFooter?: string; evenHea
 interface WorkbookHeaderFooterDraft { oddHeader: string; oddFooter: string; evenHeader: string; evenFooter: string; firstHeader: string; firstFooter: string; differentOddEven: boolean; differentFirstPage: boolean; scaleWithDocument: boolean; alignWithMargins: boolean }
 interface WorkbookSheetProtection { enabled: boolean; passwordProtected: boolean; blockedActions: string[] }
 interface WorkbookPageLayout { printArea?: WorkbookMergeRange; margins: WorkbookPageMargins; setup: WorkbookPageSetup; options: WorkbookPrintOptions; headerFooter: WorkbookHeaderFooter; protection: WorkbookSheetProtection }
-interface WorkbookArrayFormula { kind: 'legacy_array' | 'dynamic_array'; anchorRow: number; anchorColumn: number; range: WorkbookMergeRange; formula: string; declaredCellCount: number; cachedCellCount: number; calculationStatus: 'blocked'; writeStatus: 'blocked'; blocker: string }
+interface WorkbookArrayFormula { kind: 'legacy_array' | 'dynamic_array'; anchorRow: number; anchorColumn: number; range: WorkbookMergeRange; formula: string; declaredCellCount: number; cachedCellCount: number; occupiedCellCount: number; missingCachedCellCount: number; foreignFormulaCellCount: number; spillStatus: 'not_applicable' | 'cached_complete' | 'cache_incomplete' | 'potential_conflict'; calculationStatus: 'blocked'; writeStatus: 'blocked'; blocker: string }
 interface WorkbookSheetPage {
   sheet: string
   rowOffset: number
@@ -1599,6 +1604,12 @@ const columnLabel = (index: number) => {
   return label
 }
 const rangeLabel = (range: WorkbookMergeRange) => `${columnLabel(range.left)}${range.top + 1}:${columnLabel(range.right)}${range.bottom + 1}`
+const spillStatusLabel = (status: WorkbookArrayFormula['spillStatus']) => ({
+  not_applicable: '传统数组范围',
+  cached_complete: '缓存完整',
+  cache_incomplete: '缓存不完整',
+  potential_conflict: '潜在占用冲突',
+}[status])
 const drawingKindLabel = (drawing: WorkbookDrawingObject) => {
   if (drawing.kind === 'chart') return drawing.chart?.chartType === 'column' ? '柱形图' : `${drawing.chart?.chartType || '未知'}图表`
   if (drawing.kind === 'image') return '图片'
@@ -2017,7 +2028,9 @@ const cellTitle = (row: number, column: number) => {
   const validation = validationAt(row, column)
   const validationText = validation ? `\n数据验证：${validationLabel(validation)}${validation.prompt ? `\n${validation.prompt}` : ''}` : ''
   const arrayFormula = arrayFormulaAt(row, column)
-  const arrayText = arrayFormula ? `\n${arrayFormula.kind === 'dynamic_array' ? '动态数组' : '传统数组'}：${rangeLabel(arrayFormula.range)}\n${arrayFormula.blocker}` : ''
+  const arrayText = arrayFormula
+    ? `\n${arrayFormula.kind === 'dynamic_array' ? '动态数组' : '传统数组'}：${rangeLabel(arrayFormula.range)}\n缓存：${arrayFormula.cachedCellCount}/${arrayFormula.declaredCellCount}；${spillStatusLabel(arrayFormula.spillStatus)}\n${arrayFormula.blocker}`
+    : ''
   return (cell.formula ? `${columnLabel(column)}${row + 1}\n公式：${cell.formula}\n结果：${cell.value || '等待外部公式引擎重算'}` : cell.value) + validationText + arrayText
 }
 const borderCss = (side: WorkbookBorderSide) => {

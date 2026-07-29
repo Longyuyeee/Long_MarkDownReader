@@ -110,7 +110,7 @@
       "edit": "limited",
       "calculate": "planned",
       "roundTrip": "preserved",
-      "evidence": "X3-B1 exposes legacy/dynamic array anchor, declared range, formula and cached coverage in the existing workbook surface; content edits and structure migration are blocked at transaction boundaries; deterministic library fixture only, real Excel/WPS/LibreOffice producer evidence and spill semantics remain pending"
+      "evidence": "X3-B2 adds serialized-cache completeness and potential occupied-formula conflict diagnostics; WPS Spreadsheets 12.0/26895 native save, process exit and independent reopen are verified (producer matrix 1/3 partial). Excel and LibreOffice evidence, expected-spill calculation and writeback remain blocked."
     },
     {
       "id": "freeze_panes",

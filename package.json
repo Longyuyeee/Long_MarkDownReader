@@ -38,6 +38,7 @@
     "audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-s8-7e3g-xlsx-pivot-multi-axis-roundtrip-audit.ps1 -RequireComplete",
     "audit:s8-7e3g-xlsx-pivot-multi-axis-available": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-s8-7e3g-xlsx-pivot-multi-axis-roundtrip-audit.ps1",
     "audit:s8-7e3g-excel-environment": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/audit-s8-7e3g-excel-environment.ps1",
+    "audit:x3-b2-array-producers": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-x3-b2-array-producer-audit.ps1 -Force",
     "export:s8-7e3g-excel-evidence": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-s8-7e3g-excel-evidence-bundle.ps1",
     "import:s8-7e3g-excel-evidence": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/import-s8-7e3g-excel-evidence-bundle.ps1",
     "check:theme-contract": "node scripts/check-theme-contract.mjs",
