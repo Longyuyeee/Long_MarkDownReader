@@ -108,3 +108,9 @@ E1B 的实现完成度和阶段计数不变，仍为生产者门禁 2/3、基础
 - 未来发布条目固定为 `preview-only`、`saveMode=none`、`edit/create=unsupported`、`write=false`。
 
 下一步仍是获得可信 WPS ODT fixture 和关闭候选桌面证据；完成后原子切换到 `released-preview` 并进入 E1C。专项依据见 [`E1B_ODT_Release_State_Machine_Audit_2026-07-29.md`](./E1B_ODT_Release_State_Machine_Audit_2026-07-29.md)。
+
+## 9. 2026-07-29 增量审计：WPS 跨机器关闭包
+
+本机 WPS 环境复查仍为 blocked，E1B 阶段计数不变。本批补齐可信外部机器交接路径：固定三成员 ZIP 绑定本地 `wps-writer.docx` 源摘要、WPS ODT 摘要和 producer manifest 摘要；导入拒绝覆盖、摘要漂移、源不一致、额外成员和路径穿越，并在失败时清理临时状态。
+
+下一步可以在具备可信 WPS ODF 能力的机器生成和导出关闭包，本机严格导入后运行三生产者桌面审计。SHA-256 不替代对产出机器和传输来源的确认，E1C 仍须等待 E1B 真实关闭。详见 [`E1B_WPS_Portable_Closure_Handoff_Audit_2026-07-29.md`](./E1B_WPS_Portable_Closure_Handoff_Audit_2026-07-29.md)。

@@ -308,3 +308,9 @@ PDF B2A/B2B/B2C 已完成：可按显式页范围提取页面、将 2～16 个 L
 E1B 发布门禁已升级为 `checkpoint` / `released-preview` 双状态机器，并加入内存正反例验证。当前仍严格保持 `checkpoint`：Word 与 LibreOffice 已验证，WPS 有真实机器阻断证据，`.odt` 未注册且 `write=false`。
 
 后续不得分步或提前暴露 `.odt`。只有 WPS 真实 fixture、同生产者复开和三生产者 `closure-candidate` 桌面证据全部到位，才能在同一提交中把生产者矩阵、`shared/odt-read-contract.json` 和 `shared/file-formats.json` 原子切换为只读发布态；精确合同与反例见 [`E1B_ODT_Release_State_Machine_Audit_2026-07-29.md`](./E1B_ODT_Release_State_Machine_Audit_2026-07-29.md)。
+
+## 9. E1B WPS 跨机器交接入口
+
+当前机器 WPS 仍输出 OLE，不能本机生成合格 ODT。具备可信 WPS ODF 能力的机器现在可以运行 `generate-e1b-odt-producer-fixtures.ps1 -Producer wps` 后使用 `export-e1b-wps-closure-bundle.ps1` 导出固定三成员关闭包；本机使用 `import-e1b-wps-closure-bundle.ps1` 校验固定 DOCX 源摘要、容器和两层 manifest 后导入。导入不会自动修改生产者矩阵或注册表，仍须先完成桌面 `closure-candidate`。
+
+完整命令、正反例和信任边界见 [`E1B_WPS_Portable_Closure_Handoff_Audit_2026-07-29.md`](./E1B_WPS_Portable_Closure_Handoff_Audit_2026-07-29.md)。来源不明的 ZIP 即使摘要自洽也不得接纳。

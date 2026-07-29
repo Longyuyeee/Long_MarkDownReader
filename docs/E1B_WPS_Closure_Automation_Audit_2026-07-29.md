@@ -65,3 +65,7 @@ npm.cmd run check:e1b-odt-desktop-evidence
 ## 6. 后续发布状态机
 
 关闭候选自动化之后，发布控制已进一步固化为双状态机器。当前 `checkpoint` 和未来 `released-preview` 都有独立正例，提前注册、误开写能力和生产者状态不同步有反例门禁。三生产者证据到位后必须原子更新矩阵、阶段合同和精确只读注册表，不再依赖人工检查中间态。详见 [`E1B_ODT_Release_State_Machine_Audit_2026-07-29.md`](./E1B_ODT_Release_State_Machine_Audit_2026-07-29.md)。
+
+## 7. 跨机器关闭包
+
+对于当前 WPS 缺少 ODF 能力的环境，已增加固定源摘要、固定三成员 ZIP、两层 manifest 和失败清理保护的跨机器导出/导入流程。它允许可信外部机器产出证据，但不会自动抬高矩阵或产品注册。详见 [`E1B_WPS_Portable_Closure_Handoff_Audit_2026-07-29.md`](./E1B_WPS_Portable_Closure_Handoff_Audit_2026-07-29.md)。

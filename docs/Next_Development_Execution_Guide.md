@@ -614,3 +614,9 @@ AI 产生的标签、关系、摘要和转换结果必须可预览、可编辑�
 5. 运行完整 `ci:check` 并等待 GitHub Quality Gate 通过。
 
 不得先登记扩展名再补证据，也不得把只读 ODT 实现解释为 ODT 编辑能力。专项审计见 [`E1B_ODT_Release_State_Machine_Audit_2026-07-29.md`](./E1B_ODT_Release_State_Machine_Audit_2026-07-29.md)。
+
+### E1B 跨机器 WPS 证据交接（2026-07-29 补充）
+
+若当前开发机的 `audit:e1b-wps-odf-environment` 继续 blocked，可在另一台具备可信 WPS ODF 能力的机器生成 fixture，并使用 `export-e1b-wps-closure-bundle.ps1 -OutputPath <handoff.zip>` 导出。当前开发机使用 `import-e1b-wps-closure-bundle.ps1 -BundlePath <handoff.zip>` 导入。
+
+交接包必须来自已确认的机器和可信传输渠道。导入器会绑定固定 DOCX 源摘要、拒绝非三成员 ZIP、路径穿越、摘要漂移和覆盖，但 SHA-256 本身不是产出机器身份证明。导入后仍按“桌面关闭候选 → 原子发布 → 完整质量门禁”的顺序执行。

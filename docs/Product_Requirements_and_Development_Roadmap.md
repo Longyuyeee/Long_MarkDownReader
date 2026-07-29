@@ -1639,3 +1639,5 @@ T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7
 统一文件管理阶段 A、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成。当前开发入口为 **E1B WPS ODT 生产者门禁收口**；基础版本还剩 E1B、E1C、E2A、E2B、E2C、E3、R 七个门禁。完整 Excel 等价仍是长期必达主线，在基础版本 R 后按 X1～X5 / S8-7E2F～S8-8 继续推进。详细结论见 `docs/Development_Audit_and_Next_Plan_2026-07-28.md`。
 
 2026-07-29 补充：E1B 已建立 `checkpoint → released-preview` 原子发布状态机。该工作只完成发布控制，不改变阶段完成度；当前仍为 2/3 且 `.odt` 未注册。未来只有三生产者 fixture 与 `closure-candidate` 桌面证据同时通过，才能登记精确的 `preview-only` ODT 合同并转入 E1C；任何提前注册、写能力或证据不同步均由 CI 阻断。
+
+同日补充：E1B 新增 WPS 跨机器关闭证据包，允许在可信且具备 ODF 能力的机器生成、在当前开发机按固定源/产物/manifest SHA-256 严格导入；覆盖、半包、额外 ZIP 成员、路径穿越和摘要漂移均阻断。该能力只解决证据交接，不改变当前 2/3 状态，也不替代对产出环境来源的审计。

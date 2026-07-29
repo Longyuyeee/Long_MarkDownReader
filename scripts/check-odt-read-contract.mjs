@@ -18,6 +18,9 @@ const fixtureGenerator = read('scripts/generate-e1b-odt-producer-fixtures.ps1')
 const desktopEvidenceChecker = read('scripts/check-e1b-odt-desktop-audit.mjs')
 const desktopEvidenceRunner = read('scripts/run-e1b-odt-desktop-audit.ps1')
 const desktopEvidenceCapture = read('scripts/capture-e1b-odt-desktop-audit.mjs')
+const closureBundleModule = read('scripts/E1BWpsClosureBundle.psm1')
+const closureBundleImporter = read('scripts/import-e1b-wps-closure-bundle.ps1')
+const closureBundleExporter = read('scripts/export-e1b-wps-closure-bundle.ps1')
 const fail = message => { throw new Error(`E1B ODT read contract: ${message}`) }
 
 if (contract.schemaVersion !== 1 || contract.stage !== 'E1B') fail('invalid stage header')
@@ -65,6 +68,7 @@ if (contract.desktopEvidence?.verified !== true
 }
 if (contract.wpsClosureAutomation?.ready !== true
   || contract.wpsClosureAutomation?.fixtureAdmission !== 'manifest-and-sha256'
+  || contract.wpsClosureAutomation?.portableHandoff !== 'strict-zip-sha256-v1'
   || contract.wpsClosureAutomation?.desktopGateModes?.join(',') !== 'checkpoint,closure-candidate'
   || contract.wpsClosureAutomation?.requiredClosureEvidence?.join(',') !== 'native-odt-save,same-producer-reopen,privacy-sanitized,desktop-search,desktop-locator,source-unchanged'
   || !desktopEvidenceRunner.includes('Get-FileHash -LiteralPath $wpsFixture -Algorithm SHA256')
@@ -73,6 +77,14 @@ if (contract.wpsClosureAutomation?.ready !== true
   || !desktopEvidenceCapture.includes("'wps-dark-compact-locator'")
   || !desktopEvidenceChecker.includes("'closure-candidate'")) {
   fail('WPS closure automation drift')
+}
+if (!closureBundleModule.includes('wps-odt-closure-handoff')
+  || !closureBundleModule.includes('Existing WPS closure evidence will not be overwritten')
+  || !closureBundleModule.includes('Closure bundle must contain exactly')
+  || !closureBundleModule.includes('Assert-WpsFixtureEvidence')
+  || !closureBundleImporter.includes('Import-E1BWpsClosureBundle')
+  || !closureBundleExporter.includes('Export-E1BWpsClosureBundle')) {
+  fail('WPS portable closure handoff drift')
 }
 
 const generatorSection = (start, end) => {
