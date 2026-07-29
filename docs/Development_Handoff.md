@@ -197,9 +197,9 @@ FR-BASE-004 已验收：按项目既有统计口径，`lib.rs` 从 2,257 行降�
 - A4 第一批第一段：`.log` 已进入共享格式注册、文件树、统一标签路由和有界文本索引；独立只读工作面提供内容/级别筛选、时间与级别高亮、末尾范围、2 秒自动刷新、尾部跟随、轮转重载、512 KiB 单次读取和 4 MiB 显示缓冲上限。显式编辑仍为 `planned`，真实桌面刷新证据并入 A5。
 - A4 第一批第一段验证：注册表定向 Rust 回归 `4/4`、全量 Rust 功能回归 `245/245`、生产构建、Vue 类型检查、格式契约和 `cargo fmt --check` 通过；格式契约覆盖 `11` 种格式和 `14` 个扩展名，构建仅保留既有大分包警告。
 - 前端生产构建、主题/格式/工作簿/XLSX 发布契约检查均通过；工作簿契约已覆盖 S8-2A 的 Table 创建/调整入口、签名事务、包级往返、历史清理、重载与重算。
-- Rust：S8-7E2E 共 194 项测试（193 项功能、1 项性能），全部通过；七类聚合分别完成临时 Pivot 包重建与输出复读，合并分组回归验证平均值、计数和乘积均从原始记录计算；单行轴、单列轴和三度量布局完成真实来源内存语义验证，成功/阻断路径原文件字节保持不变。
-- 本批最终完整性能回归通过：`inspect=124 ms / page=1,071 ms / patch=911 ms / total=2,107 ms`，未放宽 `10000x12` 负载、时间或 5% 文件增长约束。Debug 构建仅优化 `quick-xml` 与 `miniz_oxide` 依赖，普通写回在不存在 `sheetProtection` 时跳过完整保护解析。
-- 当前完整门禁：314 项 Rust 功能测试、1 项性能测试、DOCX 生产者矩阵 `3/3 verified`、真实 Tauri 检查 `36/36` 和 28 张截图证据通过；生产依赖 0 漏洞，Tauri Debug 构建成功。本批结果见 C2E 审计及提交记录。
+- Rust：S8-7E2F 后完整门禁为 367 项功能测试、1 项性能测试，全部通过；七类聚合及单行轴、单列轴、三度量共 10 个临时 Pivot 包完成结构、语义、输出值、输出样式和未触及部件复读，成功/阻断路径原文件字节保持不变。
+- 本批完整性能回归通过：`inspect=249 ms / page=2,696 ms / patch=2,616 ms / total=5,562 ms`，未放宽 `10000x12` 负载、时间或 5% 文件增长约束。
+- 当前完整门禁：367 项 Rust 功能测试、1 项性能测试、全部格式与证据合同、前端生产构建和 PDF 范围基准通过；生产依赖 0 漏洞。真实 Tauri 专项证据继续以各阶段固定清单为准。
 - `npm audit --omit=dev`：0 个漏洞。
 
 Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能优化项，不是构建失败。
@@ -216,7 +216,7 @@ WPS 桌面补录代码已准备完成：真实 `wps-writer.odt` 到位后，同�
 
 以下内容是 2026-07-24 的历史阶段记录，用于追溯实现，不再代表当前暂停点。
 
-2026-07-24 暂停点状态、质量证据、风险和逐批退出条件见 `docs/Development_Pause_Audit_2026-07-24.md`；当时的综合审计见 `docs/Development_Progress_Audit_2026-07-24.md`，上一轮细节见 `docs/Development_Progress_Audit_2026-07-23.md`，历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。这些文档记录的是 A4 开始前的历史状态；A4/A5、G8、PDF B0～B1C 和 DOCX C1-2A 后续均已完成，不得再把“A4 YAML 开始前”当作当前恢复点。S8-7E2F～S8-8 继续保留为 XLSX 专项回补队列。
+2026-07-24 暂停点状态、质量证据、风险和逐批退出条件见 `docs/Development_Pause_Audit_2026-07-24.md`；当时的综合审计见 `docs/Development_Progress_Audit_2026-07-24.md`，上一轮细节见 `docs/Development_Progress_Audit_2026-07-23.md`，历史阶段拆分依据见 `docs/Development_Stage_Audit_2026-07-22.md`。这些文档记录的是 A4 开始前的历史状态；A4/A5、G8、PDF B0～B1C、DOCX C1-2A 和 S8-7E2F 后续均已完成，不得再把历史暂停点当作当前恢复点。X2～X5 / S8-7 后续～S8-8 继续保留为 XLSX 专项队列。
 
 当前 `v0.7.0` 基线已完成知识库文件树的创建、移动、重命名、删除、排序、扫描和状态读取路径守卫，并修复旧 API Key 迁移失败丢失及远程 HTTP 传输风险。
 
@@ -286,7 +286,7 @@ WPS 桌面补录代码已准备完成：真实 `wps-writer.odt` 到位后，同�
 64. S8-7E2B 已完成：新增 `rebuild_workbook_pivot_cache_isolated_copy`，只在内存隔离副本中实际重建 Cache Definition 与 Cache Records；已验证字符串共享索引、数字直接值、日期共享索引，修正真实 fixture 的过期日期边界，并对包复读、对象语义、新摘要及未修改部件逐字节保真设置门禁。新共享项、公式来源、混合类型、页面筛选和过期签名稳定拒绝，用户文件始终不写入。下一步 S8-7E2C 同步重建 Pivot Field items、`rowItems/colItems` 与输出工作表。
 65. S8-7E2C 已完成：新增 `rebuild_workbook_pivot_isolated_copy`，在同一内存副本同步重建 Cache Definition、Cache Records、Pivot Table 和输出工作表；保持隐藏 items，重建行列项、明细、行列总计和总计。真实 fixture 验证 2×2 可见布局、13 个输出单元格及来源数值 1→10 后总计 4→13；包、对象语义、输出值和未触及部件保真全部通过，用户文件仍不写入。下一步 S8-7E2D 扩展新 sharedItems 与布局扩缩容。
 66. S8-7E2D 已完成：新增 `rebuild_workbook_pivot_expanded_isolated_copy`，根据当前源数据增删共享项并同步 Cache Records、Pivot items、`rowItems/colItems`、`location` 和输出区域；保持既有共享项顺序与隐藏状态，新项默认可见。真实 fixture 覆盖 `A3:D7 → A3:E8` 扩张和 `A3:D7 → A3:C6` 收缩，验证样式延伸、至少 7 个旧单元格清理、总计 6/4、包语义与未触及部件保真，用户文件仍不写入。下一步 S8-7E2E 验证聚合方式与布局变体。
-67. S8-7E2E 已完成：新增 `verify_workbook_pivot_variants_isolated_copy`；`sum/count/average/max/min/product/countNums` 七类聚合各自生成临时 Pivot 包并通过联合重建、包校验、对象语义和输出值复读。真实来源进一步验证单行轴、单列轴及 `sum/count/average` 三度量语义矩阵。界面展示 7 个包级变体和 3 个语义布局，用户文件仍不写入；S8-7E2F 单轴、多度量完整 OOXML 包重写保留为 XLSX 专项回补队列。
+67. S8-7E2E 已完成：新增 `verify_workbook_pivot_variants_isolated_copy`；`sum/count/average/max/min/product/countNums` 七类聚合各自生成临时 Pivot 包并通过联合重建、包校验、对象语义和输出值复读。真实来源进一步验证单行轴、单列轴及 `sum/count/average` 三度量语义矩阵。S8-7E2F 已在同一命令上继续完成 3 个布局隔离包，合计 10 个临时包，用户文件仍不写入。
 68. T7-1 已建立主题扩展框架；该历史检查点当时有 3 套正式预设，随后 T8-1 已扩展并验收为 3 套核心 + 4 套场景预设。F7-2 已交付首个 OPML 新格式编辑器，后续 JSON/JSONC 与多类文本/配置格式也已进入统一工作面。
 69. T8-1A 已完成：七套发布预设分为 3 个核心 + 4 个场景方案，设置页区分正式与兼容组合，预设可同步动效节奏，注册表新增 WCAG AA 正文对比度和层级数量门禁。下一批 T8-1B 补齐四套场景预设的真实 Tauri 视觉矩阵。
 70. T8-1B 已完成：四套场景预设具备设置页 1440×900、工作台 1024×768、思维导图 760×900 共 12 张真实 Tauri WebView2 证据；修复紧凑图谱页头、工具栏溢出、筛选条和初始详情遮挡，并隔离 E2E 配置写入。
@@ -326,3 +326,9 @@ E1B 发布门禁已升级为 `checkpoint` / `released-preview` 双状态机器�
 到此收口，后续只接受具备原生 ODT 保存和重开能力的可信 WPS 环境通过严格跨机器交接包补齐
 第 3 个生产者；在此之前 E1B 继续保持 2/3，不进入 E1C。详细证据与官方资料复核见
 [`E1B_WPS_ODF_Final_Capability_Diagnosis_Audit_2026-07-29.md`](./E1B_WPS_ODF_Final_Capability_Diagnosis_Audit_2026-07-29.md)。
+
+## 11. S8-7E2F Pivot 布局包恢复点
+
+2026-07-29 已完成单行轴、单列轴和 `sum/count/average` 多度量的完整隔离 OOXML 包重写。三种布局分别复读 `A3:B7`、`A3:E4`、`A3:M7`，同步验证 Pivot 字段/轴项/数据伪轴、输出值、旧范围清理和输出样式；与七类聚合包合计 10 个临时包。所有结果均在内存中验证后丢弃，命令边界确认源文件字节不变。
+
+下一本地可执行入口为 X2 / S8-7 后续的“另存为新副本”事务合同和真实生产者刷新保存往返。多层轴、页面字段、切片器、外部连接、原件覆盖和原子替换继续阻断。完整范围与证据见 [`S8_7E2F_XLSX_Pivot_Layout_Package_Rewrite_Audit_2026-07-29.md`](./S8_7E2F_XLSX_Pivot_Layout_Package_Rewrite_Audit_2026-07-29.md)。

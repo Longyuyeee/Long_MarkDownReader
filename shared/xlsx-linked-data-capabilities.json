@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-24",
+  "updatedAt": "2026-07-29",
   "mode": "offline_read_only",
   "policy": {
     "metadataVisible": true,
@@ -262,8 +262,69 @@
           "untouched_part_preservation",
           "source_package_unchanged"
         ],
-        "singleAxisPackageRewrite": "pending",
-        "multiMeasurePackageRewrite": "pending",
+        "singleAxisPackageRewrite": "completed_in_S8-7E2F",
+        "multiMeasurePackageRewrite": "completed_in_S8-7E2F",
+        "failureBehavior": "discard_temporary_copy",
+        "writesUserFile": false,
+        "multiLevelAxis": "blocked",
+        "pageFields": "blocked",
+        "atomicReplace": "blocked",
+        "desktopRefreshSaveRoundTrip": "pending"
+      },
+      "isolatedLayoutPackageVariants": {
+        "stage": "S8-7E2F",
+        "execution": "temporary_copy_only",
+        "status": "isolated_layout_packages_verified",
+        "packageVariantCount": 3,
+        "layouts": {
+          "rowOnly": {
+            "rowFields": 1,
+            "columnFields": 0,
+            "dataFields": 1,
+            "outputRange": "A3:B7",
+            "outputCellCount": 10
+          },
+          "columnOnly": {
+            "rowFields": 0,
+            "columnFields": 1,
+            "dataFields": 1,
+            "outputRange": "A3:E4",
+            "outputCellCount": 10
+          },
+          "multiMeasure": {
+            "rowFields": 1,
+            "columnFields": 1,
+            "dataFields": 3,
+            "aggregations": [
+              "sum",
+              "count",
+              "average"
+            ],
+            "outputRange": "A3:M7",
+            "outputCellCount": 65,
+            "dataAxisField": -2
+          }
+        },
+        "synchronizedStructures": [
+          "pivot_fields",
+          "row_fields",
+          "column_fields",
+          "data_fields",
+          "row_items",
+          "column_items",
+          "pivot_location",
+          "output_cells",
+          "stale_output_cleanup",
+          "output_styles"
+        ],
+        "requiredGates": [
+          "package_validation",
+          "semantic_reparse",
+          "output_value_reparse",
+          "output_style_reparse",
+          "untouched_part_preservation",
+          "source_package_unchanged"
+        ],
         "failureBehavior": "discard_temporary_copy",
         "writesUserFile": false,
         "multiLevelAxis": "blocked",

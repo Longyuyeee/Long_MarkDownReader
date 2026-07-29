@@ -1586,6 +1586,16 @@ S8-7E2D 功能验收完成。下一步进入 S8-7E2E：扩展六类非 sum 聚�
 
 S8-7E2E 功能验收完成。下一步进入 S8-7E2F：把单轴和多度量语义落到完整隔离 Pivot 包，验证伪轴、标题、总计、样式与真实 producer fixture；原子替换和用户文件写回继续阻断。
 
+### S8-7E2F：单轴与多度量完整隔离包（已完成）
+
+- 单行轴、单列轴和 `sum/count/average` 三度量均生成独立临时 OOXML 包，不再只做内存语义验证。
+- 完整同步 `pivotFields`、行列字段、数据字段、`rowItems/colItems`、数据伪轴 `x="-2"`、`location`、输出单元格和旧区域清理。
+- 真实 producer fixture 分别复读 `A3:B7`、`A3:E4`、`A3:M7`，验证 10、10、65 个输出单元格。
+- 表头、标签、总计和值样式从原布局映射到新输出区域，并逐格完成样式复读。
+- 三个布局包与七类聚合包合计 10 个临时包；用户文件始终不写入，多层轴、页面筛选、原子替换和桌面生产者往返继续阻断。
+
+S8-7E2F 功能验收完成。下一步进入 X2 / S8-7 后续：建立只写新副本的 Pivot 事务合同、冲突与失败清理，并补齐 Excel/LibreOffice/WPS 刷新保存重开矩阵；生产者往返通过前不覆盖原件。
+
 ### T8-1A：场景化主题预设契约与首批实现（已完成）
 
 - 在唯一主题注册表中增加 `core/scenario/legacy` 发布层级、场景标签和动效节奏，不修改历史配置存储结构。
@@ -1600,9 +1610,9 @@ S8-7E2E 功能验收完成。下一步进入 S8-7E2F：把单轴和多度量语�
 - 修复 760px 图谱标题竖排、工具栏拥挤、筛选条错位和初始详情遮挡画布；紧凑页头、横向工具栏与窄宽度初始详情策略进入门禁。
 - Debug E2E 模式禁止配置落盘，并支持独立指定 theme、style、code theme 和 motion，避免视觉审计污染用户配置。
 
-T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7E2E 已完成高级数据对象审计与隔离重建矩阵。S8-7E2F～S8-8 保留为完整 Excel 等价专项主线；A0～A5、A3R、G8、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已交付。E1B 的 ODT 解析、只读工作面、双索引和定位实现完成，Word/LibreOffice 生产者通过；2026-07-29 又完成 WPS ODF 隔离预检、阻断证据和失败清理，但当前 WPS 仍输出 OLE，生产者门禁保持 2/3。当前实际开发入口仍为 **E1B WPS ODT 生产者门禁收口**；最新阶段计数见 `docs/Development_Audit_and_Next_Plan_2026-07-28.md`，环境门禁见 `docs/E1B_WPS_ODF_Environment_Gate_Audit_2026-07-29.md`。
+T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7E2F 已完成高级数据对象审计与隔离重建矩阵。X2～X5 / S8-7 后续～S8-8 保留为完整 Excel 等价专项主线；A0～A5、A3R、G8、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已交付。E1B 的 ODT 解析、只读工作面、双索引和定位实现完成，Word/LibreOffice 生产者通过；2026-07-29 又完成 WPS ODF 隔离预检、阻断证据和失败清理，但当前 WPS 仍输出 OLE，生产者门禁保持 2/3。E1B 等待可信外部 WPS ODF 环境期间，下一本地可执行入口为 **X2 Pivot 新副本安全写回合同**；最新阶段计数见 `docs/Development_Audit_and_Next_Plan_2026-07-28.md`。
 
-后续基础版本顺序以 `docs/Development_Audit_and_Next_Plan_2026-07-28.md` 和 `docs/Next_Development_Execution_Guide.md` 为当前主线：E1B → E1C → E2A → E2B → E2C → E3 → R。基础版本关闭后继续 X1～X5 / S8-7E2F～S8-8 的完整 Excel 等价专项；历史审计继续用于追溯，不再作为恢复入口。
+后续基础版本顺序仍为 E1B → E1C → E2A → E2B → E2C → E3 → R。完整 Excel 专项 X1 / S8-7E2F 已完成，后续继续 X2～X5 / S8-7 后续～S8-8；历史审计继续用于追溯，不再作为恢复入口。
 
 ## 12. 需求变更流程
 
@@ -1621,7 +1631,7 @@ T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7
 | 图谱与 Canvas 的关系 | 图谱负责发现，Canvas 负责表达和整理 |
 | 思维导图格式 | 层级事实源使用开放 OPML 2.0，自由空间投影使用 JSON Canvas；不建立封闭专有格式 |
 | PDF 编辑范围 | 阅读和批注，不承诺原始排版编辑 |
-| Excel 实施顺序 | 保留 CSV/Table 与渐进式 XLSX 基线；S8-7E2F～S8-8 作为专项回补队列，当前主线先推进统一文件管理、文本/JSON、PDF 页面编辑和 DOCX/PPTX 基础工作面 |
+| Excel 实施顺序 | 保留 CSV/Table 与渐进式 XLSX 基线；S8-7E2F 已完成，后续按 X2～X5 / S8-7 后续～S8-8 推进用户副本安全写回、公式、复杂对象和发布矩阵 |
 | 图表保存方式 | 保存可编辑源码或配置，不以图片作为唯一源 |
 | 索引定位 | 可重建缓存，不是唯一事实源 |
 | AI 定位 | 辅助生成、提取和整理，结果必须可编辑和可追踪 |
@@ -1636,7 +1646,7 @@ T8-1 场景化主题扩展和 S8-6 公式语义阶段均已收尾，S8-7A～S8-7
 - 实际代码和自动化测试负责证明“已经完成”。
 - 每个里程碑结束时更新版本、状态和追踪矩阵。
 
-统一文件管理阶段 A、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成。当前开发入口为 **E1B WPS ODT 生产者门禁收口**；基础版本还剩 E1B、E1C、E2A、E2B、E2C、E3、R 七个门禁。完整 Excel 等价仍是长期必达主线，在基础版本 R 后按 X1～X5 / S8-7E2F～S8-8 继续推进。详细结论见 `docs/Development_Audit_and_Next_Plan_2026-07-28.md`。
+统一文件管理阶段 A、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成。E1B WPS ODT 生产者门禁受外部环境阻断，基础版本仍剩 E1B、E1C、E2A、E2B、E2C、E3、R 七个门禁。完整 Excel 等价 X1 / S8-7E2F 已完成；等待可信 WPS ODF 环境期间，本地继续按 X2～X5 推进。
 
 2026-07-29 补充：E1B 已建立 `checkpoint → released-preview` 原子发布状态机。该工作只完成发布控制，不改变阶段完成度；当前仍为 2/3 且 `.odt` 未注册。未来只有三生产者 fixture 与 `closure-candidate` 桌面证据同时通过，才能登记精确的 `preview-only` ODT 合同并转入 E1C；任何提前注册、写能力或证据不同步均由 CI 阻断。
 

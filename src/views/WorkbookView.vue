@@ -208,7 +208,7 @@
                 <header>
                   <div>
                     <strong>聚合与布局变体已通过</strong>
-                    <small>{{ pivotVariantVerificationResults.get(pivot.part)!.packageVariantCount }} 个临时包 · {{ pivotVariantVerificationResults.get(pivot.part)!.semanticVariantCount }} 个语义布局</small>
+                    <small>{{ pivotVariantVerificationResults.get(pivot.part)!.packageVariantCount }} 个临时包 · {{ pivotVariantVerificationResults.get(pivot.part)!.layoutPackageVariantCount }} 个布局包</small>
                   </div>
                   <span>用户文件未修改</span>
                 </header>
@@ -221,13 +221,13 @@
                 <div class="pivot-layout-variants">
                   <span v-for="variant in pivotVariantVerificationResults.get(pivot.part)!.layoutVariants" :key="variant.layout">
                     <strong>{{ pivotLayoutVariantLabel(variant.layout) }}</strong>
-                    <small>行/列/值 {{ variant.rowFieldCount }}/{{ variant.columnFieldCount }}/{{ variant.dataFieldCount }} · {{ variant.groupCount }} 组 · {{ variant.outputValueCount }} 个值</small>
+                    <small>行/列/值 {{ variant.rowFieldCount }}/{{ variant.columnFieldCount }}/{{ variant.dataFieldCount }} · {{ variant.outputRange }} · {{ variant.outputCellCount }} 单元格 · {{ variant.styledOutputCellCount }} 个样式复读</small>
                   </span>
                 </div>
                 <div class="pivot-rebuild-gates">
                   <span v-for="gate in pivotVariantVerificationResults.get(pivot.part)!.gates" :key="gate.id" :class="gate.status">{{ gate.id }} · {{ gate.status }}</span>
                 </div>
-                <footer>七类聚合已完成临时 OOXML 包重建与输出复读；单行轴、单列轴和三度量布局已通过真实来源内存语义验证。多层轴、页面筛选和文件替换仍阻断。</footer>
+                <footer>七类聚合与三种布局均已完成临时 OOXML 包重写、语义、输出值和样式复读；多层轴、页面筛选和文件替换仍阻断。</footer>
               </section>
               <div v-if="pivot.audit.fields.length" class="pivot-field-list">
                 <span v-for="field in pivot.audit.fields" :key="field.index">
@@ -718,8 +718,8 @@ interface WorkbookPivotCacheRebuildResult { pivotName: string; status: string; e
 interface WorkbookPivotSynchronizedRebuildResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; sourceRecordCount: number; rebuiltRecordCount: number; visibleRowItemCount: number; visibleColumnItemCount: number; outputCellCount: number; rebuiltParts: string[]; preservedPartCount: number; sourcePackageDigest: string; isolatedPackageDigest: string; packageValid: boolean; semanticReparseValid: boolean; outputValuesVerified: boolean; untouchedPartsPreserved: boolean; fields: WorkbookPivotCacheFieldRebuild[]; gates: WorkbookPivotRebuildGate[] }
 interface WorkbookPivotExpandedRebuildResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; rebuiltRecordCount: number; addedSharedItemCount: number; removedSharedItemCount: number; visibleRowItemCount: number; visibleColumnItemCount: number; oldOutputRange: string; newOutputRange: string; outputCellCount: number; clearedStaleCellCount: number; extendedStyleCellCount: number; rebuiltParts: string[]; preservedPartCount: number; sourcePackageDigest: string; isolatedPackageDigest: string; packageValid: boolean; semanticReparseValid: boolean; outputValuesVerified: boolean; untouchedPartsPreserved: boolean; fields: WorkbookPivotCacheFieldRebuild[]; gates: WorkbookPivotRebuildGate[] }
 interface WorkbookPivotAggregationVariant { aggregation: string; status: string; outputRange: string; outputCellCount: number }
-interface WorkbookPivotLayoutVariant { layout: string; rowFieldCount: number; columnFieldCount: number; dataFieldCount: number; groupCount: number; measureCount: number; outputValueCount: number; status: string }
-interface WorkbookPivotVariantVerificationResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; aggregationVariants: WorkbookPivotAggregationVariant[]; layoutVariants: WorkbookPivotLayoutVariant[]; packageVariantCount: number; semanticVariantCount: number; sourcePackageDigest: string; packageVariantsVerified: boolean; semanticVariantsVerified: boolean; gates: WorkbookPivotRebuildGate[] }
+interface WorkbookPivotLayoutVariant { layout: string; rowFieldCount: number; columnFieldCount: number; dataFieldCount: number; groupCount: number; measureCount: number; outputValueCount: number; outputRange: string; outputCellCount: number; styledOutputCellCount: number; isolatedPackageDigest: string; status: string }
+interface WorkbookPivotVariantVerificationResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; aggregationVariants: WorkbookPivotAggregationVariant[]; layoutVariants: WorkbookPivotLayoutVariant[]; packageVariantCount: number; layoutPackageVariantCount: number; semanticVariantCount: number; sourcePackageDigest: string; packageVariantsVerified: boolean; semanticVariantsVerified: boolean; gates: WorkbookPivotRebuildGate[] }
 interface WorkbookSlicer { name: string; part: string; sheet?: string; cacheName?: string }
 interface WorkbookExternalLink { part: string; kind: string; cachedItemCount: number; targetKind?: string }
 interface WorkbookDataConnection { id?: number; name: string; kind: string; refreshOnLoad: boolean; background: boolean; saveData: boolean }
@@ -1681,7 +1681,7 @@ const verifyPivotVariantsIsolated = async (pivot: WorkbookPivotTable) => {
     const next = new Map(pivotVariantVerificationResults.value)
     next.set(pivot.part, result)
     pivotVariantVerificationResults.value = next
-    message.success(`已验证 ${result.packageVariantCount} 类聚合和 ${result.semanticVariantCount} 种布局语义`)
+    message.success(`已验证 ${result.packageVariantCount} 个临时包，其中 ${result.layoutPackageVariantCount} 个布局包`)
   } catch (cause) {
     message.error(String(cause).replace(/^Error:\s*/, ''))
   } finally {

@@ -8453,14 +8453,12 @@ fn build_pivot_aggregation_variant_package(
     write_package_preserving_unchanged(source, entries, &modified_paths)
 }
 
-fn verify_pivot_semantic_layout_variant(
-    source: &[u8],
+fn pivot_layout_variant(
     pivot: &WorkbookPivotTable,
-    layout: &str,
     row_field_count: usize,
     column_field_count: usize,
     aggregations: &[&str],
-) -> Result<WorkbookPivotLayoutVariant, String> {
+) -> Result<WorkbookPivotTable, String> {
     let mut variant = pivot.clone();
     for field in &mut variant.audit.fields {
         if field.role == "row" && row_field_count == 0 {
@@ -8488,6 +8486,18 @@ fn verify_pivot_semantic_layout_variant(
         })
         .collect();
     variant.audit.data_field_count = variant.audit.data_fields.len();
+    Ok(variant)
+}
+
+fn verify_pivot_semantic_layout_variant(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+    layout: &str,
+    row_field_count: usize,
+    column_field_count: usize,
+    aggregations: &[&str],
+) -> Result<WorkbookPivotLayoutVariant, String> {
+    let variant = pivot_layout_variant(pivot, row_field_count, column_field_count, aggregations)?;
     let preview = preview_pivot(source, &variant, Vec::new())?;
     let semantic_shape_valid = preview.groups.iter().all(|group| {
         group.row_keys.len() == row_field_count
@@ -8510,8 +8520,706 @@ fn verify_pivot_semantic_layout_variant(
         group_count: preview.groups.len(),
         measure_count: aggregations.len(),
         output_value_count: preview.groups.len().saturating_mul(aggregations.len()),
+        output_range: String::new(),
+        output_cell_count: 0,
+        styled_output_cell_count: 0,
+        isolated_package_digest: String::new(),
         status: "semantic_verified".into(),
     })
+}
+
+fn pivot_field_for_layout(
+    start: &BytesStart<'_>,
+    field_index: usize,
+    row_field: Option<usize>,
+    column_field: Option<usize>,
+    data_field: usize,
+) -> Result<BytesStart<'static>, String> {
+    let name = String::from_utf8_lossy(start.name().as_ref()).into_owned();
+    let mut updated = BytesStart::new(name);
+    for attribute in start.attributes().with_checks(false) {
+        let attribute =
+            attribute.map_err(|error| format!("解析布局变体 pivotField 属性失败: {error}"))?;
+        if !matches!(attribute.key.as_ref(), b"axis" | b"dataField") {
+            updated.push_attribute((attribute.key.as_ref(), attribute.value.as_ref()));
+        }
+    }
+    if row_field == Some(field_index) {
+        updated.push_attribute(("axis", "axisRow"));
+    } else if column_field == Some(field_index) {
+        updated.push_attribute(("axis", "axisCol"));
+    }
+    if field_index == data_field {
+        updated.push_attribute(("dataField", "1"));
+    }
+    Ok(updated.into_owned())
+}
+
+fn write_pivot_axis_fields(
+    writer: &mut Writer<Vec<u8>>,
+    element: &str,
+    fields: &[i32],
+) -> Result<(), String> {
+    if fields.is_empty() {
+        return Ok(());
+    }
+    let count = fields.len().to_string();
+    let mut container = BytesStart::new(element);
+    container.push_attribute(("count", count.as_str()));
+    writer
+        .write_event(Event::Start(container))
+        .map_err(|error| format!("写入布局变体 {element} 失败: {error}"))?;
+    for field in fields {
+        let value = field.to_string();
+        let mut item = BytesStart::new("field");
+        item.push_attribute(("x", value.as_str()));
+        writer
+            .write_event(Event::Empty(item))
+            .map_err(|error| format!("写入布局变体 {element} 字段失败: {error}"))?;
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new(element)))
+        .map_err(|error| format!("结束布局变体 {element} 失败: {error}"))
+}
+
+fn write_pivot_multi_measure_column_items(
+    writer: &mut Writer<Vec<u8>>,
+    visible: &[usize],
+    measure_count: usize,
+) -> Result<(), String> {
+    let count = visible
+        .len()
+        .saturating_add(1)
+        .saturating_mul(measure_count)
+        .to_string();
+    let mut items = BytesStart::new("colItems");
+    items.push_attribute(("count", count.as_str()));
+    writer
+        .write_event(Event::Start(items))
+        .map_err(|error| format!("写入多度量 colItems 失败: {error}"))?;
+    for field_index in visible {
+        for measure_index in 0..measure_count {
+            writer
+                .write_event(Event::Start(BytesStart::new("i")))
+                .map_err(|error| format!("写入多度量列项失败: {error}"))?;
+            for value in [*field_index, measure_index] {
+                let value = value.to_string();
+                let mut coordinate = BytesStart::new("x");
+                coordinate.push_attribute(("v", value.as_str()));
+                writer
+                    .write_event(Event::Empty(coordinate))
+                    .map_err(|error| format!("写入多度量列项坐标失败: {error}"))?;
+            }
+            writer
+                .write_event(Event::End(BytesEnd::new("i")))
+                .map_err(|error| format!("结束多度量列项失败: {error}"))?;
+        }
+    }
+    for measure_index in 0..measure_count {
+        let mut grand = BytesStart::new("i");
+        grand.push_attribute(("t", "grand"));
+        writer
+            .write_event(Event::Start(grand))
+            .and_then(|_| writer.write_event(Event::Empty(BytesStart::new("x"))))
+            .map_err(|error| format!("写入多度量总计列项失败: {error}"))?;
+        let value = measure_index.to_string();
+        let mut measure = BytesStart::new("x");
+        measure.push_attribute(("v", value.as_str()));
+        writer
+            .write_event(Event::Empty(measure))
+            .and_then(|_| writer.write_event(Event::End(BytesEnd::new("i"))))
+            .map_err(|error| format!("结束多度量总计列项失败: {error}"))?;
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new("colItems")))
+        .map_err(|error| format!("结束多度量 colItems 失败: {error}"))
+}
+
+fn write_pivot_data_fields(
+    writer: &mut Writer<Vec<u8>>,
+    fields: &[crate::formats::workbook::WorkbookPivotDataField],
+) -> Result<(), String> {
+    let count = fields.len().to_string();
+    let mut data_fields = BytesStart::new("dataFields");
+    data_fields.push_attribute(("count", count.as_str()));
+    writer
+        .write_event(Event::Start(data_fields))
+        .map_err(|error| format!("写入布局变体 dataFields 失败: {error}"))?;
+    for field in fields {
+        let source = field.source_index.to_string();
+        let mut data_field = BytesStart::new("dataField");
+        data_field.push_attribute(("name", field.name.as_str()));
+        data_field.push_attribute(("fld", source.as_str()));
+        data_field.push_attribute(("subtotal", field.aggregation.as_str()));
+        writer
+            .write_event(Event::Empty(data_field))
+            .map_err(|error| format!("写入布局变体 dataField 失败: {error}"))?;
+    }
+    writer
+        .write_event(Event::End(BytesEnd::new("dataFields")))
+        .map_err(|error| format!("结束布局变体 dataFields 失败: {error}"))
+}
+
+fn rewrite_pivot_layout_variant_xml(
+    xml: &[u8],
+    variant: &WorkbookPivotTable,
+    row_axis: &PivotAxisRebuildTemplate,
+    column_axis: &PivotAxisRebuildTemplate,
+    output_layout: &PivotOutputLayout,
+) -> Result<Vec<u8>, String> {
+    let row_field = (variant.audit.row_field_count == 1).then_some(row_axis.field_index);
+    let column_field = (variant.audit.column_field_count == 1).then_some(column_axis.field_index);
+    let data_field = variant
+        .audit
+        .data_fields
+        .first()
+        .map(|field| field.source_index)
+        .ok_or("布局变体缺少值字段")?;
+    let row_visible = row_axis
+        .hidden
+        .iter()
+        .enumerate()
+        .filter_map(|(index, hidden)| (!hidden).then_some(index))
+        .collect::<Vec<_>>();
+    let column_visible = column_axis
+        .hidden
+        .iter()
+        .enumerate()
+        .filter_map(|(index, hidden)| (!hidden).then_some(index))
+        .collect::<Vec<_>>();
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut writer = Writer::new(Vec::with_capacity(xml.len() + 512));
+    let mut buffer = Vec::new();
+    let mut pivot_field_index = 0usize;
+    loop {
+        let event = reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析布局变体 Pivot XML 失败: {error}"))?;
+        match event {
+            Event::Empty(ref start) if start.local_name().as_ref() == b"location" => {
+                let reference = output_layout_reference(output_layout)?;
+                let updated = replace_xml_attribute(start, b"ref", &reference, false)?;
+                let updated = replace_xml_attribute(
+                    &updated,
+                    b"firstDataRow",
+                    &output_layout.first_data_row.to_string(),
+                    false,
+                )?;
+                let updated = replace_xml_attribute(
+                    &updated,
+                    b"firstDataCol",
+                    &output_layout.first_data_column.to_string(),
+                    false,
+                )?;
+                writer
+                    .write_event(Event::Empty(updated))
+                    .map_err(|error| format!("写入布局变体 location 失败: {error}"))?;
+            }
+            Event::Start(ref start) | Event::Empty(ref start)
+                if start.local_name().as_ref() == b"pivotField" =>
+            {
+                let updated = pivot_field_for_layout(
+                    start,
+                    pivot_field_index,
+                    row_field,
+                    column_field,
+                    data_field,
+                )?;
+                pivot_field_index = pivot_field_index.saturating_add(1);
+                let updated = if matches!(event, Event::Start(_)) {
+                    Event::Start(updated)
+                } else {
+                    Event::Empty(updated)
+                };
+                writer
+                    .write_event(updated)
+                    .map_err(|error| format!("写入布局变体 pivotField 失败: {error}"))?;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"rowFields" => {
+                if let Some(index) = row_field {
+                    write_pivot_axis_fields(&mut writer, "rowFields", &[index as i32])?;
+                }
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"colFields" => {
+                if let Some(index) = column_field {
+                    let mut fields = vec![index as i32];
+                    if variant.audit.data_field_count > 1 {
+                        fields.push(-2);
+                    }
+                    write_pivot_axis_fields(&mut writer, "colFields", &fields)?;
+                }
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"rowItems" => {
+                if row_field.is_some() {
+                    write_pivot_axis_items(&mut writer, "rowItems", &row_visible)?;
+                }
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"colItems" => {
+                if column_field.is_some() {
+                    if variant.audit.data_field_count > 1 {
+                        write_pivot_multi_measure_column_items(
+                            &mut writer,
+                            &column_visible,
+                            variant.audit.data_field_count,
+                        )?;
+                    } else {
+                        write_pivot_axis_items(&mut writer, "colItems", &column_visible)?;
+                    }
+                }
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Start(ref start) if start.local_name().as_ref() == b"dataFields" => {
+                write_pivot_data_fields(&mut writer, &variant.audit.data_fields)?;
+                skip_xml_element(&mut reader, &mut buffer)?;
+                continue;
+            }
+            Event::Eof => break,
+            _ => writer
+                .write_event(event.into_owned())
+                .map_err(|error| format!("复制布局变体 Pivot XML 失败: {error}"))?,
+        }
+        buffer.clear();
+    }
+    Ok(writer.into_inner())
+}
+
+fn pivot_preview_key(keys: &[crate::formats::workbook::WorkbookPivotPreviewKey]) -> String {
+    keys.iter()
+        .map(|key| format!("{}\u{1f}{}", key.kind, key.value))
+        .collect::<Vec<_>>()
+        .join("\u{1e}")
+}
+
+fn pivot_preview_label(
+    keys: &[crate::formats::workbook::WorkbookPivotPreviewKey],
+    fallback: &str,
+) -> String {
+    if keys.is_empty() {
+        fallback.into()
+    } else {
+        keys.iter()
+            .map(|key| key.value.clone())
+            .collect::<Vec<_>>()
+            .join(" / ")
+    }
+}
+
+fn preview_measure_edit(
+    value: Option<f64>,
+    output_sheet: &str,
+    row: usize,
+    column: usize,
+) -> Result<WorkbookCellEdit, String> {
+    Ok(match value {
+        Some(value) => WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row,
+            column,
+            input: pivot_cache_number(value)?,
+            kind: "number".into(),
+        },
+        None => WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row,
+            column,
+            input: String::new(),
+            kind: "empty".into(),
+        },
+    })
+}
+
+fn build_pivot_layout_output_edits(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+    output_sheet: &str,
+    top: usize,
+    left: usize,
+) -> Result<(Vec<WorkbookCellEdit>, PivotOutputLayout), String> {
+    let row_count = pivot.audit.row_field_count;
+    let column_count = pivot.audit.column_field_count;
+    let aggregations = pivot
+        .audit
+        .data_fields
+        .iter()
+        .map(|field| field.aggregation.as_str())
+        .collect::<Vec<_>>();
+    let main = preview_pivot(source, pivot, Vec::new())?;
+    let row_totals = preview_pivot(
+        source,
+        &pivot_layout_variant(pivot, row_count, 0, &aggregations)?,
+        Vec::new(),
+    )?;
+    let column_totals = preview_pivot(
+        source,
+        &pivot_layout_variant(pivot, 0, column_count, &aggregations)?,
+        Vec::new(),
+    )?;
+    let grand = preview_pivot(
+        source,
+        &pivot_layout_variant(pivot, 0, 0, &aggregations)?,
+        Vec::new(),
+    )?;
+    let mut row_keys = Vec::<(String, String)>::new();
+    let mut column_keys = Vec::<(String, String)>::new();
+    for group in &main.groups {
+        let row_key = pivot_preview_key(&group.row_keys);
+        if row_count > 0 && !row_keys.iter().any(|(key, _)| key == &row_key) {
+            row_keys.push((row_key, pivot_preview_label(&group.row_keys, "Values")));
+        }
+        let column_key = pivot_preview_key(&group.column_keys);
+        if column_count > 0 && !column_keys.iter().any(|(key, _)| key == &column_key) {
+            column_keys.push((
+                column_key,
+                pivot_preview_label(&group.column_keys, "Values"),
+            ));
+        }
+    }
+    if row_keys.is_empty() {
+        row_keys.push((String::new(), "Values".into()));
+    }
+    if column_keys.is_empty() {
+        column_keys.push((String::new(), String::new()));
+    }
+    let measure_count = pivot.audit.data_fields.len();
+    let detail_column_count = if column_count > 0 {
+        column_keys.len().saturating_mul(measure_count)
+    } else {
+        measure_count
+    };
+    let total_column_count = if column_count > 0 {
+        detail_column_count.saturating_add(measure_count)
+    } else {
+        detail_column_count
+    };
+    let data_start_row = top + 1;
+    let data_start_column = left + 1;
+    let bottom = data_start_row + row_keys.len() - 1 + usize::from(row_count > 0);
+    let right = left + total_column_count;
+    let mut edits = Vec::new();
+    edits.push(WorkbookCellEdit {
+        sheet: output_sheet.into(),
+        row: top,
+        column: left,
+        input: if row_count > 0 {
+            "Row Labels".into()
+        } else {
+            "Values".into()
+        },
+        kind: "string".into(),
+    });
+    for (column_position, (_, column_label)) in column_keys.iter().enumerate() {
+        for (measure_position, measure) in pivot.audit.data_fields.iter().enumerate() {
+            edits.push(WorkbookCellEdit {
+                sheet: output_sheet.into(),
+                row: top,
+                column: data_start_column + column_position * measure_count + measure_position,
+                input: if column_count > 0 {
+                    format!("{column_label} · {}", measure.name)
+                } else {
+                    measure.name.clone()
+                },
+                kind: "string".into(),
+            });
+        }
+    }
+    if column_count > 0 {
+        for (measure_position, measure) in pivot.audit.data_fields.iter().enumerate() {
+            edits.push(WorkbookCellEdit {
+                sheet: output_sheet.into(),
+                row: top,
+                column: data_start_column + detail_column_count + measure_position,
+                input: format!("Grand Total · {}", measure.name),
+                kind: "string".into(),
+            });
+        }
+    }
+    let value_for = |groups: &[crate::formats::workbook::WorkbookPivotPreviewGroup],
+                     row_key: &str,
+                     column_key: &str,
+                     measure_index: usize| {
+        groups
+            .iter()
+            .find(|group| {
+                pivot_preview_key(&group.row_keys) == row_key
+                    && pivot_preview_key(&group.column_keys) == column_key
+            })
+            .and_then(|group| group.measures.get(measure_index))
+            .and_then(|measure| measure.value)
+    };
+    for (row_position, (row_key, row_label)) in row_keys.iter().enumerate() {
+        let row = data_start_row + row_position;
+        edits.push(WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row,
+            column: left,
+            input: row_label.clone(),
+            kind: "string".into(),
+        });
+        for (column_position, (column_key, _)) in column_keys.iter().enumerate() {
+            for measure_position in 0..measure_count {
+                edits.push(preview_measure_edit(
+                    value_for(&main.groups, row_key, column_key, measure_position),
+                    output_sheet,
+                    row,
+                    data_start_column + column_position * measure_count + measure_position,
+                )?);
+            }
+        }
+        if column_count > 0 {
+            for measure_position in 0..measure_count {
+                edits.push(preview_measure_edit(
+                    value_for(&row_totals.groups, row_key, "", measure_position),
+                    output_sheet,
+                    row,
+                    data_start_column + detail_column_count + measure_position,
+                )?);
+            }
+        }
+    }
+    if row_count > 0 {
+        edits.push(WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row: bottom,
+            column: left,
+            input: "Grand Total".into(),
+            kind: "string".into(),
+        });
+        for (column_position, (column_key, _)) in column_keys.iter().enumerate() {
+            for measure_position in 0..measure_count {
+                edits.push(preview_measure_edit(
+                    value_for(&column_totals.groups, "", column_key, measure_position),
+                    output_sheet,
+                    bottom,
+                    data_start_column + column_position * measure_count + measure_position,
+                )?);
+            }
+        }
+        if column_count > 0 {
+            for measure_position in 0..measure_count {
+                edits.push(preview_measure_edit(
+                    value_for(&grand.groups, "", "", measure_position),
+                    output_sheet,
+                    bottom,
+                    data_start_column + detail_column_count + measure_position,
+                )?);
+            }
+        }
+    }
+    Ok((
+        edits,
+        PivotOutputLayout {
+            top,
+            bottom,
+            left,
+            right,
+            first_data_row: 1,
+            first_data_column: 1,
+        },
+    ))
+}
+
+fn build_pivot_layout_variant_package(
+    source: &[u8],
+    pivot: &WorkbookPivotTable,
+    variant: &WorkbookPivotTable,
+) -> Result<(Vec<u8>, String, usize, usize), String> {
+    let plan = plan_workbook_pivot_rebuild(source, pivot)?;
+    let part_for = |role: &str| {
+        plan.affected_parts
+            .iter()
+            .find(|impact| impact.role == role)
+            .map(|impact| impact.part.clone())
+            .ok_or_else(|| format!("布局变体隔离计划缺少 {role} 部件"))
+    };
+    let definition_part = part_for("cache_definition")?;
+    let pivot_part = part_for("pivot_table")?;
+    let output_part = part_for("output_worksheet")?;
+    let output_sheet = plan
+        .output_sheet
+        .as_deref()
+        .ok_or("布局变体缺少输出工作表")?;
+    let mut entries = load_package(source)?;
+    let definition_index = entries
+        .iter()
+        .position(|entry| entry.name == definition_part)
+        .ok_or("布局变体缺少 Cache Definition")?;
+    let pivot_index = entries
+        .iter()
+        .position(|entry| entry.name == pivot_part)
+        .ok_or("布局变体缺少 Pivot Table")?;
+    let output_index = entries
+        .iter()
+        .position(|entry| entry.name == output_part)
+        .ok_or("布局变体缺少输出工作表部件")?;
+    let fields = parse_pivot_cache_field_templates(&entries[definition_index].data)?;
+    let (row_axis, column_axis, old_layout) =
+        parse_pivot_axis_templates(&entries[pivot_index].data, pivot, &fields)?;
+    let (output_edits, output_layout) = build_pivot_layout_output_edits(
+        source,
+        variant,
+        output_sheet,
+        old_layout.top,
+        old_layout.left,
+    )?;
+    let desired = output_edits
+        .iter()
+        .map(|edit| (edit.row, edit.column))
+        .collect::<HashSet<_>>();
+    let output_cell_count = output_edits.len();
+    let mut all_edits = (old_layout.top..=old_layout.bottom)
+        .flat_map(|row| (old_layout.left..=old_layout.right).map(move |column| (row, column)))
+        .filter(|coordinate| !desired.contains(coordinate))
+        .map(|(row, column)| WorkbookCellEdit {
+            sheet: output_sheet.into(),
+            row,
+            column,
+            input: String::new(),
+            kind: "empty".into(),
+        })
+        .collect::<Vec<_>>();
+    all_edits.extend(output_edits);
+    let old_header_row = old_layout.top + old_layout.first_data_row - 1;
+    let old_data_start_row = old_layout.top + old_layout.first_data_row;
+    let old_data_start_column = old_layout.left + old_layout.first_data_column;
+    let (_, old_styles) = read_sheet_formulas_and_style_ids(
+        &entries[output_index].data,
+        old_header_row,
+        old_layout.bottom + 1,
+        old_layout.right + 1,
+    )?;
+    let header_style = old_styles
+        .get(&(old_header_row, old_data_start_column))
+        .copied();
+    let header_total_style = old_styles
+        .get(&(old_header_row, old_layout.right))
+        .copied()
+        .or(header_style);
+    let row_label_style = old_styles
+        .get(&(old_data_start_row, old_layout.left))
+        .copied();
+    let grand_label_style = old_styles
+        .get(&(old_layout.bottom, old_layout.left))
+        .copied()
+        .or(row_label_style);
+    let value_style = old_styles
+        .get(&(old_data_start_row, old_data_start_column))
+        .copied();
+    let style_for = |edit: &WorkbookCellEdit| {
+        if edit.kind == "empty" {
+            None
+        } else if edit.row == output_layout.top {
+            if edit.column == output_layout.right {
+                header_total_style
+            } else {
+                header_style
+            }
+        } else if edit.column == output_layout.left {
+            if edit.row == output_layout.bottom {
+                grand_label_style
+            } else {
+                row_label_style
+            }
+        } else {
+            value_style
+        }
+    };
+    let styled_output_cell_count = all_edits
+        .iter()
+        .filter(|edit| style_for(edit).is_some())
+        .count();
+    let mut patches = SheetPatches::new();
+    for edit in &all_edits {
+        patches.entry(edit.row).or_default().insert(
+            edit.column,
+            CellPatch {
+                edit: Some(edit),
+                style_id: style_for(edit),
+            },
+        );
+    }
+    entries[pivot_index].data = rewrite_pivot_layout_variant_xml(
+        &entries[pivot_index].data,
+        variant,
+        &row_axis,
+        &column_axis,
+        &output_layout,
+    )?;
+    entries[output_index].data = patch_sheet_xml(&entries[output_index].data, &patches)?;
+    let modified_paths = HashSet::from([pivot_part.clone(), output_part.clone()]);
+    let isolated = write_package_preserving_unchanged(source, entries, &modified_paths)?;
+    validate_workbook_package(&isolated)?;
+    let linked = read_workbook_linked_data(&isolated)?;
+    let rebuilt = linked
+        .pivot_tables
+        .iter()
+        .find(|candidate| candidate.part == pivot.part)
+        .ok_or("布局变体包中的 Pivot 身份丢失")?;
+    let output_range = output_layout_reference(&output_layout)?;
+    if rebuilt.audit.row_field_count != variant.audit.row_field_count
+        || rebuilt.audit.column_field_count != variant.audit.column_field_count
+        || rebuilt.audit.data_field_count != variant.audit.data_field_count
+        || rebuilt.audit.layout_range.as_deref() != Some(output_range.as_str())
+        || rebuilt
+            .audit
+            .data_fields
+            .iter()
+            .zip(variant.audit.data_fields.iter())
+            .any(|(actual, expected)| {
+                actual.source_index != expected.source_index
+                    || actual.aggregation != expected.aggregation
+            })
+    {
+        return Err("布局变体包语义复读失败".into());
+    }
+    if !verify_pivot_output_values(&isolated, output_sheet, &all_edits)? {
+        return Err("布局变体包输出值复读失败".into());
+    }
+    let isolated_output = load_package(&isolated)?
+        .into_iter()
+        .find(|entry| entry.name == output_part)
+        .ok_or("布局变体包缺少输出工作表部件")?;
+    let (_, isolated_styles) = read_sheet_formulas_and_style_ids(
+        &isolated_output.data,
+        output_layout.top,
+        output_layout.bottom + 1,
+        output_layout.right + 1,
+    )?;
+    if all_edits.iter().any(|edit| {
+        style_for(edit).is_some()
+            && isolated_styles.get(&(edit.row, edit.column)).copied() != style_for(edit)
+    }) {
+        return Err("布局变体包输出样式复读失败".into());
+    }
+    let source_entries = load_package(source)?
+        .into_iter()
+        .map(|entry| (entry.name, entry.data))
+        .collect::<HashMap<_, _>>();
+    let isolated_entries = load_package(&isolated)?
+        .into_iter()
+        .map(|entry| (entry.name, entry.data))
+        .collect::<HashMap<_, _>>();
+    if source_entries.iter().any(|(name, data)| {
+        !modified_paths.contains(name)
+            && isolated_entries
+                .get(name)
+                .is_none_or(|candidate| candidate != data)
+    }) {
+        return Err("布局变体包改写了影响清单外的部件".into());
+    }
+    Ok((
+        isolated,
+        output_range,
+        output_cell_count,
+        styled_output_cell_count,
+    ))
 }
 
 pub(crate) fn verify_workbook_pivot_variants_isolated(
@@ -8571,18 +9279,31 @@ pub(crate) fn verify_workbook_pivot_variants_isolated(
         });
     }
 
-    let layout_variants = vec![
-        verify_pivot_semantic_layout_variant(source, pivot, "row_only", 1, 0, &["sum"])?,
-        verify_pivot_semantic_layout_variant(source, pivot, "column_only", 0, 1, &["sum"])?,
-        verify_pivot_semantic_layout_variant(
+    let layout_specs = [
+        ("row_only", 1, 0, vec!["sum"]),
+        ("column_only", 0, 1, vec!["sum"]),
+        ("multi_measure", 1, 1, vec!["sum", "count", "average"]),
+    ];
+    let mut layout_variants = Vec::with_capacity(layout_specs.len());
+    for (layout, row_fields, column_fields, aggregations) in layout_specs {
+        let mut result = verify_pivot_semantic_layout_variant(
             source,
             pivot,
-            "multi_measure",
-            1,
-            1,
-            &["sum", "count", "average"],
-        )?,
-    ];
+            layout,
+            row_fields,
+            column_fields,
+            &aggregations,
+        )?;
+        let variant = pivot_layout_variant(pivot, row_fields, column_fields, &aggregations)?;
+        let (isolated, output_range, output_cell_count, styled_output_cell_count) =
+            build_pivot_layout_variant_package(source, pivot, &variant)?;
+        result.output_range = output_range;
+        result.output_cell_count = output_cell_count;
+        result.styled_output_cell_count = styled_output_cell_count;
+        result.isolated_package_digest = format!("{:x}", md5::compute(&isolated));
+        result.status = "package_verified".into();
+        layout_variants.push(result);
+    }
     let package_variants_verified = aggregation_variants.len() == aggregations.len()
         && aggregation_variants
             .iter()
@@ -8590,7 +9311,7 @@ pub(crate) fn verify_workbook_pivot_variants_isolated(
     let semantic_variants_verified = layout_variants.len() == 3
         && layout_variants
             .iter()
-            .all(|variant| variant.status == "semantic_verified");
+            .all(|variant| variant.status == "package_verified");
     if !package_variants_verified || !semantic_variants_verified {
         return Err("聚合与布局变体隔离验证未完整通过".into());
     }
@@ -8603,7 +9324,8 @@ pub(crate) fn verify_workbook_pivot_variants_isolated(
         status: "isolated_variants_verified".into(),
         execution: "temporary_copy_and_memory_only".into(),
         writes_user_file: false,
-        package_variant_count: aggregation_variants.len(),
+        package_variant_count: aggregation_variants.len() + layout_variants.len(),
+        layout_package_variant_count: layout_variants.len(),
         semantic_variant_count: layout_variants.len(),
         source_package_digest: format!("{:x}", md5::compute(source)),
         aggregation_variants,
@@ -8616,9 +9338,12 @@ pub(crate) fn verify_workbook_pivot_variants_isolated(
             gate("non_sum_output_reparse", "passed"),
             gate("single_axis_semantics", "passed"),
             gate("multi_measure_semantics", "passed"),
+            gate("single_axis_package_rewrite", "passed"),
+            gate("multi_measure_package_rewrite", "passed"),
             gate("package_validation", "passed"),
             gate("semantic_reparse", "passed"),
             gate("output_value_reparse", "passed"),
+            gate("output_style_reparse", "passed"),
             gate("untouched_part_preservation", "passed"),
             gate("source_package_unchanged", "passed"),
             gate("atomic_replace", "blocked"),

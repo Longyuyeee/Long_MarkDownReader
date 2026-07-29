@@ -397,6 +397,10 @@ pub struct WorkbookPivotLayoutVariant {
     pub group_count: usize,
     pub measure_count: usize,
     pub output_value_count: usize,
+    pub output_range: String,
+    pub output_cell_count: usize,
+    pub styled_output_cell_count: usize,
+    pub isolated_package_digest: String,
     pub status: String,
 }
 
@@ -410,6 +414,7 @@ pub struct WorkbookPivotVariantVerificationResult {
     pub aggregation_variants: Vec<WorkbookPivotAggregationVariant>,
     pub layout_variants: Vec<WorkbookPivotLayoutVariant>,
     pub package_variant_count: usize,
+    pub layout_package_variant_count: usize,
     pub semantic_variant_count: usize,
     pub source_package_digest: String,
     pub package_variants_verified: bool,

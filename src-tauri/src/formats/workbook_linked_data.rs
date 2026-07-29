@@ -51,6 +51,20 @@ fn usize_attribute(
         .transpose()
 }
 
+fn isize_attribute(
+    event: &quick_xml::events::BytesStart<'_>,
+    name: &[u8],
+    decoder: quick_xml::encoding::Decoder,
+) -> Result<Option<isize>, String> {
+    attribute(event, name, decoder)?
+        .map(|value| {
+            value
+                .parse()
+                .map_err(|_| "透视表有符号数字属性无效".to_string())
+        })
+        .transpose()
+}
+
 fn bool_attribute(
     event: &quick_xml::events::BytesStart<'_>,
     name: &[u8],
@@ -402,13 +416,17 @@ pub(crate) fn inspect_pivot_table(
                         if row_fields.len() + column_fields.len() >= MAX_PIVOT_FIELDS {
                             return Err("透视表行列字段数量过多".into());
                         }
-                        if let Some(index) = usize_attribute(event, b"x", reader.decoder())? {
-                            if container == "rowFields" {
-                                row_fields.insert(index);
-                                roles.insert(index, "row".into());
-                            } else {
-                                column_fields.insert(index);
-                                roles.insert(index, "column".into());
+                        if let Some(index) = isize_attribute(event, b"x", reader.decoder())? {
+                            if index != -2 {
+                                let index = usize::try_from(index)
+                                    .map_err(|_| "透视表轴字段包含未知负索引")?;
+                                if container == "rowFields" {
+                                    row_fields.insert(index);
+                                    roles.insert(index, "row".into());
+                                } else {
+                                    column_fields.insert(index);
+                                    roles.insert(index, "column".into());
+                                }
                             }
                         }
                     }

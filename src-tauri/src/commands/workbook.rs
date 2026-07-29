@@ -2403,7 +2403,8 @@ mod tests {
             ))
             .unwrap();
         assert_eq!(variants.status, "isolated_variants_verified");
-        assert_eq!(variants.package_variant_count, 7);
+        assert_eq!(variants.package_variant_count, 10);
+        assert_eq!(variants.layout_package_variant_count, 3);
         assert_eq!(variants.semantic_variant_count, 3);
         assert!(variants.package_variants_verified);
         assert!(variants.semantic_variants_verified);
@@ -2440,6 +2441,28 @@ mod tests {
                 ("multi_measure", 1, 1, 3),
             ]
         );
+        assert_eq!(
+            variants
+                .layout_variants
+                .iter()
+                .map(|variant| (
+                    variant.layout.as_str(),
+                    variant.status.as_str(),
+                    variant.output_range.as_str(),
+                    variant.output_cell_count,
+                ))
+                .collect::<Vec<_>>(),
+            vec![
+                ("row_only", "package_verified", "A3:B7", 10),
+                ("column_only", "package_verified", "A3:E4", 10),
+                ("multi_measure", "package_verified", "A3:M7", 65),
+            ]
+        );
+        assert!(variants
+            .layout_variants
+            .iter()
+            .all(|variant| variant.styled_output_cell_count > 0
+                && !variant.isolated_package_digest.is_empty()));
         assert_eq!(fs::read(&path).unwrap(), source);
 
         let (isolated, _) = rebuild_workbook_pivot_cache_isolated(&source, complete).unwrap();

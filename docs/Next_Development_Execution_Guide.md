@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 当前状态：A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成；E1B 的 ODT 解析、只读工作面、双索引与定位实现完成，LibreOffice 与 Microsoft Word 真实 fixture 已通过，WPS 生产者门禁仍阻断，`.odt` 尚未登记。下一入口只处理 E1B 的 WPS 生产者门禁。基础版本剩余 7 个门禁和完整 Excel 等价 X1～X5 计划以 [2026-07-28 开发进度复审与后续计划](./Development_Audit_and_Next_Plan_2026-07-28.md) 为准；详细能力边界见 [当前开发情况与后续收口计划审计](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md)。
+> 当前状态：A0～A5、A3R、G8-1/G8-2A/G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0 和 E1A 已完成；E1B 的 ODT 解析、只读工作面、双索引与定位实现完成，LibreOffice 与 Microsoft Word 真实 fixture 已通过，WPS 生产者门禁仍受外部环境阻断，`.odt` 尚未登记。等待可信 WPS ODF 环境期间，完整 Excel 等价 X1 / S8-7E2F 已完成；下一本地可执行入口为 X2 的 Pivot 新副本安全写回合同和生产者往返。基础版本剩余 7 个门禁及 X2～X5 计划以 [2026-07-28 开发进度复审与后续计划](./Development_Audit_and_Next_Plan_2026-07-28.md) 为准。
 
 > 2026-07-29 更新：WPS ODF 环境预检、阻断机器证据和失败清理已进入合同；当前 WPS `12.1.0.26895` 仍输出 OLE 而不是 ODT ZIP，E1B 保持 2/3。恢复时先运行 `npm.cmd run audit:e1b-wps-odf-environment`，不得重复尝试旧 ODF add-in 或绕过门禁。
 
