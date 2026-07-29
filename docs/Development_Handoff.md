@@ -377,3 +377,15 @@ Microsoft Excel 真实 fixture 已固定 `Region/City` 双层行轴和 `Year/Qua
 `audit_workbook_pivot_multi_axis_isolated_copy` 只在内存临时包中重建 Cache Definition 与 Cache Records；包、对象语义和预览分组复读通过，Pivot Definition、输出 Worksheet 和其他未触及部件逐字节不变。命令绑定源签名，成功和旧签名路径均不修改用户文件。
 
 下一入口为 S8-7E3F：把轴模板扩展为有序多层模型，完整重建压缩 `rowItems/colItems` 与层级输出，再覆盖数值变化、类别扩缩容、旧单元格清理和样式延伸。S8-7E3F 仍不开放可靠保存；生产者往返与白名单留到 S8-7E3G。详细证据见 [`S8_7E3E_XLSX_Pivot_Multi_Axis_Structure_Prototype_Audit_2026-07-29.md`](./S8_7E3E_XLSX_Pivot_Multi_Axis_Structure_Prototype_Audit_2026-07-29.md)。
+
+## 17. 接手后直接做什么
+
+当前从 `main` 的 `3907903` 继续，不需要切换其他分支。
+
+1. 进入 S8-7E3F，把现有单层 Pivot 轴模板改为有序多层轴模型。
+2. 在临时包中重建多层 `rowItems/colItems`、层级表头、明细、小计和总计。
+3. 用已提交的 Microsoft Excel 双层轴 fixture 覆盖数值变化、类别扩张和收缩。
+4. 通过包结构、语义、输出值、样式、未触及部件和源文件不变门禁。
+5. S8-7E3F 只做隔离包，不开放保存；完成后进入 S8-7E3G，再做 Excel/WPS/LibreOffice 往返并评估可靠新副本。
+
+继续保持阻断：页面字段、切片器、外部连接、已有目标覆盖和原件覆盖。

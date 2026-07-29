@@ -55,7 +55,7 @@ Grand Total 项可包含一个无 `v` 的 `<x/>` 占位符；该占位按非语�
 - Workbook 机器契约：通过。
 - 完整本地 CI：通过；372 项功能测试、1 项性能测试全部通过。
 - 前端生产构建、全部机器契约、PDF Range 基准和生产依赖审计通过；`npm audit` 为 0 漏洞。
-- GitHub Quality Gate：待推送后执行并回填。
+- GitHub Quality Gate：通过，[run 30444712617](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30444712617)。
 
 ## 6. 明确未开放范围
 
