@@ -10,7 +10,7 @@
         <button class="icon-button" title="重做" :disabled="!redoStack.length || saving" @click="redo"><n-icon :component="RedoIcon" /></button>
         <button class="icon-button" title="复制区域" :disabled="!selectedCell || saving" @click="copySelection"><n-icon :component="CopyIcon" /></button>
         <button class="icon-button" title="粘贴区域" :disabled="!selectedCell || saving || sheetProtected" @click="pasteSelection"><n-icon :component="PasteIcon" /></button>
-        <button title="重算当前已加载公式" :disabled="calculating || saving || !activeSheet" @click="recalculateFormulas"><n-icon :component="CalculatorIcon" />{{ calculating ? '重算中…' : '重算' }}</button>
+        <button :title="sheetInfo?.arrayFormulas.length ? '当前工作表包含只读数组公式，暂不开放本地重算' : '重算当前已加载公式'" :disabled="calculating || saving || !activeSheet || Boolean(sheetInfo?.arrayFormulas.length)" @click="recalculateFormulas"><n-icon :component="CalculatorIcon" />{{ calculating ? '重算中…' : '重算' }}</button>
         <button :class="{ active: showFormulas }" :disabled="saving" @click="showFormulas = !showFormulas"><n-icon :component="FunctionIcon" />{{ showFormulas ? '结果' : '公式' }}</button>
         <button class="icon-button" title="重新读取" :disabled="saving" @click="refreshWorkbook"><n-icon :component="RefreshIcon" /></button>
         <button :disabled="importing || saving || !activeSheet" @click="convertSheet"><n-icon :component="TableIcon" />{{ importing ? '转换中…' : '转为 Table' }}</button>
@@ -465,6 +465,21 @@
       />
     </div>
 
+    <div v-if="workbook && sheetInfo?.arrayFormulas.length" class="array-formula-strip" aria-label="数组公式只读边界">
+      <strong>数组公式 · 只读</strong>
+      <select title="跳转到数组公式声明区域" @change="navigateArrayFormula">
+        <option value="">共 {{ sheetInfo.arrayFormulas.length }} 处，选择定位</option>
+        <option v-for="(item, index) in sheetInfo.arrayFormulas" :key="`${item.anchorRow}:${item.anchorColumn}`" :value="index">
+          {{ item.kind === 'dynamic_array' ? '动态数组' : '传统数组' }} · {{ rangeLabel(item.range) }}
+        </option>
+      </select>
+      <span v-if="selectedArrayFormula">
+        {{ selectedArrayFormula.kind === 'dynamic_array' ? '动态数组' : '传统数组' }}
+        {{ rangeLabel(selectedArrayFormula.range) }} · 缓存 {{ selectedArrayFormula.cachedCellCount }}/{{ selectedArrayFormula.declaredCellCount }}
+      </span>
+      <span v-else>可查看缓存结果；编辑、填充、结构迁移和本地重算已安全阻止</span>
+    </div>
+
     <div v-if="workbook && sheetInfo" class="format-toolbar" :class="{ protected: sheetProtected }" aria-label="单元格格式">
       <select :value="focusedStyle.namedStyle || ''" title="命名样式" :disabled="!selectedCell || saving" @change="applyNamedStyle">
         <option value="">单元格样式</option>
@@ -704,6 +719,8 @@
                     `cell-${cellAt(row.index, column - 1).kind}`,
                     {
                       formula: Boolean(cellAt(row.index, column - 1).formula),
+                      'array-formula-anchor': isArrayFormulaAnchor(row.index, column - 1),
+                      'array-formula-range': Boolean(arrayFormulaAt(row.index, column - 1)),
                       selected: isSelected(row.index, column - 1),
                       'in-range': isInSelection(row.index, column - 1),
                       'fill-preview': isInFillPreview(row.index, column - 1),
@@ -857,6 +874,7 @@ interface WorkbookHeaderFooter { oddHeader?: string; oddFooter?: string; evenHea
 interface WorkbookHeaderFooterDraft { oddHeader: string; oddFooter: string; evenHeader: string; evenFooter: string; firstHeader: string; firstFooter: string; differentOddEven: boolean; differentFirstPage: boolean; scaleWithDocument: boolean; alignWithMargins: boolean }
 interface WorkbookSheetProtection { enabled: boolean; passwordProtected: boolean; blockedActions: string[] }
 interface WorkbookPageLayout { printArea?: WorkbookMergeRange; margins: WorkbookPageMargins; setup: WorkbookPageSetup; options: WorkbookPrintOptions; headerFooter: WorkbookHeaderFooter; protection: WorkbookSheetProtection }
+interface WorkbookArrayFormula { kind: 'legacy_array' | 'dynamic_array'; anchorRow: number; anchorColumn: number; range: WorkbookMergeRange; formula: string; declaredCellCount: number; cachedCellCount: number; calculationStatus: 'blocked'; writeStatus: 'blocked'; blocker: string }
 interface WorkbookSheetPage {
   sheet: string
   rowOffset: number
@@ -879,6 +897,7 @@ interface WorkbookSheetPage {
   tables: WorkbookTable[]
   dataValidations: WorkbookDataValidation[]
   conditionalFormats: WorkbookConditionalFormatRule[]
+  arrayFormulas: WorkbookArrayFormula[]
   drawings: WorkbookDrawingObject[]
   pageLayout: WorkbookPageLayout
 }
@@ -1947,9 +1966,17 @@ const originalInput = (cell: WorkbookCell) => cell.formula || cell.value || ''
 const isEditableCell = (row: number, column: number) => {
   if (sheetProtected.value) return false
   if (isMergedCovered(row, column)) return false
+  if (arrayFormulaAt(row, column)) return false
   const source = sourceCellAt(row, column)
   return Boolean(source.formula) || !['date', 'error'].includes(source.kind)
 }
+const arrayFormulaAt = (row: number, column: number) => sheetInfo.value?.arrayFormulas.find(item =>
+  row >= item.range.top && row <= item.range.bottom && column >= item.range.left && column <= item.range.right)
+const isArrayFormulaAnchor = (row: number, column: number) => {
+  const item = arrayFormulaAt(row, column)
+  return Boolean(item && item.anchorRow === row && item.anchorColumn === column)
+}
+const selectedArrayFormula = computed(() => selectedCell.value ? arrayFormulaAt(selectedCell.value.row, selectedCell.value.column) : undefined)
 const mergeAt = (row: number, column: number) => currentMergedRanges.value.find(range => row >= range.top && row <= range.bottom && column >= range.left && column <= range.right)
 const isMergedAnchor = (row: number, column: number) => {
   const range = mergeAt(row, column)
@@ -1989,7 +2016,9 @@ const cellTitle = (row: number, column: number) => {
   const cell = cellAt(row, column)
   const validation = validationAt(row, column)
   const validationText = validation ? `\n数据验证：${validationLabel(validation)}${validation.prompt ? `\n${validation.prompt}` : ''}` : ''
-  return (cell.formula ? `${columnLabel(column)}${row + 1}\n公式：${cell.formula}\n结果：${cell.value || '等待外部公式引擎重算'}` : cell.value) + validationText
+  const arrayFormula = arrayFormulaAt(row, column)
+  const arrayText = arrayFormula ? `\n${arrayFormula.kind === 'dynamic_array' ? '动态数组' : '传统数组'}：${rangeLabel(arrayFormula.range)}\n${arrayFormula.blocker}` : ''
+  return (cell.formula ? `${columnLabel(column)}${row + 1}\n公式：${cell.formula}\n结果：${cell.value || '等待外部公式引擎重算'}` : cell.value) + validationText + arrayText
 }
 const borderCss = (side: WorkbookBorderSide) => {
   if (!side || side.style === 'none') return undefined
@@ -3081,6 +3110,7 @@ const applyBatchInputs = (start: CellSelection, matrix: string[][]) => {
     const selection = { sheet: start.sheet, row: start.row + rowOffset, column: start.column + columnOffset }
     if (selection.row >= 1_048_576 || selection.column >= 16_384) throw new Error('粘贴区域超出 XLSX 坐标上限')
     if (selection.column >= 256) throw new Error('当前工作面最多编辑前 256 列')
+    if (arrayFormulaAt(selection.row, selection.column)) throw new Error(`${columnLabel(selection.column)}${selection.row + 1} 位于只读数组公式区域`)
     const key = editKey(selection.sheet, selection.row, selection.column)
     const before = drafts.value.get(key)
     const source = sourceCellAt(selection.row, selection.column)
@@ -3142,6 +3172,7 @@ const clearSelection = () => {
   try {
     const changes: CellChange[] = []
     for (const { row, column } of selectedCoordinates()) {
+      if (arrayFormulaAt(row, column)) throw new Error(`${columnLabel(column)}${row + 1} 位于只读数组公式区域`)
       const key = editKey(focus.sheet, row, column)
       const before = drafts.value.get(key)
       const source = sourceCellAt(row, column)
@@ -3224,6 +3255,7 @@ const commitFill = async (source: SelectionArea | null, preview: SelectionArea |
     const changes: CellChange[] = []
     const styleChanges: StyleChange[] = []
     for (const item of destination) {
+      if (arrayFormulaAt(item.row, item.column)) throw new Error(`${columnLabel(item.column)}${item.row + 1} 位于只读数组公式区域`)
       const key = editKey(activeSheet.value, item.row, item.column)
       const before = drafts.value.get(key)
       const targetSource = sourceCellAt(item.row, item.column)
@@ -3758,6 +3790,23 @@ const navigateDefinedName = async (event: Event) => {
     left: Math.max(0, 52 + columnPixels.value.slice(0, reference.left).reduce((total, width) => total + width, 0) - 80),
     behavior: 'smooth',
   })
+}
+const navigateArrayFormula = async (event: Event) => {
+  const select = event.target as HTMLSelectElement
+  if (select.value === '') return
+  const item = sheetInfo.value?.arrayFormulas[Number(select.value)]
+  if (!item) return
+  await loadPage(item.range.top)
+  selectionAnchor.value = { sheet: activeSheet.value, row: item.range.top, column: item.range.left }
+  selectionAreas.value = [{ ...item.range }]
+  setSelectionFocus(item.anchorRow, item.anchorColumn)
+  await nextTick()
+  scrollRef.value?.scrollTo({
+    top: Math.max(0, rowOffset(item.range.top) - 38),
+    left: Math.max(0, 52 + columnPixels.value.slice(0, item.range.left).reduce((total, width) => total + width, 0) - 80),
+    behavior: 'smooth',
+  })
+  select.value = ''
 }
 const chartColumnIndex = (label: string) => {
   let result = 0
@@ -4481,6 +4530,10 @@ onBeforeUnmount(() => {
 .formula-bar input { min-width: 0; height: 100%; flex: 1; padding: 0 10px; border: 0; border-left: 1px solid rgba(0,0,0,.08); outline: 0; color: var(--theme-text); background: transparent; font: inherit; font-size: 10px; }
 .formula-bar input:focus { box-shadow: inset 0 -2px var(--theme-primary); }
 .formula-bar input:disabled { opacity: .55; }
+.array-formula-strip { min-height: 30px; flex: none; display: flex; align-items: center; gap: 8px; padding: 3px 10px; border-bottom: 1px solid rgba(99,102,241,.2); color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 92%, #818cf8); font-size: 9px; }
+.array-formula-strip strong { flex: none; color: #5b5fc7; font-size: 9px; }
+.array-formula-strip select { max-width: 230px; height: 23px; border: 1px solid rgba(99,102,241,.25); border-radius: 4px; color: var(--theme-text); background: var(--theme-card); font-size: 9px; }
+.array-formula-strip span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .format-toolbar { min-height: 40px; flex: none; display: flex; align-items: center; gap: 5px; padding: 4px 12px; overflow-x: auto; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); }
 .format-toolbar select,.format-toolbar input,.format-toolbar button { flex: none; height: 30px; box-sizing: border-box; border: 1px solid rgba(0,0,0,.1); border-radius: 5px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 96%, #dce6ef); font-size: 9px; }
 .format-toolbar select { min-width: 92px; padding: 0 24px 0 8px; }
@@ -4571,6 +4624,8 @@ onBeforeUnmount(() => {
 .fill-handle { position: absolute; right: -1px; bottom: -1px; z-index: 5; width: 7px; height: 7px; box-sizing: border-box; border: 1px solid var(--theme-card); background: var(--theme-primary); cursor: crosshair; }
 .workbook-cell.dirty::after { content: ''; position: absolute; top: 0; right: 0; border-top: 7px solid #df8a27; border-left: 7px solid transparent; }
 .workbook-cell.formula { color: #436fb7; }
+.workbook-cell.array-formula-range { background-image: linear-gradient(rgba(99,102,241,.07), rgba(99,102,241,.07)); cursor: not-allowed; }
+.workbook-cell.array-formula-anchor { box-shadow: inset 0 0 0 1px rgba(99,102,241,.6); }
 .workbook-cell.cell-error { color: #d24e4e; }
 .workbook-cell.cell-number,.workbook-cell.cell-integer { text-align: right; font-variant-numeric: tabular-nums; }
 .workbook-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--theme-text-secondary); }

@@ -10,6 +10,7 @@ const linkedDataCapabilities = JSON.parse(read('shared/xlsx-linked-data-capabili
 const pivotProducerFixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/pivot-producer-apache-poi.json'))
 const fixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/compatibility-baseline.json'))
 const formulaFixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/formula-function-matrix.json'))
+const arrayFormulaFixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/array-formula-boundary.json'))
 const model = read('src-tauri/src/formats/workbook.rs')
 const engine = read('src-tauri/src/commands/workbook.rs')
 const calculation = read('src-tauri/src/formats/workbook_calculation.rs')
@@ -137,6 +138,12 @@ const volatileFeature = matrix.features.find(item => item.id === 'volatile_funct
 const dynamicArrayFeature = matrix.features.find(item => item.id === 'dynamic_arrays')
 if (!volatileFeature || volatileFeature.calculate !== 'limited') fail('S8-6E volatile capability status drift')
 if (!dynamicArrayFeature || dynamicArrayFeature.calculate !== 'planned' || !ooxml.includes('validate_workbook_calculation_boundary')) fail('S8-6E array boundary status drift')
+const arrayRead = formulaCapabilities.arrayFormulaReadContract
+if (!arrayRead || arrayRead.stage !== 'X3-B1' || arrayRead.status !== 'verified' || arrayRead.calculationPolicy !== 'blocked' || arrayRead.contentWritePolicy !== 'blocked-inside-declared-range' || arrayRead.structureWritePolicy !== 'blocked-on-containing-sheet') fail('X3-B1 array read boundary drift')
+if (arrayRead.maxFormulasPerSheet !== 1024 || arrayRead.maxDeclaredCellsPerSheet !== 1000000 || arrayRead.realOfficeProducerEvidence !== false) fail('X3-B1 array resource/evidence boundary drift')
+if (arrayFormulaFixture.stage !== 'X3-B1' || arrayFormulaFixture.arrayFormulas.length !== 2 || arrayFormulaFixture.realOfficeProducerEvidence !== false) fail('X3-B1 array fixture manifest drift')
+if (!model.includes('WorkbookArrayFormula') || !ooxml.includes('read_array_formulas') || !ooxml.includes('reads_array_formula_inventory_without_mutating_the_fixture') || !view.includes('array-formula-strip') || !view.includes('arrayFormulaAt')) fail('X3-B1 array implementation evidence missing')
+if (dynamicArrayFeature.read !== 'limited' || dynamicArrayFeature.view !== 'limited' || dynamicArrayFeature.edit !== 'limited') fail('X3-B1 array capability status drift')
 if (linkedDataCapabilities.schemaVersion !== 1 || linkedDataCapabilities.mode !== 'offline_read_only') fail('S8-7A linked data capability header drift')
 for (const [key, expected] of Object.entries({ metadataVisible: true, refreshAllowed: false, objectEditingAllowed: false, externalTargetsFollowed: false, sensitiveFieldsExposed: false })) {
   if (linkedDataCapabilities.policy[key] !== expected) fail(`S8-7A linked data policy ${key} drift`)

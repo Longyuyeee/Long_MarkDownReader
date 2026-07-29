@@ -2,6 +2,8 @@
 
 ## Current Contract
 
+X3-B1 adds a separate read-only array-formula contract. The workbook surface can identify and locate OOXML formulas explicitly declared with `t="array"`, distinguish deterministic legacy/dynamic cases, report declared and cached coverage, and explain why calculation and writeback are blocked. This does not add any array-return calculation capability to IronCalc.
+
 S8-6A through S8-6F establish a project-owned formula calculation baseline on top of IronCalc 0.8.0. Calculation is explicit, in memory, and uses the `en` locale with the `UTC` timezone. It does not write calculated caches back to the XLSX package.
 
 The machine-readable source of truth is `shared/xlsx-formula-capabilities.json`. A function is public only when it appears in a `verified` family and is exercised by the committed `formula-function-matrix.xlsx` fixture through both the calculation module and the Tauri command boundary.

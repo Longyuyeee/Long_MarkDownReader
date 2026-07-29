@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "stage": "X3-B1",
+  "producer": "rust_xlsxwriter 0.96.0 deterministic regression fixture",
+  "producerClass": "library-generated",
+  "realOfficeProducerEvidence": false,
+  "sheet": "Array Boundary",
+  "arrayFormulas": [
+    {
+      "kind": "legacy_array",
+      "anchor": "B2",
+      "range": "B2:B4",
+      "formula": "=A2:A4*2",
+      "declaredCellCount": 3,
+      "calculationStatus": "blocked",
+      "writeStatus": "blocked"
+    },
+    {
+      "kind": "dynamic_array",
+      "anchor": "D2",
+      "range": "D2:D4",
+      "formula": "=_xlfn.SEQUENCE(3,1,10,1)",
+      "declaredCellCount": 3,
+      "calculationStatus": "blocked",
+      "writeStatus": "blocked"
+    }
+  ]
+}

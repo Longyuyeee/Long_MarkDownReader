@@ -1,12 +1,14 @@
 # LongEdit 后续开发步骤与执行指导
 
 > 文档类型：可执行开发指导
-> 版本：1.4
-> 更新日期：2026-07-29
+> 版本：1.5
+> 更新日期：2026-07-30
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
 > 当前状态：E1B WPS 生产者门禁仍受外部环境阻断，`.odt` 尚未登记。等待可信 WPS ODF 环境期间，完整 Excel 等价 X1 / S8-7E2F 与 X2 的 S8-7E3A～E3E 已完成；标准、三种布局和六种额外单度量聚合均可可靠另存同目录新副本，生产者矩阵分别为 3/3、9/9 与 18/18；双层行列轴真实 fixture、结构审计和临时 Cache 包已验证。下一入口为 S8-7E3F 多层轴定义与层级输出临时包重建；原件覆盖继续阻断。
+
+> 2026-07-30 最新入口：X3-B1 数组公式只读边界已完成。下一批执行 X3-B2：收集 Excel/WPS/LibreOffice 原生样本，审计生产者 OOXML 差异，增加声明范围、缓存覆盖和潜在 spill 占用冲突的只读诊断；不得提前开放数组写回或本地计算。执行细节见 `X3_B1_XLSX_Array_Formula_Readonly_Boundary_Audit_2026-07-30.md`。
 
 > 2026-07-29 更新：WPS ODF 环境预检、阻断机器证据和失败清理已进入合同；当前 WPS `12.1.0.26895` 仍输出 OLE 而不是 ODT ZIP，E1B 保持 2/3。恢复时先运行 `npm.cmd run audit:e1b-wps-odf-environment`，不得重复尝试旧 ODF add-in 或绕过门禁。
 

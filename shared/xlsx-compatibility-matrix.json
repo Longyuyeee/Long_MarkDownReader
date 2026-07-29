@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-23",
+  "updatedAt": "2026-07-30",
   "engineId": "calamine-ooxml-ironcalc-v14",
   "compatibilityProfileId": "xlsx-progressive-editing-v1",
   "format": "xlsx",
@@ -107,10 +107,10 @@
       "label": "动态数组与溢出区域",
       "read": "limited",
       "view": "limited",
-      "edit": "planned",
+      "edit": "limited",
       "calculate": "planned",
       "roundTrip": "preserved",
-      "evidence": "OOXML parts preserved; S8-6E calculation preflight rejects legacy array and known dynamic-array formulas before engine import; spill semantics not implemented"
+      "evidence": "X3-B1 exposes legacy/dynamic array anchor, declared range, formula and cached coverage in the existing workbook surface; content edits and structure migration are blocked at transaction boundaries; deterministic library fixture only, real Excel/WPS/LibreOffice producer evidence and spill semantics remain pending"
     },
     {
       "id": "freeze_panes",

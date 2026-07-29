@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-23",
+  "updatedAt": "2026-07-30",
   "engine": {
     "id": "ironcalc",
     "version": "0.8.0",
@@ -123,6 +123,21 @@
       "UTC-clock-day-relation"
     ],
     "notEquivalentToExcelAutomaticRecalculation": true
+  },
+  "arrayFormulaReadContract": {
+    "stage": "X3-B1",
+    "status": "verified",
+    "ooxmlFormulaType": "array",
+    "recognizedKinds": ["legacy_array", "dynamic_array"],
+    "visibleFields": ["anchor", "range", "formula", "declaredCellCount", "cachedCellCount", "blocker"],
+    "calculationPolicy": "blocked",
+    "contentWritePolicy": "blocked-inside-declared-range",
+    "structureWritePolicy": "blocked-on-containing-sheet",
+    "maxFormulasPerSheet": 1024,
+    "maxDeclaredCellsPerSheet": 1000000,
+    "fixture": "src-tauri/tests/fixtures/workbook/array-formula-boundary.xlsx",
+    "fixtureProducerClass": "library-generated",
+    "realOfficeProducerEvidence": false
   },
   "unsupportedCalculationBoundary": {
     "arrayAndDynamicArrayPolicy": "reject-before-engine-import",

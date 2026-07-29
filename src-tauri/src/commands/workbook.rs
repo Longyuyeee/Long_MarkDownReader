@@ -758,6 +758,7 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             tables: layout.tables,
             data_validations: layout.data_validations,
             conditional_formats: layout.conditional_formats,
+            array_formulas: layout.array_formulas,
             drawings: layout.drawings,
             page_layout: layout.page_layout,
         })

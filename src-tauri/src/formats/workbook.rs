@@ -658,8 +658,24 @@ pub struct WorkbookSheetPage {
     pub tables: Vec<WorkbookTable>,
     pub data_validations: Vec<WorkbookDataValidation>,
     pub conditional_formats: Vec<WorkbookConditionalFormatRule>,
+    pub array_formulas: Vec<WorkbookArrayFormula>,
     pub drawings: Vec<WorkbookDrawingObject>,
     pub page_layout: WorkbookPageLayout,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookArrayFormula {
+    pub kind: String,
+    pub anchor_row: usize,
+    pub anchor_column: usize,
+    pub range: WorkbookMergeRange,
+    pub formula: String,
+    pub declared_cell_count: usize,
+    pub cached_cell_count: usize,
+    pub calculation_status: String,
+    pub write_status: String,
+    pub blocker: String,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize)]

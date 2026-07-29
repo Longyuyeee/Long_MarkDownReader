@@ -1,11 +1,13 @@
 # Long Markdown Reader 开发交接
 
-更新日期：2026-07-29
+更新日期：2026-07-30
 交接基线：当前开发版本 `v0.7.0`；A3R、A4/A5、G8-1、G8-2A、G8-2B、PDF B0～B2C、DOCX C0～C2E、PPTX C3A～C5D、E0、E1A 已完成；E1B 解析、工作面、索引及 Word/LibreOffice 桌面证据完成，WPS 仍阻断，下一批只收口 E1B 的 WPS 门禁
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
 > 当前能力边界、初始需求对齐度和后续收口顺序以 [`Development_Status_and_Closure_Plan_Audit_2026-07-28.md`](./Development_Status_and_Closure_Plan_Audit_2026-07-28.md) 为权威入口。项目已进入基础需求收口期，但尚不能宣称所有初始需求 100% 完成。
+
+> 最新开发入口：X3-B1 已在原有右侧 XLSX 工作面加入数组/动态数组只读清单、范围定位、缓存覆盖提示和前后端写入保护；本地重算与行列结构迁移保持阻断。当前证据是确定性库生成样本，不能替代 Excel/WPS/LibreOffice 生产者验证。下一步为 X3-B2 三生产者差异矩阵与 spill 冲突只读诊断，详见 [`X3_B1_XLSX_Array_Formula_Readonly_Boundary_Audit_2026-07-30.md`](./X3_B1_XLSX_Array_Formula_Readonly_Boundary_Audit_2026-07-30.md)。
 
 > 当前阶段交付证据见 `docs/E1B_ODT_Read_Index_Checkpoint_Audit_2026-07-28.md` 和 `docs/E1B_ODT_Producer_Gate_Progress_Audit_2026-07-28.md`。E1B 已完成有界语义解析、WorkspaceGuard 只读命令、Library 工作面、双索引和定位代码；LibreOffice 与 Microsoft Word 真实 fixture 已通过。Word 原阻塞已定位为 ODT 格式兼容性模态提示并完成受控保存、关闭和原生重开；WPS 缺少可验证的 ODF 组件并生成错误 OLE 文件。`.odt` 仍未进入共享格式注册表，下一批只关闭 WPS 生产者门禁。
 

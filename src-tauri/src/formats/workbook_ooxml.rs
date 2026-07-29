@@ -1,8 +1,8 @@
 use crate::formats::workbook::{
-    WorkbookCellEdit, WorkbookCellStyle, WorkbookCellStyleEdit, WorkbookChart,
-    WorkbookChartDataLabels, WorkbookChartSeries, WorkbookColumnState, WorkbookColumnStateEdit,
-    WorkbookColumnWidth, WorkbookColumnWidthEdit, WorkbookConditionalColorScale,
-    WorkbookConditionalColorScalePoint, WorkbookConditionalDataBar,
+    WorkbookArrayFormula, WorkbookCellEdit, WorkbookCellStyle, WorkbookCellStyleEdit,
+    WorkbookChart, WorkbookChartDataLabels, WorkbookChartSeries, WorkbookColumnState,
+    WorkbookColumnStateEdit, WorkbookColumnWidth, WorkbookColumnWidthEdit,
+    WorkbookConditionalColorScale, WorkbookConditionalColorScalePoint, WorkbookConditionalDataBar,
     WorkbookConditionalFormatAction, WorkbookConditionalFormatChange,
     WorkbookConditionalFormatRule, WorkbookConditionalFormatStyle, WorkbookConditionalIconSet,
     WorkbookConditionalIconThreshold, WorkbookConditionalThreshold, WorkbookDataConnection,
@@ -49,6 +49,8 @@ use zip::{CompressionMethod, ZipArchive, ZipWriter};
 const MAX_CELL_EDITS: usize = 10_000;
 const MAX_CELL_TEXT: usize = 32_767;
 const MAX_FORMULA_TEXT: usize = 8_192;
+const MAX_ARRAY_FORMULAS: usize = 1_024;
+const MAX_ARRAY_FORMULA_CELLS: usize = 1_000_000;
 const MAX_XLSX_ROWS: usize = 1_048_576;
 const MAX_XLSX_COLUMNS: usize = 16_384;
 const MAX_STRUCTURE_EDITS: usize = 10_000;
@@ -108,8 +110,182 @@ pub(crate) struct WorkbookSheetLayout {
     pub tables: Vec<WorkbookTable>,
     pub data_validations: Vec<WorkbookDataValidation>,
     pub conditional_formats: Vec<WorkbookConditionalFormatRule>,
+    pub array_formulas: Vec<WorkbookArrayFormula>,
     pub drawings: Vec<WorkbookDrawingObject>,
     pub page_layout: WorkbookPageLayout,
+}
+
+fn is_dynamic_array_formula(formula: &str) -> bool {
+    let normalized = formula.to_ascii_uppercase();
+    [
+        "SEQUENCE(",
+        "FILTER(",
+        "UNIQUE(",
+        "SORT(",
+        "SORTBY(",
+        "RANDARRAY(",
+        "TOCOL(",
+        "TOROW(",
+        "TAKE(",
+        "DROP(",
+        "EXPAND(",
+        "VSTACK(",
+        "HSTACK(",
+        "WRAPROWS(",
+        "WRAPCOLS(",
+    ]
+    .iter()
+    .any(|marker| normalized.contains(marker))
+}
+
+fn read_array_formulas(xml: &[u8]) -> Result<Vec<WorkbookArrayFormula>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut buffer = Vec::new();
+    let mut current_cell = None;
+    let mut current_cell_has_metadata = false;
+    let mut formulas = Vec::new();
+    let mut declared_cells = 0usize;
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析数组公式结构失败: {error}"))?
+        {
+            Event::Start(ref event) if event.local_name().as_ref() == b"c" => {
+                current_cell = xml_value(event, b"r", reader.decoder())?
+                    .map(|reference| parse_cell_reference(&reference))
+                    .transpose()?;
+                current_cell_has_metadata = xml_value(event, b"cm", reader.decoder())?.is_some();
+            }
+            Event::End(ref event) if event.local_name().as_ref() == b"c" => {
+                current_cell = None;
+                current_cell_has_metadata = false;
+            }
+            Event::Start(ref event)
+                if event.local_name().as_ref() == b"f"
+                    && xml_value(event, b"t", reader.decoder())?.as_deref() == Some("array") =>
+            {
+                let anchor = current_cell.ok_or("数组公式缺少 anchor 单元格")?;
+                let declared_range =
+                    xml_value(event, b"ref", reader.decoder())?.ok_or("数组公式缺少声明范围")?;
+                let range = parse_range_reference(&declared_range)?;
+                if anchor != (range.top, range.left) {
+                    return Err("数组公式 anchor 必须位于声明范围左上角".into());
+                }
+                let text = reader
+                    .read_text(event.name())
+                    .map_err(|error| format!("读取数组公式失败: {error}"))?
+                    .xml10_content()
+                    .map_err(|error| format!("解码数组公式失败: {error}"))?;
+                let text = quick_xml::escape::unescape(&text)
+                    .map_err(|error| format!("还原数组公式失败: {error}"))?
+                    .into_owned();
+                if text.is_empty() {
+                    return Err("数组公式内容不能为空".into());
+                }
+                let formula = format!("={text}");
+                if formula.len() > MAX_FORMULA_TEXT {
+                    return Err(format!("数组公式不能超过 {MAX_FORMULA_TEXT} 字节"));
+                }
+                let height = range
+                    .bottom
+                    .checked_sub(range.top)
+                    .and_then(|value| value.checked_add(1))
+                    .ok_or("数组公式范围行数溢出")?;
+                let width = range
+                    .right
+                    .checked_sub(range.left)
+                    .and_then(|value| value.checked_add(1))
+                    .ok_or("数组公式范围列数溢出")?;
+                let cell_count = height.checked_mul(width).ok_or("数组公式范围大小溢出")?;
+                declared_cells = declared_cells
+                    .checked_add(cell_count)
+                    .ok_or("数组公式总范围大小溢出")?;
+                if cell_count > MAX_ARRAY_FORMULA_CELLS || declared_cells > MAX_ARRAY_FORMULA_CELLS
+                {
+                    return Err(format!(
+                        "数组公式声明范围合计不能超过 {MAX_ARRAY_FORMULA_CELLS} 个单元格"
+                    ));
+                }
+                let dynamic = current_cell_has_metadata || is_dynamic_array_formula(&formula);
+                formulas.push(WorkbookArrayFormula {
+                    kind: if dynamic {
+                        "dynamic_array".into()
+                    } else {
+                        "legacy_array".into()
+                    },
+                    anchor_row: anchor.0,
+                    anchor_column: anchor.1,
+                    range,
+                    formula,
+                    declared_cell_count: cell_count,
+                    cached_cell_count: 0,
+                    calculation_status: "blocked".into(),
+                    write_status: "blocked".into(),
+                    blocker: if dynamic {
+                        "动态数组只读展示；本地重算、溢出冲突处理和写回尚未开放".into()
+                    } else {
+                        "传统数组公式只读展示；多单元格数组重算和写回尚未开放".into()
+                    },
+                });
+                if formulas.len() > MAX_ARRAY_FORMULAS {
+                    return Err(format!(
+                        "单个工作表最多读取 {MAX_ARRAY_FORMULAS} 个数组公式"
+                    ));
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+
+    let mut ranges_by_row = HashMap::<usize, Vec<(usize, usize, usize)>>::new();
+    for (index, formula) in formulas.iter().enumerate() {
+        for row in formula.range.top..=formula.range.bottom {
+            ranges_by_row.entry(row).or_default().push((
+                formula.range.left,
+                formula.range.right,
+                index,
+            ));
+        }
+    }
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    buffer.clear();
+    current_cell = None;
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析数组公式缓存失败: {error}"))?
+        {
+            Event::Start(ref event) if event.local_name().as_ref() == b"c" => {
+                current_cell = xml_value(event, b"r", reader.decoder())?
+                    .map(|reference| parse_cell_reference(&reference))
+                    .transpose()?;
+            }
+            Event::End(ref event) if event.local_name().as_ref() == b"c" => {
+                current_cell = None;
+            }
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"v" =>
+            {
+                if let Some((row, column)) = current_cell {
+                    if let Some(ranges) = ranges_by_row.get(&row) {
+                        for &(left, right, index) in ranges {
+                            if column >= left && column <= right {
+                                formulas[index].cached_cell_count += 1;
+                            }
+                        }
+                    }
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(formulas)
 }
 
 fn read_sheet_formulas_and_style_ids(
@@ -10960,6 +11136,7 @@ pub fn read_workbook_sheet_layout(
     let mut conditional_formats =
         read_conditional_formats(&sheet_xml.data, &conditional_dxf_styles)?;
     resolve_dynamic_color_scales(&sheet_xml.data, &mut conditional_formats)?;
+    let array_formulas = read_array_formulas(&sheet_xml.data)?;
     let tables = read_sheet_tables(&entries, sheet_path, &sheet_xml.data)?;
     let drawings = read_sheet_drawings(&entries, sheet_path, &sheet_xml.data)?;
     let mut page_layout = structure.page_layout.clone();
@@ -10997,6 +11174,7 @@ pub fn read_workbook_sheet_layout(
         tables,
         data_validations: structure.data_validations,
         conditional_formats,
+        array_formulas,
         drawings,
         page_layout,
     })
@@ -18098,6 +18276,16 @@ pub fn patch_workbook_structure(
         .get(&change.sheet)
         .cloned()
         .ok_or_else(|| format!("工作表不存在: {}", change.sheet))?;
+    let target_xml = entries
+        .iter()
+        .find(|entry| entry.name == target_path)
+        .ok_or("XLSX worksheet part is missing")?;
+    if !read_array_formulas(&target_xml.data)?.is_empty() {
+        return Err(
+            "Array and dynamic-array worksheets are read-only for row/column structure changes."
+                .into(),
+        );
+    }
     let workbook_xml = entries
         .iter()
         .find(|entry| entry.name == "xl/workbook.xml")
@@ -18221,6 +18409,46 @@ pub fn patch_workbook(
             return Err(format!(
                 "工作表 {sheet} 已受保护；LongEdit 不会绕过 Excel 工作表保护"
             ));
+        }
+        let array_formulas = read_array_formulas(&xml.data)?;
+        let touches_array = |row: usize, column: usize| {
+            array_formulas.iter().any(|formula| {
+                row >= formula.range.top
+                    && row <= formula.range.bottom
+                    && column >= formula.range.left
+                    && column <= formula.range.right
+            })
+        };
+        if let Some((row, column)) = edits
+            .iter()
+            .filter(|edit| &edit.sheet == sheet)
+            .map(|edit| (edit.row, edit.column))
+            .chain(
+                style_edits
+                    .iter()
+                    .filter(|edit| &edit.sheet == sheet)
+                    .map(|edit| (edit.row, edit.column)),
+            )
+            .find(|(row, column)| touches_array(*row, *column))
+        {
+            return Err(format!(
+                "Cell {} is inside an array or dynamic-array range and is read-only.",
+                cell_reference(row, column)?
+            ));
+        }
+        if merge_edits
+            .iter()
+            .filter(|edit| &edit.sheet == sheet)
+            .any(|edit| {
+                array_formulas.iter().any(|formula| {
+                    edit.top <= formula.range.bottom
+                        && formula.range.top <= edit.bottom
+                        && edit.left <= formula.range.right
+                        && formula.range.left <= edit.right
+                })
+            })
+        {
+            return Err("Merge changes cannot overlap a read-only array formula range.".into());
         }
     }
     for (sheet, path) in &sheet_paths {
@@ -18369,12 +18597,12 @@ pub fn patch_workbook(
 mod tests {
     use super::{
         audit_workbook_pivot_multi_axis_isolated, parse_chart_part, patch_calc_chain_rows,
-        patch_sheet_structure_axis, patch_workbook_conditional_format,
+        patch_sheet_structure_axis, patch_workbook, patch_workbook_conditional_format,
         patch_workbook_data_validation, patch_workbook_defined_name, patch_workbook_drawing,
-        patch_workbook_filter, patch_workbook_structure, patch_workbook_table, read_sheet_formulas,
-        read_workbook_defined_names, read_workbook_linked_data, read_workbook_sheet_layout,
-        rebuild_workbook_pivot_aggregation_variant_isolated, validate_plain_structure_sheet,
-        validate_workbook_package,
+        patch_workbook_filter, patch_workbook_structure, patch_workbook_table, read_array_formulas,
+        read_sheet_formulas, read_workbook_defined_names, read_workbook_linked_data,
+        read_workbook_sheet_layout, rebuild_workbook_pivot_aggregation_variant_isolated,
+        validate_plain_structure_sheet, validate_workbook_package,
     };
     use crate::formats::workbook::{
         WorkbookCellEdit, WorkbookChartDataLabels, WorkbookConditionalColorScale,
@@ -18414,6 +18642,82 @@ mod tests {
             .unwrap()
             .by_name(name)
             .is_ok()
+    }
+
+    #[test]
+    fn reads_array_formula_inventory_without_mutating_the_fixture() {
+        const FIXTURE: &[u8] =
+            include_bytes!("../../tests/fixtures/workbook/array-formula-boundary.xlsx");
+        let source_hash = md5::compute(FIXTURE);
+        validate_workbook_package(FIXTURE).unwrap();
+        let layout = read_workbook_sheet_layout(FIXTURE, "Array Boundary", 0, 10, 16).unwrap();
+
+        assert_eq!(layout.array_formulas.len(), 2);
+        let legacy = &layout.array_formulas[0];
+        assert_eq!(legacy.kind, "legacy_array");
+        assert_eq!((legacy.anchor_row, legacy.anchor_column), (1, 1));
+        assert_eq!((legacy.range.top, legacy.range.bottom), (1, 3));
+        assert_eq!((legacy.range.left, legacy.range.right), (1, 1));
+        assert_eq!(legacy.formula, "=A2:A4*2");
+        assert_eq!(legacy.declared_cell_count, 3);
+        assert_eq!(legacy.cached_cell_count, 3);
+        assert_eq!(legacy.calculation_status, "blocked");
+        assert_eq!(legacy.write_status, "blocked");
+
+        let dynamic = &layout.array_formulas[1];
+        assert_eq!(dynamic.kind, "dynamic_array");
+        assert_eq!((dynamic.anchor_row, dynamic.anchor_column), (1, 3));
+        assert_eq!((dynamic.range.top, dynamic.range.bottom), (1, 3));
+        assert_eq!((dynamic.range.left, dynamic.range.right), (3, 3));
+        assert_eq!(dynamic.formula, "=_xlfn.SEQUENCE(3,1,10,1)");
+        assert_eq!(dynamic.declared_cell_count, 3);
+        assert_eq!(dynamic.cached_cell_count, 3);
+        assert_eq!(md5::compute(FIXTURE), source_hash);
+    }
+
+    #[test]
+    fn array_formula_inventory_ignores_scalar_formulas_and_limits_declared_cells() {
+        let scalar = br#"<worksheet><sheetData><row r="1"><c r="A1"><f>XMATCH(1,B1:B3)</f><v>1</v></c></row></sheetData></worksheet>"#;
+        assert!(read_array_formulas(scalar).unwrap().is_empty());
+
+        let oversized = br#"<worksheet><sheetData><row r="1"><c r="A1"><f t="array" ref="A1:XFD1048576">SEQUENCE(1048576,16384)</f><v>1</v></c></row></sheetData></worksheet>"#;
+        let error = read_array_formulas(oversized).unwrap_err();
+        assert!(error.contains("1000000"));
+    }
+
+    #[test]
+    fn blocks_array_formula_content_and_structure_writes() {
+        const FIXTURE: &[u8] =
+            include_bytes!("../../tests/fixtures/workbook/array-formula-boundary.xlsx");
+        let content_error = patch_workbook(
+            FIXTURE,
+            &[WorkbookCellEdit {
+                sheet: "Array Boundary".into(),
+                row: 2,
+                column: 1,
+                input: "99".into(),
+                kind: "number".into(),
+            }],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap_err();
+        assert!(content_error.contains("read-only"));
+
+        let structure_error = patch_workbook_structure(
+            FIXTURE,
+            &WorkbookStructureChange {
+                sheet: "Array Boundary".into(),
+                axis: WorkbookStructureAxis::Row,
+                action: WorkbookStructureAction::Insert,
+                index: 0,
+                count: 1,
+            },
+        )
+        .unwrap_err();
+        assert!(structure_error.contains("read-only"));
     }
 
     #[test]
