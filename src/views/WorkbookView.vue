@@ -202,7 +202,25 @@
                 <div class="pivot-rebuild-gates">
                   <span v-for="gate in pivotExpandedRebuildResults.get(pivot.part)!.gates" :key="gate.id" :class="gate.status">{{ gate.id }} · {{ gate.status }}</span>
                 </div>
-                <footer>sharedItems、Pivot items、行列映射、location 和工作表输出已协调验证；原子替换与真实桌面往返仍保持阻断。</footer>
+                <div class="pivot-copy-save">
+                  <label>
+                    <span>新副本文件名</span>
+                    <input
+                      :value="pivotCopyFileNames.get(pivot.part) || ''"
+                      maxlength="255"
+                      :disabled="pivotSaveCopyLoading === pivot.part"
+                      @input="setPivotCopyFileName(pivot.part, ($event.target as HTMLInputElement).value)"
+                      @keydown.enter.prevent="savePivotCopy(pivot)"
+                    />
+                  </label>
+                  <button
+                    :disabled="pivotSaveCopyLoading === pivot.part || !pivotCopyFileNames.get(pivot.part)?.trim() || Boolean(dirtyCount)"
+                    :title="dirtyCount ? '请先保存或放弃当前工作簿草稿' : '只在同目录创建经过复读验证的新 XLSX，不覆盖源文件'"
+                    @click="savePivotCopy(pivot)"
+                  >{{ pivotSaveCopyLoading === pivot.part ? '正在落盘并复读…' : '另存 Pivot 新副本并打开' }}</button>
+                  <small v-if="pivotSavedCopyResults.get(pivot.part)">已验证 {{ pivotSavedCopyResults.get(pivot.part)!.outputRange }} · {{ pivotSavedCopyResults.get(pivot.part)!.outputCellCount }} 个输出单元格 · 源文件未修改</small>
+                </div>
+                <footer>sharedItems、Pivot items、行列映射、location 和工作表输出已协调验证；首批只允许可靠另存新副本，原件覆盖与真实生产者往返仍保持阻断。</footer>
               </section>
               <section v-if="pivotVariantVerificationResults.get(pivot.part)" class="pivot-variant-verification-result">
                 <header>
@@ -717,6 +735,7 @@ interface WorkbookPivotCacheFieldRebuild { index: number; name: string; valueTyp
 interface WorkbookPivotCacheRebuildResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; sourceRecordCount: number; rebuiltRecordCount: number; rebuiltParts: string[]; preservedPartCount: number; sourcePackageDigest: string; isolatedPackageDigest: string; packageValid: boolean; semanticReparseValid: boolean; untouchedPartsPreserved: boolean; fields: WorkbookPivotCacheFieldRebuild[]; gates: WorkbookPivotRebuildGate[] }
 interface WorkbookPivotSynchronizedRebuildResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; sourceRecordCount: number; rebuiltRecordCount: number; visibleRowItemCount: number; visibleColumnItemCount: number; outputCellCount: number; rebuiltParts: string[]; preservedPartCount: number; sourcePackageDigest: string; isolatedPackageDigest: string; packageValid: boolean; semanticReparseValid: boolean; outputValuesVerified: boolean; untouchedPartsPreserved: boolean; fields: WorkbookPivotCacheFieldRebuild[]; gates: WorkbookPivotRebuildGate[] }
 interface WorkbookPivotExpandedRebuildResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; rebuiltRecordCount: number; addedSharedItemCount: number; removedSharedItemCount: number; visibleRowItemCount: number; visibleColumnItemCount: number; oldOutputRange: string; newOutputRange: string; outputCellCount: number; clearedStaleCellCount: number; extendedStyleCellCount: number; rebuiltParts: string[]; preservedPartCount: number; sourcePackageDigest: string; isolatedPackageDigest: string; packageValid: boolean; semanticReparseValid: boolean; outputValuesVerified: boolean; untouchedPartsPreserved: boolean; fields: WorkbookPivotCacheFieldRebuild[]; gates: WorkbookPivotRebuildGate[] }
+interface WorkbookPivotSavedCopyResult { status: string; saveMode: string; pivotName: string; targetPath: string; targetSignature: string; targetDigest: string; sourceSignature: string; sourceDigest: string; sourceUnchanged: boolean; outputBytes: number; outputRange: string; outputCellCount: number; changedParts: string[]; structuralReopenVerified: boolean; semanticReopenVerified: boolean; outputValuesVerified: boolean; untouchedPartsPreserved: boolean }
 interface WorkbookPivotAggregationVariant { aggregation: string; status: string; outputRange: string; outputCellCount: number }
 interface WorkbookPivotLayoutVariant { layout: string; rowFieldCount: number; columnFieldCount: number; dataFieldCount: number; groupCount: number; measureCount: number; outputValueCount: number; outputRange: string; outputCellCount: number; styledOutputCellCount: number; isolatedPackageDigest: string; status: string }
 interface WorkbookPivotVariantVerificationResult { pivotName: string; status: string; execution: string; writesUserFile: boolean; aggregationVariants: WorkbookPivotAggregationVariant[]; layoutVariants: WorkbookPivotLayoutVariant[]; packageVariantCount: number; layoutPackageVariantCount: number; semanticVariantCount: number; sourcePackageDigest: string; packageVariantsVerified: boolean; semanticVariantsVerified: boolean; gates: WorkbookPivotRebuildGate[] }
@@ -962,6 +981,9 @@ const pivotSynchronizedRebuildResults = ref(new Map<string, WorkbookPivotSynchro
 const pivotSynchronizedRebuildLoading = ref('')
 const pivotExpandedRebuildResults = ref(new Map<string, WorkbookPivotExpandedRebuildResult>())
 const pivotExpandedRebuildLoading = ref('')
+const pivotCopyFileNames = ref(new Map<string, string>())
+const pivotSavedCopyResults = ref(new Map<string, WorkbookPivotSavedCopyResult>())
+const pivotSaveCopyLoading = ref('')
 const pivotVariantVerificationResults = ref(new Map<string, WorkbookPivotVariantVerificationResult>())
 const pivotVariantVerificationLoading = ref('')
 const calculatedValues = ref(new Map<string, WorkbookCalculatedCell>())
@@ -1659,11 +1681,58 @@ const rebuildPivotExpandedIsolated = async (pivot: WorkbookPivotTable) => {
     const next = new Map(pivotExpandedRebuildResults.value)
     next.set(pivot.part, result)
     pivotExpandedRebuildResults.value = next
+    if (!pivotCopyFileNames.value.has(pivot.part)) {
+      const names = new Map(pivotCopyFileNames.value)
+      names.set(pivot.part, `${fileName.value.replace(/\.xlsx$/i, '')}-Pivot副本.xlsx`)
+      pivotCopyFileNames.value = names
+    }
     message.success(`隔离布局已验证：${result.oldOutputRange} → ${result.newOutputRange}`)
   } catch (cause) {
     message.error(String(cause).replace(/^Error:\s*/, ''))
   } finally {
     pivotExpandedRebuildLoading.value = ''
+  }
+}
+const setPivotCopyFileName = (pivotPart: string, value: string) => {
+  const next = new Map(pivotCopyFileNames.value)
+  next.set(pivotPart, value)
+  pivotCopyFileNames.value = next
+}
+const savePivotCopy = async (pivot: WorkbookPivotTable) => {
+  const verification = pivotExpandedRebuildResults.value.get(pivot.part)
+  const targetFileName = pivotCopyFileNames.value.get(pivot.part)?.trim()
+  if (!workbook.value || !verification || !targetFileName || pivotSaveCopyLoading.value) return
+  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的工作簿更改')
+  pivotSaveCopyLoading.value = pivot.part
+  try {
+    const saved = await invoke<WorkbookPivotSavedCopyResult>('save_workbook_pivot_copy', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      targetFileName,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        expectedOutputDigest: verification.isolatedPackageDigest,
+        pivotPart: pivot.part,
+      },
+    })
+    if (
+      saved.status !== 'saved_verified'
+      || saved.saveMode !== 'new_copy_only'
+      || !saved.sourceUnchanged
+      || !saved.structuralReopenVerified
+      || !saved.semanticReopenVerified
+      || !saved.outputValuesVerified
+      || !saved.untouchedPartsPreserved
+    ) throw new Error('Pivot 新副本未通过完整写后复读')
+    const next = new Map(pivotSavedCopyResults.value)
+    next.set(pivot.part, saved)
+    pivotSavedCopyResults.value = next
+    message.success(`已可靠另存并验证：${targetFileName}`)
+    await router.replace({ query: { path: saved.targetPath } })
+  } catch (cause) {
+    message.error(String(cause).replace(/^Error:\s*/, ''))
+  } finally {
+    pivotSaveCopyLoading.value = ''
   }
 }
 const verifyPivotVariantsIsolated = async (pivot: WorkbookPivotTable) => {
@@ -1735,6 +1804,8 @@ const invalidateCalculation = () => {
   pivotCacheRebuildResults.value = new Map()
   pivotSynchronizedRebuildResults.value = new Map()
   pivotExpandedRebuildResults.value = new Map()
+  pivotCopyFileNames.value = new Map()
+  pivotSavedCopyResults.value = new Map()
   pivotVariantVerificationResults.value = new Map()
 }
 const originalInput = (cell: WorkbookCell) => cell.formula || cell.value || ''
@@ -4193,6 +4264,11 @@ onBeforeUnmount(() => {
 .pivot-expanded-rebuild-result > header strong { color: #7b4c9a !important; font-size: 9px !important; }
 .pivot-expanded-rebuild-result > header small,.pivot-expanded-rebuild-result > header > span,.pivot-expanded-rebuild-result > footer { color: var(--theme-text-secondary); font-size: 8px; line-height: 1.45; }
 .pivot-expanded-rebuild-result > footer { margin: 0; }
+.pivot-copy-save { display: grid; grid-template-columns: minmax(180px,1fr) auto; align-items: end; gap: 6px; }
+.pivot-copy-save label { display: grid; gap: 3px; min-width: 0; color: var(--theme-text-secondary); font-size: 8px; }
+.pivot-copy-save input { width: 100%; min-width: 0; height: 27px; padding: 0 7px; border: 1px solid var(--theme-border); border-radius: 4px; background: var(--theme-bg-primary); color: var(--theme-text-primary); font-size: 9px; }
+.pivot-copy-save button { min-height: 27px; }
+.pivot-copy-save > small { grid-column: 1 / -1; color: var(--theme-success); font-size: 8px; }
 .pivot-variant-verification-result { display: grid; gap: 8px; padding: 9px; border: 1px solid rgba(23,125,128,.24); border-radius: 6px; background: rgba(23,125,128,.04); }
 .pivot-variant-verification-result > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .pivot-variant-verification-result > header > div { display: grid; gap: 2px; }
@@ -4365,6 +4441,6 @@ onBeforeUnmount(() => {
 .workbook-state button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } .linked-data-policy { align-items: flex-start; flex-direction: column; } .linked-data-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .linked-data-group article { grid-template-columns: 1fr; gap: 6px; } .linked-data-group article > button { justify-self: start; } .pivot-audit-status,.pivot-rebuild-plan > header,.pivot-cache-rebuild-result > header,.pivot-synchronized-rebuild-result > header,.pivot-expanded-rebuild-result > header,.pivot-variant-verification-result > header { align-items: flex-start; flex-direction: column; gap: 4px; } .pivot-impact-parts,.pivot-cache-fields,.pivot-sync-facts,.pivot-variant-grid,.pivot-layout-variants { grid-template-columns: 1fr; } .pivot-preview-result > header { align-items: flex-start; flex-direction: column; } .linked-data-group article .pivot-preview-grid article { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } .linked-data-policy { align-items: flex-start; flex-direction: column; } .linked-data-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .linked-data-group article { grid-template-columns: 1fr; gap: 6px; } .linked-data-group article > button { justify-self: start; } .pivot-audit-status,.pivot-rebuild-plan > header,.pivot-cache-rebuild-result > header,.pivot-synchronized-rebuild-result > header,.pivot-expanded-rebuild-result > header,.pivot-variant-verification-result > header { align-items: flex-start; flex-direction: column; gap: 4px; } .pivot-impact-parts,.pivot-cache-fields,.pivot-sync-facts,.pivot-variant-grid,.pivot-layout-variants,.pivot-copy-save { grid-template-columns: 1fr; } .pivot-preview-result > header { align-items: flex-start; flex-direction: column; } .linked-data-group article .pivot-preview-grid article { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .workbook-actions button:not(.primary):not(.icon-button) { display: none; } .workbook-title span { display: none; } }
 </style>

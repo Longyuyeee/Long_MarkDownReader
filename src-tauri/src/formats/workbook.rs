@@ -373,6 +373,36 @@ pub struct WorkbookPivotExpandedRebuildResult {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotSaveCopyPayload {
+    pub expected_signature: String,
+    pub expected_output_digest: String,
+    pub pivot_part: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookPivotSavedCopyResult {
+    pub status: String,
+    pub save_mode: String,
+    pub pivot_name: String,
+    pub target_path: String,
+    pub target_signature: String,
+    pub target_digest: String,
+    pub source_signature: String,
+    pub source_digest: String,
+    pub source_unchanged: bool,
+    pub output_bytes: usize,
+    pub output_range: String,
+    pub output_cell_count: usize,
+    pub changed_parts: Vec<String>,
+    pub structural_reopen_verified: bool,
+    pub semantic_reopen_verified: bool,
+    pub output_values_verified: bool,
+    pub untouched_parts_preserved: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WorkbookPivotVariantVerificationPayload {
     pub expected_signature: String,
     pub pivot_part: String,

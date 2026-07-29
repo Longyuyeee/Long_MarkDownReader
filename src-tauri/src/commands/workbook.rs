@@ -12,12 +12,12 @@ use crate::formats::workbook::{
     WorkbookOutlinePayload, WorkbookPageLayoutPayload, WorkbookPivotCacheRebuildPayload,
     WorkbookPivotCacheRebuildResult, WorkbookPivotExpandedRebuildPayload,
     WorkbookPivotExpandedRebuildResult, WorkbookPivotPreviewPayload, WorkbookPivotPreviewResult,
-    WorkbookPivotRebuildPlan, WorkbookPivotRebuildPlanPayload,
-    WorkbookPivotSynchronizedRebuildPayload, WorkbookPivotSynchronizedRebuildResult,
-    WorkbookPivotVariantVerificationPayload, WorkbookPivotVariantVerificationResult,
-    WorkbookPrintOptionsPayload, WorkbookSheetPage, WorkbookStructureChange,
-    WorkbookStructureMigrationPreview, WorkbookStructurePayload, WorkbookTablePayload,
-    WorkbookWritePayload,
+    WorkbookPivotRebuildPlan, WorkbookPivotRebuildPlanPayload, WorkbookPivotSaveCopyPayload,
+    WorkbookPivotSavedCopyResult, WorkbookPivotSynchronizedRebuildPayload,
+    WorkbookPivotSynchronizedRebuildResult, WorkbookPivotVariantVerificationPayload,
+    WorkbookPivotVariantVerificationResult, WorkbookPrintOptionsPayload, WorkbookSheetPage,
+    WorkbookStructureChange, WorkbookStructureMigrationPreview, WorkbookStructurePayload,
+    WorkbookTablePayload, WorkbookWritePayload,
 };
 use crate::formats::workbook_calculation::calculate_workbook;
 use crate::formats::workbook_formula::{
@@ -37,7 +37,7 @@ use crate::formats::workbook_ooxml::{
 };
 use crate::formats::workbook_pivot::preview_pivot;
 use crate::sanitize_filename;
-use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
+use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_new_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use calamine::{open_workbook, CellType, Data, Reader, Xlsx};
 use std::fs;
@@ -69,6 +69,178 @@ fn ensure_workbook(path: &Path) -> Result<(), String> {
         return Err("XLSX 文件不能超过 128 MB".into());
     }
     Ok(())
+}
+
+fn validate_workbook_pivot_copy_file_name(file_name: &str) -> Result<String, String> {
+    let file_name = file_name.trim();
+    if file_name.is_empty() || file_name.len() > 255 {
+        return Err("Pivot 副本文件名不能为空或超过 255 个字符".into());
+    }
+    if file_name.chars().any(|value| {
+        value.is_control() || matches!(value, '/' | '\\' | '<' | '>' | ':' | '"' | '|' | '?' | '*')
+    }) || file_name.ends_with(' ')
+        || file_name.ends_with('.')
+    {
+        return Err("Pivot 副本文件名包含路径、控制字符或 Windows 不允许的字符".into());
+    }
+    let path = Path::new(file_name);
+    if !path
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_some_and(|value| value.eq_ignore_ascii_case("xlsx"))
+        || path.file_stem().is_none_or(|value| value.is_empty())
+    {
+        return Err("Pivot 副本文件名必须以 .xlsx 结尾".into());
+    }
+    Ok(file_name.to_string())
+}
+
+fn remove_created_workbook_if_exact(path: &Path, expected: &[u8]) {
+    if fs::read(path).is_ok_and(|bytes| bytes == expected) {
+        let _ = fs::remove_file(path);
+    }
+}
+
+fn save_workbook_pivot_copy_to_path(
+    source_path: &Path,
+    target_path: &Path,
+    payload: &WorkbookPivotSaveCopyPayload,
+) -> Result<WorkbookPivotSavedCopyResult, String> {
+    if target_path == source_path {
+        return Err("Pivot 可靠另存禁止覆盖源 XLSX".into());
+    }
+    if target_path.exists() {
+        return Err("目标文件已存在；Pivot 可靠另存不会覆盖现有文件".into());
+    }
+    recover_interrupted_write(source_path)?;
+    ensure_workbook(source_path)?;
+    let metadata = source_path
+        .metadata()
+        .map_err(|error| format!("读取源 XLSX 元数据失败: {error}"))?;
+    let source = fs::read(source_path).map_err(|error| format!("读取源 XLSX 失败: {error}"))?;
+    let source_signature = workbook_signature(&metadata, &source);
+    if source_signature != payload.expected_signature {
+        return Err("XLSX 已被其他程序修改，请重新加载并完成隔离验证后再另存".into());
+    }
+    let source_digest = format!("{:x}", md5::compute(&source));
+    validate_workbook_package(&source)?;
+    let linked_data = read_workbook_linked_data(&source)?;
+    let pivot = linked_data
+        .pivot_tables
+        .iter()
+        .find(|pivot| pivot.part == payload.pivot_part)
+        .ok_or("指定的透视表不存在或身份已变化")?;
+    if pivot.audit.row_field_count != 1
+        || pivot.audit.column_field_count != 1
+        || pivot.audit.data_field_count != 1
+        || pivot.audit.page_field_count != 0
+        || pivot
+            .audit
+            .data_fields
+            .first()
+            .is_none_or(|field| field.aggregation != "sum" || !field.supported)
+    {
+        return Err(
+            "Pivot 新副本首批仅支持一个行字段、一个列字段、一个 sum 值字段且无页面筛选".into(),
+        );
+    }
+    let (output, rebuilt) = rebuild_workbook_pivot_expanded_isolated(&source, pivot)?;
+    let expected_output_digest = payload.expected_output_digest.trim().to_ascii_lowercase();
+    if rebuilt.isolated_package_digest != expected_output_digest {
+        return Err("Pivot 来源或隔离输出已变化，请重新执行布局扩缩容验证".into());
+    }
+    if !rebuilt.package_valid
+        || !rebuilt.semantic_reparse_valid
+        || !rebuilt.output_values_verified
+        || !rebuilt.untouched_parts_preserved
+    {
+        return Err("Pivot 隔离输出未通过完整结构、语义、输出值和保真门禁".into());
+    }
+
+    let source_before_write =
+        fs::read(source_path).map_err(|error| format!("另存前复核源 XLSX 失败: {error}"))?;
+    let metadata_before_write = source_path
+        .metadata()
+        .map_err(|error| format!("另存前复核源 XLSX 元数据失败: {error}"))?;
+    if source_before_write != source
+        || workbook_signature(&metadata_before_write, &source_before_write) != source_signature
+        || format!("{:x}", md5::compute(&source_before_write)) != source_digest
+    {
+        return Err("源 XLSX 在隔离验证期间发生变化，请重新加载".into());
+    }
+
+    write_new_bytes(target_path, &output)?;
+    let verification = (|| -> Result<(String, String), String> {
+        let saved = fs::read(target_path)
+            .map_err(|error| format!("目标已创建，但无法复读保存字节: {error}"))?;
+        let target_digest = format!("{:x}", md5::compute(&saved));
+        if saved != output || target_digest != rebuilt.isolated_package_digest {
+            return Err("目标落盘字节与隔离验证输出不一致".into());
+        }
+        validate_workbook_package(&saved)
+            .map_err(|error| format!("目标 XLSX 结构复读失败: {error}"))?;
+        let saved_linked = read_workbook_linked_data(&saved)?;
+        let saved_pivot = saved_linked
+            .pivot_tables
+            .iter()
+            .find(|candidate| candidate.part == pivot.part)
+            .ok_or("目标 XLSX 中的 Pivot 身份丢失")?;
+        if saved_pivot.audit.layout_range.as_deref() != Some(rebuilt.new_output_range.as_str())
+            || saved_pivot.audit.row_field_count != 1
+            || saved_pivot.audit.column_field_count != 1
+            || saved_pivot.audit.data_field_count != 1
+            || saved_pivot.audit.page_field_count != 0
+            || saved_pivot
+                .audit
+                .data_fields
+                .first()
+                .is_none_or(|field| field.aggregation != "sum" || !field.supported)
+        {
+            return Err("目标 XLSX 的 Pivot 语义复读与已验证输出不一致".into());
+        }
+        let source_after =
+            fs::read(source_path).map_err(|error| format!("另存后复核源 XLSX 失败: {error}"))?;
+        let source_metadata_after = source_path
+            .metadata()
+            .map_err(|error| format!("另存后复核源 XLSX 元数据失败: {error}"))?;
+        if source_after != source
+            || workbook_signature(&source_metadata_after, &source_after) != source_signature
+            || format!("{:x}", md5::compute(&source_after)) != source_digest
+        {
+            return Err("源 XLSX 在可靠另存期间发生变化".into());
+        }
+        let target_metadata = target_path
+            .metadata()
+            .map_err(|error| format!("读取目标 XLSX 元数据失败: {error}"))?;
+        Ok((target_digest, workbook_signature(&target_metadata, &saved)))
+    })();
+    let (target_digest, target_signature) = match verification {
+        Ok(value) => value,
+        Err(error) => {
+            remove_created_workbook_if_exact(target_path, &output);
+            return Err(format!("Pivot 可靠另存验证失败，已清理未验收副本: {error}"));
+        }
+    };
+
+    Ok(WorkbookPivotSavedCopyResult {
+        status: "saved_verified".into(),
+        save_mode: "new_copy_only".into(),
+        pivot_name: pivot.name.clone(),
+        target_path: target_path.to_string_lossy().into_owned(),
+        target_signature,
+        target_digest,
+        source_signature,
+        source_digest,
+        source_unchanged: true,
+        output_bytes: output.len(),
+        output_range: rebuilt.new_output_range,
+        output_cell_count: rebuilt.output_cell_count,
+        changed_parts: rebuilt.rebuilt_parts,
+        structural_reopen_verified: true,
+        semantic_reopen_verified: true,
+        output_values_verified: true,
+        untouched_parts_preserved: true,
+    })
 }
 
 fn open_xlsx(path: &Path) -> Result<Xlsx<std::io::BufReader<fs::File>>, String> {
@@ -486,6 +658,25 @@ pub async fn rebuild_workbook_pivot_expanded_isolated_copy(
     })
     .await
     .map_err(|error| format!("透视表隔离布局扩缩容任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn save_workbook_pivot_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    payload: WorkbookPivotSaveCopyPayload,
+) -> Result<WorkbookPivotSavedCopyResult, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["xlsx"])?;
+    let target_file_name = validate_workbook_pivot_copy_file_name(&target_file_name)?;
+    let target_path =
+        guard.resolve_file_for_write(source_path.with_file_name(target_file_name), &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_workbook_pivot_copy_to_path(&source_path, &target_path, &payload)
+    })
+    .await
+    .map_err(|error| format!("Pivot 可靠另存任务失败: {error}"))?
 }
 
 #[tauri::command]
@@ -2585,6 +2776,88 @@ mod tests {
         assert!(expanded_result.extended_style_cell_count > 0);
         assert!(expanded_result.output_values_verified);
         assert_eq!(fs::read(&expanded_path).unwrap(), expanded_source);
+        let saved_copy_path = root.join("producer-pivot-refreshed.xlsx");
+        let saved_copy = save_workbook_pivot_copy_to_path(
+            &expanded_path,
+            &saved_copy_path,
+            &WorkbookPivotSaveCopyPayload {
+                expected_signature: expanded_document.signature.clone(),
+                expected_output_digest: expanded_result.isolated_package_digest.clone(),
+                pivot_part: expanded_pivot.part.clone(),
+            },
+        )
+        .unwrap();
+        assert_eq!(saved_copy.status, "saved_verified");
+        assert_eq!(saved_copy.save_mode, "new_copy_only");
+        assert!(saved_copy.source_unchanged);
+        assert!(saved_copy.structural_reopen_verified);
+        assert!(saved_copy.semantic_reopen_verified);
+        assert!(saved_copy.output_values_verified);
+        assert!(saved_copy.untouched_parts_preserved);
+        assert_eq!(saved_copy.output_range, "A3:E8");
+        assert_eq!(saved_copy.output_cell_count, 25);
+        assert_eq!(
+            format!("{:x}", md5::compute(fs::read(&saved_copy_path).unwrap())),
+            saved_copy.target_digest
+        );
+        assert_eq!(fs::read(&expanded_path).unwrap(), expanded_source);
+        let saved_document = CalamineWorkbookEngine.inspect(&saved_copy_path).unwrap();
+        assert!(saved_document
+            .linked_data
+            .pivot_tables
+            .iter()
+            .any(|pivot| pivot.part == expanded_pivot.part
+                && pivot.audit.layout_range.as_deref() == Some("A3:E8")));
+        let occupied_error = save_workbook_pivot_copy_to_path(
+            &expanded_path,
+            &saved_copy_path,
+            &WorkbookPivotSaveCopyPayload {
+                expected_signature: expanded_document.signature.clone(),
+                expected_output_digest: expanded_result.isolated_package_digest.clone(),
+                pivot_part: expanded_pivot.part.clone(),
+            },
+        )
+        .unwrap_err();
+        assert!(occupied_error.contains("不会覆盖"));
+        let stale_target = root.join("stale-pivot-copy.xlsx");
+        let stale_error = save_workbook_pivot_copy_to_path(
+            &expanded_path,
+            &stale_target,
+            &WorkbookPivotSaveCopyPayload {
+                expected_signature: "stale".into(),
+                expected_output_digest: expanded_result.isolated_package_digest.clone(),
+                pivot_part: expanded_pivot.part.clone(),
+            },
+        )
+        .unwrap_err();
+        assert!(stale_error.contains("其他程序修改"));
+        assert!(!stale_target.exists());
+        let changed_target = root.join("changed-pivot-copy.xlsx");
+        let changed_error = save_workbook_pivot_copy_to_path(
+            &expanded_path,
+            &changed_target,
+            &WorkbookPivotSaveCopyPayload {
+                expected_signature: expanded_document.signature.clone(),
+                expected_output_digest: "changed".into(),
+                pivot_part: expanded_pivot.part.clone(),
+            },
+        )
+        .unwrap_err();
+        assert!(changed_error.contains("隔离输出已变化"));
+        assert!(!changed_target.exists());
+        assert!(validate_workbook_pivot_copy_file_name("../escape.xlsx").is_err());
+        assert!(validate_workbook_pivot_copy_file_name("pivot-copy.xls").is_err());
+        let overwrite_error = save_workbook_pivot_copy_to_path(
+            &expanded_path,
+            &expanded_path,
+            &WorkbookPivotSaveCopyPayload {
+                expected_signature: expanded_document.signature.clone(),
+                expected_output_digest: expanded_result.isolated_package_digest.clone(),
+                pivot_part: expanded_pivot.part.clone(),
+            },
+        )
+        .unwrap_err();
+        assert!(overwrite_error.contains("禁止覆盖源"));
         let (expanded_isolated, _) =
             rebuild_workbook_pivot_expanded_isolated(&expanded_source, expanded_pivot).unwrap();
         let expanded_definition = String::from_utf8(zip_part(

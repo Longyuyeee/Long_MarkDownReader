@@ -331,6 +331,41 @@
         "pageFields": "blocked",
         "atomicReplace": "blocked",
         "desktopRefreshSaveRoundTrip": "pending"
+      },
+      "verifiedPivotCopySave": {
+        "stage": "S8-7E3A",
+        "execution": "same_directory_new_copy_only",
+        "status": "verified_new_copy_save",
+        "verifiedLayout": {
+          "rowFields": 1,
+          "columnFields": 1,
+          "dataFields": 1,
+          "aggregation": "sum",
+          "pageFields": 0
+        },
+        "requiredGates": [
+          "source_signature",
+          "isolated_output_digest",
+          "target_absent",
+          "atomic_new_file_create",
+          "target_byte_reparse",
+          "package_validation",
+          "semantic_reparse",
+          "output_value_reparse",
+          "untouched_part_preservation",
+          "source_package_unchanged",
+          "exact_failure_cleanup"
+        ],
+        "targetScope": "same_directory_xlsx",
+        "opensSavedCopy": true,
+        "sourceOverwrite": "blocked",
+        "existingTargetOverwrite": "blocked",
+        "unsavedDrafts": "blocked",
+        "multiMeasureSave": "blocked",
+        "multiLevelAxis": "blocked",
+        "pageFields": "blocked",
+        "externalData": "blocked",
+        "desktopProducerRoundTrip": "pending"
       }
     }
   },
