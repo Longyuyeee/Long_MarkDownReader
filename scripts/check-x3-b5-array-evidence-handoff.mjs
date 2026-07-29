@@ -15,7 +15,7 @@ const libreOfficeRunner = read('scripts/x3-b5-libreoffice-array-roundtrip.py')
 const rustCommand = read('src-tauri/src/commands/workbook.rs')
 const rustBinary = read('src-tauri/src/bin/xlsx-array-audit.rs')
 
-if (matrix.stage !== 'X3-B5' || !['partial', 'verified'].includes(matrix.status) ||
+if (matrix.stage !== 'X3-B6' || !['partial', 'verified'].includes(matrix.status) ||
     matrix.verifiedProducers < 1 || matrix.verifiedProducers > 3 || matrix.requiredProducers !== 3 ||
     (matrix.status === 'verified') !== (matrix.verifiedProducers === 3)) {
   failures.push('X3-B5 producer matrix state is inconsistent')
@@ -53,7 +53,7 @@ if (!rustCommand.includes('generate_workbook_array_audit_report') || !rustComman
   failures.push('LongEdit array semantic audit binary is missing')
 }
 const handoff = capabilities.arrayFormulaReadContract?.producerEvidenceHandoff
-if (capabilities.arrayFormulaReadContract?.stage !== 'X3-B5' || handoff?.status !== 'ready' ||
+if (capabilities.arrayFormulaReadContract?.stage !== 'X3-B6' || handoff?.status !== 'ready' ||
     handoff?.supportedProducerIds?.join(',') !== 'microsoft-excel,libreoffice-calc' ||
     handoff?.rejectionValidation?.verifiedCaseCount !== 5 || handoff?.trustedMachineConfirmationRequired !== true ||
     capabilities.arrayFormulaReadContract?.verifiedProducerCount !== matrix.verifiedProducers ||

@@ -17,6 +17,8 @@
 
 > X3-B5 已完成：正版 Microsoft Excel 与 LibreOffice Calc 可在各自可信机器上对固定数组基线执行原生保存、退出、独立进程复开和 LongEdit 语义复读，并导出固定三成员证据包；导入端绑定基线摘要、生产者身份、生命周期、输出摘要和项目自身解析结果，拒绝覆盖既有证据。5/5 伪造/损坏包均确认不会修改矩阵、能力契约或创建目标；合法 TEMP 隔离包已验证可原子提升到 2/3。完整 `ci:check` 通过 Rust 功能测试 `383/383`、性能测试 `1/1`、PDF 100 MiB 范围基准约 `50 ms`，生产依赖审计为 `0` 漏洞。当前机器没有两套可信生产者，因此矩阵如实保持 `partial 1/3`，公开能力仍为只读受限，数组计算和写回继续阻断。详见 [`X3_B5_XLSX_Array_Producer_Evidence_Handoff_Audit_2026-07-30.md`](./X3_B5_XLSX_Array_Producer_Evidence_Handoff_Audit_2026-07-30.md)。
 
+> X3-B6 已完成可执行收口：新增只读环境审计和 Excel+LibreOffice 双包矩阵级原子关闭器。两包先在 TEMP 中分别通过 B5 全门禁并形成隔离 `3/3`，随后才一次性提升四个 fixture/manifest、生产者矩阵与共享能力契约；第二包损坏时目标状态经自动化确认保持 `1/3`。完整 `ci:check` 通过 Rust `383/383`、性能 `1/1` 和 `0` 生产依赖漏洞。本机 Excel COM 仍指向 WPS `et.exe`，LibreOffice 缺失，因此没有登记虚假生产者证据，公开能力保持受限。详见 [`X3_B6_XLSX_Array_Producer_Matrix_Atomic_Closure_Audit_2026-07-30.md`](./X3_B6_XLSX_Array_Producer_Matrix_Atomic_Closure_Audit_2026-07-30.md)。
+
 > 当前阶段交付证据见 `docs/E1B_ODT_Read_Index_Checkpoint_Audit_2026-07-28.md` 和 `docs/E1B_ODT_Producer_Gate_Progress_Audit_2026-07-28.md`。E1B 已完成有界语义解析、WorkspaceGuard 只读命令、Library 工作面、双索引和定位代码；LibreOffice 与 Microsoft Word 真实 fixture 已通过。Word 原阻塞已定位为 ODT 格式兼容性模态提示并完成受控保存、关闭和原生重开；WPS 缺少可验证的 ODF 组件并生成错误 OLE 文件。`.odt` 仍未进入共享格式注册表，下一批只关闭 WPS 生产者门禁。
 
 > 2026-07-29 又完成 E1B Word/LibreOffice 真实 Tauri 桌面子门禁：正常/紧凑、专业明/暗、文内搜索、`odt-block` 路由定位和源字节不变共 8 项检查、4 张截图通过。证据见 `docs/E1B_ODT_Desktop_Evidence_Audit_2026-07-29.md`；该结果不改变 WPS blocked 和 `.odt` 未注册边界。

@@ -125,7 +125,7 @@
     "notEquivalentToExcelAutomaticRecalculation": true
   },
   "arrayFormulaReadContract": {
-    "stage": "X3-B5",
+    "stage": "X3-B6",
     "status": "partial_producer_matrix",
     "ooxmlFormulaType": "array",
     "recognizedKinds": ["legacy_array", "dynamic_array"],
@@ -168,6 +168,15 @@
       "independentProcessReopenRequired": true,
       "longEditSemanticReparseRequired": true,
       "existingEvidenceOverwrite": "blocked",
+      "atomicPairClosure": {
+        "status": "verified",
+        "requiredStartingVerifiedProducerCount": 1,
+        "isolatedCandidateVerifiedProducerCount": 3,
+        "destinationPromotion": "atomic-with-rollback",
+        "brokenSecondBundleLeavesDestinationUnchanged": true,
+        "environmentStatus": "blocked_environment",
+        "environmentEvidence": "docs/evidence/x3-b6-xlsx-array-producer-closure/environment.json"
+      },
       "rejectionValidation": {
         "status": "verified",
         "verifiedCaseCount": 5,
