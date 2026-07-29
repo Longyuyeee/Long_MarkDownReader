@@ -368,6 +368,150 @@ pub fn generate_workbook_pivot_aggregation_audit_copy(
     generate_workbook_pivot_variant_audit_copy(source_path, target_path, None, Some(aggregation))
 }
 
+pub fn generate_workbook_pivot_multi_axis_audit_copy(
+    source_path: &Path,
+    target_path: &Path,
+) -> Result<String, String> {
+    let source_parent = source_path
+        .parent()
+        .ok_or("Multi-axis Pivot audit source has no parent directory")?
+        .canonicalize()
+        .map_err(|error| error.to_string())?;
+    let target_parent = target_path
+        .parent()
+        .ok_or("Multi-axis Pivot audit target has no parent directory")?
+        .canonicalize()
+        .map_err(|error| error.to_string())?;
+    if source_parent != target_parent {
+        return Err("Multi-axis Pivot audit copy must use the source directory".into());
+    }
+    if target_path == source_path {
+        return Err("Multi-axis Pivot audit copy refuses to overwrite the source workbook".into());
+    }
+    if target_path.exists() {
+        return Err("Multi-axis Pivot audit copy refuses to overwrite an existing target".into());
+    }
+    ensure_workbook(source_path)?;
+    let source = fs::read(source_path).map_err(|error| error.to_string())?;
+    let source_digest = format!("{:x}", md5::compute(&source));
+    validate_workbook_package(&source)?;
+    let document = CalamineWorkbookEngine.inspect(source_path)?;
+    let candidates = document
+        .linked_data
+        .pivot_tables
+        .iter()
+        .filter(|pivot| {
+            pivot.audit.writeback.status == "structure_candidate"
+                && pivot.audit.row_field_count >= 2
+                && pivot.audit.column_field_count >= 2
+                && pivot.audit.data_field_count == 1
+                && pivot.audit.page_field_count == 0
+        })
+        .collect::<Vec<_>>();
+    if candidates.len() != 1 {
+        return Err(format!(
+            "Multi-axis Pivot audit copy requires exactly one multi-axis local Pivot candidate; found {}",
+            candidates.len()
+        ));
+    }
+    let pivot = candidates[0];
+    let (output, audit) = audit_workbook_pivot_multi_axis_isolated(&source, pivot)?;
+    if audit.status != "multi_axis_output_rebuilt"
+        || audit.writes_user_file
+        || !audit.package_valid
+        || !audit.semantic_reparse_valid
+        || !audit.untouched_parts_preserved
+        || audit.pivot_definition_preserved
+        || audit.output_worksheet_preserved
+    {
+        return Err("Multi-axis Pivot audit copy did not pass the isolated rebuild gates".into());
+    }
+    write_new_bytes(target_path, &output)?;
+    let verification = (|| -> Result<(String, String), String> {
+        let saved = fs::read(target_path).map_err(|error| {
+            format!("Multi-axis target was created but cannot be reread: {error}")
+        })?;
+        let target_digest = format!("{:x}", md5::compute(&saved));
+        if saved != output || target_digest != audit.isolated_package_digest {
+            return Err("Multi-axis target bytes do not match the isolated audit output".into());
+        }
+        validate_workbook_package(&saved)
+            .map_err(|error| format!("Multi-axis target package validation failed: {error}"))?;
+        let saved_linked = read_workbook_linked_data(&saved)?;
+        let saved_pivot = saved_linked
+            .pivot_tables
+            .iter()
+            .find(|candidate| candidate.part == pivot.part)
+            .ok_or("Multi-axis target lost the Pivot identity")?;
+        if saved_pivot.audit.layout_range.as_deref() != Some(audit.output_range.as_str())
+            || saved_pivot.audit.row_field_count != audit.row_axis.field_indices.len()
+            || saved_pivot.audit.column_field_count != audit.column_axis.field_indices.len()
+            || saved_pivot.audit.data_field_count != 1
+            || saved_pivot.audit.page_field_count != 0
+        {
+            return Err(
+                "Multi-axis target Pivot semantics drifted after writing the audit copy".into(),
+            );
+        }
+        let source_after = fs::read(source_path).map_err(|error| {
+            format!("Multi-axis audit copy cannot reread source workbook: {error}")
+        })?;
+        if source_after != source || format!("{:x}", md5::compute(&source_after)) != source_digest {
+            return Err("Multi-axis audit copy changed the source workbook".into());
+        }
+        let target_metadata = target_path
+            .metadata()
+            .map_err(|error| format!("Multi-axis target metadata cannot be read: {error}"))?;
+        Ok((target_digest, workbook_signature(&target_metadata, &saved)))
+    })();
+    let (target_digest, target_signature) = match verification {
+        Ok(value) => value,
+        Err(error) => {
+            remove_created_workbook_if_exact(target_path, &output);
+            return Err(format!(
+                "Multi-axis Pivot audit copy verification failed and the unverified copy was removed: {error}"
+            ));
+        }
+    };
+    let report = serde_json::json!({
+        "status": "audit_copy_verified",
+        "stage": "S8-7E3G-A",
+        "saveMode": "producer_roundtrip_input_only",
+        "reliableSaveAllowed": false,
+        "sourceOverwriteAllowed": false,
+        "producerRoundTripStatus": "pending",
+        "pivotName": audit.pivot_name,
+        "targetPath": target_path.to_string_lossy(),
+        "targetSignature": target_signature,
+        "targetDigest": target_digest,
+        "sourceSignature": document.signature,
+        "sourceDigest": source_digest,
+        "sourceUnchanged": true,
+        "outputBytes": output.len(),
+        "outputRange": audit.output_range,
+        "outputCellCount": audit.output_cell_count,
+        "previewGroupCount": audit.preview_group_count,
+        "rowFieldCount": audit.row_axis.field_indices.len(),
+        "columnFieldCount": audit.column_axis.field_indices.len(),
+        "dataFieldCount": 1,
+        "pageFieldCount": 0,
+        "rebuiltParts": audit.rebuilt_parts,
+        "packageValid": audit.package_valid,
+        "semanticReopenVerified": audit.semantic_reparse_valid,
+        "outputValuesVerified": true,
+        "untouchedPartsPreserved": audit.untouched_parts_preserved,
+        "blockedUntilProducerRoundTrip": [
+            "reliable_copy_save",
+            "source_overwrite",
+            "existing_target_overwrite",
+            "page_fields",
+            "external_data",
+            "slicers"
+        ]
+    });
+    serde_json::to_string_pretty(&report).map_err(|error| error.to_string())
+}
+
 fn generate_workbook_pivot_variant_audit_copy(
     source_path: &Path,
     target_path: &Path,
@@ -2758,6 +2902,37 @@ mod tests {
         .unwrap_err();
         assert!(stale.contains("changed after loading"));
         assert_eq!(fs::read(&path).unwrap(), source);
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn multi_axis_audit_copy_generates_producer_roundtrip_input_without_changing_source() {
+        let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/workbook/pivot-multi-axis-microsoft-excel.xlsx");
+        let source = fs::read(fixture).unwrap();
+        let base = std::env::temp_dir().join(format!(
+            "longedit-pivot-multi-axis-copy-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&base).unwrap();
+        let path = base.join("multi-axis-source.xlsx");
+        let target = base.join("multi-axis-audit-copy.xlsx");
+        fs::write(&path, &source).unwrap();
+
+        let report = generate_workbook_pivot_multi_axis_audit_copy(&path, &target).unwrap();
+        let report: serde_json::Value = serde_json::from_str(&report).unwrap();
+        assert_eq!(report["status"], "audit_copy_verified");
+        assert_eq!(report["stage"], "S8-7E3G-A");
+        assert_eq!(report["outputRange"], "A3:I12");
+        assert_eq!(report["outputCellCount"], 80);
+        assert_eq!(report["producerRoundTripStatus"], "pending");
+        assert_eq!(report["reliableSaveAllowed"], false);
+        assert_eq!(fs::read(&path).unwrap(), source);
+        assert!(target.exists());
         fs::remove_dir_all(base).unwrap();
     }
 

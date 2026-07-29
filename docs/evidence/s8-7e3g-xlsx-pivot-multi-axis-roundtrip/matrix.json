@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "stage": "S8-7E3G",
+  "status": "blocked_preflight",
+  "complete": false,
+  "verifiedCount": 0,
+  "requiredCount": 3,
+  "requiredProducerIds": [
+    "microsoft-excel",
+    "wps-spreadsheets",
+    "libreoffice-calc"
+  ],
+  "sourceOverwriteAllowed": false,
+  "reliableSaveAllowed": false,
+  "baseline": {
+    "id": "longedit-multi-axis",
+    "status": "audit_copy_verified",
+    "stage": "S8-7E3G-A",
+    "file": "s8-7e3g-longedit-multi-axis.xlsx",
+    "bytes": 12503,
+    "sha256": "a060ff1dbd708618217e9cbb442e25a2a4e74efd1c01d64ef3d5cafaafef3736",
+    "pivotName": "MultiAxisPivot",
+    "outputRange": "A3:I12",
+    "outputCellCount": 80,
+    "previewGroupCount": 16,
+    "rowFieldCount": 2,
+    "columnFieldCount": 2,
+    "dataFieldCount": 1,
+    "pageFieldCount": 0,
+    "grandTotal": 424,
+    "saveMode": "producer_roundtrip_input_only",
+    "sourceOverwriteAllowed": false,
+    "reliableSaveAllowed": false
+  },
+  "environment": {
+    "checkedAt": "2026-07-30",
+    "microsoftExcel": {
+      "status": "missing",
+      "evidence": "EXCEL.EXE not found in PATH or common Microsoft Office install roots"
+    },
+    "wpsSpreadsheets": {
+      "status": "available",
+      "executables": [
+        "C:\\Users\\Administrator\\AppData\\Local\\Kingsoft\\WPS Office\\12.1.0.26375\\office6\\et.exe",
+        "C:\\Users\\Administrator\\AppData\\Local\\Kingsoft\\WPS Office\\12.1.0.26895\\office6\\et.exe"
+      ]
+    },
+    "libreOfficeCalc": {
+      "status": "missing",
+      "evidence": "soffice.exe not found in PATH or common LibreOffice install roots"
+    }
+  },
+  "producers": [
+    {
+      "id": "microsoft-excel",
+      "status": "pending_environment",
+      "requiredGates": [
+        "open_baseline",
+        "refresh",
+        "save",
+        "quit_process",
+        "reopen_in_new_process",
+        "verify_no_repair_prompt",
+        "reparse_longedit_semantics"
+      ]
+    },
+    {
+      "id": "wps-spreadsheets",
+      "status": "pending_full_matrix",
+      "requiredGates": [
+        "open_baseline",
+        "refresh",
+        "save",
+        "quit_process",
+        "reopen_in_new_process",
+        "verify_no_repair_prompt",
+        "reparse_longedit_semantics"
+      ]
+    },
+    {
+      "id": "libreoffice-calc",
+      "status": "pending_environment",
+      "requiredGates": [
+        "open_baseline",
+        "refresh",
+        "save",
+        "quit_process",
+        "reopen_in_new_process",
+        "verify_no_repair_prompt",
+        "reparse_longedit_semantics"
+      ]
+    }
+  ],
+  "blockedUntil": [
+    "microsoft_excel_available",
+    "libreoffice_calc_available",
+    "three_producer_roundtrip_verified"
+  ]
+}

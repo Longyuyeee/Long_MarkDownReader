@@ -394,3 +394,9 @@ Microsoft Excel 真实 fixture 已固定 `Region/City` 双层行轴和 `Year/Qua
 当前 `main` 已推进到 S8-7E3F：XLSX 多层行轴 + 多层列轴 Pivot 可以在临时包中同步重建 Cache Definition/Records、Pivot Definition、压缩 `rowItems/colItems` 和输出 Worksheet。审计命令返回 `multi_axis_output_rebuilt`，输出范围 `A3:I12`，输出单元格 `80`，Grand Total `424`，成功路径和旧签名拒绝路径均不修改用户原文件。
 
 下一步直接进入 S8-7E3G：对 S8-7E3F 的隔离输出包执行 Excel/WPS/LibreOffice 三生产者刷新、保存、退出和新进程重开，验证无修复提示和语义稳定；稳定前不开放多层轴可靠保存，更不开放原文件覆盖。
+
+# 2026-07-30 交接快照：S8-7E3G-A 预检已完成
+
+已新增 `multi_axis` 审计副本生成入口，并固定 LongEdit 基线 `fixtures/xlsx/output-reopen/s8-7e3g-longedit-multi-axis.xlsx`。E3G matrix 位于 `docs/evidence/s8-7e3g-xlsx-pivot-multi-axis-roundtrip/matrix.json`，当前状态为 `blocked_preflight` / `0/3`，原因是本机仅发现 WPS Spreadsheets，未发现 Microsoft Excel 与 LibreOffice Calc。
+
+下一台具备三生产者的机器应直接运行 `npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip`，补齐 Excel/WPS/LibreOffice 的刷新、保存、退出和新进程重开证据。未达到 3/3 前，可靠保存和原文件覆盖继续阻断。

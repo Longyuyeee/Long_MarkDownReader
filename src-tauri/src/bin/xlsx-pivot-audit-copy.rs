@@ -17,7 +17,9 @@ fn main() {
     if arguments.next().is_some() {
         panic!("unexpected extra arguments");
     }
-    let result = if matches!(
+    let result = if variant == "multi_axis" {
+        tauri_app_lib::generate_workbook_pivot_multi_axis_audit_copy(&source, &target)
+    } else if matches!(
         variant.as_str(),
         "standard" | "row_only" | "column_only" | "multi_measure"
     ) {

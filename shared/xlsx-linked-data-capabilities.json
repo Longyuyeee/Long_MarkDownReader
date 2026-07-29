@@ -631,6 +631,33 @@
         "sourceOverwrite": "blocked",
         "pageFields": "blocked",
         "externalData": "blocked"
+      },
+      "multiLevelAxisProducerRoundTrip": {
+        "stage": "S8-7E3G",
+        "execution": "producer_roundtrip_preflight",
+        "status": "blocked_preflight",
+        "matrix": "docs/evidence/s8-7e3g-xlsx-pivot-multi-axis-roundtrip/matrix.json",
+        "baselineFile": "fixtures/xlsx/output-reopen/s8-7e3g-longedit-multi-axis.xlsx",
+        "baselineStatus": "audit_copy_verified",
+        "baselineOutputRange": "A3:I12",
+        "baselineOutputCellCount": 80,
+        "baselinePreviewGroupCount": 16,
+        "baselineGrandTotal": 424,
+        "requiredProducerIds": [
+          "microsoft-excel",
+          "wps-spreadsheets",
+          "libreoffice-calc"
+        ],
+        "verifiedProducerCount": 0,
+        "requiredProducerCount": 3,
+        "producerRoundTrip": "pending_environment",
+        "reliableCopySave": "blocked",
+        "writesUserFile": false,
+        "sourceOverwrite": "blocked",
+        "existingTargetOverwrite": "blocked",
+        "pageFields": "blocked",
+        "externalData": "blocked",
+        "slicers": "blocked"
       }
     }
   },

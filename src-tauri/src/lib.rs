@@ -76,10 +76,6 @@ use commands::table::{
     create_table_file, export_table_file, import_table_file, read_table_file, write_table_file,
 };
 use commands::toml::{analyze_toml_source, write_toml_source_document};
-pub use commands::workbook::{
-    generate_workbook_pivot_aggregation_audit_copy, generate_workbook_pivot_audit_copy,
-    generate_workbook_pivot_layout_audit_copy,
-};
 use commands::workbook::{
     audit_workbook_pivot_multi_axis_isolated_copy, get_workbook_capabilities,
     import_workbook_sheet, preview_workbook_pivot, preview_workbook_pivot_rebuild,
@@ -92,6 +88,10 @@ use commands::workbook::{
     update_workbook_outline, update_workbook_page_layout, update_workbook_print_options,
     update_workbook_structure, update_workbook_table, verify_workbook_pivot_variants_isolated_copy,
     write_workbook_cells,
+};
+pub use commands::workbook::{
+    generate_workbook_pivot_aggregation_audit_copy, generate_workbook_pivot_audit_copy,
+    generate_workbook_pivot_layout_audit_copy, generate_workbook_pivot_multi_axis_audit_copy,
 };
 use commands::workspace::{analyze_workspace_health, get_workspace_overview};
 use commands::xml::{analyze_xml_source, write_xml_source_document};

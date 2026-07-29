@@ -643,3 +643,13 @@ S8-7E3F 已完成：多层行轴 + 多层列轴 Pivot 已能在临时包中重�
 4. 记录是否出现修复提示、生产者规范化差异和输出坐标变化。
 5. 三生产者全部稳定后，再评估是否把“多层轴同目录新副本”加入可靠保存白名单。
 6. 原文件覆盖、已有目标覆盖、Page Fields、外部连接、切片器继续阻断。
+
+# 2026-07-30 最新执行入口：S8-7E3G 完整矩阵
+
+S8-7E3G-A 已完成预检：LongEdit 多层轴生产者输入副本已固定，matrix 当前为 `blocked_preflight`。下一步必须在同时具备 Microsoft Excel、WPS Spreadsheets 和 LibreOffice Calc 的机器上执行：
+
+```powershell
+npm run audit:s8-7e3g-xlsx-pivot-multi-axis-roundtrip
+```
+
+执行后应把 `docs/evidence/s8-7e3g-xlsx-pivot-multi-axis-roundtrip/matrix.json` 从 `blocked_preflight` 更新为真实 `verified` 结果，并提交三生产者输出副本。稳定前不得开放多层轴可靠保存。
