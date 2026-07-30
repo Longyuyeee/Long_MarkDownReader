@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5I",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "isolated-windows-install-upgrade-launch-uninstall-retention",
+  "generatedAt": "2026-07-31",
+  "currentStatus": "isolated-lifecycle-runner-ready-host-execution-blocked",
+  "requiredScenarios": [
+    "previous-version-fresh-install",
+    "controlled-upgrade",
+    "first-launch-after-upgrade",
+    "silent-uninstall",
+    "uninstall-retains-user-data"
+  ],
+  "safetyBoundary": {
+    "hostInstallerMutationAllowed": false,
+    "existingInstallMayBeOverwritten": false,
+    "disposableMachineConfirmationRequired": true,
+    "explicitInstallerMutationSwitchRequired": true,
+    "existingProductRegistrationMustBeAbsent": true,
+    "currentInstallerHashMustMatchR5H": true,
+    "sourceUserContentAllowed": false
+  },
+  "evidence": {
+    "environmentAudit": "docs/evidence/r5i-isolated-install-lifecycle/environment-audit.json",
+    "lifecycleResult": "docs/evidence/r5i-isolated-install-lifecycle/sandbox-output/lifecycle-result.json",
+    "environmentAuditComplete": true,
+    "lifecycleResultComplete": false
+  },
+  "releaseGate": {
+    "runnerImplemented": true,
+    "currentAndPreviousInstallersAvailable": true,
+    "hostPreflightComplete": true,
+    "isolatedLifecycleSmokeExecuted": false,
+    "windows10EvidenceComplete": false,
+    "windows11EvidenceComplete": false,
+    "signedArtifactRuntimeProven": false,
+    "currentPromotionEligible": false
+  },
+  "knownLimits": [
+    "windows-sandbox-executable-not-available-on-current-host",
+    "docker-linux-context-is-not-a-windows-desktop-isolation-boundary",
+    "current-host-has-an-existing-longedit-installation-that-must-not-be-overwritten",
+    "representative-route-and-txt-json-installed-artifact-smoke-remains-pending",
+    "windows-10-and-windows-11-vm-matrix-remains-pending"
+  ],
+  "nextStage": "R5J"
+}

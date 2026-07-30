@@ -388,3 +388,27 @@ Current status: `current-msi-nsis-built-hashed-unsigned-install-smoke-pending`.
 Both installers currently report `NotSigned`. No install, upgrade, uninstall, rollback, Windows VM, or signed-artifact runtime claim is made.
 
 Next recommended stage: R5I. Run fresh-install, launch, representative route, TXT/JSON save/reopen, controlled upgrade, uninstall, and rollback smoke in an isolated Windows environment without touching the user's active installation.
+
+## R5I update - isolated installer lifecycle preflight and runner
+
+Current stage after this update: R5I has a complete safe preflight and disposable Windows lifecycle runner. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5i-isolated-install-lifecycle-policy.json`
+- `scripts/audit-r5i-isolated-install-environment.ps1`
+- `scripts/run-r5i-isolated-install-lifecycle.ps1`
+- `scripts/new-r5i-windows-sandbox-config.ps1`
+- `scripts/check-r5i-isolated-install-lifecycle.mjs`
+- `docs/R5I_Isolated_Windows_Install_Lifecycle_Audit_2026-07-31.md`
+- `docs/evidence/r5i-isolated-install-lifecycle/environment-audit.json`
+
+The current host has a registered LongEdit `0.6.9` installation and an active product process. Windows Sandbox, VMware, VirtualBox, and QEMU runners are unavailable. Docker is present only as a Linux context and cannot test a Windows WebView2 desktop installer.
+
+R5I therefore refuses host installation mutation. It now provides a guarded disposable-machine runner for previous-version fresh install, controlled `0.6.2 → 0.7.0` upgrade, first launch, silent uninstall, and user-data retention. A Windows Sandbox configuration generator maps source read-only and only the evidence directory writable.
+
+Current status: `isolated-lifecycle-runner-ready-host-execution-blocked`.
+
+No lifecycle result, installed-artifact route smoke, Windows 10/11 matrix, signature, or RC claim is made.
+
+Next recommended stage: R5J. Execute the R5I bundle in Windows Sandbox or a disposable Windows 11 VM, capture the lifecycle result, add installed-artifact right-side route and TXT/JSON save/reopen evidence, then repeat the final matrix on Windows 10.
