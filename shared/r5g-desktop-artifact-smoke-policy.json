@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5G",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "current-desktop-artifact-build-io-and-route-smoke",
+  "generatedAt": "2026-07-31",
+  "currentStatus": "current-release-built-debug-desktop-io-smoke-passed-signed-artifact-pending",
+  "artifacts": {
+    "releaseExecutableBuilt": true,
+    "releaseExecutableRuntimeSmokeExecuted": false,
+    "debugExecutableRuntimeSmokeExecuted": true,
+    "signedInstallerRuntimeSmokeExecuted": false
+  },
+  "desktopIo": {
+    "isolatedTemporaryLibraryRequired": true,
+    "txtReadEditSaveReopenRequired": true,
+    "jsonReadEditSaveReopenRequired": true,
+    "sourceUserContentAllowed": false
+  },
+  "representativeRoutes": [
+    "/workspace",
+    "/library",
+    "/text",
+    "/json",
+    "/pdf",
+    "/workbook",
+    "/diagram",
+    "/mindmap",
+    "/graph",
+    "/canvas",
+    "/release-capabilities"
+  ],
+  "requiredEvidenceFiles": [
+    "docs/evidence/r5g-desktop-artifact-smoke/audit-manifest.json",
+    "docs/evidence/r5g-desktop-artifact-smoke/route-mount-evidence.json",
+    "docs/evidence/r5g-desktop-artifact-smoke/route-performance-evidence.json",
+    "docs/evidence/r5g-desktop-artifact-smoke/txt-save-reopen.jpg",
+    "docs/evidence/r5g-desktop-artifact-smoke/json-save-reopen.jpg"
+  ],
+  "releaseGate": {
+    "currentDesktopIoSmokePassed": true,
+    "currentReleaseBuildPassed": true,
+    "signedArtifactRuntimeProven": false,
+    "requiresWindowsVmEvidenceForRc": true,
+    "requiresRollbackEvidenceForRc": true,
+    "currentPromotionEligible": false
+  },
+  "knownLimits": [
+    "runtime-smoke-executed-on-current-debug-binary-not-release-no-bundle-executable",
+    "route-timings-include-the-intentional-minimum-transition-envelope",
+    "current-msi-and-nsis-installers-not-yet-built-or-signed",
+    "windows-10-and-windows-11-vm-evidence-remains-pending"
+  ],
+  "nextStage": "R5H"
+}

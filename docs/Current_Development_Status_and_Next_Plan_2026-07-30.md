@@ -343,3 +343,26 @@ Current status: `browser-preview-route-mount-smoke-passed-desktop-io-pending`.
 This evidence proves integrated route mounting, not native file I/O or signed Windows artifact behavior.
 
 Next recommended stage: R5G. Capture a real built Tauri desktop smoke bundle with representative file open/save operations and route-performance export, then continue the existing signing, Windows VM, rollback, and RC approval gates.
+
+## R5G update - current desktop artifact I/O and route smoke
+
+Current stage after this update: R5G is implemented and the app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5g-desktop-artifact-smoke-policy.json`
+- `scripts/run-r5g-desktop-artifact-smoke.ps1`
+- `scripts/capture-r5g-desktop-artifact-smoke.mjs`
+- `scripts/check-r5g-desktop-artifact-smoke.mjs`
+- `docs/R5G_Desktop_Artifact_Smoke_Audit_2026-07-31.md`
+- `docs/evidence/r5g-desktop-artifact-smoke/`
+
+R5G built the current optimized `0.7.0` Tauri executable and recorded its SHA-256 hash. A current Debug executable built from the same source then ran in a real isolated Tauri WebView2 process and completed TXT plus JSON read/edit/save/reopen checks.
+
+The real desktop run also mounted all eleven representative right-side workspace routes and exported the route-performance buffer. No user document content was included.
+
+Current status: `current-release-built-debug-desktop-io-smoke-passed-signed-artifact-pending`.
+
+The optimized Release executable was built but not runtime-smoked because an installed user instance already owned the production single-instance channel. R5G deliberately preserves that session and does not claim signed or installed-artifact proof.
+
+Next recommended stage: R5H. Build current MSI/NSIS installers, refresh hashes and Authenticode evidence, and run installed-artifact smoke in an isolated Windows environment before Windows 10/11 VM and rollback closure.
