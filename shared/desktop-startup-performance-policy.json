@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5B",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "desktop-startup-and-route-performance-evidence",
+  "generatedAt": "2026-07-30",
+  "currentStatus": "runtime-marks-added-real-desktop-baseline-pending",
+  "evidenceState": {
+    "localRuntimeMarks": "implemented",
+    "desktopSmokeMeasurement": "pending",
+    "windowsVmMeasurement": "pending",
+    "releaseBlocking": true
+  },
+  "runtimeSignals": [
+    "performance.mark:longedit:route:<route>:start",
+    "performance.mark:longedit:route:<route>:ready",
+    "performance.measure:longedit:route:<route>",
+    "window.__LONGEDIT_ROUTE_PERFORMANCE__"
+  ],
+  "routeDomains": [
+    "workspace",
+    "library",
+    "text-json-dev-editors",
+    "pdf",
+    "workbook",
+    "diagram",
+    "mindmap",
+    "knowledge-graph",
+    "canvas",
+    "office-readers"
+  ],
+  "performanceBudgets": {
+    "routeLoaderMinimumVisibleMs": 420,
+    "routeHistoryEntryLimit": 20,
+    "manualChunkWarningLimitKb": 750,
+    "mustNotPromoteToRcWithoutRealDesktopEvidence": true
+  },
+  "capabilityAlignment": [
+    "daily-management-workspace",
+    "right-side-workspace-navigation",
+    "knowledge-graph-visualization",
+    "diagram-and-mindmap-workflows",
+    "pdf-and-office-workflows",
+    "txt-json-dev-format-editing"
+  ],
+  "knownLimits": [
+    "runtime-marks-do-not-replace-real-windows-startup-measurement",
+    "route-transition-samples-are-smoke-evidence-not-lab-benchmarks",
+    "real-rc-performance-baseline-still-needs-signed-artifact-and-vm-run"
+  ],
+  "nextStage": "R5C"
+}

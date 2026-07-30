@@ -151,6 +151,30 @@ const routeLoadingLabel = ref('正在打开知识库')
 let unlistenOpenFile: (() => void) | null = null
 let routeLoadingTimer: ReturnType<typeof setTimeout> | null = null
 let routeLoadingStartedAt = performance.now()
+let routeLoadingName = 'initial'
+performance.mark('longedit:route:initial:start')
+
+declare global {
+  interface Window {
+    __LONGEDIT_ROUTE_PERFORMANCE__?: Array<{
+      routeName: string
+      elapsedMs: number
+      recordedAt: string
+    }>
+  }
+}
+
+const ROUTE_PERFORMANCE_MAX_ENTRIES = 20
+
+const recordRoutePerformance = (routeName: string, elapsedMs: number) => {
+  const entries = window.__LONGEDIT_ROUTE_PERFORMANCE__ ?? []
+  entries.push({
+    routeName,
+    elapsedMs: Math.round(elapsedMs),
+    recordedAt: new Date().toISOString(),
+  })
+  window.__LONGEDIT_ROUTE_PERFORMANCE__ = entries.slice(-ROUTE_PERFORMANCE_MAX_ENTRIES)
+}
 
 const getRouteLoadingLabel = (routeName: unknown) => {
   const labels: Record<string, string> = {
@@ -179,14 +203,27 @@ const getRouteLoadingLabel = (routeName: unknown) => {
 const startRouteLoading = (routeName?: unknown) => {
   if (routeLoadingTimer) clearTimeout(routeLoadingTimer)
   routeLoadingStartedAt = performance.now()
+  routeLoadingName = String(routeName || 'unknown')
+  performance.mark(`longedit:route:${routeLoadingName}:start`)
   routeLoadingLabel.value = getRouteLoadingLabel(routeName)
   routeLoading.value = true
 }
 
 const finishRouteLoading = () => {
   if (routeLoadingTimer) clearTimeout(routeLoadingTimer)
-  const remaining = Math.max(0, 420 - (performance.now() - routeLoadingStartedAt))
-  routeLoadingTimer = setTimeout(() => { routeLoading.value = false }, remaining)
+  const elapsedMs = performance.now() - routeLoadingStartedAt
+  const remaining = Math.max(0, 420 - elapsedMs)
+  routeLoadingTimer = setTimeout(() => {
+    routeLoading.value = false
+    const totalElapsedMs = performance.now() - routeLoadingStartedAt
+    performance.mark(`longedit:route:${routeLoadingName}:ready`)
+    performance.measure(
+      `longedit:route:${routeLoadingName}`,
+      `longedit:route:${routeLoadingName}:start`,
+      `longedit:route:${routeLoadingName}:ready`,
+    )
+    recordRoutePerformance(routeLoadingName, totalElapsedMs)
+  }, remaining)
 }
 
 const removeBeforeEach = router.beforeEach((to) => {

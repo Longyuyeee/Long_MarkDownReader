@@ -239,3 +239,22 @@ R5A aligns release hardening with the original product goal: this is no longer j
 Current status: `chunk-domains-defined-budget-under-review`.
 
 Next recommended stage: R5B. Add desktop startup/performance evidence shape or run a local smoke measurement if the environment supports it.
+
+## R5B update - desktop startup and route performance evidence
+
+Current stage after this update: R5B is implemented as a desktop startup and route-performance evidence foundation. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/desktop-startup-performance-policy.json`
+- `scripts/check-r5b-desktop-startup-performance.mjs`
+- `docs/R5B_Desktop_Startup_Performance_Audit_2026-07-30.md`
+- `src/App.vue`
+
+R5B keeps the original requirement centered on daily management and basic editing across many formats. Because the system now includes PDF, workbook, diagrams, mind maps, knowledge graph, Office/WPS-like flows, and TXT/JSON/dev editors, route responsiveness has become a release-quality requirement.
+
+The app now records lightweight route transition evidence through `performance.mark`, `performance.measure`, and a bounded `window.__LONGEDIT_ROUTE_PERFORMANCE__` buffer. This gives the next desktop smoke test a concrete data source instead of relying only on subjective UI feel.
+
+Current status: `runtime-marks-added-real-desktop-baseline-pending`.
+
+Next recommended stage: R5C. Add a repeatable desktop smoke-audit capture path that opens a production build, navigates representative routes, exports route performance evidence, and stores the result under `docs/evidence/`.
