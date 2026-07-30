@@ -358,3 +358,9 @@ LongEdit 当前最准确的定位是：
 > **一个以本地文件为事实源、覆盖常用文本与开发格式并具备 PDF 研究、现代 Office 基础编辑、图表、思维导图和知识关系能力的多格式资料管理工作台。**
 
 它已经明显超过 Markdown 阅读器，但还不是完整的 WPS/Office/PDF 替代品。接下来应以“补齐日常格式覆盖、让关系服务当前文件、完成专业发布闭环”为主线，而不是继续以单一高级格式的功能数量衡量进度。
+
+## 11. CI 绿色基线恢复
+
+综合审计提交后的远端 Quality Gate 暴露出 PowerShell Runner 兼容问题：S8-7E3G、X3-B5、X3-B6 新证据脚本依赖 `Get-FileHash`，GitHub Runner 无法识别该命令。现已统一改为自包含的 .NET SHA-256 helper，并由机器契约阻止相关脚本回退。
+
+本地三条证据事务测试和完整 `ci:check` 已通过，Rust 功能测试为 `383 passed`，性能测试 `1 passed`，生产依赖漏洞为 `0`。该修复不改变 Pivot 或数组公式公开能力；下一代码入口仍为 F1/E2A。详细记录见 [`CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md`](./CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md)。

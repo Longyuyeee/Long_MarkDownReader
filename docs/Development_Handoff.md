@@ -439,3 +439,9 @@ LibreOffice Calc `26.2.5.2 / cd7284b4cbbfeb507e630c1aac019f4157393acb` 已通过
 Excel 三成员包现已绑定环境身份、producer 版本/构建和输出摘要。新增 CI 自动拒绝矩阵，覆盖额外 ZIP 成员、LongEdit 基线漂移、生命周期门禁缺失和输出摘要篡改；4/4 均确认失败时不创建 Excel 输出且 matrix 字节不变。
 
 当前仍是 `2/3 partial`，没有真实 Excel 证据。下一台可信 Excel 机器继续按 `audit environment → export bundle → 可信传输 → import bundle` 执行。拒绝测试中的 `synthetic-rejection-only` 数据只用于失败路径，绝不能登记为生产者证据。详细审计见 [`S8_7E3G_E_XLSX_Pivot_Excel_Evidence_Protocol_Hardening_Audit_2026-07-30.md`](./S8_7E3G_E_XLSX_Pivot_Excel_Evidence_Protocol_Hardening_Audit_2026-07-30.md)。
+
+# 2026-07-30 交接快照：CI PowerShell 哈希兼容性已修复
+
+远端连续失败已定位为 GitHub Windows Runner 无法识别新证据脚本使用的 `Get-FileHash`。S8-7E3G、X3-B5、X3-B6 的测试、导入、导出和生产者验证现统一使用 `scripts/powershell-sha256.ps1` 的 .NET SHA-256 实现；机器契约会拒绝相关脚本重新引入该 cmdlet。
+
+本地三条证据事务测试与完整 `ci:check` 已通过：Rust 功能测试 `383/383`、性能测试 `1/1`、生产依赖漏洞 `0`。此修复不提升公开能力，Pivot 多层轴仍为 `2/3`、数组公式仍为 `1/3`。远端 Quality Gate 通过后，接手者直接进入 F1/E2A 外部应用能力发现与统一外部打开。详细审计见 [`CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md`](./CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md)。

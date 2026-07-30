@@ -32,6 +32,17 @@ const pivotLayoutLibreOfficeAudit = read('scripts/verify-s8-7e3c-libreoffice-piv
 const pivotAggregationProducerAudit = read('scripts/verify-s8-7e3d-xlsx-pivot-aggregation-roundtrip.ps1')
 const pivotMultiAxisFixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/pivot-multi-axis-microsoft-excel.json'))
 const pivotMultiAxisGenerator = read('scripts/generate-s8-7e3e-xlsx-pivot-multi-axis-fixture.ps1')
+const portablePowerShellHash = read('scripts/powershell-sha256.ps1')
+const portableHashConsumers = [
+  'scripts/test-s8-7e3g-excel-evidence-bundle-rejections.ps1',
+  'scripts/import-s8-7e3g-excel-evidence-bundle.ps1',
+  'scripts/export-s8-7e3g-excel-evidence-bundle.ps1',
+  'scripts/verify-s8-7e3g-xlsx-pivot-multi-axis-roundtrip.ps1',
+  'scripts/test-x3-b5-array-evidence-bundle-rejections.ps1',
+  'scripts/test-x3-b6-array-producer-matrix-closure.ps1',
+  'scripts/import-x3-b5-array-producer-evidence.ps1',
+  'scripts/export-x3-b5-array-producer-evidence.ps1',
+].map(file => [file, read(file)])
 const view = read('src/views/WorkbookView.vue')
 const conditionalExpression = read('src/utils/conditionalExpression.ts')
 const generator = read('src-tauri/examples/generate_workbook_fixture.rs')
@@ -350,6 +361,10 @@ if (pivotExcelEvidenceHandoff.requiredBundleMembers?.join(',') !== 'manifest.jso
 const pivotExcelRejectionValidation = pivotExcelEvidenceHandoff.rejectionValidation
 if (!pivotExcelRejectionValidation || pivotExcelRejectionValidation.stage !== 'S8-7E3G-E' || pivotExcelRejectionValidation.status !== 'verified' || pivotExcelRejectionValidation.verifiedCaseCount !== 4 || pivotExcelRejectionValidation.cases?.join(',') !== 'extra_member,baseline_drift,missing_gate,output_digest_drift' || pivotExcelRejectionValidation.matrixUnchangedOnFailure !== true || pivotExcelRejectionValidation.targetAbsentOnFailure !== true) fail('S8-7E3G-E Excel evidence rejection contract drift')
 if (!fs.existsSync(path.join(root, pivotExcelRejectionValidation.script))) fail('S8-7E3G-E Excel evidence rejection script missing')
+if (!portablePowerShellHash.includes('function Get-Sha256Hex') || !portablePowerShellHash.includes('[System.Security.Cryptography.SHA256]::Create()') || !portablePowerShellHash.includes('[System.IO.File]::OpenRead')) fail('portable PowerShell SHA-256 helper drift')
+for (const [file, source] of portableHashConsumers) {
+  if (!source.includes('powershell-sha256.ps1') || !source.includes('Get-Sha256Hex') || source.includes('Get-FileHash')) fail(`${file} portable SHA-256 contract drift`)
+}
 if (!fs.existsSync(path.join(root, pivotExcelEvidenceHandoff.environmentReport)) || !fs.existsSync(path.join(root, pivotExcelEvidenceHandoff.exportScript)) || !fs.existsSync(path.join(root, pivotExcelEvidenceHandoff.importScript))) fail('S8-7E3G-D Excel evidence handoff file missing')
 if (!fs.existsSync(path.join(root, pivotMultiLevelAxisProducerRoundTrip.matrix)) || !fs.existsSync(path.join(root, pivotMultiLevelAxisProducerRoundTrip.baselineFile))) fail('S8-7E3G matrix or baseline file missing')
 if (pivotMultiAxisFixture.schemaVersion !== 1 || pivotMultiAxisFixture.stage !== 'S8-7E3E' || pivotMultiAxisFixture.producer !== 'Microsoft Excel' || pivotMultiAxisFixture.rowFields?.join(',') !== 'Region,City' || pivotMultiAxisFixture.columnFields?.join(',') !== 'Year,Quarter' || pivotMultiAxisFixture.previewGroupCount !== 16 || pivotMultiAxisFixture.grandTotal !== 424 || pivotMultiAxisFixture.independentReopenVerified !== true || pivotMultiAxisFixture.writesEnabled !== false) fail('S8-7E3E fixture manifest drift')

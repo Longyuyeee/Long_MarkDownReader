@@ -8,6 +8,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "powershell-sha256.ps1")
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 Add-Type @"
@@ -202,7 +203,7 @@ try {
     afterReopen = $afterReopen
     outputFile = $outputFile
     outputBytes = (Get-Item -LiteralPath $producerOutput).Length
-    outputSha256 = (Get-FileHash -LiteralPath $producerOutput -Algorithm SHA256).Hash.ToLowerInvariant()
+    outputSha256 = Get-Sha256Hex -Path $producerOutput
   }
   $producerPath = Join-Path $auditRoot "producer.json"
   [IO.File]::WriteAllText($producerPath, ($producerEvidence | ConvertTo-Json -Depth 14) + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
@@ -216,11 +217,11 @@ try {
     baseline = [ordered]@{
       file = "array-formula-boundary.xlsx"
       bytes = (Get-Item -LiteralPath $baseline).Length
-      sha256 = (Get-FileHash -LiteralPath $baseline -Algorithm SHA256).Hash.ToLowerInvariant()
+      sha256 = Get-Sha256Hex -Path $baseline
     }
     members = @(
-      [ordered]@{ name = "producer.json"; bytes = (Get-Item $producerPath).Length; sha256 = (Get-FileHash $producerPath -Algorithm SHA256).Hash.ToLowerInvariant() },
-      [ordered]@{ name = $outputFile; bytes = (Get-Item $producerOutput).Length; sha256 = (Get-FileHash $producerOutput -Algorithm SHA256).Hash.ToLowerInvariant() }
+      [ordered]@{ name = "producer.json"; bytes = (Get-Item $producerPath).Length; sha256 = Get-Sha256Hex -Path $producerPath },
+      [ordered]@{ name = $outputFile; bytes = (Get-Item $producerOutput).Length; sha256 = Get-Sha256Hex -Path $producerOutput }
     )
     trustedMachineConfirmationRequired = $true
     sourceOverwriteAllowed = $false

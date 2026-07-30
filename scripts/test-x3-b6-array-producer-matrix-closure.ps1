@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "powershell-sha256.ps1")
 Add-Type -AssemblyName System.IO.Compression
 
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -66,11 +67,11 @@ function New-ValidBundle {
     afterReopen = $snapshot
     outputFile = $outputName
     outputBytes = (Get-Item -LiteralPath $outputPath).Length
-    outputSha256 = (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    outputSha256 = Get-Sha256Hex -Path $outputPath
   }
   $producerPath = Join-Path $root "producer.json"
   Write-JsonFile -Path $producerPath -Value $producer
-  $outputDigest = (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  $outputDigest = Get-Sha256Hex -Path $outputPath
   $manifest = [ordered]@{
     schemaVersion = 1
     stage = "X3-B5"
@@ -81,10 +82,10 @@ function New-ValidBundle {
     baseline = [ordered]@{
       file = "array-formula-boundary.xlsx"
       bytes = (Get-Item -LiteralPath $baseline).Length
-      sha256 = (Get-FileHash -LiteralPath $baseline -Algorithm SHA256).Hash.ToLowerInvariant()
+      sha256 = Get-Sha256Hex -Path $baseline
     }
     members = @(
-      [ordered]@{ name = "producer.json"; bytes = (Get-Item $producerPath).Length; sha256 = (Get-FileHash $producerPath -Algorithm SHA256).Hash.ToLowerInvariant() },
+      [ordered]@{ name = "producer.json"; bytes = (Get-Item $producerPath).Length; sha256 = Get-Sha256Hex -Path $producerPath },
       [ordered]@{ name = $outputName; bytes = (Get-Item $outputPath).Length; sha256 = if ($BreakOutputDigest) { "0" * 64 } else { $outputDigest } }
     )
     trustedMachineConfirmationRequired = $true
@@ -151,8 +152,8 @@ try {
   $brokenLibreBundle = Join-Path $auditRoot "libreoffice-broken.zip"
   New-ValidBundle -ProducerId "libreoffice-calc" -BundlePath $brokenLibreBundle -BreakOutputDigest
   $failure = New-Destination -Name "failure"
-  $matrixHash = (Get-FileHash -LiteralPath $failure.matrixPath -Algorithm SHA256).Hash
-  $capabilityHash = (Get-FileHash -LiteralPath $failure.capabilityPath -Algorithm SHA256).Hash
+$matrixHash = Get-Sha256Hex -Path $failure.matrixPath
+$capabilityHash = Get-Sha256Hex -Path $failure.capabilityPath
   $stdout = Join-Path $auditRoot "failure-stdout.log"
   $stderr = Join-Path $auditRoot "failure-stderr.log"
   $process = Start-Process -FilePath "powershell.exe" `
@@ -165,8 +166,8 @@ try {
   if ($process.ExitCode -eq 0 -or $failureMessage -notmatch "member digest drifted") {
     throw "X3-B6 broken second bundle did not fail in isolated validation"
   }
-  if ((Get-FileHash -LiteralPath $failure.matrixPath -Algorithm SHA256).Hash -ne $matrixHash -or
-      (Get-FileHash -LiteralPath $failure.capabilityPath -Algorithm SHA256).Hash -ne $capabilityHash -or
+if ((Get-Sha256Hex -Path $failure.matrixPath) -ne $matrixHash -or
+    (Get-Sha256Hex -Path $failure.capabilityPath) -ne $capabilityHash -or
       @(Get-ChildItem -LiteralPath $failure.fixtureRoot -File).Count -ne 0) {
     throw "X3-B6 broken pair changed destination state"
   }

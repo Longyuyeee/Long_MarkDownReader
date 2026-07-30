@@ -4,6 +4,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "powershell-sha256.ps1")
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -61,18 +62,18 @@ try {
     baseline = [ordered]@{
       file = "s8-7e3g-longedit-multi-axis.xlsx"
       bytes = (Get-Item -LiteralPath $baseline).Length
-      sha256 = (Get-FileHash -LiteralPath $baseline -Algorithm SHA256).Hash.ToLowerInvariant()
+        sha256 = Get-Sha256Hex -Path $baseline
     }
     members = @(
       [ordered]@{
         name = "producer.json"
         bytes = (Get-Item -LiteralPath $producerEntryPath).Length
-        sha256 = (Get-FileHash -LiteralPath $producerEntryPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        sha256 = Get-Sha256Hex -Path $producerEntryPath
       },
       [ordered]@{
         name = "s8-7e3g-microsoft-excel.xlsx"
         bytes = (Get-Item -LiteralPath $producerOutput).Length
-        sha256 = (Get-FileHash -LiteralPath $producerOutput -Algorithm SHA256).Hash.ToLowerInvariant()
+        sha256 = Get-Sha256Hex -Path $producerOutput
       }
     )
     producerId = "microsoft-excel"

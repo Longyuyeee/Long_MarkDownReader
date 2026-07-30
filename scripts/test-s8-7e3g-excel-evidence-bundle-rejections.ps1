@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "powershell-sha256.ps1")
 Add-Type -AssemblyName System.IO.Compression
 
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -60,7 +61,7 @@ function New-RejectionBundle {
   if ($CaseId -eq "missing_gate") {
     $completedGates = @($completedGates | Where-Object { $_ -ne "reparse_longedit_semantics" })
   }
-  $outputHash = (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  $outputHash = Get-Sha256Hex -Path $outputPath
   $producer = [ordered]@{
     id = "microsoft-excel"
     producer = "Microsoft Excel"
@@ -105,13 +106,13 @@ function New-RejectionBundle {
     baseline = [ordered]@{
       file = "s8-7e3g-longedit-multi-axis.xlsx"
       bytes = (Get-Item -LiteralPath $baseline).Length
-      sha256 = (Get-FileHash -LiteralPath $baseline -Algorithm SHA256).Hash.ToLowerInvariant()
+      sha256 = Get-Sha256Hex -Path $baseline
     }
     members = @(
       [ordered]@{
         name = "producer.json"
         bytes = (Get-Item -LiteralPath $producerPath).Length
-        sha256 = (Get-FileHash -LiteralPath $producerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+      sha256 = Get-Sha256Hex -Path $producerPath
       },
       [ordered]@{
         name = "s8-7e3g-microsoft-excel.xlsx"
@@ -174,7 +175,7 @@ try {
     missing_gate = "missing gate"
     output_digest_drift = "member digest drifted"
   }
-  $matrixHash = (Get-FileHash -LiteralPath $matrixPath -Algorithm SHA256).Hash
+  $matrixHash = Get-Sha256Hex -Path $matrixPath
   foreach ($case in $cases.GetEnumerator()) {
     $bundlePath = Join-Path $auditRoot "$($case.Key).zip"
     New-RejectionBundle -CaseId $case.Key -BundlePath $bundlePath
@@ -194,7 +195,7 @@ try {
     if (Test-Path -LiteralPath $excelTarget) {
       throw "Excel evidence rejection case created a target: $($case.Key)"
     }
-    if ((Get-FileHash -LiteralPath $matrixPath -Algorithm SHA256).Hash -ne $matrixHash) {
+    if ((Get-Sha256Hex -Path $matrixPath) -ne $matrixHash) {
       throw "Excel evidence rejection case changed the matrix: $($case.Key)"
     }
   }

@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "powershell-sha256.ps1")
 Add-Type -AssemblyName System.IO.Compression
 
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -70,7 +71,7 @@ function New-RejectionBundle {
     afterReopen = $snapshot
     outputFile = $outputName
     outputBytes = (Get-Item -LiteralPath $outputPath).Length
-    outputSha256 = (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    outputSha256 = Get-Sha256Hex -Path $outputPath
   }
   $producerPath = Join-Path $caseRoot "producer.json"
   Write-JsonFile -Path $producerPath -Value $producer
@@ -84,11 +85,11 @@ function New-RejectionBundle {
     baseline = [ordered]@{
       file = "array-formula-boundary.xlsx"
       bytes = (Get-Item -LiteralPath $baseline).Length
-      sha256 = (Get-FileHash -LiteralPath $baseline -Algorithm SHA256).Hash.ToLowerInvariant()
+      sha256 = Get-Sha256Hex -Path $baseline
     }
     members = @(
-      [ordered]@{ name = "producer.json"; bytes = (Get-Item $producerPath).Length; sha256 = (Get-FileHash $producerPath -Algorithm SHA256).Hash.ToLowerInvariant() },
-      [ordered]@{ name = $outputName; bytes = (Get-Item $outputPath).Length; sha256 = (Get-FileHash $outputPath -Algorithm SHA256).Hash.ToLowerInvariant() }
+      [ordered]@{ name = "producer.json"; bytes = (Get-Item $producerPath).Length; sha256 = Get-Sha256Hex -Path $producerPath },
+      [ordered]@{ name = $outputName; bytes = (Get-Item $outputPath).Length; sha256 = Get-Sha256Hex -Path $outputPath }
     )
     trustedMachineConfirmationRequired = $true
     sourceOverwriteAllowed = $false
@@ -130,8 +131,8 @@ try {
     output_digest_drift = "member digest drifted"
     producer_identity_spoof = "not genuine Microsoft Excel"
   }
-  $matrixHash = (Get-FileHash -LiteralPath $matrixPath -Algorithm SHA256).Hash
-  $capabilityHash = (Get-FileHash -LiteralPath $capabilityPath -Algorithm SHA256).Hash
+  $matrixHash = Get-Sha256Hex -Path $matrixPath
+  $capabilityHash = Get-Sha256Hex -Path $capabilityPath
   foreach ($case in $cases.GetEnumerator()) {
     $bundlePath = Join-Path $auditRoot "$($case.Key).zip"
     New-RejectionBundle -CaseId $case.Key -BundlePath $bundlePath
@@ -147,10 +148,10 @@ try {
     if ((Test-Path -LiteralPath $target) -or (Test-Path -LiteralPath $targetManifest)) {
       throw "X3-B5 rejection case created a target: $($case.Key)"
     }
-    if ((Get-FileHash -LiteralPath $matrixPath -Algorithm SHA256).Hash -ne $matrixHash) {
+    if ((Get-Sha256Hex -Path $matrixPath) -ne $matrixHash) {
       throw "X3-B5 rejection case changed the matrix: $($case.Key)"
     }
-    if ((Get-FileHash -LiteralPath $capabilityPath -Algorithm SHA256).Hash -ne $capabilityHash) {
+    if ((Get-Sha256Hex -Path $capabilityPath) -ne $capabilityHash) {
       throw "X3-B5 rejection case changed the capability contract: $($case.Key)"
     }
   }

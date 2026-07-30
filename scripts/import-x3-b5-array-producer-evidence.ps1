@@ -8,6 +8,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "powershell-sha256.ps1")
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -100,7 +101,7 @@ try {
   $outputFile = "array-formula-$($manifest.producerId).xlsx"
   $outputPath = Join-Path $auditRoot $outputFile
   if (-not (Test-Path -LiteralPath $outputPath -PathType Leaf)) { throw "Producer output member does not match manifest identity" }
-  $baselineHash = (Get-FileHash -LiteralPath $baseline -Algorithm SHA256).Hash.ToLowerInvariant()
+  $baselineHash = Get-Sha256Hex -Path $baseline
   if ($manifest.baseline.file -ne "array-formula-boundary.xlsx" -or
       $manifest.baseline.sha256 -ne $baselineHash -or
       [long]$manifest.baseline.bytes -ne (Get-Item -LiteralPath $baseline).Length) {
@@ -117,7 +118,7 @@ try {
     $memberPath = Join-Path $auditRoot $memberName
     $member = $members[$memberName]
     if (-not $member -or [long]$member.bytes -ne (Get-Item -LiteralPath $memberPath).Length -or
-        $member.sha256 -ne (Get-FileHash -LiteralPath $memberPath -Algorithm SHA256).Hash.ToLowerInvariant()) {
+        $member.sha256 -ne (Get-Sha256Hex -Path $memberPath)) {
       throw "Evidence member digest drifted: $memberName"
     }
   }
@@ -157,7 +158,7 @@ try {
   }
   if ($producer.outputFile -ne $outputFile -or
       [long]$producer.outputBytes -ne (Get-Item -LiteralPath $outputPath).Length -or
-      $producer.outputSha256 -ne (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToLowerInvariant()) {
+      $producer.outputSha256 -ne (Get-Sha256Hex -Path $outputPath)) {
     throw "Producer output binding drifted"
   }
 

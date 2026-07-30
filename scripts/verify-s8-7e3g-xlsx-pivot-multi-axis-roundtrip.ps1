@@ -6,6 +6,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "powershell-sha256.ps1")
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $baseline = Join-Path $workspace "fixtures\xlsx\output-reopen\s8-7e3g-longedit-multi-axis.xlsx"
 $output = Join-Path $workspace "fixtures\xlsx\output-reopen"
@@ -223,7 +224,7 @@ function Invoke-ComPivotRoundTrip {
     afterSave = $afterSave
     afterReopen = $afterReopen
     outputFile = $OutputFile
-    outputSha256 = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant()
+    outputSha256 = Get-Sha256Hex -Path $target
     outputBytes = (Get-Item -LiteralPath $target).Length
   }
 }
@@ -301,7 +302,7 @@ function Invoke-LibreOfficePivotRoundTrip {
       afterSave = $save.result.after
       afterReopen = $reopen.result.after
       outputFile = $outputFile
-      outputSha256 = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant()
+    outputSha256 = Get-Sha256Hex -Path $target
       outputBytes = (Get-Item -LiteralPath $target).Length
     }
   }
@@ -333,7 +334,7 @@ $requested = if ($Producer -in @("available", "all")) {
 $matrix = Get-Content -Raw -LiteralPath $report | ConvertFrom-Json
 $existing = @{}
 foreach ($entry in $matrix.producers) { $existing[$entry.id] = $entry }
-$baselineHash = (Get-FileHash -LiteralPath $baseline -Algorithm SHA256).Hash.ToLowerInvariant()
+$baselineHash = Get-Sha256Hex -Path $baseline
 
 foreach ($id in $requested) {
   if (-not $availability[$id]) {
@@ -351,7 +352,7 @@ foreach ($id in $requested) {
   }
   $existing[$id] = $entry
 }
-if ((Get-FileHash -LiteralPath $baseline -Algorithm SHA256).Hash.ToLowerInvariant() -ne $baselineHash) {
+if ((Get-Sha256Hex -Path $baseline) -ne $baselineHash) {
   throw "Producer audit changed the immutable LongEdit baseline"
 }
 
