@@ -153,3 +153,31 @@ Current release blockers remain:
 5. no Windows 10/11 VM matrix evidence.
 
 Next recommended stage: R4D. Define the Windows 10/11 VM matrix evidence shape for fresh install, upgrade, downgrade rejection, uninstall retention, file association recovery, and first launch after install.
+
+## R4D update - Windows VM matrix evidence
+
+Current stage after this update: R4D is implemented as a VM evidence contract. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/windows-release-vm-matrix-evidence.json`
+- `scripts/check-r4d-windows-release-vm-matrix-evidence.mjs`
+- `docs/R4D_Windows_VM_Matrix_Evidence_Audit_2026-07-30.md`
+
+R4D defines the required Windows 10/11 release matrix but does not claim that real VM validation has been completed. Every row is currently `status=missing`, `evidencePath=null`, and `releaseBlocking=true`.
+
+Required Windows targets:
+
+1. `windows-10-x64`,
+2. `windows-11-x64`.
+
+Required scenarios per target:
+
+1. fresh install,
+2. upgrade from previous version,
+3. downgrade rejection,
+4. uninstall retains user data,
+5. file association recovery,
+6. first launch after install.
+
+Next recommended stage: R4E. Define release notes and rollback-plan evidence so the project has a complete final RC promotion checklist before any release-candidate switch is considered.

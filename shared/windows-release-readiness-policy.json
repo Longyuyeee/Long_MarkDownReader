@@ -38,7 +38,8 @@
   },
   "vmMatrix": {
     "required": true,
-    "currentStatus": "missing",
+    "currentStatus": "matrix-defined-results-missing",
+    "evidenceManifest": "shared/windows-release-vm-matrix-evidence.json",
     "windowsVersions": ["windows-10-x64", "windows-11-x64"],
     "scenarios": [
       "fresh-install",
@@ -75,5 +76,5 @@
     "releaseCapabilityMatrixMustRemainNonRcUntilEvidenceComplete": true,
     "debugOrUnsignedBuildsMustNotBeAdvertisedAsOfficialRelease": true
   },
-  "nextStage": "R4D"
+  "nextStage": "R4E"
 }

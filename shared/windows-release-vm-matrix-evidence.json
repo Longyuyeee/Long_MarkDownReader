@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "stage": "R4D",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "windows-vm-release-matrix-evidence-shape",
+  "generatedAt": "2026-07-30",
+  "promotionEligible": false,
+  "currentStatus": "matrix-defined-results-missing",
+  "windowsVersions": ["windows-10-x64", "windows-11-x64"],
+  "requiredScenarios": [
+    "fresh-install",
+    "upgrade-from-previous",
+    "downgrade-rejection",
+    "uninstall-retains-user-data",
+    "file-association-recovery",
+    "first-launch-after-install"
+  ],
+  "evidenceRequirements": {
+    "artifactHashMustMatch": "shared/windows-release-artifact-manifest.json",
+    "signingEvidenceMustMatch": "shared/windows-release-signing-evidence.json",
+    "screenshotsRequired": true,
+    "commandLogsRequired": true,
+    "expectedResultRequired": true,
+    "actualResultRequired": true,
+    "testerMachineFingerprintRequired": true,
+    "mustNotIncludeUserDocumentBodies": true,
+    "mustNotIncludeCredentials": true
+  },
+  "matrix": [
+    {
+      "windowsVersion": "windows-10-x64",
+      "scenario": "fresh-install",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    },
+    {
+      "windowsVersion": "windows-10-x64",
+      "scenario": "upgrade-from-previous",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    },
+    {
+      "windowsVersion": "windows-10-x64",
+      "scenario": "downgrade-rejection",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    },
+    {
+      "windowsVersion": "windows-10-x64",
+      "scenario": "uninstall-retains-user-data",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    },
+    {
+      "windowsVersion": "windows-10-x64",
+      "scenario": "file-association-recovery",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    },
+    {
+      "windowsVersion": "windows-10-x64",
+      "scenario": "first-launch-after-install",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    },
+    {
+      "windowsVersion": "windows-11-x64",
+      "scenario": "fresh-install",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    },
+    {
+      "windowsVersion": "windows-11-x64",
+      "scenario": "upgrade-from-previous",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    },
+    {
+      "windowsVersion": "windows-11-x64",
+      "scenario": "downgrade-rejection",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    },
+    {
+      "windowsVersion": "windows-11-x64",
+      "scenario": "uninstall-retains-user-data",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    },
+    {
+      "windowsVersion": "windows-11-x64",
+      "scenario": "file-association-recovery",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    },
+    {
+      "windowsVersion": "windows-11-x64",
+      "scenario": "first-launch-after-install",
+      "status": "missing",
+      "evidencePath": null,
+      "releaseBlocking": true
+    }
+  ],
+  "nextStage": "R4E"
+}

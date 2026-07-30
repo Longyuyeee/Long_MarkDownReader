@@ -32,7 +32,7 @@ const readiness = json('shared/windows-release-readiness-policy.json')
 if (readiness.schemaVersion !== 1 || readiness.stage !== 'R4') fail('R4 readiness policy identity mismatch.')
 if (readiness.releaseCandidate !== false) fail('R4A must keep releaseCandidate=false until real signing and VM evidence exist.')
 if (readiness.status !== 'blocked-pending-signing-and-vm-evidence') fail('R4A status must be blocked by missing release evidence.')
-if (readiness.nextStage !== 'R4D') fail('R4 readiness handoff must point to R4D after R4C.')
+if (readiness.nextStage !== 'R4E') fail('R4 readiness handoff must point to R4E after R4D.')
 
 if (readiness.appVersion !== packageJson.version) fail('R4 appVersion must match package.json.')
 if (readiness.appVersion !== tauriConfig.version) fail('R4 appVersion must match tauri.conf.json.')
@@ -84,7 +84,8 @@ if (readiness.signing.signatureAlgorithm !== 'sha256') fail('R4 signing must req
 if (readiness.signing.failClosed !== true) fail('R4 signing must fail closed.')
 
 if (readiness.vmMatrix.required !== true) fail('R4 VM matrix must be required.')
-if (readiness.vmMatrix.currentStatus !== 'missing') fail('R4A VM matrix status must be missing.')
+if (readiness.vmMatrix.currentStatus !== 'matrix-defined-results-missing') fail('R4 VM matrix status must record missing results.')
+if (readiness.vmMatrix.evidenceManifest !== 'shared/windows-release-vm-matrix-evidence.json') fail('R4 VM evidence manifest link missing.')
 requireIncludes('R4 VM Windows version', readiness.vmMatrix.windowsVersions, ['windows-10-x64', 'windows-11-x64'])
 requireIncludes('R4 VM scenario', readiness.vmMatrix.scenarios, [
   'fresh-install',
@@ -150,6 +151,14 @@ requireIncludes('R4C audit doc token', r4cAudit, [
   'windows-release-signing-evidence.json',
   'NotSigned',
   'R4D',
+])
+
+const r4dAudit = read('docs/R4D_Windows_VM_Matrix_Evidence_Audit_2026-07-30.md')
+requireIncludes('R4D audit doc token', r4dAudit, [
+  'R4D',
+  'windows-release-vm-matrix-evidence.json',
+  'matrix-defined-results-missing',
+  'R4E',
 ])
 
 console.log('R4 Windows release readiness contract passed: release candidate remains blocked pending signing and VM evidence.')
