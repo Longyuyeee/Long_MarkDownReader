@@ -156,6 +156,7 @@ performance.mark('longedit:route:initial:start')
 
 declare global {
   interface Window {
+    __TAURI_INTERNALS__?: unknown
     __LONGEDIT_ROUTE_PERFORMANCE__?: Array<{
       routeName: string
       elapsedMs: number
@@ -180,6 +181,7 @@ declare global {
 }
 
 const ROUTE_PERFORMANCE_MAX_ENTRIES = 20
+const isTauriRuntime = () => typeof window !== 'undefined' && !!window.__TAURI_INTERNALS__
 
 window.__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__ = () => ({
   schemaVersion: 1,
@@ -359,20 +361,22 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
 onMounted(async () => {
   await store.loadConfig()
 
-  unlistenOpenFile = await listen<string>('open-file', async (event) => {
-    const filePath = event.payload
-    if (isExternallyEditable(filePath)) {
-      await routeExternalFile(filePath)
-    }
-  })
+  if (isTauriRuntime()) {
+    unlistenOpenFile = await listen<string>('open-file', async (event) => {
+      const filePath = event.payload
+      if (isExternallyEditable(filePath)) {
+        await routeExternalFile(filePath)
+      }
+    })
 
-  try {
-    const args = await invoke<string[]>('get_launch_args')
-    const filePath = args.find(arg => isExternallyEditable(arg.replace(/^"|"$/g, '')))
-    if (filePath) {
-      await routeExternalFile(filePath)
-    }
-  } catch (_) { /* launch args unavailable, not critical */ }
+    try {
+      const args = await invoke<string[]>('get_launch_args')
+      const filePath = args.find(arg => isExternallyEditable(arg.replace(/^"|"$/g, '')))
+      if (filePath) {
+        await routeExternalFile(filePath)
+      }
+    } catch (_) { /* launch args unavailable, not critical */ }
+  }
 
   window.addEventListener('keydown', handleGlobalKeydown)
   window.addEventListener('beforeunload', handleBeforeUnload)

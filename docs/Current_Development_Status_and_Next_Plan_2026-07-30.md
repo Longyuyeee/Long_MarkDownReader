@@ -299,3 +299,24 @@ This keeps the original user requirement in scope: the product must remain a coh
 Current status: `production-dist-preflight-supported-real-desktop-run-pending`.
 
 Next recommended stage: R5E. Run a real desktop/webview smoke capture using `window.__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__()` from a built artifact and compare it against the R5D preflight asset list.
+
+## R5E update - browser-preview runtime route smoke blocker audit
+
+Current stage after this update: R5E is implemented as a browser-preview runtime route smoke blocker audit. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5e-runtime-route-smoke-policy.json`
+- `scripts/check-r5e-runtime-route-smoke.mjs`
+- `docs/R5E_Runtime_Route_Smoke_Audit_2026-07-31.md`
+- `docs/evidence/r5e-runtime-route-smoke/manifest.json`
+- `docs/evidence/r5e-runtime-route-smoke/route-performance-evidence.json`
+- `src/App.vue`
+
+R5E fixes the first smoke-test blocker discovered during local production preview: browser preview does not expose Tauri internals, so App-level desktop-only event registration is now guarded by `isTauriRuntime()`.
+
+The follow-up smoke run also exposed a deeper blocker: store/page-level code still calls Tauri APIs directly in browser preview. The evidence is intentionally recorded as blocked rather than passed.
+
+Current status: `browser-preview-runtime-smoke-blocked-by-tauri-api-dependencies`.
+
+Next recommended stage: R5F. Add a centralized safe Tauri adapter or preview runtime shim so browser-preview smoke can mount representative routes without directly requiring Tauri internals.

@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5E",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "runtime-route-smoke-evidence",
+  "generatedAt": "2026-07-31",
+  "currentStatus": "browser-preview-runtime-smoke-blocked-by-tauri-api-dependencies",
+  "runtimeBoundary": {
+    "browserPreviewMustNotRequireTauriInternals": true,
+    "tauriRuntimeKeepsDesktopOpenFileIntegration": true,
+    "guardToken": "isTauriRuntime",
+    "requiredExportToken": "__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__"
+  },
+  "representativeRoutes": [
+    "/workspace",
+    "/library",
+    "/text",
+    "/json",
+    "/pdf",
+    "/workbook",
+    "/diagram",
+    "/mindmap",
+    "/graph",
+    "/canvas",
+    "/release-capabilities"
+  ],
+  "requiredEvidenceFiles": [
+    "docs/evidence/r5e-runtime-route-smoke/manifest.json",
+    "docs/evidence/r5e-runtime-route-smoke/route-performance-evidence.json"
+  ],
+  "releaseGate": {
+    "browserPreviewSmokeCanPass": false,
+    "browserPreviewSmokeIsNotSignedDesktopArtifactProof": true,
+    "requiresSignedArtifactForRc": true,
+    "requiresWindowsVmEvidenceForRc": true,
+    "currentPromotionEligible": false
+  },
+  "capabilityAlignment": [
+    "daily-management-workspace",
+    "right-side-workspace-navigation",
+    "pdf-and-office-workflows",
+    "diagram-and-mindmap-workflows",
+    "knowledge-graph-visualization",
+    "txt-json-dev-format-editing"
+  ],
+  "knownLimits": [
+    "browser-preview-smoke-currently-proves-a-real-tauri-api-coupling-blocker",
+    "signed-desktop-artifact-run-remains-pending",
+    "rc-promotion-remains-blocked-until-signing-and-vm-evidence-exist"
+  ],
+  "nextStage": "R5F"
+}

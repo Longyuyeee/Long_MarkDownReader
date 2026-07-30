@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5E",
+  "capturedAt": "2026-07-30T16:27:04.575Z",
+  "baseUrl": "http://127.0.0.1:4174/",
+  "evidenceLevel": "browser-preview-runtime-smoke",
+  "sourceUserContentIncluded": false,
+  "routes": [
+    { "route": "/workspace", "status": "failed", "runtimeExportAvailable": false, "appErrorVisible": false, "routeSamples": 0, "measureSamples": 0 },
+    { "route": "/library", "status": "failed", "runtimeExportAvailable": false, "appErrorVisible": true, "routeSamples": 0, "measureSamples": 0 },
+    { "route": "/text", "status": "failed", "runtimeExportAvailable": false, "appErrorVisible": true, "routeSamples": 0, "measureSamples": 0 },
+    { "route": "/json", "status": "failed", "runtimeExportAvailable": false, "appErrorVisible": true, "routeSamples": 0, "measureSamples": 0 },
+    { "route": "/pdf", "status": "failed", "runtimeExportAvailable": false, "appErrorVisible": true, "routeSamples": 0, "measureSamples": 0 },
+    { "route": "/workbook", "status": "failed", "runtimeExportAvailable": false, "appErrorVisible": true, "routeSamples": 0, "measureSamples": 0 },
+    { "route": "/diagram", "status": "failed", "runtimeExportAvailable": false, "appErrorVisible": true, "routeSamples": 0, "measureSamples": 0 },
+    { "route": "/mindmap", "status": "failed", "runtimeExportAvailable": false, "appErrorVisible": true, "routeSamples": 0, "measureSamples": 0 },
+    { "route": "/graph", "status": "failed", "runtimeExportAvailable": false, "appErrorVisible": true, "routeSamples": 0, "measureSamples": 0 },
+    { "route": "/canvas", "status": "failed", "runtimeExportAvailable": false, "appErrorVisible": true, "routeSamples": 0, "measureSamples": 0 },
+    { "route": "/release-capabilities", "status": "failed", "runtimeExportAvailable": false, "appErrorVisible": true, "routeSamples": 0, "measureSamples": 0 }
+  ],
+  "consoleErrorSummary": [
+    "Failed to load config: missing Tauri invoke internals",
+    "External application discovery failed: missing Tauri invoke internals",
+    "LongEdit runtime error: missing Tauri transformCallback internals"
+  ]
+}

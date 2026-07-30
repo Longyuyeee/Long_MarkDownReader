@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5E",
+  "appVersion": "0.7.0",
+  "capturedAt": "2026-07-30T16:27:04.575Z",
+  "baseUrl": "http://127.0.0.1:4174/",
+  "evidenceLevel": "browser-preview-runtime-smoke",
+  "routeCount": 11,
+  "failedRouteCount": 11,
+  "runtimeExportAvailable": false,
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "blockerSummary": "Browser-preview runtime smoke is blocked by direct Tauri API coupling outside the desktop shell."
+}
