@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5J",
+  "appVersion": "0.7.0",
+  "capturedAt": "2026-07-30T17:18:02.939Z",
+  "currentStatus": "installed-smoke-runner-ready-disposable-execution-pending",
+  "sourceReady": true,
+  "currentInstallerMatchCount": 1,
+  "previousInstallerMatchCount": 1,
+  "nodeVersion": "v25.2.1",
+  "currentHost": {
+    "isolatedRunnerAvailable": false,
+    "existingProductRegistrationCount": 1,
+    "hostInstallerMutationAllowed": false
+  },
+  "execution": {
+    "installedArtifactSmokeExecuted": false,
+    "lifecycleResultImported": false,
+    "representativeRoutesVerified": false,
+    "txtJsonSaveReopenVerified": false,
+    "routePerformanceExported": false,
+    "screenshotsCaptured": false,
+    "releaseCandidate": false,
+    "promotionEligible": false,
+    "sourceUserContentIncluded": false
+  },
+  "expectedGuestEvidenceFiles": [
+    "lifecycle-result.json",
+    "installed-artifact-smoke.json",
+    "installed-route-mount-evidence.json",
+    "installed-route-performance-evidence.json",
+    "installed-txt-save-reopen.jpg",
+    "installed-json-save-reopen.jpg"
+  ]
+}

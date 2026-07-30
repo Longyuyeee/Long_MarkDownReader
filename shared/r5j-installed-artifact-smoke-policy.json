@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5J",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "installed-current-artifact-right-side-routes-and-txt-json-io",
+  "generatedAt": "2026-07-31",
+  "currentStatus": "installed-smoke-runner-ready-disposable-execution-pending",
+  "representativeRoutes": [
+    "/workspace",
+    "/library",
+    "/text",
+    "/json",
+    "/pdf",
+    "/workbook",
+    "/diagram",
+    "/mindmap",
+    "/graph",
+    "/canvas",
+    "/release-capabilities"
+  ],
+  "requiredChecks": [
+    "installed-current-webview-bootstrap",
+    "installed-txt-read-edit-save-reopen",
+    "installed-json-read-edit-save-reopen",
+    "installed-representative-right-side-routes",
+    "installed-route-performance-export"
+  ],
+  "safetyBoundary": {
+    "hostInstallerMutationAllowed": false,
+    "sourceRepositoryMappedReadOnly": true,
+    "evidenceDirectoryOnlyWritableMapping": true,
+    "fixedSyntheticFixturesRequired": true,
+    "sourceUserContentAllowed": false,
+    "currentInstallerHashMustMatchR5H": true
+  },
+  "evidence": {
+    "preflight": "docs/evidence/r5j-installed-artifact-smoke/preflight.json",
+    "guestOutputDirectory": "docs/evidence/r5i-isolated-install-lifecycle/sandbox-output",
+    "installedArtifactSmoke": "docs/evidence/r5i-isolated-install-lifecycle/sandbox-output/installed-artifact-smoke.json",
+    "preflightComplete": true,
+    "guestEvidenceComplete": false
+  },
+  "releaseGate": {
+    "installedSmokeSourceImplemented": true,
+    "nodeRuntimeMappingImplemented": true,
+    "lifecycleRunnerIntegrated": true,
+    "installedArtifactSmokeExecuted": false,
+    "representativeRoutesVerified": false,
+    "txtJsonSaveReopenVerified": false,
+    "windows10EvidenceComplete": false,
+    "windows11EvidenceComplete": false,
+    "signedArtifactRuntimeProven": false,
+    "currentPromotionEligible": false
+  },
+  "knownLimits": [
+    "current-host-has-no-disposable-windows-runner",
+    "guest-lifecycle-and-installed-artifact-evidence-files-not-yet-generated",
+    "windows-10-and-windows-11-vm-matrix-remains-pending",
+    "current-installers-remain-unsigned"
+  ],
+  "nextStage": "R5K"
+}

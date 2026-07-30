@@ -412,3 +412,28 @@ Current status: `isolated-lifecycle-runner-ready-host-execution-blocked`.
 No lifecycle result, installed-artifact route smoke, Windows 10/11 matrix, signature, or RC claim is made.
 
 Next recommended stage: R5J. Execute the R5I bundle in Windows Sandbox or a disposable Windows 11 VM, capture the lifecycle result, add installed-artifact right-side route and TXT/JSON save/reopen evidence, then repeat the final matrix on Windows 10.
+
+## R5J update - installed artifact right-side workspace smoke
+
+Current stage after this update: R5J has implemented and integrated the installed-artifact workspace smoke. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5j-installed-artifact-smoke-policy.json`
+- `scripts/audit-r5j-installed-artifact-smoke-preflight.mjs`
+- `scripts/capture-r5j-installed-artifact-smoke.mjs`
+- `scripts/check-r5j-installed-artifact-smoke.mjs`
+- `scripts/run-r5i-isolated-install-lifecycle.ps1`
+- `scripts/new-r5i-windows-sandbox-config.ps1`
+- `docs/R5J_Installed_Artifact_Workspace_Smoke_Audit_2026-07-31.md`
+- `docs/evidence/r5j-installed-artifact-smoke/preflight.json`
+
+The disposable lifecycle runner now launches the actually installed current executable after a controlled upgrade. It performs TXT and JSON read/edit/save/reopen inside the shared right-side Library workspace, mounts eleven representative product routes, rejects the global crash fallback, exports route-performance evidence, captures screenshots, and hashes the installed executable.
+
+The Sandbox generator maps a known Node runtime and the repository read-only; only the evidence output is writable. The smoke uses fixed guest-only fixtures and includes no user document content.
+
+Current status: `installed-smoke-runner-ready-disposable-execution-pending`.
+
+The current host still has no disposable Windows runner, so no guest evidence or RC claim is made.
+
+Next recommended stage: R5K. Execute and import the integrated R5I/R5J bundle on disposable Windows 11, then complete the corresponding Windows 10 install, upgrade, route, I/O, uninstall, retention, downgrade, association, and rollback matrix.

@@ -11,6 +11,16 @@ if ($currentArtifact.Count -ne 1 -or [string]$currentArtifact[0].sha256 -notmatc
     throw "R5H current NSIS hash evidence is missing or invalid."
 }
 $currentSha256 = [string]$currentArtifact[0].sha256
+$nodeCommand = Get-Command node.exe -ErrorAction SilentlyContinue
+if (-not $nodeCommand) {
+    throw "Node.js is required to prepare the R5J installed-artifact smoke."
+}
+$nodeDirectoryItem = Get-Item -LiteralPath (Split-Path -Parent $nodeCommand.Source)
+$nodeHostDirectory = if ($nodeDirectoryItem.LinkType -and $nodeDirectoryItem.Target) {
+    [string]$nodeDirectoryItem.Target[0]
+} else {
+    $nodeDirectoryItem.FullName
+}
 $sandboxExecutable = Join-Path $env:WINDIR "System32\WindowsSandbox.exe"
 if (-not (Test-Path -LiteralPath $sandboxExecutable -PathType Leaf)) {
     throw "Windows Sandbox is unavailable. Enable Containers-DisposableClientVM or use a disposable Windows VM."
@@ -25,10 +35,11 @@ New-Item -ItemType Directory -Path $hostOutput -Force | Out-Null
 
 $escapedRepo = [System.Security.SecurityElement]::Escape($repoRoot)
 $escapedOutput = [System.Security.SecurityElement]::Escape($hostOutput)
+$escapedNode = [System.Security.SecurityElement]::Escape($nodeHostDirectory)
 $configPath = Join-Path $env:TEMP "longedit-r5i-lifecycle.wsb"
 $xml = @"
 <Configuration>
-  <Networking>Enable</Networking>
+  <Networking>Disable</Networking>
   <ClipboardRedirection>Disable</ClipboardRedirection>
   <PrinterRedirection>Disable</PrinterRedirection>
   <MappedFolders>
@@ -42,9 +53,14 @@ $xml = @"
       <SandboxFolder>C:\LongEditR5IOutput</SandboxFolder>
       <ReadOnly>false</ReadOnly>
     </MappedFolder>
+    <MappedFolder>
+      <HostFolder>$escapedNode</HostFolder>
+      <SandboxFolder>C:\LongEditR5INode</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
   </MappedFolders>
   <LogonCommand>
-    <Command>powershell -NoProfile -ExecutionPolicy Bypass -File C:\LongEditR5IRepo\scripts\run-r5i-isolated-install-lifecycle.ps1 -InstallerDirectory C:\LongEditR5IRepo\src-tauri\target\release\bundle\nsis -ExpectedCurrentSha256 $currentSha256 -OutputDirectory C:\LongEditR5IOutput -ConfirmDisposableMachine -AllowInstallerMutation</Command>
+    <Command>powershell -NoProfile -ExecutionPolicy Bypass -File C:\LongEditR5IRepo\scripts\run-r5i-isolated-install-lifecycle.ps1 -InstallerDirectory C:\LongEditR5IRepo\src-tauri\target\release\bundle\nsis -ExpectedCurrentSha256 $currentSha256 -NodeExecutable C:\LongEditR5INode\node.exe -InstalledSmokeScript C:\LongEditR5IRepo\scripts\capture-r5j-installed-artifact-smoke.mjs -OutputDirectory C:\LongEditR5IOutput -ConfirmDisposableMachine -AllowInstallerMutation</Command>
   </LogonCommand>
 </Configuration>
 "@

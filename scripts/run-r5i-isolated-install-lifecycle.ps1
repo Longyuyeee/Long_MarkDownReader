@@ -6,6 +6,10 @@ param(
     [Parameter(Mandatory = $true)]
     [ValidatePattern("^[a-fA-F0-9]{64}$")]
     [string]$ExpectedCurrentSha256,
+    [Parameter(Mandatory = $true)]
+    [string]$NodeExecutable,
+    [Parameter(Mandatory = $true)]
+    [string]$InstalledSmokeScript,
     [string]$OutputDirectory = "C:\LongEditR5IOutput",
     [switch]$ConfirmDisposableMachine,
     [switch]$AllowInstallerMutation
@@ -60,6 +64,12 @@ function Invoke-Installer([System.IO.FileInfo]$Installer, [string]$InstallRoot) 
 if ((Get-ProductRegistrations).Count -ne 0) {
     throw "R5I requires a disposable machine with no existing LongEdit product registration."
 }
+if (-not (Test-Path -LiteralPath $NodeExecutable -PathType Leaf)) {
+    throw "R5J Node executable is missing in the disposable machine."
+}
+if (-not (Test-Path -LiteralPath $InstalledSmokeScript -PathType Leaf)) {
+    throw "R5J installed-artifact smoke script is missing."
+}
 
 $currentInstaller = Resolve-OneInstaller $CurrentVersion
 $previousInstaller = Resolve-OneInstaller $PreviousVersion
@@ -72,12 +82,28 @@ $libraryRoot = "C:\LongEditR5ILibrary"
 $configRoot = Join-Path $env:APPDATA "com.longyuye.mdreader"
 $configMarker = Join-Path $configRoot "r5i-retention-marker.json"
 $libraryMarker = Join-Path $libraryRoot "r5i-library-marker.txt"
+$textFixture = Join-Path $libraryRoot "r5j-notes.txt"
+$jsonFixture = Join-Path $libraryRoot "r5j-config.json"
+$webviewRoot = "C:\LongEditR5IWebView"
 $checks = New-Object System.Collections.Generic.List[object]
 $startedProcess = $null
 
-New-Item -ItemType Directory -Path $OutputDirectory, $libraryRoot, $configRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $OutputDirectory, $libraryRoot, $configRoot, $webviewRoot -Force | Out-Null
 [System.IO.File]::WriteAllText($libraryMarker, "R5I_EXTERNAL_LIBRARY_MUST_SURVIVE", [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($configMarker, '{"stage":"R5I","retain":true}', [System.Text.UTF8Encoding]::new($false))
+[System.IO.File]::WriteAllText($textFixture, "R5J_TEXT_INITIAL`n", [System.Text.UTF8Encoding]::new($false))
+[System.IO.File]::WriteAllText($jsonFixture, '{"marker":"R5J_JSON_INITIAL"}', [System.Text.UTF8Encoding]::new($false))
+
+function Wait-ForPort([int]$Port, [bool]$Listening) {
+    for ($attempt = 0; $attempt -lt 240; $attempt += 1) {
+        $connection = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+        if (($Listening -and $connection) -or (-not $Listening -and -not $connection)) {
+            return
+        }
+        Start-Sleep -Milliseconds 100
+    }
+    throw "Timed out waiting for port $Port listening=$Listening."
+}
 
 try {
     Invoke-Installer $previousInstaller $installRoot
@@ -95,14 +121,34 @@ try {
     if (-not (Test-Path -LiteralPath $mainBinary -PathType Leaf)) {
         throw "Installed application binary is missing."
     }
-    $startedProcess = Start-Process -FilePath $mainBinary -WorkingDirectory $installRoot -PassThru
-    Start-Sleep -Seconds 5
-    if ($startedProcess.HasExited) {
-        throw "Installed application exited before the launch smoke window completed."
+    if (Get-NetTCPConnection -LocalPort 9343 -State Listen -ErrorAction SilentlyContinue) {
+        throw "R5J installed-artifact smoke requires free local port 9343."
+    }
+    $env:LONGEDIT_E2E_LIBRARY = $libraryRoot
+    $env:LONGEDIT_E2E_THEME = "white"
+    $env:LONGEDIT_E2E_STYLE = "minimal"
+    $env:LONGEDIT_E2E_CODE_THEME = "github"
+    $env:LONGEDIT_E2E_MOTION = "reduced"
+    $env:WEBVIEW2_USER_DATA_FOLDER = $webviewRoot
+    $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=9343 --remote-allow-origins=*"
+    $env:LONGEDIT_CDP_ENDPOINT = "http://127.0.0.1:9343"
+    $env:LONGEDIT_R5J_LIBRARY = $libraryRoot
+    $env:LONGEDIT_R5J_OUTPUT = $OutputDirectory
+    $env:LONGEDIT_R5J_EXECUTABLE = $mainBinary
+    $env:LONGEDIT_R5J_APP_VERSION = $CurrentVersion
+    $env:LONGEDIT_R5J_INSTALLER_SHA256 = $currentInstallerSha256
+
+    $startedProcess = Start-Process -FilePath $mainBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
+    Wait-ForPort -Port 9343 -Listening $true
+    & $NodeExecutable $InstalledSmokeScript
+    if ($LASTEXITCODE -ne 0) {
+        throw "R5J installed-artifact route and I/O smoke failed."
     }
     $checks.Add([ordered]@{ id = "first-launch-after-upgrade"; status = "passed" })
+    $checks.Add([ordered]@{ id = "installed-artifact-route-and-io-smoke"; status = "passed" })
     Stop-Process -Id $startedProcess.Id -Force
     $startedProcess = $null
+    Wait-ForPort -Port 9343 -Listening $false
 
     $uninstallCommand = [string]$currentRegistration.UninstallString
     $uninstaller = $uninstallCommand.Trim().Trim('"')
@@ -141,6 +187,7 @@ try {
         promotionEligible = $false
         sourceUserContentIncluded = $false
         checks = @($checks)
+        installedArtifactSmokeEvidence = "installed-artifact-smoke.json"
     }
     [System.IO.File]::WriteAllText(
         (Join-Path $OutputDirectory "lifecycle-result.json"),
