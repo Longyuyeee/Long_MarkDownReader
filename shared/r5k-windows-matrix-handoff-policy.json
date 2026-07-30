@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5K",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "disposable-windows-lifecycle-matrix-and-portable-evidence-handoff",
+  "generatedAt": "2026-07-31",
+  "currentStatus": "matrix-runner-and-evidence-handoff-ready-disposable-results-pending",
+  "requiredLifecycleChecks": [
+    "previous-version-fresh-install",
+    "controlled-upgrade",
+    "file-association-registration",
+    "first-launch-after-upgrade",
+    "installed-artifact-route-and-io-smoke",
+    "downgrade-rejection",
+    "silent-uninstall",
+    "file-association-recovery",
+    "uninstall-retains-user-data",
+    "rollback-previous-install",
+    "rollback-first-launch",
+    "rollback-cleanup-retains-user-data"
+  ],
+  "handoff": {
+    "preflight": "docs/evidence/r5k-windows-matrix/preflight.json",
+    "importTarget": "docs/evidence/r5k-windows-matrix/imported",
+    "sourceCommitBound": true,
+    "currentInstallerDigestBound": true,
+    "exactArchiveMemberSetRequired": true,
+    "memberDigestsRequired": true,
+    "flatSafeMemberNamesRequired": true,
+    "noEvidenceOverwrite": true,
+    "malformedBundleRejectionCount": 4,
+    "realEvidenceImported": false
+  },
+  "privacyBoundary": {
+    "machineNameAllowed": false,
+    "userNameAllowed": false,
+    "credentialsAllowed": false,
+    "sourceUserContentAllowed": false,
+    "machineClassFingerprintAllowed": true,
+    "fixedSyntheticFixturesRequired": true
+  },
+  "releaseGate": {
+    "matrixRunnerImplemented": true,
+    "evidenceExporterImplemented": true,
+    "evidenceImporterImplemented": true,
+    "rejectionMatrixPassed": true,
+    "disposableWindowsEvidenceImported": false,
+    "windows10EvidenceComplete": false,
+    "windows11EvidenceComplete": false,
+    "rollbackEvidenceComplete": false,
+    "signedArtifactRuntimeProven": false,
+    "currentPromotionEligible": false
+  },
+  "knownLimits": [
+    "current-host-has-no-disposable-windows-runner",
+    "real-r5k-evidence-bundle-not-yet-generated-or-imported",
+    "rollback-check-is-installer-launch-and-retention-level-not-management-backup-restore-closure",
+    "windows-10-and-windows-11-final-matrix-remains-pending",
+    "current-installers-remain-unsigned"
+  ],
+  "nextStage": "R5L"
+}

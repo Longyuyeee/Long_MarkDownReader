@@ -11,6 +11,10 @@ if ($currentArtifact.Count -ne 1 -or [string]$currentArtifact[0].sha256 -notmatc
     throw "R5H current NSIS hash evidence is missing or invalid."
 }
 $currentSha256 = [string]$currentArtifact[0].sha256
+$sourceCommit = ([string](& git -C $repoRoot rev-parse HEAD)).Trim()
+if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch "^[a-fA-F0-9]{40}$") {
+    throw "Unable to bind the R5K evidence bundle to the current source commit."
+}
 $nodeCommand = Get-Command node.exe -ErrorAction SilentlyContinue
 if (-not $nodeCommand) {
     throw "Node.js is required to prepare the R5J installed-artifact smoke."
@@ -60,7 +64,7 @@ $xml = @"
     </MappedFolder>
   </MappedFolders>
   <LogonCommand>
-    <Command>powershell -NoProfile -ExecutionPolicy Bypass -File C:\LongEditR5IRepo\scripts\run-r5i-isolated-install-lifecycle.ps1 -InstallerDirectory C:\LongEditR5IRepo\src-tauri\target\release\bundle\nsis -ExpectedCurrentSha256 $currentSha256 -NodeExecutable C:\LongEditR5INode\node.exe -InstalledSmokeScript C:\LongEditR5IRepo\scripts\capture-r5j-installed-artifact-smoke.mjs -OutputDirectory C:\LongEditR5IOutput -ConfirmDisposableMachine -AllowInstallerMutation</Command>
+    <Command>powershell -NoProfile -ExecutionPolicy Bypass -File C:\LongEditR5IRepo\scripts\run-r5i-isolated-install-lifecycle.ps1 -InstallerDirectory C:\LongEditR5IRepo\src-tauri\target\release\bundle\nsis -ExpectedCurrentSha256 $currentSha256 -NodeExecutable C:\LongEditR5INode\node.exe -InstalledSmokeScript C:\LongEditR5IRepo\scripts\capture-r5j-installed-artifact-smoke.mjs -EvidenceExporter C:\LongEditR5IRepo\scripts\export-r5k-windows-evidence-bundle.ps1 -ExpectedSourceCommit $sourceCommit -OutputDirectory C:\LongEditR5IOutput -ConfirmDisposableMachine -AllowInstallerMutation</Command>
   </LogonCommand>
 </Configuration>
 "@

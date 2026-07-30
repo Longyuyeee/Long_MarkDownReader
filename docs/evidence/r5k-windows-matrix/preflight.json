@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5K",
+  "appVersion": "0.7.0",
+  "capturedAt": "2026-07-30T17:26:35.640Z",
+  "sourceCommit": "adea943bc6da97f14be26d84d768bd5d5cdcca98",
+  "currentInstallerSha256": "f75672d7731c5c924a00a273a3cd3b879f68e4e29d9a8f1f2a0d5d63361f3985",
+  "currentStatus": "matrix-runner-and-evidence-handoff-ready-disposable-results-pending",
+  "implementation": {
+    "lifecycleMatrixRunnerReady": true,
+    "downgradeRejectionReady": true,
+    "fileAssociationRecoveryReady": true,
+    "rollbackToPreviousReady": true,
+    "evidenceBundleExporterReady": true,
+    "evidenceBundleImporterReady": true,
+    "malformedBundleRejectionMatrixPassed": true
+  },
+  "currentHost": {
+    "isolatedRunnerAvailable": false,
+    "existingProductRegistrationCount": 1,
+    "hostInstallerMutationAllowed": false
+  },
+  "execution": {
+    "disposableWindowsBundleImported": false,
+    "windows10MatrixComplete": false,
+    "windows11MatrixComplete": false,
+    "downgradeRejectionProven": false,
+    "fileAssociationRecoveryProven": false,
+    "rollbackProven": false,
+    "releaseCandidate": false,
+    "promotionEligible": false,
+    "sourceUserContentIncluded": false
+  },
+  "requiredBundleMembers": [
+    "r5k-bundle-manifest.json",
+    "lifecycle-result.json",
+    "installed-artifact-smoke.json",
+    "installed-route-mount-evidence.json",
+    "installed-route-performance-evidence.json",
+    "installed-txt-save-reopen.jpg",
+    "installed-json-save-reopen.jpg"
+  ]
+}

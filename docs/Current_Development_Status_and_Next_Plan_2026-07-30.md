@@ -437,3 +437,31 @@ Current status: `installed-smoke-runner-ready-disposable-execution-pending`.
 The current host still has no disposable Windows runner, so no guest evidence or RC claim is made.
 
 Next recommended stage: R5K. Execute and import the integrated R5I/R5J bundle on disposable Windows 11, then complete the corresponding Windows 10 install, upgrade, route, I/O, uninstall, retention, downgrade, association, and rollback matrix.
+
+## R5K update - Windows lifecycle matrix and portable evidence handoff
+
+Current stage after this update: R5K has implemented the remaining disposable lifecycle scenarios and a strict portable evidence handoff. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5k-windows-matrix-handoff-policy.json`
+- `scripts/audit-r5k-windows-matrix-preflight.mjs`
+- `scripts/export-r5k-windows-evidence-bundle.ps1`
+- `scripts/import-r5k-windows-evidence-bundle.ps1`
+- `scripts/test-r5k-windows-evidence-bundle-rejections.ps1`
+- `scripts/check-r5k-windows-matrix-handoff.mjs`
+- `scripts/run-r5i-isolated-install-lifecycle.ps1`
+- `docs/R5K_Windows_Matrix_Evidence_Handoff_Audit_2026-07-31.md`
+- `docs/evidence/r5k-windows-matrix/preflight.json`
+
+The disposable runner now adds Markdown OpenWith registration/removal, controlled downgrade rejection with installed-binary digest preservation, rollback installation of `0.6.2`, rollback launch, cleanup, and retained-data checks.
+
+R5K guest evidence is exported as a fixed seven-member ZIP bound to the exact source commit, R5H installer digest, file sizes and digests, application version, non-identifying Windows machine class, and no-user-content boundary.
+
+The importer rejects path traversal, duplicates, extras, source drift, installer drift, digest drift, incomplete checks, missing routes, invalid screenshots, privacy drift, and overwrite. Four malformed bundle cases pass the rejection matrix without creating imported evidence.
+
+Current status: `matrix-runner-and-evidence-handoff-ready-disposable-results-pending`.
+
+No real disposable Windows evidence has been imported, so Windows 10/11, full backup/restore rollback, signing, and RC gates remain blocked.
+
+Next recommended stage: R5L. Execute and import the Windows 11 bundle, fix any guest-only defects, then run Windows 10 and extend rollback evidence through management-backup restore and knowledge-index recovery.

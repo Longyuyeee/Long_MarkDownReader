@@ -10,6 +10,11 @@ param(
     [string]$NodeExecutable,
     [Parameter(Mandatory = $true)]
     [string]$InstalledSmokeScript,
+    [Parameter(Mandatory = $true)]
+    [string]$EvidenceExporter,
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern("^[a-fA-F0-9]{40}$")]
+    [string]$ExpectedSourceCommit,
     [string]$OutputDirectory = "C:\LongEditR5IOutput",
     [switch]$ConfirmDisposableMachine,
     [switch]$AllowInstallerMutation
@@ -61,6 +66,28 @@ function Invoke-Installer([System.IO.FileInfo]$Installer, [string]$InstallRoot) 
     }
 }
 
+function Get-OpenWithProgIds([string]$Extension) {
+    $key = "HKCU:\Software\Classes\$Extension\OpenWithProgids"
+    if (-not (Test-Path -LiteralPath $key)) {
+        return @()
+    }
+    return @((Get-ItemProperty -LiteralPath $key).PSObject.Properties.Name | Where-Object {
+        $_ -notmatch "^PS(Path|ParentPath|ChildName|Drive|Provider)$"
+    })
+}
+
+function Invoke-RegisteredUninstall($Registration) {
+    $uninstallCommand = [string]$Registration.UninstallString
+    $uninstaller = $uninstallCommand.Trim().Trim('"')
+    if (-not (Test-Path -LiteralPath $uninstaller -PathType Leaf)) {
+        throw "Registered uninstaller is missing."
+    }
+    $process = Start-Process -FilePath $uninstaller -ArgumentList "/S" -WindowStyle Hidden -Wait -PassThru
+    if ($process.ExitCode -ne 0) {
+        throw "Uninstaller exited with $($process.ExitCode)."
+    }
+}
+
 if ((Get-ProductRegistrations).Count -ne 0) {
     throw "R5I requires a disposable machine with no existing LongEdit product registration."
 }
@@ -69,6 +96,9 @@ if (-not (Test-Path -LiteralPath $NodeExecutable -PathType Leaf)) {
 }
 if (-not (Test-Path -LiteralPath $InstalledSmokeScript -PathType Leaf)) {
     throw "R5J installed-artifact smoke script is missing."
+}
+if (-not (Test-Path -LiteralPath $EvidenceExporter -PathType Leaf)) {
+    throw "R5K evidence exporter is missing."
 }
 
 $currentInstaller = Resolve-OneInstaller $CurrentVersion
@@ -116,6 +146,12 @@ try {
         throw "Current installation escaped the isolated install root."
     }
     $checks.Add([ordered]@{ id = "controlled-upgrade"; status = "passed"; from = $PreviousVersion; to = $CurrentVersion })
+    $markdownProgIds = @(Get-OpenWithProgIds ".md")
+    $markdownLongProgIds = @(Get-OpenWithProgIds ".markdown")
+    if ($markdownProgIds -notcontains "LongEdit.Markdown" -or $markdownLongProgIds -notcontains "LongEdit.Markdown") {
+        throw "Current installer did not register both Markdown OpenWith ProgIDs."
+    }
+    $checks.Add([ordered]@{ id = "file-association-registration"; status = "passed"; defaultSelectionChanged = $false })
 
     $mainBinary = Join-Path $installRoot "tauri-app.exe"
     if (-not (Test-Path -LiteralPath $mainBinary -PathType Leaf)) {
@@ -150,20 +186,31 @@ try {
     $startedProcess = $null
     Wait-ForPort -Port 9343 -Listening $false
 
-    $uninstallCommand = [string]$currentRegistration.UninstallString
-    $uninstaller = $uninstallCommand.Trim().Trim('"')
-    if (-not (Test-Path -LiteralPath $uninstaller -PathType Leaf)) {
-        throw "Registered uninstaller is missing."
+    $currentBinarySha256 = (Get-FileHash -LiteralPath $mainBinary -Algorithm SHA256).Hash.ToLowerInvariant()
+    $downgradeProcess = Start-Process -FilePath $previousInstaller.FullName `
+        -ArgumentList @("/S", "/D=$installRoot") `
+        -WindowStyle Hidden `
+        -Wait `
+        -PassThru
+    $registrationAfterDowngrade = @(Get-ProductRegistrations | Where-Object { $_.DisplayVersion -eq $CurrentVersion })
+    if ($registrationAfterDowngrade.Count -ne 1 -or
+        -not (Test-Path -LiteralPath $mainBinary -PathType Leaf) -or
+        (Get-FileHash -LiteralPath $mainBinary -Algorithm SHA256).Hash.ToLowerInvariant() -ne $currentBinarySha256) {
+        throw "Controlled downgrade changed the installed current version."
     }
-    $uninstallProcess = Start-Process -FilePath $uninstaller -ArgumentList "/S" -WindowStyle Hidden -Wait -PassThru
-    if ($uninstallProcess.ExitCode -ne 0) {
-        throw "Uninstaller exited with $($uninstallProcess.ExitCode)."
-    }
+    $checks.Add([ordered]@{ id = "downgrade-rejection"; status = "passed"; installerExitCode = $downgradeProcess.ExitCode })
+
+    Invoke-RegisteredUninstall $currentRegistration
     Wait-ForRegistration $CurrentVersion $false | Out-Null
     if ((Get-ProductRegistrations).Count -ne 0) {
         throw "A LongEdit product registration remained after uninstall."
     }
     $checks.Add([ordered]@{ id = "silent-uninstall"; status = "passed" })
+    if ((Get-OpenWithProgIds ".md") -contains "LongEdit.Markdown" -or
+        (Get-OpenWithProgIds ".markdown") -contains "LongEdit.Markdown") {
+        throw "Current Markdown OpenWith ProgID remained after uninstall."
+    }
+    $checks.Add([ordered]@{ id = "file-association-recovery"; status = "passed" })
 
     if (-not (Test-Path -LiteralPath $libraryMarker -PathType Leaf)) {
         throw "External knowledge-library marker was removed by uninstall."
@@ -172,6 +219,44 @@ try {
         throw "Application configuration marker was removed by uninstall."
     }
     $checks.Add([ordered]@{ id = "uninstall-retains-user-data"; status = "passed" })
+
+    foreach ($name in @(
+        "LONGEDIT_E2E_LIBRARY",
+        "LONGEDIT_E2E_THEME",
+        "LONGEDIT_E2E_STYLE",
+        "LONGEDIT_E2E_CODE_THEME",
+        "LONGEDIT_E2E_MOTION",
+        "WEBVIEW2_USER_DATA_FOLDER",
+        "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+        "LONGEDIT_CDP_ENDPOINT",
+        "LONGEDIT_R5J_LIBRARY",
+        "LONGEDIT_R5J_OUTPUT",
+        "LONGEDIT_R5J_EXECUTABLE",
+        "LONGEDIT_R5J_APP_VERSION",
+        "LONGEDIT_R5J_INSTALLER_SHA256"
+    )) {
+        Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+    }
+
+    Invoke-Installer $previousInstaller $installRoot
+    $rollbackRegistration = @(Wait-ForRegistration $PreviousVersion $true)[0]
+    $checks.Add([ordered]@{ id = "rollback-previous-install"; status = "passed"; version = $PreviousVersion })
+    $rollbackBinary = Join-Path $installRoot "tauri-app.exe"
+    $startedProcess = Start-Process -FilePath $rollbackBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
+    Start-Sleep -Seconds 5
+    if ($startedProcess.HasExited) {
+        throw "Rolled-back previous version exited before the launch smoke completed."
+    }
+    $checks.Add([ordered]@{ id = "rollback-first-launch"; status = "passed" })
+    Stop-Process -Id $startedProcess.Id -Force
+    $startedProcess = $null
+    Invoke-RegisteredUninstall $rollbackRegistration
+    Wait-ForRegistration $PreviousVersion $false | Out-Null
+    if (-not (Test-Path -LiteralPath $libraryMarker -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $configMarker -PathType Leaf)) {
+        throw "Rollback cleanup removed retained user data."
+    }
+    $checks.Add([ordered]@{ id = "rollback-cleanup-retains-user-data"; status = "passed" })
 
     $result = [ordered]@{
         schemaVersion = 1
@@ -194,6 +279,13 @@ try {
         ($result | ConvertTo-Json -Depth 8),
         [System.Text.UTF8Encoding]::new($false)
     )
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $EvidenceExporter `
+        -EvidenceDirectory $OutputDirectory `
+        -OutputPath (Join-Path $OutputDirectory "r5k-windows-evidence.zip") `
+        -ExpectedSourceCommit $ExpectedSourceCommit
+    if ($LASTEXITCODE -ne 0) {
+        throw "R5K Windows evidence bundle export failed."
+    }
     Write-Host "R5I disposable lifecycle smoke passed."
 }
 finally {
