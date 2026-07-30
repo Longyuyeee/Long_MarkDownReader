@@ -20,12 +20,14 @@
     {
       "id": "R3B",
       "label": "配置与元数据备份导出",
-      "status": "planned",
+      "status": "implemented",
       "capabilities": [
         "versioned-backup-manifest",
         "settings-export",
         "library-metadata-export",
-        "content-exclusion-by-default"
+        "capability-contract-export",
+        "content-exclusion-by-default",
+        "path-and-remote-fingerprints"
       ],
       "privacyBoundary": "备份包默认不包含外部知识库正文、系统凭据、API Key、完整用户路径或可恢复缓存正文。"
     },
@@ -64,5 +66,5 @@
     "recoverable-cache-body",
     "external-library-content"
   ],
-  "nextStage": "R3B"
+  "nextStage": "R3C"
 }

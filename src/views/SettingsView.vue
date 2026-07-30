@@ -113,6 +113,16 @@
               </div>
               <n-button secondary @click="router.push({ name: 'ReleaseCapabilities' })">查看矩阵</n-button>
             </div>
+            <div class="setting-row">
+              <div class="info">
+                <div class="label">管理备份</div>
+                <div class="desc">导出脱敏配置、库清单摘要和能力合同，不包含文档正文或凭据</div>
+              </div>
+              <n-button secondary :loading="backupExporting" @click="exportManagementBackup">
+                <template #icon><n-icon :component="DownloadIcon" /></template>
+                导出
+              </n-button>
+            </div>
           </n-grid-item>
 
           <n-grid-item class="animate-item" style="--delay: 0.35s">
@@ -264,8 +274,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, reactive, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon, GitBranch as GitBranchIcon, Check as CheckIcon } from 'lucide-vue-next'
-import { open } from '@tauri-apps/plugin-dialog'
+import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon, GitBranch as GitBranchIcon, Check as CheckIcon, Download as DownloadIcon } from 'lucide-vue-next'
+import { open, save } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, NTag, NInputGroup } from 'naive-ui'
 import { useAppStore, THEME_MAP } from '../store/app'
@@ -356,6 +366,17 @@ const config = ref({
 })
 const credentialDraft = ref('')
 const credentialSaving = ref(false)
+const backupExporting = ref(false)
+
+interface ManagementBackupReceipt {
+  path: string
+  bytes: number
+  sha256: string
+  createdAt: number
+  entryCount: number
+  redactedLibraryCount: number
+  excluded: string[]
+}
 
 const newLib = reactive({ name: '', path: '' })
 const expandedGitLib = ref<string>('')
@@ -441,6 +462,26 @@ const removeCredential = () => {
       finally { credentialSaving.value = false }
     }
   })
+}
+
+const exportManagementBackup = async () => {
+  if (backupExporting.value) return
+  const target = await save({
+    title: '导出管理备份',
+    defaultPath: `longedit-management-backup-${new Date().toISOString().slice(0, 10)}.zip`,
+    filters: [{ name: 'LongEdit 管理备份', extensions: ['zip'] }],
+  })
+  if (!target) return
+  backupExporting.value = true
+  try {
+    const receipt = await invoke<ManagementBackupReceipt>('export_management_backup', { targetPath: target })
+    const kb = Math.max(1, Math.round(receipt.bytes / 1024))
+    message.success(`管理备份已导出：${kb} KiB · ${receipt.entryCount} 个条目 · ${receipt.sha256.slice(0, 12)}`)
+  } catch (error) {
+    message.error(`导出管理备份失败：${String(error)}`)
+  } finally {
+    backupExporting.value = false
+  }
 }
 
 const chooseNewLibDir = async () => {

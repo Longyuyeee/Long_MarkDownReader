@@ -3,6 +3,7 @@ mod formats;
 mod services;
 
 use commands::ai::ai_chat_completion;
+use commands::backup::export_management_backup;
 use commands::canvas::{
     create_canvas_file, create_canvas_from_graph, create_canvas_from_markdown, read_canvas_file,
     write_canvas_file,
@@ -423,6 +424,7 @@ pub fn run() {
             clear_all_history,
             exit_app,
             ai_chat_completion,
+            export_management_backup,
             git_status,
             git_init,
             git_commit,
