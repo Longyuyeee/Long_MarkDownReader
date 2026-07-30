@@ -59,7 +59,7 @@ R5K ensures that the delivered application can be upgraded, tested, removed, and
 
 ## Honest evidence boundary
 
-The current host still has no disposable Windows runner. No real R5K bundle has been generated or imported. Windows 10, Windows 11, full backup/restore rollback, signing, and RC promotion remain incomplete.
+The current host still has no disposable Windows runner. No real R5K bundle has been generated or imported. R5L extends this bundle from seven to eight fixed members with sanitized management backup/restore and index-rebuild evidence; Windows 10, Windows 11, signing, and RC promotion remain incomplete.
 
 ## Next stage: R5L
 

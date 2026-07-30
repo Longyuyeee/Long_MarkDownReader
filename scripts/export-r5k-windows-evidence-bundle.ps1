@@ -29,7 +29,8 @@ $requiredMembers = @(
     "installed-route-mount-evidence.json",
     "installed-route-performance-evidence.json",
     "installed-txt-save-reopen.jpg",
-    "installed-json-save-reopen.jpg"
+    "installed-json-save-reopen.jpg",
+    "management-backup-index-evidence.json"
 )
 foreach ($memberName in $requiredMembers) {
     $memberPath = Join-Path $evidenceRoot $memberName
@@ -40,9 +41,11 @@ foreach ($memberName in $requiredMembers) {
 
 $lifecycle = Get-Content -LiteralPath (Join-Path $evidenceRoot "lifecycle-result.json") -Raw | ConvertFrom-Json
 $smoke = Get-Content -LiteralPath (Join-Path $evidenceRoot "installed-artifact-smoke.json") -Raw | ConvertFrom-Json
+$management = Get-Content -LiteralPath (Join-Path $evidenceRoot "management-backup-index-evidence.json") -Raw | ConvertFrom-Json
 if ($lifecycle.stage -ne "R5I" -or $lifecycle.status -ne "passed" -or
-    $smoke.stage -ne "R5J" -or $smoke.status -ne "passed") {
-    throw "R5K refuses incomplete lifecycle or installed-artifact evidence."
+    $smoke.stage -ne "R5J" -or $smoke.status -ne "passed" -or
+    $management.stage -ne "R5L" -or $management.status -ne "passed") {
+    throw "R5K refuses incomplete lifecycle, installed-artifact, or management rollback evidence."
 }
 
 $os = Get-CimInstance Win32_OperatingSystem

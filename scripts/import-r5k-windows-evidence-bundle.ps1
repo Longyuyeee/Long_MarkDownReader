@@ -23,7 +23,8 @@ $requiredEvidenceMembers = @(
     "installed-route-mount-evidence.json",
     "installed-route-performance-evidence.json",
     "installed-txt-save-reopen.jpg",
-    "installed-json-save-reopen.jpg"
+    "installed-json-save-reopen.jpg",
+    "management-backup-index-evidence.json"
 )
 $requiredArchiveMembers = @("r5k-bundle-manifest.json") + $requiredEvidenceMembers
 $auditRoot = Join-Path $env:TEMP ("longedit-r5k-import-" + [guid]::NewGuid().ToString("N"))
@@ -50,7 +51,7 @@ try {
             }
             if ($names.Count -ne $requiredArchiveMembers.Count -or
                 (@($names | Sort-Object) -join "|") -ne (@($requiredArchiveMembers | Sort-Object) -join "|")) {
-                throw "R5K evidence bundle must contain exactly the required seven members."
+                throw "R5K evidence bundle must contain exactly the required eight members."
             }
             foreach ($entry in $archive.Entries) {
                 if ($entry.Length -le 0 -or $entry.Length -gt 20MB) {
@@ -203,6 +204,37 @@ try {
         $bytes = [System.IO.File]::ReadAllBytes((Join-Path $auditRoot $imageName))
         if ($bytes.Length -lt 10000 -or $bytes[0] -ne 0xFF -or $bytes[1] -ne 0xD8) {
             throw "R5K screenshot is invalid: $imageName"
+        }
+    }
+
+    $management = Get-Content -LiteralPath (Join-Path $auditRoot "management-backup-index-evidence.json") -Raw | ConvertFrom-Json
+    if ($management.schemaVersion -ne 1 -or $management.stage -ne "R5L" -or
+        $management.status -ne "passed" -or $management.releaseCandidate -ne $false -or
+        $management.promotionEligible -ne $false -or $management.sourceUserContentIncluded -ne $false -or
+        $management.preflight.valid -ne $true -or
+        $management.preflight.requiresLibraryMapping -ne $true -or
+        $management.preflight.mappingCount -ne 1 -or
+        $management.restore.libraryCount -ne 1 -or $management.restore.savedSearchCount -ne 1 -or
+        $management.indexBeforeRollback.state -ne "ready" -or
+        $management.indexAfterRestore.state -ne "ready") {
+        throw "R5L management rollback evidence is incomplete."
+    }
+    foreach ($excludedItem in @("document-body", "api-key", "system-credential", "absolute-user-path")) {
+        if (@($management.preflight.excluded | Where-Object { $_ -eq $excludedItem }).Count -ne 1) {
+            throw "R5L management backup privacy boundary is incomplete: $excludedItem"
+        }
+    }
+    foreach ($checkId in @(
+        "installed-release-formal-config-load",
+        "management-backup-export",
+        "management-backup-privacy-preflight",
+        "knowledge-index-delete-rebuild",
+        "post-rollback-management-backup-restore",
+        "post-restore-knowledge-index-rebuild",
+        "post-restore-representative-file-reopen"
+    )) {
+        if (@($management.checks | Where-Object { $_.id -eq $checkId -and $_.status -eq "passed" }).Count -ne 1) {
+            throw "R5L management rollback check is missing: $checkId"
         }
     }
 

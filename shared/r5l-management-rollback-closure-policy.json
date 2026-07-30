@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5L",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "installed-management-backup-restore-and-knowledge-index-rollback-closure",
+  "generatedAt": "2026-07-31",
+  "currentStatus": "management-rollback-runner-ready-disposable-execution-pending",
+  "requiredChecks": [
+    "installed-release-formal-config-load",
+    "management-backup-export",
+    "management-backup-privacy-preflight",
+    "knowledge-index-delete-rebuild",
+    "post-rollback-management-backup-restore",
+    "post-restore-knowledge-index-rebuild",
+    "post-restore-representative-file-reopen"
+  ],
+  "implementation": {
+    "formalReleaseConfigFixture": true,
+    "managementBackupExport": true,
+    "redactedBackupPreflight": true,
+    "explicitLibraryPathRemapping": true,
+    "knowledgeIndexDeleteRebuild": true,
+    "postRollbackCurrentReinstall": true,
+    "managementRestore": true,
+    "representativeTxtJsonReopen": true,
+    "portableEvidenceIntegration": true
+  },
+  "privacyBoundary": {
+    "fixedSyntheticLibraryOnly": true,
+    "managementBackupArchiveExportedFromGuest": false,
+    "backupDigestAndRedactedReceiptExported": true,
+    "sourceUserContentAllowed": false,
+    "credentialsAllowed": false,
+    "absoluteUserPathsAllowed": false
+  },
+  "releaseGate": {
+    "runnerImplemented": true,
+    "contractChecksPassed": true,
+    "windows11EvidenceImported": false,
+    "windows10EvidenceImported": false,
+    "managementRollbackProven": false,
+    "knowledgeIndexRecoveryProven": false,
+    "signedArtifactRuntimeProven": false,
+    "currentPromotionEligible": false
+  },
+  "knownLimits": [
+    "current-host-has-no-disposable-windows-runner",
+    "installed-management-rollback-flow-not-executed-on-windows-10-or-windows-11",
+    "management-backup-zip-remains-inside-disposable-guest-by-design",
+    "current-installers-remain-unsigned"
+  ],
+  "nextStage": "R5M"
+}

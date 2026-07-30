@@ -11,6 +11,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$InstalledSmokeScript,
     [Parameter(Mandatory = $true)]
+    [string]$ManagementRollbackSmokeScript,
+    [Parameter(Mandatory = $true)]
     [string]$EvidenceExporter,
     [Parameter(Mandatory = $true)]
     [ValidatePattern("^[a-fA-F0-9]{40}$")]
@@ -97,6 +99,9 @@ if (-not (Test-Path -LiteralPath $NodeExecutable -PathType Leaf)) {
 if (-not (Test-Path -LiteralPath $InstalledSmokeScript -PathType Leaf)) {
     throw "R5J installed-artifact smoke script is missing."
 }
+if (-not (Test-Path -LiteralPath $ManagementRollbackSmokeScript -PathType Leaf)) {
+    throw "R5L management rollback smoke script is missing."
+}
 if (-not (Test-Path -LiteralPath $EvidenceExporter -PathType Leaf)) {
     throw "R5K evidence exporter is missing."
 }
@@ -111,18 +116,60 @@ $installRoot = "C:\LongEditR5I"
 $libraryRoot = "C:\LongEditR5ILibrary"
 $configRoot = Join-Path $env:APPDATA "com.longyuye.mdreader"
 $configMarker = Join-Path $configRoot "r5i-retention-marker.json"
+$configPath = Join-Path $configRoot "config.json"
 $libraryMarker = Join-Path $libraryRoot "r5i-library-marker.txt"
 $textFixture = Join-Path $libraryRoot "r5j-notes.txt"
 $jsonFixture = Join-Path $libraryRoot "r5j-config.json"
 $webviewRoot = "C:\LongEditR5IWebView"
+$managementRoot = "C:\LongEditR5IManagement"
+$managementBackup = Join-Path $managementRoot "r5l-management-backup.zip"
 $checks = New-Object System.Collections.Generic.List[object]
 $startedProcess = $null
 
-New-Item -ItemType Directory -Path $OutputDirectory, $libraryRoot, $configRoot, $webviewRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $OutputDirectory, $libraryRoot, $configRoot, $webviewRoot, $managementRoot -Force | Out-Null
 [System.IO.File]::WriteAllText($libraryMarker, "R5I_EXTERNAL_LIBRARY_MUST_SURVIVE", [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($configMarker, '{"stage":"R5I","retain":true}', [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($textFixture, "R5J_TEXT_INITIAL`n", [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($jsonFixture, '{"marker":"R5J_JSON_INITIAL"}', [System.Text.UTF8Encoding]::new($false))
+$formalConfig = [ordered]@{
+    libraries = @([ordered]@{
+        name = "R5L Disposable Vault"
+        path = $libraryRoot
+        gitEnabled = $false
+        gitRemote = ""
+        gitBranch = "main"
+    })
+    activeLibraryPath = $libraryRoot
+    theme = "white"
+    codeTheme = "github"
+    editorMode = "wysiwyg"
+    editorBgColor = ""
+    heroIcon = "BookOpen"
+    autoSaveInterval = 3
+    textAutoSaveEnabled = $true
+    maxHistoryCount = 10
+    isAutostart = $false
+    exitStrategy = "ask"
+    visualStyle = "minimal"
+    motionSpeed = "reduced"
+    aiEnabled = $false
+    aiProvider = "openai"
+    aiEndpoint = "https://api.openai.com/v1"
+    aiModel = "gpt-4o-mini"
+    savedSearches = @([ordered]@{
+        id = "r5l-saved-search"
+        name = "R5L Restore Marker"
+        query = "R5L"
+        libraryPath = $libraryRoot
+        objectTypes = @("txt", "json")
+        createdAt = 1
+    })
+}
+[System.IO.File]::WriteAllText(
+    $configPath,
+    ($formalConfig | ConvertTo-Json -Depth 8),
+    [System.Text.UTF8Encoding]::new($false)
+)
 
 function Wait-ForPort([int]$Port, [bool]$Listening) {
     for ($attempt = 0; $attempt -lt 240; $attempt += 1) {
@@ -173,6 +220,10 @@ try {
     $env:LONGEDIT_R5J_EXECUTABLE = $mainBinary
     $env:LONGEDIT_R5J_APP_VERSION = $CurrentVersion
     $env:LONGEDIT_R5J_INSTALLER_SHA256 = $currentInstallerSha256
+    $env:LONGEDIT_R5L_LIBRARY = $libraryRoot
+    $env:LONGEDIT_R5L_OUTPUT = $OutputDirectory
+    $env:LONGEDIT_R5L_BACKUP = $managementBackup
+    $env:LONGEDIT_R5L_MODE = "prepare"
 
     $startedProcess = Start-Process -FilePath $mainBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
     Wait-ForPort -Port 9343 -Listening $true
@@ -180,8 +231,13 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "R5J installed-artifact route and I/O smoke failed."
     }
+    & $NodeExecutable $ManagementRollbackSmokeScript
+    if ($LASTEXITCODE -ne 0) {
+        throw "R5L management backup and knowledge-index prepare smoke failed."
+    }
     $checks.Add([ordered]@{ id = "first-launch-after-upgrade"; status = "passed" })
     $checks.Add([ordered]@{ id = "installed-artifact-route-and-io-smoke"; status = "passed" })
+    $checks.Add([ordered]@{ id = "management-backup-and-index-prepare"; status = "passed" })
     Stop-Process -Id $startedProcess.Id -Force
     $startedProcess = $null
     Wait-ForPort -Port 9343 -Listening $false
@@ -233,7 +289,11 @@ try {
         "LONGEDIT_R5J_OUTPUT",
         "LONGEDIT_R5J_EXECUTABLE",
         "LONGEDIT_R5J_APP_VERSION",
-        "LONGEDIT_R5J_INSTALLER_SHA256"
+        "LONGEDIT_R5J_INSTALLER_SHA256",
+        "LONGEDIT_R5L_LIBRARY",
+        "LONGEDIT_R5L_OUTPUT",
+        "LONGEDIT_R5L_BACKUP",
+        "LONGEDIT_R5L_MODE"
     )) {
         Remove-Item "Env:$name" -ErrorAction SilentlyContinue
     }
@@ -258,6 +318,47 @@ try {
     }
     $checks.Add([ordered]@{ id = "rollback-cleanup-retains-user-data"; status = "passed" })
 
+    $replacementConfig = [ordered]@{
+        libraries = @()
+        activeLibraryPath = ""
+        savedSearches = @()
+    }
+    [System.IO.File]::WriteAllText(
+        $configPath,
+        ($replacementConfig | ConvertTo-Json -Depth 4),
+        [System.Text.UTF8Encoding]::new($false)
+    )
+    Invoke-Installer $currentInstaller $installRoot
+    $restoreRegistration = @(Wait-ForRegistration $CurrentVersion $true)[0]
+    $restoreBinary = Join-Path $installRoot "tauri-app.exe"
+    $env:WEBVIEW2_USER_DATA_FOLDER = $webviewRoot
+    $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=9343 --remote-allow-origins=*"
+    $env:LONGEDIT_CDP_ENDPOINT = "http://127.0.0.1:9343"
+    $env:LONGEDIT_R5L_LIBRARY = $libraryRoot
+    $env:LONGEDIT_R5L_OUTPUT = $OutputDirectory
+    $env:LONGEDIT_R5L_BACKUP = $managementBackup
+    $env:LONGEDIT_R5L_MODE = "restore"
+    $startedProcess = Start-Process -FilePath $restoreBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
+    Wait-ForPort -Port 9343 -Listening $true
+    & $NodeExecutable $ManagementRollbackSmokeScript
+    if ($LASTEXITCODE -ne 0) {
+        throw "R5L post-rollback management restore and knowledge-index smoke failed."
+    }
+    $checks.Add([ordered]@{ id = "post-rollback-management-backup-restore"; status = "passed" })
+    $checks.Add([ordered]@{ id = "post-restore-knowledge-index-rebuild"; status = "passed" })
+    $checks.Add([ordered]@{ id = "post-restore-representative-file-reopen"; status = "passed" })
+    Stop-Process -Id $startedProcess.Id -Force
+    $startedProcess = $null
+    Wait-ForPort -Port 9343 -Listening $false
+    Invoke-RegisteredUninstall $restoreRegistration
+    Wait-ForRegistration $CurrentVersion $false | Out-Null
+    if (-not (Test-Path -LiteralPath $libraryMarker -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $configMarker -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $configPath -PathType Leaf)) {
+        throw "R5L final cleanup removed restored management data."
+    }
+    $checks.Add([ordered]@{ id = "post-restore-uninstall-retains-management-data"; status = "passed" })
+
     $result = [ordered]@{
         schemaVersion = 1
         stage = "R5I"
@@ -273,6 +374,7 @@ try {
         sourceUserContentIncluded = $false
         checks = @($checks)
         installedArtifactSmokeEvidence = "installed-artifact-smoke.json"
+        managementRollbackEvidence = "management-backup-index-evidence.json"
     }
     [System.IO.File]::WriteAllText(
         (Join-Path $OutputDirectory "lifecycle-result.json"),

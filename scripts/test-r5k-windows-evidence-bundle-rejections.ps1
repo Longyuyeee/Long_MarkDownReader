@@ -18,7 +18,8 @@ $requiredEvidenceMembers = @(
     "installed-route-mount-evidence.json",
     "installed-route-performance-evidence.json",
     "installed-txt-save-reopen.jpg",
-    "installed-json-save-reopen.jpg"
+    "installed-json-save-reopen.jpg",
+    "management-backup-index-evidence.json"
 )
 
 function New-RejectionBundle {

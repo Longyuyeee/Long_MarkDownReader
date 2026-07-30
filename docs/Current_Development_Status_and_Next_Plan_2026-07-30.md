@@ -456,7 +456,7 @@ New source of truth:
 
 The disposable runner now adds Markdown OpenWith registration/removal, controlled downgrade rejection with installed-binary digest preservation, rollback installation of `0.6.2`, rollback launch, cleanup, and retained-data checks.
 
-R5K guest evidence is exported as a fixed seven-member ZIP bound to the exact source commit, R5H installer digest, file sizes and digests, application version, non-identifying Windows machine class, and no-user-content boundary.
+R5K originally defined a fixed seven-member ZIP bound to the exact source commit, R5H installer digest, file sizes and digests, application version, non-identifying Windows machine class, and no-user-content boundary. R5L extends the same exact-member contract to eight members with a sanitized management rollback receipt.
 
 The importer rejects path traversal, duplicates, extras, source drift, installer drift, digest drift, incomplete checks, missing routes, invalid screenshots, privacy drift, and overwrite. Four malformed bundle cases pass the rejection matrix without creating imported evidence.
 
@@ -465,3 +465,29 @@ Current status: `matrix-runner-and-evidence-handoff-ready-disposable-results-pen
 No real disposable Windows evidence has been imported, so Windows 10/11, full backup/restore rollback, signing, and RC gates remain blocked.
 
 Next recommended stage: R5L. Execute and import the Windows 11 bundle, fix any guest-only defects, then run Windows 10 and extend rollback evidence through management-backup restore and knowledge-index recovery.
+
+## R5L update - management backup, index recovery, and rollback closure
+
+Current stage after this update: R5L has integrated the management-system recovery path into the disposable installed-artifact lifecycle. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5l-management-rollback-closure-policy.json`
+- `scripts/capture-r5l-management-rollback-smoke.mjs`
+- `scripts/audit-r5l-management-rollback-preflight.mjs`
+- `scripts/check-r5l-management-rollback-closure.mjs`
+- `scripts/run-r5i-isolated-install-lifecycle.ps1`
+- `docs/R5L_Management_Backup_Index_Rollback_Audit_2026-07-31.md`
+- `docs/evidence/r5l-management-rollback/preflight.json`
+
+The audit corrected an installed-release setup defect: the former smoke relied on a debug-only environment override. The disposable guest now writes a formal isolated `config.json`, and the installed application must load its fixed library and saved search before evidence is accepted.
+
+The lifecycle exports a redacted management backup, validates its privacy boundary and required path mapping, deletes and rebuilds the knowledge index, completes uninstall and previous-version rollback, deliberately replaces the live configuration, reinstalls the current artifact, restores the backup, rebuilds the index, and reopens saved TXT/JSON fixtures in the right-side workspace. A final uninstall must retain the restored configuration and external library.
+
+Only the sanitized `management-backup-index-evidence.json` receipt enters the fixed eight-member evidence bundle. The backup ZIP stays inside the disposable guest.
+
+Current status: `management-rollback-runner-ready-disposable-execution-pending`.
+
+No Windows 10/11 guest result has been imported, so management rollback and index recovery remain unproven at runtime and no RC claim is made.
+
+Next recommended stage: R5M. Execute/import the integrated Windows 11 evidence, repair guest-only defects, repeat on Windows 10, then close signing/runtime trust and final RC promotion gates.

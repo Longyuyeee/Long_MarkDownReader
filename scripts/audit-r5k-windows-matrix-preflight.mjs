@@ -73,6 +73,7 @@ fs.writeFileSync(outputPath, `${JSON.stringify({
     'installed-route-performance-evidence.json',
     'installed-txt-save-reopen.jpg',
     'installed-json-save-reopen.jpg',
+    'management-backup-index-evidence.json',
   ],
 }, null, 2)}\n`)
 
