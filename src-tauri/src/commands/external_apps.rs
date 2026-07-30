@@ -343,6 +343,28 @@ fn discover_all() -> Vec<ExternalApplicationCapability> {
         .collect()
 }
 
+pub(crate) fn discover_external_executable(
+    application_id: &str,
+    extension: &str,
+) -> Result<(PathBuf, Option<String>), String> {
+    let spec = APPLICATION_SPECS
+        .iter()
+        .copied()
+        .find(|candidate| candidate.id == application_id)
+        .ok_or_else(|| format!("未知外部应用: {application_id}"))?;
+    let application = discover_application(spec);
+    let executable = executable_for_extension(&application, extension).ok_or_else(|| {
+        format!(
+            "{} 未发现适用于 {} 的角色程序",
+            application.label, extension
+        )
+    })?;
+    let path = PathBuf::from(&executable.path)
+        .canonicalize()
+        .map_err(|error| format!("外部应用路径无法重新验证: {error}"))?;
+    Ok((path, application.version))
+}
+
 static DISCOVERED_EXTERNAL_APPLICATIONS: LazyLock<Vec<ExternalApplicationCapability>> =
     LazyLock::new(discover_all);
 

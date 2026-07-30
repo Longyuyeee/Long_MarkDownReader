@@ -1,0 +1,39 @@
+{
+    "schemaVersion":  1,
+    "stage":  "E2B",
+    "generatedAt":  "2026-07-30T05:03:43.5638314Z",
+    "producer":  {
+                     "application":  "LibreOffice Writer",
+                     "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                     "sourceSeedApplication":  "LongEdit project-authored RTF",
+                     "sourceSeedSha256":  "9a136af5aa32f6e36775bfd8ecd9a6b3401a9ac0b72df0b8e5dd955f30d39396",
+                     "exportFormat":  "MS Word 97",
+                     "isolatedProfile":  true,
+                     "independentSourceReopen":  true
+                 },
+    "converter":  {
+                      "application":  "LibreOffice Writer",
+                      "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                      "isolatedProfiles":  true,
+                      "independentOutputReopen":  true
+                  },
+    "source":  {
+                   "file":  "longedit-e2b-word-document.doc",
+                   "bytes":  9216,
+                   "sha256":  "a1fd8332818683209e509afa14d30959526df8c807cd0a40eb43cc1c869a1c2f",
+                   "cfbSignature":  "d0cf11e0a1b11ae1",
+                   "preserved":  true
+               },
+    "output":  {
+                   "file":  "longedit-e2b-libreoffice-output.docx",
+                   "bytes":  5212,
+                   "sha256":  "c98b9321725dba7c0d99a7f43f537dbb69781a0697f17a54a7f9a91accde92d6",
+                   "packageSignature":  "504b",
+                   "expectedText":  "LongEdit E2B legacy DOC conversion fixture"
+               },
+    "privacy":  {
+                    "projectAuthoredContent":  true,
+                    "localIdentityScanned":  true,
+                    "localAbsolutePathsExcludedFromManifest":  true
+                }
+}

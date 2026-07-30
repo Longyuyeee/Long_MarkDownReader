@@ -6,7 +6,7 @@
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 
-> 2026-07-30 权威执行入口：[当前开发情况与后续计划综合审计](./Development_Status_and_Next_Plan_Audit_2026-07-30.md)。**F1 / E2A 外部应用基础设施与 E3 WPS 原生格式识别/外部打开均已完成，下一代码阶段为 E2B 旧版 `.doc` 隔离转换试点**，随后按 E2C `.xls/.ppt` → E1C `.ods/.odp` 补齐旧版 Office 与 OpenDocument 的日常格式覆盖。E1B WPS ODT 保持 2/3、X3-B6 数组生产者矩阵保持 1/3，作为外部环境门禁并行等待；不得伪造关闭。下文较早的“下一入口”只保留为阶段追溯，不覆盖本段。
+> 2026-07-30 权威执行入口：[当前开发情况与后续计划综合审计](./Development_Status_and_Next_Plan_Audit_2026-07-30.md)。**F1 / E2A 外部应用基础设施、E3 WPS 原生格式识别/外部打开和 E2B 旧版 `.doc` 隔离转换均已完成，下一代码阶段为 E2C 旧版 `.xls/.ppt` 预检与显式新副本转换**，随后进入 E1C `.ods/.odp`。E1B WPS ODT 保持 2/3、X3-B6 数组生产者矩阵保持 1/3，作为外部环境门禁并行等待；不得伪造关闭。E2B 事实边界见 [`E2B_Legacy_DOC_Isolated_Conversion_Audit_2026-07-30.md`](./E2B_Legacy_DOC_Isolated_Conversion_Audit_2026-07-30.md)，下文较早的“下一入口”只保留为阶段追溯。
 
 > 路线调整原因：日常管理、文本/开发格式、PDF、图表、Canvas/OPML、知识图谱和现代 Office 基础工作面已形成主干；当前最影响初始需求完整度的是 `.wps/.et/.dps`、`.doc/.xls/.ppt`、`.odt/.ods/.odp` 的识别、右侧能力说明、外部打开与安全转换闭环。继续开发 Excel 深度能力时，必须证明其优先级不高于上述日常覆盖缺口。
 

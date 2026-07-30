@@ -1,9 +1,9 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-30
-交接基线：当前开发版本 `v0.7.0`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干；WPS 原生格式已完成识别与外部打开，旧版 Office、ODF 发布与专业发布门禁仍待收口
+交接基线：当前开发版本 `v0.7.0`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干；WPS 原生格式与旧版 DOC 隔离转换已完成，旧版 XLS/PPT、ODF 发布与专业发布门禁仍待收口
 
-> 2026-07-30 权威入口：当前能力、初始需求对齐度、风险和后续 F1～F4/R 顺序以 [`Development_Status_and_Next_Plan_Audit_2026-07-30.md`](./Development_Status_and_Next_Plan_Audit_2026-07-30.md) 为准。E2A 与 E3 已完成，下一代码阶段为 E2B 旧版 `.doc` 隔离转换试点，随后按 E2C `.xls/.ppt` → E1C `.ods/.odp` 补齐日常格式覆盖；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁，不得伪造关闭。
+> 2026-07-30 权威入口：当前能力、初始需求对齐度、风险和后续 F1～F4/R 顺序以 [`Development_Status_and_Next_Plan_Audit_2026-07-30.md`](./Development_Status_and_Next_Plan_Audit_2026-07-30.md) 为准。E2A、E3 与 E2B 已完成，下一代码阶段为 E2C 旧版 `.xls/.ppt` 预检与显式新副本转换，随后进入 E1C `.ods/.odp`；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁，不得伪造关闭。E2B 证据见 [`E2B_Legacy_DOC_Isolated_Conversion_Audit_2026-07-30.md`](./E2B_Legacy_DOC_Isolated_Conversion_Audit_2026-07-30.md)。
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 

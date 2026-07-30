@@ -163,6 +163,9 @@
       "e0Disposition": "external-open-and-isolated-conversion-planned",
       "firstImplementation": "E2A/E2B",
       "initialProductLevel": "external-open",
+      "e2bPreflightStatus": "verified-real-cfb-fixture",
+      "e2bConversionStatus": "verified-isolated-docx-copy",
+      "observedContainer": "compound-binary-word-document",
       "conversion": "explicit-new-copy-after-preflight",
       "risks": ["malformed-cfb", "encrypted-content", "vba", "ole-object", "external-link", "converter-fidelity"],
       "fixtureProfiles": ["plain", "styles-lists-tables-images", "external-link", "ole-object", "vba", "encrypted"]

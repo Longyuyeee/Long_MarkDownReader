@@ -71,6 +71,11 @@ const routes = [
     component: () => import('../views/ExternalOfficeView.vue')
   },
   {
+    path: '/legacy-office',
+    name: 'LegacyOffice',
+    component: () => import('../views/LegacyOfficeView.vue')
+  },
+  {
     path: '/quick-note',
     name: 'QuickNote',
     component: () => import('../views/QuickNote.vue')
