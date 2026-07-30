@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5H",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "current-windows-msi-nsis-build-hash-and-signature-evidence",
+  "generatedAt": "2026-07-31",
+  "currentStatus": "current-msi-nsis-built-hashed-unsigned-install-smoke-pending",
+  "requiredTargets": [
+    "msi",
+    "nsis"
+  ],
+  "evidence": {
+    "manifest": "docs/evidence/r5h-current-installers/installer-artifact-manifest.json",
+    "artifactFilesCommitted": false,
+    "sourceUserContentAllowed": false,
+    "localArtifactVerificationWhenPresent": true
+  },
+  "releaseGate": {
+    "currentInstallersBuilt": true,
+    "currentInstallerHashesRecorded": true,
+    "currentInstallerAuthenticodeRecorded": true,
+    "currentInstallersSigned": false,
+    "installedArtifactSmokeExecuted": false,
+    "signedArtifactRuntimeProven": false,
+    "currentPromotionEligible": false
+  },
+  "knownLimits": [
+    "current-msi-and-nsis-are-local-build-artifacts-and-are-not-committed",
+    "current-msi-and-nsis-authenticode-status-is-not-signed",
+    "install-upgrade-uninstall-and-rollback-smoke-remains-pending",
+    "windows-10-and-windows-11-vm-evidence-remains-pending"
+  ],
+  "nextStage": "R5I"
+}

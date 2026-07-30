@@ -366,3 +366,25 @@ Current status: `current-release-built-debug-desktop-io-smoke-passed-signed-arti
 The optimized Release executable was built but not runtime-smoked because an installed user instance already owned the production single-instance channel. R5G deliberately preserves that session and does not claim signed or installed-artifact proof.
 
 Next recommended stage: R5H. Build current MSI/NSIS installers, refresh hashes and Authenticode evidence, and run installed-artifact smoke in an isolated Windows environment before Windows 10/11 VM and rollback closure.
+
+## R5H update - current MSI/NSIS build and signature evidence
+
+Current stage after this update: R5H is implemented and the app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5h-current-installer-evidence-policy.json`
+- `scripts/capture-r5h-current-installer-evidence.ps1`
+- `scripts/check-r5h-current-installer-evidence.mjs`
+- `docs/R5H_Current_Windows_Installer_Evidence_Audit_2026-07-31.md`
+- `docs/evidence/r5h-current-installers/installer-artifact-manifest.json`
+
+R5H built the current `0.7.0` MSI and NSIS installers and recorded their exact byte sizes, SHA-256 hashes, UTC build times, and Authenticode results. Both artifacts are local engineering outputs and are intentionally not committed.
+
+This closes the current installer-build evidence gap for the original professional daily-management goal across Markdown, TXT/JSON/developer formats, PDF, workbook, diagrams, mind maps, knowledge graph, canvas, and Office/WPS-like workflows.
+
+Current status: `current-msi-nsis-built-hashed-unsigned-install-smoke-pending`.
+
+Both installers currently report `NotSigned`. No install, upgrade, uninstall, rollback, Windows VM, or signed-artifact runtime claim is made.
+
+Next recommended stage: R5I. Run fresh-install, launch, representative route, TXT/JSON save/reopen, controlled upgrade, uninstall, and rollback smoke in an isolated Windows environment without touching the user's active installation.

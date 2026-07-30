@@ -1,0 +1,45 @@
+{
+    "schemaVersion":  1,
+    "stage":  "R5H",
+    "appVersion":  "0.7.0",
+    "capturedAt":  "2026-07-30T17:05:58.5926805Z",
+    "environment":  "Current Windows release bundle build",
+    "buildCommand":  "npm run tauri -- build",
+    "buildExecuted":  true,
+    "releaseCandidate":  false,
+    "promotionEligible":  false,
+    "sourceUserContentIncluded":  false,
+    "artifactFilesCommitted":  false,
+    "installedArtifactSmokeExecuted":  false,
+    "signedArtifactRuntimeProven":  false,
+    "artifacts":  [
+                      {
+                          "target":  "msi",
+                          "fileNamePattern":  "*_0.7.0_x64_zh-CN.msi",
+                          "relativeDirectory":  "src-tauri/target/release/bundle/msi",
+                          "sizeBytes":  56332288,
+                          "lastWriteTimeUtc":  "2026-07-30T17:01:04.1520000Z",
+                          "sha256":  "5d96de0d97cdd370554a64b512fd469bf9d197a20f87042546f1907eb5290ef1",
+                          "authenticodeStatus":  "NotSigned",
+                          "signed":  false,
+                          "signerSubject":  null,
+                          "timestampSubject":  null,
+                          "officialRelease":  false,
+                          "promotionEligible":  false
+                      },
+                      {
+                          "target":  "nsis",
+                          "fileNamePattern":  "*_0.7.0_x64-setup.exe",
+                          "relativeDirectory":  "src-tauri/target/release/bundle/nsis",
+                          "sizeBytes":  51989529,
+                          "lastWriteTimeUtc":  "2026-07-30T17:01:37.8501871Z",
+                          "sha256":  "f75672d7731c5c924a00a273a3cd3b879f68e4e29d9a8f1f2a0d5d63361f3985",
+                          "authenticodeStatus":  "NotSigned",
+                          "signed":  false,
+                          "signerSubject":  null,
+                          "timestampSubject":  null,
+                          "officialRelease":  false,
+                          "promotionEligible":  false
+                      }
+                  ]
+}
