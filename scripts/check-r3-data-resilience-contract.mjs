@@ -9,7 +9,7 @@ const fail = message => {
 const policy = JSON.parse(read('shared/data-resilience-policy.json'))
 if (policy.schemaVersion !== 1 || policy.stage !== 'R3') fail('R3 policy identity mismatch.')
 if (policy.releaseCandidate !== false) fail('R3 must not mark the product as a release candidate.')
-if (policy.nextStage !== 'R3C') fail('R3B handoff must point to R3C.')
+if (policy.nextStage !== 'R3D') fail('R3C handoff must point to R3D.')
 
 const phases = new Map(policy.phases.map(phase => [phase.id, phase]))
 const r3a = phases.get('R3A')
@@ -35,9 +35,20 @@ for (const capability of [
 ]) {
   if (!r3b.capabilities.includes(capability)) fail(`R3B capability missing: ${capability}`)
 }
-for (const id of ['R3C', 'R3D']) {
-  if (phases.get(id)?.status !== 'planned') fail(`${id} must remain planned after R3A.`)
+const r3c = phases.get('R3C')
+if (!r3c || r3c.status !== 'implemented') fail('R3C must be implemented in the policy.')
+for (const capability of [
+  'backup-preflight',
+  'version-compatibility-check',
+  'fixed-entry-allowlist',
+  'manifest-digest-verification',
+  'library-path-remapping',
+  'credential-exclusion-on-restore',
+  'reliable-config-restore',
+]) {
+  if (!r3c.capabilities.includes(capability)) fail(`R3C capability missing: ${capability}`)
 }
+if (phases.get('R3D')?.status !== 'planned') fail('R3D must remain planned after R3C.')
 for (const forbidden of ['document-body', 'api-key', 'absolute-user-path', 'recoverable-cache-body']) {
   if (!policy.forbiddenByDefault.includes(forbidden)) fail(`R3 privacy forbidden item missing: ${forbidden}`)
 }
@@ -72,25 +83,38 @@ for (const token of [
   'path_fingerprint',
   'git_remote_fingerprint',
   'management_backup_excludes_paths_and_credentials',
+  'preflight_management_backup_import',
+  'restore_management_backup',
+  'ManagementBackupImportPreflight',
+  'LibraryPathMapping',
+  'fixed-entry-allowlist',
+  'management_backup_preflight_requires_library_mapping',
+  'management_backup_import_rejects_unexpected_zip_member',
 ]) {
-  if (!backup.includes(token)) fail(`R3B backup export token missing: ${token}`)
+  if (!backup.includes(token)) fail(`R3 backup token missing: ${token}`)
 }
 
 const settings = read('src/views/SettingsView.vue')
-for (const token of ['exportManagementBackup', '管理备份', '不包含文档正文或凭据']) {
-  if (!settings.includes(token)) fail(`R3B settings UI token missing: ${token}`)
+for (const token of ['exportManagementBackup', 'importManagementBackup', 'restore_management_backup', '导入恢复', '不包含文档正文或凭据']) {
+  if (!settings.includes(token)) fail(`R3 settings UI token missing: ${token}`)
 }
 
 const libRs = read('src-tauri/src/lib.rs')
-if (!libRs.includes('export_management_backup')) fail('R3B backup command is not exposed in lib.rs.')
+for (const token of ['export_management_backup', 'preflight_management_backup_import', 'restore_management_backup']) {
+  if (!libRs.includes(token)) fail(`R3 backup command is not exposed in lib.rs: ${token}`)
+}
 
-const audit = read('docs/R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md')
+const r3aAudit = read('docs/R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md')
 for (const token of ['R3A', '损坏索引', '隔离', 'R3B', 'releaseCandidate=false']) {
-  if (!audit.includes(token)) fail(`R3A audit token missing: ${token}`)
+  if (!r3aAudit.includes(token)) fail(`R3A audit token missing: ${token}`)
 }
 const r3bAudit = read('docs/R3B_Management_Backup_Export_Audit_2026-07-30.md')
 for (const token of ['R3B', '管理备份', 'config.redacted.json', 'R3C', 'releaseCandidate=false']) {
   if (!r3bAudit.includes(token)) fail(`R3B audit token missing: ${token}`)
 }
+const r3cAudit = read('docs/R3C_Management_Backup_Import_Restore_Audit_2026-07-30.md')
+for (const token of ['R3C', '导入预检', '路径重新映射', 'restore_management_backup', 'R3D', 'releaseCandidate=false']) {
+  if (!r3cAudit.includes(token)) fail(`R3C audit token missing: ${token}`)
+}
 
-console.log('R3 data resilience contract passed: R3A index recovery and R3B backup export implemented; R3C/R3D remain planned.')
+console.log('R3 data resilience contract passed: R3A index recovery, R3B backup export, and R3C import/restore implemented; R3D remains planned.')

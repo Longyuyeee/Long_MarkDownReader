@@ -33,16 +33,18 @@
     },
     {
       "id": "R3C",
-      "label": "备份导入与原子恢复",
-      "status": "planned",
+      "label": "备份导入预检与可迁移恢复",
+      "status": "implemented",
       "capabilities": [
         "backup-preflight",
         "version-compatibility-check",
-        "conflict-preview",
-        "atomic-restore",
-        "rollback-on-failure"
+        "fixed-entry-allowlist",
+        "manifest-digest-verification",
+        "library-path-remapping",
+        "credential-exclusion-on-restore",
+        "reliable-config-restore"
       ],
-      "privacyBoundary": "导入前必须预检来源、版本和冲突；失败不得修改现有配置和库清单。"
+      "privacyBoundary": "导入恢复只接受脱敏管理备份；旧机器绝对路径不会被恢复，知识库目录必须由用户在当前机器重新映射。"
     },
     {
       "id": "R3D",
@@ -66,5 +68,5 @@
     "recoverable-cache-body",
     "external-library-content"
   ],
-  "nextStage": "R3C"
+  "nextStage": "R3D"
 }

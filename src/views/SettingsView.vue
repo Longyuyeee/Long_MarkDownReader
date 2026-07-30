@@ -114,14 +114,21 @@
               <n-button secondary @click="router.push({ name: 'ReleaseCapabilities' })">查看矩阵</n-button>
             </div>
             <div class="setting-row">
+              <!-- R3 管理备份不包含文档正文或凭据，导入恢复要求路径重新映射。 -->
               <div class="info">
                 <div class="label">管理备份</div>
                 <div class="desc">导出脱敏配置、库清单摘要和能力合同，不包含文档正文或凭据</div>
               </div>
-              <n-button secondary :loading="backupExporting" @click="exportManagementBackup">
-                <template #icon><n-icon :component="DownloadIcon" /></template>
-                导出
-              </n-button>
+              <div class="backup-actions">
+                <n-button secondary :loading="backupExporting" @click="exportManagementBackup">
+                  <template #icon><n-icon :component="DownloadIcon" /></template>
+                  导出
+                </n-button>
+                <n-button secondary type="primary" :loading="backupRestoring" @click="importManagementBackup">
+                  <template #icon><n-icon :component="UploadIcon" /></template>
+                  导入恢复
+                </n-button>
+              </div>
             </div>
           </n-grid-item>
 
@@ -274,7 +281,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, reactive, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon, GitBranch as GitBranchIcon, Check as CheckIcon, Download as DownloadIcon } from 'lucide-vue-next'
+import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon, GitBranch as GitBranchIcon, Check as CheckIcon, Download as DownloadIcon, Upload as UploadIcon } from 'lucide-vue-next'
 import { open, save } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, NTag, NInputGroup } from 'naive-ui'
@@ -367,6 +374,7 @@ const config = ref({
 const credentialDraft = ref('')
 const credentialSaving = ref(false)
 const backupExporting = ref(false)
+const backupRestoring = ref(false)
 
 interface ManagementBackupReceipt {
   path: string
@@ -376,6 +384,40 @@ interface ManagementBackupReceipt {
   entryCount: number
   redactedLibraryCount: number
   excluded: string[]
+}
+
+interface RequiredLibraryMapping {
+  pathFingerprint: string
+  pathLeaf: string
+  name: string
+}
+
+interface ManagementBackupImportPreflight {
+  valid: boolean
+  schemaVersion: number
+  stage: string
+  createdAt: number
+  entryCount: number
+  redactedLibraryCount: number
+  savedSearchCount: number
+  requiresLibraryMapping: boolean
+  requiredLibraryMappings: RequiredLibraryMapping[]
+  blockedReasons: string[]
+  warnings: string[]
+  excluded: string[]
+}
+
+interface LibraryPathMapping {
+  pathFingerprint: string
+  path: string
+}
+
+interface ManagementBackupRestoreReceipt {
+  path: string
+  restoredAt: number
+  libraryCount: number
+  savedSearchCount: number
+  warnings: string[]
 }
 
 const newLib = reactive({ name: '', path: '' })
@@ -403,10 +445,7 @@ const switchLibrary = (path: string) => {
   })
 }
 
-onMounted(async () => {
-  isInitializing.value = true
-  await store.loadConfig()
-  
+const syncLocalConfigFromStore = () => {
   config.value = {
     libraries: [...store.libraries],
     activeLibraryPath: store.activeLibraryPath,
@@ -426,6 +465,12 @@ onMounted(async () => {
     aiEndpoint: store.aiEndpoint,
     aiModel: store.aiModel,
   }
+}
+
+onMounted(async () => {
+  isInitializing.value = true
+  await store.loadConfig()
+  syncLocalConfigFromStore()
 
   nextTick(() => {
     isInitializing.value = false
@@ -481,6 +526,85 @@ const exportManagementBackup = async () => {
     message.error(`导出管理备份失败：${String(error)}`)
   } finally {
     backupExporting.value = false
+  }
+}
+
+const chooseDirectoryForBackupLibrary = async (library: RequiredLibraryMapping) => {
+  const selected = await open({
+    directory: true,
+    multiple: false,
+    title: `为「${library.name || library.pathLeaf || '知识库'}」选择当前机器目录`,
+  })
+  return typeof selected === 'string' ? selected : ''
+}
+
+const restoreBackupAfterConfirm = async (backupPath: string, mappings: LibraryPathMapping[]) => {
+  backupRestoring.value = true
+  try {
+    const receipt = await invoke<ManagementBackupRestoreReceipt>('restore_management_backup', {
+      backupPath,
+      libraryMappings: mappings,
+    })
+    isInitializing.value = true
+    await store.loadConfig()
+    syncLocalConfigFromStore()
+    await nextTick()
+    isInitializing.value = false
+    message.success(`管理备份已恢复：${receipt.libraryCount} 个知识库 · ${receipt.savedSearchCount} 个保存搜索`)
+    if (receipt.warnings.length > 0) {
+      message.warning(receipt.warnings[0])
+    }
+  } catch (error) {
+    message.error(`恢复管理备份失败：${String(error)}`)
+  } finally {
+    backupRestoring.value = false
+    isInitializing.value = false
+  }
+}
+
+const importManagementBackup = async () => {
+  if (backupRestoring.value) return
+  const backupPath = await open({
+    multiple: false,
+    title: '导入管理备份',
+    filters: [{ name: 'LongEdit 管理备份', extensions: ['zip'] }],
+  })
+  if (!backupPath || typeof backupPath !== 'string') return
+  backupRestoring.value = true
+  try {
+    const preflight = await invoke<ManagementBackupImportPreflight>('preflight_management_backup_import', {
+      backupPath,
+    })
+    if (!preflight.valid) {
+      message.error(`管理备份预检未通过：${preflight.blockedReasons.join('；')}`)
+      return
+    }
+    const mappings: LibraryPathMapping[] = []
+    for (const library of preflight.requiredLibraryMappings) {
+      const path = await chooseDirectoryForBackupLibrary(library)
+      if (!path) {
+        message.info('已取消管理备份恢复')
+        return
+      }
+      mappings.push({ pathFingerprint: library.pathFingerprint, path })
+    }
+    const summary = [
+      `备份阶段：${preflight.stage} / schema ${preflight.schemaVersion}`,
+      `将恢复：${preflight.redactedLibraryCount} 个知识库、${preflight.savedSearchCount} 个保存搜索。`,
+      '不会恢复：文档正文、缓存正文、API Key、系统凭据、旧机器绝对路径；Git Remote 需恢复后手动重填。',
+      preflight.warnings[0] ? `提示：${preflight.warnings[0]}` : '',
+    ].filter(Boolean).join('\n')
+    dialog.warning({
+      title: '确认恢复管理备份',
+      content: summary,
+      positiveText: '恢复并覆盖当前管理配置',
+      negativeText: '取消',
+      onPositiveClick: () => restoreBackupAfterConfirm(backupPath, mappings),
+    })
+  } catch (error) {
+    message.error(`导入管理备份失败：${String(error)}`)
+  } finally {
+    backupRestoring.value = false
   }
 }
 
@@ -961,6 +1085,14 @@ const openDefaultAppsSettings = async () => {
 
 .setting-row:hover::before {
   opacity: 1;
+}
+
+.backup-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .is-dark .setting-row {

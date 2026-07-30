@@ -1,23 +1,34 @@
 use crate::commands::config::{AppConfig, LibraryConfig, SavedSearchConfig};
-use crate::services::reliable_write::write_new_bytes;
-use serde::Serialize;
+use crate::services::reliable_write::{write_new_bytes, write_utf8};
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::io::{Cursor, Write};
+use std::io::{Cursor, Read, Write};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::Manager;
 use zip::write::SimpleFileOptions;
-use zip::{CompressionMethod, ZipWriter};
+use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
 const BACKUP_SCHEMA_VERSION: u32 = 1;
 const BACKUP_STAGE: &str = "R3B";
+const MAX_BACKUP_BYTES: u64 = 16 * 1024 * 1024;
+const MAX_BACKUP_ENTRY_BYTES: usize = 4 * 1024 * 1024;
+// R3C fixed-entry-allowlist: reject every ZIP member outside this exact set.
+const EXPECTED_BACKUP_ENTRIES: [&str; 5] = [
+    "manifest.json",
+    "config.redacted.json",
+    "contracts/file-formats.json",
+    "contracts/release-capability-matrix.json",
+    "contracts/data-resilience-policy.json",
+];
 const FILE_FORMATS: &str = include_str!("../../../shared/file-formats.json");
 const RELEASE_CAPABILITY_MATRIX: &str =
     include_str!("../../../shared/release-capability-matrix.json");
 const DATA_RESILIENCE_POLICY: &str = include_str!("../../../shared/data-resilience-policy.json");
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ManagementBackupReceipt {
     pub path: String,
@@ -29,7 +40,49 @@ pub struct ManagementBackupReceipt {
     pub excluded: Vec<String>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ManagementBackupImportPreflight {
+    pub valid: bool,
+    pub schema_version: u32,
+    pub stage: String,
+    pub created_at: u64,
+    pub entry_count: usize,
+    pub redacted_library_count: usize,
+    pub saved_search_count: usize,
+    pub requires_library_mapping: bool,
+    pub required_library_mappings: Vec<RequiredLibraryMapping>,
+    pub blocked_reasons: Vec<String>,
+    pub warnings: Vec<String>,
+    pub excluded: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RequiredLibraryMapping {
+    pub path_fingerprint: String,
+    pub path_leaf: String,
+    pub name: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LibraryPathMapping {
+    pub path_fingerprint: String,
+    pub path: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ManagementBackupRestoreReceipt {
+    pub path: String,
+    pub restored_at: u64,
+    pub library_count: usize,
+    pub saved_search_count: usize,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ManagementBackupManifest {
     schema_version: u32,
@@ -41,7 +94,7 @@ struct ManagementBackupManifest {
     privacy_boundary: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct BackupEntryDigest {
     path: String,
@@ -49,7 +102,7 @@ struct BackupEntryDigest {
     sha256: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RedactedAppConfigBackup {
     libraries: Vec<RedactedLibraryConfig>,
@@ -73,7 +126,7 @@ struct RedactedAppConfigBackup {
     saved_searches: Vec<RedactedSavedSearchConfig>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RedactedLibraryConfig {
     name: String,
@@ -84,7 +137,7 @@ struct RedactedLibraryConfig {
     git_branch: String,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RedactedSavedSearchConfig {
     id: String,
@@ -93,6 +146,13 @@ struct RedactedSavedSearchConfig {
     library_fingerprint: String,
     object_types: Vec<String>,
     created_at: u64,
+}
+
+#[derive(Clone, Debug)]
+struct ParsedManagementBackup {
+    manifest: ManagementBackupManifest,
+    redacted_config: RedactedAppConfigBackup,
+    entries: BTreeMap<String, Vec<u8>>,
 }
 
 fn now_unix_seconds() -> u64 {
@@ -266,6 +326,260 @@ pub(crate) fn build_management_backup_archive(
     Ok((bytes, receipt))
 }
 
+fn expected_backup_entry_set() -> BTreeSet<&'static str> {
+    EXPECTED_BACKUP_ENTRIES.into_iter().collect()
+}
+
+fn ensure_expected_backup_entry_name(name: &str) -> Result<(), String> {
+    if name.starts_with('/') || name.starts_with('\\') || name.contains("..") || name.contains('\\')
+    {
+        return Err(format!("备份条目路径不安全：{name}"));
+    }
+    if !expected_backup_entry_set().contains(name) {
+        return Err(format!("备份包含非预期条目：{name}"));
+    }
+    Ok(())
+}
+
+fn read_backup_entries(bytes: &[u8]) -> Result<BTreeMap<String, Vec<u8>>, String> {
+    if bytes.len() as u64 > MAX_BACKUP_BYTES {
+        return Err("管理备份超过大小上限，已拒绝导入".into());
+    }
+    let cursor = Cursor::new(bytes);
+    let mut archive =
+        ZipArchive::new(cursor).map_err(|error| format!("读取管理备份压缩包失败: {error}"))?;
+    let mut entries = BTreeMap::new();
+    for index in 0..archive.len() {
+        let mut file = archive
+            .by_index(index)
+            .map_err(|error| format!("读取管理备份条目失败: {error}"))?;
+        let name = file.name().to_string();
+        ensure_expected_backup_entry_name(&name)?;
+        if entries.contains_key(&name) {
+            return Err(format!("备份包含重复条目：{name}"));
+        }
+        let mut content = Vec::new();
+        let bytes_read = file
+            .by_ref()
+            .take((MAX_BACKUP_ENTRY_BYTES + 1) as u64)
+            .read_to_end(&mut content)
+            .map_err(|error| format!("读取管理备份内容失败: {error}"))?;
+        if bytes_read > MAX_BACKUP_ENTRY_BYTES {
+            return Err(format!("备份条目过大：{name}"));
+        }
+        entries.insert(name, content);
+    }
+    let actual: BTreeSet<_> = entries.keys().map(|value| value.as_str()).collect();
+    let expected = expected_backup_entry_set();
+    if actual != expected {
+        let missing = expected
+            .difference(&actual)
+            .copied()
+            .collect::<Vec<_>>()
+            .join(", ");
+        let extra = actual
+            .difference(&expected)
+            .copied()
+            .collect::<Vec<_>>()
+            .join(", ");
+        return Err(format!(
+            "备份条目不完整或不匹配；缺失：{missing}；额外：{extra}"
+        ));
+    }
+    Ok(entries)
+}
+
+fn parse_management_backup(bytes: &[u8]) -> Result<ParsedManagementBackup, String> {
+    let entries = read_backup_entries(bytes)?;
+    let manifest_bytes = entries
+        .get("manifest.json")
+        .ok_or_else(|| "备份缺少 manifest.json".to_string())?;
+    let manifest: ManagementBackupManifest = serde_json::from_slice(manifest_bytes)
+        .map_err(|error| format!("备份 manifest 解析失败: {error}"))?;
+    if manifest.schema_version != BACKUP_SCHEMA_VERSION {
+        return Err(format!(
+            "暂不支持的备份 schemaVersion：{}",
+            manifest.schema_version
+        ));
+    }
+    if manifest.stage != BACKUP_STAGE {
+        return Err(format!("暂不支持的备份阶段：{}", manifest.stage));
+    }
+    for digest in &manifest.entries {
+        ensure_expected_backup_entry_name(&digest.path)?;
+        if digest.path == "manifest.json" {
+            return Err("manifest 不应自引用 manifest.json".into());
+        }
+        let Some(content) = entries.get(&digest.path) else {
+            return Err(format!("manifest 引用了缺失条目：{}", digest.path));
+        };
+        if content.len() != digest.bytes || sha256_hex(content) != digest.sha256 {
+            return Err(format!("备份条目校验失败：{}", digest.path));
+        }
+    }
+    let expected_digest_paths: BTreeSet<_> = EXPECTED_BACKUP_ENTRIES
+        .into_iter()
+        .filter(|path| *path != "manifest.json")
+        .collect();
+    let actual_digest_paths: BTreeSet<_> = manifest
+        .entries
+        .iter()
+        .map(|digest| digest.path.as_str())
+        .collect();
+    if actual_digest_paths != expected_digest_paths {
+        return Err("manifest 条目清单和备份内容不一致".into());
+    }
+    let redacted_config: RedactedAppConfigBackup =
+        serde_json::from_slice(entries.get("config.redacted.json").unwrap())
+            .map_err(|error| format!("脱敏配置解析失败: {error}"))?;
+    Ok(ParsedManagementBackup {
+        manifest,
+        redacted_config,
+        entries,
+    })
+}
+
+fn build_import_preflight(parsed: &ParsedManagementBackup) -> ManagementBackupImportPreflight {
+    let mut blocked_reasons = Vec::new();
+    let mut warnings = vec![
+        "恢复不会导入文档正文、缓存正文、API Key、系统凭据或旧机器绝对路径。".into(),
+        "所有知识库目录都需要在当前机器重新映射。".into(),
+    ];
+    let mut seen_fingerprints = BTreeSet::new();
+    let mut required_library_mappings = Vec::new();
+    for library in &parsed.redacted_config.libraries {
+        if library.path_fingerprint.trim().is_empty()
+            || !seen_fingerprints.insert(library.path_fingerprint.as_str())
+        {
+            blocked_reasons.push("备份中的知识库路径指纹为空或重复。".into());
+            continue;
+        }
+        required_library_mappings.push(RequiredLibraryMapping {
+            path_fingerprint: library.path_fingerprint.clone(),
+            path_leaf: library.path_leaf.clone(),
+            name: library.name.clone(),
+        });
+        if library.git_remote_fingerprint.is_some() {
+            warnings.push(format!(
+                "知识库「{}」的 Git Remote 只会以指纹校验存在，恢复后需手动重新填写 Remote URL。",
+                library.name
+            ));
+        }
+    }
+    let library_fingerprints: BTreeSet<_> = parsed
+        .redacted_config
+        .libraries
+        .iter()
+        .map(|library| library.path_fingerprint.as_str())
+        .collect();
+    for search in &parsed.redacted_config.saved_searches {
+        if !library_fingerprints.contains(search.library_fingerprint.as_str()) {
+            blocked_reasons.push(format!("保存搜索「{}」指向不存在的知识库。", search.name));
+        }
+    }
+    ManagementBackupImportPreflight {
+        valid: blocked_reasons.is_empty(),
+        schema_version: parsed.manifest.schema_version,
+        stage: parsed.manifest.stage.clone(),
+        created_at: parsed.manifest.created_at,
+        entry_count: parsed.entries.len(),
+        redacted_library_count: parsed.redacted_config.libraries.len(),
+        saved_search_count: parsed.redacted_config.saved_searches.len(),
+        requires_library_mapping: !parsed.redacted_config.libraries.is_empty(),
+        required_library_mappings,
+        blocked_reasons,
+        warnings,
+        excluded: parsed.manifest.excluded.clone(),
+    }
+}
+
+fn restored_config_from_redacted(
+    redacted: &RedactedAppConfigBackup,
+    mappings: Vec<LibraryPathMapping>,
+) -> Result<(AppConfig, Vec<String>), String> {
+    let mut by_fingerprint = BTreeMap::new();
+    let mut target_paths = BTreeSet::new();
+    for mapping in mappings {
+        let path = mapping.path.trim();
+        if mapping.path_fingerprint.trim().is_empty() || path.is_empty() {
+            return Err("知识库路径映射不能为空。".into());
+        }
+        if path.chars().count() > 4096 {
+            return Err("知识库路径过长，已拒绝恢复。".into());
+        }
+        if !target_paths.insert(path.to_string()) {
+            return Err("多个知识库不能映射到同一个目录。".into());
+        }
+        by_fingerprint.insert(mapping.path_fingerprint, path.to_string());
+    }
+    let mut libraries = Vec::new();
+    let mut warnings = Vec::new();
+    for library in &redacted.libraries {
+        let path = by_fingerprint
+            .get(&library.path_fingerprint)
+            .ok_or_else(|| format!("缺少知识库「{}」的当前机器目录映射。", library.name))?
+            .clone();
+        if library.git_remote_fingerprint.is_some() {
+            warnings.push(format!(
+                "知识库「{}」的 Git Remote 未恢复，请在设置中重新填写。",
+                library.name
+            ));
+        }
+        libraries.push(LibraryConfig {
+            name: library.name.clone(),
+            path,
+            git_enabled: library.git_enabled,
+            git_remote: String::new(),
+            git_branch: library.git_branch.clone(),
+        });
+    }
+    let active_library_path = redacted
+        .active_library_fingerprint
+        .as_ref()
+        .and_then(|fingerprint| by_fingerprint.get(fingerprint))
+        .cloned()
+        .or_else(|| libraries.first().map(|library| library.path.clone()))
+        .unwrap_or_default();
+    let mut saved_searches = Vec::new();
+    for search in &redacted.saved_searches {
+        let library_path = by_fingerprint
+            .get(&search.library_fingerprint)
+            .ok_or_else(|| format!("保存搜索「{}」缺少知识库目录映射。", search.name))?
+            .clone();
+        saved_searches.push(SavedSearchConfig {
+            id: search.id.clone(),
+            name: search.name.clone(),
+            query: search.query.clone(),
+            library_path,
+            object_types: search.object_types.clone(),
+            created_at: search.created_at,
+        });
+    }
+    let config = AppConfig {
+        libraries,
+        active_library_path,
+        theme: redacted.theme.clone(),
+        code_theme: redacted.code_theme.clone(),
+        editor_mode: redacted.editor_mode.clone(),
+        editor_bg_color: redacted.editor_bg_color.clone(),
+        hero_icon: redacted.hero_icon.clone(),
+        auto_save_interval: redacted.auto_save_interval,
+        text_auto_save_enabled: redacted.text_auto_save_enabled,
+        max_history_count: redacted.max_history_count,
+        is_autostart: redacted.is_autostart,
+        exit_strategy: redacted.exit_strategy.clone(),
+        visual_style: redacted.visual_style.clone(),
+        motion_speed: redacted.motion_speed.clone(),
+        ai_enabled: redacted.ai_enabled,
+        ai_provider: redacted.ai_provider.clone(),
+        ai_endpoint: redacted.ai_endpoint.clone(),
+        ai_api_key: String::new(),
+        ai_model: redacted.ai_model.clone(),
+        saved_searches,
+    };
+    Ok((config, warnings))
+}
+
 fn read_config_from_disk(app: &tauri::AppHandle) -> Result<AppConfig, String> {
     let config_path = app
         .path()
@@ -295,7 +609,7 @@ pub fn export_management_backup(
         return Err("管理备份必须保存为 .zip 文件".into());
     }
     if target.exists() {
-        return Err("目标备份文件已存在；为避免误覆盖，请选择新的文件名".into());
+        return Err("目标备份文件已存在；为避免误覆盖，请选择新的文件名。".into());
     }
     let config = read_config_from_disk(&app)?;
     let created_at = now_unix_seconds();
@@ -305,25 +619,76 @@ pub fn export_management_backup(
     Ok(receipt)
 }
 
-#[cfg(test)]
-pub(crate) fn inspect_backup_entries(
-    bytes: &[u8],
-) -> Result<std::collections::BTreeMap<String, Vec<u8>>, String> {
-    let cursor = Cursor::new(bytes);
-    let mut archive =
-        zip::ZipArchive::new(cursor).map_err(|error| format!("读取备份压缩包失败: {error}"))?;
-    let mut entries = std::collections::BTreeMap::new();
-    for index in 0..archive.len() {
-        let mut file = archive
-            .by_index(index)
-            .map_err(|error| format!("读取备份条目失败: {error}"))?;
-        let name = file.name().to_string();
-        let mut content = Vec::new();
-        std::io::copy(&mut file, &mut content)
-            .map_err(|error| format!("读取备份内容失败: {error}"))?;
-        entries.insert(name, content);
+#[tauri::command]
+pub fn preflight_management_backup_import(
+    backup_path: String,
+) -> Result<ManagementBackupImportPreflight, String> {
+    let target = Path::new(&backup_path);
+    if target
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_none_or(|value| !value.eq_ignore_ascii_case("zip"))
+    {
+        return Err("管理备份必须是 .zip 文件".into());
     }
-    Ok(entries)
+    let metadata = fs::metadata(target).map_err(|error| format!("读取管理备份失败: {error}"))?;
+    if metadata.len() > MAX_BACKUP_BYTES {
+        return Err("管理备份超过大小上限，已拒绝导入".into());
+    }
+    let bytes = fs::read(target).map_err(|error| format!("读取管理备份失败: {error}"))?;
+    let parsed = parse_management_backup(&bytes)?;
+    Ok(build_import_preflight(&parsed))
+}
+
+#[tauri::command]
+pub fn restore_management_backup(
+    app: tauri::AppHandle,
+    backup_path: String,
+    library_mappings: Vec<LibraryPathMapping>,
+) -> Result<ManagementBackupRestoreReceipt, String> {
+    let target = Path::new(&backup_path);
+    if target
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_none_or(|value| !value.eq_ignore_ascii_case("zip"))
+    {
+        return Err("管理备份必须是 .zip 文件".into());
+    }
+    let bytes = fs::read(target).map_err(|error| format!("读取管理备份失败: {error}"))?;
+    let parsed = parse_management_backup(&bytes)?;
+    let preflight = build_import_preflight(&parsed);
+    if !preflight.valid {
+        return Err(format!(
+            "管理备份预检未通过：{}",
+            preflight.blocked_reasons.join("；")
+        ));
+    }
+    let (mut config, mut warnings) =
+        restored_config_from_redacted(&parsed.redacted_config, library_mappings)?;
+    config.ai_api_key.clear();
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|error| format!("定位配置目录失败: {error}"))?;
+    if !config_dir.exists() {
+        fs::create_dir_all(&config_dir).map_err(|error| format!("创建配置目录失败: {error}"))?;
+    }
+    let content = serde_json::to_string_pretty(&config)
+        .map_err(|error| format!("序列化恢复配置失败: {error}"))?;
+    write_utf8(config_dir.join("config.json"), &content)?;
+    warnings.extend(preflight.warnings);
+    Ok(ManagementBackupRestoreReceipt {
+        path: target.to_string_lossy().into_owned(),
+        restored_at: now_unix_seconds(),
+        library_count: config.libraries.len(),
+        saved_search_count: config.saved_searches.len(),
+        warnings,
+    })
+}
+
+#[cfg(test)]
+pub(crate) fn inspect_backup_entries(bytes: &[u8]) -> Result<BTreeMap<String, Vec<u8>>, String> {
+    read_backup_entries(bytes)
 }
 
 #[cfg(test)]
@@ -368,5 +733,84 @@ mod tests {
         assert!(all_text.contains("pathFingerprint"));
         assert!(all_text.contains("gitRemoteFingerprint"));
         assert!(all_text.contains("document-body"));
+    }
+
+    #[test]
+    fn management_backup_preflight_requires_library_mapping() {
+        let config = AppConfig {
+            libraries: vec![LibraryConfig {
+                name: "Vault".into(),
+                path: "C:\\Users\\Alice\\Documents\\Vault".into(),
+                ..Default::default()
+            }],
+            active_library_path: "C:\\Users\\Alice\\Documents\\Vault".into(),
+            ..Default::default()
+        };
+        let (bytes, _) = build_management_backup_archive(&config, 100).unwrap();
+        let parsed = parse_management_backup(&bytes).unwrap();
+        let preflight = build_import_preflight(&parsed);
+        assert!(preflight.valid);
+        assert!(preflight.requires_library_mapping);
+        assert_eq!(preflight.required_library_mappings.len(), 1);
+        assert_eq!(preflight.required_library_mappings[0].path_leaf, "Vault");
+        assert!(preflight
+            .warnings
+            .iter()
+            .any(|warning| warning.contains("旧机器绝对路径")));
+    }
+
+    #[test]
+    fn management_backup_restore_rejects_missing_mapping() {
+        let config = AppConfig {
+            libraries: vec![LibraryConfig {
+                name: "Vault".into(),
+                path: "C:\\Users\\Alice\\Documents\\Vault".into(),
+                ..Default::default()
+            }],
+            saved_searches: vec![SavedSearchConfig {
+                id: "search-1".into(),
+                name: "Todo".into(),
+                query: "project".into(),
+                library_path: "C:\\Users\\Alice\\Documents\\Vault".into(),
+                object_types: vec![],
+                created_at: 1,
+            }],
+            ..Default::default()
+        };
+        let redacted = redacted_config(&config);
+        assert!(restored_config_from_redacted(&redacted, vec![]).is_err());
+        let restored = restored_config_from_redacted(
+            &redacted,
+            vec![LibraryPathMapping {
+                path_fingerprint: fingerprint("C:\\Users\\Alice\\Documents\\Vault"),
+                path: "D:\\Knowledge\\Vault".into(),
+            }],
+        )
+        .unwrap()
+        .0;
+        assert_eq!(restored.libraries[0].path, "D:\\Knowledge\\Vault");
+        assert_eq!(
+            restored.saved_searches[0].library_path,
+            "D:\\Knowledge\\Vault"
+        );
+        let serialized = serde_json::to_string(&restored).unwrap();
+        assert!(!serialized.contains("C:\\Users\\Alice"));
+    }
+
+    #[test]
+    fn management_backup_import_rejects_unexpected_zip_member() {
+        let config = AppConfig::default();
+        let (bytes, _) = build_management_backup_archive(&config, 100).unwrap();
+        let mut original_entries = inspect_backup_entries(&bytes).unwrap();
+        let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
+        for (path, content) in std::mem::take(&mut original_entries) {
+            zip.start_file(path, SimpleFileOptions::default()).unwrap();
+            zip.write_all(&content).unwrap();
+        }
+        zip.start_file("../secret.txt", SimpleFileOptions::default())
+            .unwrap();
+        zip.write_all(b"nope").unwrap();
+        let tampered = zip.finish().unwrap().into_inner();
+        assert!(parse_management_backup(&tampered).is_err());
     }
 }
