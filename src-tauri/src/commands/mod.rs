@@ -11,6 +11,7 @@ pub mod graph;
 pub mod history;
 pub mod index;
 pub mod json;
+pub mod legacy_binary_office;
 pub mod legacy_office;
 pub mod mindmap;
 pub mod odt;

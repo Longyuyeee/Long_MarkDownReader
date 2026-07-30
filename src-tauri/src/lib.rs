@@ -55,6 +55,9 @@ use commands::json::{
     rename_json_object_key_source, replace_json_scalar_source, transform_json_source,
     write_json_source_document,
 };
+use commands::legacy_binary_office::{
+    convert_legacy_binary_office_to_modern_copy, preflight_legacy_binary_office,
+};
 use commands::legacy_office::{convert_legacy_doc_to_docx_copy, preflight_legacy_doc};
 use commands::mindmap::{create_canvas_from_opml, read_opml_file, write_opml_file};
 use commands::odt::read_odt_document;
@@ -260,6 +263,8 @@ pub fn run() {
             discover_external_applications,
             open_workspace_file_externally,
             inspect_wps_native_file,
+            preflight_legacy_binary_office,
+            convert_legacy_binary_office_to_modern_copy,
             preflight_legacy_doc,
             convert_legacy_doc_to_docx_copy,
             analyze_json_source,

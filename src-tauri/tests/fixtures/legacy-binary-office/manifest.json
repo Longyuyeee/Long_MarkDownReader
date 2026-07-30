@@ -1,0 +1,59 @@
+{
+    "schemaVersion":  1,
+    "stage":  "E2C",
+    "generatedAt":  "2026-07-30T05:47:13.7505057Z",
+    "producer":  {
+                     "application":  "LibreOffice Calc and Impress",
+                     "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                     "projectAuthoredSeeds":  true,
+                     "isolatedProfiles":  true
+                 },
+    "converter":  {
+                      "application":  "LibreOffice Calc and Impress",
+                      "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                      "isolatedInputCopies":  true,
+                      "isolatedProfiles":  true,
+                      "independentOutputReopen":  true
+                  },
+    "files":  [
+                  {
+                      "formatId":  "legacy-xls",
+                      "source":  {
+                                     "file":  "longedit-e2c-spreadsheet.xls",
+                                     "bytes":  5632,
+                                     "sha256":  "5ce66eab601c51be70227aa75595bdfb47027ebff477cf46cda71a368dcb50b6",
+                                     "signature":  "d0cf11e0a1b11ae1"
+                                 },
+                      "output":  {
+                                     "file":  "longedit-e2c-spreadsheet-output.xlsx",
+                                     "bytes":  5702,
+                                     "sha256":  "4945e236580b4fc63a8e74b81c85745f6124ee362692f0b8fd817a5b6bb380a2",
+                                     "signature":  "504b"
+                                 },
+                      "expectedText":  "LongEdit E2C legacy XLS fixture",
+                      "sourcePreserved":  true
+                  },
+                  {
+                      "formatId":  "legacy-ppt",
+                      "source":  {
+                                     "file":  "longedit-e2c-presentation.ppt",
+                                     "bytes":  459264,
+                                     "sha256":  "45bdbefcaa38e795a0a7d6875dcf312bcb0eceb1d0fe2a10b54f546f8917ef7c",
+                                     "signature":  "d0cf11e0a1b11ae1"
+                                 },
+                      "output":  {
+                                     "file":  "longedit-e2c-presentation-output.pptx",
+                                     "bytes":  9053,
+                                     "sha256":  "d807ceba192b337cc5331b54f36f4a80878f89678a047a8ad628e398c5a5b1bb",
+                                     "signature":  "504b"
+                                 },
+                      "expectedText":  "LongEdit E2C legacy PPT fixture",
+                      "sourcePreserved":  true
+                  }
+              ],
+    "privacy":  {
+                    "projectAuthoredContent":  true,
+                    "localIdentityScanned":  true,
+                    "localAbsolutePathsExcludedFromManifest":  true
+                }
+}

@@ -366,6 +366,32 @@
       "creation": null
     },
     {
+      "id": "legacy-xls",
+      "label": "旧版 Excel 工作簿",
+      "extensions": [".xls"],
+      "mimeTypes": ["application/vnd.ms-excel"],
+      "routeName": "LegacyOffice",
+      "maxBytes": 134217728,
+      "capabilities": { "read": "unsupported", "edit": "unsupported", "create": "unsupported", "index": "unsupported" },
+      "userCapability": { "level": "external-open", "label": "预检并转换副本", "saveMode": "none", "description": "XLS 支持只读容器、BIFF 身份与风险预检，并可由用户显式选择新的 XLSX 目标；转换在隔离目录中完成，源文件和已有目标始终不会被覆盖。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": null, "writer": null, "creator": null, "indexer": null },
+      "creation": null
+    },
+    {
+      "id": "legacy-ppt",
+      "label": "旧版 PowerPoint 演示",
+      "extensions": [".ppt"],
+      "mimeTypes": ["application/vnd.ms-powerpoint"],
+      "routeName": "LegacyOffice",
+      "maxBytes": 100663296,
+      "capabilities": { "read": "unsupported", "edit": "unsupported", "create": "unsupported", "index": "unsupported" },
+      "userCapability": { "level": "external-open", "label": "预检并转换副本", "saveMode": "none", "description": "PPT 支持只读容器、记录流身份与风险预检，并可由用户显式选择新的 PPTX 目标；转换在隔离目录中完成，源文件和已有目标始终不会被覆盖。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": null, "writer": null, "creator": null, "indexer": null },
+      "creation": null
+    },
+    {
       "id": "pptx",
       "label": "PowerPoint 演示",
       "extensions": [".pptx"],

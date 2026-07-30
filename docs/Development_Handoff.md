@@ -1,9 +1,9 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-30
-交接基线：当前开发版本 `v0.7.0`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干；WPS 原生格式与旧版 DOC 隔离转换已完成，旧版 XLS/PPT、ODF 发布与专业发布门禁仍待收口
+交接基线：当前开发版本 `v0.7.0`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干；WPS 原生格式与旧版 DOC/XLS/PPT 隔离转换已完成，ODF 发布与专业发布门禁仍待收口
 
-> 2026-07-30 权威入口：当前能力、初始需求对齐度、风险和后续 F1～F4/R 顺序以 [`Development_Status_and_Next_Plan_Audit_2026-07-30.md`](./Development_Status_and_Next_Plan_Audit_2026-07-30.md) 为准。E2A、E3 与 E2B 已完成，下一代码阶段为 E2C 旧版 `.xls/.ppt` 预检与显式新副本转换，随后进入 E1C `.ods/.odp`；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁，不得伪造关闭。E2B 证据见 [`E2B_Legacy_DOC_Isolated_Conversion_Audit_2026-07-30.md`](./E2B_Legacy_DOC_Isolated_Conversion_Audit_2026-07-30.md)。
+> 2026-07-30 权威入口：E2A、E3、E2B 与 E2C 均已完成。`.doc/.xls/.ppt` 现在可在原右侧工作面执行只读风险预检并显式生成新的 DOCX/XLSX/PPTX 隔离副本；公开能力仍不是旧格式原生编辑。下一代码阶段为 E1C `.ods/.odp` 原生只读结构预览、搜索与索引；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁。证据见 [`E2C_Legacy_XLS_PPT_Isolated_Conversion_Audit_2026-07-30.md`](./E2C_Legacy_XLS_PPT_Isolated_Conversion_Audit_2026-07-30.md)。
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
@@ -220,7 +220,7 @@ Vite 仍会提示少数 Mermaid/UI 分包压缩后超过 500 KiB；这是性能�
 
 ## 6. 下一阶段顺序
 
-当前权威顺序：**E1B WPS 生产者门禁 → E1C ODS/ODP 只读/索引 → E2A 外部打开 → E2B DOC 隔离转换 → E2C XLS/PPT 隔离转换 → E3 WPS 原生 fixture/外部打开 → R 统一发布矩阵**。基础版本还剩这 7 个产品门禁；E0/E1A、A3R、PDF B2、DOCX C2 和 PPTX C5 已收口，高风险交换格式继续只生成可靠新副本。最新阶段计数、最初三项需求对齐和 Excel 专业等价 X1～X5 计划见 `docs/Development_Audit_and_Next_Plan_2026-07-28.md`。
+当前代码顺序：**E1C ODS/ODP 只读/索引 → R 统一发布矩阵**。E2A、E3、E2B、E2C 已收口；E1B WPS ODT 生产者与 X3-B6 数组生产者属于并行外部证据门禁，不得伪造关闭。高风险交换格式继续只生成可靠新副本。
 
 2026-07-29 已完成 E1B WPS ODF 环境门禁加固：`scripts/audit-e1b-wps-odf-environment.ps1` 以隔离 `SaveAs2(..., 23)` 探测固定 WPS `12.1.0.26895` 的 0 个文件转换器、0 个 ODF 组件和 OLE 复合文档输出；证据为 `fixtures/odt/producers/wps-writer-blocker.json`。fixture 生成器现在先做强制预检并在净化前后验证 ODT ZIP，阻断时无无效 fixture 或临时目录残留。E1B 仍为 2/3，`.odt` 仍未注册；详细审计见 `docs/E1B_WPS_ODF_Environment_Gate_Audit_2026-07-29.md`。
 

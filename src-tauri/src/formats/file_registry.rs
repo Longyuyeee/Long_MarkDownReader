@@ -242,6 +242,8 @@ mod tests {
         );
         assert_eq!(registry.by_path("config.json").unwrap().id, "json");
         assert_eq!(registry.by_path("settings.JSONC").unwrap().id, "jsonc");
+        assert_eq!(registry.by_path("archive.XLS").unwrap().id, "legacy-xls");
+        assert_eq!(registry.by_path("slides.PPT").unwrap().id, "legacy-ppt");
         assert!(registry.by_path("note.md.exe").is_none());
     }
 

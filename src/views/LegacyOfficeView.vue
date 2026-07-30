@@ -1,11 +1,11 @@
 <template>
-  <section class="legacy-office" data-testid="e2b-legacy-doc-workspace">
+  <section class="legacy-office" data-testid="legacy-office-workspace">
     <header>
       <div class="identity">
         <FileClock :size="20" aria-hidden="true" />
         <div>
           <strong>{{ fileName }}</strong>
-          <span>旧版 Word 文档 · 隔离转换</span>
+          <span>{{ formatLabel }} · 隔离转换</span>
         </div>
       </div>
       <button class="icon-button" :disabled="loading || converting" title="重新预检" @click="load">
@@ -25,15 +25,18 @@
       <div class="status" :class="{ blocked: !report.conversionEligible }">
         <component :is="report.conversionEligible ? ShieldCheck : ShieldAlert" :size="22" />
         <div>
-          <strong>{{ report.conversionEligible ? '可以生成 DOCX 副本' : '转换已被风险策略阻止' }}</strong>
-          <span>预检和转换均不修改源 DOC，也不覆盖已有目标</span>
+          <strong>{{ report.conversionEligible ? `可以生成 ${targetLabel} 副本` : '转换已被风险策略阻止' }}</strong>
+          <span>预检和转换均不修改源文件，也不覆盖已有目标</span>
         </div>
       </div>
 
       <dl>
+        <div><dt>格式</dt><dd>{{ formatLabel }}</dd></div>
         <div><dt>容器</dt><dd>OLE Compound File · {{ report.cfbVersion }}</dd></div>
         <div><dt>大小</dt><dd>{{ formatBytes(report.size) }}</dd></div>
         <div><dt>数据流</dt><dd>{{ report.streamCount }} 个</dd></div>
+        <div v-if="report.itemCount"><dt>{{ itemLabel }}</dt><dd>{{ report.itemCount }} 个</dd></div>
+        <div v-if="report.formulaCount"><dt>公式记录</dt><dd>{{ report.formulaCount }} 个</dd></div>
         <div><dt>修改时间</dt><dd>{{ formatTime(report.modified) }}</dd></div>
         <div class="digest"><dt>源 SHA-256</dt><dd>{{ report.sha256 }}</dd></div>
       </dl>
@@ -49,10 +52,10 @@
       </section>
 
       <section class="conversion">
-        <label for="legacy-doc-target">新的 DOCX 目标</label>
+        <label for="legacy-office-target">{{ targetPrompt }}</label>
         <div class="target-row">
           <input
-            id="legacy-doc-target"
+            id="legacy-office-target"
             v-model="targetPath"
             :disabled="converting"
             spellcheck="false"
@@ -61,7 +64,7 @@
           <button
             class="convert-button"
             :disabled="!canConvert"
-            title="在隔离环境中生成新的 DOCX 副本"
+            :title="`在隔离环境中生成新的 ${targetLabel} 副本`"
             @click="convert"
           >
             <LoaderCircle v-if="converting" :size="16" class="spinning" />
@@ -79,9 +82,9 @@
       <div v-else-if="receipt" class="result success">
         <CircleCheck :size="18" />
         <div>
-          <strong>DOCX 副本已生成并通过结构复读</strong>
+          <strong>{{ targetLabel }} 副本已生成并通过结构复读</strong>
           <p>{{ receipt.targetPath }}</p>
-          <span>{{ formatBytes(receipt.targetBytes) }} · {{ receipt.blockCount }} 个内容块 · 源文件摘要未变化</span>
+          <span>{{ formatBytes(receipt.targetBytes) }} · {{ receiptItemCount }} 个{{ itemLabel }} · 源文件摘要未变化</span>
         </div>
       </div>
     </main>
@@ -104,13 +107,18 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '../store/app'
 
-interface LegacyDocPreflight {
+interface LegacyOfficePreflight {
   path: string
+  formatId?: string
+  formatLabel?: string
+  targetExtension?: string
   size: number
   modified: number
   sha256: string
   cfbVersion: string
   streamCount: number
+  itemCount?: number
+  formulaCount?: number
   riskCodes: string[]
   warnings: string[]
   blockReasons: string[]
@@ -118,24 +126,50 @@ interface LegacyDocPreflight {
   sourcePreserved: boolean
 }
 
-interface LegacyDocConversionReceipt {
+interface LegacyOfficeConversionReceipt {
   targetPath: string
   targetBytes: number
-  blockCount: number
+  blockCount?: number
+  itemCount?: number
   sourcePreserved: boolean
 }
 
+type LegacyKind = 'doc' | 'xls' | 'ppt'
+
 const route = useRoute()
 const store = useAppStore()
-const report = ref<LegacyDocPreflight>()
-const receipt = ref<LegacyDocConversionReceipt>()
+const report = ref<LegacyOfficePreflight>()
+const receipt = ref<LegacyOfficeConversionReceipt>()
 const loading = ref(false)
 const converting = ref(false)
 const loadError = ref('')
 const conversionError = ref('')
 const targetPath = ref('')
 const documentPath = computed(() => String(route.query.path || store.activeTabId || ''))
-const fileName = computed(() => documentPath.value.split(/[\\/]/).pop() || '未命名 DOC')
+const legacyKind = computed<LegacyKind>(() => {
+  if (/\.xls$/i.test(documentPath.value)) return 'xls'
+  if (/\.ppt$/i.test(documentPath.value)) return 'ppt'
+  return 'doc'
+})
+const formatLabel = computed(() => report.value?.formatLabel || ({
+  doc: '旧版 Word 文档',
+  xls: '旧版 Excel 工作簿',
+  ppt: '旧版 PowerPoint 演示',
+}[legacyKind.value]))
+const targetExtension = computed(() => report.value?.targetExtension || ({
+  doc: '.docx',
+  xls: '.xlsx',
+  ppt: '.pptx',
+}[legacyKind.value]))
+const targetLabel = computed(() => targetExtension.value.slice(1).toUpperCase())
+const targetPrompt = computed(() => ({
+  doc: '新的 DOCX 目标',
+  xls: '新的 XLSX 目标',
+  ppt: '新的 PPTX 目标',
+}[legacyKind.value]))
+const itemLabel = computed(() => legacyKind.value === 'ppt' ? '幻灯片' : legacyKind.value === 'xls' ? '工作表' : '内容块')
+const fileName = computed(() => documentPath.value.split(/[\\/]/).pop() || `未命名.${legacyKind.value}`)
+const receiptItemCount = computed(() => receipt.value?.itemCount ?? receipt.value?.blockCount ?? 0)
 const canConvert = computed(() => Boolean(
   report.value?.conversionEligible
   && report.value.sourcePreserved
@@ -144,7 +178,7 @@ const canConvert = computed(() => Boolean(
   && !converting.value,
 ))
 
-const defaultTargetPath = (path: string) => path.replace(/\.doc$/i, '-converted.docx')
+const defaultTargetPath = (path: string) => path.replace(/\.(doc|xls|ppt)$/i, `-converted${targetExtension.value}`)
 const formatBytes = (value: number) => {
   if (value < 1024) return `${value} B`
   if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KiB`
@@ -159,6 +193,8 @@ const riskLabel = (risk: string) => ({
   vba: 'VBA / 宏',
   'ole-object': 'OLE 嵌入对象',
   'external-link': '外部链接',
+  formula: '公式',
+  media: '媒体内容',
 }[risk] || risk)
 
 const load = async () => {
@@ -168,7 +204,8 @@ const load = async () => {
   conversionError.value = ''
   receipt.value = undefined
   try {
-    report.value = await invoke<LegacyDocPreflight>('preflight_legacy_doc', {
+    const command = legacyKind.value === 'doc' ? 'preflight_legacy_doc' : 'preflight_legacy_binary_office'
+    report.value = await invoke<LegacyOfficePreflight>(command, {
       libraryRoot: store.libraryPath,
       path: documentPath.value,
     })
@@ -187,7 +224,10 @@ const convert = async () => {
   conversionError.value = ''
   receipt.value = undefined
   try {
-    receipt.value = await invoke<LegacyDocConversionReceipt>('convert_legacy_doc_to_docx_copy', {
+    const command = legacyKind.value === 'doc'
+      ? 'convert_legacy_doc_to_docx_copy'
+      : 'convert_legacy_binary_office_to_modern_copy'
+    receipt.value = await invoke<LegacyOfficeConversionReceipt>(command, {
       libraryRoot: store.libraryPath,
       path: documentPath.value,
       targetPath: targetPath.value.trim(),

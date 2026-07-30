@@ -13,7 +13,7 @@ use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 const MAX_LEGACY_DOC_BYTES: u64 = 64 * 1024 * 1024;
-const CONVERSION_TIMEOUT: Duration = Duration::from_secs(90);
+pub(crate) const CONVERSION_TIMEOUT: Duration = Duration::from_secs(90);
 const FIB_IDENT: u16 = 0xa5ec;
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -51,14 +51,14 @@ pub struct LegacyDocConversionReceipt {
     pub warning_count: usize,
 }
 
-struct IsolatedConversionWorkspace {
-    root: PathBuf,
+pub(crate) struct IsolatedConversionWorkspace {
+    pub(crate) root: PathBuf,
 }
 
 impl IsolatedConversionWorkspace {
-    fn create() -> Result<Self, String> {
+    pub(crate) fn create() -> Result<Self, String> {
         let root = std::env::temp_dir().join(format!(
-            "longedit-e2b-{}-{}",
+            "longedit-legacy-office-{}-{}",
             std::process::id(),
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
@@ -79,11 +79,11 @@ impl Drop for IsolatedConversionWorkspace {
     }
 }
 
-fn sha256(bytes: &[u8]) -> String {
+pub(crate) fn sha256(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
 
-fn contains_ascii_or_utf16(bytes: &[u8], value: &str) -> bool {
+pub(crate) fn contains_ascii_or_utf16(bytes: &[u8], value: &str) -> bool {
     let ascii = value.as_bytes();
     let utf16 = value
         .encode_utf16()
@@ -93,7 +93,7 @@ fn contains_ascii_or_utf16(bytes: &[u8], value: &str) -> bool {
         || bytes.windows(utf16.len()).any(|window| window == utf16)
 }
 
-fn safe_entry_name(path: &Path) -> String {
+pub(crate) fn safe_entry_name(path: &Path) -> String {
     path.to_string_lossy()
         .chars()
         .map(|character| {
@@ -252,7 +252,7 @@ fn terminate_process_tree(child: &mut std::process::Child) {
     let _ = child.kill();
 }
 
-fn run_with_timeout(command: &mut Command, timeout: Duration) -> Result<Output, String> {
+pub(crate) fn run_with_timeout(command: &mut Command, timeout: Duration) -> Result<Output, String> {
     let mut child = command
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

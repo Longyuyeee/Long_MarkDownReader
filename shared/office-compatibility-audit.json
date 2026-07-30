@@ -180,6 +180,9 @@
       "e0Disposition": "external-open-and-isolated-conversion-planned",
       "firstImplementation": "E2A/E2C",
       "initialProductLevel": "external-open",
+      "e2cPreflightStatus": "verified-real-cfb-fixture",
+      "e2cConversionStatus": "verified-isolated-xlsx-copy",
+      "observedContainer": "compound-binary-workbook",
       "conversion": "explicit-new-copy-after-preflight",
       "risks": ["malformed-cfb", "encrypted-content", "formula", "vba", "ole-object", "external-link", "converter-fidelity"],
       "fixtureProfiles": ["plain", "multi-sheet-formulas-styles", "external-link", "ole-object", "vba", "encrypted"]
@@ -194,6 +197,9 @@
       "e0Disposition": "external-open-and-isolated-conversion-planned",
       "firstImplementation": "E2A/E2C",
       "initialProductLevel": "external-open",
+      "e2cPreflightStatus": "verified-real-cfb-fixture",
+      "e2cConversionStatus": "verified-isolated-pptx-copy",
+      "observedContainer": "compound-binary-presentation",
       "conversion": "explicit-new-copy-after-preflight",
       "risks": ["malformed-cfb", "encrypted-content", "vba", "ole-object", "external-link", "media", "converter-fidelity"],
       "fixtureProfiles": ["plain", "slides-notes-images-shapes", "external-link", "ole-object", "vba", "encrypted"]
