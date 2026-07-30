@@ -459,3 +459,5 @@ Excel 三成员包现已绑定环境身份、producer 版本/构建和输出摘�
 `.wps/.et/.dps` 已由 WPS Office `12.1.0.26895` 直接生成、脱敏并用新 WPS 实例复开。共享注册表和主窗口右侧 `ExternalOffice` 工作面现在可以确认容器身份，显示大小、修改时间和 SHA-256，并复用 E2A 的系统默认/指定应用外部打开。
 
 三种格式严格保持 `external-open / saveMode:none`；LongEdit 不解析正文、不索引、不转换、不编辑、不创建也不保存。接手后直接进入 E2B `.doc` 隔离转换试点：先做 OLE 预检与风险报告，只允许显式生成新 DOCX 副本并证明源摘要不变；通过后再扩展 E2C `.xls/.ppt`。详细审计见 [`E3_WPS_Native_Recognition_and_External_Open_Audit_2026-07-30.md`](./E3_WPS_Native_Recognition_and_External_Open_Audit_2026-07-30.md)。
+
+远端隔离 Quality Gate `30512714411` 已通过：E3 契约、Rust `391 passed`、XLSX 性能预算、PDF 大文件范围读取和生产依赖审计全部为绿色。

@@ -59,6 +59,8 @@
 - PDF 100 MiB 范围读取 `144 ms`，生产依赖漏洞 `0`。
 - 完整功能链通过后，既有 XLSX 性能测试在共享机器持续 `100%` CPU 时失败：两次总耗时约 `18.8 s`，页面阶段约 `8.4～8.8 s`。未终止其他项目进程，也未放宽性能阈值；提交后以隔离 GitHub Runner 的 Quality Gate 作为发布判定。
 
+远端隔离 Quality Gate [30512714411](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30512714411) 已通过：E3 契约通过，Rust `391 passed`，XLSX 性能为 inspect `291 ms`、page `3979 ms`、patch `3904 ms`、total `8175 ms`，PDF 100 MiB 范围读取 `141 ms`，生产依赖漏洞 `0`。
+
 ## 6. 下一阶段
 
 下一代码阶段进入 **E2B：旧版 `.doc` 隔离转换试点**。先完成 OLE 复合二进制预检、宏/外链/嵌入对象风险报告、源 SHA-256 不变、显式新副本转换和目标 DOCX 结构复读；不覆盖原件或已有目标。E2B 证明流程可靠后再进入 E2C 的 `.xls/.ppt`，随后完成 E1C `.ods/.odp`。
