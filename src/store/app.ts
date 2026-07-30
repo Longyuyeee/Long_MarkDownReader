@@ -81,7 +81,6 @@ export const useAppStore = defineStore('app', {
     textAutoSaveEnabled: true,
     maxHistoryCount: 10,
     isAutostart: false,
-    isDefaultEditor: false,
     exitStrategy: 'ask' as 'ask' | 'quit' | 'minimize',
     isTempDirty: false,
     isZen: false,
@@ -142,18 +141,9 @@ export const useAppStore = defineStore('app', {
           this.isAutostart = config.isAutostart || false
         }
         
-        // 校准系统默认关联状态
-        await this.checkSystemStatus()
         // 恢复上一次的标签页
         this.restoreTabsState()
       } catch (e) { console.error('Failed to load config', e) }
-    },
-    async checkSystemStatus() {
-      try {
-        this.isDefaultEditor = await invoke<boolean>('check_association_status')
-      } catch (e) {
-        console.error('Failed to check association status', e)
-      }
     },
     async updateConfig(patch: any) {
       // 检测文件库切换，若切换则清空标签页

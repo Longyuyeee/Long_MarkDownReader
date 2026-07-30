@@ -77,7 +77,7 @@ use commands::pptx::{
     read_pptx_presentation, save_pptx_patch_copy,
 };
 use commands::search::{get_all_tags, search_all_libraries, search_by_tag, search_library};
-use commands::system::{check_association_status, exit_app, get_url_title, set_as_default_handler};
+use commands::system::{exit_app, get_url_title, open_default_apps_settings};
 use commands::table::{
     create_table_file, export_table_file, import_table_file, read_table_file, write_table_file,
 };
@@ -178,7 +178,16 @@ pub fn run() {
             _ => {}
         })
         .setup(|app| {
-            let _ = check_and_migrate_data(app.handle());
+            match check_and_migrate_data(app.handle()) {
+                Ok(report) if report.has_conflict() => {
+                    eprintln!("Legacy data migration conflict preserved: {report:?}");
+                }
+                Ok(report) if report.changed() => {
+                    eprintln!("Legacy data migration completed: {report:?}");
+                }
+                Ok(_) => {}
+                Err(error) => eprintln!("Legacy data migration check failed: {error}"),
+            }
             let window = app
                 .get_webview_window("main")
                 .ok_or_else(|| "main window not found".to_string())?;
@@ -404,8 +413,7 @@ pub fn run() {
             delete_items,
             move_item,
             move_items,
-            set_as_default_handler,
-            check_association_status,
+            open_default_apps_settings,
             save_history_version,
             save_external_history_version,
             list_history,

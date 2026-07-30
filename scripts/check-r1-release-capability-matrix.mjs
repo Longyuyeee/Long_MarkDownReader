@@ -13,7 +13,7 @@ const router = read('src/router/index.ts')
 const workflow = read('.github/workflows/quality-gate.yml')
 const failures = []
 
-if (matrix.schemaVersion !== 1 || matrix.stage !== 'R1') failures.push('invalid R1 matrix header')
+if (matrix.schemaVersion !== 1 || !['R1', 'R2'].includes(matrix.stage)) failures.push('invalid R1+ matrix header')
 if (matrix.releaseCandidate !== false) failures.push('R1 must not claim release-candidate status')
 if (matrix.appVersion !== tauri.version) failures.push('matrix and Tauri app versions must match')
 if (matrix.formatRegistrySchemaVersion !== registry.schemaVersion) failures.push('registry schema version drift')

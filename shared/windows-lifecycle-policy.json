@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "stage": "R2",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "product": {
+    "name": "Long编辑",
+    "identifier": "com.longyuye.mdreader"
+  },
+  "installer": {
+    "targets": ["msi", "nsis"],
+    "primaryTarget": "nsis",
+    "nsisInstallMode": "currentUser",
+    "allowDowngrades": false,
+    "wixUpgradeCode": "7bf71eea-e39f-54b9-a7e6-4922e93094a6"
+  },
+  "fileAssociations": {
+    "defaultSelectionOwner": "windows",
+    "directRegistryDefaultWrite": false,
+    "groups": [
+      {
+        "id": "markdown",
+        "extensions": ["md", "markdown"],
+        "role": "Editor"
+      }
+    ],
+    "excludedDependencyFormats": ["doc", "xls", "ppt", "wps", "et", "dps"]
+  },
+  "dataLifecycle": {
+    "knowledgeLibraries": "external-user-data-never-removed",
+    "appConfig": "retained-on-uninstall",
+    "appCache": "retained-on-uninstall-user-clearable",
+    "uninstallerCustomDeletion": false,
+    "legacyIdentifier": "com.mistyedit.mdhelper",
+    "migrationConflictPolicy": "preserve-both-and-report"
+  }
+}

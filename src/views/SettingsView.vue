@@ -99,16 +99,11 @@
             </div>
             <div class="setting-row">
               <div class="info">
-                <div class="label">设为默认 Markdown 编辑器</div>
-                <div class="desc">双击 .md 文件将自动使用Long编辑打开</div>
+                <div class="label">Markdown 打开方式</div>
+                <div class="desc">由 Windows 管理默认应用，Long编辑不会覆盖现有选择</div>
               </div>
-              <n-button 
-                secondary 
-                :type="store.isDefaultEditor ? 'success' : 'info'" 
-                @click="setAsDefault"
-                :disabled="store.isDefaultEditor"
-              >
-                {{ store.isDefaultEditor ? '已是默认编辑器' : '立即设置' }}
+              <n-button secondary type="info" @click="openDefaultAppsSettings">
+                打开系统设置
               </n-button>
             </div>
             <div class="setting-row">
@@ -564,22 +559,11 @@ onUnmounted(() => {
   if (saveDebounce) clearTimeout(saveDebounce)
 })
 
-const setAsDefault = async () => {
+const openDefaultAppsSettings = async () => {
   try {
-    await invoke('set_as_default_handler')
-    message.loading('正在同步系统设置...', { duration: 1000 })
-    
-    // 延迟检查，给系统注册表反应时间
-    setTimeout(async () => {
-      await store.checkSystemStatus()
-      if (store.isDefaultEditor) {
-        message.success('已成功设为默认编辑器')
-      } else {
-        message.warning('设置已提交，若未生效请在系统“打开方式”中手动选择Long编辑')
-      }
-    }, 1500)
+    await invoke('open_default_apps_settings')
   } catch (err) {
-    message.error('设置失败: ' + err)
+    message.error('无法打开系统设置: ' + err)
   }
 }
 // 移除 saveAll 函数

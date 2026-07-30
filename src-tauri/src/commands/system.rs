@@ -1,49 +1,24 @@
 use scraper::{Html, Selector};
+#[cfg(target_os = "windows")]
 use std::process::Command;
 
 #[tauri::command]
-pub fn set_as_default_handler() -> Result<(), String> {
-    let executable = std::env::current_exe().map_err(|error| error.to_string())?;
-    let script = format!(
-        "$classesPath = 'Registry::HKEY_CURRENT_USER\\Software\\Classes'; \
-         $mdPath = \"$classesPath\\.md\"; \
-         $progId = 'Long编辑.MD'; \
-         $progIdPath = \"$classesPath\\$progId\"; \
-         if (-not (Test-Path $mdPath)) {{ New-Item -Path $mdPath -Force | Out-Null }}; \
-         Set-Item -Path $mdPath -Value $progId; \
-         if (-not (Test-Path \"$progIdPath\\shell\\open\\command\")) {{ New-Item -Path \"$progIdPath\\shell\\open\\command\" -Force | Out-Null }}; \
-         Set-Item -Path $progIdPath -Value 'Markdown 文本文件'; \
-         Set-ItemProperty -Path $progIdPath -Name 'FriendlyAppName' -Value 'Long编辑'; \
-         Set-Item -Path \"$progIdPath\\shell\\open\\command\" -Value '\"{}\" \"%1\"'",
-        executable.to_string_lossy()
-    );
-    let output = hidden_powershell(&script)?;
-    if !output.status.success() {
-        return Err(String::from_utf8_lossy(&output.stderr).to_string());
-    }
-    Ok(())
-}
-
-#[tauri::command]
-pub fn check_association_status() -> bool {
-    hidden_powershell(
-        "(Get-Item -Path 'Registry::HKEY_CURRENT_USER\\Software\\Classes\\.md' -ErrorAction SilentlyContinue).'(default)'",
-    )
-    .map(|output| String::from_utf8_lossy(&output.stdout).trim() == "Long编辑.MD")
-    .unwrap_or(false)
-}
-
-fn hidden_powershell(script: &str) -> Result<std::process::Output, String> {
-    let mut command = Command::new("powershell");
+pub fn open_default_apps_settings() -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    let mut command = Command::new("explorer.exe");
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt;
         command.creation_flags(0x08000000);
+        command.arg("ms-settings:defaultapps");
+        return command
+            .spawn()
+            .map(|_| ())
+            .map_err(|error| error.to_string());
     }
-    command
-        .args(["-Command", script])
-        .output()
-        .map_err(|error| error.to_string())
+
+    #[cfg(not(target_os = "windows"))]
+    Err("默认应用设置仅在 Windows 上可用".to_string())
 }
 
 #[tauri::command]

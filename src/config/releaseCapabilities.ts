@@ -47,7 +47,7 @@ const matrix = matrixSource as ReleaseCapabilityMatrix
 const profiles = new Map(matrix.profiles.map(profile => [profile.id, profile]))
 const formats = new Map(FILE_FORMATS.map(format => [format.id, format]))
 
-if (matrix.schemaVersion !== 1 || matrix.stage !== 'R1' || matrix.formatRegistrySchemaVersion !== 2) {
+if (matrix.schemaVersion !== 1 || !['R1', 'R2'].includes(matrix.stage) || matrix.formatRegistrySchemaVersion !== 2) {
   throw new Error('Unsupported release capability matrix')
 }
 if (matrix.formats.length !== FILE_FORMATS.length) throw new Error('Incomplete release capability matrix')

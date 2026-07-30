@@ -3,7 +3,7 @@
 更新日期：2026-07-30
 交接基线：当前开发版本 `v0.7.0`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干；WPS 原生格式、旧版 DOC/XLS/PPT 隔离转换和 ODS/ODP 只读能力已完成，ODT 外部生产者证据与专业发布门禁仍待收口
 
-> 2026-07-30 权威入口：R1 统一发布能力矩阵已完成，39 类格式全部映射到 10 个发布策略档案，产品内“设置 → 格式能力”可搜索、筛选并查看保存、依赖、隐私与限制；实现提交 `d63b6b2` 的 [GitHub Quality Gate](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30525036150) 已通过。当前 `releaseCandidate=false`，下一代码阶段为 R2 Windows 安装、文件关联、升级迁移与卸载保留策略；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁。证据见 [`R1_Unified_Release_Capability_Matrix_Audit_2026-07-30.md`](./R1_Unified_Release_Capability_Matrix_Audit_2026-07-30.md)。
+> 2026-07-30 权威入口：R1 统一发布能力矩阵与 R2 Windows 安装生命周期已完成。当前 MSI/NSIS 身份、Markdown 关联白名单、系统默认应用选择、旧标识迁移和卸载数据边界均有机器契约与真实桌面证据；`releaseCandidate=false`。下一代码阶段为 R3 索引恢复、备份导入导出与隐私净化诊断包；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁。证据见 [`R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md`](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
@@ -461,3 +461,13 @@ Excel 三成员包现已绑定环境身份、producer 版本/构建和输出摘�
 三种格式严格保持 `external-open / saveMode:none`；LongEdit 不解析正文、不索引、不转换、不编辑、不创建也不保存。接手后直接进入 E2B `.doc` 隔离转换试点：先做 OLE 预检与风险报告，只允许显式生成新 DOCX 副本并证明源摘要不变；通过后再扩展 E2C `.xls/.ppt`。详细审计见 [`E3_WPS_Native_Recognition_and_External_Open_Audit_2026-07-30.md`](./E3_WPS_Native_Recognition_and_External_Open_Audit_2026-07-30.md)。
 
 远端隔离 Quality Gate `30512714411` 已通过：E3 契约、Rust `391 passed`、XLSX 性能预算、PDF 大文件范围读取和生产依赖审计全部为绿色。
+# 2026-07-30 R2 交接入口
+
+R2 Windows 安装与生命周期工程已收口。接手后直接进入 R3 数据韧性与诊断，不再回到格式能力矩阵重做：
+
+1. 先实现索引状态检查、损坏识别、安全重建和重启恢复。
+2. 再实现配置/应用元数据备份导出与导入，禁止默认打包知识库正文或凭据。
+3. 增加隐私净化诊断包及失败注入契约。
+4. R3 完成后进入 R4：正式签名和可抛弃 Windows 10/11 VM 的安装、升级、降级拒绝、卸载保留及文件关联恢复矩阵。
+
+R2 事实源为 `shared/windows-lifecycle-policy.json`，完整审计见 `docs/R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md`。发布能力页当前显示 R2，`releaseCandidate=false`。

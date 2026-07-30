@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-30T09:33:03.284Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "scenarios": [
+    {
+      "id": "cloud-paper",
+      "checks": [
+        "white-search-xlsx",
+        "white-expand-details",
+        "normal-layout-no-overflow",
+        "windows-owned-default-app-entry"
+      ],
+      "evidenceFiles": [
+        "r2-capabilities-white-1280.jpg",
+        "r2-default-app-settings-1280.jpg"
+      ]
+    },
+    {
+      "id": "dark-neon",
+      "checks": [
+        "dark-external-filter",
+        "dark-expand-details",
+        "dark-layout-no-overflow",
+        "compact-search",
+        "compact-layout-no-overflow"
+      ],
+      "evidenceFiles": [
+        "r2-capabilities-dark-1024.jpg",
+        "r2-capabilities-dark-760.jpg"
+      ]
+    }
+  ]
+}

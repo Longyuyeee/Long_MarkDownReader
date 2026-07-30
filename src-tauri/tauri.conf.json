@@ -28,9 +28,22 @@
   "bundle": {
     "active": true,
     "targets": ["msi", "nsis"],
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown"],
+        "name": "LongEdit.Markdown",
+        "description": "Markdown 文档",
+        "role": "Editor"
+      }
+    ],
     "windows": {
+      "allowDowngrades": false,
       "wix": {
+        "upgradeCode": "7bf71eea-e39f-54b9-a7e6-4922e93094a6",
         "language": ["zh-CN"]
+      },
+      "nsis": {
+        "installMode": "currentUser"
       }
     },
     "icon": [
