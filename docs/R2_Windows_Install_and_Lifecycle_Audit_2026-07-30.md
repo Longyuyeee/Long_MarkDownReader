@@ -26,6 +26,7 @@
 - `npm run tauri -- build --debug --bundles msi,nsis`：通过，实际生成 MSI 与 NSIS 两种安装包。
 - 完整 `npm run ci:check` 在安装入口修正前通过；修正 `default-run` 后的最终复跑中，全部契约和 Rust 功能测试仍为 `408 passed; 2 ignored; 1 filtered out`，但既有 XLSX 性能门禁受本机持续负载影响，三轮独立复跑分别在 page 或 patch 阶段越过阈值，最低失败采样为 `patch=5653 ms`。阈值未放宽，交由 GitHub 干净环境复核。
 - 最终独立补跑 100 MiB PDF 范围基准为 `139 ms`，生产依赖审计为 `0 vulnerabilities`。
+- 实现提交 `032ec11` 的 GitHub Quality Gate 已在干净环境完整通过，耗时 `10m06s`：<https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30533681730>。远端结果关闭了本地 XLSX 性能波动疑点。
 
 桌面证据位于 `docs/evidence/r2-windows-lifecycle/`。
 
