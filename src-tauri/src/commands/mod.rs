@@ -3,6 +3,7 @@ pub mod canvas;
 pub mod config;
 pub mod diagram;
 pub mod docx;
+pub mod external_apps;
 pub mod files;
 pub mod formats;
 pub mod git;

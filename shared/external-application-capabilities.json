@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "stage": "E2A",
+  "policies": {
+    "workspaceFilesOnly": true,
+    "fixedInstallPathsAllowed": false,
+    "arbitraryExecutablePathsAllowed": false,
+    "sourceDigestRequiredAtHandoff": true
+  },
+  "applications": [
+    {
+      "id": "microsoft-office",
+      "label": "Microsoft Office",
+      "executables": [
+        { "role": "document", "fileName": "WINWORD.EXE", "acceptedFileNames": ["WINWORD.EXE"], "supportedExtensions": [".doc", ".docx", ".odt", ".rtf"] },
+        { "role": "spreadsheet", "fileName": "EXCEL.EXE", "acceptedFileNames": ["EXCEL.EXE"], "supportedExtensions": [".xls", ".xlsx", ".ods", ".csv", ".tsv"] },
+        { "role": "presentation", "fileName": "POWERPNT.EXE", "acceptedFileNames": ["POWERPNT.EXE"], "supportedExtensions": [".ppt", ".pptx", ".odp"] }
+      ]
+    },
+    {
+      "id": "wps-office",
+      "label": "WPS Office",
+      "executables": [
+        { "role": "document", "fileName": "wps.exe", "acceptedFileNames": ["wps.exe"], "supportedExtensions": [".doc", ".docx", ".odt", ".wps", ".rtf"] },
+        { "role": "spreadsheet", "fileName": "et.exe", "acceptedFileNames": ["et.exe", "wps.exe"], "supportedExtensions": [".xls", ".xlsx", ".ods", ".et", ".csv", ".tsv"] },
+        { "role": "presentation", "fileName": "wpp.exe", "acceptedFileNames": ["wpp.exe", "wps.exe"], "supportedExtensions": [".ppt", ".pptx", ".odp", ".dps"] }
+      ]
+    },
+    {
+      "id": "libreoffice",
+      "label": "LibreOffice",
+      "executables": [
+        {
+          "role": "office-suite",
+          "fileName": "soffice.exe",
+          "acceptedFileNames": ["soffice.exe"],
+          "supportedExtensions": [
+            ".doc",
+            ".docx",
+            ".odt",
+            ".wps",
+            ".rtf",
+            ".xls",
+            ".xlsx",
+            ".ods",
+            ".et",
+            ".csv",
+            ".tsv",
+            ".ppt",
+            ".pptx",
+            ".odp",
+            ".dps"
+          ]
+        }
+      ]
+    }
+  ]
+}

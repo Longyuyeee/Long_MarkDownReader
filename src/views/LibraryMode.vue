@@ -356,6 +356,22 @@
           :summary="activeRelationSummary"
           @open="openActiveRelationGraph"
         />
+        <n-dropdown
+          v-if="activeTabId"
+          trigger="click"
+          :options="externalOpenOptions"
+          @select="handleActiveExternalOpen"
+        >
+          <n-button
+            quaternary
+            circle
+            size="small"
+            :loading="externalAppsLoading || externalOpenBusy"
+            title="使用外部应用打开"
+          >
+            <template #icon><n-icon :component="ExternalOpenIcon" /></template>
+          </n-button>
+        </n-dropdown>
         <div v-if="!activeEmbeddedEditor" class="tab-actions">
           <div class="action-btn-group">
             <n-button quaternary circle size="small" @click="refreshCurrentFile" :disabled="!activeTabId" title="从磁盘同步内容">
@@ -512,7 +528,7 @@ import {
   Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
   Database as DatabaseIcon, LayoutDashboard as DashboardIcon, ListFilter as CollectionIcon,
-  BookmarkPlus as BookmarkAddIcon, Languages as LanguagesIcon
+  BookmarkPlus as BookmarkAddIcon, Languages as LanguagesIcon, ExternalLink as ExternalOpenIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -544,6 +560,29 @@ import {
 } from '../config/fileFormats'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
+interface ExternalAppExecutable {
+  role: string
+  path: string
+  discoverySource: string
+}
+
+interface ExternalApplicationCapability {
+  id: string
+  label: string
+  available: boolean
+  version?: string
+  executables: ExternalAppExecutable[]
+  supportedExtensions: string[]
+  diagnostic: string
+}
+
+interface ExternalOpenReceipt {
+  formatId: string
+  applicationId: string
+  applicationLabel: string
+  sourcePreservedAtHandoff: boolean
+}
+
 interface KnowledgeSearchResult {
   title: string
   path: string
@@ -635,6 +674,68 @@ const tabs = computed(() => allTabs.value.filter(tab => findFileFormat(tab.path)
 const router = useRouter()
 const route = useRoute()
 const activeDocumentFormat = computed(() => activeTabId.value ? findFileFormat(activeTabId.value) : undefined)
+const externalApplications = ref<ExternalApplicationCapability[]>([])
+const externalAppsLoading = ref(false)
+const externalOpenBusy = ref(false)
+const compatibleExternalApplications = (path: string) => {
+  const extension = knownFileExtension(path)
+  return externalApplications.value.filter(application =>
+    application.available && application.supportedExtensions.includes(extension),
+  )
+}
+const buildExternalOpenOptions = (path: string) => {
+  const compatible = compatibleExternalApplications(path)
+  return [
+    {
+      label: '系统默认应用',
+      key: 'external-open:system-default',
+      icon: () => h(NIcon, null, { default: () => h(ExternalOpenIcon) }),
+    },
+    ...(compatible.length ? [{ type: 'divider', key: 'external-open-divider' }] : []),
+    ...compatible.map(application => ({
+      label: application.version
+        ? `${application.label} · ${application.version}`
+        : application.label,
+      key: `external-open:${application.id}`,
+      icon: () => h(NIcon, null, { default: () => h(ExternalOpenIcon) }),
+    })),
+  ]
+}
+const externalOpenOptions = computed(() =>
+  activeTabId.value ? buildExternalOpenOptions(activeTabId.value) : [],
+)
+const loadExternalApplications = async () => {
+  externalAppsLoading.value = true
+  try {
+    externalApplications.value = await invoke<ExternalApplicationCapability[]>('discover_external_applications')
+  } catch (error) {
+    externalApplications.value = []
+    console.error('External application discovery failed:', error)
+  } finally {
+    externalAppsLoading.value = false
+  }
+}
+const openFileExternally = async (path: string, applicationId: string) => {
+  if (!store.libraryPath || externalOpenBusy.value) return
+  externalOpenBusy.value = true
+  try {
+    const receipt = await invoke<ExternalOpenReceipt>('open_workspace_file_externally', {
+      libraryRoot: store.libraryPath,
+      path,
+      applicationId,
+    })
+    if (!receipt.sourcePreservedAtHandoff) throw new Error('源文件接管校验失败')
+    message.success(`${receipt.applicationLabel} 已打开 · 源文件校验未变化`)
+  } catch (error) {
+    message.error(`外部打开失败：${String(error)}`)
+  } finally {
+    externalOpenBusy.value = false
+  }
+}
+const handleActiveExternalOpen = (key: string) => {
+  if (!activeTabId.value || !key.startsWith('external-open:')) return
+  void openFileExternally(activeTabId.value, key.slice('external-open:'.length))
+}
 const embeddedEditorComponents = {
   TextEditor: defineAsyncComponent(() => import('./TextEditorView.vue')),
   JsonEditor: defineAsyncComponent(() => import('./JsonEditorView.vue')),
@@ -1752,6 +1853,12 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
       const isStarred = !contextMenu.isDir && store.isStarred(contextMenu.targetPath)
       const items = [
         !isMulti ? { label: '打开所在文件夹', key: 'open-folder', icon: () => h(NIcon, null, { default: () => h(FolderOpenIcon) }) } : null,
+        !contextMenu.isDir && !isMulti ? {
+          label: '使用外部应用打开',
+          key: 'external-open-menu',
+          icon: () => h(NIcon, null, { default: () => h(ExternalOpenIcon) }),
+          children: buildExternalOpenOptions(contextMenu.targetPath),
+        } : null,
         !contextMenu.isDir && !isMulti ? { label: isStarred ? '取消收藏' : '收藏文件', key: 'star', icon: () => h(NIcon, { color: isStarred ? '#f5a623' : undefined }, { default: () => h(StarIcon) }) } : null,
         { label: isMulti ? '批量重命名不可用' : '重命名 (F2)', key: 'rename', disabled: isMulti, icon: () => h(NIcon, null, { default: () => h(EditIcon) }) },
         { label: isMulti ? `物理删除所选 ${selectedKeys.value.length} 项` : '物理删除 (Del)', key: 'delete', icon: () => h(NIcon, { color: '#f5222d' }, { default: () => h(TrashIcon) }) }
@@ -1764,7 +1871,9 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
 
 const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
-  if (key === 'open-folder') {
+  if (key.startsWith('external-open:')) {
+    await openFileExternally(path, key.slice('external-open:'.length))
+  } else if (key === 'open-folder') {
     const { openPath } = await import('@tauri-apps/plugin-opener')
     const dir = contextMenu.isDir ? path : path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')))
     await openPath(dir)
@@ -2178,6 +2287,7 @@ const handleExportHtml = async () => {
 
 onMounted(async () => {
   await store.loadConfig()
+  void loadExternalApplications()
   if (activeTabId.value && !opensInLibraryShell(findFileFormat(activeTabId.value))) {
     store.activateTab(tabs.value[0]?.id || null)
   }

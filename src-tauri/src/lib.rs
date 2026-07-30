@@ -19,6 +19,7 @@ use commands::docx::{
     preview_docx_package_patch_isolated_copy, preview_docx_style_patch_isolated_copy,
     preview_docx_text_patch_isolated_copy, read_docx_document, save_docx_patch_copy,
 };
+use commands::external_apps::{discover_external_applications, open_workspace_file_externally};
 use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
     export_markdown_file, export_to_html, get_external_image_base64, get_file_stats,
@@ -254,6 +255,8 @@ pub fn run() {
             read_markdown_file,
             write_markdown_file,
             get_file_format_registry,
+            discover_external_applications,
+            open_workspace_file_externally,
             analyze_json_source,
             append_json_array_item_source,
             append_json_object_property_source,

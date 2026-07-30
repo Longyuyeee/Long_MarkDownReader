@@ -366,3 +366,9 @@ LongEdit 当前最准确的定位是：
 本地三条证据事务测试和完整 `ci:check` 已通过，Rust 功能测试为 `383 passed`，性能测试 `1 passed`，生产依赖漏洞为 `0`。该修复不改变 Pivot 或数组公式公开能力；下一代码入口仍为 F1/E2A。详细记录见 [`CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md`](./CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md)。
 
 首次远端复验已越过哈希故障，随后确认 GitHub 父 `pwsh` 与子 `powershell.exe` 的临时目录环境不同。现已增加统一路径安全 helper，在不放宽审计写入边界的前提下支持 `RUNNER_TEMP`，并通过跨环境边界、前缀逃逸拒绝、X3-B5 与 X3-B6 针对性验证。产品能力和下一阶段顺序保持不变。
+
+## 12. F1 / E2A 外部应用基础设施完成
+
+E2A 已完成 Microsoft Office、WPS Office、LibreOffice 的无固定路径发现、产品版本读取、角色/扩展名路由和统一外部打开。Library 右侧能力栏与文件树菜单复用同一入口；后端只接受应用身份，重新绑定发现清单，并以工作区边界和接管前后 SHA-256 证明 LongEdit 未修改源文件。
+
+本机已真实发现 Office `16.0.20228.20110`、WPS `12,1,0,26895` 和 LibreOffice `26.2.4.2`。本阶段没有提前登记 `.wps/.et/.dps`，也没有开放旧 Office 转换。下一代码阶段推进为 **E3 WPS 原生格式真实 fixture、识别、元数据、能力提示与外部打开**；随后仍按 E2B/E2C → E1C 推进。详细记录见 [`E2A_External_Application_Discovery_and_Unified_Open_Audit_2026-07-30.md`](./E2A_External_Application_Discovery_and_Unified_Open_Audit_2026-07-30.md)。

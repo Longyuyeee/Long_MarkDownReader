@@ -447,3 +447,9 @@ Excel 三成员包现已绑定环境身份、producer 版本/构建和输出摘�
 本地三条证据事务测试与完整 `ci:check` 已通过：Rust 功能测试 `383/383`、性能测试 `1/1`、生产依赖漏洞 `0`。此修复不提升公开能力，Pivot 多层轴仍为 `2/3`、数组公式仍为 `1/3`。远端 Quality Gate 通过后，接手者直接进入 F1/E2A 外部应用能力发现与统一外部打开。详细审计见 [`CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md`](./CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md)。
 
 首次远端复验已证明哈希修复生效，并进一步暴露父 `pwsh` 与子 `powershell.exe` 的 `TEMP` 不一致。现由 `scripts/powershell-path-safety.ps1` 同时识别系统临时目录和 GitHub `RUNNER_TEMP`，且保留严格目录边界检查；X3-B5/X3-B6 针对性事务测试已再次通过。
+
+# 2026-07-30 交接快照：F1 / E2A 已完成
+
+外部应用发现与统一打开已接入主干：Microsoft Office、WPS Office、LibreOffice 通过 App Paths/PATH 发现真实角色程序并读取产品版本；Library 右侧能力栏和文件树菜单共享系统默认/指定应用入口。后端拒绝任意程序路径，只打开工作区内已登记格式，并返回接管前后 SHA-256 不变回执。
+
+本阶段没有提前开放 WPS 原生格式或旧 Office 转换。接手后直接进入 E3：固定 `.wps/.et/.dps` 真实 fixture 和隐私清理规则，登记 `external-open` 能力，接入右侧能力工作面、文件树和最近记录；转换资格保持阻断。详细审计见 [`E2A_External_Application_Discovery_and_Unified_Open_Audit_2026-07-30.md`](./E2A_External_Application_Discovery_and_Unified_Open_Audit_2026-07-30.md)。
