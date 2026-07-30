@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5D",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "production-route-smoke-preflight-evidence",
+  "generatedAt": "2026-07-30",
+  "currentStatus": "production-dist-preflight-supported-real-desktop-run-pending",
+  "preflightInputs": {
+    "distDirectory": "dist",
+    "assetDirectory": "dist/assets",
+    "requiresProductionBuild": true,
+    "requiresRuntimeExportToken": "__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__"
+  },
+  "requiredRouteAssetFamilies": [
+    "WorkspaceHome",
+    "LibraryMode",
+    "TextEditorView",
+    "JsonEditorView",
+    "PdfView",
+    "WorkbookView",
+    "DiagramStudio",
+    "MindMapView",
+    "GraphView",
+    "CanvasView",
+    "ReleaseCapabilitiesView"
+  ],
+  "requiredEvidenceFiles": [
+    "docs/evidence/r5d-production-route-smoke-preflight/manifest.json",
+    "docs/evidence/r5d-production-route-smoke-preflight/route-assets.json"
+  ],
+  "releaseGate": {
+    "preflightCanPassWithoutDesktopAutomation": true,
+    "preflightIsNotRuntimeSmokeProof": true,
+    "requiresR5CRuntimeExportForFinalSmoke": true,
+    "requiresSignedArtifactForRc": true,
+    "requiresWindowsVmEvidenceForRc": true,
+    "currentPromotionEligible": false
+  },
+  "capabilityAlignment": [
+    "daily-management-workspace",
+    "right-side-workspace-navigation",
+    "pdf-and-office-workflows",
+    "diagram-and-mindmap-workflows",
+    "knowledge-graph-visualization",
+    "txt-json-dev-format-editing"
+  ],
+  "knownLimits": [
+    "dist-preflight-proves-build-shape-not-user-perceived-runtime-performance",
+    "desktop-webview-route-navigation-evidence-still-needs-r5c-export",
+    "rc-promotion-remains-blocked-until-signing-and-vm-evidence-exist"
+  ],
+  "nextStage": "R5E"
+}

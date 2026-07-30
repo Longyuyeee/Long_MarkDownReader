@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5D",
+  "routeAssets": [
+    {
+      "family": "WorkspaceHome",
+      "status": "present",
+      "assets": [
+        {
+          "file": "dist/assets/WorkspaceHome-BBEe15PU.js",
+          "bytes": 14678,
+          "sha256": "275683f4cf8578d674c889f522adc41b459e096d64397dfc3f74983c2fad679e"
+        }
+      ]
+    },
+    {
+      "family": "LibraryMode",
+      "status": "present",
+      "assets": [
+        {
+          "file": "dist/assets/LibraryMode-BhwSETS8.js",
+          "bytes": 86057,
+          "sha256": "d2927eff6f9973112bc9f0aca2657d6ca928d461fedb7a240a0ffd7beff83f29"
+        }
+      ]
+    },
+    {
+      "family": "TextEditorView",
+      "status": "present",
+      "assets": [
+        {
+          "file": "dist/assets/TextEditorView-Bs2YFqUb.js",
+          "bytes": 148507,
+          "sha256": "16379b424ac8d29e0e9a0fdd72e9652777e3d5e72b765655cca7b2645937f6d5"
+        }
+      ]
+    },
+    {
+      "family": "JsonEditorView",
+      "status": "present",
+      "assets": [
+        {
+          "file": "dist/assets/JsonEditorView-BYAWTApH.js",
+          "bytes": 33397,
+          "sha256": "92af3322b569ae663777982a9b8a0a064c2126a1629861c2f1521c6101102441"
+        }
+      ]
+    },
+    {
+      "family": "PdfView",
+      "status": "present",
+      "assets": [
+        {
+          "file": "dist/assets/PdfView-qIh9fUHd.js",
+          "bytes": 518470,
+          "sha256": "d955486836c50980f5a5439c05d2bbd7efd243099b1352a5c1e8e60e588ad221"
+        }
+      ]
+    },
+    {
+      "family": "WorkbookView",
+      "status": "present",
+      "assets": [
+        {
+          "file": "dist/assets/WorkbookView-BTUVc_69.js",
+          "bytes": 169629,
+          "sha256": "b3e5eb5c6b6b41847cfda0e3cffc6357013630a5712b6623c078db8ad69417bf"
+        }
+      ]
+    },
+    {
+      "family": "DiagramStudio",
+      "status": "present",
+      "assets": [
+        {
+          "file": "dist/assets/DiagramStudio-DmwF3sX4.js",
+          "bytes": 19305,
+          "sha256": "2729e6c27b2f9b964ce12f7868f98686f24f6172270707cfed700c303819a508"
+        }
+      ]
+    },
+    {
+      "family": "MindMapView",
+      "status": "present",
+      "assets": [
+        {
+          "file": "dist/assets/MindMapView-B6H7Seln.js",
+          "bytes": 13449,
+          "sha256": "26729459dac103f34537d0fd058b07948bffb8956e0e374b16b3cfdfbe83ee81"
+        }
+      ]
+    },
+    {
+      "family": "GraphView",
+      "status": "present",
+      "assets": [
+        {
+          "file": "dist/assets/GraphView-Tr5N3rCu.js",
+          "bytes": 40466,
+          "sha256": "7701abcbdb5649a4c7ce55db29a4c7ffc8fdefbbfccee844fabe172e1f4d823f"
+        }
+      ]
+    },
+    {
+      "family": "CanvasView",
+      "status": "present",
+      "assets": [
+        {
+          "file": "dist/assets/CanvasView-D1RoblGH.js",
+          "bytes": 42912,
+          "sha256": "a5a559d19198cd5d032f1ee99681b782e409f1d815325dce13c7088dd5020cf2"
+        }
+      ]
+    },
+    {
+      "family": "ReleaseCapabilitiesView",
+      "status": "present",
+      "assets": [
+        {
+          "file": "dist/assets/ReleaseCapabilitiesView-BQPdQMYh.js",
+          "bytes": 10374,
+          "sha256": "ae12fbd04b93ec3b64ae5da48d2de6f23c389ba6d4ddf9d11f74f75c28d4c2c2"
+        }
+      ]
+    }
+  ]
+}

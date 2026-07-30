@@ -278,3 +278,24 @@ This continues to align with the original user requirement: the app must feel li
 Current status: `capture-path-defined-real-evidence-pending`.
 
 Next recommended stage: R5D. Capture and attach a real route-performance evidence bundle from a built desktop artifact, then decide whether further lazy-loading or UI simplification is needed before release-candidate promotion.
+
+## R5D update - production route smoke preflight
+
+Current stage after this update: R5D is implemented as a production build route-smoke preflight. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5d-production-route-smoke-preflight-policy.json`
+- `scripts/audit-r5d-production-route-smoke-preflight.mjs`
+- `scripts/check-r5d-production-route-smoke-preflight.mjs`
+- `docs/R5D_Production_Route_Smoke_Preflight_Audit_2026-07-30.md`
+- `docs/evidence/r5d-production-route-smoke-preflight/manifest.json`
+- `docs/evidence/r5d-production-route-smoke-preflight/route-assets.json`
+
+R5D scans the current production `dist/` output and confirms that the runtime route-performance export token is present and that representative right-side workspace route assets exist for workspace, library, TXT, JSON, PDF, workbook, diagram, mind map, graph, canvas, and release capability surfaces.
+
+This keeps the original user requirement in scope: the product must remain a coherent professional management system across daily management, basic editing, PDF, Office/WPS-like flows, knowledge graph, diagrams, mind maps, and developer-friendly formats.
+
+Current status: `production-dist-preflight-supported-real-desktop-run-pending`.
+
+Next recommended stage: R5E. Run a real desktop/webview smoke capture using `window.__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__()` from a built artifact and compare it against the R5D preflight asset list.

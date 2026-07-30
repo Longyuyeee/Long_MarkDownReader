@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5D",
+  "appVersion": "0.7.0",
+  "capturedAt": "2026-07-30T15:47:17.541Z",
+  "currentStatus": "production-dist-preflight-supported-real-desktop-run-pending",
+  "distDirectory": "dist",
+  "assetDirectory": "dist/assets",
+  "runtimeExportTokenFound": true,
+  "routeAssetFamiliesPresent": 11,
+  "routeAssetFamiliesRequired": 11,
+  "jsAssetCount": 104,
+  "largestJsAsset": {
+    "file": "dist/assets/cynefin-VYW2F7L2-CBUcc8fk.js",
+    "bytes": 691070,
+    "sha256": "2d62706e46e8dc3587640be68cb4bf75065f13fa3c4813380994478d2b0bc3c7"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "evidenceLevel": "production-dist-preflight"
+}
