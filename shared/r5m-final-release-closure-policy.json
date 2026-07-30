@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5M",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "dual-windows-evidence-lanes-signed-runtime-and-fail-closed-release-decision",
+  "generatedAt": "2026-07-31",
+  "currentStatus": "dual-lane-import-and-final-audit-ready-external-evidence-pending",
+  "requiredWindowsLanes": [
+    "windows-10-x64",
+    "windows-11-x64"
+  ],
+  "implementation": {
+    "dualLaneEvidenceImport": true,
+    "windowsBuildClassValidation": true,
+    "wrongLaneRejectionTest": true,
+    "noEvidenceOverwrite": true,
+    "signedArtifactRunnerMode": true,
+    "signatureCertificateFingerprintEvidence": true,
+    "timestampCertificateFingerprintEvidence": true,
+    "finalReadinessAudit": true,
+    "manualApprovalEvidenceBinding": true,
+    "failClosedPromotionDecision": true
+  },
+  "releaseGate": {
+    "currentArtifactHashesMatch": true,
+    "windows10EvidenceImported": false,
+    "windows11EvidenceImported": false,
+    "authenticodeSignedAndTimestamped": false,
+    "signedArtifactWindows10RuntimeProven": false,
+    "signedArtifactWindows11RuntimeProven": false,
+    "manualReleaseApprovalRecorded": false,
+    "currentPromotionEligible": false
+  },
+  "promotionRules": {
+    "bothWindowsLanesRequired": true,
+    "laneMustMatchWindowsBuildClass": true,
+    "artifactHashBindingRequired": true,
+    "validAuthenticodeSignatureRequired": true,
+    "timestampCertificateRequired": true,
+    "signedArtifactRuntimeRequiredOnBothLanes": true,
+    "manualApprovalRequired": true,
+    "partialEvidenceMustNotPromote": true
+  },
+  "knownLimits": [
+    "current-windows-10-and-windows-11-evidence-lanes-are-missing",
+    "current-msi-and-nsis-artifacts-are-not-signed",
+    "signed-artifact-runtime-evidence-is-missing",
+    "manual-release-approval-is-not-recorded",
+    "current-host-has-no-disposable-windows-runner"
+  ],
+  "nextStage": "R5N"
+}

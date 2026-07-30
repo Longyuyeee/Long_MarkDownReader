@@ -491,3 +491,30 @@ Current status: `management-rollback-runner-ready-disposable-execution-pending`.
 No Windows 10/11 guest result has been imported, so management rollback and index recovery remain unproven at runtime and no RC claim is made.
 
 Next recommended stage: R5M. Execute/import the integrated Windows 11 evidence, repair guest-only defects, repeat on Windows 10, then close signing/runtime trust and final RC promotion gates.
+
+## R5M update - dual Windows lanes, signed runtime, and final fail-closed gate
+
+Current stage after this update: R5M has implemented the final evidence topology and signed-runtime gate. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5m-final-release-closure-policy.json`
+- `shared/r5m-manual-release-approval-contract.json`
+- `scripts/import-r5m-windows-matrix-evidence.ps1`
+- `scripts/test-r5m-windows-lane-rejection.ps1`
+- `scripts/audit-r5m-final-release-readiness.ps1`
+- `scripts/check-r5m-final-release-closure.mjs`
+- `docs/R5M_Final_Release_Closure_Audit_2026-07-31.md`
+- `docs/evidence/r5m-final-release/preflight.json`
+
+The former single imported-evidence destination could not represent both supported Windows versions. R5M adds independent `windows-10-x64` and `windows-11-x64` lanes, validates the OS class from the reported Windows build number, and rejects wrong-lane promotion without creating an evidence directory.
+
+The disposable lifecycle now also supports `-RequireSignedArtifact`. Signed mode requires valid Authenticode, signer and timestamp certificates, exports only certificate SHA-256 fingerprints, and propagates the signed-runtime result through the lifecycle, installed smoke, portable bundle, and importer.
+
+The final audit checks current artifact hashes/signatures, both Windows lanes, signed runtime in both lanes, and manual approval. The present audit finds matching current hashes but both artifacts are `NotSigned`, both OS lanes are missing, and approval is absent.
+
+Current status: `dual-lane-import-and-final-audit-ready-external-evidence-pending`.
+
+No installer was executed on this host and no release claim is made.
+
+Next recommended stage: R5N. Execute/import Windows 10 and Windows 11 evidence, obtain approved signing material, refresh hashes after signing, rerun both signed lanes, and record explicit manual release approval before promotion.

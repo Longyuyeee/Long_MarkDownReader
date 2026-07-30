@@ -44,7 +44,8 @@ $smoke = Get-Content -LiteralPath (Join-Path $evidenceRoot "installed-artifact-s
 $management = Get-Content -LiteralPath (Join-Path $evidenceRoot "management-backup-index-evidence.json") -Raw | ConvertFrom-Json
 if ($lifecycle.stage -ne "R5I" -or $lifecycle.status -ne "passed" -or
     $smoke.stage -ne "R5J" -or $smoke.status -ne "passed" -or
-    $management.stage -ne "R5L" -or $management.status -ne "passed") {
+    $management.stage -ne "R5L" -or $management.status -ne "passed" -or
+    $lifecycle.signedArtifactRuntimeProven -ne $smoke.signedArtifactRuntimeProven) {
     throw "R5K refuses incomplete lifecycle, installed-artifact, or management rollback evidence."
 }
 
@@ -69,6 +70,7 @@ $manifest = [ordered]@{
     currentInstallerSha256 = [string]$smoke.installerSha256
     environment = [ordered]@{
         family = "windows"
+        productName = [string]$os.Caption
         version = [string]$os.Version
         buildNumber = [string]$os.BuildNumber
         architecture = [string]$os.OSArchitecture
@@ -86,7 +88,7 @@ $manifest = [ordered]@{
     })
     releaseCandidate = $false
     promotionEligible = $false
-    signedArtifactRuntimeProven = $false
+    signedArtifactRuntimeProven = [bool]$smoke.signedArtifactRuntimeProven
     sourceUserContentIncluded = $false
 }
 

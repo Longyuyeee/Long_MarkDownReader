@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5N",
+  "scope": "explicit-human-release-approval-contract",
+  "decisionFile": "docs/evidence/r5m-final-release/manual-approval.json",
+  "requiredFields": [
+    "schemaVersion",
+    "stage",
+    "appVersion",
+    "decision",
+    "approvedAt",
+    "approverRole",
+    "sourceCommit",
+    "artifactSha256",
+    "windowsLaneSourceCommits"
+  ],
+  "requiredDecision": "approved",
+  "requirements": {
+    "bindCurrentSourceCommit": true,
+    "bindEveryCurrentArtifactSha256": true,
+    "bindWindows10LaneSourceCommit": true,
+    "bindWindows11LaneSourceCommit": true,
+    "namedPersonNotRequired": true,
+    "organizationalApproverRoleRequired": true,
+    "automaticApprovalForbidden": true
+  }
+}

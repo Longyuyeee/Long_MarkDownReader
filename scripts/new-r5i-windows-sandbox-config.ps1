@@ -1,5 +1,6 @@
 param(
     [string]$OutputDirectory = "docs\evidence\r5i-isolated-install-lifecycle\sandbox-output",
+    [switch]$RequireSignedArtifact,
     [switch]$Launch
 )
 
@@ -41,6 +42,7 @@ $escapedRepo = [System.Security.SecurityElement]::Escape($repoRoot)
 $escapedOutput = [System.Security.SecurityElement]::Escape($hostOutput)
 $escapedNode = [System.Security.SecurityElement]::Escape($nodeHostDirectory)
 $configPath = Join-Path $env:TEMP "longedit-r5i-lifecycle.wsb"
+$signedArtifactArgument = if ($RequireSignedArtifact) { " -RequireSignedArtifact" } else { "" }
 $xml = @"
 <Configuration>
   <Networking>Disable</Networking>
@@ -64,7 +66,7 @@ $xml = @"
     </MappedFolder>
   </MappedFolders>
   <LogonCommand>
-    <Command>powershell -NoProfile -ExecutionPolicy Bypass -File C:\LongEditR5IRepo\scripts\run-r5i-isolated-install-lifecycle.ps1 -InstallerDirectory C:\LongEditR5IRepo\src-tauri\target\release\bundle\nsis -ExpectedCurrentSha256 $currentSha256 -NodeExecutable C:\LongEditR5INode\node.exe -InstalledSmokeScript C:\LongEditR5IRepo\scripts\capture-r5j-installed-artifact-smoke.mjs -ManagementRollbackSmokeScript C:\LongEditR5IRepo\scripts\capture-r5l-management-rollback-smoke.mjs -EvidenceExporter C:\LongEditR5IRepo\scripts\export-r5k-windows-evidence-bundle.ps1 -ExpectedSourceCommit $sourceCommit -OutputDirectory C:\LongEditR5IOutput -ConfirmDisposableMachine -AllowInstallerMutation</Command>
+    <Command>powershell -NoProfile -ExecutionPolicy Bypass -File C:\LongEditR5IRepo\scripts\run-r5i-isolated-install-lifecycle.ps1 -InstallerDirectory C:\LongEditR5IRepo\src-tauri\target\release\bundle\nsis -ExpectedCurrentSha256 $currentSha256 -NodeExecutable C:\LongEditR5INode\node.exe -InstalledSmokeScript C:\LongEditR5IRepo\scripts\capture-r5j-installed-artifact-smoke.mjs -ManagementRollbackSmokeScript C:\LongEditR5IRepo\scripts\capture-r5l-management-rollback-smoke.mjs -EvidenceExporter C:\LongEditR5IRepo\scripts\export-r5k-windows-evidence-bundle.ps1 -ExpectedSourceCommit $sourceCommit -OutputDirectory C:\LongEditR5IOutput -ConfirmDisposableMachine -AllowInstallerMutation$signedArtifactArgument</Command>
   </LogonCommand>
 </Configuration>
 "@

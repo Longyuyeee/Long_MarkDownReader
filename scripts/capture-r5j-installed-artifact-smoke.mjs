@@ -8,6 +8,7 @@ const output = path.resolve(process.env.LONGEDIT_R5J_OUTPUT || '')
 const installedExecutable = path.resolve(process.env.LONGEDIT_R5J_EXECUTABLE || '')
 const appVersion = process.env.LONGEDIT_R5J_APP_VERSION || ''
 const installerSha256 = process.env.LONGEDIT_R5J_INSTALLER_SHA256 || ''
+const signedArtifactRuntimeProven = process.env.LONGEDIT_R5J_SIGNED_RUNTIME === 'true'
 if (!library || !output || !installedExecutable || !appVersion || !/^[a-f0-9]{64}$/.test(installerSha256)) {
   throw new Error('R5J library, output, executable, version, and installer hash are required')
 }
@@ -190,7 +191,7 @@ await fs.writeFile(path.join(output, 'installed-artifact-smoke.json'), `${JSON.s
   status: 'passed',
   releaseCandidate: false,
   promotionEligible: false,
-  signedArtifactRuntimeProven: false,
+  signedArtifactRuntimeProven,
   sourceUserContentIncluded: false,
   installerSha256,
   installedExecutable: {

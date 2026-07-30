@@ -53,6 +53,7 @@ function New-RejectionBundle {
         currentInstallerSha256 = $currentInstallerSha256
         environment = [ordered]@{
             family = "windows"
+            productName = "Microsoft Windows 11 Pro"
             buildNumber = "22621"
             architecture = "x64"
             machineClassFingerprintSha256 = "0" * 64

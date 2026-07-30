@@ -1,0 +1,65 @@
+{
+    "schemaVersion":  1,
+    "stage":  "R5M",
+    "appVersion":  "0.7.0",
+    "capturedAt":  "2026-07-30T17:44:49.0738055Z",
+    "currentStatus":  "fail-closed-release-readiness-audited",
+    "releaseCandidate":  false,
+    "promotionEligible":  false,
+    "sourceUserContentIncluded":  false,
+    "matrix":  {
+                   "requiredLanes":  [
+                                         "windows-10-x64",
+                                         "windows-11-x64"
+                                     ],
+                   "bothLanesImported":  false,
+                   "signedRuntimeMatrixComplete":  false,
+                   "lanes":  [
+                                 {
+                                     "windowsVersion":  "windows-10-x64",
+                                     "status":  "missing",
+                                     "acceptedEvidence":  false,
+                                     "signedArtifactRuntimeProven":  false,
+                                     "sourceCommit":  null,
+                                     "installerSha256":  null
+                                 },
+                                 {
+                                     "windowsVersion":  "windows-11-x64",
+                                     "status":  "missing",
+                                     "acceptedEvidence":  false,
+                                     "signedArtifactRuntimeProven":  false,
+                                     "sourceCommit":  null,
+                                     "installerSha256":  null
+                                 }
+                             ]
+               },
+    "artifacts":  {
+                      "currentHashesMatch":  true,
+                      "allSignedAndTimestamped":  false,
+                      "results":  [
+                                      {
+                                          "target":  "msi",
+                                          "status":  "NotSigned",
+                                          "hashMatches":  true,
+                                          "signed":  false,
+                                          "timestamped":  false
+                                      },
+                                      {
+                                          "target":  "nsis",
+                                          "status":  "NotSigned",
+                                          "hashMatches":  true,
+                                          "signed":  false,
+                                          "timestamped":  false
+                                      }
+                                  ]
+                  },
+    "manualApprovalRecorded":  false,
+    "manualApprovalState":  "missing",
+    "blockers":  [
+                     "windows-10-11-evidence-lanes-incomplete",
+                     "authenticode-signing-or-timestamp-incomplete",
+                     "signed-artifact-runtime-matrix-incomplete",
+                     "manual-release-approval-not-recorded"
+                 ],
+    "nextAction":  "Import both OS lanes, sign and timestamp current artifacts, rerun both lanes on signed artifacts, then record explicit release approval."
+}

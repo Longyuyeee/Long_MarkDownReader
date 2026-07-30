@@ -1,6 +1,10 @@
 param(
     [Parameter(Mandatory = $true)]
-    [string]$BundlePath
+    [string]$BundlePath,
+    [ValidateSet("imported", "windows-10-x64", "windows-11-x64")]
+    [string]$TargetName = "imported",
+    [ValidateSet("any", "windows-10-x64", "windows-11-x64")]
+    [string]$ExpectedWindowsClass = "any"
 )
 
 $ErrorActionPreference = "Stop"
@@ -9,7 +13,7 @@ Add-Type -AssemblyName System.IO.Compression
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $bundle = [System.IO.Path]::GetFullPath($BundlePath)
 $targetParent = Join-Path $repoRoot "docs/evidence/r5k-windows-matrix"
-$target = Join-Path $targetParent "imported"
+$target = Join-Path $targetParent $TargetName
 if (-not (Test-Path -LiteralPath $bundle -PathType Leaf)) {
     throw "R5K evidence bundle is missing."
 }
@@ -97,16 +101,32 @@ try {
     if ($manifest.appVersion -ne $r5h.appVersion -or
         $manifest.releaseCandidate -ne $false -or
         $manifest.promotionEligible -ne $false -or
-        $manifest.signedArtifactRuntimeProven -ne $false -or
         $manifest.sourceUserContentIncluded -ne $false) {
         throw "R5K evidence manifest truth boundary drifted."
     }
     if ($manifest.environment.family -ne "windows" -or
+        [string]$manifest.environment.productName -notmatch "Windows 1[01]" -or
         [string]$manifest.environment.buildNumber -notmatch "^\d+$" -or
+        [string]$manifest.environment.architecture -notmatch "(?i)(64|x64|amd64)" -or
         [string]$manifest.environment.machineClassFingerprintSha256 -notmatch "^[a-f0-9]{64}$" -or
         $manifest.environment.machineNameIncluded -ne $false -or
         $manifest.environment.userNameIncluded -ne $false) {
         throw "R5K environment fingerprint or privacy boundary is invalid."
+    }
+    $buildNumber = [int64]$manifest.environment.buildNumber
+    $productName = [string]$manifest.environment.productName
+    $actualWindowsClass = if ($productName -match "Windows 11" -and $buildNumber -ge 22000) {
+        "windows-11-x64"
+    } elseif ($productName -match "Windows 10" -and $buildNumber -lt 22000) {
+        "windows-10-x64"
+    } else {
+        throw "R5M Windows product name and build number are inconsistent."
+    }
+    if ($ExpectedWindowsClass -ne "any" -and $actualWindowsClass -ne $ExpectedWindowsClass) {
+        throw "R5M Windows evidence class mismatch: expected $ExpectedWindowsClass, actual $actualWindowsClass."
+    }
+    if ($TargetName -ne "imported" -and $TargetName -ne $actualWindowsClass) {
+        throw "R5M refuses to promote Windows evidence into the wrong matrix lane."
     }
 
     $memberMap = @{}
@@ -134,6 +154,7 @@ try {
         $lifecycle.currentVersion -ne $manifest.appVersion -or
         $lifecycle.currentInstallerSha256 -ne $manifest.currentInstallerSha256 -or
         $lifecycle.releaseCandidate -ne $false -or $lifecycle.promotionEligible -ne $false -or
+        $lifecycle.signedArtifactRuntimeProven -ne $manifest.signedArtifactRuntimeProven -or
         $lifecycle.sourceUserContentIncluded -ne $false) {
         throw "R5K lifecycle result is incomplete."
     }
@@ -161,10 +182,20 @@ try {
     if ($smoke.stage -ne "R5J" -or $smoke.status -ne "passed" -or
         $smoke.appVersion -ne $manifest.appVersion -or $smoke.installerSha256 -ne $manifest.currentInstallerSha256 -or
         $smoke.releaseCandidate -ne $false -or $smoke.promotionEligible -ne $false -or
-        $smoke.signedArtifactRuntimeProven -ne $false -or $smoke.sourceUserContentIncluded -ne $false -or
+        $smoke.signedArtifactRuntimeProven -ne $manifest.signedArtifactRuntimeProven -or
+        $smoke.sourceUserContentIncluded -ne $false -or
         [string]$smoke.installedExecutable.sha256 -notmatch "^[a-f0-9]{64}$" -or
         [long]$smoke.installedExecutable.sizeBytes -lt 1000000) {
         throw "R5K installed-artifact smoke result is incomplete."
+    }
+    if ($manifest.signedArtifactRuntimeProven -eq $true) {
+        if ($lifecycle.signature.status -ne "Valid" -or
+            $lifecycle.signature.valid -ne $true -or
+            $lifecycle.signature.timestamped -ne $true -or
+            [string]$lifecycle.signature.signerCertificateSha256 -notmatch "^[a-f0-9]{64}$" -or
+            [string]$lifecycle.signature.timestampCertificateSha256 -notmatch "^[a-f0-9]{64}$") {
+            throw "R5M signed-artifact runtime evidence is incomplete."
+        }
     }
     foreach ($checkId in @(
         "installed-current-webview-bootstrap",

@@ -19,7 +19,8 @@ param(
     [string]$ExpectedSourceCommit,
     [string]$OutputDirectory = "C:\LongEditR5IOutput",
     [switch]$ConfirmDisposableMachine,
-    [switch]$AllowInstallerMutation
+    [switch]$AllowInstallerMutation,
+    [switch]$RequireSignedArtifact
 )
 
 $ErrorActionPreference = "Stop"
@@ -111,6 +112,32 @@ $previousInstaller = Resolve-OneInstaller $PreviousVersion
 $currentInstallerSha256 = (Get-FileHash -LiteralPath $currentInstaller.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($currentInstallerSha256 -ne $ExpectedCurrentSha256.ToLowerInvariant()) {
     throw "Current installer SHA-256 does not match the approved R5H evidence."
+}
+$currentInstallerSignature = Get-AuthenticodeSignature -LiteralPath $currentInstaller.FullName
+$signedArtifactRuntimeProven = $currentInstallerSignature.Status -eq "Valid" -and
+    $null -ne $currentInstallerSignature.SignerCertificate -and
+    $null -ne $currentInstallerSignature.TimeStamperCertificate
+if ($RequireSignedArtifact -and -not $signedArtifactRuntimeProven) {
+    throw "Signed-artifact mode requires a valid Authenticode signature and timestamp certificate."
+}
+function Get-CertificateSha256($Certificate) {
+    if ($null -eq $Certificate) {
+        return $null
+    }
+    $hasher = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([System.BitConverter]::ToString($hasher.ComputeHash($Certificate.RawData))).Replace("-", "").ToLowerInvariant()
+    }
+    finally {
+        $hasher.Dispose()
+    }
+}
+$signatureEvidence = [ordered]@{
+    status = [string]$currentInstallerSignature.Status
+    valid = $currentInstallerSignature.Status -eq "Valid"
+    timestamped = $null -ne $currentInstallerSignature.TimeStamperCertificate
+    signerCertificateSha256 = Get-CertificateSha256 $currentInstallerSignature.SignerCertificate
+    timestampCertificateSha256 = Get-CertificateSha256 $currentInstallerSignature.TimeStamperCertificate
 }
 $installRoot = "C:\LongEditR5I"
 $libraryRoot = "C:\LongEditR5ILibrary"
@@ -220,6 +247,7 @@ try {
     $env:LONGEDIT_R5J_EXECUTABLE = $mainBinary
     $env:LONGEDIT_R5J_APP_VERSION = $CurrentVersion
     $env:LONGEDIT_R5J_INSTALLER_SHA256 = $currentInstallerSha256
+    $env:LONGEDIT_R5J_SIGNED_RUNTIME = if ($signedArtifactRuntimeProven) { "true" } else { "false" }
     $env:LONGEDIT_R5L_LIBRARY = $libraryRoot
     $env:LONGEDIT_R5L_OUTPUT = $OutputDirectory
     $env:LONGEDIT_R5L_BACKUP = $managementBackup
@@ -290,6 +318,7 @@ try {
         "LONGEDIT_R5J_EXECUTABLE",
         "LONGEDIT_R5J_APP_VERSION",
         "LONGEDIT_R5J_INSTALLER_SHA256",
+        "LONGEDIT_R5J_SIGNED_RUNTIME",
         "LONGEDIT_R5L_LIBRARY",
         "LONGEDIT_R5L_OUTPUT",
         "LONGEDIT_R5L_BACKUP",
@@ -371,6 +400,8 @@ try {
         status = "passed"
         releaseCandidate = $false
         promotionEligible = $false
+        signedArtifactRuntimeProven = $signedArtifactRuntimeProven
+        signature = $signatureEvidence
         sourceUserContentIncluded = $false
         checks = @($checks)
         installedArtifactSmokeEvidence = "installed-artifact-smoke.json"
