@@ -87,6 +87,9 @@
       "e0Disposition": "native-read-index-planned",
       "firstImplementation": "E1A/E1C",
       "initialProductLevel": "read-only-preview-and-index",
+      "e1cReadStatus": "verified-libreoffice-fixture",
+      "e1cIndexStatus": "verified-precise-cell-locator",
+      "observedContainer": "odf-zip-spreadsheet",
       "conversion": "optional-explicit-only",
       "risks": ["zip-bomb", "encrypted-entry", "signature", "formula", "script-or-macro", "external-link", "embedded-object"],
       "fixtureProfiles": ["minimal", "multi-sheet-formulas-styles", "external-link", "embedded-object", "encrypted", "signed"]
@@ -101,6 +104,9 @@
       "e0Disposition": "native-read-index-planned",
       "firstImplementation": "E1A/E1C",
       "initialProductLevel": "read-only-preview-and-index",
+      "e1cReadStatus": "verified-libreoffice-fixture",
+      "e1cIndexStatus": "verified-slide-and-notes-locator",
+      "observedContainer": "odf-zip-presentation",
       "conversion": "optional-explicit-only",
       "risks": ["zip-bomb", "encrypted-entry", "signature", "script-or-macro", "external-link", "embedded-object", "media"],
       "fixtureProfiles": ["minimal", "slides-notes-images-shapes", "external-link", "embedded-object", "encrypted", "signed"]

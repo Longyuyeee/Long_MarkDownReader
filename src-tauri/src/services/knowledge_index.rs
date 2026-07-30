@@ -1,6 +1,7 @@
 use crate::commands::graph::GraphData;
 use crate::formats::docx::parse_docx;
 use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
+use crate::formats::odf_content::{odf_content_search_segments, parse_odf_content};
 use crate::formats::odt::parse_odt;
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::pptx::{parse_pptx, pptx_search_segments};
@@ -289,6 +290,47 @@ pub(crate) fn build_pptx_index_segments(
     Ok(segments)
 }
 
+pub(crate) fn build_odf_content_index_segments(
+    title: &str,
+    path: &str,
+    object_type: &str,
+    extension: &str,
+    bytes: &[u8],
+) -> Result<Vec<IndexedSearchSegment>, String> {
+    let model = parse_odf_content(bytes, extension)?;
+    let mut segments = vec![IndexedSearchSegment {
+        title: title.into(),
+        path: path.into(),
+        object_type: object_type.into(),
+        match_kind: "title".into(),
+        text: String::new(),
+        page: None,
+        annotation_id: None,
+        locator_kind: None,
+        locator_object_id: None,
+        location_label: None,
+        extraction_failed: false,
+    }];
+    segments.extend(
+        odf_content_search_segments(&model)
+            .into_iter()
+            .map(|segment| IndexedSearchSegment {
+                title: title.into(),
+                path: path.into(),
+                object_type: object_type.into(),
+                match_kind: segment.match_kind,
+                text: segment.text,
+                page: segment.page,
+                annotation_id: None,
+                locator_kind: Some(segment.locator_kind),
+                locator_object_id: Some(segment.locator_object_id),
+                location_label: Some(segment.location_label),
+                extraction_failed: false,
+            }),
+    );
+    Ok(segments)
+}
+
 fn decode_searchable_text(path: &Path, indexer: &str) -> Option<String> {
     let bytes = path
         .metadata()
@@ -505,6 +547,26 @@ fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<Ind
                         extraction_failed: false,
                     });
                 }
+            }
+        } else if indexer == "odf-content" {
+            if let Some(odf_segments) = path
+                .metadata()
+                .ok()
+                .filter(|metadata| metadata.len() <= format.max_bytes)
+                .and_then(|_| fs::read(&path).ok())
+                .and_then(|bytes| {
+                    let extension = path.extension()?.to_str()?;
+                    build_odf_content_index_segments(
+                        &title,
+                        &path_string,
+                        &format.id,
+                        extension,
+                        &bytes,
+                    )
+                    .ok()
+                })
+            {
+                segments.extend(odf_segments);
             }
         } else if indexer == "pptx" {
             if let Some(pptx_segments) = path
@@ -878,6 +940,43 @@ mod tests {
         assert!(!snapshot.search_segments.iter().any(|segment| {
             segment.text.contains("never-index-this-secret")
                 || segment.text.contains("never-index-this-env")
+        }));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn real_ods_and_odp_enter_persistent_search_with_precise_locators() {
+        let (base, workspace, _) = fixture("odf-content");
+        let fixture_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("fixtures")
+            .join("odf-content");
+        fs::copy(
+            fixture_root.join("longedit-e1c-spreadsheet.ods"),
+            workspace.join("Evidence.ods"),
+        )
+        .unwrap();
+        fs::copy(
+            fixture_root.join("longedit-e1c-presentation.odp"),
+            workspace.join("Briefing.odp"),
+        )
+        .unwrap();
+        let snapshot = snapshot_from_graph(
+            &workspace,
+            GraphData {
+                nodes: Vec::new(),
+                edges: Vec::new(),
+            },
+        );
+        assert!(snapshot.search_segments.iter().any(|segment| {
+            segment.object_type == "ods"
+                && segment.locator_kind.as_deref() == Some("ods-cell")
+                && segment.text.contains("LongEdit E1C ODS fixture")
+        }));
+        assert!(snapshot.search_segments.iter().any(|segment| {
+            segment.object_type == "odp"
+                && segment.locator_kind.as_deref() == Some("odp-slide")
+                && segment.text.contains("LongEdit E1C ODP fixture")
         }));
         fs::remove_dir_all(base).unwrap();
     }

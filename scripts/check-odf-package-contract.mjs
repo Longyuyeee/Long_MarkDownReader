@@ -64,8 +64,26 @@ if (!contract.fixturePolicy?.syntheticSecurityFixtures
 }
 
 const registeredExtensions = registry.formats.flatMap(format => format.extensions)
-for (const [, extension] of expectedFormats) {
-  if (registeredExtensions.includes(extension)) fail(`${extension} must not be registered as supported in E1A`)
+if (registeredExtensions.includes('.odt')) {
+  fail('.odt must remain outside the supported registry after E1B')
+}
+for (const extension of ['.ods', '.odp']) {
+  const format = registry.formats.find(candidate => candidate.extensions?.includes(extension))
+  if (!format) fail(`${extension} must be registered after E1C`)
+  if (format.routeName !== 'OdfReader' || format.maxBytes !== 64 * 1024 * 1024) {
+    fail(`${extension} route or size boundary drift`)
+  }
+  if (format.userCapability?.level !== 'preview-only' || format.userCapability?.saveMode !== 'none') {
+    fail(`${extension} must remain preview-only with no save mode`)
+  }
+  if (format.capabilities?.read !== 'supported' || format.capabilities?.index !== 'supported'
+    || format.capabilities?.edit !== 'unsupported' || format.capabilities?.create !== 'unsupported') {
+    fail(`${extension} capability boundary drift`)
+  }
+  if (format.adapters?.reader !== 'odf-content' || format.adapters?.indexer !== 'odf-content'
+    || format.adapters?.writer !== null || format.adapters?.creator !== null) {
+    fail(`${extension} implementation ownership drift`)
+  }
 }
 for (const test of [
   'accepts_minimal_odt_ods_and_odp_packages',
@@ -76,4 +94,4 @@ for (const test of [
   if (!implementation.includes(`fn ${test}`)) fail(`required Rust evidence missing: ${test}`)
 }
 
-console.log('E1A ODF package contract OK: 3 formats, 8 resource limits, 5 risk classes, product exposure disabled')
+console.log('E1A ODF package boundary + E1C ODS/ODP exposure OK: 3 formats, 8 resource limits, 5 risk classes')

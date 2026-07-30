@@ -4,9 +4,9 @@ use crate::formats::odt::parse_odt;
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::knowledge_index::{
-    build_pptx_index_segments, delete_index, inspect_index, read_ready_snapshot,
-    snapshot_from_graph, write_snapshot, IndexedSearchSegment, KnowledgeIndexRuntime,
-    KnowledgeIndexStatus,
+    build_odf_content_index_segments, build_pptx_index_segments, delete_index, inspect_index,
+    read_ready_snapshot, snapshot_from_graph, write_snapshot, IndexedSearchSegment,
+    KnowledgeIndexRuntime, KnowledgeIndexStatus,
 };
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -465,6 +465,26 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     score: 70,
                     extraction_failed: false,
                 });
+            }
+        } else if indexer == "odf-content" {
+            if let Some(odf_segments) = path
+                .metadata()
+                .ok()
+                .filter(|metadata| metadata.len() <= format.max_bytes)
+                .and_then(|_| fs::read(&path).ok())
+                .and_then(|bytes| {
+                    let extension = path.extension()?.to_str()?;
+                    build_odf_content_index_segments(
+                        &title,
+                        &path_string,
+                        &format.id,
+                        extension,
+                        &bytes,
+                    )
+                    .ok()
+                })
+            {
+                results.extend(search_segments(&odf_segments, query));
             }
         } else if indexer == "pptx" {
             let pptx_segments = path

@@ -7,6 +7,7 @@ pub mod json;
 pub mod markdown;
 #[allow(dead_code)]
 pub mod odf;
+pub mod odf_content;
 pub mod odt;
 pub mod opml;
 pub mod pdf_annotations;

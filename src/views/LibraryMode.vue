@@ -1341,7 +1341,7 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
         ...(result.annotationId ? { annotation: result.annotationId } : {}),
       },
     })
-  } else if (result.objectType === 'docx' || result.objectType === 'odt') {
+  } else if (['docx', 'odt', 'ods', 'odp'].includes(result.objectType)) {
     void router.replace({
       name: 'LibraryMode',
       query: {

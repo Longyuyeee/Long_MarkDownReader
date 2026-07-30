@@ -61,6 +61,11 @@ const routes = [
     component: () => import('../views/OdtReaderView.vue')
   },
   {
+    path: '/odf-content',
+    name: 'OdfReader',
+    component: () => import('../views/OdfContentReaderView.vue')
+  },
+  {
     path: '/pptx',
     name: 'PptxReader',
     component: () => import('../views/PptxReaderView.vue')

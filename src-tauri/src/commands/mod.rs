@@ -14,6 +14,7 @@ pub mod json;
 pub mod legacy_binary_office;
 pub mod legacy_office;
 pub mod mindmap;
+pub mod odf_content;
 pub mod odt;
 pub mod pdf;
 pub mod pptx;
