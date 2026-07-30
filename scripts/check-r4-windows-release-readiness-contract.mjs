@@ -32,7 +32,7 @@ const readiness = json('shared/windows-release-readiness-policy.json')
 if (readiness.schemaVersion !== 1 || readiness.stage !== 'R4') fail('R4 readiness policy identity mismatch.')
 if (readiness.releaseCandidate !== false) fail('R4A must keep releaseCandidate=false until real signing and VM evidence exist.')
 if (readiness.status !== 'blocked-pending-signing-and-vm-evidence') fail('R4A status must be blocked by missing release evidence.')
-if (readiness.nextStage !== 'R4B') fail('R4A handoff must point to R4B.')
+if (readiness.nextStage !== 'R4C') fail('R4 readiness handoff must point to R4C after R4B.')
 
 if (readiness.appVersion !== packageJson.version) fail('R4 appVersion must match package.json.')
 if (readiness.appVersion !== tauriConfig.version) fail('R4 appVersion must match tauri.conf.json.')
@@ -72,7 +72,8 @@ requireIncludes('R4 installer promotion gate', readiness.installerArtifacts.requ
   'versioned-release-notes',
   'rollback-plan',
 ])
-if (readiness.installerArtifacts.currentStatus !== 'unsigned-artifacts-not-promotable') fail('R4A unsigned artifact status mismatch.')
+if (readiness.installerArtifacts.currentStatus !== 'hash-manifest-defined-unsigned-artifacts-not-promotable') fail('R4 artifact status mismatch.')
+if (readiness.installerArtifacts.hashManifest !== 'shared/windows-release-artifact-manifest.json') fail('R4 hash manifest link missing.')
 
 if (readiness.signing.required !== true) fail('R4 signing must be required.')
 if (readiness.signing.currentStatus !== 'missing') fail('R4A signing status must be missing.')
@@ -132,6 +133,14 @@ requireIncludes('R4A audit doc token', audit, [
   'blocked-pending-signing-and-vm-evidence',
   'releaseCandidate=false',
   'R4B',
+])
+
+const r4bAudit = read('docs/R4B_Windows_Release_Artifact_Manifest_Audit_2026-07-30.md')
+requireIncludes('R4B audit doc token', r4bAudit, [
+  'R4B',
+  'windows-release-artifact-manifest.json',
+  'promotionEligible=false',
+  'R4C',
 ])
 
 console.log('R4 Windows release readiness contract passed: release candidate remains blocked pending signing and VM evidence.')

@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "stage": "R4B",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "historical-local-installer-artifacts",
+  "generatedAt": "2026-07-30",
+  "sourceDirectory": "releases",
+  "promotionEligible": false,
+  "promotionBlockers": [
+    "not-built-from-current-release-tag",
+    "signature-status-not-verified",
+    "windows-vm-matrix-missing",
+    "release-notes-missing",
+    "rollback-plan-missing"
+  ],
+  "artifacts": [
+    {
+      "path": "releases/MDReader_Setup.exe",
+      "fileName": "MDReader_Setup.exe",
+      "kind": "historical-installer",
+      "target": "unknown-legacy-exe",
+      "sizeBytes": 2582,
+      "sha256": "a58bac4f3b3452fcb6516e1cbbe09956d8ebc0ad764cccf8bb3878bf77c332bd",
+      "signatureStatus": "not-verified",
+      "officialRelease": false,
+      "promotionEligible": false
+    },
+    {
+      "path": "releases/MistyEdit_Setup.exe",
+      "fileName": "MistyEdit_Setup.exe",
+      "kind": "historical-installer",
+      "target": "unknown-legacy-exe",
+      "sizeBytes": 9270340,
+      "sha256": "567c7866438d2a3882e7fab91f890189b30181aad0ca16e22a803e9f41e299d0",
+      "signatureStatus": "not-verified",
+      "officialRelease": false,
+      "promotionEligible": false
+    },
+    {
+      "path": "releases/MistyEdit_Setup_v0.2.0.exe",
+      "fileName": "MistyEdit_Setup_v0.2.0.exe",
+      "kind": "historical-installer",
+      "target": "unknown-legacy-exe",
+      "sizeBytes": 9266630,
+      "sha256": "29a8f9bf52274e21789016b495340ac21b6275c8ca56f286c0f3b3cc25eac4dc",
+      "signatureStatus": "not-verified",
+      "officialRelease": false,
+      "promotionEligible": false
+    }
+  ],
+  "nextStage": "R4C"
+}

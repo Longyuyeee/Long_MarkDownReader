@@ -109,3 +109,25 @@ It also preserves the original user requirement boundary:
 - external-dependency formats such as `doc`, `xls`, `ppt`, `wps`, `et`, and `dps` must not be silently claimed as Windows defaults.
 
 Next recommended stage: R4B. Build the installer evidence bundle shape, including artifact hash manifest schema, unsigned/debug/test-signed/official-signed status separation, and validation that refuses release promotion without matching artifact hashes and signature verification records.
+
+## R4B update - Windows installer artifact manifest
+
+Current stage after this update: R4B is implemented as an installer artifact evidence skeleton. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/windows-release-artifact-manifest.json`
+- `scripts/check-r4b-windows-release-artifact-manifest.mjs`
+- `docs/R4B_Windows_Release_Artifact_Manifest_Audit_2026-07-30.md`
+
+R4B records the current historical/local installers under `releases/`, verifies their SHA-256 hashes and file sizes, and explicitly marks them as `promotionEligible=false`. This prevents old local installer files from being mistaken for a current signed release.
+
+Current blockers to official release remain:
+
+1. no current release-tag build evidence,
+2. no verified code-signing evidence,
+3. no Windows 10/11 VM matrix evidence,
+4. no release notes,
+5. no rollback plan.
+
+Next recommended stage: R4C. Define signature verification evidence and accepted signing-state rules while still keeping `releaseCandidate=false` until real signing and VM evidence are complete.

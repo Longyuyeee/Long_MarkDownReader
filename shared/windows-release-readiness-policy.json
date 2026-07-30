@@ -17,7 +17,8 @@
   "installerArtifacts": {
     "targets": ["msi", "nsis"],
     "primaryTarget": "nsis",
-    "currentStatus": "unsigned-artifacts-not-promotable",
+    "currentStatus": "hash-manifest-defined-unsigned-artifacts-not-promotable",
+    "hashManifest": "shared/windows-release-artifact-manifest.json",
     "requiredBeforeReleaseCandidate": [
       "fresh-build-from-release-tag",
       "sha256-manifest",
@@ -73,5 +74,5 @@
     "releaseCapabilityMatrixMustRemainNonRcUntilEvidenceComplete": true,
     "debugOrUnsignedBuildsMustNotBeAdvertisedAsOfficialRelease": true
   },
-  "nextStage": "R4B"
+  "nextStage": "R4C"
 }
