@@ -8,6 +8,8 @@
 
 > 2026-07-30 权威执行入口：[R2 Windows 安装与生命周期审计](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。**R1/R2 已完成，下一代码阶段为 R3 索引恢复、备份与隐私净化诊断**。E1B WPS ODT 保持 2/3、X3-B6 数组生产者矩阵保持 1/3，作为外部环境门禁并行等待；不得伪造关闭。下文较早的“下一入口”只保留为阶段追溯。
 
+> 2026-07-30 R3A 已完成：[R3A 知识索引健康与恢复审计](./R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md)。当前索引损坏可在侧栏原索引条中隔离恢复，机器契约为 `shared/data-resilience-policy.json` 和 `npm run check:r3-data-resilience-contract`。剩余收口阶段为 R3B、R3C、R3D、R4 与两个外部证据门禁；下一步直接进入 **R3B 版本化备份导出**。
+
 > 路线调整原因：日常管理、文本/开发格式、PDF、图表、Canvas/OPML、知识图谱和现代 Office 基础工作面已形成主干；当前最影响初始需求完整度的是 `.wps/.et/.dps`、`.doc/.xls/.ppt`、`.odt/.ods/.odp` 的识别、右侧能力说明、外部打开与安全转换闭环。继续开发 Excel 深度能力时，必须证明其优先级不高于上述日常覆盖缺口。
 
 > 2026-07-30 最新入口：X3-B1 数组公式只读边界已完成。下一批执行 X3-B2：收集 Excel/WPS/LibreOffice 原生样本，审计生产者 OOXML 差异，增加声明范围、缓存覆盖和潜在 spill 占用冲突的只读诊断；不得提前开放数组写回或本地计算。执行细节见 `X3_B1_XLSX_Array_Formula_Readonly_Boundary_Audit_2026-07-30.md`。

@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "stage": "R3",
+  "releaseCandidate": false,
+  "scope": "local-index-backup-diagnostics",
+  "phases": [
+    {
+      "id": "R3A",
+      "label": "知识索引健康与恢复",
+      "status": "implemented",
+      "capabilities": [
+        "queryable-index-state",
+        "corrupt-snapshot-detection",
+        "corrupt-snapshot-quarantine",
+        "stale-source-count",
+        "safe-rebuild-after-quarantine"
+      ],
+      "privacyBoundary": "索引恢复只移动本机缓存快照，不读取、导出或打包知识库正文。"
+    },
+    {
+      "id": "R3B",
+      "label": "配置与元数据备份导出",
+      "status": "planned",
+      "capabilities": [
+        "versioned-backup-manifest",
+        "settings-export",
+        "library-metadata-export",
+        "content-exclusion-by-default"
+      ],
+      "privacyBoundary": "备份包默认不包含外部知识库正文、系统凭据、API Key、完整用户路径或可恢复缓存正文。"
+    },
+    {
+      "id": "R3C",
+      "label": "备份导入与原子恢复",
+      "status": "planned",
+      "capabilities": [
+        "backup-preflight",
+        "version-compatibility-check",
+        "conflict-preview",
+        "atomic-restore",
+        "rollback-on-failure"
+      ],
+      "privacyBoundary": "导入前必须预检来源、版本和冲突；失败不得修改现有配置和库清单。"
+    },
+    {
+      "id": "R3D",
+      "label": "隐私净化诊断包",
+      "status": "planned",
+      "capabilities": [
+        "redacted-environment-report",
+        "capability-contract-snapshot",
+        "index-state-summary",
+        "error-category-summary",
+        "leakage-rejection-tests"
+      ],
+      "privacyBoundary": "诊断包只允许脱敏环境、版本、能力合同、索引状态和错误分类。"
+    }
+  ],
+  "forbiddenByDefault": [
+    "document-body",
+    "api-key",
+    "system-credential",
+    "absolute-user-path",
+    "recoverable-cache-body",
+    "external-library-content"
+  ],
+  "nextStage": "R3B"
+}

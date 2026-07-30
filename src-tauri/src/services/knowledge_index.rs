@@ -19,6 +19,7 @@ use std::time::UNIX_EPOCH;
 pub const KNOWLEDGE_INDEX_SCHEMA_VERSION: u32 = 1;
 const INDEX_DIRECTORY: &str = "knowledge-index-v1";
 const INDEX_FILE: &str = "snapshot.json";
+const QUARANTINED_INDEX_PREFIX: &str = "snapshot.corrupt";
 const MAX_INDEX_BYTES: u64 = 128 * 1024 * 1024;
 const MAX_INDEX_SOURCES: usize = 100_000;
 const MAX_INDEX_OBJECTS: usize = 250_000;
@@ -103,6 +104,8 @@ pub struct KnowledgeIndexStatus {
     pub progress: u8,
     pub cache_bytes: u64,
     pub error: Option<String>,
+    pub recovery_available: bool,
+    pub stale_source_count: Option<usize>,
 }
 
 impl KnowledgeIndexStatus {
@@ -117,8 +120,21 @@ impl KnowledgeIndexStatus {
             progress: if state == "ready" { 100 } else { 0 },
             cache_bytes: 0,
             error: None,
+            recovery_available: false,
+            stale_source_count: None,
         }
     }
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct KnowledgeIndexRecoveryReport {
+    pub before_state: String,
+    pub after_state: String,
+    pub cache_bytes: u64,
+    pub quarantined: bool,
+    pub quarantine_file: Option<String>,
+    pub message: String,
 }
 
 #[derive(Clone, Debug)]
@@ -794,11 +810,13 @@ pub fn inspect_index(
             let mut status = KnowledgeIndexStatus::simple("corrupt");
             status.cache_bytes = cache_bytes;
             status.error = Some(error);
+            status.recovery_available = path.exists();
             status
         }
         Ok(Some(snapshot)) => {
             let current_sources = collect_index_sources(workspace);
-            let state = if source_digest(&current_sources) == snapshot.source_digest {
+            let current_source_digest = source_digest(&current_sources);
+            let state = if current_source_digest == snapshot.source_digest {
                 "ready"
             } else {
                 "stale"
@@ -813,9 +831,71 @@ pub fn inspect_index(
                 progress: if state == "ready" { 100 } else { 0 },
                 cache_bytes,
                 error: None,
+                recovery_available: state == "stale",
+                stale_source_count: (state == "stale").then_some(current_sources.len()),
             }
         }
     }
+}
+
+pub fn recover_index_cache(
+    cache_root: &Path,
+    workspace: &Path,
+    runtime: &KnowledgeIndexRuntime,
+) -> Result<KnowledgeIndexRecoveryReport, String> {
+    if runtime.is_building(workspace) {
+        return Err("知识索引正在构建，暂时不能恢复".into());
+    }
+    let before = inspect_index(cache_root, workspace, runtime);
+    let snapshot_path = index_snapshot_path(cache_root, workspace);
+    if before.state != "corrupt" {
+        return Ok(KnowledgeIndexRecoveryReport {
+            before_state: before.state.clone(),
+            after_state: before.state,
+            cache_bytes: before.cache_bytes,
+            quarantined: false,
+            quarantine_file: None,
+            message: "当前索引不需要隔离恢复".into(),
+        });
+    }
+    if !snapshot_path.exists() {
+        return Ok(KnowledgeIndexRecoveryReport {
+            before_state: before.state,
+            after_state: "missing".into(),
+            cache_bytes: before.cache_bytes,
+            quarantined: false,
+            quarantine_file: None,
+            message: "损坏索引文件已不存在，后续可直接重建".into(),
+        });
+    }
+    let parent = snapshot_path
+        .parent()
+        .ok_or_else(|| "知识索引快照没有父目录".to_string())?;
+    let stamp = std::time::SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|value| value.as_millis())
+        .unwrap_or_default();
+    let mut target_name = format!("{QUARANTINED_INDEX_PREFIX}.{stamp}.json");
+    let mut target = parent.join(&target_name);
+    if target.exists() {
+        target_name = format!(
+            "{QUARANTINED_INDEX_PREFIX}.{stamp}.{}.json",
+            std::process::id()
+        );
+        target = parent.join(&target_name);
+    }
+    fs::rename(&snapshot_path, &target)
+        .map_err(|error| format!("隔离损坏知识索引失败: {error}"))?;
+    runtime.set(workspace, "missing", 0, None);
+    let after = inspect_index(cache_root, workspace, runtime);
+    Ok(KnowledgeIndexRecoveryReport {
+        before_state: before.state,
+        after_state: after.state,
+        cache_bytes: before.cache_bytes,
+        quarantined: true,
+        quarantine_file: Some(target_name),
+        message: "损坏索引已隔离；可安全执行重建，不会读取或打包文档正文".into(),
+    })
 }
 
 pub fn delete_index(cache_root: &Path, workspace: &Path) -> Result<(), String> {
@@ -884,7 +964,9 @@ mod tests {
         fs::create_dir_all(&directory).unwrap();
         fs::write(directory.join(INDEX_FILE), "{not-json").unwrap();
         let runtime = KnowledgeIndexRuntime::default();
-        assert_eq!(inspect_index(&cache, &workspace, &runtime).state, "corrupt");
+        let corrupt = inspect_index(&cache, &workspace, &runtime);
+        assert_eq!(corrupt.state, "corrupt");
+        assert!(corrupt.recovery_available);
 
         let mut snapshot = snapshot_from_graph(
             &workspace,
@@ -900,6 +982,30 @@ mod tests {
         )
         .unwrap();
         assert_eq!(inspect_index(&cache, &workspace, &runtime).state, "corrupt");
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn corrupt_snapshot_can_be_quarantined_without_deleting_evidence() {
+        let (base, workspace, cache) = fixture("recover-corrupt");
+        let directory = index_workspace_directory(&cache, &workspace);
+        fs::create_dir_all(&directory).unwrap();
+        fs::write(directory.join(INDEX_FILE), "{not-json").unwrap();
+        let runtime = KnowledgeIndexRuntime::default();
+
+        let report = recover_index_cache(&cache, &workspace, &runtime).unwrap();
+
+        assert_eq!(report.before_state, "corrupt");
+        assert_eq!(report.after_state, "missing");
+        assert!(report.quarantined);
+        assert!(!directory.join(INDEX_FILE).exists());
+        let quarantine_file = report.quarantine_file.unwrap();
+        assert!(quarantine_file.starts_with(QUARANTINED_INDEX_PREFIX));
+        assert_eq!(
+            fs::read_to_string(directory.join(quarantine_file)).unwrap(),
+            "{not-json"
+        );
+        assert_eq!(inspect_index(&cache, &workspace, &runtime).state, "missing");
         fs::remove_dir_all(base).unwrap();
     }
 

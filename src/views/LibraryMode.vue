@@ -63,7 +63,11 @@
                 <span>{{ knowledgeIndexLabel }}</span>
                 <small v-if="knowledgeIndexStatus.state === 'ready'">{{ knowledgeIndexStatus.objectCount }} 对象 · {{ knowledgeIndexStatus.relationCount }} 关系</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'building'">{{ knowledgeIndexStatus.progress }}%</small>
+                <small v-else-if="knowledgeIndexStatus.state === 'stale'">{{ knowledgeIndexStatus.staleSourceCount || knowledgeIndexStatus.sourceCount }} 个来源需更新</small>
                 <div class="knowledge-index-actions">
+                  <n-button v-if="knowledgeIndexStatus.state === 'corrupt' && knowledgeIndexStatus.recoveryAvailable" quaternary circle size="tiny" :disabled="knowledgeIndexBusy" title="隔离损坏索引" @click="recoverKnowledgeIndex">
+                    <template #icon><n-icon :component="ShieldCheckIcon" /></template>
+                  </n-button>
                   <n-button quaternary circle size="tiny" :disabled="knowledgeIndexBusy" title="重建知识索引" @click="rebuildKnowledgeIndex">
                     <template #icon><n-icon :component="RefreshIcon" /></template>
                   </n-button>
@@ -528,7 +532,8 @@ import {
   Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
   Database as DatabaseIcon, LayoutDashboard as DashboardIcon, ListFilter as CollectionIcon,
-  BookmarkPlus as BookmarkAddIcon, Languages as LanguagesIcon, ExternalLink as ExternalOpenIcon
+  BookmarkPlus as BookmarkAddIcon, Languages as LanguagesIcon, ExternalLink as ExternalOpenIcon,
+  ShieldCheck as ShieldCheckIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -608,6 +613,17 @@ interface KnowledgeIndexStatus {
   progress: number
   cacheBytes: number
   error?: string
+  recoveryAvailable: boolean
+  staleSourceCount?: number
+}
+
+interface KnowledgeIndexRecoveryReport {
+  beforeState: string
+  afterState: string
+  cacheBytes: number
+  quarantined: boolean
+  quarantineFile?: string
+  message: string
 }
 
 interface TextDocumentSnapshot {
@@ -1003,7 +1019,7 @@ let relationSummaryGeneration = 0
 const relationSummaries = ref<Record<string, GraphRelationSummary>>({})
 const knowledgeIndexStatus = ref<KnowledgeIndexStatus>({
   state: 'missing', schemaVersion: 1, sourceCount: 0, objectCount: 0,
-  relationCount: 0, progress: 0, cacheBytes: 0,
+  relationCount: 0, progress: 0, cacheBytes: 0, recoveryAvailable: false,
 })
 const knowledgeIndexBusy = ref(false)
 const searchFormatOptions = FILE_FORMATS
@@ -2548,7 +2564,7 @@ const handleTextEncodingAction = (key: string) => {
 const rebuildKnowledgeIndex = async () => {
   if (!store.libraryPath || knowledgeIndexBusy.value) return
   knowledgeIndexBusy.value = true
-  knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'building', progress: 10, error: undefined }
+  knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'building', progress: 10, error: undefined, recoveryAvailable: false }
   const progressTimer = window.setInterval(() => { void refreshKnowledgeIndexStatus() }, 400)
   try {
     knowledgeIndexStatus.value = await invoke<KnowledgeIndexStatus>('rebuild_knowledge_index', { libraryRoot: store.libraryPath })
@@ -2557,6 +2573,16 @@ const rebuildKnowledgeIndex = async () => {
     knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'error', progress: 0, error: String(error) }
     message.error(`知识索引重建失败：${String(error)}`)
   } finally { window.clearInterval(progressTimer); knowledgeIndexBusy.value = false }
+}
+const recoverKnowledgeIndex = async () => {
+  if (!store.libraryPath || knowledgeIndexBusy.value || !window.confirm('隔离损坏的本地索引？用户文件不会被删除，后续可以重新构建索引。')) return
+  knowledgeIndexBusy.value = true
+  try {
+    const report = await invoke<KnowledgeIndexRecoveryReport>('recover_knowledge_index_cache', { libraryRoot: store.libraryPath })
+    knowledgeIndexStatus.value = await invoke<KnowledgeIndexStatus>('get_knowledge_index_status', { libraryRoot: store.libraryPath })
+    message.success(report.quarantined ? '损坏索引已隔离，可以重新构建' : report.message)
+  } catch (error) { message.error(`恢复索引失败：${String(error)}`) }
+  finally { knowledgeIndexBusy.value = false }
 }
 const deleteKnowledgeIndex = async () => {
   if (!store.libraryPath || knowledgeIndexBusy.value || !window.confirm('删除当前知识库的本地索引？用户文件不会被删除。')) return

@@ -5,8 +5,9 @@ use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::knowledge_index::{
     build_odf_content_index_segments, build_pptx_index_segments, delete_index, inspect_index,
-    read_ready_snapshot, snapshot_from_graph, write_snapshot, IndexedSearchSegment,
-    KnowledgeIndexRuntime, KnowledgeIndexStatus,
+    read_ready_snapshot, recover_index_cache, snapshot_from_graph, write_snapshot,
+    IndexedSearchSegment, KnowledgeIndexRecoveryReport, KnowledgeIndexRuntime,
+    KnowledgeIndexStatus,
 };
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -99,6 +100,17 @@ pub fn delete_knowledge_index(
     delete_index(&cache_root, workspace)?;
     runtime.set(workspace, "missing", 0, None);
     Ok(inspect_index(&cache_root, workspace, &runtime))
+}
+
+#[tauri::command]
+pub fn recover_knowledge_index_cache(
+    app: AppHandle,
+    runtime: State<'_, KnowledgeIndexRuntime>,
+    library_root: String,
+) -> Result<KnowledgeIndexRecoveryReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let cache_root = knowledge_index_cache_root(&app)?;
+    recover_index_cache(&cache_root, guard.root(), &runtime)
 }
 
 #[derive(Clone, Debug, Serialize)]
