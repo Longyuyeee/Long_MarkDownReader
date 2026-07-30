@@ -13,6 +13,7 @@ use commands::canvas::{
 use commands::config::{
     clear_ai_credential, get_ai_credential_status, get_config, save_config, set_ai_credential,
 };
+use commands::diagnostics::export_privacy_diagnostic_bundle;
 use commands::diagram::{
     analyze_diagram_source, create_diagram_file, read_diagram_file, update_diagram_element,
     write_diagram_file,
@@ -429,6 +430,7 @@ pub fn run() {
             export_management_backup,
             preflight_management_backup_import,
             restore_management_backup,
+            export_privacy_diagnostic_bundle,
             git_status,
             git_init,
             git_commit,

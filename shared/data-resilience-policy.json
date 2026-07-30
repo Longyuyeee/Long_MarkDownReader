@@ -49,13 +49,15 @@
     {
       "id": "R3D",
       "label": "隐私净化诊断包",
-      "status": "planned",
+      "status": "implemented",
       "capabilities": [
         "redacted-environment-report",
         "capability-contract-snapshot",
         "index-state-summary",
         "error-category-summary",
-        "leakage-rejection-tests"
+        "leakage-rejection-tests",
+        "fixed-diagnostic-bundle-manifest",
+        "credential-and-path-exclusion"
       ],
       "privacyBoundary": "诊断包只允许脱敏环境、版本、能力合同、索引状态和错误分类。"
     }
@@ -68,5 +70,5 @@
     "recoverable-cache-body",
     "external-library-content"
   ],
-  "nextStage": "R3D"
+  "nextStage": "R4"
 }

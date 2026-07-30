@@ -130,6 +130,15 @@
                 </n-button>
               </div>
             </div>
+            <div class="setting-row">
+              <div class="info">
+                <div class="label">Privacy Diagnostic</div>
+                <div class="desc">Export redacted diagnostics without document bodies, full paths, API keys, cache bodies, or credentials.</div>
+              </div>
+              <n-button secondary type="warning" :loading="diagnosticExporting" @click="exportPrivacyDiagnosticBundle">
+                Export
+              </n-button>
+            </div>
           </n-grid-item>
 
           <n-grid-item class="animate-item" style="--delay: 0.35s">
@@ -375,6 +384,7 @@ const credentialDraft = ref('')
 const credentialSaving = ref(false)
 const backupExporting = ref(false)
 const backupRestoring = ref(false)
+const diagnosticExporting = ref(false)
 
 interface ManagementBackupReceipt {
   path: string
@@ -418,6 +428,16 @@ interface ManagementBackupRestoreReceipt {
   libraryCount: number
   savedSearchCount: number
   warnings: string[]
+}
+
+interface PrivacyDiagnosticBundleReceipt {
+  path: string
+  bytes: number
+  sha256: string
+  createdAt: number
+  entryCount: number
+  libraryCount: number
+  excluded: string[]
 }
 
 const newLib = reactive({ name: '', path: '' })
@@ -605,6 +625,26 @@ const importManagementBackup = async () => {
     message.error(`导入管理备份失败：${String(error)}`)
   } finally {
     backupRestoring.value = false
+  }
+}
+
+const exportPrivacyDiagnosticBundle = async () => {
+  if (diagnosticExporting.value) return
+  const target = await save({
+    title: 'Export Privacy Diagnostic',
+    defaultPath: `longedit-privacy-diagnostic-${new Date().toISOString().slice(0, 10)}.zip`,
+    filters: [{ name: 'LongEdit Privacy Diagnostic', extensions: ['zip'] }],
+  })
+  if (!target) return
+  diagnosticExporting.value = true
+  try {
+    const receipt = await invoke<PrivacyDiagnosticBundleReceipt>('export_privacy_diagnostic_bundle', { targetPath: target })
+    const kb = Math.max(1, Math.round(receipt.bytes / 1024))
+    message.success(`Privacy diagnostic exported: ${kb} KiB · ${receipt.entryCount} entries · ${receipt.sha256.slice(0, 12)}`)
+  } catch (error) {
+    message.error(`Export privacy diagnostic failed: ${String(error)}`)
+  } finally {
+    diagnosticExporting.value = false
   }
 }
 

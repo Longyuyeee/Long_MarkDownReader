@@ -9,7 +9,7 @@ const fail = message => {
 const policy = JSON.parse(read('shared/data-resilience-policy.json'))
 if (policy.schemaVersion !== 1 || policy.stage !== 'R3') fail('R3 policy identity mismatch.')
 if (policy.releaseCandidate !== false) fail('R3 must not mark the product as a release candidate.')
-if (policy.nextStage !== 'R3D') fail('R3C handoff must point to R3D.')
+if (policy.nextStage !== 'R4') fail('R3D handoff must point to R4.')
 
 const phases = new Map(policy.phases.map(phase => [phase.id, phase]))
 const r3a = phases.get('R3A')
@@ -48,7 +48,19 @@ for (const capability of [
 ]) {
   if (!r3c.capabilities.includes(capability)) fail(`R3C capability missing: ${capability}`)
 }
-if (phases.get('R3D')?.status !== 'planned') fail('R3D must remain planned after R3C.')
+const r3d = phases.get('R3D')
+if (!r3d || r3d.status !== 'implemented') fail('R3D must be implemented in the policy.')
+for (const capability of [
+  'redacted-environment-report',
+  'capability-contract-snapshot',
+  'index-state-summary',
+  'error-category-summary',
+  'leakage-rejection-tests',
+  'fixed-diagnostic-bundle-manifest',
+  'credential-and-path-exclusion',
+]) {
+  if (!r3d.capabilities.includes(capability)) fail(`R3D capability missing: ${capability}`)
+}
 for (const forbidden of ['document-body', 'api-key', 'absolute-user-path', 'recoverable-cache-body']) {
   if (!policy.forbiddenByDefault.includes(forbidden)) fail(`R3 privacy forbidden item missing: ${forbidden}`)
 }
@@ -95,13 +107,26 @@ for (const token of [
 }
 
 const settings = read('src/views/SettingsView.vue')
-for (const token of ['exportManagementBackup', 'importManagementBackup', 'restore_management_backup', '导入恢复', '不包含文档正文或凭据']) {
+for (const token of ['exportManagementBackup', 'importManagementBackup', 'restore_management_backup', 'exportPrivacyDiagnosticBundle', 'export_privacy_diagnostic_bundle', '导入恢复', '不包含文档正文或凭据', 'Privacy Diagnostic']) {
   if (!settings.includes(token)) fail(`R3 settings UI token missing: ${token}`)
 }
 
 const libRs = read('src-tauri/src/lib.rs')
-for (const token of ['export_management_backup', 'preflight_management_backup_import', 'restore_management_backup']) {
+for (const token of ['export_management_backup', 'preflight_management_backup_import', 'restore_management_backup', 'export_privacy_diagnostic_bundle']) {
   if (!libRs.includes(token)) fail(`R3 backup command is not exposed in lib.rs: ${token}`)
+}
+const diagnostics = read('src-tauri/src/commands/diagnostics.rs')
+for (const token of [
+  'export_privacy_diagnostic_bundle',
+  'PrivacyDiagnosticBundleReceipt',
+  'diagnostics/environment.redacted.json',
+  'diagnostics/config-summary.redacted.json',
+  'diagnostics/index-state-summary.json',
+  'raw-error-message',
+  'environment-variable',
+  'privacy_diagnostic_bundle_excludes_sensitive_values',
+]) {
+  if (!diagnostics.includes(token)) fail(`R3D diagnostic token missing: ${token}`)
 }
 
 const r3aAudit = read('docs/R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md')
@@ -116,5 +141,9 @@ const r3cAudit = read('docs/R3C_Management_Backup_Import_Restore_Audit_2026-07-3
 for (const token of ['R3C', '导入预检', '路径重新映射', 'restore_management_backup', 'R3D', 'releaseCandidate=false']) {
   if (!r3cAudit.includes(token)) fail(`R3C audit token missing: ${token}`)
 }
+const r3dAudit = read('docs/R3D_Privacy_Diagnostic_Bundle_Audit_2026-07-30.md')
+for (const token of ['R3D', '隐私诊断包', 'export_privacy_diagnostic_bundle', 'R4', 'releaseCandidate=false']) {
+  if (!r3dAudit.includes(token)) fail(`R3D audit token missing: ${token}`)
+}
 
-console.log('R3 data resilience contract passed: R3A index recovery, R3B backup export, and R3C import/restore implemented; R3D remains planned.')
+console.log('R3 data resilience contract passed: R3A index recovery, R3B backup export, R3C import/restore, and R3D privacy diagnostics implemented; R4 remains next.')
