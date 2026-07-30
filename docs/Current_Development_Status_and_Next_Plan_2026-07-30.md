@@ -258,3 +258,23 @@ The app now records lightweight route transition evidence through `performance.m
 Current status: `runtime-marks-added-real-desktop-baseline-pending`.
 
 Next recommended stage: R5C. Add a repeatable desktop smoke-audit capture path that opens a production build, navigates representative routes, exports route performance evidence, and stores the result under `docs/evidence/`.
+
+## R5C update - route performance smoke capture path
+
+Current stage after this update: R5C is implemented as a repeatable route-performance smoke capture path. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5c-route-performance-smoke-policy.json`
+- `scripts/capture-r5c-route-performance-evidence.mjs`
+- `scripts/check-r5c-route-performance-smoke.mjs`
+- `docs/R5C_Route_Performance_Smoke_Capture_Audit_2026-07-30.md`
+- `src/App.vue`
+
+R5C turns the R5B route performance marks into exportable evidence. A real desktop/webview run can call `window.__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__()`, save the JSON, and normalize it through `npm run audit:r5c-route-performance-smoke -- <json>`.
+
+This continues to align with the original user requirement: the app must feel like one professional daily-management system across Markdown, TXT/JSON/dev formats, PDF, workbook, diagrams, mind maps, knowledge graph, and Office/WPS-like workflows. The capture path makes route responsiveness auditable without collecting user document content.
+
+Current status: `capture-path-defined-real-evidence-pending`.
+
+Next recommended stage: R5D. Capture and attach a real route-performance evidence bundle from a built desktop artifact, then decide whether further lazy-loading or UI simplification is needed before release-candidate promotion.

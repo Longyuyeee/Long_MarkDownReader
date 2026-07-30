@@ -161,10 +161,40 @@ declare global {
       elapsedMs: number
       recordedAt: string
     }>
+    __LONGEDIT_EXPORT_ROUTE_PERFORMANCE__?: () => {
+      schemaVersion: number
+      capturedAt: string
+      routeHistoryLimit: number
+      routes: Array<{
+        routeName: string
+        elapsedMs: number
+        recordedAt: string
+      }>
+      measures: Array<{
+        name: string
+        durationMs: number
+        startTimeMs: number
+      }>
+    }
   }
 }
 
 const ROUTE_PERFORMANCE_MAX_ENTRIES = 20
+
+window.__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__ = () => ({
+  schemaVersion: 1,
+  capturedAt: new Date().toISOString(),
+  routeHistoryLimit: ROUTE_PERFORMANCE_MAX_ENTRIES,
+  routes: [...(window.__LONGEDIT_ROUTE_PERFORMANCE__ ?? [])],
+  measures: performance.getEntriesByType('measure')
+    .filter(entry => entry.name.startsWith('longedit:route:'))
+    .slice(-ROUTE_PERFORMANCE_MAX_ENTRIES)
+    .map(entry => ({
+      name: entry.name,
+      durationMs: Math.round(entry.duration),
+      startTimeMs: Math.round(entry.startTime),
+    })),
+})
 
 const recordRoutePerformance = (routeName: string, elapsedMs: number) => {
   const entries = window.__LONGEDIT_ROUTE_PERFORMANCE__ ?? []

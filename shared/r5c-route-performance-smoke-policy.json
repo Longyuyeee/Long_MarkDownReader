@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5C",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "route-performance-smoke-capture",
+  "generatedAt": "2026-07-30",
+  "currentStatus": "capture-path-defined-real-evidence-pending",
+  "inputContract": {
+    "source": "window.__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__",
+    "schemaVersion": 1,
+    "requiredFields": [
+      "capturedAt",
+      "routeHistoryLimit",
+      "routes",
+      "measures"
+    ]
+  },
+  "outputContract": {
+    "defaultDirectory": "docs/evidence/r5c-route-performance-smoke",
+    "manifestFile": "manifest.json",
+    "evidenceFile": "route-performance-evidence.json",
+    "sourceUserContentAllowed": false
+  },
+  "representativeRoutes": [
+    "WorkspaceHome",
+    "LibraryMode",
+    "TextEditor",
+    "JsonEditor",
+    "Pdf",
+    "Workbook",
+    "Diagram",
+    "MindMap",
+    "Graph",
+    "Canvas",
+    "ReleaseCapabilities"
+  ],
+  "releaseGate": {
+    "requiresRealDesktopRun": true,
+    "requiresSignedArtifactForRc": true,
+    "requiresWindowsVmEvidenceForRc": true,
+    "currentPromotionEligible": false
+  },
+  "capabilityAlignment": [
+    "daily-management-workspace",
+    "right-side-workspace-navigation",
+    "pdf-and-office-workflows",
+    "diagram-and-mindmap-workflows",
+    "knowledge-graph-visualization",
+    "txt-json-dev-format-editing"
+  ],
+  "knownLimits": [
+    "capture-script-normalizes-exported-runtime-data-but-does-not-launch-the-desktop-app-by-itself",
+    "real-smoke-evidence-remains-pending-until-a-built-app-is-opened-and-exported",
+    "rc-promotion-remains-blocked-until-signing-and-vm-evidence-exist"
+  ],
+  "nextStage": "R5D"
+}
