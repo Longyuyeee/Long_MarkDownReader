@@ -206,3 +206,19 @@ The release notes also document current limitations:
 Rollback plan evidence now requires backup export, manifest verification, safe uninstall, previous known-good reinstall, path-remapped backup restore, knowledge-index rebuild, and representative file reopen checks.
 
 Next recommended stage: R4F. Create the final RC promotion gate so `releaseCandidate=true` remains impossible until artifacts, signing, VM matrix, release notes, rollback, and data retention all pass.
+
+## R4F update - final RC promotion gate
+
+Current stage after this update: R4F is implemented as the final release-candidate promotion gate. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/windows-release-rc-promotion-gate.json`
+- `scripts/check-r4f-windows-release-rc-promotion-gate.mjs`
+- `docs/R4F_Windows_RC_Promotion_Gate_Audit_2026-07-30.md`
+
+R4F connects artifact hashes, signing evidence, Windows VM matrix, release notes, rollback plan, data-retention policy, and public capability matrix into one machine-checkable RC gate. Every required evidence row is currently `passed=false` and `releaseBlocking=true`.
+
+R4 contract-layer release readiness is now structurally closed: the project has clear machine-checkable gates, but it is not yet a release candidate because real signed artifacts, VM runs, rollback validation, and manual approval are still missing.
+
+Next recommended stage: R5. Execute real release evidence and product hardening: run the Windows 10/11 VM matrix, decide signing/distribution strategy, validate rollback on real VMs, review frontend chunk splitting, and only then consider a controlled RC switch.

@@ -32,7 +32,7 @@ const readiness = json('shared/windows-release-readiness-policy.json')
 if (readiness.schemaVersion !== 1 || readiness.stage !== 'R4') fail('R4 readiness policy identity mismatch.')
 if (readiness.releaseCandidate !== false) fail('R4A must keep releaseCandidate=false until real signing and VM evidence exist.')
 if (readiness.status !== 'blocked-pending-signing-and-vm-evidence') fail('R4A status must be blocked by missing release evidence.')
-if (readiness.nextStage !== 'R4F') fail('R4 readiness handoff must point to R4F after R4E.')
+if (readiness.nextStage !== 'R5') fail('R4 readiness handoff must point to R5 after R4F.')
 
 if (readiness.appVersion !== packageJson.version) fail('R4 appVersion must match package.json.')
 if (readiness.appVersion !== tauriConfig.version) fail('R4 appVersion must match tauri.conf.json.')
@@ -102,6 +102,10 @@ if (readiness.releaseNotes.evidenceManifest !== 'shared/windows-release-notes-ro
 if (readiness.rollbackPlan.required !== true) fail('R4 rollback plan must be required.')
 if (readiness.rollbackPlan.currentStatus !== 'rollback-plan-defined-but-not-vm-validated') fail('R4 rollback plan status mismatch.')
 if (readiness.rollbackPlan.evidenceManifest !== 'shared/windows-release-notes-rollback-plan.json') fail('R4 rollback plan evidence link missing.')
+if (readiness.rcPromotionGate.required !== true) fail('R4 RC promotion gate must be required.')
+if (readiness.rcPromotionGate.currentStatus !== 'blocked-pending-real-release-evidence') fail('R4 RC promotion gate status mismatch.')
+if (readiness.rcPromotionGate.evidenceManifest !== 'shared/windows-release-rc-promotion-gate.json') fail('R4 RC promotion gate evidence link missing.')
+if (readiness.rcPromotionGate.manualApprovalRequired !== true) fail('R4 RC promotion gate must require manual approval.')
 
 if (readiness.fileAssociations.sourceOfTruth !== 'shared/windows-lifecycle-policy.json') fail('R4 file association source mismatch.')
 if (readiness.fileAssociations.defaultSelectionOwner !== lifecycle.fileAssociations.defaultSelectionOwner) fail('R4 file association owner mismatch.')
@@ -174,6 +178,14 @@ requireIncludes('R4E audit doc token', r4eAudit, [
   'windows-release-notes-rollback-plan.json',
   'release-notes-and-rollback-defined-but-evidence-incomplete',
   'R4F',
+])
+
+const r4fAudit = read('docs/R4F_Windows_RC_Promotion_Gate_Audit_2026-07-30.md')
+requireIncludes('R4F audit doc token', r4fAudit, [
+  'R4F',
+  'windows-release-rc-promotion-gate.json',
+  'blocked-pending-real-release-evidence',
+  'R5',
 ])
 
 console.log('R4 Windows release readiness contract passed: release candidate remains blocked pending signing and VM evidence.')

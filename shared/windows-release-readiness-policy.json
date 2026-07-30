@@ -60,6 +60,12 @@
     "currentStatus": "rollback-plan-defined-but-not-vm-validated",
     "evidenceManifest": "shared/windows-release-notes-rollback-plan.json"
   },
+  "rcPromotionGate": {
+    "required": true,
+    "currentStatus": "blocked-pending-real-release-evidence",
+    "evidenceManifest": "shared/windows-release-rc-promotion-gate.json",
+    "manualApprovalRequired": true
+  },
   "fileAssociations": {
     "sourceOfTruth": "shared/windows-lifecycle-policy.json",
     "defaultSelectionOwner": "windows",
@@ -86,5 +92,5 @@
     "releaseCapabilityMatrixMustRemainNonRcUntilEvidenceComplete": true,
     "debugOrUnsignedBuildsMustNotBeAdvertisedAsOfficialRelease": true
   },
-  "nextStage": "R4F"
+  "nextStage": "R5"
 }

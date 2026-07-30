@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "stage": "R4F",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "final-rc-promotion-gate",
+  "generatedAt": "2026-07-30",
+  "promotionEligible": false,
+  "currentStatus": "blocked-pending-real-release-evidence",
+  "sourceManifests": {
+    "readiness": "shared/windows-release-readiness-policy.json",
+    "artifacts": "shared/windows-release-artifact-manifest.json",
+    "signing": "shared/windows-release-signing-evidence.json",
+    "vmMatrix": "shared/windows-release-vm-matrix-evidence.json",
+    "releaseNotesRollback": "shared/windows-release-notes-rollback-plan.json",
+    "dataRetention": "shared/windows-lifecycle-policy.json",
+    "publicCapabilityMatrix": "shared/release-capability-matrix.json"
+  },
+  "requiredEvidence": [
+    {
+      "id": "artifact-hash-manifest",
+      "source": "shared/windows-release-artifact-manifest.json",
+      "requiredStatus": "promotionEligible=true",
+      "currentStatus": "promotionEligible=false",
+      "passed": false,
+      "releaseBlocking": true
+    },
+    {
+      "id": "valid-authenticode-signing",
+      "source": "shared/windows-release-signing-evidence.json",
+      "requiredStatus": "official-signed-with-timestamp",
+      "currentStatus": "not-signed-artifacts-recorded",
+      "passed": false,
+      "releaseBlocking": true
+    },
+    {
+      "id": "windows-vm-matrix",
+      "source": "shared/windows-release-vm-matrix-evidence.json",
+      "requiredStatus": "all-windows-10-11-scenarios-passed",
+      "currentStatus": "matrix-defined-results-missing",
+      "passed": false,
+      "releaseBlocking": true
+    },
+    {
+      "id": "release-notes",
+      "source": "shared/windows-release-notes-rollback-plan.json",
+      "requiredStatus": "reviewed-and-approved",
+      "currentStatus": "defined-but-not-approved",
+      "passed": false,
+      "releaseBlocking": true
+    },
+    {
+      "id": "rollback-plan",
+      "source": "shared/windows-release-notes-rollback-plan.json",
+      "requiredStatus": "validated-on-windows-10-and-11",
+      "currentStatus": "defined-but-not-vm-validated",
+      "passed": false,
+      "releaseBlocking": true
+    },
+    {
+      "id": "data-retention-policy",
+      "source": "shared/windows-lifecycle-policy.json",
+      "requiredStatus": "reviewed-against-release-build",
+      "currentStatus": "policy-defined-review-pending",
+      "passed": false,
+      "releaseBlocking": true
+    },
+    {
+      "id": "public-capability-matrix",
+      "source": "shared/release-capability-matrix.json",
+      "requiredStatus": "updated-only-after-evidence",
+      "currentStatus": "non-rc-r2-public-matrix",
+      "passed": false,
+      "releaseBlocking": true
+    }
+  ],
+  "promotionRules": {
+    "mustRemainReleaseCandidateFalse": true,
+    "allRequiredEvidenceMustPassBeforeRc": true,
+    "publicCapabilityMatrixMustNotBePromotedFirst": true,
+    "unsignedOrHistoricalArtifactsMustRemainBlocked": true,
+    "vmMissingRowsMustBlockRelease": true,
+    "rollbackMustBeVmValidatedBeforeRc": true
+  },
+  "manualApprovalRequired": true,
+  "nextStage": "R5"
+}

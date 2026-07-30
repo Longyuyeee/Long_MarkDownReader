@@ -29,7 +29,7 @@ if (vmEvidence.promotionEligible !== false) fail('R4D VM evidence must not be pr
 if (vmEvidence.nextStage !== 'R4E') fail('R4D handoff must point to R4E.')
 
 if (readiness.stage !== 'R4' || readiness.releaseCandidate !== false) fail('R4 readiness baseline must remain non-RC.')
-if (readiness.nextStage !== 'R4F') fail('R4 readiness policy must hand off to R4F after R4E.')
+if (readiness.nextStage !== 'R5') fail('R4 readiness policy must hand off to R5 after R4F.')
 if (readiness.vmMatrix.currentStatus !== 'matrix-defined-results-missing') {
   fail('R4 readiness VM status must record matrix-defined-results-missing.')
 }
@@ -41,6 +41,12 @@ if (readiness.releaseNotes.currentStatus !== 'release-notes-and-rollback-defined
 }
 if (readiness.rollbackPlan.currentStatus !== 'rollback-plan-defined-but-not-vm-validated') {
   fail('R4 rollback plan status mismatch after R4E.')
+}
+if (readiness.rcPromotionGate.currentStatus !== 'blocked-pending-real-release-evidence') {
+  fail('R4 RC promotion gate status mismatch after R4F.')
+}
+if (readiness.rcPromotionGate.evidenceManifest !== 'shared/windows-release-rc-promotion-gate.json') {
+  fail('R4 RC promotion gate evidence manifest link missing after R4F.')
 }
 if (releaseMatrix.releaseCandidate !== false) fail('Public release capability matrix must remain non-RC.')
 
