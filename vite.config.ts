@@ -47,6 +47,7 @@ export default defineConfig(async () => ({
     },
   },
   build: {
+    chunkSizeWarningLimit: 750,
     rollupOptions: {
       output: {
         manualChunks: {

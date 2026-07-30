@@ -222,3 +222,20 @@ R4F connects artifact hashes, signing evidence, Windows VM matrix, release notes
 R4 contract-layer release readiness is now structurally closed: the project has clear machine-checkable gates, but it is not yet a release candidate because real signed artifacts, VM runs, rollback validation, and manual approval are still missing.
 
 Next recommended stage: R5. Execute real release evidence and product hardening: run the Windows 10/11 VM matrix, decide signing/distribution strategy, validate rollback on real VMs, review frontend chunk splitting, and only then consider a controlled RC switch.
+
+## R5A update - frontend release bundle hardening
+
+Current stage after this update: R5A is implemented as a frontend release-bundle hardening step. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/frontend-release-hardening-policy.json`
+- `scripts/check-r5a-frontend-release-hardening.mjs`
+- `docs/R5A_Frontend_Release_Bundle_Hardening_Audit_2026-07-30.md`
+- `vite.config.ts`
+
+R5A aligns release hardening with the original product goal: this is no longer just a Markdown reader, so PDF, knowledge graph, diagrams/mind maps, OCR, workbook, Office-like workflows, and code/dev editing have real frontend weight. The Vite build now separates these heavy capability domains into explicit chunks and uses an audited `chunkSizeWarningLimit` budget instead of leaving large chunks as unexplained build noise.
+
+Current status: `chunk-domains-defined-budget-under-review`.
+
+Next recommended stage: R5B. Add desktop startup/performance evidence shape or run a local smoke measurement if the environment supports it.

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5A",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "frontend-release-bundle-hardening",
+  "generatedAt": "2026-07-30",
+  "currentStatus": "chunk-domains-defined-budget-under-review",
+  "bundleBudget": {
+    "chunkSizeWarningLimitKb": 750,
+    "rationale": "The app intentionally includes PDF, diagram, graph, OCR, workbook, and editor capabilities for a professional management workspace. Release hardening separates heavy capability domains and keeps the warning budget explicit instead of hiding it.",
+    "mustNotIncreaseWithoutAudit": true
+  },
+  "chunkDomains": [
+    "vue-vendor",
+    "ui-vendor",
+    "icon-vendor",
+    "editor-vendor",
+    "pdf-route-chunks",
+    "graph-route-chunks",
+    "diagram-route-chunks",
+    "code-editor-route-chunks",
+    "ocr-static-assets"
+  ],
+  "capabilityAlignment": [
+    "daily-management-workspace",
+    "pdf-workflows",
+    "knowledge-graph-visualization",
+    "diagram-and-mindmap-workflows",
+    "txt-json-dev-format-editing",
+    "ocr-sidecar-workflows",
+    "office-and-workbook-workflows"
+  ],
+  "knownLimits": [
+    "bundle-size-budget-is-a-release-warning-gate-not-a-runtime-performance-proof",
+    "real-startup-performance-still-needs-desktop-measurement",
+    "pdf-worker-and-large-diagram-modules-remain-intentionally-heavy-capability-assets"
+  ],
+  "nextStage": "R5B"
+}
