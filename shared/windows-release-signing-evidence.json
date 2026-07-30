@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "stage": "R4C",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "historical-local-installer-signing-evidence",
+  "generatedAt": "2026-07-30",
+  "verificationTool": "PowerShell Get-AuthenticodeSignature",
+  "promotionEligible": false,
+  "requiredBeforeReleaseCandidate": [
+    "valid-authenticode-signature",
+    "sha256-digest-matches-artifact-manifest",
+    "timestamp-certificate-present",
+    "accepted-certificate-subject-defined",
+    "windows-vm-matrix-complete"
+  ],
+  "acceptedReleaseStates": ["official-signed"],
+  "rejectedReleaseStates": ["unsigned", "not-signed", "unknown", "invalid", "test-signed"],
+  "artifacts": [
+    {
+      "path": "releases/MDReader_Setup.exe",
+      "sha256": "a58bac4f3b3452fcb6516e1cbbe09956d8ebc0ad764cccf8bb3878bf77c332bd",
+      "authenticodeStatus": "NotSigned",
+      "releaseSigningState": "not-signed",
+      "signerSubject": null,
+      "timestampSubject": null,
+      "officialRelease": false,
+      "promotionEligible": false
+    },
+    {
+      "path": "releases/MistyEdit_Setup.exe",
+      "sha256": "567c7866438d2a3882e7fab91f890189b30181aad0ca16e22a803e9f41e299d0",
+      "authenticodeStatus": "NotSigned",
+      "releaseSigningState": "not-signed",
+      "signerSubject": null,
+      "timestampSubject": null,
+      "officialRelease": false,
+      "promotionEligible": false
+    },
+    {
+      "path": "releases/MistyEdit_Setup_v0.2.0.exe",
+      "sha256": "29a8f9bf52274e21789016b495340ac21b6275c8ca56f286c0f3b3cc25eac4dc",
+      "authenticodeStatus": "NotSigned",
+      "releaseSigningState": "not-signed",
+      "signerSubject": null,
+      "timestampSubject": null,
+      "officialRelease": false,
+      "promotionEligible": false
+    }
+  ],
+  "nextStage": "R4D"
+}

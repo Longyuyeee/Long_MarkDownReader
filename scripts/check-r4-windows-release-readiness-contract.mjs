@@ -32,7 +32,7 @@ const readiness = json('shared/windows-release-readiness-policy.json')
 if (readiness.schemaVersion !== 1 || readiness.stage !== 'R4') fail('R4 readiness policy identity mismatch.')
 if (readiness.releaseCandidate !== false) fail('R4A must keep releaseCandidate=false until real signing and VM evidence exist.')
 if (readiness.status !== 'blocked-pending-signing-and-vm-evidence') fail('R4A status must be blocked by missing release evidence.')
-if (readiness.nextStage !== 'R4C') fail('R4 readiness handoff must point to R4C after R4B.')
+if (readiness.nextStage !== 'R4D') fail('R4 readiness handoff must point to R4D after R4C.')
 
 if (readiness.appVersion !== packageJson.version) fail('R4 appVersion must match package.json.')
 if (readiness.appVersion !== tauriConfig.version) fail('R4 appVersion must match tauri.conf.json.')
@@ -76,7 +76,8 @@ if (readiness.installerArtifacts.currentStatus !== 'hash-manifest-defined-unsign
 if (readiness.installerArtifacts.hashManifest !== 'shared/windows-release-artifact-manifest.json') fail('R4 hash manifest link missing.')
 
 if (readiness.signing.required !== true) fail('R4 signing must be required.')
-if (readiness.signing.currentStatus !== 'missing') fail('R4A signing status must be missing.')
+if (readiness.signing.currentStatus !== 'not-signed-artifacts-recorded') fail('R4 signing status must record not-signed artifacts.')
+if (readiness.signing.evidenceManifest !== 'shared/windows-release-signing-evidence.json') fail('R4 signing evidence manifest link missing.')
 if (readiness.signing.acceptedSubjects.length !== 0) fail('R4A must not list accepted signing subjects before evidence.')
 if (readiness.signing.timestampRequired !== true) fail('R4 signing must require a timestamp.')
 if (readiness.signing.signatureAlgorithm !== 'sha256') fail('R4 signing must require sha256.')
@@ -141,6 +142,14 @@ requireIncludes('R4B audit doc token', r4bAudit, [
   'windows-release-artifact-manifest.json',
   'promotionEligible=false',
   'R4C',
+])
+
+const r4cAudit = read('docs/R4C_Windows_Release_Signing_Evidence_Audit_2026-07-30.md')
+requireIncludes('R4C audit doc token', r4cAudit, [
+  'R4C',
+  'windows-release-signing-evidence.json',
+  'NotSigned',
+  'R4D',
 ])
 
 console.log('R4 Windows release readiness contract passed: release candidate remains blocked pending signing and VM evidence.')

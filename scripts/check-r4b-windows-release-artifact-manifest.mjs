@@ -35,14 +35,15 @@ if (manifest.promotionEligible !== false) fail('R4B manifest must not be promoti
 if (manifest.nextStage !== 'R4C') fail('R4B handoff must point to R4C.')
 
 if (readiness.stage !== 'R4' || readiness.releaseCandidate !== false) fail('R4 readiness baseline must remain non-RC.')
-if (readiness.nextStage !== 'R4C') fail('R4 readiness policy must hand off to R4C after R4B.')
+if (readiness.nextStage !== 'R4D') fail('R4 readiness policy must hand off to R4D after R4C.')
 if (readiness.installerArtifacts.hashManifest !== 'shared/windows-release-artifact-manifest.json') {
   fail('R4 readiness policy must link the artifact hash manifest.')
 }
 if (readiness.installerArtifacts.currentStatus !== 'hash-manifest-defined-unsigned-artifacts-not-promotable') {
   fail('R4 readiness artifact status must identify hash-manifest-defined but non-promotable artifacts.')
 }
-if (readiness.signing.currentStatus !== 'missing') fail('R4 signing must still be missing.')
+if (readiness.signing.currentStatus !== 'not-signed-artifacts-recorded') fail('R4 signing status must record not-signed artifacts after R4C.')
+if (readiness.signing.evidenceManifest !== 'shared/windows-release-signing-evidence.json') fail('R4 signing evidence manifest link missing after R4C.')
 if (readiness.vmMatrix.currentStatus !== 'missing') fail('R4 VM evidence must still be missing.')
 
 if (releaseMatrix.releaseCandidate !== false) fail('Public release capability matrix must remain non-RC.')

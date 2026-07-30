@@ -131,3 +131,25 @@ Current blockers to official release remain:
 5. no rollback plan.
 
 Next recommended stage: R4C. Define signature verification evidence and accepted signing-state rules while still keeping `releaseCandidate=false` until real signing and VM evidence are complete.
+
+## R4C update - Windows signing evidence
+
+Current stage after this update: R4C is implemented as a signing-evidence contract. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/windows-release-signing-evidence.json`
+- `scripts/check-r4c-windows-release-signing-evidence.mjs`
+- `docs/R4C_Windows_Release_Signing_Evidence_Audit_2026-07-30.md`
+
+R4C records the current historical/local installers as `NotSigned` according to PowerShell `Get-AuthenticodeSignature`. Each signing record is linked back to the R4B SHA-256 artifact manifest, and every artifact remains `promotionEligible=false`.
+
+Current release blockers remain:
+
+1. no valid Authenticode signature,
+2. no timestamp certificate,
+3. no accepted certificate subject,
+4. no current release-tag build evidence,
+5. no Windows 10/11 VM matrix evidence.
+
+Next recommended stage: R4D. Define the Windows 10/11 VM matrix evidence shape for fresh install, upgrade, downgrade rejection, uninstall retention, file association recovery, and first launch after install.

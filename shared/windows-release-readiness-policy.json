@@ -29,7 +29,8 @@
   },
   "signing": {
     "required": true,
-    "currentStatus": "missing",
+    "currentStatus": "not-signed-artifacts-recorded",
+    "evidenceManifest": "shared/windows-release-signing-evidence.json",
     "acceptedSubjects": [],
     "timestampRequired": true,
     "signatureAlgorithm": "sha256",
@@ -74,5 +75,5 @@
     "releaseCapabilityMatrixMustRemainNonRcUntilEvidenceComplete": true,
     "debugOrUnsignedBuildsMustNotBeAdvertisedAsOfficialRelease": true
   },
-  "nextStage": "R4C"
+  "nextStage": "R4D"
 }
