@@ -35,7 +35,7 @@ if (signing.promotionEligible !== false) fail('R4C signing evidence must not be 
 if (signing.nextStage !== 'R4D') fail('R4C handoff must point to R4D.')
 
 if (readiness.stage !== 'R4' || readiness.releaseCandidate !== false) fail('R4 readiness baseline must remain non-RC.')
-if (readiness.nextStage !== 'R4E') fail('R4 readiness policy must hand off to R4E after R4D.')
+if (readiness.nextStage !== 'R4F') fail('R4 readiness policy must hand off to R4F after R4E.')
 if (readiness.signing.currentStatus !== 'not-signed-artifacts-recorded') {
   fail('R4 readiness signing status must record the current not-signed state.')
 }
@@ -48,6 +48,12 @@ if (readiness.signing.required !== true || readiness.signing.timestampRequired !
 if (readiness.signing.acceptedSubjects.length !== 0) fail('R4C must not define accepted subjects before real signing material exists.')
 if (readiness.vmMatrix.currentStatus !== 'matrix-defined-results-missing') fail('R4 VM matrix status must record missing results after R4D.')
 if (readiness.vmMatrix.evidenceManifest !== 'shared/windows-release-vm-matrix-evidence.json') fail('R4 VM evidence manifest link missing after R4D.')
+if (readiness.releaseNotes.currentStatus !== 'release-notes-and-rollback-defined-but-evidence-incomplete') {
+  fail('R4 release notes status mismatch after R4E.')
+}
+if (readiness.rollbackPlan.currentStatus !== 'rollback-plan-defined-but-not-vm-validated') {
+  fail('R4 rollback plan status mismatch after R4E.')
+}
 if (releaseMatrix.releaseCandidate !== false) fail('Public release capability matrix must remain non-RC.')
 
 requireIncludes('R4C release prerequisite', signing.requiredBeforeReleaseCandidate, [

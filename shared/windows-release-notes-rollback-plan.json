@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "stage": "R4E",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "release-notes-and-rollback-plan-evidence",
+  "generatedAt": "2026-07-30",
+  "promotionEligible": false,
+  "currentStatus": "release-notes-and-rollback-defined-but-evidence-incomplete",
+  "releaseNotes": {
+    "capabilitySummary": [
+      "daily-management-workspace",
+      "markdown-and-text-editing",
+      "txt-json-dev-format-editing",
+      "pdf-reading-sidecar-ocr-annotations-page-ops",
+      "diagram-mindmap-canvas-opml-management",
+      "xlsx-workbook-bounded-editing",
+      "docx-pptx-limited-office-copy-editing",
+      "wps-and-legacy-office-guarded-external-or-conversion-workflows",
+      "knowledge-graph-index-recovery-backup-restore-diagnostics"
+    ],
+    "knownLimitations": [
+      "pdf-body-equivalent-editing-not-supported",
+      "wps-native-body-editing-not-supported",
+      "legacy-binary-office-editing-requires-compatible-office-conversion",
+      "unsigned-historical-installers-not-promotable",
+      "windows-vm-results-missing",
+      "large-frontend-chunks-warning-remains"
+    ],
+    "installAndUpgradeWarnings": [
+      "only-md-and-markdown-file-associations-are-claimed",
+      "external-dependency-formats-are-not-claimed-as-windows-defaults",
+      "knowledge-libraries-are-external-user-data-and-must-not-be-deleted-by-uninstall",
+      "debug-or-unsigned-installers-must-not-be-advertised-as-official-release"
+    ]
+  },
+  "rollbackPlan": {
+    "strategy": "preserve-user-data-uninstall-or-reinstall-previous-known-good",
+    "steps": [
+      "export-management-backup-before-upgrade",
+      "verify-backup-manifest-and-content-exclusion",
+      "uninstall-current-app-without-deleting-external-knowledge-libraries",
+      "install-previous-known-good-build",
+      "restore-management-backup-with-library-path-remapping",
+      "rebuild-knowledge-index-if-cache-is-stale-or-corrupt",
+      "reopen-markdown-json-pdf-diagram-workbook-office-sample-files"
+    ],
+    "requiredEvidenceBeforeRc": [
+      "rollback-procedure-run-on-windows-10-x64",
+      "rollback-procedure-run-on-windows-11-x64",
+      "backup-restore-after-rollback",
+      "knowledge-index-recovery-after-rollback"
+    ]
+  },
+  "dataRetentionNotes": {
+    "sourceOfTruth": "shared/windows-lifecycle-policy.json",
+    "knowledgeLibraries": "external-user-data-never-removed",
+    "appConfig": "retained-on-uninstall",
+    "appCache": "retained-on-uninstall-user-clearable",
+    "diagnosticBundlesMustRemainRedacted": true,
+    "managementBackupsMustExcludeDocumentBodiesByDefault": true
+  },
+  "finalRcPromotionChecklist": [
+    "fresh-build-from-release-tag",
+    "installer-hash-manifest",
+    "valid-authenticode-signature",
+    "timestamp-certificate-present",
+    "accepted-certificate-subject-defined",
+    "windows-vm-matrix-complete",
+    "release-notes-reviewed",
+    "rollback-plan-validated",
+    "data-retention-policy-reviewed",
+    "known-limitations-reviewed",
+    "release-capability-matrix-updated-only-after-evidence"
+  ],
+  "blockers": [
+    "signing-evidence-currently-not-signed",
+    "windows-vm-matrix-results-missing",
+    "rollback-procedure-not-run-on-real-vm",
+    "release-candidate-switch-not-approved"
+  ],
+  "nextStage": "R4F"
+}

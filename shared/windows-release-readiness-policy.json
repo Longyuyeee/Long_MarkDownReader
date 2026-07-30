@@ -50,6 +50,16 @@
       "first-launch-after-install"
     ]
   },
+  "releaseNotes": {
+    "required": true,
+    "currentStatus": "release-notes-and-rollback-defined-but-evidence-incomplete",
+    "evidenceManifest": "shared/windows-release-notes-rollback-plan.json"
+  },
+  "rollbackPlan": {
+    "required": true,
+    "currentStatus": "rollback-plan-defined-but-not-vm-validated",
+    "evidenceManifest": "shared/windows-release-notes-rollback-plan.json"
+  },
   "fileAssociations": {
     "sourceOfTruth": "shared/windows-lifecycle-policy.json",
     "defaultSelectionOwner": "windows",
@@ -76,5 +86,5 @@
     "releaseCapabilityMatrixMustRemainNonRcUntilEvidenceComplete": true,
     "debugOrUnsignedBuildsMustNotBeAdvertisedAsOfficialRelease": true
   },
-  "nextStage": "R4E"
+  "nextStage": "R4F"
 }

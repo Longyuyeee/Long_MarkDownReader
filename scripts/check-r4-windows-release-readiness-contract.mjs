@@ -32,7 +32,7 @@ const readiness = json('shared/windows-release-readiness-policy.json')
 if (readiness.schemaVersion !== 1 || readiness.stage !== 'R4') fail('R4 readiness policy identity mismatch.')
 if (readiness.releaseCandidate !== false) fail('R4A must keep releaseCandidate=false until real signing and VM evidence exist.')
 if (readiness.status !== 'blocked-pending-signing-and-vm-evidence') fail('R4A status must be blocked by missing release evidence.')
-if (readiness.nextStage !== 'R4E') fail('R4 readiness handoff must point to R4E after R4D.')
+if (readiness.nextStage !== 'R4F') fail('R4 readiness handoff must point to R4F after R4E.')
 
 if (readiness.appVersion !== packageJson.version) fail('R4 appVersion must match package.json.')
 if (readiness.appVersion !== tauriConfig.version) fail('R4 appVersion must match tauri.conf.json.')
@@ -95,6 +95,13 @@ requireIncludes('R4 VM scenario', readiness.vmMatrix.scenarios, [
   'file-association-recovery',
   'first-launch-after-install',
 ])
+
+if (readiness.releaseNotes.required !== true) fail('R4 release notes must be required.')
+if (readiness.releaseNotes.currentStatus !== 'release-notes-and-rollback-defined-but-evidence-incomplete') fail('R4 release notes status mismatch.')
+if (readiness.releaseNotes.evidenceManifest !== 'shared/windows-release-notes-rollback-plan.json') fail('R4 release notes evidence link missing.')
+if (readiness.rollbackPlan.required !== true) fail('R4 rollback plan must be required.')
+if (readiness.rollbackPlan.currentStatus !== 'rollback-plan-defined-but-not-vm-validated') fail('R4 rollback plan status mismatch.')
+if (readiness.rollbackPlan.evidenceManifest !== 'shared/windows-release-notes-rollback-plan.json') fail('R4 rollback plan evidence link missing.')
 
 if (readiness.fileAssociations.sourceOfTruth !== 'shared/windows-lifecycle-policy.json') fail('R4 file association source mismatch.')
 if (readiness.fileAssociations.defaultSelectionOwner !== lifecycle.fileAssociations.defaultSelectionOwner) fail('R4 file association owner mismatch.')
@@ -159,6 +166,14 @@ requireIncludes('R4D audit doc token', r4dAudit, [
   'windows-release-vm-matrix-evidence.json',
   'matrix-defined-results-missing',
   'R4E',
+])
+
+const r4eAudit = read('docs/R4E_Windows_Release_Notes_Rollback_Audit_2026-07-30.md')
+requireIncludes('R4E audit doc token', r4eAudit, [
+  'R4E',
+  'windows-release-notes-rollback-plan.json',
+  'release-notes-and-rollback-defined-but-evidence-incomplete',
+  'R4F',
 ])
 
 console.log('R4 Windows release readiness contract passed: release candidate remains blocked pending signing and VM evidence.')

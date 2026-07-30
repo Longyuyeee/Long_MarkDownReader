@@ -181,3 +181,28 @@ Required scenarios per target:
 6. first launch after install.
 
 Next recommended stage: R4E. Define release notes and rollback-plan evidence so the project has a complete final RC promotion checklist before any release-candidate switch is considered.
+
+## R4E update - release notes and rollback plan
+
+Current stage after this update: R4E is implemented as a release-notes and rollback-plan evidence contract. The app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/windows-release-notes-rollback-plan.json`
+- `scripts/check-r4e-windows-release-notes-rollback-plan.mjs`
+- `docs/R4E_Windows_Release_Notes_Rollback_Audit_2026-07-30.md`
+
+R4E keeps the original user goal explicit in the release evidence: daily management, basic editing, Markdown/TXT/JSON/dev formats, PDF sidecar workflows, diagrams/mind maps/canvas/OPML, XLSX, DOCX/PPTX, WPS/legacy guarded workflows, and knowledge graph/index/backup/diagnostic management.
+
+The release notes also document current limitations:
+
+1. PDF body-equivalent editing is not supported,
+2. WPS native body editing is not supported,
+3. legacy binary Office editing depends on compatible Office conversion,
+4. historical installers are unsigned and not promotable,
+5. Windows VM results are missing,
+6. large frontend chunk warnings remain.
+
+Rollback plan evidence now requires backup export, manifest verification, safe uninstall, previous known-good reinstall, path-remapped backup restore, knowledge-index rebuild, and representative file reopen checks.
+
+Next recommended stage: R4F. Create the final RC promotion gate so `releaseCandidate=true` remains impossible until artifacts, signing, VM matrix, release notes, rollback, and data retention all pass.
