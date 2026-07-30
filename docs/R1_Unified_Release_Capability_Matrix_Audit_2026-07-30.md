@@ -51,6 +51,7 @@
 - GitHub Quality Gate 继续固定 Node.js 22。`actions/setup-node@v6` 升级因当前推送凭据缺少 workflow 修改权限而转入 R2 仓库维护项，不影响 R1 产品能力验收。
 - 本机 `npm.cmd run ci:check` 已通过构建、全部契约链和 Rust 功能测试（`406 passed; 2 ignored; 1 filtered out`），但既有 XLSX 性能门禁两次采样的 page/patch 阶段为 `9242/8053ms` 与 `7778/7983ms`，超过发布阈值后退出；阈值未放宽，最终由推送后的 GitHub Quality Gate 干净环境复核。
 - 中断后独立补跑 `benchmark:pdf-range`：100 MiB 文件 `637ms`，请求约 `255.9 KiB`；`audit:prod` 为 `0 vulnerabilities`，`cargo check --locked` 通过。
+- 实现提交 `d63b6b2` 的 GitHub Quality Gate 已在干净环境完整通过，耗时 `9m49s`：<https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30525036150>。唯一 annotation 是已记录的 `setup-node@v4` action runtime 维护提示。
 
 ## 6. 下一阶段
 
