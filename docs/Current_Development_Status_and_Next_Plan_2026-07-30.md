@@ -81,3 +81,31 @@ R3D 完成后进入 R4：
 - 不要提交 `.claude/settings.local.json`。
 - 当前本地 `src-tauri/src/formats/pptx.rs` 有既有未提交改动，本轮不属于 R3D 范围，提交时需排除。
 - 继续直接在 `main` 推进时，每个阶段完成后都要更新审计文档、运行契约检查、提交并推送。
+
+## R4A update - Windows release readiness contract
+
+Current stage after this update: R4A is implemented as a release-readiness contract. The app is still not a release candidate; `releaseCandidate=false` remains required.
+
+New source of truth:
+
+- `shared/windows-release-readiness-policy.json`
+- `scripts/check-r4-windows-release-readiness-contract.mjs`
+- `docs/R4A_Windows_Release_Readiness_Contract_Audit_2026-07-30.md`
+
+R4A closes the planning gap between the already-built daily-management/basic-editing capabilities and a professional distributable Windows product. It explicitly blocks public release promotion until the project has:
+
+1. real signing evidence,
+2. Windows 10/11 VM installation evidence,
+3. installer SHA-256 manifest,
+4. release notes,
+5. rollback plan.
+
+It also preserves the original user requirement boundary:
+
+- daily management and basic editing remain the core product goal;
+- Markdown, TXT/JSON/dev formats, PDF sidecar workflows, diagrams/mind maps, XLSX, DOCX/PPTX, and WPS/legacy formats stay under their verified capability contracts;
+- user knowledge libraries must never be removed by uninstall;
+- only Markdown file associations are currently claimed by the app;
+- external-dependency formats such as `doc`, `xls`, `ppt`, `wps`, `et`, and `dps` must not be silently claimed as Windows defaults.
+
+Next recommended stage: R4B. Build the installer evidence bundle shape, including artifact hash manifest schema, unsigned/debug/test-signed/official-signed status separation, and validation that refuses release promotion without matching artifact hashes and signature verification records.

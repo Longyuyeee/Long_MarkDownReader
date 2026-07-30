@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "stage": "R4",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "blocked-pending-signing-and-vm-evidence",
+  "product": {
+    "nameSource": "src-tauri/tauri.conf.json",
+    "identifierSource": "src-tauri/tauri.conf.json"
+  },
+  "baseline": {
+    "lifecyclePolicy": "shared/windows-lifecycle-policy.json",
+    "dataResiliencePolicy": "shared/data-resilience-policy.json",
+    "requiresR2LifecycleImplemented": true,
+    "requiresR3DataResilienceImplemented": true
+  },
+  "installerArtifacts": {
+    "targets": ["msi", "nsis"],
+    "primaryTarget": "nsis",
+    "currentStatus": "unsigned-artifacts-not-promotable",
+    "requiredBeforeReleaseCandidate": [
+      "fresh-build-from-release-tag",
+      "sha256-manifest",
+      "signature-verification",
+      "versioned-release-notes",
+      "rollback-plan"
+    ]
+  },
+  "signing": {
+    "required": true,
+    "currentStatus": "missing",
+    "acceptedSubjects": [],
+    "timestampRequired": true,
+    "signatureAlgorithm": "sha256",
+    "failClosed": true
+  },
+  "vmMatrix": {
+    "required": true,
+    "currentStatus": "missing",
+    "windowsVersions": ["windows-10-x64", "windows-11-x64"],
+    "scenarios": [
+      "fresh-install",
+      "upgrade-from-previous",
+      "downgrade-rejection",
+      "uninstall-retains-user-data",
+      "file-association-recovery",
+      "first-launch-after-install"
+    ]
+  },
+  "fileAssociations": {
+    "sourceOfTruth": "shared/windows-lifecycle-policy.json",
+    "defaultSelectionOwner": "windows",
+    "managedExtensions": ["md", "markdown"],
+    "excludedExternalDependencyExtensions": ["doc", "xls", "ppt", "wps", "et", "dps"]
+  },
+  "dataRetention": {
+    "sourceOfTruth": "shared/windows-lifecycle-policy.json",
+    "knowledgeLibraries": "external-user-data-never-removed",
+    "appConfig": "retained-on-uninstall",
+    "appCache": "retained-on-uninstall-user-clearable",
+    "uninstallerCustomDeletion": false,
+    "legacyIdentifier": "com.mistyedit.mdhelper",
+    "migrationConflictPolicy": "preserve-both-and-report"
+  },
+  "promotionRules": {
+    "forbiddenPromotionWithout": [
+      "signing-evidence",
+      "vm-matrix-evidence",
+      "installer-hash-manifest",
+      "release-notes",
+      "rollback-plan"
+    ],
+    "releaseCapabilityMatrixMustRemainNonRcUntilEvidenceComplete": true,
+    "debugOrUnsignedBuildsMustNotBeAdvertisedAsOfficialRelease": true
+  },
+  "nextStage": "R4B"
+}
