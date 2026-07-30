@@ -44,6 +44,7 @@ LibreOffice 本次从 FODP 导出 ODP 时没有保留种子中的演讲者备注
 - 共享 Office 审计与格式注册测试：通过。
 - `npm.cmd run ci:check` 已通过构建、全部共享契约链和 Rust 功能测试（`406 passed; 2 ignored; 1 filtered out`），但本机既有 XLSX 性能门禁两次采样的 patch 阶段为 `7217ms` / `9076ms`，超过发布阈值，因此完整命令以失败退出；阈值未放宽，最终以推送后的 GitHub Quality Gate 干净环境结果复核。
 - 中断后独立补跑 `benchmark:pdf-range`：100 MiB 文件 `1068ms`，请求约 `255.9 KiB`；`audit:prod` 为 `0 vulnerabilities`，`cargo check --locked` 通过。
+- 实现提交 `1a2780a` 的 GitHub Quality Gate 已在干净环境完整通过，耗时 `10m50s`：<https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30522399662>。唯一 annotation 是 `actions/setup-node@v4` 的 Node 20 action runtime 弃用维护提示，不影响本阶段验收，留给 R 阶段升级 CI action。
 
 ## 5. 下一阶段
 

@@ -3,7 +3,7 @@
 更新日期：2026-07-30
 交接基线：当前开发版本 `v0.7.0`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干；WPS 原生格式与旧版 DOC/XLS/PPT 隔离转换已完成，ODF 发布与专业发布门禁仍待收口
 
-> 2026-07-30 权威入口：E2A、E3、E2B、E2C 与 E1C 均已完成。`.ods/.odp` 已进入原 Library 右侧工作面，支持有界结构化只读预览、搜索和精确定位；不计算、不编辑也不写回。下一代码阶段为 R 统一发布矩阵与基础版本收口；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁。证据见 [`E1C_ODS_ODP_Read_Index_Audit_2026-07-30.md`](./E1C_ODS_ODP_Read_Index_Audit_2026-07-30.md)。
+> 2026-07-30 权威入口：E2A、E3、E2B、E2C 与 E1C 均已完成。`.ods/.odp` 已进入原 Library 右侧工作面，支持有界结构化只读预览、搜索和精确定位；不计算、不编辑也不写回。实现提交 `1a2780a` 的 [GitHub Quality Gate](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30522399662) 已通过。下一代码阶段为 R 统一发布矩阵与基础版本收口；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁。证据见 [`E1C_ODS_ODP_Read_Index_Audit_2026-07-30.md`](./E1C_ODS_ODP_Read_Index_Audit_2026-07-30.md)。
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
