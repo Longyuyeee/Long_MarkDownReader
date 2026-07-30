@@ -40,3 +40,16 @@
 ## 5. 下一步
 
 远端 Quality Gate 通过后，绿色基线恢复。下一代码阶段仍按综合审计进入 F1/E2A：外部应用能力发现与统一外部打开；外部生产者证据作为并行门禁等待可信机器。
+
+## 6. 远端复验补充
+
+提交 `209c2cd` 已确认消除 `Get-FileHash` 失败，Quality Gate 继续执行到 X3-B5 拒绝矩阵后，暴露出第二个跨进程差异：GitHub Actions 父 `pwsh` 使用 `RUNNER_TEMP`，子 `powershell.exe` 的 `TEMP` 解析到另一目录，合法审计沙箱因此被误判为越界。
+
+修复新增 `scripts/powershell-path-safety.ps1`，受信根目录同时识别 `TEMP`、`TMP`、`RUNNER_TEMP` 和 .NET 临时目录，并使用目录分隔符边界比较阻止相似前缀目录逃逸。X3-B5 导入与 X3-B6 原子闭环统一使用该 helper；Workbook 契约固定 helper、`RUNNER_TEMP` 支持和两个消费方。
+
+本地复验已覆盖：
+
+- `TEMP` 与 `RUNNER_TEMP` 不一致时，`RUNNER_TEMP` 下的合法路径仍可通过；
+- 与临时目录仅共享字符串前缀的兄弟目录会被拒绝；
+- X3-B5 的 5/5 损坏包拒绝和合法沙箱推进通过；
+- X3-B6 的双包原子推进与失败不变性通过。

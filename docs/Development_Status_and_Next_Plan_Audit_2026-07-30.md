@@ -364,3 +364,5 @@ LongEdit 当前最准确的定位是：
 综合审计提交后的远端 Quality Gate 暴露出 PowerShell Runner 兼容问题：S8-7E3G、X3-B5、X3-B6 新证据脚本依赖 `Get-FileHash`，GitHub Runner 无法识别该命令。现已统一改为自包含的 .NET SHA-256 helper，并由机器契约阻止相关脚本回退。
 
 本地三条证据事务测试和完整 `ci:check` 已通过，Rust 功能测试为 `383 passed`，性能测试 `1 passed`，生产依赖漏洞为 `0`。该修复不改变 Pivot 或数组公式公开能力；下一代码入口仍为 F1/E2A。详细记录见 [`CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md`](./CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md)。
+
+首次远端复验已越过哈希故障，随后确认 GitHub 父 `pwsh` 与子 `powershell.exe` 的临时目录环境不同。现已增加统一路径安全 helper，在不放宽审计写入边界的前提下支持 `RUNNER_TEMP`，并通过跨环境边界、前缀逃逸拒绝、X3-B5 与 X3-B6 针对性验证。产品能力和下一阶段顺序保持不变。

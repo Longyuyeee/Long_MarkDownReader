@@ -33,6 +33,11 @@ const pivotAggregationProducerAudit = read('scripts/verify-s8-7e3d-xlsx-pivot-ag
 const pivotMultiAxisFixture = JSON.parse(read('src-tauri/tests/fixtures/workbook/pivot-multi-axis-microsoft-excel.json'))
 const pivotMultiAxisGenerator = read('scripts/generate-s8-7e3e-xlsx-pivot-multi-axis-fixture.ps1')
 const portablePowerShellHash = read('scripts/powershell-sha256.ps1')
+const portablePowerShellPathSafety = read('scripts/powershell-path-safety.ps1')
+const portableTempConsumers = [
+  'scripts/import-x3-b5-array-producer-evidence.ps1',
+  'scripts/close-x3-b6-array-producer-matrix.ps1',
+].map(file => [file, read(file)])
 const portableHashConsumers = [
   'scripts/test-s8-7e3g-excel-evidence-bundle-rejections.ps1',
   'scripts/import-s8-7e3g-excel-evidence-bundle.ps1',
@@ -364,6 +369,10 @@ if (!fs.existsSync(path.join(root, pivotExcelRejectionValidation.script))) fail(
 if (!portablePowerShellHash.includes('function Get-Sha256Hex') || !portablePowerShellHash.includes('[System.Security.Cryptography.SHA256]::Create()') || !portablePowerShellHash.includes('[System.IO.File]::OpenRead')) fail('portable PowerShell SHA-256 helper drift')
 for (const [file, source] of portableHashConsumers) {
   if (!source.includes('powershell-sha256.ps1') || !source.includes('Get-Sha256Hex') || source.includes('Get-FileHash')) fail(`${file} portable SHA-256 contract drift`)
+}
+if (!portablePowerShellPathSafety.includes('function Test-PathWithinTrustedTemp') || !portablePowerShellPathSafety.includes('$env:RUNNER_TEMP') || !portablePowerShellPathSafety.includes('DirectorySeparatorChar')) fail('portable PowerShell TEMP path helper drift')
+for (const [file, source] of portableTempConsumers) {
+  if (!source.includes('powershell-path-safety.ps1') || !source.includes('Test-PathWithinTrustedTemp')) fail(`${file} portable TEMP path contract drift`)
 }
 if (!fs.existsSync(path.join(root, pivotExcelEvidenceHandoff.environmentReport)) || !fs.existsSync(path.join(root, pivotExcelEvidenceHandoff.exportScript)) || !fs.existsSync(path.join(root, pivotExcelEvidenceHandoff.importScript))) fail('S8-7E3G-D Excel evidence handoff file missing')
 if (!fs.existsSync(path.join(root, pivotMultiLevelAxisProducerRoundTrip.matrix)) || !fs.existsSync(path.join(root, pivotMultiLevelAxisProducerRoundTrip.baselineFile))) fail('S8-7E3G matrix or baseline file missing')

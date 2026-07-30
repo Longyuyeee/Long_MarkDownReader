@@ -445,3 +445,5 @@ Excel 三成员包现已绑定环境身份、producer 版本/构建和输出摘�
 远端连续失败已定位为 GitHub Windows Runner 无法识别新证据脚本使用的 `Get-FileHash`。S8-7E3G、X3-B5、X3-B6 的测试、导入、导出和生产者验证现统一使用 `scripts/powershell-sha256.ps1` 的 .NET SHA-256 实现；机器契约会拒绝相关脚本重新引入该 cmdlet。
 
 本地三条证据事务测试与完整 `ci:check` 已通过：Rust 功能测试 `383/383`、性能测试 `1/1`、生产依赖漏洞 `0`。此修复不提升公开能力，Pivot 多层轴仍为 `2/3`、数组公式仍为 `1/3`。远端 Quality Gate 通过后，接手者直接进入 F1/E2A 外部应用能力发现与统一外部打开。详细审计见 [`CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md`](./CI_PowerShell_SHA256_Portability_Audit_2026-07-30.md)。
+
+首次远端复验已证明哈希修复生效，并进一步暴露父 `pwsh` 与子 `powershell.exe` 的 `TEMP` 不一致。现由 `scripts/powershell-path-safety.ps1` 同时识别系统临时目录和 GitHub `RUNNER_TEMP`，且保留严格目录边界检查；X3-B5/X3-B6 针对性事务测试已再次通过。

@@ -9,6 +9,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "powershell-sha256.ps1")
+. (Join-Path $PSScriptRoot "powershell-path-safety.ps1")
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -31,10 +32,9 @@ if (-not [string]::IsNullOrWhiteSpace($AuditFixtureRoot)) {
   $fixtureRoot = [IO.Path]::GetFullPath($AuditFixtureRoot)
   $matrixPath = [IO.Path]::GetFullPath($AuditMatrixPath)
   $capabilityPath = [IO.Path]::GetFullPath($AuditCapabilityPath)
-  $resolvedTemp = (Resolve-Path -LiteralPath $env:TEMP).Path
-  if (-not $fixtureRoot.StartsWith($resolvedTemp, [StringComparison]::OrdinalIgnoreCase) -or
-      -not $matrixPath.StartsWith($resolvedTemp, [StringComparison]::OrdinalIgnoreCase) -or
-      -not $capabilityPath.StartsWith($resolvedTemp, [StringComparison]::OrdinalIgnoreCase)) {
+  if (-not (Test-PathWithinTrustedTemp -Path $fixtureRoot) -or
+      -not (Test-PathWithinTrustedTemp -Path $matrixPath) -or
+      -not (Test-PathWithinTrustedTemp -Path $capabilityPath)) {
     throw "Audit import overrides are restricted to TEMP"
   }
 }

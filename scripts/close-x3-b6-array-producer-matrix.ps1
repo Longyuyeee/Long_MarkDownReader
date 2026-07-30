@@ -10,6 +10,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "powershell-path-safety.ps1")
 if (-not $ConfirmTrustedProducers) {
   throw "Matrix closure requires -ConfirmTrustedProducers after both source machines and producer identities are confirmed"
 }
@@ -28,9 +29,8 @@ if ($auditOverrideCount -eq 3) {
   $destinationFixtureRoot = [IO.Path]::GetFullPath($AuditFixtureRoot)
   $destinationMatrixPath = [IO.Path]::GetFullPath($AuditMatrixPath)
   $destinationCapabilityPath = [IO.Path]::GetFullPath($AuditCapabilityPath)
-  $resolvedTemp = (Resolve-Path -LiteralPath $env:TEMP).Path
   foreach ($path in @($destinationFixtureRoot, $destinationMatrixPath, $destinationCapabilityPath)) {
-    if (-not $path.StartsWith($resolvedTemp, [StringComparison]::OrdinalIgnoreCase)) {
+    if (-not (Test-PathWithinTrustedTemp -Path $path)) {
       throw "Audit closure overrides are restricted to TEMP"
     }
   }
