@@ -10,7 +10,7 @@
 >
 > 结论性质：产品与工程综合审计；不以“能打开”替代“能编辑”，不以内部实现替代真实生产者验证
 
-> 2026-07-30 E1C 最新检查点：`.ods/.odp` 已进入共享注册表和原 Library 右侧工作面，完成真实 LibreOffice ODF fixture、有界语义解析、搜索索引、单元格/幻灯片/备注 locator 和源字节不变证明。公开能力为 `preview-only / saveMode none`，不宣称计算、编辑或写回。下一代码阶段为 R 统一发布矩阵，详见 [`E1C_ODS_ODP_Read_Index_Audit_2026-07-30.md`](./E1C_ODS_ODP_Read_Index_Audit_2026-07-30.md)。
+> 2026-07-30 R1 最新检查点：39 类注册格式已全部进入统一发布能力矩阵，产品内可查询保存、依赖、隐私与限制；统计为 27 项已验证、6 项有限能力、6 项外部依赖，`releaseCandidate=false`。下一代码阶段为 R2 Windows 安装与生命周期边界，详见 [`R1_Unified_Release_Capability_Matrix_Audit_2026-07-30.md`](./R1_Unified_Release_Capability_Matrix_Audit_2026-07-30.md)。
 
 ## 1. 审计结论
 
@@ -330,7 +330,7 @@ WPS ODT、Excel/LibreOffice 数组矩阵依赖真实外部生产者。缺少环�
 
 ## 8. 下一开发入口
 
-当前建议的**下一代码阶段是 R：统一发布矩阵与基础版本收口**。E2A、E3、E2B、E2C 和 E1C 已完成，当前应汇总真实能力、安装关联、迁移恢复、隐私、桌面场景和已知限制。
+R1 统一发布能力矩阵已经完成。当前建议的**下一代码阶段是 R2：Windows 安装与生命周期边界**，依次审计安装包身份、文件关联白名单、升级迁移、卸载保留策略，并补齐真实 Tauri 格式能力工作面矩阵。
 
 可并行但不得伪造关闭的外部门禁：
 

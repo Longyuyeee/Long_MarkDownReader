@@ -124,6 +124,11 @@ const routes = [
     path: '/settings',
     name: 'Settings',
     component: () => import('../views/SettingsView.vue')
+  },
+  {
+    path: '/release-capabilities',
+    name: 'ReleaseCapabilities',
+    component: () => import('../views/ReleaseCapabilitiesView.vue')
   }
 ]
 

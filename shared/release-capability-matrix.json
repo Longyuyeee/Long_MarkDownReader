@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "stage": "R1",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "formatRegistrySchemaVersion": 2,
+  "profiles": [
+    {
+      "id": "local-overwrite",
+      "dependency": "none",
+      "sourcePolicy": "受签名冲突保护的原文件保存",
+      "privacyBoundary": "内容仅在本机工作区处理",
+      "knownLimitations": ["仅开放注册表声明的编辑能力，不提供外部运行时或语言服务"]
+    },
+    {
+      "id": "protected-local-overwrite",
+      "dependency": "none",
+      "sourcePolicy": "显式解锁后受签名冲突保护保存",
+      "privacyBoundary": "敏感值默认遮罩，并排除索引、知识图谱与遥测",
+      "knownLimitations": ["敏感内容必须逐文件显式显示后才能编辑"]
+    },
+    {
+      "id": "lightweight-source",
+      "dependency": "none",
+      "sourcePolicy": "受签名冲突保护的原文件保存",
+      "privacyBoundary": "内容仅在本机工作区处理",
+      "knownLimitations": ["不包含编译、执行、调试、数据库连接或语言服务"]
+    },
+    {
+      "id": "readonly-log",
+      "dependency": "none",
+      "sourcePolicy": "源文件只读",
+      "privacyBoundary": "日志内容仅在本机按受限范围读取",
+      "knownLimitations": ["不编辑或保存日志；轮转后按磁盘状态重新读取"]
+    },
+    {
+      "id": "pdf-sidecar",
+      "dependency": "none",
+      "sourcePolicy": "PDF 原文只读，批注与 OCR 写入 sidecar",
+      "privacyBoundary": "正文、批注与 OCR 数据保持本地",
+      "knownLimitations": ["不提供 PDF 正文等价编辑；页面操作输出可靠新副本"]
+    },
+    {
+      "id": "office-copy",
+      "dependency": "none",
+      "sourcePolicy": "源 Office 文件只读，编辑结果仅可靠另存新副本",
+      "privacyBoundary": "解析、索引和副本生成均在本机完成",
+      "knownLimitations": ["仅开放经过真实生产者复开的基础编辑子集；高级对象保持只读"]
+    },
+    {
+      "id": "odf-preview",
+      "dependency": "none",
+      "sourcePolicy": "源文件只读，不提供保存",
+      "privacyBoundary": "解析与索引均在本机完成，外部链接不跟随",
+      "knownLimitations": ["不计算公式、不执行脚本、不还原复杂演示效果"]
+    },
+    {
+      "id": "legacy-conversion",
+      "dependency": "compatible-office-suite",
+      "sourcePolicy": "源文件只读，仅允许用户指定不存在的新格式目标",
+      "privacyBoundary": "转换使用隔离目录，源文件与既有目标不覆盖",
+      "knownLimitations": ["LongEdit 不编辑旧二进制正文；转换结果取决于本机兼容 Office 应用"]
+    },
+    {
+      "id": "wps-external",
+      "dependency": "compatible-desktop-application",
+      "sourcePolicy": "源文件只读，由用户确认后交给外部应用",
+      "privacyBoundary": "LongEdit 仅读取容器身份与安全元数据",
+      "knownLimitations": ["不解析正文、不索引、不转换、不写回"]
+    },
+    {
+      "id": "workbook-bounded",
+      "dependency": "none",
+      "sourcePolicy": "仅经验证的 XLSX 子集允许带冲突保护的有限写回",
+      "privacyBoundary": "工作簿解析、计算预览与保存均在本机完成",
+      "knownLimitations": ["数组公式、外部链接和未验证高级对象保持只读或阻断写回"]
+    }
+  ],
+  "formats": [
+    { "id": "markdown", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "plain-text", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "env", "profile": "protected-local-overwrite", "readiness": "verified" },
+    { "id": "ini", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "properties", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "editorconfig", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "gitignore", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "javascript", "profile": "lightweight-source", "readiness": "verified" },
+    { "id": "typescript", "profile": "lightweight-source", "readiness": "verified" },
+    { "id": "python", "profile": "lightweight-source", "readiness": "verified" },
+    { "id": "rust", "profile": "lightweight-source", "readiness": "verified" },
+    { "id": "go", "profile": "lightweight-source", "readiness": "verified" },
+    { "id": "jvm-code", "profile": "lightweight-source", "readiness": "verified" },
+    { "id": "c-family", "profile": "lightweight-source", "readiness": "verified" },
+    { "id": "shell", "profile": "lightweight-source", "readiness": "verified" },
+    { "id": "sql", "profile": "lightweight-source", "readiness": "verified" },
+    { "id": "web-source", "profile": "lightweight-source", "readiness": "verified" },
+    { "id": "json", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "log", "profile": "readonly-log", "readiness": "verified" },
+    { "id": "jsonc", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "yaml", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "xml", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "toml", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "canvas", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "pdf", "profile": "pdf-sidecar", "readiness": "verified-with-limitations" },
+    { "id": "table", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "docx", "profile": "office-copy", "readiness": "verified-with-limitations" },
+    { "id": "ods", "profile": "odf-preview", "readiness": "verified-with-limitations" },
+    { "id": "odp", "profile": "odf-preview", "readiness": "verified-with-limitations" },
+    { "id": "legacy-doc", "profile": "legacy-conversion", "readiness": "external-dependency" },
+    { "id": "legacy-xls", "profile": "legacy-conversion", "readiness": "external-dependency" },
+    { "id": "legacy-ppt", "profile": "legacy-conversion", "readiness": "external-dependency" },
+    { "id": "pptx", "profile": "office-copy", "readiness": "verified-with-limitations" },
+    { "id": "wps-document", "profile": "wps-external", "readiness": "external-dependency" },
+    { "id": "wps-spreadsheet", "profile": "wps-external", "readiness": "external-dependency" },
+    { "id": "wps-presentation", "profile": "wps-external", "readiness": "external-dependency" },
+    { "id": "workbook", "profile": "workbook-bounded", "readiness": "verified-with-limitations" },
+    { "id": "diagram", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "opml", "profile": "local-overwrite", "readiness": "verified" }
+  ],
+  "externalGates": [
+    {
+      "id": "e1b-wps-odt",
+      "status": "partial",
+      "evidence": "2/3",
+      "releaseImpact": "可信 WPS ODF 证据到位前，ODT 保持未注册"
+    },
+    {
+      "id": "x3-b6-array-producers",
+      "status": "partial",
+      "evidence": "1/3",
+      "releaseImpact": "XLSX 数组计算与写回继续阻断"
+    }
+  ]
+}

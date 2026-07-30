@@ -111,6 +111,13 @@
                 {{ store.isDefaultEditor ? '已是默认编辑器' : '立即设置' }}
               </n-button>
             </div>
+            <div class="setting-row">
+              <div class="info">
+                <div class="label">格式能力</div>
+                <div class="desc">查看每种格式的保存边界、依赖和已知限制</div>
+              </div>
+              <n-button secondary @click="router.push({ name: 'ReleaseCapabilities' })">查看矩阵</n-button>
+            </div>
           </n-grid-item>
 
           <n-grid-item class="animate-item" style="--delay: 0.35s">
