@@ -494,4 +494,30 @@ mod tests {
         assert_eq!(format.adapters.indexer.as_deref(), Some("pptx"));
         assert!(format.adapters.creator.is_none());
     }
+
+    #[test]
+    fn wps_native_formats_are_external_open_only() {
+        for (path, id) in [
+            ("draft.wps", "wps-document"),
+            ("budget.et", "wps-spreadsheet"),
+            ("briefing.dps", "wps-presentation"),
+        ] {
+            let format = file_format_for_path(path).unwrap();
+            assert_eq!(format.id, id);
+            assert_eq!(format.route_name, "ExternalOffice");
+            assert_eq!(
+                format.user_capability.level,
+                UserCapabilityLevel::ExternalOpen
+            );
+            assert_eq!(format.user_capability.save_mode, SaveMode::None);
+            assert!(!format.capabilities.read.is_supported());
+            assert!(!format.capabilities.edit.is_supported());
+            assert!(!format.capabilities.create.is_supported());
+            assert!(!format.capabilities.index.is_supported());
+            assert!(format.adapters.reader.is_none());
+            assert!(format.adapters.writer.is_none());
+            assert!(format.adapters.creator.is_none());
+            assert!(format.adapters.indexer.is_none());
+        }
+    }
 }

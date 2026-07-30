@@ -1,9 +1,9 @@
 # Long Markdown Reader 开发交接
 
 更新日期：2026-07-30
-交接基线：当前开发版本 `v0.7.0`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干；WPS 原生、旧版 Office、ODF 发布与专业发布门禁仍待收口
+交接基线：当前开发版本 `v0.7.0`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干；WPS 原生格式已完成识别与外部打开，旧版 Office、ODF 发布与专业发布门禁仍待收口
 
-> 2026-07-30 权威入口：当前能力、初始需求对齐度、风险和后续 F1～F4/R 顺序以 [`Development_Status_and_Next_Plan_Audit_2026-07-30.md`](./Development_Status_and_Next_Plan_Audit_2026-07-30.md) 为准。下一代码阶段调整为 F1 / E2A“外部应用能力发现与统一外部打开”，随后按 E3 → E2B/E2C → E1C 补齐 WPS、旧版 Office 与 OpenDocument 的日常管理覆盖；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁，不得伪造关闭。
+> 2026-07-30 权威入口：当前能力、初始需求对齐度、风险和后续 F1～F4/R 顺序以 [`Development_Status_and_Next_Plan_Audit_2026-07-30.md`](./Development_Status_and_Next_Plan_Audit_2026-07-30.md) 为准。E2A 与 E3 已完成，下一代码阶段为 E2B 旧版 `.doc` 隔离转换试点，随后按 E2C `.xls/.ppt` → E1C `.ods/.odp` 补齐日常格式覆盖；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁，不得伪造关闭。
 
 > 最新基础桌面门禁基线为 36 项真实 Tauri 检查和 28 张截图；PPTX C3 结构化只读、三生产者输入、搜索定位、知识关系、索引生命周期和桌面视觉矩阵均已收口；C4D 已完成可靠新副本，C4E 已完成 PowerPoint/WPS/LibreOffice 对文本、样式、替代文本三个输出的真实复开。下文较早的逐批记录保留为历史证据，不应覆盖最新结论。
 
@@ -453,3 +453,9 @@ Excel 三成员包现已绑定环境身份、producer 版本/构建和输出摘�
 外部应用发现与统一打开已接入主干：Microsoft Office、WPS Office、LibreOffice 通过 App Paths/PATH 发现真实角色程序并读取产品版本；Library 右侧能力栏和文件树菜单共享系统默认/指定应用入口。后端拒绝任意程序路径，只打开工作区内已登记格式，并返回接管前后 SHA-256 不变回执。
 
 本阶段没有提前开放 WPS 原生格式或旧 Office 转换。接手后直接进入 E3：固定 `.wps/.et/.dps` 真实 fixture 和隐私清理规则，登记 `external-open` 能力，接入右侧能力工作面、文件树和最近记录；转换资格保持阻断。详细审计见 [`E2A_External_Application_Discovery_and_Unified_Open_Audit_2026-07-30.md`](./E2A_External_Application_Discovery_and_Unified_Open_Audit_2026-07-30.md)。
+
+# 2026-07-30 交接快照：E3 WPS 原生格式已完成
+
+`.wps/.et/.dps` 已由 WPS Office `12.1.0.26895` 直接生成、脱敏并用新 WPS 实例复开。共享注册表和主窗口右侧 `ExternalOffice` 工作面现在可以确认容器身份，显示大小、修改时间和 SHA-256，并复用 E2A 的系统默认/指定应用外部打开。
+
+三种格式严格保持 `external-open / saveMode:none`；LongEdit 不解析正文、不索引、不转换、不编辑、不创建也不保存。接手后直接进入 E2B `.doc` 隔离转换试点：先做 OLE 预检与风险报告，只允许显式生成新 DOCX 副本并证明源摘要不变；通过后再扩展 E2C `.xls/.ppt`。详细审计见 [`E3_WPS_Native_Recognition_and_External_Open_Audit_2026-07-30.md`](./E3_WPS_Native_Recognition_and_External_Open_Audit_2026-07-30.md)。

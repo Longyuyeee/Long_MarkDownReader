@@ -746,6 +746,7 @@ const embeddedEditorComponents = {
   DocxEditor: defineAsyncComponent(() => import('./DocxReaderView.vue')),
   OdtReader: defineAsyncComponent(() => import('./OdtReaderView.vue')),
   PptxReader: defineAsyncComponent(() => import('./PptxReaderView.vue')),
+  ExternalOffice: defineAsyncComponent(() => import('./ExternalOfficeView.vue')),
 }
 const activeEmbeddedEditor = computed(() => {
   const routeName = activeDocumentFormat.value?.routeName

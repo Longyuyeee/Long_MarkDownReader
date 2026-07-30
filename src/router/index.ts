@@ -66,6 +66,11 @@ const routes = [
     component: () => import('../views/PptxReaderView.vue')
   },
   {
+    path: '/external-office',
+    name: 'ExternalOffice',
+    component: () => import('../views/ExternalOfficeView.vue')
+  },
+  {
     path: '/quick-note',
     name: 'QuickNote',
     component: () => import('../views/QuickNote.vue')

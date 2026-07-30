@@ -21,5 +21,6 @@ pub mod table;
 pub mod toml;
 pub mod workbook;
 pub mod workspace;
+pub mod wps_native;
 pub mod xml;
 pub mod yaml;

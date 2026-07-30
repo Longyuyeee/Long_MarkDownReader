@@ -366,6 +366,45 @@
       "creation": null
     },
     {
+      "id": "wps-document",
+      "label": "WPS 文字",
+      "extensions": [".wps"],
+      "mimeTypes": ["application/x-wps"],
+      "routeName": "ExternalOffice",
+      "maxBytes": 134217728,
+      "capabilities": { "read": "unsupported", "edit": "unsupported", "create": "unsupported", "index": "unsupported" },
+      "userCapability": { "level": "external-open", "label": "外部打开", "saveMode": "none", "description": "已验证 WPS 原生容器身份；LongEdit 仅显示只读文件元数据并交给兼容桌面应用处理，不解析正文、不转换、不索引且不写回。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": null, "writer": null, "creator": null, "indexer": null },
+      "creation": null
+    },
+    {
+      "id": "wps-spreadsheet",
+      "label": "WPS 表格",
+      "extensions": [".et"],
+      "mimeTypes": ["application/x-et"],
+      "routeName": "ExternalOffice",
+      "maxBytes": 134217728,
+      "capabilities": { "read": "unsupported", "edit": "unsupported", "create": "unsupported", "index": "unsupported" },
+      "userCapability": { "level": "external-open", "label": "外部打开", "saveMode": "none", "description": "已验证 WPS 原生容器身份；LongEdit 仅显示只读文件元数据并交给兼容桌面应用处理，不解析工作表、不转换、不索引且不写回。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": null, "writer": null, "creator": null, "indexer": null },
+      "creation": null
+    },
+    {
+      "id": "wps-presentation",
+      "label": "WPS 演示",
+      "extensions": [".dps"],
+      "mimeTypes": ["application/x-dps"],
+      "routeName": "ExternalOffice",
+      "maxBytes": 134217728,
+      "capabilities": { "read": "unsupported", "edit": "unsupported", "create": "unsupported", "index": "unsupported" },
+      "userCapability": { "level": "external-open", "label": "外部打开", "saveMode": "none", "description": "已验证 WPS 原生容器身份；LongEdit 仅显示只读文件元数据并交给兼容桌面应用处理，不解析幻灯片、不转换、不索引且不写回。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": null, "writer": null, "creator": null, "indexer": null },
+      "creation": null
+    },
+    {
       "id": "workbook",
       "label": "Excel 工作簿",
       "extensions": [".xlsx"],

@@ -115,6 +115,8 @@
       "e0Disposition": "recognize-and-external-open-planned",
       "firstImplementation": "E3",
       "initialProductLevel": "external-open",
+      "e3RecognitionStatus": "verified-real-wps-fixture",
+      "observedContainer": "zip-ooxml-word",
       "conversion": "blocked-until-real-fixture-qualification",
       "risks": ["unknown-container", "encrypted-content", "macro-or-active-content", "external-link", "embedded-object", "converter-contract"],
       "fixtureProfiles": ["plain", "styles-tables-images", "external-link", "embedded-object", "encrypted"]
@@ -129,6 +131,8 @@
       "e0Disposition": "recognize-and-external-open-planned",
       "firstImplementation": "E3",
       "initialProductLevel": "external-open",
+      "e3RecognitionStatus": "verified-real-wps-fixture",
+      "observedContainer": "zip-ooxml-spreadsheet",
       "conversion": "blocked-until-real-fixture-qualification",
       "risks": ["unknown-container", "encrypted-content", "formula", "macro-or-active-content", "external-link", "embedded-object", "converter-contract"],
       "fixtureProfiles": ["plain", "multi-sheet-formulas-styles", "external-link", "embedded-object", "encrypted"]
@@ -143,6 +147,8 @@
       "e0Disposition": "recognize-and-external-open-planned",
       "firstImplementation": "E3",
       "initialProductLevel": "external-open",
+      "e3RecognitionStatus": "verified-real-wps-fixture",
+      "observedContainer": "compound-binary-presentation",
       "conversion": "blocked-until-real-fixture-qualification",
       "risks": ["unknown-container", "encrypted-content", "macro-or-active-content", "external-link", "embedded-object", "media", "converter-contract"],
       "fixtureProfiles": ["plain", "slides-notes-images-shapes", "external-link", "embedded-object", "encrypted"]

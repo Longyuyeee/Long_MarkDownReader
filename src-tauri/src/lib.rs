@@ -96,6 +96,7 @@ pub use commands::workbook::{
     generate_workbook_pivot_multi_axis_audit_copy,
 };
 use commands::workspace::{analyze_workspace_health, get_workspace_overview};
+use commands::wps_native::inspect_wps_native_file;
 use commands::xml::{analyze_xml_source, write_xml_source_document};
 use commands::yaml::{analyze_yaml_source, write_yaml_source_document};
 use services::data_migration::check_and_migrate_data;
@@ -257,6 +258,7 @@ pub fn run() {
             get_file_format_registry,
             discover_external_applications,
             open_workspace_file_externally,
+            inspect_wps_native_file,
             analyze_json_source,
             append_json_array_item_source,
             append_json_object_property_source,

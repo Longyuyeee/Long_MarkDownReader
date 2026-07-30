@@ -1,0 +1,39 @@
+{
+    "schemaVersion":  1,
+    "stage":  "E3",
+    "producer":  "WPS Office",
+    "producerVersion":  "12.1.0.26895",
+    "directNativeSave":  true,
+    "independentNativeReopen":  true,
+    "metadataSanitized":  true,
+    "conversionQualified":  false,
+    "files":  [
+                  {
+                      "formatId":  "wps-document",
+                      "file":  "longedit-e3-document.wps",
+                      "container":  "zip-ooxml-word",
+                      "size":  9922,
+                      "sha256":  "C7F83B162475BFD92E48AF666314F4F3550254C40F77C055BA13F35BD5883233",
+                      "automationProgId":  "KWps.Application",
+                      "producerVersion":  "12.0"
+                  },
+                  {
+                      "formatId":  "wps-spreadsheet",
+                      "file":  "longedit-e3-spreadsheet.et",
+                      "container":  "zip-ooxml-spreadsheet",
+                      "size":  9329,
+                      "sha256":  "5DC3AB1C721F9FCC5CCACA710A876B93AE3AD0726795699C2EA6D1137479B179",
+                      "automationProgId":  "KET.Application",
+                      "producerVersion":  "12.0"
+                  },
+                  {
+                      "formatId":  "wps-presentation",
+                      "file":  "longedit-e3-presentation.dps",
+                      "container":  "compound-binary-presentation",
+                      "size":  126464,
+                      "sha256":  "1C5E358ABB56B1AF8CCC14506A9CC83D75BE5C183D75C87579D23EFFE1EC6809",
+                      "automationProgId":  "KWPP.Application",
+                      "producerVersion":  "12.1.0.26895"
+                  }
+              ]
+}

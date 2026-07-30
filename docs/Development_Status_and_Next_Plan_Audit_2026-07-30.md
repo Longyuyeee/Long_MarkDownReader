@@ -372,3 +372,11 @@ LongEdit 当前最准确的定位是：
 E2A 已完成 Microsoft Office、WPS Office、LibreOffice 的无固定路径发现、产品版本读取、角色/扩展名路由和统一外部打开。Library 右侧能力栏与文件树菜单复用同一入口；后端只接受应用身份，重新绑定发现清单，并以工作区边界和接管前后 SHA-256 证明 LongEdit 未修改源文件。
 
 本机已真实发现 Office `16.0.20228.20110`、WPS `12,1,0,26895` 和 LibreOffice `26.2.4.2`。本阶段没有提前登记 `.wps/.et/.dps`，也没有开放旧 Office 转换。下一代码阶段推进为 **E3 WPS 原生格式真实 fixture、识别、元数据、能力提示与外部打开**；随后仍按 E2B/E2C → E1C 推进。详细记录见 [`E2A_External_Application_Discovery_and_Unified_Open_Audit_2026-07-30.md`](./E2A_External_Application_Discovery_and_Unified_Open_Audit_2026-07-30.md)。
+
+## 13. E3 WPS 原生格式外部处理闭环完成
+
+E3 已使用 WPS Office `12.1.0.26895` 直接生成并独立复开 `.wps/.et/.dps` 三份脱敏 fixture。格式注册、容器识别、只读元数据、主窗口右侧能力工作面、文件树/最近记录和 E2A 统一外部打开已经接通；识别命令在工作区边界内返回大小、修改时间和 SHA-256，并确认读取前后源字节不变。
+
+三种格式的公开能力均锁定为 `external-open / saveMode:none`，正文读取、索引、转换、编辑、创建和保存全部为 `unsupported`。这一步补齐了最初需求中的 WPS 原生日常文件管理入口，但没有把外部 WPS 能力冒充为 LongEdit 内置等价编辑。
+
+下一代码阶段改为 **E2B 旧版 `.doc` 隔离转换试点**，完成后进入 E2C `.xls/.ppt`，再进入 E1C `.ods/.odp`。E1B WPS ODT 2/3、X3-B6 数组公式 1/3 和 Pivot 多层轴缺少真实 Excel 的外部证据继续并行等待，不得伪造关闭。详细记录见 [`E3_WPS_Native_Recognition_and_External_Open_Audit_2026-07-30.md`](./E3_WPS_Native_Recognition_and_External_Open_Audit_2026-07-30.md)。
