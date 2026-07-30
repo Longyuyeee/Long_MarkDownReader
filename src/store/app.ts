@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { invoke } from '@tauri-apps/api/core'
 import { enable, disable, isEnabled } from '@tauri-apps/plugin-autostart'
+import { invoke, isTauriRuntime } from '../services/tauriRuntime'
 import {
   THEME_EDITOR_BACKGROUNDS,
   getThemePreset,
@@ -111,6 +111,10 @@ export const useAppStore = defineStore('app', {
       if (!path || this.relationObjectFocus?.path === path) this.relationObjectFocus = null
     },
     async loadConfig() {
+      if (!isTauriRuntime()) {
+        this.restoreTabsState()
+        return
+      }
       try {
         const config = await invoke<any>('get_config')
         this.libraries = (config.libraries || []).map((l: any) => ({ ...l, gitEnabled: l.gitEnabled || false, gitRemote: l.gitRemote || '', gitBranch: l.gitBranch || 'main' }))
@@ -155,7 +159,7 @@ export const useAppStore = defineStore('app', {
       }
 
       // 核心修复：真实调用自启插件
-      if (patch.isAutostart !== undefined && patch.isAutostart !== this.isAutostart) {
+      if (isTauriRuntime() && patch.isAutostart !== undefined && patch.isAutostart !== this.isAutostart) {
         try {
           if (patch.isAutostart) await enable()
           else await disable()
@@ -175,6 +179,11 @@ export const useAppStore = defineStore('app', {
         this.savedSearches = this.savedSearches.filter(search => libraryPaths.has(search.libraryPath))
       }
       
+      if (!isTauriRuntime()) {
+        this.saveTabsState()
+        return
+      }
+
       await invoke('save_config', { config: {
         libraries: this.libraries,
         activeLibraryPath: this.activeLibraryPath,

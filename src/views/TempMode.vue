@@ -76,7 +76,7 @@
 import { onMounted, ref, computed, onUnmounted, watch, nextTick, reactive } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '@tauri-apps/api/event'
+import { listen } from '../services/tauriRuntime'
 import { useMessage, NIcon } from 'naive-ui'
 import { List as ListIcon, BookPlus as BookPlusIcon } from 'lucide-vue-next'
 import Vditor from 'vditor'

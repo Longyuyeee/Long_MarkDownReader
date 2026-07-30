@@ -547,7 +547,7 @@ import RelationSummaryBadge, { type GraphRelationSummary } from '../components/R
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { listen } from '@tauri-apps/api/event'
+import { isTauriRuntime, listen } from '../services/tauriRuntime'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
@@ -2318,7 +2318,8 @@ onMounted(async () => {
   unlistenSaveCmd = await listen('command-save', saveCurrentFile)
   unlistenDailyNote = await listen('command-daily-note', createDailyNote)
   // 外部文件变更检测：窗口获焦时检查活跃文件是否被外部修改
-  unlistenFocus = await getCurrentWindow().listen('tauri://focus', async () => {
+  if (isTauriRuntime()) {
+    unlistenFocus = await getCurrentWindow().listen('tauri://focus', async () => {
     void refreshKnowledgeIndexStatus()
     if (!activeTabId.value || !lastKnownModified) return
     try {
@@ -2334,9 +2335,11 @@ onMounted(async () => {
         })
       }
     } catch (e) { /* file may have been deleted */ }
-  })
+    })
+  }
   nextTick(() => { initVditor(); startShadowSaveTimer() })
-  unlistenDrop = await getCurrentWindow().onDragDropEvent(async (event) => {
+  if (isTauriRuntime()) {
+    unlistenDrop = await getCurrentWindow().onDragDropEvent(async (event) => {
     if (event.payload.type === 'over') {
       updateDropTarget(event.payload.position.x, event.payload.position.y)
     } else if (event.payload.type === 'drop') {
@@ -2393,7 +2396,8 @@ onMounted(async () => {
       }
       virtualDrag.dropTarget = null; virtualDrag.dropPosition = null
     }
-  })
+    })
+  }
 })
 
 onUnmounted(() => {

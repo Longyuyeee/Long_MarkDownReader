@@ -81,6 +81,7 @@ import FileRelationContext from './components/FileRelationContext.vue'
 import { useAppStore } from './store/app'
 import { findFileFormat, isExternallyEditable, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
+import { isTauriRuntime } from './services/tauriRuntime'
 
 const osTheme = useOsTheme()
 const router = useRouter()
@@ -156,7 +157,6 @@ performance.mark('longedit:route:initial:start')
 
 declare global {
   interface Window {
-    __TAURI_INTERNALS__?: unknown
     __LONGEDIT_ROUTE_PERFORMANCE__?: Array<{
       routeName: string
       elapsedMs: number
@@ -181,8 +181,6 @@ declare global {
 }
 
 const ROUTE_PERFORMANCE_MAX_ENTRIES = 20
-const isTauriRuntime = () => typeof window !== 'undefined' && !!window.__TAURI_INTERNALS__
-
 window.__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__ = () => ({
   schemaVersion: 1,
   capturedAt: new Date().toISOString(),

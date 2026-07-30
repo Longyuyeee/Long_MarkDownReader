@@ -17,6 +17,7 @@ const packageJson = json('package.json')
 const policy = json('shared/r5e-runtime-route-smoke-policy.json')
 const r5dPolicy = json('shared/r5d-production-route-smoke-preflight-policy.json')
 const appVue = read('src/App.vue')
+const tauriRuntime = read('src/services/tauriRuntime.ts')
 const statusDoc = read('docs/Current_Development_Status_and_Next_Plan_2026-07-30.md')
 const auditDoc = read('docs/R5E_Runtime_Route_Smoke_Audit_2026-07-31.md')
 const manifest = json('docs/evidence/r5e-runtime-route-smoke/manifest.json')
@@ -61,14 +62,20 @@ requireIncludes('R5E capability alignment', policy.capabilityAlignment, [
 ])
 
 for (const token of [
-  'const isTauriRuntime',
-  'window.__TAURI_INTERNALS__',
+  "import { isTauriRuntime } from './services/tauriRuntime'",
   'if (isTauriRuntime())',
   '__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__',
   "listen<string>('open-file'",
   "invoke<string[]>('get_launch_args')",
 ]) {
   if (!appVue.includes(token)) fail(`R5E App.vue runtime boundary token missing: ${token}`)
+}
+
+for (const token of [
+  'export const isTauriRuntime',
+  'window.__TAURI_INTERNALS__',
+]) {
+  if (!tauriRuntime.includes(token)) fail(`R5E centralized runtime boundary token missing: ${token}`)
 }
 
 if (manifest.schemaVersion !== 1 || manifest.stage !== 'R5E') fail('R5E manifest identity mismatch.')

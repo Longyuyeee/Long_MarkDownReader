@@ -320,3 +320,26 @@ The follow-up smoke run also exposed a deeper blocker: store/page-level code sti
 Current status: `browser-preview-runtime-smoke-blocked-by-tauri-api-dependencies`.
 
 Next recommended stage: R5F. Add a centralized safe Tauri adapter or preview runtime shim so browser-preview smoke can mount representative routes without directly requiring Tauri internals.
+
+## R5F update - centralized safe Tauri runtime boundary
+
+Current stage after this update: R5F is implemented and the app still remains `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5f-safe-tauri-runtime-policy.json`
+- `scripts/check-r5f-safe-tauri-runtime.mjs`
+- `docs/R5F_Safe_Tauri_Runtime_Audit_2026-07-31.md`
+- `docs/evidence/r5f-safe-tauri-runtime/manifest.json`
+- `docs/evidence/r5f-safe-tauri-runtime/route-mount-evidence.json`
+- `src/services/tauriRuntime.ts`
+
+R5F centralizes runtime detection, typed unavailable-runtime errors, and preview-safe event registration. Configuration loading no longer calls desktop APIs in browser preview, while Library focus/drag-drop listeners remain active in the real Tauri desktop runtime.
+
+The production browser-preview smoke now passes all eleven representative right-side workspace routes: workspace, library, TXT, JSON, PDF, workbook, Mermaid diagram, OPML mind map, knowledge graph, JSON Canvas, and release capability governance.
+
+Current status: `browser-preview-route-mount-smoke-passed-desktop-io-pending`.
+
+This evidence proves integrated route mounting, not native file I/O or signed Windows artifact behavior.
+
+Next recommended stage: R5G. Capture a real built Tauri desktop smoke bundle with representative file open/save operations and route-performance export, then continue the existing signing, Windows VM, rollback, and RC approval gates.

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5F",
+  "appVersion": "0.7.0",
+  "capturedAt": "2026-07-30T16:38:36.177Z",
+  "baseUrl": "http://127.0.0.1:4175/",
+  "evidenceLevel": "browser-preview-route-mount-smoke",
+  "routeCount": 11,
+  "passedRouteCount": 11,
+  "failedRouteCount": 0,
+  "sourceUserContentIncluded": false,
+  "desktopFileIoProven": false,
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "summary": "All representative right-side workspace routes mounted without the global crash fallback after centralizing preview-safe Tauri boundaries."
+}

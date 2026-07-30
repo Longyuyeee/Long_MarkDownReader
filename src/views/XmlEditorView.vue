@@ -99,7 +99,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '@tauri-apps/api/event'
+import { listen } from '../services/tauriRuntime'
 import { basicSetup } from 'codemirror'
 import { xml } from '@codemirror/lang-xml'
 import { foldAll, unfoldAll } from '@codemirror/language'

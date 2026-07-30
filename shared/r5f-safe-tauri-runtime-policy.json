@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5F",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "safe-tauri-runtime-boundary-and-route-mount-smoke",
+  "generatedAt": "2026-07-31",
+  "currentStatus": "browser-preview-route-mount-smoke-passed-desktop-io-pending",
+  "runtimeBoundary": {
+    "adapterPath": "src/services/tauriRuntime.ts",
+    "desktopInvokeBehaviorPreserved": true,
+    "browserPreviewInvokeFailsWithTypedError": true,
+    "browserPreviewEventListenIsNoop": true,
+    "browserPreviewConfigUsesLocalTabState": true,
+    "desktopWindowListenersRemainTauriOnly": true
+  },
+  "representativeRoutes": [
+    "/workspace",
+    "/library",
+    "/text",
+    "/json",
+    "/pdf",
+    "/workbook",
+    "/diagram",
+    "/mindmap",
+    "/graph",
+    "/canvas",
+    "/release-capabilities"
+  ],
+  "requiredEvidenceFiles": [
+    "docs/evidence/r5f-safe-tauri-runtime/manifest.json",
+    "docs/evidence/r5f-safe-tauri-runtime/route-mount-evidence.json"
+  ],
+  "releaseGate": {
+    "browserPreviewRouteMountPassed": true,
+    "browserPreviewDoesNotProveDesktopFileIo": true,
+    "requiresSignedArtifactForRc": true,
+    "requiresWindowsVmEvidenceForRc": true,
+    "currentPromotionEligible": false
+  },
+  "capabilityAlignment": [
+    "daily-management-workspace",
+    "right-side-workspace-navigation",
+    "pdf-and-office-workflows",
+    "diagram-and-mindmap-workflows",
+    "knowledge-graph-visualization",
+    "txt-json-dev-format-editing"
+  ],
+  "knownLimits": [
+    "browser-preview-validates-route-mounting-not-real-desktop-file-io",
+    "signed-desktop-artifact-run-remains-pending",
+    "rc-promotion-remains-blocked-until-signing-vm-and-rollback-evidence-exist"
+  ],
+  "nextStage": "R5G"
+}
