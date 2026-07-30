@@ -1,17 +1,44 @@
 param(
     [string]$OutputDirectory = "docs\evidence\r5i-isolated-install-lifecycle\sandbox-output",
+    [string]$ArtifactManifestPath = "docs\evidence\r5h-current-installers\installer-artifact-manifest.json",
     [switch]$RequireSignedArtifact,
     [switch]$Launch
 )
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$r5hManifest = Get-Content -LiteralPath (Join-Path $repoRoot "docs/evidence/r5h-current-installers/installer-artifact-manifest.json") -Raw | ConvertFrom-Json
+$resolvedManifestPath = if ([System.IO.Path]::IsPathRooted($ArtifactManifestPath)) {
+    [System.IO.Path]::GetFullPath($ArtifactManifestPath)
+} else {
+    [System.IO.Path]::GetFullPath((Join-Path $repoRoot $ArtifactManifestPath))
+}
+$evidenceRoot = [System.IO.Path]::GetFullPath((Join-Path $repoRoot "docs/evidence"))
+if (-not $resolvedManifestPath.StartsWith($evidenceRoot, [System.StringComparison]::OrdinalIgnoreCase) -or
+    -not (Test-Path -LiteralPath $resolvedManifestPath -PathType Leaf)) {
+    throw "R5N artifact manifest must exist under docs/evidence."
+}
+$r5hManifest = Get-Content -LiteralPath $resolvedManifestPath -Raw | ConvertFrom-Json
 $currentArtifact = @($r5hManifest.artifacts | Where-Object { $_.target -eq "nsis" })
 if ($currentArtifact.Count -ne 1 -or [string]$currentArtifact[0].sha256 -notmatch "^[a-f0-9]{64}$") {
     throw "R5H current NSIS hash evidence is missing or invalid."
 }
 $currentSha256 = [string]$currentArtifact[0].sha256
+$manifestRequiresSignedRuntime = $currentArtifact[0].signed -eq $true
+if ($manifestRequiresSignedRuntime -ne [bool]$RequireSignedArtifact) {
+    throw "Artifact manifest signing state must match -RequireSignedArtifact."
+}
+$currentInstallerHostDirectory = [System.IO.Path]::GetFullPath(
+    (Join-Path $repoRoot ([string]$currentArtifact[0].relativeDirectory))
+)
+$repoFullPath = [System.IO.Path]::GetFullPath($repoRoot)
+$repoPathPrefix = $repoFullPath.TrimEnd("\", "/") + [System.IO.Path]::DirectorySeparatorChar
+if (-not $currentInstallerHostDirectory.StartsWith($repoPathPrefix, [System.StringComparison]::OrdinalIgnoreCase) -or
+    -not (Test-Path -LiteralPath $currentInstallerHostDirectory -PathType Container)) {
+    throw "Artifact manifest installer directory must remain inside the repository."
+}
+$relativeInstallerDirectory = $currentInstallerHostDirectory.Substring($repoPathPrefix.Length)
+$guestInstallerDirectory = "C:\LongEditR5IRepo\" + $relativeInstallerDirectory.Replace("/", "\")
+$guestPreviousInstallerDirectory = "C:\LongEditR5IRepo\src-tauri\target\release\bundle\nsis"
 $sourceCommit = ([string](& git -C $repoRoot rev-parse HEAD)).Trim()
 if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch "^[a-fA-F0-9]{40}$") {
     throw "Unable to bind the R5K evidence bundle to the current source commit."
@@ -66,7 +93,7 @@ $xml = @"
     </MappedFolder>
   </MappedFolders>
   <LogonCommand>
-    <Command>powershell -NoProfile -ExecutionPolicy Bypass -File C:\LongEditR5IRepo\scripts\run-r5i-isolated-install-lifecycle.ps1 -InstallerDirectory C:\LongEditR5IRepo\src-tauri\target\release\bundle\nsis -ExpectedCurrentSha256 $currentSha256 -NodeExecutable C:\LongEditR5INode\node.exe -InstalledSmokeScript C:\LongEditR5IRepo\scripts\capture-r5j-installed-artifact-smoke.mjs -ManagementRollbackSmokeScript C:\LongEditR5IRepo\scripts\capture-r5l-management-rollback-smoke.mjs -EvidenceExporter C:\LongEditR5IRepo\scripts\export-r5k-windows-evidence-bundle.ps1 -ExpectedSourceCommit $sourceCommit -OutputDirectory C:\LongEditR5IOutput -ConfirmDisposableMachine -AllowInstallerMutation$signedArtifactArgument</Command>
+    <Command>powershell -NoProfile -ExecutionPolicy Bypass -File C:\LongEditR5IRepo\scripts\run-r5i-isolated-install-lifecycle.ps1 -InstallerDirectory $guestInstallerDirectory -PreviousInstallerDirectory $guestPreviousInstallerDirectory -ExpectedCurrentSha256 $currentSha256 -NodeExecutable C:\LongEditR5INode\node.exe -InstalledSmokeScript C:\LongEditR5IRepo\scripts\capture-r5j-installed-artifact-smoke.mjs -ManagementRollbackSmokeScript C:\LongEditR5IRepo\scripts\capture-r5l-management-rollback-smoke.mjs -EvidenceExporter C:\LongEditR5IRepo\scripts\export-r5k-windows-evidence-bundle.ps1 -ExpectedSourceCommit $sourceCommit -OutputDirectory C:\LongEditR5IOutput -ConfirmDisposableMachine -AllowInstallerMutation$signedArtifactArgument</Command>
   </LogonCommand>
 </Configuration>
 "@

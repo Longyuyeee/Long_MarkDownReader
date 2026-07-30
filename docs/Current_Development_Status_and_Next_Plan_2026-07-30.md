@@ -518,3 +518,29 @@ Current status: `dual-lane-import-and-final-audit-ready-external-evidence-pendin
 No installer was executed on this host and no release claim is made.
 
 Next recommended stage: R5N. Execute/import Windows 10 and Windows 11 evidence, obtain approved signing material, refresh hashes after signing, rerun both signed lanes, and record explicit manual release approval before promotion.
+
+## R5N update - signed release execution handoff
+
+Current stage after this update: R5N has completed the repository-side signed release handoff while keeping the application `releaseCandidate=false`.
+
+New source of truth:
+
+- `shared/r5n-external-release-execution-policy.json`
+- `scripts/audit-r5n-external-release-environment.ps1`
+- `scripts/capture-r5n-signed-installer-manifest.ps1`
+- `scripts/import-r5n-signed-windows-evidence.ps1`
+- `scripts/audit-r5n-release-promotion-readiness.ps1`
+- `scripts/new-r5n-manual-release-approval.ps1`
+- `scripts/test-r5n-release-closure-rejections.ps1`
+- `scripts/check-r5n-external-release-execution.mjs`
+- `docs/R5N_External_Release_Execution_Handoff_Audit_2026-07-31.md`
+- `docs/evidence/r5n-external-release/environment-audit.json`
+- `docs/evidence/r5n-release-promotion/preflight.json`
+
+R5N separates signed Windows 10/11 results from unsigned engineering lanes, binds guest execution and import to an explicit signed artifact manifest, requires Authenticode plus timestamp certificates, and blocks approval until the signed manifest and both signed runtime lanes pass.
+
+The current host has a running `vmcompute` service but no Windows Sandbox or Hyper-V provisioning command, no Windows SDK `signtool.exe`, no eligible code-signing certificate, and no provided disposable Windows 10/11 runner. Signed artifacts, signed runtime evidence, and approval are therefore absent.
+
+Current status: `external-release-handoff-ready-environment-and-evidence-blocked`.
+
+Next action: `external-release-execution`. Provision the two Windows runners and signing material, then follow the R5N execution order. No repository-only change can truthfully substitute for those external results.

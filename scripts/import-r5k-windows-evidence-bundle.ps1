@@ -1,10 +1,17 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$BundlePath,
-    [ValidateSet("imported", "windows-10-x64", "windows-11-x64")]
+    [ValidateSet(
+        "imported",
+        "windows-10-x64",
+        "windows-11-x64",
+        "signed-windows-10-x64",
+        "signed-windows-11-x64"
+    )]
     [string]$TargetName = "imported",
     [ValidateSet("any", "windows-10-x64", "windows-11-x64")]
-    [string]$ExpectedWindowsClass = "any"
+    [string]$ExpectedWindowsClass = "any",
+    [string]$ArtifactManifestPath = "docs/evidence/r5h-current-installers/installer-artifact-manifest.json"
 )
 
 $ErrorActionPreference = "Stop"
@@ -14,6 +21,16 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $bundle = [System.IO.Path]::GetFullPath($BundlePath)
 $targetParent = Join-Path $repoRoot "docs/evidence/r5k-windows-matrix"
 $target = Join-Path $targetParent $TargetName
+$approvedManifestPath = if ([System.IO.Path]::IsPathRooted($ArtifactManifestPath)) {
+    [System.IO.Path]::GetFullPath($ArtifactManifestPath)
+} else {
+    [System.IO.Path]::GetFullPath((Join-Path $repoRoot $ArtifactManifestPath))
+}
+$approvedManifestRoot = [System.IO.Path]::GetFullPath((Join-Path $repoRoot "docs/evidence"))
+if (-not $approvedManifestPath.StartsWith($approvedManifestRoot, [System.StringComparison]::OrdinalIgnoreCase) -or
+    -not (Test-Path -LiteralPath $approvedManifestPath -PathType Leaf)) {
+    throw "R5N approved artifact manifest must exist under docs/evidence."
+}
 if (-not (Test-Path -LiteralPath $bundle -PathType Leaf)) {
     throw "R5K evidence bundle is missing."
 }
@@ -93,7 +110,7 @@ try {
     if ($LASTEXITCODE -ne 0 -or $manifest.sourceCommit -ne $currentCommit) {
         throw "R5K evidence bundle is bound to a different source commit."
     }
-    $r5h = Get-Content -LiteralPath (Join-Path $repoRoot "docs/evidence/r5h-current-installers/installer-artifact-manifest.json") -Raw | ConvertFrom-Json
+    $r5h = Get-Content -LiteralPath $approvedManifestPath -Raw | ConvertFrom-Json
     $approvedInstaller = @($r5h.artifacts | Where-Object { $_.target -eq "nsis" })
     if ($approvedInstaller.Count -ne 1 -or $manifest.currentInstallerSha256 -ne $approvedInstaller[0].sha256) {
         throw "R5K evidence bundle is bound to a different current installer."
@@ -125,8 +142,12 @@ try {
     if ($ExpectedWindowsClass -ne "any" -and $actualWindowsClass -ne $ExpectedWindowsClass) {
         throw "R5M Windows evidence class mismatch: expected $ExpectedWindowsClass, actual $actualWindowsClass."
     }
-    if ($TargetName -ne "imported" -and $TargetName -ne $actualWindowsClass) {
+    $targetWindowsClass = $TargetName -replace "^signed-", ""
+    if ($TargetName -ne "imported" -and $targetWindowsClass -ne $actualWindowsClass) {
         throw "R5M refuses to promote Windows evidence into the wrong matrix lane."
+    }
+    if ($TargetName -like "signed-*" -and $manifest.signedArtifactRuntimeProven -ne $true) {
+        throw "R5N signed release lane requires signed-artifact runtime evidence."
     }
 
     $memberMap = @{}

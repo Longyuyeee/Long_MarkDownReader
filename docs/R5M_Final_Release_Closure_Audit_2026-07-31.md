@@ -28,7 +28,7 @@ Only SHA-256 certificate fingerprints and signature state enter evidence. The si
 
 `scripts/audit-r5m-final-release-readiness.ps1` now evaluates the current installer hashes and signatures, both imported OS lanes, signed-runtime status in both lanes, and manual approval. Missing or partial evidence always produces `promotionEligible=false`.
 
-Manual approval is never inferred. An optional `docs/evidence/r5m-final-release/manual-approval.json` must satisfy `shared/r5m-manual-release-approval-contract.json` and bind the current source commit, every current artifact hash, both imported lane source commits, the application version, approval time, and an organizational approver role. A missing, malformed, or stale decision remains blocking.
+Manual approval is never inferred. An optional `docs/evidence/r5m-final-release/manual-approval.json` must satisfy `shared/r5m-manual-release-approval-contract.json` and bind the signed artifact's product-source commit, every approved artifact hash, both imported lane source commits, the application version, approval time, and an organizational approver role. A missing, malformed, or stale decision remains blocking.
 
 ## Current audited state
 

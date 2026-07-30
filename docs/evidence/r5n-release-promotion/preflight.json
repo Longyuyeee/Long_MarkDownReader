@@ -1,0 +1,36 @@
+{
+    "schemaVersion":  1,
+    "stage":  "R5N",
+    "capturedAt":  "2026-07-30T17:55:01.9873177Z",
+    "currentStatus":  "external-release-evidence-blocked",
+    "releaseCandidate":  false,
+    "promotionEligible":  false,
+    "sourceUserContentIncluded":  false,
+    "automatedGatesPassed":  false,
+    "environmentReady":  false,
+    "signedManifestReady":  false,
+    "signedWindowsMatrixReady":  false,
+    "signedWindowsLanes":  [
+                               {
+                                   "windowsVersion":  "windows-10-x64",
+                                   "status":  "missing-or-invalid",
+                                   "accepted":  false,
+                                   "sourceCommit":  null
+                               },
+                               {
+                                   "windowsVersion":  "windows-11-x64",
+                                   "status":  "missing-or-invalid",
+                                   "accepted":  false,
+                                   "sourceCommit":  null
+                               }
+                           ],
+    "manualApprovalRecorded":  false,
+    "manualApprovalState":  "missing",
+    "productSourceCommit":  null,
+    "blockers":  [
+                     "approved-signed-installer-manifest-incomplete",
+                     "external-signing-or-windows-runner-environment-incomplete",
+                     "signed-windows-10-11-runtime-matrix-incomplete",
+                     "manual-release-approval-not-recorded"
+                 ]
+}

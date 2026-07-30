@@ -1,0 +1,31 @@
+{
+    "schemaVersion":  1,
+    "stage":  "R5N",
+    "capturedAt":  "2026-07-30T17:49:26.9700628Z",
+    "currentStatus":  "external-release-environment-blocked",
+    "releaseCandidate":  false,
+    "promotionEligible":  false,
+    "hostInstallerMutationAllowed":  false,
+    "environment":  {
+                        "windowsSandboxAvailable":  false,
+                        "hyperVProvisioningCmdletAvailable":  false,
+                        "vmComputeServicePresent":  true,
+                        "vmComputeServiceRunning":  true,
+                        "signToolAvailable":  false,
+                        "eligibleCurrentUserCodeSigningCertificateCount":  0
+                    },
+    "evidence":  {
+                     "certificateSubjectsIncluded":  false,
+                     "certificateThumbprintsIncluded":  false,
+                     "machineNameIncluded":  false,
+                     "userNameIncluded":  false,
+                     "sourceUserContentIncluded":  false
+                 },
+    "blockers":  [
+                     "no-windows-sandbox-or-hyper-v-provisioning-command",
+                     "windows-sdk-signtool-unavailable",
+                     "no-current-user-code-signing-certificate-with-private-key",
+                     "windows-10-disposable-runner-not-provided",
+                     "windows-11-disposable-runner-not-provided"
+                 ]
+}

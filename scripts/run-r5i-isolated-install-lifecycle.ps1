@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$InstallerDirectory,
+    [string]$PreviousInstallerDirectory = "",
     [string]$CurrentVersion = "0.7.0",
     [string]$PreviousVersion = "0.6.2",
     [Parameter(Mandatory = $true)]
@@ -50,8 +51,8 @@ function Wait-ForRegistration([string]$Version, [bool]$Present) {
     throw "Timed out waiting for registration version=$Version present=$Present."
 }
 
-function Resolve-OneInstaller([string]$Version) {
-    $matches = @(Get-ChildItem -LiteralPath $InstallerDirectory -File -Filter "*_${Version}_x64-setup.exe")
+function Resolve-OneInstaller([string]$Directory, [string]$Version) {
+    $matches = @(Get-ChildItem -LiteralPath $Directory -File -Filter "*_${Version}_x64-setup.exe")
     if ($matches.Count -ne 1) {
         throw "Expected exactly one NSIS installer for version $Version; found $($matches.Count)."
     }
@@ -107,8 +108,13 @@ if (-not (Test-Path -LiteralPath $EvidenceExporter -PathType Leaf)) {
     throw "R5K evidence exporter is missing."
 }
 
-$currentInstaller = Resolve-OneInstaller $CurrentVersion
-$previousInstaller = Resolve-OneInstaller $PreviousVersion
+$resolvedPreviousInstallerDirectory = if ([string]::IsNullOrWhiteSpace($PreviousInstallerDirectory)) {
+    $InstallerDirectory
+} else {
+    $PreviousInstallerDirectory
+}
+$currentInstaller = Resolve-OneInstaller $InstallerDirectory $CurrentVersion
+$previousInstaller = Resolve-OneInstaller $resolvedPreviousInstallerDirectory $PreviousVersion
 $currentInstallerSha256 = (Get-FileHash -LiteralPath $currentInstaller.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($currentInstallerSha256 -ne $ExpectedCurrentSha256.ToLowerInvariant()) {
     throw "Current installer SHA-256 does not match the approved R5H evidence."

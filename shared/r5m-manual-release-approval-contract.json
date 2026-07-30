@@ -16,7 +16,7 @@
   ],
   "requiredDecision": "approved",
   "requirements": {
-    "bindCurrentSourceCommit": true,
+    "bindSignedArtifactSourceCommit": true,
     "bindEveryCurrentArtifactSha256": true,
     "bindWindows10LaneSourceCommit": true,
     "bindWindows11LaneSourceCommit": true,

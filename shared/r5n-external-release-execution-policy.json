@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5N",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "signed-artifact-dual-windows-execution-and-explicit-release-approval",
+  "generatedAt": "2026-07-31",
+  "currentStatus": "external-release-handoff-ready-environment-and-evidence-blocked",
+  "implementation": {
+    "externalEnvironmentAudit": true,
+    "signedInstallerManifestCapture": true,
+    "signedArtifactManifestBinding": true,
+    "separateSignedWindows10Lane": true,
+    "separateSignedWindows11Lane": true,
+    "signedLaneImportValidation": true,
+    "signedReleasePromotionAudit": true,
+    "manualApprovalGenerator": true,
+    "manualApprovalEvidenceBinding": true,
+    "unsafeTransitionRejectionCount": 3
+  },
+  "currentEnvironment": {
+    "windowsSandboxAvailable": false,
+    "hyperVProvisioningCmdletAvailable": false,
+    "vmComputeServiceRunning": true,
+    "signToolAvailable": false,
+    "eligibleCodeSigningCertificateCount": 0,
+    "hostInstallerMutationAllowed": false
+  },
+  "releaseGate": {
+    "signedInstallerManifestCaptured": false,
+    "signedWindows10EvidenceImported": false,
+    "signedWindows11EvidenceImported": false,
+    "automatedGatesPassed": false,
+    "manualReleaseApprovalRecorded": false,
+    "currentPromotionEligible": false
+  },
+  "failClosedRules": {
+    "unsignedArtifactCannotCreateSignedManifest": true,
+    "unsignedManifestCannotEnterSignedRunnerMode": true,
+    "unsignedRuntimeCannotEnterSignedLane": true,
+    "wrongWindowsClassCannotEnterLane": true,
+    "approvalCannotPrecedeAutomatedGates": true,
+    "approvalCannotBeOverwritten": true,
+    "approvalMustBindProductSourceArtifactHashesAndBothLanes": true,
+    "releaseCandidateRequiresSeparateExplicitPromotion": true
+  },
+  "knownLimits": [
+    "windows-sdk-signtool-unavailable",
+    "approved-code-signing-certificate-unavailable",
+    "windows-10-disposable-runner-unavailable",
+    "windows-11-disposable-runner-unavailable",
+    "current-artifacts-remain-unsigned",
+    "real-signed-runtime-evidence-and-human-approval-remain-missing"
+  ],
+  "nextAction": "external-release-execution"
+}
