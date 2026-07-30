@@ -544,3 +544,13 @@ The current host has a running `vmcompute` service but no Windows Sandbox or Hyp
 Current status: `external-release-handoff-ready-environment-and-evidence-blocked`.
 
 Next action: `external-release-execution`. Provision the two Windows runners and signing material, then follow the R5N execution order. No repository-only change can truthfully substitute for those external results.
+
+## 2026-07-31 comprehensive audit index
+
+The initial product goals, current 39-format capability boundary, unified workspace, knowledge graph and mind-map maturity, release blockers, and staged closure plan have been consolidated in:
+
+- `docs/Current_Development_Audit_and_Next_Plan_2026-07-31.md`
+
+Audit conclusion: daily management, basic editing, and systematic knowledge organization are materially implemented at the engineering-feature level. The product remains `releaseCandidate=false` because signed Windows 10/11 installed-runtime evidence and manual release approval are still missing.
+
+Next action remains `external-release-execution`. Product enhancements may proceed in parallel, but they must not be reported as a substitute for the R5N signed runtime closure.
