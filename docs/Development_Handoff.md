@@ -1,7 +1,9 @@
 # Long Markdown Reader 开发交接
 
-更新日期：2026-07-30
+更新日期：2026-07-31
 交接基线：当前开发版本 `v0.7.0`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干；WPS 原生格式、旧版 DOC/XLS/PPT 隔离转换和 ODS/ODP 只读能力已完成，ODT 外部生产者证据与专业发布门禁仍待收口
+
+> 2026-07-31 C1A 已完成：R5N 外部签名环境仍阻断时，知识图谱产品化继续向管理行动推进。现有关系新增/删除、来源证据和健康治理保持不变；图谱节点现在可按 1～4 层局部关系生成新的 Markdown 项目笔记，记录中心来源、关联资料、目标和任务，并自动进入现有搜索与首页待办。生成文件与中心对象同目录、同名递增且不覆盖，最多写入 100 个关联对象。下一本机阶段为 C1B 子图智能集合；P0 仍是 R5N 已签名 Windows 10/11 外部发布执行。详见 [`C1A_Graph_Project_Note_Audit_2026-07-31.md`](./C1A_Graph_Project_Note_Audit_2026-07-31.md)。
 
 > 2026-07-30 权威入口：R1 统一发布能力矩阵与 R2 Windows 安装生命周期已完成。当前 MSI/NSIS 身份、Markdown 关联白名单、系统默认应用选择、旧标识迁移和卸载数据边界均有机器契约与真实桌面证据；实现提交 `032ec11` 的 [GitHub Quality Gate](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30533681730) 已完整通过。`releaseCandidate=false`，下一代码阶段为 R3 索引恢复、备份导入导出与隐私净化诊断包；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁。证据见 [`R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md`](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。
 

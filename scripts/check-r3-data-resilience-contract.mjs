@@ -146,4 +146,4 @@ for (const token of ['R3D', '隐私诊断包', 'export_privacy_diagnostic_bundle
   if (!r3dAudit.includes(token)) fail(`R3D audit token missing: ${token}`)
 }
 
-console.log('R3 data resilience contract passed: R3A index recovery, R3B backup export, R3C import/restore, and R3D privacy diagnostics implemented; R4 remains next.')
+console.log('R3 data resilience contract passed: R3A index recovery, R3B backup export, R3C import/restore, and R3D privacy diagnostics implemented; current release closure is tracked by the latest development audit.')

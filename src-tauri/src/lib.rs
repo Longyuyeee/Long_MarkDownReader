@@ -7,8 +7,8 @@ use commands::backup::{
     export_management_backup, preflight_management_backup_import, restore_management_backup,
 };
 use commands::canvas::{
-    create_canvas_file, create_canvas_from_graph, create_canvas_from_markdown, read_canvas_file,
-    write_canvas_file,
+    create_canvas_file, create_canvas_from_graph, create_canvas_from_markdown,
+    create_project_note_from_graph, read_canvas_file, write_canvas_file,
 };
 use commands::config::{
     clear_ai_credential, get_ai_credential_status, get_config, save_config, set_ai_credential,
@@ -413,6 +413,7 @@ pub fn run() {
             create_diagram_file,
             create_canvas_from_graph,
             create_canvas_from_markdown,
+            create_project_note_from_graph,
             create_new_folder,
             rename_item,
             delete_item,

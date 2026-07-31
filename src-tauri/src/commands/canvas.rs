@@ -5,6 +5,8 @@ use crate::{build_local_graph, read_markdown_file, sanitize_filename, FileConten
 use std::fs;
 use std::path::Path;
 
+const MAX_GRAPH_PROJECT_NODES: usize = 100;
+
 #[tauri::command]
 pub async fn create_canvas_file(
     library_root: String,
@@ -193,6 +195,119 @@ pub async fn create_canvas_from_graph(
     Ok(path)
 }
 
+fn graph_project_markdown(
+    graph: &GraphData,
+    library_root: &Path,
+    center_path: &str,
+    depth: usize,
+) -> Result<String, String> {
+    let center = graph
+        .nodes
+        .iter()
+        .find(|node| node.id == center_path)
+        .ok_or("当前对象不在知识图谱中")?;
+    let center_relative = Path::new(&center.path)
+        .strip_prefix(library_root)
+        .map_err(|_| "中心对象超出知识库范围")?
+        .to_string_lossy()
+        .replace('\\', "/");
+    if center_relative.contains(['[', ']', '|', '\r', '\n']) {
+        return Err("中心对象路径无法安全写入项目笔记".into());
+    }
+
+    let mut related = graph
+        .nodes
+        .iter()
+        .filter(|node| node.id != center_path)
+        .filter_map(|node| {
+            let relative = Path::new(&node.path)
+                .strip_prefix(library_root)
+                .ok()?
+                .to_string_lossy()
+                .replace('\\', "/");
+            if relative.contains(['[', ']', '|', '\r', '\n']) {
+                return None;
+            }
+            Some((
+                node.title.trim().replace(['\r', '\n', '[', ']', '|'], " "),
+                relative,
+            ))
+        })
+        .collect::<Vec<_>>();
+    related.sort_by(|left, right| left.0.cmp(&right.0).then(left.1.cmp(&right.1)));
+    let omitted_count = related.len().saturating_sub(MAX_GRAPH_PROJECT_NODES);
+    related.truncate(MAX_GRAPH_PROJECT_NODES);
+
+    let title = center
+        .title
+        .trim()
+        .replace(['\r', '\n', '[', ']', '|'], " ");
+    let mut output = format!(
+        "---\nlongedit-generated: graph-project\nlongedit-center: \"{}\"\nlongedit-depth: {}\n---\n\n# {} 项目\n\n> 来源：知识图谱中的 [[{}|{}]]，生成后可继续自由编辑。\n\n## 目标\n\n- [ ] 明确项目目标与完成标准\n- [ ] 确认负责人和时间范围\n\n## 关联资料\n\n- [[{}|{}]]（中心对象）\n",
+        center_relative.replace('"', "\\\""),
+        depth.clamp(1, 4),
+        title,
+        center_relative,
+        title,
+        center_relative,
+        title,
+    );
+    for (related_title, relative) in &related {
+        output.push_str(&format!("- [[{}|{}]]\n", relative, related_title));
+    }
+    if omitted_count > 0 {
+        output.push_str(&format!(
+            "- 另有 {} 个关联对象未写入，以控制项目笔记规模\n",
+            omitted_count
+        ));
+    }
+    output.push_str(&format!(
+        "\n## 下一步\n\n- [ ] 审阅中心对象\n- [ ] 核对 {} 个关联对象\n- [ ] 将确认后的行动拆分为具体任务\n",
+        related.len()
+    ));
+    Ok(output)
+}
+
+#[tauri::command]
+pub async fn create_project_note_from_graph(
+    library_root: String,
+    center_path: String,
+    depth: usize,
+) -> Result<String, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let center = guard.resolve_existing_file(center_path, &["md", "pdf"])?;
+    let canonical_root = guard.root().to_string_lossy().into_owned();
+    let canonical_center = center.to_string_lossy().into_owned();
+    let graph = build_local_graph(canonical_root, canonical_center.clone(), depth).await?;
+    let content = graph_project_markdown(&graph, guard.root(), &canonical_center, depth)?;
+    let center_title = graph
+        .nodes
+        .iter()
+        .find(|node| node.id == canonical_center)
+        .map(|node| node.title.as_str())
+        .unwrap_or("知识图谱");
+    let base_name = sanitize_filename(&format!("{} 项目", center_title));
+    if base_name.is_empty() {
+        return Err("项目笔记文件名不能为空".into());
+    }
+    let target_dir = center.parent().unwrap_or(guard.root());
+    let mut index = 0usize;
+    let target = loop {
+        let name = if index == 0 {
+            format!("{base_name}.md")
+        } else {
+            format!("{base_name} {index}.md")
+        };
+        let candidate = guard.resolve_file_for_write(target_dir.join(name), &["md"])?;
+        if !candidate.exists() {
+            break candidate;
+        }
+        index += 1;
+    };
+    write_utf8(&target, &content)?;
+    Ok(target.to_string_lossy().into_owned())
+}
+
 #[tauri::command]
 pub async fn create_canvas_from_markdown(
     library_root: String,
@@ -292,6 +407,32 @@ mod tests {
         assert_eq!(canvas["edges"][0]["toEnd"], "arrow");
         assert_eq!(canvas["edges"][0]["relationType"], "links-to");
         assert!(validate_canvas_json(&serde_json::to_string(&canvas).unwrap()).is_ok());
+    }
+
+    #[test]
+    fn graph_generates_traceable_project_note_with_tasks() {
+        let root = Path::new("C:\\Knowledge");
+        let center_path = "C:\\Knowledge\\Projects\\Alpha.md";
+        let mut center = GraphNode::test_node(center_path);
+        center.title = "Alpha".into();
+        center.path = center_path.into();
+        let mut related = GraphNode::test_node("C:\\Knowledge\\Notes\\Research.md");
+        related.title = "Research".into();
+        related.path = "C:\\Knowledge\\Notes\\Research.md".into();
+        let graph = GraphData {
+            nodes: vec![center, related],
+            edges: vec![GraphEdge::test_edge(
+                center_path,
+                "C:\\Knowledge\\Notes\\Research.md",
+            )],
+        };
+
+        let markdown = graph_project_markdown(&graph, root, center_path, 2).unwrap();
+
+        assert!(markdown.contains("longedit-generated: graph-project"));
+        assert!(markdown.contains("longedit-center: \"Projects/Alpha.md\""));
+        assert!(markdown.contains("[[Notes/Research.md|Research]]"));
+        assert!(markdown.contains("- [ ] 核对 1 个关联对象"));
     }
 
     #[test]

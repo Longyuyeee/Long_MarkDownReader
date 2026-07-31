@@ -192,6 +192,7 @@
           <button class="primary-action" @click="openNode(selectedNode)">打开{{ objectTypeLabel(selectedNode.objectType) }}</button>
           <button @click="useAsMindmapRoot(selectedNode)">设为思维导图中心</button>
           <button :disabled="isCreatingCanvas || Boolean(selectedNode.parentId)" @click="sendToCanvas(selectedNode)">{{ isCreatingCanvas ? '正在生成…' : '发送到可编辑画布' }}</button>
+          <button :disabled="isCreatingProject || !canCreateProjectNote(selectedNode)" @click="createProjectNote(selectedNode)">{{ isCreatingProject ? '正在生成…' : '生成项目笔记' }}</button>
         </div>
         <div v-if="selectedNode.objectType === 'markdown'" class="relation-editor">
           <span class="neighbor-title">建立语义关系</span>
@@ -266,6 +267,7 @@ const showTutorial = ref(false)
 const isCreatingCanvas = ref(false)
 const isExporting = ref(false)
 const healthOpen = ref(false)
+const isCreatingProject = ref(false)
 const viewMode = ref<'network' | 'mindmap'>('network')
 const { filters } = useGraphFilters()
 const searchQuery = computed({ get: () => filters.query, set: value => { filters.query = value } })
@@ -629,6 +631,7 @@ const objectTypeLabel = (type: string) => ({
   canvas: 'Canvas 画布', canvas_node: 'Canvas 节点', opml: '思维导图', opml_node: '思维导图主题',
   pptx: 'PowerPoint 演示', pptx_slide: 'PowerPoint 幻灯片', markdown: 'Markdown 笔记'
 }[type] || type)
+const canCreateProjectNote = (node: GraphNode) => !node.parentId && ['markdown', 'pdf'].includes(node.objectType)
 const displayWorkspacePath = (path: string) => path.replace(/^\\\\\?\\/, '')
 const openNode = (node: GraphNode) => {
   const locator = node.locator
@@ -677,6 +680,23 @@ const sendToCanvas = async (node: GraphNode) => {
     window.alert(`生成画布失败：${String(error)}`)
   } finally {
     isCreatingCanvas.value = false
+  }
+}
+
+const createProjectNote = async (node: GraphNode) => {
+  if (isCreatingProject.value) return
+  isCreatingProject.value = true
+  try {
+    const path = await invoke<string>('create_project_note_from_graph', {
+      libraryRoot: store.libraryPath,
+      centerPath: node.path,
+      depth: mindmapDepth.value
+    })
+    router.push({ name: 'LibraryMode', query: { path } })
+  } catch (error) {
+    window.alert(`生成项目笔记失败：${String(error)}`)
+  } finally {
+    isCreatingProject.value = false
   }
 }
 
