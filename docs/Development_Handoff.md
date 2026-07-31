@@ -15,6 +15,8 @@
 
 > 2026-07-31 D1C 已完成：JSON、Table、Diagram、Canvas、Workbook、PDF、DOCX、PPTX 的高频模式切换、图标按钮和关键弹层已完成键盘与控件语义收口。Table 视图删除改为独立可聚焦按钮；PDF 翻页、颜色和侧栏标签有稳定名称/状态；PPTX 放映层可接管并约束焦点，Esc/方向键/空格不重复触发，退出后返回放映按钮。新增 `check:d1c-accessibility-contract` 并接入总格式门禁。D1 统一体验阶段至此收口，但不宣称完整 WCAG 认证。下一步进入 D2 跨格式安全降级回归。详见 [`D1C_Keyboard_Focus_and_Accessibility_Audit_2026-07-31.md`](./D1C_Keyboard_Focus_and_Accessibility_Audit_2026-07-31.md)。
 
+> 2026-07-31 D2 已完成：39 类注册格式全部且仅一次归入 6 条安全通道，统一覆盖签名保护覆盖、严格只读、PDF sidecar、Office 可靠新副本、外部应用交接和 XLSX 有界写回。新增 `shared/safe-degradation-contract.json` 与 `check:d2-safe-degradation-contract`，会核对格式注册表、发布矩阵、writer 边界以及冲突/失败/恢复实现证据，并已接入总格式门禁。本机 C、D1、D2 产品收尾主线至此完成，下一步为 D3 最终产品验收与能力冻结；R5N 正式签名和剩余外部生产者证据仍独立保持 fail-closed。详见 [`D2_Cross_Format_Safe_Degradation_Audit_2026-07-31.md`](./D2_Cross_Format_Safe_Degradation_Audit_2026-07-31.md)。
+
 > 2026-07-30 权威入口：R1 统一发布能力矩阵与 R2 Windows 安装生命周期已完成。当前 MSI/NSIS 身份、Markdown 关联白名单、系统默认应用选择、旧标识迁移和卸载数据边界均有机器契约与真实桌面证据；实现提交 `032ec11` 的 [GitHub Quality Gate](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30533681730) 已完整通过。`releaseCandidate=false`，下一代码阶段为 R3 索引恢复、备份导入导出与隐私净化诊断包；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁。证据见 [`R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md`](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。
 
 > 2026-07-30 R3A 已完成：知识索引状态新增 `recoveryAvailable` 和 `staleSourceCount`；损坏 `snapshot.json` 可在原缓存目录隔离为 `snapshot.corrupt.<timestamp>.json`，随后用户可显式重建索引。该步骤不读取、不导出、不打包知识库正文。当前距离“全格式支持和收口”还剩 R3B 备份导出、R3C 备份导入恢复、R3D 隐私诊断包、R4 正式签名/Windows VM 发布矩阵，以及外部证据门禁 E1B WPS ODT 3/3 和 X3-B6 数组生产者 3/3。下一代码阶段为 R3B，详见 [`R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md`](./R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md)。

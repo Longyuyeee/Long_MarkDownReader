@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "stage": "D2",
+  "appVersion": "0.7.0",
+  "formatRegistrySchemaVersion": 2,
+  "lanes": [
+    {
+      "id": "signature-protected-overwrite",
+      "formats": [
+        "markdown", "plain-text", "env", "ini", "properties", "editorconfig",
+        "gitignore", "javascript", "typescript", "python", "rust", "go",
+        "jvm-code", "c-family", "shell", "sql", "web-source", "json", "jsonc",
+        "yaml", "xml", "toml", "canvas", "table", "diagram", "opml"
+      ],
+      "saveModes": ["overwrite"],
+      "profiles": ["local-overwrite", "protected-local-overwrite", "lightweight-source"],
+      "sourcePolicy": "signature-protected-write",
+      "failurePolicy": "reject-stale-source-and-retain-draft",
+      "evidence": [
+        {
+          "path": "src-tauri/src/commands/formats.rs",
+          "markers": ["verify_current_signature", "expected_signature"]
+        },
+        {
+          "path": "src-tauri/src/commands/json.rs",
+          "markers": ["rejects_stale_signatures", "external-modified"]
+        },
+        {
+          "path": "src/views/TextEditorView.vue",
+          "markers": ["expectedSignature", "dirty.value = true"]
+        }
+      ]
+    },
+    {
+      "id": "strict-readonly-preview",
+      "formats": ["log", "ods", "odp"],
+      "saveModes": ["none"],
+      "profiles": ["readonly-log", "odf-preview"],
+      "sourcePolicy": "never-write-source",
+      "failurePolicy": "stop-preview-on-source-change",
+      "evidence": [
+        {
+          "path": "src-tauri/src/commands/odf_content.rs",
+          "markers": ["read_only: true", "source_preserved", "before == after"]
+        },
+        {
+          "path": "shared/file-formats.json",
+          "markers": ["\"id\": \"log\"", "\"id\": \"ods\"", "\"id\": \"odp\""]
+        }
+      ]
+    },
+    {
+      "id": "pdf-sidecar-isolation",
+      "formats": ["pdf"],
+      "saveModes": ["sidecar"],
+      "profiles": ["pdf-sidecar"],
+      "sourcePolicy": "never-write-source",
+      "failurePolicy": "preserve-sidecar-and-report-source-mismatch",
+      "evidence": [
+        {
+          "path": "src-tauri/src/commands/pdf.rs",
+          "markers": ["write_pdf_annotations", "write_pdf_ocr", "source_unchanged", "target_path.exists()"]
+        },
+        {
+          "path": "src/views/PdfView.vue",
+          "markers": ["loaded.source.fingerprint !== fingerprint", "!saved.sourceUnchanged"]
+        }
+      ]
+    },
+    {
+      "id": "verified-office-copy",
+      "formats": ["docx", "pptx"],
+      "saveModes": ["copy"],
+      "profiles": ["office-copy"],
+      "sourcePolicy": "never-overwrite-source",
+      "failurePolicy": "reject-stale-or-existing-target-and-remove-unverified-copy",
+      "evidence": [
+        {
+          "path": "src-tauri/src/commands/docx.rs",
+          "markers": ["target_path.exists()", "source_signature != expected_signature", "source_unchanged: true"]
+        },
+        {
+          "path": "src-tauri/src/commands/pptx.rs",
+          "markers": ["target_path.exists()", "source_signature != expected_signature", "remove_created_pptx_if_exact", "source_unchanged: true"]
+        },
+        {
+          "path": "src/views/DocxReaderView.vue",
+          "markers": ["expectedSignature", "!saved.sourceUnchanged"]
+        },
+        {
+          "path": "src/views/PptxReaderView.vue",
+          "markers": ["expectedSignature", "saved.saveMode !== 'copy'"]
+        }
+      ]
+    },
+    {
+      "id": "external-application-handoff",
+      "formats": [
+        "legacy-doc", "legacy-xls", "legacy-ppt", "wps-document",
+        "wps-spreadsheet", "wps-presentation"
+      ],
+      "saveModes": ["none"],
+      "profiles": ["legacy-conversion", "wps-external"],
+      "sourcePolicy": "never-write-source",
+      "failurePolicy": "require-explicit-application-or-new-conversion-target",
+      "evidence": [
+        {
+          "path": "src-tauri/src/commands/external_apps.rs",
+          "markers": ["open_workspace_file_externally", "source_preserved_at_handoff"]
+        },
+        {
+          "path": "src-tauri/src/commands/legacy_office.rs",
+          "markers": ["if target.exists()", "IsolatedConversionWorkspace::create"]
+        },
+        {
+          "path": "src-tauri/src/commands/legacy_binary_office.rs",
+          "markers": ["if target.exists()", "IsolatedConversionWorkspace::create"]
+        },
+        {
+          "path": "src/views/LibraryMode.vue",
+          "markers": ["external-open:system-default", "openFileExternally"]
+        }
+      ]
+    },
+    {
+      "id": "bounded-workbook-write",
+      "formats": ["workbook"],
+      "saveModes": ["bounded-overwrite"],
+      "profiles": ["workbook-bounded"],
+      "sourcePolicy": "signature-protected-bounded-write",
+      "failurePolicy": "reject-stale-or-unsupported-advanced-object",
+      "evidence": [
+        {
+          "path": "src-tauri/src/commands/workbook.rs",
+          "markers": ["payload.expected_signature", "source_unchanged: true", "external_data"]
+        },
+        {
+          "path": "scripts/check-workbook-contract.mjs",
+          "markers": ["expectedSignature", "array"]
+        }
+      ]
+    }
+  ]
+}
