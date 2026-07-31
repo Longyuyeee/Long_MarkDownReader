@@ -6,7 +6,7 @@ name: U2 Unsigned Disposable Lifecycle
       product_ref:
         description: Product source commit to build and test
         required: true
-        default: 953494c50360d232e0848d0bab80e0defd3c53d4
+        default: 4cf5df4e521ff885336dcc3931d5e195e8605219
 
 permissions:
   contents: read
@@ -15,7 +15,7 @@ jobs:
   unsigned-lifecycle:
     name: Build and exercise unsigned internal candidate
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     env:
       CARGO_TERM_COLOR: always

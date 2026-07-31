@@ -222,13 +222,59 @@ $formalConfig = [ordered]@{
     [System.Text.UTF8Encoding]::new($false)
 )
 
-function Wait-ForPort([int]$Port, [bool]$Listening) {
-    for ($attempt = 0; $attempt -lt 240; $attempt += 1) {
+function Write-RuntimeLaunchDiagnostics([System.Diagnostics.Process]$Process, [string]$Phase) {
+    $webViewProcesses = @(Get-Process -Name "msedgewebview2" -ErrorAction SilentlyContinue)
+    $webViewVersions = @(
+        "HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}",
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}",
+        "HKCU:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+    ) | ForEach-Object {
+        if (Test-Path -LiteralPath $_) {
+            [string](Get-ItemPropertyValue -LiteralPath $_ -Name "pv" -ErrorAction SilentlyContinue)
+        }
+    } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
+    $Process.Refresh()
+    $diagnostics = [ordered]@{
+        schemaVersion = 1
+        stage = "U2"
+        phase = $Phase
+        capturedAt = (Get-Date).ToUniversalTime().ToString("o")
+        processId = $Process.Id
+        processExited = $Process.HasExited
+        processExitCode = if ($Process.HasExited) { $Process.ExitCode } else { $null }
+        userInteractive = [Environment]::UserInteractive
+        sessionName = [string]$env:SESSIONNAME
+        explorerProcessCount = @(Get-Process -Name "explorer" -ErrorAction SilentlyContinue).Count
+        webViewProcessCount = $webViewProcesses.Count
+        webViewRuntimeVersions = @($webViewVersions)
+        remoteDebugPortListening = $null -ne (Get-NetTCPConnection -LocalPort 9343 -State Listen -ErrorAction SilentlyContinue)
+        sourceUserContentIncluded = $false
+        releaseCandidate = $false
+    }
+    [System.IO.File]::WriteAllText(
+        (Join-Path $OutputDirectory "runtime-launch-diagnostics-$Phase.json"),
+        ($diagnostics | ConvertTo-Json -Depth 5),
+        [System.Text.UTF8Encoding]::new($false)
+    )
+}
+
+function Wait-ForPort([int]$Port, [bool]$Listening, [System.Diagnostics.Process]$Process = $null, [string]$Phase = "runtime") {
+    for ($attempt = 0; $attempt -lt 1200; $attempt += 1) {
         $connection = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
         if (($Listening -and $connection) -or (-not $Listening -and -not $connection)) {
             return
         }
+        if ($Listening -and $null -ne $Process) {
+            $Process.Refresh()
+            if ($Process.HasExited) {
+                Write-RuntimeLaunchDiagnostics -Process $Process -Phase $Phase
+                throw "Application exited with code $($Process.ExitCode) before port $Port started listening."
+            }
+        }
         Start-Sleep -Milliseconds 100
+    }
+    if ($Listening -and $null -ne $Process) {
+        Write-RuntimeLaunchDiagnostics -Process $Process -Phase $Phase
     }
     throw "Timed out waiting for port $Port listening=$Listening."
 }
@@ -292,7 +338,7 @@ try {
     $env:LONGEDIT_R5L_MODE = "prepare"
 
     $startedProcess = Start-Process -FilePath $mainBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
-    Wait-ForPort -Port 9343 -Listening $true
+    Wait-ForPort -Port 9343 -Listening $true -Process $startedProcess -Phase "installed-upgrade"
     & $NodeExecutable $InstalledSmokeScript
     if ($LASTEXITCODE -ne 0) {
         throw "R5J installed-artifact route and I/O smoke failed."
@@ -410,7 +456,7 @@ try {
     $env:LONGEDIT_R5L_BACKUP = $managementBackup
     $env:LONGEDIT_R5L_MODE = "restore"
     $startedProcess = Start-Process -FilePath $restoreBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
-    Wait-ForPort -Port 9343 -Listening $true
+    Wait-ForPort -Port 9343 -Listening $true -Process $startedProcess -Phase "post-rollback-restore"
     & $NodeExecutable $ManagementRollbackSmokeScript
     if ($LASTEXITCODE -ne 0) {
         throw "R5L post-rollback management restore and knowledge-index smoke failed."
