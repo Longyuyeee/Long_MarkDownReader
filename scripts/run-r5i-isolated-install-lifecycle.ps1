@@ -575,7 +575,7 @@ try {
         signedArtifactRuntimeProven = $signedArtifactRuntimeProven
         signature = $signatureEvidence
         sourceUserContentIncluded = $false
-        checks = @($checks)
+        checks = [object[]]$checks.ToArray()
         installedArtifactSmokeEvidence = "installed-artifact-smoke.json"
         managementRollbackEvidence = "management-backup-index-evidence.json"
     }
