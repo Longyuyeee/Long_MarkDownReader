@@ -96,6 +96,38 @@ function Get-ProgIdOpenCommand([string]$ProgId) {
     return [string](Get-Item -LiteralPath $key).GetValue("")
 }
 
+$webViewPolicyRoot = "HKCU:\Software\Policies\Microsoft\Edge\WebView2"
+$webViewArgumentsPolicy = Join-Path $webViewPolicyRoot "AdditionalBrowserArguments"
+$webViewUserDataPolicy = Join-Path $webViewPolicyRoot "UserDataFolder"
+$webViewHostName = "tauri-app.exe"
+$webViewTestPolicyConfigured = $false
+
+function Enable-WebView2TestPolicy([string]$UserDataRoot) {
+    foreach ($key in @($webViewArgumentsPolicy, $webViewUserDataPolicy)) {
+        if ((Test-Path -LiteralPath $key) -and $null -ne (Get-ItemProperty -LiteralPath $key -Name $webViewHostName -ErrorAction SilentlyContinue)) {
+            throw "Refusing to overwrite an existing WebView2 policy for $webViewHostName."
+        }
+        New-Item -Path $key -Force | Out-Null
+    }
+    New-ItemProperty -LiteralPath $webViewArgumentsPolicy -Name $webViewHostName -PropertyType String `
+        -Value "--remote-debugging-port=9343 --remote-allow-origins=*" -Force | Out-Null
+    New-ItemProperty -LiteralPath $webViewUserDataPolicy -Name $webViewHostName -PropertyType String `
+        -Value $UserDataRoot -Force | Out-Null
+    $script:webViewTestPolicyConfigured = $true
+}
+
+function Disable-WebView2TestPolicy {
+    if (-not $script:webViewTestPolicyConfigured) {
+        return
+    }
+    Remove-ItemProperty -LiteralPath $webViewArgumentsPolicy -Name $webViewHostName -ErrorAction SilentlyContinue
+    Remove-ItemProperty -LiteralPath $webViewUserDataPolicy -Name $webViewHostName -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $webViewArgumentsPolicy -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $webViewUserDataPolicy -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $webViewPolicyRoot -ErrorAction SilentlyContinue
+    $script:webViewTestPolicyConfigured = $false
+}
+
 function Invoke-RegisteredUninstall($Registration) {
     $uninstallCommand = [string]$Registration.UninstallString
     $uninstaller = $uninstallCommand.Trim().Trim('"')
@@ -337,6 +369,7 @@ try {
     $env:LONGEDIT_R5L_BACKUP = $managementBackup
     $env:LONGEDIT_R5L_MODE = "prepare"
 
+    Enable-WebView2TestPolicy -UserDataRoot $webviewRoot
     $startedProcess = Start-Process -FilePath $mainBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
     Wait-ForPort -Port 9343 -Listening $true -Process $startedProcess -Phase "installed-upgrade"
     & $NodeExecutable $InstalledSmokeScript
@@ -513,4 +546,5 @@ finally {
     if ($startedProcess -and -not $startedProcess.HasExited) {
         Stop-Process -Id $startedProcess.Id -Force -ErrorAction SilentlyContinue
     }
+    Disable-WebView2TestPolicy
 }

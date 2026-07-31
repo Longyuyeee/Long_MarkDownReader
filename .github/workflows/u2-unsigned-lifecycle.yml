@@ -7,9 +7,14 @@ name: U2 Unsigned Disposable Lifecycle
         description: Product source commit to build and test
         required: true
         default: 4cf5df4e521ff885336dcc3931d5e195e8605219
+      artifact_run_id:
+        description: Optional prior U2 run whose already-built installers should be reused
+        required: false
+        default: ""
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   unsigned-lifecycle:
@@ -47,20 +52,47 @@ jobs:
           node-version: 22
 
       - name: Install current locked dependencies
+        if: ${{ inputs.artifact_run_id == '' }}
         working-directory: current-product
         run: npm ci
 
       - name: Build current unsigned NSIS candidate
+        if: ${{ inputs.artifact_run_id == '' }}
         working-directory: current-product
         run: npm run tauri -- build --bundles nsis
 
       - name: Install rollback locked dependencies
+        if: ${{ inputs.artifact_run_id == '' }}
         working-directory: previous-product
         run: npm ci
 
       - name: Build v0.6.2 rollback NSIS candidate
+        if: ${{ inputs.artifact_run_id == '' }}
         working-directory: previous-product
         run: npm run tauri -- build --bundles nsis
+
+      - name: Download prior verified U2 installers
+        if: ${{ inputs.artifact_run_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: u2-unsigned-lifecycle-${{ inputs.artifact_run_id }}
+          path: reused-u2-artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.artifact_run_id }}
+
+      - name: Restore prior verified U2 installers
+        if: ${{ inputs.artifact_run_id != '' }}
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          foreach ($product in @("current-product", "previous-product")) {
+            $source = Join-Path $env:GITHUB_WORKSPACE "reused-u2-artifact\$product\src-tauri\target\release\bundle\nsis"
+            $target = Join-Path $env:GITHUB_WORKSPACE "$product\src-tauri\target\release\bundle\nsis"
+            $installers = @(Get-ChildItem -LiteralPath $source -File -Filter "*_x64-setup.exe")
+            if ($installers.Count -ne 1) { throw "Expected one reusable installer for $product." }
+            New-Item -ItemType Directory -Path $target -Force | Out-Null
+            Copy-Item -LiteralPath $installers[0].FullName -Destination $target
+          }
 
       - name: Capture runner build receipt
         shell: powershell
