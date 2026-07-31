@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5J",
+  "appVersion": "0.7.0",
+  "capturedAt": "2026-07-31T21:17:50.229Z",
+  "environment": "Disposable Windows installed current NSIS artifact",
+  "status": "passed",
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "signedArtifactRuntimeProven": false,
+  "sourceUserContentIncluded": false,
+  "installerSha256": "d6ec52af91096158ee117c93342c8767b0f649ebf11a8a47005112171ef2dafb",
+  "installedExecutable": {
+    "fileName": "tauri-app.exe",
+    "sizeBytes": 81318912,
+    "sha256": "0c1a91d9768bef08cba40fce8abf0284c3cac1a052422808bdab2420a0ebf22b"
+  },
+  "checks": [
+    {
+      "id": "installed-current-webview-bootstrap",
+      "status": "passed"
+    },
+    {
+      "id": "installed-txt-read-edit-save-reopen",
+      "status": "passed",
+      "visual": {
+        "foreground": "rgb(23, 26, 31)",
+        "background": "rgb(247, 248, 250)",
+        "contrastRatio": 16.41413914300899,
+        "cumulativeOpacity": 1,
+        "fontSize": "13px",
+        "markerRect": {
+          "x": 266,
+          "y": 334,
+          "width": 96.46875,
+          "height": 17
+        },
+        "editorRect": {
+          "x": 266,
+          "y": 266,
+          "width": 1009,
+          "height": 136
+        },
+        "markerInsideEditor": true,
+        "markerHitTestVisible": true,
+        "hitStack": [
+          {
+            "tag": "DIV",
+            "className": "cm-line cm-activeLine",
+            "text": "R5J_TEXT_SAVED",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-content cm-lineWrapping",
+            "text": "R5J_TEXT_SAVEDinstalled-right-side-workspace=true",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-scroller",
+            "text": "9123›R5J_TEXT_SAVEDinstalled-right-side-workspace=true",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-editor ͼ1 ͼ2 ͼ4 ͼs",
+            "text": "9123›R5J_TEXT_SAVEDinstalled-right-side-workspace=true",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "MAIN",
+            "className": "editor-stage",
+            "text": "9123›R5J_TEXT_SAVEDinstalled-right-side-workspace=true",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "text-workspace",
+            "text": "r5j-notesr5j-notes.txt纯文本  · 已同步 保存读取UTF-8GBKGB18030保存UTF-8GBKGB18030BOM无 BOMUTF",
+            "background": "rgb(247, 248, 250)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "library-embedded-editor",
+            "text": "r5j-notesr5j-notes.txt纯文本  · 已同步 保存读取UTF-8GBKGB18030保存UTF-8GBKGB18030BOM无 BOMUTF",
+            "background": "rgb(247, 248, 250)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "editor-viewport editor-width-medium",
+            "text": "r5j-notesr5j-notes.txt纯文本  · 已同步 保存读取UTF-8GBKGB18030保存UTF-8GBKGB18030BOM无 BOMUTF",
+            "background": "rgb(255, 255, 255)",
+            "pointerEvents": "auto"
+          }
+        ],
+        "editorInstances": [
+          {
+            "text": "9123›R5J_TEXT_SAVEDinstalled-right-side-workspace=true",
+            "rect": {
+              "x": 266,
+              "y": 266,
+              "width": 1009,
+              "height": 136
+            },
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "installed-json-read-edit-save-reopen",
+      "status": "passed",
+      "visual": {
+        "foreground": "rgb(23, 26, 31)",
+        "background": "rgb(247, 248, 250)",
+        "contrastRatio": 16.41413914300899,
+        "cumulativeOpacity": 1,
+        "fontSize": "13px",
+        "markerRect": {
+          "x": 334.90625,
+          "y": 380,
+          "width": 99.46875,
+          "height": 17
+        },
+        "editorRect": {
+          "x": 266,
+          "y": 278,
+          "width": 699,
+          "height": 170
+        },
+        "markerInsideEditor": true,
+        "markerHitTestVisible": true,
+        "hitStack": [
+          {
+            "tag": "SPAN",
+            "className": "ͼe",
+            "text": "\"R5J_JSON_SAVED\"",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-line",
+            "text": "  \"marker\": \"R5J_JSON_SAVED\",",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-content cm-lineWrapping",
+            "text": "{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-scroller",
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-editor ͼ1 ͼ2 ͼ4 ͼx",
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "editor-host",
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "SECTION",
+            "className": "source-pane",
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "MAIN",
+            "className": "json-main",
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}解析状态语法有效JSON根节点对象节点3属性2",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          }
+        ],
+        "editorInstances": [
+          {
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "rect": {
+              "x": 266,
+              "y": 278,
+              "width": 699,
+              "height": 170
+            },
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "installed-representative-right-side-routes",
+      "status": "passed"
+    },
+    {
+      "id": "installed-route-performance-export",
+      "status": "passed"
+    }
+  ],
+  "evidenceFiles": [
+    "installed-txt-save-reopen.jpg",
+    "installed-json-save-reopen.jpg",
+    "installed-route-mount-evidence.json",
+    "installed-route-performance-evidence.json"
+  ]
+}
