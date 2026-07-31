@@ -15,6 +15,7 @@ if (!library || !output || !installedExecutable || !appVersion || !/^[a-f0-9]{64
 
 const textFile = path.join(library, 'r5j-notes.txt')
 const jsonFile = path.join(library, 'r5j-config.json')
+const embeddedEditorSelector = '.library-embedded-editor .cm-content'
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 const sha256 = async file => crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex')
 const targets = await fetch(`${endpoint}/json`).then(response => response.json())
@@ -80,7 +81,7 @@ const assertNoGlobalFallback = async description => {
 }
 const assertEditorTextVisible = async (marker, description) => {
   const visibility = await evaluate(`(() => {
-    const line = [...document.querySelectorAll('.cm-line')]
+    const line = [...document.querySelectorAll('.library-embedded-editor .cm-line')]
       .find(element => element.textContent?.includes(${JSON.stringify(marker)}))
     const editor = line?.closest('.cm-editor')
     if (!line || !editor) return null
@@ -107,7 +108,6 @@ const assertEditorTextVisible = async (marker, description) => {
       if (style.backgroundColor !== 'rgba(0, 0, 0, 0)' && style.backgroundColor !== 'transparent') {
         background = style.backgroundColor
       }
-      if (element === editor) break
     }
     const foreground = getComputedStyle(line).color
     const components = value => (value.match(/[\\d.]+/g) || []).slice(0, 3).map(Number)
@@ -147,7 +147,7 @@ const assertEditorTextVisible = async (marker, description) => {
 }
 const setEditorText = async text => {
   const point = await evaluate(`(() => {
-    const editor = document.querySelector('.cm-content')
+    const editor = document.querySelector(${JSON.stringify(embeddedEditorSelector)})
     if (!editor) return null
     const rect = editor.getBoundingClientRect()
     return { x: rect.left + Math.min(24, rect.width / 2), y: rect.top + Math.min(24, rect.height / 2) }
@@ -157,7 +157,7 @@ const setEditorText = async text => {
   await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: point.x, y: point.y, button: 'left', clickCount: 1 })
   await waitFor(
     `(() => {
-      const editor = document.querySelector('.cm-content')
+      const editor = document.querySelector(${JSON.stringify(embeddedEditorSelector)})
       editor?.focus()
       return document.activeElement === editor
         || editor?.closest('.cm-editor')?.classList.contains('cm-focused') === true
@@ -172,7 +172,7 @@ const setEditorText = async text => {
   await send('Input.insertText', { text })
   const marker = text.includes('R5J_TEXT_SAVED') ? 'R5J_TEXT_SAVED' : 'R5J_JSON_SAVED'
   await waitFor(
-    `document.querySelector('.cm-content')?.innerText?.includes(${JSON.stringify(marker)}) === true`,
+    `document.querySelector(${JSON.stringify(embeddedEditorSelector)})?.innerText?.includes(${JSON.stringify(marker)}) === true`,
     'CodeMirror document replacement',
   )
 }
@@ -201,14 +201,14 @@ const checks = [{ id: 'installed-current-webview-bootstrap', status: 'passed' }]
 
 const textRoute = `#/library?path=${encodeURIComponent(textFile)}`
 await navigate(textRoute, '.library-embedded-editor .text-workspace', 'installed embedded TXT editor')
-await waitFor(`document.querySelector('.cm-content')?.textContent?.includes('R5J_TEXT_INITIAL') === true`, 'initial TXT content')
+await waitFor(`document.querySelector(${JSON.stringify(embeddedEditorSelector)})?.textContent?.includes('R5J_TEXT_INITIAL') === true`, 'initial TXT content')
 const savedText = 'R5J_TEXT_SAVED\ninstalled-right-side-workspace=true'
 await setEditorText(savedText)
 await saveShortcut()
 await waitForFile(textFile, 'R5J_TEXT_SAVED', 'installed TXT disk save')
 await navigate('#/workspace', '.workspace-home', 'workspace between installed TXT reopen')
 await navigate(textRoute, '.library-embedded-editor .text-workspace', 'reopened installed TXT editor')
-await waitFor(`document.querySelector('.cm-content')?.textContent?.includes('R5J_TEXT_SAVED') === true`, 'reopened installed TXT content')
+await waitFor(`document.querySelector(${JSON.stringify(embeddedEditorSelector)})?.textContent?.includes('R5J_TEXT_SAVED') === true`, 'reopened installed TXT content')
 await assertNoGlobalFallback('reopened installed TXT editor')
 const textVisual = await assertEditorTextVisible('R5J_TEXT_SAVED', 'reopened installed TXT editor')
 await capture('installed-txt-save-reopen.jpg')
@@ -216,14 +216,14 @@ checks.push({ id: 'installed-txt-read-edit-save-reopen', status: 'passed', visua
 
 const jsonRoute = `#/library?path=${encodeURIComponent(jsonFile)}`
 await navigate(jsonRoute, '.library-embedded-editor .json-workspace', 'installed embedded JSON editor')
-await waitFor(`document.querySelector('.cm-content')?.textContent?.includes('R5J_JSON_INITIAL') === true`, 'initial JSON content')
+await waitFor(`document.querySelector(${JSON.stringify(embeddedEditorSelector)})?.textContent?.includes('R5J_JSON_INITIAL') === true`, 'initial JSON content')
 const savedJson = '{\n  "marker": "R5J_JSON_SAVED",\n  "installed": true\n}'
 await setEditorText(savedJson)
 await saveShortcut()
 await waitForFile(jsonFile, 'R5J_JSON_SAVED', 'installed JSON disk save')
 await navigate('#/workspace', '.workspace-home', 'workspace between installed JSON reopen')
 await navigate(jsonRoute, '.library-embedded-editor .json-workspace', 'reopened installed JSON editor')
-await waitFor(`document.querySelector('.cm-content')?.textContent?.includes('R5J_JSON_SAVED') === true`, 'reopened installed JSON content')
+await waitFor(`document.querySelector(${JSON.stringify(embeddedEditorSelector)})?.textContent?.includes('R5J_JSON_SAVED') === true`, 'reopened installed JSON content')
 await assertNoGlobalFallback('reopened installed JSON editor')
 const jsonVisual = await assertEditorTextVisible('R5J_JSON_SAVED', 'reopened installed JSON editor')
 await capture('installed-json-save-reopen.jpg')
