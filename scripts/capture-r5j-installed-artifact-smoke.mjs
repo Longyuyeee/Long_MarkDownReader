@@ -125,6 +125,23 @@ const assertEditorTextVisible = async (marker, description) => {
     const centerX = markerRect.left + markerRect.width / 2
     const centerY = markerRect.top + markerRect.height / 2
     const hit = document.elementFromPoint(centerX, centerY)
+    const hitStack = document.elementsFromPoint(centerX, centerY).slice(0, 8).map(element => ({
+      tag: element.tagName,
+      className: typeof element.className === 'string' ? element.className : '',
+      text: element.textContent?.slice(0, 80) || '',
+      background: getComputedStyle(element).backgroundColor,
+      pointerEvents: getComputedStyle(element).pointerEvents,
+    }))
+    const editorInstances = [...document.querySelectorAll('.library-embedded-editor .cm-editor')].map(element => {
+      const rect = element.getBoundingClientRect()
+      return {
+        text: element.textContent?.slice(0, 120) || '',
+        rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+        display: getComputedStyle(element).display,
+        visibility: getComputedStyle(element).visibility,
+        opacity: getComputedStyle(element).opacity,
+      }
+    })
     return {
       foreground,
       background,
@@ -136,6 +153,8 @@ const assertEditorTextVisible = async (marker, description) => {
       markerInsideEditor: markerRect.left >= editorRect.left && markerRect.right <= editorRect.right
         && markerRect.top >= editorRect.top && markerRect.bottom <= editorRect.bottom,
       markerHitTestVisible: Boolean(hit && (line === hit || line.contains(hit))),
+      hitStack,
+      editorInstances,
     }
   })()`)
   if (!visibility || visibility.cumulativeOpacity < 0.9 || visibility.contrastRatio < 3 ||
