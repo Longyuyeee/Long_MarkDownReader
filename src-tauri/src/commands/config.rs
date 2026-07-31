@@ -2,13 +2,14 @@ use crate::services::credentials::{delete_ai_secret, read_ai_secret, store_ai_se
 use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Component, Path, PathBuf};
 use tauri::Manager;
 
 const MAX_SAVED_SEARCHES: usize = 64;
 const MAX_SAVED_SEARCH_NAME_CHARS: usize = 80;
 const MAX_SAVED_SEARCH_QUERY_CHARS: usize = 500;
 const MAX_SAVED_SEARCH_FORMATS: usize = 8;
+const GRAPH_COLLECTION_QUERY: &str = "__longedit_graph_collection__";
 
 fn default_git_branch() -> String {
     "main".into()
@@ -36,6 +37,10 @@ pub struct SavedSearchConfig {
     pub library_path: String,
     #[serde(default)]
     pub object_types: Vec<String>,
+    #[serde(default)]
+    pub graph_root: Option<String>,
+    #[serde(default)]
+    pub graph_depth: Option<usize>,
     pub created_at: u64,
 }
 
@@ -146,10 +151,40 @@ fn validate_saved_searches(
         {
             return Err("保存的搜索名称为空或过长".into());
         }
+        let graph_collection = search.graph_root.is_some() || search.graph_depth.is_some();
         if search.query.trim().is_empty()
             || search.query.chars().count() > MAX_SAVED_SEARCH_QUERY_CHARS
         {
             return Err("保存的搜索查询为空或过长".into());
+        }
+        if graph_collection {
+            if search.query != GRAPH_COLLECTION_QUERY || !search.object_types.is_empty() {
+                return Err("图谱集合查询标记或格式过滤器无效".into());
+            }
+            let graph_root = search.graph_root.as_deref().ok_or("图谱集合缺少中心对象")?;
+            let graph_path = Path::new(graph_root);
+            if graph_root.trim().is_empty()
+                || graph_root.chars().count() > 4096
+                || graph_path.is_absolute()
+                || graph_path.components().any(|component| {
+                    matches!(
+                        component,
+                        Component::ParentDir | Component::RootDir | Component::Prefix(_)
+                    )
+                })
+                || !graph_path
+                    .extension()
+                    .and_then(|value| value.to_str())
+                    .is_some_and(|extension| {
+                        extension.eq_ignore_ascii_case("md")
+                            || extension.eq_ignore_ascii_case("pdf")
+                    })
+            {
+                return Err("图谱集合中心对象必须是知识库内的 Markdown/PDF 相对路径".into());
+            }
+            if !matches!(search.graph_depth, Some(1..=4)) {
+                return Err("图谱集合深度必须在 1 到 4 之间".into());
+            }
         }
         if search.library_path.trim().is_empty() || search.library_path.chars().count() > 4096 {
             return Err("保存的搜索知识库路径为空或过长".into());
@@ -336,6 +371,8 @@ mod tests {
             query: "milestone".into(),
             library_path: "C:\\Knowledge".into(),
             object_types: vec!["markdown".into(), "pdf".into()],
+            graph_root: None,
+            graph_depth: None,
             created_at: 1,
         };
         let libraries = vec![LibraryConfig {
@@ -359,10 +396,29 @@ mod tests {
             query: "query".into(),
             library_path: "C:\\Outside".into(),
             object_types: vec![],
+            graph_root: None,
+            graph_depth: None,
             created_at: 2,
         };
         assert!(validate_saved_searches(std::slice::from_ref(&outside), &libraries).is_err());
         outside.library_path = libraries[0].path.clone();
         assert!(validate_saved_searches(&[outside], &libraries).is_ok());
+
+        let graph_collection = SavedSearchConfig {
+            id: "graph-1".into(),
+            name: "Project graph".into(),
+            query: GRAPH_COLLECTION_QUERY.into(),
+            library_path: libraries[0].path.clone(),
+            object_types: vec![],
+            graph_root: Some("Projects\\Alpha.md".into()),
+            graph_depth: Some(2),
+            created_at: 3,
+        };
+        assert!(
+            validate_saved_searches(std::slice::from_ref(&graph_collection), &libraries).is_ok()
+        );
+        let mut unsafe_graph = graph_collection;
+        unsafe_graph.graph_root = Some("..\\Outside.md".into());
+        assert!(validate_saved_searches(&[unsafe_graph], &libraries).is_err());
     }
 }

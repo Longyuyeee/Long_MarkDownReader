@@ -85,7 +85,11 @@
                     </template>
                   </n-empty>
                 </div>
-                <div v-else-if="searchQuery.trim()" class="knowledge-search-results">
+                <div v-else-if="showKnowledgeResults" class="knowledge-search-results">
+                  <div v-if="activeGraphCollection" class="graph-collection-state">
+                    <span><strong>{{ activeGraphCollection.name }}</strong><small>{{ activeGraphCollection.graphDepth }} 层动态子图</small></span>
+                    <button type="button" title="关闭集合" @click="closeGraphCollection">×</button>
+                  </div>
                   <div v-if="knowledgeSearchRunning" class="knowledge-search-state">正在搜索工作区已索引内容…</div>
                   <div v-else-if="!visibleKnowledgeSearchResults.length" class="knowledge-search-state">没有找到匹配内容</div>
                   <div v-for="(result, index) in visibleKnowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.locatorObjectId || result.annotationId || index}`" class="knowledge-search-result">
@@ -149,7 +153,7 @@
                 <div v-for="search in librarySavedSearches" :key="search.id" class="collection-row">
                   <button class="collection-open" @click="openSavedSearch(search)">
                     <n-icon :component="CollectionIcon" />
-                    <span><strong>{{ search.name }}</strong><small>{{ collectionFilterLabel(search.objectTypes) }}</small></span>
+                    <span><strong>{{ search.name }}</strong><small>{{ collectionFilterLabel(search) }}</small></span>
                   </button>
                   <n-button quaternary circle size="tiny" title="删除智能集合" @click="confirmRemoveSavedSearch(search.id, search.name)">
                     <template #icon><n-icon :component="TrashIcon" /></template>
@@ -551,6 +555,8 @@ import { isTauriRuntime, listen } from '../services/tauriRuntime'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
+import { resolveCollectionPath, sameWorkspacePath } from '../utils/savedCollections'
+import type { GraphData } from '../types/graph'
 import {
   CREATABLE_FILE_FORMATS,
   FILE_FORMATS,
@@ -967,9 +973,11 @@ const searchByTag = (tag: string) => {
   activeSidebarTab.value = 'files'
 }
 const resultFormatLabel = (objectType: string) => findFileFormatById(objectType)?.label || objectType
-const collectionFilterLabel = (objectTypes: string[]) => objectTypes.length
-  ? objectTypes.map(resultFormatLabel).join(' · ')
-  : '全部格式'
+const collectionFilterLabel = (search: SavedSearchConfig) => search.graphRoot
+  ? `${search.graphDepth || 1} 层动态子图`
+  : search.objectTypes.length
+    ? search.objectTypes.map(resultFormatLabel).join(' · ')
+    : '全部格式'
 const saveCurrentSearch = async () => {
   if (!searchQuery.value.trim()) return
   try {
@@ -979,6 +987,11 @@ const saveCurrentSearch = async () => {
   } catch (error) { message.error(`保存搜索失败：${String(error)}`) }
 }
 const openSavedSearch = (search: SavedSearchConfig) => {
+  if (search.graphRoot) {
+    void activateGraphCollection(search)
+    return
+  }
+  activeCollectionId.value = ''
   searchObjectTypes.value = [...search.objectTypes]
   searchQuery.value = search.query
   activeSidebarTab.value = 'files'
@@ -1012,6 +1025,7 @@ const treeInstRef = ref<any>(null)
 const treeData = ref<TreeOption[]>([])
 const searchQuery = ref('')
 const searchObjectTypes = ref<string[]>([])
+const activeCollectionId = ref('')
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
 const knowledgeSearchRunning = ref(false)
 let knowledgeSearchGeneration = 0
@@ -1022,12 +1036,61 @@ const knowledgeIndexStatus = ref<KnowledgeIndexStatus>({
   relationCount: 0, progress: 0, cacheBytes: 0, recoveryAvailable: false,
 })
 const knowledgeIndexBusy = ref(false)
+const activeGraphCollection = computed(() => store.savedSearches.find(search =>
+  search.id === activeCollectionId.value && search.libraryPath === store.libraryPath && search.graphRoot))
+const showKnowledgeResults = computed(() => Boolean(searchQuery.value.trim() || activeGraphCollection.value))
 const searchFormatOptions = FILE_FORMATS
   .filter(format => format.capabilities.index === 'supported')
   .map(format => ({ label: format.label, value: format.id }))
 const visibleKnowledgeSearchResults = computed(() => searchObjectTypes.value.length
   ? knowledgeSearchResults.value.filter(result => searchObjectTypes.value.includes(result.objectType))
   : knowledgeSearchResults.value)
+const closeGraphCollection = () => {
+  ++knowledgeSearchGeneration
+  activeCollectionId.value = ''
+  knowledgeSearchResults.value = []
+  void refreshRelationSummaries()
+}
+const activateGraphCollection = async (search: SavedSearchConfig) => {
+  if (!search.graphRoot || !store.libraryPath) return
+  const centerPath = resolveCollectionPath(store.libraryPath, search.graphRoot)
+  const generation = ++knowledgeSearchGeneration
+  if (searchTimer) clearTimeout(searchTimer)
+  activeCollectionId.value = search.id
+  searchQuery.value = ''
+  searchObjectTypes.value = []
+  knowledgeSearchRunning.value = true
+  activeSidebarTab.value = 'files'
+  try {
+    const graph = await invoke<GraphData>('build_local_graph', {
+      libraryRoot: store.libraryPath,
+      centerPath,
+      depth: search.graphDepth || 1,
+    })
+    if (generation !== knowledgeSearchGeneration || activeCollectionId.value !== search.id) return
+    knowledgeSearchResults.value = graph.nodes.filter(node => !node.parentId).map(node => ({
+      title: node.title,
+      path: node.path,
+      objectType: node.objectType,
+      matchKind: 'related',
+      context: sameWorkspacePath(node.path, centerPath) ? '图谱集合中心对象' : `${search.graphDepth || 1} 层子图关联对象`,
+      page: node.locator?.page || undefined,
+      locatorKind: node.locator?.kind || undefined,
+      locatorObjectId: node.locator?.objectId || undefined,
+      locationLabel: node.locationLabel || undefined,
+      score: sameWorkspacePath(node.path, centerPath) ? 100 : 80,
+      extractionFailed: false,
+    }))
+    await refreshRelationSummaries()
+  } catch (error) {
+    if (generation === knowledgeSearchGeneration) {
+      knowledgeSearchResults.value = []
+      message.error(`打开图谱集合失败：${String(error)}`)
+    }
+  } finally {
+    if (generation === knowledgeSearchGeneration) knowledgeSearchRunning.value = false
+  }
+}
 const relationSummary = (path: string) => relationSummaries.value[path]
 const activeRelationSummary = computed(() => activeTabId.value ? relationSummary(activeTabId.value) : undefined)
 const refreshRelationSummaries = async () => {
@@ -2482,6 +2545,12 @@ watch(() => route.query.path, (path) => {
 }, { immediate: true })
 const applyRouteSearch = () => {
   if (route.query.panel === 'collections') activeSidebarTab.value = 'collections'
+  const collectionId = route.query.collection
+  if (typeof collectionId === 'string' && collectionId) {
+    const collection = store.savedSearches.find(search => search.id === collectionId)
+    if (collection) openSavedSearch(collection)
+    return
+  }
   const query = route.query.search
   if (typeof query !== 'string' || !query.trim()) return
   searchQuery.value = query
@@ -2490,7 +2559,7 @@ const applyRouteSearch = () => {
     : []
   activeSidebarTab.value = 'files'
 }
-watch(() => [route.query.search, route.query.types, route.query.panel], applyRouteSearch)
+watch(() => [route.query.search, route.query.types, route.query.panel, route.query.collection], applyRouteSearch)
 const refreshKnowledgeIndexStatus = async () => {
   if (!store.libraryPath) return
   try {
@@ -2617,15 +2686,18 @@ watch(() => store.libraries, () => { nextTick(() => refreshGitStatus()) }, { dee
 // 搜索防抖
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 watch(searchQuery, (q) => {
-  const generation = ++knowledgeSearchGeneration
   if (searchTimer) clearTimeout(searchTimer)
   if (!q.trim()) {
+    if (activeCollectionId.value) return
+    ++knowledgeSearchGeneration
     knowledgeSearchResults.value = []
     knowledgeSearchRunning.value = false
     void refreshRelationSummaries()
     refreshLibrary()
     return
   }
+  activeCollectionId.value = ''
+  const generation = ++knowledgeSearchGeneration
   knowledgeSearchRunning.value = true
   searchTimer = setTimeout(async () => {
     if (!store.libraryPath) return
@@ -2922,6 +2994,7 @@ watch(activeTabId, (newId, oldId) => {
 .knowledge-search-result { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 6px; width: 100%; padding: 4px 6px 4px 0; border: 1px solid rgba(0,0,0,.07); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: rgba(var(--theme-primary-rgb),.035); }
 .knowledge-search-result:hover { border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }
 .knowledge-result-open { min-width: 0; display: flex; flex-direction: column; gap: 5px; padding: 5px 4px 5px 10px; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; }
+.graph-collection-state { min-height: 42px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 10px; border-bottom: var(--theme-border); background: rgba(var(--theme-primary-rgb),.055); }.graph-collection-state>span { min-width: 0; display: grid; gap: 2px; }.graph-collection-state strong,.graph-collection-state small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.graph-collection-state strong { font-size: 10px; }.graph-collection-state small { color: var(--theme-text-secondary); font-size: 8px; }.graph-collection-state button { width: 26px; height: 26px; border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 16px; }
 .knowledge-result-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.knowledge-result-head strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }.knowledge-result-head i { flex: none; color: var(--theme-primary); font-size: 8px; font-style: normal; font-weight: 700; }
 .knowledge-result-context { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: 9px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.knowledge-search-result small { color: var(--theme-primary); font-size: 8px; }
 .knowledge-index-strip { min-height: 30px; display: grid; grid-template-columns:16px minmax(0,auto) minmax(0,1fr) auto; align-items:center; gap:6px; padding:0 8px 0 12px; border-bottom:var(--theme-border); color:var(--theme-text-secondary); background:var(--theme-surface); font-size:9px; }

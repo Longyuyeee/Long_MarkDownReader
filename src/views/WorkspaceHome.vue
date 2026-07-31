@@ -110,9 +110,9 @@
         <section class="workspace-section collection-section">
           <div class="section-heading"><div><span class="section-kicker">SMART VIEWS</span><h2>智能集合</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode', query: { panel: 'collections' } })">管理集合</button></div>
           <div v-if="savedSearches.length" class="collection-list">
-            <button v-for="search in savedSearches" :key="search.id" @click="openSavedSearch(search.query, search.objectTypes)">
+            <button v-for="search in savedSearches" :key="search.id" @click="openSavedSearch(search)">
               <CollectionIcon />
-              <span><strong>{{ search.name }}</strong><small>{{ search.objectTypes.length ? search.objectTypes.map(formatLabel).join(' · ') : '全部格式' }}</small></span>
+              <span><strong>{{ search.name }}</strong><small>{{ search.graphRoot ? `${search.graphDepth || 1} 层动态子图` : search.objectTypes.length ? search.objectTypes.map(formatLabel).join(' · ') : '全部格式' }}</small></span>
               <ArrowIcon />
             </button>
           </div>
@@ -145,7 +145,7 @@ import {
   ListFilter as CollectionIcon, RefreshCw as RefreshIcon, Settings as SettingsIcon,
   Star as StarIcon, Workflow as DiagramIcon,
 } from 'lucide-vue-next'
-import { useAppStore } from '../store/app'
+import { useAppStore, type SavedSearchConfig } from '../store/app'
 import { fileDisplayName, findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
 import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceHealthReport } from '../components/WorkspaceHealthQueue.vue'
@@ -210,9 +210,11 @@ const openFirstCanvas = () => {
   const firstCanvas = canvasItems.value[0]
   if (firstCanvas) openPath(firstCanvas.path)
 }
-const openSavedSearch = (query: string, objectTypes: string[]) => router.push({
+const openSavedSearch = (search: SavedSearchConfig) => router.push({
   name: 'LibraryMode',
-  query: { search: query, ...(objectTypes.length ? { types: objectTypes.join(',') } : {}) },
+  query: search.graphRoot
+    ? { collection: search.id }
+    : { search: search.query, ...(search.objectTypes.length ? { types: search.objectTypes.join(',') } : {}) },
 })
 const relationSummary = (path: string) => relationSummaries.value[path]
 const openRelationGraph = (path: string) => {

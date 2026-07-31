@@ -5,6 +5,8 @@
 
 > 2026-07-31 C1A 已完成：R5N 外部签名环境仍阻断时，知识图谱产品化继续向管理行动推进。现有关系新增/删除、来源证据和健康治理保持不变；图谱节点现在可按 1～4 层局部关系生成新的 Markdown 项目笔记，记录中心来源、关联资料、目标和任务，并自动进入现有搜索与首页待办。生成文件与中心对象同目录、同名递增且不覆盖，最多写入 100 个关联对象。下一本机阶段为 C1B 子图智能集合；P0 仍是 R5N 已签名 Windows 10/11 外部发布执行。详见 [`C1A_Graph_Project_Note_Audit_2026-07-31.md`](./C1A_Graph_Project_Note_Audit_2026-07-31.md)。
 
+> 2026-07-31 C1B 已完成：Markdown/PDF 图谱中心可按 1～4 层保存为动态智能集合；集合使用知识库相对根路径，每次打开实时重建文件级子图，并已接入首页、Library 集合侧栏和文件关系上下文。管理备份可保留并在换机映射后恢复图谱集合。当前没有真实签名证书，R5N 保持 `releaseCandidate=false` 并转为未来外部执行项，不再阻塞本机产品收尾。下一本机阶段为 C1C 关系确认/隐藏/恢复，随后进入 D1 统一体验审计。详见 [`C1B_Dynamic_Graph_Collections_Audit_2026-07-31.md`](./C1B_Dynamic_Graph_Collections_Audit_2026-07-31.md)。
+
 > 2026-07-30 权威入口：R1 统一发布能力矩阵与 R2 Windows 安装生命周期已完成。当前 MSI/NSIS 身份、Markdown 关联白名单、系统默认应用选择、旧标识迁移和卸载数据边界均有机器契约与真实桌面证据；实现提交 `032ec11` 的 [GitHub Quality Gate](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30533681730) 已完整通过。`releaseCandidate=false`，下一代码阶段为 R3 索引恢复、备份导入导出与隐私净化诊断包；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁。证据见 [`R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md`](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。
 
 > 2026-07-30 R3A 已完成：知识索引状态新增 `recoveryAvailable` 和 `staleSourceCount`；损坏 `snapshot.json` 可在原缓存目录隔离为 `snapshot.corrupt.<timestamp>.json`，随后用户可显式重建索引。该步骤不读取、不导出、不打包知识库正文。当前距离“全格式支持和收口”还剩 R3B 备份导出、R3C 备份导入恢复、R3D 隐私诊断包、R4 正式签名/Windows VM 发布矩阵，以及外部证据门禁 E1B WPS ODT 3/3 和 X3-B6 数组生产者 3/3。下一代码阶段为 R3B，详见 [`R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md`](./R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md)。

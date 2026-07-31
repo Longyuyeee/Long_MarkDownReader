@@ -94,6 +94,8 @@ import { useRouter } from 'vue-router'
 import { ArrowRight as ArrowRightIcon, Minus as MinusIcon, Network as NetworkIcon, RefreshCw as RefreshIcon } from 'lucide-vue-next'
 import { useAppStore, type SavedSearchConfig } from '../store/app'
 import { clearRelationContextCache, getRelationContextCache, setRelationContextCache } from '../services/relationContextCache'
+import { resolveCollectionPath } from '../utils/savedCollections'
+import type { GraphData } from '../types/graph'
 
 interface GraphObjectLocator { kind: string; objectId: string; page?: number }
 interface GraphContextNode {
@@ -182,6 +184,16 @@ const loadCollectionMemberships = async (force = false) => {
   }
   const memberships = (await Promise.all(saved.map(async collection => {
     try {
+      if (collection.graphRoot) {
+        const graph = await invoke<GraphData>('build_local_graph', {
+          libraryRoot,
+          centerPath: resolveCollectionPath(libraryRoot, collection.graphRoot),
+          depth: collection.graphDepth || 1,
+        })
+        return graph.nodes.some(node => !node.parentId && samePath(node.path, filePath))
+          ? collection
+          : undefined
+      }
       const results = await invoke<KnowledgeSearchResult[]>('search_knowledge', {
         libraryRoot,
         query: collection.query,
@@ -264,10 +276,12 @@ const openCenteredGraph = () => {
 }
 const openCollection = (collection: SavedSearchConfig) => router.push({
   name: 'LibraryMode',
-  query: {
-    search: collection.query,
-    types: collection.objectTypes.length ? collection.objectTypes.join(',') : undefined,
-  },
+  query: collection.graphRoot
+    ? { collection: collection.id }
+    : {
+        search: collection.query,
+        types: collection.objectTypes.length ? collection.objectTypes.join(',') : undefined,
+      },
 })
 let relationNavigationSequence = 0
 const openNode = (node: GraphContextNode) => {

@@ -9,6 +9,7 @@ import {
   type ThemeName,
   type VisualStyle,
 } from '../config/themePresets'
+import { toCollectionRelativePath } from '../utils/savedCollections'
 
 export type SessionMode = 'TEMP' | 'LIBRARY'
 
@@ -53,6 +54,8 @@ export interface SavedSearchConfig {
   query: string
   libraryPath: string
   objectTypes: string[]
+  graphRoot?: string
+  graphDepth?: number
   createdAt: number
 }
 
@@ -64,6 +67,7 @@ export interface RelationObjectFocus {
 }
 
 const TABS_STORAGE_KEY = 'longedit_tabs_state'
+const GRAPH_COLLECTION_QUERY = '__longedit_graph_collection__'
 
 export const useAppStore = defineStore('app', {
   state: () => ({
@@ -230,7 +234,8 @@ export const useAppStore = defineStore('app', {
       const normalizedQuery = query.trim()
       if (!normalizedQuery || !this.activeLibraryPath) throw new Error('搜索查询或知识库为空')
       const normalizedTypes = [...new Set(objectTypes)].sort()
-      const duplicate = this.savedSearches.find(search => search.libraryPath === this.activeLibraryPath
+      const duplicate = this.savedSearches.find(search => !search.graphRoot
+        && search.libraryPath === this.activeLibraryPath
         && search.query.toLowerCase() === normalizedQuery.toLowerCase()
         && [...search.objectTypes].sort().join('|') === normalizedTypes.join('|'))
       if (duplicate) return duplicate
@@ -241,6 +246,32 @@ export const useAppStore = defineStore('app', {
         query: normalizedQuery.slice(0, 500),
         libraryPath: this.activeLibraryPath,
         objectTypes: normalizedTypes.slice(0, 8),
+        graphRoot: undefined,
+        graphDepth: undefined,
+        createdAt: Date.now(),
+      }
+      const previous = this.savedSearches
+      try { await this.updateConfig({ savedSearches: [savedSearch, ...previous] }) }
+      catch (error) { this.savedSearches = previous; throw error }
+      return savedSearch
+    },
+    async addGraphCollection(name: string, centerPath: string, depth: number) {
+      if (!this.activeLibraryPath) throw new Error('知识库为空')
+      const graphRoot = toCollectionRelativePath(this.activeLibraryPath, centerPath)
+      const graphDepth = Math.min(4, Math.max(1, Math.trunc(depth)))
+      const duplicate = this.savedSearches.find(search => search.libraryPath === this.activeLibraryPath
+        && search.graphRoot?.toLowerCase() === graphRoot.toLowerCase()
+        && search.graphDepth === graphDepth)
+      if (duplicate) return duplicate
+      if (this.savedSearches.length >= 64) throw new Error('保存的搜索不能超过 64 个')
+      const savedSearch: SavedSearchConfig = {
+        id: `graph-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: name.trim().slice(0, 80) || '图谱集合',
+        query: GRAPH_COLLECTION_QUERY,
+        libraryPath: this.activeLibraryPath,
+        objectTypes: [],
+        graphRoot,
+        graphDepth,
         createdAt: Date.now(),
       }
       const previous = this.savedSearches

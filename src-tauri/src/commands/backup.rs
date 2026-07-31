@@ -145,6 +145,10 @@ struct RedactedSavedSearchConfig {
     query: String,
     library_fingerprint: String,
     object_types: Vec<String>,
+    #[serde(default)]
+    graph_root: Option<String>,
+    #[serde(default)]
+    graph_depth: Option<usize>,
     created_at: u64,
 }
 
@@ -200,6 +204,8 @@ fn redacted_saved_search(search: &SavedSearchConfig) -> RedactedSavedSearchConfi
         query: search.query.clone(),
         library_fingerprint: fingerprint(&search.library_path),
         object_types: search.object_types.clone(),
+        graph_root: search.graph_root.clone(),
+        graph_depth: search.graph_depth,
         created_at: search.created_at,
     }
 }
@@ -552,6 +558,8 @@ fn restored_config_from_redacted(
             query: search.query.clone(),
             library_path,
             object_types: search.object_types.clone(),
+            graph_root: search.graph_root.clone(),
+            graph_depth: search.graph_depth,
             created_at: search.created_at,
         });
     }
@@ -710,9 +718,11 @@ mod tests {
             saved_searches: vec![SavedSearchConfig {
                 id: "search-1".into(),
                 name: "Todo".into(),
-                query: "project".into(),
+                query: "__longedit_graph_collection__".into(),
                 library_path: "C:\\Users\\Alice\\Documents\\Vault".into(),
-                object_types: vec!["markdown".into()],
+                object_types: vec![],
+                graph_root: Some("Projects\\Alpha.md".into()),
+                graph_depth: Some(2),
                 created_at: 1,
             }],
             ..Default::default()
@@ -732,6 +742,7 @@ mod tests {
         assert!(!all_text.contains("token@example.com"));
         assert!(all_text.contains("pathFingerprint"));
         assert!(all_text.contains("gitRemoteFingerprint"));
+        assert!(all_text.contains("Projects\\\\Alpha.md"));
         assert!(all_text.contains("document-body"));
     }
 
@@ -770,9 +781,11 @@ mod tests {
             saved_searches: vec![SavedSearchConfig {
                 id: "search-1".into(),
                 name: "Todo".into(),
-                query: "project".into(),
+                query: "__longedit_graph_collection__".into(),
                 library_path: "C:\\Users\\Alice\\Documents\\Vault".into(),
                 object_types: vec![],
+                graph_root: Some("Projects\\Alpha.md".into()),
+                graph_depth: Some(2),
                 created_at: 1,
             }],
             ..Default::default()
@@ -793,6 +806,11 @@ mod tests {
             restored.saved_searches[0].library_path,
             "D:\\Knowledge\\Vault"
         );
+        assert_eq!(
+            restored.saved_searches[0].graph_root.as_deref(),
+            Some("Projects\\Alpha.md")
+        );
+        assert_eq!(restored.saved_searches[0].graph_depth, Some(2));
         let serialized = serde_json::to_string(&restored).unwrap();
         assert!(!serialized.contains("C:\\Users\\Alice"));
     }
