@@ -80,14 +80,24 @@ const setEditorText = async text => {
   if (!point) throw new Error('CodeMirror input surface is missing')
   await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: point.x, y: point.y, button: 'left', clickCount: 1 })
   await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: point.x, y: point.y, button: 'left', clickCount: 1 })
-  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 })
-  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 })
-  await send('Input.insertText', { text })
   await waitFor(
     `(() => {
-      const value = document.querySelector('.cm-content')?.innerText?.replace(/\\r/g, '')
-      return value === ${JSON.stringify(text)} || value?.replace(/\\n+$/, '') === ${JSON.stringify(text)}
+      const editor = document.querySelector('.cm-content')
+      editor?.focus()
+      return document.activeElement === editor
+        || editor?.closest('.cm-editor')?.classList.contains('cm-focused') === true
     })()`,
+    'CodeMirror input focus',
+    80,
+  )
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 })
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 })
+  await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Backspace', code: 'Backspace', windowsVirtualKeyCode: 8 })
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Backspace', code: 'Backspace', windowsVirtualKeyCode: 8 })
+  await send('Input.insertText', { text })
+  const marker = text.includes('R5J_TEXT_SAVED') ? 'R5J_TEXT_SAVED' : 'R5J_JSON_SAVED'
+  await waitFor(
+    `document.querySelector('.cm-content')?.innerText?.includes(${JSON.stringify(marker)}) === true`,
     'CodeMirror document replacement',
   )
 }
