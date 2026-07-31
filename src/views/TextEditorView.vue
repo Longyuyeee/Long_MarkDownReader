@@ -388,7 +388,8 @@ const editorExtensions = (isReadOnly: boolean) => [
       fontFamily: '"Fira Code", "Cascadia Code", Consolas, monospace',
       lineHeight: '1.65',
     },
-    '.cm-content': { padding: '14px 0 48px' },
+    '.cm-content': { padding: '14px 0 48px', color: 'var(--theme-text)' },
+    '.cm-line': { color: 'var(--theme-text)' },
     '.cm-gutters': {
       color: 'var(--theme-text-secondary)',
       backgroundColor: 'var(--theme-surface-2)',

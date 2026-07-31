@@ -78,6 +78,21 @@ const assertNoGlobalFallback = async description => {
   })()`)
   if (fallback) throw new Error(`${description} showed the global crash fallback: ${fallback}`)
 }
+const assertEditorTextVisible = async (marker, description) => {
+  const visibility = await evaluate(`(() => {
+    const line = [...document.querySelectorAll('.cm-line')]
+      .find(element => element.textContent?.includes(${JSON.stringify(marker)}))
+    const editor = line?.closest('.cm-editor')
+    if (!line || !editor) return null
+    const foreground = getComputedStyle(line).color
+    const background = getComputedStyle(editor).backgroundColor
+    return { foreground, background, opacity: getComputedStyle(line).opacity }
+  })()`)
+  if (!visibility || visibility.opacity === '0' || visibility.foreground === visibility.background ||
+      visibility.foreground === 'rgba(0, 0, 0, 0)' || visibility.foreground === 'transparent') {
+    throw new Error(`${description} text is not visibly rendered: ${JSON.stringify(visibility)}`)
+  }
+}
 const setEditorText = async text => {
   const point = await evaluate(`(() => {
     const editor = document.querySelector('.cm-content')
@@ -143,6 +158,7 @@ await navigate('#/workspace', '.workspace-home', 'workspace between installed TX
 await navigate(textRoute, '.library-embedded-editor .text-workspace', 'reopened installed TXT editor')
 await waitFor(`document.querySelector('.cm-content')?.textContent?.includes('R5J_TEXT_SAVED') === true`, 'reopened installed TXT content')
 await assertNoGlobalFallback('reopened installed TXT editor')
+await assertEditorTextVisible('R5J_TEXT_SAVED', 'reopened installed TXT editor')
 await capture('installed-txt-save-reopen.jpg')
 checks.push({ id: 'installed-txt-read-edit-save-reopen', status: 'passed' })
 
@@ -157,6 +173,7 @@ await navigate('#/workspace', '.workspace-home', 'workspace between installed JS
 await navigate(jsonRoute, '.library-embedded-editor .json-workspace', 'reopened installed JSON editor')
 await waitFor(`document.querySelector('.cm-content')?.textContent?.includes('R5J_JSON_SAVED') === true`, 'reopened installed JSON content')
 await assertNoGlobalFallback('reopened installed JSON editor')
+await assertEditorTextVisible('R5J_JSON_SAVED', 'reopened installed JSON editor')
 await capture('installed-json-save-reopen.jpg')
 checks.push({ id: 'installed-json-read-edit-save-reopen', status: 'passed' })
 
