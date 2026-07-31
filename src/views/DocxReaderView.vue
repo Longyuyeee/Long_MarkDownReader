@@ -32,6 +32,7 @@
           type="button"
           :disabled="!editableTargetCount"
           :class="{ active: editorOpen }"
+          :aria-pressed="editorOpen"
           title="基础编辑并另存副本"
           @click="editorOpen = !editorOpen"
         >

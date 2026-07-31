@@ -25,7 +25,7 @@
         <button type="button" :disabled="!matches.length" title="下一个结果" @click="moveSearch(1)">
           <ChevronDownIcon :size="16" />
         </button>
-        <button type="button" :disabled="!report" title="放映" @click="presenting = true">
+        <button ref="presentButtonRef" type="button" :disabled="!report" title="放映" @click="presenting = true">
           <PlayIcon :size="16" />
           <span>放映</span>
         </button>
@@ -39,7 +39,7 @@
           <LockKeyholeIcon :size="16" :class="{ spin: baselineLoading }" />
           <span>{{ baselineLoading ? '验证中' : '编辑准备' }}</span>
         </button>
-        <button type="button" :class="{ active: showDetails }" title="备注与兼容画像" @click="showDetails = !showDetails">
+        <button type="button" :class="{ active: showDetails }" :aria-pressed="showDetails" title="备注与兼容画像" @click="showDetails = !showDetails">
           <PanelRightIcon :size="16" />
         </button>
         <button type="button" :disabled="loading" title="重新读取" @click="loadPresentation">
@@ -632,7 +632,20 @@
     </footer>
 
     <Teleport to="body">
-      <div v-if="presenting && activeSlide" class="presenter" role="dialog" aria-modal="true" @keydown.left="previousSlide" @keydown.right="nextSlide">
+      <div
+        v-if="presenting && activeSlide"
+        ref="presenterRef"
+        class="presenter"
+        role="dialog"
+        aria-modal="true"
+        aria-label="演示文稿放映"
+        tabindex="-1"
+        @keydown.esc.stop="presenting = false"
+        @keydown.left.stop="previousSlide"
+        @keydown.right.stop="nextSlide"
+        @keydown.space.prevent.stop="nextSlide"
+        @keydown.tab.prevent.stop="trapPresenterFocus"
+      >
         <button type="button" title="退出放映" @click="presenting = false">
           <XIcon :size="20" />
         </button>
@@ -1086,6 +1099,8 @@ const searchQuery = ref('')
 const activeMatch = ref(0)
 const showDetails = ref(true)
 const presenting = ref(false)
+const presentButtonRef = ref<HTMLButtonElement>()
+const presenterRef = ref<HTMLElement>()
 const baselineLoading = ref(false)
 const baselineError = ref('')
 const editBaseline = ref<PptxEditBaselineReport>()
@@ -2098,6 +2113,15 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'ArrowLeft') previousSlide()
   if (event.key === 'ArrowRight' || event.key === ' ') nextSlide()
 }
+const trapPresenterFocus = (event: KeyboardEvent) => {
+  const controls = Array.from(presenterRef.value?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') || [])
+  if (!controls.length) return
+  const current = controls.indexOf(document.activeElement as HTMLButtonElement)
+  const next = event.shiftKey
+    ? (current <= 0 ? controls.length - 1 : current - 1)
+    : (current < 0 || current === controls.length - 1 ? 0 : current + 1)
+  controls[next]?.focus()
+}
 
 watch(selectedEditTargetId, () => {
   replacementText.value = selectedEditTarget.value?.text || ''
@@ -2179,10 +2203,9 @@ watch(
   applyRouteLocator,
 )
 watch(presenting, async value => {
-  if (value) {
-    await nextTick()
-    document.querySelector<HTMLElement>('.presenter')?.focus()
-  }
+  await nextTick()
+  if (value) presenterRef.value?.focus()
+  else presentButtonRef.value?.focus()
 })
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)

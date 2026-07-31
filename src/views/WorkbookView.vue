@@ -11,7 +11,7 @@
         <button class="icon-button" title="复制区域" :disabled="!selectedCell || saving" @click="copySelection"><n-icon :component="CopyIcon" /></button>
         <button class="icon-button" title="粘贴区域" :disabled="!selectedCell || saving || sheetProtected" @click="pasteSelection"><n-icon :component="PasteIcon" /></button>
         <button :title="sheetInfo?.arrayFormulas.length ? '当前工作表包含只读数组公式，暂不开放本地重算' : '重算当前已加载公式'" :disabled="calculating || saving || !activeSheet || Boolean(sheetInfo?.arrayFormulas.length)" @click="recalculateFormulas"><n-icon :component="CalculatorIcon" />{{ calculating ? '重算中…' : '重算' }}</button>
-        <button :class="{ active: showFormulas }" :disabled="saving" @click="showFormulas = !showFormulas"><n-icon :component="FunctionIcon" />{{ showFormulas ? '结果' : '公式' }}</button>
+        <button :class="{ active: showFormulas }" :aria-pressed="showFormulas" :disabled="saving" @click="showFormulas = !showFormulas"><n-icon :component="FunctionIcon" />{{ showFormulas ? '结果' : '公式' }}</button>
         <button class="icon-button" title="重新读取" :disabled="saving" @click="refreshWorkbook"><n-icon :component="RefreshIcon" /></button>
         <button :disabled="importing || saving || !activeSheet" @click="convertSheet"><n-icon :component="TableIcon" />{{ importing ? '转换中…' : '转为 Table' }}</button>
         <button class="primary" :disabled="!dirtyCount || saving" aria-live="polite" @click="saveWorkbook"><n-icon :component="SaveIcon" />{{ saving ? '保存中' : dirtyCount ? `保存 (${dirtyCount})` : '已保存' }}</button>

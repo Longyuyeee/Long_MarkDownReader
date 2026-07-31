@@ -19,12 +19,13 @@
         </div>
       </div>
       <n-button-group size="small" class="view-switch" aria-label="JSON 视图">
-        <n-button :type="viewMode === 'source' ? 'primary' : 'default'" @click="viewMode = 'source'">
+        <n-button :type="viewMode === 'source' ? 'primary' : 'default'" :aria-pressed="viewMode === 'source'" @click="viewMode = 'source'">
           <template #icon><n-icon :component="SourceIcon" /></template>
           源码
         </n-button>
         <n-button
           :type="viewMode === 'tree' ? 'primary' : 'default'"
+          :aria-pressed="viewMode === 'tree'"
           :disabled="!analysis?.valid"
           @click="viewMode = 'tree'"
         >

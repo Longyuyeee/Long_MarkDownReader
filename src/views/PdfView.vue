@@ -3,13 +3,13 @@
     <header class="pdf-toolbar">
       <div class="toolbar-leading">
         <button class="icon-btn" title="返回知识库" @click="router.push('/library')">←</button>
-        <button class="icon-btn" :class="{ active: sidebarOpen }" title="缩略图与目录" @click="sidebarOpen = !sidebarOpen">☰</button>
+        <button class="icon-btn" :class="{ active: sidebarOpen }" :aria-pressed="sidebarOpen" title="缩略图与目录" @click="sidebarOpen = !sidebarOpen">☰</button>
         <div class="document-title"><strong>{{ fileName }}<i v-if="pdfWorkspaceDirty" class="page-plan-dirty" aria-live="polite">页面草稿</i></strong><span v-if="pdfDocument">{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template></span></div>
       </div>
       <div v-if="pdfDocument" class="toolbar-center">
-        <button class="icon-btn" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
+        <button class="icon-btn" title="上一页" aria-label="上一页" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
         <label class="page-jump"><input v-model.number="pageInput" type="number" min="1" :max="pdfDocument.numPages" @keydown.enter="commitPageInput" @blur="commitPageInput"/><span>/ {{ pdfDocument.numPages }}</span></label>
-        <button class="icon-btn" :disabled="currentPage >= pdfDocument.numPages" @click="goToPage(currentPage + 1)">›</button>
+        <button class="icon-btn" title="下一页" aria-label="下一页" :disabled="currentPage >= pdfDocument.numPages" @click="goToPage(currentPage + 1)">›</button>
       </div>
       <div v-if="pdfDocument" class="toolbar-actions">
         <div class="pdf-search" :class="{ active: searchQuery }">
@@ -23,22 +23,28 @@
         <button class="icon-btn" title="缩小" @click="changeScale(-0.1)">−</button>
         <button class="scale-label" title="恢复 100%" @click="setScale(1)">{{ Math.round(scale * 100) }}%</button>
         <button class="icon-btn" title="放大" @click="changeScale(0.1)">＋</button>
-        <button class="fit-btn" :class="{ active: fitWidth }" title="适合宽度" @click="toggleFitWidth"><Columns3Icon :size="14"/><span class="action-label">适合宽度</span></button>
-        <button class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" title="离线识别扫描页" @click="openOcrPanel"><ScanTextIcon :size="14"/><span class="action-label">OCR</span></button>
-        <button class="fit-btn" :class="{ active: sidebarTab === 'organize' }" title="非破坏式页面整理预览" @click="openPageOrganizer"><ListOrderedIcon :size="14"/><span class="action-label">页面整理</span></button>
-        <button class="fit-btn" :class="{ active: areaMode }" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
+        <button class="fit-btn" :class="{ active: fitWidth }" :aria-pressed="fitWidth" title="适合宽度" @click="toggleFitWidth"><Columns3Icon :size="14"/><span class="action-label">适合宽度</span></button>
+        <button class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" :aria-pressed="sidebarOpen && sidebarTab === 'ocr'" title="离线识别扫描页" @click="openOcrPanel"><ScanTextIcon :size="14"/><span class="action-label">OCR</span></button>
+        <button class="fit-btn" :class="{ active: sidebarTab === 'organize' }" :aria-pressed="sidebarOpen && sidebarTab === 'organize'" title="非破坏式页面整理预览" @click="openPageOrganizer"><ListOrderedIcon :size="14"/><span class="action-label">页面整理</span></button>
+        <button class="fit-btn" :class="{ active: areaMode }" :aria-pressed="areaMode" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
         <button class="fit-btn" :disabled="!annotationWritable" title="为当前页添加评论" @click="createPageComment"><MessageSquareTextIcon :size="14"/><span class="action-label">页评论</span></button>
       </div>
     </header>
 
     <main class="pdf-workspace">
       <aside v-if="sidebarOpen && pdfDocument" class="pdf-sidebar" :class="{ 'organize-open': sidebarTab === 'organize' }">
-        <div class="sidebar-switch">
-          <button :class="{ active: sidebarTab === 'thumbnails' }" @click="sidebarTab = 'thumbnails'">缩略图</button>
-          <button :class="{ active: sidebarTab === 'outline' }" @click="sidebarTab = 'outline'">目录</button>
-          <button :class="{ active: sidebarTab === 'annotations' }" @click="sidebarTab = 'annotations'">批注 {{ annotations.length || '' }}</button>
-          <button :class="{ active: sidebarTab === 'ocr' }" @click="sidebarTab = 'ocr'">OCR {{ ocrDocument?.pages.length || '' }}</button>
-          <button :class="{ active: sidebarTab === 'organize' }" @click="sidebarTab = 'organize'">页面</button>
+        <div
+          class="sidebar-switch"
+          role="tablist"
+          aria-label="PDF 侧栏"
+          @keydown.left.prevent="moveSidebarTabFocus($event, -1)"
+          @keydown.right.prevent="moveSidebarTabFocus($event, 1)"
+        >
+          <button role="tab" :aria-selected="sidebarTab === 'thumbnails'" :class="{ active: sidebarTab === 'thumbnails' }" @click="sidebarTab = 'thumbnails'">缩略图</button>
+          <button role="tab" :aria-selected="sidebarTab === 'outline'" :class="{ active: sidebarTab === 'outline' }" @click="sidebarTab = 'outline'">目录</button>
+          <button role="tab" :aria-selected="sidebarTab === 'annotations'" :class="{ active: sidebarTab === 'annotations' }" @click="sidebarTab = 'annotations'">批注 {{ annotations.length || '' }}</button>
+          <button role="tab" :aria-selected="sidebarTab === 'ocr'" :class="{ active: sidebarTab === 'ocr' }" @click="sidebarTab = 'ocr'">OCR {{ ocrDocument?.pages.length || '' }}</button>
+          <button role="tab" :aria-selected="sidebarTab === 'organize'" :class="{ active: sidebarTab === 'organize' }" @click="sidebarTab = 'organize'">页面</button>
         </div>
         <div v-if="sidebarTab === 'thumbnails'" class="thumbnail-list">
           <button v-for="page in pdfDocument.numPages" :key="page" :class="['thumbnail-item', { active: page === currentPage }]" @click="goToPage(page)">
@@ -60,7 +66,7 @@
           </button>
           <div v-if="selectedAnnotation" class="annotation-editor">
             <label>评论<textarea v-model="selectedAnnotation.comment" :disabled="!annotationWritable" maxlength="20000" placeholder="为这条批注补充评论…" @change="touchSelectedAnnotation"></textarea></label>
-            <div class="annotation-colors"><button v-for="color in annotationColors" :key="color" :disabled="!annotationWritable" :class="[`color-${color}`, { active: selectedAnnotation.color === color }]" @click="setSelectedAnnotationColor(color)"></button></div>
+            <div class="annotation-colors"><button v-for="color in annotationColors" :key="color" :disabled="!annotationWritable" :class="[`color-${color}`, { active: selectedAnnotation.color === color }]" :aria-label="`${annotationColorLabel(color)}批注`" :aria-pressed="selectedAnnotation.color === color" @click="setSelectedAnnotationColor(color)"></button></div>
             <div class="annotation-reference-actions">
               <button :disabled="referenceWorking" @click="copySelectedAnnotationReference">复制引用</button>
               <button v-if="markdownTarget" :disabled="referenceWorking" @click="insertSelectedAnnotationReference">插入到 {{ markdownTarget.title }}</button>
@@ -383,9 +389,9 @@
     </main>
     <div v-if="selectionTool.show" class="selection-annotation-tool" :style="{ left: `${selectionTool.x}px`, top: `${selectionTool.y}px` }" @mousedown.prevent>
       <span>高亮</span>
-      <button v-for="color in annotationColors" :key="color" :class="`color-${color}`" :title="`${color} 高亮`" @click="createSelectionAnnotation(color, false)"></button>
+      <button v-for="color in annotationColors" :key="color" :class="`color-${color}`" :title="`${annotationColorLabel(color)}高亮`" :aria-label="`${annotationColorLabel(color)}高亮`" @click="createSelectionAnnotation(color, false)"></button>
       <button class="comment-selection" @click="createSelectionAnnotation(annotationColor, true)">高亮并评论</button>
-      <button class="close-selection" @click="dismissSelectionTool">×</button>
+      <button class="close-selection" title="关闭高亮工具" aria-label="关闭高亮工具" @click="dismissSelectionTool">×</button>
     </div>
     <div v-if="areaMode" class="area-mode-hint">区域批注模式：在任意页面拖出矩形，Esc 退出</div>
   </div>
@@ -756,6 +762,16 @@ const loadOutline = async () => {
 }
 
 const annotationKindLabel = (kind: PdfAnnotationKind) => ({ highlight: '文字高亮', area: '区域', comment: '评论' }[kind])
+const annotationColorLabel = (color: PdfAnnotationColor) => ({ yellow: '黄色', green: '绿色', pink: '粉色', blue: '蓝色' }[color])
+const moveSidebarTabFocus = (event: KeyboardEvent, direction: -1 | 1) => {
+  const current = event.target as HTMLButtonElement
+  const tabs = Array.from(current.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]') || [])
+  const currentIndex = tabs.indexOf(current)
+  if (currentIndex < 0 || !tabs.length) return
+  const next = tabs[(currentIndex + direction + tabs.length) % tabs.length]
+  next?.focus()
+  next?.click()
+}
 const makeAnnotationId = () => `pdf-annotation-${typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`}`
 const currentFingerprint = (document = pdfDocument.value) => document?.fingerprints?.[0] || undefined
 const requestedPage = () => {

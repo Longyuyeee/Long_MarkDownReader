@@ -21,13 +21,13 @@
         <button class="zoom-value" title="恢复 100%" @click="zoom = 1">{{ Math.round(zoom * 100) }}%</button>
         <button title="放大" @click="zoom = Math.min(2, zoom + .1)">＋</button>
         <button @click="scheduleRender(true)">刷新预览</button>
-        <button class="structure-toggle" :class="{ active: showStructure }" @click="showStructure = !showStructure">结构</button>
-        <button class="export-toggle" :class="{ active: showExport }" :disabled="!svg" @click="showExport = !showExport">导出</button>
+        <button class="structure-toggle" :class="{ active: showStructure }" :aria-pressed="showStructure" @click="showStructure = !showStructure">结构</button>
+        <button class="export-toggle" :class="{ active: showExport }" :aria-pressed="showExport" :disabled="!svg" @click="showExport = !showExport">导出</button>
         <button class="save-button" :disabled="!dirty || saving || !!parseError" aria-live="polite" @click="saveDiagram">{{ saving ? '保存中' : dirty ? '保存' : '已保存' }}</button>
       </div>
     </header>
 
-    <section v-if="showExport" class="export-panel">
+    <section v-if="showExport" class="export-panel" role="dialog" aria-label="导出图表">
       <header><div><strong>导出图表</strong><span>当前主题：{{ diagramTheme }}</span></div><button title="关闭" @click="showExport = false">×</button></header>
       <label>格式<select v-model="exportFormat"><option value="svg">SVG 矢量图</option><option value="png">PNG 位图</option></select></label>
       <label v-if="exportFormat === 'png'">倍率<select v-model.number="exportScale"><option :value="1">1×</option><option :value="2">2×</option><option :value="3">3×</option></select></label>
@@ -65,7 +65,7 @@
         <div v-if="!structure.supported" class="structure-empty"><strong>{{ structure.diagramType || '当前图表' }} 暂不支持表单编辑</strong><p>结构化表单当前只处理常用 flowchart / graph，源码和实时预览不会受影响。</p></div>
         <template v-else>
           <div v-if="structure.warnings.length" class="structure-warning">{{ structure.warnings.join(' ') }}</div>
-          <nav class="structure-tabs"><button :class="{ active: structureTab === 'nodes' }" @click="structureTab = 'nodes'">节点</button><button :class="{ active: structureTab === 'edges' }" @click="structureTab = 'edges'">连线</button></nav>
+          <nav class="structure-tabs"><button :class="{ active: structureTab === 'nodes' }" :aria-pressed="structureTab === 'nodes'" @click="structureTab = 'nodes'">节点</button><button :class="{ active: structureTab === 'edges' }" :aria-pressed="structureTab === 'edges'" @click="structureTab = 'edges'">连线</button></nav>
           <div class="structure-list">
             <button v-for="node in structureTab === 'nodes' ? structure.nodes : []" :key="node.id" :class="{ active: selectedKind === 'node' && selectedId === node.id }" @click="selectNode(node)"><strong>{{ node.label }}</strong><span>{{ node.id }} · 第 {{ node.line }} 行</span></button>
             <button v-for="edge in structureTab === 'edges' ? structure.edges : []" :key="edge.id" :class="{ active: selectedKind === 'edge' && selectedId === edge.id }" @click="selectEdge(edge)"><strong>{{ edge.source }} {{ edge.arrow }} {{ edge.target }}</strong><span>{{ edge.label || '无标签' }} · 第 {{ edge.line }} 行</span></button>

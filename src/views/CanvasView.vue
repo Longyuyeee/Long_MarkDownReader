@@ -14,7 +14,7 @@
     </header>
 
     <div class="canvas-toolbar" role="toolbar" aria-label="Canvas 工具栏">
-      <button :class="{ active: tool === 'select' }" @click="setTool('select')">选择</button>
+      <button :class="{ active: tool === 'select' }" :aria-pressed="tool === 'select'" @click="setTool('select')">选择</button>
       <button :disabled="undoStack.length === 0" title="撤销 Ctrl+Z" @click="undo">↶</button>
       <button :disabled="redoStack.length === 0" title="重做 Ctrl+Shift+Z" @click="redo">↷</button>
       <span class="toolbar-divider"></span>
@@ -24,7 +24,7 @@
       <button @click="addMermaidNode">＋ Mermaid</button>
       <button @click="addLinkNode">＋ 链接</button>
       <button @click="addGroupNode">＋ 分组</button>
-      <button :class="{ active: tool === 'connect' }" @click="setTool('connect')">
+      <button :class="{ active: tool === 'connect' }" :aria-pressed="tool === 'connect'" @click="setTool('connect')">
         {{ connectingFrom ? '选择目标节点' : '连线' }}
       </button>
       <span class="toolbar-divider"></span>
@@ -63,9 +63,9 @@
         ></button>
       </div>
       <span class="toolbar-spacer"></span>
-      <button @click="changeZoom(-0.1)">−</button>
-      <button @click="resetView">{{ Math.round(zoom * 100) }}%</button>
-      <button @click="changeZoom(0.1)">＋</button>
+      <button title="缩小画布" aria-label="缩小画布" @click="changeZoom(-0.1)">−</button>
+      <button title="恢复画布视图" :aria-label="`恢复画布视图，当前缩放 ${Math.round(zoom * 100)}%`" @click="resetView">{{ Math.round(zoom * 100) }}%</button>
+      <button title="放大画布" aria-label="放大画布" @click="changeZoom(0.1)">＋</button>
       <button @click="fitToContent">适应内容</button>
       <button class="primary" :disabled="saveState === 'saving' || saveState === 'saved'" aria-live="polite" @click="saveCanvas">
         {{ saveState === 'saving' ? '保存中' : saveState === 'saved' ? '已保存' : '保存' }}
