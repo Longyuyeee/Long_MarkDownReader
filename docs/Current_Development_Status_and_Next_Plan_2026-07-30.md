@@ -454,7 +454,7 @@ New source of truth:
 - `docs/R5K_Windows_Matrix_Evidence_Handoff_Audit_2026-07-31.md`
 - `docs/evidence/r5k-windows-matrix/preflight.json`
 
-The disposable runner now adds Markdown OpenWith registration/removal, controlled downgrade rejection with installed-binary digest preservation, rollback installation of `0.6.2`, rollback launch, cleanup, and retained-data checks.
+The disposable runner now adds Markdown OpenWith registration/removal, controlled downgrade safety, rollback installation of `0.6.2`, rollback launch, cleanup, and retained-data checks. Because the historical `0.6.2` installer predates the current downgrade-rejection policy, the runner truthfully accepts either direct rejection or detection followed by an automatic reinstall of the verified `0.7.0` binary; the future signed Windows 10/11 release matrix still requires strict downgrade rejection between policy-aware installer generations.
 
 R5K originally defined a fixed seven-member ZIP bound to the exact source commit, R5H installer digest, file sizes and digests, application version, non-identifying Windows machine class, and no-user-content boundary. R5L extends the same exact-member contract to eight members with a sanitized management rollback receipt.
 

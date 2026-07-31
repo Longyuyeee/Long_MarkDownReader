@@ -103,7 +103,7 @@ for (const checkId of policy.requiredLifecycleChecks) {
 }
 for (const token of [
   'LongEdit.Markdown',
-  'Controlled downgrade changed the installed current version.',
+  'legacy-downgrade-detected-and-current-restored',
   'rollback-previous-install',
   'rollback-first-launch',
   'export-r5k-windows-evidence-bundle.ps1',

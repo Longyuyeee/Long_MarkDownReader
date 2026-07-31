@@ -185,7 +185,7 @@ try {
         "file-association-registration",
         "first-launch-after-upgrade",
         "installed-artifact-route-and-io-smoke",
-        "downgrade-rejection",
+        "controlled-downgrade-safety",
         "silent-uninstall",
         "file-association-recovery",
         "uninstall-retains-user-data",

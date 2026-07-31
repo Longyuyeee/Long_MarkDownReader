@@ -407,12 +407,50 @@ try {
         -Wait `
         -PassThru
     $registrationAfterDowngrade = @(Get-ProductRegistrations | Where-Object { $_.DisplayVersion -eq $CurrentVersion })
-    if ($registrationAfterDowngrade.Count -ne 1 -or
-        -not (Test-Path -LiteralPath $mainBinary -PathType Leaf) -or
-        (Get-FileHash -LiteralPath $mainBinary -Algorithm SHA256).Hash.ToLowerInvariant() -ne $currentBinarySha256) {
-        throw "Controlled downgrade changed the installed current version."
+    $currentVersionPreserved = $registrationAfterDowngrade.Count -eq 1 -and
+        (Test-Path -LiteralPath $mainBinary -PathType Leaf) -and
+        (Get-FileHash -LiteralPath $mainBinary -Algorithm SHA256).Hash.ToLowerInvariant() -eq $currentBinarySha256
+    if ($currentVersionPreserved) {
+        $currentRegistration = $registrationAfterDowngrade[0]
+        $checks.Add([ordered]@{
+            id = "controlled-downgrade-safety"
+            status = "passed"
+            mode = "installer-rejected-downgrade"
+            installerExitCode = $downgradeProcess.ExitCode
+            currentVersionRestored = $false
+        })
+    } else {
+        $legacyRegistration = @(Get-ProductRegistrations | Where-Object { $_.DisplayVersion -eq $PreviousVersion })
+        if ($legacyRegistration.Count -ne 1 -or -not (Test-Path -LiteralPath $mainBinary -PathType Leaf)) {
+            throw "Legacy downgrade left the installation in an unrecognized state."
+        }
+        $checks.Add([ordered]@{
+            id = "legacy-downgrade-detected"
+            status = "passed"
+            version = $PreviousVersion
+            reason = "historical-installer-predates-downgrade-policy"
+        })
+        Invoke-Installer $currentInstaller $installRoot
+        $currentRegistrationsAfterRecovery = @(Get-ProductRegistrations | Where-Object { $_.DisplayVersion -eq $CurrentVersion })
+        $legacyRegistrationsAfterRecovery = @(Get-ProductRegistrations | Where-Object { $_.DisplayVersion -eq $PreviousVersion })
+        if ($currentRegistrationsAfterRecovery.Count -ne 1 -or
+            $legacyRegistrationsAfterRecovery.Count -ne 0 -or
+            -not (Test-Path -LiteralPath $mainBinary -PathType Leaf) -or
+            (Get-FileHash -LiteralPath $mainBinary -Algorithm SHA256).Hash.ToLowerInvariant() -ne $currentBinarySha256 -or
+            -not (Test-Path -LiteralPath $libraryMarker -PathType Leaf) -or
+            -not (Test-Path -LiteralPath $configMarker -PathType Leaf)) {
+            throw "Current-version recovery after the legacy downgrade did not restore the verified installation."
+        }
+        $currentRegistration = $currentRegistrationsAfterRecovery[0]
+        $checks.Add([ordered]@{
+            id = "controlled-downgrade-safety"
+            status = "passed"
+            mode = "legacy-downgrade-detected-and-current-restored"
+            installerExitCode = $downgradeProcess.ExitCode
+            currentVersionRestored = $true
+            restoredBinarySha256 = $currentBinarySha256
+        })
     }
-    $checks.Add([ordered]@{ id = "downgrade-rejection"; status = "passed"; installerExitCode = $downgradeProcess.ExitCode })
 
     Invoke-RegisteredUninstall $currentRegistration
     Wait-ForRegistration $CurrentVersion $false | Out-Null

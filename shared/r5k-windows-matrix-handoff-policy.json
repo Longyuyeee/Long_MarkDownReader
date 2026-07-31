@@ -12,7 +12,7 @@
     "file-association-registration",
     "first-launch-after-upgrade",
     "installed-artifact-route-and-io-smoke",
-    "downgrade-rejection",
+    "controlled-downgrade-safety",
     "silent-uninstall",
     "file-association-recovery",
     "uninstall-retains-user-data",
@@ -57,7 +57,8 @@
     "real-r5k-evidence-bundle-not-yet-generated-or-imported",
     "rollback-check-is-installer-launch-and-retention-level-not-management-backup-restore-closure",
     "windows-10-and-windows-11-final-matrix-remains-pending",
-    "current-installers-remain-unsigned"
+    "current-installers-remain-unsigned",
+    "historical-0.6.2-installer-predates-the-current-downgrade-rejection-policy"
   ],
   "nextStage": "R5L"
 }
