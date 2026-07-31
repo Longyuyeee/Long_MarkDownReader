@@ -434,6 +434,7 @@ const replaceDocument = (content: string, isReadOnly: boolean) => {
   if (!editor) return
   applyingDocument = true
   editor.setState(EditorState.create({ doc: content, extensions: editorExtensions(isReadOnly) }))
+  editor.dispatch({ effects: EditorView.scrollIntoView(0, { y: 'start', yMargin: 8 }) })
   applyingDocument = false
   characterCount.value = content.length
   lineCount.value = editor.state.doc.lines
