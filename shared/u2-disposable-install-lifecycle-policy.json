@@ -9,9 +9,11 @@
   "runner": {
     "lifecycleScript": "scripts/run-r5i-isolated-install-lifecycle.ps1",
     "sandboxGenerator": "scripts/new-r5i-windows-sandbox-config.ps1",
+    "githubHostedWorkflow": ".github/workflows/u2-unsigned-lifecycle.yml",
     "artifactManifest": "docs/evidence/u1-unsigned-internal-candidate/installer-manifest.json",
     "artifactSourceCommitBound": true,
     "sandboxConfigurationPrepared": true,
+    "githubHostedRunnerPrepared": true,
     "hostInstallerMutationAllowed": false
   },
   "requiredChecks": [

@@ -52,3 +52,9 @@ npm run prepare:u2-windows-sandbox -- -Launch
 - 结果只能证明未签名内部候选生命周期，不得晋级 RC。
 
 U2 成功后，将同一产品基线交给 R5N，取得真实签名材料并完成 Windows 10/11 两条已签名运行通道。
+
+## GitHub Hosted Runner 通道
+
+当本机没有虚拟化能力时，可手动触发 `.github/workflows/u2-unsigned-lifecycle.yml`。该通道在一次性 `windows-latest` runner 中分别构建产品提交 `953494c` 与回滚标签 `v0.6.2`，验证当前安装包为未签名，然后执行相同生命周期脚本。
+
+无论生命周期成功还是失败，工作流都会上传当前/回滚安装包、构建回执和已产生的证据，便于审计 guest-only 问题。Hosted Runner 结果只计入 U2 未签名内部验证，不可替代 Windows 10/11 客户端和正式签名证据。

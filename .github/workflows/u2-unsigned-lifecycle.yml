@@ -1,0 +1,126 @@
+name: U2 Unsigned Disposable Lifecycle
+
+"on":
+  workflow_dispatch:
+    inputs:
+      product_ref:
+        description: Product source commit to build and test
+        required: true
+        default: 953494c50360d232e0848d0bab80e0defd3c53d4
+
+permissions:
+  contents: read
+
+jobs:
+  unsigned-lifecycle:
+    name: Build and exercise unsigned internal candidate
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    env:
+      CARGO_TERM_COLOR: always
+      LONGEDIT_R5I_DISPOSABLE: "1"
+      PRODUCT_SOURCE_COMMIT: ${{ inputs.product_ref }}
+
+    steps:
+      - name: Check out orchestration contracts
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          path: orchestration
+
+      - name: Check out frozen product source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.product_ref }}
+          path: current-product
+
+      - name: Check out rollback product source
+        uses: actions/checkout@v6
+        with:
+          ref: v0.6.2
+          path: previous-product
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install current locked dependencies
+        working-directory: current-product
+        run: npm ci
+
+      - name: Build current unsigned NSIS candidate
+        working-directory: current-product
+        run: npm run tauri -- build --bundles nsis
+
+      - name: Install rollback locked dependencies
+        working-directory: previous-product
+        run: npm ci
+
+      - name: Build v0.6.2 rollback NSIS candidate
+        working-directory: previous-product
+        run: npm run tauri -- build --bundles nsis
+
+      - name: Capture runner build receipt
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $currentDirectory = Join-Path $env:GITHUB_WORKSPACE "current-product\src-tauri\target\release\bundle\nsis"
+          $previousDirectory = Join-Path $env:GITHUB_WORKSPACE "previous-product\src-tauri\target\release\bundle\nsis"
+          $current = @(Get-ChildItem -LiteralPath $currentDirectory -File -Filter "*_0.7.0_x64-setup.exe")
+          $previous = @(Get-ChildItem -LiteralPath $previousDirectory -File -Filter "*_0.6.2_x64-setup.exe")
+          if ($current.Count -ne 1 -or $previous.Count -ne 1) { throw "Expected exactly one current and rollback NSIS installer." }
+          $signature = Get-AuthenticodeSignature -LiteralPath $current[0].FullName
+          if ($signature.Status -ne "NotSigned") { throw "U2 workflow only accepts an unsigned internal candidate." }
+          $output = Join-Path $env:GITHUB_WORKSPACE "u2-output"
+          New-Item -ItemType Directory -Path $output -Force | Out-Null
+          $receipt = [ordered]@{
+            schemaVersion = 1
+            stage = "U2"
+            status = "runner-build-ready"
+            sourceCommit = $env:PRODUCT_SOURCE_COMMIT.ToLowerInvariant()
+            appVersion = "0.7.0"
+            previousVersion = "0.6.2"
+            currentInstallerSha256 = (Get-FileHash -LiteralPath $current[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            previousInstallerSha256 = (Get-FileHash -LiteralPath $previous[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            authenticodeStatus = "NotSigned"
+            releaseCandidate = $false
+            promotionEligible = $false
+            sourceUserContentIncluded = $false
+          }
+          [IO.File]::WriteAllText((Join-Path $output "runner-build-receipt.json"), ($receipt | ConvertTo-Json -Depth 5), [Text.UTF8Encoding]::new($false))
+          "CURRENT_INSTALLER_DIRECTORY=$currentDirectory" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "PREVIOUS_INSTALLER_DIRECTORY=$previousDirectory" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "CURRENT_INSTALLER_SHA256=$($receipt.currentInstallerSha256)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "U2_OUTPUT=$output" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Execute disposable install lifecycle
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $root = Join-Path $env:GITHUB_WORKSPACE "orchestration"
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root "scripts\run-r5i-isolated-install-lifecycle.ps1") `
+            -InstallerDirectory $env:CURRENT_INSTALLER_DIRECTORY `
+            -PreviousInstallerDirectory $env:PREVIOUS_INSTALLER_DIRECTORY `
+            -ExpectedCurrentSha256 $env:CURRENT_INSTALLER_SHA256 `
+            -NodeExecutable (Get-Command node.exe).Source `
+            -InstalledSmokeScript (Join-Path $root "scripts\capture-r5j-installed-artifact-smoke.mjs") `
+            -ManagementRollbackSmokeScript (Join-Path $root "scripts\capture-r5l-management-rollback-smoke.mjs") `
+            -EvidenceExporter (Join-Path $root "scripts\export-r5k-windows-evidence-bundle.ps1") `
+            -ExpectedSourceCommit $env:PRODUCT_SOURCE_COMMIT `
+            -OutputDirectory $env:U2_OUTPUT `
+            -ConfirmDisposableMachine `
+            -AllowInstallerMutation
+
+      - name: Upload U2 evidence and unsigned installers
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: u2-unsigned-lifecycle-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            u2-output
+            current-product/src-tauri/target/release/bundle/nsis/*_0.7.0_x64-setup.exe
+            previous-product/src-tauri/target/release/bundle/nsis/*_0.6.2_x64-setup.exe
