@@ -1499,6 +1499,37 @@ pub struct WorkbookCalculationResult {
     pub evaluated_formula_count: usize,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookDynamicArrayPreviewPayload {
+    pub expected_signature: String,
+    pub sheet: String,
+    pub anchor_row: usize,
+    pub anchor_column: usize,
+    #[serde(default)]
+    pub edits: Vec<WorkbookCellEdit>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookDynamicArrayDiagnostic {
+    pub code: String,
+    pub message: String,
+    pub cells: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbookDynamicArrayPreviewResult {
+    pub status: String,
+    pub function: String,
+    pub range: WorkbookMergeRange,
+    pub cells: Vec<WorkbookCalculatedCell>,
+    pub diagnostics: Vec<WorkbookDynamicArrayDiagnostic>,
+    pub evaluated_dependency_count: usize,
+    pub source_package_unchanged: bool,
+}
+
 pub trait WorkbookEngine {
     fn capabilities(&self) -> WorkbookCapabilities;
 

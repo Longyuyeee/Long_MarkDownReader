@@ -24,7 +24,9 @@
         {
           "id": "E1A",
           "name": "dynamic-array-in-memory-preview",
-          "status": "next",
+          "status": "completed",
+          "completedAt": "2026-07-31",
+          "deliveredContract": "shared/xlsx-formula-capabilities.json#dynamicArrayPreviewContract",
           "writeUserFile": false,
           "entryCriteria": [
             "existing-array-formula-read-contract",
@@ -108,7 +110,7 @@
         {
           "id": "E2A",
           "name": "svg-basic-source-editor",
-          "status": "ready-after-security-contract",
+          "status": "next",
           "writeUserFile": false,
           "entryCriteria": [
             "svg-script-and-event-handler-policy",
@@ -223,8 +225,8 @@
     }
   ],
   "decision": {
-    "nextStage": "E1A",
-    "nextSlice": "dynamic-array-in-memory-preview",
-    "reason": "Excel equivalence is the remaining explicit long-term requirement; an in-memory spill preview advances calculation semantics without bypassing the current 1/3 producer gate or writing unverified results."
+    "nextStage": "E2A",
+    "nextSlice": "svg-security-contract-and-basic-source-editor",
+    "reason": "E1A has delivered a bounded SEQUENCE in-memory preview without writing files or caches. E1B and E1C remain externally blocked at 1/3 and 2/3 producer evidence, so SVG is the next executable product slice."
   }
 }

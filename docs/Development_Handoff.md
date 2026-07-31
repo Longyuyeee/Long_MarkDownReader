@@ -21,6 +21,8 @@
 
 > 2026-07-31 E0 已完成：`shared/advanced-capability-roadmap.json` 已把高级开发拆为 Excel 等价 P0、新格式编辑器 P1、按场景主题扩展 P2、复杂 Office/WPS P2 四条轨道。Excel 当前 10 个公式族已验证，但数组生产者仍为 1/3、Multi-axis Pivot 为 2/3；下一代码阶段为 E1A 动态数组/spill 只读内存计算与预览，明确不写用户文件、不改公式缓存。SVG 为后续 E2A 候选，安全合同通过前不注册 writer。主题当前 3 核心 + 4 场景承诺已完成，后续不以数量代替场景证据。`releaseCandidate=false` 保持不变。详见 [`E0_Advanced_Editing_Gap_and_Priority_Audit_2026-07-31.md`](./E0_Advanced_Editing_Gap_and_Priority_Audit_2026-07-31.md)。
 
+> 2026-07-31 E1A 已完成：`dynamicArrayPreviewContract` 已开放受限 `SEQUENCE` 动态数组内存预览，支持有限数字参数、直接 A1 数值依赖和未保存数值草稿，单次上限 10,000 个单元格；占用、外来公式、合并区域、越界、未知函数和复杂依赖均稳定阻断。该命令只读且受源签名保护，不写用户文件、公式缓存或数组声明。数组生产者 1/3 与 Multi-axis Pivot 2/3 状态不变，E1B/E1C 继续等待外部证据；下一代码阶段为 E2A SVG 安全合同与基础源码编辑器。详见 [`E1A_Dynamic_Array_In_Memory_Preview_Audit_2026-07-31.md`](./E1A_Dynamic_Array_In_Memory_Preview_Audit_2026-07-31.md)。
+
 > 2026-07-30 权威入口：R1 统一发布能力矩阵与 R2 Windows 安装生命周期已完成。当前 MSI/NSIS 身份、Markdown 关联白名单、系统默认应用选择、旧标识迁移和卸载数据边界均有机器契约与真实桌面证据；实现提交 `032ec11` 的 [GitHub Quality Gate](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30533681730) 已完整通过。`releaseCandidate=false`，下一代码阶段为 R3 索引恢复、备份导入导出与隐私净化诊断包；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁。证据见 [`R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md`](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。
 
 > 2026-07-30 R3A 已完成：知识索引状态新增 `recoveryAvailable` 和 `staleSourceCount`；损坏 `snapshot.json` 可在原缓存目录隔离为 `snapshot.corrupt.<timestamp>.json`，随后用户可显式重建索引。该步骤不读取、不导出、不打包知识库正文。当前距离“全格式支持和收口”还剩 R3B 备份导出、R3C 备份导入恢复、R3D 隐私诊断包、R4 正式签名/Windows VM 发布矩阵，以及外部证据门禁 E1B WPS ODT 3/3 和 X3-B6 数组生产者 3/3。下一代码阶段为 R3B，详见 [`R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md`](./R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md)。

@@ -186,8 +186,41 @@
       }
     }
   },
+  "dynamicArrayPreviewContract": {
+    "stage": "E1A",
+    "status": "verified-bounded-preview",
+    "supportedFunctions": ["SEQUENCE"],
+    "mode": "explicit-in-memory-preview",
+    "resultPersistence": "none",
+    "writesUserFile": false,
+    "writesFormulaCache": false,
+    "maxPreviewCells": 10000,
+    "acceptedArguments": ["finite-number-literal", "direct-a1-numeric-cell"],
+    "unsavedNumericDependencies": true,
+    "formulaDependencies": "blocked",
+    "nestedFunctions": "blocked",
+    "externalReferences": "blocked",
+    "stableDiagnostics": [
+      "e1a_unsupported_function",
+      "e1a_invalid_formula",
+      "spill_conflict",
+      "resource_limit",
+      "sheet_boundary",
+      "numeric_overflow",
+      "legacy_array_blocked",
+      "array_range_edit_blocked"
+    ],
+    "conflictSources": [
+      "occupied-cell-outside-declared-array-range",
+      "foreign-formula-inside-declared-array-range",
+      "merged-cell"
+    ],
+    "sourceSignatureRequired": true,
+    "sourcePackageUnchanged": true
+  },
   "unsupportedCalculationBoundary": {
     "arrayAndDynamicArrayPolicy": "reject-before-engine-import",
+    "boundedPreviewException": "E1A-SEQUENCE-in-memory-only",
     "externalWorkbookPolicy": "offline-reject-before-engine-import",
     "preserveSourcePackage": true
   },
@@ -197,7 +230,7 @@
     "XLOOKUP-array-return-and-spill-results",
     "multi-criteria-range-mismatch-semantics",
     "Excel-automatic-volatile-recalculation-timing",
-    "dynamic-arrays-and-spill-ranges",
+    "dynamic-arrays-outside-E1A-SEQUENCE-preview",
     "external-workbook-references",
     "Excel-complete-function-equivalence",
     "calculation-cache-persistence"

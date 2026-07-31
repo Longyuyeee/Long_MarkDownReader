@@ -14,6 +14,8 @@ X3-B5 provides the portable closure path for the two missing producers. A genuin
 
 X3-B6 makes the final two-producer intake atomic at matrix level. Both bundles must independently pass the X3-B5 gates in a temporary 3/3 candidate before any checked-in fixture, manifest, matrix, or capability contract is promoted. A damaged second bundle leaves the destination at its original 1/3 state. The current environment remains blocked because the Excel COM CLSID resolves to WPS `et.exe` and LibreOffice is absent; therefore X3-B6 adds no synthetic producer claim and does not change calculation or writeback support.
 
+E1A adds a separate bounded dynamic-array preview path without weakening the IronCalc import guard. The machine whitelist currently contains only deterministic `SEQUENCE`. Its one to four arguments may be finite numeric literals or direct numeric A1 cells, including unsaved numeric drafts. Formula dependencies, nested functions, range arguments, strings, external references, unsupported functions, more than 10,000 output cells, occupied targets, merged cells, worksheet overflow, and non-finite results fail closed with stable diagnostics. Results exist only in the current UI memory and never update the XLSX package, formula cache, or array declaration.
+
 S8-6A through S8-6F establish a project-owned formula calculation baseline on top of IronCalc 0.8.0. Calculation is explicit, in memory, and uses the `en` locale with the `UTC` timezone. It does not write calculated caches back to the XLSX package.
 
 The machine-readable source of truth is `shared/xlsx-formula-capabilities.json`. A function is public only when it appears in a `verified` family and is exercised by the committed `formula-function-matrix.xlsx` fixture through both the calculation module and the Tauri command boundary.
@@ -45,7 +47,7 @@ S8-6E adds a deliberately limited volatile subset. `OFFSET` and `INDIRECT` cover
 
 X3-A / S8-6F upgrades the pinned engine to IronCalc 0.8.0 and adds scalar `XMATCH`. The committed XLSX matrix covers exact lookup, forward wildcard lookup, reverse search, next-smaller and next-larger modes, row vectors, default `#N/A`, `IFERROR` recovery, and recalculation after an unsaved dependency edit. Array constants, regex mode and dynamic-array return semantics are not part of the public contract.
 
-Before IronCalc import, the calculation boundary rejects workbooks containing multi-cell legacy array formulas, known dynamic-array functions, or real external-workbook link parts. Rejection does not modify the source package: the existing formula text and cached result remain available through normal workbook reading.
+Before IronCalc import, the scalar calculation boundary rejects workbooks containing multi-cell legacy array formulas, known dynamic-array functions, or real external-workbook link parts. E1A is an independent parser and evaluator for its explicit `SEQUENCE` whitelist and does not import unsupported array semantics into IronCalc. Rejection and preview do not modify the source package: the existing formula text and cached result remain available through normal workbook reading.
 
 ## Error Semantics
 
@@ -55,7 +57,7 @@ The stable categories are `division_by_zero`, `name`, `value`, `reference`, `num
 
 ## Explicit Exclusions
 
-This baseline is not an Excel-complete formula claim. Unverified modern lookup functions, `XMATCH` array constants/regex mode, `XLOOKUP` array-return/spill results, mismatched-range `*IFS` semantics, Excel-equivalent automatic volatile timing, array formulas, dynamic arrays and spill ranges, external workbook calculation, complete range/operator equivalence, every IronCalc function, and calculated-cache persistence remain outside the public contract.
+This baseline is not an Excel-complete formula claim. Unverified modern lookup functions, `XMATCH` array constants/regex mode, `XLOOKUP` array-return/spill results, mismatched-range `*IFS` semantics, Excel-equivalent automatic volatile timing, legacy array calculation, dynamic arrays outside the bounded E1A `SEQUENCE` preview, external workbook calculation, complete range/operator equivalence, every IronCalc function, array writeback, and calculated-cache persistence remain outside the public contract.
 
 ## Reproduction
 

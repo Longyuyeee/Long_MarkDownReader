@@ -489,6 +489,25 @@
       <button v-if="selectedArrayFormula?.errorCacheCells.length" class="diagnostic-link" @click="navigateArrayDiagnosticCell(selectedArrayFormula.errorCacheCells[0])">
         定位错误缓存 {{ selectedArrayFormula.errorCacheCells[0] }}
       </button>
+      <button
+        v-if="selectedArrayFormula?.kind === 'dynamic_array'"
+        class="diagnostic-link"
+        :disabled="dynamicArrayPreviewLoading"
+        title="只在内存中计算机器白名单内的动态数组"
+        @click="previewSelectedDynamicArray"
+      >
+        {{ dynamicArrayPreviewLoading ? '预览中…' : '内存预览' }}
+      </button>
+      <span v-if="dynamicArrayPreview?.status === 'ready'" class="dynamic-array-ready">
+        {{ dynamicArrayPreview.function }} · {{ dynamicArrayPreview.cells.length }} 个单元格
+      </span>
+      <button
+        v-else-if="dynamicArrayPreview?.diagnostics[0]?.cells.length"
+        class="diagnostic-link warning"
+        @click="navigateArrayDiagnosticCell(dynamicArrayPreview.diagnostics[0].cells[0])"
+      >
+        定位预览阻断 {{ dynamicArrayPreview.diagnostics[0].cells[0] }}
+      </button>
       <span v-if="selectedArrayFormula?.diagnosticCellsTruncated" class="diagnostic-truncated">
         诊断地址已截断（最多显示 256 个）
       </span>
@@ -736,6 +755,7 @@
                       'array-formula-anchor': isArrayFormulaAnchor(row.index, column - 1),
                       'array-formula-range': Boolean(arrayFormulaAt(row.index, column - 1)),
                       'array-formula-conflict': isArrayFormulaConflict(row.index, column - 1),
+                      'dynamic-array-preview': isDynamicArrayPreviewCell(row.index, column - 1),
                       selected: isSelected(row.index, column - 1),
                       'in-range': isInSelection(row.index, column - 1),
                       'fill-preview': isInFillPreview(row.index, column - 1),
@@ -973,6 +993,8 @@ interface WorkbookFormulaTarget { sheet: string; row: number; column: number }
 interface WorkbookCalculatedCell { sheet: string; row: number; column: number; value: string; formattedValue: string; kind: string }
 interface WorkbookCalculationDiagnostic { sheet: string; row: number; column: number; code: string; category: string }
 interface WorkbookCalculationResult { cells: WorkbookCalculatedCell[]; diagnostics: WorkbookCalculationDiagnostic[]; evaluatedFormulaCount: number }
+interface WorkbookDynamicArrayDiagnostic { code: string; message: string; cells: string[] }
+interface WorkbookDynamicArrayPreviewResult { status: 'ready' | 'blocked'; function: string; range: WorkbookMergeRange; cells: WorkbookCalculatedCell[]; diagnostics: WorkbookDynamicArrayDiagnostic[]; evaluatedDependencyCount: number; sourcePackageUnchanged: boolean }
 
 const PAGE_ROWS = 2_000
 const MAX_BATCH_CELLS = 10_000
@@ -1059,6 +1081,9 @@ const pivotVariantVerificationLoading = ref('')
 const calculatedValues = ref(new Map<string, WorkbookCalculatedCell>())
 const calculationCount = ref(0)
 const calculationErrors = ref(0)
+const dynamicArrayPreview = ref<WorkbookDynamicArrayPreviewResult | null>(null)
+const dynamicArrayPreviewValues = ref(new Map<string, WorkbookCalculatedCell>())
+const dynamicArrayPreviewLoading = ref(false)
 const scrollRef = ref<HTMLElement | null>(null)
 const scrollTop = ref(0)
 const viewportHeight = ref(600)
@@ -1094,12 +1119,22 @@ const draftExtent = computed(() => {
   }
   return { row, column }
 })
-const canvasRowCount = computed(() => Math.min(1_048_576, Math.max(EXTRA_ROWS, (sheetInfo.value?.totalRows || 0) + EXTRA_ROWS, draftExtent.value.row + 1)))
+const canvasRowCount = computed(() => Math.min(1_048_576, Math.max(
+  EXTRA_ROWS,
+  (sheetInfo.value?.totalRows || 0) + EXTRA_ROWS,
+  draftExtent.value.row + 1,
+  (dynamicArrayPreview.value?.range.bottom ?? -1) + 1,
+)))
 const canvasColumnCount = computed(() => {
   const info = sheetInfo.value
   if (!info) return 1
   if (info.truncatedColumns) return info.returnedColumns
-  return Math.min(256, Math.max(12, info.returnedColumns + EXTRA_COLUMNS, draftExtent.value.column + 1))
+  return Math.min(256, Math.max(
+    12,
+    info.returnedColumns + EXTRA_COLUMNS,
+    draftExtent.value.column + 1,
+    (dynamicArrayPreview.value?.range.right ?? -1) + 1,
+  ))
 })
 const rowHeightKey = (sheet: string, row: number) => `${sheet}\u0000${row}`
 const columnWidthKey = (sheet: string, column: number) => `${sheet}\u0000${column}`
@@ -1970,6 +2005,11 @@ const cellAt = (row: number, column: number): WorkbookCell => {
   const key = editKey(activeSheet.value, row, column)
   const edit = drafts.value.get(key)
   const calculated = calculatedValues.value.get(key)
+  const dynamicPreview = dynamicArrayPreviewValues.value.get(key)
+  if (dynamicPreview) {
+    const source = sourceCellAt(row, column)
+    return { ...source, value: dynamicPreview.value, kind: dynamicPreview.kind, style: cellStyleAt(row, column) }
+  }
   if (!edit) {
     const source = sourceCellAt(row, column)
     return { ...source, ...(source.formula && calculated ? { value: calculated.value, kind: calculated.kind } : {}), style: cellStyleAt(row, column) }
@@ -1981,6 +2021,8 @@ const invalidateCalculation = () => {
   calculatedValues.value = new Map()
   calculationCount.value = 0
   calculationErrors.value = 0
+  dynamicArrayPreview.value = null
+  dynamicArrayPreviewValues.value = new Map()
   pivotPreviews.value = new Map()
   pivotRebuildPlans.value = new Map()
   pivotCacheRebuildResults.value = new Map()
@@ -2008,6 +2050,8 @@ const isArrayFormulaConflict = (row: number, column: number) => {
   const address = `${columnLabel(column)}${row + 1}`
   return Boolean(arrayFormulaAt(row, column)?.conflictCells.includes(address))
 }
+const isDynamicArrayPreviewCell = (row: number, column: number) =>
+  dynamicArrayPreviewValues.value.has(editKey(activeSheet.value, row, column))
 const selectedArrayFormula = computed(() => selectedCell.value ? arrayFormulaAt(selectedCell.value.row, selectedCell.value.column) : undefined)
 const mergeAt = (row: number, column: number) => currentMergedRanges.value.find(range => row >= range.top && row <= range.bottom && column >= range.left && column <= range.right)
 const isMergedAnchor = (row: number, column: number) => {
@@ -3362,6 +3406,49 @@ const recalculateLoadedFormulas = async (notify: boolean) => {
 }
 const recalculateFormulas = () => recalculateLoadedFormulas(true)
 
+const previewSelectedDynamicArray = async () => {
+  const item = selectedArrayFormula.value
+  if (!workbook.value || !item || item.kind !== 'dynamic_array' || dynamicArrayPreviewLoading.value) return
+  const currentGeneration = generation
+  const sheet = activeSheet.value
+  dynamicArrayPreviewLoading.value = true
+  try {
+    const result = await invoke<WorkbookDynamicArrayPreviewResult>('preview_workbook_dynamic_array', {
+      libraryRoot: store.libraryPath,
+      path: workbookPath.value,
+      payload: {
+        expectedSignature: workbook.value.signature,
+        sheet,
+        anchorRow: item.anchorRow,
+        anchorColumn: item.anchorColumn,
+        edits: Array.from(drafts.value.values()),
+      },
+    })
+    if (currentGeneration !== generation || sheet !== activeSheet.value) return
+    dynamicArrayPreview.value = result
+    dynamicArrayPreviewValues.value = new Map(result.cells.map(cell => [editKey(cell.sheet, cell.row, cell.column), cell]))
+    if (result.status === 'blocked') {
+      const issue = result.diagnostics[0]
+      message.warning(issue ? `${issue.code}: ${issue.message}` : '动态数组预览已安全阻断')
+      return
+    }
+    selectionAnchor.value = { sheet, row: result.range.top, column: result.range.left }
+    selectionAreas.value = [{ ...result.range }]
+    setSelectionFocus(result.range.top, result.range.left)
+    await nextTick()
+    scrollRef.value?.scrollTo({
+      top: Math.max(0, rowOffset(result.range.top) - 38),
+      left: Math.max(0, 52 + columnPixels.value.slice(0, result.range.left).reduce((total, width) => total + width, 0) - 80),
+      behavior: 'smooth',
+    })
+    message.success(`已在内存中预览 ${result.cells.length} 个 ${result.function} 结果`)
+  } catch (cause) {
+    message.error(String(cause).replace(/^Error:\s*/, ''))
+  } finally {
+    dynamicArrayPreviewLoading.value = false
+  }
+}
+
 const loadPage = async (offset: number) => {
   if (!activeSheet.value || !workbook.value) return
   offset = Math.max(0, Math.floor(offset / PAGE_ROWS) * PAGE_ROWS)
@@ -4590,6 +4677,8 @@ onBeforeUnmount(() => {
 .array-formula-strip .diagnostic-link { height: 22px; flex: none; padding: 0 7px; border: 1px solid rgba(99,102,241,.3); border-radius: 4px; color: #5b5fc7; background: var(--theme-card); font-size: 8px; cursor: pointer; }
 .array-formula-strip .diagnostic-link.warning { border-color: rgba(220,38,38,.35); color: #b91c1c; }
 .array-formula-strip .diagnostic-truncated { flex: none; color: #b45309; font-size: 8px; }
+.array-formula-strip .dynamic-array-ready { flex: none; color: #047857; font-weight: 600; }
+.workbook-cell.dynamic-array-preview { box-shadow: inset 0 0 0 1px rgba(5,150,105,.45); background: color-mix(in srgb, var(--theme-card) 88%, #10b981); }
 .format-toolbar { min-height: 40px; flex: none; display: flex; align-items: center; gap: 5px; padding: 4px 12px; overflow-x: auto; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); }
 .format-toolbar select,.format-toolbar input,.format-toolbar button { flex: none; height: 30px; box-sizing: border-box; border: 1px solid rgba(0,0,0,.1); border-radius: 5px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 96%, #dce6ef); font-size: 9px; }
 .format-toolbar select { min-width: 92px; padding: 0 24px 0 8px; }

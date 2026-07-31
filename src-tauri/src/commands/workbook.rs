@@ -8,19 +8,21 @@ use crate::formats::workbook::{
     WorkbookCalculationPayload, WorkbookCalculationResult, WorkbookCapabilities,
     WorkbookCapabilityLevel, WorkbookCell, WorkbookConditionalFormatPayload,
     WorkbookDataValidationPayload, WorkbookDefinedNamePayload, WorkbookDocument,
-    WorkbookDrawingPayload, WorkbookEngine, WorkbookFilterPayload, WorkbookHeaderFooterPayload,
-    WorkbookOutlinePayload, WorkbookPageLayoutPayload, WorkbookPivotCacheRebuildPayload,
-    WorkbookPivotCacheRebuildResult, WorkbookPivotExpandedRebuildPayload,
-    WorkbookPivotExpandedRebuildResult, WorkbookPivotMultiAxisAuditPayload,
-    WorkbookPivotMultiAxisAuditResult, WorkbookPivotPreviewPayload, WorkbookPivotPreviewResult,
-    WorkbookPivotRebuildPlan, WorkbookPivotRebuildPlanPayload, WorkbookPivotSaveCopyPayload,
-    WorkbookPivotSavedCopyResult, WorkbookPivotSynchronizedRebuildPayload,
-    WorkbookPivotSynchronizedRebuildResult, WorkbookPivotVariantVerificationPayload,
-    WorkbookPivotVariantVerificationResult, WorkbookPrintOptionsPayload, WorkbookSheetPage,
-    WorkbookStructureChange, WorkbookStructureMigrationPreview, WorkbookStructurePayload,
-    WorkbookTablePayload, WorkbookWritePayload,
+    WorkbookDrawingPayload, WorkbookDynamicArrayPreviewPayload, WorkbookDynamicArrayPreviewResult,
+    WorkbookEngine, WorkbookFilterPayload, WorkbookHeaderFooterPayload, WorkbookOutlinePayload,
+    WorkbookPageLayoutPayload, WorkbookPivotCacheRebuildPayload, WorkbookPivotCacheRebuildResult,
+    WorkbookPivotExpandedRebuildPayload, WorkbookPivotExpandedRebuildResult,
+    WorkbookPivotMultiAxisAuditPayload, WorkbookPivotMultiAxisAuditResult,
+    WorkbookPivotPreviewPayload, WorkbookPivotPreviewResult, WorkbookPivotRebuildPlan,
+    WorkbookPivotRebuildPlanPayload, WorkbookPivotSaveCopyPayload, WorkbookPivotSavedCopyResult,
+    WorkbookPivotSynchronizedRebuildPayload, WorkbookPivotSynchronizedRebuildResult,
+    WorkbookPivotVariantVerificationPayload, WorkbookPivotVariantVerificationResult,
+    WorkbookPrintOptionsPayload, WorkbookSheetPage, WorkbookStructureChange,
+    WorkbookStructureMigrationPreview, WorkbookStructurePayload, WorkbookTablePayload,
+    WorkbookWritePayload,
 };
 use crate::formats::workbook_calculation::calculate_workbook;
+use crate::formats::workbook_dynamic_array::preview_dynamic_array;
 use crate::formats::workbook_formula::{
     migrate_workbook_formula, migrate_workbook_reference, translate_formula,
     validate_workbook_structure_change, WorkbookFormulaTranslation, MAX_FORMULA_TRANSLATIONS,
@@ -878,6 +880,31 @@ pub async fn recalculate_workbook_formulas(
     })
     .await
     .map_err(|error| format!("公式重算任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_workbook_dynamic_array(
+    library_root: String,
+    path: String,
+    payload: WorkbookDynamicArrayPreviewPayload,
+) -> Result<WorkbookDynamicArrayPreviewResult, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再预览动态数组".into());
+        }
+        validate_workbook_package(&source)?;
+        preview_dynamic_array(&source, payload)
+    })
+    .await
+    .map_err(|error| format!("动态数组预览任务失败: {error}"))?
 }
 
 #[tauri::command]
@@ -1905,6 +1932,70 @@ mod tests {
         )
         .unwrap();
         (base, path)
+    }
+
+    fn dynamic_array_fixture_copy(name: &str) -> (PathBuf, PathBuf) {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-dynamic-array-{name}-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let root = base.join("library");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("dynamic-array.xlsx");
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_worksheet();
+        sheet.set_name("Data").unwrap();
+        sheet.write_number(0, 3, 2).unwrap();
+        sheet
+            .write_dynamic_formula(0, 0, Formula::new("=SEQUENCE(D1,2,1,1)").set_result("1"))
+            .unwrap();
+        workbook.save(&path).unwrap();
+        (base, path)
+    }
+
+    #[test]
+    fn dynamic_array_preview_command_requires_current_signature() {
+        let (base, path) = dynamic_array_fixture_copy("command");
+        let root = path.parent().unwrap().to_string_lossy().into_owned();
+        let path_text = path.to_string_lossy().into_owned();
+        let document =
+            tauri::async_runtime::block_on(read_workbook_file(root.clone(), path_text.clone()))
+                .unwrap();
+        let payload = WorkbookDynamicArrayPreviewPayload {
+            expected_signature: document.signature,
+            sheet: "Data".into(),
+            anchor_row: 0,
+            anchor_column: 0,
+            edits: Vec::new(),
+        };
+        let result = tauri::async_runtime::block_on(preview_workbook_dynamic_array(
+            root.clone(),
+            path_text.clone(),
+            payload,
+        ))
+        .unwrap();
+        assert_eq!(result.status, "ready");
+        assert_eq!(result.cells.len(), 4);
+        assert!(result.source_package_unchanged);
+
+        let error = tauri::async_runtime::block_on(preview_workbook_dynamic_array(
+            root,
+            path_text,
+            WorkbookDynamicArrayPreviewPayload {
+                expected_signature: "stale-signature".into(),
+                sheet: "Data".into(),
+                anchor_row: 0,
+                anchor_column: 0,
+                edits: Vec::new(),
+            },
+        ))
+        .unwrap_err();
+        assert!(error.contains("其他程序修改"));
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]

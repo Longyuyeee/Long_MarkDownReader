@@ -106,11 +106,13 @@ if (
 const e1a = excel?.phases?.find((phase) => phase.id === "E1A");
 if (
   !e1a ||
-  e1a.status !== "next" ||
+  e1a.status !== "completed" ||
   e1a.writeUserFile !== false ||
+  e1a.deliveredContract !==
+    "shared/xlsx-formula-capabilities.json#dynamicArrayPreviewContract" ||
   !e1a.exitCriteria.includes("formula-cache-and-source-package-remain-unchanged")
 ) {
-  fail("E1A must remain a no-write in-memory dynamic-array slice");
+  fail("E1A completion must remain bound to the no-write preview contract");
 }
 for (const phase of excel?.phases ?? []) {
   if (phase.writeUserFile !== false) {
@@ -133,6 +135,7 @@ if (
 if (
   formatTrack?.phases?.[0]?.id !== "E2A" ||
   formatTrack.phases[0].name !== "svg-basic-source-editor" ||
+  formatTrack.phases[0].status !== "next" ||
   formatTrack.phases[0].writeUserFile !== false
 ) {
   fail("SVG must begin behind a no-write security contract");
@@ -175,10 +178,10 @@ for (const [requirement, source] of [
 }
 
 if (
-  roadmap.decision?.nextStage !== "E1A" ||
-  roadmap.decision?.nextSlice !== "dynamic-array-in-memory-preview"
+  roadmap.decision?.nextStage !== "E2A" ||
+  roadmap.decision?.nextSlice !== "svg-security-contract-and-basic-source-editor"
 ) {
-  fail("E0 handoff must point to E1A dynamic-array preview");
+  fail("E0 roadmap must advance to E2A after bounded E1A completion");
 }
 if (
   !packageJson.scripts["ci:check"]?.includes(
@@ -197,12 +200,12 @@ for (const [label, source, markers] of [
   [
     "development handoff",
     handoffDoc,
-    ["E0 已完成", "advanced-capability-roadmap.json", "下一代码阶段为 E1A"],
+    ["E0 已完成", "advanced-capability-roadmap.json", "E1A 已完成"],
   ],
   [
     "current development audit",
     currentAuditDoc,
-    ["E0 高级能力差距审计已完成", "下一代码阶段为 E1A"],
+    ["E0 高级能力差距审计已完成", "下一代码阶段为 E2A"],
   ],
 ]) {
   for (const marker of markers) {
@@ -216,5 +219,5 @@ if (failures.length) {
 }
 
 console.log(
-  `E0 advanced capability roadmap passed: ${tracks.size} tracks; Excel E1A is next, SVG is security-gated, themes remain 3 core + 4 scenario, RC remains blocked.`,
+  `E0 advanced capability roadmap passed: ${tracks.size} tracks; bounded Excel E1A is complete, SVG E2A is next, themes remain 3 core + 4 scenario, RC remains blocked.`,
 );
