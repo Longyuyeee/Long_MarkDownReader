@@ -129,7 +129,8 @@ function Enable-WebView2TestPolicy([string]$UserDataRoot) {
 }
 
 function Disable-WebView2TestPolicy {
-    foreach ($entry in @($script:webViewTestPolicyEntries)) {
+    for ($index = $script:webViewTestPolicyEntries.Count - 1; $index -ge 0; $index -= 1) {
+        $entry = $script:webViewTestPolicyEntries[$index]
         Remove-ItemProperty -LiteralPath $entry.key -Name $entry.name -ErrorAction SilentlyContinue
     }
     foreach ($root in $webViewPolicyRoots) {

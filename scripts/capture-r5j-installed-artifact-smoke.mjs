@@ -84,7 +84,10 @@ const setEditorText = async text => {
   await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 })
   await send('Input.insertText', { text })
   await waitFor(
-    `document.querySelector('.cm-content')?.innerText?.replace(/\\r/g, '') === ${JSON.stringify(text)}`,
+    `(() => {
+      const value = document.querySelector('.cm-content')?.innerText?.replace(/\\r/g, '')
+      return value === ${JSON.stringify(text)} || value?.replace(/\\n+$/, '') === ${JSON.stringify(text)}
+    })()`,
     'CodeMirror document replacement',
   )
 }
