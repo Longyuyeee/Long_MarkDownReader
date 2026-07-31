@@ -9,6 +9,8 @@
 
 > 2026-07-31 C1C 已完成：共同标签推断关系可在文件关系上下文中确认、隐藏、改回推断和恢复；判断以知识库相对路径保存到 `.longedit/graph-relation-decisions.json`，不修改 Markdown。已确认关系会进入图谱和动态集合，并从孤立文件治理中移除；隐藏后影响立即撤销。显式链接与结构关系继续以原文件为事实源。C 阶段本机产品化主线已收口，下一步进入 D1 跨编辑器统一体验审计与集中修正。详见 [`C1C_Graph_Relation_Lifecycle_Audit_2026-07-31.md`](./C1C_Graph_Relation_Lifecycle_Audit_2026-07-31.md)。
 
+> 2026-07-31 D1A 已完成：跨编辑器矩阵已建立，首批关闭 YAML/XML/TOML 的体验缺口。三个结构化源码编辑器共用响应式结构面板，桌面可收起，760px 以下默认保留完整源码空间并可一键切换结构/诊断；保存按钮统一为“保存中/保存/已保存”，状态支持辅助技术播报。安全保存和格式能力边界未改变。下一步进入 D1B，集中处理 JSON、Table、Diagram、Canvas、Workbook、PDF、DOCX、PPTX 的工具栏密度、只读/阻断提示和窄屏优先级。详见 [`D1A_Structured_Editor_Unified_Experience_Audit_2026-07-31.md`](./D1A_Structured_Editor_Unified_Experience_Audit_2026-07-31.md)。
+
 > 2026-07-30 权威入口：R1 统一发布能力矩阵与 R2 Windows 安装生命周期已完成。当前 MSI/NSIS 身份、Markdown 关联白名单、系统默认应用选择、旧标识迁移和卸载数据边界均有机器契约与真实桌面证据；实现提交 `032ec11` 的 [GitHub Quality Gate](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30533681730) 已完整通过。`releaseCandidate=false`，下一代码阶段为 R3 索引恢复、备份导入导出与隐私净化诊断包；E1B WPS ODT 2/3 和 X3-B6 数组生产者 1/3 继续作为外部证据门禁。证据见 [`R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md`](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。
 
 > 2026-07-30 R3A 已完成：知识索引状态新增 `recoveryAvailable` 和 `staleSourceCount`；损坏 `snapshot.json` 可在原缓存目录隔离为 `snapshot.corrupt.<timestamp>.json`，随后用户可显式重建索引。该步骤不读取、不导出、不打包知识库正文。当前距离“全格式支持和收口”还剩 R3B 备份导出、R3C 备份导入恢复、R3D 隐私诊断包、R4 正式签名/Windows VM 发布矩阵，以及外部证据门禁 E1B WPS ODT 3/3 和 X3-B6 数组生产者 3/3。下一代码阶段为 R3B，详见 [`R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md`](./R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md)。

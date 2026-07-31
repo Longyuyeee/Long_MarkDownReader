@@ -7,17 +7,18 @@
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
         <n-icon :component="FileCodeIcon" size="22" class="accent" />
-        <div><strong :title="path">{{ fileName }}</strong><span>TOML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}</span></div>
+        <div><strong :title="path">{{ fileName }}</strong><span aria-live="polite">TOML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}</span></div>
       </div>
       <div class="actions">
         <n-button quaternary circle size="small" title="查找" @click="editor && openSearchPanel(editor)"><template #icon><n-icon :component="SearchIcon" /></template></n-button>
         <n-button quaternary circle size="small" title="折叠全部" @click="editor && foldAll(editor)"><template #icon><n-icon :component="FoldIcon" /></template></n-button>
         <n-button quaternary circle size="small" title="展开全部" @click="editor && unfoldAll(editor)"><template #icon><n-icon :component="UnfoldIcon" /></template></n-button>
         <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reload"><template #icon><n-icon :component="RefreshIcon" /></template></n-button>
-        <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty" @click="save()"><template #icon><n-icon :component="SaveIcon" /></template>保存</n-button>
+        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏键路径提纲' : '显示键路径提纲'" :aria-pressed="inspectorVisible" @click="toggleInspector"><template #icon><n-icon :component="InspectorIcon" /></template></n-button>
+        <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty" @click="save()"><template #icon><n-icon :component="SaveIcon" /></template>{{ saving ? '保存中' : dirty ? '保存' : '已保存' }}</n-button>
       </div>
     </header>
-    <main>
+    <main :class="{ 'inspector-hidden': !inspectorVisible }">
       <section class="source">
         <div v-if="loading" class="state"><n-spin size="small" /><strong>正在读取 TOML</strong></div>
         <div v-else-if="loadError" class="state error"><n-icon :component="AlertIcon" size="24" /><strong>无法打开 TOML</strong><p>{{ loadError }}</p><n-button size="small" @click="load(true)">重试</n-button></div>
@@ -67,8 +68,9 @@ import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
-import { AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as ValidIcon, FileCode2 as FileCodeIcon, FoldVertical as FoldIcon, KeyRound as KeyIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Search as SearchIcon, TableProperties as TableIcon, UnfoldVertical as UnfoldIcon } from 'lucide-vue-next'
+import { AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as ValidIcon, FileCode2 as FileCodeIcon, FoldVertical as FoldIcon, KeyRound as KeyIcon, PanelRight as InspectorIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Search as SearchIcon, TableProperties as TableIcon, UnfoldVertical as UnfoldIcon } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
 import { type TabInfo, useAppStore } from '../store/app'
 
@@ -79,6 +81,7 @@ interface Entry extends Range { path: string; label: string; kind: string; depth
 interface Analysis { valid: boolean; tableCount: number; arrayOfTablesCount: number; valueCount: number; maxDepth: number; outline: Entry[]; outlineTruncated: boolean; diagnostics: Diagnostic[] }
 
 const route = useRoute(), router = useRouter(), store = useAppStore(), dialog = useDialog(), message = useMessage()
+const { inspectorVisible, toggleInspector } = useResponsiveInspector()
 const editorHost = ref<HTMLElement | null>(null), path = computed(() => String(route.query.path || '')), format = computed(() => findFileFormat(path.value))
 const fileName = computed(() => path.value.split(/[\\/]/).pop() || '未命名 TOML'), currentTab = computed(() => store.tabs.find(tab => tab.path === path.value))
 const loading = ref(true), saving = ref(false), dirty = ref(false), analysisPending = ref(false), loadError = ref(''), query = ref('')
@@ -110,4 +113,6 @@ onBeforeUnmount(() => { clearTimer(); syncTab(); editor?.destroy(); editor = nul
 
 <style scoped>
 .workspace{width:100%;height:100%;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:var(--theme-bg);color:var(--theme-text)}header{min-height:54px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:var(--theme-border);background:var(--theme-surface)}.identity,.actions{display:flex;align-items:center;gap:8px;min-width:0}.identity>div,.heading>div{display:flex;flex-direction:column;min-width:0}.identity strong{max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.identity span,.heading span{font-size:11px;color:var(--theme-text-secondary)}.accent{color:var(--theme-primary)}.error{color:var(--theme-danger,#d03050)}main{min-height:0;flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px)}.source{position:relative;min-width:0;min-height:0}.editor{width:100%;height:100%}.hidden{visibility:hidden}.state{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center}aside{min-height:0;padding:14px;display:flex;flex-direction:column;gap:12px;border-left:var(--theme-border);background:var(--theme-surface)}.heading{display:flex;align-items:center;justify-content:space-between}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.metrics div{padding:8px 3px;display:flex;flex-direction:column;align-items:center;border:var(--theme-border);border-radius:8px}.metrics span{font-size:10px;color:var(--theme-text-secondary)}.diagnostic{padding:8px;display:flex;gap:8px;border:0;border-radius:7px;color:var(--theme-danger,#d03050);background:rgba(208,48,80,.08);text-align:left}.diagnostic span,.outline button span{min-width:0;display:flex;flex:1;flex-direction:column}.diagnostic small,.outline small{overflow:hidden;color:var(--theme-text-secondary);text-overflow:ellipsis;white-space:nowrap}.valid{padding:9px;display:flex;gap:8px;border-radius:8px;color:var(--theme-primary);background:rgba(var(--theme-primary-rgb),.08)}.outline{min-height:0;flex:1;overflow:auto}.outline button{width:100%;min-height:48px;padding-top:6px;padding-right:8px;padding-bottom:6px;display:flex;align-items:center;gap:7px;border:0;border-bottom:var(--theme-border);color:inherit;background:transparent;text-align:left;cursor:pointer}.outline button:hover{background:rgba(var(--theme-primary-rgb),.07)}.outline p{padding:14px 6px;color:var(--theme-text-secondary);font-size:12px;text-align:center}.outline .warning{color:var(--theme-warning,#f0a020)}footer{min-height:28px;padding:0 14px;display:flex;align-items:center;gap:14px;border-top:var(--theme-border);color:var(--theme-text-secondary);background:var(--theme-surface);font-size:11px}
+main.inspector-hidden{grid-template-columns:minmax(0,1fr)}main.inspector-hidden aside{display:none}
+@media (max-width:760px){header{gap:8px;padding-inline:9px}.identity strong{max-width:34vw}main{grid-template-columns:minmax(0,1fr)}main:not(.inspector-hidden) .source{display:none}aside{border-left:0}footer{gap:8px;padding-inline:9px}footer span:nth-child(3){display:none}}
 </style>

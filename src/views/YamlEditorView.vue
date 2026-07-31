@@ -10,7 +10,7 @@
         <n-icon :component="FileCodeIcon" size="22" class="format-icon" />
         <div class="document-title">
           <strong :title="yamlPath">{{ fileName }}</strong>
-          <span>YAML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}</span>
+          <span aria-live="polite">YAML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}</span>
         </div>
       </div>
 
@@ -27,6 +27,9 @@
         <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reloadFromDisk">
           <template #icon><n-icon :component="RefreshIcon" /></template>
         </n-button>
+        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏结构提纲' : '显示结构提纲'" :aria-pressed="inspectorVisible" @click="toggleInspector">
+          <template #icon><n-icon :component="InspectorIcon" /></template>
+        </n-button>
         <n-button
           type="primary"
           size="small"
@@ -35,12 +38,12 @@
           @click="save()"
         >
           <template #icon><n-icon :component="SaveIcon" /></template>
-          保存
+          {{ saving ? '保存中' : dirty ? '保存' : '已保存' }}
         </n-button>
       </div>
     </header>
 
-    <main class="yaml-stage">
+    <main class="yaml-stage" :class="{ 'inspector-hidden': !inspectorVisible }">
       <section class="source-pane">
         <div v-if="loading" class="editor-state">
           <n-spin size="small" />
@@ -174,6 +177,7 @@ import {
   FileCode2 as FileCodeIcon,
   FoldVertical as FoldIcon,
   List as SequenceIcon,
+  PanelRight as InspectorIcon,
   RefreshCw as RefreshIcon,
   Save as SaveIcon,
   Search as SearchIcon,
@@ -181,6 +185,7 @@ import {
   UnfoldVertical as UnfoldIcon,
 } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
 import { type TabInfo, useAppStore } from '../store/app'
 
@@ -238,6 +243,7 @@ const router = useRouter()
 const store = useAppStore()
 const dialog = useDialog()
 const message = useMessage()
+const { inspectorVisible, toggleInspector } = useResponsiveInspector()
 const editorHost = ref<HTMLElement | null>(null)
 const yamlPath = computed(() => String(route.query.path || ''))
 const format = computed(() => findFileFormat(yamlPath.value))
@@ -667,6 +673,14 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
 }
 
+.yaml-stage.inspector-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.yaml-stage.inspector-hidden .inspector {
+  display: none;
+}
+
 .source-pane {
   min-width: 0;
   min-height: 0;
@@ -871,6 +885,39 @@ onBeforeUnmount(() => {
 
   .toolbar-actions :deep(.n-button:nth-child(2)),
   .toolbar-actions :deep(.n-button:nth-child(3)) {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .yaml-toolbar {
+    gap: 8px;
+    padding-inline: 9px;
+  }
+
+  .document-title strong {
+    max-width: 34vw;
+  }
+
+  .yaml-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .yaml-stage:not(.inspector-hidden) .source-pane {
+    display: none;
+  }
+
+  .inspector {
+    border-left: 0;
+  }
+
+  .yaml-statusbar {
+    gap: 8px;
+    padding-inline: 9px;
+  }
+
+  .yaml-statusbar span:nth-child(3),
+  .yaml-statusbar span:nth-child(5) {
     display: none;
   }
 }

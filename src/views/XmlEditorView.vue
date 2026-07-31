@@ -9,7 +9,7 @@
         <n-icon :component="FileCodeIcon" size="22" class="accent" />
         <div>
           <strong :title="xmlPath">{{ fileName }}</strong>
-          <span>XML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}</span>
+          <span aria-live="polite">XML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}</span>
         </div>
       </div>
       <div class="actions">
@@ -25,14 +25,17 @@
         <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reload">
           <template #icon><n-icon :component="RefreshIcon" /></template>
         </n-button>
+        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏结构树' : '显示结构树'" :aria-pressed="inspectorVisible" @click="toggleInspector">
+          <template #icon><n-icon :component="InspectorIcon" /></template>
+        </n-button>
         <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
-          保存
+          {{ saving ? '保存中' : dirty ? '保存' : '已保存' }}
         </n-button>
       </div>
     </header>
 
-    <main class="stage">
+    <main class="stage" :class="{ 'inspector-hidden': !inspectorVisible }">
       <section class="source">
         <div v-if="loading" class="state"><n-spin size="small" /><strong>正在读取 XML</strong></div>
         <div v-else-if="loadError" class="state error">
@@ -110,10 +113,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
 import {
   AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as ValidIcon,
-  FileCode2 as FileCodeIcon, FoldVertical as FoldIcon, RefreshCw as RefreshIcon,
+  FileCode2 as FileCodeIcon, FoldVertical as FoldIcon, PanelRight as InspectorIcon, RefreshCw as RefreshIcon,
   Save as SaveIcon, Search as SearchIcon, Tags as TagIcon, UnfoldVertical as UnfoldIcon,
 } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
 import { type TabInfo, useAppStore } from '../store/app'
 
@@ -131,6 +135,7 @@ const router = useRouter()
 const store = useAppStore()
 const dialog = useDialog()
 const message = useMessage()
+const { inspectorVisible, toggleInspector } = useResponsiveInspector()
 const editorHost = ref<HTMLElement | null>(null)
 const xmlPath = computed(() => String(route.query.path || ''))
 const format = computed(() => findFileFormat(xmlPath.value))
@@ -295,6 +300,8 @@ onBeforeUnmount(() => {
 .identity span, .heading span, .valid-summary span { color: var(--theme-text-secondary); font-size: 11px; }
 .accent { color: var(--theme-primary); }.error { color: var(--theme-danger, #d03050); }
 .stage { min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); }
+.stage.inspector-hidden { grid-template-columns: minmax(0, 1fr); }
+.stage.inspector-hidden .inspector { display: none; }
 .source { min-width: 0; min-height: 0; position: relative; }.editor-host { width: 100%; height: 100%; }.editor-host.hidden { visibility: hidden; }
 .state { position: absolute; inset: 0; z-index: 2; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; }
 .state p { max-width: 640px; margin: 0; color: var(--theme-text-secondary); }
@@ -315,4 +322,13 @@ onBeforeUnmount(() => {
 .outline > p { padding: 14px 6px; color: var(--theme-text-secondary); font-size: 12px; text-align: center; }.outline > p.warning { color: var(--theme-warning, #f0a020); }
 footer { min-height: 28px; padding: 0 14px; display: flex; align-items: center; gap: 14px; border-top: var(--theme-border); color: var(--theme-text-secondary); background: var(--theme-surface); font-size: 11px; }
 @media (max-width: 900px) { .stage { grid-template-columns: minmax(0, 1fr) minmax(240px, 42vw); } }
+@media (max-width: 760px) {
+  .toolbar { gap: 8px; padding-inline: 9px; }
+  .identity strong { max-width: 34vw; }
+  .stage { grid-template-columns: minmax(0, 1fr); }
+  .stage:not(.inspector-hidden) .source { display: none; }
+  .inspector { border-left: 0; }
+  footer { gap: 8px; padding-inline: 9px; }
+  footer span:nth-child(3), footer span:nth-child(5) { display: none; }
+}
 </style>
