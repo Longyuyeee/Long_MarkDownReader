@@ -82,6 +82,7 @@ use commands::pptx::{
     read_pptx_presentation, save_pptx_patch_copy,
 };
 use commands::search::{get_all_tags, search_all_libraries, search_by_tag, search_library};
+use commands::svg::{analyze_svg_source, write_svg_source_document};
 use commands::system::{exit_app, get_url_title, open_default_apps_settings};
 use commands::table::{
     create_table_file, export_table_file, import_table_file, read_table_file, write_table_file,
@@ -295,6 +296,8 @@ pub fn run() {
             write_yaml_source_document,
             analyze_xml_source,
             write_xml_source_document,
+            analyze_svg_source,
+            write_svg_source_document,
             analyze_toml_source,
             write_toml_source_document,
             read_text_document,

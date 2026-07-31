@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "stage": "E2A",
+  "formatId": "svg",
+  "sourceLimitBytes": 5242880,
+  "viewportLimit": 16384,
+  "structureLimits": {
+    "elements": 20000,
+    "attributes": 100000,
+    "depth": 64
+  },
+  "previewBoundary": {
+    "transport": "sanitized-svg-blob-in-img",
+    "activeContentExecuted": false,
+    "externalResourcesLoaded": false,
+    "unknownElementsPreservedInPreview": false
+  },
+  "blockedContent": [
+    "script",
+    "event-handler-attributes",
+    "foreignObject",
+    "external-href",
+    "external-css-url",
+    "processing-instruction",
+    "doctype-and-entities",
+    "non-whitelisted-elements"
+  ],
+  "savePolicy": {
+    "mode": "signature-protected-overwrite",
+    "unsafeSourceWriteAllowed": false,
+    "expectedSignatureRequiredAfterOpen": true,
+    "draftRetainedOnFailure": true
+  },
+  "integration": {
+    "create": true,
+    "searchIndex": true,
+    "recentFiles": true,
+    "libraryShell": true,
+    "routeName": "XmlEditor"
+  },
+  "releaseCandidate": false
+}

@@ -246,6 +246,7 @@ mod tests {
         assert_eq!(registry.by_path("slides.PPT").unwrap().id, "legacy-ppt");
         assert_eq!(registry.by_path("budget.ODS").unwrap().id, "ods");
         assert_eq!(registry.by_path("briefing.ODP").unwrap().id, "odp");
+        assert_eq!(registry.by_path("illustration.SVG").unwrap().id, "svg");
         assert!(registry.by_path("note.md.exe").is_none());
     }
 

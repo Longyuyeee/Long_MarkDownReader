@@ -6,10 +6,10 @@
         <n-button quaternary circle size="small" title="返回知识库" @click="router.push({ name: 'LibraryMode' })">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
-        <n-icon :component="FileCodeIcon" size="22" class="accent" />
+        <n-icon :component="isSvg ? ImageIcon : FileCodeIcon" size="22" class="accent" />
         <div>
           <strong :title="xmlPath">{{ fileName }}</strong>
-          <span aria-live="polite">XML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}</span>
+          <span aria-live="polite">{{ formatLabel }} · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}</span>
         </div>
       </div>
       <div class="actions">
@@ -37,9 +37,9 @@
 
     <main class="stage" :class="{ 'inspector-hidden': !inspectorVisible }">
       <section class="source">
-        <div v-if="loading" class="state"><n-spin size="small" /><strong>正在读取 XML</strong></div>
+        <div v-if="loading" class="state"><n-spin size="small" /><strong>正在读取 {{ formatLabel }}</strong></div>
         <div v-else-if="loadError" class="state error">
-          <n-icon :component="AlertIcon" size="24" /><strong>无法打开 XML</strong><p>{{ loadError }}</p>
+          <n-icon :component="AlertIcon" size="24" /><strong>无法打开 {{ formatLabel }}</strong><p>{{ loadError }}</p>
           <n-button size="small" @click="load(true)">重试</n-button>
         </div>
         <div ref="editorHost" class="editor-host" :class="{ hidden: loading || loadError }" />
@@ -47,7 +47,7 @@
 
       <aside class="inspector">
         <div class="heading">
-          <div><strong>只读结构树</strong><span>源码是唯一事实源</span></div>
+          <div><strong>{{ isSvg ? '净化预览' : '只读结构树' }}</strong><span>源码是唯一事实源</span></div>
           <n-spin v-if="analysisPending" size="small" />
           <n-icon v-else :component="analysis?.valid ? ValidIcon : AlertIcon" :class="analysis?.valid ? 'accent' : 'error'" size="20" />
         </div>
@@ -57,6 +57,15 @@
           <div><strong>{{ analysis?.namespaceCount ?? 0 }}</strong><span>命名空间</span></div>
           <div><strong>{{ analysis?.maxDepth ?? 0 }}</strong><span>深度</span></div>
         </div>
+
+        <section v-if="isSvg && previewUrl" class="svg-preview">
+          <img :src="previewUrl" alt="SVG 净化预览" />
+          <span>仅渲染安全白名单子集，不加载外部资源</span>
+        </section>
+        <section v-else-if="isSvg" class="valid-summary">
+          <n-icon :component="ShieldOffIcon" />
+          <div><strong>预览已阻断</strong><span>修复根元素、语法或资源上限诊断后恢复</span></div>
+        </section>
 
         <section v-if="analysis?.diagnostics.length" class="diagnostics">
           <button v-for="item in analysis.diagnostics" :key="`${item.code}:${item.start}`" type="button" @click="reveal(item)">
@@ -87,7 +96,7 @@
             <span><strong>{{ item.name }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
             <em v-if="item.attributeCount">{{ item.attributeCount }}</em>
           </button>
-          <p v-if="!filteredOutline.length">{{ analysis?.valid ? '没有匹配的元素' : '修复诊断后显示结构树' }}</p>
+          <p v-if="!filteredOutline.length">{{ analysis?.valid || analysis?.previewAvailable ? '没有匹配的元素' : '修复诊断后显示结构树' }}</p>
           <p v-if="analysis?.outlineTruncated" class="warning">结构过大，仅显示受限范围</p>
         </div>
       </aside>
@@ -112,9 +121,9 @@ import { EditorView } from '@codemirror/view'
 import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
 import {
-  AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as ValidIcon,
+  AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as ValidIcon, Image as ImageIcon,
   FileCode2 as FileCodeIcon, FoldVertical as FoldIcon, PanelRight as InspectorIcon, RefreshCw as RefreshIcon,
-  Save as SaveIcon, Search as SearchIcon, Tags as TagIcon, UnfoldVertical as UnfoldIcon,
+  Save as SaveIcon, Search as SearchIcon, ShieldOff as ShieldOffIcon, Tags as TagIcon, UnfoldVertical as UnfoldIcon,
 } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
@@ -128,6 +137,7 @@ interface Analysis {
   valid: boolean; rootName?: string; elementCount: number; attributeCount: number; namespaceCount: number; maxDepth: number
   commentCount: number; cdataCount: number; processingInstructionCount: number; doctypeCount: number
   outline: OutlineEntry[]; outlineTruncated: boolean; diagnostics: Diagnostic[]
+  sanitizedSvg?: string; previewAvailable?: boolean; blockedElementCount?: number; blockedAttributeCount?: number; externalReferenceCount?: number
 }
 
 const route = useRoute()
@@ -139,12 +149,15 @@ const { inspectorVisible, toggleInspector } = useResponsiveInspector()
 const editorHost = ref<HTMLElement | null>(null)
 const xmlPath = computed(() => String(route.query.path || ''))
 const format = computed(() => findFileFormat(xmlPath.value))
-const fileName = computed(() => xmlPath.value.split(/[\\/]/).pop() || '未命名 XML')
+const isSvg = computed(() => format.value?.id === 'svg')
+const formatLabel = computed(() => isSvg.value ? 'SVG' : 'XML')
+const fileName = computed(() => xmlPath.value.split(/[\\/]/).pop() || `未命名 ${formatLabel.value}`)
 const currentTab = computed(() => store.tabs.find(tab => tab.path === xmlPath.value))
 const loading = ref(true), saving = ref(false), loadError = ref(''), dirty = ref(false), analysisPending = ref(false)
 const sourceContent = ref(''), signature = ref(''), encoding = ref('utf-8'), readOnlyReason = ref(''), query = ref('')
 const fileSize = ref(0), modified = ref(0), sourceSize = ref(0), lineCount = ref(1), cursorLine = ref(1), cursorColumn = ref(1)
 const analysis = ref<Analysis | null>(null)
+const previewUrl = ref('')
 const readOnly = computed(() => Boolean(readOnlyReason.value))
 const filteredOutline = computed(() => {
   const needle = query.value.trim().toLocaleLowerCase()
@@ -165,8 +178,16 @@ const formatBytes = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 104
 const diagnosticTitle = (code: string) => ({
   'syntax-error': '语法错误', 'doctype-blocked': 'DOCTYPE 安全阻断', 'source-too-large': '超过分析上限',
   'analysis-budget-exceeded': '结构超过分析预算', 'root-element-count': '根元素错误', 'attribute-error': '属性错误',
-}[code] || 'XML 诊断')
+  'svg-source-too-large': '超过 SVG 上限', 'svg-root-required': 'SVG 根元素错误',
+  'svg-structure-budget-exceeded': '超过 SVG 结构预算',
+  'svg-element-blocked': '元素已阻断', 'svg-attribute-blocked': '属性已阻断',
+  'svg-processing-instruction-blocked': '处理指令已阻断', 'svg-sanitizer-failed': '净化失败',
+}[code] || `${formatLabel.value} 诊断`)
 const clearTimer = () => { if (timer) clearTimeout(timer); timer = null }
+const updatePreview = (source?: string) => {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+  previewUrl.value = source ? URL.createObjectURL(new Blob([source], { type: 'image/svg+xml' })) : ''
+}
 
 const syncTab = (isDirty = dirty.value) => {
   const tab = store.tabs.find(item => item.path === xmlPath.value)
@@ -182,8 +203,11 @@ const analyze = async (content: string) => {
   const generation = ++analysisGeneration
   analysisPending.value = true; sourceSize.value = new TextEncoder().encode(content).length
   try {
-    const result = await invoke<Analysis>('analyze_xml_source', { content })
-    if (generation === analysisGeneration && sourceContent.value === content) analysis.value = result
+    const result = await invoke<Analysis>(isSvg.value ? 'analyze_svg_source' : 'analyze_xml_source', { content })
+    if (generation === analysisGeneration && sourceContent.value === content) {
+      analysis.value = result
+      updatePreview(isSvg.value && result.previewAvailable ? result.sanitizedSvg : undefined)
+    }
     return result
   } finally { if (generation === analysisGeneration) analysisPending.value = false }
 }
@@ -231,10 +255,10 @@ const load = async (discardDraft = false) => {
   const generation = ++loadGeneration
   analysisGeneration++; clearTimer(); loading.value = true; loadError.value = ''; analysis.value = null
   try {
-    if (!xmlPath.value || format.value?.id !== 'xml') throw new Error('当前路径不是已注册的 XML 文件')
+    if (!xmlPath.value || !['xml', 'svg'].includes(format.value?.id || '')) throw new Error('当前路径不是已注册的 XML 或 SVG 文件')
     const draft = currentTab.value
     if (!discardDraft && draft?.isDirty && draft.content !== undefined) { await restoreDraft(draft); return }
-    const value = await invoke<Snapshot>('read_text_document', { libraryRoot: store.libraryPath, path: xmlPath.value, formatId: 'xml', readOptions: undefined })
+    const value = await invoke<Snapshot>('read_text_document', { libraryRoot: store.libraryPath, path: xmlPath.value, formatId: format.value?.id, readOptions: undefined })
     if (generation === loadGeneration) await applySnapshot(value)
   } catch (error) { if (generation === loadGeneration) loadError.value = errorText(error) }
   finally { if (generation === loadGeneration) loading.value = false }
@@ -252,17 +276,26 @@ const save = async (allowInvalid = false) => {
   try {
     const result = await analyze(content)
     if (!result.valid && !allowInvalid) {
-      dialog.warning({
-        title: 'XML 不满足安全有效性要求', content: '默认不会覆盖磁盘文件。可以继续修复，或明确按当前源码保存。',
-        positiveText: '按源码保存', negativeText: '继续编辑', onPositiveClick: () => { void save(true) },
-      }); return
+      if (isSvg.value) {
+        dialog.warning({
+          title: 'SVG 不满足安全合同', content: '脚本、事件属性、外部引用或不受控元素不会写入磁盘。请根据诊断修复后再保存。',
+          positiveText: '继续编辑',
+        })
+      } else {
+        dialog.warning({
+          title: 'XML 不满足安全有效性要求', content: '默认不会覆盖磁盘文件。可以继续修复，或明确按当前源码保存。',
+          positiveText: '按源码保存', negativeText: '继续编辑', onPositiveClick: () => { void save(true) },
+        })
+      }
+      return
     }
-    const value = await invoke<Snapshot>('write_xml_source_document', {
-      libraryRoot: store.libraryPath, path: xmlPath.value, content, expectedSignature: signature.value, allowInvalid,
+    const value = await invoke<Snapshot>(isSvg.value ? 'write_svg_source_document' : 'write_xml_source_document', {
+      libraryRoot: store.libraryPath, path: xmlPath.value, content, expectedSignature: signature.value,
+      ...(isSvg.value ? {} : { allowInvalid }),
     })
     if (editor.state.doc.toString() === content) await applySnapshot(value)
     else { signature.value = value.signature; encoding.value = value.encoding; fileSize.value = value.size; modified.value = value.modified; dirty.value = true; syncTab(true); scheduleAnalysis() }
-    message.success(result.valid ? 'XML 源码已安全保存' : 'XML 已按源码保存')
+    message.success(result.valid ? `${formatLabel.value} 源码已安全保存` : 'XML 已按源码保存')
   } catch (cause) {
     const error = cause as { code?: string }
     if (error?.code === 'external-modified') dialog.warning({
@@ -273,7 +306,7 @@ const save = async (allowInvalid = false) => {
   } finally { saving.value = false }
 }
 const reload = async () => {
-  if (dirty.value && !window.confirm('重新读取会覆盖当前未保存的 XML 源码，是否继续？')) return
+  if (dirty.value && !window.confirm(`重新读取会覆盖当前未保存的 ${formatLabel.value} 源码，是否继续？`)) return
   await load(true)
 }
 const keydown = (event: KeyboardEvent) => {
@@ -287,7 +320,7 @@ onMounted(async () => {
   unlistenSave = await listen('command-save', () => { void save() }); unlistenRefresh = await listen('command-refresh', () => { void reload() })
 })
 onBeforeUnmount(() => {
-  clearTimer(); syncTab(); editor?.destroy(); editor = null; window.removeEventListener('keydown', keydown); unlistenSave?.(); unlistenRefresh?.()
+  clearTimer(); updatePreview(); syncTab(); editor?.destroy(); editor = null; window.removeEventListener('keydown', keydown); unlistenSave?.(); unlistenRefresh?.()
 })
 </script>
 
@@ -310,6 +343,9 @@ onBeforeUnmount(() => {
 .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .metrics div { padding: 8px 3px; display: flex; flex-direction: column; align-items: center; border: var(--theme-border); border-radius: 8px; background: var(--theme-bg); }
 .metrics span { color: var(--theme-text-secondary); font-size: 10px; }
+.svg-preview { min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; border: var(--theme-border); border-radius: 8px; overflow: hidden; background: var(--theme-bg); }
+.svg-preview img { width: 100%; height: 180px; object-fit: contain; }
+.svg-preview span { padding: 0 8px 8px; color: var(--theme-text-secondary); font-size: 10px; text-align: center; }
 .diagnostics button, .outline button { width: 100%; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; }
 .diagnostics button { padding: 8px; display: flex; gap: 8px; border-radius: 7px; color: var(--theme-danger, #d03050); background: rgba(208,48,80,.08); }
 .diagnostics span, .outline button span { min-width: 0; flex: 1; display: flex; flex-direction: column; }

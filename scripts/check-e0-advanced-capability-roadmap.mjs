@@ -52,7 +52,7 @@ if (
 
 const expectedTracks = new Map([
   ["excel-equivalence", ["FR-DATA-009", "P0", "partial"]],
-  ["new-format-editors", ["FR-VECTOR-001..002", "P1", "candidate-ranked"]],
+  ["new-format-editors", ["FR-VECTOR-001..002", "P1", "in-progress"]],
   ["theme-expansion", ["FR-THEME-001", "P2", "current-commitment-complete"]],
   ["complex-office-and-wps", ["FR-OFFICE-001..006", "P2", "deferred-risk-review"]],
 ]);
@@ -124,21 +124,24 @@ const formatIds = new Set(registry.formats.map((format) => format.id));
 const formatTrack = tracks.get("new-format-editors");
 if (
   formatTrack?.currentFacts?.registeredFormats !== registry.formats.length ||
-  registry.formats.length !== 39 ||
-  formatIds.has("svg") ||
+  registry.formats.length !== 40 ||
+  !formatIds.has("svg") ||
   formatIds.has("drawio") ||
-  formatTrack?.currentFacts?.svgRegistered !== false ||
+  formatTrack?.currentFacts?.svgRegistered !== true ||
   formatTrack?.currentFacts?.drawioRegistered !== false
 ) {
-  fail("new-format candidate facts are stale");
+  fail("new-format implementation facts are stale");
 }
 if (
   formatTrack?.phases?.[0]?.id !== "E2A" ||
   formatTrack.phases[0].name !== "svg-basic-source-editor" ||
-  formatTrack.phases[0].status !== "next" ||
-  formatTrack.phases[0].writeUserFile !== false
+  formatTrack.phases[0].status !== "completed" ||
+  formatTrack.phases[0].writeUserFile !== true ||
+  formatTrack.phases[0].deliveredContract !== "shared/svg-security-contract.json" ||
+  formatTrack?.phases?.[1]?.id !== "E2B" ||
+  formatTrack.phases[1].status !== "next"
 ) {
-  fail("SVG must begin behind a no-write security contract");
+  fail("SVG completion and Draw.io handoff drift");
 }
 
 const registeredPresetCount = [
@@ -178,10 +181,10 @@ for (const [requirement, source] of [
 }
 
 if (
-  roadmap.decision?.nextStage !== "E2A" ||
-  roadmap.decision?.nextSlice !== "svg-security-contract-and-basic-source-editor"
+  roadmap.decision?.nextStage !== "E2B" ||
+  roadmap.decision?.nextSlice !== "drawio-structured-editor-security-contract"
 ) {
-  fail("E0 roadmap must advance to E2A after bounded E1A completion");
+  fail("E0 roadmap must advance to E2B after SVG E2A completion");
 }
 if (
   !packageJson.scripts["ci:check"]?.includes(
@@ -205,7 +208,7 @@ for (const [label, source, markers] of [
   [
     "current development audit",
     currentAuditDoc,
-    ["E0 高级能力差距审计已完成", "下一代码阶段为 E2A"],
+    ["E0 高级能力差距审计已完成", "E2A SVG 安全源码编辑已完成", "下一代码阶段为 E2B"],
   ],
 ]) {
   for (const marker of markers) {
@@ -219,5 +222,5 @@ if (failures.length) {
 }
 
 console.log(
-  `E0 advanced capability roadmap passed: ${tracks.size} tracks; bounded Excel E1A is complete, SVG E2A is next, themes remain 3 core + 4 scenario, RC remains blocked.`,
+  `E0 advanced capability roadmap passed: ${tracks.size} tracks; bounded Excel E1A and SVG E2A are complete, Draw.io E2B is next, themes remain 3 core + 4 scenario, RC remains blocked.`,
 );

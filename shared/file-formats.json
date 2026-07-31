@@ -288,6 +288,19 @@
       "creation": { "defaultExtension": ".xml", "defaultContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<document>\n  <item>未命名内容</item>\n</document>\n", "defaultName": "未命名 XML" }
     },
     {
+      "id": "svg",
+      "label": "SVG",
+      "extensions": [".svg"],
+      "mimeTypes": ["image/svg+xml"],
+      "routeName": "XmlEditor",
+      "maxBytes": 5242880,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "basic-edit", "label": "安全源码编辑", "saveMode": "overwrite", "description": "SVG 支持创建、源码高亮、实时安全诊断、白名单净化预览、草稿恢复、文本索引和带签名冲突保护的可靠保存；脚本、事件属性、外部引用、foreignObject、处理指令和非受控元素会被阻断。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".svg", "defaultContent": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 320 180\" role=\"img\">\n  <title>未命名 SVG</title>\n  <rect x=\"12\" y=\"12\" width=\"296\" height=\"156\" rx=\"12\" fill=\"#36a18b\"/>\n  <text x=\"160\" y=\"98\" fill=\"#ffffff\" font-size=\"24\" text-anchor=\"middle\">LongEdit SVG</text>\n</svg>\n", "defaultName": "未命名 SVG" }
+    },
+    {
       "id": "toml",
       "label": "TOML",
       "extensions": [".toml"],

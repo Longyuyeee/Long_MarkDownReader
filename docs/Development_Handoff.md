@@ -495,3 +495,16 @@ R2 Windows 安装与生命周期工程已收口。接手后直接进入 R3 数�
 4. R3 完成后进入 R4：正式签名和可抛弃 Windows 10/11 VM 的安装、升级、降级拒绝、卸载保留及文件关联恢复矩阵。
 
 R2 事实源为 `shared/windows-lifecycle-policy.json`，完整审计见 `docs/R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md`。发布能力页当前显示 R2，`releaseCandidate=false`。
+
+# 2026-07-31 E2A SVG 交接入口
+
+E2A 已完成。SVG 现在是第 40 类注册格式，复用统一 XML 源码工作面，并增加 Rust 安全白名单重写、`<img>` Blob 净化预览、5 MiB 源码预算、16,384 视口预算和签名冲突保护保存。不安全源码只保留在草稿中修复，脚本、事件属性、`foreignObject`、外部引用、处理指令和非白名单元素不能写回。
+
+接手后直接进入 E2B：
+
+1. 冻结 Draw.io 的 mxGraph 压缩/XML 解析合同。
+2. 明确外部图片、链接、实体、资源预算和未知属性保留策略。
+3. 实现页面与单元格结构模型，再确定可靠副本或受保护覆盖策略。
+4. 增加真实 `.drawio` fixture、失败语料、桌面复开和 D2 安全通道证据。
+
+E1B 数组写回和 E1C 多层 Pivot 可靠副本仍分别受 1/3、2/3 外部生产者证据阻断；`releaseCandidate=false` 不变。详细审计见 [`E2A_SVG_Security_and_Basic_Source_Editor_Audit_2026-07-31.md`](./E2A_SVG_Security_and_Basic_Source_Editor_Audit_2026-07-31.md)。

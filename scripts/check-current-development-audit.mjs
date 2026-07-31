@@ -56,8 +56,8 @@ const readinessCounts = matrix.formats.reduce((counts, item) => {
 }, {});
 
 const expectedFacts = [
-  ["39 类注册格式", matrix.formats.length === 39],
-  ["27 类已验证", readinessCounts.verified === 27],
+  ["40 类注册格式", matrix.formats.length === 40],
+  ["28 类已验证", readinessCounts.verified === 28],
   [
     "6 类已验证但存在明确限制",
     readinessCounts["verified-with-limitations"] === 6,
