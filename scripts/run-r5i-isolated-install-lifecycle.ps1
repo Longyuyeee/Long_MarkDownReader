@@ -257,7 +257,7 @@ $formalConfig = [ordered]@{
         name = "R5L Restore Marker"
         query = "R5L"
         libraryPath = $libraryRoot
-        objectTypes = @("txt", "json")
+        objectTypes = @("plain-text", "json")
         createdAt = 1
     })
 }

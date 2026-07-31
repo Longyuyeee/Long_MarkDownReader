@@ -70,6 +70,14 @@ const navigate = async (hash, selector, description) => {
     throw new Error(`${description} showed the global crash fallback`)
   }
 }
+const assertNoGlobalFallback = async description => {
+  await delay(750)
+  const fallback = await evaluate(`(() => {
+    const element = document.querySelector('.crash-fallback')
+    return element ? element.textContent : ''
+  })()`)
+  if (fallback) throw new Error(`${description} showed the global crash fallback: ${fallback}`)
+}
 const setEditorText = async text => {
   const point = await evaluate(`(() => {
     const editor = document.querySelector('.cm-content')
@@ -134,6 +142,7 @@ await waitForFile(textFile, 'R5J_TEXT_SAVED', 'installed TXT disk save')
 await navigate('#/workspace', '.workspace-home', 'workspace between installed TXT reopen')
 await navigate(textRoute, '.library-embedded-editor .text-workspace', 'reopened installed TXT editor')
 await waitFor(`document.querySelector('.cm-content')?.textContent?.includes('R5J_TEXT_SAVED') === true`, 'reopened installed TXT content')
+await assertNoGlobalFallback('reopened installed TXT editor')
 await capture('installed-txt-save-reopen.jpg')
 checks.push({ id: 'installed-txt-read-edit-save-reopen', status: 'passed' })
 
@@ -147,6 +156,7 @@ await waitForFile(jsonFile, 'R5J_JSON_SAVED', 'installed JSON disk save')
 await navigate('#/workspace', '.workspace-home', 'workspace between installed JSON reopen')
 await navigate(jsonRoute, '.library-embedded-editor .json-workspace', 'reopened installed JSON editor')
 await waitFor(`document.querySelector('.cm-content')?.textContent?.includes('R5J_JSON_SAVED') === true`, 'reopened installed JSON content')
+await assertNoGlobalFallback('reopened installed JSON editor')
 await capture('installed-json-save-reopen.jpg')
 checks.push({ id: 'installed-json-read-edit-save-reopen', status: 'passed' })
 

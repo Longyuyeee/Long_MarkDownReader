@@ -6,9 +6,9 @@ $importer = Join-Path $repoRoot "scripts/import-r5k-windows-evidence-bundle.ps1"
 $target = Join-Path $repoRoot "docs/evidence/r5k-windows-matrix/imported"
 $r5h = Get-Content -LiteralPath (Join-Path $repoRoot "docs/evidence/r5h-current-installers/installer-artifact-manifest.json") -Raw | ConvertFrom-Json
 $currentInstallerSha256 = [string]@($r5h.artifacts | Where-Object { $_.target -eq "nsis" })[0].sha256
-if (Test-Path -LiteralPath $target) {
-    throw "R5K rejection tests only run before real evidence is imported."
-}
+$existingEvidenceSha256 = if (Test-Path -LiteralPath (Join-Path $target "r5k-bundle-manifest.json")) {
+    (Get-FileHash -LiteralPath (Join-Path $target "r5k-bundle-manifest.json") -Algorithm SHA256).Hash
+} else { "" }
 $auditRoot = Join-Path $env:TEMP ("longedit-r5k-rejections-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $auditRoot -Force | Out-Null
 
@@ -131,7 +131,7 @@ try {
         $stdout = Join-Path $auditRoot "$($case.Key)-stdout.log"
         $stderr = Join-Path $auditRoot "$($case.Key)-stderr.log"
         $process = Start-Process -FilePath "powershell.exe" `
-            -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $importer, "-BundlePath", $bundlePath) `
+            -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $importer, "-BundlePath", $bundlePath, "-ValidationOnly") `
             -WindowStyle Hidden `
             -RedirectStandardOutput $stdout `
             -RedirectStandardError $stderr `
@@ -141,8 +141,11 @@ try {
         if ($process.ExitCode -eq 0 -or $message -notmatch [regex]::Escape($case.Value)) {
             throw "R5K rejection case did not fail as expected: $($case.Key)"
         }
-        if (Test-Path -LiteralPath $target) {
-            throw "R5K rejection case promoted evidence: $($case.Key)"
+        $evidenceSha256After = if (Test-Path -LiteralPath (Join-Path $target "r5k-bundle-manifest.json")) {
+            (Get-FileHash -LiteralPath (Join-Path $target "r5k-bundle-manifest.json") -Algorithm SHA256).Hash
+        } else { "" }
+        if ($evidenceSha256After -ne $existingEvidenceSha256) {
+            throw "R5K rejection case changed promoted evidence: $($case.Key)"
         }
     }
     Write-Host "R5K evidence rejection matrix passed: 4/4 malformed bundles rejected without promotion."

@@ -11,7 +11,8 @@ param(
     [string]$TargetName = "imported",
     [ValidateSet("any", "windows-10-x64", "windows-11-x64")]
     [string]$ExpectedWindowsClass = "any",
-    [string]$ArtifactManifestPath = "docs/evidence/r5h-current-installers/installer-artifact-manifest.json"
+    [string]$ArtifactManifestPath = "docs/evidence/r5h-current-installers/installer-artifact-manifest.json",
+    [switch]$ValidationOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -34,7 +35,7 @@ if (-not $approvedManifestPath.StartsWith($approvedManifestRoot, [System.StringC
 if (-not (Test-Path -LiteralPath $bundle -PathType Leaf)) {
     throw "R5K evidence bundle is missing."
 }
-if (Test-Path -LiteralPath $target) {
+if (-not $ValidationOnly -and (Test-Path -LiteralPath $target)) {
     throw "Refusing to overwrite existing R5K imported evidence."
 }
 
@@ -297,12 +298,16 @@ try {
         }
     }
 
-    New-Item -ItemType Directory -Path $promotionRoot -Force | Out-Null
-    foreach ($item in Get-ChildItem -LiteralPath $auditRoot -File) {
-        Copy-Item -LiteralPath $item.FullName -Destination $promotionRoot
+    if ($ValidationOnly) {
+        Write-Host "R5K Windows evidence bundle validation passed without import."
+    } else {
+        New-Item -ItemType Directory -Path $promotionRoot -Force | Out-Null
+        foreach ($item in Get-ChildItem -LiteralPath $auditRoot -File) {
+            Copy-Item -LiteralPath $item.FullName -Destination $promotionRoot
+        }
+        Move-Item -LiteralPath $promotionRoot -Destination $target
+        Write-Host "R5K Windows evidence bundle imported: $target"
     }
-    Move-Item -LiteralPath $promotionRoot -Destination $target
-    Write-Host "R5K Windows evidence bundle imported: $target"
 }
 finally {
     if (Test-Path -LiteralPath $auditRoot) {

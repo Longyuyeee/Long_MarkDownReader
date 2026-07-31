@@ -130,6 +130,7 @@ for (const token of [
   'member digest drifted',
   'approvedSourceCommit',
   'windows-server-x64',
+  'ValidationOnly',
   'installed-txt-save-reopen.jpg',
   'rollback-cleanup-retains-user-data',
   'Refusing to overwrite existing R5K imported evidence',
