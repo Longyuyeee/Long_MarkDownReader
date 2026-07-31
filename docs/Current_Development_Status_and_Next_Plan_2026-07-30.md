@@ -562,3 +562,9 @@ GitHub Actions run `30664431101` rebuilt source `dfe5e9c424ab4a3b71f1eee3924dc43
 R5K is now `generic-hosted-windows-evidence-imported-client-matrix-pending`; R5L is `generic-hosted-management-recovery-proven-client-matrix-pending`; U2 is `hosted-unsigned-lifecycle-passed-signed-client-matrix-pending`. This closes the generic hosted unsigned lane only. Windows 10, Windows 11, Authenticode signing, signed runtime, and manual release approval remain false, so `releaseCandidate=false` remains unchanged.
 
 Next action: R5N `execute-signed-windows-10-and-windows-11-client-matrix`. Full evidence and boundary analysis are in `docs/U2O_Hosted_Unsigned_Lifecycle_Closure_Audit_2026-08-01.md`.
+
+## U2P update - repository automation closed at the R5N external boundary
+
+The R5N environment and promotion audits were rerun after U2O. The host has no Windows SDK signing tool, no eligible code-signing certificate with a private key, no Windows Sandbox or Hyper-V provisioning command, and no provided Windows 10/11 disposable clients. Signed manifest readiness, both signed client lanes, automated promotion gates, and manual approval therefore remain false. The 3/3 unsafe-transition rejection matrix passed.
+
+Repository-only progression is now closed at a genuine external dependency boundary. The exact signing, dual-client execution, import, approval, and explicit-promotion order is documented in `docs/U2P_R5N_External_Release_Blocker_Audit_2026-08-01.md`.

@@ -1,9 +1,13 @@
 # U2O 托管未签名安装生命周期收口审计
 
-日期：2026-08-01  
-应用版本：0.7.0  
-产品源码：`dfe5e9c424ab4a3b71f1eee3924dc43f8f7d400f`  
-GitHub Actions：`30664431101`  
+日期：2026-08-01
+
+应用版本：0.7.0
+
+产品源码：`dfe5e9c424ab4a3b71f1eee3924dc43f8f7d400f`
+
+GitHub Actions：`30664431101`
+
 结论：通用托管 Windows 未签名内部候选链路通过；`releaseCandidate=false`。
 
 ## 1. 本阶段关闭的问题
