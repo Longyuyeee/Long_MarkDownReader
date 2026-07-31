@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "stage": "D3",
+  "appVersion": "0.7.0",
+  "productAcceptanceStatus": "accepted-for-capability-freeze",
+  "releaseStatus": "blocked-external-evidence",
+  "releaseCandidate": false,
+  "frozenBaseline": {
+    "registeredFormats": 39,
+    "releaseProfiles": 10,
+    "safeDegradationLanes": 6
+  },
+  "acceptanceAreas": [
+    {
+      "id": "daily-workspace-management",
+      "status": "accepted",
+      "gateScripts": [
+        "check:a5-desktop-evidence",
+        "check:r5g-desktop-artifact-smoke"
+      ],
+      "evidence": [
+        "docs/evidence/a5-stage-a/audit-manifest.json",
+        "docs/evidence/r5g-desktop-artifact-smoke/audit-manifest.json"
+      ]
+    },
+    {
+      "id": "format-authoring-and-safe-degradation",
+      "status": "accepted",
+      "gateScripts": [
+        "check:format-contract",
+        "check:d1c-accessibility-contract",
+        "check:d2-safe-degradation-contract"
+      ],
+      "evidence": [
+        "shared/release-capability-matrix.json",
+        "shared/safe-degradation-contract.json"
+      ]
+    },
+    {
+      "id": "knowledge-organization",
+      "status": "accepted",
+      "gateScripts": [
+        "check:graph-product-contract",
+        "check:a5-desktop-evidence"
+      ],
+      "evidence": [
+        "docs/evidence/a5-stage-a/audit-manifest.json"
+      ]
+    },
+    {
+      "id": "visual-authoring-theme-and-accessibility",
+      "status": "accepted",
+      "gateScripts": [
+        "check:theme-contract",
+        "check:d1c-accessibility-contract"
+      ],
+      "evidence": [
+        "docs/evidence/t8-1b/audit-manifest.json",
+        "docs/evidence/c5d-pptx-release-closure/audit-manifest.json"
+      ]
+    },
+    {
+      "id": "pdf-page-workflows",
+      "status": "accepted",
+      "gateScripts": [
+        "check:pdf-page-plan-contract",
+        "check:b2a-pdf-page-extraction-evidence",
+        "check:b2b-pdf-merge-evidence",
+        "check:b2c-pdf-insert-evidence"
+      ],
+      "evidence": [
+        "docs/evidence/b2a-pdf-page-extraction/audit-manifest.json",
+        "docs/evidence/b2b-pdf-merge/audit-manifest.json",
+        "docs/evidence/b2c-pdf-insert/audit-manifest.json"
+      ]
+    },
+    {
+      "id": "modern-office-copy-workflows",
+      "status": "accepted",
+      "gateScripts": [
+        "check:docx-producer-matrix",
+        "check:pptx-producer-matrix",
+        "check:c5d-pptx-release-closure-evidence"
+      ],
+      "evidence": [
+        "docs/evidence/a5-stage-a/audit-manifest.json",
+        "docs/evidence/c5d-pptx-release-closure/audit-manifest.json"
+      ]
+    },
+    {
+      "id": "bounded-workbook-editing",
+      "status": "accepted",
+      "gateScripts": [
+        "check:workbook-contract",
+        "check:xlsx-release-gate",
+        "check:x3-b3-array-desktop",
+        "check:x3-b4-array-conflict-desktop"
+      ],
+      "evidence": [
+        "docs/evidence/x3-b3-xlsx-array-desktop/audit-manifest.json",
+        "docs/evidence/x3-b4-xlsx-array-conflict-desktop/audit-manifest.json"
+      ]
+    },
+    {
+      "id": "recovery-backup-and-privacy",
+      "status": "accepted",
+      "gateScripts": [
+        "check:r3-data-resilience-contract"
+      ],
+      "evidence": [
+        "shared/data-resilience-policy.json"
+      ]
+    },
+    {
+      "id": "performance-and-regression-quality",
+      "status": "accepted",
+      "gateScripts": [
+        "check:r5a-frontend-release-hardening",
+        "check:r5b-desktop-startup-performance",
+        "check:r5e-runtime-route-smoke",
+        "test:rust",
+        "benchmark:pdf-range"
+      ],
+      "evidence": [
+        "docs/evidence/r5e-runtime-route-smoke/manifest.json",
+        "docs/evidence/r5g-desktop-artifact-smoke/route-performance-evidence.json"
+      ]
+    }
+  ],
+  "externalGates": [
+    {
+      "id": "e1b-wps-odt",
+      "status": "partial",
+      "evidence": "2/3"
+    },
+    {
+      "id": "x3-b6-array-producers",
+      "status": "partial",
+      "evidence": "1/3"
+    }
+  ],
+  "scopeExclusions": [
+    "signed-windows-rc-promotion",
+    "complete-excel-equivalent-editing",
+    "complex-office-and-odf-equivalent-editing",
+    "wps-native-kernel-editing",
+    "cloud-collaboration-and-enterprise-governance"
+  ],
+  "nextStage": "E0"
+}
