@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "stage": "U1",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "isolated-clean-build-of-unsigned-internal-msi-and-nsis",
+  "currentStatus": "unsigned-candidate-built-runtime-smoke-blocked-existing-single-instance",
+  "sourceCommit": "953494c50360d232e0848d0bab80e0defd3c53d4",
+  "requiredTargets": [
+    "msi",
+    "nsis"
+  ],
+  "evidence": {
+    "installerManifest": "docs/evidence/u1-unsigned-internal-candidate/installer-manifest.json",
+    "portableRuntimeSmoke": "docs/evidence/u1-unsigned-internal-candidate/portable-runtime-smoke.json",
+    "artifactFilesCommitted": false,
+    "localArtifactVerificationWhenPresent": true,
+    "sourceUserContentAllowed": false
+  },
+  "gates": {
+    "cleanIsolatedBuildPassed": true,
+    "msiBuilt": true,
+    "nsisBuilt": true,
+    "hashesRecorded": true,
+    "authenticodeRecorded": true,
+    "artifactsSigned": false,
+    "portableRuntimeSmokePassed": false,
+    "installerExecuted": false,
+    "promotionEligible": false
+  },
+  "blockers": [
+    "existing-longedit-single-instance-prevented-portable-runtime-smoke",
+    "host-installer-mutation-not-authorized",
+    "signed-windows-10-runtime-evidence-missing",
+    "signed-windows-11-runtime-evidence-missing",
+    "manual-release-approval-missing"
+  ],
+  "nextStage": "U2",
+  "nextSlice": "disposable-unsigned-install-lifecycle"
+}

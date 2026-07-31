@@ -522,3 +522,9 @@ E2B 已完成。Draw.io 现在是第 41 类注册格式，`.drawio/.dio` 已接�
 E5 已完成。机器事实源为 `shared/e5-final-capability-closure.json`，完整门禁在基线提交 `313e8701825c29e69de9d0592df1ac462d3921a4` 上通过：Rust 功能回归 431/431、性能回归 1/1、生产依赖漏洞 0。
 
 下一步直接进入 U1 未签名内部候选包：从 E5 通过后的干净 `main` 构建 MSI/NSIS，绑定提交、版本、大小和 SHA-256，并明确保持 internal-only 与 `releaseCandidate=false`。完成 U1 后进入 U2 本机安装生命周期验证；真实签名和 Windows 10/11 隔离证据仍交给 R5N 外部流程。
+
+# 2026-08-01 U1 交接入口
+
+U1 已完成。`shared/u1-unsigned-internal-candidate-policy.json` 绑定提交 `953494c` 的隔离干净构建，MSI/NSIS 均为 `NotSigned`，哈希与大小已登记，二进制只保存在本机忽略目录。
+
+便携运行烟测因当前会话存在另一份 LongEdit 单实例而记录为 `blocked-existing-single-instance`；没有关闭用户进程、执行安装器或修改注册表。下一步进入 U2 一次性环境的未签名安装生命周期。

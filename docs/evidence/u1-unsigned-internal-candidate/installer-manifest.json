@@ -1,0 +1,41 @@
+{
+    "schemaVersion":  1,
+    "stage":  "U1",
+    "appVersion":  "0.7.0",
+    "capturedAt":  "2026-07-31T17:35:03.0520246Z",
+    "sourceCommit":  "953494c50360d232e0848d0bab80e0defd3c53d4",
+    "buildCommand":  "npm run tauri -- build --bundles msi,nsis",
+    "isolatedCleanWorktree":  true,
+    "buildExecuted":  true,
+    "releaseCandidate":  false,
+    "promotionEligible":  false,
+    "internalOnly":  true,
+    "artifactFilesCommitted":  false,
+    "sourceUserContentIncluded":  false,
+    "artifacts":  [
+                      {
+                          "target":  "msi",
+                          "fileName":  "Long编辑_0.7.0_x64_zh-CN.msi",
+                          "relativeDirectory":  "src-tauri/target/release/bundle/u1-unsigned/953494c",
+                          "sizeBytes":  56524800,
+                          "lastWriteTimeUtc":  "2026-07-31T17:29:36.3710000Z",
+                          "sha256":  "d1e8d90b99bc5611a6b14c819913810af254a3ddcccd1ffc7cac21b4cc95e17d",
+                          "authenticodeStatus":  "NotSigned",
+                          "signed":  false,
+                          "officialRelease":  false,
+                          "promotionEligible":  false
+                      },
+                      {
+                          "target":  "nsis",
+                          "fileName":  "Long编辑_0.7.0_x64-setup.exe",
+                          "relativeDirectory":  "src-tauri/target/release/bundle/u1-unsigned/953494c",
+                          "sizeBytes":  52101715,
+                          "lastWriteTimeUtc":  "2026-07-31T17:30:12.9988997Z",
+                          "sha256":  "a00236f7921f331ef690a75ba8a6417cbbc88c0b97bbbff14a1d8cd5957c072e",
+                          "authenticodeStatus":  "NotSigned",
+                          "signed":  false,
+                          "officialRelease":  false,
+                          "promotionEligible":  false
+                      }
+                  ]
+}

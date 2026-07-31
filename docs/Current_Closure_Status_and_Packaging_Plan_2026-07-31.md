@@ -51,3 +51,9 @@ E5 已完成。完整 `ci:check` 已在提交 `313e8701825c29e69de9d0592df1ac462
 当前 41 类格式与高级能力总账已经冻结，下一阶段正式推进到 U1：构建并登记未签名内部候选安装包。该包只能用于内部安装与生命周期验证，必须继续保持 `releaseCandidate=false`。
 
 E1B 数组生产者 1/3、E1C 多层 Pivot 2/3、WPS ODF 2/3，以及已签名 Windows 10/11 运行证据 0/2 均继续保持外部阻塞，不得由 U1 替代。
+
+## 2026-08-01 U1 打包更新
+
+U1 已完成：提交 `953494c` 的隔离干净工作树成功生成 MSI 和 NSIS，两者均为 `NotSigned`，哈希和大小已写入 `docs/evidence/u1-unsigned-internal-candidate/installer-manifest.json`。产物为 internal-only，`releaseCandidate=false`。
+
+本机便携运行烟测被现有 LongEdit 单实例阻挡，已按 `blocked-existing-single-instance` 留证且未打扰用户进程。下一步为 U2 一次性 Windows 环境的未签名安装生命周期。
