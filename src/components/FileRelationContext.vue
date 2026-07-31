@@ -62,6 +62,8 @@
             <div class="relation-meta">
               <span :class="`class-${relation.relationClass}`">{{ relationClassLabel(relation.relationClass) }}</span>
               <b>{{ relationTypeLabel(relation.relationType) }}</b>
+              <em v-if="relation.decisionStatus === 'confirmed'">已确认</em>
+              <em v-else-if="relation.decisionStatus === 'inferred'">待判断</em>
               <small>{{ directionLabel(relation.direction) }}</small>
             </div>
             <button class="relation-route" type="button" @click="openNode(focusNode(relation))">
@@ -75,12 +77,53 @@
               <span>{{ relation.evidence[0].context }}</span>
               <small><template v-if="relation.evidence[0].line">第 {{ relation.evidence[0].line }} 行 · </template>{{ relation.evidence[0].syntax }}</small>
             </blockquote>
+            <div v-if="isDecisionRelation(relation)" class="decision-actions">
+              <button
+                v-if="relation.decisionStatus !== 'confirmed'"
+                type="button"
+                :disabled="decisionSaving === relationKey(relation)"
+                title="确认这条共同标签关系"
+                @click="setRelationDecision(relation, 'confirmed')"
+              ><CheckIcon />确认</button>
+              <button
+                v-else
+                type="button"
+                :disabled="decisionSaving === relationKey(relation)"
+                title="恢复为尚未判断的推断关系"
+                @click="setRelationDecision(relation, 'inferred')"
+              ><RotateIcon />改回推断</button>
+              <button
+                type="button"
+                :disabled="decisionSaving === relationKey(relation)"
+                title="隐藏这条共同标签关系"
+                @click="setRelationDecision(relation, 'hidden')"
+              ><EyeOffIcon />隐藏</button>
+            </div>
           </article>
         </div>
         <div v-else class="context-state empty">
           <strong>{{ filter === 'all' ? '当前文件还没有关系' : '没有这一类关系' }}</strong>
           <span>{{ filter === 'all' ? '可以通过双向链接、批注、视图、画布节点或思维导图层级建立上下文。' : '切换“全部”查看其他关系。' }}</span>
         </div>
+        <details v-if="context.hiddenRelations.length" class="hidden-relations">
+          <summary>已隐藏的推断关系 <b>{{ context.hiddenRelations.length }}</b></summary>
+          <article v-for="relation in context.hiddenRelations" :key="relationKey(relation)" class="relation-card hidden">
+            <div class="relation-meta">
+              <span class="class-semantic">语义</span>
+              <b>{{ relationTypeLabel(relation.relationType) }}</b>
+              <small>已隐藏</small>
+            </div>
+            <div class="hidden-route">
+              <span>{{ relation.source.title }}</span><MinusIcon /><span>{{ relation.target.title }}</span>
+            </div>
+            <button
+              class="restore-decision"
+              type="button"
+              :disabled="decisionSaving === relationKey(relation)"
+              @click="setRelationDecision(relation, 'inferred')"
+            ><RotateIcon />恢复</button>
+          </article>
+        </details>
         <footer v-if="context.truncated">仅展示前 80 条关系；完整网络请进入知识图谱。</footer>
       </template>
     </aside>
@@ -91,7 +134,15 @@
 import { computed, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
-import { ArrowRight as ArrowRightIcon, Minus as MinusIcon, Network as NetworkIcon, RefreshCw as RefreshIcon } from 'lucide-vue-next'
+import {
+  ArrowRight as ArrowRightIcon,
+  Check as CheckIcon,
+  EyeOff as EyeOffIcon,
+  Minus as MinusIcon,
+  Network as NetworkIcon,
+  RefreshCw as RefreshIcon,
+  RotateCcw as RotateIcon,
+} from 'lucide-vue-next'
 import { useAppStore, type SavedSearchConfig } from '../store/app'
 import { clearRelationContextCache, getRelationContextCache, setRelationContextCache } from '../services/relationContextCache'
 import { resolveCollectionPath } from '../utils/savedCollections'
@@ -115,11 +166,13 @@ interface GraphContextRelation {
   direction: 'incoming' | 'outgoing' | 'internal' | 'related'
   directed: boolean
   evidence: GraphRelationEvidence[]
+  decisionStatus: 'explicit' | 'inferred' | 'confirmed' | 'hidden'
 }
 interface GraphRelationContext {
   path: string
   node?: GraphContextNode
   relations: GraphContextRelation[]
+  hiddenRelations: GraphContextRelation[]
   indexed: boolean
   truncated: boolean
 }
@@ -140,6 +193,7 @@ const error = ref('')
 const context = ref<GraphRelationContext>()
 const filter = ref<'all' | 'fact' | 'structure' | 'planning' | 'semantic'>('all')
 const collectionMemberships = ref<SavedSearchConfig[]>([])
+const decisionSaving = ref('')
 let requestId = 0
 let membershipRequestId = 0
 
@@ -262,7 +316,31 @@ const toggle = () => {
   sessionStorage.setItem('longedit.relation-context.open', String(open.value))
   if (open.value) void loadContext()
 }
-const relationKey = (relation: GraphContextRelation, index: number) => `${relation.source.id}:${relation.target.id}:${relation.relationType}:${index}`
+const relationKey = (relation: GraphContextRelation, index?: number) => `${relation.source.id}:${relation.target.id}:${relation.relationType}${index === undefined ? '' : `:${index}`}`
+const isDecisionRelation = (relation: GraphContextRelation) => relation.relationType === 'shares-tag'
+const setRelationDecision = async (
+  relation: GraphContextRelation,
+  status: 'inferred' | 'confirmed' | 'hidden',
+) => {
+  const key = relationKey(relation)
+  if (decisionSaving.value) return
+  decisionSaving.value = key
+  error.value = ''
+  try {
+    await invoke('update_graph_relation_decision', {
+      libraryRoot: props.libraryRoot,
+      sourcePath: relation.source.path,
+      targetPath: relation.target.path,
+      relationType: relation.relationType,
+      status,
+    })
+    await loadContext(true)
+  } catch (reason) {
+    error.value = String(reason)
+  } finally {
+    decisionSaving.value = ''
+  }
+}
 const focusNode = (relation: GraphContextRelation) => {
   const currentId = context.value?.node?.id
   if (relation.source.id === currentId) return relation.target
@@ -378,6 +456,7 @@ watch(() => [
 .relation-meta span { padding: 2px 5px; border-radius: 4px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .08); }
 .relation-meta .class-planning { color: #8b5cf6; background: rgba(139, 92, 246, .1); }
 .relation-meta .class-structure { color: #0284c7; background: rgba(2, 132, 199, .1); }
+.relation-meta em { padding: 2px 5px; border-radius: 4px; color: #047857; background: rgba(5, 150, 105, .1); font-style: normal; }
 .relation-meta small { margin-left: auto; color: var(--theme-text-secondary); }
 .relation-route { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 14px minmax(0, 1fr); align-items: center; gap: 5px; margin-top: 8px; padding: 0; border: 0; background: transparent; color: var(--theme-text); text-align: left; cursor: pointer; }
 .relation-route span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
@@ -385,6 +464,19 @@ watch(() => [
 .relation-card p { margin: 5px 0 0; color: var(--theme-text-secondary); font-size: 9px; }
 .relation-card blockquote { display: grid; gap: 4px; margin: 8px 0 0; padding: 7px 8px; border-left: 2px solid rgba(var(--theme-primary-rgb), .35); color: var(--theme-text-secondary); background: rgba(var(--theme-primary-rgb), .035); font-size: 9px; }
 .relation-card blockquote small { opacity: .78; }
+.decision-actions { display: flex; justify-content: flex-end; gap: 5px; margin-top: 8px; }
+.decision-actions button, .restore-decision { display: inline-flex; align-items: center; gap: 4px; padding: 4px 7px; border: 1px solid var(--theme-border); border-radius: 6px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: 9px; cursor: pointer; }
+.decision-actions button:first-child, .restore-decision { color: var(--theme-primary); }
+.decision-actions button:disabled, .restore-decision:disabled { opacity: .45; cursor: wait; }
+.decision-actions svg, .restore-decision svg { width: 11px; }
+.hidden-relations { flex: none; max-height: 38%; overflow: auto; border-top: 1px solid var(--theme-border); }
+.hidden-relations summary { padding: 8px 12px; color: var(--theme-text-secondary); font-size: 9px; cursor: pointer; }
+.hidden-relations summary b { color: var(--theme-primary); }
+.hidden-relations .relation-card { margin: 0 12px 8px; }
+.relation-card.hidden { opacity: .78; }
+.hidden-route { display: grid; grid-template-columns: minmax(0, 1fr) 12px minmax(0, 1fr); align-items: center; gap: 5px; margin: 8px 0; color: var(--theme-text-secondary); font-size: 9px; }
+.hidden-route span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hidden-route svg { width: 11px; }
 .context-state { display: grid; place-content: center; gap: 7px; min-height: 150px; padding: 24px; color: var(--theme-text-secondary); text-align: center; font-size: 10px; }
 .context-state strong { color: var(--theme-text); font-size: 12px; }
 .context-state.error strong { color: var(--theme-danger, #dc2626); }

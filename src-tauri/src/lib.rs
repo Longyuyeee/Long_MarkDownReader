@@ -42,7 +42,7 @@ pub(crate) use commands::graph::GraphData;
 use commands::graph::{
     analyze_graph_health, build_link_graph, build_local_graph, extract_wikilinks, find_backlinks,
     get_graph_relation_context, get_library_stats, repair_graph_links, summarize_graph_relations,
-    update_graph_relation,
+    update_graph_relation, update_graph_relation_decision,
 };
 #[cfg(test)]
 pub(crate) use commands::graph::{GraphEdge, GraphNode};
@@ -389,6 +389,7 @@ pub fn run() {
             analyze_graph_health,
             repair_graph_links,
             update_graph_relation,
+            update_graph_relation_decision,
             get_launch_args,
             scan_directory,
             get_folder_order,

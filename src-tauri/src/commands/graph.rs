@@ -20,6 +20,10 @@ static RE_TAG: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(r"(?:^|\s)#([^\s#`\[\]()]+)").unwrap());
 const MAX_RELATION_SUMMARY_PATHS: usize = 100;
 const MAX_RELATION_CONTEXT_ITEMS: usize = 80;
+const MAX_RELATION_DECISIONS: usize = 512;
+const MAX_RELATION_DECISION_FILE_BYTES: u64 = 512 * 1024;
+const RELATION_DECISION_DIRECTORY: &str = ".longedit";
+const RELATION_DECISION_FILE: &str = "graph-relation-decisions.json";
 
 #[derive(Serialize, Clone)]
 pub struct GraphData {
@@ -69,6 +73,7 @@ pub struct GraphContextRelation {
     pub direction: String,
     pub directed: bool,
     pub evidence: Vec<GraphRelationEvidence>,
+    pub decision_status: String,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -77,9 +82,38 @@ pub struct GraphRelationContext {
     pub path: String,
     pub node: Option<GraphContextNode>,
     pub relations: Vec<GraphContextRelation>,
+    pub hidden_relations: Vec<GraphContextRelation>,
     pub indexed: bool,
     pub truncated: bool,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct GraphRelationDecision {
+    source_path: String,
+    target_path: String,
+    relation_type: String,
+    status: String,
+    updated_at: u64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+struct GraphRelationDecisionFile {
+    version: u32,
+    decisions: Vec<GraphRelationDecision>,
+}
+
+impl Default for GraphRelationDecisionFile {
+    fn default() -> Self {
+        Self {
+            version: 1,
+            decisions: Vec::new(),
+        }
+    }
+}
+
+type GraphRelationDecisionMap = HashMap<(String, String, String), String>;
 
 #[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -176,6 +210,7 @@ impl GraphEdge {
 pub async fn build_link_graph(library_root: String) -> Result<GraphData, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
     let root = guard.root().to_path_buf();
+    let decisions = read_graph_relation_decision_map(&root)?;
     tauri::async_runtime::spawn_blocking(move || {
         let mut nodes = Vec::new();
         let mut edges = Vec::new();
@@ -209,6 +244,7 @@ pub async fn build_link_graph(library_root: String) -> Result<GraphData, String>
             }
         }
         edges.retain(|edge| node_ids.contains(&edge.source) && node_ids.contains(&edge.target));
+        append_confirmed_relation_edges(&nodes, &mut edges, &decisions);
         edges = merge_graph_edges(edges);
         let mut degrees = HashMap::new();
         for edge in &edges {
@@ -419,7 +455,54 @@ pub(crate) fn relation_context(
     center_path: &str,
     requested_path: &str,
 ) -> GraphRelationContext {
-    relation_context_for_locator(graph, center_path, requested_path, None, None, None)
+    relation_context_for_locator(
+        graph,
+        center_path,
+        requested_path,
+        None,
+        None,
+        None,
+        &GraphRelationDecisionMap::new(),
+    )
+}
+
+fn append_confirmed_relation_edges(
+    nodes: &[GraphNode],
+    edges: &mut Vec<GraphEdge>,
+    decisions: &GraphRelationDecisionMap,
+) {
+    let node_by_path: HashMap<&str, &GraphNode> = nodes
+        .iter()
+        .filter(|node| node.parent_id.is_none())
+        .map(|node| (node.path.as_str(), node))
+        .collect();
+    for ((source_path, target_path, relation_type), status) in decisions {
+        if status != "confirmed" || relation_type != "shares-tag" {
+            continue;
+        }
+        let (Some(source), Some(target)) = (
+            node_by_path.get(source_path.as_str()),
+            node_by_path.get(target_path.as_str()),
+        ) else {
+            continue;
+        };
+        let source_tags: HashSet<String> =
+            source.tags.iter().map(|tag| tag.to_lowercase()).collect();
+        if !target
+            .tags
+            .iter()
+            .any(|tag| source_tags.contains(&tag.to_lowercase()))
+        {
+            continue;
+        }
+        edges.push(GraphEdge {
+            source: source.id.clone(),
+            target: target.id.clone(),
+            relation_type: relation_type.clone(),
+            directed: false,
+            mentions: Vec::new(),
+        });
+    }
 }
 
 fn relation_context_for_locator(
@@ -429,6 +512,7 @@ fn relation_context_for_locator(
     focus_locator_kind: Option<&str>,
     focus_locator_object_id: Option<&str>,
     focus_locator_page: Option<u32>,
+    decisions: &GraphRelationDecisionMap,
 ) -> GraphRelationContext {
     let node_by_id: HashMap<&str, &GraphNode> = graph
         .nodes
@@ -467,11 +551,10 @@ fn relation_context_for_locator(
     };
     let mut relations = Vec::new();
     let mut truncated = false;
-    for edge in graph
-        .edges
-        .iter()
-        .filter(|edge| scope.contains(edge.source.as_str()) || scope.contains(edge.target.as_str()))
-    {
+    for edge in graph.edges.iter().filter(|edge| {
+        edge.relation_type != "shares-tag"
+            && (scope.contains(edge.source.as_str()) || scope.contains(edge.target.as_str()))
+    }) {
         if relations.len() >= MAX_RELATION_CONTEXT_ITEMS {
             truncated = true;
             break;
@@ -508,8 +591,10 @@ fn relation_context_for_locator(
                     syntax: mention.syntax.clone(),
                 })
                 .collect(),
+            decision_status: "explicit".into(),
         });
     }
+    let mut hidden_relations = Vec::new();
     if let Some(root) = root {
         let root_tags: HashMap<String, String> = root
             .tags
@@ -528,7 +613,7 @@ fn relation_context_for_locator(
                 if shared.is_empty() {
                     continue;
                 }
-                if relations.len() >= MAX_RELATION_CONTEXT_ITEMS {
+                if relations.len() + hidden_relations.len() >= MAX_RELATION_CONTEXT_ITEMS {
                     truncated = true;
                     break;
                 }
@@ -537,7 +622,15 @@ fn relation_context_for_locator(
                     .map(|tag| format!("#{tag}"))
                     .collect::<Vec<_>>()
                     .join(" ");
-                relations.push(GraphContextRelation {
+                let decision_status = decisions
+                    .get(&relation_decision_key(
+                        root.path.as_str(),
+                        peer.path.as_str(),
+                        "shares-tag",
+                    ))
+                    .cloned()
+                    .unwrap_or_else(|| "inferred".into());
+                let relation = GraphContextRelation {
                     source: context_node(root, center_path, requested_path),
                     target: context_node(peer, center_path, requested_path),
                     relation_type: "shares-tag".into(),
@@ -549,7 +642,13 @@ fn relation_context_for_locator(
                         line: 0,
                         syntax,
                     }],
-                });
+                    decision_status: decision_status.clone(),
+                };
+                if decision_status == "hidden" {
+                    hidden_relations.push(relation);
+                } else {
+                    relations.push(relation);
+                }
             }
         }
     }
@@ -557,6 +656,7 @@ fn relation_context_for_locator(
         path: requested_path.to_string(),
         node: root.map(|node| context_node(node, center_path, requested_path)),
         relations,
+        hidden_relations,
         indexed: root.is_some(),
         truncated,
     }
@@ -577,6 +677,7 @@ pub async fn get_graph_relation_context(
     }
     let canonical_path = resolved.to_string_lossy().into_owned();
     let graph = build_link_graph(guard.root().to_string_lossy().into_owned()).await?;
+    let decisions = read_graph_relation_decision_map(guard.root())?;
     Ok(relation_context_for_locator(
         &graph,
         &canonical_path,
@@ -584,7 +685,168 @@ pub async fn get_graph_relation_context(
         focus_locator_kind.as_deref(),
         focus_locator_object_id.as_deref(),
         focus_locator_page,
+        &decisions,
     ))
+}
+
+fn relation_decision_key(
+    source_path: &str,
+    target_path: &str,
+    relation_type: &str,
+) -> (String, String, String) {
+    let mut paths = [source_path.to_string(), target_path.to_string()];
+    paths.sort();
+    (
+        paths[0].clone(),
+        paths[1].clone(),
+        relation_type.to_string(),
+    )
+}
+
+fn relation_decision_path(root: &Path) -> PathBuf {
+    root.join(RELATION_DECISION_DIRECTORY)
+        .join(RELATION_DECISION_FILE)
+}
+
+fn safe_relation_decision_relative_path(path: &str) -> bool {
+    let value = Path::new(path);
+    !path.trim().is_empty()
+        && path.chars().count() <= 4096
+        && !value.is_absolute()
+        && !value.components().any(|component| {
+            matches!(
+                component,
+                std::path::Component::ParentDir
+                    | std::path::Component::RootDir
+                    | std::path::Component::Prefix(_)
+            )
+        })
+        && value
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+}
+
+fn read_graph_relation_decision_file(root: &Path) -> Result<GraphRelationDecisionFile, String> {
+    let path = relation_decision_path(root);
+    if !path.exists() {
+        return Ok(GraphRelationDecisionFile::default());
+    }
+    let metadata =
+        fs::metadata(&path).map_err(|error| format!("读取关系判断元数据失败: {error}"))?;
+    if metadata.len() > MAX_RELATION_DECISION_FILE_BYTES {
+        return Err("关系判断元数据超过 512 KiB 安全上限".into());
+    }
+    let content =
+        fs::read_to_string(&path).map_err(|error| format!("读取关系判断元数据失败: {error}"))?;
+    let file: GraphRelationDecisionFile = serde_json::from_str(&content)
+        .map_err(|error| format!("关系判断元数据格式无效: {error}"))?;
+    if file.version != 1 || file.decisions.len() > MAX_RELATION_DECISIONS {
+        return Err("关系判断元数据版本或数量无效".into());
+    }
+    Ok(file)
+}
+
+fn read_graph_relation_decision_map(root: &Path) -> Result<GraphRelationDecisionMap, String> {
+    let guard = WorkspaceGuard::new(root)?;
+    let mut result = GraphRelationDecisionMap::new();
+    for decision in read_graph_relation_decision_file(guard.root())?.decisions {
+        if decision.relation_type != "shares-tag"
+            || !matches!(decision.status.as_str(), "confirmed" | "hidden")
+            || !safe_relation_decision_relative_path(&decision.source_path)
+            || !safe_relation_decision_relative_path(&decision.target_path)
+        {
+            return Err("关系判断元数据包含无效记录".into());
+        }
+        let (Ok(source), Ok(target)) = (
+            guard.resolve_existing_file(&decision.source_path, &["md"]),
+            guard.resolve_existing_file(&decision.target_path, &["md"]),
+        ) else {
+            continue;
+        };
+        if source == target {
+            return Err("关系判断不能指向同一文件".into());
+        }
+        let key = relation_decision_key(
+            source.to_string_lossy().as_ref(),
+            target.to_string_lossy().as_ref(),
+            &decision.relation_type,
+        );
+        if result.insert(key, decision.status).is_some() {
+            return Err("关系判断元数据包含重复记录".into());
+        }
+    }
+    Ok(result)
+}
+
+fn relative_decision_path(root: &Path, path: &Path) -> Result<String, String> {
+    path.strip_prefix(root)
+        .map(|relative| relative.to_string_lossy().replace('\\', "/"))
+        .map_err(|_| "无法计算关系判断相对路径".into())
+}
+
+#[tauri::command]
+pub async fn update_graph_relation_decision(
+    library_root: String,
+    source_path: String,
+    target_path: String,
+    relation_type: String,
+    status: String,
+) -> Result<(), String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source = guard.resolve_existing_file(&source_path, &["md"])?;
+    let target = guard.resolve_existing_file(&target_path, &["md"])?;
+    if source == target {
+        return Err("关系判断不能指向同一文件".into());
+    }
+    if relation_type != "shares-tag" {
+        return Err("当前仅支持管理共同标签推断关系".into());
+    }
+    if !matches!(status.as_str(), "confirmed" | "hidden" | "inferred") {
+        return Err("关系判断状态无效".into());
+    }
+
+    let source_relative = relative_decision_path(guard.root(), &source)?;
+    let target_relative = relative_decision_path(guard.root(), &target)?;
+    let key = relation_decision_key(&source_relative, &target_relative, &relation_type);
+    let mut file = read_graph_relation_decision_file(guard.root())?;
+    file.decisions.retain(|decision| {
+        relation_decision_key(
+            &decision.source_path,
+            &decision.target_path,
+            &decision.relation_type,
+        ) != key
+    });
+    if status != "inferred" {
+        if file.decisions.len() >= MAX_RELATION_DECISIONS {
+            return Err(format!("关系判断不能超过 {MAX_RELATION_DECISIONS} 条"));
+        }
+        file.decisions.push(GraphRelationDecision {
+            source_path: source_relative,
+            target_path: target_relative,
+            relation_type,
+            status,
+            updated_at: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis() as u64,
+        });
+        file.decisions.sort_by(|left, right| {
+            (&left.source_path, &left.target_path, &left.relation_type).cmp(&(
+                &right.source_path,
+                &right.target_path,
+                &right.relation_type,
+            ))
+        });
+    }
+    let directory = guard.resolve_directory(RELATION_DECISION_DIRECTORY, true)?;
+    fs::create_dir_all(&directory).map_err(|error| format!("创建关系判断目录失败: {error}"))?;
+    let content = serde_json::to_string_pretty(&file)
+        .map_err(|error| format!("序列化关系判断失败: {error}"))?;
+    write_utf8(
+        relation_decision_path(guard.root()),
+        &format!("{content}\n"),
+    )
 }
 
 fn build_filename_index(dir: &Path, index: &mut HashMap<String, Vec<String>>) {
@@ -1440,7 +1702,18 @@ enum LinkResolution {
 #[tauri::command]
 pub async fn analyze_graph_health(library_root: String) -> Result<GraphHealthReport, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
-    analyze_workspace(guard.root())
+    let mut report = analyze_workspace(guard.root())?;
+    let graph = build_link_graph(guard.root().to_string_lossy().into_owned()).await?;
+    let confirmed_paths: HashSet<&str> = graph
+        .edges
+        .iter()
+        .filter(|edge| edge.relation_type == "shares-tag")
+        .flat_map(|edge| [edge.source.as_str(), edge.target.as_str()])
+        .collect();
+    report
+        .orphan_notes
+        .retain(|note| !confirmed_paths.contains(note.path.as_str()));
+    Ok(report)
 }
 
 fn analyze_workspace(root: &Path) -> Result<GraphHealthReport, String> {
@@ -2512,8 +2785,103 @@ mod tests {
         assert_eq!(context.relations.len(), 1);
         assert_eq!(context.relations[0].relation_type, "shares-tag");
         assert_eq!(context.relations[0].relation_class, "semantic");
+        assert_eq!(context.relations[0].decision_status, "inferred");
         assert_eq!(context.relations[0].target.id, "peer");
         assert_eq!(context.relations[0].evidence[0].syntax, "#Research");
+        assert!(context.hidden_relations.is_empty());
+    }
+
+    #[test]
+    fn shared_tag_relation_decisions_confirm_hide_and_restore() {
+        let (base, root) = fixture("relation-decisions");
+        let source = root.join("Source.md");
+        let target = root.join("Target.md");
+        fs::write(&source, "# Source\n\n#Research\n").unwrap();
+        fs::write(&target, "# Target\n\n#research\n").unwrap();
+        let root_text = root.to_string_lossy().into_owned();
+        let source_text = source.to_string_lossy().into_owned();
+        let target_text = target.to_string_lossy().into_owned();
+
+        tauri::async_runtime::block_on(update_graph_relation_decision(
+            root_text.clone(),
+            source_text.clone(),
+            target_text.clone(),
+            "shares-tag".into(),
+            "confirmed".into(),
+        ))
+        .unwrap();
+        let confirmed = tauri::async_runtime::block_on(get_graph_relation_context(
+            root_text.clone(),
+            source_text.clone(),
+            None,
+            None,
+            None,
+        ))
+        .unwrap();
+        assert_eq!(confirmed.relations.len(), 1);
+        assert_eq!(confirmed.relations[0].decision_status, "confirmed");
+        assert!(confirmed.hidden_relations.is_empty());
+        let confirmed_graph =
+            tauri::async_runtime::block_on(build_link_graph(root_text.clone())).unwrap();
+        assert!(confirmed_graph
+            .edges
+            .iter()
+            .any(|edge| edge.relation_type == "shares-tag" && !edge.directed));
+        let confirmed_health =
+            tauri::async_runtime::block_on(analyze_graph_health(root_text.clone())).unwrap();
+        assert!(confirmed_health.orphan_notes.is_empty());
+
+        tauri::async_runtime::block_on(update_graph_relation_decision(
+            root_text.clone(),
+            source_text.clone(),
+            target_text.clone(),
+            "shares-tag".into(),
+            "hidden".into(),
+        ))
+        .unwrap();
+        let hidden = tauri::async_runtime::block_on(get_graph_relation_context(
+            root_text.clone(),
+            source_text.clone(),
+            None,
+            None,
+            None,
+        ))
+        .unwrap();
+        assert!(hidden.relations.is_empty());
+        assert_eq!(hidden.hidden_relations.len(), 1);
+        assert_eq!(hidden.hidden_relations[0].decision_status, "hidden");
+        let hidden_graph =
+            tauri::async_runtime::block_on(build_link_graph(root_text.clone())).unwrap();
+        assert!(!hidden_graph
+            .edges
+            .iter()
+            .any(|edge| edge.relation_type == "shares-tag"));
+        let hidden_health =
+            tauri::async_runtime::block_on(analyze_graph_health(root_text.clone())).unwrap();
+        assert_eq!(hidden_health.orphan_notes.len(), 2);
+
+        tauri::async_runtime::block_on(update_graph_relation_decision(
+            root_text.clone(),
+            source_text.clone(),
+            target_text,
+            "shares-tag".into(),
+            "inferred".into(),
+        ))
+        .unwrap();
+        let restored = tauri::async_runtime::block_on(get_graph_relation_context(
+            root_text,
+            source_text,
+            None,
+            None,
+            None,
+        ))
+        .unwrap();
+        assert_eq!(restored.relations[0].decision_status, "inferred");
+        assert!(read_graph_relation_decision_file(&root)
+            .unwrap()
+            .decisions
+            .is_empty());
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]
@@ -2719,6 +3087,7 @@ mod tests {
             Some(&first_locator.kind),
             Some(&first_locator.object_id),
             first_locator.page,
+            &GraphRelationDecisionMap::new(),
         );
         assert_eq!(focused.node.as_ref().unwrap().id, slides[0].id);
         assert_eq!(focused.relations.len(), 1);
