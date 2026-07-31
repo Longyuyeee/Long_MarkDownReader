@@ -84,14 +84,66 @@ const assertEditorTextVisible = async (marker, description) => {
       .find(element => element.textContent?.includes(${JSON.stringify(marker)}))
     const editor = line?.closest('.cm-editor')
     if (!line || !editor) return null
+    const walker = document.createTreeWalker(line, NodeFilter.SHOW_TEXT)
+    let textNode = null
+    while (walker.nextNode()) {
+      if (walker.currentNode.textContent?.includes(${JSON.stringify(marker)})) {
+        textNode = walker.currentNode
+        break
+      }
+    }
+    if (!textNode) return null
+    const markerOffset = textNode.textContent.indexOf(${JSON.stringify(marker)})
+    const range = document.createRange()
+    range.setStart(textNode, markerOffset)
+    range.setEnd(textNode, markerOffset + ${JSON.stringify(marker)}.length)
+    const markerRect = range.getBoundingClientRect()
+    const editorRect = editor.getBoundingClientRect()
+    let cumulativeOpacity = 1
+    let background = 'rgba(0, 0, 0, 0)'
+    for (let element = line; element; element = element.parentElement) {
+      const style = getComputedStyle(element)
+      cumulativeOpacity *= Number(style.opacity || 1)
+      if (style.backgroundColor !== 'rgba(0, 0, 0, 0)' && style.backgroundColor !== 'transparent') {
+        background = style.backgroundColor
+      }
+      if (element === editor) break
+    }
     const foreground = getComputedStyle(line).color
-    const background = getComputedStyle(editor).backgroundColor
-    return { foreground, background, opacity: getComputedStyle(line).opacity }
+    const components = value => (value.match(/[\\d.]+/g) || []).slice(0, 3).map(Number)
+    const luminance = value => {
+      const channels = components(value).map(channel => {
+        const normalized = channel / 255
+        return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
+      })
+      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+    }
+    const foregroundLuminance = luminance(foreground)
+    const backgroundLuminance = luminance(background)
+    const contrastRatio = (Math.max(foregroundLuminance, backgroundLuminance) + 0.05)
+      / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05)
+    const centerX = markerRect.left + markerRect.width / 2
+    const centerY = markerRect.top + markerRect.height / 2
+    const hit = document.elementFromPoint(centerX, centerY)
+    return {
+      foreground,
+      background,
+      contrastRatio,
+      cumulativeOpacity,
+      fontSize: getComputedStyle(line).fontSize,
+      markerRect: { x: markerRect.x, y: markerRect.y, width: markerRect.width, height: markerRect.height },
+      editorRect: { x: editorRect.x, y: editorRect.y, width: editorRect.width, height: editorRect.height },
+      markerInsideEditor: markerRect.left >= editorRect.left && markerRect.right <= editorRect.right
+        && markerRect.top >= editorRect.top && markerRect.bottom <= editorRect.bottom,
+      markerHitTestVisible: Boolean(hit && (line === hit || line.contains(hit))),
+    }
   })()`)
-  if (!visibility || visibility.opacity === '0' || visibility.foreground === visibility.background ||
-      visibility.foreground === 'rgba(0, 0, 0, 0)' || visibility.foreground === 'transparent') {
+  if (!visibility || visibility.cumulativeOpacity < 0.9 || visibility.contrastRatio < 3 ||
+      visibility.markerRect.width < 20 || visibility.markerRect.height < 8 ||
+      !visibility.markerInsideEditor || !visibility.markerHitTestVisible) {
     throw new Error(`${description} text is not visibly rendered: ${JSON.stringify(visibility)}`)
   }
+  return visibility
 }
 const setEditorText = async text => {
   const point = await evaluate(`(() => {
@@ -158,9 +210,9 @@ await navigate('#/workspace', '.workspace-home', 'workspace between installed TX
 await navigate(textRoute, '.library-embedded-editor .text-workspace', 'reopened installed TXT editor')
 await waitFor(`document.querySelector('.cm-content')?.textContent?.includes('R5J_TEXT_SAVED') === true`, 'reopened installed TXT content')
 await assertNoGlobalFallback('reopened installed TXT editor')
-await assertEditorTextVisible('R5J_TEXT_SAVED', 'reopened installed TXT editor')
+const textVisual = await assertEditorTextVisible('R5J_TEXT_SAVED', 'reopened installed TXT editor')
 await capture('installed-txt-save-reopen.jpg')
-checks.push({ id: 'installed-txt-read-edit-save-reopen', status: 'passed' })
+checks.push({ id: 'installed-txt-read-edit-save-reopen', status: 'passed', visual: textVisual })
 
 const jsonRoute = `#/library?path=${encodeURIComponent(jsonFile)}`
 await navigate(jsonRoute, '.library-embedded-editor .json-workspace', 'installed embedded JSON editor')
@@ -173,9 +225,9 @@ await navigate('#/workspace', '.workspace-home', 'workspace between installed JS
 await navigate(jsonRoute, '.library-embedded-editor .json-workspace', 'reopened installed JSON editor')
 await waitFor(`document.querySelector('.cm-content')?.textContent?.includes('R5J_JSON_SAVED') === true`, 'reopened installed JSON content')
 await assertNoGlobalFallback('reopened installed JSON editor')
-await assertEditorTextVisible('R5J_JSON_SAVED', 'reopened installed JSON editor')
+const jsonVisual = await assertEditorTextVisible('R5J_JSON_SAVED', 'reopened installed JSON editor')
 await capture('installed-json-save-reopen.jpg')
-checks.push({ id: 'installed-json-read-edit-save-reopen', status: 'passed' })
+checks.push({ id: 'installed-json-read-edit-save-reopen', status: 'passed', visual: jsonVisual })
 
 const routes = [
   ['#/workspace', '.workspace-home', '/workspace'],
