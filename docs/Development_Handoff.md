@@ -3,6 +3,8 @@
 更新日期：2026-07-31
 交接基线：当前开发版本 `v0.7.0`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干；WPS 原生格式、旧版 DOC/XLS/PPT 隔离转换和 ODS/ODP 只读能力已完成，ODT 外部生产者证据与专业发布门禁仍待收口
 
+> 最新接手入口：[`Current_Closure_Status_and_Packaging_Plan_2026-07-31.md`](./Current_Closure_Status_and_Packaging_Plan_2026-07-31.md)。当前先执行 E5 高级能力最终收口审计，随后构建并验证未签名 MSI/NSIS；真实签名、Windows 10/11 隔离发布矩阵与人工批准继续独立阻塞正式 RC，`releaseCandidate=false`。
+
 > 2026-07-31 C1A 已完成：R5N 外部签名环境仍阻断时，知识图谱产品化继续向管理行动推进。现有关系新增/删除、来源证据和健康治理保持不变；图谱节点现在可按 1～4 层局部关系生成新的 Markdown 项目笔记，记录中心来源、关联资料、目标和任务，并自动进入现有搜索与首页待办。生成文件与中心对象同目录、同名递增且不覆盖，最多写入 100 个关联对象。下一本机阶段为 C1B 子图智能集合；P0 仍是 R5N 已签名 Windows 10/11 外部发布执行。详见 [`C1A_Graph_Project_Note_Audit_2026-07-31.md`](./C1A_Graph_Project_Note_Audit_2026-07-31.md)。
 
 > 2026-07-31 C1B 已完成：Markdown/PDF 图谱中心可按 1～4 层保存为动态智能集合；集合使用知识库相对根路径，每次打开实时重建文件级子图，并已接入首页、Library 集合侧栏和文件关系上下文。管理备份可保留并在换机映射后恢复图谱集合。当前没有真实签名证书，R5N 保持 `releaseCandidate=false` 并转为未来外部执行项，不再阻塞本机产品收尾。下一本机阶段为 C1C 关系确认/隐藏/恢复，随后进入 D1 统一体验审计。详见 [`C1B_Dynamic_Graph_Collections_Audit_2026-07-31.md`](./C1B_Dynamic_Graph_Collections_Audit_2026-07-31.md)。

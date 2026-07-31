@@ -10,6 +10,10 @@
 
 发布结论：`releaseCandidate=false`
 
+最新执行入口：[`Current_Closure_Status_and_Packaging_Plan_2026-07-31.md`](./Current_Closure_Status_and_Packaging_Plan_2026-07-31.md)
+
+当前顺序已经冻结为：E5 高级能力最终收口审计 → 未签名 MSI/NSIS 构建与本机安装冒烟 → 等待真实签名证书和 Windows 10/11 隔离发布证据。未签名安装包只作为内部候选与交接产物，不提升 `releaseCandidate=false`。
+
 ## 1. 审计结论
 
 项目已经从最初的 Markdown 阅读器发展为一个以“统一右侧工作区”为核心的本地多格式知识与文件管理器。用户最初提出的基础目标——覆盖日常管理、基础编辑，并将文件、任务、关系和知识组织成体系——在工程功能层面已经基本实现。
