@@ -39,9 +39,14 @@ if (-not $currentInstallerHostDirectory.StartsWith($repoPathPrefix, [System.Stri
 $relativeInstallerDirectory = $currentInstallerHostDirectory.Substring($repoPathPrefix.Length)
 $guestInstallerDirectory = "C:\LongEditR5IRepo\" + $relativeInstallerDirectory.Replace("/", "\")
 $guestPreviousInstallerDirectory = "C:\LongEditR5IRepo\src-tauri\target\release\bundle\nsis"
-$sourceCommit = ([string](& git -C $repoRoot rev-parse HEAD)).Trim()
-if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch "^[a-fA-F0-9]{40}$") {
-    throw "Unable to bind the R5K evidence bundle to the current source commit."
+$manifestSourceCommit = [string]$r5hManifest.sourceCommit
+$sourceCommit = if ($manifestSourceCommit -match "^[a-fA-F0-9]{40}$") {
+    $manifestSourceCommit.ToLowerInvariant()
+} else {
+    ([string](& git -C $repoRoot rev-parse HEAD)).Trim().ToLowerInvariant()
+}
+if ($sourceCommit -notmatch "^[a-f0-9]{40}$") {
+    throw "Unable to bind the R5K evidence bundle to the artifact source commit."
 }
 $nodeCommand = Get-Command node.exe -ErrorAction SilentlyContinue
 if (-not $nodeCommand) {
@@ -54,14 +59,21 @@ $nodeHostDirectory = if ($nodeDirectoryItem.LinkType -and $nodeDirectoryItem.Tar
     $nodeDirectoryItem.FullName
 }
 $sandboxExecutable = Join-Path $env:WINDIR "System32\WindowsSandbox.exe"
-if (-not (Test-Path -LiteralPath $sandboxExecutable -PathType Leaf)) {
+$sandboxAvailable = Test-Path -LiteralPath $sandboxExecutable -PathType Leaf
+if ($Launch -and -not $sandboxAvailable) {
     throw "Windows Sandbox is unavailable. Enable Containers-DisposableClientVM or use a disposable Windows VM."
 }
 
 $hostOutput = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $OutputDirectory))
-$expectedRoot = [System.IO.Path]::GetFullPath((Join-Path $repoRoot "docs/evidence/r5i-isolated-install-lifecycle"))
-if (-not $hostOutput.StartsWith($expectedRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
-    throw "R5I Sandbox output must remain under docs/evidence/r5i-isolated-install-lifecycle."
+$expectedRoots = @(
+    [System.IO.Path]::GetFullPath((Join-Path $repoRoot "docs/evidence/r5i-isolated-install-lifecycle")),
+    [System.IO.Path]::GetFullPath((Join-Path $repoRoot "docs/evidence/u2-disposable-install-lifecycle"))
+)
+$outputAllowed = @($expectedRoots | Where-Object {
+    $hostOutput.StartsWith($_, [System.StringComparison]::OrdinalIgnoreCase)
+}).Count -gt 0
+if (-not $outputAllowed) {
+    throw "Sandbox output must remain under the R5I or U2 evidence directory."
 }
 New-Item -ItemType Directory -Path $hostOutput -Force | Out-Null
 
@@ -99,6 +111,8 @@ $xml = @"
 "@
 [System.IO.File]::WriteAllText($configPath, $xml, [System.Text.UTF8Encoding]::new($false))
 Write-Host "R5I Windows Sandbox configuration created: $configPath"
+Write-Host "Artifact source commit: $sourceCommit"
+Write-Host "Windows Sandbox available on this host: $sandboxAvailable"
 
 if ($Launch) {
     Start-Process -FilePath $sandboxExecutable -ArgumentList $configPath

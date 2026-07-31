@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "stage": "U2",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "scope": "unsigned-internal-candidate-disposable-install-lifecycle",
+  "currentStatus": "handoff-ready-current-host-execution-blocked",
+  "artifactSourceCommit": "953494c50360d232e0848d0bab80e0defd3c53d4",
+  "runner": {
+    "lifecycleScript": "scripts/run-r5i-isolated-install-lifecycle.ps1",
+    "sandboxGenerator": "scripts/new-r5i-windows-sandbox-config.ps1",
+    "artifactManifest": "docs/evidence/u1-unsigned-internal-candidate/installer-manifest.json",
+    "artifactSourceCommitBound": true,
+    "sandboxConfigurationPrepared": true,
+    "hostInstallerMutationAllowed": false
+  },
+  "requiredChecks": [
+    "previous-version-fresh-install",
+    "controlled-upgrade",
+    "file-association-registration",
+    "installed-artifact-route-and-io-smoke",
+    "management-backup-restore",
+    "knowledge-index-recovery",
+    "downgrade-rejection",
+    "silent-uninstall",
+    "file-association-recovery",
+    "uninstall-retains-user-data"
+  ],
+  "evidence": {
+    "environmentAudit": "docs/evidence/u2-disposable-install-lifecycle/environment-audit.json",
+    "sandboxOutput": "docs/evidence/u2-disposable-install-lifecycle/sandbox-output",
+    "lifecycleResultComplete": false,
+    "sourceUserContentAllowed": false
+  },
+  "blockers": [
+    "windows-sandbox-unavailable",
+    "hyper-v-provisioning-command-unavailable",
+    "third-party-vm-runner-unavailable",
+    "existing-longedit-installation-present",
+    "existing-longedit-process-running"
+  ],
+  "nextAction": "execute-on-disposable-windows-runner",
+  "afterSuccess": "R5N-signed-windows-10-11-execution"
+}

@@ -528,3 +528,9 @@ E5 已完成。机器事实源为 `shared/e5-final-capability-closure.json`，�
 U1 已完成。`shared/u1-unsigned-internal-candidate-policy.json` 绑定提交 `953494c` 的隔离干净构建，MSI/NSIS 均为 `NotSigned`，哈希与大小已登记，二进制只保存在本机忽略目录。
 
 便携运行烟测因当前会话存在另一份 LongEdit 单实例而记录为 `blocked-existing-single-instance`；没有关闭用户进程、执行安装器或修改注册表。下一步进入 U2 一次性环境的未签名安装生命周期。
+
+# 2026-08-01 U2 外部执行入口
+
+U2 已推进到 `execute-on-disposable-windows-runner`。机器事实源为 `shared/u2-disposable-install-lifecycle-policy.json`；U1 NSIS 与 0.6.2 回滚安装器均就绪，但当前主机没有一次性 Windows runner，且已有安装与运行进程，所以安装修改继续阻断。
+
+Sandbox 生成器已修正为绑定安装包清单中的产品提交 `953494c`，并可在无 Sandbox 主机上先生成配置。具备 Windows Sandbox 的干净机器运行 `npm run prepare:u2-windows-sandbox -- -Launch`；U2 证据通过后再进入 R5N 已签名 Windows 10/11 双通道。

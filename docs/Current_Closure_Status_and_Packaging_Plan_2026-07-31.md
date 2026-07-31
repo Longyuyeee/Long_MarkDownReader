@@ -57,3 +57,9 @@ E1B 数组生产者 1/3、E1C 多层 Pivot 2/3、WPS ODF 2/3，以及已签名 W
 U1 已完成：提交 `953494c` 的隔离干净工作树成功生成 MSI 和 NSIS，两者均为 `NotSigned`，哈希和大小已写入 `docs/evidence/u1-unsigned-internal-candidate/installer-manifest.json`。产物为 internal-only，`releaseCandidate=false`。
 
 本机便携运行烟测被现有 LongEdit 单实例阻挡，已按 `blocked-existing-single-instance` 留证且未打扰用户进程。下一步为 U2 一次性 Windows 环境的未签名安装生命周期。
+
+## 2026-08-01 U2 交接更新
+
+U2 已完成环境审计和可执行交接，当前状态为 `handoff-ready-current-host-execution-blocked`。候选与回滚安装器完整，但本机无可用一次性 runner，并存在现有安装和运行进程，因此没有执行任何安装修改。
+
+下一动作是 `execute-on-disposable-windows-runner`。通过 U2 未签名生命周期后，继续进入 R5N 的真实签名及 Windows 10/11 双通道；`releaseCandidate=false` 保持不变。
