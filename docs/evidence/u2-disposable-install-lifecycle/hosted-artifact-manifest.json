@@ -3,9 +3,9 @@
   "stage": "U2I",
   "status": "hosted-evidence-import-approved",
   "appVersion": "0.7.0",
-  "sourceCommit": "4cf5df4e521ff885336dcc3931d5e195e8605219",
-  "githubRunId": 30660582582,
-  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30660582582",
+  "sourceCommit": "dfe5e9c424ab4a3b71f1eee3924dc43f8f7d400f",
+  "githubRunId": 30664431101,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30664431101",
   "releaseCandidate": false,
   "promotionEligible": false,
   "sourceUserContentIncluded": false,
@@ -13,7 +13,7 @@
     {
       "target": "nsis",
       "version": "0.7.0",
-      "sha256": "5b9ef6aabf1e1a97817189e80a5c65e5972bace2b27eb49f1ec3a66a76016ba2",
+      "sha256": "d6ec52af91096158ee117c93342c8767b0f649ebf11a8a47005112171ef2dafb",
       "authenticodeStatus": "NotSigned",
       "signed": false
     }
@@ -21,7 +21,7 @@
   "rollbackArtifact": {
     "target": "nsis",
     "version": "0.6.2",
-    "sha256": "9d01fd58cebdc98cd1082f5668dbc6ebd2b169d483e0464330d619ef93b7c228",
+    "sha256": "2be92e76f0fbffa685b2956ebe3e80094e8f9c8204a5a0aad330e3d89103e97e",
     "authenticodeStatus": "NotSigned",
     "signed": false
   }
