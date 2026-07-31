@@ -51,7 +51,7 @@
     </div>
 
     <template v-else-if="report">
-      <section v-if="allWarnings.length" class="compatibility-warning">
+      <section v-if="allWarnings.length" class="compatibility-warning" role="status">
         <ShieldAlertIcon :size="17" />
         <div>
           <strong>高级对象保持只读</strong>
@@ -327,7 +327,7 @@
             {{ previewing ? '正在生成并复读…' : '验证隔离副本' }}
           </button>
 
-          <div v-if="previewReport || editError" class="edit-verification" :class="{ error: editError }">
+          <div v-if="previewReport || editError" class="edit-verification" :class="{ error: editError }" :role="editError ? 'alert' : 'status'" aria-live="polite">
             <template v-if="previewReport">
               <strong>隔离验证通过</strong>
               <span>{{ formatBytes(previewReport.outputBytes) }} · 仅修改 {{ previewReport.changedParts.join('、') }}</span>
@@ -344,11 +344,11 @@
               <span>新副本文件名</span>
               <input v-model="copyFileName" maxlength="255" @keydown.enter.prevent="saveCopy" />
             </label>
-            <button type="button" :disabled="saving || !copyFileName.trim()" @click="saveCopy">
+            <button type="button" :disabled="saving || !copyFileName.trim()" aria-live="polite" @click="saveCopy">
               <SaveIcon :size="15" />
               {{ saving ? '正在落盘并重开…' : '另存新 DOCX 并打开' }}
             </button>
-            <small v-if="saveError">{{ saveError }}</small>
+            <small v-if="saveError" role="alert">{{ saveError }}</small>
           </div>
         </aside>
       </div>

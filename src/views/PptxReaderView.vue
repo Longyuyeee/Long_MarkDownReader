@@ -537,7 +537,7 @@
           </template>
           <p v-else class="muted">没有通过 C5C 关系与部件边界审计的幻灯片。</p>
         </section>
-        <section v-if="verifiedPreview && verifiedOperation" class="reliable-save-copy" data-testid="c4d-save-panel">
+        <section v-if="verifiedPreview && verifiedOperation" class="reliable-save-copy" data-testid="c4d-save-panel" aria-live="polite">
           <header>
             <SaveIcon :size="15" />
             <strong>C4D 可靠另存副本</strong>
@@ -568,7 +568,7 @@
             {{ savingCopy ? '正在落盘并复读' : '原子另存并验证' }}
           </button>
           <p class="muted">只创建同目录新文件，不覆盖源文件或已有目标；输出已通过 PowerPoint、WPS 与 LibreOffice 复开验证。</p>
-          <p v-if="saveCopyError" class="baseline-error">{{ saveCopyError }}</p>
+          <p v-if="saveCopyError" class="baseline-error" role="alert">{{ saveCopyError }}</p>
           <dl v-if="savedCopyReport" class="patch-report c4d-save-report">
             <div><dt>保存模式</dt><dd>新副本</dd></div>
             <div><dt>结构复开</dt><dd>{{ savedCopyReport.structuralReopenVerified ? '通过' : '未通过' }}</dd></div>
@@ -621,7 +621,7 @@
       </aside>
     </div>
 
-    <footer v-if="report" class="pptx-status">
+    <footer v-if="report" class="pptx-status" aria-live="polite">
       <span>{{ report.model.slides.length }} 张幻灯片 · {{ formatBytes(report.size) }}</span>
       <span v-if="routeTargetLabel" class="route-target-status" aria-live="polite">已定位：{{ routeTargetLabel }}</span>
       <span v-else-if="savedCopyReport" class="baseline-status">C4D 新副本已可靠保存 · 原文件未修改</span>

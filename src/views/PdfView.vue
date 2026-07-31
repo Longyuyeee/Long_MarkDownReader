@@ -4,7 +4,7 @@
       <div class="toolbar-leading">
         <button class="icon-btn" title="返回知识库" @click="router.push('/library')">←</button>
         <button class="icon-btn" :class="{ active: sidebarOpen }" title="缩略图与目录" @click="sidebarOpen = !sidebarOpen">☰</button>
-        <div class="document-title"><strong>{{ fileName }}<i v-if="pdfWorkspaceDirty" class="page-plan-dirty">页面草稿</i></strong><span v-if="pdfDocument">{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template></span></div>
+        <div class="document-title"><strong>{{ fileName }}<i v-if="pdfWorkspaceDirty" class="page-plan-dirty" aria-live="polite">页面草稿</i></strong><span v-if="pdfDocument">{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template></span></div>
       </div>
       <div v-if="pdfDocument" class="toolbar-center">
         <button class="icon-btn" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
@@ -52,7 +52,7 @@
           <button v-for="(item, index) in outline" :key="`${item.title}-${index}`" :style="{ paddingLeft: `${12 + item.depth * 14}px` }" @click="openOutlineItem(item)">{{ item.title }}</button>
         </div>
         <div v-else-if="sidebarTab === 'annotations'" class="annotation-panel">
-          <div v-if="annotationError" class="annotation-alert">{{ annotationError }}</div>
+          <div v-if="annotationError" class="annotation-alert" role="alert">{{ annotationError }}</div>
           <div v-else-if="!annotations.length" class="sidebar-empty">选择正文后添加高亮，或启用“区域批注”框选页面。</div>
           <button v-for="annotation in sortedAnnotations" :key="annotation.id" :class="['annotation-card', { active: selectedAnnotationId === annotation.id }]" @click="selectAnnotation(annotation.id)">
             <span class="annotation-card-head"><strong>第 {{ annotation.page }} 页 · {{ annotationKindLabel(annotation.kind) }}</strong><i :class="`dot-${annotation.color}`"></i></span>
@@ -67,12 +67,12 @@
             </div>
             <button class="delete-annotation" :disabled="!annotationWritable" @click="deleteSelectedAnnotation">删除批注</button>
           </div>
-          <div v-if="referenceNotice" class="annotation-alert">{{ referenceNotice }}</div>
-          <div v-if="annotationDocument" class="annotation-save-state" :class="{ error: annotationSaveError }">{{ annotationSaveError || (annotationSaving ? '正在保存批注…' : annotationDirty ? '等待保存…' : '批注已保存到 sidecar') }}</div>
+          <div v-if="referenceNotice" class="annotation-alert" aria-live="polite">{{ referenceNotice }}</div>
+          <div v-if="annotationDocument" class="annotation-save-state" :class="{ error: annotationSaveError }" :role="annotationSaveError ? 'alert' : 'status'" aria-live="polite">{{ annotationSaveError || (annotationSaving ? '正在保存批注' : annotationDirty ? '等待保存' : '批注已保存到 sidecar') }}</div>
         </div>
         <div v-else-if="sidebarTab === 'organize'" class="page-organizer">
           <div class="page-plan-summary">
-            <div v-if="savedCopyNotice?.path === pdfPath" class="page-plan-saved">
+            <div v-if="savedCopyNotice?.path === pdfPath" class="page-plan-saved" role="status" aria-live="polite">
               <strong>可靠副本已落盘并重开</strong>
               <span>{{ savedCopyNotice.pages }} 页 · {{ formatBytes(savedCopyNotice.bytes) }} · 源文件未修改</span>
             </div>
@@ -143,6 +143,8 @@
                 v-if="pdfInsertVerification"
                 class="pdf-merge-verification"
                 :class="{ blocked: pdfInsertVerification.status === 'blocked' }"
+                :role="pdfInsertVerification.status === 'blocked' ? 'alert' : 'status'"
+                aria-live="polite"
               >
                 <template v-if="pdfInsertVerification.status === 'isolated_verified'">
                   <strong>插页副本验证通过</strong>
@@ -198,7 +200,7 @@
                   </div>
                 </article>
               </div>
-              <small v-if="pdfMergeError" class="pdf-merge-error">{{ pdfMergeError }}</small>
+              <small v-if="pdfMergeError" class="pdf-merge-error" role="alert">{{ pdfMergeError }}</small>
               <button
                 class="pdf-merge-verify"
                 data-testid="b2b-pdf-merge-verify"
@@ -211,6 +213,8 @@
                 v-if="pdfMergeVerification"
                 class="pdf-merge-verification"
                 :class="{ blocked: pdfMergeVerification.status === 'blocked' }"
+                :role="pdfMergeVerification.status === 'blocked' ? 'alert' : 'status'"
+                aria-live="polite"
               >
                 <template v-if="pdfMergeVerification.status === 'isolated_verified'">
                   <strong>合并副本验证通过</strong>
@@ -242,7 +246,7 @@
               </label>
               <small>保留填写顺序；只生成同目录新 PDF，源文件始终不变。</small>
               <button data-testid="b2a-page-range-apply" @click="applyPageRangeExtraction">应用提取范围</button>
-              <small v-if="pageRangeError" class="page-range-error">{{ pageRangeError }}</small>
+              <small v-if="pageRangeError" class="page-range-error" role="alert">{{ pageRangeError }}</small>
             </div>
             <p>旋转、排序和排除先在内存中预览；验证通过后只能在源文件同目录创建新副本，不会覆盖任何 PDF。</p>
             <div class="page-plan-history">
@@ -257,6 +261,8 @@
               v-if="pagePlanVerification || pagePlanVerificationError"
               class="page-plan-verification"
               :class="{ blocked: pagePlanVerification?.status === 'blocked' || pagePlanVerificationError }"
+              :role="pagePlanVerification?.status === 'blocked' || pagePlanVerificationError ? 'alert' : 'status'"
+              aria-live="polite"
             >
               <template v-if="pagePlanVerification?.status === 'isolated_verified'">
                 <strong>{{ pagePlanMode === 'extract' ? '提取副本验证通过' : '隔离副本验证通过' }}</strong>

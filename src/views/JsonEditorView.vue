@@ -10,7 +10,7 @@
         <FileJsonIcon :size="18" />
         <div class="document-title">
           <strong>{{ fileName }}</strong>
-          <span>
+          <span aria-live="polite">
             {{ formatLabel }}
             <template v-if="readOnly"> · 只读预览</template>
             <template v-else-if="dirty"> · 未保存</template>
@@ -53,7 +53,7 @@
         </n-button>
         <n-button data-testid="json-save" type="primary" size="small" :disabled="loading || saving || readOnly || !dirty" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
-          {{ saving ? '保存中' : '保存' }}
+          {{ saving ? '保存中' : dirty ? '保存' : '已保存' }}
         </n-button>
       </div>
     </header>
@@ -445,7 +445,7 @@
       </template>
     </n-modal>
 
-    <footer class="json-statusbar">
+    <footer class="json-statusbar" aria-live="polite">
       <span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span>
       <span>{{ encoding.toUpperCase() }}</span>
       <span>{{ lineCount }} 行</span>

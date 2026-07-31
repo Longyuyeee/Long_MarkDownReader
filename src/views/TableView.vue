@@ -13,7 +13,7 @@
         <button v-if="table.format === 'longedit-table'" @click="exportAs('xlsx')">导出 XLSX</button>
         <button @click="addRow">＋ 行</button>
         <button @click="addColumn">＋ 列</button>
-        <button class="save-button" :disabled="!dirty || saving" @click="saveTable">{{ saving ? '保存中…' : dirty ? '保存' : '已保存' }}</button>
+        <button class="save-button" :disabled="!dirty || saving" aria-live="polite" @click="saveTable">{{ saving ? '保存中' : dirty ? '保存' : '已保存' }}</button>
       </div>
     </header>
     <nav v-if="table?.format === 'longedit-table'" class="view-tabs" aria-label="数据视图">
@@ -48,7 +48,7 @@
           <template v-else>
             <span>仪表盘筛选会同时作用于全部图表，拖动卡片可调整顺序</span>
           </template>
-          <i v-if="notice">{{ notice }}</i>
+          <i v-if="notice" aria-live="polite">{{ notice }}</i>
         </div>
         <div v-if="activeViewKind === 'grid'" ref="scrollRef" class="table-scroll" @scroll="handleScroll">
           <div class="table-canvas" :style="{ width: `${tableWidth}px` }">
@@ -624,5 +624,6 @@ onBeforeUnmount(() => {
 .board-scroll { min-height: 0; flex: 1; display: flex; align-items: flex-start; gap: 12px; padding: 14px; overflow: auto; }.board-column { width: 280px; max-height: 100%; flex: none; display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,.08); border-radius: 10px; background: rgba(0,0,0,.025); }.board-column > header { height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 11px; border-bottom: 1px solid rgba(0,0,0,.07); }.board-column > header strong { font-size: 11px; }.board-column > header span { min-width: 20px; padding: 2px 5px; border-radius: 10px; text-align: center; color: var(--theme-text-secondary); background: rgba(0,0,0,.06); font-size: 8px; }.board-cards { min-height: 60px; padding: 8px; overflow: auto; }.board-card { margin-bottom: 8px; padding: 10px; border: 1px solid rgba(0,0,0,.08); border-radius: 8px; background: var(--theme-card); box-shadow: 0 2px 7px rgba(0,0,0,.045); cursor: grab; }.board-card:active { cursor: grabbing; }.board-card > strong { display: block; margin-bottom: 8px; font-size: 11px; }.board-card p { display: grid; grid-template-columns: 72px minmax(0,1fr); align-items: center; gap: 5px; margin: 4px 0; }.board-card p span { overflow: hidden; text-overflow: ellipsis; color: var(--theme-text-secondary); font-size: 8px; }.board-card input { min-width: 0; border: 0; border-bottom: 1px solid transparent; outline: 0; color: var(--theme-text); background: transparent; font-size: 9px; }.board-card input:focus { border-color: var(--theme-primary); }.board-card small { display: block; margin-top: 8px; color: var(--theme-text-secondary); font-size: 7px; }
 .view-empty { margin: auto; max-width: 480px; color: var(--theme-text-secondary); text-align: center; font-size: 11px; }
 .table-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--theme-text-secondary); }.table-state strong { color: var(--theme-text); }.table-state p { max-width: 560px; text-align: center; }.table-state button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }.loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 900px) { .table-filter { width: 150px; }.table-title span { display: none; }.table-tools > button:not(.save-button) { display: none; } }
+@media (max-width: 900px) { .table-filter { width: 150px; }.table-title span { display: none; }.table-tools > button:not(.save-button) { display: none; }.view-tabs { overflow-x: auto; align-items: end; }.view-tabs > button,.view-add,.view-tabs > small { flex: none; } }
+@media (max-width: 620px) { .table-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }.table-title { width: 100%; min-width: 0; }.table-title div { min-width: 0; }.table-title strong { max-width: 100%; }.table-tools { width: 100%; }.table-filter { min-width: 0; flex: 1; }.table-tools .save-button { flex: none; } }
 </style>

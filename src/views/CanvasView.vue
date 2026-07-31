@@ -8,7 +8,7 @@
           <div class="canvas-subtitle">开放 JSON Canvas · {{ visibleNodes.length }}/{{ document.nodes.length }} 个节点可见 · 当前渲染 {{ renderedNodes.length }} 节点 / {{ renderedEdges.length }} 连线<template v-if="measuredFps"> · {{ measuredFps }} FPS</template></div>
         </div>
       </div>
-      <div class="save-state" :class="saveState">
+      <div class="save-state" :class="saveState" aria-live="polite">
         <span class="state-dot"></span>{{ saveStateLabel }}
       </div>
     </header>
@@ -67,7 +67,9 @@
       <button @click="resetView">{{ Math.round(zoom * 100) }}%</button>
       <button @click="changeZoom(0.1)">＋</button>
       <button @click="fitToContent">适应内容</button>
-      <button class="primary" @click="saveCanvas">保存</button>
+      <button class="primary" :disabled="saveState === 'saving' || saveState === 'saved'" aria-live="polite" @click="saveCanvas">
+        {{ saveState === 'saving' ? '保存中' : saveState === 'saved' ? '已保存' : '保存' }}
+      </button>
     </div>
 
     <main
@@ -276,7 +278,7 @@
       </div>
     </main>
 
-    <footer class="canvas-statusbar">
+    <footer class="canvas-statusbar" aria-live="polite">
       <span>{{ hiddenNodeIds.size ? `已折叠 ${hiddenNodeIds.size} 个分支节点` : selectionCount > 1 ? `已选择 ${selectionCount} 个节点` : tool === 'connect' ? '依次点击两个节点建立关系' : '拖拽卡片组织结构 · Shift+拖拽框选' }}</span>
       <span>Ctrl+C/X/V 复制剪切粘贴 · 方向键微调 · Alt 拖拽暂停吸附 · Ctrl+S 保存</span>
     </footer>
@@ -1353,5 +1355,5 @@ onBeforeRouteLeave(async () => { if (saveState.value === 'dirty') await saveCanv
 .canvas-overlay, .empty-canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px; border: var(--theme-border); border-radius: 16px; background: color-mix(in srgb, var(--theme-surface) 94%, transparent); box-shadow: 0 18px 50px rgba(0,0,0,.12); text-align: center; }.canvas-overlay.error strong { color: #ef4444; }.canvas-overlay span { max-width: 520px; color: var(--theme-text-secondary); word-break: break-word; }.canvas-overlay button, .empty-canvas button { padding: 8px 14px; }.empty-canvas { pointer-events: none; }.empty-canvas button { pointer-events: auto; }.empty-icon { font-size: 44px; color: var(--theme-primary); }.empty-canvas h2 { margin: 0; font-size: 19px; }.empty-canvas p { margin: 0; max-width: 420px; color: var(--theme-text-secondary); font-size: 13px; }
 .canvas-statusbar { min-height: 28px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: var(--theme-border); background: var(--theme-surface); color: var(--theme-text-secondary); font-size: 11px; }
 @keyframes pulse { 50% { opacity: .35; } } @keyframes sourcePulse { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--node-color) 13%, transparent); } }
-@media (max-width: 800px) { .canvas-subtitle, .canvas-statusbar span:last-child { display: none; }.canvas-toolbar { padding-inline: 8px; }.canvas-header { padding-inline: 10px; } }
+@media (max-width: 800px) { .canvas-subtitle, .canvas-statusbar span:last-child { display: none; }.canvas-toolbar { padding-inline: 8px; scrollbar-gutter: stable; }.canvas-header { min-height: 52px; padding: 7px 10px; }.canvas-title { max-width: 55vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.save-state { flex: none; padding-inline: 6px; } }
 </style>
