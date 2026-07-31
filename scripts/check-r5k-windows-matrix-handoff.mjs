@@ -128,6 +128,8 @@ for (const token of [
   'different source commit',
   'different current installer',
   'member digest drifted',
+  'approvedSourceCommit',
+  'windows-server-x64',
   'installed-txt-save-reopen.jpg',
   'rollback-cleanup-retains-user-data',
   'Refusing to overwrite existing R5K imported evidence',

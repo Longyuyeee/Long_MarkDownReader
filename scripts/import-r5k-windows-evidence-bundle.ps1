@@ -106,11 +106,16 @@ try {
     if ([string]$manifest.sourceCommit -notmatch "^[a-fA-F0-9]{40}$") {
         throw "R5K source commit binding is invalid."
     }
+    $r5h = Get-Content -LiteralPath $approvedManifestPath -Raw | ConvertFrom-Json
     $currentCommit = ([string](& git -C $repoRoot rev-parse HEAD)).Trim()
-    if ($LASTEXITCODE -ne 0 -or $manifest.sourceCommit -ne $currentCommit) {
+    $approvedSourceCommit = if ($null -ne $r5h.PSObject.Properties["sourceCommit"]) {
+        [string]$r5h.sourceCommit
+    } else {
+        $currentCommit
+    }
+    if ($LASTEXITCODE -ne 0 -or $manifest.sourceCommit -ne $approvedSourceCommit) {
         throw "R5K evidence bundle is bound to a different source commit."
     }
-    $r5h = Get-Content -LiteralPath $approvedManifestPath -Raw | ConvertFrom-Json
     $approvedInstaller = @($r5h.artifacts | Where-Object { $_.target -eq "nsis" })
     if ($approvedInstaller.Count -ne 1 -or $manifest.currentInstallerSha256 -ne $approvedInstaller[0].sha256) {
         throw "R5K evidence bundle is bound to a different current installer."
@@ -122,7 +127,7 @@ try {
         throw "R5K evidence manifest truth boundary drifted."
     }
     if ($manifest.environment.family -ne "windows" -or
-        [string]$manifest.environment.productName -notmatch "Windows 1[01]" -or
+        [string]$manifest.environment.productName -notmatch "Windows" -or
         [string]$manifest.environment.buildNumber -notmatch "^\d+$" -or
         [string]$manifest.environment.architecture -notmatch "(?i)(64|x64|amd64)" -or
         [string]$manifest.environment.machineClassFingerprintSha256 -notmatch "^[a-f0-9]{64}$" -or
@@ -132,7 +137,9 @@ try {
     }
     $buildNumber = [int64]$manifest.environment.buildNumber
     $productName = [string]$manifest.environment.productName
-    $actualWindowsClass = if ($productName -match "Windows 11" -and $buildNumber -ge 22000) {
+    $actualWindowsClass = if ($productName -match "Windows Server") {
+        "windows-server-x64"
+    } elseif ($productName -match "Windows 11" -and $buildNumber -ge 22000) {
         "windows-11-x64"
     } elseif ($productName -match "Windows 10" -and $buildNumber -lt 22000) {
         "windows-10-x64"

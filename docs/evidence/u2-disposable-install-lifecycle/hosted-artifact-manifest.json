@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "stage": "U2I",
+  "status": "hosted-evidence-import-approved",
+  "appVersion": "0.7.0",
+  "sourceCommit": "4cf5df4e521ff885336dcc3931d5e195e8605219",
+  "githubRunId": 30660582582,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30660582582",
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "sourceUserContentIncluded": false,
+  "artifacts": [
+    {
+      "target": "nsis",
+      "version": "0.7.0",
+      "sha256": "5b9ef6aabf1e1a97817189e80a5c65e5972bace2b27eb49f1ec3a66a76016ba2",
+      "authenticodeStatus": "NotSigned",
+      "signed": false
+    }
+  ],
+  "rollbackArtifact": {
+    "target": "nsis",
+    "version": "0.6.2",
+    "sha256": "9d01fd58cebdc98cd1082f5668dbc6ebd2b169d483e0464330d619ef93b7c228",
+    "authenticodeStatus": "NotSigned",
+    "signed": false
+  }
+}
