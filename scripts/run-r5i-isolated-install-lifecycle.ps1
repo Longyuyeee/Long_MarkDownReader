@@ -96,36 +96,48 @@ function Get-ProgIdOpenCommand([string]$ProgId) {
     return [string](Get-Item -LiteralPath $key).GetValue("")
 }
 
-$webViewPolicyRoot = "HKCU:\Software\Policies\Microsoft\Edge\WebView2"
-$webViewArgumentsPolicy = Join-Path $webViewPolicyRoot "AdditionalBrowserArguments"
-$webViewUserDataPolicy = Join-Path $webViewPolicyRoot "UserDataFolder"
-$webViewHostName = "tauri-app.exe"
-$webViewTestPolicyConfigured = $false
+$webViewPolicyRoots = @(
+    "HKCU:\Software\Policies\Microsoft\Edge\WebView2",
+    "HKLM:\Software\Policies\Microsoft\Edge\WebView2"
+)
+$webViewHostIds = @("com.longyuye.mdreader", "tauri-app.exe", "tauri-app", "*")
+$webViewTestPolicyEntries = New-Object System.Collections.Generic.List[object]
 
 function Enable-WebView2TestPolicy([string]$UserDataRoot) {
-    foreach ($key in @($webViewArgumentsPolicy, $webViewUserDataPolicy)) {
-        if ((Test-Path -LiteralPath $key) -and $null -ne (Get-ItemProperty -LiteralPath $key -Name $webViewHostName -ErrorAction SilentlyContinue)) {
-            throw "Refusing to overwrite an existing WebView2 policy for $webViewHostName."
+    foreach ($root in $webViewPolicyRoots) {
+        $argumentsKey = Join-Path $root "AdditionalBrowserArguments"
+        $userDataKey = Join-Path $root "UserDataFolder"
+        New-Item -Path $argumentsKey -Force | Out-Null
+        New-Item -Path $userDataKey -Force | Out-Null
+        foreach ($hostId in $webViewHostIds) {
+            if ($null -ne (Get-ItemProperty -LiteralPath $argumentsKey -Name $hostId -ErrorAction SilentlyContinue)) {
+                throw "Refusing to overwrite an existing WebView2 argument policy for $hostId."
+            }
+            New-ItemProperty -LiteralPath $argumentsKey -Name $hostId -PropertyType String `
+                -Value "--remote-debugging-port=9343 --remote-allow-origins=*" -Force | Out-Null
+            $script:webViewTestPolicyEntries.Add([ordered]@{ key = $argumentsKey; name = $hostId; root = $root })
         }
-        New-Item -Path $key -Force | Out-Null
+        foreach ($hostId in $webViewHostIds | Where-Object { $_ -ne "*" }) {
+            if ($null -ne (Get-ItemProperty -LiteralPath $userDataKey -Name $hostId -ErrorAction SilentlyContinue)) {
+                throw "Refusing to overwrite an existing WebView2 user-data policy for $hostId."
+            }
+            New-ItemProperty -LiteralPath $userDataKey -Name $hostId -PropertyType String `
+                -Value $UserDataRoot -Force | Out-Null
+            $script:webViewTestPolicyEntries.Add([ordered]@{ key = $userDataKey; name = $hostId; root = $root })
+        }
     }
-    New-ItemProperty -LiteralPath $webViewArgumentsPolicy -Name $webViewHostName -PropertyType String `
-        -Value "--remote-debugging-port=9343 --remote-allow-origins=*" -Force | Out-Null
-    New-ItemProperty -LiteralPath $webViewUserDataPolicy -Name $webViewHostName -PropertyType String `
-        -Value $UserDataRoot -Force | Out-Null
-    $script:webViewTestPolicyConfigured = $true
 }
 
 function Disable-WebView2TestPolicy {
-    if (-not $script:webViewTestPolicyConfigured) {
-        return
+    foreach ($entry in @($script:webViewTestPolicyEntries)) {
+        Remove-ItemProperty -LiteralPath $entry.key -Name $entry.name -ErrorAction SilentlyContinue
     }
-    Remove-ItemProperty -LiteralPath $webViewArgumentsPolicy -Name $webViewHostName -ErrorAction SilentlyContinue
-    Remove-ItemProperty -LiteralPath $webViewUserDataPolicy -Name $webViewHostName -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath $webViewArgumentsPolicy -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath $webViewUserDataPolicy -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath $webViewPolicyRoot -ErrorAction SilentlyContinue
-    $script:webViewTestPolicyConfigured = $false
+    foreach ($root in $webViewPolicyRoots) {
+        Remove-Item -LiteralPath (Join-Path $root "AdditionalBrowserArguments") -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath (Join-Path $root "UserDataFolder") -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $root -ErrorAction SilentlyContinue
+    }
+    $script:webViewTestPolicyEntries.Clear()
 }
 
 function Invoke-RegisteredUninstall($Registration) {

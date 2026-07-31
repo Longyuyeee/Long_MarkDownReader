@@ -28,7 +28,7 @@ for (const token of [
 ]) {
   if (!workflow.includes(token)) fail(`U2 workflow token missing: ${token}`);
 }
-for (const token of ["Write-RuntimeLaunchDiagnostics", "runtime-launch-diagnostics-$Phase.json", "$attempt -lt 1200", "processExitCode", "webViewRuntimeVersions", "Enable-WebView2TestPolicy", "AdditionalBrowserArguments", "Disable-WebView2TestPolicy", "Refusing to overwrite an existing WebView2 policy"]) {
+for (const token of ["Write-RuntimeLaunchDiagnostics", "runtime-launch-diagnostics-$Phase.json", "$attempt -lt 1200", "processExitCode", "webViewRuntimeVersions", "Enable-WebView2TestPolicy", "AdditionalBrowserArguments", "Disable-WebView2TestPolicy", "com.longyuye.mdreader", "tauri-app.exe", "\"*\"", "HKLM:\\Software\\Policies", "Refusing to overwrite an existing WebView2 argument policy"]) {
   if (!lifecycle.includes(token)) fail(`U2 runtime diagnostic token missing: ${token}`);
 }
 if (policy.runner.githubHostedWorkflow !== ".github/workflows/u2-unsigned-lifecycle.yml" || policy.runner.githubHostedRunnerPrepared !== true) fail("U2 policy does not bind the hosted runner");
