@@ -11,9 +11,17 @@ const r5iEnvironment = JSON.parse(fs.readFileSync(
   'docs/evidence/r5i-isolated-install-lifecycle/environment-audit.json',
   'utf8',
 ))
-const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
+const repositoryCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
 const currentInstaller = r5h.artifacts.find(artifact => artifact.target === 'nsis')
-if (!/^[a-f0-9]{40}$/.test(sourceCommit) || !/^[a-f0-9]{64}$/.test(currentInstaller?.sha256 || '')) {
+const importedRoot = 'docs/evidence/r5k-windows-matrix/imported'
+const importedBundlePath = `${importedRoot}/r5k-bundle-manifest.json`
+const importedLifecyclePath = `${importedRoot}/lifecycle-result.json`
+const importedBundle = fs.existsSync(importedBundlePath) ? JSON.parse(fs.readFileSync(importedBundlePath, 'utf8')) : null
+const importedLifecycle = fs.existsSync(importedLifecyclePath) ? JSON.parse(fs.readFileSync(importedLifecyclePath, 'utf8')) : null
+const hostedEvidencePassed = importedBundle?.environment?.productName === 'Microsoft Windows Server 2025 Datacenter' && importedLifecycle?.status === 'passed'
+const sourceCommit = hostedEvidencePassed ? importedBundle.sourceCommit : repositoryCommit
+const currentInstallerSha256 = hostedEvidencePassed ? importedBundle.currentInstallerSha256 : currentInstaller?.sha256
+if (!/^[a-f0-9]{40}$/.test(sourceCommit) || !/^[a-f0-9]{64}$/.test(currentInstallerSha256 || '')) {
   throw new Error('R5K source commit or current installer binding is invalid')
 }
 
@@ -38,8 +46,8 @@ fs.writeFileSync(outputPath, `${JSON.stringify({
   appVersion: packageJson.version,
   capturedAt: new Date().toISOString(),
   sourceCommit,
-  currentInstallerSha256: currentInstaller.sha256,
-  currentStatus: 'matrix-runner-and-evidence-handoff-ready-disposable-results-pending',
+  currentInstallerSha256,
+  currentStatus: hostedEvidencePassed ? 'generic-hosted-windows-evidence-imported-client-matrix-pending' : 'matrix-runner-and-evidence-handoff-ready-disposable-results-pending',
   implementation: {
     lifecycleMatrixRunnerReady: true,
     downgradeRejectionReady: true,
@@ -55,12 +63,12 @@ fs.writeFileSync(outputPath, `${JSON.stringify({
     hostInstallerMutationAllowed: false,
   },
   execution: {
-    disposableWindowsBundleImported: false,
+    disposableWindowsBundleImported: hostedEvidencePassed,
     windows10MatrixComplete: false,
     windows11MatrixComplete: false,
     downgradeRejectionProven: false,
-    fileAssociationRecoveryProven: false,
-    rollbackProven: false,
+    fileAssociationRecoveryProven: hostedEvidencePassed,
+    rollbackProven: hostedEvidencePassed,
     releaseCandidate: false,
     promotionEligible: false,
     sourceUserContentIncluded: false,

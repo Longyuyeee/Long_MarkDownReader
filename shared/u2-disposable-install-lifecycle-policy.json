@@ -4,13 +4,15 @@
   "appVersion": "0.7.0",
   "releaseCandidate": false,
   "scope": "unsigned-internal-candidate-disposable-install-lifecycle",
-  "currentStatus": "handoff-ready-current-host-execution-blocked",
-  "artifactSourceCommit": "953494c50360d232e0848d0bab80e0defd3c53d4",
+  "currentStatus": "hosted-unsigned-lifecycle-passed-signed-client-matrix-pending",
+  "artifactSourceCommit": "dfe5e9c424ab4a3b71f1eee3924dc43f8f7d400f",
   "runner": {
     "lifecycleScript": "scripts/run-r5i-isolated-install-lifecycle.ps1",
     "sandboxGenerator": "scripts/new-r5i-windows-sandbox-config.ps1",
     "githubHostedWorkflow": ".github/workflows/u2-unsigned-lifecycle.yml",
-    "artifactManifest": "docs/evidence/u1-unsigned-internal-candidate/installer-manifest.json",
+    "artifactManifest": "docs/evidence/u2-disposable-install-lifecycle/hosted-artifact-manifest.json",
+    "githubRunId": 30664431101,
+    "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30664431101",
     "artifactSourceCommitBound": true,
     "sandboxConfigurationPrepared": true,
     "githubHostedRunnerPrepared": true,
@@ -31,16 +33,16 @@
   "evidence": {
     "environmentAudit": "docs/evidence/u2-disposable-install-lifecycle/environment-audit.json",
     "sandboxOutput": "docs/evidence/u2-disposable-install-lifecycle/sandbox-output",
-    "lifecycleResultComplete": false,
+    "importedEvidence": "docs/evidence/r5k-windows-matrix/imported",
+    "lifecycleResultComplete": true,
     "sourceUserContentAllowed": false
   },
   "blockers": [
-    "windows-sandbox-unavailable",
-    "hyper-v-provisioning-command-unavailable",
-    "third-party-vm-runner-unavailable",
-    "existing-longedit-installation-present",
-    "existing-longedit-process-running"
+    "hosted-runner-is-windows-server-2025-not-windows-10-client",
+    "hosted-runner-is-windows-server-2025-not-windows-11-client",
+    "current-installers-are-unsigned",
+    "approved-code-signing-certificate-unavailable"
   ],
-  "nextAction": "execute-on-disposable-windows-runner",
-  "afterSuccess": "R5N-signed-windows-10-11-execution"
+  "nextAction": "execute-signed-windows-10-and-windows-11-client-matrix",
+  "afterSuccess": "R5N-manual-release-approval-and-promotion-audit"
 }

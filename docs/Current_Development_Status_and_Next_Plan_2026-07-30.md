@@ -554,3 +554,11 @@ The initial product goals, current 39-format capability boundary, unified worksp
 Audit conclusion: daily management, basic editing, and systematic knowledge organization are materially implemented at the engineering-feature level. The product remains `releaseCandidate=false` because signed Windows 10/11 installed-runtime evidence and manual release approval are still missing.
 
 Next action remains `external-release-execution`. Product enhancements may proceed in parallel, but they must not be reported as a substitute for the R5N signed runtime closure.
+
+## U2O update - hosted unsigned lifecycle and management recovery closed
+
+GitHub Actions run `30664431101` rebuilt source `dfe5e9c424ab4a3b71f1eee3924dc43f8f7d400f` and passed the complete unsigned installed lifecycle on Microsoft Windows Server 2025. The imported bundle is bound to the source commit and installer digest. All 18 lifecycle checks passed, including installed TXT/JSON save-reopen, file-association recovery, rollback, management backup restore, knowledge-index rebuild, and retained data. Manual screenshot review confirmed both editors remain visible in the Library right-side workspace.
+
+R5K is now `generic-hosted-windows-evidence-imported-client-matrix-pending`; R5L is `generic-hosted-management-recovery-proven-client-matrix-pending`; U2 is `hosted-unsigned-lifecycle-passed-signed-client-matrix-pending`. This closes the generic hosted unsigned lane only. Windows 10, Windows 11, Authenticode signing, signed runtime, and manual release approval remain false, so `releaseCandidate=false` remains unchanged.
+
+Next action: R5N `execute-signed-windows-10-and-windows-11-client-matrix`. Full evidence and boundary analysis are in `docs/U2O_Hosted_Unsigned_Lifecycle_Closure_Audit_2026-08-01.md`.

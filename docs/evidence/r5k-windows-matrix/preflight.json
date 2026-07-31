@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "R5K",
   "appVersion": "0.7.0",
-  "capturedAt": "2026-07-30T17:26:35.640Z",
-  "sourceCommit": "adea943bc6da97f14be26d84d768bd5d5cdcca98",
-  "currentInstallerSha256": "f75672d7731c5c924a00a273a3cd3b879f68e4e29d9a8f1f2a0d5d63361f3985",
-  "currentStatus": "matrix-runner-and-evidence-handoff-ready-disposable-results-pending",
+  "capturedAt": "2026-07-31T21:26:15.022Z",
+  "sourceCommit": "dfe5e9c424ab4a3b71f1eee3924dc43f8f7d400f",
+  "currentInstallerSha256": "d6ec52af91096158ee117c93342c8767b0f649ebf11a8a47005112171ef2dafb",
+  "currentStatus": "generic-hosted-windows-evidence-imported-client-matrix-pending",
   "implementation": {
     "lifecycleMatrixRunnerReady": true,
     "downgradeRejectionReady": true,
@@ -21,12 +21,12 @@
     "hostInstallerMutationAllowed": false
   },
   "execution": {
-    "disposableWindowsBundleImported": false,
+    "disposableWindowsBundleImported": true,
     "windows10MatrixComplete": false,
     "windows11MatrixComplete": false,
     "downgradeRejectionProven": false,
-    "fileAssociationRecoveryProven": false,
-    "rollbackProven": false,
+    "fileAssociationRecoveryProven": true,
+    "rollbackProven": true,
     "releaseCandidate": false,
     "promotionEligible": false,
     "sourceUserContentIncluded": false

@@ -529,6 +529,12 @@ U1 已完成。`shared/u1-unsigned-internal-candidate-policy.json` 绑定提交 
 
 便携运行烟测因当前会话存在另一份 LongEdit 单实例而记录为 `blocked-existing-single-instance`；没有关闭用户进程、执行安装器或修改注册表。下一步进入 U2 一次性环境的未签名安装生命周期。
 
+# 2026-08-01 U2O handoff
+
+U2O 已完成。GitHub 托管运行 `30664431101` 对源码 `dfe5e9c424ab4a3b71f1eee3924dc43f8f7d400f` 重新构建安装包，并在 Windows Server 2025 一次性环境通过 18 项未签名安装生命周期检查。TXT/JSON 保存重开截图已人工确认位于 Library 右侧工作面，管理备份恢复和知识索引重建也已通过。证据已导入 `docs/evidence/r5k-windows-matrix/imported`。
+
+当前动作是 R5N `execute-signed-windows-10-and-windows-11-client-matrix`。必须使用受信任签名材料和真实 Windows 10/11 客户端；Windows Server 托管证据不得冒充客户端通道，`releaseCandidate=false` 不变。
+
 # 2026-08-01 U2 外部执行入口
 
 U2 已推进到 `execute-on-disposable-windows-runner`。机器事实源为 `shared/u2-disposable-install-lifecycle-policy.json`；U1 NSIS 与 0.6.2 回滚安装器均就绪，但当前主机没有一次性 Windows runner，且已有安装与运行进程，所以安装修改继续阻断。

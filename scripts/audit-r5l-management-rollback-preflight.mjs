@@ -7,6 +7,9 @@ const r5iEnvironment = JSON.parse(fs.readFileSync(
   'docs/evidence/r5i-isolated-install-lifecycle/environment-audit.json',
   'utf8',
 ))
+const importedEvidencePath = 'docs/evidence/r5k-windows-matrix/imported/management-backup-index-evidence.json'
+const importedEvidence = fs.existsSync(importedEvidencePath) ? JSON.parse(fs.readFileSync(importedEvidencePath, 'utf8')) : null
+const hostedEvidencePassed = importedEvidence?.status === 'passed' && importedEvidence?.checks?.length === policy.requiredChecks.length
 const requiredFiles = [
   'scripts/capture-r5l-management-rollback-smoke.mjs',
   'scripts/run-r5i-isolated-install-lifecycle.ps1',
@@ -35,11 +38,11 @@ fs.writeFileSync(outputPath, `${JSON.stringify({
     hostInstallerMutationAllowed: false,
   },
   execution: {
-    disposableManagementEvidenceImported: false,
+    disposableManagementEvidenceImported: hostedEvidencePassed,
     windows11Complete: false,
     windows10Complete: false,
-    managementRollbackProven: false,
-    knowledgeIndexRecoveryProven: false,
+    managementRollbackProven: hostedEvidencePassed,
+    knowledgeIndexRecoveryProven: hostedEvidencePassed,
     releaseCandidate: false,
     promotionEligible: false,
     sourceUserContentIncluded: false,

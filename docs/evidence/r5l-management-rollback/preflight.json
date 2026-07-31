@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "stage": "R5L",
   "appVersion": "0.7.0",
-  "capturedAt": "2026-07-30T17:34:29.381Z",
-  "currentStatus": "management-rollback-runner-ready-disposable-execution-pending",
+  "capturedAt": "2026-07-31T21:26:15.323Z",
+  "currentStatus": "generic-hosted-management-recovery-proven-client-matrix-pending",
   "implementation": {
     "formalReleaseConfigFixture": true,
     "managementBackupExport": true,
@@ -21,11 +21,11 @@
     "hostInstallerMutationAllowed": false
   },
   "execution": {
-    "disposableManagementEvidenceImported": false,
+    "disposableManagementEvidenceImported": true,
     "windows11Complete": false,
     "windows10Complete": false,
-    "managementRollbackProven": false,
-    "knowledgeIndexRecoveryProven": false,
+    "managementRollbackProven": true,
+    "knowledgeIndexRecoveryProven": true,
     "releaseCandidate": false,
     "promotionEligible": false,
     "sourceUserContentIncluded": false

@@ -5,7 +5,7 @@
   "releaseCandidate": false,
   "scope": "installed-management-backup-restore-and-knowledge-index-rollback-closure",
   "generatedAt": "2026-07-31",
-  "currentStatus": "management-rollback-runner-ready-disposable-execution-pending",
+  "currentStatus": "generic-hosted-management-recovery-proven-client-matrix-pending",
   "requiredChecks": [
     "installed-release-formal-config-load",
     "management-backup-export",
@@ -39,14 +39,13 @@
     "contractChecksPassed": true,
     "windows11EvidenceImported": false,
     "windows10EvidenceImported": false,
-    "managementRollbackProven": false,
-    "knowledgeIndexRecoveryProven": false,
+    "managementRollbackProven": true,
+    "knowledgeIndexRecoveryProven": true,
     "signedArtifactRuntimeProven": false,
     "currentPromotionEligible": false
   },
   "knownLimits": [
-    "current-host-has-no-disposable-windows-runner",
-    "installed-management-rollback-flow-not-executed-on-windows-10-or-windows-11",
+    "hosted-management-evidence-is-windows-server-2025-not-a-windows-10-or-windows-11-client-lane",
     "management-backup-zip-remains-inside-disposable-guest-by-design",
     "current-installers-remain-unsigned"
   ],
