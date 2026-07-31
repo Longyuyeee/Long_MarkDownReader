@@ -83,9 +83,11 @@ if (
   e2b?.status !== "completed" ||
   e2b?.writeUserFile !== true ||
   e2b?.deliveredContract !== "shared/drawio-security-contract.json" ||
-  roadmap.decision?.nextStage !== "E5" ||
-  roadmap.decision?.nextSlice !== "advanced-capability-final-closure-audit"
-) fail("advanced roadmap did not close E2B and hand off to E5");
+  roadmap.decision?.nextStage !== "U1" ||
+  roadmap.decision?.nextSlice !== "unsigned-internal-candidate-package" ||
+  roadmap.decision?.closureContract !==
+    "shared/e5-final-capability-closure.json"
+) fail("advanced roadmap did not preserve E2B through E5 and hand off to U1");
 
 for (const [label, source, markers] of [
   ["backend", backend, ["DeflateDecoder", "MAX_TOTAL_PAGE_BYTES", "unknown_attribute_count", "external-image-not-loaded", "transform_drawio_cell_source"]],
@@ -106,4 +108,4 @@ if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));
   process.exit(1);
 }
-console.log("E2B Draw.io contract passed: 41 formats; compressed/uncompressed pages, bounded local preview, structured edits, unknown-attribute preservation, and signature-protected save verified; E5 is next.");
+console.log("E2B Draw.io contract passed: 41 formats; compressed/uncompressed pages, bounded local preview, structured edits, unknown-attribute preservation, and signature-protected save verified; E5 is closed and U1 is next.");

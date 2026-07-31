@@ -183,10 +183,12 @@ for (const [requirement, source] of [
 }
 
 if (
-  roadmap.decision?.nextStage !== "E5" ||
-  roadmap.decision?.nextSlice !== "advanced-capability-final-closure-audit"
+  roadmap.decision?.nextStage !== "U1" ||
+  roadmap.decision?.nextSlice !== "unsigned-internal-candidate-package" ||
+  roadmap.decision?.closureContract !==
+    "shared/e5-final-capability-closure.json"
 ) {
-  fail("E0 roadmap must advance to E5 after Draw.io E2B completion");
+  fail("E0 roadmap must advance through E5 to U1 after final closure");
 }
 if (
   !packageJson.scripts["ci:check"]?.includes(
@@ -224,5 +226,5 @@ if (failures.length) {
 }
 
 console.log(
-  `E0 advanced capability roadmap passed: ${tracks.size} tracks; bounded Excel E1A, SVG E2A, and Draw.io E2B are complete, E5 is next, themes remain 3 core + 4 scenario, RC remains blocked.`,
+  `E0 advanced capability roadmap passed: ${tracks.size} tracks; bounded Excel E1A, SVG E2A, Draw.io E2B, and E5 closure are complete, U1 is next, themes remain 3 core + 4 scenario, RC remains blocked.`,
 );

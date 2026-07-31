@@ -232,8 +232,9 @@
     }
   ],
   "decision": {
-    "nextStage": "E5",
-    "nextSlice": "advanced-capability-final-closure-audit",
-    "reason": "SVG E2A and Draw.io E2B are complete. Excel E1B/E1C still require unavailable external producer evidence, so the next executable slice is a final advanced-capability closure audit without promoting releaseCandidate."
+    "nextStage": "U1",
+    "nextSlice": "unsigned-internal-candidate-package",
+    "closureContract": "shared/e5-final-capability-closure.json",
+    "reason": "E5 passed the complete quality gate and froze the advanced capability ledger. External producer and signed Windows evidence remain blocked, so the next executable slice is an unsigned internal candidate package without promoting releaseCandidate."
   }
 }

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "stage": "E5",
+  "capturedAt": "2026-08-01T00:00:00+08:00",
+  "sourceCommit": "313e8701825c29e69de9d0592df1ac462d3921a4",
+  "status": "passed",
+  "releaseCandidate": false,
+  "checks": [
+    { "id": "frontend-production-build", "status": "passed" },
+    { "id": "format-theme-release-and-evidence-contracts", "status": "passed" },
+    { "id": "rust-functional-regression", "status": "passed", "passed": 431, "failed": 0 },
+    { "id": "rust-workbook-performance", "status": "passed", "passed": 1, "failed": 0 },
+    { "id": "pdf-range-benchmark", "status": "passed", "fileMiB": 100, "elapsedMs": 57, "requestedKiB": 255.9 },
+    { "id": "production-dependency-audit", "status": "passed", "vulnerabilities": 0 }
+  ],
+  "externalEvidencePromoted": false,
+  "sourceUserContentIncluded": false
+}

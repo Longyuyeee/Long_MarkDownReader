@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "stage": "E5",
+  "appVersion": "0.7.0",
+  "status": "advanced-capability-closure-passed",
+  "releaseCandidate": false,
+  "auditedSourceCommit": "313e8701825c29e69de9d0592df1ac462d3921a4",
+  "frozenBaseline": {
+    "registeredFormats": 41,
+    "verifiedFormats": 29,
+    "limitedFormats": 6,
+    "externalDependencyFormats": 6,
+    "releaseProfiles": 10,
+    "safeDegradationLanes": 6
+  },
+  "completedSlices": [
+    "E1A-dynamic-array-in-memory-preview",
+    "E2A-secure-svg-source-editor",
+    "E2B-structured-drawio-editor",
+    "C1-knowledge-graph-productization",
+    "D1-unified-workspace-experience",
+    "D2-cross-format-safe-degradation",
+    "D3-product-capability-freeze"
+  ],
+  "externalEvidenceBlocked": [
+    { "id": "E1B-array-producer-closure", "evidence": "1/3", "promotionAllowed": false },
+    { "id": "E1C-multi-axis-pivot-reliable-copy", "evidence": "2/3", "promotionAllowed": false },
+    { "id": "wps-odf-producer-closure", "evidence": "2/3", "promotionAllowed": false },
+    { "id": "signed-windows-10-11-runtime", "evidence": "0/2", "promotionAllowed": false }
+  ],
+  "deferredTracks": [
+    "E1D-complex-workbook-objects-and-external-data",
+    "E3A-on-demand-theme-expansion",
+    "E4A-advanced-office-equivalence-feasibility",
+    "cloud-collaboration-and-enterprise-governance"
+  ],
+  "qualityEvidence": {
+    "manifest": "docs/evidence/e5-final-capability-closure/audit-manifest.json",
+    "fullCiPassed": true,
+    "functionalRustTestsPassed": 431,
+    "performanceRustTestsPassed": 1,
+    "productionVulnerabilities": 0
+  },
+  "nextStage": "U1",
+  "nextSlice": "unsigned-internal-candidate-package"
+}

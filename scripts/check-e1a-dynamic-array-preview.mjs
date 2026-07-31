@@ -73,9 +73,11 @@ if (
   e1a?.writeUserFile !== false ||
   e1a?.deliveredContract !==
     "shared/xlsx-formula-capabilities.json#dynamicArrayPreviewContract" ||
-  roadmap.decision?.nextStage !== "E5" ||
+  roadmap.decision?.nextStage !== "U1" ||
   roadmap.decision?.nextSlice !==
-    "advanced-capability-final-closure-audit" ||
+    "unsigned-internal-candidate-package" ||
+  roadmap.decision?.closureContract !==
+    "shared/e5-final-capability-closure.json" ||
   formats?.phases?.[0]?.status !== "completed" ||
   formats?.phases?.[1]?.status !== "completed"
 ) {

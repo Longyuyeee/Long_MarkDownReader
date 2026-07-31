@@ -69,8 +69,10 @@ if (
   e2a?.status !== "completed" ||
   e2a?.deliveredContract !== "shared/svg-security-contract.json" ||
   e2b?.status !== "completed" ||
-  roadmap.decision?.nextStage !== "E5"
-) fail("advanced roadmap did not preserve E2A while closing E2B");
+  roadmap.decision?.nextStage !== "U1" ||
+  roadmap.decision?.closureContract !==
+    "shared/e5-final-capability-closure.json"
+) fail("advanced roadmap did not preserve E2A through E5 closure");
 
 for (const [label, source, markers] of [
   ["backend", backend, ["MAX_SVG_SOURCE_BYTES", "MAX_SVG_ELEMENTS", "exceeds_viewbox_limit", "is_allowed_element", "svg-attribute-blocked", "sanitized_svg"]],
