@@ -188,7 +188,7 @@ for (const [label, source, markers] of [
     currentAuditDoc,
     [
       "D3 最终产品验收已完成",
-      "下一代码阶段为 E0",
+      "E0 高级能力差距审计已完成",
       "后者继续为 `false`",
     ],
   ],
