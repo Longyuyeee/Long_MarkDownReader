@@ -73,11 +73,11 @@ if (
   e1a?.writeUserFile !== false ||
   e1a?.deliveredContract !==
     "shared/xlsx-formula-capabilities.json#dynamicArrayPreviewContract" ||
-  roadmap.decision?.nextStage !== "E2B" ||
+  roadmap.decision?.nextStage !== "E5" ||
   roadmap.decision?.nextSlice !==
-    "drawio-structured-editor-security-contract" ||
+    "advanced-capability-final-closure-audit" ||
   formats?.phases?.[0]?.status !== "completed" ||
-  formats?.phases?.[1]?.status !== "next"
+  formats?.phases?.[1]?.status !== "completed"
 ) {
   fail("E1A completion and current advanced-format handoff are not aligned");
 }
@@ -144,7 +144,7 @@ for (const [label, source, markers] of [
   [
     "current audit",
     currentAudit,
-    ["E1A 已完成", "E2A SVG 安全源码编辑已完成", "下一代码阶段为 E2B"],
+    ["E1A 已完成", "E2A SVG 安全源码编辑已完成", "E2B Draw.io 结构化编辑已完成"],
   ],
 ]) {
   for (const marker of markers) {
@@ -158,5 +158,5 @@ if (failures.length) {
 }
 
 console.log(
-  "E1A dynamic-array preview passed: bounded SEQUENCE, direct numeric drafts, stable spill diagnostics, zero file/cache writes; SVG E2A is complete and E2B is next.",
+  "E1A dynamic-array preview passed: bounded SEQUENCE, direct numeric drafts, stable spill diagnostics, zero file/cache writes; SVG E2A and Draw.io E2B are complete.",
 );

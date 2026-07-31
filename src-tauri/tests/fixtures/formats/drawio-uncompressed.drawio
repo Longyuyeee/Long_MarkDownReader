@@ -1,0 +1,30 @@
+<mxfile host="app.diagrams.net" modified="2026-07-31T00:00:00.000Z" agent="LongEdit E2B">
+  <diagram id="page-1" name="Architecture">
+    <mxGraphModel dx="1000" dy="700" grid="1" customModel="preserve-model">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="node-a" value="Reader" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1" customFlag="preserve-me">
+          <mxGeometry x="80" y="80" width="140" height="60" as="geometry" customGeometry="keep"/>
+        </mxCell>
+        <mxCell id="node-b" value="Workspace" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="340" y="80" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-a" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" parent="1" source="node-a" target="node-b">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page-2" name="Resources">
+    <mxGraphModel>
+      <root>
+        <mxCell id="p2-0"/>
+        <mxCell id="p2-1" parent="p2-0"/>
+        <mxCell id="external" value="https://example.com" style="shape=image;image=https://example.com/image.png;" vertex="1" parent="p2-1">
+          <mxGeometry x="40" y="40" width="120" height="80" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

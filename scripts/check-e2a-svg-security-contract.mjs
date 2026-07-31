@@ -64,13 +64,13 @@ if (releaseSvg?.profile !== "local-overwrite" || releaseSvg?.readiness !== "veri
 if (!overwriteLane?.formats?.includes("svg")) fail("SVG is missing from the D2 overwrite lane");
 if (
   formatTrack?.currentFacts?.registeredFormats !== registry.formats.length ||
-  registry.formats.length !== 40 ||
+  registry.formats.length !== 41 ||
   formatTrack?.currentFacts?.svgRegistered !== true ||
   e2a?.status !== "completed" ||
   e2a?.deliveredContract !== "shared/svg-security-contract.json" ||
-  e2b?.status !== "next" ||
-  roadmap.decision?.nextStage !== "E2B"
-) fail("advanced roadmap did not advance from E2A to E2B");
+  e2b?.status !== "completed" ||
+  roadmap.decision?.nextStage !== "E5"
+) fail("advanced roadmap did not preserve E2A while closing E2B");
 
 for (const [label, source, markers] of [
   ["backend", backend, ["MAX_SVG_SOURCE_BYTES", "MAX_SVG_ELEMENTS", "exceeds_viewbox_limit", "is_allowed_element", "svg-attribute-blocked", "sanitized_svg"]],
@@ -90,4 +90,4 @@ if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));
   process.exit(1);
 }
-console.log("E2A SVG security contract passed: 40 formats; sanitized preview, safe source save, indexing, creation, and D2 coverage verified; E2B is next.");
+console.log("E2A SVG security contract passed: 41 formats; sanitized preview, safe source save, indexing, creation, and D2 coverage verified; Draw.io E2B is complete.");

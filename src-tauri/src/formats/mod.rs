@@ -2,6 +2,7 @@ pub mod canvas;
 pub mod diagram;
 pub mod docx;
 pub mod docx_patch;
+pub mod drawio;
 pub mod file_registry;
 pub mod json;
 pub mod markdown;

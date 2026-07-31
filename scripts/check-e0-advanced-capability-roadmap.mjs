@@ -52,7 +52,7 @@ if (
 
 const expectedTracks = new Map([
   ["excel-equivalence", ["FR-DATA-009", "P0", "partial"]],
-  ["new-format-editors", ["FR-VECTOR-001..002", "P1", "in-progress"]],
+  ["new-format-editors", ["FR-VECTOR-001..002", "P1", "completed"]],
   ["theme-expansion", ["FR-THEME-001", "P2", "current-commitment-complete"]],
   ["complex-office-and-wps", ["FR-OFFICE-001..006", "P2", "deferred-risk-review"]],
 ]);
@@ -124,11 +124,11 @@ const formatIds = new Set(registry.formats.map((format) => format.id));
 const formatTrack = tracks.get("new-format-editors");
 if (
   formatTrack?.currentFacts?.registeredFormats !== registry.formats.length ||
-  registry.formats.length !== 40 ||
+  registry.formats.length !== 41 ||
   !formatIds.has("svg") ||
-  formatIds.has("drawio") ||
+  !formatIds.has("drawio") ||
   formatTrack?.currentFacts?.svgRegistered !== true ||
-  formatTrack?.currentFacts?.drawioRegistered !== false
+  formatTrack?.currentFacts?.drawioRegistered !== true
 ) {
   fail("new-format implementation facts are stale");
 }
@@ -139,9 +139,11 @@ if (
   formatTrack.phases[0].writeUserFile !== true ||
   formatTrack.phases[0].deliveredContract !== "shared/svg-security-contract.json" ||
   formatTrack?.phases?.[1]?.id !== "E2B" ||
-  formatTrack.phases[1].status !== "next"
+  formatTrack.phases[1].status !== "completed" ||
+  formatTrack.phases[1].writeUserFile !== true ||
+  formatTrack.phases[1].deliveredContract !== "shared/drawio-security-contract.json"
 ) {
-  fail("SVG completion and Draw.io handoff drift");
+  fail("SVG and Draw.io completion drift");
 }
 
 const registeredPresetCount = [
@@ -181,10 +183,10 @@ for (const [requirement, source] of [
 }
 
 if (
-  roadmap.decision?.nextStage !== "E2B" ||
-  roadmap.decision?.nextSlice !== "drawio-structured-editor-security-contract"
+  roadmap.decision?.nextStage !== "E5" ||
+  roadmap.decision?.nextSlice !== "advanced-capability-final-closure-audit"
 ) {
-  fail("E0 roadmap must advance to E2B after SVG E2A completion");
+  fail("E0 roadmap must advance to E5 after Draw.io E2B completion");
 }
 if (
   !packageJson.scripts["ci:check"]?.includes(
@@ -208,7 +210,7 @@ for (const [label, source, markers] of [
   [
     "current development audit",
     currentAuditDoc,
-    ["E0 高级能力差距审计已完成", "E2A SVG 安全源码编辑已完成", "下一代码阶段为 E2B"],
+    ["E0 高级能力差距审计已完成", "E2A SVG 安全源码编辑已完成", "E2B Draw.io 结构化编辑已完成"],
   ],
 ]) {
   for (const marker of markers) {
@@ -222,5 +224,5 @@ if (failures.length) {
 }
 
 console.log(
-  `E0 advanced capability roadmap passed: ${tracks.size} tracks; bounded Excel E1A and SVG E2A are complete, Draw.io E2B is next, themes remain 3 core + 4 scenario, RC remains blocked.`,
+  `E0 advanced capability roadmap passed: ${tracks.size} tracks; bounded Excel E1A, SVG E2A, and Draw.io E2B are complete, E5 is next, themes remain 3 core + 4 scenario, RC remains blocked.`,
 );

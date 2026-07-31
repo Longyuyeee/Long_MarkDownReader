@@ -87,7 +87,7 @@ const osTheme = useOsTheme()
 const router = useRouter()
 const store = useAppStore()
 const relationContextRoutes = new Set([
-  'LibraryMode', 'TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'TomlEditor',
+  'LibraryMode', 'TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'DrawioEditor', 'TomlEditor',
   'LogViewer', 'Pdf', 'Table', 'Canvas', 'MindMap',
 ])
 const activeContextPath = computed(() => {
@@ -214,6 +214,7 @@ const getRouteLoadingLabel = (routeName: unknown) => {
     JsonEditor: '正在打开 JSON 工作区',
     YamlEditor: '正在打开 YAML 工作区',
     XmlEditor: '正在打开 XML 工作区',
+    DrawioEditor: '正在打开 Draw.io 工作区',
     TomlEditor: '正在打开 TOML 工作区',
     TempMode: '正在载入文档',
     QuickNote: '正在打开快速笔记',

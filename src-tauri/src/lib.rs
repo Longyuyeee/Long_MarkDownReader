@@ -23,6 +23,9 @@ use commands::docx::{
     preview_docx_package_patch_isolated_copy, preview_docx_style_patch_isolated_copy,
     preview_docx_text_patch_isolated_copy, read_docx_document, save_docx_patch_copy,
 };
+use commands::drawio::{
+    analyze_drawio_source, transform_drawio_cell_source, write_drawio_source_document,
+};
 use commands::external_apps::{discover_external_applications, open_workspace_file_externally};
 use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
@@ -298,6 +301,9 @@ pub fn run() {
             write_xml_source_document,
             analyze_svg_source,
             write_svg_source_document,
+            analyze_drawio_source,
+            transform_drawio_cell_source,
+            write_drawio_source_document,
             analyze_toml_source,
             write_toml_source_document,
             read_text_document,

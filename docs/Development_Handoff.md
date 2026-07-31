@@ -508,3 +508,9 @@ E2A 已完成。SVG 现在是第 40 类注册格式，复用统一 XML 源码工
 4. 增加真实 `.drawio` fixture、失败语料、桌面复开和 D2 安全通道证据。
 
 E1B 数组写回和 E1C 多层 Pivot 可靠副本仍分别受 1/3、2/3 外部生产者证据阻断；`releaseCandidate=false` 不变。详细审计见 [`E2A_SVG_Security_and_Basic_Source_Editor_Audit_2026-07-31.md`](./E2A_SVG_Security_and_Basic_Source_Editor_Audit_2026-07-31.md)。
+
+# 2026-07-31 E2B Draw.io 交接入口
+
+E2B 已完成。Draw.io 现在是第 41 类注册格式，`.drawio/.dio` 已接入独立结构化工作面、创建、索引和签名保护保存。后端同时支持直接嵌入与压缩页，页面/单元格解析受资源预算限制；工作面只绘制本地 mxCell 投影，不自动打开链接或加载外部图片。标签、几何和颜色修改只重写目标页，未知属性保持保真，危险资源协议会阻止保存。
+
+接手后直接进入 E5 高级能力最终收口审计：核对 E1A、E2A、E2B、主题承诺、发布矩阵和仍阻塞的外部生产者证据，不继续扩展 Draw.io 功能，也不提升 `releaseCandidate=false`。详细审计见 [`E2B_Drawio_Structured_Editor_Audit_2026-07-31.md`](./E2B_Drawio_Structured_Editor_Audit_2026-07-31.md)。

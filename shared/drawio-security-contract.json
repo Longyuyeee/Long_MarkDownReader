@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "stage": "E2B",
+  "formatId": "drawio",
+  "releaseCandidate": false,
+  "sourceLimitBytes": 10485760,
+  "structureLimits": {
+    "pages": 100,
+    "pageInflatedBytes": 20971520,
+    "totalInflatedBytes": 41943040,
+    "cellsPerPage": 50000,
+    "depth": 96
+  },
+  "pageEncodings": [
+    "embedded-mxGraphModel",
+    "base64-raw-deflate-uri-encoded-mxGraphModel"
+  ],
+  "previewBoundary": {
+    "renderer": "local-mxCell-svg-projection",
+    "activeContentExecuted": false,
+    "externalResourcesLoaded": false,
+    "linksOpenedAutomatically": false
+  },
+  "resourcePolicy": {
+    "httpLinks": "preserve-with-warning",
+    "externalImages": "preserve-with-warning-never-load",
+    "blockedSchemes": ["javascript", "data", "file"]
+  },
+  "editingBoundary": {
+    "editableFields": ["label", "x", "y", "width", "height", "fillColor", "strokeColor"],
+    "unknownAttributesPreserved": true,
+    "targetPageOnlyRewrite": true,
+    "compressedPageReencoded": true
+  },
+  "savePolicy": {
+    "mode": "signature-protected-overwrite",
+    "unsafeSourceWriteAllowed": false,
+    "expectedSignatureRequiredAfterOpen": true,
+    "postTransformReanalysisRequired": true
+  },
+  "evidence": [
+    "src-tauri/tests/fixtures/formats/drawio-uncompressed.drawio",
+    "src-tauri/src/formats/drawio.rs",
+    "src-tauri/src/commands/drawio.rs",
+    "src/views/DrawioEditorView.vue",
+    "docs/E2B_Drawio_Structured_Editor_Audit_2026-07-31.md"
+  ]
+}

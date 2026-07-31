@@ -115,6 +115,7 @@
     { "id": "wps-spreadsheet", "profile": "wps-external", "readiness": "external-dependency" },
     { "id": "wps-presentation", "profile": "wps-external", "readiness": "external-dependency" },
     { "id": "workbook", "profile": "workbook-bounded", "readiness": "verified-with-limitations" },
+    { "id": "drawio", "profile": "local-overwrite", "readiness": "verified" },
     { "id": "diagram", "profile": "local-overwrite", "readiness": "verified" },
     { "id": "opml", "profile": "local-overwrite", "readiness": "verified" }
   ],

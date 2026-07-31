@@ -496,6 +496,19 @@
       "creation": null
     },
     {
+      "id": "drawio",
+      "label": "Draw.io 图表",
+      "extensions": [".drawio", ".dio"],
+      "mimeTypes": ["application/vnd.jgraph.mxfile", "application/xml", "text/xml"],
+      "routeName": "DrawioEditor",
+      "maxBytes": 10485760,
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
+      "userCapability": { "level": "basic-edit", "label": "结构化基础编辑", "saveMode": "overwrite", "description": "Draw.io 支持压缩与非压缩多页文件的本地预览，以及节点标签、几何和颜色编辑；未知属性原样保留，外部链接和图片仅作为数据保留且不会自动加载，保存受结构预算和文件签名冲突保护。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".drawio", "defaultContent": "<mxfile host=\"LongEdit\"><diagram id=\"page-1\" name=\"Page 1\"><mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"node-1\" value=\"New node\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"80\" y=\"80\" width=\"140\" height=\"60\" as=\"geometry\"/></mxCell></root></mxGraphModel></diagram></mxfile>\n", "defaultName": "未命名 Draw.io 图表" }
+    },
+    {
       "id": "diagram",
       "label": "Mermaid 图表",
       "extensions": [".mmd", ".mermaid"],

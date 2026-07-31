@@ -763,6 +763,7 @@ const embeddedEditorComponents = {
   JsonEditor: defineAsyncComponent(() => import('./JsonEditorView.vue')),
   YamlEditor: defineAsyncComponent(() => import('./YamlEditorView.vue')),
   XmlEditor: defineAsyncComponent(() => import('./XmlEditorView.vue')),
+  DrawioEditor: defineAsyncComponent(() => import('./DrawioEditorView.vue')),
   TomlEditor: defineAsyncComponent(() => import('./TomlEditorView.vue')),
   LogViewer: defineAsyncComponent(() => import('./LogViewerView.vue')),
   DocxEditor: defineAsyncComponent(() => import('./DocxReaderView.vue')),

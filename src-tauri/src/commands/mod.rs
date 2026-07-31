@@ -5,6 +5,7 @@ pub mod config;
 pub mod diagnostics;
 pub mod diagram;
 pub mod docx;
+pub mod drawio;
 pub mod external_apps;
 pub mod files;
 pub mod formats;

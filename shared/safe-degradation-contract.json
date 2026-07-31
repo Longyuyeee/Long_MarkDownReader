@@ -10,7 +10,7 @@
         "markdown", "plain-text", "env", "ini", "properties", "editorconfig",
         "gitignore", "javascript", "typescript", "python", "rust", "go",
         "jvm-code", "c-family", "shell", "sql", "web-source", "json", "jsonc",
-        "yaml", "xml", "svg", "toml", "canvas", "table", "diagram", "opml"
+        "yaml", "xml", "svg", "drawio", "toml", "canvas", "table", "diagram", "opml"
       ],
       "saveModes": ["overwrite"],
       "profiles": ["local-overwrite", "protected-local-overwrite", "lightweight-source"],
@@ -32,6 +32,10 @@
         {
           "path": "src-tauri/src/commands/svg.rs",
           "markers": ["unsafe-svg-save-blocked", "expected_signature"]
+        },
+        {
+          "path": "src-tauri/src/commands/drawio.rs",
+          "markers": ["unsafe-drawio-save-blocked", "expected_signature"]
         }
       ]
     },

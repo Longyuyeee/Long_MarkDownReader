@@ -100,11 +100,11 @@
       "id": "new-format-editors",
       "requirement": "FR-VECTOR-001..002",
       "priority": "P1",
-      "status": "in-progress",
+      "status": "completed",
       "currentFacts": {
-        "registeredFormats": 40,
+        "registeredFormats": 41,
         "svgRegistered": true,
-        "drawioRegistered": false
+        "drawioRegistered": true
       },
       "phases": [
         {
@@ -130,8 +130,10 @@
         {
           "id": "E2B",
           "name": "drawio-structured-editor",
-          "status": "next",
-          "writeUserFile": false,
+          "status": "completed",
+          "completedAt": "2026-07-31",
+          "writeUserFile": true,
+          "deliveredContract": "shared/drawio-security-contract.json",
           "entryCriteria": [
             "mxgraph-compression-and-xml-contract",
             "external-image-and-link-policy",
@@ -148,7 +150,9 @@
       "evidence": [
         "shared/file-formats.json",
         "shared/svg-security-contract.json",
+        "shared/drawio-security-contract.json",
         "docs/E2A_SVG_Security_and_Basic_Source_Editor_Audit_2026-07-31.md",
+        "docs/E2B_Drawio_Structured_Editor_Audit_2026-07-31.md",
         "docs/Next_Development_Execution_Guide.md",
         "docs/Unified_File_Manager_Format_Requirements.md"
       ]
@@ -228,8 +232,8 @@
     }
   ],
   "decision": {
-    "nextStage": "E2B",
-    "nextSlice": "drawio-structured-editor-security-contract",
-    "reason": "E2A has registered SVG with a bounded sanitizer, safe preview, source editing, indexing, creation, and signature-protected save. E1B and E1C remain externally blocked at 1/3 and 2/3 producer evidence, so Draw.io is the next executable product slice."
+    "nextStage": "E5",
+    "nextSlice": "advanced-capability-final-closure-audit",
+    "reason": "SVG E2A and Draw.io E2B are complete. Excel E1B/E1C still require unavailable external producer evidence, so the next executable slice is a final advanced-capability closure audit without promoting releaseCandidate."
   }
 }
