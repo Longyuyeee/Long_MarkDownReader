@@ -9,6 +9,7 @@ const tauri = JSON.parse(read('src-tauri/tauri.conf.json'))
 const packageJson = JSON.parse(read('package.json'))
 const cargo = read('src-tauri/Cargo.toml')
 const system = read('src-tauri/src/commands/system.rs')
+const nsisHooks = read('src-tauri/windows/nsis-hooks.nsh')
 const migration = read('src-tauri/src/services/data_migration.rs')
 const lib = read('src-tauri/src/lib.rs')
 const settings = read('src/views/SettingsView.vue')
@@ -76,7 +77,13 @@ for (const extension of policy.fileAssociations.excludedDependencyFormats || [])
 }
 failUnless(
   policy.fileAssociations.defaultSelectionOwner === 'windows'
-    && policy.fileAssociations.directRegistryDefaultWrite === false,
+    && policy.fileAssociations.directRegistryDefaultWrite === false
+    && tauri.bundle.windows.nsis.installerHooks === 'windows/nsis-hooks.nsh'
+    && nsisHooks.includes('NSIS_HOOK_POSTINSTALL')
+    && nsisHooks.includes('NSIS_HOOK_POSTUNINSTALL')
+    && nsisHooks.includes('OpenWithProgids')
+    && nsisHooks.includes('LongEdit.Markdown_backup')
+    && nsisHooks.includes('DeleteRegValue SHELL_CONTEXT "Software\\Classes\\.${EXT}" ""'),
   'Windows must own default app selection',
 )
 failUnless(

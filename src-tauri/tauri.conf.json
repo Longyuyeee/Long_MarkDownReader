@@ -43,7 +43,8 @@
         "language": ["zh-CN"]
       },
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "installerHooks": "windows/nsis-hooks.nsh"
       }
     },
     "icon": [

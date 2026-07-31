@@ -80,6 +80,22 @@ function Get-OpenWithProgIds([string]$Extension) {
     })
 }
 
+function Get-DefaultProgId([string]$Extension) {
+    $key = "HKCU:\Software\Classes\$Extension"
+    if (-not (Test-Path -LiteralPath $key)) {
+        return ""
+    }
+    return [string](Get-Item -LiteralPath $key).GetValue("")
+}
+
+function Get-ProgIdOpenCommand([string]$ProgId) {
+    $key = "HKCU:\Software\Classes\$ProgId\shell\open\command"
+    if (-not (Test-Path -LiteralPath $key)) {
+        return ""
+    }
+    return [string](Get-Item -LiteralPath $key).GetValue("")
+}
+
 function Invoke-RegisteredUninstall($Registration) {
     $uninstallCommand = [string]$Registration.UninstallString
     $uninstaller = $uninstallCommand.Trim().Trim('"')
@@ -158,6 +174,8 @@ $managementRoot = "C:\LongEditR5IManagement"
 $managementBackup = Join-Path $managementRoot "r5l-management-backup.zip"
 $checks = New-Object System.Collections.Generic.List[object]
 $startedProcess = $null
+$initialMarkdownDefault = Get-DefaultProgId ".md"
+$initialMarkdownLongDefault = Get-DefaultProgId ".markdown"
 
 New-Item -ItemType Directory -Path $OutputDirectory, $libraryRoot, $configRoot, $webviewRoot, $managementRoot -Force | Out-Null
 [System.IO.File]::WriteAllText($libraryMarker, "R5I_EXTERNAL_LIBRARY_MUST_SURVIVE", [System.Text.UTF8Encoding]::new($false))
@@ -231,7 +249,21 @@ try {
     if ($markdownProgIds -notcontains "LongEdit.Markdown" -or $markdownLongProgIds -notcontains "LongEdit.Markdown") {
         throw "Current installer did not register both Markdown OpenWith ProgIDs."
     }
-    $checks.Add([ordered]@{ id = "file-association-registration"; status = "passed"; defaultSelectionChanged = $false })
+    if ((Get-DefaultProgId ".md") -ne $initialMarkdownDefault -or
+        (Get-DefaultProgId ".markdown") -ne $initialMarkdownLongDefault) {
+        throw "Current installer changed a Windows-owned Markdown default selection."
+    }
+    $associationCommand = Get-ProgIdOpenCommand "LongEdit.Markdown"
+    if ([string]::IsNullOrWhiteSpace($associationCommand) -or $associationCommand -notlike "*$installRoot*") {
+        throw "Current Markdown ProgID does not target the isolated installation."
+    }
+    $checks.Add([ordered]@{
+        id = "file-association-registration"
+        status = "passed"
+        defaultSelectionChanged = $false
+        previousMdDefault = $initialMarkdownDefault
+        previousMarkdownDefault = $initialMarkdownLongDefault
+    })
 
     $mainBinary = Join-Path $installRoot "tauri-app.exe"
     if (-not (Test-Path -LiteralPath $mainBinary -PathType Leaf)) {
@@ -299,6 +331,10 @@ try {
     if ((Get-OpenWithProgIds ".md") -contains "LongEdit.Markdown" -or
         (Get-OpenWithProgIds ".markdown") -contains "LongEdit.Markdown") {
         throw "Current Markdown OpenWith ProgID remained after uninstall."
+    }
+    if ((Get-DefaultProgId ".md") -ne $initialMarkdownDefault -or
+        (Get-DefaultProgId ".markdown") -ne $initialMarkdownLongDefault) {
+        throw "Markdown default selection was not restored after uninstall."
     }
     $checks.Add([ordered]@{ id = "file-association-recovery"; status = "passed" })
 
