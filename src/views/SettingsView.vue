@@ -153,6 +153,41 @@
                 </n-button>
               </div>
             </div>
+            <section class="knowledge-observation-session" data-testid="knowledge-observation-session" :data-phase="observationSessionPhase">
+              <div class="observation-session-heading">
+                <div>
+                  <strong>真实资料库改善观察</strong>
+                  <span>四步均由你主动确认；软件不会自动保存、上传或修改资料库。</span>
+                </div>
+                <n-button size="tiny" quaternary data-testid="knowledge-observation-session-reset" @click="resetObservationSession">重新开始</n-button>
+              </div>
+              <ol class="observation-session-steps">
+                <li :class="{ active: observationSessionPhase === 1, complete: observationSessionPhase > 1 }">
+                  <b>1</b>
+                  <div><strong>保存并检查匿名基线</strong><span>先查看聚合预览，再自行选择本地 JSON 保存位置。</span></div>
+                  <div class="observation-step-actions">
+                    <n-button size="small" secondary type="info" :disabled="!store.libraryPath" :loading="observationExporting" data-testid="knowledge-session-save-baseline" @click="previewKnowledgeObservation">预览基线</n-button>
+                    <n-button size="small" quaternary :disabled="observationSessionPhase > 1" data-testid="knowledge-session-existing-baseline" @click="markExistingBaselineReady">我已有已检查基线</n-button>
+                  </div>
+                </li>
+                <li :class="{ active: observationSessionPhase === 2, complete: observationSessionPhase > 2 }">
+                  <b>2</b>
+                  <div><strong>执行一项知识治理建议</strong><span>返回工作台查看建议，再在图谱或管理界面完成一项关系改善。</span></div>
+                  <n-button size="small" secondary :disabled="observationSessionPhase < 2" data-testid="knowledge-session-open-guidance" @click="openObservationRemediation">前往工作台建议</n-button>
+                </li>
+                <li :class="{ active: observationSessionPhase === 3, complete: observationSessionPhase > 3 }">
+                  <b>3</b>
+                  <div><strong>确认治理动作已经完成</strong><span>此确认只推进本地会话步骤，不读取或记录你修改了什么。</span></div>
+                  <n-button size="small" secondary type="success" :disabled="observationSessionPhase < 2 || observationSessionPhase > 3" data-testid="knowledge-session-remediation-complete" @click="markObservationRemediationComplete">我已完成一项治理</n-button>
+                </li>
+                <li :class="{ active: observationSessionPhase === 4 }">
+                  <b>4</b>
+                  <div><strong>选择原基线并复查改善</strong><span>请再次确认基线来自当前资料库；对比回执仍只含聚合变化。</span></div>
+                  <n-button size="small" secondary type="success" :disabled="!store.libraryPath || observationSessionPhase < 3" :loading="observationComparisonExporting" data-testid="knowledge-session-compare" @click="previewKnowledgeObservationComparison">预览并复查</n-button>
+                </li>
+              </ol>
+              <p class="observation-session-privacy">会话进度只保存数字步骤，不保存资料库名称、路径、指纹、正文、文件名、对象 ID 或回执位置。你可以随时取消或重新开始。</p>
+            </section>
           </n-grid-item>
 
           <n-grid-item class="animate-item" style="--delay: 0.35s">
@@ -404,6 +439,31 @@ const observationExporting = ref(false)
 const observationComparisonExporting = ref(false)
 const knowledgeObservationRow = ref<HTMLElement | null>(null)
 const observationRouteFocused = computed(() => route.query.focus === 'knowledge-observation')
+type ObservationSessionPhase = 1 | 2 | 3 | 4
+const OBSERVATION_SESSION_KEY = 'longedit:knowledge-observation-session:v1'
+const readObservationSessionPhase = (): ObservationSessionPhase => {
+  try {
+    const value = Number(JSON.parse(sessionStorage.getItem(OBSERVATION_SESSION_KEY) || '{}').phase)
+    return value >= 1 && value <= 4 ? value as ObservationSessionPhase : 1
+  } catch {
+    return 1
+  }
+}
+const observationSessionPhase = ref<ObservationSessionPhase>(readObservationSessionPhase())
+const setObservationSessionPhase = (phase: ObservationSessionPhase) => {
+  observationSessionPhase.value = phase
+  sessionStorage.setItem(OBSERVATION_SESSION_KEY, JSON.stringify({ schemaVersion: 1, phase }))
+}
+const advanceObservationSession = (phase: ObservationSessionPhase) => {
+  if (phase > observationSessionPhase.value) setObservationSessionPhase(phase)
+}
+const resetObservationSession = () => setObservationSessionPhase(1)
+const markExistingBaselineReady = () => setObservationSessionPhase(2)
+const openObservationRemediation = () => {
+  advanceObservationSession(2)
+  router.push({ name: 'WorkspaceHome' })
+}
+const markObservationRemediationComplete = () => advanceObservationSession(3)
 
 interface ManagementBackupReceipt {
   path: string
@@ -738,6 +798,7 @@ const exportKnowledgeObservationAfterConfirm = async () => {
       libraryRoot: store.libraryPath,
       targetPath: target,
     })
+    advanceObservationSession(2)
     message.success(`匿名观察已保存：${receipt.objectCount} 对象 · ${receipt.relationCount} 关系 · ${receipt.coveragePercent}% 覆盖`)
   } catch (error) {
     message.error(`导出知识网络匿名观察失败：${String(error)}`)
@@ -807,6 +868,7 @@ const exportKnowledgeObservationComparisonAfterConfirm = async (baselinePath: st
       baselinePath,
       targetPath: target,
     })
+    advanceObservationSession(4)
     message.success(`改善对比已保存：${comparisonOutcomeLabel(receipt.outcome)} · 覆盖率 ${signedChange(receipt.changes.coveragePercent, '%')}`)
   } catch (error) {
     message.error(`导出知识网络改善对比失败：${String(error)}`)
@@ -1346,6 +1408,73 @@ const openDefaultAppsSettings = async () => {
   justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.knowledge-observation-session {
+  margin: -2px 0 calc(12px * var(--theme-spacing));
+  padding: calc(18px * var(--theme-spacing));
+  border: var(--theme-border);
+  border-radius: var(--theme-radius);
+  background: rgba(var(--theme-primary-rgb), 0.025);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.observation-session-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.observation-session-heading > div { display: grid; gap: 3px; }
+.observation-session-heading strong { color: var(--theme-text); font-size: 14px; }
+.observation-session-heading span,
+.observation-session-privacy { color: var(--theme-text-secondary); font-size: 11px; line-height: 1.55; }
+
+.observation-session-steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.observation-session-steps li {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.1);
+  border-radius: calc(var(--theme-radius) * 0.75);
+  background: var(--style-control-bg);
+}
+
+.observation-session-steps li > b {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--theme-text-secondary);
+  background: rgba(var(--theme-primary-rgb), 0.08);
+  font-size: 11px;
+}
+
+.observation-session-steps li > div:not(.observation-step-actions) { display: grid; gap: 2px; }
+.observation-session-steps li > div > strong { color: var(--theme-text); font-size: 12px; }
+.observation-session-steps li > div > span { color: var(--theme-text-secondary); font-size: 10px; line-height: 1.4; }
+.observation-session-steps li.active { border-color: rgba(var(--theme-primary-rgb), 0.4); box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.06); }
+.observation-session-steps li.active > b { color: white; background: var(--theme-primary); }
+.observation-session-steps li.complete > b { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.12); }
+.observation-step-actions { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
+.observation-session-privacy { margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed rgba(var(--theme-primary-rgb), 0.14); }
+
+@media (max-width: 720px) {
+  .observation-session-steps li { grid-template-columns: 26px minmax(0, 1fr); }
+  .observation-session-steps li > .n-button,
+  .observation-step-actions { grid-column: 2; justify-self: start; }
 }
 
 .is-dark .setting-row {

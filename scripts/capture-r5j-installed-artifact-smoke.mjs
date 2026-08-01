@@ -386,6 +386,54 @@ await fs.writeFile(path.join(output, 'installed-knowledge-observation-entry-evid
 }, null, 2)}\n`)
 checks.push({ id: 'installed-knowledge-observation-entry-navigation', status: 'passed' })
 
+await waitFor(`document.querySelector('[data-testid="knowledge-observation-session"]') !== null`, 'installed consented observation session')
+await evaluate(`document.querySelector('[data-testid="knowledge-observation-session-reset"]')?.click()`)
+await waitFor(`document.querySelector('[data-testid="knowledge-observation-session"]')?.getAttribute('data-phase') === '1'`, 'reset observation session phase')
+await evaluate(`document.querySelector('[data-testid="knowledge-session-save-baseline"]')?.scrollIntoView({ block: 'center' })`)
+await waitForStableVisibleSurface('[data-testid="knowledge-session-save-baseline"]', 'installed observation session start action')
+await capture('installed-knowledge-session-start.jpg')
+await evaluate(`document.querySelector('[data-testid="knowledge-session-existing-baseline"]')?.click()`)
+await waitFor(`document.querySelector('[data-testid="knowledge-observation-session"]')?.getAttribute('data-phase') === '2'`, 'existing baseline session handoff')
+await evaluate(`document.querySelector('[data-testid="knowledge-session-open-guidance"]')?.click()`)
+await waitFor(`document.querySelector('.workspace-home') !== null && document.querySelector('.page-loader') === null`, 'observation session Workspace handoff', 1200)
+await waitFor(`document.querySelector('[data-testid="knowledge-observation-entry"]') !== null`, 'observation session return entry')
+await evaluate(`document.querySelector('[data-testid="knowledge-observation-entry"]')?.click()`)
+await waitFor(`location.hash.includes('/settings?focus=knowledge-observation') && document.querySelector('[data-testid="knowledge-observation-session"]')?.getAttribute('data-phase') === '2'`, 'observation session resumed in Settings', 1200)
+await waitForStableVisibleSurface('[data-testid="knowledge-session-remediation-complete"]', 'installed remediation confirmation action')
+await evaluate(`document.querySelector('[data-testid="knowledge-session-remediation-complete"]')?.click()`)
+await waitFor(`document.querySelector('[data-testid="knowledge-observation-session"]')?.getAttribute('data-phase') === '3' && document.querySelector('[data-testid="knowledge-session-compare"]')?.disabled === false`, 'installed comparison action unlocked')
+await evaluate(`document.querySelector('[data-testid="knowledge-session-compare"]')?.scrollIntoView({ block: 'center' })`)
+await waitForStableVisibleSurface('[data-testid="knowledge-session-compare"]', 'installed comparison action in settled viewport')
+const knowledgeSessionEvidence = await evaluate(`(() => {
+  const stored = JSON.parse(sessionStorage.getItem('longedit:knowledge-observation-session:v1') || '{}')
+  return {
+    phase: Number(document.querySelector('[data-testid="knowledge-observation-session"]')?.getAttribute('data-phase') || 0),
+    storedKeys: Object.keys(stored).sort(),
+    storedSchemaVersion: stored.schemaVersion,
+    storedPhase: stored.phase,
+    comparisonUnlocked: document.querySelector('[data-testid="knowledge-session-compare"]')?.disabled === false,
+    route: location.hash,
+    openedInCurrentWindow: window.opener === null,
+  }
+})()`)
+if (knowledgeSessionEvidence.phase !== 3 || knowledgeSessionEvidence.storedSchemaVersion !== 1 ||
+    knowledgeSessionEvidence.storedPhase !== 3 || JSON.stringify(knowledgeSessionEvidence.storedKeys) !== JSON.stringify(['phase', 'schemaVersion']) ||
+    !knowledgeSessionEvidence.comparisonUnlocked || !knowledgeSessionEvidence.route.includes('/settings?focus=knowledge-observation') ||
+    !knowledgeSessionEvidence.openedInCurrentWindow) {
+  throw new Error(`Installed consented observation session failed: ${JSON.stringify(knowledgeSessionEvidence)}`)
+}
+await capture('installed-knowledge-session-ready.jpg')
+await fs.writeFile(path.join(output, 'installed-knowledge-session-evidence.json'), `${JSON.stringify({
+  schemaVersion: 1,
+  stage: 'G15E',
+  evidenceLevel: 'installed-current-tauri-webview2-synthetic-library-guidance-only',
+  sourceUserContentIncluded: false,
+  exportTriggered: false,
+  automaticRemediationTriggered: false,
+  knowledgeSessionEvidence,
+}, null, 2)}\n`)
+checks.push({ id: 'installed-consented-real-library-session-guidance', status: 'passed' })
+
 await navigate('#/workspace', '.workspace-home', 'workspace before centered knowledge topic navigation')
 await waitFor(`document.querySelectorAll('[data-testid="knowledge-network-topic"]').length > 0`, 'restored installed knowledge network top topics')
 
@@ -563,6 +611,9 @@ await fs.writeFile(path.join(output, 'installed-artifact-smoke.json'), `${JSON.s
     'installed-workspace-observation-entry.jpg',
     'installed-graph-outcome-entry.jpg',
     'installed-knowledge-observation-entry-evidence.json',
+    'installed-knowledge-session-start.jpg',
+    'installed-knowledge-session-ready.jpg',
+    'installed-knowledge-session-evidence.json',
     'installed-knowledge-observation-settings.jpg',
     'installed-knowledge-observation-baseline.json',
     'installed-knowledge-guidance-comparison.json',

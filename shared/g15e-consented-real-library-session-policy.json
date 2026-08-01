@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "stage": "G15E",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "consented-real-library-session-runner-integrated-hosted-execution-next",
+  "scope": "guided-consent-preserving-baseline-remediation-follow-up-session",
+  "steps": [
+    "preview-and-explicitly-save-aggregate-baseline",
+    "open-workspace-guidance-and-perform-one-user-chosen-remediation",
+    "explicitly-confirm-remediation-complete",
+    "select-baseline-preview-and-explicitly-save-comparison"
+  ],
+  "sessionState": {
+    "storage": "sessionStorage",
+    "storedFields": ["schemaVersion", "phase"],
+    "libraryNameIncluded": false,
+    "absolutePathIncluded": false,
+    "libraryFingerprintIncluded": false,
+    "documentContentIncluded": false,
+    "fileNameIncluded": false,
+    "objectIdentifierIncluded": false,
+    "receiptLocationIncluded": false
+  },
+  "consentBoundary": {
+    "automaticBaselineExportAllowed": false,
+    "automaticComparisonExportAllowed": false,
+    "automaticRemediationAllowed": false,
+    "userChoosesLocalDestination": true,
+    "previewBeforeExport": true,
+    "explicitConfirmationRequired": true,
+    "automaticUploadAllowed": false
+  },
+  "expectedEvidenceFiles": [
+    "installed-knowledge-session-start.jpg",
+    "installed-knowledge-session-ready.jpg",
+    "installed-knowledge-session-evidence.json"
+  ],
+  "qualityGate": {
+    "guidedSessionImplemented": true,
+    "progressResetImplemented": true,
+    "existingBaselineHandoffImplemented": true,
+    "responsiveSettingsStyleImplemented": true,
+    "frontendProductionBuildComplete": true,
+    "installedSessionComplete": false,
+    "realUserSessionComplete": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "productSourceCommit": null,
+  "hostedRunId": null,
+  "nextStage": "G15E-hosted-installed-session-guidance-acceptance"
+}
