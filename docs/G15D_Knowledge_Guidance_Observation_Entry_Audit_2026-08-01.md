@@ -15,3 +15,9 @@ G15D 在工作台知识网络区域增加“记录治理基线”，在图谱行
 - 聚焦样式沿用设置页边框、阴影与主题色变量，不引入独立字号或视觉体系。
 
 前端生产构建与 G9–G15D 机器合同将验证两个入口、受限路由、滚动聚焦、现有确认边界和阶段状态。下一步是 `G15D-installed-current-window-observation-entry-acceptance`：在安装版从工作台和图谱分别点击入口，确认当前窗口路由、目标区域可见和样式一致。真实资料库验收仍需用户授权，不能由安装态合成数据代替。
+
+## 安装态验证器集成
+
+一次性安装生命周期现从工作台实际点击“记录治理基线”，要求地址进入 `#/settings?focus=knowledge-observation`、目标行带有聚焦状态、目标矩形位于视口内且 `window.opener` 为空。随后返回工作台，从健康建议进入图谱，再实际点击“复查改善”并重复相同检查。
+
+验证器保存两张入口截图和一份仅含路由布尔状态的 JSON，明确记录 `exportTriggered=false`；不会点击“保存基线”或“复查改善”的文件操作按钮。当前状态为 `installed-observation-entry-runner-integrated-hosted-execution-next`。产品提交固定为 `80df4a65a03d2640841efd0d2d9111f61a00fafa`，托管运行和截图复核仍为 false。

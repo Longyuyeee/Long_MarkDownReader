@@ -308,6 +308,30 @@ if (knowledgePulse.objectCount < 5 || knowledgePulse.relationCount < 3 || knowle
 await capture('installed-knowledge-network-pulse.jpg')
 checks.push({ id: 'installed-knowledge-network-pulse', status: 'passed' })
 
+await waitFor(`document.querySelector('[data-testid="knowledge-observation-entry"]') !== null`, 'workspace knowledge observation entry')
+await evaluate(`document.querySelector('[data-testid="knowledge-observation-entry"]')?.click()`)
+await waitFor(`location.hash.includes('/settings?focus=knowledge-observation') && document.querySelector('[data-testid="knowledge-observation-export"].is-route-focused') !== null`, 'workspace baseline entry focused Settings destination', 1200)
+await waitFor(`(() => {
+  const element = document.querySelector('[data-testid="knowledge-observation-export"]')
+  if (!element) return false
+  const rect = element.getBoundingClientRect()
+  return rect.top >= 0 && rect.bottom <= window.innerHeight
+})()`, 'workspace baseline entry target in viewport', 1200)
+const workspaceObservationNavigation = await evaluate(`(() => ({
+  route: location.hash,
+  targetVisible: document.querySelector('[data-testid="knowledge-observation-export"]') !== null,
+  targetFocused: document.querySelector('[data-testid="knowledge-observation-export"]')?.classList.contains('is-route-focused') === true,
+  openedInCurrentWindow: window.opener === null,
+}))()`)
+if (!workspaceObservationNavigation.route.includes('/settings?focus=knowledge-observation') ||
+    !workspaceObservationNavigation.targetVisible || !workspaceObservationNavigation.targetFocused ||
+    !workspaceObservationNavigation.openedInCurrentWindow) {
+  throw new Error(`Installed workspace observation entry failed: ${JSON.stringify(workspaceObservationNavigation)}`)
+}
+await capture('installed-workspace-observation-entry.jpg')
+
+await navigate('#/workspace', '.workspace-home', 'workspace before actionable guidance navigation')
+await waitFor(`document.querySelector('[data-testid="knowledge-network-guidance"]') !== null`, 'restored actionable knowledge guidance')
 await evaluate(`document.querySelector('[data-testid="knowledge-network-guidance"]')?.click()`)
 await waitFor(`document.querySelector('.graph-container') !== null`, 'actionable guidance graph route mount')
 await waitFor(`document.querySelector('.page-loader') === null`, 'actionable guidance graph route transition')
@@ -321,6 +345,38 @@ if (!guidanceNavigation.route.startsWith('#/graph') || !guidanceNavigation.graph
 }
 await capture('installed-knowledge-guidance-graph.jpg')
 checks.push({ id: 'installed-actionable-knowledge-guidance', status: 'passed' })
+
+await waitFor(`document.querySelector('[data-testid="knowledge-outcome-entry"]') !== null`, 'graph knowledge outcome entry')
+await evaluate(`document.querySelector('[data-testid="knowledge-outcome-entry"]')?.click()`)
+await waitFor(`location.hash.includes('/settings?focus=knowledge-observation') && document.querySelector('[data-testid="knowledge-observation-export"].is-route-focused') !== null`, 'graph outcome entry focused Settings destination', 1200)
+await waitFor(`(() => {
+  const element = document.querySelector('[data-testid="knowledge-observation-export"]')
+  if (!element) return false
+  const rect = element.getBoundingClientRect()
+  return rect.top >= 0 && rect.bottom <= window.innerHeight
+})()`, 'graph outcome entry target in viewport', 1200)
+const graphOutcomeNavigation = await evaluate(`(() => ({
+  route: location.hash,
+  targetVisible: document.querySelector('[data-testid="knowledge-observation-export"]') !== null,
+  targetFocused: document.querySelector('[data-testid="knowledge-observation-export"]')?.classList.contains('is-route-focused') === true,
+  openedInCurrentWindow: window.opener === null,
+}))()`)
+if (!graphOutcomeNavigation.route.includes('/settings?focus=knowledge-observation') ||
+    !graphOutcomeNavigation.targetVisible || !graphOutcomeNavigation.targetFocused ||
+    !graphOutcomeNavigation.openedInCurrentWindow) {
+  throw new Error(`Installed graph outcome entry failed: ${JSON.stringify(graphOutcomeNavigation)}`)
+}
+await capture('installed-graph-outcome-entry.jpg')
+await fs.writeFile(path.join(output, 'installed-knowledge-observation-entry-evidence.json'), `${JSON.stringify({
+  schemaVersion: 1,
+  stage: 'G15D',
+  evidenceLevel: 'installed-current-tauri-webview2-synthetic-library-navigation-only',
+  sourceUserContentIncluded: false,
+  exportTriggered: false,
+  workspaceObservationNavigation,
+  graphOutcomeNavigation,
+}, null, 2)}\n`)
+checks.push({ id: 'installed-knowledge-observation-entry-navigation', status: 'passed' })
 
 await navigate('#/workspace', '.workspace-home', 'workspace before centered knowledge topic navigation')
 await waitFor(`document.querySelectorAll('[data-testid="knowledge-network-topic"]').length > 0`, 'restored installed knowledge network top topics')
@@ -496,6 +552,9 @@ await fs.writeFile(path.join(output, 'installed-artifact-smoke.json'), `${JSON.s
     'installed-knowledge-guidance-graph.jpg',
     'installed-knowledge-topic-centered.jpg',
     'installed-knowledge-network-evidence.json',
+    'installed-workspace-observation-entry.jpg',
+    'installed-graph-outcome-entry.jpg',
+    'installed-knowledge-observation-entry-evidence.json',
     'installed-knowledge-observation-settings.jpg',
     'installed-knowledge-observation-baseline.json',
     'installed-knowledge-guidance-comparison.json',
