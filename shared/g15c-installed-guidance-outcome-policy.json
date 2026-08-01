@@ -3,7 +3,7 @@
   "stage": "G15C",
   "appVersion": "0.7.0",
   "releaseCandidate": false,
-  "status": "installed-guidance-outcome-functional-passed-visual-recapture-next",
+  "status": "hosted-installed-guidance-outcome-passed-real-user-follow-up-next",
   "scope": "installed-consented-guidance-outcome-synthetic-acceptance",
   "requiredChecks": [
     "installed-workspace-initialization-barrier",
@@ -32,12 +32,12 @@
     "installedRunnerIntegrated": true,
     "frontendProductionBuildComplete": true,
     "hostedInstalledExecutionComplete": true,
-    "screenshotReviewComplete": false,
+    "screenshotReviewComplete": true,
     "realUserComparisonComplete": false,
     "signedWindowsClientEvidenceComplete": false
   },
   "productSourceCommit": "fffbc6af4508b6476610a5b34d704ac606efe2ee",
-  "hostedRunId": 30693531173,
+  "hostedRunId": 30693694231,
   "attemptHistory": [
     {
       "runId": 30692454820,
@@ -52,7 +52,17 @@
       "failure": "observation-settings-controls-outside-captured-viewport",
       "productBuildComplete": true,
       "g15cExecuted": true
+    },
+    {
+      "runId": 30693694231,
+      "status": "accepted",
+      "failure": null,
+      "productBuildComplete": true,
+      "g15cExecuted": true
     }
   ],
-  "nextStage": "G15C-hosted-installed-visual-recapture-and-evidence-review"
+  "evidence": {
+    "acceptanceReceipt": "docs/evidence/g15c-installed-guidance-outcome/acceptance-receipt.json"
+  },
+  "nextStage": "G15-consented-real-library-baseline-remediation-follow-up"
 }

@@ -16,6 +16,14 @@ GitHub Actions 运行 `30692454820` 成功构建当前产品和 v0.6.2 回滚安
 
 人工查看 `installed-knowledge-observation-settings.jpg` 后没有接收视觉证据：截图停留在设置页顶部，目标知识网络观察区域位于视口下方。元素存在与功能调用已经由机器证据证明，但该截图不能证明按钮文字、字号和风格。验证器现将目标行滚动到视口中央，校验宽度、高度和上下边界后再截图。当前状态因此为 `installed-guidance-outcome-functional-passed-visual-recapture-next`，截图复核仍为 false。
 
+## 最终安装态验收
+
+视觉重拍运行 `30693694231` 在 2 分 3 秒内再次通过 9/9 安装 smoke 和 18/18 生命周期检查。新证据声明目标区域 `viewportVisible=true`、`openedInCurrentWindow=true`。人工复核确认“知识网络匿名观察”说明、“保存基线”和“复查改善”全部清晰可见，按钮尺寸、边框、文字层级与相邻设置项一致。
+
+最终聚合结果仍为 5→6 个对象、6→7 条关系、5→6 个已连接对象，结果 `improved`；未包含正文、对象标识、文件名或绝对路径。脱敏回执位于 `docs/evidence/g15c-installed-guidance-outcome/acceptance-receipt.json`，原始截图和完整运行证据只保留在 GitHub Actions artifact。
+
+G15C 状态更新为 `hosted-installed-guidance-outcome-passed-real-user-follow-up-next`。这证明未签名 Windows 托管安装环境中的合成资料库流程与视觉入口，不代表真实用户资料库或签名 Windows 10/11 客户端已经验收。下一步仍是用户明确授权的真实资料库基线—治理—复查；`releaseCandidate=false` 保持不变。
+
 ## 验收范围
 
 - 在安装后的当前应用窗口打开设置页，确认两个知识网络匿名观察操作均可见。

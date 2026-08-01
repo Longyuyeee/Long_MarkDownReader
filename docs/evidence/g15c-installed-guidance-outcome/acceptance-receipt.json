@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "stage": "G15C",
+  "status": "accepted",
+  "hostedRunId": 30693694231,
+  "productSourceCommit": "fffbc6af4508b6476610a5b34d704ac606efe2ee",
+  "orchestrationCommit": "f880e5a",
+  "installerSha256": "c2e676480192da751d8a15c0e3da68332c231c39bfa547d364e51466dcb9dd7e",
+  "evidenceLevel": "hosted-installed-tauri-webview2-synthetic-library-aggregate-only",
+  "sourceUserContentIncluded": false,
+  "objectIdentifiersIncluded": false,
+  "fileNamesIncluded": false,
+  "absolutePathsIncluded": false,
+  "observationSurface": {
+    "baselineVisible": true,
+    "comparisonVisible": true,
+    "comparisonLabel": "复查改善",
+    "openedInCurrentWindow": true,
+    "viewportVisible": true
+  },
+  "baseline": {
+    "objectCount": 5,
+    "relationCount": 6,
+    "connectedObjectCount": 5,
+    "isolatedObjectCount": 0,
+    "coveragePercent": 100
+  },
+  "comparison": {
+    "outcome": "improved",
+    "changes": {
+      "objectCount": 1,
+      "relationCount": 1,
+      "connectedObjectCount": 1,
+      "isolatedObjectCount": 0,
+      "coveragePercent": 0,
+      "relationTypeCount": 0
+    },
+    "achievements": [
+      "relations-added"
+    ]
+  },
+  "installedSmoke": {
+    "passed": 9,
+    "total": 9
+  },
+  "lifecycle": {
+    "passed": 18,
+    "total": 18
+  },
+  "visualReview": {
+    "status": "accepted",
+    "screenshotName": "installed-knowledge-observation-settings.jpg",
+    "screenshotSha256": "ba508bbef52ba1516c263bb50e5d8b7573b379e2658bf2a5a07ac8527e2b01dc",
+    "controlsReadable": true,
+    "styleAlignedWithSettings": true
+  },
+  "signedArtifactRuntimeProven": false,
+  "realUserComparisonComplete": false,
+  "releaseCandidate": false
+}
