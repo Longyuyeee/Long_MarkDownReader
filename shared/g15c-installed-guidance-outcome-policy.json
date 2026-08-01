@@ -6,6 +6,7 @@
   "status": "installed-guidance-outcome-runner-integrated-hosted-execution-next",
   "scope": "installed-consented-guidance-outcome-synthetic-acceptance",
   "requiredChecks": [
+    "installed-workspace-initialization-barrier",
     "installed-observation-settings-surface",
     "installed-aggregate-baseline-export",
     "installed-synthetic-guided-remediation",
@@ -37,5 +38,14 @@
   },
   "productSourceCommit": "fffbc6af4508b6476610a5b34d704ac606efe2ee",
   "hostedRunId": null,
+  "attemptHistory": [
+    {
+      "runId": 30692454820,
+      "status": "failed-before-g15c",
+      "failure": "startup-route-race-before-installed-txt-smoke",
+      "productBuildComplete": true,
+      "g15cExecuted": false
+    }
+  ],
   "nextStage": "G15C-hosted-installed-execution-and-evidence-review"
 }
