@@ -292,7 +292,10 @@ checks.push({ id: 'installed-knowledge-network-pulse', status: 'passed' })
 
 const selectedTopic = knowledgePulse.topics[0]
 await evaluate(`document.querySelector('[data-testid="knowledge-network-topic"]')?.click()`)
+await waitFor(`document.querySelector('.graph-container') !== null`, 'knowledge graph route mount')
+await waitFor(`document.querySelector('.page-loader') === null`, 'knowledge graph route transition')
 await waitFor(`document.querySelector('[data-testid="graph-selected-node"]')?.getAttribute('data-node-id') === ${JSON.stringify(selectedTopic.nodeId)}`, 'centered graph topic selection')
+await delay(500)
 const centeredNavigation = await evaluate(`(() => ({
   nodeId: document.querySelector('[data-testid="graph-selected-node"]')?.getAttribute('data-node-id') || '',
   title: document.querySelector('[data-testid="graph-selected-node"] h3')?.textContent || '',

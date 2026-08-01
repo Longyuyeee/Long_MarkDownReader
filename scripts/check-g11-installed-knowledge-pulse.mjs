@@ -20,7 +20,7 @@ for (const token of ['data-testid="knowledge-network-pulse"', 'data-testid="know
 requireText(graph, 'data-testid="graph-selected-node"', 'G11 selected graph node selector missing')
 for (const token of ['r5j-north-star.md', 'r5j-plan.md', 'r5j-network.canvas', 'depends-on: [[r5j-north-star]]', '"relationType":"supports"']) requireText(lifecycle, token, `G11 fixture marker missing: ${token}`)
 for (const token of [...policy.requiredChecks, ...policy.evidenceFiles, 'knowledgePulse.coveragePercent < 60', 'knowledgePulse.connectedObjectCount <= knowledgePulse.isolatedObjectCount', "centeredNavigation.nodeId !== selectedTopic.nodeId", "!centeredNavigation.route.includes('root=')"]) requireText(capture, token, `G11 capture marker missing: ${token}`)
-for (const token of ["document.querySelector('.crash-fallback')", 'navigation timed out', 'completed without its expected surface', '2000']) requireText(capture, token, `G11 navigation diagnostic marker missing: ${token}`)
+for (const token of ["document.querySelector('.crash-fallback')", 'navigation timed out', 'completed without its expected surface', 'knowledge graph route transition', '2000']) requireText(capture, token, `G11 navigation diagnostic marker missing: ${token}`)
 for (const token of ['G11', 'releaseCandidate=false', '合成', '托管执行']) requireText(audit, token, `G11 audit marker missing: ${token}`)
 if (!packageJson.scripts?.['check:g11-installed-knowledge-pulse'] || !packageJson.scripts?.['check:graph-product-contract']?.includes('check-g11-installed-knowledge-pulse')) failures.push('G11 checker must be reachable through graph product contract and ci:check')
 
