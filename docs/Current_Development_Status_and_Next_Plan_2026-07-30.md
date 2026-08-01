@@ -620,3 +620,9 @@ Current status is `installed-actionable-guidance-runner-integrated-hosted-execut
 GitHub Actions run `30690425501` rebuilt product commit `068d3bd` and exercised orchestration commit `cc9c549` through the complete disposable lifecycle. The installed Workspace Home rendered `network-health-on-track` for the 5-object, 6-relation, 100%-coverage synthetic network; clicking the guidance opened `#/graph` in the current application window. All 8 installed smoke checks and 18 lifecycle checks passed.
 
 Manual screenshot review confirmed the guidance card is readable and aligned with the existing workspace style, and the destination contains the real graph and node detail without a loading overlay or unexpected window. Current status is `hosted-installed-actionable-guidance-passed-real-user-observation-next`. The accepted receipt is sanitized; original screenshots remain in the Actions artifact. G15 remains user-consented real-library observation, while R5N signing and Windows 10/11 evidence still block release.
+
+## G15A update - guided remediation routing
+
+The installed G14 evidence proved that guidance opens the graph in the current window, but also exposed that every guidance code used the same generic destination. G15A now maps the six stable codes to specific management contexts: first-object guidance opens the library; first-relation guidance opens the link tutorial; coverage and isolation guidance temporarily focus orphan objects and open governance; diversity guidance explains semantic relation actions; healthy guidance opens the network overview.
+
+The `focus` query is bounded, orphan focus is ephemeral, persisted graph filters and user content are not mutated, and the banner can restore the normal graph route. Current status is `guided-remediation-routing-implemented-real-user-execution-next`; G15 remains the consent-gated real-library observation and `releaseCandidate=false` remains unchanged.

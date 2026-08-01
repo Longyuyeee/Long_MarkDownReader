@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "stage": "G15A",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "guided-remediation-routing-implemented-real-user-execution-next",
+  "scope": "knowledge-guidance-to-specific-management-action",
+  "routes": {
+    "add-first-knowledge-object": "library",
+    "create-first-relation": "graph-relations-tutorial",
+    "increase-relation-coverage": "graph-orphan-focus",
+    "connect-isolated-objects": "graph-orphan-focus",
+    "diversify-relation-types": "graph-diversity-guidance",
+    "network-health-on-track": "graph-overview"
+  },
+  "interactionBoundary": {
+    "sameApplicationWindow": true,
+    "routeQueryBounded": true,
+    "orphanFocusEphemeral": true,
+    "savedGraphFiltersMutated": false,
+    "userContentMutated": false
+  },
+  "qualityGate": {
+    "sourceRoutingContractComplete": true,
+    "frontendProductionBuildComplete": true,
+    "realUserExecutionComplete": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "nextStage": "G15-consented-real-library-guidance-observation"
+}

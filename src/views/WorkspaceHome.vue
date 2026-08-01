@@ -90,7 +90,7 @@
               </button>
             </div>
             <button v-else class="pulse-empty" @click="router.push({ name: 'Graph' })">从双向链接、标签或画布连接开始建立知识网络</button>
-            <button v-if="graphPulse.guidance.length" class="pulse-guidance" data-testid="knowledge-network-guidance" :data-guidance-code="graphPulse.guidance[0].code" @click="router.push({ name: 'Graph' })">
+            <button v-if="graphPulse.guidance.length" class="pulse-guidance" data-testid="knowledge-network-guidance" :data-guidance-code="graphPulse.guidance[0].code" @click="openGuidance(graphPulse.guidance[0])">
               <span><b>{{ guidanceCopy(graphPulse.guidance[0]).title }}</b><small>{{ guidanceCopy(graphPulse.guidance[0]).detail }}</small></span>
               <ArrowIcon />
             </button>
@@ -269,6 +269,20 @@ const guidanceCopy = (item: KnowledgeGraphGuidance) => ({
   'diversify-relation-types': { title: '丰富关系语义', detail: `当前 ${item.currentValue} 类，建议达到 ${item.targetValue} 类以上。` },
   'network-health-on-track': { title: '知识网络状态良好', detail: `关系覆盖 ${item.currentValue}%，继续从核心主题维护网络。` },
 } as Record<string, { title: string; detail: string }>)[item.code] || { title: '检查知识网络', detail: '打开图谱查看关系结构与孤立对象。' }
+const openGuidance = (item: KnowledgeGraphGuidance) => {
+  if (item.code === 'add-first-knowledge-object') {
+    router.push({ name: 'LibraryMode' })
+    return
+  }
+  const focus = ({
+    'create-first-relation': 'relations',
+    'increase-relation-coverage': 'orphans',
+    'connect-isolated-objects': 'orphans',
+    'diversify-relation-types': 'diversity',
+    'network-health-on-track': 'overview',
+  } as Record<string, string>)[item.code] || 'overview'
+  router.push({ name: 'Graph', query: { focus } })
+}
 
 const loadRelationSummaries = async () => {
   const paths = [...new Set([...starredItems.value, ...recentItems.value].map(item => item.path))].slice(0, 100)

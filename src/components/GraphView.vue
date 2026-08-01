@@ -81,6 +81,11 @@
       </template>
       <span v-if="searchQuery" class="match-count">{{ visibleNodes.length }} 个匹配</span>
     </div>
+    <div v-if="remediationCopy" class="remediation-banner" data-testid="graph-remediation-focus" :data-remediation-focus="remediationFocus">
+      <div><strong>{{ remediationCopy.title }}</strong><span>{{ remediationCopy.detail }}</span></div>
+      <button v-if="remediationCopy.action" @click="runRemediationAction">{{ remediationCopy.action }}</button>
+      <button class="remediation-close" aria-label="关闭行动提示" @click="clearRemediation">×</button>
+    </div>
     <canvas ref="canvasRef" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @wheel.prevent="onZoom" @click="onClick" @dblclick="onDblClick"></canvas>
     <GraphHealthPanel
       :open="healthOpen"
@@ -290,6 +295,13 @@ const relationTypeOptions = [
   { value: 'derived-from', label: '派生自' },
 ]
 const editableRelationTypes = new Set(relationTypeOptions.map(option => option.value))
+const remediationFocus = computed(() => typeof route.query.focus === 'string' && ['relations', 'orphans', 'diversity', 'overview'].includes(route.query.focus) ? route.query.focus : '')
+const remediationCopy = computed(() => ({
+  relations: { title: '建立第一条知识关系', detail: '从链接教程开始，或选中 Markdown 节点建立带语义的关系。', action: '打开链接教程' },
+  orphans: { title: '正在聚焦孤立对象', detail: '画布仅显示没有关系的对象；可在治理列表中逐项打开并补充链接。', action: '打开治理列表' },
+  diversity: { title: '丰富关系语义', detail: '选择节点后使用“相关、依赖、包含、引用”等关系，避免所有连接表达同一种含义。', action: '' },
+  overview: { title: '知识网络状态良好', detail: '继续从核心主题检查关系依据，或切换思维导图查看层级。', action: '' },
+} as Record<string, { title: string; detail: string; action: string }>)[remediationFocus.value] || null)
 
 const degreeMap = computed(() => {
   const result = new Map<string, number>()
@@ -301,14 +313,28 @@ const degreeMap = computed(() => {
 })
 
 const filteredGraph = computed(() => applyGraphFilters(graphData.value, filters))
+const remediationGraph = computed(() => {
+  if (remediationFocus.value !== 'orphans') return filteredGraph.value
+  const connected = new Set(graphData.value.edges.flatMap(edge => [edge.source, edge.target]))
+  return { nodes: filteredGraph.value.nodes.filter(node => !connected.has(node.id)), edges: [] }
+})
 const visibleNodes = computed(() => {
-  return filteredGraph.value.nodes.filter(node =>
+  return remediationGraph.value.nodes.filter(node =>
     viewMode.value !== 'mindmap' || !mindmapNodeIds.value || mindmapNodeIds.value.has(node.id)
   )
 })
 
 const visibleNodeIds = computed(() => new Set(visibleNodes.value.map(node => node.id)))
-const visibleEdges = computed(() => filteredGraph.value.edges.filter(edge => visibleNodeIds.value.has(edge.source) && visibleNodeIds.value.has(edge.target)))
+const visibleEdges = computed(() => remediationGraph.value.edges.filter(edge => visibleNodeIds.value.has(edge.source) && visibleNodeIds.value.has(edge.target)))
+const clearRemediation = () => {
+  const query = { ...route.query }
+  delete query.focus
+  router.replace({ name: 'Graph', query })
+}
+const runRemediationAction = () => {
+  if (remediationFocus.value === 'relations') showTutorial.value = true
+  if (remediationFocus.value === 'orphans') healthOpen.value = true
+}
 const nodeDegree = (id: string) => degreeMap.value.get(id) || 0
 const incomingCount = (id: string) => graphData.value.edges.filter(edge => edge.target === id).length
 const outgoingCount = (id: string) => graphData.value.edges.filter(edge => edge.source === id).length
@@ -1144,6 +1170,15 @@ const onDblClick = () => {
 watch(() => props.show, (v) => { if (v !== false) loadGraph() })
 watch(() => store.libraryPath, () => { if (props.show !== false) loadGraph() })
 watch(() => selectedNode.value?.id, () => { relationDraftTarget.value = '' })
+watch(remediationFocus, focus => {
+  if (focus === 'relations') showTutorial.value = true
+  if (focus === 'orphans') {
+    healthOpen.value = true
+    selectedNode.value = null
+  }
+  frameCount = 0
+  layoutSettled = false
+}, { immediate: true })
 watch(filters, () => {
   if (viewMode.value === 'network') {
     frameCount = 0
@@ -1312,6 +1347,7 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 .option-divider { width: 1px; height: 16px; background: rgba(0, 0, 0, 0.1); }
 .mindmap-root { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text); }
 .match-count { color: var(--theme-primary); font-weight: 650; }
+.remediation-banner { position: absolute; top: 122px; left: 18px; right: 18px; z-index: 3; min-height: 46px; display: grid; grid-template-columns: minmax(0,1fr) auto 24px; align-items: center; gap: 10px; padding: 7px 8px 7px 12px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 94%, transparent); backdrop-filter: blur(16px); box-shadow: 0 4px 16px rgba(0,0,0,.06); }.remediation-banner>div { min-width: 0; display: grid; gap: 2px; }.remediation-banner strong { font-size: 11px; }.remediation-banner span { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }.remediation-banner button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font-size: 9px; font-weight: 650; }.remediation-banner .remediation-close { width: 24px; min-height: 24px; padding: 0; border-color: transparent; color: var(--theme-text-secondary); background: transparent; font-size: 16px; }
 
 .tutorial-btn {
   height: 36px;
