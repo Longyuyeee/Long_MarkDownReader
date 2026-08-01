@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "stage": "G15F",
+  "status": "accepted",
+  "evidenceLevel": "hosted-installed-current-tauri-webview2-synthetic-local-receipt-review-and-manual-visual-review",
+  "hostedRunId": 30700011023,
+  "productSourceCommit": "057dd40efdfd852120da11d0b097187765ee09f1",
+  "orchestrationCommit": "0e6b2a1a0eb319d968c161b4070cd41b61766882",
+  "installerSha256": "27cc2aedff35d9cc542d67bb4dd3f749e4ab62fe6c60205ca7972518b7bb9dd5",
+  "installedSmoke": {
+    "status": "passed",
+    "passed": 12,
+    "total": 12
+  },
+  "lifecycle": {
+    "status": "passed",
+    "passed": 18,
+    "total": 18
+  },
+  "review": {
+    "stage": "G15B",
+    "outcome": "improved",
+    "relationCountChange": 1,
+    "connectedObjectCountChange": 1,
+    "unknownFieldRejected": true,
+    "entryVisible": true,
+    "entryLabel": "审阅回执",
+    "openedInCurrentWindow": true,
+    "pathRendered": false,
+    "pathPersisted": false,
+    "automaticUploadTriggered": false
+  },
+  "visualReview": {
+    "status": "accepted",
+    "screenshotSha256": "d802c9f510ac1e35f504536ed6ef313407bbb4d213e8e1e229ddd1c6a49884ca",
+    "entryReadable": true,
+    "existingSettingsStyleAligned": true,
+    "rightSideCurrentWindowLayout": true,
+    "separateWindowObserved": false
+  },
+  "evidenceJsonSha256": "24a958a87f8fc6b7b865f21595051cd5b1a70ba27072f1a942f7f12fb286b968",
+  "sourceUserContentIncluded": false,
+  "realUserReceiptReviewed": false,
+  "signedWindowsClientEvidenceComplete": false,
+  "releaseCandidate": false,
+  "promotionEligible": false
+}

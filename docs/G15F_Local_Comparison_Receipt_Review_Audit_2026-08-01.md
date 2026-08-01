@@ -4,7 +4,7 @@
 
 G15E 已把真实资料库的基线—治理—复查顺序做成设置页四步引导，但复查回执保存后只能离开软件手工阅读 JSON。G15F 增加“审阅回执”：用户主动选择本地改善对比 JSON，软件严格校验后在原设置页展示覆盖率、关系数量、已连接对象、孤立对象、结论和受限成就，不创建新窗口。
 
-当前状态为 `installed-local-receipt-review-runner-integrated-hosted-execution-next`，`releaseCandidate=false`。本阶段已完成本地解析、界面、前端生产构建、Rust 定向回归和安装态验收脚本接入，不代表已经审阅任何真实用户回执或已经取得安装版通过证据。
+当前状态为 `hosted-installed-local-receipt-review-passed-real-user-review-next`，`releaseCandidate=false`。本阶段已完成本地解析、界面、前端生产构建、Rust 定向回归和安装态验收；不代表已经审阅任何真实用户回执。
 
 ## 严格输入与隐私边界
 
@@ -22,3 +22,7 @@ G15E 已把真实资料库的基线—治理—复查顺序做成设置页四步
 安装态脚本现在使用安装包内同一个正式 Tauri 命令重新读取合成匿名回执，并核对聚合结果；同时检查设置页“审阅回执”入口可见、位于当前窗口、回执路径未进入页面或 Web Storage。脚本还临时构造包含 `libraryPath` 未知字段的副本并要求安装态后端拒绝，随后立即删除该副本，避免路径随失败证据上传。证据预期为 `installed-knowledge-receipt-review-entry.jpg` 与 `installed-knowledge-receipt-review-evidence.json`。下一步是在 U2 托管 Windows 环境执行并人工复核截图；在运行成功前，`installedReviewComplete` 必须保持 false。真实资料库回执仍必须由用户主动生成、检查和选择；软件不会自动上传，签名 Windows 客户端、1.0.0 与自动更新仍由独立发布门禁控制。
 
 首次完整 U2 运行 `30699010067` 成功构建当前与回滚安装包，并在安装态确认合法回执读取、设置页入口、当前窗口及路径边界；异常回执也实际触发了 Promise 拒绝。但 CDP 只返回通用 Promise 异常，脚本因匹配不到 Rust 中文错误文本而把拒绝误记为 false。该运行属于验收脚本判定失败，不是产品失败。脚本改为验证“命令必须拒绝”，具体“不允许的字段”原因仍由 Rust 精确回归与源码合同负责；下一次 U2 可复用 `30699010067` 已验证哈希的安装器。
+
+复用运行 `30700011023` 通过：安装态 smoke 12/12，安装、升级、回滚生命周期 18/18。产品源码固定为 `057dd40efdfd852120da11d0b097187765ee09f1`，验收编排固定为 `0e6b2a1a0eb319d968c161b4070cd41b61766882`，安装器 SHA-256 为 `27cc2aedff35d9cc542d67bb4dd3f749e4ab62fe6c60205ca7972518b7bb9dd5`。证据确认合法回执为 `improved`、关系和已连接对象各增加 1，未知字段被拒绝，路径未渲染或持久化，未自动上传。
+
+人工截图复核接受：设置页“审阅回执”入口可读，按钮、字号、间距、边框与既有设置控件一致，仍位于右侧当前窗口，没有新开窗口。脱敏验收回执为 `docs/evidence/g15f-local-comparison-receipt-review/acceptance-receipt.json`。真实用户回执审阅、签名 Windows 客户端、1.0.0 和自动更新仍未满足独立门禁。
