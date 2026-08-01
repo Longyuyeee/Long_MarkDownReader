@@ -32,6 +32,7 @@ if (policy.gates.installedLifecyclePassed !== true || policy.gates.frontendBuild
 
 if (policy.gates.githubReleasePublished === true) {
   if (policy.gates.qualityGatePassed !== true || policy.releaseCandidate !== true || policy.currentStatus !== "v1.0.0-community-release-published") fail("published V1 state is inconsistent");
+  if (policy.release?.tag !== "v1.0.0" || policy.release?.taggedCommit !== "b017c8e3285b19d0ad3d24a6bad00de74badb1aa" || policy.release?.qualityGateRunId !== 30709764736 || policy.release?.url !== "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.0") fail("published V1 release receipt drift");
 } else if (policy.gates.qualityGatePassed === true) {
   if (policy.releaseCandidate !== true || policy.currentStatus !== "v1.0.0-community-release-ready-to-publish") fail("ready-to-publish V1 state is inconsistent");
 } else if (policy.releaseCandidate !== false || policy.currentStatus !== "installed-lifecycle-passed-final-quality-gate-pending") {

@@ -5,7 +5,7 @@
   "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-01",
-  "currentStatus": "v1.0.0-community-release-ready-to-publish",
+  "currentStatus": "v1.0.0-community-release-published",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -28,12 +28,20 @@
     "updaterSignaturesBuilt": true,
     "installedLifecyclePassed": true,
     "qualityGatePassed": true,
-    "githubReleasePublished": false
+    "githubReleasePublished": true
+  },
+  "release": {
+    "tag": "v1.0.0",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.0",
+    "publishedAt": "2026-08-01T17:22:42Z",
+    "taggedCommit": "b017c8e3285b19d0ad3d24a6bad00de74badb1aa",
+    "qualityGateRunId": 30709764736,
+    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30709764736"
   },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "publish-v1.0.0-community-release"
+  "nextAction": "monitor-v1.0.0-feedback-and-preserve-updater-key"
 }

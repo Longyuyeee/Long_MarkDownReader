@@ -57,4 +57,11 @@ v1.0.0 已达到“日常管理 + 基础编辑 + 成体系组织”的初始产�
 - 100 MiB PDF 范围读取基准：62 ms，请求约 255.9 KiB。
 - `npm audit --omit=dev`：0 个生产依赖漏洞。
 
-机器状态已提升为 `v1.0.0-community-release-ready-to-publish`；GitHub Release 发布后再记录发布 URL 和最终资产清单。
+GitHub 远程 Quality Gate `30709764736` 在候选提交 `b017c8e3285b19d0ad3d24a6bad00de74badb1aa` 上通过。`v1.0.0` 标签固定在该提交，正式 Release 已发布：<https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.0>。
+
+GitHub 资产 API 返回的正式安装包摘要与本地清单一致：
+
+- `LongEdit_1.0.0_x64-setup.exe`：`6dae10b828424d0b03ddd4b4b759bcbae94fcbeca4cd37b6da26edc9f2802ee6`
+- `LongEdit_1.0.0_x64_zh-CN.msi`：`8a793c664fc04403e2e161edceb273afa1ccf6b876dc06ab7d5dbfc83977256b`
+
+公开的 `releases/latest/download/latest.json` 返回 HTTP 200，版本为 `1.0.0`，Windows x64 下载 URL 与 NSIS 资产一致，内嵌完整 420 字节 Tauri 更新签名。机器状态现为 `v1.0.0-community-release-published`。
