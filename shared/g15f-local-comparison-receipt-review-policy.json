@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "stage": "G15F",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "local-comparison-receipt-review-source-validated-installed-acceptance-next",
+  "scope": "strict-local-reopen-and-review-of-anonymous-knowledge-comparison-receipts",
+  "inputBoundary": {
+    "extension": "json",
+    "maximumBytes": 1048576,
+    "userSelectsFile": true,
+    "unknownFieldsRejected": true,
+    "privacyFlagsRequiredFalse": true,
+    "aggregateConsistencyValidated": true,
+    "receiptPathPersisted": false,
+    "automaticUploadAllowed": false
+  },
+  "reviewedMetrics": [
+    "coverage-percent",
+    "relation-count",
+    "connected-object-count",
+    "isolated-object-count",
+    "outcome",
+    "bounded-achievements"
+  ],
+  "qualityGate": {
+    "strictBackendLoaderImplemented": true,
+    "unknownFieldRegressionImplemented": true,
+    "inconsistentChangeRegressionImplemented": true,
+    "settingsReviewImplemented": true,
+    "responsiveReviewLayoutImplemented": true,
+    "frontendProductionBuildComplete": true,
+    "rustTargetedTestComplete": true,
+    "installedReviewComplete": false,
+    "realUserReceiptReviewed": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "nextStage": "G15F-installed-local-receipt-review-acceptance"
+}

@@ -47,8 +47,8 @@ use commands::graph::{
     export_knowledge_graph_observation_comparison, extract_wikilinks, find_backlinks,
     get_graph_relation_context, get_knowledge_graph_observation,
     get_knowledge_graph_observation_comparison, get_knowledge_graph_pulse, get_library_stats,
-    repair_graph_links, summarize_graph_relations, update_graph_relation,
-    update_graph_relation_decision,
+    repair_graph_links, review_knowledge_graph_observation_comparison, summarize_graph_relations,
+    update_graph_relation, update_graph_relation_decision,
 };
 #[cfg(test)]
 pub(crate) use commands::graph::{GraphEdge, GraphNode};
@@ -470,7 +470,8 @@ pub fn run() {
             get_knowledge_graph_observation,
             export_knowledge_graph_observation,
             get_knowledge_graph_observation_comparison,
-            export_knowledge_graph_observation_comparison
+            export_knowledge_graph_observation_comparison,
+            review_knowledge_graph_observation_comparison
         ])
         .run(tauri::generate_context!())
         .expect("error");

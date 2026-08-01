@@ -159,7 +159,10 @@
                   <strong>真实资料库改善观察</strong>
                   <span>四步均由你主动确认；软件不会自动保存、上传或修改资料库。</span>
                 </div>
-                <n-button size="tiny" quaternary data-testid="knowledge-observation-session-reset" @click="resetObservationSession">重新开始</n-button>
+                <div class="observation-session-heading-actions">
+                  <n-button size="tiny" secondary :loading="observationReviewing" data-testid="knowledge-session-review" @click="reviewKnowledgeObservationReceipt">审阅回执</n-button>
+                  <n-button size="tiny" quaternary data-testid="knowledge-observation-session-reset" @click="resetObservationSession">重新开始</n-button>
+                </div>
               </div>
               <ol class="observation-session-steps">
                 <li :class="{ active: observationSessionPhase === 1, complete: observationSessionPhase > 1 }">
@@ -187,6 +190,22 @@
                 </li>
               </ol>
               <p class="observation-session-privacy">会话进度只保存数字步骤，不保存资料库名称、路径、指纹、正文、文件名、对象 ID 或回执位置。你可以随时取消或重新开始。</p>
+              <article v-if="observationReview" class="observation-review" data-testid="knowledge-session-review-result" :data-outcome="observationReview.outcome">
+                <div class="observation-review-heading">
+                  <div><strong>匿名改善回执</strong><span>已通过结构、隐私标志和聚合变化一致性校验</span></div>
+                  <n-tag size="small" :type="observationReview.outcome === 'regressed' ? 'warning' : observationReview.outcome === 'improved' ? 'success' : 'info'">{{ comparisonOutcomeLabel(observationReview.outcome) }}</n-tag>
+                </div>
+                <div class="observation-review-grid">
+                  <div><span>关系覆盖</span><strong>{{ observationReview.baseline.coveragePercent }}% → {{ observationReview.current.coveragePercent }}%</strong><small>{{ signedChange(observationReview.changes.coveragePercent, '%') }}</small></div>
+                  <div><span>关系数量</span><strong>{{ observationReview.baseline.relationCount }} → {{ observationReview.current.relationCount }}</strong><small>{{ signedChange(observationReview.changes.relationCount) }}</small></div>
+                  <div><span>已连接对象</span><strong>{{ observationReview.baseline.connectedObjectCount }} → {{ observationReview.current.connectedObjectCount }}</strong><small>{{ signedChange(observationReview.changes.connectedObjectCount) }}</small></div>
+                  <div><span>孤立对象</span><strong>{{ observationReview.baseline.isolatedObjectCount }} → {{ observationReview.current.isolatedObjectCount }}</strong><small>{{ signedChange(observationReview.changes.isolatedObjectCount) }}</small></div>
+                </div>
+                <div v-if="observationReview.achievements.length" class="observation-review-achievements">
+                  <span v-for="achievement in observationReview.achievements" :key="achievement">{{ observationAchievementLabel(achievement) }}</span>
+                </div>
+                <p>本次审阅不会保存所选路径，也不会上传回执。重新加载页面后需要再次由你选择文件。</p>
+              </article>
             </section>
           </n-grid-item>
 
@@ -437,6 +456,8 @@ const backupRestoring = ref(false)
 const diagnosticExporting = ref(false)
 const observationExporting = ref(false)
 const observationComparisonExporting = ref(false)
+const observationReviewing = ref(false)
+const observationReview = ref<KnowledgeGraphObservationComparison | null>(null)
 const knowledgeObservationRow = ref<HTMLElement | null>(null)
 const observationRouteFocused = computed(() => route.query.focus === 'knowledge-observation')
 type ObservationSessionPhase = 1 | 2 | 3 | 4
@@ -853,6 +874,33 @@ const comparisonOutcomeLabel = (outcome: KnowledgeGraphObservationComparison['ou
   regressed: '需要继续治理',
   unchanged: '暂无变化',
 })[outcome]
+const observationAchievementLabel = (achievement: string) => ({
+  'coverage-increased': '覆盖率提升',
+  'isolated-objects-reduced': '孤立对象减少',
+  'relations-added': '关系数量增加',
+  'relation-types-diversified': '关系类型更丰富',
+  'healthy-coverage-threshold-reached': '达到健康覆盖阈值',
+} as Record<string, string>)[achievement] || achievement
+
+const reviewKnowledgeObservationReceipt = async () => {
+  if (observationReviewing.value) return
+  const receiptPath = await open({
+    multiple: false,
+    title: '选择知识网络改善对比回执',
+    filters: [{ name: 'LongEdit Knowledge Improvement', extensions: ['json'] }],
+  })
+  if (!receiptPath || typeof receiptPath !== 'string') return
+  observationReviewing.value = true
+  try {
+    observationReview.value = await invoke<KnowledgeGraphObservationComparison>('review_knowledge_graph_observation_comparison', { receiptPath })
+    message.success(`匿名改善回执已通过校验：${comparisonOutcomeLabel(observationReview.value.outcome)}`)
+  } catch (error) {
+    observationReview.value = null
+    message.error(`审阅知识网络改善回执失败：${String(error)}`)
+  } finally {
+    observationReviewing.value = false
+  }
+}
 
 const exportKnowledgeObservationComparisonAfterConfirm = async (baselinePath: string) => {
   const target = await save({
@@ -1428,6 +1476,7 @@ const openDefaultAppsSettings = async () => {
 }
 
 .observation-session-heading > div { display: grid; gap: 3px; }
+.observation-session-heading-actions { display: flex !important; align-items: center; justify-content: flex-end; gap: 6px !important; }
 .observation-session-heading strong { color: var(--theme-text); font-size: 14px; }
 .observation-session-heading span,
 .observation-session-privacy { color: var(--theme-text-secondary); font-size: 11px; line-height: 1.55; }
@@ -1471,10 +1520,33 @@ const openDefaultAppsSettings = async () => {
 .observation-step-actions { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
 .observation-session-privacy { margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed rgba(var(--theme-primary-rgb), 0.14); }
 
+.observation-review {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.22);
+  border-radius: calc(var(--theme-radius) * 0.75);
+  background: rgba(var(--theme-primary-rgb), 0.04);
+}
+.observation-review-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.observation-review-heading > div { display: grid; gap: 2px; }
+.observation-review-heading strong { color: var(--theme-text); font-size: 12px; }
+.observation-review-heading span,
+.observation-review p { margin: 0; color: var(--theme-text-secondary); font-size: 10px; line-height: 1.45; }
+.observation-review-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.observation-review-grid > div { display: grid; gap: 2px; padding: 8px; border-radius: 6px; background: var(--style-control-bg); }
+.observation-review-grid span { color: var(--theme-text-secondary); font-size: 9px; }
+.observation-review-grid strong { color: var(--theme-text); font-size: 11px; }
+.observation-review-grid small { color: var(--theme-primary); font-size: 9px; }
+.observation-review-achievements { display: flex; flex-wrap: wrap; gap: 6px; }
+.observation-review-achievements span { padding: 3px 7px; border-radius: 999px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.09); font-size: 9px; }
+
 @media (max-width: 720px) {
   .observation-session-steps li { grid-template-columns: 26px minmax(0, 1fr); }
   .observation-session-steps li > .n-button,
   .observation-step-actions { grid-column: 2; justify-self: start; }
+  .observation-review-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .is-dark .setting-row {

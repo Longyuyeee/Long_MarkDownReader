@@ -123,7 +123,7 @@ pub struct KnowledgeGraphObservation {
     pub guidance: Vec<KnowledgeGraphGuidance>,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct KnowledgeGraphObservationSnapshot {
     pub object_count: usize,
@@ -135,7 +135,7 @@ pub struct KnowledgeGraphObservationSnapshot {
     pub guidance_codes: Vec<String>,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct KnowledgeGraphObservationChanges {
     pub object_count: i64,
@@ -146,7 +146,7 @@ pub struct KnowledgeGraphObservationChanges {
     pub relation_type_count: i64,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct KnowledgeGraphObservationComparison {
     pub schema_version: u32,
@@ -900,6 +900,203 @@ fn load_knowledge_graph_observation(path: &Path) -> Result<KnowledgeGraphObserva
         return Err("知识网络观察基线未通过隐私与版本校验".into());
     }
     Ok(observation)
+}
+
+fn require_exact_json_keys(
+    value: &serde_json::Value,
+    expected: &[&str],
+    label: &str,
+) -> Result<(), String> {
+    let object = value
+        .as_object()
+        .ok_or_else(|| format!("{label} 必须是 JSON 对象"))?;
+    for key in object.keys() {
+        if !expected.contains(&key.as_str()) {
+            return Err(format!("{label} 包含不允许的字段: {key}"));
+        }
+    }
+    for key in expected {
+        if !object.contains_key(*key) {
+            return Err(format!("{label} 缺少必需字段: {key}"));
+        }
+    }
+    Ok(())
+}
+
+fn checked_count_change(current: usize, baseline: usize, label: &str) -> Result<i64, String> {
+    let current = i64::try_from(current).map_err(|_| format!("{label} 当前值超出安全范围"))?;
+    let baseline = i64::try_from(baseline).map_err(|_| format!("{label} 基线值超出安全范围"))?;
+    current
+        .checked_sub(baseline)
+        .ok_or_else(|| format!("{label} 变化值超出安全范围"))
+}
+
+fn load_knowledge_graph_observation_comparison(
+    path: &Path,
+) -> Result<KnowledgeGraphObservationComparison, String> {
+    if path
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_none_or(|value| !value.eq_ignore_ascii_case("json"))
+    {
+        return Err("知识网络改善对比回执必须是 .json 文件".into());
+    }
+    let metadata =
+        fs::metadata(path).map_err(|error| format!("读取知识网络改善对比回执失败: {error}"))?;
+    if metadata.len() > 1024 * 1024 {
+        return Err("知识网络改善对比回执超过 1 MiB 安全上限".into());
+    }
+    let bytes = fs::read(path).map_err(|error| format!("读取知识网络改善对比回执失败: {error}"))?;
+    let value: serde_json::Value = serde_json::from_slice(&bytes)
+        .map_err(|error| format!("解析知识网络改善对比回执失败: {error}"))?;
+    require_exact_json_keys(
+        &value,
+        &[
+            "schemaVersion",
+            "stage",
+            "appVersion",
+            "generatedAt",
+            "evidenceLevel",
+            "consentBoundary",
+            "sourceUserContentIncluded",
+            "objectIdentifiersIncluded",
+            "fileNamesIncluded",
+            "absolutePathsIncluded",
+            "baselineGeneratedAt",
+            "elapsedSeconds",
+            "baseline",
+            "current",
+            "changes",
+            "outcome",
+            "achievements",
+        ],
+        "知识网络改善对比回执",
+    )?;
+    for key in ["baseline", "current"] {
+        require_exact_json_keys(
+            &value[key],
+            &[
+                "objectCount",
+                "relationCount",
+                "connectedObjectCount",
+                "isolatedObjectCount",
+                "coveragePercent",
+                "relationTypeCount",
+                "guidanceCodes",
+            ],
+            if key == "baseline" {
+                "基线摘要"
+            } else {
+                "当前摘要"
+            },
+        )?;
+    }
+    require_exact_json_keys(
+        &value["changes"],
+        &[
+            "objectCount",
+            "relationCount",
+            "connectedObjectCount",
+            "isolatedObjectCount",
+            "coveragePercent",
+            "relationTypeCount",
+        ],
+        "聚合变化",
+    )?;
+    let comparison: KnowledgeGraphObservationComparison = serde_json::from_value(value)
+        .map_err(|error| format!("解析知识网络改善对比回执失败: {error}"))?;
+    if comparison.schema_version != 1
+        || comparison.stage != "G15B"
+        || comparison.evidence_level != "local-consented-aggregate-comparison-only"
+        || comparison.source_user_content_included
+        || comparison.object_identifiers_included
+        || comparison.file_names_included
+        || comparison.absolute_paths_included
+    {
+        return Err("知识网络改善对比回执未通过隐私与版本校验".into());
+    }
+    if !matches!(
+        comparison.outcome.as_str(),
+        "improved" | "mixed" | "regressed" | "unchanged"
+    ) {
+        return Err("知识网络改善对比回执包含未知结论".into());
+    }
+    const ALLOWED_ACHIEVEMENTS: [&str; 5] = [
+        "coverage-increased",
+        "isolated-objects-reduced",
+        "relations-added",
+        "relation-types-diversified",
+        "healthy-coverage-threshold-reached",
+    ];
+    if comparison.achievements.len() > ALLOWED_ACHIEVEMENTS.len()
+        || comparison
+            .achievements
+            .iter()
+            .any(|item| !ALLOWED_ACHIEVEMENTS.contains(&item.as_str()))
+    {
+        return Err("知识网络改善对比回执包含未知成就".into());
+    }
+    for (label, snapshot) in [
+        ("基线", &comparison.baseline),
+        ("当前", &comparison.current),
+    ] {
+        if snapshot.coverage_percent > 100
+            || snapshot.connected_object_count > snapshot.object_count
+            || snapshot.isolated_object_count > snapshot.object_count
+            || snapshot
+                .connected_object_count
+                .checked_add(snapshot.isolated_object_count)
+                != Some(snapshot.object_count)
+        {
+            return Err(format!("{label}摘要的聚合计数不一致"));
+        }
+    }
+    if comparison.generated_at < comparison.baseline_generated_at
+        || comparison.generated_at - comparison.baseline_generated_at != comparison.elapsed_seconds
+        || comparison.changes.object_count
+            != checked_count_change(
+                comparison.current.object_count,
+                comparison.baseline.object_count,
+                "对象数量",
+            )?
+        || comparison.changes.relation_count
+            != checked_count_change(
+                comparison.current.relation_count,
+                comparison.baseline.relation_count,
+                "关系数量",
+            )?
+        || comparison.changes.connected_object_count
+            != checked_count_change(
+                comparison.current.connected_object_count,
+                comparison.baseline.connected_object_count,
+                "已连接对象",
+            )?
+        || comparison.changes.isolated_object_count
+            != checked_count_change(
+                comparison.current.isolated_object_count,
+                comparison.baseline.isolated_object_count,
+                "孤立对象",
+            )?
+        || comparison.changes.coverage_percent
+            != i16::from(comparison.current.coverage_percent)
+                - i16::from(comparison.baseline.coverage_percent)
+        || comparison.changes.relation_type_count
+            != checked_count_change(
+                comparison.current.relation_type_count,
+                comparison.baseline.relation_type_count,
+                "关系类型",
+            )?
+    {
+        return Err("知识网络改善对比回执的时间或变化值不一致".into());
+    }
+    Ok(comparison)
+}
+
+#[tauri::command]
+pub async fn review_knowledge_graph_observation_comparison(
+    receipt_path: String,
+) -> Result<KnowledgeGraphObservationComparison, String> {
+    load_knowledge_graph_observation_comparison(Path::new(&receipt_path))
 }
 
 async fn build_knowledge_graph_observation_comparison(
@@ -3899,5 +4096,69 @@ mod tests {
         ] {
             assert!(!serialized.contains(secret), "comparison leaked {secret}");
         }
+    }
+
+    #[test]
+    fn comparison_receipt_review_rejects_unknown_and_inconsistent_fields() {
+        let baseline_graph = GraphData {
+            nodes: vec![
+                GraphNode::test_node("C:\\Private\\a.md"),
+                GraphNode::test_node("C:\\Private\\b.md"),
+            ],
+            edges: Vec::new(),
+        };
+        let mut current_graph = baseline_graph.clone();
+        current_graph.edges.push(GraphEdge::structural(
+            "C:\\Private\\a.md".into(),
+            "C:\\Private\\b.md".into(),
+            "supports",
+        ));
+        let comparison = compare_knowledge_graph_observations(
+            &knowledge_graph_observation(&baseline_graph, 100),
+            &knowledge_graph_observation(&current_graph, 160),
+        );
+        let path = std::env::temp_dir().join(format!(
+            "longedit-g15f-comparison-review-{}-{}.json",
+            std::process::id(),
+            current_unix_seconds().unwrap()
+        ));
+        fs::write(&path, serde_json::to_vec_pretty(&comparison).unwrap()).unwrap();
+        let reviewed = load_knowledge_graph_observation_comparison(&path).unwrap();
+        assert_eq!(reviewed, comparison);
+
+        let mut value = serde_json::to_value(&comparison).unwrap();
+        value
+            .as_object_mut()
+            .unwrap()
+            .insert("libraryPath".into(), serde_json::json!("C:\\Private"));
+        fs::write(&path, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+        assert!(load_knowledge_graph_observation_comparison(&path)
+            .unwrap_err()
+            .contains("不允许的字段"));
+
+        let mut value = serde_json::to_value(&comparison).unwrap();
+        value["changes"]["relationCount"] = serde_json::json!(99);
+        fs::write(&path, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+        assert!(load_knowledge_graph_observation_comparison(&path)
+            .unwrap_err()
+            .contains("变化值不一致"));
+
+        let mut value = serde_json::to_value(&comparison).unwrap();
+        value["baselineGeneratedAt"] = serde_json::json!(200);
+        value["generatedAt"] = serde_json::json!(100);
+        fs::write(&path, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+        assert!(load_knowledge_graph_observation_comparison(&path)
+            .unwrap_err()
+            .contains("变化值不一致"));
+
+        let mut value = serde_json::to_value(&comparison).unwrap();
+        value["baseline"]["objectCount"] = serde_json::json!(usize::MAX);
+        value["baseline"]["connectedObjectCount"] = serde_json::json!(usize::MAX);
+        value["baseline"]["isolatedObjectCount"] = serde_json::json!(usize::MAX);
+        fs::write(&path, serde_json::to_vec_pretty(&value).unwrap()).unwrap();
+        assert!(load_knowledge_graph_observation_comparison(&path)
+            .unwrap_err()
+            .contains("聚合计数不一致"));
+        let _ = fs::remove_file(path);
     }
 }
