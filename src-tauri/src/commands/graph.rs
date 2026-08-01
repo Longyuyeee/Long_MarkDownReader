@@ -63,6 +63,15 @@ pub struct KnowledgeGraphPulseRelationType {
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
+pub struct KnowledgeGraphGuidance {
+    pub code: String,
+    pub priority: String,
+    pub current_value: usize,
+    pub target_value: usize,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct KnowledgeGraphPulse {
     pub object_count: usize,
     pub relation_count: usize,
@@ -71,6 +80,7 @@ pub struct KnowledgeGraphPulse {
     pub coverage_percent: u8,
     pub relation_types: Vec<KnowledgeGraphPulseRelationType>,
     pub top_nodes: Vec<KnowledgeGraphPulseNode>,
+    pub guidance: Vec<KnowledgeGraphGuidance>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -110,6 +120,7 @@ pub struct KnowledgeGraphObservation {
     pub object_types: Vec<KnowledgeGraphObservationCount>,
     pub relation_types: Vec<KnowledgeGraphPulseRelationType>,
     pub degree_distribution: KnowledgeGraphDegreeDistribution,
+    pub guidance: Vec<KnowledgeGraphGuidance>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -534,21 +545,90 @@ pub(crate) fn knowledge_graph_pulse(graph: &GraphData) -> KnowledgeGraphPulse {
     });
     top_nodes.truncate(6);
 
+    let relation_types: Vec<KnowledgeGraphPulseRelationType> = relation_type_counts
+        .into_iter()
+        .map(|(relation_type, count)| KnowledgeGraphPulseRelationType {
+            relation_type,
+            count,
+        })
+        .collect();
+    let isolated_object_count = object_count.saturating_sub(connected_object_count);
+    let guidance = knowledge_graph_guidance(
+        object_count,
+        graph.edges.len(),
+        isolated_object_count,
+        coverage_percent,
+        relation_types.len(),
+    );
+
     KnowledgeGraphPulse {
         object_count,
         relation_count: graph.edges.len(),
         connected_object_count,
-        isolated_object_count: object_count.saturating_sub(connected_object_count),
+        isolated_object_count,
         coverage_percent,
-        relation_types: relation_type_counts
-            .into_iter()
-            .map(|(relation_type, count)| KnowledgeGraphPulseRelationType {
-                relation_type,
-                count,
-            })
-            .collect(),
+        relation_types,
         top_nodes,
+        guidance,
     }
+}
+
+fn knowledge_graph_guidance(
+    object_count: usize,
+    relation_count: usize,
+    isolated_object_count: usize,
+    coverage_percent: u8,
+    relation_type_count: usize,
+) -> Vec<KnowledgeGraphGuidance> {
+    if object_count == 0 {
+        return vec![KnowledgeGraphGuidance {
+            code: "add-first-knowledge-object".into(),
+            priority: "high".into(),
+            current_value: 0,
+            target_value: 1,
+        }];
+    }
+
+    let mut guidance = Vec::new();
+    if relation_count == 0 {
+        guidance.push(KnowledgeGraphGuidance {
+            code: "create-first-relation".into(),
+            priority: "high".into(),
+            current_value: 0,
+            target_value: 1,
+        });
+    } else if coverage_percent < 70 {
+        guidance.push(KnowledgeGraphGuidance {
+            code: "increase-relation-coverage".into(),
+            priority: "high".into(),
+            current_value: coverage_percent as usize,
+            target_value: 70,
+        });
+    } else if isolated_object_count > 0 {
+        guidance.push(KnowledgeGraphGuidance {
+            code: "connect-isolated-objects".into(),
+            priority: "medium".into(),
+            current_value: isolated_object_count,
+            target_value: 0,
+        });
+    }
+    if relation_count > 0 && object_count >= 3 && relation_type_count < 3 {
+        guidance.push(KnowledgeGraphGuidance {
+            code: "diversify-relation-types".into(),
+            priority: "medium".into(),
+            current_value: relation_type_count,
+            target_value: 3,
+        });
+    }
+    if guidance.is_empty() {
+        guidance.push(KnowledgeGraphGuidance {
+            code: "network-health-on-track".into(),
+            priority: "healthy".into(),
+            current_value: coverage_percent as usize,
+            target_value: 70,
+        });
+    }
+    guidance
 }
 
 #[tauri::command]
@@ -610,6 +690,7 @@ fn knowledge_graph_observation(graph: &GraphData, generated_at: u64) -> Knowledg
             .collect(),
         relation_types: pulse.relation_types,
         degree_distribution,
+        guidance: pulse.guidance,
     }
 }
 
@@ -2992,6 +3073,34 @@ mod tests {
         assert_eq!(pulse.relation_types[0].count, 2);
         assert_eq!(pulse.top_nodes[0].id, "alpha");
         assert_eq!(pulse.top_nodes[0].relation_count, 2);
+        assert_eq!(pulse.guidance.len(), 2);
+        assert_eq!(pulse.guidance[0].code, "connect-isolated-objects");
+        assert_eq!(pulse.guidance[0].current_value, 1);
+        assert_eq!(pulse.guidance[0].target_value, 0);
+        assert_eq!(pulse.guidance[1].code, "diversify-relation-types");
+    }
+
+    #[test]
+    fn knowledge_graph_guidance_covers_empty_disconnected_and_healthy_networks() {
+        let empty = knowledge_graph_guidance(0, 0, 0, 0, 0);
+        assert_eq!(empty[0].code, "add-first-knowledge-object");
+
+        let disconnected = knowledge_graph_guidance(4, 0, 4, 0, 0);
+        assert_eq!(
+            disconnected
+                .iter()
+                .map(|item| item.code.as_str())
+                .collect::<Vec<_>>(),
+            vec!["create-first-relation"]
+        );
+
+        let low_coverage = knowledge_graph_guidance(10, 2, 6, 40, 3);
+        assert_eq!(low_coverage[0].code, "increase-relation-coverage");
+        assert_eq!(low_coverage[0].target_value, 70);
+
+        let healthy = knowledge_graph_guidance(10, 12, 0, 100, 4);
+        assert_eq!(healthy[0].code, "network-health-on-track");
+        assert_eq!(healthy[0].priority, "healthy");
     }
 
     #[test]
@@ -3513,6 +3622,7 @@ mod tests {
         assert_eq!(observation.degree_distribution.zero, 1);
         assert_eq!(observation.degree_distribution.one, 2);
         assert_eq!(observation.object_types.len(), 2);
+        assert_eq!(observation.guidance[0].code, "increase-relation-coverage");
         assert!(!observation.source_user_content_included);
         assert!(!observation.object_identifiers_included);
         assert!(!observation.file_names_included);

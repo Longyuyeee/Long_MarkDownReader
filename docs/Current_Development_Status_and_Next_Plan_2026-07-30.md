@@ -602,3 +602,9 @@ Current product status is `hosted-installed-knowledge-pulse-passed-real-user-obs
 Settings now provides a preview-first, explicit-confirmation local export for real-library knowledge-network observation. The JSON contains only counts, coverage, object/relation type distributions, and degree buckets. Document content, file names, object IDs, absolute paths, library names, saved searches, credentials, and raw errors are excluded; the app never uploads the receipt automatically and refuses to overwrite an existing file.
 
 The privacy regression deliberately constructs a graph with secret titles, identifiers, and Windows paths and verifies none survive serialization. Current status is `consented-aggregate-observation-export-implemented-user-execution-next`: implementation is complete, but no real-user observation is claimed until the user explicitly runs and shares an inspected aggregate receipt. `releaseCandidate=false`; R5N signing and Windows 10/11 client evidence remain required before 1.0.0 or updater work.
+
+## G13 update - actionable local knowledge guidance
+
+Knowledge-network metrics now produce deterministic aggregate-only guidance instead of ending at passive counts. Workspace Home presents the highest-priority action inside the existing knowledge pulse and opens the unified graph workspace; the consented preview and local receipt carry the same stable guidance codes, priorities, current values, and targets.
+
+Rules cover empty, disconnected, low-coverage, isolated, low-diversity, and healthy networks. They use no content, file names, object identifiers, paths, model calls, network requests, or automatic uploads. Rust tests cover the decision thresholds and extend the G12 leakage boundary. Current status is `actionable-local-guidance-implemented-real-user-execution-next`; real-user execution remains consent-gated and `releaseCandidate=false` remains unchanged.

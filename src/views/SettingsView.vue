@@ -469,6 +469,7 @@ interface KnowledgeGraphObservation {
   objectTypes: { category: string; count: number }[]
   relationTypes: { relationType: string; count: number }[]
   degreeDistribution: { zero: number; one: number; twoToFour: number; fiveOrMore: number }
+  guidance: { code: string; priority: string; currentValue: number; targetValue: number }[]
 }
 
 const newLib = reactive({ name: '', path: '' })
@@ -700,6 +701,15 @@ const exportKnowledgeObservationAfterConfirm = async () => {
   }
 }
 
+const observationGuidanceLabel = (code: string) => ({
+  'add-first-knowledge-object': '建立第一个知识对象',
+  'create-first-relation': '建立第一条知识关系',
+  'increase-relation-coverage': '提升知识关系覆盖率',
+  'connect-isolated-objects': '连接孤立知识对象',
+  'diversify-relation-types': '丰富关系语义类型',
+  'network-health-on-track': '知识网络状态良好',
+} as Record<string, string>)[code] || '检查知识网络结构'
+
 const previewKnowledgeObservation = async () => {
   if (!store.libraryPath || observationExporting.value) return
   observationExporting.value = true
@@ -712,6 +722,7 @@ const previewKnowledgeObservation = async () => {
       `已连接：${preview.connectedObjectCount}；孤立：${preview.isolatedObjectCount}`,
       `对象类型：${preview.objectTypes.map(item => `${item.category} ${item.count}`).join('、') || '无'}`,
       `关系类型：${preview.relationTypes.map(item => `${item.relationType} ${item.count}`).join('、') || '无'}`,
+      `改善建议：${preview.guidance.map(item => observationGuidanceLabel(item.code)).join('、') || '无'}`,
       '',
       '回执不会包含正文、文件名、对象 ID、绝对路径或凭据。软件只在你确认后保存到本地，不会自动上传。',
     ].join('\n')

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "stage": "G13",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "actionable-local-guidance-implemented-real-user-execution-next",
+  "scope": "privacy-preserving-actionable-knowledge-network-guidance",
+  "guidanceCodes": [
+    "add-first-knowledge-object",
+    "create-first-relation",
+    "increase-relation-coverage",
+    "connect-isolated-objects",
+    "diversify-relation-types",
+    "network-health-on-track"
+  ],
+  "inputs": [
+    "object-count",
+    "relation-count",
+    "isolated-object-count",
+    "coverage-percent",
+    "relation-type-count"
+  ],
+  "privacy": {
+    "localComputationOnly": true,
+    "documentContentUsed": false,
+    "fileNameUsed": false,
+    "objectIdentifierUsed": false,
+    "absolutePathUsed": false,
+    "automaticUploadAllowed": false
+  },
+  "surfaces": {
+    "workspaceHome": true,
+    "consentedObservationPreview": true,
+    "aggregateReceipt": true
+  },
+  "qualityGate": {
+    "deterministicThresholdTestsComplete": true,
+    "privacyRegressionExtended": true,
+    "realUserExecutionComplete": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "nextStage": "G13-consented-real-library-execution"
+}
