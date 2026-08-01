@@ -17,6 +17,7 @@ const textFile = path.join(library, 'r5j-notes.txt')
 const jsonFile = path.join(library, 'r5j-config.json')
 const knowledgeBaselineFile = path.join(output, 'installed-knowledge-observation-baseline.json')
 const knowledgeComparisonFile = path.join(output, 'installed-knowledge-guidance-comparison.json')
+const invalidKnowledgeComparisonFile = path.join(output, 'installed-knowledge-guidance-comparison-invalid.json')
 const knowledgeImprovementFixture = path.join(library, 'g15c-linked-follow-up.md')
 const embeddedEditorSelector = '.library-embedded-editor .cm-content'
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -524,6 +525,58 @@ const serializedComparison = await fs.readFile(knowledgeComparisonFile, 'utf8')
 for (const forbidden of [library, 'r5j-north-star.md', 'g15c-linked-follow-up.md', 'R5J North Star', 'G15C Linked Follow-up']) {
   if (serializedComparison.includes(forbidden)) throw new Error(`Installed knowledge comparison leaked synthetic identifier: ${forbidden}`)
 }
+const reviewedComparison = await invokeTauri('review_knowledge_graph_observation_comparison', {
+  receiptPath: knowledgeComparisonFile,
+})
+const invalidComparison = JSON.parse(serializedComparison)
+invalidComparison.libraryPath = library
+await fs.writeFile(invalidKnowledgeComparisonFile, `${JSON.stringify(invalidComparison, null, 2)}\n`)
+let unknownFieldRejected = false
+try {
+  await invokeTauri('review_knowledge_graph_observation_comparison', {
+    receiptPath: invalidKnowledgeComparisonFile,
+  })
+} catch (error) {
+  unknownFieldRejected = String(error).includes('不允许的字段')
+} finally {
+  await fs.rm(invalidKnowledgeComparisonFile, { force: true })
+}
+await evaluate(`document.querySelector('[data-testid="knowledge-session-review"]')?.scrollIntoView({ block: 'center' })`)
+await waitForStableVisibleSurface('[data-testid="knowledge-session-review"]', 'installed local comparison receipt review entry')
+const receiptReviewSurface = await evaluate(`(() => {
+  const entry = document.querySelector('[data-testid="knowledge-session-review"]')
+  const storage = [...Object.entries(localStorage), ...Object.entries(sessionStorage)]
+  const forbidden = ${JSON.stringify([knowledgeComparisonFile, path.basename(knowledgeComparisonFile)])}
+  return {
+    entryVisible: entry !== null,
+    entryLabel: entry?.textContent?.trim() || '',
+    openedInCurrentWindow: window.opener === null,
+    pathRendered: forbidden.some(value => document.body?.innerText?.includes(value)),
+    pathPersisted: storage.some(([, value]) => forbidden.some(item => String(value).includes(item))),
+  }
+})()`)
+if (reviewedComparison.stage !== 'G15B' || reviewedComparison.outcome !== comparisonReceipt.outcome ||
+    reviewedComparison.current.relationCount !== comparisonReceipt.current.relationCount ||
+    reviewedComparison.changes.connectedObjectCount !== comparisonReceipt.changes.connectedObjectCount ||
+    reviewedComparison.sourceUserContentIncluded || reviewedComparison.objectIdentifiersIncluded ||
+    reviewedComparison.fileNamesIncluded || reviewedComparison.absolutePathsIncluded || !unknownFieldRejected ||
+    !receiptReviewSurface.entryVisible || !receiptReviewSurface.entryLabel.includes('审阅回执') ||
+    !receiptReviewSurface.openedInCurrentWindow || receiptReviewSurface.pathRendered || receiptReviewSurface.pathPersisted) {
+  throw new Error(`Installed local comparison receipt review failed: ${JSON.stringify({ reviewedComparison, unknownFieldRejected, receiptReviewSurface })}`)
+}
+await capture('installed-knowledge-receipt-review-entry.jpg')
+await fs.writeFile(path.join(output, 'installed-knowledge-receipt-review-evidence.json'), `${JSON.stringify({
+  schemaVersion: 1,
+  stage: 'G15F',
+  evidenceLevel: 'installed-current-tauri-webview2-synthetic-local-receipt-review',
+  sourceUserContentIncluded: false,
+  receiptPathPersisted: false,
+  automaticUploadTriggered: false,
+  unknownFieldRejected,
+  receiptReviewSurface,
+  reviewedComparison,
+}, null, 2)}\n`)
+checks.push({ id: 'installed-local-comparison-receipt-review', status: 'passed' })
 const knowledgeGuidanceOutcome = {
   observationSurface,
   baseline: {
@@ -634,6 +687,8 @@ await fs.writeFile(path.join(output, 'installed-artifact-smoke.json'), `${JSON.s
     'installed-knowledge-observation-baseline.json',
     'installed-knowledge-guidance-comparison.json',
     'installed-knowledge-guidance-outcome-evidence.json',
+    'installed-knowledge-receipt-review-entry.jpg',
+    'installed-knowledge-receipt-review-evidence.json',
     'installed-route-mount-evidence.json',
     'installed-route-performance-evidence.json',
   ],

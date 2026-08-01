@@ -3,7 +3,7 @@
   "stage": "G15F",
   "appVersion": "0.7.0",
   "releaseCandidate": false,
-  "status": "local-comparison-receipt-review-source-validated-installed-acceptance-next",
+  "status": "installed-local-receipt-review-runner-integrated-hosted-execution-next",
   "scope": "strict-local-reopen-and-review-of-anonymous-knowledge-comparison-receipts",
   "inputBoundary": {
     "extension": "json",
@@ -23,6 +23,19 @@
     "outcome",
     "bounded-achievements"
   ],
+  "installedAcceptance": {
+    "syntheticReceiptOnly": true,
+    "formalInstalledBackendCommandUsed": true,
+    "visibleSettingsEntryRequired": true,
+    "sameWindowRequired": true,
+    "unknownFieldRejectionRequired": true,
+    "pathRenderedAllowed": false,
+    "pathPersistedAllowed": false,
+    "expectedEvidenceFiles": [
+      "installed-knowledge-receipt-review-entry.jpg",
+      "installed-knowledge-receipt-review-evidence.json"
+    ]
+  },
   "qualityGate": {
     "strictBackendLoaderImplemented": true,
     "unknownFieldRegressionImplemented": true,
@@ -35,5 +48,5 @@
     "realUserReceiptReviewed": false,
     "signedWindowsClientEvidenceComplete": false
   },
-  "nextStage": "G15F-installed-local-receipt-review-acceptance"
+  "nextStage": "G15F-hosted-installed-local-receipt-review-execution"
 }
