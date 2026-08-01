@@ -64,11 +64,24 @@ const waitForFile = async (file, marker, description, attempts = 300) => {
 }
 const navigate = async (hash, selector, description) => {
   await evaluate(`location.hash = ${JSON.stringify(hash)}`)
-  await waitFor(`document.querySelector(${JSON.stringify(selector)}) !== null`, description)
-  await waitFor(`document.querySelector('.page-loader') === null`, `${description} transition`)
+  try {
+    await waitFor(`document.querySelector(${JSON.stringify(selector)}) !== null || document.querySelector('.crash-fallback') !== null`, description, 1200)
+    await waitFor(`document.querySelector('.page-loader') === null || document.querySelector('.crash-fallback') !== null`, `${description} transition`, 1200)
+  } catch (error) {
+    const diagnostics = await evaluate(`({ hash: location.hash, title: document.title, body: document.body?.innerText?.slice(0, 2000) || '' })`)
+    throw new Error(`${description} navigation timed out: ${JSON.stringify(diagnostics)}; ${error.message}`)
+  }
   await delay(150)
-  if (await evaluate(`document.querySelector('.crash-fallback') !== null`)) {
-    throw new Error(`${description} showed the global crash fallback`)
+  const crash = await evaluate(`(() => {
+    const fallback = document.querySelector('.crash-fallback')
+    return fallback ? { hash: location.hash, text: fallback.textContent?.slice(0, 2000) || '' } : null
+  })()`)
+  if (crash) {
+    throw new Error(`${description} showed the global crash fallback: ${JSON.stringify(crash)}`)
+  }
+  if (!await evaluate(`document.querySelector(${JSON.stringify(selector)}) !== null`)) {
+    const diagnostics = await evaluate(`({ hash: location.hash, body: document.body?.innerText?.slice(0, 2000) || '' })`)
+    throw new Error(`${description} completed without its expected surface: ${JSON.stringify(diagnostics)}`)
   }
 }
 const assertNoGlobalFallback = async description => {
