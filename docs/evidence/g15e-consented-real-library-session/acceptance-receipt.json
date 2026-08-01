@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "stage": "G15E",
+  "status": "accepted",
+  "evidenceLevel": "hosted-installed-current-tauri-webview2-synthetic-library-session-guidance-and-manual-visual-review",
+  "hostedRunId": 30696762556,
+  "productSourceCommit": "eafd75828a697470c4974e1039da038ad8220f23",
+  "orchestrationCommit": "2d68521c7cd18451a720cdd4317af8644c0bb8d1",
+  "installerSha256": "735409a643a463f8b64343a0c1def02aa6aaf92d03dd8cee2cc2cee818543433",
+  "installedSmoke": {
+    "status": "passed",
+    "passed": 11,
+    "total": 11
+  },
+  "lifecycle": {
+    "status": "passed",
+    "passed": 18,
+    "total": 18
+  },
+  "session": {
+    "phase": 3,
+    "storedKeys": ["phase", "schemaVersion"],
+    "storedSchemaVersion": 1,
+    "storedPhase": 3,
+    "comparisonUnlocked": true,
+    "route": "#/settings?focus=knowledge-observation",
+    "openedInCurrentWindow": true,
+    "exportTriggered": false,
+    "automaticRemediationTriggered": false
+  },
+  "visualReview": {
+    "status": "accepted",
+    "startScreenshotSha256": "090ccca9ffbc3323443d62d7fa40930c858dc7e668dc9b306ec1fd8aebf22d35",
+    "readyScreenshotSha256": "1816e1071a6ded4c27f3653a98ee378c977ae7248e7a6a4e89a86415d06d7dcf",
+    "initialStepHighlighted": true,
+    "remediationStepCompleted": true,
+    "repeatedAcknowledgementDisabled": true,
+    "comparisonStepHighlighted": true,
+    "labelsReadable": true,
+    "existingSettingsStyleAligned": true,
+    "separateWindowObserved": false
+  },
+  "sourceUserContentIncluded": false,
+  "realUserSessionComplete": false,
+  "signedWindowsClientEvidenceComplete": false,
+  "releaseCandidate": false,
+  "promotionEligible": false
+}

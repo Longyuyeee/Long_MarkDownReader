@@ -3,7 +3,7 @@
   "stage": "G15E",
   "appVersion": "0.7.0",
   "releaseCandidate": false,
-  "status": "consented-real-library-session-runner-integrated-hosted-execution-next",
+  "status": "hosted-installed-session-guidance-passed-consented-real-user-execution-next",
   "scope": "guided-consent-preserving-baseline-remediation-follow-up-session",
   "steps": [
     "preview-and-explicitly-save-aggregate-baseline",
@@ -42,11 +42,12 @@
     "existingBaselineHandoffImplemented": true,
     "responsiveSettingsStyleImplemented": true,
     "frontendProductionBuildComplete": true,
-    "installedSessionComplete": false,
+    "installedSessionComplete": true,
     "realUserSessionComplete": false,
     "signedWindowsClientEvidenceComplete": false
   },
   "productSourceCommit": "eafd75828a697470c4974e1039da038ad8220f23",
-  "hostedRunId": null,
-  "nextStage": "G15E-hosted-installed-session-guidance-acceptance"
+  "hostedRunId": 30696762556,
+  "acceptanceReceipt": "docs/evidence/g15e-consented-real-library-session/acceptance-receipt.json",
+  "nextStage": "G15-consented-real-library-baseline-remediation-follow-up"
 }
