@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "stage": "G15C",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "installed-guidance-outcome-runner-integrated-hosted-execution-next",
+  "scope": "installed-consented-guidance-outcome-synthetic-acceptance",
+  "requiredChecks": [
+    "installed-observation-settings-surface",
+    "installed-aggregate-baseline-export",
+    "installed-synthetic-guided-remediation",
+    "installed-aggregate-comparison-preview",
+    "installed-create-new-comparison-export",
+    "installed-comparison-privacy-scan"
+  ],
+  "expectedEvidenceFiles": [
+    "installed-knowledge-observation-settings.jpg",
+    "installed-knowledge-observation-baseline.json",
+    "installed-knowledge-guidance-comparison.json",
+    "installed-knowledge-guidance-outcome-evidence.json"
+  ],
+  "safetyBoundary": {
+    "fixedSyntheticLibraryOnly": true,
+    "sourceUserContentAllowed": false,
+    "aggregateEvidenceOnly": true,
+    "automaticUploadAllowed": false,
+    "sameApplicationWindowRequired": true,
+    "hostInstallerMutationAllowed": false
+  },
+  "qualityGate": {
+    "installedRunnerIntegrated": true,
+    "frontendProductionBuildComplete": true,
+    "hostedInstalledExecutionComplete": false,
+    "screenshotReviewComplete": false,
+    "realUserComparisonComplete": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "productSourceCommit": "fffbc6af4508b6476610a5b34d704ac606efe2ee",
+  "hostedRunId": null,
+  "nextStage": "G15C-hosted-installed-execution-and-evidence-review"
+}

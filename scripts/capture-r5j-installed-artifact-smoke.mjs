@@ -15,6 +15,9 @@ if (!library || !output || !installedExecutable || !appVersion || !/^[a-f0-9]{64
 
 const textFile = path.join(library, 'r5j-notes.txt')
 const jsonFile = path.join(library, 'r5j-config.json')
+const knowledgeBaselineFile = path.join(output, 'installed-knowledge-observation-baseline.json')
+const knowledgeComparisonFile = path.join(output, 'installed-knowledge-guidance-comparison.json')
+const knowledgeImprovementFixture = path.join(library, 'g15c-linked-follow-up.md')
 const embeddedEditorSelector = '.library-embedded-editor .cm-content'
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 const sha256 = async file => crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex')
@@ -48,6 +51,7 @@ const evaluate = async expression => {
   if (result.exceptionDetails) throw new Error(result.exceptionDetails.text || 'WebView evaluation failed')
   return result.result.value
 }
+const invokeTauri = (command, args) => evaluate(`window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)}, ${JSON.stringify(args)})`)
 const waitFor = async (expression, description, attempts = 300) => {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     if (await evaluate(expression)) return
@@ -332,6 +336,69 @@ if (centeredNavigation.nodeId !== selectedTopic.nodeId || centeredNavigation.tit
 await capture('installed-knowledge-topic-centered.jpg')
 checks.push({ id: 'installed-knowledge-topic-centered-navigation', status: 'passed' })
 
+await navigate('#/settings', '.settings-view', 'installed consented knowledge observation settings')
+await waitFor(`document.querySelector('[data-testid="knowledge-observation-export"]') !== null`, 'knowledge observation baseline surface')
+await waitFor(`document.querySelector('[data-testid="knowledge-observation-compare"]') !== null`, 'knowledge observation comparison action')
+const observationSurface = await evaluate(`(() => ({
+  baselineVisible: document.querySelector('[data-testid="knowledge-observation-export"]') !== null,
+  comparisonVisible: document.querySelector('[data-testid="knowledge-observation-compare"]') !== null,
+  comparisonLabel: document.querySelector('[data-testid="knowledge-observation-compare"]')?.textContent?.trim() || '',
+  openedInCurrentWindow: window.opener === null,
+}))()`)
+if (!observationSurface.baselineVisible || !observationSurface.comparisonVisible ||
+    !observationSurface.comparisonLabel.includes('复查改善') || !observationSurface.openedInCurrentWindow) {
+  throw new Error(`Installed knowledge observation surface failed: ${JSON.stringify(observationSurface)}`)
+}
+await capture('installed-knowledge-observation-settings.jpg')
+
+const observationBaseline = await invokeTauri('export_knowledge_graph_observation', {
+  libraryRoot: library,
+  targetPath: knowledgeBaselineFile,
+})
+await fs.writeFile(knowledgeImprovementFixture, `---\nrelations:\n  supports: [[r5j-north-star]]\n---\n# G15C Linked Follow-up\n`)
+const comparisonPreview = await invokeTauri('get_knowledge_graph_observation_comparison', {
+  libraryRoot: library,
+  baselinePath: knowledgeBaselineFile,
+})
+const comparisonReceipt = await invokeTauri('export_knowledge_graph_observation_comparison', {
+  libraryRoot: library,
+  baselinePath: knowledgeBaselineFile,
+  targetPath: knowledgeComparisonFile,
+})
+if (observationBaseline.stage !== 'G12' || comparisonPreview.stage !== 'G15B' ||
+    comparisonReceipt.stage !== 'G15B' || comparisonReceipt.outcome !== 'improved' ||
+    comparisonReceipt.changes.relationCount < 1 || comparisonReceipt.changes.connectedObjectCount < 1 ||
+    comparisonReceipt.sourceUserContentIncluded || comparisonReceipt.objectIdentifiersIncluded ||
+    comparisonReceipt.fileNamesIncluded || comparisonReceipt.absolutePathsIncluded ||
+    comparisonReceipt.current.objectCount !== comparisonPreview.current.objectCount ||
+    comparisonReceipt.current.relationCount !== comparisonPreview.current.relationCount ||
+    comparisonReceipt.outcome !== comparisonPreview.outcome) {
+  throw new Error(`Installed knowledge guidance outcome failed: ${JSON.stringify({ observationBaseline, comparisonPreview, comparisonReceipt })}`)
+}
+const serializedComparison = await fs.readFile(knowledgeComparisonFile, 'utf8')
+for (const forbidden of [library, 'r5j-north-star.md', 'g15c-linked-follow-up.md', 'R5J North Star', 'G15C Linked Follow-up']) {
+  if (serializedComparison.includes(forbidden)) throw new Error(`Installed knowledge comparison leaked synthetic identifier: ${forbidden}`)
+}
+const knowledgeGuidanceOutcome = {
+  observationSurface,
+  baseline: {
+    objectCount: observationBaseline.objectCount,
+    relationCount: observationBaseline.relationCount,
+    connectedObjectCount: observationBaseline.connectedObjectCount,
+    isolatedObjectCount: observationBaseline.isolatedObjectCount,
+    coveragePercent: observationBaseline.coveragePercent,
+  },
+  comparison: comparisonReceipt,
+}
+await fs.writeFile(path.join(output, 'installed-knowledge-guidance-outcome-evidence.json'), `${JSON.stringify({
+  schemaVersion: 1,
+  stage: 'G15C',
+  evidenceLevel: 'installed-current-tauri-webview2-synthetic-library-aggregate-only',
+  sourceUserContentIncluded: false,
+  ...knowledgeGuidanceOutcome,
+}, null, 2)}\n`)
+checks.push({ id: 'installed-consented-knowledge-guidance-outcome', status: 'passed' })
+
 const routes = [
   ['#/workspace', '.workspace-home', '/workspace'],
   ['#/library', '.library-mode', '/library'],
@@ -412,6 +479,10 @@ await fs.writeFile(path.join(output, 'installed-artifact-smoke.json'), `${JSON.s
     'installed-knowledge-guidance-graph.jpg',
     'installed-knowledge-topic-centered.jpg',
     'installed-knowledge-network-evidence.json',
+    'installed-knowledge-observation-settings.jpg',
+    'installed-knowledge-observation-baseline.json',
+    'installed-knowledge-guidance-comparison.json',
+    'installed-knowledge-guidance-outcome-evidence.json',
     'installed-route-mount-evidence.json',
     'installed-route-performance-evidence.json',
   ],
