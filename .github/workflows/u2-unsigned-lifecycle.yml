@@ -59,7 +59,7 @@ jobs:
       - name: Build current unsigned NSIS candidate
         if: ${{ inputs.artifact_run_id == '' }}
         working-directory: current-product
-        run: npm run tauri -- build --bundles nsis --config src-tauri/tauri.u2.conf.json
+        run: npm run tauri -- build --bundles nsis --config ../orchestration/src-tauri/tauri.u2.conf.json
 
       - name: Install rollback locked dependencies
         if: ${{ inputs.artifact_run_id == '' }}
