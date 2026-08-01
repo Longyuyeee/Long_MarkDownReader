@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.0.0",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-01",
-  "currentStatus": "installed-lifecycle-passed-final-quality-gate-pending",
+  "currentStatus": "v1.0.0-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -27,7 +27,7 @@
     "nsisBuilt": true,
     "updaterSignaturesBuilt": true,
     "installedLifecyclePassed": true,
-    "qualityGatePassed": false,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "releaseWarnings": [
@@ -35,5 +35,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "run-1.0.0-final-quality-gate-and-publish"
+  "nextAction": "publish-v1.0.0-community-release"
 }
