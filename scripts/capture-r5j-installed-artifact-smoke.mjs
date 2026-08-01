@@ -225,6 +225,23 @@ const capture = async fileName => {
   })
   await fs.writeFile(path.join(output, fileName), Buffer.from(screenshot.data, 'base64'))
 }
+const waitForStableVisibleSurface = async (selector, description) => {
+  const stableExpression = `(() => {
+    const element = document.querySelector(${JSON.stringify(selector)})
+    if (!element || document.querySelector('.page-loader')) return false
+    const rect = element.getBoundingClientRect()
+    const style = getComputedStyle(element)
+    return rect.width > 0 && rect.height > 0
+      && rect.top >= 0 && rect.bottom <= window.innerHeight
+      && style.visibility !== 'hidden' && style.display !== 'none'
+  })()`
+  await waitFor(stableExpression, description, 1200)
+  await evaluate(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`)
+  await delay(500)
+  if (!await evaluate(stableExpression)) {
+    throw new Error(`${description} did not remain visible after the route transition settled`)
+  }
+}
 
 await fs.mkdir(output, { recursive: true })
 await send('Page.enable')
@@ -311,12 +328,7 @@ checks.push({ id: 'installed-knowledge-network-pulse', status: 'passed' })
 await waitFor(`document.querySelector('[data-testid="knowledge-observation-entry"]') !== null`, 'workspace knowledge observation entry')
 await evaluate(`document.querySelector('[data-testid="knowledge-observation-entry"]')?.click()`)
 await waitFor(`location.hash.includes('/settings?focus=knowledge-observation') && document.querySelector('[data-testid="knowledge-observation-export"].is-route-focused') !== null`, 'workspace baseline entry focused Settings destination', 1200)
-await waitFor(`(() => {
-  const element = document.querySelector('[data-testid="knowledge-observation-export"]')
-  if (!element) return false
-  const rect = element.getBoundingClientRect()
-  return rect.top >= 0 && rect.bottom <= window.innerHeight
-})()`, 'workspace baseline entry target in viewport', 1200)
+await waitForStableVisibleSurface('[data-testid="knowledge-observation-export"]', 'workspace baseline entry target in settled viewport')
 const workspaceObservationNavigation = await evaluate(`(() => ({
   route: location.hash,
   targetVisible: document.querySelector('[data-testid="knowledge-observation-export"]') !== null,
@@ -349,12 +361,7 @@ checks.push({ id: 'installed-actionable-knowledge-guidance', status: 'passed' })
 await waitFor(`document.querySelector('[data-testid="knowledge-outcome-entry"]') !== null`, 'graph knowledge outcome entry')
 await evaluate(`document.querySelector('[data-testid="knowledge-outcome-entry"]')?.click()`)
 await waitFor(`location.hash.includes('/settings?focus=knowledge-observation') && document.querySelector('[data-testid="knowledge-observation-export"].is-route-focused') !== null`, 'graph outcome entry focused Settings destination', 1200)
-await waitFor(`(() => {
-  const element = document.querySelector('[data-testid="knowledge-observation-export"]')
-  if (!element) return false
-  const rect = element.getBoundingClientRect()
-  return rect.top >= 0 && rect.bottom <= window.innerHeight
-})()`, 'graph outcome entry target in viewport', 1200)
+await waitForStableVisibleSurface('[data-testid="knowledge-observation-export"]', 'graph outcome entry target in settled viewport')
 const graphOutcomeNavigation = await evaluate(`(() => ({
   route: location.hash,
   targetVisible: document.querySelector('[data-testid="knowledge-observation-export"]') !== null,
@@ -373,6 +380,7 @@ await fs.writeFile(path.join(output, 'installed-knowledge-observation-entry-evid
   evidenceLevel: 'installed-current-tauri-webview2-synthetic-library-navigation-only',
   sourceUserContentIncluded: false,
   exportTriggered: false,
+  visualSurfaceSettled: true,
   workspaceObservationNavigation,
   graphOutcomeNavigation,
 }, null, 2)}\n`)

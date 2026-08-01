@@ -3,7 +3,7 @@
   "stage": "G15D",
   "appVersion": "0.7.0",
   "releaseCandidate": false,
-  "status": "installed-observation-entry-runner-integrated-hosted-execution-next",
+  "status": "installed-observation-entry-functional-passed-visual-recapture-next",
   "scope": "knowledge-guidance-to-consented-outcome-workflow-discoverability",
   "entries": {
     "workspaceHome": "settings-knowledge-observation-focus",
@@ -34,11 +34,13 @@
     "graphFollowUpEntryImplemented": true,
     "settingsFocusImplemented": true,
     "frontendProductionBuildComplete": true,
+    "hostedFunctionalNavigationComplete": true,
     "installedNavigationComplete": false,
+    "installedVisualReviewComplete": false,
     "realUserComparisonComplete": false,
     "signedWindowsClientEvidenceComplete": false
   },
   "productSourceCommit": "80df4a65a03d2640841efd0d2d9111f61a00fafa",
-  "hostedRunId": null,
-  "nextStage": "G15D-hosted-installed-current-window-observation-entry-acceptance"
+  "hostedRunId": 30694114591,
+  "nextStage": "G15D-hosted-installed-observation-entry-visual-recapture"
 }
