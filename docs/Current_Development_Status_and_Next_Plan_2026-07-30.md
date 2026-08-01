@@ -650,3 +650,9 @@ The repaired run `30693531173` passed all installed lifecycle checks and execute
 Visual recapture run `30693694231` passed 9/9 installed smoke checks and all 18 lifecycle checks. The installed Settings page showed the complete knowledge-observation row inside the viewport, with readable baseline/follow-up actions aligned to the existing management and diagnostic controls. Manual screenshot review is accepted.
 
 The aggregate synthetic result remained 5→6 objects, 6→7 relations, and 5→6 connected objects with outcome `improved`; no content, identifiers, file names, or absolute paths entered the receipt. Current status is `hosted-installed-guidance-outcome-passed-real-user-follow-up-next`. G15C closes installed synthetic product preparation, while G15 consented real-library execution and R5N signed Windows 10/11 release evidence remain pending. `releaseCandidate=false` is unchanged.
+
+## G15D update - discoverable baseline and follow-up entries
+
+The post-G15C audit found that the consented outcome workflow was technically complete but still hidden in Settings. Workspace Home now exposes `记录治理基线` beside the active knowledge guidance, while every graph remediation banner exposes `复查改善`. Both use the current application window and the bounded `Settings?focus=knowledge-observation` route.
+
+Settings recognizes only that focus value, scrolls the existing observation row into view, and highlights it with existing theme tokens. Navigation never starts an export, chooses a file, bypasses preview/confirmation, or uploads evidence. Current status is `guidance-observation-entry-implemented-installed-navigation-next`; installed navigation evidence and real-user execution remain false, and `releaseCandidate=false` is unchanged.

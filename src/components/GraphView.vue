@@ -82,8 +82,11 @@
       <span v-if="searchQuery" class="match-count">{{ visibleNodes.length }} 个匹配</span>
     </div>
     <div v-if="remediationCopy" class="remediation-banner" data-testid="graph-remediation-focus" :data-remediation-focus="remediationFocus">
-      <div><strong>{{ remediationCopy.title }}</strong><span>{{ remediationCopy.detail }}</span></div>
-      <button v-if="remediationCopy.action" @click="runRemediationAction">{{ remediationCopy.action }}</button>
+      <div class="remediation-copy"><strong>{{ remediationCopy.title }}</strong><span>{{ remediationCopy.detail }}</span></div>
+      <div class="remediation-actions">
+        <button v-if="remediationCopy.action" @click="runRemediationAction">{{ remediationCopy.action }}</button>
+        <button data-testid="knowledge-outcome-entry" @click="openKnowledgeOutcome">复查改善</button>
+      </div>
       <button class="remediation-close" aria-label="关闭行动提示" @click="clearRemediation">×</button>
     </div>
     <canvas ref="canvasRef" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @wheel.prevent="onZoom" @click="onClick" @dblclick="onDblClick"></canvas>
@@ -335,6 +338,7 @@ const runRemediationAction = () => {
   if (remediationFocus.value === 'relations') showTutorial.value = true
   if (remediationFocus.value === 'orphans') healthOpen.value = true
 }
+const openKnowledgeOutcome = () => router.push({ name: 'Settings', query: { focus: 'knowledge-observation' } })
 const nodeDegree = (id: string) => degreeMap.value.get(id) || 0
 const incomingCount = (id: string) => graphData.value.edges.filter(edge => edge.target === id).length
 const outgoingCount = (id: string) => graphData.value.edges.filter(edge => edge.source === id).length
@@ -1347,7 +1351,7 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 .option-divider { width: 1px; height: 16px; background: rgba(0, 0, 0, 0.1); }
 .mindmap-root { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text); }
 .match-count { color: var(--theme-primary); font-weight: 650; }
-.remediation-banner { position: absolute; top: 122px; left: 18px; right: 18px; z-index: 3; min-height: 46px; display: grid; grid-template-columns: minmax(0,1fr) auto 24px; align-items: center; gap: 10px; padding: 7px 8px 7px 12px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 94%, transparent); backdrop-filter: blur(16px); box-shadow: 0 4px 16px rgba(0,0,0,.06); }.remediation-banner>div { min-width: 0; display: grid; gap: 2px; }.remediation-banner strong { font-size: 11px; }.remediation-banner span { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }.remediation-banner button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font-size: 9px; font-weight: 650; }.remediation-banner .remediation-close { width: 24px; min-height: 24px; padding: 0; border-color: transparent; color: var(--theme-text-secondary); background: transparent; font-size: 16px; }
+.remediation-banner { position: absolute; top: 122px; left: 18px; right: 18px; z-index: 3; min-height: 46px; display: grid; grid-template-columns: minmax(0,1fr) auto 24px; align-items: center; gap: 10px; padding: 7px 8px 7px 12px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 94%, transparent); backdrop-filter: blur(16px); box-shadow: 0 4px 16px rgba(0,0,0,.06); }.remediation-copy { min-width: 0; display: grid; gap: 2px; }.remediation-banner strong { font-size: 11px; }.remediation-banner span { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }.remediation-actions { display: flex; align-items: center; gap: 6px; }.remediation-banner button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font-size: 9px; font-weight: 650; }.remediation-banner .remediation-close { width: 24px; min-height: 24px; padding: 0; border-color: transparent; color: var(--theme-text-secondary); background: transparent; font-size: 16px; }
 
 .tutorial-btn {
   height: 36px;

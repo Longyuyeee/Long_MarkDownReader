@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "stage": "G15D",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "guidance-observation-entry-implemented-installed-navigation-next",
+  "scope": "knowledge-guidance-to-consented-outcome-workflow-discoverability",
+  "entries": {
+    "workspaceHome": "settings-knowledge-observation-focus",
+    "graphRemediation": "settings-knowledge-observation-focus"
+  },
+  "destination": {
+    "routeName": "Settings",
+    "focusQuery": "knowledge-observation",
+    "sameApplicationWindow": true,
+    "targetScrollIntoView": true,
+    "targetHighlight": true
+  },
+  "consentBoundary": {
+    "automaticBaselineExportAllowed": false,
+    "automaticComparisonExportAllowed": false,
+    "nativeFileChoiceBypassed": false,
+    "previewBypassed": false,
+    "explicitConfirmationBypassed": false,
+    "automaticUploadAllowed": false
+  },
+  "qualityGate": {
+    "workspaceEntryImplemented": true,
+    "graphFollowUpEntryImplemented": true,
+    "settingsFocusImplemented": true,
+    "frontendProductionBuildComplete": true,
+    "installedNavigationComplete": false,
+    "realUserComparisonComplete": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "nextStage": "G15D-installed-current-window-observation-entry-acceptance"
+}

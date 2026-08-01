@@ -139,7 +139,7 @@
                 Export
               </n-button>
             </div>
-            <div class="setting-row" data-testid="knowledge-observation-export">
+            <div ref="knowledgeObservationRow" class="setting-row" :class="{ 'is-route-focused': observationRouteFocused }" data-testid="knowledge-observation-export">
               <div class="info">
                 <div class="label">知识网络匿名观察</div>
                 <div class="desc">保存匿名基线，改善关系后再做本地复查；只比较聚合变化，不包含正文、文件名、对象 ID 或绝对路径。</div>
@@ -302,8 +302,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, reactive, watch, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted, reactive, watch, nextTick, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon, GitBranch as GitBranchIcon, Check as CheckIcon, Download as DownloadIcon, Upload as UploadIcon } from 'lucide-vue-next'
 import { open, save } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
@@ -319,6 +319,7 @@ import {
 } from '../config/themePresets'
 
 const router = useRouter()
+const route = useRoute()
 const message = useMessage()
 const dialog = useDialog()
 const store = useAppStore()
@@ -401,6 +402,8 @@ const backupRestoring = ref(false)
 const diagnosticExporting = ref(false)
 const observationExporting = ref(false)
 const observationComparisonExporting = ref(false)
+const knowledgeObservationRow = ref<HTMLElement | null>(null)
+const observationRouteFocused = computed(() => route.query.focus === 'knowledge-observation')
 
 interface ManagementBackupReceipt {
   path: string
@@ -567,6 +570,7 @@ onMounted(async () => {
 
   nextTick(() => {
     isInitializing.value = false
+    if (observationRouteFocused.value) knowledgeObservationRow.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   })
 })
 
@@ -1324,6 +1328,15 @@ const openDefaultAppsSettings = async () => {
 }
 
 .setting-row:hover::before {
+  opacity: 1;
+}
+
+.setting-row.is-route-focused {
+  border-color: rgba(var(--theme-primary-rgb), 0.5);
+  box-shadow: var(--theme-shadow-sm), 0 0 0 3px rgba(var(--theme-primary-rgb), 0.09);
+}
+
+.setting-row.is-route-focused::before {
   opacity: 1;
 }
 
