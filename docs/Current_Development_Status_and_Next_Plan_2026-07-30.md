@@ -608,3 +608,9 @@ The privacy regression deliberately constructs a graph with secret titles, ident
 Knowledge-network metrics now produce deterministic aggregate-only guidance instead of ending at passive counts. Workspace Home presents the highest-priority action inside the existing knowledge pulse and opens the unified graph workspace; the consented preview and local receipt carry the same stable guidance codes, priorities, current values, and targets.
 
 Rules cover empty, disconnected, low-coverage, isolated, low-diversity, and healthy networks. They use no content, file names, object identifiers, paths, model calls, network requests, or automatic uploads. Rust tests cover the decision thresholds and extend the G12 leakage boundary. Current status is `actionable-local-guidance-implemented-real-user-execution-next`; real-user execution remains consent-gated and `releaseCandidate=false` remains unchanged.
+
+## G14 update - installed actionable guidance runner integrated
+
+The U2 installed-artifact capture now requires the fixed synthetic management library to expose `network-health-on-track`, a visible healthy-state label, and current-window navigation from the guidance card into the unified graph route. It then returns to Workspace Home and preserves the existing centered-topic navigation acceptance.
+
+Current status is `installed-actionable-guidance-runner-integrated-hosted-execution-next`. The hosted run and screenshot review are deliberately still false until executed against G13 product commit `068d3bd`; this remains synthetic unsigned Windows Server evidence, not real-user or signed Windows 10/11 evidence. `releaseCandidate=false` remains unchanged.

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "stage": "G14",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "installed-actionable-guidance-runner-integrated-hosted-execution-next",
+  "fixtureClassification": "fixed-synthetic-management-library",
+  "expectedGuidanceCode": "network-health-on-track",
+  "requiredChecks": [
+    "installed-actionable-guidance-visible",
+    "installed-actionable-guidance-current-window-navigation"
+  ],
+  "requiredEvidenceFiles": [
+    "installed-knowledge-network-evidence.json",
+    "installed-knowledge-network-pulse.jpg",
+    "installed-knowledge-guidance-graph.jpg"
+  ],
+  "evidence": {
+    "runnerIntegrated": true,
+    "hostedExecutionCompleteForCurrentProductCommit": false,
+    "screenshotsManuallyReviewed": false,
+    "sourceUserContentIncluded": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "nextStage": "G14-hosted-installed-guidance-execution"
+}

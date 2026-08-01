@@ -264,9 +264,11 @@ checks.push({ id: 'installed-json-read-edit-save-reopen', status: 'passed', visu
 await navigate('#/workspace', '.workspace-home', 'installed workspace knowledge network pulse')
 await waitFor(`Number(document.querySelector('[data-testid="knowledge-network-coverage"]')?.getAttribute('aria-valuenow')) > 0`, 'installed knowledge network coverage')
 await waitFor(`document.querySelectorAll('[data-testid="knowledge-network-topic"]').length > 0`, 'installed knowledge network top topics')
+await waitFor(`document.querySelector('[data-testid="knowledge-network-guidance"]') !== null`, 'installed actionable knowledge guidance')
 const knowledgePulse = await evaluate(`(() => {
   const pulse = document.querySelector('[data-testid="knowledge-network-pulse"]')
   const coverage = document.querySelector('[data-testid="knowledge-network-coverage"]')
+  const guidance = document.querySelector('[data-testid="knowledge-network-guidance"]')
   const topics = [...document.querySelectorAll('[data-testid="knowledge-network-topic"]')].map(button => ({
     nodeId: button.getAttribute('data-node-id'),
     title: button.querySelector('span')?.textContent || '',
@@ -279,16 +281,39 @@ const knowledgePulse = await evaluate(`(() => {
     isolatedObjectCount: Number(pulse?.getAttribute('data-isolated-count') || 0),
     coveragePercent: Number(coverage?.getAttribute('aria-valuenow') || 0),
     relationTypes: [...document.querySelectorAll('.pulse-types [data-relation-type]')].map(item => item.getAttribute('data-relation-type')),
+    guidance: {
+      code: guidance?.getAttribute('data-guidance-code') || '',
+      title: guidance?.querySelector('b')?.textContent || '',
+      detail: guidance?.querySelector('small')?.textContent || '',
+    },
     topics,
   }
 })()`)
 if (knowledgePulse.objectCount < 5 || knowledgePulse.relationCount < 3 || knowledgePulse.coveragePercent < 60 ||
     knowledgePulse.connectedObjectCount <= knowledgePulse.isolatedObjectCount || knowledgePulse.topics.length < 1 ||
-    !knowledgePulse.relationTypes.includes('depends-on') || !knowledgePulse.relationTypes.includes('supports')) {
+    !knowledgePulse.relationTypes.includes('depends-on') || !knowledgePulse.relationTypes.includes('supports') ||
+    knowledgePulse.guidance.code !== 'network-health-on-track' || !knowledgePulse.guidance.title.includes('状态良好')) {
   throw new Error(`Installed knowledge network pulse is not useful: ${JSON.stringify(knowledgePulse)}`)
 }
 await capture('installed-knowledge-network-pulse.jpg')
 checks.push({ id: 'installed-knowledge-network-pulse', status: 'passed' })
+
+await evaluate(`document.querySelector('[data-testid="knowledge-network-guidance"]')?.click()`)
+await waitFor(`document.querySelector('.graph-container') !== null`, 'actionable guidance graph route mount')
+await waitFor(`document.querySelector('.page-loader') === null`, 'actionable guidance graph route transition')
+const guidanceNavigation = await evaluate(`(() => ({
+  route: location.hash,
+  graphVisible: document.querySelector('.graph-container') !== null,
+  openedInCurrentWindow: window.opener === null,
+}))()`)
+if (!guidanceNavigation.route.startsWith('#/graph') || !guidanceNavigation.graphVisible || !guidanceNavigation.openedInCurrentWindow) {
+  throw new Error(`Installed actionable guidance navigation failed: ${JSON.stringify(guidanceNavigation)}`)
+}
+await capture('installed-knowledge-guidance-graph.jpg')
+checks.push({ id: 'installed-actionable-knowledge-guidance', status: 'passed' })
+
+await navigate('#/workspace', '.workspace-home', 'workspace before centered knowledge topic navigation')
+await waitFor(`document.querySelectorAll('[data-testid="knowledge-network-topic"]').length > 0`, 'restored installed knowledge network top topics')
 
 const selectedTopic = knowledgePulse.topics[0]
 await evaluate(`document.querySelector('[data-testid="knowledge-network-topic"]')?.click()`)
@@ -337,11 +362,12 @@ const executableStats = await fs.stat(installedExecutable)
 const capturedAt = new Date().toISOString()
 await fs.writeFile(path.join(output, 'installed-knowledge-network-evidence.json'), `${JSON.stringify({
   schemaVersion: 1,
-  stage: 'G11',
+  stage: 'G14',
   capturedAt,
   evidenceLevel: 'installed-current-tauri-webview2-synthetic-library',
   sourceUserContentIncluded: false,
   knowledgePulse,
+  guidanceNavigation,
   centeredNavigation,
 }, null, 2)}\n`)
 await fs.writeFile(path.join(output, 'installed-route-mount-evidence.json'), `${JSON.stringify({
@@ -383,6 +409,7 @@ await fs.writeFile(path.join(output, 'installed-artifact-smoke.json'), `${JSON.s
     'installed-txt-save-reopen.jpg',
     'installed-json-save-reopen.jpg',
     'installed-knowledge-network-pulse.jpg',
+    'installed-knowledge-guidance-graph.jpg',
     'installed-knowledge-topic-centered.jpg',
     'installed-knowledge-network-evidence.json',
     'installed-route-mount-evidence.json',
