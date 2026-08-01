@@ -175,12 +175,12 @@
                   <div><strong>执行一项知识治理建议</strong><span>返回工作台查看建议，再在图谱或管理界面完成一项关系改善。</span></div>
                   <n-button size="small" secondary :disabled="observationSessionPhase < 2" data-testid="knowledge-session-open-guidance" @click="openObservationRemediation">前往工作台建议</n-button>
                 </li>
-                <li :class="{ active: observationSessionPhase === 3, complete: observationSessionPhase > 3 }">
+                <li :class="{ complete: observationSessionPhase >= 3 }">
                   <b>3</b>
                   <div><strong>确认治理动作已经完成</strong><span>此确认只推进本地会话步骤，不读取或记录你修改了什么。</span></div>
-                  <n-button size="small" secondary type="success" :disabled="observationSessionPhase < 2 || observationSessionPhase > 3" data-testid="knowledge-session-remediation-complete" @click="markObservationRemediationComplete">我已完成一项治理</n-button>
+                  <n-button size="small" secondary type="success" :disabled="observationSessionPhase !== 2" data-testid="knowledge-session-remediation-complete" @click="markObservationRemediationComplete">我已完成一项治理</n-button>
                 </li>
-                <li :class="{ active: observationSessionPhase === 4 }">
+                <li :class="{ active: observationSessionPhase === 3, complete: observationSessionPhase === 4 }">
                   <b>4</b>
                   <div><strong>选择原基线并复查改善</strong><span>请再次确认基线来自当前资料库；对比回执仍只含聚合变化。</span></div>
                   <n-button size="small" secondary type="success" :disabled="!store.libraryPath || observationSessionPhase < 3" :loading="observationComparisonExporting" data-testid="knowledge-session-compare" @click="previewKnowledgeObservationComparison">预览并复查</n-button>
