@@ -43,9 +43,10 @@ use commands::formats::{
 use commands::git::{git_commit, git_init, git_pull, git_push, git_status};
 pub(crate) use commands::graph::GraphData;
 use commands::graph::{
-    analyze_graph_health, build_link_graph, build_local_graph, extract_wikilinks, find_backlinks,
-    get_graph_relation_context, get_knowledge_graph_pulse, get_library_stats, repair_graph_links,
-    summarize_graph_relations, update_graph_relation, update_graph_relation_decision,
+    analyze_graph_health, build_link_graph, build_local_graph, export_knowledge_graph_observation,
+    extract_wikilinks, find_backlinks, get_graph_relation_context, get_knowledge_graph_observation,
+    get_knowledge_graph_pulse, get_library_stats, repair_graph_links, summarize_graph_relations,
+    update_graph_relation, update_graph_relation_decision,
 };
 #[cfg(test)]
 pub(crate) use commands::graph::{GraphEdge, GraphNode};
@@ -463,7 +464,9 @@ pub fn run() {
             build_local_graph,
             summarize_graph_relations,
             get_graph_relation_context,
-            get_knowledge_graph_pulse
+            get_knowledge_graph_pulse,
+            get_knowledge_graph_observation,
+            export_knowledge_graph_observation
         ])
         .run(tauri::generate_context!())
         .expect("error");

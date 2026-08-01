@@ -13,6 +13,7 @@ use chardetng::EncodingDetector;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
@@ -70,6 +71,45 @@ pub struct KnowledgeGraphPulse {
     pub coverage_percent: u8,
     pub relation_types: Vec<KnowledgeGraphPulseRelationType>,
     pub top_nodes: Vec<KnowledgeGraphPulseNode>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct KnowledgeGraphObservationCount {
+    pub category: String,
+    pub count: usize,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct KnowledgeGraphDegreeDistribution {
+    pub zero: usize,
+    pub one: usize,
+    pub two_to_four: usize,
+    pub five_or_more: usize,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct KnowledgeGraphObservation {
+    pub schema_version: u32,
+    pub stage: String,
+    pub app_version: String,
+    pub generated_at: u64,
+    pub evidence_level: String,
+    pub consent_boundary: String,
+    pub source_user_content_included: bool,
+    pub object_identifiers_included: bool,
+    pub file_names_included: bool,
+    pub absolute_paths_included: bool,
+    pub object_count: usize,
+    pub relation_count: usize,
+    pub connected_object_count: usize,
+    pub isolated_object_count: usize,
+    pub coverage_percent: u8,
+    pub object_types: Vec<KnowledgeGraphObservationCount>,
+    pub relation_types: Vec<KnowledgeGraphPulseRelationType>,
+    pub degree_distribution: KnowledgeGraphDegreeDistribution,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -518,6 +558,108 @@ pub async fn get_knowledge_graph_pulse(
     let guard = WorkspaceGuard::new(&library_root)?;
     let graph = build_link_graph(guard.root().to_string_lossy().into_owned()).await?;
     Ok(knowledge_graph_pulse(&graph))
+}
+
+fn knowledge_graph_observation(graph: &GraphData, generated_at: u64) -> KnowledgeGraphObservation {
+    let pulse = knowledge_graph_pulse(graph);
+    let mut object_type_counts = BTreeMap::new();
+    let mut degrees: HashMap<&str, usize> = HashMap::new();
+    for node in &graph.nodes {
+        *object_type_counts
+            .entry(node.object_type.clone())
+            .or_insert(0usize) += 1;
+    }
+    for edge in &graph.edges {
+        *degrees.entry(edge.source.as_str()).or_insert(0) += 1;
+        *degrees.entry(edge.target.as_str()).or_insert(0) += 1;
+    }
+    let mut degree_distribution = KnowledgeGraphDegreeDistribution {
+        zero: 0,
+        one: 0,
+        two_to_four: 0,
+        five_or_more: 0,
+    };
+    for node in &graph.nodes {
+        match degrees.get(node.id.as_str()).copied().unwrap_or(0) {
+            0 => degree_distribution.zero += 1,
+            1 => degree_distribution.one += 1,
+            2..=4 => degree_distribution.two_to_four += 1,
+            _ => degree_distribution.five_or_more += 1,
+        }
+    }
+
+    KnowledgeGraphObservation {
+        schema_version: 1,
+        stage: "G12".into(),
+        app_version: env!("CARGO_PKG_VERSION").into(),
+        generated_at,
+        evidence_level: "local-consented-aggregate-only".into(),
+        consent_boundary: "User previews aggregate metrics and explicitly chooses a local JSON destination. LongEdit performs no automatic upload.".into(),
+        source_user_content_included: false,
+        object_identifiers_included: false,
+        file_names_included: false,
+        absolute_paths_included: false,
+        object_count: pulse.object_count,
+        relation_count: pulse.relation_count,
+        connected_object_count: pulse.connected_object_count,
+        isolated_object_count: pulse.isolated_object_count,
+        coverage_percent: pulse.coverage_percent,
+        object_types: object_type_counts
+            .into_iter()
+            .map(|(category, count)| KnowledgeGraphObservationCount { category, count })
+            .collect(),
+        relation_types: pulse.relation_types,
+        degree_distribution,
+    }
+}
+
+fn current_unix_seconds() -> Result<u64, String> {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_secs())
+        .map_err(|error| format!("系统时间无效: {error}"))
+}
+
+#[tauri::command]
+pub async fn get_knowledge_graph_observation(
+    library_root: String,
+) -> Result<KnowledgeGraphObservation, String> {
+    let graph = build_link_graph(library_root).await?;
+    Ok(knowledge_graph_observation(&graph, current_unix_seconds()?))
+}
+
+#[tauri::command]
+pub async fn export_knowledge_graph_observation(
+    library_root: String,
+    target_path: String,
+) -> Result<KnowledgeGraphObservation, String> {
+    let target = Path::new(&target_path);
+    if target
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_none_or(|value| !value.eq_ignore_ascii_case("json"))
+    {
+        return Err("知识网络观察回执必须保存为 .json 文件".into());
+    }
+    if target.parent().is_none_or(|parent| !parent.is_dir()) {
+        return Err("知识网络观察回执目标目录不存在".into());
+    }
+    let observation = get_knowledge_graph_observation(library_root).await?;
+    let mut bytes = serde_json::to_vec_pretty(&observation)
+        .map_err(|error| format!("序列化知识网络观察回执失败: {error}"))?;
+    bytes.push(b'\n');
+    let mut output = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(target)
+        .map_err(|error| format!("创建知识网络观察回执失败: {error}"))?;
+    output
+        .write_all(&bytes)
+        .map_err(|error| format!("写入知识网络观察回执失败: {error}"))?;
+    output
+        .sync_all()
+        .map_err(|error| format!("同步知识网络观察回执失败: {error}"))?;
+    Ok(observation)
 }
 
 fn context_node(node: &GraphNode, center_path: &str, requested_path: &str) -> GraphContextNode {
@@ -3342,5 +3484,51 @@ mod tests {
             .all(|pair| pair[0].relation_count >= pair[1].relation_count));
 
         fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn consented_observation_contains_only_aggregate_graph_metrics() {
+        let mut secret_a = GraphNode::test_node("secret-object-a");
+        secret_a.title = "Confidential Acquisition".into();
+        secret_a.path = "C:\\Users\\Alice\\SecretVault\\acquisition.md".into();
+        secret_a.object_type = "markdown".into();
+        let mut secret_b = GraphNode::test_node("secret-object-b");
+        secret_b.title = "Private Customer List".into();
+        secret_b.path = "C:\\Users\\Alice\\SecretVault\\customers.pdf".into();
+        secret_b.object_type = "pdf".into();
+        let mut isolated = GraphNode::test_node("secret-object-c");
+        isolated.title = "Unannounced Roadmap".into();
+        isolated.path = "C:\\Users\\Alice\\SecretVault\\roadmap.md".into();
+        let graph = GraphData {
+            nodes: vec![secret_a, secret_b, isolated],
+            edges: vec![GraphEdge::test_edge("secret-object-a", "secret-object-b")],
+        };
+
+        let observation = knowledge_graph_observation(&graph, 100);
+        assert_eq!(observation.object_count, 3);
+        assert_eq!(observation.relation_count, 1);
+        assert_eq!(observation.connected_object_count, 2);
+        assert_eq!(observation.isolated_object_count, 1);
+        assert_eq!(observation.coverage_percent, 67);
+        assert_eq!(observation.degree_distribution.zero, 1);
+        assert_eq!(observation.degree_distribution.one, 2);
+        assert_eq!(observation.object_types.len(), 2);
+        assert!(!observation.source_user_content_included);
+        assert!(!observation.object_identifiers_included);
+        assert!(!observation.file_names_included);
+        assert!(!observation.absolute_paths_included);
+
+        let serialized = serde_json::to_string(&observation).unwrap();
+        for secret in [
+            "secret-object-a",
+            "Confidential Acquisition",
+            "Private Customer List",
+            "Unannounced Roadmap",
+            "Alice",
+            "SecretVault",
+            "acquisition.md",
+        ] {
+            assert!(!serialized.contains(secret), "observation leaked {secret}");
+        }
     }
 }

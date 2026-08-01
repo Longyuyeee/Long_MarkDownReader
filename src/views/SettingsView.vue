@@ -139,6 +139,15 @@
                 Export
               </n-button>
             </div>
+            <div class="setting-row" data-testid="knowledge-observation-export">
+              <div class="info">
+                <div class="label">知识网络匿名观察</div>
+                <div class="desc">先预览聚合指标，再明确确认保存；不包含正文、文件名、对象 ID 或绝对路径，也不会自动上传。</div>
+              </div>
+              <n-button secondary type="info" :disabled="!store.libraryPath" :loading="observationExporting" @click="previewKnowledgeObservation">
+                预览并导出
+              </n-button>
+            </div>
           </n-grid-item>
 
           <n-grid-item class="animate-item" style="--delay: 0.35s">
@@ -385,6 +394,7 @@ const credentialSaving = ref(false)
 const backupExporting = ref(false)
 const backupRestoring = ref(false)
 const diagnosticExporting = ref(false)
+const observationExporting = ref(false)
 
 interface ManagementBackupReceipt {
   path: string
@@ -438,6 +448,27 @@ interface PrivacyDiagnosticBundleReceipt {
   entryCount: number
   libraryCount: number
   excluded: string[]
+}
+
+interface KnowledgeGraphObservation {
+  schemaVersion: number
+  stage: string
+  appVersion: string
+  generatedAt: number
+  evidenceLevel: string
+  consentBoundary: string
+  sourceUserContentIncluded: boolean
+  objectIdentifiersIncluded: boolean
+  fileNamesIncluded: boolean
+  absolutePathsIncluded: boolean
+  objectCount: number
+  relationCount: number
+  connectedObjectCount: number
+  isolatedObjectCount: number
+  coveragePercent: number
+  objectTypes: { category: string; count: number }[]
+  relationTypes: { relationType: string; count: number }[]
+  degreeDistribution: { zero: number; one: number; twoToFour: number; fiveOrMore: number }
 }
 
 const newLib = reactive({ name: '', path: '' })
@@ -645,6 +676,56 @@ const exportPrivacyDiagnosticBundle = async () => {
     message.error(`Export privacy diagnostic failed: ${String(error)}`)
   } finally {
     diagnosticExporting.value = false
+  }
+}
+
+const exportKnowledgeObservationAfterConfirm = async () => {
+  const target = await save({
+    title: '保存知识网络匿名观察回执',
+    defaultPath: `longedit-knowledge-observation-${new Date().toISOString().slice(0, 10)}.json`,
+    filters: [{ name: 'LongEdit Knowledge Observation', extensions: ['json'] }],
+  })
+  if (!target) return
+  observationExporting.value = true
+  try {
+    const receipt = await invoke<KnowledgeGraphObservation>('export_knowledge_graph_observation', {
+      libraryRoot: store.libraryPath,
+      targetPath: target,
+    })
+    message.success(`匿名观察已保存：${receipt.objectCount} 对象 · ${receipt.relationCount} 关系 · ${receipt.coveragePercent}% 覆盖`)
+  } catch (error) {
+    message.error(`导出知识网络匿名观察失败：${String(error)}`)
+  } finally {
+    observationExporting.value = false
+  }
+}
+
+const previewKnowledgeObservation = async () => {
+  if (!store.libraryPath || observationExporting.value) return
+  observationExporting.value = true
+  try {
+    const preview = await invoke<KnowledgeGraphObservation>('get_knowledge_graph_observation', {
+      libraryRoot: store.libraryPath,
+    })
+    const summary = [
+      `对象：${preview.objectCount}；关系：${preview.relationCount}；覆盖率：${preview.coveragePercent}%`,
+      `已连接：${preview.connectedObjectCount}；孤立：${preview.isolatedObjectCount}`,
+      `对象类型：${preview.objectTypes.map(item => `${item.category} ${item.count}`).join('、') || '无'}`,
+      `关系类型：${preview.relationTypes.map(item => `${item.relationType} ${item.count}`).join('、') || '无'}`,
+      '',
+      '回执不会包含正文、文件名、对象 ID、绝对路径或凭据。软件只在你确认后保存到本地，不会自动上传。',
+    ].join('\n')
+    dialog.warning({
+      title: '确认导出匿名知识网络观察',
+      content: summary,
+      positiveText: '同意并选择保存位置',
+      negativeText: '取消',
+      onPositiveClick: () => exportKnowledgeObservationAfterConfirm(),
+    })
+  } catch (error) {
+    message.error(`生成知识网络观察预览失败：${String(error)}`)
+  } finally {
+    observationExporting.value = false
   }
 }
 

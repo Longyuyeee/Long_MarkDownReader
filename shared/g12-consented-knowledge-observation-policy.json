@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "stage": "G12",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "consented-aggregate-observation-export-implemented-user-execution-next",
+  "scope": "privacy-preserving-real-library-knowledge-network-observation",
+  "consent": {
+    "previewBeforeExport": true,
+    "explicitConfirmationRequired": true,
+    "userChoosesLocalDestination": true,
+    "automaticUploadAllowed": false
+  },
+  "includedAggregates": [
+    "object-count",
+    "relation-count",
+    "connected-object-count",
+    "isolated-object-count",
+    "coverage-percent",
+    "object-type-counts",
+    "relation-type-counts",
+    "degree-distribution-buckets"
+  ],
+  "excludedData": [
+    "document-content",
+    "file-name",
+    "object-id",
+    "absolute-path",
+    "library-name",
+    "saved-search",
+    "credential",
+    "raw-error"
+  ],
+  "qualityGate": {
+    "aggregateBuilderImplemented": true,
+    "privacyRegressionImplemented": true,
+    "settingsPreviewAndExplicitExportImplemented": true,
+    "realUserObservationComplete": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "nextStage": "G12-consented-user-execution-and-analysis"
+}
