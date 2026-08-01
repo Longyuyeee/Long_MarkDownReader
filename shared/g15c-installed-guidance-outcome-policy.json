@@ -3,7 +3,7 @@
   "stage": "G15C",
   "appVersion": "0.7.0",
   "releaseCandidate": false,
-  "status": "installed-guidance-outcome-runner-integrated-hosted-execution-next",
+  "status": "installed-guidance-outcome-functional-passed-visual-recapture-next",
   "scope": "installed-consented-guidance-outcome-synthetic-acceptance",
   "requiredChecks": [
     "installed-workspace-initialization-barrier",
@@ -31,13 +31,13 @@
   "qualityGate": {
     "installedRunnerIntegrated": true,
     "frontendProductionBuildComplete": true,
-    "hostedInstalledExecutionComplete": false,
+    "hostedInstalledExecutionComplete": true,
     "screenshotReviewComplete": false,
     "realUserComparisonComplete": false,
     "signedWindowsClientEvidenceComplete": false
   },
   "productSourceCommit": "fffbc6af4508b6476610a5b34d704ac606efe2ee",
-  "hostedRunId": null,
+  "hostedRunId": 30693531173,
   "attemptHistory": [
     {
       "runId": 30692454820,
@@ -45,7 +45,14 @@
       "failure": "startup-route-race-before-installed-txt-smoke",
       "productBuildComplete": true,
       "g15cExecuted": false
+    },
+    {
+      "runId": 30693531173,
+      "status": "functional-passed-visual-recapture-required",
+      "failure": "observation-settings-controls-outside-captured-viewport",
+      "productBuildComplete": true,
+      "g15cExecuted": true
     }
   ],
-  "nextStage": "G15C-hosted-installed-execution-and-evidence-review"
+  "nextStage": "G15C-hosted-installed-visual-recapture-and-evidence-review"
 }

@@ -355,6 +355,17 @@ if (!observationSurface.baselineVisible || !observationSurface.comparisonVisible
     !observationSurface.comparisonLabel.includes('复查改善') || !observationSurface.openedInCurrentWindow) {
   throw new Error(`Installed knowledge observation surface failed: ${JSON.stringify(observationSurface)}`)
 }
+await evaluate(`document.querySelector('[data-testid="knowledge-observation-export"]')?.scrollIntoView({ block: 'center' })`)
+await delay(350)
+observationSurface.viewportVisible = await evaluate(`(() => {
+  const element = document.querySelector('[data-testid="knowledge-observation-export"]')
+  if (!element) return false
+  const rect = element.getBoundingClientRect()
+  return rect.width > 100 && rect.height > 30 && rect.top >= 0 && rect.bottom <= window.innerHeight
+})()`)
+if (!observationSurface.viewportVisible) {
+  throw new Error(`Installed knowledge observation surface is outside the screenshot viewport: ${JSON.stringify(observationSurface)}`)
+}
 await capture('installed-knowledge-observation-settings.jpg')
 
 const observationBaseline = await invokeTauri('export_knowledge_graph_observation', {
