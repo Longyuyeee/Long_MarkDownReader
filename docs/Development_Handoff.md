@@ -537,6 +537,8 @@ U2O 已完成。GitHub 托管运行 `30664431101` 对源码 `dfe5e9c424ab4a3b71f
 
 R5N 环境已在 U2P 再次审计：本机没有签名工具、合格证书或两个客户端 runner。接手机器按 `docs/U2P_R5N_External_Release_Blocker_Audit_2026-08-01.md` 的顺序执行，不得用自签名或 Windows Server 结果替代正式发布证据。
 
+G9 产品线已并行完成首页“知识网络脉搏”：关系覆盖率、已连接/孤立对象、关系类型和高连接主题均来自统一图谱模型，高连接主题可直接打开居中图谱。接手后进入 G10 真实感跨格式资料库桌面验收；不得把合成单元测试登记成真实用户资料库证据。
+
 # 2026-08-01 U2 外部执行入口
 
 U2 已推进到 `execute-on-disposable-windows-runner`。机器事实源为 `shared/u2-disposable-install-lifecycle-policy.json`；U1 NSIS 与 0.6.2 回滚安装器均就绪，但当前主机没有一次性 Windows runner，且已有安装与运行进程，所以安装修改继续阻断。

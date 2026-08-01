@@ -568,3 +568,11 @@ Next action: R5N `execute-signed-windows-10-and-windows-11-client-matrix`. Full 
 The R5N environment and promotion audits were rerun after U2O. The host has no Windows SDK signing tool, no eligible code-signing certificate with a private key, no Windows Sandbox or Hyper-V provisioning command, and no provided Windows 10/11 disposable clients. Signed manifest readiness, both signed client lanes, automated promotion gates, and manual approval therefore remain false. The 3/3 unsafe-transition rejection matrix passed.
 
 Repository-only progression is now closed at a genuine external dependency boundary. The exact signing, dual-client execution, import, approval, and explicit-promotion order is documented in `docs/U2P_R5N_External_Release_Blocker_Audit_2026-08-01.md`.
+
+## G9 update - knowledge network pulse
+
+The product track continues independently of the blocked signing track. Workspace Home now exposes a knowledge network pulse with connected-object coverage, connected and isolated counts, relation totals, deterministic relation-type distribution, and up to six top connected topics. Each topic opens a graph centered on that knowledge object; an empty network presents a concrete link/tag/canvas onboarding action.
+
+The backend computes these values from the unified graph model and has Rust coverage for a four-object, three-relation fixture with 75% coverage. `check:graph-product-contract` now includes the G9 machine contract. Frontend production build, 432/432 Rust functional tests, 1/1 performance test, the full format contract, and the graph product contract pass. Current status is `knowledge-network-pulse-implemented-real-library-acceptance-next`; `releaseCandidate=false` and all R5N external blockers remain unchanged.
+
+Next product stage: G10. Capture isolated desktop evidence on a representative cross-format library and evaluate whether relation coverage, top topics, and navigation provide useful management feedback. Full audit: `docs/G9_Knowledge_Network_Pulse_Audit_2026-08-01.md`.

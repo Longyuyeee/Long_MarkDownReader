@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "stage": "G9",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "knowledge-network-pulse-implemented-real-library-acceptance-next",
+  "scope": "workspace-visible-knowledge-graph-coverage-and-navigation",
+  "metrics": [
+    "object-count",
+    "relation-count",
+    "connected-object-count",
+    "isolated-object-count",
+    "coverage-percent",
+    "relation-type-distribution",
+    "top-connected-topics"
+  ],
+  "productIntegration": {
+    "workspaceHomeVisible": true,
+    "centeredGraphNavigation": true,
+    "emptyStateGuidance": true,
+    "boundedTopTopicCount": 6,
+    "relationTypesDeterministic": true
+  },
+  "qualityGate": {
+    "rustRegressionRequired": true,
+    "frontendBuildRequired": true,
+    "graphProductContractRequired": true,
+    "realUserLibraryEvidenceComplete": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "knownLimits": [
+    "current-acceptance-fixture-is-synthetic-not-a-user-library",
+    "graph-quality-and-recommendation-value-require-real-library-observation",
+    "signed-windows-10-and-windows-11-release-evidence-remains-external"
+  ],
+  "nextStage": "G10-real-library-graph-acceptance"
+}

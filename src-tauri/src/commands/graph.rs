@@ -11,7 +11,7 @@ use crate::services::reliable_write::write_utf8;
 use crate::services::workspace_guard::WorkspaceGuard;
 use chardetng::EncodingDetector;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
@@ -42,6 +42,34 @@ pub struct GraphRelationSummary {
     pub related_count: usize,
     pub relation_types: Vec<String>,
     pub isolated: bool,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct KnowledgeGraphPulseNode {
+    pub id: String,
+    pub title: String,
+    pub object_type: String,
+    pub relation_count: usize,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct KnowledgeGraphPulseRelationType {
+    pub relation_type: String,
+    pub count: usize,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct KnowledgeGraphPulse {
+    pub object_count: usize,
+    pub relation_count: usize,
+    pub connected_object_count: usize,
+    pub isolated_object_count: usize,
+    pub coverage_percent: u8,
+    pub relation_types: Vec<KnowledgeGraphPulseRelationType>,
+    pub top_nodes: Vec<KnowledgeGraphPulseNode>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -420,6 +448,76 @@ pub async fn summarize_graph_relations(
         }
     }
     Ok(summaries)
+}
+
+pub(crate) fn knowledge_graph_pulse(graph: &GraphData) -> KnowledgeGraphPulse {
+    let mut degrees: HashMap<&str, usize> = HashMap::new();
+    let mut relation_type_counts = BTreeMap::new();
+    for edge in &graph.edges {
+        *degrees.entry(edge.source.as_str()).or_insert(0) += 1;
+        *degrees.entry(edge.target.as_str()).or_insert(0) += 1;
+        *relation_type_counts
+            .entry(edge.relation_type.clone())
+            .or_insert(0usize) += 1;
+    }
+
+    let connected_object_count = graph
+        .nodes
+        .iter()
+        .filter(|node| degrees.get(node.id.as_str()).copied().unwrap_or(0) > 0)
+        .count();
+    let object_count = graph.nodes.len();
+    let coverage_percent = if object_count == 0 {
+        0
+    } else {
+        ((connected_object_count * 100 + object_count / 2) / object_count).min(100) as u8
+    };
+    let mut top_nodes: Vec<KnowledgeGraphPulseNode> = graph
+        .nodes
+        .iter()
+        .filter_map(|node| {
+            let relation_count = degrees.get(node.id.as_str()).copied().unwrap_or(0);
+            (relation_count > 0).then(|| KnowledgeGraphPulseNode {
+                id: node.id.clone(),
+                title: node.title.clone(),
+                object_type: node.object_type.clone(),
+                relation_count,
+            })
+        })
+        .collect();
+    top_nodes.sort_by(|left, right| {
+        right
+            .relation_count
+            .cmp(&left.relation_count)
+            .then_with(|| left.title.cmp(&right.title))
+            .then_with(|| left.id.cmp(&right.id))
+    });
+    top_nodes.truncate(6);
+
+    KnowledgeGraphPulse {
+        object_count,
+        relation_count: graph.edges.len(),
+        connected_object_count,
+        isolated_object_count: object_count.saturating_sub(connected_object_count),
+        coverage_percent,
+        relation_types: relation_type_counts
+            .into_iter()
+            .map(|(relation_type, count)| KnowledgeGraphPulseRelationType {
+                relation_type,
+                count,
+            })
+            .collect(),
+        top_nodes,
+    }
+}
+
+#[tauri::command]
+pub async fn get_knowledge_graph_pulse(
+    library_root: String,
+) -> Result<KnowledgeGraphPulse, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let graph = build_link_graph(guard.root().to_string_lossy().into_owned()).await?;
+    Ok(knowledge_graph_pulse(&graph))
 }
 
 fn context_node(node: &GraphNode, center_path: &str, requested_path: &str) -> GraphContextNode {
@@ -2718,6 +2816,40 @@ mod tests {
         let summaries = relation_summaries(&graph, &["two".to_string(), "outside".to_string()]);
         assert_eq!(summaries.len(), 1);
         assert_eq!(summaries[0].path, "two");
+    }
+
+    #[test]
+    fn knowledge_graph_pulse_exposes_coverage_relation_types_and_top_nodes() {
+        let graph = GraphData {
+            nodes: vec![
+                graph_node("alpha"),
+                graph_node("beta"),
+                graph_node("gamma"),
+                graph_node("isolated"),
+            ],
+            edges: vec![
+                GraphEdge::test_edge("alpha", "beta"),
+                GraphEdge::test_edge("alpha", "gamma"),
+                GraphEdge {
+                    source: "beta".into(),
+                    target: "gamma".into(),
+                    relation_type: "related".into(),
+                    directed: false,
+                    mentions: Vec::new(),
+                },
+            ],
+        };
+        let pulse = knowledge_graph_pulse(&graph);
+        assert_eq!(pulse.object_count, 4);
+        assert_eq!(pulse.relation_count, 3);
+        assert_eq!(pulse.connected_object_count, 3);
+        assert_eq!(pulse.isolated_object_count, 1);
+        assert_eq!(pulse.coverage_percent, 75);
+        assert_eq!(pulse.relation_types.len(), 2);
+        assert_eq!(pulse.relation_types[0].relation_type, "links-to");
+        assert_eq!(pulse.relation_types[0].count, 2);
+        assert_eq!(pulse.top_nodes[0].id, "alpha");
+        assert_eq!(pulse.top_nodes[0].relation_count, 2);
     }
 
     #[test]

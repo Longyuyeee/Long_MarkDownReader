@@ -73,6 +73,24 @@
             <button @click="router.push({ name: 'Graph' })"><span>歧义</span><strong>{{ health.ambiguousLinks.length }}</strong></button>
             <button @click="router.push({ name: 'Graph' })"><span>孤立笔记</span><strong>{{ health.orphanNotes.length }}</strong></button>
           </div>
+          <div class="knowledge-pulse" aria-label="知识网络脉搏">
+            <div class="pulse-heading">
+              <div><span>关系覆盖</span><strong>{{ graphPulse.coveragePercent }}%</strong></div>
+              <small>{{ graphPulse.connectedObjectCount }} 已连接 · {{ graphPulse.isolatedObjectCount }} 孤立 · {{ graphPulse.relationCount }} 关系</small>
+            </div>
+            <div class="pulse-track" role="progressbar" aria-label="知识对象关系覆盖率" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="graphPulse.coveragePercent">
+              <i :style="{ width: `${graphPulse.coveragePercent}%` }"></i>
+            </div>
+            <div v-if="graphPulse.relationTypes.length" class="pulse-types">
+              <span v-for="item in graphPulse.relationTypes.slice(0, 5)" :key="item.relationType">{{ relationTypeLabel(item.relationType) }} <b>{{ item.count }}</b></span>
+            </div>
+            <div v-if="graphPulse.topNodes.length" class="pulse-nodes">
+              <button v-for="node in graphPulse.topNodes" :key="node.id" :title="`以 ${node.title} 为中心打开图谱`" @click="openPulseNode(node.id)">
+                <span>{{ node.title }}</span><b>{{ node.relationCount }}</b>
+              </button>
+            </div>
+            <button v-else class="pulse-empty" @click="router.push({ name: 'Graph' })">从双向链接、标签或画布连接开始建立知识网络</button>
+          </div>
           <div class="index-line">
             <DatabaseIcon />
             <div><strong>{{ indexLabel }}</strong><small v-if="indexStatus.state === 'ready'">{{ indexStatus.objectCount }} 对象 · {{ indexStatus.relationCount }} 关系</small><small v-else>在资料库中维护索引</small></div>
@@ -155,6 +173,17 @@ interface WorkspaceFile { title: string; path: string; relativePath: string; obj
 interface WorkspaceOverview { totalFiles: number; tasks: WorkspaceTask[]; recentFiles: WorkspaceFile[]; canvases: WorkspaceFile[]; formatCounts: { objectType: string; count: number }[] }
 interface GraphHealth { brokenLinks: unknown[]; ambiguousLinks: unknown[]; orphanNotes: unknown[]; scannedNotes: number }
 interface IndexStatus { state: 'missing' | 'building' | 'ready' | 'stale' | 'corrupt' | 'error'; objectCount: number; relationCount: number }
+interface KnowledgeGraphPulseRelationType { relationType: string; count: number }
+interface KnowledgeGraphPulseNode { id: string; title: string; objectType: string; relationCount: number }
+interface KnowledgeGraphPulse {
+  objectCount: number
+  relationCount: number
+  connectedObjectCount: number
+  isolatedObjectCount: number
+  coveragePercent: number
+  relationTypes: KnowledgeGraphPulseRelationType[]
+  topNodes: KnowledgeGraphPulseNode[]
+}
 
 const router = useRouter()
 const store = useAppStore()
@@ -167,6 +196,7 @@ const governanceSection = ref<HTMLElement | null>(null)
 const overview = ref<WorkspaceOverview>({ totalFiles: 0, tasks: [], recentFiles: [], canvases: [], formatCounts: [] })
 const health = ref<GraphHealth>({ brokenLinks: [], ambiguousLinks: [], orphanNotes: [], scannedNotes: 0 })
 const indexStatus = ref<IndexStatus>({ state: 'missing', objectCount: 0, relationCount: 0 })
+const graphPulse = ref<KnowledgeGraphPulse>({ objectCount: 0, relationCount: 0, connectedObjectCount: 0, isolatedObjectCount: 0, coveragePercent: 0, relationTypes: [], topNodes: [] })
 const workspaceHealth = ref<WorkspaceHealthReport>({ duplicateGroups: [], unreferencedAnnotations: [], scannedFiles: 0, hashedFiles: 0, scannedAnnotations: 0, truncated: false })
 const relationSummaries = ref<Record<string, GraphRelationSummary>>({})
 
@@ -221,6 +251,10 @@ const openRelationGraph = (path: string) => {
   const summary = relationSummary(path)
   if (summary) router.push({ name: 'Graph', query: { root: summary.nodeId } })
 }
+const openPulseNode = (nodeId: string) => router.push({ name: 'Graph', query: { root: nodeId } })
+const relationTypeLabel = (type: string) => ({
+  'links-to': '链接', related: '相关', contains: '包含', annotates: '批注', 'shares-tag': '同标签', references: '引用',
+} as Record<string, string>)[type] || type
 
 const loadRelationSummaries = async () => {
   const paths = [...new Set([...starredItems.value, ...recentItems.value].map(item => item.path))].slice(0, 100)
@@ -256,11 +290,12 @@ const loadWorkspace = async () => {
   loading.value = true
   error.value = ''
   workspaceHealthError.value = ''
-  const [overviewResult, healthResult, indexResult, workspaceHealthResult] = await Promise.allSettled([
+  const [overviewResult, healthResult, indexResult, workspaceHealthResult, graphPulseResult] = await Promise.allSettled([
     invoke<WorkspaceOverview>('get_workspace_overview', { libraryRoot: store.libraryPath }),
     invoke<GraphHealth>('analyze_graph_health', { libraryRoot: store.libraryPath }),
     invoke<IndexStatus>('get_knowledge_index_status', { libraryRoot: store.libraryPath }),
     invoke<WorkspaceHealthReport>('analyze_workspace_health', { libraryRoot: store.libraryPath }),
+    invoke<KnowledgeGraphPulse>('get_knowledge_graph_pulse', { libraryRoot: store.libraryPath }),
   ])
   if (overviewResult.status === 'fulfilled') overview.value = overviewResult.value
   else error.value = `工作台概览不可用：${String(overviewResult.reason)}`
@@ -268,6 +303,8 @@ const loadWorkspace = async () => {
   if (indexResult.status === 'fulfilled') indexStatus.value = indexResult.value
   if (workspaceHealthResult.status === 'fulfilled') workspaceHealth.value = workspaceHealthResult.value
   else workspaceHealthError.value = `治理扫描不可用：${String(workspaceHealthResult.reason)}`
+  if (graphPulseResult.status === 'fulfilled') graphPulse.value = graphPulseResult.value
+  else graphPulse.value = { objectCount: 0, relationCount: 0, connectedObjectCount: 0, isolatedObjectCount: 0, coveragePercent: 0, relationTypes: [], topNodes: [] }
   await loadRelationSummaries()
   refreshedAt.value = Date.now()
   loading.value = false
@@ -293,6 +330,7 @@ onMounted(async () => {
 .workspace-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,.8fr); column-gap: 32px; }.workspace-section { min-width: 0; padding: 25px 0 28px; border-bottom: var(--theme-border); }.governance-section { grid-column: 1 / -1; }.section-heading { min-height: 35px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }.section-heading h2 { margin: 3px 0 0; font-size: 14px; letter-spacing: 0; }.section-count { min-width: 24px; text-align: right; color: var(--theme-text-secondary); font-size: 11px; }
 .list-label { margin: 9px 0 5px; color: var(--theme-text-secondary); font-size: 8px; font-weight: 700; }.list-label:first-of-type { margin-top: 0; }.file-list,.task-list { display: grid; }.starred-list { margin-bottom: 15px; }.file-row { min-height: 51px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; padding-right: 8px; border-top: var(--theme-border); }.file-row:hover { background: rgba(var(--theme-primary-rgb),.045); }.file-open { min-width: 0; min-height: 50px; display: grid; grid-template-columns: 28px minmax(0,1fr) 18px; align-items: center; gap: 10px; padding: 6px 0; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.file-icon { width: 26px; height: 26px; display: grid; place-items: center; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); border-radius: 5px; }.file-icon svg,.file-action svg { width: 13px; }.file-copy { min-width: 0; display: grid; gap: 3px; }.file-copy strong,.task-list strong,.canvas-list strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.file-copy small,.task-list small,.canvas-list small { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 8px; }.file-action { color: var(--theme-text-secondary); }
 .health-grid { display: grid; grid-template-columns: repeat(3,1fr); border-top: var(--theme-border); border-bottom: var(--theme-border); }.health-grid button { min-height: 65px; display: grid; align-content: center; gap: 4px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: center; }.health-grid button:last-child { border-right: 0; }.health-grid span { color: var(--theme-text-secondary); font-size: 8px; }.health-grid strong { font-size: 17px; }.index-line { min-height: 54px; display: grid; grid-template-columns: 22px minmax(0,1fr) 24px; align-items: center; gap: 8px; border-bottom: var(--theme-border); }.index-line>svg { width: 16px; color: var(--theme-primary); }.index-line>div { display: grid; gap: 2px; }.index-line strong { font-size: 9px; }.index-line small { color: var(--theme-text-secondary); font-size: 8px; }.index-line button { border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.index-line button svg { width: 13px; }.format-line { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 10px; }.format-line span { display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: var(--theme-border); border-radius: 4px; font-size: 8px; }.format-line i { color: var(--theme-text-secondary); font-style: normal; }.format-line b { font-weight: 700; }
+.knowledge-pulse { display: grid; gap: 8px; padding: 12px 0; border-bottom: var(--theme-border); }.pulse-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }.pulse-heading>div { display: flex; align-items: baseline; gap: 6px; }.pulse-heading span,.pulse-heading small { color: var(--theme-text-secondary); font-size: 8px; }.pulse-heading strong { color: var(--theme-primary); font-size: 16px; }.pulse-track { height: 5px; overflow: hidden; border-radius: 999px; background: rgba(var(--theme-primary-rgb),.09); }.pulse-track i { display: block; height: 100%; border-radius: inherit; background: var(--theme-primary); transition: width .25s ease; }.pulse-types,.pulse-nodes { display: flex; flex-wrap: wrap; gap: 5px; }.pulse-types span { padding: 3px 5px; border-radius: 4px; color: var(--theme-text-secondary); background: rgba(var(--theme-primary-rgb),.055); font-size: 8px; }.pulse-types b { color: var(--theme-text); }.pulse-nodes button { max-width: 150px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 6px; border: 1px solid rgba(var(--theme-primary-rgb),.16); border-radius: 999px; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: 8px; }.pulse-nodes button:hover { background: rgba(var(--theme-primary-rgb),.07); }.pulse-nodes span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.pulse-nodes b { min-width: 14px; color: var(--theme-text-secondary); }.pulse-empty { min-height: 30px; padding: 0 8px; border: 1px dashed rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.035); cursor: pointer; font-size: 8px; }
 .task-list button { min-height: 48px; display: grid; grid-template-columns: 16px minmax(0,1fr) 16px; align-items: center; gap: 9px; padding: 5px 8px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.task-list button:hover { background: rgba(var(--theme-primary-rgb),.045); }.task-list button>span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }.task-list svg { width: 13px; color: var(--theme-text-secondary); }.task-check { width: 11px; height: 11px; border: 1px solid var(--theme-text-secondary); border-radius: 2px; }
 .canvas-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }.canvas-list button { min-height: 58px; display: grid; grid-template-columns: 24px minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 8px; border: var(--theme-border); border-radius: 6px; color: var(--theme-text); background: var(--theme-surface); cursor: pointer; text-align: left; }.canvas-list button:hover { border-color: rgba(var(--theme-primary-rgb),.35); }.canvas-list button>svg { width: 15px; color: var(--theme-primary); }.canvas-list button>span { min-width: 0; display: grid; gap: 3px; }.canvas-list button>svg:last-child { width: 12px; color: var(--theme-text-secondary); }
 .collection-list { display: grid; }.collection-list button { min-height: 48px; display: grid; grid-template-columns: 22px minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 5px 7px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.collection-list button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.045); }.collection-list button>svg { width: 14px; color: var(--theme-primary); }.collection-list button>svg:last-child { width: 12px; color: var(--theme-text-secondary); }.collection-list button>span { min-width: 0; display: grid; gap: 3px; }.collection-list strong,.collection-list small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-list strong { font-size: 10px; }.collection-list small { color: var(--theme-text-secondary); font-size: 8px; }
