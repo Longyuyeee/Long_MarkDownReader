@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "stage": "G11",
+  "status": "passed",
+  "capturedAt": "2026-08-01T07:09:22.485Z",
+  "githubRunId": 30689117409,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30689117409",
+  "productSourceCommit": "634c98f44f80c8a01df0c526730ea9d1263f72a1",
+  "orchestrationCommit": "5e2853ace89ff55956aed8ce7ccb5373bdbccebc",
+  "appVersion": "0.7.0",
+  "installerSha256": "58122834f2de44b7dbf4e9524c5b7283ec08bfd445aa39324a2b5d6dab64476c",
+  "environment": "GitHub-hosted Microsoft Windows Server 2025 installed Tauri WebView2",
+  "fixtureClassification": "fixed-synthetic-management-library",
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "knowledgePulse": {
+    "objectCount": 5,
+    "relationCount": 6,
+    "connectedObjectCount": 5,
+    "isolatedObjectCount": 0,
+    "coveragePercent": 100,
+    "relationTypes": ["contains", "depends-on", "embeds", "supports"],
+    "topTopicCount": 5
+  },
+  "centeredNavigationIdentityMatched": true,
+  "visualReview": {
+    "pulseVisible": true,
+    "centeredGraphVisible": true,
+    "selectedNodeDetailsVisible": true,
+    "loadingOverlayAbsent": true,
+    "reviewedAt": "2026-08-01T07:12:00.000Z"
+  },
+  "artifacts": [
+    {
+      "name": "installed-knowledge-network-pulse.jpg",
+      "bytes": 66934,
+      "sha256": "6a053ea81fc345141aef28a2176c722c6daae2cabde7f3e331a995bf5d4c55c9"
+    },
+    {
+      "name": "installed-knowledge-topic-centered.jpg",
+      "bytes": 57726,
+      "sha256": "265e9ca92182919606a252d88d3bfe30a0fc609cf29ee8391478391af559f89b"
+    },
+    {
+      "name": "installed-knowledge-network-evidence.json",
+      "bytes": 1507,
+      "sha256": "39ec487cd9fc150ab2be225f32f63f1f118cf2c5e623f45fd2f5bc99d02a7e00"
+    }
+  ],
+  "externalGatesStillRequired": [
+    "consented-real-user-library-observation",
+    "signed-windows-10-installed-runtime",
+    "signed-windows-11-installed-runtime",
+    "manual-release-approval"
+  ]
+}

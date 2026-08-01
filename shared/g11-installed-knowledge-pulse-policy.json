@@ -3,7 +3,7 @@
   "stage": "G11",
   "appVersion": "0.7.0",
   "releaseCandidate": false,
-  "status": "installed-knowledge-pulse-runner-integrated-hosted-execution-next",
+  "status": "hosted-installed-knowledge-pulse-passed-real-user-observation-next",
   "fixtureClassification": "fixed-synthetic-management-library",
   "requiredChecks": [
     "installed-knowledge-network-pulse",
@@ -19,7 +19,11 @@
   },
   "evidence": {
     "runnerIntegrated": true,
-    "hostedExecutionCompleteForCurrentCommit": false,
+    "hostedExecutionCompleteForCurrentCommit": true,
+    "githubRunId": 30689117409,
+    "productSourceCommit": "634c98f44f80c8a01df0c526730ea9d1263f72a1",
+    "acceptanceReceipt": "docs/evidence/g11-installed-knowledge-pulse/acceptance-receipt.json",
+    "screenshotsManuallyReviewed": true,
     "realUserLibraryObservationComplete": false,
     "signedWindowsClientEvidenceComplete": false
   },
@@ -28,5 +32,5 @@
     "installed-knowledge-topic-centered.jpg",
     "installed-knowledge-network-evidence.json"
   ],
-  "nextStage": "G11-hosted-installed-artifact-execution"
+  "nextStage": "G12-consented-real-library-observation-design"
 }

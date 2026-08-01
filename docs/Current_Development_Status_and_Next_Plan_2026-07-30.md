@@ -590,3 +590,9 @@ Next product stage: G11. Exercise the same knowledge pulse and centered graph na
 The disposable installed-artifact lifecycle now creates a fixed synthetic Markdown/Canvas relation network. The installed Workspace Home must expose non-zero useful coverage, `depends-on` and `supports` relations, and ranked topics; clicking the first topic must open the graph with matching selected object identity and a `root` route. Stable non-visual test attributes and three redacted evidence outputs have been added.
 
 Current status is `installed-knowledge-pulse-runner-integrated-hosted-execution-next`: source integration is complete, but no hosted run for the current commit has yet been accepted. `releaseCandidate=false` remains unchanged. Next action: trigger the U2 hosted lifecycle for the current commit, inspect/import the G11 outputs, then close G11 in a separate audit push.
+
+## G11 closure - hosted installed knowledge pulse passed
+
+GitHub Actions run `30689117409` reused the installer built from product commit `634c98f` and passed the complete disposable installed lifecycle with the corrected evidence timing. Workspace Home showed 5 objects, 6 relations, 5 connected objects, 0 isolated objects, 100% coverage, four relation types, and five ranked topics. Topic identity remained stable through centered graph navigation. Manual screenshot review confirmed both the pulse and selected-node graph were visible with no route loading overlay.
+
+Current product status is `hosted-installed-knowledge-pulse-passed-real-user-observation-next`. This proves the synthetic installed-artifact experience on Microsoft Windows Server 2025, not a real user library and not signed Windows 10/11 clients. `releaseCandidate=false` remains unchanged. Next product stage: G12 consented real-library observation design; release action remains R5N external signing and dual-client execution.
