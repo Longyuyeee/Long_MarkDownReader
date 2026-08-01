@@ -3,7 +3,7 @@
   "stage": "G14",
   "appVersion": "0.7.0",
   "releaseCandidate": false,
-  "status": "installed-actionable-guidance-runner-integrated-hosted-execution-next",
+  "status": "hosted-installed-actionable-guidance-passed-real-user-observation-next",
   "fixtureClassification": "fixed-synthetic-management-library",
   "expectedGuidanceCode": "network-health-on-track",
   "requiredChecks": [
@@ -17,10 +17,14 @@
   ],
   "evidence": {
     "runnerIntegrated": true,
-    "hostedExecutionCompleteForCurrentProductCommit": false,
-    "screenshotsManuallyReviewed": false,
+    "hostedExecutionCompleteForCurrentProductCommit": true,
+    "screenshotsManuallyReviewed": true,
     "sourceUserContentIncluded": false,
-    "signedWindowsClientEvidenceComplete": false
+    "signedWindowsClientEvidenceComplete": false,
+    "githubRunId": 30690425501,
+    "productSourceCommit": "068d3bd5d868a5f6e3d04a53935d8735f2208769",
+    "orchestrationCommit": "cc9c549fe90d678c9f38fa327b18f3b2bf22d091",
+    "acceptanceReceipt": "docs/evidence/g14-installed-knowledge-guidance/acceptance-receipt.json"
   },
-  "nextStage": "G14-hosted-installed-guidance-execution"
+  "nextStage": "G15-consented-real-library-guidance-observation"
 }

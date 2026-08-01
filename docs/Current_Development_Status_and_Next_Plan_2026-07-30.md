@@ -614,3 +614,9 @@ Rules cover empty, disconnected, low-coverage, isolated, low-diversity, and heal
 The U2 installed-artifact capture now requires the fixed synthetic management library to expose `network-health-on-track`, a visible healthy-state label, and current-window navigation from the guidance card into the unified graph route. It then returns to Workspace Home and preserves the existing centered-topic navigation acceptance.
 
 Current status is `installed-actionable-guidance-runner-integrated-hosted-execution-next`. The hosted run and screenshot review are deliberately still false until executed against G13 product commit `068d3bd`; this remains synthetic unsigned Windows Server evidence, not real-user or signed Windows 10/11 evidence. `releaseCandidate=false` remains unchanged.
+
+## G14 closure - hosted installed actionable guidance passed
+
+GitHub Actions run `30690425501` rebuilt product commit `068d3bd` and exercised orchestration commit `cc9c549` through the complete disposable lifecycle. The installed Workspace Home rendered `network-health-on-track` for the 5-object, 6-relation, 100%-coverage synthetic network; clicking the guidance opened `#/graph` in the current application window. All 8 installed smoke checks and 18 lifecycle checks passed.
+
+Manual screenshot review confirmed the guidance card is readable and aligned with the existing workspace style, and the destination contains the real graph and node detail without a loading overlay or unexpected window. Current status is `hosted-installed-actionable-guidance-passed-real-user-observation-next`. The accepted receipt is sanitized; original screenshots remain in the Actions artifact. G15 remains user-consented real-library observation, while R5N signing and Windows 10/11 evidence still block release.

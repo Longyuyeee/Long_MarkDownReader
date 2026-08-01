@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "stage": "G14",
+  "status": "passed",
+  "githubRunId": 30690425501,
+  "productSourceCommit": "068d3bd5d868a5f6e3d04a53935d8735f2208769",
+  "orchestrationCommit": "cc9c549fe90d678c9f38fa327b18f3b2bf22d091",
+  "appVersion": "0.7.0",
+  "environment": "GitHub-hosted Microsoft Windows Server 2025 Datacenter",
+  "evidenceLevel": "installed-current-tauri-webview2-synthetic-library",
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "signedArtifactRuntimeProven": false,
+  "installerSha256": "76d979a06dcaf334788e42b163bed9e7b5a0c3e7eb10702054fb5003f3967a04",
+  "knowledgePulse": {
+    "objectCount": 5,
+    "relationCount": 6,
+    "connectedObjectCount": 5,
+    "isolatedObjectCount": 0,
+    "coveragePercent": 100,
+    "relationTypes": [
+      "contains",
+      "depends-on",
+      "embeds",
+      "supports"
+    ],
+    "guidanceCode": "network-health-on-track",
+    "guidanceTitle": "知识网络状态良好"
+  },
+  "guidanceNavigation": {
+    "route": "#/graph",
+    "graphVisible": true,
+    "openedInCurrentWindow": true
+  },
+  "visualReview": {
+    "guidanceVisible": true,
+    "guidanceStyleAlignedWithWorkspace": true,
+    "graphVisible": true,
+    "loadingOverlayAbsent": true,
+    "unexpectedWindowAbsent": true
+  },
+  "lifecycleChecksPassed": 18,
+  "installedSmokeChecksPassed": 8,
+  "artifacts": [
+    {
+      "name": "installed-knowledge-network-evidence.json",
+      "bytes": 1806,
+      "sha256": "6de896b09cc136eece12c3a97302cac4423be6cd3281a14e58fd0475a2a33b9a"
+    },
+    {
+      "name": "installed-knowledge-network-pulse.jpg",
+      "bytes": 69175,
+      "sha256": "86ffb2f04a667052dbd404f9d9804d729c446ae6c0005eca95f27968a9e04f86"
+    },
+    {
+      "name": "installed-knowledge-guidance-graph.jpg",
+      "bytes": 57587,
+      "sha256": "adc25cb21256491eef868108013eb8bfb4aae02cf268e2e5316679b33b82494a"
+    }
+  ]
+}
