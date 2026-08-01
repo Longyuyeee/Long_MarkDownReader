@@ -64,7 +64,7 @@ const expectedFacts = [
   ],
   ["6 类依赖外部", readinessCounts["external-dependency"] === 6],
   ["10 套发布能力配置", matrix.profiles.length === 10],
-  ["对应版本：0.7.0", matrix.appVersion === "0.7.0"],
+  ["对应版本：1.0.0", matrix.appVersion === "1.0.0"],
   ["当前发布阶段：R5N", environment.stage === "R5N"],
   ["5 个阻塞项", environment.blockers.length === 5],
   ["`releaseCandidate=false`", matrix.releaseCandidate === false],

@@ -49,7 +49,7 @@ function New-RejectionBundle {
         status = "disposable_windows_evidence_bundle"
         createdAt = [DateTime]::UtcNow.ToString("o")
         sourceCommit = if ($CaseId -eq "source_commit_drift") { "0" * 40 } else { $sourceCommit }
-        appVersion = "0.7.0"
+        appVersion = "1.0.0"
         currentInstallerSha256 = $currentInstallerSha256
         environment = [ordered]@{
             family = "windows"

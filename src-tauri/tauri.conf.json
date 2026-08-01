@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Long编辑",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "identifier": "com.longyuye.mdreader",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -27,6 +27,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": ["msi", "nsis"],
     "fileAssociations": [
       {
@@ -54,5 +55,16 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDczRkJDOUM2RDFGNTM2N0YKUldSL052WFJ4c243Yys4N2JiOXF5c0RnN2pDUVY3Wk42RXFka3NBZWo5alIxYlg5VlNuYkE4WEsK",
+      "endpoints": [
+        "https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

@@ -100,7 +100,7 @@ jobs:
           $ErrorActionPreference = "Stop"
           $currentDirectory = Join-Path $env:GITHUB_WORKSPACE "current-product\src-tauri\target\release\bundle\nsis"
           $previousDirectory = Join-Path $env:GITHUB_WORKSPACE "previous-product\src-tauri\target\release\bundle\nsis"
-          $current = @(Get-ChildItem -LiteralPath $currentDirectory -File -Filter "*_0.7.0_x64-setup.exe")
+          $current = @(Get-ChildItem -LiteralPath $currentDirectory -File -Filter "*_1.0.0_x64-setup.exe")
           $previous = @(Get-ChildItem -LiteralPath $previousDirectory -File -Filter "*_0.6.2_x64-setup.exe")
           if ($current.Count -ne 1 -or $previous.Count -ne 1) { throw "Expected exactly one current and rollback NSIS installer." }
           $signature = Get-AuthenticodeSignature -LiteralPath $current[0].FullName
@@ -112,7 +112,7 @@ jobs:
             stage = "U2"
             status = "runner-build-ready"
             sourceCommit = $env:PRODUCT_SOURCE_COMMIT.ToLowerInvariant()
-            appVersion = "0.7.0"
+            appVersion = "1.0.0"
             previousVersion = "0.6.2"
             currentInstallerSha256 = (Get-FileHash -LiteralPath $current[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant()
             previousInstallerSha256 = (Get-FileHash -LiteralPath $previous[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -154,5 +154,5 @@ jobs:
           retention-days: 14
           path: |
             u2-output
-            current-product/src-tauri/target/release/bundle/nsis/*_0.7.0_x64-setup.exe
+            current-product/src-tauri/target/release/bundle/nsis/*_1.0.0_x64-setup.exe
             previous-product/src-tauri/target/release/bundle/nsis/*_0.6.2_x64-setup.exe

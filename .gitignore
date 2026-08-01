@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Local release credentials (never commit updater private keys or passwords)
+.release-secrets/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

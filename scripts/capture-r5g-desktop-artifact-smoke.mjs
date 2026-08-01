@@ -190,7 +190,7 @@ await fs.writeFile(path.join(output, 'route-mount-evidence.json'), `${JSON.strin
 await fs.writeFile(path.join(output, 'audit-manifest.json'), `${JSON.stringify({
   schemaVersion: 1,
   stage: 'R5G',
-  appVersion: '0.7.0',
+  appVersion: '1.0.0',
   capturedAt,
   environment: 'Current Tauri Debug WebView2 via Chrome DevTools Protocol',
   releaseCandidate: false,

@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v0.6.9-0078d4?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v1.0.0-0078d4?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Platform-Windows-0078d4?style=flat-square&logo=windows11&logoColor=white" alt="Windows">
   <img src="https://img.shields.io/badge/Tauri-2-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3-42b883?style=flat-square" alt="Vue">
@@ -27,13 +27,15 @@ Long编辑是一款本地优先的视觉知识与资料管理工作台。Markdow
 
 ## 下载安装
 
-当前稳定版本为 **v0.6.9**，支持 Windows 10/11 x64。
+当前稳定版本为 **v1.0.0**，支持 Windows 10/11 x64。
 
-- [下载 v0.6.9](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v0.6.9)
+- [下载 v1.0.0](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.0)
 - `.exe`：推荐个人用户使用，安装流程更简单。
 - `.msi`：适合企业部署或需要 MSI 的安装场景。
 
-覆盖安装新版本不会删除知识库、应用设置或历史副本。安装包目前没有商业代码签名，Windows 首次运行时可能显示 SmartScreen 提示。
+覆盖安装新版本不会删除知识库、应用设置或历史副本。v1.0.0 是无 Authenticode 代码签名的社区版本，Windows 首次运行时可能显示“未知发布者”或 SmartScreen 提示；请只从本仓库的 GitHub Releases 下载，并按发布页 SHA-256 核对文件。
+
+从 v1.0.0 开始，软件会每 24 小时自动检查一次更新，也可以在“设置 → 系统集成 → 软件更新”中手动检查。下载后的更新包必须通过内置 Tauri 更新公钥校验才会安装；该完整性签名与 Windows 发布者签名是两套独立机制。
 
 ## 快速上手
 

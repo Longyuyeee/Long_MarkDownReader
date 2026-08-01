@@ -114,6 +114,7 @@
               <n-button secondary @click="router.push({ name: 'ReleaseCapabilities' })">查看矩阵</n-button>
             </div>
             <div class="setting-row">
+              <UpdateSettingsRow />
               <!-- R3 管理备份不包含文档正文或凭据，导入恢复要求路径重新映射。 -->
               <div class="info">
                 <div class="label">管理备份</div>
@@ -363,6 +364,7 @@ import { open, save } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, NTag, NInputGroup } from 'naive-ui'
 import { useAppStore, THEME_MAP } from '../store/app'
+import UpdateSettingsRow from '../components/UpdateSettingsRow.vue'
 import {
   THEME_EDITOR_BACKGROUNDS,
   themePresetGroups,

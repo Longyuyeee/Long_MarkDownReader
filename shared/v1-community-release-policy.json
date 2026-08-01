@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1",
+  "appVersion": "1.0.0",
+  "releaseCandidate": false,
+  "channel": "community-unsigned",
+  "generatedAt": "2026-08-01",
+  "currentStatus": "candidate-built-installed-lifecycle-pending",
+  "supersedesAuthenticodeGateForThisChannel": "R5N",
+  "userDecision": {
+    "authenticodeRequired": false,
+    "unsignedCommunityReleaseApproved": true,
+    "unknownPublisherWarningRequired": true
+  },
+  "updater": {
+    "enabled": true,
+    "automaticCheckIntervalHours": 24,
+    "manualCheckAvailable": true,
+    "integritySignatureRequired": true,
+    "privateKeyCommitted": false,
+    "latestManifestAsset": "latest.json"
+  },
+  "gates": {
+    "frontendBuildPassed": true,
+    "rustLockedCheckPassed": true,
+    "msiBuilt": true,
+    "nsisBuilt": true,
+    "updaterSignaturesBuilt": true,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
+  },
+  "releaseWarnings": [
+    "windows-unknown-publisher-or-smartscreen-may-appear",
+    "download-only-from-official-github-release",
+    "verify-published-sha256-before-install"
+  ],
+  "nextAction": "run-1.0.0-installed-lifecycle-and-final-quality-gate"
+}

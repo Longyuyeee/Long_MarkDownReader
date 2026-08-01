@@ -26,6 +26,8 @@
     "fs:allow-mkdir",
     "core:path:default",
     "os:default",
+    "process:allow-restart",
+    "updater:default",
     "autostart:default"
   ]
 }

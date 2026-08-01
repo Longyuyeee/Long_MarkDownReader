@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$InstallerDirectory,
     [string]$PreviousInstallerDirectory = "",
-    [string]$CurrentVersion = "0.7.0",
+    [string]$CurrentVersion = "1.0.0",
     [string]$PreviousVersion = "0.6.2",
     [Parameter(Mandatory = $true)]
     [ValidatePattern("^[a-fA-F0-9]{64}$")]
