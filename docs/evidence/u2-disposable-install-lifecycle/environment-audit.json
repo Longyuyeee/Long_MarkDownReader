@@ -1,35 +1,36 @@
 {
-    "schemaVersion":  1,
-    "stage":  "U2",
-    "capturedAt":  "2026-07-31T17:39:35.1462333Z",
-    "appVersion":  "0.7.0",
-    "sourceCommit":  "953494c50360d232e0848d0bab80e0defd3c53d4",
-    "artifactPreflight":  {
-                              "candidateNsisMatchCount":  1,
-                              "previousNsisMatchCount":  1,
-                              "candidateHashMatchesManifest":  true,
-                              "candidateAuthenticodeStatus":  "NotSigned"
-                          },
-    "virtualization":  {
-                           "windowsSandboxExecutablePresent":  false,
-                           "hyperVProvisioningCommandPresent":  false,
-                           "vmwareCommandPresent":  false,
-                           "virtualBoxCommandPresent":  false,
-                           "qemuCommandPresent":  false
-                       },
-    "hostSafety":  {
-                       "existingProductRegistrationCount":  1,
-                       "runningProductProcessCount":  1,
-                       "hostInstallerMutationAllowed":  false,
-                       "existingInstallMayBeOverwritten":  false
-                   },
-    "execution":  {
-                      "sandboxConfigurationCanBePrepared":  true,
-                      "isolatedRunnerAvailable":  false,
-                      "lifecycleSmokeExecuted":  false,
-                      "currentStatus":  "handoff-ready-current-host-execution-blocked",
-                      "releaseCandidate":  false,
-                      "promotionEligible":  false,
-                      "sourceUserContentIncluded":  false
-                  }
+  "schemaVersion": 1,
+  "stage": "U2",
+  "capturedAt": "2026-08-01T16:41:47.6523189Z",
+  "appVersion": "1.0.0",
+  "sourceCommit": "6f3ce5053bce430803bee9722678ae911aa06d79",
+  "githubRunId": 30707592201,
+  "artifactPreflight": {
+    "candidateNsisMatchCount": 1,
+    "previousNsisMatchCount": 1,
+    "candidateHashMatchesManifest": true,
+    "candidateAuthenticodeStatus": "NotSigned"
+  },
+  "environment": {
+    "productName": "Microsoft Windows Server 2025 Datacenter",
+    "version": "10.0.26100",
+    "buildNumber": "26100",
+    "architecture": "64-bit",
+    "disposable": true,
+    "windowsClientEvidenceClaimed": false
+  },
+  "hostSafety": {
+    "hostInstallerMutationAllowed": false,
+    "sourceUserContentIncluded": false
+  },
+  "execution": {
+    "isolatedRunnerAvailable": true,
+    "lifecycleSmokeExecuted": true,
+    "lifecycleCheckCount": 18,
+    "installedSmokeCheckCount": 12,
+    "currentStatus": "hosted-unsigned-lifecycle-passed",
+    "releaseCandidate": false,
+    "promotionEligible": false,
+    "sourceUserContentIncluded": false
+  }
 }

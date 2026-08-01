@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "stage": "R5J",
-  "appVersion": "0.7.0",
-  "capturedAt": "2026-07-31T21:17:50.229Z",
+  "appVersion": "1.0.0",
+  "capturedAt": "2026-08-01T16:41:17.483Z",
   "environment": "Disposable Windows installed current NSIS artifact",
   "status": "passed",
   "releaseCandidate": false,
   "promotionEligible": false,
   "signedArtifactRuntimeProven": false,
   "sourceUserContentIncluded": false,
-  "installerSha256": "d6ec52af91096158ee117c93342c8767b0f649ebf11a8a47005112171ef2dafb",
+  "installerSha256": "6dae10b828424d0b03ddd4b4b759bcbae94fcbeca4cd37b6da26edc9f2802ee6",
   "installedExecutable": {
     "fileName": "tauri-app.exe",
-    "sizeBytes": 81318912,
-    "sha256": "0c1a91d9768bef08cba40fce8abf0284c3cac1a052422808bdab2420a0ebf22b"
+    "sizeBytes": 84981248,
+    "sha256": "e4df4020db2e09befca7058b6da6804e5978f26f48ef2727004b61ca901a02a0"
   },
   "checks": [
     {
@@ -215,6 +215,34 @@
       }
     },
     {
+      "id": "installed-knowledge-network-pulse",
+      "status": "passed"
+    },
+    {
+      "id": "installed-actionable-knowledge-guidance",
+      "status": "passed"
+    },
+    {
+      "id": "installed-knowledge-observation-entry-navigation",
+      "status": "passed"
+    },
+    {
+      "id": "installed-consented-real-library-session-guidance",
+      "status": "passed"
+    },
+    {
+      "id": "installed-knowledge-topic-centered-navigation",
+      "status": "passed"
+    },
+    {
+      "id": "installed-local-comparison-receipt-review",
+      "status": "passed"
+    },
+    {
+      "id": "installed-consented-knowledge-guidance-outcome",
+      "status": "passed"
+    },
+    {
       "id": "installed-representative-right-side-routes",
       "status": "passed"
     },
@@ -226,6 +254,22 @@
   "evidenceFiles": [
     "installed-txt-save-reopen.jpg",
     "installed-json-save-reopen.jpg",
+    "installed-knowledge-network-pulse.jpg",
+    "installed-knowledge-guidance-graph.jpg",
+    "installed-knowledge-topic-centered.jpg",
+    "installed-knowledge-network-evidence.json",
+    "installed-workspace-observation-entry.jpg",
+    "installed-graph-outcome-entry.jpg",
+    "installed-knowledge-observation-entry-evidence.json",
+    "installed-knowledge-session-start.jpg",
+    "installed-knowledge-session-ready.jpg",
+    "installed-knowledge-session-evidence.json",
+    "installed-knowledge-observation-settings.jpg",
+    "installed-knowledge-observation-baseline.json",
+    "installed-knowledge-guidance-comparison.json",
+    "installed-knowledge-guidance-outcome-evidence.json",
+    "installed-knowledge-receipt-review-entry.jpg",
+    "installed-knowledge-receipt-review-evidence.json",
     "installed-route-mount-evidence.json",
     "installed-route-performance-evidence.json"
   ]

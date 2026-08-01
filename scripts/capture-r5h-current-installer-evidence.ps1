@@ -1,5 +1,6 @@
 param(
-    [string]$OutputPath = "docs/evidence/r5h-current-installers/installer-artifact-manifest.json"
+    [string]$OutputPath = "docs/evidence/r5h-current-installers/installer-artifact-manifest.json",
+    [string]$SourceCommit = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -7,6 +8,16 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $package = Get-Content -LiteralPath (Join-Path $repoRoot "package.json") -Raw | ConvertFrom-Json
 $version = [string]$package.version
 $bundleRoot = Join-Path $repoRoot "src-tauri/target/release/bundle"
+$sourceCommitResolvedFromGit = [string]::IsNullOrWhiteSpace($SourceCommit)
+$resolvedSourceCommit = if ($sourceCommitResolvedFromGit) {
+    ([string](& git -C $repoRoot rev-parse HEAD)).Trim()
+} else {
+    $SourceCommit.Trim()
+}
+if (($sourceCommitResolvedFromGit -and $LASTEXITCODE -ne 0) -or $resolvedSourceCommit -notmatch "^[a-fA-F0-9]{40}$") {
+    throw "R5H source commit must be a full 40-character Git commit hash."
+}
+$resolvedSourceCommit = $resolvedSourceCommit.ToLowerInvariant()
 
 $expectedArtifacts = @(
     @{
@@ -53,6 +64,7 @@ $manifest = [ordered]@{
     schemaVersion = 1
     stage = "R5H"
     appVersion = $version
+    sourceCommit = $resolvedSourceCommit
     capturedAt = (Get-Date).ToUniversalTime().ToString("o")
     environment = "Current Windows release bundle build"
     buildCommand = "npm run tauri -- build"

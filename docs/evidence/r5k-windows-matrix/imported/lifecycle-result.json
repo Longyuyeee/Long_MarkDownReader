@@ -1,12 +1,12 @@
 {
     "schemaVersion":  1,
     "stage":  "R5I",
-    "capturedAt":  "2026-07-31T21:18:17.7415407Z",
+    "capturedAt":  "2026-08-01T16:41:46.8150155Z",
     "environment":  "disposable-windows-guest",
-    "currentVersion":  "0.7.0",
+    "currentVersion":  "1.0.0",
     "previousVersion":  "0.6.2",
-    "currentInstallerSha256":  "d6ec52af91096158ee117c93342c8767b0f649ebf11a8a47005112171ef2dafb",
-    "previousInstallerSha256":  "2be92e76f0fbffa685b2956ebe3e80094e8f9c8204a5a0aad330e3d89103e97e",
+    "currentInstallerSha256":  "6dae10b828424d0b03ddd4b4b759bcbae94fcbeca4cd37b6da26edc9f2802ee6",
+    "previousInstallerSha256":  "c584d5f763c088044aa922bd88c410211b57fffdfb8a8c6e6a977486a5b07305",
     "status":  "passed",
     "releaseCandidate":  false,
     "promotionEligible":  false,
@@ -29,7 +29,7 @@
                        "id":  "controlled-upgrade",
                        "status":  "passed",
                        "from":  "0.6.2",
-                       "to":  "0.7.0"
+                       "to":  "1.0.0"
                    },
                    {
                        "id":  "file-association-registration",
@@ -62,7 +62,7 @@
                        "mode":  "legacy-downgrade-detected-and-current-restored",
                        "installerExitCode":  0,
                        "currentVersionRestored":  true,
-                       "restoredBinarySha256":  "0c1a91d9768bef08cba40fce8abf0284c3cac1a052422808bdab2420a0ebf22b"
+                       "restoredBinarySha256":  "e4df4020db2e09befca7058b6da6804e5978f26f48ef2727004b61ca901a02a0"
                    },
                    {
                        "id":  "silent-uninstall",

@@ -2,10 +2,10 @@
     "schemaVersion":  1,
     "stage":  "R5K",
     "status":  "disposable_windows_evidence_bundle",
-    "createdAt":  "2026-07-31T21:18:18.4954763Z",
-    "sourceCommit":  "dfe5e9c424ab4a3b71f1eee3924dc43f8f7d400f",
-    "appVersion":  "0.7.0",
-    "currentInstallerSha256":  "d6ec52af91096158ee117c93342c8767b0f649ebf11a8a47005112171ef2dafb",
+    "createdAt":  "2026-08-01T16:41:47.6523189Z",
+    "sourceCommit":  "6f3ce5053bce430803bee9722678ae911aa06d79",
+    "appVersion":  "1.0.0",
+    "currentInstallerSha256":  "6dae10b828424d0b03ddd4b4b759bcbae94fcbeca4cd37b6da26edc9f2802ee6",
     "environment":  {
                         "family":  "windows",
                         "productName":  "Microsoft Windows Server 2025 Datacenter",
@@ -20,37 +20,37 @@
                     {
                         "name":  "lifecycle-result.json",
                         "bytes":  4617,
-                        "sha256":  "c52a8c1dd64e1de020b50e88c3bef362edcf03a450564a6e8d87b9437d0a7c08"
+                        "sha256":  "fb052a9f91b0dea22c8678855a194c9dab875b4e698e9323900c7be8950cb7a4"
                     },
                     {
                         "name":  "installed-artifact-smoke.json",
-                        "bytes":  7514,
-                        "sha256":  "375692ba0dd30ab20498ae53e7a7a71e7aea844fbd9881a797f8fdd8668766c3"
+                        "bytes":  8990,
+                        "sha256":  "df2889dabbc6d268ecc69011add781799a74ffb6ae2ad637bcffbb7961dbef7c"
                     },
                     {
                         "name":  "installed-route-mount-evidence.json",
                         "bytes":  1708,
-                        "sha256":  "50e07de036ed6024889d46116de5d70473c8bd0151a81ed0a795ef058e68374e"
+                        "sha256":  "2e016b711dcd8c8f59a80c73a92d1f8ebd8f93280c9469d0e7ee58930c619216"
                     },
                     {
                         "name":  "installed-route-performance-evidence.json",
-                        "bytes":  4032,
-                        "sha256":  "37693a4d709d4639ff5097be55d4ffa80e77b2d8dc1b5759f9492eacc43a15f0"
+                        "bytes":  4678,
+                        "sha256":  "28165d45cc6dd62178d80cf92fae225636d9545b20550b40ac8e05c65d99b486"
                     },
                     {
                         "name":  "installed-txt-save-reopen.jpg",
-                        "bytes":  61812,
-                        "sha256":  "12bdfa868ea8d6ef6233256e9f4b8ac1e8ca8599e3748df8faeacbf11a8d5da9"
+                        "bytes":  61758,
+                        "sha256":  "e62d63732b81b9a03f12b260013e4f3ca4b4dd9485da11f3fa31dcd71d50663a"
                     },
                     {
                         "name":  "installed-json-save-reopen.jpg",
-                        "bytes":  80869,
-                        "sha256":  "02b610ded65290b21066380b325493d5a916e09cfcc38727da51a1f43454da32"
+                        "bytes":  80860,
+                        "sha256":  "64c63fdc8319a60b807d7723cd6e27941df9f58b3505f4cd430209f5ab27b715"
                     },
                     {
                         "name":  "management-backup-index-evidence.json",
                         "bytes":  2170,
-                        "sha256":  "fa7960f14edab88126bf63152f6ced1fe8e5e440b52bc6b76c6c384a21a96637"
+                        "sha256":  "431993c00b76ed71755e2ece6444dfc152b77d87eae4215dcb7626bf019daad9"
                     }
                 ],
     "releaseCandidate":  false,

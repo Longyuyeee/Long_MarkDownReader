@@ -5,7 +5,7 @@
   "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-01",
-  "currentStatus": "candidate-built-installed-lifecycle-pending",
+  "currentStatus": "installed-lifecycle-passed-final-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -26,7 +26,7 @@
     "msiBuilt": true,
     "nsisBuilt": true,
     "updaterSignaturesBuilt": true,
-    "installedLifecyclePassed": false,
+    "installedLifecyclePassed": true,
     "qualityGatePassed": false,
     "githubReleasePublished": false
   },
@@ -35,5 +35,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "run-1.0.0-installed-lifecycle-and-final-quality-gate"
+  "nextAction": "run-1.0.0-final-quality-gate-and-publish"
 }

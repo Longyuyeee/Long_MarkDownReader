@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "R5L",
-  "capturedAt": "2026-07-31T21:17:50.511Z",
+  "capturedAt": "2026-08-01T16:41:17.824Z",
   "environment": "disposable-windows-installed-current-artifact",
   "status": "passed",
   "releaseCandidate": false,
@@ -38,8 +38,8 @@
     }
   ],
   "backup": {
-    "bytes": 10408,
-    "sha256": "1c53b33f2b322e96d89310561d4d034f128a077c3f9d8bd297a6aab7bd4119ad",
+    "bytes": 10409,
+    "sha256": "308339ff47236fb460c0345c02c9815396ca16a966eb31e40e70b668c23cb628",
     "entryCount": 5,
     "redactedLibraryCount": 1,
     "excluded": [
@@ -73,12 +73,12 @@
   "indexBeforeRollback": {
     "state": "ready",
     "schemaVersion": 1,
-    "sourceCount": 3,
-    "objectCount": 3,
-    "relationCount": 0,
-    "cacheBytes": 2341
+    "sourceCount": 7,
+    "objectCount": 9,
+    "relationCount": 7,
+    "cacheBytes": 7644
   },
-  "completedAt": "2026-07-31T21:18:16.192Z",
+  "completedAt": "2026-08-01T16:41:45.364Z",
   "restore": {
     "libraryCount": 1,
     "savedSearchCount": 1,
@@ -87,9 +87,9 @@
   "indexAfterRestore": {
     "state": "ready",
     "schemaVersion": 1,
-    "sourceCount": 3,
-    "objectCount": 3,
-    "relationCount": 0,
-    "cacheBytes": 2341
+    "sourceCount": 7,
+    "objectCount": 9,
+    "relationCount": 7,
+    "cacheBytes": 7644
   }
 }
