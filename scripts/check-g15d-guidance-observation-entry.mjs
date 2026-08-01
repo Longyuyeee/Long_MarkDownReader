@@ -10,17 +10,26 @@ const settings = read('src/views/SettingsView.vue')
 const capture = read('scripts/capture-r5j-installed-artifact-smoke.mjs')
 const workflow = read('.github/workflows/u2-unsigned-lifecycle.yml')
 const audit = read('docs/G15D_Knowledge_Guidance_Observation_Entry_Audit_2026-08-01.md')
+const receipt = json('docs/evidence/g15d-guidance-observation-entry/acceptance-receipt.json')
 const failures = []
 const requireText = (source, token, message) => { if (!source.includes(token)) failures.push(message) }
 
 if (policy.schemaVersion !== 1 || policy.stage !== 'G15D' || policy.appVersion !== packageJson.version || policy.releaseCandidate !== false) failures.push('G15D policy identity drift')
-if (policy.status !== 'installed-observation-entry-functional-passed-visual-recapture-next' || policy.nextStage !== 'G15D-hosted-installed-observation-entry-visual-recapture') failures.push('G15D stage boundary drift')
-if (!/^[a-f0-9]{40}$/.test(policy.productSourceCommit) || policy.hostedRunId !== 30694114591 || policy.expectedEvidenceFiles.length !== 3) failures.push('G15D functional installed evidence identity drift')
+if (policy.status !== 'hosted-installed-observation-entry-passed-real-user-execution-next' || policy.nextStage !== 'G15-consented-real-library-baseline-remediation-follow-up') failures.push('G15D stage boundary drift')
+if (!/^[a-f0-9]{40}$/.test(policy.productSourceCommit) || policy.hostedRunId !== 30695157895 || policy.expectedEvidenceFiles.length !== 3 || policy.acceptanceReceipt !== 'docs/evidence/g15d-guidance-observation-entry/acceptance-receipt.json') failures.push('G15D accepted installed evidence identity drift')
 if (policy.entries.workspaceHome !== 'settings-knowledge-observation-focus' || policy.entries.graphRemediation !== 'settings-knowledge-observation-focus') failures.push('G15D entry matrix drift')
 for (const key of ['sameApplicationWindow', 'targetScrollIntoView', 'targetHighlight']) if (policy.destination[key] !== true) failures.push(`G15D navigation guarantee drift: ${key}`)
 for (const [key, value] of Object.entries(policy.consentBoundary)) if (value !== false) failures.push(`G15D consent boundary must remain false: ${key}`)
-for (const key of ['workspaceEntryImplemented', 'graphFollowUpEntryImplemented', 'settingsFocusImplemented', 'frontendProductionBuildComplete', 'hostedFunctionalNavigationComplete']) if (policy.qualityGate[key] !== true) failures.push(`G15D implemented gate drift: ${key}`)
-for (const key of ['installedNavigationComplete', 'installedVisualReviewComplete', 'realUserComparisonComplete', 'signedWindowsClientEvidenceComplete']) if (policy.qualityGate[key] !== false) failures.push(`G15D external gate must remain false: ${key}`)
+for (const key of ['workspaceEntryImplemented', 'graphFollowUpEntryImplemented', 'settingsFocusImplemented', 'frontendProductionBuildComplete', 'hostedFunctionalNavigationComplete', 'installedNavigationComplete', 'installedVisualReviewComplete']) if (policy.qualityGate[key] !== true) failures.push(`G15D implemented gate drift: ${key}`)
+for (const key of ['realUserComparisonComplete', 'signedWindowsClientEvidenceComplete']) if (policy.qualityGate[key] !== false) failures.push(`G15D external gate must remain false: ${key}`)
+if (receipt.schemaVersion !== 1 || receipt.stage !== 'G15D' || receipt.status !== 'accepted' || receipt.hostedRunId !== policy.hostedRunId || receipt.productSourceCommit !== policy.productSourceCommit) failures.push('G15D acceptance receipt identity drift')
+if (receipt.installedSmoke?.status !== 'passed' || receipt.installedSmoke?.passed !== 10 || receipt.installedSmoke?.total !== 10 || receipt.lifecycle?.status !== 'passed' || receipt.lifecycle?.passed !== 18 || receipt.lifecycle?.total !== 18) failures.push('G15D installed acceptance counts drift')
+for (const entry of [receipt.navigation?.workspaceObservationEntry, receipt.navigation?.graphOutcomeEntry]) {
+  if (entry?.route !== '#/settings?focus=knowledge-observation' || entry?.targetVisible !== true || entry?.targetFocused !== true || entry?.openedInCurrentWindow !== true) failures.push('G15D accepted navigation receipt drift')
+}
+if (receipt.navigation?.exportTriggered !== false || receipt.navigation?.visualSurfaceSettled !== true || receipt.visualReview?.status !== 'accepted' || receipt.visualReview?.focusedObservationRowVisible !== true || receipt.visualReview?.labelsReadable !== true || receipt.visualReview?.existingSettingsStyleAligned !== true || receipt.visualReview?.separateWindowObserved !== false) failures.push('G15D visual acceptance receipt drift')
+for (const hash of [receipt.installerSha256, receipt.visualReview?.workspaceScreenshotSha256, receipt.visualReview?.graphScreenshotSha256]) if (!/^[a-f0-9]{64}$/.test(hash || '')) failures.push('G15D acceptance hash drift')
+if (receipt.sourceUserContentIncluded !== false || receipt.realUserLibraryExecutionComplete !== false || receipt.signedWindowsClientEvidenceComplete !== false || receipt.releaseCandidate !== false || receipt.promotionEligible !== false) failures.push('G15D acceptance boundary drift')
 
 for (const token of ['data-testid="knowledge-observation-entry"', '记录治理基线', 'openKnowledgeObservation', "name: 'Settings', query: { focus: 'knowledge-observation' }"]) requireText(home, token, `G15D workspace entry missing: ${token}`)
 for (const token of ['data-testid="knowledge-outcome-entry"', '复查改善', 'openKnowledgeOutcome', "name: 'Settings', query: { focus: 'knowledge-observation' }"]) requireText(graph, token, `G15D graph follow-up entry missing: ${token}`)
@@ -34,4 +43,4 @@ if (failures.length) {
   console.error(failures.map(item => `- ${item}`).join('\n'))
   process.exit(1)
 }
-console.log('G15D guidance observation entry passed: hosted functional navigation passed, while the runner now waits for the Settings loading surface to disappear before the required visual recapture.')
+console.log('G15D guidance observation entry passed: both hosted installed entries reached a readable, focused Settings observation row in the current window without export; real-user and signed-client evidence remain pending.')

@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "stage": "G15D",
+  "status": "accepted",
+  "evidenceLevel": "hosted-installed-current-tauri-webview2-synthetic-library-navigation-and-manual-visual-review",
+  "hostedRunId": 30695157895,
+  "reusedInstallerRunId": 30694114591,
+  "productSourceCommit": "80df4a65a03d2640841efd0d2d9111f61a00fafa",
+  "orchestrationCommit": "f6623dffdccf7900819f2946efe940328ccd8241",
+  "installerSha256": "328ba93e1b042e4b587e3cc88d44f9b9172668b68a4c5dd90e442ebc9d2d2292",
+  "installedSmoke": {
+    "status": "passed",
+    "passed": 10,
+    "total": 10
+  },
+  "lifecycle": {
+    "status": "passed",
+    "passed": 18,
+    "total": 18
+  },
+  "navigation": {
+    "workspaceObservationEntry": {
+      "route": "#/settings?focus=knowledge-observation",
+      "targetVisible": true,
+      "targetFocused": true,
+      "openedInCurrentWindow": true
+    },
+    "graphOutcomeEntry": {
+      "route": "#/settings?focus=knowledge-observation",
+      "targetVisible": true,
+      "targetFocused": true,
+      "openedInCurrentWindow": true
+    },
+    "exportTriggered": false,
+    "visualSurfaceSettled": true
+  },
+  "visualReview": {
+    "status": "accepted",
+    "workspaceScreenshotSha256": "648d9fdb29f7a5df398bd4e9471458658a21c461ef8505452ec0a3f344c8c517",
+    "graphScreenshotSha256": "ff9be88082333f85ee09a9d4057d167f4f01abd1ab10e479338e7f187494dfd1",
+    "focusedObservationRowVisible": true,
+    "labelsReadable": true,
+    "existingSettingsStyleAligned": true,
+    "separateWindowObserved": false
+  },
+  "sourceUserContentIncluded": false,
+  "realUserLibraryExecutionComplete": false,
+  "signedWindowsClientEvidenceComplete": false,
+  "releaseCandidate": false,
+  "promotionEligible": false
+}

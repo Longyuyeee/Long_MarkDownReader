@@ -27,3 +27,9 @@ G15D 在工作台知识网络区域增加“记录治理基线”，在图谱行
 GitHub Actions U2 运行 `30694114591` 已在一次性 Windows 环境完成：安装版 smoke `10/10`、安装/升级/回退生命周期 `18/18`，工作台和图谱入口都在当前窗口到达 `#/settings?focus=knowledge-observation`，目标元素存在、聚焦且位于视口内，`exportTriggered=false`。但人工检查两张入口截图时，画面仍停留在“正在载入设置”的淡出过渡层，无法证明知识观察区块的文字、字号、位置与原界面风格。因此本次只接收功能证据，不接收视觉证据，也不把 `installedNavigationComplete` 提升为 true。
 
 验证器已增加稳定表面门禁：要求 `.page-loader` 完全消失、目标矩形持续位于视口内，等待两个绘制帧和 500ms 后再次确认，再进行截图。当前状态为 `installed-observation-entry-functional-passed-visual-recapture-next`，下一步复用运行 `30694114591` 的已构建安装包执行视觉重采集；`releaseCandidate=false`，真实资料库对照和签名 Windows 客户端证据仍未完成。
+
+## 视觉重采集接收与阶段收口
+
+U2 重采集运行 `30695157895` 复用了运行 `30694114591` 的安装包并在 2 分 16 秒内完成。新证据明确记录 `visualSurfaceSettled=true`，安装版 smoke 再次为 `10/10`、生命周期为 `18/18`。两张截图均显示设置页中的“知识网络匿名观察”行处于完整蓝色聚焦状态，“保存基线”和“复查改善”文字清晰，字号、按钮、边框和留白沿用设置页既有视觉体系；没有观察到新窗口或独立界面。截图哈希及聚合结果已写入 `docs/evidence/g15d-guidance-observation-entry/acceptance-receipt.json`，不保存测试资料正文、文件名、对象 ID 或路径。
+
+G15D 当前状态提升为 `hosted-installed-observation-entry-passed-real-user-execution-next`：安装态入口发现、当前窗口导航、目标聚焦、无导出副作用和视觉一致性已经闭环。下一阶段是 `G15-consented-real-library-baseline-remediation-follow-up`，只有获得用户对真实资料库的明确授权后才能执行；签名 Windows 客户端证据、`releaseCandidate` 和 `promotionEligible` 继续为 false。
