@@ -2,9 +2,9 @@
 
 日期：2026-08-01
 
-版本：`0.7.0`
+版本：`1.0.0`
 
-产物源提交：`953494c50360d232e0848d0bab80e0defd3c53d4`
+产物源提交：`6f3ce5053bce430803bee9722678ae911aa06d79`
 
 ## 结论
 
@@ -12,14 +12,14 @@ U1 已完成构建与登记。两个安装包均来自隔离、无本地修改�
 
 | 类型 | 文件 | 大小 | SHA-256 | 签名 |
 | --- | --- | ---: | --- | --- |
-| MSI | `Long编辑_0.7.0_x64_zh-CN.msi` | 56,524,800 | `d1e8d90b99bc5611a6b14c819913810af254a3ddcccd1ffc7cac21b4cc95e17d` | `NotSigned` |
-| NSIS | `Long编辑_0.7.0_x64-setup.exe` | 52,101,715 | `a00236f7921f331ef690a75ba8a6417cbbc88c0b97bbbff14a1d8cd5957c072e` | `NotSigned` |
+| MSI | `Long编辑_1.0.0_x64_zh-CN.msi` | 58,109,952 | `8a793c664fc04403e2e161edceb273afa1ccf6b876dc06ab7d5dbfc83977256b` | `NotSigned` |
+| NSIS | `Long编辑_1.0.0_x64-setup.exe` | 53,234,487 | `e944e907079aa30145c6ad6f990d9559f2f0ed4eed08785aae2883e6b8a48b04` | `NotSigned` |
 
-本机产物位于忽略目录 `src-tauri/target/release/bundle/u1-unsigned/953494c`，二进制不提交 Git；提交的只有脱敏清单。
+本机产物位于忽略目录 `src-tauri/target/release/bundle/u1-unsigned/6f3ce50`，二进制不提交 Git；提交的只有脱敏清单。
 
 ## 隔离构建
 
-主工作区存在用户未提交的 PPTX 修改，因此本次没有直接在主工作区打包。构建从提交 `953494c` 创建独立 detached worktree，执行：
+主工作区存在用户未提交的 PPTX 修改，因此本次没有直接在主工作区打包。构建从提交 `6f3ce50` 创建独立发布工作树，执行：
 
 ```powershell
 npm run tauri -- build --bundles msi,nsis

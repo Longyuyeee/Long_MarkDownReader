@@ -16,7 +16,7 @@ for (const token of [
   "LONGEDIT_R5I_DISPOSABLE: \"1\"",
   "ref: ${{ inputs.product_ref }}",
   "ref: v0.6.2",
-  "npm run tauri -- build --bundles nsis",
+  "npm run tauri -- build --bundles nsis --config src-tauri/tauri.u2.conf.json",
   "Get-AuthenticodeSignature",
   "-ExpectedSourceCommit $env:PRODUCT_SOURCE_COMMIT",
   "-ConfirmDisposableMachine",

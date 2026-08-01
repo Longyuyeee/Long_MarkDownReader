@@ -42,7 +42,7 @@ for (const blocker of ["existing-longedit-single-instance-prevented-portable-run
   if (!policy.blockers.includes(blocker)) fail(`U1 blocker missing: ${blocker}`);
 }
 if (!packageJson.scripts["ci:check"]?.includes("check:u1-unsigned-internal-candidate")) fail("U1 checker is not reachable from ci:check");
-for (const [label, source, markers] of [["audit", audit, ["U1", "953494c", "NotSigned", "blocked-existing-single-instance", "releaseCandidate=false", "U2"]], ["handoff", handoff, ["U1 已完成", "u1-unsigned-internal-candidate-policy.json", "U2"]]]) {
+for (const [label, source, markers] of [["audit", audit, ["U1", "6f3ce50", "NotSigned", "blocked-existing-single-instance", "releaseCandidate=false", "U2"]], ["handoff", handoff, ["U1 已更新到 1.0.0", "u1-unsigned-internal-candidate-policy.json", "U2"]]]) {
   for (const marker of markers) if (!source.includes(marker)) fail(`${label} is missing marker: ${marker}`);
 }
 

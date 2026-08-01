@@ -6,7 +6,7 @@ name: U2 Unsigned Disposable Lifecycle
       product_ref:
         description: Product source commit to build and test
         required: true
-        default: 4cf5df4e521ff885336dcc3931d5e195e8605219
+        default: 6f3ce5053bce430803bee9722678ae911aa06d79
       artifact_run_id:
         description: Optional prior U2 run whose already-built installers should be reused
         required: false
@@ -59,7 +59,7 @@ jobs:
       - name: Build current unsigned NSIS candidate
         if: ${{ inputs.artifact_run_id == '' }}
         working-directory: current-product
-        run: npm run tauri -- build --bundles nsis
+        run: npm run tauri -- build --bundles nsis --config src-tauri/tauri.u2.conf.json
 
       - name: Install rollback locked dependencies
         if: ${{ inputs.artifact_run_id == '' }}
