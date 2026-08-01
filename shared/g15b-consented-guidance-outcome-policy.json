@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "stage": "G15B",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "consented-guidance-outcome-comparison-implemented-user-execution-next",
+  "scope": "privacy-preserving-before-after-knowledge-guidance-outcome",
+  "workflow": [
+    "export-consented-aggregate-baseline",
+    "perform-local-guided-remediation",
+    "select-baseline-and-preview-current-comparison",
+    "explicitly-save-local-comparison-receipt"
+  ],
+  "outcomes": [
+    "improved",
+    "mixed",
+    "regressed",
+    "unchanged"
+  ],
+  "measuredChanges": [
+    "object-count",
+    "relation-count",
+    "connected-object-count",
+    "isolated-object-count",
+    "coverage-percent",
+    "relation-type-count"
+  ],
+  "privacy": {
+    "baselinePrivacyContractValidated": true,
+    "baselineMaximumBytes": 1048576,
+    "localComputationOnly": true,
+    "previewBeforeExport": true,
+    "explicitConfirmationRequired": true,
+    "createNewReceiptOnly": true,
+    "automaticUploadAllowed": false,
+    "documentContentIncluded": false,
+    "fileNameIncluded": false,
+    "objectIdentifierIncluded": false,
+    "absolutePathIncluded": false,
+    "libraryFingerprintIncluded": false
+  },
+  "qualityGate": {
+    "comparisonBackendImplemented": true,
+    "settingsWorkflowImplemented": true,
+    "privacyRegressionImplemented": true,
+    "frontendProductionBuildComplete": true,
+    "realUserComparisonComplete": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "nextStage": "G15-consented-real-library-baseline-remediation-follow-up"
+}

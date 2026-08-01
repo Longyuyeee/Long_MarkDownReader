@@ -142,11 +142,16 @@
             <div class="setting-row" data-testid="knowledge-observation-export">
               <div class="info">
                 <div class="label">知识网络匿名观察</div>
-                <div class="desc">先预览聚合指标，再明确确认保存；不包含正文、文件名、对象 ID 或绝对路径，也不会自动上传。</div>
+                <div class="desc">保存匿名基线，改善关系后再做本地复查；只比较聚合变化，不包含正文、文件名、对象 ID 或绝对路径。</div>
               </div>
-              <n-button secondary type="info" :disabled="!store.libraryPath" :loading="observationExporting" @click="previewKnowledgeObservation">
-                预览并导出
-              </n-button>
+              <div class="backup-actions">
+                <n-button secondary type="info" :disabled="!store.libraryPath" :loading="observationExporting" @click="previewKnowledgeObservation">
+                  保存基线
+                </n-button>
+                <n-button secondary type="success" data-testid="knowledge-observation-compare" :disabled="!store.libraryPath" :loading="observationComparisonExporting" @click="previewKnowledgeObservationComparison">
+                  复查改善
+                </n-button>
+              </div>
             </div>
           </n-grid-item>
 
@@ -395,6 +400,7 @@ const backupExporting = ref(false)
 const backupRestoring = ref(false)
 const diagnosticExporting = ref(false)
 const observationExporting = ref(false)
+const observationComparisonExporting = ref(false)
 
 interface ManagementBackupReceipt {
   path: string
@@ -470,6 +476,41 @@ interface KnowledgeGraphObservation {
   relationTypes: { relationType: string; count: number }[]
   degreeDistribution: { zero: number; one: number; twoToFour: number; fiveOrMore: number }
   guidance: { code: string; priority: string; currentValue: number; targetValue: number }[]
+}
+
+interface KnowledgeGraphObservationComparison {
+  schemaVersion: number
+  stage: string
+  generatedAt: number
+  evidenceLevel: string
+  sourceUserContentIncluded: boolean
+  objectIdentifiersIncluded: boolean
+  fileNamesIncluded: boolean
+  absolutePathsIncluded: boolean
+  baselineGeneratedAt: number
+  elapsedSeconds: number
+  baseline: KnowledgeGraphObservationSnapshot
+  current: KnowledgeGraphObservationSnapshot
+  changes: {
+    objectCount: number
+    relationCount: number
+    connectedObjectCount: number
+    isolatedObjectCount: number
+    coveragePercent: number
+    relationTypeCount: number
+  }
+  outcome: 'improved' | 'mixed' | 'regressed' | 'unchanged'
+  achievements: string[]
+}
+
+interface KnowledgeGraphObservationSnapshot {
+  objectCount: number
+  relationCount: number
+  connectedObjectCount: number
+  isolatedObjectCount: number
+  coveragePercent: number
+  relationTypeCount: number
+  guidanceCodes: string[]
 }
 
 const newLib = reactive({ name: '', path: '' })
@@ -737,6 +778,73 @@ const previewKnowledgeObservation = async () => {
     message.error(`生成知识网络观察预览失败：${String(error)}`)
   } finally {
     observationExporting.value = false
+  }
+}
+
+const signedChange = (value: number, suffix = '') => `${value > 0 ? '+' : ''}${value}${suffix}`
+const comparisonOutcomeLabel = (outcome: KnowledgeGraphObservationComparison['outcome']) => ({
+  improved: '已改善',
+  mixed: '部分改善',
+  regressed: '需要继续治理',
+  unchanged: '暂无变化',
+})[outcome]
+
+const exportKnowledgeObservationComparisonAfterConfirm = async (baselinePath: string) => {
+  const target = await save({
+    title: '保存知识网络改善对比回执',
+    defaultPath: `longedit-knowledge-improvement-${new Date().toISOString().slice(0, 10)}.json`,
+    filters: [{ name: 'LongEdit Knowledge Improvement', extensions: ['json'] }],
+  })
+  if (!target) return
+  observationComparisonExporting.value = true
+  try {
+    const receipt = await invoke<KnowledgeGraphObservationComparison>('export_knowledge_graph_observation_comparison', {
+      libraryRoot: store.libraryPath,
+      baselinePath,
+      targetPath: target,
+    })
+    message.success(`改善对比已保存：${comparisonOutcomeLabel(receipt.outcome)} · 覆盖率 ${signedChange(receipt.changes.coveragePercent, '%')}`)
+  } catch (error) {
+    message.error(`导出知识网络改善对比失败：${String(error)}`)
+  } finally {
+    observationComparisonExporting.value = false
+  }
+}
+
+const previewKnowledgeObservationComparison = async () => {
+  if (!store.libraryPath || observationComparisonExporting.value) return
+  const baselinePath = await open({
+    multiple: false,
+    title: '选择此前保存的知识网络匿名观察基线',
+    filters: [{ name: 'LongEdit Knowledge Observation', extensions: ['json'] }],
+  })
+  if (!baselinePath || typeof baselinePath !== 'string') return
+  observationComparisonExporting.value = true
+  try {
+    const preview = await invoke<KnowledgeGraphObservationComparison>('get_knowledge_graph_observation_comparison', {
+      libraryRoot: store.libraryPath,
+      baselinePath,
+    })
+    const summary = [
+      `结论：${comparisonOutcomeLabel(preview.outcome)}`,
+      `覆盖率：${preview.baseline.coveragePercent}% → ${preview.current.coveragePercent}%（${signedChange(preview.changes.coveragePercent, '%')}）`,
+      `孤立对象：${preview.baseline.isolatedObjectCount} → ${preview.current.isolatedObjectCount}（${signedChange(preview.changes.isolatedObjectCount)}）`,
+      `关系数量：${preview.baseline.relationCount} → ${preview.current.relationCount}（${signedChange(preview.changes.relationCount)}）`,
+      `关系类型：${preview.baseline.relationTypeCount} → ${preview.current.relationTypeCount}（${signedChange(preview.changes.relationTypeCount)}）`,
+      '',
+      '请确认基线来自当前资料库。对比回执只保存聚合前后值与变化，不包含正文、文件名、对象 ID、绝对路径，也不会自动上传。',
+    ].join('\n')
+    dialog.warning({
+      title: '确认保存知识网络改善对比',
+      content: summary,
+      positiveText: '确认并选择保存位置',
+      negativeText: '取消',
+      onPositiveClick: () => exportKnowledgeObservationComparisonAfterConfirm(baselinePath),
+    })
+  } catch (error) {
+    message.error(`生成知识网络改善对比失败：${String(error)}`)
+  } finally {
+    observationComparisonExporting.value = false
   }
 }
 

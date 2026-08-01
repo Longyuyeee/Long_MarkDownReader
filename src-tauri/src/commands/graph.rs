@@ -54,14 +54,14 @@ pub struct KnowledgeGraphPulseNode {
     pub relation_count: usize,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct KnowledgeGraphPulseRelationType {
     pub relation_type: String,
     pub count: usize,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct KnowledgeGraphGuidance {
     pub code: String,
@@ -83,14 +83,14 @@ pub struct KnowledgeGraphPulse {
     pub guidance: Vec<KnowledgeGraphGuidance>,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct KnowledgeGraphObservationCount {
     pub category: String,
     pub count: usize,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct KnowledgeGraphDegreeDistribution {
     pub zero: usize,
@@ -99,7 +99,7 @@ pub struct KnowledgeGraphDegreeDistribution {
     pub five_or_more: usize,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct KnowledgeGraphObservation {
     pub schema_version: u32,
@@ -121,6 +121,51 @@ pub struct KnowledgeGraphObservation {
     pub relation_types: Vec<KnowledgeGraphPulseRelationType>,
     pub degree_distribution: KnowledgeGraphDegreeDistribution,
     pub guidance: Vec<KnowledgeGraphGuidance>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct KnowledgeGraphObservationSnapshot {
+    pub object_count: usize,
+    pub relation_count: usize,
+    pub connected_object_count: usize,
+    pub isolated_object_count: usize,
+    pub coverage_percent: u8,
+    pub relation_type_count: usize,
+    pub guidance_codes: Vec<String>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct KnowledgeGraphObservationChanges {
+    pub object_count: i64,
+    pub relation_count: i64,
+    pub connected_object_count: i64,
+    pub isolated_object_count: i64,
+    pub coverage_percent: i16,
+    pub relation_type_count: i64,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct KnowledgeGraphObservationComparison {
+    pub schema_version: u32,
+    pub stage: String,
+    pub app_version: String,
+    pub generated_at: u64,
+    pub evidence_level: String,
+    pub consent_boundary: String,
+    pub source_user_content_included: bool,
+    pub object_identifiers_included: bool,
+    pub file_names_included: bool,
+    pub absolute_paths_included: bool,
+    pub baseline_generated_at: u64,
+    pub elapsed_seconds: u64,
+    pub baseline: KnowledgeGraphObservationSnapshot,
+    pub current: KnowledgeGraphObservationSnapshot,
+    pub changes: KnowledgeGraphObservationChanges,
+    pub outcome: String,
+    pub achievements: Vec<String>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -741,6 +786,173 @@ pub async fn export_knowledge_graph_observation(
         .sync_all()
         .map_err(|error| format!("同步知识网络观察回执失败: {error}"))?;
     Ok(observation)
+}
+
+fn observation_snapshot(
+    observation: &KnowledgeGraphObservation,
+) -> KnowledgeGraphObservationSnapshot {
+    KnowledgeGraphObservationSnapshot {
+        object_count: observation.object_count,
+        relation_count: observation.relation_count,
+        connected_object_count: observation.connected_object_count,
+        isolated_object_count: observation.isolated_object_count,
+        coverage_percent: observation.coverage_percent,
+        relation_type_count: observation.relation_types.len(),
+        guidance_codes: observation
+            .guidance
+            .iter()
+            .map(|item| item.code.clone())
+            .collect(),
+    }
+}
+
+fn compare_knowledge_graph_observations(
+    baseline: &KnowledgeGraphObservation,
+    current: &KnowledgeGraphObservation,
+) -> KnowledgeGraphObservationComparison {
+    let baseline_snapshot = observation_snapshot(baseline);
+    let current_snapshot = observation_snapshot(current);
+    let changes = KnowledgeGraphObservationChanges {
+        object_count: current.object_count as i64 - baseline.object_count as i64,
+        relation_count: current.relation_count as i64 - baseline.relation_count as i64,
+        connected_object_count: current.connected_object_count as i64
+            - baseline.connected_object_count as i64,
+        isolated_object_count: current.isolated_object_count as i64
+            - baseline.isolated_object_count as i64,
+        coverage_percent: current.coverage_percent as i16 - baseline.coverage_percent as i16,
+        relation_type_count: current.relation_types.len() as i64
+            - baseline.relation_types.len() as i64,
+    };
+    let mut achievements = Vec::new();
+    if changes.coverage_percent > 0 {
+        achievements.push("coverage-increased".into());
+    }
+    if changes.isolated_object_count < 0 {
+        achievements.push("isolated-objects-reduced".into());
+    }
+    if changes.relation_count > 0 {
+        achievements.push("relations-added".into());
+    }
+    if changes.relation_type_count > 0 {
+        achievements.push("relation-types-diversified".into());
+    }
+    if baseline.coverage_percent < 70 && current.coverage_percent >= 70 {
+        achievements.push("healthy-coverage-threshold-reached".into());
+    }
+    let improved = changes.coverage_percent > 0
+        || changes.isolated_object_count < 0
+        || changes.connected_object_count > 0
+        || changes.relation_count > 0
+        || changes.relation_type_count > 0;
+    let regressed = changes.coverage_percent < 0 || changes.isolated_object_count > 0;
+    let outcome = match (improved, regressed) {
+        (true, false) => "improved",
+        (true, true) => "mixed",
+        (false, true) => "regressed",
+        (false, false) => "unchanged",
+    };
+
+    KnowledgeGraphObservationComparison {
+        schema_version: 1,
+        stage: "G15B".into(),
+        app_version: env!("CARGO_PKG_VERSION").into(),
+        generated_at: current.generated_at,
+        evidence_level: "local-consented-aggregate-comparison-only".into(),
+        consent_boundary: "User selects a local aggregate baseline, previews the comparison, and explicitly chooses a new local JSON destination. LongEdit performs no automatic upload.".into(),
+        source_user_content_included: false,
+        object_identifiers_included: false,
+        file_names_included: false,
+        absolute_paths_included: false,
+        baseline_generated_at: baseline.generated_at,
+        elapsed_seconds: current.generated_at.saturating_sub(baseline.generated_at),
+        baseline: baseline_snapshot,
+        current: current_snapshot,
+        changes,
+        outcome: outcome.into(),
+        achievements,
+    }
+}
+
+fn load_knowledge_graph_observation(path: &Path) -> Result<KnowledgeGraphObservation, String> {
+    if path
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_none_or(|value| !value.eq_ignore_ascii_case("json"))
+    {
+        return Err("知识网络观察基线必须是 .json 文件".into());
+    }
+    let metadata =
+        fs::metadata(path).map_err(|error| format!("读取知识网络观察基线失败: {error}"))?;
+    if metadata.len() > 1024 * 1024 {
+        return Err("知识网络观察基线超过 1 MiB 安全上限".into());
+    }
+    let bytes = fs::read(path).map_err(|error| format!("读取知识网络观察基线失败: {error}"))?;
+    let observation: KnowledgeGraphObservation = serde_json::from_slice(&bytes)
+        .map_err(|error| format!("解析知识网络观察基线失败: {error}"))?;
+    if observation.schema_version != 1
+        || observation.stage != "G12"
+        || observation.evidence_level != "local-consented-aggregate-only"
+        || observation.source_user_content_included
+        || observation.object_identifiers_included
+        || observation.file_names_included
+        || observation.absolute_paths_included
+    {
+        return Err("知识网络观察基线未通过隐私与版本校验".into());
+    }
+    Ok(observation)
+}
+
+async fn build_knowledge_graph_observation_comparison(
+    library_root: String,
+    baseline_path: String,
+) -> Result<KnowledgeGraphObservationComparison, String> {
+    let baseline = load_knowledge_graph_observation(Path::new(&baseline_path))?;
+    let current = get_knowledge_graph_observation(library_root).await?;
+    Ok(compare_knowledge_graph_observations(&baseline, &current))
+}
+
+#[tauri::command]
+pub async fn get_knowledge_graph_observation_comparison(
+    library_root: String,
+    baseline_path: String,
+) -> Result<KnowledgeGraphObservationComparison, String> {
+    build_knowledge_graph_observation_comparison(library_root, baseline_path).await
+}
+
+#[tauri::command]
+pub async fn export_knowledge_graph_observation_comparison(
+    library_root: String,
+    baseline_path: String,
+    target_path: String,
+) -> Result<KnowledgeGraphObservationComparison, String> {
+    let target = Path::new(&target_path);
+    if target
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_none_or(|value| !value.eq_ignore_ascii_case("json"))
+    {
+        return Err("知识网络改善对比回执必须保存为 .json 文件".into());
+    }
+    if target.parent().is_none_or(|parent| !parent.is_dir()) {
+        return Err("知识网络改善对比回执目标目录不存在".into());
+    }
+    let comparison =
+        build_knowledge_graph_observation_comparison(library_root, baseline_path).await?;
+    let mut bytes = serde_json::to_vec_pretty(&comparison)
+        .map_err(|error| format!("序列化知识网络改善对比回执失败: {error}"))?;
+    bytes.push(b'\n');
+    let mut output = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(target)
+        .map_err(|error| format!("创建知识网络改善对比回执失败: {error}"))?;
+    output
+        .write_all(&bytes)
+        .map_err(|error| format!("写入知识网络改善对比回执失败: {error}"))?;
+    output
+        .sync_all()
+        .map_err(|error| format!("同步知识网络改善对比回执失败: {error}"))?;
+    Ok(comparison)
 }
 
 fn context_node(node: &GraphNode, center_path: &str, requested_path: &str) -> GraphContextNode {
@@ -3639,6 +3851,53 @@ mod tests {
             "acquisition.md",
         ] {
             assert!(!serialized.contains(secret), "observation leaked {secret}");
+        }
+    }
+
+    #[test]
+    fn consented_observation_comparison_reports_improvement_without_identifiers() {
+        let baseline_graph = GraphData {
+            nodes: vec![
+                GraphNode::test_node("C:\\Secret\\baseline-a.md"),
+                GraphNode::test_node("C:\\Secret\\baseline-b.md"),
+                GraphNode::test_node("C:\\Secret\\baseline-c.md"),
+            ],
+            edges: vec![GraphEdge::test_edge(
+                "C:\\Secret\\baseline-a.md",
+                "C:\\Secret\\baseline-b.md",
+            )],
+        };
+        let mut current_graph = baseline_graph.clone();
+        current_graph.edges.push(GraphEdge::structural(
+            "C:\\Secret\\baseline-b.md".into(),
+            "C:\\Secret\\baseline-c.md".into(),
+            "supports",
+        ));
+        let baseline = knowledge_graph_observation(&baseline_graph, 100);
+        let current = knowledge_graph_observation(&current_graph, 160);
+        let comparison = compare_knowledge_graph_observations(&baseline, &current);
+
+        assert_eq!(comparison.stage, "G15B");
+        assert_eq!(comparison.elapsed_seconds, 60);
+        assert_eq!(comparison.changes.relation_count, 1);
+        assert_eq!(comparison.changes.isolated_object_count, -1);
+        assert_eq!(comparison.changes.coverage_percent, 33);
+        assert_eq!(comparison.outcome, "improved");
+        assert!(comparison
+            .achievements
+            .contains(&"isolated-objects-reduced".to_string()));
+        assert!(comparison
+            .achievements
+            .contains(&"relations-added".to_string()));
+
+        let serialized = serde_json::to_string(&comparison).unwrap();
+        for secret in [
+            "C:\\Secret",
+            "baseline-a.md",
+            "baseline-b.md",
+            "baseline-c.md",
+        ] {
+            assert!(!serialized.contains(secret), "comparison leaked {secret}");
         }
     }
 }

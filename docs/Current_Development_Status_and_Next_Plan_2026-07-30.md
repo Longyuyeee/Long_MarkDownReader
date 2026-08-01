@@ -626,3 +626,11 @@ Manual screenshot review confirmed the guidance card is readable and aligned wit
 The installed G14 evidence proved that guidance opens the graph in the current window, but also exposed that every guidance code used the same generic destination. G15A now maps the six stable codes to specific management contexts: first-object guidance opens the library; first-relation guidance opens the link tutorial; coverage and isolation guidance temporarily focus orphan objects and open governance; diversity guidance explains semantic relation actions; healthy guidance opens the network overview.
 
 The `focus` query is bounded, orphan focus is ephemeral, persisted graph filters and user content are not mutated, and the banner can restore the normal graph route. Current status is `guided-remediation-routing-implemented-real-user-execution-next`; G15 remains the consent-gated real-library observation and `releaseCandidate=false` remains unchanged.
+
+## G15B update - consented guidance outcome comparison
+
+The consented observation flow now supports a privacy-preserving baseline and follow-up comparison. A user saves a previewed aggregate baseline, performs a guided remediation, selects that baseline again, reviews coverage, isolation, connected-object, relation, and relation-type changes, and explicitly chooses whether to save a new local comparison receipt.
+
+The backend accepts only a valid G12 aggregate-only baseline, caps input at 1 MiB, rejects any privacy flags that indicate content, identifiers, file names, or paths, and creates rather than overwrites the result. The comparison contains no library fingerprint and performs no upload, so the user must explicitly confirm that the selected baseline belongs to the current library. Current status is `consented-guidance-outcome-comparison-implemented-user-execution-next`; no real-user outcome is claimed and `releaseCandidate=false` remains unchanged.
+
+Next product action: `G15-consented-real-library-baseline-remediation-follow-up`. The user selects a real library, saves and inspects a baseline, performs one recommended action, then reviews and optionally shares the inspected aggregate comparison. Release action remains independently blocked at R5N signing, signed Windows 10/11 client execution, and manual approval.
