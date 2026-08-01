@@ -3251,4 +3251,96 @@ mod tests {
         assert_eq!(fs::read(&path).unwrap(), source);
         fs::remove_dir_all(base).unwrap();
     }
+
+    #[test]
+    fn representative_cross_format_library_produces_a_useful_knowledge_pulse() {
+        let (base, root) = fixture("g10-cross-format-pulse");
+        let research = root.join("research");
+        fs::create_dir_all(&research).unwrap();
+        fs::write(root.join("NorthStar.md"), "# North Star\n").unwrap();
+        fs::write(
+            research.join("Evidence.pdf"),
+            b"%PDF representative fixture",
+        )
+        .unwrap();
+        fs::write(
+            research.join("Evidence.pdf.annotations.json"),
+            r#"{"schemaVersion":1,"source":{"pdfFile":"Evidence.pdf","size":27,"modifiedAt":1},"annotations":[{"id":"evidence-1","kind":"comment","page":1,"color":"yellow","rects":[],"quote":"retention","comment":"Supports the roadmap","createdAt":1,"updatedAt":1}]}"#,
+        )
+        .unwrap();
+        fs::write(
+            research.join("Roadmap.table.json"),
+            r#"{"schemaVersion":1,"kind":"longedit.table","data":{"columns":[{"id":"topic","name":"Topic","type":"text"}],"rows":[{"id":"row-1","values":{"topic":"Knowledge network"}}]},"views":[{"id":"chart","name":"Coverage chart","kind":"chart","config":{"categoryColumn":"topic"}},{"id":"dashboard","name":"Management dashboard","kind":"dashboard","config":{"dashboardItems":[{"chartViewId":"chart","width":6}]}}],"activeView":"dashboard"}"#,
+        )
+        .unwrap();
+        fs::write(
+            research.join("System.canvas"),
+            r#"{"nodes":[{"id":"north-star","type":"file","file":"NorthStar.md","x":0,"y":0,"width":240,"height":120},{"id":"roadmap-chart","type":"file","file":"research/Roadmap.table.json","longeditViewId":"chart","x":320,"y":0,"width":240,"height":120}],"edges":[{"id":"supports-roadmap","fromNode":"north-star","toNode":"roadmap-chart","relationType":"supports"}]}"#,
+        )
+        .unwrap();
+        fs::write(
+            research.join("Outline.opml"),
+            r#"<?xml version="1.0" encoding="UTF-8"?><opml version="2.0"><head><title>Delivery outline</title></head><body><outline text="Discover" _longeditId="discover"><outline text="Deliver" _longeditId="deliver"/></outline></body></opml>"#,
+        )
+        .unwrap();
+        fs::write(
+            research.join("Brief.md"),
+            "---\nrelations:\n  depends-on: [[NorthStar]]\n---\n# Brief\n[Evidence](longedit://pdf?path=research%2FEvidence.pdf&page=1&annotation=evidence-1)",
+        )
+        .unwrap();
+        fs::write(
+            research.join("Review.pptx"),
+            include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx"),
+        )
+        .unwrap();
+
+        let graph =
+            tauri::async_runtime::block_on(build_link_graph(root.to_string_lossy().into_owned()))
+                .unwrap();
+        let pulse = knowledge_graph_pulse(&graph);
+        let object_types = graph
+            .nodes
+            .iter()
+            .map(|node| node.object_type.as_str())
+            .collect::<HashSet<_>>();
+        for required in [
+            "markdown",
+            "pdf",
+            "pdf_annotation",
+            "table",
+            "table_view",
+            "canvas",
+            "canvas_node",
+            "opml",
+            "opml_node",
+            "pptx",
+            "pptx_slide",
+        ] {
+            assert!(
+                object_types.contains(required),
+                "missing {required} graph object"
+            );
+        }
+        for required in ["annotates", "contains", "depends-on", "embeds", "supports"] {
+            assert!(
+                pulse
+                    .relation_types
+                    .iter()
+                    .any(|relation| relation.relation_type == required),
+                "missing {required} relation in pulse"
+            );
+        }
+        assert!(pulse.object_count >= 16, "unexpected pulse: {pulse:?}");
+        assert!(pulse.relation_count >= 12, "unexpected pulse: {pulse:?}");
+        assert!(pulse.connected_object_count > pulse.isolated_object_count);
+        assert!(pulse.coverage_percent >= 75);
+        assert!(!pulse.top_nodes.is_empty());
+        assert!(pulse.top_nodes.len() <= 6);
+        assert!(pulse
+            .top_nodes
+            .windows(2)
+            .all(|pair| pair[0].relation_count >= pair[1].relation_count));
+
+        fs::remove_dir_all(base).unwrap();
+    }
 }

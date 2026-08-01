@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "stage": "G10",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "representative-cross-format-library-pulse-accepted-installed-observation-next",
+  "scope": "isolated-representative-cross-format-library-knowledge-network-acceptance",
+  "fixtureClassification": "synthetic-files-written-to-an-isolated-real-filesystem",
+  "requiredObjectTypes": [
+    "markdown",
+    "pdf",
+    "pdf_annotation",
+    "table",
+    "table_view",
+    "canvas",
+    "canvas_node",
+    "opml",
+    "opml_node",
+    "pptx",
+    "pptx_slide"
+  ],
+  "requiredRelationTypes": [
+    "annotates",
+    "contains",
+    "depends-on",
+    "embeds",
+    "supports"
+  ],
+  "acceptance": {
+    "minimumObjectCount": 16,
+    "minimumRelationCount": 12,
+    "minimumCoveragePercent": 75,
+    "connectedObjectsMustOutnumberIsolatedObjects": true,
+    "topTopicsMustBeRankedAndBounded": true,
+    "maximumTopTopicCount": 6
+  },
+  "qualityGate": {
+    "realFilesystemGraphBuildComplete": true,
+    "representativeCrossFormatPulseComplete": true,
+    "installedDesktopObservationComplete": false,
+    "realUserLibraryObservationComplete": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "knownLimits": [
+    "fixture-content-is-representative-and-synthetic-not-real-user-content",
+    "installed-artifact-workspace-home-pulse-observation-is-still-required",
+    "recommendation-quality-still-requires-consented-real-library-observation",
+    "signed-windows-10-and-windows-11-release-evidence-remains-external"
+  ],
+  "nextStage": "G11-installed-artifact-knowledge-pulse-observation"
+}

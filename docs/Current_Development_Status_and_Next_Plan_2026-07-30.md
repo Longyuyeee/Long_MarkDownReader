@@ -576,3 +576,11 @@ The product track continues independently of the blocked signing track. Workspac
 The backend computes these values from the unified graph model and has Rust coverage for a four-object, three-relation fixture with 75% coverage. `check:graph-product-contract` now includes the G9 machine contract. Frontend production build, 432/432 Rust functional tests, 1/1 performance test, the full format contract, and the graph product contract pass. Current status is `knowledge-network-pulse-implemented-real-library-acceptance-next`; `releaseCandidate=false` and all R5N external blockers remain unchanged.
 
 Next product stage: G10. Capture isolated desktop evidence on a representative cross-format library and evaluate whether relation coverage, top topics, and navigation provide useful management feedback. Full audit: `docs/G9_Knowledge_Network_Pulse_Audit_2026-08-01.md`.
+
+## G10 update - representative cross-format knowledge network acceptance
+
+G10 now validates the knowledge network against files written to an isolated real filesystem instead of a hand-built graph. One representative library covers Markdown, PDF annotations, table views, Canvas nodes, OPML outline nodes, and a real-producer PPTX fixture. The resulting pulse must contain 11 object types, five management relation types, at least 16 objects and 12 relations, at least 75% relation coverage, more connected than isolated objects, and a ranked top-topic list bounded to six entries.
+
+This is deterministic synthetic-content integration evidence, not a real user library and not installed-artifact UI evidence. Current status is `representative-cross-format-library-pulse-accepted-installed-observation-next`; `releaseCandidate=false` and the R5N signing/Windows 10/11 blockers remain unchanged.
+
+Next product stage: G11. Exercise the same knowledge pulse and centered graph navigation inside the disposable installed-artifact lifecycle, while preserving the synthetic evidence label. Full audit: `docs/G10_Cross_Format_Knowledge_Network_Acceptance_Audit_2026-08-01.md`.
