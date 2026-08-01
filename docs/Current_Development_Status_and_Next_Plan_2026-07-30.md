@@ -584,3 +584,9 @@ G10 now validates the knowledge network against files written to an isolated rea
 This is deterministic synthetic-content integration evidence, not a real user library and not installed-artifact UI evidence. Current status is `representative-cross-format-library-pulse-accepted-installed-observation-next`; `releaseCandidate=false` and the R5N signing/Windows 10/11 blockers remain unchanged.
 
 Next product stage: G11. Exercise the same knowledge pulse and centered graph navigation inside the disposable installed-artifact lifecycle, while preserving the synthetic evidence label. Full audit: `docs/G10_Cross_Format_Knowledge_Network_Acceptance_Audit_2026-08-01.md`.
+
+## G11 update - installed knowledge pulse runner integrated
+
+The disposable installed-artifact lifecycle now creates a fixed synthetic Markdown/Canvas relation network. The installed Workspace Home must expose non-zero useful coverage, `depends-on` and `supports` relations, and ranked topics; clicking the first topic must open the graph with matching selected object identity and a `root` route. Stable non-visual test attributes and three redacted evidence outputs have been added.
+
+Current status is `installed-knowledge-pulse-runner-integrated-hosted-execution-next`: source integration is complete, but no hosted run for the current commit has yet been accepted. `releaseCandidate=false` remains unchanged. Next action: trigger the U2 hosted lifecycle for the current commit, inspect/import the G11 outputs, then close G11 in a separate audit push.

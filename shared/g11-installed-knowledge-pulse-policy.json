@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "stage": "G11",
+  "appVersion": "0.7.0",
+  "releaseCandidate": false,
+  "status": "installed-knowledge-pulse-runner-integrated-hosted-execution-next",
+  "fixtureClassification": "fixed-synthetic-management-library",
+  "requiredChecks": [
+    "installed-knowledge-network-pulse",
+    "installed-knowledge-topic-centered-navigation"
+  ],
+  "acceptance": {
+    "minimumObjectCount": 5,
+    "minimumRelationCount": 3,
+    "minimumCoveragePercent": 60,
+    "connectedObjectsMustOutnumberIsolatedObjects": true,
+    "requiredRelationTypes": ["depends-on", "supports"],
+    "centeredTopicIdentityMustMatch": true
+  },
+  "evidence": {
+    "runnerIntegrated": true,
+    "hostedExecutionCompleteForCurrentCommit": false,
+    "realUserLibraryObservationComplete": false,
+    "signedWindowsClientEvidenceComplete": false
+  },
+  "evidenceFiles": [
+    "installed-knowledge-network-pulse.jpg",
+    "installed-knowledge-topic-centered.jpg",
+    "installed-knowledge-network-evidence.json"
+  ],
+  "nextStage": "G11-hosted-installed-artifact-execution"
+}

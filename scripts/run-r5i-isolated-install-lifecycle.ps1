@@ -214,6 +214,9 @@ $configPath = Join-Path $configRoot "config.json"
 $libraryMarker = Join-Path $libraryRoot "r5i-library-marker.txt"
 $textFixture = Join-Path $libraryRoot "r5j-notes.txt"
 $jsonFixture = Join-Path $libraryRoot "r5j-config.json"
+$graphNorthStarFixture = Join-Path $libraryRoot "r5j-north-star.md"
+$graphPlanFixture = Join-Path $libraryRoot "r5j-plan.md"
+$graphCanvasFixture = Join-Path $libraryRoot "r5j-network.canvas"
 $webviewRoot = "C:\LongEditR5IWebView"
 $managementRoot = "C:\LongEditR5IManagement"
 $managementBackup = Join-Path $managementRoot "r5l-management-backup.zip"
@@ -227,6 +230,9 @@ New-Item -ItemType Directory -Path $OutputDirectory, $libraryRoot, $configRoot, 
 [System.IO.File]::WriteAllText($configMarker, '{"stage":"R5I","retain":true}', [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($textFixture, "R5J_TEXT_INITIAL`n", [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($jsonFixture, '{"marker":"R5J_JSON_INITIAL"}', [System.Text.UTF8Encoding]::new($false))
+[System.IO.File]::WriteAllText($graphNorthStarFixture, "# R5J North Star`n`nInstalled knowledge-network acceptance root.`n", [System.Text.UTF8Encoding]::new($false))
+[System.IO.File]::WriteAllText($graphPlanFixture, "---`nrelations:`n  depends-on: [[r5j-north-star]]`n---`n# R5J Delivery Plan`n", [System.Text.UTF8Encoding]::new($false))
+[System.IO.File]::WriteAllText($graphCanvasFixture, '{"nodes":[{"id":"north-star","type":"file","file":"r5j-north-star.md","x":0,"y":0,"width":240,"height":120},{"id":"plan","type":"file","file":"r5j-plan.md","x":320,"y":0,"width":240,"height":120}],"edges":[{"id":"supports-plan","fromNode":"north-star","toNode":"plan","relationType":"supports"}]}', [System.Text.UTF8Encoding]::new($false))
 $formalConfig = [ordered]@{
     libraries = @([ordered]@{
         name = "R5L Disposable Vault"

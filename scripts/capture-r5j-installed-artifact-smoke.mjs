@@ -248,6 +248,49 @@ const jsonVisual = await assertEditorTextVisible('R5J_JSON_SAVED', 'reopened ins
 await capture('installed-json-save-reopen.jpg')
 checks.push({ id: 'installed-json-read-edit-save-reopen', status: 'passed', visual: jsonVisual })
 
+await navigate('#/workspace', '.workspace-home', 'installed workspace knowledge network pulse')
+await waitFor(`Number(document.querySelector('[data-testid="knowledge-network-coverage"]')?.getAttribute('aria-valuenow')) > 0`, 'installed knowledge network coverage')
+await waitFor(`document.querySelectorAll('[data-testid="knowledge-network-topic"]').length > 0`, 'installed knowledge network top topics')
+const knowledgePulse = await evaluate(`(() => {
+  const pulse = document.querySelector('[data-testid="knowledge-network-pulse"]')
+  const coverage = document.querySelector('[data-testid="knowledge-network-coverage"]')
+  const topics = [...document.querySelectorAll('[data-testid="knowledge-network-topic"]')].map(button => ({
+    nodeId: button.getAttribute('data-node-id'),
+    title: button.querySelector('span')?.textContent || '',
+    relationCount: Number(button.querySelector('b')?.textContent || 0),
+  }))
+  return {
+    objectCount: Number(pulse?.getAttribute('data-object-count') || 0),
+    relationCount: Number(pulse?.getAttribute('data-relation-count') || 0),
+    connectedObjectCount: Number(pulse?.getAttribute('data-connected-count') || 0),
+    isolatedObjectCount: Number(pulse?.getAttribute('data-isolated-count') || 0),
+    coveragePercent: Number(coverage?.getAttribute('aria-valuenow') || 0),
+    relationTypes: [...document.querySelectorAll('.pulse-types [data-relation-type]')].map(item => item.getAttribute('data-relation-type')),
+    topics,
+  }
+})()`)
+if (knowledgePulse.objectCount < 5 || knowledgePulse.relationCount < 3 || knowledgePulse.coveragePercent < 60 ||
+    knowledgePulse.connectedObjectCount <= knowledgePulse.isolatedObjectCount || knowledgePulse.topics.length < 1 ||
+    !knowledgePulse.relationTypes.includes('depends-on') || !knowledgePulse.relationTypes.includes('supports')) {
+  throw new Error(`Installed knowledge network pulse is not useful: ${JSON.stringify(knowledgePulse)}`)
+}
+await capture('installed-knowledge-network-pulse.jpg')
+checks.push({ id: 'installed-knowledge-network-pulse', status: 'passed' })
+
+const selectedTopic = knowledgePulse.topics[0]
+await evaluate(`document.querySelector('[data-testid="knowledge-network-topic"]')?.click()`)
+await waitFor(`document.querySelector('[data-testid="graph-selected-node"]')?.getAttribute('data-node-id') === ${JSON.stringify(selectedTopic.nodeId)}`, 'centered graph topic selection')
+const centeredNavigation = await evaluate(`(() => ({
+  nodeId: document.querySelector('[data-testid="graph-selected-node"]')?.getAttribute('data-node-id') || '',
+  title: document.querySelector('[data-testid="graph-selected-node"] h3')?.textContent || '',
+  route: location.hash,
+}))()`)
+if (centeredNavigation.nodeId !== selectedTopic.nodeId || centeredNavigation.title !== selectedTopic.title || !centeredNavigation.route.includes('root=')) {
+  throw new Error(`Installed centered graph navigation failed: ${JSON.stringify(centeredNavigation)}`)
+}
+await capture('installed-knowledge-topic-centered.jpg')
+checks.push({ id: 'installed-knowledge-topic-centered-navigation', status: 'passed' })
+
 const routes = [
   ['#/workspace', '.workspace-home', '/workspace'],
   ['#/library', '.library-mode', '/library'],
@@ -276,6 +319,15 @@ checks.push({ id: 'installed-route-performance-export', status: 'passed' })
 
 const executableStats = await fs.stat(installedExecutable)
 const capturedAt = new Date().toISOString()
+await fs.writeFile(path.join(output, 'installed-knowledge-network-evidence.json'), `${JSON.stringify({
+  schemaVersion: 1,
+  stage: 'G11',
+  capturedAt,
+  evidenceLevel: 'installed-current-tauri-webview2-synthetic-library',
+  sourceUserContentIncluded: false,
+  knowledgePulse,
+  centeredNavigation,
+}, null, 2)}\n`)
 await fs.writeFile(path.join(output, 'installed-route-mount-evidence.json'), `${JSON.stringify({
   schemaVersion: 1,
   stage: 'R5J',
@@ -314,6 +366,9 @@ await fs.writeFile(path.join(output, 'installed-artifact-smoke.json'), `${JSON.s
   evidenceFiles: [
     'installed-txt-save-reopen.jpg',
     'installed-json-save-reopen.jpg',
+    'installed-knowledge-network-pulse.jpg',
+    'installed-knowledge-topic-centered.jpg',
+    'installed-knowledge-network-evidence.json',
     'installed-route-mount-evidence.json',
     'installed-route-performance-evidence.json',
   ],

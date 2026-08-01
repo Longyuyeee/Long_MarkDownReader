@@ -73,19 +73,19 @@
             <button @click="router.push({ name: 'Graph' })"><span>歧义</span><strong>{{ health.ambiguousLinks.length }}</strong></button>
             <button @click="router.push({ name: 'Graph' })"><span>孤立笔记</span><strong>{{ health.orphanNotes.length }}</strong></button>
           </div>
-          <div class="knowledge-pulse" aria-label="知识网络脉搏">
+          <div class="knowledge-pulse" aria-label="知识网络脉搏" data-testid="knowledge-network-pulse" :data-object-count="graphPulse.objectCount" :data-relation-count="graphPulse.relationCount" :data-connected-count="graphPulse.connectedObjectCount" :data-isolated-count="graphPulse.isolatedObjectCount">
             <div class="pulse-heading">
               <div><span>关系覆盖</span><strong>{{ graphPulse.coveragePercent }}%</strong></div>
               <small>{{ graphPulse.connectedObjectCount }} 已连接 · {{ graphPulse.isolatedObjectCount }} 孤立 · {{ graphPulse.relationCount }} 关系</small>
             </div>
-            <div class="pulse-track" role="progressbar" aria-label="知识对象关系覆盖率" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="graphPulse.coveragePercent">
+            <div class="pulse-track" role="progressbar" aria-label="知识对象关系覆盖率" data-testid="knowledge-network-coverage" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="graphPulse.coveragePercent">
               <i :style="{ width: `${graphPulse.coveragePercent}%` }"></i>
             </div>
             <div v-if="graphPulse.relationTypes.length" class="pulse-types">
-              <span v-for="item in graphPulse.relationTypes.slice(0, 5)" :key="item.relationType">{{ relationTypeLabel(item.relationType) }} <b>{{ item.count }}</b></span>
+              <span v-for="item in graphPulse.relationTypes.slice(0, 5)" :key="item.relationType" :data-relation-type="item.relationType">{{ relationTypeLabel(item.relationType) }} <b>{{ item.count }}</b></span>
             </div>
             <div v-if="graphPulse.topNodes.length" class="pulse-nodes">
-              <button v-for="node in graphPulse.topNodes" :key="node.id" :title="`以 ${node.title} 为中心打开图谱`" @click="openPulseNode(node.id)">
+              <button v-for="node in graphPulse.topNodes" :key="node.id" data-testid="knowledge-network-topic" :data-node-id="node.id" :title="`以 ${node.title} 为中心打开图谱`" @click="openPulseNode(node.id)">
                 <span>{{ node.title }}</span><b>{{ node.relationCount }}</b>
               </button>
             </div>
