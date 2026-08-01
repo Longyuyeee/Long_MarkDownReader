@@ -12,7 +12,7 @@ const requireText = (source, token, message) => { if (!source.includes(token)) f
 
 if (policy.schemaVersion !== 1 || policy.stage !== 'G15E' || policy.appVersion !== packageJson.version || policy.releaseCandidate !== false) failures.push('G15E policy identity drift')
 if (policy.status !== 'consented-real-library-session-runner-integrated-hosted-execution-next' || policy.nextStage !== 'G15E-hosted-installed-session-guidance-acceptance') failures.push('G15E stage boundary drift')
-if (policy.productSourceCommit !== '07edb2e47e227fefd240ac6f9e6a2dd33ad33187' || policy.hostedRunId !== null || policy.expectedEvidenceFiles.length !== 3) failures.push('G15E pending installed evidence identity drift')
+if (policy.productSourceCommit !== 'eafd75828a697470c4974e1039da038ad8220f23' || policy.hostedRunId !== null || policy.expectedEvidenceFiles.length !== 3) failures.push('G15E pending installed evidence identity drift')
 if (policy.steps.length !== 4 || policy.sessionState.storage !== 'sessionStorage' || JSON.stringify(policy.sessionState.storedFields) !== JSON.stringify(['schemaVersion', 'phase'])) failures.push('G15E bounded session state drift')
 for (const [key, value] of Object.entries(policy.sessionState)) if (key.endsWith('Included') && value !== false) failures.push(`G15E session privacy drift: ${key}`)
 for (const key of ['automaticBaselineExportAllowed', 'automaticComparisonExportAllowed', 'automaticRemediationAllowed', 'automaticUploadAllowed']) if (policy.consentBoundary[key] !== false) failures.push(`G15E automatic action boundary drift: ${key}`)
