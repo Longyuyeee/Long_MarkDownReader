@@ -21,9 +21,25 @@ const knowledgeImprovementFixture = path.join(library, 'g15c-linked-follow-up.md
 const embeddedEditorSelector = '.library-embedded-editor .cm-content'
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 const sha256 = async file => crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex')
-const targets = await fetch(`${endpoint}/json`).then(response => response.json())
-const target = targets.find(item => item.type === 'page')
-if (!target?.webSocketDebuggerUrl) throw new Error('R5J installed Tauri WebView CDP target was not found')
+const waitForCdpTarget = async (attempts = 120) => {
+  let lastError = ''
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const targets = await fetch(`${endpoint}/json`).then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        return response.json()
+      })
+      const target = targets.find(item => item.type === 'page' && item.webSocketDebuggerUrl)
+      if (target) return target
+      lastError = 'no page target advertised'
+    } catch (error) {
+      lastError = String(error)
+    }
+    await delay(250)
+  }
+  throw new Error(`R5J installed Tauri WebView CDP target was not found after ${attempts} attempts: ${lastError}`)
+}
+const target = await waitForCdpTarget()
 
 const socket = new WebSocket(target.webSocketDebuggerUrl)
 await new Promise((resolve, reject) => {
