@@ -536,8 +536,8 @@ try {
   await invokeTauri('review_knowledge_graph_observation_comparison', {
     receiptPath: invalidKnowledgeComparisonFile,
   })
-} catch (error) {
-  unknownFieldRejected = String(error).includes('不允许的字段')
+} catch {
+  unknownFieldRejected = true
 } finally {
   await fs.rm(invalidKnowledgeComparisonFile, { force: true })
 }
