@@ -80,6 +80,7 @@ pub struct KnowledgeGraphPulse {
     pub coverage_percent: u8,
     pub relation_types: Vec<KnowledgeGraphPulseRelationType>,
     pub top_nodes: Vec<KnowledgeGraphPulseNode>,
+    pub isolated_nodes: Vec<KnowledgeGraphPulseNode>,
     pub guidance: Vec<KnowledgeGraphGuidance>,
 }
 
@@ -590,6 +591,24 @@ pub(crate) fn knowledge_graph_pulse(graph: &GraphData) -> KnowledgeGraphPulse {
     });
     top_nodes.truncate(6);
 
+    let mut isolated_nodes: Vec<KnowledgeGraphPulseNode> = graph
+        .nodes
+        .iter()
+        .filter(|node| degrees.get(node.id.as_str()).copied().unwrap_or(0) == 0)
+        .map(|node| KnowledgeGraphPulseNode {
+            id: node.id.clone(),
+            title: node.title.clone(),
+            object_type: node.object_type.clone(),
+            relation_count: 0,
+        })
+        .collect();
+    isolated_nodes.sort_by(|left, right| {
+        left.title
+            .cmp(&right.title)
+            .then_with(|| left.id.cmp(&right.id))
+    });
+    isolated_nodes.truncate(6);
+
     let relation_types: Vec<KnowledgeGraphPulseRelationType> = relation_type_counts
         .into_iter()
         .map(|(relation_type, count)| KnowledgeGraphPulseRelationType {
@@ -614,6 +633,7 @@ pub(crate) fn knowledge_graph_pulse(graph: &GraphData) -> KnowledgeGraphPulse {
         coverage_percent,
         relation_types,
         top_nodes,
+        isolated_nodes,
         guidance,
     }
 }
@@ -3482,11 +3502,41 @@ mod tests {
         assert_eq!(pulse.relation_types[0].count, 2);
         assert_eq!(pulse.top_nodes[0].id, "alpha");
         assert_eq!(pulse.top_nodes[0].relation_count, 2);
+        assert_eq!(pulse.isolated_nodes.len(), 1);
+        assert_eq!(pulse.isolated_nodes[0].id, "isolated");
+        assert_eq!(pulse.isolated_nodes[0].relation_count, 0);
         assert_eq!(pulse.guidance.len(), 2);
         assert_eq!(pulse.guidance[0].code, "connect-isolated-objects");
         assert_eq!(pulse.guidance[0].current_value, 1);
         assert_eq!(pulse.guidance[0].target_value, 0);
         assert_eq!(pulse.guidance[1].code, "diversify-relation-types");
+    }
+
+    #[test]
+    fn knowledge_graph_pulse_bounds_and_orders_isolated_action_queue() {
+        let graph = GraphData {
+            nodes: [
+                "zeta", "eta", "theta", "beta", "delta", "alpha", "gamma", "epsilon",
+            ]
+            .into_iter()
+            .map(graph_node)
+            .collect(),
+            edges: Vec::new(),
+        };
+        let pulse = knowledge_graph_pulse(&graph);
+        assert_eq!(pulse.isolated_nodes.len(), 6);
+        assert_eq!(
+            pulse
+                .isolated_nodes
+                .iter()
+                .map(|node| node.id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["alpha", "beta", "delta", "epsilon", "eta", "gamma"]
+        );
+        assert!(pulse
+            .isolated_nodes
+            .iter()
+            .all(|node| node.relation_count == 0));
     }
 
     #[test]
