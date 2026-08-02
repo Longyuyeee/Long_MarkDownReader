@@ -41,3 +41,12 @@ v1.0.1 是基于已完成安装生命周期验证的 v1.0.0 制作的品牌与�
 ## 已知边界与后续计划
 
 v1.0.1 解决结构性 P0 问题，但不代表历史 UI 样式已全部迁移。当前仍存在大量微字号、直接颜色值和格式编辑器内部的专属控件。后续按 [v1.0.1 UI 一致性审计](UI_Consistency_Audit_v1.0.1_2026-08-02.md) 的 UI-1 至 UI-4 推进共享组件、颜色语义、管理页壳层和视觉回归门禁。
+
+## 发布回执
+
+- 发布状态：正式发布，非 Draft、非 Prerelease。
+- Release：[Long编辑 v1.0.1](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.1)
+- 标签提交：`33575dafcedd78a58d19881492756886d25d9edd`
+- 发布时间：`2026-08-02T10:32:14Z`
+- GitHub Actions：[Quality Gate 30743708659](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30743708659)，结果 `success`。
+- 发布资产：NSIS、MSI、两份更新签名、`latest.json`、`SHA256SUMS.txt`，共 6 项。
