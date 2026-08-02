@@ -9,6 +9,23 @@ const library = read("src/views/LibraryMode.vue");
 const app = read("src/App.vue");
 const home = read("src/views/WorkspaceHome.vue");
 const tokens = read("src/styles/tokens.scss");
+const router = read("src/router/index.ts");
+
+if (!/path:\s*['"]\/['"][\s\S]*?redirect:\s*['"]\/library['"]/.test(router)) {
+  fail("application startup must enter the library/editor shell");
+}
+if (!library.includes('data-ui-shell="library-editor"')) {
+  fail("library/editor shell identity is missing");
+}
+for (const region of ["navigation", "sidebar-tabs", "editor"]) {
+  if (!library.includes(`data-ui-region="${region}"`)) fail(`primary UI region is missing: ${region}`);
+}
+if (!library.includes('<img src="/icon.png" alt="Long编辑图标">')) {
+  fail("library empty state must use the shared brand icon");
+}
+if (/\.library-mode\s*\{[^}]*width:\s*100vw/.test(library)) {
+  fail("primary library shell must use its application container instead of viewport width");
+}
 
 for (const route of ["Canvas", "Pdf", "Table", "Workbook", "Diagram", "MindMap", "OdfReader"]) {
   if (!formats.includes(`'${route}'`)) fail(`embedded route is missing: ${route}`);

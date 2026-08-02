@@ -1,10 +1,10 @@
 <template>
-  <div class="library-mode" :class="{ 'is-dragging': !!activeResizer }" @mousemove="onMouseMove" @mouseup="onMouseUp">
+  <div class="library-mode" data-ui-shell="library-editor" :class="{ 'is-dragging': !!activeResizer }" @mousemove="onMouseMove" @mouseup="onMouseUp">
     <!-- 统一左侧侧边栏 -->
-    <div class="sidebar" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
+    <div class="sidebar" data-ui-region="navigation" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
       <div class="sidebar-inner">
         <!-- 侧边栏图标 Tab 栏（点击展开文字） -->
-        <div class="sidebar-tabs-header" role="tablist" aria-label="侧边栏导航">
+        <div class="sidebar-tabs-header" data-ui-region="sidebar-tabs" role="tablist" aria-label="侧边栏导航">
           <div
             v-for="tab in sidebarTabs" :key="tab.key"
             class="icon-tab"
@@ -355,7 +355,7 @@
     </div>
 
     <!-- 中间编辑区 -->
-    <div class="editor-main" :class="{ 'zen-mode': store.isZen }">
+    <div class="editor-main" data-ui-region="editor" :class="{ 'zen-mode': store.isZen }">
       <div class="tabs-bar" v-if="!store.isZen && store.tabs.length > 0">
         <WorkspaceTabs />
         <RelationSummaryBadge
@@ -461,10 +461,10 @@
           
           <div class="hero-content">
             <div class="hero-brand">
-              <n-icon :component="getHeroIcon(store.heroIcon)" />
+              <img src="/icon.png" alt="Long编辑图标">
             </div>
-            <h2 class="hero-title">Long编辑 · MD助手</h2>
-            <p class="hero-subtitle">选择一个文档或直接将文件拖拽至此</p>
+            <h2 class="hero-title">Long编辑</h2>
+            <p class="hero-subtitle">从左侧选择文件，在右侧阅读或编辑</p>
             <div class="hero-actions">
               <n-button secondary type="primary" round size="large" class="hero-btn" @click="handleToolbarAction('file')">创建新笔记</n-button>
               <n-button secondary round size="large" class="hero-btn" @click="openSettings">文件库配置</n-button>
@@ -533,7 +533,7 @@ import {
   RefreshCw as RefreshIcon, FileText as FileIcon, Folder as FolderIcon,
   Plus as PlusIcon, FolderPlus as FolderPlusIcon, FolderOpen as FolderOpenIcon, Trash as TrashIcon,
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
-  Save as SaveIcon, BookOpen as BookOpenIcon, List as ListIcon, History as ClockIcon,
+  Save as SaveIcon, List as ListIcon, History as ClockIcon,
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
   Database as DatabaseIcon, LayoutDashboard as DashboardIcon, ListFilter as CollectionIcon,
   BookmarkPlus as BookmarkAddIcon, Languages as LanguagesIcon, ExternalLink as ExternalOpenIcon,
@@ -1334,16 +1334,6 @@ const createMindMapFromCurrentMarkdown = async () => {
     message.error(`转换思维导图失败：${String(error)}`)
   }
 }
-const getHeroIcon = (iconName: string) => {
-  switch (iconName) {
-    case 'BookOpen': return BookOpenIcon
-    case 'FileText': return FileIcon
-    case 'Folder': return FolderIcon
-    case 'Settings': return SettingsIcon
-    default: return BookOpenIcon
-  }
-}
-
 const fetchHistory = async () => {
   if (!activeTabId.value) return
   try {
@@ -2767,7 +2757,7 @@ watch(activeTabId, (newId, oldId) => {
 </script>
 
 <style scoped>
-.library-mode { display: flex; height: 100%; width: 100vw; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s var(--ease-premium); }
+.library-mode { display: flex; height: 100%; width: 100%; min-width: 0; min-height: 0; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s var(--ease-premium); }
 .is-dragging, .is-dragging * { transition: none !important; user-select: none !important; }
 
 .sidebar {
@@ -3781,7 +3771,8 @@ watch(activeTabId, (newId, oldId) => {
 .blob { display: none; }
 
 .hero-content { text-align: center; z-index: 10; max-width: 500px; }
-.hero-brand { font-size: 52px; display: flex; justify-content: center; margin-bottom: 24px; color: var(--theme-primary); letter-spacing: -0.05em; animation: heroEntry 1s var(--ease-premium); }
+.hero-brand { display: flex; justify-content: center; margin-bottom: 20px; animation: heroEntry 1s var(--ease-premium); }
+.hero-brand img { width: 64px; height: 64px; display: block; border-radius: 15px; object-fit: cover; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22); }
 .hero-title { font-size: 32px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.03em; animation: slideUp 0.8s var(--ease-premium) 0.2s both; }
 .hero-subtitle { font-size: 16px; opacity: 0.6; margin-bottom: 32px; animation: slideUp 0.8s var(--ease-premium) 0.4s both; }
 .hero-actions { display: flex; gap: 16px; justify-content: center; animation: slideUp 0.8s var(--ease-premium) 0.6s both; }

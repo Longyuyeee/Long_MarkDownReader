@@ -3,7 +3,9 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 const routes = [
   {
     path: '/',
-    redirect: '/workspace'
+    // The library/editor shell is the product's primary surface. Management
+    // dashboards remain reachable from the shell, but must not replace it at startup.
+    redirect: '/library'
   },
   {
     path: '/workspace',
