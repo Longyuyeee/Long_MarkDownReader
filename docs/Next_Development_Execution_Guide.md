@@ -5,6 +5,7 @@
 > 更新日期：2026-07-30
 > 上位需求：[统一文件管理、阅读与编辑需求基线](./Unified_File_Manager_Format_Requirements.md)
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
+> 当前权威执行入口：[2026-08-02 当前开发对齐审计与收口计划](./Development_Alignment_and_Closure_Plan_2026-08-02.md)。v1.0.1 已发布；下一代码阶段固定为 P0 内部文件路由收敛，随后按 UI-1～UI-4 完成全量 UI 治理。下方历史“最新入口”仅用于阶段追溯。
 
 > 2026-07-30 权威执行入口：[R2 Windows 安装与生命周期审计](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。**R1/R2 已完成，下一代码阶段为 R3 索引恢复、备份与隐私净化诊断**。E1B WPS ODT 保持 2/3、X3-B6 数组生产者矩阵保持 1/3，作为外部环境门禁并行等待；不得伪造关闭。下文较早的“下一入口”只保留为阶段追溯。
 
