@@ -1993,7 +1993,7 @@ onBeforeUnmount(async () => {
 </script>
 
 <style scoped>
-.pdf-view { height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: #d9dde3; outline: none; }
+.pdf-view { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 92%, var(--theme-text-secondary)); outline: none; }
 .pdf-toolbar { min-height: 58px; display: grid; grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr); align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); box-shadow: 0 2px 10px rgba(0,0,0,.07); z-index: 5; }
 .toolbar-leading,.toolbar-center,.toolbar-actions { display: flex; align-items: center; gap: 7px; }
 .toolbar-actions { justify-content: flex-end; }

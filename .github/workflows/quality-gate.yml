@@ -33,5 +33,5 @@ jobs:
       - name: Install locked frontend dependencies
         run: npm ci
 
-      - name: Run the shared quality gate
-        run: npm run ci:check
+      - name: Run the v1 patch release quality gate
+        run: npm run ci:patch-release

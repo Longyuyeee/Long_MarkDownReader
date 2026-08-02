@@ -1323,7 +1323,7 @@ onBeforeRouteLeave(async () => { if (saveState.value === 'dirty') await saveCanv
 </script>
 
 <style scoped>
-.canvas-page { width: 100vw; height: 100%; display: grid; grid-template-rows: auto auto 1fr auto; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
+.canvas-page { width: 100%; height: 100%; min-width: 0; min-height: 0; display: grid; grid-template-rows: auto auto 1fr auto; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
 .canvas-header { min-height: 64px; padding: 10px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: var(--theme-border); background: color-mix(in srgb, var(--theme-surface) 92%, transparent); }
 .header-main { display: flex; align-items: center; gap: 12px; min-width: 0; }.canvas-title { font-size: 16px; font-weight: 700; }.canvas-subtitle { margin-top: 2px; color: var(--theme-text-secondary); font-size: 11px; }
 .icon-button, .canvas-toolbar button, .empty-canvas button, .canvas-overlay button { border: var(--theme-border); background: var(--theme-surface); color: var(--theme-text); border-radius: 8px; cursor: pointer; }

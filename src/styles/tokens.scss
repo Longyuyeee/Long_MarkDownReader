@@ -5,6 +5,7 @@ body {
   --font-mono: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
   --text-xs: 10px;
+  --text-compact: 11px;
   --text-sm: 12px;
   --text-base: 13px;
   --text-md: 14px;
@@ -21,6 +22,10 @@ body {
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+
+  --workspace-toolbar-height: 48px;
+  --workspace-control-height: 32px;
+  --workspace-status-height: 28px;
 
   --surface-alpha: 0.72;
   --control-alpha: 0.08;

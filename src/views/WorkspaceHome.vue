@@ -2,7 +2,7 @@
   <div class="workspace-home">
     <header class="workspace-header">
       <div class="brand-block">
-        <span class="brand-mark">胧</span>
+        <img class="brand-mark" src="/icon.png" alt="Long编辑图标">
         <div><strong>Long编辑</strong><small>专业工作台</small></div>
       </div>
       <nav class="workspace-nav" aria-label="工作台导航">
@@ -159,7 +159,7 @@
     </main>
 
     <main v-else class="workspace-empty">
-      <span class="brand-mark large">胧</span>
+      <img class="brand-mark large" src="/icon.png" alt="Long编辑图标">
       <h1>Long编辑</h1>
       <p>未关联知识库</p>
       <button @click="router.push({ name: 'Settings' })"><SettingsIcon />配置知识库</button>
@@ -361,7 +361,7 @@ onMounted(async () => {
 .workspace-home { height: 100%; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
 .workspace-header { height: 58px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: var(--theme-border); background: var(--theme-surface); }
 .brand-block { display: flex; align-items: center; gap: 10px; }.brand-block>div { display: grid; gap: 1px; }.brand-block strong { font-size: 13px; }.brand-block small { color: var(--theme-text-secondary); font-size: 9px; }
-.brand-mark { width: 28px; height: 28px; display: grid; place-items: center; color: #fff; background: var(--theme-primary); border-radius: 6px; font-weight: 800; }.brand-mark.large { width: 42px; height: 42px; font-size: 20px; }
+.brand-mark { width: 28px; height: 28px; display: block; border-radius: 7px; object-fit: cover; }.brand-mark.large { width: 44px; height: 44px; border-radius: 10px; }
 .workspace-nav { display: flex; align-items: center; gap: 4px; }.workspace-nav button { min-width: 34px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 9px; border: 1px solid transparent; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 10px; }.workspace-nav button:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.22); background: rgba(var(--theme-primary-rgb),.06); }.workspace-nav button:disabled { opacity: .35; cursor: default; }.workspace-nav svg { width: 15px; }.spinning { animation: spin .8s linear infinite; }
 .workspace-content { height: calc(100% - 58px); overflow: auto; box-sizing: border-box; padding: 24px clamp(18px,4vw,54px) 48px; }
 .workspace-identity { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 19px; border-bottom: 2px solid var(--theme-text); }.workspace-identity h1 { margin: 4px 0 3px; font-size: 25px; line-height: 1.15; letter-spacing: 0; }.workspace-identity p { max-width: min(620px,60vw); margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }

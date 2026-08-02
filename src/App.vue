@@ -6,7 +6,7 @@
       <div class="app-container" :class="{ 'is-dark': isDark, 'zen-mode': store.isZen }" :data-theme="currentThemeName">
         <div class="custom-titlebar" v-if="showMainTitlebar" data-tauri-drag-region>
           <div class="titlebar-left" data-tauri-drag-region>
-            <div class="app-logo">胧</div>
+            <img class="app-logo" src="/icon.png" alt="" aria-hidden="true">
             <div class="titlebar-title">Long编辑</div>
           </div>
           <div class="titlebar-right">
@@ -90,7 +90,8 @@ const router = useRouter()
 const store = useAppStore()
 const relationContextRoutes = new Set([
   'LibraryMode', 'TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'DrawioEditor', 'TomlEditor',
-  'LogViewer', 'Pdf', 'Table', 'Canvas', 'MindMap',
+  'LogViewer', 'DocxEditor', 'OdtReader', 'OdfReader', 'PptxReader', 'Pdf', 'Table', 'Workbook',
+  'Canvas', 'Diagram', 'MindMap',
 ])
 const activeContextPath = computed(() => {
   const route = router.currentRoute.value
@@ -447,7 +448,7 @@ body {
 }
 
 .titlebar-left { display: flex; align-items: center; padding-left: 16px; flex: 1; height: 100%; }
-.app-logo { font-size: 13px; font-weight: 700; color: var(--theme-primary); margin-right: 10px; }
+.app-logo { width: 18px; height: 18px; margin-right: 9px; border-radius: 4px; object-fit: cover; }
 .titlebar-title { font-size: 11px; font-weight: 500; opacity: 0.5; }
 
 .titlebar-right, .window-controls { display: flex; height: 100%; }

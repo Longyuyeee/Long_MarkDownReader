@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="./icon.png" width="150" height="150" alt="Long编辑 Logo">
+  <img src="./icon.png" width="168" height="168" alt="Long编辑金色钢笔 L 图标">
 </p>
 
-<h1 align="center">Long编辑 · 知识助手</h1>
+<h1 align="center">Long编辑 · 全格式知识工作台</h1>
 
 <p align="center">
-  <strong>轻盈、专注、连接思考的本地 Markdown 知识库</strong>
+  <strong>在一个本地优先的管理器中阅读、基础编辑、组织并连接日常文件</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Release-v1.0.0-0078d4?style=flat-square" alt="Release">
+  <img src="https://img.shields.io/badge/Release-v1.0.1-b8902f?style=flat-square" alt="Release">
   <img src="https://img.shields.io/badge/Platform-Windows-0078d4?style=flat-square&logo=windows11&logoColor=white" alt="Windows">
   <img src="https://img.shields.io/badge/Tauri-2-orange?style=flat-square" alt="Tauri">
   <img src="https://img.shields.io/badge/Vue-3-42b883?style=flat-square" alt="Vue">
@@ -18,26 +18,63 @@
 
 <p align="center">
   <a href="#下载安装">下载安装</a> ·
+  <a href="#格式能力概览">格式能力</a> ·
   <a href="#快速上手">快速上手</a> ·
   <a href="#建立知识连接">双向链接</a> ·
   <a href="#常用快捷键">快捷键</a>
 </p>
 
-Long编辑是一款本地优先的视觉知识与资料管理工作台。Markdown、JSON Canvas、PDF 和 CSV/TSV 始终保存在你选择的普通文件夹中，可以继续使用 Git、网盘或其他工具同步，不依赖私有数据库作为唯一事实源。
+Long编辑是一款本地优先的专业文件、知识与资料管理工作台。Markdown、TXT、JSON、PDF、Office/WPS 文档、表格、演示文稿、Mermaid、Draw.io、OPML 思维导图和 JSON Canvas 等文件继续保存在你选择的普通文件夹中，可以使用 Git、网盘或其他工具同步，不依赖私有数据库作为唯一事实源。
+
+产品的基础目标不是在每种格式上取代完整的 Microsoft Office、WPS 或专业 PDF 软件，而是覆盖日常管理、阅读和可靠的基础编辑，并把文件、标签、双向链接、图表、思维导图和知识图谱组织为同一个可持续管理的体系。界面会明确区分完整编辑、基础编辑、阅读批注、预览和外部应用打开，不把“能够识别”描述成“能够无损编辑”。
 
 ## 下载安装
 
-当前稳定版本为 **v1.0.0**，支持 Windows 10/11 x64。
+当前稳定版本为 **v1.0.1**，支持 Windows 10/11 x64。
 
-- [下载 v1.0.0](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.0)
+- [下载 v1.0.1](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.1)
 - `.exe`：推荐个人用户使用，安装流程更简单。
 - `.msi`：适合企业部署或需要 MSI 的安装场景。
 
-覆盖安装新版本不会删除知识库、应用设置或历史副本。v1.0.0 是无 Authenticode 代码签名的社区版本，Windows 首次运行时可能显示“未知发布者”或 SmartScreen 提示；请只从本仓库的 GitHub Releases 下载，并按发布页 SHA-256 核对文件。
+覆盖安装新版本不会删除知识库、应用设置或历史副本。v1.0.1 是无 Authenticode 代码签名的社区版本，Windows 首次运行时可能显示“未知发布者”或 SmartScreen 提示；请只从本仓库的 GitHub Releases 下载，并按发布页 SHA-256 核对文件。
 
 从 v1.0.0 开始，软件会每 24 小时自动检查一次更新，也可以在“设置 → 系统集成 → 软件更新”中手动检查。下载后的更新包必须通过内置 Tauri 更新公钥校验才会安装；该完整性签名与 Windows 发布者签名是两套独立机制。
 
-完整能力边界、安装验证与哈希见 [v1.0.0 发布说明](docs/RELEASE_NOTES_v1.0.0.md) 和 [无代码签名社区版发布审计](docs/V1_0_0_Unsigned_Community_Release_Audit_2026-08-01.md)。
+完整能力边界、安装包哈希与回滚说明见 [v1.0.1 发布说明](docs/RELEASE_NOTES_v1.0.1.md)。首个正式版的完整安装生命周期证据仍保存在 [v1.0.0 无代码签名社区版发布审计](docs/V1_0_0_Unsigned_Community_Release_Audit_2026-08-01.md) 中。
+
+## v1.0.1 更新重点
+
+- 启用新的 Long编辑品牌图标：深海军蓝底、金色钢笔轮廓与 `L` 组合，统一替换 Windows、macOS、Android、iOS、商店、应用标题栏、工作台和 README 图标。
+- PDF、CSV/TSV、XLSX、Mermaid、OPML 思维导图和 JSON Canvas 现在统一从资料库文件树进入右侧工作区，不再默认跳出为另一套全屏页面。
+- 修复 ODF 已声明为右侧嵌入格式但缺少组件映射的问题。
+- 为文件工作区统一高度、边界、工具栏、主题表面和品牌入口，减少不同格式页面之间的视觉跳变。
+- 完成全局 UI 一致性审计，记录字号、颜色、间距和工作区组件治理的后续收口顺序。
+
+## 统一工作区与界面规则
+
+日常文件以“左侧管理、顶部标签、右侧阅读或编辑”为主结构。Markdown、开发文本、PDF、文档、表格、演示文稿、图表、思维导图和 Canvas 共用资料库上下文、统一标签页和文件关系入口；工作台首页、知识图谱、设置与发布能力页面保留为独立管理页面。
+
+- 正文字号以 13px 为基准，工具栏与辅助信息使用统一的紧凑字号层级。
+- 文件工作区使用统一的 48px 工具栏、32px 控件和 28px 状态栏基准。
+- 颜色优先使用主题令牌；格式专属颜色只用于状态、数据语义和内容画布。
+- 所有格式必须明确显示保存方式：覆盖保存、受限覆盖、保存副本、旁车文件或只读。
+- 新增格式首先进入资料库右侧工作区，只有管理级页面或明确的外部应用接管才离开该结构。
+
+详细问题、已完成修复与后续阶段见 [v1.0.1 UI 一致性审计](docs/UI_Consistency_Audit_v1.0.1_2026-08-02.md)。
+
+## 格式能力概览
+
+| 类型 | 代表格式 | 当前能力 | 保存边界 |
+| --- | --- | --- | --- |
+| 笔记与开发文本 | Markdown、TXT、JSON、YAML、XML、TOML、LOG | 阅读、搜索、创建与基础编辑 | 支持可靠覆盖保存；大文件可降级为范围预览 |
+| PDF | PDF | 阅读、缩略图、检索、OCR、批注、页面提取/合并/插入 | 批注使用旁车数据；页面操作优先保存副本 |
+| 数据表 | CSV、TSV、开放表格 | 单元格编辑、筛选、排序、冻结、图表和仪表盘 | CSV/TSV 可可靠覆盖；开放表格可导出 CSV/XLSX |
+| 工作簿 | XLSX、ODS | 多 Sheet 阅读与受约束编辑，包含部分公式、样式、图表和 Pivot 工作流 | 高风险结构只读或保存可靠副本，不承诺完整无损往返 |
+| 文档 | DOCX、ODT、DOC | 读取、结构预览和受限副本编辑；旧格式隔离转换 | 默认保留源文件，编辑结果保存为新副本 |
+| 演示文稿 | PPTX、ODP、PPT | 幻灯片预览、文本/样式/替代文本及部分对象操作 | 经过验证的操作保存副本；复杂对象可能降级 |
+| 图表 | Mermaid、Draw.io | 源码/结构编辑、实时预览、SVG/PNG 导出 | Mermaid 可覆盖保存；Draw.io 依能力边界保存 |
+| 思维导图与画布 | OPML、JSON Canvas | 大纲与脑图同步编辑、节点关系、拖拽画布 | 保存开放格式，不锁定到私有数据库 |
+| WPS 与旧 Office | WPS 兼容 OOXML、DOC/XLS/PPT | 读取、隔离转换或外部 WPS/Office 打开 | 明确提示转换与兼容边界，源文件保持不变 |
 
 ## 快速上手
 
@@ -200,7 +237,7 @@ API Key 保存在 Windows Credential Manager、macOS Keychain 或 Linux Secret S
 
 ### 为什么修改了颜色却又恢复？
 
-请升级到 v0.6.9。该版本已经修复外观预设覆盖颜色选择的问题。
+请升级到 v1.0.1。该版本保留了外观预设与独立颜色选择的隔离规则，并进一步统一文件工作区的主题表面。
 
 ### 我的笔记存在哪里？
 

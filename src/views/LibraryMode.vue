@@ -768,9 +768,16 @@ const embeddedEditorComponents = {
   LogViewer: defineAsyncComponent(() => import('./LogViewerView.vue')),
   DocxEditor: defineAsyncComponent(() => import('./DocxReaderView.vue')),
   OdtReader: defineAsyncComponent(() => import('./OdtReaderView.vue')),
+  OdfReader: defineAsyncComponent(() => import('./OdfContentReaderView.vue')),
   PptxReader: defineAsyncComponent(() => import('./PptxReaderView.vue')),
   ExternalOffice: defineAsyncComponent(() => import('./ExternalOfficeView.vue')),
   LegacyOffice: defineAsyncComponent(() => import('./LegacyOfficeView.vue')),
+  Canvas: defineAsyncComponent(() => import('./CanvasView.vue')),
+  Pdf: defineAsyncComponent(() => import('./PdfView.vue')),
+  Table: defineAsyncComponent(() => import('./TableView.vue')),
+  Workbook: defineAsyncComponent(() => import('./WorkbookView.vue')),
+  Diagram: defineAsyncComponent(() => import('./DiagramStudio.vue')),
+  MindMap: defineAsyncComponent(() => import('./MindMapView.vue')),
 }
 const activeEmbeddedEditor = computed(() => {
   const routeName = activeDocumentFormat.value?.routeName
@@ -3641,6 +3648,29 @@ watch(activeTabId, (newId, oldId) => {
 }
 .library-embedded-editor :deep(.cm-editor) {
   font-size: 13px;
+}
+.library-embedded-editor :deep(.canvas-page),
+.library-embedded-editor :deep(.pdf-view),
+.library-embedded-editor :deep(.table-view),
+.library-embedded-editor :deep(.workbook-view),
+.library-embedded-editor :deep(.diagram-studio),
+.library-embedded-editor :deep(.mindmap-page) {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  border-radius: inherit;
+}
+.library-embedded-editor :deep(.canvas-header),
+.library-embedded-editor :deep(.mindmap-header),
+.library-embedded-editor :deep(.pdf-toolbar),
+.library-embedded-editor :deep(.table-toolbar),
+.library-embedded-editor :deep(.workbook-toolbar),
+.library-embedded-editor :deep(.studio-toolbar) {
+  min-height: var(--workspace-toolbar-height);
+  padding-right: var(--space-3);
+  padding-left: var(--space-3);
+  box-shadow: none;
 }
 .library-embedded-editor :deep(.yaml-toolbar),
 .library-embedded-editor :deep(.xml-workspace > .toolbar),

@@ -94,6 +94,12 @@ export const LIBRARY_EMBEDDED_EDITOR_ROUTES: readonly EditorRouteName[] = Object
   'PptxReader',
   'ExternalOffice',
   'LegacyOffice',
+  'Canvas',
+  'Pdf',
+  'Table',
+  'Workbook',
+  'Diagram',
+  'MindMap',
 ])
 const libraryEmbeddedEditorRoutes = new Set<EditorRouteName>(LIBRARY_EMBEDDED_EDITOR_ROUTES)
 
