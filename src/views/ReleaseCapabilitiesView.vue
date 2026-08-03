@@ -1,20 +1,17 @@
 <template>
   <div class="release-capabilities">
-    <header>
-      <button class="icon-button" type="button" title="返回设置" @click="router.back()">
-        <ArrowLeft :size="18" />
-      </button>
-      <div>
-        <h1>格式能力</h1>
-        <span>Long编辑 {{ RELEASE_MATRIX_VERSION }} · {{ RELEASE_CAPABILITY_ROWS.length }} 类格式</span>
-      </div>
+    <WorkspaceManagementHeader
+      title="格式能力"
+      :subtitle="`Long编辑 ${RELEASE_MATRIX_VERSION} · ${RELEASE_CAPABILITY_ROWS.length} 类格式`"
+      @back="router.push({ name: 'LibraryMode' })"
+    >
       <div class="release-state">
         <ShieldCheck :size="16" />
         <span>{{ RELEASE_CANDIDATE ? '发布候选' : `${RELEASE_STAGE} 收口中` }}</span>
       </div>
-    </header>
+    </WorkspaceManagementHeader>
 
-    <main>
+    <WorkspaceManagementContent class="release-content">
       <div class="toolbar">
         <label class="search-box">
           <Search :size="16" />
@@ -89,14 +86,16 @@
           <p>{{ gate.releaseImpact }}</p>
         </div>
       </section>
-    </main>
+    </WorkspaceManagementContent>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, ChevronDown, Search, ShieldCheck } from 'lucide-vue-next'
+import { ChevronDown, Search, ShieldCheck } from 'lucide-vue-next'
+import WorkspaceManagementContent from '../components/workspace/WorkspaceManagementContent.vue'
+import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
 import {
   RELEASE_CANDIDATE,
   RELEASE_CAPABILITY_ROWS,
@@ -149,38 +148,11 @@ const dependencyLabel = (dependency: ReleaseDependency) => ({
 
 <style scoped>
 .release-capabilities {
-  min-height: 100vh;
+  height: 100%;
+  overflow-y: auto;
   color: var(--theme-text);
   background: var(--theme-bg);
 }
-
-header {
-  min-height: 72px;
-  padding: 12px clamp(18px, 4vw, 52px);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  border-bottom: var(--theme-border);
-  background: var(--theme-surface);
-}
-
-.icon-button {
-  width: 36px;
-  height: 36px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 6px;
-  color: inherit;
-  background: transparent;
-  cursor: pointer;
-}
-
-.icon-button:hover { background: rgba(var(--theme-primary-rgb), 0.08); }
-header > div:nth-child(2) { min-width: 0; flex: 1; }
-h1 { margin: 0; font-size: 20px; letter-spacing: 0; }
-header span { color: var(--theme-text-secondary); font-size: 12px; }
 
 .release-state {
   min-height: 32px;
@@ -190,12 +162,6 @@ header span { color: var(--theme-text-secondary); font-size: 12px; }
   gap: 7px;
   border: var(--theme-border);
   border-radius: 6px;
-}
-
-main {
-  width: min(1180px, calc(100% - 36px));
-  margin: 0 auto;
-  padding: 24px 0 48px;
 }
 
 .toolbar {
@@ -329,7 +295,6 @@ main {
 .gate-status { color: var(--theme-warning, #b77813); }
 
 @media (max-width: 760px) {
-  main { width: min(100% - 24px, 1180px); padding-top: 16px; }
   .toolbar { align-items: stretch; flex-direction: column; }
   .search-box { width: 100%; box-sizing: border-box; }
   .matrix-head { display: none; }

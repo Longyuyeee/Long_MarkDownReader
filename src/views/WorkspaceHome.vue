@@ -1,19 +1,22 @@
 <template>
   <div class="workspace-home">
-    <WorkspaceToolbar class="workspace-header">
-      <div class="brand-block">
+    <WorkspaceManagementHeader
+      class="workspace-header"
+      title="工作台"
+      :subtitle="store.currentLibraryName || '专业工作区概览'"
+      @back="router.push({ name: 'LibraryMode' })"
+    >
+      <template #icon>
         <img class="brand-mark" src="/icon.png" alt="Long编辑图标">
-        <div><strong>Long编辑</strong><small>专业工作台</small></div>
-      </div>
+      </template>
       <nav class="workspace-nav" aria-label="工作台导航">
-        <button title="资料库" @click="router.push({ name: 'LibraryMode' })"><LibraryIcon /><span>资料库</span></button>
         <button title="知识图谱" :disabled="!store.libraryPath" @click="router.push({ name: 'Graph' })"><NetworkIcon /><span>图谱</span></button>
         <button title="设置" @click="router.push({ name: 'Settings' })"><SettingsIcon /></button>
         <button title="刷新工作台" :disabled="loading || !store.libraryPath" @click="loadWorkspace"><RefreshIcon :class="{ spinning: loading }" /></button>
       </nav>
-    </WorkspaceToolbar>
+    </WorkspaceManagementHeader>
 
-    <main v-if="store.libraryPath" class="workspace-content">
+    <WorkspaceManagementContent v-if="store.libraryPath" class="workspace-content">
       <section class="workspace-identity">
         <div>
           <span class="section-kicker">ACTIVE WORKSPACE</span>
@@ -156,7 +159,7 @@
           <WorkspaceHealthQueue :report="workspaceHealth" :error="workspaceHealthError" @open-file="openPath" @open-annotation="openAnnotation" />
         </section>
       </div>
-    </main>
+    </WorkspaceManagementContent>
 
     <WorkspaceEmptyState v-else as="main" class="workspace-empty">
       <img class="brand-mark large" src="/icon.png" alt="Long编辑图标">
@@ -172,7 +175,7 @@ import { computed, onMounted, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
 import {
-  AlertTriangle as AlertIcon, ArrowRight as ArrowIcon, BookOpen as LibraryIcon,
+  AlertTriangle as AlertIcon, ArrowRight as ArrowIcon,
   Clock3 as ClockIcon, Database as DatabaseIcon, FileSpreadsheet as TableIcon,
   FileText as FileIcon, LayoutDashboard as CanvasIcon, Network as NetworkIcon,
   ListFilter as CollectionIcon, RefreshCw as RefreshIcon, Settings as SettingsIcon,
@@ -184,8 +187,9 @@ import { openManagedFile } from '../services/fileNavigation'
 import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
 import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceHealthReport } from '../components/WorkspaceHealthQueue.vue'
 import WorkspaceEmptyState from '../components/workspace/WorkspaceEmptyState.vue'
+import WorkspaceManagementContent from '../components/workspace/WorkspaceManagementContent.vue'
+import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
-import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 
 interface WorkspaceTask { title: string; path: string; relativePath: string; line: number; text: string }
 interface WorkspaceFile { title: string; path: string; relativePath: string; objectType: string; modifiedAt: number; size: number }
@@ -363,12 +367,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.workspace-home { height: 100%; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
-.workspace-header { height: 58px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: var(--theme-border); background: var(--theme-surface); }
-.brand-block { display: flex; align-items: center; gap: 10px; }.brand-block>div { display: grid; gap: 1px; }.brand-block strong { font-size: 13px; }.brand-block small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.workspace-home { height: 100%; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
+.workspace-header { flex: none; }
 .brand-mark { width: 28px; height: 28px; display: block; border-radius: 7px; object-fit: cover; }.brand-mark.large { width: 44px; height: 44px; border-radius: 10px; }
 .workspace-nav { display: flex; align-items: center; gap: 4px; }.workspace-nav button { min-width: 34px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 9px; border: 1px solid transparent; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: var(--text-compact); }.workspace-nav button:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.22); background: rgba(var(--theme-primary-rgb),.06); }.workspace-nav button:disabled { opacity: .35; cursor: default; }.workspace-nav svg { width: 15px; }.spinning { animation: spin .8s linear infinite; }
-.workspace-content { height: calc(100% - 58px); overflow: auto; box-sizing: border-box; padding: 24px clamp(18px,4vw,54px) 48px; }
+.workspace-content { flex: 1; overflow: auto; }
 .workspace-identity { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 19px; border-bottom: 2px solid var(--theme-text); }.workspace-identity h1 { margin: 4px 0 3px; font-size: 25px; line-height: 1.15; letter-spacing: 0; }.workspace-identity p { max-width: min(620px,60vw); margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }
 .section-kicker { color: var(--theme-primary); font-size: var(--text-compact); font-weight: 800; }.workspace-signals { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }.signal { height: 27px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: var(--theme-border); border-radius: 5px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: var(--text-compact); }.signal svg { width: 13px; }.signal.index-ready { color: var(--status-success); }.signal.index-stale,.signal.index-corrupt,.signal.index-error { color: var(--status-warning); }
 .metric-strip { display: grid; grid-template-columns: repeat(5,minmax(100px,1fr)); border-bottom: var(--theme-border); }.metric-strip button { min-height: 74px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; padding: 10px 16px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; }.metric-strip button:first-child { padding-left: 0; }.metric-strip button:last-child { border-right: 0; }.metric-strip button:hover { background: rgba(var(--theme-primary-rgb),.045); }.metric-strip span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.metric-strip strong { font-size: 22px; font-weight: 680; }
@@ -381,8 +384,8 @@ onMounted(async () => {
 .task-list button { min-height: 48px; display: grid; grid-template-columns: 16px minmax(0,1fr) 16px; align-items: center; gap: 9px; padding: 5px 8px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.task-list button:hover { background: rgba(var(--theme-primary-rgb),.045); }.task-list button>span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }.task-list svg { width: 13px; color: var(--theme-text-secondary); }.task-check { width: 11px; height: 11px; border: 1px solid var(--theme-text-secondary); border-radius: 2px; }
 .canvas-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }.canvas-list button { min-height: 58px; display: grid; grid-template-columns: 24px minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 8px; border: var(--theme-border); border-radius: 6px; color: var(--theme-text); background: var(--theme-surface); cursor: pointer; text-align: left; }.canvas-list button:hover { border-color: rgba(var(--theme-primary-rgb),.35); }.canvas-list button>svg { width: 15px; color: var(--theme-primary); }.canvas-list button>span { min-width: 0; display: grid; gap: 3px; }.canvas-list button>svg:last-child { width: 12px; color: var(--theme-text-secondary); }
 .collection-list { display: grid; }.collection-list button { min-height: 48px; display: grid; grid-template-columns: 22px minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 5px 7px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.collection-list button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.045); }.collection-list button>svg { width: 14px; color: var(--theme-primary); }.collection-list button>svg:last-child { width: 12px; color: var(--theme-text-secondary); }.collection-list button>span { min-width: 0; display: grid; gap: 3px; }.collection-list strong,.collection-list small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-list strong { font-size: var(--text-compact); }.collection-list small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
-.empty-line { min-height: 68px; display: grid; place-items: center; color: var(--theme-text-secondary); border-top: var(--theme-border); font-size: var(--text-compact); }.workspace-empty { height: calc(100% - 58px); display: grid; place-content: center; justify-items: center; gap: 8px; }.workspace-empty h1 { margin: 4px 0 0; font-size: 22px; }.workspace-empty p { margin: 0 0 10px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.workspace-empty button { height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 12px; border: 0; border-radius: 6px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; }.workspace-empty button svg { width: 14px; }
+.empty-line { min-height: 68px; display: grid; place-items: center; color: var(--theme-text-secondary); border-top: var(--theme-border); font-size: var(--text-compact); }.workspace-empty { flex: 1; display: grid; place-content: center; justify-items: center; gap: 8px; }.workspace-empty h1 { margin: 4px 0 0; font-size: 22px; }.workspace-empty p { margin: 0 0 10px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.workspace-empty button { height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 12px; border: 0; border-radius: 6px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; }.workspace-empty button svg { width: 14px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 900px) { .workspace-grid { grid-template-columns: 1fr; }.health-section { grid-row: auto; }.metric-strip { grid-template-columns: repeat(3,1fr); }.metric-strip button:nth-child(3) { border-right: 0; }.workspace-nav button span { display: none; }.workspace-identity { align-items: flex-start; flex-direction: column; }.workspace-signals { justify-content: flex-start; }.workspace-identity p { max-width: 80vw; } }
-@media (max-width: 560px) { .workspace-header { padding: 0 12px; }.workspace-content { padding: 18px 14px 36px; }.metric-strip { grid-template-columns: repeat(2,1fr); }.metric-strip button { border-right: var(--theme-border) !important; }.metric-strip button:nth-child(2n) { border-right: 0 !important; }.canvas-list,.pulse-isolation>div:last-child { grid-template-columns: 1fr; }.workspace-nav { gap: 1px; }.workspace-nav button { padding: 0 7px; }.workspace-identity h1 { font-size: 21px; } }
+@media (max-width: 560px) { .metric-strip { grid-template-columns: repeat(2,1fr); }.metric-strip button { border-right: var(--theme-border) !important; }.metric-strip button:nth-child(2n) { border-right: 0 !important; }.canvas-list,.pulse-isolation>div:last-child { grid-template-columns: 1fr; }.workspace-nav { gap: 1px; }.workspace-nav button { padding: 0 7px; }.workspace-identity h1 { font-size: 21px; } }
 </style>

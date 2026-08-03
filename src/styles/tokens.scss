@@ -23,8 +23,12 @@ body {
   --space-8: 32px;
 
   --workspace-toolbar-height: 48px;
+  --workspace-management-header-height: 58px;
   --workspace-control-height: 32px;
   --workspace-status-height: 28px;
+  --workspace-page-max-width: 1180px;
+  --workspace-page-narrow-width: 840px;
+  --workspace-page-gutter: clamp(12px, 4vw, 52px);
   --workspace-border-color: color-mix(in srgb, var(--theme-text) 12%, transparent);
   --workspace-control-bg: color-mix(in srgb, var(--theme-text) 5%, transparent);
   --workspace-control-hover-bg: color-mix(in srgb, var(--theme-text) 9%, transparent);

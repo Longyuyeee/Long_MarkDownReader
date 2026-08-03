@@ -1,13 +1,12 @@
 <template>
   <div class="settings-view">
-    <div class="settings-header">
-      <n-button quaternary circle @click="router.back()">
-        <template #icon><n-icon :component="ArrowLeftIcon" /></template>
-      </n-button>
-      <h2>设置</h2>
-    </div>
+    <WorkspaceManagementHeader
+      title="设置"
+      subtitle="资料库、编辑器与应用偏好"
+      @back="router.push({ name: 'LibraryMode' })"
+    />
 
-    <div class="settings-content">
+    <WorkspaceManagementContent class="settings-content" narrow>
       <n-form label-placement="top" size="medium">
         <n-grid :cols="1" :y-gap="24">
           <n-grid-item class="animate-item" style="--delay: 0.1s">
@@ -352,19 +351,21 @@
           </n-grid-item>
         </n-grid>
       </n-form>
-    </div>
+    </WorkspaceManagementContent>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, reactive, watch, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft as ArrowLeftIcon, Trash as TrashIcon, GitBranch as GitBranchIcon, Check as CheckIcon, Download as DownloadIcon, Upload as UploadIcon } from 'lucide-vue-next'
+import { Trash as TrashIcon, GitBranch as GitBranchIcon, Check as CheckIcon, Download as DownloadIcon, Upload as UploadIcon } from 'lucide-vue-next'
 import { open, save } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, NTag, NInputGroup } from 'naive-ui'
 import { useAppStore, THEME_MAP } from '../store/app'
 import UpdateSettingsRow from '../components/UpdateSettingsRow.vue'
+import WorkspaceManagementContent from '../components/workspace/WorkspaceManagementContent.vue'
+import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
 import {
   THEME_EDITOR_BACKGROUNDS,
   themePresetGroups,
@@ -1092,82 +1093,16 @@ const openDefaultAppsSettings = async () => {
 
 <style scoped>
 .settings-view {
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--style-bg-gradient);
-  animation: settings-fade-in 0.6s var(--ease-premium);
-  position: relative;
+  background: var(--theme-bg);
   overflow: hidden;
-}
-
-.settings-view::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 20% 10%, rgba(var(--theme-primary-rgb), 0.08), transparent 40%),
-    radial-gradient(circle at 80% 50%, rgba(var(--theme-primary-rgb), 0.05), transparent 45%);
-  pointer-events: none;
-  opacity: 0.5;
-}
-
-@keyframes settings-fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.settings-header {
-  padding: 32px 5% 16px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border-bottom: var(--theme-border-strong);
-  background: var(--style-card-gradient);
-  backdrop-filter: blur(10px);
-  position: relative;
-  z-index: 1;
-  box-shadow: var(--theme-shadow-sm);
-}
-
-.settings-header::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 2px;
-  background: linear-gradient(90deg,
-    transparent,
-    rgba(var(--theme-primary-rgb), 0.3) 20%,
-    rgba(var(--theme-primary-rgb), 0.3) 80%,
-    transparent);
-  opacity: 0.4;
-}
-
-.is-dark .settings-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
-
-.settings-header h2 {
-  margin: 0;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  font-size: 26px;
-  background: linear-gradient(135deg,
-    var(--theme-text) 0%,
-    rgba(var(--theme-primary-rgb), 0.9) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .settings-content {
   flex: 1;
   overflow-y: auto;
-  padding: 30px 5% 60px;
-  max-width: 840px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-  position: relative;
-  z-index: 0;
 }
 
 .section-title {
