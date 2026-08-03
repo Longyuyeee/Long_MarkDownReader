@@ -41,8 +41,9 @@ for (const entry of manifest.entries || []) {
   const scale = UI4_DISPLAY_SCALES.find(item => item.percent === entry.scalePercent)
   const logical = scale && ui4LogicalViewport(scale)
   if (!logical || entry.logicalViewport?.width !== logical.width || entry.logicalViewport?.height !== logical.height) failures.push(`logical viewport drift: ${key}`)
-  if (!entry.sampleFile || !entry.geometry?.route?.startsWith('#/library?path=')) failures.push(`managed sample route is missing: ${key}`)
-  if (!entry.geometry?.rootVisible || !entry.geometry?.rootWithinViewport || entry.geometry?.pageOverflowX
+  if (!entry.sampleFile || !entry.requestedRoute?.startsWith('#/library?path=')) failures.push(`managed sample entry route is missing: ${key}`)
+  if (entry.geometry?.route !== entry.requestedRoute && entry.geometry?.route !== '#/library') failures.push(`managed canonical route drift: ${key}`)
+  if (!entry.geometry?.rootVisible || !entry.geometry?.rootWithinViewport || !entry.geometry?.sampleIdentityVisible || entry.geometry?.pageOverflowX
     || entry.geometry?.toolbarClipped || entry.geometry?.toolbarOverflow || entry.geometry?.statusClipped) failures.push(`geometry gate failed: ${key}`)
   const filePath = path.join(root, entry.file || '')
   if (!fs.existsSync(filePath) || fs.statSync(filePath).size < 15_000) failures.push(`missing or undersized screenshot: ${entry.file}`)

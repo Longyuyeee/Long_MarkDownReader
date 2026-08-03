@@ -95,7 +95,7 @@ const navigate = async surface => {
   return hash
 }
 
-const inspectGeometry = async surface => evaluate(`(() => {
+const inspectGeometry = async (surface, sampleName) => evaluate(`(() => {
   const root = document.querySelector(${JSON.stringify(surface.selector)})
   const rect = root?.getBoundingClientRect()
   const toolbar = root?.querySelector('header, [role="toolbar"], .pdf-toolbar, .workbook-toolbar, .studio-toolbar')
@@ -113,6 +113,7 @@ const inspectGeometry = async surface => evaluate(`(() => {
     toolbarClipped: Boolean(rect && toolbarRect && (toolbarRect.left < rect.left - 2 || toolbarRect.right > rect.right + 2 || toolbarRect.top < rect.top - 2)),
     toolbarOverflow: Boolean(toolbar && toolbar.scrollWidth > toolbar.clientWidth + 2),
     statusClipped: Boolean(rect && statusRect && statusRect.bottom > rect.bottom + 2),
+    sampleIdentityVisible: Boolean(root?.textContent?.includes(${JSON.stringify(sampleName)})),
     title: document.title,
     route: location.hash,
     theme: document.body.dataset.theme,
@@ -143,17 +144,20 @@ for (const scale of UI4_DISPLAY_SCALES) {
         && document.body.dataset.motion === ${JSON.stringify(scenario.motion)}`,
       `${scenario.id} semantic body tokens`,
     )
-    const geometry = await inspectGeometry(surface)
-    if (!geometry.rootVisible || !geometry.rootWithinViewport || geometry.pageOverflowX || geometry.toolbarClipped || geometry.toolbarOverflow || geometry.statusClipped) {
+    const sampleFile = path.basename(sampleMap[surface.sampleKey])
+    const sampleName = sampleFile.replace(/\.[^.]+$/, '')
+    const geometry = await inspectGeometry(surface, sampleName)
+    if (!geometry.rootVisible || !geometry.rootWithinViewport || !geometry.sampleIdentityVisible || geometry.pageOverflowX || geometry.toolbarClipped || geometry.toolbarOverflow || geometry.statusClipped) {
       throw new Error(`Geometry gate failed for ${scenario.id}/${surface.id}/${scale.percent}: ${JSON.stringify(geometry)}`)
     }
-    if (geometry.route !== expectedRoute) throw new Error(`Managed file route drift for ${surface.id}: ${geometry.route}`)
+    if (geometry.route !== expectedRoute && geometry.route !== '#/library') throw new Error(`Managed file route drift for ${surface.id}: ${geometry.route}`)
     const file = `${scenario.id}-${surface.id}-${scale.id}.jpg`
     await capture(file)
     entries.push({
       scenarioId: scenario.id,
       surfaceId: surface.id,
-      sampleFile: path.basename(sampleMap[surface.sampleKey]),
+      sampleFile,
+      requestedRoute: expectedRoute,
       scalePercent: scale.percent,
       physicalViewport: UI4_PHYSICAL_VIEWPORT,
       logicalViewport,

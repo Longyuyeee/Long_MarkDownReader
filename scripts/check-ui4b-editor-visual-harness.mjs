@@ -36,6 +36,8 @@ for (const token of [
   'toolbarClipped',
   'toolbarOverflow',
   'statusClipped',
+  'sampleIdentityVisible',
+  "geometry.route !== '#/library'",
   'Page.captureScreenshot',
 ]) {
   if (!capture.includes(token)) failures.push(`capture contract is missing: ${token}`)
