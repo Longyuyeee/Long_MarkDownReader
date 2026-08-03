@@ -1997,7 +1997,7 @@ onBeforeUnmount(async () => {
 </script>
 
 <style scoped>
-.pdf-view { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 92%, var(--theme-text-secondary)); outline: none; }
+.pdf-view { width: 100%; height: 100%; min-width: 0; min-height: 0; container-type: inline-size; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 92%, var(--theme-text-secondary)); outline: none; }
 .pdf-toolbar { min-height: 58px; display: grid; grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr); align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); box-shadow: var(--workspace-shadow-sm); z-index: 5; }
 .toolbar-leading,.toolbar-center,.toolbar-actions { display: flex; align-items: center; gap: 7px; }
 .toolbar-actions { justify-content: flex-end; }
@@ -2101,4 +2101,5 @@ onBeforeUnmount(async () => {
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 980px) { .pdf-search { width: 150px; }.pdf-search.active { width: 220px; }.document-title strong { max-width: 160px; }.toolbar-actions .fit-btn { width: 32px; padding: 0; }.toolbar-actions .fit-btn .action-label { display: none; } }
 @media (max-width: 760px) { .pdf-toolbar { grid-template-columns: 1fr auto; }.toolbar-center { order: 3; grid-column: 1 / -1; justify-content: center; padding-bottom: 7px; }.pdf-sidebar { width: 176px; }.fit-btn,.scale-label { display: none; }.pdf-search { width: 130px; }.pdf-search.active { width: 190px; } }
+@container (max-width: 640px) { .pdf-toolbar { grid-template-columns: minmax(0,1fr) auto; }.toolbar-center { order: 3; grid-column: 1 / -1; justify-content: center; padding-bottom: 7px; }.pdf-sidebar { width: 176px; }.fit-btn,.scale-label { display: none; }.pdf-search { width: 130px; }.pdf-search.active { width: 190px; } }
 </style>
