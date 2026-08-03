@@ -74,14 +74,14 @@
             <button class="delete-annotation" :disabled="!annotationWritable" @click="deleteSelectedAnnotation">删除批注</button>
           </div>
           <div v-if="referenceNotice" class="annotation-alert" aria-live="polite">{{ referenceNotice }}</div>
-          <div v-if="annotationDocument" class="annotation-save-state" :class="{ error: annotationSaveError }" :role="annotationSaveError ? 'alert' : 'status'" aria-live="polite">{{ annotationSaveError || (annotationSaving ? '正在保存批注' : annotationDirty ? '等待保存' : '批注已保存到 sidecar') }}</div>
+          <WorkspaceStateNotice v-if="annotationDocument" class="annotation-save-state" :kind="annotationSaveError ? 'error' : annotationSaving ? 'loading' : annotationDirty ? 'limited' : 'saved'" :tone="annotationSaveError ? 'danger' : annotationDirty ? 'warning' : annotationSaving ? 'info' : 'success'" compact>{{ annotationSaveError || (annotationSaving ? '正在保存批注' : annotationDirty ? '等待保存' : '批注已保存到 sidecar') }}</WorkspaceStateNotice>
         </div>
         <div v-else-if="sidebarTab === 'organize'" class="page-organizer">
           <div class="page-plan-summary">
-            <div v-if="savedCopyNotice?.path === pdfPath" class="page-plan-saved" role="status" aria-live="polite">
+            <WorkspaceStateNotice v-if="savedCopyNotice?.path === pdfPath" class="page-plan-saved" kind="saved" tone="success" compact>
               <strong>可靠副本已落盘并重开</strong>
               <span>{{ savedCopyNotice.pages }} 页 · {{ formatBytes(savedCopyNotice.bytes) }} · 源文件未修改</span>
-            </div>
+            </WorkspaceStateNotice>
             <div class="page-plan-heading"><strong>页面整理草稿</strong><span>{{ pagePlanStatus }}</span></div>
             <section class="pdf-insert-panel" data-testid="b2c-pdf-insert">
               <div class="pdf-merge-heading">
@@ -361,8 +361,8 @@
       </aside>
 
       <section ref="scrollRef" class="pdf-scroll" @scroll.passive="handleScroll" @mouseup="captureTextSelection">
-        <div v-if="loading" class="pdf-state"><div class="loader"></div><strong>正在打开 PDF</strong><span v-if="loadProgress">{{ loadProgress }}%</span></div>
-        <div v-else-if="error" class="pdf-state error"><strong>无法打开 PDF</strong><p>{{ error }}</p><button @click="loadPdf">重试</button></div>
+        <WorkspaceStateNotice v-if="loading" class="pdf-state" kind="loading" tone="info" title="正在打开 PDF"><span v-if="loadProgress">{{ loadProgress }}%</span></WorkspaceStateNotice>
+        <WorkspaceStateNotice v-else-if="error" class="pdf-state" kind="error" tone="danger" title="无法打开 PDF"><p>{{ error }}</p><template #action><button @click="loadPdf">重试</button></template></WorkspaceStateNotice>
         <div v-else-if="pdfDocument" class="page-list">
           <div v-for="page in pdfDocument.numPages" :id="`pdf-page-${page}`" :key="page" class="page-shell" :data-page="page">
             <PdfPage
@@ -404,6 +404,7 @@ import { useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
 import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity.vue'
+import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
@@ -2041,7 +2042,7 @@ onBeforeUnmount(async () => {
 .annotation-colors { display: flex; gap: 7px; }.annotation-colors button,.selection-annotation-tool > button:not(.comment-selection):not(.close-selection) { width: 18px; height: 18px; padding: 0; border: 2px solid #fff; border-radius: 50%; cursor: pointer; box-shadow: 0 0 0 1px var(--workspace-border-color); }.annotation-colors button.active { outline: 2px solid var(--theme-primary); outline-offset: 1px; }.color-yellow { background: #f0c928; }.color-green { background: #2fbd75; }.color-pink { background: #ef68a6; }.color-blue { background: #3e91ee; }
 .annotation-reference-actions { display: grid; grid-template-columns: 1fr 1.35fr; gap: 6px; }.annotation-reference-actions button { min-height: 28px; padding: 4px 6px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: var(--text-compact); line-height: 1.25; }.annotation-reference-actions button:disabled { cursor: default; opacity: .4; }
 .delete-annotation { height: 28px; border: 1px solid rgba(220,76,62,.24); border-radius: 6px; color: var(--status-danger); background: rgba(220,76,62,.06); cursor: pointer; font-size: var(--text-compact); }.delete-annotation:disabled,.annotation-colors button:disabled { cursor: default; opacity: .4; }
-.annotation-save-state { margin-top: 10px; color: var(--theme-text-secondary); font-size: var(--text-compact); text-align: center; }.annotation-save-state.error { color: var(--status-danger); }
+.annotation-save-state { margin-top: 10px; text-align: left; }
 .ocr-panel { min-height: 0; flex: 1; overflow: auto; padding: 10px; }
 .ocr-summary { display: flex; flex-direction: column; gap: 4px; padding: 10px; border: 1px solid rgba(var(--theme-primary-rgb),.18); border-radius: 8px; background: rgba(var(--theme-primary-rgb),.055); }.ocr-summary strong { font-size: 11px; }.ocr-summary span,.ocr-summary p { margin: 0; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.5; }
 .ocr-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }.ocr-actions button,.ocr-progress button { min-height: 30px; border: 1px solid rgba(var(--theme-primary-rgb),.25); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: var(--text-compact); }
@@ -2051,7 +2052,7 @@ onBeforeUnmount(async () => {
 .page-organizer { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .page-plan-summary { max-height: min(68%,520px); flex: none; overflow: auto; padding: 10px; border-bottom: 1px solid var(--workspace-border-color); background: rgba(var(--theme-primary-rgb),.035); }
 .page-plan-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.page-plan-saved { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; margin-bottom: 8px; padding: 7px; border: 1px solid rgba(43,125,78,.22); border-radius: 7px; color: var(--status-success); background: rgba(43,125,78,.07); }.page-plan-saved strong { font-size: var(--text-compact); }.page-plan-saved span { color: inherit; font-size: var(--text-compact); }
+.page-plan-saved { margin-bottom: 8px; }.page-plan-saved strong,.page-plan-saved span { color: inherit; font-size: var(--text-compact); }
 .page-plan-summary strong { font-size: 11px; }.page-plan-summary span { color: var(--theme-primary); font-size: var(--text-compact); }
 .pdf-merge-panel,.pdf-insert-panel { display: grid; gap: 6px; margin-top: 8px; padding: 8px 0; border-top: 1px solid var(--workspace-border-color); border-bottom: 1px solid var(--workspace-border-color); }
 .pdf-merge-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.pdf-merge-heading strong { color: var(--theme-text); font-size: var(--text-compact); }.pdf-merge-heading span { color: var(--theme-text-secondary); font-size: var(--text-compact); }
@@ -2092,8 +2093,8 @@ onBeforeUnmount(async () => {
 .page-list { min-width: max-content; display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 30px 32px 60px; }
 .page-shell { position: relative; scroll-margin-top: 22px; }
 .page-number { position: absolute; right: 0; bottom: -18px; left: 0; color: #667085; font-size: var(--text-compact); text-align: center; }
-.pdf-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #596273; }
-.pdf-state strong { color: #273142; font-size: 15px; }
+.pdf-state { height: 100%; align-content: center; justify-content: center; border: 0; border-radius: 0; background: transparent; }
+.pdf-state strong { font-size: 15px; }
 .pdf-state.error p { max-width: 520px; margin: 0; font-size: 11px; text-align: center; }
 .pdf-state.error button { padding: 7px 16px; border: 0; border-radius: 7px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; }
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }

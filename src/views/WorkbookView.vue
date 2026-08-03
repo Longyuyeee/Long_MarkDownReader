@@ -40,18 +40,15 @@
       <button class="linked-data-overview" @click="linkedDataModalOpen = true">
         查看审计详情<small>{{ workbook.linkedData.summary.totalObjectCount }} 个对象 · {{ workbook.linkedData.summary.refreshRiskCount }} 个刷新风险</small>
       </button>
-      <em v-if="workbook.linkedData.externalRelationshipCount">安全模式：已识别 {{ workbook.linkedData.externalRelationshipCount }} 个外部目标，未发起网络或文件访问</em>
+      <WorkspaceStateNotice v-if="workbook.linkedData.externalRelationshipCount" kind="external" tone="warning" compact>安全模式：已识别 {{ workbook.linkedData.externalRelationshipCount }} 个外部目标，未发起网络或文件访问</WorkspaceStateNotice>
     </div>
 
     <n-modal v-if="workbook" v-model:show="linkedDataModalOpen" preset="card" title="高级数据对象审计" class="linked-data-modal">
       <div class="linked-data-audit">
-        <section class="linked-data-policy">
-          <div>
-            <strong>离线只读模式</strong>
-            <p>显示脱敏结构元数据；不刷新缓存、不执行查询、不跟随外部目标，也不修改高级对象。</p>
-          </div>
-          <span>安全策略已生效</span>
-        </section>
+        <WorkspaceStateNotice as="section" class="linked-data-policy" kind="readonly" tone="success" title="离线只读模式">
+          <p>显示脱敏结构元数据；不刷新缓存、不执行查询、不跟随外部目标，也不修改高级对象。</p>
+          <template #action><span>安全策略已生效</span></template>
+        </WorkspaceStateNotice>
         <div class="linked-data-metrics">
           <span><strong>{{ workbook.linkedData.summary.totalObjectCount }}</strong>高级对象</span>
           <span><strong>{{ workbook.linkedData.summary.localPivotCount }}</strong>本地来源透视表</span>
@@ -724,8 +721,8 @@
     </section>
 
     <main class="workbook-main">
-      <div v-if="loading" class="workbook-state"><div class="loader"></div><strong>正在解析 XLSX 工作簿</strong></div>
-      <div v-else-if="error" class="workbook-state error"><strong>无法打开工作簿</strong><p>{{ error }}</p><button @click="loadWorkbook">重试</button></div>
+      <WorkspaceStateNotice v-if="loading" class="workbook-state" kind="loading" tone="info" title="正在解析 XLSX 工作簿" />
+      <WorkspaceStateNotice v-else-if="error" class="workbook-state" kind="error" tone="danger" title="无法打开工作簿"><p>{{ error }}</p><template #action><button @click="loadWorkbook">重试</button></template></WorkspaceStateNotice>
       <template v-else-if="workbook && sheetInfo">
         <WorkspaceStatusBar v-if="dirtyCount || sheetInfo.truncatedColumns || pageLoading || updatingStructure || calculationCount || calculationErrors" as="div" class="workbook-status">
           <span v-if="dirtyCount">{{ dirtyCount }} 个更改项尚未保存</span>
@@ -801,6 +798,7 @@ import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
 import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity.vue'
 import WorkspaceSegmentedControl from '../components/workspace/WorkspaceSegmentedControl.vue'
+import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
 import WorkspaceStatusBar from '../components/workspace/WorkspaceStatusBar.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import { useDialog, useMessage } from 'naive-ui'
@@ -4505,6 +4503,7 @@ onBeforeUnmount(() => {
 .formula-bar { height: 34px; flex: none; display: flex; align-items: center; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); }
 .linked-data-toolbar { min-height: 42px; flex: none; display: flex; align-items: center; gap: 7px; padding: 4px 12px; overflow-x: auto; border-bottom: 1px solid rgba(190,120,25,.18); color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 91%, #fff0cf); font-size: var(--text-compact); }
 .linked-data-toolbar > strong,.linked-data-toolbar > span,.linked-data-toolbar > em { flex: none; }
+.linked-data-toolbar > .workspace-state-notice { flex: none; margin-left: auto; }
 .linked-data-toolbar > strong { color: var(--status-warning); }
 .linked-data-toolbar > span { padding: 4px 7px; border-radius: 4px; background: rgba(190,120,25,.1); }
 .linked-data-toolbar > em { margin-left: auto; color: var(--status-warning); font-style: normal; }
@@ -4513,10 +4512,9 @@ onBeforeUnmount(() => {
 .linked-data-toolbar .linked-data-overview { min-width: 150px; border-color: rgba(var(--theme-primary-rgb),.24); color: var(--theme-primary); }
 :deep(.linked-data-modal) { width: min(860px, calc(100vw - 32px)); }
 .linked-data-audit { display: grid; gap: 14px; max-height: min(680px, calc(100vh - 190px)); overflow-y: auto; padding-right: 3px; }
-.linked-data-policy { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 16px; border: 1px solid rgba(49,130,86,.22); border-radius: 8px; background: rgba(49,130,86,.07); }
-.linked-data-policy strong { color: var(--status-success); font-size: 13px; }
+.linked-data-policy { padding: 14px 16px; border-color: var(--status-success-border); background: var(--status-success-bg); }
 .linked-data-policy p { margin: 4px 0 0; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.55; }
-.linked-data-policy > span { flex: none; padding: 5px 9px; border-radius: 99px; color: var(--status-success); background: rgba(49,130,86,.12); font-size: var(--text-compact); font-weight: 700; }
+.linked-data-policy span { flex: none; padding: 5px 9px; border-radius: 99px; color: var(--status-success); background: var(--status-success-bg); font-size: var(--text-compact); font-weight: 700; }
 .linked-data-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
 .linked-data-metrics span { display: grid; gap: 3px; padding: 11px 12px; border: 1px solid var(--workspace-border-color); border-radius: 7px; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 96%, var(--theme-primary)); font-size: var(--text-compact); }
 .linked-data-metrics strong { color: var(--theme-text); font-size: 17px; }
@@ -4779,8 +4777,7 @@ onBeforeUnmount(() => {
 .workbook-cell.array-formula-conflict { background-image: repeating-linear-gradient(135deg, rgba(220,38,38,.12), rgba(220,38,38,.12) 4px, rgba(99,102,241,.05) 4px, rgba(99,102,241,.05) 8px); box-shadow: inset 0 0 0 1px rgba(220,38,38,.65); }
 .workbook-cell.cell-error { color: #d24e4e; }
 .workbook-cell.cell-number,.workbook-cell.cell-integer { text-align: right; font-variant-numeric: tabular-nums; }
-.workbook-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--theme-text-secondary); }
-.workbook-state strong { color: var(--theme-text); }
+.workbook-state { height: 100%; align-content: center; justify-content: center; border: 0; border-radius: 0; background: transparent; }
 .workbook-state p { max-width: 560px; text-align: center; }
 .workbook-state button { padding: 7px 16px; border: 0; border-radius: 7px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; }
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }

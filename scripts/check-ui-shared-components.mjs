@@ -16,6 +16,7 @@ const componentContracts = {
   'src/components/workspace/WorkspaceField.vue': ['workspace-field', '<label'],
   'src/components/workspace/WorkspaceSegmentedControl.vue': ['workspace-segmented-control', 'role="group"'],
   'src/components/workspace/WorkspaceEmptyState.vue': ['workspace-empty-state', '<component :is="as"'],
+  'src/components/workspace/WorkspaceStateNotice.vue': ['workspace-state-notice', 'data-state', 'aria-live'],
 }
 
 for (const [filePath, tokens] of Object.entries(componentContracts)) {
@@ -33,4 +34,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('UI shared component contract passed: six primitives are used across four high-risk workspaces.')
+console.log('UI shared component contract passed: seven primitives are used across four high-risk workspaces.')

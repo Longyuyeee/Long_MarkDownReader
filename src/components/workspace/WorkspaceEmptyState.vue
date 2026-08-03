@@ -1,5 +1,5 @@
 <template>
-  <component :is="as" class="workspace-empty-state">
+  <component :is="as" class="workspace-empty-state" data-state="empty" role="status">
     <slot />
   </component>
 </template>
