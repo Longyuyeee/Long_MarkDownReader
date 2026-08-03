@@ -719,9 +719,13 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .text-workspace {
+  width: 100%;
   height: 100%;
+  min-width: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 48px 38px minmax(0, 1fr) 28px;
+  overflow: hidden;
   color: var(--theme-text);
   background: var(--theme-bg);
 }
@@ -729,6 +733,7 @@ onBeforeUnmount(() => {
 .text-toolbar,
 .format-bar,
 .status-bar {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -749,6 +754,14 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.document-identity {
+  flex: 1;
+}
+
+.editor-actions {
+  flex: 0 0 auto;
 }
 
 .document-title {
@@ -870,7 +883,7 @@ onBeforeUnmount(() => {
   gap: 14px;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .text-workspace { grid-template-rows: auto 48px auto minmax(0, 1fr) 32px; }
   .format-bar { min-height: 42px; padding: 6px 10px; gap: 8px; overflow-x: auto; }
   .format-bar label > span:first-child, .confidence-label { display: none; }
