@@ -1,10 +1,10 @@
 <template>
   <div class="workbook-view" tabindex="-1">
-    <header class="workbook-toolbar">
-      <div class="workbook-title">
+    <WorkspaceToolbar class="workbook-toolbar">
+      <WorkspaceFileIdentity class="workbook-title">
         <button class="icon-button" title="返回知识库" @click="router.push('/library')"><n-icon :component="ArrowLeftIcon" /></button>
         <div><strong>{{ fileName }}</strong><span v-if="workbook">XLSX 工作簿 · {{ workbook.sheets.length }} 个 Sheet · {{ formatBytes(workbook.size) }}</span></div>
-      </div>
+      </WorkspaceFileIdentity>
       <div v-if="workbook" class="workbook-actions">
         <button class="icon-button" title="撤销" :disabled="!undoStack.length || saving" @click="undo"><n-icon :component="UndoIcon" /></button>
         <button class="icon-button" title="重做" :disabled="!redoStack.length || saving" @click="redo"><n-icon :component="RedoIcon" /></button>
@@ -16,7 +16,7 @@
         <button :disabled="importing || saving || !activeSheet" @click="convertSheet"><n-icon :component="TableIcon" />{{ importing ? '转换中…' : '转为 Table' }}</button>
         <button class="primary" :disabled="!dirtyCount || saving" aria-live="polite" @click="saveWorkbook"><n-icon :component="SaveIcon" />{{ saving ? '保存中' : dirtyCount ? `保存 (${dirtyCount})` : '已保存' }}</button>
       </div>
-    </header>
+    </WorkspaceToolbar>
 
     <nav v-if="workbook" class="sheet-tabs" aria-label="工作表">
       <button v-for="sheet in workbook.sheets" :key="sheet" :class="{ active: sheet === activeSheet }" @click="selectSheet(sheet)"><n-icon :component="SheetIcon" />{{ sheet }}</button>
@@ -530,11 +530,11 @@
       <label class="color-control" title="文字颜色"><n-icon :component="TypeIcon" /><input type="color" :value="focusedStyle.fontColor || '#111827'" :disabled="!selectedCell || saving" @input="applyStylePatch({ fontColor: ($event.target as HTMLInputElement).value })"></label>
       <label class="color-control" title="填充颜色"><n-icon :component="FillIcon" /><input type="color" :value="focusedStyle.fillColor || '#ffffff'" :disabled="!selectedCell || saving" @input="applyStylePatch({ fillColor: ($event.target as HTMLInputElement).value })"></label>
       <span class="toolbar-divider"></span>
-      <div class="segmented" aria-label="水平对齐">
+      <WorkspaceSegmentedControl class="segmented" aria-label="水平对齐">
         <button class="icon-button" :class="{ active: focusedStyle.horizontalAlignment === 'left' }" title="左对齐" :disabled="!selectedCell || saving" @click="applyStylePatch({ horizontalAlignment: focusedStyle.horizontalAlignment === 'left' ? 'general' : 'left' })"><n-icon :component="AlignLeftIcon" /></button>
         <button class="icon-button" :class="{ active: focusedStyle.horizontalAlignment === 'center' }" title="居中" :disabled="!selectedCell || saving" @click="applyStylePatch({ horizontalAlignment: focusedStyle.horizontalAlignment === 'center' ? 'general' : 'center' })"><n-icon :component="AlignCenterIcon" /></button>
         <button class="icon-button" :class="{ active: focusedStyle.horizontalAlignment === 'right' }" title="右对齐" :disabled="!selectedCell || saving" @click="applyStylePatch({ horizontalAlignment: focusedStyle.horizontalAlignment === 'right' ? 'general' : 'right' })"><n-icon :component="AlignRightIcon" /></button>
-      </div>
+      </WorkspaceSegmentedControl>
       <button class="icon-button" :class="{ active: focusedStyle.wrapText }" title="自动换行" :disabled="!selectedCell || saving" @click="applyStylePatch({ wrapText: !focusedStyle.wrapText })"><n-icon :component="WrapIcon" /></button>
       <button class="icon-button" :class="{ active: focusedStyle.borderStyle !== 'none' }" title="所有边框" :disabled="!selectedCell || saving" @click="applyStylePatch({ borderStyle: focusedStyle.borderStyle === 'none' ? 'thin' : 'none', borderColor: focusedStyle.borderStyle === 'none' ? '#808080' : '' })"><n-icon :component="BorderIcon" /></button>
       <select class="border-side-select" title="分边框" :disabled="!selectedCell || saving" @change="applyBorderSide">
@@ -727,14 +727,14 @@
       <div v-if="loading" class="workbook-state"><div class="loader"></div><strong>正在解析 XLSX 工作簿</strong></div>
       <div v-else-if="error" class="workbook-state error"><strong>无法打开工作簿</strong><p>{{ error }}</p><button @click="loadWorkbook">重试</button></div>
       <template v-else-if="workbook && sheetInfo">
-        <div v-if="dirtyCount || sheetInfo.truncatedColumns || pageLoading || updatingStructure || calculationCount || calculationErrors" class="workbook-status" aria-live="polite">
+        <WorkspaceStatusBar v-if="dirtyCount || sheetInfo.truncatedColumns || pageLoading || updatingStructure || calculationCount || calculationErrors" as="div" class="workbook-status">
           <span v-if="dirtyCount">{{ dirtyCount }} 个更改项尚未保存</span>
           <span v-if="sheetInfo.truncatedColumns">当前显示前 {{ sheetInfo.returnedColumns }} 列</span>
           <span v-if="pageLoading">正在载入行数据…</span>
           <span v-if="updatingStructure">正在更新工作表结构…</span>
           <span v-if="calculationCount">已重算 {{ calculationCount }} 个公式</span>
           <span v-if="calculationErrors" class="calculation-error">{{ calculationErrors }} 个公式错误</span>
-        </div>
+        </WorkspaceStatusBar>
         <div ref="scrollRef" class="sheet-scroll" @scroll="handleScroll">
           <div class="sheet-canvas" :style="{ width: `${sheetWidth}px` }">
             <div class="sheet-header" :style="gridStyle">
@@ -799,6 +799,10 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSPro
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
+import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity.vue'
+import WorkspaceSegmentedControl from '../components/workspace/WorkspaceSegmentedControl.vue'
+import WorkspaceStatusBar from '../components/workspace/WorkspaceStatusBar.vue'
+import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import { useDialog, useMessage } from 'naive-ui'
 import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Calculator as CalculatorIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'

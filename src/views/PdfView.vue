@@ -1,11 +1,11 @@
 <template>
   <div class="pdf-view" @keydown="handleKeydown" tabindex="-1">
-    <header class="pdf-toolbar">
-      <div class="toolbar-leading">
+    <WorkspaceToolbar class="pdf-toolbar">
+      <WorkspaceFileIdentity class="toolbar-leading">
         <button class="icon-btn" title="返回知识库" @click="router.push('/library')">←</button>
         <button class="icon-btn" :class="{ active: sidebarOpen }" :aria-pressed="sidebarOpen" title="缩略图与目录" @click="sidebarOpen = !sidebarOpen">☰</button>
         <div class="document-title"><strong>{{ fileName }}<i v-if="pdfWorkspaceDirty" class="page-plan-dirty" aria-live="polite">页面草稿</i></strong><span v-if="pdfDocument">{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template></span></div>
-      </div>
+      </WorkspaceFileIdentity>
       <div v-if="pdfDocument" class="toolbar-center">
         <button class="icon-btn" title="上一页" aria-label="上一页" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
         <label class="page-jump"><input v-model.number="pageInput" type="number" min="1" :max="pdfDocument.numPages" @keydown.enter="commitPageInput" @blur="commitPageInput"/><span>/ {{ pdfDocument.numPages }}</span></label>
@@ -29,7 +29,7 @@
         <button class="fit-btn" :class="{ active: areaMode }" :aria-pressed="areaMode" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
         <button class="fit-btn" :disabled="!annotationWritable" title="为当前页添加评论" @click="createPageComment"><MessageSquareTextIcon :size="14"/><span class="action-label">页评论</span></button>
       </div>
-    </header>
+    </WorkspaceToolbar>
 
     <main class="pdf-workspace">
       <aside v-if="sidebarOpen && pdfDocument" class="pdf-sidebar" :class="{ 'organize-open': sidebarTab === 'organize' }">
@@ -403,6 +403,8 @@ import { invoke } from '@tauri-apps/api/core'
 import { useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
+import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity.vue'
+import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist'

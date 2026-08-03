@@ -1,6 +1,6 @@
 <template>
   <div class="workspace-home">
-    <header class="workspace-header">
+    <WorkspaceToolbar class="workspace-header">
       <div class="brand-block">
         <img class="brand-mark" src="/icon.png" alt="Long编辑图标">
         <div><strong>Long编辑</strong><small>专业工作台</small></div>
@@ -11,7 +11,7 @@
         <button title="设置" @click="router.push({ name: 'Settings' })"><SettingsIcon /></button>
         <button title="刷新工作台" :disabled="loading || !store.libraryPath" @click="loadWorkspace"><RefreshIcon :class="{ spinning: loading }" /></button>
       </nav>
-    </header>
+    </WorkspaceToolbar>
 
     <main v-if="store.libraryPath" class="workspace-content">
       <section class="workspace-identity">
@@ -158,12 +158,12 @@
       </div>
     </main>
 
-    <main v-else class="workspace-empty">
+    <WorkspaceEmptyState v-else as="main" class="workspace-empty">
       <img class="brand-mark large" src="/icon.png" alt="Long编辑图标">
       <h1>Long编辑</h1>
       <p>未关联知识库</p>
       <button @click="router.push({ name: 'Settings' })"><SettingsIcon />配置知识库</button>
-    </main>
+    </WorkspaceEmptyState>
   </div>
 </template>
 
@@ -183,6 +183,8 @@ import { fileDisplayName, findFileFormat, opensInLibraryShell, routeForFile } fr
 import { openManagedFile } from '../services/fileNavigation'
 import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
 import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceHealthReport } from '../components/WorkspaceHealthQueue.vue'
+import WorkspaceEmptyState from '../components/workspace/WorkspaceEmptyState.vue'
+import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 
 interface WorkspaceTask { title: string; path: string; relativePath: string; line: number; text: string }
 interface WorkspaceFile { title: string; path: string; relativePath: string; objectType: string; modifiedAt: number; size: number }

@@ -1,10 +1,10 @@
 <template>
   <div class="diagram-studio" tabindex="-1" @keydown="handleKeydown">
-    <header class="studio-toolbar">
-      <div class="studio-title">
+    <WorkspaceToolbar class="studio-toolbar">
+      <WorkspaceFileIdentity class="studio-title">
         <button title="返回知识库" @click="router.push('/library')">←</button>
         <div><strong>{{ fileName }}</strong><span>Mermaid 图表工作室 · {{ lineCount }} 行</span></div>
-      </div>
+      </WorkspaceFileIdentity>
       <div class="studio-actions">
         <label>模板
           <select v-model="selectedTemplate" @change="applySelectedTemplate">
@@ -25,13 +25,13 @@
         <button class="export-toggle" :class="{ active: showExport }" :aria-pressed="showExport" :disabled="!svg" @click="showExport = !showExport">导出</button>
         <button class="save-button" :disabled="!dirty || saving || !!parseError" aria-live="polite" @click="saveDiagram">{{ saving ? '保存中' : dirty ? '保存' : '已保存' }}</button>
       </div>
-    </header>
+    </WorkspaceToolbar>
 
     <section v-if="showExport" class="export-panel" role="dialog" aria-label="导出图表">
       <header><div><strong>导出图表</strong><span>当前主题：{{ diagramTheme }}</span></div><button title="关闭" @click="showExport = false">×</button></header>
-      <label>格式<select v-model="exportFormat"><option value="svg">SVG 矢量图</option><option value="png">PNG 位图</option></select></label>
-      <label v-if="exportFormat === 'png'">倍率<select v-model.number="exportScale"><option :value="1">1×</option><option :value="2">2×</option><option :value="3">3×</option></select></label>
-      <label>背景<select v-model="exportBackground"><option value="transparent">透明</option><option value="theme">当前主题背景</option><option value="white">白色</option></select></label>
+      <WorkspaceField>格式<select v-model="exportFormat"><option value="svg">SVG 矢量图</option><option value="png">PNG 位图</option></select></WorkspaceField>
+      <WorkspaceField v-if="exportFormat === 'png'">倍率<select v-model.number="exportScale"><option :value="1">1×</option><option :value="2">2×</option><option :value="3">3×</option></select></WorkspaceField>
+      <WorkspaceField>背景<select v-model="exportBackground"><option value="transparent">透明</option><option value="theme">当前主题背景</option><option value="white">白色</option></select></WorkspaceField>
       <p>SVG 保留矢量文字；PNG 最大边 8192 px、最多 3200 万像素。</p>
       <button class="export-confirm" :disabled="!exportReady || exporting" @click="exportDiagram">{{ exporting ? '导出中…' : exportReady ? `导出 ${exportFormat.toUpperCase()}` : '等待最新预览' }}</button>
     </section>
@@ -49,7 +49,7 @@
           <strong>{{ errorLine ? `第 ${errorLine} 行` : '语法错误' }}</strong>
           <span>{{ parseError }}</span>
         </button>
-        <footer v-else aria-live="polite"><span class="valid-dot"></span>语法有效<span v-if="rendering"> · 正在渲染…</span><i>{{ notice }}</i></footer>
+        <WorkspaceStatusBar v-else><span class="valid-dot"></span>语法有效<span v-if="rendering"> · 正在渲染…</span><i>{{ notice }}</i></WorkspaceStatusBar>
       </section>
 
       <section class="preview-panel">
@@ -97,6 +97,10 @@ import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
+import WorkspaceField from '../components/workspace/WorkspaceField.vue'
+import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity.vue'
+import WorkspaceStatusBar from '../components/workspace/WorkspaceStatusBar.vue'
+import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import { diagramSvgToPng, prepareDiagramSvg, type DiagramBackground } from '../utils/diagramExport'
 
 interface DiagramDocument { path: string; content: string; signature: string }
