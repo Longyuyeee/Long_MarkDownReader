@@ -7,7 +7,7 @@
 <p align="center">本地优先的 Windows 知识工作台：统一管理、阅读和编辑 Markdown、Office、PDF、表格、图表、思维导图与 Canvas。</p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.2"><img src="https://img.shields.io/badge/Release-v1.0.2-cca43b" alt="Release v1.0.2"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.3"><img src="https://img.shields.io/badge/Release-v1.0.3-cca43b" alt="Release v1.0.3"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-41-0f766e" alt="41 registered formats">
   <img src="https://img.shields.io/badge/License-AGPL--3.0-7c3aed" alt="AGPL-3.0">
@@ -15,26 +15,24 @@
 
 ## 下载与安装
 
-当前社区版为 **v1.0.2**，支持 Windows 10/11 x64：
+当前社区版为 **v1.0.3**，支持 Windows 10/11 x64：
 
-- [下载 NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.2/LongEdit_1.0.2_x64-setup.exe)
-- [下载 MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.2/LongEdit_1.0.2_x64_zh-CN.msi)
-- [查看 GitHub Release 与 SHA-256](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.2)
+- [下载 NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.3/LongEdit_1.0.3_x64-setup.exe)
+- [下载 MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.3/LongEdit_1.0.3_x64_zh-CN.msi)
+- [查看 GitHub Release 与 SHA-256](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.3)
 
 本项目当前没有 Windows Authenticode 商业证书，安装时可能出现“未知发布者”或 SmartScreen 提示。请只从官方 GitHub Release 下载，并使用 `SHA256SUMS.txt` 核对 SHA-256。
 
-v1.0.2 采用**手动下载安装**。由于原 Tauri 自动更新私钥在当前发布环境不可用，本版本不发布 `latest.json` 和 `.sig`，已安装版本的自动更新检查不会分发这个补丁。项目保留原公钥，避免用新密钥伪造更新连续性。
+v1.0.3 采用**手动下载安装**。由于原 Tauri 自动更新私钥在当前发布环境不可用，本版本不发布 `latest.json` 和 `.sig`，已安装版本的自动更新检查不会分发这个补丁。项目保留原公钥，避免用新密钥伪造更新连续性。
 
-## v1.0.2 更新重点
+## v1.0.3 更新重点
 
-- 全面启用新的品牌图标：放大的实心金色 `L`、金色编辑笔尖与深蓝底，应用内、Windows、macOS、iOS、Android 和 README 使用同一母版。
-- 完成 P0 与 UI-1 至 UI-4 收口：受管文件统一在资料库右侧工作区打开，管理页、图谱和编辑器使用一致的导航、状态与视觉语义。
-- 完成 144 张真实 Tauri WebView2 视觉证据：45 张核心壳层和 99 张主要编辑器截图，覆盖三种核心主题与 100%/125%/150% 等效缩放。
-- 主题系统由唯一注册表驱动：3 个核心主题、4 个已验证场景预设，以及 12 个兼容外观组合，共 19 个可选预设。
-- 修复 PDF、表格、工作簿、思维导图和 Canvas 在嵌入工作区、窄宽度与缩放场景中的裁切、溢出和路由问题。
-- 版本、能力矩阵、发布页面和文档统一到 v1.0.2，同时保持复杂格式的真实能力边界。
+- 修复安装版中 Tauri CSP 阻止 Naive UI 动态样式生效的问题，恢复与开发态一致的按钮、输入框、空状态和图标尺寸。
+- 外部 Office/WPS/LibreOffice 探测改为进程内读取 Windows 注册表，不再启动 `reg.exe`；辅助探测程序统一隐藏窗口。
+- 在 Windows 200% 缩放和真实覆盖安装环境复测：动态样式生效、超大 SVG 为 0、15 秒启动观察内 `reg.exe` 启动为 0。
+- 保留 v1.0.2 的品牌图标、UI 收口、19 套主题预设与 41 类格式能力边界，不扩大复杂格式承诺。
 
-详细变更见 [v1.0.2 发布说明](docs/RELEASE_NOTES_v1.0.2.md) 与 [发布审计](docs/V1_0_2_Unsigned_Community_Release_Audit_2026-08-03.md)。
+详细变更见 [v1.0.3 发布说明](docs/RELEASE_NOTES_v1.0.3.md) 与 [安装热修复审计](docs/V1_0_3_Installed_Hotfix_Audit_2026-08-03.md)。
 
 ## 核心体验
 
@@ -115,7 +113,7 @@ npm run build
 npm run ci:patch-release
 ```
 
-桌面安装包由 Tauri 生成。v1.0.2 的手动发布构建会关闭更新产物生成，仅上传 MSI、NSIS 和 `SHA256SUMS.txt`。
+桌面安装包由 Tauri 生成。v1.0.3 的手动发布构建会关闭更新产物生成，仅上传 MSI、NSIS 和 `SHA256SUMS.txt`。
 
 ## 工程结构
 

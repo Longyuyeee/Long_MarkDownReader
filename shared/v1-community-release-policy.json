@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.0.3",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-03",
-  "currentStatus": "v1.0.3-community-release-quality-gate-pending",
+  "currentStatus": "v1.0.3-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -23,11 +23,11 @@
   "gates": {
     "frontendBuildPassed": true,
     "rustLockedCheckPassed": true,
-    "msiBuilt": false,
-    "nsisBuilt": false,
+    "msiBuilt": true,
+    "nsisBuilt": true,
     "updaterSignaturesBuilt": false,
     "installedLifecyclePassed": true,
-    "qualityGatePassed": false,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "patchValidation": {
@@ -48,10 +48,21 @@
     "assetMode": "manual-msi-nsis-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": "",
+    "artifactSourceCommit": "9e6f290a6fc569b301e04e5fc2a8e4bee71a9ce9",
     "qualityGateRunId": null,
     "qualityGateRunUrl": "",
-    "artifacts": []
+    "artifacts": [
+      {
+        "name": "LongEdit_1.0.3_x64-setup.exe",
+        "sha256": "2b01ec0a51f9b9423eec1febc897c26567536394c20fc340da25576dcb87973c",
+        "authenticodeStatus": "NotSigned"
+      },
+      {
+        "name": "LongEdit_1.0.3_x64_zh-CN.msi",
+        "sha256": "a3a421974c6ef9be2a583267e76554dbcd69c3354089e64365d0f179f82671b8",
+        "authenticodeStatus": "NotSigned"
+      }
+    ]
   },
   "release": {
     "tag": "v1.0.2",
@@ -66,5 +77,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "build-and-verify-v1.0.3-installed-hotfix"
+  "nextAction": "publish-v1.0.3-manual-github-release"
 }

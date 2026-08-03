@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "appVersion": "1.0.3",
+  "sourceCommit": "9e6f290a6fc569b301e04e5fc2a8e4bee71a9ce9",
+  "environment": {
+    "platform": "windows",
+    "appliedDpi": 192,
+    "displayScalePercent": 200,
+    "webviewDevicePixelRatio": 2
+  },
+  "packagedUi": {
+    "naiveStyleApplied": true,
+    "sampleIconWidthPx": 18,
+    "sampleIconHeightPx": 18,
+    "oversizedSvgCount": 0
+  },
+  "installedLifecycle": {
+    "upgradeFrom": "1.0.2",
+    "installedVersion": "1.0.3",
+    "observationSeconds": 15,
+    "regExeStarts": 0
+  },
+  "artifacts": [
+    {
+      "name": "LongEdit_1.0.3_x64-setup.exe",
+      "bytes": 53463488,
+      "sha256": "2b01ec0a51f9b9423eec1febc897c26567536394c20fc340da25576dcb87973c"
+    },
+    {
+      "name": "LongEdit_1.0.3_x64_zh-CN.msi",
+      "bytes": 58269696,
+      "sha256": "a3a421974c6ef9be2a583267e76554dbcd69c3354089e64365d0f179f82671b8"
+    }
+  ]
+}
