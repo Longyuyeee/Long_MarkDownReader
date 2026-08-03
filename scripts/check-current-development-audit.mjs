@@ -41,7 +41,11 @@ const expectedFacts = [
     "当前能力矩阵仍保持 `releaseCandidate=false`",
     matrix.releaseCandidate === false,
   ],
-  ["下一代码阶段固定为：**P0 内部文件路由收敛**", true],
+  ["P0、UI-1、UI-2、UI-3、UI-4A 与 UI-4B 均已完成", true],
+  [
+    "当前唯一下一阶段为：**UI-4C 全面复核、事实源收敛与 `1.0.2` 发布判定**",
+    true,
+  ],
 ];
 
 for (const [token, condition] of expectedFacts) {

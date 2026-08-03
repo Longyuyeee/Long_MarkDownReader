@@ -1,0 +1,5060 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-03T06:58:25.004Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "navigation": "managed-file-route",
+  "sourceCommit": "f8e995abbeba722a16a5d9024ed99315035fe584",
+  "physicalViewport": {
+    "width": 1280,
+    "height": 820
+  },
+  "scenarios": [
+    {
+      "id": "professional-light",
+      "name": "专业浅色",
+      "theme": "white",
+      "style": "minimal",
+      "motion": "swift"
+    },
+    {
+      "id": "professional-dark",
+      "name": "专业深色",
+      "theme": "dark",
+      "style": "minimal",
+      "motion": "calm"
+    },
+    {
+      "id": "high-contrast",
+      "name": "高对比",
+      "theme": "contrast",
+      "style": "sharp",
+      "motion": "reduced"
+    }
+  ],
+  "scales": [
+    {
+      "id": "100",
+      "percent": 100,
+      "factor": 1
+    },
+    {
+      "id": "125",
+      "percent": 125,
+      "factor": 1.25
+    },
+    {
+      "id": "150",
+      "percent": 150,
+      "factor": 1.5
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "markdown",
+      "name": "Markdown",
+      "sampleKey": "markdown"
+    },
+    {
+      "id": "txt",
+      "name": "TXT",
+      "sampleKey": "txt"
+    },
+    {
+      "id": "json",
+      "name": "JSON",
+      "sampleKey": "json"
+    },
+    {
+      "id": "pdf",
+      "name": "PDF",
+      "sampleKey": "pdf"
+    },
+    {
+      "id": "docx",
+      "name": "DOCX",
+      "sampleKey": "docx"
+    },
+    {
+      "id": "pptx",
+      "name": "PPTX",
+      "sampleKey": "pptx"
+    },
+    {
+      "id": "csv",
+      "name": "CSV",
+      "sampleKey": "csv"
+    },
+    {
+      "id": "xlsx",
+      "name": "XLSX",
+      "sampleKey": "xlsx"
+    },
+    {
+      "id": "diagram",
+      "name": "Mermaid 图表",
+      "sampleKey": "diagram"
+    },
+    {
+      "id": "mindmap",
+      "name": "OPML 脑图",
+      "sampleKey": "mindmap"
+    },
+    {
+      "id": "canvas",
+      "name": "JSON Canvas",
+      "sampleKey": "canvas"
+    }
+  ],
+  "entries": [
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "markdown",
+      "sampleFile": "UI4B Product Brief.md",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-markdown-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1238,
+          "height": 788
+        },
+        "toolbar": {
+          "x": 265,
+          "y": 32,
+          "width": 969,
+          "height": 65.59375
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "txt",
+      "sampleFile": "UI4B Release Notes.txt",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-txt-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 38.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "json",
+      "sampleFile": "UI4B Workspace.json",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-json-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "pdf",
+      "sampleFile": "UI4B Two Page Review.pdf",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-pdf-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "docx",
+      "sampleFile": "UI4B Word Review.docx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-docx-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 52.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "pptx",
+      "sampleFile": "UI4B Presentation Review.pptx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-pptx-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 52
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "csv",
+      "sampleFile": "UI4B Delivery Metrics.csv",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-csv-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "xlsx",
+      "sampleFile": "UI4B Workbook Review.xlsx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-xlsx-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "diagram",
+      "sampleFile": "UI4B Release Flow.mmd",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-diagram-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "mindmap",
+      "sampleFile": "UI4B Product Map.opml",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-mindmap-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 65.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "canvas",
+      "sampleFile": "UI4B Planning Board.canvas",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-canvas-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 66.1875
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "markdown",
+      "sampleFile": "UI4B Product Brief.md",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-markdown-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 982,
+          "height": 624
+        },
+        "toolbar": {
+          "x": 205,
+          "y": 32,
+          "width": 773,
+          "height": 65.59375
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "txt",
+      "sampleFile": "UI4B Release Notes.txt",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-txt-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 38.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "json",
+      "sampleFile": "UI4B Workspace.json",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-json-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "pdf",
+      "sampleFile": "UI4B Two Page Review.pdf",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-pdf-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "docx",
+      "sampleFile": "UI4B Word Review.docx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-docx-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 52.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "pptx",
+      "sampleFile": "UI4B Presentation Review.pptx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-pptx-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 52
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "csv",
+      "sampleFile": "UI4B Delivery Metrics.csv",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-csv-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "xlsx",
+      "sampleFile": "UI4B Workbook Review.xlsx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-xlsx-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "diagram",
+      "sampleFile": "UI4B Release Flow.mmd",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-diagram-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "mindmap",
+      "sampleFile": "UI4B Product Map.opml",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-mindmap-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 65.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "canvas",
+      "sampleFile": "UI4B Planning Board.canvas",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-canvas-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 66.1875
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "markdown",
+      "sampleFile": "UI4B Product Brief.md",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-markdown-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 811,
+          "height": 515
+        },
+        "toolbar": {
+          "x": 205,
+          "y": 32,
+          "width": 602,
+          "height": 65.59375
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "txt",
+      "sampleFile": "UI4B Release Notes.txt",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-txt-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 38.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "json",
+      "sampleFile": "UI4B Workspace.json",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-json-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "pdf",
+      "sampleFile": "UI4B Two Page Review.pdf",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-pdf-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 90.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "docx",
+      "sampleFile": "UI4B Word Review.docx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-docx-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 52.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "pptx",
+      "sampleFile": "UI4B Presentation Review.pptx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-pptx-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 69.3828125
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "csv",
+      "sampleFile": "UI4B Delivery Metrics.csv",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-csv-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "xlsx",
+      "sampleFile": "UI4B Workbook Review.xlsx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-xlsx-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "diagram",
+      "sampleFile": "UI4B Release Flow.mmd",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-diagram-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "mindmap",
+      "sampleFile": "UI4B Product Map.opml",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-mindmap-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 53
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "canvas",
+      "sampleFile": "UI4B Planning Board.canvas",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-canvas-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 66.1875
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "markdown",
+      "sampleFile": "UI4B Product Brief.md",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-markdown-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1238,
+          "height": 788
+        },
+        "toolbar": {
+          "x": 265,
+          "y": 32,
+          "width": 969,
+          "height": 65.59375
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "txt",
+      "sampleFile": "UI4B Release Notes.txt",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-txt-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 38.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "json",
+      "sampleFile": "UI4B Workspace.json",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-json-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "pdf",
+      "sampleFile": "UI4B Two Page Review.pdf",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-pdf-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "docx",
+      "sampleFile": "UI4B Word Review.docx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-docx-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 52.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "pptx",
+      "sampleFile": "UI4B Presentation Review.pptx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-pptx-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 52
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "csv",
+      "sampleFile": "UI4B Delivery Metrics.csv",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-csv-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "xlsx",
+      "sampleFile": "UI4B Workbook Review.xlsx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-xlsx-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "diagram",
+      "sampleFile": "UI4B Release Flow.mmd",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-diagram-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "mindmap",
+      "sampleFile": "UI4B Product Map.opml",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-mindmap-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 65.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "canvas",
+      "sampleFile": "UI4B Planning Board.canvas",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-canvas-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 741
+        },
+        "toolbar": {
+          "x": 266,
+          "y": 75,
+          "width": 967,
+          "height": 66.1875
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "markdown",
+      "sampleFile": "UI4B Product Brief.md",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-markdown-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 982,
+          "height": 624
+        },
+        "toolbar": {
+          "x": 205,
+          "y": 32,
+          "width": 773,
+          "height": 65.59375
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "txt",
+      "sampleFile": "UI4B Release Notes.txt",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-txt-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 38.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "json",
+      "sampleFile": "UI4B Workspace.json",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-json-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "pdf",
+      "sampleFile": "UI4B Two Page Review.pdf",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-pdf-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "docx",
+      "sampleFile": "UI4B Word Review.docx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-docx-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 52.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "pptx",
+      "sampleFile": "UI4B Presentation Review.pptx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-pptx-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 52
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "csv",
+      "sampleFile": "UI4B Delivery Metrics.csv",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-csv-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "xlsx",
+      "sampleFile": "UI4B Workbook Review.xlsx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-xlsx-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "diagram",
+      "sampleFile": "UI4B Release Flow.mmd",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-diagram-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "mindmap",
+      "sampleFile": "UI4B Product Map.opml",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-mindmap-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 65.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "canvas",
+      "sampleFile": "UI4B Planning Board.canvas",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-canvas-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 577
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 771,
+          "height": 66.1875
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "markdown",
+      "sampleFile": "UI4B Product Brief.md",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-markdown-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 811,
+          "height": 515
+        },
+        "toolbar": {
+          "x": 205,
+          "y": 32,
+          "width": 602,
+          "height": 65.59375
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "txt",
+      "sampleFile": "UI4B Release Notes.txt",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-txt-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 38.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "json",
+      "sampleFile": "UI4B Workspace.json",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-json-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "pdf",
+      "sampleFile": "UI4B Two Page Review.pdf",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-pdf-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 90.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "docx",
+      "sampleFile": "UI4B Word Review.docx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-docx-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 52.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "pptx",
+      "sampleFile": "UI4B Presentation Review.pptx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-pptx-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 69.3828125
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "csv",
+      "sampleFile": "UI4B Delivery Metrics.csv",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-csv-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "xlsx",
+      "sampleFile": "UI4B Workbook Review.xlsx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-xlsx-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "diagram",
+      "sampleFile": "UI4B Release Flow.mmd",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-diagram-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "mindmap",
+      "sampleFile": "UI4B Product Map.opml",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-mindmap-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 53
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "canvas",
+      "sampleFile": "UI4B Planning Board.canvas",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-canvas-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 468
+        },
+        "toolbar": {
+          "x": 206,
+          "y": 75,
+          "width": 600,
+          "height": 66.1875
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "markdown",
+      "sampleFile": "UI4B Product Brief.md",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-markdown-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1238,
+          "height": 788
+        },
+        "toolbar": {
+          "x": 265,
+          "y": 32,
+          "width": 969,
+          "height": 65.59375
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "txt",
+      "sampleFile": "UI4B Release Notes.txt",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-txt-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 740
+        },
+        "toolbar": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 39.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "json",
+      "sampleFile": "UI4B Workspace.json",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-json-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 740
+        },
+        "toolbar": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "pdf",
+      "sampleFile": "UI4B Two Page Review.pdf",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-pdf-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 740
+        },
+        "toolbar": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "docx",
+      "sampleFile": "UI4B Word Review.docx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-docx-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 740
+        },
+        "toolbar": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 52.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "pptx",
+      "sampleFile": "UI4B Presentation Review.pptx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-pptx-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 740
+        },
+        "toolbar": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 52
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "csv",
+      "sampleFile": "UI4B Delivery Metrics.csv",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-csv-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 740
+        },
+        "toolbar": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "xlsx",
+      "sampleFile": "UI4B Workbook Review.xlsx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-xlsx-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 740
+        },
+        "toolbar": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "diagram",
+      "sampleFile": "UI4B Release Flow.mmd",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-diagram-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 740
+        },
+        "toolbar": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "mindmap",
+      "sampleFile": "UI4B Product Map.opml",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-mindmap-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 740
+        },
+        "toolbar": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 66.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "canvas",
+      "sampleFile": "UI4B Planning Board.canvas",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-canvas-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 740
+        },
+        "toolbar": {
+          "x": 267,
+          "y": 76,
+          "width": 965,
+          "height": 67.1875
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "markdown",
+      "sampleFile": "UI4B Product Brief.md",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-markdown-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 982,
+          "height": 624
+        },
+        "toolbar": {
+          "x": 205,
+          "y": 32,
+          "width": 773,
+          "height": 65.59375
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "txt",
+      "sampleFile": "UI4B Release Notes.txt",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-txt-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 576
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 39.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "json",
+      "sampleFile": "UI4B Workspace.json",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-json-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 576
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "pdf",
+      "sampleFile": "UI4B Two Page Review.pdf",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-pdf-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 576
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "docx",
+      "sampleFile": "UI4B Word Review.docx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-docx-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 576
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 52.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "pptx",
+      "sampleFile": "UI4B Presentation Review.pptx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-pptx-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 576
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 52
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "csv",
+      "sampleFile": "UI4B Delivery Metrics.csv",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-csv-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 576
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "xlsx",
+      "sampleFile": "UI4B Workbook Review.xlsx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-xlsx-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 576
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "diagram",
+      "sampleFile": "UI4B Release Flow.mmd",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-diagram-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 576
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "mindmap",
+      "sampleFile": "UI4B Product Map.opml",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-mindmap-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 576
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 66.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "canvas",
+      "sampleFile": "UI4B Planning Board.canvas",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-canvas-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 576
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 769,
+          "height": 67.1875
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "markdown",
+      "sampleFile": "UI4B Product Brief.md",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-markdown-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 811,
+          "height": 515
+        },
+        "toolbar": {
+          "x": 205,
+          "y": 32,
+          "width": 602,
+          "height": 65.59375
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Brief.md",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "txt",
+      "sampleFile": "UI4B Release Notes.txt",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-txt-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 467
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 39.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Notes.txt",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "json",
+      "sampleFile": "UI4B Workspace.json",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-json-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 467
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workspace.json",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "pdf",
+      "sampleFile": "UI4B Two Page Review.pdf",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-pdf-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 467
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 90.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Two%20Page%20Review.pdf",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "docx",
+      "sampleFile": "UI4B Word Review.docx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-docx-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 467
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 52.7890625
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Word%20Review.docx",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "pptx",
+      "sampleFile": "UI4B Presentation Review.pptx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-pptx-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 467
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 69.3828125
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Presentation%20Review.pptx",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "csv",
+      "sampleFile": "UI4B Delivery Metrics.csv",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-csv-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 467
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Delivery%20Metrics.csv",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "xlsx",
+      "sampleFile": "UI4B Workbook Review.xlsx",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-xlsx-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 467
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Workbook%20Review.xlsx",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "diagram",
+      "sampleFile": "UI4B Release Flow.mmd",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-diagram-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 467
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 48
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Release%20Flow.mmd",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "mindmap",
+      "sampleFile": "UI4B Product Map.opml",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-mindmap-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 467
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 54
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Product%20Map.opml",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "canvas",
+      "sampleFile": "UI4B Planning Board.canvas",
+      "requestedRoute": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-canvas-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 467
+        },
+        "toolbar": {
+          "x": 207,
+          "y": 76,
+          "width": 598,
+          "height": 67.1875
+        },
+        "rootVisible": true,
+        "toolbarVisible": true,
+        "rootWithinViewport": true,
+        "pageOverflowX": false,
+        "toolbarClipped": false,
+        "toolbarOverflow": false,
+        "statusClipped": false,
+        "contextTriggerOverlap": false,
+        "contextTriggerContentOverlap": false,
+        "sampleIdentityVisible": true,
+        "title": "Long编辑",
+        "route": "#/library?path=C%3A%5CUsers%5C39633%5CAppData%5CLocal%5CTemp%5Clongedit-ui4b-9948-1785740138386%5Clibrary%5CUI4B%20Planning%20Board.canvas",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    }
+  ]
+}
