@@ -11,6 +11,17 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::AppHandle;
 use tauri_plugin_opener::OpenerExt;
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+#[cfg(target_os = "windows")]
+use winreg::{
+    enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_32KEY, KEY_WOW64_64KEY},
+    RegKey,
+};
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ExternalAppExecutable {
@@ -173,37 +184,22 @@ fn normalize_discovered_executable(
 }
 
 #[cfg(target_os = "windows")]
-fn parse_registry_default_path(output: &str) -> Option<String> {
-    output.lines().find_map(|line| {
-        ["REG_EXPAND_SZ", "REG_SZ"].into_iter().find_map(|marker| {
-            line.split_once(marker)
-                .map(|(_, value)| value.trim().trim_matches('"').to_string())
-                .filter(|value| !value.is_empty())
-        })
-    })
-}
-
-#[cfg(target_os = "windows")]
 fn query_windows_app_path(
     file_name: &str,
     accepted_file_names: &[&str],
 ) -> Option<(PathBuf, String)> {
-    for hive in ["HKCU", "HKLM"] {
-        for view in ["64", "32"] {
-            let key =
-                format!(r"{hive}\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{file_name}");
-            let output = Command::new("reg.exe")
-                .args(["query", &key, "/ve", &format!("/reg:{view}")])
-                .output()
-                .ok()?;
-            if !output.status.success() {
-                continue;
-            }
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            if let Some(path) = parse_registry_default_path(&stdout)
-                .and_then(|path| normalize_discovered_executable(path, accepted_file_names))
-            {
-                return Some((path, format!("windows-app-paths:{hive}:{view}")));
+    let key_path = format!(r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{file_name}");
+    for (hive_name, hive) in [("HKCU", HKEY_CURRENT_USER), ("HKLM", HKEY_LOCAL_MACHINE)] {
+        for (view_name, view) in [("64", KEY_WOW64_64KEY), ("32", KEY_WOW64_32KEY)] {
+            let path = RegKey::predef(hive)
+                .open_subkey_with_flags(&key_path, KEY_READ | view)
+                .ok()
+                .and_then(|key| key.get_value::<String, _>("").ok())
+                .and_then(|path| {
+                    normalize_discovered_executable(path.trim_matches('"'), accepted_file_names)
+                });
+            if let Some(path) = path {
+                return Some((path, format!("windows-app-paths:{hive_name}:{view_name}")));
             }
         }
     }
@@ -215,7 +211,11 @@ fn query_path_executable(
     file_name: &str,
     accepted_file_names: &[&str],
 ) -> Option<(PathBuf, String)> {
-    let output = Command::new("where.exe").arg(file_name).output().ok()?;
+    let output = Command::new("where.exe")
+        .arg(file_name)
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .ok()?;
     if !output.status.success() {
         return None;
     }
@@ -257,6 +257,7 @@ fn executable_version(path: &Path) -> Option<String> {
             "(Get-Item -LiteralPath $env:LONGEDIT_VERSION_TARGET).VersionInfo.ProductVersion",
         ])
         .env("LONGEDIT_VERSION_TARGET", path)
+        .creation_flags(CREATE_NO_WINDOW)
         .output()
         .ok()?;
     if !output.status.success() {
@@ -561,20 +562,5 @@ mod tests {
         assert_eq!(before, after);
         assert_eq!(fs::read(&path).unwrap(), b"external-open-source");
         fs::remove_file(path).unwrap();
-    }
-
-    #[cfg(target_os = "windows")]
-    #[test]
-    fn registry_default_value_parser_accepts_string_types_only() {
-        let output = r#"
-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\EXCEL.EXE
-    (Default)    REG_SZ    C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE
-    Path    REG_SZ    C:\Program Files\Microsoft Office\root\Office16\
-"#;
-        assert_eq!(
-            parse_registry_default_path(output).as_deref(),
-            Some(r"C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE")
-        );
-        assert!(parse_registry_default_path("ERROR: missing").is_none());
     }
 }

@@ -46,7 +46,9 @@ for (const role of ['spreadsheet', 'presentation']) {
 }
 
 requireText(backend, 'windows-app-paths:', 'E2A Windows discovery must query registered App Paths')
+requireText(backend, 'RegKey::predef', 'E2A Windows discovery must read App Paths in process')
 requireText(backend, 'where.exe', 'E2A discovery must retain PATH fallback without fixed install directories')
+requireText(backend, 'CREATE_NO_WINDOW', 'E2A helper probes must not flash console windows')
 requireText(backend, 'VersionInfo.ProductVersion', 'E2A discovery must report executable product versions')
 requireText(backend, 'normalize_discovered_executable', 'E2A discovery must canonicalize and bind executable file names')
 requireText(backend, 'WorkspaceGuard::new(library_root)', 'E2A external open must remain workspace-scoped')
@@ -60,6 +62,7 @@ requireText(backend, '.open_path(', 'E2A open must use the existing Tauri opener
 requireText(backend, 'source_sha256_before == source_sha256_after_handoff', 'E2A open must verify source digest stability at handoff')
 requireText(backend, 'source_digest_is_stable_and_read_only', 'E2A source preservation must have a Rust regression')
 if (/Program Files|ProgramData|AppData[\\/]+Local[\\/]+Kingsoft/i.test(backendRuntime)) failures.push('E2A backend reintroduced a fixed install path')
+if (/Command::new\(["']reg\.exe["']\)/i.test(backendRuntime)) failures.push('E2A backend must not launch reg.exe during discovery')
 
 requireText(commandModule, 'pub mod external_apps;', 'E2A command module is not exported')
 requireText(tauriLib, 'discover_external_applications', 'E2A discovery command is not registered')

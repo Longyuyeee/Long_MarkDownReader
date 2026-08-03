@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.0.2",
-  "releaseCandidate": true,
+  "appVersion": "1.0.3",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-03",
-  "currentStatus": "v1.0.2-community-release-published",
+  "currentStatus": "v1.0.3-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -23,12 +23,12 @@
   "gates": {
     "frontendBuildPassed": true,
     "rustLockedCheckPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
+    "msiBuilt": false,
+    "nsisBuilt": false,
     "updaterSignaturesBuilt": false,
     "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
     "baseInstalledLifecycleVersion": "1.0.1",
@@ -38,31 +38,20 @@
     "rustLockedCheckPassed": true,
     "updaterPublicKeyUnchanged": true,
     "fullInstalledLifecycleRerun": false,
-    "scope": "ui-governance-solid-gold-branding-and-release-fact-patch",
+    "scope": "packaged-ui-csp-and-console-free-external-app-discovery-hotfix",
     "automaticUpdaterAssetsPlanned": false,
     "automaticUpdaterBlocker": "original-tauri-updater-private-key-unavailable-on-release-workstation"
   },
   "targetRelease": {
-    "tag": "v1.0.2",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.2",
+    "tag": "v1.0.3",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.3",
     "assetMode": "manual-msi-nsis-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": "3a5ce4e7171f05456c82469249c6bcaa5b5d3677",
-    "qualityGateRunId": 30795936184,
-    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30795936184",
-    "artifacts": [
-      {
-        "name": "LongEdit_1.0.2_x64-setup.exe",
-        "sha256": "893cc3a9f848e62e76e03b82707b1840baf1564e8e422a36d461a73361a11880",
-        "authenticodeStatus": "NotSigned"
-      },
-      {
-        "name": "LongEdit_1.0.2_x64_zh-CN.msi",
-        "sha256": "b980e3d118b7fcd7eb50cf4296f783e810f28ad914680bdab5c7dbaa46e34add",
-        "authenticodeStatus": "NotSigned"
-      }
-    ]
+    "artifactSourceCommit": "",
+    "qualityGateRunId": null,
+    "qualityGateRunUrl": "",
+    "artifacts": []
   },
   "release": {
     "tag": "v1.0.2",
@@ -77,5 +66,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "monitor-v1.0.2-manual-install-feedback-and-plan-next-capability-stage"
+  "nextAction": "build-and-verify-v1.0.3-installed-hotfix"
 }

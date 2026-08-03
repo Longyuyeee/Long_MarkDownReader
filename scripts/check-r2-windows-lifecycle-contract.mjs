@@ -40,6 +40,13 @@ failUnless(
   'product identity drift',
 )
 failUnless(
+  Array.isArray(tauri.app.security.dangerousDisableAssetCspModification)
+    && tauri.app.security.dangerousDisableAssetCspModification.length === 1
+    && tauri.app.security.dangerousDisableAssetCspModification[0] === 'style-src'
+    && tauri.app.security.csp.includes("style-src 'self' 'unsafe-inline'"),
+  'runtime component styles must remain compatible with the packaged CSP',
+)
+failUnless(
   sameJson(tauri.bundle.targets, policy.installer.targets),
   'installer target matrix drift',
 )
