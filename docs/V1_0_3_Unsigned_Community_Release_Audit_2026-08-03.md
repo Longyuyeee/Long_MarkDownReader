@@ -1,7 +1,7 @@
 # V1.0.3 未签名社区版发布审计
 
 版本：`1.0.3`  
-当前状态：安装热修复已构建并完成本机覆盖安装验证，本地补丁质量门禁通过，等待 GitHub Quality Gate 与 Release 发布回执。
+当前状态：v1.0.3 社区版已发布。
 
 本补丁只关闭两个 v1.0.2 安装态回归：动态组件样式因打包 CSP 改写失效，以及启动时外部应用发现反复调用 `reg.exe`。修复未扩大格式、Excel、Office 或主题能力承诺。
 
@@ -16,4 +16,12 @@
 - v1.0.2 到 v1.0.3 覆盖安装成功；15 秒启动观察中 `reg.exe` 启动次数为 0。
 - 安装包未做 Authenticode 签名；自动更新私钥仍不可用，因此只发布 NSIS、MSI 和 `SHA256SUMS.txt`。
 
-发布后需补写 GitHub Quality Gate、标签、Release URL 和最终提交回执。
+## 发布回执
+
+- 标签：`v1.0.3`
+- 标签提交：`89f20bfb6f3d1840eafdcf550a4ff802834723f9`
+- GitHub Quality Gate：Run `30802772020`，成功
+- Release：https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.3
+- 发布时间：`2026-08-03T09:52:57Z`
+
+审计结论：v1.0.3 手动社区热修复已发布，远端资产大小与 SHA-256 和本地候选一致。后续进入安装反馈与稳定性观察。
