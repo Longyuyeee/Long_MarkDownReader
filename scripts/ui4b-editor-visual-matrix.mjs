@@ -11,7 +11,7 @@ export const UI4B_EDITOR_SURFACES = [
   { id: 'markdown', name: 'Markdown', sampleKey: 'markdown', selector: '.library-mode', readySelector: '#vditor-lib .vditor-content' },
   { id: 'txt', name: 'TXT', sampleKey: 'txt', selector: '.text-workspace', readySelector: '.text-workspace .cm-editor' },
   { id: 'json', name: 'JSON', sampleKey: 'json', selector: '.json-workspace', readySelector: '.json-workspace .cm-editor' },
-  { id: 'pdf', name: 'PDF', sampleKey: 'pdf', selector: '.pdf-view', readySelector: '.pdf-view .pdf-page' },
+  { id: 'pdf', name: 'PDF', sampleKey: 'pdf', selector: '.pdf-view', readySelector: '.pdf-view .page-shell canvas' },
   { id: 'docx', name: 'DOCX', sampleKey: 'docx', selector: '.docx-workspace', readySelector: '.docx-workspace .docx-page' },
   { id: 'pptx', name: 'PPTX', sampleKey: 'pptx', selector: '.pptx-workspace', readySelector: '.pptx-workspace .slide-canvas' },
   { id: 'csv', name: 'CSV', sampleKey: 'csv', selector: '.table-view', readySelector: '.table-view .table-scroll' },
