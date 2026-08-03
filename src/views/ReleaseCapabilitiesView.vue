@@ -5,9 +5,9 @@
       :subtitle="`Long编辑 ${RELEASE_MATRIX_VERSION} · ${RELEASE_CAPABILITY_ROWS.length} 类格式`"
       @back="router.push({ name: 'LibraryMode' })"
     >
-      <div class="release-state">
+      <div class="release-state" title="社区无签名发布渠道；企业签名发布候选状态独立评估">
         <ShieldCheck :size="16" />
-        <span>{{ RELEASE_CANDIDATE ? '发布候选' : `${RELEASE_STAGE} 收口中` }}</span>
+        <span>{{ RELEASE_PUBLIC_STATUS_LABEL }}</span>
       </div>
     </WorkspaceManagementHeader>
 
@@ -97,11 +97,10 @@ import { ChevronDown, Search, ShieldCheck } from 'lucide-vue-next'
 import WorkspaceManagementContent from '../components/workspace/WorkspaceManagementContent.vue'
 import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
 import {
-  RELEASE_CANDIDATE,
   RELEASE_CAPABILITY_ROWS,
   RELEASE_EXTERNAL_GATES,
   RELEASE_MATRIX_VERSION,
-  RELEASE_STAGE,
+  RELEASE_PUBLIC_STATUS_LABEL,
   type ReleaseDependency,
   type ReleaseReadiness,
 } from '../config/releaseCapabilities'

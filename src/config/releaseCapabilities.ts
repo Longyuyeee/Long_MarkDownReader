@@ -1,4 +1,5 @@
 import matrixSource from '../../shared/release-capability-matrix.json'
+import communityReleaseSource from '../../shared/v1-community-release-policy.json'
 import { FILE_FORMATS, type FileFormatDefinition } from './fileFormats'
 
 export type ReleaseReadiness = 'verified' | 'verified-with-limitations' | 'external-dependency'
@@ -34,6 +35,17 @@ interface ReleaseCapabilityMatrix {
   }>
 }
 
+interface CommunityReleasePolicy {
+  schemaVersion: number
+  appVersion: string
+  releaseCandidate: boolean
+  channel: 'community-unsigned'
+  currentStatus: string
+  gates: {
+    githubReleasePublished: boolean
+  }
+}
+
 export interface ReleaseCapabilityRow {
   format: FileFormatDefinition
   readiness: ReleaseReadiness
@@ -44,6 +56,7 @@ export interface ReleaseCapabilityRow {
 }
 
 const matrix = matrixSource as ReleaseCapabilityMatrix
+const communityRelease = communityReleaseSource as CommunityReleasePolicy
 const profiles = new Map(matrix.profiles.map(profile => [profile.id, profile]))
 const formats = new Map(FILE_FORMATS.map(format => [format.id, format]))
 
@@ -51,6 +64,9 @@ if (matrix.schemaVersion !== 1 || !['R1', 'R2'].includes(matrix.stage) || matrix
   throw new Error('Unsupported release capability matrix')
 }
 if (matrix.formats.length !== FILE_FORMATS.length) throw new Error('Incomplete release capability matrix')
+if (communityRelease.schemaVersion !== 1 || communityRelease.appVersion !== matrix.appVersion) {
+  throw new Error('Community release policy does not match the capability matrix')
+}
 
 export const RELEASE_CAPABILITY_ROWS: readonly ReleaseCapabilityRow[] = Object.freeze(
   matrix.formats.map(mapping => {
@@ -71,4 +87,12 @@ export const RELEASE_CAPABILITY_ROWS: readonly ReleaseCapabilityRow[] = Object.f
 export const RELEASE_STAGE = matrix.stage
 export const RELEASE_MATRIX_VERSION = matrix.appVersion
 export const RELEASE_CANDIDATE = matrix.releaseCandidate
+export const RELEASE_PUBLIC_STATUS_LABEL = communityRelease.gates.githubReleasePublished
+  && communityRelease.currentStatus === `v${matrix.appVersion}-community-release-published`
+  ? `v${matrix.appVersion} 社区版已发布`
+  : communityRelease.releaseCandidate
+    ? '社区版发布候选'
+    : RELEASE_CANDIDATE
+      ? '企业发布候选'
+      : `${RELEASE_STAGE} 能力审计`
 export const RELEASE_EXTERNAL_GATES = Object.freeze(matrix.externalGates)
