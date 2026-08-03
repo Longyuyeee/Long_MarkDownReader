@@ -46,7 +46,8 @@ for (const entry of manifest.entries || []) {
   if (!logical || entry.logicalViewport?.width !== logical.width || entry.logicalViewport?.height !== logical.height) {
     failures.push(`logical viewport drift: ${key}`)
   }
-  if (!entry.geometry?.rootVisible || entry.geometry?.pageOverflowX || entry.geometry?.headerContentOverlap) {
+  if (!entry.geometry?.rootVisible || entry.geometry?.pageOverflowX || entry.geometry?.headerContentOverlap
+    || entry.geometry?.statusClipped || entry.geometry?.graphControlsOverflow) {
     failures.push(`geometry gate failed: ${key}`)
   }
   const filePath = path.join(root, entry.file || '')

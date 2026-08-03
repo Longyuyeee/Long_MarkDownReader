@@ -96,6 +96,8 @@ const inspectGeometry = async surface => evaluate(`(() => {
   const rect = root?.getBoundingClientRect()
   const header = root?.querySelector('.workspace-management-header')?.getBoundingClientRect()
   const content = root?.querySelector('.workspace-management-content, .workspace-content, .settings-content, .release-content')?.getBoundingClientRect()
+  const status = root?.querySelector('.graph-stats')?.getBoundingClientRect()
+  const graphControls = root?.querySelector('.graph-controls')
   const visible = rect && rect.width > 0 && rect.height > 0
   return {
     viewport: { width: window.innerWidth, height: window.innerHeight, devicePixelRatio: window.devicePixelRatio },
@@ -104,6 +106,8 @@ const inspectGeometry = async surface => evaluate(`(() => {
     pageOverflowX: document.documentElement.scrollWidth > window.innerWidth + 2,
     pageOverflowY: document.documentElement.scrollHeight > window.innerHeight + 2,
     headerContentOverlap: Boolean(header && content && header.bottom > content.top + 2),
+    statusClipped: Boolean(rect && status && status.bottom > rect.bottom + 2),
+    graphControlsOverflow: Boolean(graphControls && graphControls.scrollWidth > graphControls.clientWidth + 2),
     title: document.title,
     route: location.hash,
     theme: document.body.dataset.theme,
@@ -138,7 +142,7 @@ for (const scale of UI4_DISPLAY_SCALES) {
       `${scenario.id} semantic body tokens`,
     )
     const geometry = await inspectGeometry(surface)
-    if (!geometry.rootVisible || geometry.pageOverflowX || geometry.headerContentOverlap) {
+    if (!geometry.rootVisible || geometry.pageOverflowX || geometry.headerContentOverlap || geometry.statusClipped || geometry.graphControlsOverflow) {
       throw new Error(`Geometry gate failed for ${scenario.id}/${surface.id}/${scale.percent}: ${JSON.stringify(geometry)}`)
     }
     const file = `${scenario.id}-${surface.id}-${scale.id}.jpg`

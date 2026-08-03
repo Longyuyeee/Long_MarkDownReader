@@ -1163,7 +1163,8 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 <style scoped>
 .graph-container {
   width: 100%;
-  height: 100vh;
+  height: 100%;
+  min-height: 0;
   position: relative;
   background: linear-gradient(135deg,
     var(--theme-bg) 0%,
@@ -1829,6 +1830,10 @@ canvas:active {
     flex: 0 0 auto;
   }
 
+  .tutorial-btn span,
+  .graph-export-btn { display: none; }
+  .tutorial-btn { width: var(--workspace-control-height); padding: 0; justify-content: center; }
+
   .graph-search {
     width: 142px;
   }
@@ -1854,10 +1859,8 @@ canvas:active {
 @media (max-width: 640px) {
   .view-switch button { padding: 0 7px; }
   .graph-search { display: none; }
-  .tutorial-btn span { display: none; }
-  .tutorial-btn { width: 36px; padding: 0; justify-content: center; }
+  .tutorial-btn { width: var(--workspace-control-height); }
   .health-entry { width: 36px; padding: 0; justify-content: center; font-size: 0; }
-  .graph-export-btn { display: none; }
   .tutorial-card { padding: 24px 18px; }
   .empty-icon { display: none; }
 }

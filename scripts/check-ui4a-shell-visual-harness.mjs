@@ -33,6 +33,8 @@ for (const token of [
   'deviceScaleFactor: scale.factor',
   'pageOverflowX',
   'headerContentOverlap',
+  'statusClipped',
+  'graphControlsOverflow',
   'Page.captureScreenshot',
 ]) {
   if (!capture.includes(token)) failures.push(`capture contract is missing: ${token}`)
