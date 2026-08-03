@@ -30,7 +30,12 @@ v1.0.2 是品牌统一、界面治理和发布事实收口补丁，不扩大复�
 - `LongEdit_1.0.2_x64_zh-CN.msi`
 - `SHA256SUMS.txt`
 
-安装包 SHA-256 将在构建完成后写入本节，并随 GitHub Release 一同发布。
+安装包 SHA-256：
+
+- `LongEdit_1.0.2_x64-setup.exe`：`893cc3a9f848e62e76e03b82707b1840baf1564e8e422a36d461a73361a11880`
+- `LongEdit_1.0.2_x64_zh-CN.msi`：`b980e3d118b7fcd7eb50cf4296f783e810f28ad914680bdab5c7dbaa46e34add`
+
+同一组校验值已写入随 GitHub Release 发布的 `SHA256SUMS.txt`。
 
 ## 升级与回滚
 

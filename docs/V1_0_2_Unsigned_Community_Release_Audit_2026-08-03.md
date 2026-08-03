@@ -1,7 +1,7 @@
 # V1.0.2 未签名社区版发布审计
 
 审计日期：2026-08-03  
-当前状态：质量门禁与安装包构建准备中  
+当前状态：安装包已审计，GitHub Release 待发布  
 发布渠道：`community-unsigned`  
 版本：`1.0.2`
 
@@ -26,5 +26,13 @@ v1.0.2 的代码范围已经完成 P0、UI-1、UI-2、UI-3、UI-4 与新品牌�
 ## 待完成回执
 
 - `npm run ci:patch-release` 本地通过；GitHub Quality Gate `30795402967` 在提交 `740250b87a6e35b25c65eb87edc33f0dd7a1bf3d` 上通过。
-- v1.0.2 NSIS/MSI 构建、文件签名状态与 SHA-256 检查。
 - GitHub 标签、Release URL、附件列表和最终提交回执。
+
+## 安装包回执
+
+候选来源提交：`3a5ce4e7171f05456c82469249c6bcaa5b5d3677`  
+候选 GitHub Quality Gate：`30795936184`，结论 `success`
+
+- `LongEdit_1.0.2_x64-setup.exe`：53,427,942 bytes，版本 `1.0.2`，`NotSigned`，SHA-256 `893cc3a9f848e62e76e03b82707b1840baf1564e8e422a36d461a73361a11880`。
+- `LongEdit_1.0.2_x64_zh-CN.msi`：58,224,640 bytes，`NotSigned`，SHA-256 `b980e3d118b7fcd7eb50cf4296f783e810f28ad914680bdab5c7dbaa46e34add`。
+- Release 附件目录共 3 个文件：EXE、MSI、`SHA256SUMS.txt`；`.sig` 与 `latest.json` 数量为 0。

@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.0.2",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-03",
-  "currentStatus": "v1.0.2-community-release-quality-gate-pending",
+  "currentStatus": "v1.0.2-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -23,11 +23,11 @@
   "gates": {
     "frontendBuildPassed": true,
     "rustLockedCheckPassed": true,
-    "msiBuilt": false,
-    "nsisBuilt": false,
+    "msiBuilt": true,
+    "nsisBuilt": true,
     "updaterSignaturesBuilt": false,
     "installedLifecyclePassed": true,
-    "qualityGatePassed": false,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "patchValidation": {
@@ -47,10 +47,27 @@
     "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.2",
     "assetMode": "manual-msi-nsis-with-sha256"
   },
+  "candidate": {
+    "artifactSourceCommit": "3a5ce4e7171f05456c82469249c6bcaa5b5d3677",
+    "qualityGateRunId": 30795936184,
+    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30795936184",
+    "artifacts": [
+      {
+        "name": "LongEdit_1.0.2_x64-setup.exe",
+        "sha256": "893cc3a9f848e62e76e03b82707b1840baf1564e8e422a36d461a73361a11880",
+        "authenticodeStatus": "NotSigned"
+      },
+      {
+        "name": "LongEdit_1.0.2_x64_zh-CN.msi",
+        "sha256": "b980e3d118b7fcd7eb50cf4296f783e810f28ad914680bdab5c7dbaa46e34add",
+        "authenticodeStatus": "NotSigned"
+      }
+    ]
+  },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "run-v1.0.2-quality-gate-and-build-manual-community-installers"
+  "nextAction": "publish-v1.0.2-tag-and-manual-community-release-assets"
 }
