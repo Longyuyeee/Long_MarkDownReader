@@ -1,0 +1,1784 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-03T05:44:06.791Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "sourceCommit": "4ce413b0ddbca5cceb24cb8c91751691dafdb34f",
+  "physicalViewport": {
+    "width": 1280,
+    "height": 820
+  },
+  "scenarios": [
+    {
+      "id": "professional-light",
+      "name": "专业浅色",
+      "theme": "white",
+      "style": "minimal",
+      "motion": "swift"
+    },
+    {
+      "id": "professional-dark",
+      "name": "专业深色",
+      "theme": "dark",
+      "style": "minimal",
+      "motion": "calm"
+    },
+    {
+      "id": "high-contrast",
+      "name": "高对比",
+      "theme": "contrast",
+      "style": "sharp",
+      "motion": "reduced"
+    }
+  ],
+  "scales": [
+    {
+      "id": "100",
+      "percent": 100,
+      "factor": 1
+    },
+    {
+      "id": "125",
+      "percent": 125,
+      "factor": 1.25
+    },
+    {
+      "id": "150",
+      "percent": 150,
+      "factor": 1.5
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "library",
+      "name": "资料库"
+    },
+    {
+      "id": "workspace",
+      "name": "工作台"
+    },
+    {
+      "id": "settings",
+      "name": "设置"
+    },
+    {
+      "id": "release-capabilities",
+      "name": "格式能力"
+    },
+    {
+      "id": "graph",
+      "name": "知识图谱"
+    }
+  ],
+  "entries": [
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "library",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-library-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/library",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "workspace",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-workspace-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/workspace",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "settings",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-settings-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/settings",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "release-capabilities",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-release-capabilities-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/release-capabilities",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "graph",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-light-graph-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/graph?mode=mindmap",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "library",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-library-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/library",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "workspace",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-workspace-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/workspace",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "settings",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-settings-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/settings",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "release-capabilities",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-release-capabilities-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/release-capabilities",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "graph",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-light-graph-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/graph?mode=mindmap",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "library",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-library-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/library",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "workspace",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-workspace-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/workspace",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "settings",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-settings-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/settings",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "release-capabilities",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-release-capabilities-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/release-capabilities",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-light",
+      "surfaceId": "graph",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-light-graph-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/graph?mode=mindmap",
+        "theme": "white",
+        "style": "minimal",
+        "motion": "swift"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "library",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-library-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/library",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "workspace",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-workspace-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/workspace",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "settings",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-settings-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/settings",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "release-capabilities",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-release-capabilities-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/release-capabilities",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "graph",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "professional-dark-graph-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/graph?mode=mindmap",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "library",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-library-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/library",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "workspace",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-workspace-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/workspace",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "settings",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-settings-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/settings",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "release-capabilities",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-release-capabilities-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/release-capabilities",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "graph",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "professional-dark-graph-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/graph?mode=mindmap",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "library",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-library-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/library",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "workspace",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-workspace-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/workspace",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "settings",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-settings-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/settings",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "release-capabilities",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-release-capabilities-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/release-capabilities",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "professional-dark",
+      "surfaceId": "graph",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "professional-dark-graph-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/graph?mode=mindmap",
+        "theme": "dark",
+        "style": "minimal",
+        "motion": "calm"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "library",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-library-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/library",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "workspace",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-workspace-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/workspace",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "settings",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-settings-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/settings",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "release-capabilities",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-release-capabilities-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/release-capabilities",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "graph",
+      "scalePercent": 100,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "file": "high-contrast-graph-100.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1280,
+          "height": 820,
+          "devicePixelRatio": 1
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1280,
+          "height": 788
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/graph?mode=mindmap",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "library",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-library-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/library",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "workspace",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-workspace-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/workspace",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "settings",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-settings-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/settings",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "release-capabilities",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-release-capabilities-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/release-capabilities",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "graph",
+      "scalePercent": 125,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 1024,
+        "height": 656
+      },
+      "file": "high-contrast-graph-125.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 1024,
+          "height": 656,
+          "devicePixelRatio": 1.25
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 1024,
+          "height": 624
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/graph?mode=mindmap",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "library",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-library-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/library",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "workspace",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-workspace-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/workspace",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "settings",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-settings-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/settings",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "release-capabilities",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-release-capabilities-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/release-capabilities",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    },
+    {
+      "scenarioId": "high-contrast",
+      "surfaceId": "graph",
+      "scalePercent": 150,
+      "physicalViewport": {
+        "width": 1280,
+        "height": 820
+      },
+      "logicalViewport": {
+        "width": 853,
+        "height": 547
+      },
+      "file": "high-contrast-graph-150.jpg",
+      "geometry": {
+        "viewport": {
+          "width": 853,
+          "height": 547,
+          "devicePixelRatio": 1.5
+        },
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 853,
+          "height": 515
+        },
+        "rootVisible": true,
+        "pageOverflowX": false,
+        "pageOverflowY": false,
+        "headerContentOverlap": false,
+        "statusClipped": false,
+        "graphControlsOverflow": false,
+        "title": "Long编辑",
+        "route": "#/graph?mode=mindmap",
+        "theme": "contrast",
+        "style": "sharp",
+        "motion": "reduced"
+      }
+    }
+  ]
+}
