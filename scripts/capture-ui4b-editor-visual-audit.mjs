@@ -98,15 +98,20 @@ const navigate = async surface => {
 const inspectGeometry = async (surface, sampleName) => evaluate(`(() => {
   const root = document.querySelector(${JSON.stringify(surface.selector)})
   const rect = root?.getBoundingClientRect()
-  const toolbar = root?.querySelector('header, [role="toolbar"], .pdf-toolbar, .workbook-toolbar, .studio-toolbar')
+  const firstVisible = selector => [...(root?.querySelectorAll(selector) || [])].find(node => {
+    const candidate = node.getBoundingClientRect()
+    return candidate.width > 0 && candidate.height > 0
+  })
+  const toolbar = firstVisible('header, [role="toolbar"], .pdf-toolbar, .workbook-toolbar, .studio-toolbar')
   const toolbarRect = toolbar?.getBoundingClientRect()
-  const status = root?.querySelector('footer, .status-bar, .statusbar, .canvas-statusbar, .docx-status')
+  const status = firstVisible('footer, .status-bar, .statusbar, .canvas-statusbar, .docx-status')
   const statusRect = status?.getBoundingClientRect()
   const visible = rect && rect.width > 0 && rect.height > 0
   const withinViewport = rect && rect.left >= -2 && rect.top >= -2 && rect.right <= window.innerWidth + 2 && rect.bottom <= window.innerHeight + 2
   return {
     viewport: { width: window.innerWidth, height: window.innerHeight, devicePixelRatio: window.devicePixelRatio },
     root: rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null,
+    toolbar: toolbarRect ? { x: toolbarRect.x, y: toolbarRect.y, width: toolbarRect.width, height: toolbarRect.height } : null,
     rootVisible: Boolean(visible),
     rootWithinViewport: Boolean(withinViewport),
     pageOverflowX: document.documentElement.scrollWidth > window.innerWidth + 2,
