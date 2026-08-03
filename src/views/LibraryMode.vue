@@ -569,6 +569,7 @@ import {
   opensInLibraryShell,
   routeForFile,
 } from '../config/fileFormats'
+import { openManagedFile } from '../services/fileNavigation'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
 interface ExternalAppExecutable {
@@ -836,7 +837,7 @@ const textEncodingMenuOptions = computed(() => [
     })),
   },
 ])
-const openEmbeddedTableChart = (path: string) => router.push({ name: 'Table', query: { path } })
+const openEmbeddedTableChart = (path: string) => openManagedFile(router, path)
 
 // 统一错误处理辅助函数
 const handleError = (error: any, userMessage: string, logContext?: string) => {
@@ -1314,7 +1315,7 @@ const createCanvasFromCurrentGraph = async (depth: number) => {
       depth
     })
     await refreshLibrary()
-    router.push({ name: 'Canvas', query: { path } })
+    openManagedFile(router, path)
   } catch (error) {
     message.error(`生成画布失败：${String(error)}`)
   }
@@ -1329,7 +1330,7 @@ const createMindMapFromCurrentMarkdown = async () => {
       markdownPath: activeTabId.value
     })
     await refreshLibrary()
-    router.push({ name: 'Canvas', query: { path } })
+    openManagedFile(router, path)
   } catch (error) {
     message.error(`转换思维导图失败：${String(error)}`)
   }
@@ -1389,7 +1390,7 @@ const handleNodeSelect = (keys: string[]) => {
   const format = lastKey ? findFileFormat(lastKey) : undefined
   if (format && opensInLibraryShell(format)) {
     if (route.name !== 'LibraryMode' || route.query.path !== lastKey) {
-      void router.replace({ name: 'LibraryMode', query: { path: lastKey } })
+      void openManagedFile(router, lastKey, {}, 'replace')
       return
     }
     const title = fileDisplayName(lastKey) || format.label
@@ -1410,36 +1411,24 @@ const nextKnowledgeLocatorToken = () => `${Date.now()}-${++knowledgeLocatorSeque
 
 const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
   if (result.objectType === 'pdf') {
-    router.push({
-      name: 'Pdf',
-      query: {
-        path: result.path,
+    openManagedFile(router, result.path, {
         ...(result.page ? { page: String(result.page) } : {}),
         ...(result.annotationId ? { annotation: result.annotationId } : {}),
-      },
     })
   } else if (['docx', 'odt', 'ods', 'odp'].includes(result.objectType)) {
-    void router.replace({
-      name: 'LibraryMode',
-      query: {
-        path: result.path,
+    void openManagedFile(router, result.path, {
         ...(result.locatorObjectId ? { locator: result.locatorObjectId } : {}),
         locatorToken: nextKnowledgeLocatorToken(),
-      },
-    })
+    }, 'replace')
   } else if (result.objectType === 'pptx') {
-    void router.replace({
-      name: 'LibraryMode',
-      query: {
-        path: result.path,
+    void openManagedFile(router, result.path, {
         ...(result.page ? { slide: String(result.page) } : {}),
         ...(result.locatorKind ? { locatorKind: result.locatorKind } : {}),
         ...(result.locatorObjectId ? { locator: result.locatorObjectId } : {}),
         ...(result.locationLabel ? { locationLabel: result.locationLabel } : {}),
         matchKind: result.matchKind,
         locatorToken: nextKnowledgeLocatorToken(),
-      },
-    })
+    }, 'replace')
   } else {
     const target = routeForFile(result.path)
     if (opensInLibraryShell(findFileFormat(result.path))) handleNodeSelect([result.path])
@@ -2352,10 +2341,7 @@ const openPdfReference = (event: MouseEvent) => {
     message.warning('PDF 批注引用格式无效')
     return
   }
-  router.push({
-    name: 'Pdf',
-    query: { path, page: String(target.page), annotation: target.annotationId },
-  })
+  openManagedFile(router, path, { page: String(target.page), annotation: target.annotationId })
 }
 
 const handleExportHtml = async () => {

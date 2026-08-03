@@ -115,6 +115,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import { openManagedFile } from '../services/fileNavigation'
 import { useMessage } from 'naive-ui'
 import { ArrowLeft as ArrowLeftIcon, ChevronRight as ChevronRightIcon, CornerDownRight as CornerDownRightIcon, ListPlus as ListPlusIcon, ListTree as ListTreeIcon, MousePointer2 as MousePointerIcon, Network as NetworkIcon, Plus as PlusIcon, Redo2 as RedoIcon, Save as SaveIcon, Search as SearchIcon, Trash2 as TrashIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
@@ -237,7 +238,7 @@ const save = async () => {
 }
 const projectToCanvas = async () => {
   if (dirty.value && !(await save())) return
-  try { const canvas = await invoke<string>('create_canvas_from_opml', { libraryRoot: store.libraryPath, path: path.value }); await router.push({ name: 'Canvas', query: { path: canvas } }) }
+  try { const canvas = await invoke<string>('create_canvas_from_opml', { libraryRoot: store.libraryPath, path: path.value }); await openManagedFile(router, canvas) }
   catch (cause) { message.error(`Canvas 投影失败：${String(cause)}`) }
 }
 const load = async () => {

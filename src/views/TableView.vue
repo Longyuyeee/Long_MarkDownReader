@@ -126,6 +126,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
+import { openManagedFile } from '../services/fileNavigation'
 import { useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
 import TableChartEditor from '../components/TableChartEditor.vue'
@@ -549,7 +550,7 @@ const convertToTable = async () => {
   try {
     const path = await invoke<string>('import_table_file', { libraryRoot: store.libraryPath, path: tablePath.value })
     message.success('已创建开放 Table，原 CSV/TSV 保持不变')
-    await router.replace({ name: 'Table', query: { path } })
+    await openManagedFile(router, path, {}, 'replace')
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 

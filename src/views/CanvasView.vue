@@ -294,6 +294,7 @@ import { useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
 import { isActiveThemeDark } from '../config/themePresets'
 import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
+import { openManagedFile } from '../services/fileNavigation'
 import TableChartEmbed from '../components/TableChartEmbed.vue'
 import MermaidDiagramEmbed from '../components/MermaidDiagramEmbed.vue'
 
@@ -1222,14 +1223,14 @@ const isChartNode = (node: CanvasNode) => node.type === 'file'
   && Boolean(node.longeditViewId)
 const chartViewId = (node: CanvasNode) => typeof node.longeditViewId === 'string' ? node.longeditViewId : ''
 const isMermaidNode = (node: CanvasNode) => node.type === 'file' && typeof node.file === 'string' && /\.(?:mmd|mermaid)$/i.test(node.file)
-const openEmbeddedChart = (path: string) => router.push({ name: 'Table', query: { path } })
-const openEmbeddedDiagram = (path: string) => router.push({ name: 'Diagram', query: { path } })
+const openEmbeddedChart = (path: string) => openManagedFile(router, path)
+const openEmbeddedDiagram = (path: string) => openManagedFile(router, path)
 const openNode = async (node: CanvasNode) => {
   if (node.type === 'file' && node.file) {
     const path = resolveFilePath(node.file)
     const target = routeForFile(path)
     if (opensInLibraryShell(findFileFormat(path))) {
-      router.push({ name: 'LibraryMode', query: { path } })
+      openManagedFile(router, path)
     } else if (target) router.push(target)
     else message.warning('该文件格式尚未注册工作面')
   } else if (node.type === 'link' && node.url) {

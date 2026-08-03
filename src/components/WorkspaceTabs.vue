@@ -29,6 +29,7 @@
 import { useRouter } from 'vue-router'
 import { FileText as FileTextIcon, X as XIcon } from 'lucide-vue-next'
 import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
+import { openManagedFile } from '../services/fileNavigation'
 import { type TabInfo, useAppStore } from '../store/app'
 
 const router = useRouter()
@@ -38,7 +39,7 @@ const routeToTab = async (tab: TabInfo) => {
   const target = routeForFile(tab.path)
   if (!target) return
   if (!tab.external && opensInLibraryShell(findFileFormat(tab.path))) {
-    await router.push({ name: 'LibraryMode', query: { path: tab.path } })
+    await openManagedFile(router, tab.path)
   } else {
     await router.push({
       ...target,

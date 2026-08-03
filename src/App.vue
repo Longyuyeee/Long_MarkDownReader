@@ -83,6 +83,7 @@ import AppUpdater from './components/AppUpdater.vue'
 import { useAppStore } from './store/app'
 import { findFileFormat, isExternallyEditable, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
+import { openManagedFile } from './services/fileNavigation'
 import { isTauriRuntime } from './services/tauriRuntime'
 
 const osTheme = useOsTheme()
@@ -304,7 +305,7 @@ const handleCommand = async (item: any) => {
   } else if (item.type === 'file') {
     const target = routeForFile(item.path)
     if (opensInLibraryShell(findFileFormat(item.path))) {
-      router.push({ name: 'LibraryMode', query: { path: item.path } })
+      openManagedFile(router, item.path)
     } else if (target) router.push(target)
   }
 }

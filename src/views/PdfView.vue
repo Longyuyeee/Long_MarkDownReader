@@ -402,6 +402,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, s
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
+import { openManagedFile } from '../services/fileNavigation'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist'
@@ -991,7 +992,7 @@ const savePdfInsertCopy = async () => {
     }
     clearPdfInsertSource()
     message.success(`已可靠插入并验证：${pdfInsertCopyName.value.trim()}`)
-    await router.replace({ path: '/pdf', query: { path: saved.targetPath } })
+    await openManagedFile(router, saved.targetPath, {}, 'replace')
   } catch (cause) {
     pdfInsertError.value = String(cause).replace(/^Error:\s*/, '')
   } finally {
@@ -1133,7 +1134,7 @@ const savePdfMergeCopy = async () => {
     pdfMergeInputs.value = []
     pdfMergeVerification.value = null
     message.success(`已可靠合并并验证：${pdfMergeCopyName.value.trim()}`)
-    await router.replace({ path: '/pdf', query: { path: saved.targetPath } })
+    await openManagedFile(router, saved.targetPath, {}, 'replace')
   } catch (cause) {
     pdfMergeError.value = String(cause).replace(/^Error:\s*/, '')
   } finally {
@@ -1340,7 +1341,7 @@ const savePagePlanCopy = async () => {
       bytes: saved.outputBytes,
     }
     message.success(`已可靠另存并验证：${pagePlanCopyName.value.trim()}`)
-    await router.replace({ path: '/pdf', query: { path: saved.targetPath } })
+    await openManagedFile(router, saved.targetPath, {}, 'replace')
   } catch (cause) {
     pagePlanSaveError.value = String(cause).replace(/^Error:\s*/, '')
   } finally {

@@ -253,6 +253,7 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
+import { openManagedFile } from '../services/fileNavigation'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone, isActiveThemeDark } from '../config/themePresets'
 import GraphFilterControls from './GraphFilterControls.vue'
@@ -669,33 +670,29 @@ const openNode = (node: GraphNode) => {
   const locator = node.locator
   const path = displayWorkspacePath(node.path)
   if (node.objectType === 'pdf' || node.objectType === 'pdf_annotation') {
-    return router.push({ name: 'Pdf', query: { path, page: locator?.page, annotation: locator?.objectId } })
+    return openManagedFile(router, path, { page: locator?.page, annotation: locator?.objectId })
   }
   if (node.objectType === 'table' || node.objectType === 'table_view') {
-    return router.push({ name: 'Table', query: { path, view: locator?.objectId } })
+    return openManagedFile(router, path, { view: locator?.objectId })
   }
   if (node.objectType === 'canvas' || node.objectType === 'canvas_node') {
-    return router.push({ name: 'Canvas', query: { path, node: locator?.objectId } })
+    return openManagedFile(router, path, { node: locator?.objectId })
   }
   if (node.objectType === 'opml' || node.objectType === 'opml_node') {
-    return router.push({ name: 'MindMap', query: { path, node: locator?.objectId } })
+    return openManagedFile(router, path, { node: locator?.objectId })
   }
   if (node.objectType === 'pptx_slide') {
-    return router.push({
-      name: 'LibraryMode',
-      query: {
-        path,
+    return openManagedFile(router, path, {
         slide: locator?.page,
         locatorKind: 'pptx-slide',
         locator: locator?.objectId,
         locationLabel: node.locationLabel || undefined,
         locatorToken: String(Date.now()),
-      },
     })
   }
-  return router.push({ name: 'LibraryMode', query: { path } })
+  return openManagedFile(router, path)
 }
-const openPath = (path: string) => router.push({ name: 'LibraryMode', query: { path: displayWorkspacePath(path) } })
+const openPath = (path: string) => openManagedFile(router, displayWorkspacePath(path))
 const handleHealthRepaired = () => loadGraph()
 
 const sendToCanvas = async (node: GraphNode) => {
@@ -707,7 +704,7 @@ const sendToCanvas = async (node: GraphNode) => {
       centerPath: node.path,
       depth: mindmapDepth.value
     })
-    router.push({ name: 'Canvas', query: { path } })
+    openManagedFile(router, path)
   } catch (error) {
     window.alert(`生成画布失败：${String(error)}`)
   } finally {
@@ -724,7 +721,7 @@ const createProjectNote = async (node: GraphNode) => {
       centerPath: node.path,
       depth: mindmapDepth.value
     })
-    router.push({ name: 'LibraryMode', query: { path } })
+    openManagedFile(router, path)
   } catch (error) {
     window.alert(`生成项目笔记失败：${String(error)}`)
   } finally {

@@ -134,6 +134,7 @@
 import { computed, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
+import { openManagedFile } from '../services/fileNavigation'
 import {
   ArrowRight as ArrowRightIcon,
   Check as CheckIcon,
@@ -365,16 +366,16 @@ let relationNavigationSequence = 0
 const openNode = (node: GraphContextNode) => {
   const path = displayPath(node.path)
   if (node.objectType === 'pdf' || node.objectType === 'pdf_annotation') {
-    return router.push({ name: 'Pdf', query: { path, page: node.locator?.page, annotation: node.locator?.objectId } })
+    return openManagedFile(router, path, { page: node.locator?.page, annotation: node.locator?.objectId })
   }
   if (node.objectType === 'table' || node.objectType === 'table_view') {
-    return router.push({ name: 'Table', query: { path, view: node.locator?.objectId } })
+    return openManagedFile(router, path, { view: node.locator?.objectId })
   }
   if (node.objectType === 'canvas' || node.objectType === 'canvas_node') {
-    return router.push({ name: 'Canvas', query: { path, node: node.locator?.objectId } })
+    return openManagedFile(router, path, { node: node.locator?.objectId })
   }
   if (node.objectType === 'opml' || node.objectType === 'opml_node') {
-    return router.push({ name: 'MindMap', query: { path, node: node.locator?.objectId } })
+    return openManagedFile(router, path, { node: node.locator?.objectId })
   }
   if (node.objectType === 'pptx_slide') {
     store.setRelationObjectFocus({
@@ -383,20 +384,16 @@ const openNode = (node: GraphContextNode) => {
       locatorObjectId: node.locator?.objectId || '',
       locatorPage: node.locator?.page,
     })
-    return router.push({
-      name: 'LibraryMode',
-      query: {
-        path,
+    return openManagedFile(router, path, {
         slide: node.locator?.page,
         locatorKind: 'pptx-slide',
         locator: node.locator?.objectId,
         locationLabel: node.locationLabel,
         locatorToken: `${Date.now()}-${++relationNavigationSequence}`,
-      },
     })
   }
   if (node.objectType === 'pptx') store.clearRelationObjectFocus()
-  return router.push({ name: 'LibraryMode', query: { path } })
+  return openManagedFile(router, path)
 }
 const objectTypeLabel = (type: string) => ({
   markdown: 'Markdown 笔记', pdf: 'PDF 文档', table: '数据表', canvas: 'Canvas 画布', opml: 'OPML 思维导图',

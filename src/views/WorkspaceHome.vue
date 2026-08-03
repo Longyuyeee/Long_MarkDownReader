@@ -180,6 +180,7 @@ import {
 } from 'lucide-vue-next'
 import { useAppStore, type SavedSearchConfig } from '../store/app'
 import { fileDisplayName, findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
+import { openManagedFile } from '../services/fileNavigation'
 import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
 import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceHealthReport } from '../components/WorkspaceHealthQueue.vue'
 
@@ -317,14 +318,15 @@ const loadRelationSummaries = async () => {
 const openPath = (path: string) => {
   const target = routeForFile(path)
   if (!target) return
-  if (opensInLibraryShell(findFileFormat(path))) router.push({ name: 'LibraryMode', query: { path } })
+  if (opensInLibraryShell(findFileFormat(path))) openManagedFile(router, path)
   else router.push(target)
 }
 
-const openAnnotation = (issue: WorkspaceAnnotationIssue) => router.push({
-  name: 'Pdf',
-  query: { path: issue.pdfPath, page: String(issue.page), annotation: issue.annotationId },
-})
+const openAnnotation = (issue: WorkspaceAnnotationIssue) => openManagedFile(
+  router,
+  issue.pdfPath,
+  { page: String(issue.page), annotation: issue.annotationId },
+)
 
 const loadWorkspace = async () => {
   if (!store.libraryPath || loading.value) return

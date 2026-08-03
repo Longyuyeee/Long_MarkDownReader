@@ -798,6 +798,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import { openManagedFile } from '../services/fileNavigation'
 import { useDialog, useMessage } from 'naive-ui'
 import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Calculator as CalculatorIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
@@ -4389,7 +4390,7 @@ const convertSheet = async () => {
   try {
     const path = await invoke<string>('import_workbook_sheet', { libraryRoot: store.libraryPath, path: workbookPath.value, sheet: activeSheet.value })
     message.success('已从当前 Sheet 创建开放 Table，原 XLSX 保持不变')
-    await router.push({ name: 'Table', query: { path } })
+    await openManagedFile(router, path)
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { importing.value = false }
 }
