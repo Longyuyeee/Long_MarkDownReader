@@ -37,7 +37,8 @@ for (const token of [
   'toolbarOverflow',
   'statusClipped',
   'sampleIdentityVisible',
-  'firstVisible',
+  'visibleNodes',
+  'contextTriggerOverlap',
   "geometry.route !== '#/library'",
   'Page.captureScreenshot',
 ]) {

@@ -424,7 +424,7 @@ watch(() => [
 
 <style scoped>
 .relation-context-host { position: fixed; z-index: 780; top: 76px; right: 0; bottom: 14px; pointer-events: none; }
-.relation-context-trigger { pointer-events: auto; position: absolute; top: 18px; right: 0; min-height: 34px; display: flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid rgba(var(--theme-primary-rgb), .24); border-right: 0; border-radius: 10px 0 0 10px; color: var(--theme-primary); background: var(--theme-surface); box-shadow: var(--theme-shadow-sm); font-size: 11px; cursor: pointer; white-space: nowrap; }
+.relation-context-trigger { pointer-events: auto; position: absolute; top: 50%; right: 0; min-height: 34px; display: flex; align-items: center; gap: 6px; padding: 7px 10px; transform: translateY(-50%); border: 1px solid rgba(var(--theme-primary-rgb), .24); border-right: 0; border-radius: 10px 0 0 10px; color: var(--theme-primary); background: var(--theme-surface); box-shadow: var(--theme-shadow-sm); font-size: 11px; cursor: pointer; white-space: nowrap; }
 .relation-context-host.open .relation-context-trigger { right: 326px; }
 .relation-context-trigger svg { width: 15px; }
 .relation-context-trigger b { min-width: 17px; padding: 1px 5px; border-radius: 999px; background: rgba(var(--theme-primary-rgb), .12); font-size: var(--text-compact); }
@@ -478,4 +478,9 @@ watch(() => [
 .context-state strong { color: var(--theme-text); font-size: 12px; }
 .context-state.error strong { color: var(--theme-danger, #dc2626); }
 .relation-context-panel > footer { padding: 8px 12px; border-top: 1px solid var(--theme-border); color: var(--theme-text-secondary); font-size: var(--text-compact); }
+
+@media (max-width: 900px) {
+  .relation-context-trigger { width: 38px; justify-content: center; padding: 8px; }
+  .relation-context-trigger span { display: none; }
+}
 </style>
