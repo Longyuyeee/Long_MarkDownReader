@@ -136,6 +136,11 @@ body[data-theme="dark"] {
   --accent-primary: #64d987;
   --accent-primary-hover: #86efac;
   --accent-secondary: #22d3ee;
+  --workspace-on-accent: #08110b;
+  --status-success: #64d987;
+  --status-warning: #f5b84b;
+  --status-danger: #ff8a80;
+  --status-info: #79b8ff;
 }
 
 body[data-theme="cream"] {
@@ -243,6 +248,11 @@ body[data-theme="contrast"] {
   --accent-primary: #ffd400;
   --accent-primary-hover: #fff06a;
   --accent-secondary: #00e5ff;
+  --workspace-on-accent: #000000;
+  --status-success: #00ff88;
+  --status-warning: #ffd400;
+  --status-danger: #ff6b6b;
+  --status-info: #00e5ff;
 }
 
 body[data-theme="contrast"][data-style] {

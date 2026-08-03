@@ -25,6 +25,26 @@ body {
   --workspace-toolbar-height: 48px;
   --workspace-control-height: 32px;
   --workspace-status-height: 28px;
+  --workspace-border-color: color-mix(in srgb, var(--theme-text) 12%, transparent);
+  --workspace-control-bg: color-mix(in srgb, var(--theme-text) 5%, transparent);
+  --workspace-control-hover-bg: color-mix(in srgb, var(--theme-text) 9%, transparent);
+  --workspace-surface-raised: color-mix(in srgb, var(--theme-surface) 88%, transparent);
+  --workspace-shadow-sm: 0 2px 10px color-mix(in srgb, var(--theme-text) 8%, transparent);
+  --workspace-shadow: 0 14px 38px color-mix(in srgb, var(--theme-text) 18%, transparent);
+  --workspace-on-accent: #ffffff;
+
+  --status-success: #168a52;
+  --status-warning: #9a641f;
+  --status-danger: #c4473c;
+  --status-info: #246aab;
+  --status-success-bg: color-mix(in srgb, var(--status-success) 9%, var(--theme-surface));
+  --status-warning-bg: color-mix(in srgb, var(--status-warning) 9%, var(--theme-surface));
+  --status-danger-bg: color-mix(in srgb, var(--status-danger) 9%, var(--theme-surface));
+  --status-info-bg: color-mix(in srgb, var(--status-info) 9%, var(--theme-surface));
+  --status-success-border: color-mix(in srgb, var(--status-success) 28%, transparent);
+  --status-warning-border: color-mix(in srgb, var(--status-warning) 28%, transparent);
+  --status-danger-border: color-mix(in srgb, var(--status-danger) 28%, transparent);
+  --status-info-border: color-mix(in srgb, var(--status-info) 28%, transparent);
 
   --surface-alpha: 0.72;
   --control-alpha: 0.08;
