@@ -25,6 +25,6 @@ v1.0.2 的代码范围已经完成 P0、UI-1、UI-2、UI-3、UI-4 与新品牌�
 
 ## 待完成回执
 
-- `npm run ci:patch-release` 本地与 GitHub Quality Gate。
+- `npm run ci:patch-release` 本地通过；GitHub Quality Gate `30795402967` 在提交 `740250b87a6e35b25c65eb87edc33f0dd7a1bf3d` 上通过。
 - v1.0.2 NSIS/MSI 构建、文件签名状态与 SHA-256 检查。
 - GitHub 标签、Release URL、附件列表和最终提交回执。

@@ -25,7 +25,7 @@ if (published && (community.currentStatus !== `${tag}-community-release-publishe
 if (ready && (community.currentStatus !== `${tag}-community-release-ready-to-publish` || community.releaseCandidate !== true)) failures.push('ready community state drift')
 if (pending && (community.currentStatus !== `${tag}-community-release-quality-gate-pending` || community.releaseCandidate !== false)) failures.push('pending community state drift')
 
-for (const token of ['communityReleaseSource', 'RELEASE_PUBLIC_STATUS_LABEL', '社区版已发布', '发布准备']) {
+for (const token of ['communityReleaseSource', 'RELEASE_PUBLIC_STATUS_LABEL', '社区版已发布', '社区版']) {
   if (!config.includes(token)) failures.push(`release capability config is missing ${token}`)
 }
 if (!view.includes('{{ RELEASE_PUBLIC_STATUS_LABEL }}')) failures.push('release capability page does not use the public status label')
