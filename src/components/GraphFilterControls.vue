@@ -85,11 +85,11 @@ const objectTypeLabel = (type: string) => ({
 </script>
 
 <style scoped>
-.graph-filter-control { position: relative; color: var(--theme-text); font-size: 10px; }
+.graph-filter-control { position: relative; color: var(--theme-text); font-size: var(--text-compact); }
 .graph-filter-control summary { display: flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border: 1px solid rgba(var(--theme-primary-rgb), 0.16); border-radius: 8px; background: rgba(var(--theme-primary-rgb), 0.055); cursor: pointer; list-style: none; font-weight: 700; }
 .graph-filter-control summary::-webkit-details-marker { display: none; }
 .graph-filter-control[open] summary { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb), 0.38); }
-.filter-count { display: grid; place-items: center; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 999px; color: #fff; background: var(--theme-primary); font-size: 8px; }
+.filter-count { display: grid; place-items: center; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 999px; color: #fff; background: var(--theme-primary); font-size: var(--text-compact); }
 .filter-panel { position: absolute; top: calc(100% + 7px); left: 0; z-index: 40; display: flex; flex-direction: column; gap: 11px; width: 280px; max-height: min(560px, calc(100vh - 150px)); padding: 14px; overflow: auto; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb), 0.18); border-radius: 12px; background: color-mix(in srgb, var(--theme-card) 96%, transparent); box-shadow: 0 16px 44px rgba(0, 0, 0, 0.18); backdrop-filter: blur(22px); }
 .compact .filter-panel { left: auto; right: 0; width: min(280px, calc(100vw - 56px)); max-height: 430px; }
 .filter-search { display: grid; gap: 5px; color: var(--theme-text-secondary); }
@@ -97,7 +97,7 @@ const objectTypeLabel = (type: string) => ({
 .filter-search input:focus, .filter-row select:focus { border-color: var(--theme-primary); }
 .filter-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--theme-text-secondary); }
 fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
-legend { margin-bottom: 6px; color: var(--theme-text-secondary); font-size: 9px; font-weight: 750; }
+legend { margin-bottom: 6px; color: var(--theme-text-secondary); font-size: var(--text-compact); font-weight: 750; }
 .filter-options { display: grid; gap: 3px; max-height: 105px; overflow: auto; }
 .filter-options.horizontal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .filter-options label, .orphan-toggle { display: flex; align-items: center; gap: 7px; min-height: 25px; padding: 0 5px; border-radius: 6px; cursor: pointer; }

@@ -288,7 +288,7 @@ header { display: flex; min-height: 52px; align-items: center; justify-content: 
 .sheet-stage thead th { position: sticky; z-index: 2; top: 0; color: var(--text-muted); background: var(--bg-secondary); font-size: 11px; font-weight: 500; }
 .sheet-stage tbody th, .corner { position: sticky; z-index: 1; left: 0; width: 48px; min-width: 48px; color: var(--text-muted); background: var(--bg-secondary); font-size: 11px; font-weight: 500; }
 .sheet-stage td { position: relative; }
-.sheet-stage td code { position: absolute; top: 2px; right: 3px; color: var(--theme-primary); font-size: 9px; }
+.sheet-stage td code { position: absolute; top: 2px; right: 3px; color: var(--theme-primary); font-size: var(--text-compact); }
 .odp-layout { display: grid; flex: 1; min-height: 0; grid-template-columns: 220px minmax(0, 1fr); }
 .odp-layout aside { overflow: auto; padding: 8px; border-right: 1px solid var(--border-color); background: var(--bg-primary); }
 .odp-layout aside button { display: grid; width: 100%; grid-template-columns: 24px minmax(0, 1fr); gap: 2px 7px; margin-bottom: 4px; padding: 8px; border: 1px solid transparent; border-radius: 6px; text-align: left; color: var(--text-secondary); background: transparent; cursor: pointer; }
@@ -300,7 +300,7 @@ header { display: flex; min-height: 52px; align-items: center; justify-content: 
 .slide { position: relative; width: min(960px, calc(100% - 24px)); aspect-ratio: 16 / 9; margin: 0 auto; padding: 8% 9%; box-sizing: border-box; border: 1px solid var(--border-color); box-shadow: 0 8px 26px rgba(0,0,0,.12); overflow: auto; background: var(--bg-primary); }
 .slide > p { margin: .6em 0; line-height: 1.5; font-size: 18px; }
 .slide > p.title { margin: 0 0 .8em; font-size: 28px; font-weight: 650; }
-.slide-number { position: absolute; right: 12px; bottom: 8px; color: var(--text-muted); font-size: 10px; }
+.slide-number { position: absolute; right: 12px; bottom: 8px; color: var(--text-muted); font-size: var(--text-compact); }
 .slide section { margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--border-color); color: var(--text-secondary); }
 .slide section p { white-space: pre-wrap; }
 .media-note { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 11px; }

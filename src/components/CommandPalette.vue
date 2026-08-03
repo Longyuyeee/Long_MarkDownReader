@@ -436,7 +436,7 @@ onUnmounted(() => {
     rgba(var(--theme-primary-rgb), 0.15) 0%,
     rgba(var(--theme-primary-rgb), 0.08) 100%);
   color: var(--theme-primary);
-  font-size: 10px;
+  font-size: var(--text-compact);
   font-weight: 700;
   border: 1px solid rgba(var(--theme-primary-rgb), 0.12);
   transition:

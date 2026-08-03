@@ -57,13 +57,13 @@ const title = computed(() => props.summary.isolated
   color: var(--theme-primary);
   background: rgba(var(--theme-primary-rgb), .06);
   cursor: pointer;
-  font-size: 8px;
+  font-size: var(--text-compact);
   white-space: nowrap;
 }
 .relation-summary:hover { border-color: rgba(var(--theme-primary-rgb), .42); background: rgba(var(--theme-primary-rgb), .11); }
 .relation-summary svg { width: 12px; height: 12px; }
-.relation-summary strong { font-size: 9px; }
-.relation-summary small { color: var(--theme-text-secondary); font-size: 8px; }
+.relation-summary strong { font-size: var(--text-compact); }
+.relation-summary small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .relation-summary.isolated { color: #a46a12; border-color: rgba(164, 106, 18, .2); background: rgba(164, 106, 18, .07); }
 .relation-summary.compact { min-height: 20px; padding: 2px 6px; }
 </style>

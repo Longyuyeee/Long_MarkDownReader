@@ -180,7 +180,7 @@ watch([() => props.path, () => props.show], fetchStats, { immediate: true })
 }
 
 .file-path {
-  font-size: 10px;
+  font-size: var(--text-compact);
   color: var(--text-tertiary, rgba(29,29,31,0.35));
   font-weight: 500;
   padding-left: 24px;
@@ -205,7 +205,7 @@ watch([() => props.path, () => props.show], fetchStats, { immediate: true })
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: var(--text-compact);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -233,7 +233,7 @@ watch([() => props.path, () => props.show], fetchStats, { immediate: true })
   position: absolute;
   top: 16px;
   right: 16px;
-  font-size: 10px;
+  font-size: var(--text-compact);
   font-weight: 900;
   padding: 2px 8px;
   background: var(--theme-card);

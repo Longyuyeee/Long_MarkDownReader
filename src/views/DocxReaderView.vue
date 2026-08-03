@@ -913,15 +913,15 @@ watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocato
 .docx-outline nav { display: flex; flex-direction: column; gap: 2px; }
 .docx-outline nav button { padding: 6px 8px; border: 0; border-radius: 5px; overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); background: transparent; cursor: pointer; font: inherit; }
 .docx-outline nav button:hover { background: var(--hover-bg); color: var(--text-primary); }
-.docx-outline nav button span { margin-right: 5px; color: var(--primary-color); font-size: 10px; }
+.docx-outline nav button span { margin-right: 5px; color: var(--primary-color); font-size: var(--text-compact); }
 .compatibility-card { margin-top: 16px; padding: 10px; display: flex; flex-direction: column; gap: 7px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); }
-.compatibility-card > span, .compatibility-card small { color: var(--text-muted); font-size: 10px; line-height: 1.5; }
+.compatibility-card > span, .compatibility-card small { color: var(--text-muted); font-size: var(--text-compact); line-height: 1.5; }
 .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.metric-grid span { padding: 5px; border-radius: 5px; background: var(--bg-primary); color: var(--text-secondary); font-size: 10px; }
+.metric-grid span { padding: 5px; border-radius: 5px; background: var(--bg-primary); color: var(--text-secondary); font-size: var(--text-compact); }
 .metric-grid b { margin-right: 3px; color: var(--text-primary); font-size: 12px; }
 .docx-layout-summary { padding-top: 7px; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--border-color); }
 .docx-layout-summary strong { font-size: 11px; }
-.docx-layout-summary span { color: var(--text-muted); font-size: 10px; line-height: 1.45; }
+.docx-layout-summary span { color: var(--text-muted); font-size: var(--text-compact); line-height: 1.45; }
 .docx-stage { overflow: auto; padding: 24px; background: color-mix(in srgb, var(--bg-secondary) 88%, #7f8da3); }
 .docx-page { width: min(760px, calc(100% - 24px)); min-height: 960px; margin: 0 auto; padding: 64px 70px; box-sizing: border-box; border: 1px solid var(--border-color); box-shadow: 0 8px 26px rgba(0,0,0,.12); background: var(--bg-primary); }
 .docx-block { scroll-margin: 90px; border-radius: 4px; transition: background .15s ease; }
@@ -931,14 +931,14 @@ h1.docx-heading { font-size: 25px; } h2.docx-heading { font-size: 21px; } h3.doc
 h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .docx-paragraph { margin: .55em 0; line-height: 1.75; white-space: pre-wrap; }
 .docx-paragraph p { margin: 0; }
-.inline-image-note { margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: 10px; }
+.inline-image-note { margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: var(--text-compact); }
 .docx-list-item { margin: .38em 0; display: flex; gap: 8px; line-height: 1.65; }
 .docx-list-item > span { color: var(--primary-color); }
 .docx-list-item p { margin: 0; }
 .docx-table-wrap { margin: 14px 0; overflow: auto; }
 .docx-table-wrap table { width: 100%; border-collapse: collapse; }
 .docx-table-wrap td { min-width: 80px; padding: 7px 9px; border: 1px solid var(--border-color); vertical-align: top; }
-.docx-page-break { height: 32px; margin: 20px 0; display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 10px; }
+.docx-page-break { height: 32px; margin: 20px 0; display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: var(--text-compact); }
 .docx-page-break::before, .docx-page-break::after { content: ''; flex: 1; border-top: 1px dashed var(--border-color); }
 .docx-page-break.rendered { opacity: .68; }
 .docx-image-placeholder { min-height: 100px; margin: 14px 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; border: 1px dashed var(--border-color); color: var(--text-muted); background: var(--bg-secondary); }
@@ -946,12 +946,12 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .inline-images { margin: 10px 0; display: grid; gap: 8px; justify-items: start; }
 .related-links, .related-anchors { display: flex; flex-wrap: wrap; gap: 5px; }
 .related-links { margin: 4px 0 10px; }
-.related-links button, .related-anchors button { min-height: 24px; padding: 3px 7px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; font: inherit; font-size: 10px; }
+.related-links button, .related-anchors button { min-height: 24px; padding: 3px 7px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; font: inherit; font-size: var(--text-compact); }
 .related-links button:hover, .related-anchors button:hover { border-color: var(--primary-color); color: var(--primary-color); }
 .docx-related-content { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border-color); }
 .docx-related-content > header { margin-bottom: 16px; }
 .docx-related-content h2 { margin: 0 0 4px; font-size: 17px; }
-.docx-related-content > header span, .related-item-heading span { color: var(--text-muted); font-size: 10px; }
+.docx-related-content > header span, .related-item-heading span { color: var(--text-muted); font-size: var(--text-compact); }
 .related-item { scroll-margin: 90px; padding: 11px 0; border-bottom: 1px solid var(--border-color); }
 .related-item-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .related-item-heading strong { font-size: 12px; }
@@ -961,7 +961,7 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .docx-editor > header { margin-bottom: 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .docx-editor > header div { display: flex; flex-direction: column; gap: 2px; }
 .docx-editor > header strong { font-size: 13px; }
-.docx-editor > header span { color: var(--text-muted); font-size: 10px; }
+.docx-editor > header span { color: var(--text-muted); font-size: var(--text-compact); }
 .docx-editor > header button { width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 5px; color: var(--text-secondary); background: transparent; cursor: pointer; }
 .docx-editor > header button:hover { background: var(--hover-bg); }
 .edit-mode-tabs { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
@@ -983,10 +983,10 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .edit-verification { margin-top: 12px; padding: 9px; display: flex; flex-direction: column; gap: 4px; border-left: 3px solid #2c9b68; background: color-mix(in srgb, #2c9b68 8%, var(--bg-primary)); }
 .edit-verification.error { border-color: var(--error-color); background: color-mix(in srgb, var(--error-color) 7%, var(--bg-primary)); }
 .edit-verification strong { font-size: 11px; }
-.edit-verification span, .edit-verification small, .copy-save > small { color: var(--text-muted); font-size: 10px; line-height: 1.5; }
+.edit-verification span, .edit-verification small, .copy-save > small { color: var(--text-muted); font-size: var(--text-compact); line-height: 1.5; }
 .copy-save { margin-top: 12px; padding-top: 1px; border-top: 1px solid var(--border-color); }
 .copy-save > small { display: block; margin-top: 7px; color: var(--error-color); }
-.docx-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: 10px; }
+.docx-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: var(--text-compact); }
 .docx-status > div { gap: 10px; }
 @media (max-width: 820px) {
   .docx-layout { grid-template-columns: 180px minmax(0, 1fr); }

@@ -768,7 +768,7 @@ onBeforeUnmount(() => {
 .document-title span,
 .status-bar {
   color: var(--theme-text-secondary);
-  font-size: 9px;
+  font-size: var(--text-compact);
 }
 
 .format-bar {
@@ -782,7 +782,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   color: var(--theme-text-secondary);
-  font-size: 9px;
+  font-size: var(--text-compact);
 }
 
 .format-bar select {
@@ -807,7 +807,7 @@ onBeforeUnmount(() => {
 .confidence-label {
   margin-left: auto;
   color: var(--theme-text-secondary);
-  font-size: 9px;
+  font-size: var(--text-compact);
 }
 
 .readonly-label {
@@ -816,7 +816,7 @@ onBeforeUnmount(() => {
   border-radius: 5px;
   color: #a5542d;
   background: rgba(184, 92, 46, 0.07);
-  font-size: 9px;
+  font-size: var(--text-compact);
   font-weight: 700;
 }
 
@@ -851,7 +851,7 @@ onBeforeUnmount(() => {
   max-width: 560px;
   margin: 0;
   text-align: center;
-  font-size: 10px;
+  font-size: var(--text-compact);
 }
 
 .editor-state.error strong {

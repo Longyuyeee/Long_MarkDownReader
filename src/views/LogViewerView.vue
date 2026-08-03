@@ -502,7 +502,7 @@ onBeforeUnmount(() => {
 .level-filter button span {
   min-width: 14px;
   color: inherit;
-  font-size: 10px;
+  font-size: var(--text-compact);
   text-align: right;
 }
 

@@ -2224,14 +2224,14 @@ onBeforeUnmount(() => {
 .document-identity { min-width: 0; gap: 9px; }
 .document-identity > div { min-width: 0; display: flex; flex-direction: column; }
 .document-identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.document-identity span { color: var(--text-muted); font-size: 10px; }
+.document-identity span { color: var(--text-muted); font-size: var(--text-compact); }
 .toolbar-actions { gap: 4px; }
 .toolbar-actions > button { min-width: 30px; height: 30px; padding: 0 7px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid transparent; border-radius: 5px; color: var(--text-secondary); background: transparent; cursor: pointer; font: inherit; }
 .toolbar-actions > button:hover:not(:disabled), .toolbar-actions > button.active { border-color: var(--border-color); background: var(--hover-bg); color: var(--text-primary); }
 .toolbar-actions > button:disabled { opacity: .38; cursor: default; }
 .pptx-search { width: 218px; height: 30px; gap: 6px; padding: 0 8px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); }
 .pptx-search input { min-width: 0; flex: 1; border: 0; outline: 0; color: inherit; background: transparent; font: inherit; }
-.pptx-search span { color: var(--text-muted); font-size: 10px; }
+.pptx-search span { color: var(--text-muted); font-size: var(--text-compact); }
 .pptx-state { flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .pptx-state.error { color: var(--error-color); }
 .pptx-state p { max-width: 560px; margin: 4px 0 0; color: var(--text-secondary); }
@@ -2243,10 +2243,10 @@ onBeforeUnmount(() => {
 .slide-strip > button.active { border-color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 8%, transparent); }
 .slide-strip > button.route-target { animation: route-target-pulse 1.15s ease-out; }
 .slide-strip > button.hit:not(.active)::after { content: ''; position: absolute; right: 7px; top: 7px; width: 5px; height: 5px; border-radius: 50%; background: #d69b18; }
-.slide-number { position: absolute; left: 6px; top: 9px; color: var(--text-muted); font-size: 10px; }
+.slide-number { position: absolute; left: 6px; top: 9px; color: var(--text-muted); font-size: var(--text-compact); }
 .thumbnail { position: relative; box-sizing: border-box; padding: 0; display: block; overflow: hidden; container-type: size; border: 1px solid var(--border-color); background: #fff; color: #20242b; box-shadow: 0 2px 7px rgba(0,0,0,.08); text-align: left; }
-.thumbnail strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.thumbnail > small { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; padding: 8px; font-size: 7px; line-height: 1.35; }
+.thumbnail strong { overflow: hidden; font-size: var(--text-compact); text-overflow: ellipsis; white-space: nowrap; }
+.thumbnail > small { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; padding: 8px; font-size: var(--text-compact); line-height: 1.35; }
 .hidden-mark { position: absolute; right: 10px; bottom: 10px; color: var(--text-muted); }
 .pptx-stage { min-width: 0; overflow: auto; padding: 28px; display: grid; place-items: center; background: color-mix(in srgb, var(--bg-secondary) 78%, #526073); }
 .slide-canvas, .presenter-slide { position: relative; width: min(100%, 1100px); overflow: hidden; container-type: size; background: #fff; color: #1e232b; box-shadow: 0 12px 38px rgba(0,0,0,.22); }
@@ -2272,8 +2272,8 @@ onBeforeUnmount(() => {
 .pptx-details dt { color: var(--text-muted); }
 .pptx-details dd { margin: 0; text-align: right; }
 .pptx-details ul { margin: 0; padding-left: 17px; color: var(--text-secondary); line-height: 1.55; }
-.pptx-details .verified-badge { margin-left: auto; padding: 2px 6px; border-radius: 999px; color: var(--success-color); background: color-mix(in srgb, var(--success-color) 12%, transparent); font-size: 10px; }
-.baseline-digest { margin: 9px 0 6px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 10px; word-break: break-all; }
+.pptx-details .verified-badge { margin-left: auto; padding: 2px 6px; border-radius: 999px; color: var(--success-color); background: color-mix(in srgb, var(--success-color) 12%, transparent); font-size: var(--text-compact); }
+.baseline-digest { margin: 9px 0 6px; color: var(--text-secondary); font-family: var(--font-mono); font-size: var(--text-compact); word-break: break-all; }
 .baseline-error { margin: 0; color: var(--error-color); line-height: 1.5; }
 .baseline-status { color: var(--success-color); }
 .isolated-text-patch label, .isolated-metadata-patch label, .reliable-save-copy label { display: grid; gap: 5px; margin-bottom: 9px; color: var(--text-muted); font-size: 11px; }
@@ -2286,7 +2286,7 @@ onBeforeUnmount(() => {
 .reliable-save-copy > button { min-height: 30px; padding: 0 9px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid var(--primary-color); border-radius: 5px; color: var(--primary-color); background: transparent; cursor: pointer; font: inherit; font-size: 11px; }
 .reliable-save-copy > button:hover:not(:disabled) { background: color-mix(in srgb, var(--primary-color) 9%, transparent); }
 .reliable-save-copy > button:disabled { opacity: .45; cursor: default; }
-.reliable-save-copy .muted { margin: 8px 0 0; font-size: 10px; line-height: 1.5; }
+.reliable-save-copy .muted { margin: 8px 0 0; font-size: var(--text-compact); line-height: 1.5; }
 .reliable-save-copy .open-saved-copy { margin-top: 9px; color: var(--success-color); border-color: var(--success-color); }
 .c4c-block + .c4c-block { margin-top: 13px; padding-top: 12px; border-top: 1px dashed var(--border-color); }
 .c4c-block h4 { margin: 0 0 9px; display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 11px; }
@@ -2296,11 +2296,11 @@ onBeforeUnmount(() => {
 .shape-mode button { border: 0; border-radius: 3px; color: var(--text-muted); background: transparent; cursor: pointer; font: inherit; font-size: 11px; }
 .shape-mode button.active { color: var(--text-primary); background: var(--bg-primary); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 .slide-lifecycle-mode { min-height: 32px; margin: 0 0 9px; padding: 2px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); }
-.slide-lifecycle-mode button { min-width: 0; min-height: 26px; padding: 0 3px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; border: 0; border-radius: 3px; color: var(--text-muted); background: transparent; cursor: pointer; font: inherit; font-size: 10px; }
+.slide-lifecycle-mode button { min-width: 0; min-height: 26px; padding: 0 3px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; border: 0; border-radius: 3px; color: var(--text-muted); background: transparent; cursor: pointer; font: inherit; font-size: var(--text-compact); }
 .slide-lifecycle-mode button.active { color: var(--text-primary); background: var(--bg-primary); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 .slide-order-list { margin: 0 0 9px; border-top: 1px solid var(--border-color); }
 .slide-order-list > div { min-height: 32px; display: grid; grid-template-columns: 22px minmax(0, 1fr) 28px 28px; align-items: center; gap: 4px; border-bottom: 1px solid var(--border-color); }
-.slide-order-list span { color: var(--text-muted); font-size: 10px; }
+.slide-order-list span { color: var(--text-muted); font-size: var(--text-compact); }
 .slide-order-list strong { overflow: hidden; color: var(--text-secondary); font-size: 11px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .slide-order-list button { width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 4px; color: var(--text-muted); background: transparent; cursor: pointer; }
 .slide-order-list button:hover:not(:disabled) { color: var(--text-primary); background: var(--bg-secondary); }
@@ -2316,14 +2316,14 @@ onBeforeUnmount(() => {
 .image-replacement-preview div { min-width: 0; display: grid; gap: 2px; }
 .image-replacement-preview strong, .image-replacement-preview small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .image-replacement-preview strong { font-size: 11px; }
-.image-replacement-preview small { color: var(--text-muted); font-size: 9px; }
+.image-replacement-preview small { color: var(--text-muted); font-size: var(--text-compact); }
 .patch-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.patch-actions small { color: var(--text-muted); font-size: 9px; }
+.patch-actions small { color: var(--text-muted); font-size: var(--text-compact); }
 .patch-actions button { min-height: 28px; padding: 0 8px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--primary-color); border-radius: 5px; color: var(--primary-color); background: transparent; cursor: pointer; font: inherit; font-size: 11px; }
 .patch-actions button:hover:not(:disabled) { background: color-mix(in srgb, var(--primary-color) 9%, transparent); }
 .patch-actions button:disabled { opacity: .45; cursor: default; }
 .patch-report { margin-top: 9px !important; padding-top: 6px; border-top: 1px dashed var(--border-color); }
-.pptx-status { min-height: 28px; padding: 0 12px; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: 10px; }
+.pptx-status { min-height: 28px; padding: 0 12px; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: var(--text-compact); }
 .route-target-status { overflow: hidden; color: var(--primary-color); text-overflow: ellipsis; white-space: nowrap; }
 .presenter { position: fixed; z-index: 10000; inset: 0; display: grid; place-items: center; background: #101215; }
 .presenter > button { position: absolute; z-index: 2; top: 14px; right: 14px; width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 5px; color: #fff; background: rgba(255,255,255,.12); cursor: pointer; }

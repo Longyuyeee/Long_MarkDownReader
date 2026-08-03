@@ -761,7 +761,7 @@ onBeforeUnmount(() => {
 
 .metrics span {
   color: var(--theme-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-compact);
 }
 
 .diagnostics h3 {
@@ -851,7 +851,7 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   color: var(--theme-primary);
   background: rgba(var(--theme-primary-rgb), 0.1);
-  font-size: 10px;
+  font-size: var(--text-compact);
 }
 
 .empty-outline,

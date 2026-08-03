@@ -250,7 +250,7 @@ main {
 
 .segments button:last-child { border-right: 0; }
 .segments button.active { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.09); }
-.segments span { font-size: 10px; }
+.segments span { font-size: var(--text-compact); }
 
 .matrix-head,
 .matrix-row summary {

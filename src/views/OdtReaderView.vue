@@ -275,8 +275,8 @@ watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocato
 .odt-outline nav { display: flex; flex-direction: column; gap: 2px; }
 .odt-outline nav button { padding: 6px 8px; border: 0; border-radius: 5px; overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); background: transparent; cursor: pointer; font: inherit; }
 .odt-outline nav button:hover { background: var(--hover-bg); color: var(--text-primary); }
-.odt-outline nav button span { margin-right: 5px; color: var(--theme-primary); font-size: 10px; }
-.package-summary { margin-top: 18px; padding-top: 12px; display: flex; flex-direction: column; gap: 5px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 10px; }
+.odt-outline nav button span { margin-right: 5px; color: var(--theme-primary); font-size: var(--text-compact); }
+.package-summary { margin-top: 18px; padding-top: 12px; display: flex; flex-direction: column; gap: 5px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: var(--text-compact); }
 .package-summary div { display: flex; align-items: center; gap: 6px; color: var(--text-primary); font-size: 11px; }
 .odt-stage { overflow: auto; padding: 24px; background: color-mix(in srgb, var(--bg-secondary) 88%, #7f8da3); }
 .odt-page { width: min(760px, calc(100% - 24px)); min-height: 960px; margin: 0 auto; padding: 64px 70px; box-sizing: border-box; border: 1px solid var(--border-color); box-shadow: 0 8px 26px rgba(0,0,0,.12); background: var(--bg-primary); }
@@ -298,7 +298,7 @@ h4.odt-heading, h5.odt-heading, h6.odt-heading { font-size: 15px; }
 .odt-images img { display: block; max-width: 100%; max-height: 520px; object-fit: contain; }
 .odt-images span { min-height: 72px; padding: 12px; display: flex; align-items: center; gap: 6px; border: 1px dashed var(--border-color); color: var(--text-muted); background: var(--bg-secondary); }
 .empty-document { padding: 80px 20px; text-align: center; color: var(--text-muted); }
-.odt-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: 10px; }
+.odt-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: var(--text-compact); }
 .odt-status > div { gap: 10px; }
 .spinning { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

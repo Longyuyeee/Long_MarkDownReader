@@ -1557,7 +1557,7 @@ onBeforeUnmount(() => {
 
 .tree-toolbar span {
   color: var(--theme-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-compact);
 }
 
 .tree-rows {
@@ -1630,7 +1630,7 @@ onBeforeUnmount(() => {
 
 .tree-node-main small {
   color: var(--theme-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-compact);
 }
 
 .tree-node-main code {
@@ -1845,7 +1845,7 @@ onBeforeUnmount(() => {
 .path-item span,
 .empty-paths {
   color: var(--theme-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-compact);
 }
 
 .empty-paths {
@@ -1921,12 +1921,12 @@ onBeforeUnmount(() => {
 }
 
 .diagnostic-item strong { font-size: 12px; }
-.diagnostic-item small { color: var(--theme-text-secondary); font-size: 10px; }
+.diagnostic-item small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .diagnostic-item em { font-size: 11px; font-style: normal; line-height: 1.45; }
 .diagnostic-item code {
   overflow: hidden;
   color: var(--theme-primary);
-  font-size: 10px;
+  font-size: var(--text-compact);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1956,7 +1956,7 @@ onBeforeUnmount(() => {
   border-top: var(--theme-border);
   color: var(--theme-text-secondary);
   background: var(--theme-surface);
-  font-size: 10px;
+  font-size: var(--text-compact);
 }
 
 @media (max-width: 780px) {
