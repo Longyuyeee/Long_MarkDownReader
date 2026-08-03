@@ -43,7 +43,7 @@ for (const entry of manifest.entries || []) {
   if (!logical || entry.logicalViewport?.width !== logical.width || entry.logicalViewport?.height !== logical.height) failures.push(`logical viewport drift: ${key}`)
   if (!entry.sampleFile || !entry.requestedRoute?.startsWith('#/library?path=')) failures.push(`managed sample entry route is missing: ${key}`)
   if (entry.geometry?.route !== entry.requestedRoute && entry.geometry?.route !== '#/library') failures.push(`managed canonical route drift: ${key}`)
-  if (!entry.geometry?.rootVisible || !entry.geometry?.rootWithinViewport || !entry.geometry?.sampleIdentityVisible || entry.geometry?.pageOverflowX
+  if (!entry.geometry?.rootVisible || !entry.geometry?.toolbarVisible || !entry.geometry?.rootWithinViewport || !entry.geometry?.sampleIdentityVisible || entry.geometry?.pageOverflowX
     || entry.geometry?.toolbarClipped || entry.geometry?.toolbarOverflow || entry.geometry?.statusClipped || entry.geometry?.contextTriggerOverlap) failures.push(`geometry gate failed: ${key}`)
   const filePath = path.join(root, entry.file || '')
   if (!fs.existsSync(filePath) || fs.statSync(filePath).size < 15_000) failures.push(`missing or undersized screenshot: ${entry.file}`)

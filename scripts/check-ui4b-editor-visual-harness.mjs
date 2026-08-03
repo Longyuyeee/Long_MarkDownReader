@@ -20,6 +20,7 @@ if (UI4B_EDITOR_SURFACES.map(item => item.id).join(',') !== 'markdown,txt,json,p
   failures.push('UI-4B editor surface matrix drifted')
 }
 if (new Set(UI4B_EDITOR_SURFACES.map(item => item.sampleKey)).size !== 11) failures.push('UI-4B samples must map one-to-one to editor surfaces')
+if (UI4B_EDITOR_SURFACES.some(item => !item.toolbarSelector || !item.identitySelector)) failures.push('every UI-4B editor surface must declare primary toolbar and identity selectors')
 if (UI4_PHYSICAL_VIEWPORT.width !== 1280 || UI4_PHYSICAL_VIEWPORT.height !== 820) failures.push('UI-4B physical viewport drifted')
 
 const logicalViewports = UI4_DISPLAY_SCALES.map(ui4LogicalViewport)
@@ -32,11 +33,13 @@ for (const token of [
   'deviceScaleFactor: scale.factor',
   'ui4bManagedFileHash',
   'rootWithinViewport',
+  'toolbarVisible',
   'pageOverflowX',
   'toolbarClipped',
   'toolbarOverflow',
   'statusClipped',
   'sampleIdentityVisible',
+  'initialized library shell',
   'visibleNodes',
   'contextTriggerOverlap',
   "geometry.route !== '#/library'",

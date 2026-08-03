@@ -98,14 +98,14 @@ const navigate = async surface => {
 const inspectGeometry = async (surface, sampleName) => evaluate(`(() => {
   const root = document.querySelector(${JSON.stringify(surface.selector)})
   const rect = root?.getBoundingClientRect()
-  const visibleNodes = selector => [...(root?.querySelectorAll(selector) || [])].filter(node => {
+  const visibleNodes = selector => selector ? [...(root?.querySelectorAll(selector) || [])].filter(node => {
     const candidate = node.getBoundingClientRect()
     return candidate.width > 0 && candidate.height > 0
-  })
-  const toolbars = visibleNodes('header, [role="toolbar"], .pdf-toolbar, .workbook-toolbar, .studio-toolbar')
+  }) : []
+  const toolbars = visibleNodes(${JSON.stringify(surface.toolbarSelector)})
   const toolbar = toolbars[0]
   const toolbarRect = toolbar?.getBoundingClientRect()
-  const status = visibleNodes('footer, .status-bar, .statusbar, .canvas-statusbar, .docx-status')[0]
+  const status = visibleNodes(${JSON.stringify(surface.statusSelector || '')})[0]
   const statusRect = status?.getBoundingClientRect()
   const contextTrigger = document.querySelector('.relation-context-trigger')
   const contextRect = contextTrigger?.getBoundingClientRect()
@@ -117,13 +117,14 @@ const inspectGeometry = async (surface, sampleName) => evaluate(`(() => {
     root: rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null,
     toolbar: toolbarRect ? { x: toolbarRect.x, y: toolbarRect.y, width: toolbarRect.width, height: toolbarRect.height } : null,
     rootVisible: Boolean(visible),
+    toolbarVisible: toolbars.length > 0,
     rootWithinViewport: Boolean(withinViewport),
     pageOverflowX: document.documentElement.scrollWidth > window.innerWidth + 2,
     toolbarClipped: Boolean(rect && toolbarRect && (toolbarRect.left < rect.left - 2 || toolbarRect.right > rect.right + 2 || toolbarRect.top < rect.top - 2)),
     toolbarOverflow: Boolean(toolbar && toolbar.scrollWidth > toolbar.clientWidth + 2),
     statusClipped: Boolean(rect && statusRect && statusRect.bottom > rect.bottom + 2),
     contextTriggerOverlap: Boolean(contextRect && toolbars.some(node => intersects(contextRect, node.getBoundingClientRect()))),
-    sampleIdentityVisible: Boolean(root?.textContent?.includes(${JSON.stringify(sampleName)})),
+    sampleIdentityVisible: Boolean(root?.querySelector(${JSON.stringify(surface.identitySelector)})?.textContent?.includes(${JSON.stringify(sampleName)})),
     title: document.title,
     route: location.hash,
     theme: document.body.dataset.theme,
@@ -142,6 +143,7 @@ const capture = async fileName => {
 await fs.mkdir(outputRoot, { recursive: true })
 await send('Page.enable')
 await send('Runtime.enable')
+await waitFor(`document.querySelector('.page-loader') === null && document.querySelector('.library-mode') !== null`, 'initialized library shell')
 
 const entries = []
 for (const scale of UI4_DISPLAY_SCALES) {
@@ -157,7 +159,7 @@ for (const scale of UI4_DISPLAY_SCALES) {
     const sampleFile = path.basename(sampleMap[surface.sampleKey])
     const sampleName = sampleFile.replace(/\.[^.]+$/, '')
     const geometry = await inspectGeometry(surface, sampleName)
-    if (!geometry.rootVisible || !geometry.rootWithinViewport || !geometry.sampleIdentityVisible || geometry.pageOverflowX || geometry.toolbarClipped || geometry.toolbarOverflow || geometry.statusClipped || geometry.contextTriggerOverlap) {
+    if (!geometry.rootVisible || !geometry.toolbarVisible || !geometry.rootWithinViewport || !geometry.sampleIdentityVisible || geometry.pageOverflowX || geometry.toolbarClipped || geometry.toolbarOverflow || geometry.statusClipped || geometry.contextTriggerOverlap) {
       throw new Error(`Geometry gate failed for ${scenario.id}/${surface.id}/${scale.percent}: ${JSON.stringify(geometry)}`)
     }
     if (geometry.route !== expectedRoute && geometry.route !== '#/library') throw new Error(`Managed file route drift for ${surface.id}: ${geometry.route}`)
