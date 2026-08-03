@@ -1,79 +1,31 @@
-import fs from "node:fs";
-import path from "node:path";
+import fs from 'node:fs'
 
-const root = process.cwd();
-const auditPath = path.join(
-  root,
-  "docs",
-  "Development_Alignment_and_Closure_Plan_2026-08-02.md",
-);
-const matrixPath = path.join(root, "shared", "release-capability-matrix.json");
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))
+const policy = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.json', 'utf8'))
+const audit = fs.readFileSync('docs/Development_Alignment_and_Closure_Plan_2026-08-02.md', 'utf8')
+const counts = matrix.formats.reduce((result, item) => {
+  result[item.readiness] = (result[item.readiness] ?? 0) + 1
+  return result
+}, {})
+const required = [
+  ['41 类格式', matrix.formats.length === 41],
+  ['29 类为已验证', counts.verified === 29],
+  ['6 类为有限能力', counts['verified-with-limitations'] === 6],
+  ['6 类依赖外部程序', counts['external-dependency'] === 6],
+  ['10 套发布能力配置', matrix.profiles.length === 10],
+  [`当前版本：\`${pkg.version}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
+  ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
+  ['当前阶段：**`1.0.2` 补丁打包与社区发布执行**', pkg.version === '1.0.2'],
+]
 
-const fail = (message) => {
-  throw new Error(`[current-development-audit] ${message}`);
-};
-
-for (const requiredPath of [auditPath, matrixPath]) {
-  if (!fs.existsSync(requiredPath)) {
-    fail(`missing required source: ${path.relative(root, requiredPath)}`);
-  }
+for (const [token, condition] of required) {
+  if (!condition) throw new Error(`[current-development-audit] source-of-truth no longer supports: ${token}`)
+  if (!audit.includes(token)) throw new Error(`[current-development-audit] audit is missing: ${token}`)
 }
 
-const audit = fs.readFileSync(auditPath, "utf8");
-const matrix = JSON.parse(fs.readFileSync(matrixPath, "utf8"));
-
-const readinessCounts = matrix.formats.reduce((counts, item) => {
-  counts[item.readiness] = (counts[item.readiness] ?? 0) + 1;
-  return counts;
-}, {});
-
-const expectedFacts = [
-  ["41 类格式", matrix.formats.length === 41],
-  ["29 类为已验证", readinessCounts.verified === 29],
-  [
-    "6 类为有限能力",
-    readinessCounts["verified-with-limitations"] === 6,
-  ],
-  ["6 类依赖外部程序", readinessCounts["external-dependency"] === 6],
-  ["10 套发布能力配置", matrix.profiles.length === 10],
-  ["当前版本：`1.0.1`", matrix.appVersion === "1.0.1"],
-  [
-    "当前能力矩阵仍保持 `releaseCandidate=false`",
-    matrix.releaseCandidate === false,
-  ],
-  ["P0、UI-1、UI-2、UI-3 与 UI-4 均已完成", true],
-  [
-    "当前唯一下一阶段为：**`1.0.2` 版本提升、补丁打包与社区发布准备**",
-    true,
-  ],
-];
-
-for (const [token, condition] of expectedFacts) {
-  if (!condition) {
-    fail(`source-of-truth no longer supports documented fact: ${token}`);
-  }
-  if (!audit.includes(token)) {
-    fail(`audit is missing source-backed token: ${token}`);
-  }
+for (const section of ['## 1. 审计结论', '## 2. 需求对齐', '## 3. 当前开发状态', '## 4. 发布边界', '## 5. 接手后的顺序']) {
+  if (!audit.includes(section)) throw new Error(`[current-development-audit] audit is missing section: ${section}`)
 }
 
-const requiredSections = [
-  "## 1. 审计结论",
-  "## 2. 最初需求基线",
-  "## 3. 当前能力盘点",
-  "## 4. 与原计划的对齐情况",
-  "## 5. 当前 UI 收口审计",
-  "## 6. 后续开发计划",
-  "## 7. 最终收口定义",
-  "## 8. 当前下一步",
-];
-
-for (const section of requiredSections) {
-  if (!audit.includes(section)) {
-    fail(`audit is missing required section: ${section}`);
-  }
-}
-
-console.log(
-  `[current-development-audit] PASS version=${matrix.appVersion} formats=${matrix.formats.length} verified=${readinessCounts.verified} limited=${readinessCounts["verified-with-limitations"]} external=${readinessCounts["external-dependency"]}`,
-);
+console.log(`Current development audit passed: v${pkg.version}, 41 format mappings and release stage are aligned.`)

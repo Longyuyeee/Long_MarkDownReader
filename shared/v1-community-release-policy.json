@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.0.1",
-  "releaseCandidate": true,
+  "appVersion": "1.0.2",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
-  "generatedAt": "2026-08-02",
-  "currentStatus": "v1.0.1-community-release-published",
+  "generatedAt": "2026-08-03",
+  "currentStatus": "v1.0.2-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -23,34 +23,34 @@
   "gates": {
     "frontendBuildPassed": true,
     "rustLockedCheckPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "updaterSignaturesBuilt": true,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "updaterSignaturesBuilt": false,
     "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "baseInstalledLifecycleVersion": "1.0.0",
+    "baseInstalledLifecycleVersion": "1.0.1",
+    "baseInstalledLifecycleEvidenceVersion": "1.0.0",
     "baseInstalledLifecycleEvidenceInherited": true,
     "frontendBuildPassed": true,
     "rustLockedCheckPassed": true,
     "updaterPublicKeyUnchanged": true,
     "fullInstalledLifecycleRerun": false,
-    "scope": "branding-and-embedded-workspace-ui-patch"
+    "scope": "ui-governance-solid-gold-branding-and-release-fact-patch",
+    "automaticUpdaterAssetsPlanned": false,
+    "automaticUpdaterBlocker": "original-tauri-updater-private-key-unavailable-on-release-workstation"
   },
-  "release": {
-    "tag": "v1.0.1",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.1",
-    "publishedAt": "2026-08-02T10:32:14Z",
-    "taggedCommit": "33575dafcedd78a58d19881492756886d25d9edd",
-    "qualityGateRunId": 30743708659,
-    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30743708659"
+  "targetRelease": {
+    "tag": "v1.0.2",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.2",
+    "assetMode": "manual-msi-nsis-with-sha256"
   },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "monitor-v1.0.1-feedback-and-continue-ui-1-governance"
+  "nextAction": "run-v1.0.2-quality-gate-and-build-manual-community-installers"
 }

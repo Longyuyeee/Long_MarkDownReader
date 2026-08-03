@@ -91,7 +91,9 @@ export const RELEASE_PUBLIC_STATUS_LABEL = communityRelease.gates.githubReleaseP
   && communityRelease.currentStatus === `v${matrix.appVersion}-community-release-published`
   ? `v${matrix.appVersion} 社区版已发布`
   : communityRelease.releaseCandidate
-    ? '社区版发布候选'
+    ? `v${matrix.appVersion} 社区版发布候选`
+    : communityRelease.currentStatus === `v${matrix.appVersion}-community-release-quality-gate-pending`
+      ? `v${matrix.appVersion} 发布准备`
     : RELEASE_CANDIDATE
       ? '企业发布候选'
       : `${RELEASE_STAGE} 能力审计`

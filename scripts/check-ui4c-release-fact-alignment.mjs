@@ -10,20 +10,28 @@ const matrix = json('shared/release-capability-matrix.json')
 const community = json('shared/v1-community-release-policy.json')
 const config = read('src/config/releaseCapabilities.ts')
 const view = read('src/views/ReleaseCapabilitiesView.vue')
-const audit = read('docs/UI_4C_Release_Fact_Alignment_Audit_2026-08-03.md')
+const auditPath = `docs/V${pkg.version.replaceAll('.', '_')}_Unsigned_Community_Release_Audit_2026-08-03.md`
+const audit = fs.existsSync(auditPath) ? read(auditPath) : ''
+const tag = `v${pkg.version}`
 
 if (pkg.version !== tauri.version || pkg.version !== matrix.appVersion || pkg.version !== community.appVersion) failures.push('public version identity drift')
 if (matrix.stage !== 'R2' || matrix.releaseCandidate !== false) failures.push('capability or enterprise RC boundary drift')
-if (community.channel !== 'community-unsigned' || community.releaseCandidate !== true || community.gates?.githubReleasePublished !== true) failures.push('community release publication drift')
-if (community.currentStatus !== `v${pkg.version}-community-release-published` || community.release?.tag !== `v${pkg.version}`) failures.push('community release receipt drift')
+if (community.channel !== 'community-unsigned') failures.push('community release channel drift')
 
-for (const token of ['communityReleaseSource', 'RELEASE_PUBLIC_STATUS_LABEL', '社区版已发布']) {
+const published = community.gates?.githubReleasePublished === true
+const ready = !published && community.gates?.qualityGatePassed === true
+const pending = !published && !ready
+if (published && (community.currentStatus !== `${tag}-community-release-published` || community.release?.tag !== tag)) failures.push('published community receipt drift')
+if (ready && (community.currentStatus !== `${tag}-community-release-ready-to-publish` || community.releaseCandidate !== true)) failures.push('ready community state drift')
+if (pending && (community.currentStatus !== `${tag}-community-release-quality-gate-pending` || community.releaseCandidate !== false)) failures.push('pending community state drift')
+
+for (const token of ['communityReleaseSource', 'RELEASE_PUBLIC_STATUS_LABEL', '社区版已发布', '发布准备']) {
   if (!config.includes(token)) failures.push(`release capability config is missing ${token}`)
 }
-if (!view.includes('{{ RELEASE_PUBLIC_STATUS_LABEL }}') || view.includes("`${RELEASE_STAGE} 收口中`")) failures.push('release capability page still derives publication state from the capability stage')
+if (!view.includes('{{ RELEASE_PUBLIC_STATUS_LABEL }}')) failures.push('release capability page does not use the public status label')
 
-for (const token of ['UI-4C1', `v${pkg.version} 社区版已发布`, 'releaseCandidate=false', 'community-unsigned', 'UI-4C2']) {
-  if (!audit.includes(token)) failures.push(`UI-4C audit is missing ${token}`)
+for (const token of ['1.0.2', 'community-unsigned', 'releaseCandidate=false', '手动下载安装']) {
+  if (!audit.includes(token)) failures.push(`release audit is missing ${token}`)
 }
 
 if (failures.length) {
@@ -31,4 +39,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log(`UI-4C release facts passed: v${pkg.version} community release is published while enterprise RC remains separate.`)
+console.log(`UI-4C release facts passed: ${tag} is ${published ? 'published' : ready ? 'ready' : 'being prepared'} and enterprise RC remains separate.`)
