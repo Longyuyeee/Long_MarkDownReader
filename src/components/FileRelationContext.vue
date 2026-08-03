@@ -424,9 +424,10 @@ watch(() => [
 
 <style scoped>
 .relation-context-host { position: fixed; z-index: 780; top: 76px; right: 0; bottom: 14px; pointer-events: none; }
-.relation-context-trigger { pointer-events: auto; position: absolute; top: 50%; right: 0; min-height: 34px; display: flex; align-items: center; gap: 6px; padding: 7px 10px; transform: translateY(-50%); border: 1px solid rgba(var(--theme-primary-rgb), .24); border-right: 0; border-radius: 10px 0 0 10px; color: var(--theme-primary); background: var(--theme-surface); box-shadow: var(--theme-shadow-sm); font-size: 11px; cursor: pointer; white-space: nowrap; }
+.relation-context-trigger { pointer-events: auto; position: absolute; top: 50%; right: 0; width: 38px; min-height: 34px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; transform: translateY(-50%); border: 1px solid rgba(var(--theme-primary-rgb), .24); border-right: 0; border-radius: 10px 0 0 10px; color: var(--theme-primary); background: var(--theme-surface); box-shadow: var(--theme-shadow-sm); font-size: 11px; cursor: pointer; white-space: nowrap; }
 .relation-context-host.open .relation-context-trigger { right: 326px; }
 .relation-context-trigger svg { width: 15px; }
+.relation-context-trigger span { display: none; }
 .relation-context-trigger b { min-width: 17px; padding: 1px 5px; border-radius: 999px; background: rgba(var(--theme-primary-rgb), .12); font-size: var(--text-compact); }
 .relation-context-panel { pointer-events: auto; width: 326px; height: 100%; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--theme-border); border-right: 0; border-radius: 14px 0 0 14px; background: var(--theme-surface); box-shadow: -14px 16px 42px rgba(15, 23, 42, .16); color: var(--theme-text); }
 .relation-context-panel > header { display: flex; justify-content: space-between; gap: 12px; padding: 17px 16px 13px; border-bottom: 1px solid var(--theme-border); }
@@ -479,8 +480,4 @@ watch(() => [
 .context-state.error strong { color: var(--theme-danger, #dc2626); }
 .relation-context-panel > footer { padding: 8px 12px; border-top: 1px solid var(--theme-border); color: var(--theme-text-secondary); font-size: var(--text-compact); }
 
-@media (max-width: 900px) {
-  .relation-context-trigger { width: 38px; justify-content: center; padding: 8px; }
-  .relation-context-trigger span { display: none; }
-}
 </style>

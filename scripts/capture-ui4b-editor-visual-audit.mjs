@@ -124,6 +124,7 @@ const inspectGeometry = async (surface, sampleName) => evaluate(`(() => {
     toolbarOverflow: Boolean(toolbar && toolbar.scrollWidth > toolbar.clientWidth + 2),
     statusClipped: Boolean(rect && statusRect && statusRect.bottom > rect.bottom + 2),
     contextTriggerOverlap: Boolean(contextRect && toolbars.some(node => intersects(contextRect, node.getBoundingClientRect()))),
+    contextTriggerContentOverlap: Boolean(contextRect && intersects(contextRect, rect)),
     sampleIdentityVisible: Boolean(root?.querySelector(${JSON.stringify(surface.identitySelector)})?.textContent?.includes(${JSON.stringify(sampleName)})),
     title: document.title,
     route: location.hash,
@@ -159,7 +160,7 @@ for (const scale of UI4_DISPLAY_SCALES) {
     const sampleFile = path.basename(sampleMap[surface.sampleKey])
     const sampleName = sampleFile.replace(/\.[^.]+$/, '')
     const geometry = await inspectGeometry(surface, sampleName)
-    if (!geometry.rootVisible || !geometry.toolbarVisible || !geometry.rootWithinViewport || !geometry.sampleIdentityVisible || geometry.pageOverflowX || geometry.toolbarClipped || geometry.toolbarOverflow || geometry.statusClipped || geometry.contextTriggerOverlap) {
+    if (!geometry.rootVisible || !geometry.toolbarVisible || !geometry.rootWithinViewport || !geometry.sampleIdentityVisible || geometry.pageOverflowX || geometry.toolbarClipped || geometry.toolbarOverflow || geometry.statusClipped || geometry.contextTriggerOverlap || geometry.contextTriggerContentOverlap) {
       throw new Error(`Geometry gate failed for ${scenario.id}/${surface.id}/${scale.percent}: ${JSON.stringify(geometry)}`)
     }
     if (geometry.route !== expectedRoute && geometry.route !== '#/library') throw new Error(`Managed file route drift for ${surface.id}: ${geometry.route}`)

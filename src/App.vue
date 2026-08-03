@@ -17,7 +17,7 @@
             </div>
           </div>
         </div>
-        <div class="app-content">
+        <div class="app-content" :class="{ 'has-relation-context': activeContextPath }">
           <router-view v-slot="{ Component }">
             <transition name="premium-switch" mode="out-in">
               <div :key="$route.path" class="route-wrapper">
@@ -459,6 +459,10 @@ body[data-theme="dark"] .win-btn:hover, body[data-theme="contrast"] .win-btn:hov
 .win-btn.close:hover { background: #ff3b30 !important; color: #fff !important; }
 
 .app-content { flex: 1; position: relative; overflow: hidden; }
+.app-content.has-relation-context .route-wrapper {
+  box-sizing: border-box;
+  padding-right: 42px;
+}
 
 .page-loader {
   position: absolute;

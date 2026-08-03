@@ -42,6 +42,7 @@ for (const token of [
   'initialized library shell',
   'visibleNodes',
   'contextTriggerOverlap',
+  'contextTriggerContentOverlap',
   "geometry.route !== '#/library'",
   'Page.captureScreenshot',
 ]) {
