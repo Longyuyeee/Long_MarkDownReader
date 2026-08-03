@@ -1,43 +1,18 @@
 <template>
   <div class="graph-container" ref="containerRef">
-    <div class="graph-header">
-      <button class="back-btn" @click="$router.push('/library')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        返回
-      </button>
-      <div class="header-title">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3"/>
-          <circle cx="5" cy="5" r="2"/>
-          <circle cx="19" cy="5" r="2"/>
-          <circle cx="5" cy="19" r="2"/>
-          <circle cx="19" cy="19" r="2"/>
-          <line x1="8.5" y1="6.5" x2="10.5" y2="10.5"/>
-          <line x1="15.5" y1="6.5" x2="13.5" y2="10.5"/>
-          <line x1="8.5" y1="17.5" x2="10.5" y2="13.5"/>
-          <line x1="15.5" y1="17.5" x2="13.5" y2="13.5"/>
-        </svg>
-        <span class="graph-title">知识图谱</span>
-      </div>
+    <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="router.push({ name: 'LibraryMode' })">
+      <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls">
-        <div class="view-switch" aria-label="图谱布局模式">
+        <WorkspaceSegmentedControl class="view-switch" aria-label="图谱布局模式">
           <button :class="{ active: viewMode === 'network' }" @click="switchView('network')">关系网络</button>
           <button :class="{ active: viewMode === 'mindmap' }" @click="switchView('mindmap')">思维导图</button>
-        </div>
+        </WorkspaceSegmentedControl>
         <label class="graph-search">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
+          <Search :size="14" />
           <input v-model="searchQuery" placeholder="搜索节点" @keydown.enter="focusFirstMatch" />
         </label>
         <button class="tutorial-btn" :class="{ active: showTutorial }" @click="showTutorial = !showTutorial" title="如何建立链接">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M9.1 9a3 3 0 1 1 5.8 1c0 2-3 2-3 4"/>
-            <path d="M12 18h.01"/>
-          </svg>
+          <CircleHelp :size="16" />
           <span>如何建立链接</span>
         </button>
         <button class="health-entry" :class="{ active: healthOpen }" @click="healthOpen = !healthOpen">
@@ -46,25 +21,16 @@
         <button class="graph-export-btn" :disabled="isExporting" @click="exportGraph('svg')">导出 SVG</button>
         <button class="graph-export-btn" :disabled="isExporting" @click="exportGraph('png')">导出 PNG</button>
         <button class="control-btn" @click="resetLayout" title="清除已保存位置并重新布局">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-            <path d="M21 3v5h-5"/>
-          </svg>
+          <RotateCcw :size="16" />
         </button>
         <button class="control-btn" @click="zoom = Math.min(3, zoom * 1.2)" title="放大">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.35-4.35M11 8v6M8 11h6"/>
-          </svg>
+          <ZoomIn :size="16" />
         </button>
         <button class="control-btn" @click="zoom = Math.max(0.1, zoom * 0.8)" title="缩小">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.35-4.35M8 11h6"/>
-          </svg>
+          <ZoomOut :size="16" />
         </button>
       </div>
-    </div>
+    </WorkspaceManagementHeader>
     <div class="graph-options">
       <GraphFilterControls :graph="graphData" :show-search="false" />
       <template v-if="viewMode === 'mindmap'">
@@ -144,32 +110,26 @@
       <div class="tutorial-note">
         跨目录可写 <code>[[子目录/文件名]]</code>；文件名在知识库中唯一时，也可直接写 <code>[[文件名]]</code>。
       </div>
-      <button class="tutorial-action" @click="router.push('/library')">返回编辑器试一试</button>
+      <button class="tutorial-action" @click="router.push({ name: 'LibraryMode' })">返回编辑器试一试</button>
     </div>
     </transition>
 
-    <div class="graph-stats">
+    <WorkspaceStatusBar class="graph-stats">
       <div class="stat-item">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-        </svg>
+        <Circle :size="14" />
         {{ visibleNodes.length }} / {{ graphData.nodes.length }} 节点
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-        </svg>
+        <Link2 :size="14" />
         {{ visibleEdges.length }} 连接
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"/>
-        </svg>
+        <Search :size="14" />
         {{ Math.round(zoom * 100) }}%
       </div>
-    </div>
+    </WorkspaceStatusBar>
     <!-- 节点悬浮提示 -->
     <transition name="tooltip-fade">
       <div v-if="hoveredNode" class="node-tooltip" :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }">
@@ -253,11 +213,15 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
+import { Circle, CircleHelp, Link2, Network, RotateCcw, Search, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { openManagedFile } from '../services/fileNavigation'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone, isActiveThemeDark } from '../config/themePresets'
 import GraphFilterControls from './GraphFilterControls.vue'
 import GraphHealthPanel from './GraphHealthPanel.vue'
+import WorkspaceManagementHeader from './workspace/WorkspaceManagementHeader.vue'
+import WorkspaceSegmentedControl from './workspace/WorkspaceSegmentedControl.vue'
+import WorkspaceStatusBar from './workspace/WorkspaceStatusBar.vue'
 import { applyGraphFilters, useGraphFilters } from '../composables/useGraphFilters'
 import { clearGraphLayout, createGraphSvg, graphSvgToPng, restoreGraphLayout, saveGraphLayout } from '../utils/graphWorkspace'
 import type { GraphData, GraphNode } from '../types/graph'
@@ -1210,62 +1174,20 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 }
 
 .graph-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  flex-shrink: 0;
-  background: var(--theme-card);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  flex: 0 0 auto;
   z-index: 10;
 }
 
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--theme-text);
-}
-
-.header-title svg {
-  color: var(--theme-primary);
-  opacity: 0.9;
-}
-
-.graph-title {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.back-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(var(--theme-primary-rgb), 0.08);
-  border: 1px solid rgba(var(--theme-primary-rgb), 0.15);
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--theme-primary);
-  padding: 8px 14px;
-  border-radius: var(--theme-radius);
-  transition: all 0.3s var(--ease-premium);
-}
-
-.back-btn:hover {
-  background: var(--theme-primary);
-  color: white;
-  transform: translateX(-2px);
-  box-shadow: 0 2px 8px rgba(var(--theme-primary-rgb), 0.25);
-}
+.graph-header-icon { color: var(--theme-primary); }
+.graph-header :deep(.management-actions) { min-width: 0; flex: 1; overflow: hidden; }
 
 .graph-controls {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .view-switch {
@@ -1296,15 +1218,15 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 
 .graph-search {
   width: 180px;
-  height: 34px;
+  height: var(--workspace-control-height);
   display: flex;
   align-items: center;
   gap: 7px;
   padding: 0 10px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: var(--theme-radius-sm);
+  border: 1px solid var(--workspace-border-color);
+  border-radius: 6px;
   color: var(--theme-text-secondary);
-  background: rgba(0, 0, 0, 0.025);
+  background: var(--workspace-control-bg);
 }
 
 .graph-search input {
@@ -1319,20 +1241,20 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 
 .graph-options {
   position: absolute;
-  top: 76px;
-  left: 18px;
+  top: calc(var(--workspace-management-header-height) + 12px);
+  left: var(--workspace-floating-gutter);
   z-index: 4;
   min-height: 34px;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 0 12px;
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: var(--theme-radius-sm);
+  border: 1px solid var(--workspace-border-color);
+  border-radius: 6px;
   color: var(--theme-text-secondary);
   background: color-mix(in srgb, var(--theme-card) 92%, transparent);
   backdrop-filter: blur(16px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--workspace-shadow-sm);
   font-size: 11px;
 }
 
@@ -1345,13 +1267,13 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
   background: transparent;
   font-size: 11px;
 }
-.option-divider { width: 1px; height: 16px; background: rgba(0, 0, 0, 0.1); }
+.option-divider { width: 1px; height: 16px; background: var(--workspace-border-color); }
 .mindmap-root { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text); }
 .match-count { color: var(--theme-primary); font-weight: 650; }
-.remediation-banner { position: absolute; top: 122px; left: 18px; right: 18px; z-index: 3; min-height: 46px; display: grid; grid-template-columns: minmax(0,1fr) auto 24px; align-items: center; gap: 10px; padding: 7px 8px 7px 12px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 94%, transparent); backdrop-filter: blur(16px); box-shadow: 0 4px 16px rgba(0,0,0,.06); }.remediation-copy { min-width: 0; display: grid; gap: 2px; }.remediation-banner strong { font-size: 11px; }.remediation-banner span { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.remediation-actions { display: flex; align-items: center; gap: 6px; }.remediation-banner button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font-size: var(--text-compact); font-weight: 650; }.remediation-banner .remediation-close { width: 24px; min-height: 24px; padding: 0; border-color: transparent; color: var(--theme-text-secondary); background: transparent; font-size: 16px; }
+.remediation-banner { position: absolute; top: calc(var(--workspace-management-header-height) + 58px); left: var(--workspace-floating-gutter); right: var(--workspace-floating-gutter); z-index: 3; min-height: 46px; display: grid; grid-template-columns: minmax(0,1fr) auto 24px; align-items: center; gap: 10px; padding: 7px 8px 7px 12px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 94%, transparent); backdrop-filter: blur(16px); box-shadow: var(--workspace-shadow-sm); }.remediation-copy { min-width: 0; display: grid; gap: 2px; }.remediation-banner strong { font-size: 11px; }.remediation-banner span { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.remediation-actions { display: flex; align-items: center; gap: 6px; }.remediation-banner button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font-size: var(--text-compact); font-weight: 650; }.remediation-banner .remediation-close { width: 24px; min-height: 24px; padding: 0; border-color: transparent; color: var(--theme-text-secondary); background: transparent; font-size: 16px; }
 
 .tutorial-btn {
-  height: 36px;
+  height: var(--workspace-control-height);
   display: flex;
   align-items: center;
   gap: 7px;
@@ -1376,7 +1298,7 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 }
 
 .health-entry {
-  height: 36px;
+  height: var(--workspace-control-height);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1394,7 +1316,7 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 .health-entry.active .health-dot { background: var(--theme-primary); box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb), 0.14); }
 
 .graph-export-btn {
-  height: 36px;
+  height: var(--workspace-control-height);
   padding: 0 10px;
   border: 1px solid rgba(var(--theme-primary-rgb), 0.18);
   border-radius: var(--theme-radius-sm);
@@ -1408,13 +1330,13 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 .graph-export-btn:disabled { cursor: wait; opacity: 0.5; }
 
 .control-btn {
-  width: 36px;
-  height: 36px;
+  width: var(--workspace-control-height);
+  height: var(--workspace-control-height);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--workspace-control-bg);
+  border: 1px solid var(--workspace-border-color);
   border-radius: var(--theme-radius-sm);
   cursor: pointer;
   transition: all 0.3s var(--ease-premium);
@@ -1448,15 +1370,15 @@ canvas:active {
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   font-size: 12px;
   font-weight: 600;
-  background: var(--theme-card);
+  background: var(--workspace-surface-raised);
   backdrop-filter: blur(20px);
-  padding: 10px 20px;
-  border-radius: 999px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 0 12px;
+  border-radius: 6px;
+  box-shadow: var(--workspace-shadow-sm);
+  border: 1px solid var(--workspace-border-color);
   pointer-events: none;
   animation: slideUp 0.6s var(--ease-premium);
 }
@@ -1476,7 +1398,7 @@ canvas:active {
 .stat-divider {
   width: 1px;
   height: 14px;
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--workspace-border-color);
 }
 
 .node-tooltip {
@@ -1499,20 +1421,20 @@ canvas:active {
 
 .node-details {
   position: absolute;
-  top: 76px;
-  right: 18px;
+  top: calc(var(--workspace-management-header-height) + 12px);
+  right: var(--workspace-floating-gutter);
   z-index: 5;
-  width: 290px;
-  max-height: calc(100vh - 116px);
+  width: var(--workspace-inspector-width);
+  max-height: calc(100vh - var(--workspace-management-header-height) - 52px);
   overflow: auto;
   padding: 20px;
   box-sizing: border-box;
   border: 1px solid rgba(var(--theme-primary-rgb), 0.14);
-  border-radius: calc(var(--theme-radius) * 1.25);
+  border-radius: 6px;
   color: var(--theme-text);
   background: color-mix(in srgb, var(--theme-card) 95%, transparent);
   backdrop-filter: blur(22px);
-  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.14);
+  box-shadow: var(--workspace-shadow);
 }
 
 .details-close {
@@ -1852,11 +1774,6 @@ canvas:active {
     color-mix(in srgb, var(--theme-bg) 97%, var(--theme-primary)) 100%);
 }
 
-.is-dark .graph-header {
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
 .is-dark .control-btn {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.08);
@@ -1897,29 +1814,6 @@ canvas:active {
 }
 
 @media (max-width: 900px) {
-  .graph-header {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 8px 12px;
-    padding: 10px 12px 8px;
-  }
-
-  .back-btn {
-    padding: 7px 10px;
-  }
-
-  .header-title {
-    min-width: 0;
-    gap: 7px;
-  }
-
-  .header-title svg {
-    width: 18px;
-    height: 18px;
-    flex: none;
-  }
-
-  .graph-title,
   .view-switch button,
   .tutorial-btn,
   .health-entry,
@@ -1927,20 +1821,8 @@ canvas:active {
     white-space: nowrap;
   }
 
-  .graph-title {
-    overflow: hidden;
-    font-size: 15px;
-    text-overflow: ellipsis;
-  }
-
   .graph-controls {
-    grid-column: 1 / -1;
     width: 100%;
-    min-width: 0;
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding-bottom: 3px;
-    scrollbar-width: thin;
   }
 
   .graph-controls > * {
@@ -1952,7 +1834,6 @@ canvas:active {
   }
 
   .graph-options {
-    top: 102px;
     right: 12px;
     left: 12px;
     max-width: none;

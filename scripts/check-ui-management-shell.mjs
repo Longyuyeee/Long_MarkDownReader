@@ -14,6 +14,8 @@ requireTokens('src/styles/tokens.scss', [
   '--workspace-page-max-width',
   '--workspace-page-narrow-width',
   '--workspace-page-gutter',
+  '--workspace-floating-gutter',
+  '--workspace-inspector-width',
 ])
 
 for (const filePath of [
@@ -33,9 +35,26 @@ for (const filePath of [
 
 requireTokens('src/router/index.ts', ["path: '/'", "redirect: '/library'"])
 
+requireTokens('src/components/GraphView.vue', [
+  '<WorkspaceManagementHeader class="graph-header"',
+  '<WorkspaceSegmentedControl class="view-switch"',
+  '<WorkspaceStatusBar class="graph-stats"',
+  "router.push({ name: 'LibraryMode' })",
+  'width: var(--workspace-inspector-width)',
+])
+requireTokens('src/components/GraphHealthPanel.vue', [
+  'width: min(var(--workspace-inspector-width)',
+  'top: calc(var(--workspace-management-header-height)',
+])
+
+const graphSource = read('src/components/GraphView.vue')
+if (graphSource.includes("router.push('/library')") || graphSource.includes('$router')) {
+  failures.push('src/components/GraphView.vue must use the named LibraryMode route for all library returns')
+}
+
 if (failures.length) {
   console.error(failures.map(message => `- ${message}`).join('\n'))
   process.exit(1)
 }
 
-console.log('UI management shell contract passed: three management pages share navigation and return to the library shell.')
+console.log('UI management shell contract passed: management pages and the immersive graph share navigation, controls, status, and inspector dimensions.')

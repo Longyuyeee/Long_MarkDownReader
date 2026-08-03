@@ -179,7 +179,7 @@ watch(() => props.libraryRoot, () => { report.value = null; if (props.open) load
 </script>
 
 <style scoped>
-.health-panel { position: absolute; top: 62px; right: 16px; bottom: 16px; z-index: 35; width: min(430px, calc(100vw - 32px)); padding: 18px; overflow: auto; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb), 0.18); border-radius: 16px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 97%, transparent); box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22); backdrop-filter: blur(26px); }
+.health-panel { position: absolute; top: calc(var(--workspace-management-header-height) + 12px); right: var(--workspace-floating-gutter); bottom: var(--workspace-floating-gutter); z-index: 35; width: min(var(--workspace-inspector-width), calc(100vw - var(--workspace-floating-gutter) - var(--workspace-floating-gutter))); padding: 18px; overflow: auto; box-sizing: border-box; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-surface-raised); box-shadow: var(--workspace-shadow); backdrop-filter: blur(22px); }
 header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
 .health-kicker { color: var(--theme-primary); font-size: var(--text-compact); font-weight: 800; letter-spacing: 0.13em; }
 h2 { margin: 4px 0 0; font-size: 19px; }
