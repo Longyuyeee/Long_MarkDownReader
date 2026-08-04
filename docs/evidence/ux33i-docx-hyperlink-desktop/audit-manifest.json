@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-04T09:33:35.030Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "evidenceBoundary": "real desktop WebView; not an installed MSI/NSIS lifecycle claim",
+  "sourceCommit": "ddacfcdc56c834d00a402545bed25b13c703db2b",
+  "viewport": {
+    "width": 1365,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "results": [
+    {
+      "producerId": "microsoft-word",
+      "route": "#/library?path=<isolated-library>/UX33I%20Microsoft%20Word%20Hyperlinks.docx",
+      "sourceFile": "microsoft-word-hyperlinks.docx",
+      "sourceSha256": "e828af70515111371aa6eaeea0b32c02870e542a4be2b57ea0831e4cd971837b",
+      "editorAvailable": true,
+      "expectedEditableLinks": 2,
+      "linkTargetLabels": [
+        "链接文字 · Microsoft Word external link",
+        "链接文字 · Microsoft Word internal link"
+      ],
+      "editableHyperlinkCount": 2,
+      "linkPromptVerified": true,
+      "draftCreated": true,
+      "undoVerified": true,
+      "redoVerified": true,
+      "isolatedPreviewVerified": true,
+      "saveBoundaryVerified": true,
+      "copySaveReachable": true,
+      "sourceUnchanged": true,
+      "screenshots": [
+        "microsoft-word-link-draft.jpg",
+        "microsoft-word-isolated-preview.jpg"
+      ]
+    },
+    {
+      "producerId": "wps-writer",
+      "route": "#/library?path=<isolated-library>/UX33I%20WPS%20Writer%20Hyperlinks.docx",
+      "sourceFile": "wps-writer-hyperlinks.docx",
+      "sourceSha256": "ef5155b5d29bf0a73e2e1121fdd5cb567b3af980a47c5b25da4c4fb5352c8c0c",
+      "editorAvailable": true,
+      "expectedEditableLinks": 0,
+      "linkTargetLabels": [],
+      "editableHyperlinkCount": 0,
+      "linkPromptVerified": false,
+      "draftCreated": false,
+      "undoVerified": false,
+      "redoVerified": false,
+      "isolatedPreviewVerified": false,
+      "saveBoundaryVerified": false,
+      "copySaveReachable": false,
+      "sourceUnchanged": true,
+      "screenshots": [
+        "wps-writer-readonly-field-links.jpg"
+      ]
+    },
+    {
+      "producerId": "libreoffice-writer",
+      "route": "#/library?path=<isolated-library>/UX33I%20LibreOffice%20Writer%20Hyperlinks.docx",
+      "sourceFile": "libreoffice-writer-hyperlinks.docx",
+      "sourceSha256": "3fbba1da1b32bce15d806ad764cff98d9bf6f0155d8712e76d6a54ea8e6c10e1",
+      "editorAvailable": true,
+      "expectedEditableLinks": 2,
+      "linkTargetLabels": [
+        "链接文字 · LibreOffice Writer external link",
+        "链接文字 · LibreOffice Writer internal link"
+      ],
+      "editableHyperlinkCount": 2,
+      "linkPromptVerified": true,
+      "draftCreated": true,
+      "undoVerified": true,
+      "redoVerified": true,
+      "isolatedPreviewVerified": true,
+      "saveBoundaryVerified": true,
+      "copySaveReachable": true,
+      "sourceUnchanged": true,
+      "screenshots": [
+        "libreoffice-writer-link-draft.jpg",
+        "libreoffice-writer-isolated-preview.jpg"
+      ]
+    }
+  ]
+}
