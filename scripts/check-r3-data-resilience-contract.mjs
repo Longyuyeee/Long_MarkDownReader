@@ -83,7 +83,7 @@ const lib = read('src-tauri/src/lib.rs')
 if (!lib.includes('recover_knowledge_index_cache')) fail('Tauri recovery command is not exposed in lib.rs.')
 
 const libraryMode = read('src/views/LibraryMode.vue')
-for (const token of ['recoverKnowledgeIndex', 'recoveryAvailable', 'staleSourceCount', '隔离损坏索引']) {
+for (const token of ['recoverKnowledgeIndex', 'recoveryAvailable', 'staleSourceCount', '隔离损坏缓存并重新准备']) {
   if (!libraryMode.includes(token)) fail(`Library index recovery UI token missing: ${token}`)
 }
 

@@ -58,22 +58,20 @@
                 </div>
               </div>
 
-              <div v-if="store.libraryPath" class="knowledge-index-strip" :class="`state-${knowledgeIndexStatus.state}`">
+              <div v-if="store.libraryPath" class="knowledge-index-strip" :class="`state-${knowledgeIndexStatus.state}`" :title="knowledgeIndexExplanation">
                 <n-icon :component="DatabaseIcon" />
                 <span>{{ knowledgeIndexLabel }}</span>
-                <small v-if="knowledgeIndexStatus.state === 'ready'">{{ knowledgeIndexStatus.objectCount }} 对象 · {{ knowledgeIndexStatus.relationCount }} 关系</small>
+                <small v-if="knowledgeIndexStatus.state === 'ready'">{{ knowledgeIndexStatus.objectCount }} 个对象 · {{ knowledgeIndexStatus.relationCount }} 条关系</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'building'">{{ knowledgeIndexStatus.progress }}%</small>
-                <small v-else-if="knowledgeIndexStatus.state === 'stale'">{{ knowledgeIndexStatus.staleSourceCount || knowledgeIndexStatus.sourceCount }} 个来源需更新</small>
+                <small v-else-if="knowledgeIndexStatus.state === 'missing'">首次打开会自动准备</small>
+                <small v-else-if="knowledgeIndexStatus.state === 'stale'">{{ knowledgeIndexStatus.staleSourceCount || knowledgeIndexStatus.sourceCount }} 个文件需要更新</small>
+                <small v-else>打开更多菜单处理</small>
                 <div class="knowledge-index-actions">
-                  <n-button v-if="knowledgeIndexStatus.state === 'corrupt' && knowledgeIndexStatus.recoveryAvailable" quaternary circle size="tiny" :disabled="knowledgeIndexBusy" title="隔离损坏索引" @click="recoverKnowledgeIndex">
-                    <template #icon><n-icon :component="ShieldCheckIcon" /></template>
-                  </n-button>
-                  <n-button quaternary circle size="tiny" :disabled="knowledgeIndexBusy" title="重建知识索引" @click="rebuildKnowledgeIndex">
-                    <template #icon><n-icon :component="RefreshIcon" /></template>
-                  </n-button>
-                  <n-button quaternary circle size="tiny" :disabled="knowledgeIndexBusy || knowledgeIndexStatus.state === 'missing'" title="删除本地索引" @click="deleteKnowledgeIndex">
-                    <template #icon><n-icon :component="TrashIcon" /></template>
-                  </n-button>
+                  <n-dropdown trigger="click" :options="knowledgeIndexMenuOptions" @select="handleKnowledgeIndexAction">
+                    <n-button quaternary circle size="tiny" :disabled="knowledgeIndexBusy" title="搜索与关联选项">
+                      <template #icon><n-icon :component="MoreIcon" /></template>
+                    </n-button>
+                  </n-dropdown>
                 </div>
               </div>
 
@@ -537,7 +535,7 @@ import {
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
   Database as DatabaseIcon, LayoutDashboard as DashboardIcon, ListFilter as CollectionIcon,
   BookmarkPlus as BookmarkAddIcon, Languages as LanguagesIcon, ExternalLink as ExternalOpenIcon,
-  ShieldCheck as ShieldCheckIcon
+  MoreHorizontal as MoreIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -1045,6 +1043,7 @@ const knowledgeIndexStatus = ref<KnowledgeIndexStatus>({
   relationCount: 0, progress: 0, cacheBytes: 0, recoveryAvailable: false,
 })
 const knowledgeIndexBusy = ref(false)
+const automaticallyPreparingLibraries = new Set<string>()
 const activeGraphCollection = computed(() => store.savedSearches.find(search =>
   search.id === activeCollectionId.value && search.libraryPath === store.libraryPath && search.graphRoot))
 const showKnowledgeResults = computed(() => Boolean(searchQuery.value.trim() || activeGraphCollection.value))
@@ -1135,9 +1134,26 @@ const librarySavedSearches = computed(() => store.savedSearches
   .filter(search => search.libraryPath === store.libraryPath)
   .sort((left, right) => right.createdAt - left.createdAt))
 const knowledgeIndexLabel = computed(() => ({
-  missing: '索引未构建', building: '正在构建索引', ready: '索引就绪', stale: '索引已过期',
-  corrupt: '索引已损坏', error: '索引构建失败',
+  missing: '搜索与关联：准备中', building: '搜索与关联：正在准备', ready: '搜索与关联：可用', stale: '搜索与关联：需要更新',
+  corrupt: '搜索与关联：需要处理', error: '搜索与关联：需要处理',
 }[knowledgeIndexStatus.value.state]))
+const knowledgeIndexExplanation = computed(() => ({
+  missing: 'LongEdit 会在后台读取支持的文件并准备本地搜索缓存，不会修改资料库文件。',
+  building: '正在后台准备本地搜索与文件关系，期间仍可继续浏览和编辑。',
+  ready: '全文搜索和文件关系已经可以使用；缓存只保存在本机。',
+  stale: '资料库内容发生变化，LongEdit 正在后台更新本地搜索缓存。',
+  corrupt: '本地搜索缓存无法读取，可从更多菜单隔离缓存并重新准备；资料库文件不会被删除。',
+  error: '本地搜索缓存准备失败，可从更多菜单重试；资料库文件不会被修改。',
+}[knowledgeIndexStatus.value.state]))
+const knowledgeIndexMenuOptions = computed(() => [
+  ...(knowledgeIndexStatus.value.state === 'corrupt' && knowledgeIndexStatus.value.recoveryAvailable
+    ? [{ label: '隔离损坏缓存并重新准备', key: 'recover' }]
+    : []),
+  { label: '重新准备搜索与关联', key: 'rebuild' },
+  ...(knowledgeIndexStatus.value.state !== 'missing'
+    ? [{ type: 'divider', key: 'divider' }, { label: '清除本地搜索缓存后重新准备', key: 'clear' }]
+    : []),
+])
 const selectedKeys = ref<string[]>([])
 const expandedKeys = ref<string[]>([])
 let vditor: any = null
@@ -2544,12 +2560,20 @@ const applyRouteSearch = () => {
   activeSidebarTab.value = 'files'
 }
 watch(() => [route.query.search, route.query.types, route.query.panel, route.query.collection], applyRouteSearch)
-const refreshKnowledgeIndexStatus = async () => {
-  if (!store.libraryPath) return
+const refreshKnowledgeIndexStatus = async (options: { autoPrepare?: boolean; libraryRoot?: string } = {}) => {
+  const libraryRoot = options.libraryRoot || store.libraryPath
+  if (!libraryRoot) return
   try {
-    knowledgeIndexStatus.value = await invoke<KnowledgeIndexStatus>('get_knowledge_index_status', { libraryRoot: store.libraryPath })
+    const status = await invoke<KnowledgeIndexStatus>('get_knowledge_index_status', { libraryRoot })
+    if (store.libraryPath !== libraryRoot) return
+    knowledgeIndexStatus.value = status
+    const shouldPrepare = options.autoPrepare !== false && (status.state === 'missing' || status.state === 'stale')
+    if (shouldPrepare && !knowledgeIndexBusy.value && !automaticallyPreparingLibraries.has(libraryRoot)) {
+      automaticallyPreparingLibraries.add(libraryRoot)
+      void rebuildKnowledgeIndex({ automatic: true, libraryRoot })
+    }
   } catch (error) {
-    knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'error', error: String(error) }
+    if (store.libraryPath === libraryRoot) knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'error', error: String(error) }
   }
 }
 
@@ -2618,37 +2642,79 @@ const handleTextEncodingAction = (key: string) => {
     void saveTextWithEncoding(encoding, bom)
   }
 }
-const rebuildKnowledgeIndex = async () => {
-  if (!store.libraryPath || knowledgeIndexBusy.value) return
+const rebuildKnowledgeIndex = async (options: { automatic?: boolean; libraryRoot?: string } = {}) => {
+  const libraryRoot = options.libraryRoot || store.libraryPath
+  if (!libraryRoot || knowledgeIndexBusy.value) return
   knowledgeIndexBusy.value = true
-  knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'building', progress: 10, error: undefined, recoveryAvailable: false }
-  const progressTimer = window.setInterval(() => { void refreshKnowledgeIndexStatus() }, 400)
+  if (store.libraryPath === libraryRoot) knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'building', progress: 10, error: undefined, recoveryAvailable: false }
+  const progressTimer = window.setInterval(() => { void refreshKnowledgeIndexStatus({ autoPrepare: false, libraryRoot }) }, 400)
   try {
-    knowledgeIndexStatus.value = await invoke<KnowledgeIndexStatus>('rebuild_knowledge_index', { libraryRoot: store.libraryPath })
-    message.success('知识索引已重建')
+    const status = await invoke<KnowledgeIndexStatus>('rebuild_knowledge_index', { libraryRoot })
+    if (store.libraryPath === libraryRoot) knowledgeIndexStatus.value = status
+    if (!options.automatic) message.success('搜索与关联已重新准备')
   } catch (error) {
-    knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'error', progress: 0, error: String(error) }
-    message.error(`知识索引重建失败：${String(error)}`)
-  } finally { window.clearInterval(progressTimer); knowledgeIndexBusy.value = false }
+    if (store.libraryPath === libraryRoot) knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'error', progress: 0, error: String(error) }
+    if (!options.automatic) message.error(`重新准备搜索与关联失败：${String(error)}`)
+  } finally {
+    window.clearInterval(progressTimer)
+    knowledgeIndexBusy.value = false
+    if (options.automatic) automaticallyPreparingLibraries.delete(libraryRoot)
+    if (store.libraryPath && store.libraryPath !== libraryRoot) {
+      void refreshKnowledgeIndexStatus({ libraryRoot: store.libraryPath })
+    }
+  }
 }
-const recoverKnowledgeIndex = async () => {
-  if (!store.libraryPath || knowledgeIndexBusy.value || !window.confirm('隔离损坏的本地索引？用户文件不会被删除，后续可以重新构建索引。')) return
-  knowledgeIndexBusy.value = true
-  try {
-    const report = await invoke<KnowledgeIndexRecoveryReport>('recover_knowledge_index_cache', { libraryRoot: store.libraryPath })
-    knowledgeIndexStatus.value = await invoke<KnowledgeIndexStatus>('get_knowledge_index_status', { libraryRoot: store.libraryPath })
-    message.success(report.quarantined ? '损坏索引已隔离，可以重新构建' : report.message)
-  } catch (error) { message.error(`恢复索引失败：${String(error)}`) }
-  finally { knowledgeIndexBusy.value = false }
+const recoverKnowledgeIndex = () => {
+  const libraryRoot = store.libraryPath
+  if (!libraryRoot || knowledgeIndexBusy.value) return
+  dialog.warning({
+    title: '隔离损坏的搜索缓存',
+    content: '只会移动 LongEdit 的本地搜索缓存，不会删除或修改资料库文件。隔离后将自动重新准备搜索与关联。',
+    positiveText: '隔离并重新准备',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      knowledgeIndexBusy.value = true
+      try {
+        const report = await invoke<KnowledgeIndexRecoveryReport>('recover_knowledge_index_cache', { libraryRoot })
+        message.success(report.quarantined ? '损坏缓存已隔离，正在重新准备' : report.message)
+      } catch (error) {
+        message.error(`隔离搜索缓存失败：${String(error)}`)
+        return
+      } finally {
+        knowledgeIndexBusy.value = false
+      }
+      await rebuildKnowledgeIndex({ automatic: true, libraryRoot })
+    },
+  })
 }
-const deleteKnowledgeIndex = async () => {
-  if (!store.libraryPath || knowledgeIndexBusy.value || !window.confirm('删除当前知识库的本地索引？用户文件不会被删除。')) return
-  knowledgeIndexBusy.value = true
-  try {
-    knowledgeIndexStatus.value = await invoke<KnowledgeIndexStatus>('delete_knowledge_index', { libraryRoot: store.libraryPath })
-    message.success('本地索引已删除')
-  } catch (error) { message.error(`删除索引失败：${String(error)}`) }
-  finally { knowledgeIndexBusy.value = false }
+const clearKnowledgeIndexCache = () => {
+  const libraryRoot = store.libraryPath
+  if (!libraryRoot || knowledgeIndexBusy.value) return
+  dialog.warning({
+    title: '清除本地搜索缓存',
+    content: '只会清除 LongEdit 为当前资料库生成的搜索与关系缓存，不会删除或修改任何资料库文件。清除后将自动重新准备。',
+    positiveText: '清除并重新准备',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      knowledgeIndexBusy.value = true
+      try {
+        const status = await invoke<KnowledgeIndexStatus>('delete_knowledge_index', { libraryRoot })
+        if (store.libraryPath === libraryRoot) knowledgeIndexStatus.value = status
+        message.success('本地搜索缓存已清除，资料库文件未修改')
+      } catch (error) {
+        message.error(`清除本地搜索缓存失败：${String(error)}`)
+        return
+      } finally {
+        knowledgeIndexBusy.value = false
+      }
+      await rebuildKnowledgeIndex({ automatic: true, libraryRoot })
+    },
+  })
+}
+const handleKnowledgeIndexAction = (key: string) => {
+  if (key === 'recover') recoverKnowledgeIndex()
+  else if (key === 'rebuild') void rebuildKnowledgeIndex()
+  else if (key === 'clear') clearKnowledgeIndexCache()
 }
 
 watch(() => store.libraryPath, (newPath) => {
@@ -2981,8 +3047,8 @@ watch(activeTabId, (newId, oldId) => {
 .graph-collection-state { min-height: 42px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 10px; border-bottom: var(--theme-border); background: rgba(var(--theme-primary-rgb),.055); }.graph-collection-state>span { min-width: 0; display: grid; gap: 2px; }.graph-collection-state strong,.graph-collection-state small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.graph-collection-state strong { font-size: var(--text-compact); }.graph-collection-state small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.graph-collection-state button { width: 26px; height: 26px; border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 16px; }
 .knowledge-result-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.knowledge-result-head strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }.knowledge-result-head i { flex: none; color: var(--theme-primary); font-size: var(--text-compact); font-style: normal; font-weight: 700; }
 .knowledge-result-context { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.knowledge-search-result small { color: var(--theme-primary); font-size: var(--text-compact); }
-.knowledge-index-strip { min-height: 30px; display: grid; grid-template-columns:16px minmax(0,auto) minmax(0,1fr) auto; align-items:center; gap:6px; padding:0 8px 0 12px; border-bottom:var(--theme-border); color:var(--theme-text-secondary); background:var(--theme-surface); font-size: var(--text-compact); }
-.knowledge-index-strip>span { color:var(--theme-text); font-weight:650; white-space:nowrap; }.knowledge-index-strip>small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.knowledge-index-strip.state-ready>svg { color:#168a52; }.knowledge-index-strip.state-stale>svg,.knowledge-index-strip.state-corrupt>svg,.knowledge-index-strip.state-error>svg { color:#c47a16; }.knowledge-index-actions { display:flex; align-items:center; }
+.knowledge-index-strip { min-height: 44px; display: grid; grid-template-columns:16px minmax(0,1fr) auto; grid-template-rows:auto auto; align-items:center; column-gap:7px; padding:5px 8px 5px 12px; border-bottom:var(--theme-border); color:var(--theme-text-secondary); background:var(--theme-surface); font-size: var(--text-compact); }
+.knowledge-index-strip>svg { grid-row:1 / 3; }.knowledge-index-strip>span { align-self:end; overflow:hidden; color:var(--theme-text); font-weight:650; text-overflow:ellipsis; white-space:nowrap; }.knowledge-index-strip>small { grid-column:2; align-self:start; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.knowledge-index-strip.state-ready>svg { color:#168a52; }.knowledge-index-strip.state-stale>svg,.knowledge-index-strip.state-corrupt>svg,.knowledge-index-strip.state-error>svg { color:#c47a16; }.knowledge-index-actions { grid-column:3; grid-row:1 / 3; display:flex; align-items:center; }
 
 .tag-row {
   display: flex;

@@ -193,8 +193,7 @@ await click('[data-testid="json-save"]')
 await waitForFile(jsoncPath, jsoncContent)
 await waitFor(`document.querySelector('.analysis-header')?.textContent?.includes('语法有效') === true`, 'valid saved JSONC')
 
-await click('[title="重建知识索引"]')
-await waitFor(`document.querySelector('.knowledge-index-strip.state-ready') !== null`, 'rebuilt JSON knowledge index')
+await waitFor(`document.querySelector('.knowledge-index-strip.state-ready') !== null`, 'automatically prepared JSON search cache')
 await setInput('.search-area input[placeholder="搜索文档..."]', 'a3r-index-proof')
 await waitFor(
   `document.querySelector('.knowledge-search-result')?.textContent?.includes('未命名数据') === true

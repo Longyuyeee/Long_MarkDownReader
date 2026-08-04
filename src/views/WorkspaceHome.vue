@@ -111,8 +111,8 @@
           </div>
           <div class="index-line">
             <DatabaseIcon />
-            <div><strong>{{ indexLabel }}</strong><small v-if="indexStatus.state === 'ready'">{{ indexStatus.objectCount }} 对象 · {{ indexStatus.relationCount }} 关系</small><small v-else>在资料库中维护索引</small></div>
-            <button title="打开资料库索引" @click="router.push({ name: 'LibraryMode' })"><ArrowIcon /></button>
+            <div><strong>{{ indexLabel }}</strong><small v-if="indexStatus.state === 'ready'">{{ indexStatus.objectCount }} 个对象 · {{ indexStatus.relationCount }} 条关系</small><small v-else>LongEdit 会在后台准备本地搜索缓存</small></div>
+            <button title="打开搜索与关联状态" @click="router.push({ name: 'LibraryMode' })"><ArrowIcon /></button>
           </div>
           <div class="format-line" v-if="overview.formatCounts.length">
             <span v-for="item in overview.formatCounts.slice(0, 6)" :key="item.objectType"><i>{{ formatLabel(item.objectType) }}</i><b>{{ item.count }}</b></span>
@@ -222,11 +222,19 @@ const governanceSection = ref<HTMLElement | null>(null)
 const overview = ref<WorkspaceOverview>({ totalFiles: 0, tasks: [], recentFiles: [], canvases: [], formatCounts: [] })
 const health = ref<GraphHealth>({ brokenLinks: [], ambiguousLinks: [], orphanNotes: [], scannedNotes: 0 })
 const indexStatus = ref<IndexStatus>({ state: 'missing', objectCount: 0, relationCount: 0 })
+const indexAutoPreparing = ref(false)
 const graphPulse = ref<KnowledgeGraphPulse>({ objectCount: 0, relationCount: 0, connectedObjectCount: 0, isolatedObjectCount: 0, coveragePercent: 0, relationTypes: [], topNodes: [], isolatedNodes: [], guidance: [] })
 const workspaceHealth = ref<WorkspaceHealthReport>({ duplicateGroups: [], unreferencedAnnotations: [], scannedFiles: 0, hashedFiles: 0, scannedAnnotations: 0, truncated: false })
 const relationSummaries = ref<Record<string, GraphRelationSummary>>({})
 
-const indexLabel = computed(() => ({ missing: '索引未构建', building: '索引构建中', ready: '索引就绪', stale: '索引已过期', corrupt: '索引已损坏', error: '索引异常' }[indexStatus.value.state]))
+const indexLabel = computed(() => ({
+  missing: '搜索与关联：准备中',
+  building: '搜索与关联：正在准备',
+  ready: '搜索与关联：可用',
+  stale: '搜索与关联：需要更新',
+  corrupt: '搜索与关联：需要处理',
+  error: '搜索与关联：需要处理',
+}[indexStatus.value.state]))
 const healthRiskCount = computed(() => health.value.brokenLinks.length + health.value.ambiguousLinks.length + health.value.orphanNotes.length + workspaceHealth.value.duplicateGroups.length + workspaceHealth.value.unreferencedAnnotations.length)
 const refreshedLabel = computed(() => refreshedAt.value ? new Date(refreshedAt.value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '尚未刷新')
 const starredItems = computed(() => store.starredFiles.slice(0, 6).map(path => ({ path })))
@@ -350,7 +358,12 @@ const loadWorkspace = async () => {
   if (overviewResult.status === 'fulfilled') overview.value = overviewResult.value
   else error.value = `工作台概览不可用：${String(overviewResult.reason)}`
   if (healthResult.status === 'fulfilled') health.value = healthResult.value
-  if (indexResult.status === 'fulfilled') indexStatus.value = indexResult.value
+  if (indexResult.status === 'fulfilled') {
+    indexStatus.value = indexResult.value
+    if (indexResult.value.state === 'missing' || indexResult.value.state === 'stale') {
+      void prepareWorkspaceSearch(store.libraryPath)
+    }
+  }
   if (workspaceHealthResult.status === 'fulfilled') workspaceHealth.value = workspaceHealthResult.value
   else workspaceHealthError.value = `治理扫描不可用：${String(workspaceHealthResult.reason)}`
   if (graphPulseResult.status === 'fulfilled') graphPulse.value = graphPulseResult.value
@@ -358,6 +371,20 @@ const loadWorkspace = async () => {
   await loadRelationSummaries()
   refreshedAt.value = Date.now()
   loading.value = false
+}
+
+const prepareWorkspaceSearch = async (libraryRoot: string) => {
+  if (!libraryRoot || indexAutoPreparing.value) return
+  indexAutoPreparing.value = true
+  indexStatus.value = { ...indexStatus.value, state: 'building' }
+  try {
+    const status = await invoke<IndexStatus>('rebuild_knowledge_index', { libraryRoot })
+    if (store.libraryPath === libraryRoot) indexStatus.value = status
+  } catch {
+    if (store.libraryPath === libraryRoot) indexStatus.value = { ...indexStatus.value, state: 'error' }
+  } finally {
+    indexAutoPreparing.value = false
+  }
 }
 
 onMounted(async () => {
