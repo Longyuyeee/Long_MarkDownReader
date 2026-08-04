@@ -20,9 +20,9 @@ use commands::diagram::{
 };
 use commands::docx::{
     audit_docx_save_readiness, preview_docx_image_alt_text_patch_isolated_copy,
-    preview_docx_package_patch_isolated_copy, preview_docx_style_patch_isolated_copy,
-    preview_docx_text_patch_isolated_copy, read_docx_document, save_docx_patch_copy,
-    save_docx_patch_source,
+    preview_docx_package_patch_isolated_copy, preview_docx_patch_batch_isolated_copy,
+    preview_docx_style_patch_isolated_copy, preview_docx_text_patch_isolated_copy,
+    read_docx_document, save_docx_patch_batch_source, save_docx_patch_copy, save_docx_patch_source,
 };
 use commands::drawio::{
     analyze_drawio_source, transform_drawio_cell_source, write_drawio_source_document,
@@ -342,9 +342,11 @@ pub fn run() {
             preview_docx_text_patch_isolated_copy,
             preview_docx_style_patch_isolated_copy,
             preview_docx_image_alt_text_patch_isolated_copy,
+            preview_docx_patch_batch_isolated_copy,
             audit_docx_save_readiness,
             save_docx_patch_copy,
             save_docx_patch_source,
+            save_docx_patch_batch_source,
             read_pdf_file,
             read_pdf_info,
             read_pdf_range,

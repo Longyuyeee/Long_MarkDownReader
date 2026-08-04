@@ -135,6 +135,42 @@ pub struct DocxSavedSourceReport {
     pub producer_evidence: Vec<String>,
 }
 
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocxBatchPatchReport {
+    pub status: String,
+    pub engine: String,
+    pub operation_count: usize,
+    pub operation_kinds: Vec<String>,
+    pub semantic_target_ids: Vec<String>,
+    pub output_digest: String,
+    pub output_bytes: usize,
+    pub changed_parts: Vec<String>,
+    pub unchanged_parts_verified: bool,
+    pub structural_reparse_verified: bool,
+    pub semantic_reparse_verified: bool,
+    pub deterministic_replay_verified: bool,
+    pub temporary_copy_reopen_verified: bool,
+    pub source_unchanged: bool,
+}
+
+enum DocxBatchExpectation {
+    Text {
+        target: DocxEditableTextTarget,
+        replacement: String,
+    },
+    Style {
+        target: DocxEditableStyleTarget,
+        bold: bool,
+        italic: bool,
+        underline: bool,
+    },
+    ImageAltText {
+        target: DocxEditableImageTarget,
+        replacement: String,
+    },
+}
+
 struct TemporaryDocxCopy {
     path: PathBuf,
 }
@@ -410,6 +446,47 @@ fn preview_docx_image_alt_text_patch_path(
     })
 }
 
+fn preview_docx_batch_patch_path(
+    path: &Path,
+    expected_signature: &str,
+    operations: &[DocxPatchOperation],
+) -> Result<DocxBatchPatchReport, String> {
+    let metadata = path
+        .metadata()
+        .map_err(|error| format!("读取 DOCX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_DOCX_FILE_BYTES {
+        return Err("DOCX 文件超过 64 MiB 批量隔离补丁上限".into());
+    }
+    let actual_signature = file_signature(&metadata);
+    if actual_signature != expected_signature {
+        return Err("DOCX 已被外部修改，请重新打开后再验证批量补丁".into());
+    }
+    let source = fs::read(path).map_err(|error| format!("读取 DOCX 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let (mut report, output) = build_docx_batch_operations(&source, operations)?;
+
+    let temporary = TemporaryDocxCopy::create(&output)?;
+    let reopened = fs::read(&temporary.path)
+        .map_err(|error| format!("复读 DOCX 批量临时副本失败: {error}"))?;
+    if reopened != output || format!("{:x}", Sha256::digest(&reopened)) != report.output_digest {
+        return Err("DOCX 批量临时副本复读字节与隔离输出不一致".into());
+    }
+    parse_docx(&reopened).map_err(|error| format!("DOCX 批量临时副本结构重开失败: {error}"))?;
+    report.temporary_copy_reopen_verified = true;
+
+    let source_after = fs::read(path).map_err(|error| format!("复核源 DOCX 失败: {error}"))?;
+    let metadata_after = path
+        .metadata()
+        .map_err(|error| format!("复核源 DOCX 元数据失败: {error}"))?;
+    report.source_unchanged = source_after == source
+        && format!("{:x}", Sha256::digest(&source_after)) == source_digest
+        && file_signature(&metadata_after) == actual_signature;
+    if !report.source_unchanged {
+        return Err("批量隔离补丁验证期间源 DOCX 发生变化，请重新打开".into());
+    }
+    Ok(report)
+}
+
 fn validate_docx_copy_file_name(file_name: &str) -> Result<String, String> {
     let file_name = file_name.trim();
     if file_name.is_empty() || file_name.len() > 255 {
@@ -517,6 +594,221 @@ fn build_docx_operation(
             replacement_alt_text,
         ),
     }
+}
+
+fn batch_content_anchor(
+    block_id: &str,
+    row_index: Option<usize>,
+    column_index: Option<usize>,
+) -> String {
+    format!(
+        "content:{block_id}:{}:{}",
+        row_index.map_or_else(|| "-".into(), |value| value.to_string()),
+        column_index.map_or_else(|| "-".into(), |value| value.to_string())
+    )
+}
+
+fn inspect_batch_expectations(
+    source: &[u8],
+    operations: &[DocxPatchOperation],
+) -> Result<(Vec<DocxBatchExpectation>, Vec<String>, Vec<String>), String> {
+    if !(2..=32).contains(&operations.len()) {
+        return Err("DOCX 批量编辑必须包含 2 到 32 个操作".into());
+    }
+    let model = parse_docx(source)?;
+    let text_targets = inspect_docx_editable_text_targets(source, &model)?;
+    let style_targets = inspect_docx_editable_style_targets(source, &model)?;
+    let image_targets = inspect_docx_editable_image_targets(source, &model)?;
+    let mut anchors = HashSet::new();
+    let mut target_ids = HashSet::new();
+    let mut expectations = Vec::with_capacity(operations.len());
+    let mut kinds = Vec::with_capacity(operations.len());
+    let mut semantic_target_ids = Vec::with_capacity(operations.len());
+
+    for operation in operations {
+        let (anchor, target_id, kind, expectation) = match operation {
+            DocxPatchOperation::Text {
+                target_id,
+                expected_text_digest,
+                replacement_text,
+            } => {
+                let target = text_targets
+                    .iter()
+                    .find(|target| target.id == *target_id)
+                    .ok_or("DOCX 批量文本目标不存在或已不再安全")?;
+                if target.expected_text_digest != expected_text_digest.trim().to_ascii_lowercase() {
+                    return Err("DOCX 批量文本目标摘要已变化，请重新读取".into());
+                }
+                (
+                    batch_content_anchor(&target.block_id, target.row_index, target.column_index),
+                    target.id.clone(),
+                    "text".into(),
+                    DocxBatchExpectation::Text {
+                        target: target.clone(),
+                        replacement: replacement_text.clone(),
+                    },
+                )
+            }
+            DocxPatchOperation::Style {
+                target_id,
+                expected_style_digest,
+                bold,
+                italic,
+                underline,
+            } => {
+                let target = style_targets
+                    .iter()
+                    .find(|target| target.id == *target_id)
+                    .ok_or("DOCX 批量样式目标不存在或已不再安全")?;
+                if target.expected_style_digest != expected_style_digest.trim().to_ascii_lowercase()
+                {
+                    return Err("DOCX 批量样式目标摘要已变化，请重新读取".into());
+                }
+                (
+                    batch_content_anchor(&target.block_id, target.row_index, target.column_index),
+                    target.id.clone(),
+                    "style".into(),
+                    DocxBatchExpectation::Style {
+                        target: target.clone(),
+                        bold: *bold,
+                        italic: *italic,
+                        underline: *underline,
+                    },
+                )
+            }
+            DocxPatchOperation::ImageAltText {
+                target_id,
+                expected_metadata_digest,
+                replacement_alt_text,
+            } => {
+                let target = image_targets
+                    .iter()
+                    .find(|target| target.id == *target_id)
+                    .ok_or("DOCX 批量图片目标不存在或已不再安全")?;
+                if target.expected_metadata_digest
+                    != expected_metadata_digest.trim().to_ascii_lowercase()
+                {
+                    return Err("DOCX 批量图片目标摘要已变化，请重新读取".into());
+                }
+                (
+                    format!("image:{}", target.block_id),
+                    target.id.clone(),
+                    "imageAltText".into(),
+                    DocxBatchExpectation::ImageAltText {
+                        target: target.clone(),
+                        replacement: replacement_alt_text.clone(),
+                    },
+                )
+            }
+        };
+        if !target_ids.insert(target_id.clone()) || !anchors.insert(anchor) {
+            return Err(
+                "DOCX 批量编辑包含重复目标；同一段落、单元格或图片每批只允许一个操作".into(),
+            );
+        }
+        semantic_target_ids.push(target_id);
+        kinds.push(kind);
+        expectations.push(expectation);
+    }
+    Ok((expectations, kinds, semantic_target_ids))
+}
+
+fn verify_batch_expectations(
+    output: &[u8],
+    expectations: &[DocxBatchExpectation],
+) -> Result<(), String> {
+    let model = parse_docx(output)?;
+    let text_targets = inspect_docx_editable_text_targets(output, &model)?;
+    let style_targets = inspect_docx_editable_style_targets(output, &model)?;
+    let image_targets = inspect_docx_editable_image_targets(output, &model)?;
+    for expectation in expectations {
+        let satisfied = match expectation {
+            DocxBatchExpectation::Text {
+                target,
+                replacement,
+            } => text_targets.iter().any(|item| {
+                item.block_id == target.block_id
+                    && item.kind == target.kind
+                    && item.row_index == target.row_index
+                    && item.column_index == target.column_index
+                    && item.text == *replacement
+            }),
+            DocxBatchExpectation::Style {
+                target,
+                bold,
+                italic,
+                underline,
+            } => style_targets.iter().any(|item| {
+                item.block_id == target.block_id
+                    && item.kind == target.kind
+                    && item.row_index == target.row_index
+                    && item.column_index == target.column_index
+                    && (item.bold, item.italic, item.underline) == (*bold, *italic, *underline)
+            }),
+            DocxBatchExpectation::ImageAltText {
+                target,
+                replacement,
+            } => image_targets.iter().any(|item| {
+                item.block_id == target.block_id
+                    && item.image_part == target.image_part
+                    && item.alt_text == *replacement
+            }),
+        };
+        if !satisfied {
+            return Err("DOCX 批量隔离输出未保留全部目标的最终语义".into());
+        }
+    }
+    Ok(())
+}
+
+fn build_docx_batch_operations(
+    source: &[u8],
+    operations: &[DocxPatchOperation],
+) -> Result<(DocxBatchPatchReport, Vec<u8>), String> {
+    let (expectations, operation_kinds, semantic_target_ids) =
+        inspect_batch_expectations(source, operations)?;
+    let mut output = source.to_vec();
+    for operation in operations {
+        let (report, next) = build_docx_operation(&output, operation)?;
+        if !report.unchanged_parts_verified
+            || !report.structural_reparse_verified
+            || !report.semantic_reparse_verified
+            || report.changed_parts != ["word/document.xml"]
+        {
+            return Err("DOCX 批量编辑中的单项补丁未通过保真与语义门禁".into());
+        }
+        output = next;
+    }
+    verify_batch_expectations(&output, &expectations)?;
+    parse_docx(&output).map_err(|error| format!("DOCX 批量输出结构复读失败: {error}"))?;
+
+    let mut replay = source.to_vec();
+    for operation in operations {
+        replay = build_docx_operation(&replay, operation)?.1;
+    }
+    if replay != output {
+        return Err("DOCX 批量操作无法确定性重放".into());
+    }
+
+    Ok((
+        DocxBatchPatchReport {
+            status: "batch_isolated_verified".into(),
+            engine: "LongEdit DOCX verified batch patch".into(),
+            operation_count: operations.len(),
+            operation_kinds,
+            semantic_target_ids,
+            output_digest: format!("{:x}", Sha256::digest(&output)),
+            output_bytes: output.len(),
+            changed_parts: vec!["word/document.xml".into()],
+            unchanged_parts_verified: true,
+            structural_reparse_verified: true,
+            semantic_reparse_verified: true,
+            deterministic_replay_verified: true,
+            temporary_copy_reopen_verified: false,
+            source_unchanged: false,
+        },
+        output,
+    ))
 }
 
 fn remove_created_docx_if_exact(path: &Path, expected: &[u8]) {
@@ -734,6 +1026,105 @@ fn save_docx_patch_source_to_path(
     })
 }
 
+fn save_docx_batch_source_to_path(
+    source_path: &Path,
+    expected_signature: &str,
+    expected_output_digest: &str,
+    operations: &[DocxPatchOperation],
+) -> Result<DocxSavedSourceReport, String> {
+    let (producer_evidence, missing_producer_evidence) = docx_producer_evidence()?;
+    if !missing_producer_evidence.is_empty() {
+        return Err(format!(
+            "DOCX 生产者重开证据尚未齐全: {}",
+            missing_producer_evidence.join(", ")
+        ));
+    }
+    let metadata = source_path
+        .metadata()
+        .map_err(|error| format!("读取 DOCX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_DOCX_FILE_BYTES {
+        return Err("DOCX 文件超过 64 MiB 批量可靠保存上限".into());
+    }
+    let source_signature = file_signature(&metadata);
+    if source_signature != expected_signature {
+        return Err("DOCX 已被外部修改，请重新打开后再保存批量草稿".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 DOCX 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let (batch_report, output) = build_docx_batch_operations(&source, operations)?;
+    if batch_report.output_digest != expected_output_digest.trim().to_ascii_lowercase() {
+        return Err("DOCX 批量编辑内容或隔离输出已变化，请重新验证后再保存".into());
+    }
+    if !batch_report.unchanged_parts_verified
+        || !batch_report.structural_reparse_verified
+        || !batch_report.semantic_reparse_verified
+        || !batch_report.deterministic_replay_verified
+    {
+        return Err("DOCX 批量隔离补丁未通过完整保真、语义与重放门禁".into());
+    }
+
+    let source_before_write =
+        fs::read(source_path).map_err(|error| format!("保存前复核源 DOCX 失败: {error}"))?;
+    let metadata_before_write = source_path
+        .metadata()
+        .map_err(|error| format!("保存前复核源 DOCX 元数据失败: {error}"))?;
+    if source_before_write != source
+        || file_signature(&metadata_before_write) != source_signature
+        || format!("{:x}", Sha256::digest(&source_before_write)) != source_digest
+    {
+        return Err("DOCX 在批量隔离验证期间发生变化，请重新打开后再保存".into());
+    }
+
+    write_bytes(source_path, &output)?;
+    let verification = (|| -> Result<(String, String), String> {
+        let saved = fs::read(source_path)
+            .map_err(|error| format!("源文件已替换，但无法复读批量保存字节: {error}"))?;
+        let digest = format!("{:x}", Sha256::digest(&saved));
+        if saved != output || digest != batch_report.output_digest {
+            return Err("源文件落盘字节与批量隔离验证输出不一致".into());
+        }
+        parse_docx(&saved).map_err(|error| format!("批量保存后源 DOCX 结构复读失败: {error}"))?;
+        let (_, replay) = build_docx_batch_operations(&source, operations)?;
+        if replay != saved {
+            return Err("批量保存后语义重放结果与已验证输出不一致".into());
+        }
+        let saved_metadata = source_path
+            .metadata()
+            .map_err(|error| format!("读取批量保存后 DOCX 元数据失败: {error}"))?;
+        Ok((digest, file_signature(&saved_metadata)))
+    })();
+    let (digest, signature) = match verification {
+        Ok(value) => value,
+        Err(error) => {
+            write_bytes(source_path, &source).map_err(|rollback_error| {
+                format!("批量保存复读失败且原文件恢复失败: {error}; {rollback_error}")
+            })?;
+            let restored = fs::read(source_path).map_err(|rollback_error| {
+                format!("批量保存复读失败且无法确认原文件恢复: {error}; {rollback_error}")
+            })?;
+            if restored != source {
+                return Err(format!("批量保存复读失败且原文件恢复内容不一致: {error}"));
+            }
+            return Err(format!("批量可靠保存验证失败，已恢复原文件: {error}"));
+        }
+    };
+
+    Ok(DocxSavedSourceReport {
+        status: "batch_source_saved_verified".into(),
+        engine: batch_report.engine,
+        path: source_path.to_string_lossy().into_owned(),
+        signature,
+        digest,
+        output_bytes: output.len(),
+        changed_parts: batch_report.changed_parts,
+        unchanged_parts_verified: true,
+        structural_reopen_verified: true,
+        semantic_reopen_verified: true,
+        rollback_protected: true,
+        producer_evidence,
+    })
+}
+
 fn audit_docx_save_readiness_path(
     source_path: &Path,
     target_path: &Path,
@@ -925,6 +1316,22 @@ pub async fn preview_docx_image_alt_text_patch_isolated_copy(
 }
 
 #[tauri::command]
+pub async fn preview_docx_patch_batch_isolated_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    operations: Vec<DocxPatchOperation>,
+) -> Result<DocxBatchPatchReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let document = guard.resolve_existing_file(path, &["docx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_docx_batch_patch_path(&document, &expected_signature, &operations)
+    })
+    .await
+    .map_err(|error| format!("DOCX 批量隔离补丁任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn audit_docx_save_readiness(
     library_root: String,
     path: String,
@@ -996,6 +1403,28 @@ pub async fn save_docx_patch_source(
     })
     .await
     .map_err(|error| format!("DOCX 源文件可靠保存任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn save_docx_patch_batch_source(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    expected_output_digest: String,
+    operations: Vec<DocxPatchOperation>,
+) -> Result<DocxSavedSourceReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["docx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_docx_batch_source_to_path(
+            &source_path,
+            &expected_signature,
+            &expected_output_digest,
+            &operations,
+        )
+    })
+    .await
+    .map_err(|error| format!("DOCX 批量源文件可靠保存任务失败: {error}"))?
 }
 
 #[cfg(test)]
@@ -1433,6 +1862,149 @@ mod tests {
             &signature,
             &preview.output_digest,
             &operation,
+        )
+        .unwrap_err()
+        .contains("外部修改"));
+
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn ux33c_batches_distinct_targets_for_all_verified_producers() {
+        let fixtures = [
+            (
+                "microsoft-word-16",
+                include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx")
+                    .as_slice(),
+            ),
+            (
+                "wps-writer",
+                include_bytes!("../../../fixtures/docx/producers/wps-writer.docx").as_slice(),
+            ),
+            (
+                "libreoffice-writer",
+                include_bytes!("../../../fixtures/docx/producers/libreoffice-writer.docx")
+                    .as_slice(),
+            ),
+        ];
+        for (producer, source) in fixtures {
+            let model = parse_docx(source).unwrap();
+            let targets = inspect_docx_editable_text_targets(source, &model).unwrap();
+            assert!(targets.len() >= 2, "{producer} needs two safe targets");
+            let operations = targets
+                .iter()
+                .take(2)
+                .enumerate()
+                .map(|(index, target)| DocxPatchOperation::Text {
+                    target_id: target.id.clone(),
+                    expected_text_digest: target.expected_text_digest.clone(),
+                    replacement_text: format!("LongEdit batch {producer} target {}", index + 1),
+                })
+                .collect::<Vec<_>>();
+            let (report, output) = build_docx_batch_operations(source, &operations).unwrap();
+            assert_eq!(report.status, "batch_isolated_verified");
+            assert_eq!(report.operation_count, 2);
+            assert!(report.unchanged_parts_verified);
+            assert!(report.structural_reparse_verified);
+            assert!(report.semantic_reparse_verified);
+            assert!(report.deterministic_replay_verified);
+            let output_model = parse_docx(&output).unwrap();
+            assert!(output_model
+                .plain_text
+                .contains(&format!("LongEdit batch {producer} target 1")));
+            assert!(output_model
+                .plain_text
+                .contains(&format!("LongEdit batch {producer} target 2")));
+        }
+    }
+
+    #[test]
+    fn ux33c_rejects_duplicate_anchor_and_reliably_saves_batch() {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-docx-ux33c-batch-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&base).unwrap();
+        let source_path = base.join("source.docx");
+        let source =
+            include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx").to_vec();
+        fs::write(&source_path, &source).unwrap();
+        let signature = file_signature(&source_path.metadata().unwrap());
+        let model = parse_docx(&source).unwrap();
+        let text_targets = inspect_docx_editable_text_targets(&source, &model).unwrap();
+        let style_targets = inspect_docx_editable_style_targets(&source, &model).unwrap();
+        let first = &text_targets[0];
+        let same_style = style_targets
+            .iter()
+            .find(|target| target.block_id == first.block_id)
+            .unwrap();
+        let duplicate_anchor = vec![
+            DocxPatchOperation::Text {
+                target_id: first.id.clone(),
+                expected_text_digest: first.expected_text_digest.clone(),
+                replacement_text: "LongEdit duplicate text".into(),
+            },
+            DocxPatchOperation::Style {
+                target_id: same_style.id.clone(),
+                expected_style_digest: same_style.expected_style_digest.clone(),
+                bold: !same_style.bold,
+                italic: same_style.italic,
+                underline: same_style.underline,
+            },
+        ];
+        assert!(build_docx_batch_operations(&source, &duplicate_anchor)
+            .unwrap_err()
+            .contains("重复目标"));
+
+        let operations = text_targets
+            .iter()
+            .take(2)
+            .enumerate()
+            .map(|(index, target)| DocxPatchOperation::Text {
+                target_id: target.id.clone(),
+                expected_text_digest: target.expected_text_digest.clone(),
+                replacement_text: format!("LongEdit reliable batch target {}", index + 1),
+            })
+            .collect::<Vec<_>>();
+        let preview = preview_docx_batch_patch_path(&source_path, &signature, &operations).unwrap();
+        assert!(preview.temporary_copy_reopen_verified);
+        assert!(preview.source_unchanged);
+        assert_eq!(fs::read(&source_path).unwrap(), source);
+        assert!(save_docx_batch_source_to_path(
+            &source_path,
+            &signature,
+            &"0".repeat(64),
+            &operations,
+        )
+        .unwrap_err()
+        .contains("已变化"));
+        assert_eq!(fs::read(&source_path).unwrap(), source);
+
+        let saved = save_docx_batch_source_to_path(
+            &source_path,
+            &signature,
+            &preview.output_digest,
+            &operations,
+        )
+        .unwrap();
+        assert_eq!(saved.status, "batch_source_saved_verified");
+        assert!(saved.rollback_protected);
+        let saved_model = parse_docx(&fs::read(&source_path).unwrap()).unwrap();
+        assert!(saved_model
+            .plain_text
+            .contains("LongEdit reliable batch target 1"));
+        assert!(saved_model
+            .plain_text
+            .contains("LongEdit reliable batch target 2"));
+        assert!(save_docx_batch_source_to_path(
+            &source_path,
+            &signature,
+            &preview.output_digest,
+            &operations,
         )
         .unwrap_err()
         .contains("外部修改"));
