@@ -2,7 +2,7 @@
 
 > **2026-08-04 最新接手入口：** v1.0.3 安装版真实多格式测试暴露了 ACL、更新策略、路由状态、工作区布局和跨格式编辑体验问题。后续开发以 [`User_Experience_Closure_Audit_2026-08-04.md`](./User_Experience_Closure_Audit_2026-08-04.md) 的 39 项验收清单和阶段 A-E 为最高优先级；下方历史阶段记录仅作为能力与证据背景，不得据此宣称当前用户体验已经收口。
 
-> A0A 已完成安装态确认对话框 ACL 代码修复：主窗口补齐 confirm/message 权限，新增源码到能力清单的一致性检查并接入补丁发布门禁。UX-07、UX-11、UX-16 仍为开发中，下一安装包需真实点击复测。详见 [`A0A_Dialog_ACL_Hotfix_Audit_2026-08-04.md`](./A0A_Dialog_ACL_Hotfix_Audit_2026-08-04.md)。
+> A0A 已完成安装态确认对话框 ACL 代码修复：主窗口补齐 confirm/message 权限，新增源码到能力清单的一致性检查并接入补丁发布门禁。A0A 完成时 UX-07、UX-11、UX-16 仍为开发中；当前状态以下方后续阶段和总验收清单为准。详见 [`A0A_Dialog_ACL_Hotfix_Audit_2026-08-04.md`](./A0A_Dialog_ACL_Hotfix_Audit_2026-08-04.md)。
 
 > A0B 已完成更新体验与发布事实对齐：当前运行态不再自动请求未发布的 `latest.json`，设置页改为打开官方 GitHub Release 的手动更新入口，并同步修正共享发布策略与机器合同。UX-03 为待复测，下一安装包需验证外部浏览器打开行为。详见 [`A0B_Manual_Update_Experience_Audit_2026-08-04.md`](./A0B_Manual_Update_Experience_Audit_2026-08-04.md)。
 
@@ -11,6 +11,8 @@
 > A0D 已完成设置页信息架构重构：八类任务导航替代单列长页，关系改善工具改为用户语言并折叠到知识能力高级区域，主题预设合并为可筛选、展示层去重的单一主题库。桌面 1366×768 与窄窗口 720×760 浏览器视觉复核通过；UX-01、UX-05、UX-06 为待安装包复测。详见 [`A0D_Settings_Information_Architecture_Audit_2026-08-04.md`](./A0D_Settings_Information_Architecture_Audit_2026-08-04.md)。
 
 > A0E 已完成搜索与关联自动准备：首次选择资料库和缓存过期后由后台自动处理，用户状态、说明与更多菜单均改为任务语言；清除/隔离只作用于本机缓存并使用应用内确认框。UX-07 为待安装包复测。下一步按阶段 A 继续处理 UX-11 表格行删除交互与撤销。详见 [`A0E_Automatic_Search_Relation_Preparation_Audit_2026-08-04.md`](./A0E_Automatic_Search_Relation_Preparation_Audit_2026-08-04.md)。
+
+> A0F 已完成 CSV/TSV/开放 Table 行交互止血：行号只选择，删除由明确命令和应用内确认触发；新增/删除行支持撤销重做，所有变更仅在点击保存后写入源文件。UX-11 为待安装包复测。下一步处理 UX-12，从图谱返回表格时等待资料库状态恢复并保持活动文件上下文。详见 [`A0F_Table_Row_Selection_Deletion_Undo_Audit_2026-08-04.md`](./A0F_Table_Row_Selection_Deletion_Undo_Audit_2026-08-04.md)。
 
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。

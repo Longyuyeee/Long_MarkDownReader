@@ -6,6 +6,8 @@
         <div><strong>{{ fileName }}</strong><span v-if="table">{{ table.rows.length.toLocaleString() }} 行 × {{ table.headers.length }} 列 · {{ formatLabel }} · {{ table.encoding }}</span></div>
       </div>
       <div v-if="table" class="table-tools">
+        <button class="history-button icon-tool" title="撤销行操作 (Ctrl+Z)" :disabled="!rowUndoStack.length || saving" @click="undoRowOperation"><UndoIcon /></button>
+        <button class="history-button icon-tool" title="重做行操作 (Ctrl+Y)" :disabled="!rowRedoStack.length || saving" @click="redoRowOperation"><RedoIcon /></button>
         <label class="table-filter"><span>⌕</span><input v-model="filterQuery" placeholder="筛选所有字段" @input="markViewDirty" /><button v-if="filterQuery" type="button" aria-label="清除筛选" @click="clearFilter">×</button></label>
         <button v-if="activeViewKind === 'grid'" :class="{ active: freezeFirstColumn }" :aria-pressed="freezeFirstColumn" @click="toggleFreeze">冻结首列</button>
         <button v-if="table.format !== 'longedit-table'" @click="convertToTable">转换为 Table</button>
@@ -38,6 +40,11 @@
           <template v-if="activeViewKind === 'grid'">
             <span v-if="sortColumn >= 0">按“{{ headerLabel(sortColumn) }}”{{ sortDirection === 'asc' ? '升序' : '降序' }}</span>
             <button v-if="sortColumn >= 0" @click="clearSort">清除排序</button>
+            <span v-if="selectedRowIndex >= 0" class="row-selection-actions">
+              已选择第 {{ selectedRowIndex + 1 }} 行
+              <button type="button" title="删除选中行" @click="requestDeleteSelectedRow"><TrashIcon />删除</button>
+              <button type="button" @click="clearRowSelection">取消选择</button>
+            </span>
           </template>
           <template v-else-if="activeViewKind === 'board'">
             <label>分组 <select v-model="groupBy" @change="updateViewConfig"><option v-for="(_, index) in table.headers" :key="table.columnIds[index]" :value="table.columnIds[index]">{{ headerLabel(index) }}</option></select></label>
@@ -68,9 +75,17 @@
                 v-for="item in visibleRows"
                 :key="item.rowIndex"
                 class="table-row"
+                :class="{ selected: table.rowIds[item.rowIndex] === selectedRowId }"
                 :style="[{ transform: `translateY(${item.virtualIndex * rowHeight}px)` }, gridStyle]"
               >
-                <button class="row-number" title="删除此行" @click="deleteRow(item.rowIndex)">{{ item.rowIndex + 1 }}</button>
+                <button
+                  class="row-number"
+                  :class="{ selected: table.rowIds[item.rowIndex] === selectedRowId }"
+                  :title="`选择第 ${item.rowIndex + 1} 行`"
+                  :aria-label="`选择第 ${item.rowIndex + 1} 行`"
+                  :aria-pressed="table.rowIds[item.rowIndex] === selectedRowId"
+                  @click="selectRow(item.rowIndex)"
+                >{{ item.rowIndex + 1 }}</button>
                 <div v-for="(_, column) in table.headers" :key="column" class="data-cell" :class="{ frozen: freezeFirstColumn && column === 0 }">
                   <input
                     :value="table.rows[item.rowIndex][column]"
@@ -127,7 +142,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
-import { useMessage } from 'naive-ui'
+import { useDialog, useMessage } from 'naive-ui'
+import { Redo2 as RedoIcon, Trash2 as TrashIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 import TableChartEditor from '../components/TableChartEditor.vue'
 import TableDashboard, { type DashboardItem } from '../components/TableDashboard.vue'
@@ -173,11 +189,18 @@ interface TableDocument {
 }
 
 interface TableWriteResult { signature: string; size: number }
+interface RowHistoryEntry {
+  kind: 'add' | 'delete'
+  index: number
+  row: string[]
+  rowId: string
+}
 
 const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
 const message = useMessage()
+const dialog = useDialog()
 const scrollRef = ref<HTMLElement | null>(null)
 const table = ref<TableDocument | null>(null)
 const loading = ref(true)
@@ -185,6 +208,9 @@ const error = ref('')
 const dirty = ref(false)
 const saving = ref(false)
 const notice = ref('')
+const selectedRowId = ref('')
+const rowUndoStack = ref<RowHistoryEntry[]>([])
+const rowRedoStack = ref<RowHistoryEntry[]>([])
 const filterQuery = ref('')
 const sortColumn = ref(-1)
 const sortDirection = ref<'asc' | 'desc'>('asc')
@@ -228,6 +254,7 @@ const chartConfig = computed(() => ({
   showLegend: showLegend.value,
 }))
 const chartViews = computed(() => views.value.filter((view): view is TableViewDefinition & { kind: 'chart' } => view.kind === 'chart'))
+const selectedRowIndex = computed(() => selectedRowId.value && table.value ? table.value.rowIds.indexOf(selectedRowId.value) : -1)
 
 const typeLabel = (type: string) => ({ integer: '整数', number: '数值', boolean: '布尔', date: '日期', empty: '空', text: '文本' }[type] || '文本')
 const headerLabel = (column: number) => table.value?.headers[column]?.trim() || `列 ${column + 1}`
@@ -372,19 +399,27 @@ const renameView = (view: TableViewDefinition) => {
   if (name && name.length <= 120) { view.name = name; markDirty() }
 }
 const deleteView = (view: TableViewDefinition) => {
-  if (views.value.length <= 1 || !window.confirm(`删除视图“${view.name}”？数据不会被删除。`)) return
-  const index = views.value.findIndex(item => item.id === view.id)
-  views.value.splice(index, 1)
-  if (view.kind === 'chart') {
-    for (const candidate of views.value) {
-      candidate.config.dashboardItems = (candidate.config.dashboardItems || []).filter(item => item.chartViewId !== view.id)
+  if (views.value.length <= 1) return
+  dialog.warning({
+    title: `删除视图“${view.name}”？`,
+    content: '只会删除当前视图配置，共享数据不会被删除。点击保存后才会写入文件。',
+    positiveText: '删除视图',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      const index = views.value.findIndex(item => item.id === view.id)
+      views.value.splice(index, 1)
+      if (view.kind === 'chart') {
+        for (const candidate of views.value) {
+          candidate.config.dashboardItems = (candidate.config.dashboardItems || []).filter(item => item.chartViewId !== view.id)
+        }
+      }
+      if (activeViewId.value === view.id) {
+        activeViewId.value = views.value[Math.max(0, index - 1)].id
+        applyView(activeView.value)
+      }
+      markDirty()
     }
-  }
-  if (activeViewId.value === view.id) {
-    activeViewId.value = views.value[Math.max(0, index - 1)].id
-    applyView(activeView.value)
-  }
-  markDirty()
+  })
 }
 const updateViewConfig = () => { captureActiveView(); markViewDirty() }
 const applyChartConfig = (config: Pick<TableViewConfig, 'chartType' | 'categoryColumn' | 'valueColumn' | 'seriesColumn' | 'aggregation' | 'nullStrategy' | 'showLegend'>) => {
@@ -423,8 +458,16 @@ const clearSort = () => { sortColumn.value = -1; sortDirection.value = 'asc'; ma
 
 const addRow = () => {
   if (!table.value) return
-  table.value.rows.push(Array(table.value.headers.length).fill(''))
-  table.value.rowIds.push(`row-${Date.now()}-${table.value.rowIds.length + 1}`)
+  const entry: RowHistoryEntry = {
+    kind: 'add',
+    index: table.value.rows.length,
+    row: Array(table.value.headers.length).fill(''),
+    rowId: `row-${Date.now()}-${table.value.rowIds.length + 1}`,
+  }
+  table.value.rows.push(entry.row)
+  table.value.rowIds.push(entry.rowId)
+  pushRowHistory(entry)
+  selectedRowId.value = entry.rowId
   markDirty()
   nextTick(() => scrollRef.value?.scrollTo({ top: filteredIndices.value.length * rowHeight }))
 }
@@ -437,11 +480,90 @@ const addColumn = () => {
   table.value.rows.forEach(row => row.push(''))
   markDirty()
 }
-const deleteRow = (row: number) => {
-  if (!table.value || !window.confirm(`删除第 ${row + 1} 行？`)) return
-  table.value.rows.splice(row, 1)
-  table.value.rowIds.splice(row, 1)
+const pushRowHistory = (entry: RowHistoryEntry) => {
+  rowUndoStack.value = [...rowUndoStack.value.slice(-99), { ...entry, row: [...entry.row] }]
+  rowRedoStack.value = []
+}
+const selectRow = (row: number) => {
+  if (!table.value) return
+  const rowId = table.value.rowIds[row] || ''
+  selectedRowId.value = selectedRowId.value === rowId ? '' : rowId
+}
+const clearRowSelection = () => { selectedRowId.value = '' }
+const deleteSelectedRow = () => {
+  if (!table.value || selectedRowIndex.value < 0) return
+  const index = selectedRowIndex.value
+  const entry: RowHistoryEntry = {
+    kind: 'delete',
+    index,
+    row: [...table.value.rows[index]],
+    rowId: table.value.rowIds[index],
+  }
+  table.value.rows.splice(index, 1)
+  table.value.rowIds.splice(index, 1)
+  pushRowHistory(entry)
+  selectedRowId.value = ''
   markDirty()
+  notice.value = `第 ${index + 1} 行已从草稿移除，可撤销；点击保存后才会写入文件`
+}
+const requestDeleteSelectedRow = () => {
+  if (selectedRowIndex.value < 0) return
+  const rowNumber = selectedRowIndex.value + 1
+  dialog.warning({
+    title: `删除第 ${rowNumber} 行？`,
+    content: '此操作只会从当前编辑草稿移除该行，点击保存后才会写入源文件。删除后仍可撤销。',
+    positiveText: '删除行',
+    negativeText: '取消',
+    onPositiveClick: deleteSelectedRow,
+  })
+}
+const undoRowOperation = () => {
+  if (!table.value) return
+  const entry = rowUndoStack.value[rowUndoStack.value.length - 1]
+  if (!entry) return
+  rowUndoStack.value = rowUndoStack.value.slice(0, -1)
+  let completedEntry = entry
+  if (entry.kind === 'add') {
+    const index = table.value.rowIds.indexOf(entry.rowId)
+    if (index >= 0) {
+      completedEntry = { ...entry, index, row: [...table.value.rows[index]] }
+      table.value.rows.splice(index, 1)
+      table.value.rowIds.splice(index, 1)
+    }
+    selectedRowId.value = ''
+  } else {
+    const index = Math.min(entry.index, table.value.rows.length)
+    table.value.rows.splice(index, 0, [...entry.row])
+    table.value.rowIds.splice(index, 0, entry.rowId)
+    selectedRowId.value = entry.rowId
+  }
+  rowRedoStack.value = [...rowRedoStack.value, completedEntry]
+  markDirty()
+  notice.value = entry.kind === 'delete' ? '已撤销删除行' : '已撤销新增行'
+}
+const redoRowOperation = () => {
+  if (!table.value) return
+  const entry = rowRedoStack.value[rowRedoStack.value.length - 1]
+  if (!entry) return
+  rowRedoStack.value = rowRedoStack.value.slice(0, -1)
+  let completedEntry = entry
+  if (entry.kind === 'add') {
+    const index = Math.min(entry.index, table.value.rows.length)
+    table.value.rows.splice(index, 0, [...entry.row])
+    table.value.rowIds.splice(index, 0, entry.rowId)
+    selectedRowId.value = entry.rowId
+  } else {
+    const index = table.value.rowIds.indexOf(entry.rowId)
+    if (index >= 0) {
+      completedEntry = { ...entry, index, row: [...table.value.rows[index]] }
+      table.value.rows.splice(index, 1)
+      table.value.rowIds.splice(index, 1)
+    }
+    selectedRowId.value = ''
+  }
+  rowUndoStack.value = [...rowUndoStack.value, completedEntry]
+  markDirty()
+  notice.value = entry.kind === 'delete' ? '已重做删除行' : '已重做新增行'
 }
 const cardTitle = (row: number) => {
   const column = columnIndex(titleColumn.value)
@@ -478,6 +600,9 @@ const loadTable = async () => {
     const document = await invoke<TableDocument>('read_table_file', { libraryRoot: store.libraryPath, path: tablePath.value })
     if (generation !== loadGeneration) return
     table.value = document
+    selectedRowId.value = ''
+    rowUndoStack.value = []
+    rowRedoStack.value = []
     views.value = document.views?.length ? document.views : [{ id: 'grid', name: '表格', kind: 'grid', config: document.view }]
     const requestedView = typeof route.query.view === 'string' ? route.query.view : ''
     activeViewId.value = views.value.some(view => view.id === requestedView)
@@ -580,8 +705,28 @@ const startColumnResize = (column: number, event: PointerEvent) => {
 const handleScroll = () => { if (scrollRef.value) scrollTop.value = scrollRef.value.scrollTop }
 const handleKeydown = (event: KeyboardEvent) => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void saveTable() }
+  const target = event.target as HTMLElement | null
+  const isEditing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable
+  if (!isEditing && (event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z') { event.preventDefault(); undoRowOperation() }
+  if (!isEditing && (event.ctrlKey || event.metaKey) && (event.key.toLowerCase() === 'y' || (event.shiftKey && event.key.toLowerCase() === 'z'))) { event.preventDefault(); redoRowOperation() }
+  if (!isEditing && event.key === 'Delete' && selectedRowIndex.value >= 0) { event.preventDefault(); requestDeleteSelectedRow() }
+  if (!isEditing && event.key === 'Escape') clearRowSelection()
 }
-const mayLeave = () => !dirty.value || window.confirm('表格还有未保存修改，确定离开吗？')
+const mayLeave = () => {
+  if (!dirty.value) return Promise.resolve(true)
+  return new Promise<boolean>(resolve => {
+    dialog.warning({
+      title: '表格还有未保存修改',
+      content: '离开后会丢失当前编辑草稿，源文件不会被修改。',
+      positiveText: '放弃修改并离开',
+      negativeText: '继续编辑',
+      closable: false,
+      maskClosable: false,
+      onPositiveClick: () => resolve(true),
+      onNegativeClick: () => resolve(false),
+    })
+  })
+}
 const leaveTable = () => { void router.push('/library') }
 const beforeUnload = (event: BeforeUnloadEvent) => {
   if (dirty.value) {
@@ -616,17 +761,17 @@ onBeforeUnmount(() => {
 <style scoped>
 .table-view { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 94%, var(--theme-primary)); outline: none; }
 .table-toolbar { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 0 16px; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); box-shadow: 0 2px 10px rgba(0,0,0,.06); z-index: 5; }
-.table-title,.table-tools { display: flex; align-items: center; gap: 8px; }.table-title > button,.table-tools > button { height: 32px; padding: 0 10px; border: 1px solid rgba(0,0,0,.1); border-radius: 7px; color: var(--theme-text); background: rgba(0,0,0,.035); cursor: pointer; }.table-title > button { width: 32px; padding: 0; font-size: 18px; }.table-title div { display: flex; flex-direction: column; }.table-title strong { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }.table-title span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.table-tools > button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.4); background: rgba(var(--theme-primary-rgb),.08); }.table-tools .save-button { min-width: 72px; color: #fff; border-color: var(--theme-primary); background: var(--theme-primary); }.table-tools .save-button:disabled { color: var(--theme-text-secondary); border-color: rgba(0,0,0,.08); background: rgba(0,0,0,.04); cursor: default; }
+.table-title,.table-tools { display: flex; align-items: center; gap: 8px; }.table-title > button,.table-tools > button { height: 32px; padding: 0 10px; border: 1px solid rgba(0,0,0,.1); border-radius: 7px; color: var(--theme-text); background: rgba(0,0,0,.035); cursor: pointer; }.table-tools > button:disabled { opacity: .42; cursor: default; }.table-tools > .icon-tool { width: 32px; display: grid; place-items: center; padding: 0; }.table-tools > .icon-tool svg { width: 16px; height: 16px; }.table-title > button { width: 32px; padding: 0; font-size: 18px; }.table-title div { display: flex; flex-direction: column; }.table-title strong { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }.table-title span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.table-tools > button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.4); background: rgba(var(--theme-primary-rgb),.08); }.table-tools .save-button { min-width: 72px; color: #fff; border-color: var(--theme-primary); background: var(--theme-primary); }.table-tools .save-button:disabled { color: var(--theme-text-secondary); border-color: rgba(0,0,0,.08); background: rgba(0,0,0,.04); cursor: default; }
 .table-filter { width: 220px; height: 32px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid rgba(0,0,0,.1); border-radius: 7px; background: rgba(0,0,0,.025); }.table-filter input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--theme-text); background: transparent; font-size: var(--text-compact); }.table-filter button { border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }
 .view-tabs { min-height: 38px; display: flex; align-items: end; gap: 4px; padding: 5px 12px 0; border-bottom: 1px solid rgba(0,0,0,.09); background: color-mix(in srgb, var(--theme-card) 97%, #dce6ef); }.view-tab { height: 32px; display: flex; align-items: center; border: 1px solid transparent; border-bottom: 0; border-radius: 7px 7px 0 0; color: var(--theme-text-secondary); background: transparent; }.view-tab.active { color: var(--theme-primary); border-color: rgba(0,0,0,.1); background: var(--theme-card); }.view-tab-main,.view-tab-delete,.view-add button { height: 31px; border: 0; color: inherit; background: transparent; cursor: pointer; font-size: var(--text-compact); }.view-tab-main { display: flex; align-items: center; gap: 5px; padding: 0 6px 0 10px; }.view-tab-delete { width: 25px; padding: 0; opacity: .4; }.view-tab-delete:hover,.view-tab-delete:focus-visible { opacity: 1; }.view-add { display: flex; margin-left: 5px; }.view-add button { height: 27px; padding: 0 7px; border-radius: 5px; }.view-add button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }.view-tabs > small { margin: 0 4px 9px auto; color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .table-workspace { min-height: 0; flex: 1; display: flex; flex-direction: column; }.table-meta-bar { height: 30px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 14px; border-bottom: 1px solid rgba(0,0,0,.07); color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 94%, transparent); font-size: var(--text-compact); }.table-meta-bar button { padding: 2px 6px; border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; }.table-meta-bar i { margin-left: auto; font-style: normal; }
-.table-meta-bar label { display: flex; align-items: center; gap: 4px; }.table-meta-bar select { height: 22px; max-width: 130px; border: 1px solid rgba(0,0,0,.1); border-radius: 4px; color: var(--theme-text); background: var(--theme-card); font-size: var(--text-compact); }.card-fields { display: flex; align-items: center; gap: 3px; }.card-fields b { font-weight: 500; }.card-fields button { border-radius: 4px; color: var(--theme-text-secondary); background: rgba(0,0,0,.035); }.card-fields button.active { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); }
+.table-meta-bar label { display: flex; align-items: center; gap: 4px; }.table-meta-bar select { height: 22px; max-width: 130px; border: 1px solid rgba(0,0,0,.1); border-radius: 4px; color: var(--theme-text); background: var(--theme-card); font-size: var(--text-compact); }.row-selection-actions { display: flex; align-items: center; gap: 5px; color: var(--theme-text); font-weight: 650; }.row-selection-actions button { display: inline-flex; align-items: center; gap: 3px; border-radius: 4px; }.row-selection-actions button:first-of-type { color: var(--theme-danger, #c83b46); background: color-mix(in srgb, var(--theme-danger, #c83b46) 9%, transparent); }.row-selection-actions svg { width: 13px; height: 13px; }.card-fields { display: flex; align-items: center; gap: 3px; }.card-fields b { font-weight: 500; }.card-fields button { border-radius: 4px; color: var(--theme-text-secondary); background: rgba(0,0,0,.035); }.card-fields button.active { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); }
 .table-scroll { min-height: 0; flex: 1; overflow: auto; position: relative; }.table-canvas { min-height: 100%; }.table-header,.table-row { display: grid; }.table-header { position: sticky; top: 0; z-index: 20; height: 46px; background: color-mix(in srgb, var(--theme-card) 96%, #e8edf3); box-shadow: 0 1px 0 rgba(0,0,0,.12); }.virtual-body { position: relative; }.table-row { position: absolute; top: 0; left: 0; height: 34px; }
-.header-cell,.data-cell,.row-number { min-width: 0; box-sizing: border-box; border-right: 1px solid rgba(0,0,0,.07); border-bottom: 1px solid rgba(0,0,0,.07); background: var(--theme-card); }.row-number { position: sticky; left: 0; z-index: 6; display: grid; place-items: center; padding: 0; border-top: 0; border-left: 0; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 92%, #dce4ec); cursor: pointer; font-size: var(--text-compact); }.header-number { z-index: 25; cursor: default; }.header-cell { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 24px; grid-template-rows: 27px 14px; padding: 3px 5px 2px; }.header-cell input,.data-cell input { width: 100%; min-width: 0; box-sizing: border-box; border: 0; outline: 0; color: var(--theme-text); background: transparent; font: inherit; }.header-cell input { font-size: var(--text-compact); font-weight: 700; }.header-cell > button { grid-column: 2; grid-row: 1; border: 0; border-radius: 4px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.header-cell > button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }.header-cell small { grid-column: 1 / -1; grid-row: 2; color: var(--theme-text-secondary); font-size: var(--text-compact); }.data-cell { padding: 0 7px; }.data-cell input { height: 33px; font-size: var(--text-compact); }.data-cell:focus-within { position: relative; z-index: 4; outline: 2px solid var(--theme-primary); outline-offset: -2px; }.header-cell.frozen,.data-cell.frozen { position: sticky; left: 52px; z-index: 5; box-shadow: 2px 0 5px rgba(0,0,0,.08); }.header-cell.frozen { z-index: 24; }
+.header-cell,.data-cell,.row-number { min-width: 0; box-sizing: border-box; border-right: 1px solid rgba(0,0,0,.07); border-bottom: 1px solid rgba(0,0,0,.07); background: var(--theme-card); }.row-number { position: sticky; left: 0; z-index: 6; display: grid; place-items: center; padding: 0; border-top: 0; border-left: 0; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 92%, #dce4ec); cursor: pointer; font-size: var(--text-compact); }.table-row.selected .data-cell,.row-number.selected { background: color-mix(in srgb, var(--theme-card) 84%, var(--theme-primary)); }.row-number.selected { color: var(--theme-primary); box-shadow: inset 3px 0 0 var(--theme-primary); font-weight: 750; }.header-number { z-index: 25; cursor: default; }.header-cell { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 24px; grid-template-rows: 27px 14px; padding: 3px 5px 2px; }.header-cell input,.data-cell input { width: 100%; min-width: 0; box-sizing: border-box; border: 0; outline: 0; color: var(--theme-text); background: transparent; font: inherit; }.header-cell input { font-size: var(--text-compact); font-weight: 700; }.header-cell > button { grid-column: 2; grid-row: 1; border: 0; border-radius: 4px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.header-cell > button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }.header-cell small { grid-column: 1 / -1; grid-row: 2; color: var(--theme-text-secondary); font-size: var(--text-compact); }.data-cell { padding: 0 7px; }.data-cell input { height: 33px; font-size: var(--text-compact); }.data-cell:focus-within { position: relative; z-index: 4; outline: 2px solid var(--theme-primary); outline-offset: -2px; }.header-cell.frozen,.data-cell.frozen { position: sticky; left: 52px; z-index: 5; box-shadow: 2px 0 5px rgba(0,0,0,.08); }.header-cell.frozen { z-index: 24; }
 .column-resize { position: absolute; top: 0; right: -3px; z-index: 3; width: 7px; height: 100%; cursor: col-resize; }.column-resize:hover { background: rgba(var(--theme-primary-rgb),.24); }
 .board-scroll { min-height: 0; flex: 1; display: flex; align-items: flex-start; gap: 12px; padding: 14px; overflow: auto; }.board-column { width: 280px; max-height: 100%; flex: none; display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,.08); border-radius: 10px; background: rgba(0,0,0,.025); }.board-column > header { height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 11px; border-bottom: 1px solid rgba(0,0,0,.07); }.board-column > header strong { font-size: 11px; }.board-column > header span { min-width: 20px; padding: 2px 5px; border-radius: 10px; text-align: center; color: var(--theme-text-secondary); background: rgba(0,0,0,.06); font-size: var(--text-compact); }.board-cards { min-height: 60px; padding: 8px; overflow: auto; }.board-card { margin-bottom: 8px; padding: 10px; border: 1px solid rgba(0,0,0,.08); border-radius: 8px; background: var(--theme-card); box-shadow: 0 2px 7px rgba(0,0,0,.045); cursor: grab; }.board-card:active { cursor: grabbing; }.board-card > strong { display: block; margin-bottom: 8px; font-size: 11px; }.board-card p { display: grid; grid-template-columns: 72px minmax(0,1fr); align-items: center; gap: 5px; margin: 4px 0; }.board-card p span { overflow: hidden; text-overflow: ellipsis; color: var(--theme-text-secondary); font-size: var(--text-compact); }.board-card input { min-width: 0; border: 0; border-bottom: 1px solid transparent; outline: 0; color: var(--theme-text); background: transparent; font-size: var(--text-compact); }.board-card input:focus { border-color: var(--theme-primary); }.board-card small { display: block; margin-top: 8px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .view-empty { margin: auto; max-width: 480px; color: var(--theme-text-secondary); text-align: center; font-size: 11px; }
 .table-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--theme-text-secondary); }.table-state strong { color: var(--theme-text); }.table-state p { max-width: 560px; text-align: center; }.table-state button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }.loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 900px) { .table-filter { width: 150px; }.table-title span { display: none; }.table-tools > button:not(.save-button) { display: none; }.view-tabs { overflow-x: auto; align-items: end; }.view-tab,.view-add,.view-tabs > small { flex: none; } }
+@media (max-width: 900px) { .table-filter { width: 150px; }.table-title span { display: none; }.table-tools > button:not(.save-button):not(.history-button) { display: none; }.view-tabs { overflow-x: auto; align-items: end; }.view-tab,.view-add,.view-tabs > small { flex: none; } }
 @media (max-width: 620px) { .table-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }.table-title { width: 100%; min-width: 0; }.table-title div { min-width: 0; }.table-title strong { max-width: 100%; }.table-tools { width: 100%; }.table-filter { min-width: 0; flex: 1; }.table-tools .save-button { flex: none; } }
 </style>
