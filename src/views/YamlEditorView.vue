@@ -27,7 +27,7 @@
         <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reloadFromDisk">
           <template #icon><n-icon :component="RefreshIcon" /></template>
         </n-button>
-        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏结构提纲' : '显示结构提纲'" :aria-pressed="inspectorVisible" @click="toggleInspector">
+        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏文档结构与问题' : '显示文档结构与问题'" :aria-pressed="inspectorVisible" @click="toggleInspector">
           <template #icon><n-icon :component="InspectorIcon" /></template>
         </n-button>
         <n-button
@@ -61,8 +61,8 @@
       <aside class="inspector">
         <div class="inspector-heading">
           <div>
-            <strong>结构提纲</strong>
-            <span>由 YAML 权威解析器生成</span>
+            <strong>文档结构与问题</strong>
+            <span>{{ analysisPending ? '正在更新结构分析，编辑不受影响' : '点击条目可定位到对应源码' }}</span>
           </div>
           <n-spin v-if="analysisPending" size="small" />
           <n-icon
@@ -189,6 +189,7 @@ import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
 import { type TabInfo, useAppStore } from '../store/app'
+import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../utils/structuredAnalysis'
 
 interface TextDocumentSnapshot {
   content: string
@@ -362,10 +363,15 @@ const analyzeContent = async (content: string) => {
 
 const scheduleAnalysis = () => {
   clearAnalysisTimer()
-  const content = sourceContent.value
   analysisTimer = setTimeout(() => {
+    analysisTimer = null
+    if (analysisPending.value) {
+      scheduleAnalysis()
+      return
+    }
+    const content = sourceContent.value
     void analyzeContent(content).catch(cause => message.error(`实时分析失败：${errorMessage(cause)}`))
-  }, 280)
+  }, analysisPending.value ? STRUCTURED_ANALYSIS_BUSY_RETRY_MS : structuredAnalysisDelay(sourceContent.value.length))
 }
 
 const editorExtensions = (isReadOnly: boolean) => [

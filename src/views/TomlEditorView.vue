@@ -14,7 +14,7 @@
         <n-button quaternary circle size="small" title="折叠全部" @click="editor && foldAll(editor)"><template #icon><n-icon :component="FoldIcon" /></template></n-button>
         <n-button quaternary circle size="small" title="展开全部" @click="editor && unfoldAll(editor)"><template #icon><n-icon :component="UnfoldIcon" /></template></n-button>
         <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reload"><template #icon><n-icon :component="RefreshIcon" /></template></n-button>
-        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏键路径提纲' : '显示键路径提纲'" :aria-pressed="inspectorVisible" @click="toggleInspector"><template #icon><n-icon :component="InspectorIcon" /></template></n-button>
+        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏配置分区与问题' : '显示配置分区与问题'" :aria-pressed="inspectorVisible" @click="toggleInspector"><template #icon><n-icon :component="InspectorIcon" /></template></n-button>
         <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty" @click="save()"><template #icon><n-icon :component="SaveIcon" /></template>{{ saving ? '保存中' : dirty ? '保存' : '已保存' }}</n-button>
       </div>
     </header>
@@ -26,7 +26,7 @@
       </section>
       <aside>
         <div class="heading">
-          <div><strong>键路径提纲</strong><span>格式保留解析器生成</span></div>
+          <div><strong>配置分区与问题</strong><span>{{ analysisPending ? '正在更新结构分析，编辑不受影响' : '点击分区或键可定位到对应源码' }}</span></div>
           <n-spin v-if="analysisPending" size="small" />
           <n-icon v-else :component="analysis?.valid ? ValidIcon : AlertIcon" :class="analysis?.valid ? 'accent' : 'error'" size="20" />
         </div>
@@ -74,6 +74,7 @@ import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { type TabInfo, useAppStore } from '../store/app'
+import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../utils/structuredAnalysis'
 
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string }
 interface Range { start: number; end: number }
@@ -95,7 +96,18 @@ const errorText = (cause: unknown) => { const e = cause as { message?: string; s
 const clearTimer = () => { if (timer) clearTimeout(timer); timer = null }
 const syncTab = (isDirty = dirty.value) => { const tab = store.tabs.find(t => t.path === path.value); if (!editor || !tab) return; tab.content = editor.state.doc.toString(); tab.isDirty = isDirty; tab.textSignature = signature.value; tab.textEncoding = encoding.value; tab.textReadOnlyReason = readOnlyReason.value; tab.textSize = fileSize.value; tab.textModified = modified.value }
 const analyze = async (source: string) => { const id = ++analysisId; analysisPending.value = true; try { const result = await invoke<Analysis>('analyze_toml_source', { content: source }); if (id === analysisId && content.value === source) analysis.value = result; return result } finally { if (id === analysisId) analysisPending.value = false } }
-const schedule = () => { clearTimer(); const source = content.value; timer = setTimeout(() => void analyze(source).catch(e => message.error(`实时分析失败：${errorText(e)}`)), 280) }
+const schedule = () => {
+  clearTimer()
+  timer = setTimeout(() => {
+    timer = null
+    if (analysisPending.value) {
+      schedule()
+      return
+    }
+    const source = content.value
+    void analyze(source).catch(e => message.error(`实时分析失败：${errorText(e)}`))
+  }, analysisPending.value ? STRUCTURED_ANALYSIS_BUSY_RETRY_MS : structuredAnalysisDelay(content.value.length))
+}
 const extensions = (locked: boolean) => [basicSetup, StreamLanguage.define(toml), EditorState.readOnly.of(locked), EditorView.editable.of(!locked), EditorView.lineWrapping,
   EditorView.updateListener.of(update => { if (update.docChanged) { content.value = update.state.doc.toString(); lines.value = update.state.doc.lines; if (!applying) { dirty.value = true; syncTab(true); schedule() } } if (update.docChanged || update.selectionSet) { const p = update.state.selection.main.head, line = update.state.doc.lineAt(p); cursorLine.value = line.number; cursorColumn.value = p - line.from + 1 } }),
   ...codeMirrorThemeExtensions]

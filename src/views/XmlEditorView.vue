@@ -25,7 +25,7 @@
         <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reload">
           <template #icon><n-icon :component="RefreshIcon" /></template>
         </n-button>
-        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏结构树' : '显示结构树'" :aria-pressed="inspectorVisible" @click="toggleInspector">
+        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏元素导航与问题' : '显示元素导航与问题'" :aria-pressed="inspectorVisible" @click="toggleInspector">
           <template #icon><n-icon :component="InspectorIcon" /></template>
         </n-button>
         <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty" @click="save()">
@@ -47,7 +47,10 @@
 
       <aside class="inspector">
         <div class="heading">
-          <div><strong>{{ isSvg ? '净化预览' : '只读结构树' }}</strong><span>源码是唯一事实源</span></div>
+          <div>
+            <strong>{{ isSvg ? '安全预览与元素导航' : '元素导航与问题' }}</strong>
+            <span>{{ analysisPending ? '正在更新结构分析，编辑不受影响' : '点击元素可定位，源码是保存依据' }}</span>
+          </div>
           <n-spin v-if="analysisPending" size="small" />
           <n-icon v-else :component="analysis?.valid ? ValidIcon : AlertIcon" :class="analysis?.valid ? 'accent' : 'error'" size="20" />
         </div>
@@ -130,6 +133,7 @@ import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { type TabInfo, useAppStore } from '../store/app'
+import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../utils/structuredAnalysis'
 
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string; path: string }
 interface Diagnostic { severity: string; code: string; message: string; start: number; end: number; line: number; column: number; path?: string }
@@ -213,8 +217,16 @@ const analyze = async (content: string) => {
   } finally { if (generation === analysisGeneration) analysisPending.value = false }
 }
 const scheduleAnalysis = () => {
-  clearTimer(); const content = sourceContent.value
-  timer = setTimeout(() => void analyze(content).catch(error => message.error(`实时分析失败：${errorText(error)}`)), 280)
+  clearTimer()
+  timer = setTimeout(() => {
+    timer = null
+    if (analysisPending.value) {
+      scheduleAnalysis()
+      return
+    }
+    const content = sourceContent.value
+    void analyze(content).catch(error => message.error(`实时分析失败：${errorText(error)}`))
+  }, analysisPending.value ? STRUCTURED_ANALYSIS_BUSY_RETRY_MS : structuredAnalysisDelay(sourceContent.value.length))
 }
 const extensions = (locked: boolean) => [
   basicSetup, xml(), EditorState.readOnly.of(locked), EditorView.editable.of(!locked), EditorView.lineWrapping,
