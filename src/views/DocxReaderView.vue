@@ -2,6 +2,9 @@
   <div class="docx-workspace">
     <header class="docx-toolbar">
       <div class="document-identity">
+        <button type="button" class="toolbar-icon" title="返回上一页" aria-label="返回上一页" @click="leaveDocx">
+          <ArrowLeftIcon :size="16" />
+        </button>
         <FileTextIcon :size="18" />
         <div class="document-title">
           <strong :title="docxPath">{{ fileName }}</strong>
@@ -9,6 +12,12 @@
         </div>
       </div>
       <div class="toolbar-actions">
+        <button type="button" :disabled="!draftUndoStack.length" title="撤销草稿修改" @click="undoDraft">
+          <UndoIcon :size="15" />
+        </button>
+        <button type="button" :disabled="!draftRedoStack.length" title="重做草稿修改" @click="redoDraft">
+          <RedoIcon :size="15" />
+        </button>
         <label class="docx-search">
           <SearchIcon :size="14" />
           <input
@@ -37,6 +46,14 @@
           @click="editorOpen = !editorOpen"
         >
           <FilePenLineIcon :size="15" />
+        </button>
+        <button
+          type="button"
+          :disabled="!previewReport || savingSource"
+          title="保存到原文件"
+          @click="confirmSaveSource"
+        >
+          <SaveIcon :size="15" />
         </button>
       </div>
     </header>
@@ -101,9 +118,15 @@
           </div>
         </aside>
 
-        <main class="docx-stage" aria-label="DOCX 结构化正文">
-          <article class="docx-page">
-            <template v-for="block in report.model.blocks" :key="block.id">
+        <main class="docx-stage" aria-label="DOCX 分页正文">
+          <article
+            v-for="(page, pageIndex) in documentPages"
+            :key="page.id"
+            class="docx-page"
+            :style="pageStyle(page)"
+          >
+            <span class="page-number" aria-hidden="true">{{ pageIndex + 1 }}</span>
+            <template v-for="block in page.blocks" :key="block.id">
               <component
                 :is="headingTag(block.level)"
                 v-if="block.kind === 'heading'"
@@ -213,7 +236,7 @@
             </template>
             <div v-if="!report.model.blocks.length" class="empty-document">文档没有可显示的正文块。</div>
 
-            <section v-if="report.model.relatedContent.length" class="docx-related-content">
+            <section v-if="pageIndex === documentPages.length - 1 && report.model.relatedContent.length" class="docx-related-content">
               <header>
                 <h2>附属内容</h2>
                 <span>页眉、页脚、脚注、尾注与批注均保持只读</span>
@@ -290,7 +313,7 @@
 
           <label v-if="editMode === 'text'" class="edit-field">
             <span>替换文本</span>
-            <textarea v-model="replacementText" maxlength="32767" rows="7"></textarea>
+            <textarea v-model="replacementText" maxlength="32767" rows="7" @beforeinput="captureDraftHistory()"></textarea>
           </label>
 
           <div v-else-if="editMode === 'style'" class="edit-field">
@@ -301,28 +324,28 @@
                 :class="{ active: draftBold }"
                 title="粗体"
                 aria-label="粗体"
-                @click="draftBold = !draftBold"
+                @click="toggleDraftStyle('bold')"
               ><b>B</b></button>
               <button
                 type="button"
                 :class="{ active: draftItalic }"
                 title="斜体"
                 aria-label="斜体"
-                @click="draftItalic = !draftItalic"
+                @click="toggleDraftStyle('italic')"
               ><i>I</i></button>
               <button
                 type="button"
                 :class="{ active: draftUnderline }"
                 title="下划线"
                 aria-label="下划线"
-                @click="draftUnderline = !draftUnderline"
+                @click="toggleDraftStyle('underline')"
               ><u>U</u></button>
             </div>
           </div>
 
           <label v-else class="edit-field">
             <span>图片替代文本</span>
-            <textarea v-model="replacementAltText" maxlength="1024" rows="5"></textarea>
+            <textarea v-model="replacementAltText" maxlength="1024" rows="5" @beforeinput="captureDraftHistory()"></textarea>
           </label>
 
           <button
@@ -373,6 +396,7 @@
           <span>{{ report.model.relatedContent.length }} 项附属内容</span>
           <span>{{ report.model.plainText.length.toLocaleString() }} 字符</span>
           <span>{{ report.media.length }}/{{ profile.renderableImageCount }} 张图片已安全预览</span>
+          <span>{{ documentPages.length }} 页</span>
         </div>
         <div>
           <SaveIcon :size="13" />
@@ -384,12 +408,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useDialog, useMessage } from 'naive-ui'
-import { useRoute, useRouter } from 'vue-router'
+import { NButton, useDialog, useMessage } from 'naive-ui'
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import {
   AlertTriangle as AlertIcon,
+  ArrowLeft as ArrowLeftIcon,
   BookOpenText as BookOpenTextIcon,
   ChevronDown as ChevronDownIcon,
   ChevronUp as ChevronUpIcon,
@@ -403,6 +428,8 @@ import {
   Search as SearchIcon,
   ShieldCheck as ShieldCheckIcon,
   ShieldAlert as ShieldAlertIcon,
+  Redo2 as RedoIcon,
+  Undo2 as UndoIcon,
   X as XIcon,
 } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
@@ -441,6 +468,12 @@ interface DocxSectionSummary {
   headerDistanceTwips?: number | null
   footerDistanceTwips?: number | null
   columnCount: number
+}
+interface DocxPage {
+  id: string
+  blocks: DocxBlock[]
+  section?: DocxSectionSummary
+  breakKind?: 'page-break' | 'rendered-page-break' | 'section'
 }
 interface DocxRelatedContent {
   id: string
@@ -576,6 +609,13 @@ type DocxPatchOperation =
   | { kind: 'text'; targetId: string; expectedTextDigest: string; replacementText: string }
   | { kind: 'style'; targetId: string; expectedStyleDigest: string; bold: boolean; italic: boolean; underline: boolean }
   | { kind: 'imageAltText'; targetId: string; expectedMetadataDigest: string; replacementAltText: string }
+interface DraftSnapshot {
+  text: string
+  altText: string
+  bold: boolean
+  italic: boolean
+  underline: boolean
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -602,6 +642,10 @@ const copyFileName = ref('')
 const saving = ref(false)
 const savingSource = ref(false)
 const saveError = ref('')
+const draftUndoStack = ref<DraftSnapshot[]>([])
+const draftRedoStack = ref<DraftSnapshot[]>([])
+const allowNextLeave = ref(false)
+let lastDraftHistoryAt = 0
 
 const docxPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const routeLocator = computed(() => typeof route.query.locator === 'string' ? route.query.locator : '')
@@ -651,6 +695,38 @@ const packageFeatureLabel = computed(() => {
   return features.length
     ? `${packageSummary} · 只读识别：${features.join(' · ')}`
     : `${packageSummary} · 未检测到首批模型外的高风险对象`
+})
+const documentPages = computed<DocxPage[]>(() => {
+  const blocks = report.value?.model.blocks || []
+  const sections = report.value?.model.sections || []
+  const pages: DocxPage[] = []
+  let sectionIndex = 0
+  let current: DocxBlock[] = []
+  const pushPage = (breakKind?: DocxPage['breakKind'], force = false) => {
+    if (!current.length && !force) return
+    pages.push({
+      id: `docx-page-${pages.length + 1}`,
+      blocks: current,
+      section: sections[Math.min(sectionIndex, Math.max(0, sections.length - 1))],
+      breakKind,
+    })
+    current = []
+  }
+  for (const block of blocks) {
+    if (block.kind === 'page-break' || block.kind === 'rendered-page-break') {
+      pushPage(block.kind, true)
+      continue
+    }
+    current.push(block)
+    const section = sections[sectionIndex]
+    if (section?.afterBlockId === block.id && sectionIndex < sections.length - 1) {
+      pushPage('section')
+      sectionIndex += 1
+    }
+  }
+  pushPage()
+  if (!pages.length) pushPage(undefined, true)
+  return pages
 })
 const editableTargetCount = computed(() => {
   const value = report.value
@@ -709,6 +785,65 @@ const canPreviewEdit = computed(() => {
   }
   return 'altText' in target && replacementAltText.value !== target.altText
 })
+
+const draftSnapshot = (): DraftSnapshot => ({
+  text: replacementText.value,
+  altText: replacementAltText.value,
+  bold: draftBold.value,
+  italic: draftItalic.value,
+  underline: draftUnderline.value,
+})
+const sameDraftSnapshot = (left: DraftSnapshot, right: DraftSnapshot) => (
+  left.text === right.text
+  && left.altText === right.altText
+  && left.bold === right.bold
+  && left.italic === right.italic
+  && left.underline === right.underline
+)
+const clearDraftHistory = () => {
+  draftUndoStack.value = []
+  draftRedoStack.value = []
+  lastDraftHistoryAt = 0
+}
+const captureDraftHistory = (force = false) => {
+  const snapshot = draftSnapshot()
+  const previous = draftUndoStack.value[draftUndoStack.value.length - 1]
+  const now = performance.now()
+  if (!force && now - lastDraftHistoryAt < 650) return
+  if (!previous || !sameDraftSnapshot(previous, snapshot)) {
+    draftUndoStack.value.push(snapshot)
+    if (draftUndoStack.value.length > 80) draftUndoStack.value.shift()
+  }
+  draftRedoStack.value = []
+  lastDraftHistoryAt = now
+}
+const restoreDraftSnapshot = (snapshot: DraftSnapshot) => {
+  replacementText.value = snapshot.text
+  replacementAltText.value = snapshot.altText
+  draftBold.value = snapshot.bold
+  draftItalic.value = snapshot.italic
+  draftUnderline.value = snapshot.underline
+}
+const undoDraft = () => {
+  const previous = draftUndoStack.value.pop()
+  if (!previous) return
+  draftRedoStack.value.push(draftSnapshot())
+  restoreDraftSnapshot(previous)
+  lastDraftHistoryAt = 0
+}
+const redoDraft = () => {
+  const next = draftRedoStack.value.pop()
+  if (!next) return
+  draftUndoStack.value.push(draftSnapshot())
+  restoreDraftSnapshot(next)
+  lastDraftHistoryAt = 0
+}
+const toggleDraftStyle = (property: 'bold' | 'italic' | 'underline') => {
+  captureDraftHistory(true)
+  if (property === 'bold') draftBold.value = !draftBold.value
+  if (property === 'italic') draftItalic.value = !draftItalic.value
+  if (property === 'underline') draftUnderline.value = !draftUnderline.value
+}
 
 const textTargetForBlock = (blockId: string) => textTargets.value.find(target => (
   target.blockId === blockId && target.kind !== 'table-cell'
@@ -776,6 +911,20 @@ const sectionSummary = (section: DocxSectionSummary) => {
     : '默认纸张'
   return `${orientation} · ${size} · ${section.columnCount} 栏 · ${section.breakType}`
 }
+const pageStyle = (page: DocxPage) => {
+  const section = page.section
+  const width = section?.pageWidthTwips || 11_906
+  const height = section?.pageHeightTwips || 16_838
+  const margin = (value: number | null | undefined, fallback: number) => `${((value || fallback) / 1440 * 2.54).toFixed(2)}cm`
+  return {
+    '--page-ratio': `${width} / ${height}`,
+    '--page-max-width': width > height ? '1040px' : '794px',
+    '--page-padding-top': margin(section?.marginTopTwips, 1440),
+    '--page-padding-right': margin(section?.marginRightTwips, 1440),
+    '--page-padding-bottom': margin(section?.marginBottomTwips, 1440),
+    '--page-padding-left': margin(section?.marginLeftTwips, 1440),
+  }
+}
 const mediaFor = (block: DocxBlock) => block.imageParts
   .map(part => mediaByPart.value.get(part))
   .filter((media): media is DocxMediaPreview => Boolean(media))
@@ -807,6 +956,7 @@ const resetTargetDraft = () => {
     draftUnderline.value = target.underline
   }
   if ('expectedMetadataDigest' in target) replacementAltText.value = target.altText
+  clearDraftHistory()
 }
 const invalidatePreview = () => {
   previewReport.value = null
@@ -887,17 +1037,19 @@ const saveCopy = async () => {
     ) throw new Error('保存结果未通过完整复读与生产者门禁')
     message.success(`已可靠另存并验证：${copyFileName.value.trim()}`)
     const routeName = route.name === 'LibraryMode' ? 'LibraryMode' : 'DocxEditor'
+    allowNextLeave.value = true
     await router.replace({ name: routeName, query: { path: saved.targetPath } })
   } catch (cause) {
+    allowNextLeave.value = false
     saveError.value = String(cause).replace(/^Error:\s*/, '')
   } finally {
     saving.value = false
   }
 }
-const saveSource = async () => {
+const saveSource = async (): Promise<boolean> => {
   const preview = previewReport.value
   const operation = currentOperation.value
-  if (!preview || !operation || !report.value || savingSource.value) return
+  if (!preview || !operation || !report.value || savingSource.value) return false
   savingSource.value = true
   saveError.value = ''
   try {
@@ -918,8 +1070,10 @@ const saveSource = async () => {
     ) throw new Error('源文件保存结果未通过完整复读与恢复门禁')
     message.success('DOCX 已可靠保存并重新读取')
     await load()
+    return true
   } catch (cause) {
     saveError.value = String(cause).replace(/^Error:\s*/, '')
+    return false
   } finally {
     savingSource.value = false
   }
@@ -933,6 +1087,49 @@ const confirmSaveSource = () => {
     negativeText: '取消',
     onPositiveClick: () => { void saveSource() },
   })
+}
+const mayLeave = () => {
+  if (allowNextLeave.value) {
+    allowNextLeave.value = false
+    return true
+  }
+  if (!canPreviewEdit.value) return true
+  return new Promise<boolean>(resolve => {
+    let dialogRef: ReturnType<typeof dialog.warning> | null = null
+    let settled = false
+    const finish = (value: boolean) => {
+      if (settled) return
+      settled = true
+      dialogRef?.destroy()
+      resolve(value)
+    }
+    dialogRef = dialog.warning({
+      title: 'DOCX 还有未保存修改',
+      content: previewReport.value
+        ? '草稿已通过隔离验证。可以保存到原文件后离开、放弃草稿，或继续编辑。'
+        : '草稿尚未通过隔离验证。请继续编辑并先验证，或者明确放弃草稿。',
+      closable: false,
+      maskClosable: false,
+      action: () => h('div', { class: 'docx-leave-actions' }, [
+        h(NButton, { size: 'small', onClick: () => finish(false) }, { default: () => '继续编辑' }),
+        h(NButton, { size: 'small', secondary: true, onClick: () => finish(true) }, { default: () => '放弃并离开' }),
+        h(NButton, {
+          size: 'small',
+          type: 'primary',
+          disabled: !previewReport.value || savingSource.value,
+          loading: savingSource.value,
+          onClick: async () => { if (await saveSource()) finish(true) },
+        }, { default: () => previewReport.value ? '保存并离开' : '先验证后保存' }),
+      ]),
+    })
+  })
+}
+const leaveDocx = () => { router.back() }
+const beforeUnload = (event: BeforeUnloadEvent) => {
+  if (canPreviewEdit.value) {
+    event.preventDefault()
+    event.returnValue = ''
+  }
 }
 const scrollToBlock = async (id: string) => {
   await nextTick()
@@ -990,7 +1187,9 @@ watch(matches, value => {
   matchIndex.value = value.length ? 0 : -1
 })
 watch(editMode, () => {
-  selectedTargetId.value = activeTargets.value[0]?.id || ''
+  if (!activeTargets.value.some(target => target.id === selectedTargetId.value)) {
+    selectedTargetId.value = activeTargets.value[0]?.id || ''
+  }
   resetTargetDraft()
   invalidatePreview()
 })
@@ -1003,6 +1202,10 @@ watch(
   invalidatePreview,
 )
 watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocator)
+onBeforeRouteLeave(() => mayLeave())
+onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
+onMounted(() => window.addEventListener('beforeunload', beforeUnload))
+onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
 </script>
 
 <style scoped>
@@ -1010,6 +1213,8 @@ watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocato
 .docx-toolbar { min-height: 52px; padding: 7px 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
 .document-identity, .toolbar-actions, .docx-search, .compatibility-warning, .docx-status > div { display: flex; align-items: center; }
 .document-identity { gap: 9px; min-width: 0; }
+.toolbar-icon { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; }
+.toolbar-icon:hover { color: var(--primary-color); border-color: var(--primary-color); }
 .document-title { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .document-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
 .document-title span { color: var(--text-muted); font-size: 11px; }
@@ -1044,8 +1249,9 @@ watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocato
 .docx-layout-summary { padding-top: 7px; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--border-color); }
 .docx-layout-summary strong { font-size: 11px; }
 .docx-layout-summary span { color: var(--text-muted); font-size: var(--text-compact); line-height: 1.45; }
-.docx-stage { overflow: auto; padding: 24px; background: color-mix(in srgb, var(--bg-secondary) 88%, #7f8da3); }
-.docx-page { width: min(760px, calc(100% - 24px)); min-height: 960px; margin: 0 auto; padding: 64px 70px; box-sizing: border-box; border: 1px solid var(--border-color); box-shadow: 0 8px 26px rgba(0,0,0,.12); background: var(--bg-primary); }
+.docx-stage { overflow: auto; padding: 28px 24px 48px; display: flex; flex-direction: column; align-items: center; gap: 28px; background: color-mix(in srgb, var(--bg-secondary) 88%, #7f8da3); }
+.docx-page { position: relative; width: min(var(--page-max-width, 794px), calc(100% - 24px)); min-height: 720px; aspect-ratio: var(--page-ratio, 0.707); padding: var(--page-padding-top, 2.54cm) var(--page-padding-right, 2.54cm) var(--page-padding-bottom, 2.54cm) var(--page-padding-left, 2.54cm); box-sizing: border-box; border: 1px solid var(--border-color); box-shadow: 0 8px 26px rgba(0,0,0,.15); background: var(--bg-primary); }
+.page-number { position: absolute; right: 12px; bottom: 8px; color: var(--text-muted); font-size: var(--text-compact); user-select: none; }
 .docx-block { scroll-margin: 90px; border-radius: 4px; transition: background .15s ease; }
 .docx-block.search-hit { background: color-mix(in srgb, #f0bd3e 23%, transparent); }
 .docx-block.editable, .docx-table-wrap td.editable { cursor: text; }
@@ -1118,7 +1324,7 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
   .docx-layout { grid-template-columns: 180px minmax(0, 1fr); }
   .docx-layout.editor-open { grid-template-columns: minmax(0, 1fr) 280px; }
   .docx-layout.editor-open .docx-outline { display: none; }
-  .docx-page { padding: 42px 36px; }
+  .docx-page { --page-padding-top: 42px !important; --page-padding-right: 36px !important; --page-padding-bottom: 42px !important; --page-padding-left: 36px !important; min-height: 780px; }
   .docx-search input { width: 105px; }
 }
 @media (min-width: 821px) and (max-width: 1180px) {
