@@ -2147,14 +2147,20 @@ const saveCurrentFile = async (options: unknown = {}) => {
   }
 }
 
-const syncVditorMode = () => { if (vditor) { const currentMode = vditor.getCurrentMode(); if (currentMode && currentMode !== store.editorMode) store.updateConfig({ editorMode: currentMode as any }) } }
+const syncUserSelectedVditorMode = () => {
+  if (!vditor) return
+  const currentMode = vditor.getCurrentMode()
+  if (currentMode && (currentMode !== store.editorMode || !store.editorModeExplicit)) {
+    void store.updateConfig({ editorMode: currentMode as any, editorModeExplicit: true })
+  }
+}
 const switchEditorMode = (mode: string) => {
-  if (!vditor || store.editorMode === mode) return
+  if (!vditor || (store.editorMode === mode && store.editorModeExplicit)) return
   const content = vditor.getValue()
   if (autoSaveTimer) { clearTimeout(autoSaveTimer); autoSaveTimer = null }
   editorLoading.value = true
   vditor.destroy(); vditor = null; isVditorReady = false
-  store.updateConfig({ editorMode: mode })
+  void store.updateConfig({ editorMode: mode, editorModeExplicit: true })
   nextTick(() => {
     initVditor()
     const check = setInterval(() => {
@@ -2162,7 +2168,11 @@ const switchEditorMode = (mode: string) => {
     }, 100)
   })
 }
-const handleEditorClick = (e: MouseEvent) => { if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(() => syncVditorMode(), EDITOR_MODE_SYNC_DELAY_MS) }
+const handleEditorClick = (e: MouseEvent) => {
+  if ((e.target as HTMLElement).closest('[data-type="edit-mode"]')) {
+    setTimeout(syncUserSelectedVditorMode, EDITOR_MODE_SYNC_DELAY_MS)
+  }
+}
 
 interface ChartSourceDocument { views: { id: string; name: string; kind: string }[] }
 const resolveMarkdownReference = (source: string, host: string) => {
@@ -2245,13 +2255,11 @@ const initVditor = () => {
           triggerAutoSave(val); 
           store.updateTabContent(cur.path, val);
         }
-        syncVditorMode();
         wordCount.value = val.length;
       },
       after: () => {
         isVditorReady = true;
         editorLoading.value = false;
-        syncVditorMode();
         const isDark = isActiveThemeDark(store.theme)
         vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', store.codeTheme || 'github')
         // 光标位置追踪（兼容 WYSIWYG / IR / SV 三种模式）

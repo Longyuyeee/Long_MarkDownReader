@@ -16,6 +16,8 @@
 
 > A0G 已完成资料库上下文与图谱返回修复：应用先恢复配置/标签再挂载路由，图谱返回和无路径资料库导航会补回活动文件；Table/Workbook 读取前等待配置，并以内存状态恢复滚动位置和 XLSX 活动 Sheet。UX-12 为待安装包复测。下一步处理 UX-19，保证 Markdown 首次打开和旧配置迁移后默认进入所见即所得。详见 [`A0G_Library_Context_and_Graph_Return_Audit_2026-08-04.md`](./A0G_Library_Context_and_Graph_Return_Audit_2026-08-04.md)。
 
+> A0H 已完成 Markdown 默认模式迁移：新安装、旧配置和旧备份在没有用户显式选择标记时统一进入所见即所得；资料库与外部 Markdown 只在用户主动切换模式后持久化偏好。UX-19 为待安装包复测。下一步处理 UX-20，统一 Markdown 代码块、高亮文字、光标和选区的主题对比度。详见 [`A0H_Markdown_Wysiwyg_Default_Migration_Audit_2026-08-04.md`](./A0H_Markdown_Wysiwyg_Default_Migration_Audit_2026-08-04.md)。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 

@@ -52,6 +52,7 @@ pub struct AppConfig {
     pub theme: String,
     pub code_theme: String,
     pub editor_mode: String,
+    pub editor_mode_explicit: bool,
     pub editor_bg_color: String,
     pub hero_icon: String,
     pub auto_save_interval: u32,
@@ -108,6 +109,7 @@ impl Default for AppConfig {
             theme: "system".into(),
             code_theme: "github".into(),
             editor_mode: "wysiwyg".into(),
+            editor_mode_explicit: false,
             editor_bg_color: String::new(),
             hero_icon: "BookOpen".into(),
             auto_save_interval: 3,
@@ -125,6 +127,18 @@ impl Default for AppConfig {
             saved_searches: vec![],
         }
     }
+}
+
+fn normalize_editor_mode(config: &mut AppConfig) -> bool {
+    let supported = matches!(config.editor_mode.as_str(), "wysiwyg" | "ir" | "sv");
+    if config.editor_mode_explicit && supported {
+        return false;
+    }
+
+    let changed = config.editor_mode != "wysiwyg" || config.editor_mode_explicit;
+    config.editor_mode = "wysiwyg".into();
+    config.editor_mode_explicit = false;
+    changed
 }
 
 fn validate_saved_searches(
@@ -230,20 +244,24 @@ pub fn get_config(app_handle: tauri::AppHandle) -> AppConfig {
     } else {
         get_default_config(&app_handle)
     };
+    let mut config_changed = normalize_editor_mode(&mut config);
     if !config.ai_api_key.is_empty() {
         match store_ai_secret(&config.ai_api_key) {
             Ok(()) => {
                 config.ai_api_key.clear();
-                if let Ok(content) = serde_json::to_string_pretty(&config) {
-                    if let Err(error) = write_utf8(&config_path, &content) {
-                        eprintln!("Failed to remove migrated API credential from config: {error}");
-                    }
-                }
+                config_changed = true;
             }
             Err(error) => {
                 // Leave the legacy value on disk so migration can be retried next launch.
                 eprintln!("Legacy API credential migration failed: {error}");
                 config.ai_api_key.clear();
+            }
+        }
+    }
+    if config_changed {
+        if let Ok(content) = serde_json::to_string_pretty(&config) {
+            if let Err(error) = write_utf8(&config_path, &content) {
+                eprintln!("Failed to persist migrated config: {error}");
             }
         }
     }
@@ -316,6 +334,7 @@ pub fn save_config(app_handle: tauri::AppHandle, mut config: AppConfig) -> Resul
         fs::create_dir_all(&config_dir).map_err(|error| error.to_string())?;
     }
     validate_saved_searches(&config.saved_searches, &config.libraries)?;
+    normalize_editor_mode(&mut config);
     config.ai_api_key.clear();
     let content = serde_json::to_string_pretty(&config).map_err(|error| error.to_string())?;
     write_utf8(config_dir.join("config.json"), &content)
@@ -361,6 +380,31 @@ mod tests {
         .unwrap();
         assert_eq!(legacy.ai_api_key, "legacy-value");
         assert!(legacy.text_auto_save_enabled);
+    }
+
+    #[test]
+    fn legacy_editor_mode_migrates_to_wysiwyg_until_user_selects_a_mode() {
+        let mut legacy: AppConfig =
+            serde_json::from_str(r#"{"editorMode":"sv","libraries":[],"activeLibraryPath":""}"#)
+                .unwrap();
+        assert!(!legacy.editor_mode_explicit);
+        assert!(normalize_editor_mode(&mut legacy));
+        assert_eq!(legacy.editor_mode, "wysiwyg");
+        assert!(!legacy.editor_mode_explicit);
+
+        let mut explicit = AppConfig {
+            editor_mode: "sv".into(),
+            editor_mode_explicit: true,
+            ..Default::default()
+        };
+        assert!(!normalize_editor_mode(&mut explicit));
+        assert_eq!(explicit.editor_mode, "sv");
+        assert!(explicit.editor_mode_explicit);
+
+        explicit.editor_mode = "unsupported".into();
+        assert!(normalize_editor_mode(&mut explicit));
+        assert_eq!(explicit.editor_mode, "wysiwyg");
+        assert!(!explicit.editor_mode_explicit);
     }
 
     #[test]

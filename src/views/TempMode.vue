@@ -297,16 +297,17 @@ onMounted(async () => {
     ],
     input: () => {
       isDirty.value = true
-      syncVditorMode()
     },
     after: () => {
       syncOutlineManual()
       setTimeout(fixEditorImages, 500)
       setupOutlineObserver()
-      const contentEl = (vditor as any).vditor.wysiwyg?.element
-      if (contentEl) {
-        contentEl.addEventListener('click', (e: MouseEvent) => {
-          if ((e.target as HTMLElement).closest('.vditor-toolbar__item')) setTimeout(syncVditorMode, 300)
+      const editorContainer = document.getElementById('vditor')
+      if (editorContainer) {
+        editorContainer.addEventListener('click', (e: MouseEvent) => {
+          if ((e.target as HTMLElement).closest('[data-type="edit-mode"]')) {
+            setTimeout(syncUserSelectedVditorMode, 300)
+          }
         })
       }
       startShadowSaveTimer()
@@ -325,10 +326,12 @@ onUnmounted(() => {
   }
 })
 
-const syncVditorMode = () => {
+const syncUserSelectedVditorMode = () => {
   if (vditor) {
     const currentMode = vditor.getCurrentMode()
-    if (currentMode && currentMode !== store.editorMode) store.updateConfig({ editorMode: currentMode as any })
+    if (currentMode && (currentMode !== store.editorMode || !store.editorModeExplicit)) {
+      void store.updateConfig({ editorMode: currentMode as any, editorModeExplicit: true })
+    }
   }
 }
 

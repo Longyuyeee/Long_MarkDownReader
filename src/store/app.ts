@@ -78,6 +78,7 @@ export const useAppStore = defineStore('app', {
     theme: 'system' as ThemeName,
     codeTheme: 'github' as string,
     editorMode: 'wysiwyg' as 'wysiwyg' | 'ir' | 'sv',
+    editorModeExplicit: false,
     editorBgColor: '' as string,
     heroIcon: 'BookOpen' as string,
     libraries: [] as LibraryConfig[],
@@ -130,7 +131,10 @@ export const useAppStore = defineStore('app', {
           this.activeLibraryPath = config.activeLibraryPath || ''
           this.theme = normalizeThemeName(config.theme)
           this.codeTheme = config.codeTheme || 'github'
-          this.editorMode = config.editorMode || 'wysiwyg'
+          this.editorModeExplicit = config.editorModeExplicit === true
+          this.editorMode = this.editorModeExplicit && ['wysiwyg', 'ir', 'sv'].includes(config.editorMode)
+            ? config.editorMode
+            : 'wysiwyg'
           this.editorBgColor = config.editorBgColor || ''
           this.heroIcon = config.heroIcon || 'BookOpen'
           this.autoSaveInterval = config.autoSaveInterval || 3
@@ -206,6 +210,7 @@ export const useAppStore = defineStore('app', {
         theme: this.theme,
         codeTheme: this.codeTheme,
         editorMode: this.editorMode,
+        editorModeExplicit: this.editorModeExplicit,
         editorBgColor: this.editorBgColor,
         heroIcon: this.heroIcon,
         autoSaveInterval: this.autoSaveInterval,
