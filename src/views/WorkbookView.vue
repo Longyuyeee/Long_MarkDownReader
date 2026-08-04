@@ -12,6 +12,17 @@
         <button class="icon-button" title="粘贴区域" :disabled="!selectedCell || saving || sheetProtected" @click="pasteSelection"><n-icon :component="PasteIcon" /></button>
         <button :title="sheetInfo?.arrayFormulas.length ? '当前工作表包含只读数组公式，暂不开放本地重算' : '重算当前已加载公式'" :disabled="calculating || saving || !activeSheet || Boolean(sheetInfo?.arrayFormulas.length)" @click="recalculateFormulas"><n-icon :component="CalculatorIcon" />{{ calculating ? '重算中…' : '重算' }}</button>
         <button :class="{ active: showFormulas }" :aria-pressed="showFormulas" :disabled="saving" @click="showFormulas = !showFormulas"><n-icon :component="FunctionIcon" />{{ showFormulas ? '结果' : '公式' }}</button>
+        <button
+          v-if="hasLinkedData"
+          class="linked-data-trigger"
+          :class="{ warning: workbook.linkedData.summary.refreshRiskCount }"
+          :title="linkedDataSummaryText"
+          @click="linkedDataModalOpen = true"
+        >
+          <n-icon :component="LinkedDataIcon" />
+          <span>透视表与数据连接</span>
+          <strong>{{ workbook.linkedData.summary.totalObjectCount }}</strong>
+        </button>
         <button class="icon-button" title="重新读取" :disabled="saving" @click="refreshWorkbook"><n-icon :component="RefreshIcon" /></button>
         <button :disabled="importing || saving || !activeSheet" @click="convertSheet"><n-icon :component="TableIcon" />{{ importing ? '转换中…' : '转为 Table' }}</button>
         <button class="primary" :disabled="!dirtyCount || saving" aria-live="polite" @click="saveWorkbook"><n-icon :component="SaveIcon" />{{ saving ? '保存中' : dirtyCount ? `保存 (${dirtyCount})` : '已保存' }}</button>
@@ -23,34 +34,23 @@
       <small v-if="sheetInfo">{{ sheetInfo.totalRows.toLocaleString() }} 行 × {{ sheetInfo.totalColumns.toLocaleString() }} 列</small>
     </nav>
 
-    <div
-      v-if="workbook && (workbook.linkedData.pivotTables.length || workbook.linkedData.slicers.length || workbook.linkedData.externalLinks.length || workbook.linkedData.connections.length || workbook.linkedData.externalRelationshipCount)"
-      class="linked-data-toolbar"
-      aria-label="透视表与外部数据状态"
-    >
-      <strong>高级数据对象</strong>
-      <button v-for="pivot in workbook.linkedData.pivotTables" :key="pivot.part" :title="pivotTooltip(pivot)" @click="pivot.sheet && selectSheet(pivot.sheet)">
-        透视表 · {{ pivot.name }}<small>{{ pivot.sourceSheet ? `${pivot.sourceSheet}!${pivot.sourceRange || ''}` : pivot.sourceType }}</small>
-      </button>
-      <button v-for="slicer in workbook.linkedData.slicers" :key="slicer.part" :title="slicer.cacheName || slicer.part" @click="slicer.sheet && selectSheet(slicer.sheet)">
-        切片器 · {{ slicer.name }}<small>{{ slicer.sheet || '未绑定工作表' }}</small>
-      </button>
-      <span v-if="workbook.linkedData.connections.length">数据连接 {{ workbook.linkedData.connections.length }}</span>
-      <span v-if="workbook.linkedData.externalLinks.length">外部工作簿 {{ workbook.linkedData.externalLinks.length }}</span>
-      <button class="linked-data-overview" @click="linkedDataModalOpen = true">
-        查看审计详情<small>{{ workbook.linkedData.summary.totalObjectCount }} 个对象 · {{ workbook.linkedData.summary.refreshRiskCount }} 个刷新风险</small>
-      </button>
-      <WorkspaceStateNotice v-if="workbook.linkedData.externalRelationshipCount" kind="external" tone="warning" compact>安全模式：已识别 {{ workbook.linkedData.externalRelationshipCount }} 个外部目标，未发起网络或文件访问</WorkspaceStateNotice>
-    </div>
-
-    <n-modal v-if="workbook" v-model:show="linkedDataModalOpen" preset="card" title="高级数据对象审计" class="linked-data-modal">
+    <n-modal v-if="workbook" v-model:show="linkedDataModalOpen" preset="card" title="透视表与数据连接" class="linked-data-modal">
       <div class="linked-data-audit">
-        <WorkspaceStateNotice as="section" class="linked-data-policy" kind="readonly" tone="success" title="离线只读模式">
-          <p>显示脱敏结构元数据；不刷新缓存、不执行查询、不跟随外部目标，也不修改高级对象。</p>
-          <template #action><span>安全策略已生效</span></template>
+        <WorkspaceStateNotice as="section" class="linked-data-policy" kind="readonly" tone="success" title="安全查看模式">
+          <p>这里集中显示工作簿中的透视表、切片器和外部数据来源。LongEdit 不会自动刷新数据，也不会访问外部文件或网络地址。</p>
+          <template #action><span>当前仅查看</span></template>
+        </WorkspaceStateNotice>
+        <WorkspaceStateNotice
+          v-if="workbook.linkedData.externalRelationshipCount"
+          as="section"
+          kind="external"
+          tone="warning"
+          title="已阻止外部目标"
+        >
+          <p>工作簿包含 {{ workbook.linkedData.externalRelationshipCount }} 个外部目标。LongEdit 只显示脱敏摘要，不会打开目标或发送请求。</p>
         </WorkspaceStateNotice>
         <div class="linked-data-metrics">
-          <span><strong>{{ workbook.linkedData.summary.totalObjectCount }}</strong>高级对象</span>
+          <span><strong>{{ workbook.linkedData.summary.totalObjectCount }}</strong>相关对象</span>
           <span><strong>{{ workbook.linkedData.summary.localPivotCount }}</strong>本地来源透视表</span>
           <span><strong>{{ workbook.linkedData.summary.externalLinkCount + workbook.linkedData.summary.connectionCount }}</strong>外部来源对象</span>
           <span :class="{ warning: workbook.linkedData.summary.refreshRiskCount }"><strong>{{ workbook.linkedData.summary.refreshRiskCount }}</strong>打开时刷新标记</span>
@@ -803,7 +803,7 @@ import WorkspaceStatusBar from '../components/workspace/WorkspaceStatusBar.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useDialog, useMessage } from 'naive-ui'
-import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Calculator as CalculatorIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
+import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Calculator as CalculatorIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, Database as LinkedDataIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone } from '../config/themePresets'
 import { conditionalExpressionReferences, evaluateConditionalExpression, parseConditionalExpression } from '../utils/conditionalExpression'
@@ -1067,6 +1067,22 @@ const calculating = ref(false)
 const error = ref('')
 const showFormulas = ref(false)
 const linkedDataModalOpen = ref(false)
+const hasLinkedData = computed(() => Boolean(workbook.value && (
+  workbook.value.linkedData.summary.totalObjectCount
+  || workbook.value.linkedData.externalRelationshipCount
+)))
+const linkedDataSummaryText = computed(() => {
+  if (!workbook.value) return ''
+  const { summary, externalRelationshipCount } = workbook.value.linkedData
+  const parts = [
+    `${summary.localPivotCount + summary.connectionBackedPivotCount} 个透视表`,
+    `${summary.slicerCount} 个切片器`,
+    `${summary.connectionCount + summary.externalLinkCount} 个外部数据来源`,
+  ]
+  if (summary.refreshRiskCount) parts.push(`${summary.refreshRiskCount} 项请求刷新，当前已阻止`)
+  if (externalRelationshipCount) parts.push('LongEdit 不会访问外部目标')
+  return parts.join('；')
+})
 const pivotPreviews = ref(new Map<string, WorkbookPivotPreviewResult>())
 const pivotPreviewLoading = ref('')
 const pivotRebuildPlans = ref(new Map<string, WorkbookPivotRebuildPlan>())
@@ -1685,14 +1701,6 @@ const drawingTooltip = (drawing: WorkbookDrawingObject) => {
   if (drawing.part) lines.push(`OOXML：${drawing.part}`)
   return lines.filter(Boolean).join('\n')
 }
-const pivotTooltip = (pivot: WorkbookPivotTable) => [
-  `缓存 ${pivot.cacheId ?? '—'} · 来源 ${pivot.sourceType}`,
-  pivot.sourceSheet ? `${pivot.sourceSheet}!${pivot.sourceRange || ''}` : '',
-  pivot.audit.rebuildCandidate ? '结构审计：受限重建候选（刷新仍禁用）' : `结构审计：${pivot.audit.blockers.join('；')}`,
-  pivot.connectionId ? `连接 ${pivot.connectionId}` : '',
-  pivot.refreshOnLoad ? '原文件要求打开时刷新；LongEdit 不会自动刷新' : '',
-  `OOXML：${pivot.part}`,
-].filter(Boolean).join('\n')
 const pivotFieldRoleLabel = (role: string) => ({ row: '行', column: '列', page: '筛选', data: '值', unused: '未使用' }[role] || role)
 const pivotFieldTypeLabel = (type: string) => ({ string: '文本', number: '数值', date: '日期', boolean: '布尔', error: '错误', blank: '空值', mixed: '混合', unknown: '未知类型' }[type] || type)
 const pivotAggregationLabel = (aggregation: string) => ({ sum: '求和', count: '计数', average: '平均值', max: '最大值', min: '最小值', product: '乘积', countNums: '数值计数' }[aggregation] || aggregation)
@@ -2118,7 +2126,7 @@ const cellStyleCss = (row: number, column: number): CSSProperties => {
     ? rowOffset(merged.bottom + 1) - rowOffset(merged.top)
     : undefined
   return {
-    '--cell-fill': style.fillColor || 'var(--theme-card)',
+    '--cell-fill': style.fillColor || 'var(--theme-surface)',
     color: style.fontColor || undefined,
     fontFamily: style.fontName,
     fontSize: `${style.fontSize}pt`,
@@ -4503,7 +4511,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .workbook-view { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 94%, var(--theme-primary)); }
-.workbook-toolbar { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 16px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); box-shadow: var(--workspace-shadow-sm); z-index: 5; }
+.workbook-toolbar { min-height: var(--workspace-toolbar-height); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-surface); box-shadow: var(--workspace-shadow-sm); z-index: 5; }
 .workbook-title,.workbook-actions,.workbook-actions button { display: flex; align-items: center; gap: 8px; }
 .workbook-title > button,.workbook-actions button { height: 32px; padding: 0 10px; border: 1px solid var(--workspace-border-color); border-radius: 7px; color: var(--theme-text); background: var(--workspace-control-bg); cursor: pointer; }
 .workbook-title .icon-button,.workbook-actions .icon-button { width: 32px; justify-content: center; padding: 0; }
@@ -4513,20 +4521,14 @@ onBeforeUnmount(() => {
 .workbook-actions button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.4); background: rgba(var(--theme-primary-rgb),.08); }
 .workbook-actions button.primary { color: var(--workspace-on-accent); border-color: var(--theme-primary); background: var(--theme-primary); }
 .workbook-actions button:disabled { opacity: .45; cursor: default; }
-.sheet-tabs { min-height: 39px; display: flex; align-items: end; gap: 4px; padding: 5px 12px 0; overflow-x: auto; border-bottom: 1px solid var(--workspace-border-color); background: color-mix(in srgb, var(--theme-card) 97%, #dce6ef); }
-.sheet-tabs button { height: 33px; display: flex; align-items: center; gap: 6px; padding: 0 12px; border: 1px solid transparent; border-bottom: 0; border-radius: 7px 7px 0 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; white-space: nowrap; font-size: var(--text-compact); }
-.sheet-tabs button.active { color: var(--theme-primary); border-color: var(--workspace-border-color); background: var(--theme-card); }
-.sheet-tabs small { margin: 0 5px 10px auto; color: var(--theme-text-secondary); white-space: nowrap; font-size: var(--text-compact); }
+.workbook-actions .linked-data-trigger { position: relative; }
+.workbook-actions .linked-data-trigger strong { min-width: 18px; padding: 1px 5px; border-radius: 9px; color: var(--theme-primary); background: color-mix(in srgb, var(--theme-primary) 11%, var(--theme-surface)); font-size: var(--text-compact); text-align: center; }
+.workbook-actions .linked-data-trigger.warning strong { color: var(--status-warning); background: var(--status-warning-bg); }
+.sheet-tabs { min-height: 35px; display: flex; align-items: end; gap: 3px; padding: 3px 10px 0; overflow-x: auto; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-surface-2); }
+.sheet-tabs button { height: 31px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; white-space: nowrap; font-size: var(--text-compact); }
+.sheet-tabs button.active { color: var(--theme-primary); border-color: var(--workspace-border-color); background: var(--theme-surface); }
+.sheet-tabs small { margin: 0 5px 8px auto; color: var(--theme-text-secondary); white-space: nowrap; font-size: var(--text-compact); }
 .formula-bar { height: 34px; flex: none; display: flex; align-items: center; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); }
-.linked-data-toolbar { min-height: 42px; flex: none; display: flex; align-items: center; gap: 7px; padding: 4px 12px; overflow-x: auto; border-bottom: 1px solid rgba(190,120,25,.18); color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 91%, #fff0cf); font-size: var(--text-compact); }
-.linked-data-toolbar > strong,.linked-data-toolbar > span,.linked-data-toolbar > em { flex: none; }
-.linked-data-toolbar > .workspace-state-notice { flex: none; margin-left: auto; }
-.linked-data-toolbar > strong { color: var(--status-warning); }
-.linked-data-toolbar > span { padding: 4px 7px; border-radius: 4px; background: rgba(190,120,25,.1); }
-.linked-data-toolbar > em { margin-left: auto; color: var(--status-warning); font-style: normal; }
-.linked-data-toolbar button { min-width: 155px; height: 32px; flex: none; display: flex; flex-direction: column; justify-content: center; padding: 3px 8px; border: 1px solid rgba(190,120,25,.2); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); text-align: left; font-size: var(--text-compact); cursor: pointer; }
-.linked-data-toolbar button small { max-width: 180px; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }
-.linked-data-toolbar .linked-data-overview { min-width: 150px; border-color: rgba(var(--theme-primary-rgb),.24); color: var(--theme-primary); }
 :deep(.linked-data-modal) { width: min(860px, calc(100vw - 32px)); }
 .linked-data-audit { display: grid; gap: 14px; max-height: min(680px, calc(100vh - 190px)); overflow-y: auto; padding-right: 3px; }
 .linked-data-policy { padding: 14px 16px; border-color: var(--status-success-border); background: var(--status-success-bg); }
@@ -4763,18 +4765,18 @@ onBeforeUnmount(() => {
 .sheet-scroll { min-height: 0; flex: 1; overflow: auto; }
 .sheet-canvas { min-height: 100%; }
 .sheet-header,.sheet-row { display: grid; }
-.sheet-header { position: sticky; top: 0; z-index: 20; height: 38px; background: color-mix(in srgb, var(--theme-card) 94%, #dce6ef); box-shadow: 0 1px 0 var(--workspace-border-color); }
+.sheet-header { position: sticky; top: 0; z-index: 20; height: 38px; background: var(--theme-surface-2); box-shadow: 0 1px 0 var(--workspace-border-color); }
 .virtual-sheet { position: relative; }
 .sheet-row { position: absolute; top: 0; left: 0; }
 .row-number,.column-header,.workbook-cell { min-width: 0; box-sizing: border-box; border-right: 1px solid var(--workspace-border-color); border-bottom: 1px solid var(--workspace-border-color); }
-.row-number { position: sticky; left: 0; z-index: 8; display: grid; place-items: center; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 91%, #d9e3ed); font-size: var(--text-compact); }
+.row-number { position: sticky; left: 0; z-index: 8; display: grid; place-items: center; color: var(--theme-text-secondary); background: var(--theme-surface-2); font-size: var(--text-compact); }
 .row-number:not(.corner),.column-header,.corner { cursor: pointer; user-select: none; }
-.row-number.active,.column-header.active { color: var(--theme-primary); background: color-mix(in srgb, var(--theme-card) 78%, var(--theme-primary)); }
-.row-number.outlined,.column-header.outlined { box-shadow: inset 3px 0 rgba(var(--theme-primary-rgb),.5); }.row-number.hidden,.column-header.hidden { overflow: hidden; color: transparent; background: color-mix(in srgb, var(--theme-card) 70%, var(--theme-primary)); }
+.row-number.active,.column-header.active { color: var(--theme-primary); background: color-mix(in srgb, var(--theme-surface-2) 78%, var(--theme-primary)); }
+.row-number.outlined,.column-header.outlined { box-shadow: inset 3px 0 rgba(var(--theme-primary-rgb),.5); }.row-number.hidden,.column-header.hidden { overflow: hidden; color: transparent; background: color-mix(in srgb, var(--theme-surface-2) 70%, var(--theme-primary)); }
 .corner { z-index: 24; }
-.column-header { display: grid; place-items: center; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 94%, #dce6ef); font-size: var(--text-compact); font-weight: 700; }
-.column-header.frozen,.workbook-cell.frozen { box-shadow: 1px 0 0 rgba(var(--theme-primary-rgb),.28); }
-.workbook-cell { position: relative; overflow: hidden; padding: 7px 8px 0; outline: 0; text-overflow: ellipsis; white-space: nowrap; background: var(--cell-fill, var(--theme-card)); font-size: var(--text-compact); user-select: none; }
+.column-header { display: grid; place-items: center; color: var(--theme-text-secondary); background: var(--theme-surface-2); font-size: var(--text-compact); font-weight: 700; }
+.column-header.frozen,.workbook-cell.frozen { box-shadow: 2px 0 0 color-mix(in srgb, var(--theme-primary) 32%, var(--theme-surface)); }
+.workbook-cell { position: relative; overflow: hidden; padding: 7px 8px 0; outline: 0; text-overflow: ellipsis; white-space: nowrap; background: var(--cell-fill, var(--theme-surface)); font-size: var(--text-compact); user-select: none; }
 .workbook-cell.in-table { background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 94%, var(--theme-primary)); }
 .workbook-cell.table-header { color: var(--theme-primary); font-weight: 700; background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 82%, var(--theme-primary)); }
 .workbook-cell.validated::before { content: ''; position: absolute; top: 3px; right: 3px; width: 3px; height: 3px; border-radius: 50%; background: #d59a2d; }
@@ -4800,5 +4802,6 @@ onBeforeUnmount(() => {
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } .linked-data-policy { align-items: flex-start; flex-direction: column; } .linked-data-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .linked-data-group article { grid-template-columns: 1fr; gap: 6px; } .linked-data-group article > button { justify-self: start; } .pivot-audit-status,.pivot-rebuild-plan > header,.pivot-cache-rebuild-result > header,.pivot-synchronized-rebuild-result > header,.pivot-expanded-rebuild-result > header,.pivot-variant-verification-result > header { align-items: flex-start; flex-direction: column; gap: 4px; } .pivot-impact-parts,.pivot-cache-fields,.pivot-sync-facts,.pivot-variant-grid,.pivot-layout-variants,.pivot-copy-save { grid-template-columns: 1fr; } .pivot-preview-result > header { align-items: flex-start; flex-direction: column; } .linked-data-group article .pivot-preview-grid article { grid-template-columns: 1fr; } }
-@media (max-width: 900px) { .workbook-actions button:not(.primary):not(.icon-button) { display: none; } .workbook-title span { display: none; } }
+@media (max-width: 1180px) { .workbook-actions .linked-data-trigger span { display: none; } .workbook-actions .linked-data-trigger { padding-inline: 8px; } }
+@media (max-width: 900px) { .workbook-actions button:not(.primary):not(.icon-button):not(.linked-data-trigger) { display: none; } .workbook-title span { display: none; } .workbook-title strong { max-width: 32vw; } }
 </style>

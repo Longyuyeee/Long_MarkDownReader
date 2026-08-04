@@ -34,6 +34,8 @@
 
 > A0P 已完成 YAML/XML/TOML 结构化源码工作区收口：侧栏使用面向任务的结构导航与问题语言，点击条目可定位源码；实时分析按源码规模自适应延迟，并串行追赶最新内容，避免连续编辑并发堆积。统一主题、响应式侧栏、Rust 诊断和显式保存边界保持不变。UX-31 为待安装包复测。下一步处理 UX-32，优化 XLSX 布局、冻结区域视觉和高级数据对象说明。详见 [`A0P_Structured_Source_Workspace_Audit_2026-08-04.md`](./A0P_Structured_Source_Workspace_Audit_2026-08-04.md)。
 
+> A0Q 已完成 XLSX 工作区体验收口：默认占整行的高级对象摘要已移入“透视表与数据连接”工具栏入口，首层说明改为用户语言；主工具栏和 Sheet 标签更紧凑，入口在窄窗口保留可达。网格默认单元格、表头、行号与冻结区域改用不透明主题表面，冻结分隔保持清晰。UX-32 为待安装包复测。下一步处理 UX-33，推进 DOCX 页面式直接编辑与显式保存边界。详见 [`A0Q_Workbook_Workspace_Experience_Audit_2026-08-04.md`](./A0Q_Workbook_Workspace_Experience_Audit_2026-08-04.md)。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 

@@ -389,7 +389,8 @@ if (!fs.existsSync(path.join(root, linkedDataCapabilities.fixture))) fail('S8-7A
 if (!fixture.documentFeatures.pivotCacheRecords || fixture.currentEngineExpectations.pivotAudit !== 'supported') fail('S8-7B fixture audit expectation missing')
 if (!model.includes('pub summary: WorkbookLinkedDataSummary') || !model.includes('pub policy: WorkbookLinkedDataPolicy')) fail('S8-7A linked data model summary missing')
 if (!ooxml.includes('build_workbook_linked_data')) fail('S8-7A linked data parser summary missing')
-if (!engine.includes('offline_read_only') || !view.includes('高级数据对象审计') || !view.includes('安全策略已生效') || !view.includes('连接字符串、命令、凭据和完整路径不会发送到界面')) fail('S8-7A linked data audit UI or command evidence missing')
+if (!engine.includes('offline_read_only') || !view.includes('透视表与数据连接') || !view.includes('当前仅查看') || !view.includes('LongEdit 不会自动刷新数据') || !view.includes('连接字符串、命令、凭据和完整路径不会发送到界面')) fail('S8-7A linked data review UI or command evidence missing')
+if (view.includes('class="linked-data-toolbar"') || view.includes('title="高级数据对象审计"')) fail('S8-7A linked data summary must not occupy a permanent workbook row')
 if (!model.includes('pub audit: WorkbookPivotAudit') || !linkedDataEngine.includes('inspect_pivot_cache') || !linkedDataEngine.includes('candidate_for_rebuild') || !linkedDataEngine.includes('record_widths_valid') || !linkedDataEngine.includes('声明数量与实际记录不一致')) fail('S8-7B pivot audit backend evidence missing')
 if (!view.includes('结构满足受限重建候选条件') || !view.includes('本阶段仍不执行刷新或写回') || !view.includes('缓存记录')) fail('S8-7B pivot audit UI evidence missing')
 if (!model.includes('pub struct WorkbookPivotPreviewResult') || !engine.includes('pub async fn preview_workbook_pivot') || !tauriLib.includes('preview_workbook_pivot,') || !pivotPreviewEngine.includes('MAX_PIVOT_SOURCE_ROWS: usize = 50_000') || !pivotPreviewEngine.includes('MAX_PIVOT_SOURCE_COLUMNS: usize = 256') || !pivotPreviewEngine.includes('MAX_PIVOT_PREVIEW_GROUPS: usize = 10_000') || !pivotPreviewEngine.includes('MAX_PIVOT_PREVIEW_EDITS: usize = 10_000')) fail('S8-7C pivot preview backend or registration evidence missing')
@@ -479,7 +480,7 @@ for (const field of ['pivot_tables', 'slicers', 'external_data']) {
   if (!model.includes(`pub ${field}: WorkbookCapabilityLevel`)) fail(`${field} machine capability missing`)
 }
 if (!model.includes('pub linked_data: WorkbookLinkedData') || !ooxml.includes('read_workbook_linked_data') || !ooxml.includes('external_relationship_summary')) fail('linked data inventory evidence missing')
-if (!view.includes('linked-data-toolbar') || !view.includes('安全模式：已识别')) fail('linked data safety presentation missing')
+if (!view.includes('class="linked-data-trigger"') || !view.includes('LongEdit 不会访问外部目标') || !view.includes('不会访问外部文件或网络地址')) fail('linked data safety presentation missing')
 for (const feature of ['pivotTable', 'slicer', 'externalLink', 'dataConnection']) {
   if (fixture.documentFeatures[feature] !== true) fail(`${feature} fixture evidence missing`)
 }
