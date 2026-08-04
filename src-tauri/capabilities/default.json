@@ -18,6 +18,8 @@
     "core:event:default",
     "dialog:allow-open",
     "dialog:allow-save",
+    "dialog:allow-confirm",
+    "dialog:allow-message",
     "fs:allow-exists",
     "fs:allow-read-file",
     "fs:allow-write-file",
