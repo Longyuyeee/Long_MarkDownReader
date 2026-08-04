@@ -34,23 +34,45 @@
         </n-button>
       </n-button-group>
       <div class="editor-actions">
-        <n-button quaternary circle size="small" title="搜索源码" :disabled="loading || viewMode !== 'source'" @click="openSourceSearch">
-          <template #icon><n-icon :component="SearchIcon" /></template>
+        <div v-show="advancedToolsVisible" class="advanced-editor-actions">
+          <n-button quaternary circle size="small" title="搜索源码" :disabled="loading || viewMode !== 'source'" @click="openSourceSearch">
+            <template #icon><n-icon :component="SearchIcon" /></template>
+          </n-button>
+          <n-button quaternary circle size="small" title="折叠全部" :disabled="loading || viewMode !== 'source'" @click="foldSource">
+            <template #icon><n-icon :component="FoldIcon" /></template>
+          </n-button>
+          <n-button quaternary circle size="small" title="展开全部" :disabled="loading || viewMode !== 'source'" @click="unfoldSource">
+            <template #icon><n-icon :component="UnfoldIcon" /></template>
+          </n-button>
+          <n-button quaternary circle size="small" title="格式化源码" :disabled="transformDisabled" @click="transformSource('pretty')">
+            <template #icon><n-icon :component="FormatIcon" /></template>
+          </n-button>
+          <n-button quaternary circle size="small" title="压缩源码" :disabled="transformDisabled" @click="transformSource('minify')">
+            <template #icon><n-icon :component="MinifyIcon" /></template>
+          </n-button>
+          <n-button quaternary circle size="small" title="重新从磁盘读取" :disabled="loading || saving" @click="reloadFromDisk">
+            <template #icon><n-icon :component="RefreshIcon" /></template>
+          </n-button>
+        </div>
+        <n-button
+          quaternary
+          circle
+          size="small"
+          :title="advancedToolsVisible ? '收起编辑工具' : '展开编辑工具'"
+          :aria-pressed="advancedToolsVisible"
+          @click="advancedToolsVisible = !advancedToolsVisible"
+        >
+          <template #icon><n-icon :component="ToolsIcon" /></template>
         </n-button>
-        <n-button quaternary circle size="small" title="折叠全部" :disabled="loading || viewMode !== 'source'" @click="foldSource">
-          <template #icon><n-icon :component="FoldIcon" /></template>
-        </n-button>
-        <n-button quaternary circle size="small" title="展开全部" :disabled="loading || viewMode !== 'source'" @click="unfoldSource">
-          <template #icon><n-icon :component="UnfoldIcon" /></template>
-        </n-button>
-        <n-button quaternary circle size="small" title="格式化源码" :disabled="transformDisabled" @click="transformSource('pretty')">
-          <template #icon><n-icon :component="FormatIcon" /></template>
-        </n-button>
-        <n-button quaternary circle size="small" title="压缩源码" :disabled="transformDisabled" @click="transformSource('minify')">
-          <template #icon><n-icon :component="MinifyIcon" /></template>
-        </n-button>
-        <n-button quaternary circle size="small" title="重新从磁盘读取" :disabled="loading || saving" @click="reloadFromDisk">
-          <template #icon><n-icon :component="RefreshIcon" /></template>
+        <n-button
+          quaternary
+          circle
+          size="small"
+          :title="inspectorVisible ? '隐藏结构与诊断' : '显示结构与诊断'"
+          :aria-pressed="inspectorVisible"
+          @click="toggleInspector"
+        >
+          <template #icon><n-icon :component="InspectorIcon" /></template>
         </n-button>
         <n-button data-testid="json-save" type="primary" size="small" :disabled="loading || saving || readOnly || !dirty" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
@@ -65,7 +87,7 @@
       <n-button size="small" @click="load(false)">重试</n-button>
     </div>
 
-    <main v-else class="json-main">
+    <main v-else class="json-main" :class="{ 'inspector-hidden': !inspectorVisible }">
       <section class="source-pane" :aria-label="viewMode === 'source' ? 'JSON 源码' : 'JSON 树形预览'">
         <div v-if="loading" class="loading-state">
           <n-spin size="small" />
@@ -87,18 +109,27 @@
               </n-button>
             </div>
           </header>
-          <div class="tree-rows" role="tree" aria-label="JSON 节点">
-            <div
-              v-for="entry in visibleTreePaths"
-              :key="`${entry.path}-${entry.start}`"
-              class="tree-row"
-              :class="{ selected: selectedTreeStart === entry.start }"
-              :style="{ '--tree-depth': Math.min(entry.depth - 1, 16) }"
-              role="treeitem"
-              :aria-level="entry.depth"
-              :aria-expanded="entry.childCount ? !collapsedTreeNodes.has(entry.start) : undefined"
-              @click="selectedTreeStart = entry.start"
-            >
+          <div
+            ref="treeViewport"
+            class="tree-rows"
+            role="tree"
+            aria-label="JSON 节点"
+            @scroll.passive="handleTreeScroll"
+          >
+            <div class="tree-virtual-space" :style="{ height: `${treeVirtualHeight}px` }">
+              <div class="tree-window" :style="{ transform: `translateY(${treeWindowOffset}px)` }">
+                <div
+                  v-for="entry in visibleTreePaths"
+                  :key="`${entry.path}-${entry.start}`"
+                  class="tree-row"
+                  :class="{ selected: selectedTreeStart === entry.start }"
+                  :style="{ '--tree-depth': Math.min(entry.depth - 1, 16) }"
+                  :data-kind="entry.kind"
+                  role="treeitem"
+                  :aria-level="entry.depth"
+                  :aria-expanded="entry.childCount ? !collapsedTreeNodes.has(entry.start) : undefined"
+                  @click="selectedTreeStart = entry.start"
+                >
               <button
                 v-if="entry.childCount"
                 class="tree-toggle"
@@ -115,7 +146,7 @@
                 <small>{{ kindLabel(entry.kind) }}<template v-if="entry.childCount"> · {{ entry.childCount }} 项</template></small>
                 <code>{{ entry.preview }}</code>
               </button>
-              <div class="tree-node-actions">
+                  <div class="tree-node-actions">
                 <n-button
                   v-if="entry.kind === 'object'"
                   quaternary
@@ -191,12 +222,12 @@
                 <n-button quaternary circle size="tiny" title="复制 JSON Path" @click.stop="copyPath(entry.path)">
                   <template #icon><n-icon :component="CopyIcon" /></template>
                 </n-button>
+                  </div>
+                </div>
               </div>
             </div>
-            <div v-if="treeView.truncated || analysis?.pathsTruncated" class="tree-limit-note">
-              <template v-if="analysis?.pathsTruncated">节点目录已达到 20,000 项分析上限。</template>
-              <template v-if="treeView.truncated">当前层级仅渲染前 2,000 个可见节点。</template>
-              请折叠节点或使用 JSON Path 筛选定位其余内容
+            <div v-if="analysis?.pathsTruncated" class="tree-limit-note">
+              节点目录已达到 20,000 项安全分析上限，可使用字段路径筛选定位已分析内容。
             </div>
           </div>
         </div>
@@ -231,17 +262,20 @@
           </div>
         </div>
 
-        <section class="path-browser" aria-label="JSON Path 导航">
+        <section class="path-browser" aria-label="字段路径与快速定位">
           <div class="diagnostic-heading">
-            <strong>JSON Path</strong>
+            <strong>字段路径与快速定位</strong>
             <span>{{ analysis?.paths.length ?? 0 }}{{ analysis?.pathsTruncated ? '+' : '' }}</span>
           </div>
+          <p class="path-help">
+            按字段名、路径或值查找内容。点击结果会切换到源码并定位，例如 <code>$.items[0].name</code>。
+          </p>
           <n-input
             v-model:value="pathQuery"
             size="small"
             clearable
-            placeholder="筛选路径或值"
-            aria-label="筛选 JSON Path"
+            placeholder="输入字段名、路径或值"
+            aria-label="筛选字段路径"
           >
             <template #prefix><SearchIcon :size="14" /></template>
           </n-input>
@@ -251,16 +285,22 @@
               :key="`${entry.path}-${entry.start}`"
               class="path-item"
             >
-              <button type="button" @click="revealSourceRange(entry)">
+              <button type="button" @click="showSourceRange(entry)">
                 <code>{{ entry.path }}</code>
                 <small>{{ kindLabel(entry.kind) }} · 第 {{ entry.line }} 行</small>
                 <span>{{ entry.preview }}</span>
               </button>
-              <n-button quaternary circle size="tiny" title="复制路径" @click="copyPath(entry.path)">
+              <n-button quaternary circle size="tiny" title="复制字段路径" @click="copyPath(entry.path)">
                 <template #icon><n-icon :component="CopyIcon" /></template>
               </n-button>
             </div>
-            <div v-if="!filteredPaths.length" class="empty-paths">没有匹配的路径</div>
+            <div v-if="!analysis?.valid" class="empty-paths">修复 JSON 语法后，这里会列出可定位的字段路径。</div>
+            <div v-else-if="!filteredPaths.length" class="empty-paths">
+              {{ pathQuery.trim() ? '没有匹配的字段、路径或值。' : '当前文档没有可导航的字段。' }}
+            </div>
+            <div v-else-if="!pathQuery.trim() && (analysis?.paths.length ?? 0) > filteredPaths.length" class="path-result-note">
+              先展示前 200 项，输入关键词可筛选全部已分析路径。
+            </div>
           </div>
         </section>
 
@@ -488,9 +528,11 @@ import {
   ListTree as TreeIcon,
   LocateFixed as LocateIcon,
   Minimize2 as MinifyIcon,
+  PanelRight as InspectorIcon,
   RefreshCw as RefreshIcon,
   Save as SaveIcon,
   Search as SearchIcon,
+  SlidersHorizontal as ToolsIcon,
   ShieldAlert as ShieldAlertIcon,
   ShieldCheck as ShieldCheckIcon,
   Trash2 as RemovePropertyIcon,
@@ -498,6 +540,7 @@ import {
 } from 'lucide-vue-next'
 import { findFileFormat } from '../config/fileFormats'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { type TabInfo, useAppStore } from '../store/app'
 
 interface TextDocumentSnapshot {
@@ -558,7 +601,9 @@ const router = useRouter()
 const store = useAppStore()
 const dialog = useDialog()
 const message = useMessage()
+const { inspectorVisible, toggleInspector } = useResponsiveInspector(780)
 const editorHost = ref<HTMLElement | null>(null)
+const treeViewport = ref<HTMLElement | null>(null)
 const jsonPath = computed(() => String(route.query.path || ''))
 const format = computed(() => findFileFormat(jsonPath.value))
 const formatLabel = computed(() => format.value?.label || 'JSON')
@@ -571,10 +616,16 @@ const analysis = ref<JsonSourceAnalysis | null>(null)
 const analysisPending = ref(false)
 const transformPending = ref(false)
 const pathQuery = ref('')
+const deferredPathQuery = ref('')
+const advancedToolsVisible = ref(true)
 const viewMode = ref<'source' | 'tree'>('source')
 const collapsedTreeNodes = ref<Set<number>>(new Set())
 const selectedTreeStart = ref<number | null>(null)
-const MAX_TREE_RENDER_NODES = 2_000
+const treeScrollTop = ref(0)
+const treeViewportHeight = ref(480)
+const TREE_ROW_HEIGHT = 44
+const TREE_OVERSCAN_ROWS = 8
+const LARGE_TREE_AUTO_COLLAPSE_NODES = 500
 const scalarEditVisible = ref(false)
 const scalarEditPending = ref(false)
 const scalarEditEntry = ref<JsonPathEntry | null>(null)
@@ -675,6 +726,7 @@ let editor: EditorView | null = null
 let loadGeneration = 0
 let analysisGeneration = 0
 let analysisTimer: ReturnType<typeof setTimeout> | null = null
+let pathQueryTimer: ReturnType<typeof setTimeout> | null = null
 let applyingDocument = false
 let unlistenSave: (() => void) | null = null
 let unlistenRefresh: (() => void) | null = null
@@ -697,36 +749,66 @@ const structureStatusText = computed(() => {
 })
 
 const filteredPaths = computed(() => {
-  const query = pathQuery.value.trim().toLocaleLowerCase()
+  const query = deferredPathQuery.value.trim().toLocaleLowerCase()
   const paths = analysis.value?.paths || []
   if (!query) return paths.slice(0, 200)
-  return paths
-    .filter(entry => (
+  const matches: JsonPathEntry[] = []
+  for (const entry of paths) {
+    if (
       entry.path.toLocaleLowerCase().includes(query)
       || entry.preview.toLocaleLowerCase().includes(query)
-    ))
-    .slice(0, 200)
+    ) {
+      matches.push(entry)
+      if (matches.length === 200) break
+    }
+  }
+  return matches
 })
 
-const treeView = computed(() => {
+const treeIndex = computed(() => {
   const paths = analysis.value?.paths || []
+  const roots: JsonPathEntry[] = []
+  const children = new Map<number, JsonPathEntry[]>()
   const ancestors: JsonPathEntry[] = []
-  const visible: JsonPathEntry[] = []
   for (const entry of paths) {
-    while (ancestors.length && ancestors[ancestors.length - 1].depth >= entry.depth) {
-      ancestors.pop()
+    const parent = entry.depth > 1 ? ancestors[entry.depth - 2] : undefined
+    if (parent) {
+      const siblings = children.get(parent.start)
+      if (siblings) siblings.push(entry)
+      else children.set(parent.start, [entry])
+    } else {
+      roots.push(entry)
     }
-    if (!ancestors.some(ancestor => collapsedTreeNodes.value.has(ancestor.start))) {
-      visible.push(entry)
-    }
-    ancestors.push(entry)
+    ancestors[entry.depth - 1] = entry
+    ancestors.length = entry.depth
   }
-  return {
-    entries: visible.slice(0, MAX_TREE_RENDER_NODES),
-    truncated: visible.length > MAX_TREE_RENDER_NODES,
-  }
+  return { roots, children }
 })
-const visibleTreePaths = computed(() => treeView.value.entries)
+
+const expandedTreePaths = computed(() => {
+  const visible: JsonPathEntry[] = []
+  const pending = [...treeIndex.value.roots].reverse()
+  while (pending.length) {
+    const entry = pending.pop()!
+    visible.push(entry)
+    if (collapsedTreeNodes.value.has(entry.start)) continue
+    const children = treeIndex.value.children.get(entry.start)
+    if (children) {
+      for (let index = children.length - 1; index >= 0; index -= 1) pending.push(children[index])
+    }
+  }
+  return visible
+})
+
+const treeWindow = computed(() => {
+  const start = Math.max(0, Math.floor(treeScrollTop.value / TREE_ROW_HEIGHT) - TREE_OVERSCAN_ROWS)
+  const visibleRows = Math.ceil(treeViewportHeight.value / TREE_ROW_HEIGHT) + TREE_OVERSCAN_ROWS * 2
+  const end = Math.min(expandedTreePaths.value.length, start + visibleRows)
+  return { start, entries: expandedTreePaths.value.slice(start, end) }
+})
+const visibleTreePaths = computed(() => treeWindow.value.entries)
+const treeWindowOffset = computed(() => treeWindow.value.start * TREE_ROW_HEIGHT)
+const treeVirtualHeight = computed(() => expandedTreePaths.value.length * TREE_ROW_HEIGHT)
 
 const syncCurrentTab = (isDirty = dirty.value) => {
   if (!editor || !jsonPath.value) return
@@ -756,6 +838,23 @@ const clearAnalysisTimer = () => {
   analysisTimer = null
 }
 
+const measureTreeViewport = () => {
+  if (treeViewport.value) treeViewportHeight.value = Math.max(TREE_ROW_HEIGHT, treeViewport.value.clientHeight)
+}
+
+const handleTreeScroll = (event: Event) => {
+  treeScrollTop.value = (event.currentTarget as HTMLElement).scrollTop
+}
+
+const resetTreeForAnalysis = (result: JsonSourceAnalysis) => {
+  collapsedTreeNodes.value = result.paths.length >= LARGE_TREE_AUTO_COLLAPSE_NODES
+    ? new Set(result.paths.filter(entry => entry.childCount > 0 && entry.depth > 1).map(entry => entry.start))
+    : new Set()
+  selectedTreeStart.value = null
+  treeScrollTop.value = 0
+  if (treeViewport.value) treeViewport.value.scrollTop = 0
+}
+
 const analyzeContent = async (content: string) => {
   const generation = ++analysisGeneration
   analysisPending.value = true
@@ -767,6 +866,7 @@ const analyzeContent = async (content: string) => {
     })
     if (generation === analysisGeneration && sourceContent.value === content) {
       analysis.value = result
+      resetTreeForAnalysis(result)
       if (!result.valid) viewMode.value = 'source'
     }
     return result
@@ -795,7 +895,6 @@ const editorExtensions = (isReadOnly: boolean) => [
     if (update.docChanged) {
       sourceContent.value = update.state.doc.toString()
       lineCount.value = update.state.doc.lines
-      collapsedTreeNodes.value = new Set()
       selectedTreeStart.value = null
       if (!applyingDocument) {
         dirty.value = true
@@ -939,9 +1038,10 @@ const unfoldSource = () => {
 const copyPath = async (path: string) => {
   try {
     await navigator.clipboard.writeText(path)
-    message.success('JSON Path 已复制')
+    const pathSummary = path.length > 80 ? `${path.slice(0, 77)}...` : path
+    message.success(`字段路径已复制：${pathSummary}`)
   } catch {
-    message.error('复制 JSON Path 失败')
+    message.error('复制字段路径失败')
   }
 }
 
@@ -1269,6 +1369,7 @@ const collapseAllTree = () => {
 
 const expandAllTree = () => {
   collapsedTreeNodes.value = new Set()
+  message.success('已展开全部节点，长列表将按可见区域渲染')
 }
 
 const kindLabel = (kind: string) => ({
@@ -1394,20 +1495,34 @@ watch(jsonPath, (_, previousPath) => {
   if (previousPath) syncCurrentTab(dirty.value)
   void load()
 })
+watch(pathQuery, query => {
+  if (pathQueryTimer) clearTimeout(pathQueryTimer)
+  pathQueryTimer = setTimeout(() => {
+    deferredPathQuery.value = query
+  }, 120)
+})
+watch(viewMode, async mode => {
+  if (mode !== 'tree') return
+  await nextTick()
+  measureTreeViewport()
+})
 onMounted(async () => {
   await nextTick()
   createEditor()
   await load()
   window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('resize', measureTreeViewport)
   unlistenSave = await listen('command-save', () => { void save() })
   unlistenRefresh = await listen('command-refresh', () => { void reloadFromDisk() })
 })
 onBeforeUnmount(() => {
   clearAnalysisTimer()
+  if (pathQueryTimer) clearTimeout(pathQueryTimer)
   syncCurrentTab(dirty.value)
   editor?.destroy()
   editor = null
   window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('resize', measureTreeViewport)
   unlistenSave?.()
   unlistenRefresh?.()
 })
@@ -1486,7 +1601,15 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 310px;
+  grid-template-columns: minmax(0, 1fr) 330px;
+}
+
+.json-main.inspector-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.json-main.inspector-hidden .analysis-pane {
+  display: none;
 }
 
 .source-pane {
@@ -1540,17 +1663,40 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
-  padding: 6px 0 24px;
+  padding: 0 0 24px;
+}
+
+.advanced-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tree-virtual-space {
+  position: relative;
+  min-width: 560px;
+}
+
+.tree-window {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  will-change: transform;
 }
 
 .tree-row {
   min-width: 560px;
-  height: 38px;
+  height: 44px;
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr) 172px;
   align-items: center;
   padding: 0 8px 0 calc(8px + var(--tree-depth) * 18px);
   border-bottom: 1px solid transparent;
+}
+
+.tree-row:nth-child(even) {
+  background: color-mix(in srgb, var(--theme-surface-2) 34%, transparent);
 }
 
 .tree-row:hover,
@@ -1603,6 +1749,13 @@ onBeforeUnmount(() => {
 .tree-node-main strong {
   font-size: 12px;
 }
+
+.tree-row[data-kind="object"] .tree-node-main strong { color: var(--code-editor-property); }
+.tree-row[data-kind="array"] .tree-node-main strong { color: var(--code-editor-function); }
+.tree-row[data-kind="string"] .tree-node-main code { color: var(--code-editor-string); }
+.tree-row[data-kind="number"] .tree-node-main code,
+.tree-row[data-kind="boolean"] .tree-node-main code,
+.tree-row[data-kind="null"] .tree-node-main code { color: var(--code-editor-number); }
 
 .tree-node-main small {
   color: var(--theme-text-secondary);
@@ -1680,9 +1833,9 @@ onBeforeUnmount(() => {
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
-  padding: 16px;
+  padding: 16px 14px 24px;
   border-left: var(--theme-border);
-  background: var(--theme-surface);
+  background: color-mix(in srgb, var(--theme-surface) 88%, var(--theme-bg));
 }
 
 .analysis-header,
@@ -1709,10 +1862,8 @@ onBeforeUnmount(() => {
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1px;
+  gap: 6px;
   margin-top: 16px;
-  border: var(--theme-border);
-  background: var(--theme-border-color);
 }
 
 .metric-grid > div {
@@ -1723,7 +1874,21 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 3px;
   padding: 0 10px;
-  background: var(--theme-bg);
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 14%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--theme-primary) 5%, var(--theme-bg));
+}
+
+.metric-grid > div:nth-child(2),
+.metric-grid > div:nth-child(5) {
+  border-color: color-mix(in srgb, var(--status-info) 20%, transparent);
+  background: color-mix(in srgb, var(--status-info) 6%, var(--theme-bg));
+}
+
+.metric-grid > div:nth-child(3),
+.metric-grid > div:nth-child(6) {
+  border-color: color-mix(in srgb, var(--status-success) 18%, transparent);
+  background: color-mix(in srgb, var(--status-success) 5%, var(--theme-bg));
 }
 
 .metric-grid strong {
@@ -1738,9 +1903,11 @@ onBeforeUnmount(() => {
   grid-template-columns: 18px minmax(0, 1fr);
   gap: 9px;
   margin: 14px 0 18px;
-  padding: 11px 0;
-  border-top: var(--theme-border);
-  border-bottom: var(--theme-border);
+  padding: 11px 12px;
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 18%, transparent);
+  border-left: 3px solid var(--theme-primary);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--theme-primary) 6%, transparent);
 }
 
 .structure-status > svg {
@@ -1764,6 +1931,22 @@ onBeforeUnmount(() => {
 
 .path-browser {
   margin-bottom: 18px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--status-info) 20%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--status-info) 5%, var(--theme-bg));
+}
+
+.path-help {
+  margin: 0 0 10px;
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.path-help code {
+  color: var(--code-editor-property);
+  font-family: "Fira Code", "Cascadia Code", Consolas, monospace;
 }
 
 .path-results {
@@ -1827,6 +2010,13 @@ onBeforeUnmount(() => {
 .empty-paths {
   padding: 16px 0;
   text-align: center;
+}
+
+.path-result-note {
+  padding: 9px 2px;
+  color: var(--theme-text-secondary);
+  font-size: var(--text-compact);
+  line-height: 1.5;
 }
 
 .diagnostic-heading {
@@ -1956,6 +2146,10 @@ onBeforeUnmount(() => {
   .json-main {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(260px, 1fr) minmax(180px, 42%);
+  }
+
+  .json-main.inspector-hidden {
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .analysis-pane {

@@ -26,6 +26,8 @@
 
 > A0L 已完成 CodeMirror 主题合同：TXT/代码、JSON、YAML、XML、TOML 共用九主题语义配色，光标、选区、行号、搜索、括号、面板和提示层不再依赖默认值；自动门禁检查语法、行号和光标对比度。UX-24/UX-27 为待安装包复测。下一步处理 UX-25/UX-26/UX-28，收口 JSON Path 说明、大型树性能和结构化编辑器视觉。详见 [`A0L_CodeMirror_Theme_Contract_Audit_2026-08-04.md`](./A0L_CodeMirror_Theme_Contract_Audit_2026-08-04.md)。
 
+> A0M 已完成 JSON 工作区收口：次要源码工具及结构诊断均可收起，字段路径改为用户任务语言并支持点击定位和明确复制反馈；大型树改用父子索引、按展开节点遍历和固定行高虚拟窗口，Rust 安全分析预算及点击保存写盘边界保持不变。UX-25/UX-26/UX-28 为待安装包复测。下一步处理 UX-29，为 LOG 建立专业查看与编辑双模式。详见 [`A0M_JSON_Workspace_Experience_Audit_2026-08-04.md`](./A0M_JSON_Workspace_Experience_Audit_2026-08-04.md)。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 
