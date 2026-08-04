@@ -96,6 +96,7 @@ requireTokens(patchKernel, 'DOCX isolated hyperlink label kernel', [
   'LongEdit UX-33G isolated hyperlink label patch',
   'ux33g_round_trips_derived_producer_hyperlink_labels_and_preserves_envelope',
   'ux33g_rejects_ambiguous_or_destinationless_hyperlinks',
+  'ux33h_round_trips_native_word_and_libreoffice_labels_and_keeps_wps_fields_read_only',
 ])
 requireTokens(backend, 'DOCX reliable source transaction', [
   'fn save_docx_patch_source_to_path(',

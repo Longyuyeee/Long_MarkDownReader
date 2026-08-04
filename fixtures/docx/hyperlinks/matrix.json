@@ -1,0 +1,60 @@
+{
+    "schemaVersion":  1,
+    "stage":  "UX-33H",
+    "status":  "verified",
+    "generatedAt":  "2026-08-04T09:08:46.8654020Z",
+    "lifecycle":  "producer-created-saved-exited-new-instance-reopened",
+    "producers":  [
+                      {
+                          "id":  "microsoft-word-16",
+                          "producer":  "Microsoft Word",
+                          "executable":  "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE",
+                          "version":  "16.0",
+                          "file":  "microsoft-word-hyperlinks.docx",
+                          "producerCreated":  true,
+                          "producerReopenVerified":  true,
+                          "expectedEditableLabels":  2,
+                          "expectedReadOnlyLabels":  2,
+                          "nativeHyperlinkCount":  4,
+                          "fieldHyperlinkCount":  0,
+                          "externalTargetVerified":  true,
+                          "internalAnchorVerified":  true,
+                          "sha256":  "e828af70515111371aa6eaeea0b32c02870e542a4be2b57ea0831e4cd971837b",
+                          "bytes":  14058
+                      },
+                      {
+                          "id":  "wps-writer",
+                          "producer":  "WPS Writer",
+                          "executable":  "C:\\Program Files (x86)\\WPS Office\\12.1.0.26895\\office6\\wps.exe",
+                          "version":  "12.1.0.26895",
+                          "file":  "wps-writer-hyperlinks.docx",
+                          "producerCreated":  true,
+                          "producerReopenVerified":  true,
+                          "expectedEditableLabels":  0,
+                          "expectedReadOnlyLabels":  4,
+                          "nativeHyperlinkCount":  0,
+                          "fieldHyperlinkCount":  4,
+                          "externalTargetVerified":  true,
+                          "internalAnchorVerified":  true,
+                          "sha256":  "ef5155b5d29bf0a73e2e1121fdd5cb567b3af980a47c5b25da4c4fb5352c8c0c",
+                          "bytes":  10685
+                      },
+                      {
+                          "id":  "libreoffice-writer",
+                          "producer":  "LibreOffice Writer",
+                          "executable":  "C:\\Program Files\\LibreOffice\\program\\soffice.com",
+                          "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                          "file":  "libreoffice-writer-hyperlinks.docx",
+                          "producerCreated":  true,
+                          "producerReopenVerified":  true,
+                          "expectedEditableLabels":  2,
+                          "expectedReadOnlyLabels":  2,
+                          "nativeHyperlinkCount":  4,
+                          "fieldHyperlinkCount":  0,
+                          "externalTargetVerified":  true,
+                          "internalAnchorVerified":  true,
+                          "sha256":  "3fbba1da1b32bce15d806ad764cff98d9bf6f0155d8712e76d6a54ea8e6c10e1",
+                          "bytes":  6065
+                      }
+                  ]
+}

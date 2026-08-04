@@ -1743,6 +1743,93 @@ mod tests {
     }
 
     #[test]
+    fn ux33h_round_trips_native_word_and_libreoffice_labels_and_keeps_wps_fields_read_only() {
+        let fixtures: [(&str, &[u8], &[&str]); 3] = [
+            (
+                "microsoft-word-16",
+                include_bytes!("../../../fixtures/docx/hyperlinks/microsoft-word-hyperlinks.docx"),
+                &[
+                    "Microsoft Word external link",
+                    "Microsoft Word internal link",
+                ],
+            ),
+            (
+                "wps-writer",
+                include_bytes!("../../../fixtures/docx/hyperlinks/wps-writer-hyperlinks.docx"),
+                &[],
+            ),
+            (
+                "libreoffice-writer",
+                include_bytes!(
+                    "../../../fixtures/docx/hyperlinks/libreoffice-writer-hyperlinks.docx"
+                ),
+                &[
+                    "LibreOffice Writer external link",
+                    "LibreOffice Writer internal link",
+                ],
+            ),
+        ];
+
+        for (producer, source, expected_labels) in fixtures {
+            let model = parse_docx(source).unwrap();
+            let targets = editable_targets_with_spans(source, &model).unwrap();
+            let hyperlink_targets = targets
+                .iter()
+                .filter(|(target, _)| target.carrier == "hyperlink-label")
+                .collect::<Vec<_>>();
+            assert_eq!(
+                hyperlink_targets.len(),
+                expected_labels.len(),
+                "{producer} editable hyperlink target count drifted"
+            );
+            assert!(expected_labels.iter().all(|label| hyperlink_targets
+                .iter()
+                .any(|(target, _)| target.text == *label)));
+            assert!(!targets.iter().any(|(target, _)| {
+                target.text.contains("complex styled link") || target.text.contains("mixed link")
+            }));
+
+            if producer == "wps-writer" {
+                let document_xml = read_part(source, DOCX_EDITABLE_DOCUMENT_PART).unwrap();
+                let document_xml = String::from_utf8(document_xml).unwrap();
+                assert_eq!(document_xml.matches("HYPERLINK").count(), 4);
+                assert!(document_xml.contains("WPS Writer external link"));
+                continue;
+            }
+
+            for (index, (target, before_span)) in hyperlink_targets.into_iter().enumerate() {
+                let replacement = format!("LongEdit native {producer} label {}", index + 1);
+                let (report, output) = build_docx_text_patch_isolated(
+                    source,
+                    &target.id,
+                    &target.expected_text_digest,
+                    &replacement,
+                )
+                .unwrap();
+                assert_eq!(report.changed_parts, [DOCX_EDITABLE_DOCUMENT_PART]);
+                assert!(report.unchanged_parts_verified);
+                assert!(report.semantic_reparse_verified);
+
+                let output_model = parse_docx(&output).unwrap();
+                let (_, after_span) = editable_targets_with_spans(&output, &output_model)
+                    .unwrap()
+                    .into_iter()
+                    .find(|(candidate, _)| {
+                        candidate.carrier == "hyperlink-label" && candidate.text == replacement
+                    })
+                    .unwrap();
+                let before_xml = read_part(source, DOCX_EDITABLE_DOCUMENT_PART).unwrap();
+                let after_xml = read_part(&output, DOCX_EDITABLE_DOCUMENT_PART).unwrap();
+                assert_eq!(
+                    &before_xml[..before_span.start],
+                    &after_xml[..after_span.start]
+                );
+                assert_eq!(&before_xml[before_span.end..], &after_xml[after_span.end..]);
+            }
+        }
+    }
+
+    #[test]
     fn ux33g_rejects_ambiguous_or_destinationless_hyperlinks() {
         let destinationless = br#"<w:document xmlns:w="w"><w:body><w:p><w:hyperlink><w:r><w:t>Unsafe</w:t></w:r></w:hyperlink></w:p></w:body></w:document>"#;
         let multiple = br#"<w:document xmlns:w="w"><w:body><w:p><w:hyperlink w:anchor="a"><w:r><w:t>One</w:t></w:r></w:hyperlink><w:hyperlink w:anchor="b"><w:r><w:t>Two</w:t></w:r></w:hyperlink></w:p></w:body></w:document>"#;

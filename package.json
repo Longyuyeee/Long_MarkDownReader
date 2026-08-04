@@ -149,7 +149,7 @@
     "check:v1-community-release": "node scripts/check-v1-community-release.mjs",
     "check:v1-installed-hotfix": "node scripts/check-v1-installed-hotfix.mjs",
     "check:current-development-audit": "node scripts/check-current-development-audit.mjs",
-    "check:docx-producer-matrix": "node scripts/check-docx-producer-matrix.mjs",
+    "check:docx-producer-matrix": "node scripts/check-docx-producer-matrix.mjs && node scripts/check-ux33h-docx-hyperlink-producer-matrix.mjs",
     "check:pptx-producer-matrix": "node scripts/check-pptx-producer-matrix.mjs",
     "check:pptx-locator": "node scripts/check-pptx-locator.mjs",
     "check:c3c2-pptx-locator-evidence": "node scripts/check-c3c2-pptx-locator-audit.mjs",
