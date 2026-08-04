@@ -167,6 +167,7 @@ import { foldAll, unfoldAll } from '@codemirror/language'
 import { openSearchPanel } from '@codemirror/search'
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
+import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
 import {
@@ -390,32 +391,7 @@ const editorExtensions = (isReadOnly: boolean) => [
       cursorColumn.value = position - line.from + 1
     }
   }),
-  EditorView.theme({
-    '&': {
-      height: '100%',
-      color: 'var(--theme-text)',
-      backgroundColor: 'var(--theme-bg)',
-      fontSize: '13px',
-    },
-    '.cm-scroller': {
-      overflow: 'auto',
-      fontFamily: "'Cascadia Code', 'SFMono-Regular', Consolas, monospace",
-      lineHeight: '1.65',
-    },
-    '.cm-content': { padding: '14px 0 40px' },
-    '.cm-gutters': {
-      color: 'var(--theme-text-tertiary)',
-      backgroundColor: 'var(--theme-surface)',
-      borderRight: 'var(--theme-border)',
-    },
-    '.cm-activeLine, .cm-activeLineGutter': {
-      backgroundColor: 'rgba(var(--theme-primary-rgb), 0.07)',
-    },
-    '&.cm-focused': { outline: 'none' },
-    '.cm-selectionBackground, ::selection': {
-      backgroundColor: 'rgba(var(--theme-primary-rgb), 0.22) !important',
-    },
-  }),
+  ...codeMirrorThemeExtensions,
 ]
 
 const createEditor = () => {

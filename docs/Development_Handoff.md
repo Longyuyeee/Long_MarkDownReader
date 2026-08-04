@@ -24,6 +24,8 @@
 
 > A0K 已完成外部修改检测重构：焦点恢复改用 Rust 内容摘要与精确文件身份，应用内保存采用写入回执更新基线；同一签名只提示一次，并提供比较、保留当前、重新加载。UX-23 为待安装包复测。下一步处理 UX-24/UX-27，统一代码编辑器主题与光标对比度。详见 [`A0K_External_Change_Identity_Audit_2026-08-04.md`](./A0K_External_Change_Identity_Audit_2026-08-04.md)。
 
+> A0L 已完成 CodeMirror 主题合同：TXT/代码、JSON、YAML、XML、TOML 共用九主题语义配色，光标、选区、行号、搜索、括号、面板和提示层不再依赖默认值；自动门禁检查语法、行号和光标对比度。UX-24/UX-27 为待安装包复测。下一步处理 UX-25/UX-26/UX-28，收口 JSON Path 说明、大型树性能和结构化编辑器视觉。详见 [`A0L_CodeMirror_Theme_Contract_Audit_2026-08-04.md`](./A0L_CodeMirror_Theme_Contract_Audit_2026-08-04.md)。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 

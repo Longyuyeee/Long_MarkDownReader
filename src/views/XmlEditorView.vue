@@ -128,6 +128,7 @@ import {
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
+import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { type TabInfo, useAppStore } from '../store/app'
 
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string; path: string }
@@ -227,14 +228,7 @@ const extensions = (locked: boolean) => [
       cursorLine.value = line.number; cursorColumn.value = position - line.from + 1
     }
   }),
-  EditorView.theme({
-    '&': { height: '100%', color: 'var(--theme-text)', backgroundColor: 'var(--theme-bg)', fontSize: '13px' },
-    '.cm-scroller': { overflow: 'auto', fontFamily: "'Cascadia Code', Consolas, monospace", lineHeight: '1.65' },
-    '.cm-content': { padding: '14px 0 40px' },
-    '.cm-gutters': { color: 'var(--theme-text-tertiary)', backgroundColor: 'var(--theme-surface)', borderRight: 'var(--theme-border)' },
-    '.cm-activeLine, .cm-activeLineGutter': { backgroundColor: 'rgba(var(--theme-primary-rgb), .07)' },
-    '&.cm-focused': { outline: 'none' },
-  }),
+  ...codeMirrorThemeExtensions,
 ]
 const replaceDocument = (content: string, locked: boolean) => {
   if (!editor) return

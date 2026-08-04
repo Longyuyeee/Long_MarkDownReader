@@ -315,6 +315,100 @@ body[data-theme="contrast"] {
   --markdown-code-selection: rgba(255, 212, 0, 0.38);
 }
 
+// CodeMirror workspaces share explicit UI and syntax tokens instead of browser defaults.
+body[data-theme="white"],
+body[data-theme="green"],
+body[data-theme="blue"],
+body[data-theme="pink"],
+body[data-theme="cream"],
+body[data-theme="purple"],
+body[data-theme="amber"] {
+  --code-editor-surface: #f3f6fa;
+  --code-editor-panel: #ffffff;
+  --code-editor-gutter: #e9eef5;
+  --code-editor-gutter-text: #52606f;
+  --code-editor-border: #b8c4d4;
+  --code-editor-text: #1f2937;
+  --code-editor-keyword: #9d174d;
+  --code-editor-string: #047857;
+  --code-editor-number: #1d4ed8;
+  --code-editor-comment: #52606f;
+  --code-editor-function: #6d28d9;
+  --code-editor-variable: #9a3412;
+  --code-editor-property: #075985;
+  --code-editor-type: #5b21b6;
+  --code-editor-operator: #334155;
+  --code-editor-link: #075985;
+  --code-editor-invalid: #b91c1c;
+  --code-editor-cursor: #111827;
+  --code-editor-accent: #2563eb;
+  --code-editor-active-line: rgba(37, 99, 235, 0.07);
+  --code-editor-selection: rgba(37, 99, 235, 0.24);
+  --code-editor-selection-match: rgba(14, 165, 233, 0.18);
+  --code-editor-search-match: rgba(250, 204, 21, 0.34);
+  --code-editor-search-selected: rgba(245, 158, 11, 0.48);
+  --code-editor-bracket-match: rgba(16, 185, 129, 0.18);
+  --code-editor-invalid-surface: rgba(185, 28, 28, 0.12);
+}
+
+body[data-theme="dark"] {
+  --code-editor-surface: #171b22;
+  --code-editor-panel: #202630;
+  --code-editor-gutter: #1d222b;
+  --code-editor-gutter-text: #9aa7b8;
+  --code-editor-border: #465161;
+  --code-editor-text: #e6edf3;
+  --code-editor-keyword: #ff7bdb;
+  --code-editor-string: #a7e57a;
+  --code-editor-number: #79c0ff;
+  --code-editor-comment: #9aa7b8;
+  --code-editor-function: #d2a8ff;
+  --code-editor-variable: #ffa657;
+  --code-editor-property: #79c0ff;
+  --code-editor-type: #d2a8ff;
+  --code-editor-operator: #c9d1d9;
+  --code-editor-link: #79c0ff;
+  --code-editor-invalid: #ff8a80;
+  --code-editor-cursor: #ffffff;
+  --code-editor-accent: #79c0ff;
+  --code-editor-active-line: rgba(121, 192, 255, 0.09);
+  --code-editor-selection: rgba(121, 192, 255, 0.32);
+  --code-editor-selection-match: rgba(34, 211, 238, 0.2);
+  --code-editor-search-match: rgba(245, 184, 75, 0.28);
+  --code-editor-search-selected: rgba(245, 184, 75, 0.48);
+  --code-editor-bracket-match: rgba(100, 217, 135, 0.2);
+  --code-editor-invalid-surface: rgba(255, 138, 128, 0.16);
+}
+
+body[data-theme="contrast"] {
+  --code-editor-surface: #000000;
+  --code-editor-panel: #111111;
+  --code-editor-gutter: #111111;
+  --code-editor-gutter-text: #d0d0d0;
+  --code-editor-border: #ffffff;
+  --code-editor-text: #ffffff;
+  --code-editor-keyword: #ff5cff;
+  --code-editor-string: #7cff00;
+  --code-editor-number: #00e5ff;
+  --code-editor-comment: #d0d0d0;
+  --code-editor-function: #ffd400;
+  --code-editor-variable: #ff9d00;
+  --code-editor-property: #00e5ff;
+  --code-editor-type: #ff5cff;
+  --code-editor-operator: #ffffff;
+  --code-editor-link: #00e5ff;
+  --code-editor-invalid: #ff7b7b;
+  --code-editor-cursor: #ffd400;
+  --code-editor-accent: #ffd400;
+  --code-editor-active-line: rgba(255, 212, 0, 0.12);
+  --code-editor-selection: rgba(255, 212, 0, 0.38);
+  --code-editor-selection-match: rgba(0, 229, 255, 0.28);
+  --code-editor-search-match: rgba(255, 212, 0, 0.32);
+  --code-editor-search-selected: rgba(255, 212, 0, 0.56);
+  --code-editor-bracket-match: rgba(124, 255, 0, 0.24);
+  --code-editor-invalid-surface: rgba(255, 123, 123, 0.2);
+}
+
 // ============================================
 // 视觉风格（Visual Styles）
 // 从"变色"升级到"完整视觉语言"

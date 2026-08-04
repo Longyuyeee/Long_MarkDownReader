@@ -153,6 +153,7 @@ import {
   Undo2 as UndoIcon,
 } from 'lucide-vue-next'
 import { findFileFormat } from '../config/fileFormats'
+import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { type TabInfo, useAppStore } from '../store/app'
 
@@ -376,49 +377,7 @@ const editorExtensions = (isReadOnly: boolean) => [
       cursorColumn.value = position - line.from + 1
     }
   }),
-  EditorView.theme({
-    '&': {
-      height: '100%',
-      color: 'var(--theme-text)',
-      backgroundColor: 'var(--theme-bg)',
-      fontSize: '13px',
-    },
-    '.cm-scroller': {
-      overflow: 'auto',
-      fontFamily: '"Fira Code", "Cascadia Code", Consolas, monospace',
-      lineHeight: '1.65',
-    },
-    '.cm-content': { padding: '14px 0 48px', color: 'var(--theme-text)' },
-    '.cm-line': { color: 'var(--theme-text)' },
-    '.cm-gutters': {
-      color: 'var(--theme-text-secondary)',
-      backgroundColor: 'var(--theme-surface-2)',
-      borderRight: 'var(--theme-border)',
-    },
-    '.cm-activeLine, .cm-activeLineGutter': {
-      backgroundColor: 'rgba(var(--theme-primary-rgb), 0.065)',
-    },
-    '.cm-selectionBackground, ::selection': {
-      backgroundColor: 'rgba(var(--theme-primary-rgb), 0.2) !important',
-    },
-    '&.cm-focused': { outline: 'none' },
-    '.cm-panels': {
-      color: 'var(--theme-text)',
-      backgroundColor: 'var(--theme-surface)',
-      borderColor: 'rgba(var(--theme-primary-rgb), 0.16)',
-    },
-    '.cm-textfield': {
-      color: 'var(--theme-text)',
-      backgroundColor: 'var(--theme-bg)',
-      border: '1px solid rgba(var(--theme-primary-rgb), 0.2)',
-    },
-    '.cm-button': {
-      color: 'var(--theme-text)',
-      backgroundImage: 'none',
-      backgroundColor: 'var(--theme-surface-2)',
-      border: '1px solid rgba(var(--theme-primary-rgb), 0.18)',
-    },
-  }),
+  ...codeMirrorThemeExtensions,
 ]
 
 const createEditor = () => {

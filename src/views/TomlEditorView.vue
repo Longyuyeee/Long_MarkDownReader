@@ -72,6 +72,7 @@ import { AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
+import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { type TabInfo, useAppStore } from '../store/app'
 
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string }
@@ -97,7 +98,7 @@ const analyze = async (source: string) => { const id = ++analysisId; analysisPen
 const schedule = () => { clearTimer(); const source = content.value; timer = setTimeout(() => void analyze(source).catch(e => message.error(`实时分析失败：${errorText(e)}`)), 280) }
 const extensions = (locked: boolean) => [basicSetup, StreamLanguage.define(toml), EditorState.readOnly.of(locked), EditorView.editable.of(!locked), EditorView.lineWrapping,
   EditorView.updateListener.of(update => { if (update.docChanged) { content.value = update.state.doc.toString(); lines.value = update.state.doc.lines; if (!applying) { dirty.value = true; syncTab(true); schedule() } } if (update.docChanged || update.selectionSet) { const p = update.state.selection.main.head, line = update.state.doc.lineAt(p); cursorLine.value = line.number; cursorColumn.value = p - line.from + 1 } }),
-  EditorView.theme({ '&': { height: '100%', backgroundColor: 'var(--theme-bg)', color: 'var(--theme-text)' }, '.cm-scroller': { overflow: 'auto', fontFamily: "'Cascadia Code', Consolas, monospace" }, '.cm-gutters': { backgroundColor: 'var(--theme-surface)', borderRight: 'var(--theme-border)' }, '&.cm-focused': { outline: 'none' } })]
+  ...codeMirrorThemeExtensions]
 const replace = (source: string, locked: boolean) => { if (!editor) return; applying = true; editor.setState(EditorState.create({ doc: source, extensions: extensions(locked) })); applying = false; content.value = source; lines.value = editor.state.doc.lines }
 const apply = async (s: Snapshot) => { signature.value = s.signature; encoding.value = s.encoding; fileSize.value = s.size; modified.value = s.modified; readOnlyReason.value = s.readOnlyReason || ''; dirty.value = false; replace(s.content, Boolean(s.readOnlyReason)); store.addTab({ id: path.value, title: fileName.value, path: path.value, isDirty: false }); syncTab(false); await analyze(s.content) }
 const restore = async (tab: TabInfo) => { signature.value = tab.textSignature || ''; encoding.value = tab.textEncoding || 'utf-8'; fileSize.value = tab.textSize || 0; modified.value = tab.textModified || 0; readOnlyReason.value = tab.textReadOnlyReason || ''; dirty.value = true; replace(tab.content || '', Boolean(tab.textReadOnlyReason)); store.activateTab(tab.id); await analyze(tab.content || '') }
