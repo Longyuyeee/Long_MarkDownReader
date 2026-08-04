@@ -266,6 +266,55 @@ body[data-theme="contrast"][data-style] {
   --style-glow-color: rgba(255, 212, 0, 0.65);
 }
 
+// Markdown 代码区域使用成套背景、语法、光标和选区令牌。
+body[data-theme="white"],
+body[data-theme="green"],
+body[data-theme="blue"],
+body[data-theme="pink"],
+body[data-theme="cream"],
+body[data-theme="purple"],
+body[data-theme="amber"] {
+  --markdown-code-surface: #f3f6fa;
+  --markdown-code-text: #1f2937;
+  --markdown-code-keyword: #9d174d;
+  --markdown-code-string: #047857;
+  --markdown-code-number: #1d4ed8;
+  --markdown-code-comment: #52606f;
+  --markdown-code-function: #6d28d9;
+  --markdown-code-variable: #9a3412;
+  --markdown-code-operator: #334155;
+  --markdown-code-cursor: #111827;
+  --markdown-code-selection: rgba(37, 99, 235, 0.24);
+}
+
+body[data-theme="dark"] {
+  --markdown-code-surface: #171b22;
+  --markdown-code-text: #e6edf3;
+  --markdown-code-keyword: #ff7bdb;
+  --markdown-code-string: #a7e57a;
+  --markdown-code-number: #79c0ff;
+  --markdown-code-comment: #9aa7b8;
+  --markdown-code-function: #d2a8ff;
+  --markdown-code-variable: #ffa657;
+  --markdown-code-operator: #c9d1d9;
+  --markdown-code-cursor: #ffffff;
+  --markdown-code-selection: rgba(121, 192, 255, 0.32);
+}
+
+body[data-theme="contrast"] {
+  --markdown-code-surface: #000000;
+  --markdown-code-text: #ffffff;
+  --markdown-code-keyword: #ff5cff;
+  --markdown-code-string: #7cff00;
+  --markdown-code-number: #00e5ff;
+  --markdown-code-comment: #d0d0d0;
+  --markdown-code-function: #ffd400;
+  --markdown-code-variable: #ff9d00;
+  --markdown-code-operator: #ffffff;
+  --markdown-code-cursor: #ffd400;
+  --markdown-code-selection: rgba(255, 212, 0, 0.38);
+}
+
 // ============================================
 // 视觉风格（Visual Styles）
 // 从"变色"升级到"完整视觉语言"

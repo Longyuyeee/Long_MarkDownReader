@@ -1,6 +1,6 @@
 import { watch } from 'vue'
 import { useAppStore } from '../store/app'
-import { isActiveThemeDark } from '../config/themePresets'
+import { resolveMarkdownEditorAppearance } from '../config/markdownCodeTheme'
 
 export function useVditorTheme(getVditor: () => any) {
   const store = useAppStore()
@@ -8,14 +8,14 @@ export function useVditorTheme(getVditor: () => any) {
   watch(() => store.theme, (newTheme) => {
     const vditor = getVditor()
     if (!vditor) return
-    const isDark = isActiveThemeDark(newTheme)
-    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', store.codeTheme || 'github')
+    const appearance = resolveMarkdownEditorAppearance(newTheme, store.codeTheme)
+    vditor.setTheme(appearance.editorTheme, appearance.contentTheme, appearance.codeTheme)
   })
 
   watch(() => store.codeTheme, (newCodeTheme) => {
     const vditor = getVditor()
     if (!vditor) return
-    const isDark = isActiveThemeDark(store.theme)
-    vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', newCodeTheme || 'github')
+    const appearance = resolveMarkdownEditorAppearance(store.theme, newCodeTheme)
+    vditor.setTheme(appearance.editorTheme, appearance.contentTheme, appearance.codeTheme)
   })
 }

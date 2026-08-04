@@ -541,6 +541,7 @@ import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore, THEME_MAP, type SavedSearchConfig, type TabInfo } from '../store/app'
 import { isActiveThemeDark } from '../config/themePresets'
+import { markdownCodeThemeChoices, resolveMarkdownEditorAppearance } from '../config/markdownCodeTheme'
 import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
 import LocalGraph from '../components/LocalGraph.vue'
@@ -1481,8 +1482,9 @@ const loadDirectory = async (path: string): Promise<TreeOption[]> => {
 }
 
 const handleCodeThemeChange = async (val: string) => {
-  store.codeTheme = val; await store.updateConfig({ codeTheme: val })
-  if (vditor && isVditorReady) { const isDark = isActiveThemeDark(store.theme); vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', val) }
+  const appearance = resolveMarkdownEditorAppearance(store.theme, val)
+  await store.updateConfig({ codeTheme: appearance.codeTheme })
+  if (vditor && isVditorReady) vditor.setTheme(appearance.editorTheme, appearance.contentTheme, appearance.codeTheme)
 }
 const handleEditorBgChange = async (val: string) => { store.editorBgColor = val; await store.updateConfig({ editorBgColor: val }) }
 
@@ -2204,12 +2206,7 @@ const initVditor = () => {
   container.addEventListener('click', handleEditorClick);
   editorLoading.value = true
 
-  // 编辑器工具栏主题：深色用 dark，其他用 classic
-  const isDarkTheme = isActiveThemeDark(store.theme)
-  const vditorEditorTheme = isDarkTheme ? 'dark' : 'classic'
-
-  // 内容渲染：不使用 Vditor 内置主题，让我们的自定义 CSS 接管
-  // 所有色调都使用 'light' 作为基础，通过 CSS 变量覆盖样式
+  const appearance = resolveMarkdownEditorAppearance(store.theme, store.codeTheme)
 
   try {
     vditor = new Vditor('vditor-lib', {
@@ -2219,10 +2216,10 @@ const initVditor = () => {
       mode: activeIsMarkdown.value ? store.editorMode || 'wysiwyg' : 'sv',
       customWysiwygToolbar: () => {},
       cache: { enable: false },
-      theme: vditorEditorTheme,
+      theme: appearance.editorTheme,
       preview: {
-        theme: { current: 'light' },  // 使用 light 作为基础，CSS 变量会覆盖
-        hljs: { enable: true, style: store.codeTheme || 'github' },
+        theme: { current: appearance.contentTheme },
+        hljs: { enable: true, style: appearance.codeTheme },
         math: { engine: 'KaTeX' } as any,
         markdown: { mermaid: true, footnotes: true, toc: true } as any,
         customWysiwygToolbar: () => {},
@@ -2236,7 +2233,7 @@ const initVditor = () => {
         { name: 'link', tip: '插入链接' }, { name: 'table', tip: '插入表格' },
         { name: 'table-chart', tip: '插入实时 Table 图表', icon: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>', click: () => { void insertTableChartReference() } }, '|',
         { name: 'code-theme', tip: '切换代码高亮风格', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>', click: () => {
-          const themes = ['github', 'monokai', 'dracula', 'vscode', 'native', 'one-dark']
+          const themes = markdownCodeThemeChoices(store.theme)
           const nextTheme = themes[(themes.indexOf(store.codeTheme) + 1) % themes.length]
           handleCodeThemeChange(nextTheme); message.info(`代码风格: ${nextTheme.toUpperCase()}`)
         }},
@@ -2260,8 +2257,8 @@ const initVditor = () => {
       after: () => {
         isVditorReady = true;
         editorLoading.value = false;
-        const isDark = isActiveThemeDark(store.theme)
-        vditor.setTheme(isDark ? 'dark' : 'classic', isDark ? 'dark' : 'light', store.codeTheme || 'github')
+        const currentAppearance = resolveMarkdownEditorAppearance(store.theme, store.codeTheme)
+        vditor.setTheme(currentAppearance.editorTheme, currentAppearance.contentTheme, currentAppearance.codeTheme)
         // 光标位置追踪（兼容 WYSIWYG / IR / SV 三种模式）
         const contentEl = vditor.vditor.wysiwyg?.element || vditor.vditor.ir?.element || vditor.vditor.sv?.element
         if (contentEl) {
@@ -2498,7 +2495,6 @@ onUnmounted(() => {
 watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory(); if (newTab === 'links') fetchLinks() })
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
-    // 判断当前主题是否为深色系
     const isDark = isActiveThemeDark(newTheme)
 
     // 自动调整编辑器背景色
@@ -2506,43 +2502,15 @@ watch(() => store.theme, (newTheme) => {
     const isDefaultBg = Object.values(THEME_MAP).includes(store.editorBgColor)
     if (isDefaultBg) handleEditorBgChange(targetBg)
 
-    // 根据是否深色主题，智能切换 Vditor 渲染主题和代码高亮
-    const darkCodeThemes = ['atom-one-dark', 'github-dark', 'dracula', 'vs2015', 'tokyo-night-dark', 'monokai', 'native']
-
-    // 如果当前代码主题与新主题色调不匹配，自动切换
-    const currentCodeThemeIsDark = darkCodeThemes.includes(store.codeTheme)
-    let finalCodeTheme = store.codeTheme
-
-    if (isDark && !currentCodeThemeIsDark) {
-      // 切换到深色主题，但代码主题是浅色 → 自动换成深色代码主题
-      finalCodeTheme = 'atom-one-dark'
-    } else if (!isDark && currentCodeThemeIsDark) {
-      // 切换到浅色主题，但代码主题是深色 → 自动换成浅色代码主题
-      finalCodeTheme = 'github'
-    }
-
-    // 应用 Vditor 主题
-    vditor.setTheme(
-      isDark ? 'dark' : 'classic',
-      isDark ? 'dark' : 'light',
-      finalCodeTheme
-    )
-
-    // 如果代码主题被自动调整了，同步到 store
-    if (finalCodeTheme !== store.codeTheme) {
-      store.updateConfig({ codeTheme: finalCodeTheme })
-    }
+    const appearance = resolveMarkdownEditorAppearance(newTheme, store.codeTheme)
+    vditor.setTheme(appearance.editorTheme, appearance.contentTheme, appearance.codeTheme)
   }
 })
 
 watch(() => store.codeTheme, (newCodeTheme) => {
   if (vditor && isVditorReady) {
-    const isDark = isActiveThemeDark(store.theme)
-    vditor.setTheme(
-      isDark ? 'dark' : 'classic',
-      isDark ? 'dark' : 'light',
-      newCodeTheme || 'github'
-    )
+    const appearance = resolveMarkdownEditorAppearance(store.theme, newCodeTheme)
+    vditor.setTheme(appearance.editorTheme, appearance.contentTheme, appearance.codeTheme)
   }
 })
 

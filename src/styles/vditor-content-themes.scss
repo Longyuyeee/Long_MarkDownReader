@@ -1133,3 +1133,93 @@
     overflow-x: auto;
   }
 }
+
+/* Markdown 编辑、预览与语法高亮共享同一套对比度合同。 */
+.vditor-wysiwyg,
+.vditor-ir,
+.vditor-sv {
+  color: var(--text-primary) !important;
+  caret-color: var(--markdown-code-cursor) !important;
+}
+
+.vditor-wysiwyg ::selection,
+.vditor-ir ::selection,
+.vditor-sv ::selection,
+.vditor-preview ::selection {
+  color: var(--markdown-code-text);
+  background: var(--markdown-code-selection);
+}
+
+.vditor-reset pre,
+.vditor-wysiwyg pre,
+.vditor-ir pre,
+.vditor-preview pre {
+  color: var(--markdown-code-text) !important;
+  background: var(--markdown-code-surface) !important;
+  border-color: color-mix(in srgb, var(--markdown-code-text) 18%, transparent) !important;
+}
+
+.vditor-reset pre code,
+.vditor-wysiwyg pre code,
+.vditor-ir pre code,
+.vditor-preview pre code,
+.vditor-reset code.hljs,
+.vditor-preview code.hljs {
+  color: var(--markdown-code-text) !important;
+  background: transparent !important;
+  caret-color: var(--markdown-code-cursor) !important;
+}
+
+.vditor-ir__marker--pre,
+.vditor-sv__marker,
+.vditor-ir__marker {
+  color: var(--markdown-code-comment) !important;
+}
+
+.hljs-doctag,
+.hljs-formula,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-type { color: var(--markdown-code-keyword) !important; }
+
+.hljs-addition,
+.hljs-meta .hljs-string,
+.hljs-regexp,
+.hljs-string { color: var(--markdown-code-string) !important; }
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-number,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-template-variable { color: var(--markdown-code-number) !important; }
+
+.hljs-code,
+.hljs-comment,
+.hljs-quote { color: var(--markdown-code-comment) !important; }
+
+.hljs-built_in,
+.hljs-class .hljs-title,
+.hljs-section,
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.function { color: var(--markdown-code-function) !important; }
+
+.hljs-bullet,
+.hljs-link,
+.hljs-meta,
+.hljs-selector-id,
+.hljs-symbol,
+.hljs-variable,
+.hljs-variable.language_ { color: var(--markdown-code-variable) !important; }
+
+.hljs-name,
+.hljs-operator,
+.hljs-selector-pseudo,
+.hljs-selector-tag,
+.hljs-subst { color: var(--markdown-code-operator) !important; }
+
+.hljs-addition { background: color-mix(in srgb, var(--markdown-code-string) 14%, transparent) !important; }
+.hljs-deletion { color: var(--markdown-code-keyword) !important; background: color-mix(in srgb, var(--markdown-code-keyword) 14%, transparent) !important; }

@@ -83,6 +83,7 @@ import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore } from '../store/app'
 import { isActiveThemeDark } from '../config/themePresets'
+import { resolveMarkdownEditorAppearance } from '../config/markdownCodeTheme'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { useVditorTheme } from '../composables/useVditorTheme'
@@ -269,6 +270,7 @@ onMounted(async () => {
     try { await invoke('export_external_to_html', { path: filePath.value, htmlContent: html }); message.success('HTML 已导出') } catch (e) { message.error('导出失败') }
   })
 
+  const appearance = resolveMarkdownEditorAppearance(store.theme, store.codeTheme)
   vditor = new Vditor('vditor', {
     cdn: './vditor',
     lang: 'zh_CN',
@@ -277,10 +279,10 @@ onMounted(async () => {
     value: initialContent,
     customWysiwygToolbar: () => {},
     cache: { enable: false },
-    theme: isActiveThemeDark(store.theme) ? 'dark' : 'classic',
+    theme: appearance.editorTheme,
     preview: {
-      theme: { current: isActiveThemeDark(store.theme) ? 'dark' : 'light' },
-      hljs: { enable: true, style: store.codeTheme || 'github' },
+      theme: { current: appearance.contentTheme },
+      hljs: { enable: true, style: appearance.codeTheme },
       math: { engine: 'KaTeX' } as any,
       markdown: { mermaid: true, footnotes: true, toc: true } as any,
       customWysiwygToolbar: () => {},
