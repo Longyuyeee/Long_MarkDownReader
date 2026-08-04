@@ -3,7 +3,7 @@
     <WorkspaceManagementHeader
       title="格式能力"
       :subtitle="`Long编辑 ${RELEASE_MATRIX_VERSION} · ${RELEASE_CAPABILITY_ROWS.length} 类格式`"
-      @back="router.push({ name: 'LibraryMode' })"
+      @back="returnToSource"
     >
       <div class="release-state" title="社区无签名发布渠道；企业签名发布候选状态独立评估">
         <ShieldCheck :size="16" />
@@ -92,7 +92,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ChevronDown, Search, ShieldCheck } from 'lucide-vue-next'
 import WorkspaceManagementContent from '../components/workspace/WorkspaceManagementContent.vue'
 import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
@@ -109,8 +109,16 @@ import type { SaveMode } from '../config/fileFormats'
 type FilterValue = 'all' | ReleaseReadiness
 
 const router = useRouter()
+const route = useRoute()
 const query = ref('')
 const activeFilter = ref<FilterValue>('all')
+const returnToSource = () => {
+  if (route.query.from === 'settings') {
+    router.push({ name: 'Settings', query: { focus: route.query.settingsFocus || 'format-capabilities' } })
+    return
+  }
+  router.push({ name: 'LibraryMode' })
+}
 
 const filters = computed(() => [
   { value: 'all' as const, label: '全部', count: RELEASE_CAPABILITY_ROWS.length },

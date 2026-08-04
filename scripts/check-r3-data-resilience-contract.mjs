@@ -107,7 +107,7 @@ for (const token of [
 }
 
 const settings = read('src/views/SettingsView.vue')
-for (const token of ['exportManagementBackup', 'importManagementBackup', 'restore_management_backup', 'exportPrivacyDiagnosticBundle', 'export_privacy_diagnostic_bundle', '导入恢复', '不包含文档正文或凭据', 'Privacy Diagnostic']) {
+for (const token of ['exportManagementBackup', 'importManagementBackup', 'restore_management_backup', 'exportPrivacyDiagnosticBundle', 'export_privacy_diagnostic_bundle', '导入恢复', '不包含文档正文或凭据', '隐私诊断包']) {
   if (!settings.includes(token)) fail(`R3 settings UI token missing: ${token}`)
 }
 

@@ -6,6 +6,8 @@
 
 > A0B 已完成更新体验与发布事实对齐：当前运行态不再自动请求未发布的 `latest.json`，设置页改为打开官方 GitHub Release 的手动更新入口，并同步修正共享发布策略与机器合同。UX-03 为待复测，下一安装包需验证外部浏览器打开行为。详见 [`A0B_Manual_Update_Experience_Audit_2026-08-04.md`](./A0B_Manual_Update_Experience_Audit_2026-08-04.md)。
 
+> A0C 已完成设置子页返回与隐私诊断中文化：格式能力页现在识别设置来源，返回后重新定位格式能力项；隐私诊断入口、保存对话框及结果反馈已统一中文。UX-02、UX-04 为待复测。详见 [`A0C_Settings_Navigation_Localization_Audit_2026-08-04.md`](./A0C_Settings_Navigation_Localization_Audit_2026-08-04.md)。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 

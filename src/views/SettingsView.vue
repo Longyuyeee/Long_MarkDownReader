@@ -105,12 +105,17 @@
                 打开系统设置
               </n-button>
             </div>
-            <div class="setting-row">
+            <div
+              ref="formatCapabilityRow"
+              class="setting-row"
+              :class="{ 'is-route-focused': formatCapabilityRouteFocused }"
+              data-testid="format-capability-settings"
+            >
               <div class="info">
                 <div class="label">格式能力</div>
                 <div class="desc">查看每种格式的保存边界、依赖和已知限制</div>
               </div>
-              <n-button secondary @click="router.push({ name: 'ReleaseCapabilities' })">查看矩阵</n-button>
+              <n-button secondary @click="openReleaseCapabilities">查看矩阵</n-button>
             </div>
             <div class="setting-row">
               <UpdateSettingsRow />
@@ -132,11 +137,11 @@
             </div>
             <div class="setting-row">
               <div class="info">
-                <div class="label">Privacy Diagnostic</div>
-                <div class="desc">Export redacted diagnostics without document bodies, full paths, API keys, cache bodies, or credentials.</div>
+                <div class="label">隐私诊断包</div>
+                <div class="desc">导出脱敏诊断信息，不包含文档正文、完整路径、API 密钥、缓存正文或凭据。</div>
               </div>
               <n-button secondary type="warning" :loading="diagnosticExporting" @click="exportPrivacyDiagnosticBundle">
-                Export
+                导出诊断包
               </n-button>
             </div>
             <div ref="knowledgeObservationRow" class="setting-row" :class="{ 'is-route-focused': observationRouteFocused }" data-testid="knowledge-observation-export">
@@ -461,8 +466,14 @@ const observationExporting = ref(false)
 const observationComparisonExporting = ref(false)
 const observationReviewing = ref(false)
 const observationReview = ref<KnowledgeGraphObservationComparison | null>(null)
+const formatCapabilityRow = ref<HTMLElement | null>(null)
 const knowledgeObservationRow = ref<HTMLElement | null>(null)
+const formatCapabilityRouteFocused = computed(() => route.query.focus === 'format-capabilities')
 const observationRouteFocused = computed(() => route.query.focus === 'knowledge-observation')
+const openReleaseCapabilities = () => router.push({
+  name: 'ReleaseCapabilities',
+  query: { from: 'settings', settingsFocus: 'format-capabilities' },
+})
 type ObservationSessionPhase = 1 | 2 | 3 | 4
 const OBSERVATION_SESSION_KEY = 'longedit:knowledge-observation-session:v1'
 const readObservationSessionPhase = (): ObservationSessionPhase => {
@@ -654,6 +665,7 @@ onMounted(async () => {
 
   nextTick(() => {
     isInitializing.value = false
+    if (formatCapabilityRouteFocused.value) formatCapabilityRow.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     if (observationRouteFocused.value) knowledgeObservationRow.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   })
 })
@@ -792,18 +804,18 @@ const importManagementBackup = async () => {
 const exportPrivacyDiagnosticBundle = async () => {
   if (diagnosticExporting.value) return
   const target = await save({
-    title: 'Export Privacy Diagnostic',
+    title: '导出隐私诊断包',
     defaultPath: `longedit-privacy-diagnostic-${new Date().toISOString().slice(0, 10)}.zip`,
-    filters: [{ name: 'LongEdit Privacy Diagnostic', extensions: ['zip'] }],
+    filters: [{ name: 'LongEdit 隐私诊断包', extensions: ['zip'] }],
   })
   if (!target) return
   diagnosticExporting.value = true
   try {
     const receipt = await invoke<PrivacyDiagnosticBundleReceipt>('export_privacy_diagnostic_bundle', { targetPath: target })
     const kb = Math.max(1, Math.round(receipt.bytes / 1024))
-    message.success(`Privacy diagnostic exported: ${kb} KiB · ${receipt.entryCount} entries · ${receipt.sha256.slice(0, 12)}`)
+    message.success(`隐私诊断包已导出：${kb} KiB · ${receipt.entryCount} 个条目 · 校验值 ${receipt.sha256.slice(0, 12)}`)
   } catch (error) {
-    message.error(`Export privacy diagnostic failed: ${String(error)}`)
+    message.error(`导出隐私诊断包失败：${String(error)}`)
   } finally {
     diagnosticExporting.value = false
   }

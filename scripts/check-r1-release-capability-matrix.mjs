@@ -89,7 +89,7 @@ requireText(view, 'RELEASE_CAPABILITY_ROWS', 'release matrix view must render th
 requireText(view, 'knownLimitations', 'release matrix view must expose known limitations')
 requireText(view, 'privacyBoundary', 'release matrix view must expose privacy boundaries')
 requireText(view, 'RELEASE_EXTERNAL_GATES', 'release matrix view must expose external gates')
-requireText(settings, "router.push({ name: 'ReleaseCapabilities' })", 'settings must link to the release matrix')
+requireText(settings, "name: 'ReleaseCapabilities'", 'settings must link to the release matrix')
 requireText(router, "name: 'ReleaseCapabilities'", 'release matrix route is missing')
 requireText(workflow, 'node-version: 22', 'Quality Gate must retain the Node.js 22 build baseline')
 
