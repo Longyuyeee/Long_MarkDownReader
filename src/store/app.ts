@@ -68,6 +68,7 @@ export interface RelationObjectFocus {
 
 const TABS_STORAGE_KEY = 'longedit_tabs_state'
 const GRAPH_COLLECTION_QUERY = '__longedit_graph_collection__'
+let configLoadPromise: Promise<void> | null = null
 
 export const useAppStore = defineStore('app', {
   state: () => ({
@@ -99,6 +100,7 @@ export const useAppStore = defineStore('app', {
     starredFiles: [] as string[],
     savedSearches: [] as SavedSearchConfig[],
     relationObjectFocus: null as RelationObjectFocus | null,
+    configReady: false,
   }),
   getters: {
     libraryPath: (state) => state.activeLibraryPath,
@@ -115,43 +117,53 @@ export const useAppStore = defineStore('app', {
       if (!path || this.relationObjectFocus?.path === path) this.relationObjectFocus = null
     },
     async loadConfig() {
-      if (!isTauriRuntime()) {
-        this.restoreTabsState()
-        return
-      }
-      try {
-        const config = await invoke<any>('get_config')
-        this.libraries = (config.libraries || []).map((l: any) => ({ ...l, gitEnabled: l.gitEnabled || false, gitRemote: l.gitRemote || '', gitBranch: l.gitBranch || 'main' }))
-        this.activeLibraryPath = config.activeLibraryPath || ''
-        this.theme = normalizeThemeName(config.theme)
-        this.codeTheme = config.codeTheme || 'github'
-        this.editorMode = config.editorMode || 'wysiwyg'
-        this.editorBgColor = config.editorBgColor || ''
-        this.heroIcon = config.heroIcon || 'BookOpen'
-        this.autoSaveInterval = config.autoSaveInterval || 3
-        this.textAutoSaveEnabled = config.textAutoSaveEnabled !== false
-        this.maxHistoryCount = config.maxHistoryCount || 10
-        this.exitStrategy = config.exitStrategy || 'ask'
-        this.visualStyle = config.visualStyle || 'soft'
-        this.motionSpeed = config.motionSpeed || 'calm'
-        this.aiEnabled = config.aiEnabled || false
-        this.aiProvider = config.aiProvider || 'openai'
-        this.aiEndpoint = config.aiEndpoint || 'https://api.openai.com/v1'
-        try { this.aiCredentialStored = await invoke<boolean>('get_ai_credential_status') }
-        catch { this.aiCredentialStored = false }
-        this.aiModel = config.aiModel || 'gpt-4o-mini'
-        this.savedSearches = Array.isArray(config.savedSearches) ? config.savedSearches : []
-
-        // 同步系统真实的自启状态，以系统为准
+      if (this.configReady) return
+      if (configLoadPromise) return configLoadPromise
+      configLoadPromise = (async () => {
         try {
-          this.isAutostart = await isEnabled()
+          if (!isTauriRuntime()) {
+            this.restoreTabsState()
+            return
+          }
+          const config = await invoke<any>('get_config')
+          this.libraries = (config.libraries || []).map((l: any) => ({ ...l, gitEnabled: l.gitEnabled || false, gitRemote: l.gitRemote || '', gitBranch: l.gitBranch || 'main' }))
+          this.activeLibraryPath = config.activeLibraryPath || ''
+          this.theme = normalizeThemeName(config.theme)
+          this.codeTheme = config.codeTheme || 'github'
+          this.editorMode = config.editorMode || 'wysiwyg'
+          this.editorBgColor = config.editorBgColor || ''
+          this.heroIcon = config.heroIcon || 'BookOpen'
+          this.autoSaveInterval = config.autoSaveInterval || 3
+          this.textAutoSaveEnabled = config.textAutoSaveEnabled !== false
+          this.maxHistoryCount = config.maxHistoryCount || 10
+          this.exitStrategy = config.exitStrategy || 'ask'
+          this.visualStyle = config.visualStyle || 'soft'
+          this.motionSpeed = config.motionSpeed || 'calm'
+          this.aiEnabled = config.aiEnabled || false
+          this.aiProvider = config.aiProvider || 'openai'
+          this.aiEndpoint = config.aiEndpoint || 'https://api.openai.com/v1'
+          try { this.aiCredentialStored = await invoke<boolean>('get_ai_credential_status') }
+          catch { this.aiCredentialStored = false }
+          this.aiModel = config.aiModel || 'gpt-4o-mini'
+          this.savedSearches = Array.isArray(config.savedSearches) ? config.savedSearches : []
+
+          // 同步系统真实的自启状态，以系统为准
+          try {
+            this.isAutostart = await isEnabled()
+          } catch (e) {
+            this.isAutostart = config.isAutostart || false
+          }
+
+          // 恢复上一次的标签页
+          this.restoreTabsState()
         } catch (e) {
-          this.isAutostart = config.isAutostart || false
+          console.error('Failed to load config', e)
+        } finally {
+          this.configReady = true
         }
-        
-        // 恢复上一次的标签页
-        this.restoreTabsState()
-      } catch (e) { console.error('Failed to load config', e) }
+      })()
+      try { await configLoadPromise }
+      finally { configLoadPromise = null }
     },
     async updateConfig(patch: any) {
       // 检测文件库切换，若切换则清空标签页

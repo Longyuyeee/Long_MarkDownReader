@@ -2368,6 +2368,9 @@ const handleExportHtml = async () => {
 
 onMounted(async () => {
   await store.loadConfig()
+  if (activeTabId.value && route.query.path !== activeTabId.value) {
+    await router.replace({ name: 'LibraryMode', query: { ...route.query, path: activeTabId.value } })
+  }
   void loadExternalApplications()
   if (activeTabId.value && !opensInLibraryShell(findFileFormat(activeTabId.value))) {
     store.activateTab(tabs.value[0]?.id || null)

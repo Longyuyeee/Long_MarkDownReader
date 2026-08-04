@@ -29,6 +29,8 @@ import {
 } from 'naive-ui'
 import App from './App.vue'
 import router from './router'
+import { useAppStore } from './store/app'
+import { managedFileLocation } from './services/fileNavigation'
 
 import 'vfonts/Inter.css'
 import 'vfonts/FiraCode.css'
@@ -41,7 +43,7 @@ const app = createApp(App)
 const pinia = createPinia()
 
 app.use(pinia)
-app.use(router)
+const store = useAppStore(pinia)
 
 const naiveComponents = {
   NButton,
@@ -96,4 +98,14 @@ app.config.errorHandler = (err, _instance, info) => {
   }
 }
 
-app.mount('#app')
+const bootstrap = async () => {
+  await store.loadConfig()
+  app.use(router)
+  await router.isReady()
+  if (router.currentRoute.value.name === 'LibraryMode' && typeof router.currentRoute.value.query.path !== 'string' && store.activeTabId) {
+    await router.replace(managedFileLocation(store.activeTabId, router.currentRoute.value.query))
+  }
+  app.mount('#app')
+}
+
+void bootstrap()

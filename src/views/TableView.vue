@@ -142,6 +142,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useDialog, useMessage } from 'naive-ui'
 import { Redo2 as RedoIcon, Trash2 as TrashIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
@@ -236,7 +237,7 @@ let resizeObserver: ResizeObserver | null = null
 let typeTimer = 0
 let loadGeneration = 0
 
-const tablePath = computed(() => String(route.query.path || ''))
+const tablePath = computed(() => String(route.query.path || store.activeTabId || ''))
 const fileName = computed(() => tablePath.value.split(/[\\/]/).pop() || '数据表')
 const formatLabel = computed(() => table.value?.format === 'longedit-table' ? '开放 Table' : table.value?.format?.toUpperCase() || 'CSV')
 const tableWidth = computed(() => 52 + (columnWidths.value.length ? columnWidths.value.reduce((sum, width) => sum + width, 0) : 160))
@@ -596,6 +597,8 @@ const loadTable = async () => {
   dirty.value = false
   notice.value = ''
   try {
+    await store.loadConfig()
+    if (generation !== loadGeneration) return
     if (!store.libraryPath || !/(?:\.(csv|tsv)|\.table\.json)$/i.test(tablePath.value)) throw new Error('表格路径无效或知识库尚未配置')
     const document = await invoke<TableDocument>('read_table_file', { libraryRoot: store.libraryPath, path: tablePath.value })
     if (generation !== loadGeneration) return
@@ -609,6 +612,12 @@ const loadTable = async () => {
       ? requestedView
       : views.value.some(view => view.id === document.activeView) ? document.activeView : views.value[0].id
     applyView(activeView.value)
+    const viewState = recallWorkspaceViewState(tablePath.value)
+    if (viewState) {
+      await nextTick()
+      scrollRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
+      scrollTop.value = viewState.scrollTop
+    }
     notice.value = `已解析 ${table.value.rows.length.toLocaleString()} 行`
   } catch (cause) {
     if (generation !== loadGeneration) return
@@ -752,6 +761,9 @@ onMounted(() => {
   if (scrollRef.value) resizeObserver.observe(scrollRef.value)
 })
 onBeforeUnmount(() => {
+  if (scrollRef.value) {
+    rememberWorkspaceViewState(tablePath.value, { scrollTop: scrollRef.value.scrollTop, scrollLeft: scrollRef.value.scrollLeft })
+  }
   window.clearTimeout(typeTimer)
   window.removeEventListener('beforeunload', beforeUnload)
   resizeObserver?.disconnect()

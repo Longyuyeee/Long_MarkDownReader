@@ -261,6 +261,9 @@ const finishRouteLoading = () => {
 
 const removeBeforeEach = router.beforeEach((to) => {
   startRouteLoading(to.name)
+  if (to.name === 'LibraryMode' && typeof to.query.path !== 'string' && store.activeTabId) {
+    return { name: 'LibraryMode', query: { ...to.query, path: store.activeTabId }, replace: true }
+  }
   return true
 })
 const removeAfterEach = router.afterEach(() => {

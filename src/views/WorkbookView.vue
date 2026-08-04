@@ -801,6 +801,7 @@ import WorkspaceSegmentedControl from '../components/workspace/WorkspaceSegmente
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
 import WorkspaceStatusBar from '../components/workspace/WorkspaceStatusBar.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useDialog, useMessage } from 'naive-ui'
 import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Calculator as CalculatorIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
@@ -1097,7 +1098,7 @@ let dragSelecting = false
 let fillSource: SelectionArea | null = null
 let filling = false
 
-const workbookPath = computed(() => String(route.query.path || ''))
+const workbookPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const fileName = computed(() => workbookPath.value.split(/[\\/]/).pop() || '工作簿.xlsx')
 const draftExtent = computed(() => {
   let row = -1
@@ -4324,6 +4325,8 @@ const loadWorkbook = async () => {
   loading.value = true
   error.value = ''
   try {
+    await store.loadConfig()
+    if (current !== generation) return
     if (!store.libraryPath || !workbookPath.value.toLowerCase().endsWith('.xlsx')) throw new Error('XLSX 路径无效或知识库尚未配置')
     const document = await invoke<WorkbookDocument>('read_workbook_file', { libraryRoot: store.libraryPath, path: workbookPath.value })
     if (current !== generation) return
@@ -4334,7 +4337,14 @@ const loadWorkbook = async () => {
     selectionAreas.value = []
     invalidateCalculation()
     loading.value = false
-    await selectSheet(document.sheets[0])
+    const viewState = recallWorkspaceViewState(workbookPath.value)
+    const targetSheet = viewState?.section && document.sheets.includes(viewState.section) ? viewState.section : document.sheets[0]
+    await selectSheet(targetSheet)
+    if (viewState) {
+      await nextTick()
+      scrollRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
+      scrollTop.value = viewState.scrollTop
+    }
   } catch (cause) {
     if (current !== generation) return
     workbook.value = null
@@ -4475,6 +4485,13 @@ onMounted(() => {
   window.addEventListener('beforeunload', warnBeforeUnload)
 })
 onBeforeUnmount(() => {
+  if (scrollRef.value) {
+    rememberWorkspaceViewState(workbookPath.value, {
+      scrollTop: scrollRef.value.scrollTop,
+      scrollLeft: scrollRef.value.scrollLeft,
+      section: activeSheet.value,
+    })
+  }
   generation += 1
   chartPreviewGeneration += 1
   resizeObserver?.disconnect()

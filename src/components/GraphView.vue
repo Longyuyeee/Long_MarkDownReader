@@ -1,6 +1,6 @@
 <template>
   <div class="graph-container" ref="containerRef">
-    <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="router.push({ name: 'LibraryMode' })">
+    <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls">
         <WorkspaceSegmentedControl class="view-switch" aria-label="图谱布局模式">
@@ -110,7 +110,7 @@
       <div class="tutorial-note">
         跨目录可写 <code>[[子目录/文件名]]</code>；文件名在知识库中唯一时，也可直接写 <code>[[文件名]]</code>。
       </div>
-      <button class="tutorial-action" @click="router.push({ name: 'LibraryMode' })">返回编辑器试一试</button>
+      <button class="tutorial-action" @click="returnToLibrary">返回编辑器试一试</button>
     </div>
     </transition>
 
@@ -214,7 +214,7 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
 import { Circle, CircleHelp, Link2, Network, RotateCcw, Search, ZoomIn, ZoomOut } from 'lucide-vue-next'
-import { openManagedFile } from '../services/fileNavigation'
+import { managedFileLocation, openManagedFile } from '../services/fileNavigation'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone, isActiveThemeDark } from '../config/themePresets'
 import GraphFilterControls from './GraphFilterControls.vue'
@@ -304,6 +304,9 @@ const runRemediationAction = () => {
   if (remediationFocus.value === 'orphans') healthOpen.value = true
 }
 const openKnowledgeOutcome = () => router.push({ name: 'Settings', query: { focus: 'knowledge-observation' } })
+const returnToLibrary = () => store.activeTabId
+  ? router.push(managedFileLocation(store.activeTabId))
+  : router.push({ name: 'LibraryMode' })
 const nodeDegree = (id: string) => degreeMap.value.get(id) || 0
 const incomingCount = (id: string) => graphData.value.edges.filter(edge => edge.target === id).length
 const outgoingCount = (id: string) => graphData.value.edges.filter(edge => edge.source === id).length
