@@ -93,6 +93,7 @@
     "check:code-editor-theme-contract": "node scripts/check-code-editor-theme-contract.mjs",
     "check:structured-source-workspace": "node scripts/check-structured-source-workspace.mjs",
     "check:workbook-workspace-experience": "node scripts/check-workbook-workspace-experience.mjs",
+    "check:docx-page-editing-experience": "node scripts/check-docx-page-editing-experience.mjs",
     "check:log-workspace-editing": "node scripts/check-log-workspace-editing.mjs",
     "check:code-html-workspace": "node scripts/check-code-html-workspace.mjs",
     "check:json-workspace-experience": "node scripts/check-json-workspace-experience.mjs",

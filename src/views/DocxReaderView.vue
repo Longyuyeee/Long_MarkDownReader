@@ -5,7 +5,7 @@
         <FileTextIcon :size="18" />
         <div class="document-title">
           <strong :title="docxPath">{{ fileName }}</strong>
-          <span>Word 文档 · 基础编辑副本 · 原文件只读</span>
+          <span>Word 页面编辑 · 草稿只驻留内存 · 点击保存才写入</span>
         </div>
       </div>
       <div class="toolbar-actions">
@@ -33,7 +33,7 @@
           :disabled="!editableTargetCount"
           :class="{ active: editorOpen }"
           :aria-pressed="editorOpen"
-          title="基础编辑并另存副本"
+          title="打开 DOCX 页面编辑"
           @click="editorOpen = !editorOpen"
         >
           <FilePenLineIcon :size="15" />
@@ -109,18 +109,21 @@
                 v-if="block.kind === 'heading'"
                 :id="block.id"
                 class="docx-block docx-heading"
-                :class="{ 'search-hit': matchIds.has(block.id) }"
+                :class="blockEditClasses(block)"
+                :style="draftStyleForBlock(block)"
+                @click="selectTextBlock(block)"
               >
-                {{ block.text }}
+                {{ draftTextForBlock(block) }}
               </component>
               <div
                 v-else-if="block.kind === 'list-item'"
                 :id="block.id"
                 class="docx-block docx-list-item"
-                :class="{ 'search-hit': matchIds.has(block.id) }"
+                :class="blockEditClasses(block)"
                 :style="{ paddingLeft: `${Math.min(5, block.listLevel || 0) * 20}px` }"
+                @click="selectTextBlock(block)"
               >
-                <span>{{ block.listKind === 'ordered' ? '1.' : '•' }}</span><p>{{ block.text }}</p>
+                <span>{{ block.listKind === 'ordered' ? '1.' : '•' }}</span><p>{{ draftTextForBlock(block) }}</p>
               </div>
               <div
                 v-else-if="block.kind === 'table'"
@@ -136,8 +139,10 @@
                           v-if="!cell.continuation"
                           :colspan="cell.columnSpan"
                           :rowspan="cell.rowSpan"
+                          :class="tableCellEditClasses(block, rowIndex, cellIndex)"
+                          @click.stop="selectTableCell(block, rowIndex, cellIndex)"
                         >
-                          {{ cell.text }}
+                          {{ draftTableCellText(block, rowIndex, cellIndex, cell.text) }}
                         </td>
                       </template>
                     </tr>
@@ -175,9 +180,11 @@
                 v-else
                 :id="block.id"
                 class="docx-block docx-paragraph"
-                :class="{ 'search-hit': matchIds.has(block.id) }"
+                :class="blockEditClasses(block)"
+                :style="draftStyleForBlock(block)"
+                @click="selectTextBlock(block)"
               >
-                <p>{{ block.text }}</p>
+                <p>{{ draftTextForBlock(block) }}</p>
                 <div v-if="mediaFor(block).length" class="inline-images">
                   <img
                     v-for="media in mediaFor(block)"
@@ -240,11 +247,11 @@
           </article>
         </main>
 
-        <aside v-if="editorOpen" class="docx-editor" aria-label="DOCX 基础编辑副本">
+        <aside v-if="editorOpen" class="docx-editor" aria-label="DOCX 页面编辑">
           <header>
             <div>
-              <strong>基础编辑副本</strong>
-              <span>一次编辑生成一个新 DOCX</span>
+              <strong>页面编辑</strong>
+              <span>修改先留在草稿，验证后才能保存</span>
             </div>
             <button type="button" title="关闭编辑面板" @click="editorOpen = false">
               <XIcon :size="15" />
@@ -341,8 +348,13 @@
           </div>
 
           <div v-if="previewReport" class="copy-save">
+            <button type="button" :disabled="savingSource" aria-live="polite" @click="confirmSaveSource">
+              <SaveIcon :size="15" />
+              {{ savingSource ? '正在可靠保存并重开…' : '保存到原文件' }}
+            </button>
+            <p class="save-boundary">会覆盖当前 DOCX；保存前再次检查外部修改，失败时恢复原文件。</p>
             <label class="edit-field">
-              <span>新副本文件名</span>
+              <span>或者另存副本</span>
               <input v-model="copyFileName" maxlength="255" @keydown.enter.prevent="saveCopy" />
             </label>
             <button type="button" :disabled="saving || !copyFileName.trim()" aria-live="polite" @click="saveCopy">
@@ -363,8 +375,8 @@
           <span>{{ report.media.length }}/{{ profile.renderableImageCount }} 张图片已安全预览</span>
         </div>
         <div>
-          <LockIcon :size="13" />
-          <span>原件始终只读；经保真验证的基础编辑仅创建同目录新副本</span>
+          <SaveIcon :size="13" />
+          <span>简单文本、列表、单段表格单元格、基础样式和图片说明可编辑；未点击保存不会写盘</span>
         </div>
       </footer>
     </template>
@@ -374,7 +386,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useMessage } from 'naive-ui'
+import { useDialog, useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import {
   AlertTriangle as AlertIcon,
@@ -385,7 +397,6 @@ import {
   FileText as FileTextIcon,
   Image as ImageIcon,
   LocateFixed as LocateFixedIcon,
-  Lock as LockIcon,
   MessageSquareText as MessageSquareTextIcon,
   RefreshCw as RefreshIcon,
   Save as SaveIcon,
@@ -544,6 +555,18 @@ interface DocxSavedCopyReport {
   semanticReopenVerified: boolean
   producerEvidence: string[]
 }
+interface DocxSavedSourceReport {
+  status: string
+  path: string
+  signature: string
+  digest: string
+  outputBytes: number
+  unchangedPartsVerified: boolean
+  structuralReopenVerified: boolean
+  semanticReopenVerified: boolean
+  rollbackProtected: boolean
+  producerEvidence: string[]
+}
 type DocxTextTarget = DocxReadReport['editableTextTargets'][number]
 type DocxStyleTarget = DocxReadReport['editableStyleTargets'][number]
 type DocxImageTarget = DocxReadReport['editableImageTargets'][number]
@@ -556,6 +579,7 @@ type DocxPatchOperation =
 
 const route = useRoute()
 const router = useRouter()
+const dialog = useDialog()
 const message = useMessage()
 const store = useAppStore()
 const report = ref<DocxReadReport | null>(null)
@@ -576,6 +600,7 @@ const previewReport = ref<DocxPatchPreviewReport | null>(null)
 const editError = ref('')
 const copyFileName = ref('')
 const saving = ref(false)
+const savingSource = ref(false)
 const saveError = ref('')
 
 const docxPath = computed(() => String(route.query.path || store.activeTabId || ''))
@@ -639,6 +664,8 @@ const activeTargets = computed<DocxEditableTarget[]>(() => {
   if (editMode.value === 'imageAltText') return report.value.editableImageTargets
   return report.value.editableTextTargets
 })
+const textTargets = computed(() => report.value?.editableTextTargets || [])
+const styleTargets = computed(() => report.value?.editableStyleTargets || [])
 const selectedTarget = computed(() => activeTargets.value.find(target => target.id === selectedTargetId.value))
 const currentOperation = computed<DocxPatchOperation | null>(() => {
   const target = selectedTarget.value
@@ -682,6 +709,61 @@ const canPreviewEdit = computed(() => {
   }
   return 'altText' in target && replacementAltText.value !== target.altText
 })
+
+const textTargetForBlock = (blockId: string) => textTargets.value.find(target => (
+  target.blockId === blockId && target.kind !== 'table-cell'
+))
+const tableTargetForCell = (blockId: string, rowIndex: number, columnIndex: number) => textTargets.value.find(target => (
+  target.blockId === blockId
+  && target.kind === 'table-cell'
+  && target.rowIndex === rowIndex
+  && target.columnIndex === columnIndex
+))
+const selectedTextTarget = () => editMode.value === 'text' && selectedTarget.value && 'text' in selectedTarget.value
+  ? selectedTarget.value
+  : null
+const selectedStyleTarget = () => editMode.value === 'style' && selectedTarget.value && 'bold' in selectedTarget.value
+  ? selectedTarget.value
+  : null
+const draftTextForBlock = (block: DocxBlock) => {
+  const target = selectedTextTarget()
+  return target?.blockId === block.id && target.kind !== 'table-cell' ? replacementText.value : block.text
+}
+const draftTableCellText = (block: DocxBlock, rowIndex: number, columnIndex: number, fallback: string) => {
+  const target = selectedTextTarget()
+  return target?.blockId === block.id && target.kind === 'table-cell'
+    && target.rowIndex === rowIndex && target.columnIndex === columnIndex
+    ? replacementText.value
+    : fallback
+}
+const blockEditClasses = (block: DocxBlock) => ({
+  'search-hit': matchIds.value.has(block.id),
+  editable: Boolean(textTargetForBlock(block.id) || styleTargets.value.some(target => target.blockId === block.id)),
+  'edit-selected': selectedTarget.value?.blockId === block.id,
+})
+const tableCellEditClasses = (block: DocxBlock, rowIndex: number, columnIndex: number) => ({
+  editable: Boolean(tableTargetForCell(block.id, rowIndex, columnIndex)),
+  'edit-selected': selectedTextTarget()?.id === tableTargetForCell(block.id, rowIndex, columnIndex)?.id,
+})
+const draftStyleForBlock = (block: DocxBlock) => {
+  const target = selectedStyleTarget()
+  if (target?.blockId !== block.id) return undefined
+  return {
+    fontWeight: draftBold.value ? '700' : '400',
+    fontStyle: draftItalic.value ? 'italic' : 'normal',
+    textDecoration: draftUnderline.value ? 'underline' : 'none',
+  }
+}
+const selectTextTarget = (target?: DocxTextTarget) => {
+  if (!target) return
+  editorOpen.value = true
+  editMode.value = 'text'
+  selectedTargetId.value = target.id
+}
+const selectTextBlock = (block: DocxBlock) => selectTextTarget(textTargetForBlock(block.id))
+const selectTableCell = (block: DocxBlock, rowIndex: number, columnIndex: number) => {
+  selectTextTarget(tableTargetForCell(block.id, rowIndex, columnIndex))
+}
 
 const headingTag = (level?: number | null) => `h${Math.min(6, Math.max(1, level || 1))}`
 const twipsToCentimeters = (twips?: number | null) => twips
@@ -812,6 +894,46 @@ const saveCopy = async () => {
     saving.value = false
   }
 }
+const saveSource = async () => {
+  const preview = previewReport.value
+  const operation = currentOperation.value
+  if (!preview || !operation || !report.value || savingSource.value) return
+  savingSource.value = true
+  saveError.value = ''
+  try {
+    const saved = await invoke<DocxSavedSourceReport>('save_docx_patch_source', {
+      libraryRoot: store.libraryPath,
+      path: docxPath.value,
+      expectedSignature: report.value.signature,
+      expectedOutputDigest: preview.outputDigest,
+      operation,
+    })
+    if (
+      saved.status !== 'source_saved_verified'
+      || !saved.rollbackProtected
+      || !saved.unchangedPartsVerified
+      || !saved.structuralReopenVerified
+      || !saved.semanticReopenVerified
+      || saved.producerEvidence.length !== 3
+    ) throw new Error('源文件保存结果未通过完整复读与恢复门禁')
+    message.success('DOCX 已可靠保存并重新读取')
+    await load()
+  } catch (cause) {
+    saveError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    savingSource.value = false
+  }
+}
+const confirmSaveSource = () => {
+  if (!previewReport.value || savingSource.value) return
+  dialog.warning({
+    title: '覆盖当前 DOCX？',
+    content: '只有确认后才会写入源文件。LongEdit 会再次检查外部修改，使用同目录临时文件可靠替换，并在落盘复读失败时恢复原文件。',
+    positiveText: '保存到原文件',
+    negativeText: '取消',
+    onPositiveClick: () => { void saveSource() },
+  })
+}
 const scrollToBlock = async (id: string) => {
   await nextTick()
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -926,6 +1048,9 @@ watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocato
 .docx-page { width: min(760px, calc(100% - 24px)); min-height: 960px; margin: 0 auto; padding: 64px 70px; box-sizing: border-box; border: 1px solid var(--border-color); box-shadow: 0 8px 26px rgba(0,0,0,.12); background: var(--bg-primary); }
 .docx-block { scroll-margin: 90px; border-radius: 4px; transition: background .15s ease; }
 .docx-block.search-hit { background: color-mix(in srgb, #f0bd3e 23%, transparent); }
+.docx-block.editable, .docx-table-wrap td.editable { cursor: text; }
+.docx-block.editable:hover, .docx-table-wrap td.editable:hover { outline: 1px solid color-mix(in srgb, var(--primary-color) 55%, transparent); background: color-mix(in srgb, var(--primary-color) 7%, var(--bg-primary)); }
+.docx-block.edit-selected, .docx-table-wrap td.edit-selected { outline: 2px solid var(--primary-color); outline-offset: 2px; background: color-mix(in srgb, var(--primary-color) 9%, var(--bg-primary)); }
 .docx-heading { margin: 1.3em 0 .55em; line-height: 1.3; }
 h1.docx-heading { font-size: 25px; } h2.docx-heading { font-size: 21px; } h3.docx-heading { font-size: 18px; }
 h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
@@ -985,6 +1110,7 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .edit-verification strong { font-size: 11px; }
 .edit-verification span, .edit-verification small, .copy-save > small { color: var(--text-muted); font-size: var(--text-compact); line-height: 1.5; }
 .copy-save { margin-top: 12px; padding-top: 1px; border-top: 1px solid var(--border-color); }
+.save-boundary { margin: 7px 0 2px; color: var(--text-muted); font-size: var(--text-compact); line-height: 1.5; }
 .copy-save > small { display: block; margin-top: 7px; color: var(--error-color); }
 .docx-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: var(--text-compact); }
 .docx-status > div { gap: 10px; }
