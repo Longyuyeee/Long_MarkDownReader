@@ -4,6 +4,8 @@
 
 > A0A 已完成安装态确认对话框 ACL 代码修复：主窗口补齐 confirm/message 权限，新增源码到能力清单的一致性检查并接入补丁发布门禁。UX-07、UX-11、UX-16 仍为开发中，下一安装包需真实点击复测。详见 [`A0A_Dialog_ACL_Hotfix_Audit_2026-08-04.md`](./A0A_Dialog_ACL_Hotfix_Audit_2026-08-04.md)。
 
+> A0B 已完成更新体验与发布事实对齐：当前运行态不再自动请求未发布的 `latest.json`，设置页改为打开官方 GitHub Release 的手动更新入口，并同步修正共享发布策略与机器合同。UX-03 为待复测，下一安装包需验证外部浏览器打开行为。详见 [`A0B_Manual_Update_Experience_Audit_2026-08-04.md`](./A0B_Manual_Update_Experience_Audit_2026-08-04.md)。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 

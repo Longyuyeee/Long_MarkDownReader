@@ -2,7 +2,6 @@
   <n-config-provider :theme="activeTheme" :theme-overrides="themeOverrides">
     <n-dialog-provider>
     <n-message-provider :placement="'top'" :container-style="{ marginTop: '40px' }">
-      <AppUpdater />
       <div class="app-container" :class="{ 'is-dark': isDark, 'zen-mode': store.isZen }" :data-theme="currentThemeName">
         <div class="custom-titlebar" v-if="showMainTitlebar" data-tauri-drag-region>
           <div class="titlebar-left" data-tauri-drag-region>
@@ -79,7 +78,6 @@ import { useRouter } from 'vue-router'
 import { listen, emit } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import FileRelationContext from './components/FileRelationContext.vue'
-import AppUpdater from './components/AppUpdater.vue'
 import { useAppStore } from './store/app'
 import { findFileFormat, isExternallyEditable, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'

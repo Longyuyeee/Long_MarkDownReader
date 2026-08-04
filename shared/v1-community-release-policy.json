@@ -13,12 +13,13 @@
     "unknownPublisherWarningRequired": true
   },
   "updater": {
-    "enabled": true,
-    "automaticCheckIntervalHours": 24,
+    "enabled": false,
+    "automaticCheckIntervalHours": 0,
     "manualCheckAvailable": true,
     "integritySignatureRequired": true,
     "privateKeyCommitted": false,
-    "latestManifestAsset": "latest.json"
+    "latestManifestAsset": null,
+    "manualReleaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
     "frontendBuildPassed": true,

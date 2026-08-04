@@ -2,11 +2,12 @@
   <div class="setting-row update-settings-row" data-testid="app-update-settings">
     <div class="info">
       <div class="label">软件更新</div>
-      <div class="desc">当前版本 v{{ state.currentVersion }} · 每 24 小时自动检查，也可随时手动检查</div>
+      <div class="desc">当前版本 v{{ state.currentVersion }} · 社区版暂时采用手动下载安装</div>
       <div v-if="statusText" class="update-status" :class="{ error: state.status === 'error' }">{{ statusText }}</div>
     </div>
-    <n-button secondary type="primary" :loading="state.status === 'checking'" :disabled="state.status === 'downloading' || state.status === 'ready'" @click="manualCheck">
-      {{ state.status === 'available' ? `安装 v${state.availableVersion}` : '检查更新' }}
+    <n-button secondary type="primary" :loading="state.status === 'opening'" @click="openRelease">
+      <template #icon><n-icon :component="ExternalLinkIcon" /></template>
+      查看最新版本
     </n-button>
   </div>
 </template>
@@ -14,27 +15,20 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { NButton, useMessage } from 'naive-ui'
-import { checkForUpdates, initializeUpdater, installAvailableUpdate, updaterState as state } from '../services/appUpdater'
+import { ExternalLink as ExternalLinkIcon } from 'lucide-vue-next'
+import { initializeUpdater, openLatestRelease, updaterState as state } from '../services/appUpdater'
 
 const message = useMessage()
 const statusText = computed(() => ({
-  current: state.lastCheckedAt ? `已是最新版本 · ${new Date(state.lastCheckedAt).toLocaleString()}` : '已是最新版本',
-  available: `发现 v${state.availableVersion}，点击即可更新`,
-  downloading: '正在下载并安装，完成后会自动重启…',
-  ready: '安装完成，正在重启…',
-  error: `检查失败：${state.error}`,
-  unsupported: '浏览器预览环境不支持桌面更新',
+  ready: '将打开官方 GitHub Release 页面；下载安装前请核对 SHA-256。',
+  opening: '正在打开官方发布页面…',
+  error: `无法打开发布页面：${state.error}`,
+  unsupported: '当前环境无法打开外部发布页面',
 } as Record<string, string>)[state.status] || '')
 
-const manualCheck = async () => {
-  if (state.status === 'available') {
-    const installed = await installAvailableUpdate()
-    if (!installed && state.error) message.error(`更新失败：${state.error}`)
-    return
-  }
-  const update = await checkForUpdates()
-  if (!update && state.status === 'current') message.success('当前已经是最新版本')
-  if (state.status === 'error') message.error(`检查更新失败：${state.error}`)
+const openRelease = async () => {
+  const opened = await openLatestRelease()
+  if (!opened && state.error) message.error(`无法打开官方发布页面：${state.error}`)
 }
 
 onMounted(() => void initializeUpdater())
