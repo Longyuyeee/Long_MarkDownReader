@@ -20,7 +20,7 @@ for (const key of ['realUserObservationComplete', 'signedWindowsClientEvidenceCo
 
 for (const token of ['pub struct KnowledgeGraphObservation', 'get_knowledge_graph_observation', 'export_knowledge_graph_observation', '.create_new(true)', '知识网络观察回执必须保存为 .json 文件', 'consented_observation_contains_only_aggregate_graph_metrics', 'observation leaked']) requireText(graph, token, `G12 backend/privacy marker missing: ${token}`)
 for (const token of ['get_knowledge_graph_observation', 'export_knowledge_graph_observation']) requireText(lib, token, `G12 command registration missing: ${token}`)
-for (const token of ['data-testid="knowledge-observation-export"', 'previewKnowledgeObservation', '确认导出匿名知识网络观察', '同意并选择保存位置', '不会自动上传', "save({", "export_knowledge_graph_observation"]) requireText(settings, token, `G12 explicit consent UI marker missing: ${token}`)
+for (const token of ['data-testid="knowledge-observation-export"', 'previewKnowledgeObservation', '确认记录当前关系状态', '确认并选择保存位置', '不会自动上传', "save({", "export_knowledge_graph_observation"]) requireText(settings, token, `G12 explicit consent UI marker missing: ${token}`)
 for (const token of ['G12', 'releaseCandidate=false', '不包含正文', '用户明确确认', '真实资料库']) requireText(audit, token, `G12 audit marker missing: ${token}`)
 if (!packageJson.scripts?.['check:g12-consented-knowledge-observation'] || !packageJson.scripts?.['check:graph-product-contract']?.includes('check-g12-consented-knowledge-observation')) failures.push('G12 checker must be reachable through graph product contract and ci:check')
 

@@ -6,10 +6,30 @@
       @back="router.push({ name: 'LibraryMode' })"
     />
 
-    <WorkspaceManagementContent class="settings-content" narrow>
+    <WorkspaceManagementContent class="settings-content">
+      <div class="settings-layout">
+        <nav class="settings-navigation" aria-label="设置分类">
+          <button
+            v-for="category in settingsCategories"
+            :key="category.id"
+            type="button"
+            :class="{ active: activeCategory === category.id }"
+            @click="selectSettingsCategory(category.id)"
+          >
+            <n-icon :component="category.icon" />
+            <span>{{ category.label }}</span>
+          </button>
+        </nav>
+        <section class="settings-panel">
+          <header class="settings-category-heading">
+            <div>
+              <h2>{{ activeCategoryMeta.label }}</h2>
+              <p>{{ activeCategoryMeta.description }}</p>
+            </div>
+          </header>
       <n-form label-placement="top" size="medium">
         <n-grid :cols="1" :y-gap="24">
-          <n-grid-item class="animate-item" style="--delay: 0.1s">
+          <n-grid-item v-if="activeCategory === 'library'" class="animate-item" style="--delay: 0.1s">
             <div class="section-title">文件库管理</div>
             <div class="library-manager-card">
               <div v-for="(lib, index) in config.libraries" :key="index" class="library-item" :class="{ active: lib.path === config.activeLibraryPath }">
@@ -55,8 +75,8 @@
             </div>
           </n-grid-item>
 
-          <n-grid-item class="animate-item" style="--delay: 0.2s">
-            <div class="section-title">影子副本 (Shadow Copy)</div>
+          <n-grid-item v-if="activeCategory === 'editing'" class="animate-item" style="--delay: 0.2s">
+            <div class="section-title">编辑与历史版本</div>
             <div class="setting-card">
               <n-form-item label="自动保存间隔 (分钟)">
                 <n-input-number v-model:value="config.autoSaveInterval" :min="1" :max="60">
@@ -76,16 +96,16 @@
             </div>
           </n-grid-item>
 
-          <n-grid-item class="animate-item" style="--delay: 0.3s">
-            <div class="section-title">系统集成</div>
-            <div class="setting-row">
+          <n-grid-item v-if="['formats', 'knowledge', 'system', 'privacy'].includes(activeCategory)" class="animate-item" style="--delay: 0.3s">
+            <div class="section-title">{{ activeCategoryMeta.label }}</div>
+            <div v-show="activeCategory === 'system'" class="setting-row">
               <div class="info">
                 <div class="label">开机自动启动</div>
                 <div class="desc">在 Windows 启动时自动运行Long编辑</div>
               </div>
               <n-switch v-model:value="config.isAutostart" />
             </div>
-            <div class="setting-row">
+            <div v-show="activeCategory === 'system'" class="setting-row">
               <div class="info">
                 <div class="label">退出行为</div>
                 <div class="desc">点击关闭按钮时的默认处理方式</div>
@@ -96,7 +116,7 @@
                 <n-radio-button value="minimize">后台运行</n-radio-button>
               </n-radio-group>
             </div>
-            <div class="setting-row">
+            <div v-show="activeCategory === 'formats'" class="setting-row">
               <div class="info">
                 <div class="label">Markdown 打开方式</div>
                 <div class="desc">由 Windows 管理默认应用，Long编辑不会覆盖现有选择</div>
@@ -107,6 +127,7 @@
             </div>
             <div
               ref="formatCapabilityRow"
+              v-show="activeCategory === 'formats'"
               class="setting-row"
               :class="{ 'is-route-focused': formatCapabilityRouteFocused }"
               data-testid="format-capability-settings"
@@ -117,8 +138,8 @@
               </div>
               <n-button secondary @click="openReleaseCapabilities">查看矩阵</n-button>
             </div>
-            <div class="setting-row">
-              <UpdateSettingsRow />
+            <UpdateSettingsRow v-show="activeCategory === 'system'" />
+            <div v-show="activeCategory === 'privacy'" class="setting-row">
               <!-- R3 管理备份不包含文档正文或凭据，导入恢复要求路径重新映射。 -->
               <div class="info">
                 <div class="label">管理备份</div>
@@ -135,7 +156,7 @@
                 </n-button>
               </div>
             </div>
-            <div class="setting-row">
+            <div v-show="activeCategory === 'privacy'" class="setting-row">
               <div class="info">
                 <div class="label">隐私诊断包</div>
                 <div class="desc">导出脱敏诊断信息，不包含文档正文、完整路径、API 密钥、缓存正文或凭据。</div>
@@ -144,38 +165,43 @@
                 导出诊断包
               </n-button>
             </div>
+            <details class="advanced-settings" :open="observationRouteFocused" v-show="activeCategory === 'knowledge'">
+              <summary>
+                <span>高级：关系改善对比</span>
+                <small>需要比较资料库整理前后的关系覆盖变化时使用</small>
+              </summary>
             <div ref="knowledgeObservationRow" class="setting-row" :class="{ 'is-route-focused': observationRouteFocused }" data-testid="knowledge-observation-export">
               <div class="info">
-                <div class="label">知识网络匿名观察</div>
-                <div class="desc">保存匿名基线，改善关系后再做本地复查；只比较聚合变化，不包含正文、文件名、对象 ID 或绝对路径。</div>
+                <div class="label">记录并对比关系改善</div>
+                <div class="desc">先记录当前关系覆盖情况，整理资料库后再对比变化；报告只保存到你选择的位置，不包含正文、文件名或完整路径。</div>
               </div>
               <div class="backup-actions">
                 <n-button secondary type="info" :disabled="!store.libraryPath" :loading="observationExporting" @click="previewKnowledgeObservation">
-                  保存基线
+                  记录当前状态
                 </n-button>
                 <n-button secondary type="success" data-testid="knowledge-observation-compare" :disabled="!store.libraryPath" :loading="observationComparisonExporting" @click="previewKnowledgeObservationComparison">
-                  复查改善
+                  对比改善结果
                 </n-button>
               </div>
             </div>
             <section class="knowledge-observation-session" data-testid="knowledge-observation-session" :data-phase="observationSessionPhase">
               <div class="observation-session-heading">
                 <div>
-                  <strong>真实资料库改善观察</strong>
-                  <span>四步均由你主动确认；软件不会自动保存、上传或修改资料库。</span>
+                  <strong>关系整理效果对比</strong>
+                  <span>按四步记录和比较关系覆盖变化；软件不会自动上传或修改资料库。</span>
                 </div>
                 <div class="observation-session-heading-actions">
-                  <n-button size="tiny" secondary :loading="observationReviewing" data-testid="knowledge-session-review" @click="reviewKnowledgeObservationReceipt">审阅回执</n-button>
+                  <n-button size="tiny" secondary :loading="observationReviewing" data-testid="knowledge-session-review" @click="reviewKnowledgeObservationReceipt">查看已保存结果</n-button>
                   <n-button size="tiny" quaternary data-testid="knowledge-observation-session-reset" @click="resetObservationSession">重新开始</n-button>
                 </div>
               </div>
               <ol class="observation-session-steps">
                 <li :class="{ active: observationSessionPhase === 1, complete: observationSessionPhase > 1 }">
                   <b>1</b>
-                  <div><strong>保存并检查匿名基线</strong><span>先查看聚合预览，再自行选择本地 JSON 保存位置。</span></div>
+                  <div><strong>记录当前关系状态</strong><span>先查看统计预览，再自行选择本地 JSON 保存位置。</span></div>
                   <div class="observation-step-actions">
-                    <n-button size="small" secondary type="info" :disabled="!store.libraryPath" :loading="observationExporting" data-testid="knowledge-session-save-baseline" @click="previewKnowledgeObservation">预览基线</n-button>
-                    <n-button size="small" quaternary :disabled="observationSessionPhase > 1" data-testid="knowledge-session-existing-baseline" @click="markExistingBaselineReady">我已有已检查基线</n-button>
+                    <n-button size="small" secondary type="info" :disabled="!store.libraryPath" :loading="observationExporting" data-testid="knowledge-session-save-baseline" @click="previewKnowledgeObservation">预览并记录</n-button>
+                    <n-button size="small" quaternary :disabled="observationSessionPhase > 1" data-testid="knowledge-session-existing-baseline" @click="markExistingBaselineReady">我已有之前记录</n-button>
                   </div>
                 </li>
                 <li :class="{ active: observationSessionPhase === 2, complete: observationSessionPhase > 2 }">
@@ -190,14 +216,14 @@
                 </li>
                 <li :class="{ active: observationSessionPhase === 3, complete: observationSessionPhase === 4 }">
                   <b>4</b>
-                  <div><strong>选择原基线并复查改善</strong><span>请再次确认基线来自当前资料库；对比回执仍只含聚合变化。</span></div>
-                  <n-button size="small" secondary type="success" :disabled="!store.libraryPath || observationSessionPhase < 3" :loading="observationComparisonExporting" data-testid="knowledge-session-compare" @click="previewKnowledgeObservationComparison">预览并复查</n-button>
+                  <div><strong>选择之前记录并查看结果</strong><span>选择来自当前资料库的记录；结果只包含关系数量和覆盖率变化。</span></div>
+                  <n-button size="small" secondary type="success" :disabled="!store.libraryPath || observationSessionPhase < 3" :loading="observationComparisonExporting" data-testid="knowledge-session-compare" @click="previewKnowledgeObservationComparison">查看对比结果</n-button>
                 </li>
               </ol>
-              <p class="observation-session-privacy">会话进度只保存数字步骤，不保存资料库名称、路径、指纹、正文、文件名、对象 ID 或回执位置。你可以随时取消或重新开始。</p>
+              <p class="observation-session-privacy">操作进度只保存数字步骤，不保存资料库名称、路径、指纹、正文、文件名、对象 ID 或报告位置。你可以随时取消或重新开始。</p>
               <article v-if="observationReview" class="observation-review" data-testid="knowledge-session-review-result" :data-outcome="observationReview.outcome">
                 <div class="observation-review-heading">
-                  <div><strong>匿名改善回执</strong><span>已通过结构、隐私标志和聚合变化一致性校验</span></div>
+                  <div><strong>关系改善结果</strong><span>已检查报告结构、隐私边界和统计变化</span></div>
                   <n-tag size="small" :type="observationReview.outcome === 'regressed' ? 'warning' : observationReview.outcome === 'improved' ? 'success' : 'info'">{{ comparisonOutcomeLabel(observationReview.outcome) }}</n-tag>
                 </div>
                 <div class="observation-review-grid">
@@ -209,12 +235,13 @@
                 <div v-if="observationReview.achievements.length" class="observation-review-achievements">
                   <span v-for="achievement in observationReview.achievements" :key="achievement">{{ observationAchievementLabel(achievement) }}</span>
                 </div>
-                <p>本次审阅不会保存所选路径，也不会上传回执。重新加载页面后需要再次由你选择文件。</p>
+                <p>本次查看不会保存所选路径，也不会上传报告。重新加载页面后需要再次由你选择文件。</p>
               </article>
             </section>
+            </details>
           </n-grid-item>
 
-          <n-grid-item class="animate-item" style="--delay: 0.35s">
+          <n-grid-item v-if="activeCategory === 'ai'" class="animate-item" style="--delay: 0.35s">
             <div class="section-title">AI 辅助</div>
             <div class="setting-card">
               <div class="setting-row">
@@ -245,19 +272,18 @@
             </div>
           </n-grid-item>
 
-          <n-grid-item class="animate-item" style="--delay: 0.4s">
+          <n-grid-item v-if="activeCategory === 'appearance'" class="animate-item" style="--delay: 0.4s">
             <div class="section-title">外观主题</div>
-            <section v-for="group in themePresetGroups" :key="group.id" class="theme-preset-group">
-              <div class="theme-preset-group-heading">
-                <div>
-                  <strong>{{ group.label }}</strong>
-                  <span>{{ group.description }}</span>
-                </div>
-                <n-tag size="small" round :bordered="false">{{ group.presets.length }} 套</n-tag>
+            <section class="theme-preset-group">
+              <div class="theme-library-toolbar" aria-label="主题类型筛选">
+                <button v-for="filter in themeFilters" :key="filter.id" type="button" :class="{ active: activeThemeFilter === filter.id }" @click="activeThemeFilter = filter.id">
+                  {{ filter.label }}
+                  <span>{{ filter.count }}</span>
+                </button>
               </div>
               <div class="theme-preset-grid">
                 <div
-                  v-for="preset in group.presets"
+                  v-for="preset in filteredThemePresets"
                   :key="preset.id"
                   class="theme-preset-card"
                   :class="{ active: isPresetActive(preset) }"
@@ -356,6 +382,8 @@
           </n-grid-item>
         </n-grid>
       </n-form>
+        </section>
+      </div>
     </WorkspaceManagementContent>
   </div>
 </template>
@@ -363,7 +391,21 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, reactive, watch, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Trash as TrashIcon, GitBranch as GitBranchIcon, Check as CheckIcon, Download as DownloadIcon, Upload as UploadIcon } from 'lucide-vue-next'
+import {
+  Trash as TrashIcon,
+  GitBranch as GitBranchIcon,
+  Check as CheckIcon,
+  Download as DownloadIcon,
+  Upload as UploadIcon,
+  Library as LibraryIcon,
+  History as HistoryIcon,
+  Palette as PaletteIcon,
+  Files as FilesIcon,
+  Network as NetworkIcon,
+  MonitorCog as SystemIcon,
+  ShieldCheck as PrivacyIcon,
+  Sparkles as AiIcon,
+} from 'lucide-vue-next'
 import { open, save } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, NTag, NInputGroup } from 'naive-ui'
@@ -373,7 +415,7 @@ import WorkspaceManagementContent from '../components/workspace/WorkspaceManagem
 import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
 import {
   THEME_EDITOR_BACKGROUNDS,
-  themePresetGroups,
+  themePresets,
   themeToneById,
   themeTones,
   type ThemeName,
@@ -386,6 +428,59 @@ const message = useMessage()
 const dialog = useDialog()
 const store = useAppStore()
 const isInitializing = ref(true)
+
+type SettingsCategory = 'library' | 'editing' | 'appearance' | 'formats' | 'knowledge' | 'system' | 'privacy' | 'ai'
+type ThemeFilter = 'all' | 'light' | 'dark' | 'eye-care' | 'creative' | 'contrast'
+
+const settingsCategories = [
+  { id: 'library', label: '资料库', description: '管理资料库位置、名称与 Git 连接。', icon: LibraryIcon },
+  { id: 'editing', label: '编辑与保存', description: '设置自动保存、历史版本和编辑安全策略。', icon: HistoryIcon },
+  { id: 'appearance', label: '外观', description: '选择主题组合，并调整颜色、代码高亮和动效。', icon: PaletteIcon },
+  { id: 'formats', label: '格式与文件', description: '管理文件打开方式并查看各格式的编辑与保存能力。', icon: FilesIcon },
+  { id: 'knowledge', label: '知识能力', description: '使用关系整理与效果对比等高级资料库工具。', icon: NetworkIcon },
+  { id: 'system', label: '系统与更新', description: '设置启动、退出和软件更新。', icon: SystemIcon },
+  { id: 'privacy', label: '隐私与诊断', description: '导出管理备份或不含正文与凭据的诊断包。', icon: PrivacyIcon },
+  { id: 'ai', label: 'AI', description: '配置可选的 AI 服务、模型和系统凭据。', icon: AiIcon },
+] as const
+
+const isSettingsCategory = (value: unknown): value is SettingsCategory => settingsCategories.some(category => category.id === value)
+const categoryForRoute = (): SettingsCategory => {
+  if (route.query.focus === 'format-capabilities') return 'formats'
+  if (route.query.focus === 'knowledge-observation') return 'knowledge'
+  return isSettingsCategory(route.query.category) ? route.query.category : 'library'
+}
+const activeCategory = ref<SettingsCategory>(categoryForRoute())
+const activeCategoryMeta = computed(() => settingsCategories.find(category => category.id === activeCategory.value) || settingsCategories[0])
+const selectSettingsCategory = (category: SettingsCategory) => {
+  activeCategory.value = category
+  router.replace({ name: 'Settings', query: { category } })
+}
+
+const activeThemeFilter = ref<ThemeFilter>('all')
+const visibleThemePresets = computed(() => themePresets.filter((preset, index, presets) => (
+  presets.findIndex(candidate => `${candidate.theme}:${candidate.style}:${candidate.vditorCodeTheme}` === `${preset.theme}:${preset.style}:${preset.vditorCodeTheme}`) === index
+)))
+const matchesThemeFilter = (preset: ThemePreset, filter: ThemeFilter) => {
+  if (filter === 'all') return true
+  if (filter === 'light') return preset.mode === 'light' && !['green', 'cream', 'purple', 'pink'].includes(preset.theme)
+  if (filter === 'dark') return preset.mode === 'dark'
+  if (filter === 'eye-care') return ['green', 'cream'].includes(preset.theme)
+  if (filter === 'creative') return ['pink', 'purple', 'amber'].includes(preset.theme)
+  return preset.theme === 'contrast'
+}
+const themeFilterDefinitions = [
+  { id: 'all', label: '全部' },
+  { id: 'light', label: '浅色' },
+  { id: 'dark', label: '深色' },
+  { id: 'eye-care', label: '护眼' },
+  { id: 'creative', label: '创意' },
+  { id: 'contrast', label: '高对比' },
+] as const
+const themeFilters = computed(() => themeFilterDefinitions.map(filter => ({
+  ...filter,
+  count: visibleThemePresets.value.filter(preset => matchesThemeFilter(preset, filter.id)).length,
+})))
+const filteredThemePresets = computed(() => visibleThemePresets.value.filter(preset => matchesThemeFilter(preset, activeThemeFilter.value)))
 
 const styleOptions: { label: string; value: 'soft' | 'neo' | 'glass' | 'airy' | 'minimal' | 'sharp' }[] = [
   { label: '柔和', value: 'soft' },
@@ -670,6 +765,10 @@ onMounted(async () => {
   })
 })
 
+watch(() => [route.query.category, route.query.focus], () => {
+  activeCategory.value = categoryForRoute()
+})
+
 // 深度监听配置对象，实现实时保存
 let saveDebounce: any = null
 watch(config, (newVal) => {
@@ -823,9 +922,9 @@ const exportPrivacyDiagnosticBundle = async () => {
 
 const exportKnowledgeObservationAfterConfirm = async () => {
   const target = await save({
-    title: '保存知识网络匿名观察回执',
+    title: '保存当前关系状态',
     defaultPath: `longedit-knowledge-observation-${new Date().toISOString().slice(0, 10)}.json`,
-    filters: [{ name: 'LongEdit Knowledge Observation', extensions: ['json'] }],
+    filters: [{ name: 'LongEdit 关系状态记录', extensions: ['json'] }],
   })
   if (!target) return
   observationExporting.value = true
@@ -835,9 +934,9 @@ const exportKnowledgeObservationAfterConfirm = async () => {
       targetPath: target,
     })
     advanceObservationSession(2)
-    message.success(`匿名观察已保存：${receipt.objectCount} 对象 · ${receipt.relationCount} 关系 · ${receipt.coveragePercent}% 覆盖`)
+    message.success(`当前关系状态已保存：${receipt.objectCount} 个对象 · ${receipt.relationCount} 条关系 · ${receipt.coveragePercent}% 覆盖`)
   } catch (error) {
-    message.error(`导出知识网络匿名观察失败：${String(error)}`)
+    message.error(`保存当前关系状态失败：${String(error)}`)
   } finally {
     observationExporting.value = false
   }
@@ -866,17 +965,17 @@ const previewKnowledgeObservation = async () => {
       `关系类型：${preview.relationTypes.map(item => `${item.relationType} ${item.count}`).join('、') || '无'}`,
       `改善建议：${preview.guidance.map(item => observationGuidanceLabel(item.code)).join('、') || '无'}`,
       '',
-      '回执不会包含正文、文件名、对象 ID、绝对路径或凭据。软件只在你确认后保存到本地，不会自动上传。',
+      '记录文件不会包含正文、文件名、对象 ID、绝对路径或凭据。软件只在你确认后保存到本地，不会自动上传。',
     ].join('\n')
     dialog.warning({
-      title: '确认导出匿名知识网络观察',
+      title: '确认记录当前关系状态',
       content: summary,
-      positiveText: '同意并选择保存位置',
+      positiveText: '确认并选择保存位置',
       negativeText: '取消',
       onPositiveClick: () => exportKnowledgeObservationAfterConfirm(),
     })
   } catch (error) {
-    message.error(`生成知识网络观察预览失败：${String(error)}`)
+    message.error(`生成关系状态预览失败：${String(error)}`)
   } finally {
     observationExporting.value = false
   }
@@ -901,17 +1000,17 @@ const reviewKnowledgeObservationReceipt = async () => {
   if (observationReviewing.value) return
   const receiptPath = await open({
     multiple: false,
-    title: '选择知识网络改善对比回执',
-    filters: [{ name: 'LongEdit Knowledge Improvement', extensions: ['json'] }],
+    title: '选择已保存的关系改善结果',
+    filters: [{ name: 'LongEdit 关系改善结果', extensions: ['json'] }],
   })
   if (!receiptPath || typeof receiptPath !== 'string') return
   observationReviewing.value = true
   try {
     observationReview.value = await invoke<KnowledgeGraphObservationComparison>('review_knowledge_graph_observation_comparison', { receiptPath })
-    message.success(`匿名改善回执已通过校验：${comparisonOutcomeLabel(observationReview.value.outcome)}`)
+    message.success(`关系改善结果已通过检查：${comparisonOutcomeLabel(observationReview.value.outcome)}`)
   } catch (error) {
     observationReview.value = null
-    message.error(`审阅知识网络改善回执失败：${String(error)}`)
+    message.error(`查看关系改善结果失败：${String(error)}`)
   } finally {
     observationReviewing.value = false
   }
@@ -919,9 +1018,9 @@ const reviewKnowledgeObservationReceipt = async () => {
 
 const exportKnowledgeObservationComparisonAfterConfirm = async (baselinePath: string) => {
   const target = await save({
-    title: '保存知识网络改善对比回执',
+    title: '保存关系改善结果',
     defaultPath: `longedit-knowledge-improvement-${new Date().toISOString().slice(0, 10)}.json`,
-    filters: [{ name: 'LongEdit Knowledge Improvement', extensions: ['json'] }],
+    filters: [{ name: 'LongEdit 关系改善结果', extensions: ['json'] }],
   })
   if (!target) return
   observationComparisonExporting.value = true
@@ -944,8 +1043,8 @@ const previewKnowledgeObservationComparison = async () => {
   if (!store.libraryPath || observationComparisonExporting.value) return
   const baselinePath = await open({
     multiple: false,
-    title: '选择此前保存的知识网络匿名观察基线',
-    filters: [{ name: 'LongEdit Knowledge Observation', extensions: ['json'] }],
+    title: '选择此前保存的关系状态记录',
+    filters: [{ name: 'LongEdit 关系状态记录', extensions: ['json'] }],
   })
   if (!baselinePath || typeof baselinePath !== 'string') return
   observationComparisonExporting.value = true
@@ -961,10 +1060,10 @@ const previewKnowledgeObservationComparison = async () => {
       `关系数量：${preview.baseline.relationCount} → ${preview.current.relationCount}（${signedChange(preview.changes.relationCount)}）`,
       `关系类型：${preview.baseline.relationTypeCount} → ${preview.current.relationTypeCount}（${signedChange(preview.changes.relationTypeCount)}）`,
       '',
-      '请确认基线来自当前资料库。对比回执只保存聚合前后值与变化，不包含正文、文件名、对象 ID、绝对路径，也不会自动上传。',
+      '请确认之前的记录来自当前资料库。结果文件只保存关系统计前后值与变化，不包含正文、文件名、对象 ID、绝对路径，也不会自动上传。',
     ].join('\n')
     dialog.warning({
-      title: '确认保存知识网络改善对比',
+      title: '确认保存关系改善结果',
       content: summary,
       positiveText: '确认并选择保存位置',
       negativeText: '取消',
@@ -1116,6 +1215,58 @@ const openDefaultAppsSettings = async () => {
   flex: 1;
   overflow-y: auto;
 }
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  align-items: start;
+  gap: 28px;
+}
+
+.settings-navigation {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  border: var(--theme-border);
+  border-radius: 8px;
+  background: var(--theme-surface);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.settings-navigation button {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--theme-text-secondary);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-navigation button:hover { color: var(--theme-text); background: rgba(var(--theme-primary-rgb), 0.06); }
+.settings-navigation button.active { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.11); font-weight: 700; }
+.settings-navigation .n-icon { flex: none; font-size: 17px; }
+
+.settings-panel { min-width: 0; }
+
+.settings-category-heading {
+  min-height: 56px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  display: flex;
+  align-items: flex-start;
+  border-bottom: var(--theme-border);
+}
+
+.settings-category-heading h2 { margin: 0 0 4px; font-size: 18px; letter-spacing: 0; }
+.settings-category-heading p { margin: 0; color: var(--theme-text-secondary); font-size: 12px; line-height: 1.5; }
 
 .section-title {
   font-size: 13px;
@@ -1407,6 +1558,30 @@ const openDefaultAppsSettings = async () => {
   flex-wrap: wrap;
 }
 
+.advanced-settings {
+  border: var(--theme-border);
+  border-radius: 8px;
+  background: var(--theme-surface);
+  overflow: hidden;
+}
+
+.advanced-settings > summary {
+  min-height: 56px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  color: var(--theme-text);
+  background: rgba(var(--theme-primary-rgb), 0.035);
+  cursor: pointer;
+}
+
+.advanced-settings > summary small { color: var(--theme-text-secondary); font-size: 11px; }
+.advanced-settings[open] > summary { border-bottom: var(--theme-border); }
+.advanced-settings > .setting-row { margin: 12px; }
+.advanced-settings > .knowledge-observation-session { margin: 0 12px 12px; }
+
 .knowledge-observation-session {
   margin: -2px 0 calc(12px * var(--theme-spacing));
   padding: calc(18px * var(--theme-spacing));
@@ -1632,6 +1807,34 @@ const openDefaultAppsSettings = async () => {
 .theme-preset-group {
   margin-bottom: 24px;
 }
+
+.theme-library-toolbar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 4px;
+  overflow-x: auto;
+  border: var(--theme-border);
+  border-radius: 7px;
+  background: var(--theme-surface);
+}
+
+.theme-library-toolbar button {
+  min-height: 32px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--theme-text-secondary);
+  background: transparent;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.theme-library-toolbar button.active { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.1); }
+.theme-library-toolbar button span { font-size: 10px; opacity: 0.72; }
 
 .theme-preset-group-heading {
   display: flex;
@@ -2069,7 +2272,7 @@ const openDefaultAppsSettings = async () => {
   margin: 0 0 14px;
   color: var(--theme-text);
   opacity: 0.95;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .preview-md-p {
@@ -2157,4 +2360,28 @@ const openDefaultAppsSettings = async () => {
 .theme-vscode .variable { color: #9cdcfe; }
 .theme-vscode .string { color: #ce9178; }
 .theme-vscode .method { color: #dcdcaa; }
+
+@media (max-width: 900px) {
+  .settings-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .settings-navigation {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    overflow-x: auto;
+  }
+  .settings-navigation button { width: auto; min-width: max-content; }
+  .settings-category-heading { margin-bottom: 14px; }
+}
+
+@media (max-width: 640px) {
+  .settings-navigation button { min-height: 36px; padding: 0 8px; }
+  .settings-navigation .n-icon { font-size: 15px; }
+  .setting-row { align-items: flex-start; flex-wrap: wrap; gap: 12px; padding: 14px; }
+  .setting-row > .info { width: 100%; }
+  .backup-actions { width: 100%; justify-content: flex-start; }
+  .observation-session-heading { flex-direction: column; }
+  .theme-preset-grid { grid-template-columns: minmax(0, 1fr); }
+}
 </style>

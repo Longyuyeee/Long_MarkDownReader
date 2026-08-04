@@ -28,7 +28,8 @@ requireMatch(registry, /tone\('contrast',[\s\S]*?'high-contrast'/, 'high-contras
 requireMatch(styles, /body\[data-theme="contrast"\]/, 'high-contrast CSS tokens are missing')
 requireMatch(app, /getThemeTone\(/, 'App must consume the theme registry')
 requireMatch(settings, /themeTones\.map\(/, 'Settings must derive tone options from the registry')
-requireMatch(settings, /themePresetGroups/, 'Settings must group release and compatible presets')
+requireMatch(settings, /themeFilters/, 'Settings must expose one filterable theme library')
+requireMatch(settings, /filteredThemePresets/, 'Settings must filter and de-duplicate visible theme presets')
 requireMatch(palette, /themePresets\.map\(/, 'Command palette must derive theme commands from the registry')
 requireMatch(app, /data-motion/, 'App must expose preset motion through semantic data attributes')
 requireMatch(settings, /preset\.motionSpeed/, 'Settings must apply preset motion')
@@ -73,5 +74,5 @@ if (failures.length) {
   console.error(`Theme contract check failed:\n- ${failures.join('\n- ')}`)
   process.exitCode = 1
 } else {
-  console.log('Theme contract check passed: one registry, 3 core + 4 scenario presets, 12 Tauri visual proofs, grouped settings, shared editor/chart consumers.')
+  console.log('Theme contract check passed: one registry, 3 core + 4 scenario presets, 12 Tauri visual proofs, one filtered theme library, shared editor/chart consumers.')
 }
