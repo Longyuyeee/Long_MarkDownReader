@@ -57,6 +57,14 @@ requireTokens(view, 'DOCX multi-target draft workspace', [
   'previewReport.value.temporaryCopyReopenVerified',
   'message.success(`已可靠另存并验证 ${operations.length} 项修改',
 ])
+requireTokens(view, 'DOCX direct color and font-size editing', [
+  '<span>字色</span>',
+  'type="color"',
+  '<span>字号</span>',
+  'const fontSizeOptions = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72]',
+  'fontColor: draftFontColor.value ? draftFontColor.value.slice(1).toUpperCase() : null',
+  'fontSizeHalfPoints: draftFontSizeHalfPoints.value',
+])
 requireTokens(view, 'DOCX unsaved draft protection', [
   "title: 'DOCX 还有未保存修改'",
   "default: () => '继续编辑'",
@@ -69,6 +77,14 @@ requireTokens(view, 'DOCX unsaved draft protection', [
 if (view.includes('原件始终只读')) fail('The obsolete DOCX source-read-only claim returned.')
 
 const backend = read('src-tauri/src/commands/docx.rs')
+const patchKernel = read('src-tauri/src/formats/docx_patch.rs')
+requireTokens(patchKernel, 'DOCX safe direct color and font-size kernel', [
+  'pub font_color: Option<String>',
+  'pub font_size_half_points: Option<u16>',
+  'DOCX 字体颜色必须是 6 位 RGB 十六进制值',
+  'DOCX 字号必须在 8–72 磅之间',
+  'ux33f_audits_all_producers_and_round_trips_only_safe_style_targets',
+])
 requireTokens(backend, 'DOCX reliable source transaction', [
   'fn save_docx_patch_source_to_path(',
   'write_bytes(source_path, &output)?;',
@@ -87,4 +103,4 @@ if ((registration.match(/save_docx_patch_source/g) || []).length < 2) {
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
 if (!/\| UX-33 \|[^\n]+\| 进行中 \|/.test(audit)) fail('UX-33 must remain in progress after the source-save baseline.')
 
-console.log('DOCX page editing contract passed: paged canvas, multi-target drafts, batch verification, reliable copy/source saves, and guarded navigation.')
+console.log('DOCX page editing contract passed: paged canvas, multi-target drafts, direct RGB/font-size formatting, reliable copy/source saves, and guarded navigation.')

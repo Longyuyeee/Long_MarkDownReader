@@ -88,6 +88,10 @@ pub enum DocxPatchOperation {
         bold: bool,
         italic: bool,
         underline: bool,
+        #[serde(rename = "fontColor")]
+        font_color: Option<String>,
+        #[serde(rename = "fontSizeHalfPoints")]
+        font_size_half_points: Option<u16>,
     },
     #[serde(rename = "imageAltText")]
     ImageAltText {
@@ -164,6 +168,8 @@ enum DocxBatchExpectation {
         bold: bool,
         italic: bool,
         underline: bool,
+        font_color: Option<String>,
+        font_size_half_points: Option<u16>,
     },
     ImageAltText {
         target: DocxEditableImageTarget,
@@ -416,6 +422,8 @@ fn preview_docx_style_patch_path(
     bold: bool,
     italic: bool,
     underline: bool,
+    font_color: Option<&str>,
+    font_size_half_points: Option<u16>,
 ) -> Result<DocxIsolatedPatchReport, String> {
     preview_docx_isolated_path(path, expected_signature, |source| {
         build_docx_style_patch_isolated(
@@ -425,6 +433,8 @@ fn preview_docx_style_patch_path(
             bold,
             italic,
             underline,
+            font_color,
+            font_size_half_points,
         )
     })
 }
@@ -575,6 +585,8 @@ fn build_docx_operation(
             bold,
             italic,
             underline,
+            font_color,
+            font_size_half_points,
         } => build_docx_style_patch_isolated(
             source,
             target_id,
@@ -582,6 +594,8 @@ fn build_docx_operation(
             *bold,
             *italic,
             *underline,
+            font_color.as_deref(),
+            *font_size_half_points,
         ),
         DocxPatchOperation::ImageAltText {
             target_id,
@@ -655,6 +669,8 @@ fn inspect_batch_expectations(
                 bold,
                 italic,
                 underline,
+                font_color,
+                font_size_half_points,
             } => {
                 let target = style_targets
                     .iter()
@@ -673,6 +689,8 @@ fn inspect_batch_expectations(
                         bold: *bold,
                         italic: *italic,
                         underline: *underline,
+                        font_color: font_color.clone(),
+                        font_size_half_points: *font_size_half_points,
                     },
                 )
             }
@@ -738,12 +756,16 @@ fn verify_batch_expectations(
                 bold,
                 italic,
                 underline,
+                font_color,
+                font_size_half_points,
             } => style_targets.iter().any(|item| {
                 item.block_id == target.block_id
                     && item.kind == target.kind
                     && item.row_index == target.row_index
                     && item.column_index == target.column_index
                     && (item.bold, item.italic, item.underline) == (*bold, *italic, *underline)
+                    && item.font_color == *font_color
+                    && item.font_size_half_points == *font_size_half_points
             }),
             DocxBatchExpectation::ImageAltText {
                 target,
@@ -1383,6 +1405,8 @@ pub async fn preview_docx_style_patch_isolated_copy(
     bold: bool,
     italic: bool,
     underline: bool,
+    font_color: Option<String>,
+    font_size_half_points: Option<u16>,
 ) -> Result<DocxIsolatedPatchReport, String> {
     let guard = WorkspaceGuard::new(library_root)?;
     let document = guard.resolve_existing_file(path, &["docx"])?;
@@ -1395,6 +1419,8 @@ pub async fn preview_docx_style_patch_isolated_copy(
             bold,
             italic,
             underline,
+            font_color.as_deref(),
+            font_size_half_points,
         )
     })
     .await
@@ -1693,6 +1719,8 @@ mod tests {
             true,
             true,
             false,
+            Some("2457A6"),
+            Some(32),
         )
         .unwrap();
         assert_eq!(
@@ -2129,6 +2157,8 @@ mod tests {
                 bold: !same_style.bold,
                 italic: same_style.italic,
                 underline: same_style.underline,
+                font_color: same_style.font_color.clone(),
+                font_size_half_points: same_style.font_size_half_points,
             },
         ];
         assert!(build_docx_batch_operations(&source, &duplicate_anchor)

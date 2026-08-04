@@ -317,7 +317,7 @@
           </label>
 
           <div v-else-if="editMode === 'style'" class="edit-field">
-            <span>基础字符样式</span>
+            <span>字符格式</span>
             <div class="style-controls">
               <button
                 type="button"
@@ -340,6 +340,26 @@
                 aria-label="下划线"
                 @click="toggleDraftStyle('underline')"
               ><u>U</u></button>
+            </div>
+            <div class="advanced-style-controls">
+              <label>
+                <span>字色</span>
+                <input
+                  type="color"
+                  :value="draftFontColor || '#2457a6'"
+                  title="选择直接 RGB 字色"
+                  @focus="captureDraftHistory(true)"
+                  @input="setDraftFontColor"
+                />
+                <button type="button" :disabled="!draftFontColor" @click="clearDraftFontColor">继承</button>
+              </label>
+              <label>
+                <span>字号</span>
+                <select v-model="draftFontSizeHalfPoints" @focus="captureDraftHistory(true)">
+                  <option :value="null">继承</option>
+                  <option v-for="size in fontSizeOptions" :key="size" :value="size * 2">{{ size }} 磅</option>
+                </select>
+              </label>
             </div>
           </div>
 
@@ -420,7 +440,7 @@
         </div>
         <div>
           <SaveIcon :size="13" />
-          <span>简单文本、列表、单段表格单元格、基础样式和图片说明可编辑；未点击保存不会写盘</span>
+          <span>简单文本、列表、单段表格单元格、字符格式和图片说明可编辑；未点击保存不会写盘</span>
         </div>
       </footer>
     </template>
@@ -563,6 +583,8 @@ interface DocxReadReport {
     bold: boolean
     italic: boolean
     underline: boolean
+    fontColor: string | null
+    fontSizeHalfPoints: number | null
     expectedStyleDigest: string
     rowIndex: number | null
     columnIndex: number | null
@@ -630,7 +652,7 @@ type DocxEditableTarget = DocxTextTarget | DocxStyleTarget | DocxImageTarget
 type DocxEditMode = 'text' | 'style' | 'imageAltText'
 type DocxPatchOperation =
   | { kind: 'text'; targetId: string; expectedTextDigest: string; replacementText: string }
-  | { kind: 'style'; targetId: string; expectedStyleDigest: string; bold: boolean; italic: boolean; underline: boolean }
+  | { kind: 'style'; targetId: string; expectedStyleDigest: string; bold: boolean; italic: boolean; underline: boolean; fontColor: string | null; fontSizeHalfPoints: number | null }
   | { kind: 'imageAltText'; targetId: string; expectedMetadataDigest: string; replacementAltText: string }
 interface DocxDraftEntry {
   anchor: string
@@ -649,6 +671,8 @@ interface DraftSnapshot {
   bold: boolean
   italic: boolean
   underline: boolean
+  fontColor: string
+  fontSizeHalfPoints: number | null
 }
 
 const route = useRoute()
@@ -669,6 +693,8 @@ const replacementAltText = ref('')
 const draftBold = ref(false)
 const draftItalic = ref(false)
 const draftUnderline = ref(false)
+const draftFontColor = ref('')
+const draftFontSizeHalfPoints = ref<number | null>(null)
 const previewing = ref(false)
 const previewReport = ref<DocxPatchPreviewReport | null>(null)
 const editError = ref('')
@@ -682,6 +708,7 @@ const draftRedoStack = ref<DraftSnapshot[]>([])
 const allowNextLeave = ref(false)
 let lastDraftHistoryAt = 0
 let restoringDraftSnapshot = false
+const fontSizeOptions = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72]
 
 const docxPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const routeLocator = computed(() => typeof route.query.locator === 'string' ? route.query.locator : '')
@@ -801,6 +828,8 @@ const currentOperation = computed<DocxPatchOperation | null>(() => {
       bold: draftBold.value,
       italic: draftItalic.value,
       underline: draftUnderline.value,
+      fontColor: draftFontColor.value ? draftFontColor.value.slice(1).toUpperCase() : null,
+      fontSizeHalfPoints: draftFontSizeHalfPoints.value,
     }
   }
   if (editMode.value === 'imageAltText' && 'expectedMetadataDigest' in target) {
@@ -821,6 +850,8 @@ const canPreviewEdit = computed(() => {
     return draftBold.value !== target.bold
       || draftItalic.value !== target.italic
       || draftUnderline.value !== target.underline
+      || (draftFontColor.value ? draftFontColor.value.slice(1).toUpperCase() : null) !== target.fontColor
+      || draftFontSizeHalfPoints.value !== target.fontSizeHalfPoints
   }
   return 'altText' in target && replacementAltText.value !== target.altText
 })
@@ -841,6 +872,8 @@ const draftSnapshot = (): DraftSnapshot => ({
   bold: draftBold.value,
   italic: draftItalic.value,
   underline: draftUnderline.value,
+  fontColor: draftFontColor.value,
+  fontSizeHalfPoints: draftFontSizeHalfPoints.value,
 })
 const sameDraftSnapshot = (left: DraftSnapshot, right: DraftSnapshot) => JSON.stringify(left) === JSON.stringify(right)
 const clearDraftHistory = () => {
@@ -873,6 +906,8 @@ const restoreDraftSnapshot = (snapshot: DraftSnapshot) => {
   draftBold.value = snapshot.bold
   draftItalic.value = snapshot.italic
   draftUnderline.value = snapshot.underline
+  draftFontColor.value = snapshot.fontColor
+  draftFontSizeHalfPoints.value = snapshot.fontSizeHalfPoints
   invalidatePreview()
   void nextTick(() => { restoringDraftSnapshot = false })
 }
@@ -895,6 +930,13 @@ const toggleDraftStyle = (property: 'bold' | 'italic' | 'underline') => {
   if (property === 'bold') draftBold.value = !draftBold.value
   if (property === 'italic') draftItalic.value = !draftItalic.value
   if (property === 'underline') draftUnderline.value = !draftUnderline.value
+}
+const setDraftFontColor = (event: Event) => {
+  draftFontColor.value = (event.target as HTMLInputElement).value
+}
+const clearDraftFontColor = () => {
+  captureDraftHistory(true)
+  draftFontColor.value = ''
 }
 
 const draftEntryForTarget = (target: DocxEditableTarget | undefined) => target
@@ -982,6 +1024,8 @@ const draftStyleForBlock = (block: DocxBlock) => {
     fontWeight: entry.operation.bold ? '700' : '400',
     fontStyle: entry.operation.italic ? 'italic' : 'normal',
     textDecoration: entry.operation.underline ? 'underline' : 'none',
+    color: entry.operation.fontColor ? `#${entry.operation.fontColor}` : undefined,
+    fontSize: entry.operation.fontSizeHalfPoints ? `${entry.operation.fontSizeHalfPoints / 2}pt` : undefined,
   }
 }
 const selectTextTarget = (target?: DocxTextTarget) => {
@@ -1052,6 +1096,12 @@ const resetTargetDraft = () => {
     draftBold.value = entry?.operation.kind === 'style' ? entry.operation.bold : target.bold
     draftItalic.value = entry?.operation.kind === 'style' ? entry.operation.italic : target.italic
     draftUnderline.value = entry?.operation.kind === 'style' ? entry.operation.underline : target.underline
+    draftFontColor.value = (entry?.operation.kind === 'style' ? entry.operation.fontColor : target.fontColor)
+      ? `#${entry?.operation.kind === 'style' ? entry.operation.fontColor : target.fontColor}`
+      : ''
+    draftFontSizeHalfPoints.value = entry?.operation.kind === 'style'
+      ? entry.operation.fontSizeHalfPoints
+      : target.fontSizeHalfPoints
   }
   if ('expectedMetadataDigest' in target) {
     replacementAltText.value = entry?.operation.kind === 'imageAltText'
@@ -1096,6 +1146,8 @@ const previewEdit = async () => {
         bold: operation.bold,
         italic: operation.italic,
         underline: operation.underline,
+        fontColor: operation.fontColor,
+        fontSizeHalfPoints: operation.fontSizeHalfPoints,
       })
     } else {
       previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_image_alt_text_patch_isolated_copy', {
@@ -1316,7 +1368,7 @@ watch(selectedTargetId, () => {
   invalidatePreview()
 })
 watch(
-  [replacementText, replacementAltText, draftBold, draftItalic, draftUnderline],
+  [replacementText, replacementAltText, draftBold, draftItalic, draftUnderline, draftFontColor, draftFontSizeHalfPoints],
   syncCurrentDraft,
 )
 watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocator)
@@ -1428,6 +1480,12 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .style-controls { display: flex; gap: 5px; }
 .style-controls button { width: 32px; height: 30px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; }
 .style-controls button.active { border-color: var(--primary-color); color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 10%, var(--bg-primary)); }
+.advanced-style-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.advanced-style-controls label { min-width: 0; display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 11px; }
+.advanced-style-controls input[type="color"] { width: 30px; height: 28px; padding: 2px; flex: none; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); cursor: pointer; }
+.advanced-style-controls button { height: 28px; padding: 0 6px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; font: inherit; font-size: 10px; }
+.advanced-style-controls button:disabled { opacity: .4; cursor: default; }
+.advanced-style-controls select { min-width: 0; height: 28px; flex: 1; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-primary); background: var(--bg-secondary); font: inherit; font-size: 11px; }
 .draft-list { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); }
 .draft-list > header { display: flex; align-items: center; justify-content: space-between; }
 .draft-list > header strong { font-size: 12px; }

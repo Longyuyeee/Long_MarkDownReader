@@ -35,6 +35,8 @@ pub struct DocxEditableStyleTarget {
     pub bold: bool,
     pub italic: bool,
     pub underline: bool,
+    pub font_color: Option<String>,
+    pub font_size_half_points: Option<u16>,
     pub expected_style_digest: String,
     pub row_index: Option<usize>,
     pub column_index: Option<usize>,
@@ -90,6 +92,8 @@ struct ParagraphTextSpan {
     bold: bool,
     italic: bool,
     underline: bool,
+    font_color: Option<String>,
+    font_size_half_points: Option<u16>,
 }
 
 #[derive(Default)]
@@ -112,6 +116,8 @@ struct ParagraphScanState {
     bold: bool,
     italic: bool,
     underline: bool,
+    font_color: Option<String>,
+    font_size_half_points: Option<u16>,
 }
 
 #[derive(Clone, Debug)]
@@ -253,6 +259,28 @@ fn parse_basic_style_property(
             Some(b"none") => paragraph.underline = false,
             _ => paragraph.basic_style_safe = false,
         },
+        b"color" => {
+            let Some(value) = value.and_then(|value| String::from_utf8(value).ok()) else {
+                paragraph.basic_style_safe = false;
+                return Ok(());
+            };
+            if value.len() == 6 && value.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+                paragraph.font_color = Some(value.to_ascii_uppercase());
+            } else {
+                paragraph.basic_style_safe = false;
+            }
+        }
+        b"sz" => {
+            let Some(value) = value
+                .and_then(|value| String::from_utf8(value).ok())
+                .and_then(|value| value.parse::<u16>().ok())
+                .filter(|value| (2..=400).contains(value))
+            else {
+                paragraph.basic_style_safe = false;
+                return Ok(());
+            };
+            paragraph.font_size_half_points = Some(value);
+        }
         _ => paragraph.basic_style_safe = false,
     }
     Ok(())
@@ -474,6 +502,8 @@ fn scan_document_paragraphs(document_xml: &[u8]) -> Result<Vec<ParagraphTextSpan
                                 bold: paragraph.bold,
                                 italic: paragraph.italic,
                                 underline: paragraph.underline,
+                                font_color: paragraph.font_color,
+                                font_size_half_points: paragraph.font_size_half_points,
                             });
                         }
                     }
@@ -832,8 +862,15 @@ fn editable_style_targets_with_spans(
                 }
                 let style_digest = digest(
                     format!(
-                        "{}:{}:{}:{}",
-                        target.text, span.bold, span.italic, span.underline
+                        "{}:{}:{}:{}:{}:{}",
+                        target.text,
+                        span.bold,
+                        span.italic,
+                        span.underline,
+                        span.font_color.as_deref().unwrap_or("inherit"),
+                        span.font_size_half_points
+                            .map(|value| value.to_string())
+                            .unwrap_or_else(|| "inherit".into())
                     )
                     .as_bytes(),
                 );
@@ -850,6 +887,8 @@ fn editable_style_targets_with_spans(
                         bold: span.bold,
                         italic: span.italic,
                         underline: span.underline,
+                        font_color: span.font_color.clone(),
+                        font_size_half_points: span.font_size_half_points,
                         expected_style_digest: style_digest,
                         row_index: target.row_index,
                         column_index: target.column_index,
@@ -1145,6 +1184,8 @@ pub fn build_docx_style_patch_isolated(
     bold: bool,
     italic: bool,
     underline: bool,
+    font_color: Option<&str>,
+    font_size_half_points: Option<u16>,
 ) -> Result<(DocxIsolatedPatchReport, Vec<u8>), String> {
     let expected_style_digest = expected_style_digest.trim().to_ascii_lowercase();
     if !valid_digest(&expected_style_digest) {
@@ -1159,12 +1200,34 @@ pub fn build_docx_style_patch_isolated(
     if target.expected_style_digest != expected_style_digest {
         return Err("DOCX C2D 目标字符样式已变化，请重新读取".into());
     }
-    if (target.bold, target.italic, target.underline) == (bold, italic, underline) {
+    let font_color =
+        font_color.map(|value| value.trim().trim_start_matches('#').to_ascii_uppercase());
+    if font_color.as_deref().is_some_and(|value| {
+        value.len() != 6 || !value.bytes().all(|byte| byte.is_ascii_hexdigit())
+    }) {
+        return Err("DOCX 字体颜色必须是 6 位 RGB 十六进制值".into());
+    }
+    if font_size_half_points.is_some_and(|value| !(16..=144).contains(&value)) {
+        return Err("DOCX 字号必须在 8–72 磅之间".into());
+    }
+    if (
+        target.bold,
+        target.italic,
+        target.underline,
+        target.font_color.as_deref(),
+        target.font_size_half_points,
+    ) == (
+        bold,
+        italic,
+        underline,
+        font_color.as_deref(),
+        font_size_half_points,
+    ) {
         return Err("DOCX C2D 字符样式没有变化".into());
     }
 
     let mut run_properties = String::new();
-    if bold || italic || underline {
+    if bold || italic || underline || font_color.is_some() || font_size_half_points.is_some() {
         run_properties.push_str("<w:rPr>");
         if bold {
             run_properties.push_str("<w:b/>");
@@ -1174,6 +1237,12 @@ pub fn build_docx_style_patch_isolated(
         }
         if underline {
             run_properties.push_str(r#"<w:u w:val="single"/>"#);
+        }
+        if let Some(color) = &font_color {
+            run_properties.push_str(&format!(r#"<w:color w:val="{color}"/>"#));
+        }
+        if let Some(size) = font_size_half_points {
+            run_properties.push_str(&format!(r#"<w:sz w:val="{size}"/>"#));
         }
         run_properties.push_str("</w:rPr>");
     }
@@ -1208,6 +1277,8 @@ pub fn build_docx_style_patch_isolated(
             && candidate.row_index == target.row_index
             && candidate.column_index == target.column_index
             && (candidate.bold, candidate.italic, candidate.underline) == (bold, italic, underline)
+            && candidate.font_color == font_color
+            && candidate.font_size_half_points == font_size_half_points
     }) {
         return Err("DOCX C2D 隔离输出字符样式复读不一致".into());
     }
@@ -1519,6 +1590,8 @@ mod tests {
             true,
             false,
             true,
+            Some("C62828"),
+            Some(36),
         )
         .unwrap();
         assert_eq!(
@@ -1534,6 +1607,8 @@ mod tests {
             true,
             false,
             false,
+            None,
+            None,
         )
         .unwrap_err()
         .contains("样式已变化"));
@@ -1544,9 +1619,35 @@ mod tests {
             false,
             false,
             false,
+            None,
+            None,
         )
         .unwrap_err()
         .contains("没有变化"));
+        assert!(build_docx_style_patch_isolated(
+            source,
+            &target.id,
+            &target.expected_style_digest,
+            false,
+            false,
+            false,
+            Some("not-rgb"),
+            None,
+        )
+        .unwrap_err()
+        .contains("6 位 RGB"));
+        assert!(build_docx_style_patch_isolated(
+            source,
+            &target.id,
+            &target.expected_style_digest,
+            false,
+            false,
+            false,
+            None,
+            Some(150),
+        )
+        .unwrap_err()
+        .contains("8–72 磅"));
 
         let styled_model = parse_docx(&styled).unwrap();
         let styled_targets = inspect_docx_editable_style_targets(&styled, &styled_model).unwrap();
@@ -1557,6 +1658,8 @@ mod tests {
         assert!(styled_target.bold);
         assert!(!styled_target.italic);
         assert!(styled_target.underline);
+        assert_eq!(styled_target.font_color.as_deref(), Some("C62828"));
+        assert_eq!(styled_target.font_size_half_points, Some(36));
 
         let (_, cleared) = build_docx_style_patch_isolated(
             &styled,
@@ -1565,6 +1668,8 @@ mod tests {
             false,
             false,
             false,
+            None,
+            None,
         )
         .unwrap();
         let cleared_model = parse_docx(&cleared).unwrap();
@@ -1577,6 +1682,65 @@ mod tests {
         assert!(!cleared_target.bold);
         assert!(!cleared_target.italic);
         assert!(!cleared_target.underline);
+        assert!(cleared_target.font_color.is_none());
+        assert!(cleared_target.font_size_half_points.is_none());
+    }
+
+    #[test]
+    fn ux33f_audits_all_producers_and_round_trips_only_safe_style_targets() {
+        let fixtures = [
+            (
+                "microsoft-word",
+                include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx")
+                    .as_slice(),
+            ),
+            (
+                "wps-writer",
+                include_bytes!("../../../fixtures/docx/producers/wps-writer.docx").as_slice(),
+            ),
+            (
+                "libreoffice-writer",
+                include_bytes!("../../../fixtures/docx/producers/libreoffice-writer.docx")
+                    .as_slice(),
+            ),
+        ];
+        let mut verified = Vec::new();
+        let mut read_only = Vec::new();
+        for (producer, source) in fixtures {
+            let model = parse_docx(source).unwrap();
+            let Some(target) = inspect_docx_editable_style_targets(source, &model)
+                .unwrap()
+                .into_iter()
+                .next()
+            else {
+                read_only.push(producer);
+                continue;
+            };
+            let (report, output) = build_docx_style_patch_isolated(
+                source,
+                &target.id,
+                &target.expected_style_digest,
+                target.bold,
+                target.italic,
+                target.underline,
+                Some("2F6FED"),
+                Some(28),
+            )
+            .unwrap();
+            assert!(report.unchanged_parts_verified);
+            assert!(report.semantic_reparse_verified);
+            let output_model = parse_docx(&output).unwrap();
+            let output_target = inspect_docx_editable_style_targets(&output, &output_model)
+                .unwrap()
+                .into_iter()
+                .find(|candidate| candidate.id == target.id)
+                .unwrap();
+            assert_eq!(output_target.font_color.as_deref(), Some("2F6FED"));
+            assert_eq!(output_target.font_size_half_points, Some(28));
+            verified.push(producer);
+        }
+        assert_eq!(verified, ["microsoft-word"]);
+        assert_eq!(read_only, ["wps-writer", "libreoffice-writer"]);
     }
 
     #[test]
@@ -1658,7 +1822,7 @@ mod tests {
         let document_xml = String::from_utf8(document_xml).unwrap();
         let complex_style_xml = document_xml.replacen(
             "<w:t>Microsoft Word Producer Fixture</w:t>",
-            r#"<w:rPr><w:color w:val="FF0000"/></w:rPr><w:t>Microsoft Word Producer Fixture</w:t>"#,
+            r#"<w:rPr><w:rFonts w:ascii="Aptos"/></w:rPr><w:t>Microsoft Word Producer Fixture</w:t>"#,
             1,
         );
         let part_digest = digest(document_xml.as_bytes());
