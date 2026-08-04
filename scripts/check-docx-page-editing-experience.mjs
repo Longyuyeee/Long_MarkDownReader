@@ -16,7 +16,7 @@ requireTokens(view, 'DOCX explicit source save', [
   "title: '覆盖当前 DOCX？'",
   "positiveText: '保存到原文件'",
   'saved.rollbackProtected',
-  "message.success('DOCX 已可靠保存并重新读取')",
+  'message.success(`DOCX 已可靠保存 ${operations.length} 项修改并重新读取`)',
 ])
 requireTokens(view, 'DOCX page draft interaction', [
   '@click="selectTextBlock(block)"',
@@ -38,6 +38,22 @@ requireTokens(view, 'DOCX paged draft workspace', [
   'title="重做草稿修改"',
   'const undoDraft = () =>',
   'const redoDraft = () =>',
+])
+requireTokens(view, 'DOCX multi-target draft workspace', [
+  'const draftEntries = ref(new Map<string, DocxDraftEntry>())',
+  'const semanticAnchor = (target: DocxEditableTarget)',
+  'const syncCurrentDraft = () =>',
+  'const removeDraftEntry = (entry: DocxDraftEntry)',
+  'const locateDraftEntry = (entry: DocxDraftEntry)',
+  'aria-label="DOCX 修改清单"',
+  '{{ draftCount }}/32',
+  "'preview_docx_patch_batch_isolated_copy'",
+  "'save_docx_patch_batch_source'",
+  "'batch_isolated_verified'",
+  "'batch_source_saved_verified'",
+  'previewReport.value.deterministicReplayVerified',
+  'previewReport.value.temporaryCopyReopenVerified',
+  '批量另存副本将在下一阶段接入',
 ])
 requireTokens(view, 'DOCX unsaved draft protection', [
   "title: 'DOCX 还有未保存修改'",
@@ -69,4 +85,4 @@ if ((registration.match(/save_docx_patch_source/g) || []).length < 2) {
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
 if (!/\| UX-33 \|[^\n]+\| 进行中 \|/.test(audit)) fail('UX-33 must remain in progress after the source-save baseline.')
 
-console.log('DOCX page editing contract passed: paged canvas, draft history, guarded navigation, explicit verified source save, and retained copy save.')
+console.log('DOCX page editing contract passed: paged canvas, multi-target drafts, batch verification/source save, guarded navigation, and explicit copy-save boundary.')

@@ -42,6 +42,8 @@
 
 > A0T 已完成 UX-33C DOCX 批量补丁事务基础：2–32 个不同语义锚点按顺序通过单项门禁、最终语义复读和确定性整批重放；临时副本重开、源签名冲突、一次可靠覆盖及失败恢复均有三生产者回归。当前前端仍是单目标草稿，UX-33 保持进行中。下一步 UX-33D 接入多目标草稿、修改清单及整批验证/保存。详见 [`A0T_DOCX_Batch_Patch_Transaction_Audit_2026-08-04.md`](./A0T_DOCX_Batch_Patch_Transaction_Audit_2026-08-04.md)。
 
+> A0U 已完成 UX-33D DOCX 多目标草稿工作面：跨页目标自动进入修改清单，语义锚点防止冲突操作，统一撤销/重做可恢复整份草稿；1 项沿用单项命令，2–32 项使用批量隔离验证与可靠覆盖保存。批量另存副本仍明确禁用，UX-33 保持进行中。下一步 UX-33E 补齐批量另存副本，再扩大安全对象覆盖并执行三生产者安装态复测。详见 [`A0U_DOCX_Multi_Target_Draft_Workspace_Audit_2026-08-04.md`](./A0U_DOCX_Multi_Target_Draft_Workspace_Audit_2026-08-04.md)。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 

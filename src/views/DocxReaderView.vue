@@ -348,21 +348,41 @@
             <textarea v-model="replacementAltText" maxlength="1024" rows="5" @beforeinput="captureDraftHistory()"></textarea>
           </label>
 
+          <section class="draft-list" aria-label="DOCX 修改清单">
+            <header>
+              <strong>修改清单</strong>
+              <span :class="{ error: draftLimitExceeded }">{{ draftCount }}/32</span>
+            </header>
+            <p v-if="!draftCount">修改任一目标后会自动加入清单，切换页面或目标不会丢失。</p>
+            <template v-else>
+              <article v-for="entry in draftEntryList" :key="entry.anchor">
+                <button type="button" class="draft-locate" :title="`定位到${entry.label}`" @click="locateDraftEntry(entry)">
+                  <LocateFixedIcon :size="13" />
+                  <span><b>{{ entry.operation.kind === 'text' ? '文本' : entry.operation.kind === 'style' ? '样式' : '图片说明' }}</b>{{ entry.label }}</span>
+                </button>
+                <button type="button" class="draft-remove" title="移除这项修改" @click="removeDraftEntry(entry)">
+                  <XIcon :size="13" />
+                </button>
+              </article>
+              <p v-if="draftLimitExceeded" class="draft-limit" role="alert">一次最多验证 32 项，请先移除多余修改。</p>
+            </template>
+          </section>
+
           <button
             type="button"
             class="verify-edit"
-            :disabled="!canPreviewEdit || previewing"
+            :disabled="!draftCount || draftLimitExceeded || previewing"
             @click="previewEdit"
           >
             <ShieldCheckIcon :size="15" />
-            {{ previewing ? '正在生成并复读…' : '验证隔离副本' }}
+            {{ previewing ? '正在生成并复读…' : `验证 ${draftCount} 项修改` }}
           </button>
 
           <div v-if="previewReport || editError" class="edit-verification" :class="{ error: editError }" :role="editError ? 'alert' : 'status'" aria-live="polite">
             <template v-if="previewReport">
               <strong>隔离验证通过</strong>
-              <span>{{ formatBytes(previewReport.outputBytes) }} · 仅修改 {{ previewReport.changedParts.join('、') }}</span>
-              <small>未编辑 OOXML 部件逐字节保持，源文件未修改。</small>
+              <span>{{ previewReport.operationCount || draftCount }} 项 · {{ formatBytes(previewReport.outputBytes) }} · 仅修改 {{ previewReport.changedParts.join('、') }}</span>
+              <small>{{ draftCount > 1 ? '批量修改已通过确定性重放与临时副本复读；' : '' }}未编辑 OOXML 部件逐字节保持，源文件未修改。</small>
             </template>
             <template v-else>
               <strong>验证未通过</strong>
@@ -380,10 +400,11 @@
               <span>或者另存副本</span>
               <input v-model="copyFileName" maxlength="255" @keydown.enter.prevent="saveCopy" />
             </label>
-            <button type="button" :disabled="saving || !copyFileName.trim()" aria-live="polite" @click="saveCopy">
+            <button type="button" :disabled="saving || draftCount !== 1 || !copyFileName.trim()" aria-live="polite" @click="saveCopy">
               <SaveIcon :size="15" />
               {{ saving ? '正在落盘并重开…' : '另存新 DOCX 并打开' }}
             </button>
+            <small v-if="draftCount > 1" class="copy-boundary">批量另存副本将在下一阶段接入；当前可保存到原文件，或将清单缩减为 1 项后另存。</small>
             <small v-if="saveError" role="alert">{{ saveError }}</small>
           </div>
         </aside>
@@ -577,6 +598,9 @@ interface DocxPatchPreviewReport {
   structuralReparseVerified: boolean
   semanticReparseVerified: boolean
   sourceUnchanged: boolean
+  operationCount?: number
+  deterministicReplayVerified?: boolean
+  temporaryCopyReopenVerified?: boolean
 }
 interface DocxSavedCopyReport {
   status: string
@@ -609,7 +633,18 @@ type DocxPatchOperation =
   | { kind: 'text'; targetId: string; expectedTextDigest: string; replacementText: string }
   | { kind: 'style'; targetId: string; expectedStyleDigest: string; bold: boolean; italic: boolean; underline: boolean }
   | { kind: 'imageAltText'; targetId: string; expectedMetadataDigest: string; replacementAltText: string }
+interface DocxDraftEntry {
+  anchor: string
+  blockId: string
+  rowIndex: number | null
+  columnIndex: number | null
+  label: string
+  operation: DocxPatchOperation
+}
 interface DraftSnapshot {
+  entries: DocxDraftEntry[]
+  editMode: DocxEditMode
+  selectedTargetId: string
   text: string
   altText: string
   bold: boolean
@@ -642,10 +677,12 @@ const copyFileName = ref('')
 const saving = ref(false)
 const savingSource = ref(false)
 const saveError = ref('')
+const draftEntries = ref(new Map<string, DocxDraftEntry>())
 const draftUndoStack = ref<DraftSnapshot[]>([])
 const draftRedoStack = ref<DraftSnapshot[]>([])
 const allowNextLeave = ref(false)
 let lastDraftHistoryAt = 0
+let restoringDraftSnapshot = false
 
 const docxPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const routeLocator = computed(() => typeof route.query.locator === 'string' ? route.query.locator : '')
@@ -743,6 +780,9 @@ const activeTargets = computed<DocxEditableTarget[]>(() => {
 const textTargets = computed(() => report.value?.editableTextTargets || [])
 const styleTargets = computed(() => report.value?.editableStyleTargets || [])
 const selectedTarget = computed(() => activeTargets.value.find(target => target.id === selectedTargetId.value))
+const semanticAnchor = (target: DocxEditableTarget) => 'imagePart' in target
+  ? `image:${target.blockId}`
+  : `content:${target.blockId}:${target.rowIndex ?? '-'}:${target.columnIndex ?? '-'}`
 const currentOperation = computed<DocxPatchOperation | null>(() => {
   const target = selectedTarget.value
   if (!target) return null
@@ -785,21 +825,25 @@ const canPreviewEdit = computed(() => {
   }
   return 'altText' in target && replacementAltText.value !== target.altText
 })
+const draftOperations = computed(() => Array.from(draftEntries.value.values(), entry => entry.operation))
+const draftEntryList = computed(() => Array.from(draftEntries.value.values()))
+const draftCount = computed(() => draftEntries.value.size)
+const draftLimitExceeded = computed(() => draftCount.value > 32)
 
 const draftSnapshot = (): DraftSnapshot => ({
+  entries: Array.from(draftEntries.value.values(), entry => ({
+    ...entry,
+    operation: { ...entry.operation },
+  })),
+  editMode: editMode.value,
+  selectedTargetId: selectedTargetId.value,
   text: replacementText.value,
   altText: replacementAltText.value,
   bold: draftBold.value,
   italic: draftItalic.value,
   underline: draftUnderline.value,
 })
-const sameDraftSnapshot = (left: DraftSnapshot, right: DraftSnapshot) => (
-  left.text === right.text
-  && left.altText === right.altText
-  && left.bold === right.bold
-  && left.italic === right.italic
-  && left.underline === right.underline
-)
+const sameDraftSnapshot = (left: DraftSnapshot, right: DraftSnapshot) => JSON.stringify(left) === JSON.stringify(right)
 const clearDraftHistory = () => {
   draftUndoStack.value = []
   draftRedoStack.value = []
@@ -818,11 +862,20 @@ const captureDraftHistory = (force = false) => {
   lastDraftHistoryAt = now
 }
 const restoreDraftSnapshot = (snapshot: DraftSnapshot) => {
+  restoringDraftSnapshot = true
+  draftEntries.value = new Map(snapshot.entries.map(entry => [entry.anchor, {
+    ...entry,
+    operation: { ...entry.operation },
+  }]))
+  editMode.value = snapshot.editMode
+  selectedTargetId.value = snapshot.selectedTargetId
   replacementText.value = snapshot.text
   replacementAltText.value = snapshot.altText
   draftBold.value = snapshot.bold
   draftItalic.value = snapshot.italic
   draftUnderline.value = snapshot.underline
+  invalidatePreview()
+  void nextTick(() => { restoringDraftSnapshot = false })
 }
 const undoDraft = () => {
   const previous = draftUndoStack.value.pop()
@@ -845,6 +898,50 @@ const toggleDraftStyle = (property: 'bold' | 'italic' | 'underline') => {
   if (property === 'underline') draftUnderline.value = !draftUnderline.value
 }
 
+const draftEntryForTarget = (target: DocxEditableTarget | undefined) => target
+  ? draftEntries.value.get(semanticAnchor(target))
+  : undefined
+const makeDraftEntry = (target: DocxEditableTarget, operation: DocxPatchOperation): DocxDraftEntry => ({
+  anchor: semanticAnchor(target),
+  blockId: target.blockId,
+  rowIndex: 'rowIndex' in target ? target.rowIndex : null,
+  columnIndex: 'columnIndex' in target ? target.columnIndex : null,
+  label: targetLabel(target),
+  operation,
+})
+const syncCurrentDraft = () => {
+  if (restoringDraftSnapshot) return
+  const target = selectedTarget.value
+  const operation = currentOperation.value
+  if (!target || !operation) return
+  const anchor = semanticAnchor(target)
+  const entries = new Map(draftEntries.value)
+  if (canPreviewEdit.value) {
+    entries.set(anchor, makeDraftEntry(target, operation))
+  } else if (entries.get(anchor)?.operation.targetId === target.id) {
+    entries.delete(anchor)
+  } else {
+    return
+  }
+  draftEntries.value = entries
+  invalidatePreview()
+}
+const removeDraftEntry = (entry: DocxDraftEntry) => {
+  captureDraftHistory(true)
+  const entries = new Map(draftEntries.value)
+  entries.delete(entry.anchor)
+  draftEntries.value = entries
+  if (entry.operation.targetId === selectedTargetId.value) resetTargetDraft()
+  invalidatePreview()
+}
+const locateDraftEntry = (entry: DocxDraftEntry) => {
+  const mode: DocxEditMode = entry.operation.kind === 'imageAltText' ? 'imageAltText' : entry.operation.kind
+  editorOpen.value = true
+  editMode.value = mode
+  selectedTargetId.value = entry.operation.targetId
+  void scrollToBlock(entry.blockId)
+}
+
 const textTargetForBlock = (blockId: string) => textTargets.value.find(target => (
   target.blockId === blockId && target.kind !== 'table-cell'
 ))
@@ -857,36 +954,35 @@ const tableTargetForCell = (blockId: string, rowIndex: number, columnIndex: numb
 const selectedTextTarget = () => editMode.value === 'text' && selectedTarget.value && 'text' in selectedTarget.value
   ? selectedTarget.value
   : null
-const selectedStyleTarget = () => editMode.value === 'style' && selectedTarget.value && 'bold' in selectedTarget.value
-  ? selectedTarget.value
-  : null
 const draftTextForBlock = (block: DocxBlock) => {
-  const target = selectedTextTarget()
-  return target?.blockId === block.id && target.kind !== 'table-cell' ? replacementText.value : block.text
+  const target = textTargetForBlock(block.id)
+  const entry = draftEntryForTarget(target)
+  return entry?.operation.kind === 'text' ? entry.operation.replacementText : block.text
 }
 const draftTableCellText = (block: DocxBlock, rowIndex: number, columnIndex: number, fallback: string) => {
-  const target = selectedTextTarget()
-  return target?.blockId === block.id && target.kind === 'table-cell'
-    && target.rowIndex === rowIndex && target.columnIndex === columnIndex
-    ? replacementText.value
-    : fallback
+  const target = tableTargetForCell(block.id, rowIndex, columnIndex)
+  const entry = draftEntryForTarget(target)
+  return entry?.operation.kind === 'text' ? entry.operation.replacementText : fallback
 }
 const blockEditClasses = (block: DocxBlock) => ({
   'search-hit': matchIds.value.has(block.id),
   editable: Boolean(textTargetForBlock(block.id) || styleTargets.value.some(target => target.blockId === block.id)),
   'edit-selected': selectedTarget.value?.blockId === block.id,
+  'has-draft': Array.from(draftEntries.value.values()).some(entry => entry.blockId === block.id),
 })
 const tableCellEditClasses = (block: DocxBlock, rowIndex: number, columnIndex: number) => ({
   editable: Boolean(tableTargetForCell(block.id, rowIndex, columnIndex)),
   'edit-selected': selectedTextTarget()?.id === tableTargetForCell(block.id, rowIndex, columnIndex)?.id,
+  'has-draft': Boolean(draftEntryForTarget(tableTargetForCell(block.id, rowIndex, columnIndex))),
 })
 const draftStyleForBlock = (block: DocxBlock) => {
-  const target = selectedStyleTarget()
-  if (target?.blockId !== block.id) return undefined
+  const target = styleTargets.value.find(candidate => candidate.blockId === block.id && candidate.kind !== 'table-cell')
+  const entry = draftEntryForTarget(target)
+  if (entry?.operation.kind !== 'style') return undefined
   return {
-    fontWeight: draftBold.value ? '700' : '400',
-    fontStyle: draftItalic.value ? 'italic' : 'normal',
-    textDecoration: draftUnderline.value ? 'underline' : 'none',
+    fontWeight: entry.operation.bold ? '700' : '400',
+    fontStyle: entry.operation.italic ? 'italic' : 'normal',
+    textDecoration: entry.operation.underline ? 'underline' : 'none',
   }
 }
 const selectTextTarget = (target?: DocxTextTarget) => {
@@ -949,14 +1045,20 @@ const targetLabel = (target: DocxEditableTarget) => {
 const resetTargetDraft = () => {
   const target = selectedTarget.value
   if (!target) return
-  if ('expectedTextDigest' in target) replacementText.value = target.text
-  if ('expectedStyleDigest' in target) {
-    draftBold.value = target.bold
-    draftItalic.value = target.italic
-    draftUnderline.value = target.underline
+  const entry = draftEntryForTarget(target)
+  if ('expectedTextDigest' in target) {
+    replacementText.value = entry?.operation.kind === 'text' ? entry.operation.replacementText : target.text
   }
-  if ('expectedMetadataDigest' in target) replacementAltText.value = target.altText
-  clearDraftHistory()
+  if ('expectedStyleDigest' in target) {
+    draftBold.value = entry?.operation.kind === 'style' ? entry.operation.bold : target.bold
+    draftItalic.value = entry?.operation.kind === 'style' ? entry.operation.italic : target.italic
+    draftUnderline.value = entry?.operation.kind === 'style' ? entry.operation.underline : target.underline
+  }
+  if ('expectedMetadataDigest' in target) {
+    replacementAltText.value = entry?.operation.kind === 'imageAltText'
+      ? entry.operation.replacementAltText
+      : target.altText
+  }
 }
 const invalidatePreview = () => {
   previewReport.value = null
@@ -964,8 +1066,8 @@ const invalidatePreview = () => {
   saveError.value = ''
 }
 const previewEdit = async () => {
-  const operation = currentOperation.value
-  if (!operation || !report.value || !canPreviewEdit.value || previewing.value) return
+  const operations = draftOperations.value
+  if (!operations.length || operations.length > 32 || !report.value || previewing.value) return
   previewing.value = true
   invalidatePreview()
   try {
@@ -974,7 +1076,13 @@ const previewEdit = async () => {
       path: docxPath.value,
       expectedSignature: report.value.signature,
     }
-    if (operation.kind === 'text') {
+    const operation = operations[0]
+    if (operations.length > 1) {
+      previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_patch_batch_isolated_copy', {
+        ...base,
+        operations,
+      })
+    } else if (operation.kind === 'text') {
       previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_text_patch_isolated_copy', {
         ...base,
         targetId: operation.targetId,
@@ -998,12 +1106,15 @@ const previewEdit = async () => {
         replacementAltText: operation.replacementAltText,
       })
     }
+    const isBatch = operations.length > 1
     if (
-      previewReport.value.status !== 'isolated_verified'
+      previewReport.value.status !== (isBatch ? 'batch_isolated_verified' : 'isolated_verified')
       || !previewReport.value.unchangedPartsVerified
       || !previewReport.value.structuralReparseVerified
       || !previewReport.value.semanticReparseVerified
       || !previewReport.value.sourceUnchanged
+      || (isBatch && !previewReport.value.deterministicReplayVerified)
+      || (isBatch && !previewReport.value.temporaryCopyReopenVerified)
     ) throw new Error('隔离副本未通过完整保真验证')
   } catch (cause) {
     previewReport.value = null
@@ -1014,8 +1125,8 @@ const previewEdit = async () => {
 }
 const saveCopy = async () => {
   const preview = previewReport.value
-  const operation = currentOperation.value
-  if (!preview || !operation || !report.value || !copyFileName.value.trim() || saving.value) return
+  const operation = draftOperations.value[0]
+  if (!preview || draftCount.value !== 1 || !operation || !report.value || !copyFileName.value.trim() || saving.value) return
   saving.value = true
   saveError.value = ''
   try {
@@ -1048,27 +1159,29 @@ const saveCopy = async () => {
 }
 const saveSource = async (): Promise<boolean> => {
   const preview = previewReport.value
-  const operation = currentOperation.value
-  if (!preview || !operation || !report.value || savingSource.value) return false
+  const operations = draftOperations.value
+  if (!preview || !operations.length || operations.length > 32 || !report.value || savingSource.value) return false
   savingSource.value = true
   saveError.value = ''
   try {
-    const saved = await invoke<DocxSavedSourceReport>('save_docx_patch_source', {
+    const base = {
       libraryRoot: store.libraryPath,
       path: docxPath.value,
       expectedSignature: report.value.signature,
       expectedOutputDigest: preview.outputDigest,
-      operation,
-    })
+    }
+    const saved = operations.length > 1
+      ? await invoke<DocxSavedSourceReport>('save_docx_patch_batch_source', { ...base, operations })
+      : await invoke<DocxSavedSourceReport>('save_docx_patch_source', { ...base, operation: operations[0] })
     if (
-      saved.status !== 'source_saved_verified'
+      saved.status !== (operations.length > 1 ? 'batch_source_saved_verified' : 'source_saved_verified')
       || !saved.rollbackProtected
       || !saved.unchangedPartsVerified
       || !saved.structuralReopenVerified
       || !saved.semanticReopenVerified
       || saved.producerEvidence.length !== 3
     ) throw new Error('源文件保存结果未通过完整复读与恢复门禁')
-    message.success('DOCX 已可靠保存并重新读取')
+    message.success(`DOCX 已可靠保存 ${operations.length} 项修改并重新读取`)
     await load()
     return true
   } catch (cause) {
@@ -1093,7 +1206,7 @@ const mayLeave = () => {
     allowNextLeave.value = false
     return true
   }
-  if (!canPreviewEdit.value) return true
+  if (!draftCount.value) return true
   return new Promise<boolean>(resolve => {
     let dialogRef: ReturnType<typeof dialog.warning> | null = null
     let settled = false
@@ -1126,7 +1239,7 @@ const mayLeave = () => {
 }
 const leaveDocx = () => { router.back() }
 const beforeUnload = (event: BeforeUnloadEvent) => {
-  if (canPreviewEdit.value) {
+  if (draftCount.value) {
     event.preventDefault()
     event.returnValue = ''
   }
@@ -1167,6 +1280,8 @@ const load = async () => {
           ? report.value.editableStyleTargets[0]
           : report.value.editableImageTargets[0]
     )?.id || ''
+    draftEntries.value = new Map()
+    clearDraftHistory()
     resetTargetDraft()
     invalidatePreview()
     scrollToRouteLocator()
@@ -1187,6 +1302,7 @@ watch(matches, value => {
   matchIndex.value = value.length ? 0 : -1
 })
 watch(editMode, () => {
+  if (restoringDraftSnapshot) return
   if (!activeTargets.value.some(target => target.id === selectedTargetId.value)) {
     selectedTargetId.value = activeTargets.value[0]?.id || ''
   }
@@ -1194,12 +1310,13 @@ watch(editMode, () => {
   invalidatePreview()
 })
 watch(selectedTargetId, () => {
+  if (restoringDraftSnapshot) return
   resetTargetDraft()
   invalidatePreview()
 })
 watch(
   [replacementText, replacementAltText, draftBold, draftItalic, draftUnderline],
-  invalidatePreview,
+  syncCurrentDraft,
 )
 watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocator)
 onBeforeRouteLeave(() => mayLeave())
@@ -1257,6 +1374,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
 .docx-block.editable, .docx-table-wrap td.editable { cursor: text; }
 .docx-block.editable:hover, .docx-table-wrap td.editable:hover { outline: 1px solid color-mix(in srgb, var(--primary-color) 55%, transparent); background: color-mix(in srgb, var(--primary-color) 7%, var(--bg-primary)); }
 .docx-block.edit-selected, .docx-table-wrap td.edit-selected { outline: 2px solid var(--primary-color); outline-offset: 2px; background: color-mix(in srgb, var(--primary-color) 9%, var(--bg-primary)); }
+.docx-block.has-draft, .docx-table-wrap td.has-draft { box-shadow: inset 3px 0 color-mix(in srgb, #d49a28 78%, var(--primary-color)); background: color-mix(in srgb, #d49a28 8%, var(--bg-primary)); }
 .docx-heading { margin: 1.3em 0 .55em; line-height: 1.3; }
 h1.docx-heading { font-size: 25px; } h2.docx-heading { font-size: 21px; } h3.docx-heading { font-size: 18px; }
 h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
@@ -1309,6 +1427,19 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .style-controls { display: flex; gap: 5px; }
 .style-controls button { width: 32px; height: 30px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; }
 .style-controls button.active { border-color: var(--primary-color); color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 10%, var(--bg-primary)); }
+.draft-list { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+.draft-list > header { display: flex; align-items: center; justify-content: space-between; }
+.draft-list > header strong { font-size: 12px; }
+.draft-list > header span { min-width: 40px; text-align: right; color: var(--primary-color); font-size: 11px; font-variant-numeric: tabular-nums; }
+.draft-list > header span.error, .draft-limit { color: var(--error-color); }
+.draft-list > p { margin: 8px 0 0; color: var(--text-muted); font-size: var(--text-compact); line-height: 1.5; }
+.draft-list article { min-width: 0; margin-top: 6px; display: flex; align-items: stretch; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; background: var(--bg-secondary); }
+.draft-list button { border: 0; color: var(--text-secondary); background: transparent; cursor: pointer; }
+.draft-locate { min-width: 0; flex: 1; padding: 7px 8px; display: flex; align-items: center; gap: 7px; text-align: left; }
+.draft-locate > span { min-width: 0; display: flex; flex-direction: column; gap: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }
+.draft-locate b { color: var(--primary-color); font-size: 10px; }
+.draft-remove { width: 30px; flex: none; display: grid; place-items: center; border-left: 1px solid var(--border-color) !important; }
+.draft-list button:hover { color: var(--primary-color); background: var(--hover-bg); }
 .verify-edit, .copy-save > button { width: 100%; min-height: 34px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--primary-color); border-radius: 6px; color: #fff; background: var(--primary-color); cursor: pointer; font: inherit; font-weight: 600; }
 .verify-edit:disabled, .copy-save > button:disabled { opacity: .45; cursor: default; }
 .edit-verification { margin-top: 12px; padding: 9px; display: flex; flex-direction: column; gap: 4px; border-left: 3px solid #2c9b68; background: color-mix(in srgb, #2c9b68 8%, var(--bg-primary)); }
@@ -1318,6 +1449,7 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .copy-save { margin-top: 12px; padding-top: 1px; border-top: 1px solid var(--border-color); }
 .save-boundary { margin: 7px 0 2px; color: var(--text-muted); font-size: var(--text-compact); line-height: 1.5; }
 .copy-save > small { display: block; margin-top: 7px; color: var(--error-color); }
+.copy-save > small.copy-boundary { color: var(--text-muted); }
 .docx-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: var(--text-compact); }
 .docx-status > div { gap: 10px; }
 @media (max-width: 820px) {
