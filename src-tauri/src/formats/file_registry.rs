@@ -299,21 +299,18 @@ mod tests {
     }
 
     #[test]
-    fn log_format_is_bounded_read_only_and_searchable() {
+    fn log_format_has_bounded_professional_view_and_guarded_editing() {
         let format = file_format_by_id("log").unwrap();
         assert!(format.capabilities.read.is_supported());
-        assert_eq!(format.capabilities.edit, CapabilityLevel::Planned);
+        assert_eq!(format.capabilities.edit, CapabilityLevel::Supported);
         assert_eq!(format.capabilities.create, CapabilityLevel::Unsupported);
         assert!(format.capabilities.index.is_supported());
         assert_eq!(format.route_name, "LogViewer");
         assert_eq!(format.adapters.reader.as_deref(), Some("text"));
-        assert_eq!(format.adapters.writer, None);
+        assert_eq!(format.adapters.writer.as_deref(), Some("text"));
         assert_eq!(format.adapters.indexer.as_deref(), Some("text"));
-        assert_eq!(
-            format.user_capability.level,
-            UserCapabilityLevel::PreviewOnly
-        );
-        assert_eq!(format.user_capability.save_mode, SaveMode::None);
+        assert_eq!(format.user_capability.level, UserCapabilityLevel::BasicEdit);
+        assert_eq!(format.user_capability.save_mode, SaveMode::Overwrite);
         assert_eq!(
             file_format_registry()
                 .unwrap()

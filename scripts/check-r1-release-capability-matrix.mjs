@@ -61,7 +61,7 @@ for (const format of registry.formats) {
 
 for (const [id, profile] of [
   ['env', 'protected-local-overwrite'],
-  ['log', 'readonly-log'],
+  ['log', 'professional-log'],
   ['pdf', 'pdf-sidecar'],
   ['docx', 'office-copy'],
   ['pptx', 'office-copy'],

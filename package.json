@@ -91,6 +91,7 @@
     "check:markdown-default-mode": "node scripts/check-markdown-default-mode.mjs",
     "check:markdown-code-theme-contrast": "node scripts/check-markdown-code-theme-contrast.mjs",
     "check:code-editor-theme-contract": "node scripts/check-code-editor-theme-contract.mjs",
+    "check:log-workspace-editing": "node scripts/check-log-workspace-editing.mjs",
     "check:json-workspace-experience": "node scripts/check-json-workspace-experience.mjs",
     "check:text-workspace-layout": "node scripts/check-text-workspace-layout.mjs",
     "check:external-change-identity": "node scripts/check-external-change-identity.mjs",

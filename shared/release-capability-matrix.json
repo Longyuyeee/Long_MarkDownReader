@@ -27,11 +27,11 @@
       "knownLimitations": ["不包含编译、执行、调试、数据库连接或语言服务"]
     },
     {
-      "id": "readonly-log",
+      "id": "professional-log",
       "dependency": "none",
-      "sourcePolicy": "源文件只读",
-      "privacyBoundary": "日志内容仅在本机按受限范围读取",
-      "knownLimitations": ["不编辑或保存日志；轮转后按磁盘状态重新读取"]
+      "sourcePolicy": "查看模式只读；显式编辑模式以签名冲突保护覆盖源日志",
+      "privacyBoundary": "日志内容仅在本机读取、筛选和编辑",
+      "knownLimitations": ["编辑模式限制为 8 MiB；进入编辑会暂停自动刷新和尾部跟随；不提供并发日志合并"]
     },
     {
       "id": "pdf-sidecar",
@@ -95,7 +95,7 @@
     { "id": "sql", "profile": "lightweight-source", "readiness": "verified" },
     { "id": "web-source", "profile": "lightweight-source", "readiness": "verified" },
     { "id": "json", "profile": "local-overwrite", "readiness": "verified" },
-    { "id": "log", "profile": "readonly-log", "readiness": "verified" },
+    { "id": "log", "profile": "professional-log", "readiness": "verified" },
     { "id": "jsonc", "profile": "local-overwrite", "readiness": "verified" },
     { "id": "yaml", "profile": "local-overwrite", "readiness": "verified" },
     { "id": "xml", "profile": "local-overwrite", "readiness": "verified" },

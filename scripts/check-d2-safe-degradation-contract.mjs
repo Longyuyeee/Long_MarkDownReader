@@ -119,7 +119,7 @@ if (
 }
 
 for (const [id, saveMode, profile] of [
-  ["log", "none", "readonly-log"],
+  ["log", "overwrite", "professional-log"],
   ["pdf", "sidecar", "pdf-sidecar"],
   ["docx", "copy", "office-copy"],
   ["pptx", "copy", "office-copy"],

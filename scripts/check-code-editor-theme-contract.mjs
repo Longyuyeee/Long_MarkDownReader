@@ -65,6 +65,7 @@ const workspaces = [
   'src/views/YamlEditorView.vue',
   'src/views/XmlEditorView.vue',
   'src/views/TomlEditorView.vue',
+  'src/views/LogViewerView.vue',
 ]
 for (const path of workspaces) {
   const source = read(path)
@@ -78,4 +79,4 @@ for (const id of ['UX-24', 'UX-27']) {
   if (!new RegExp(`\\| ${id} \\|[^\\n]+\\| 待复测 \\|`).test(audit)) fail(`${id} must remain recorded as pending installed-build retest.`)
 }
 
-console.log('Five CodeMirror workspaces share one theme; 9 palettes meet syntax, gutter, and cursor contrast contracts.')
+console.log('Six CodeMirror workspaces share one theme; 9 palettes meet syntax, gutter, and cursor contrast contracts.')

@@ -10,10 +10,10 @@
         "markdown", "plain-text", "env", "ini", "properties", "editorconfig",
         "gitignore", "javascript", "typescript", "python", "rust", "go",
         "jvm-code", "c-family", "shell", "sql", "web-source", "json", "jsonc",
-        "yaml", "xml", "svg", "drawio", "toml", "canvas", "table", "diagram", "opml"
+        "yaml", "xml", "svg", "drawio", "toml", "canvas", "table", "diagram", "opml", "log"
       ],
       "saveModes": ["overwrite"],
-      "profiles": ["local-overwrite", "protected-local-overwrite", "lightweight-source"],
+      "profiles": ["local-overwrite", "protected-local-overwrite", "lightweight-source", "professional-log"],
       "sourcePolicy": "signature-protected-write",
       "failurePolicy": "reject-stale-source-and-retain-draft",
       "evidence": [
@@ -30,6 +30,10 @@
           "markers": ["expectedSignature", "dirty.value = true"]
         },
         {
+          "path": "src/views/LogViewerView.vue",
+          "markers": ["write_log_document", "acknowledgedOverwrite", "dirty.value = true"]
+        },
+        {
           "path": "src-tauri/src/commands/svg.rs",
           "markers": ["unsafe-svg-save-blocked", "expected_signature"]
         },
@@ -41,9 +45,9 @@
     },
     {
       "id": "strict-readonly-preview",
-      "formats": ["log", "ods", "odp"],
+      "formats": ["ods", "odp"],
       "saveModes": ["none"],
-      "profiles": ["readonly-log", "odf-preview"],
+      "profiles": ["odf-preview"],
       "sourcePolicy": "never-write-source",
       "failurePolicy": "stop-preview-on-source-change",
       "evidence": [
@@ -53,7 +57,7 @@
         },
         {
           "path": "shared/file-formats.json",
-          "markers": ["\"id\": \"log\"", "\"id\": \"ods\"", "\"id\": \"odp\""]
+          "markers": ["\"id\": \"ods\"", "\"id\": \"odp\""]
         }
       ]
     },

@@ -340,7 +340,8 @@ requireText(jsonEditor, 'foldAll', 'A3 JSON workspace must expose source folding
 requireText(jsonEditor, "'transform_json_source'", 'A3 JSON workspace must use fidelity-safe Rust transforms')
 requireText(jsonEditor, 'filteredPaths', 'A3 JSON workspace must expose bounded JSON Path navigation')
 requireText(jsonEditor, "viewMode === 'tree'", 'A3 JSON workspace must expose a dedicated tree preview mode')
-requireText(jsonEditor, 'MAX_TREE_RENDER_NODES', 'A3 tree preview must enforce a DOM render budget')
+requireText(jsonEditor, 'treeVirtualHeight', 'A3 tree preview must expose a virtualized scroll height')
+requireText(jsonEditor, 'treeWindow', 'A3 tree preview must render a bounded virtual window')
 requireText(jsonEditor, 'visibleTreePaths', 'A3 tree preview must preserve parent-child visibility when folding')
 requireText(jsonEditor, 'sourceRangeText', 'A3 tree node copy must use the original source range')
 requireText(jsonEditor, 'showSourceRange', 'A3 tree nodes must navigate back to the source fact')
@@ -605,17 +606,24 @@ const logFormat = registry.formats.find(format => format.id === 'log')
 if (!logFormat
   || logFormat.routeName !== 'LogViewer'
   || logFormat.capabilities?.read !== 'supported'
-  || logFormat.capabilities?.edit !== 'planned'
+  || logFormat.capabilities?.edit !== 'supported'
   || logFormat.capabilities?.index !== 'supported'
-  || logFormat.userCapability?.level !== 'preview-only'
-  || logFormat.userCapability?.saveMode !== 'none'
+  || logFormat.userCapability?.level !== 'basic-edit'
+  || logFormat.userCapability?.saveMode !== 'overwrite'
   || logFormat.adapters?.reader !== 'text'
-  || logFormat.adapters?.writer !== null) failures.push('A4 LOG read-only format contract is incomplete')
+  || logFormat.adapters?.writer !== 'text') failures.push('A4 LOG professional viewer and guarded editor contract is incomplete')
 requireText(logViewer, "'read_text_document_range'", 'A4 LOG viewer must use bounded range reads')
 requireText(logViewer, 'readTailRange', 'A4 LOG viewer must enter large files from a bounded tail window')
 requireText(logViewer, 'pollForUpdates', 'A4 LOG viewer must refresh appended records')
 requireText(logViewer, 'LEVEL_PATTERNS', 'A4 LOG viewer must classify common log levels')
 requireText(logViewer, 'MAX_BUFFER_CHARS', 'A4 LOG viewer must bound its in-memory display buffer')
+requireText(logViewer, "'write_log_document'", 'A4 LOG editor must use its guarded writer')
+requireText(logViewer, 'acknowledgedOverwrite: true', 'A4 LOG source overwrite must require explicit acknowledgement')
+requireText(logViewer, 'MAX_LOG_EDIT_BYTES', 'A4 LOG editor must enforce its bounded edit lane')
+requireText(logViewer, '...codeMirrorThemeExtensions', 'A4 LOG editor must use the shared code editor theme')
+requireText(formatCommands, 'pub async fn write_log_document', 'A4 LOG saves must use a dedicated backend boundary')
+requireText(formatCommands, 'acknowledged_overwrite: bool', 'A4 LOG backend must require overwrite acknowledgement')
+requireText(formatCommands, 'if format_id == "log"', 'A4 generic text writes must reject LOG bypasses')
 requireText(library, '<WorkspaceTabs', 'Markdown workspace must consume unified session tabs')
 requireText(textEditor, '<WorkspaceTabs', 'TXT workspace must consume unified session tabs')
 requireText(workspaceTabs, 'routeForFile', 'unified tabs must route each registered format to its workspace')

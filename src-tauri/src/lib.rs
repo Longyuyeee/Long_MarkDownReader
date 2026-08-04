@@ -38,7 +38,8 @@ pub(crate) use commands::files::{sanitize_filename, FileContent, FileEntry};
 use commands::formats::{
     create_format_file, get_file_format_registry, get_text_document_identity,
     read_external_text_document, read_external_text_document_range, read_text_document,
-    read_text_document_range, write_external_text_document, write_text_document,
+    read_text_document_range, write_external_text_document, write_log_document,
+    write_text_document,
 };
 use commands::git::{git_commit, git_init, git_pull, git_push, git_status};
 pub(crate) use commands::graph::GraphData;
@@ -313,6 +314,7 @@ pub fn run() {
             write_toml_source_document,
             read_text_document,
             read_text_document_range,
+            write_log_document,
             write_text_document,
             read_external_text_document,
             read_external_text_document_range,

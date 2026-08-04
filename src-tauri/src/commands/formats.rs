@@ -15,6 +15,8 @@ use std::fs;
 use std::path::Path;
 use tauri::State;
 
+const MAX_LOG_EDIT_BYTES: usize = 8 * 1024 * 1024;
+
 fn ensure_capability(
     format_id: &str,
     capability: &str,
@@ -288,6 +290,12 @@ pub async fn write_text_document(
             "JSON/JSONC 必须通过专用保存命令执行语法门禁",
         ));
     }
+    if format_id == "log" {
+        return Err(TextDocumentError::simple(
+            "specialized-writer-required",
+            "日志必须通过专用保存命令确认覆盖影响并执行签名保护",
+        ));
+    }
     write_registered_text_document(
         library_root,
         path,
@@ -295,6 +303,42 @@ pub async fn write_text_document(
         content,
         expected_signature,
         save_policy,
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn write_log_document(
+    library_root: String,
+    path: String,
+    content: String,
+    expected_signature: Option<String>,
+    acknowledged_overwrite: bool,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    if !acknowledged_overwrite {
+        return Err(TextDocumentError::recoverable(
+            "log-overwrite-not-acknowledged",
+            "保存日志会覆盖源文件，必须先确认覆盖影响",
+            "返回日志工作区确认后，再点击保存",
+        ));
+    }
+    if content.len() > MAX_LOG_EDIT_BYTES {
+        return Err(TextDocumentError::recoverable(
+            "log-edit-too-large",
+            format!(
+                "日志编辑内容超过 {} MiB 上限",
+                MAX_LOG_EDIT_BYTES / 1024 / 1024
+            ),
+            "使用专业查看模式筛选大日志，或在外部工具中拆分后再编辑",
+        ));
+    }
+    write_registered_text_document(
+        library_root,
+        path,
+        "log".into(),
+        content,
+        expected_signature,
+        None,
     )
     .await
 }
@@ -687,6 +731,65 @@ mod tests {
         assert_eq!(first.offset, 0);
         assert!(first.next_offset <= 10);
         assert!(!first.eof);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn log_writer_requires_acknowledgement_and_rejects_stale_sources() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-log-write-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("application.log");
+        fs::write(&path, "first line\n").unwrap();
+        let root_string = root.to_string_lossy().into_owned();
+        let path_string = path.to_string_lossy().into_owned();
+        let loaded = tauri::async_runtime::block_on(read_text_document(
+            root_string.clone(),
+            path_string.clone(),
+            "log".into(),
+            None,
+        ))
+        .unwrap();
+
+        let rejected = tauri::async_runtime::block_on(write_log_document(
+            root_string.clone(),
+            path_string.clone(),
+            "draft".into(),
+            Some(loaded.signature.clone()),
+            false,
+        ))
+        .unwrap_err();
+        assert_eq!(rejected.code, "log-overwrite-not-acknowledged");
+        assert_eq!(fs::read_to_string(&path).unwrap(), "first line\n");
+
+        let oversized = tauri::async_runtime::block_on(write_log_document(
+            root_string.clone(),
+            path_string.clone(),
+            "x".repeat(MAX_LOG_EDIT_BYTES + 1),
+            Some(loaded.signature.clone()),
+            true,
+        ))
+        .unwrap_err();
+        assert_eq!(oversized.code, "log-edit-too-large");
+        assert_eq!(fs::read_to_string(&path).unwrap(), "first line\n");
+
+        fs::write(&path, "external append\n").unwrap();
+        let stale = tauri::async_runtime::block_on(write_log_document(
+            root_string,
+            path_string,
+            "draft".into(),
+            Some(loaded.signature),
+            true,
+        ))
+        .unwrap_err();
+        assert_eq!(stale.code, "external-modified");
+        assert_eq!(fs::read_to_string(&path).unwrap(), "external append\n");
         fs::remove_dir_all(root).unwrap();
     }
 }
