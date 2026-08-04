@@ -1,7 +1,9 @@
 # Long Markdown Reader 开发交接
 
-更新日期：2026-07-31
-交接基线：当前发布版本 `v1.0.0`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干；本版本按明确决策作为无 Authenticode 签名社区版发布，并以 Tauri updater 完整性签名支持后续自动更新
+> **2026-08-04 最新接手入口：** v1.0.3 安装版真实多格式测试暴露了 ACL、更新策略、路由状态、工作区布局和跨格式编辑体验问题。后续开发以 [`User_Experience_Closure_Audit_2026-08-04.md`](./User_Experience_Closure_Audit_2026-08-04.md) 的 39 项验收清单和阶段 A-E 为最高优先级；下方历史阶段记录仅作为能力与证据背景，不得据此宣称当前用户体验已经收口。
+
+更新日期：2026-08-04
+交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 
 > 最新接手入口：[`Current_Closure_Status_and_Packaging_Plan_2026-07-31.md`](./Current_Closure_Status_and_Packaging_Plan_2026-07-31.md)。当前先执行 E5 高级能力最终收口审计，随后构建并验证未签名 MSI/NSIS；真实签名、Windows 10/11 隔离发布矩阵与人工批准继续独立阻塞正式 RC，`releaseCandidate=false`。
 
