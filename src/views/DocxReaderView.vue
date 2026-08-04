@@ -400,11 +400,10 @@
               <span>或者另存副本</span>
               <input v-model="copyFileName" maxlength="255" @keydown.enter.prevent="saveCopy" />
             </label>
-            <button type="button" :disabled="saving || draftCount !== 1 || !copyFileName.trim()" aria-live="polite" @click="saveCopy">
+            <button type="button" :disabled="saving || !draftCount || !copyFileName.trim()" aria-live="polite" @click="saveCopy">
               <SaveIcon :size="15" />
               {{ saving ? '正在落盘并重开…' : '另存新 DOCX 并打开' }}
             </button>
-            <small v-if="draftCount > 1" class="copy-boundary">批量另存副本将在下一阶段接入；当前可保存到原文件，或将清单缩减为 1 项后另存。</small>
             <small v-if="saveError" role="alert">{{ saveError }}</small>
           </div>
         </aside>
@@ -1125,28 +1124,30 @@ const previewEdit = async () => {
 }
 const saveCopy = async () => {
   const preview = previewReport.value
-  const operation = draftOperations.value[0]
-  if (!preview || draftCount.value !== 1 || !operation || !report.value || !copyFileName.value.trim() || saving.value) return
+  const operations = draftOperations.value
+  if (!preview || !operations.length || operations.length > 32 || !report.value || !copyFileName.value.trim() || saving.value) return
   saving.value = true
   saveError.value = ''
   try {
-    const saved = await invoke<DocxSavedCopyReport>('save_docx_patch_copy', {
+    const base = {
       libraryRoot: store.libraryPath,
       path: docxPath.value,
       targetFileName: copyFileName.value.trim(),
       expectedSignature: report.value.signature,
       expectedOutputDigest: preview.outputDigest,
-      operation,
-    })
+    }
+    const saved = operations.length > 1
+      ? await invoke<DocxSavedCopyReport>('save_docx_patch_batch_copy', { ...base, operations })
+      : await invoke<DocxSavedCopyReport>('save_docx_patch_copy', { ...base, operation: operations[0] })
     if (
-      saved.status !== 'saved_verified'
+      saved.status !== (operations.length > 1 ? 'batch_saved_verified' : 'saved_verified')
       || !saved.sourceUnchanged
       || !saved.unchangedPartsVerified
       || !saved.structuralReopenVerified
       || !saved.semanticReopenVerified
       || saved.producerEvidence.length !== 3
     ) throw new Error('保存结果未通过完整复读与生产者门禁')
-    message.success(`已可靠另存并验证：${copyFileName.value.trim()}`)
+    message.success(`已可靠另存并验证 ${operations.length} 项修改：${copyFileName.value.trim()}`)
     const routeName = route.name === 'LibraryMode' ? 'LibraryMode' : 'DocxEditor'
     allowNextLeave.value = true
     await router.replace({ name: routeName, query: { path: saved.targetPath } })
@@ -1449,7 +1450,6 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .copy-save { margin-top: 12px; padding-top: 1px; border-top: 1px solid var(--border-color); }
 .save-boundary { margin: 7px 0 2px; color: var(--text-muted); font-size: var(--text-compact); line-height: 1.5; }
 .copy-save > small { display: block; margin-top: 7px; color: var(--error-color); }
-.copy-save > small.copy-boundary { color: var(--text-muted); }
 .docx-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: var(--text-compact); }
 .docx-status > div { gap: 10px; }
 @media (max-width: 820px) {

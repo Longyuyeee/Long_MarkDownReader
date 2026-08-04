@@ -927,6 +927,116 @@ fn save_docx_patch_copy_to_path(
     })
 }
 
+fn save_docx_batch_copy_to_path(
+    source_path: &Path,
+    target_path: &Path,
+    expected_signature: &str,
+    expected_output_digest: &str,
+    operations: &[DocxPatchOperation],
+) -> Result<DocxSavedCopyReport, String> {
+    if target_path == source_path {
+        return Err("批量可靠另存禁止覆盖源 DOCX".into());
+    }
+    if target_path.exists() {
+        return Err("目标文件已存在；批量可靠另存不会覆盖现有文件".into());
+    }
+    let (producer_evidence, missing_producer_evidence) = docx_producer_evidence()?;
+    if !missing_producer_evidence.is_empty() {
+        return Err(format!(
+            "DOCX 生产者重开证据尚未齐全: {}",
+            missing_producer_evidence.join(", ")
+        ));
+    }
+    let metadata = source_path
+        .metadata()
+        .map_err(|error| format!("读取 DOCX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_DOCX_FILE_BYTES {
+        return Err("DOCX 文件超过 64 MiB 批量可靠另存上限".into());
+    }
+    let source_signature = file_signature(&metadata);
+    if source_signature != expected_signature {
+        return Err("DOCX 已被外部修改，请重新打开后再另存批量草稿".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 DOCX 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let (batch_report, output) = build_docx_batch_operations(&source, operations)?;
+    if batch_report.output_digest != expected_output_digest.trim().to_ascii_lowercase() {
+        return Err("DOCX 批量编辑内容或隔离输出已变化，请重新验证后再另存".into());
+    }
+    if !batch_report.unchanged_parts_verified
+        || !batch_report.structural_reparse_verified
+        || !batch_report.semantic_reparse_verified
+        || !batch_report.deterministic_replay_verified
+    {
+        return Err("DOCX 批量隔离补丁未通过完整保真、语义与重放门禁".into());
+    }
+
+    let source_before_write =
+        fs::read(source_path).map_err(|error| format!("另存前复核源 DOCX 失败: {error}"))?;
+    let metadata_before_write = source_path
+        .metadata()
+        .map_err(|error| format!("另存前复核源 DOCX 元数据失败: {error}"))?;
+    if source_before_write != source
+        || file_signature(&metadata_before_write) != source_signature
+        || format!("{:x}", Sha256::digest(&source_before_write)) != source_digest
+    {
+        return Err("DOCX 在批量隔离验证期间发生变化，请重新打开后再另存".into());
+    }
+
+    write_new_bytes(target_path, &output)?;
+    let verification = (|| -> Result<(String, String), String> {
+        let saved = fs::read(target_path)
+            .map_err(|error| format!("目标已创建，但无法复读批量保存字节: {error}"))?;
+        let target_digest = format!("{:x}", Sha256::digest(&saved));
+        if saved != output || target_digest != batch_report.output_digest {
+            return Err("目标落盘字节与批量隔离验证输出不一致".into());
+        }
+        parse_docx(&saved).map_err(|error| format!("批量目标 DOCX 结构复读失败: {error}"))?;
+        let (_, replay) = build_docx_batch_operations(&source, operations)?;
+        if replay != saved {
+            return Err("批量目标 DOCX 语义重放结果与已验证输出不一致".into());
+        }
+        let source_after = fs::read(source_path)
+            .map_err(|error| format!("批量另存后复核源 DOCX 失败: {error}"))?;
+        let source_metadata_after = source_path
+            .metadata()
+            .map_err(|error| format!("批量另存后复核源 DOCX 元数据失败: {error}"))?;
+        if source_after != source
+            || file_signature(&source_metadata_after) != source_signature
+            || format!("{:x}", Sha256::digest(&source_after)) != source_digest
+        {
+            return Err("源 DOCX 在批量另存期间发生变化".into());
+        }
+        let target_metadata = target_path
+            .metadata()
+            .map_err(|error| format!("读取批量保存后 DOCX 元数据失败: {error}"))?;
+        Ok((target_digest, file_signature(&target_metadata)))
+    })();
+    let (target_digest, target_signature) = match verification {
+        Ok(value) => value,
+        Err(error) => {
+            remove_created_docx_if_exact(target_path, &output);
+            return Err(format!("批量可靠另存验证失败，已清理未验收副本: {error}"));
+        }
+    };
+
+    Ok(DocxSavedCopyReport {
+        status: "batch_saved_verified".into(),
+        engine: batch_report.engine,
+        target_path: target_path.to_string_lossy().into_owned(),
+        target_signature,
+        target_digest,
+        source_signature,
+        source_unchanged: true,
+        output_bytes: output.len(),
+        changed_parts: batch_report.changed_parts,
+        unchanged_parts_verified: true,
+        structural_reopen_verified: true,
+        semantic_reopen_verified: true,
+        producer_evidence,
+    })
+}
+
 fn save_docx_patch_source_to_path(
     source_path: &Path,
     expected_signature: &str,
@@ -1381,6 +1491,33 @@ pub async fn save_docx_patch_copy(
     })
     .await
     .map_err(|error| format!("DOCX C2E 可靠另存任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn save_docx_patch_batch_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_signature: String,
+    expected_output_digest: String,
+    operations: Vec<DocxPatchOperation>,
+) -> Result<DocxSavedCopyReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["docx"])?;
+    let target_file_name = validate_docx_copy_file_name(&target_file_name)?;
+    let target_path =
+        guard.resolve_file_for_write(source_path.with_file_name(target_file_name), &["docx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_docx_batch_copy_to_path(
+            &source_path,
+            &target_path,
+            &expected_signature,
+            &expected_output_digest,
+            &operations,
+        )
+    })
+    .await
+    .map_err(|error| format!("DOCX 批量可靠另存任务失败: {error}"))?
 }
 
 #[tauri::command]
@@ -1870,7 +2007,7 @@ mod tests {
     }
 
     #[test]
-    fn ux33c_batches_distinct_targets_for_all_verified_producers() {
+    fn ux33e_batches_distinct_targets_and_reliably_saves_copies_for_all_verified_producers() {
         let fixtures = [
             (
                 "microsoft-word-16",
@@ -1888,6 +2025,19 @@ mod tests {
             ),
         ];
         for (producer, source) in fixtures {
+            let base = std::env::temp_dir().join(format!(
+                "longedit-docx-ux33e-batch-copy-{producer}-{}-{}",
+                std::process::id(),
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            ));
+            fs::create_dir_all(&base).unwrap();
+            let source_path = base.join("source.docx");
+            let target_path = base.join("batch-copy.docx");
+            fs::write(&source_path, source).unwrap();
+            let signature = file_signature(&source_path.metadata().unwrap());
             let model = parse_docx(source).unwrap();
             let targets = inspect_docx_editable_text_targets(source, &model).unwrap();
             assert!(targets.len() >= 2, "{producer} needs two safe targets");
@@ -1915,6 +2065,31 @@ mod tests {
             assert!(output_model
                 .plain_text
                 .contains(&format!("LongEdit batch {producer} target 2")));
+            let saved = save_docx_batch_copy_to_path(
+                &source_path,
+                &target_path,
+                &signature,
+                &report.output_digest,
+                &operations,
+            )
+            .unwrap();
+            assert_eq!(saved.status, "batch_saved_verified");
+            assert!(saved.source_unchanged);
+            assert!(saved.unchanged_parts_verified);
+            assert!(saved.structural_reopen_verified);
+            assert!(saved.semantic_reopen_verified);
+            assert_eq!(fs::read(&source_path).unwrap(), source);
+            assert_eq!(fs::read(&target_path).unwrap(), output);
+            assert!(save_docx_batch_copy_to_path(
+                &source_path,
+                &target_path,
+                &signature,
+                &report.output_digest,
+                &operations,
+            )
+            .unwrap_err()
+            .contains("已存在"));
+            fs::remove_dir_all(base).unwrap();
         }
     }
 

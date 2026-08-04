@@ -48,12 +48,14 @@ requireTokens(view, 'DOCX multi-target draft workspace', [
   'aria-label="DOCX 修改清单"',
   '{{ draftCount }}/32',
   "'preview_docx_patch_batch_isolated_copy'",
+  "'save_docx_patch_batch_copy'",
   "'save_docx_patch_batch_source'",
   "'batch_isolated_verified'",
+  "'batch_saved_verified'",
   "'batch_source_saved_verified'",
   'previewReport.value.deterministicReplayVerified',
   'previewReport.value.temporaryCopyReopenVerified',
-  '批量另存副本将在下一阶段接入',
+  'message.success(`已可靠另存并验证 ${operations.length} 项修改',
 ])
 requireTokens(view, 'DOCX unsaved draft protection', [
   "title: 'DOCX 还有未保存修改'",
@@ -85,4 +87,4 @@ if ((registration.match(/save_docx_patch_source/g) || []).length < 2) {
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
 if (!/\| UX-33 \|[^\n]+\| 进行中 \|/.test(audit)) fail('UX-33 must remain in progress after the source-save baseline.')
 
-console.log('DOCX page editing contract passed: paged canvas, multi-target drafts, batch verification/source save, guarded navigation, and explicit copy-save boundary.')
+console.log('DOCX page editing contract passed: paged canvas, multi-target drafts, batch verification, reliable copy/source saves, and guarded navigation.')

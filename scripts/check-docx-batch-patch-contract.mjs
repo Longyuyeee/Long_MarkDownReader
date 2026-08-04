@@ -27,8 +27,17 @@ requireTokens(backend, 'DOCX batch reliable source save', [
   '批量可靠保存验证失败，已恢复原文件',
   'status: "batch_source_saved_verified".into()',
 ])
+requireTokens(backend, 'DOCX batch reliable copy save', [
+  'fn save_docx_batch_copy_to_path(',
+  'pub async fn save_docx_patch_batch_copy(',
+  'write_new_bytes(target_path, &output)?;',
+  'remove_created_docx_if_exact(target_path, &output);',
+  'status: "batch_saved_verified".into()',
+  'assert_eq!(fs::read(&source_path).unwrap(), source);',
+  'assert_eq!(fs::read(&target_path).unwrap(), output);',
+])
 requireTokens(backend, 'DOCX batch producer evidence', [
-  'ux33c_batches_distinct_targets_for_all_verified_producers',
+  'ux33e_batches_distinct_targets_and_reliably_saves_copies_for_all_verified_producers',
   'ux33c_rejects_duplicate_anchor_and_reliably_saves_batch',
   'microsoft-word-16.docx',
   'wps-writer.docx',
@@ -36,7 +45,7 @@ requireTokens(backend, 'DOCX batch producer evidence', [
 ])
 
 const registration = read('src-tauri/src/lib.rs')
-for (const command of ['preview_docx_patch_batch_isolated_copy', 'save_docx_patch_batch_source']) {
+for (const command of ['preview_docx_patch_batch_isolated_copy', 'save_docx_patch_batch_copy', 'save_docx_patch_batch_source']) {
   if ((registration.match(new RegExp(command, 'g')) || []).length < 2) {
     fail(`${command} is not imported and registered.`)
   }
@@ -45,4 +54,4 @@ for (const command of ['preview_docx_patch_batch_isolated_copy', 'save_docx_patc
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
 if (!/\| UX-33 \|[^\n]+\| 进行中 \|/.test(audit)) fail('UX-33 must remain in progress until the multi-target UI is delivered and retested.')
 
-console.log('DOCX batch patch contract passed: bounded distinct anchors, final semantics, deterministic replay, reliable source save, rollback, and three-producer tests.')
+console.log('DOCX batch patch contract passed: bounded distinct anchors, deterministic replay, reliable copy/source saves, rollback or cleanup, and three-producer tests.')
