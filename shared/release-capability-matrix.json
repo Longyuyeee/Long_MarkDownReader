@@ -22,9 +22,9 @@
     {
       "id": "lightweight-source",
       "dependency": "none",
-      "sourcePolicy": "受签名冲突保护的原文件保存",
+      "sourcePolicy": "仅在用户点击保存后，以签名冲突保护覆盖原文件",
       "privacyBoundary": "内容仅在本机工作区处理",
-      "knownLimitations": ["不包含编译、执行、调试、数据库连接或语言服务"]
+      "knownLimitations": ["补全和诊断仅覆盖语言关键字、HTML 标签、当前文档词及轻量源码问题，不包含编译、执行、调试、数据库连接或语言服务；HTML 安全预览不运行脚本或加载外部资源"]
     },
     {
       "id": "professional-log",

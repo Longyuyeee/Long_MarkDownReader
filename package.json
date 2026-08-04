@@ -92,6 +92,7 @@
     "check:markdown-code-theme-contrast": "node scripts/check-markdown-code-theme-contrast.mjs",
     "check:code-editor-theme-contract": "node scripts/check-code-editor-theme-contract.mjs",
     "check:log-workspace-editing": "node scripts/check-log-workspace-editing.mjs",
+    "check:code-html-workspace": "node scripts/check-code-html-workspace.mjs",
     "check:json-workspace-experience": "node scripts/check-json-workspace-experience.mjs",
     "check:text-workspace-layout": "node scripts/check-text-workspace-layout.mjs",
     "check:external-change-identity": "node scripts/check-external-change-identity.mjs",
@@ -214,12 +215,14 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "6.20.3",
     "@codemirror/commands": "^6.10.4",
     "@codemirror/lang-json": "6.0.2",
     "@codemirror/lang-xml": "6.1.0",
     "@codemirror/lang-yaml": "6.1.3",
     "@codemirror/language": "^6.12.4",
     "@codemirror/legacy-modes": "6.5.3",
+    "@codemirror/lint": "6.9.7",
     "@codemirror/search": "^6.7.1",
     "@codemirror/state": "^6.7.1",
     "@codemirror/view": "^6.43.6",

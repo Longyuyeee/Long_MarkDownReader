@@ -100,7 +100,7 @@
       "routeName": "TextEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "轻量代码编辑", "saveMode": "overwrite", "description": "JavaScript 支持语法高亮、查找替换、行跳转、全文检索和可靠保存；不包含编译、调试或语言服务。" },
+      "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "JavaScript 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含编译、调试或语言服务。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
@@ -113,7 +113,7 @@
       "routeName": "TextEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "轻量代码编辑", "saveMode": "overwrite", "description": "TypeScript 支持语法高亮、查找替换、行跳转、全文检索和可靠保存；不包含类型检查、编译、调试或语言服务。" },
+      "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "TypeScript 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含类型检查、编译、调试或语言服务。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
@@ -126,7 +126,7 @@
       "routeName": "TextEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "轻量代码编辑", "saveMode": "overwrite", "description": "Python 支持语法高亮、查找替换、行跳转、全文检索和可靠保存；不包含运行、调试或语言服务。" },
+      "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Python 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含运行、调试或语言服务。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
@@ -139,7 +139,7 @@
       "routeName": "TextEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "轻量代码编辑", "saveMode": "overwrite", "description": "Rust 支持语法高亮、查找替换、行跳转、全文检索和可靠保存；不包含构建、调试或语言服务。" },
+      "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Rust 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
@@ -152,7 +152,7 @@
       "routeName": "TextEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "轻量代码编辑", "saveMode": "overwrite", "description": "Go 支持语法高亮、查找替换、行跳转、全文检索和可靠保存；不包含构建、调试或语言服务。" },
+      "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Go 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
@@ -165,7 +165,7 @@
       "routeName": "TextEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "轻量代码编辑", "saveMode": "overwrite", "description": "Java 与 Kotlin 支持语法高亮、查找替换、行跳转、全文检索和可靠保存；不包含构建、调试或语言服务。" },
+      "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Java 与 Kotlin 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
@@ -178,7 +178,7 @@
       "routeName": "TextEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "轻量代码编辑", "saveMode": "overwrite", "description": "C、C++ 与 C# 支持语法高亮、查找替换、行跳转、全文检索和可靠保存；不包含构建、调试或语言服务。" },
+      "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "C、C++ 与 C# 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
@@ -191,7 +191,7 @@
       "routeName": "TextEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "轻量代码编辑", "saveMode": "overwrite", "description": "Shell 与 PowerShell 支持语法高亮、查找替换、行跳转、全文检索和可靠保存；不执行脚本。" },
+      "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Shell 与 PowerShell 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入且不执行脚本。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
@@ -204,7 +204,7 @@
       "routeName": "TextEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "轻量代码编辑", "saveMode": "overwrite", "description": "SQL 支持语法高亮、查找替换、行跳转、全文检索和可靠保存；不连接或执行数据库语句。" },
+      "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "SQL 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不连接或执行数据库语句。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
@@ -217,7 +217,7 @@
       "routeName": "TextEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "轻量代码编辑", "saveMode": "overwrite", "description": "HTML、CSS、SCSS、Less 与 Vue 单文件支持基础语法高亮、查找替换、行跳转、全文检索和可靠保存；不包含构建或语言服务。" },
+      "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "HTML、CSS、SCSS、Less 与 Vue 支持语法高亮、括号匹配、自动缩进、标签/关键字/文档词补全、基础诊断和签名保护保存；HTML 可预览当前草稿，预览会移除危险能力并禁止外部资源，只有点击保存才写入。" },
       "externalPolicy": "import",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null

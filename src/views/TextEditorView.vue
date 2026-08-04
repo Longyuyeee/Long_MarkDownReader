@@ -18,6 +18,16 @@
       </div>
 
       <div class="editor-actions">
+        <n-button-group v-if="isHtmlDocument" size="small" aria-label="HTML 工作模式">
+          <n-button :type="viewMode === 'source' ? 'primary' : 'default'" @click="viewMode = 'source'">
+            <template #icon><n-icon :component="CodeIcon" /></template>
+            源码
+          </n-button>
+          <n-button :type="viewMode === 'preview' ? 'primary' : 'default'" @click="openSafePreview">
+            <template #icon><n-icon :component="EyeIcon" /></template>
+            安全预览
+          </n-button>
+        </n-button-group>
         <n-button
           v-if="isSensitiveEnv"
           secondary
@@ -28,16 +38,16 @@
         >
           {{ sensitiveValuesHidden ? '显示并编辑变量值' : '重新遮罩变量值' }}
         </n-button>
-        <n-button quaternary circle size="small" title="撤销" :disabled="loading || readOnly" @click="runUndo">
+        <n-button v-if="viewMode === 'source'" quaternary circle size="small" title="撤销" :disabled="loading || readOnly" @click="runUndo">
           <template #icon><n-icon :component="UndoIcon" /></template>
         </n-button>
-        <n-button quaternary circle size="small" title="重做" :disabled="loading || readOnly" @click="runRedo">
+        <n-button v-if="viewMode === 'source'" quaternary circle size="small" title="重做" :disabled="loading || readOnly" @click="runRedo">
           <template #icon><n-icon :component="RedoIcon" /></template>
         </n-button>
-        <n-button quaternary circle size="small" title="查找与替换" :disabled="loading" @click="openFind">
+        <n-button v-if="viewMode === 'source'" quaternary circle size="small" title="查找与替换" :disabled="loading" @click="openFind">
           <template #icon><n-icon :component="SearchIcon" /></template>
         </n-button>
-        <n-button quaternary circle size="small" title="跳转到行" :disabled="loading" @click="openGoToLine">
+        <n-button v-if="viewMode === 'source'" quaternary circle size="small" title="跳转到行" :disabled="loading" @click="openGoToLine">
           <template #icon><n-icon :component="ListOrderedIcon" /></template>
         </n-button>
         <n-button quaternary circle size="small" title="重新从磁盘读取" :disabled="loading || saving" @click="reloadCurrentEncoding">
@@ -50,7 +60,7 @@
       </div>
     </header>
 
-    <section class="format-bar" aria-label="文本保存策略">
+    <section v-if="viewMode === 'source'" class="format-bar" aria-label="文本保存策略">
       <label>
         <span>读取</span>
         <select v-model="readEncoding" :disabled="loading" @change="reloadCurrentEncoding">
@@ -82,12 +92,19 @@
         <input v-model="saveFinalNewline" type="checkbox" :disabled="loading || readOnly" @change="markPolicyDirty">
         <span>末尾换行</span>
       </label>
-      <label class="autosave-option">
-        <span>自动保存</span>
-        <n-switch v-model:value="textAutoSaveEnabled" size="small" :disabled="readOnly" />
-      </label>
+      <span v-if="format?.userCapability.level === 'basic-edit'" class="diagnostic-label">
+        {{ sourceDiagnostics.length ? `基础检查 ${sourceDiagnostics.length} 项` : '基础检查通过' }}
+      </span>
       <span v-if="encodingConfidence" class="confidence-label">{{ confidenceLabel }}</span>
       <span v-if="readOnlyReason" class="readonly-label">{{ readOnlyLabel }}</span>
+    </section>
+
+    <section v-else class="preview-bar" aria-label="安全网页预览说明">
+      <div>
+        <strong>安全网页预览</strong>
+        <span>脚本、内联事件、嵌入页面、表单提交和外部资源已隔离。</span>
+      </div>
+      <span>预览当前草稿，不会自动保存</span>
     </section>
 
     <main class="editor-stage">
@@ -100,15 +117,24 @@
         <p>{{ loadError }}</p>
         <n-button size="small" @click="load">重试</n-button>
       </div>
-      <div v-show="!loading && !loadError" ref="editorHost" class="editor-host"></div>
+      <div v-show="!loading && !loadError && viewMode === 'source'" ref="editorHost" class="editor-host"></div>
+      <iframe
+        v-if="!loading && !loadError && viewMode === 'preview'"
+        class="safe-preview-frame"
+        title="HTML 安全网页预览"
+        sandbox=""
+        referrerpolicy="no-referrer"
+        :srcdoc="safePreviewHtml"
+      />
     </main>
 
     <footer class="status-bar">
-      <div>
+      <div v-if="viewMode === 'source'">
         <span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span>
         <span>{{ lineCount }} 行</span>
         <span>{{ characterCount.toLocaleString() }} 字符</span>
       </div>
+      <div v-else><span>安全预览当前内存草稿</span></div>
       <div>
         <span>{{ displayEncoding }}</span>
         <span>{{ saveLineEnding.toUpperCase() }}</span>
@@ -126,7 +152,9 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { basicSetup } from 'codemirror'
+import { autocompletion } from '@codemirror/autocomplete'
 import { undo, redo } from '@codemirror/commands'
+import { lintGutter, linter } from '@codemirror/lint'
 import { openSearchPanel, gotoLine } from '@codemirror/search'
 import { Compartment, EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
@@ -145,6 +173,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
 import {
   ArrowLeft as ArrowLeftIcon,
+  Code2 as CodeIcon,
+  Eye as EyeIcon,
   ListOrdered as ListOrderedIcon,
   Redo2 as RedoIcon,
   RefreshCw as RefreshIcon,
@@ -156,6 +186,12 @@ import { findFileFormat } from '../config/fileFormats'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { type TabInfo, useAppStore } from '../store/app'
+import {
+  MAX_DIAGNOSTIC_SCAN_CHARS,
+  codeCompletionSource,
+  collectBasicSourceDiagnostics,
+} from '../utils/codeEditingSupport'
+import { createSafeHtmlPreview } from '../utils/safeHtmlPreview'
 
 interface TextDocumentError {
   code?: string
@@ -211,10 +247,7 @@ const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => textPath.value.split(/[\\/]/).pop() || '未命名文本')
 const format = computed(() => findFileFormat(textPath.value))
 const isSensitiveEnv = computed(() => format.value?.id === 'env')
-const textAutoSaveEnabled = computed({
-  get: () => store.textAutoSaveEnabled,
-  set: (value: boolean) => { void store.updateConfig({ textAutoSaveEnabled: value }) },
-})
+const isHtmlDocument = computed(() => /\.html?$/i.test(textPath.value))
 const currentTab = computed(() => store.tabs.find(tab => tab.path === textPath.value))
 const loading = ref(true)
 const saving = ref(false)
@@ -240,11 +273,13 @@ const cursorLine = ref(1)
 const cursorColumn = ref(1)
 const lineCount = ref(1)
 const characterCount = ref(0)
+const viewMode = ref<'source' | 'preview'>('source')
+const diagnosticSource = ref('')
+const previewSource = ref('')
 const readOnlyCompartment = new Compartment()
 let editor: EditorView | null = null
 let applyingDocument = false
 let loadGeneration = 0
-let autoSaveTimer: ReturnType<typeof setTimeout> | null = null
 
 const readOnly = computed(() => Boolean(readOnlyReason.value))
 const sensitiveValuesHidden = computed(() => isSensitiveEnv.value && !sensitiveRevealed.value)
@@ -259,17 +294,8 @@ const confidenceLabel = computed(() => ({
   detected: '编码自动检测',
   'user-selected': '编码由用户指定',
 }[encodingConfidence.value] || encodingConfidence.value))
-
-const clearAutoSave = () => {
-  if (autoSaveTimer) clearTimeout(autoSaveTimer)
-  autoSaveTimer = null
-}
-
-const scheduleAutoSave = () => {
-  clearAutoSave()
-  if (!textAutoSaveEnabled.value || loading.value || readOnly.value) return
-  autoSaveTimer = setTimeout(() => { void save(true) }, 1500)
-}
+const sourceDiagnostics = computed(() => collectBasicSourceDiagnostics(diagnosticSource.value, isHtmlDocument.value))
+const safePreviewHtml = computed(() => createSafeHtmlPreview(previewSource.value))
 
 const normalizeEncoding = (value: string) => {
   const normalized = value.toLowerCase()
@@ -360,14 +386,20 @@ const editorExtensions = (isReadOnly: boolean) => [
     EditorView.editable.of(!isReadOnly),
   ]),
   EditorView.lineWrapping,
+  autocompletion({ override: [codeCompletionSource(format.value?.id || '', isHtmlDocument.value)] }),
+  linter(view => collectBasicSourceDiagnostics(
+    view.state.sliceDoc(0, Math.min(view.state.doc.length, MAX_DIAGNOSTIC_SCAN_CHARS)),
+    isHtmlDocument.value,
+  ), { delay: 500 }),
+  lintGutter(),
   EditorView.updateListener.of(update => {
     if (update.docChanged) {
+      diagnosticSource.value = update.state.sliceDoc(0, Math.min(update.state.doc.length, MAX_DIAGNOSTIC_SCAN_CHARS))
       characterCount.value = update.state.doc.length
       lineCount.value = update.state.doc.lines
       if (!applyingDocument) {
         dirty.value = true
         syncCurrentTab(true)
-        scheduleAutoSave()
       }
     }
     if (update.docChanged || update.selectionSet) {
@@ -396,11 +428,11 @@ const replaceDocument = (content: string, isReadOnly: boolean) => {
   editor.dispatch({ effects: EditorView.scrollIntoView(0, { y: 'start', yMargin: 8 }) })
   applyingDocument = false
   characterCount.value = content.length
+  diagnosticSource.value = content.slice(0, MAX_DIAGNOSTIC_SCAN_CHARS)
   lineCount.value = editor.state.doc.lines
   cursorLine.value = 1
   cursorColumn.value = 1
   dirty.value = false
-  clearAutoSave()
 }
 
 const maskEnvValues = (content: string) => content
@@ -487,7 +519,6 @@ const readRange = (offset: number, encoding?: string) => invoke<TextDocumentRang
 
 const load = async (encoding?: string, discardDraft = false) => {
   const generation = ++loadGeneration
-  clearAutoSave()
   loading.value = true
   loadError.value = ''
   try {
@@ -544,9 +575,8 @@ const loadNextRange = async () => {
   }
 }
 
-const save = async (isAutoSave = false) => {
+const save = async () => {
   if (!editor || readOnly.value || !dirty.value || saving.value || !format.value) return
-  clearAutoSave()
   saving.value = true
   const content = editor.state.doc.toString()
   try {
@@ -575,9 +605,8 @@ const save = async (isAutoSave = false) => {
       modified.value = snapshot.modified
       dirty.value = true
       syncCurrentTab(true)
-      scheduleAutoSave()
     }
-    if (!isAutoSave) message.success('文本已安全保存')
+    message.success('文本已安全保存')
   } catch (cause) {
     const error = cause as TextDocumentError
     if (error?.code === 'external-modified') {
@@ -608,7 +637,6 @@ const markPolicyDirty = () => {
   if (!loading.value && !readOnly.value) {
     dirty.value = true
     syncCurrentTab(true)
-    scheduleAutoSave()
   }
 }
 
@@ -616,6 +644,11 @@ const runUndo = () => { if (editor) undo(editor) }
 const runRedo = () => { if (editor) redo(editor) }
 const openFind = () => { if (editor) { openSearchPanel(editor); editor.focus() } }
 const openGoToLine = () => { if (editor) { gotoLine(editor); editor.focus() } }
+const openSafePreview = () => {
+  if (!editor || !isHtmlDocument.value) return
+  previewSource.value = editor.state.doc.toString()
+  viewMode.value = 'preview'
+}
 const revealSensitiveValues = () => {
   dialog.warning({
     title: '显示敏感变量值？',
@@ -652,11 +685,8 @@ const formatBytes = (value: number) => {
 watch(saveEncoding, value => {
   if (value !== 'utf-8') saveBom.value = 'none'
 })
-watch(textAutoSaveEnabled, enabled => {
-  if (enabled && dirty.value) scheduleAutoSave()
-  else clearAutoSave()
-})
 watch([textPath, isExternal], () => {
+  viewMode.value = 'source'
   sensitiveRevealed.value = Boolean(
     isSensitiveEnv.value && store.tabs.find(tab => tab.path === textPath.value)?.isDirty,
   )
@@ -669,7 +699,6 @@ onMounted(async () => {
   window.addEventListener('keydown', handleKeydown)
 })
 onBeforeUnmount(() => {
-  clearAutoSave()
   editor?.destroy()
   editor = null
   window.removeEventListener('keydown', handleKeydown)
@@ -699,11 +728,13 @@ onBeforeUnmount(() => {
 .text-tabs { grid-area: tabs; }
 .text-toolbar { grid-area: toolbar; }
 .format-bar { grid-area: format; }
+.preview-bar { grid-area: format; }
 .editor-stage { grid-area: editor; }
 .status-bar { grid-area: status; }
 
 .text-toolbar,
 .format-bar,
+.preview-bar,
 .status-bar {
   min-width: 0;
   display: flex;
@@ -762,6 +793,32 @@ onBeforeUnmount(() => {
   background: var(--theme-surface-2);
 }
 
+.preview-bar {
+  justify-content: space-between;
+  padding: 0 14px;
+  color: var(--theme-text-secondary);
+  background: color-mix(in srgb, var(--theme-primary) 7%, var(--theme-surface));
+  font-size: var(--text-compact);
+}
+
+.preview-bar > div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.preview-bar strong {
+  color: var(--theme-primary);
+  font-size: 12px;
+}
+
+.preview-bar span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .format-bar label {
   display: flex;
   align-items: center;
@@ -795,6 +852,13 @@ onBeforeUnmount(() => {
   font-size: var(--text-compact);
 }
 
+.diagnostic-label {
+  margin-left: auto;
+  color: var(--theme-text-secondary);
+  font-size: var(--text-compact);
+  white-space: nowrap;
+}
+
 .readonly-label {
   padding: 3px 7px;
   border: 1px solid rgba(184, 92, 46, 0.2);
@@ -814,6 +878,13 @@ onBeforeUnmount(() => {
 .editor-host {
   width: 100%;
   height: 100%;
+}
+
+.safe-preview-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
 }
 
 .editor-state {
@@ -866,6 +937,8 @@ onBeforeUnmount(() => {
 @media (max-width: 900px) {
   .text-workspace { grid-template-rows: auto 48px auto minmax(0, 1fr) 32px; }
   .format-bar { min-height: 42px; padding: 6px 10px; gap: 8px; overflow-x: auto; }
+  .preview-bar { min-height: 42px; padding: 6px 10px; }
+  .preview-bar > div span { display: none; }
   .format-bar label > span:first-child, .confidence-label { display: none; }
   .document-title strong { max-width: 32vw; }
   .status-bar { padding: 0 8px; }

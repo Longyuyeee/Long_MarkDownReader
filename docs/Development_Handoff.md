@@ -30,6 +30,8 @@
 
 > A0N 已完成 LOG 专业工作区：查看模式继续使用范围读取、筛选、级别高亮、自动刷新和尾部跟随；8 MiB 以内可在明确确认影响后进入统一 CodeMirror 编辑器，支持撤销/重做且只有点击保存才写源文件。专用后端命令要求确认并以源签名拒绝并发覆盖，通用文本写入不能绕过。UX-29 为待安装包复测。下一步处理 UX-30，统一 HTML 与代码格式的专业编辑体验，并加入不执行危险脚本、不请求外部资源的安全网页预览。详见 [`A0N_Professional_Log_Viewer_Edit_Audit_2026-08-04.md`](./A0N_Professional_Log_Viewer_Edit_Audit_2026-08-04.md)。
 
+> A0O 已完成 HTML/代码专业工作区：十类源码格式共用行号、语法高亮、括号匹配、自动缩进、有界关键字/标签/文档词补全和轻量诊断；HTML 默认源码，可切换到 DOM 净化、严格 CSP 与无权限 sandbox 三重隔离的安全预览。TextEditor 的历史自动保存已移除，编辑仅更新草稿，只有用户点击保存才以签名保护写盘。UX-30 为待安装包复测。下一步处理 UX-31，优化 XLSX 工作区布局、冻结区域视觉和高级数据对象说明。详见 [`A0O_Code_and_Safe_HTML_Workspace_Audit_2026-08-04.md`](./A0O_Code_and_Safe_HTML_Workspace_Audit_2026-08-04.md)。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 

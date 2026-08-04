@@ -3,7 +3,7 @@ import { ODT_PREVIEW_FORMAT } from './odt-release-state-machine.mjs'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, docxPatchKernel, pptxKernel, pptxEditKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, pptxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, pptxReader, pptxObjectContent, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, docxPatchKernel, pptxKernel, pptxEditKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, pptxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, pptxReader, pptxObjectContent, logViewer, workspaceTabs, router, app, appStore, settings, canvas, mindmap, opml, knowledgeIndex, codeEditingSupport, safeHtmlPreview] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -45,6 +45,8 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src/views/MindMapView.vue'),
   read('src-tauri/src/formats/opml.rs'),
   read('src-tauri/src/services/knowledge_index.rs'),
+  read('src/utils/codeEditingSupport.ts'),
+  read('src/utils/safeHtmlPreview.ts'),
 ])
 const registry = JSON.parse(registryText)
 const failures = []
@@ -317,7 +319,18 @@ requireText(textEditor, 'expectedSignature', 'A2 TXT saves must retain external 
 requireText(textEditor, 'readEncoding', 'A2 TXT editor must separate source decoding from save conversion')
 requireText(textEditor, "'read_external_text_document'", 'A2 TXT editor must support authorized external reads')
 requireText(textEditor, "'write_external_text_document'", 'A2 TXT editor must support authorized external writes')
-requireText(textEditor, 'scheduleAutoSave', 'A2 TXT editor must expose debounced auto-save')
+forbid(textEditor, /scheduleAutoSave|save\(true\)|setTimeout\(\(\) => \{ void save/, 'A2 TXT/code editor must never write without an explicit save command')
+requireText(textEditor, "from '@codemirror/autocomplete'", 'A4 code editor must expose bounded source completion')
+requireText(textEditor, "from '@codemirror/lint'", 'A4 code editor must expose lightweight diagnostics')
+requireText(textEditor, "viewMode === 'preview'", 'A4 HTML editor must expose safe preview mode')
+requireText(textEditor, 'sandbox=""', 'A4 HTML preview must use a no-permission iframe sandbox')
+requireText(textEditor, 'referrerpolicy="no-referrer"', 'A4 HTML preview must suppress referrer data')
+requireText(codeEditingSupport, 'MAX_COMPLETION_SCAN_CHARS', 'A4 source completion must use a bounded document scan')
+requireText(codeEditingSupport, 'MAX_DIAGNOSTIC_SCAN_CHARS', 'A4 source diagnostics must use a bounded document scan')
+requireText(safeHtmlPreview, "default-src 'none'", 'A4 HTML preview must block resources by default')
+requireText(safeHtmlPreview, "script-src 'none'", 'A4 HTML preview must block script execution')
+requireText(safeHtmlPreview, "connect-src 'none'", 'A4 HTML preview must block network connections')
+requireText(safeHtmlPreview, "form-action 'none'", 'A4 HTML preview must block form submission')
 requireText(textEditor, 'registerCurrentTab', 'A2 TXT editor must register with unified session tabs')
 requireText(textEditor, 'syncCurrentTab', 'A2 TXT drafts must survive workspace route changes')
 requireText(jsonEditor, "from '@codemirror/lang-json'", 'A3 JSON source view must use the CodeMirror JSON language package')
@@ -642,8 +655,7 @@ requireText(appStore, '.filter(tab => !tab.external)', 'external authorization t
 requireText(app, 'confirmDiscardUnsaved', 'application exit must coordinate dirty session tabs')
 requireText(app, "'pick_external_editable_file'", 'external picker must accept every registered editable text format')
 requireText(app, "external: '1'", 'external TXT routes must retain their authorization context')
-requireText(appStore, 'textAutoSaveEnabled', 'TXT auto-save preference must be persisted')
-requireText(settings, 'TXT 自动保存', 'TXT auto-save preference must be user configurable')
+forbid(settings, /TXT 自动保存/, 'settings must not promise background TXT writes')
 requireText(files, 'file_format_registry()', 'workspace scanning must consume registry')
 requireText(externalAccess, 'file_format_for_path', 'external authorization must consume registry')
 requireText(index, 'format.adapters.indexer', 'index dispatch must consume registered adapters')
