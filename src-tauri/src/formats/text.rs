@@ -57,10 +57,20 @@ pub struct TextDocumentSnapshot {
     pub line_ending: String,
     pub has_final_newline: bool,
     pub signature: String,
+    pub content_digest: String,
     pub size: u64,
     pub modified: u128,
     pub read_only_reason: Option<String>,
     pub path: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TextDocumentIdentity {
+    pub signature: String,
+    pub content_digest: String,
+    pub size: u64,
+    pub modified_nanos: String,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -157,19 +167,34 @@ pub fn read_text_snapshot_with_options(
     }
     let content = text.into_owned();
     let line_ending = detect_line_ending(&content);
+    let identity = text_document_identity(&metadata, &bytes);
     Ok(TextDocumentSnapshot {
         encoding: encoding.name().to_string(),
         encoding_confidence: encoding_confidence(&bytes, encoding, selected_encoding.is_some()),
         bom: bom.into(),
         line_ending: line_ending.into(),
         has_final_newline: has_final_newline(&content),
-        signature: file_signature(&metadata, &bytes),
+        signature: identity.signature,
+        content_digest: identity.content_digest,
         size: metadata.len(),
         modified: modified_nanos(&metadata),
         read_only_reason: metadata.permissions().readonly().then(|| "readonly".into()),
         path: path.to_string_lossy().into_owned(),
         content,
     })
+}
+
+pub fn read_text_identity(path: &Path) -> Result<TextDocumentIdentity, TextDocumentError> {
+    let metadata = path.metadata().map_err(|error| {
+        TextDocumentError::simple(
+            "metadata-read-failed",
+            format!("读取文本元数据失败: {error}"),
+        )
+    })?;
+    let bytes = fs::read(path).map_err(|error| {
+        TextDocumentError::simple("read-failed", format!("读取文本文件失败: {error}"))
+    })?;
+    Ok(text_document_identity(&metadata, &bytes))
 }
 
 pub fn read_text_range_with_options(
@@ -462,6 +487,15 @@ fn file_signature(metadata: &fs::Metadata, bytes: &[u8]) -> String {
     )
 }
 
+fn text_document_identity(metadata: &fs::Metadata, bytes: &[u8]) -> TextDocumentIdentity {
+    TextDocumentIdentity {
+        signature: file_signature(metadata, bytes),
+        content_digest: format!("{:x}", md5::compute(bytes)),
+        size: metadata.len(),
+        modified_nanos: modified_nanos(metadata).to_string(),
+    }
+}
+
 fn modified_nanos(metadata: &fs::Metadata) -> u128 {
     metadata
         .modified()
@@ -501,6 +535,20 @@ mod tests {
         assert_eq!(snapshot.line_ending, "crlf");
         assert!(snapshot.has_final_newline);
         assert!(snapshot.signature.contains(':'));
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn identity_changes_when_same_size_content_changes() {
+        let path = fixture("identity", b"alpha");
+        let first = read_text_identity(&path).unwrap();
+        fs::write(&path, b"bravo").unwrap();
+        let second = read_text_identity(&path).unwrap();
+        assert_eq!(first.size, second.size);
+        assert_ne!(first.content_digest, second.content_digest);
+        assert_ne!(first.signature, second.signature);
+        assert_eq!(first.content_digest.len(), 32);
+        assert!(!second.modified_nanos.is_empty());
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 

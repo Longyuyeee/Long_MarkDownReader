@@ -484,6 +484,35 @@
       <n-input v-model:value="renameState.newName" placeholder="请输入新名称（无需后缀）" autofocus @keyup.enter="applyRename" />
     </n-modal>
 
+    <n-modal
+      v-model:show="externalChange.show"
+      preset="card"
+      title="检测到磁盘内容变化"
+      :mask-closable="false"
+      :closable="false"
+      class="external-change-modal"
+    >
+      <div class="external-change-summary">
+        <strong>{{ externalChange.fileName }}</strong>
+        <span>检测时间：{{ externalChange.detectedAt }}</span>
+        <p>磁盘中的文件内容与当前编辑基线不同。请选择比较、保留当前编辑内容，或重新加载磁盘版本。</p>
+      </div>
+      <div v-if="externalChange.compareLoading" class="external-compare-state"><n-spin size="small" /> 正在读取磁盘版本</div>
+      <div v-else-if="externalChange.compareError" class="external-compare-state error">{{ externalChange.compareError }}</div>
+      <div v-else-if="externalChange.diskContent !== null" class="external-compare-grid">
+        <section><header>当前编辑区</header><pre>{{ externalCurrentPreview }}</pre></section>
+        <section><header>磁盘版本</header><pre>{{ externalDiskPreview }}</pre></section>
+      </div>
+      <template #footer>
+        <div class="external-change-actions">
+          <n-button secondary :loading="externalChange.compareLoading" @click="compareExternalChange">比较</n-button>
+          <span></span>
+          <n-button @click="keepExternalChange">保留当前</n-button>
+          <n-button type="primary" @click="reloadExternalChange">重新加载</n-button>
+        </div>
+      </template>
+    </n-modal>
+
     <!-- AI 操作选择弹窗 -->
     <n-modal v-model:show="aiState.showActionModal" preset="dialog" title="AI 辅助" positive-text="" negative-text="取消" @negative-click="aiState.showActionModal = false">
       <div class="ai-action-grid">
@@ -640,10 +669,18 @@ interface TextDocumentSnapshot {
   lineEnding: string
   hasFinalNewline: boolean
   signature: string
+  contentDigest: string
   size: number
   modified: number
   readOnlyReason?: string
   path: string
+}
+
+interface TextDocumentIdentity {
+  signature: string
+  contentDigest: string
+  size: number
+  modifiedNanos: string
 }
 
 interface TextDocumentRangeSnapshot {
@@ -1160,8 +1197,32 @@ const expandedKeys = ref<string[]>([])
 let vditor: any = null
 let isVditorReady = false
 let lastLoadedPath = ''
-let lastKnownModified = 0
+let externalCheckInFlight = false
+let lastPromptedExternalSignature = ''
 let suppressEditorInput = false
+
+const externalChange = reactive({
+  show: false,
+  path: '',
+  fileName: '',
+  detectedAt: '',
+  signature: '',
+  contentDigest: '',
+  diskContent: null as string | null,
+  compareLoading: false,
+  compareError: '',
+})
+
+const externalCurrentPreview = computed(() => {
+  const tab = tabs.value.find(item => item.path === externalChange.path)
+  const content = externalChange.path === activeTabId.value && vditor ? vditor.getValue() : (tab?.content || '')
+  return content.length > 12000 ? `${content.slice(0, 12000)}\n\n…… 当前内容过长，仅显示前 12000 字符` : content
+})
+const externalDiskPreview = computed(() => {
+  const content = externalChange.diskContent || ''
+  return content.length > 12000 ? `${content.slice(0, 12000)}\n\n…… 磁盘内容过长，仅显示前 12000 字符` : content
+})
+const contentDigestFromSignature = (signature: string) => signature.match(/:([a-f0-9]{32})$/i)?.[1].toLowerCase() || ''
 
 // 常量定义
 const AUTO_SAVE_DELAY_MS = 2000
@@ -1537,7 +1598,6 @@ const loadFileToEditor = async (path: string) => {
       setTimeout(() => { 
         if (currentTab) currentTab.isDirty = false
         lastLoadedPath = path;
-        invoke<any>('get_file_stats', { libraryRoot: store.libraryPath, path }).then(s => { lastKnownModified = s.modified }).catch(() => {})
         syncOutlineManual();
         setupOutlineObserver();
         updateWordCount();
@@ -1551,6 +1611,7 @@ const loadFileToEditor = async (path: string) => {
     tab.content = snapshot.content
     tab.isDirty = false
     tab.textSignature = snapshot.signature
+    tab.textContentDigest = snapshot.contentDigest
     tab.textEncoding = snapshot.encoding
     tab.textBom = snapshot.bom
     tab.textLineEnding = snapshot.lineEnding
@@ -1560,6 +1621,8 @@ const loadFileToEditor = async (path: string) => {
     tab.textRangeNextOffset = undefined
     tab.textRangeEof = undefined
     tab.textSize = snapshot.size
+    tab.textModified = snapshot.modified
+    lastPromptedExternalSignature = ''
   }
 
   if (currentTab?.content !== undefined) {
@@ -1592,6 +1655,7 @@ const updateTabFromTextSnapshot = (tab: TabInfo, snapshot: TextDocumentSnapshot,
   tab.content = snapshot.content
   tab.isDirty = false
   tab.textSignature = snapshot.signature
+  tab.textContentDigest = snapshot.contentDigest
   tab.textEncoding = snapshot.encoding
   tab.textBom = snapshot.bom
   tab.textLineEnding = snapshot.lineEnding
@@ -1601,12 +1665,15 @@ const updateTabFromTextSnapshot = (tab: TabInfo, snapshot: TextDocumentSnapshot,
   tab.textRangeNextOffset = undefined
   tab.textRangeEof = undefined
   tab.textSize = snapshot.size
+  tab.textModified = snapshot.modified
+  lastPromptedExternalSignature = ''
 }
 
 const applyTextRangeSnapshot = (tab: TabInfo, snapshot: TextDocumentRangeSnapshot, readEncoding?: string) => {
   tab.content = snapshot.content
   tab.isDirty = false
   tab.textSignature = undefined
+  tab.textContentDigest = undefined
   tab.textEncoding = snapshot.encoding
   if (snapshot.offset === 0) {
     tab.textBom = snapshot.bom
@@ -2069,12 +2136,14 @@ const triggerAutoSave = (content: string) => {
         })
         current.content = saved.content
         current.textSignature = saved.signature
+        current.textContentDigest = saved.contentDigest
         current.textEncoding = saved.encoding
         current.textBom = saved.bom
         current.textLineEnding = saved.lineEnding
         current.textHasFinalNewline = saved.hasFinalNewline
         current.isDirty = false
-        lastKnownModified = Math.floor(Date.now() / 1000)
+        current.textModified = saved.modified
+        lastPromptedExternalSignature = ''
       } catch (error) { console.error('Auto-save failed:', error) }
     }
   }, AUTO_SAVE_DELAY_MS)
@@ -2088,6 +2157,86 @@ const refreshCurrentFile = async () => {
     currentTab.content = undefined
     await loadFileToEditor(activeTabId.value)
     message.success('已同步磁盘最新内容')
+  }
+}
+
+const compareExternalChange = async () => {
+  const tab = tabs.value.find(item => item.path === externalChange.path)
+  const format = tab ? findFileFormat(tab.path) : undefined
+  if (!tab || !format || format.routeName !== 'LibraryMode') return
+  externalChange.compareLoading = true
+  externalChange.compareError = ''
+  try {
+    const snapshot = await invoke<TextDocumentSnapshot>('read_text_document', {
+      libraryRoot: store.libraryPath,
+      path: tab.path,
+      formatId: format.id,
+      readOptions: tab.textReadEncoding ? { encoding: tab.textReadEncoding } : undefined,
+    })
+    externalChange.diskContent = snapshot.content
+    externalChange.signature = snapshot.signature
+    externalChange.contentDigest = snapshot.contentDigest
+    lastPromptedExternalSignature = snapshot.signature
+  } catch (error) {
+    externalChange.compareError = `无法读取磁盘版本：${String(error).replace(/^Error:\s*/, '')}`
+  } finally {
+    externalChange.compareLoading = false
+  }
+}
+
+const keepExternalChange = () => {
+  externalChange.show = false
+  externalChange.diskContent = null
+  externalChange.compareError = ''
+}
+
+const reloadExternalChange = async () => {
+  const path = externalChange.path
+  externalChange.show = false
+  externalChange.diskContent = null
+  externalChange.compareError = ''
+  if (path !== activeTabId.value) return
+  await refreshCurrentFile()
+  lastPromptedExternalSignature = ''
+}
+
+const checkActiveTextIdentity = async () => {
+  if (externalCheckInFlight || externalChange.show || !activeTabId.value) return
+  const path = activeTabId.value
+  const tab = tabs.value.find(item => item.path === path)
+  const format = tab ? findFileFormat(tab.path) : undefined
+  if (!tab?.textSignature || !format || format.routeName !== 'LibraryMode') return
+  const baselineDigest = tab.textContentDigest || contentDigestFromSignature(tab.textSignature)
+  if (!baselineDigest) return
+  externalCheckInFlight = true
+  try {
+    const identity = await invoke<TextDocumentIdentity>('get_text_document_identity', {
+      libraryRoot: store.libraryPath,
+      path,
+      formatId: format.id,
+    })
+    if (activeTabId.value !== path) return
+    if (identity.contentDigest === baselineDigest) {
+      tab.textSignature = identity.signature
+      tab.textContentDigest = identity.contentDigest
+      tab.textSize = identity.size
+      lastPromptedExternalSignature = ''
+      return
+    }
+    if (identity.signature === lastPromptedExternalSignature) return
+    lastPromptedExternalSignature = identity.signature
+    externalChange.path = path
+    externalChange.fileName = tab.title
+    externalChange.detectedAt = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date())
+    externalChange.signature = identity.signature
+    externalChange.contentDigest = identity.contentDigest
+    externalChange.diskContent = null
+    externalChange.compareError = ''
+    externalChange.show = true
+  } catch (error: any) {
+    if (error?.code !== 'identity-too-large') console.warn('External text identity check failed:', error)
+  } finally {
+    externalCheckInFlight = false
   }
 }
 
@@ -2136,7 +2285,7 @@ const saveCurrentFile = async (options: unknown = {}) => {
         vditor.setValue(saved.content)
         setTimeout(() => { suppressEditorInput = false }, 0)
       }
-      lastKnownModified = Math.floor(Date.now() / 1000)
+      lastPromptedExternalSignature = ''
       message.success(saveOptions.successMessage || '已安全保存');
       // Git 自动 commit（本地）
       if (currentLibGitEnabled.value) {
@@ -2388,24 +2537,11 @@ onMounted(async () => {
   unlistenRefreshCmd = await listen('command-refresh', () => refreshLibrary())
   unlistenSaveCmd = await listen('command-save', saveCurrentFile)
   unlistenDailyNote = await listen('command-daily-note', createDailyNote)
-  // 外部文件变更检测：窗口获焦时检查活跃文件是否被外部修改
+  // 聚焦时用内容摘要核对磁盘身份；弹窗自身的焦点变化不会重复触发。
   if (isTauriRuntime()) {
-    unlistenFocus = await getCurrentWindow().listen('tauri://focus', async () => {
-    void refreshKnowledgeIndexStatus()
-    if (!activeTabId.value || !lastKnownModified) return
-    try {
-      const stats = await invoke<any>('get_file_stats', { libraryRoot: store.libraryPath, path: activeTabId.value })
-      if (stats.modified > lastKnownModified) {
-        dialog.warning({
-          title: '文件已在外部被修改',
-          content: '当前文件已被其他程序修改。是否重新加载最新内容？',
-          positiveText: '重新加载',
-          negativeText: '保留当前',
-          onPositiveClick: () => refreshCurrentFile(),
-          onNegativeClick: () => { lastKnownModified = stats.modified }
-        })
-      }
-    } catch (e) { /* file may have been deleted */ }
+    unlistenFocus = await getCurrentWindow().listen('tauri://focus', () => {
+      void refreshKnowledgeIndexStatus()
+      void checkActiveTextIdentity()
     })
   }
   nextTick(() => { initVditor(); startShadowSaveTimer() })
@@ -2586,7 +2722,7 @@ const reloadTextWithEncoding = async (encoding: string) => {
       suppressEditorInput = true
       vditor.setValue(snapshot.content)
       setTimeout(() => { suppressEditorInput = false }, 0)
-      lastKnownModified = Math.floor(Date.now() / 1000)
+      lastPromptedExternalSignature = ''
       message.success(`已按 ${encodingLabel(encoding)} 重新读取`)
     } catch (e: any) {
       handleError(e, '编码重读失败', 'reloadTextWithEncoding')
@@ -3820,4 +3956,17 @@ watch(activeTabId, (newId, oldId) => {
 .ai-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 8px 0; }
 .ai-action-btn { height: 56px; font-size: 15px; font-weight: 600; }
 .ai-result-content { white-space: pre-wrap; line-height: 1.7; font-size: 14px; color: var(--theme-text); max-height: 400px; overflow-y: auto; }
+.external-change-modal { width: min(920px, calc(100vw - 32px)); }
+.external-change-summary { display: grid; gap: 5px; color: var(--theme-text); }
+.external-change-summary strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.external-change-summary span { color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.external-change-summary p { margin: 6px 0 0; color: var(--theme-text-secondary); line-height: 1.6; }
+.external-compare-state { min-height: 120px; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--theme-text-secondary); }
+.external-compare-state.error { color: var(--status-danger); }
+.external-compare-grid { min-height: 0; max-height: 52vh; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.external-compare-grid section { min-width: 0; min-height: 0; display: grid; grid-template-rows: 32px minmax(0, 1fr); overflow: hidden; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: var(--theme-bg); }
+.external-compare-grid header { display: flex; align-items: center; padding: 0 10px; color: var(--theme-text-secondary); background: var(--theme-surface-2); font-size: var(--text-compact); font-weight: 700; }
+.external-compare-grid pre { min-height: 0; margin: 0; padding: 12px; overflow: auto; color: var(--theme-text); background: var(--theme-bg); font: 12px/1.65 var(--font-mono); white-space: pre; }
+.external-change-actions { width: 100%; display: grid; grid-template-columns: auto 1fr auto auto; gap: 8px; }
+@media (max-width: 700px) { .external-compare-grid { grid-template-columns: 1fr; max-height: 58vh; }.external-compare-grid section { min-height: 180px; }.external-change-actions { grid-template-columns: 1fr 1fr; }.external-change-actions span { display: none; } }
 </style>

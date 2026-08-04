@@ -2,10 +2,10 @@ use crate::formats::file_registry::{
     file_format_by_id, file_format_for_path, file_format_registry, FileFormatRegistry,
 };
 use crate::formats::text::{
-    encode_text_for_save, read_text_range_with_options, read_text_snapshot,
+    encode_text_for_save, read_text_identity, read_text_range_with_options, read_text_snapshot,
     read_text_snapshot_with_options, verify_current_signature, TextDocumentError,
-    TextDocumentRangeSnapshot, TextDocumentSnapshot, TextReadOptions, TextSavePolicy,
-    DEFAULT_TEXT_RANGE_BYTES,
+    TextDocumentIdentity, TextDocumentRangeSnapshot, TextDocumentSnapshot, TextReadOptions,
+    TextSavePolicy, DEFAULT_TEXT_RANGE_BYTES,
 };
 use crate::sanitize_filename;
 use crate::services::external_file_access::ExternalFileAccess;
@@ -176,6 +176,45 @@ pub async fn read_text_document(
     ensure_matching_format(&path, &format_id)
         .map_err(|error| text_boundary_error("format-mismatch", error))?;
     read_resolved_text_document(&path, format, read_options)
+}
+
+#[tauri::command]
+pub async fn get_text_document_identity(
+    library_root: String,
+    path: String,
+    format_id: String,
+) -> Result<TextDocumentIdentity, TextDocumentError> {
+    let format = ensure_capability(&format_id, "read")
+        .map_err(|error| text_boundary_error("format-read-unsupported", error))?;
+    if format.adapters.reader.as_deref() != Some("text") {
+        return Err(text_boundary_error(
+            "adapter-mismatch",
+            format!("{} 不是通用文本读取格式", format.label),
+        ));
+    }
+    let guard = WorkspaceGuard::new(library_root)
+        .map_err(|error| text_boundary_error("workspace-root-invalid", error))?;
+    let path = guard
+        .resolve_existing(path)
+        .map_err(|error| text_boundary_error("path-outside-workspace", error))?;
+    if !path.is_file() {
+        return Err(text_boundary_error("target-not-file", "目标必须是文件"));
+    }
+    ensure_matching_format(&path, &format_id)
+        .map_err(|error| text_boundary_error("format-mismatch", error))?;
+    if path
+        .metadata()
+        .map(|metadata| metadata.len())
+        .unwrap_or(u64::MAX)
+        > format.max_bytes
+    {
+        return Err(TextDocumentError::recoverable(
+            "identity-too-large",
+            format!("{} 超过焦点变更检测上限", format.label),
+            "大文件范围模式继续使用保存时签名保护",
+        ));
+    }
+    read_text_identity(&path)
 }
 
 #[tauri::command]

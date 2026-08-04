@@ -22,6 +22,8 @@
 
 > A0J 已完成 TXT/LOG 工作区尺寸修复：具名 Grid 区域不再受标签栏显隐影响，正文稳定占据剩余高度，状态栏保持紧凑单行。UX-22 为待安装包复测。下一步处理 UX-23，修复窗口切换时外部修改误报。详见 [`A0J_Text_Workspace_Layout_Audit_2026-08-04.md`](./A0J_Text_Workspace_Layout_Audit_2026-08-04.md)。
 
+> A0K 已完成外部修改检测重构：焦点恢复改用 Rust 内容摘要与精确文件身份，应用内保存采用写入回执更新基线；同一签名只提示一次，并提供比较、保留当前、重新加载。UX-23 为待安装包复测。下一步处理 UX-24/UX-27，统一代码编辑器主题与光标对比度。详见 [`A0K_External_Change_Identity_Audit_2026-08-04.md`](./A0K_External_Change_Identity_Audit_2026-08-04.md)。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 

@@ -22,6 +22,7 @@ export interface TabInfo {
   isDirty: boolean
   content?: string
   textSignature?: string
+  textContentDigest?: string
   textEncoding?: string
   textBom?: string
   textLineEnding?: string
@@ -307,6 +308,7 @@ export const useAppStore = defineStore('app', {
         const existing = this.tabs[idx]
         if (tab.content !== undefined) existing.content = tab.content
         if (tab.textSignature !== undefined) existing.textSignature = tab.textSignature
+        if (tab.textContentDigest !== undefined) existing.textContentDigest = tab.textContentDigest
         if (tab.textEncoding !== undefined) existing.textEncoding = tab.textEncoding
         if (tab.textBom !== undefined) existing.textBom = tab.textBom
         if (tab.textLineEnding !== undefined) existing.textLineEnding = tab.textLineEnding
