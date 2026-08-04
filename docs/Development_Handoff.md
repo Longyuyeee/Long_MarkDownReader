@@ -54,6 +54,8 @@
 
 > A0Z 已完成 UX-33I DOCX 原生超链接桌面 WebView 审计：真实 Tauri Debug WebView2 中，Word/LibreOffice 各 2 个“链接文字”目标通过草稿、撤销/重做、隔离验证和保存边界检查；WPS 字段链接为 0 个编辑目标并保持只读。5 张截图及机器清单通过，三份源 fixture 和隔离副本字节未变。本步不是 MSI/NSIS 安装生命周期证据，UX-33 保持进行中；下一步 UX-33J 在可丢弃环境复测无签名内部安装包，不覆盖当前用户安装。详见 [`A0Z_DOCX_Hyperlink_Desktop_Audit_2026-08-04.md`](./A0Z_DOCX_Hyperlink_Desktop_Audit_2026-08-04.md)。
 
+> A10 已完成 UX-33J 安装态执行器准备：GitHub 一次性 Windows 流水线已从冻结产品提交动态读取版本，不再锁死 `1.0.0`；安装后 WebView 烟测已接入 Word/WPS/LibreOffice 原生超链接 fixture、草稿撤销/重做、隔离验证、只读降级、安装器摘要和隐私净化路由。当前只证明 harness 就绪，尚未产生 `1.0.3` 的真实安装结论。下一步推送后以该提交触发 hosted lifecycle，回收证据再关闭 UX-33J。详见 [`A10_DOCX_Installed_Harness_Audit_2026-08-04.md`](./A10_DOCX_Installed_Harness_Audit_2026-08-04.md)。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 

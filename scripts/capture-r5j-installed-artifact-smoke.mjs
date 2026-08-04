@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const endpoint = process.env.LONGEDIT_CDP_ENDPOINT || 'http://127.0.0.1:9343'
 const library = path.resolve(process.env.LONGEDIT_R5J_LIBRARY || '')
@@ -8,9 +9,10 @@ const output = path.resolve(process.env.LONGEDIT_R5J_OUTPUT || '')
 const installedExecutable = path.resolve(process.env.LONGEDIT_R5J_EXECUTABLE || '')
 const appVersion = process.env.LONGEDIT_R5J_APP_VERSION || ''
 const installerSha256 = process.env.LONGEDIT_R5J_INSTALLER_SHA256 || ''
+const sourceCommit = process.env.LONGEDIT_R5J_SOURCE_COMMIT || ''
 const signedArtifactRuntimeProven = process.env.LONGEDIT_R5J_SIGNED_RUNTIME === 'true'
-if (!library || !output || !installedExecutable || !appVersion || !/^[a-f0-9]{64}$/.test(installerSha256)) {
-  throw new Error('R5J library, output, executable, version, and installer hash are required')
+if (!library || !output || !installedExecutable || !appVersion || !/^[a-f0-9]{64}$/.test(installerSha256) || !/^[a-f0-9]{40}$/.test(sourceCommit)) {
+  throw new Error('R5J library, output, executable, version, installer hash, and source commit are required')
 }
 
 const textFile = path.join(library, 'r5j-notes.txt')
@@ -19,6 +21,12 @@ const knowledgeBaselineFile = path.join(output, 'installed-knowledge-observation
 const knowledgeComparisonFile = path.join(output, 'installed-knowledge-guidance-comparison.json')
 const invalidKnowledgeComparisonFile = path.join(output, 'installed-knowledge-guidance-comparison-invalid.json')
 const knowledgeImprovementFixture = path.join(library, 'g15c-linked-follow-up.md')
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const nativeDocxFixtures = [
+  { producerId: 'microsoft-word', sourceFile: 'microsoft-word-hyperlinks.docx', copyFile: 'UX33J Microsoft Word Hyperlinks.docx', expectedEditableLinks: 2 },
+  { producerId: 'wps-writer', sourceFile: 'wps-writer-hyperlinks.docx', copyFile: 'UX33J WPS Writer Hyperlinks.docx', expectedEditableLinks: 0 },
+  { producerId: 'libreoffice-writer', sourceFile: 'libreoffice-writer-hyperlinks.docx', copyFile: 'UX33J LibreOffice Writer Hyperlinks.docx', expectedEditableLinks: 2 },
+]
 const embeddedEditorSelector = '.library-embedded-editor .cm-content'
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 const sha256 = async file => crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex')
@@ -304,6 +312,146 @@ await assertNoGlobalFallback('reopened installed JSON editor')
 const jsonVisual = await assertEditorTextVisible('R5J_JSON_SAVED', 'reopened installed JSON editor')
 await capture('installed-json-save-reopen.jpg')
 checks.push({ id: 'installed-json-read-edit-save-reopen', status: 'passed', visual: jsonVisual })
+
+const clickByTitle = title => evaluate(`(() => {
+  const button = document.querySelector(${JSON.stringify(`button[title="${title}"]`)})
+  if (!button || button.disabled) return false
+  button.click()
+  return true
+})()`)
+const installedDocxResults = []
+for (const fixture of nativeDocxFixtures) {
+  const source = path.join(repoRoot, 'fixtures', 'docx', 'hyperlinks', fixture.sourceFile)
+  const targetFile = path.join(library, fixture.copyFile)
+  const sourceSha256 = await sha256(source)
+  await fs.copyFile(source, targetFile)
+  const initialCopySha256 = await sha256(targetFile)
+  if (initialCopySha256 !== sourceSha256) throw new Error(`${fixture.producerId} installed fixture copy digest mismatch`)
+
+  const route = `#/library?path=${encodeURIComponent(targetFile)}`
+  await navigate(route, '.library-embedded-editor .docx-workspace .docx-page', `${fixture.producerId} installed DOCX`)
+  const sampleName = path.basename(targetFile, path.extname(targetFile))
+  await waitFor(
+    `document.querySelector('.docx-workspace .document-title strong')?.textContent.includes(${JSON.stringify(sampleName)}) === true`,
+    `${fixture.producerId} installed DOCX identity`,
+    1200,
+  )
+  const editorAvailable = await evaluate(`(() => {
+    if (document.querySelector('.docx-editor')) return true
+    const button = document.querySelector('.docx-toolbar button[title="打开 DOCX 页面编辑"]')
+    if (!button || button.disabled) return false
+    button.click()
+    return true
+  })()`)
+  if (editorAvailable) await waitFor(`document.querySelector('.docx-editor') !== null`, `${fixture.producerId} installed DOCX editor`)
+  const initialState = await evaluate(`(() => {
+    const select = document.querySelector('.docx-editor .edit-field select')
+    const labels = select ? [...select.options].map(item => item.textContent.trim()) : []
+    return {
+      linkTargetLabels: labels.filter(label => label.startsWith('链接文字')),
+      editableHyperlinkCount: document.querySelectorAll('.docx-workspace .editable-hyperlink').length,
+    }
+  })()`)
+  if (initialState.linkTargetLabels.length !== fixture.expectedEditableLinks || initialState.editableHyperlinkCount !== fixture.expectedEditableLinks) {
+    throw new Error(`${fixture.producerId} installed link target count failed: ${JSON.stringify(initialState)}`)
+  }
+  const result = {
+    producerId: fixture.producerId,
+    sourceFile: fixture.sourceFile,
+    route: `#/library?path=<disposable-library>/${encodeURIComponent(fixture.copyFile)}`,
+    sourceSha256,
+    expectedEditableLinks: fixture.expectedEditableLinks,
+    linkTargetLabels: initialState.linkTargetLabels,
+    editableHyperlinkCount: initialState.editableHyperlinkCount,
+    linkPromptVerified: false,
+    draftCreated: false,
+    undoVerified: false,
+    redoVerified: false,
+    isolatedPreviewVerified: false,
+    saveBoundaryVerified: false,
+    sourceUnchanged: false,
+    screenshot: '',
+  }
+
+  if (fixture.expectedEditableLinks > 0) {
+    if (!editorAvailable) throw new Error(`${fixture.producerId} installed DOCX editor unavailable`)
+    const selected = await evaluate(`(() => {
+      const select = document.querySelector('.docx-editor .edit-field select')
+      const option = select ? [...select.options].find(item => item.textContent.trim().startsWith('链接文字')) : null
+      if (!option) return false
+      select.value = option.value
+      select.dispatchEvent(new Event('change', { bubbles: true }))
+      return true
+    })()`)
+    if (!selected) throw new Error(`${fixture.producerId} installed link target selection failed`)
+    await waitFor(
+      `[...document.querySelectorAll('.docx-editor .edit-field > span')].some(node => node.textContent.trim() === '替换链接文字（地址保持不变）')`,
+      `${fixture.producerId} installed link boundary prompt`,
+    )
+    result.linkPromptVerified = true
+    const changed = await evaluate(`(() => {
+      const textarea = document.querySelector('.docx-editor .edit-field textarea')
+      if (!textarea) return false
+      const suffix = ' [UX33J 安装态草稿]'
+      textarea.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, inputType: 'insertText', data: suffix }))
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(textarea, textarea.value + suffix)
+      textarea.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: suffix }))
+      return true
+    })()`)
+    if (!changed) throw new Error(`${fixture.producerId} installed draft edit failed`)
+    await waitFor(`document.querySelector('.draft-list header span')?.textContent.trim() === '1/32'`, `${fixture.producerId} installed draft`)
+    result.draftCreated = true
+    if (!await clickByTitle('撤销草稿修改')) throw new Error(`${fixture.producerId} installed undo unavailable`)
+    await waitFor(`document.querySelector('.draft-list header span')?.textContent.trim() === '0/32'`, `${fixture.producerId} installed undo`)
+    result.undoVerified = true
+    if (!await clickByTitle('重做草稿修改')) throw new Error(`${fixture.producerId} installed redo unavailable`)
+    await waitFor(`document.querySelector('.draft-list header span')?.textContent.trim() === '1/32'`, `${fixture.producerId} installed redo`)
+    result.redoVerified = true
+    const previewStarted = await evaluate(`(() => {
+      const button = document.querySelector('.docx-editor .verify-edit')
+      if (!button || button.disabled) return false
+      button.click()
+      return true
+    })()`)
+    if (!previewStarted) throw new Error(`${fixture.producerId} installed isolated preview unavailable`)
+    await waitFor(
+      `document.querySelector('.docx-editor .edit-verification:not(.error)')?.textContent.includes('隔离验证通过')`,
+      `${fixture.producerId} installed isolated preview`,
+      1200,
+    )
+    result.isolatedPreviewVerified = true
+    result.saveBoundaryVerified = await evaluate(`(() => {
+      const text = document.querySelector('.docx-editor .copy-save')?.textContent || ''
+      return text.includes('会覆盖当前 DOCX') && text.includes('或者另存副本')
+    })()`)
+    if (!result.saveBoundaryVerified) throw new Error(`${fixture.producerId} installed save boundary missing`)
+    await evaluate(`document.querySelector('.docx-editor')?.scrollTo({ top: document.querySelector('.docx-editor').scrollHeight, behavior: 'instant' })`)
+    await delay(200)
+    result.screenshot = `installed-${fixture.producerId}-docx-hyperlink.jpg`
+    await capture(result.screenshot)
+    if (!await clickByTitle('撤销草稿修改')) throw new Error(`${fixture.producerId} installed cleanup undo unavailable`)
+    await waitFor(`document.querySelector('.draft-list header span')?.textContent.trim() === '0/32'`, `${fixture.producerId} installed draft cleanup`)
+  } else {
+    result.screenshot = `installed-${fixture.producerId}-docx-hyperlink-readonly.jpg`
+    await capture(result.screenshot)
+  }
+  result.sourceUnchanged = await sha256(source) === sourceSha256 && await sha256(targetFile) === initialCopySha256
+  if (!result.sourceUnchanged) throw new Error(`${fixture.producerId} installed fixture changed during preview audit`)
+  installedDocxResults.push(result)
+  checks.push({ id: `installed-docx-hyperlink-${fixture.producerId}`, status: 'passed' })
+}
+await fs.writeFile(path.join(output, 'installed-docx-hyperlink-evidence.json'), `${JSON.stringify({
+  schemaVersion: 1,
+  stage: 'UX-33J',
+  capturedAt: new Date().toISOString(),
+  environment: 'Disposable Windows installed current NSIS artifact with Tauri WebView2',
+  evidenceBoundary: 'unsigned internal candidate; not a signed release candidate',
+  appVersion,
+  sourceCommit,
+  installerSha256,
+  sourceUserContentIncluded: false,
+  results: installedDocxResults,
+}, null, 2)}\n`)
 
 await navigate('#/workspace', '.workspace-home', 'installed workspace knowledge network pulse')
 await waitFor(`Number(document.querySelector('[data-testid="knowledge-network-coverage"]')?.getAttribute('aria-valuenow')) > 0`, 'installed knowledge network coverage')
@@ -673,6 +821,10 @@ await fs.writeFile(path.join(output, 'installed-artifact-smoke.json'), `${JSON.s
   evidenceFiles: [
     'installed-txt-save-reopen.jpg',
     'installed-json-save-reopen.jpg',
+    'installed-microsoft-word-docx-hyperlink.jpg',
+    'installed-wps-writer-docx-hyperlink-readonly.jpg',
+    'installed-libreoffice-writer-docx-hyperlink.jpg',
+    'installed-docx-hyperlink-evidence.json',
     'installed-knowledge-network-pulse.jpg',
     'installed-knowledge-guidance-graph.jpg',
     'installed-knowledge-topic-centered.jpg',

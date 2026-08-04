@@ -382,6 +382,7 @@ try {
     $env:LONGEDIT_R5J_EXECUTABLE = $mainBinary
     $env:LONGEDIT_R5J_APP_VERSION = $CurrentVersion
     $env:LONGEDIT_R5J_INSTALLER_SHA256 = $currentInstallerSha256
+    $env:LONGEDIT_R5J_SOURCE_COMMIT = $ExpectedSourceCommit.ToLowerInvariant()
     $env:LONGEDIT_R5J_SIGNED_RUNTIME = if ($signedArtifactRuntimeProven) { "true" } else { "false" }
     $env:LONGEDIT_R5L_LIBRARY = $libraryRoot
     $env:LONGEDIT_R5L_OUTPUT = $OutputDirectory
