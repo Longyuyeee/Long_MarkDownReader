@@ -1,6 +1,6 @@
 <template>
   <div class="text-workspace">
-    <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
+    <WorkspaceTabs v-if="!store.isZen && store.tabs.length" class="text-tabs" />
     <header class="text-toolbar">
       <div class="document-identity">
         <n-button quaternary circle size="small" title="返回知识库" @click="leaveEditor">
@@ -722,13 +722,26 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   min-width: 0;
+  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 48px 38px minmax(0, 1fr) 28px;
+  grid-template-areas:
+    "tabs"
+    "toolbar"
+    "format"
+    "editor"
+    "status";
   overflow: hidden;
   color: var(--theme-text);
   background: var(--theme-bg);
 }
+
+.text-tabs { grid-area: tabs; }
+.text-toolbar { grid-area: toolbar; }
+.format-bar { grid-area: format; }
+.editor-stage { grid-area: editor; }
+.status-bar { grid-area: status; }
 
 .text-toolbar,
 .format-bar,
@@ -874,13 +887,21 @@ onBeforeUnmount(() => {
 .status-bar {
   justify-content: space-between;
   padding: 0 14px;
+  overflow: hidden;
   border-top: var(--theme-border);
   border-bottom: 0;
   background: var(--theme-surface);
+  white-space: nowrap;
 }
 
 .status-bar > div {
   gap: 14px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.status-bar > div:last-child {
+  justify-content: flex-end;
 }
 
 @media (max-width: 900px) {

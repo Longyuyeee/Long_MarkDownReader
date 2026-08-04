@@ -1,6 +1,6 @@
 <template>
   <div class="log-workspace">
-    <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
+    <WorkspaceTabs v-if="!store.isZen && store.tabs.length" class="log-tabs" />
 
     <header class="log-toolbar">
       <div class="document-identity">
@@ -408,12 +408,29 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .log-workspace {
+  width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 48px 46px minmax(0, 1fr) 28px;
+  grid-template-areas:
+    "tabs"
+    "toolbar"
+    "filter"
+    "viewer"
+    "status";
+  overflow: hidden;
   color: var(--theme-text);
   background: var(--theme-bg);
 }
+
+.log-tabs { grid-area: tabs; }
+.log-toolbar { grid-area: toolbar; }
+.filter-bar { grid-area: filter; }
+.log-stage { grid-area: viewer; }
+.status-bar { grid-area: status; }
 
 .log-toolbar,
 .filter-bar,
@@ -593,8 +610,19 @@ onBeforeUnmount(() => {
 
 .status-bar {
   justify-content: space-between;
+  overflow: hidden;
   border-top: var(--theme-border);
   border-bottom: 0;
+  white-space: nowrap;
+}
+
+.status-bar > div {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.status-bar > div:last-child {
+  justify-content: flex-end;
 }
 
 @media (max-width: 860px) {
