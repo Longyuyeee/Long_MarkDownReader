@@ -48,6 +48,8 @@
 
 > A0W 已完成 UX-33F DOCX 安全字符格式扩展：单运行目标在粗体、斜体、下划线之外支持直接 RGB 字色和 8–72 磅字号，页面即时显示草稿效果，并完整接入撤销/重做、批量验证、覆盖及另存事务。主题色、字体族和跨部件对象继续只读；Word fixture 语义往返通过，WPS/LibreOffice fixture 因没有白名单单运行目标而保持只读。UX-33 保持进行中，下一步 UX-33G 审计正文内超链接标签等单部件候选，再进入安装态复测。详见 [`A0W_DOCX_Direct_Color_Font_Size_Audit_2026-08-04.md`](./A0W_DOCX_Direct_Color_Font_Size_Audit_2026-08-04.md)。
 
+> A0X 已完成 UX-33G DOCX 简单超链接显示文字编辑：仅开放单段落、单链接、单运行、单文本节点且具有目标的白名单结构，界面明确提示地址保持不变；补丁只替换文本字节，语义复读核对链接载体，链接外壳、目标属性和其余部件保持不变。三生产者自动证据来自真实 fixture 的确定性派生链接包，不等同于原生超链接生产者证据。UX-33 保持进行中，下一步 UX-33H 收集原生样本并执行安装态复测。详见 [`A0X_DOCX_Hyperlink_Label_Edit_Audit_2026-08-04.md`](./A0X_DOCX_Hyperlink_Label_Edit_Audit_2026-08-04.md)。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 

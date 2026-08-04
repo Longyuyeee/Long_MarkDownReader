@@ -747,6 +747,7 @@ fn verify_batch_expectations(
             } => text_targets.iter().any(|item| {
                 item.block_id == target.block_id
                     && item.kind == target.kind
+                    && item.carrier == target.carrier
                     && item.row_index == target.row_index
                     && item.column_index == target.column_index
                     && item.text == *replacement

@@ -312,7 +312,7 @@
           </label>
 
           <label v-if="editMode === 'text'" class="edit-field">
-            <span>替换文本</span>
+            <span>{{ selectedTextTarget()?.carrier === 'hyperlink-label' ? '替换链接文字（地址保持不变）' : '替换文本' }}</span>
             <textarea v-model="replacementText" maxlength="32767" rows="7" @beforeinput="captureDraftHistory()"></textarea>
           </label>
 
@@ -570,6 +570,7 @@ interface DocxReadReport {
     id: string
     blockId: string
     kind: 'paragraph' | 'heading' | 'list-item' | 'table-cell'
+    carrier: 'plain' | 'hyperlink-label'
     text: string
     expectedTextDigest: string
     rowIndex: number | null
@@ -992,7 +993,7 @@ const tableTargetForCell = (blockId: string, rowIndex: number, columnIndex: numb
   && target.rowIndex === rowIndex
   && target.columnIndex === columnIndex
 ))
-const selectedTextTarget = () => editMode.value === 'text' && selectedTarget.value && 'text' in selectedTarget.value
+const selectedTextTarget = () => editMode.value === 'text' && selectedTarget.value && 'expectedTextDigest' in selectedTarget.value
   ? selectedTarget.value
   : null
 const draftTextForBlock = (block: DocxBlock) => {
@@ -1010,11 +1011,13 @@ const blockEditClasses = (block: DocxBlock) => ({
   editable: Boolean(textTargetForBlock(block.id) || styleTargets.value.some(target => target.blockId === block.id)),
   'edit-selected': selectedTarget.value?.blockId === block.id,
   'has-draft': Array.from(draftEntries.value.values()).some(entry => entry.blockId === block.id),
+  'editable-hyperlink': textTargetForBlock(block.id)?.carrier === 'hyperlink-label',
 })
 const tableCellEditClasses = (block: DocxBlock, rowIndex: number, columnIndex: number) => ({
   editable: Boolean(tableTargetForCell(block.id, rowIndex, columnIndex)),
   'edit-selected': selectedTextTarget()?.id === tableTargetForCell(block.id, rowIndex, columnIndex)?.id,
   'has-draft': Boolean(draftEntryForTarget(tableTargetForCell(block.id, rowIndex, columnIndex))),
+  'editable-hyperlink': tableTargetForCell(block.id, rowIndex, columnIndex)?.carrier === 'hyperlink-label',
 })
 const draftStyleForBlock = (block: DocxBlock) => {
   const target = styleTargets.value.find(candidate => candidate.blockId === block.id && candidate.kind !== 'table-cell')
@@ -1079,7 +1082,9 @@ const formatBytes = (bytes: number) => bytes < 1024 * 1024
   : `${(bytes / 1024 / 1024).toFixed(1)} MiB`
 const targetLabel = (target: DocxEditableTarget) => {
   if ('imagePart' in target) return target.name || target.imagePart
-  const location = target.kind === 'table-cell'
+  const location = 'carrier' in target && target.carrier === 'hyperlink-label'
+    ? '链接文字'
+    : target.kind === 'table-cell'
     ? `表格 R${(target.rowIndex || 0) + 1}C${(target.columnIndex || 0) + 1}`
     : ({ paragraph: '段落', heading: '标题', 'list-item': '列表' } as const)[target.kind]
   const summary = target.text.trim().replace(/\s+/g, ' ') || '空文本'
@@ -1428,6 +1433,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
 .docx-block.editable:hover, .docx-table-wrap td.editable:hover { outline: 1px solid color-mix(in srgb, var(--primary-color) 55%, transparent); background: color-mix(in srgb, var(--primary-color) 7%, var(--bg-primary)); }
 .docx-block.edit-selected, .docx-table-wrap td.edit-selected { outline: 2px solid var(--primary-color); outline-offset: 2px; background: color-mix(in srgb, var(--primary-color) 9%, var(--bg-primary)); }
 .docx-block.has-draft, .docx-table-wrap td.has-draft { box-shadow: inset 3px 0 color-mix(in srgb, #d49a28 78%, var(--primary-color)); background: color-mix(in srgb, #d49a28 8%, var(--bg-primary)); }
+.docx-block.editable-hyperlink, .docx-table-wrap td.editable-hyperlink { text-decoration: underline; text-decoration-style: dotted; text-decoration-color: color-mix(in srgb, var(--primary-color) 75%, transparent); text-underline-offset: 3px; }
 .docx-heading { margin: 1.3em 0 .55em; line-height: 1.3; }
 h1.docx-heading { font-size: 25px; } h2.docx-heading { font-size: 21px; } h3.docx-heading { font-size: 18px; }
 h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }

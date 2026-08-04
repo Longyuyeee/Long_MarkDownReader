@@ -19,6 +19,7 @@ pub struct DocxEditableTextTarget {
     pub id: String,
     pub block_id: String,
     pub kind: String,
+    pub carrier: String,
     pub text: String,
     pub expected_text_digest: String,
     pub row_index: Option<usize>,
@@ -82,6 +83,7 @@ struct ParagraphTextSpan {
     start: usize,
     end: usize,
     safe: bool,
+    hyperlink_label: bool,
     table_index: Option<usize>,
     row_index: Option<usize>,
     column_index: Option<usize>,
@@ -104,6 +106,10 @@ struct ParagraphScanState {
     text_element_count: usize,
     safe: bool,
     in_text: bool,
+    hyperlink_depth: usize,
+    hyperlink_count: usize,
+    text_inside_hyperlink: bool,
+    run_depth: usize,
     table_index: Option<usize>,
     row_index: Option<usize>,
     column_index: Option<usize>,
@@ -190,7 +196,6 @@ fn forbidden_text_carrier(name: &[u8]) -> bool {
             | b"instrText"
             | b"fldChar"
             | b"sdt"
-            | b"hyperlink"
             | b"smartTag"
             | b"customXml"
             | b"drawing"
@@ -352,8 +357,27 @@ fn scan_document_paragraphs(document_xml: &[u8]) -> Result<Vec<ParagraphTextSpan
                     _ => {}
                 }
                 if let Some(paragraph) = current.as_mut() {
-                    if name == b"r" {
+                    if name == b"hyperlink" {
+                        paragraph.hyperlink_count += 1;
+                        paragraph.hyperlink_depth += 1;
+                        let has_destination = attribute_value_bytes(event, b"id")?
+                            .is_some_and(|value| !value.is_empty())
+                            || attribute_value_bytes(event, b"anchor")?
+                                .is_some_and(|value| !value.is_empty());
+                        if paragraph.hyperlink_count != 1
+                            || paragraph.hyperlink_depth != 1
+                            || paragraph.run_depth != 0
+                            || paragraph.in_run_properties
+                            || !has_destination
+                        {
+                            paragraph.safe = false;
+                        }
+                    } else if name == b"r" {
                         paragraph.run_count += 1;
+                        paragraph.run_depth += 1;
+                        if paragraph.hyperlink_count > 0 && paragraph.hyperlink_depth != 1 {
+                            paragraph.safe = false;
+                        }
                         if paragraph.run_count == 1 {
                             paragraph.run_insert_position = Some(
                                 usize::try_from(reader.buffer_position())
@@ -378,6 +402,10 @@ fn scan_document_paragraphs(document_xml: &[u8]) -> Result<Vec<ParagraphTextSpan
                     if name == b"t" {
                         paragraph.text_element_count += 1;
                         paragraph.in_text = true;
+                        paragraph.text_inside_hyperlink = paragraph.hyperlink_depth == 1;
+                        if paragraph.hyperlink_depth == 1 && paragraph.run_depth != 1 {
+                            paragraph.safe = false;
+                        }
                     }
                 }
             }
@@ -399,7 +427,11 @@ fn scan_document_paragraphs(document_xml: &[u8]) -> Result<Vec<ParagraphTextSpan
                     if forbidden_text_carrier(name) {
                         paragraph.safe = false;
                     }
-                    if name == b"t" {
+                    if name == b"hyperlink" {
+                        paragraph.safe = false;
+                    } else if name == b"r" && paragraph.hyperlink_depth > 0 {
+                        paragraph.safe = false;
+                    } else if name == b"t" {
                         paragraph.text_element_count += 1;
                         paragraph.safe = false;
                     }
@@ -471,6 +503,14 @@ fn scan_document_paragraphs(document_xml: &[u8]) -> Result<Vec<ParagraphTextSpan
                     if let Some(paragraph) = current.as_mut() {
                         paragraph.in_text = false;
                     }
+                } else if name == b"r" {
+                    if let Some(paragraph) = current.as_mut() {
+                        paragraph.run_depth = paragraph.run_depth.saturating_sub(1);
+                    }
+                } else if name == b"hyperlink" {
+                    if let Some(paragraph) = current.as_mut() {
+                        paragraph.hyperlink_depth = paragraph.hyperlink_depth.saturating_sub(1);
+                    }
                 } else if name == b"rPr" {
                     if let Some(paragraph) = current.as_mut() {
                         paragraph.in_run_properties = false;
@@ -490,7 +530,16 @@ fn scan_document_paragraphs(document_xml: &[u8]) -> Result<Vec<ParagraphTextSpan
                                 text: paragraph.text,
                                 start,
                                 end,
-                                safe: paragraph.safe && paragraph.text_element_count == 1,
+                                safe: paragraph.safe
+                                    && paragraph.text_element_count == 1
+                                    && paragraph.hyperlink_depth == 0
+                                    && paragraph.run_depth == 0
+                                    && (paragraph.hyperlink_count == 0
+                                        || (paragraph.hyperlink_count == 1
+                                            && paragraph.text_inside_hyperlink
+                                            && paragraph.run_count == 1)),
+                                hyperlink_label: paragraph.hyperlink_count == 1
+                                    && paragraph.text_inside_hyperlink,
                                 table_index: paragraph.table_index,
                                 row_index: paragraph.row_index,
                                 column_index: paragraph.column_index,
@@ -787,6 +836,11 @@ fn editable_targets_with_spans(
                     ),
                     block_id: block.id.clone(),
                     kind: "table-cell".into(),
+                    carrier: if paragraph.hyperlink_label {
+                        "hyperlink-label".into()
+                    } else {
+                        "plain".into()
+                    },
                     text: paragraph.text.clone(),
                     expected_text_digest: text_digest,
                     row_index: Some(row_index),
@@ -821,12 +875,22 @@ fn editable_targets_with_spans(
         targets.push((
             DocxEditableTextTarget {
                 id: format!(
-                    "docx-text-{}-{}",
+                    "{}-{}-{}",
+                    if paragraph.hyperlink_label {
+                        "docx-hyperlink"
+                    } else {
+                        "docx-text"
+                    },
                     paragraph.paragraph_index,
                     &text_digest[..12]
                 ),
                 block_id: block.id.clone(),
                 kind: block.kind.clone(),
+                carrier: if paragraph.hyperlink_label {
+                    "hyperlink-label".into()
+                } else {
+                    "plain".into()
+                },
                 text: paragraph.text.clone(),
                 expected_text_digest: text_digest,
                 row_index: None,
@@ -854,7 +918,8 @@ fn editable_style_targets_with_spans(
         targets
             .into_iter()
             .filter_map(|(target, span)| {
-                if span.run_count != 1
+                if span.hyperlink_label
+                    || span.run_count != 1
                     || span.run_insert_position.is_none()
                     || !span.basic_style_safe
                 {
@@ -1158,6 +1223,7 @@ pub fn build_docx_text_patch_isolated(
     let semantic_match = output_targets.iter().any(|candidate| {
         candidate.block_id == target.block_id
             && candidate.kind == target.kind
+            && candidate.carrier == target.carrier
             && candidate.row_index == target.row_index
             && candidate.column_index == target.column_index
             && candidate.text == replacement_text
@@ -1165,14 +1231,20 @@ pub fn build_docx_text_patch_isolated(
     if !semantic_match {
         return Err("DOCX C2B/C2C 隔离输出语义复读与目标文本不一致".into());
     }
-    report.engine = if matches!(target.kind.as_str(), "list-item" | "table-cell") {
+    report.engine = if target.carrier == "hyperlink-label" {
+        "LongEdit UX-33G isolated hyperlink label patch"
+    } else if matches!(target.kind.as_str(), "list-item" | "table-cell") {
         "LongEdit C2C isolated structured text patch"
     } else {
         "LongEdit C2B isolated paragraph text patch"
     }
     .into();
     report.semantic_target_id = Some(target.id);
-    report.semantic_kind = Some(target.kind);
+    report.semantic_kind = Some(if target.carrier == "hyperlink-label" {
+        "hyperlink-label".into()
+    } else {
+        target.kind
+    });
     report.semantic_reparse_verified = true;
     Ok((report, output))
 }
@@ -1371,6 +1443,39 @@ mod tests {
     fn replace_once(source: &str, before: &str, after: &str) -> String {
         assert_eq!(source.matches(before).count(), 1);
         source.replacen(before, after, 1)
+    }
+
+    fn derive_simple_hyperlink_fixture(source: &[u8]) -> (Vec<u8>, String) {
+        let model = parse_docx(source).unwrap();
+        let (_, span) = editable_targets_with_spans(source, &model)
+            .unwrap()
+            .into_iter()
+            .find(|(target, _)| target.carrier == "plain" && target.row_index.is_none())
+            .unwrap();
+        let document_xml = read_part(source, DOCX_EDITABLE_DOCUMENT_PART).unwrap();
+        let document = String::from_utf8(document_xml.clone()).unwrap();
+        let mut search_end = span.start;
+        let run_start = loop {
+            let candidate = document[..search_end].rfind("<w:r").unwrap();
+            if document
+                .as_bytes()
+                .get(candidate + 4)
+                .is_some_and(|byte| *byte == b'>' || byte.is_ascii_whitespace())
+            {
+                break candidate;
+            }
+            search_end = candidate;
+        };
+        let run_end = span.end + document[span.end..].find("</w:r>").unwrap() + 6;
+        let mut linked = String::with_capacity(document.len() + 96);
+        linked.push_str(&document[..run_start]);
+        linked.push_str(r#"<w:hyperlink w:anchor="LongEditTarget">"#);
+        linked.push_str(&document[run_start..run_end]);
+        linked.push_str("</w:hyperlink>");
+        linked.push_str(&document[run_end..]);
+        let (_, derived) =
+            build_docx_document_patch_isolated(source, &digest(&document_xml), &linked).unwrap();
+        (derived, span.text)
     }
 
     #[test]
@@ -1572,6 +1677,89 @@ mod tests {
                     && candidate.text == replacement
             }));
         }
+    }
+
+    #[test]
+    fn ux33g_round_trips_derived_producer_hyperlink_labels_and_preserves_envelope() {
+        let fixtures = [
+            include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx").as_slice(),
+            include_bytes!("../../../fixtures/docx/producers/wps-writer.docx").as_slice(),
+            include_bytes!("../../../fixtures/docx/producers/libreoffice-writer.docx").as_slice(),
+        ];
+
+        for (index, source) in fixtures.into_iter().enumerate() {
+            let (linked, original) = derive_simple_hyperlink_fixture(source);
+            let linked_model = parse_docx(&linked).unwrap();
+            let (target, before_span) = editable_targets_with_spans(&linked, &linked_model)
+                .unwrap()
+                .into_iter()
+                .find(|(target, _)| target.carrier == "hyperlink-label")
+                .unwrap();
+            assert_eq!(target.text, original);
+            assert!(!inspect_docx_editable_style_targets(&linked, &linked_model)
+                .unwrap()
+                .iter()
+                .any(|style| style.block_id == target.block_id));
+
+            let replacement = format!("LongEdit hyperlink label {}", index + 1);
+            let (report, output) = build_docx_text_patch_isolated(
+                &linked,
+                &target.id,
+                &target.expected_text_digest,
+                &replacement,
+            )
+            .unwrap();
+            assert_eq!(
+                report.engine,
+                "LongEdit UX-33G isolated hyperlink label patch"
+            );
+            assert_eq!(report.semantic_kind.as_deref(), Some("hyperlink-label"));
+            assert!(report.semantic_reparse_verified);
+            assert_eq!(report.changed_parts, [DOCX_EDITABLE_DOCUMENT_PART]);
+
+            let output_model = parse_docx(&output).unwrap();
+            let (_, after_span) = editable_targets_with_spans(&output, &output_model)
+                .unwrap()
+                .into_iter()
+                .find(|(candidate, _)| {
+                    candidate.carrier == "hyperlink-label" && candidate.text == replacement
+                })
+                .unwrap();
+            let before_xml = read_part(&linked, DOCX_EDITABLE_DOCUMENT_PART).unwrap();
+            let after_xml = read_part(&output, DOCX_EDITABLE_DOCUMENT_PART).unwrap();
+            assert_eq!(
+                &before_xml[..before_span.start],
+                &after_xml[..after_span.start]
+            );
+            assert_eq!(&before_xml[before_span.end..], &after_xml[after_span.end..]);
+            assert_eq!(
+                String::from_utf8(after_xml)
+                    .unwrap()
+                    .matches(r#"<w:hyperlink w:anchor="LongEditTarget">"#)
+                    .count(),
+                1
+            );
+        }
+    }
+
+    #[test]
+    fn ux33g_rejects_ambiguous_or_destinationless_hyperlinks() {
+        let destinationless = br#"<w:document xmlns:w="w"><w:body><w:p><w:hyperlink><w:r><w:t>Unsafe</w:t></w:r></w:hyperlink></w:p></w:body></w:document>"#;
+        let multiple = br#"<w:document xmlns:w="w"><w:body><w:p><w:hyperlink w:anchor="a"><w:r><w:t>One</w:t></w:r></w:hyperlink><w:hyperlink w:anchor="b"><w:r><w:t>Two</w:t></w:r></w:hyperlink></w:p></w:body></w:document>"#;
+        let safe = br#"<w:document xmlns:w="w"><w:body><w:p><w:hyperlink w:anchor="a"><w:r><w:t>Safe</w:t></w:r></w:hyperlink></w:p></w:body></w:document>"#;
+
+        assert!(!scan_document_paragraphs(destinationless)
+            .unwrap()
+            .into_iter()
+            .any(|span| span.safe));
+        assert!(!scan_document_paragraphs(multiple)
+            .unwrap()
+            .into_iter()
+            .any(|span| span.safe));
+        assert!(scan_document_paragraphs(safe)
+            .unwrap()
+            .into_iter()
+            .any(|span| span.safe && span.hyperlink_label));
     }
 
     #[test]

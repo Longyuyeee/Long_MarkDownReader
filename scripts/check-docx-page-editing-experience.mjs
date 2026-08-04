@@ -65,6 +65,12 @@ requireTokens(view, 'DOCX direct color and font-size editing', [
   'fontColor: draftFontColor.value ? draftFontColor.value.slice(1).toUpperCase() : null',
   'fontSizeHalfPoints: draftFontSizeHalfPoints.value',
 ])
+requireTokens(view, 'DOCX safe hyperlink label editing', [
+  "carrier: 'plain' | 'hyperlink-label'",
+  "'链接文字'",
+  '替换链接文字（地址保持不变）',
+  "'editable-hyperlink'",
+])
 requireTokens(view, 'DOCX unsaved draft protection', [
   "title: 'DOCX 还有未保存修改'",
   "default: () => '继续编辑'",
@@ -85,6 +91,12 @@ requireTokens(patchKernel, 'DOCX safe direct color and font-size kernel', [
   'DOCX 字号必须在 8–72 磅之间',
   'ux33f_audits_all_producers_and_round_trips_only_safe_style_targets',
 ])
+requireTokens(patchKernel, 'DOCX isolated hyperlink label kernel', [
+  'pub carrier: String',
+  'LongEdit UX-33G isolated hyperlink label patch',
+  'ux33g_round_trips_derived_producer_hyperlink_labels_and_preserves_envelope',
+  'ux33g_rejects_ambiguous_or_destinationless_hyperlinks',
+])
 requireTokens(backend, 'DOCX reliable source transaction', [
   'fn save_docx_patch_source_to_path(',
   'write_bytes(source_path, &output)?;',
@@ -103,4 +115,4 @@ if ((registration.match(/save_docx_patch_source/g) || []).length < 2) {
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
 if (!/\| UX-33 \|[^\n]+\| 进行中 \|/.test(audit)) fail('UX-33 must remain in progress after the source-save baseline.')
 
-console.log('DOCX page editing contract passed: paged canvas, multi-target drafts, direct RGB/font-size formatting, reliable copy/source saves, and guarded navigation.')
+console.log('DOCX page editing contract passed: paged canvas, multi-target drafts, direct RGB/font-size formatting, isolated hyperlink labels, reliable copy/source saves, and guarded navigation.')
