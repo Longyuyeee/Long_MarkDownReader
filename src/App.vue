@@ -155,6 +155,7 @@ let unlistenOpenFile: (() => void) | null = null
 let routeLoadingTimer: ReturnType<typeof setTimeout> | null = null
 let routeLoadingStartedAt = performance.now()
 let routeLoadingName = 'initial'
+let routeLoadingSequence = 0
 performance.mark('longedit:route:initial:start')
 
 declare global {
@@ -235,6 +236,7 @@ const getRouteLoadingLabel = (routeName: unknown) => {
 
 const startRouteLoading = (routeName?: unknown) => {
   if (routeLoadingTimer) clearTimeout(routeLoadingTimer)
+  routeLoadingSequence += 1
   routeLoadingStartedAt = performance.now()
   routeLoadingName = String(routeName || 'unknown')
   performance.mark(`longedit:route:${routeLoadingName}:start`)
@@ -242,11 +244,13 @@ const startRouteLoading = (routeName?: unknown) => {
   routeLoading.value = true
 }
 
-const finishRouteLoading = () => {
+const finishRouteLoading = (sequence = routeLoadingSequence) => {
+  if (sequence !== routeLoadingSequence) return
   if (routeLoadingTimer) clearTimeout(routeLoadingTimer)
   const elapsedMs = performance.now() - routeLoadingStartedAt
   const remaining = Math.max(0, 420 - elapsedMs)
   routeLoadingTimer = setTimeout(() => {
+    if (sequence !== routeLoadingSequence) return
     routeLoading.value = false
     const totalElapsedMs = performance.now() - routeLoadingStartedAt
     performance.mark(`longedit:route:${routeLoadingName}:ready`)
@@ -267,8 +271,16 @@ const removeBeforeEach = router.beforeEach((to) => {
   return true
 })
 const removeAfterEach = router.afterEach(() => {
-  // Give the destination component two paint frames before revealing it.
-  requestAnimationFrame(() => requestAnimationFrame(finishRouteLoading))
+  const sequence = routeLoadingSequence
+  let finished = false
+  const finishOnce = () => {
+    if (finished) return
+    finished = true
+    finishRouteLoading(sequence)
+  }
+  // Occluded WebView2 windows can suspend animation frames, so keep a bounded fallback.
+  requestAnimationFrame(() => requestAnimationFrame(finishOnce))
+  setTimeout(finishOnce, 250)
 })
 
 const handleGlobalKeydown = (e: KeyboardEvent) => {
