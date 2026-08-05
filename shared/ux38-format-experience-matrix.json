@@ -34,6 +34,13 @@
         "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
       }
     },
+    "ux38d1-pdf": {
+      "evidence": ["docs/evidence/ux38d1-pdf-workspace/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json", "docs/evidence/ui4b-editors/audit-manifest.json", "shared/release-capability-matrix.json"],
+      "dimensions": {
+        "open": "accepted", "load": "accepted", "states": "accepted", "edit": "partial", "save": "partial", "return": "accepted",
+        "tab": "accepted", "theme": "referenced", "scale": "accepted", "keyboard": "partial", "performance": "partial", "errors": "accepted"
+      }
+    },
     "specialized-existing": {
       "evidence": ["shared/release-capability-matrix.json", "docs/evidence/ui4b-editors/audit-manifest.json"],
       "dimensions": {
@@ -75,7 +82,7 @@
     { "id": "svg", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
     { "id": "toml", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
     { "id": "canvas", "cohort": "diagram-canvas", "profile": "specialized-existing" },
-    { "id": "pdf", "cohort": "document-media", "profile": "specialized-existing" },
+    { "id": "pdf", "cohort": "document-media", "profile": "ux38d1-pdf" },
     { "id": "table", "cohort": "data-grid", "profile": "ux38c-table-grid" },
     { "id": "docx", "cohort": "document-media", "profile": "specialized-existing" },
     { "id": "ods", "cohort": "document-media", "profile": "ux38c-ods" },

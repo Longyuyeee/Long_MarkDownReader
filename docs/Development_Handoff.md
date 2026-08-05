@@ -660,3 +660,9 @@ UX-38 总项继续进行。接手后进入 UX-38C2：真实复测 XLSX/ODS 的�
 UX-38C2 已完成，数据表格格式族收口，UX-12、UX-13、UX-32 关闭。XLSX 与 ODS 采用工作区容器响应布局和不透明冻结层，并持续记忆滚动位置与活动 Sheet；CSV/TSV 修正加载态恢复时机。真实 Tauri Debug WebView2 已验证 CSV、TSV、XLSX、ODS 从知识图谱返回后的活动文件与滚动上下文，XLSX/ODS 同时恢复目标 Sheet；运行时错误为 0，源文件哈希不变。证据见 `docs/evidence/ux38c2-workbook-context`，审计见 `docs/A20_UX38C2_Workbook_Context_Audit_2026-08-05.md`。
 
 UX-38 总项继续进行。接手后进入 UX-38D 文档媒体格式族，依次验收 PDF、DOCX/ODT、PPTX/ODP 的真实打开、模式切换、保存边界、主题、窄窗口、键盘和返回上下文。不得把有界 Office 能力写成完整等价编辑；当前 `releaseCandidate=false`。
+
+# 2026-08-05 UX-38D1 交接入口
+
+UX-38D1 PDF 工作区已完成。PDF 现在持续记忆当前页、双向滚动、缩放、适合宽度及侧栏状态，并在知识图谱往返后恢复；工具栏按工作区容器宽度折行，窄宽度侧栏标签采用两行紧凑布局。真实 Tauri Debug WebView2 在 220% 缩放下完成图谱返回与 900x720 窄窗口验收，运行时错误为 0，源 PDF 哈希不变。证据见 `docs/evidence/ux38d1-pdf-workspace`，审计见 `docs/A21_UX38D1_PDF_Workspace_Audit_2026-08-05.md`。
+
+UX-38 总项仍在进行中。接手后进入 UX-38D2，验收 DOCX/ODT 的打开、加载与异常状态、页面式编辑或结构化只读边界、显式保存/可靠副本、主题、窄窗口、键盘和返回上下文。PDF 原文只读、sidecar 批注及可靠新副本边界保持不变；当前 `releaseCandidate=false`。
