@@ -61,7 +61,7 @@
           </div>
         </aside>
 
-        <main class="odt-stage" data-testid="e1b-odt-stage">
+        <main ref="stageRef" class="odt-stage" data-testid="e1b-odt-stage" @scroll.passive="rememberOdtViewState()">
           <article class="odt-page">
             <template v-for="block in report.model.blocks" :key="block.id">
               <component
@@ -133,9 +133,10 @@ import { invoke } from '@tauri-apps/api/core'
 import {
   ChevronDown, ChevronUp, FileText, ImageOff, RefreshCw, Search, ShieldAlert, ShieldCheck,
 } from 'lucide-vue-next'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '../store/app'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 
 interface OdtTableCell { text: string; columnSpan: number; rowSpan: number }
 interface OdtBlock {
@@ -180,10 +181,16 @@ const store = useAppStore()
 const report = ref<OdtReadReport>()
 const loading = ref(false)
 const loadError = ref('')
+const stageRef = ref<HTMLElement | null>(null)
 const query = ref('')
 const matchIndex = ref(-1)
 const odtPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const fileName = computed(() => odtPath.value.split(/[\\/]/).pop() || '未命名.odt')
+const rememberOdtViewState = (path = odtPath.value) => {
+  const stage = stageRef.value
+  if (!path || !stage) return
+  rememberWorkspaceViewState(path, { scrollTop: stage.scrollTop, scrollLeft: stage.scrollLeft })
+}
 const mediaByPart = computed(() => new Map((report.value?.media || []).map(item => [item.partName, item])))
 const allWarnings = computed(() => [...(report.value?.model.warnings || []), ...(report.value?.mediaWarnings || [])])
 const matches = computed(() => {
@@ -222,6 +229,7 @@ const moveMatch = (direction: number) => {
 }
 const load = async () => {
   if (!odtPath.value || loading.value) return
+  const viewState = recallWorkspaceViewState(odtPath.value)
   loading.value = true
   loadError.value = ''
   try {
@@ -229,26 +237,32 @@ const load = async () => {
       libraryRoot: store.libraryPath,
       path: odtPath.value,
     })
-    await scrollToRouteLocator()
   } catch (error) {
     report.value = undefined
     loadError.value = String(error)
   } finally {
     loading.value = false
   }
+  if (report.value) {
+    await nextTick()
+    if (routeLocatorId.value) await scrollToRouteLocator()
+    else if (viewState) stageRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
+  }
 }
 
-watch(odtPath, () => {
+watch(odtPath, (_next, previous) => {
+  if (previous) rememberOdtViewState(previous)
   query.value = ''
   matchIndex.value = -1
   void load()
 }, { immediate: true })
 watch(matches, value => { matchIndex.value = value.length ? 0 : -1 })
 watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocator)
+onBeforeUnmount(rememberOdtViewState)
 </script>
 
 <style scoped>
-.odt-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; color: var(--text-primary); background: var(--bg-secondary); font-size: 13px; }
+.odt-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; color: var(--text-primary); background: var(--bg-secondary); font-size: 13px; container-type: inline-size; }
 .odt-toolbar { min-height: 52px; padding: 7px 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
 .document-identity, .toolbar-actions, .odt-search, .odt-status > div { display: flex; align-items: center; }
 .document-identity { min-width: 0; gap: 9px; }
@@ -307,5 +321,19 @@ h4.odt-heading, h5.odt-heading, h6.odt-heading { font-size: 15px; }
   .odt-outline { display: none; }
   .odt-page { padding: 42px 36px; }
   .odt-search input { width: 105px; }
+}
+@container (max-width: 820px) {
+  .odt-layout { grid-template-columns: minmax(0, 1fr); }
+  .odt-outline { display: none; }
+  .odt-page { padding: 42px 36px; }
+  .odt-search input { width: 105px; }
+}
+@container (max-width: 560px) {
+  .odt-toolbar { flex-wrap: wrap; }
+  .document-identity { flex: 1 1 100%; }
+  .document-identity span { display: none; }
+  .toolbar-actions { width: 100%; justify-content: flex-end; }
+  .odt-search { flex: 1; }
+  .odt-search input { min-width: 0; width: 100%; }
 }
 </style>

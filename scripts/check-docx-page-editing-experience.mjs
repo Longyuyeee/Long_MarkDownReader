@@ -114,6 +114,6 @@ if ((registration.match(/save_docx_patch_source/g) || []).length < 2) {
 }
 
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
-if (!/\| UX-33 \|[^\n]+\| 进行中 \|/.test(audit)) fail('UX-33 must remain in progress after the source-save baseline.')
+if (!/\| UX-33 \|[^\n]+\| 已完成（有界） \|/.test(audit)) fail('UX-33 bounded page editing must remain recorded as completed.')
 
 console.log('DOCX page editing contract passed: paged canvas, multi-target drafts, direct RGB/font-size formatting, isolated hyperlink labels, reliable copy/source saves, and guarded navigation.')

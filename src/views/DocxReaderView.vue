@@ -118,7 +118,7 @@
           </div>
         </aside>
 
-        <main class="docx-stage" aria-label="DOCX 分页正文">
+        <main ref="stageRef" class="docx-stage" aria-label="DOCX 分页正文" @scroll.passive="rememberDocxViewState()">
           <article
             v-for="(page, pageIndex) in documentPages"
             :key="page.id"
@@ -473,6 +473,7 @@ import {
   X as XIcon,
 } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 
 interface DocxBlock {
   id: string
@@ -684,6 +685,7 @@ const store = useAppStore()
 const report = ref<DocxReadReport | null>(null)
 const loading = ref(false)
 const loadError = ref('')
+const stageRef = ref<HTMLElement | null>(null)
 const query = ref('')
 const matchIndex = ref(-1)
 const editorOpen = ref(false)
@@ -714,6 +716,16 @@ const fontSizeOptions = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 6
 const docxPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const routeLocator = computed(() => typeof route.query.locator === 'string' ? route.query.locator : '')
 const fileName = computed(() => docxPath.value.split(/[\\/]/).pop() || '未命名.docx')
+const rememberDocxViewState = (path = docxPath.value) => {
+  const stage = stageRef.value
+  if (!path || !stage) return
+  rememberWorkspaceViewState(path, {
+    scrollTop: stage.scrollTop,
+    scrollLeft: stage.scrollLeft,
+    panelOpen: editorOpen.value,
+    mode: editMode.value,
+  })
+}
 const profile = computed(() => report.value?.model.compatibility as DocxProfile)
 const mediaByPart = computed(() => new Map(
   (report.value?.media || []).map(media => [media.partName, media]),
@@ -1316,6 +1328,7 @@ const moveSearch = (direction: -1 | 1) => {
 }
 const load = async () => {
   if (!docxPath.value || loading.value) return
+  const viewState = recallWorkspaceViewState(docxPath.value)
   loading.value = true
   loadError.value = ''
   try {
@@ -1331,6 +1344,10 @@ const load = async () => {
         ? 'style'
         : 'imageAltText'
     editMode.value = availableMode
+    if (viewState?.mode === 'text' && report.value.editableTextTargets.length) editMode.value = 'text'
+    if (viewState?.mode === 'style' && report.value.editableStyleTargets.length) editMode.value = 'style'
+    if (viewState?.mode === 'imageAltText' && report.value.editableImageTargets.length) editMode.value = 'imageAltText'
+    if (typeof viewState?.panelOpen === 'boolean') editorOpen.value = viewState.panelOpen
     selectedTargetId.value = (
       availableMode === 'text'
         ? report.value.editableTextTargets[0]
@@ -1342,16 +1359,21 @@ const load = async () => {
     clearDraftHistory()
     resetTargetDraft()
     invalidatePreview()
-    scrollToRouteLocator()
   } catch (cause) {
     report.value = null
     loadError.value = String(cause).replace(/^Error:\s*/, '')
   } finally {
     loading.value = false
   }
+  if (report.value) {
+    await nextTick()
+    if (routeLocator.value) scrollToRouteLocator()
+    else if (viewState) stageRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
+  }
 }
 
-watch(docxPath, () => {
+watch(docxPath, (_next, previous) => {
+  if (previous) rememberDocxViewState(previous)
   query.value = ''
   matchIndex.value = -1
   load()
@@ -1380,11 +1402,14 @@ watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocato
 onBeforeRouteLeave(() => mayLeave())
 onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
 onMounted(() => window.addEventListener('beforeunload', beforeUnload))
-onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
+onBeforeUnmount(() => {
+  rememberDocxViewState()
+  window.removeEventListener('beforeunload', beforeUnload)
+})
 </script>
 
 <style scoped>
-.docx-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; color: var(--text-primary); background: var(--bg-secondary); font-size: 13px; }
+.docx-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; color: var(--text-primary); background: var(--bg-secondary); font-size: 13px; container-type: inline-size; }
 .docx-toolbar { min-height: 52px; padding: 7px 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
 .document-identity, .toolbar-actions, .docx-search, .compatibility-warning, .docx-status > div { display: flex; align-items: center; }
 .document-identity { gap: 9px; min-width: 0; }
@@ -1407,7 +1432,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
 .compatibility-warning div { display: flex; flex-direction: column; gap: 2px; }
 .compatibility-warning strong { font-size: 12px; }
 .compatibility-warning span { color: var(--text-secondary); font-size: 11px; }
-.docx-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 230px minmax(0, 1fr); }
+.docx-layout { position: relative; flex: 1; min-height: 0; display: grid; grid-template-columns: 230px minmax(0, 1fr); }
 .docx-layout.editor-open { grid-template-columns: 210px minmax(0, 1fr) 310px; }
 .docx-outline { overflow: auto; padding: 12px 10px; border-right: 1px solid var(--border-color); background: var(--bg-primary); }
 .outline-heading { padding: 0 5px 8px; display: flex; justify-content: space-between; }
@@ -1526,5 +1551,25 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 @media (min-width: 821px) and (max-width: 1180px) {
   .docx-layout.editor-open { grid-template-columns: minmax(0, 1fr) 300px; }
   .docx-layout.editor-open .docx-outline { display: none; }
+}
+@container (max-width: 1180px) {
+  .docx-layout.editor-open { grid-template-columns: minmax(0, 1fr) 300px; }
+  .docx-layout.editor-open .docx-outline { display: none; }
+}
+@container (max-width: 820px) {
+  .docx-layout { grid-template-columns: 180px minmax(0, 1fr); }
+  .docx-layout.editor-open { grid-template-columns: minmax(0, 1fr) 280px; }
+  .docx-layout.editor-open .docx-outline { display: none; }
+  .docx-page { --page-padding-top: 42px !important; --page-padding-right: 36px !important; --page-padding-bottom: 42px !important; --page-padding-left: 36px !important; min-height: 780px; }
+  .docx-search input { width: 105px; }
+}
+@container (max-width: 680px) {
+  .docx-toolbar { flex-wrap: wrap; }
+  .document-identity { flex: 1 1 100%; }
+  .document-title span { display: none; }
+  .toolbar-actions { width: 100%; justify-content: flex-end; }
+  .docx-layout, .docx-layout.editor-open { grid-template-columns: minmax(0, 1fr); }
+  .docx-outline, .docx-layout.editor-open .docx-outline { display: none; }
+  .docx-editor { position: absolute; inset: 0 0 0 auto; z-index: 6; width: min(310px, 88%); box-shadow: -8px 0 24px rgba(0,0,0,.16); }
 }
 </style>

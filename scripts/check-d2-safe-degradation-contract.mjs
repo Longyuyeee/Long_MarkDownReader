@@ -109,7 +109,7 @@ const expectedLanes = new Set([
   "pdf-sidecar-isolation",
   "verified-office-copy",
   "external-application-handoff",
-  "bounded-workbook-write",
+  "bounded-structured-write",
 ]);
 if (
   laneIds.size !== expectedLanes.size ||
@@ -121,7 +121,7 @@ if (
 for (const [id, saveMode, profile] of [
   ["log", "overwrite", "professional-log"],
   ["pdf", "sidecar", "pdf-sidecar"],
-  ["docx", "copy", "office-copy"],
+  ["docx", "bounded-overwrite", "office-copy"],
   ["pptx", "copy", "office-copy"],
   ["ods", "none", "odf-preview"],
   ["odp", "none", "odf-preview"],

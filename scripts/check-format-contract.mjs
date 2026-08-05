@@ -186,7 +186,7 @@ if (!docxFormat
   || docxFormat.adapters?.creator !== null
   || docxFormat.adapters?.indexer !== 'docx'
   || docxFormat.userCapability?.level !== 'basic-edit'
-  || docxFormat.userCapability?.saveMode !== 'copy') failures.push('C2E DOCX basic copy-edit contract is incomplete')
+  || docxFormat.userCapability?.saveMode !== 'bounded-overwrite') failures.push('UX-33 DOCX bounded source/copy editing contract is incomplete')
 const pptxFormat = registry.formats?.find(format => format.id === 'pptx')
 if (!pptxFormat
   || pptxFormat.routeName !== 'PptxReader'
@@ -475,16 +475,18 @@ requireText(docxCommands, 'producer_evidence_missing:{producer}', 'C2E must repo
 requireText(docxCommands, 'write_attempted: false', 'C2E readiness must prove that it never attempts a write')
 requireText(docxCommands, 'c2e_save_readiness_reports_conflicts_without_writing_files', 'C2E must regress source, target, and no-write gates')
 requireText(docxCommands, 'save_docx_patch_copy', 'C2E must expose reliable save-as-copy without source overwrite')
+requireText(docxCommands, 'save_docx_patch_source', 'UX-33 must expose guarded DOCX source saving')
+requireText(docxCommands, 'rollback_protected: true', 'UX-33 DOCX source save must retain rollback protection')
 requireText(docxCommands, 'write_new_bytes', 'C2E must use atomic create-new reliable writing')
 requireText(docxCommands, 'c2e_reliably_saves_and_reopens_all_three_producer_copies', 'C2E must regress all producer copies')
 if (docxCommands.includes('write_docx') || docxCommands.includes('save_docx_overwrite')) failures.push('C2E must not expose DOCX source overwrite commands')
-requireText(docxReader, '基础编辑副本', 'C2E DOCX workspace must identify its bounded editing capability')
-requireText(docxReader, '原文件只读', 'C1 DOCX workspace must state the original file is read-only')
+requireText(docxReader, 'Word 页面编辑 · 草稿只驻留内存 · 点击保存才写入', 'UX-33 DOCX workspace must identify explicit-save page editing')
 requireText(docxReader, '文档目录', 'C1 DOCX workspace must expose a heading outline')
 requireText(docxReader, '搜索 DOCX 正文', 'C1 DOCX workspace must expose in-document search')
 requireText(docxReader, '兼容画像', 'C1 DOCX workspace must expose its compatibility profile')
-requireText(docxReader, '原件始终只读', 'C2E DOCX workspace must state the no-overwrite boundary')
 requireText(docxReader, 'save_docx_patch_copy', 'C2E DOCX workspace must expose reliable save-as-copy')
+requireText(docxReader, 'save_docx_patch_source', 'UX-33 DOCX workspace must expose guarded source saving')
+requireText(docxReader, '覆盖当前 DOCX？', 'UX-33 DOCX source overwrite must require explicit confirmation')
 requireText(docxReader, 'media.dataUrl', 'C1-2A DOCX workspace must render verified embedded media')
 requireText(docxReader, 'numberingDefinitionCount', 'C1-2A DOCX workspace must expose numbering resolution in its compatibility profile')
 requireText(docxReader, 'cell.columnSpan', 'C1-2B2 DOCX workspace must render horizontal table merges')

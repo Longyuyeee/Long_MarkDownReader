@@ -7,6 +7,8 @@ export interface WorkspaceViewState {
   fitWidth?: boolean
   sidebarOpen?: boolean
   sidebarTab?: string
+  panelOpen?: boolean
+  mode?: string
 }
 
 const MAX_ENTRIES = 24
