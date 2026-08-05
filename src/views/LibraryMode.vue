@@ -104,6 +104,9 @@
                 <n-tree 
                   v-else
                   ref="treeInstRef"
+                  class="library-file-tree"
+                  aria-label="知识库文件树"
+                  :aria-describedby="preview.focusPath ? 'file-tree-detail-preview' : undefined"
                   :data="treeData" 
                   lazy
                   multiple
@@ -114,6 +117,9 @@
                   :selected-keys="selectedKeys"
                   v-model:expanded-keys="expandedKeys"
                   @update:selected-keys="handleNodeSelect"
+                  @focus="handleTreeKeyboardFocus"
+                  @blur="handleTreeKeyboardBlur"
+                  @keydown="handleTreeKeyboardNavigation"
                 />
               </div>
             </div>
@@ -1972,6 +1978,44 @@ const scheduleFilePreview = (option: TreeOption, x: number, y: number, delay: nu
     preview.timer = null
   }, delay)
 }
+const findTreeOptionByKey = (nodes: TreeOption[], key: string): TreeOption | null => {
+  for (const node of nodes) {
+    if (node.key === key) return node
+    const nested = node.children ? findTreeOptionByKey(node.children, key) : null
+    if (nested) return nested
+  }
+  return null
+}
+const schedulePendingTreePreview = () => {
+  requestAnimationFrame(() => {
+    const tree = document.querySelector<HTMLElement>('.library-file-tree')
+    if (!tree || !tree.contains(document.activeElement)) return
+    const pending = tree.querySelector<HTMLElement>('.n-tree-node--pending[data-key]')
+    const key = pending?.dataset.key || ''
+    const option = key ? findTreeOptionByKey(treeData.value, key) : null
+    if (!pending || !option?.isLeaf) {
+      preview.focusPath = ''
+      hideFilePreview()
+      return
+    }
+    preview.focusPath = key
+    const rect = pending.getBoundingClientRect()
+    scheduleFilePreview(option, rect.right, rect.top, 80)
+  })
+}
+const handleTreeKeyboardFocus = () => schedulePendingTreePreview()
+const handleTreeKeyboardBlur = () => {
+  preview.focusPath = ''
+  hideFilePreview()
+}
+const handleTreeKeyboardNavigation = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    preview.focusPath = ''
+    hideFilePreview()
+    return
+  }
+  if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(event.key)) schedulePendingTreePreview()
+}
 const nodeProps = ({ option }: { option: TreeOption }) => ({
   'data-key': option.key,
   'data-drop-path': option.key,
@@ -2005,23 +2049,6 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
   },
   onMouseleave: () => {
     if (preview.focusPath !== option.key) hideFilePreview()
-  },
-  onFocus: (e: FocusEvent) => {
-    if (!option.isLeaf) return
-    preview.focusPath = option.key as string
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    scheduleFilePreview(option, rect.right, rect.top, 120)
-  },
-  onBlur: (e: FocusEvent) => {
-    const target = e.currentTarget as HTMLElement
-    if (e.relatedTarget instanceof Node && target.contains(e.relatedTarget)) return
-    if (preview.focusPath === option.key) preview.focusPath = ''
-    hideFilePreview()
-  },
-  onKeydown: (e: KeyboardEvent) => {
-    if (e.key !== 'Escape' || preview.focusPath !== option.key) return
-    preview.focusPath = ''
-    hideFilePreview()
   },
   onContextmenu: (e: MouseEvent) => {
     if (virtualDrag.active) return; e.preventDefault(); contextMenu.show = false;
