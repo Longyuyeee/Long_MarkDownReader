@@ -678,3 +678,9 @@ ODT 仍是预览路由且未注册：Word/LibreOffice 通过，WPS 生产者门�
 UX-38D3 PPTX/ODP 工作区已完成，文档媒体格式族收口。PPTX 现在记忆当前幻灯片、详情面板与画布滚动，并按实际工作区宽度响应；ODP 记忆当前幻灯片，且加载态不会再覆盖历史上下文。真实 Tauri Debug WebView2 已验证两种格式从知识图谱返回、窄窗口与源文件不变，运行时错误为 0；证据见 `docs/evidence/ux38d3-presentation-workspace`，完整结论见 `docs/A23_UX38D3_Presentation_Workspace_Audit_2026-08-05.md`。
 
 接手后进入 UX-38E 图形画布格式族，按 Canvas、Draw.io、Diagram、OPML 的顺序核对打开、显式保存、撤销重做、主题、窄窗口、键盘和返回上下文，优先复用 UX-34/UX-37 已有真实证据并只补缺口。PPTX 仍只能可靠另存副本，ODP 仍为只读，`releaseCandidate=false` 不变。
+
+# 2026-08-05 UX-38E 交接入口
+
+UX-38E 图形工作区已完成。Canvas、Draw.io、Mermaid、OPML 均已验证内存草稿、显式保存和知识图谱往返上下文；Canvas、Draw.io、Mermaid 本轮通过撤销重做，OPML 复用 UX-37A 已接受证据。真实 Tauri WebView2 审计运行时错误和意外弹窗均为 0，证据见 `docs/evidence/ux38e-graphics-workspace`，完整结论见 `docs/A24_UX38E_Graphics_Workspace_Audit_2026-08-05.md`。
+
+接手后进入 UX-38F：只收口 `.doc/.xls/.ppt/.wps/.et/.dps` 的外部应用发现、不可用状态、失败说明、返回上下文与窄窗口，不宣称 LongEdit 内部等价编辑或转换。UX-38F 完成后执行 UX-38 总矩阵最终审计；当前 `releaseCandidate=false`。

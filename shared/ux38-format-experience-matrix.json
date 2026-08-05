@@ -62,6 +62,13 @@
         "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
       }
     },
+    "ux38e-graphics": {
+      "evidence": ["docs/evidence/ux38e-graphics-workspace/manifest.json", "docs/evidence/ux37a-opml-canvas/manifest.json", "docs/evidence/ux34-drawio-canvas-stability/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json"],
+      "dimensions": {
+        "open": "accepted", "load": "accepted", "states": "accepted", "edit": "accepted", "save": "accepted", "return": "accepted",
+        "tab": "accepted", "theme": "accepted", "scale": "accepted", "keyboard": "accepted", "performance": "partial", "errors": "accepted"
+      }
+    },
     "specialized-existing": {
       "evidence": ["shared/release-capability-matrix.json", "docs/evidence/ui4b-editors/audit-manifest.json"],
       "dimensions": {
@@ -102,7 +109,7 @@
     { "id": "xml", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
     { "id": "svg", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
     { "id": "toml", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
-    { "id": "canvas", "cohort": "diagram-canvas", "profile": "specialized-existing" },
+    { "id": "canvas", "cohort": "diagram-canvas", "profile": "ux38e-graphics" },
     { "id": "pdf", "cohort": "document-media", "profile": "ux38d1-pdf" },
     { "id": "table", "cohort": "data-grid", "profile": "ux38c-table-grid" },
     { "id": "docx", "cohort": "document-media", "profile": "ux38d2-docx" },
@@ -116,8 +123,8 @@
     { "id": "wps-spreadsheet", "cohort": "external-office", "profile": "external-dependent" },
     { "id": "wps-presentation", "cohort": "external-office", "profile": "external-dependent" },
     { "id": "workbook", "cohort": "data-grid", "profile": "ux38c-workbook" },
-    { "id": "drawio", "cohort": "diagram-canvas", "profile": "specialized-existing" },
-    { "id": "diagram", "cohort": "diagram-canvas", "profile": "specialized-existing" },
-    { "id": "opml", "cohort": "diagram-canvas", "profile": "specialized-existing" }
+    { "id": "drawio", "cohort": "diagram-canvas", "profile": "ux38e-graphics" },
+    { "id": "diagram", "cohort": "diagram-canvas", "profile": "ux38e-graphics" },
+    { "id": "opml", "cohort": "diagram-canvas", "profile": "ux38e-graphics" }
   ]
 }
