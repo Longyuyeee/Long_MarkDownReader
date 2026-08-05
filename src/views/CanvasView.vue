@@ -374,7 +374,6 @@ const collapsedNodeIds = ref<string[]>([])
 const layoutBackup = ref<Record<string, { x: number; y: number }>>({})
 const undoStack = ref<string[]>([])
 const redoStack = ref<string[]>([])
-let saveTimer: ReturnType<typeof setTimeout> | null = null
 let textEditSnapshot: string | null = null
 let edgeEditSnapshot: string | null = null
 let pasteSequence = 0
@@ -1242,8 +1241,6 @@ const openNode = async (node: CanvasNode) => {
 
 const markDirty = () => {
   saveState.value = 'dirty'
-  if (saveTimer) clearTimeout(saveTimer)
-  saveTimer = setTimeout(saveCanvas, 1200)
 }
 const queueViewportSize = (entry?: ResizeObserverEntry) => {
   const rect = entry?.contentRect ?? viewportRef.value?.getBoundingClientRect()
@@ -1265,8 +1262,7 @@ const queueViewportSize = (entry?: ResizeObserverEntry) => {
   })
 }
 const saveCanvas = async () => {
-  if (!canvasPath.value || !store.libraryPath || saveState.value === 'saving') return
-  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null }
+  if (!canvasPath.value || !store.libraryPath || !['dirty', 'error'].includes(saveState.value)) return
   saveState.value = 'saving'
   try {
     await invoke('write_canvas_file', { libraryRoot: store.libraryPath, path: canvasPath.value, content: JSON.stringify(document, null, 2) + '\n' })
@@ -1314,6 +1310,13 @@ const handleKeydown = (event: KeyboardEvent) => {
   else if (event.key === 'Delete' || event.key === 'Backspace') removeSelection()
   else if (event.key === 'Escape') { setTool('select'); clearSelection() }
 }
+const mayLeave = () => !['dirty', 'error'].includes(saveState.value)
+  || window.confirm('Canvas 还有未保存修改，确定离开并丢弃这些修改吗？')
+const beforeUnload = (event: BeforeUnloadEvent) => {
+  if (!['dirty', 'error'].includes(saveState.value)) return
+  event.preventDefault()
+  event.returnValue = ''
+}
 
 watch([canvasPath, () => route.query.node], loadCanvas)
 watch(snapEnabled, enabled => {
@@ -1322,6 +1325,7 @@ watch(snapEnabled, enabled => {
 })
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('beforeunload', beforeUnload)
   if (viewportRef.value) {
     viewportResizeObserver = new ResizeObserver(entries => queueViewportSize(entries[entries.length - 1]))
     viewportResizeObserver.observe(viewportRef.value)
@@ -1332,6 +1336,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('beforeunload', beforeUnload)
   viewportResizeObserver?.disconnect()
   viewportResizeObserver = null
   if (viewportResizeFrame) cancelAnimationFrame(viewportResizeFrame)
@@ -1339,9 +1344,8 @@ onBeforeUnmount(() => {
   pendingViewportSize = null
   cancelAnimationFrame(performanceFrameId)
   edgeGeometryCache.clear()
-  if (saveTimer) clearTimeout(saveTimer)
 })
-onBeforeRouteLeave(async () => { if (saveState.value === 'dirty') await saveCanvas(); return true })
+onBeforeRouteLeave(() => mayLeave())
 </script>
 
 <style scoped>
