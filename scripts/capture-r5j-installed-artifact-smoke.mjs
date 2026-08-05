@@ -620,7 +620,7 @@ if (centeredNavigation.nodeId !== selectedTopic.nodeId || centeredNavigation.tit
 await capture('installed-knowledge-topic-centered.jpg')
 checks.push({ id: 'installed-knowledge-topic-centered-navigation', status: 'passed' })
 
-await navigate('#/settings', '.settings-view', 'installed consented knowledge observation settings')
+await navigate('#/settings?focus=knowledge-observation', '.settings-view', 'installed consented knowledge observation settings')
 await waitFor(`document.querySelector('[data-testid="knowledge-observation-export"]') !== null`, 'knowledge observation baseline surface')
 await waitFor(`document.querySelector('[data-testid="knowledge-observation-compare"]') !== null`, 'knowledge observation comparison action')
 const observationSurface = await evaluate(`(() => ({

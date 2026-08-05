@@ -18,6 +18,7 @@ for (const token of [
   "stage: 'UX-33J'",
   'installed-docx-hyperlink-evidence.json',
   "navigate('#/workspace', '.workspace-home', 'installed workspace initialization')",
+  "navigate('#/settings?focus=knowledge-observation', '.settings-view', 'installed consented knowledge observation settings')",
   'microsoft-word-hyperlinks.docx',
   'wps-writer-hyperlinks.docx',
   'libreoffice-writer-hyperlinks.docx',
