@@ -13,7 +13,13 @@
         </div>
       </div>
       <div class="actions">
-        <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="load(true)">
+        <n-button quaternary circle size="small" title="撤销" :disabled="loading || applying || !undoStack.length" @click="undo">
+          <template #icon><n-icon :component="UndoIcon" /></template>
+        </n-button>
+        <n-button quaternary circle size="small" title="重做" :disabled="loading || applying || !redoStack.length" @click="redo">
+          <template #icon><n-icon :component="RedoIcon" /></template>
+        </n-button>
+        <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reloadFromDisk">
           <template #icon><n-icon :component="RefreshIcon" /></template>
         </n-button>
         <n-button type="primary" size="small" :loading="saving" :disabled="loading || saving || !dirty || !analysis?.valid" @click="save">
@@ -150,13 +156,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage } from 'naive-ui'
-import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import {
   AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, Box as BoxIcon, File as FileIcon,
-  RefreshCw as RefreshIcon, Save as SaveIcon, Search as SearchIcon, ShieldCheck as ShieldIcon,
+  Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Search as SearchIcon, ShieldCheck as ShieldIcon,
+  Undo2 as UndoIcon,
   Workflow as WorkflowIcon,
 } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
@@ -196,6 +203,8 @@ const analysis = ref<Analysis | null>(null)
 const activePageId = ref('')
 const selectedCellId = ref('')
 const cellQuery = ref('')
+const undoStack = ref<string[]>([])
+const redoStack = ref<string[]>([])
 const form = reactive({ label: '', x: 0, y: 0, width: 120, height: 60, fillColor: '#ffffff', strokeColor: '#64748b' })
 
 const activePage = computed(() => analysis.value?.pages.find(page => page.id === activePageId.value) || analysis.value?.pages[0])
@@ -258,6 +267,8 @@ const analyze = async (source: string) => {
 const load = async (discardDraft = false) => {
   loading.value = true
   loadError.value = ''
+  undoStack.value = []
+  redoStack.value = []
   try {
     if (!documentPath.value.toLocaleLowerCase().match(/\.(drawio|dio)$/)) throw new Error('当前路径不是已注册的 Draw.io 文件')
     const draft = store.tabs.find(item => item.path === documentPath.value)
@@ -284,6 +295,10 @@ const load = async (discardDraft = false) => {
     loading.value = false
   }
 }
+const reloadFromDisk = () => {
+  if (dirty.value && !window.confirm('重新读取会丢弃当前 Draw.io 内存草稿，确定继续吗？')) return
+  void load(true)
+}
 const selectPage = (id: string) => {
   activePageId.value = id
   selectedCellId.value = editableCells.value[0]?.id || ''
@@ -301,6 +316,11 @@ const applyPatch = async () => {
         fillColor: form.fillColor, strokeColor: form.strokeColor,
       },
     })
+    if (output !== content.value) {
+      undoStack.value.push(content.value)
+      if (undoStack.value.length > 80) undoStack.value.shift()
+      redoStack.value = []
+    }
     content.value = output
     dirty.value = true
     await analyze(output)
@@ -311,6 +331,24 @@ const applyPatch = async () => {
   } finally {
     applying.value = false
   }
+}
+const restoreHistory = async (value: string) => {
+  content.value = value
+  dirty.value = true
+  await analyze(value)
+  syncTab()
+}
+const undo = async () => {
+  const previous = undoStack.value.pop()
+  if (previous === undefined) return
+  redoStack.value.push(content.value)
+  await restoreHistory(previous)
+}
+const redo = async () => {
+  const next = redoStack.value.pop()
+  if (next === undefined) return
+  undoStack.value.push(content.value)
+  await restoreHistory(next)
 }
 const save = async () => {
   if (!dirty.value || !analysis.value?.valid) return
@@ -343,11 +381,31 @@ watch(selectedCell, cell => {
   form.strokeColor = safeColor(cell.strokeColor, '#64748b')
 }, { immediate: true })
 watch(documentPath, () => void load())
-onMounted(() => void load())
+const handleKeydown = (event: KeyboardEvent) => {
+  const command = event.ctrlKey || event.metaKey
+  if (!command) return
+  if (event.key.toLowerCase() === 's') { event.preventDefault(); void save(); return }
+  if ((event.target as HTMLElement | null)?.matches('textarea,input,[contenteditable="true"]')) return
+  if (event.key.toLowerCase() === 'z') { event.preventDefault(); void (event.shiftKey ? redo() : undo()) }
+  else if (event.key.toLowerCase() === 'y') { event.preventDefault(); void redo() }
+}
+const mayLeave = () => !dirty.value || window.confirm('Draw.io 还有未保存修改，确定离开吗？磁盘文件不会改变，草稿仍保留在当前标签中。')
+const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
+onBeforeRouteLeave(() => mayLeave())
+onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('beforeunload', beforeUnload)
+  void load()
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('beforeunload', beforeUnload)
+})
 </script>
 
 <style scoped>
-.drawio-workspace { height: 100%; min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); color: var(--theme-text); background: var(--theme-bg); }
+.drawio-workspace { height: 100%; min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); color: var(--theme-text); background: var(--theme-bg); container-type: inline-size; }
 .toolbar { min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 14px; border-bottom: var(--theme-border); background: var(--theme-surface); }
 .identity,.actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .identity>div { min-width: 0; display: grid; gap: 2px; }
@@ -380,4 +438,6 @@ onMounted(() => void load())
 .properties>small,.empty-inspector,.empty-state { color: var(--theme-text-secondary); font-size: var(--text-compact); }.empty-inspector { padding: 16px 4px; line-height: 1.6; }.empty-state { display: grid; place-items: center; height: 100%; }
 @media (max-width: 980px) { .stage { grid-template-columns: 150px minmax(300px, 1fr) 230px; }.diagram-canvas { width: 700px; } }
 @media (max-width: 760px) { .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(420px, 1fr) auto; overflow-y: auto; }.pages-pane { max-height: 150px; border-right: 0; border-bottom: var(--theme-border); }.inspector-pane { min-height: 330px; border-left: 0; border-top: var(--theme-border); }.canvas-pane { min-height: 480px; }.toolbar { align-items: flex-start; }.identity { max-width: 58%; }.actions .n-button { min-width: 32px; } }
+@container (max-width: 980px) { .stage { grid-template-columns: 150px minmax(300px, 1fr) 230px; }.diagram-canvas { width: 700px; } }
+@container (max-width: 760px) { .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(420px, 1fr) auto; overflow-y: auto; }.pages-pane { max-height: 150px; border-right: 0; border-bottom: var(--theme-border); }.inspector-pane { min-height: 330px; border-left: 0; border-top: var(--theme-border); }.canvas-pane { min-height: 480px; }.toolbar { align-items: flex-start; }.identity { max-width: 58%; }.actions .n-button { min-width: 32px; } }
 </style>

@@ -20,6 +20,8 @@
         <button title="缩小" @click="zoom = Math.max(.5, zoom - .1)">−</button>
         <button class="zoom-value" title="恢复 100%" @click="zoom = 1">{{ Math.round(zoom * 100) }}%</button>
         <button title="放大" @click="zoom = Math.min(2, zoom + .1)">＋</button>
+        <button class="history-button" title="撤销" :disabled="!undoStack.length" @click="undo"><UndoIcon :size="15" /></button>
+        <button class="history-button" title="重做" :disabled="!redoStack.length" @click="redo"><RedoIcon :size="15" /></button>
         <button @click="scheduleRender(true)">刷新预览</button>
         <button class="structure-toggle" :class="{ active: showStructure }" :aria-pressed="showStructure" @click="showStructure = !showStructure">结构</button>
         <button class="export-toggle" :class="{ active: showExport }" :aria-pressed="showExport" :disabled="!svg" @click="showExport = !showExport">导出</button>
@@ -94,6 +96,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { Redo2 as RedoIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
@@ -152,9 +155,12 @@ const selectedKind = ref<'node' | 'edge'>('node')
 const selectedId = ref('')
 const draftLabel = ref('')
 const draftShape = ref('rectangle')
+const undoStack = ref<string[]>([])
+const redoStack = ref<string[]>([])
 let renderTimer = 0
 let renderGeneration = 0
 let loadGeneration = 0
+let lastSourceValue = ''
 
 const diagramPath = computed(() => String(route.query.path || ''))
 const fileName = computed(() => diagramPath.value.split(/[\\/]/).pop() || 'Mermaid 图表')
@@ -224,15 +230,52 @@ const scheduleRender = (immediate = false) => {
   window.clearTimeout(renderTimer)
   renderTimer = window.setTimeout(renderDiagram, immediate ? 0 : 350)
 }
-const onSourceInput = () => { dirty.value = true; notice.value = '有未保存修改'; scheduleRender() }
+const rememberSourceChange = (previous: string, next = source.value) => {
+  if (previous === next) return
+  undoStack.value.push(previous)
+  if (undoStack.value.length > 100) undoStack.value.shift()
+  redoStack.value = []
+}
+const onSourceInput = () => {
+  rememberSourceChange(lastSourceValue)
+  lastSourceValue = source.value
+  dirty.value = true
+  notice.value = '有未保存修改'
+  scheduleRender()
+}
+const replaceSource = (value: string, messageText: string) => {
+  if (value === source.value) return
+  rememberSourceChange(source.value, value)
+  source.value = value
+  lastSourceValue = value
+  dirty.value = true
+  notice.value = messageText
+  scheduleRender(true)
+}
+const restoreHistory = (value: string) => {
+  source.value = value
+  lastSourceValue = value
+  dirty.value = true
+  notice.value = '已恢复历史版本，尚未保存'
+  scheduleRender(true)
+}
+const undo = () => {
+  const previous = undoStack.value.pop()
+  if (previous === undefined) return
+  redoStack.value.push(source.value)
+  restoreHistory(previous)
+}
+const redo = () => {
+  const next = redoStack.value.pop()
+  if (next === undefined) return
+  undoStack.value.push(source.value)
+  restoreHistory(next)
+}
 const applySelectedTemplate = () => {
   const template = templates.find(item => item.id === selectedTemplate.value)
   selectedTemplate.value = ''
   if (!template || (dirty.value && !window.confirm(`使用“${template.name}”模板替换当前源码？`))) return
-  source.value = template.source
-  dirty.value = true
-  notice.value = `已应用${template.name}模板`
-  scheduleRender(true)
+  replaceSource(template.source, `已应用${template.name}模板`)
 }
 const selectNode = (node: StructureNode) => {
   selectedKind.value = 'node'; selectedId.value = node.id; draftLabel.value = node.label
@@ -242,7 +285,7 @@ const selectEdge = (edge: StructureEdge) => { selectedKind.value = 'edge'; selec
 const applyStructureEdit = async () => {
   if (!selectedNode.value && !selectedEdge.value) return
   try {
-    source.value = await invoke<string>('update_diagram_element', {
+    const output = await invoke<string>('update_diagram_element', {
       content: source.value,
       edit: {
         kind: selectedKind.value,
@@ -251,9 +294,7 @@ const applyStructureEdit = async () => {
         shape: selectedKind.value === 'node' ? draftShape.value : undefined,
       },
     })
-    dirty.value = true
-    notice.value = '结构修改已同步到源码'
-    scheduleRender(true)
+    replaceSource(output, '结构修改已同步到源码')
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 const focusErrorLine = () => {
@@ -276,6 +317,9 @@ const loadDiagram = async () => {
     const document = await invoke<DiagramDocument>('read_diagram_file', { libraryRoot: store.libraryPath, path: diagramPath.value })
     if (generation !== loadGeneration) return
     source.value = document.content
+    lastSourceValue = document.content
+    undoStack.value = []
+    redoStack.value = []
     signature.value = document.signature
     dirty.value = false
     notice.value = '文件已加载'
@@ -330,7 +374,11 @@ const exportDiagram = async () => {
   }
 }
 const handleKeydown = (event: KeyboardEvent) => {
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void saveDiagram() }
+  const command = event.ctrlKey || event.metaKey
+  if (!command) return
+  if (event.key.toLowerCase() === 's') { event.preventDefault(); void saveDiagram() }
+  else if (event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? redo() : undo() }
+  else if (event.key.toLowerCase() === 'y') { event.preventDefault(); redo() }
 }
 const mayLeave = () => !dirty.value || window.confirm('Mermaid 图表还有未保存修改，确定离开吗？')
 const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
@@ -343,7 +391,7 @@ onBeforeUnmount(() => { window.clearTimeout(renderTimer); window.removeEventList
 </script>
 
 <style scoped>
-.diagram-studio { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 95%, var(--theme-primary)); outline: none; }.studio-toolbar { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 16px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); box-shadow: var(--workspace-shadow-sm); z-index: 4; }.studio-title,.studio-actions { display: flex; align-items: center; gap: 7px; }.studio-title > button,.studio-actions > button { height: 31px; padding: 0 9px; border: 1px solid var(--workspace-border-color); border-radius: 7px; color: var(--theme-text); background: var(--workspace-control-bg); cursor: pointer; }.studio-title > button { width: 31px; padding: 0; font-size: 18px; }.studio-title div { display: flex; flex-direction: column; }.studio-title strong { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }.studio-title span,.studio-actions label { color: var(--theme-text-secondary); font-size: var(--text-compact); }.studio-actions label { display: flex; align-items: center; gap: 4px; }.studio-actions select { height: 29px; max-width: 125px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--theme-card); font-size: var(--text-compact); }.studio-actions .zoom-value { min-width: 48px; }.studio-actions .save-button { min-width: 68px; color: var(--workspace-on-accent); border-color: var(--theme-primary); background: var(--theme-primary); }.studio-actions .save-button:disabled { color: var(--theme-text-secondary); border-color: transparent; background: var(--workspace-control-bg); cursor: default; }
+.diagram-studio { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 95%, var(--theme-primary)); outline: none; container-type: inline-size; }.studio-toolbar { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 16px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); box-shadow: var(--workspace-shadow-sm); z-index: 4; }.studio-title,.studio-actions { display: flex; align-items: center; gap: 7px; }.studio-title > button,.studio-actions > button { height: 31px; padding: 0 9px; border: 1px solid var(--workspace-border-color); border-radius: 7px; color: var(--theme-text); background: var(--workspace-control-bg); cursor: pointer; }.studio-title > button { width: 31px; padding: 0; font-size: 18px; }.studio-title div { display: flex; flex-direction: column; }.studio-title strong { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }.studio-title span,.studio-actions label { color: var(--theme-text-secondary); font-size: var(--text-compact); }.studio-actions label { display: flex; align-items: center; gap: 4px; }.studio-actions select { height: 29px; max-width: 125px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--theme-card); font-size: var(--text-compact); }.studio-actions .zoom-value { min-width: 48px; }.studio-actions .save-button { min-width: 68px; color: var(--workspace-on-accent); border-color: var(--theme-primary); background: var(--theme-primary); }.studio-actions .save-button:disabled { color: var(--theme-text-secondary); border-color: transparent; background: var(--workspace-control-bg); cursor: default; }
 .studio-workspace { min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(330px, 42%) minmax(0, 1fr); }.source-panel,.preview-panel { min-width: 0; min-height: 0; display: grid; grid-template-rows: 40px minmax(0,1fr) auto; }.source-panel { border-right: 1px solid var(--workspace-border-color); background: color-mix(in srgb, var(--theme-card) 97%, #edf2f7); }.preview-panel { grid-template-rows: 40px minmax(0,1fr); }.source-panel > header,.preview-panel > header { display: flex; align-items: center; justify-content: space-between; padding: 0 13px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); }.source-panel header strong,.preview-panel header strong { font-size: var(--text-compact); }.source-panel header span,.preview-panel header span { color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .source-editor { min-height: 0; display: grid; grid-template-columns: 48px minmax(0,1fr); overflow: hidden; background: #18202b; }.source-editor pre { height: 100%; margin: 0; padding: 14px 10px; overflow: hidden; box-sizing: border-box; color: #66778b; border-right: 1px solid rgba(255,255,255,.07); text-align: right; font: 12px/22px 'Fira Code', monospace; user-select: none; }.source-editor textarea { width: 100%; height: 100%; padding: 14px; overflow: auto; resize: none; box-sizing: border-box; border: 0; outline: 0; color: #dbe7f3; background: transparent; caret-color: #7ea6ff; tab-size: 2; font: 12px/22px 'Fira Code', monospace; white-space: pre; }.source-panel footer { min-height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 11px; color: var(--theme-text-secondary); background: var(--theme-card); font-size: var(--text-compact); }.source-panel footer i { margin-left: auto; font-style: normal; }.valid-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--status-success); }.parse-error { min-height: 54px; display: grid; grid-template-columns: auto minmax(0,1fr); align-items: start; gap: 8px; padding: 9px 12px; border: 0; border-top: 1px solid var(--status-danger-border); color: var(--status-danger); background: var(--status-danger-bg); text-align: left; cursor: pointer; }.parse-error strong { font-size: var(--text-compact); }.parse-error span { overflow: hidden; font: var(--text-compact)/1.5 var(--font-mono); }
 .preview-scroll { min-height: 0; display: grid; place-items: center; padding: 24px; overflow: auto; transform-origin: center; }.svg-stage { width: min(100%, 1200px); transform-origin: center; transition: transform .15s ease; }.svg-stage :deep(svg) { width: 100%; height: auto; max-height: calc(100vh - 150px); }.preview-empty { display: flex; flex-direction: column; align-items: center; gap: 7px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.preview-empty strong { color: var(--theme-text); font-size: 13px; }.studio-state { flex: 1; place-content: center; justify-items: center; border: 0; border-radius: 0; background: transparent; }.studio-state button { height: 30px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--theme-card); cursor: pointer; }
@@ -351,6 +399,9 @@ onBeforeUnmount(() => { window.clearTimeout(renderTimer); window.removeEventList
 .export-panel { position: absolute; top: 52px; right: 84px; z-index: 20; width: 265px; display: grid; gap: 10px; padding: 13px; box-sizing: border-box; border: 1px solid var(--workspace-border-color); border-radius: 10px; background: var(--theme-card); box-shadow: var(--workspace-shadow); }.export-panel > header { display: flex; align-items: center; justify-content: space-between; }.export-panel > header div { display: flex; flex-direction: column; }.export-panel > header strong { font-size: 11px; }.export-panel > header span,.export-panel p { margin: 0; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.5; }.export-panel > header button { width: 25px; height: 25px; border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 16px; }.export-panel label { display: grid; grid-template-columns: 70px 1fr; align-items: center; color: var(--theme-text-secondary); font-size: var(--text-compact); }.export-panel select { height: 31px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--theme-bg); font-size: var(--text-compact); }.export-confirm { height: 33px; border: 0; border-radius: 7px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; font-size: var(--text-compact); }.export-confirm:disabled { opacity: .45; cursor: default; }
 .structure-panel { min-width: 0; min-height: 0; display: flex; flex-direction: column; border-left: 1px solid var(--workspace-border-color); background: var(--theme-card); }.structure-panel > header { min-height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px 0 13px; border-bottom: 1px solid var(--workspace-border-color); }.structure-panel > header div { display: flex; flex-direction: column; }.structure-panel > header strong { font-size: var(--text-compact); }.structure-panel > header span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.structure-panel > header button { width: 25px; height: 25px; border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 16px; }.structure-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 8px 9px 0; }.structure-tabs button { height: 28px; border: 0; border-bottom: 2px solid transparent; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: var(--text-compact); }.structure-tabs button.active { color: var(--theme-primary); border-color: var(--theme-primary); }.structure-list { max-height: 34%; min-height: 100px; padding: 7px 9px; overflow: auto; border-bottom: 1px solid var(--workspace-border-color); }.structure-list > button { width: 100%; min-height: 43px; display: flex; flex-direction: column; justify-content: center; padding: 5px 8px; border: 1px solid transparent; border-radius: 7px; color: var(--theme-text); background: transparent; text-align: left; cursor: pointer; }.structure-list > button:hover,.structure-list > button.active { border-color: rgba(var(--theme-primary-rgb),.18); background: rgba(var(--theme-primary-rgb),.06); }.structure-list strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.structure-list span,.structure-list p { color: var(--theme-text-secondary); font-size: var(--text-compact); }.structure-warning { padding: 7px 10px; color: var(--status-warning); background: var(--status-warning-bg); font-size: var(--text-compact); line-height: 1.5; }.structure-empty { margin: 12px; }.property-placeholder { padding: 22px 14px; color: var(--theme-text-secondary); text-align: center; font-size: var(--text-compact); line-height: 1.6; }.property-form { display: flex; flex-direction: column; gap: 11px; padding: 14px; overflow: auto; }.property-form header { display: flex; align-items: center; justify-content: space-between; }.property-form header strong { font-size: var(--text-compact); }.property-form header span,.property-form p { color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.6; }.property-form label { display: grid; gap: 5px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.property-form input,.property-form select { width: 100%; height: 31px; padding: 0 8px; box-sizing: border-box; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--theme-bg); outline: none; font-size: var(--text-compact); }.property-form input:focus,.property-form select:focus { border-color: var(--theme-primary); }.property-form > button { height: 31px; border: 0; border-radius: 6px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; font-size: var(--text-compact); }.property-form > button:disabled { opacity: .45; cursor: default; }
 @media (max-width: 1100px) { .studio-workspace.with-inspector { grid-template-columns: minmax(300px,40%) minmax(0,1fr); }.structure-panel { position: absolute; top: 58px; right: 0; bottom: 0; z-index: 10; width: 290px; box-shadow: var(--workspace-shadow); } }
-@media (max-width: 900px) { .studio-actions label:nth-child(2),.studio-actions > button:not(.save-button):not(.structure-toggle):not(.export-toggle) { display: none; }.studio-actions > button.active { display: block; }.export-panel { top: 54px; right: 10px; }.studio-workspace,.studio-workspace.with-inspector { grid-template-columns: 1fr; grid-template-rows: 46% minmax(0,1fr); }.source-panel { border-right: 0; border-bottom: 1px solid var(--workspace-border-color); } }
+@media (max-width: 900px) { .studio-actions label:nth-child(2),.studio-actions > button:not(.save-button):not(.structure-toggle):not(.export-toggle):not(.history-button) { display: none; }.studio-actions > button.active { display: block; }.export-panel { top: 54px; right: 10px; }.studio-workspace,.studio-workspace.with-inspector { grid-template-columns: 1fr; grid-template-rows: 46% minmax(0,1fr); }.source-panel { border-right: 0; border-bottom: 1px solid var(--workspace-border-color); } }
 @media (max-width: 620px) { .studio-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }.studio-title { width: 100%; min-width: 0; }.studio-title div { min-width: 0; }.studio-title strong { max-width: 100%; }.studio-actions { width: 100%; justify-content: flex-end; }.studio-actions label:first-child { min-width: 0; flex: 1; }.studio-actions label:first-child select { min-width: 0; flex: 1; }.structure-panel { top: 96px; width: min(290px, 88vw); } }
+@container (max-width: 1100px) { .studio-workspace.with-inspector { grid-template-columns: minmax(300px,40%) minmax(0,1fr); }.structure-panel { position: absolute; top: 58px; right: 0; bottom: 0; z-index: 10; width: 290px; box-shadow: var(--workspace-shadow); } }
+@container (max-width: 900px) { .studio-actions label:nth-child(2),.studio-actions > button:not(.save-button):not(.structure-toggle):not(.export-toggle):not(.history-button) { display: none; }.studio-actions > button.active { display: block; }.export-panel { top: 54px; right: 10px; }.studio-workspace,.studio-workspace.with-inspector { grid-template-columns: 1fr; grid-template-rows: 46% minmax(0,1fr); }.source-panel { border-right: 0; border-bottom: 1px solid var(--workspace-border-color); } }
+@container (max-width: 620px) { .studio-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }.studio-title { width: 100%; min-width: 0; }.studio-title div { min-width: 0; }.studio-title strong { max-width: 100%; }.studio-actions { width: 100%; justify-content: flex-end; }.studio-actions label:first-child { min-width: 0; flex: 1; }.studio-actions label:first-child select { min-width: 0; flex: 1; }.structure-panel { top: 96px; width: min(290px, 88cqw); } }
 </style>
