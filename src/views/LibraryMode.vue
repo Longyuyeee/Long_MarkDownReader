@@ -1990,8 +1990,8 @@ const schedulePendingTreePreview = () => {
   requestAnimationFrame(() => {
     const tree = document.querySelector<HTMLElement>('.library-file-tree')
     if (!tree || !tree.contains(document.activeElement)) return
-    const pending = tree.querySelector<HTMLElement>('.n-tree-node--pending[data-key]')
-    const key = pending?.dataset.key || ''
+    const pending = tree.querySelector<HTMLElement>('.n-tree-node--pending[data-drop-path]')
+    const key = pending?.dataset.dropPath || ''
     const option = key ? findTreeOptionByKey(treeData.value, key) : null
     if (!pending || !option?.isLeaf) {
       preview.focusPath = ''
