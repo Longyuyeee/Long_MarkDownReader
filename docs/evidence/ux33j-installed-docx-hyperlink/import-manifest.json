@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX-33J",
+  "status": "accepted",
+  "importedAt": "2026-08-05",
+  "githubRunId": 30967710442,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30967710442",
+  "workflowConclusion": "success",
+  "orchestrationCommit": "ade1cd06b1cd291f9d995ea94f70b97c39beb067",
+  "productSourceCommit": "22ac691b9fdd339aac7bdf174b3e3cb7a21dcf48",
+  "appVersion": "1.0.3",
+  "installerSha256": "f22f082bdfe857f18563c209e5ce18c1aa91de520b287be997293f31c4c697ac",
+  "authenticodeStatus": "NotSigned",
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "sourceUserContentIncluded": false,
+  "ux33jSpecialtyResult": "passed",
+  "lifecycleResult": "passed",
+  "artifacts": [
+    { "file": "installed-docx-hyperlink-evidence.json", "bytes": 2801, "sha256": "aa928a70562f7f5f241862f508ff6d61924525cba16531eb5c0e999684227e9f" },
+    { "file": "installed-microsoft-word-docx-hyperlink.jpg", "bytes": 136688, "sha256": "66121aed664864cd5e593187e7c26d487ce52f55d0d93d84f18268a2b5182caf" },
+    { "file": "installed-wps-writer-docx-hyperlink-readonly.jpg", "bytes": 131763, "sha256": "dae3ee73ac71c06f210a2c2edf50e3d4fb41e529ffa03db40cb923bae90c4ac9" },
+    { "file": "installed-libreoffice-writer-docx-hyperlink.jpg", "bytes": 142302, "sha256": "13e6699962eb8885f3eb3f6d035b5b830f08731eee24271039fe89da5ef8bfbb" },
+    { "file": "lifecycle-result.json", "bytes": 4617, "sha256": "01bbf2040f9bd14a39162d52df9b02e93eb5c001d7aa8a69567703b813f1bb93" },
+    { "file": "runner-build-receipt.json", "bytes": 568, "sha256": "002901640c2c269a1bf4f84ce6363014915282d450150b34fbde03e703ba2410" }
+  ]
+}

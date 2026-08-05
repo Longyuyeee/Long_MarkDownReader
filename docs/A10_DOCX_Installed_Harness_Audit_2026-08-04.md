@@ -1,5 +1,7 @@
 # A10 DOCX 安装态执行器审计
 
+> 最终安装态结论已由 `docs/A11_DOCX_Installed_Hyperlink_Audit_2026-08-05.md` 取代；本文件保留为执行器准备与早期失败记录。
+
 日期：2026-08-04
 
 阶段：UX-33J harness

@@ -602,3 +602,8 @@ G9 产品线已并行完成首页“知识网络脉搏”：关系覆盖率、�
 U2 已推进到 `execute-on-disposable-windows-runner`。机器事实源为 `shared/u2-disposable-install-lifecycle-policy.json`；U1 NSIS 与 0.6.2 回滚安装器均就绪，但当前主机没有一次性 Windows runner，且已有安装与运行进程，所以安装修改继续阻断。
 
 Sandbox 生成器绑定安装包清单中的产品提交 `6f3ce50`，并可在无 Sandbox 主机上先生成配置。1.0.0 的 U2 证据通过后进入 V1 无 Authenticode 签名社区发布通道；历史 R5N 保留为未来商业签名通道，不再阻止本次社区版发布。
+# 2026-08-05 UX-33J 交接入口
+
+UX-33 有界 DOCX 页面编辑已完成安装态收口。U2 运行 `30967710442` 对固定产品提交 `22ac691` 的无签名 `1.0.3` NSIS 完成三类 DOCX 验证，并通过 18/18 安装、卸载、回滚和恢复检查。机器证据位于 `docs/evidence/ux33j-installed-docx-hyperlink`，完整结论见 `docs/A11_DOCX_Installed_Hyperlink_Audit_2026-08-05.md`。
+
+接手后直接进入 UX-34：修复 Drawio/Canvas 的 ResizeObserver 可恢复警告，验证重复切换、缩放、拖动和返回资料库不会弹阻断错误。不要把 UX-33 扩写成完整 Word 等价能力；跨部件 DOCX 对象仍需另立阶段。当前安装包未签名，`releaseCandidate=false`。
