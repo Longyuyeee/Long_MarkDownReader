@@ -274,8 +274,9 @@ await send('Runtime.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 820, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('#app')?.children.length > 0`, 'installed desktop app bootstrap')
 await waitFor(`typeof window.__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__ === 'function'`, 'route performance export')
+await navigate('#/workspace', '.workspace-home', 'installed workspace initialization')
 await waitFor(
-  `location.hash.startsWith('#/workspace') && document.querySelector('[data-testid="knowledge-network-pulse"]') !== null`,
+  `document.querySelector('[data-testid="knowledge-network-pulse"]') !== null`,
   'installed workspace initialization before route testing',
   1200,
 )

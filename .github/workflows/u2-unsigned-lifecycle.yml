@@ -95,6 +95,12 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
+          $receiptPath = Join-Path $env:GITHUB_WORKSPACE "reused-u2-artifact\u2-output\runner-build-receipt.json"
+          if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) { throw "Reusable U2 artifact is missing its build receipt." }
+          $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
+          if ($receipt.sourceCommit -ne $env:PRODUCT_SOURCE_COMMIT -or $receipt.appVersion -ne $env:CURRENT_APP_VERSION) {
+            throw "Reusable U2 artifact does not match the frozen product commit and version."
+          }
           foreach ($product in @("current-product", "previous-product")) {
             $source = Join-Path $env:GITHUB_WORKSPACE "reused-u2-artifact\$product\src-tauri\target\release\bundle\nsis"
             $target = Join-Path $env:GITHUB_WORKSPACE "$product\src-tauri\target\release\bundle\nsis"
@@ -102,6 +108,13 @@ jobs:
             if ($installers.Count -ne 1) { throw "Expected one reusable installer for $product." }
             New-Item -ItemType Directory -Path $target -Force | Out-Null
             Copy-Item -LiteralPath $installers[0].FullName -Destination $target
+          }
+          $restoredCurrent = @(Get-ChildItem -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "current-product\src-tauri\target\release\bundle\nsis") -File -Filter "*_$($env:CURRENT_APP_VERSION)_x64-setup.exe")
+          $restoredPrevious = @(Get-ChildItem -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "previous-product\src-tauri\target\release\bundle\nsis") -File -Filter "*_0.6.2_x64-setup.exe")
+          if ($restoredCurrent.Count -ne 1 -or $restoredPrevious.Count -ne 1 `
+              -or (Get-FileHash -LiteralPath $restoredCurrent[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne $receipt.currentInstallerSha256 `
+              -or (Get-FileHash -LiteralPath $restoredPrevious[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne $receipt.previousInstallerSha256) {
+            throw "Reusable U2 installer hashes do not match the build receipt."
           }
 
       - name: Capture runner build receipt

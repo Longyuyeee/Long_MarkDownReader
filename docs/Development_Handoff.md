@@ -56,6 +56,8 @@
 
 > A10 已完成 UX-33J 安装态执行器准备：GitHub 一次性 Windows 流水线已从冻结产品提交动态读取版本，不再锁死 `1.0.0`；安装后 WebView 烟测已接入 Word/WPS/LibreOffice 原生超链接 fixture、草稿撤销/重做、隔离验证、只读降级、安装器摘要和隐私净化路由。当前只证明 harness 就绪，尚未产生 `1.0.3` 的真实安装结论。下一步推送后以该提交触发 hosted lifecycle，回收证据再关闭 UX-33J。详见 [`A10_DOCX_Installed_Harness_Audit_2026-08-04.md`](./A10_DOCX_Installed_Harness_Audit_2026-08-04.md)。
 
+> UX-33J 首次 hosted run `30897488050` 已构建 `22ac691` 的 `1.0.3` 无签名 NSIS，但旧 R5J 启动 hash 假设在 DOCX 检查前超时；不是 DOCX 功能失败。执行器现改为显式导航工作台。下一次运行复用 `30897488050` 安装器时，`product_ref` 必须保持 `22ac691`，以维持安装器源码绑定。
+
 更新日期：2026-08-04
 交接基线：当前发布版本 `v1.0.3`；日常管理、文本/开发格式、PDF 研究与页面管理、图表、Canvas/OPML 思维导图、知识图谱和现代 Office 基础工作面已经形成主干。当前仍为无 Authenticode 签名社区版，原自动更新私钥不可用，v1.0.3 不发布 `latest.json` 或 `.sig`，版本更新暂时通过 GitHub Release 手动下载安装。
 

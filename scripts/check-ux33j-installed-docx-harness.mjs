@@ -7,7 +7,7 @@ const lifecycle = read('scripts/run-r5i-isolated-install-lifecycle.ps1')
 const capture = read('scripts/capture-r5j-installed-artifact-smoke.mjs')
 const packageJson = JSON.parse(read('package.json'))
 
-for (const token of ['default: main', 'Resolve frozen product identity', 'CURRENT_APP_VERSION', '-CurrentVersion $env:CURRENT_APP_VERSION', '*_x64-setup.exe']) {
+for (const token of ['default: main', 'Resolve frozen product identity', 'CURRENT_APP_VERSION', '-CurrentVersion $env:CURRENT_APP_VERSION', '*_x64-setup.exe', 'Reusable U2 artifact does not match the frozen product commit and version.', 'Reusable U2 installer hashes do not match the build receipt.']) {
   if (!workflow.includes(token)) fail(`dynamic hosted version token missing: ${token}`)
 }
 for (const stale of ['*_1.0.0_x64-setup.exe', 'appVersion = "1.0.0"']) {
@@ -17,6 +17,7 @@ if (!lifecycle.includes('LONGEDIT_R5J_SOURCE_COMMIT = $ExpectedSourceCommit.ToLo
 for (const token of [
   "stage: 'UX-33J'",
   'installed-docx-hyperlink-evidence.json',
+  "navigate('#/workspace', '.workspace-home', 'installed workspace initialization')",
   'microsoft-word-hyperlinks.docx',
   'wps-writer-hyperlinks.docx',
   'libreoffice-writer-hyperlinks.docx',
