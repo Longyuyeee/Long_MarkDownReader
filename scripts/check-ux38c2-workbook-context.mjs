@@ -10,7 +10,7 @@ const table = read('src/views/TableView.vue')
 for (const token of ['container-type: inline-size', '@container (max-width: 900px)', 'rememberWorkspaceViewState(workbookPath.value', '.workbook-cell.frozen.in-table', '.workbook-cell.frozen.fill-preview']) {
   if (!workbook.includes(token)) fail(`UX-38C2 workbook token missing: ${token}`)
 }
-for (const token of ['ref="sheetStageRef"', 'rememberOdsViewState', 'recallWorkspaceViewState(documentPath.value)', '@container (max-width: 700px)', '.sheet-stage .corner { z-index: 4; }']) {
+for (const token of ['ref="sheetStageRef"', 'rememberOdfViewState', 'recallWorkspaceViewState(documentPath.value)', '@container (max-width: 700px)', '.sheet-stage .corner { z-index: 4; }']) {
   if (!ods.includes(token)) fail(`UX-38C2 ODS token missing: ${token}`)
 }
 for (const token of ['loading.value = false', 'rememberWorkspaceViewState(tablePath.value', 'scrollLeft: scrollRef.value.scrollLeft']) {

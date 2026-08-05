@@ -48,6 +48,20 @@
         "tab": "accepted", "theme": "referenced", "scale": "referenced", "keyboard": "partial", "performance": "partial", "errors": "accepted"
       }
     },
+    "ux38d3-pptx": {
+      "evidence": ["docs/evidence/ux38d3-presentation-workspace/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json", "shared/release-capability-matrix.json"],
+      "dimensions": {
+        "open": "accepted", "load": "accepted", "states": "accepted", "edit": "partial", "save": "partial", "return": "accepted",
+        "tab": "accepted", "theme": "referenced", "scale": "accepted", "keyboard": "partial", "performance": "partial", "errors": "accepted"
+      }
+    },
+    "ux38d3-odp": {
+      "evidence": ["docs/evidence/ux38d3-presentation-workspace/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json", "shared/odf-package-contract.json"],
+      "dimensions": {
+        "open": "accepted", "load": "accepted", "states": "accepted", "edit": "not-applicable", "save": "not-applicable", "return": "accepted",
+        "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
+      }
+    },
     "specialized-existing": {
       "evidence": ["shared/release-capability-matrix.json", "docs/evidence/ui4b-editors/audit-manifest.json"],
       "dimensions": {
@@ -93,11 +107,11 @@
     { "id": "table", "cohort": "data-grid", "profile": "ux38c-table-grid" },
     { "id": "docx", "cohort": "document-media", "profile": "ux38d2-docx" },
     { "id": "ods", "cohort": "document-media", "profile": "ux38c-ods" },
-    { "id": "odp", "cohort": "document-media", "profile": "specialized-existing" },
+    { "id": "odp", "cohort": "document-media", "profile": "ux38d3-odp" },
     { "id": "legacy-doc", "cohort": "external-office", "profile": "external-dependent" },
     { "id": "legacy-xls", "cohort": "external-office", "profile": "external-dependent" },
     { "id": "legacy-ppt", "cohort": "external-office", "profile": "external-dependent" },
-    { "id": "pptx", "cohort": "document-media", "profile": "specialized-existing" },
+    { "id": "pptx", "cohort": "document-media", "profile": "ux38d3-pptx" },
     { "id": "wps-document", "cohort": "external-office", "profile": "external-dependent" },
     { "id": "wps-spreadsheet", "cohort": "external-office", "profile": "external-dependent" },
     { "id": "wps-presentation", "cohort": "external-office", "profile": "external-dependent" },
