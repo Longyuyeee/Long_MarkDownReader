@@ -635,6 +635,7 @@ const loadTable = async () => {
       : views.value.some(view => view.id === document.activeView) ? document.activeView : views.value[0].id
     applyView(activeView.value)
     const viewState = recallWorkspaceViewState(tablePath.value)
+    loading.value = false
     if (viewState) {
       if (typeof viewState.frozenColumns === 'number') frozenColumns.value = Math.min(maxFrozenColumns.value, Math.max(0, Math.trunc(viewState.frozenColumns)))
       await nextTick()
@@ -756,7 +757,15 @@ const startColumnResize = (column: number, event: PointerEvent) => {
   window.addEventListener('pointerup', finish, { once: true })
 }
 
-const handleScroll = () => { if (scrollRef.value) scrollTop.value = scrollRef.value.scrollTop }
+const handleScroll = () => {
+  if (!scrollRef.value) return
+  scrollTop.value = scrollRef.value.scrollTop
+  rememberWorkspaceViewState(tablePath.value, {
+    scrollTop: scrollRef.value.scrollTop,
+    scrollLeft: scrollRef.value.scrollLeft,
+    frozenColumns: frozenColumns.value,
+  })
+}
 const handleKeydown = (event: KeyboardEvent) => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void saveTable() }
   const target = event.target as HTMLElement | null
