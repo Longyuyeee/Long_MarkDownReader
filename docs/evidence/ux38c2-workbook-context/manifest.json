@@ -1,0 +1,28 @@
+{
+    "schemaVersion":  1,
+    "stage":  "UX-38C2",
+    "status":  "accepted",
+    "visualReview":  "accepted",
+    "sourceCommit":  "89d1dffc4d23871e16f1c6bee9a99c6507a4393d",
+    "evidenceFile":  "interaction-evidence.json",
+    "evidenceSha256":  "2cdc7c2b832a4470e68767a08891bfd43609c9e32980233f426931665431247e",
+    "screenshots":  [
+                        {
+                            "file":  "xlsx-frozen-grid.jpg",
+                            "bytes":  143115,
+                            "sha256":  "a24c4d1aadba3d4457f8684a1fc6a9739455d97a106b6c2c5ad3e772bab3122f"
+                        },
+                        {
+                            "file":  "xlsx-graph-return-context.jpg",
+                            "bytes":  137077,
+                            "sha256":  "c5ac07755bfa4df37d89b9369da30ff5c25f41d6592c9c472cdc973052d8c7bc"
+                        },
+                        {
+                            "file":  "ods-narrow-graph-return.jpg",
+                            "bytes":  66748,
+                            "sha256":  "f2aab51b248429f473736c6a7ad0e598df2d4c95a2fc986d48734191ce568f7b"
+                        }
+                    ],
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false
+}

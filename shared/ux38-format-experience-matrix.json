@@ -20,6 +20,20 @@
         "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
       }
     },
+    "ux38c-workbook": {
+      "evidence": ["docs/evidence/ux38c2-workbook-context/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json"],
+      "dimensions": {
+        "open": "accepted", "load": "accepted", "states": "accepted", "edit": "partial", "save": "partial", "return": "accepted",
+        "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
+      }
+    },
+    "ux38c-ods": {
+      "evidence": ["docs/evidence/ux38c2-workbook-context/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json", "shared/odf-package-contract.json"],
+      "dimensions": {
+        "open": "accepted", "load": "accepted", "states": "accepted", "edit": "not-applicable", "save": "not-applicable", "return": "accepted",
+        "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
+      }
+    },
     "specialized-existing": {
       "evidence": ["shared/release-capability-matrix.json", "docs/evidence/ui4b-editors/audit-manifest.json"],
       "dimensions": {
@@ -64,7 +78,7 @@
     { "id": "pdf", "cohort": "document-media", "profile": "specialized-existing" },
     { "id": "table", "cohort": "data-grid", "profile": "ux38c-table-grid" },
     { "id": "docx", "cohort": "document-media", "profile": "specialized-existing" },
-    { "id": "ods", "cohort": "document-media", "profile": "specialized-existing" },
+    { "id": "ods", "cohort": "document-media", "profile": "ux38c-ods" },
     { "id": "odp", "cohort": "document-media", "profile": "specialized-existing" },
     { "id": "legacy-doc", "cohort": "external-office", "profile": "external-dependent" },
     { "id": "legacy-xls", "cohort": "external-office", "profile": "external-dependent" },
@@ -73,7 +87,7 @@
     { "id": "wps-document", "cohort": "external-office", "profile": "external-dependent" },
     { "id": "wps-spreadsheet", "cohort": "external-office", "profile": "external-dependent" },
     { "id": "wps-presentation", "cohort": "external-office", "profile": "external-dependent" },
-    { "id": "workbook", "cohort": "data-grid", "profile": "specialized-existing" },
+    { "id": "workbook", "cohort": "data-grid", "profile": "ux38c-workbook" },
     { "id": "drawio", "cohort": "diagram-canvas", "profile": "specialized-existing" },
     { "id": "diagram", "cohort": "diagram-canvas", "profile": "specialized-existing" },
     { "id": "opml", "cohort": "diagram-canvas", "profile": "specialized-existing" }

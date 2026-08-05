@@ -654,3 +654,9 @@ UX-38 总项仍在进行中。接手后进入 UX-38C 数据表格格式族，依
 UX-38C1 CSV/TSV/Table 网格体验已完成。冻结控制支持 0 至 12 列并按累计列宽定位，冻结表头、数据格和行号改用不透明主题表面；行号选择与应用内删除确认完成实机复测；“创建 Table 副本”会先说明目标名称、目录和原文件不变，完成后可打开或在文件树定位。工具栏还会按工作区容器宽度换行。真实 Tauri Debug WebView2 的 CSV/TSV 验收运行时错误为 0，源文件哈希不变；证据见 `docs/evidence/ux38c-table-grid`，审计见 `docs/A19_UX38C1_Table_Grid_Experience_Audit_2026-08-05.md`。
 
 UX-38 总项继续进行。接手后进入 UX-38C2：真实复测 XLSX/ODS 的冻结层、紧凑布局、主题、窄窗口和异常状态，并覆盖图谱返回后的 CSV/TSV/XLSX 活动文件、滚动位置与 Sheet 上下文，判断 UX-12、UX-32 是否可以关闭。当前证据不含用户资料与完整本机路径，`releaseCandidate=false`。
+
+# 2026-08-05 UX-38C2 交接入口
+
+UX-38C2 已完成，数据表格格式族收口，UX-12、UX-13、UX-32 关闭。XLSX 与 ODS 采用工作区容器响应布局和不透明冻结层，并持续记忆滚动位置与活动 Sheet；CSV/TSV 修正加载态恢复时机。真实 Tauri Debug WebView2 已验证 CSV、TSV、XLSX、ODS 从知识图谱返回后的活动文件与滚动上下文，XLSX/ODS 同时恢复目标 Sheet；运行时错误为 0，源文件哈希不变。证据见 `docs/evidence/ux38c2-workbook-context`，审计见 `docs/A20_UX38C2_Workbook_Context_Audit_2026-08-05.md`。
+
+UX-38 总项继续进行。接手后进入 UX-38D 文档媒体格式族，依次验收 PDF、DOCX/ODT、PPTX/ODP 的真实打开、模式切换、保存边界、主题、窄窗口、键盘和返回上下文。不得把有界 Office 能力写成完整等价编辑；当前 `releaseCandidate=false`。
