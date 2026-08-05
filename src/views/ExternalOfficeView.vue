@@ -112,7 +112,7 @@ header { display: flex; min-height: 52px; align-items: center; justify-content: 
 button { display: grid; width: 30px; height: 30px; place-items: center; border: 0; border-radius: 5px; color: inherit; background: transparent; cursor: pointer; }
 button:hover { background: var(--theme-hover); }
 button:disabled { opacity: .45; cursor: default; }
-main { width: min(760px, calc(100% - 40px)); margin: 34px auto; }
+main { box-sizing: border-box; width: min(760px, calc(100% - 40px)); margin: 34px auto; overflow-x: hidden; }
 .status { display: flex; align-items: center; gap: 12px; padding-bottom: 22px; border-bottom: var(--theme-border); color: var(--theme-primary); }
 .status div { display: grid; gap: 3px; }
 .status strong { font-size: 15px; }

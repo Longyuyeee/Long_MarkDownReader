@@ -11,6 +11,7 @@ for (const [name, source] of [['WPS native', external], ['legacy Office', legacy
   if (!source.includes('<ExternalApplicationPanel :path="documentPath" />')) fail(`${name} workspace does not expose direct external open`)
   if (!source.includes('container-type: inline-size') || !source.includes('@container (max-width: 640px)')) fail(`${name} workspace is not container responsive`)
 }
+if (!legacy.includes('overflow-x: hidden') || !legacy.includes('box-sizing: border-box; width: 100%')) fail('legacy narrow layout can expose a native horizontal track')
 for (const token of ['recallWorkspaceViewState(documentPath.value)?.draft', 'rememberWorkspaceViewState(documentPath.value']) if (!legacy.includes(token)) fail(`legacy target restoration token missing: ${token}`)
 for (const token of ['externalApplication?: string', 'draft?: string']) if (!state.includes(token)) fail(`workspace state token missing: ${token}`)
 const registry = JSON.parse(read('shared/file-formats.json'))

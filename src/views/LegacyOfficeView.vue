@@ -263,7 +263,7 @@ button { border: 0; border-radius: 5px; color: inherit; cursor: pointer; }
 button:disabled { opacity: .45; cursor: default; }
 .icon-button { display: grid; width: 30px; height: 30px; place-items: center; background: transparent; }
 .icon-button:hover { background: var(--theme-hover); }
-main { width: min(780px, calc(100% - 40px)); margin: 30px auto; overflow-y: auto; }
+main { box-sizing: border-box; width: min(780px, calc(100% - 40px)); margin: 30px auto; overflow-x: hidden; overflow-y: auto; }
 .status { display: flex; align-items: center; gap: 12px; padding-bottom: 20px; border-bottom: var(--theme-border); color: var(--theme-primary); }
 .status.blocked { color: var(--theme-danger); }
 .status div { display: grid; gap: 3px; }
@@ -280,7 +280,7 @@ h2, label { display: block; margin: 0 0 10px; font-size: 12px; font-weight: 600;
 .risk-list span.clear { border-color: color-mix(in srgb, var(--theme-success) 45%, transparent); color: var(--theme-success); }
 .block-reason { margin: 10px 0 0; color: var(--theme-danger); font-size: 12px; }
 .target-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
-input { min-width: 0; height: 34px; padding: 0 10px; border: var(--theme-border); border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--theme-bg-secondary); font-family: var(--font-mono); font-size: 11px; }
+input { box-sizing: border-box; width: 100%; min-width: 0; height: 34px; padding: 0 10px; border: var(--theme-border); border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--theme-bg-secondary); font-family: var(--font-mono); font-size: 11px; }
 input:focus { border-color: var(--theme-primary); }
 .convert-button { display: inline-flex; height: 34px; align-items: center; gap: 7px; padding: 0 12px; color: var(--theme-button-text); background: var(--theme-primary); font-size: 12px; }
 .conversion > p { margin: 8px 0 0; color: var(--theme-text-secondary); font-size: 11px; }
