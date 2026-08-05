@@ -210,12 +210,16 @@ const formatBytes = (value: number) => value < 1024 * 1024
   : `${(value / 1024 / 1024).toFixed(1)} MiB`
 const selectSlide = (id: string) => {
   selectedSlideId.value = id
-  void nextTick(() => document.getElementById(id)?.scrollIntoView({ block: 'center' }))
+  void nextTick(() => {
+    rememberOdfViewState()
+    document.getElementById(id)?.scrollIntoView({ block: 'center' })
+  })
 }
 const reveal = async (id: string, parent: string) => {
   if (isOds.value) selectedSheetId.value = parent
   else selectedSlideId.value = parent
   await nextTick()
+  rememberOdfViewState()
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
 }
 const moveMatch = (direction: number) => {
@@ -276,7 +280,6 @@ watch(documentPath, (_path, previousPath) => {
 watch(matches, value => { matchIndex.value = value.length ? 0 : -1 })
 watch(() => [route.query.locator, route.query.locatorToken], revealRouteLocator)
 watch(selectedSheetId, () => void nextTick(rememberOdfViewState))
-watch(selectedSlideId, () => void nextTick(rememberOdfViewState))
 onBeforeUnmount(rememberOdfViewState)
 </script>
 
