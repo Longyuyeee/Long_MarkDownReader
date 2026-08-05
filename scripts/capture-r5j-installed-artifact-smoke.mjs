@@ -630,7 +630,7 @@ const observationSurface = await evaluate(`(() => ({
   openedInCurrentWindow: window.opener === null,
 }))()`)
 if (!observationSurface.baselineVisible || !observationSurface.comparisonVisible ||
-    !observationSurface.comparisonLabel.includes('复查改善') || !observationSurface.openedInCurrentWindow) {
+    !observationSurface.comparisonLabel.includes('对比改善结果') || !observationSurface.openedInCurrentWindow) {
   throw new Error(`Installed knowledge observation surface failed: ${JSON.stringify(observationSurface)}`)
 }
 await evaluate(`document.querySelector('[data-testid="knowledge-observation-export"]')?.scrollIntoView({ block: 'center' })`)
