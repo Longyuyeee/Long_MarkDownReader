@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX-34",
+  "capturedAt": "2026-08-05T02:17:01.938Z",
+  "environment": "Tauri Debug WebView2 with isolated repository fixtures",
+  "sourceCommit": "2f756cd1d9bb729a0002077d20aa6d0060bf961b",
+  "routeCycles": 6,
+  "viewportChanges": 6,
+  "canvasZoomInteractions": 6,
+  "canvasDragInteractions": 6,
+  "boundary": {
+    "undeliveredPrevented": true,
+    "undeliveredDisplayed": false,
+    "limitPrevented": true,
+    "limitDisplayed": false,
+    "unrelatedPrevented": false,
+    "unrelatedDisplayed": true
+  },
+  "runtimeErrorCount": 0,
+  "blockingErrorSurfaceObserved": false,
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "cycles": [
+    {
+      "cycle": 1,
+      "drawio": {
+        "pages": 2,
+        "cells": 2,
+        "errorVisible": false
+      },
+      "canvas": {
+        "nodes": 2,
+        "worldTransform": "translate(60px, 208.375px) scale(1.29219)",
+        "crashFallbackVisible": false
+      }
+    },
+    {
+      "cycle": 2,
+      "drawio": {
+        "pages": 2,
+        "cells": 2,
+        "errorVisible": false
+      },
+      "canvas": {
+        "nodes": 2,
+        "worldTransform": "translate(60px, 216.5px) scale(1.32344)",
+        "crashFallbackVisible": false
+      }
+    },
+    {
+      "cycle": 3,
+      "drawio": {
+        "pages": 2,
+        "cells": 2,
+        "errorVisible": false
+      },
+      "canvas": {
+        "nodes": 2,
+        "worldTransform": "translate(60px, 208.375px) scale(1.29219)",
+        "crashFallbackVisible": false
+      }
+    },
+    {
+      "cycle": 4,
+      "drawio": {
+        "pages": 2,
+        "cells": 2,
+        "errorVisible": false
+      },
+      "canvas": {
+        "nodes": 2,
+        "worldTransform": "translate(60px, 216.5px) scale(1.32344)",
+        "crashFallbackVisible": false
+      }
+    },
+    {
+      "cycle": 5,
+      "drawio": {
+        "pages": 2,
+        "cells": 2,
+        "errorVisible": false
+      },
+      "canvas": {
+        "nodes": 2,
+        "worldTransform": "translate(60px, 208.375px) scale(1.29219)",
+        "crashFallbackVisible": false
+      }
+    },
+    {
+      "cycle": 6,
+      "drawio": {
+        "pages": 2,
+        "cells": 2,
+        "errorVisible": false
+      },
+      "canvas": {
+        "nodes": 2,
+        "worldTransform": "translate(60px, 216.5px) scale(1.32344)",
+        "crashFallbackVisible": false
+      }
+    }
+  ]
+}

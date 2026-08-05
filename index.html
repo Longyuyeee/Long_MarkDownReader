@@ -21,7 +21,13 @@
       <p style="color:#888;margin-top:20px">按 Ctrl+Shift+F12 可尝试打开开发者工具</p>
     </div>
     <script>
+      const isRecoverableLayoutError = function(value) {
+        const message = value && typeof value === 'object' && 'message' in value ? value.message : value;
+        return message === 'ResizeObserver loop limit exceeded' ||
+          message === 'ResizeObserver loop completed with undelivered notifications.';
+      };
       window.onerror = function(msg, url, line, col, err) {
+        if (isRecoverableLayoutError(msg) || isRecoverableLayoutError(err)) return true;
         document.getElementById('crash-screen').style.display = 'block';
         document.getElementById('crash-info').textContent =
           'Error: ' + msg + '\nURL: ' + url + '\nLine: ' + line + ':' + col + '\nStack: ' + (err ? err.stack : 'none');
