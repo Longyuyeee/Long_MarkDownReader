@@ -53,6 +53,7 @@
     "check:ux37a-opml-canvas": "node scripts/check-ux37a-opml-canvas-contract.mjs",
     "audit:ux37a-opml-canvas": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-ux37a-opml-canvas-audit.ps1",
     "check:ux37b-knowledge-graph-canvas": "node scripts/check-ux37b-knowledge-graph-canvas-contract.mjs",
+    "audit:ux37b-knowledge-graph-canvas": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-ux37b-knowledge-graph-canvas-audit.ps1",
     "audit:r5c-route-performance-smoke": "node scripts/capture-r5c-route-performance-evidence.mjs",
     "audit:r5d-production-route-smoke-preflight": "node scripts/audit-r5d-production-route-smoke-preflight.mjs",
     "audit:r5g-desktop-artifact-smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-r5g-desktop-artifact-smoke.ps1",
