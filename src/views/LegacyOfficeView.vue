@@ -75,6 +75,8 @@
         <p>目标必须位于当前知识库内且尚不存在。外部转换器只接触临时源副本。</p>
       </section>
 
+      <ExternalApplicationPanel :path="documentPath" />
+
       <div v-if="conversionError" class="result error">
         <CircleX :size="18" />
         <p>{{ conversionError }}</p>
@@ -105,6 +107,8 @@ import {
 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import ExternalApplicationPanel from '../components/workspace/ExternalApplicationPanel.vue'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useAppStore } from '../store/app'
 
 interface LegacyOfficePreflight {
@@ -209,7 +213,7 @@ const load = async () => {
       libraryRoot: store.libraryPath,
       path: documentPath.value,
     })
-    targetPath.value = defaultTargetPath(documentPath.value)
+    targetPath.value = recallWorkspaceViewState(documentPath.value)?.draft || defaultTargetPath(documentPath.value)
   } catch (error) {
     report.value = undefined
     loadError.value = String(error).replace(/^Error:\s*/, '')
@@ -241,10 +245,15 @@ const convert = async () => {
 }
 
 watch(documentPath, load, { immediate: true })
+watch(targetPath, value => {
+  if (!documentPath.value || loading.value) return
+  const current = recallWorkspaceViewState(documentPath.value)
+  rememberWorkspaceViewState(documentPath.value, { ...current, scrollTop: current?.scrollTop || 0, scrollLeft: current?.scrollLeft || 0, draft: value })
+})
 </script>
 
 <style scoped>
-.legacy-office { display: flex; width: 100%; height: 100%; min-width: 0; flex-direction: column; color: var(--theme-text); background: var(--theme-bg); }
+.legacy-office { display: flex; width: 100%; height: 100%; min-width: 0; flex-direction: column; color: var(--theme-text); background: var(--theme-bg); container-type: inline-size; }
 header { display: flex; min-height: 52px; align-items: center; justify-content: space-between; padding: 0 14px; border-bottom: var(--theme-border); }
 .identity { display: flex; min-width: 0; align-items: center; gap: 10px; }
 .identity div { display: grid; min-width: 0; gap: 2px; }
@@ -289,7 +298,7 @@ input:focus { border-color: var(--theme-primary); }
 .state.error p { margin: 5px 0 0; line-height: 1.5; }
 .spinning { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   main { width: calc(100% - 24px); margin-top: 20px; }
   dl div { grid-template-columns: 86px minmax(0, 1fr); }
   .target-row { grid-template-columns: 1fr; }

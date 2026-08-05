@@ -37,6 +37,7 @@
         <div class="digest"><dt>SHA-256</dt><dd>{{ report.sha256 }}</dd></div>
       </dl>
       <p class="boundary">{{ format?.userCapability.description }}</p>
+      <ExternalApplicationPanel :path="documentPath" />
     </main>
   </section>
 </template>
@@ -47,6 +48,7 @@ import { FileType2, RefreshCw, ShieldAlert, ShieldCheck } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { findFileFormat } from '../config/fileFormats'
+import ExternalApplicationPanel from '../components/workspace/ExternalApplicationPanel.vue'
 import { useAppStore } from '../store/app'
 
 interface WpsNativeInspection {
@@ -101,7 +103,7 @@ watch(documentPath, load, { immediate: true })
 </script>
 
 <style scoped>
-.external-office { display: flex; width: 100%; height: 100%; min-width: 0; flex-direction: column; color: var(--theme-text); background: var(--theme-bg); }
+.external-office { display: flex; width: 100%; height: 100%; min-width: 0; flex-direction: column; color: var(--theme-text); background: var(--theme-bg); container-type: inline-size; }
 header { display: flex; min-height: 52px; align-items: center; justify-content: space-between; padding: 0 14px; border-bottom: var(--theme-border); }
 .identity { display: flex; min-width: 0; align-items: center; gap: 10px; }
 .identity div { display: grid; min-width: 0; gap: 2px; }
@@ -127,7 +129,7 @@ dd { min-width: 0; margin: 0; font-size: 12px; }
 .state.error p { margin: 5px 0 0; line-height: 1.5; }
 .spinning { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   main { width: calc(100% - 24px); margin-top: 22px; }
   dl div { grid-template-columns: 86px minmax(0, 1fr); }
 }

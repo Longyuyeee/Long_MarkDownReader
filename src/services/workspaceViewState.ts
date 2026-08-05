@@ -12,6 +12,8 @@ export interface WorkspaceViewState {
   panX?: number
   panY?: number
   selection?: string
+  externalApplication?: string
+  draft?: string
 }
 
 const MAX_ENTRIES = 24
