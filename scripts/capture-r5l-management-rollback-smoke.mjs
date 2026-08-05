@@ -87,6 +87,7 @@ const readPrior = async () => {
 }
 
 await fs.mkdir(output, { recursive: true })
+await send('Page.enable')
 await send('Runtime.enable')
 await waitFor(`document.querySelector('#app')?.children.length > 0`, 'installed desktop app bootstrap')
 
@@ -173,6 +174,16 @@ try {
     }
     const rebuilt = await invoke('rebuild_knowledge_index', { libraryRoot: library })
     assertReadyIndex(rebuilt)
+
+    await evaluate(`location.hash = '#/workspace'`)
+    await send('Page.reload', { ignoreCache: true })
+    await delay(1000)
+    await waitFor(`document.querySelector('#app')?.children.length > 0`, 'post-restore application reload')
+    await waitFor(`typeof window.__TAURI_INTERNALS__?.invoke === 'function'`, 'post-restore Tauri bridge')
+    const reloadedConfig = await invoke('get_config')
+    if (reloadedConfig.activeLibraryPath !== library || reloadedConfig.libraries?.[0]?.path !== library) {
+      throw new Error('Reloaded application did not adopt the restored library mapping')
+    }
 
     const textFile = path.join(library, 'r5j-notes.txt')
     const jsonFile = path.join(library, 'r5j-config.json')

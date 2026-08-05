@@ -63,6 +63,7 @@ for (const token of [
   "restore_management_backup",
   "delete_knowledge_index",
   "rebuild_knowledge_index",
+  "post-restore application reload",
   "R5J_TEXT_SAVED",
   "R5J_JSON_SAVED",
   "sourceUserContentIncluded: false",
