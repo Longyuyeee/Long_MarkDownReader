@@ -709,7 +709,7 @@ if (reviewedComparison.stage !== 'G15B' || reviewedComparison.outcome !== compar
     reviewedComparison.changes.connectedObjectCount !== comparisonReceipt.changes.connectedObjectCount ||
     reviewedComparison.sourceUserContentIncluded || reviewedComparison.objectIdentifiersIncluded ||
     reviewedComparison.fileNamesIncluded || reviewedComparison.absolutePathsIncluded || !unknownFieldRejected ||
-    !receiptReviewSurface.entryVisible || !receiptReviewSurface.entryLabel.includes('审阅回执') ||
+    !receiptReviewSurface.entryVisible || !receiptReviewSurface.entryLabel.includes('查看已保存结果') ||
     !receiptReviewSurface.openedInCurrentWindow || receiptReviewSurface.pathRendered || receiptReviewSurface.pathPersisted) {
   throw new Error(`Installed local comparison receipt review failed: ${JSON.stringify({ reviewedComparison, unknownFieldRejected, receiptReviewSurface })}`)
 }
