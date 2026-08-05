@@ -235,11 +235,12 @@ const revealRouteLocator = async () => {
   await reveal(locator, parent)
 }
 const rememberOdfViewState = (path = documentPath.value) => {
-  if (!path) return
+  const format = report.value?.model.format
+  if (!path || !format) return
   rememberWorkspaceViewState(path, {
-    scrollTop: isOds.value ? sheetStageRef.value?.scrollTop || 0 : 0,
-    scrollLeft: isOds.value ? sheetStageRef.value?.scrollLeft || 0 : 0,
-    section: isOds.value ? selectedSheetId.value : selectedSlideId.value,
+    scrollTop: format === 'ods' ? sheetStageRef.value?.scrollTop || 0 : 0,
+    scrollLeft: format === 'ods' ? sheetStageRef.value?.scrollLeft || 0 : 0,
+    section: format === 'ods' ? selectedSheetId.value : selectedSlideId.value,
   })
 }
 const load = async () => {
