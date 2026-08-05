@@ -612,3 +612,9 @@ UX-33 有界 DOCX 页面编辑已完成安装态收口。U2 运行 `30967710442`
 UX-34 Drawio/Canvas 尺寸稳定性已完成。Canvas ResizeObserver 采用单帧合并、尺寸短路和卸载取消；`index.html` 与应用运行时仅阻止两种标准可恢复布局通知，普通错误仍进入原错误页。Tauri Debug WebView2 已完成 6 轮路由、视口、缩放和拖动验证，证据见 `docs/evidence/ux34-drawio-canvas-stability`，完整审计见 `docs/A12_Drawio_Canvas_Resize_Stability_Audit_2026-08-05.md`。
 
 接手后直接进入 UX-35：删除文件树节点重复的原生 `title` 文本提示，只保留统一详情浮层，并确保键盘焦点可以获得同等信息。当前证据不包含用户资料，`releaseCandidate=false`。
+
+# 2026-08-05 UX-35 交接入口
+
+UX-35 文件树详情浮层已完成。节点原生 `title` 已删除，鼠标和键盘方向键当前项共用可访问详情浮层，Esc 与焦点离开可关闭。真实 Tauri Debug WebView2 已验证两个隔离 fixture 均无重复原生提示，运行时异常为 0；证据见 `docs/evidence/ux35-file-tree-preview`，完整审计见 `docs/A13_File_Tree_Detail_Preview_Audit_2026-08-05.md`。
+
+接手后直接进入 UX-36：文件树空白区/目录右键菜单第一项改为“新建”二级菜单，按文档、数据、图表、代码组织格式；重命名必须展示完整文件名并允许修改后缀，格式变化前提示风险、名称冲突时禁止覆盖。当前证据不含用户资料与完整本机路径，`releaseCandidate=false`。
