@@ -7,10 +7,10 @@
   "allowedStatuses": ["accepted", "partial", "referenced", "pending", "not-applicable"],
   "profiles": {
     "ux38a-lightweight": {
-      "evidence": ["docs/evidence/ux38a-lightweight-formats/manifest.json", "docs/evidence/ui4b-editors/audit-manifest.json"],
+      "evidence": ["docs/evidence/ux38a-lightweight-formats/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json", "docs/evidence/ui4b-editors/audit-manifest.json"],
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "partial", "edit": "partial", "save": "partial", "return": "partial",
-        "tab": "partial", "theme": "referenced", "scale": "referenced", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
+        "tab": "accepted", "theme": "referenced", "scale": "referenced", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
       }
     },
     "specialized-existing": {

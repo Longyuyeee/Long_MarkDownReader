@@ -642,3 +642,9 @@ UX-37B 产品知识图谱专业画布已完成，UX-37 总项关闭。关系网�
 UX-38A 已建立覆盖 41/41 个格式族、12 个体验维度的机器可检查矩阵，并在真实 Tauri Debug WebView2 中完成 24 个轻量格式的受管打开与加载验收。24/24 通过，最长加载 2041 ms，运行时错误和阻断界面均为 0，源文件哈希全部不变；证据见 `docs/evidence/ux38a-lightweight-formats`，审计见 `docs/A17_UX38A_Lightweight_Format_Matrix_Audit_2026-08-05.md`。
 
 UX-38 总项仍在进行中。视觉审计确认多标签会继续压缩并暴露原生滚动条，标签维度只能标记为部分通过。接手后进入 UX-38B，先统一修复 UX-09、UX-10、UX-17：标签保持可读最小宽度、滚轮/触控板横向滚动、隐藏原生轨道并提供边缘反馈；之后再继续数据表格、Office、图形和外部依赖格式。当前证据不含用户资料与完整本机路径，`releaseCandidate=false`。
+
+# 2026-08-05 UX-38B 交接入口
+
+UX-38B 工作区标签滚动已完成，UX-09、UX-10、UX-17 关闭。标签采用 176px 固定宽度和 156px 最小保护宽度，隐藏原生轨道，支持滚轮、Shift+滚轮、触控板主方向增量、左右边缘按钮、活动项自动显露和方向键导航。真实 Tauri Debug WebView2 已用 12 个文件完成宽屏、滚动和 1000x720 窄窗口验收，运行时错误为 0，源文件哈希不变；证据见 `docs/evidence/ux38b-workspace-tabs`，审计见 `docs/A18_UX38B_Workspace_Tab_Scrolling_Audit_2026-08-05.md`。
+
+UX-38 总项仍在进行中。接手后进入 UX-38C 数据表格格式族，依次核查 Table、CSV/TSV、XLSX、ODS 的打开、加载与异常状态、内存编辑与显式保存、主题和冻结层、窄窗口、键盘及返回上下文。当前证据不含用户资料与完整本机路径，`releaseCandidate=false`。
