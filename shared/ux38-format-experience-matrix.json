@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX-38",
+  "status": "in-progress",
+  "releaseCandidate": false,
+  "dimensions": ["open", "load", "states", "edit", "save", "return", "tab", "theme", "scale", "keyboard", "performance", "errors"],
+  "allowedStatuses": ["accepted", "partial", "referenced", "pending", "not-applicable"],
+  "profiles": {
+    "ux38a-lightweight": {
+      "evidence": ["docs/evidence/ux38a-lightweight-formats/manifest.json", "docs/evidence/ui4b-editors/audit-manifest.json"],
+      "dimensions": {
+        "open": "accepted", "load": "accepted", "states": "partial", "edit": "partial", "save": "partial", "return": "partial",
+        "tab": "partial", "theme": "referenced", "scale": "referenced", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
+      }
+    },
+    "specialized-existing": {
+      "evidence": ["shared/release-capability-matrix.json", "docs/evidence/ui4b-editors/audit-manifest.json"],
+      "dimensions": {
+        "open": "referenced", "load": "referenced", "states": "partial", "edit": "partial", "save": "partial", "return": "partial",
+        "tab": "referenced", "theme": "referenced", "scale": "referenced", "keyboard": "partial", "performance": "partial", "errors": "partial"
+      }
+    },
+    "external-dependent": {
+      "evidence": ["shared/release-capability-matrix.json"],
+      "dimensions": {
+        "open": "partial", "load": "pending", "states": "pending", "edit": "not-applicable", "save": "not-applicable", "return": "pending",
+        "tab": "pending", "theme": "pending", "scale": "pending", "keyboard": "pending", "performance": "pending", "errors": "pending"
+      }
+    }
+  },
+  "formats": [
+    { "id": "markdown", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "plain-text", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "env", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "ini", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "properties", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "editorconfig", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "gitignore", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "javascript", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "typescript", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "python", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "rust", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "go", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "jvm-code", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "c-family", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "shell", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "sql", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "web-source", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "json", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "log", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "jsonc", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "yaml", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "xml", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "svg", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "toml", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
+    { "id": "canvas", "cohort": "diagram-canvas", "profile": "specialized-existing" },
+    { "id": "pdf", "cohort": "document-media", "profile": "specialized-existing" },
+    { "id": "table", "cohort": "data-grid", "profile": "specialized-existing" },
+    { "id": "docx", "cohort": "document-media", "profile": "specialized-existing" },
+    { "id": "ods", "cohort": "document-media", "profile": "specialized-existing" },
+    { "id": "odp", "cohort": "document-media", "profile": "specialized-existing" },
+    { "id": "legacy-doc", "cohort": "external-office", "profile": "external-dependent" },
+    { "id": "legacy-xls", "cohort": "external-office", "profile": "external-dependent" },
+    { "id": "legacy-ppt", "cohort": "external-office", "profile": "external-dependent" },
+    { "id": "pptx", "cohort": "document-media", "profile": "specialized-existing" },
+    { "id": "wps-document", "cohort": "external-office", "profile": "external-dependent" },
+    { "id": "wps-spreadsheet", "cohort": "external-office", "profile": "external-dependent" },
+    { "id": "wps-presentation", "cohort": "external-office", "profile": "external-dependent" },
+    { "id": "workbook", "cohort": "data-grid", "profile": "specialized-existing" },
+    { "id": "drawio", "cohort": "diagram-canvas", "profile": "specialized-existing" },
+    { "id": "diagram", "cohort": "diagram-canvas", "profile": "specialized-existing" },
+    { "id": "opml", "cohort": "diagram-canvas", "profile": "specialized-existing" }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+    "schemaVersion":  1,
+    "stage":  "UX-38A",
+    "status":  "accepted",
+    "visualReview":  "accepted",
+    "sourceCommit":  "9a461506a7e4f72ddf4f3ae056d152a95480b5f8",
+    "evidenceFile":  "interaction-evidence.json",
+    "evidenceSha256":  "b63b9c2e3865745c216f50329c3fd0d875e865fb36f37c1da59964b391a58777",
+    "screenshots":  [
+                        {
+                            "file":  "plain-text-workspace.jpg",
+                            "bytes":  85286,
+                            "sha256":  "21c816a45dfe69061fd5d75a6880260a0b91607c88af201ad898432dcd31029e"
+                        },
+                        {
+                            "file":  "javascript-workspace.jpg",
+                            "bytes":  89068,
+                            "sha256":  "88cef294831b63c7e36d7d954c49517f24a06b785a1a40aa271280b6f66cbf9f"
+                        },
+                        {
+                            "file":  "json-workspace.jpg",
+                            "bytes":  122670,
+                            "sha256":  "7be156e6b6b425a1ec97b2f3fe243de28ca986bbe08ecaecbc10fe0a1c94d05d"
+                        },
+                        {
+                            "file":  "yaml-workspace.jpg",
+                            "bytes":  100448,
+                            "sha256":  "b4fc0fb911de562c5e73a3ec96fb518ea1fd3d558117fe946b0043ac40065686"
+                        },
+                        {
+                            "file":  "log-workspace.jpg",
+                            "bytes":  91468,
+                            "sha256":  "db652faab467b8f692898babe63d6fe037b4b428ab8310a396778b3a6b56826d"
+                        }
+                    ],
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false
+}
