@@ -45,7 +45,7 @@
         <header><strong>源码</strong><span>修改后自动预览</span></header>
         <div class="source-editor">
           <pre aria-hidden="true">{{ lineNumbers }}</pre>
-          <textarea ref="sourceInput" v-model="source" spellcheck="false" aria-label="Mermaid 源码" @input="onSourceInput" @scroll="syncGutter"></textarea>
+          <textarea ref="sourceInput" v-model="source" spellcheck="false" aria-label="Mermaid 源码" @input="onSourceInput" @scroll="handleSourceScroll"></textarea>
         </div>
         <button v-if="parseError" class="parse-error" aria-live="assertive" @click="focusErrorLine">
           <strong>{{ errorLine ? `第 ${errorLine} 行` : '语法错误' }}</strong>
@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { Redo2 as RedoIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -105,6 +105,7 @@ import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
 import WorkspaceStatusBar from '../components/workspace/WorkspaceStatusBar.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { diagramSvgToPng, prepareDiagramSvg, type DiagramBackground } from '../utils/diagramExport'
 
 interface DiagramDocument { path: string; content: string; signature: string }
@@ -236,6 +237,22 @@ const rememberSourceChange = (previous: string, next = source.value) => {
   if (undoStack.value.length > 100) undoStack.value.shift()
   redoStack.value = []
 }
+const rememberDiagramViewState = (path = diagramPath.value) => {
+  if (!path || loading.value) return
+  rememberWorkspaceViewState(path, {
+    scrollTop: sourceInput.value?.scrollTop || 0,
+    scrollLeft: sourceInput.value?.scrollLeft || 0,
+    zoom: zoom.value,
+    panelOpen: showStructure.value,
+    sidebarTab: structureTab.value,
+    mode: diagramTheme.value,
+    selection: selectedId.value,
+  })
+}
+const handleSourceScroll = (event: Event) => {
+  syncGutter(event)
+  rememberDiagramViewState()
+}
 const onSourceInput = () => {
   rememberSourceChange(lastSourceValue)
   lastSourceValue = source.value
@@ -323,6 +340,19 @@ const loadDiagram = async () => {
     signature.value = document.signature
     dirty.value = false
     notice.value = '文件已加载'
+    const viewState = recallWorkspaceViewState(diagramPath.value)
+    if (viewState) {
+      zoom.value = viewState.zoom || 1
+      showStructure.value = viewState.panelOpen ?? true
+      if (viewState.sidebarTab === 'nodes' || viewState.sidebarTab === 'edges') structureTab.value = viewState.sidebarTab
+      if (['default', 'neutral', 'forest', 'dark'].includes(viewState.mode || '')) diagramTheme.value = viewState.mode as MermaidTheme
+      selectedId.value = viewState.selection || ''
+      await nextTick()
+      if (sourceInput.value) {
+        sourceInput.value.scrollTop = viewState.scrollTop
+        sourceInput.value.scrollLeft = viewState.scrollLeft
+      }
+    }
     scheduleRender(true)
   } catch (cause) {
     if (generation === loadGeneration) loadError.value = String(cause).replace(/^Error:\s*/, '')
@@ -384,10 +414,11 @@ const mayLeave = () => !dirty.value || window.confirm('Mermaid 图表还有未�
 const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
 
 watch(diagramPath, loadDiagram)
+watch([zoom, showStructure, structureTab, diagramTheme, selectedId], () => rememberDiagramViewState())
 onBeforeRouteLeave(() => mayLeave())
 onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
 onMounted(() => { loadDiagram(); window.addEventListener('beforeunload', beforeUnload) })
-onBeforeUnmount(() => { window.clearTimeout(renderTimer); window.removeEventListener('beforeunload', beforeUnload) })
+onBeforeUnmount(() => { rememberDiagramViewState(); window.clearTimeout(renderTimer); window.removeEventListener('beforeunload', beforeUnload) })
 </script>
 
 <style scoped>

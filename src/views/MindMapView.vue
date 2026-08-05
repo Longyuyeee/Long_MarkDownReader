@@ -163,6 +163,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useDialog, useMessage } from 'naive-ui'
 import { ArrowLeft as ArrowLeftIcon, ChevronRight as ChevronRightIcon, CornerDownRight as CornerDownRightIcon, Hand as HandIcon, ListPlus as ListPlusIcon, ListTree as ListTreeIcon, Maximize2 as MaximizeIcon, MousePointer2 as MousePointerIcon, Network as NetworkIcon, Plus as PlusIcon, Redo2 as RedoIcon, Save as SaveIcon, Search as SearchIcon, Trash2 as TrashIcon, Undo2 as UndoIcon, ZoomIn as ZoomInIcon, ZoomOut as ZoomOutIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
@@ -385,6 +386,20 @@ const fitMap = () => {
     y: (panel.clientHeight - (maxY - minY) * zoom) / 2 - minY * zoom,
   }
 }
+const rememberMindMapViewState = (filePath = path.value) => {
+  if (!filePath || loading.value) return
+  rememberWorkspaceViewState(filePath, {
+    scrollTop: 0,
+    scrollLeft: 0,
+    zoom: mapZoom.value,
+    panX: mapPan.value.x,
+    panY: mapPan.value.y,
+    section: layoutMode.value,
+    mode: viewMode.value,
+    sidebarTab: mapTheme.value,
+    selection: selectedIds.value.join(','),
+  })
+}
 const toggleNodeSelection = (id: string, additive: boolean) => {
   if (!additive) return selectOnly(id)
   const next = new Set(selectedIds.value)
@@ -500,7 +515,16 @@ const load = async () => {
     selectedId.value = requestedNode && locate(requestedNode) ? requestedNode : ''
     selectedIds.value = selectedId.value ? [selectedId.value] : []
     ensureSelection()
-    void nextTick(fitMap)
+    const viewState = recallWorkspaceViewState(path.value)
+    if (!requestedNode && viewState) {
+      if (['tree', 'organization', 'radial', 'timeline'].includes(viewState.section || '')) layoutMode.value = viewState.section as LayoutMode
+      if (viewState.mode === 'map' || viewState.mode === 'outline') viewMode.value = viewState.mode
+      if (['professional', 'colorful', 'focus'].includes(viewState.sidebarTab || '')) mapTheme.value = viewState.sidebarTab as MapTheme
+      mapZoom.value = viewState.zoom || 1
+      mapPan.value = { x: viewState.panX || 0, y: viewState.panY || 0 }
+      selectedIds.value = (viewState.selection || '').split(',').filter(id => Boolean(locate(id)))
+      selectedId.value = selectedIds.value[0] || selectedId.value
+    } else void nextTick(fitMap)
   }
   catch (cause) { document.value = null; error.value = String(cause).replace(/^Error:\s*/, '') }
   finally { loading.value = false }
@@ -540,9 +564,11 @@ const mayLeave = () => {
 watch(viewMode, value => localStorage.setItem('opml-view-mode', value))
 watch(layoutMode, value => localStorage.setItem('opml-layout-mode', value))
 watch(mapTheme, value => localStorage.setItem('opml-map-theme', value))
+watch([mapZoom, mapPan, layoutMode, mapTheme, viewMode, selectedIds], () => rememberMindMapViewState(), { deep: true })
 watch([path, () => route.query.node], () => { void load() })
 onMounted(() => { window.addEventListener('keydown', handleKeydown); window.addEventListener('keyup', handleKeyup); window.addEventListener('beforeunload', beforeUnload); void load() })
 onBeforeUnmount(() => {
+  rememberMindMapViewState()
   window.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('keyup', handleKeyup)
   window.removeEventListener('beforeunload', beforeUnload)

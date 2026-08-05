@@ -295,6 +295,7 @@ import { useAppStore } from '../store/app'
 import { isActiveThemeDark } from '../config/themePresets'
 import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import TableChartEmbed from '../components/TableChartEmbed.vue'
 import MermaidDiagramEmbed from '../components/MermaidDiagramEmbed.vue'
 
@@ -1242,6 +1243,18 @@ const openNode = async (node: CanvasNode) => {
 const markDirty = () => {
   saveState.value = 'dirty'
 }
+const rememberCanvasViewState = (path = canvasPath.value) => {
+  if (!path || loading.value) return
+  rememberWorkspaceViewState(path, {
+    scrollTop: 0,
+    scrollLeft: 0,
+    zoom: zoom.value,
+    panX: pan.x,
+    panY: pan.y,
+    selection: selectedNodeIds.value.join(','),
+    mode: tool.value,
+  })
+}
 const queueViewportSize = (entry?: ResizeObserverEntry) => {
   const rect = entry?.contentRect ?? viewportRef.value?.getBoundingClientRect()
   if (!rect) return
@@ -1283,8 +1296,17 @@ const loadCanvas = async () => {
     loadLayoutBackup()
     saveState.value = 'saved'
     const requestedNode = typeof route.query.node === 'string' ? route.query.node : ''
-    if (requestedNode && document.nodes.some(node => node.id === requestedNode)) selectedNodeIds.value = [requestedNode]
-    setTimeout(fitToContent, 0)
+    const viewState = recallWorkspaceViewState(canvasPath.value)
+    if (requestedNode && document.nodes.some(node => node.id === requestedNode)) {
+      selectedNodeIds.value = [requestedNode]
+      setTimeout(fitToContent, 0)
+    } else if (viewState) {
+      zoom.value = viewState.zoom || 1
+      pan.x = viewState.panX ?? 72
+      pan.y = viewState.panY ?? 72
+      selectedNodeIds.value = (viewState.selection || '').split(',').filter(id => document.nodes.some(node => node.id === id))
+      if (viewState.mode === 'select' || viewState.mode === 'connect') tool.value = viewState.mode
+    } else setTimeout(fitToContent, 0)
   } catch (error) { loadError.value = String(error) }
   finally { loading.value = false }
 }
@@ -1319,6 +1341,7 @@ const beforeUnload = (event: BeforeUnloadEvent) => {
 }
 
 watch([canvasPath, () => route.query.node], loadCanvas)
+watch([zoom, () => pan.x, () => pan.y, selectedNodeIds, tool], () => rememberCanvasViewState(), { deep: true })
 watch(snapEnabled, enabled => {
   localStorage.setItem('canvas-snap-enabled', String(enabled))
   if (!enabled) alignmentGuides.value = []
@@ -1335,6 +1358,7 @@ onMounted(() => {
   loadCanvas()
 })
 onBeforeUnmount(() => {
+  rememberCanvasViewState()
   window.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('beforeunload', beforeUnload)
   viewportResizeObserver?.disconnect()

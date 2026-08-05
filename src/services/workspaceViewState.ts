@@ -9,6 +9,9 @@ export interface WorkspaceViewState {
   sidebarTab?: string
   panelOpen?: boolean
   mode?: string
+  panX?: number
+  panY?: number
+  selection?: string
 }
 
 const MAX_ENTRIES = 24

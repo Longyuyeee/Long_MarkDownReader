@@ -62,7 +62,7 @@
             <strong>{{ activePage?.name || 'Draw.io' }}</strong>
             <span>{{ activePage?.width.toFixed(0) }} × {{ activePage?.height.toFixed(0) }}</span>
           </div>
-          <div class="canvas-scroll">
+          <div ref="canvasScrollRef" class="canvas-scroll" @scroll.passive="rememberDrawioViewState()">
             <svg
               v-if="activePage"
               class="diagram-canvas"
@@ -167,6 +167,7 @@ import {
   Workflow as WorkflowIcon,
 } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useAppStore } from '../store/app'
 
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string }
@@ -203,6 +204,7 @@ const analysis = ref<Analysis | null>(null)
 const activePageId = ref('')
 const selectedCellId = ref('')
 const cellQuery = ref('')
+const canvasScrollRef = ref<HTMLElement>()
 const undoStack = ref<string[]>([])
 const redoStack = ref<string[]>([])
 const form = reactive({ label: '', x: 0, y: 0, width: 120, height: 60, fillColor: '#ffffff', strokeColor: '#64748b' })
@@ -264,6 +266,23 @@ const analyze = async (source: string) => {
   if (!editableCells.value.some(cell => cell.id === selectedCellId.value)) selectedCellId.value = editableCells.value[0]?.id || ''
   return result
 }
+const rememberDrawioViewState = (path = documentPath.value) => {
+  if (!path || loading.value) return
+  rememberWorkspaceViewState(path, {
+    scrollTop: canvasScrollRef.value?.scrollTop || 0,
+    scrollLeft: canvasScrollRef.value?.scrollLeft || 0,
+    section: activePageId.value,
+    selection: selectedCellId.value,
+  })
+}
+const restoreDrawioViewState = async () => {
+  const viewState = recallWorkspaceViewState(documentPath.value)
+  if (viewState?.section && analysis.value?.pages.some(page => page.id === viewState.section)) activePageId.value = viewState.section
+  if (viewState?.selection && editableCells.value.some(cell => cell.id === viewState.selection)) selectedCellId.value = viewState.selection
+  if (!viewState) return
+  await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+  canvasScrollRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
+}
 const load = async (discardDraft = false) => {
   loading.value = true
   loadError.value = ''
@@ -277,6 +296,7 @@ const load = async (discardDraft = false) => {
       signature.value = draft.textSignature || ''
       dirty.value = true
       await analyze(content.value)
+      await restoreDrawioViewState()
       store.activateTab(draft.id)
       return
     }
@@ -288,6 +308,7 @@ const load = async (discardDraft = false) => {
     signature.value = snapshot.signature
     dirty.value = false
     await analyze(content.value)
+    await restoreDrawioViewState()
     registerTab()
   } catch (error) {
     loadError.value = errorText(error)
@@ -381,6 +402,7 @@ watch(selectedCell, cell => {
   form.strokeColor = safeColor(cell.strokeColor, '#64748b')
 }, { immediate: true })
 watch(documentPath, () => void load())
+watch([activePageId, selectedCellId], () => rememberDrawioViewState())
 const handleKeydown = (event: KeyboardEvent) => {
   const command = event.ctrlKey || event.metaKey
   if (!command) return
@@ -399,6 +421,7 @@ onMounted(() => {
   void load()
 })
 onBeforeUnmount(() => {
+  rememberDrawioViewState()
   window.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('beforeunload', beforeUnload)
 })
