@@ -12,6 +12,12 @@ use std::process::{Command, Output, Stdio};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
 const MAX_LEGACY_DOC_BYTES: u64 = 64 * 1024 * 1024;
 pub(crate) const CONVERSION_TIMEOUT: Duration = Duration::from_secs(90);
 const FIB_IDENT: u16 = 0xa5ec;
@@ -239,11 +245,13 @@ fn preflight_path(path: &Path) -> Result<LegacyDocPreflight, String> {
 
 #[cfg(target_os = "windows")]
 fn terminate_process_tree(child: &mut std::process::Child) {
-    let _ = Command::new("taskkill.exe")
+    let mut command = Command::new("taskkill.exe");
+    command
+        .creation_flags(CREATE_NO_WINDOW)
         .args(["/PID", &child.id().to_string(), "/T", "/F"])
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status();
+        .stderr(Stdio::null());
+    let _ = command.status();
     let _ = child.kill();
 }
 
@@ -253,6 +261,8 @@ fn terminate_process_tree(child: &mut std::process::Child) {
 }
 
 pub(crate) fn run_with_timeout(command: &mut Command, timeout: Duration) -> Result<Output, String> {
+    #[cfg(target_os = "windows")]
+    command.creation_flags(CREATE_NO_WINDOW);
     let mut child = command
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

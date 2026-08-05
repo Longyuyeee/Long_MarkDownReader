@@ -1,0 +1,22 @@
+import fs from 'node:fs'
+
+const read = file => fs.readFileSync(file, 'utf8')
+const json = file => JSON.parse(read(file))
+const fail = message => { console.error(`UX-39 packaging preflight rejected: ${message}`); process.exit(1) }
+const pkg = json('package.json')
+const tauri = json('src-tauri/tauri.conf.json')
+const ux39 = json('src-tauri/tauri.ux39.conf.json')
+const main = read('src-tauri/src/main.rs')
+const externalApps = read('src-tauri/src/commands/external_apps.rs')
+const git = read('src-tauri/src/commands/git.rs')
+const legacy = read('src-tauri/src/commands/legacy_office.rs')
+const system = read('src-tauri/src/commands/system.rs')
+if (pkg.version !== '1.0.3' || tauri.version !== pkg.version) fail('package/Tauri version drift')
+if (!main.includes('#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]')) fail('release executable can allocate a console window')
+if (ux39.bundle?.createUpdaterArtifacts !== false || JSON.stringify(ux39.bundle.targets) !== JSON.stringify(['msi', 'nsis'])) fail('unsigned MSI/NSIS build override drift')
+for (const [name, source] of [['external app discovery', externalApps], ['Git integration', git], ['legacy conversion', legacy], ['system settings', system]]) if (!source.includes('creation_flags') || !source.includes('0x0800_0000') && !source.includes('0x08000000')) fail(`${name} does not suppress helper console windows`)
+if (!legacy.includes('command.creation_flags(CREATE_NO_WINDOW)') || !legacy.includes('Command::new("taskkill.exe")')) fail('legacy conversion child process suppression drift')
+if (/Command::new\(["']reg\.exe["']\)/i.test(externalApps)) fail('reg.exe startup regression')
+if (!pkg.scripts?.['build:ux39-unsigned']?.includes('tauri.ux39.conf.json') || !pkg.scripts?.['check:ux39-packaging-preflight']) fail('UX-39 package commands are missing')
+if (!pkg.scripts?.['check:current-development-audit']?.includes('check-ux39-packaging-preflight')) fail('UX-39 preflight is outside the development audit chain')
+console.log('UX-39 packaging preflight passed: v1.0.3 builds unsigned MSI/NSIS artifacts and suppresses known Windows helper consoles.')
