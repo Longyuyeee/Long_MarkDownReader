@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX-37A",
+  "status": "accepted",
+  "visualReview": "accepted",
+  "productSourceCommit": "a6975600f7d3bceac3e920c2eb1724c8454bac88",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "39fe0c597e32f8be8ec6bdf42dcf7b825055c3eb964834207c40ac3dcd6050ba",
+  "screenshots": [
+    {
+      "file": "tree-colorful-canvas.jpg",
+      "bytes": 129795,
+      "sha256": "695e395ebd42cdbda9547915362806ac098ea21e8bb3d6d8702123c720a68119"
+    },
+    {
+      "file": "radial-layout.jpg",
+      "bytes": 126235,
+      "sha256": "76d3a13d8c12aa4b1838468a2da17be0044eb4f2e668c0bbd25306a8f2d3aef0"
+    },
+    {
+      "file": "multi-select-dragged.jpg",
+      "bytes": 127653,
+      "sha256": "f8db90aa5c320820f158e6e1e7e585408dbbcbec00d4500734795d365bf364d7"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
