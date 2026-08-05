@@ -1,5 +1,5 @@
 <template>
-  <div class="graph-container" ref="containerRef">
+  <div class="graph-container" ref="containerRef" :class="`graph-canvas-theme-${graphCanvasTheme}`">
     <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls">
@@ -23,16 +23,42 @@
         <button class="control-btn" @click="resetLayout" title="清除已保存位置并重新布局">
           <RotateCcw :size="16" />
         </button>
-        <button class="control-btn" @click="zoom = Math.min(3, zoom * 1.2)" title="放大">
+        <button class="control-btn" :disabled="!layoutUndoStack.length" @click="undoLayout" title="撤销画布调整">
+          <Undo2 :size="16" />
+        </button>
+        <button class="control-btn" :disabled="!layoutRedoStack.length" @click="redoLayout" title="重做画布调整">
+          <Redo2 :size="16" />
+        </button>
+        <button class="control-btn" @click="changeGraphZoom(1.2)" title="放大">
           <ZoomIn :size="16" />
         </button>
-        <button class="control-btn" @click="zoom = Math.max(0.1, zoom * 0.8)" title="缩小">
+        <button class="control-btn" @click="changeGraphZoom(0.8)" title="缩小">
           <ZoomOut :size="16" />
+        </button>
+        <button class="control-btn" @click="fitGraph" title="适合窗口">
+          <Maximize2 :size="16" />
         </button>
       </div>
     </WorkspaceManagementHeader>
     <div class="graph-options">
       <GraphFilterControls :graph="graphData" :show-search="false" />
+      <span class="option-divider"></span>
+      <label>布局
+        <select v-model="graphLayoutMode" @change="applySelectedLayout">
+          <option value="force">自动网络</option>
+          <option value="tree">树状</option>
+          <option value="organization">组织</option>
+          <option value="radial">放射</option>
+          <option value="timeline">时间线</option>
+        </select>
+      </label>
+      <label>主题
+        <select v-model="graphCanvasTheme">
+          <option value="professional">专业</option>
+          <option value="colorful">多彩</option>
+          <option value="focus">专注</option>
+        </select>
+      </label>
       <template v-if="viewMode === 'mindmap'">
         <span class="option-divider"></span>
         <label>展开深度
@@ -55,7 +81,20 @@
       </div>
       <button class="remediation-close" aria-label="关闭行动提示" @click="clearRemediation">×</button>
     </div>
-    <canvas ref="canvasRef" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @wheel.prevent="onZoom" @click="onClick" @dblclick="onDblClick"></canvas>
+    <canvas
+      ref="canvasRef"
+      tabindex="0"
+      aria-label="产品知识图谱画布"
+      :data-layout-mode="graphLayoutMode"
+      :data-selected-count="selectedNodeIds.length"
+      @mousedown="startDrag"
+      @mousemove="onDrag"
+      @mouseup="endDrag"
+      @mouseleave="endDrag"
+      @wheel.prevent="onZoom"
+      @click="onClick"
+      @dblclick="onDblClick"
+    ></canvas>
     <GraphHealthPanel
       :open="healthOpen"
       :library-root="store.libraryPath"
@@ -127,7 +166,11 @@
       <div class="stat-divider"></div>
       <div class="stat-item">
         <Search :size="14" />
-        {{ Math.round(zoom * 100) }}%
+        {{ Math.round(zoomLevel * 100) }}%
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        {{ selectedNodeIds.length }} 个已选
       </div>
     </WorkspaceStatusBar>
     <!-- 节点悬浮提示 -->
@@ -147,7 +190,7 @@
     </transition>
     <transition name="details-slide">
       <aside v-if="selectedNode" class="node-details" data-testid="graph-selected-node" :data-node-id="selectedNode.id">
-        <button class="details-close" @click="selectedNode = null" aria-label="关闭节点详情">×</button>
+        <button class="details-close" @click="clearSelection" aria-label="关闭节点详情">×</button>
         <span class="details-kicker">节点详情</span>
         <h3>{{ selectedNode.title }}</h3>
         <p class="details-path">{{ displayWorkspacePath(selectedNode.path) }}<template v-if="selectedNode.locationLabel"> · {{ selectedNode.locationLabel }}</template></p>
@@ -213,7 +256,7 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
-import { Circle, CircleHelp, Link2, Network, RotateCcw, Search, ZoomIn, ZoomOut } from 'lucide-vue-next'
+import { Circle, CircleHelp, Link2, Maximize2, Network, Redo2, RotateCcw, Search, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { managedFileLocation, openManagedFile } from '../services/fileNavigation'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone, isActiveThemeDark } from '../config/themePresets'
@@ -247,6 +290,15 @@ const viewMode = ref<'network' | 'mindmap'>('network')
 const { filters } = useGraphFilters()
 const searchQuery = computed({ get: () => filters.query, set: value => { filters.query = value } })
 const selectedNode = ref<GraphNode | null>(null)
+const selectedNodeIds = ref<string[]>([])
+type GraphLayoutMode = 'force' | 'tree' | 'organization' | 'radial' | 'timeline'
+type GraphCanvasTheme = 'professional' | 'colorful' | 'focus'
+type LayoutSnapshot = { mode: GraphLayoutMode; positions: Record<string, { x: number; y: number }> }
+const graphLayoutMode = ref<GraphLayoutMode>((localStorage.getItem('longedit.graph.layout-mode') as GraphLayoutMode) || 'force')
+const graphCanvasTheme = ref<GraphCanvasTheme>((localStorage.getItem('longedit.graph.canvas-theme') as GraphCanvasTheme) || 'colorful')
+const zoomLevel = ref(1)
+const layoutUndoStack = ref<LayoutSnapshot[]>([])
+const layoutRedoStack = ref<LayoutSnapshot[]>([])
 const mindmapRoot = ref<GraphNode | null>(null)
 const mindmapDepth = ref(3)
 const mindmapNodeIds = ref<Set<string> | null>(null)
@@ -359,10 +411,10 @@ const canDeleteRelation = (relation: SelectedRelation) => {
 }
 
 const reloadAfterRelationMutation = async (selectedPath: string) => {
-  selectedNode.value = null
+  clearSelection()
   await loadGraph()
   const refreshed = graphData.value.nodes.find(node => node.path === selectedPath)
-  if (refreshed) selectedNode.value = refreshed
+  if (refreshed) selectOnly(refreshed)
 }
 
 const addGraphRelation = async () => {
@@ -428,6 +480,10 @@ let dragging: GraphNode | null = null
 let wasDragging = false
 let offsetX = 0, offsetY = 0
 let viewX = 0, viewY = 0, zoom = 1
+let dragStartWorldX = 0, dragStartWorldY = 0
+let dragStartPositions = new Map<string, { x: number; y: number }>()
+let dragSnapshot: LayoutSnapshot | null = null
+let selectionBox: { startX: number; startY: number; x: number; y: number } | null = null
 let frameCount = 0
 let layoutSettled = false
 const hoveredNode = ref<GraphNode | null>(null)
@@ -437,8 +493,8 @@ let mouseX = 0, mouseY = 0
 let layoutSaveTimer = 0
 
 const currentLayoutId = () => viewMode.value === 'mindmap'
-  ? `mindmap:${mindmapRoot.value?.id || 'none'}:${mindmapDepth.value}`
-  : 'network'
+  ? `mindmap:${mindmapRoot.value?.id || 'none'}:${mindmapDepth.value}:${graphLayoutMode.value}`
+  : `network:${graphLayoutMode.value}`
 
 const layoutNodes = () => viewMode.value === 'network' ? graphData.value.nodes : visibleNodes.value
 const persistLayout = () => saveGraphLayout(store.libraryPath, currentLayoutId(), layoutNodes())
@@ -466,7 +522,7 @@ const loadGraph = async () => {
     const initialNode = requestedRoot || selectedNode.value || strongest
     const compactViewport = window.matchMedia('(max-width: 900px)').matches
     if (initialNode && (requestedRoot || selectedNode.value || !compactViewport)) {
-      selectedNode.value = initialNode
+      selectOnly(initialNode)
     }
 
     if (route.query.mode === 'mindmap' && initialNode) {
@@ -486,7 +542,7 @@ const initLayout = () => {
   const nodes = graphData.value.nodes
   const cx = (containerRef.value?.clientWidth || 800) / 2
   const cy = (containerRef.value?.clientHeight || 600) / 2
-  const restored = restoreGraphLayout(store.libraryPath, 'network', nodes)
+  const restored = restoreGraphLayout(store.libraryPath, currentLayoutId(), nodes)
   nodes.forEach(n => {
     if (!Number.isFinite(n.x) || !Number.isFinite(n.y)) {
       n.x = cx + (Math.random() - 0.5) * 400
@@ -496,6 +552,7 @@ const initLayout = () => {
   })
   frameCount = restored === nodes.length && nodes.length > 0 ? LAYOUT_MAX_FRAMES : 0
   layoutSettled = restored === nodes.length && nodes.length > 0
+  if (!restored && graphLayoutMode.value !== 'force') positionGraphLayout(graphLayoutMode.value)
 }
 
 const adjacencyFor = (id: string) => {
@@ -505,6 +562,126 @@ const adjacencyFor = (id: string) => {
     if (edge.target === id) ids.add(edge.source)
   }
   return [...ids]
+}
+
+let activeLayoutMode = graphLayoutMode.value
+const captureLayoutSnapshot = (mode: GraphLayoutMode = graphLayoutMode.value): LayoutSnapshot => ({
+  mode,
+  positions: Object.fromEntries(layoutNodes().filter(node => Number.isFinite(node.x) && Number.isFinite(node.y)).map(node => [node.id, { x: node.x!, y: node.y! }])),
+})
+const restoreLayoutSnapshot = (snapshot: LayoutSnapshot) => {
+  graphLayoutMode.value = snapshot.mode
+  activeLayoutMode = snapshot.mode
+  const nodes = layoutNodes()
+  for (const node of nodes) {
+    const point = snapshot.positions[node.id]
+    if (!point) continue
+    node.x = point.x; node.y = point.y; node.vx = 0; node.vy = 0
+  }
+  layoutSettled = true
+  frameCount = LAYOUT_MAX_FRAMES
+  scheduleLayoutSave()
+}
+const pushLayoutUndo = (before: LayoutSnapshot) => {
+  const after = captureLayoutSnapshot()
+  if (JSON.stringify(before.positions) === JSON.stringify(after.positions) && before.mode === after.mode) return
+  layoutUndoStack.value.push(before)
+  if (layoutUndoStack.value.length > 100) layoutUndoStack.value.shift()
+  layoutRedoStack.value = []
+}
+const undoLayout = () => {
+  const previous = layoutUndoStack.value.pop()
+  if (!previous) return
+  layoutRedoStack.value.push(captureLayoutSnapshot())
+  restoreLayoutSnapshot(previous)
+}
+const redoLayout = () => {
+  const next = layoutRedoStack.value.pop()
+  if (!next) return
+  layoutUndoStack.value.push(captureLayoutSnapshot())
+  restoreLayoutSnapshot(next)
+}
+const graphLevels = (nodes: GraphNode[], root: GraphNode) => {
+  const allowed = new Set(nodes.map(node => node.id))
+  const visited = new Set<string>([root.id])
+  const levels: GraphNode[][] = [[root]]
+  let frontier = [root.id]
+  while (frontier.length && visited.size < nodes.length) {
+    const next: string[] = []
+    const level: GraphNode[] = []
+    for (const id of frontier) {
+      for (const neighborId of adjacencyFor(id)) {
+        if (!allowed.has(neighborId) || visited.has(neighborId)) continue
+        const node = nodes.find(candidate => candidate.id === neighborId)
+        if (!node) continue
+        visited.add(neighborId); next.push(neighborId); level.push(node)
+      }
+    }
+    if (!level.length) break
+    levels.push(level)
+    frontier = next
+  }
+  const disconnected = nodes.filter(node => !visited.has(node.id))
+  if (disconnected.length) levels.push(disconnected)
+  return levels
+}
+const positionGraphLayout = (mode: GraphLayoutMode) => {
+  const nodes = layoutNodes()
+  if (!nodes.length) return
+  const width = Math.max(760, canvasRef.value?.clientWidth || containerRef.value?.clientWidth || 1000)
+  const height = Math.max(520, canvasRef.value?.clientHeight || containerRef.value?.clientHeight || 700)
+  if (mode === 'force') {
+    nodes.forEach((node, index) => {
+      const angle = (Math.PI * 2 * index) / Math.max(1, nodes.length)
+      const radius = Math.min(width, height) * (0.2 + (index % 3) * 0.07)
+      node.x = width / 2 + Math.cos(angle) * radius
+      node.y = height / 2 + Math.sin(angle) * radius
+      node.vx = 0; node.vy = 0
+    })
+    frameCount = 0
+    layoutSettled = false
+    return
+  }
+  const root = (selectedNode.value && nodes.includes(selectedNode.value) ? selectedNode.value : null)
+    || (mindmapRoot.value && nodes.includes(mindmapRoot.value) ? mindmapRoot.value : null)
+    || [...nodes].sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))[0]
+  const levels = graphLevels(nodes, root)
+  if (mode === 'tree') {
+    levels.forEach((level, depth) => level.forEach((node, index) => {
+      node.x = 140 + depth * 260
+      node.y = ((index + 1) * height) / (level.length + 1)
+    }))
+  } else if (mode === 'organization') {
+    levels.forEach((level, depth) => level.forEach((node, index) => {
+      node.x = ((index + 1) * width) / (level.length + 1)
+      node.y = 110 + depth * 150
+    }))
+  } else if (mode === 'radial') {
+    root.x = width / 2; root.y = height / 2
+    levels.slice(1).forEach((level, depthIndex) => level.forEach((node, index) => {
+      const angle = (Math.PI * 2 * index) / level.length - Math.PI / 2
+      const radius = 180 + depthIndex * 170
+      node.x = width / 2 + Math.cos(angle) * radius
+      node.y = height / 2 + Math.sin(angle) * radius
+    }))
+  } else {
+    const ordered = [...nodes].sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'))
+    ordered.forEach((node, index) => {
+      node.x = 120 + index * 220
+      node.y = height / 2 + (index % 2 === 0 ? -75 : 75)
+    })
+  }
+  nodes.forEach(node => { node.vx = 0; node.vy = 0 })
+  layoutSettled = true
+  frameCount = LAYOUT_MAX_FRAMES
+}
+const applySelectedLayout = () => {
+  const before = captureLayoutSnapshot(activeLayoutMode)
+  activeLayoutMode = graphLayoutMode.value
+  positionGraphLayout(graphLayoutMode.value)
+  pushLayoutUndo(before)
+  scheduleLayoutSave()
+  requestAnimationFrame(fitGraph)
 }
 
 const applyMindMapLayout = (root: GraphNode) => {
@@ -543,12 +720,13 @@ const applyMindMapLayout = (root: GraphNode) => {
 
   mindmapRoot.value = root
   mindmapNodeIds.value = visited
-  restoreGraphLayout(store.libraryPath, `mindmap:${root.id}:${mindmapDepth.value}`, levels.flat())
+  restoreGraphLayout(store.libraryPath, currentLayoutId(), levels.flat())
   layoutSettled = true
   frameCount = LAYOUT_MAX_FRAMES
   viewX = 40
   viewY = 0
   zoom = Math.max(0.55, Math.min(1, 3.2 / Math.max(1, levels.length)))
+  zoomLevel.value = zoom
 }
 
 const switchView = (mode: 'network' | 'mindmap') => {
@@ -559,6 +737,8 @@ const switchView = (mode: 'network' | 'mindmap') => {
     resetView()
     return
   }
+  graphLayoutMode.value = 'tree'
+  activeLayoutMode = 'tree'
   const root = selectedNode.value || [...graphData.value.nodes].sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))[0]
   if (root) applyMindMapLayout(root)
 }
@@ -603,10 +783,55 @@ const exportGraph = async (format: 'svg' | 'png') => {
 }
 
 const useAsMindmapRoot = (node: GraphNode) => {
-  selectedNode.value = node
+  selectOnly(node)
   viewMode.value = 'mindmap'
+  graphLayoutMode.value = 'tree'
+  activeLayoutMode = 'tree'
   searchQuery.value = ''
   applyMindMapLayout(node)
+}
+
+const clearSelection = () => { selectedNode.value = null; selectedNodeIds.value = [] }
+const selectOnly = (node: GraphNode | null) => {
+  selectedNode.value = node
+  selectedNodeIds.value = node ? [node.id] : []
+}
+const toggleSelection = (node: GraphNode) => {
+  const next = new Set(selectedNodeIds.value)
+  next.has(node.id) ? next.delete(node.id) : next.add(node.id)
+  selectedNodeIds.value = [...next]
+  selectedNode.value = next.has(node.id) ? node : graphData.value.nodes.find(candidate => candidate.id === selectedNodeIds.value[selectedNodeIds.value.length - 1]) || null
+}
+
+const changeGraphZoom = (factor: number, clientX?: number, clientY?: number) => {
+  const canvas = canvasRef.value
+  if (!canvas) return
+  const rect = canvas.getBoundingClientRect()
+  const anchorX = (clientX ?? rect.left + rect.width / 2) - rect.left
+  const anchorY = (clientY ?? rect.top + rect.height / 2) - rect.top
+  const next = Math.max(0.1, Math.min(3, zoom * factor))
+  const worldX = (anchorX - viewX) / zoom
+  const worldY = (anchorY - viewY) / zoom
+  viewX = anchorX - worldX * next
+  viewY = anchorY - worldY * next
+  zoom = next
+  zoomLevel.value = zoom
+}
+const fitGraph = () => {
+  const canvas = canvasRef.value
+  const nodes = visibleNodes.value
+  if (!canvas || !nodes.length) return
+  const extents = nodes.map(node => {
+    const halfWidth = viewMode.value === 'mindmap' ? (node.id === mindmapRoot.value?.id ? 90 : 80) : Math.max(26, node.size * 0.75)
+    const halfHeight = viewMode.value === 'mindmap' ? 28 : Math.max(40, node.size * 0.75 + 24)
+    return { left: (node.x || 0) - halfWidth, right: (node.x || 0) + halfWidth, top: (node.y || 0) - halfHeight, bottom: (node.y || 0) + halfHeight }
+  })
+  const minX = Math.min(...extents.map(item => item.left)), maxX = Math.max(...extents.map(item => item.right))
+  const minY = Math.min(...extents.map(item => item.top)), maxY = Math.max(...extents.map(item => item.bottom))
+  zoom = Math.max(0.15, Math.min(1.35, Math.min((canvas.clientWidth - 100) / Math.max(1, maxX - minX), (canvas.clientHeight - 100) / Math.max(1, maxY - minY))))
+  viewX = (canvas.clientWidth - (maxX - minX) * zoom) / 2 - minX * zoom
+  viewY = (canvas.clientHeight - (maxY - minY) * zoom) / 2 - minY * zoom
+  zoomLevel.value = zoom
 }
 
 const centerOnNode = (node: GraphNode) => {
@@ -617,7 +842,7 @@ const centerOnNode = (node: GraphNode) => {
 }
 
 const selectAndCenter = (node: GraphNode) => {
-  selectedNode.value = node
+  selectOnly(node)
   centerOnNode(node)
 }
 
@@ -807,6 +1032,7 @@ const resetView = () => {
   viewX = 0
   viewY = 0
   zoom = 1
+  zoomLevel.value = 1
   frameCount = 0
   layoutSettled = false
   if (viewMode.value === 'mindmap' && mindmapRoot.value) applyMindMapLayout(mindmapRoot.value)
@@ -814,6 +1040,7 @@ const resetView = () => {
 }
 
 const resetLayout = () => {
+  const before = captureLayoutSnapshot()
   clearGraphLayout(store.libraryPath, currentLayoutId())
   for (const node of graphData.value.nodes) {
     node.x = undefined
@@ -822,6 +1049,7 @@ const resetLayout = () => {
     node.vy = 0
   }
   resetView()
+  pushLayoutUndo(before)
 }
 
 const findNodeAt = (mx: number, my: number): GraphNode | null => {
@@ -933,7 +1161,7 @@ const draw = () => {
   for (const n of visibleNodes.value) {
     const r = n.size * 0.6
     const isHovered = hovered === n
-    const isSelected = selectedNode.value?.id === n.id
+    const isSelected = selectedNodeIds.value.includes(n.id)
 
     if (viewMode.value === 'mindmap') {
       const isRoot = n.id === mindmapRoot.value?.id
@@ -985,7 +1213,13 @@ const draw = () => {
       n.x || 0, n.y || 0, r
     )
 
-    if (n.objectType === 'pdf') {
+    if (graphCanvasTheme.value === 'focus') {
+      nodeGradient.addColorStop(0, isDark ? 'rgba(205,214,224,0.96)' : 'rgba(72,84,99,0.92)')
+      nodeGradient.addColorStop(1, isDark ? 'rgba(126,139,153,0.9)' : 'rgba(42,52,64,0.86)')
+    } else if (graphCanvasTheme.value === 'professional') {
+      nodeGradient.addColorStop(0, `${activeTone.ui.primary}f2`)
+      nodeGradient.addColorStop(1, `${activeTone.ui.primary}b8`)
+    } else if (n.objectType === 'pdf') {
       nodeGradient.addColorStop(0, isDark ? 'rgba(255,190,80,1)' : 'rgba(255,176,48,1)')
       nodeGradient.addColorStop(1, isDark ? 'rgba(217,132,28,0.88)' : 'rgba(221,132,20,0.85)')
     } else if (n.objectType === 'table') {
@@ -1003,8 +1237,8 @@ const draw = () => {
     ctx.fill()
 
     // 边缘描边
-    ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'
-    ctx.lineWidth = (isHovered ? 2 : 1) / zoom
+    ctx.strokeStyle = isSelected ? activeTone.ui.primary : (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)')
+    ctx.lineWidth = (isHovered || isSelected ? 3 : 1) / zoom
     ctx.stroke()
 
     // 标签 - 根据缩放级别动态显示
@@ -1023,6 +1257,18 @@ const draw = () => {
       ctx.fillText(display, n.x || 0, (n.y || 0) + r + 8 / zoom)
       ctx.shadowBlur = 0
     }
+  }
+
+  if (selectionBox) {
+    const left = Math.min(selectionBox.startX, selectionBox.x)
+    const top = Math.min(selectionBox.startY, selectionBox.y)
+    const width = Math.abs(selectionBox.x - selectionBox.startX)
+    const height = Math.abs(selectionBox.y - selectionBox.startY)
+    ctx.fillStyle = `${activeTone.ui.primary}24`
+    ctx.strokeStyle = activeTone.ui.primary
+    ctx.lineWidth = 1.5 / zoom
+    ctx.fillRect(left, top, width, height)
+    ctx.strokeRect(left, top, width, height)
   }
 
   ctx.restore()
@@ -1050,42 +1296,94 @@ const loop = () => {
 const startDrag = (e: MouseEvent) => {
   const canvas = canvasRef.value
   if (!canvas) return
+  canvas.focus()
   const rect = canvas.getBoundingClientRect()
   const mx = (e.clientX - rect.left - viewX) / zoom
   const my = (e.clientY - rect.top - viewY) / zoom
   const node = findNodeAt(mx, my)
   if (node) {
+    if (e.ctrlKey || e.metaKey) toggleSelection(node)
+    else if (!selectedNodeIds.value.includes(node.id)) selectOnly(node)
+    if (!selectedNodeIds.value.includes(node.id)) return
     dragging = node
-    offsetX = (node.x || 0) - mx
-    offsetY = (node.y || 0) - my
+    dragStartWorldX = mx
+    dragStartWorldY = my
+    dragStartPositions = new Map(selectedNodeIds.value.map(id => {
+      const selected = graphData.value.nodes.find(candidate => candidate.id === id)
+      return [id, { x: selected?.x || 0, y: selected?.y || 0 }]
+    }))
+    dragSnapshot = captureLayoutSnapshot()
+    wasDragging = false
     return
   }
+  if (e.shiftKey && e.button === 0) {
+    selectionBox = { startX: mx, startY: my, x: mx, y: my }
+    dragging = null
+    wasDragging = false
+    return
+  }
+  if (e.button !== 0 && e.button !== 1) return
+  clearSelection()
   dragging = { id: '', title: '', path: '', size: 0, x: e.clientX, y: e.clientY } as any
   offsetX = viewX; offsetY = viewY
+  wasDragging = false
 }
 
 const onDrag = (e: MouseEvent) => {
   mouseX = e.clientX; mouseY = e.clientY
+  if (selectionBox) {
+    const canvas = canvasRef.value
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+    selectionBox.x = (e.clientX - rect.left - viewX) / zoom
+    selectionBox.y = (e.clientY - rect.top - viewY) / zoom
+    wasDragging = true
+    return
+  }
   if (!dragging) return
-  if (!wasDragging) wasDragging = true
   if (dragging.id) {
     const canvas = canvasRef.value
     if (!canvas) return
     const rect = canvas.getBoundingClientRect()
     const mx = (e.clientX - rect.left - viewX) / zoom
     const my = (e.clientY - rect.top - viewY) / zoom
-    dragging.x = mx + offsetX
-    dragging.y = my + offsetY
+    const dx = mx - dragStartWorldX
+    const dy = my - dragStartWorldY
+    if (!wasDragging && Math.hypot(dx, dy) < 3 / zoom) return
+    wasDragging = true
+    dragStartPositions.forEach((position, id) => {
+      const node = graphData.value.nodes.find(candidate => candidate.id === id)
+      if (!node) return
+      node.x = position.x + dx
+      node.y = position.y + dy
+      node.vx = 0; node.vy = 0
+    })
+    layoutSettled = true
+    frameCount = LAYOUT_MAX_FRAMES
   } else {
+    wasDragging = true
     viewX = e.clientX - (dragging.x || 0) + offsetX
     viewY = e.clientY - (dragging.y || 0) + offsetY
   }
 }
 
 const endDrag = () => {
-  if (dragging && dragging.id) {
-    // 拖拽节点后重新模拟几秒让布局稳定
-    layoutSettled = false; frameCount = 90
+  if (selectionBox) {
+    const left = Math.min(selectionBox.startX, selectionBox.x)
+    const right = Math.max(selectionBox.startX, selectionBox.x)
+    const top = Math.min(selectionBox.startY, selectionBox.y)
+    const bottom = Math.max(selectionBox.startY, selectionBox.y)
+    const matches = visibleNodes.value.filter(node => {
+      const halfWidth = viewMode.value === 'mindmap' ? (node.id === mindmapRoot.value?.id ? 90 : 80) : Math.max(18, node.size * 0.6)
+      const halfHeight = viewMode.value === 'mindmap' ? 24 : Math.max(18, node.size * 0.6)
+      return (node.x || 0) + halfWidth >= left && (node.x || 0) - halfWidth <= right && (node.y || 0) + halfHeight >= top && (node.y || 0) - halfHeight <= bottom
+    })
+    selectedNodeIds.value = matches.map(node => node.id)
+    selectedNode.value = matches[matches.length - 1] || null
+    selectionBox = null
+  }
+  if (dragging?.id && wasDragging && dragSnapshot) {
+    pushLayoutUndo(dragSnapshot)
     scheduleLayoutSave()
   }
   if (dragging && dragging.id && !wasDragging) {
@@ -1093,6 +1391,8 @@ const endDrag = () => {
     emit('selectFile', dragging.path)
   }
   dragging = null
+  dragSnapshot = null
+  dragStartPositions.clear()
   wasDragging = false
 }
 
@@ -1101,28 +1401,7 @@ const onZoom = (e: WheelEvent) => {
   const canvas = canvasRef.value
   if (!canvas) return
 
-  const rect = canvas.getBoundingClientRect()
-  const mouseXCanvas = e.clientX - rect.left
-  const mouseYCanvas = e.clientY - rect.top
-
-  // 计算鼠标在世界坐标系中的位置（缩放前）
-  const worldXBefore = (mouseXCanvas - viewX) / zoom
-  const worldYBefore = (mouseYCanvas - viewY) / zoom
-
-  // 缩放
-  const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1
-  const newZoom = zoom * zoomFactor
-  zoom = Math.max(0.1, Math.min(3, newZoom))
-
-  // 计算鼠标在世界坐标系中的位置（缩放后）
-  const worldXAfter = (mouseXCanvas - viewX) / zoom
-  const worldYAfter = (mouseYCanvas - viewY) / zoom
-
-  // 调整视图偏移，使鼠标位置保持不变
-  viewX += (worldXAfter - worldXBefore) * zoom
-  viewY += (worldYAfter - worldYBefore) * zoom
-
-  layoutSettled = false; frameCount = 100
+  changeGraphZoom(e.deltaY > 0 ? 0.9 : 1.1, e.clientX, e.clientY)
 }
 
 const onClick = () => {
@@ -1135,19 +1414,59 @@ const onDblClick = () => {
   }
 }
 
+const moveSelectedNodes = (dx: number, dy: number) => {
+  if (!selectedNodeIds.value.length) return
+  const before = captureLayoutSnapshot()
+  for (const id of selectedNodeIds.value) {
+    const node = graphData.value.nodes.find(candidate => candidate.id === id)
+    if (!node) continue
+    node.x = (node.x || 0) + dx
+    node.y = (node.y || 0) + dy
+    node.vx = 0; node.vy = 0
+  }
+  layoutSettled = true
+  frameCount = LAYOUT_MAX_FRAMES
+  pushLayoutUndo(before)
+  scheduleLayoutSave()
+}
+const handleGraphKeydown = (event: KeyboardEvent) => {
+  const target = event.target as HTMLElement | null
+  if (target?.matches('input, textarea, select, [contenteditable="true"]')) return
+  const command = event.ctrlKey || event.metaKey
+  if (command && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? redoLayout() : undoLayout(); return }
+  if (command && event.key.toLowerCase() === 'y') { event.preventDefault(); redoLayout(); return }
+  if (command && event.key.toLowerCase() === 'a') {
+    event.preventDefault()
+    selectedNodeIds.value = visibleNodes.value.map(node => node.id)
+    selectedNode.value = visibleNodes.value[visibleNodes.value.length - 1] || null
+    return
+  }
+  if (event.key === 'Escape') { clearSelection(); return }
+  const distance = event.shiftKey ? 24 : 8
+  if (event.key === 'ArrowLeft') { event.preventDefault(); moveSelectedNodes(-distance, 0) }
+  if (event.key === 'ArrowRight') { event.preventDefault(); moveSelectedNodes(distance, 0) }
+  if (event.key === 'ArrowUp') { event.preventDefault(); moveSelectedNodes(0, -distance) }
+  if (event.key === 'ArrowDown') { event.preventDefault(); moveSelectedNodes(0, distance) }
+}
+
 watch(() => props.show, (v) => { if (v !== false) loadGraph() })
 watch(() => store.libraryPath, () => { if (props.show !== false) loadGraph() })
 watch(() => selectedNode.value?.id, () => { relationDraftTarget.value = '' })
+watch(graphLayoutMode, value => localStorage.setItem('longedit.graph.layout-mode', value))
+watch(graphCanvasTheme, value => localStorage.setItem('longedit.graph.canvas-theme', value))
 watch(remediationFocus, focus => {
   if (focus === 'relations') showTutorial.value = true
   if (focus === 'orphans') {
     healthOpen.value = true
-    selectedNode.value = null
+    clearSelection()
   }
   frameCount = 0
   layoutSettled = false
 }, { immediate: true })
 watch(filters, () => {
+  const visible = new Set(visibleNodes.value.map(node => node.id))
+  selectedNodeIds.value = selectedNodeIds.value.filter(id => visible.has(id))
+  if (selectedNode.value && !visible.has(selectedNode.value.id)) selectedNode.value = null
   if (viewMode.value === 'network') {
     frameCount = 0
     layoutSettled = false
@@ -1159,8 +1478,8 @@ const handleVisibility = () => {
   if (document.hidden) { paused = true; cancelAnimationFrame(animationId) }
   else if (paused) { paused = false; layoutSettled = false; frameCount = 40; loop() }
 }
-onMounted(() => { loadGraph(); loop(); document.addEventListener('visibilitychange', handleVisibility) })
-onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); document.removeEventListener('visibilitychange', handleVisibility) })
+onMounted(() => { loadGraph(); loop(); document.addEventListener('visibilitychange', handleVisibility); window.addEventListener('keydown', handleGraphKeydown) })
+onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>
 
 <style scoped>
@@ -1356,16 +1675,26 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.2);
 }
+.control-btn:disabled { cursor: default; opacity: .32; transform: none; box-shadow: none; }
+.control-btn:disabled:hover { color: var(--theme-text); border-color: var(--workspace-border-color); background: var(--workspace-control-bg); }
 
 canvas {
   display: block;
   cursor: grab;
   flex: 1;
+  min-height: 0;
+  outline: none;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--theme-text-secondary) 20%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
 canvas:active {
   cursor: grabbing;
 }
+canvas:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--theme-primary) 48%, transparent); }
+.graph-canvas-theme-professional canvas { background-color: color-mix(in srgb, var(--theme-bg) 97%, #eef2f6); background-size: 28px 28px; }
+.graph-canvas-theme-colorful canvas { background-color: color-mix(in srgb, var(--theme-bg) 95%, #dcecff); }
+.graph-canvas-theme-focus canvas { background-color: var(--theme-bg); background-image: none; }
 
 .graph-stats {
   position: absolute;
