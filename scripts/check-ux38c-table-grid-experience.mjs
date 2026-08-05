@@ -16,6 +16,8 @@ for (const token of [
   "'frozen-edge': column === frozenColumns - 1",
   'background: var(--theme-surface)',
   '.table-row.selected .data-cell.frozen',
+  'container-type: inline-size',
+  '@container (max-width: 900px)',
   "title: '创建可视化 Table 副本？'",
   "title: 'Table 副本已创建'",
   "positiveText: '打开新文件'",
