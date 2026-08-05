@@ -9,7 +9,7 @@ const fail = message => { throw new Error(`UX-38 format experience matrix reject
 const expectedDimensions = ['open', 'load', 'states', 'edit', 'save', 'return', 'tab', 'theme', 'scale', 'keyboard', 'performance', 'errors']
 const sha256 = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 
-if (matrix.schemaVersion !== 1 || matrix.stage !== 'UX-38' || matrix.status !== 'in-progress' || matrix.releaseCandidate !== false) fail('matrix identity or release boundary drift')
+if (matrix.schemaVersion !== 1 || matrix.stage !== 'UX-38' || matrix.status !== 'accepted-bounded' || matrix.releaseCandidate !== false) fail('matrix identity or release boundary drift')
 if (JSON.stringify(matrix.dimensions) !== JSON.stringify(expectedDimensions)) fail('the 12 required experience dimensions changed')
 const allowed = new Set(matrix.allowedStatuses)
 if (allowed.size !== 5 || !['accepted', 'partial', 'referenced', 'pending', 'not-applicable'].every(value => allowed.has(value))) fail('status vocabulary drift')
@@ -52,4 +52,4 @@ if (!packageJson.scripts?.['check:ux38-format-experience-matrix']) fail('package
 if (!packageJson.scripts?.['audit:ux38a-lightweight-formats']) fail('desktop audit command missing')
 if (!packageJson.scripts?.['check:current-development-audit']?.includes('check-ux38-format-experience-matrix')) fail('checker is outside the development audit chain')
 
-console.log(`UX-38 format experience matrix passed: ${matrixIds.size} formats, ${expectedDimensions.length} dimensions, and ${lightweight.length} UX-38A lightweight desktop routes are tracked without claiming full closure.`)
+console.log(`UX-38 format experience matrix passed: ${matrixIds.size} formats and ${expectedDimensions.length} dimensions are accepted with explicit capability boundaries.`)

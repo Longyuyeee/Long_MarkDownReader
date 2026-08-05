@@ -690,3 +690,9 @@ UX-38E 图形工作区已完成。Canvas、Draw.io、Mermaid、OPML 均已验证
 UX-38F 外部 Office 工作区已完成。`.doc/.xls/.ppt/.wps/.et/.dps` 均在工作区内展示系统默认、Microsoft Office、WPS Office、LibreOffice 的可用或不可用状态，并提供用户主动触发的安全外部交接；旧 Office 的隔离转换入口与外部打开已明确分区。真实 Tauri WebView2 已验证六格式加载、图谱往返、应用选择或目标路径恢复、760x720 窄布局与源哈希不变，运行时错误和意外弹窗均为 0。证据见 `docs/evidence/ux38f-external-office`，完整结论见 `docs/A25_UX38F_External_Office_Workspace_Audit_2026-08-05.md`。
 
 接手后执行 UX-38 总矩阵最终审计：清点 41/41 格式的证据和所有 `partial/referenced/not-applicable` 边界，只关闭有真实证据支持的项目，不扩大有限 Office、外部打开或只读预览能力。当前 `releaseCandidate=false`。
+
+# 2026-08-05 UX-38 最终交接入口
+
+UX-38 全格式体验阶段已按有界能力完成。矩阵覆盖 41/41 格式、10 个实际档案和 12 个体验维度，状态合计为 75 accepted、32 partial、7 referenced、6 not-applicable、0 pending；两个无人引用的历史占位档案已移除。所有有限项都有明确能力边界，因此不得把阶段收口解读为完整 Office/Excel/Draw.io 等价。机器事实见 `shared/ux38-final-closure.json`，完整审计见 `docs/A26_UX38_Final_Format_Experience_Closure_2026-08-05.md`。
+
+接手后进入 UX-39 无签名打包与安装回归：从当前干净 `main` 重建 1.0.3，重点复测启动时无控制台弹窗、安装界面与开发界面一致，以及 UX-38 各工作区在安装态的关键路径。没有真实签名时只保持无签名社区构建，`releaseCandidate=false`。

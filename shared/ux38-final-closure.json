@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX-38",
+  "status": "accepted-bounded",
+  "productBaselineCommit": "84ceaf8d0e44dd7af387944fe4f38753dfef16b2",
+  "evidenceBaselineCommit": "e783abc",
+  "formatCount": 41,
+  "profileCount": 10,
+  "dimensionCount": 12,
+  "dimensionStatusCounts": {
+    "accepted": 75,
+    "partial": 32,
+    "referenced": 7,
+    "not-applicable": 6,
+    "pending": 0
+  },
+  "unusedProfileCount": 0,
+  "releaseCandidate": false,
+  "nextStage": "UX-39 unsigned packaging and installed-regression closure"
+}

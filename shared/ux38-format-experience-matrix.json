@@ -1,13 +1,14 @@
 {
   "schemaVersion": 1,
   "stage": "UX-38",
-  "status": "in-progress",
+  "status": "accepted-bounded",
   "releaseCandidate": false,
   "dimensions": ["open", "load", "states", "edit", "save", "return", "tab", "theme", "scale", "keyboard", "performance", "errors"],
   "allowedStatuses": ["accepted", "partial", "referenced", "pending", "not-applicable"],
   "profiles": {
     "ux38a-lightweight": {
       "evidence": ["docs/evidence/ux38a-lightweight-formats/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json", "docs/evidence/ui4b-editors/audit-manifest.json"],
+      "boundary": "24 种轻量格式共享受管源码工作区；具体编辑、预览与保存能力以格式注册表为准，不把统一路由证据扩写为每种语言的完整 IDE 能力。",
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "partial", "edit": "partial", "save": "partial", "return": "partial",
         "tab": "accepted", "theme": "referenced", "scale": "referenced", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
@@ -15,6 +16,7 @@
     },
     "ux38c-table-grid": {
       "evidence": ["docs/evidence/ux38c-table-grid/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json"],
+      "boundary": "CSV、TSV 与 Table 提供受控网格编辑和显式副本转换，不宣称完整电子表格公式、对象或格式等价。",
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "accepted", "edit": "partial", "save": "partial", "return": "partial",
         "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
@@ -22,6 +24,7 @@
     },
     "ux38c-workbook": {
       "evidence": ["docs/evidence/ux38c2-workbook-context/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json"],
+      "boundary": "XLSX 提供有界工作簿编辑、冻结与上下文恢复，复杂 Excel 对象仍按能力矩阵处理，不宣称完整 Excel 等价。",
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "accepted", "edit": "partial", "save": "partial", "return": "accepted",
         "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
@@ -29,6 +32,7 @@
     },
     "ux38c-ods": {
       "evidence": ["docs/evidence/ux38c2-workbook-context/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json", "shared/odf-package-contract.json"],
+      "boundary": "ODS 当前为受控只读工作簿预览，编辑与保存不适用；主题和键盘状态只覆盖现有预览表面。",
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "accepted", "edit": "not-applicable", "save": "not-applicable", "return": "accepted",
         "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
@@ -36,6 +40,7 @@
     },
     "ux38d1-pdf": {
       "evidence": ["docs/evidence/ux38d1-pdf-workspace/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json", "docs/evidence/ui4b-editors/audit-manifest.json", "shared/release-capability-matrix.json"],
+      "boundary": "PDF 原文只读，批注与页面操作走受控旁路或副本；不宣称直接重写任意 PDF 内容。",
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "accepted", "edit": "partial", "save": "partial", "return": "accepted",
         "tab": "accepted", "theme": "referenced", "scale": "accepted", "keyboard": "partial", "performance": "partial", "errors": "accepted"
@@ -43,6 +48,7 @@
     },
     "ux38d2-docx": {
       "evidence": ["docs/evidence/ux38d2-document-workspace/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json", "docs/evidence/ui4b-editors/audit-manifest.json", "shared/release-capability-matrix.json"],
+      "boundary": "DOCX 是有界页面编辑与可靠保存能力，复杂跨部件对象仍受注册表和保存合同限制，不宣称完整 Word 等价。",
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "accepted", "edit": "partial", "save": "partial", "return": "accepted",
         "tab": "accepted", "theme": "referenced", "scale": "referenced", "keyboard": "partial", "performance": "partial", "errors": "accepted"
@@ -50,6 +56,7 @@
     },
     "ux38d3-pptx": {
       "evidence": ["docs/evidence/ux38d3-presentation-workspace/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json", "shared/release-capability-matrix.json"],
+      "boundary": "PPTX 仅提供基础编辑并生成可靠副本，原文件不直接覆盖；不宣称完整 PowerPoint 等价。",
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "accepted", "edit": "partial", "save": "partial", "return": "accepted",
         "tab": "accepted", "theme": "referenced", "scale": "accepted", "keyboard": "partial", "performance": "partial", "errors": "accepted"
@@ -57,6 +64,7 @@
     },
     "ux38d3-odp": {
       "evidence": ["docs/evidence/ux38d3-presentation-workspace/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json", "shared/odf-package-contract.json"],
+      "boundary": "ODP 当前为受控只读演示预览，编辑与保存不适用。",
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "accepted", "edit": "not-applicable", "save": "not-applicable", "return": "accepted",
         "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
@@ -64,30 +72,18 @@
     },
     "ux38e-graphics": {
       "evidence": ["docs/evidence/ux38e-graphics-workspace/manifest.json", "docs/evidence/ux37a-opml-canvas/manifest.json", "docs/evidence/ux34-drawio-canvas-stability/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json"],
+      "boundary": "Canvas、Mermaid 与 OPML 提供直接编辑；Draw.io 是受控结构化基础编辑，复杂大图性能仍为有限能力。",
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "accepted", "edit": "accepted", "save": "accepted", "return": "accepted",
         "tab": "accepted", "theme": "accepted", "scale": "accepted", "keyboard": "accepted", "performance": "partial", "errors": "accepted"
       }
     },
-    "specialized-existing": {
-      "evidence": ["shared/release-capability-matrix.json", "docs/evidence/ui4b-editors/audit-manifest.json"],
-      "dimensions": {
-        "open": "referenced", "load": "referenced", "states": "partial", "edit": "partial", "save": "partial", "return": "partial",
-        "tab": "referenced", "theme": "referenced", "scale": "referenced", "keyboard": "partial", "performance": "partial", "errors": "partial"
-      }
-    },
     "ux38f-external-office": {
       "evidence": ["docs/evidence/ux38f-external-office/manifest.json", "shared/release-capability-matrix.json", "docs/E2A_External_Application_Discovery_and_Unified_Open_Audit_2026-07-30.md", "docs/E2B_Legacy_DOC_Isolated_Conversion_Audit_2026-07-30.md", "docs/E2C_Legacy_XLS_PPT_Isolated_Conversion_Audit_2026-07-30.md", "docs/E3_WPS_Native_Recognition_and_External_Open_Audit_2026-07-30.md"],
+      "boundary": "旧 Office 与 WPS 原生格式依赖外部桌面应用；LongEdit 不内部编辑或写回，旧 Office 转换只生成显式新副本。",
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "accepted", "edit": "not-applicable", "save": "not-applicable", "return": "accepted",
         "tab": "accepted", "theme": "referenced", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
-      }
-    },
-    "external-dependent": {
-      "evidence": ["shared/release-capability-matrix.json"],
-      "dimensions": {
-        "open": "partial", "load": "pending", "states": "pending", "edit": "not-applicable", "save": "not-applicable", "return": "pending",
-        "tab": "pending", "theme": "pending", "scale": "pending", "keyboard": "pending", "performance": "pending", "errors": "pending"
       }
     }
   },
