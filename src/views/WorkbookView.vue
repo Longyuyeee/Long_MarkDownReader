@@ -4417,6 +4417,11 @@ const convertSheet = async () => {
 const handleScroll = () => {
   if (!scrollRef.value) return
   scrollTop.value = scrollRef.value.scrollTop
+  rememberWorkspaceViewState(workbookPath.value, {
+    scrollTop: scrollRef.value.scrollTop,
+    scrollLeft: scrollRef.value.scrollLeft,
+    section: activeSheet.value,
+  })
   const start = rowAtOffset(scrollTop.value)
   void loadPage(start)
   const end = rowAtOffset(scrollTop.value + viewportHeight.value) + 20
@@ -4510,7 +4515,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.workbook-view { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 94%, var(--theme-primary)); }
+.workbook-view { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 94%, var(--theme-primary)); container-type: inline-size; }
 .workbook-toolbar { min-height: var(--workspace-toolbar-height); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-surface); box-shadow: var(--workspace-shadow-sm); z-index: 5; }
 .workbook-title,.workbook-actions,.workbook-actions button { display: flex; align-items: center; gap: 8px; }
 .workbook-title > button,.workbook-actions button { height: 32px; padding: 0 10px; border: 1px solid var(--workspace-border-color); border-radius: 7px; color: var(--theme-text); background: var(--workspace-control-bg); cursor: pointer; }
@@ -4775,7 +4780,7 @@ onBeforeUnmount(() => {
 .row-number.outlined,.column-header.outlined { box-shadow: inset 3px 0 rgba(var(--theme-primary-rgb),.5); }.row-number.hidden,.column-header.hidden { overflow: hidden; color: transparent; background: color-mix(in srgb, var(--theme-surface-2) 70%, var(--theme-primary)); }
 .corner { z-index: 24; }
 .column-header { display: grid; place-items: center; color: var(--theme-text-secondary); background: var(--theme-surface-2); font-size: var(--text-compact); font-weight: 700; }
-.column-header.frozen,.workbook-cell.frozen { box-shadow: 2px 0 0 color-mix(in srgb, var(--theme-primary) 32%, var(--theme-surface)); }
+.column-header.frozen,.workbook-cell.frozen { background: var(--cell-fill, var(--theme-surface)); box-shadow: 2px 0 0 color-mix(in srgb, var(--theme-primary) 32%, var(--theme-surface)); }
 .workbook-cell { position: relative; overflow: hidden; padding: 7px 8px 0; outline: 0; text-overflow: ellipsis; white-space: nowrap; background: var(--cell-fill, var(--theme-surface)); font-size: var(--text-compact); user-select: none; }
 .workbook-cell.in-table { background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 94%, var(--theme-primary)); }
 .workbook-cell.table-header { color: var(--theme-primary); font-weight: 700; background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 82%, var(--theme-primary)); }
@@ -4783,6 +4788,9 @@ onBeforeUnmount(() => {
 .workbook-cell.editable { cursor: cell; }
 .workbook-cell.in-range { background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 82%, var(--theme-primary)); }
 .workbook-cell.fill-preview { background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 72%, var(--theme-primary)); }
+.workbook-cell.frozen.in-table { background: color-mix(in srgb, var(--cell-fill, var(--theme-surface)) 94%, var(--theme-primary)); }
+.workbook-cell.frozen.table-header,.workbook-cell.frozen.in-range { background: color-mix(in srgb, var(--cell-fill, var(--theme-surface)) 82%, var(--theme-primary)); }
+.workbook-cell.frozen.fill-preview { background: color-mix(in srgb, var(--cell-fill, var(--theme-surface)) 72%, var(--theme-primary)); }
 .workbook-cell.selected { z-index: 3; box-shadow: inset 0 0 0 2px var(--theme-primary); }
 .workbook-cell.merged-anchor { z-index: 4; }
 .workbook-cell.merged-covered { visibility: hidden; pointer-events: none; }
@@ -4804,4 +4812,6 @@ onBeforeUnmount(() => {
 @media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } .linked-data-policy { align-items: flex-start; flex-direction: column; } .linked-data-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .linked-data-group article { grid-template-columns: 1fr; gap: 6px; } .linked-data-group article > button { justify-self: start; } .pivot-audit-status,.pivot-rebuild-plan > header,.pivot-cache-rebuild-result > header,.pivot-synchronized-rebuild-result > header,.pivot-expanded-rebuild-result > header,.pivot-variant-verification-result > header { align-items: flex-start; flex-direction: column; gap: 4px; } .pivot-impact-parts,.pivot-cache-fields,.pivot-sync-facts,.pivot-variant-grid,.pivot-layout-variants,.pivot-copy-save { grid-template-columns: 1fr; } .pivot-preview-result > header { align-items: flex-start; flex-direction: column; } .linked-data-group article .pivot-preview-grid article { grid-template-columns: 1fr; } }
 @media (max-width: 1180px) { .workbook-actions .linked-data-trigger span { display: none; } .workbook-actions .linked-data-trigger { padding-inline: 8px; } }
 @media (max-width: 900px) { .workbook-actions button:not(.primary):not(.icon-button):not(.linked-data-trigger) { display: none; } .workbook-title span { display: none; } .workbook-title strong { max-width: 32vw; } }
+@container (max-width: 900px) { .workbook-toolbar { min-height: auto; align-items: stretch; flex-direction: column; gap: 5px; padding-block: 6px; } .workbook-title { min-height: 30px; } .workbook-title strong { max-width: min(68cqw, 520px); } .workbook-title span { display: none; } .workbook-actions { width: 100%; overflow-x: auto; padding-bottom: 1px; scrollbar-width: thin; } .workbook-actions button { flex: none; } .workbook-actions button:not(.primary):not(.icon-button):not(.linked-data-trigger) { display: flex; } }
+@container (max-width: 620px) { .workbook-actions button:not(.primary):not(.icon-button):not(.linked-data-trigger) { display: none; } .workbook-actions .linked-data-trigger span { display: none; } }
 </style>

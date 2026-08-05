@@ -41,7 +41,7 @@
             @click="selectedSheetId = sheet.id"
           >{{ sheet.name }}</button>
         </nav>
-        <main class="sheet-stage" data-testid="e1c-ods-stage">
+        <main ref="sheetStageRef" class="sheet-stage" data-testid="e1c-ods-stage" @scroll="rememberOdsViewState">
           <table v-if="selectedSheet">
             <thead><tr><th class="corner"></th><th v-for="column in sheetColumnCount" :key="column">{{ columnName(column) }}</th></tr></thead>
             <tbody>
@@ -111,9 +111,10 @@ import { invoke } from '@tauri-apps/api/core'
 import {
   ChevronDown, ChevronUp, Image, Presentation, RefreshCw, Search, ShieldAlert, Table2,
 } from 'lucide-vue-next'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '../store/app'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 
 interface OdsCell { address: string; column: number; text: string; valueType?: string; formula?: string }
 interface OdsRow { row: number; cells: OdsCell[] }
@@ -154,6 +155,7 @@ const query = ref('')
 const matchIndex = ref(-1)
 const selectedSheetId = ref('')
 const selectedSlideId = ref('')
+const sheetStageRef = ref<HTMLElement | null>(null)
 const documentPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const extension = computed(() => /\.odp$/i.test(documentPath.value) ? 'odp' : 'ods')
 const isOds = computed(() => report.value?.model.format !== 'odp')
@@ -228,6 +230,14 @@ const revealRouteLocator = async () => {
   const parent = locator.startsWith('ods-sheet-') ? locator.split(':')[0] : locator
   await reveal(locator, parent)
 }
+const rememberOdsViewState = () => {
+  if (!isOds.value || !sheetStageRef.value) return
+  rememberWorkspaceViewState(documentPath.value, {
+    scrollTop: sheetStageRef.value.scrollTop,
+    scrollLeft: sheetStageRef.value.scrollLeft,
+    section: selectedSheetId.value,
+  })
+}
 const load = async () => {
   if (!documentPath.value || loading.value) return
   loading.value = true
@@ -237,9 +247,16 @@ const load = async () => {
       libraryRoot: store.libraryPath,
       path: documentPath.value,
     })
-    selectedSheetId.value = report.value.model.sheets[0]?.id || ''
+    const viewState = recallWorkspaceViewState(documentPath.value)
+    selectedSheetId.value = viewState?.section && report.value.model.sheets.some(sheet => sheet.id === viewState.section)
+      ? viewState.section
+      : report.value.model.sheets[0]?.id || ''
     selectedSlideId.value = report.value.model.slides[0]?.id || ''
     await revealRouteLocator()
+    if (isOds.value && viewState && !routeLocator.value) {
+      await nextTick()
+      sheetStageRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
+    }
   } catch (error) {
     report.value = undefined
     loadError.value = String(error).replace(/^Error:\s*/, '')
@@ -255,10 +272,12 @@ watch(documentPath, () => {
 }, { immediate: true })
 watch(matches, value => { matchIndex.value = value.length ? 0 : -1 })
 watch(() => [route.query.locator, route.query.locatorToken], revealRouteLocator)
+watch(selectedSheetId, () => void nextTick(rememberOdsViewState))
+onBeforeUnmount(rememberOdsViewState)
 </script>
 
 <style scoped>
-.odf-workspace { display: flex; width: 100%; height: 100%; min-width: 0; min-height: 0; flex-direction: column; color: var(--text-primary); background: var(--bg-secondary); font-size: 13px; }
+.odf-workspace { display: flex; width: 100%; height: 100%; min-width: 0; min-height: 0; flex-direction: column; color: var(--text-primary); background: var(--bg-secondary); font-size: 13px; container-type: inline-size; }
 header { display: flex; min-height: 52px; align-items: center; justify-content: space-between; gap: 14px; padding: 7px 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
 .identity, .toolbar, .search-box, footer > div { display: flex; align-items: center; }
 .identity { min-width: 0; gap: 9px; }
@@ -285,8 +304,9 @@ header { display: flex; min-height: 52px; align-items: center; justify-content: 
 .sheet-stage { flex: 1; overflow: auto; }
 .sheet-stage table { min-width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
 .sheet-stage th, .sheet-stage td { width: 120px; min-width: 120px; height: 30px; padding: 4px 7px; box-sizing: border-box; border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: var(--bg-primary); }
-.sheet-stage thead th { position: sticky; z-index: 2; top: 0; color: var(--text-muted); background: var(--bg-secondary); font-size: 11px; font-weight: 500; }
-.sheet-stage tbody th, .corner { position: sticky; z-index: 1; left: 0; width: 48px; min-width: 48px; color: var(--text-muted); background: var(--bg-secondary); font-size: 11px; font-weight: 500; }
+.sheet-stage thead th { position: sticky; z-index: 3; top: 0; color: var(--text-muted); background: var(--theme-surface-2); font-size: 11px; font-weight: 500; }
+.sheet-stage tbody th, .corner { position: sticky; z-index: 2; left: 0; width: 48px; min-width: 48px; color: var(--text-muted); background: var(--theme-surface-2); box-shadow: 2px 0 0 color-mix(in srgb, var(--theme-primary) 24%, var(--theme-surface)); font-size: 11px; font-weight: 500; }
+.sheet-stage .corner { z-index: 4; }
 .sheet-stage td { position: relative; }
 .sheet-stage td code { position: absolute; top: 2px; right: 3px; color: var(--theme-primary); font-size: var(--text-compact); }
 .odp-layout { display: grid; flex: 1; min-height: 0; grid-template-columns: 220px minmax(0, 1fr); }
@@ -318,5 +338,12 @@ footer > div { gap: 10px; }
   .slide-stage { padding: 12px; }
   .slide { width: 100%; }
   .search-box input { width: 100px; }
+}
+@container (max-width: 700px) {
+  header { min-height: auto; align-items: stretch; flex-direction: column; gap: 6px; padding-block: 7px; }
+  .toolbar { width: 100%; }
+  .search-box { min-width: 0; flex: 1; }
+  .search-box input { width: 100%; min-width: 0; }
+  footer > span { display: none; }
 }
 </style>
