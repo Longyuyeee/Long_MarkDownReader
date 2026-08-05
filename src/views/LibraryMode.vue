@@ -1241,7 +1241,7 @@ const updateWordCount = () => {
   }
 }
 
-const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0, timer: null as any })
+const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0, focusPath: '', timer: null as any })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, options: [] as any[] })
 const renameState = reactive({ show: false, oldPath: '', newName: '' })
 
@@ -1955,11 +1955,28 @@ const deleteAction = async (paths: string[]) => {
   })
 }
 
+const hideFilePreview = () => {
+  if (preview.timer) clearTimeout(preview.timer)
+  preview.timer = null
+  preview.show = false
+}
+const scheduleFilePreview = (option: TreeOption, x: number, y: number, delay: number) => {
+  if (!option.isLeaf) return
+  hideFilePreview()
+  preview.timer = setTimeout(() => {
+    preview.show = true
+    preview.title = option.label as string
+    preview.path = option.key as string
+    preview.x = x
+    preview.y = y
+    preview.timer = null
+  }, delay)
+}
 const nodeProps = ({ option }: { option: TreeOption }) => ({
   'data-key': option.key,
   'data-drop-path': option.key,
   'data-drop-dir': !option.isLeaf ? 'true' : 'false',
-  'title': option.label as string,
+  'aria-describedby': option.isLeaf ? 'file-tree-detail-preview' : undefined,
   class: [
     virtualDrag.dropTarget === option.key ? 'drop-active' : '',
     virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'before' ? 'is-drop-before' : '',
@@ -1984,22 +2001,31 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
   },
   onMouseenter: (e: MouseEvent) => {
     if (!option.isLeaf || virtualDrag.active) return
-    if (preview.timer) clearTimeout(preview.timer)
-    preview.timer = setTimeout(() => {
-      preview.show = true
-      preview.title = option.label as string
-      preview.path = option.key as string
-      preview.x = e.clientX
-      preview.y = e.clientY
-    }, 600)
+    scheduleFilePreview(option, e.clientX, e.clientY, 600)
   },
   onMouseleave: () => {
-    if (preview.timer) clearTimeout(preview.timer)
-    preview.show = false
+    if (preview.focusPath !== option.key) hideFilePreview()
+  },
+  onFocus: (e: FocusEvent) => {
+    if (!option.isLeaf) return
+    preview.focusPath = option.key as string
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    scheduleFilePreview(option, rect.right, rect.top, 120)
+  },
+  onBlur: (e: FocusEvent) => {
+    const target = e.currentTarget as HTMLElement
+    if (e.relatedTarget instanceof Node && target.contains(e.relatedTarget)) return
+    if (preview.focusPath === option.key) preview.focusPath = ''
+    hideFilePreview()
+  },
+  onKeydown: (e: KeyboardEvent) => {
+    if (e.key !== 'Escape' || preview.focusPath !== option.key) return
+    preview.focusPath = ''
+    hideFilePreview()
   },
   onContextmenu: (e: MouseEvent) => {
     if (virtualDrag.active) return; e.preventDefault(); contextMenu.show = false;
-    if (preview.timer) clearTimeout(preview.timer); preview.show = false;
+    preview.focusPath = ''; hideFilePreview()
     setTimeout(() => {
       contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf;
       const isMulti = selectedKeys.value.length > 1

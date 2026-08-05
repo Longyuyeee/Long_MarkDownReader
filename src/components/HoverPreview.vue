@@ -1,6 +1,6 @@
 <template>
   <transition name="preview-fade">
-    <div v-if="show" class="hover-card" :style="style">
+    <div v-if="show" id="file-tree-detail-preview" class="hover-card" role="tooltip" :style="style">
       <div class="card-glow"></div>
       <div class="card-inner">
         <div class="card-header">
