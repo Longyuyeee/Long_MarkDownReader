@@ -666,3 +666,9 @@ UX-38 总项继续进行。接手后进入 UX-38D 文档媒体格式族，依次
 UX-38D1 PDF 工作区已完成。PDF 现在持续记忆当前页、双向滚动、缩放、适合宽度及侧栏状态，并在知识图谱往返后恢复；工具栏按工作区容器宽度折行，窄宽度侧栏标签采用两行紧凑布局。真实 Tauri Debug WebView2 在 220% 缩放下完成图谱返回与 900x720 窄窗口验收，运行时错误为 0，源 PDF 哈希不变。证据见 `docs/evidence/ux38d1-pdf-workspace`，审计见 `docs/A21_UX38D1_PDF_Workspace_Audit_2026-08-05.md`。
 
 UX-38 总项仍在进行中。接手后进入 UX-38D2，验收 DOCX/ODT 的打开、加载与异常状态、页面式编辑或结构化只读边界、显式保存/可靠副本、主题、窄窗口、键盘和返回上下文。PDF 原文只读、sidecar 批注及可靠新副本边界保持不变；当前 `releaseCandidate=false`。
+
+# 2026-08-05 UX-38D2 交接入口
+
+UX-38D2 DOCX 受管工作区已完成。DOCX/ODT 均记忆正文滚动，DOCX 还恢复编辑面板与模式；两者改为按实际工作区容器宽度响应。DOCX 注册表、发布矩阵和安全合同已对齐现有“内存草稿、隔离验证、用户确认后有界覆盖或可靠另存”能力。真实 Tauri Debug WebView2 验证 DOCX 图谱往返、820x720 编辑布局和 ODT 760x720 直接只读预览，运行时错误为 0，源文件哈希不变。证据见 `docs/evidence/ux38d2-document-workspace`，审计见 `docs/A22_UX38D2_Document_Workspace_Audit_2026-08-05.md`。
+
+ODT 仍是预览路由且未注册：Word/LibreOffice 通过，WPS 生产者门禁为 2/3，不得宣称资料库已正式开放。UX-38 下一步进入 UX-38D3，验收 PPTX/ODP 的模式、可靠副本、主题、窄窗口、键盘和返回上下文；当前 `releaseCandidate=false`。

@@ -1,0 +1,28 @@
+{
+    "schemaVersion":  1,
+    "stage":  "UX-38D2",
+    "status":  "accepted",
+    "visualReview":  "accepted",
+    "sourceCommit":  "5883c3685d1ee49ee9fec06005cca7a6553a10a9",
+    "evidenceFile":  "interaction-evidence.json",
+    "evidenceSha256":  "bfcaab1b64168feb70551664a77540efc97da06b515bdc99c0591ee89ff4339c",
+    "screenshots":  [
+                        {
+                            "file":  "docx-editor-before-graph.jpg",
+                            "bytes":  106134,
+                            "sha256":  "aade9297919f485860a2aa008966d40d074cd5e1db41a7488d97d38ff3ea70b2"
+                        },
+                        {
+                            "file":  "docx-narrow-editor.jpg",
+                            "bytes":  83278,
+                            "sha256":  "2066bc91b07a12a6a0b263003ea37473293b03f882053ad40d06d609c3bbcece"
+                        },
+                        {
+                            "file":  "odt-narrow-return.jpg",
+                            "bytes":  74870,
+                            "sha256":  "c721f7cf7855a71201139c22e03de926815a9b24c764216c8286a93e184cf170"
+                        }
+                    ],
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false
+}
