@@ -9,8 +9,12 @@
         <button class="history-button icon-tool" title="撤销行操作 (Ctrl+Z)" :disabled="!rowUndoStack.length || saving" @click="undoRowOperation"><UndoIcon /></button>
         <button class="history-button icon-tool" title="重做行操作 (Ctrl+Y)" :disabled="!rowRedoStack.length || saving" @click="redoRowOperation"><RedoIcon /></button>
         <label class="table-filter"><span>⌕</span><input v-model="filterQuery" placeholder="筛选所有字段" @input="markViewDirty" /><button v-if="filterQuery" type="button" aria-label="清除筛选" @click="clearFilter">×</button></label>
-        <button v-if="activeViewKind === 'grid'" :class="{ active: freezeFirstColumn }" :aria-pressed="freezeFirstColumn" @click="toggleFreeze">冻结首列</button>
-        <button v-if="table.format !== 'longedit-table'" @click="convertToTable">转换为 Table</button>
+        <label v-if="activeViewKind === 'grid'" class="freeze-control" title="固定最前面的列，横向滚动时保持可见">
+          <SnowflakeIcon /><span>冻结</span>
+          <input type="number" :value="frozenColumns" min="0" :max="maxFrozenColumns" step="1" aria-label="冻结最前面的列数" @change="setFrozenColumns" />
+          <span>列</span>
+        </label>
+        <button v-if="table.format !== 'longedit-table'" @click="requestConvertToTable">创建 Table 副本</button>
         <button v-else @click="exportAs('csv')">导出 CSV</button>
         <button v-if="table.format === 'longedit-table'" @click="exportAs('xlsx')">导出 XLSX</button>
         <button @click="addRow">＋ 行</button>
@@ -63,7 +67,7 @@
           <div class="table-canvas" :style="{ width: `${tableWidth}px` }">
             <div class="table-header" :style="gridStyle">
               <div class="row-number header-number">#</div>
-              <div v-for="(_, column) in table.headers" :key="table.columnIds[column]" class="header-cell" :class="{ frozen: freezeFirstColumn && column === 0 }">
+              <div v-for="(_, column) in table.headers" :key="table.columnIds[column]" class="header-cell" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1 }" :style="frozenColumnStyle(column)">
                 <input :value="table.headers[column]" :aria-label="`第 ${column + 1} 列名称`" @input="editHeader(column, $event)" />
                 <button :title="`按 ${headerLabel(column)} 排序`" @click="cycleSort(column)">{{ sortColumn === column ? (sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</button>
                 <small>{{ typeLabel(table.columnTypes[column]) }}</small>
@@ -86,7 +90,7 @@
                   :aria-pressed="table.rowIds[item.rowIndex] === selectedRowId"
                   @click="selectRow(item.rowIndex)"
                 >{{ item.rowIndex + 1 }}</button>
-                <div v-for="(_, column) in table.headers" :key="column" class="data-cell" :class="{ frozen: freezeFirstColumn && column === 0 }">
+                <div v-for="(_, column) in table.headers" :key="column" class="data-cell" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1 }" :style="frozenColumnStyle(column)">
                   <input
                     :value="table.rows[item.rowIndex][column]"
                     :aria-label="`${headerLabel(column)}，第 ${item.rowIndex + 1} 行`"
@@ -144,7 +148,7 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vu
 import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useDialog, useMessage } from 'naive-ui'
-import { Redo2 as RedoIcon, Trash2 as TrashIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
+import { Redo2 as RedoIcon, Snowflake as SnowflakeIcon, Trash2 as TrashIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 import TableChartEditor from '../components/TableChartEditor.vue'
 import TableDashboard, { type DashboardItem } from '../components/TableDashboard.vue'
@@ -215,7 +219,7 @@ const rowRedoStack = ref<RowHistoryEntry[]>([])
 const filterQuery = ref('')
 const sortColumn = ref(-1)
 const sortDirection = ref<'asc' | 'desc'>('asc')
-const freezeFirstColumn = ref(true)
+const frozenColumns = ref(1)
 const columnWidths = ref<number[]>([])
 const views = ref<TableViewDefinition[]>([])
 const activeViewId = ref('grid')
@@ -256,6 +260,12 @@ const chartConfig = computed(() => ({
 }))
 const chartViews = computed(() => views.value.filter((view): view is TableViewDefinition & { kind: 'chart' } => view.kind === 'chart'))
 const selectedRowIndex = computed(() => selectedRowId.value && table.value ? table.value.rowIds.indexOf(selectedRowId.value) : -1)
+const maxFrozenColumns = computed(() => Math.min(12, table.value?.headers.length || 0))
+const conversionTargetName = computed(() => fileName.value.replace(/\.(csv|tsv)$/i, '') + '.table.json')
+const conversionDirectoryName = computed(() => {
+  const parts = tablePath.value.split(/[\\/]/)
+  return parts.length > 1 ? parts[parts.length - 2] : '当前资料库'
+})
 
 const typeLabel = (type: string) => ({ integer: '整数', number: '数值', boolean: '布尔', date: '日期', empty: '空', text: '文本' }[type] || '文本')
 const headerLabel = (column: number) => table.value?.headers[column]?.trim() || `列 ${column + 1}`
@@ -327,7 +337,7 @@ const captureActiveView = () => {
     filter: filterQuery.value,
     sortColumn: sortColumn.value >= 0 ? table.value?.columnIds[sortColumn.value] : undefined,
     sortDirection: sortDirection.value,
-    frozenColumns: freezeFirstColumn.value ? 1 : 0,
+    frozenColumns: frozenColumns.value,
     columnWidths: [...columnWidths.value],
     groupBy: groupBy.value,
     titleColumn: titleColumn.value,
@@ -348,7 +358,7 @@ const applyView = (view?: TableViewDefinition) => {
   filterQuery.value = config.filter || ''
   sortColumn.value = config.sortColumn ? table.value.columnIds.indexOf(config.sortColumn) : -1
   sortDirection.value = config.sortDirection === 'desc' ? 'desc' : 'asc'
-  freezeFirstColumn.value = config.frozenColumns > 0
+  frozenColumns.value = Math.min(maxFrozenColumns.value, Math.max(0, Math.trunc(config.frozenColumns || 0)))
   columnWidths.value = table.value.headers.map((_, index) => Math.min(600, Math.max(60, config.columnWidths[index] || 160)))
   groupBy.value = config.groupBy || table.value.columnIds[0]
   titleColumn.value = config.titleColumn || table.value.columnIds[0]
@@ -439,7 +449,19 @@ const applyDashboardItems = (items: DashboardItem[]) => {
 }
 const markViewDirty = () => { if (table.value?.format === 'longedit-table') markDirty() }
 const clearFilter = () => { filterQuery.value = ''; markViewDirty() }
-const toggleFreeze = () => { freezeFirstColumn.value = !freezeFirstColumn.value; markViewDirty() }
+const setFrozenColumns = (event: Event) => {
+  const requested = Number((event.target as HTMLInputElement).value)
+  frozenColumns.value = Math.min(maxFrozenColumns.value, Math.max(0, Number.isFinite(requested) ? Math.trunc(requested) : 0))
+  rememberWorkspaceViewState(tablePath.value, {
+    scrollTop: scrollRef.value?.scrollTop || 0,
+    scrollLeft: scrollRef.value?.scrollLeft || 0,
+    frozenColumns: frozenColumns.value,
+  })
+  markViewDirty()
+}
+const frozenColumnStyle = (column: number) => column < frozenColumns.value
+  ? { left: `${52 + columnWidths.value.slice(0, column).reduce((sum, width) => sum + width, 0)}px` }
+  : undefined
 const editHeader = (column: number, event: Event) => { if (table.value) { table.value.headers[column] = (event.target as HTMLInputElement).value; markDirty() } }
 const editCell = (row: number, column: number, event: Event) => {
   if (!table.value) return
@@ -614,6 +636,7 @@ const loadTable = async () => {
     applyView(activeView.value)
     const viewState = recallWorkspaceViewState(tablePath.value)
     if (viewState) {
+      if (typeof viewState.frozenColumns === 'number') frozenColumns.value = Math.min(maxFrozenColumns.value, Math.max(0, Math.trunc(viewState.frozenColumns)))
       await nextTick()
       scrollRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
       scrollTop.value = viewState.scrollTop
@@ -650,7 +673,7 @@ const saveTable = async () => {
           filter: filterQuery.value,
           sortColumn: sortColumn.value >= 0 ? table.value.columnIds[sortColumn.value] : undefined,
           sortDirection: sortDirection.value,
-          frozenColumns: freezeFirstColumn.value ? 1 : 0,
+          frozenColumns: frozenColumns.value,
           columnWidths: columnWidths.value,
           groupBy: groupBy.value,
           titleColumn: titleColumn.value,
@@ -679,13 +702,35 @@ const saveTable = async () => {
   } finally { saving.value = false }
 }
 
+const revealCreatedTable = (path: string) => {
+  window.dispatchEvent(new CustomEvent('longedit:reveal-library-file', { detail: path }))
+}
+
 const convertToTable = async () => {
-  if (!table.value || dirty.value) { message.warning('请先保存当前修改'); return }
+  if (!table.value) return
   try {
     const path = await invoke<string>('import_table_file', { libraryRoot: store.libraryPath, path: tablePath.value })
-    message.success('已创建开放 Table，原 CSV/TSV 保持不变')
-    await openManagedFile(router, path, {}, 'replace')
+    window.dispatchEvent(new CustomEvent('longedit:library-file-created', { detail: path }))
+    dialog.success({
+      title: 'Table 副本已创建',
+      content: `已在“${conversionDirectoryName.value}”创建 ${path.split(/[\\/]/).pop()}。原 ${formatLabel.value} 文件没有改变。`,
+      positiveText: '打开新文件',
+      negativeText: '在文件树中定位',
+      onPositiveClick: () => openManagedFile(router, path),
+      onNegativeClick: () => revealCreatedTable(path),
+    })
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+}
+
+const requestConvertToTable = () => {
+  if (!table.value || dirty.value) { message.warning('请先保存当前修改'); return }
+  dialog.info({
+    title: '创建可视化 Table 副本？',
+    content: `将在“${conversionDirectoryName.value}”创建 ${conversionTargetName.value}，用于保存表格、看板、图表和仪表盘视图。原 ${formatLabel.value} 文件保持不变；如有同名文件，系统会使用新的序号。`,
+    positiveText: '创建副本',
+    negativeText: '取消',
+    onPositiveClick: convertToTable,
+  })
 }
 
 const exportAs = async (format: 'csv' | 'xlsx') => {
@@ -762,7 +807,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   if (scrollRef.value) {
-    rememberWorkspaceViewState(tablePath.value, { scrollTop: scrollRef.value.scrollTop, scrollLeft: scrollRef.value.scrollLeft })
+    rememberWorkspaceViewState(tablePath.value, { scrollTop: scrollRef.value.scrollTop, scrollLeft: scrollRef.value.scrollLeft, frozenColumns: frozenColumns.value })
   }
   window.clearTimeout(typeTimer)
   window.removeEventListener('beforeunload', beforeUnload)
@@ -774,16 +819,18 @@ onBeforeUnmount(() => {
 .table-view { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 94%, var(--theme-primary)); outline: none; }
 .table-toolbar { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 0 16px; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); box-shadow: 0 2px 10px rgba(0,0,0,.06); z-index: 5; }
 .table-title,.table-tools { display: flex; align-items: center; gap: 8px; }.table-title > button,.table-tools > button { height: 32px; padding: 0 10px; border: 1px solid rgba(0,0,0,.1); border-radius: 7px; color: var(--theme-text); background: rgba(0,0,0,.035); cursor: pointer; }.table-tools > button:disabled { opacity: .42; cursor: default; }.table-tools > .icon-tool { width: 32px; display: grid; place-items: center; padding: 0; }.table-tools > .icon-tool svg { width: 16px; height: 16px; }.table-title > button { width: 32px; padding: 0; font-size: 18px; }.table-title div { display: flex; flex-direction: column; }.table-title strong { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }.table-title span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.table-tools > button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.4); background: rgba(var(--theme-primary-rgb),.08); }.table-tools .save-button { min-width: 72px; color: #fff; border-color: var(--theme-primary); background: var(--theme-primary); }.table-tools .save-button:disabled { color: var(--theme-text-secondary); border-color: rgba(0,0,0,.08); background: rgba(0,0,0,.04); cursor: default; }
+.freeze-control { height: 32px; display: flex; align-items: center; gap: 5px; padding: 0 7px; border: 1px solid rgba(0,0,0,.1); border-radius: 7px; color: var(--theme-text-secondary); background: var(--theme-card); font-size: var(--text-compact); }.freeze-control svg { width: 14px; height: 14px; color: var(--theme-primary); }.freeze-control input { width: 42px; height: 23px; box-sizing: border-box; border: 1px solid rgba(0,0,0,.12); border-radius: 4px; color: var(--theme-text); background: var(--theme-bg); text-align: center; font: inherit; }
 .table-filter { width: 220px; height: 32px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid rgba(0,0,0,.1); border-radius: 7px; background: rgba(0,0,0,.025); }.table-filter input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--theme-text); background: transparent; font-size: var(--text-compact); }.table-filter button { border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }
 .view-tabs { min-height: 38px; display: flex; align-items: end; gap: 4px; padding: 5px 12px 0; border-bottom: 1px solid rgba(0,0,0,.09); background: color-mix(in srgb, var(--theme-card) 97%, #dce6ef); }.view-tab { height: 32px; display: flex; align-items: center; border: 1px solid transparent; border-bottom: 0; border-radius: 7px 7px 0 0; color: var(--theme-text-secondary); background: transparent; }.view-tab.active { color: var(--theme-primary); border-color: rgba(0,0,0,.1); background: var(--theme-card); }.view-tab-main,.view-tab-delete,.view-add button { height: 31px; border: 0; color: inherit; background: transparent; cursor: pointer; font-size: var(--text-compact); }.view-tab-main { display: flex; align-items: center; gap: 5px; padding: 0 6px 0 10px; }.view-tab-delete { width: 25px; padding: 0; opacity: .4; }.view-tab-delete:hover,.view-tab-delete:focus-visible { opacity: 1; }.view-add { display: flex; margin-left: 5px; }.view-add button { height: 27px; padding: 0 7px; border-radius: 5px; }.view-add button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }.view-tabs > small { margin: 0 4px 9px auto; color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .table-workspace { min-height: 0; flex: 1; display: flex; flex-direction: column; }.table-meta-bar { height: 30px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 14px; border-bottom: 1px solid rgba(0,0,0,.07); color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 94%, transparent); font-size: var(--text-compact); }.table-meta-bar button { padding: 2px 6px; border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; }.table-meta-bar i { margin-left: auto; font-style: normal; }
 .table-meta-bar label { display: flex; align-items: center; gap: 4px; }.table-meta-bar select { height: 22px; max-width: 130px; border: 1px solid rgba(0,0,0,.1); border-radius: 4px; color: var(--theme-text); background: var(--theme-card); font-size: var(--text-compact); }.row-selection-actions { display: flex; align-items: center; gap: 5px; color: var(--theme-text); font-weight: 650; }.row-selection-actions button { display: inline-flex; align-items: center; gap: 3px; border-radius: 4px; }.row-selection-actions button:first-of-type { color: var(--theme-danger, #c83b46); background: color-mix(in srgb, var(--theme-danger, #c83b46) 9%, transparent); }.row-selection-actions svg { width: 13px; height: 13px; }.card-fields { display: flex; align-items: center; gap: 3px; }.card-fields b { font-weight: 500; }.card-fields button { border-radius: 4px; color: var(--theme-text-secondary); background: rgba(0,0,0,.035); }.card-fields button.active { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); }
 .table-scroll { min-height: 0; flex: 1; overflow: auto; position: relative; }.table-canvas { min-height: 100%; }.table-header,.table-row { display: grid; }.table-header { position: sticky; top: 0; z-index: 20; height: 46px; background: color-mix(in srgb, var(--theme-card) 96%, #e8edf3); box-shadow: 0 1px 0 rgba(0,0,0,.12); }.virtual-body { position: relative; }.table-row { position: absolute; top: 0; left: 0; height: 34px; }
-.header-cell,.data-cell,.row-number { min-width: 0; box-sizing: border-box; border-right: 1px solid rgba(0,0,0,.07); border-bottom: 1px solid rgba(0,0,0,.07); background: var(--theme-card); }.row-number { position: sticky; left: 0; z-index: 6; display: grid; place-items: center; padding: 0; border-top: 0; border-left: 0; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 92%, #dce4ec); cursor: pointer; font-size: var(--text-compact); }.table-row.selected .data-cell,.row-number.selected { background: color-mix(in srgb, var(--theme-card) 84%, var(--theme-primary)); }.row-number.selected { color: var(--theme-primary); box-shadow: inset 3px 0 0 var(--theme-primary); font-weight: 750; }.header-number { z-index: 25; cursor: default; }.header-cell { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 24px; grid-template-rows: 27px 14px; padding: 3px 5px 2px; }.header-cell input,.data-cell input { width: 100%; min-width: 0; box-sizing: border-box; border: 0; outline: 0; color: var(--theme-text); background: transparent; font: inherit; }.header-cell input { font-size: var(--text-compact); font-weight: 700; }.header-cell > button { grid-column: 2; grid-row: 1; border: 0; border-radius: 4px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.header-cell > button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }.header-cell small { grid-column: 1 / -1; grid-row: 2; color: var(--theme-text-secondary); font-size: var(--text-compact); }.data-cell { padding: 0 7px; }.data-cell input { height: 33px; font-size: var(--text-compact); }.data-cell:focus-within { position: relative; z-index: 4; outline: 2px solid var(--theme-primary); outline-offset: -2px; }.header-cell.frozen,.data-cell.frozen { position: sticky; left: 52px; z-index: 5; box-shadow: 2px 0 5px rgba(0,0,0,.08); }.header-cell.frozen { z-index: 24; }
+.header-cell,.data-cell,.row-number { min-width: 0; box-sizing: border-box; border-right: 1px solid rgba(0,0,0,.07); border-bottom: 1px solid rgba(0,0,0,.07); background: var(--theme-card); }.row-number { position: sticky; left: 0; z-index: 16; display: grid; place-items: center; padding: 0; border-top: 0; border-left: 0; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 92%, #dce4ec); cursor: pointer; font-size: var(--text-compact); }.table-row.selected .data-cell,.row-number.selected { background: color-mix(in srgb, var(--theme-card) 84%, var(--theme-primary)); }.row-number.selected { color: var(--theme-primary); box-shadow: inset 3px 0 0 var(--theme-primary); font-weight: 750; }.header-number { z-index: 26; cursor: default; }.header-cell { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 24px; grid-template-rows: 27px 14px; padding: 3px 5px 2px; }.header-cell input,.data-cell input { width: 100%; min-width: 0; box-sizing: border-box; border: 0; outline: 0; color: var(--theme-text); background: transparent; font: inherit; }.header-cell input { font-size: var(--text-compact); font-weight: 700; }.header-cell > button { grid-column: 2; grid-row: 1; border: 0; border-radius: 4px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.header-cell > button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }.header-cell small { grid-column: 1 / -1; grid-row: 2; color: var(--theme-text-secondary); font-size: var(--text-compact); }.data-cell { padding: 0 7px; }.data-cell input { height: 33px; font-size: var(--text-compact); }.data-cell:focus-within { position: relative; z-index: 17; outline: 2px solid var(--theme-primary); outline-offset: -2px; }.header-cell.frozen,.data-cell.frozen { position: sticky; z-index: 14; background: var(--theme-card); box-shadow: 1px 0 0 rgba(0,0,0,.12); }.header-cell.frozen { z-index: 24; }.header-cell.frozen:last-of-type,.data-cell.frozen:last-of-type { box-shadow: 3px 0 8px rgba(0,0,0,.13); }
 .column-resize { position: absolute; top: 0; right: -3px; z-index: 3; width: 7px; height: 100%; cursor: col-resize; }.column-resize:hover { background: rgba(var(--theme-primary-rgb),.24); }
+.header-cell.frozen-edge,.data-cell.frozen-edge { box-shadow: 3px 0 8px rgba(0,0,0,.13); }
 .board-scroll { min-height: 0; flex: 1; display: flex; align-items: flex-start; gap: 12px; padding: 14px; overflow: auto; }.board-column { width: 280px; max-height: 100%; flex: none; display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,.08); border-radius: 10px; background: rgba(0,0,0,.025); }.board-column > header { height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 11px; border-bottom: 1px solid rgba(0,0,0,.07); }.board-column > header strong { font-size: 11px; }.board-column > header span { min-width: 20px; padding: 2px 5px; border-radius: 10px; text-align: center; color: var(--theme-text-secondary); background: rgba(0,0,0,.06); font-size: var(--text-compact); }.board-cards { min-height: 60px; padding: 8px; overflow: auto; }.board-card { margin-bottom: 8px; padding: 10px; border: 1px solid rgba(0,0,0,.08); border-radius: 8px; background: var(--theme-card); box-shadow: 0 2px 7px rgba(0,0,0,.045); cursor: grab; }.board-card:active { cursor: grabbing; }.board-card > strong { display: block; margin-bottom: 8px; font-size: 11px; }.board-card p { display: grid; grid-template-columns: 72px minmax(0,1fr); align-items: center; gap: 5px; margin: 4px 0; }.board-card p span { overflow: hidden; text-overflow: ellipsis; color: var(--theme-text-secondary); font-size: var(--text-compact); }.board-card input { min-width: 0; border: 0; border-bottom: 1px solid transparent; outline: 0; color: var(--theme-text); background: transparent; font-size: var(--text-compact); }.board-card input:focus { border-color: var(--theme-primary); }.board-card small { display: block; margin-top: 8px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .view-empty { margin: auto; max-width: 480px; color: var(--theme-text-secondary); text-align: center; font-size: 11px; }
 .table-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--theme-text-secondary); }.table-state strong { color: var(--theme-text); }.table-state p { max-width: 560px; text-align: center; }.table-state button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }.loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 900px) { .table-filter { width: 150px; }.table-title span { display: none; }.table-tools > button:not(.save-button):not(.history-button) { display: none; }.view-tabs { overflow-x: auto; align-items: end; }.view-tab,.view-add,.view-tabs > small { flex: none; } }
+@media (max-width: 900px) { .table-filter { width: 150px; }.table-title span { display: none; }.table-tools > button:not(.save-button):not(.history-button) { display: none; }.freeze-control { display: none; }.view-tabs { overflow-x: auto; align-items: end; }.view-tab,.view-add,.view-tabs > small { flex: none; } }
 @media (max-width: 620px) { .table-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }.table-title { width: 100%; min-width: 0; }.table-title div { min-width: 0; }.table-title strong { max-width: 100%; }.table-tools { width: 100%; }.table-filter { min-width: 0; flex: 1; }.table-tools .save-button { flex: none; } }
 </style>

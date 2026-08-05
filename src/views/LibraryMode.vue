@@ -1639,6 +1639,18 @@ const handleEditorBgChange = async (val: string) => { store.editorBgColor = val;
 
 
 const refreshLibrary = async () => { if (store.libraryPath) treeData.value = await loadDirectory(store.libraryPath) }
+const revealLibraryFile = async (event: Event) => {
+  const path = (event as CustomEvent<string>).detail
+  if (!path) return
+  await refreshLibrary()
+  selectedKeys.value = [path]
+  const separator = path.includes('\\') ? '\\' : '/'
+  const parent = path.slice(0, path.lastIndexOf(separator))
+  if (parent && !expandedKeys.value.includes(parent)) expandedKeys.value = [...expandedKeys.value, parent]
+  await nextTick()
+  window.setTimeout(() => treeInstRef.value?.scrollTo({ key: path, behavior: 'smooth' }), 120)
+}
+const refreshCreatedLibraryFile = () => { void refreshLibrary() }
 const refreshNode = async (path: string) => {
   if (!path || !store.libraryPath) return
   const newEntries = await loadDirectory(path)
@@ -2784,6 +2796,8 @@ const handleExportHtml = async () => {
 }
 
 onMounted(async () => {
+  window.addEventListener('longedit:reveal-library-file', revealLibraryFile)
+  window.addEventListener('longedit:library-file-created', refreshCreatedLibraryFile)
   await store.loadConfig()
   if (activeTabId.value && route.query.path !== activeTabId.value) {
     await router.replace({ name: 'LibraryMode', query: { ...route.query, path: activeTabId.value } })
@@ -2872,6 +2886,8 @@ onMounted(async () => {
 
 onUnmounted(() => {
   destroyImageFix()
+  window.removeEventListener('longedit:reveal-library-file', revealLibraryFile)
+  window.removeEventListener('longedit:library-file-created', refreshCreatedLibraryFile)
   window.removeEventListener('keydown', handleKeyDown)
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
   if (shadowSaveTimer) clearInterval(shadowSaveTimer)

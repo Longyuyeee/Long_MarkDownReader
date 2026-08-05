@@ -2,6 +2,7 @@ export interface WorkspaceViewState {
   scrollTop: number
   scrollLeft: number
   section?: string
+  frozenColumns?: number
 }
 
 const MAX_ENTRIES = 24
