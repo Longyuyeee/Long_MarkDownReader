@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX-36",
+  "status": "accepted",
+  "productSourceCommit": "24455dd556367aeedbb308708c42321a4910e684",
+  "evidenceFile": "actions-evidence.json",
+  "evidenceSha256": "51db1780c1708f5b57786c0e419330ec60712f20f544be73c6024a04c8900112",
+  "screenshots": [
+    {
+      "file": "root-create-categories.jpg",
+      "bytes": 64075,
+      "sha256": "21c4ca70b76f7348b23a6f8a54722b9e4fa91ba95ed75516cb1adce83d273f5a"
+    },
+    {
+      "file": "rename-extension-warning.jpg",
+      "bytes": 156550,
+      "sha256": "ba7e568a8befe37683d1c7084fdbf482ff4b80994e35d8d799b886b796b6a036"
+    },
+    {
+      "file": "rename-format-confirmation.jpg",
+      "bytes": 161427,
+      "sha256": "3073c27db7573356fcc9caf1b0390be54aaeb47c39a1434f2e216d1225a1a9e2"
+    }
+  ],
+  "visualReview": "accepted",
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

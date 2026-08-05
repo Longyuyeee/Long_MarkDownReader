@@ -618,3 +618,9 @@ UX-34 Drawio/Canvas 尺寸稳定性已完成。Canvas ResizeObserver 采用单�
 UX-35 文件树详情浮层已完成。节点原生 `title` 已删除，鼠标和键盘方向键当前项共用可访问详情浮层，Esc 与焦点离开可关闭。真实 Tauri Debug WebView2 已验证两个隔离 fixture 均无重复原生提示，运行时异常为 0；证据见 `docs/evidence/ux35-file-tree-preview`，完整审计见 `docs/A13_File_Tree_Detail_Preview_Audit_2026-08-05.md`。
 
 接手后直接进入 UX-36：文件树空白区/目录右键菜单第一项改为“新建”二级菜单，按文档、数据、图表、代码组织格式；重命名必须展示完整文件名并允许修改后缀，格式变化前提示风险、名称冲突时禁止覆盖。当前证据不含用户资料与完整本机路径，`releaseCandidate=false`。
+
+# 2026-08-05 UX-36 交接入口
+
+UX-36 文件树新建与安全重命名已完成。空白区和目录右键首项统一为“新建”，按四类覆盖格式注册表全部 18 种可创建格式；完整文件名重命名支持已注册后缀变化、明确拒绝同名目标，并在单弹窗内二次确认“不转换内容”。真实 Tauri Debug WebView2 已验证 JSON 创建、冲突拒绝、`.md` 改 `.txt` 及树/标签/路由同步，证据见 `docs/evidence/ux36-file-tree-actions`，完整审计见 `docs/A14_File_Tree_Create_Rename_Audit_2026-08-05.md`。
+
+接手后直接进入 UX-37：审计脑图、思维导图和产品知识图谱的真实画布交互，按平移、缩放、节点拖动、框选、多选、键盘移动、撤销重做、树状/组织/放射/时间线布局逐项补齐并取真实桌面证据。当前证据不含用户资料与完整本机路径，`releaseCandidate=false`。
