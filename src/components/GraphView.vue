@@ -189,7 +189,7 @@
       </div>
     </transition>
     <transition name="details-slide">
-      <aside v-if="selectedNode" class="node-details" data-testid="graph-selected-node" :data-node-id="selectedNode.id">
+      <aside v-if="selectedNode && selectedNodeIds.length === 1" class="node-details" data-testid="graph-selected-node" :data-node-id="selectedNode.id">
         <button class="details-close" @click="clearSelection" aria-label="关闭节点详情">×</button>
         <span class="details-kicker">节点详情</span>
         <h3>{{ selectedNode.title }}</h3>
