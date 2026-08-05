@@ -403,6 +403,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity.vue'
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
@@ -751,6 +752,19 @@ const savePosition = () => {
   positions[positionId()] = currentPage.value
   const limited = Object.fromEntries(Object.entries(positions).slice(-100))
   try { localStorage.setItem(POSITION_KEY, JSON.stringify(limited)) } catch { /* best effort */ }
+}
+const rememberPdfViewState = (path = pdfPath.value) => {
+  const container = scrollRef.value
+  if (!path || !container) return
+  rememberWorkspaceViewState(path, {
+    scrollTop: container.scrollTop,
+    scrollLeft: container.scrollLeft,
+    section: String(currentPage.value),
+    zoom: scale.value,
+    fitWidth: fitWidth.value,
+    sidebarOpen: sidebarOpen.value,
+    sidebarTab: sidebarTab.value,
+  })
 }
 
 const flattenOutline = (items: Awaited<ReturnType<PDFDocumentProxy['getOutline']>>, depth = 0): OutlineEntry[] => {
@@ -1818,6 +1832,7 @@ const loadPdf = async () => {
     return
   }
   try {
+    const viewState = recallWorkspaceViewState(pdfPath.value)
     const descriptor = await invoke<PdfReadDescriptor>('read_pdf_info', { libraryRoot: store.libraryPath, path: pdfPath.value })
     pdfSourceSignature.value = descriptor.signature
     initializePdfMergeInputs(descriptor.signature)
@@ -1865,7 +1880,17 @@ const loadPdf = async () => {
     const firstPage = await document.getPage(1)
     const viewport = firstPage.getViewport({ scale: 1 })
     basePage.value = { width: viewport.width, height: viewport.height }
-    const restored = Math.max(1, Math.min(document.numPages, requestedPage() || readPositions()[positionId()] || 1))
+    const routedPage = requestedPage()
+    const rememberedPage = Number(viewState?.section)
+    const restored = Math.max(1, Math.min(document.numPages, routedPage || (Number.isInteger(rememberedPage) ? rememberedPage : 0) || readPositions()[positionId()] || 1))
+    if (typeof viewState?.sidebarOpen === 'boolean') sidebarOpen.value = viewState.sidebarOpen
+    if (['thumbnails', 'outline', 'annotations', 'ocr', 'organize'].includes(viewState?.sidebarTab || '')) {
+      sidebarTab.value = viewState?.sidebarTab as typeof sidebarTab.value
+    }
+    if (typeof viewState?.fitWidth === 'boolean') fitWidth.value = viewState.fitWidth
+    if (typeof viewState?.zoom === 'number' && Number.isFinite(viewState.zoom)) {
+      scale.value = Math.max(0.5, Math.min(2.5, viewState.zoom))
+    }
     currentPage.value = restored
     pageInput.value = restored
     pdfInsertAnchorPage.value = restored
@@ -1874,6 +1899,11 @@ const loadPdf = async () => {
     await nextTick()
     if (fitWidth.value) applyFitWidth()
     goToPage(restored, 'auto')
+    if (!routedPage && viewState) {
+      await nextTick()
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+      scrollRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft, behavior: 'auto' })
+    }
     loadOutline()
     await loadAnnotations(document)
     await loadOcrDocument(document)
@@ -1918,6 +1948,7 @@ const handleScroll = () => {
       if (delta < distance) { distance = delta; nearest = Number(element.dataset.page) }
     }
     if (nearest !== currentPage.value) { currentPage.value = nearest; pageInput.value = nearest; schedulePositionSave() }
+    rememberPdfViewState()
   })
 }
 
@@ -1963,7 +1994,10 @@ const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
   event.preventDefault()
   event.returnValue = ''
 }
-watch([pdfPath, () => store.libraryPath], loadPdf)
+watch([pdfPath, () => store.libraryPath], (_next, previous) => {
+  if (previous?.[0]) rememberPdfViewState(previous[0])
+  void loadPdf()
+})
 watch([() => route.query.page, () => route.query.annotation], () => {
   if (pdfDocument.value && annotationDocument.value) focusRequestedReference()
 })
@@ -1981,6 +2015,7 @@ onMounted(() => {
 onBeforeUnmount(async () => {
   await cancelOcr()
   savePosition()
+  rememberPdfViewState()
   window.clearTimeout(positionTimer)
   window.clearTimeout(searchTimer)
   window.clearTimeout(annotationSaveTimer)
@@ -2101,5 +2136,6 @@ onBeforeUnmount(async () => {
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 980px) { .pdf-search { width: 150px; }.pdf-search.active { width: 220px; }.document-title strong { max-width: 160px; }.toolbar-actions .fit-btn { width: 32px; padding: 0; }.toolbar-actions .fit-btn .action-label { display: none; } }
 @media (max-width: 760px) { .pdf-toolbar { grid-template-columns: 1fr auto; }.toolbar-center { order: 3; grid-column: 1 / -1; justify-content: center; padding-bottom: 7px; }.pdf-sidebar { width: 176px; }.fit-btn,.scale-label { display: none; }.pdf-search { width: 130px; }.pdf-search.active { width: 190px; } }
-@container (max-width: 640px) { .pdf-toolbar { grid-template-columns: minmax(0,1fr) auto; }.toolbar-center { order: 3; grid-column: 1 / -1; justify-content: center; padding-bottom: 7px; }.pdf-sidebar { width: 176px; }.fit-btn,.scale-label { display: none; }.pdf-search { width: 130px; }.pdf-search.active { width: 190px; } }
+@container (max-width: 980px) { .pdf-search { width: 150px; }.pdf-search.active { width: 220px; }.document-title strong { max-width: 160px; }.toolbar-actions .fit-btn { width: 32px; padding: 0; }.toolbar-actions .fit-btn .action-label { display: none; } }
+@container (max-width: 760px) { .pdf-toolbar { grid-template-columns: minmax(0,1fr) auto; }.toolbar-center { order: 3; grid-column: 1 / -1; justify-content: center; padding-bottom: 7px; }.pdf-sidebar { width: 176px; }.fit-btn,.scale-label { display: none; }.pdf-search { width: 130px; }.pdf-search.active { width: 190px; } }
 </style>

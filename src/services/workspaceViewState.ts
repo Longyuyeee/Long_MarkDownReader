@@ -3,6 +3,10 @@ export interface WorkspaceViewState {
   scrollLeft: number
   section?: string
   frozenColumns?: number
+  zoom?: number
+  fitWidth?: boolean
+  sidebarOpen?: boolean
+  sidebarTab?: string
 }
 
 const MAX_ENTRIES = 24
