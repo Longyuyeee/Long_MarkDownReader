@@ -684,3 +684,9 @@ UX-38D3 PPTX/ODP 工作区已完成，文档媒体格式族收口。PPTX 现在�
 UX-38E 图形工作区已完成。Canvas、Draw.io、Mermaid、OPML 均已验证内存草稿、显式保存和知识图谱往返上下文；Canvas、Draw.io、Mermaid 本轮通过撤销重做，OPML 复用 UX-37A 已接受证据。真实 Tauri WebView2 审计运行时错误和意外弹窗均为 0，证据见 `docs/evidence/ux38e-graphics-workspace`，完整结论见 `docs/A24_UX38E_Graphics_Workspace_Audit_2026-08-05.md`。
 
 接手后进入 UX-38F：只收口 `.doc/.xls/.ppt/.wps/.et/.dps` 的外部应用发现、不可用状态、失败说明、返回上下文与窄窗口，不宣称 LongEdit 内部等价编辑或转换。UX-38F 完成后执行 UX-38 总矩阵最终审计；当前 `releaseCandidate=false`。
+
+# 2026-08-05 UX-38F 交接入口
+
+UX-38F 外部 Office 工作区已完成。`.doc/.xls/.ppt/.wps/.et/.dps` 均在工作区内展示系统默认、Microsoft Office、WPS Office、LibreOffice 的可用或不可用状态，并提供用户主动触发的安全外部交接；旧 Office 的隔离转换入口与外部打开已明确分区。真实 Tauri WebView2 已验证六格式加载、图谱往返、应用选择或目标路径恢复、760x720 窄布局与源哈希不变，运行时错误和意外弹窗均为 0。证据见 `docs/evidence/ux38f-external-office`，完整结论见 `docs/A25_UX38F_External_Office_Workspace_Audit_2026-08-05.md`。
+
+接手后执行 UX-38 总矩阵最终审计：清点 41/41 格式的证据和所有 `partial/referenced/not-applicable` 边界，只关闭有真实证据支持的项目，不扩大有限 Office、外部打开或只读预览能力。当前 `releaseCandidate=false`。

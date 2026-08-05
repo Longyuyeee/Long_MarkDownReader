@@ -1,0 +1,80 @@
+{
+    "schemaVersion":  1,
+    "stage":  "UX-38F",
+    "sourceCommit":  "84ceaf8d0e44dd7af387944fe4f38753dfef16b2",
+    "formatResults":  [
+                          {
+                              "id":  "legacy-doc",
+                              "optionCount":  4,
+                              "unavailableCount":  0,
+                              "openButtonVisible":  true,
+                              "boundaryVisible":  true,
+                              "loadError":  false,
+                              "contextRestored":  true,
+                              "narrowStable":  true
+                          },
+                          {
+                              "id":  "legacy-xls",
+                              "optionCount":  4,
+                              "unavailableCount":  0,
+                              "openButtonVisible":  true,
+                              "boundaryVisible":  true,
+                              "loadError":  false,
+                              "contextRestored":  true,
+                              "narrowStable":  true
+                          },
+                          {
+                              "id":  "legacy-ppt",
+                              "optionCount":  4,
+                              "unavailableCount":  0,
+                              "openButtonVisible":  true,
+                              "boundaryVisible":  true,
+                              "loadError":  false,
+                              "contextRestored":  true,
+                              "narrowStable":  true
+                          },
+                          {
+                              "id":  "wps-document",
+                              "optionCount":  4,
+                              "unavailableCount":  1,
+                              "openButtonVisible":  true,
+                              "boundaryVisible":  true,
+                              "loadError":  false,
+                              "contextRestored":  true,
+                              "narrowStable":  true
+                          },
+                          {
+                              "id":  "wps-spreadsheet",
+                              "optionCount":  4,
+                              "unavailableCount":  1,
+                              "openButtonVisible":  true,
+                              "boundaryVisible":  true,
+                              "loadError":  false,
+                              "contextRestored":  true,
+                              "narrowStable":  true
+                          },
+                          {
+                              "id":  "wps-presentation",
+                              "optionCount":  4,
+                              "unavailableCount":  1,
+                              "openButtonVisible":  true,
+                              "boundaryVisible":  true,
+                              "loadError":  false,
+                              "contextRestored":  true,
+                              "narrowStable":  true
+                          }
+                      ],
+    "allFormatsLoaded":  true,
+    "directExternalOpenVisible":  true,
+    "capabilityBoundaryVisible":  true,
+    "allContextsRestored":  true,
+    "allNarrowLayoutsStable":  true,
+    "externalApplicationLaunched":  false,
+    "conversionExecuted":  false,
+    "runtimeErrorCount":  0,
+    "unexpectedDialogCount":  0,
+    "blockingErrorSurfaceObserved":  false,
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false,
+    "allSourceFilesUnchanged":  true
+}

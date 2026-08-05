@@ -71,6 +71,7 @@
     "audit:ux38e-graphics-workspace": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-ux38e-graphics-workspace-audit.ps1",
     "check:ux38e-graphics-workspace": "node scripts/check-ux38e-graphics-workspace.mjs",
     "check:ux38f-external-office-workspace": "node scripts/check-ux38f-external-office-workspace.mjs",
+    "audit:ux38f-external-office": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-ux38f-external-office-audit.ps1",
     "check:ux38e-canvas-explicit-save": "node scripts/check-ux38e-canvas-explicit-save.mjs",
     "check:ux38e-diagram-history": "node scripts/check-ux38e-diagram-history.mjs",
     "audit:r5c-route-performance-smoke": "node scripts/capture-r5c-route-performance-evidence.mjs",

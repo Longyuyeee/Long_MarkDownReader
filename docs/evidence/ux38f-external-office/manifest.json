@@ -1,0 +1,23 @@
+{
+    "schemaVersion":  1,
+    "stage":  "UX-38F",
+    "status":  "accepted",
+    "visualReview":  "accepted",
+    "sourceCommit":  "84ceaf8d0e44dd7af387944fe4f38753dfef16b2",
+    "evidenceFile":  "interaction-evidence.json",
+    "evidenceSha256":  "8cd7de9aed0ac8457cb97dc5ac474882884e099a22efd297b0e16eb2c422026f",
+    "screenshots":  [
+                        {
+                            "file":  "legacy-doc-narrow.jpg",
+                            "bytes":  93442,
+                            "sha256":  "5bfd961b13dfeb8d5bc1f3f1defbb918eebf49a8f5af08ae72fcb568d060024b"
+                        },
+                        {
+                            "file":  "wps-document-narrow.jpg",
+                            "bytes":  87168,
+                            "sha256":  "1705948adef6009ae80906b7a170e7d2a0f8244681e31aa1e28d6fcec136fa0d"
+                        }
+                    ],
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false
+}

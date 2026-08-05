@@ -76,6 +76,13 @@
         "tab": "referenced", "theme": "referenced", "scale": "referenced", "keyboard": "partial", "performance": "partial", "errors": "partial"
       }
     },
+    "ux38f-external-office": {
+      "evidence": ["docs/evidence/ux38f-external-office/manifest.json", "shared/release-capability-matrix.json", "docs/E2A_External_Application_Discovery_and_Unified_Open_Audit_2026-07-30.md", "docs/E2B_Legacy_DOC_Isolated_Conversion_Audit_2026-07-30.md", "docs/E2C_Legacy_XLS_PPT_Isolated_Conversion_Audit_2026-07-30.md", "docs/E3_WPS_Native_Recognition_and_External_Open_Audit_2026-07-30.md"],
+      "dimensions": {
+        "open": "accepted", "load": "accepted", "states": "accepted", "edit": "not-applicable", "save": "not-applicable", "return": "accepted",
+        "tab": "accepted", "theme": "referenced", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
+      }
+    },
     "external-dependent": {
       "evidence": ["shared/release-capability-matrix.json"],
       "dimensions": {
@@ -115,13 +122,13 @@
     { "id": "docx", "cohort": "document-media", "profile": "ux38d2-docx" },
     { "id": "ods", "cohort": "document-media", "profile": "ux38c-ods" },
     { "id": "odp", "cohort": "document-media", "profile": "ux38d3-odp" },
-    { "id": "legacy-doc", "cohort": "external-office", "profile": "external-dependent" },
-    { "id": "legacy-xls", "cohort": "external-office", "profile": "external-dependent" },
-    { "id": "legacy-ppt", "cohort": "external-office", "profile": "external-dependent" },
+    { "id": "legacy-doc", "cohort": "external-office", "profile": "ux38f-external-office" },
+    { "id": "legacy-xls", "cohort": "external-office", "profile": "ux38f-external-office" },
+    { "id": "legacy-ppt", "cohort": "external-office", "profile": "ux38f-external-office" },
     { "id": "pptx", "cohort": "document-media", "profile": "ux38d3-pptx" },
-    { "id": "wps-document", "cohort": "external-office", "profile": "external-dependent" },
-    { "id": "wps-spreadsheet", "cohort": "external-office", "profile": "external-dependent" },
-    { "id": "wps-presentation", "cohort": "external-office", "profile": "external-dependent" },
+    { "id": "wps-document", "cohort": "external-office", "profile": "ux38f-external-office" },
+    { "id": "wps-spreadsheet", "cohort": "external-office", "profile": "ux38f-external-office" },
+    { "id": "wps-presentation", "cohort": "external-office", "profile": "ux38f-external-office" },
     { "id": "workbook", "cohort": "data-grid", "profile": "ux38c-workbook" },
     { "id": "drawio", "cohort": "diagram-canvas", "profile": "ux38e-graphics" },
     { "id": "diagram", "cohort": "diagram-canvas", "profile": "ux38e-graphics" },
