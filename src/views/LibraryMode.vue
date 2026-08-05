@@ -75,7 +75,12 @@
                 </div>
               </div>
 
-              <div class="tree-viewport" :class="{ 'drop-active': virtualDrag.dropTarget === store.libraryPath }">
+              <div
+                class="tree-viewport"
+                data-testid="library-tree-viewport"
+                :class="{ 'drop-active': virtualDrag.dropTarget === store.libraryPath }"
+                @contextmenu="openRootContextMenu"
+              >
                 <div v-if="!store.libraryPath" class="path-guide">
                   <n-empty description="库未就绪" size="small">
                     <template #extra>
@@ -486,8 +491,31 @@
       :on-clickoutside="() => contextMenu.show = false" @select="onMenuAction"
     />
 
-    <n-modal v-model:show="renameState.show" preset="dialog" title="项目重命名" positive-text="更新" negative-text="取消" @positive-click="applyRename">
-      <n-input v-model:value="renameState.newName" placeholder="请输入新名称（无需后缀）" autofocus @keyup.enter="applyRename" />
+    <n-modal
+      v-model:show="renameState.show"
+      preset="dialog"
+      title="项目重命名"
+      positive-text="更新名称"
+      negative-text="取消"
+      :positive-button-props="{ disabled: !renameValidation.valid }"
+      @positive-click="applyRename"
+    >
+      <div class="rename-editor">
+        <label for="library-rename-input">完整名称{{ renameState.isDir ? '' : '（包含后缀）' }}</label>
+        <n-input
+          id="library-rename-input"
+          v-model:value="renameState.newName"
+          :placeholder="renameState.isDir ? '请输入文件夹名称' : '例如：项目说明.md'"
+          :status="renameValidation.valid ? undefined : 'error'"
+          autofocus
+          @keyup.enter="applyRename"
+        />
+        <p v-if="!renameValidation.valid" class="rename-feedback is-error">{{ renameValidation.message }}</p>
+        <p v-else-if="renameExtensionChange.changed" class="rename-feedback is-warning">
+          将从 {{ renameExtensionChange.oldLabel }} 改为 {{ renameExtensionChange.newLabel }}。此操作只修改文件名，不会转换文件内容，确认后才会执行。
+        </p>
+        <p v-else class="rename-feedback">可以修改名称和后缀；同名项目不会被覆盖。</p>
+      </div>
     </n-modal>
 
     <n-modal
@@ -1248,8 +1276,55 @@ const updateWordCount = () => {
 }
 
 const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0, focusPath: '', timer: null as any })
-const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, options: [] as any[] })
-const renameState = reactive({ show: false, oldPath: '', newName: '' })
+const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, atRoot: false, options: [] as any[] })
+const renameState = reactive({ show: false, oldPath: '', oldName: '', newName: '', isDir: false })
+
+const displayedExtension = (name: string) => {
+  const registered = knownFileExtension(name)
+  if (registered) return registered
+  const dot = name.lastIndexOf('.')
+  return dot > 0 ? name.slice(dot) : ''
+}
+const WINDOWS_RESERVED_NAMES = new Set([
+  'CON', 'PRN', 'AUX', 'NUL',
+  'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+  'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9',
+])
+const renameValidation = computed(() => {
+  const name = renameState.newName
+  if (!name) return { valid: false, message: '名称不能为空' }
+  if (name !== name.trim() || name.endsWith('.')) return { valid: false, message: '名称不能以空格或句点开头或结尾' }
+  if (name === '.' || name === '..') return { valid: false, message: '名称不能是 . 或 ..' }
+  if (/[\\/:*?"<>|\u0000-\u001f]/.test(name)) return { valid: false, message: '名称包含 Windows 不允许的字符' }
+  if (WINDOWS_RESERVED_NAMES.has(name.split('.')[0].toUpperCase())) return { valid: false, message: '名称使用了 Windows 保留名称' }
+  if (name === renameState.oldName) return { valid: false, message: '名称没有变化' }
+  if (!renameState.isDir && !findFileFormat(name)) return { valid: false, message: '该后缀尚未注册，重命名后将无法在工作区中打开' }
+  return { valid: true, message: '' }
+})
+const renameExtensionChange = computed(() => {
+  if (renameState.isDir) return { changed: false, oldLabel: '', newLabel: '' }
+  const oldExtension = displayedExtension(renameState.oldName)
+  const newExtension = displayedExtension(renameState.newName)
+  const oldFormat = findFileFormat(renameState.oldName)
+  const newFormat = findFileFormat(renameState.newName)
+  const label = (format: typeof oldFormat, extension: string) => format
+    ? `${format.label}（${extension || '无后缀'}）`
+    : extension ? `未注册格式（${extension}）` : '无后缀文件'
+  return {
+    changed: oldExtension.toLowerCase() !== newExtension.toLowerCase(),
+    oldLabel: label(oldFormat, oldExtension),
+    newLabel: label(newFormat, newExtension),
+  }
+})
+
+const openRename = (path: string, isDir: boolean) => {
+  const name = path.split(/[\\/]/).pop() || ''
+  renameState.oldPath = path
+  renameState.oldName = name
+  renameState.newName = name
+  renameState.isDir = isDir
+  renameState.show = true
+}
 
 // --- AI Assistant ---
 const aiState = reactive({
@@ -2016,6 +2091,52 @@ const handleTreeKeyboardNavigation = (event: KeyboardEvent) => {
   }
   if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(event.key)) schedulePendingTreePreview()
 }
+
+const CREATE_FORMAT_GROUPS = [
+  { label: '文档', ids: ['markdown', 'plain-text'], icon: FileIcon },
+  { label: '数据', ids: ['json', 'jsonc', 'yaml', 'xml', 'toml', 'table'], icon: DatabaseIcon },
+  { label: '图表与画布', ids: ['canvas', 'drawio', 'diagram', 'opml', 'svg'], icon: DashboardIcon },
+  { label: '代码与配置', ids: ['env', 'ini', 'properties', 'editorconfig', 'gitignore'], icon: SettingsIcon },
+] as const
+const buildCreateMenuOptions = () => {
+  const registered = new Map(CREATABLE_FILE_FORMATS.map(format => [format.id, format]))
+  const formatGroups = CREATE_FORMAT_GROUPS.map(group => ({
+    label: group.label,
+    key: `create-group:${group.label}`,
+    icon: () => h(NIcon, null, { default: () => h(group.icon) }),
+    children: group.ids
+      .map(id => registered.get(id))
+      .filter((format): format is NonNullable<typeof format> => Boolean(format))
+      .map(format => ({
+        label: `${format.label}（${format.creation?.defaultExtension}）`,
+        key: `create-format:${format.id}`,
+      })),
+  })).filter(group => group.children.length > 0)
+  return [{
+    label: '新建',
+    key: 'create-menu',
+    icon: () => h(NIcon, null, { default: () => h(PlusIcon) }),
+    children: [
+      { label: '文件夹', key: 'create-folder', icon: () => h(NIcon, null, { default: () => h(FolderPlusIcon) }) },
+      { type: 'divider', key: 'create-divider' },
+      ...formatGroups,
+    ],
+  }]
+}
+const openRootContextMenu = (event: MouseEvent) => {
+  if ((event.target as HTMLElement | null)?.closest('.n-tree-node')) return
+  event.preventDefault()
+  preview.focusPath = ''
+  hideFilePreview()
+  contextMenu.show = false
+  contextMenu.x = event.clientX
+  contextMenu.y = event.clientY
+  contextMenu.targetPath = store.libraryPath
+  contextMenu.isDir = true
+  contextMenu.atRoot = true
+  contextMenu.options = buildCreateMenuOptions()
+  contextMenu.show = true
+}
 const nodeProps = ({ option }: { option: TreeOption }) => ({
   'data-key': option.key,
   'data-drop-path': option.key,
@@ -2051,13 +2172,14 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
     if (preview.focusPath !== option.key) hideFilePreview()
   },
   onContextmenu: (e: MouseEvent) => {
-    if (virtualDrag.active) return; e.preventDefault(); contextMenu.show = false;
+    if (virtualDrag.active) return; e.preventDefault(); e.stopPropagation(); contextMenu.show = false;
     preview.focusPath = ''; hideFilePreview()
     setTimeout(() => {
-      contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf;
+      contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf; contextMenu.atRoot = false;
       const isMulti = selectedKeys.value.length > 1
       const isStarred = !contextMenu.isDir && store.isStarred(contextMenu.targetPath)
       const items = [
+        ...(!isMulti && contextMenu.isDir ? buildCreateMenuOptions() : []),
         !isMulti ? { label: '打开所在文件夹', key: 'open-folder', icon: () => h(NIcon, null, { default: () => h(FolderOpenIcon) }) } : null,
         !contextMenu.isDir && !isMulti ? {
           label: '使用外部应用打开',
@@ -2069,7 +2191,6 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
         { label: isMulti ? '批量重命名不可用' : '重命名 (F2)', key: 'rename', disabled: isMulti, icon: () => h(NIcon, null, { default: () => h(EditIcon) }) },
         { label: isMulti ? `物理删除所选 ${selectedKeys.value.length} 项` : '物理删除 (Del)', key: 'delete', icon: () => h(NIcon, { color: '#f5222d' }, { default: () => h(TrashIcon) }) }
       ].filter(Boolean);
-      if (!isMulti && contextMenu.isDir) items.unshift({ label: '新建子笔记', key: 'add-file', icon: () => h(NIcon, null, { default: () => h(PlusIcon) }) }, { label: '新建子文件夹', key: 'add-folder', icon: () => h(NIcon, null, { default: () => h(FolderPlusIcon) }) })
       contextMenu.options = items; contextMenu.show = true
     }, 50)
   }
@@ -2077,20 +2198,36 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
 
 const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
-  if (key.startsWith('external-open:')) {
+  if (key.startsWith('create-format:')) {
+    const formatId = key.slice('create-format:'.length)
+    try {
+      const created = await createRegisteredFile(formatId, path)
+      if (path !== store.libraryPath && !expandedKeys.value.includes(path)) expandedKeys.value.push(path)
+      await refreshNode(path)
+      handleNodeSelect([created])
+    } catch (error: any) {
+      handleError(error, '创建失败', 'contextCreateFormat')
+    }
+  } else if (key === 'create-folder') {
+    try {
+      await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: path })
+      if (path !== store.libraryPath && !expandedKeys.value.includes(path)) expandedKeys.value.push(path)
+      await refreshNode(path)
+    } catch (error: any) {
+      handleError(error, '创建文件夹失败', 'contextCreateFolder')
+    }
+  } else if (key.startsWith('external-open:')) {
     await openFileExternally(path, key.slice('external-open:'.length))
   } else if (key === 'open-folder') {
     const { openPath } = await import('@tauri-apps/plugin-opener')
     const dir = contextMenu.isDir ? path : path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')))
     await openPath(dir)
   } else if (key === 'star') { store.toggleStar(path); message.info(store.isStarred(path) ? '已收藏' : '已取消收藏') }
-  else if (key === 'rename') { renameState.oldPath = path; let name = path.split(/[\\/]/).pop() || ''; if (!contextMenu.isDir) name = name.replace(/(?:\.table\.json|\.[^.]+)$/i, ''); renameState.newName = name; renameState.show = true }
+  else if (key === 'rename') { openRename(path, contextMenu.isDir) }
   else if (key === 'delete') {
     const targets = selectedKeys.value.includes(path) ? selectedKeys.value : [path]
     await deleteAction(targets)
   }
-  else if (key === 'add-file') { const p = await invoke<string>('create_new_file', { libraryRoot: store.libraryPath, targetDir: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path); handleNodeSelect([p]) }
-  else if (key === 'add-folder') { await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: path }); if (!expandedKeys.value.includes(path)) expandedKeys.value.push(path); await refreshNode(path) }
 }
 
 const TEMPLATES: Record<string, string> = {
@@ -2164,8 +2301,72 @@ const createDailyNote = async () => {
   } catch (e) { message.error('创建今日笔记失败') }
 }
 
-const applyRename = async () => {
-  try { let finalName = renameState.newName; const extension = knownFileExtension(renameState.oldPath); if (extension && !finalName.toLowerCase().endsWith(extension)) finalName += extension; await invoke('rename_item', { libraryRoot: store.libraryPath, oldPath: renameState.oldPath, newName: finalName }); const parentPath = renameState.oldPath.substring(0, Math.max(renameState.oldPath.lastIndexOf('\\'), renameState.oldPath.lastIndexOf('/'))); await refreshNode(parentPath || store.libraryPath); renameState.show = false; message.success('修改成功') } catch (e) { message.error('重命名失败') }
+const replaceRenamedPath = (value: string, oldPath: string, newPath: string) => {
+  const normalizedValue = value.replace(/\\/g, '/').toLowerCase()
+  const normalizedOld = oldPath.replace(/\\/g, '/').toLowerCase()
+  if (normalizedValue === normalizedOld) return newPath
+  if (normalizedValue.startsWith(`${normalizedOld}/`)) return `${newPath}${value.slice(oldPath.length)}`
+  return value
+}
+
+const syncRenamedWorkspaceReferences = (oldPath: string, newPath: string) => {
+  for (const tab of allTabs.value) {
+    const nextPath = replaceRenamedPath(tab.path, oldPath, newPath)
+    if (nextPath === tab.path) continue
+    tab.id = nextPath
+    tab.path = nextPath
+    if (tab.path === newPath) tab.title = fileDisplayName(newPath) || tab.title
+  }
+  activeTabId.value = activeTabId.value ? replaceRenamedPath(activeTabId.value, oldPath, newPath) : null
+  selectedKeys.value = selectedKeys.value.map(value => replaceRenamedPath(value, oldPath, newPath))
+  expandedKeys.value = expandedKeys.value.map(value => replaceRenamedPath(value, oldPath, newPath))
+  store.starredFiles = store.starredFiles.map(value => replaceRenamedPath(value, oldPath, newPath))
+  store.recentFiles = store.recentFiles.map(item => {
+    const nextPath = replaceRenamedPath(item.path, oldPath, newPath)
+    return nextPath === item.path ? item : { ...item, path: nextPath, title: fileDisplayName(nextPath) || item.title }
+  })
+  store.saveTabsState()
+  const routePath = typeof route.query.path === 'string' ? route.query.path : ''
+  const nextRoutePath = routePath ? replaceRenamedPath(routePath, oldPath, newPath) : ''
+  if (nextRoutePath && nextRoutePath !== routePath) void openManagedFile(router, nextRoutePath, {}, 'replace')
+}
+
+const executeRename = async () => {
+  const oldPath = renameState.oldPath
+  const parentPath = oldPath.substring(0, Math.max(oldPath.lastIndexOf('\\'), oldPath.lastIndexOf('/'))) || store.libraryPath
+  try {
+    const newPath = await invoke<string>('rename_item', {
+      libraryRoot: store.libraryPath,
+      oldPath,
+      newName: renameState.newName,
+    })
+    syncRenamedWorkspaceReferences(oldPath, newPath)
+    await refreshNode(parentPath)
+    renameState.show = false
+    message.success(`已重命名为 ${renameState.newName}`)
+  } catch (error: any) {
+    const detail = typeof error === 'string' ? error : error?.message
+    message.error(detail || '重命名失败，请检查名称后重试')
+  }
+}
+
+const applyRename = () => {
+  if (!renameValidation.value.valid) {
+    message.warning(renameValidation.value.message)
+    return false
+  }
+  if (renameExtensionChange.value.changed) {
+    dialog.warning({
+      title: '确认更改文件格式',
+      content: `${renameExtensionChange.value.oldLabel} 将改为 ${renameExtensionChange.value.newLabel}。只会修改文件名，不会转换文件内容，原编辑器可能无法正确解析。`,
+      positiveText: '仍然重命名',
+      negativeText: '返回检查',
+      onPositiveClick: executeRename,
+    })
+    return false
+  }
+  void executeRename()
+  return false
 }
 
 let autoSaveTimer: any = null
@@ -2519,7 +2720,11 @@ const initVditor = () => {
 }
 
 const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.key === 'F2' && selectedKeys.value.length > 0) { const p = selectedKeys.value[0]; renameState.oldPath = p; let name = p.split(/[\\/]/).pop() || ''; name = name.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx|mmd|mermaid))$/i, ''); renameState.newName = name; renameState.show = true }
+  if (e.key === 'F2' && selectedKeys.value.length > 0) {
+    const path = selectedKeys.value[0]
+    const option = findTreeOptionByKey(treeData.value, path)
+    openRename(path, option ? !option.isLeaf : false)
+  }
   if (e.key === 'Delete' && selectedKeys.value.length > 0) deleteAction(selectedKeys.value)
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
   if (e.altKey && e.key === 'a') { e.preventDefault(); handleAIAssist() }
@@ -3031,6 +3236,13 @@ watch(activeTabId, (newId, oldId) => {
 
 .sidebar-header { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
 .search-area { display: grid; gap: 7px; }.search-control-row { display: grid; grid-template-columns: minmax(0,1fr) 30px; align-items: center; gap: 4px; }.search-format-filter { width: 100%; }
+
+.rename-editor { display: grid; gap: 9px; padding-top: 4px; }
+.rename-editor label { font-size: 12px; font-weight: 700; color: var(--theme-text); }
+.rename-feedback { min-height: 18px; margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-tertiary); }
+.rename-feedback.is-error { color: var(--theme-danger, #d03050); }
+.rename-feedback.is-warning { color: var(--theme-warning, #b26a00); }
+.is-dark .rename-feedback.is-warning { color: #f0b45a; }
 
 .tree-viewport {
   flex: 1;

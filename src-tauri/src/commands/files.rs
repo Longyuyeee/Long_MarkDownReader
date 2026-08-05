@@ -41,6 +41,59 @@ pub(crate) fn sanitize_filename(name: &str) -> String {
         .collect()
 }
 
+fn validate_item_name(name: &str) -> Result<(), String> {
+    if name.is_empty() {
+        return Err("名称不能为空".into());
+    }
+    if name != name.trim() || name.ends_with('.') {
+        return Err("名称不能以空格或句点开头或结尾".into());
+    }
+    if name == "." || name == ".." {
+        return Err("名称不能是 . 或 ..".into());
+    }
+    if name.chars().any(|character| {
+        matches!(
+            character,
+            '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|'
+        ) || character.is_control()
+    }) {
+        return Err("名称包含 Windows 不允许的字符".into());
+    }
+    let reserved_stem = name
+        .split('.')
+        .next()
+        .unwrap_or_default()
+        .to_ascii_uppercase();
+    if matches!(
+        reserved_stem.as_str(),
+        "CON"
+            | "PRN"
+            | "AUX"
+            | "NUL"
+            | "COM1"
+            | "COM2"
+            | "COM3"
+            | "COM4"
+            | "COM5"
+            | "COM6"
+            | "COM7"
+            | "COM8"
+            | "COM9"
+            | "LPT1"
+            | "LPT2"
+            | "LPT3"
+            | "LPT4"
+            | "LPT5"
+            | "LPT6"
+            | "LPT7"
+            | "LPT8"
+            | "LPT9"
+    ) {
+        return Err("名称使用了 Windows 保留名称".into());
+    }
+    Ok(())
+}
+
 #[derive(Serialize)]
 pub struct FileContent {
     pub content: String,
@@ -137,9 +190,7 @@ pub async fn rename_item(
     old_path: String,
     new_name: String,
 ) -> Result<String, String> {
-    if new_name.is_empty() || new_name.contains('/') || new_name.contains('\\') {
-        return Err("文件名包含非法字符".into());
-    }
+    validate_item_name(&new_name)?;
     let guard = WorkspaceGuard::new(&library_root)?;
     let old = guard.resolve_existing(&old_path)?;
     reject_workspace_root(&old, &guard)?;
@@ -149,7 +200,13 @@ pub async fn rename_item(
         return Err("文件名包含非法字符".into());
     }
     let new_path = guard.resolve_for_write(&new_path)?;
-    fs::rename(&old, &new_path).map_err(|error| error.to_string())?;
+    if new_path == old {
+        return Ok(old.to_string_lossy().into_owned());
+    }
+    if new_path.exists() {
+        return Err("目标目录已存在同名项目，请使用其他名称".into());
+    }
+    fs::rename(&old, &new_path).map_err(|error| format!("重命名失败: {error}"))?;
     let old_history = history_dir(&app_handle, &old_path)?;
     if old_history.exists() {
         let new_history = history_dir(&app_handle, &new_path.to_string_lossy())?;
@@ -726,6 +783,15 @@ mod tests {
         fs::create_dir_all(&root).unwrap();
         assert!(validate_path_in_root(&root.join("..").join("outside.md"), &root).is_err());
         assert_eq!(sanitize_filename("a/\\:*?\"<>|b"), "ab");
+        assert!(validate_item_name("报告 2026.md").is_ok());
+        assert!(validate_item_name("数据.table.json").is_ok());
+        assert_eq!(
+            validate_item_name("CON.txt").unwrap_err(),
+            "名称使用了 Windows 保留名称"
+        );
+        assert!(validate_item_name("报告?.md").is_err());
+        assert!(validate_item_name("尾部空格 ").is_err());
+        assert!(validate_item_name("尾部句点.").is_err());
         fs::remove_dir_all(root).unwrap();
     }
 
