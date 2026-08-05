@@ -13,6 +13,13 @@
         "tab": "accepted", "theme": "referenced", "scale": "referenced", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
       }
     },
+    "ux38c-table-grid": {
+      "evidence": ["docs/evidence/ux38c-table-grid/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json"],
+      "dimensions": {
+        "open": "accepted", "load": "accepted", "states": "accepted", "edit": "partial", "save": "partial", "return": "partial",
+        "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"
+      }
+    },
     "specialized-existing": {
       "evidence": ["shared/release-capability-matrix.json", "docs/evidence/ui4b-editors/audit-manifest.json"],
       "dimensions": {
@@ -55,7 +62,7 @@
     { "id": "toml", "cohort": "lightweight-source", "profile": "ux38a-lightweight" },
     { "id": "canvas", "cohort": "diagram-canvas", "profile": "specialized-existing" },
     { "id": "pdf", "cohort": "document-media", "profile": "specialized-existing" },
-    { "id": "table", "cohort": "data-grid", "profile": "specialized-existing" },
+    { "id": "table", "cohort": "data-grid", "profile": "ux38c-table-grid" },
     { "id": "docx", "cohort": "document-media", "profile": "specialized-existing" },
     { "id": "ods", "cohort": "document-media", "profile": "specialized-existing" },
     { "id": "odp", "cohort": "document-media", "profile": "specialized-existing" },

@@ -59,6 +59,7 @@
     "check:ux38b-workspace-tabs": "node scripts/check-ux38b-workspace-tabs-contract.mjs",
     "audit:ux38b-workspace-tabs": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-ux38b-workspace-tabs-audit.ps1",
     "check:ux38c-table-grid-experience": "node scripts/check-ux38c-table-grid-experience.mjs",
+    "audit:ux38c-table-grid": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-ux38c-table-grid-audit.ps1",
     "audit:r5c-route-performance-smoke": "node scripts/capture-r5c-route-performance-evidence.mjs",
     "audit:r5d-production-route-smoke-preflight": "node scripts/audit-r5d-production-route-smoke-preflight.mjs",
     "audit:r5g-desktop-artifact-smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-r5g-desktop-artifact-smoke.ps1",

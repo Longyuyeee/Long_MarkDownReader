@@ -648,3 +648,9 @@ UX-38 总项仍在进行中。视觉审计确认多标签会继续压缩并暴�
 UX-38B 工作区标签滚动已完成，UX-09、UX-10、UX-17 关闭。标签采用 176px 固定宽度和 156px 最小保护宽度，隐藏原生轨道，支持滚轮、Shift+滚轮、触控板主方向增量、左右边缘按钮、活动项自动显露和方向键导航。真实 Tauri Debug WebView2 已用 12 个文件完成宽屏、滚动和 1000x720 窄窗口验收，运行时错误为 0，源文件哈希不变；证据见 `docs/evidence/ux38b-workspace-tabs`，审计见 `docs/A18_UX38B_Workspace_Tab_Scrolling_Audit_2026-08-05.md`。
 
 UX-38 总项仍在进行中。接手后进入 UX-38C 数据表格格式族，依次核查 Table、CSV/TSV、XLSX、ODS 的打开、加载与异常状态、内存编辑与显式保存、主题和冻结层、窄窗口、键盘及返回上下文。当前证据不含用户资料与完整本机路径，`releaseCandidate=false`。
+
+# 2026-08-05 UX-38C1 交接入口
+
+UX-38C1 CSV/TSV/Table 网格体验已完成。冻结控制支持 0 至 12 列并按累计列宽定位，冻结表头、数据格和行号改用不透明主题表面；行号选择与应用内删除确认完成实机复测；“创建 Table 副本”会先说明目标名称、目录和原文件不变，完成后可打开或在文件树定位。工具栏还会按工作区容器宽度换行。真实 Tauri Debug WebView2 的 CSV/TSV 验收运行时错误为 0，源文件哈希不变；证据见 `docs/evidence/ux38c-table-grid`，审计见 `docs/A19_UX38C1_Table_Grid_Experience_Audit_2026-08-05.md`。
+
+UX-38 总项继续进行。接手后进入 UX-38C2：真实复测 XLSX/ODS 的冻结层、紧凑布局、主题、窄窗口和异常状态，并覆盖图谱返回后的 CSV/TSV/XLSX 活动文件、滚动位置与 Sheet 上下文，判断 UX-12、UX-32 是否可以关闭。当前证据不含用户资料与完整本机路径，`releaseCandidate=false`。

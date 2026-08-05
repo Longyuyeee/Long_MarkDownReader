@@ -1,0 +1,28 @@
+{
+    "schemaVersion":  1,
+    "stage":  "UX-38C1",
+    "status":  "accepted",
+    "visualReview":  "accepted",
+    "sourceCommit":  "f43ac3268db99691c31464881e18b165c19b0d5a",
+    "evidenceFile":  "interaction-evidence.json",
+    "evidenceSha256":  "d8be619a8e35c528c9456f18eb4a8e3c0506b7cb0faf9c0372e029fc53f20cd9",
+    "screenshots":  [
+                        {
+                            "file":  "csv-three-frozen-columns.jpg",
+                            "bytes":  148718,
+                            "sha256":  "3d4dc0d691b96e3754c286bfa0399e4b0b705abc85e1e376922bf0256a6b1a3e"
+                        },
+                        {
+                            "file":  "csv-conversion-preview.jpg",
+                            "bytes":  150346,
+                            "sha256":  "302fc35ae85d2e7379bd9a8d6f0120f7d762bba6c507cd5be2e565282ade2932"
+                        },
+                        {
+                            "file":  "tsv-narrow-grid.jpg",
+                            "bytes":  107478,
+                            "sha256":  "11612f7b910002eff5dd08b214858d0dc270790ab8619d06b53011071b005129"
+                        }
+                    ],
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false
+}
