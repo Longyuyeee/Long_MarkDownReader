@@ -494,8 +494,8 @@
     <n-modal
       v-model:show="renameState.show"
       preset="dialog"
-      title="项目重命名"
-      positive-text="更新名称"
+      :title="renameState.confirmExtension ? '确认更改文件格式' : '项目重命名'"
+      :positive-text="renameState.confirmExtension ? '仍然重命名' : '更新名称'"
       negative-text="取消"
       :positive-button-props="{ disabled: !renameValidation.valid }"
       @positive-click="applyRename"
@@ -508,6 +508,7 @@
           :placeholder="renameState.isDir ? '请输入文件夹名称' : '例如：项目说明.md'"
           :status="renameValidation.valid ? undefined : 'error'"
           autofocus
+          @update:value="renameState.confirmExtension = false"
           @keyup.enter="applyRename"
         />
         <p v-if="!renameValidation.valid" class="rename-feedback is-error">{{ renameValidation.message }}</p>
@@ -515,6 +516,10 @@
           将从 {{ renameExtensionChange.oldLabel }} 改为 {{ renameExtensionChange.newLabel }}。此操作只修改文件名，不会转换文件内容，确认后才会执行。
         </p>
         <p v-else class="rename-feedback">可以修改名称和后缀；同名项目不会被覆盖。</p>
+        <div v-if="renameState.confirmExtension" class="rename-confirmation">
+          <strong>文件内容不会自动转换</strong>
+          <span>请确认目标编辑器能够解析现有内容，然后点击“仍然重命名”。</span>
+        </div>
       </div>
     </n-modal>
 
@@ -1277,7 +1282,7 @@ const updateWordCount = () => {
 
 const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0, focusPath: '', timer: null as any })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, atRoot: false, options: [] as any[] })
-const renameState = reactive({ show: false, oldPath: '', oldName: '', newName: '', isDir: false })
+const renameState = reactive({ show: false, oldPath: '', oldName: '', newName: '', isDir: false, confirmExtension: false })
 
 const displayedExtension = (name: string) => {
   const registered = knownFileExtension(name)
@@ -1318,11 +1323,13 @@ const renameExtensionChange = computed(() => {
 })
 
 const openRename = (path: string, isDir: boolean) => {
+  contextMenu.show = false
   const name = path.split(/[\\/]/).pop() || ''
   renameState.oldPath = path
   renameState.oldName = name
   renameState.newName = name
   renameState.isDir = isDir
+  renameState.confirmExtension = false
   renameState.show = true
 }
 
@@ -2356,13 +2363,11 @@ const applyRename = () => {
     return false
   }
   if (renameExtensionChange.value.changed) {
-    dialog.warning({
-      title: '确认更改文件格式',
-      content: `${renameExtensionChange.value.oldLabel} 将改为 ${renameExtensionChange.value.newLabel}。只会修改文件名，不会转换文件内容，原编辑器可能无法正确解析。`,
-      positiveText: '仍然重命名',
-      negativeText: '返回检查',
-      onPositiveClick: executeRename,
-    })
+    if (!renameState.confirmExtension) {
+      renameState.confirmExtension = true
+      return false
+    }
+    void executeRename()
     return false
   }
   void executeRename()
@@ -3243,6 +3248,9 @@ watch(activeTabId, (newId, oldId) => {
 .rename-feedback.is-error { color: var(--theme-danger, #d03050); }
 .rename-feedback.is-warning { color: var(--theme-warning, #b26a00); }
 .is-dark .rename-feedback.is-warning { color: #f0b45a; }
+.rename-confirmation { display: grid; gap: 3px; padding: 10px 12px; border: 1px solid rgba(178, 106, 0, 0.28); border-radius: var(--theme-radius-sm); background: rgba(245, 166, 35, 0.09); color: var(--theme-text); }
+.rename-confirmation strong { font-size: 12px; }
+.rename-confirmation span { font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
 
 .tree-viewport {
   flex: 1;
