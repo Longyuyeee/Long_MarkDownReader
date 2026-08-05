@@ -31,6 +31,7 @@ import App from './App.vue'
 import router from './router'
 import { useAppStore } from './store/app'
 import { managedFileLocation } from './services/fileNavigation'
+import { installRecoverableLayoutErrorBoundary } from './services/recoverableRuntimeErrors'
 
 import 'vfonts/Inter.css'
 import 'vfonts/FiraCode.css'
@@ -38,6 +39,9 @@ import './styles/tokens.scss'
 import './styles/themes.scss'
 import './styles/motion.scss'
 import './styles/vditor-content-themes.scss'
+
+const removeRecoverableLayoutErrorBoundary = installRecoverableLayoutErrorBoundary()
+import.meta.hot?.dispose(removeRecoverableLayoutErrorBoundary)
 
 const app = createApp(App)
 const pinia = createPinia()

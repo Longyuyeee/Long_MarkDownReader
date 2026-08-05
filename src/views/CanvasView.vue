@@ -380,6 +380,8 @@ let edgeEditSnapshot: string | null = null
 let pasteSequence = 0
 let isPasting = false
 let viewportResizeObserver: ResizeObserver | null = null
+let viewportResizeFrame = 0
+let pendingViewportSize: { width: number; height: number } | null = null
 const edgeGeometryCache = new Map<string, CachedEdgeGeometry>()
 let performanceFrameId = 0
 let performanceFrameCount = 0
@@ -1243,6 +1245,25 @@ const markDirty = () => {
   if (saveTimer) clearTimeout(saveTimer)
   saveTimer = setTimeout(saveCanvas, 1200)
 }
+const queueViewportSize = (entry?: ResizeObserverEntry) => {
+  const rect = entry?.contentRect ?? viewportRef.value?.getBoundingClientRect()
+  if (!rect) return
+  const next = {
+    width: Math.max(0, Math.round(rect.width)),
+    height: Math.max(0, Math.round(rect.height)),
+  }
+  if (next.width === viewportSize.width && next.height === viewportSize.height) return
+  pendingViewportSize = next
+  if (viewportResizeFrame) return
+  viewportResizeFrame = requestAnimationFrame(() => {
+    viewportResizeFrame = 0
+    const size = pendingViewportSize
+    pendingViewportSize = null
+    if (!size || (size.width === viewportSize.width && size.height === viewportSize.height)) return
+    viewportSize.width = size.width
+    viewportSize.height = size.height
+  })
+}
 const saveCanvas = async () => {
   if (!canvasPath.value || !store.libraryPath || saveState.value === 'saving') return
   if (saveTimer) { clearTimeout(saveTimer); saveTimer = null }
@@ -1302,13 +1323,9 @@ watch(snapEnabled, enabled => {
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
   if (viewportRef.value) {
-    const updateSize = () => {
-      const rect = viewportRef.value?.getBoundingClientRect()
-      if (rect) { viewportSize.width = rect.width; viewportSize.height = rect.height }
-    }
-    viewportResizeObserver = new ResizeObserver(updateSize)
+    viewportResizeObserver = new ResizeObserver(entries => queueViewportSize(entries[entries.length - 1]))
     viewportResizeObserver.observe(viewportRef.value)
-    updateSize()
+    queueViewportSize()
   }
   performanceFrameId = requestAnimationFrame(sampleCanvasPerformance)
   loadCanvas()
@@ -1316,6 +1333,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
   viewportResizeObserver?.disconnect()
+  viewportResizeObserver = null
+  if (viewportResizeFrame) cancelAnimationFrame(viewportResizeFrame)
+  viewportResizeFrame = 0
+  pendingViewportSize = null
   cancelAnimationFrame(performanceFrameId)
   edgeGeometryCache.clear()
   if (saveTimer) clearTimeout(saveTimer)
