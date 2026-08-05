@@ -696,3 +696,5 @@ UX-38F 外部 Office 工作区已完成。`.doc/.xls/.ppt/.wps/.et/.dps` 均在�
 UX-38 全格式体验阶段已按有界能力完成。矩阵覆盖 41/41 格式、10 个实际档案和 12 个体验维度，状态合计为 75 accepted、32 partial、7 referenced、6 not-applicable、0 pending；两个无人引用的历史占位档案已移除。所有有限项都有明确能力边界，因此不得把阶段收口解读为完整 Office/Excel/Draw.io 等价。机器事实见 `shared/ux38-final-closure.json`，完整审计见 `docs/A26_UX38_Final_Format_Experience_Closure_2026-08-05.md`。
 
 接手后进入 UX-39 无签名打包与安装回归：产品开发版本已提升到 `1.0.4`，从冻结的干净 `main` 构建 MSI/NSIS，重点复测启动时无控制台弹窗、安装界面与开发界面一致，以及 UX-38 各工作区在安装态的关键路径。没有真实签名时只保持无签名社区构建，`releaseCandidate=false`；不得把本阶段误打包为 `1.0.3`，也不得在验收前提前宣称 v1.0.4 已发布。
+
+UX-39A 已完成 v1.0.4 本地产物审计：源码提交 `1bec297` 生成 MSI/NSIS，版本资源、文件名、SHA-256、`NotSigned` 状态和无更新附件边界均已核对。由于本机已有安装实例运行，未中断用户状态强行做便携烟测；隔离安装回归已派发到 GitHub Actions 运行 `30989527026`。下一步导入该运行的安装态证据，通过前不得发布 v1.0.4。详见 [`UX39A_Unsigned_Package_Artifact_Audit_2026-08-05.md`](./UX39A_Unsigned_Package_Artifact_Audit_2026-08-05.md)。
