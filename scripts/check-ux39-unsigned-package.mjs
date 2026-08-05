@@ -31,9 +31,9 @@ for (const artifact of manifest.artifacts) {
   if (artifact.authenticodeStatus !== 'NotSigned') fail(`${artifact.target} is not recorded as unsigned`)
 }
 if (manifest.localPortableRuntime.status !== 'deferred-existing-single-instance' || manifest.localPortableRuntime.existingProcessTerminated !== false) fail('local runtime boundary drift')
-if (manifest.disposableInstalledRuntime.status !== 'dispatched' || manifest.disposableInstalledRuntime.githubRunId !== 30989527026) fail('hosted lifecycle dispatch drift')
+if (manifest.disposableInstalledRuntime.status !== 'dispatched' || manifest.disposableInstalledRuntime.githubRunId !== 30992573469 || manifest.disposableInstalledRuntime.supersedesFailedRunId !== 30989527026) fail('hosted lifecycle dispatch drift')
 
-for (const token of [`v${pkg.version}`, manifest.sourceCommit, '30989527026', 'NotSigned', '8754e0ccb63c0027a6201b1de4feffcb4590cc76f96ddfc63c815af83577cb8f']) {
+for (const token of [`v${pkg.version}`, manifest.sourceCommit, '30992573469', 'NotSigned', '21214f91ac3c9499f0b44e13e45a76a82f8353ff7b47af8b45c2c0664369eaa9']) {
   if (!audit.includes(token)) fail(`audit is missing ${token}`)
 }
 

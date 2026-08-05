@@ -3,8 +3,8 @@
   "stage": "UX-39A",
   "status": "artifact-audit-passed",
   "appVersion": "1.0.4",
-  "capturedAt": "2026-08-05T08:33:37Z",
-  "sourceCommit": "1bec2972958a455300f904140daa1a13cabc47f8",
+  "capturedAt": "2026-08-05T09:26:46Z",
+  "sourceCommit": "efe03d21f9dfbaa2e0005b5508669a55fb9b8c4f",
   "build": {
     "command": "npm run build:ux39-unsigned",
     "completed": true,
@@ -26,7 +26,7 @@
       "target": "release-executable",
       "fileName": "tauri-app.exe",
       "sizeBytes": 86062592,
-      "sha256": "3a43abf67a74000aa3f87e60ed0f0af94f967102439ee5969aefde77445b54e9",
+      "sha256": "bd85c8ef368fea8e8d45ee46c13f463cdbd7a20375e860a1af7cb59b2fd57f0e",
       "authenticodeStatus": "NotSigned",
       "fileVersion": "1.0.4",
       "productVersion": "1.0.4"
@@ -35,14 +35,14 @@
       "target": "msi",
       "fileName": "Long编辑_1.0.4_x64_zh-CN.msi",
       "sizeBytes": 58384384,
-      "sha256": "669cd81a5983503a1dcb9876305f325a7dc7c2cdadb78573a3706f39f56e55e4",
+      "sha256": "0bcb813cd20d7561eae94cc9bfe7050eb56de819b4fba8cafd4bfd72218c09b6",
       "authenticodeStatus": "NotSigned"
     },
     {
       "target": "nsis",
       "fileName": "Long编辑_1.0.4_x64-setup.exe",
-      "sizeBytes": 53542875,
-      "sha256": "8754e0ccb63c0027a6201b1de4feffcb4590cc76f96ddfc63c815af83577cb8f",
+      "sizeBytes": 53529193,
+      "sha256": "21214f91ac3c9499f0b44e13e45a76a82f8353ff7b47af8b45c2c0664369eaa9",
       "authenticodeStatus": "NotSigned",
       "fileVersion": "1.0.4",
       "productVersion": "1.0.4"
@@ -57,8 +57,9 @@
   },
   "disposableInstalledRuntime": {
     "status": "dispatched",
-    "githubRunId": 30989527026,
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30989527026",
-    "productSourceCommit": "1bec2972958a455300f904140daa1a13cabc47f8"
+    "githubRunId": 30992573469,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30992573469",
+    "productSourceCommit": "efe03d21f9dfbaa2e0005b5508669a55fb9b8c4f",
+    "supersedesFailedRunId": 30989527026
   }
 }

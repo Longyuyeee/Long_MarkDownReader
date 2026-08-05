@@ -2,7 +2,7 @@
 
 状态：**本地产物审计通过，隔离安装回归已派发**  
 版本：`v1.0.4`  
-源码提交：`1bec2972958a455300f904140daa1a13cabc47f8`
+源码提交：`efe03d21f9dfbaa2e0005b5508669a55fb9b8c4f`
 
 ## 审计结论
 
@@ -14,9 +14,9 @@
 
 | 目标 | 大小 | SHA-256 |
 | --- | ---: | --- |
-| `tauri-app.exe` | 86,062,592 B | `3a43abf67a74000aa3f87e60ed0f0af94f967102439ee5969aefde77445b54e9` |
-| `Long编辑_1.0.4_x64_zh-CN.msi` | 58,384,384 B | `669cd81a5983503a1dcb9876305f325a7dc7c2cdadb78573a3706f39f56e55e4` |
-| `Long编辑_1.0.4_x64-setup.exe` | 53,542,875 B | `8754e0ccb63c0027a6201b1de4feffcb4590cc76f96ddfc63c815af83577cb8f` |
+| `tauri-app.exe` | 86,062,592 B | `bd85c8ef368fea8e8d45ee46c13f463cdbd7a20375e860a1af7cb59b2fd57f0e` |
+| `Long编辑_1.0.4_x64_zh-CN.msi` | 58,384,384 B | `0bcb813cd20d7561eae94cc9bfe7050eb56de819b4fba8cafd4bfd72218c09b6` |
+| `Long编辑_1.0.4_x64-setup.exe` | 53,529,193 B | `21214f91ac3c9499f0b44e13e45a76a82f8353ff7b47af8b45c2c0664369eaa9` |
 
 安装器二进制保留在被 Git 忽略的 `src-tauri/target/release/bundle`，仓库只提交可复核清单，不提交大体积产物。
 
@@ -24,4 +24,6 @@
 
 本机已有 `E:/Long/Long编辑/tauri-app.exe` 正在运行。为避免关闭用户实例或污染现有资料库，未强行启动本地 release 候选；该状态记录为 `deferred-existing-single-instance`，不能冒充便携运行通过。
 
-一次性 Windows 安装生命周期已派发到 GitHub Actions 运行 `30989527026`，绑定同一源码提交。下一步等待执行器完成后导入安装态证据，复核控制台弹窗、安装态界面一致性、升级/卸载恢复和代表性格式路径；通过前 `releaseCandidate=false`，不创建 v1.0.4 Release。
+第一次一次性 Windows 安装生命周期运行 `30989527026` 成功构建 v1.0.4，但在无人值守 WebView2 从 Canvas 跳转格式能力页时发现路由遮罩仅依赖动画帧、后台窗口可能无法收尾的问题。产品已加入带路由代次保护的 250ms 兜底，并由提交 `efe03d21f9dfbaa2e0005b5508669a55fb9b8c4f` 重新构建。
+
+修复后的隔离安装回归已派发为 GitHub Actions 运行 `30992573469`。下一步等待执行器完成后导入安装态证据，复核控制台弹窗、安装态界面一致性、升级/卸载恢复和代表性格式路径；通过前 `releaseCandidate=false`，不创建 v1.0.4 Release。
