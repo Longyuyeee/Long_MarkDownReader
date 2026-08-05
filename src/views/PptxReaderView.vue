@@ -91,7 +91,7 @@
         </button>
       </aside>
 
-      <main class="pptx-stage">
+      <main ref="stageRef" class="pptx-stage" @scroll.passive="rememberPptxViewState()">
         <div
           v-if="activeSlide"
           class="slide-canvas"
@@ -709,6 +709,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import PptxObjectContent from '../components/pptx/PptxObjectContent.vue'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useAppStore } from '../store/app'
 import { resolvePptxRouteLocator } from '../utils/pptxLocator'
 
@@ -1168,6 +1169,7 @@ const savingCopy = ref(false)
 const saveCopyError = ref('')
 const savedCopyReport = ref<PptxSavedCopyReport>()
 const slideStripRef = ref<HTMLElement>()
+const stageRef = ref<HTMLElement>()
 const routeTargetSlideIndex = ref(-1)
 const routeTargetObjectId = ref('')
 const routeTargetLabel = ref('')
@@ -1819,6 +1821,15 @@ const previewImagePatch = async () => {
     imagePatchLoading.value = false
   }
 }
+const rememberPptxViewState = (path = pptxPath.value) => {
+  if (!path) return
+  rememberWorkspaceViewState(path, {
+    scrollTop: stageRef.value?.scrollTop || 0,
+    scrollLeft: stageRef.value?.scrollLeft || 0,
+    section: activeSlide.value?.id,
+    panelOpen: showDetails.value,
+  })
+}
 const clearShapePatch = () => {
   shapePatchReport.value = undefined
   shapePatchError.value = ''
@@ -2093,13 +2104,24 @@ const loadPresentation = async () => {
   savedCopyReport.value = undefined
   saveCopyError.value = ''
   try {
+    const viewState = recallWorkspaceViewState(pptxPath.value)
     report.value = await invoke<PptxReadReport>('read_pptx_presentation', {
       libraryRoot: store.libraryPath,
       path: pptxPath.value,
     })
-    activeSlideIndex.value = Math.min(activeSlideIndex.value, Math.max(0, report.value.model.slides.length - 1))
+    const rememberedSlideIndex = viewState?.section
+      ? report.value.model.slides.findIndex(slide => slide.id === viewState.section)
+      : -1
+    activeSlideIndex.value = rememberedSlideIndex >= 0
+      ? rememberedSlideIndex
+      : Math.min(activeSlideIndex.value, Math.max(0, report.value.model.slides.length - 1))
+    if (typeof viewState?.panelOpen === 'boolean') showDetails.value = viewState.panelOpen
     syncRelationFocus(activeSlideIndex.value)
     await applyRouteLocator()
+    if (viewState && !route.query.locator && !route.query.slide) {
+      await nextTick()
+      stageRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
+    }
   } catch (error) {
     report.value = undefined
     loadError.value = String(error)
@@ -2197,7 +2219,10 @@ watch(matches, value => {
   activeMatch.value = 0
   if (value.length) selectSlide(value[0].slideIndex)
 })
-watch(pptxPath, () => loadPresentation())
+watch(pptxPath, (_path, previousPath) => {
+  rememberPptxViewState(previousPath)
+  void loadPresentation()
+})
 watch(
   () => [route.query.slide, route.query.locatorKind, route.query.locator, route.query.locatorToken],
   applyRouteLocator,
@@ -2212,13 +2237,14 @@ onMounted(() => {
   loadPresentation()
 })
 onBeforeUnmount(() => {
+  rememberPptxViewState()
   window.removeEventListener('keydown', handleKeydown)
   store.clearRelationObjectFocus()
 })
 </script>
 
 <style scoped>
-.pptx-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; color: var(--text-primary); background: var(--bg-secondary); font-size: 13px; }
+.pptx-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; color: var(--text-primary); background: var(--bg-secondary); font-size: 13px; container-type: inline-size; }
 .pptx-toolbar { min-height: 52px; padding: 7px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
 .document-identity, .toolbar-actions, .pptx-search, .pptx-details header, .pptx-status { display: flex; align-items: center; }
 .document-identity { min-width: 0; gap: 9px; }
@@ -2358,6 +2384,27 @@ onBeforeUnmount(() => {
   }
 }
 @media (max-width: 760px) {
+  .pptx-toolbar { align-items: flex-start; flex-direction: column; }
+  .toolbar-actions { width: 100%; }
+  .pptx-search { min-width: 0; flex: 1; }
+  .toolbar-actions > button span { display: none; }
+  .pptx-layout, .pptx-layout.details-open { grid-template-columns: 118px minmax(0, 1fr); }
+  .pptx-layout.details-open .pptx-details { width: min(270px, calc(100% - 118px)); }
+  .pptx-stage { padding: 14px; }
+}
+@container (max-width: 1050px) {
+  .pptx-layout.details-open { position: relative; grid-template-columns: 170px minmax(0, 1fr); }
+  .pptx-layout.details-open .pptx-details {
+    position: absolute;
+    z-index: 4;
+    inset: 0 0 0 auto;
+    width: min(280px, calc(100% - 170px));
+    box-sizing: border-box;
+    display: block;
+    box-shadow: -12px 0 28px rgba(0,0,0,.16);
+  }
+}
+@container (max-width: 760px) {
   .pptx-toolbar { align-items: flex-start; flex-direction: column; }
   .toolbar-actions { width: 100%; }
   .pptx-search { min-width: 0; flex: 1; }

@@ -41,7 +41,7 @@
             @click="selectedSheetId = sheet.id"
           >{{ sheet.name }}</button>
         </nav>
-        <main ref="sheetStageRef" class="sheet-stage" data-testid="e1c-ods-stage" @scroll="rememberOdsViewState">
+        <main ref="sheetStageRef" class="sheet-stage" data-testid="e1c-ods-stage" @scroll="rememberOdfViewState()">
           <table v-if="selectedSheet">
             <thead><tr><th class="corner"></th><th v-for="column in sheetColumnCount" :key="column">{{ columnName(column) }}</th></tr></thead>
             <tbody>
@@ -230,12 +230,12 @@ const revealRouteLocator = async () => {
   const parent = locator.startsWith('ods-sheet-') ? locator.split(':')[0] : locator
   await reveal(locator, parent)
 }
-const rememberOdsViewState = () => {
-  if (!isOds.value || !sheetStageRef.value) return
-  rememberWorkspaceViewState(documentPath.value, {
-    scrollTop: sheetStageRef.value.scrollTop,
-    scrollLeft: sheetStageRef.value.scrollLeft,
-    section: selectedSheetId.value,
+const rememberOdfViewState = (path = documentPath.value) => {
+  if (!path) return
+  rememberWorkspaceViewState(path, {
+    scrollTop: isOds.value ? sheetStageRef.value?.scrollTop || 0 : 0,
+    scrollLeft: isOds.value ? sheetStageRef.value?.scrollLeft || 0 : 0,
+    section: isOds.value ? selectedSheetId.value : selectedSlideId.value,
   })
 }
 const load = async () => {
@@ -251,7 +251,9 @@ const load = async () => {
     selectedSheetId.value = viewState?.section && report.value.model.sheets.some(sheet => sheet.id === viewState.section)
       ? viewState.section
       : report.value.model.sheets[0]?.id || ''
-    selectedSlideId.value = report.value.model.slides[0]?.id || ''
+    selectedSlideId.value = viewState?.section && report.value.model.slides.some(slide => slide.id === viewState.section)
+      ? viewState.section
+      : report.value.model.slides[0]?.id || ''
     await revealRouteLocator()
     if (isOds.value && viewState && !routeLocator.value) {
       await nextTick()
@@ -265,15 +267,17 @@ const load = async () => {
   }
 }
 
-watch(documentPath, () => {
+watch(documentPath, (_path, previousPath) => {
+  rememberOdfViewState(previousPath)
   query.value = ''
   matchIndex.value = -1
   void load()
 }, { immediate: true })
 watch(matches, value => { matchIndex.value = value.length ? 0 : -1 })
 watch(() => [route.query.locator, route.query.locatorToken], revealRouteLocator)
-watch(selectedSheetId, () => void nextTick(rememberOdsViewState))
-onBeforeUnmount(rememberOdsViewState)
+watch(selectedSheetId, () => void nextTick(rememberOdfViewState))
+watch(selectedSlideId, () => void nextTick(rememberOdfViewState))
+onBeforeUnmount(rememberOdfViewState)
 </script>
 
 <style scoped>
