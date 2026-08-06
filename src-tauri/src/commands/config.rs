@@ -1,6 +1,7 @@
 use crate::services::credentials::{delete_ai_secret, read_ai_secret, store_ai_secret};
 use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use tauri::Manager;
@@ -44,6 +45,14 @@ pub struct SavedSearchConfig {
     pub created_at: u64,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase", default)]
+pub struct FileDisplayStyle {
+    pub background_color: String,
+    pub text_color: String,
+    pub icon: String,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", default)]
 pub struct AppConfig {
@@ -75,6 +84,7 @@ pub struct AppConfig {
     #[serde(default = "default_ai_model")]
     pub ai_model: String,
     pub saved_searches: Vec<SavedSearchConfig>,
+    pub file_display_styles: HashMap<String, FileDisplayStyle>,
 }
 
 fn default_visual_style() -> String {
@@ -125,6 +135,7 @@ impl Default for AppConfig {
             ai_api_key: String::new(),
             ai_model: default_ai_model(),
             saved_searches: vec![],
+            file_display_styles: HashMap::new(),
         }
     }
 }
@@ -217,6 +228,44 @@ fn validate_saved_searches(
             {
                 return Err(format!("保存的搜索格式过滤器无效: {object_type}"));
             }
+        }
+    }
+    Ok(())
+}
+
+fn validate_file_display_styles(styles: &HashMap<String, FileDisplayStyle>) -> Result<(), String> {
+    const ICONS: &[&str] = &[
+        "auto",
+        "star",
+        "flag",
+        "bookmark",
+        "briefcase",
+        "idea",
+        "alert",
+        "check",
+        "heart",
+        "archive",
+    ];
+    let valid_color = |value: &str| {
+        value.is_empty()
+            || (value.len() == 7
+                && value.starts_with('#')
+                && value[1..]
+                    .chars()
+                    .all(|character| character.is_ascii_hexdigit()))
+    };
+    if styles.len() > 512 {
+        return Err("文件显示标记不能超过 512 个".into());
+    }
+    for (path, style) in styles {
+        if path.trim().is_empty() || path.chars().count() > 4096 {
+            return Err("文件显示标记路径为空或过长".into());
+        }
+        if !valid_color(&style.background_color) || !valid_color(&style.text_color) {
+            return Err("文件显示标记颜色必须使用 #RRGGBB".into());
+        }
+        if !ICONS.contains(&style.icon.as_str()) {
+            return Err("文件显示标记图标无效".into());
         }
     }
     Ok(())
@@ -334,6 +383,7 @@ pub fn save_config(app_handle: tauri::AppHandle, mut config: AppConfig) -> Resul
         fs::create_dir_all(&config_dir).map_err(|error| error.to_string())?;
     }
     validate_saved_searches(&config.saved_searches, &config.libraries)?;
+    validate_file_display_styles(&config.file_display_styles)?;
     normalize_editor_mode(&mut config);
     config.ai_api_key.clear();
     let content = serde_json::to_string_pretty(&config).map_err(|error| error.to_string())?;
@@ -380,6 +430,30 @@ mod tests {
         .unwrap();
         assert_eq!(legacy.ai_api_key, "legacy-value");
         assert!(legacy.text_auto_save_enabled);
+    }
+
+    #[test]
+    fn file_display_styles_accept_bounded_markers_and_reject_invalid_values() {
+        let valid = HashMap::from([(
+            r"C:\Vault\plan.md".into(),
+            FileDisplayStyle {
+                background_color: "#fff1a8".into(),
+                text_color: "#253041".into(),
+                icon: "flag".into(),
+            },
+        )]);
+        assert!(validate_file_display_styles(&valid).is_ok());
+
+        let mut invalid_color = valid.clone();
+        invalid_color
+            .get_mut(r"C:\Vault\plan.md")
+            .unwrap()
+            .text_color = "red".into();
+        assert!(validate_file_display_styles(&invalid_color).is_err());
+
+        let mut invalid_icon = valid;
+        invalid_icon.get_mut(r"C:\Vault\plan.md").unwrap().icon = "remote-image".into();
+        assert!(validate_file_display_styles(&invalid_icon).is_err());
     }
 
     #[test]

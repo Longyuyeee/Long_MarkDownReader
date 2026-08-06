@@ -10,6 +10,7 @@ import {
   type VisualStyle,
 } from '../config/themePresets'
 import { toCollectionRelativePath } from '../utils/savedCollections'
+import type { FileDisplayStyle } from '../config/fileTreeAppearance'
 
 export type SessionMode = 'TEMP' | 'LIBRARY'
 
@@ -101,6 +102,7 @@ export const useAppStore = defineStore('app', {
     recentFiles: [] as { title: string; path: string }[],
     starredFiles: [] as string[],
     savedSearches: [] as SavedSearchConfig[],
+    fileDisplayStyles: {} as Record<string, FileDisplayStyle>,
     relationObjectFocus: null as RelationObjectFocus | null,
     configReady: false,
   }),
@@ -151,6 +153,7 @@ export const useAppStore = defineStore('app', {
           catch { this.aiCredentialStored = false }
           this.aiModel = config.aiModel || 'gpt-4o-mini'
           this.savedSearches = Array.isArray(config.savedSearches) ? config.savedSearches : []
+          this.fileDisplayStyles = config.fileDisplayStyles && typeof config.fileDisplayStyles === 'object' ? config.fileDisplayStyles : {}
 
           // 同步系统真实的自启状态，以系统为准
           try {
@@ -227,6 +230,7 @@ export const useAppStore = defineStore('app', {
         aiEndpoint: this.aiEndpoint,
         aiModel: this.aiModel,
         savedSearches: this.savedSearches,
+        fileDisplayStyles: this.fileDisplayStyles,
       } })
 
     },
@@ -273,6 +277,48 @@ export const useAppStore = defineStore('app', {
       try { await this.updateConfig({ savedSearches: [savedSearch, ...previous] }) }
       catch (error) { this.savedSearches = previous; throw error }
       return savedSearch
+    },
+    async setFileDisplayStyle(path: string, style: FileDisplayStyle) {
+      const previous = this.fileDisplayStyles
+      const next = { ...previous, [path]: style }
+      try { await this.updateConfig({ fileDisplayStyles: next }) }
+      catch (error) { this.fileDisplayStyles = previous; throw error }
+    },
+    async clearFileDisplayStyle(path: string) {
+      if (!this.fileDisplayStyles[path]) return
+      const previous = this.fileDisplayStyles
+      const next = { ...previous }
+      delete next[path]
+      try { await this.updateConfig({ fileDisplayStyles: next }) }
+      catch (error) { this.fileDisplayStyles = previous; throw error }
+    },
+    async moveFileDisplayStyles(oldPath: string, newPath: string) {
+      const entries = Object.entries(this.fileDisplayStyles)
+      const affected = entries.filter(([path]) => path === oldPath || path.startsWith(`${oldPath}\\`) || path.startsWith(`${oldPath}/`))
+      if (!affected.length) return
+      const previous = this.fileDisplayStyles
+      const next = { ...previous }
+      for (const [path, style] of affected) {
+        delete next[path]
+        next[`${newPath}${path.slice(oldPath.length)}`] = style
+      }
+      try { await this.updateConfig({ fileDisplayStyles: next }) }
+      catch (error) { this.fileDisplayStyles = previous; throw error }
+    },
+    async removeFileDisplayStyles(paths: string[]) {
+      const previous = this.fileDisplayStyles
+      const next = { ...this.fileDisplayStyles }
+      let changed = false
+      for (const candidate of Object.keys(next)) {
+        if (paths.some(path => candidate === path || candidate.startsWith(`${path}\\`) || candidate.startsWith(`${path}/`))) {
+          delete next[candidate]
+          changed = true
+        }
+      }
+      if (changed) {
+        try { await this.updateConfig({ fileDisplayStyles: next }) }
+        catch (error) { this.fileDisplayStyles = previous; throw error }
+      }
     },
     async addGraphCollection(name: string, centerPath: string, depth: number) {
       if (!this.activeLibraryPath) throw new Error('知识库为空')

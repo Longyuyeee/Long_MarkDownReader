@@ -588,6 +588,8 @@ fn restored_config_from_redacted(
         ai_api_key: String::new(),
         ai_model: redacted.ai_model.clone(),
         saved_searches,
+        // Display markers use device-local absolute paths and are intentionally not restored.
+        file_display_styles: std::collections::HashMap::new(),
     };
     Ok((config, warnings))
 }
@@ -729,6 +731,14 @@ mod tests {
                 graph_depth: Some(2),
                 created_at: 1,
             }],
+            file_display_styles: std::collections::HashMap::from([(
+                "C:\\Users\\Alice\\Documents\\Vault\\SecretMarker.md".into(),
+                crate::commands::config::FileDisplayStyle {
+                    background_color: "#fff1a8".into(),
+                    text_color: "#253041".into(),
+                    icon: "flag".into(),
+                },
+            )]),
             ..Default::default()
         };
         let (bytes, receipt) = build_management_backup_archive(&config, 100).unwrap();
@@ -744,6 +754,7 @@ mod tests {
         assert!(!all_text.contains("C:\\Users\\Alice"));
         assert!(!all_text.contains("sk-should-never-export"));
         assert!(!all_text.contains("token@example.com"));
+        assert!(!all_text.contains("SecretMarker.md"));
         assert!(all_text.contains("pathFingerprint"));
         assert!(all_text.contains("gitRemoteFingerprint"));
         assert!(all_text.contains("Projects\\\\Alpha.md"));

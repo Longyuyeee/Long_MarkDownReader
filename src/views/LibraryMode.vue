@@ -145,15 +145,15 @@
               <div class="recent-files" v-if="store.starredFiles.length > 0">
                 <div class="recent-header">收藏文件</div>
                 <div class="recent-item" v-for="sp in store.starredFiles" :key="sp" @click="handleNodeSelect([sp])" :title="sp">
-                  <n-icon :component="StarIcon" size="14" color="#f5a623" />
-                  <span>{{ sp.split(/[\\/]/).pop()?.replace('.md', '') || sp }}</span>
+                  <n-icon :component="fileTreeVisualForPath(sp).icon" size="14" :color="fileTreeVisualForPath(sp).color" />
+                  <span>{{ fileNameWithExtension(sp) }}</span>
                 </div>
               </div>
               <div class="recent-files" v-if="store.recentFiles.length > 0">
                 <div class="recent-header">最近打开</div>
                 <div class="recent-item" v-for="rf in store.recentFiles" :key="rf.path" @click="handleNodeSelect([rf.path])" :title="rf.path">
-                  <n-icon :component="FileIcon" size="14" />
-                  <span>{{ rf.title }}</span>
+                  <n-icon :component="fileTreeVisualForPath(rf.path).icon" size="14" :color="fileTreeVisualForPath(rf.path).color" />
+                  <span>{{ fileNameWithExtension(rf.path) }}</span>
                 </div>
               </div>
             </div>
@@ -525,6 +525,89 @@
       </div>
     </n-modal>
 
+    <n-modal v-model:show="fileStyleEditor.show" preset="card" class="file-style-modal" title="编辑文件显示样式">
+      <div class="file-style-editor">
+        <div
+          class="file-style-preview"
+          :style="{ backgroundColor: fileStyleEditor.backgroundColor || undefined, color: markerTextColor(fileStyleEditor) || undefined }"
+        >
+          <n-icon size="19" :color="fileStylePreviewVisual.color"><component :is="fileStylePreviewVisual.icon" /></n-icon>
+          <span>{{ fileStyleEditor.name }}</span>
+        </div>
+
+        <section class="file-style-section">
+          <label>背景标记</label>
+          <div class="file-color-options">
+            <button
+              v-for="color in FILE_MARKER_BACKGROUND_OPTIONS"
+              :key="color.value || 'default'"
+              type="button"
+              class="file-color-swatch"
+              :class="{ active: fileStyleEditor.backgroundColor === color.value, default: !color.value }"
+              :style="color.value ? { backgroundColor: color.value } : undefined"
+              :title="color.label"
+              :aria-label="color.label"
+              @click="fileStyleEditor.backgroundColor = color.value"
+            ><span v-if="!color.value">默认</span></button>
+            <input
+              type="color"
+              :value="fileStyleEditor.backgroundColor || '#fff1a8'"
+              title="自定义背景色"
+              aria-label="自定义背景色"
+              @input="fileStyleEditor.backgroundColor = ($event.target as HTMLInputElement).value"
+            >
+          </div>
+        </section>
+
+        <section class="file-style-section">
+          <label>文字颜色</label>
+          <div class="file-color-options">
+            <button
+              v-for="color in FILE_MARKER_TEXT_OPTIONS"
+              :key="color.value || 'default'"
+              type="button"
+              class="file-color-swatch"
+              :class="{ active: fileStyleEditor.textColor === color.value, default: !color.value }"
+              :style="color.value ? { backgroundColor: color.value } : undefined"
+              :title="color.label"
+              :aria-label="color.label"
+              @click="fileStyleEditor.textColor = color.value"
+            ><span v-if="!color.value">默认</span></button>
+            <input
+              type="color"
+              :value="fileStyleEditor.textColor || '#1f2937'"
+              title="自定义文字颜色"
+              aria-label="自定义文字颜色"
+              @input="fileStyleEditor.textColor = ($event.target as HTMLInputElement).value"
+            >
+          </div>
+        </section>
+
+        <section class="file-style-section">
+          <label>文件图标</label>
+          <div class="file-icon-options">
+            <button
+              v-for="option in FILE_MARKER_ICON_OPTIONS"
+              :key="option.id"
+              type="button"
+              :class="{ active: fileStyleEditor.icon === option.id }"
+              :title="option.label"
+              :aria-label="option.label"
+              @click="fileStyleEditor.icon = option.id"
+            ><n-icon size="18"><component :is="option.icon" /></n-icon></button>
+          </div>
+        </section>
+      </div>
+      <template #footer>
+        <div class="file-style-actions">
+          <n-button quaternary @click="resetFileDisplayStyle">恢复默认</n-button>
+          <span></span>
+          <n-button @click="fileStyleEditor.show = false">取消</n-button>
+          <n-button type="primary" :loading="fileStyleEditor.saving" @click="saveFileDisplayStyle">保存样式</n-button>
+        </div>
+      </template>
+    </n-modal>
+
     <n-modal
       v-model:show="externalChange.show"
       preset="card"
@@ -605,7 +688,7 @@ import {
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
   Database as DatabaseIcon, LayoutDashboard as DashboardIcon, ListFilter as CollectionIcon,
   BookmarkPlus as BookmarkAddIcon, Languages as LanguagesIcon, ExternalLink as ExternalOpenIcon,
-  MoreHorizontal as MoreIcon
+  MoreHorizontal as MoreIcon, Palette as PaletteIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -639,6 +722,12 @@ import {
   routeForFile,
 } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
+import {
+  FILE_MARKER_ICON_OPTIONS,
+  resolveFileTreeVisual,
+  type FileDisplayStyle,
+  type FileMarkerIconId,
+} from '../config/fileTreeAppearance'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
 interface ExternalAppExecutable {
@@ -1279,6 +1368,97 @@ const updateWordCount = () => {
 const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0, focusPath: '', timer: null as any })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, atRoot: false, options: [] as any[] })
 const renameState = reactive({ show: false, oldPath: '', oldName: '', newName: '', isDir: false, confirmExtension: false })
+const fileStyleEditor = reactive({
+  show: false,
+  saving: false,
+  path: '',
+  name: '',
+  formatId: '',
+  backgroundColor: '',
+  textColor: '',
+  icon: 'auto' as FileMarkerIconId,
+})
+const FILE_MARKER_BACKGROUND_OPTIONS = [
+  { label: '默认背景', value: '' },
+  { label: '柔和黄色', value: '#fff1a8' },
+  { label: '柔和绿色', value: '#d9f7d6' },
+  { label: '柔和蓝色', value: '#dcecff' },
+  { label: '柔和紫色', value: '#eee2ff' },
+  { label: '柔和粉色', value: '#ffe0eb' },
+  { label: '柔和灰色', value: '#e9edf2' },
+]
+const FILE_MARKER_TEXT_OPTIONS = [
+  { label: '默认文字', value: '' },
+  { label: '深灰', value: '#253041' },
+  { label: '深红', value: '#9f2430' },
+  { label: '深绿', value: '#176b45' },
+  { label: '深蓝', value: '#245ca6' },
+  { label: '深紫', value: '#6740a5' },
+  { label: '棕色', value: '#81511c' },
+]
+const readableMarkerText = (backgroundColor: string) => {
+  if (!/^#[0-9a-f]{6}$/i.test(backgroundColor)) return ''
+  const channels = [1, 3, 5].map(offset => Number.parseInt(backgroundColor.slice(offset, offset + 2), 16) / 255)
+  const luminance = channels.reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0)
+  return luminance > 0.52 ? '#253041' : '#f8fafc'
+}
+const markerTextColor = (style?: FileDisplayStyle) => style?.textColor || readableMarkerText(style?.backgroundColor || '')
+const fileNameWithExtension = (path: string) => path.split(/[\\/]/).pop() || path
+const fileTreeVisualForPath = (path: string) => {
+  const marker = store.fileDisplayStyles[path]
+  const visual = resolveFileTreeVisual(findFileFormat(path)?.id, marker?.icon || 'auto')
+  return { ...visual, color: markerTextColor(marker) || visual.color }
+}
+const fileStylePreviewVisual = computed(() => {
+  const base = resolveFileTreeVisual(fileStyleEditor.formatId, fileStyleEditor.icon)
+  return { ...base, color: markerTextColor(fileStyleEditor) || base.color }
+})
+
+const refreshFileTreePresentation = () => { treeData.value = [...treeData.value] }
+const openFileStyleEditor = (path: string) => {
+  const existing = store.fileDisplayStyles[path]
+  fileStyleEditor.path = path
+  fileStyleEditor.name = path.split(/[\\/]/).pop() || path
+  fileStyleEditor.formatId = findFileFormat(path)?.id || ''
+  fileStyleEditor.backgroundColor = existing?.backgroundColor || ''
+  fileStyleEditor.textColor = existing?.textColor || ''
+  fileStyleEditor.icon = existing?.icon || 'auto'
+  fileStyleEditor.show = true
+}
+const saveFileDisplayStyle = async () => {
+  if (!fileStyleEditor.path || fileStyleEditor.saving) return
+  fileStyleEditor.saving = true
+  try {
+    const style: FileDisplayStyle = {
+      backgroundColor: fileStyleEditor.backgroundColor,
+      textColor: fileStyleEditor.textColor,
+      icon: fileStyleEditor.icon,
+    }
+    if (!style.backgroundColor && !style.textColor && style.icon === 'auto') await store.clearFileDisplayStyle(fileStyleEditor.path)
+    else await store.setFileDisplayStyle(fileStyleEditor.path, style)
+    refreshFileTreePresentation()
+    fileStyleEditor.show = false
+    message.success('文件显示样式已保存')
+  } catch (error) {
+    message.error(`保存显示样式失败：${String(error)}`)
+  } finally {
+    fileStyleEditor.saving = false
+  }
+}
+const resetFileDisplayStyle = async () => {
+  if (!fileStyleEditor.path || fileStyleEditor.saving) return
+  fileStyleEditor.saving = true
+  try {
+    await store.clearFileDisplayStyle(fileStyleEditor.path)
+    refreshFileTreePresentation()
+    fileStyleEditor.show = false
+    message.success('已恢复默认显示样式')
+  } catch (error) {
+    message.error(`恢复默认样式失败：${String(error)}`)
+  } finally {
+    fileStyleEditor.saving = false
+  }
+}
 
 const displayedExtension = (name: string) => {
   const registered = knownFileExtension(name)
@@ -1612,15 +1792,17 @@ const loadDirectory = async (path: string): Promise<TreeOption[]> => {
   if (!path) return []
   const entries = await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path })
   return entries.map(entry => ({
-    label: entry.is_dir ? entry.name : fileDisplayName(entry.name),
+    label: entry.name,
     key: entry.path,
     isLeaf: !entry.is_dir,
     prefix: () => {
       const format = entry.is_dir ? undefined : findFileFormat(entry.path)
-      return h(entry.is_dir ? FolderIcon : FileIcon, {
+      const marker = entry.is_dir ? undefined : store.fileDisplayStyles[entry.path]
+      const formatVisual = resolveFileTreeVisual(format?.id, marker?.icon || 'auto')
+      return h(entry.is_dir ? FolderIcon : formatVisual.icon, {
         size: 14,
-        style: 'opacity: 0.6',
-        title: format ? `${format.label} · ${format.userCapability.label}` : undefined,
+        color: entry.is_dir ? undefined : markerTextColor(marker) || formatVisual.color,
+        style: entry.is_dir ? 'opacity: 0.68' : undefined,
       })
     }
   }))
@@ -2046,6 +2228,8 @@ const deleteAction = async (paths: string[]) => {
     onPositiveClick: async () => {
       try {
         await invoke('delete_items', { libraryRoot: store.libraryPath, paths })
+        try { await store.removeFileDisplayStyles(paths) }
+        catch (error) { console.warn('Failed to clean file display styles', error) }
         paths.forEach(p => { if (activeTabId.value === p || store.tabs.some(t => t.id === p)) store.removeTab(p) })
         const parentsToRefresh = new Set<string>()
         paths.forEach(p => { const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/')); parentsToRefresh.add(idx !== -1 ? p.substring(0, idx) : store.libraryPath) })
@@ -2165,11 +2349,17 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
   'data-drop-dir': !option.isLeaf ? 'true' : 'false',
   'aria-describedby': option.isLeaf ? 'file-tree-detail-preview' : undefined,
   class: [
+    option.isLeaf && store.fileDisplayStyles[option.key as string] ? 'has-file-display-style' : '',
     virtualDrag.dropTarget === option.key ? 'drop-active' : '',
     virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'before' ? 'is-drop-before' : '',
     virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'after' ? 'is-drop-after' : '',
     virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'inside' ? 'is-drop-inside' : '',
   ].join(' '),
+  style: option.isLeaf && store.fileDisplayStyles[option.key as string] ? {
+    '--file-marker-bg': store.fileDisplayStyles[option.key as string].backgroundColor || 'transparent',
+    '--file-marker-text': markerTextColor(store.fileDisplayStyles[option.key as string]) || 'inherit',
+    '--file-marker-accent': markerTextColor(store.fileDisplayStyles[option.key as string]) || 'var(--theme-primary)',
+  } : undefined,
   onMousedown: (e: MouseEvent) => { 
     if (e.button !== 0) return; 
     virtualDrag.startX = e.clientX; virtualDrag.startY = e.clientY; 
@@ -2210,6 +2400,7 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
           children: buildExternalOpenOptions(contextMenu.targetPath),
         } : null,
         !contextMenu.isDir && !isMulti ? { label: isStarred ? '取消收藏' : '收藏文件', key: 'star', icon: () => h(NIcon, { color: isStarred ? '#f5a623' : undefined }, { default: () => h(StarIcon) }) } : null,
+        !contextMenu.isDir && !isMulti ? { label: '编辑显示样式', key: 'edit-display-style', icon: () => h(NIcon, null, { default: () => h(PaletteIcon) }) } : null,
         { label: isMulti ? '批量重命名不可用' : '重命名 (F2)', key: 'rename', disabled: isMulti, icon: () => h(NIcon, null, { default: () => h(EditIcon) }) },
         { label: isMulti ? `物理删除所选 ${selectedKeys.value.length} 项` : '物理删除 (Del)', key: 'delete', icon: () => h(NIcon, { color: '#f5222d' }, { default: () => h(TrashIcon) }) }
       ].filter(Boolean);
@@ -2245,6 +2436,7 @@ const onMenuAction = async (key: string) => {
     const dir = contextMenu.isDir ? path : path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')))
     await openPath(dir)
   } else if (key === 'star') { store.toggleStar(path); message.info(store.isStarred(path) ? '已收藏' : '已取消收藏') }
+  else if (key === 'edit-display-style') { openFileStyleEditor(path) }
   else if (key === 'rename') { openRename(path, contextMenu.isDir) }
   else if (key === 'delete') {
     const targets = selectedKeys.value.includes(path) ? selectedKeys.value : [path]
@@ -2362,6 +2554,8 @@ const executeRename = async () => {
       oldPath,
       newName: renameState.newName,
     })
+    try { await store.moveFileDisplayStyles(oldPath, newPath) }
+    catch (error) { message.warning(`文件已重命名，但显示标记迁移失败：${String(error)}`) }
     syncRenamedWorkspaceReferences(oldPath, newPath)
     await refreshNode(parentPath)
     renameState.show = false
@@ -3277,6 +3471,36 @@ watch(activeTabId, (newId, oldId) => {
 .rename-confirmation strong { font-size: 12px; }
 .rename-confirmation span { font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
 
+.file-style-modal { width: min(520px, calc(100vw - 28px)); }
+.file-style-editor { display: grid; gap: 18px; }
+.file-style-preview {
+  min-height: 46px; display: flex; align-items: center; gap: 9px; padding: 8px 12px;
+  box-sizing: border-box; overflow: hidden; border: 1px solid var(--theme-border);
+  border-radius: 7px; background: var(--theme-surface-muted); color: var(--theme-text);
+  font-size: 13px; font-weight: 650;
+}
+.file-style-preview span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-style-section { display: grid; gap: 9px; }
+.file-style-section > label { color: var(--theme-text); font-size: 12px; font-weight: 700; }
+.file-color-options, .file-icon-options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.file-color-swatch, .file-icon-options button, .file-color-options input[type="color"] {
+  width: 34px; height: 34px; padding: 0; box-sizing: border-box;
+  border: 1px solid var(--theme-border); border-radius: 7px;
+  background: var(--theme-surface); color: var(--theme-text-secondary); cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-emphasized), box-shadow var(--motion-fast) var(--ease-standard);
+}
+.file-color-swatch.default { width: 48px; font-size: 11px; }
+.file-color-swatch.active, .file-icon-options button.active {
+  border-color: var(--theme-primary); color: var(--theme-primary);
+  box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), .14);
+}
+.file-color-swatch:hover, .file-icon-options button:hover, .file-color-options input[type="color"]:hover { transform: translateY(-1px); }
+.file-icon-options button { display: grid; place-items: center; }
+.file-color-options input[type="color"] { overflow: hidden; }
+.file-color-options input[type="color"]::-webkit-color-swatch-wrapper { padding: 3px; }
+.file-color-options input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 4px; }
+.file-style-actions { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 8px; }
+
 .tree-viewport {
   flex: 1;
   overflow-y: auto;
@@ -3326,6 +3550,17 @@ watch(activeTabId, (newId, oldId) => {
 :deep(.n-tree-node-content:hover::before) {
   opacity: 1;
 }
+
+:deep(.n-tree-node.has-file-display-style .n-tree-node-content) {
+  background: var(--file-marker-bg) !important;
+  color: var(--file-marker-text) !important;
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--file-marker-accent) 55%, var(--theme-primary));
+}
+:deep(.n-tree-node.has-file-display-style .n-tree-node-content:hover) {
+  filter: saturate(1.04) brightness(1.015);
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--file-marker-accent) 70%, var(--theme-primary)), var(--theme-shadow-sm);
+}
+:deep(.n-tree-node.has-file-display-style .n-tree-node-content__text) { color: inherit; }
 
 :deep(.n-tree-node-content.n-tree-node-content--selected) {
   background: linear-gradient(135deg,
