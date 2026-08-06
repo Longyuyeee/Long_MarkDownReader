@@ -423,7 +423,8 @@ watch(() => [
 </script>
 
 <style scoped>
-.relation-context-host { position: fixed; z-index: 780; top: 76px; right: 0; bottom: 14px; pointer-events: none; }
+.relation-context-host { position: fixed; z-index: 780; top: 76px; right: 0; bottom: 14px; width: 0; pointer-events: none; }
+.relation-context-host.open { width: 326px; }
 .relation-context-trigger { pointer-events: auto; position: absolute; top: 50%; right: 0; width: 38px; min-height: 34px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; transform: translateY(-50%); border: 1px solid rgba(var(--theme-primary-rgb), .24); border-right: 0; border-radius: 10px 0 0 10px; color: var(--theme-primary); background: var(--theme-surface); box-shadow: var(--theme-shadow-sm); font-size: 11px; cursor: pointer; white-space: nowrap; }
 .relation-context-host.open .relation-context-trigger { right: 326px; }
 .relation-context-trigger svg { width: 15px; }

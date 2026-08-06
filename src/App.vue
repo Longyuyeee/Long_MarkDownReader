@@ -16,7 +16,7 @@
             </div>
           </div>
         </div>
-        <div class="app-content" :class="{ 'has-relation-context': activeContextPath }">
+        <div class="app-content">
           <router-view v-slot="{ Component }">
             <div :key="$route.path" class="route-wrapper">
               <component :is="Component" />
@@ -435,11 +435,6 @@ body[data-theme="dark"] .win-btn:hover, body[data-theme="contrast"] .win-btn:hov
 .win-btn.close:hover { background: #ff3b30 !important; color: #fff !important; }
 
 .app-content { flex: 1; position: relative; overflow: hidden; }
-.app-content.has-relation-context .route-wrapper {
-  box-sizing: border-box;
-  padding-right: 42px;
-}
-
 .route-error-notice {
   position: absolute;
   z-index: 9000;
