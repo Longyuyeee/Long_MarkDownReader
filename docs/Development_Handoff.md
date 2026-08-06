@@ -742,3 +742,5 @@ UX-43 已新增图片与视频只读工作区，当前注册格式由 41 类扩�
 UX-47 已恢复自动检查与自动安装，但不再依赖遗失的旧 Tauri 私钥。新链路固定查询本仓库 GitHub 最新稳定 Release，只接受严格命名的 Windows x64 NSIS，后端校验附件 SHA-256 后才允许用户确认安装；应用每 24 小时自动检查一次，设置页也可手动检查。已发布的 v1.0.4 不含该代码，接手后要在下一安装包做一次人工迁移，并用更高测试版本完成端到端覆盖安装回归。详见 [`UX47_Managed_Automatic_Update_Audit_2026-08-06.md`](./UX47_Managed_Automatic_Update_Audit_2026-08-06.md)。
 
 UX-48 已修复 Table 顶部“导出 CSV”等命令在空间不足时被压缩、文字越界的问题，并删除窄窗口直接隐藏导出与行列命令的规则。统一命令条合同已覆盖 Table、Workbook、Canvas、思维导图、Mermaid、PDF、PPTX、DOCX、ODT、日志和 YAML：控件保持可读尺寸，空间不足时隐藏原生滚动条并支持滚轮横滑。详见 [`UX48_Command_Strip_Overflow_Audit_2026-08-06.md`](./UX48_Command_Strip_Overflow_Audit_2026-08-06.md)。
+
+UX-49 已完成媒体流式读取与视频工具增强。图片和视频不再整文件读入 JavaScript/Blob，而是在 `WorkspaceGuard` 校验后仅授权当前文件，通过 Tauri Asset Protocol 的 Range 响应按需读取；视频上限由 128 MiB 调整为 2 GiB。MP4/WebM/OGV/M4V 保持 WebView 原生目标，MOV/MKV/AVI/MPEG/MPG 作为系统解码器兼容格式开放，并明确显示兼容边界。播放器新增播放/暂停、前后 10 秒、循环、静音、倍速、画中画、全屏、快捷键与非阻断错误提示，图片适应窗口会跟随工作区尺寸更新。源码构建、Rust 锁定检查、2 项分类单测和媒体专项门禁已通过；下一安装包仍需用真实大视频和多编码样本复测内存、拖动定位、全屏/画中画及外部打开。详见 [`UX49_Streaming_Media_Workspace_Audit_2026-08-06.md`](./UX49_Streaming_Media_Workspace_Audit_2026-08-06.md)。

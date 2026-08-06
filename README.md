@@ -61,7 +61,7 @@
 | PDF | 阅读、批注、页面提取、合并与插入 | 非通用内容重排编辑器 |
 | Mermaid / Draw.io / SVG | 图表查看、编辑或安全降级 | 按格式与安全策略执行 |
 | PNG / JPEG / GIF / WebP / BMP / ICO / AVIF | 缩放、适应窗口、旋转与透明背景查看 | 只读，不修改源文件 |
-| MP4 / WebM / Ogg Video / M4V | 原生播放、倍速、全屏与媒体信息 | 只读；解码能力取决于系统 WebView2 |
+| MP4 / WebM / Ogg Video / M4V / MOV / MKV / AVI / MPEG / MPG | 按需流式播放、快进快退、循环、静音、倍速、画中画、全屏与媒体信息 | 只读；后五种为系统解码器兼容播放，不保证所有编码组合可用 |
 | OPML / JSON Canvas | 思维导图与 Canvas 工作流 | 保持结构化显式保存边界 |
 | ODT / ODS / ODP 与旧 Office | 读取、旁车数据、转换或外部程序打开 | 部分能力依赖兼容桌面程序 |
 
