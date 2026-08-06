@@ -92,9 +92,20 @@
       @mouseup="endDrag"
       @mouseleave="endDrag"
       @wheel.prevent="onZoom"
+      @contextmenu.prevent="openGraphContextMenu"
       @click="onClick"
       @dblclick="onDblClick"
     ></canvas>
+    <n-dropdown
+      placement="bottom-start"
+      trigger="manual"
+      :x="contextMenu.x"
+      :y="contextMenu.y"
+      :options="contextMenuOptions"
+      :show="contextMenu.show"
+      :on-clickoutside="closeContextMenu"
+      @select="handleContextMenuAction"
+    />
     <GraphHealthPanel
       :open="healthOpen"
       :library-root="store.libraryPath"
@@ -253,7 +264,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, nextTick, reactive, ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
 import { Circle, CircleHelp, Link2, Maximize2, Network, Redo2, RotateCcw, Search, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
@@ -291,6 +302,8 @@ const { filters } = useGraphFilters()
 const searchQuery = computed({ get: () => filters.query, set: value => { filters.query = value } })
 const selectedNode = ref<GraphNode | null>(null)
 const selectedNodeIds = ref<string[]>([])
+const contextNode = ref<GraphNode | null>(null)
+const contextMenu = reactive({ show: false, x: 0, y: 0 })
 type GraphLayoutMode = 'force' | 'tree' | 'organization' | 'radial' | 'timeline'
 type GraphCanvasTheme = 'professional' | 'colorful' | 'focus'
 type LayoutSnapshot = { mode: GraphLayoutMode; positions: Record<string, { x: number; y: number }> }
@@ -346,6 +359,24 @@ const visibleNodes = computed(() => {
 
 const visibleNodeIds = computed(() => new Set(visibleNodes.value.map(node => node.id)))
 const visibleEdges = computed(() => remediationGraph.value.edges.filter(edge => visibleNodeIds.value.has(edge.source) && visibleNodeIds.value.has(edge.target)))
+const contextMenuOptions = computed(() => {
+  const node = contextNode.value
+  if (node) return [
+    { label: `打开${objectTypeLabel(node.objectType)}`, key: 'open' },
+    { label: '居中查看', key: 'center' },
+    { label: '设为思维导图中心', key: 'mindmap-root' },
+    ...(!node.parentId ? [{ label: '生成可编辑 Canvas', key: 'send-canvas' }] : []),
+    ...(canCreateProjectNote(node) ? [{ label: '生成项目笔记', key: 'project-note' }, { label: '保存当前关系视图', key: 'save-collection' }] : []),
+  ]
+  return [
+    { label: '适合全部内容', key: 'fit' },
+    { label: '恢复初始视图', key: 'reset-view' },
+    { label: '重新计算布局', key: 'reset-layout' },
+    { type: 'divider', key: 'mode-divider' },
+    { label: '切换到关系网络', key: 'network' },
+    { label: '切换到思维导图', key: 'mindmap' },
+  ]
+})
 const clearRemediation = () => {
   const query = { ...route.query }
   delete query.focus
@@ -1294,6 +1325,7 @@ const loop = () => {
 }
 
 const startDrag = (e: MouseEvent) => {
+  if (e.button === 2) return
   const canvas = canvasRef.value
   if (!canvas) return
   canvas.focus()
@@ -1402,6 +1434,38 @@ const onZoom = (e: WheelEvent) => {
   if (!canvas) return
 
   changeGraphZoom(e.deltaY > 0 ? 0.9 : 1.1, e.clientX, e.clientY)
+}
+
+const closeContextMenu = () => { contextMenu.show = false }
+const openGraphContextMenu = (event: MouseEvent) => {
+  const canvas = canvasRef.value
+  if (!canvas) return
+  const rect = canvas.getBoundingClientRect()
+  const worldX = (event.clientX - rect.left - viewX) / zoom
+  const worldY = (event.clientY - rect.top - viewY) / zoom
+  const node = findNodeAt(worldX, worldY)
+  contextNode.value = node
+  if (node) selectOnly(node)
+  else clearSelection()
+  contextMenu.show = false
+  contextMenu.x = event.clientX
+  contextMenu.y = event.clientY
+  void nextTick(() => { contextMenu.show = true })
+}
+const handleContextMenuAction = async (key: string) => {
+  closeContextMenu()
+  const node = contextNode.value
+  if (key === 'fit') fitGraph()
+  else if (key === 'reset-view') resetView()
+  else if (key === 'reset-layout') resetLayout()
+  else if (key === 'network') switchView('network')
+  else if (key === 'mindmap') switchView('mindmap')
+  else if (key === 'open' && node) await openNode(node)
+  else if (key === 'center' && node) selectAndCenter(node)
+  else if (key === 'mindmap-root' && node) useAsMindmapRoot(node)
+  else if (key === 'send-canvas' && node) await sendToCanvas(node)
+  else if (key === 'project-note' && node) await createProjectNote(node)
+  else if (key === 'save-collection' && node) await saveGraphCollection(node)
 }
 
 const onClick = () => {

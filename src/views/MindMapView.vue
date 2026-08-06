@@ -74,6 +74,7 @@
             @dragover.prevent
             @drop.prevent="dropOn(item.node.id)"
             @click="selectOnly(item.node.id)"
+            @contextmenu.prevent="openNodeContextMenu(item.node, $event)"
           >
             <span class="tree-lines"></span>
             <button class="collapse" :class="{ hidden: !item.node.children.length }" @click.stop="toggleCollapsed(item.node)"><n-icon :component="ChevronRightIcon" /></button>
@@ -92,6 +93,7 @@
           tabindex="0"
           @pointerdown="startCanvasPointer"
           @wheel.prevent="onMapWheel"
+          @contextmenu.prevent="openMapContextMenu"
         >
           <div
             class="map-canvas"
@@ -112,6 +114,7 @@
               :style="{ left: `${item.x}px`, top: `${item.y}px` }"
               @pointerdown.stop="startNodePointer($event, item.node.id)"
               @dblclick.stop="beginNodeRename(item.node.id)"
+              @contextmenu.stop.prevent="openNodeContextMenu(item.node, $event)"
             >
               <button v-if="item.node.children.length" class="map-collapse" @click.stop="toggleCollapsed(item.node)">{{ item.node.collapsed ? `+${descendantCount(item.node)}` : '−' }}</button>
               <input
@@ -151,6 +154,17 @@
       </template>
     </main>
 
+    <n-dropdown
+      placement="bottom-start"
+      trigger="manual"
+      :x="contextMenu.x"
+      :y="contextMenu.y"
+      :options="contextMenuOptions"
+      :show="contextMenu.show"
+      :on-clickoutside="closeContextMenu"
+      @select="handleContextMenuAction"
+    />
+
     <footer v-if="document" class="statusbar">
       <span>{{ dirty ? '有未保存更改' : '已与磁盘同步' }}<template v-if="saveError"> · {{ saveError }}</template></span>
       <span>OPML 2.0 · {{ layoutLabels[layoutMode] }}布局 · {{ selectedIds.length }} 个已选 · 仅点击保存时写入</span>
@@ -159,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
@@ -202,6 +216,7 @@ const mapPanel = ref<HTMLElement | null>(null)
 const mapZoom = ref(1)
 const mapPan = ref({ x: 0, y: 0 })
 const selectionBox = ref<{ startX: number; startY: number; x: number; y: number } | null>(null)
+const contextMenu = reactive({ show: false, x: 0, y: 0, target: 'background' as 'background' | 'node', nodeId: '' })
 const editingId = ref('')
 const undoStack = ref<string[]>([])
 const redoStack = ref<string[]>([])
@@ -239,6 +254,30 @@ const locate = (id: string): LocatedNode | null => {
   return document.value ? search(document.value.roots, null, null, -1) : null
 }
 const selectedNode = computed(() => locate(selectedId.value)?.node || null)
+const contextMenuOptions = computed(() => {
+  if (contextMenu.target === 'background') return [
+    { label: '新增根主题', key: 'add-root' },
+    { type: 'divider', key: 'background-divider' },
+    { label: '适合全部内容', key: 'fit' },
+    { label: '恢复 100% 视图', key: 'reset-view' },
+    { label: '重新应用当前布局', key: 'apply-layout' },
+    { type: 'divider', key: 'collapse-divider' },
+    { label: '全部展开', key: 'expand-all' },
+    { label: '全部折叠', key: 'collapse-all' },
+  ]
+  const location = locate(contextMenu.nodeId)
+  const node = location?.node
+  return [
+    { label: '重命名', key: 'rename' },
+    { label: '新增子主题', key: 'add-child' },
+    { label: '新增同级主题', key: 'add-sibling' },
+    ...(location && location.index > 0 ? [{ label: '缩进为上一项的子主题', key: 'indent' }] : []),
+    ...(location?.parent ? [{ label: '减少缩进', key: 'outdent' }] : []),
+    ...(node?.children.length ? [{ label: node.collapsed ? '展开分支' : '折叠分支', key: 'toggle-collapse' }] : []),
+    { type: 'divider', key: 'node-divider' },
+    { label: '删除主题', key: 'delete' },
+  ]
+})
 const makeId = () => `node-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 const newNode = (text = '新主题'): OpmlNode => ({ id: makeId(), text, note: '', collapsed: false, attributes: {}, children: [] })
 const ensureSelection = () => {
@@ -444,6 +483,7 @@ const panelPoint = (event: PointerEvent) => {
 }
 const startCanvasPointer = (event: PointerEvent) => {
   if (!mapPanel.value) return
+  if (event.button !== 0 && event.button !== 1) return
   const point = panelPoint(event)
   if (event.button === 1 || spacePressed || !event.shiftKey) {
     panOrigin = { clientX: event.clientX, clientY: event.clientY, x: mapPan.value.x, y: mapPan.value.y }
@@ -455,6 +495,42 @@ const startCanvasPointer = (event: PointerEvent) => {
   selectionBox.value = { startX: point.x, startY: point.y, x: point.x, y: point.y }
   window.addEventListener('pointermove', moveSelectionBox)
   window.addEventListener('pointerup', endSelectionBox, { once: true })
+}
+
+const closeContextMenu = () => { contextMenu.show = false }
+const showContextMenu = (event: MouseEvent, target: 'background' | 'node', nodeId = '') => {
+  contextMenu.show = false
+  contextMenu.x = event.clientX
+  contextMenu.y = event.clientY
+  contextMenu.target = target
+  contextMenu.nodeId = nodeId
+  void nextTick(() => { contextMenu.show = true })
+}
+const openMapContextMenu = (event: MouseEvent) => {
+  if ((event.target as HTMLElement).closest('.map-node')) return
+  selectOnly('')
+  showContextMenu(event, 'background')
+}
+const openNodeContextMenu = (node: OpmlNode, event: MouseEvent) => {
+  selectOnly(node.id)
+  showContextMenu(event, 'node', node.id)
+}
+const handleContextMenuAction = (key: string) => {
+  closeContextMenu()
+  if (contextMenu.nodeId) selectOnly(contextMenu.nodeId)
+  if (key === 'add-root') addRoot()
+  else if (key === 'fit') fitMap()
+  else if (key === 'reset-view') resetViewport()
+  else if (key === 'apply-layout') applyLayout()
+  else if (key === 'expand-all') setAllCollapsed(false)
+  else if (key === 'collapse-all') setAllCollapsed(true)
+  else if (key === 'rename' && contextMenu.nodeId) beginNodeRename(contextMenu.nodeId)
+  else if (key === 'add-child') addChild()
+  else if (key === 'add-sibling') addSibling()
+  else if (key === 'indent') indentNode()
+  else if (key === 'outdent') outdentNode()
+  else if (key === 'toggle-collapse' && selectedNode.value) toggleCollapsed(selectedNode.value)
+  else if (key === 'delete') removeSelected()
 }
 const moveCanvasPan = (event: PointerEvent) => {
   if (!panOrigin) return

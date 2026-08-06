@@ -78,6 +78,7 @@
       :class="{ connecting: tool === 'connect', panning: isPanning }"
       @mousedown="startPan"
       @wheel.prevent="handleWheel"
+      @contextmenu.prevent="openCanvasContextMenu"
       @dblclick="handleBackgroundDoubleClick"
     >
       <div class="canvas-grid" :style="gridStyle"></div>
@@ -129,6 +130,7 @@
           :style="nodeStyle(node)"
           @mousedown.stop="startNodeDrag(node, $event)"
           @click.stop
+          @contextmenu.stop.prevent="openNodeContextMenu(node, $event)"
           @dblclick.stop="openNode(node)"
         >
           <template v-if="node.type === 'text'">
@@ -278,6 +280,17 @@
       </div>
     </main>
 
+    <n-dropdown
+      placement="bottom-start"
+      trigger="manual"
+      :x="contextMenu.x"
+      :y="contextMenu.y"
+      :options="contextMenuOptions"
+      :show="contextMenu.show"
+      :on-clickoutside="closeContextMenu"
+      @select="handleContextMenuAction"
+    />
+
     <footer class="canvas-statusbar" aria-live="polite">
       <span>{{ hiddenNodeIds.size ? `已折叠 ${hiddenNodeIds.size} 个分支节点` : selectionCount > 1 ? `已选择 ${selectionCount} 个节点` : tool === 'connect' ? '依次点击两个节点建立关系' : '拖拽卡片组织结构 · Shift+拖拽框选' }}</span>
       <span>Ctrl+C/X/V 复制剪切粘贴 · 方向键微调 · Alt 拖拽暂停吸附 · Ctrl+S 保存</span>
@@ -286,7 +299,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { openUrl } from '@tauri-apps/plugin-opener'
@@ -369,6 +382,7 @@ const pan = reactive({ x: 72, y: 72 })
 const viewportSize = reactive({ width: 800, height: 600 })
 const isPanning = ref(false)
 const selectionBox = ref<{ x: number; y: number; width: number; height: number } | null>(null)
+const contextMenu = reactive({ show: false, x: 0, y: 0, target: 'background' as 'background' | 'node' | 'edge', nodeId: '', edgeId: '', worldX: 0, worldY: 0 })
 const alignmentGuides = ref<AlignmentGuide[]>([])
 const snapEnabled = ref(localStorage.getItem('canvas-snap-enabled') !== 'false')
 const collapsedNodeIds = ref<string[]>([])
@@ -393,6 +407,33 @@ const nodeById = computed(() => new Map(document.nodes.map(node => [node.id, nod
 const selectedNode = computed(() => nodeById.value.get(selectedNodeId.value || '') || null)
 const selectedEdge = computed(() => document.edges.find(edge => edge.id === selectedEdgeId.value) || null)
 const selectionCount = computed(() => selectedNodeIds.value.length)
+const contextMenuOptions = computed(() => {
+  if (contextMenu.target === 'node') {
+    const node = nodeById.value.get(contextMenu.nodeId)
+    return [
+      ...(node?.type === 'file' || node?.type === 'link' ? [{ label: '打开', key: 'open' }] : []),
+      { label: '复制', key: 'copy' },
+      { label: '创建副本', key: 'duplicate' },
+      { label: '从这里建立连线', key: 'connect' },
+      ...(node && nodeHasChildren(node.id) ? [{ label: collapsedNodeIds.value.includes(node.id) ? '展开分支' : '折叠分支', key: 'toggle-branch' }] : []),
+      { type: 'divider', key: 'node-divider' },
+      { label: '删除', key: 'delete' },
+    ]
+  }
+  if (contextMenu.target === 'edge') return [
+    { label: '查看连线属性', key: 'inspect-edge' },
+    { type: 'divider', key: 'edge-divider' },
+    { label: '删除连线', key: 'delete' },
+  ]
+  return [
+    { label: '新建文本卡片', key: 'add-text' },
+    { label: '新建分组', key: 'add-group' },
+    { label: '粘贴到这里', key: 'paste' },
+    { type: 'divider', key: 'view-divider' },
+    { label: '适合全部内容', key: 'fit' },
+    { label: '恢复 100% 视图', key: 'reset-view' },
+  ]
+})
 const saveStateLabel = computed(() => ({ saved: '已保存', dirty: '有未保存修改', saving: '正在保存', error: '保存失败' })[saveState.value])
 const colors = [
   { value: '1', label: '红色', css: '#ef4444' }, { value: '2', label: '橙色', css: '#f59e0b' },
@@ -727,7 +768,7 @@ const readClipboardPayload = async () => {
   if (!raw) raw = sessionStorage.getItem(CANVAS_CLIPBOARD_KEY)
   return parseClipboardPayload(raw || '')
 }
-const pasteSelection = async () => {
+const pasteSelection = async (pasteTarget?: { x: number; y: number }) => {
   if (isPasting) return
   isPasting = true
   try {
@@ -736,7 +777,7 @@ const pasteSelection = async () => {
     const minY = Math.min(...payload.nodes.map(node => node.y))
     const maxX = Math.max(...payload.nodes.map(node => node.x + node.width))
     const maxY = Math.max(...payload.nodes.map(node => node.y + node.height))
-    const target = viewportCenter()
+    const target = pasteTarget || viewportCenter()
     const cascade = Math.min(pasteSequence, 6) * 24
     const dx = Math.round(target.x - (minX + maxX) / 2 + cascade)
     const dy = Math.round(target.y - (minY + maxY) / 2 + cascade)
@@ -991,6 +1032,7 @@ const endTextEdit = () => {
 }
 
 const startNodeDrag = (node: CanvasNode, event: MouseEvent) => {
+  if (event.button !== 0) return
   if ((event.target as HTMLElement).matches('textarea,input,button')) return
   selectNode(node, event)
   if (tool.value === 'connect') return
@@ -1191,10 +1233,10 @@ const changeZoom = (delta: number, anchor?: { x: number; y: number }) => {
   zoom.value = next
 }
 const handleWheel = (event: WheelEvent) => {
-  if (event.ctrlKey || event.metaKey) {
-    const rect = viewportRef.value?.getBoundingClientRect()
-    changeZoom(event.deltaY > 0 ? -0.1 : 0.1, { x: event.clientX - (rect?.left || 0), y: event.clientY - (rect?.top || 0) })
-  } else { pan.x -= event.deltaX; pan.y -= event.deltaY }
+  const rect = viewportRef.value?.getBoundingClientRect()
+  const direction = event.deltaY || event.deltaX
+  if (!direction) return
+  changeZoom(direction > 0 ? -0.1 : 0.1, { x: event.clientX - (rect?.left || 0), y: event.clientY - (rect?.top || 0) })
 }
 const resetView = () => { zoom.value = 1; pan.x = 72; pan.y = 72 }
 const fitToContent = () => {
@@ -1242,6 +1284,54 @@ const openNode = async (node: CanvasNode) => {
 
 const markDirty = () => {
   saveState.value = 'dirty'
+}
+
+const closeContextMenu = () => { contextMenu.show = false }
+const showContextMenu = (event: MouseEvent, target: 'background' | 'node' | 'edge', nodeId = '', edgeId = '') => {
+  const point = screenToWorld(event.clientX, event.clientY)
+  contextMenu.show = false
+  contextMenu.x = event.clientX
+  contextMenu.y = event.clientY
+  contextMenu.target = target
+  contextMenu.nodeId = nodeId
+  contextMenu.edgeId = edgeId
+  contextMenu.worldX = point.x
+  contextMenu.worldY = point.y
+  void nextTick(() => { contextMenu.show = true })
+}
+const openCanvasContextMenu = (event: MouseEvent) => {
+  const element = event.target as HTMLElement
+  const edge = element.closest<SVGGElement>('.canvas-edge')
+  if (edge) {
+    const index = [...edge.parentElement!.querySelectorAll('.canvas-edge')].indexOf(edge)
+    const item = renderedEdges.value[index]
+    if (item) { selectEdge(item.id); showContextMenu(event, 'edge', '', item.id); return }
+  }
+  if (element.closest('.canvas-node,.edge-inspector')) return
+  clearSelection()
+  showContextMenu(event, 'background')
+}
+const openNodeContextMenu = (node: CanvasNode, event: MouseEvent) => {
+  if (!selectedNodeIds.value.includes(node.id)) selectedNodeIds.value = [node.id]
+  selectedEdgeId.value = null
+  showContextMenu(event, 'node', node.id)
+}
+const handleContextMenuAction = async (key: string) => {
+  closeContextMenu()
+  const point = { x: contextMenu.worldX, y: contextMenu.worldY }
+  const node = nodeById.value.get(contextMenu.nodeId)
+  if (key === 'add-text') addNode({ type: 'text', text: '# 新想法\n\n开始记录…', width: 280, height: 180 }, point)
+  else if (key === 'add-group') addNode({ type: 'group', label: '主题分组', width: 560, height: 360 }, point)
+  else if (key === 'paste') await pasteSelection(point)
+  else if (key === 'fit') fitToContent()
+  else if (key === 'reset-view') resetView()
+  else if (key === 'open' && node) await openNode(node)
+  else if (key === 'copy') await copySelection()
+  else if (key === 'duplicate') { if (await copySelection(false)) await pasteSelection(point) }
+  else if (key === 'connect' && node) { selectNode(node); connectingFrom.value = node.id; tool.value = 'connect' }
+  else if (key === 'toggle-branch' && node) toggleBranchCollapse(node.id)
+  else if (key === 'inspect-edge' && contextMenu.edgeId) selectEdge(contextMenu.edgeId)
+  else if (key === 'delete') removeSelection()
 }
 const rememberCanvasViewState = (path = canvasPath.value) => {
   if (!path || loading.value) return
