@@ -21,7 +21,7 @@ const contrast = (foreground, background) => {
 
 const themes = read('src/styles/themes.scss')
 const coveredThemes = new Set()
-const syntaxColors = ['text', 'keyword', 'string', 'number', 'comment', 'function', 'variable', 'property', 'type', 'operator', 'link', 'invalid']
+const syntaxColors = ['text', 'keyword', 'string', 'number', 'comment', 'function', 'variable', 'property', 'tag', 'attribute', 'type', 'constant', 'regexp', 'escape', 'meta', 'operator', 'punctuation', 'link', 'invalid']
 const requiredColors = ['surface', 'panel', 'gutter', 'gutter-text', 'border', ...syntaxColors, 'cursor', 'accent']
 const requiredEffects = ['active-line', 'selection', 'selection-match', 'search-match', 'search-selected', 'bracket-match', 'invalid-surface']
 const blocks = [...themes.matchAll(/((?:body\[data-theme="[^"]+"\](?:,\s*)?)+)\s*\{([^{}]*--code-editor-surface:[^{}]*)\}/g)]
@@ -48,6 +48,13 @@ for (const theme of expectedThemes) if (!coveredThemes.has(theme)) fail(`Code ed
 const sharedTheme = read('src/config/codeMirrorTheme.ts')
 requireTokens(sharedTheme, 'Shared CodeMirror theme', [
   'syntaxHighlighting(syntaxTheme)',
+  'tags.tagName',
+  'tags.attributeName',
+  'tags.angleBracket',
+  'tags.processingInstruction',
+  'var(--code-editor-constant)',
+  'var(--code-editor-regexp)',
+  'var(--code-editor-escape)',
   "'.cm-cursor, .cm-dropCursor'",
   "'.cm-selectionBackground, ::selection'",
   "'.cm-selectionMatch'",
@@ -79,4 +86,4 @@ for (const id of ['UX-24', 'UX-27']) {
   if (!new RegExp(`\\| ${id} \\|[^\\n]+\\| 待复测 \\|`).test(audit)) fail(`${id} must remain recorded as pending installed-build retest.`)
 }
 
-console.log('Six CodeMirror workspaces share one theme; 9 palettes meet syntax, gutter, and cursor contrast contracts.')
+console.log('Six CodeMirror workspaces share one rich semantic theme; 9 palettes meet syntax, gutter, and cursor contrast contracts.')
