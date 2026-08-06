@@ -21,14 +21,16 @@ for (const [profileId, profile] of Object.entries(matrix.profiles || {})) {
 }
 
 const registryById = new Map(registry.formats.map(format => [format.id, format]))
+const postClosureFormats = new Set(['raster-image', 'video'])
 const matrixIds = new Set()
 for (const format of matrix.formats || []) {
   if (!registryById.has(format.id) || matrixIds.has(format.id)) fail(`unknown or duplicate format ${format.id}`)
   if (!format.cohort || !matrix.profiles[format.profile]) fail(`format ${format.id} has no valid cohort/profile`)
   matrixIds.add(format.id)
 }
-if (matrixIds.size !== registry.formats.length) fail(`matrix covers ${matrixIds.size}/${registry.formats.length} registered formats`)
-for (const id of registryById.keys()) if (!matrixIds.has(id)) fail(`registered format omitted: ${id}`)
+if (matrixIds.size !== registry.formats.length - postClosureFormats.size) fail(`UX-38 baseline covers ${matrixIds.size}/${registry.formats.length - postClosureFormats.size} baseline formats`)
+for (const id of registryById.keys()) if (!matrixIds.has(id) && !postClosureFormats.has(id)) fail(`UX-38 baseline format omitted: ${id}`)
+for (const id of postClosureFormats) if (!registryById.has(id) || matrixIds.has(id)) fail(`post-closure format boundary drift: ${id}`)
 
 const lightweight = matrix.formats.filter(format => format.profile === 'ux38a-lightweight')
 if (lightweight.length !== 24) fail(`UX-38A lightweight cohort drift: ${lightweight.length}`)

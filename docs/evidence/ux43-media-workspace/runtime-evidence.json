@@ -1,0 +1,78 @@
+{
+    "schemaVersion":  1,
+    "stage":  "UX-43",
+    "imageInitial":  {
+                         "viewport":  {
+                                          "width":  1280,
+                                          "height":  800
+                                      },
+                         "documentOverflow":  0,
+                         "workspace":  {
+                                           "width":  1069,
+                                           "height":  721
+                                       },
+                         "image":  {
+                                       "width":  960,
+                                       "naturalWidth":  960
+                                   },
+                         "video":  null,
+                         "errorVisible":  false
+                     },
+    "imageEdited":  {
+                        "viewport":  {
+                                         "width":  1280,
+                                         "height":  800
+                                     },
+                        "documentOverflow":  0,
+                        "workspace":  {
+                                          "width":  1069,
+                                          "height":  721
+                                      },
+                        "image":  {
+                                      "width":  326.8125,
+                                      "naturalWidth":  960
+                                  },
+                        "video":  null,
+                        "errorVisible":  false
+                    },
+    "video":  {
+                  "viewport":  {
+                                   "width":  1280,
+                                   "height":  800
+                               },
+                  "documentOverflow":  0,
+                  "workspace":  {
+                                    "width":  1009,
+                                    "height":  721
+                                },
+                  "image":  null,
+                  "video":  {
+                                "readyState":  4,
+                                "width":  640,
+                                "height":  360
+                            },
+                  "errorVisible":  false
+              },
+    "narrow":  {
+                   "viewport":  {
+                                    "width":  720,
+                                    "height":  680
+                                },
+                   "documentOverflow":  0,
+                   "workspace":  {
+                                     "width":  509,
+                                     "height":  601
+                                 },
+                   "image":  null,
+                   "video":  {
+                                 "readyState":  4,
+                                 "width":  640,
+                                 "height":  360
+                             },
+                   "errorVisible":  false
+               },
+    "runtimeErrorCount":  0,
+    "sourceUserContentIncluded":  false,
+    "passed":  true,
+    "imageFixtureUnchanged":  true
+}

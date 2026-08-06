@@ -2,7 +2,7 @@ import registrySource from '../../shared/file-formats.json'
 
 export type CapabilityLevel = 'supported' | 'planned' | 'unsupported'
 export type ExternalFilePolicy = 'none' | 'import' | 'edit'
-export type EditorRouteName = 'LibraryMode' | 'TextEditor' | 'JsonEditor' | 'YamlEditor' | 'XmlEditor' | 'DrawioEditor' | 'TomlEditor' | 'LogViewer' | 'DocxEditor' | 'OdtReader' | 'OdfReader' | 'PptxReader' | 'ExternalOffice' | 'LegacyOffice' | 'Canvas' | 'Pdf' | 'Table' | 'Workbook' | 'Diagram' | 'MindMap'
+export type EditorRouteName = 'LibraryMode' | 'TextEditor' | 'JsonEditor' | 'YamlEditor' | 'XmlEditor' | 'DrawioEditor' | 'TomlEditor' | 'LogViewer' | 'DocxEditor' | 'OdtReader' | 'OdfReader' | 'PptxReader' | 'ExternalOffice' | 'LegacyOffice' | 'Canvas' | 'Pdf' | 'Table' | 'Workbook' | 'Diagram' | 'MindMap' | 'MediaViewer'
 export type UserCapabilityLevel = 'complete-edit' | 'basic-edit' | 'read-annotate' | 'preview-only' | 'external-open' | 'unsupported'
 export type SaveMode = 'overwrite' | 'bounded-overwrite' | 'sidecar' | 'copy' | 'none'
 
@@ -100,6 +100,7 @@ export const LIBRARY_EMBEDDED_EDITOR_ROUTES: readonly EditorRouteName[] = Object
   'Workbook',
   'Diagram',
   'MindMap',
+  'MediaViewer',
 ])
 const libraryEmbeddedEditorRoutes = new Set<EditorRouteName>(LIBRARY_EMBEDDED_EDITOR_ROUTES)
 

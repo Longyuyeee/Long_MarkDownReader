@@ -301,6 +301,32 @@
       "creation": { "defaultExtension": ".svg", "defaultContent": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 320 180\" role=\"img\">\n  <title>未命名 SVG</title>\n  <rect x=\"12\" y=\"12\" width=\"296\" height=\"156\" rx=\"12\" fill=\"#36a18b\"/>\n  <text x=\"160\" y=\"98\" fill=\"#ffffff\" font-size=\"24\" text-anchor=\"middle\">LongEdit SVG</text>\n</svg>\n", "defaultName": "未命名 SVG" }
     },
     {
+      "id": "raster-image",
+      "label": "图片",
+      "extensions": [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico", ".avif"],
+      "mimeTypes": ["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp", "image/x-icon", "image/avif"],
+      "routeName": "MediaViewer",
+      "maxBytes": 104857600,
+      "capabilities": { "read": "supported", "edit": "unsupported", "create": "unsupported", "index": "unsupported" },
+      "userCapability": { "level": "preview-only", "label": "专业图片查看", "saveMode": "none", "description": "PNG、JPEG、GIF、WebP、BMP、ICO 与 AVIF 可在应用内查看、缩放和旋转；预览只读，不会修改源文件。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "media", "writer": null, "creator": null, "indexer": null },
+      "creation": null
+    },
+    {
+      "id": "video",
+      "label": "视频",
+      "extensions": [".mp4", ".webm", ".ogv", ".m4v"],
+      "mimeTypes": ["video/mp4", "video/webm", "video/ogg"],
+      "routeName": "MediaViewer",
+      "maxBytes": 134217728,
+      "capabilities": { "read": "supported", "edit": "unsupported", "create": "unsupported", "index": "unsupported" },
+      "userCapability": { "level": "preview-only", "label": "视频播放", "saveMode": "none", "description": "MP4、WebM、Ogg Video 与 M4V 可使用系统 WebView 的可用编解码器播放；超过 128 MiB 或当前系统缺少解码器时应使用外部播放器。" },
+      "externalPolicy": "import",
+      "adapters": { "reader": "media", "writer": null, "creator": null, "indexer": null },
+      "creation": null
+    },
+    {
       "id": "toml",
       "label": "TOML",
       "extensions": [".toml"],

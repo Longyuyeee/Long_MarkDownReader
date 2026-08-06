@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX-43",
+  "status": "accepted",
+  "evidenceFile": "runtime-evidence.json",
+  "screenshots": [
+    {
+      "file": "image-preview.png",
+      "bytes": 91042,
+      "sha256": "c98b69ef7ef730c2d464fe9fdcdb0235ee563698e4900d1cc9965e2d4601a9e2"
+    },
+    {
+      "file": "video-preview.png",
+      "bytes": 116333,
+      "sha256": "f99f2ef4ac1ecc2a353dd0eb7cddc1551a6d92f6af90e57379ec93f81c292ff7"
+    },
+    {
+      "file": "video-narrow.png",
+      "bytes": 64644,
+      "sha256": "3f993663e83f7ebe143490ef0ce4ee2b6a1d53dcb876a631c4d9672ba21fa5f0"
+    }
+  ],
+  "sourceUserContentIncluded": false
+}

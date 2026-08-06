@@ -74,6 +74,13 @@
       "sourcePolicy": "仅经验证的 XLSX 子集允许带冲突保护的有限写回",
       "privacyBoundary": "工作簿解析、计算预览与保存均在本机完成",
       "knownLimitations": ["数组公式、外部链接和未验证高级对象保持只读或阻断写回"]
+    },
+    {
+      "id": "media-preview",
+      "dependency": "none",
+      "sourcePolicy": "图片和视频源文件只读，应用内预览不提供写回",
+      "privacyBoundary": "媒体字节只在本机读取并交给系统 WebView 解码，不上传、不索引",
+      "knownLimitations": ["视频播放取决于系统 WebView 编解码器；超出应用内大小预算时交给外部程序"]
     }
   ],
   "formats": [
@@ -100,6 +107,8 @@
     { "id": "yaml", "profile": "local-overwrite", "readiness": "verified" },
     { "id": "xml", "profile": "local-overwrite", "readiness": "verified" },
     { "id": "svg", "profile": "local-overwrite", "readiness": "verified" },
+    { "id": "raster-image", "profile": "media-preview", "readiness": "verified" },
+    { "id": "video", "profile": "media-preview", "readiness": "verified-with-limitations" },
     { "id": "toml", "profile": "local-overwrite", "readiness": "verified" },
     { "id": "canvas", "profile": "local-overwrite", "readiness": "verified" },
     { "id": "pdf", "profile": "pdf-sidecar", "readiness": "verified-with-limitations" },

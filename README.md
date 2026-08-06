@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.4"><img src="https://img.shields.io/badge/Release-v1.0.4-cca43b" alt="Release v1.0.4"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
-  <img src="https://img.shields.io/badge/Formats-41-0f766e" alt="41 registered formats">
+  <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/License-AGPL--3.0-7c3aed" alt="AGPL-3.0">
 </p>
 
@@ -32,7 +32,7 @@ v1.0.4 采用**手动下载安装**。原 Tauri 自动更新私钥在当前发�
 - 改善 CSV/TSV 与工作簿布局，支持冻结前 N 列，并明确“转换为表格”的目标、保存位置和覆盖确认。
 - Markdown 默认进入所见即所得模式；代码块在浅色、深色和高对比主题下保持可读。
 - 完成 PDF、DOCX/ODT、PPTX/ODP、Canvas、Draw.io、Mermaid、OPML 和外部 Office 交接的有界工作区验收。
-- 41 类格式均进入体验矩阵：29 类已验证、6 类有限能力、6 类依赖外部程序；不把可识别或可预览夸大为完整等价编辑。
+- 当前注册 43 类格式：30 类已验证、7 类有限能力、6 类依赖外部程序；UX-38 的历史收口矩阵保持 41 类基线，新增图片与视频由独立媒体审计覆盖。
 - 修复安装版控制台反复弹窗、动态样式偏差、后台路由加载挂起和发布能力页预发布版本冲突。
 - 隔离 Windows 环境已通过 18/18 安装生命周期、15/15 安装态功能检查和 11/11 关键路由挂载检查。
 
@@ -58,6 +58,8 @@ v1.0.4 采用**手动下载安装**。原 Tauri 自动更新私钥在当前发�
 | DOCX / PPTX | 阅读、受管草稿编辑与可靠副本保存 | 不宣称完整等价于 Microsoft Office |
 | PDF | 阅读、批注、页面提取、合并与插入 | 非通用内容重排编辑器 |
 | Mermaid / Draw.io / SVG | 图表查看、编辑或安全降级 | 按格式与安全策略执行 |
+| PNG / JPEG / GIF / WebP / BMP / ICO / AVIF | 缩放、适应窗口、旋转与透明背景查看 | 只读，不修改源文件 |
+| MP4 / WebM / Ogg Video / M4V | 原生播放、倍速、全屏与媒体信息 | 只读；解码能力取决于系统 WebView2 |
 | OPML / JSON Canvas | 思维导图与 Canvas 工作流 | 保持结构化显式保存边界 |
 | ODT / ODS / ODP 与旧 Office | 读取、旁车数据、转换或外部程序打开 | 部分能力依赖兼容桌面程序 |
 

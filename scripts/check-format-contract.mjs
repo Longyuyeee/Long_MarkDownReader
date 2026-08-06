@@ -668,7 +668,7 @@ requireText(docxReader, 'route.query.locator', 'DOCX reader must consume object 
 requireText(library, 'CREATABLE_FILE_FORMATS', 'creation menu must derive from registry')
 requireText(library, 'activeFormatCanEdit', 'text workspace save action must consume format edit capability')
 requireText(library, 'format-capability-badge', 'text workspace must display user-visible capability tiers')
-requireText(library, 'format.userCapability.label', 'file tree must expose registered capability labels')
+requireText(library, 'activeDocumentFormat?.userCapability.label', 'file tree must expose registered capability labels')
 requireText(library, "'read_text_document'", 'text reads must use the generic adapter')
 requireText(library, "'write_text_document'", 'text writes must use the generic adapter')
 requireText(library, 'expectedSignature', 'text workspace saves must pass snapshot signatures')

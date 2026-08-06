@@ -8,10 +8,14 @@ const closure = readJson('shared/ux38-final-closure.json')
 const packageJson = readJson('package.json')
 const dimensions = ['open', 'load', 'states', 'edit', 'save', 'return', 'tab', 'theme', 'scale', 'keyboard', 'performance', 'errors']
 const formats = matrix.formats || []
+const postClosureFormats = new Set(['raster-image', 'video'])
 const usedProfiles = new Set(formats.map(format => format.profile))
 const profileIds = Object.keys(matrix.profiles || {})
 if (matrix.status !== 'accepted-bounded' || matrix.releaseCandidate !== false) fail('matrix closure or release boundary drift')
-if (formats.length !== registry.formats.length || formats.length !== closure.formatCount || formats.length !== 41) fail('format coverage drift')
+if (formats.length !== closure.formatCount || formats.length !== 41) fail('UX-38 baseline format coverage drift')
+const registryIds = new Set(registry.formats.map(format => format.id))
+if (registry.formats.length !== formats.length + postClosureFormats.size || formats.some(format => !registryIds.has(format.id))) fail('current registry no longer contains the accepted UX-38 baseline')
+for (const id of postClosureFormats) if (!registryIds.has(id) || formats.some(format => format.id === id)) fail(`post-closure format boundary drift: ${id}`)
 if (dimensions.length !== closure.dimensionCount || JSON.stringify(matrix.dimensions) !== JSON.stringify(dimensions)) fail('dimension coverage drift')
 if (usedProfiles.size !== profileIds.length || usedProfiles.size !== closure.profileCount || profileIds.some(profile => !usedProfiles.has(profile))) fail('unused or missing experience profile')
 const counts = { accepted: 0, partial: 0, referenced: 0, 'not-applicable': 0, pending: 0 }

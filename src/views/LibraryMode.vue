@@ -945,6 +945,7 @@ const embeddedEditorComponents = {
   Workbook: defineAsyncComponent(() => import('./WorkbookView.vue')),
   Diagram: defineAsyncComponent(() => import('./DiagramStudio.vue')),
   MindMap: defineAsyncComponent(() => import('./MindMapView.vue')),
+  MediaViewer: defineAsyncComponent(() => import('./MediaViewerView.vue')),
 }
 const activeEmbeddedEditor = computed(() => {
   const routeName = activeDocumentFormat.value?.routeName

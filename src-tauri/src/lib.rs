@@ -73,6 +73,7 @@ use commands::legacy_binary_office::{
     convert_legacy_binary_office_to_modern_copy, preflight_legacy_binary_office,
 };
 use commands::legacy_office::{convert_legacy_doc_to_docx_copy, preflight_legacy_doc};
+use commands::media::inspect_media_file;
 use commands::mindmap::{create_canvas_from_opml, read_opml_file, write_opml_file};
 use commands::odf_content::read_odf_content_document;
 use commands::odt::read_odt_document;
@@ -463,6 +464,7 @@ pub fn run() {
             git_pull,
             get_image_base64,
             get_external_image_base64,
+            inspect_media_file,
             get_file_stats,
             get_text_document_identity,
             search_all_libraries,

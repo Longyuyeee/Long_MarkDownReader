@@ -9,11 +9,11 @@ const counts = matrix.formats.reduce((result, item) => {
   return result
 }, {})
 const required = [
-  ['41 类格式', matrix.formats.length === 41],
-  ['29 类为已验证', counts.verified === 29],
-  ['6 类为有限能力', counts['verified-with-limitations'] === 6],
+  ['43 类格式', matrix.formats.length === 43],
+  ['30 类为已验证', counts.verified === 30],
+  ['7 类为有限能力', counts['verified-with-limitations'] === 7],
   ['6 类依赖外部程序', counts['external-dependency'] === 6],
-  ['10 套发布能力配置', matrix.profiles.length === 10],
+  ['11 套发布能力配置', matrix.profiles.length === 11],
   [`当前版本：\`${pkg.version}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
   [
@@ -31,4 +31,4 @@ for (const section of ['## 1. 审计结论', '## 2. 需求对齐', '## 3. 当前
   if (!audit.includes(section)) throw new Error(`[current-development-audit] audit is missing section: ${section}`)
 }
 
-console.log(`Current development audit passed: v${pkg.version}, 41 format mappings and release stage are aligned.`)
+console.log(`Current development audit passed: v${pkg.version}, 43 format mappings and release stage are aligned.`)

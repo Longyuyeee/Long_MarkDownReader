@@ -128,6 +128,11 @@ const routes = [
     component: () => import('../views/MindMapView.vue')
   },
   {
+    path: '/media',
+    name: 'MediaViewer',
+    component: () => import('../views/MediaViewerView.vue')
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('../views/SettingsView.vue')

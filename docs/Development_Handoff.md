@@ -736,3 +736,5 @@ UX-19 首次打开 Markdown 的显示错位已定位并修复：资料库编辑�
 UX-41 已建立全局横向滚轮导航。纯横向工具栏、标签栏、筛选条、卡片和预览集合自动接入；Table 与 Workbook 双轴网格在表头/列标题悬浮时横向滚动，正文保留纵向滚动；画布缩放、原生横向触控板和表单控件不被抢占。专项审计 `check:horizontal-wheel-navigation` 已进入当前开发审计链，完整边界见 [`UX41_Horizontal_Wheel_Navigation_Audit_2026-08-06.md`](./UX41_Horizontal_Wheel_Navigation_Audit_2026-08-06.md)。
 
 UX-42 已重构 Table 新建看板体验。视图创建收纳为单一菜单，看板分组、标题与卡片字段改为分层配置；长字段名和长内容具有稳定省略、换行与尺寸约束，窄窗口不再挤压错位。已使用 `测试结果记录 2.table.json` 的隔离副本在真实 Tauri WebView2 中验证 13 字段、11 卡片，桌面/字段弹层/760px 窄窗口无越界、无运行时错误且源文件未变化。专项审计 `check:table-board-experience` 已进入当前开发审计链，详见 [`UX42_Table_Board_Experience_Audit_2026-08-06.md`](./UX42_Table_Board_Experience_Audit_2026-08-06.md)。
+
+UX-43 已新增图片与视频只读工作区，当前注册格式由 41 类扩展为 43 类。图片覆盖 PNG/JPEG/GIF/WebP/BMP/ICO/AVIF，提供缩放、适应窗口、旋转和透明网格；视频覆盖 MP4/WebM/Ogg Video/M4V，提供原生控制、倍速和全屏，实际解码取决于系统 WebView2。媒体路径先经 `WorkspaceGuard` 和大小预算验证，再仅授权规范化单文件只读访问。真实 Tauri 回归已通过透明 PNG、WebM 和 720px 窄窗口，详见 [`UX43_Media_Workspace_Audit_2026-08-06.md`](./UX43_Media_Workspace_Audit_2026-08-06.md)。
