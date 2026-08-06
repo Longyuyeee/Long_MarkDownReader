@@ -953,6 +953,11 @@ const activeEmbeddedEditor = computed(() => {
     : null
 })
 const activeIsMarkdown = computed(() => activeDocumentFormat.value?.id === 'markdown')
+type VditorMode = 'wysiwyg' | 'ir' | 'sv'
+const desiredVditorMode = (path: string | null = activeTabId.value): VditorMode => {
+  const format = path ? findFileFormat(path) : undefined
+  return format?.id === 'markdown' ? store.editorMode || 'wysiwyg' : 'sv'
+}
 const activeMarkdownContent = computed(() => activeIsMarkdown.value ? tabs.value.find(tab => tab.id === activeTabId.value)?.content || '' : '')
 const activeTextTab = computed(() => tabs.value.find(tab => tab.id === activeTabId.value))
 const activeFormatCanEdit = computed(() => Boolean(
@@ -2787,6 +2792,21 @@ const switchEditorMode = (mode: string) => {
     }, 100)
   })
 }
+const ensureVditorModeForFile = (path: string) => {
+  // The editor can be mounted before a route opens its first document. In that case it starts
+  // in source mode and must be rebuilt before Markdown content is loaded into the wrong surface.
+  if (!vditor || !isVditorReady) return true
+  const desiredMode = desiredVditorMode(path)
+  if (vditor.getCurrentMode() === desiredMode) return false
+  if (autoSaveTimer) { clearTimeout(autoSaveTimer); autoSaveTimer = null }
+  editorLoading.value = true
+  cleanupEditorListeners()
+  vditor.destroy()
+  vditor = null
+  isVditorReady = false
+  nextTick(initVditor)
+  return true
+}
 const handleEditorClick = (e: MouseEvent) => {
   if ((e.target as HTMLElement).closest('[data-type="edit-mode"]')) {
     setTimeout(syncUserSelectedVditorMode, EDITOR_MODE_SYNC_DELAY_MS)
@@ -2830,7 +2850,7 @@ const initVditor = () => {
       cdn: './vditor',
       lang: 'zh_CN',
       height: '100%',
-      mode: activeIsMarkdown.value ? store.editorMode || 'wysiwyg' : 'sv',
+      mode: desiredVditorMode(),
       customWysiwygToolbar: () => {},
       cache: { enable: false },
       theme: appearance.editorTheme,
@@ -3368,7 +3388,7 @@ watch(searchQuery, (q) => {
 watch(activeTabId, (newId, oldId) => { 
   if (newId && newId !== oldId) { 
     const t = tabs.value.find(item => item.id === newId); 
-    if (t && findFileFormat(t.path)?.routeName === 'LibraryMode') loadFileToEditor(t.path)
+    if (t && findFileFormat(t.path)?.routeName === 'LibraryMode' && !ensureVditorModeForFile(t.path)) loadFileToEditor(t.path)
     if (activeSidebarTab.value === 'links') fetchLinks()
 
     // 侧边栏自动同步逻辑

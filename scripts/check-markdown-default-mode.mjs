@@ -36,7 +36,7 @@ for (const [path, label, modeToken] of [
   [
     'src/views/LibraryMode.vue',
     'Library Markdown editor',
-    "mode: activeIsMarkdown.value ? store.editorMode || 'wysiwyg' : 'sv'",
+    'mode: desiredVditorMode()',
   ],
   ['src/views/TempMode.vue', 'External Markdown editor', "mode: store.editorMode || 'wysiwyg'"],
 ]) {
@@ -48,6 +48,15 @@ for (const [path, label, modeToken] of [
     'editorModeExplicit: true',
   ])
 }
+
+const library = read('src/views/LibraryMode.vue')
+requireTokens(library, 'Library Markdown runtime mode alignment', [
+  'const desiredVditorMode =',
+  "return format?.id === 'markdown' ? store.editorMode || 'wysiwyg' : 'sv'",
+  'const ensureVditorModeForFile =',
+  'vditor.getCurrentMode() === desiredMode',
+  '!ensureVditorModeForFile(t.path)',
+])
 
 const backup = read('src-tauri/src/commands/backup.rs')
 requireTokens(backup, 'Portable preference backup', [
