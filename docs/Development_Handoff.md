@@ -734,3 +734,5 @@ UX-08 已让文件树显示完整文件名与后缀，并为全部 41 种注册�
 UX-19 首次打开 Markdown 的显示错位已定位并修复：资料库编辑器可能在尚无活动文档时先以源码模式挂载，随后虽然顶部“所见”按钮按配置高亮，底层 Vditor 仍保持源码模式。现在首次打开及在普通文本与 Markdown 之间切换时都会核对真实编辑器模式，不一致则先按目标模式重建再载入内容；`check:markdown-default-mode` 已覆盖这一运行时对齐合同。安装态仍需复测首次打开、连续切换和用户主动持久化源码偏好。
 
 UX-41 已建立全局横向滚轮导航。纯横向工具栏、标签栏、筛选条、卡片和预览集合自动接入；Table 与 Workbook 双轴网格在表头/列标题悬浮时横向滚动，正文保留纵向滚动；画布缩放、原生横向触控板和表单控件不被抢占。专项审计 `check:horizontal-wheel-navigation` 已进入当前开发审计链，完整边界见 [`UX41_Horizontal_Wheel_Navigation_Audit_2026-08-06.md`](./UX41_Horizontal_Wheel_Navigation_Audit_2026-08-06.md)。
+
+UX-42 已重构 Table 新建看板体验。视图创建收纳为单一菜单，看板分组、标题与卡片字段改为分层配置；长字段名和长内容具有稳定省略、换行与尺寸约束，窄窗口不再挤压错位。已使用 `测试结果记录 2.table.json` 的隔离副本在真实 Tauri WebView2 中验证 13 字段、11 卡片，桌面/字段弹层/760px 窄窗口无越界、无运行时错误且源文件未变化。专项审计 `check:table-board-experience` 已进入当前开发审计链，详见 [`UX42_Table_Board_Experience_Audit_2026-08-06.md`](./UX42_Table_Board_Experience_Audit_2026-08-06.md)。

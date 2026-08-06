@@ -23,23 +23,57 @@
       </div>
     </header>
     <nav v-if="table?.format === 'longedit-table'" class="view-tabs" aria-label="数据视图">
-      <div v-for="view in views" :key="view.id" class="view-tab" :class="{ active: view.id === activeViewId }">
-        <button class="view-tab-main" :aria-current="view.id === activeViewId ? 'page' : undefined" @click="switchView(view.id)" @dblclick="renameView(view)">
-          <span>{{ view.kind === 'grid' ? '▦' : view.kind === 'board' ? '▤' : view.kind === 'chart' ? '▥' : '▦' }}</span>{{ view.name }}
-        </button>
-        <button v-if="views.length > 1" class="view-tab-delete" type="button" :aria-label="`删除视图 ${view.name}`" @click="deleteView(view)">×</button>
+      <div class="view-tab-scroll" role="tablist" data-horizontal-wheel="always">
+        <div v-for="view in views" :key="view.id" class="view-tab" :class="{ active: view.id === activeViewId }">
+          <button class="view-tab-main" role="tab" :title="`${view.name} · 双击重命名`" :aria-selected="view.id === activeViewId" @click="switchView(view.id)" @dblclick="renameView(view)">
+            <LayoutGridIcon v-if="view.kind === 'grid'" />
+            <ColumnsIcon v-else-if="view.kind === 'board'" />
+            <ChartIcon v-else-if="view.kind === 'chart'" />
+            <DashboardIcon v-else />
+            <span>{{ view.name }}</span>
+          </button>
+          <button v-if="views.length > 1" class="view-tab-delete" type="button" :aria-label="`删除视图 ${view.name}`" @click="deleteView(view)">×</button>
+        </div>
       </div>
-      <div class="view-add">
-        <button @click="addView('grid')">＋表格</button><button @click="addView('board')">＋看板</button><button @click="addView('chart')">＋图表</button><button @click="addView('dashboard')">＋仪表盘</button>
-      </div>
-      <small>双击视图可重命名 · 所有视图共享同一份数据</small>
+      <details class="view-create-menu">
+        <summary title="新建数据视图"><PlusIcon /><span>新建视图</span></summary>
+        <div>
+          <button @click="addView('grid', $event)"><LayoutGridIcon /><span>表格</span></button>
+          <button @click="addView('board', $event)"><ColumnsIcon /><span>看板</span></button>
+          <button @click="addView('chart', $event)"><ChartIcon /><span>图表</span></button>
+          <button @click="addView('dashboard', $event)"><DashboardIcon /><span>仪表盘</span></button>
+        </div>
+      </details>
     </nav>
 
     <main class="table-workspace">
       <div v-if="loading" class="table-state"><div class="loader"></div><strong>正在解析 CSV/TSV</strong></div>
       <div v-else-if="error" class="table-state error"><strong>无法打开表格</strong><p>{{ error }}</p><button @click="loadTable">重新加载</button></div>
       <template v-else-if="table">
-        <div class="table-meta-bar">
+        <section v-if="activeViewKind === 'board'" class="board-config-bar">
+          <div class="board-config-main">
+            <span class="board-result-count"><strong>{{ filteredIndices.length.toLocaleString() }}</strong> 张卡片</span>
+            <label><span>分组字段</span><select v-model="groupBy" @change="updateBoardConfig"><option v-for="(_, index) in table.headers" :key="table.columnIds[index]" :value="table.columnIds[index]">{{ headerLabel(index) }}</option></select></label>
+            <label><span>标题字段</span><select v-model="titleColumn" @change="updateBoardConfig"><option v-for="(_, index) in table.headers" :key="table.columnIds[index]" :value="table.columnIds[index]">{{ headerLabel(index) }}</option></select></label>
+            <details class="board-field-picker">
+              <summary><SettingsIcon /><span>卡片字段</span><strong>{{ cardFieldIds.length }}/8</strong></summary>
+              <div class="board-field-menu">
+                <header><strong>卡片正文</strong><span>最多显示 8 个字段</span></header>
+                <button
+                  v-for="(_, index) in table.headers"
+                  :key="table.columnIds[index]"
+                  type="button"
+                  :class="{ active: cardColumns.includes(table.columnIds[index]) }"
+                  :disabled="table.columnIds[index] === groupBy || table.columnIds[index] === titleColumn"
+                  :title="table.columnIds[index] === groupBy ? '当前分组字段已显示在列标题' : table.columnIds[index] === titleColumn ? '当前标题字段已显示在卡片顶部' : headerLabel(index)"
+                  @click="toggleCardColumn(table.columnIds[index])"
+                ><CheckIcon /><span>{{ headerLabel(index) }}</span></button>
+              </div>
+            </details>
+            <i v-if="notice" aria-live="polite">{{ notice }}</i>
+          </div>
+        </section>
+        <div v-else class="table-meta-bar">
           <span>显示 {{ filteredIndices.length.toLocaleString() }} / {{ table.rows.length.toLocaleString() }} 行</span>
           <template v-if="activeViewKind === 'grid'">
             <span v-if="sortColumn >= 0">按“{{ headerLabel(sortColumn) }}”{{ sortDirection === 'asc' ? '升序' : '降序' }}</span>
@@ -49,11 +83,6 @@
               <button type="button" title="删除选中行" @click="requestDeleteSelectedRow"><TrashIcon />删除</button>
               <button type="button" @click="clearRowSelection">取消选择</button>
             </span>
-          </template>
-          <template v-else-if="activeViewKind === 'board'">
-            <label>分组 <select v-model="groupBy" @change="updateViewConfig"><option v-for="(_, index) in table.headers" :key="table.columnIds[index]" :value="table.columnIds[index]">{{ headerLabel(index) }}</option></select></label>
-            <label>标题 <select v-model="titleColumn" @change="updateViewConfig"><option v-for="(_, index) in table.headers" :key="table.columnIds[index]" :value="table.columnIds[index]">{{ headerLabel(index) }}</option></select></label>
-            <span class="card-fields"><b>卡片字段</b><button v-for="(_, index) in table.headers" :key="table.columnIds[index]" :class="{ active: cardColumns.includes(table.columnIds[index]) }" @click="toggleCardColumn(table.columnIds[index])">{{ headerLabel(index) }}</button></span>
           </template>
           <template v-else-if="activeViewKind === 'chart'">
             <span>图表字段、类型和呈现方式可在编辑器侧栏调整</span>
@@ -103,12 +132,15 @@
         </div>
         <div v-else-if="activeViewKind === 'board'" class="board-scroll">
           <section v-for="group in boardGroups" :key="group.name" class="board-column" @dragover.prevent @drop="cardDrop(group.name, $event)">
-            <header><strong>{{ group.name }}</strong><span>{{ group.rows.length }}</span></header>
+            <header><strong :title="group.name">{{ group.name }}</strong><span>{{ group.rows.length }}</span></header>
             <div class="board-cards">
               <article v-for="row in group.rows" :key="table.rowIds[row]" class="board-card" draggable="true" @dragstart="cardDragStart(row, $event)">
-                <strong>{{ cardTitle(row) }}</strong>
-                <p v-for="id in cardFieldIds" :key="id"><span>{{ headerLabel(columnIndex(id)) }}</span><input :value="table.rows[row][columnIndex(id)]" @input="editCell(row, columnIndex(id), $event)" /></p>
-                <small>#{{ row + 1 }} · 拖动可改变分组</small>
+                <header class="board-card-title"><GripIcon /><strong :title="cardTitle(row)">{{ cardTitle(row) }}</strong></header>
+                <label v-for="id in cardFieldIds" :key="id" class="board-card-field">
+                  <span :title="headerLabel(columnIndex(id))">{{ headerLabel(columnIndex(id)) }}</span>
+                  <textarea rows="1" :value="table.rows[row][columnIndex(id)]" :title="table.rows[row][columnIndex(id)]" @input="editCell(row, columnIndex(id), $event)"></textarea>
+                </label>
+                <footer title="拖动卡片到其他分组"><span>#{{ row + 1 }}</span><GripIcon /></footer>
               </article>
             </div>
           </section>
@@ -148,7 +180,20 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vu
 import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useDialog, useMessage } from 'naive-ui'
-import { Redo2 as RedoIcon, Snowflake as SnowflakeIcon, Trash2 as TrashIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
+import {
+  BarChart3 as ChartIcon,
+  Check as CheckIcon,
+  Columns3 as ColumnsIcon,
+  GripVertical as GripIcon,
+  LayoutDashboard as DashboardIcon,
+  LayoutGrid as LayoutGridIcon,
+  Plus as PlusIcon,
+  Redo2 as RedoIcon,
+  Settings2 as SettingsIcon,
+  Snowflake as SnowflakeIcon,
+  Trash2 as TrashIcon,
+  Undo2 as UndoIcon,
+} from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 import TableChartEditor from '../components/TableChartEditor.vue'
 import TableDashboard, { type DashboardItem } from '../components/TableDashboard.vue'
@@ -323,6 +368,28 @@ const boardGroups = computed(() => {
   return [...groups].map(([name, rows]) => ({ name, rows }))
 })
 
+const defaultBoardGroupColumn = () => {
+  if (!table.value) return ''
+  const scored = table.value.columnIds.map((id, index) => {
+    const values = table.value!.rows.map(row => row[index]?.trim()).filter(Boolean)
+    const distinct = new Set(values).size + (values.length < table.value!.rows.length ? 1 : 0)
+    const populated = values.length > 0
+    const typePenalty = table.value!.columnTypes[index] === 'text' ? 0 : 40
+    const groupPenalty = distinct < 2 ? 80 : Math.abs(Math.min(12, distinct) - 4) * 5
+    return { id, index, populated, score: typePenalty + groupPenalty + index / 100 }
+  }).filter(candidate => candidate.populated)
+  return scored.sort((left, right) => left.score - right.score)[0]?.id || table.value.columnIds[0]
+}
+
+const defaultBoardTitleColumn = (groupId: string) => {
+  if (!table.value) return ''
+  return table.value.columnIds.find((id, index) => id !== groupId
+    && table.value!.columnTypes[index] === 'text'
+    && table.value!.rows.some(row => row[index]?.trim()))
+    || table.value.columnIds.find(id => id !== groupId)
+    || groupId
+}
+
 const visibleRows = computed(() => {
   const start = Math.max(0, Math.floor(Math.max(0, scrollTop.value - 46) / rowHeight) - 8)
   const count = Math.ceil(viewportHeight.value / rowHeight) + 16
@@ -382,11 +449,16 @@ const switchView = (id: string) => {
   applyView(views.value.find(view => view.id === id))
   markDirty()
 }
-const addView = (kind: ViewKind) => {
+const addView = (kind: ViewKind, event?: MouseEvent) => {
   if (!table.value || table.value.format !== 'longedit-table') return
   captureActiveView()
   const id = `view-${Date.now()}-${views.value.length + 1}`
   const first = table.value.columnIds[0]
+  const boardGroup = defaultBoardGroupColumn()
+  const boardTitle = defaultBoardTitleColumn(boardGroup)
+  const boardFields = table.value.columnIds.filter((columnId, index) => columnId !== boardGroup
+    && columnId !== boardTitle
+    && table.value!.rows.some(row => row[index]?.trim())).slice(0, 4)
   const numeric = table.value.columnIds.find((_, index) => ['integer', 'number'].includes(table.value!.columnTypes[index]))
   const view: TableViewDefinition = {
     id,
@@ -394,8 +466,8 @@ const addView = (kind: ViewKind) => {
     kind,
     config: {
       filter: '', sortDirection: 'asc', frozenColumns: 1,
-      columnWidths: table.value.headers.map(() => 160), cardColumns: table.value.columnIds.slice(1, 4),
-      groupBy: first, titleColumn: first, categoryColumn: first, valueColumn: numeric || first, aggregation: 'count',
+      columnWidths: table.value.headers.map(() => 160), cardColumns: kind === 'board' ? boardFields : table.value.columnIds.slice(1, 4),
+      groupBy: kind === 'board' ? boardGroup : first, titleColumn: kind === 'board' ? boardTitle : first, categoryColumn: first, valueColumn: numeric || first, aggregation: 'count',
       chartType: 'bar', nullStrategy: 'skip', showLegend: true,
       dashboardItems: kind === 'dashboard' ? chartViews.value.slice(0, 4).map(chart => ({ chartViewId: chart.id, width: 6 })) : [],
     },
@@ -404,6 +476,7 @@ const addView = (kind: ViewKind) => {
   activeViewId.value = id
   applyView(view)
   markDirty()
+  ;(event?.currentTarget as HTMLElement | undefined)?.closest('details')?.removeAttribute('open')
 }
 const renameView = (view: TableViewDefinition) => {
   const name = window.prompt('视图名称', view.name)?.trim()
@@ -433,6 +506,10 @@ const deleteView = (view: TableViewDefinition) => {
   })
 }
 const updateViewConfig = () => { captureActiveView(); markViewDirty() }
+const updateBoardConfig = () => {
+  cardColumns.value = cardColumns.value.filter(id => id !== groupBy.value && id !== titleColumn.value)
+  updateViewConfig()
+}
 const applyChartConfig = (config: Pick<TableViewConfig, 'chartType' | 'categoryColumn' | 'valueColumn' | 'seriesColumn' | 'aggregation' | 'nullStrategy' | 'showLegend'>) => {
   chartType.value = config.chartType
   categoryColumn.value = config.categoryColumn
@@ -830,17 +907,18 @@ onBeforeUnmount(() => {
 .table-title,.table-tools { display: flex; align-items: center; gap: 8px; }.table-title > button,.table-tools > button { height: 32px; padding: 0 10px; border: 1px solid rgba(0,0,0,.1); border-radius: 7px; color: var(--theme-text); background: rgba(0,0,0,.035); cursor: pointer; }.table-tools > button:disabled { opacity: .42; cursor: default; }.table-tools > .icon-tool { width: 32px; display: grid; place-items: center; padding: 0; }.table-tools > .icon-tool svg { width: 16px; height: 16px; }.table-title > button { width: 32px; padding: 0; font-size: 18px; }.table-title div { display: flex; flex-direction: column; }.table-title strong { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }.table-title span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.table-tools > button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.4); background: rgba(var(--theme-primary-rgb),.08); }.table-tools .save-button { min-width: 72px; color: #fff; border-color: var(--theme-primary); background: var(--theme-primary); }.table-tools .save-button:disabled { color: var(--theme-text-secondary); border-color: rgba(0,0,0,.08); background: rgba(0,0,0,.04); cursor: default; }
 .freeze-control { height: 32px; display: flex; align-items: center; gap: 5px; padding: 0 7px; border: 1px solid rgba(0,0,0,.1); border-radius: 7px; color: var(--theme-text-secondary); background: var(--theme-card); font-size: var(--text-compact); }.freeze-control svg { width: 14px; height: 14px; color: var(--theme-primary); }.freeze-control input { width: 42px; height: 23px; box-sizing: border-box; border: 1px solid rgba(0,0,0,.12); border-radius: 4px; color: var(--theme-text); background: var(--theme-bg); text-align: center; font: inherit; }
 .table-filter { width: 220px; height: 32px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid rgba(0,0,0,.1); border-radius: 7px; background: rgba(0,0,0,.025); }.table-filter input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--theme-text); background: transparent; font-size: var(--text-compact); }.table-filter button { border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }
-.view-tabs { min-height: 38px; display: flex; align-items: end; gap: 4px; padding: 5px 12px 0; border-bottom: 1px solid rgba(0,0,0,.09); background: color-mix(in srgb, var(--theme-card) 97%, #dce6ef); }.view-tab { height: 32px; display: flex; align-items: center; border: 1px solid transparent; border-bottom: 0; border-radius: 7px 7px 0 0; color: var(--theme-text-secondary); background: transparent; }.view-tab.active { color: var(--theme-primary); border-color: rgba(0,0,0,.1); background: var(--theme-card); }.view-tab-main,.view-tab-delete,.view-add button { height: 31px; border: 0; color: inherit; background: transparent; cursor: pointer; font-size: var(--text-compact); }.view-tab-main { display: flex; align-items: center; gap: 5px; padding: 0 6px 0 10px; }.view-tab-delete { width: 25px; padding: 0; opacity: .4; }.view-tab-delete:hover,.view-tab-delete:focus-visible { opacity: 1; }.view-add { display: flex; margin-left: 5px; }.view-add button { height: 27px; padding: 0 7px; border-radius: 5px; }.view-add button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }.view-tabs > small { margin: 0 4px 9px auto; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.view-tabs { position: relative; min-height: 42px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; gap: 8px; padding: 5px 10px 0; border-bottom: 1px solid rgba(0,0,0,.09); background: color-mix(in srgb, var(--theme-card) 97%, #dce6ef); }.view-tab-scroll { min-width: 0; display: flex; align-items: end; gap: 4px; overflow-x: auto; scrollbar-width: none; }.view-tab-scroll::-webkit-scrollbar { width: 0; height: 0; }.view-tab { min-width: 112px; max-width: 220px; height: 36px; flex: none; display: flex; align-items: center; border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0; color: var(--theme-text-secondary); background: transparent; }.view-tab.active { color: var(--theme-primary); border-color: rgba(0,0,0,.1); background: var(--theme-card); }.view-tab-main,.view-tab-delete { height: 35px; border: 0; color: inherit; background: transparent; cursor: pointer; font-size: var(--text-compact); }.view-tab-main { min-width: 0; flex: 1; display: flex; align-items: center; gap: 7px; padding: 0 7px 0 10px; }.view-tab-main svg { width: 15px; height: 15px; flex: none; }.view-tab-main span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.view-tab-delete { width: 27px; flex: none; padding: 0; opacity: .45; }.view-tab-delete:hover,.view-tab-delete:focus-visible { opacity: 1; }.view-create-menu { position: relative; align-self: center; margin-bottom: 4px; }.view-create-menu summary { height: 29px; display: flex; align-items: center; gap: 6px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; list-style: none; white-space: nowrap; font-size: var(--text-compact); }.view-create-menu summary::-webkit-details-marker { display: none; }.view-create-menu summary svg,.view-create-menu button svg { width: 15px; height: 15px; }.view-create-menu > div { position: absolute; top: calc(100% + 5px); right: 0; z-index: 45; width: 142px; display: grid; gap: 3px; padding: 5px; border: 1px solid var(--workspace-border-color); border-radius: 7px; background: var(--theme-card); box-shadow: var(--workspace-shadow); }.view-create-menu button { height: 33px; display: flex; align-items: center; gap: 8px; padding: 0 9px; border: 0; border-radius: 5px; color: var(--theme-text); background: transparent; cursor: pointer; font-size: var(--text-compact); }.view-create-menu button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }
 .table-workspace { min-height: 0; flex: 1; display: flex; flex-direction: column; }.table-meta-bar { height: 30px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 14px; border-bottom: 1px solid rgba(0,0,0,.07); color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 94%, transparent); font-size: var(--text-compact); }.table-meta-bar button { padding: 2px 6px; border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; }.table-meta-bar i { margin-left: auto; font-style: normal; }
-.table-meta-bar label { display: flex; align-items: center; gap: 4px; }.table-meta-bar select { height: 22px; max-width: 130px; border: 1px solid rgba(0,0,0,.1); border-radius: 4px; color: var(--theme-text); background: var(--theme-card); font-size: var(--text-compact); }.row-selection-actions { display: flex; align-items: center; gap: 5px; color: var(--theme-text); font-weight: 650; }.row-selection-actions button { display: inline-flex; align-items: center; gap: 3px; border-radius: 4px; }.row-selection-actions button:first-of-type { color: var(--theme-danger, #c83b46); background: color-mix(in srgb, var(--theme-danger, #c83b46) 9%, transparent); }.row-selection-actions svg { width: 13px; height: 13px; }.card-fields { display: flex; align-items: center; gap: 3px; }.card-fields b { font-weight: 500; }.card-fields button { border-radius: 4px; color: var(--theme-text-secondary); background: rgba(0,0,0,.035); }.card-fields button.active { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); }
+.table-meta-bar label { display: flex; align-items: center; gap: 4px; }.table-meta-bar select { height: 22px; max-width: 130px; border: 1px solid rgba(0,0,0,.1); border-radius: 4px; color: var(--theme-text); background: var(--theme-card); font-size: var(--text-compact); }.row-selection-actions { display: flex; align-items: center; gap: 5px; color: var(--theme-text); font-weight: 650; }.row-selection-actions button { display: inline-flex; align-items: center; gap: 3px; border-radius: 4px; }.row-selection-actions button:first-of-type { color: var(--theme-danger, #c83b46); background: color-mix(in srgb, var(--theme-danger, #c83b46) 9%, transparent); }.row-selection-actions svg { width: 13px; height: 13px; }
+.board-config-bar { position: relative; z-index: 30; min-height: 48px; flex: none; display: flex; align-items: center; padding: 6px 12px; box-sizing: border-box; border-bottom: 1px solid rgba(0,0,0,.08); background: color-mix(in srgb, var(--theme-card) 96%, var(--theme-primary)); }.board-config-main { min-width: 0; width: 100%; display: flex; align-items: center; gap: 9px; }.board-result-count { flex: none; padding-right: 10px; border-right: 1px solid var(--workspace-border-color); color: var(--theme-text-secondary); font-size: var(--text-compact); white-space: nowrap; }.board-result-count strong { color: var(--theme-text); font-size: 12px; }.board-config-main > label { min-width: 0; display: flex; align-items: center; gap: 6px; color: var(--theme-text-secondary); font-size: var(--text-compact); white-space: nowrap; }.board-config-main > label span { flex: none; }.board-config-main select { width: clamp(112px, 14vw, 180px); min-width: 0; height: 31px; padding: 0 26px 0 8px; overflow: hidden; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--theme-card); text-overflow: ellipsis; font-size: var(--text-compact); }.board-config-main > i { min-width: 0; margin-left: auto; overflow: hidden; color: var(--theme-primary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); font-style: normal; }.board-field-picker { position: relative; flex: none; }.board-field-picker summary { height: 31px; display: flex; align-items: center; gap: 6px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.22); border-radius: 6px; color: var(--theme-text); background: rgba(var(--theme-primary-rgb),.055); cursor: pointer; list-style: none; font-size: var(--text-compact); white-space: nowrap; }.board-field-picker summary::-webkit-details-marker { display: none; }.board-field-picker summary svg { width: 14px; height: 14px; color: var(--theme-primary); }.board-field-picker summary strong { min-width: 30px; padding: 2px 5px; border-radius: 10px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); text-align: center; font-size: var(--text-compact); }.board-field-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 50; width: min(360px, calc(100vw - 32px)); max-height: min(420px, calc(100vh - 190px)); display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 4px; padding: 8px; overflow: auto; box-sizing: border-box; border: 1px solid var(--workspace-border-color); border-radius: 7px; background: var(--theme-card); box-shadow: var(--workspace-shadow); }.board-field-menu header { grid-column: 1 / -1; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 3px 4px 7px; border-bottom: 1px solid var(--workspace-border-color); }.board-field-menu header strong { font-size: 12px; }.board-field-menu header span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.board-field-menu button { min-width: 0; height: 34px; display: flex; align-items: center; gap: 6px; padding: 0 8px; overflow: hidden; border: 1px solid transparent; border-radius: 5px; color: var(--theme-text-secondary); background: var(--workspace-control-bg); cursor: pointer; text-align: left; font-size: var(--text-compact); }.board-field-menu button svg { width: 13px; height: 13px; flex: none; opacity: 0; }.board-field-menu button span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.board-field-menu button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.2); background: rgba(var(--theme-primary-rgb),.08); }.board-field-menu button.active svg { opacity: 1; }.board-field-menu button:disabled { opacity: .45; cursor: default; }
 .table-scroll { min-height: 0; flex: 1; overflow: auto; position: relative; }.table-canvas { min-height: 100%; }.table-header,.table-row { display: grid; }.table-header { position: sticky; top: 0; z-index: 20; height: 46px; background: color-mix(in srgb, var(--theme-card) 96%, #e8edf3); box-shadow: 0 1px 0 rgba(0,0,0,.12); }.virtual-body { position: relative; }.table-row { position: absolute; top: 0; left: 0; height: 34px; }
 .header-cell,.data-cell,.row-number { min-width: 0; box-sizing: border-box; border-right: 1px solid rgba(0,0,0,.07); border-bottom: 1px solid rgba(0,0,0,.07); background: var(--theme-card); }.row-number { position: sticky; left: 0; z-index: 16; display: grid; place-items: center; padding: 0; border-top: 0; border-left: 0; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-surface) 92%, var(--theme-bg)); cursor: pointer; font-size: var(--text-compact); }.table-row.selected .data-cell,.row-number.selected { background: color-mix(in srgb, var(--theme-card) 84%, var(--theme-primary)); }.table-row.selected .data-cell.frozen,.row-number.selected { background: color-mix(in srgb, var(--theme-surface) 84%, var(--theme-primary)); }.row-number.selected { color: var(--theme-primary); box-shadow: inset 3px 0 0 var(--theme-primary); font-weight: 750; }.header-number { z-index: 26; cursor: default; }.header-cell { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 24px; grid-template-rows: 27px 14px; padding: 3px 5px 2px; }.header-cell input,.data-cell input { width: 100%; min-width: 0; box-sizing: border-box; border: 0; outline: 0; color: var(--theme-text); background: transparent; font: inherit; }.header-cell input { font-size: var(--text-compact); font-weight: 700; }.header-cell > button { grid-column: 2; grid-row: 1; border: 0; border-radius: 4px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.header-cell > button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }.header-cell small { grid-column: 1 / -1; grid-row: 2; color: var(--theme-text-secondary); font-size: var(--text-compact); }.data-cell { padding: 0 7px; }.data-cell input { height: 33px; font-size: var(--text-compact); }.data-cell:focus-within { position: relative; z-index: 17; outline: 2px solid var(--theme-primary); outline-offset: -2px; }.header-cell.frozen,.data-cell.frozen { position: sticky; z-index: 14; background: var(--theme-surface); box-shadow: 1px 0 0 rgba(0,0,0,.12); }.header-cell.frozen { z-index: 24; }.header-cell.frozen:last-of-type,.data-cell.frozen:last-of-type { box-shadow: 3px 0 8px rgba(0,0,0,.13); }
 .column-resize { position: absolute; top: 0; right: -3px; z-index: 3; width: 7px; height: 100%; cursor: col-resize; }.column-resize:hover { background: rgba(var(--theme-primary-rgb),.24); }
 .header-cell.frozen-edge,.data-cell.frozen-edge { box-shadow: 3px 0 8px rgba(0,0,0,.13); }
-.board-scroll { min-height: 0; flex: 1; display: flex; align-items: flex-start; gap: 12px; padding: 14px; overflow: auto; }.board-column { width: 280px; max-height: 100%; flex: none; display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,.08); border-radius: 10px; background: rgba(0,0,0,.025); }.board-column > header { height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 11px; border-bottom: 1px solid rgba(0,0,0,.07); }.board-column > header strong { font-size: 11px; }.board-column > header span { min-width: 20px; padding: 2px 5px; border-radius: 10px; text-align: center; color: var(--theme-text-secondary); background: rgba(0,0,0,.06); font-size: var(--text-compact); }.board-cards { min-height: 60px; padding: 8px; overflow: auto; }.board-card { margin-bottom: 8px; padding: 10px; border: 1px solid rgba(0,0,0,.08); border-radius: 8px; background: var(--theme-card); box-shadow: 0 2px 7px rgba(0,0,0,.045); cursor: grab; }.board-card:active { cursor: grabbing; }.board-card > strong { display: block; margin-bottom: 8px; font-size: 11px; }.board-card p { display: grid; grid-template-columns: 72px minmax(0,1fr); align-items: center; gap: 5px; margin: 4px 0; }.board-card p span { overflow: hidden; text-overflow: ellipsis; color: var(--theme-text-secondary); font-size: var(--text-compact); }.board-card input { min-width: 0; border: 0; border-bottom: 1px solid transparent; outline: 0; color: var(--theme-text); background: transparent; font-size: var(--text-compact); }.board-card input:focus { border-color: var(--theme-primary); }.board-card small { display: block; margin-top: 8px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.board-scroll { min-width: 0; min-height: 0; flex: 1; display: flex; align-items: stretch; gap: 12px; padding: 12px; overflow: auto; scroll-padding-inline: 12px; }.board-column { width: clamp(260px, 28vw, 320px); min-width: 260px; max-height: 100%; flex: none; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--workspace-border-color); border-radius: 7px; background: color-mix(in srgb, var(--theme-surface) 95%, var(--theme-primary)); }.board-column > header { min-height: 42px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px 0 12px; border-bottom: 1px solid var(--workspace-border-color); background: color-mix(in srgb, var(--theme-card) 94%, var(--theme-primary)); }.board-column > header strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }.board-column > header span { min-width: 22px; flex: none; padding: 2px 6px; border-radius: 10px; text-align: center; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); font-size: var(--text-compact); }.board-cards { min-height: 60px; flex: 1; padding: 8px; overflow-x: hidden; overflow-y: auto; }.board-card { margin-bottom: 8px; padding: 9px; overflow: hidden; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: var(--theme-card); box-shadow: var(--workspace-shadow-sm); cursor: grab; }.board-card:active { cursor: grabbing; }.board-card-title { min-width: 0; display: grid; grid-template-columns: 14px minmax(0,1fr); align-items: start; gap: 6px; margin-bottom: 8px; }.board-card-title svg { width: 14px; height: 14px; margin-top: 2px; color: var(--theme-text-secondary); }.board-card-title strong { min-width: 0; overflow: hidden; overflow-wrap: anywhere; font-size: 12px; line-height: 1.45; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }.board-card-field { min-width: 0; display: grid; gap: 4px; margin-top: 7px; }.board-card-field > span { min-width: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.board-card-field textarea { width: 100%; min-width: 0; min-height: 34px; max-height: 84px; padding: 7px 8px; overflow: auto; resize: vertical; box-sizing: border-box; border: 1px solid transparent; border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--workspace-control-bg); caret-color: var(--theme-primary); overflow-wrap: anywhere; font: var(--text-compact)/1.45 var(--font-sans); }.board-card-field textarea:hover { border-color: var(--workspace-border-color); }.board-card-field textarea:focus { border-color: var(--theme-primary); background: var(--theme-bg); box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb),.1); }.board-card footer { min-height: 22px; display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--workspace-border-color); color: var(--theme-text-secondary); font-size: var(--text-compact); }.board-card footer svg { width: 13px; height: 13px; }
 .view-empty { margin: auto; max-width: 480px; color: var(--theme-text-secondary); text-align: center; font-size: 11px; }
 .table-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--theme-text-secondary); }.table-state strong { color: var(--theme-text); }.table-state p { max-width: 560px; text-align: center; }.table-state button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }.loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 900px) { .table-filter { width: 150px; }.table-title span { display: none; }.table-tools > button:not(.save-button):not(.history-button) { display: none; }.freeze-control { display: none; }.view-tabs { overflow-x: auto; align-items: end; }.view-tab,.view-add,.view-tabs > small { flex: none; } }
-@media (max-width: 620px) { .table-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }.table-title { width: 100%; min-width: 0; }.table-title div { min-width: 0; }.table-title strong { max-width: 100%; }.table-tools { width: 100%; }.table-filter { min-width: 0; flex: 1; }.table-tools .save-button { flex: none; } }
-@container (max-width: 900px) { .table-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }.table-title { width: 100%; min-width: 0; }.table-title div { min-width: 0; }.table-title strong { max-width: 100%; }.table-tools { width: 100%; overflow-x: auto; }.table-tools > * { flex: none; }.table-filter { min-width: 150px; flex: 1; } }
+@media (max-width: 900px) { .table-filter { width: 150px; }.table-title span { display: none; }.table-tools > button:not(.save-button):not(.history-button) { display: none; }.freeze-control { display: none; }.view-create-menu summary span { display: none; }.board-config-main { overflow-x: auto; scrollbar-width: none; }.board-config-main::-webkit-scrollbar { width: 0; height: 0; }.board-config-main > * { flex: none; }.board-config-main > i { display: none; } }
+@media (max-width: 620px) { .table-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }.table-title { width: 100%; min-width: 0; }.table-title div { min-width: 0; }.table-title strong { max-width: 100%; }.table-tools { width: 100%; }.table-filter { min-width: 0; flex: 1; }.table-tools .save-button { flex: none; }.view-tab { min-width: 104px; max-width: 160px; }.board-config-bar { padding-inline: 8px; }.board-result-count { padding-right: 7px; }.board-config-main select { width: 126px; }.board-field-menu { position: fixed; top: 148px; right: 8px; width: calc(100vw - 16px); } }
+@container (max-width: 900px) { .table-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }.table-title { width: 100%; min-width: 0; }.table-title div { min-width: 0; }.table-title strong { max-width: 100%; }.table-tools { width: 100%; overflow-x: auto; }.table-tools > * { flex: none; }.table-filter { min-width: 150px; flex: 1; }.board-config-main { overflow-x: auto; scrollbar-width: none; }.board-config-main::-webkit-scrollbar { width: 0; height: 0; }.board-config-main > * { flex: none; }.board-config-main > i { display: none; } }
 </style>
