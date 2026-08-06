@@ -59,14 +59,29 @@ const matrix = matrixSource as ReleaseCapabilityMatrix
 const communityRelease = communityReleaseSource as CommunityReleasePolicy
 const profiles = new Map(matrix.profiles.map(profile => [profile.id, profile]))
 const formats = new Map(FILE_FORMATS.map(format => [format.id, format]))
+const versionParts = (version: string) => {
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version)
+  if (!match) throw new Error(`Invalid release version ${version}`)
+  return match.slice(1).map(Number)
+}
+const compareVersions = (left: string, right: string) => {
+  const leftParts = versionParts(left)
+  const rightParts = versionParts(right)
+  for (let index = 0; index < leftParts.length; index += 1) {
+    if (leftParts[index] !== rightParts[index]) return leftParts[index] - rightParts[index]
+  }
+  return 0
+}
 
 if (matrix.schemaVersion !== 1 || !['R1', 'R2'].includes(matrix.stage) || matrix.formatRegistrySchemaVersion !== 2) {
   throw new Error('Unsupported release capability matrix')
 }
 if (matrix.formats.length !== FILE_FORMATS.length) throw new Error('Incomplete release capability matrix')
-if (communityRelease.schemaVersion !== 1 || communityRelease.appVersion !== matrix.appVersion) {
+if (communityRelease.schemaVersion !== 1 || compareVersions(communityRelease.appVersion, matrix.appVersion) > 0) {
   throw new Error('Community release policy does not match the capability matrix')
 }
+const currentCommunityReleasePublished = communityRelease.gates.githubReleasePublished
+  && communityRelease.currentStatus === `v${communityRelease.appVersion}-community-release-published`
 
 export const RELEASE_CAPABILITY_ROWS: readonly ReleaseCapabilityRow[] = Object.freeze(
   matrix.formats.map(mapping => {
@@ -87,14 +102,16 @@ export const RELEASE_CAPABILITY_ROWS: readonly ReleaseCapabilityRow[] = Object.f
 export const RELEASE_STAGE = matrix.stage
 export const RELEASE_MATRIX_VERSION = matrix.appVersion
 export const RELEASE_CANDIDATE = matrix.releaseCandidate
-export const RELEASE_PUBLIC_STATUS_LABEL = communityRelease.gates.githubReleasePublished
-  && communityRelease.currentStatus === `v${matrix.appVersion}-community-release-published`
+export const RELEASE_PUBLIC_STATUS_LABEL = currentCommunityReleasePublished
+  && communityRelease.appVersion === matrix.appVersion
   ? `v${matrix.appVersion} 社区版已发布`
+  : currentCommunityReleasePublished
+    ? `v${matrix.appVersion} 发布准备中 · 当前公开 v${communityRelease.appVersion}`
   : communityRelease.releaseCandidate
     ? `v${matrix.appVersion} 社区版`
     : communityRelease.currentStatus === `v${matrix.appVersion}-community-release-quality-gate-pending`
       ? `v${matrix.appVersion} 社区版`
-    : RELEASE_CANDIDATE
-      ? '企业发布候选'
-      : `${RELEASE_STAGE} 能力审计`
+      : RELEASE_CANDIDATE
+        ? '企业发布候选'
+        : `${RELEASE_STAGE} 能力审计`
 export const RELEASE_EXTERNAL_GATES = Object.freeze(matrix.externalGates)
