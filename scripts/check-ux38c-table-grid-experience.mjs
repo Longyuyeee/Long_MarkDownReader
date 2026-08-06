@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { textEvidenceMatchesSha256 } from './lib/text-evidence-integrity.mjs'
 
 const table = fs.readFileSync('src/views/TableView.vue', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
@@ -49,7 +50,7 @@ const manifest = JSON.parse(fs.readFileSync(path.join(evidenceRoot, 'manifest.js
 const evidence = JSON.parse(fs.readFileSync(path.join(evidenceRoot, manifest.evidenceFile), 'utf8'))
 if (manifest.stage !== 'UX-38C1' || manifest.status !== 'accepted' || manifest.visualReview !== 'accepted') fail('desktop evidence is not visually accepted')
 if (manifest.sourceCommit !== 'f43ac3268db99691c31464881e18b165c19b0d5a' || evidence.sourceCommit !== manifest.sourceCommit) fail('desktop evidence is not bound to the product commit')
-if (sha256(path.join(evidenceRoot, manifest.evidenceFile)) !== manifest.evidenceSha256) fail('interaction evidence hash drift')
+if (!textEvidenceMatchesSha256(path.join(evidenceRoot, manifest.evidenceFile), manifest.evidenceSha256)) fail('interaction evidence hash drift')
 for (const key of ['csvLoaded', 'tsvLoaded', 'stickyPositionsStable', 'frozenLayersOpaque', 'rowSelectionNonDestructive', 'deleteDialogUsesApplicationSurface', 'conversionExplained', 'conversionResultExplained', 'generatedTableCreated', 'generatedTableLocated', 'narrowViewportStable', 'sourceFilesUnchanged']) {
   if (evidence[key] !== true) fail(`${key} is not accepted`)
 }

@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { textEvidenceMatchesSha256 } from './lib/text-evidence-integrity.mjs'
 
 const read = file => fs.readFileSync(file, 'utf8')
 const fail = message => { console.error(message); process.exit(1) }
@@ -28,8 +29,7 @@ for (const key of ['workbookLoaded', 'odsLoaded', 'workbookFrozenLayersOpaque', 
   if (evidence[key] !== true) fail(`UX-38C2 evidence gate failed: ${key}`)
 }
 if (evidence.runtimeErrorCount !== 0 || evidence.blockingErrorSurfaceObserved !== false || evidence.sourceUserContentIncluded !== false || evidence.releaseCandidate !== false) fail('UX-38C2 runtime/privacy/release boundary drift')
-const evidenceDigest = crypto.createHash('sha256').update(fs.readFileSync(evidencePath)).digest('hex')
-if (manifest.evidenceSha256 !== evidenceDigest) fail('UX-38C2 evidence digest mismatch')
+if (!textEvidenceMatchesSha256(evidencePath, manifest.evidenceSha256)) fail('UX-38C2 evidence digest mismatch')
 if (!Array.isArray(manifest.screenshots) || manifest.screenshots.length !== 3) fail('UX-38C2 screenshot set is incomplete')
 for (const screenshot of manifest.screenshots) {
   const file = path.join('docs/evidence/ux38c2-workbook-context', screenshot.file)

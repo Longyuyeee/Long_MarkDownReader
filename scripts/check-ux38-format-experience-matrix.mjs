@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { textEvidenceMatchesSha256 } from './lib/text-evidence-integrity.mjs'
 
 const registry = JSON.parse(fs.readFileSync('shared/file-formats.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/ux38-format-experience-matrix.json', 'utf8'))
@@ -39,7 +40,7 @@ const manifest = JSON.parse(fs.readFileSync(path.join(evidenceRoot, 'manifest.js
 const evidence = JSON.parse(fs.readFileSync(path.join(evidenceRoot, manifest.evidenceFile), 'utf8'))
 if (manifest.stage !== 'UX-38A' || manifest.status !== 'accepted' || manifest.visualReview !== 'accepted') fail('UX-38A evidence is not accepted')
 if (manifest.sourceCommit !== evidence.sourceCommit || !/^[0-9a-f]{40}$/.test(manifest.sourceCommit)) fail('UX-38A source commit drift')
-if (sha256(path.join(evidenceRoot, manifest.evidenceFile)) !== manifest.evidenceSha256) fail('UX-38A evidence hash drift')
+if (!textEvidenceMatchesSha256(path.join(evidenceRoot, manifest.evidenceFile), manifest.evidenceSha256)) fail('UX-38A evidence hash drift')
 if (evidence.formatCount !== 24 || evidence.passedFormatCount !== 24 || evidence.sourceFilesUnchanged !== true) fail('UX-38A format or source integrity drift')
 if (evidence.runtimeErrorCount !== 0 || evidence.blockingErrorSurfaceObserved !== false || evidence.maxLoadMilliseconds > 5000) fail('UX-38A runtime or performance drift')
 if (evidence.sourceUserContentIncluded !== false || evidence.releaseCandidate !== false) fail('UX-38A privacy or release boundary drift')

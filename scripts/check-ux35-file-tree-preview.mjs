@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { textEvidenceMatchesSha256 } from './lib/text-evidence-integrity.mjs'
 
 const read = file => fs.readFileSync(file)
 const text = file => read(file).toString('utf8')
@@ -19,7 +20,7 @@ const runner = text('scripts/run-ux35-file-tree-preview-audit.ps1')
 if (manifest.schemaVersion !== 1 || manifest.stage !== 'UX-35' || manifest.status !== 'accepted') fail('manifest identity drift')
 if (manifest.productSourceCommit !== 'b3bf7f1671cfaa766a78ed983171d01a51123b08' || evidence.sourceCommit !== manifest.productSourceCommit) fail('product source commit drift')
 if (manifest.visualReview !== 'accepted' || manifest.sourceUserContentIncluded !== false || manifest.releaseCandidate !== false) fail('visual, privacy, or release boundary drift')
-if (sha256(path.join(root, manifest.evidenceFile)) !== manifest.evidenceSha256) fail('evidence hash drift')
+if (!textEvidenceMatchesSha256(path.join(root, manifest.evidenceFile), manifest.evidenceSha256)) fail('evidence hash drift')
 for (const [fileKey, bytesKey, hashKey] of [
   ['mouseScreenshotFile', 'mouseScreenshotBytes', 'mouseScreenshotSha256'],
   ['keyboardScreenshotFile', 'keyboardScreenshotBytes', 'keyboardScreenshotSha256'],

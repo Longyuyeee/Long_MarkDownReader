@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { textEvidenceMatchesSha256 } from './lib/text-evidence-integrity.mjs'
 
 const read = file => fs.readFileSync(file, 'utf8')
 const fail = message => { console.error(`UX-38E graphics workspace rejected: ${message}`); process.exit(1) }
@@ -33,7 +34,7 @@ for (const format of ['canvas', 'drawio', 'diagram']) {
 for (const suffix of ['NoWriteBeforeSave', 'ExplicitSaveWrites', 'ContextRestored', 'NarrowStable']) if (evidence[`opml${suffix}`] !== true) fail(`evidence gate failed: opml${suffix}`)
 if (evidence.opmlHistoryReferenced !== 'docs/evidence/ux37a-opml-canvas/manifest.json') fail('OPML history evidence reference drift')
 if (evidence.runtimeErrorCount !== 0 || evidence.unexpectedDialogCount !== 0 || evidence.blockingErrorSurfaceObserved !== false || evidence.sourceUserContentIncluded !== false || evidence.releaseCandidate !== false) fail('runtime/dialog/privacy/release boundary drift')
-if (manifest.evidenceSha256 !== crypto.createHash('sha256').update(fs.readFileSync(evidencePath)).digest('hex')) fail('evidence digest mismatch')
+if (!textEvidenceMatchesSha256(evidencePath, manifest.evidenceSha256)) fail('evidence digest mismatch')
 if (!Array.isArray(manifest.screenshots) || manifest.screenshots.length !== 4) fail('screenshot set is incomplete')
 for (const screenshot of manifest.screenshots) {
   const bytes = fs.readFileSync(path.join(root, screenshot.file))

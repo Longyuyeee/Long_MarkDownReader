@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { textEvidenceMatchesSha256 } from './lib/text-evidence-integrity.mjs'
 
 const read = file => fs.readFileSync(file)
 const text = file => read(file).toString('utf8')
@@ -21,7 +22,7 @@ const runner = text('scripts/run-ux34-drawio-canvas-stability-audit.ps1')
 if (manifest.schemaVersion !== 1 || manifest.stage !== 'UX-34' || manifest.status !== 'accepted') fail('manifest identity drift')
 if (manifest.productSourceCommit !== '2f756cd1d9bb729a0002077d20aa6d0060bf961b' || evidence.sourceCommit !== manifest.productSourceCommit) fail('product source commit drift')
 if (manifest.visualReview !== 'accepted' || manifest.sourceUserContentIncluded !== false || manifest.releaseCandidate !== false) fail('visual, privacy, or release boundary drift')
-if (sha256(path.join(root, manifest.evidenceFile)) !== manifest.evidenceSha256) fail('evidence hash drift')
+if (!textEvidenceMatchesSha256(path.join(root, manifest.evidenceFile), manifest.evidenceSha256)) fail('evidence hash drift')
 const screenshot = path.join(root, manifest.screenshotFile)
 if (fs.statSync(screenshot).size !== manifest.screenshotBytes || manifest.screenshotBytes < 100000 || sha256(screenshot) !== manifest.screenshotSha256) fail('screenshot integrity drift')
 

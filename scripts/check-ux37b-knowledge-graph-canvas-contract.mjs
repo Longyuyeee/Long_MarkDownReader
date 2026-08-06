@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { textEvidenceMatchesSha256 } from './lib/text-evidence-integrity.mjs'
 
 const source = fs.readFileSync('src/components/GraphView.vue', 'utf8')
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'))
@@ -56,7 +57,7 @@ if (!packageJson.scripts?.['check:current-development-audit']?.includes('check-u
 if (manifest.schemaVersion !== 1 || manifest.stage !== 'UX-37B' || manifest.status !== 'accepted' || manifest.visualReview !== 'accepted') fail('manifest identity or visual review drift')
 if (manifest.productSourceCommit !== '17ad313fdf467c857856ffa6698b549315bb8f43' || evidence.sourceCommit !== manifest.productSourceCommit) fail('product source commit drift')
 if (manifest.sourceUserContentIncluded !== false || manifest.releaseCandidate !== false) fail('privacy or release boundary drift')
-if (sha256(path.join(evidenceRoot, manifest.evidenceFile)) !== manifest.evidenceSha256) fail('evidence hash drift')
+if (!textEvidenceMatchesSha256(path.join(evidenceRoot, manifest.evidenceFile), manifest.evidenceSha256)) fail('evidence hash drift')
 if (!Array.isArray(manifest.screenshots) || manifest.screenshots.length !== 3) fail('screenshot manifest drift')
 for (const screenshot of manifest.screenshots) {
   const file = path.join(evidenceRoot, screenshot.file)

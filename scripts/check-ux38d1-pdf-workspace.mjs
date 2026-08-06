@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { textEvidenceMatchesSha256 } from './lib/text-evidence-integrity.mjs'
 
 const read = file => fs.readFileSync(file, 'utf8')
 const fail = message => { console.error(`UX-38D1 PDF workspace rejected: ${message}`); process.exit(1) }
@@ -21,8 +22,7 @@ for (const key of ['pdfLoaded', 'pdfContextRestored', 'narrowWorkspaceStable', '
   if (evidence[key] !== true) fail(`evidence gate failed: ${key}`)
 }
 if (evidence.runtimeErrorCount !== 0 || evidence.blockingErrorSurfaceObserved !== false || evidence.sourceUserContentIncluded !== false || evidence.releaseCandidate !== false) fail('runtime/privacy/release boundary drift')
-const digest = crypto.createHash('sha256').update(fs.readFileSync(evidencePath)).digest('hex')
-if (manifest.evidenceSha256 !== digest) fail('evidence digest mismatch')
+if (!textEvidenceMatchesSha256(evidencePath, manifest.evidenceSha256)) fail('evidence digest mismatch')
 if (!Array.isArray(manifest.screenshots) || manifest.screenshots.length !== 3) fail('screenshot set is incomplete')
 for (const screenshot of manifest.screenshots) {
   const file = path.join(root, screenshot.file)

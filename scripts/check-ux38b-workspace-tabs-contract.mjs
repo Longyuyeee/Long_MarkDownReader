@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { textEvidenceMatchesSha256 } from './lib/text-evidence-integrity.mjs'
 
 const source = fs.readFileSync('src/components/WorkspaceTabs.vue', 'utf8')
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'))
@@ -38,7 +39,7 @@ const manifest = JSON.parse(fs.readFileSync(path.join(evidenceRoot, 'manifest.js
 const evidence = JSON.parse(fs.readFileSync(path.join(evidenceRoot, manifest.evidenceFile), 'utf8'))
 if (manifest.stage !== 'UX-38B' || manifest.status !== 'accepted' || manifest.visualReview !== 'accepted') fail('desktop evidence is not visually accepted')
 if (manifest.sourceCommit !== '055935e73d857446d9cdc5211ddc98eaad313553' || evidence.sourceCommit !== manifest.sourceCommit) fail('desktop evidence is not bound to the product commit')
-if (sha256(path.join(evidenceRoot, manifest.evidenceFile)) !== manifest.evidenceSha256) fail('interaction evidence hash drift')
+if (!textEvidenceMatchesSha256(path.join(evidenceRoot, manifest.evidenceFile), manifest.evidenceSha256)) fail('interaction evidence hash drift')
 if (evidence.tabCount !== 12 || evidence.minTabWidth < 156 || evidence.minTextWidth < 66 || evidence.overflow !== true || evidence.scrollbarWidth !== 'none') fail('readability or overflow evidence regressed')
 for (const key of ['wheelScrollChanged', 'shiftWheelScrollChanged', 'arrowScrollChanged', 'activeTabRevealed', 'narrowViewportStable', 'keyboardNavigationChanged', 'sourceFilesUnchanged']) {
   if (evidence[key] !== true) fail(`${key} is not accepted`)

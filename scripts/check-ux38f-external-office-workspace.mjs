@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { textEvidenceMatchesSha256 } from './lib/text-evidence-integrity.mjs'
 
 const read = file => fs.readFileSync(file, 'utf8')
 const fail = message => { console.error(`UX-38F external Office workspace rejected: ${message}`); process.exit(1) }
@@ -31,7 +32,7 @@ if (manifest.sourceCommit !== evidence.sourceCommit || evidence.sourceCommit !==
 for (const key of ['allFormatsLoaded', 'directExternalOpenVisible', 'capabilityBoundaryVisible', 'allContextsRestored', 'allNarrowLayoutsStable', 'allSourceFilesUnchanged']) if (evidence[key] !== true) fail(`evidence gate failed: ${key}`)
 if (evidence.externalApplicationLaunched !== false || evidence.conversionExecuted !== false || evidence.runtimeErrorCount !== 0 || evidence.unexpectedDialogCount !== 0 || evidence.blockingErrorSurfaceObserved !== false || evidence.sourceUserContentIncluded !== false || evidence.releaseCandidate !== false) fail('execution/runtime/privacy/release boundary drift')
 if (!Array.isArray(evidence.formatResults) || evidence.formatResults.length !== 6 || evidence.formatResults.some(item => item.optionCount !== 4 || !item.openButtonVisible || !item.boundaryVisible || item.loadError || !item.contextRestored || !item.narrowStable)) fail('per-format desktop evidence is incomplete')
-if (manifest.evidenceSha256 !== crypto.createHash('sha256').update(fs.readFileSync(evidencePath)).digest('hex')) fail('evidence digest mismatch')
+if (!textEvidenceMatchesSha256(evidencePath, manifest.evidenceSha256)) fail('evidence digest mismatch')
 if (!Array.isArray(manifest.screenshots) || manifest.screenshots.length !== 2) fail('screenshot set is incomplete')
 for (const screenshot of manifest.screenshots) {
   const bytes = fs.readFileSync(path.join(evidenceRoot, screenshot.file))
