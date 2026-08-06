@@ -732,7 +732,7 @@
           <span v-if="calculationCount">已重算 {{ calculationCount }} 个公式</span>
           <span v-if="calculationErrors" class="calculation-error">{{ calculationErrors }} 个公式错误</span>
         </WorkspaceStatusBar>
-        <div ref="scrollRef" class="sheet-scroll" @scroll="handleScroll">
+        <div ref="scrollRef" class="sheet-scroll" data-horizontal-wheel="headers" @scroll="handleScroll">
           <div class="sheet-canvas" :style="{ width: `${sheetWidth}px` }">
             <div class="sheet-header" :style="gridStyle">
               <div class="row-number corner" title="选择当前工作区" @pointerdown="selectAllCells">#</div>

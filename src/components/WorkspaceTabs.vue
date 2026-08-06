@@ -81,7 +81,7 @@ const handleWheel = (event: WheelEvent) => {
   const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
   if (!delta) return
   event.preventDefault()
-  element.scrollBy({ left: delta, behavior: 'smooth' })
+  element.scrollBy({ left: delta, behavior: 'auto' })
 }
 
 const routeToTab = async (tab: TabInfo) => {

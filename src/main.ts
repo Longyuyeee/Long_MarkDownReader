@@ -32,6 +32,7 @@ import router from './router'
 import { useAppStore } from './store/app'
 import { managedFileLocation } from './services/fileNavigation'
 import { installRecoverableLayoutErrorBoundary } from './services/recoverableRuntimeErrors'
+import { installHorizontalWheelNavigation } from './services/horizontalWheel'
 import { withTimeout } from './services/tauriRuntime'
 
 import 'vfonts/Inter.css'
@@ -42,7 +43,11 @@ import './styles/motion.scss'
 import './styles/vditor-content-themes.scss'
 
 const removeRecoverableLayoutErrorBoundary = installRecoverableLayoutErrorBoundary()
-import.meta.hot?.dispose(removeRecoverableLayoutErrorBoundary)
+const removeHorizontalWheelNavigation = installHorizontalWheelNavigation()
+import.meta.hot?.dispose(() => {
+  removeRecoverableLayoutErrorBoundary()
+  removeHorizontalWheelNavigation()
+})
 
 const app = createApp(App)
 const pinia = createPinia()

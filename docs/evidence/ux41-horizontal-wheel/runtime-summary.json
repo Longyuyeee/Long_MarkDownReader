@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-06T11:49:00+08:00",
+  "surface": "Chromium local production UI",
+  "viewport": {
+    "width": 700,
+    "height": 700
+  },
+  "target": ".settings-navigation",
+  "clientWidth": 642,
+  "scrollWidth": 797,
+  "maxScrollLeft": 155,
+  "forwardWheel": {
+    "inputDeltaY": 398,
+    "scrollLeftBefore": 0,
+    "scrollLeftAfter": 155,
+    "passed": true
+  },
+  "reverseWheel": {
+    "inputDeltaY": -180,
+    "scrollLeftBefore": 155,
+    "scrollLeftAfter": 0,
+    "passed": true
+  }
+}

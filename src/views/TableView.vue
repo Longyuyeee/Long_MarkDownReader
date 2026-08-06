@@ -63,7 +63,7 @@
           </template>
           <i v-if="notice" aria-live="polite">{{ notice }}</i>
         </div>
-        <div v-if="activeViewKind === 'grid'" ref="scrollRef" class="table-scroll" @scroll="handleScroll">
+        <div v-if="activeViewKind === 'grid'" ref="scrollRef" class="table-scroll" data-horizontal-wheel="headers" @scroll="handleScroll">
           <div class="table-canvas" :style="{ width: `${tableWidth}px` }">
             <div class="table-header" :style="gridStyle">
               <div class="row-number header-number">#</div>
