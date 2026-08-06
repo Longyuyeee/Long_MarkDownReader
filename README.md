@@ -23,7 +23,9 @@
 
 项目当前没有 Windows Authenticode 商业证书，安装时可能出现“未知发布者”或 SmartScreen 提示。请只从官方 GitHub Release 下载，并使用 `SHA256SUMS.txt` 核对 SHA-256。
 
-v1.0.4 采用**手动下载安装**。原 Tauri 自动更新私钥在当前发布环境不可用，因此本版本不发布 `latest.json` 或 `.sig`，应用内自动更新不会分发此版本；现有公钥保持不变，避免伪造历史更新链。
+已发布的 v1.0.4 仍采用**手动下载安装**。原 Tauri 自动更新私钥在当前发布环境不可用，因此该 Release 没有 `latest.json` 或 `.sig`，现有公钥保持不变，避免伪造历史更新链。
+
+当前主分支已实现新的受控更新链：每天自动检查或手动检查官方 GitHub Release，用户确认后下载 Windows x64 NSIS 安装器，校验 GitHub 附件 SHA-256 并覆盖安装。此能力将在下一安装包中生效；现有 v1.0.4 用户需要先完成一次手动升级。详见 [UX-47 自动更新审计](docs/UX47_Managed_Automatic_Update_Audit_2026-08-06.md)。
 
 ## v1.0.4 更新重点
 

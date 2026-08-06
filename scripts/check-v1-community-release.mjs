@@ -16,6 +16,7 @@ const readme = read('README.md')
 const appUpdater = read('src/services/appUpdater.ts')
 const updateSettings = read('src/components/UpdateSettingsRow.vue')
 const app = read('src/App.vue')
+const managedUpdaterPolicy = json('shared/community-updater-policy.json')
 const tag = `v${pkg.version}`
 const releaseUrl = `https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/${tag}`
 
@@ -26,8 +27,8 @@ if (policy.updater?.enabled !== false || policy.updater?.automaticCheckIntervalH
 if (tauri.bundle.createUpdaterArtifacts !== true || !tauri.plugins?.updater?.pubkey || !tauri.plugins.updater.endpoints?.includes('https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest/download/latest.json')) fail('Tauri updater configuration drift')
 if (!pkg.dependencies?.['@tauri-apps/plugin-updater'] || !pkg.dependencies?.['@tauri-apps/plugin-process'] || !cargo.includes('tauri-plugin-updater = "2"') || !cargo.includes('tauri-plugin-process = "2"')) fail('updater dependencies drift')
 for (const token of ['LATEST_RELEASE_URL', 'openLatestRelease', 'releases/latest']) if (!appUpdater.includes(token) && !updateSettings.includes(token)) fail(`manual release implementation token missing: ${token}`)
-for (const forbidden of ['checkForUpdates', 'downloadAndInstall', '<AppUpdater']) if (appUpdater.includes(forbidden) || updateSettings.includes(forbidden) || app.includes(forbidden)) fail(`inactive automatic updater leaked into runtime: ${forbidden}`)
-if (!updateSettings.includes('查看最新版本') || !updateSettings.includes('SHA-256') || !gitignore.includes('.release-secrets/')) fail('manual release UI or secret ignore boundary drift')
+if (managedUpdaterPolicy.status !== 'implemented-for-next-package' || managedUpdaterPolicy.migration?.v1_0_4CanSelfUpgrade !== false || managedUpdaterPolicy.legacyTauriUpdater?.enabled !== false) fail('managed updater migration boundary drift')
+if (!updateSettings.includes('检查更新') || !updateSettings.includes('SHA-256') || !gitignore.includes('.release-secrets/')) fail('update UI or secret ignore boundary drift')
 for (const token of [tag, '未知发布者', 'SHA-256', '手动下载安装', '自动更新']) if (!readme.includes(token)) fail(`README release disclosure missing: ${token}`)
 
 if (lifecycle.status !== 'passed' || lifecycle.appVersion !== pkg.version || lifecycle.sourceCommit !== policy.candidate?.artifactSourceCommit || lifecycle.blockers?.length !== 0) fail('current installed lifecycle evidence is incomplete')
@@ -54,4 +55,4 @@ if (failures.length) {
   console.error(failures.map(message => `- ${message}`).join('\n'))
   process.exit(1)
 }
-console.log(`V1 community release contract passed: ${pkg.version}, manual unsigned distribution and current lifecycle evidence are aligned.`)
+console.log(`V1 community release contract passed: ${pkg.version} remains a manual historical release; the managed updater is staged only for the next package.`)

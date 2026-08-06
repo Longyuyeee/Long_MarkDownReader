@@ -27,6 +27,7 @@ pub mod svg;
 pub mod system;
 pub mod table;
 pub mod toml;
+pub mod updater;
 pub mod workbook;
 pub mod workspace;
 pub mod wps_native;

@@ -98,6 +98,7 @@ use commands::table::{
     create_table_file, export_table_file, import_table_file, read_table_file, write_table_file,
 };
 use commands::toml::{analyze_toml_source, write_toml_source_document};
+use commands::updater::{check_community_update, install_community_update};
 use commands::workbook::{
     audit_workbook_pivot_multi_axis_isolated_copy, get_workbook_capabilities,
     import_workbook_sheet, preview_workbook_dynamic_array, preview_workbook_pivot,
@@ -452,6 +453,8 @@ pub fn run() {
             delete_history_version,
             clear_all_history,
             exit_app,
+            check_community_update,
+            install_community_update,
             ai_chat_completion,
             export_management_backup,
             preflight_management_backup_import,

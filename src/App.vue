@@ -37,6 +37,7 @@
           </div>
         </div>
         <CommandPalette :show="showPalette" @close="showPalette = false" @execute="handleCommand" />
+        <AppUpdater />
 
         <!-- 手写极简退出确认弹窗 (无侵入式) -->
         <transition name="modal-fade">
@@ -70,6 +71,7 @@ import { useRouter } from 'vue-router'
 import { listen, emit } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import FileRelationContext from './components/FileRelationContext.vue'
+import AppUpdater from './components/AppUpdater.vue'
 import { useAppStore } from './store/app'
 import { findFileFormat, isExternallyEditable, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
