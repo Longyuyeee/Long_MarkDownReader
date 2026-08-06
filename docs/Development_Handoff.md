@@ -712,3 +712,9 @@ UX-39 已完成安装包与安装态回归收口。最终产品源码提交为 `
 `v1.0.4` 已于 `2026-08-06T02:06:55Z` 正式发布，标签指向提交 `acfc86b937307eee70e8063884ef405ba2c0a7fa`。Release 地址为 <https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.4>。NSIS、MSI 和 `SHA256SUMS.txt` 已从远端重新下载复核，公开哈希与发布候选完全一致。
 
 接手后进入 v1.0.4 稳定性观察，不再重复打包 1.0.3 或 1.0.4。只处理真实可复现回归；后续产品阶段继续推进完整 Excel、高级 Office 编辑、更多原生格式和主题深化。自动更新私钥边界不变，仍不发布 `latest.json` 或 `.sig`。
+
+# 2026-08-06 UX-40 交接入口
+
+v1.0.4 安装反馈确认文档 Tab 切换被全局路由遮罩和 `out-in` 串行转场人为阻塞。UX-40 已将全屏遮罩限制为首次启动，文档导航遮罩预算改为 0ms，并移除跨格式工作区的串行退场；性能记录仍保留但不再影响交互。生产构建、R5B 性能合同和当前完整审计链均通过，详见 [`UX40_Document_Switching_Performance_Audit_2026-08-06.md`](./UX40_Document_Switching_Performance_Audit_2026-08-06.md)。
+
+该修复位于 `main`，已发布的 `v1.0.4` 安装器不包含它。接手后应先用真实安装包复测 Markdown/TXT 同路由切换以及 TXT/JSON/PDF/XLSX 跨格式切换，再决定后续补丁版本；不得把当前源码修复误报为已交付给 v1.0.4 用户。

@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "stage": "R5B",
-  "appVersion": "1.0.0",
+  "appVersion": "1.0.4",
   "releaseCandidate": false,
   "scope": "desktop-startup-and-route-performance-evidence",
-  "generatedAt": "2026-07-30",
+  "generatedAt": "2026-08-06",
   "currentStatus": "runtime-marks-added-real-desktop-baseline-pending",
   "evidenceState": {
     "localRuntimeMarks": "implemented",
@@ -31,7 +31,9 @@
     "office-readers"
   ],
   "performanceBudgets": {
-    "routeLoaderMinimumVisibleMs": 420,
+    "routeLoaderMinimumVisibleMs": 0,
+    "initialLoaderMinimumVisibleMs": 120,
+    "documentNavigationOverlay": "disabled",
     "routeHistoryEntryLimit": 20,
     "manualChunkWarningLimitKb": 750,
     "mustNotPromoteToRcWithoutRealDesktopEvidence": true

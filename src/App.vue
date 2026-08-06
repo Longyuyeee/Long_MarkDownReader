@@ -18,11 +18,9 @@
         </div>
         <div class="app-content" :class="{ 'has-relation-context': activeContextPath }">
           <router-view v-slot="{ Component }">
-            <transition name="premium-switch" mode="out-in">
-              <div :key="$route.path" class="route-wrapper">
-                <component :is="Component" />
-              </div>
-            </transition>
+            <div :key="$route.path" class="route-wrapper">
+              <component :is="Component" />
+            </div>
           </router-view>
           <FileRelationContext
             v-if="activeContextPath"
@@ -39,7 +37,7 @@
               </div>
               <div class="page-loader-copy">
                 <strong>{{ routeLoadingLabel }}</strong>
-                <span>正在准备页面内容...</span>
+                <span>正在恢复工作区...</span>
               </div>
             </div>
           </transition>
@@ -150,12 +148,13 @@ const showPalette = ref(false)
 const showExitModal = ref(false)
 const dontAskAgain = ref(false)
 const routeLoading = ref(true)
-const routeLoadingLabel = ref('正在打开知识库')
+const routeLoadingLabel = ref('正在启动 Long编辑')
 let unlistenOpenFile: (() => void) | null = null
-let routeLoadingTimer: ReturnType<typeof setTimeout> | null = null
-let routeLoadingStartedAt = performance.now()
-let routeLoadingName = 'initial'
-let routeLoadingSequence = 0
+let initialLoadingTimer: ReturnType<typeof setTimeout> | null = null
+const appLoadingStartedAt = performance.now()
+let routeMeasurementStartedAt = performance.now()
+let routeMeasurementName = 'initial'
+let routeMeasurementSequence = 0
 performance.mark('longedit:route:initial:start')
 
 declare global {
@@ -209,74 +208,51 @@ const recordRoutePerformance = (routeName: string, elapsedMs: number) => {
   window.__LONGEDIT_ROUTE_PERFORMANCE__ = entries.slice(-ROUTE_PERFORMANCE_MAX_ENTRIES)
 }
 
-const getRouteLoadingLabel = (routeName: unknown) => {
-  const labels: Record<string, string> = {
-    WorkspaceHome: '正在准备工作台',
-    LibraryMode: '正在打开知识库',
-    TextEditor: '正在打开文本编辑器',
-    JsonEditor: '正在打开 JSON 工作区',
-    YamlEditor: '正在打开 YAML 工作区',
-    XmlEditor: '正在打开 XML 工作区',
-    DrawioEditor: '正在打开 Draw.io 工作区',
-    TomlEditor: '正在打开 TOML 工作区',
-    TempMode: '正在载入文档',
-    QuickNote: '正在打开快速笔记',
-    Graph: '正在准备知识图谱',
-    Canvas: '正在打开知识画布',
-    Pdf: '正在打开 PDF',
-    OdtReader: '正在解析 ODT 文档',
-    Table: '正在打开数据表',
-    Workbook: '正在解析 XLSX 工作簿',
-    Diagram: '正在打开 Mermaid 图表工作室',
-    MindMap: '正在打开 OPML 思维导图',
-    Settings: '正在载入设置'
-  }
-  return labels[String(routeName)] || '正在切换页面'
+const startRouteMeasurement = (routeName?: unknown) => {
+  routeMeasurementSequence += 1
+  routeMeasurementStartedAt = performance.now()
+  routeMeasurementName = String(routeName || 'unknown')
+  performance.mark(`longedit:route:${routeMeasurementName}:start`)
 }
 
-const startRouteLoading = (routeName?: unknown) => {
-  if (routeLoadingTimer) clearTimeout(routeLoadingTimer)
-  routeLoadingSequence += 1
-  routeLoadingStartedAt = performance.now()
-  routeLoadingName = String(routeName || 'unknown')
-  performance.mark(`longedit:route:${routeLoadingName}:start`)
-  routeLoadingLabel.value = getRouteLoadingLabel(routeName)
-  routeLoading.value = true
+const finishRouteMeasurement = (sequence = routeMeasurementSequence) => {
+  if (sequence !== routeMeasurementSequence) return
+  const totalElapsedMs = performance.now() - routeMeasurementStartedAt
+  performance.mark(`longedit:route:${routeMeasurementName}:ready`)
+  performance.measure(
+    `longedit:route:${routeMeasurementName}`,
+    `longedit:route:${routeMeasurementName}:start`,
+    `longedit:route:${routeMeasurementName}:ready`,
+  )
+  recordRoutePerformance(routeMeasurementName, totalElapsedMs)
 }
 
-const finishRouteLoading = (sequence = routeLoadingSequence) => {
-  if (sequence !== routeLoadingSequence) return
-  if (routeLoadingTimer) clearTimeout(routeLoadingTimer)
-  const elapsedMs = performance.now() - routeLoadingStartedAt
-  const remaining = Math.max(0, 420 - elapsedMs)
-  routeLoadingTimer = setTimeout(() => {
-    if (sequence !== routeLoadingSequence) return
+const finishInitialAppLoading = () => {
+  if (initialLoadingTimer) clearTimeout(initialLoadingTimer)
+  const remaining = Math.max(0, 120 - (performance.now() - appLoadingStartedAt))
+  initialLoadingTimer = setTimeout(() => {
     routeLoading.value = false
-    const totalElapsedMs = performance.now() - routeLoadingStartedAt
-    performance.mark(`longedit:route:${routeLoadingName}:ready`)
-    performance.measure(
-      `longedit:route:${routeLoadingName}`,
-      `longedit:route:${routeLoadingName}:start`,
-      `longedit:route:${routeLoadingName}:ready`,
-    )
-    recordRoutePerformance(routeLoadingName, totalElapsedMs)
+    const totalElapsedMs = performance.now() - appLoadingStartedAt
+    performance.mark('longedit:route:initial:ready')
+    performance.measure('longedit:route:initial', 'longedit:route:initial:start', 'longedit:route:initial:ready')
+    recordRoutePerformance('initial', totalElapsedMs)
   }, remaining)
 }
 
 const removeBeforeEach = router.beforeEach((to) => {
-  startRouteLoading(to.name)
+  startRouteMeasurement(to.name)
   if (to.name === 'LibraryMode' && typeof to.query.path !== 'string' && store.activeTabId) {
     return { name: 'LibraryMode', query: { ...to.query, path: store.activeTabId }, replace: true }
   }
   return true
 })
 const removeAfterEach = router.afterEach(() => {
-  const sequence = routeLoadingSequence
+  const sequence = routeMeasurementSequence
   let finished = false
   const finishOnce = () => {
     if (finished) return
     finished = true
-    finishRouteLoading(sequence)
+    finishRouteMeasurement(sequence)
   }
   // Occluded WebView2 windows can suspend animation frames, so keep a bounded fallback.
   requestAnimationFrame(() => requestAnimationFrame(finishOnce))
@@ -396,14 +372,14 @@ onMounted(async () => {
 
   window.addEventListener('keydown', handleGlobalKeydown)
   window.addEventListener('beforeunload', handleBeforeUnload)
-  finishRouteLoading()
+  finishInitialAppLoading()
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown)
   window.removeEventListener('beforeunload', handleBeforeUnload)
   if (unlistenOpenFile) unlistenOpenFile()
-  if (routeLoadingTimer) clearTimeout(routeLoadingTimer)
+  if (initialLoadingTimer) clearTimeout(initialLoadingTimer)
   removeBeforeEach()
   removeAfterEach()
 })
@@ -561,31 +537,9 @@ body[data-theme="dark"] .win-btn:hover, body[data-theme="contrast"] .win-btn:hov
   50% { transform: translateY(-4px) scale(1); opacity: 1; }
 }
 
-/* 全局高级转场动效 */
 .route-wrapper {
   width: 100%;
   height: 100%;
-}
-
-.premium-switch-enter-active, .premium-switch-leave-active {
-  transition:
-    opacity var(--motion-page) var(--ease-standard),
-    transform var(--motion-page) var(--ease-emphasized),
-    filter var(--motion-page) var(--ease-standard);
-}
-.premium-switch-enter-from { opacity: 0; transform: scale(0.96) translateY(15px); filter: blur(10px); }
-.premium-switch-leave-to { opacity: 0; transform: scale(1.04); filter: blur(5px); }
-
-.premium-switch-leave-active {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-
-.premium-switch-enter-active {
-  position: relative;
-  z-index: 2;
 }
 
 /* 隐藏 Vditor 浮动工具栏，提升专注感 */
