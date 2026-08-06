@@ -11,7 +11,7 @@
           <span>Word 页面编辑 · 草稿只驻留内存 · 点击保存才写入</span>
         </div>
       </div>
-      <div class="toolbar-actions">
+      <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
         <button type="button" :disabled="!draftUndoStack.length" title="撤销草稿修改" @click="undoDraft">
           <UndoIcon :size="15" />
         </button>

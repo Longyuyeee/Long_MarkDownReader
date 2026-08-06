@@ -5,7 +5,7 @@
         <button class="icon-button" title="返回知识库" @click="router.push('/library')"><n-icon :component="ArrowLeftIcon" /></button>
         <div><strong>{{ fileName }}</strong><span v-if="workbook">XLSX 工作簿 · {{ workbook.sheets.length }} 个 Sheet · {{ formatBytes(workbook.size) }}</span></div>
       </WorkspaceFileIdentity>
-      <div v-if="workbook" class="workbook-actions" data-horizontal-wheel="always">
+      <div v-if="workbook" class="workbook-actions" data-command-strip data-horizontal-wheel="always">
         <button class="icon-button" title="撤销" :disabled="!undoStack.length || saving" @click="undo"><n-icon :component="UndoIcon" /></button>
         <button class="icon-button" title="重做" :disabled="!redoStack.length || saving" @click="redo"><n-icon :component="RedoIcon" /></button>
         <button class="icon-button" :class="{ active: showFormulas }" :aria-pressed="showFormulas" :title="showFormulas ? '显示计算结果' : '显示公式'" :disabled="saving" @click="showFormulas = !showFormulas"><n-icon :component="FunctionIcon" /></button>
@@ -4549,8 +4549,8 @@ onBeforeUnmount(() => {
 .workbook-view { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 94%, var(--theme-primary)); container-type: inline-size; }
 .workbook-toolbar { height: 44px; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-surface); box-shadow: var(--workspace-shadow-sm); z-index: 5; }
 .workbook-title,.workbook-actions,.workbook-actions button { display: flex; align-items: center; gap: 8px; }
-.workbook-actions { min-width: 0; flex: none; gap: 5px; }
-.workbook-title > button,.workbook-actions button { height: 30px; padding: 0 9px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-control-bg); cursor: pointer; }
+.workbook-actions { min-width: 0; max-width: 100%; flex: none; gap: 5px; }
+.workbook-title > button,.workbook-actions button { min-width: max-content; height: 30px; flex: none; padding: 0 9px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-control-bg); cursor: pointer; white-space: nowrap; }
 .workbook-title .icon-button,.workbook-actions .icon-button { width: 30px; justify-content: center; padding: 0; }
 .workbook-title > div { display: flex; flex-direction: column; }
 .workbook-title strong { max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }

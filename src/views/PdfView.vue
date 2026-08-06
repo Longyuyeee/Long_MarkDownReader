@@ -11,7 +11,7 @@
         <label class="page-jump"><input v-model.number="pageInput" type="number" min="1" :max="pdfDocument.numPages" @keydown.enter="commitPageInput" @blur="commitPageInput"/><span>/ {{ pdfDocument.numPages }}</span></label>
         <button class="icon-btn" title="下一页" aria-label="下一页" :disabled="currentPage >= pdfDocument.numPages" @click="goToPage(currentPage + 1)">›</button>
       </div>
-      <div v-if="pdfDocument" class="toolbar-actions">
+      <div v-if="pdfDocument" class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
         <div class="pdf-search" :class="{ active: searchQuery }">
           <span aria-hidden="true">⌕</span>
           <input ref="searchInputRef" v-model="searchQuery" aria-label="搜索 PDF 正文" placeholder="搜索 PDF" @keydown.enter.prevent="navigateMatch($event.shiftKey ? -1 : 1)" @keydown.esc="clearSearch"/>

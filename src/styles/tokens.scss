@@ -86,6 +86,31 @@ select {
   font: inherit;
 }
 
+// Command strips keep labels readable and scroll as a unit when the workspace narrows.
+[data-command-strip] {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+}
+
+[data-command-strip]::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+[data-command-strip] > * {
+  flex-shrink: 0;
+}
+
+[data-command-strip] button,
+[data-command-strip] summary,
+[data-command-strip] label {
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 // Native selects use one theme-aware visual contract across every workspace.
 select:not([multiple]):not([size]) {
   appearance: none;

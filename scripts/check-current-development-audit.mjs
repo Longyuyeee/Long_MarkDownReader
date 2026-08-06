@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import './check-community-updater-contract.mjs'
+import './check-command-strip-layout.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))

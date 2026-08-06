@@ -5,7 +5,7 @@
         <button title="返回知识库" @click="router.push('/library')">←</button>
         <div><strong>{{ fileName }}</strong><span>Mermaid 图表工作室 · {{ lineCount }} 行</span></div>
       </WorkspaceFileIdentity>
-      <div class="studio-actions">
+      <div class="studio-actions" data-command-strip data-horizontal-wheel="always">
         <label>模板
           <select v-model="selectedTemplate" @change="applySelectedTemplate">
             <option value="">选择模板…</option>

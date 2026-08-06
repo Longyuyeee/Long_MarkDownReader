@@ -8,7 +8,7 @@
           <span>OpenDocument Text · 只读</span>
         </div>
       </div>
-      <div class="toolbar-actions">
+      <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
         <label class="odt-search">
           <Search :size="14" aria-hidden="true" />
           <input v-model="query" data-testid="e1b-odt-search" type="search" placeholder="搜索文档" />

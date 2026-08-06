@@ -740,3 +740,5 @@ UX-42 已重构 Table 新建看板体验。视图创建收纳为单一菜单，�
 UX-43 已新增图片与视频只读工作区，当前注册格式由 41 类扩展为 43 类。图片覆盖 PNG/JPEG/GIF/WebP/BMP/ICO/AVIF，提供缩放、适应窗口、旋转和透明网格；视频覆盖 MP4/WebM/Ogg Video/M4V，提供原生控制、倍速和全屏，实际解码取决于系统 WebView2。媒体路径先经 `WorkspaceGuard` 和大小预算验证，再仅授权规范化单文件只读访问。真实 Tauri 回归已通过透明 PNG、WebM 和 720px 窄窗口，详见 [`UX43_Media_Workspace_Audit_2026-08-06.md`](./UX43_Media_Workspace_Audit_2026-08-06.md)。
 
 UX-47 已恢复自动检查与自动安装，但不再依赖遗失的旧 Tauri 私钥。新链路固定查询本仓库 GitHub 最新稳定 Release，只接受严格命名的 Windows x64 NSIS，后端校验附件 SHA-256 后才允许用户确认安装；应用每 24 小时自动检查一次，设置页也可手动检查。已发布的 v1.0.4 不含该代码，接手后要在下一安装包做一次人工迁移，并用更高测试版本完成端到端覆盖安装回归。详见 [`UX47_Managed_Automatic_Update_Audit_2026-08-06.md`](./UX47_Managed_Automatic_Update_Audit_2026-08-06.md)。
+
+UX-48 已修复 Table 顶部“导出 CSV”等命令在空间不足时被压缩、文字越界的问题，并删除窄窗口直接隐藏导出与行列命令的规则。统一命令条合同已覆盖 Table、Workbook、Canvas、思维导图、Mermaid、PDF、PPTX、DOCX、ODT、日志和 YAML：控件保持可读尺寸，空间不足时隐藏原生滚动条并支持滚轮横滑。详见 [`UX48_Command_Strip_Overflow_Audit_2026-08-06.md`](./UX48_Command_Strip_Overflow_Audit_2026-08-06.md)。

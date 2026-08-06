@@ -8,7 +8,7 @@
           <span>基础编辑副本 · 原文件不写回</span>
         </div>
       </div>
-      <div class="toolbar-actions">
+      <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
         <label class="pptx-search">
           <SearchIcon :size="14" />
           <input

@@ -17,7 +17,7 @@
       </div>
     </header>
 
-    <div v-if="document" class="mindmap-toolbar" data-horizontal-wheel="always">
+    <div v-if="document" class="mindmap-toolbar" data-command-strip data-horizontal-wheel="always">
       <div class="view-switch">
         <button :class="{ active: viewMode === 'map' }" @click="viewMode = 'map'"><n-icon :component="NetworkIcon" />思维导图</button>
         <button :class="{ active: viewMode === 'outline' }" @click="viewMode = 'outline'"><n-icon :component="ListTreeIcon" />树形大纲</button>

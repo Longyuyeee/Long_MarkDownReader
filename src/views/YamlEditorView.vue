@@ -14,7 +14,7 @@
         </div>
       </div>
 
-      <div class="toolbar-actions">
+      <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
         <n-button quaternary circle size="small" title="查找（Ctrl+F）" @click="openSourceSearch">
           <template #icon><n-icon :component="SearchIcon" /></template>
         </n-button>

@@ -13,7 +13,7 @@
         </div>
       </div>
 
-      <div class="toolbar-actions">
+      <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
         <n-button-group size="small" aria-label="日志工作模式">
           <n-button :type="workspaceMode === 'viewer' ? 'primary' : 'default'" @click="requestViewerMode">
             <template #icon><n-icon :component="EyeIcon" /></template>
