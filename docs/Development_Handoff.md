@@ -698,3 +698,11 @@ UX-38 全格式体验阶段已按有界能力完成。矩阵覆盖 41/41 格式�
 接手后进入 UX-39 无签名打包与安装回归：产品开发版本已提升到 `1.0.4`，从冻结的干净 `main` 构建 MSI/NSIS，重点复测启动时无控制台弹窗、安装界面与开发界面一致，以及 UX-38 各工作区在安装态的关键路径。没有真实签名时只保持无签名社区构建，`releaseCandidate=false`；不得把本阶段误打包为 `1.0.3`，也不得在验收前提前宣称 v1.0.4 已发布。
 
 UX-39A 已完成 v1.0.4 本地产物审计：源码提交 `1bec297` 生成 MSI/NSIS，版本资源、文件名、SHA-256、`NotSigned` 状态和无更新附件边界均已核对。由于本机已有安装实例运行，未中断用户状态强行做便携烟测；隔离安装回归已派发到 GitHub Actions 运行 `30989527026`。下一步导入该运行的安装态证据，通过前不得发布 v1.0.4。详见 [`UX39A_Unsigned_Package_Artifact_Audit_2026-08-05.md`](./UX39A_Unsigned_Package_Artifact_Audit_2026-08-05.md)。
+
+# 2026-08-06 UX-39 发布交接入口
+
+UX-39 已完成安装包与安装态回归收口。最终产品源码提交为 `2b5d4d750da0f3e3ee913a4cc461784ffa8ea947`；GitHub Actions 运行 `31062756515` 通过 18/18 安装生命周期、15/15 安装态功能和 11/11 路由挂载检查。此前两个失败运行暴露的后台路由兜底和预发布能力矩阵版本冲突均已修复，不再作为阻断项。
+
+最终公开候选为 `LongEdit_1.0.4_x64-setup.exe`（SHA-256 `cd68e19d9daab198f9bca7f97d3eeb432314f5f3e7895295845e7b48d4b29ff3`）与 `LongEdit_1.0.4_x64_zh-CN.msi`（SHA-256 `dacbd99ed0f6fe148bdecb99378cf49b4afd68f16e9dcc4b5492233b1e358ee9`）。两者均为 `NotSigned`，只允许与 `SHA256SUMS.txt` 一起手动发布，不上传 `latest.json` 或 `.sig`。
+
+接手后只需完成 `v1.0.4` 标签与 GitHub Release、下载复核公开附件，并把发布 URL、时间和标签提交写回 `shared/v1-community-release-policy.json`。完整证据见 [`UX39B_Installed_Lifecycle_Closure_Audit_2026-08-06.md`](./UX39B_Installed_Lifecycle_Closure_Audit_2026-08-06.md)。

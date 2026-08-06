@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX-39B",
+  "status": "passed",
+  "capturedAt": "2026-08-06T01:54:27Z",
+  "environment": "github-hosted-disposable-windows",
+  "githubRunId": 31062756515,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31062756515",
+  "sourceCommit": "2b5d4d750da0f3e3ee913a4cc461784ffa8ea947",
+  "appVersion": "1.0.4",
+  "previousVersion": "0.6.2",
+  "hostedInstallerSha256": "bca8b3a99898698535a758f4ffc24dd30ef641d19c3b96681d6ff7c997d699df",
+  "installedExecutableSha256": "8918480c56037389c9b5dfd397842412017c75d0f5fe388175af990b04bf0bbd",
+  "authenticodeStatus": "NotSigned",
+  "checks": {
+    "installedLifecycle": { "passed": 18, "total": 18 },
+    "installedFeatureSmoke": { "passed": 15, "total": 15 },
+    "routeMount": { "passed": 11, "total": 11 }
+  },
+  "covered": [
+    "fresh-install-and-controlled-upgrade",
+    "file-association-and-first-launch",
+    "txt-json-edit-save-reopen",
+    "docx-word-wps-libreoffice-handoff",
+    "knowledge-workflows-and-representative-routes",
+    "backup-index-uninstall-rollback-restore-reopen"
+  ],
+  "blockers": [],
+  "sourceUserContentIncluded": false
+}

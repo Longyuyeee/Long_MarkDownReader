@@ -8,8 +8,8 @@ const fail = message => failures.push(message)
 const pkg = json('package.json')
 const tauri = json('src-tauri/tauri.conf.json')
 const policy = json('shared/v1-community-release-policy.json')
-const u2 = json('shared/u2-disposable-install-lifecycle-policy.json')
-const r5h = json('docs/evidence/r5h-current-installers/installer-artifact-manifest.json')
+const lifecycle = json('docs/evidence/ux39-installed-lifecycle/summary.json')
+const artifactManifest = json('docs/evidence/ux39-unsigned-package/artifact-manifest.json')
 const cargo = read('src-tauri/Cargo.toml')
 const gitignore = read('.gitignore')
 const readme = read('README.md')
@@ -30,10 +30,11 @@ for (const forbidden of ['checkForUpdates', 'downloadAndInstall', '<AppUpdater']
 if (!updateSettings.includes('查看最新版本') || !updateSettings.includes('SHA-256') || !gitignore.includes('.release-secrets/')) fail('manual release UI or secret ignore boundary drift')
 for (const token of [tag, '未知发布者', 'SHA-256', '手动下载安装', '自动更新']) if (!readme.includes(token)) fail(`README release disclosure missing: ${token}`)
 
-if (u2.evidence?.lifecycleResultComplete !== true || u2.runner?.artifactSourceCommitBound !== true || u2.blockers?.length !== 0) fail('inherited installed lifecycle evidence is incomplete')
-if (r5h.sourceCommit !== u2.artifactSourceCommit || r5h.artifacts?.length !== 2 || r5h.artifacts.some(item => item.authenticodeStatus !== 'NotSigned' || item.signed !== false)) fail('inherited installer evidence drift')
+if (lifecycle.status !== 'passed' || lifecycle.appVersion !== pkg.version || lifecycle.sourceCommit !== policy.candidate?.artifactSourceCommit || lifecycle.blockers?.length !== 0) fail('current installed lifecycle evidence is incomplete')
+if (lifecycle.checks?.installedLifecycle?.passed !== 18 || lifecycle.checks?.installedFeatureSmoke?.passed !== 15 || lifecycle.checks?.routeMount?.passed !== 11) fail('current installed lifecycle coverage drift')
+if (artifactManifest.sourceCommit !== lifecycle.sourceCommit || artifactManifest.artifacts?.length !== 3 || artifactManifest.artifacts.some(item => item.authenticodeStatus !== 'NotSigned')) fail('current installer evidence drift')
 if (policy.gates?.installedLifecyclePassed !== true || policy.gates?.frontendBuildPassed !== true || policy.gates?.rustLockedCheckPassed !== true) fail('V1 prerequisite gate drift')
-if (policy.patchValidation?.baseInstalledLifecycleVersion !== '1.0.1' || policy.patchValidation?.baseInstalledLifecycleEvidenceVersion !== '1.0.0' || policy.patchValidation?.baseInstalledLifecycleEvidenceInherited !== true) fail('patch lifecycle inheritance drift')
+if (policy.patchValidation?.baseInstalledLifecycleVersion !== '0.6.2' || policy.patchValidation?.baseInstalledLifecycleEvidenceVersion !== pkg.version || policy.patchValidation?.baseInstalledLifecycleEvidenceInherited !== false || policy.patchValidation?.fullInstalledLifecycleRerun !== true) fail('current lifecycle validation drift')
 if (policy.patchValidation?.automaticUpdaterAssetsPlanned !== false || !policy.patchValidation?.automaticUpdaterBlocker || policy.gates?.updaterSignaturesBuilt !== false) fail('manual-only updater boundary drift')
 if (policy.targetRelease?.tag !== tag || policy.targetRelease?.url !== releaseUrl || policy.targetRelease?.assetMode !== 'manual-msi-nsis-with-sha256') fail('target release drift')
 
@@ -47,10 +48,10 @@ if (policy.gates.githubReleasePublished === true) {
 }
 
 const slug = pkg.version.replaceAll('.', '_')
-for (const path of [`docs/RELEASE_NOTES_v${pkg.version}.md`, `docs/V${slug}_Unsigned_Community_Release_Audit_2026-08-03.md`]) if (!fs.existsSync(path)) fail(`release document missing: ${path}`)
+for (const path of [`docs/RELEASE_NOTES_v${pkg.version}.md`, `docs/V${slug}_Unsigned_Community_Release_Audit_${policy.generatedAt}.md`]) if (!fs.existsSync(path)) fail(`release document missing: ${path}`)
 
 if (failures.length) {
   console.error(failures.map(message => `- ${message}`).join('\n'))
   process.exit(1)
 }
-console.log(`V1 community release contract passed: ${pkg.version}, manual unsigned distribution and inherited lifecycle evidence are aligned.`)
+console.log(`V1 community release contract passed: ${pkg.version}, manual unsigned distribution and current lifecycle evidence are aligned.`)

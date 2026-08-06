@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "stage": "UX-39A",
-  "status": "artifact-audit-passed",
+  "status": "artifact-and-hosted-lifecycle-passed",
   "appVersion": "1.0.4",
-  "capturedAt": "2026-08-05T09:26:46Z",
-  "sourceCommit": "efe03d21f9dfbaa2e0005b5508669a55fb9b8c4f",
+  "capturedAt": "2026-08-06T01:54:27Z",
+  "sourceCommit": "2b5d4d750da0f3e3ee913a4cc461784ffa8ea947",
   "build": {
     "command": "npm run build:ux39-unsigned",
     "completed": true,
@@ -15,7 +15,7 @@
     "nsisBundlePassed": true
   },
   "boundaries": {
-    "releaseCandidate": false,
+    "releaseCandidate": true,
     "authenticodeRequired": false,
     "updaterArtifactsPresent": false,
     "artifactFilesCommitted": false,
@@ -26,7 +26,7 @@
       "target": "release-executable",
       "fileName": "tauri-app.exe",
       "sizeBytes": 86062592,
-      "sha256": "bd85c8ef368fea8e8d45ee46c13f463cdbd7a20375e860a1af7cb59b2fd57f0e",
+      "sha256": "85acb595da2b345d0ce637543f497501e21f210ed2cee412aed91e62483fee5d",
       "authenticodeStatus": "NotSigned",
       "fileVersion": "1.0.4",
       "productVersion": "1.0.4"
@@ -35,31 +35,27 @@
       "target": "msi",
       "fileName": "Long编辑_1.0.4_x64_zh-CN.msi",
       "sizeBytes": 58384384,
-      "sha256": "0bcb813cd20d7561eae94cc9bfe7050eb56de819b4fba8cafd4bfd72218c09b6",
+      "sha256": "dacbd99ed0f6fe148bdecb99378cf49b4afd68f16e9dcc4b5492233b1e358ee9",
       "authenticodeStatus": "NotSigned"
     },
     {
       "target": "nsis",
       "fileName": "Long编辑_1.0.4_x64-setup.exe",
-      "sizeBytes": 53529193,
-      "sha256": "21214f91ac3c9499f0b44e13e45a76a82f8353ff7b47af8b45c2c0664369eaa9",
+      "sizeBytes": 53554162,
+      "sha256": "cd68e19d9daab198f9bca7f97d3eeb432314f5f3e7895295845e7b48d4b29ff3",
       "authenticodeStatus": "NotSigned",
       "fileVersion": "1.0.4",
       "productVersion": "1.0.4"
     }
   ],
-  "localPortableRuntime": {
-    "status": "deferred-existing-single-instance",
-    "existingInstalledExecutable": "E:/Long/Long编辑/tauri-app.exe",
-    "existingProcessTerminated": false,
-    "candidateStarted": false,
-    "reason": "A running installed LongEdit instance owns the single-instance boundary; user state was not interrupted."
-  },
-  "disposableInstalledRuntime": {
-    "status": "dispatched",
-    "githubRunId": 30992573469,
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/30992573469",
-    "productSourceCommit": "efe03d21f9dfbaa2e0005b5508669a55fb9b8c4f",
-    "supersedesFailedRunId": 30989527026
+  "hostedInstalledRuntime": {
+    "status": "passed",
+    "githubRunId": 31062756515,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31062756515",
+    "productSourceCommit": "2b5d4d750da0f3e3ee913a4cc461784ffa8ea947",
+    "lifecycleChecks": "18/18",
+    "installedFeatureChecks": "15/15",
+    "routeMountChecks": "11/11",
+    "supersedesFailedRunIds": [30989527026, 30992573469]
   }
 }

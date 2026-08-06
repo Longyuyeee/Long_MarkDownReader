@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX-39B",
+  "capturedAt": "2026-08-06T01:53:56Z",
+  "evidenceLevel": "installed-current-tauri-webview2",
+  "status": "passed",
+  "routes": [
+    "/workspace",
+    "/library",
+    "/text",
+    "/json",
+    "/pdf",
+    "/workbook",
+    "/diagram",
+    "/mindmap",
+    "/graph",
+    "/canvas",
+    "/release-capabilities"
+  ],
+  "passed": 11,
+  "total": 11,
+  "crashFallbackVisible": false,
+  "sourceUserContentIncluded": false
+}

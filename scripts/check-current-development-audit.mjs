@@ -14,11 +14,11 @@ const required = [
   ['6 类为有限能力', counts['verified-with-limitations'] === 6],
   ['6 类依赖外部程序', counts['external-dependency'] === 6],
   ['10 套发布能力配置', matrix.profiles.length === 10],
-  [`当前版本：\`${pkg.version}\``, matrix.appVersion === pkg.version && policy.appVersion === '1.0.3'],
+  [`当前版本：\`${pkg.version}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
   [
-    '当前阶段：**`1.0.4` 无签名安装包回归与发布准备**',
-    pkg.version === '1.0.4' && policy.gates.githubReleasePublished,
+    '当前阶段：**`1.0.4` 无签名社区发布准备完成**',
+    pkg.version === '1.0.4' && policy.gates.qualityGatePassed,
   ],
 ]
 
