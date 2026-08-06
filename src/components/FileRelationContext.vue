@@ -43,7 +43,7 @@
       </div>
       <template v-else-if="context">
         <section v-if="collectionMemberships.length" class="collection-memberships">
-          <small>所属智能集合</small>
+          <small>所属保存视图</small>
           <button v-for="collection in collectionMemberships" :key="collection.id" type="button" @click="openCollection(collection)">
             {{ collection.name }}
           </button>

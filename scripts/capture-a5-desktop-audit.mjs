@@ -284,14 +284,14 @@ await waitFor(
   'tag collection search result',
 )
 await clickText('button[title="保存当前搜索"]', '')
-await waitFor(`document.body.innerText.includes('已保存为智能集合')`, 'G8 saved collection confirmation')
-await waitFor(`!document.body.innerText.includes('已保存为智能集合')`, 'G8 saved collection toast dismissal', 80)
+await waitFor(`document.body.innerText.includes('已保存为视图')`, 'G8 saved view confirmation')
+await waitFor(`!document.body.innerText.includes('已保存为视图')`, 'G8 saved view toast dismissal', 80)
 await navigate(routeFor('library', relationTagFile), '.library-mode')
 await waitFor(
   `document.querySelector('.relation-context-panel')?.textContent?.includes('共同标签') === true
     && document.querySelector('.relation-context-panel')?.textContent?.includes('G8 Tag Peer') === true
-    && document.querySelector('.collection-memberships')?.textContent?.includes('所属智能集合') === true`,
-  'shared tag and saved collection context',
+    && document.querySelector('.collection-memberships')?.textContent?.includes('所属保存视图') === true`,
+  'shared tag and saved view context',
   180,
 )
 checks.push({ id: 'g8-tag-and-collection-context', status: 'passed' })
@@ -696,8 +696,8 @@ await waitFor(
   'public source search result',
 )
 await clickText('button[title="保存当前搜索"]', '')
-await waitFor(`document.body.innerText.includes('已保存为智能集合')`, 'saved search confirmation')
-await waitFor(`!document.body.innerText.includes('已保存为智能集合')`, 'saved search toast dismissal', 80)
+await waitFor(`document.body.innerText.includes('已保存为视图')`, 'saved search confirmation')
+await waitFor(`!document.body.innerText.includes('已保存为视图')`, 'saved search toast dismissal', 80)
 await setInput(searchInput, 'A5_PRIVATE_ENV_MARKER')
 await waitFor(
   `document.querySelector('.knowledge-search-state')?.textContent?.includes('没有找到匹配内容') === true`,

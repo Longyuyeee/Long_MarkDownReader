@@ -144,7 +144,7 @@
         </section>
 
         <section class="workspace-section collection-section">
-          <div class="section-heading"><div><span class="section-kicker">SMART VIEWS</span><h2>智能集合</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode', query: { panel: 'collections' } })">管理集合</button></div>
+          <div class="section-heading"><div><span class="section-kicker">SAVED VIEWS</span><h2>保存视图</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode', query: { panel: 'collections' } })">管理视图</button></div>
           <div v-if="savedSearches.length" class="collection-list">
             <button v-for="search in savedSearches" :key="search.id" @click="openSavedSearch(search)">
               <CollectionIcon />
@@ -152,7 +152,7 @@
               <ArrowIcon />
             </button>
           </div>
-          <div v-else class="empty-line">暂无智能集合</div>
+          <div v-else class="empty-line">暂无保存视图</div>
         </section>
 
         <section ref="governanceSection" class="workspace-section governance-section">

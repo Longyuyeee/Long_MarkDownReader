@@ -204,7 +204,7 @@
           <button @click="useAsMindmapRoot(selectedNode)">设为思维导图中心</button>
           <button :disabled="isCreatingCanvas || Boolean(selectedNode.parentId)" @click="sendToCanvas(selectedNode)">{{ isCreatingCanvas ? '正在生成…' : '发送到可编辑画布' }}</button>
           <button :disabled="isCreatingProject || !canCreateProjectNote(selectedNode)" @click="createProjectNote(selectedNode)">{{ isCreatingProject ? '正在生成…' : '生成项目笔记' }}</button>
-          <button :disabled="isSavingCollection || !canCreateProjectNote(selectedNode)" @click="saveGraphCollection(selectedNode)">{{ isSavingCollection ? '正在保存…' : '保存为智能集合' }}</button>
+          <button :disabled="isSavingCollection || !canCreateProjectNote(selectedNode)" @click="saveGraphCollection(selectedNode)">{{ isSavingCollection ? '正在保存…' : '保存视图' }}</button>
         </div>
         <div v-if="selectedNode.objectType === 'markdown'" class="relation-editor">
           <span class="neighbor-title">建立语义关系</span>

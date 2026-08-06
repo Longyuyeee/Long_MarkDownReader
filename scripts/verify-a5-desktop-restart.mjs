@@ -69,7 +69,7 @@ await waitFor(
   'persisted recent log state',
 )
 const historyTabClicked = await evaluate(`(() => {
-  const tab = document.querySelector('.icon-tab[aria-label="历史"]')
+  const tab = document.querySelector('.icon-tab[aria-label="最近"]')
   if (!tab) return false
   tab.click()
   return true

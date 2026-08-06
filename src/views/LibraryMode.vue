@@ -3,13 +3,21 @@
     <!-- 统一左侧侧边栏 -->
     <div class="sidebar" data-ui-region="navigation" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
       <div class="sidebar-inner">
-        <!-- 侧边栏图标 Tab 栏（点击展开文字） -->
-        <div class="sidebar-tabs-header" data-ui-region="sidebar-tabs" role="tablist" aria-label="侧边栏导航">
+        <!-- 侧边栏导航根据可用宽度统一切换文字标签。 -->
+        <div
+          class="sidebar-tabs-header"
+          :class="{ compact: sidebarTabsCompact }"
+          :data-layout="sidebarTabsCompact ? 'icons' : 'labels'"
+          data-ui-region="sidebar-tabs"
+          role="tablist"
+          aria-label="侧边栏导航"
+        >
           <div
             v-for="tab in sidebarTabs" :key="tab.key"
             class="icon-tab"
             :class="{ active: activeSidebarTab === tab.key }"
             role="tab"
+            :id="`tab-${tab.key}`"
             :aria-selected="activeSidebarTab === tab.key"
             :aria-label="tab.label"
             :aria-controls="`panel-${tab.key}`"
@@ -152,7 +160,7 @@
 
             <div v-else-if="activeSidebarTab === 'collections'" :key="'collections'" class="tab-pane collections-pane">
               <div class="collections-header">
-                <div><strong>智能集合</strong><small>{{ librarySavedSearches.length }} 个</small></div>
+                <div><strong>已保存视图</strong><small>{{ librarySavedSearches.length }} 个</small></div>
                 <n-button quaternary circle size="small" title="保存当前搜索" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
                   <template #icon><n-icon :component="BookmarkAddIcon" /></template>
                 </n-button>
@@ -164,7 +172,7 @@
                     <n-icon :component="CollectionIcon" />
                     <span><strong>{{ search.name }}</strong><small>{{ collectionFilterLabel(search) }}</small></span>
                   </button>
-                  <n-button quaternary circle size="tiny" title="删除智能集合" @click="confirmRemoveSavedSearch(search.id, search.name)">
+                  <n-button quaternary circle size="tiny" title="删除保存视图" @click="confirmRemoveSavedSearch(search.id, search.name)">
                     <template #icon><n-icon :component="TrashIcon" /></template>
                   </n-button>
                 </div>
@@ -919,11 +927,11 @@ const handleError = (error: any, userMessage: string, logContext?: string) => {
 const activeSidebarTab = ref<'files' | 'quick' | 'collections' | 'tags' | 'outline' | 'links' | 'history'>('files')
 const sidebarTabs = [
   { key: 'files' as const, icon: FileIcon, label: '文件' },
-  { key: 'collections' as const, icon: CollectionIcon, label: '集合' },
+  { key: 'collections' as const, icon: CollectionIcon, label: '保存' },
   { key: 'outline' as const, icon: ListIcon, label: '目录' },
   { key: 'tags' as const, icon: TagIcon, label: '标签' },
   { key: 'links' as const, icon: LinkIcon, label: '引用' },
-  { key: 'quick' as const, icon: ClockIcon, label: '历史' },
+  { key: 'quick' as const, icon: ClockIcon, label: '最近' },
   { key: 'history' as const, icon: SaveIcon, label: '备份' },
 ]
 const outgoingLinks = ref<string[]>([])
@@ -1061,7 +1069,7 @@ const saveCurrentSearch = async () => {
   try {
     const before = store.savedSearches.length
     await store.addSavedSearch(searchQuery.value, searchObjectTypes.value)
-    message.success(store.savedSearches.length === before ? '该搜索已保存' : '已保存为智能集合')
+    message.success(store.savedSearches.length === before ? '该搜索已保存' : '已保存为视图')
   } catch (error) { message.error(`保存搜索失败：${String(error)}`) }
 }
 const openSavedSearch = (search: SavedSearchConfig) => {
@@ -1076,12 +1084,12 @@ const openSavedSearch = (search: SavedSearchConfig) => {
 }
 const confirmRemoveSavedSearch = (id: string, name: string) => {
   dialog.warning({
-    title: '删除智能集合',
+    title: '删除保存视图',
     content: `删除“${name}”？这不会删除任何知识库文件。`,
     positiveText: '删除',
     negativeText: '取消',
     onPositiveClick: async () => {
-      try { await store.removeSavedSearch(id); message.success('智能集合已删除') }
+      try { await store.removeSavedSearch(id); message.success('保存视图已删除') }
       catch (error) { message.error(`删除失败：${String(error)}`) }
     },
   })
@@ -1098,6 +1106,7 @@ const editorWidthMode = ref<'narrow' | 'medium' | 'wide'>(
 )
 watch(editorWidthMode, (v) => { localStorage.setItem('longedit_editor_width', v) })
 const sidebarWidth = ref(260)
+const sidebarTabsCompact = computed(() => sidebarWidth.value < 460)
 const activeResizer = ref<'sidebar' | null>(null)
 const treeInstRef = ref<any>(null)
 const treeData = ref<TreeOption[]>([])
@@ -3210,37 +3219,43 @@ watch(activeTabId, (newId, oldId) => {
 
 /* === 顶部 Tabs 优化 === */
 .sidebar-tabs-header {
-  display: flex; gap: 4px; padding: 8px 8px; flex-shrink: 0;
-  overflow-x: auto; overflow-y: hidden;
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px;
+  padding: 8px; flex-shrink: 0; overflow: hidden;
 }
 .icon-tab {
-  display: flex; align-items: center; justify-content: center; gap: 0;
-  width: 32px; min-width: 32px; height: 32px; padding: 0;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  width: 100%; min-width: 0; height: 34px; padding: 0 4px;
+  box-sizing: border-box;
   border-radius: var(--theme-radius-sm); cursor: pointer;
   background: transparent; color: var(--theme-text, #1d1d1f);
   opacity: 0.55; overflow: hidden;
-  transition: width 0.3s var(--ease-premium),
-              gap 0.3s var(--ease-premium),
-              padding 0.3s var(--ease-premium),
-              background 0.3s ease, opacity 0.3s ease;
+  transition: background var(--motion-base) var(--ease-standard),
+              color var(--motion-base) var(--ease-standard),
+              opacity var(--motion-base) var(--ease-standard),
+              transform var(--motion-base) var(--ease-emphasized);
 }
 .icon-tab:hover { opacity: 0.8; background: rgba(0,0,0,0.05); }
 .icon-tab.active {
-  opacity: 1; width: auto; padding: 0 12px; gap: 6px;
-  background: rgba(0,0,0,0.08); justify-content: flex-start;
+  opacity: 1; background: rgba(0,0,0,0.08); transform: translateY(-1px);
 }
+.icon-tab :deep(svg) { flex: none; transition: transform var(--motion-base) var(--ease-emphasized); }
+.icon-tab.active :deep(svg) { transform: scale(1.08); }
 .icon-tab-text {
-  font-size: 0; opacity: 0; max-width: 0;
-  white-space: nowrap; font-weight: 600; flex-shrink: 0;
-  transition: font-size 0.3s var(--ease-premium),
-              opacity 0.3s var(--ease-premium),
-              max-width 0.3s var(--ease-premium);
+  min-width: 0; max-width: 48px; overflow: hidden;
+  white-space: nowrap; font-size: 11px; font-weight: 600;
+  opacity: 1; transform: translateX(0);
+  transition: max-width var(--motion-base) var(--ease-emphasized),
+              opacity var(--motion-fast) var(--ease-standard),
+              transform var(--motion-base) var(--ease-emphasized);
 }
-.icon-tab.active .icon-tab-text {
-  font-size: 12px; opacity: 1; max-width: 60px;
-}
+.sidebar-tabs-header.compact .icon-tab { gap: 0; padding: 0; }
+.sidebar-tabs-header.compact .icon-tab-text { max-width: 0; opacity: 0; transform: translateX(-4px); }
 .is-dark .icon-tab:hover { background: rgba(255,255,255,0.08); }
 .is-dark .icon-tab.active { background: rgba(255,255,255,0.12); }
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-tab, .icon-tab :deep(svg), .icon-tab-text { transition-duration: 0.01ms; }
+}
 
 .sidebar-tab-content { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .tab-pane { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
