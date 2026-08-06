@@ -1,6 +1,6 @@
 # v1.0.5 无签名社区版发布审计
 
-状态：**安装包与 Quality Gate 已通过，准备发布**
+状态：**已正式发布，远端附件复核通过**
 
 渠道：`community-unsigned`
 
@@ -30,3 +30,11 @@ v1.0.5 已完成版本同步、生产构建、43 类格式能力审计、Windows
 ## 更新迁移
 
 v1.0.5 首次启用基于 GitHub Release 和 SHA-256 的受控自动更新。v1.0.4 不包含这条新链路，需要用户手动下载安装 v1.0.5 一次；之后可使用每日自动检查或设置页手动检查。发布中不包含旧 Tauri 私钥更新器的 `latest.json` 或 `.sig`。
+
+## 发布回执
+
+- Release：<https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.5>
+- 发布时间：`2026-08-06T09:02:45Z`
+- 标签提交：`de53be652a69df721642bddd84ba221755afb2f5`
+- 最终 Quality Gate：`31086967613`，通过
+- 发布后已从 GitHub 重新下载 NSIS、MSI 和 `SHA256SUMS.txt`，三项大小与 SHA-256 均与候选证据一致。

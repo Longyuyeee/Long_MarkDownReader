@@ -5,7 +5,7 @@
   "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-06",
-  "currentStatus": "v1.0.5-community-release-ready-to-publish",
+  "currentStatus": "v1.0.5-community-release-published",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -33,7 +33,7 @@
     "localRuntimeSmokePassed": false,
     "installedLifecyclePassed": false,
     "qualityGatePassed": true,
-    "githubReleasePublished": false
+    "githubReleasePublished": true
   },
   "patchValidation": {
     "previousPublicVersion": "1.0.4",
@@ -70,12 +70,42 @@
       }
     ]
   },
-  "release": null,
+  "release": {
+    "tag": "v1.0.5",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.5",
+    "publishedAt": "2026-08-06T09:02:45Z",
+    "taggedCommit": "de53be652a69df721642bddd84ba221755afb2f5",
+    "qualityGateRunId": 31086967613,
+    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31086967613",
+    "draft": false,
+    "prerelease": false,
+    "downloadVerification": {
+      "verifiedAt": "2026-08-06T09:03:30Z",
+      "allHashesMatched": true,
+      "assets": [
+        {
+          "fileName": "LongEdit_1.0.5_x64-setup.exe",
+          "sizeBytes": 53661708,
+          "sha256": "51223ef679f2f58746c3ebe470ddc9dbc24155573b4000e1f4887ab1bb7b84e7"
+        },
+        {
+          "fileName": "LongEdit_1.0.5_x64_zh-CN.msi",
+          "sizeBytes": 58511360,
+          "sha256": "103b94fa4a119cc6b74f22a0f320576e18afdae7c646df43c298eca0d090b012"
+        },
+        {
+          "fileName": "SHA256SUMS.txt",
+          "sizeBytes": 190,
+          "sha256": "8389eadf54b8b71d532e55fef11610927f6fb9d7804b942515a24bf583e78730"
+        }
+      ]
+    }
+  },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "publish-v1.0.5-and-verify-remote-assets"
+  "nextAction": "monitor-v1.0.5-and-validate-managed-update-with-the-next-version"
 }
