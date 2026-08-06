@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.0.5",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-06",
-  "currentStatus": "v1.0.5-community-release-quality-gate-pending",
+  "currentStatus": "v1.0.5-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -27,12 +27,12 @@
     "frontendBuildPassed": true,
     "rustLockedCheckPassed": true,
     "productionDependencyAuditPassed": true,
-    "msiBuilt": false,
-    "nsisBuilt": false,
-    "artifactHashesVerified": false,
+    "msiBuilt": true,
+    "nsisBuilt": true,
+    "artifactHashesVerified": true,
     "localRuntimeSmokePassed": false,
     "installedLifecyclePassed": false,
-    "qualityGatePassed": false,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "patchValidation": {
@@ -50,10 +50,25 @@
     "assetMode": "managed-nsis-msi-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": null,
-    "qualityGateRunId": null,
-    "qualityGateRunUrl": null,
-    "artifacts": []
+    "artifactSourceCommit": "7cf9e23f6cea284fbc1c1b0ce89aee0b07c01f41",
+    "qualityGateRunId": 31086396133,
+    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31086396133",
+    "artifacts": [
+      {
+        "target": "msi",
+        "fileName": "LongEdit_1.0.5_x64_zh-CN.msi",
+        "sizeBytes": 58511360,
+        "sha256": "103b94fa4a119cc6b74f22a0f320576e18afdae7c646df43c298eca0d090b012",
+        "authenticodeStatus": "NotSigned"
+      },
+      {
+        "target": "nsis",
+        "fileName": "LongEdit_1.0.5_x64-setup.exe",
+        "sizeBytes": 53661708,
+        "sha256": "51223ef679f2f58746c3ebe470ddc9dbc24155573b4000e1f4887ab1bb7b84e7",
+        "authenticodeStatus": "NotSigned"
+      }
+    ]
   },
   "release": null,
   "releaseWarnings": [
@@ -62,5 +77,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "freeze-source-run-quality-gate-build-and-audit-v1.0.5"
+  "nextAction": "publish-v1.0.5-and-verify-remote-assets"
 }

@@ -1,23 +1,32 @@
-# v1.0.5 无签名社区发布审计
+# v1.0.5 无签名社区版发布审计
 
-状态：**Quality Gate 与安装包证据待完成**
+状态：**安装包与 Quality Gate 已通过，准备发布**
 
 渠道：`community-unsigned`
 
-企业候选边界：`releaseCandidate=false`
+企业签名候选边界：`releaseCandidate=false`；本次社区候选与企业候选相互独立。
 
-## 当前结论
+## 收口结论
 
-v1.0.5 已完成源码版本同步和发布前代码审计，可以进入冻结提交、Quality Gate、MSI/NSIS 构建与哈希复核。v1.0.4 的 18/18 安装生命周期、15/15 安装态功能和 11/11 路由证据仅作为上一公开版本历史基线，不继承为 v1.0.5 当前安装证据。
+v1.0.5 已完成版本同步、生产构建、43 类格式能力审计、Windows MSI/NSIS 打包、依赖安全审计和 GitHub Quality Gate。产品源码候选为 `7cf9e23f6cea284fbc1c1b0ce89aee0b07c01f41`，远端门禁运行 `31086396133` 已通过。
 
-## 发布要求
+本版是无 Authenticode 证书的社区发布，Windows 可能显示“未知发布者”或 SmartScreen 提示。安装包只应从官方 GitHub Release 下载，并用 `SHA256SUMS.txt` 核对 SHA-256。
 
-- 必须从冻结提交构建 NSIS 和 MSI，并记录版本资源、大小、SHA-256 与 `NotSigned` 状态。
-- 必须等待同一源码提交的 GitHub Quality Gate 通过。
-- 无 Authenticode 证书时允许按用户既定决策发布社区版，但 README 与 Release 必须提示未知发布者和 SHA-256 校验。
-- v1.0.4 用户需手动下载安装 v1.0.5 一次；v1.0.5 起启用固定 GitHub Release 与 SHA-256 的受控自动更新。
-- 不生成或上传旧 Tauri 更新器的 `latest.json`、`.sig`，也不伪造遗失的私钥签名。
+## 发布附件
 
-## 发布前状态
+| 附件 | 大小 | SHA-256 | 签名 |
+| --- | ---: | --- | --- |
+| `LongEdit_1.0.5_x64-setup.exe` | 53,661,708 B | `51223ef679f2f58746c3ebe470ddc9dbc24155573b4000e1f4887ab1bb7b84e7` | `NotSigned` |
+| `LongEdit_1.0.5_x64_zh-CN.msi` | 58,511,360 B | `103b94fa4a119cc6b74f22a0f320576e18afdae7c646df43c298eca0d090b012` | `NotSigned` |
+| `SHA256SUMS.txt` | 190 B | `8389eadf54b8b71d532e55fef11610927f6fb9d7804b942515a24bf583e78730` | 校验清单 |
 
-当前不得标记 GitHub Release 已发布。完成安装包、运行烟测、远端附件复核后，再写入源码提交、Quality Gate 运行、附件哈希、Release URL 和发布时间。
+## 验证边界
+
+- `npm run ci:patch-release` 在本地通过；GitHub Quality Gate `31086396133` 通过。
+- Rust 更新器专项测试 3/3 通过，生产依赖审计为 0 个漏洞。
+- 本机构建时已有一个 LongEdit 实例正在运行。为避免终止用户进程，未启动第二个便携实例，也未执行安装器，因此 v1.0.5 的本机运行烟测和完整安装生命周期不声明为已通过。
+- v1.0.4 的安装生命周期证据仅作为历史基线，不继承为 v1.0.5 当前证据。
+
+## 更新迁移
+
+v1.0.5 首次启用基于 GitHub Release 和 SHA-256 的受控自动更新。v1.0.4 不包含这条新链路，需要用户手动下载安装 v1.0.5 一次；之后可使用每日自动检查或设置页手动检查。发布中不包含旧 Tauri 私钥更新器的 `latest.json` 或 `.sig`。

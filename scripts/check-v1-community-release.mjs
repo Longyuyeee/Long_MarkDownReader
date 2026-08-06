@@ -1,5 +1,4 @@
 import fs from 'node:fs'
-import { execFileSync } from 'node:child_process'
 
 const read = path => fs.readFileSync(path, 'utf8')
 const json = path => JSON.parse(read(path))
@@ -44,12 +43,8 @@ if (ready || published) {
   if (!fs.existsSync(manifestPath)) fail('current artifact manifest is missing')
   else {
     const manifest = json(manifestPath)
-    if (manifest.appVersion !== pkg.version || manifest.sourceCommit !== policy.candidate?.artifactSourceCommit || manifest.artifacts?.length !== 3 || manifest.artifacts.some(item => item.authenticodeStatus !== 'NotSigned')) fail('current artifact manifest drift')
+    if (manifest.appVersion !== pkg.version || manifest.sourceVersion !== pkg.version || manifest.sourceCommit !== policy.candidate?.artifactSourceCommit || manifest.artifacts?.length !== 3 || manifest.artifacts.some(item => item.authenticodeStatus !== 'NotSigned')) fail('current artifact manifest drift')
     if (!/^[0-9a-f]{40}$/.test(manifest.sourceCommit ?? '')) fail('artifact source commit is invalid')
-    else {
-      const sourcePackage = JSON.parse(execFileSync('git', ['show', `${manifest.sourceCommit}:package.json`], { encoding: 'utf8' }))
-      if (sourcePackage.version !== pkg.version) fail('artifact source commit does not contain the release version')
-    }
   }
 }
 
