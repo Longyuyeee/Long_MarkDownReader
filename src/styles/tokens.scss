@@ -85,3 +85,44 @@ textarea,
 select {
   font: inherit;
 }
+
+// Native selects use one theme-aware visual contract across every workspace.
+select:not([multiple]):not([size]) {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 28px !important;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--theme-text-secondary) 50%),
+    linear-gradient(135deg, var(--theme-text-secondary) 50%, transparent 50%) !important;
+  background-position:
+    calc(100% - 13px) calc(50% - 1px),
+    calc(100% - 9px) calc(50% - 1px) !important;
+  background-size: 4px 4px, 4px 4px !important;
+  background-repeat: no-repeat !important;
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast) var(--ease-standard),
+    box-shadow var(--motion-fast) var(--ease-standard),
+    background-color var(--motion-fast) var(--ease-standard);
+}
+
+select:not([multiple]):not([size]):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--theme-primary) 55%, var(--workspace-border-color)) !important;
+}
+
+select:not([multiple]):not([size]):focus-visible {
+  outline: none;
+  border-color: var(--theme-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 16%, transparent) !important;
+}
+
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+select option,
+select optgroup {
+  color: var(--theme-text);
+  background-color: var(--theme-surface);
+}
