@@ -706,3 +706,9 @@ UX-39 已完成安装包与安装态回归收口。最终产品源码提交为 `
 最终公开候选为 `LongEdit_1.0.4_x64-setup.exe`（SHA-256 `cd68e19d9daab198f9bca7f97d3eeb432314f5f3e7895295845e7b48d4b29ff3`）与 `LongEdit_1.0.4_x64_zh-CN.msi`（SHA-256 `dacbd99ed0f6fe148bdecb99378cf49b4afd68f16e9dcc4b5492233b1e358ee9`）。两者均为 `NotSigned`，只允许与 `SHA256SUMS.txt` 一起手动发布，不上传 `latest.json` 或 `.sig`。
 
 接手后只需完成 `v1.0.4` 标签与 GitHub Release、下载复核公开附件，并把发布 URL、时间和标签提交写回 `shared/v1-community-release-policy.json`。完整证据见 [`UX39B_Installed_Lifecycle_Closure_Audit_2026-08-06.md`](./UX39B_Installed_Lifecycle_Closure_Audit_2026-08-06.md)。
+
+## v1.0.4 发布回执
+
+`v1.0.4` 已于 `2026-08-06T02:06:55Z` 正式发布，标签指向提交 `acfc86b937307eee70e8063884ef405ba2c0a7fa`。Release 地址为 <https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.4>。NSIS、MSI 和 `SHA256SUMS.txt` 已从远端重新下载复核，公开哈希与发布候选完全一致。
+
+接手后进入 v1.0.4 稳定性观察，不再重复打包 1.0.3 或 1.0.4。只处理真实可复现回归；后续产品阶段继续推进完整 Excel、高级 Office 编辑、更多原生格式和主题深化。自动更新私钥边界不变，仍不发布 `latest.json` 或 `.sig`。

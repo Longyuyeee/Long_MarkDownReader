@@ -1,6 +1,6 @@
 # v1.0.4 无签名社区发布审计
 
-状态：**发布准备通过**
+状态：**已发布并完成远端附件复核**
 渠道：`community-unsigned`
 企业候选边界：`releaseCandidate=false`
 发布方式：**手动下载安装**
@@ -21,4 +21,6 @@ v1.0.4 的产品构建、Rust 锁定检查、本地 MSI/NSIS 产物和隔离 Win
 - 社区渠道允许无签名发布，但必须提示“未知发布者”并提供 SHA-256。
 - 能力矩阵的 `releaseCandidate=false` 指企业签名候选未成立，不阻止经用户批准的无签名社区发布。
 - 自动更新保持关闭，不发布 `latest.json` 或 `.sig`；原更新公钥不变。
-- Release 创建后必须重新下载三个附件并核对哈希，随后把发布 URL、时间和标签提交写回事实源。
+- GitHub Release 已于 `2026-08-06T02:06:55Z` 发布，标签 `v1.0.4` 指向提交 `acfc86b937307eee70e8063884ef405ba2c0a7fa`。
+- 已从 Release 重新下载三个公开附件：NSIS 与 MSI 哈希均与候选清单一致，`SHA256SUMS.txt` 的 SHA-256 为 `e119688e4cde6520a4ccf8463d7e4b5e6e2a33d5a0c5ec428333b24e034b0c52`。
+- 正式发布地址：<https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.4>

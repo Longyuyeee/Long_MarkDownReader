@@ -5,7 +5,7 @@
   "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-06",
-  "currentStatus": "v1.0.4-community-release-ready-to-publish",
+  "currentStatus": "v1.0.4-community-release-published",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -29,7 +29,7 @@
     "updaterSignaturesBuilt": false,
     "installedLifecyclePassed": true,
     "qualityGatePassed": true,
-    "githubReleasePublished": false
+    "githubReleasePublished": true
   },
   "patchValidation": {
     "baseInstalledLifecycleVersion": "0.6.2",
@@ -65,10 +65,24 @@
       }
     ]
   },
+  "release": {
+    "tag": "v1.0.4",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.4",
+    "publishedAt": "2026-08-06T02:06:55Z",
+    "taggedCommit": "acfc86b937307eee70e8063884ef405ba2c0a7fa",
+    "qualityGateRunId": 31062756515,
+    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31062756515",
+    "downloadVerification": {
+      "completed": true,
+      "sha256Sums": "e119688e4cde6520a4ccf8463d7e4b5e6e2a33d5a0c5ec428333b24e034b0c52",
+      "nsis": "cd68e19d9daab198f9bca7f97d3eeb432314f5f3e7895295845e7b48d4b29ff3",
+      "msi": "dacbd99ed0f6fe148bdecb99378cf49b4afd68f16e9dcc4b5492233b1e358ee9"
+    }
+  },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "publish-v1.0.4-community-release"
+  "nextAction": "monitor-v1.0.4-community-release-feedback"
 }
