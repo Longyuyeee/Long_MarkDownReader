@@ -21,10 +21,22 @@ requireTokens(store, 'Configuration readiness', [
 ])
 
 const main = read('src/main.ts')
-if (!/const bootstrap = async \(\) => \{[\s\S]*?await store\.loadConfig\(\)[\s\S]*?app\.use\(router\)[\s\S]*?await router\.isReady\(\)[\s\S]*?app\.mount\('#app'\)/.test(main)) {
-  fail('Application bootstrap must restore configuration before router components mount.')
+requireTokens(main, 'Non-blocking bootstrap and managed route restoration', [
+  'app.use(router)',
+  "app.mount('#app')",
+  'await store.loadConfig()',
+  "withTimeout(router.isReady(), 8000, 'router:isReady')",
+  'managedFileLocation(store.activeTabId',
+  'router.replace(',
+  '[Long编辑 Bootstrap Recovery]',
+])
+if (main.indexOf("app.mount('#app')") > main.indexOf('await store.loadConfig()')) {
+  fail('Application shell must mount before configuration IPC so restoration cannot block navigation.')
 }
-requireTokens(main, 'Initial managed route restoration', ['managedFileLocation(store.activeTabId', 'router.replace('])
+requireTokens(store, 'Bounded configuration recovery', [
+  "invokeWithTimeout<any>('get_config', undefined, 4000)",
+  'this.restoreTabsState()',
+])
 
 const app = read('src/App.vue')
 requireTokens(app, 'Library navigation guard', [

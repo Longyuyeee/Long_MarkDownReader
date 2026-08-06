@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.0.4",
-  "releaseCandidate": true,
+  "appVersion": "1.0.5",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-06",
-  "currentStatus": "v1.0.4-community-release-published",
+  "currentStatus": "v1.0.5-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -13,76 +13,54 @@
     "unknownPublisherWarningRequired": true
   },
   "updater": {
-    "enabled": false,
-    "automaticCheckIntervalHours": 0,
+    "mode": "github-release-sha256-managed",
+    "enabled": true,
+    "automaticCheckIntervalHours": 24,
     "manualCheckAvailable": true,
-    "integritySignatureRequired": true,
+    "userConfirmationRequired": true,
+    "integrityDigestRequired": true,
     "privateKeyCommitted": false,
     "latestManifestAsset": null,
-    "manualReleaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"
+    "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
     "frontendBuildPassed": true,
     "rustLockedCheckPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "updaterSignaturesBuilt": false,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "productionDependencyAuditPassed": true,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "baseInstalledLifecycleVersion": "0.6.2",
-    "baseInstalledLifecycleEvidenceVersion": "1.0.4",
-    "baseInstalledLifecycleEvidenceInherited": false,
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "updaterPublicKeyUnchanged": true,
-    "fullInstalledLifecycleRerun": true,
-    "scope": "ux39-format-experience-and-installed-package-closure",
-    "automaticUpdaterAssetsPlanned": false,
-    "automaticUpdaterBlocker": "original-tauri-updater-private-key-unavailable-on-release-workstation"
+    "previousPublicVersion": "1.0.4",
+    "previousInstalledLifecycleEvidenceVersion": "1.0.4",
+    "previousEvidenceInheritedAsCurrent": false,
+    "fullInstalledLifecycleRerun": false,
+    "managedUpdaterFirstRelease": true,
+    "v1_0_4RequiresManualMigration": true,
+    "scope": "ux40-ux49-stability-media-and-managed-update-closure"
   },
   "targetRelease": {
-    "tag": "v1.0.4",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.4",
-    "assetMode": "manual-msi-nsis-with-sha256"
+    "tag": "v1.0.5",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.5",
+    "assetMode": "managed-nsis-msi-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": "2b5d4d750da0f3e3ee913a4cc461784ffa8ea947",
-    "qualityGateRunId": 31062756515,
-    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31062756515",
-    "artifacts": [
-      {
-        "name": "LongEdit_1.0.4_x64-setup.exe",
-        "sha256": "cd68e19d9daab198f9bca7f97d3eeb432314f5f3e7895295845e7b48d4b29ff3",
-        "authenticodeStatus": "NotSigned"
-      },
-      {
-        "name": "LongEdit_1.0.4_x64_zh-CN.msi",
-        "sha256": "dacbd99ed0f6fe148bdecb99378cf49b4afd68f16e9dcc4b5492233b1e358ee9",
-        "authenticodeStatus": "NotSigned"
-      }
-    ]
+    "artifactSourceCommit": null,
+    "qualityGateRunId": null,
+    "qualityGateRunUrl": null,
+    "artifacts": []
   },
-  "release": {
-    "tag": "v1.0.4",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.4",
-    "publishedAt": "2026-08-06T02:06:55Z",
-    "taggedCommit": "acfc86b937307eee70e8063884ef405ba2c0a7fa",
-    "qualityGateRunId": 31062756515,
-    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31062756515",
-    "downloadVerification": {
-      "completed": true,
-      "sha256Sums": "e119688e4cde6520a4ccf8463d7e4b5e6e2a33d5a0c5ec428333b24e034b0c52",
-      "nsis": "cd68e19d9daab198f9bca7f97d3eeb432314f5f3e7895295845e7b48d4b29ff3",
-      "msi": "dacbd99ed0f6fe148bdecb99378cf49b4afd68f16e9dcc4b5492233b1e358ee9"
-    }
-  },
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
+    "v1.0.4-users-must-install-v1.0.5-manually-once",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "monitor-v1.0.4-community-release-feedback"
+  "nextAction": "freeze-source-run-quality-gate-build-and-audit-v1.0.5"
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "implemented-for-next-package",
+  "status": "active-from-v1.0.5",
   "repository": "Longyuyeee/Long_MarkDownReader",
   "platform": "windows-x86_64",
   "automaticCheckIntervalHours": 24,
@@ -29,6 +29,7 @@
   },
   "migration": {
     "v1_0_4CanSelfUpgrade": false,
+    "firstManagedUpdaterVersion": "1.0.5",
     "firstManagedUpdaterBuildRequiresManualInstallation": true,
     "subsequentSupportedBuildsCanAutoUpdate": true
   }

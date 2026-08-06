@@ -8,7 +8,7 @@ const evidence = json('docs/evidence/v1.0.3-installed-hotfix/runtime.json')
 const externalApps = read('src-tauri/src/commands/external_apps.rs')
 const failures = []
 
-if (pkg.version !== '1.0.3' || tauri.version !== pkg.version || evidence.appVersion !== pkg.version) failures.push('hotfix version identity drift')
+if (pkg.version !== tauri.version || evidence.appVersion !== '1.0.3') failures.push('current version or historical hotfix identity drift')
 if (tauri.app?.security?.dangerousDisableAssetCspModification?.join('|') !== 'style-src') failures.push('packaged dynamic style CSP exception drift')
 if (!evidence.packagedUi?.naiveStyleApplied || evidence.packagedUi?.oversizedSvgCount !== 0 || evidence.packagedUi?.sampleIconWidthPx > 48) failures.push('installed UI geometry evidence failed')
 if (evidence.environment?.displayScalePercent !== 200 || evidence.installedLifecycle?.upgradeFrom !== '1.0.2') failures.push('installed reproduction environment drift')

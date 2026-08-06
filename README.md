@@ -1,120 +1,125 @@
 <p align="center">
-  <img src="design/brand/longedit-icon-v1.0.2.png" width="184" alt="Long编辑图标：深蓝底、实心金色 L 与金色编辑笔尖">
+  <img src="design/brand/longedit-icon-v1.0.2.png" width="168" alt="Long编辑图标：深蓝底、实心金色 L 与金色编辑笔尖">
 </p>
 
 <h1 align="center">Long编辑</h1>
 
-<p align="center">本地优先的 Windows 知识工作台：统一管理、阅读和编辑 Markdown、Office、PDF、表格、图表、思维导图与 Canvas。</p>
+<p align="center">本地优先的 Windows 知识工作台，在一个资料库里管理、阅读和编辑文本、表格、Office、PDF、图表、思维导图与媒体文件。</p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.4"><img src="https://img.shields.io/badge/Release-v1.0.4-cca43b" alt="Release v1.0.4"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.5"><img src="https://img.shields.io/badge/Release-v1.0.5-cca43b" alt="Release v1.0.5"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/License-AGPL--3.0-7c3aed" alt="AGPL-3.0">
 </p>
 
-## 下载与安装
+## 下载
 
-当前社区版为 **v1.0.4**，支持 Windows 10/11 x64：
+Long编辑 v1.0.5 支持 Windows 10/11 x64：
 
-- [下载 NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.4/LongEdit_1.0.4_x64-setup.exe)
-- [下载 MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.4/LongEdit_1.0.4_x64_zh-CN.msi)
-- [查看 GitHub Release 与 SHA-256](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.4)
+- [NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.5/LongEdit_1.0.5_x64-setup.exe)（推荐）
+- [MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.5/LongEdit_1.0.5_x64_zh-CN.msi)
+- [Release、更新说明与 SHA-256](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.5)
 
-项目当前没有 Windows Authenticode 商业证书，安装时可能出现“未知发布者”或 SmartScreen 提示。请只从官方 GitHub Release 下载，并使用 `SHA256SUMS.txt` 核对 SHA-256。
+社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同一页面的 `SHA256SUMS.txt` 核对文件。
 
-已发布的 v1.0.4 仍采用**手动下载安装**。原 Tauri 自动更新私钥在当前发布环境不可用，因此该 Release 没有 `latest.json` 或 `.sig`，现有公钥保持不变，避免伪造历史更新链。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 无法自动迁移，需要手动安装 v1.0.5 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
 
-当前主分支已实现新的受控更新链：每天自动检查或手动检查官方 GitHub Release，用户确认后下载 Windows x64 NSIS 安装器，校验 GitHub 附件 SHA-256 并覆盖安装。此能力将在下一安装包中生效；现有 v1.0.4 用户需要先完成一次手动升级。详见 [UX-47 自动更新审计](docs/UX47_Managed_Automatic_Update_Audit_2026-08-06.md)。
+## 这是什么
 
-## v1.0.4 更新重点
+Long编辑把“文件编辑器”和“本地知识库”放在同一个工作区：左侧浏览资料库、搜索和保存视图，中间打开多个文件标签，右侧按需查看文件上下文。文档内容默认留在本机，编辑只在点击保存后写回；受限格式会明确显示只读、可靠副本或外部程序边界。
 
-- 完成安装反馈形成的 39 项体验清单：设置分类、路由返回、对话框 ACL、文件树辨识、标签页滚动、资料库上下文恢复和外部修改误报均已纳入验收。
-- 重构文本、日志、代码、JSON 与结构化源文件工作区；统一显式保存、撤销/重做、主题对比度、编辑器布局和大文件降级策略。
-- 改善 CSV/TSV 与工作簿布局，支持冻结前 N 列，并明确“转换为表格”的目标、保存位置和覆盖确认。
-- Markdown 默认进入所见即所得模式；代码块在浅色、深色和高对比主题下保持可读。
-- 完成 PDF、DOCX/ODT、PPTX/ODP、Canvas、Draw.io、Mermaid、OPML 和外部 Office 交接的有界工作区验收。
-- 当前注册 43 类格式：30 类已验证、7 类有限能力、6 类依赖外部程序；UX-38 的历史收口矩阵保持 41 类基线，新增图片与视频由独立媒体审计覆盖。
-- 修复安装版控制台反复弹窗、动态样式偏差、后台路由加载挂起和发布能力页预发布版本冲突。
-- 隔离 Windows 环境已通过 18/18 安装生命周期、15/15 安装态功能检查和 11/11 关键路由挂载检查。
+### 资料库与知识组织
 
-详细变更见 [v1.0.4 发布说明](docs/RELEASE_NOTES_v1.0.4.md) 与 [无签名社区发布审计](docs/V1_0_4_Unsigned_Community_Release_Audit_2026-08-06.md)。
+- 文件树显示完整扩展名，并按格式使用不同图标和识别色。
+- 文件可设置本机显示标记，包括背景、文字颜色和标记图标。
+- 支持搜索、标签、保存视图、引用、反向链接、知识图谱、历史与管理备份。
+- 文件标签保持可读宽度；标签栏、工具栏和横向集合支持滚轮横向导航。
+- 从搜索、图谱、关系界面和 Canvas 返回时保留活动文件与工作区位置。
 
-## 核心体验
+### 编辑体验
 
-### 本地知识资料库
+- Markdown 默认所见即所得，也可切换即时渲染和源码模式。
+- TXT、LOG、代码和结构化源码使用统一的专业编辑器主题、光标对比度、撤销/重做和显式保存。
+- JSON 提供源码、虚拟化树形查看、诊断和带引导的路径定位；YAML、XML、TOML 具有结构面板与校验。
+- CSV、TSV 和开放 Table 支持网格编辑、冻结前 N 列、看板、导入导出以及有明确目标的格式转换。
+- XLSX 工作区支持多工作表、公式、样式、图表、筛选和部分高级对象；复杂生产者结构按能力矩阵降级，不宣称完全等价 Microsoft Excel。
 
-- 选择本地目录作为知识库，文件默认留在用户设备中。
-- 文件树、最近项目、搜索、标签、集合、历史与备份集中在统一资料库外壳。
-- 从搜索、图谱、关系面板、命令面板和 Canvas 打开文件时保留资料库上下文。
-- 通过引用、反向链接、标签和跨格式关系连接内容，并提供本地治理入口。
+### 文档、图形与媒体
 
-### 多格式工作区
+- PDF：阅读、搜索、批注、页面提取、合并和插入，写入保持 sidecar 或可靠新文件边界。
+- DOCX/PPTX：阅读、受控草稿编辑和可靠副本；ODT/ODS/ODP 与旧 Office 按已验证能力预览或交给桌面程序。
+- Mermaid、Draw.io、SVG、OPML、JSON Canvas 和知识图谱提供专业画布、拖动、缩放、右键操作与显式保存。
+- 图片支持 PNG、JPEG、GIF、WebP、BMP、ICO、AVIF，可缩放、适应窗口、旋转和查看透明网格。
+- 视频支持 MP4、WebM、OGV、M4V，并按系统解码器尝试 MOV、MKV、AVI、MPEG、MPG；提供按需流式读取、前后 10 秒、循环、静音、倍速、画中画和全屏。
 
-| 类型 | 主要能力 | 边界 |
+## 格式能力
+
+当前注册 43 类格式、91 个扩展名，映射到 11 套发布能力配置：30 类已验证、7 类有限能力、6 类依赖外部程序。
+
+| 格式族 | 主要能力 | 明确边界 |
 | --- | --- | --- |
-| Markdown / TXT / LOG | 编辑、预览、搜索、引用、显式保存 | LOG 提供查看与编辑模式 |
-| JSON / YAML / XML / TOML / 代码 | 结构化查看、源码编辑、校验与大文件降级 | 保存前执行格式校验 |
-| CSV / TSV | 网格编辑、冻结前 N 列、转换与导入导出 | 不承诺复杂工作簿语义 |
-| XLSX / XLSM / XLSB | 多工作表、公式、样式、图表、筛选及部分高级结构 | 宏不执行，复杂对象按能力提示处理 |
-| DOCX / PPTX | 阅读、受管草稿编辑与可靠副本保存 | 不宣称完整等价于 Microsoft Office |
-| PDF | 阅读、批注、页面提取、合并与插入 | 非通用内容重排编辑器 |
-| Mermaid / Draw.io / SVG | 图表查看、编辑或安全降级 | 按格式与安全策略执行 |
-| PNG / JPEG / GIF / WebP / BMP / ICO / AVIF | 缩放、适应窗口、旋转与透明背景查看 | 只读，不修改源文件 |
-| MP4 / WebM / Ogg Video / M4V / MOV / MKV / AVI / MPEG / MPG | 按需流式播放、快进快退、循环、静音、倍速、画中画、全屏与媒体信息 | 只读；后五种为系统解码器兼容播放，不保证所有编码组合可用 |
-| OPML / JSON Canvas | 思维导图与 Canvas 工作流 | 保持结构化显式保存边界 |
-| ODT / ODS / ODP 与旧 Office | 读取、旁车数据、转换或外部程序打开 | 部分能力依赖兼容桌面程序 |
+| Markdown / TXT / LOG | 编辑、预览、搜索、撤销与显式保存 | LOG 大文件优先使用专业查看模式 |
+| JSON / YAML / XML / TOML / 代码 | 语法高亮、结构查看、诊断、补全与保存 | HTML 预览经过净化和 sandbox，不执行危险脚本 |
+| CSV / TSV / Table | 网格、冻结列、看板、转换、导入导出 | 不承诺复杂 Excel 对象语义 |
+| XLSX / XLSM / XLSB | 工作表、公式、样式、图表、筛选和有界高级对象 | 宏不执行；部分高级结构只读或可靠副本 |
+| DOCX / PPTX | 阅读、受管草稿与可靠保存 | 不宣称完整等价 Office |
+| PDF | 阅读、批注和页面管理 | 不是通用内容重排编辑器 |
+| Mermaid / Draw.io / SVG | 查看、编辑、画布操作与安全保存 | 外部资源和危险协议会被阻断 |
+| OPML / JSON Canvas | 思维导图、卡片与关系画布 | 修改需显式保存 |
+| 图片 | 七种常见位图格式查看 | 只读，不修改源文件 |
+| 视频 | 九种容器入口与专业播放工具 | MOV/MKV/AVI/MPEG/MPG 取决于系统解码器 |
+| ODF / 旧 Office / WPS | 有界预览、转换或外部程序交接 | 能力依赖文件生产者与本机软件 |
 
-### 主题与可访问性
+完整事实源位于 [`shared/file-formats.json`](shared/file-formats.json) 和 [`shared/release-capability-matrix.json`](shared/release-capability-matrix.json)。
 
-- 核心主题：专业浅色、专业深色、高对比。
-- 场景预设：长文阅读、护眼研读、编码专注、创意图谱。
-- 共 19 个主题与外观组合，由统一主题注册表驱动。
-- 编辑器、图表、管理页面和导出流程共享字体、颜色、焦点与状态语义。
+## 主题与界面
 
-## 使用方式
+- 3 套核心预设：专业浅色、专业深色、高对比。
+- 4 套场景预设：长文阅读、护眼研读、编码专注、创意图谱。
+- 共 19 个主题与外观组合，编辑器、表格、图表和管理页面共享颜色、排版、动效与焦点语义。
+- 左侧导航会根据宽度在“图标 + 文字”和纯图标之间切换；紧凑工具栏保持按钮尺寸并使用横向滚动，不挤压正文。
+
+## 使用
 
 1. 安装并启动 Long编辑。
 2. 选择或创建一个本地目录作为知识库。
-3. 在左侧资料库中浏览、搜索或组织文件。
-4. 在右侧工作区阅读或编辑；修改只在点击保存后写回文件。
-5. 使用标签、集合、引用、图谱和关系面板整理内容。
+3. 从左侧文件树打开文件，或使用搜索、保存视图和知识图谱定位内容。
+4. 在工作区编辑；只有点击保存或按 `Ctrl+S` 才会写回支持编辑的源文件。
+5. 遇到只读、可靠副本或外部程序格式时，按界面的能力说明操作。
 
 | 快捷键 | 操作 |
 | --- | --- |
 | `Ctrl+O` | 打开外部文件 |
-| `Ctrl+S` | 保存当前内容 |
+| `Ctrl+S` | 保存当前草稿 |
 | `Ctrl+Z` / `Ctrl+Shift+Z` | 撤销 / 重做 |
 | `Ctrl+P` | 打开命令面板 |
-| `Ctrl+F` | 在当前工作面搜索 |
+| `Ctrl+F` | 搜索当前工作区 |
 | `Ctrl+,` | 打开设置 |
 
-## 数据与安全
+## 本地与安全
 
-- 文件和知识关系默认保存在本地，不要求云端账号。
-- 破坏性操作、格式降级和外部程序接管均显示明确状态或确认步骤。
-- 历史副本、备份和恢复用于降低误编辑风险；重要文件仍建议保留独立备份。
-- 更新私钥、签名文件和本地发布凭证不进入 Git 历史。
+- 文档、索引和知识关系默认保存在本机，不要求云端账号。
+- 保存命令使用文件签名或内容身份检查，发现外部变化时由用户决定比较、保留草稿或重新加载。
+- 删除、覆盖、格式降级、外部程序接管和自动安装均需要明确确认。
+- 管理备份与隐私诊断会移除文档正文、完整路径、API Key、凭据和缓存正文。
+- 更新安装器仅接受固定 GitHub 仓库、稳定 Release、严格文件名、大小上限和 SHA-256 匹配。
 
-## 本地开发
+## 开发与验证
 
-环境要求：Node.js、Rust stable、Windows WebView2，以及 Tauri 2 所需的 Windows 构建工具。
+需要 Node.js 22、Rust stable、Windows WebView2 和 Tauri 2 所需的 Windows 构建工具。
 
 ```powershell
-npm install
+npm ci
 npm run tauri dev
 ```
 
-生产构建与补丁发布门禁：
-
 ```powershell
-npm run build
 npm run ci:patch-release
+npm run build:ux39-unsigned
 ```
 
-桌面安装包由 Tauri 生成。v1.0.4 的社区发布构建关闭更新附件生成，仅上传 MSI、NSIS 和 `SHA256SUMS.txt`。
-
-## 工程结构
+安装包使用 Tauri 生成 MSI 与 NSIS。社区发布上传两个安装器和 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
 ```text
 src/                 Vue 3 前端、编辑器与知识工作区
@@ -125,7 +130,7 @@ docs/                审计、发布说明和开发交接文档
 design/brand/        品牌图标母版
 ```
 
-当前状态与后续接手顺序见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)。
+开发状态见 [收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，本次变化见 [v1.0.5 发布说明](docs/RELEASE_NOTES_v1.0.5.md)。
 
 ## 许可证
 

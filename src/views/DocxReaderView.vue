@@ -1514,7 +1514,7 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .advanced-style-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .advanced-style-controls label { min-width: 0; display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 11px; }
 .advanced-style-controls input[type="color"] { width: 30px; height: 28px; padding: 2px; flex: none; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); cursor: pointer; }
-.advanced-style-controls button { height: 28px; padding: 0 6px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; font: inherit; font-size: 10px; }
+.advanced-style-controls button { height: 28px; padding: 0 6px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; font: inherit; font-size: var(--text-compact); }
 .advanced-style-controls button:disabled { opacity: .4; cursor: default; }
 .advanced-style-controls select { min-width: 0; height: 28px; flex: 1; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-primary); background: var(--bg-secondary); font: inherit; font-size: 11px; }
 .draft-list { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); }
@@ -1527,7 +1527,7 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .draft-list button { border: 0; color: var(--text-secondary); background: transparent; cursor: pointer; }
 .draft-locate { min-width: 0; flex: 1; padding: 7px 8px; display: flex; align-items: center; gap: 7px; text-align: left; }
 .draft-locate > span { min-width: 0; display: flex; flex-direction: column; gap: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }
-.draft-locate b { color: var(--primary-color); font-size: 10px; }
+.draft-locate b { color: var(--primary-color); font-size: var(--text-compact); }
 .draft-remove { width: 30px; flex: none; display: grid; place-items: center; border-left: 1px solid var(--border-color) !important; }
 .draft-list button:hover { color: var(--primary-color); background: var(--hover-bg); }
 .verify-edit, .copy-save > button { width: 100%; min-height: 34px; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--primary-color); border-radius: 6px; color: #fff; background: var(--primary-color); cursor: pointer; font: inherit; font-weight: 600; }

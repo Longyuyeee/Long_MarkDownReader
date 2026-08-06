@@ -156,7 +156,7 @@ header span, .panel-message { color: var(--theme-text-secondary); font-size: 11p
 .application-option span { display: grid; min-width: 0; gap: 2px; }
 .application-option strong, .application-option small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .application-option strong { font-size: 12px; }
-.application-option small { color: var(--theme-text-secondary); font-size: 10px; }
+.application-option small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .panel-message { margin: 0; }
 .panel-message.error { color: var(--theme-danger); }
 .open-button { display: inline-flex; min-height: 34px; align-items: center; justify-content: center; gap: 7px; padding: 0 13px; border: 0; border-radius: 6px; color: var(--workspace-on-accent); background: var(--theme-primary); font-size: 12px; cursor: pointer; }

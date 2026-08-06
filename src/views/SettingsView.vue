@@ -1829,7 +1829,7 @@ const openDefaultAppsSettings = async () => {
 }
 
 .theme-library-toolbar button.active { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.1); }
-.theme-library-toolbar button span { font-size: 10px; opacity: 0.72; }
+.theme-library-toolbar button span { font-size: var(--text-compact); opacity: 0.72; }
 
 .theme-preset-group-heading {
   display: flex;

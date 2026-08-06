@@ -13,12 +13,13 @@ const requireTokens = (source, tokens, area) => tokens.forEach(token => {
   if (!source.includes(token)) failures.push(`${area} missing: ${token}`)
 })
 
-if (policy.status !== 'implemented-for-next-package'
+if (policy.status !== 'active-from-v1.0.5'
   || policy.automaticCheckIntervalHours !== 24
   || policy.userConfirmationRequired !== true
   || policy.integrity?.algorithm !== 'sha256'
   || policy.integrity?.missingDigestAction !== 'reject'
   || policy.migration?.v1_0_4CanSelfUpgrade === true
+  || policy.migration?.firstManagedUpdaterVersion !== '1.0.5'
   || policy.migration?.firstManagedUpdaterBuildRequiresManualInstallation !== true) {
   failures.push('community updater policy drift')
 }
