@@ -8,7 +8,7 @@
 
     <WorkspaceManagementContent class="settings-content">
       <div class="settings-layout">
-        <nav class="settings-navigation" aria-label="设置分类">
+        <nav class="settings-navigation" aria-label="设置分类" data-horizontal-wheel="always">
           <button
             v-for="category in settingsCategories"
             :key="category.id"
@@ -272,7 +272,7 @@
           <n-grid-item v-if="activeCategory === 'appearance'" class="animate-item" style="--delay: 0.4s">
             <div class="section-title">外观主题</div>
             <section class="theme-preset-group">
-              <div class="theme-library-toolbar" aria-label="主题类型筛选">
+              <div class="theme-library-toolbar" aria-label="主题类型筛选" data-horizontal-wheel="always">
                 <button v-for="filter in themeFilters" :key="filter.id" type="button" :class="{ active: activeThemeFilter === filter.id }" @click="activeThemeFilter = filter.id">
                   {{ filter.label }}
                   <span>{{ filter.count }}</span>

@@ -26,13 +26,39 @@ requireTokens(main, 'Application installation', [
   'removeHorizontalWheelNavigation()',
 ])
 
+const app = read('src/App.vue')
+requireTokens(app, 'Compact horizontal surface styling', [
+  '[data-horizontal-wheel="always"] {',
+  'scrollbar-width: none;',
+  '-ms-overflow-style: none;',
+  '[data-horizontal-wheel="always"]::-webkit-scrollbar {',
+  'display: none;',
+])
+
 for (const [file, selector] of [
   ['src/views/TableView.vue', 'class="table-scroll" data-horizontal-wheel="headers"'],
   ['src/views/WorkbookView.vue', 'class="sheet-scroll" data-horizontal-wheel="headers"'],
   ['src/components/workspace/WorkspaceToolbar.vue', 'class="workspace-toolbar-shell" data-horizontal-wheel="always"'],
   ['src/components/workspace/WorkspaceSegmentedControl.vue', 'class="workspace-segmented-control" role="group" data-horizontal-wheel="always"'],
+  ['src/views/MindMapView.vue', 'class="mindmap-toolbar" data-horizontal-wheel="always"'],
+  ['src/views/CanvasView.vue', 'class="canvas-toolbar" role="toolbar" aria-label="Canvas 工具栏" data-horizontal-wheel="always"'],
+  ['src/components/GraphView.vue', 'class="graph-controls" data-horizontal-wheel="always"'],
+  ['src/components/GraphView.vue', 'class="graph-options" data-horizontal-wheel="always"'],
+  ['src/components/FileRelationContext.vue', 'class="context-filters" aria-label="关系类别" data-horizontal-wheel="always"'],
+  ['src/views/TableView.vue', 'class="table-tools" data-horizontal-wheel="always"'],
+  ['src/views/WorkbookView.vue', 'class="sheet-tabs" aria-label="工作表" data-horizontal-wheel="always"'],
+  ['src/views/WorkbookView.vue', 'class="format-toolbar" :class="{ protected: sheetProtected }" aria-label="单元格格式" data-horizontal-wheel="always"'],
+  ['src/views/LogViewerView.vue', 'class="level-filter" role="group" aria-label="日志级别" data-horizontal-wheel="always"'],
+  ['src/views/OdfContentReaderView.vue', 'class="sheet-tabs" aria-label="工作表" data-horizontal-wheel="always"'],
+  ['src/views/ReleaseCapabilitiesView.vue', 'class="segments" aria-label="能力筛选" data-horizontal-wheel="always"'],
+  ['src/views/SettingsView.vue', 'class="theme-library-toolbar" aria-label="主题类型筛选" data-horizontal-wheel="always"'],
+  ['src/views/TextEditorView.vue', 'class="format-bar" aria-label="文本保存策略" data-horizontal-wheel="always"'],
 ]) {
   if (!read(file).includes(selector)) fail(`${file} must expose its dual-axis header scrolling contract`)
+}
+
+for (const file of ['src/views/MindMapView.vue', 'src/components/GraphView.vue', 'src/views/WorkbookView.vue']) {
+  if (/scrollbar-width\s*:\s*thin/.test(read(file))) fail(`${file} must not restore a native compact-strip scrollbar`)
 }
 
 const roots = ['src/components', 'src/views', 'src/styles']
@@ -47,4 +73,4 @@ if (evidence.maxScrollLeft <= 0 || !evidence.forwardWheel?.passed || !evidence.r
   fail('Accepted browser runtime evidence must cover forward and reverse vertical-wheel translation')
 }
 
-console.log(`Horizontal wheel navigation passed: global delegation covers ${horizontalFiles.length} files and accepted browser evidence moves ${evidence.maxScrollLeft}px in both directions.`)
+console.log(`Horizontal wheel navigation passed: global delegation covers ${horizontalFiles.length} files, compact control strips hide native tracks, and accepted browser evidence moves ${evidence.maxScrollLeft}px in both directions.`)

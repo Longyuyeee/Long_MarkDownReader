@@ -5,7 +5,7 @@
         <button class="icon-button" title="返回知识库" @click="router.push('/library')"><n-icon :component="ArrowLeftIcon" /></button>
         <div><strong>{{ fileName }}</strong><span v-if="workbook">XLSX 工作簿 · {{ workbook.sheets.length }} 个 Sheet · {{ formatBytes(workbook.size) }}</span></div>
       </WorkspaceFileIdentity>
-      <div v-if="workbook" class="workbook-actions">
+      <div v-if="workbook" class="workbook-actions" data-horizontal-wheel="always">
         <button class="icon-button" title="撤销" :disabled="!undoStack.length || saving" @click="undo"><n-icon :component="UndoIcon" /></button>
         <button class="icon-button" title="重做" :disabled="!redoStack.length || saving" @click="redo"><n-icon :component="RedoIcon" /></button>
         <button class="icon-button" title="复制区域" :disabled="!selectedCell || saving" @click="copySelection"><n-icon :component="CopyIcon" /></button>
@@ -29,7 +29,7 @@
       </div>
     </WorkspaceToolbar>
 
-    <nav v-if="workbook" class="sheet-tabs" aria-label="工作表">
+    <nav v-if="workbook" class="sheet-tabs" aria-label="工作表" data-horizontal-wheel="always">
       <button v-for="sheet in workbook.sheets" :key="sheet" :class="{ active: sheet === activeSheet }" @click="selectSheet(sheet)"><n-icon :component="SheetIcon" />{{ sheet }}</button>
       <small v-if="sheetInfo">{{ sheetInfo.totalRows.toLocaleString() }} 行 × {{ sheetInfo.totalColumns.toLocaleString() }} 列</small>
     </nav>
@@ -345,7 +345,7 @@
       <template #footer><div class="page-layout-actions"><button @click="linkedDataModalOpen = false">关闭</button></div></template>
     </n-modal>
 
-    <div v-if="workbook && sheetInfo" class="page-layout-toolbar" aria-label="打印布局与保护状态">
+    <div v-if="workbook && sheetInfo" class="page-layout-toolbar" aria-label="打印布局与保护状态" data-horizontal-wheel="always">
       <strong><n-icon :component="PrinterIcon" />页面</strong>
       <span v-if="sheetInfo.pageLayout.printArea">打印区域 {{ rangeLabel(sheetInfo.pageLayout.printArea) }}</span>
       <span v-if="sheetInfo.pageLayout.setup.orientation">{{ sheetInfo.pageLayout.setup.orientation === 'landscape' ? '横向' : '纵向' }} · 纸张 {{ sheetInfo.pageLayout.setup.paperSize || '默认' }}</span>
@@ -510,7 +510,7 @@
       </span>
     </div>
 
-    <div v-if="workbook && sheetInfo" class="format-toolbar" :class="{ protected: sheetProtected }" aria-label="单元格格式">
+    <div v-if="workbook && sheetInfo" class="format-toolbar" :class="{ protected: sheetProtected }" aria-label="单元格格式" data-horizontal-wheel="always">
       <select :value="focusedStyle.namedStyle || ''" title="命名样式" :disabled="!selectedCell || saving" @change="applyNamedStyle">
         <option value="">单元格样式</option>
         <option v-for="style in sheetInfo.namedStyles" :key="style.name" :value="style.name">{{ style.name }}</option>
@@ -565,7 +565,7 @@
       <button title="取消当前工作表冻结窗格" :disabled="(!effectiveFreeze.rows && !effectiveFreeze.columns) || saving || updatingStructure || Boolean(dirtyCount)" @click="clearFreezePane">取消冻结</button>
     </div>
 
-    <div v-if="workbook && sheetInfo && (activeDataRegion || selectedValidation || tableSelection || validationSelection)" class="data-toolbar">
+    <div v-if="workbook && sheetInfo && (activeDataRegion || selectedValidation || tableSelection || validationSelection)" class="data-toolbar" data-horizontal-wheel="always">
       <button v-if="tableSelection && !selectedTable" title="从选区创建 Excel Table" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('create')">创建 Table</button>
       <button v-if="tableSelection && selectedTable" title="把 Excel Table 调整到选区并同步表头" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('resize')">调整 Table</button>
       <template v-if="selectedTable">
@@ -631,7 +631,7 @@
       </template>
     </div>
 
-    <div v-if="workbook && sheetInfo" class="drawing-toolbar" aria-label="工作表绘图对象">
+    <div v-if="workbook && sheetInfo" class="drawing-toolbar" aria-label="工作表绘图对象" data-horizontal-wheel="always">
       <strong>绘图对象 {{ sheetInfo.drawings.length }}</strong>
       <select v-model="newChartType" class="drawing-series-select" title="选择要创建的图表类型">
         <option value="column">柱形图</option>
@@ -4812,6 +4812,6 @@ onBeforeUnmount(() => {
 @media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } .linked-data-policy { align-items: flex-start; flex-direction: column; } .linked-data-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .linked-data-group article { grid-template-columns: 1fr; gap: 6px; } .linked-data-group article > button { justify-self: start; } .pivot-audit-status,.pivot-rebuild-plan > header,.pivot-cache-rebuild-result > header,.pivot-synchronized-rebuild-result > header,.pivot-expanded-rebuild-result > header,.pivot-variant-verification-result > header { align-items: flex-start; flex-direction: column; gap: 4px; } .pivot-impact-parts,.pivot-cache-fields,.pivot-sync-facts,.pivot-variant-grid,.pivot-layout-variants,.pivot-copy-save { grid-template-columns: 1fr; } .pivot-preview-result > header { align-items: flex-start; flex-direction: column; } .linked-data-group article .pivot-preview-grid article { grid-template-columns: 1fr; } }
 @media (max-width: 1180px) { .workbook-actions .linked-data-trigger span { display: none; } .workbook-actions .linked-data-trigger { padding-inline: 8px; } }
 @media (max-width: 900px) { .workbook-actions button:not(.primary):not(.icon-button):not(.linked-data-trigger) { display: none; } .workbook-title span { display: none; } .workbook-title strong { max-width: 32vw; } }
-@container (max-width: 900px) { .workbook-toolbar { min-height: auto; align-items: stretch; flex-direction: column; gap: 5px; padding-block: 6px; } .workbook-title { min-height: 30px; } .workbook-title strong { max-width: min(68cqw, 520px); } .workbook-title span { display: none; } .workbook-actions { width: 100%; overflow-x: auto; padding-bottom: 1px; scrollbar-width: thin; } .workbook-actions button { flex: none; } .workbook-actions button:not(.primary):not(.icon-button):not(.linked-data-trigger) { display: flex; } }
+@container (max-width: 900px) { .workbook-toolbar { min-height: auto; align-items: stretch; flex-direction: column; gap: 5px; padding-block: 6px; } .workbook-title { min-height: 30px; } .workbook-title strong { max-width: min(68cqw, 520px); } .workbook-title span { display: none; } .workbook-actions { width: 100%; overflow-x: auto; padding-bottom: 1px; } .workbook-actions button { flex: none; } .workbook-actions button:not(.primary):not(.icon-button):not(.linked-data-trigger) { display: flex; } }
 @container (max-width: 620px) { .workbook-actions button:not(.primary):not(.icon-button):not(.linked-data-trigger) { display: none; } .workbook-actions .linked-data-trigger span { display: none; } }
 </style>

@@ -2,7 +2,7 @@
   <div class="graph-container" ref="containerRef" :class="`graph-canvas-theme-${graphCanvasTheme}`">
     <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
-      <div class="graph-controls">
+      <div class="graph-controls" data-horizontal-wheel="always">
         <WorkspaceSegmentedControl class="view-switch" aria-label="图谱布局模式">
           <button :class="{ active: viewMode === 'network' }" @click="switchView('network')">关系网络</button>
           <button :class="{ active: viewMode === 'mindmap' }" @click="switchView('mindmap')">思维导图</button>
@@ -40,7 +40,7 @@
         </button>
       </div>
     </WorkspaceManagementHeader>
-    <div class="graph-options">
+    <div class="graph-options" data-horizontal-wheel="always">
       <GraphFilterControls :graph="graphData" :show-search="false" />
       <span class="option-divider"></span>
       <label>布局
@@ -1510,7 +1510,6 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
   align-items: center;
   gap: 6px;
   overflow-x: auto;
-  scrollbar-width: thin;
 }
 
 .view-switch {

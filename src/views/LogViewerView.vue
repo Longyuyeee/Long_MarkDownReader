@@ -56,7 +56,7 @@
       <n-input v-model:value="query" clearable size="small" placeholder="筛选日志内容" aria-label="筛选日志内容">
         <template #prefix><n-icon :component="SearchIcon" /></template>
       </n-input>
-      <div class="level-filter" role="group" aria-label="日志级别">
+      <div class="level-filter" role="group" aria-label="日志级别" data-horizontal-wheel="always">
         <button
           v-for="option in levelOptions"
           :key="option.value"

@@ -494,4 +494,16 @@ body[data-theme="dark"] .win-btn:hover, body[data-theme="contrast"] .win-btn:hov
   background: var(--theme-primary); border-radius: 20px; 
   border: 3px solid transparent; background-clip: content-box; opacity: 0.4;
 }
+
+/* Compact horizontal controls use wheel navigation instead of a native scrollbar track. */
+[data-horizontal-wheel="always"] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+[data-horizontal-wheel="always"]::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
 </style>

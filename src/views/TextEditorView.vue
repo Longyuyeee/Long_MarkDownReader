@@ -60,7 +60,7 @@
       </div>
     </header>
 
-    <section v-if="viewMode === 'source'" class="format-bar" aria-label="文本保存策略">
+    <section v-if="viewMode === 'source'" class="format-bar" aria-label="文本保存策略" data-horizontal-wheel="always">
       <label>
         <span>读取</span>
         <select v-model="readEncoding" :disabled="loading" @change="reloadCurrentEncoding">

@@ -13,7 +13,7 @@
       </div>
     </header>
 
-    <div class="canvas-toolbar" role="toolbar" aria-label="Canvas 工具栏">
+    <div class="canvas-toolbar" role="toolbar" aria-label="Canvas 工具栏" data-horizontal-wheel="always">
       <button :class="{ active: tool === 'select' }" :aria-pressed="tool === 'select'" @click="setTool('select')">选择</button>
       <button :disabled="undoStack.length === 0" title="撤销 Ctrl+Z" @click="undo">↶</button>
       <button :disabled="redoStack.length === 0" title="重做 Ctrl+Shift+Z" @click="redo">↷</button>

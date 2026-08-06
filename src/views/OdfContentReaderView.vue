@@ -33,7 +33,7 @@
       </div>
 
       <div v-if="isOds" class="ods-layout">
-        <nav class="sheet-tabs" aria-label="工作表">
+        <nav class="sheet-tabs" aria-label="工作表" data-horizontal-wheel="always">
           <button
             v-for="sheet in report.model.sheets"
             :key="sheet.id"

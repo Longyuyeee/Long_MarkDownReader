@@ -17,7 +17,7 @@
           <Search :size="16" />
           <input v-model="query" type="search" placeholder="搜索格式或扩展名" />
         </label>
-        <div class="segments" aria-label="能力筛选">
+        <div class="segments" aria-label="能力筛选" data-horizontal-wheel="always">
           <button
             v-for="option in filters"
             :key="option.value"

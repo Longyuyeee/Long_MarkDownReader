@@ -42,13 +42,13 @@
         <span>文件仍可正常管理和编辑；后续关系提取不会执行其中的代码或配置。</span>
       </div>
       <template v-else-if="context">
-        <section v-if="collectionMemberships.length" class="collection-memberships">
+        <section v-if="collectionMemberships.length" class="collection-memberships" data-horizontal-wheel="always">
           <small>所属保存视图</small>
           <button v-for="collection in collectionMemberships" :key="collection.id" type="button" @click="openCollection(collection)">
             {{ collection.name }}
           </button>
         </section>
-        <nav class="context-filters" aria-label="关系类别">
+        <nav class="context-filters" aria-label="关系类别" data-horizontal-wheel="always">
           <button
             v-for="item in filters"
             :key="item.id"

@@ -5,7 +5,7 @@
         <button title="返回知识库" @click="leaveTable">←</button>
         <div><strong>{{ fileName }}</strong><span v-if="table">{{ table.rows.length.toLocaleString() }} 行 × {{ table.headers.length }} 列 · {{ formatLabel }} · {{ table.encoding }}</span></div>
       </div>
-      <div v-if="table" class="table-tools">
+      <div v-if="table" class="table-tools" data-horizontal-wheel="always">
         <button class="history-button icon-tool" title="撤销行操作 (Ctrl+Z)" :disabled="!rowUndoStack.length || saving" @click="undoRowOperation"><UndoIcon /></button>
         <button class="history-button icon-tool" title="重做行操作 (Ctrl+Y)" :disabled="!rowRedoStack.length || saving" @click="redoRowOperation"><RedoIcon /></button>
         <label class="table-filter"><span>⌕</span><input v-model="filterQuery" placeholder="筛选所有字段" @input="markViewDirty" /><button v-if="filterQuery" type="button" aria-label="清除筛选" @click="clearFilter">×</button></label>
