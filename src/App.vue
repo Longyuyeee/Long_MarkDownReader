@@ -30,17 +30,11 @@
             :focus-locator-object-id="activeContextFocus?.locatorObjectId"
             :focus-locator-page="activeContextFocus?.locatorPage"
           />
-          <transition name="page-loader-fade">
-            <div v-if="routeLoading" class="page-loader" role="status" aria-live="polite">
-              <div class="page-loader-mark" aria-hidden="true">
-                <span></span><span></span><span></span>
-              </div>
-              <div class="page-loader-copy">
-                <strong>{{ routeLoadingLabel }}</strong>
-                <span>正在恢复工作区...</span>
-              </div>
-            </div>
-          </transition>
+          <div v-if="routeErrorMessage" class="route-error-notice" role="alert">
+            <span>{{ routeErrorMessage }}</span>
+            <button type="button" @click="reloadApplication">重新载入界面</button>
+            <button type="button" class="route-error-close" title="关闭提示" aria-label="关闭提示" @click="routeErrorMessage = ''">×</button>
+          </div>
         </div>
         <CommandPalette :show="showPalette" @close="showPalette = false" @execute="handleCommand" />
 
@@ -80,7 +74,7 @@ import { useAppStore } from './store/app'
 import { findFileFormat, isExternallyEditable, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 import { openManagedFile } from './services/fileNavigation'
-import { isTauriRuntime } from './services/tauriRuntime'
+import { isTauriRuntime, withTimeout } from './services/tauriRuntime'
 
 const osTheme = useOsTheme()
 const router = useRouter()
@@ -147,11 +141,8 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
 const showPalette = ref(false)
 const showExitModal = ref(false)
 const dontAskAgain = ref(false)
-const routeLoading = ref(true)
-const routeLoadingLabel = ref('正在启动 Long编辑')
+const routeErrorMessage = ref('')
 let unlistenOpenFile: (() => void) | null = null
-let initialLoadingTimer: ReturnType<typeof setTimeout> | null = null
-const appLoadingStartedAt = performance.now()
 let routeMeasurementStartedAt = performance.now()
 let routeMeasurementName = 'initial'
 let routeMeasurementSequence = 0
@@ -227,19 +218,8 @@ const finishRouteMeasurement = (sequence = routeMeasurementSequence) => {
   recordRoutePerformance(routeMeasurementName, totalElapsedMs)
 }
 
-const finishInitialAppLoading = () => {
-  if (initialLoadingTimer) clearTimeout(initialLoadingTimer)
-  const remaining = Math.max(0, 120 - (performance.now() - appLoadingStartedAt))
-  initialLoadingTimer = setTimeout(() => {
-    routeLoading.value = false
-    const totalElapsedMs = performance.now() - appLoadingStartedAt
-    performance.mark('longedit:route:initial:ready')
-    performance.measure('longedit:route:initial', 'longedit:route:initial:start', 'longedit:route:initial:ready')
-    recordRoutePerformance('initial', totalElapsedMs)
-  }, remaining)
-}
-
 const removeBeforeEach = router.beforeEach((to) => {
+  routeErrorMessage.value = ''
   startRouteMeasurement(to.name)
   if (to.name === 'LibraryMode' && typeof to.query.path !== 'string' && store.activeTabId) {
     return { name: 'LibraryMode', query: { ...to.query, path: store.activeTabId }, replace: true }
@@ -258,6 +238,12 @@ const removeAfterEach = router.afterEach(() => {
   requestAnimationFrame(() => requestAnimationFrame(finishOnce))
   setTimeout(finishOnce, 250)
 })
+const removeRouteError = router.onError((cause, to) => {
+  const target = typeof to?.fullPath === 'string' ? to.fullPath : '目标页面'
+  routeErrorMessage.value = `无法打开 ${target}。当前文档仍然保留，可以重新载入界面后再试。`
+  console.error('[Long编辑 Route Error]', cause)
+})
+const reloadApplication = () => window.location.reload()
 
 const handleGlobalKeydown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); showPalette.value = true }
@@ -350,38 +336,39 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   event.returnValue = ''
 }
 
-onMounted(async () => {
-  await store.loadConfig()
-
-  if (isTauriRuntime()) {
-    unlistenOpenFile = await listen<string>('open-file', async (event) => {
+const initializeExternalFileRouting = async () => {
+  try {
+    unlistenOpenFile = await withTimeout(listen<string>('open-file', async (event) => {
       const filePath = event.payload
-      if (isExternallyEditable(filePath)) {
-        await routeExternalFile(filePath)
-      }
-    })
-
-    try {
-      const args = await invoke<string[]>('get_launch_args')
-      const filePath = args.find(arg => isExternallyEditable(arg.replace(/^"|"$/g, '')))
-      if (filePath) {
-        await routeExternalFile(filePath)
-      }
-    } catch (_) { /* launch args unavailable, not critical */ }
+      if (isExternallyEditable(filePath)) await routeExternalFile(filePath)
+    }), 2500, 'event:open-file')
+  } catch (cause) {
+    console.warn('Open-file event registration timed out', cause)
   }
 
+  try {
+    const args = await withTimeout(invoke<string[]>('get_launch_args'), 2500, 'invoke:get_launch_args')
+    const filePath = args.find(arg => isExternallyEditable(arg.replace(/^"|"$/g, '')))
+    if (filePath) await routeExternalFile(filePath)
+  } catch (cause) {
+    console.warn('Launch arguments unavailable', cause)
+  }
+}
+
+onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown)
   window.addEventListener('beforeunload', handleBeforeUnload)
-  finishInitialAppLoading()
+  void store.loadConfig()
+  if (isTauriRuntime()) void initializeExternalFileRouting()
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown)
   window.removeEventListener('beforeunload', handleBeforeUnload)
   if (unlistenOpenFile) unlistenOpenFile()
-  if (initialLoadingTimer) clearTimeout(initialLoadingTimer)
   removeBeforeEach()
   removeAfterEach()
+  removeRouteError()
 })
 </script>
 
@@ -453,88 +440,43 @@ body[data-theme="dark"] .win-btn:hover, body[data-theme="contrast"] .win-btn:hov
   padding-right: 42px;
 }
 
-.page-loader {
+.route-error-notice {
   position: absolute;
-  inset: 0;
   z-index: 9000;
-  display: flex;
+  top: 10px;
+  left: 50%;
+  width: min(680px, calc(100% - 32px));
+  min-height: 38px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 28px;
   align-items: center;
-  justify-content: center;
-  gap: 18px;
-  background:
-    radial-gradient(circle at 50% 45%, rgba(var(--theme-primary-rgb), 0.1), transparent 32%),
-    color-mix(in srgb, var(--theme-bg) 90%, transparent);
-  backdrop-filter: blur(10px);
+  gap: 10px;
+  padding: 7px 8px 7px 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--status-danger-border);
+  border-radius: 6px;
+  color: var(--status-danger);
+  background: var(--status-danger-bg);
+  box-shadow: var(--workspace-shadow-md);
+  transform: translateX(-50%);
+  font-size: var(--text-compact);
 }
 
-.page-loader-mark {
-  position: relative;
-  width: 58px;
-  height: 58px;
+.route-error-notice button {
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
 }
 
-.page-loader-mark::before {
-  content: '';
-  position: absolute;
-  inset: 4px;
-  border-radius: 16px;
-  border: 1px solid rgba(var(--theme-primary-rgb), 0.2);
-  background: rgba(var(--theme-primary-rgb), 0.055);
-  transform: rotate(45deg);
-  animation: loaderTile 1.8s var(--ease-premium) infinite;
-}
-
-.page-loader-mark span {
-  position: absolute;
-  top: 25px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--theme-primary);
-  box-shadow: 0 0 14px rgba(var(--theme-primary-rgb), 0.45);
-  animation: loaderDot 1.1s ease-in-out infinite;
-}
-
-.page-loader-mark span:nth-child(1) { left: 12px; }
-.page-loader-mark span:nth-child(2) { left: 25px; animation-delay: 0.14s; }
-.page-loader-mark span:nth-child(3) { left: 38px; animation-delay: 0.28s; }
-
-.page-loader-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.page-loader-copy strong {
-  color: var(--theme-text);
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.page-loader-copy span {
-  color: var(--text-secondary);
-  font-size: 11px;
-}
-
-.page-loader-fade-enter-active,
-.page-loader-fade-leave-active {
-  transition: opacity 0.25s ease, backdrop-filter 0.25s ease;
-}
-
-.page-loader-fade-enter-from,
-.page-loader-fade-leave-to {
-  opacity: 0;
-  backdrop-filter: blur(0);
-}
-
-@keyframes loaderTile {
-  0%, 100% { transform: rotate(45deg) scale(0.92); opacity: 0.65; }
-  50% { transform: rotate(135deg) scale(1.05); opacity: 1; }
-}
-
-@keyframes loaderDot {
-  0%, 100% { transform: translateY(4px) scale(0.75); opacity: 0.45; }
-  50% { transform: translateY(-4px) scale(1); opacity: 1; }
+.route-error-notice .route-error-close {
+  width: 28px;
+  padding: 0;
+  border-color: transparent;
+  font-size: 18px;
 }
 
 .route-wrapper {

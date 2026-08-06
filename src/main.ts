@@ -32,6 +32,7 @@ import router from './router'
 import { useAppStore } from './store/app'
 import { managedFileLocation } from './services/fileNavigation'
 import { installRecoverableLayoutErrorBoundary } from './services/recoverableRuntimeErrors'
+import { withTimeout } from './services/tauriRuntime'
 
 import 'vfonts/Inter.css'
 import 'vfonts/FiraCode.css'
@@ -103,13 +104,17 @@ app.config.errorHandler = (err, _instance, info) => {
 }
 
 const bootstrap = async () => {
-  await store.loadConfig()
   app.use(router)
-  await router.isReady()
-  if (router.currentRoute.value.name === 'LibraryMode' && typeof router.currentRoute.value.query.path !== 'string' && store.activeTabId) {
-    await router.replace(managedFileLocation(store.activeTabId, router.currentRoute.value.query))
-  }
   app.mount('#app')
+  await store.loadConfig()
+  try {
+    await withTimeout(router.isReady(), 8000, 'router:isReady')
+    if (router.currentRoute.value.name === 'LibraryMode' && typeof router.currentRoute.value.query.path !== 'string' && store.activeTabId) {
+      await router.replace(managedFileLocation(store.activeTabId, router.currentRoute.value.query))
+    }
+  } catch (cause) {
+    console.error('[Long编辑 Bootstrap Recovery]', cause)
+  }
 }
 
 void bootstrap()

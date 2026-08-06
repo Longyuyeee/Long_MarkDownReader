@@ -1681,11 +1681,15 @@ const refreshNode = async (path: string) => {
   }
 }
 
+let editorLoadGeneration = 0
 const loadFileToEditor = async (path: string) => {
   if (!vditor || !path) return; lastLoadedPath = '' 
+  const generation = ++editorLoadGeneration
   const currentTab = tabs.value.find(t => t.path === path)
+  const isCurrentRequest = () => generation === editorLoadGeneration && activeTabId.value === path
   
   const setEditorValue = (content: string, readOnly = false) => {
+    if (!isCurrentRequest()) return
     suppressEditorInput = true
     vditor.setValue(content)
     setTimeout(() => {
@@ -1733,12 +1737,15 @@ const loadFileToEditor = async (path: string) => {
       if (!format || format.routeName !== 'LibraryMode') throw new Error('文件未注册为文本工作面格式')
       const readOptions = currentTab?.textReadEncoding ? { encoding: currentTab.textReadEncoding } : undefined
       const res = await invoke<TextDocumentSnapshot>('read_text_document', { libraryRoot: store.libraryPath, path, formatId: format.id, readOptions })
+      if (!isCurrentRequest()) return
       applyTextSnapshot(currentTab, res, currentTab?.textReadEncoding)
       setEditorValue(res.content)
     } catch (err: any) {
+      if (!isCurrentRequest()) return
       if (err?.code === 'read-too-large' && currentTab) {
         try {
           const preview = await readLargeTextPreview(currentTab, 0, currentTab.textReadEncoding)
+          if (!isCurrentRequest()) return
           setEditorValue(preview.content, true)
           message.warning('文件超过完整编辑上限，已进入大文件只读预览')
         } catch (previewError: any) {
@@ -2885,6 +2892,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  editorLoadGeneration += 1
   destroyImageFix()
   window.removeEventListener('longedit:reveal-library-file', revealLibraryFile)
   window.removeEventListener('longedit:library-file-created', refreshCreatedLibraryFile)

@@ -32,8 +32,9 @@
   ],
   "performanceBudgets": {
     "routeLoaderMinimumVisibleMs": 0,
-    "initialLoaderMinimumVisibleMs": 120,
+    "initialLoaderMinimumVisibleMs": 0,
     "documentNavigationOverlay": "disabled",
+    "startupNavigationOverlay": "disabled",
     "routeHistoryEntryLimit": 20,
     "manualChunkWarningLimitKb": 750,
     "mustNotPromoteToRcWithoutRealDesktopEvidence": true

@@ -30,7 +30,7 @@ if (policy.evidenceState.localRuntimeMarks !== 'implemented') fail('R5B route ru
 if (policy.evidenceState.desktopSmokeMeasurement !== 'pending') fail('R5B must truthfully keep desktop smoke measurement pending.')
 if (policy.evidenceState.windowsVmMeasurement !== 'pending') fail('R5B must truthfully keep Windows VM measurement pending.')
 if (policy.evidenceState.releaseBlocking !== true) fail('R5B must remain release blocking until real evidence exists.')
-if (policy.performanceBudgets.routeLoaderMinimumVisibleMs !== 0 || policy.performanceBudgets.initialLoaderMinimumVisibleMs !== 120 || policy.performanceBudgets.documentNavigationOverlay !== 'disabled') fail('R5B navigation overlay budget must match App.vue.')
+if (policy.performanceBudgets.routeLoaderMinimumVisibleMs !== 0 || policy.performanceBudgets.initialLoaderMinimumVisibleMs !== 0 || policy.performanceBudgets.documentNavigationOverlay !== 'disabled' || policy.performanceBudgets.startupNavigationOverlay !== 'disabled') fail('R5B navigation overlay budget must match App.vue.')
 if (policy.performanceBudgets.routeHistoryEntryLimit !== 20) fail('R5B route performance history limit must be 20.')
 if (policy.performanceBudgets.manualChunkWarningLimitKb !== frontendPolicy.bundleBudget.chunkSizeWarningLimitKb) {
   fail('R5B frontend budget must mirror R5A chunk budget.')
@@ -76,10 +76,10 @@ for (const token of [
   'performance.mark(`longedit:route:${routeMeasurementName}:ready`)',
   'performance.measure(',
   'recordRoutePerformance(routeMeasurementName, totalElapsedMs)',
-  'Math.max(0, 120 - (performance.now() - appLoadingStartedAt))',
 ]) {
   if (!appVue.includes(token)) fail(`R5B App.vue runtime token missing: ${token}`)
 }
+if (appVue.includes('page-loader') || appVue.includes('routeLoading')) fail('R5B blocking navigation overlay was reintroduced.')
 
 for (const token of [
   "path: '/workspace'",

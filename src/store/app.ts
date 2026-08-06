@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { enable, disable, isEnabled } from '@tauri-apps/plugin-autostart'
-import { invoke, isTauriRuntime } from '../services/tauriRuntime'
+import { invoke, invokeWithTimeout, isTauriRuntime, withTimeout } from '../services/tauriRuntime'
 import {
   THEME_EDITOR_BACKGROUNDS,
   getThemePreset,
@@ -127,7 +127,7 @@ export const useAppStore = defineStore('app', {
             this.restoreTabsState()
             return
           }
-          const config = await invoke<any>('get_config')
+          const config = await invokeWithTimeout<any>('get_config', undefined, 4000)
           this.libraries = (config.libraries || []).map((l: any) => ({ ...l, gitEnabled: l.gitEnabled || false, gitRemote: l.gitRemote || '', gitBranch: l.gitBranch || 'main' }))
           this.activeLibraryPath = config.activeLibraryPath || ''
           this.theme = normalizeThemeName(config.theme)
@@ -147,14 +147,14 @@ export const useAppStore = defineStore('app', {
           this.aiEnabled = config.aiEnabled || false
           this.aiProvider = config.aiProvider || 'openai'
           this.aiEndpoint = config.aiEndpoint || 'https://api.openai.com/v1'
-          try { this.aiCredentialStored = await invoke<boolean>('get_ai_credential_status') }
+          try { this.aiCredentialStored = await invokeWithTimeout<boolean>('get_ai_credential_status', undefined, 2000) }
           catch { this.aiCredentialStored = false }
           this.aiModel = config.aiModel || 'gpt-4o-mini'
           this.savedSearches = Array.isArray(config.savedSearches) ? config.savedSearches : []
 
           // 同步系统真实的自启状态，以系统为准
           try {
-            this.isAutostart = await isEnabled()
+            this.isAutostart = await withTimeout(isEnabled(), 2000, 'autostart:isEnabled')
           } catch (e) {
             this.isAutostart = config.isAutostart || false
           }
@@ -163,6 +163,7 @@ export const useAppStore = defineStore('app', {
           this.restoreTabsState()
         } catch (e) {
           console.error('Failed to load config', e)
+          this.restoreTabsState()
         } finally {
           this.configReady = true
         }
