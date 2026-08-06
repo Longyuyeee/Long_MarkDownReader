@@ -367,12 +367,6 @@
     <div class="editor-main" data-ui-region="editor" :class="{ 'zen-mode': store.isZen }">
       <div class="tabs-bar" v-if="!store.isZen && store.tabs.length > 0">
         <WorkspaceTabs />
-        <RelationSummaryBadge
-          v-if="activeRelationSummary"
-          class="active-relation-summary"
-          :summary="activeRelationSummary"
-          @open="openActiveRelationGraph"
-        />
         <n-dropdown
           v-if="activeTabId"
           trigger="click"
@@ -1177,13 +1171,9 @@ const activateGraphCollection = async (search: SavedSearchConfig) => {
   }
 }
 const relationSummary = (path: string) => relationSummaries.value[path]
-const activeRelationSummary = computed(() => activeTabId.value ? relationSummary(activeTabId.value) : undefined)
 const refreshRelationSummaries = async () => {
   const generation = ++relationSummaryGeneration
-  const paths = [...new Set([
-    ...(activeTabId.value ? [activeTabId.value] : []),
-    ...knowledgeSearchResults.value.map(result => result.path),
-  ])].slice(0, 100)
+  const paths = [...new Set(knowledgeSearchResults.value.map(result => result.path))].slice(0, 100)
   if (!store.libraryPath || !paths.length) {
     relationSummaries.value = {}
     return
@@ -1203,9 +1193,6 @@ const refreshRelationSummaries = async () => {
 const openRelationGraph = (path: string) => {
   const summary = relationSummary(path)
   if (summary) router.push({ name: 'Graph', query: { root: summary.nodeId } })
-}
-const openActiveRelationGraph = () => {
-  if (activeTabId.value) openRelationGraph(activeTabId.value)
 }
 const librarySavedSearches = computed(() => store.savedSearches
   .filter(search => search.libraryPath === store.libraryPath)
@@ -3180,7 +3167,6 @@ watch(activeTabId, (newId, oldId) => {
     const t = tabs.value.find(item => item.id === newId); 
     if (t && findFileFormat(t.path)?.routeName === 'LibraryMode') loadFileToEditor(t.path)
     if (activeSidebarTab.value === 'links') fetchLinks()
-    void refreshRelationSummaries()
 
     // 侧边栏自动同步逻辑
     selectedKeys.value = [newId]
@@ -3963,7 +3949,6 @@ watch(activeTabId, (newId, oldId) => {
 
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
 .tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; gap: 12px; }
-.active-relation-summary { flex: none; }
 .embedded-format-capability {
   display: flex;
   min-width: 0;

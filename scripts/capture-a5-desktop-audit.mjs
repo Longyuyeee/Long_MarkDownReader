@@ -226,13 +226,12 @@ const checks = []
 
 await navigate(routeFor('library', relationSourceFile), '.library-mode')
 await waitFor(
-  `document.querySelector('.active-relation-summary')?.textContent?.includes('1') === true
-    && document.querySelector('.active-relation-summary')?.textContent?.includes('关系') === true`,
-  'current file relation summary',
+  `document.querySelector('.active-relation-summary') === null`,
+  'editor tab bar without relation status',
   600,
 )
-checks.push({ id: 'g8-current-file-relation-summary', status: 'passed' })
-await capture('g8-current-file-relation-summary.jpg')
+checks.push({ id: 'g8-editor-tab-bar-without-relation-status', status: 'passed' })
+await capture('g8-editor-tab-bar-without-relation-status.jpg')
 await clickText('.relation-context-trigger', '关系上下文')
 await waitFor(
   `document.querySelector('.relation-context-panel')?.textContent?.includes('G8 Source') === true
