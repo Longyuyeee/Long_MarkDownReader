@@ -76,6 +76,7 @@ import { useAppStore } from './store/app'
 import { findFileFormat, isExternallyEditable, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 import { openManagedFile } from './services/fileNavigation'
+import { externalRouteForFile } from './services/externalFileNavigation'
 import { isTauriRuntime, withTimeout } from './services/tauriRuntime'
 
 const osTheme = useOsTheme()
@@ -306,15 +307,8 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
 
 const routeExternalFile = async (filePath: string) => {
   const cleanPath = filePath.replace(/^"|"$/g, '')
-  const target = routeForFile(cleanPath)
-  if (target?.name === 'TextEditor') {
-    await router.push({
-      name: 'TextEditor',
-      query: { path: cleanPath, external: '1', t: Date.now() },
-    })
-    return
-  }
-  await router.push({ name: 'TempMode', query: { path: cleanPath, t: Date.now() } })
+  const target = externalRouteForFile(cleanPath)
+  if (target) await router.push(target)
 }
 
 const openExternalFile = async () => {

@@ -2,12 +2,20 @@
   <div class="temp-mode" :class="{ 'is-dark': isActiveThemeDark(store.theme), 'zen-mode': store.isZen }">
     <div class="temp-header" v-if="!store.isZen">
       <div class="temp-info">
-        <n-tag :bordered="false" type="error" size="small" class="mode-tag">临时编辑</n-tag>
+        <n-button quaternary circle size="small" title="返回资料库" @click="leaveExternalEditor">
+          <template #icon><n-icon :component="ArrowLeftIcon" /></template>
+        </n-button>
+        <n-tag :bordered="false" type="info" size="small" class="mode-tag">外部 Markdown</n-tag>
         <span class="file-name" :title="filePath">{{ fileName }}</span>
         <div v-if="isDirty" class="dirty-dot"></div>
+        <span class="save-boundary">仅在点击保存时写回源文件</span>
       </div>
       <div class="actions">
         <n-button-group size="small">
+          <n-button secondary :title="showOutline ? '隐藏大纲' : '显示大纲'" @click="showOutline = !showOutline">
+            <template #icon><n-icon :component="showOutline ? PanelLeftCloseIcon : PanelLeftOpenIcon" /></template>
+            大纲
+          </n-button>
           <n-button secondary type="primary" @click="importToLibrary" :disabled="!store.libraryPath">
             <template #icon><n-icon :component="BookPlusIcon" /></template>
             存入知识库
@@ -78,7 +86,7 @@ import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '../services/tauriRuntime'
 import { useMessage, NIcon } from 'naive-ui'
-import { List as ListIcon, BookPlus as BookPlusIcon } from 'lucide-vue-next'
+import { ArrowLeft as ArrowLeftIcon, BookPlus as BookPlusIcon, List as ListIcon, PanelLeftClose as PanelLeftCloseIcon, PanelLeftOpen as PanelLeftOpenIcon } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore } from '../store/app'
@@ -105,8 +113,10 @@ onBeforeRouteLeave((_to, _from, next) => {
 })
 
 const sidebarWidth = ref(240)
-const showOutline = ref(true)
+const showOutline = ref(false)
 let vditor: Vditor | null = null
+
+const leaveExternalEditor = () => router.push({ name: 'LibraryMode' })
 
 const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
 const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => filePath.value, { external: true })
@@ -341,24 +351,27 @@ watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
 </script>
 
 <style scoped>
-.temp-mode { height: 100%; display: flex; flex-direction: column; background: var(--theme-bg); color: var(--theme-text); }
-.temp-header { height: 48px; background: var(--theme-bg); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: var(--theme-border); z-index: 10; }
+.temp-mode { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--theme-bg); color: var(--theme-text); }
+.temp-header { min-width: 0; min-height: 48px; background: var(--theme-bg); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 12px; border-bottom: var(--theme-border); z-index: 10; }
 .is-dark .temp-header { background: rgba(255, 255, 255, 0.05); border-bottom-color: rgba(255, 255, 255, 0.1); }
-.main-content { flex: 1; display: flex; overflow: hidden; }
-.temp-sidebar { background: rgba(0, 0, 0, 0.02); border-right: var(--theme-border); display: flex; flex-direction: column; }
+.main-content { flex: 1; min-width: 0; min-height: 0; display: flex; overflow: hidden; }
+.temp-sidebar { flex: 0 0 auto; min-height: 0; background: rgba(0, 0, 0, 0.02); border-right: var(--theme-border); display: flex; flex-direction: column; }
 .sidebar-header { padding: 12px 16px; font-size: 12px; font-weight: 700; opacity: 0.5; display: flex; align-items: center; gap: 8px; border-bottom: var(--theme-border); }
 .outline-container { flex: 1; overflow-y: auto; padding: 8px; }
 .empty-outline { padding: 40px 20px; text-align: center; opacity: 0.3; font-size: 13px; }
 .resizer { width: 4px; cursor: col-resize; transition: background 0.2s; }
 .resizer:hover { background: var(--theme-primary); }
-.editor-container { flex: 1; min-width: 0; background: transparent; }
-.temp-info { display: flex; align-items: center; gap: 8px; }
-.file-name { font-size: 13px; font-weight: 600; opacity: 0.8; }
+.editor-container { flex: 1; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: hidden; background: transparent; }
+.temp-info { min-width: 0; display: flex; align-items: center; gap: 8px; }
+.actions { flex: 0 0 auto; }
+.file-name { max-width: min(34vw, 520px); overflow: hidden; font-size: 13px; font-weight: 600; opacity: 0.8; text-overflow: ellipsis; white-space: nowrap; }
+.save-boundary { color: var(--theme-text-secondary); font-size: var(--text-compact); white-space: nowrap; }
 .dirty-dot { width: 6px; height: 6px; background: #ff4d4f; border-radius: 50%; }
-:deep(.vditor) { border: none !important; background: transparent !important; }
+:deep(#vditor),
+:deep(.vditor) { width: 100% !important; height: 100% !important; min-width: 0; min-height: 0; border: none !important; background: transparent !important; }
 :deep(.vditor-toolbar) { background: transparent !important; border-bottom: var(--theme-border) !important; }
-:deep(.vditor-content) { background: transparent !important; }
-:deep(.vditor-reset) { max-width: 800px !important; margin: 0 auto !important; color: inherit !important; }
+:deep(.vditor-content) { min-width: 0; min-height: 0; background: transparent !important; }
+:deep(.vditor-reset) { width: 100% !important; max-width: none !important; margin: 0 !important; padding-inline: clamp(22px, 4vw, 64px) !important; box-sizing: border-box; color: inherit !important; }
 .compact-outline-tree :deep(.n-tree-node-content) { font-size: 13px !important; padding: 4px 8px !important; overflow: hidden; }
 .compact-outline-tree :deep(.n-tree-node-content__text) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 
@@ -374,4 +387,11 @@ watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
 .ai-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 8px 0; }
 .ai-action-btn { height: 56px; font-size: 15px; font-weight: 600; }
 .ai-result-content { white-space: pre-wrap; line-height: 1.7; font-size: 14px; color: var(--theme-text); max-height: 400px; overflow-y: auto; }
+
+@media (max-width: 760px) {
+  .save-boundary { display: none; }
+  .temp-header { flex-wrap: wrap; padding-block: 7px; }
+  .temp-info { flex: 1 1 100%; }
+  .actions { max-width: 100%; margin-left: auto; overflow-x: auto; }
+}
 </style>
