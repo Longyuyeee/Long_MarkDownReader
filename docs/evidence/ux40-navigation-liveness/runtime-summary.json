@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX-40",
+  "status": "debug-tauri-runtime-passed",
+  "capturedAt": "2026-08-06",
+  "sourceCommit": "676baa774dddf050408bf59e340a82389697f7ef",
+  "environment": "Tauri Debug WebView2 isolated library",
+  "formatTabs": 12,
+  "checks": {
+    "blockingOverlayObserved": false,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false,
+    "wheelScrollChanged": true,
+    "shiftWheelScrollChanged": true,
+    "arrowScrollChanged": true,
+    "keyboardNavigationChanged": true,
+    "activeTabRevealed": true,
+    "narrowViewportStable": true,
+    "sourceFilesUnchanged": true
+  },
+  "layout": {
+    "minimumTabWidth": 176,
+    "minimumTextWidth": 107,
+    "nativeScrollbarVisible": false
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

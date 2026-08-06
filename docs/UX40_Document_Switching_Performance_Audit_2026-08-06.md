@@ -1,6 +1,6 @@
 # UX-40 文档切换卡死全面审计
 
-状态：**代码与自动化门禁通过，待新安装包完成真实交付验证**
+状态：**代码、自动化门禁与真实 Tauri Debug 回归通过，待新安装包完成交付验证**
 
 ## 根因
 
@@ -31,7 +31,10 @@ v1.0.4 的“正在打开知识库 / 正在准备页面内容”不是文档自�
 - `npm run check:route-loading-fallback`：通过，确认源码不存在 `page-loader`、`routeLoading` 或 `out-in`。
 - `npm run check:r5b-desktop-startup-performance`：通过，启动与文档导航阻塞遮罩预算均为 0ms。
 - `npm run check:current-development-audit`：通过，UX-34 至 UX-39 全链保持成立。
+- 真实 Tauri Debug WebView2：用隔离资料库连续打开 12 种文本与开发格式，滚轮、Shift+滚轮、边缘按钮、键盘和窄窗口切换全部通过；运行时错误 0、阻断错误界面 0、源文件变化 0，全程不存在 `.page-loader`。
+
+机器摘要见 `docs/evidence/ux40-navigation-liveness/runtime-summary.json`。本机截图保留在 Git 忽略的 `.release-secrets/ux40-navigation-runtime-676baa7`，不包含用户资料库内容。
 
 ## 交付边界
 
-当前 GitHub `v1.0.4` Release 不包含这些修复。必须生成后续安装包，并在安装态连续切换 Markdown/TXT、JSON/YAML、PDF、XLSX、DOCX/PPTX 和 Canvas 后，才能向已安装用户宣称问题已交付解决。
+当前 GitHub `v1.0.4` Release 不包含这些修复。Debug WebView2 已证明导航框架与 12 种轻量格式不再卡死；仍必须生成后续安装包，并在安装态连续切换 Markdown/TXT、JSON/YAML、PDF、XLSX、DOCX/PPTX 和 Canvas 后，才能向已安装用户宣称问题已交付解决。
