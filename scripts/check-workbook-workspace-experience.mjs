@@ -11,9 +11,9 @@ const requireTokens = (source, label, tokens) => {
 
 const view = read('src/views/WorkbookView.vue')
 requireTokens(view, 'Workbook linked data entry', [
-  'class="linked-data-trigger"',
+  'workbookActionOptions',
+  "key: 'linked-data'",
   '透视表与数据连接',
-  'linkedDataSummaryText',
   'summary.totalObjectCount',
   '当前仅查看',
   'LongEdit 不会自动刷新数据',
@@ -22,13 +22,27 @@ requireTokens(view, 'Workbook linked data entry', [
 if (view.includes('class="linked-data-toolbar"')) fail('Linked data summary restored a permanent workbook row.')
 if (view.includes('title="高级数据对象审计"')) fail('Internal audit wording returned to the primary workbook UI.')
 
-requireTokens(view, 'Workbook compact responsive shell', [
-  'min-height: var(--workspace-toolbar-height)',
-  '.sheet-tabs { min-height: 35px',
-  '@media (max-width: 1180px)',
-  '.workbook-actions .linked-data-trigger span { display: none; }',
-  ':not(.linked-data-trigger)',
+requireTokens(view, 'Workbook progressive tool shell', [
+  "const activeToolPanel = ref<'none' | 'format' | 'data' | 'chart'>('none')",
+  ':options="workbookToolOptions"',
+  "activeToolPanel === 'format'",
+  "activeToolPanel === 'data'",
+  "activeToolPanel === 'chart'",
+  'handleWorkbookToolSelect',
+  'height: 44px; min-height: 44px',
+  '.sheet-tabs { min-height: 32px',
+  '@container (max-width: 680px)',
+  '.workbook-actions .tool-panel-trigger span { display: none; }',
+  '.workbook-actions button.primary span { display: none; }',
 ])
+requireTokens(view, 'Workbook compact formula bar', [
+  ':options="definedNameActionOptions"',
+  'class="name-manager-button"',
+  'handleDefinedNameAction',
+  '.formula-bar .name-manager-button',
+])
+if (!/<div[^>]+activeToolPanel === 'format'[^>]+class="format-toolbar"/.test(view)) fail('Format tools must remain collapsed until explicitly requested.')
+if (!/<div[^>]+activeToolPanel === 'chart'[^>]+class="drawing-toolbar"/.test(view)) fail('Drawing tools must remain collapsed until explicitly requested.')
 
 requireTokens(view, 'Opaque workbook grid', [
   "'--cell-fill': style.fillColor || 'var(--theme-surface)'",
@@ -49,6 +63,6 @@ if (surfaceValues.length < 9 || surfaceValues.some(value => !/^#[0-9a-f]{6}$/i.t
 }
 
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
-if (!/\| UX-32 \|[^\n]+\| 待复测 \|/.test(audit)) fail('UX-32 must remain pending installed-build retest.')
+if (!/\| UX-32 \|[^\n]+\| 已完成 \|/.test(audit)) fail('UX-32 must retain its accepted installed-build status.')
 
-console.log('Workbook workspace contract passed: compact linked-data entry, responsive reachability, and opaque frozen grid surfaces.')
+console.log('Workbook workspace contract passed: progressive tools, compact formula controls, responsive reachability, and opaque frozen grid surfaces.')

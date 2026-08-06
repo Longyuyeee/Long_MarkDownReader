@@ -8,24 +8,16 @@
       <div v-if="workbook" class="workbook-actions" data-horizontal-wheel="always">
         <button class="icon-button" title="撤销" :disabled="!undoStack.length || saving" @click="undo"><n-icon :component="UndoIcon" /></button>
         <button class="icon-button" title="重做" :disabled="!redoStack.length || saving" @click="redo"><n-icon :component="RedoIcon" /></button>
-        <button class="icon-button" title="复制区域" :disabled="!selectedCell || saving" @click="copySelection"><n-icon :component="CopyIcon" /></button>
-        <button class="icon-button" title="粘贴区域" :disabled="!selectedCell || saving || sheetProtected" @click="pasteSelection"><n-icon :component="PasteIcon" /></button>
-        <button :title="sheetInfo?.arrayFormulas.length ? '当前工作表包含只读数组公式，暂不开放本地重算' : '重算当前已加载公式'" :disabled="calculating || saving || !activeSheet || Boolean(sheetInfo?.arrayFormulas.length)" @click="recalculateFormulas"><n-icon :component="CalculatorIcon" />{{ calculating ? '重算中…' : '重算' }}</button>
-        <button :class="{ active: showFormulas }" :aria-pressed="showFormulas" :disabled="saving" @click="showFormulas = !showFormulas"><n-icon :component="FunctionIcon" />{{ showFormulas ? '结果' : '公式' }}</button>
-        <button
-          v-if="hasLinkedData"
-          class="linked-data-trigger"
-          :class="{ warning: workbook.linkedData.summary.refreshRiskCount }"
-          :title="linkedDataSummaryText"
-          @click="linkedDataModalOpen = true"
-        >
-          <n-icon :component="LinkedDataIcon" />
-          <span>透视表与数据连接</span>
-          <strong>{{ workbook.linkedData.summary.totalObjectCount }}</strong>
-        </button>
-        <button class="icon-button" title="重新读取" :disabled="saving" @click="refreshWorkbook"><n-icon :component="RefreshIcon" /></button>
-        <button :disabled="importing || saving || !activeSheet" @click="convertSheet"><n-icon :component="TableIcon" />{{ importing ? '转换中…' : '转为 Table' }}</button>
-        <button class="primary" :disabled="!dirtyCount || saving" aria-live="polite" @click="saveWorkbook"><n-icon :component="SaveIcon" />{{ saving ? '保存中' : dirtyCount ? `保存 (${dirtyCount})` : '已保存' }}</button>
+        <button class="icon-button" :class="{ active: showFormulas }" :aria-pressed="showFormulas" :title="showFormulas ? '显示计算结果' : '显示公式'" :disabled="saving" @click="showFormulas = !showFormulas"><n-icon :component="FunctionIcon" /></button>
+        <n-dropdown trigger="click" :options="workbookToolOptions" @select="handleWorkbookToolSelect">
+          <button class="tool-panel-trigger" :class="{ active: activeToolPanel !== 'none' }" :title="activeToolPanel === 'none' ? '展开专业工具' : `当前展开：${activeToolPanelLabel}`">
+            <n-icon :component="SlidersIcon" /><span>{{ activeToolPanelLabel }}</span>
+          </button>
+        </n-dropdown>
+        <n-dropdown trigger="click" :options="workbookActionOptions" @select="handleWorkbookAction">
+          <button class="icon-button action-menu-trigger" title="更多工作簿操作"><n-icon :component="MoreIcon" /></button>
+        </n-dropdown>
+        <button class="primary" :disabled="!dirtyCount || saving" aria-live="polite" @click="saveWorkbook"><n-icon :component="SaveIcon" /><span>{{ saving ? '保存中' : dirtyCount ? `保存 (${dirtyCount})` : '已保存' }}</span></button>
       </div>
     </WorkspaceToolbar>
 
@@ -445,10 +437,9 @@
         <option :value="-1">{{ navigableDefinedNames.length ? '命名区域' : '无命名区域' }}</option>
         <option v-for="item in navigableDefinedNames" :key="item.index" :value="item.index">{{ item.label }}</option>
       </select>
-      <button title="从当前单一区域创建名称" :disabled="!canEditDefinedNames || !definedNameSelection" @click="createDefinedName">新建名称</button>
-      <button title="重命名当前名称；被公式引用时会安全拒绝" :disabled="!canEditDefinedNames || selectedDefinedNameIndex < 0" @click="renameDefinedName">改名</button>
-      <button title="把当前名称指向当前单一区域" :disabled="!canEditDefinedNames || selectedDefinedNameIndex < 0 || !definedNameSelection" @click="updateDefinedNameRange">更新引用</button>
-      <button title="删除当前名称；被公式引用时会安全拒绝" :disabled="!canEditDefinedNames || selectedDefinedNameIndex < 0" @click="deleteDefinedName">删除名称</button>
+      <n-dropdown trigger="click" :options="definedNameActionOptions" @select="handleDefinedNameAction">
+        <button class="name-manager-button" title="管理命名区域"><n-icon :component="MoreIcon" /></button>
+      </n-dropdown>
       <output>{{ selectedAddress || '—' }}</output>
       <span>fx</span>
       <input
@@ -510,7 +501,7 @@
       </span>
     </div>
 
-    <div v-if="workbook && sheetInfo" class="format-toolbar" :class="{ protected: sheetProtected }" aria-label="单元格格式" data-horizontal-wheel="always">
+    <div v-if="workbook && sheetInfo && activeToolPanel === 'format'" class="format-toolbar" :class="{ protected: sheetProtected }" aria-label="单元格格式" data-horizontal-wheel="always">
       <select :value="focusedStyle.namedStyle || ''" title="命名样式" :disabled="!selectedCell || saving" @change="applyNamedStyle">
         <option value="">单元格样式</option>
         <option v-for="style in sheetInfo.namedStyles" :key="style.name" :value="style.name">{{ style.name }}</option>
@@ -565,7 +556,7 @@
       <button title="取消当前工作表冻结窗格" :disabled="(!effectiveFreeze.rows && !effectiveFreeze.columns) || saving || updatingStructure || Boolean(dirtyCount)" @click="clearFreezePane">取消冻结</button>
     </div>
 
-    <div v-if="workbook && sheetInfo && (activeDataRegion || selectedValidation || tableSelection || validationSelection)" class="data-toolbar" data-horizontal-wheel="always">
+    <div v-if="workbook && sheetInfo && activeToolPanel === 'data' && (activeDataRegion || selectedValidation || tableSelection || validationSelection)" class="data-toolbar" data-horizontal-wheel="always">
       <button v-if="tableSelection && !selectedTable" title="从选区创建 Excel Table" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('create')">创建 Table</button>
       <button v-if="tableSelection && selectedTable" title="把 Excel Table 调整到选区并同步表头" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('resize')">调整 Table</button>
       <template v-if="selectedTable">
@@ -631,7 +622,7 @@
       </template>
     </div>
 
-    <div v-if="workbook && sheetInfo" class="drawing-toolbar" aria-label="工作表绘图对象" data-horizontal-wheel="always">
+    <div v-if="workbook && sheetInfo && activeToolPanel === 'chart'" class="drawing-toolbar" aria-label="工作表绘图对象" data-horizontal-wheel="always">
       <strong>绘图对象 {{ sheetInfo.drawings.length }}</strong>
       <select v-model="newChartType" class="drawing-series-select" title="选择要创建的图表类型">
         <option value="column">柱形图</option>
@@ -803,7 +794,7 @@ import WorkspaceStatusBar from '../components/workspace/WorkspaceStatusBar.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useDialog, useMessage } from 'naive-ui'
-import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Calculator as CalculatorIcon, ClipboardPaste as PasteIcon, Copy as CopyIcon, Database as LinkedDataIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Table2 as TableIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
+import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, MoreHorizontal as MoreIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, Save as SaveIcon, SlidersHorizontal as SlidersIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone } from '../config/themePresets'
 import { conditionalExpressionReferences, evaluateConditionalExpression, parseConditionalExpression } from '../utils/conditionalExpression'
@@ -1066,23 +1057,12 @@ const saving = ref(false)
 const calculating = ref(false)
 const error = ref('')
 const showFormulas = ref(false)
+const activeToolPanel = ref<'none' | 'format' | 'data' | 'chart'>('none')
 const linkedDataModalOpen = ref(false)
 const hasLinkedData = computed(() => Boolean(workbook.value && (
   workbook.value.linkedData.summary.totalObjectCount
   || workbook.value.linkedData.externalRelationshipCount
 )))
-const linkedDataSummaryText = computed(() => {
-  if (!workbook.value) return ''
-  const { summary, externalRelationshipCount } = workbook.value.linkedData
-  const parts = [
-    `${summary.localPivotCount + summary.connectionBackedPivotCount} 个透视表`,
-    `${summary.slicerCount} 个切片器`,
-    `${summary.connectionCount + summary.externalLinkCount} 个外部数据来源`,
-  ]
-  if (summary.refreshRiskCount) parts.push(`${summary.refreshRiskCount} 项请求刷新，当前已阻止`)
-  if (externalRelationshipCount) parts.push('LongEdit 不会访问外部目标')
-  return parts.join('；')
-})
 const pivotPreviews = ref(new Map<string, WorkbookPivotPreviewResult>())
 const pivotPreviewLoading = ref('')
 const pivotRebuildPlans = ref(new Map<string, WorkbookPivotRebuildPlan>())
@@ -2179,6 +2159,57 @@ const navigableDefinedNames = computed(() => (workbook.value?.definedNames || []
 const selectedDefinedName = computed(() => selectedDefinedNameIndex.value >= 0 ? workbook.value?.definedNames[selectedDefinedNameIndex.value] : undefined)
 const definedNameSelection = computed(() => selectionAreas.value.length === 1 ? selectionBounds.value : null)
 const canEditDefinedNames = computed(() => Boolean(workbook.value && !workbook.value.protection.lockStructure && !saving.value && !updatingStructure.value && !dirtyCount.value))
+const activeToolPanelLabel = computed(() => ({ none: '工具', format: '格式', data: '数据', chart: '图表' })[activeToolPanel.value])
+const hasDataToolContext = computed(() => Boolean(activeDataRegion.value || selectedValidation.value || tableSelection.value || validationSelection.value))
+const workbookToolOptions = computed(() => [
+  { label: `${activeToolPanel.value === 'format' ? '✓ ' : ''}单元格格式`, key: 'format' },
+  { label: `${activeToolPanel.value === 'data' ? '✓ ' : ''}数据、Table 与规则`, key: 'data', disabled: !hasDataToolContext.value },
+  { label: `${activeToolPanel.value === 'chart' ? '✓ ' : ''}图表与绘图对象`, key: 'chart' },
+  { type: 'divider', key: 'tool-divider' },
+  { label: '收起工具面板', key: 'none', disabled: activeToolPanel.value === 'none' },
+])
+const workbookActionOptions = computed(() => [
+  { label: '复制选区', key: 'copy', disabled: !selectedCell.value || saving.value },
+  { label: '粘贴选区', key: 'paste', disabled: !selectedCell.value || saving.value || sheetProtected.value },
+  { type: 'divider', key: 'edit-divider' },
+  {
+    label: calculating.value ? '正在重算公式…' : '重算已加载公式',
+    key: 'recalculate',
+    disabled: calculating.value || saving.value || !activeSheet.value || Boolean(sheetInfo.value?.arrayFormulas.length),
+  },
+  { label: importing.value ? '正在转换为 Table…' : '将工作表转为 Table', key: 'convert-table', disabled: importing.value || saving.value || !activeSheet.value },
+  ...(hasLinkedData.value ? [{
+    label: `透视表与数据连接 (${workbook.value?.linkedData.summary.totalObjectCount || 0})`,
+    key: 'linked-data',
+  }] : []),
+  { type: 'divider', key: 'file-divider' },
+  { label: '重新读取工作簿', key: 'refresh', disabled: saving.value },
+])
+const definedNameActionOptions = computed(() => [
+  { label: '从当前选区新建名称', key: 'create', disabled: !canEditDefinedNames.value || !definedNameSelection.value },
+  { label: '重命名当前名称', key: 'rename', disabled: !canEditDefinedNames.value || selectedDefinedNameIndex.value < 0 },
+  { label: '更新为当前选区', key: 'update', disabled: !canEditDefinedNames.value || selectedDefinedNameIndex.value < 0 || !definedNameSelection.value },
+  { type: 'divider', key: 'name-divider' },
+  { label: '删除当前名称', key: 'delete', disabled: !canEditDefinedNames.value || selectedDefinedNameIndex.value < 0 },
+])
+const handleWorkbookToolSelect = (key: string) => {
+  const target = key as 'none' | 'format' | 'data' | 'chart'
+  activeToolPanel.value = activeToolPanel.value === target ? 'none' : target
+}
+const handleWorkbookAction = async (key: string) => {
+  if (key === 'copy') await copySelection()
+  else if (key === 'paste') await pasteSelection()
+  else if (key === 'recalculate') recalculateFormulas()
+  else if (key === 'convert-table') await convertSheet()
+  else if (key === 'linked-data') linkedDataModalOpen.value = true
+  else if (key === 'refresh') refreshWorkbook()
+}
+const handleDefinedNameAction = (key: string) => {
+  if (key === 'create') createDefinedName()
+  else if (key === 'rename') renameDefinedName()
+  else if (key === 'update') updateDefinedNameRange()
+  else if (key === 'delete') deleteDefinedName()
+}
 const rowLayoutStyle = (row: number): CSSProperties => row < effectiveFreeze.value.rows
   ? { position: 'sticky', top: `${38 + rowOffset(row)}px`, transform: 'none', height: `${rowPixelHeight(row)}px`, zIndex: 16 }
   : { transform: `translateY(${rowOffset(row)}px)`, height: `${rowPixelHeight(row)}px` }
@@ -4516,23 +4547,23 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .workbook-view { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 94%, var(--theme-primary)); container-type: inline-size; }
-.workbook-toolbar { min-height: var(--workspace-toolbar-height); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-surface); box-shadow: var(--workspace-shadow-sm); z-index: 5; }
+.workbook-toolbar { height: 44px; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-surface); box-shadow: var(--workspace-shadow-sm); z-index: 5; }
 .workbook-title,.workbook-actions,.workbook-actions button { display: flex; align-items: center; gap: 8px; }
-.workbook-title > button,.workbook-actions button { height: 32px; padding: 0 10px; border: 1px solid var(--workspace-border-color); border-radius: 7px; color: var(--theme-text); background: var(--workspace-control-bg); cursor: pointer; }
-.workbook-title .icon-button,.workbook-actions .icon-button { width: 32px; justify-content: center; padding: 0; }
+.workbook-actions { min-width: 0; flex: none; gap: 5px; }
+.workbook-title > button,.workbook-actions button { height: 30px; padding: 0 9px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-control-bg); cursor: pointer; }
+.workbook-title .icon-button,.workbook-actions .icon-button { width: 30px; justify-content: center; padding: 0; }
 .workbook-title > div { display: flex; flex-direction: column; }
 .workbook-title strong { max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
 .workbook-title span { color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .workbook-actions button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.4); background: rgba(var(--theme-primary-rgb),.08); }
 .workbook-actions button.primary { color: var(--workspace-on-accent); border-color: var(--theme-primary); background: var(--theme-primary); }
 .workbook-actions button:disabled { opacity: .45; cursor: default; }
-.workbook-actions .linked-data-trigger { position: relative; }
-.workbook-actions .linked-data-trigger strong { min-width: 18px; padding: 1px 5px; border-radius: 9px; color: var(--theme-primary); background: color-mix(in srgb, var(--theme-primary) 11%, var(--theme-surface)); font-size: var(--text-compact); text-align: center; }
-.workbook-actions .linked-data-trigger.warning strong { color: var(--status-warning); background: var(--status-warning-bg); }
-.sheet-tabs { min-height: 35px; display: flex; align-items: end; gap: 3px; padding: 3px 10px 0; overflow-x: auto; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-surface-2); }
-.sheet-tabs button { height: 31px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; white-space: nowrap; font-size: var(--text-compact); }
+.workbook-actions .tool-panel-trigger { min-width: 74px; justify-content: center; }
+.workbook-actions .action-menu-trigger { margin-left: 1px; }
+.sheet-tabs { min-height: 32px; display: flex; align-items: end; gap: 3px; padding: 3px 10px 0; overflow-x: auto; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-surface-2); }
+.sheet-tabs button { height: 28px; display: flex; align-items: center; gap: 6px; padding: 0 9px; border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; white-space: nowrap; font-size: var(--text-compact); }
 .sheet-tabs button.active { color: var(--theme-primary); border-color: var(--workspace-border-color); background: var(--theme-surface); }
-.sheet-tabs small { margin: 0 5px 8px auto; color: var(--theme-text-secondary); white-space: nowrap; font-size: var(--text-compact); }
+.sheet-tabs small { margin: 0 5px 6px auto; color: var(--theme-text-secondary); white-space: nowrap; font-size: var(--text-compact); }
 .formula-bar { height: 34px; flex: none; display: flex; align-items: center; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); }
 :deep(.linked-data-modal) { width: min(860px, calc(100vw - 32px)); }
 .linked-data-audit { display: grid; gap: 14px; max-height: min(680px, calc(100vh - 190px)); overflow-y: auto; padding-right: 3px; }
@@ -4689,8 +4720,9 @@ onBeforeUnmount(() => {
 .header-footer-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .header-footer-fields label { min-width: 0; display: grid; gap: 6px; color: var(--theme-text-secondary); font-size: 11px; }
 .header-footer-fields textarea { width: 100%; min-height: 84px; box-sizing: border-box; resize: vertical; padding: 9px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); font: inherit; line-height: 1.5; }
-.formula-bar select { width: 150px; min-width: 120px; height: 100%; padding: 0 24px 0 10px; border: 0; border-right: 1px solid var(--workspace-border-color); outline: 0; color: var(--theme-text); background: transparent; font-size: var(--text-compact); }
+.formula-bar select { width: 132px; min-width: 104px; height: 100%; padding: 0 24px 0 10px; border: 0; border-right: 1px solid var(--workspace-border-color); outline: 0; color: var(--theme-text); background: transparent; font-size: var(--text-compact); }
 .formula-bar button { height: 25px; flex: none; margin-left: 4px; padding: 0 7px; border: 1px solid var(--workspace-border-color); border-radius: 4px; color: var(--theme-text-secondary); background: transparent; font-size: var(--text-compact); cursor: pointer; }
+.formula-bar .name-manager-button { width: 26px; display: grid; place-items: center; padding: 0; }
 .formula-bar button:disabled { opacity: .4; cursor: default; }
 .formula-bar output { width: 72px; flex: none; overflow: hidden; padding: 0 8px; text-align: center; text-overflow: ellipsis; font-size: var(--text-compact); font-weight: 700; }
 .formula-bar span { width: 28px; flex: none; color: var(--theme-text-secondary); text-align: center; font-size: 11px; font-style: italic; }
@@ -4706,7 +4738,7 @@ onBeforeUnmount(() => {
 .array-formula-strip .diagnostic-truncated { flex: none; color: var(--status-warning); font-size: var(--text-compact); }
 .array-formula-strip .dynamic-array-ready { flex: none; color: var(--status-success); font-weight: 600; }
 .workbook-cell.dynamic-array-preview { box-shadow: inset 0 0 0 1px rgba(5,150,105,.45); background: color-mix(in srgb, var(--theme-card) 88%, #10b981); }
-.format-toolbar { min-height: 40px; flex: none; display: flex; align-items: center; gap: 5px; padding: 4px 12px; overflow-x: auto; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); }
+.format-toolbar { min-height: 36px; flex: none; display: flex; align-items: center; gap: 5px; padding: 3px 10px; overflow-x: auto; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); }
 .format-toolbar select,.format-toolbar input,.format-toolbar button { flex: none; height: 30px; box-sizing: border-box; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 96%, #dce6ef); font-size: var(--text-compact); }
 .format-toolbar select { min-width: 92px; padding: 0 24px 0 8px; }
 .format-toolbar .font-size { width: 50px; padding: 0 4px 0 7px; }
@@ -4729,7 +4761,7 @@ onBeforeUnmount(() => {
 .data-toolbar button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.4); }
 .data-toolbar button:disabled { opacity: .45; cursor: default; }
 .data-toolbar .validation-hint { margin-left: auto; flex: none; color: var(--status-warning); }
-.drawing-toolbar { min-height: 48px; flex: none; display: flex; align-items: center; gap: 7px; padding: 5px 12px; overflow-x: auto; border-bottom: 1px solid var(--workspace-border-color); color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 93%, #e8ddff); font-size: var(--text-compact); }
+.drawing-toolbar { min-height: 42px; flex: none; display: flex; align-items: center; gap: 7px; padding: 3px 10px; overflow-x: auto; border-bottom: 1px solid var(--workspace-border-color); color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-card) 93%, #e8ddff); font-size: var(--text-compact); }
 .drawing-toolbar > strong,.drawing-toolbar > em { flex: none; }
 .drawing-toolbar > strong { color: var(--theme-primary); }
 .drawing-toolbar > em { margin-left: auto; font-style: normal; opacity: .72; }
@@ -4810,8 +4842,7 @@ onBeforeUnmount(() => {
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } .linked-data-policy { align-items: flex-start; flex-direction: column; } .linked-data-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .linked-data-group article { grid-template-columns: 1fr; gap: 6px; } .linked-data-group article > button { justify-self: start; } .pivot-audit-status,.pivot-rebuild-plan > header,.pivot-cache-rebuild-result > header,.pivot-synchronized-rebuild-result > header,.pivot-expanded-rebuild-result > header,.pivot-variant-verification-result > header { align-items: flex-start; flex-direction: column; gap: 4px; } .pivot-impact-parts,.pivot-cache-fields,.pivot-sync-facts,.pivot-variant-grid,.pivot-layout-variants,.pivot-copy-save { grid-template-columns: 1fr; } .pivot-preview-result > header { align-items: flex-start; flex-direction: column; } .linked-data-group article .pivot-preview-grid article { grid-template-columns: 1fr; } }
-@media (max-width: 1180px) { .workbook-actions .linked-data-trigger span { display: none; } .workbook-actions .linked-data-trigger { padding-inline: 8px; } }
-@media (max-width: 900px) { .workbook-actions button:not(.primary):not(.icon-button):not(.linked-data-trigger) { display: none; } .workbook-title span { display: none; } .workbook-title strong { max-width: 32vw; } }
-@container (max-width: 900px) { .workbook-toolbar { min-height: auto; align-items: stretch; flex-direction: column; gap: 5px; padding-block: 6px; } .workbook-title { min-height: 30px; } .workbook-title strong { max-width: min(68cqw, 520px); } .workbook-title span { display: none; } .workbook-actions { width: 100%; overflow-x: auto; padding-bottom: 1px; } .workbook-actions button { flex: none; } .workbook-actions button:not(.primary):not(.icon-button):not(.linked-data-trigger) { display: flex; } }
-@container (max-width: 620px) { .workbook-actions button:not(.primary):not(.icon-button):not(.linked-data-trigger) { display: none; } .workbook-actions .linked-data-trigger span { display: none; } }
+@media (max-width: 1050px) { .workbook-title span { display: none; } .workbook-title strong { max-width: 34vw; } }
+@container (max-width: 900px) { .workbook-title span { display: none; } .workbook-title strong { max-width: min(34cqw, 280px); } }
+@container (max-width: 680px) { .workbook-toolbar { padding-inline: 7px; } .workbook-title strong { max-width: 22cqw; } .workbook-actions .tool-panel-trigger { width: 30px; min-width: 30px; padding: 0; } .workbook-actions .tool-panel-trigger span { display: none; } .workbook-actions button.primary { width: 30px; justify-content: center; padding: 0; } .workbook-actions button.primary span { display: none; } .formula-bar select { width: 104px; } .formula-bar output { width: 58px; } }
 </style>
