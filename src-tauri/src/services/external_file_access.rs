@@ -191,6 +191,7 @@ mod tests {
         let directory = fixture("format");
         let text_file = directory.join("note.txt");
         let code_file = directory.join("sample.ts");
+        let log_file = directory.join("application.log");
         let structured_files = [
             directory.join("data.json"),
             directory.join("settings.jsonc"),
@@ -202,6 +203,7 @@ mod tests {
         let imported_file = directory.join("data.csv");
         fs::write(&text_file, "text").unwrap();
         fs::write(&code_file, "const value = 1;").unwrap();
+        fs::write(&log_file, "INFO ready\n").unwrap();
         for path in &structured_files {
             fs::write(path, "{}").unwrap();
         }
@@ -212,6 +214,8 @@ mod tests {
         assert!(access.resolve_editable(&text_file).is_ok());
         assert!(access.authorize_editable(&code_file).is_ok());
         assert!(access.resolve_editable(&code_file).is_ok());
+        assert!(access.authorize_editable(&log_file).is_ok());
+        assert!(access.resolve_editable(&log_file).is_ok());
         for path in &structured_files {
             assert!(access.authorize_editable(path).is_ok());
             assert!(access.resolve_editable(path).is_ok());

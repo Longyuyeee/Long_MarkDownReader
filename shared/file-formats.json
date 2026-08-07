@@ -244,7 +244,7 @@
       "maxBytes": 1073741824,
       "capabilities": { "read": "supported", "edit": "supported", "create": "unsupported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业查看与编辑", "saveMode": "overwrite", "description": "查看模式支持受限范围读取、筛选、级别高亮、自动刷新和尾部跟随；8 MiB 以内可显式进入编辑模式，只有确认影响并点击保存后才以签名保护覆盖源日志。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
     },

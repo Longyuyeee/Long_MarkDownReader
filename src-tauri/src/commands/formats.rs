@@ -52,11 +52,11 @@ fn text_boundary_error(code: &str, message: impl Into<String>) -> TextDocumentEr
 fn ensure_general_external_writer(format_id: &str) -> Result<(), TextDocumentError> {
     if matches!(
         format_id,
-        "json" | "jsonc" | "yaml" | "xml" | "svg" | "toml"
+        "json" | "jsonc" | "yaml" | "xml" | "svg" | "toml" | "log"
     ) {
         return Err(TextDocumentError::simple(
             "specialized-writer-required",
-            "结构化源码必须通过对应的专用外部保存命令执行语法与安全门禁",
+            "结构化源码和日志必须通过对应的专用外部保存命令执行安全门禁",
         ));
     }
     Ok(())
@@ -312,6 +312,49 @@ pub(crate) async fn write_external_registered_text_document(
     write_resolved_text_document(&path, format, content, expected_signature, save_policy)
 }
 
+fn validate_log_write(
+    content: &str,
+    acknowledged_overwrite: bool,
+) -> Result<(), TextDocumentError> {
+    if !acknowledged_overwrite {
+        return Err(TextDocumentError::recoverable(
+            "log-overwrite-not-acknowledged",
+            "保存日志会覆盖源文件，必须先确认覆盖影响",
+            "返回日志工作区确认后，再点击保存",
+        ));
+    }
+    if content.len() > MAX_LOG_EDIT_BYTES {
+        return Err(TextDocumentError::recoverable(
+            "log-edit-too-large",
+            format!(
+                "日志编辑内容超过 {} MiB 上限",
+                MAX_LOG_EDIT_BYTES / 1024 / 1024
+            ),
+            "使用专业查看模式筛选大日志，或在外部工具中拆分后再编辑",
+        ));
+    }
+    Ok(())
+}
+
+async fn write_external_log_document_with_access(
+    path: String,
+    content: String,
+    expected_signature: Option<String>,
+    acknowledged_overwrite: bool,
+    access: &ExternalFileAccess,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    validate_log_write(&content, acknowledged_overwrite)?;
+    write_external_registered_text_document(
+        path,
+        "log".into(),
+        content,
+        expected_signature,
+        None,
+        access,
+    )
+    .await
+}
+
 #[tauri::command]
 pub async fn write_text_document(
     library_root: String,
@@ -352,23 +395,7 @@ pub async fn write_log_document(
     expected_signature: Option<String>,
     acknowledged_overwrite: bool,
 ) -> Result<TextDocumentSnapshot, TextDocumentError> {
-    if !acknowledged_overwrite {
-        return Err(TextDocumentError::recoverable(
-            "log-overwrite-not-acknowledged",
-            "保存日志会覆盖源文件，必须先确认覆盖影响",
-            "返回日志工作区确认后，再点击保存",
-        ));
-    }
-    if content.len() > MAX_LOG_EDIT_BYTES {
-        return Err(TextDocumentError::recoverable(
-            "log-edit-too-large",
-            format!(
-                "日志编辑内容超过 {} MiB 上限",
-                MAX_LOG_EDIT_BYTES / 1024 / 1024
-            ),
-            "使用专业查看模式筛选大日志，或在外部工具中拆分后再编辑",
-        ));
-    }
+    validate_log_write(&content, acknowledged_overwrite)?;
     write_registered_text_document(
         library_root,
         path,
@@ -376,6 +403,24 @@ pub async fn write_log_document(
         content,
         expected_signature,
         None,
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn write_external_log_document(
+    path: String,
+    content: String,
+    expected_signature: Option<String>,
+    acknowledged_overwrite: bool,
+    access: State<'_, ExternalFileAccess>,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    write_external_log_document_with_access(
+        path,
+        content,
+        expected_signature,
+        acknowledged_overwrite,
+        &access,
     )
     .await
 }
@@ -535,8 +580,8 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
-    fn general_external_writer_rejects_specialized_structured_sources() {
-        for format_id in ["json", "jsonc", "yaml", "xml", "svg", "toml"] {
+    fn general_external_writer_rejects_specialized_sources() {
+        for format_id in ["json", "jsonc", "yaml", "xml", "svg", "toml", "log"] {
             let error = ensure_general_external_writer(format_id).unwrap_err();
             assert_eq!(error.code, "specialized-writer-required");
         }
@@ -834,6 +879,59 @@ mod tests {
             "draft".into(),
             Some(loaded.signature),
             true,
+        ))
+        .unwrap_err();
+        assert_eq!(stale.code, "external-modified");
+        assert_eq!(fs::read_to_string(&path).unwrap(), "external append\n");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn external_log_writer_requires_authorization_and_preserves_conflicting_sources() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-external-log-write-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("application.log");
+        fs::write(&path, "first line\n").unwrap();
+        let path_string = path.to_string_lossy().into_owned();
+        let access = ExternalFileAccess::default();
+
+        let unauthorized = tauri::async_runtime::block_on(write_external_log_document_with_access(
+            path_string.clone(),
+            "draft".into(),
+            None,
+            true,
+            &access,
+        ))
+        .unwrap_err();
+        assert_eq!(unauthorized.code, "external-not-authorized");
+
+        access.authorize_editable(&path).unwrap();
+        let loaded =
+            read_resolved_text_document(&path, file_format_by_id("log").unwrap(), None).unwrap();
+        let rejected = tauri::async_runtime::block_on(write_external_log_document_with_access(
+            path_string.clone(),
+            "draft".into(),
+            Some(loaded.signature.clone()),
+            false,
+            &access,
+        ))
+        .unwrap_err();
+        assert_eq!(rejected.code, "log-overwrite-not-acknowledged");
+
+        fs::write(&path, "external append\n").unwrap();
+        let stale = tauri::async_runtime::block_on(write_external_log_document_with_access(
+            path_string,
+            "draft".into(),
+            Some(loaded.signature),
+            true,
+            &access,
         ))
         .unwrap_err();
         assert_eq!(stale.code, "external-modified");

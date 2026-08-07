@@ -9,7 +9,7 @@
         </n-button>
         <div class="document-title">
           <strong :title="logPath">{{ fileName }}</strong>
-          <span>{{ workspaceMode === 'viewer' ? '专业日志查看' : `日志编辑 · ${dirty ? '未保存' : '已保存'}` }}</span>
+          <span>{{ workspaceMode === 'viewer' ? `${isExternal ? '外部日志 · ' : ''}专业日志查看` : `${isExternal ? '外部' : ''}日志编辑 · ${dirty ? '未保存' : '已保存'}` }}</span>
         </div>
       </div>
 
@@ -214,6 +214,7 @@ const message = useMessage()
 const viewport = ref<HTMLElement | null>(null)
 const editorHost = ref<HTMLElement | null>(null)
 const logPath = computed(() => String(route.query.path || ''))
+const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => logPath.value.split(/[\\/]/).pop() || '未命名日志')
 const format = computed(() => findFileFormat(logPath.value))
 const currentTab = computed(() => store.tabs.find(tab => tab.path === logPath.value))
@@ -282,8 +283,8 @@ const errorMessage = (cause: unknown) => {
   const detail = error?.message || String(cause).replace(/^Error:\s*/, '')
   return error?.suggestion ? `${detail} · ${error.suggestion}` : detail
 }
-const readRange = (offset: number) => invoke<TextDocumentRangeSnapshot>('read_text_document_range', {
-  libraryRoot: store.libraryPath,
+const readRange = (offset: number) => invoke<TextDocumentRangeSnapshot>(isExternal.value ? 'read_external_text_document_range' : 'read_text_document_range', {
+  ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
   path: logPath.value,
   formatId: 'log',
   offset,
@@ -332,7 +333,7 @@ const applyRangeSnapshot = async (snapshot: TextDocumentRangeSnapshot, replace: 
 }
 const registerTab = () => {
   if (!logPath.value) return
-  store.addTab({ id: logPath.value, title: fileName.value, path: logPath.value, isDirty: dirty.value })
+  store.addTab({ id: logPath.value, title: fileName.value, path: logPath.value, isDirty: dirty.value, external: isExternal.value })
 }
 const syncCurrentTab = () => {
   const tab = currentTab.value
@@ -456,8 +457,8 @@ const enterEditMode = async () => {
       dirty.value = true
       return
     }
-    const snapshot = await invoke<TextDocumentSnapshot>('read_text_document', {
-      libraryRoot: store.libraryPath,
+    const snapshot = await invoke<TextDocumentSnapshot>(isExternal.value ? 'read_external_text_document' : 'read_text_document', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: logPath.value,
       formatId: 'log',
       readOptions: encoding.value ? { encoding: encoding.value } : undefined,
@@ -510,8 +511,8 @@ const saveLog = async () => {
   if (!editor || !dirty.value || saving.value) return
   saving.value = true
   try {
-    const snapshot = await invoke<TextDocumentSnapshot>('write_log_document', {
-      libraryRoot: store.libraryPath,
+    const snapshot = await invoke<TextDocumentSnapshot>(isExternal.value ? 'write_external_log_document' : 'write_log_document', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: logPath.value,
       content: editor.state.doc.toString(),
       expectedSignature: signature.value,
@@ -577,8 +578,8 @@ const handleKeydown = (event: KeyboardEvent) => {
   }
 }
 
-watch(logPath, async (_path, previousPath) => {
-  if (previousPath && workspaceMode.value === 'editor') syncCurrentTab()
+watch([logPath, isExternal], async (_next, previous) => {
+  if (previous?.[0] && workspaceMode.value === 'editor') syncCurrentTab()
   workspaceMode.value = 'viewer'
   editor?.destroy()
   editor = null
