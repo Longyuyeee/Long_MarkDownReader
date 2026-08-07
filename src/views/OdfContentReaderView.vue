@@ -1,11 +1,13 @@
 <template>
   <section class="odf-workspace" data-testid="e1c-odf-workspace">
+    <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
     <header>
       <div class="identity">
+        <button v-if="isExternal" class="identity-back" title="返回资料库" @click="router.push({ name: 'LibraryMode' })"><ArrowLeft :size="15" /></button>
         <component :is="isOds ? Table2 : Presentation" :size="18" aria-hidden="true" />
         <div>
           <strong>{{ fileName }}</strong>
-          <span>{{ isOds ? 'OpenDocument Spreadsheet' : 'OpenDocument Presentation' }} · 只读</span>
+          <span><template v-if="isExternal">外部文件 · </template>{{ isOds ? 'OpenDocument Spreadsheet' : 'OpenDocument Presentation' }} · 只读<template v-if="isExternal"> · 不会写回</template></span>
         </div>
       </div>
       <div class="toolbar">
@@ -109,10 +111,11 @@
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core'
 import {
-  ChevronDown, ChevronUp, Image, Presentation, RefreshCw, Search, ShieldAlert, Table2,
+  ArrowLeft, ChevronDown, ChevronUp, Image, Presentation, RefreshCw, Search, ShieldAlert, Table2,
 } from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useAppStore } from '../store/app'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 
@@ -147,6 +150,7 @@ interface OdfContentReport {
 }
 
 const route = useRoute()
+const router = useRouter()
 const store = useAppStore()
 const report = ref<OdfContentReport>()
 const loading = ref(false)
@@ -157,6 +161,7 @@ const selectedSheetId = ref('')
 const selectedSlideId = ref('')
 const sheetStageRef = ref<HTMLElement | null>(null)
 const documentPath = computed(() => String(route.query.path || store.activeTabId || ''))
+const isExternal = computed(() => route.query.external === '1')
 const extension = computed(() => /\.odp$/i.test(documentPath.value) ? 'odp' : 'ods')
 const isOds = computed(() => report.value?.model.format !== 'odp')
 const fileName = computed(() => documentPath.value.split(/[\\/]/).pop() || `未命名.${extension.value}`)
@@ -248,9 +253,16 @@ const load = async () => {
   loading.value = true
   loadError.value = ''
   try {
-    report.value = await invoke<OdfContentReport>('read_odf_content_document', {
-      libraryRoot: store.libraryPath,
+    report.value = await invoke<OdfContentReport>(isExternal.value ? 'read_external_odf_content_document' : 'read_odf_content_document', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: documentPath.value,
+    })
+    store.addTab({
+      id: documentPath.value,
+      title: fileName.value,
+      path: documentPath.value,
+      isDirty: false,
+      external: isExternal.value,
     })
     const viewState = recallWorkspaceViewState(documentPath.value)
     selectedSheetId.value = viewState?.section && report.value.model.sheets.some(sheet => sheet.id === viewState.section)
@@ -272,8 +284,9 @@ const load = async () => {
   }
 }
 
-watch(documentPath, (_path, previousPath) => {
-  rememberOdfViewState(previousPath)
+watch([documentPath, isExternal], (_next, previous) => {
+  const previousPath = previous?.[0]
+  if (previousPath) rememberOdfViewState(previousPath)
   query.value = ''
   matchIndex.value = -1
   void load()
@@ -289,6 +302,8 @@ onBeforeUnmount(rememberOdfViewState)
 header { display: flex; min-height: 52px; align-items: center; justify-content: space-between; gap: 14px; padding: 7px 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
 .identity, .toolbar, .search-box, footer > div { display: flex; align-items: center; }
 .identity { min-width: 0; gap: 9px; }
+.identity-back { display: grid; width: 28px; height: 28px; flex: none; place-items: center; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; }
+.identity-back:hover { color: var(--theme-primary); border-color: color-mix(in srgb, var(--theme-primary) 42%, var(--border-color)); }
 .identity > div { display: flex; min-width: 0; flex-direction: column; gap: 1px; }
 .identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
 .identity span, footer { color: var(--text-muted); font-size: 11px; }

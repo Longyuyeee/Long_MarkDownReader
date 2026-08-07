@@ -249,10 +249,14 @@ mod tests {
         let image = directory.join("photo.png");
         let video = directory.join("clip.mp4");
         let pdf = directory.join("document.pdf");
+        let spreadsheet = directory.join("sheet.ods");
+        let presentation = directory.join("slides.odp");
         let markdown = directory.join("note.md");
         fs::write(&image, "png").unwrap();
         fs::write(&video, "mp4").unwrap();
         fs::write(&pdf, "%PDF-1.7").unwrap();
+        fs::write(&spreadsheet, "ods").unwrap();
+        fs::write(&presentation, "odp").unwrap();
         fs::write(&markdown, "note").unwrap();
 
         let access = ExternalFileAccess::default();
@@ -265,6 +269,11 @@ mod tests {
         assert!(access.authorize_openable(&pdf).is_ok());
         assert!(access.resolve_preview(&pdf).is_ok());
         assert!(access.resolve_editable(&pdf).is_err());
+        for path in [&spreadsheet, &presentation] {
+            assert!(access.authorize_openable(path).is_ok());
+            assert!(access.resolve_preview(path).is_ok());
+            assert!(access.resolve_editable(path).is_err());
+        }
         assert!(access.authorize_preview(&markdown).is_err());
         assert!(access.authorize_openable(&markdown).is_ok());
         assert!(access.resolve_editable(&markdown).is_ok());

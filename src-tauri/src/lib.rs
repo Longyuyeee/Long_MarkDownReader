@@ -75,7 +75,7 @@ use commands::legacy_binary_office::{
 use commands::legacy_office::{convert_legacy_doc_to_docx_copy, preflight_legacy_doc};
 use commands::media::{inspect_external_media_file, inspect_media_file};
 use commands::mindmap::{create_canvas_from_opml, read_opml_file, write_opml_file};
-use commands::odf_content::read_odf_content_document;
+use commands::odf_content::{read_external_odf_content_document, read_odf_content_document};
 use commands::odt::read_odt_document;
 use commands::pdf::{
     build_pdf_annotation_reference, preview_pdf_insert_isolated_copy,
@@ -355,6 +355,7 @@ pub fn run() {
             read_docx_document,
             read_odt_document,
             read_odf_content_document,
+            read_external_odf_content_document,
             preview_docx_package_patch_isolated_copy,
             preview_docx_text_patch_isolated_copy,
             preview_docx_style_patch_isolated_copy,

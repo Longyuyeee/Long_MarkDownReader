@@ -760,3 +760,9 @@ EA-3A 已完成图片和视频的外部只读工作区。外部能力现明确�
 EA-3B 已完成外部 PDF 专业只读工作区。外部 PDF 复用 2 GB 渐进 Range 阅读器，保留搜索、目录、页码、缩放、适合宽度、密码输入和阅读位置；标题明确显示外部、只读和不会写回，并进入统一标签会话。后端新增独立 preview 授权命令，未经用户授权的绝对路径不能读取。
 
 批注、OCR、知识引用、页面整理、提取、合并和插页严格保留在资料库模式；外部 PDF 不写 Sidecar、不初始化页面草稿，也不创建新副本。外部能力现为 23 类 `edit` 与 3 类 `preview`，安装器关联仍只有 `.md/.markdown`。专项契约、资料库 PDF 回归、前端构建、4 项授权测试、26 项 PDF 测试和 Rust 检查均通过。接手后进入 EA-3C，优先评估 ODS/ODP 等纯只读结构格式；DOCX/PPTX/XLSX 继续单独审计。详见 [`UX50E_External_PDF_Readonly_Workspace_Audit_2026-08-07.md`](./UX50E_External_PDF_Readonly_Workspace_Audit_2026-08-07.md)。
+
+# 2026-08-07 EA-3C 交接入口
+
+EA-3C 已完成 ODS 与 ODP 外部结构化只读预览。两类格式通过独立 preview 授权命令复用有界解析器，ODS 展示工作表、单元格和公式缓存值，ODP 展示幻灯片、文本与备注线索；均不执行内容、不计算公式、不保存、不转换，解析后再次核对源字节。外部工作区已纳入统一标签、返回资料库和“外部文件 · 只读 · 不会写回”状态。
+
+外部能力现为 23 类 `edit` 与 5 类 `preview`，安装器关联仍只有 `.md/.markdown`。专项契约、E1C 资料库回归、前端类型检查与生产构建、2 项 ODF 测试、4 项授权测试和 Rust 锁定检查均通过。接手后进入 EA-3D，只审计 ODT 的外部只读资格和真实生产者门禁；证据齐备前保持 `import`，DOCX/PPTX/XLSX 继续单独处理。详见 [`UX50F_External_ODF_Structured_Preview_Audit_2026-08-07.md`](./UX50F_External_ODF_Structured_Preview_Audit_2026-08-07.md)。

@@ -400,7 +400,7 @@
       "maxBytes": 67108864,
       "capabilities": { "read": "supported", "edit": "unsupported", "create": "unsupported", "index": "supported" },
       "userCapability": { "level": "preview-only", "label": "结构化只读预览", "saveMode": "none", "description": "ODS 支持有界工作表、单元格、公式显示值预览、搜索和定位；不计算公式、不编辑也不写回源文件。" },
-      "externalPolicy": "import",
+      "externalPolicy": "preview",
       "adapters": { "reader": "odf-content", "writer": null, "creator": null, "indexer": "odf-content" },
       "creation": null
     },
@@ -413,7 +413,7 @@
       "maxBytes": 67108864,
       "capabilities": { "read": "supported", "edit": "unsupported", "create": "unsupported", "index": "supported" },
       "userCapability": { "level": "preview-only", "label": "结构化只读预览", "saveMode": "none", "description": "ODP 支持有界幻灯片顺序、文本、备注线索、搜索和定位；复杂版式、动画和媒体保持降级预览，不编辑也不写回源文件。" },
-      "externalPolicy": "import",
+      "externalPolicy": "preview",
       "adapters": { "reader": "odf-content", "writer": null, "creator": null, "indexer": "odf-content" },
       "creation": null
     },

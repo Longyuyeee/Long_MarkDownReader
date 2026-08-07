@@ -1,11 +1,14 @@
+use crate::formats::file_registry::file_format_for_path;
 use crate::formats::odf::MAX_ODF_FILE_BYTES;
 use crate::formats::odf_content::{parse_odf_content, OdfContentModel};
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
+use tauri::State;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -53,6 +56,14 @@ fn read_odf_content_path(path: &Path) -> Result<OdfContentReadReport, String> {
     })
 }
 
+fn ensure_odf_content_format(path: &Path) -> Result<(), String> {
+    let format = file_format_for_path(path)?;
+    if !["ods", "odp"].contains(&format.id.as_str()) {
+        return Err("外部 ODF 内容命令只接受已授权的 .ods 或 .odp 文件".into());
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn read_odf_content_document(
     library_root: String,
@@ -63,6 +74,18 @@ pub async fn read_odf_content_document(
     tauri::async_runtime::spawn_blocking(move || read_odf_content_path(&document))
         .await
         .map_err(|error| format!("ODF 内容读取任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn read_external_odf_content_document(
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+) -> Result<OdfContentReadReport, String> {
+    let document = access.resolve_preview(path)?;
+    ensure_odf_content_format(&document)?;
+    tauri::async_runtime::spawn_blocking(move || read_odf_content_path(&document))
+        .await
+        .map_err(|error| format!("外部 ODF 内容读取任务失败: {error}"))?
 }
 
 #[cfg(test)]
@@ -91,5 +114,13 @@ mod tests {
             assert!(report.source_preserved);
             assert_eq!(before, fs::read(path).unwrap());
         }
+    }
+
+    #[test]
+    fn external_format_gate_is_limited_to_ods_and_odp() {
+        for name in ["document.ods", "slides.odp"] {
+            assert!(ensure_odf_content_format(Path::new(name)).is_ok());
+        }
+        assert!(ensure_odf_content_format(Path::new("document.pdf")).is_err());
     }
 }
