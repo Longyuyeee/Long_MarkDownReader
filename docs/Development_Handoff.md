@@ -808,3 +808,9 @@ EA-4B 已完成 `.canvas` 外部完整编辑。外部 Canvas 使用独立授权�
 EA-4C 已完成 `.table.json`、`.csv`、`.tsv` 外部专用编辑工作区。三类文件必须通过用户授权路径读取，编辑只驻留内存；点击保存后再次确认覆盖并校验源签名。CSV/TSV 保留原扩展名、分隔符、编码、BOM 和换行符，`.table.json` 保留原生表格、看板、图表与仪表盘视图，外部修改冲突不会被覆盖。
 
 外部模式隐藏需要资料库目标的“创建 Table 副本”和导出入口，不会静默向外部目录创建文件。外部能力现为 26 类 `edit`、8 类 `preview` 与 9 类 `import`，安装器关联仍只有 `.md/.markdown`。接手后进入 EA-4D，依次审计 Draw.io、Mermaid/Diagram 与 OPML 的外部直开、显式保存、画布交互和引用隔离；旧 Office/WPS 六类继续保持显式转换或系统打开。详见 [`UX50M_External_Table_Workspace_Audit_2026-08-07.md`](./UX50M_External_Table_Workspace_Audit_2026-08-07.md)。
+
+# 2026-08-07 EA-4D1 交接入口
+
+EA-4D1 已完成 `.drawio`、`.dio` 外部结构化基础编辑。外部文件通过独立授权读取，专用 writer 在保存前重新执行 XML、压缩页、资源协议和结构预算门禁，并验证源签名；外链和外部图片只作为数据保留，不执行、不自动打开也不加载。草稿只驻留内存，点击保存后使用应用内确认覆盖，外部修改冲突不会被覆盖。
+
+外部能力现为 27 类 `edit`、8 类 `preview` 与 8 类 `import`，安装器关联仍只有 `.md/.markdown`。接手后进入 EA-4D2，单独开放并验证 Mermaid `.mmd/.mermaid` 的外部源码编辑、实时预览、导出边界与签名保护；OPML 继续保持 `import`，旧 Office/WPS 六类继续显式转换。详见 [`UX50N_External_Drawio_Workspace_Audit_2026-08-07.md`](./UX50N_External_Drawio_Workspace_Audit_2026-08-07.md)。

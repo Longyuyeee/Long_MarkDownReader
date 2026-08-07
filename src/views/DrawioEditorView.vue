@@ -158,7 +158,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useMessage } from 'naive-ui'
+import { useDialog, useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import {
   AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, Box as BoxIcon, File as FileIcon,
@@ -190,8 +190,10 @@ interface RenderedEdge { id: string; x1: number; y1: number; x2: number; y2: num
 const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
+const dialog = useDialog()
 const message = useMessage()
 const documentPath = computed(() => String(route.query.path || ''))
+const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => documentPath.value.split(/[\\/]/).pop() || '未命名.drawio')
 const loading = ref(true)
 const saving = ref(false)
@@ -235,7 +237,8 @@ const renderedEdges = computed<RenderedEdge[]>(() => {
 const statusLabel = computed(() => {
   if (loading.value) return '读取中'
   if (!analysis.value?.valid) return '安全检查未通过'
-  return dirty.value ? '有未保存修改' : `${analysis.value.pageCount} 页 · 已保存`
+  const state = dirty.value ? '有未保存修改' : `${analysis.value.pageCount} 页 · 已保存`
+  return isExternal.value ? `外部 Draw.io · 仅点击保存写回 · ${state}` : state
 })
 
 const displayLabel = (value: string) => {
@@ -256,7 +259,7 @@ const syncTab = () => {
   tab.textSignature = signature.value
 }
 const registerTab = () => {
-  store.addTab({ id: documentPath.value, title: fileName.value, path: documentPath.value, isDirty: dirty.value })
+  store.addTab({ id: documentPath.value, title: fileName.value, path: documentPath.value, isDirty: dirty.value, external: isExternal.value })
   syncTab()
 }
 const analyze = async (source: string) => {
@@ -300,8 +303,10 @@ const load = async (discardDraft = false) => {
       store.activateTab(draft.id)
       return
     }
-    const snapshot = await invoke<Snapshot>('read_text_document', {
-      libraryRoot: store.libraryPath, path: documentPath.value, formatId: 'drawio', readOptions: undefined,
+    if (!isExternal.value && !store.libraryPath) throw new Error('知识库尚未配置')
+    const snapshot = await invoke<Snapshot>(isExternal.value ? 'read_external_text_document' : 'read_text_document', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+      path: documentPath.value, formatId: 'drawio', readOptions: undefined,
     })
     if (snapshot.readOnlyReason) throw new Error(snapshot.readOnlyReason)
     content.value = snapshot.content
@@ -373,19 +378,44 @@ const redo = async () => {
 }
 const save = async () => {
   if (!dirty.value || !analysis.value?.valid) return
+  if (isExternal.value) {
+    const confirmed = await new Promise<boolean>(resolve => {
+      dialog.warning({
+        title: '覆盖外部 Draw.io 源文件？',
+        content: '保存将覆盖当前外部源文件。Long编辑会先重新执行结构安全检查并确认文件未被其他程序修改。',
+        positiveText: '确认保存',
+        negativeText: '取消',
+        closable: false,
+        maskClosable: false,
+        onPositiveClick: () => resolve(true),
+        onNegativeClick: () => resolve(false),
+      })
+    })
+    if (!confirmed) return
+  }
   saving.value = true
   try {
-    const snapshot = await invoke<Snapshot>('write_drawio_source_document', {
-      libraryRoot: store.libraryPath, path: documentPath.value, content: content.value, expectedSignature: signature.value,
-    })
+    const snapshot = isExternal.value
+      ? await invoke<Snapshot>('write_external_drawio_source_document', {
+          path: documentPath.value, content: content.value, expectedSignature: signature.value,
+        })
+      : await invoke<Snapshot>('write_drawio_source_document', {
+          libraryRoot: store.libraryPath, path: documentPath.value, content: content.value, expectedSignature: signature.value,
+        })
     content.value = snapshot.content
     signature.value = snapshot.signature
     dirty.value = false
     await analyze(content.value)
     syncTab()
     message.success('Draw.io 文件已保存并重新校验')
-  } catch (error) {
-    message.error(`保存失败：${errorText(error)}`)
+  } catch (error: any) {
+    if (isExternal.value && error?.code === 'external-modified') {
+      dialog.warning({
+        title: '外部 Draw.io 已发生变化',
+        content: '源文件在编辑期间被其他程序修改。Long编辑没有覆盖这些变化，请重新打开后再编辑。',
+        positiveText: '知道了',
+      })
+    } else message.error(`保存失败：${errorText(error)}`)
   } finally {
     saving.value = false
   }
@@ -401,7 +431,7 @@ watch(selectedCell, cell => {
   form.fillColor = safeColor(cell.fillColor, '#ffffff')
   form.strokeColor = safeColor(cell.strokeColor, '#64748b')
 }, { immediate: true })
-watch(documentPath, () => void load())
+watch([documentPath, isExternal], () => void load())
 watch([activePageId, selectedCellId], () => rememberDrawioViewState())
 const handleKeydown = (event: KeyboardEvent) => {
   const command = event.ctrlKey || event.metaKey

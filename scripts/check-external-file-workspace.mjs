@@ -38,7 +38,7 @@ const ea2Audit = read('docs/UX50B_External_Text_Code_Default_App_Audit_2026-08-0
 const ea2bAudit = read('docs/UX50C_External_Structured_Source_Audit_2026-08-07.md')
 
 const expectedEditableIds = [
-  'c-family', 'canvas', 'editorconfig', 'env', 'gitignore', 'go', 'ini', 'javascript', 'json', 'jsonc',
+  'c-family', 'canvas', 'drawio', 'editorconfig', 'env', 'gitignore', 'go', 'ini', 'javascript', 'json', 'jsonc',
   'jvm-code', 'log', 'markdown', 'plain-text', 'properties', 'python',
   'rust', 'shell', 'sql', 'svg', 'table', 'toml', 'typescript', 'web-source', 'xml', 'yaml',
 ]
@@ -49,7 +49,7 @@ const editableIds = registry.formats
 if (JSON.stringify(editableIds) !== JSON.stringify(expectedEditableIds)) {
   failures.push(`EA-2B external edit boundary drift: ${editableIds.join(', ')}`)
 }
-const dedicatedIds = new Set(['json', 'jsonc', 'yaml', 'xml', 'svg', 'toml', 'log', 'canvas', 'table'])
+const dedicatedIds = new Set(['json', 'jsonc', 'yaml', 'xml', 'svg', 'toml', 'log', 'canvas', 'drawio', 'table'])
 const invalidTextEditors = registry.formats.filter(format =>
   format.externalPolicy === 'edit' && format.id !== 'markdown' && !dedicatedIds.has(format.id)
   && (format.routeName !== 'TextEditor' || format.adapters.writer !== 'text'),
@@ -70,6 +70,10 @@ if (canvas?.externalPolicy !== 'edit' || canvas.routeName !== 'Canvas' || canvas
 const table = registry.formats.find(item => item.id === 'table')
 if (table?.externalPolicy !== 'edit' || table.routeName !== 'Table' || table.adapters.writer !== 'table') {
   failures.push('table dedicated external route contract drift')
+}
+const drawio = registry.formats.find(item => item.id === 'drawio')
+if (drawio?.externalPolicy !== 'edit' || drawio.routeName !== 'DrawioEditor' || drawio.adapters.writer !== 'text') {
+  failures.push('drawio dedicated external route contract drift')
 }
 
 for (const token of [
@@ -117,7 +121,7 @@ for (const [name, source] of Object.entries(structuredCommands)) {
   requireText(source, `write_external_${name}_source_document`, `${name} dedicated external writer is missing`)
   requireText(source, 'write_external_registered_text_document', `${name} external writer bypasses the authorized reliable writer`)
 }
-for (const token of ['"json" | "jsonc" | "yaml" | "xml" | "svg" | "toml" | "log"', 'specialized-writer-required']) {
+for (const token of ['"json" | "jsonc" | "yaml" | "xml" | "svg" | "toml" | "log" | "drawio"', 'specialized-writer-required']) {
   requireText(formatCommands, token, `generic external writer boundary is missing ${token}`)
 }
 
@@ -167,4 +171,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('External workspace passed: 26 editable profiles include structured-source, LOG, Canvas and Table dedicated routes with explicit authorization, specialized save gates, and unchanged Windows associations.')
+console.log('External workspace passed: 27 editable profiles include structured-source, LOG, Canvas, Table and Draw.io dedicated routes with explicit authorization, specialized save gates, and unchanged Windows associations.')

@@ -28,6 +28,7 @@ use commands::docx::{
 };
 use commands::drawio::{
     analyze_drawio_source, transform_drawio_cell_source, write_drawio_source_document,
+    write_external_drawio_source_document,
 };
 use commands::external_apps::{discover_external_applications, open_workspace_file_externally};
 use commands::files::{
@@ -330,6 +331,7 @@ pub fn run() {
             analyze_drawio_source,
             transform_drawio_cell_source,
             write_drawio_source_document,
+            write_external_drawio_source_document,
             analyze_toml_source,
             write_toml_source_document,
             write_external_toml_source_document,
