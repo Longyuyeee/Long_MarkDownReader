@@ -374,7 +374,7 @@
       "maxBytes": 67108864,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "CSV/TSV 和开放表格可编辑、创建、索引并可靠保存。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "table", "writer": "table", "creator": "table", "indexer": "table" },
       "creation": { "defaultExtension": ".table.json", "defaultContent": null, "defaultName": "未命名数据表" }
     },

@@ -4,6 +4,7 @@ use crate::formats::table::{
     TABLE_SCHEMA_VERSION,
 };
 use crate::sanitize_filename;
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use chardetng::EncodingDetector;
@@ -17,6 +18,7 @@ use std::hash::{Hash, Hasher};
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
+use tauri::State;
 
 const MAX_TABLE_BYTES: u64 = 32 * 1024 * 1024;
 const MAX_TABLE_ROWS: usize = 200_000;
@@ -610,6 +612,52 @@ pub async fn write_table_file(
     .map_err(|error| format!("表格保存任务失败: {}", error))?
 }
 
+async fn read_external_table_file_with_access(
+    path: String,
+    access: &ExternalFileAccess,
+) -> Result<TableDocument, String> {
+    let file = access.resolve_editable(path)?;
+    ensure_table_path(&file)?;
+    tauri::async_runtime::spawn_blocking(move || parse_any_table(&file))
+        .await
+        .map_err(|error| format!("外部表格解析任务失败: {error}"))?
+}
+
+async fn write_external_table_file_with_access(
+    path: String,
+    payload: TableWritePayload,
+    access: &ExternalFileAccess,
+) -> Result<TableWriteResult, String> {
+    let file = access.resolve_editable(path)?;
+    ensure_table_path(&file)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        if is_internal_table(&file) {
+            write_internal_table(&file, payload)
+        } else {
+            write_table(&file, payload)
+        }
+    })
+    .await
+    .map_err(|error| format!("外部表格保存任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn read_external_table_file(
+    path: String,
+    access: State<'_, ExternalFileAccess>,
+) -> Result<TableDocument, String> {
+    read_external_table_file_with_access(path, &access).await
+}
+
+#[tauri::command]
+pub async fn write_external_table_file(
+    path: String,
+    payload: TableWritePayload,
+    access: State<'_, ExternalFileAccess>,
+) -> Result<TableWriteResult, String> {
+    write_external_table_file_with_access(path, payload, &access).await
+}
+
 fn normalized_ids(values: Vec<String>, count: usize, prefix: &str) -> Vec<String> {
     if values.len() == count {
         values
@@ -1102,6 +1150,54 @@ mod tests {
         fs::write(&path, b"key,value\na,two\n").unwrap();
         let error = write_table(&path, payload(&document)).unwrap_err();
         assert!(error.contains("其他程序修改"));
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn external_table_requires_authorization_and_preserves_source_conflicts() {
+        let path = temp_table("csv", b"key,value\na,one\n");
+        let path_string = path.to_string_lossy().into_owned();
+        let access = ExternalFileAccess::default();
+
+        assert!(
+            tauri::async_runtime::block_on(read_external_table_file_with_access(
+                path_string.clone(),
+                &access,
+            ))
+            .unwrap_err()
+            .contains("authorized")
+        );
+
+        access.authorize_editable(&path).unwrap();
+        let opened = tauri::async_runtime::block_on(read_external_table_file_with_access(
+            path_string.clone(),
+            &access,
+        ))
+        .unwrap();
+        assert_eq!(opened.format, "csv");
+
+        let mut updated = payload(&opened);
+        updated.rows[0][1] = "saved".into();
+        let saved = tauri::async_runtime::block_on(write_external_table_file_with_access(
+            path_string.clone(),
+            updated,
+            &access,
+        ))
+        .unwrap();
+        assert_eq!(parse_table(&path).unwrap().rows[0][1], "saved");
+
+        fs::write(&path, b"key,value\na,two\n").unwrap();
+        let mut stale_payload = payload(&opened);
+        stale_payload.expected_signature = saved.signature;
+        let stale = tauri::async_runtime::block_on(write_external_table_file_with_access(
+            path_string,
+            stale_payload,
+            &access,
+        ))
+        .unwrap_err();
+        assert!(stale.contains("其他程序修改"));
+        assert_eq!(fs::read(&path).unwrap(), b"key,value\na,two\n");
+
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 

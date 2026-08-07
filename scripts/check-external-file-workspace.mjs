@@ -40,7 +40,7 @@ const ea2bAudit = read('docs/UX50C_External_Structured_Source_Audit_2026-08-07.m
 const expectedEditableIds = [
   'c-family', 'canvas', 'editorconfig', 'env', 'gitignore', 'go', 'ini', 'javascript', 'json', 'jsonc',
   'jvm-code', 'log', 'markdown', 'plain-text', 'properties', 'python',
-  'rust', 'shell', 'sql', 'svg', 'toml', 'typescript', 'web-source', 'xml', 'yaml',
+  'rust', 'shell', 'sql', 'svg', 'table', 'toml', 'typescript', 'web-source', 'xml', 'yaml',
 ]
 const editableIds = registry.formats
   .filter(format => format.externalPolicy === 'edit')
@@ -49,7 +49,7 @@ const editableIds = registry.formats
 if (JSON.stringify(editableIds) !== JSON.stringify(expectedEditableIds)) {
   failures.push(`EA-2B external edit boundary drift: ${editableIds.join(', ')}`)
 }
-const dedicatedIds = new Set(['json', 'jsonc', 'yaml', 'xml', 'svg', 'toml', 'log', 'canvas'])
+const dedicatedIds = new Set(['json', 'jsonc', 'yaml', 'xml', 'svg', 'toml', 'log', 'canvas', 'table'])
 const invalidTextEditors = registry.formats.filter(format =>
   format.externalPolicy === 'edit' && format.id !== 'markdown' && !dedicatedIds.has(format.id)
   && (format.routeName !== 'TextEditor' || format.adapters.writer !== 'text'),
@@ -66,6 +66,10 @@ for (const [id, routeName] of Object.entries({ json: 'JsonEditor', jsonc: 'JsonE
 const canvas = registry.formats.find(item => item.id === 'canvas')
 if (canvas?.externalPolicy !== 'edit' || canvas.routeName !== 'Canvas' || canvas.adapters.writer !== 'canvas' || canvas.maxBytes !== 20 * 1024 * 1024) {
   failures.push('canvas dedicated external route contract drift')
+}
+const table = registry.formats.find(item => item.id === 'table')
+if (table?.externalPolicy !== 'edit' || table.routeName !== 'Table' || table.adapters.writer !== 'table') {
+  failures.push('table dedicated external route contract drift')
 }
 
 for (const token of [
@@ -163,4 +167,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('External workspace passed: 25 editable profiles include structured-source, LOG and Canvas dedicated routes with explicit authorization, specialized save gates, and unchanged Windows associations.')
+console.log('External workspace passed: 26 editable profiles include structured-source, LOG, Canvas and Table dedicated routes with explicit authorization, specialized save gates, and unchanged Windows associations.')

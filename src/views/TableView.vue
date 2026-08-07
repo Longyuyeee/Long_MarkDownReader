@@ -1,9 +1,10 @@
 <template>
-  <div class="table-view" tabindex="-1" @keydown="handleKeydown">
+  <div class="table-view" :class="{ 'external-table': isExternal }" tabindex="-1" @keydown="handleKeydown">
+    <WorkspaceTabs v-if="isExternal" />
     <header class="table-toolbar">
       <div class="table-title">
         <button title="返回知识库" @click="leaveTable">←</button>
-        <div><strong>{{ fileName }}</strong><span v-if="table">{{ table.rows.length.toLocaleString() }} 行 × {{ table.headers.length }} 列 · {{ formatLabel }} · {{ table.encoding }}</span></div>
+        <div><strong>{{ fileName }}</strong><span v-if="table">{{ isExternal ? '外部表格 · 仅点击保存写回 · ' : '' }}{{ table.rows.length.toLocaleString() }} 行 × {{ table.headers.length }} 列 · {{ formatLabel }} · {{ table.encoding }}</span></div>
       </div>
       <div v-if="table" class="table-tools" data-command-strip data-horizontal-wheel="always">
         <button class="history-button icon-tool" title="撤销行操作 (Ctrl+Z)" :disabled="!rowUndoStack.length || saving" @click="undoRowOperation"><UndoIcon /></button>
@@ -14,9 +15,9 @@
           <input type="number" :value="frozenColumns" min="0" :max="maxFrozenColumns" step="1" aria-label="冻结最前面的列数" @change="setFrozenColumns" />
           <span>列</span>
         </label>
-        <button v-if="table.format !== 'longedit-table'" @click="requestConvertToTable">创建 Table 副本</button>
-        <button v-else @click="exportAs('csv')">导出 CSV</button>
-        <button v-if="table.format === 'longedit-table'" @click="exportAs('xlsx')">导出 XLSX</button>
+        <button v-if="!isExternal && table.format !== 'longedit-table'" @click="requestConvertToTable">创建 Table 副本</button>
+        <button v-if="!isExternal && table.format === 'longedit-table'" @click="exportAs('csv')">导出 CSV</button>
+        <button v-if="!isExternal && table.format === 'longedit-table'" @click="exportAs('xlsx')">导出 XLSX</button>
         <button @click="addRow">＋ 行</button>
         <button @click="addColumn">＋ 列</button>
         <button class="save-button" :disabled="!dirty || saving" aria-live="polite" @click="saveTable">{{ saving ? '保存中' : dirty ? '保存' : '已保存' }}</button>
@@ -197,6 +198,7 @@ import {
 import { useAppStore } from '../store/app'
 import TableChartEditor from '../components/TableChartEditor.vue'
 import TableDashboard, { type DashboardItem } from '../components/TableDashboard.vue'
+import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 
 type ViewKind = 'grid' | 'board' | 'chart' | 'dashboard'
 type ChartType = 'bar' | 'line' | 'pie' | 'scatter'
@@ -287,6 +289,7 @@ let typeTimer = 0
 let loadGeneration = 0
 
 const tablePath = computed(() => String(route.query.path || store.activeTabId || ''))
+const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => tablePath.value.split(/[\\/]/).pop() || '数据表')
 const formatLabel = computed(() => table.value?.format === 'longedit-table' ? '开放 Table' : table.value?.format?.toUpperCase() || 'CSV')
 const tableWidth = computed(() => 52 + (columnWidths.value.length ? columnWidths.value.reduce((sum, width) => sum + width, 0) : 160))
@@ -396,7 +399,12 @@ const visibleRows = computed(() => {
   return filteredIndices.value.slice(start, start + count).map((rowIndex, offset) => ({ rowIndex, virtualIndex: start + offset }))
 })
 
-const markDirty = () => { dirty.value = true; notice.value = '有未保存修改' }
+const markDirty = () => {
+  dirty.value = true
+  notice.value = '有未保存修改'
+  const tab = store.tabs.find(item => item.path === tablePath.value)
+  if (tab) tab.isDirty = true
+}
 const captureActiveView = () => {
   const current = activeView.value
   if (!current) return
@@ -698,8 +706,12 @@ const loadTable = async () => {
   try {
     await store.loadConfig()
     if (generation !== loadGeneration) return
-    if (!store.libraryPath || !/(?:\.(csv|tsv)|\.table\.json)$/i.test(tablePath.value)) throw new Error('表格路径无效或知识库尚未配置')
-    const document = await invoke<TableDocument>('read_table_file', { libraryRoot: store.libraryPath, path: tablePath.value })
+    if (!/(?:\.(csv|tsv)|\.table\.json)$/i.test(tablePath.value)) throw new Error('表格路径无效')
+    if (!isExternal.value && !store.libraryPath) throw new Error('知识库尚未配置')
+    const document = await invoke<TableDocument>(isExternal.value ? 'read_external_table_file' : 'read_table_file', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+      path: tablePath.value,
+    })
     if (generation !== loadGeneration) return
     table.value = document
     selectedRowId.value = ''
@@ -711,6 +723,7 @@ const loadTable = async () => {
       ? requestedView
       : views.value.some(view => view.id === document.activeView) ? document.activeView : views.value[0].id
     applyView(activeView.value)
+    store.addTab({ id: tablePath.value, title: fileName.value, path: tablePath.value, isDirty: false, external: isExternal.value })
     const viewState = recallWorkspaceViewState(tablePath.value)
     loading.value = false
     if (viewState) {
@@ -729,12 +742,13 @@ const loadTable = async () => {
 
 const saveTable = async () => {
   if (!table.value || !dirty.value || saving.value) return
+  if (isExternal.value && !window.confirm(`保存将覆盖当前外部 ${formatLabel.value} 源文件。确定继续吗？`)) return
   captureActiveView()
   saving.value = true
   notice.value = '正在可靠写入…'
   try {
-    const result = await invoke<TableWriteResult>('write_table_file', {
-      libraryRoot: store.libraryPath,
+    const result = await invoke<TableWriteResult>(isExternal.value ? 'write_external_table_file' : 'write_table_file', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: tablePath.value,
       payload: {
         delimiter: table.value.delimiter,
@@ -772,11 +786,20 @@ const saveTable = async () => {
     table.value.signature = result.signature
     window.dispatchEvent(new CustomEvent('longedit:table-saved', { detail: tablePath.value }))
     dirty.value = false
+    const tab = store.tabs.find(item => item.path === tablePath.value)
+    if (tab) tab.isDirty = false
     notice.value = `已保存 · ${(result.size / 1024).toFixed(1)} KB`
     message.success('表格已保存')
   } catch (cause) {
     notice.value = '保存失败'
-    message.error(String(cause).replace(/^Error:\s*/, ''))
+    const detail = String(cause).replace(/^Error:\s*/, '')
+    if (isExternal.value && detail.includes('其他程序修改')) {
+      dialog.warning({
+        title: '外部表格已发生变化',
+        content: '源文件在编辑期间被其他程序修改。Long编辑没有覆盖这些变化，请重新打开后再编辑。',
+        positiveText: '知道了',
+      })
+    } else message.error(detail)
   } finally { saving.value = false }
 }
 
@@ -875,7 +898,7 @@ const beforeUnload = (event: BeforeUnloadEvent) => {
   }
 }
 
-watch([tablePath, () => route.query.view], loadTable)
+watch([tablePath, isExternal, () => route.query.view], loadTable)
 watch(scrollRef, element => {
   resizeObserver?.disconnect()
   if (element) {

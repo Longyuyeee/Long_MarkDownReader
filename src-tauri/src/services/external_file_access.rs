@@ -201,7 +201,7 @@ mod tests {
             directory.join("image.svg"),
             directory.join("project.toml"),
         ];
-        let imported_file = directory.join("data.csv");
+        let table_file = directory.join("data.csv");
         fs::write(&text_file, "text").unwrap();
         fs::write(&code_file, "const value = 1;").unwrap();
         fs::write(&log_file, "INFO ready\n").unwrap();
@@ -209,7 +209,7 @@ mod tests {
         for path in &structured_files {
             fs::write(path, "{}").unwrap();
         }
-        fs::write(&imported_file, "id\n1\n").unwrap();
+        fs::write(&table_file, "id\n1\n").unwrap();
 
         let access = ExternalFileAccess::default();
         assert!(access.authorize_editable(&text_file).is_ok());
@@ -224,7 +224,8 @@ mod tests {
             assert!(access.authorize_editable(path).is_ok());
             assert!(access.resolve_editable(path).is_ok());
         }
-        assert!(access.authorize_editable(&imported_file).is_err());
+        assert!(access.authorize_editable(&table_file).is_ok());
+        assert!(access.resolve_editable(&table_file).is_ok());
         assert!(access.resolve_markdown(&text_file).is_err());
         assert!(access
             .authorize_editable(directory.join("missing.md"))

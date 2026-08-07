@@ -19,10 +19,10 @@ const counts = registry.formats.reduce((result, format) => {
   result[format.externalPolicy] = (result[format.externalPolicy] || 0) + 1
   return result
 }, {})
-if (counts.edit !== 25 || counts.preview !== 8 || counts.import !== 10) {
+if (counts.edit !== 26 || counts.preview !== 8 || counts.import !== 9) {
   failures.push(`EA-4B policy counts drift: ${JSON.stringify(counts)}`)
 }
-for (const id of ['table', 'drawio', 'diagram', 'opml']) {
+for (const id of ['drawio', 'diagram', 'opml']) {
   if (registry.formats.find(format => format.id === id)?.externalPolicy !== 'import') {
     failures.push(`${id} must remain import-only until its specialized workspace is audited`)
   }

@@ -99,7 +99,8 @@ use commands::svg::{
 };
 use commands::system::{exit_app, get_url_title, open_default_apps_settings};
 use commands::table::{
-    create_table_file, export_table_file, import_table_file, read_table_file, write_table_file,
+    create_table_file, export_table_file, import_table_file, read_external_table_file,
+    read_table_file, write_external_table_file, write_table_file,
 };
 use commands::toml::{
     analyze_toml_source, write_external_toml_source_document, write_toml_source_document,
@@ -401,7 +402,9 @@ pub fn run() {
             preview_pptx_slide_lifecycle_isolated_copy,
             save_pptx_patch_copy,
             read_table_file,
+            read_external_table_file,
             write_table_file,
+            write_external_table_file,
             create_table_file,
             import_table_file,
             export_table_file,
