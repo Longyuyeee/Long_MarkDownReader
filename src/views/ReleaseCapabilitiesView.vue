@@ -16,7 +16,7 @@
         <FileInput :size="20" />
         <div>
           <strong>外部打开与默认应用</strong>
-          <p>{{ externalEditableCount }} 类格式可直接编辑，{{ externalPreviewCount }} 类媒体可只读预览；编辑格式只有点击保存才写回，预览格式永不写回。Windows 默认应用始终由你确认，并按格式逐项选择。</p>
+          <p>{{ externalEditableCount }} 类格式可直接编辑，{{ externalPreviewCount }} 类文件可只读预览；编辑格式只有点击保存才写回，预览格式永不写回。Windows 默认应用始终由你确认，并按格式逐项选择。</p>
         </div>
         <button type="button" @click="openDefaultAppsSettings">
           <ExternalLink :size="15" />
@@ -173,7 +173,7 @@ const filteredRows = computed(() => {
 
 const externalPolicyDescription = (policy: ExternalFilePolicy) => ({
   edit: '可由文件选择器或 Windows 启动参数授权，在独立工作区直接打开；不会自动保存。',
-  preview: '可由文件选择器或 Windows 启动参数授权，在独立媒体工作区只读打开；不会修改或写回源文件。',
+  preview: '可由文件选择器或 Windows 启动参数授权，在独立只读工作区打开；不会修改或写回源文件。',
   import: '当前仅支持从资料库或明确导入入口打开，尚未注册为系统外部启动格式。',
   none: '当前不接受外部启动或导入。',
 })[policy]

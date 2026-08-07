@@ -5,6 +5,7 @@ use crate::formats::pdf_annotations::{
 use crate::formats::pdf_ocr::{
     validate_pdf_ocr, PdfOcrDocument, PdfOcrSource, MAX_OCR_SIDECAR_BYTES,
 };
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_new_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
 use lopdf::xref::{XrefEntry, XrefType};
@@ -16,6 +17,7 @@ use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
+use tauri::State;
 
 pub const MAX_PDF_DOCUMENT_BYTES: u64 = 2 * 1024 * 1024 * 1024;
 pub const MAX_PDF_FULL_READ_BYTES: u64 = 4 * 1024 * 1024;
@@ -78,6 +80,20 @@ pub async fn read_pdf_info(
 ) -> Result<PdfReadDescriptor, String> {
     let guard = WorkspaceGuard::new(library_root)?;
     let file_path = guard.resolve_existing_file(path, &["pdf"])?;
+    read_pdf_info_from_path(file_path).await
+}
+
+#[tauri::command]
+pub async fn read_external_pdf_info(
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+) -> Result<PdfReadDescriptor, String> {
+    let file_path = access.resolve_preview(path)?;
+    ensure_pdf_format(&file_path)?;
+    read_pdf_info_from_path(file_path).await
+}
+
+async fn read_pdf_info_from_path(file_path: PathBuf) -> Result<PdfReadDescriptor, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let metadata = file_path
             .metadata()
@@ -119,6 +135,28 @@ pub async fn read_pdf_range(
 ) -> Result<Vec<u8>, String> {
     let guard = WorkspaceGuard::new(library_root)?;
     let file_path = guard.resolve_existing_file(path, &["pdf"])?;
+    read_pdf_range_from_path(file_path, begin, end, expected_signature).await
+}
+
+#[tauri::command]
+pub async fn read_external_pdf_range(
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+    begin: u64,
+    end: u64,
+    expected_signature: String,
+) -> Result<Vec<u8>, String> {
+    let file_path = access.resolve_preview(path)?;
+    ensure_pdf_format(&file_path)?;
+    read_pdf_range_from_path(file_path, begin, end, expected_signature).await
+}
+
+async fn read_pdf_range_from_path(
+    file_path: PathBuf,
+    begin: u64,
+    end: u64,
+    expected_signature: String,
+) -> Result<Vec<u8>, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let before = file_path
             .metadata()
@@ -144,6 +182,13 @@ pub async fn read_pdf_range(
     })
     .await
     .map_err(|error| format!("PDF 范围读取任务失败: {}", error))?
+}
+
+fn ensure_pdf_format(path: &Path) -> Result<(), String> {
+    if crate::formats::file_registry::file_format_for_path(path)?.id != "pdf" {
+        return Err("外部 PDF 命令只接受已授权的 .pdf 文件".into());
+    }
+    Ok(())
 }
 
 #[derive(Clone, Debug, serde::Serialize)]
@@ -2279,6 +2324,13 @@ mod tests {
     use lopdf::{EncryptionState, EncryptionVersion, Permissions, Stream, StringFormat};
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn external_pdf_format_gate_rejects_other_preview_formats() {
+        assert!(ensure_pdf_format(Path::new("document.pdf")).is_ok());
+        assert!(ensure_pdf_format(Path::new("photo.png")).is_err());
+        assert!(ensure_pdf_format(Path::new("clip.mp4")).is_err());
+    }
 
     struct TestWorkspace {
         base: PathBuf,

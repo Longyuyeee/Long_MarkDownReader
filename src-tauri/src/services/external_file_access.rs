@@ -248,9 +248,11 @@ mod tests {
         let directory = fixture("preview");
         let image = directory.join("photo.png");
         let video = directory.join("clip.mp4");
+        let pdf = directory.join("document.pdf");
         let markdown = directory.join("note.md");
         fs::write(&image, "png").unwrap();
         fs::write(&video, "mp4").unwrap();
+        fs::write(&pdf, "%PDF-1.7").unwrap();
         fs::write(&markdown, "note").unwrap();
 
         let access = ExternalFileAccess::default();
@@ -260,6 +262,9 @@ mod tests {
         assert!(access.resolve_editable(&image).is_err());
         assert!(access.authorize_openable(&video).is_ok());
         assert!(access.resolve_preview(&video).is_ok());
+        assert!(access.authorize_openable(&pdf).is_ok());
+        assert!(access.resolve_preview(&pdf).is_ok());
+        assert!(access.resolve_editable(&pdf).is_err());
         assert!(access.authorize_preview(&markdown).is_err());
         assert!(access.authorize_openable(&markdown).is_ok());
         assert!(access.resolve_editable(&markdown).is_ok());

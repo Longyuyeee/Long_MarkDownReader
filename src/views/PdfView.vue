@@ -1,10 +1,11 @@
 <template>
   <div class="pdf-view" @keydown="handleKeydown" tabindex="-1">
+    <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
     <WorkspaceToolbar class="pdf-toolbar">
       <WorkspaceFileIdentity class="toolbar-leading">
-        <button class="icon-btn" title="返回知识库" @click="router.push('/library')">←</button>
+        <button class="icon-btn" :title="isExternal ? '返回资料库' : '返回知识库'" @click="router.push('/library')">←</button>
         <button class="icon-btn" :class="{ active: sidebarOpen }" :aria-pressed="sidebarOpen" title="缩略图与目录" @click="sidebarOpen = !sidebarOpen">☰</button>
-        <div class="document-title"><strong>{{ fileName }}<i v-if="pdfWorkspaceDirty" class="page-plan-dirty" aria-live="polite">页面草稿</i></strong><span v-if="pdfDocument">{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template></span></div>
+        <div class="document-title"><strong>{{ fileName }}<i v-if="pdfWorkspaceDirty" class="page-plan-dirty" aria-live="polite">页面草稿</i></strong><span v-if="pdfDocument"><template v-if="isExternal">外部文件 · 只读 · </template>{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template><template v-if="isExternal"> · 不会写回</template></span></div>
       </WorkspaceFileIdentity>
       <div v-if="pdfDocument" class="toolbar-center">
         <button class="icon-btn" title="上一页" aria-label="上一页" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
@@ -24,10 +25,10 @@
         <button class="scale-label" title="恢复 100%" @click="setScale(1)">{{ Math.round(scale * 100) }}%</button>
         <button class="icon-btn" title="放大" @click="changeScale(0.1)">＋</button>
         <button class="fit-btn" :class="{ active: fitWidth }" :aria-pressed="fitWidth" title="适合宽度" @click="toggleFitWidth"><Columns3Icon :size="14"/><span class="action-label">适合宽度</span></button>
-        <button class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" :aria-pressed="sidebarOpen && sidebarTab === 'ocr'" title="离线识别扫描页" @click="openOcrPanel"><ScanTextIcon :size="14"/><span class="action-label">OCR</span></button>
-        <button class="fit-btn" :class="{ active: sidebarTab === 'organize' }" :aria-pressed="sidebarOpen && sidebarTab === 'organize'" title="非破坏式页面整理预览" @click="openPageOrganizer"><ListOrderedIcon :size="14"/><span class="action-label">页面整理</span></button>
-        <button class="fit-btn" :class="{ active: areaMode }" :aria-pressed="areaMode" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
-        <button class="fit-btn" :disabled="!annotationWritable" title="为当前页添加评论" @click="createPageComment"><MessageSquareTextIcon :size="14"/><span class="action-label">页评论</span></button>
+        <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" :aria-pressed="sidebarOpen && sidebarTab === 'ocr'" title="离线识别扫描页" @click="openOcrPanel"><ScanTextIcon :size="14"/><span class="action-label">OCR</span></button>
+        <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'organize' }" :aria-pressed="sidebarOpen && sidebarTab === 'organize'" title="非破坏式页面整理预览" @click="openPageOrganizer"><ListOrderedIcon :size="14"/><span class="action-label">页面整理</span></button>
+        <button v-if="!isExternal" class="fit-btn" :class="{ active: areaMode }" :aria-pressed="areaMode" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
+        <button v-if="!isExternal" class="fit-btn" :disabled="!annotationWritable" title="为当前页添加评论" @click="createPageComment"><MessageSquareTextIcon :size="14"/><span class="action-label">页评论</span></button>
       </div>
     </WorkspaceToolbar>
 
@@ -42,9 +43,9 @@
         >
           <button role="tab" :aria-selected="sidebarTab === 'thumbnails'" :class="{ active: sidebarTab === 'thumbnails' }" @click="sidebarTab = 'thumbnails'">缩略图</button>
           <button role="tab" :aria-selected="sidebarTab === 'outline'" :class="{ active: sidebarTab === 'outline' }" @click="sidebarTab = 'outline'">目录</button>
-          <button role="tab" :aria-selected="sidebarTab === 'annotations'" :class="{ active: sidebarTab === 'annotations' }" @click="sidebarTab = 'annotations'">批注 {{ annotations.length || '' }}</button>
-          <button role="tab" :aria-selected="sidebarTab === 'ocr'" :class="{ active: sidebarTab === 'ocr' }" @click="sidebarTab = 'ocr'">OCR {{ ocrDocument?.pages.length || '' }}</button>
-          <button role="tab" :aria-selected="sidebarTab === 'organize'" :class="{ active: sidebarTab === 'organize' }" @click="sidebarTab = 'organize'">页面</button>
+          <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'annotations'" :class="{ active: sidebarTab === 'annotations' }" @click="sidebarTab = 'annotations'">批注 {{ annotations.length || '' }}</button>
+          <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'ocr'" :class="{ active: sidebarTab === 'ocr' }" @click="sidebarTab = 'ocr'">OCR {{ ocrDocument?.pages.length || '' }}</button>
+          <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'organize'" :class="{ active: sidebarTab === 'organize' }" @click="sidebarTab = 'organize'">页面</button>
         </div>
         <div v-if="sidebarTab === 'thumbnails'" class="thumbnail-list">
           <button v-for="page in pdfDocument.numPages" :key="page" :class="['thumbnail-item', { active: page === currentPage }]" @click="goToPage(page)">
@@ -57,7 +58,7 @@
           <p v-else-if="!outline.length" class="sidebar-empty">此文档没有内置目录</p>
           <button v-for="(item, index) in outline" :key="`${item.title}-${index}`" :style="{ paddingLeft: `${12 + item.depth * 14}px` }" @click="openOutlineItem(item)">{{ item.title }}</button>
         </div>
-        <div v-else-if="sidebarTab === 'annotations'" class="annotation-panel">
+        <div v-else-if="!isExternal && sidebarTab === 'annotations'" class="annotation-panel">
           <div v-if="annotationError" class="annotation-alert" role="alert">{{ annotationError }}</div>
           <div v-else-if="!annotations.length" class="sidebar-empty">选择正文后添加高亮，或启用“区域批注”框选页面。</div>
           <button v-for="annotation in sortedAnnotations" :key="annotation.id" :class="['annotation-card', { active: selectedAnnotationId === annotation.id }]" @click="selectAnnotation(annotation.id)">
@@ -76,7 +77,7 @@
           <div v-if="referenceNotice" class="annotation-alert" aria-live="polite">{{ referenceNotice }}</div>
           <WorkspaceStateNotice v-if="annotationDocument" class="annotation-save-state" :kind="annotationSaveError ? 'error' : annotationSaving ? 'loading' : annotationDirty ? 'limited' : 'saved'" :tone="annotationSaveError ? 'danger' : annotationDirty ? 'warning' : annotationSaving ? 'info' : 'success'" compact>{{ annotationSaveError || (annotationSaving ? '正在保存批注' : annotationDirty ? '等待保存' : '批注已保存到 sidecar') }}</WorkspaceStateNotice>
         </div>
-        <div v-else-if="sidebarTab === 'organize'" class="page-organizer">
+        <div v-else-if="!isExternal && sidebarTab === 'organize'" class="page-organizer">
           <div class="page-plan-summary">
             <WorkspaceStateNotice v-if="savedCopyNotice?.path === pdfPath" class="page-plan-saved" kind="saved" tone="success" compact>
               <strong>可靠副本已落盘并重开</strong>
@@ -331,7 +332,7 @@
             </article>
           </div>
         </div>
-        <div v-else class="ocr-panel">
+        <div v-else-if="!isExternal" class="ocr-panel">
           <div class="ocr-summary">
             <strong>离线 OCR</strong>
             <span>Tesseract WASM · 简体中文 + 英文</span>
@@ -407,6 +408,7 @@ import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../service
 import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity.vue'
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
+import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist'
@@ -661,10 +663,11 @@ const textAccess = new Map<number, number>()
 const annotationColors: PdfAnnotationColor[] = ['yellow', 'green', 'pink', 'blue']
 
 const pdfPath = computed(() => String(route.query.path || ''))
+const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => pdfPath.value.split(/[\\/]/).pop()?.replace(/\.pdf$/i, '') || 'PDF 文档')
 const thumbnailScale = computed(() => Math.min(0.25, 132 / basePage.value.width))
 const loadModeLabel = computed(() => loadMode.value === 'range' ? '渐进读取' : '快速读取')
-const positionId = () => `${store.libraryPath}\n${pdfPath.value}`
+const positionId = () => `${isExternal.value ? 'external' : store.libraryPath}\n${pdfPath.value}`
 const activeMatchId = computed(() => activeMatchIdState.value || undefined)
 const activeMatchIndex = computed(() => searchMatches.value.findIndex(match => match.id === activeMatchIdState.value))
 const searchStatus = computed(() => {
@@ -1789,6 +1792,8 @@ const loadPdf = async () => {
   annotationRevision = 0
   annotationDirty.value = false
   annotationError.value = ''
+  annotationWritable.value = !isExternal.value
+  if (isExternal.value && !['thumbnails', 'outline'].includes(sidebarTab.value)) sidebarTab.value = 'thumbnails'
   referenceNotice.value = ''
   selectedAnnotationId.value = ''
   areaMode.value = false
@@ -1826,16 +1831,19 @@ const loadPdf = async () => {
   rangeTransport = null
   loadingTask = null
   pdfDocument.value = null
-  if (!store.libraryPath || !pdfPath.value.toLowerCase().endsWith('.pdf')) {
-    error.value = 'PDF 路径无效或知识库尚未配置'
+  if ((!isExternal.value && !store.libraryPath) || !pdfPath.value.toLowerCase().endsWith('.pdf')) {
+    error.value = isExternal.value ? '外部 PDF 路径无效或尚未授权' : 'PDF 路径无效或知识库尚未配置'
     loading.value = false
     return
   }
   try {
     const viewState = recallWorkspaceViewState(pdfPath.value)
-    const descriptor = await invoke<PdfReadDescriptor>('read_pdf_info', { libraryRoot: store.libraryPath, path: pdfPath.value })
+    const descriptor = await invoke<PdfReadDescriptor>(isExternal.value ? 'read_external_pdf_info' : 'read_pdf_info', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+      path: pdfPath.value,
+    })
     pdfSourceSignature.value = descriptor.signature
-    initializePdfMergeInputs(descriptor.signature)
+    if (!isExternal.value) initializePdfMergeInputs(descriptor.signature)
     if (descriptor.fullData) {
       loadMode.value = 'full'
       loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(descriptor.fullData), useWasm: false })
@@ -1845,7 +1853,8 @@ const loadPdf = async () => {
         descriptor.length,
         new Uint8Array(descriptor.initialData),
         {
-          libraryRoot: store.libraryPath,
+          ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+          external: isExternal.value,
           path: pdfPath.value,
           signature: descriptor.signature,
           fileName: `${fileName.value}.pdf`,
@@ -1876,7 +1885,14 @@ const loadPdf = async () => {
     }
     const document = await loadingTask.promise
     pdfDocument.value = document
-    initializePagePlan(document.numPages)
+    store.addTab({
+      id: pdfPath.value,
+      title: `${fileName.value}.pdf`,
+      path: pdfPath.value,
+      isDirty: false,
+      external: isExternal.value,
+    })
+    if (!isExternal.value) initializePagePlan(document.numPages)
     const firstPage = await document.getPage(1)
     const viewport = firstPage.getViewport({ scale: 1 })
     basePage.value = { width: viewport.width, height: viewport.height }
@@ -1884,7 +1900,8 @@ const loadPdf = async () => {
     const rememberedPage = Number(viewState?.section)
     const restored = Math.max(1, Math.min(document.numPages, routedPage || (Number.isInteger(rememberedPage) ? rememberedPage : 0) || readPositions()[positionId()] || 1))
     if (typeof viewState?.sidebarOpen === 'boolean') sidebarOpen.value = viewState.sidebarOpen
-    if (['thumbnails', 'outline', 'annotations', 'ocr', 'organize'].includes(viewState?.sidebarTab || '')) {
+    const availableSidebarTabs = isExternal.value ? ['thumbnails', 'outline'] : ['thumbnails', 'outline', 'annotations', 'ocr', 'organize']
+    if (availableSidebarTabs.includes(viewState?.sidebarTab || '')) {
       sidebarTab.value = viewState?.sidebarTab as typeof sidebarTab.value
     }
     if (typeof viewState?.fitWidth === 'boolean') fitWidth.value = viewState.fitWidth
@@ -1905,8 +1922,10 @@ const loadPdf = async () => {
       scrollRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft, behavior: 'auto' })
     }
     loadOutline()
-    await loadAnnotations(document)
-    await loadOcrDocument(document)
+    if (!isExternal.value) {
+      await loadAnnotations(document)
+      await loadOcrDocument(document)
+    }
   } catch (cause) {
     if (!error.value) error.value = String(cause).replace(/^Error:\s*/, '')
     loading.value = false
@@ -1994,7 +2013,7 @@ const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
   event.preventDefault()
   event.returnValue = ''
 }
-watch([pdfPath, () => store.libraryPath], (_next, previous) => {
+watch([pdfPath, () => store.libraryPath, isExternal], (_next, previous) => {
   if (previous?.[0]) rememberPdfViewState(previous[0])
   void loadPdf()
 })

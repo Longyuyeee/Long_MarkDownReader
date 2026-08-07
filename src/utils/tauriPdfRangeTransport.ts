@@ -10,7 +10,8 @@ export interface PdfReadDescriptor {
 }
 
 interface RangeTransportOptions {
-  libraryRoot: string
+  libraryRoot?: string
+  external?: boolean
   path: string
   signature: string
   fileName: string
@@ -26,8 +27,8 @@ export class TauriPdfRangeTransport extends PDFDataRangeTransport {
 
   requestDataRange(begin: number, end: number): void {
     if (!this.active) return
-    void invoke<number[]>('read_pdf_range', {
-      libraryRoot: this.options.libraryRoot,
+    void invoke<number[]>(this.options.external ? 'read_external_pdf_range' : 'read_pdf_range', {
+      ...(this.options.external ? {} : { libraryRoot: this.options.libraryRoot }),
       path: this.options.path,
       begin,
       end,

@@ -754,3 +754,9 @@ UX-49 已完成媒体流式读取与视频工具增强。图片和视频不再�
 EA-3A 已完成图片和视频的外部只读工作区。外部能力现明确分为 23 类 `edit` 与 2 类 `preview`：图片/视频可由应用文件选择器、Windows 启动参数或用户逐项选择的默认应用入口直接打开，但只获得独立预览授权，没有 writer、保存按钮或写回路径。安装器关联仍只有 `.md/.markdown`，不会抢占全部支持格式。
 
 格式能力页已分别说明可编辑与只读数量，媒体工作区显示外部文件、只读和不会写回，并纳入统一标签与返回资料库流程。专项契约、前端生产构建、4 项外部授权测试、2 项媒体分类测试和 Rust 锁定检查均通过。接手后进入 EA-3B，从 PDF 开始逐类审计外部预览、sidecar、新副本和资料库语义；不能批量把剩余 `import` 格式改成 `preview/edit`。完整结论见 [`UX50D_External_Media_Preview_Audit_2026-08-07.md`](./UX50D_External_Media_Preview_Audit_2026-08-07.md)。
+
+# 2026-08-07 EA-3B 交接入口
+
+EA-3B 已完成外部 PDF 专业只读工作区。外部 PDF 复用 2 GB 渐进 Range 阅读器，保留搜索、目录、页码、缩放、适合宽度、密码输入和阅读位置；标题明确显示外部、只读和不会写回，并进入统一标签会话。后端新增独立 preview 授权命令，未经用户授权的绝对路径不能读取。
+
+批注、OCR、知识引用、页面整理、提取、合并和插页严格保留在资料库模式；外部 PDF 不写 Sidecar、不初始化页面草稿，也不创建新副本。外部能力现为 23 类 `edit` 与 3 类 `preview`，安装器关联仍只有 `.md/.markdown`。专项契约、资料库 PDF 回归、前端构建、4 项授权测试、26 项 PDF 测试和 Rust 检查均通过。接手后进入 EA-3C，优先评估 ODS/ODP 等纯只读结构格式；DOCX/PPTX/XLSX 继续单独审计。详见 [`UX50E_External_PDF_Readonly_Workspace_Audit_2026-08-07.md`](./UX50E_External_PDF_Readonly_Workspace_Audit_2026-08-07.md)。

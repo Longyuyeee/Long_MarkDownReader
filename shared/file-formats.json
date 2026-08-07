@@ -361,7 +361,7 @@
       "maxBytes": 536870912,
       "capabilities": { "read": "supported", "edit": "unsupported", "create": "unsupported", "index": "supported" },
       "userCapability": { "level": "read-annotate", "label": "阅读/批注", "saveMode": "sidecar", "description": "PDF 原文只读，批注、OCR 和引用写入 sidecar。" },
-      "externalPolicy": "import",
+      "externalPolicy": "preview",
       "adapters": { "reader": "pdf", "writer": null, "creator": null, "indexer": "pdf" },
       "creation": null
     },

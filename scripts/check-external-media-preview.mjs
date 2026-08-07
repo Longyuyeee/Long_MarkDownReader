@@ -10,7 +10,7 @@ const requireText = (source, token, message) => {
 const registry = json('shared/file-formats.json')
 const tauri = json('src-tauri/tauri.conf.json')
 const previewIds = registry.formats
-  .filter(format => format.externalPolicy === 'preview')
+  .filter(format => format.externalPolicy === 'preview' && format.adapters.reader === 'media')
   .map(format => format.id)
   .sort()
 if (JSON.stringify(previewIds) !== JSON.stringify(['raster-image', 'video'])) {
