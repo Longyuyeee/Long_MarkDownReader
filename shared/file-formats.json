@@ -387,7 +387,7 @@
       "maxBytes": 67108864,
       "capabilities": { "read": "supported", "edit": "supported", "create": "unsupported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "受限页面编辑", "saveMode": "bounded-overwrite", "description": "DOCX 支持页面式阅读和有界文本、字符样式、图片说明编辑；草稿只驻留内存，隔离验证后可由用户确认覆盖源文件或可靠另存副本，高级对象保持只读。" },
-      "externalPolicy": "import",
+      "externalPolicy": "preview",
       "adapters": { "reader": "docx", "writer": "docx", "creator": null, "indexer": "docx" },
       "creation": null
     },

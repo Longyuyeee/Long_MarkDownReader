@@ -6,6 +6,8 @@ use crate::formats::docx_patch::{
     inspect_docx_editable_text_targets, DocxEditableImageTarget, DocxEditableStyleTarget,
     DocxEditableTextTarget, DocxIsolatedPatchReport,
 };
+use crate::formats::file_registry::file_format_for_path;
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{write_bytes, write_new_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
@@ -16,6 +18,7 @@ use std::fs::{self, OpenOptions};
 use std::io::{Cursor, Read, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
+use tauri::State;
 use zip::ZipArchive;
 
 const MAX_DOCX_MEDIA_PREVIEWS: usize = 32;
@@ -43,6 +46,7 @@ pub struct DocxReadReport {
     pub editable_style_targets: Vec<DocxEditableStyleTarget>,
     pub editable_image_targets: Vec<DocxEditableImageTarget>,
     pub read_only: bool,
+    pub source_preserved: bool,
     pub model: DocxDocumentModel,
     pub media: Vec<DocxMediaPreview>,
     pub media_warnings: Vec<String>,
@@ -325,6 +329,11 @@ fn read_docx_path(path: &Path) -> Result<DocxReadReport, String> {
     let editable_style_targets = inspect_docx_editable_style_targets(&source, &model)?;
     let editable_image_targets = inspect_docx_editable_image_targets(&source, &model)?;
     let (media, media_warnings) = extract_media_previews(&source, &model)?;
+    let after = fs::read(path).map_err(|error| format!("复核 DOCX 源文件失败: {error}"))?;
+    let source_preserved = source == after;
+    if !source_preserved {
+        return Err("DOCX 文件在只读解析期间发生变化".into());
+    }
     let modified = metadata
         .modified()
         .ok()
@@ -341,10 +350,19 @@ fn read_docx_path(path: &Path) -> Result<DocxReadReport, String> {
         editable_style_targets,
         editable_image_targets,
         read_only: true,
+        source_preserved,
         model,
         media,
         media_warnings,
     })
+}
+
+fn ensure_docx_format(path: &Path) -> Result<(), String> {
+    let format = file_format_for_path(path)?;
+    if format.id != "docx" {
+        return Err("外部 DOCX 读取命令只接受已授权的 .docx 文件".into());
+    }
+    Ok(())
 }
 
 fn preview_docx_isolated_path<F>(
@@ -1351,6 +1369,24 @@ pub async fn read_docx_document(
 }
 
 #[tauri::command]
+pub async fn read_external_docx_document(
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+) -> Result<DocxReadReport, String> {
+    let document = access.resolve_preview(path)?;
+    ensure_docx_format(&document)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut report = read_docx_path(&document)?;
+        report.editable_text_targets.clear();
+        report.editable_style_targets.clear();
+        report.editable_image_targets.clear();
+        Ok(report)
+    })
+    .await
+    .map_err(|error| format!("外部 DOCX 读取任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn preview_docx_package_patch_isolated_copy(
     library_root: String,
     path: String,
@@ -1610,6 +1646,27 @@ mod tests {
             b"\x89PNG\r\n\x1a\nbody",
             "image/svg+xml"
         ));
+    }
+
+    #[test]
+    fn external_format_gate_accepts_only_docx() {
+        assert!(ensure_docx_format(Path::new("document.docx")).is_ok());
+        assert!(ensure_docx_format(Path::new("slides.pptx")).is_err());
+    }
+
+    #[test]
+    fn reads_verified_docx_without_mutation() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("fixtures")
+            .join("docx")
+            .join("producers")
+            .join("microsoft-word-16.docx");
+        let before = fs::read(&path).unwrap();
+        let report = read_docx_path(&path).unwrap();
+        assert!(report.read_only);
+        assert!(report.source_preserved);
+        assert_eq!(before, fs::read(path).unwrap());
     }
 
     #[test]

@@ -1,5 +1,6 @@
 <template>
   <div class="docx-workspace">
+    <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
     <header class="docx-toolbar">
       <div class="document-identity">
         <button type="button" class="toolbar-icon" title="返回上一页" aria-label="返回上一页" @click="leaveDocx">
@@ -8,14 +9,14 @@
         <FileTextIcon :size="18" />
         <div class="document-title">
           <strong :title="docxPath">{{ fileName }}</strong>
-          <span>Word 页面编辑 · 草稿只驻留内存 · 点击保存才写入</span>
+          <span>{{ isExternal ? '外部 Word 文档 · 只读 · 不会写回' : 'Word 页面编辑 · 草稿只驻留内存 · 点击保存才写入' }}</span>
         </div>
       </div>
       <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
-        <button type="button" :disabled="!draftUndoStack.length" title="撤销草稿修改" @click="undoDraft">
+        <button v-if="!isExternal" type="button" :disabled="!draftUndoStack.length" title="撤销草稿修改" @click="undoDraft">
           <UndoIcon :size="15" />
         </button>
-        <button type="button" :disabled="!draftRedoStack.length" title="重做草稿修改" @click="redoDraft">
+        <button v-if="!isExternal" type="button" :disabled="!draftRedoStack.length" title="重做草稿修改" @click="redoDraft">
           <RedoIcon :size="15" />
         </button>
         <label class="docx-search">
@@ -38,6 +39,7 @@
           <RefreshIcon :size="15" />
         </button>
         <button
+          v-if="!isExternal"
           type="button"
           :disabled="!editableTargetCount"
           :class="{ active: editorOpen }"
@@ -48,6 +50,7 @@
           <FilePenLineIcon :size="15" />
         </button>
         <button
+          v-if="!isExternal"
           type="button"
           :disabled="!previewReport || savingSource"
           title="保存到原文件"
@@ -77,7 +80,7 @@
         </div>
       </section>
 
-      <div class="docx-layout" :class="{ 'editor-open': editorOpen }">
+      <div class="docx-layout" :class="{ 'editor-open': editorOpen && !isExternal }">
         <aside class="docx-outline">
           <div class="outline-heading">
             <strong>文档目录</strong>
@@ -270,7 +273,7 @@
           </article>
         </main>
 
-        <aside v-if="editorOpen" class="docx-editor" aria-label="DOCX 页面编辑">
+        <aside v-if="editorOpen && !isExternal" class="docx-editor" aria-label="DOCX 页面编辑">
           <header>
             <div>
               <strong>页面编辑</strong>
@@ -439,8 +442,9 @@
           <span>{{ documentPages.length }} 页</span>
         </div>
         <div>
-          <SaveIcon :size="13" />
-          <span>简单文本、列表、单段表格单元格、字符格式和图片说明可编辑；未点击保存不会写盘</span>
+          <ShieldCheckIcon v-if="isExternal" :size="13" />
+          <SaveIcon v-else :size="13" />
+          <span>{{ isExternal ? '外部文件只读预览；源文件未修改' : '简单文本、列表、单段表格单元格、字符格式和图片说明可编辑；未点击保存不会写盘' }}</span>
         </div>
       </footer>
     </template>
@@ -452,6 +456,7 @@ import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'v
 import { invoke } from '@tauri-apps/api/core'
 import { NButton, useDialog, useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
+import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import {
   AlertTriangle as AlertIcon,
   ArrowLeft as ArrowLeftIcon,
@@ -600,6 +605,7 @@ interface DocxReadReport {
     expectedMetadataDigest: string
   }>
   readOnly: boolean
+  sourcePreserved: boolean
   model: {
     blocks: DocxBlock[]
     headings: Array<{ blockId: string; text: string; level: number }>
@@ -714,6 +720,7 @@ let restoringDraftSnapshot = false
 const fontSizeOptions = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72]
 
 const docxPath = computed(() => String(route.query.path || store.activeTabId || ''))
+const isExternal = computed(() => route.query.external === '1')
 const routeLocator = computed(() => typeof route.query.locator === 'string' ? route.query.locator : '')
 const fileName = computed(() => docxPath.value.split(/[\\/]/).pop() || '未命名.docx')
 const rememberDocxViewState = (path = docxPath.value) => {
@@ -1020,13 +1027,13 @@ const draftTableCellText = (block: DocxBlock, rowIndex: number, columnIndex: num
 }
 const blockEditClasses = (block: DocxBlock) => ({
   'search-hit': matchIds.value.has(block.id),
-  editable: Boolean(textTargetForBlock(block.id) || styleTargets.value.some(target => target.blockId === block.id)),
+  editable: !isExternal.value && Boolean(textTargetForBlock(block.id) || styleTargets.value.some(target => target.blockId === block.id)),
   'edit-selected': selectedTarget.value?.blockId === block.id,
   'has-draft': Array.from(draftEntries.value.values()).some(entry => entry.blockId === block.id),
   'editable-hyperlink': textTargetForBlock(block.id)?.carrier === 'hyperlink-label',
 })
 const tableCellEditClasses = (block: DocxBlock, rowIndex: number, columnIndex: number) => ({
-  editable: Boolean(tableTargetForCell(block.id, rowIndex, columnIndex)),
+  editable: !isExternal.value && Boolean(tableTargetForCell(block.id, rowIndex, columnIndex)),
   'edit-selected': selectedTextTarget()?.id === tableTargetForCell(block.id, rowIndex, columnIndex)?.id,
   'has-draft': Boolean(draftEntryForTarget(tableTargetForCell(block.id, rowIndex, columnIndex))),
   'editable-hyperlink': tableTargetForCell(block.id, rowIndex, columnIndex)?.carrier === 'hyperlink-label',
@@ -1044,7 +1051,7 @@ const draftStyleForBlock = (block: DocxBlock) => {
   }
 }
 const selectTextTarget = (target?: DocxTextTarget) => {
-  if (!target) return
+  if (!target || isExternal.value) return
   editorOpen.value = true
   editMode.value = 'text'
   selectedTargetId.value = target.id
@@ -1307,7 +1314,7 @@ const mayLeave = () => {
     })
   })
 }
-const leaveDocx = () => { router.back() }
+const leaveDocx = () => { if (isExternal.value) void router.push({ name: 'LibraryMode' }); else router.back() }
 const beforeUnload = (event: BeforeUnloadEvent) => {
   if (draftCount.value) {
     event.preventDefault()
@@ -1332,10 +1339,11 @@ const load = async () => {
   loading.value = true
   loadError.value = ''
   try {
-    report.value = await invoke<DocxReadReport>('read_docx_document', {
-      libraryRoot: store.libraryPath,
+    report.value = await invoke<DocxReadReport>(isExternal.value ? 'read_external_docx_document' : 'read_docx_document', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: docxPath.value,
     })
+    store.addTab({ id: docxPath.value, title: fileName.value, path: docxPath.value, isDirty: false, external: isExternal.value })
     const baseName = fileName.value.replace(/\.docx$/i, '')
     copyFileName.value = `${baseName}-LongEdit副本.docx`
     const availableMode = report.value.editableTextTargets.length
@@ -1347,7 +1355,8 @@ const load = async () => {
     if (viewState?.mode === 'text' && report.value.editableTextTargets.length) editMode.value = 'text'
     if (viewState?.mode === 'style' && report.value.editableStyleTargets.length) editMode.value = 'style'
     if (viewState?.mode === 'imageAltText' && report.value.editableImageTargets.length) editMode.value = 'imageAltText'
-    if (typeof viewState?.panelOpen === 'boolean') editorOpen.value = viewState.panelOpen
+    if (!isExternal.value && typeof viewState?.panelOpen === 'boolean') editorOpen.value = viewState.panelOpen
+    if (isExternal.value) editorOpen.value = false
     selectedTargetId.value = (
       availableMode === 'text'
         ? report.value.editableTextTargets[0]
@@ -1372,8 +1381,8 @@ const load = async () => {
   }
 }
 
-watch(docxPath, (_next, previous) => {
-  if (previous) rememberDocxViewState(previous)
+watch([docxPath, isExternal], (_next, previous) => {
+  if (previous?.[0]) rememberDocxViewState(previous[0])
   query.value = ''
   matchIndex.value = -1
   load()
