@@ -15,7 +15,7 @@ if (!log || log.externalPolicy !== 'edit' || log.routeName !== 'LogViewer'
   failures.push('LOG must expose guarded external editing without weakening its library contract')
 }
 
-for (const id of ['diagram', 'opml']) {
+for (const id of ['opml']) {
   if (registry.formats.find(format => format.id === id)?.externalPolicy !== 'import') {
     failures.push(`${id} must remain import-only until its specialized workspace is audited`)
   }

@@ -16,8 +16,8 @@ use commands::config::{
 };
 use commands::diagnostics::export_privacy_diagnostic_bundle;
 use commands::diagram::{
-    analyze_diagram_source, create_diagram_file, read_diagram_file, update_diagram_element,
-    write_diagram_file,
+    analyze_diagram_source, create_diagram_file, read_diagram_file, read_external_diagram_file,
+    update_diagram_element, write_diagram_file, write_external_diagram_file,
 };
 use commands::docx::{
     audit_docx_save_readiness, preview_docx_image_alt_text_patch_isolated_copy,
@@ -357,7 +357,9 @@ pub fn run() {
             write_canvas_file,
             write_external_canvas_file,
             read_diagram_file,
+            read_external_diagram_file,
             write_diagram_file,
+            write_external_diagram_file,
             analyze_diagram_source,
             update_diagram_element,
             read_docx_document,

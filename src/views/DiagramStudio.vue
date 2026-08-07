@@ -3,7 +3,7 @@
     <WorkspaceToolbar class="studio-toolbar">
       <WorkspaceFileIdentity class="studio-title">
         <button title="返回知识库" @click="router.push('/library')">←</button>
-        <div><strong>{{ fileName }}</strong><span>Mermaid 图表工作室 · {{ lineCount }} 行</span></div>
+        <div><strong>{{ fileName }}</strong><span>{{ isExternal ? '外部 Mermaid · 仅点击保存写回' : 'Mermaid 图表工作室' }} · {{ lineCount }} 行</span></div>
       </WorkspaceFileIdentity>
       <div class="studio-actions" data-command-strip data-horizontal-wheel="always">
         <label>模板
@@ -42,7 +42,7 @@
     <WorkspaceStateNotice v-else-if="loadError" as="main" class="studio-state" kind="error" tone="danger" title="无法打开图表"><p>{{ loadError }}</p><template #action><button @click="loadDiagram">重新加载</button></template></WorkspaceStateNotice>
     <main v-else class="studio-workspace" :class="{ 'with-inspector': showStructure }">
       <section class="source-panel">
-        <header><strong>源码</strong><span>修改后自动预览</span></header>
+        <header><strong>源码</strong><span>{{ isExternal ? '修改仅保留在当前页面，点击保存后写回源文件' : '修改后自动预览' }}</span></header>
         <div class="source-editor">
           <pre aria-hidden="true">{{ lineNumbers }}</pre>
           <textarea ref="sourceInput" v-model="source" spellcheck="false" aria-label="Mermaid 源码" @input="onSourceInput" @scroll="handleSourceScroll"></textarea>
@@ -98,7 +98,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { Redo2 as RedoIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useDialog, useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
 import WorkspaceField from '../components/workspace/WorkspaceField.vue'
 import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity.vue'
@@ -126,6 +126,7 @@ const templates = [
 const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
+const dialog = useDialog()
 const message = useMessage()
 const sourceInput = ref<HTMLTextAreaElement | null>(null)
 const source = ref('')
@@ -164,12 +165,17 @@ let loadGeneration = 0
 let lastSourceValue = ''
 
 const diagramPath = computed(() => String(route.query.path || ''))
+const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => diagramPath.value.split(/[\\/]/).pop() || 'Mermaid 图表')
 const lineCount = computed(() => Math.max(1, source.value.split('\n').length))
 const lineNumbers = computed(() => Array.from({ length: lineCount.value }, (_, index) => index + 1).join('\n'))
 const selectedNode = computed(() => selectedKind.value === 'node' ? structure.value.nodes.find(node => node.id === selectedId.value) : undefined)
 const selectedEdge = computed(() => selectedKind.value === 'edge' ? structure.value.edges.find(edge => edge.id === selectedId.value) : undefined)
 const exportReady = computed(() => !!svg.value && !parseError.value && !rendering.value && renderedSource.value === source.value && renderedTheme.value === diagramTheme.value)
+const errorText = (cause: unknown) => {
+  if (cause && typeof cause === 'object' && 'message' in cause) return String((cause as { message: unknown }).message)
+  return String(cause).replace(/^Error:\s*/, '')
+}
 
 const syncGutter = (event: Event) => {
   const textarea = event.target as HTMLTextAreaElement
@@ -330,8 +336,12 @@ const loadDiagram = async () => {
   loading.value = true
   loadError.value = ''
   try {
-    if (!store.libraryPath || !/\.(?:mmd|mermaid)$/i.test(diagramPath.value)) throw new Error('Mermaid 路径无效或知识库尚未配置')
-    const document = await invoke<DiagramDocument>('read_diagram_file', { libraryRoot: store.libraryPath, path: diagramPath.value })
+    if (!/\.(?:mmd|mermaid)$/i.test(diagramPath.value)) throw new Error('Mermaid 路径无效')
+    if (!isExternal.value && !store.libraryPath) throw new Error('知识库尚未配置')
+    const document = await invoke<DiagramDocument>(isExternal.value ? 'read_external_diagram_file' : 'read_diagram_file', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+      path: diagramPath.value,
+    })
     if (generation !== loadGeneration) return
     source.value = document.content
     lastSourceValue = document.content
@@ -339,7 +349,7 @@ const loadDiagram = async () => {
     redoStack.value = []
     signature.value = document.signature
     dirty.value = false
-    notice.value = '文件已加载'
+    notice.value = isExternal.value ? '外部文件已加载，修改尚未写回' : '文件已加载'
     const viewState = recallWorkspaceViewState(diagramPath.value)
     if (viewState) {
       zoom.value = viewState.zoom || 1
@@ -355,25 +365,48 @@ const loadDiagram = async () => {
     }
     scheduleRender(true)
   } catch (cause) {
-    if (generation === loadGeneration) loadError.value = String(cause).replace(/^Error:\s*/, '')
+    if (generation === loadGeneration) loadError.value = errorText(cause)
   } finally { if (generation === loadGeneration) loading.value = false }
 }
 const saveDiagram = async () => {
   if (!dirty.value || saving.value || parseError.value) return
+  if (isExternal.value) {
+    const confirmed = await new Promise<boolean>(resolve => {
+      dialog.warning({
+        title: '覆盖外部 Mermaid 源文件？',
+        content: '保存将覆盖当前外部 .mmd/.mermaid 文件。Long编辑会再次验证语法，并确认文件未被其他程序修改。',
+        positiveText: '确认保存',
+        negativeText: '取消',
+        closable: false,
+        maskClosable: false,
+        onPositiveClick: () => resolve(true),
+        onNegativeClick: () => resolve(false),
+      })
+    })
+    if (!confirmed) return
+  }
   saving.value = true
   try {
-    const document = await invoke<DiagramDocument>('write_diagram_file', {
-      libraryRoot: store.libraryPath,
+    const document = await invoke<DiagramDocument>(isExternal.value ? 'write_external_diagram_file' : 'write_diagram_file', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: diagramPath.value,
       content: source.value,
       expectedSignature: signature.value,
     })
     signature.value = document.signature
     dirty.value = false
-    notice.value = '已可靠保存'
+    notice.value = isExternal.value ? '外部源文件已可靠保存' : '已可靠保存'
     window.dispatchEvent(new CustomEvent('longedit:diagram-saved', { detail: document.path }))
     message.success('Mermaid 图表已保存')
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) } finally { saving.value = false }
+  } catch (cause: any) {
+    if (isExternal.value && cause?.code === 'external-modified') {
+      dialog.warning({
+        title: '外部 Mermaid 已发生变化',
+        content: '源文件在编辑期间被其他程序修改。Long编辑没有覆盖这些变化，请重新打开后再编辑。',
+        positiveText: '知道了',
+      })
+    } else message.error(errorText(cause))
+  } finally { saving.value = false }
 }
 const exportDiagram = async () => {
   if (!exportReady.value || exporting.value) return
@@ -413,10 +446,10 @@ const handleKeydown = (event: KeyboardEvent) => {
 const mayLeave = () => !dirty.value || window.confirm('Mermaid 图表还有未保存修改，确定离开吗？')
 const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
 
-watch(diagramPath, loadDiagram)
+watch([diagramPath, isExternal], loadDiagram)
 watch([zoom, showStructure, structureTab, diagramTheme, selectedId], () => rememberDiagramViewState())
 onBeforeRouteLeave(() => mayLeave())
-onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
+onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query.external === from.query.external) || mayLeave())
 onMounted(() => { loadDiagram(); window.addEventListener('beforeunload', beforeUnload) })
 onBeforeUnmount(() => { rememberDiagramViewState(); window.clearTimeout(renderTimer); window.removeEventListener('beforeunload', beforeUnload) })
 </script>

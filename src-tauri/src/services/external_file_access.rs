@@ -194,6 +194,7 @@ mod tests {
         let log_file = directory.join("application.log");
         let canvas_file = directory.join("project.canvas");
         let drawio_file = directory.join("diagram.drawio");
+        let mermaid_file = directory.join("diagram.mmd");
         let structured_files = [
             directory.join("data.json"),
             directory.join("settings.jsonc"),
@@ -208,6 +209,7 @@ mod tests {
         fs::write(&log_file, "INFO ready\n").unwrap();
         fs::write(&canvas_file, "{\"nodes\":[],\"edges\":[]}").unwrap();
         fs::write(&drawio_file, "<mxfile><diagram/></mxfile>").unwrap();
+        fs::write(&mermaid_file, "flowchart LR\n  A --> B\n").unwrap();
         for path in &structured_files {
             fs::write(path, "{}").unwrap();
         }
@@ -224,6 +226,8 @@ mod tests {
         assert!(access.resolve_editable(&canvas_file).is_ok());
         assert!(access.authorize_editable(&drawio_file).is_ok());
         assert!(access.resolve_editable(&drawio_file).is_ok());
+        assert!(access.authorize_editable(&mermaid_file).is_ok());
+        assert!(access.resolve_editable(&mermaid_file).is_ok());
         for path in &structured_files {
             assert!(access.authorize_editable(path).is_ok());
             assert!(access.resolve_editable(path).is_ok());

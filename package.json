@@ -90,6 +90,7 @@
     "check:external-canvas-workspace": "node scripts/check-external-canvas-workspace.mjs",
     "check:external-table-workspace": "node scripts/check-external-table-workspace.mjs",
     "check:external-drawio-workspace": "node scripts/check-external-drawio-workspace.mjs",
+    "check:external-mermaid-workspace": "node scripts/check-external-mermaid-workspace.mjs",
     "check:sidebar-tabs-responsive": "node scripts/check-sidebar-tabs-responsive.mjs",
     "check:file-tree-appearance": "node scripts/check-file-tree-appearance.mjs",
     "check:ux38e-canvas-explicit-save": "node scripts/check-ux38e-canvas-explicit-save.mjs",

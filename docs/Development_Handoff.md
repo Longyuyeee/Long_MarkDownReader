@@ -814,3 +814,9 @@ EA-4C 已完成 `.table.json`、`.csv`、`.tsv` 外部专用编辑工作区。�
 EA-4D1 已完成 `.drawio`、`.dio` 外部结构化基础编辑。外部文件通过独立授权读取，专用 writer 在保存前重新执行 XML、压缩页、资源协议和结构预算门禁，并验证源签名；外链和外部图片只作为数据保留，不执行、不自动打开也不加载。草稿只驻留内存，点击保存后使用应用内确认覆盖，外部修改冲突不会被覆盖。
 
 外部能力现为 27 类 `edit`、8 类 `preview` 与 8 类 `import`，安装器关联仍只有 `.md/.markdown`。接手后进入 EA-4D2，单独开放并验证 Mermaid `.mmd/.mermaid` 的外部源码编辑、实时预览、导出边界与签名保护；OPML 继续保持 `import`，旧 Office/WPS 六类继续显式转换。详见 [`UX50N_External_Drawio_Workspace_Audit_2026-08-07.md`](./UX50N_External_Drawio_Workspace_Audit_2026-08-07.md)。
+
+## 2026-08-07 EA-4D2 External Mermaid Workspace
+
+Mermaid `.mmd/.mermaid` 已进入授权后的外部直接编辑：外部路径不再依赖知识库，实时预览保持严格安全模式，修改只在点击保存或 Ctrl+S 后写回；覆盖前确认，后端继续执行 2 MiB、UTF-8、扩展名、语法和源签名检查，外部冲突不会覆盖。SVG/PNG 导出仍与源文件写回隔离。
+
+外部能力现为 28 类 `edit`、8 类 `preview` 与 7 类 `import`，安装器关联仍只有 `.md/.markdown`。接手后进入 EA-4D3，单独开放并验证 OPML 外部 XML 保真、画布拖动/历史、显式保存和冲突保护；旧 Office/WPS 六类继续显式转换。详见 [`UX50O_External_Mermaid_Workspace_Audit_2026-08-07.md`](./UX50O_External_Mermaid_Workspace_Audit_2026-08-07.md)。
