@@ -1,4 +1,6 @@
-use crate::commands::formats::write_registered_text_document;
+use crate::commands::formats::{
+    write_external_registered_text_document, write_registered_text_document,
+};
 use crate::formats::json::{
     analyze_json_source as analyze_source,
     append_json_array_item_source as append_array_item_source,
@@ -10,6 +12,40 @@ use crate::formats::json::{
     JsonSourceAnalysis,
 };
 use crate::formats::text::{TextDocumentError, TextDocumentSnapshot};
+use crate::services::external_file_access::ExternalFileAccess;
+use tauri::State;
+
+fn validate_save(
+    content: &str,
+    format_id: &str,
+    allow_invalid: bool,
+) -> Result<bool, TextDocumentError> {
+    let jsonc = match format_id {
+        "json" => false,
+        "jsonc" => true,
+        _ => {
+            return Err(TextDocumentError::simple(
+                "json-format-required",
+                "JSON 源码保存只接受已注册的 JSON 或 JSONC 格式",
+            ));
+        }
+    };
+    let analysis = analyze_source(content, jsonc);
+    if !analysis.valid && !allow_invalid {
+        let location = analysis
+            .diagnostics
+            .iter()
+            .find(|diagnostic| diagnostic.severity == "error")
+            .map(|diagnostic| format!("第 {} 行，第 {} 列", diagnostic.line, diagnostic.column))
+            .unwrap_or_else(|| "未知位置".into());
+        return Err(TextDocumentError::recoverable(
+            "invalid-json-save-blocked",
+            format!("JSON 源码存在语法错误（{location}），已阻止覆盖原文件"),
+            "修复语法后保存，或明确选择“按源码保存”保留当前非法内容",
+        ));
+    }
+    Ok(jsonc)
+}
 
 #[tauri::command]
 pub fn analyze_json_source(content: String, jsonc: bool) -> JsonSourceAnalysis {
@@ -108,30 +144,7 @@ pub async fn write_json_source_document(
     expected_signature: Option<String>,
     allow_invalid: bool,
 ) -> Result<TextDocumentSnapshot, TextDocumentError> {
-    let jsonc = match format_id.as_str() {
-        "json" => false,
-        "jsonc" => true,
-        _ => {
-            return Err(TextDocumentError::simple(
-                "json-format-required",
-                "JSON 源码保存只接受已注册的 JSON 或 JSONC 格式",
-            ));
-        }
-    };
-    let analysis = analyze_source(&content, jsonc);
-    if !analysis.valid && !allow_invalid {
-        let location = analysis
-            .diagnostics
-            .iter()
-            .find(|diagnostic| diagnostic.severity == "error")
-            .map(|diagnostic| format!("第 {} 行，第 {} 列", diagnostic.line, diagnostic.column))
-            .unwrap_or_else(|| "未知位置".into());
-        return Err(TextDocumentError::recoverable(
-            "invalid-json-save-blocked",
-            format!("JSON 源码存在语法错误（{location}），已阻止覆盖原文件"),
-            "修复语法后保存，或明确选择“按源码保存”保留当前非法内容",
-        ));
-    }
+    validate_save(&content, &format_id, allow_invalid)?;
 
     write_registered_text_document(
         library_root,
@@ -140,6 +153,27 @@ pub async fn write_json_source_document(
         content,
         expected_signature,
         None,
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn write_external_json_source_document(
+    path: String,
+    format_id: String,
+    content: String,
+    expected_signature: Option<String>,
+    allow_invalid: bool,
+    access: State<'_, ExternalFileAccess>,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    validate_save(&content, &format_id, allow_invalid)?;
+    write_external_registered_text_document(
+        path,
+        format_id,
+        content,
+        expected_signature,
+        None,
+        &access,
     )
     .await
 }

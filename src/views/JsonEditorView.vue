@@ -4,17 +4,18 @@
 
     <header class="json-toolbar">
       <div class="document-identity">
-        <n-button quaternary circle size="small" title="返回知识库" @click="leaveEditor">
+        <n-button quaternary circle size="small" :title="isExternal ? '返回资料库' : '返回知识库'" @click="leaveEditor">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
         <FileJsonIcon :size="18" />
         <div class="document-title">
           <strong>{{ fileName }}</strong>
           <span aria-live="polite">
-            {{ formatLabel }}
+            <template v-if="isExternal">外部文件 · </template>{{ formatLabel }}
             <template v-if="readOnly"> · 只读预览</template>
             <template v-else-if="dirty"> · 未保存</template>
             <template v-else> · 已同步</template>
+            <template v-if="isExternal && !readOnly"> · 仅点击保存写回</template>
           </span>
         </div>
       </div>
@@ -605,6 +606,7 @@ const { inspectorVisible, toggleInspector } = useResponsiveInspector(780)
 const editorHost = ref<HTMLElement | null>(null)
 const treeViewport = ref<HTMLElement | null>(null)
 const jsonPath = computed(() => String(route.query.path || ''))
+const isExternal = computed(() => route.query.external === '1')
 const format = computed(() => findFileFormat(jsonPath.value))
 const formatLabel = computed(() => format.value?.label || 'JSON')
 const fileName = computed(() => jsonPath.value.split(/[\\/]/).pop() || '未命名 JSON')
@@ -829,6 +831,7 @@ const registerCurrentTab = () => {
     title: fileName.value,
     path: jsonPath.value,
     isDirty: dirty.value,
+    external: isExternal.value,
   })
   syncCurrentTab(dirty.value)
 }
@@ -994,8 +997,8 @@ const load = async (discardDraft = false) => {
       await restoreTabDraft(draft)
       return
     }
-    const loaded = await invoke<TextDocumentSnapshot>('read_text_document', {
-      libraryRoot: store.libraryPath,
+    const loaded = await invoke<TextDocumentSnapshot>(isExternal.value ? 'read_external_text_document' : 'read_text_document', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: jsonPath.value,
       formatId: format.value!.id,
       readOptions: undefined,
@@ -1440,8 +1443,8 @@ const save = async (allowInvalid = false) => {
       })
       return
     }
-    const saved = await invoke<TextDocumentSnapshot>('write_json_source_document', {
-      libraryRoot: store.libraryPath,
+    const saved = await invoke<TextDocumentSnapshot>(isExternal.value ? 'write_external_json_source_document' : 'write_json_source_document', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: jsonPath.value,
       formatId: format.value.id,
       content,
@@ -1491,7 +1494,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   }
 }
 
-watch(jsonPath, (_, previousPath) => {
+watch([jsonPath, isExternal], (_current, [previousPath]) => {
   if (previousPath) syncCurrentTab(dirty.value)
   void load()
 })

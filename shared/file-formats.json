@@ -231,7 +231,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "普通 JSON 支持软件内创建、源码编辑、实时诊断、草稿恢复、树形预览、文本索引，以及受保护的标量、键、对象属性和数组项增删改。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
       "creation": { "defaultExtension": ".json", "defaultContent": "{}\n", "defaultName": "未命名数据" }
     },
@@ -257,7 +257,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "JSONC 支持软件内创建、保留注释的源码编辑、实时诊断、草稿恢复、树形预览、文本索引和受保护的局部结构编辑；歧义注释、重复键和精度风险会阻断结构化写回。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
       "creation": { "defaultExtension": ".jsonc", "defaultContent": "{}\n", "defaultName": "未命名配置" }
     },
@@ -270,7 +270,7 @@
       "maxBytes": 8388608,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "YAML 支持创建、源码高亮与折叠、实时诊断、多文档结构提纲、草稿恢复、文本索引和带冲突保护的可靠保存。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
       "creation": { "defaultExtension": ".yaml", "defaultContent": "# YAML 文档\n\nname: 未命名\nitems: []\n", "defaultName": "未命名配置" }
     },
@@ -283,7 +283,7 @@
       "maxBytes": 8388608,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "XML 支持创建、源码高亮与折叠、实时安全校验、命名空间感知结构提纲、草稿恢复、文本索引和可靠保存；DOCTYPE 被安全阻断，混合内容不提供冒险的自动格式化。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
       "creation": { "defaultExtension": ".xml", "defaultContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<document>\n  <item>未命名内容</item>\n</document>\n", "defaultName": "未命名 XML" }
     },
@@ -296,7 +296,7 @@
       "maxBytes": 5242880,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "安全源码编辑", "saveMode": "overwrite", "description": "SVG 支持创建、源码高亮、实时安全诊断、白名单净化预览、草稿恢复、文本索引和带签名冲突保护的可靠保存；脚本、事件属性、外部引用、foreignObject、处理指令和非受控元素会被阻断。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
       "creation": { "defaultExtension": ".svg", "defaultContent": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 320 180\" role=\"img\">\n  <title>未命名 SVG</title>\n  <rect x=\"12\" y=\"12\" width=\"296\" height=\"156\" rx=\"12\" fill=\"#36a18b\"/>\n  <text x=\"160\" y=\"98\" fill=\"#ffffff\" font-size=\"24\" text-anchor=\"middle\">LongEdit SVG</text>\n</svg>\n", "defaultName": "未命名 SVG" }
     },
@@ -335,7 +335,7 @@
       "maxBytes": 8388608,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "TOML 支持创建、语法高亮、实时诊断、键路径提纲、草稿恢复、文本索引和带冲突保护的可靠保存。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
       "creation": { "defaultExtension": ".toml", "defaultContent": "title = \"未命名配置\"\n\n[settings]\nenabled = true\n", "defaultName": "未命名配置" }
     },

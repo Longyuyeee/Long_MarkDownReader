@@ -67,7 +67,7 @@ use commands::json::{
     analyze_json_source, append_json_array_item_source, append_json_object_property_source,
     remove_json_array_item_source, remove_json_object_property_source,
     rename_json_object_key_source, replace_json_scalar_source, transform_json_source,
-    write_json_source_document,
+    write_external_json_source_document, write_json_source_document,
 };
 use commands::legacy_binary_office::{
     convert_legacy_binary_office_to_modern_copy, preflight_legacy_binary_office,
@@ -92,12 +92,16 @@ use commands::pptx::{
     read_pptx_presentation, save_pptx_patch_copy,
 };
 use commands::search::{get_all_tags, search_all_libraries, search_by_tag, search_library};
-use commands::svg::{analyze_svg_source, write_svg_source_document};
+use commands::svg::{
+    analyze_svg_source, write_external_svg_source_document, write_svg_source_document,
+};
 use commands::system::{exit_app, get_url_title, open_default_apps_settings};
 use commands::table::{
     create_table_file, export_table_file, import_table_file, read_table_file, write_table_file,
 };
-use commands::toml::{analyze_toml_source, write_toml_source_document};
+use commands::toml::{
+    analyze_toml_source, write_external_toml_source_document, write_toml_source_document,
+};
 use commands::updater::{check_community_update, install_community_update};
 use commands::workbook::{
     audit_workbook_pivot_multi_axis_isolated_copy, get_workbook_capabilities,
@@ -119,8 +123,12 @@ pub use commands::workbook::{
 };
 use commands::workspace::{analyze_workspace_health, get_workspace_overview};
 use commands::wps_native::inspect_wps_native_file;
-use commands::xml::{analyze_xml_source, write_xml_source_document};
-use commands::yaml::{analyze_yaml_source, write_yaml_source_document};
+use commands::xml::{
+    analyze_xml_source, write_external_xml_source_document, write_xml_source_document,
+};
+use commands::yaml::{
+    analyze_yaml_source, write_external_yaml_source_document, write_yaml_source_document,
+};
 use services::data_migration::check_and_migrate_data;
 use services::external_file_access::ExternalFileAccess;
 use services::knowledge_index::KnowledgeIndexRuntime;
@@ -305,17 +313,22 @@ pub fn run() {
             replace_json_scalar_source,
             transform_json_source,
             write_json_source_document,
+            write_external_json_source_document,
             analyze_yaml_source,
             write_yaml_source_document,
+            write_external_yaml_source_document,
             analyze_xml_source,
             write_xml_source_document,
+            write_external_xml_source_document,
             analyze_svg_source,
             write_svg_source_document,
+            write_external_svg_source_document,
             analyze_drawio_source,
             transform_drawio_cell_source,
             write_drawio_source_document,
             analyze_toml_source,
             write_toml_source_document,
+            write_external_toml_source_document,
             read_text_document,
             read_text_document_range,
             write_log_document,

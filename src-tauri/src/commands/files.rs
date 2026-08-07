@@ -390,8 +390,8 @@ pub async fn pick_external_editable_file(
     let selected = app_handle
         .dialog()
         .file()
-        .set_title("打开可编辑文本文件")
-        .add_filter("可编辑文本", &extensions)
+        .set_title("打开可编辑文件")
+        .add_filter("可编辑文本、代码与结构化源码", &extensions)
         .blocking_pick_file();
     let Some(selected) = selected else {
         return Ok(None);

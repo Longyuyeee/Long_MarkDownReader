@@ -3,13 +3,13 @@
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
     <header class="toolbar">
       <div class="identity">
-        <n-button quaternary circle size="small" title="返回知识库" @click="router.push({ name: 'LibraryMode' })">
+        <n-button quaternary circle size="small" :title="isExternal ? '返回资料库' : '返回知识库'" @click="router.push({ name: 'LibraryMode' })">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
         <n-icon :component="isSvg ? ImageIcon : FileCodeIcon" size="22" class="accent" />
         <div>
           <strong :title="xmlPath">{{ fileName }}</strong>
-          <span aria-live="polite">{{ formatLabel }} · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}</span>
+          <span aria-live="polite"><template v-if="isExternal">外部文件 · </template>{{ formatLabel }} · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}<template v-if="isExternal && !readOnly"> · 仅点击保存写回</template></span>
         </div>
       </div>
       <div class="actions">
@@ -153,6 +153,7 @@ const message = useMessage()
 const { inspectorVisible, toggleInspector } = useResponsiveInspector()
 const editorHost = ref<HTMLElement | null>(null)
 const xmlPath = computed(() => String(route.query.path || ''))
+const isExternal = computed(() => route.query.external === '1')
 const format = computed(() => findFileFormat(xmlPath.value))
 const isSvg = computed(() => format.value?.id === 'svg')
 const formatLabel = computed(() => isSvg.value ? 'SVG' : 'XML')
@@ -201,7 +202,7 @@ const syncTab = (isDirty = dirty.value) => {
   tab.textEncoding = encoding.value; tab.textReadOnlyReason = readOnlyReason.value; tab.textSize = fileSize.value; tab.textModified = modified.value
 }
 const registerTab = () => {
-  store.addTab({ id: xmlPath.value, title: fileName.value, path: xmlPath.value, isDirty: dirty.value })
+  store.addTab({ id: xmlPath.value, title: fileName.value, path: xmlPath.value, isDirty: dirty.value, external: isExternal.value })
   syncTab()
 }
 const analyze = async (content: string) => {
@@ -264,7 +265,7 @@ const load = async (discardDraft = false) => {
     if (!xmlPath.value || !['xml', 'svg'].includes(format.value?.id || '')) throw new Error('当前路径不是已注册的 XML 或 SVG 文件')
     const draft = currentTab.value
     if (!discardDraft && draft?.isDirty && draft.content !== undefined) { await restoreDraft(draft); return }
-    const value = await invoke<Snapshot>('read_text_document', { libraryRoot: store.libraryPath, path: xmlPath.value, formatId: format.value?.id, readOptions: undefined })
+    const value = await invoke<Snapshot>(isExternal.value ? 'read_external_text_document' : 'read_text_document', { ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }), path: xmlPath.value, formatId: format.value?.id, readOptions: undefined })
     if (generation === loadGeneration) await applySnapshot(value)
   } catch (error) { if (generation === loadGeneration) loadError.value = errorText(error) }
   finally { if (generation === loadGeneration) loading.value = false }
@@ -295,8 +296,11 @@ const save = async (allowInvalid = false) => {
       }
       return
     }
-    const value = await invoke<Snapshot>(isSvg.value ? 'write_svg_source_document' : 'write_xml_source_document', {
-      libraryRoot: store.libraryPath, path: xmlPath.value, content, expectedSignature: signature.value,
+    const writeCommand = isExternal.value
+      ? (isSvg.value ? 'write_external_svg_source_document' : 'write_external_xml_source_document')
+      : (isSvg.value ? 'write_svg_source_document' : 'write_xml_source_document')
+    const value = await invoke<Snapshot>(writeCommand, {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }), path: xmlPath.value, content, expectedSignature: signature.value,
       ...(isSvg.value ? {} : { allowInvalid }),
     })
     if (editor.state.doc.toString() === content) await applySnapshot(value)
@@ -318,7 +322,7 @@ const reload = async () => {
 const keydown = (event: KeyboardEvent) => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void save() }
 }
-watch(xmlPath, (_, previous) => { if (previous) syncTab(); void load() })
+watch([xmlPath, isExternal], (_current, [previous]) => { if (previous) syncTab(); void load() })
 onMounted(async () => {
   await nextTick()
   if (editorHost.value) editor = new EditorView({ state: EditorState.create({ doc: '', extensions: extensions(true) }), parent: editorHost.value })

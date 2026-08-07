@@ -49,6 +49,19 @@ fn text_boundary_error(code: &str, message: impl Into<String>) -> TextDocumentEr
     TextDocumentError::simple(code, message.into())
 }
 
+fn ensure_general_external_writer(format_id: &str) -> Result<(), TextDocumentError> {
+    if matches!(
+        format_id,
+        "json" | "jsonc" | "yaml" | "xml" | "svg" | "toml"
+    ) {
+        return Err(TextDocumentError::simple(
+            "specialized-writer-required",
+            "结构化源码必须通过对应的专用外部保存命令执行语法与安全门禁",
+        ));
+    }
+    Ok(())
+}
+
 fn read_resolved_text_document(
     path: &Path,
     format: &crate::formats::file_registry::FileFormatDefinition,
@@ -275,6 +288,30 @@ pub(crate) async fn write_registered_text_document(
     write_resolved_text_document(&path, format, content, expected_signature, save_policy)
 }
 
+pub(crate) async fn write_external_registered_text_document(
+    path: String,
+    format_id: String,
+    content: String,
+    expected_signature: Option<String>,
+    save_policy: Option<TextSavePolicy>,
+    access: &ExternalFileAccess,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    let format = ensure_capability(&format_id, "edit")
+        .map_err(|error| text_boundary_error("format-edit-unsupported", error))?;
+    if format.adapters.writer.as_deref() != Some("text") {
+        return Err(text_boundary_error(
+            "adapter-mismatch",
+            format!("{} 不是通用文本写入格式", format.label),
+        ));
+    }
+    let path = access
+        .resolve_editable(path)
+        .map_err(|error| text_boundary_error("external-not-authorized", error))?;
+    ensure_matching_format(&path, &format_id)
+        .map_err(|error| text_boundary_error("format-mismatch", error))?;
+    write_resolved_text_document(&path, format, content, expected_signature, save_policy)
+}
+
 #[tauri::command]
 pub async fn write_text_document(
     library_root: String,
@@ -400,6 +437,7 @@ pub async fn write_external_text_document(
     save_policy: Option<TextSavePolicy>,
     access: State<'_, ExternalFileAccess>,
 ) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    ensure_general_external_writer(&format_id)?;
     let format = ensure_capability(&format_id, "edit")
         .map_err(|error| text_boundary_error("format-edit-unsupported", error))?;
     if format.adapters.writer.as_deref() != Some("text") {
@@ -495,6 +533,16 @@ pub async fn create_format_file(
 mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn general_external_writer_rejects_specialized_structured_sources() {
+        for format_id in ["json", "jsonc", "yaml", "xml", "svg", "toml"] {
+            let error = ensure_general_external_writer(format_id).unwrap_err();
+            assert_eq!(error.code, "specialized-writer-required");
+        }
+        assert!(ensure_general_external_writer("plain-text").is_ok());
+        assert!(ensure_general_external_writer("typescript").is_ok());
+    }
 
     #[test]
     fn plain_text_adapter_creates_reads_writes_and_rejects_format_spoofing() {

@@ -14,40 +14,61 @@ const navigation = read('src/services/externalFileNavigation.ts')
 const app = read('src/App.vue')
 const markdown = read('src/views/TempMode.vue')
 const text = read('src/views/TextEditorView.vue')
+const structuredViews = {
+  json: read('src/views/JsonEditorView.vue'),
+  yaml: read('src/views/YamlEditorView.vue'),
+  xml: read('src/views/XmlEditorView.vue'),
+  toml: read('src/views/TomlEditorView.vue'),
+}
 const settings = read('src/views/SettingsView.vue')
 const capabilities = read('src/views/ReleaseCapabilitiesView.vue')
 const access = read('src-tauri/src/services/external_file_access.rs')
 const commands = read('src-tauri/src/commands/files.rs')
+const formatCommands = read('src-tauri/src/commands/formats.rs')
+const structuredCommands = {
+  json: read('src-tauri/src/commands/json.rs'),
+  yaml: read('src-tauri/src/commands/yaml.rs'),
+  xml: read('src-tauri/src/commands/xml.rs'),
+  svg: read('src-tauri/src/commands/svg.rs'),
+  toml: read('src-tauri/src/commands/toml.rs'),
+}
 const packageJson = json('package.json')
 const audit = read('docs/UX50A_External_Markdown_Text_Workspace_Audit_2026-08-06.md')
 const ea2Audit = read('docs/UX50B_External_Text_Code_Default_App_Audit_2026-08-07.md')
+const ea2bAudit = read('docs/UX50C_External_Structured_Source_Audit_2026-08-07.md')
 
 const expectedEditableIds = [
-  'c-family', 'editorconfig', 'env', 'gitignore', 'go', 'ini', 'javascript', 'jvm-code',
-  'markdown', 'plain-text', 'properties', 'python', 'rust', 'shell', 'sql', 'typescript', 'web-source',
+  'c-family', 'editorconfig', 'env', 'gitignore', 'go', 'ini', 'javascript', 'json', 'jsonc',
+  'jvm-code', 'markdown', 'plain-text', 'properties', 'python',
+  'rust', 'shell', 'sql', 'svg', 'toml', 'typescript', 'web-source', 'xml', 'yaml',
 ]
 const editableIds = registry.formats
   .filter(format => format.externalPolicy === 'edit')
   .map(format => format.id)
   .sort()
 if (JSON.stringify(editableIds) !== JSON.stringify(expectedEditableIds)) {
-  failures.push(`EA-2A external edit boundary drift: ${editableIds.join(', ')}`)
+  failures.push(`EA-2B external edit boundary drift: ${editableIds.join(', ')}`)
 }
+const dedicatedIds = new Set(['json', 'jsonc', 'yaml', 'xml', 'svg', 'toml'])
 const invalidTextEditors = registry.formats.filter(format =>
-  format.externalPolicy === 'edit'
-  && format.id !== 'markdown'
+  format.externalPolicy === 'edit' && format.id !== 'markdown' && !dedicatedIds.has(format.id)
   && (format.routeName !== 'TextEditor' || format.adapters.writer !== 'text'),
 )
 if (invalidTextEditors.length) {
-  failures.push(`EA-2A external edit formats bypass TextEditor: ${invalidTextEditors.map(format => format.id).join(', ')}`)
+  failures.push(`EA-2B general external edit formats bypass TextEditor: ${invalidTextEditors.map(format => format.id).join(', ')}`)
+}
+for (const [id, routeName] of Object.entries({ json: 'JsonEditor', jsonc: 'JsonEditor', yaml: 'YamlEditor', xml: 'XmlEditor', svg: 'XmlEditor', toml: 'TomlEditor' })) {
+  const format = registry.formats.find(item => item.id === id)
+  if (format?.externalPolicy !== 'edit' || format.routeName !== routeName || format.adapters.writer !== 'text') {
+    failures.push(`${id} dedicated external route contract drift`)
+  }
 }
 
 for (const token of [
   "format.externalPolicy !== 'edit'",
   "format.id === 'markdown'",
   "name: 'TempMode'",
-  "format.routeName === 'TextEditor'",
-  "name: 'TextEditor'",
+  'return { name: format.routeName, query }',
   "external: '1'",
 ]) requireText(navigation, token, `external route mapping is missing ${token}`)
 requireText(app, 'externalRouteForFile(cleanPath)', 'App does not use the explicit external route mapping')
@@ -73,6 +94,23 @@ for (const token of [
   '外部文件 · ',
   '仅点击保存写回',
 ]) requireText(text, token, `external text workspace is missing ${token}`)
+
+for (const [name, source] of Object.entries(structuredViews)) {
+  for (const token of [
+    "const isExternal = computed(() => route.query.external === '1')",
+    "'read_external_text_document'",
+    'external: isExternal.value',
+    '外部文件 · ',
+    '仅点击保存写回',
+  ]) requireText(source, token, `${name} external workspace is missing ${token}`)
+}
+for (const [name, source] of Object.entries(structuredCommands)) {
+  requireText(source, `write_external_${name}_source_document`, `${name} dedicated external writer is missing`)
+  requireText(source, 'write_external_registered_text_document', `${name} external writer bypasses the authorized reliable writer`)
+}
+for (const token of ['"json" | "jsonc" | "yaml" | "xml" | "svg" | "toml"', 'specialized-writer-required']) {
+  requireText(formatCommands, token, `generic external writer boundary is missing ${token}`)
+}
 
 for (const token of [
   '格式能力与默认应用',
@@ -111,10 +149,13 @@ for (const token of ['EA-1', 'Markdown', 'TXT', '显式保存', 'Windows', 'EA-2
 for (const token of ['EA-2A', '17', 'TextEditor', 'Windows', '默认应用', 'JSON', 'EA-2B']) {
   requireText(ea2Audit, token, `EA-2A audit is missing ${token}`)
 }
+for (const token of ['EA-2B', '23', 'JSONC', 'YAML', 'XML', 'SVG', 'TOML', '专用', '显式保存', 'EA-3']) {
+  requireText(ea2bAudit, token, `EA-2B audit is missing ${token}`)
+}
 
 if (failures.length) {
   console.error(failures.map(message => `- ${message}`).join('\n'))
   process.exit(1)
 }
 
-console.log('EA-2A external workspace passed: 17 Markdown/text/code profiles use explicit authorization, user-confirmed saves, per-format capability guidance, and the unchanged Windows association boundary.')
+console.log('EA-2B external workspace passed: 23 profiles include six dedicated structured-source routes with explicit authorization, specialized save gates, and unchanged Windows associations.')

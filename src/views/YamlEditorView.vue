@@ -4,13 +4,13 @@
 
     <header class="yaml-toolbar">
       <div class="document-identity">
-        <n-button quaternary circle size="small" title="返回知识库" @click="leaveEditor">
+        <n-button quaternary circle size="small" :title="isExternal ? '返回资料库' : '返回知识库'" @click="leaveEditor">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
         <n-icon :component="FileCodeIcon" size="22" class="format-icon" />
         <div class="document-title">
           <strong :title="yamlPath">{{ fileName }}</strong>
-          <span aria-live="polite">YAML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}</span>
+          <span aria-live="polite"><template v-if="isExternal">外部文件 · </template>YAML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}<template v-if="isExternal && !readOnly"> · 仅点击保存写回</template></span>
         </div>
       </div>
 
@@ -248,6 +248,7 @@ const message = useMessage()
 const { inspectorVisible, toggleInspector } = useResponsiveInspector()
 const editorHost = ref<HTMLElement | null>(null)
 const yamlPath = computed(() => String(route.query.path || ''))
+const isExternal = computed(() => route.query.external === '1')
 const format = computed(() => findFileFormat(yamlPath.value))
 const fileName = computed(() => yamlPath.value.split(/[\\/]/).pop() || '未命名 YAML')
 const currentTab = computed(() => store.tabs.find(tab => tab.path === yamlPath.value))
@@ -339,6 +340,7 @@ const registerCurrentTab = () => {
     title: fileName.value,
     path: yamlPath.value,
     isDirty: dirty.value,
+    external: isExternal.value,
   })
   syncCurrentTab(dirty.value)
 }
@@ -460,8 +462,8 @@ const load = async (discardDraft = false) => {
       await restoreTabDraft(draft)
       return
     }
-    const snapshot = await invoke<TextDocumentSnapshot>('read_text_document', {
-      libraryRoot: store.libraryPath,
+    const snapshot = await invoke<TextDocumentSnapshot>(isExternal.value ? 'read_external_text_document' : 'read_text_document', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: yamlPath.value,
       formatId: 'yaml',
       readOptions: undefined,
@@ -512,8 +514,8 @@ const save = async (allowInvalid = false) => {
       })
       return
     }
-    const snapshot = await invoke<TextDocumentSnapshot>('write_yaml_source_document', {
-      libraryRoot: store.libraryPath,
+    const snapshot = await invoke<TextDocumentSnapshot>(isExternal.value ? 'write_external_yaml_source_document' : 'write_yaml_source_document', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: yamlPath.value,
       content,
       expectedSignature: signature.value,
@@ -562,7 +564,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   }
 }
 
-watch(yamlPath, (_, previousPath) => {
+watch([yamlPath, isExternal], (_current, [previousPath]) => {
   if (previousPath) syncCurrentTab(dirty.value)
   void load()
 })
