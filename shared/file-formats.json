@@ -345,10 +345,10 @@
       "extensions": [".canvas"],
       "mimeTypes": ["application/json", "application/vnd.jsoncanvas+json"],
       "routeName": "Canvas",
-      "maxBytes": 16777216,
+      "maxBytes": 20971520,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "JSON Canvas 使用开放事实源，可编辑、创建、索引并可靠保存。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "canvas", "writer": "canvas", "creator": "text-template", "indexer": "json-text" },
       "creation": { "defaultExtension": ".canvas", "defaultContent": "{\n  \"nodes\": [],\n  \"edges\": []\n}\n", "defaultName": "未命名画布" }
     },

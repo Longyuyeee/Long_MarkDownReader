@@ -1,17 +1,19 @@
 <template>
-  <div class="canvas-page">
+  <div class="canvas-page" :class="{ 'with-tabs': isExternal }">
     <header class="canvas-header">
       <div class="header-main">
         <button class="icon-button" title="返回知识库" @click="router.push('/library')">←</button>
         <div>
           <div class="canvas-title">{{ fileName }}</div>
-          <div class="canvas-subtitle">开放 JSON Canvas · {{ visibleNodes.length }}/{{ document.nodes.length }} 个节点可见 · 当前渲染 {{ renderedNodes.length }} 节点 / {{ renderedEdges.length }} 连线<template v-if="measuredFps"> · {{ measuredFps }} FPS</template></div>
+          <div class="canvas-subtitle">{{ isExternal ? '外部 JSON Canvas · 仅点击保存写回' : '开放 JSON Canvas' }} · {{ visibleNodes.length }}/{{ document.nodes.length }} 个节点可见 · 当前渲染 {{ renderedNodes.length }} 节点 / {{ renderedEdges.length }} 连线<template v-if="measuredFps"> · {{ measuredFps }} FPS</template></div>
         </div>
       </div>
       <div class="save-state" :class="saveState" aria-live="polite">
         <span class="state-dot"></span>{{ saveStateLabel }}
       </div>
     </header>
+
+    <WorkspaceTabs v-if="isExternal" />
 
     <div class="canvas-toolbar" role="toolbar" aria-label="Canvas 工具栏" data-command-strip data-horizontal-wheel="always">
       <button :class="{ active: tool === 'select' }" :aria-pressed="tool === 'select'" @click="setTool('select')">选择</button>
@@ -20,8 +22,8 @@
       <span class="toolbar-divider"></span>
       <button @click="addTextNode">＋ 文本卡片</button>
       <button @click="addFileNode">＋ 文件</button>
-      <button @click="addChartNode">＋ 图表</button>
-      <button @click="addMermaidNode">＋ Mermaid</button>
+      <button v-if="!isExternal" @click="addChartNode">＋ 图表</button>
+      <button v-if="!isExternal" @click="addMermaidNode">＋ Mermaid</button>
       <button @click="addLinkNode">＋ 链接</button>
       <button @click="addGroupNode">＋ 分组</button>
       <button :class="{ active: tool === 'connect' }" :aria-pressed="tool === 'connect'" @click="setTool('connect')">
@@ -146,7 +148,7 @@
           </template>
           <template v-else-if="node.type === 'file'">
             <TableChartEmbed
-              v-if="isChartNode(node)"
+              v-if="!isExternal && isChartNode(node)"
               compact
               :library-root="store.libraryPath"
               :source="node.file!"
@@ -155,7 +157,7 @@
               @open="openEmbeddedChart"
             />
             <MermaidDiagramEmbed
-              v-else-if="isMermaidNode(node)"
+              v-else-if="!isExternal && isMermaidNode(node)"
               compact
               :library-root="store.libraryPath"
               :source="node.file!"
@@ -164,10 +166,10 @@
               @open="openEmbeddedDiagram"
             />
             <template v-else>
-              <div class="node-kind">知识库文件</div>
+              <div class="node-kind">{{ isExternal ? '文件引用' : '知识库文件' }}</div>
               <div class="node-icon">▤</div>
               <div class="node-label">{{ node.file || '未指定文件' }}</div>
-              <div class="node-hint">双击打开原文档</div>
+              <div class="node-hint">{{ isExternal ? '外部画布不会自动读取引用文件' : '双击打开原文档' }}</div>
             </template>
           </template>
           <template v-else-if="node.type === 'link'">
@@ -303,7 +305,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { useMessage } from 'naive-ui'
+import { useDialog, useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
 import { isActiveThemeDark } from '../config/themePresets'
 import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
@@ -311,6 +313,7 @@ import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import TableChartEmbed from '../components/TableChartEmbed.vue'
 import MermaidDiagramEmbed from '../components/MermaidDiagramEmbed.vue'
+import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 
 type CanvasNodeType = 'text' | 'file' | 'link' | 'group'
 type Tool = 'select' | 'connect'
@@ -345,6 +348,7 @@ interface CanvasEdge {
 }
 
 interface CanvasDocument { nodes: CanvasNode[]; edges: CanvasEdge[]; [key: string]: unknown }
+interface CanvasSnapshot { content: string; signature: string; path: string; encoding: string }
 interface CanvasClipboardPayload { nodes: CanvasNode[]; edges: CanvasEdge[]; sourceCanvas?: string }
 interface RenderedCanvasEdge extends CanvasEdge { path: string; labelX: number; labelY: number; renderColor?: string }
 interface CachedEdgeGeometry { signature: string; value: RenderedCanvasEdge; left: number; right: number; top: number; bottom: number }
@@ -363,6 +367,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
 const message = useMessage()
+const dialog = useDialog()
 const viewportRef = ref<HTMLElement | null>(null)
 const document = reactive<CanvasDocument>({ nodes: [], edges: [] })
 const loading = ref(true)
@@ -402,7 +407,11 @@ let performanceFrameCount = 0
 let performanceSampleStarted = 0
 
 const canvasPath = computed(() => String(route.query.path || ''))
+const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => canvasPath.value.split(/[\\/]/).pop()?.replace(/\.canvas$/i, '') || '未命名画布')
+const tabTitle = computed(() => canvasPath.value.split(/[\\/]/).pop() || '未命名画布.canvas')
+const sourceSignature = ref('')
+const currentTab = computed(() => store.tabs.find(tab => tab.path === canvasPath.value))
 const nodeById = computed(() => new Map(document.nodes.map(node => [node.id, node])))
 const selectedNode = computed(() => nodeById.value.get(selectedNodeId.value || '') || null)
 const selectedEdge = computed(() => document.edges.find(edge => edge.id === selectedEdgeId.value) || null)
@@ -1271,6 +1280,10 @@ const openEmbeddedChart = (path: string) => openManagedFile(router, path)
 const openEmbeddedDiagram = (path: string) => openManagedFile(router, path)
 const openNode = async (node: CanvasNode) => {
   if (node.type === 'file' && node.file) {
+    if (isExternal.value) {
+      message.info('外部 Canvas 不会自动读取引用文件，请通过“打开外部文件”单独授权')
+      return
+    }
     const path = resolveFilePath(node.file)
     const target = routeForFile(path)
     if (opensInLibraryShell(findFileFormat(path))) {
@@ -1284,6 +1297,7 @@ const openNode = async (node: CanvasNode) => {
 
 const markDirty = () => {
   saveState.value = 'dirty'
+  if (currentTab.value) currentTab.value.isDirty = true
 }
 
 const closeContextMenu = () => { contextMenu.show = false }
@@ -1365,17 +1379,42 @@ const queueViewportSize = (entry?: ResizeObserverEntry) => {
   })
 }
 const saveCanvas = async () => {
-  if (!canvasPath.value || !store.libraryPath || !['dirty', 'error'].includes(saveState.value)) return
+  if (!canvasPath.value || (!isExternal.value && !store.libraryPath) || !['dirty', 'error'].includes(saveState.value)) return
+  if (isExternal.value && !window.confirm('保存将覆盖当前外部 Canvas 源文件。确定继续吗？')) return
   saveState.value = 'saving'
   try {
-    await invoke('write_canvas_file', { libraryRoot: store.libraryPath, path: canvasPath.value, content: JSON.stringify(document, null, 2) + '\n' })
+    const content = JSON.stringify(document, null, 2) + '\n'
+    if (isExternal.value) {
+      const saved = await invoke<CanvasSnapshot>('write_external_canvas_file', {
+        path: canvasPath.value,
+        content,
+        expectedSignature: sourceSignature.value,
+      })
+      sourceSignature.value = saved.signature
+    } else {
+      await invoke('write_canvas_file', { libraryRoot: store.libraryPath, path: canvasPath.value, content })
+    }
     saveState.value = 'saved'
-  } catch (error) { saveState.value = 'error'; message.error(`Canvas 保存失败：${String(error)}`) }
+    if (currentTab.value) currentTab.value.isDirty = false
+  } catch (error: any) {
+    saveState.value = 'error'
+    if (error?.code === 'external-modified') {
+      dialog.warning({
+        title: '外部 Canvas 已发生变化',
+        content: '源文件在编辑期间被其他程序修改。Long编辑没有覆盖这些变化，请重新打开后再编辑。',
+        positiveText: '知道了',
+      })
+    } else message.error(`Canvas 保存失败：${error?.message || String(error)}`)
+  }
 }
 const loadCanvas = async () => {
   loading.value = true; loadError.value = ''; selectedNodeIds.value = []; selectedEdgeId.value = null
   try {
-    const result = await invoke<{ content: string }>('read_canvas_file', { libraryRoot: store.libraryPath, path: canvasPath.value })
+    const result = await invoke<CanvasSnapshot>(isExternal.value ? 'read_external_canvas_file' : 'read_canvas_file', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+      path: canvasPath.value,
+    })
+    sourceSignature.value = result.signature || ''
     const parsed = JSON.parse(result.content) as CanvasDocument
     document.nodes = parsed.nodes || []; document.edges = parsed.edges || []
     edgeGeometryCache.clear()
@@ -1385,6 +1424,7 @@ const loadCanvas = async () => {
     loadCollapsedState()
     loadLayoutBackup()
     saveState.value = 'saved'
+    store.addTab({ id: canvasPath.value, title: tabTitle.value, path: canvasPath.value, isDirty: false, external: isExternal.value })
     const requestedNode = typeof route.query.node === 'string' ? route.query.node : ''
     const viewState = recallWorkspaceViewState(canvasPath.value)
     if (requestedNode && document.nodes.some(node => node.id === requestedNode)) {
@@ -1430,7 +1470,7 @@ const beforeUnload = (event: BeforeUnloadEvent) => {
   event.returnValue = ''
 }
 
-watch([canvasPath, () => route.query.node], loadCanvas)
+watch([canvasPath, isExternal, () => route.query.node], loadCanvas)
 watch([zoom, () => pan.x, () => pan.y, selectedNodeIds, tool], () => rememberCanvasViewState(), { deep: true })
 watch(snapEnabled, enabled => {
   localStorage.setItem('canvas-snap-enabled', String(enabled))
@@ -1464,6 +1504,7 @@ onBeforeRouteLeave(() => mayLeave())
 
 <style scoped>
 .canvas-page { width: 100%; height: 100%; min-width: 0; min-height: 0; display: grid; grid-template-rows: auto auto 1fr auto; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
+.canvas-page.with-tabs { grid-template-rows: auto auto auto 1fr auto; }
 .canvas-header { min-height: 64px; padding: 10px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: var(--theme-border); background: color-mix(in srgb, var(--theme-surface) 92%, transparent); }
 .header-main { display: flex; align-items: center; gap: 12px; min-width: 0; }.canvas-title { font-size: 16px; font-weight: 700; }.canvas-subtitle { margin-top: 2px; color: var(--theme-text-secondary); font-size: 11px; }
 .icon-button, .canvas-toolbar button, .empty-canvas button, .canvas-overlay button { border: var(--theme-border); background: var(--theme-surface); color: var(--theme-text); border-radius: 8px; cursor: pointer; }

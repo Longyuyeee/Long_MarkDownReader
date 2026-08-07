@@ -1,9 +1,15 @@
 use crate::formats::canvas::{markdown_outline_to_canvas, validate_canvas_json};
+use crate::formats::file_registry::file_format_for_path;
+use crate::formats::text::{
+    read_text_snapshot, verify_current_signature, TextDocumentError, TextDocumentSnapshot,
+};
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
 use crate::{build_local_graph, read_markdown_file, sanitize_filename, FileContent, GraphData};
 use std::fs;
 use std::path::Path;
+use tauri::State;
 
 const MAX_GRAPH_PROJECT_NODES: usize = 100;
 
@@ -72,6 +78,85 @@ pub async fn write_canvas_file(
     let file_path = guard.resolve_file_for_write(path, &["canvas"])?;
     validate_canvas_json(&content)?;
     write_utf8(file_path, &content)
+}
+
+fn canvas_boundary_error(code: &str, message: impl Into<String>) -> TextDocumentError {
+    TextDocumentError::simple(code, message.into())
+}
+
+fn ensure_canvas_path(path: &Path) -> Result<(), TextDocumentError> {
+    let format = file_format_for_path(path)
+        .map_err(|error| canvas_boundary_error("format-unregistered", error))?;
+    if format.id != "canvas" {
+        return Err(canvas_boundary_error(
+            "format-mismatch",
+            "外部 Canvas 命令只接受 .canvas 文件",
+        ));
+    }
+    Ok(())
+}
+
+fn read_canvas_snapshot(path: &Path) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    ensure_canvas_path(path)?;
+    recover_interrupted_write(path)
+        .map_err(|error| canvas_boundary_error("canvas-recovery-failed", error))?;
+    let snapshot = read_text_snapshot(path)?;
+    if snapshot.encoding != "UTF-8" {
+        return Err(TextDocumentError::recoverable(
+            "canvas-encoding-unsupported",
+            format!("Canvas 必须使用 UTF-8，当前检测为 {}", snapshot.encoding),
+            "请先在文本工具中转换为 UTF-8 后再打开",
+        ));
+    }
+    validate_canvas_json(&snapshot.content)
+        .map_err(|error| canvas_boundary_error("canvas-invalid", error))?;
+    Ok(snapshot)
+}
+
+async fn read_external_canvas_file_with_access(
+    path: String,
+    access: &ExternalFileAccess,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    let file_path = access
+        .resolve_editable(path)
+        .map_err(|error| canvas_boundary_error("external-not-authorized", error))?;
+    read_canvas_snapshot(&file_path)
+}
+
+async fn write_external_canvas_file_with_access(
+    path: String,
+    content: String,
+    expected_signature: String,
+    access: &ExternalFileAccess,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    let file_path = access
+        .resolve_editable(path)
+        .map_err(|error| canvas_boundary_error("external-not-authorized", error))?;
+    ensure_canvas_path(&file_path)?;
+    validate_canvas_json(&content)
+        .map_err(|error| canvas_boundary_error("canvas-invalid", error))?;
+    verify_current_signature(&file_path, Some(&expected_signature))?;
+    write_utf8(&file_path, &content)
+        .map_err(|error| canvas_boundary_error("canvas-write-failed", error))?;
+    read_canvas_snapshot(&file_path)
+}
+
+#[tauri::command]
+pub async fn read_external_canvas_file(
+    path: String,
+    access: State<'_, ExternalFileAccess>,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    read_external_canvas_file_with_access(path, &access).await
+}
+
+#[tauri::command]
+pub async fn write_external_canvas_file(
+    path: String,
+    content: String,
+    expected_signature: String,
+    access: State<'_, ExternalFileAccess>,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    write_external_canvas_file_with_access(path, content, expected_signature, &access).await
 }
 
 fn graph_to_canvas_json(
@@ -454,6 +539,64 @@ mod tests {
         assert_eq!(result.content, VALID_CANVAS);
         assert_eq!(result.encoding, "UTF-8");
         assert_eq!(Path::new(&result.path), path.canonicalize().unwrap());
+    }
+
+    #[test]
+    fn external_canvas_requires_authorization_and_rejects_stale_or_invalid_writes() {
+        let workspace = TestWorkspace::new("external");
+        let path = workspace.root.join("external.canvas");
+        fs::write(&path, VALID_CANVAS).unwrap();
+        let path_string = path.to_string_lossy().into_owned();
+        let access = ExternalFileAccess::default();
+
+        let unauthorized = tauri::async_runtime::block_on(read_external_canvas_file_with_access(
+            path_string.clone(),
+            &access,
+        ))
+        .unwrap_err();
+        assert_eq!(unauthorized.code, "external-not-authorized");
+
+        access.authorize_editable(&path).unwrap();
+        let opened = tauri::async_runtime::block_on(read_external_canvas_file_with_access(
+            path_string.clone(),
+            &access,
+        ))
+        .unwrap();
+
+        let invalid = tauri::async_runtime::block_on(write_external_canvas_file_with_access(
+            path_string.clone(),
+            DAMAGED_CANVAS.into(),
+            opened.signature.clone(),
+            &access,
+        ))
+        .unwrap_err();
+        assert_eq!(invalid.code, "canvas-invalid");
+        assert_eq!(fs::read_to_string(&path).unwrap(), VALID_CANVAS);
+
+        let saved_content = "{\"nodes\":[],\"edges\":[]}\n";
+        let saved = tauri::async_runtime::block_on(write_external_canvas_file_with_access(
+            path_string.clone(),
+            saved_content.into(),
+            opened.signature,
+            &access,
+        ))
+        .unwrap();
+        assert_eq!(saved.content, saved_content);
+        assert_eq!(fs::read_to_string(&path).unwrap(), saved_content);
+
+        fs::write(&path, "{\n  \"nodes\": [],\n  \"edges\": []\n}\n").unwrap();
+        let stale = tauri::async_runtime::block_on(write_external_canvas_file_with_access(
+            path_string,
+            VALID_CANVAS.into(),
+            saved.signature,
+            &access,
+        ))
+        .unwrap_err();
+        assert_eq!(stale.code, "external-modified");
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            "{\n  \"nodes\": [],\n  \"edges\": []\n}\n"
+        );
     }
 
     #[test]

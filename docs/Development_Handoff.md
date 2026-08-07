@@ -796,3 +796,9 @@ EA-3G 已完成 XLSX 外部只读分页工作区。外部 XLSX 使用独立 prev
 EA-4A 已完成 `.log` 外部专业查看与受保护编辑。外部日志复用有界范围读取、筛选、高亮、尾部跟随和自动刷新；进入编辑模式后保持 8 MiB 上限、撤销重做、覆盖确认和签名冲突保护，只有点击保存才写回。专用外部写入命令要求显式授权且不能由通用文本写入绕过。
 
 外部能力现为 24 类 `edit`、8 类 `preview` 与 11 类 `import`，安装器关联仍只有 `.md/.markdown`。Canvas、开放 Table、Draw.io、Mermaid、OPML 继续保持 `import`，旧 Office/WPS 六类继续显式转换。接手后进入 EA-4B，先为 JSON Canvas 建立独立外部读取、显式保存、撤销重做、格式校验与签名冲突链路，再逐类审计其余专业格式。详见 [`UX50K_External_Log_Workspace_Audit_2026-08-07.md`](./UX50K_External_Log_Workspace_Audit_2026-08-07.md)。
+
+# 2026-08-07 EA-4B 交接入口
+
+EA-4B 已完成 `.canvas` 外部完整编辑。外部 Canvas 使用独立授权读写命令，保留画布交互、撤销重做和显式保存；读取和写入都执行 20 MiB 与 JSON Canvas 结构门禁，保存前确认覆盖并验证源文件签名，合法保存后更新签名，外部修改冲突不会被覆盖。
+
+外部 Canvas 的文件节点只展示引用数据，不自动读取未授权文件；资料库图表/Mermaid 嵌入、创建、Markdown/图谱投影和索引能力没有外泄。外部能力现为 25 类 `edit`、8 类 `preview` 与 10 类 `import`，安装器关联仍只有 `.md/.markdown`。接手后进入 EA-4C，优先审计开放 Table、CSV、TSV 的外部编辑、编码、转换说明和签名保护；Draw.io、Mermaid、OPML 与旧 Office/WPS 保持现有边界。详见 [`UX50L_External_Canvas_Workspace_Audit_2026-08-07.md`](./UX50L_External_Canvas_Workspace_Audit_2026-08-07.md)。

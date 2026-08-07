@@ -8,7 +8,8 @@ use commands::backup::{
 };
 use commands::canvas::{
     create_canvas_file, create_canvas_from_graph, create_canvas_from_markdown,
-    create_project_note_from_graph, read_canvas_file, write_canvas_file,
+    create_project_note_from_graph, read_canvas_file, read_external_canvas_file,
+    write_canvas_file, write_external_canvas_file,
 };
 use commands::config::{
     clear_ai_credential, get_ai_credential_status, get_config, save_config, set_ai_credential,
@@ -349,7 +350,9 @@ pub fn run() {
             export_markdown_file,
             export_external_to_html,
             read_canvas_file,
+            read_external_canvas_file,
             write_canvas_file,
+            write_external_canvas_file,
             read_diagram_file,
             write_diagram_file,
             analyze_diagram_source,
