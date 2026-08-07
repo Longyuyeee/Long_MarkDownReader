@@ -742,47 +742,60 @@ const loadTable = async () => {
 
 const saveTable = async () => {
   if (!table.value || !dirty.value || saving.value) return
-  if (isExternal.value && !window.confirm(`保存将覆盖当前外部 ${formatLabel.value} 源文件。确定继续吗？`)) return
+  if (isExternal.value) {
+    const confirmed = await new Promise<boolean>(resolve => {
+      dialog.warning({
+        title: `覆盖外部 ${formatLabel.value}？`,
+        content: '保存将覆盖当前外部源文件。Long编辑会先检查文件是否被其他程序修改。',
+        positiveText: '确认保存',
+        negativeText: '取消',
+        closable: false,
+        maskClosable: false,
+        onPositiveClick: () => resolve(true),
+        onNegativeClick: () => resolve(false),
+      })
+    })
+    if (!confirmed) return
+  }
   captureActiveView()
   saving.value = true
   notice.value = '正在可靠写入…'
   try {
-    const result = await invoke<TableWriteResult>(isExternal.value ? 'write_external_table_file' : 'write_table_file', {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: tablePath.value,
-      payload: {
-        delimiter: table.value.delimiter,
-        encoding: table.value.encoding,
-        hasBom: table.value.hasBom,
-        lineEnding: table.value.lineEnding,
-        expectedSignature: table.value.signature,
-        headers: table.value.headers,
-        rows: table.value.rows,
-        columnTypes: table.value.columnTypes,
-        columnIds: table.value.columnIds,
-        rowIds: table.value.rowIds,
-        view: {
-          filter: filterQuery.value,
-          sortColumn: sortColumn.value >= 0 ? table.value.columnIds[sortColumn.value] : undefined,
-          sortDirection: sortDirection.value,
-          frozenColumns: frozenColumns.value,
-          columnWidths: columnWidths.value,
-          groupBy: groupBy.value,
-          titleColumn: titleColumn.value,
-          cardColumns: cardColumns.value,
-          categoryColumn: categoryColumn.value,
-          valueColumn: valueColumn.value,
-          aggregation: aggregation.value,
-          chartType: chartType.value,
-          seriesColumn: seriesColumn.value,
-          nullStrategy: nullStrategy.value,
-          showLegend: showLegend.value,
-          dashboardItems: dashboardItems.value,
-        },
-        views: views.value,
-        activeView: activeViewId.value,
+    const payload = {
+      delimiter: table.value.delimiter,
+      encoding: table.value.encoding,
+      hasBom: table.value.hasBom,
+      lineEnding: table.value.lineEnding,
+      expectedSignature: table.value.signature,
+      headers: table.value.headers,
+      rows: table.value.rows,
+      columnTypes: table.value.columnTypes,
+      columnIds: table.value.columnIds,
+      rowIds: table.value.rowIds,
+      view: {
+        filter: filterQuery.value,
+        sortColumn: sortColumn.value >= 0 ? table.value.columnIds[sortColumn.value] : undefined,
+        sortDirection: sortDirection.value,
+        frozenColumns: frozenColumns.value,
+        columnWidths: columnWidths.value,
+        groupBy: groupBy.value,
+        titleColumn: titleColumn.value,
+        cardColumns: cardColumns.value,
+        categoryColumn: categoryColumn.value,
+        valueColumn: valueColumn.value,
+        aggregation: aggregation.value,
+        chartType: chartType.value,
+        seriesColumn: seriesColumn.value,
+        nullStrategy: nullStrategy.value,
+        showLegend: showLegend.value,
+        dashboardItems: dashboardItems.value,
       },
-    })
+      views: views.value,
+      activeView: activeViewId.value,
+    }
+    const result = isExternal.value
+      ? await invoke<TableWriteResult>('write_external_table_file', { path: tablePath.value, payload })
+      : await invoke<TableWriteResult>('write_table_file', { libraryRoot: store.libraryPath, path: tablePath.value, payload })
     table.value.signature = result.signature
     window.dispatchEvent(new CustomEvent('longedit:table-saved', { detail: tablePath.value }))
     dirty.value = false

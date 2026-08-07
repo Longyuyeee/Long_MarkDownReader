@@ -50,7 +50,7 @@ for (const token of [
 for (const token of [
   "const isExternal = computed(() => route.query.external === '1')",
   "isExternal.value ? 'read_external_table_file' : 'read_table_file'",
-  "isExternal.value ? 'write_external_table_file' : 'write_table_file'",
+  "invoke<TableWriteResult>('write_external_table_file'",
   '保存将覆盖当前外部',
   '外部表格 · 仅点击保存写回',
   'external: isExternal.value',
