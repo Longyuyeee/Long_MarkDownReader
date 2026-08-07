@@ -784,3 +784,9 @@ EA-3E 已完成 DOCX 外部只读工作区。外部 DOCX 使用独立 preview �
 EA-3F 已完成 PPTX 外部只读工作区。外部 PPTX 使用独立 preview 授权命令，保留缩略图、结构化画布、搜索、定位、备注、兼容画像、受限图片预览和放映；编辑准备、文本/样式/图片/形状/幻灯片补丁以及可靠另存区域均被隐藏并在函数入口再次阻断。解析后会重新读取并逐字节核对源文件。
 
 外部能力现为 23 类 `edit` 与 7 类 `preview`，安装器关联仍只有 `.md/.markdown`。专项契约、PPTX 11 项回归、DOCX/ODF 既有契约、前端类型检查与生产构建和 Rust 锁定检查均通过。接手后进入 EA-3G，只审计 XLSX 外部只读与分页读取边界。详见 [`UX50I_External_PPTX_Readonly_Workspace_Audit_2026-08-07.md`](./UX50I_External_PPTX_Readonly_Workspace_Audit_2026-08-07.md)。
+
+# 2026-08-07 EA-3G 交接入口
+
+EA-3G 已完成 XLSX 外部只读分页工作区。外部 XLSX 使用独立 preview 授权的描述与 Sheet 分页命令，不执行中断写入恢复，每次解析前后都复核源字节；页面保留分页浏览、选区复制、公式显示、命名区域、样式、图表和脱敏连接信息，隐藏并阻断保存、草稿、重算、转换、结构编辑、动态数组和透视表重建。
+
+外部能力现为 23 类 `edit`、8 类 `preview` 与 12 类 `import`，安装器关联仍只有 `.md/.markdown`。工作簿 39 项回归、外部授权 4 项回归、专项契约、前端类型检查、生产构建和 Rust 锁定检查均通过。EA-3 的现代 Office 外部只读阶段已收口；接手后进入 EA-4A，审计日志、Canvas、开放 Table、Draw.io、Mermaid 和 OPML 的直开资格，旧 Office/WPS 六类继续保持显式转换。详见 [`UX50J_External_XLSX_Readonly_Workspace_Audit_2026-08-07.md`](./UX50J_External_XLSX_Readonly_Workspace_Audit_2026-08-07.md)。

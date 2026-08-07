@@ -1,6 +1,7 @@
 use crate::commands::table::{
     available_output_path, infer_column_type, internal_from_document, TableDocument, TableViewState,
 };
+use crate::formats::file_registry::file_format_for_path;
 use crate::formats::table::{
     validate_internal_table, MAX_INTERNAL_TABLE_BYTES, MAX_TABLE_COLUMNS, MAX_TABLE_ROWS,
 };
@@ -41,12 +42,14 @@ use crate::formats::workbook_ooxml::{
 };
 use crate::formats::workbook_pivot::preview_pivot;
 use crate::sanitize_filename;
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_new_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use calamine::{open_workbook, CellType, Data, Reader, Xlsx};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
+use tauri::State;
 
 const MAX_WORKBOOK_BYTES: u64 = 128 * 1024 * 1024;
 const MAX_PAGE_ROWS: usize = 5_000;
@@ -71,6 +74,22 @@ fn ensure_workbook(path: &Path) -> Result<(), String> {
         .map_err(|error| format!("读取 XLSX 元数据失败: {}", error))?;
     if metadata.len() > MAX_WORKBOOK_BYTES {
         return Err("XLSX 文件不能超过 128 MB".into());
+    }
+    Ok(())
+}
+
+fn ensure_workbook_format(path: &Path) -> Result<(), String> {
+    let format = file_format_for_path(path)?;
+    if format.id != "workbook" {
+        return Err("外部 XLSX 读取命令只接受已授权的 .xlsx 文件".into());
+    }
+    Ok(())
+}
+
+fn verify_workbook_source(path: &Path, before: &[u8]) -> Result<(), String> {
+    let after = fs::read(path).map_err(|error| format!("复核 XLSX 源文件失败: {error}"))?;
+    if before != after {
+        return Err("XLSX 文件在只读解析期间发生变化".into());
     }
     Ok(())
 }
@@ -800,6 +819,43 @@ impl WorkbookEngine for CalamineWorkbookEngine {
     }
 }
 
+fn inspect_external_workbook_path(path: &Path) -> Result<WorkbookDocument, String> {
+    ensure_workbook_format(path)?;
+    let metadata = path
+        .metadata()
+        .map_err(|error| format!("读取外部 XLSX 元数据失败: {error}"))?;
+    let before = fs::read(path).map_err(|error| format!("读取外部 XLSX 失败: {error}"))?;
+    let workbook = open_xlsx(path)?;
+    let sheets = workbook.sheet_names().to_vec();
+    if sheets.is_empty() {
+        return Err("XLSX 不包含可读取的工作表".into());
+    }
+    let document = WorkbookDocument {
+        path: path.to_string_lossy().into_owned(),
+        size: metadata.len(),
+        signature: workbook_signature(&metadata, &before),
+        sheets,
+        defined_names: read_workbook_defined_names(&before)?,
+        linked_data: read_workbook_linked_data(&before)?,
+        protection: read_workbook_protection(&before)?,
+    };
+    verify_workbook_source(path, &before)?;
+    Ok(document)
+}
+
+fn read_external_workbook_sheet_path(
+    path: &Path,
+    sheet: &str,
+    row_offset: usize,
+    row_limit: usize,
+) -> Result<WorkbookSheetPage, String> {
+    ensure_workbook_format(path)?;
+    let before = fs::read(path).map_err(|error| format!("读取外部 XLSX 失败: {error}"))?;
+    let page = CalamineWorkbookEngine.read_sheet(path, sheet, row_offset, row_limit)?;
+    verify_workbook_source(path, &before)?;
+    Ok(page)
+}
+
 #[tauri::command]
 pub fn get_workbook_capabilities() -> WorkbookCapabilities {
     CalamineWorkbookEngine.capabilities()
@@ -1162,6 +1218,17 @@ pub async fn read_workbook_file(
 }
 
 #[tauri::command]
+pub async fn read_external_workbook_file(
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+) -> Result<WorkbookDocument, String> {
+    let file = access.resolve_preview(path)?;
+    tauri::async_runtime::spawn_blocking(move || inspect_external_workbook_path(&file))
+        .await
+        .map_err(|error| format!("外部 XLSX 读取任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn read_workbook_sheet(
     library_root: String,
     path: String,
@@ -1176,6 +1243,22 @@ pub async fn read_workbook_sheet(
     })
     .await
     .map_err(|error| format!("工作表读取任务失败: {}", error))?
+}
+
+#[tauri::command]
+pub async fn read_external_workbook_sheet(
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+    sheet: String,
+    row_offset: usize,
+    row_limit: usize,
+) -> Result<WorkbookSheetPage, String> {
+    let file = access.resolve_preview(path)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        read_external_workbook_sheet_path(&file, &sheet, row_offset, row_limit)
+    })
+    .await
+    .map_err(|error| format!("外部工作表读取任务失败: {error}"))?
 }
 
 #[tauri::command]
@@ -1869,6 +1952,23 @@ mod tests {
         workbook.add_worksheet().set_name("说明").unwrap();
         workbook.save(&path).unwrap();
         (base, path)
+    }
+
+    #[test]
+    fn external_workbook_reads_are_bounded_and_preserve_source() {
+        let (base, path) = fixture();
+        let before = fs::read(&path).unwrap();
+
+        let document = inspect_external_workbook_path(&path).unwrap();
+        assert_eq!(document.sheets, ["进度", "说明"]);
+        let page = read_external_workbook_sheet_path(&path, "进度", 0, 2).unwrap();
+        assert_eq!(page.row_offset, 0);
+        assert_eq!(page.rows.len(), 2);
+        assert_eq!(page.returned_columns, 2);
+        assert_eq!(fs::read(&path).unwrap(), before);
+        assert!(ensure_workbook_format(Path::new("document.docx")).is_err());
+
+        fs::remove_dir_all(base).unwrap();
     }
 
     fn compatibility_fixture_copy(name: &str) -> (PathBuf, PathBuf) {

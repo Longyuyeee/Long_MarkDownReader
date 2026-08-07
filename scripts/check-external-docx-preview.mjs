@@ -14,10 +14,6 @@ if (!docx || docx.externalPolicy !== 'preview' || docx.routeName !== 'DocxEditor
   || docx.userCapability.saveMode !== 'bounded-overwrite') {
   failures.push('DOCX must retain library editing while exposing a separate external read-only preview')
 }
-if (registry.formats.find(format => format.id === 'workbook')?.externalPolicy !== 'import') {
-  failures.push('workbook must remain import-only until its own external audit')
-}
-
 const backend = read('src-tauri/src/commands/docx.rs')
 const access = read('src-tauri/src/services/external_file_access.rs')
 const view = read('src/views/DocxReaderView.vue')
@@ -54,4 +50,4 @@ if (failures.length) {
   console.error(failures.map(failure => `- ${failure}`).join('\n'))
   process.exit(1)
 }
-console.log('EA-3E external DOCX preview passed: external reads expose no edit targets or save UI, library editing remains intact, and XLSX stays import-only.')
+console.log('EA-3E external DOCX preview passed: external reads expose no edit targets or save UI, and library editing remains intact.')

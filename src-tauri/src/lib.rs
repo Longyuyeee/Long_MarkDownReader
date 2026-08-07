@@ -107,7 +107,8 @@ use commands::updater::{check_community_update, install_community_update};
 use commands::workbook::{
     audit_workbook_pivot_multi_axis_isolated_copy, get_workbook_capabilities,
     import_workbook_sheet, preview_workbook_dynamic_array, preview_workbook_pivot,
-    preview_workbook_pivot_rebuild, preview_workbook_structure_migration, read_workbook_file,
+    preview_workbook_pivot_rebuild, preview_workbook_structure_migration,
+    read_external_workbook_file, read_external_workbook_sheet, read_workbook_file,
     read_workbook_sheet, rebuild_workbook_pivot_cache_isolated_copy,
     rebuild_workbook_pivot_expanded_isolated_copy, rebuild_workbook_pivot_isolated_copy,
     recalculate_workbook_formulas, save_workbook_pivot_copy, translate_workbook_formulas,
@@ -402,6 +403,8 @@ pub fn run() {
             export_table_file,
             read_workbook_file,
             read_workbook_sheet,
+            read_external_workbook_file,
+            read_external_workbook_sheet,
             import_workbook_sheet,
             get_workbook_capabilities,
             recalculate_workbook_formulas,

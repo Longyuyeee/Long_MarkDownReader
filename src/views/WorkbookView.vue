@@ -1,15 +1,16 @@
 <template>
-  <div class="workbook-view" tabindex="-1">
+  <div class="workbook-view" :class="{ 'external-readonly': isExternal }" tabindex="-1">
+    <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
     <WorkspaceToolbar class="workbook-toolbar">
       <WorkspaceFileIdentity class="workbook-title">
         <button class="icon-button" title="返回知识库" @click="router.push('/library')"><n-icon :component="ArrowLeftIcon" /></button>
-        <div><strong>{{ fileName }}</strong><span v-if="workbook">XLSX 工作簿 · {{ workbook.sheets.length }} 个 Sheet · {{ formatBytes(workbook.size) }}</span></div>
+        <div><strong>{{ fileName }}</strong><span v-if="workbook">{{ isExternal ? '外部 XLSX · 只读' : 'XLSX 工作簿' }} · {{ workbook.sheets.length }} 个 Sheet · {{ formatBytes(workbook.size) }}</span></div>
       </WorkspaceFileIdentity>
       <div v-if="workbook" class="workbook-actions" data-command-strip data-horizontal-wheel="always">
-        <button class="icon-button" title="撤销" :disabled="!undoStack.length || saving" @click="undo"><n-icon :component="UndoIcon" /></button>
-        <button class="icon-button" title="重做" :disabled="!redoStack.length || saving" @click="redo"><n-icon :component="RedoIcon" /></button>
+        <button v-if="!isExternal" class="icon-button" title="撤销" :disabled="!undoStack.length || saving" @click="undo"><n-icon :component="UndoIcon" /></button>
+        <button v-if="!isExternal" class="icon-button" title="重做" :disabled="!redoStack.length || saving" @click="redo"><n-icon :component="RedoIcon" /></button>
         <button class="icon-button" :class="{ active: showFormulas }" :aria-pressed="showFormulas" :title="showFormulas ? '显示计算结果' : '显示公式'" :disabled="saving" @click="showFormulas = !showFormulas"><n-icon :component="FunctionIcon" /></button>
-        <n-dropdown trigger="click" :options="workbookToolOptions" @select="handleWorkbookToolSelect">
+        <n-dropdown v-if="!isExternal" trigger="click" :options="workbookToolOptions" @select="handleWorkbookToolSelect">
           <button class="tool-panel-trigger" :class="{ active: activeToolPanel !== 'none' }" :title="activeToolPanel === 'none' ? '展开专业工具' : `当前展开：${activeToolPanelLabel}`">
             <n-icon :component="SlidersIcon" /><span>{{ activeToolPanelLabel }}</span>
           </button>
@@ -17,7 +18,7 @@
         <n-dropdown trigger="click" :options="workbookActionOptions" @select="handleWorkbookAction">
           <button class="icon-button action-menu-trigger" title="更多工作簿操作"><n-icon :component="MoreIcon" /></button>
         </n-dropdown>
-        <button class="primary" :disabled="!dirtyCount || saving" aria-live="polite" @click="saveWorkbook"><n-icon :component="SaveIcon" /><span>{{ saving ? '保存中' : dirtyCount ? `保存 (${dirtyCount})` : '已保存' }}</span></button>
+        <button v-if="!isExternal" class="primary" :disabled="!dirtyCount || saving" aria-live="polite" @click="saveWorkbook"><n-icon :component="SaveIcon" /><span>{{ saving ? '保存中' : dirtyCount ? `保存 (${dirtyCount})` : '已保存' }}</span></button>
       </div>
     </WorkspaceToolbar>
 
@@ -56,36 +57,37 @@
             <div class="linked-data-actions">
               <button v-if="pivot.sheet" @click="navigateLinkedSheet(pivot.sheet)">定位工作表</button>
               <button
-                v-if="pivot.audit.rebuildCandidate"
+                v-if="!isExternal && pivot.audit.rebuildCandidate"
                 :disabled="pivotPreviewLoading === pivot.part || pivot.audit.pageFieldCount > 0"
                 :title="pivot.audit.pageFieldCount ? '含筛选字段的透视表暂不进入内存预览' : '从工作表当前值和未保存草稿生成，不修改 XLSX'"
                 @click="previewLocalPivot(pivot)"
               >{{ pivotPreviewLoading === pivot.part ? '计算中…' : '内存预览' }}</button>
               <button
+                v-if="!isExternal"
                 :disabled="pivotRebuildPlanLoading === pivot.part"
                 title="生成隔离重建影响清单；只验证临时内存副本，不修改用户文件"
                 @click="previewPivotRebuildPlan(pivot)"
               >{{ pivotRebuildPlanLoading === pivot.part ? '审计中…' : '影响清单' }}</button>
               <button
-                v-if="pivotRebuildPlans.get(pivot.part)?.status === 'isolated_dry_run_ready'"
+                v-if="!isExternal && pivotRebuildPlans.get(pivot.part)?.status === 'isolated_dry_run_ready'"
                 :disabled="pivotCacheRebuildLoading === pivot.part"
                 title="仅在临时内存副本中重建 Cache Definition 与 Cache Records，不保存到用户文件"
                 @click="rebuildPivotCacheIsolated(pivot)"
               >{{ pivotCacheRebuildLoading === pivot.part ? '重建中…' : '隔离重建 Cache' }}</button>
               <button
-                v-if="pivotCacheRebuildResults.get(pivot.part)?.status === 'isolated_cache_rebuilt'"
+                v-if="!isExternal && pivotCacheRebuildResults.get(pivot.part)?.status === 'isolated_cache_rebuilt'"
                 :disabled="pivotSynchronizedRebuildLoading === pivot.part"
                 title="在同一临时副本中同步重建 Cache、Pivot items、行列项和输出区域，不保存到用户文件"
                 @click="rebuildPivotSynchronizedIsolated(pivot)"
               >{{ pivotSynchronizedRebuildLoading === pivot.part ? '同步中…' : '隔离同步透视表' }}</button>
               <button
-                v-if="pivotSynchronizedRebuildResults.get(pivot.part)?.status === 'isolated_pivot_rebuilt'"
+                v-if="!isExternal && pivotSynchronizedRebuildResults.get(pivot.part)?.status === 'isolated_pivot_rebuilt'"
                 :disabled="pivotExpandedRebuildLoading === pivot.part"
                 title="在临时副本中协调新增/删除 sharedItems、输出范围扩缩容、旧区域清理和样式延伸"
                 @click="rebuildPivotExpandedIsolated(pivot)"
               >{{ pivotExpandedRebuildLoading === pivot.part ? '扩缩容中…' : '隔离验证布局扩缩容' }}</button>
               <button
-                v-if="pivotExpandedRebuildResults.get(pivot.part)?.status === 'isolated_layout_resized'"
+                v-if="!isExternal && pivotExpandedRebuildResults.get(pivot.part)?.status === 'isolated_layout_resized'"
                 :disabled="pivotVariantVerificationLoading === pivot.part"
                 title="为七类聚合生成临时 Pivot 包，并验证单轴和多度量内存输出语义；不会保存到用户文件"
                 @click="verifyPivotVariantsIsolated(pivot)"
@@ -344,11 +346,11 @@
       <span v-if="sheetInfo.pageLayout.setup.fitToPage">适配 {{ sheetInfo.pageLayout.setup.fitToWidth ?? '默认' }} × {{ sheetInfo.pageLayout.setup.fitToHeight ?? '默认' }} 页</span>
       <span v-if="hasStoredPrintOptions">{{ storedPrintOptionsSummary }}</span>
       <span v-if="hasStoredHeaderFooter" :title="storedHeaderFooterSummary">已配置页眉/页脚</span>
-      <button title="把当前连续选区设为打印区域" :disabled="!canEditPrintArea || !pageLayoutSelection" @click="setSelectionAsPrintArea">设为打印区域</button>
-      <button title="清除当前 Sheet 的打印区域" :disabled="!canEditPrintArea || !sheetInfo.pageLayout.printArea" @click="clearPrintArea">清除打印区域</button>
-      <button title="编辑方向、纸张、缩放和页边距" :disabled="!canEditPageLayout" @click="pageLayoutModalOpen = true">页面设置</button>
-      <button title="编辑网格线、标题、居中和输出选项" :disabled="!canEditPageLayout" @click="printOptionsModalOpen = true">打印选项</button>
-      <button title="编辑当前 Sheet 的页眉和页脚" :disabled="!canEditPageLayout" @click="headerFooterModalOpen = true">页眉页脚</button>
+      <button v-if="!isExternal" title="把当前连续选区设为打印区域" :disabled="!canEditPrintArea || !pageLayoutSelection" @click="setSelectionAsPrintArea">设为打印区域</button>
+      <button v-if="!isExternal" title="清除当前 Sheet 的打印区域" :disabled="!canEditPrintArea || !sheetInfo.pageLayout.printArea" @click="clearPrintArea">清除打印区域</button>
+      <button v-if="!isExternal" title="编辑方向、纸张、缩放和页边距" :disabled="!canEditPageLayout" @click="pageLayoutModalOpen = true">页面设置</button>
+      <button v-if="!isExternal" title="编辑网格线、标题、居中和输出选项" :disabled="!canEditPageLayout" @click="printOptionsModalOpen = true">打印选项</button>
+      <button v-if="!isExternal" title="编辑当前 Sheet 的页眉和页脚" :disabled="!canEditPageLayout" @click="headerFooterModalOpen = true">页眉页脚</button>
       <span v-if="workbook.protection.lockStructure">工作簿结构已锁定</span>
       <em v-if="sheetProtected">当前 Sheet 受保护，LongEdit 不会绕过密码或写入限制</em>
     </div>
@@ -437,7 +439,7 @@
         <option :value="-1">{{ navigableDefinedNames.length ? '命名区域' : '无命名区域' }}</option>
         <option v-for="item in navigableDefinedNames" :key="item.index" :value="item.index">{{ item.label }}</option>
       </select>
-      <n-dropdown trigger="click" :options="definedNameActionOptions" @select="handleDefinedNameAction">
+      <n-dropdown v-if="!isExternal" trigger="click" :options="definedNameActionOptions" @select="handleDefinedNameAction">
         <button class="name-manager-button" title="管理命名区域"><n-icon :component="MoreIcon" /></button>
       </n-dropdown>
       <output>{{ selectedAddress || '—' }}</output>
@@ -445,7 +447,7 @@
       <input
         ref="formulaInputRef"
         v-model="formulaInput"
-        :disabled="!selectedEditable || saving"
+        :disabled="isExternal || !selectedEditable || saving"
         :placeholder="selectedCell ? '当前单元格不可编辑' : '选择单元格'"
         @change="commitFormulaInput"
         @keydown.enter.prevent="commitFormulaInput"
@@ -478,7 +480,7 @@
         定位错误缓存 {{ selectedArrayFormula.errorCacheCells[0] }}
       </button>
       <button
-        v-if="selectedArrayFormula?.kind === 'dynamic_array'"
+        v-if="!isExternal && selectedArrayFormula?.kind === 'dynamic_array'"
         class="diagnostic-link"
         :disabled="dynamicArrayPreviewLoading"
         title="只在内存中计算机器白名单内的动态数组"
@@ -501,7 +503,7 @@
       </span>
     </div>
 
-    <div v-if="workbook && sheetInfo && activeToolPanel === 'format'" class="format-toolbar" :class="{ protected: sheetProtected }" aria-label="单元格格式" data-horizontal-wheel="always">
+    <div v-if="workbook && sheetInfo && !isExternal && activeToolPanel === 'format'" class="format-toolbar" :class="{ protected: sheetProtected }" aria-label="单元格格式" data-horizontal-wheel="always">
       <select :value="focusedStyle.namedStyle || ''" title="命名样式" :disabled="!selectedCell || saving" @change="applyNamedStyle">
         <option value="">单元格样式</option>
         <option v-for="style in sheetInfo.namedStyles" :key="style.name" :value="style.name">{{ style.name }}</option>
@@ -556,7 +558,7 @@
       <button title="取消当前工作表冻结窗格" :disabled="(!effectiveFreeze.rows && !effectiveFreeze.columns) || saving || updatingStructure || Boolean(dirtyCount)" @click="clearFreezePane">取消冻结</button>
     </div>
 
-    <div v-if="workbook && sheetInfo && activeToolPanel === 'data' && (activeDataRegion || selectedValidation || tableSelection || validationSelection)" class="data-toolbar" data-horizontal-wheel="always">
+    <div v-if="workbook && sheetInfo && !isExternal && activeToolPanel === 'data' && (activeDataRegion || selectedValidation || tableSelection || validationSelection)" class="data-toolbar" data-horizontal-wheel="always">
       <button v-if="tableSelection && !selectedTable" title="从选区创建 Excel Table" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('create')">创建 Table</button>
       <button v-if="tableSelection && selectedTable" title="把 Excel Table 调整到选区并同步表头" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('resize')">调整 Table</button>
       <template v-if="selectedTable">
@@ -622,7 +624,7 @@
       </template>
     </div>
 
-    <div v-if="workbook && sheetInfo && activeToolPanel === 'chart'" class="drawing-toolbar" aria-label="工作表绘图对象" data-horizontal-wheel="always">
+    <div v-if="workbook && sheetInfo && !isExternal && activeToolPanel === 'chart'" class="drawing-toolbar" aria-label="工作表绘图对象" data-horizontal-wheel="always">
       <strong>绘图对象 {{ sheetInfo.drawings.length }}</strong>
       <select v-model="newChartType" class="drawing-series-select" title="选择要创建的图表类型">
         <option value="column">柱形图</option>
@@ -715,7 +717,8 @@
       <WorkspaceStateNotice v-if="loading" class="workbook-state" kind="loading" tone="info" title="正在解析 XLSX 工作簿" />
       <WorkspaceStateNotice v-else-if="error" class="workbook-state" kind="error" tone="danger" title="无法打开工作簿"><p>{{ error }}</p><template #action><button @click="loadWorkbook">重试</button></template></WorkspaceStateNotice>
       <template v-else-if="workbook && sheetInfo">
-        <WorkspaceStatusBar v-if="dirtyCount || sheetInfo.truncatedColumns || pageLoading || updatingStructure || calculationCount || calculationErrors" as="div" class="workbook-status">
+        <WorkspaceStatusBar v-if="isExternal || dirtyCount || sheetInfo.truncatedColumns || pageLoading || updatingStructure || calculationCount || calculationErrors" as="div" class="workbook-status">
+          <span v-if="isExternal">外部文件只读分页预览 · 源文件未修改 · 外部链接不会打开</span>
           <span v-if="dirtyCount">{{ dirtyCount }} 个更改项尚未保存</span>
           <span v-if="sheetInfo.truncatedColumns">当前显示前 {{ sheetInfo.returnedColumns }} 列</span>
           <span v-if="pageLoading">正在载入行数据…</span>
@@ -771,7 +774,7 @@
                     >{{ conditionalIconSymbol(row.index, column - 1) }}</span>
                     <span v-if="!conditionalIconHidesValue(row.index, column - 1)">{{ cellDisplay(row.index, column - 1) }}</span>
                   </span>
-                  <span v-if="isFillHandleCell(row.index, column - 1)" class="fill-handle" title="拖动填充" @pointerdown.stop="startFill($event)"></span>
+                  <span v-if="!isExternal && isFillHandleCell(row.index, column - 1)" class="fill-handle" title="拖动填充" @pointerdown.stop="startFill($event)"></span>
                 </div>
               </div>
             </div>
@@ -792,6 +795,7 @@ import WorkspaceSegmentedControl from '../components/workspace/WorkspaceSegmente
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
 import WorkspaceStatusBar from '../components/workspace/WorkspaceStatusBar.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
+import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useDialog, useMessage } from 'naive-ui'
 import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, MoreHorizontal as MoreIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, Save as SaveIcon, SlidersHorizontal as SlidersIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
@@ -1095,7 +1099,18 @@ let fillSource: SelectionArea | null = null
 let filling = false
 
 const workbookPath = computed(() => String(route.query.path || store.activeTabId || ''))
+const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => workbookPath.value.split(/[\\/]/).pop() || '工作簿.xlsx')
+const readSheetPage = (sheet: string, rowOffset: number, rowLimit: number) => invoke<WorkbookSheetPage>(
+  isExternal.value ? 'read_external_workbook_sheet' : 'read_workbook_sheet',
+  {
+    ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+    path: workbookPath.value,
+    sheet,
+    rowOffset,
+    rowLimit,
+  },
+)
 const draftExtent = computed(() => {
   let row = -1
   let column = -1
@@ -1205,6 +1220,7 @@ const selectedMerge = computed(() => {
   return currentMergedRanges.value.find(range => cell.row >= range.top && cell.row <= range.bottom && cell.column >= range.left && cell.column <= range.right) || null
 })
 const canMergeSelection = computed(() => {
+  if (isExternal.value) return false
   const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
   if (!area || (area.top === area.bottom && area.left === area.right)) return false
   return !currentMergedRanges.value.some(range => area.top <= range.bottom && range.top <= area.bottom && area.left <= range.right && range.left <= area.right)
@@ -1319,7 +1335,7 @@ const pageLayoutSelection = computed(() => {
   if (!area || area.bottom >= canvasRowCount.value || area.right >= canvasColumnCount.value) return null
   return area
 })
-const canEditPageLayout = computed(() => Boolean(workbook.value && sheetInfo.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
+const canEditPageLayout = computed(() => Boolean(!isExternal.value && workbook.value && sheetInfo.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
 const canEditPrintArea = computed(() => Boolean(canEditPageLayout.value && !workbook.value?.protection.lockStructure))
 const syncPageLayoutDraft = () => {
   const layout = sheetInfo.value?.pageLayout
@@ -1375,12 +1391,12 @@ const validationSelection = computed(() => {
   if (!area || area.bottom >= canvasRowCount.value || area.right >= canvasColumnCount.value) return null
   return area
 })
-const canEditDataValidation = computed(() => Boolean(workbook.value && validationSelection.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
+const canEditDataValidation = computed(() => Boolean(!isExternal.value && workbook.value && validationSelection.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
 const conditionalSelection = computed(() => validationSelection.value)
 const conditionalFormatsAt = (row: number, column: number) => (sheetInfo.value?.conditionalFormats || [])
   .filter(rule => rule.ranges.some(range => containsCell(range, row, column)))
   .sort((left, right) => left.priority - right.priority)
-const canEditConditionalFormat = computed(() => Boolean(workbook.value && conditionalSelection.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
+const canEditConditionalFormat = computed(() => Boolean(!isExternal.value && workbook.value && conditionalSelection.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
 const conditionalRuleKey = (rule: WorkbookConditionalFormatRule) => `${rule.groupIndex}:${rule.ruleIndex}`
 const selectedConditionalFormats = computed(() => selectedCell.value ? conditionalFormatsAt(selectedCell.value.row, selectedCell.value.column) : [])
 const selectedConditionalFormat = computed(() => selectedConditionalFormats.value.find(rule => conditionalRuleKey(rule) === selectedConditionalRuleKey.value) || selectedConditionalFormats.value[0])
@@ -1687,7 +1703,7 @@ const pivotAggregationLabel = (aggregation: string) => ({ sum: '求和', count: 
 const pivotLayoutVariantLabel = (layout: string) => ({ row_only: '单行轴', column_only: '单列轴', multi_measure: '多度量' }[layout] || layout)
 const pivotPreviewKeys = (keys: WorkbookPivotPreviewKey[], fallback: string) => keys.length ? keys.map(key => `${key.fieldName}：${key.value}`).join(' · ') : fallback
 const previewLocalPivot = async (pivot: WorkbookPivotTable) => {
-  if (!workbook.value || !pivot.audit.rebuildCandidate || pivotPreviewLoading.value) return
+  if (isExternal.value || !workbook.value || !pivot.audit.rebuildCandidate || pivotPreviewLoading.value) return
   pivotPreviewLoading.value = pivot.part
   try {
     const preview = await invoke<WorkbookPivotPreviewResult>('preview_workbook_pivot', {
@@ -1710,7 +1726,7 @@ const previewLocalPivot = async (pivot: WorkbookPivotTable) => {
   }
 }
 const previewPivotRebuildPlan = async (pivot: WorkbookPivotTable) => {
-  if (!workbook.value || pivotRebuildPlanLoading.value) return
+  if (isExternal.value || !workbook.value || pivotRebuildPlanLoading.value) return
   pivotRebuildPlanLoading.value = pivot.part
   try {
     const plan = await invoke<WorkbookPivotRebuildPlan>('preview_workbook_pivot_rebuild', {
@@ -1733,7 +1749,7 @@ const previewPivotRebuildPlan = async (pivot: WorkbookPivotTable) => {
   }
 }
 const rebuildPivotCacheIsolated = async (pivot: WorkbookPivotTable) => {
-  if (!workbook.value || pivotCacheRebuildLoading.value || pivotRebuildPlans.value.get(pivot.part)?.status !== 'isolated_dry_run_ready') return
+  if (isExternal.value || !workbook.value || pivotCacheRebuildLoading.value || pivotRebuildPlans.value.get(pivot.part)?.status !== 'isolated_dry_run_ready') return
   pivotCacheRebuildLoading.value = pivot.part
   try {
     const result = await invoke<WorkbookPivotCacheRebuildResult>('rebuild_workbook_pivot_cache_isolated_copy', {
@@ -1755,7 +1771,7 @@ const rebuildPivotCacheIsolated = async (pivot: WorkbookPivotTable) => {
   }
 }
 const rebuildPivotSynchronizedIsolated = async (pivot: WorkbookPivotTable) => {
-  if (!workbook.value || pivotSynchronizedRebuildLoading.value || pivotCacheRebuildResults.value.get(pivot.part)?.status !== 'isolated_cache_rebuilt') return
+  if (isExternal.value || !workbook.value || pivotSynchronizedRebuildLoading.value || pivotCacheRebuildResults.value.get(pivot.part)?.status !== 'isolated_cache_rebuilt') return
   pivotSynchronizedRebuildLoading.value = pivot.part
   try {
     const result = await invoke<WorkbookPivotSynchronizedRebuildResult>('rebuild_workbook_pivot_isolated_copy', {
@@ -1777,7 +1793,7 @@ const rebuildPivotSynchronizedIsolated = async (pivot: WorkbookPivotTable) => {
   }
 }
 const rebuildPivotExpandedIsolated = async (pivot: WorkbookPivotTable) => {
-  if (!workbook.value || pivotExpandedRebuildLoading.value || pivotSynchronizedRebuildResults.value.get(pivot.part)?.status !== 'isolated_pivot_rebuilt') return
+  if (isExternal.value || !workbook.value || pivotExpandedRebuildLoading.value || pivotSynchronizedRebuildResults.value.get(pivot.part)?.status !== 'isolated_pivot_rebuilt') return
   pivotExpandedRebuildLoading.value = pivot.part
   try {
     const result = await invoke<WorkbookPivotExpandedRebuildResult>('rebuild_workbook_pivot_expanded_isolated_copy', {
@@ -1813,7 +1829,7 @@ const setPivotCopyFileName = (key: string, value: string) => {
 const savePivotCopy = async (pivot: WorkbookPivotTable) => {
   const verification = pivotExpandedRebuildResults.value.get(pivot.part)
   const targetFileName = pivotCopyFileNames.value.get(pivot.part)?.trim()
-  if (!workbook.value || !verification || !targetFileName || pivotSaveCopyLoading.value) return
+  if (isExternal.value || !workbook.value || !verification || !targetFileName || pivotSaveCopyLoading.value) return
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的工作簿更改')
   pivotSaveCopyLoading.value = pivot.part
   try {
@@ -1852,7 +1868,7 @@ const savePivotCopy = async (pivot: WorkbookPivotTable) => {
 const savePivotAggregationCopy = async (pivot: WorkbookPivotTable, variant: WorkbookPivotAggregationVariant) => {
   const key = pivotAggregationCopyKey(pivot.part, variant.aggregation)
   const targetFileName = pivotCopyFileNames.value.get(key)?.trim()
-  if (!workbook.value || !targetFileName || pivotSaveCopyLoading.value) return
+  if (isExternal.value || !workbook.value || !targetFileName || pivotSaveCopyLoading.value) return
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的工作簿更改')
   pivotSaveCopyLoading.value = key
   try {
@@ -1894,7 +1910,7 @@ const savePivotAggregationCopy = async (pivot: WorkbookPivotTable, variant: Work
 const savePivotLayoutCopy = async (pivot: WorkbookPivotTable, variant: WorkbookPivotLayoutVariant) => {
   const key = pivotLayoutCopyKey(pivot.part, variant.layout)
   const targetFileName = pivotCopyFileNames.value.get(key)?.trim()
-  if (!workbook.value || !targetFileName || pivotSaveCopyLoading.value) return
+  if (isExternal.value || !workbook.value || !targetFileName || pivotSaveCopyLoading.value) return
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的工作簿更改')
   pivotSaveCopyLoading.value = key
   try {
@@ -1934,7 +1950,7 @@ const savePivotLayoutCopy = async (pivot: WorkbookPivotTable, variant: WorkbookP
   }
 }
 const verifyPivotVariantsIsolated = async (pivot: WorkbookPivotTable) => {
-  if (!workbook.value || pivotVariantVerificationLoading.value || pivotExpandedRebuildResults.value.get(pivot.part)?.status !== 'isolated_layout_resized') return
+  if (isExternal.value || !workbook.value || pivotVariantVerificationLoading.value || pivotExpandedRebuildResults.value.get(pivot.part)?.status !== 'isolated_layout_resized') return
   pivotVariantVerificationLoading.value = pivot.part
   try {
     const result = await invoke<WorkbookPivotVariantVerificationResult>('verify_workbook_pivot_variants_isolated_copy', {
@@ -2026,6 +2042,7 @@ const invalidateCalculation = () => {
 }
 const originalInput = (cell: WorkbookCell) => cell.formula || cell.value || ''
 const isEditableCell = (row: number, column: number) => {
+  if (isExternal.value) return false
   if (sheetProtected.value) return false
   if (isMergedCovered(row, column)) return false
   if (arrayFormulaAt(row, column)) return false
@@ -2158,7 +2175,7 @@ const navigableDefinedNames = computed(() => (workbook.value?.definedNames || []
   .filter(({ item }) => !item.hidden && item.reference && workbook.value?.sheets.includes(item.reference.sheet)))
 const selectedDefinedName = computed(() => selectedDefinedNameIndex.value >= 0 ? workbook.value?.definedNames[selectedDefinedNameIndex.value] : undefined)
 const definedNameSelection = computed(() => selectionAreas.value.length === 1 ? selectionBounds.value : null)
-const canEditDefinedNames = computed(() => Boolean(workbook.value && !workbook.value.protection.lockStructure && !saving.value && !updatingStructure.value && !dirtyCount.value))
+const canEditDefinedNames = computed(() => Boolean(!isExternal.value && workbook.value && !workbook.value.protection.lockStructure && !saving.value && !updatingStructure.value && !dirtyCount.value))
 const activeToolPanelLabel = computed(() => ({ none: '工具', format: '格式', data: '数据', chart: '图表' })[activeToolPanel.value])
 const hasDataToolContext = computed(() => Boolean(activeDataRegion.value || selectedValidation.value || tableSelection.value || validationSelection.value))
 const workbookToolOptions = computed(() => [
@@ -2170,14 +2187,16 @@ const workbookToolOptions = computed(() => [
 ])
 const workbookActionOptions = computed(() => [
   { label: '复制选区', key: 'copy', disabled: !selectedCell.value || saving.value },
-  { label: '粘贴选区', key: 'paste', disabled: !selectedCell.value || saving.value || sheetProtected.value },
-  { type: 'divider', key: 'edit-divider' },
-  {
-    label: calculating.value ? '正在重算公式…' : '重算已加载公式',
-    key: 'recalculate',
-    disabled: calculating.value || saving.value || !activeSheet.value || Boolean(sheetInfo.value?.arrayFormulas.length),
-  },
-  { label: importing.value ? '正在转换为 Table…' : '将工作表转为 Table', key: 'convert-table', disabled: importing.value || saving.value || !activeSheet.value },
+  ...(!isExternal.value ? [
+    { label: '粘贴选区', key: 'paste', disabled: !selectedCell.value || saving.value || sheetProtected.value },
+    { type: 'divider', key: 'edit-divider' },
+    {
+      label: calculating.value ? '正在重算公式…' : '重算已加载公式',
+      key: 'recalculate',
+      disabled: calculating.value || saving.value || !activeSheet.value || Boolean(sheetInfo.value?.arrayFormulas.length),
+    },
+    { label: importing.value ? '正在转换为 Table…' : '将工作表转为 Table', key: 'convert-table', disabled: importing.value || saving.value || !activeSheet.value },
+  ] : []),
   ...(hasLinkedData.value ? [{
     label: `透视表与数据连接 (${workbook.value?.linkedData.summary.totalObjectCount || 0})`,
     key: 'linked-data',
@@ -2197,6 +2216,7 @@ const handleWorkbookToolSelect = (key: string) => {
   activeToolPanel.value = activeToolPanel.value === target ? 'none' : target
 }
 const handleWorkbookAction = async (key: string) => {
+  if (isExternal.value && !['copy', 'linked-data', 'refresh'].includes(key)) return
   if (key === 'copy') await copySelection()
   else if (key === 'paste') await pasteSelection()
   else if (key === 'recalculate') recalculateFormulas()
@@ -2225,6 +2245,7 @@ const inferEdit = (selection: CellSelection, input: string): WorkbookCellEdit =>
   return { ...selection, input, kind: 'string' }
 }
 const setDraft = (key: string, edit?: WorkbookCellEdit) => {
+  if (isExternal.value) return
   const next = new Map(drafts.value)
   if (edit) next.set(key, edit)
   else next.delete(key)
@@ -2287,7 +2308,7 @@ const extendCellSelection = (row: number, column: number) => {
   }
 }
 const startFill = (event: PointerEvent) => {
-  if (event.button !== 0 || selectionAreas.value.length !== 1 || !selectionBounds.value) return
+  if (isExternal.value || event.button !== 0 || selectionAreas.value.length !== 1 || !selectionBounds.value) return
   event.preventDefault()
   dragSelecting = false
   filling = true
@@ -2435,7 +2456,7 @@ const selectedCoordinates = () => {
   return coordinates
 }
 const applyStylePatch = (patch: WorkbookStylePatch) => {
-  if (!selectedCell.value) return
+  if (isExternal.value || !selectedCell.value) return
   if (patch.borderStyle !== undefined) {
     const side = { style: patch.borderStyle, ...(patch.borderColor ? { color: patch.borderColor } : {}) }
     patch = { ...patch, borderTop: side, borderRight: side, borderBottom: side, borderLeft: side }
@@ -2509,6 +2530,7 @@ const selectedColumnsForResize = () => {
   return Array.from(columns)
 }
 const setSelectedRowHeight = () => {
+  if (isExternal.value) return
   let rows: number[]
   try { rows = selectedRowsForResize() } catch (cause) { return void message.error(String(cause).replace(/^Error:\s*/, '')) }
   if (!rows.length) return
@@ -2535,6 +2557,7 @@ const setSelectedRowHeight = () => {
   redoStack.value = []
 }
 const setSelectedColumnWidth = () => {
+  if (isExternal.value) return
   const columns = selectedColumnsForResize()
   if (!columns.length) return
   const initial = columnWidthUnits(columns[0]).toFixed(2).replace(/\.00$/, '')
@@ -2570,7 +2593,7 @@ const applyAxisAction = async (event: Event) => {
   const action = select.value as 'hide' | 'show' | 'group' | 'ungroup' | ''
   select.value = ''
   const axis = selectedAxis.value
-  if (!action || !axis || !workbook.value || updatingStructure.value || dirtyCount.value) return
+  if (isExternal.value || !action || !axis || !workbook.value || updatingStructure.value || dirtyCount.value) return
   if (axis.end - axis.start + 1 > MAX_BATCH_CELLS) return void message.error(`单次最多修改 ${MAX_BATCH_CELLS.toLocaleString()} 行或列`)
   const rowEdits: WorkbookRowStateEdit[] = []
   const columnEdits: WorkbookColumnStateEdit[] = []
@@ -2621,7 +2644,7 @@ const restoreAxisSelection = async (sheet: string, axis: 'row' | 'column', index
   await recalculateLoadedFormulas(false)
 }
 const commitStructure = async (axis: 'row' | 'column', action: 'insert' | 'delete', start: number, count: number) => {
-  if (!workbook.value || updatingStructure.value) return
+  if (isExternal.value || !workbook.value || updatingStructure.value) return
   updatingStructure.value = true
   const sheet = activeSheet.value
   try {
@@ -2674,7 +2697,7 @@ const restoreTableSelection = async (sheet: string, area: WorkbookMergeRange) =>
 const selectedDrawing = computed(() => sheetInfo.value?.drawings.find(drawing => drawing.id === selectedDrawingId.value))
 const selectedChartSeries = computed(() => selectedDrawing.value?.chart?.series.find(series => series.index === selectedChartSeriesIndex.value))
 const chartThemePalette = computed(() => getActiveThemeTone(store.theme).chartPalette)
-const canEditDrawing = computed(() => Boolean(selectedDrawing.value?.editable && workbook.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
+const canEditDrawing = computed(() => Boolean(!isExternal.value && selectedDrawing.value?.editable && workbook.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
 const canApplyDrawingSelection = computed(() => Boolean(canEditDrawing.value && selectionAreas.value.length === 1 && selectionBounds.value))
 const canEditChartTitle = computed(() => Boolean(canEditDrawing.value && selectedDrawing.value?.chart?.titleEditable))
 const canEditChartSeries = computed(() => Boolean(canEditDrawing.value && selectedChartSeries.value?.editable))
@@ -2715,7 +2738,7 @@ const canApplyDataLabels = computed(() => {
     .some(key => targetDataLabels.value[key] !== chart.dataLabels[key])
 })
 const commitTableLifecycleChange = async (change: WorkbookTableChange, area: WorkbookMergeRange, success: string) => {
-  if (!workbook.value || updatingStructure.value) return
+  if (isExternal.value || !workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑 Table')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   updatingStructure.value = true
@@ -2782,7 +2805,7 @@ const promptDataValidationRule = (existing: WorkbookDataValidation | undefined, 
   }
 }
 const commitDataValidationChange = async (change: WorkbookDataValidationChange, area: WorkbookMergeRange, success: string) => {
-  if (!workbook.value || updatingStructure.value) return
+  if (isExternal.value || !workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改数据验证')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   updatingStructure.value = true
@@ -3003,7 +3026,7 @@ const promptConditionalFormatRule = (existing: WorkbookConditionalFormatRule | u
   }
 }
 const commitConditionalFormatChange = async (change: WorkbookConditionalFormatChange, area: WorkbookMergeRange, success: string) => {
-  if (!workbook.value || updatingStructure.value) return
+  if (isExternal.value || !workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改条件格式')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   updatingStructure.value = true
@@ -3154,7 +3177,7 @@ const removeSelectedTable = (action: 'convert_to_range' | 'delete') => {
 const editSelectedTable = async (action: 'create' | 'resize') => {
   commitFormulaInput()
   const area = tableSelection.value
-  if (!area || !workbook.value || updatingStructure.value) return
+  if (isExternal.value || !area || !workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑 Table')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   const table = selectedTable.value
@@ -3272,6 +3295,7 @@ const copySelection = async () => {
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')); return false }
 }
 const pasteSelection = async () => {
+  if (isExternal.value) return
   if (!selectedCell.value) return
   try {
     const text = await navigator.clipboard.readText()
@@ -3288,6 +3312,7 @@ const pasteSelection = async () => {
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 const clearSelection = () => {
+  if (isExternal.value) return
   const focus = selectedCell.value
   if (!focus) return
   try {
@@ -3316,7 +3341,7 @@ const clearSelection = () => {
     formulaInput.value = originalInput(cellAt(focus.row, focus.column))
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
-const cutSelection = async () => { if (await copySelection()) clearSelection() }
+const cutSelection = async () => { if (!isExternal.value && await copySelection()) clearSelection() }
 
 const styleAsPatch = (style: WorkbookCellStyle): WorkbookStylePatch => ({
   namedStyle: style.namedStyle,
@@ -3329,7 +3354,7 @@ const styleAsPatch = (style: WorkbookCellStyle): WorkbookStylePatch => ({
 })
 const patternIndex = (value: number, start: number, size: number) => start + ((value - start) % size + size) % size
 const commitFill = async (source: SelectionArea | null, preview: SelectionArea | null) => {
-  if (!source || !preview || JSON.stringify(source) === JSON.stringify(preview)) return
+  if (isExternal.value || !source || !preview || JSON.stringify(source) === JSON.stringify(preview)) return
   try {
     const destination: Array<{ row: number; column: number; sourceRow: number; sourceColumn: number; input: string }> = []
     const sourceHeight = source.bottom - source.top + 1
@@ -3408,7 +3433,7 @@ const commitFill = async (source: SelectionArea | null, preview: SelectionArea |
 
 const recalculateLoadedFormulas = async (notify: boolean) => {
   commitFormulaInput()
-  if (!workbook.value || calculating.value) return
+  if (isExternal.value || !workbook.value || calculating.value) return
   const sheet = activeSheet.value
   const targets = new Map<string, WorkbookFormulaTarget>()
   for (const [row, cells] of loadedRows.value) {
@@ -3447,11 +3472,11 @@ const recalculateLoadedFormulas = async (notify: boolean) => {
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { calculating.value = false }
 }
-const recalculateFormulas = () => recalculateLoadedFormulas(true)
+const recalculateFormulas = () => { if (!isExternal.value) recalculateLoadedFormulas(true) }
 
 const previewSelectedDynamicArray = async () => {
   const item = selectedArrayFormula.value
-  if (!workbook.value || !item || item.kind !== 'dynamic_array' || dynamicArrayPreviewLoading.value) return
+  if (isExternal.value || !workbook.value || !item || item.kind !== 'dynamic_array' || dynamicArrayPreviewLoading.value) return
   const currentGeneration = generation
   const sheet = activeSheet.value
   dynamicArrayPreviewLoading.value = true
@@ -3502,7 +3527,7 @@ const loadPage = async (offset: number) => {
   const sheet = activeSheet.value
   pageLoading.value = true
   try {
-    const page = await invoke<WorkbookSheetPage>('read_workbook_sheet', { libraryRoot: store.libraryPath, path: workbookPath.value, sheet, rowOffset: offset, rowLimit: PAGE_ROWS })
+    const page = await readSheetPage(sheet, offset, PAGE_ROWS)
     if (current !== generation || sheet !== activeSheet.value) return
     const next = new Map(loadedRows.value)
     page.rows.forEach((row, index) => next.set(page.rowOffset + index, row))
@@ -3545,7 +3570,7 @@ const loadConditionalDependencyPages = async (offsets: number[]) => {
       const offset = pendingConditionalDependencyPages.values().next().value as number
       pendingConditionalDependencyPages.delete(offset)
       if (loadedPages.has(offset)) continue
-      const page = await invoke<WorkbookSheetPage>('read_workbook_sheet', { libraryRoot: store.libraryPath, path: workbookPath.value, sheet, rowOffset: offset, rowLimit: PAGE_ROWS })
+      const page = await readSheetPage(sheet, offset, PAGE_ROWS)
       if (current !== generation || sheet !== activeSheet.value) return
       const next = new Map(loadedRows.value)
       page.rows.forEach((row, index) => next.set(page.rowOffset + index, row))
@@ -3598,7 +3623,7 @@ const prepareDataView = async () => {
   try {
     for (let offset = start; offset < end; offset += PAGE_ROWS) {
       if (loadedPages.has(offset)) continue
-      const page = await invoke<WorkbookSheetPage>('read_workbook_sheet', { libraryRoot: store.libraryPath, path: workbookPath.value, sheet, rowOffset: offset, rowLimit: PAGE_ROWS })
+      const page = await readSheetPage(sheet, offset, PAGE_ROWS)
       if (current !== generation || sheet !== activeSheet.value) return
       const next = new Map(loadedRows.value)
       page.rows.forEach((row, index) => next.set(page.rowOffset + index, row))
@@ -3610,7 +3635,7 @@ const prepareDataView = async () => {
 }
 const commitPersistedDataView = async (action: 'apply' | 'clear') => {
   const region = activeDataRegion.value
-  if (!region || !workbook.value || updatingStructure.value) return
+  if (isExternal.value || !region || !workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改筛选条件')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   const query = filterQuery.value.trim()
@@ -3668,7 +3693,7 @@ const navigateDataResult = async (direction: number) => {
   scrollRef.value?.scrollTo({ top: Math.max(0, rowOffset(row) - 80), behavior: 'smooth' })
 }
 const applyFreezePane = async (rows: number, columns: number) => {
-  if (!workbook.value || !sheetInfo.value || updatingStructure.value || dirtyCount.value) return
+  if (isExternal.value || !workbook.value || !sheetInfo.value || updatingStructure.value || dirtyCount.value) return
   updatingStructure.value = true
   try {
     const document = await invoke<WorkbookDocument>('update_workbook_freeze_pane', {
@@ -3858,7 +3883,7 @@ const promptDefinedNameScope = (): string | undefined | null => {
   return workbook.value.sheets.find(sheet => sheet.toLocaleLowerCase() === scope.toLocaleLowerCase())
 }
 const commitDefinedNameChange = async (change: WorkbookDefinedNameChange, success: string, selectedName?: string) => {
-  if (!workbook.value || updatingStructure.value) return
+  if (isExternal.value || !workbook.value || updatingStructure.value) return
   if (workbook.value.protection.lockStructure) return void message.error('工作簿结构受保护，不能修改命名区域')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   updatingStructure.value = true
@@ -4014,13 +4039,7 @@ const readChartReference = async (formula: string) => {
   const vertical = range.top !== range.bottom
   const count = Math.min(60, vertical ? range.bottom - range.top + 1 : range.right - range.left + 1)
   const previewBottom = vertical ? range.top + count - 1 : range.top
-  const page = await invoke<WorkbookSheetPage>('read_workbook_sheet', {
-    libraryRoot: store.libraryPath,
-    path: workbookPath.value,
-    sheet: range.sheet,
-    rowOffset: range.top,
-    rowLimit: previewBottom - range.top + 1,
-  })
+  const page = await readSheetPage(range.sheet, range.top, previewBottom - range.top + 1)
   return Array.from({ length: count }, (_, index) => {
     const row = vertical ? range.top + index : range.top
     const column = vertical ? range.left : range.left + index
@@ -4087,7 +4106,7 @@ const loadChartPreview = async () => {
   } finally { if (current === chartPreviewGeneration) chartPreviewLoading.value = false }
 }
 const commitDrawingChange = async (change: WorkbookDrawingChange, area: WorkbookMergeRange, success: string, selectionMode: 'keep' | 'new' | 'clear' = 'keep') => {
-  if (!workbook.value || updatingStructure.value) return
+  if (isExternal.value || !workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑绘图对象')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   updatingStructure.value = true
@@ -4366,10 +4385,14 @@ const loadWorkbook = async () => {
   try {
     await store.loadConfig()
     if (current !== generation) return
-    if (!store.libraryPath || !workbookPath.value.toLowerCase().endsWith('.xlsx')) throw new Error('XLSX 路径无效或知识库尚未配置')
-    const document = await invoke<WorkbookDocument>('read_workbook_file', { libraryRoot: store.libraryPath, path: workbookPath.value })
+    if ((!isExternal.value && !store.libraryPath) || !workbookPath.value.toLowerCase().endsWith('.xlsx')) throw new Error('XLSX 路径无效或知识库尚未配置')
+    const document = await invoke<WorkbookDocument>(isExternal.value ? 'read_external_workbook_file' : 'read_workbook_file', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+      path: workbookPath.value,
+    })
     if (current !== generation) return
     workbook.value = document
+    store.addTab({ id: workbookPath.value, title: fileName.value, path: workbookPath.value, isDirty: false, external: isExternal.value })
     activeSheet.value = ''
     selectedCell.value = null
     selectionAnchor.value = null
@@ -4398,6 +4421,7 @@ const refreshWorkbook = () => {
   dialog.warning({ title: '放弃未保存更改？', content: `将丢弃 ${dirtyCount.value} 个工作簿更改项。`, positiveText: '放弃并重新读取', negativeText: '取消', onPositiveClick: discardAndReload })
 }
 const saveWorkbook = async () => {
+  if (isExternal.value) return
   commitFormulaInput()
   if (!workbook.value || !dirtyCount.value || saving.value) return
   saving.value = true
@@ -4436,7 +4460,7 @@ const saveWorkbook = async () => {
   finally { saving.value = false }
 }
 const convertSheet = async () => {
-  if (!activeSheet.value || importing.value) return
+  if (isExternal.value || !activeSheet.value || importing.value) return
   importing.value = true
   try {
     const path = await invoke<string>('import_workbook_sheet', { libraryRoot: store.libraryPath, path: workbookPath.value, sheet: activeSheet.value })
@@ -4461,7 +4485,7 @@ const handleScroll = () => {
 const handleShortcut = (event: KeyboardEvent) => {
   const formulaFocused = event.target === formulaInputRef.value
   if (!(event.ctrlKey || event.metaKey)) {
-    if (!formulaFocused && event.key === 'Delete') { event.preventDefault(); clearSelection() }
+    if (!isExternal.value && !formulaFocused && event.key === 'Delete') { event.preventDefault(); clearSelection() }
     if (!formulaFocused && selectedCell.value && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
       event.preventDefault()
       const rowDelta = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0
@@ -4473,13 +4497,13 @@ const handleShortcut = (event: KeyboardEvent) => {
     return
   }
   const key = event.key.toLowerCase()
-  if (key === 's') { event.preventDefault(); void saveWorkbook() }
+  if (key === 's') { if (isExternal.value) return; event.preventDefault(); void saveWorkbook() }
   else if (!formulaFocused && key === 'c') { event.preventDefault(); void copySelection() }
-  else if (!formulaFocused && key === 'v') { event.preventDefault(); void pasteSelection() }
-  else if (!formulaFocused && key === 'x') { event.preventDefault(); void cutSelection() }
-  else if (!formulaFocused && key === 'z' && event.shiftKey) { event.preventDefault(); redo() }
-  else if (!formulaFocused && key === 'z') { event.preventDefault(); undo() }
-  else if (!formulaFocused && key === 'y') { event.preventDefault(); redo() }
+  else if (!isExternal.value && !formulaFocused && key === 'v') { event.preventDefault(); void pasteSelection() }
+  else if (!isExternal.value && !formulaFocused && key === 'x') { event.preventDefault(); void cutSelection() }
+  else if (!isExternal.value && !formulaFocused && key === 'z' && event.shiftKey) { event.preventDefault(); redo() }
+  else if (!isExternal.value && !formulaFocused && key === 'z') { event.preventDefault(); undo() }
+  else if (!isExternal.value && !formulaFocused && key === 'y') { event.preventDefault(); redo() }
 }
 const warnBeforeUnload = (event: BeforeUnloadEvent) => { if (dirtyCount.value) event.preventDefault() }
 const stopCellSelection = () => {
@@ -4493,7 +4517,7 @@ const stopCellSelection = () => {
   void commitFill(source, preview)
 }
 
-watch(workbookPath, () => {
+watch([workbookPath, isExternal], () => {
   drafts.value = new Map(); styleDrafts.value = new Map(); rowHeightDrafts.value = new Map(); columnWidthDrafts.value = new Map(); mergeDrafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook()
 })
 watch(() => [sheetInfo.value?.sheet || '', workbook.value?.signature || ''], syncPageLayoutDraft, { immediate: true })
@@ -4547,6 +4571,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .workbook-view { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 94%, var(--theme-primary)); container-type: inline-size; }
+.workbook-view.external-readonly .workbook-cell { cursor: default; }
+.workbook-view.external-readonly .formula-bar input { cursor: default; }
 .workbook-toolbar { height: 44px; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-surface); box-shadow: var(--workspace-shadow-sm); z-index: 5; }
 .workbook-title,.workbook-actions,.workbook-actions button { display: flex; align-items: center; gap: 8px; }
 .workbook-actions { min-width: 0; max-width: 100%; flex: none; gap: 5px; }

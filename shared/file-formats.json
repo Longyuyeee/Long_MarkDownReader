@@ -517,7 +517,7 @@
       "maxBytes": 134217728,
       "capabilities": { "read": "supported", "edit": "supported", "create": "unsupported", "index": "planned" },
       "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "bounded-overwrite", "description": "XLSX 仅开放已验证的渐进式编辑子集，高级对象分级只读保真。" },
-      "externalPolicy": "import",
+      "externalPolicy": "preview",
       "adapters": { "reader": "workbook", "writer": "workbook", "creator": null, "indexer": null },
       "creation": null
     },
