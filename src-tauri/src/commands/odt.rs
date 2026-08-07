@@ -30,6 +30,7 @@ pub struct OdtReadReport {
     pub modified: Option<u64>,
     pub signature: String,
     pub read_only: bool,
+    pub source_preserved: bool,
     pub model: OdtDocumentModel,
     pub media: Vec<OdtMediaPreview>,
     pub media_warnings: Vec<String>,
@@ -113,6 +114,11 @@ fn read_odt_path(path: &Path) -> Result<OdtReadReport, String> {
     let source = fs::read(path).map_err(|error| format!("读取 ODT 失败: {error}"))?;
     let model = parse_odt(&source)?;
     let (media, media_warnings) = extract_media_previews(&source, &model)?;
+    let after = fs::read(path).map_err(|error| format!("复核 ODT 源文件失败: {error}"))?;
+    let source_preserved = source == after;
+    if !source_preserved {
+        return Err("ODT 文件在只读预览期间发生变化".into());
+    }
     let modified = metadata
         .modified()
         .ok()
@@ -124,6 +130,7 @@ fn read_odt_path(path: &Path) -> Result<OdtReadReport, String> {
         modified,
         signature: format!("{:x}", Sha256::digest(&source)),
         read_only: true,
+        source_preserved,
         model,
         media,
         media_warnings,
@@ -140,4 +147,31 @@ pub async fn read_odt_document(
     tauri::async_runtime::spawn_blocking(move || read_odt_path(&document))
         .await
         .map_err(|error| format!("ODT 读取任务失败: {error}"))?
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn fixture(name: &str) -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("fixtures")
+            .join("odt")
+            .join("producers")
+            .join(name)
+    }
+
+    #[test]
+    fn reads_verified_producer_sources_without_mutation() {
+        for name in ["microsoft-word-16.odt", "libreoffice-writer.odt"] {
+            let path = fixture(name);
+            let before = fs::read(&path).unwrap();
+            let report = read_odt_path(&path).unwrap();
+            assert!(report.read_only);
+            assert!(report.source_preserved);
+            assert_eq!(before, fs::read(path).unwrap());
+        }
+    }
 }

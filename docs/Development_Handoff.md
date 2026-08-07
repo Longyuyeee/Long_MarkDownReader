@@ -766,3 +766,9 @@ EA-3B 已完成外部 PDF 专业只读工作区。外部 PDF 复用 2 GB 渐进 
 EA-3C 已完成 ODS 与 ODP 外部结构化只读预览。两类格式通过独立 preview 授权命令复用有界解析器，ODS 展示工作表、单元格和公式缓存值，ODP 展示幻灯片、文本与备注线索；均不执行内容、不计算公式、不保存、不转换，解析后再次核对源字节。外部工作区已纳入统一标签、返回资料库和“外部文件 · 只读 · 不会写回”状态。
 
 外部能力现为 23 类 `edit` 与 5 类 `preview`，安装器关联仍只有 `.md/.markdown`。专项契约、E1C 资料库回归、前端类型检查与生产构建、2 项 ODF 测试、4 项授权测试和 Rust 锁定检查均通过。接手后进入 EA-3D，只审计 ODT 的外部只读资格和真实生产者门禁；证据齐备前保持 `import`，DOCX/PPTX/XLSX 继续单独处理。详见 [`UX50F_External_ODF_Structured_Preview_Audit_2026-08-07.md`](./UX50F_External_ODF_Structured_Preview_Audit_2026-08-07.md)。
+
+# 2026-08-07 EA-3D 交接入口
+
+EA-3D 已完成 ODT 外部资格审计与源文件保护加固，但没有开放外部预览。机器合同仍为 `checkpoint`：Microsoft Word、LibreOffice Writer 已验证，WPS Writer 因 ODF 输出组件不可用保持阻断，生产者门禁为 2/3；`.odt` 继续不进入共享注册表，不新增外部命令或安装器关联。
+
+ODT 解析和受限图片提取后现在会再次读取并逐字节核对源文件，Word/LibreOffice 真实 fixture 的命令层零修改测试通过，工作区状态栏显示“源文件未修改”。`check:external-odt-gate` 已加入当前开发审计链，持续防止 3/3 前误开放。外部能力仍为 23 类 `edit` 与 5 类 `preview`。接手后进入 EA-3E，逐类审计 DOCX、PPTX、XLSX 的外部只读或可靠新副本策略；ODT 等待可信 WPS 证据包。详见 [`UX50G_External_ODT_Eligibility_Gate_Audit_2026-08-07.md`](./UX50G_External_ODT_Eligibility_Gate_Audit_2026-08-07.md)。

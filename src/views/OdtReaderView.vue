@@ -121,6 +121,7 @@
           <span>{{ formatBytes(report.size) }}</span>
           <span>{{ report.model.blocks.length }} 个结构块</span>
           <span>{{ report.model.plainText.length.toLocaleString() }} 字符</span>
+          <span v-if="report.sourcePreserved" class="source-preserved"><ShieldCheck :size="13" />源文件未修改</span>
         </div>
         <span>{{ report.model.generator || report.model.creator || '未知生产者' }}</span>
       </footer>
@@ -171,6 +172,7 @@ interface OdtReadReport {
   modified?: number
   signature: string
   readOnly: boolean
+  sourcePreserved: boolean
   model: OdtModel
   media: { partName: string; mediaType: string; dataUrl: string }[]
   mediaWarnings: string[]
@@ -314,6 +316,7 @@ h4.odt-heading, h5.odt-heading, h6.odt-heading { font-size: 15px; }
 .empty-document { padding: 80px 20px; text-align: center; color: var(--text-muted); }
 .odt-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: var(--text-compact); }
 .odt-status > div { gap: 10px; }
+.source-preserved { display: inline-flex; align-items: center; gap: 4px; color: var(--success-color); }
 .spinning { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 820px) {
