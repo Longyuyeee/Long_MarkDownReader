@@ -1,3 +1,4 @@
+use crate::formats::file_registry::file_format_for_path;
 use crate::formats::pptx::{parse_pptx, PptxPresentationModel, MAX_PPTX_FILE_BYTES};
 use crate::formats::pptx_edit::{
     build_pptx_alt_text_patch_isolated, build_pptx_edit_baseline, build_pptx_image_patch_isolated,
@@ -7,6 +8,7 @@ use crate::formats::pptx_edit::{
     build_pptx_text_patch_isolated, PptxEditBaselineReport, PptxIsolatedMetadataPatchReport,
     PptxIsolatedTextPatchReport, PptxSlideLifecycleReport,
 };
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::write_new_bytes;
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
@@ -19,6 +21,7 @@ use std::io::{Cursor, Read, Write};
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tauri::State;
 use zip::ZipArchive;
 
 const MAX_PPTX_MEDIA_PREVIEWS: usize = 48;
@@ -43,6 +46,7 @@ pub struct PptxReadReport {
     pub modified: u64,
     pub signature: String,
     pub read_only: bool,
+    pub source_preserved: bool,
     pub model: PptxPresentationModel,
     pub media: Vec<PptxMediaPreview>,
     pub media_warnings: Vec<String>,
@@ -359,6 +363,11 @@ fn read_pptx_path(path: &Path) -> Result<PptxReadReport, String> {
     let bytes = fs::read(path).map_err(|error| format!("读取 PPTX 失败: {error}"))?;
     let model = parse_pptx(&bytes)?;
     let (media, media_warnings) = extract_media_previews(&bytes, &model)?;
+    let after = fs::read(path).map_err(|error| format!("复核 PPTX 源文件失败: {error}"))?;
+    let source_preserved = bytes == after;
+    if !source_preserved {
+        return Err("PPTX 文件在只读解析期间发生变化".into());
+    }
     let modified = metadata
         .modified()
         .ok()
@@ -371,10 +380,19 @@ fn read_pptx_path(path: &Path) -> Result<PptxReadReport, String> {
         modified,
         signature: file_signature(&metadata),
         read_only: true,
+        source_preserved,
         model,
         media,
         media_warnings,
     })
+}
+
+fn ensure_pptx_format(path: &Path) -> Result<(), String> {
+    let format = file_format_for_path(path)?;
+    if format.id != "pptx" {
+        return Err("外部 PPTX 读取命令只接受已授权的 .pptx 文件".into());
+    }
+    Ok(())
 }
 
 fn audit_pptx_edit_baseline_path(
@@ -972,6 +990,18 @@ pub async fn read_pptx_presentation(
 }
 
 #[tauri::command]
+pub async fn read_external_pptx_presentation(
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+) -> Result<PptxReadReport, String> {
+    let presentation = access.resolve_preview(path)?;
+    ensure_pptx_format(&presentation)?;
+    tauri::async_runtime::spawn_blocking(move || read_pptx_path(&presentation))
+        .await
+        .map_err(|error| format!("外部 PPTX 读取任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn audit_pptx_edit_baseline(
     library_root: String,
     path: String,
@@ -1238,6 +1268,12 @@ mod tests {
     }
 
     #[test]
+    fn external_format_gate_accepts_only_pptx() {
+        assert!(ensure_pptx_format(Path::new("slides.pptx")).is_ok());
+        assert!(ensure_pptx_format(Path::new("document.docx")).is_err());
+    }
+
+    #[test]
     fn per_request_workspace_guard_reads_pptx_without_managed_state() {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -1253,6 +1289,8 @@ mod tests {
         let guard = WorkspaceGuard::new(&root).unwrap();
         let resolved = guard.resolve_existing_file(&path, &["pptx"]).unwrap();
         let report = read_pptx_path(&resolved).unwrap();
+        assert!(report.read_only);
+        assert!(report.source_preserved);
         assert_eq!(report.model.slides.len(), 3);
         assert_eq!(report.model.slides[0].title, "PowerPoint Producer Fixture");
         assert_eq!(fs::read(&path).unwrap(), fixture);

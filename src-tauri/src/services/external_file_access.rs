@@ -252,6 +252,7 @@ mod tests {
         let spreadsheet = directory.join("sheet.ods");
         let presentation = directory.join("slides.odp");
         let document = directory.join("document.docx");
+        let powerpoint = directory.join("presentation.pptx");
         let markdown = directory.join("note.md");
         fs::write(&image, "png").unwrap();
         fs::write(&video, "mp4").unwrap();
@@ -259,6 +260,7 @@ mod tests {
         fs::write(&spreadsheet, "ods").unwrap();
         fs::write(&presentation, "odp").unwrap();
         fs::write(&document, "docx").unwrap();
+        fs::write(&powerpoint, "pptx").unwrap();
         fs::write(&markdown, "note").unwrap();
 
         let access = ExternalFileAccess::default();
@@ -279,6 +281,9 @@ mod tests {
         assert!(access.authorize_openable(&document).is_ok());
         assert!(access.resolve_preview(&document).is_ok());
         assert!(access.resolve_editable(&document).is_err());
+        assert!(access.authorize_openable(&powerpoint).is_ok());
+        assert!(access.resolve_preview(&powerpoint).is_ok());
+        assert!(access.resolve_editable(&powerpoint).is_err());
         assert!(access.authorize_preview(&markdown).is_err());
         assert!(access.authorize_openable(&markdown).is_ok());
         assert!(access.resolve_editable(&markdown).is_ok());

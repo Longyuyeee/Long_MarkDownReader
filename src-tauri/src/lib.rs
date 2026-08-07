@@ -90,7 +90,7 @@ use commands::pptx::{
     preview_pptx_image_patch_isolated_copy, preview_pptx_shape_add_isolated_copy,
     preview_pptx_shape_delete_isolated_copy, preview_pptx_slide_lifecycle_isolated_copy,
     preview_pptx_style_patch_isolated_copy, preview_pptx_text_patch_isolated_copy,
-    read_pptx_presentation, save_pptx_patch_copy,
+    read_external_pptx_presentation, read_pptx_presentation, save_pptx_patch_copy,
 };
 use commands::search::{get_all_tags, search_all_libraries, search_by_tag, search_library};
 use commands::svg::{
@@ -385,6 +385,7 @@ pub fn run() {
             read_pdf_ocr,
             write_pdf_ocr,
             read_pptx_presentation,
+            read_external_pptx_presentation,
             audit_pptx_edit_baseline,
             preview_pptx_text_patch_isolated_copy,
             preview_pptx_style_patch_isolated_copy,

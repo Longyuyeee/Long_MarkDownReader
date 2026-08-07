@@ -1,11 +1,15 @@
 <template>
   <div class="pptx-workspace">
+    <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
     <header class="pptx-toolbar">
       <div class="document-identity">
+        <button v-if="isExternal" type="button" class="identity-back" title="返回资料库" @click="router.push({ name: 'LibraryMode' })">
+          <ArrowLeftIcon :size="15" />
+        </button>
         <PresentationIcon :size="18" />
         <div>
           <strong :title="pptxPath">{{ fileName }}</strong>
-          <span>基础编辑副本 · 原文件不写回</span>
+          <span>{{ isExternal ? '外部演示文稿 · 只读 · 不会写回' : '基础编辑副本 · 原文件不写回' }}</span>
         </div>
       </div>
       <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
@@ -30,6 +34,7 @@
           <span>放映</span>
         </button>
         <button
+          v-if="!isExternal"
           type="button"
           :disabled="!report || baselineLoading"
           :class="{ active: Boolean(editBaseline) }"
@@ -118,7 +123,7 @@
       </main>
 
       <aside v-if="showDetails" class="pptx-details">
-        <section class="edit-baseline">
+        <section v-if="!isExternal" class="edit-baseline">
           <header>
             <LockKeyholeIcon :size="15" />
             <strong>编辑安全基线</strong>
@@ -141,7 +146,7 @@
           <p v-else-if="baselineError" class="baseline-error">{{ baselineError }}</p>
           <p v-else class="muted">尚未启动编辑。源 PPTX 始终只读，编辑结果仅可另存为同目录新副本。</p>
         </section>
-        <section v-if="editBaseline" class="isolated-text-patch">
+        <section v-if="editBaseline && !isExternal" class="isolated-text-patch">
           <header>
             <PenLineIcon :size="15" />
             <strong>C4B 隔离文本预览</strong>
@@ -193,7 +198,7 @@
           </template>
           <p v-else class="muted">此演示文稿没有符合 C4B 保守规则的单文本目标。</p>
         </section>
-        <section v-if="editBaseline" class="isolated-metadata-patch" data-testid="c4c-patch-panel">
+        <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c4c-patch-panel">
           <header>
             <PaletteIcon :size="15" />
             <strong>C4C 样式与无障碍预览</strong>
@@ -300,7 +305,7 @@
             <p v-else class="muted">没有符合规则的单一内嵌图片目标。</p>
           </div>
         </section>
-        <section v-if="editBaseline" class="isolated-metadata-patch" data-testid="c5a-image-panel">
+        <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c5a-image-panel">
           <header>
             <ImageIcon :size="15" />
             <strong>C5A 隔离图片替换</strong>
@@ -355,7 +360,7 @@
           </template>
           <p v-else class="muted">没有符合“PNG/JPEG 且仅被一个对象引用”的安全图片目标。</p>
         </section>
-        <section v-if="editBaseline" class="isolated-metadata-patch" data-testid="c5b-shape-panel">
+        <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c5b-shape-panel">
           <header>
             <ShapesIcon :size="15" />
             <strong>C5B 基础形状</strong>
@@ -455,7 +460,7 @@
             <div><dt>源文件写入</dt><dd>{{ shapePatchReport.writesUserFile ? '是' : '否' }}</dd></div>
           </dl>
         </section>
-        <section v-if="editBaseline" class="isolated-metadata-patch" data-testid="c5c-slide-panel">
+        <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c5c-slide-panel">
           <header>
             <PresentationIcon :size="15" />
             <strong>C5C 幻灯片管理</strong>
@@ -537,7 +542,7 @@
           </template>
           <p v-else class="muted">没有通过 C5C 关系与部件边界审计的幻灯片。</p>
         </section>
-        <section v-if="verifiedPreview && verifiedOperation" class="reliable-save-copy" data-testid="c4d-save-panel" aria-live="polite">
+        <section v-if="verifiedPreview && verifiedOperation && !isExternal" class="reliable-save-copy" data-testid="c4d-save-panel" aria-live="polite">
           <header>
             <SaveIcon :size="15" />
             <strong>C4D 可靠另存副本</strong>
@@ -624,6 +629,7 @@
     <footer v-if="report" class="pptx-status" aria-live="polite">
       <span>{{ report.model.slides.length }} 张幻灯片 · {{ formatBytes(report.size) }}</span>
       <span v-if="routeTargetLabel" class="route-target-status" aria-live="polite">已定位：{{ routeTargetLabel }}</span>
+      <span v-else-if="isExternal" class="baseline-status">外部文件只读预览 · 源文件未修改</span>
       <span v-else-if="savedCopyReport" class="baseline-status">C4D 新副本已可靠保存 · 原文件未修改</span>
       <span v-else-if="stylePatchReport || altTextPatchReport" class="baseline-status">C4C 隔离补丁已验证 · 原文件未修改</span>
       <span v-else-if="textPatchReport" class="baseline-status">C4B 隔离补丁已验证 · 原文件未修改</span>
@@ -681,6 +687,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import {
   AlertTriangle as AlertTriangleIcon,
+  ArrowLeft as ArrowLeftIcon,
   Copy as CopyIcon,
   ChevronDown as ChevronDownIcon,
   ChevronLeft as ChevronLeftIcon,
@@ -709,6 +716,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import PptxObjectContent from '../components/pptx/PptxObjectContent.vue'
+import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { useAppStore } from '../store/app'
 import { resolvePptxRouteLocator } from '../utils/pptxLocator'
@@ -811,6 +819,7 @@ interface PptxReadReport {
   modified: number
   signature: string
   readOnly: boolean
+  sourcePreserved: boolean
   model: {
     width: number
     height: number
@@ -1174,6 +1183,7 @@ const routeTargetSlideIndex = ref(-1)
 const routeTargetObjectId = ref('')
 const routeTargetLabel = ref('')
 const pptxPath = computed(() => String(route.query.path || store.activeTabId || ''))
+const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => pptxPath.value.split(/[\\/]/).pop() || '未命名.pptx')
 const profile = computed(() => report.value?.model.compatibility as PptxProfile)
 const safeEditTargets = computed(() => [
@@ -1450,7 +1460,7 @@ const moveSearch = (direction: -1 | 1) => {
   selectSlide(matches.value[activeMatch.value].slideIndex)
 }
 const prepareEditBaseline = async () => {
-  if (!report.value || baselineLoading.value) return
+  if (!report.value || baselineLoading.value || isExternal.value) return
   baselineLoading.value = true
   baselineError.value = ''
   try {
@@ -2105,10 +2115,11 @@ const loadPresentation = async () => {
   saveCopyError.value = ''
   try {
     const viewState = recallWorkspaceViewState(pptxPath.value)
-    report.value = await invoke<PptxReadReport>('read_pptx_presentation', {
-      libraryRoot: store.libraryPath,
+    report.value = await invoke<PptxReadReport>(isExternal.value ? 'read_external_pptx_presentation' : 'read_pptx_presentation', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: pptxPath.value,
     })
+    store.addTab({ id: pptxPath.value, title: fileName.value, path: pptxPath.value, isDirty: false, external: isExternal.value })
     const rememberedSlideIndex = viewState?.section
       ? report.value.model.slides.findIndex(slide => slide.id === viewState.section)
       : -1
@@ -2219,8 +2230,8 @@ watch(matches, value => {
   activeMatch.value = 0
   if (value.length) selectSlide(value[0].slideIndex)
 })
-watch(pptxPath, (_path, previousPath) => {
-  rememberPptxViewState(previousPath)
+watch([pptxPath, isExternal], (_next, previous) => {
+  if (previous?.[0]) rememberPptxViewState(previous[0])
   void loadPresentation()
 })
 watch(
@@ -2248,6 +2259,8 @@ onBeforeUnmount(() => {
 .pptx-toolbar { min-height: 52px; padding: 7px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
 .document-identity, .toolbar-actions, .pptx-search, .pptx-details header, .pptx-status { display: flex; align-items: center; }
 .document-identity { min-width: 0; gap: 9px; }
+.identity-back { display: grid; width: 28px; height: 28px; flex: none; place-items: center; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; }
+.identity-back:hover { color: var(--primary-color); border-color: color-mix(in srgb, var(--primary-color) 42%, var(--border-color)); }
 .document-identity > div { min-width: 0; display: flex; flex-direction: column; }
 .document-identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .document-identity span { color: var(--text-muted); font-size: var(--text-compact); }

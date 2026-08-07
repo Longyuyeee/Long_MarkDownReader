@@ -778,3 +778,9 @@ ODT 解析和受限图片提取后现在会再次读取并逐字节核对源文�
 EA-3E 已完成 DOCX 外部只读工作区。外部 DOCX 使用独立 preview 授权命令，解析后清空文本、样式和图片说明编辑目标，并在返回前再次核对源字节；页面隐藏撤销、编辑、隔离验证、覆盖和另存入口，只保留页面阅读、目录、搜索、定位、兼容画像与安全图片预览。资料库内 DOCX 的有界编辑和三生产者可靠保存能力没有改变。
 
 外部能力现为 23 类 `edit` 与 6 类 `preview`，安装器关联仍只有 `.md/.markdown`。专项契约、DOCX 10 项回归、既有外部能力契约、前端类型检查与生产构建和 Rust 锁定检查均通过。接手后进入 EA-3F，单独开放并验证 PPTX 外部只读工作区；XLSX 继续保持 `import`。详见 [`UX50H_External_DOCX_Readonly_Workspace_Audit_2026-08-07.md`](./UX50H_External_DOCX_Readonly_Workspace_Audit_2026-08-07.md)。
+
+# 2026-08-07 EA-3F 交接入口
+
+EA-3F 已完成 PPTX 外部只读工作区。外部 PPTX 使用独立 preview 授权命令，保留缩略图、结构化画布、搜索、定位、备注、兼容画像、受限图片预览和放映；编辑准备、文本/样式/图片/形状/幻灯片补丁以及可靠另存区域均被隐藏并在函数入口再次阻断。解析后会重新读取并逐字节核对源文件。
+
+外部能力现为 23 类 `edit` 与 7 类 `preview`，安装器关联仍只有 `.md/.markdown`。专项契约、PPTX 11 项回归、DOCX/ODF 既有契约、前端类型检查与生产构建和 Rust 锁定检查均通过。接手后进入 EA-3G，只审计 XLSX 外部只读与分页读取边界。详见 [`UX50I_External_PPTX_Readonly_Workspace_Audit_2026-08-07.md`](./UX50I_External_PPTX_Readonly_Workspace_Audit_2026-08-07.md)。
