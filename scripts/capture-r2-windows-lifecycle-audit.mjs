@@ -123,14 +123,15 @@ if (scenario === 'cloud-paper') {
 
   await navigate('#/settings', '.settings-view', 'settings route')
   await waitFor(
-    `document.body.textContent.includes('Long编辑不会覆盖现有选择')
+    `document.body.textContent.includes('格式能力与默认应用')
+      && document.body.textContent.includes('Long编辑不会自动覆盖')
       && [...document.querySelectorAll('button')].some(button => button.textContent.includes('打开系统设置'))`,
     'safe default-app settings entry',
   )
   await waitFor(`document.querySelector('.page-loader') === null`, 'settings route transition')
   await evaluate(`(() => {
     const row = [...document.querySelectorAll('.setting-row')]
-      .find(item => item.textContent?.includes('Markdown 打开方式'))
+      .find(item => item.textContent?.includes('格式能力与默认应用'))
     row?.scrollIntoView({ block: 'center' })
     return row !== undefined
   })()`)

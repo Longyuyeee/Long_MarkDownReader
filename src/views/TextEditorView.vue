@@ -3,16 +3,18 @@
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" class="text-tabs" />
     <header class="text-toolbar">
       <div class="document-identity">
-        <n-button quaternary circle size="small" title="返回知识库" @click="leaveEditor">
+        <n-button quaternary circle size="small" :title="isExternal ? '返回资料库' : '返回知识库'" @click="leaveEditor">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
         <div class="document-title">
           <strong :title="textPath">{{ fileName }}</strong>
           <span>
+            <template v-if="isExternal">外部文件 · </template>
             {{ format?.label || '文本' }}
             <template v-if="readOnlyReason"> · 只读预览</template>
             <template v-else-if="dirty"> · 未保存</template>
             <template v-else> · 已同步</template>
+            <template v-if="isExternal && !readOnlyReason"> · 仅点击保存写回</template>
           </span>
         </div>
       </div>

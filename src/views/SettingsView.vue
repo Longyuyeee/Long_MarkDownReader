@@ -113,15 +113,6 @@
                 <n-radio-button value="minimize">后台运行</n-radio-button>
               </n-radio-group>
             </div>
-            <div v-show="activeCategory === 'formats'" class="setting-row">
-              <div class="info">
-                <div class="label">Markdown 打开方式</div>
-                <div class="desc">由 Windows 管理默认应用，Long编辑不会覆盖现有选择</div>
-              </div>
-              <n-button secondary type="info" @click="openDefaultAppsSettings">
-                打开系统设置
-              </n-button>
-            </div>
             <div
               ref="formatCapabilityRow"
               v-show="activeCategory === 'formats'"
@@ -130,10 +121,13 @@
               data-testid="format-capability-settings"
             >
               <div class="info">
-                <div class="label">格式能力</div>
-                <div class="desc">查看每种格式的保存边界、依赖和已知限制</div>
+                <div class="label">格式能力与默认应用</div>
+                <div class="desc">逐格式查看编辑与外部打开边界；默认应用由你在 Windows 中确认，Long编辑不会自动覆盖</div>
               </div>
-              <n-button secondary @click="openReleaseCapabilities">查看矩阵</n-button>
+              <div class="backup-actions">
+                <n-button secondary @click="openReleaseCapabilities">查看与配置</n-button>
+                <n-button secondary type="info" @click="openDefaultAppsSettings">打开系统设置</n-button>
+              </div>
             </div>
             <UpdateSettingsRow v-show="activeCategory === 'system'" />
             <div v-show="activeCategory === 'privacy'" class="setting-row">

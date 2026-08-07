@@ -139,11 +139,18 @@ mod tests {
     fn accepts_registered_external_text_and_rejects_missing_files() {
         let directory = fixture("format");
         let text_file = directory.join("note.txt");
+        let code_file = directory.join("sample.ts");
+        let structured_file = directory.join("data.json");
         fs::write(&text_file, "text").unwrap();
+        fs::write(&code_file, "const value = 1;").unwrap();
+        fs::write(&structured_file, "{}").unwrap();
 
         let access = ExternalFileAccess::default();
         assert!(access.authorize_editable(&text_file).is_ok());
         assert!(access.resolve_editable(&text_file).is_ok());
+        assert!(access.authorize_editable(&code_file).is_ok());
+        assert!(access.resolve_editable(&code_file).is_ok());
+        assert!(access.authorize_editable(&structured_file).is_err());
         assert!(access.resolve_markdown(&text_file).is_err());
         assert!(access
             .authorize_editable(directory.join("missing.md"))

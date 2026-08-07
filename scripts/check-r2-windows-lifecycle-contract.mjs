@@ -104,7 +104,8 @@ failUnless(
 )
 failUnless(
   settings.includes("invoke('open_default_apps_settings')")
-    && settings.includes('Long编辑不会覆盖现有选择')
+    && settings.includes('格式能力与默认应用')
+    && settings.includes('Long编辑不会自动覆盖')
     && !settings.includes('set_as_default_handler'),
   'settings default-app workflow drift',
 )

@@ -14,17 +14,32 @@ const navigation = read('src/services/externalFileNavigation.ts')
 const app = read('src/App.vue')
 const markdown = read('src/views/TempMode.vue')
 const text = read('src/views/TextEditorView.vue')
+const settings = read('src/views/SettingsView.vue')
+const capabilities = read('src/views/ReleaseCapabilitiesView.vue')
 const access = read('src-tauri/src/services/external_file_access.rs')
 const commands = read('src-tauri/src/commands/files.rs')
 const packageJson = json('package.json')
 const audit = read('docs/UX50A_External_Markdown_Text_Workspace_Audit_2026-08-06.md')
+const ea2Audit = read('docs/UX50B_External_Text_Code_Default_App_Audit_2026-08-07.md')
 
+const expectedEditableIds = [
+  'c-family', 'editorconfig', 'env', 'gitignore', 'go', 'ini', 'javascript', 'jvm-code',
+  'markdown', 'plain-text', 'properties', 'python', 'rust', 'shell', 'sql', 'typescript', 'web-source',
+]
 const editableIds = registry.formats
   .filter(format => format.externalPolicy === 'edit')
   .map(format => format.id)
   .sort()
-if (JSON.stringify(editableIds) !== JSON.stringify(['markdown', 'plain-text'])) {
-  failures.push(`EA-1 external edit boundary drift: ${editableIds.join(', ')}`)
+if (JSON.stringify(editableIds) !== JSON.stringify(expectedEditableIds)) {
+  failures.push(`EA-2A external edit boundary drift: ${editableIds.join(', ')}`)
+}
+const invalidTextEditors = registry.formats.filter(format =>
+  format.externalPolicy === 'edit'
+  && format.id !== 'markdown'
+  && (format.routeName !== 'TextEditor' || format.adapters.writer !== 'text'),
+)
+if (invalidTextEditors.length) {
+  failures.push(`EA-2A external edit formats bypass TextEditor: ${invalidTextEditors.map(format => format.id).join(', ')}`)
 }
 
 for (const token of [
@@ -55,7 +70,23 @@ for (const token of [
   "'read_external_text_document_range'",
   "'read_external_text_document'",
   "'write_external_text_document'",
+  '外部文件 · ',
+  '仅点击保存写回',
 ]) requireText(text, token, `external text workspace is missing ${token}`)
+
+for (const token of [
+  '格式能力与默认应用',
+  'Long编辑不会自动覆盖',
+  '查看与配置',
+  '打开系统设置',
+]) requireText(settings, token, `default-app settings are missing ${token}`)
+for (const token of [
+  '外部打开与默认应用',
+  "'external-ready'",
+  'Windows 默认应用始终由你确认',
+  "invoke('open_default_apps_settings')",
+  'externalPolicyDescription',
+]) requireText(capabilities, token, `format capability external-opening UI is missing ${token}`)
 
 for (const token of ['authorize_editable', 'format.external_policy != "edit"', 'resolve_editable']) {
   requireText(access, token, `backend external authorization is missing ${token}`)
@@ -66,7 +97,7 @@ for (const token of ['read_external_markdown_file', 'write_external_markdown_fil
 
 const associations = tauri.bundle?.fileAssociations || []
 if (associations.length !== 1 || JSON.stringify(associations[0].ext) !== JSON.stringify(['md', 'markdown'])) {
-  failures.push('EA-1 must not expand installer file associations')
+  failures.push('EA-2A must not expand installer file associations')
 }
 if (lifecycle.fileAssociations?.defaultSelectionOwner !== 'windows' || lifecycle.fileAssociations?.directRegistryDefaultWrite !== false) {
   failures.push('Windows default-app ownership drift')
@@ -77,10 +108,13 @@ if (!packageJson.scripts?.['check:current-development-audit']?.includes('check-e
 for (const token of ['EA-1', 'Markdown', 'TXT', '显式保存', 'Windows', 'EA-2']) {
   requireText(audit, token, `EA-1 audit is missing ${token}`)
 }
+for (const token of ['EA-2A', '17', 'TextEditor', 'Windows', '默认应用', 'JSON', 'EA-2B']) {
+  requireText(ea2Audit, token, `EA-2A audit is missing ${token}`)
+}
 
 if (failures.length) {
   console.error(failures.map(message => `- ${message}`).join('\n'))
   process.exit(1)
 }
 
-console.log('EA-1 external workspace passed: Markdown and TXT use explicit authorized routes, full-height editors, explicit saves, and the existing Windows association boundary.')
+console.log('EA-2A external workspace passed: 17 Markdown/text/code profiles use explicit authorization, user-confirmed saves, per-format capability guidance, and the unchanged Windows association boundary.')

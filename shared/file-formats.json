@@ -36,7 +36,7 @@
       "maxBytes": 2097152,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "unsupported" },
       "userCapability": { "level": "basic-edit", "label": "受保护编辑", "saveMode": "overwrite", "description": ".env 默认遮罩变量值并排除全文索引、知识图谱与遥测；仅在当前文件显式确认后显示和编辑原值。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": null },
       "creation": { "defaultExtension": ".env", "defaultContent": "# 环境变量\nAPP_ENV=development\n", "defaultName": "未命名环境变量" }
     },
@@ -49,7 +49,7 @@
       "maxBytes": 8388608,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "INI、CONF 与 CFG 可创建、查找替换、编辑、全文索引，并保留原始编码和换行策略可靠保存。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
       "creation": { "defaultExtension": ".ini", "defaultContent": "[settings]\nenabled=true\n", "defaultName": "未命名配置" }
     },
@@ -62,7 +62,7 @@
       "maxBytes": 8388608,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "Java Properties 可创建、查找替换、编辑、全文索引，并保留原始编码和换行策略可靠保存。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
       "creation": { "defaultExtension": ".properties", "defaultContent": "# Properties\napp.name=LongEdit\n", "defaultName": "未命名属性配置" }
     },
@@ -75,7 +75,7 @@
       "maxBytes": 2097152,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "unsupported" },
       "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "EditorConfig 可在文件树中识别、创建和可靠编辑；点文件不进入全文索引和知识图谱。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": null },
       "creation": { "defaultExtension": ".editorconfig", "defaultContent": "root = true\n\n[*]\ncharset = utf-8\nend_of_line = lf\ninsert_final_newline = true\n", "defaultName": ".editorconfig" }
     },
@@ -88,7 +88,7 @@
       "maxBytes": 2097152,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "unsupported" },
       "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "Git 忽略规则可在文件树中识别、创建和可靠编辑；点文件不进入全文索引和知识图谱。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": null },
       "creation": { "defaultExtension": ".gitignore", "defaultContent": "node_modules/\ndist/\n.env\n", "defaultName": ".gitignore" }
     },
@@ -101,7 +101,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "JavaScript 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含编译、调试或语言服务。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
     },
@@ -114,7 +114,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "TypeScript 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含类型检查、编译、调试或语言服务。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
     },
@@ -127,7 +127,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Python 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含运行、调试或语言服务。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
     },
@@ -140,7 +140,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Rust 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
     },
@@ -153,7 +153,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Go 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
     },
@@ -166,7 +166,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Java 与 Kotlin 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
     },
@@ -179,7 +179,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "C、C++ 与 C# 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
     },
@@ -192,7 +192,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Shell 与 PowerShell 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入且不执行脚本。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
     },
@@ -205,7 +205,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "SQL 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不连接或执行数据库语句。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
     },
@@ -218,7 +218,7 @@
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "HTML、CSS、SCSS、Less 与 Vue 支持语法高亮、括号匹配、自动缩进、标签/关键字/文档词补全、基础诊断和签名保护保存；HTML 可预览当前草稿，预览会移除危险能力并禁止外部资源，只有点击保存才写入。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
       "creation": null
     },

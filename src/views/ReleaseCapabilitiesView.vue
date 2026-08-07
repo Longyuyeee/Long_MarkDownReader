@@ -12,6 +12,18 @@
     </WorkspaceManagementHeader>
 
     <WorkspaceManagementContent class="release-content">
+      <section class="external-opening-summary">
+        <FileInput :size="20" />
+        <div>
+          <strong>外部打开与默认应用</strong>
+          <p>{{ externalReadyCount }} 类格式可在用户明确选择后直接进入 Long编辑；只有点击保存才写回。Windows 默认应用始终由你确认。</p>
+        </div>
+        <button type="button" @click="openDefaultAppsSettings">
+          <ExternalLink :size="15" />
+          Windows 默认应用
+        </button>
+      </section>
+
       <div class="toolbar">
         <label class="search-box">
           <Search :size="16" />
@@ -69,6 +81,19 @@
               <h2>当前能力</h2>
               <p>{{ row.format.userCapability.description }}</p>
             </section>
+            <section>
+              <h2>外部打开</h2>
+              <p>{{ externalPolicyDescription(row.format.externalPolicy) }}</p>
+              <button
+                v-if="row.format.externalPolicy === 'edit'"
+                type="button"
+                class="default-app-action"
+                @click="openDefaultAppsSettings"
+              >
+                <ExternalLink :size="14" />
+                在 Windows 中选择
+              </button>
+            </section>
           </div>
         </details>
       </div>
@@ -92,8 +117,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { invoke } from '@tauri-apps/api/core'
+import { useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronDown, Search, ShieldCheck } from 'lucide-vue-next'
+import { ChevronDown, ExternalLink, FileInput, Search, ShieldCheck } from 'lucide-vue-next'
 import WorkspaceManagementContent from '../components/workspace/WorkspaceManagementContent.vue'
 import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
 import {
@@ -104,14 +131,16 @@ import {
   type ReleaseDependency,
   type ReleaseReadiness,
 } from '../config/releaseCapabilities'
-import type { SaveMode } from '../config/fileFormats'
+import type { ExternalFilePolicy, SaveMode } from '../config/fileFormats'
 
-type FilterValue = 'all' | ReleaseReadiness
+type FilterValue = 'all' | 'external-ready' | ReleaseReadiness
 
 const router = useRouter()
 const route = useRoute()
+const message = useMessage()
 const query = ref('')
 const activeFilter = ref<FilterValue>('all')
+const externalReadyCount = RELEASE_CAPABILITY_ROWS.filter(row => row.format.externalPolicy === 'edit').length
 const returnToSource = () => {
   if (route.query.from === 'settings') {
     router.push({ name: 'Settings', query: { focus: route.query.settingsFocus || 'format-capabilities' } })
@@ -125,18 +154,34 @@ const filters = computed(() => [
   { value: 'verified' as const, label: '已验证', count: RELEASE_CAPABILITY_ROWS.filter(row => row.readiness === 'verified').length },
   { value: 'verified-with-limitations' as const, label: '有限能力', count: RELEASE_CAPABILITY_ROWS.filter(row => row.readiness === 'verified-with-limitations').length },
   { value: 'external-dependency' as const, label: '外部依赖', count: RELEASE_CAPABILITY_ROWS.filter(row => row.readiness === 'external-dependency').length },
+  { value: 'external-ready' as const, label: '可外部打开', count: externalReadyCount },
 ])
 
 const filteredRows = computed(() => {
   const needle = query.value.trim().toLocaleLowerCase()
   return RELEASE_CAPABILITY_ROWS.filter(row => {
-    if (activeFilter.value !== 'all' && row.readiness !== activeFilter.value) return false
+    if (activeFilter.value === 'external-ready' && row.format.externalPolicy !== 'edit') return false
+    if (activeFilter.value !== 'all' && activeFilter.value !== 'external-ready' && row.readiness !== activeFilter.value) return false
     if (!needle) return true
     return row.format.label.toLocaleLowerCase().includes(needle)
       || row.format.id.includes(needle)
       || row.format.extensions.some(extension => extension.includes(needle))
   })
 })
+
+const externalPolicyDescription = (policy: ExternalFilePolicy) => ({
+  edit: '可由文件选择器或 Windows 启动参数授权，在独立工作区直接打开；不会自动保存。',
+  import: '当前仅支持从资料库或明确导入入口打开，尚未注册为系统外部启动格式。',
+  none: '当前不接受外部启动或导入。',
+})[policy]
+
+const openDefaultAppsSettings = async () => {
+  try {
+    await invoke('open_default_apps_settings')
+  } catch (cause) {
+    message.error(`无法打开 Windows 默认应用设置：${String(cause)}`)
+  }
+}
 
 const saveModeLabel = (mode: SaveMode) => ({
   overwrite: '原文件保存',
@@ -170,6 +215,42 @@ const dependencyLabel = (dependency: ReleaseDependency) => ({
   border: var(--theme-border);
   border-radius: 6px;
 }
+
+.external-opening-summary {
+  min-height: 64px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: var(--theme-border);
+  border-radius: 6px;
+  background: var(--theme-surface);
+}
+.external-opening-summary > svg { color: var(--theme-primary); }
+.external-opening-summary strong { font-size: 13px; }
+.external-opening-summary p { margin: 3px 0 0; color: var(--theme-text-secondary); font-size: 12px; line-height: 1.5; }
+.external-opening-summary button,
+.default-app-action {
+  min-height: 32px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: var(--theme-border);
+  border-radius: 5px;
+  color: var(--theme-primary);
+  background: var(--theme-bg);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.external-opening-summary button:hover,
+.default-app-action:hover { background: rgba(var(--theme-primary-rgb), 0.08); }
+.default-app-action { margin-top: 8px; }
 
 .toolbar {
   display: flex;
@@ -302,6 +383,8 @@ const dependencyLabel = (dependency: ReleaseDependency) => ({
 .gate-status { color: var(--theme-warning, #b77813); }
 
 @media (max-width: 760px) {
+  .external-opening-summary { grid-template-columns: 24px minmax(0, 1fr); }
+  .external-opening-summary button { grid-column: 1 / -1; width: 100%; }
   .toolbar { align-items: stretch; flex-direction: column; }
   .search-box { width: 100%; box-sizing: border-box; }
   .matrix-head { display: none; }

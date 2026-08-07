@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-07 EA-2A 最新接手入口：** 外部文件工作区已从 Markdown/TXT 扩展到 17 类配置与代码格式；格式能力页逐格式公开外部打开状态，并把默认应用选择明确交给 Windows 和用户。安装器仍只登记 Markdown 的 OpenWith 候选，不会静默接管其他格式。下一步进入 EA-2B，为 JSON/YAML/XML/TOML/SVG 建立专用外部授权保存链路。详见 [`UX50B_External_Text_Code_Default_App_Audit_2026-08-07.md`](./UX50B_External_Text_Code_Default_App_Audit_2026-08-07.md)。
+
 > **2026-08-04 最新接手入口：** v1.0.3 安装版真实多格式测试暴露了 ACL、更新策略、路由状态、工作区布局和跨格式编辑体验问题。后续开发以 [`User_Experience_Closure_Audit_2026-08-04.md`](./User_Experience_Closure_Audit_2026-08-04.md) 的 39 项验收清单和阶段 A-E 为最高优先级；下方历史阶段记录仅作为能力与证据背景，不得据此宣称当前用户体验已经收口。
 
 > A0A 已完成安装态确认对话框 ACL 代码修复：主窗口补齐 confirm/message 权限，新增源码到能力清单的一致性检查并接入补丁发布门禁。A0A 完成时 UX-07、UX-11、UX-16 仍为开发中；当前状态以下方后续阶段和总验收清单为准。详见 [`A0A_Dialog_ACL_Hotfix_Audit_2026-08-04.md`](./A0A_Dialog_ACL_Hotfix_Audit_2026-08-04.md)。
