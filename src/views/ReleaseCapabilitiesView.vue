@@ -16,7 +16,7 @@
         <FileInput :size="20" />
         <div>
           <strong>外部打开与默认应用</strong>
-          <p>{{ externalReadyCount }} 类格式可在用户明确选择后直接进入 Long编辑；只有点击保存才写回。Windows 默认应用始终由你确认。</p>
+          <p>{{ externalEditableCount }} 类格式可直接编辑，{{ externalPreviewCount }} 类媒体可只读预览；编辑格式只有点击保存才写回，预览格式永不写回。Windows 默认应用始终由你确认，并按格式逐项选择。</p>
         </div>
         <button type="button" @click="openDefaultAppsSettings">
           <ExternalLink :size="15" />
@@ -85,7 +85,7 @@
               <h2>外部打开</h2>
               <p>{{ externalPolicyDescription(row.format.externalPolicy) }}</p>
               <button
-                v-if="row.format.externalPolicy === 'edit'"
+                v-if="row.format.externalPolicy === 'edit' || row.format.externalPolicy === 'preview'"
                 type="button"
                 class="default-app-action"
                 @click="openDefaultAppsSettings"
@@ -140,7 +140,9 @@ const route = useRoute()
 const message = useMessage()
 const query = ref('')
 const activeFilter = ref<FilterValue>('all')
-const externalReadyCount = RELEASE_CAPABILITY_ROWS.filter(row => row.format.externalPolicy === 'edit').length
+const externalEditableCount = RELEASE_CAPABILITY_ROWS.filter(row => row.format.externalPolicy === 'edit').length
+const externalPreviewCount = RELEASE_CAPABILITY_ROWS.filter(row => row.format.externalPolicy === 'preview').length
+const externalReadyCount = externalEditableCount + externalPreviewCount
 const returnToSource = () => {
   if (route.query.from === 'settings') {
     router.push({ name: 'Settings', query: { focus: route.query.settingsFocus || 'format-capabilities' } })
@@ -160,7 +162,7 @@ const filters = computed(() => [
 const filteredRows = computed(() => {
   const needle = query.value.trim().toLocaleLowerCase()
   return RELEASE_CAPABILITY_ROWS.filter(row => {
-    if (activeFilter.value === 'external-ready' && row.format.externalPolicy !== 'edit') return false
+    if (activeFilter.value === 'external-ready' && !['edit', 'preview'].includes(row.format.externalPolicy)) return false
     if (activeFilter.value !== 'all' && activeFilter.value !== 'external-ready' && row.readiness !== activeFilter.value) return false
     if (!needle) return true
     return row.format.label.toLocaleLowerCase().includes(needle)
@@ -171,6 +173,7 @@ const filteredRows = computed(() => {
 
 const externalPolicyDescription = (policy: ExternalFilePolicy) => ({
   edit: '可由文件选择器或 Windows 启动参数授权，在独立工作区直接打开；不会自动保存。',
+  preview: '可由文件选择器或 Windows 启动参数授权，在独立媒体工作区只读打开；不会修改或写回源文件。',
   import: '当前仅支持从资料库或明确导入入口打开，尚未注册为系统外部启动格式。',
   none: '当前不接受外部启动或导入。',
 })[policy]

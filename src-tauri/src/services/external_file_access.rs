@@ -6,6 +6,7 @@ use std::sync::Mutex;
 #[derive(Debug, Default)]
 pub struct ExternalFileAccess {
     authorized_editable: Mutex<HashSet<PathBuf>>,
+    authorized_previews: Mutex<HashSet<PathBuf>>,
     authorized_imports: Mutex<HashSet<PathBuf>>,
 }
 
@@ -45,6 +46,39 @@ impl ExternalFileAccess {
         Ok(resolved)
     }
 
+    pub fn authorize_preview(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
+        let resolved = resolve_preview(path.as_ref())?;
+        self.authorized_previews
+            .lock()
+            .map_err(|_| "External preview authorization state is unavailable".to_string())?
+            .insert(resolved.clone());
+        Ok(resolved)
+    }
+
+    pub fn resolve_preview(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
+        let resolved = resolve_preview(path.as_ref())?;
+        let is_authorized = self
+            .authorized_previews
+            .lock()
+            .map_err(|_| "External preview authorization state is unavailable".to_string())?
+            .contains(&resolved);
+        if is_authorized {
+            Ok(resolved)
+        } else {
+            Err("This external preview has not been authorized by the user".into())
+        }
+    }
+
+    pub fn authorize_openable(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
+        let path = path.as_ref();
+        let resolved = canonical_file(path, "External file")?;
+        match file_format_for_path(&resolved)?.external_policy.as_str() {
+            "edit" => self.authorize_editable(resolved),
+            "preview" => self.authorize_preview(resolved),
+            _ => Err("This format is not registered for direct external opening".into()),
+        }
+    }
+
     pub fn authorize_import(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
         let resolved = resolve_import(path.as_ref())?;
         self.authorized_imports
@@ -73,15 +107,32 @@ impl ExternalFileAccess {
 }
 
 fn resolve_editable(path: &Path) -> Result<PathBuf, String> {
-    let resolved = path
-        .canonicalize()
-        .map_err(|error| format!("External file is unavailable: {error}"))?;
-    if !resolved.is_file() {
-        return Err("External path must be a file".into());
-    }
+    let resolved = canonical_file(path, "External file")?;
     let format = file_format_for_path(&resolved)?;
     if format.external_policy != "edit" {
         return Err(format!("{} 不允许作为外部可编辑文档打开", format.label));
+    }
+    Ok(resolved)
+}
+
+fn resolve_preview(path: &Path) -> Result<PathBuf, String> {
+    let resolved = canonical_file(path, "External preview")?;
+    let format = file_format_for_path(&resolved)?;
+    if format.external_policy != "preview" {
+        return Err(format!(
+            "{} is not registered for external read-only preview",
+            format.label
+        ));
+    }
+    Ok(resolved)
+}
+
+fn canonical_file(path: &Path, label: &str) -> Result<PathBuf, String> {
+    let resolved = path
+        .canonicalize()
+        .map_err(|error| format!("{label} is unavailable: {error}"))?;
+    if !resolved.is_file() {
+        return Err(format!("{label} path must be a file"));
     }
     Ok(resolved)
 }
@@ -188,6 +239,30 @@ mod tests {
         assert!(access.resolve_import(&workbook).is_ok());
         assert!(access.resolve_import(&workbook).is_ok());
         assert!(access.authorize_import(&executable).is_err());
+
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn preview_authorization_is_read_only_and_format_limited() {
+        let directory = fixture("preview");
+        let image = directory.join("photo.png");
+        let video = directory.join("clip.mp4");
+        let markdown = directory.join("note.md");
+        fs::write(&image, "png").unwrap();
+        fs::write(&video, "mp4").unwrap();
+        fs::write(&markdown, "note").unwrap();
+
+        let access = ExternalFileAccess::default();
+        assert!(access.resolve_preview(&image).is_err());
+        assert!(access.authorize_openable(&image).is_ok());
+        assert!(access.resolve_preview(&image).is_ok());
+        assert!(access.resolve_editable(&image).is_err());
+        assert!(access.authorize_openable(&video).is_ok());
+        assert!(access.resolve_preview(&video).is_ok());
+        assert!(access.authorize_preview(&markdown).is_err());
+        assert!(access.authorize_openable(&markdown).is_ok());
+        assert!(access.resolve_editable(&markdown).is_ok());
 
         fs::remove_dir_all(directory).unwrap();
     }

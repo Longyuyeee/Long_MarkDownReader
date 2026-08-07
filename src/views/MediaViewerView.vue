@@ -1,11 +1,13 @@
 <template>
   <section class="media-workspace" data-testid="media-workspace" tabindex="0" @keydown="handleKeydown">
+    <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
     <header class="media-toolbar">
       <div class="media-identity">
+        <button v-if="isExternal" class="back-button" title="返回资料库" @click="leaveViewer"><ArrowLeftIcon /></button>
         <component :is="isVideo ? VideoIcon : ImageIcon" :size="19" aria-hidden="true" />
         <div>
           <strong :title="fileName">{{ fileName }}</strong>
-          <span>{{ report?.formatLabel || '媒体' }} · {{ report?.streaming ? '按需读取' : '只读预览' }}</span>
+          <span><template v-if="isExternal">外部文件 · </template>{{ report?.formatLabel || '媒体' }} · {{ report?.streaming ? '按需读取' : '只读预览' }} · 不会写回</span>
         </div>
       </div>
 
@@ -105,7 +107,7 @@
 import { convertFileSrc, invoke } from '@tauri-apps/api/core'
 import { openPath } from '@tauri-apps/plugin-opener'
 import {
-  ExternalLink as ExternalLinkIcon, FastForward as FastForwardIcon, FileWarning as FileWarningIcon,
+  ArrowLeft as ArrowLeftIcon, ExternalLink as ExternalLinkIcon, FastForward as FastForwardIcon, FileWarning as FileWarningIcon,
   Gauge as GaugeIcon, Grid3X3 as GridIcon, Image as ImageIcon, Maximize as MaximizeIcon,
   Pause as PauseIcon, PictureInPicture2 as PictureInPictureIcon, Play as PlayIcon,
   RefreshCw as RefreshCwIcon, Repeat2 as RepeatIcon, Rewind as RewindIcon,
@@ -113,7 +115,8 @@ import {
   Volume2 as VolumeIcon, VolumeX as VolumeXIcon, ZoomIn as ZoomInIcon, ZoomOut as ZoomOutIcon,
 } from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useAppStore } from '../store/app'
 
 interface MediaInspection {
@@ -131,6 +134,7 @@ interface MediaInspection {
 }
 
 const route = useRoute()
+const router = useRouter()
 const store = useAppStore()
 const stageRef = ref<HTMLElement | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
@@ -158,6 +162,7 @@ let fitFrame = 0
 let stageResizeObserver: ResizeObserver | undefined
 
 const mediaPath = computed(() => String(route.query.path || store.activeTabId || ''))
+const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => mediaPath.value.split(/[\\/]/).pop() || '未命名媒体')
 const isVideo = computed(() => report.value?.kind === 'video')
 const pictureInPictureAvailable = computed(() => {
@@ -267,6 +272,7 @@ const enterPictureInPicture = async () => {
 }
 const onMediaError = () => { loadError.value = isVideo.value ? '当前系统缺少该视频的编解码器，请使用系统播放器打开。' : '图片数据无效或当前系统不支持该编码。' }
 const openExternally = () => { if (mediaPath.value) void openPath(mediaPath.value) }
+const leaveViewer = () => router.push({ name: 'LibraryMode' })
 
 const load = async () => {
   if (!mediaPath.value) return
@@ -283,9 +289,19 @@ const load = async () => {
   fitToWindow.value = true
   clearMediaUrl()
   try {
-    const inspected = await invoke<MediaInspection>('inspect_media_file', { libraryRoot: store.libraryPath, path: mediaPath.value })
+    const inspected = await invoke<MediaInspection>(isExternal.value ? 'inspect_external_media_file' : 'inspect_media_file', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+      path: mediaPath.value,
+    })
     if (token !== loadToken) return
     report.value = inspected
+    store.addTab({
+      id: mediaPath.value,
+      title: fileName.value,
+      path: mediaPath.value,
+      isDirty: false,
+      external: isExternal.value,
+    })
     mediaUrl.value = convertFileSrc(inspected.path)
     await nextTick()
   } catch (error) {
@@ -316,7 +332,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   event.preventDefault()
 }
 
-watch(mediaPath, load, { immediate: true })
+watch([mediaPath, isExternal], load, { immediate: true })
 onMounted(() => {
   if (!stageRef.value) return
   stageResizeObserver = new ResizeObserver(() => {
@@ -338,6 +354,7 @@ onBeforeUnmount(() => {
 .media-workspace { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; color: var(--theme-text); background: var(--theme-bg); container-type: inline-size; outline: none; }
 .media-toolbar { min-height: 52px; flex: none; display: grid; grid-template-columns: minmax(150px,1fr) auto minmax(70px,1fr); align-items: center; gap: 10px; padding: 6px 12px; box-sizing: border-box; border-bottom: var(--theme-border); background: var(--theme-card); }
 .media-identity { min-width: 0; display: flex; align-items: center; gap: 9px; }.media-identity > svg { flex: none; color: var(--theme-primary); }.media-identity div { min-width: 0; display: grid; gap: 1px; }.media-identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }.media-identity span { color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.back-button { flex: none; }
 .media-actions,.media-global-actions { display: flex; align-items: center; gap: 4px; }.media-actions { min-width: 0; overflow-x: auto; scrollbar-width: none; }.media-actions::-webkit-scrollbar { display: none; }.media-global-actions { justify-self: end; }
 button,.playback-rate { height: 30px; flex: none; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text-secondary); background: var(--workspace-control-bg); }.media-toolbar button { width: 30px; padding: 0; cursor: pointer; }.media-toolbar button svg,.playback-rate svg { width: 15px; height: 15px; }.media-toolbar button:hover,.media-toolbar button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }.media-toolbar button:disabled { opacity: .4; cursor: default; }.media-toolbar .scale-value { width: 54px; font-size: var(--text-compact); font-variant-numeric: tabular-nums; }.toolbar-divider { width: 1px; height: 20px; margin: 0 3px; background: var(--workspace-border-color); }
 .playback-rate { gap: 5px; padding: 0 7px; }.playback-rate select { border: 0; outline: 0; color: inherit; background: transparent; font-size: var(--text-compact); }

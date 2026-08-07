@@ -65,12 +65,13 @@ for (const [id, routeName] of Object.entries({ json: 'JsonEditor', jsonc: 'JsonE
 }
 
 for (const token of [
-  "format.externalPolicy !== 'edit'",
+  "['edit', 'preview'].includes(format.externalPolicy)",
   "format.id === 'markdown'",
   "name: 'TempMode'",
   'return { name: format.routeName, query }',
   "external: '1'",
 ]) requireText(navigation, token, `external route mapping is missing ${token}`)
+requireText(commands, 'pick_external_openable_file', 'external picker must expose the openable format boundary')
 requireText(app, 'externalRouteForFile(cleanPath)', 'App does not use the explicit external route mapping')
 if (app.includes("router.push({ name: 'TempMode', query: { path: cleanPath")) failures.push('generic Markdown fallback returned')
 

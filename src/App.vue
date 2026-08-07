@@ -73,7 +73,7 @@ import CommandPalette from './components/CommandPalette.vue'
 import FileRelationContext from './components/FileRelationContext.vue'
 import AppUpdater from './components/AppUpdater.vue'
 import { useAppStore } from './store/app'
-import { findFileFormat, isExternallyEditable, opensInLibraryShell, routeForFile } from './config/fileFormats'
+import { findFileFormat, isExternallyOpenable, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 import { openManagedFile } from './services/fileNavigation'
 import { externalRouteForFile } from './services/externalFileNavigation'
@@ -312,7 +312,7 @@ const routeExternalFile = async (filePath: string) => {
 }
 
 const openExternalFile = async () => {
-  const filePath = await invoke<string | null>('pick_external_editable_file')
+  const filePath = await invoke<string | null>('pick_external_openable_file')
   if (filePath) await routeExternalFile(filePath)
 }
 
@@ -388,7 +388,7 @@ const initializeExternalFileRouting = async () => {
   try {
     unlistenOpenFile = await withTimeout(listen<string>('open-file', async (event) => {
       const filePath = event.payload
-      if (isExternallyEditable(filePath)) await routeExternalFile(filePath)
+      if (isExternallyOpenable(filePath)) await routeExternalFile(filePath)
     }), 2500, 'event:open-file')
   } catch (cause) {
     console.warn('Open-file event registration timed out', cause)
@@ -396,7 +396,7 @@ const initializeExternalFileRouting = async () => {
 
   try {
     const args = await withTimeout(invoke<string[]>('get_launch_args'), 2500, 'invoke:get_launch_args')
-    const filePath = args.find(arg => isExternallyEditable(arg.replace(/^"|"$/g, '')))
+    const filePath = args.find(arg => isExternallyOpenable(arg.replace(/^"|"$/g, '')))
     if (filePath) await routeExternalFile(filePath)
   } catch (cause) {
     console.warn('Launch arguments unavailable', cause)

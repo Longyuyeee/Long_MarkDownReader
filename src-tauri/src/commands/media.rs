@@ -1,8 +1,9 @@
 use crate::formats::file_registry::file_format_for_path;
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::Serialize;
 use std::time::UNIX_EPOCH;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
 use tauri_plugin_fs::FsExt;
 
 const IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp", "ico", "avif"];
@@ -69,6 +70,23 @@ pub async fn inspect_media_file(
         .copied()
         .collect();
     let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &allowed)?;
+    inspect_resolved_media_file(&app, path)
+}
+
+#[tauri::command]
+pub async fn inspect_external_media_file(
+    app: AppHandle,
+    access: State<'_, ExternalFileAccess>,
+    path: String,
+) -> Result<MediaInspection, String> {
+    let path = access.resolve_preview(path)?;
+    inspect_resolved_media_file(&app, path)
+}
+
+fn inspect_resolved_media_file(
+    app: &AppHandle,
+    path: std::path::PathBuf,
+) -> Result<MediaInspection, String> {
     let format = file_format_for_path(&path)?;
     if !["raster-image", "video"].contains(&format.id.as_str()) {
         return Err("当前文件没有注册为媒体预览格式".into());

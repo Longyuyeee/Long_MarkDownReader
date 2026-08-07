@@ -748,3 +748,9 @@ UX-47 已恢复自动检查与自动安装，但不再依赖遗失的旧 Tauri �
 UX-48 已修复 Table 顶部“导出 CSV”等命令在空间不足时被压缩、文字越界的问题，并删除窄窗口直接隐藏导出与行列命令的规则。统一命令条合同已覆盖 Table、Workbook、Canvas、思维导图、Mermaid、PDF、PPTX、DOCX、ODT、日志和 YAML：控件保持可读尺寸，空间不足时隐藏原生滚动条并支持滚轮横滑。详见 [`UX48_Command_Strip_Overflow_Audit_2026-08-06.md`](./UX48_Command_Strip_Overflow_Audit_2026-08-06.md)。
 
 UX-49 已完成媒体流式读取与视频工具增强。图片和视频不再整文件读入 JavaScript/Blob，而是在 `WorkspaceGuard` 校验后仅授权当前文件，通过 Tauri Asset Protocol 的 Range 响应按需读取；视频上限由 128 MiB 调整为 2 GiB。MP4/WebM/OGV/M4V 保持 WebView 原生目标，MOV/MKV/AVI/MPEG/MPG 作为系统解码器兼容格式开放，并明确显示兼容边界。播放器新增播放/暂停、前后 10 秒、循环、静音、倍速、画中画、全屏、快捷键与非阻断错误提示，图片适应窗口会跟随工作区尺寸更新。源码构建、Rust 锁定检查、2 项分类单测和媒体专项门禁已通过；下一安装包仍需用真实大视频和多编码样本复测内存、拖动定位、全屏/画中画及外部打开。详见 [`UX49_Streaming_Media_Workspace_Audit_2026-08-06.md`](./UX49_Streaming_Media_Workspace_Audit_2026-08-06.md)。
+
+# 2026-08-07 EA-3A 交接入口
+
+EA-3A 已完成图片和视频的外部只读工作区。外部能力现明确分为 23 类 `edit` 与 2 类 `preview`：图片/视频可由应用文件选择器、Windows 启动参数或用户逐项选择的默认应用入口直接打开，但只获得独立预览授权，没有 writer、保存按钮或写回路径。安装器关联仍只有 `.md/.markdown`，不会抢占全部支持格式。
+
+格式能力页已分别说明可编辑与只读数量，媒体工作区显示外部文件、只读和不会写回，并纳入统一标签与返回资料库流程。专项契约、前端生产构建、4 项外部授权测试、2 项媒体分类测试和 Rust 锁定检查均通过。接手后进入 EA-3B，从 PDF 开始逐类审计外部预览、sidecar、新副本和资料库语义；不能批量把剩余 `import` 格式改成 `preview/edit`。完整结论见 [`UX50D_External_Media_Preview_Audit_2026-08-07.md`](./UX50D_External_Media_Preview_Audit_2026-08-07.md)。

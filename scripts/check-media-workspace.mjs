@@ -24,7 +24,7 @@ for (const id of ['raster-image', 'video']) if (!release.formats.some(format => 
 
 const mediaWorkspace = read('src/views/MediaViewerView.vue')
 requireTokens(mediaWorkspace, 'Media workspace', [
-  "invoke<MediaInspection>('inspect_media_file'",
+  "isExternal.value ? 'inspect_external_media_file' : 'inspect_media_file'",
   'convertFileSrc(inspected.path)',
   'requestFullscreen()',
   'requestPictureInPicture',

@@ -372,14 +372,14 @@ pub async fn write_external_markdown_file(
 }
 
 #[tauri::command]
-pub async fn pick_external_editable_file(
+pub async fn pick_external_openable_file(
     app_handle: tauri::AppHandle,
     access: State<'_, ExternalFileAccess>,
 ) -> Result<Option<String>, String> {
     let extensions: Vec<&str> = file_format_registry()?
         .formats
         .iter()
-        .filter(|format| format.external_policy == "edit")
+        .filter(|format| matches!(format.external_policy.as_str(), "edit" | "preview"))
         .flat_map(|format| {
             format
                 .extensions
@@ -390,8 +390,8 @@ pub async fn pick_external_editable_file(
     let selected = app_handle
         .dialog()
         .file()
-        .set_title("打开可编辑文件")
-        .add_filter("可编辑文本、代码与结构化源码", &extensions)
+        .set_title("打开外部文件")
+        .add_filter("可编辑文档与只读媒体", &extensions)
         .blocking_pick_file();
     let Some(selected) = selected else {
         return Ok(None);
@@ -399,7 +399,7 @@ pub async fn pick_external_editable_file(
     let path = selected
         .into_path()
         .map_err(|error| format!("Invalid selected path: {error}"))?;
-    let path = access.authorize_editable(path)?;
+    let path = access.authorize_openable(path)?;
     Ok(Some(path.to_string_lossy().into_owned()))
 }
 

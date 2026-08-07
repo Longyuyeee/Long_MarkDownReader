@@ -656,7 +656,7 @@ requireText(canvas, 'opensInLibraryShell', 'canvas file nodes must retain the li
 requireText(workspaceTabs, 'tab.isDirty', 'unified tabs must confirm before discarding dirty drafts')
 requireText(appStore, '.filter(tab => !tab.external)', 'external authorization tabs must not survive process restart')
 requireText(app, 'confirmDiscardUnsaved', 'application exit must coordinate dirty session tabs')
-requireText(app, "'pick_external_editable_file'", 'external picker must accept every registered editable text format')
+requireText(app, "'pick_external_openable_file'", 'external picker must accept every registered externally openable format')
 requireText(externalNavigation, "external: '1'", 'external TXT routes must retain their authorization context')
 forbid(settings, /TXT 自动保存/, 'settings must not promise background TXT writes')
 requireText(files, 'file_format_registry()', 'workspace scanning must consume registry')
