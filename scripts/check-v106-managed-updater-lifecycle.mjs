@@ -88,6 +88,8 @@ requireTokens(probe, [
   'installerStartedBeforeConfirmation: false',
   "document.querySelector('.sidebar-footer')",
   "item.textContent?.includes('系统与更新')",
+  "scrollIntoView({ block: 'center', inline: 'nearest' })",
+  'visible post-upgrade update settings row',
   'managed-updater-post-upgrade-navigation.json',
   '当前已是最新版本',
   'managed-updater-available.jpg',

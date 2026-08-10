@@ -243,12 +243,29 @@ if (mode === 'discover-install') {
     'post-upgrade up-to-date status',
     1200,
   )
+  await evaluate(`document.querySelector('[data-testid="app-update-settings"]')?.scrollIntoView({ block: 'center', inline: 'nearest' })`)
+  await waitFor(
+    `(() => {
+      const root = document.querySelector('[data-testid="app-update-settings"]')
+      if (!root) return false
+      const rect = root.getBoundingClientRect()
+      const style = getComputedStyle(root)
+      const containerStyle = getComputedStyle(root.closest('.animate-item') || root)
+      return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < innerHeight
+        && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity || 1) > 0.9
+        && containerStyle.display !== 'none' && containerStyle.visibility !== 'hidden' && Number(containerStyle.opacity || 1) > 0.9
+    })()`,
+    'visible post-upgrade update settings row',
+    600,
+  )
+  await delay(500)
   const surface = await evaluate(`(() => {
     const root = document.querySelector('[data-testid="app-update-settings"]')
     const rect = root?.getBoundingClientRect()
     return root && rect ? {
       text: root.textContent?.replace(/\s+/g, ' ').trim().slice(0, 1200) || '',
-      visible: rect.width > 0 && rect.height > 0,
+      visible: rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < innerHeight,
+      viewport: { top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height },
     } : null
   })()`)
   if (!surface?.visible || !surface.text.includes(`当前已是最新版本 v${currentVersion}`)) {
