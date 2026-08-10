@@ -1,6 +1,6 @@
 # Long Markdown Reader 开发交接
 
-> **2026-08-10 v1.0.6 发布候选入口：** 冻结产品提交 `9349c334b22753dacd0a58fad7f1ce55aa0bf6dc` 的完整 Quality Gate（运行 `31392652689`）、本地 MSI/NSIS 构建及 GitHub 托管安装生命周期（运行 `31394967949`）均已通过。托管环境完成 22/22 生命周期和 18/18 安装态工作区检查；本机因已有 LongEdit 单实例运行，没有终止用户进程或执行安装器。社区无签名候选现为 `ready-to-publish`，企业签名候选仍为 false。接手后先等待本证据提交的远端门禁，再创建 `v1.0.6` Release、复核远端附件并更新 README；最后单独执行 `1.0.5 -> 1.0.6` 应用内更新观察。详见 [`V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md`](./V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md)。
+> **2026-08-10 v1.0.6 已发布入口：** 冻结产品提交 `9349c334b22753dacd0a58fad7f1ce55aa0bf6dc` 的质量门、本地 MSI/NSIS 构建和托管安装生命周期均通过；候选证据提交 `257c12e1795e9de2d5629e8053cbeaa1fb802cc8` 的 Quality Gate `31399100657` 也通过。GitHub Release `367990618` 已公开，Tag 绑定 `257c12e`，NSIS、MSI 与 `SHA256SUMS.txt` 从远端重新下载后大小和 SHA-256 全部匹配。社区渠道已发布，企业签名候选仍为 false。接手后只需先等待本发布回执提交的远端门禁，再在隔离环境执行 `1.0.5 -> 1.0.6` 应用内更新与资料保留观察。详见 [`V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md`](./V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md)。
 
 > **2026-08-10 v1.0.6 发布准备入口：** package、Cargo、Tauri 和现行发布事实源已提升到 `1.0.6`，本地 `ci:patch-release` 已通过，社区策略仍等待远端质量门与安装包证据；公开下载保持 `v1.0.5`。README 与 `RELEASE_NOTES_v1.0.6.md` 已对齐 EA-5C 的 29 类外部编辑、8 类外部预览、6 类显式转换，以及 37 类/85 扩展名逐项默认应用候选。接手后先等待远端 Quality Gate，再从冻结提交构建 MSI/NSIS、记录哈希、发布并执行 `1.0.5 -> 1.0.6` 受控更新观察。详见 [`V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md`](./V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md)。
 

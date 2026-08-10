@@ -101,6 +101,38 @@ if (ready || published) {
         else if (fs.statSync(evidencePath).size !== file.bytes || sha256(evidencePath) !== file.sha256) fail(`hosted lifecycle evidence hash drift: ${file.path}`)
       }
     }
+
+    if (published) {
+      const receiptPath = `docs/evidence/v${pkg.version}-release/release-receipt.json`
+      if (!fs.existsSync(receiptPath)) fail('published release receipt is missing')
+      else {
+        const receipt = json(receiptPath)
+        if (receipt.status !== 'published-and-remote-assets-verified'
+          || receipt.release?.tag !== tag
+          || receipt.release?.url !== releaseUrl
+          || receipt.release?.taggedCommit !== policy.release?.taggedCommit
+          || receipt.release?.databaseId !== policy.release?.databaseId
+          || receipt.release?.isDraft !== false
+          || receipt.release?.isPrerelease !== false
+          || receipt.authenticodeStatus !== 'NotSigned'
+          || receipt.sourceUserContentIncluded !== false
+          || receipt.managedUpdaterObservation !== policy.patchValidation?.managedUpdaterUpgradePath
+          || manifest.status !== 'published-remote-assets-verified-hosted-lifecycle-passed-local-smoke-blocked-existing-single-instance'
+          || manifest.releaseReceipt !== 'release-receipt.json'
+          || manifest.boundaries?.managedUpdaterReleaseAssetsPresent !== true
+          || manifest.boundaries?.legacyTauriUpdaterArtifactsPresent !== false) fail('published remote receipt boundary drift')
+
+        const expectedAssets = new Map([
+          ...manifest.artifacts.filter(item => item.target === 'msi' || item.target === 'nsis').map(item => [item.fileName, { sizeBytes: item.sizeBytes, sha256: item.sha256 }]),
+          [manifest.checksumFile.fileName, { sizeBytes: manifest.checksumFile.sizeBytes, sha256: manifest.checksumFile.sha256 }],
+        ])
+        if (receipt.assets?.length !== expectedAssets.size) fail('published remote asset count drift')
+        for (const asset of receipt.assets ?? []) {
+          const expected = expectedAssets.get(asset.name)
+          if (!expected || asset.sizeBytes !== expected.sizeBytes || asset.sha256 !== expected.sha256 || asset.remoteDownloadVerified !== true || !Number.isInteger(asset.assetId)) fail(`published remote asset drift: ${asset.name}`)
+        }
+      }
+    }
   }
 }
 
