@@ -16,6 +16,10 @@ const signedArtifactRuntimeProven = process.env.LONGEDIT_R5J_SIGNED_RUNTIME === 
 const coldLaunchFile = process.env.LONGEDIT_EA5B_COLD_FILE ? path.resolve(process.env.LONGEDIT_EA5B_COLD_FILE) : ''
 const secondaryLaunchFile = process.env.LONGEDIT_EA5B_SECONDARY_FILE ? path.resolve(process.env.LONGEDIT_EA5B_SECONDARY_FILE) : ''
 const windowsDevicePrefix = '\\\\?\\'
+const normalizeWindowsPath = value => {
+  const normalized = String(value || '').replaceAll('/', '\\').toLocaleLowerCase()
+  return normalized.startsWith(windowsDevicePrefix) ? normalized.slice(4) : normalized
+}
 if (!library || !output || !installedExecutable || !coldLaunchFile || !secondaryLaunchFile || !appVersion || !/^[a-f0-9]{64}$/.test(installerSha256) || !/^[a-f0-9]{40}$/.test(sourceCommit)) {
   throw new Error('R5J library, output, executable, external launch fixtures, version, installer hash, and source commit are required')
 }
@@ -309,14 +313,10 @@ try {
   await waitFor(
     `(() => {
       const query = new URLSearchParams(location.hash.split('?')[1] || '')
-      const normalize = value => {
-        const normalized = String(value || '').replaceAll('/', '\\\\').toLocaleLowerCase()
-        return normalized.startsWith(${JSON.stringify(windowsDevicePrefix)}) ? normalized.slice(4) : normalized
-      }
       return location.hash.includes('/text')
         && query.get('external') === '1'
-        && normalize(query.get('path')) === normalize(${JSON.stringify(secondaryLaunchFile)})
         && document.querySelector('.text-workspace') !== null
+        && document.body?.innerText?.includes('EA5B_SECONDARY_INSTANCE_UNICODE_PATH') === true
     })()`,
     'single-instance external TXT handoff with Chinese and spaces',
     1200,
@@ -329,6 +329,10 @@ try {
     crash: document.querySelector('.crash-fallback')?.textContent?.slice(0, 800) || '',
   })`)
   throw new Error(`${error.message}: ${JSON.stringify(diagnostics)}`)
+}
+const routedSecondaryPath = await evaluate(`new URLSearchParams(location.hash.split('?')[1] || '').get('path') || ''`)
+if (normalizeWindowsPath(routedSecondaryPath) !== normalizeWindowsPath(secondaryLaunchFile)) {
+  throw new Error(`Single-instance handoff opened an unexpected path: ${JSON.stringify({ routedSecondaryPath, secondaryLaunchFile })}`)
 }
 checks.push({ id: 'installed-single-instance-external-handoff', status: 'passed' })
 
