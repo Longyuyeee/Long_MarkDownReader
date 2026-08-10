@@ -152,21 +152,9 @@ use window_vibrancy::{apply_blur, apply_mica};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default()
-        .manage(ExternalFileAccess::default())
-        .manage(PendingExternalOpenFiles::default())
-        .manage(KnowledgeIndexRuntime::default())
-        .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_autostart::init(
-            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            Some(vec!["--minimized"]),
-        ))
-        .plugin(tauri_plugin_opener::init());
+    let builder = tauri::Builder::default();
 
+    // This plugin must run before every plugin that can initialize a secondary process.
     #[cfg(debug_assertions)]
     let builder = if std::env::var_os("LONGEDIT_E2E_LIBRARY").is_some() {
         builder
@@ -204,6 +192,21 @@ pub fn run() {
             }
         }
     }));
+
+    let builder = builder
+        .manage(ExternalFileAccess::default())
+        .manage(PendingExternalOpenFiles::default())
+        .manage(KnowledgeIndexRuntime::default())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"]),
+        ))
+        .plugin(tauri_plugin_opener::init());
 
     builder
         .on_window_event(|window, event| match event {

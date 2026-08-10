@@ -36,7 +36,12 @@ for (const token of [
   '.manage(PendingExternalOpenFiles::default())',
   'pending.enqueue(path.clone())',
   'take_pending_external_open_files,',
+  'let builder = tauri::Builder::default();',
 ]) requireText(rustApp, token, `single-instance backend queue is missing ${token}`)
+
+if (rustApp.indexOf('plugin(tauri_plugin_single_instance::init') > rustApp.indexOf('.manage(ExternalFileAccess::default())')) {
+  failures.push('single-instance plugin must be registered before managed state and all other plugins')
+}
 
 for (const token of [
   'pub struct PendingExternalOpenFiles',

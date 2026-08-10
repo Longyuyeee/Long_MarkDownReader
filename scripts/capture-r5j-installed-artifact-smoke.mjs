@@ -304,17 +304,28 @@ const [secondaryExitCode] = await Promise.race([
   delay(15_000).then(() => { throw new Error('Secondary LongEdit process did not exit through the single-instance handoff') }),
 ])
 if (secondaryExitCode !== 0) throw new Error(`Secondary LongEdit process exited with ${secondaryExitCode}`)
-await waitFor(
-  `(() => {
-    const query = new URLSearchParams(location.hash.split('?')[1] || '')
-    return location.hash.includes('/text')
-      && query.get('external') === '1'
-      && query.get('path')?.endsWith(${JSON.stringify(secondaryLaunchFile)}) === true
-      && document.querySelector('.text-workspace') !== null
-  })()`,
-  'single-instance external TXT handoff with Chinese and spaces',
-  1200,
-)
+try {
+  await waitFor(
+    `(() => {
+      const query = new URLSearchParams(location.hash.split('?')[1] || '')
+      const normalize = value => String(value || '').replace(/^\\\\\\?\\\\/, '').replace(/\\//g, '\\\\').toLocaleLowerCase()
+      return location.hash.includes('/text')
+        && query.get('external') === '1'
+        && normalize(query.get('path')) === normalize(${JSON.stringify(secondaryLaunchFile)})
+        && document.querySelector('.text-workspace') !== null
+    })()`,
+    'single-instance external TXT handoff with Chinese and spaces',
+    1200,
+  )
+} catch (error) {
+  const diagnostics = await evaluate(`({
+    hash: location.hash,
+    body: document.body?.innerText?.slice(0, 1200) || '',
+    textWorkspace: document.querySelector('.text-workspace') !== null,
+    crash: document.querySelector('.crash-fallback')?.textContent?.slice(0, 800) || '',
+  })`)
+  throw new Error(`${error.message}: ${JSON.stringify(diagnostics)}`)
+}
 checks.push({ id: 'installed-single-instance-external-handoff', status: 'passed' })
 
 await navigate('#/workspace', '.workspace-home', 'installed workspace initialization')
