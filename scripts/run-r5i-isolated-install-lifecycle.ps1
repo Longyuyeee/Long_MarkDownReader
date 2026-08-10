@@ -96,6 +96,22 @@ function Get-ProgIdOpenCommand([string]$ProgId) {
     return [string](Get-Item -LiteralPath $key).GetValue("")
 }
 
+function Get-UserChoiceProgId([string]$Extension) {
+    $key = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$Extension\UserChoice"
+    if (-not (Test-Path -LiteralPath $key)) {
+        return ""
+    }
+    return [string](Get-Item -LiteralPath $key).GetValue("ProgId")
+}
+
+function Get-RegisteredApplication([string]$Name) {
+    $key = "HKCU:\Software\RegisteredApplications"
+    if (-not (Test-Path -LiteralPath $key)) {
+        return ""
+    }
+    return [string](Get-Item -LiteralPath $key).GetValue($Name)
+}
+
 $webViewPolicyRoots = @(
     "HKCU:\Software\Policies\Microsoft\Edge\WebView2",
     "HKLM:\Software\Policies\Microsoft\Edge\WebView2"
@@ -217,6 +233,9 @@ $jsonFixture = Join-Path $libraryRoot "r5j-config.json"
 $graphNorthStarFixture = Join-Path $libraryRoot "r5j-north-star.md"
 $graphPlanFixture = Join-Path $libraryRoot "r5j-plan.md"
 $graphCanvasFixture = Join-Path $libraryRoot "r5j-network.canvas"
+$externalLaunchRoot = "C:\LongEdit EA5B 外部"
+$coldLaunchFixture = Join-Path $externalLaunchRoot "冷启动 思维导图.opml"
+$secondaryLaunchFixture = Join-Path $externalLaunchRoot "二次打开 记录.txt"
 $webviewRoot = "C:\LongEditR5IWebView"
 $managementRoot = "C:\LongEditR5IManagement"
 $managementBackup = Join-Path $managementRoot "r5l-management-backup.zip"
@@ -224,8 +243,12 @@ $checks = New-Object System.Collections.Generic.List[object]
 $startedProcess = $null
 $initialMarkdownDefault = Get-DefaultProgId ".md"
 $initialMarkdownLongDefault = Get-DefaultProgId ".markdown"
+$initialOpmlDefault = Get-DefaultProgId ".opml"
+$initialPngDefault = Get-DefaultProgId ".png"
+$initialOpmlUserChoice = Get-UserChoiceProgId ".opml"
+$initialPngUserChoice = Get-UserChoiceProgId ".png"
 
-New-Item -ItemType Directory -Path $OutputDirectory, $libraryRoot, $configRoot, $webviewRoot, $managementRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $OutputDirectory, $libraryRoot, $configRoot, $webviewRoot, $managementRoot, $externalLaunchRoot -Force | Out-Null
 [System.IO.File]::WriteAllText($libraryMarker, "R5I_EXTERNAL_LIBRARY_MUST_SURVIVE", [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($configMarker, '{"stage":"R5I","retain":true}', [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($textFixture, "R5J_TEXT_INITIAL`n", [System.Text.UTF8Encoding]::new($false))
@@ -233,6 +256,8 @@ New-Item -ItemType Directory -Path $OutputDirectory, $libraryRoot, $configRoot, 
 [System.IO.File]::WriteAllText($graphNorthStarFixture, "# R5J North Star`n`nInstalled knowledge-network acceptance root.`n", [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($graphPlanFixture, "---`nrelations:`n  depends-on: [[r5j-north-star]]`n---`n# R5J Delivery Plan`n", [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($graphCanvasFixture, '{"nodes":[{"id":"north-star","type":"file","file":"r5j-north-star.md","x":0,"y":0,"width":240,"height":120},{"id":"plan","type":"file","file":"r5j-plan.md","x":320,"y":0,"width":240,"height":120}],"edges":[{"id":"supports-plan","fromNode":"north-star","toNode":"plan","relationType":"supports"}]}', [System.Text.UTF8Encoding]::new($false))
+[System.IO.File]::WriteAllText($coldLaunchFixture, '<?xml version="1.0" encoding="UTF-8"?><opml version="2.0"><head><title>EA5B 冷启动</title></head><body><outline text="中文 空格路径"/></body></opml>', [System.Text.UTF8Encoding]::new($false))
+[System.IO.File]::WriteAllText($secondaryLaunchFixture, "EA5B_SECONDARY_INSTANCE_UNICODE_PATH`n", [System.Text.UTF8Encoding]::new($false))
 $formalConfig = [ordered]@{
     libraries = @([ordered]@{
         name = "R5L Disposable Vault"
@@ -384,18 +409,44 @@ try {
     $env:LONGEDIT_R5J_INSTALLER_SHA256 = $currentInstallerSha256
     $env:LONGEDIT_R5J_SOURCE_COMMIT = $ExpectedSourceCommit.ToLowerInvariant()
     $env:LONGEDIT_R5J_SIGNED_RUNTIME = if ($signedArtifactRuntimeProven) { "true" } else { "false" }
+    $env:LONGEDIT_EA5B_COLD_FILE = $coldLaunchFixture
+    $env:LONGEDIT_EA5B_SECONDARY_FILE = $secondaryLaunchFixture
     $env:LONGEDIT_R5L_LIBRARY = $libraryRoot
     $env:LONGEDIT_R5L_OUTPUT = $OutputDirectory
     $env:LONGEDIT_R5L_BACKUP = $managementBackup
     $env:LONGEDIT_R5L_MODE = "prepare"
 
     Enable-WebView2TestPolicy -UserDataRoot $webviewRoot
-    $startedProcess = Start-Process -FilePath $mainBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
+    $startedProcess = Start-Process -FilePath $mainBinary -ArgumentList @("`"$coldLaunchFixture`"") -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
     Wait-ForPort -Port 9343 -Listening $true -Process $startedProcess -Phase "installed-upgrade"
     & $NodeExecutable $InstalledSmokeScript
     if ($LASTEXITCODE -ne 0) {
         throw "R5J installed-artifact route and I/O smoke failed."
     }
+    $runtimeCandidateCommand = Get-ProgIdOpenCommand "LongEdit.ExternalFile"
+    $registeredApplication = Get-RegisteredApplication "LongEdit"
+    $capabilitiesKey = "HKCU:\Software\LongEdit\Capabilities\FileAssociations"
+    $opmlCapability = if (Test-Path -LiteralPath $capabilitiesKey) { [string](Get-Item -LiteralPath $capabilitiesKey).GetValue(".opml") } else { "" }
+    $pngCapability = if (Test-Path -LiteralPath $capabilitiesKey) { [string](Get-Item -LiteralPath $capabilitiesKey).GetValue(".png") } else { "" }
+    if ((Get-OpenWithProgIds ".opml") -notcontains "LongEdit.ExternalFile" -or
+        (Get-OpenWithProgIds ".png") -notcontains "LongEdit.ExternalFile" -or
+        (Get-OpenWithProgIds ".avif") -notcontains "LongEdit.ExternalFile" -or
+        (Get-OpenWithProgIds ".json") -contains "LongEdit.ExternalFile" -or
+        $runtimeCandidateCommand -notlike "*$installRoot*" -or
+        $registeredApplication -ne "Software\LongEdit\Capabilities" -or
+        $opmlCapability -ne "LongEdit.ExternalFile" -or
+        $pngCapability -ne "LongEdit.ExternalFile") {
+        throw "EA-5B installed candidate registration did not remain format-bounded or installation-bound."
+    }
+    if ((Get-DefaultProgId ".opml") -ne $initialOpmlDefault -or
+        (Get-DefaultProgId ".png") -ne $initialPngDefault -or
+        (Get-UserChoiceProgId ".opml") -ne $initialOpmlUserChoice -or
+        (Get-UserChoiceProgId ".png") -ne $initialPngUserChoice) {
+        throw "EA-5B candidate preparation changed a Windows-owned default selection."
+    }
+    $checks.Add([ordered]@{ id = "default-app-candidate-registration"; status = "passed"; selectedFormats = @("opml", "raster-image"); unselectedFormat = "json" })
+    $checks.Add([ordered]@{ id = "external-cold-launch-unicode-space-path"; status = "passed"; sourceUserContentIncluded = $false })
+    $checks.Add([ordered]@{ id = "single-instance-secondary-file-handoff"; status = "passed"; sourceUserContentIncluded = $false })
     & $NodeExecutable $ManagementRollbackSmokeScript
     if ($LASTEXITCODE -ne 0) {
         throw "R5L management backup and knowledge-index prepare smoke failed."
@@ -474,6 +525,41 @@ try {
         throw "Markdown default selection was not restored after uninstall."
     }
     $checks.Add([ordered]@{ id = "file-association-recovery"; status = "passed" })
+    if ((Get-OpenWithProgIds ".opml") -contains "LongEdit.ExternalFile" -or
+        (Get-OpenWithProgIds ".png") -contains "LongEdit.ExternalFile" -or
+        (Get-OpenWithProgIds ".avif") -contains "LongEdit.ExternalFile" -or
+        (Test-Path -LiteralPath "HKCU:\Software\Classes\LongEdit.ExternalFile") -or
+        (Test-Path -LiteralPath "HKCU:\Software\LongEdit\Capabilities") -or
+        -not ([string]::IsNullOrWhiteSpace((Get-RegisteredApplication "LongEdit"))) -or
+        (Get-DefaultProgId ".opml") -ne $initialOpmlDefault -or
+        (Get-DefaultProgId ".png") -ne $initialPngDefault -or
+        (Get-UserChoiceProgId ".opml") -ne $initialOpmlUserChoice -or
+        (Get-UserChoiceProgId ".png") -ne $initialPngUserChoice) {
+        throw "EA-5B uninstall did not remove only LongEdit-owned candidate registrations."
+    }
+    $checks.Add([ordered]@{ id = "default-app-candidate-uninstall-recovery"; status = "passed"; defaultSelectionChanged = $false })
+    $defaultAppLifecycleEvidence = [ordered]@{
+        schemaVersion = 1
+        stage = "EA-5B2"
+        capturedAt = (Get-Date).ToUniversalTime().ToString("o")
+        status = "passed"
+        environment = "disposable-windows-installed-nsis"
+        selectedFormats = @("opml", "raster-image")
+        selectedExtensionsVerified = @(".opml", ".png", ".avif")
+        unselectedExtensionsVerified = @(".json")
+        coldLaunchUnicodeSpacePath = $true
+        secondarySingleInstanceHandoff = $true
+        windowsDefaultSelectionChanged = $false
+        longEditRegistrationsRemovedAfterUninstall = $true
+        sourceUserContentIncluded = $false
+        releaseCandidate = $false
+        promotionEligible = $false
+    }
+    [System.IO.File]::WriteAllText(
+        (Join-Path $OutputDirectory "installed-default-app-lifecycle-evidence.json"),
+        ($defaultAppLifecycleEvidence | ConvertTo-Json -Depth 6),
+        [System.Text.UTF8Encoding]::new($false)
+    )
 
     if (-not (Test-Path -LiteralPath $libraryMarker -PathType Leaf)) {
         throw "External knowledge-library marker was removed by uninstall."
@@ -498,6 +584,8 @@ try {
         "LONGEDIT_R5J_APP_VERSION",
         "LONGEDIT_R5J_INSTALLER_SHA256",
         "LONGEDIT_R5J_SIGNED_RUNTIME",
+        "LONGEDIT_EA5B_COLD_FILE",
+        "LONGEDIT_EA5B_SECONDARY_FILE",
         "LONGEDIT_R5L_LIBRARY",
         "LONGEDIT_R5L_OUTPUT",
         "LONGEDIT_R5L_BACKUP",
@@ -584,6 +672,7 @@ try {
         sourceUserContentIncluded = $false
         checks = [object[]]$checks.ToArray()
         installedArtifactSmokeEvidence = "installed-artifact-smoke.json"
+        defaultAppLifecycleEvidence = "installed-default-app-lifecycle-evidence.json"
         managementRollbackEvidence = "management-backup-index-evidence.json"
     }
     [System.IO.File]::WriteAllText(

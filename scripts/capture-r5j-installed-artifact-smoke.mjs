@@ -1,4 +1,6 @@
 import crypto from 'node:crypto'
+import { spawn } from 'node:child_process'
+import { once } from 'node:events'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -11,8 +13,10 @@ const appVersion = process.env.LONGEDIT_R5J_APP_VERSION || ''
 const installerSha256 = process.env.LONGEDIT_R5J_INSTALLER_SHA256 || ''
 const sourceCommit = process.env.LONGEDIT_R5J_SOURCE_COMMIT || ''
 const signedArtifactRuntimeProven = process.env.LONGEDIT_R5J_SIGNED_RUNTIME === 'true'
-if (!library || !output || !installedExecutable || !appVersion || !/^[a-f0-9]{64}$/.test(installerSha256) || !/^[a-f0-9]{40}$/.test(sourceCommit)) {
-  throw new Error('R5J library, output, executable, version, installer hash, and source commit are required')
+const coldLaunchFile = process.env.LONGEDIT_EA5B_COLD_FILE ? path.resolve(process.env.LONGEDIT_EA5B_COLD_FILE) : ''
+const secondaryLaunchFile = process.env.LONGEDIT_EA5B_SECONDARY_FILE ? path.resolve(process.env.LONGEDIT_EA5B_SECONDARY_FILE) : ''
+if (!library || !output || !installedExecutable || !coldLaunchFile || !secondaryLaunchFile || !appVersion || !/^[a-f0-9]{64}$/.test(installerSha256) || !/^[a-f0-9]{40}$/.test(sourceCommit)) {
+  throw new Error('R5J library, output, executable, external launch fixtures, version, installer hash, and source commit are required')
 }
 
 const textFile = path.join(library, 'r5j-notes.txt')
@@ -274,6 +278,45 @@ await send('Runtime.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 820, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('#app')?.children.length > 0`, 'installed desktop app bootstrap')
 await waitFor(`typeof window.__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__ === 'function'`, 'route performance export')
+const checks = [{ id: 'installed-current-webview-bootstrap', status: 'passed' }]
+
+await waitFor(
+  `(() => {
+    const query = new URLSearchParams(location.hash.split('?')[1] || '')
+    return location.hash.includes('/mindmap')
+      && query.get('external') === '1'
+      && query.get('path')?.endsWith(${JSON.stringify(coldLaunchFile)}) === true
+      && document.querySelector('.mindmap-page') !== null
+  })()`,
+  'cold launch external OPML route with Chinese and spaces',
+  1200,
+)
+checks.push({ id: 'installed-external-cold-launch-unicode-space-path', status: 'passed' })
+
+const secondaryProcess = spawn(installedExecutable, [secondaryLaunchFile], {
+  cwd: path.dirname(installedExecutable),
+  windowsHide: true,
+  stdio: 'ignore',
+})
+const secondaryExit = once(secondaryProcess, 'exit')
+const [secondaryExitCode] = await Promise.race([
+  secondaryExit,
+  delay(15_000).then(() => { throw new Error('Secondary LongEdit process did not exit through the single-instance handoff') }),
+])
+if (secondaryExitCode !== 0) throw new Error(`Secondary LongEdit process exited with ${secondaryExitCode}`)
+await waitFor(
+  `(() => {
+    const query = new URLSearchParams(location.hash.split('?')[1] || '')
+    return location.hash.includes('/text')
+      && query.get('external') === '1'
+      && query.get('path')?.endsWith(${JSON.stringify(secondaryLaunchFile)}) === true
+      && document.querySelector('.text-workspace') !== null
+  })()`,
+  'single-instance external TXT handoff with Chinese and spaces',
+  1200,
+)
+checks.push({ id: 'installed-single-instance-external-handoff', status: 'passed' })
+
 await navigate('#/workspace', '.workspace-home', 'installed workspace initialization')
 await waitFor(
   `document.querySelector('[data-testid="knowledge-network-pulse"]') !== null`,
@@ -281,8 +324,6 @@ await waitFor(
   1200,
 )
 await delay(750)
-
-const checks = [{ id: 'installed-current-webview-bootstrap', status: 'passed' }]
 
 const textRoute = `#/library?path=${encodeURIComponent(textFile)}`
 await navigate(textRoute, '.library-embedded-editor .text-workspace', 'installed embedded TXT editor')
@@ -746,6 +787,35 @@ await fs.writeFile(path.join(output, 'installed-knowledge-guidance-outcome-evide
 }, null, 2)}\n`)
 checks.push({ id: 'installed-consented-knowledge-guidance-outcome', status: 'passed' })
 
+await navigate('#/release-capabilities', '.release-capabilities', 'installed default-app candidate surface')
+for (const formatId of ['opml', 'raster-image']) {
+  const selector = `[data-format-id="${formatId}"]`
+  const buttonSelector = `[data-testid="default-app-candidate-${formatId}"]`
+  const expanded = await evaluate(`(() => {
+    const details = document.querySelector(${JSON.stringify(selector)})
+    if (!details) return false
+    details.open = true
+    details.dispatchEvent(new Event('toggle'))
+    return true
+  })()`)
+  if (!expanded) throw new Error(`Installed default-app row is missing: ${formatId}`)
+  await waitFor(`document.querySelector(${JSON.stringify(buttonSelector)})?.disabled === false`, `${formatId} default-app action`)
+  const clicked = await evaluate(`(() => {
+    const button = document.querySelector(${JSON.stringify(buttonSelector)})
+    if (!button || button.disabled) return false
+    button.click()
+    return true
+  })()`)
+  if (!clicked) throw new Error(`Installed default-app action could not be triggered: ${formatId}`)
+  await waitFor(
+    `document.querySelector(${JSON.stringify(buttonSelector)})?.dataset.prepared === 'true'`,
+    `${formatId} default-app candidate preparation`,
+    1200,
+  )
+}
+await capture('installed-default-app-candidates.jpg')
+checks.push({ id: 'installed-user-triggered-default-app-candidates', status: 'passed' })
+
 const routes = [
   ['#/workspace', '.workspace-home', '/workspace'],
   ['#/library', '.library-mode', '/library'],
@@ -822,6 +892,8 @@ await fs.writeFile(path.join(output, 'installed-artifact-smoke.json'), `${JSON.s
   evidenceFiles: [
     'installed-txt-save-reopen.jpg',
     'installed-json-save-reopen.jpg',
+    'installed-default-app-candidates.jpg',
+    'installed-default-app-lifecycle-evidence.json',
     'installed-microsoft-word-docx-hyperlink.jpg',
     'installed-wps-writer-docx-hyperlink-readonly.jpg',
     'installed-libreoffice-writer-docx-hyperlink.jpg',

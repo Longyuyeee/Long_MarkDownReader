@@ -838,3 +838,9 @@ OPML `.opml` 已进入授权后的外部直接编辑：外部路径不依赖知�
 NSIS 卸载钩子已补齐运行时候选清理：37 类 `edit/preview` 格式的 85 个扩展名只删除 `LongEdit.ExternalFile` 值，并清理 LongEdit ProgID、能力清单和 `RegisteredApplications` 入口；其他应用候选、扩展名键和 Windows `UserChoice` 均不触碰。自动契约会从统一格式注册表核对完整集合，安装器静态关联仍只有 `.md/.markdown`。
 
 接手后进入 EA-5B2，把候选触发、冷启动、已有实例二次打开、中文/空格路径和卸载恢复接入可丢弃 Windows 安装生命周期并执行真实 NSIS 证据回归。详见 [`UX50R_Default_App_Uninstall_Recovery_Audit_2026-08-10.md`](./UX50R_Default_App_Uninstall_Recovery_Audit_2026-08-10.md)。
+
+## 2026-08-10 EA-5B2A 安装生命周期探针
+
+U2 可丢弃 Windows runner 已接入 EA-5B 安装态探针：带中文/空格路径的外部 OPML 冷启动、已有实例接收外部 TXT、格式能力页真实触发 OPML/图片候选、未选择 JSON 反向检查、默认值与 `UserChoice` 前后比较，以及卸载后的 LongEdit 注册恢复。独立 JSON 与截图已纳入 R5K 必需证据；普通开发机不会执行安装或注册表变更。
+
+接手后进入 EA-5B2B：以本阶段冻结提交触发 `U2 Unsigned Disposable Lifecycle`，等待真实 NSIS 安装、升级、启动、候选注册、卸载和回滚全部完成，下载并校验证据后再更新完成状态。详见 [`UX50S_Default_App_Installed_Lifecycle_Harness_Audit_2026-08-10.md`](./UX50S_Default_App_Installed_Lifecycle_Harness_Audit_2026-08-10.md)。

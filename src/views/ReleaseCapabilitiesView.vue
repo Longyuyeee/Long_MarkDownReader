@@ -55,6 +55,7 @@
           v-for="row in filteredRows"
           :key="row.format.id"
           class="matrix-row"
+          :data-format-id="row.format.id"
           @toggle="loadCandidateStatus($event, row.format.id, row.format.externalPolicy)"
         >
           <summary>
@@ -100,6 +101,8 @@
                 <button
                   type="button"
                   class="default-app-action"
+                  :data-testid="`default-app-candidate-${row.format.id}`"
+                  :data-prepared="candidatePrepared(row.format.id)"
                   :disabled="preparingFormatId === row.format.id"
                   @click="prepareDefaultApp(row.format.id, row.format.label)"
                 >

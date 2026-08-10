@@ -1,0 +1,69 @@
+import fs from 'node:fs'
+
+const read = file => fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n')
+const lifecycle = read('scripts/run-r5i-isolated-install-lifecycle.ps1')
+const smoke = read('scripts/capture-r5j-installed-artifact-smoke.mjs')
+const exporter = read('scripts/export-r5k-windows-evidence-bundle.ps1')
+const view = read('src/views/ReleaseCapabilitiesView.vue')
+const workflow = read('.github/workflows/u2-unsigned-lifecycle.yml')
+const failures = []
+
+const requireText = (source, token, message) => {
+  if (!source.includes(token)) failures.push(message)
+}
+
+for (const token of [
+  'LONGEDIT_EA5B_COLD_FILE',
+  'LONGEDIT_EA5B_SECONDARY_FILE',
+  "spawn(installedExecutable, [secondaryLaunchFile]",
+  'installed-external-cold-launch-unicode-space-path',
+  'installed-single-instance-external-handoff',
+  "for (const formatId of ['opml', 'raster-image'])",
+  'installed-user-triggered-default-app-candidates',
+  'installed-default-app-candidates.jpg',
+]) requireText(smoke, token, `installed WebView probe is missing ${token}`)
+
+for (const token of [
+  'C:\\LongEdit EA5B 外部',
+  '冷启动 思维导图.opml',
+  '二次打开 记录.txt',
+  'Get-UserChoiceProgId',
+  'Get-RegisteredApplication',
+  'LongEdit.ExternalFile',
+  '(Get-OpenWithProgIds ".json") -contains "LongEdit.ExternalFile"',
+  'default-app-candidate-registration',
+  'external-cold-launch-unicode-space-path',
+  'single-instance-secondary-file-handoff',
+  'default-app-candidate-uninstall-recovery',
+  'windowsDefaultSelectionChanged = $false',
+  'longEditRegistrationsRemovedAfterUninstall = $true',
+  'installed-default-app-lifecycle-evidence.json',
+]) requireText(lifecycle, token, `disposable lifecycle is missing ${token}`)
+
+for (const token of [
+  ':data-format-id="row.format.id"',
+  ':data-testid="`default-app-candidate-${row.format.id}`"',
+  ':data-prepared="candidatePrepared(row.format.id)"',
+]) requireText(view, token, `format capability installed-test anchor is missing ${token}`)
+
+for (const token of [
+  'installed-default-app-lifecycle-evidence.json',
+  'installed-default-app-candidates.jpg',
+]) requireText(exporter, token, `Windows evidence exporter is missing ${token}`)
+
+for (const token of [
+  'LONGEDIT_R5I_DISPOSABLE: "1"',
+  '-ConfirmDisposableMachine',
+  '-AllowInstallerMutation',
+  '-ExpectedSourceCommit $env:PRODUCT_SOURCE_COMMIT',
+]) requireText(workflow, token, `hosted disposable workflow is missing ${token}`)
+
+if (lifecycle.includes('UserChoice" "') || lifecycle.includes('SetValue("ProgId"')) {
+  failures.push('installed lifecycle must observe Windows UserChoice without mutating it')
+}
+
+if (failures.length) {
+  console.error(failures.map(failure => `- ${failure}`).join('\n'))
+  process.exit(1)
+}
+console.log('EA-5B2A installed lifecycle harness passed: user-triggered candidates, Unicode cold/hot launch, Windows ownership, uninstall recovery, and disposable evidence export are locked.')

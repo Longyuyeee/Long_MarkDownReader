@@ -28,6 +28,8 @@ $requiredMembers = @(
     "installed-artifact-smoke.json",
     "installed-route-mount-evidence.json",
     "installed-route-performance-evidence.json",
+    "installed-default-app-lifecycle-evidence.json",
+    "installed-default-app-candidates.jpg",
     "installed-txt-save-reopen.jpg",
     "installed-json-save-reopen.jpg",
     "management-backup-index-evidence.json"
