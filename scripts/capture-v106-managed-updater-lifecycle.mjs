@@ -194,9 +194,32 @@ if (mode === 'discover-install') {
 } else {
   const info = await invokeTauri('check_community_update')
   assertRelease(info, false, currentVersion)
-  await evaluate(`location.hash = '#/settings'`)
+  await waitFor(
+    `Boolean(document.querySelector('.app-container') && document.querySelector('.route-wrapper') && document.querySelector('.sidebar-footer'))`,
+    'stable library shell and settings entry',
+    1200,
+  )
+  const navigation = await evaluate(`(() => {
+    const entry = document.querySelector('.sidebar-footer')
+    const rect = entry?.getBoundingClientRect()
+    const beforeHash = location.hash
+    if (!entry || !rect || rect.width <= 0 || rect.height <= 0) return null
+    entry.click()
+    return { beforeHash, entryVisible: true, entryText: entry.textContent?.replace(/\s+/g, ' ').trim() || '' }
+  })()`)
+  if (!navigation?.entryVisible) throw new Error(`Post-upgrade settings entry is invalid: ${JSON.stringify(navigation)}`)
+  await waitFor(`location.hash.startsWith('#/settings')`, 'settings route navigation', 600)
   await waitFor(`document.querySelector('[data-testid="app-update-settings"]') !== null`, 'software update settings row', 1200)
   await waitFor(`document.querySelector('.page-loader') === null`, 'settings route transition', 1200)
+  navigation.afterHash = await evaluate('location.hash')
+  await writeEvidence('managed-updater-post-upgrade-navigation.json', {
+    schemaVersion: 1,
+    stage: 'V1.0.6-U1-NAVIGATION',
+    capturedAt: new Date().toISOString(),
+    status: 'passed',
+    ...navigation,
+    sourceUserContentIncluded: false,
+  })
   const clicked = await evaluate(`(() => {
     const root = document.querySelector('[data-testid="app-update-settings"]')
     const button = [...(root?.querySelectorAll('button') || [])].find(item => item.textContent?.includes('检查更新'))
@@ -230,6 +253,7 @@ if (mode === 'discover-install') {
     environment: 'GitHub-hosted disposable Windows updated through the installed v1.0.5 client',
     release: info,
     manualCheckVisible: true,
+    settingsNavigation: navigation,
     upToDateSurface: surface,
     screenshot: 'managed-updater-current.jpg',
     sourceUserContentIncluded: false,
