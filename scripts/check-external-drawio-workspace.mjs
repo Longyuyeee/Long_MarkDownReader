@@ -18,13 +18,8 @@ const counts = registry.formats.reduce((result, format) => {
   result[format.externalPolicy] = (result[format.externalPolicy] || 0) + 1
   return result
 }, {})
-if (counts.edit !== 28 || counts.preview !== 8 || counts.import !== 7) {
+if (counts.edit !== 29 || counts.preview !== 8 || counts.import !== 6) {
   failures.push(`EA-4D1 policy counts drift: ${JSON.stringify(counts)}`)
-}
-for (const id of ['opml']) {
-  if (registry.formats.find(format => format.id === id)?.externalPolicy !== 'import') {
-    failures.push(`${id} must remain import-only until its specialized workspace is audited`)
-  }
 }
 
 const backend = read('src-tauri/src/commands/drawio.rs')
@@ -43,7 +38,7 @@ for (const token of [
   'external-not-authorized',
   'external-modified',
 ]) requireText(backend, token, `external Draw.io backend is missing ${token}`)
-for (const token of ['"log" | "drawio"', 'specialized-writer-required']) {
+for (const token of ['| "log"\n            | "drawio"\n            | "diagram"\n            | "opml"', 'specialized-writer-required']) {
   requireText(formatCommands, token, `generic external writer boundary is missing ${token}`)
 }
 for (const token of ['external-image-not-loaded', 'MAX_TOTAL_PAGE_BYTES', 'unsafe-resource-scheme']) {

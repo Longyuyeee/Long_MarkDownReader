@@ -15,11 +15,6 @@ if (!log || log.externalPolicy !== 'edit' || log.routeName !== 'LogViewer'
   failures.push('LOG must expose guarded external editing without weakening its library contract')
 }
 
-for (const id of ['opml']) {
-  if (registry.formats.find(format => format.id === id)?.externalPolicy !== 'import') {
-    failures.push(`${id} must remain import-only until its specialized workspace is audited`)
-  }
-}
 for (const id of ['legacy-doc', 'legacy-xls', 'legacy-ppt', 'wps-document', 'wps-spreadsheet', 'wps-presentation']) {
   if (registry.formats.find(format => format.id === id)?.externalPolicy !== 'import') {
     failures.push(`${id} must remain an explicit conversion or system-open workflow`)
@@ -34,7 +29,7 @@ for (const token of [
   'pub async fn write_external_log_document',
   'write_external_log_document_with_access',
   'validate_log_write(&content, acknowledged_overwrite)?',
-  '"json" | "jsonc" | "yaml" | "xml" | "svg" | "toml" | "log"',
+  '| "log"\n            | "drawio"\n            | "diagram"\n            | "opml"',
   'write_external_registered_text_document(',
   'log-overwrite-not-acknowledged',
   'log-edit-too-large',

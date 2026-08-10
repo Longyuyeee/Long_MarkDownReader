@@ -19,13 +19,8 @@ const counts = registry.formats.reduce((result, format) => {
   result[format.externalPolicy] = (result[format.externalPolicy] || 0) + 1
   return result
 }, {})
-if (counts.edit !== 28 || counts.preview !== 8 || counts.import !== 7) {
+if (counts.edit !== 29 || counts.preview !== 8 || counts.import !== 6) {
   failures.push(`EA-4B policy counts drift: ${JSON.stringify(counts)}`)
-}
-for (const id of ['opml']) {
-  if (registry.formats.find(format => format.id === id)?.externalPolicy !== 'import') {
-    failures.push(`${id} must remain import-only until its specialized workspace is audited`)
-  }
 }
 
 const backend = read('src-tauri/src/commands/canvas.rs')

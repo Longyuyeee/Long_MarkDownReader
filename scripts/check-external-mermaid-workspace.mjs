@@ -19,11 +19,8 @@ const counts = registry.formats.reduce((result, format) => {
   result[format.externalPolicy] = (result[format.externalPolicy] || 0) + 1
   return result
 }, {})
-if (counts.edit !== 28 || counts.preview !== 8 || counts.import !== 7) {
+if (counts.edit !== 29 || counts.preview !== 8 || counts.import !== 6) {
   failures.push(`EA-4D2 policy counts drift: ${JSON.stringify(counts)}`)
-}
-if (registry.formats.find(format => format.id === 'opml')?.externalPolicy !== 'import') {
-  failures.push('OPML must remain import-only until EA-4D3 audits its specialized workspace')
 }
 
 const backend = read('src-tauri/src/commands/diagram.rs')
@@ -49,7 +46,7 @@ for (const token of ['MAX_DIAGRAM_BYTES', 'Mermaid 源码不能超过 2 MB', 'Me
 for (const token of ['MAX_DIAGRAM_BYTES: usize = 2 * 1024 * 1024', 'validate_mermaid_source']) {
   requireText(formatKernel, token, `Mermaid validation kernel is missing ${token}`)
 }
-for (const token of ['"log" | "drawio" | "diagram"', 'specialized-writer-required']) {
+for (const token of ['| "log"\n            | "drawio"\n            | "diagram"\n            | "opml"', 'specialized-writer-required']) {
   requireText(formatCommands, token, `generic writer boundary is missing ${token}`)
 }
 for (const token of [

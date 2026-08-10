@@ -556,7 +556,7 @@
       "maxBytes": 8388608,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "complete-edit", "label": "完整编辑", "saveMode": "overwrite", "description": "OPML 树形与思维导图双视图共享开放事实源，可编辑、创建、索引并保存。" },
-      "externalPolicy": "import",
+      "externalPolicy": "edit",
       "adapters": { "reader": "opml", "writer": "opml", "creator": "text-template", "indexer": "opml" },
       "creation": { "defaultExtension": ".opml", "defaultContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<opml version=\"2.0\">\n  <head><title>未命名思维导图</title></head>\n  <body>\n    <outline text=\"中心主题\" _longeditId=\"root\"/>\n  </body>\n</opml>\n", "defaultName": "未命名思维导图" }
     }

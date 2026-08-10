@@ -52,11 +52,20 @@ fn text_boundary_error(code: &str, message: impl Into<String>) -> TextDocumentEr
 fn ensure_general_external_writer(format_id: &str) -> Result<(), TextDocumentError> {
     if matches!(
         format_id,
-        "json" | "jsonc" | "yaml" | "xml" | "svg" | "toml" | "log" | "drawio" | "diagram"
+        "json"
+            | "jsonc"
+            | "yaml"
+            | "xml"
+            | "svg"
+            | "toml"
+            | "log"
+            | "drawio"
+            | "diagram"
+            | "opml"
     ) {
         return Err(TextDocumentError::simple(
             "specialized-writer-required",
-            "结构化源码、日志、Draw.io 和 Mermaid 必须通过对应的专用外部保存命令执行安全门禁",
+            "结构化源码、日志、Draw.io、Mermaid 和 OPML 必须通过对应的专用外部保存命令执行安全门禁",
         ));
     }
     Ok(())
@@ -582,7 +591,7 @@ mod tests {
     #[test]
     fn general_external_writer_rejects_specialized_sources() {
         for format_id in [
-            "json", "jsonc", "yaml", "xml", "svg", "toml", "log", "drawio", "diagram",
+            "json", "jsonc", "yaml", "xml", "svg", "toml", "log", "drawio", "diagram", "opml",
         ] {
             let error = ensure_general_external_writer(format_id).unwrap_err();
             assert_eq!(error.code, "specialized-writer-required");

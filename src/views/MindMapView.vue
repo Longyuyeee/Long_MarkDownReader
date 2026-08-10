@@ -6,13 +6,13 @@
         <div>
           <input v-if="document" v-model="document.title" class="title-input" maxlength="500" @focus="beginFieldEdit" @change="endFieldEdit" />
           <strong v-else>OPML 思维导图</strong>
-          <span>{{ fileName }} · {{ nodeCount }} 个主题 · {{ maxDepth }} 层</span>
+          <span>{{ isExternal ? '外部 OPML · 仅点击保存写回' : fileName }} · {{ nodeCount }} 个主题 · {{ maxDepth }} 层</span>
         </div>
       </div>
       <div class="header-actions">
         <button title="撤销" :disabled="!undoStack.length" @click="undo"><n-icon :component="UndoIcon" /></button>
         <button title="重做" :disabled="!redoStack.length" @click="redo"><n-icon :component="RedoIcon" /></button>
-        <button title="投影到 Canvas" :disabled="saving || loading" @click="projectToCanvas"><n-icon :component="NetworkIcon" />投影到 Canvas</button>
+        <button v-if="!isExternal" title="投影到 Canvas" :disabled="saving || loading" @click="projectToCanvas"><n-icon :component="NetworkIcon" />投影到 Canvas</button>
         <button class="primary" title="保存" :disabled="!dirty || saving" @click="save"><n-icon :component="SaveIcon" />{{ saving ? '保存中…' : '保存' }}</button>
       </div>
     </header>
@@ -167,7 +167,7 @@
 
     <footer v-if="document" class="statusbar">
       <span>{{ dirty ? '有未保存更改' : '已与磁盘同步' }}<template v-if="saveError"> · {{ saveError }}</template></span>
-      <span>OPML 2.0 · {{ layoutLabels[layoutMode] }}布局 · {{ selectedIds.length }} 个已选 · 仅点击保存时写入</span>
+      <span>{{ isExternal ? '外部 OPML · 保存时规范化 XML' : 'OPML 2.0' }} · {{ layoutLabels[layoutMode] }}布局 · {{ selectedIds.length }} 个已选 · 仅点击保存时写入</span>
     </footer>
   </div>
 </template>
@@ -194,6 +194,7 @@ const store = useAppStore()
 const dialog = useDialog()
 const message = useMessage()
 const path = computed(() => String(route.query.path || ''))
+const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => path.value.split(/[\\/]/).pop()?.replace(/\.opml$/i, '') || '未命名思维导图')
 const document = ref<OpmlDocument | null>(null)
 const signature = ref('')
@@ -566,16 +567,48 @@ const moveSelected = (dx: number, dy: number) => {
 
 const undo = () => { const previous = undoStack.value.pop(); if (!previous) return; redoStack.value.push(snapshot()); restore(previous) }
 const redo = () => { const next = redoStack.value.pop(); if (!next) return; undoStack.value.push(snapshot()); restore(next) }
+const errorText = (cause: unknown) => {
+  if (cause && typeof cause === 'object' && 'message' in cause) return String((cause as { message: unknown }).message)
+  return String(cause).replace(/^Error:\s*/, '')
+}
 const save = async () => {
-  if (!document.value || !dirty.value || saving.value || !store.libraryPath) return !dirty.value
+  if (!document.value || !dirty.value || saving.value || (!isExternal.value && !store.libraryPath)) return !dirty.value
+  if (isExternal.value) {
+    const confirmed = await new Promise<boolean>(resolve => dialog.warning({
+      title: '覆盖外部 OPML 源文件？',
+      content: '保存将覆盖当前外部 .opml 文件，并按 OPML 2.0 规范化 XML 排版。受支持的头部元数据、节点属性、备注、折叠状态和布局坐标会保留。',
+      positiveText: '确认保存',
+      negativeText: '取消',
+      closable: false,
+      maskClosable: false,
+      onPositiveClick: () => resolve(true),
+      onNegativeClick: () => resolve(false),
+    }))
+    if (!confirmed) return false
+  }
   saving.value = true; saveError.value = ''
   try {
-    const result = await invoke<OpmlFile>('write_opml_file', { libraryRoot: store.libraryPath, path: path.value, expectedSignature: signature.value, document: document.value })
+    const result = await invoke<OpmlFile>(isExternal.value ? 'write_external_opml_file' : 'write_opml_file', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+      path: path.value,
+      expectedSignature: signature.value,
+      document: document.value,
+    })
     signature.value = result.signature; document.value = result.document; dirty.value = false; return true
-  } catch (cause) { saveError.value = String(cause).replace(/^Error:\s*/, ''); message.error(`保存失败：${saveError.value}`); return false }
+  } catch (cause: any) {
+    saveError.value = errorText(cause)
+    if (isExternal.value && cause?.code === 'external-modified') dialog.warning({
+      title: '外部 OPML 已发生变化',
+      content: '源文件在编辑期间被其他程序修改。Long编辑没有覆盖这些变化，请重新打开后再编辑。',
+      positiveText: '知道了',
+    })
+    else message.error(`保存失败：${saveError.value}`)
+    return false
+  }
   finally { saving.value = false }
 }
 const projectToCanvas = async () => {
+  if (isExternal.value) return void message.info('外部 OPML 需要先加入知识库，才能投影到 Canvas')
   if (dirty.value) return void message.warning('请先点击保存，再将当前版本投影到 Canvas')
   try { const canvas = await invoke<string>('create_canvas_from_opml', { libraryRoot: store.libraryPath, path: path.value }); await openManagedFile(router, canvas) }
   catch (cause) { message.error(`Canvas 投影失败：${String(cause)}`) }
@@ -583,7 +616,12 @@ const projectToCanvas = async () => {
 const load = async () => {
   loading.value = true; error.value = ''; saveError.value = ''
   try {
-    const result = await invoke<OpmlFile>('read_opml_file', { libraryRoot: store.libraryPath, path: path.value })
+    if (!/\.opml$/i.test(path.value)) throw new Error('OPML 路径无效')
+    if (!isExternal.value && !store.libraryPath) throw new Error('知识库尚未配置')
+    const result = await invoke<OpmlFile>(isExternal.value ? 'read_external_opml_file' : 'read_opml_file', {
+      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+      path: path.value,
+    })
     signature.value = result.signature; document.value = result.document; dirty.value = false; undoStack.value = []; redoStack.value = []
     const savedLayout = result.document.metadata._longeditLayout as LayoutMode
     if (['tree', 'organization', 'radial', 'timeline'].includes(savedLayout)) layoutMode.value = savedLayout
@@ -602,7 +640,7 @@ const load = async () => {
       selectedId.value = selectedIds.value[0] || selectedId.value
     } else void nextTick(fitMap)
   }
-  catch (cause) { document.value = null; error.value = String(cause).replace(/^Error:\s*/, '') }
+  catch (cause) { document.value = null; error.value = errorText(cause) }
   finally { loading.value = false }
 }
 const handleKeydown = (event: KeyboardEvent) => {
@@ -641,7 +679,7 @@ watch(viewMode, value => localStorage.setItem('opml-view-mode', value))
 watch(layoutMode, value => localStorage.setItem('opml-layout-mode', value))
 watch(mapTheme, value => localStorage.setItem('opml-map-theme', value))
 watch([mapZoom, mapPan, layoutMode, mapTheme, viewMode, selectedIds], () => rememberMindMapViewState(), { deep: true })
-watch([path, () => route.query.node], () => { void load() })
+watch([path, isExternal, () => route.query.node], () => { void load() })
 onMounted(() => { window.addEventListener('keydown', handleKeydown); window.addEventListener('keyup', handleKeyup); window.addEventListener('beforeunload', beforeUnload); void load() })
 onBeforeUnmount(() => {
   rememberMindMapViewState()
@@ -653,7 +691,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('pointermove', moveSelectionBox)
 })
 onBeforeRouteLeave(() => mayLeave())
-onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
+onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query.external === from.query.external) || mayLeave())
 </script>
 
 <style scoped>

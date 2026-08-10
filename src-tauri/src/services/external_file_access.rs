@@ -195,6 +195,7 @@ mod tests {
         let canvas_file = directory.join("project.canvas");
         let drawio_file = directory.join("diagram.drawio");
         let mermaid_file = directory.join("diagram.mmd");
+        let opml_file = directory.join("mindmap.opml");
         let structured_files = [
             directory.join("data.json"),
             directory.join("settings.jsonc"),
@@ -210,6 +211,11 @@ mod tests {
         fs::write(&canvas_file, "{\"nodes\":[],\"edges\":[]}").unwrap();
         fs::write(&drawio_file, "<mxfile><diagram/></mxfile>").unwrap();
         fs::write(&mermaid_file, "flowchart LR\n  A --> B\n").unwrap();
+        fs::write(
+            &opml_file,
+            "<opml version=\"2.0\"><head><title>Map</title></head><body><outline text=\"Root\"/></body></opml>",
+        )
+        .unwrap();
         for path in &structured_files {
             fs::write(path, "{}").unwrap();
         }
@@ -228,6 +234,8 @@ mod tests {
         assert!(access.resolve_editable(&drawio_file).is_ok());
         assert!(access.authorize_editable(&mermaid_file).is_ok());
         assert!(access.resolve_editable(&mermaid_file).is_ok());
+        assert!(access.authorize_editable(&opml_file).is_ok());
+        assert!(access.resolve_editable(&opml_file).is_ok());
         for path in &structured_files {
             assert!(access.authorize_editable(path).is_ok());
             assert!(access.resolve_editable(path).is_ok());

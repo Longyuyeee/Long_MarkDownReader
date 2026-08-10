@@ -2,11 +2,14 @@ use crate::formats::canvas::validate_canvas_json;
 use crate::formats::opml::{
     opml_to_canvas, parse_opml, serialize_opml, OpmlDocument, MAX_OPML_BYTES,
 };
+use crate::formats::text::TextDocumentError;
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::Serialize;
 use std::fs;
 use std::path::Path;
+use tauri::State;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -33,6 +36,71 @@ fn read_validated(path: &Path) -> Result<(String, OpmlDocument), String> {
     Ok((content, document))
 }
 
+fn external_error(code: &str, message: impl Into<String>) -> TextDocumentError {
+    TextDocumentError::simple(code, message.into())
+}
+
+fn resolve_external_opml(
+    path: String,
+    access: &ExternalFileAccess,
+) -> Result<std::path::PathBuf, TextDocumentError> {
+    let file = access
+        .resolve_editable(path)
+        .map_err(|error| external_error("external-not-authorized", error))?;
+    let extension = file
+        .extension()
+        .and_then(|value| value.to_str())
+        .unwrap_or_default();
+    if !extension.eq_ignore_ascii_case("opml") {
+        return Err(external_error(
+            "format-mismatch",
+            "外部思维导图必须使用 .opml 扩展名",
+        ));
+    }
+    Ok(file)
+}
+
+fn external_opml_file(file: &Path) -> Result<OpmlFile, TextDocumentError> {
+    let (content, document) =
+        read_validated(file).map_err(|error| external_error("external-opml-read-failed", error))?;
+    Ok(OpmlFile {
+        path: file.to_string_lossy().into_owned(),
+        signature: signature(&content),
+        document,
+    })
+}
+
+fn read_external_opml_file_with_access(
+    path: String,
+    access: &ExternalFileAccess,
+) -> Result<OpmlFile, TextDocumentError> {
+    let file = resolve_external_opml(path, access)?;
+    external_opml_file(&file)
+}
+
+fn write_external_opml_file_with_access(
+    path: String,
+    expected_signature: String,
+    document: OpmlDocument,
+    access: &ExternalFileAccess,
+) -> Result<OpmlFile, TextDocumentError> {
+    let content = serialize_opml(&document)
+        .map_err(|error| external_error("invalid-opml-document", error))?;
+    let file = resolve_external_opml(path, access)?;
+    let (current, _) = read_validated(&file)
+        .map_err(|error| external_error("external-opml-read-failed", error))?;
+    if signature(&current) != expected_signature {
+        return Err(TextDocumentError::recoverable(
+            "external-modified",
+            "外部 OPML 文件已被其他程序修改",
+            "Long编辑没有覆盖外部变化，请重新打开文件后再编辑",
+        ));
+    }
+    write_utf8(&file, &content)
+        .map_err(|error| external_error("external-opml-write-failed", error))?;
+    external_opml_file(&file)
+}
+
 #[tauri::command]
 pub async fn read_opml_file(library_root: String, path: String) -> Result<OpmlFile, String> {
     let guard = WorkspaceGuard::new(library_root)?;
@@ -47,6 +115,14 @@ pub async fn read_opml_file(library_root: String, path: String) -> Result<OpmlFi
     })
     .await
     .map_err(|error| format!("OPML 读取任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn read_external_opml_file(
+    path: String,
+    access: State<'_, ExternalFileAccess>,
+) -> Result<OpmlFile, TextDocumentError> {
+    read_external_opml_file_with_access(path, &access)
 }
 
 #[tauri::command]
@@ -73,6 +149,16 @@ pub async fn write_opml_file(
     })
     .await
     .map_err(|error| format!("OPML 写入任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn write_external_opml_file(
+    path: String,
+    expected_signature: String,
+    document: OpmlDocument,
+    access: State<'_, ExternalFileAccess>,
+) -> Result<OpmlFile, TextDocumentError> {
+    write_external_opml_file_with_access(path, expected_signature, document, &access)
 }
 
 #[tauri::command]
@@ -184,6 +270,59 @@ mod tests {
         ))
         .unwrap();
         assert!(Path::new(&canvas).is_file());
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn external_opml_requires_authorization_preserves_metadata_and_rejects_conflicts() {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-external-opml-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&base).unwrap();
+        let path = base.join("external.opml");
+        fs::write(&path, FIXTURE).unwrap();
+        let path_string = path.to_string_lossy().into_owned();
+        let access = ExternalFileAccess::default();
+
+        let unauthorized =
+            read_external_opml_file_with_access(path_string.clone(), &access).unwrap_err();
+        assert_eq!(unauthorized.code, "external-not-authorized");
+
+        access.authorize_editable(&path).unwrap();
+        let mut opened = read_external_opml_file_with_access(path_string.clone(), &access).unwrap();
+        opened.document.title = "外部 OPML 已保存".into();
+        let saved = write_external_opml_file_with_access(
+            path_string.clone(),
+            opened.signature,
+            opened.document,
+            &access,
+        )
+        .unwrap();
+        assert_eq!(saved.document.title, "外部 OPML 已保存");
+        assert_eq!(
+            saved.document.roots[0]
+                .attributes
+                .get("category")
+                .map(String::as_str),
+            Some("product")
+        );
+
+        let external_change = FIXTURE.replace("产品知识图谱", "其他程序修改");
+        fs::write(&path, &external_change).unwrap();
+        let stale = write_external_opml_file_with_access(
+            path_string,
+            saved.signature,
+            saved.document,
+            &access,
+        )
+        .unwrap_err();
+        assert_eq!(stale.code, "external-modified");
+        assert_eq!(fs::read_to_string(&path).unwrap(), external_change);
         fs::remove_dir_all(base).unwrap();
     }
 }

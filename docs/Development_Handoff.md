@@ -820,3 +820,9 @@ EA-4D1 已完成 `.drawio`、`.dio` 外部结构化基础编辑。外部文件�
 Mermaid `.mmd/.mermaid` 已进入授权后的外部直接编辑：外部路径不再依赖知识库，实时预览保持严格安全模式，修改只在点击保存或 Ctrl+S 后写回；覆盖前确认，后端继续执行 2 MiB、UTF-8、扩展名、语法和源签名检查，外部冲突不会覆盖。SVG/PNG 导出仍与源文件写回隔离。
 
 外部能力现为 28 类 `edit`、8 类 `preview` 与 7 类 `import`，安装器关联仍只有 `.md/.markdown`。接手后进入 EA-4D3，单独开放并验证 OPML 外部 XML 保真、画布拖动/历史、显式保存和冲突保护；旧 Office/WPS 六类继续显式转换。详见 [`UX50O_External_Mermaid_Workspace_Audit_2026-08-07.md`](./UX50O_External_Mermaid_Workspace_Audit_2026-08-07.md)。
+
+## 2026-08-10 EA-4D3 External OPML Workspace
+
+OPML `.opml` 已进入授权后的外部直接编辑：外部路径不依赖知识库，思维导图/大纲、四种布局、三种主题、拖动多选、右键、键盘移动与撤销重做保持可用；修改只在点击保存或 Ctrl+S 后写回。覆盖前会说明 OPML 2.0 XML 规范化，后端继续执行 8 MiB、10,000 节点、64 层、DTD 拒绝、文档校验和源签名检查，外部冲突不会覆盖。依赖知识库创建新文件的 Canvas 投影在外部模式隐藏。
+
+外部能力现为 29 类 `edit`、8 类 `preview` 与 6 类 `import`，安装器关联仍只有 `.md/.markdown`；剩余六类均为旧 Office/WPS 显式转换或系统打开工作流。接手后进行全部外部格式的默认应用选择、安装态启动与关联收口审计，再判断是否进入下一补丁版本。详见 [`UX50P_External_OPML_Workspace_Audit_2026-08-10.md`](./UX50P_External_OPML_Workspace_Audit_2026-08-10.md)。

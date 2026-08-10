@@ -46,7 +46,7 @@ for (const token of [
   "title: '思维导图还有未保存修改'",
   "content: '离开后会丢失当前草稿，源文件不会被修改。'",
   'onBeforeRouteLeave(() => mayLeave())',
-  'onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())',
+  'onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query.external === from.query.external) || mayLeave())',
   "document.value.metadata._longeditLayout = layoutMode.value",
   "node.attributes._longeditX",
   "node.attributes._longeditY",
