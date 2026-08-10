@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-10 v1.0.6 受控更新观察入口：** 本机正在运行的 LongEdit 已核对为 v1.0.5，但为避免关闭应用、覆盖安装或触碰用户资料，本阶段改用 GitHub 托管可丢弃 Windows。新增工作流将安装官方 v1.0.5，通过真实更新弹窗由用户动作触发官方 v1.0.6 下载，核对 SHA-256、静默覆盖、首启、已是最新版与合成资料保留。当前仅完成安全 runner，状态仍为 `hosted-execution-pending`；接手后先等待工具提交 Quality Gate，再触发工作流、人工复核并导入证据。详见 [`V1_0_6_Managed_Updater_Lifecycle_Audit_2026-08-10.md`](./V1_0_6_Managed_Updater_Lifecycle_Audit_2026-08-10.md)。
+
 > **2026-08-10 v1.0.6 已发布入口：** 冻结产品提交 `9349c334b22753dacd0a58fad7f1ce55aa0bf6dc` 的质量门、本地 MSI/NSIS 构建和托管安装生命周期均通过；候选证据提交 `257c12e1795e9de2d5629e8053cbeaa1fb802cc8` 的 Quality Gate `31399100657` 也通过。GitHub Release `367990618` 已公开，Tag 绑定 `257c12e`，NSIS、MSI 与 `SHA256SUMS.txt` 从远端重新下载后大小和 SHA-256 全部匹配。社区渠道已发布，企业签名候选仍为 false。接手后只需先等待本发布回执提交的远端门禁，再在隔离环境执行 `1.0.5 -> 1.0.6` 应用内更新与资料保留观察。详见 [`V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md`](./V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md)。
 
 > **2026-08-10 v1.0.6 发布准备入口：** package、Cargo、Tauri 和现行发布事实源已提升到 `1.0.6`，本地 `ci:patch-release` 已通过，社区策略仍等待远端质量门与安装包证据；公开下载保持 `v1.0.5`。README 与 `RELEASE_NOTES_v1.0.6.md` 已对齐 EA-5C 的 29 类外部编辑、8 类外部预览、6 类显式转换，以及 37 类/85 扩展名逐项默认应用候选。接手后先等待远端 Quality Gate，再从冻结提交构建 MSI/NSIS、记录哈希、发布并执行 `1.0.5 -> 1.0.6` 受控更新观察。详见 [`V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md`](./V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md)。

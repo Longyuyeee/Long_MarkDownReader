@@ -11,6 +11,7 @@ const pkg = json('package.json')
 const tauri = json('src-tauri/tauri.conf.json')
 const policy = json('shared/v1-community-release-policy.json')
 const updater = json('shared/community-updater-policy.json')
+const managedUpdaterLifecycle = json('shared/v1-managed-updater-lifecycle-policy.json')
 const previousLifecycle = json('docs/evidence/ea-5b2-installed-default-app/audit-manifest.json')
 const cargo = read('src-tauri/Cargo.toml')
 const readme = read('README.md')
@@ -19,6 +20,9 @@ const tag = `v${pkg.version}`
 const releaseUrl = `https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/${tag}`
 const auditPath = `docs/V${pkg.version.replaceAll('.', '_')}_Unsigned_Community_Release_Audit_${policy.generatedAt}.md`
 const notesPath = `docs/RELEASE_NOTES_v${pkg.version}.md`
+const managedUpdaterUpgradePath = managedUpdaterLifecycle.status === 'hosted-managed-update-passed'
+  ? '1.0.5-to-1.0.6-passed'
+  : '1.0.5-to-1.0.6-pending'
 
 if (!/^1\.\d+\.\d+$/.test(pkg.version) || tauri.version !== pkg.version || !cargo.includes(`version = "${pkg.version}"`)) fail('V1 version identity drift')
 if (policy.schemaVersion !== 1 || policy.stage !== 'V1' || policy.appVersion !== pkg.version || policy.channel !== 'community-unsigned') fail('V1 policy identity drift')
@@ -33,7 +37,7 @@ if (previousLifecycle.stage !== 'EA-5B2B'
   || policy.patchValidation?.previousPublicVersion !== '1.0.5'
   || policy.patchValidation?.previousInstalledLifecycleEvidenceVersion !== '1.0.5'
   || policy.patchValidation?.previousEvidenceInheritedAsCurrent !== false
-  || policy.patchValidation?.managedUpdaterUpgradePath !== '1.0.5-to-1.0.6-pending') fail('previous installed lifecycle must remain a bounded v1.0.5 baseline')
+  || policy.patchValidation?.managedUpdaterUpgradePath !== managedUpdaterUpgradePath) fail('previous installed lifecycle must remain a bounded v1.0.5 baseline')
 if (!fs.existsSync(auditPath) || !fs.existsSync(notesPath)) fail('current release documents are missing')
 for (const token of [tag, '未知发布者', 'SHA-256', '自动更新']) if (!readme.includes(token)) fail(`README release disclosure missing: ${token}`)
 
