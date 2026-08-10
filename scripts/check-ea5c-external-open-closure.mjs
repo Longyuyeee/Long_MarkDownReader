@@ -87,8 +87,12 @@ for (const file of evidence.files) {
     fail(`installed evidence file is missing: ${target}`)
     continue
   }
-  const hash = crypto.createHash('sha256').update(fs.readFileSync(target)).digest('hex')
-  if (hash !== file.sha256) fail(`installed evidence hash drift: ${file.path}`)
+  const bytes = fs.readFileSync(target)
+  const rawHash = crypto.createHash('sha256').update(bytes).digest('hex')
+  const canonicalHash = crypto.createHash('sha256')
+    .update(bytes.toString('utf8').replace(/\r\n/g, '\n'))
+    .digest('hex')
+  if (rawHash !== file.sha256 && canonicalHash !== file.sha256) fail(`installed evidence hash drift: ${file.path}`)
 }
 
 const supplementalEvidence = [

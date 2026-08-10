@@ -29,7 +29,7 @@
 
 ## 当前验证
 
-- `check:ea5c-external-open-closure` 通过，41 项逐项证据、5 个安装证据文件哈希和格式/候选计数一致。
+- `check:ea5c-external-open-closure` 通过，41 项逐项证据、5 个安装证据文件哈希和格式/候选计数一致；文本证据按 LF 规范内容复核，避免 Windows checkout 的 CRLF 转换造成误报。
 - 9 组从“待复测”迁移到 EA-5C 接受器的 Markdown、文本、JSON、LOG、HTML/代码和结构化编辑器合同独立通过。
 - `check:current-development-audit` 通过，现行外部工作区、默认候选、格式体验和补充体验链保持成立。
 - `ci:patch-release` 完整通过：Vue/Vite 生产构建处理 6225 个模块，Rust 锁定检查通过，生产依赖漏洞为 0。
