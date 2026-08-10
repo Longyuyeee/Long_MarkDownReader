@@ -28,6 +28,10 @@
 - `scripts/capture-v106-managed-updater-lifecycle.mjs`：通过安装态 WebView2/CDP 验证更新弹窗、用户点击与更新后设置页。
 - `scripts/check-v106-managed-updater-lifecycle.mjs`：锁定发布资产、测试安全门和导入证据哈希。
 
+## 首次托管执行观察
+
+运行 `31402919779` 已通过官方附件元数据、更新弹窗、显式用户确认和实际覆盖安装，但在安装后 EXE 哈希检查处停止。原因是初版合同错误地要求 NSIS 落盘 EXE 必须与未公开发布的独立构建 EXE 逐字节相同；公开信任锚点实际是 GitHub Release 上的 NSIS 附件及其 SHA-256。修订后的 runner 仍严格验证官方 NSIS 哈希、安装版本与路径，同时独立记录落盘 EXE 的大小、SHA-256 和它与裸构建参考值的比较结果，不再混淆两个不同载体。
+
 ## 下一步
 
 先推送工具提交并等待 Quality Gate，通过后手动触发托管工作流。只有工作流成功、截图人工复核且结构化证据导入仓库后，才能把 `1.0.5-to-1.0.6-pending` 更新为已通过。

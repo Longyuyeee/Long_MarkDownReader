@@ -33,12 +33,13 @@ if (policy.releases?.current?.version !== releasePolicy.appVersion
   || policy.releases?.current?.installer?.fileName !== releaseReceipt.assets.find(item => item.name.endsWith('-setup.exe'))?.name
   || policy.releases?.current?.installer?.sizeBytes !== releaseReceipt.assets.find(item => item.name.endsWith('-setup.exe'))?.sizeBytes
   || policy.releases?.current?.installer?.sha256 !== releaseReceipt.assets.find(item => item.name.endsWith('-setup.exe'))?.sha256
-  || policy.releases?.current?.installedExecutableSha256 !== artifactManifest.artifacts.find(item => item.target === 'release-executable')?.sha256) fail('managed updater current release drift')
+  || policy.releases?.current?.standaloneReleaseExecutableReferenceSha256 !== artifactManifest.artifacts.find(item => item.target === 'release-executable')?.sha256) fail('managed updater current release drift')
 if (policy.requirements?.officialLatestRelease !== true
   || policy.requirements?.explicitUserConfirmation !== true
   || policy.requirements?.sha256BeforeInstall !== true
   || policy.requirements?.silentOverwrite !== true
   || policy.requirements?.sameInstallRoot !== true
+  || policy.requirements?.installedExecutableIdentityRecorded !== true
   || policy.requirements?.firstLaunchAfterUpdate !== true
   || policy.requirements?.postUpgradeReportsCurrent !== true
   || policy.requirements?.libraryDataRetained !== true
@@ -66,11 +67,14 @@ requireTokens(runner, [
   'LONGEDIT_MANAGED_UPDATER_DISPOSABLE',
   'ExpectedPreviousInstallerSha256',
   'ExpectedCurrentInstallerSha256',
-  'ExpectedCurrentExecutableSha256',
+  'ReleaseExecutableReferenceSha256',
   'Updater downloaded an installer before explicit user confirmation',
   'managed-updater-discovery-evidence.json',
   'downloaded-installer-sha256',
   'silent-overwrite-install',
+  'managed-updater-installed-binary.json',
+  'installed-version-and-binary-recorded',
+  'trustAnchor = "verified-official-nsis-installer"',
   'overwrite-retains-user-data',
   'first-launch-after-managed-update',
   'post-upgrade-reports-current',
@@ -129,7 +133,10 @@ if (!completed) {
         || lifecycle.previousVersion !== '1.0.5'
         || lifecycle.currentVersion !== '1.0.6'
         || lifecycle.currentInstallerSha256 !== policy.releases.current.installer.sha256
-        || lifecycle.installedExecutableSha256 !== policy.releases.current.installedExecutableSha256
+        || !/^[0-9a-f]{64}$/.test(lifecycle.installedExecutableSha256 ?? '')
+        || lifecycle.installedExecutableAuthenticodeStatus !== 'NotSigned'
+        || lifecycle.standaloneReleaseExecutableReferenceSha256 !== policy.releases.current.standaloneReleaseExecutableReferenceSha256
+        || typeof lifecycle.matchesStandaloneReleaseExecutableReference !== 'boolean'
         || lifecycle.checksPassed < 10
         || lifecycle.checksFailed !== 0
         || lifecycle.explicitUserConfirmation !== true

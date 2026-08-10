@@ -41,7 +41,7 @@ jobs:
           "CURRENT_INSTALLER_NAME=$($policy.releases.current.installer.fileName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "CURRENT_INSTALLER_SIZE=$($policy.releases.current.installer.sizeBytes)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "CURRENT_INSTALLER_SHA256=$($policy.releases.current.installer.sha256)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
-          "CURRENT_EXECUTABLE_SHA256=$($policy.releases.current.installedExecutableSha256)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CURRENT_EXECUTABLE_REFERENCE_SHA256=$($policy.releases.current.standaloneReleaseExecutableReferenceSha256)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Download official community releases
         shell: powershell
@@ -96,7 +96,7 @@ jobs:
             -ExpectedPreviousInstallerSha256 $env:PREVIOUS_INSTALLER_SHA256 `
             -ExpectedCurrentInstallerSha256 $env:CURRENT_INSTALLER_SHA256 `
             -ExpectedCurrentInstallerSize ([long]$env:CURRENT_INSTALLER_SIZE) `
-            -ExpectedCurrentExecutableSha256 $env:CURRENT_EXECUTABLE_SHA256 `
+            -ReleaseExecutableReferenceSha256 $env:CURRENT_EXECUTABLE_REFERENCE_SHA256 `
             -ExpectedTaggedCommit $env:CURRENT_TAGGED_COMMIT `
             -ExpectedReleaseUrl $env:CURRENT_RELEASE_URL `
             -NodeExecutable (Get-Command node.exe).Source `

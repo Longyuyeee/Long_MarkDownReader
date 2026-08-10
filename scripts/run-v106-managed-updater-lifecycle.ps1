@@ -14,7 +14,7 @@ param(
     [long]$ExpectedCurrentInstallerSize,
     [Parameter(Mandatory = $true)]
     [ValidatePattern("^[a-fA-F0-9]{64}$")]
-    [string]$ExpectedCurrentExecutableSha256,
+    [string]$ReleaseExecutableReferenceSha256,
     [Parameter(Mandatory = $true)]
     [ValidatePattern("^[a-fA-F0-9]{40}$")]
     [string]$ExpectedTaggedCommit,
@@ -301,10 +301,41 @@ try {
         throw "Managed updater did not install the expected current application version."
     }
     $installedExecutableSha256 = (Get-FileHash -LiteralPath $mainBinary -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($installedExecutableSha256 -ne $ExpectedCurrentExecutableSha256.ToLowerInvariant()) {
-        throw "Installed v$CurrentVersion executable does not match the published artifact manifest."
+    $installedExecutableInfo = Get-Item -LiteralPath $mainBinary
+    $installedAuthenticodeStatus = [string](Get-AuthenticodeSignature -LiteralPath $mainBinary).Status
+    if ($installedAuthenticodeStatus -ne "NotSigned") {
+        throw "Installed application signature status drifted from the unsigned community release boundary."
     }
-    $checks.Add([ordered]@{ id = "installed-version-and-binary"; status = "passed"; version = $CurrentVersion; sha256 = $installedExecutableSha256 })
+    $matchesStandaloneReference = $installedExecutableSha256 -eq $ReleaseExecutableReferenceSha256.ToLowerInvariant()
+    $installedBinaryReceipt = [ordered]@{
+        schemaVersion = 1
+        stage = "V1.0.6-U1-INSTALLED-BINARY"
+        capturedAt = (Get-Date).ToUniversalTime().ToString("o")
+        status = "recorded"
+        version = $CurrentVersion
+        fileName = $installedExecutableInfo.Name
+        sizeBytes = $installedExecutableInfo.Length
+        sha256 = $installedExecutableSha256
+        authenticodeStatus = $installedAuthenticodeStatus
+        standaloneReleaseExecutableReferenceSha256 = $ReleaseExecutableReferenceSha256.ToLowerInvariant()
+        matchesStandaloneReleaseExecutableReference = $matchesStandaloneReference
+        trustAnchor = "verified-official-nsis-installer"
+        sourceUserContentIncluded = $false
+    }
+    [IO.File]::WriteAllText(
+        (Join-Path $OutputDirectory "managed-updater-installed-binary.json"),
+        ($installedBinaryReceipt | ConvertTo-Json -Depth 5),
+        [Text.UTF8Encoding]::new($false)
+    )
+    $checks.Add([ordered]@{
+        id = "installed-version-and-binary-recorded"
+        status = "passed"
+        version = $CurrentVersion
+        sha256 = $installedExecutableSha256
+        authenticodeStatus = $installedAuthenticodeStatus
+        matchesStandaloneReleaseExecutableReference = $matchesStandaloneReference
+        trustAnchor = "verified-official-nsis-installer"
+    })
 
     if (-not (Test-Path -LiteralPath $libraryMarker -PathType Leaf) -or
         -not (Test-Path -LiteralPath $configMarker -PathType Leaf) -or
@@ -359,6 +390,9 @@ try {
         currentInstallerSha256 = $cachedInstallerSha256
         currentInstallerSizeBytes = $cachedInstallerInfo.Length
         installedExecutableSha256 = $installedExecutableSha256
+        installedExecutableAuthenticodeStatus = $installedAuthenticodeStatus
+        standaloneReleaseExecutableReferenceSha256 = $ReleaseExecutableReferenceSha256.ToLowerInvariant()
+        matchesStandaloneReleaseExecutableReference = $matchesStandaloneReference
         releaseUrl = $ExpectedReleaseUrl
         taggedCommit = $ExpectedTaggedCommit.ToLowerInvariant()
         checks = [object[]]$checks.ToArray()
