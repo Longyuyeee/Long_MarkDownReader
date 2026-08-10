@@ -209,9 +209,19 @@ if (mode === 'discover-install') {
   })()`)
   if (!navigation?.entryVisible) throw new Error(`Post-upgrade settings entry is invalid: ${JSON.stringify(navigation)}`)
   await waitFor(`location.hash.startsWith('#/settings')`, 'settings route navigation', 600)
+  await waitFor(`document.querySelector('.settings-navigation') !== null`, 'settings category navigation', 1200)
+  const selectedSystemCategory = await evaluate(`(() => {
+    const button = [...document.querySelectorAll('.settings-navigation button')]
+      .find(item => item.textContent?.includes('系统与更新'))
+    if (!button) return false
+    button.click()
+    return true
+  })()`)
+  if (!selectedSystemCategory) throw new Error('Post-upgrade system update category was not selectable')
   await waitFor(`document.querySelector('[data-testid="app-update-settings"]') !== null`, 'software update settings row', 1200)
   await waitFor(`document.querySelector('.page-loader') === null`, 'settings route transition', 1200)
   navigation.afterHash = await evaluate('location.hash')
+  navigation.systemCategorySelected = true
   await writeEvidence('managed-updater-post-upgrade-navigation.json', {
     schemaVersion: 1,
     stage: 'V1.0.6-U1-NAVIGATION',

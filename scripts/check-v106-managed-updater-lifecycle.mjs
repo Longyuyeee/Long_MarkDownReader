@@ -87,6 +87,7 @@ requireTokens(probe, [
   "textContent?.includes('下载并安装')",
   'installerStartedBeforeConfirmation: false',
   "document.querySelector('.sidebar-footer')",
+  "item.textContent?.includes('系统与更新')",
   'managed-updater-post-upgrade-navigation.json',
   '当前已是最新版本',
   'managed-updater-available.jpg',
