@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-11 XLSX 错误值编辑增量：** 七种可稳定复读的经典 Excel 错误值已进入显式单元格编辑、撤销/重做、批量粘贴、签名保护保存和 OOXML `t="e"` 语义复读链；`#GETTING_DATA`、动态数组错误和未知扩展错误继续阻断类型化写回。公共能力矩阵已从 `planned` 提升为 `limited`。当前还剩 2 个可执行能力阶段（日期时间编辑、复杂对象/新场景按需扩展）和 1 个最终版本验收阶段；三生产者数组写回仍等待外部证据，不计入本机可独立关闭阶段。详见 [`XLSX_Error_Value_Editing_Audit_2026-08-11.md`](./XLSX_Error_Value_Editing_Audit_2026-08-11.md)。
+
 > **2026-08-11 v1.0.6 受控更新闭环：** GitHub 托管的一次性 Windows 已从官方 v1.0.5 通过应用内“下载并安装”升级到官方 v1.0.6。最终运行 `31406703253` 完成 11/11 检查：Release/NSIS SHA-256、显式确认、同目录覆盖、v1.0.6 首启、设置页“当前已是最新版本”、覆盖安装与卸载后的合成资料保留全部通过，三张截图已人工复核，证据位于 [`docs/evidence/v1.0.6-managed-updater`](./evidence/v1.0.6-managed-updater)。本机正在使用的 v1.0.5 全程未触碰。下一步恢复有界的 Excel/Office 等价能力、新格式编辑器和主题预设开发。
 
 > **2026-08-10 v1.0.6 受控更新观察过程（已由上方闭环取代）：** 本机正在运行的 LongEdit 已核对为 v1.0.5，为避免关闭应用、覆盖安装或触碰用户资料，本阶段改用 GitHub 托管可丢弃 Windows。该段记录 runner 刚完成时的 `hosted-execution-pending` 历史状态，最终结论以上方 2026-08-11 入口和 [`V1_0_6_Managed_Updater_Lifecycle_Audit_2026-08-10.md`](./V1_0_6_Managed_Updater_Lifecycle_Audit_2026-08-10.md) 为准。

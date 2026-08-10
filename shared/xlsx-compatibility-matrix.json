@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-30",
+  "updatedAt": "2026-08-11",
   "engineId": "calamine-ooxml-ironcalc-v14",
   "compatibilityProfileId": "xlsx-progressive-editing-v1",
   "format": "xlsx",
@@ -37,10 +37,10 @@
       "label": "Excel 错误值",
       "read": "supported",
       "view": "supported",
-      "edit": "planned",
+      "edit": "limited",
       "calculate": "supported",
       "roundTrip": "supported",
-      "evidence": "Summary!F2 #DIV/0! fixture + semantic round-trip test"
+      "evidence": "Summary!F2 #DIV/0! fixture + seven classic Excel error literals (#NULL!, #DIV/0!, #VALUE!, #REF!, #NAME?, #NUM!, #N/A) have explicit edit, OOXML t=e write, undo/batch paths, and save-reopen semantic tests; #GETTING_DATA, dynamic-array errors, and unknown extended errors remain read-only or plain text"
     },
     {
       "id": "formulas",

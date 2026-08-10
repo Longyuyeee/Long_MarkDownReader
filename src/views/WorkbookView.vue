@@ -937,7 +937,7 @@ interface WorkbookSheetPage {
 }
 interface WorkbookBorderSide { style: string; color?: string }
 interface WorkbookNamedStyle { name: string; builtinId?: number }
-interface WorkbookCellEdit { sheet: string; row: number; column: number; input: string; kind: 'string' | 'number' | 'boolean' | 'empty' | 'formula' }
+interface WorkbookCellEdit { sheet: string; row: number; column: number; input: string; kind: 'string' | 'number' | 'boolean' | 'error' | 'empty' | 'formula' }
 interface WorkbookCellStyleEdit { sheet: string; row: number; column: number; patch: WorkbookStylePatch }
 interface WorkbookRowHeightEdit { sheet: string; row: number; height: number | null }
 interface WorkbookColumnWidthEdit { sheet: string; startColumn: number; endColumn: number; width: number | null }
@@ -1017,6 +1017,7 @@ const loadedPages = new Set<number>()
 const pendingConditionalDependencyPages = new Set<number>()
 let conditionalDependencyLoading = false
 const drafts = ref(new Map<string, WorkbookCellEdit>())
+const EDITABLE_ERROR_VALUES = new Set(['#NULL!', '#DIV/0!', '#VALUE!', '#REF!', '#NAME?', '#NUM!', '#N/A'])
 const styleDrafts = ref(new Map<string, WorkbookStylePatch>())
 const rowHeightDrafts = ref(new Map<string, number | null>())
 const columnWidthDrafts = ref(new Map<string, number | null>())
@@ -2047,7 +2048,10 @@ const isEditableCell = (row: number, column: number) => {
   if (isMergedCovered(row, column)) return false
   if (arrayFormulaAt(row, column)) return false
   const source = sourceCellAt(row, column)
-  return Boolean(source.formula) || !['date', 'error'].includes(source.kind)
+  if (source.formula) return true
+  if (source.kind === 'date') return false
+  if (source.kind === 'error') return EDITABLE_ERROR_VALUES.has(source.value)
+  return true
 }
 const arrayFormulaAt = (row: number, column: number) => sheetInfo.value?.arrayFormulas.find(item =>
   row >= item.range.top && row <= item.range.bottom && column >= item.range.left && column <= item.range.right)
@@ -2241,6 +2245,7 @@ const inferEdit = (selection: CellSelection, input: string): WorkbookCellEdit =>
   if (input.startsWith('=') && input.length > 1) return { ...selection, input, kind: 'formula' }
   if (!input) return { ...selection, input, kind: 'empty' }
   if (/^(true|false)$/i.test(input)) return { ...selection, input: input.toLowerCase(), kind: 'boolean' }
+  if (EDITABLE_ERROR_VALUES.has(input.toUpperCase())) return { ...selection, input: input.toUpperCase(), kind: 'error' }
   if (/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(input) && Number.isFinite(Number(input))) return { ...selection, input, kind: 'number' }
   return { ...selection, input, kind: 'string' }
 }
@@ -3258,7 +3263,7 @@ const applyBatchInputs = (start: CellSelection, matrix: string[][]) => {
     const key = editKey(selection.sheet, selection.row, selection.column)
     const before = drafts.value.get(key)
     const source = sourceCellAt(selection.row, selection.column)
-    if (!before && ['date', 'error'].includes(source.kind)) throw new Error(`${columnLabel(selection.column)}${selection.row + 1} 当前类型暂不支持区域写入`)
+    if (!before && (source.kind === 'date' || (source.kind === 'error' && !EDITABLE_ERROR_VALUES.has(source.value)))) throw new Error(`${columnLabel(selection.column)}${selection.row + 1} 当前类型暂不支持区域写入`)
     const after = input === originalInput(source) || (!input && source.kind === 'empty') ? undefined : inferEdit(selection, input)
     if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
   }))
@@ -3322,7 +3327,7 @@ const clearSelection = () => {
       const key = editKey(focus.sheet, row, column)
       const before = drafts.value.get(key)
       const source = sourceCellAt(row, column)
-      if (!before && ['date', 'error'].includes(source.kind)) throw new Error(`${columnLabel(column)}${row + 1} 当前类型暂不支持区域写入`)
+      if (!before && (source.kind === 'date' || (source.kind === 'error' && !EDITABLE_ERROR_VALUES.has(source.value)))) throw new Error(`${columnLabel(column)}${row + 1} 当前类型暂不支持区域写入`)
       const selection = { sheet: focus.sheet, row, column }
       const after = source.kind === 'empty' ? undefined : inferEdit(selection, '')
       if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })

@@ -4112,6 +4112,78 @@ mod tests {
     }
 
     #[test]
+    fn standard_excel_error_values_round_trip_as_typed_error_cells() {
+        let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/workbook/compatibility-baseline.xlsx");
+        let source = fs::read(fixture_path).unwrap();
+        let values = [
+            "#NULL!",
+            "#DIV/0!",
+            "#VALUE!",
+            "#REF!",
+            "#NAME?",
+            "#NUM!",
+            "#N/A",
+        ];
+        let edits = values
+            .iter()
+            .enumerate()
+            .map(|(column, value)| WorkbookCellEdit {
+                sheet: "Summary".into(),
+                row: 8,
+                column,
+                input: (*value).into(),
+                kind: "error".into(),
+            })
+            .collect::<Vec<_>>();
+        let output = patch_workbook(&source, &edits, &[], &[], &[], &[]).unwrap();
+        let unsupported = patch_workbook(
+            &source,
+            &[WorkbookCellEdit {
+                sheet: "Summary".into(),
+                row: 8,
+                column: values.len(),
+                input: "#GETTING_DATA".into(),
+                kind: "error".into(),
+            }],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap_err();
+        assert!(unsupported.contains("标准 Excel 错误常量"));
+        let worksheet = zip_part(&output, "xl/worksheets/sheet1.xml");
+        assert_eq!(
+            worksheet
+                .windows(b"t=\"e\"".len())
+                .filter(|window| *window == b"t=\"e\"")
+                .count(),
+            values.len() + 1
+        );
+
+        let base = std::env::temp_dir().join(format!(
+            "longedit-xlsx-error-values-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&base).unwrap();
+        let path = base.join("error-values.xlsx");
+        fs::write(&path, output).unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "Summary", 0, 20)
+            .unwrap();
+        for (column, value) in values.iter().enumerate() {
+            assert_eq!(page.rows[8][column].kind, "error");
+            assert_eq!(page.rows[8][column].value, *value);
+        }
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
     fn updates_and_removes_freeze_panes_with_signature_protection() {
         let (base, path) = compatibility_fixture_copy("freeze-pane");
         let root = base.join("library");

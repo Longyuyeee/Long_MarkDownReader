@@ -90,6 +90,12 @@ for (const id of ['named_ranges', 'date_time_values', 'error_values']) {
 }
 const namedRanges = matrix.features.find(item => item.id === 'named_ranges')
 if (!namedRanges || namedRanges.edit !== 'limited' || namedRanges.roundTrip !== 'supported') fail('named range S8-3A status drift')
+const errorValues = matrix.features.find(item => item.id === 'error_values')
+if (!errorValues || errorValues.edit !== 'limited' || errorValues.roundTrip !== 'supported') fail('error value bounded edit status drift')
+for (const value of ['#NULL!', '#DIV/0!', '#VALUE!', '#REF!', '#NAME?', '#NUM!', '#N/A']) {
+  if (!ooxml.includes(`"${value}"`) || !view.includes(`'${value}'`)) fail(`editable error value ${value} is not aligned across backend and UI`)
+}
+if (!ooxml.includes('"error" => cell.push_attribute(("t", "e"))') || !engine.includes('standard_excel_error_values_round_trip_as_typed_error_cells') || !engine.includes('input: "#GETTING_DATA".into()') || !view.includes("kind: 'error'")) fail('error value edit/save/reopen boundary evidence missing')
 if (!ooxml.includes('read_workbook_defined_names') || !view.includes('navigateDefinedName')) fail('named range read/navigation evidence missing')
 if (!ooxml.includes('patch_workbook_defined_name') || !engine.includes('update_workbook_defined_name') || !view.includes("invoke<WorkbookDocument>('update_workbook_defined_name'")) fail('named range S8-3A transaction evidence missing')
 if (!ooxml.includes('refuses_to_rename_or_delete_referenced_defined_names') || !view.includes('createDefinedName') || !view.includes('updateDefinedNameRange')) fail('named range S8-3A safety/UI evidence missing')
@@ -480,7 +486,7 @@ for (const field of ['pivot_tables', 'slicers', 'external_data']) {
   if (!model.includes(`pub ${field}: WorkbookCapabilityLevel`)) fail(`${field} machine capability missing`)
 }
 if (!model.includes('pub linked_data: WorkbookLinkedData') || !ooxml.includes('read_workbook_linked_data') || !ooxml.includes('external_relationship_summary')) fail('linked data inventory evidence missing')
-if (!view.includes('class="linked-data-trigger"') || !view.includes('LongEdit 不会访问外部目标') || !view.includes('不会访问外部文件或网络地址')) fail('linked data safety presentation missing')
+if (!view.includes('class="linked-data-policy"') || !view.includes('不会自动刷新数据') || !view.includes('不会访问外部文件或网络地址')) fail('linked data safety presentation missing')
 for (const feature of ['pivotTable', 'slicer', 'externalLink', 'dataConnection']) {
   if (fixture.documentFeatures[feature] !== true) fail(`${feature} fixture evidence missing`)
 }

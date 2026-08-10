@@ -49,6 +49,15 @@ use zip::{CompressionMethod, ZipArchive, ZipWriter};
 const MAX_CELL_EDITS: usize = 10_000;
 const MAX_CELL_TEXT: usize = 32_767;
 const MAX_FORMULA_TEXT: usize = 8_192;
+const EDITABLE_ERROR_VALUES: [&str; 7] = [
+    "#NULL!",
+    "#DIV/0!",
+    "#VALUE!",
+    "#REF!",
+    "#NAME?",
+    "#NUM!",
+    "#N/A",
+];
 const MAX_ARRAY_FORMULAS: usize = 1_024;
 const MAX_ARRAY_FORMULA_CELLS: usize = 1_000_000;
 const MAX_ARRAY_DIAGNOSTIC_CELLS: usize = 256;
@@ -917,6 +926,7 @@ pub(crate) fn validate_edit(edit: &WorkbookCellEdit) -> Result<(), String> {
             _ => Err("数字单元格内容无效".into()),
         },
         "boolean" if matches!(edit.input.to_ascii_lowercase().as_str(), "true" | "false") => Ok(()),
+        "error" if EDITABLE_ERROR_VALUES.contains(&edit.input.as_str()) => Ok(()),
         "empty" if edit.input.is_empty() => Ok(()),
         "formula"
             if edit.input.starts_with('=')
@@ -926,6 +936,7 @@ pub(crate) fn validate_edit(edit: &WorkbookCellEdit) -> Result<(), String> {
             Ok(())
         }
         "string" => Err(format!("单元格文本不能超过 {MAX_CELL_TEXT} 个字符")),
+        "error" => Err("错误值必须是受支持的标准 Excel 错误常量".into()),
         "formula" => Err("公式必须以 = 开头且不能超过 8192 个字符".into()),
         _ => Err("不支持的单元格编辑类型".into()),
     }
@@ -1033,6 +1044,7 @@ fn write_cell(
     match edit.kind.as_str() {
         "string" => cell.push_attribute(("t", "inlineStr")),
         "boolean" => cell.push_attribute(("t", "b")),
+        "error" => cell.push_attribute(("t", "e")),
         _ => {}
     }
     writer
@@ -1070,6 +1082,13 @@ fn write_cell(
                 .and_then(|_| writer.write_event(Event::Text(BytesText::new(value))))
                 .and_then(|_| writer.write_event(Event::End(BytesEnd::new("v"))))
                 .map_err(|error| format!("写入布尔单元格失败: {error}"))?;
+        }
+        "error" => {
+            writer
+                .write_event(Event::Start(BytesStart::new("v")))
+                .and_then(|_| writer.write_event(Event::Text(BytesText::new(&edit.input))))
+                .and_then(|_| writer.write_event(Event::End(BytesEnd::new("v"))))
+                .map_err(|error| format!("写入错误值单元格失败: {error}"))?;
         }
         "formula" => {
             writer
