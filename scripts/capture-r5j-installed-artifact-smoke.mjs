@@ -287,7 +287,8 @@ const checks = [{ id: 'installed-current-webview-bootstrap', status: 'passed' }]
 
 await waitFor(
   `(() => {
-    const query = new URLSearchParams(location.hash.split('?')[1] || '')
+    const separator = location.hash.indexOf('?')
+    const query = new URLSearchParams(separator >= 0 ? location.hash.slice(separator + 1) : '')
     return location.hash.includes('/mindmap')
       && query.get('external') === '1'
       && query.get('path')?.endsWith(${JSON.stringify(coldLaunchFile)}) === true
@@ -312,7 +313,8 @@ if (secondaryExitCode !== 0) throw new Error(`Secondary LongEdit process exited 
 try {
   await waitFor(
     `(() => {
-      const query = new URLSearchParams(location.hash.split('?')[1] || '')
+      const separator = location.hash.indexOf('?')
+      const query = new URLSearchParams(separator >= 0 ? location.hash.slice(separator + 1) : '')
       return location.hash.includes('/text')
         && query.get('external') === '1'
         && document.querySelector('.text-workspace') !== null
@@ -334,7 +336,10 @@ try {
   })`)
   throw new Error(`${error.message}: ${JSON.stringify(diagnostics)}`)
 }
-const routedSecondaryPath = await evaluate(`new URLSearchParams(location.hash.split('?')[1] || '').get('path') || ''`)
+const routedSecondaryPath = await evaluate(`(() => {
+  const separator = location.hash.indexOf('?')
+  return new URLSearchParams(separator >= 0 ? location.hash.slice(separator + 1) : '').get('path') || ''
+})()`)
 if (normalizeWindowsPath(routedSecondaryPath) !== normalizeWindowsPath(secondaryLaunchFile)) {
   throw new Error(`Single-instance handoff opened an unexpected path: ${JSON.stringify({ routedSecondaryPath, secondaryLaunchFile })}`)
 }

@@ -32,6 +32,10 @@ for (const token of [
   'installed-default-app-candidates.jpg',
 ]) requireText(smoke, token, `installed WebView probe is missing ${token}`)
 
+if (smoke.includes("location.hash.split('?')")) {
+  failures.push('installed WebView probe must preserve raw question marks inside Windows device paths')
+}
+
 for (const token of [
   "invoke<string[]>('take_pending_external_open_files')",
   "listen<string>('open-file', async ()",
