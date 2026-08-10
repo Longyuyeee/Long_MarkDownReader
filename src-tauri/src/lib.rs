@@ -101,7 +101,10 @@ use commands::search::{get_all_tags, search_all_libraries, search_by_tag, search
 use commands::svg::{
     analyze_svg_source, write_external_svg_source_document, write_svg_source_document,
 };
-use commands::system::{exit_app, get_url_title, open_default_apps_settings};
+use commands::system::{
+    exit_app, get_default_app_candidate_status, get_url_title, open_default_apps_settings,
+    prepare_default_app_candidate,
+};
 use commands::table::{
     create_table_file, export_table_file, import_table_file, read_external_table_file,
     read_table_file, write_external_table_file, write_table_file,
@@ -485,6 +488,8 @@ pub fn run() {
             move_item,
             move_items,
             open_default_apps_settings,
+            get_default_app_candidate_status,
+            prepare_default_app_candidate,
             save_history_version,
             save_external_history_version,
             list_history,

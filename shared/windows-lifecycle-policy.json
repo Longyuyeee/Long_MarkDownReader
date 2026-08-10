@@ -17,6 +17,9 @@
   "fileAssociations": {
     "defaultSelectionOwner": "windows",
     "directRegistryDefaultWrite": false,
+    "candidateRegistrationOwner": "explicit-user-action",
+    "runtimeCandidateRegistration": "current-user-open-with-only",
+    "runtimeCandidatePolicies": ["edit", "preview"],
     "groups": [
       {
         "id": "markdown",

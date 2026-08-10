@@ -36,3 +36,4 @@ for (const section of ['## 1. 审计结论', '## 2. 需求对齐', '## 3. 当前
 console.log(`Current development audit passed: v${pkg.version}, 43 format mappings and release stage are aligned.`)
 await import('./check-external-mermaid-workspace.mjs')
 await import('./check-external-opml-workspace.mjs')
+await import('./check-default-app-candidate-workflow.mjs')

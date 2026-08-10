@@ -826,3 +826,9 @@ Mermaid `.mmd/.mermaid` 已进入授权后的外部直接编辑：外部路径�
 OPML `.opml` 已进入授权后的外部直接编辑：外部路径不依赖知识库，思维导图/大纲、四种布局、三种主题、拖动多选、右键、键盘移动与撤销重做保持可用；修改只在点击保存或 Ctrl+S 后写回。覆盖前会说明 OPML 2.0 XML 规范化，后端继续执行 8 MiB、10,000 节点、64 层、DTD 拒绝、文档校验和源签名检查，外部冲突不会覆盖。依赖知识库创建新文件的 Canvas 投影在外部模式隐藏。
 
 外部能力现为 29 类 `edit`、8 类 `preview` 与 6 类 `import`，安装器关联仍只有 `.md/.markdown`；剩余六类均为旧 Office/WPS 显式转换或系统打开工作流。接手后进行全部外部格式的默认应用选择、安装态启动与关联收口审计，再判断是否进入下一补丁版本。详见 [`UX50P_External_OPML_Workspace_Audit_2026-08-10.md`](./UX50P_External_OPML_Workspace_Audit_2026-08-10.md)。
+
+## 2026-08-10 EA-5A 默认应用逐格式候选
+
+“格式能力”页已提供逐格式 LongEdit 候选准备。只有用户点击的 `edit/preview` 格式会写入当前用户 `OpenWithProgids` 与 LongEdit 能力清单，随后由 Windows 页面完成最终默认应用确认；LongEdit 不写 `UserChoice`，安装器关联仍只有 `.md/.markdown`，旧 Office/WPS 六类继续排除。外部首实例与单实例启动仍先授权再路由，`external=1` 页面不再挂载资料库文件上下文，保持完整工作区。
+
+接手后进入 EA-5B，对测试安装包执行真实 Windows 候选注册、冷启动、已有实例二次打开、中文/空格路径与卸载恢复回归。详见 [`UX50Q_Default_App_Candidate_Workflow_Audit_2026-08-10.md`](./UX50Q_Default_App_Candidate_Workflow_Audit_2026-08-10.md)。

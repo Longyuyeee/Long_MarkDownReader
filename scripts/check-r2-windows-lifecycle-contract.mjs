@@ -85,6 +85,9 @@ for (const extension of policy.fileAssociations.excludedDependencyFormats || [])
 failUnless(
   policy.fileAssociations.defaultSelectionOwner === 'windows'
     && policy.fileAssociations.directRegistryDefaultWrite === false
+    && policy.fileAssociations.candidateRegistrationOwner === 'explicit-user-action'
+    && policy.fileAssociations.runtimeCandidateRegistration === 'current-user-open-with-only'
+    && sameJson(policy.fileAssociations.runtimeCandidatePolicies, ['edit', 'preview'])
     && tauri.bundle.windows.nsis.installerHooks === 'windows/nsis-hooks.nsh'
     && nsisHooks.includes('NSIS_HOOK_POSTINSTALL')
     && nsisHooks.includes('NSIS_HOOK_POSTUNINSTALL')
@@ -98,9 +101,18 @@ failUnless(
     && system.includes('ms-settings:defaultapps')
     && !system.includes('Set-Item')
     && !system.includes('Set-ItemProperty')
-    && !system.includes('HKEY_CURRENT_USER')
     && !system.includes('reg.exe'),
   'system command must open Windows settings without writing default associations',
+)
+failUnless(
+  system.includes('prepare_default_app_candidate')
+    && system.includes('get_default_app_candidate_status')
+    && system.includes('OpenWithProgids')
+    && system.includes('Software\\RegisteredApplications')
+    && system.includes('registeredAppUser=LongEdit')
+    && system.includes('matches!(format.external_policy.as_str(), "edit" | "preview")')
+    && !system.includes('UserChoice'),
+  'runtime candidate registration must be explicit, format-bounded, and leave Windows UserChoice untouched',
 )
 failUnless(
   settings.includes("invoke('open_default_apps_settings')")

@@ -89,6 +89,7 @@ const relationContextRoutes = new Set([
 ])
 const activeContextPath = computed(() => {
   const route = router.currentRoute.value
+  if (route.query.external === '1') return ''
   return relationContextRoutes.has(String(route.name)) && typeof route.query.path === 'string'
     ? route.query.path
     : ''
