@@ -5,6 +5,9 @@ const lifecycle = read('scripts/run-r5i-isolated-install-lifecycle.ps1')
 const smoke = read('scripts/capture-r5j-installed-artifact-smoke.mjs')
 const exporter = read('scripts/export-r5k-windows-evidence-bundle.ps1')
 const view = read('src/views/ReleaseCapabilitiesView.vue')
+const app = read('src/App.vue')
+const rustApp = read('src-tauri/src/lib.rs')
+const externalAccess = read('src-tauri/src/services/external_file_access.rs')
 const workflow = read('.github/workflows/u2-unsigned-lifecycle.yml')
 const failures = []
 
@@ -22,6 +25,24 @@ for (const token of [
   'installed-user-triggered-default-app-candidates',
   'installed-default-app-candidates.jpg',
 ]) requireText(smoke, token, `installed WebView probe is missing ${token}`)
+
+for (const token of [
+  "invoke<string[]>('take_pending_external_open_files')",
+  "listen<string>('open-file', async ()",
+  'pendingExternalOpenTimer = setInterval',
+]) requireText(app, token, `single-instance handoff recovery is missing ${token}`)
+
+for (const token of [
+  '.manage(PendingExternalOpenFiles::default())',
+  'pending.enqueue(path.clone())',
+  'take_pending_external_open_files,',
+]) requireText(rustApp, token, `single-instance backend queue is missing ${token}`)
+
+for (const token of [
+  'pub struct PendingExternalOpenFiles',
+  'pub fn enqueue(&self, path: PathBuf)',
+  'pub fn take_all(&self) -> Result<Vec<String>, String>',
+]) requireText(externalAccess, token, `single-instance pending state is missing ${token}`)
 
 for (const token of [
   '$unicodeMarker = -join @([char]0x4E2D, [char]0x6587)',

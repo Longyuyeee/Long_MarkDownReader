@@ -199,6 +199,8 @@ const showExitModal = ref(false)
 const dontAskAgain = ref(false)
 const routeErrorMessage = ref('')
 let unlistenOpenFile: (() => void) | null = null
+let pendingExternalOpenTimer: ReturnType<typeof setInterval> | null = null
+let drainingPendingExternalFiles = false
 let routeMeasurementStartedAt = performance.now()
 let routeMeasurementName = 'initial'
 let routeMeasurementSequence = 0
@@ -385,11 +387,29 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   event.returnValue = ''
 }
 
+const drainPendingExternalOpenFiles = async () => {
+  if (drainingPendingExternalFiles) return
+  drainingPendingExternalFiles = true
+  try {
+    const paths = await withTimeout(
+      invoke<string[]>('take_pending_external_open_files'),
+      2500,
+      'invoke:take_pending_external_open_files',
+    )
+    for (const filePath of paths) {
+      if (isExternallyOpenable(filePath)) await routeExternalFile(filePath)
+    }
+  } catch (cause) {
+    console.warn('Pending external files unavailable', cause)
+  } finally {
+    drainingPendingExternalFiles = false
+  }
+}
+
 const initializeExternalFileRouting = async () => {
   try {
-    unlistenOpenFile = await withTimeout(listen<string>('open-file', async (event) => {
-      const filePath = event.payload
-      if (isExternallyOpenable(filePath)) await routeExternalFile(filePath)
+    unlistenOpenFile = await withTimeout(listen<string>('open-file', async () => {
+      await drainPendingExternalOpenFiles()
     }), 2500, 'event:open-file')
   } catch (cause) {
     console.warn('Open-file event registration timed out', cause)
@@ -402,6 +422,11 @@ const initializeExternalFileRouting = async () => {
   } catch (cause) {
     console.warn('Launch arguments unavailable', cause)
   }
+
+  await drainPendingExternalOpenFiles()
+  pendingExternalOpenTimer = setInterval(() => {
+    void drainPendingExternalOpenFiles()
+  }, 1000)
 }
 
 onMounted(() => {
@@ -415,6 +440,7 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown)
   window.removeEventListener('beforeunload', handleBeforeUnload)
   if (unlistenOpenFile) unlistenOpenFile()
+  if (pendingExternalOpenTimer) clearInterval(pendingExternalOpenTimer)
   removeBeforeEach()
   removeAfterEach()
   removeRouteError()

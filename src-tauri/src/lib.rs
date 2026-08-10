@@ -36,7 +36,8 @@ use commands::files::{
     export_markdown_file, export_to_html, get_external_image_base64, get_file_stats,
     get_folder_order, get_image_base64, get_launch_args, import_to_library, move_item, move_items,
     pick_external_openable_file, read_external_markdown_file, read_markdown_file, rename_item,
-    save_folder_order, scan_directory, write_external_markdown_file, write_markdown_file,
+    save_folder_order, scan_directory, take_pending_external_open_files,
+    write_external_markdown_file, write_markdown_file,
 };
 pub(crate) use commands::files::{sanitize_filename, FileContent, FileEntry};
 use commands::formats::{
@@ -141,7 +142,7 @@ use commands::yaml::{
     analyze_yaml_source, write_external_yaml_source_document, write_yaml_source_document,
 };
 use services::data_migration::check_and_migrate_data;
-use services::external_file_access::ExternalFileAccess;
+use services::external_file_access::{ExternalFileAccess, PendingExternalOpenFiles};
 use services::knowledge_index::KnowledgeIndexRuntime;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
@@ -153,6 +154,7 @@ use window_vibrancy::{apply_blur, apply_mica};
 pub fn run() {
     let builder = tauri::Builder::default()
         .manage(ExternalFileAccess::default())
+        .manage(PendingExternalOpenFiles::default())
         .manage(KnowledgeIndexRuntime::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -176,8 +178,10 @@ pub fn run() {
                 let _ = win.set_focus();
             }
             let access = app.state::<ExternalFileAccess>();
+            let pending = app.state::<PendingExternalOpenFiles>();
             for argument in args.iter().skip(1) {
                 if let Ok(path) = access.authorize_openable(argument.trim_matches('"')) {
+                    let _ = pending.enqueue(path.clone());
                     let _ = app.emit("open-file", path.to_string_lossy().into_owned());
                 }
             }
@@ -192,8 +196,10 @@ pub fn run() {
             let _ = win.set_focus();
         }
         let access = app.state::<ExternalFileAccess>();
+        let pending = app.state::<PendingExternalOpenFiles>();
         for argument in args.iter().skip(1) {
             if let Ok(path) = access.authorize_openable(argument.trim_matches('"')) {
+                let _ = pending.enqueue(path.clone());
                 let _ = app.emit("open-file", path.to_string_lossy().into_owned());
             }
         }
@@ -457,6 +463,7 @@ pub fn run() {
             update_graph_relation,
             update_graph_relation_decision,
             get_launch_args,
+            take_pending_external_open_files,
             scan_directory,
             get_folder_order,
             save_folder_order,
