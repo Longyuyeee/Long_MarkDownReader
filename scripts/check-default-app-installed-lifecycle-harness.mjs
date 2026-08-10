@@ -24,9 +24,10 @@ for (const token of [
 ]) requireText(smoke, token, `installed WebView probe is missing ${token}`)
 
 for (const token of [
-  'C:\\LongEdit EA5B 外部',
-  '冷启动 思维导图.opml',
-  '二次打开 记录.txt',
+  '$unicodeMarker = -join @([char]0x4E2D, [char]0x6587)',
+  'C:\\LongEdit EA5B $unicodeMarker',
+  'cold launch $unicodeMarker mindmap.opml',
+  'secondary $unicodeMarker notes.txt',
   'Get-UserChoiceProgId',
   'Get-RegisteredApplication',
   'LongEdit.ExternalFile',
@@ -39,6 +40,10 @@ for (const token of [
   'longEditRegistrationsRemovedAfterUninstall = $true',
   'installed-default-app-lifecycle-evidence.json',
 ]) requireText(lifecycle, token, `disposable lifecycle is missing ${token}`)
+
+if (/[^\x00-\x7f]/.test(lifecycle)) {
+  failures.push('Windows PowerShell 5.1 lifecycle source must stay ASCII and construct Unicode fixtures at runtime')
+}
 
 for (const token of [
   ':data-format-id="row.format.id"',

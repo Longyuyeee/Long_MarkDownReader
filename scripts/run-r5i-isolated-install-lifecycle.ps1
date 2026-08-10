@@ -233,9 +233,10 @@ $jsonFixture = Join-Path $libraryRoot "r5j-config.json"
 $graphNorthStarFixture = Join-Path $libraryRoot "r5j-north-star.md"
 $graphPlanFixture = Join-Path $libraryRoot "r5j-plan.md"
 $graphCanvasFixture = Join-Path $libraryRoot "r5j-network.canvas"
-$externalLaunchRoot = "C:\LongEdit EA5B 外部"
-$coldLaunchFixture = Join-Path $externalLaunchRoot "冷启动 思维导图.opml"
-$secondaryLaunchFixture = Join-Path $externalLaunchRoot "二次打开 记录.txt"
+$unicodeMarker = -join @([char]0x4E2D, [char]0x6587)
+$externalLaunchRoot = "C:\LongEdit EA5B $unicodeMarker"
+$coldLaunchFixture = Join-Path $externalLaunchRoot "cold launch $unicodeMarker mindmap.opml"
+$secondaryLaunchFixture = Join-Path $externalLaunchRoot "secondary $unicodeMarker notes.txt"
 $webviewRoot = "C:\LongEditR5IWebView"
 $managementRoot = "C:\LongEditR5IManagement"
 $managementBackup = Join-Path $managementRoot "r5l-management-backup.zip"
@@ -256,7 +257,8 @@ New-Item -ItemType Directory -Path $OutputDirectory, $libraryRoot, $configRoot, 
 [System.IO.File]::WriteAllText($graphNorthStarFixture, "# R5J North Star`n`nInstalled knowledge-network acceptance root.`n", [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($graphPlanFixture, "---`nrelations:`n  depends-on: [[r5j-north-star]]`n---`n# R5J Delivery Plan`n", [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($graphCanvasFixture, '{"nodes":[{"id":"north-star","type":"file","file":"r5j-north-star.md","x":0,"y":0,"width":240,"height":120},{"id":"plan","type":"file","file":"r5j-plan.md","x":320,"y":0,"width":240,"height":120}],"edges":[{"id":"supports-plan","fromNode":"north-star","toNode":"plan","relationType":"supports"}]}', [System.Text.UTF8Encoding]::new($false))
-[System.IO.File]::WriteAllText($coldLaunchFixture, '<?xml version="1.0" encoding="UTF-8"?><opml version="2.0"><head><title>EA5B 冷启动</title></head><body><outline text="中文 空格路径"/></body></opml>', [System.Text.UTF8Encoding]::new($false))
+$coldLaunchContent = '<?xml version="1.0" encoding="UTF-8"?><opml version="2.0"><head><title>EA5B cold launch</title></head><body><outline text="' + $unicodeMarker + ' space path"/></body></opml>'
+[System.IO.File]::WriteAllText($coldLaunchFixture, $coldLaunchContent, [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText($secondaryLaunchFixture, "EA5B_SECONDARY_INSTANCE_UNICODE_PATH`n", [System.Text.UTF8Encoding]::new($false))
 $formalConfig = [ordered]@{
     libraries = @([ordered]@{
