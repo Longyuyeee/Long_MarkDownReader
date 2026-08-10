@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { hasEa5cRequirementAcceptance } from './lib/ea5c-requirement-acceptance.mjs'
 
 const read = path => fs.readFileSync(path, 'utf8')
 const fail = message => {
@@ -57,7 +58,7 @@ if (!view.includes("invoke<JsonSourceAnalysis>('analyze_json_source'")) fail('JS
 
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
 for (const id of ['UX-25', 'UX-26', 'UX-28']) {
-  if (!new RegExp(`\\| ${id} \\|[^\\n]+\\| 待复测 \\|`).test(audit)) fail(`${id} must remain recorded as pending installed-build retest.`)
+  if (!hasEa5cRequirementAcceptance(id, audit)) fail(`${id} is missing its EA-5C accepted evidence boundary.`)
 }
 
 console.log('JSON workspace contract passed: guided paths, collapsible diagnostics, indexed expansion, and virtual tree rows.')

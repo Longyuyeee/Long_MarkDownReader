@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { hasEa5cRequirementAcceptance } from './lib/ea5c-requirement-acceptance.mjs'
 
 const read = path => fs.readFileSync(path, 'utf8')
 const fail = message => {
@@ -59,6 +60,6 @@ if (!/\.library-embedded-editor\s*\{[^}]*min-height:\s*0;[^}]*flex:\s*1;/s.test(
 }
 
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
-if (!/\| UX-22 \|[^\n]+\| 待复测 \|/.test(audit)) fail('UX-22 must remain recorded as pending installed-build retest.')
+if (!hasEa5cRequirementAcceptance('UX-22', audit)) fail('UX-22 is missing its EA-5C accepted evidence boundary.')
 
 console.log('TXT and LOG use stable named grid areas; editor/viewer keeps remaining height and status stays compact.')

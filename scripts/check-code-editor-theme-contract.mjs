@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { hasEa5cRequirementAcceptance } from './lib/ea5c-requirement-acceptance.mjs'
 
 const read = path => fs.readFileSync(path, 'utf8')
 const fail = message => {
@@ -83,7 +84,7 @@ for (const path of workspaces) {
 
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
 for (const id of ['UX-24', 'UX-27']) {
-  if (!new RegExp(`\\| ${id} \\|[^\\n]+\\| 待复测 \\|`).test(audit)) fail(`${id} must remain recorded as pending installed-build retest.`)
+  if (!hasEa5cRequirementAcceptance(id, audit)) fail(`${id} is missing its EA-5C accepted evidence boundary.`)
 }
 
 console.log('Six CodeMirror workspaces share one rich semantic theme; 9 palettes meet syntax, gutter, and cursor contrast contracts.')

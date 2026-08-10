@@ -95,6 +95,7 @@
     "check:default-app-candidate-workflow": "node scripts/check-default-app-candidate-workflow.mjs",
     "check:default-app-uninstall-recovery": "node scripts/check-default-app-uninstall-recovery.mjs",
     "check:default-app-installed-lifecycle-harness": "node scripts/check-default-app-installed-lifecycle-harness.mjs",
+    "check:ea5c-external-open-closure": "node scripts/check-ea5c-external-open-closure.mjs",
     "check:sidebar-tabs-responsive": "node scripts/check-sidebar-tabs-responsive.mjs",
     "check:file-tree-appearance": "node scripts/check-file-tree-appearance.mjs",
     "check:ux38e-canvas-explicit-save": "node scripts/check-ux38e-canvas-explicit-save.mjs",

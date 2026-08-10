@@ -19,7 +19,7 @@ const required = [
   [`当前版本：\`${pkg.version}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
   [
-    '当前阶段：**`1.0.5` 无签名社区发布收尾**',
+    '当前阶段：**EA-5C 外部打开与体验有界收口完成**',
     pkg.version === '1.0.5',
   ],
 ]
@@ -39,3 +39,4 @@ await import('./check-external-opml-workspace.mjs')
 await import('./check-default-app-candidate-workflow.mjs')
 await import('./check-default-app-uninstall-recovery.mjs')
 await import('./check-default-app-installed-lifecycle-harness.mjs')
+await import('./check-ea5c-external-open-closure.mjs')

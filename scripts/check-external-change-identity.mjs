@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { hasEa5cRequirementAcceptance } from './lib/ea5c-requirement-acceptance.mjs'
 
 const read = path => fs.readFileSync(path, 'utf8')
 const fail = message => { console.error(message); process.exit(1) }
@@ -43,6 +44,6 @@ const store = read('src/store/app.ts')
 requireTokens(store, 'Tab identity baseline', ['textContentDigest?: string', 'existing.textContentDigest = tab.textContentDigest'])
 
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
-if (!/\| UX-23 \|[^\n]+\| 待复测 \|/.test(audit)) fail('UX-23 must remain pending installed-build retest.')
+if (!hasEa5cRequirementAcceptance('UX-23', audit)) fail('UX-23 is missing its EA-5C accepted evidence boundary.')
 
 console.log('External text changes use exact content identity, save receipts, one-signature dedupe, and compare/reload/keep actions.')

@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "stage": "EA-5C",
+  "status": "accepted-bounded",
+  "appVersion": "1.0.5",
+  "formatCoverage": {
+    "registeredFormats": 43,
+    "registeredExtensions": 91,
+    "externalEdit": 29,
+    "externalPreview": 8,
+    "explicitImportOrSystemOpen": 6
+  },
+  "defaultAppCandidates": {
+    "formatProfiles": 37,
+    "extensions": 85,
+    "owner": "explicit-user-action",
+    "windowsDefaultSelectionChanged": false
+  },
+  "experienceClosure": {
+    "foundationalRequirementCount": 41,
+    "pendingImplementationCount": 0,
+    "status": "accepted-bounded",
+    "formatExperiencePendingDimensions": 0,
+    "supplementalRequirementGroups": 10,
+    "foundationalEvidence": [
+      { "id": "UX-01", "references": ["scripts/check-settings-information-architecture.mjs", "docs/evidence/ui4a-shell/audit-manifest.json"] },
+      { "id": "UX-02", "references": ["scripts/check-settings-navigation-localization.mjs"] },
+      { "id": "UX-03", "references": ["scripts/check-community-updater-contract.mjs"] },
+      { "id": "UX-04", "references": ["scripts/check-settings-navigation-localization.mjs"] },
+      { "id": "UX-05", "references": ["scripts/check-settings-information-architecture.mjs", "docs/evidence/ea-5b2-installed-default-app/installed-artifact-smoke.json"] },
+      { "id": "UX-06", "references": ["scripts/check-theme-contract.mjs", "docs/evidence/t8-1b/audit-manifest.json"] },
+      { "id": "UX-07", "references": ["scripts/check-index-auto-preparation-experience.mjs", "scripts/check-dialog-acl.mjs"] },
+      { "id": "UX-08", "references": ["scripts/check-file-tree-appearance.mjs"] },
+      { "id": "UX-09", "references": ["docs/evidence/ux38b-workspace-tabs/manifest.json"] },
+      { "id": "UX-10", "references": ["docs/evidence/ux38b-workspace-tabs/interaction-evidence.json"] },
+      { "id": "UX-11", "references": ["docs/evidence/ux38c-table-grid/interaction-evidence.json"] },
+      { "id": "UX-12", "references": ["docs/evidence/ux38c2-workbook-context/interaction-evidence.json"] },
+      { "id": "UX-13", "references": ["docs/evidence/ux38c-table-grid/manifest.json", "docs/evidence/ux38c2-workbook-context/manifest.json"] },
+      { "id": "UX-14", "references": ["docs/evidence/ux38c-table-grid/interaction-evidence.json"] },
+      { "id": "UX-15", "references": ["docs/evidence/ux38c-table-grid/interaction-evidence.json"] },
+      { "id": "UX-16", "references": ["docs/evidence/ui4b-editors/audit-manifest.json", "scripts/check-dialog-acl.mjs", "scripts/check-command-strip-layout.mjs"] },
+      { "id": "UX-17", "references": ["docs/evidence/ux38b-workspace-tabs/manifest.json"] },
+      { "id": "UX-18", "references": ["docs/evidence/ui4a-shell/audit-manifest.json"] },
+      { "id": "UX-19", "references": ["scripts/check-markdown-default-mode.mjs"] },
+      { "id": "UX-20", "references": ["docs/evidence/ui4b-editors/audit-manifest.json", "scripts/check-markdown-code-theme-contrast.mjs"] },
+      { "id": "UX-21", "references": ["scripts/check-ui-management-shell.mjs"] },
+      { "id": "UX-22", "references": ["docs/evidence/ux38a-lightweight-formats/manifest.json", "docs/evidence/ea-5b2-installed-default-app/installed-artifact-smoke.json"] },
+      { "id": "UX-23", "references": ["docs/evidence/a5-stage-a/audit-manifest.json", "scripts/check-external-change-identity.mjs"] },
+      { "id": "UX-24", "references": ["docs/evidence/ui4b-editors/audit-manifest.json", "scripts/check-code-editor-theme-contract.mjs"] },
+      { "id": "UX-25", "references": ["docs/evidence/ui4b-editors/audit-manifest.json", "scripts/check-json-workspace-experience.mjs"] },
+      { "id": "UX-26", "references": ["scripts/check-json-workspace-experience.mjs"] },
+      { "id": "UX-27", "references": ["docs/evidence/ui4b-editors/audit-manifest.json", "scripts/check-code-editor-theme-contract.mjs"] },
+      { "id": "UX-28", "references": ["scripts/check-json-workspace-experience.mjs"] },
+      { "id": "UX-29", "references": ["docs/evidence/ux38a-lightweight-formats/manifest.json", "scripts/check-log-workspace-editing.mjs"] },
+      { "id": "UX-30", "references": ["scripts/check-code-html-workspace.mjs"] },
+      { "id": "UX-31", "references": ["docs/evidence/a5-stage-a/audit-manifest.json", "scripts/check-structured-source-workspace.mjs"] },
+      { "id": "UX-32", "references": ["docs/evidence/ux38c2-workbook-context/manifest.json"] },
+      { "id": "UX-33", "references": ["docs/evidence/ea-5b2-installed-default-app/installed-artifact-smoke.json", "docs/evidence/ux33j-installed-docx-hyperlink/lifecycle-result.json"] },
+      { "id": "UX-34", "references": ["docs/evidence/ux34-drawio-canvas-stability/manifest.json"] },
+      { "id": "UX-35", "references": ["docs/evidence/ux35-file-tree-preview/manifest.json"] },
+      { "id": "UX-36", "references": ["docs/evidence/ux36-file-tree-actions/manifest.json"] },
+      { "id": "UX-37", "references": ["docs/evidence/ux37a-opml-canvas/manifest.json", "docs/evidence/ux37b-knowledge-graph-canvas/manifest.json"] },
+      { "id": "UX-38", "references": ["shared/ux38-final-closure.json", "scripts/check-ux38-final-closure.mjs"] },
+      { "id": "UX-39", "references": ["shared/ux38-format-experience-matrix.json", "scripts/check-ux38-final-closure.mjs"] },
+      { "id": "UX-40", "references": ["docs/evidence/ux40-navigation-liveness/runtime-summary.json", "scripts/check-navigation-liveness.mjs"] },
+      { "id": "UX-41", "references": ["scripts/check-sidebar-tabs-responsive.mjs"] }
+    ]
+  },
+  "installedEvidence": {
+    "runId": 31368123651,
+    "sourceCommit": "328d16d2cb3af27a835431d042ee302430b9560f",
+    "currentInstallerSha256": "404be9231425ca5896183362c5a218718c9ca65a58b67e98a328b1d9e1abe12e",
+    "lifecycleChecksPassed": 22,
+    "installedWorkspaceChecksPassed": 18,
+    "sourceUserContentIncluded": false
+  },
+  "postReleaseObservations": [
+    {
+      "id": "managed-update-cross-version",
+      "blocking": false,
+      "boundary": "Verify the first published 1.0.5 to 1.0.6 managed update after 1.0.6 assets exist."
+    },
+    {
+      "id": "optional-video-codecs",
+      "blocking": false,
+      "boundary": "MOV, MKV, AVI, MPEG and MPG playback remains dependent on the installed Windows WebView2 codecs; unsupported samples must offer external open."
+    }
+  ],
+  "nextPatch": {
+    "version": "1.0.6",
+    "communityPackagingEligible": true,
+    "requiresReadmeAndReleaseRewrite": true
+  },
+  "releaseCandidate": false,
+  "promotionEligible": false
+}

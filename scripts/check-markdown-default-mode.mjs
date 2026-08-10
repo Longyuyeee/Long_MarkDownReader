@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { hasEa5cRequirementAcceptance } from './lib/ea5c-requirement-acceptance.mjs'
 
 const read = path => fs.readFileSync(path, 'utf8').replace(/\r\n/g, '\n')
 const fail = message => {
@@ -66,8 +67,6 @@ requireTokens(backup, 'Portable preference backup', [
 ])
 
 const audit = read('docs/User_Experience_Closure_Audit_2026-08-04.md')
-if (!/\| UX-19 \|[^\n]+\| 待复测 \|/.test(audit)) {
-  fail('UX-19 must remain recorded as pending installed-build retest.')
-}
+if (!hasEa5cRequirementAcceptance('UX-19', audit)) fail('UX-19 is missing its EA-5C accepted evidence boundary.')
 
 console.log('Markdown WYSIWYG default, legacy migration, explicit preference, and backup contract passed.')

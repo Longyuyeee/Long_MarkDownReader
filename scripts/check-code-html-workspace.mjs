@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { hasEa5cRequirementAcceptance } from './lib/ea5c-requirement-acceptance.mjs'
 
 const read = path => fs.readFileSync(path, 'utf8')
 const fail = message => { console.error(message); process.exit(1) }
@@ -45,6 +46,6 @@ requireTokens(preview, 'Safe HTML preview', [
   "connect-src 'none'", "img-src data:", "form-action 'none'", "base-uri 'none'",
   "name.startsWith('on')", 'URL_ATTRIBUTES',
 ])
-if (!/\| UX-30 \|[^\n]+\| 待复测 \|/.test(audit)) fail('UX-30 must be recorded as pending installed-build retest.')
+if (!hasEa5cRequirementAcceptance('UX-30', audit)) fail('UX-30 is missing its EA-5C accepted evidence boundary.')
 
 console.log('Professional code editing, explicit save, and sandboxed HTML preview contract passed.')

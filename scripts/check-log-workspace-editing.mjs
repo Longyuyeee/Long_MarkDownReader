@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { hasEa5cRequirementAcceptance } from './lib/ea5c-requirement-acceptance.mjs'
 
 const read = path => fs.readFileSync(path, 'utf8')
 const fail = message => { console.error(message); process.exit(1) }
@@ -38,6 +39,6 @@ requireTokens(backend, 'LOG guarded writer', [
   'log-overwrite-not-acknowledged', 'log-edit-too-large', 'expected_signature',
   'if format_id == "log"', 'specialized-writer-required',
 ])
-if (!/\| UX-29 \|[^\n]+\| 待复测 \|/.test(audit)) fail('UX-29 must be recorded as pending installed-build retest.')
+if (!hasEa5cRequirementAcceptance('UX-29', audit)) fail('UX-29 is missing its EA-5C accepted evidence boundary.')
 
 console.log('LOG professional viewer and guarded editor contract passed.')
