@@ -121,10 +121,19 @@ if (!completed) {
     if (manifest.stage !== 'V1.0.6-U1I'
       || manifest.status !== 'accepted'
       || manifest.githubRunId !== policy.githubRun.id
+      || manifest.githubRunUrl !== policy.githubRun.url
+      || manifest.workflowConclusion !== policy.githubRun.conclusion
+      || manifest.headCommit !== policy.githubRun.headCommit
       || manifest.previousVersion !== policy.releases.previous.version
       || manifest.currentVersion !== policy.releases.current.version
+      || manifest.officialInstallerSha256 !== policy.releases.current.installer.sha256
+      || manifest.installedExecutableSha256 !== policy.releases.current.installedPackageExecutable.sha256
+      || manifest.authenticodeStatus !== policy.releases.current.installedPackageExecutable.authenticodeStatus
+      || manifest.lifecycleChecks?.passed !== 11
+      || manifest.lifecycleChecks?.failed !== 0
       || manifest.sourceUserContentIncluded !== false
-      || manifest.files?.length < 6) fail('managed updater import manifest drift')
+      || manifest.files?.length !== 9
+      || manifest.files.filter(file => file.path.endsWith('.jpg')).some(file => file.visuallyReviewed !== true)) fail('managed updater import manifest drift')
     for (const file of manifest.files ?? []) {
       const evidencePath = `${root}/${file.path}`
       if (!fs.existsSync(evidencePath)) fail(`managed updater evidence missing: ${file.path}`)
@@ -137,11 +146,11 @@ if (!completed) {
         || lifecycle.previousVersion !== '1.0.5'
         || lifecycle.currentVersion !== '1.0.6'
         || lifecycle.currentInstallerSha256 !== policy.releases.current.installer.sha256
-        || !/^[0-9a-f]{64}$/.test(lifecycle.installedExecutableSha256 ?? '')
-        || lifecycle.installedExecutableAuthenticodeStatus !== 'NotSigned'
+        || lifecycle.installedExecutableSha256 !== policy.releases.current.installedPackageExecutable.sha256
+        || lifecycle.installedExecutableAuthenticodeStatus !== policy.releases.current.installedPackageExecutable.authenticodeStatus
         || lifecycle.standaloneReleaseExecutableReferenceSha256 !== policy.releases.current.standaloneReleaseExecutableReferenceSha256
-        || typeof lifecycle.matchesStandaloneReleaseExecutableReference !== 'boolean'
-        || lifecycle.checksPassed < 10
+        || lifecycle.matchesStandaloneReleaseExecutableReference !== policy.releases.current.installedPackageExecutable.matchesStandaloneReleaseExecutableReference
+        || lifecycle.checksPassed !== 11
         || lifecycle.checksFailed !== 0
         || lifecycle.explicitUserConfirmation !== true
         || lifecycle.userDataRetainedAfterOverwrite !== true

@@ -42,7 +42,7 @@
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.5-to-1.0.6-pending",
+    "managedUpdaterUpgradePath": "1.0.5-to-1.0.6-passed",
     "scope": "external-open-default-app-and-experience-closure"
   },
   "targetRelease": {
@@ -87,15 +87,17 @@
     "taggedCommit": "257c12e1795e9de2d5629e8053cbeaa1fb802cc8",
     "publishedAt": "2026-08-10T14:43:31Z",
     "candidateEvidenceQualityGateRunId": 31399100657,
+    "managedUpdaterLifecycleRunId": 31406703253,
+    "managedUpdaterLifecycleRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31406703253",
     "remoteAssetsVerified": true,
     "receipt": "docs/evidence/v1.0.6-release/release-receipt.json"
   },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.5-to-v1.0.6-managed-update-observation-pending",
+    "v1.0.5-to-v1.0.6-managed-update-observed",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "observe-v1.0.5-to-v1.0.6-managed-updater-and-user-data-retention"
+  "nextAction": "monitor-community-updater-and-resume-bounded-format-capability-development"
 }

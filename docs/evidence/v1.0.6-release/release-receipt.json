@@ -16,7 +16,8 @@
   "qualityGates": {
     "frozenProductRunId": 31392652689,
     "candidateEvidenceRunId": 31399100657,
-    "hostedInstalledLifecycleRunId": 31394967949
+    "hostedInstalledLifecycleRunId": 31394967949,
+    "managedUpdaterLifecycleRunId": 31406703253
   },
   "assets": [
     {
@@ -43,5 +44,5 @@
   ],
   "authenticodeStatus": "NotSigned",
   "sourceUserContentIncluded": false,
-  "managedUpdaterObservation": "1.0.5-to-1.0.6-pending"
+  "managedUpdaterObservation": "1.0.5-to-1.0.6-passed"
 }
