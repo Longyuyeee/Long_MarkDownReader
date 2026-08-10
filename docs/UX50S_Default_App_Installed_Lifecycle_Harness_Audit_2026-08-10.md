@@ -1,7 +1,7 @@
 # UX50S 默认应用安装生命周期探针审计
 
 日期：2026-08-10
-阶段：EA-5B2A 完成
+阶段：EA-5B2B 完成，EA-5B 安装态收口
 
 ## 审计结论
 
@@ -12,6 +12,16 @@
 - 候选准备前后都会比较 `.opml/.png` 的扩展名默认值与 Windows `UserChoice`，任何变化都会让任务失败。
 - 静默卸载后必须移除候选值、ProgID、能力清单和 `RegisteredApplications` 入口，同时保持原默认值与 `UserChoice` 不变。
 - 独立证据 JSON 和安装态截图已加入 R5K 证据包必需成员；测试仍拒绝在非 Windows Sandbox、非 GitHub 托管 runner或未明确标记的可丢弃虚拟机中执行。
+
+## EA-5B2B 托管安装态结果
+
+- `U2 Unsigned Disposable Lifecycle` [运行 31368123651](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31368123651) 已通过，安装态生命周期从 2026-08-10 08:00:28 UTC 执行至 08:01:40 UTC。
+- 被验收的产品源码冻结在 `328d16d2cb3af27a835431d042ee302430b9560f`；当前 NSIS 为 `1.0.5`，SHA-256 为 `404be9231425ca5896183362c5a218718c9ca65a58b67e98a328b1d9e1abe12e`。回滚 NSIS 为 `0.6.2`，SHA-256 为 `6b3d939aa89254b4aa4b7ac6fe3d4db55aaa34a0ffc46897300a757b637a6dc9`。
+- 22 项完整生命周期检查和 18 项安装产物工作区检查全部通过，覆盖旧版新装、受控升级、Unicode/空格路径冷启动、已有实例二次文件转交、显式候选注册、卸载恢复、用户数据保留、回滚、管理备份恢复、索引重建和代表文件复开。
+- 用户在“格式能力”中主动选择 OPML 与图片后，`.opml/.png/.avif` 出现 LongEdit 候选；未选择的 `.json` 没有出现候选。Windows 默认值与 `UserChoice` 均未改变，卸载后 LongEdit 自有注册全部移除。
+- 安装态截图已人工复核：格式能力页、逐格式选择入口和 Windows 默认应用入口显示完整，没有把所有支持格式静默设为默认应用。
+- 证据已固化到 [`docs/evidence/ea-5b2-installed-default-app/audit-manifest.json`](./evidence/ea-5b2-installed-default-app/audit-manifest.json)。上游 R5K 证据包 SHA-256 为 `c59e67541fbd63d4b5d7cbb0207f6e4632da8efd086097fe0d18a2056486b196`。
+- 当前安装包为 `NotSigned`。本结果只关闭无签名内部安装态回归，不等同于真实签名证明，不将 `releaseCandidate` 或 `promotionEligible` 改为 `true`。
 
 ## 需求对齐
 
@@ -29,10 +39,12 @@
 - 前端生产构建通过。
 - EA-5A、EA-5B1 与 EA-5B2A 专属契约通过。
 - U2 GitHub 托管可丢弃工作流契约通过。
+- EA-5B2B 托管安装生命周期通过，原始 JSON、截图和 SHA-256 清单已入库。
+- `npm run ci:patch-release` 完整通过：生产构建处理 6225 个模块，现行格式与体验合同、Rust 锁定检查全部通过，生产依赖漏洞为 0。
 
 ## 下一步
 
-进入 EA-5B2B：先推送并冻结本阶段提交，再以该提交触发 `U2 Unsigned Disposable Lifecycle`。只有任务实际完成、安装器哈希与提交绑定、证据包通过校验后，才能把 EA-5B 的安装态结果标记为通过；失败则依据上传的诊断和证据修复后重新执行。
+进入 EA-5C 外部打开能力汇总收口：核对 29 类直接编辑、8 类只读预览、6 类显式转换与 37 类/85 扩展名默认应用候选边界，回写总体验验收清单，并判断是否具备进入下一个补丁版本打包的条件。EA-5C 不扩大写入白名单，也不因本次无签名安装态通过而宣称企业签名发布候选成立。
 
 ## 托管预检修正
 

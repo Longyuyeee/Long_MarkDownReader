@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-10 EA-5B2B 最新接手入口：** GitHub 托管可丢弃 Windows 已对冻结产品提交 `328d16d` 完成真实 NSIS 生命周期，22 项安装/升级/卸载/回滚检查和 18 项安装产物工作区检查全部通过。用户主动选择的 OPML、PNG、AVIF 成为 LongEdit 候选，未选择的 JSON 未被接管；Unicode/空格路径冷启动、已有实例二次文件转交、默认值不变和卸载清理均通过。安装包仍为 `NotSigned`，只代表无签名内部安装态收口。下一步进入 EA-5C，汇总外部打开能力与总体验清单，再决定是否提升补丁版本并打包。详见 [`UX50S_Default_App_Installed_Lifecycle_Harness_Audit_2026-08-10.md`](./UX50S_Default_App_Installed_Lifecycle_Harness_Audit_2026-08-10.md)。
+
 > **2026-08-07 EA-2B 最新接手入口：** JSON/JSONC、YAML、XML、SVG、TOML 已进入各自专用外部源码工作区；外部可编辑注册项增至 23 个。新增链路保持撤销重做、实时诊断、冲突保护和显式保存，通用外部文本写入不能绕过专用语法/安全门禁。安装器关联仍只有 Markdown。下一步进入 EA-3，审计非源码格式的外部预览、导入、系统打开和可靠写回边界。详见 [`UX50C_External_Structured_Source_Audit_2026-08-07.md`](./UX50C_External_Structured_Source_Audit_2026-08-07.md)。
 
 > **2026-08-07 EA-2A 最新接手入口：** 外部文件工作区已从 Markdown/TXT 扩展到 17 类配置与代码格式；格式能力页逐格式公开外部打开状态，并把默认应用选择明确交给 Windows 和用户。安装器仍只登记 Markdown 的 OpenWith 候选，不会静默接管其他格式。下一步进入 EA-2B，为 JSON/YAML/XML/TOML/SVG 建立专用外部授权保存链路。详见 [`UX50B_External_Text_Code_Default_App_Audit_2026-08-07.md`](./UX50B_External_Text_Code_Default_App_Audit_2026-08-07.md)。
@@ -844,3 +846,9 @@ NSIS 卸载钩子已补齐运行时候选清理：37 类 `edit/preview` 格式�
 U2 可丢弃 Windows runner 已接入 EA-5B 安装态探针：带中文/空格路径的外部 OPML 冷启动、已有实例接收外部 TXT、格式能力页真实触发 OPML/图片候选、未选择 JSON 反向检查、默认值与 `UserChoice` 前后比较，以及卸载后的 LongEdit 注册恢复。独立 JSON 与截图已纳入 R5K 必需证据；普通开发机不会执行安装或注册表变更。
 
 接手后进入 EA-5B2B：以本阶段冻结提交触发 `U2 Unsigned Disposable Lifecycle`，等待真实 NSIS 安装、升级、启动、候选注册、卸载和回滚全部完成，下载并校验证据后再更新完成状态。详见 [`UX50S_Default_App_Installed_Lifecycle_Harness_Audit_2026-08-10.md`](./UX50S_Default_App_Installed_Lifecycle_Harness_Audit_2026-08-10.md)。
+
+## 2026-08-10 EA-5B2B 安装态验收完成
+
+托管运行 `31368123651` 已对冻结产品提交 `328d16d` 完成真实 NSIS 验收：22 项生命周期检查与 18 项安装产物检查全部通过。逐格式候选只由用户在“格式能力”中主动触发，未选择格式不接管，Windows 默认值不变；中文/空格路径冷启动、单实例二次打开、卸载清理、用户数据保留和回滚恢复均通过。证据清单及安装态截图已入库。
+
+接手后进入 EA-5C：汇总 29 类直接编辑、8 类只读预览、6 类显式转换和 37 类/85 扩展名候选边界，逐项回写总体验验收清单；确认没有剩余 P0/P1 阻断后，再决定下一个补丁版本的版本号、README、安装包与 Release。当前包未签名，不得将本次结果写成真实签名或企业发布候选证明。

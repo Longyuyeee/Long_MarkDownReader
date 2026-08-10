@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "stage": "EA-5B2B",
+  "capturedAt": "2026-08-10T08:01:39.0288355Z",
+  "environment": "GitHub-hosted disposable Windows installed NSIS lifecycle",
+  "sourceRun": {
+    "id": 31368123651,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31368123651",
+    "sourceCommit": "328d16d2cb3af27a835431d042ee302430b9560f"
+  },
+  "artifacts": {
+    "appVersion": "1.0.5",
+    "previousVersion": "0.6.2",
+    "currentInstallerSha256": "404be9231425ca5896183362c5a218718c9ca65a58b67e98a328b1d9e1abe12e",
+    "previousInstallerSha256": "6b3d939aa89254b4aa4b7ac6fe3d4db55aaa34a0ffc46897300a757b637a6dc9",
+    "installedExecutableSha256": "a9180fc0cc5b1e8eab59287530a581dd0209479d5027377346315528b788720b",
+    "upstreamEvidenceBundleSha256": "c59e67541fbd63d4b5d7cbb0207f6e4632da8efd086097fe0d18a2056486b196",
+    "authenticodeStatus": "NotSigned"
+  },
+  "checks": {
+    "lifecycle": {
+      "passed": 22,
+      "failed": 0
+    },
+    "installedArtifactSmoke": {
+      "passed": 18,
+      "failed": 0
+    },
+    "windowsDefaultSelectionChanged": false,
+    "longEditRegistrationsRemovedAfterUninstall": true,
+    "sourceUserContentIncluded": false
+  },
+  "files": [
+    {
+      "path": "installed-artifact-smoke.json",
+      "sha256": "a44e5fd5e36f82cfdd17fc057dd55fcd31020e2bb5c783b91c4f429c0282534a"
+    },
+    {
+      "path": "installed-default-app-candidates.jpg",
+      "sha256": "f77107acc9bdec3dcc7322335752cef78c4589d516023fceaaec7db897f7f96d",
+      "visuallyReviewed": true
+    },
+    {
+      "path": "installed-default-app-lifecycle-evidence.json",
+      "sha256": "0b9b5f889515789ffcc0c5e35b3d897c581d9f6ae430fe2d8301e9b26fe14ebe"
+    },
+    {
+      "path": "lifecycle-result.json",
+      "sha256": "8f73e81c57c37f572901f5d81d44f0986f658eecc9e63b4090bf99bcddff6ed4"
+    },
+    {
+      "path": "runner-build-receipt.json",
+      "sha256": "47568bd719903c66518efd8b4508c885030ff9767fd44dd304cb0bef1859bc85"
+    }
+  ],
+  "releaseCandidate": false,
+  "promotionEligible": false
+}
