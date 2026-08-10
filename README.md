@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.5"><img src="https://img.shields.io/badge/Release-v1.0.5-cca43b" alt="Release v1.0.5"></a>
+  <img src="https://img.shields.io/badge/Next-v1.0.6%20preparing-0f766e" alt="v1.0.6 preparing">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/License-AGPL--3.0-7c3aed" alt="AGPL-3.0">
@@ -15,7 +16,7 @@
 
 ## 下载
 
-Long编辑 v1.0.5 支持 Windows 10/11 x64：
+当前已发布版本是 Long编辑 v1.0.5，支持 Windows 10/11 x64：
 
 - [NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.5/LongEdit_1.0.5_x64-setup.exe)（推荐）
 - [MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.5/LongEdit_1.0.5_x64_zh-CN.msi)
@@ -24,6 +25,17 @@ Long编辑 v1.0.5 支持 Windows 10/11 x64：
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同一页面的 `SHA256SUMS.txt` 核对文件。
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 无法自动迁移，需要手动安装 v1.0.5 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
+
+`main` 当前正在准备 v1.0.6。新版本尚未发布，暂不提供失效的安装包链接；候选范围与边界见 [v1.0.6 发布说明](docs/RELEASE_NOTES_v1.0.6.md)。
+
+## v1.0.6 更新重点
+
+- 外部打开覆盖全部 43 类注册格式：29 类进入专用编辑工作区，8 类进入只读预览，6 类旧 Office/WPS 使用显式转换或桌面程序交接。
+- 外部编辑保持撤销、重做、未保存保护、源文件身份冲突检查和“点击保存才写回”；外部预览不会获得写入权限。
+- “格式能力”提供 37 类、85 个扩展名的逐格式默认应用候选，必须由用户主动触发并在 Windows 中确认，不会批量接管全部支持格式。
+- Windows 单实例链支持 Unicode、空格路径、冷启动和已有窗口二次文件转交；卸载只清理 LongEdit 自己创建的候选注册。
+- UX-01 至 UX-41 基础体验要求均已有代码、专项合同、真实 Tauri 或安装态证据，并保留 Office、视频解码器与无签名发布边界。
+- 自动更新继续使用固定 GitHub Release、严格 NSIS 名称与 SHA-256；`1.0.5 -> 1.0.6` 的真实覆盖安装将在附件发布后执行。
 
 ## 这是什么
 
@@ -130,7 +142,7 @@ docs/                审计、发布说明和开发交接文档
 design/brand/        品牌图标母版
 ```
 
-开发状态见 [收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，本次变化见 [v1.0.5 发布说明](docs/RELEASE_NOTES_v1.0.5.md)。
+开发状态见 [收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，候选变化见 [v1.0.6 发布说明](docs/RELEASE_NOTES_v1.0.6.md)，当前公开版本记录见 [v1.0.5 发布说明](docs/RELEASE_NOTES_v1.0.5.md)。
 
 ## 许可证
 

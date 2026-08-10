@@ -257,7 +257,7 @@ mod tests {
     fn rejects_untrusted_download_locations() {
         assert!(validate_download_url("https://example.com/LongEdit.exe").is_err());
         assert!(validate_download_url(
-            "https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.5/LongEdit_1.0.5_x64-setup.exe"
+            "https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.6/LongEdit_1.0.6_x64-setup.exe"
         )
         .is_ok());
     }

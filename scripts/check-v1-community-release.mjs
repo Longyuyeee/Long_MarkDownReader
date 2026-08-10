@@ -9,7 +9,7 @@ const pkg = json('package.json')
 const tauri = json('src-tauri/tauri.conf.json')
 const policy = json('shared/v1-community-release-policy.json')
 const updater = json('shared/community-updater-policy.json')
-const previousLifecycle = json('docs/evidence/ux39-installed-lifecycle/summary.json')
+const previousLifecycle = json('docs/evidence/ea-5b2-installed-default-app/audit-manifest.json')
 const cargo = read('src-tauri/Cargo.toml')
 const readme = read('README.md')
 const backendUpdater = read('src-tauri/src/commands/updater.rs')
@@ -24,7 +24,14 @@ if (policy.userDecision?.authenticodeRequired !== false || policy.userDecision?.
 if (policy.targetRelease?.tag !== tag || policy.targetRelease?.url !== releaseUrl || policy.targetRelease?.assetMode !== 'managed-nsis-msi-with-sha256') fail('target release drift')
 if (updater.status !== 'active-from-v1.0.5' || updater.migration?.firstManagedUpdaterVersion !== '1.0.5' || policy.updater?.mode !== 'github-release-sha256-managed' || policy.updater?.enabled !== true || policy.updater?.automaticCheckIntervalHours !== 24 || policy.updater?.integrityDigestRequired !== true || policy.updater?.latestManifestAsset !== null) fail('managed updater release boundary drift')
 for (const token of ['api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest', 'Sha256::digest', 'LongEdit_{expected_version}_x64-setup.exe']) if (!backendUpdater.includes(token)) fail(`managed updater implementation missing: ${token}`)
-if (previousLifecycle.appVersion !== '1.0.4' || previousLifecycle.status !== 'passed' || policy.patchValidation?.previousInstalledLifecycleEvidenceVersion !== '1.0.4' || policy.patchValidation?.previousEvidenceInheritedAsCurrent !== false) fail('previous installed lifecycle must remain historical')
+if (previousLifecycle.stage !== 'EA-5B2B'
+  || previousLifecycle.artifacts?.appVersion !== policy.patchValidation?.previousInstalledLifecycleEvidenceVersion
+  || previousLifecycle.checks?.lifecycle?.failed !== 0
+  || previousLifecycle.checks?.installedArtifactSmoke?.failed !== 0
+  || policy.patchValidation?.previousPublicVersion !== '1.0.5'
+  || policy.patchValidation?.previousInstalledLifecycleEvidenceVersion !== '1.0.5'
+  || policy.patchValidation?.previousEvidenceInheritedAsCurrent !== false
+  || policy.patchValidation?.managedUpdaterUpgradePath !== '1.0.5-to-1.0.6-pending') fail('previous installed lifecycle must remain a bounded v1.0.5 baseline')
 if (!fs.existsSync(auditPath) || !fs.existsSync(notesPath)) fail('current release documents are missing')
 for (const token of [tag, '未知发布者', 'SHA-256', '自动更新']) if (!readme.includes(token)) fail(`README release disclosure missing: ${token}`)
 

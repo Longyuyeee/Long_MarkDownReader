@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-10 v1.0.6 发布准备入口：** package、Cargo、Tauri 和现行发布事实源已提升到 `1.0.6`，本地 `ci:patch-release` 已通过，社区策略仍等待远端质量门与安装包证据；公开下载保持 `v1.0.5`。README 与 `RELEASE_NOTES_v1.0.6.md` 已对齐 EA-5C 的 29 类外部编辑、8 类外部预览、6 类显式转换，以及 37 类/85 扩展名逐项默认应用候选。接手后先等待远端 Quality Gate，再从冻结提交构建 MSI/NSIS、记录哈希、发布并执行 `1.0.5 -> 1.0.6` 受控更新观察。详见 [`V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md`](./V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md)。
+
 > **2026-08-10 EA-5C 最新接手入口：** 外部打开与默认应用阶段已完成有界收口：43 类格式分为 29 类直接编辑、8 类只读预览、6 类显式转换；37 类/85 扩展名候选只由用户逐项触发。UX-01 至 UX-41 基础清单已全部回写为完成或有界完成，EA-5B2B 的 22 项生命周期与 18 项安装工作区证据已由 SHA-256 清单锁定。两个 GitHub 工作流已升级到 `actions/setup-node@v6`。下一步提升到 `1.0.6`，重写 README/Release Notes、构建并发布无签名 MSI/NSIS，再执行 `1.0.5 -> 1.0.6` 自动更新观察。详见 [`UX50T_External_Open_and_Experience_Closure_Audit_2026-08-10.md`](./UX50T_External_Open_and_Experience_Closure_Audit_2026-08-10.md)。
 
 > **2026-08-10 EA-5B2B 最新接手入口：** GitHub 托管可丢弃 Windows 已对冻结产品提交 `328d16d` 完成真实 NSIS 生命周期，22 项安装/升级/卸载/回滚检查和 18 项安装产物工作区检查全部通过。用户主动选择的 OPML、PNG、AVIF 成为 LongEdit 候选，未选择的 JSON 未被接管；Unicode/空格路径冷启动、已有实例二次文件转交、默认值不变和卸载清理均通过。安装包仍为 `NotSigned`，只代表无签名内部安装态收口。下一步进入 EA-5C，汇总外部打开能力与总体验清单，再决定是否提升补丁版本并打包。详见 [`UX50S_Default_App_Installed_Lifecycle_Harness_Audit_2026-08-10.md`](./UX50S_Default_App_Installed_Lifecycle_Harness_Audit_2026-08-10.md)。

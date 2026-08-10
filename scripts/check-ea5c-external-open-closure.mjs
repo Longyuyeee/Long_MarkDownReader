@@ -42,10 +42,10 @@ for (const [label, actual, expected] of [
 ]) if (actual !== expected) fail(`${label} drift: ${actual} != ${expected}`)
 
 if (JSON.stringify(importIds) !== JSON.stringify(expectedImportIds)) fail('legacy Office/WPS import boundary drift')
-if (closure.status !== 'accepted-bounded' || closure.appVersion !== pkg.version) fail('EA-5C status or app version drift')
+if (closure.status !== 'accepted-bounded' || closure.appVersion !== '1.0.5') fail('EA-5C accepted baseline drift')
 if (closure.defaultAppCandidates.owner !== 'explicit-user-action' || closure.defaultAppCandidates.windowsDefaultSelectionChanged !== false) fail('default-app ownership drift')
 if (closure.releaseCandidate !== false || closure.promotionEligible !== false) fail('enterprise release boundary drift')
-if (closure.nextPatch.version !== '1.0.6' || closure.nextPatch.communityPackagingEligible !== true) fail('next community patch decision drift')
+if (closure.nextPatch.version !== pkg.version || closure.nextPatch.communityPackagingEligible !== true) fail('next community patch decision drift')
 
 const auditRows = userAudit
   .split('\n')
@@ -115,7 +115,7 @@ for (const token of [
   "import('./check-default-app-installed-lifecycle-harness.mjs')",
 ]) if (!currentAudit.includes(token)) fail(`current development audit is missing ${token}`)
 if (!pkg.scripts?.['check:ea5c-external-open-closure']) fail('EA-5C package script is missing')
-if (!alignment.includes('当前阶段：**EA-5C 外部打开与体验有界收口完成**')) fail('development alignment is stale')
+if (!alignment.includes('当前阶段：**`1.0.6` 无签名社区发布准备**')) fail('development alignment is stale')
 
 for (const [name, workflow] of [['quality gate', qualityWorkflow], ['U2 lifecycle', lifecycleWorkflow]]) {
   if (!workflow.includes('actions/setup-node@v6') || workflow.includes('actions/setup-node@v4')) fail(`${name} still uses the deprecated Node 20 action runtime`)
