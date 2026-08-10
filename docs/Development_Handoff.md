@@ -832,3 +832,9 @@ OPML `.opml` 已进入授权后的外部直接编辑：外部路径不依赖知�
 “格式能力”页已提供逐格式 LongEdit 候选准备。只有用户点击的 `edit/preview` 格式会写入当前用户 `OpenWithProgids` 与 LongEdit 能力清单，随后由 Windows 页面完成最终默认应用确认；LongEdit 不写 `UserChoice`，安装器关联仍只有 `.md/.markdown`，旧 Office/WPS 六类继续排除。外部首实例与单实例启动仍先授权再路由，`external=1` 页面不再挂载资料库文件上下文，保持完整工作区。
 
 接手后进入 EA-5B，对测试安装包执行真实 Windows 候选注册、冷启动、已有实例二次打开、中文/空格路径与卸载恢复回归。详见 [`UX50Q_Default_App_Candidate_Workflow_Audit_2026-08-10.md`](./UX50Q_Default_App_Candidate_Workflow_Audit_2026-08-10.md)。
+
+## 2026-08-10 EA-5B1 默认应用候选卸载恢复
+
+NSIS 卸载钩子已补齐运行时候选清理：37 类 `edit/preview` 格式的 85 个扩展名只删除 `LongEdit.ExternalFile` 值，并清理 LongEdit ProgID、能力清单和 `RegisteredApplications` 入口；其他应用候选、扩展名键和 Windows `UserChoice` 均不触碰。自动契约会从统一格式注册表核对完整集合，安装器静态关联仍只有 `.md/.markdown`。
+
+接手后进入 EA-5B2，把候选触发、冷启动、已有实例二次打开、中文/空格路径和卸载恢复接入可丢弃 Windows 安装生命周期并执行真实 NSIS 证据回归。详见 [`UX50R_Default_App_Uninstall_Recovery_Audit_2026-08-10.md`](./UX50R_Default_App_Uninstall_Recovery_Audit_2026-08-10.md)。

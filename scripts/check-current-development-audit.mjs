@@ -37,3 +37,4 @@ console.log(`Current development audit passed: v${pkg.version}, 43 format mappin
 await import('./check-external-mermaid-workspace.mjs')
 await import('./check-external-opml-workspace.mjs')
 await import('./check-default-app-candidate-workflow.mjs')
+await import('./check-default-app-uninstall-recovery.mjs')
