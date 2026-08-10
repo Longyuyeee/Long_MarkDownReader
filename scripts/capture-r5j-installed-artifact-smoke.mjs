@@ -316,9 +316,13 @@ try {
       return location.hash.includes('/text')
         && query.get('external') === '1'
         && document.querySelector('.text-workspace') !== null
-        && document.body?.innerText?.includes('EA5B_SECONDARY_INSTANCE_UNICODE_PATH') === true
     })()`,
-    'single-instance external TXT handoff with Chinese and spaces',
+    'single-instance external TXT route with Chinese and spaces',
+    1200,
+  )
+  await waitFor(
+    `document.body?.innerText?.includes('EA5B_SECONDARY_INSTANCE_UNICODE_PATH') === true`,
+    'single-instance external TXT content marker',
     1200,
   )
 } catch (error) {

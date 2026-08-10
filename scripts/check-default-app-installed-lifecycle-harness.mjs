@@ -24,6 +24,8 @@ for (const token of [
   "const windowsDevicePrefix = '\\\\\\\\?\\\\'",
   'const normalizeWindowsPath = value =>',
   'EA5B_SECONDARY_INSTANCE_UNICODE_PATH',
+  'single-instance external TXT route with Chinese and spaces',
+  'single-instance external TXT content marker',
   'normalizeWindowsPath(routedSecondaryPath) !== normalizeWindowsPath(secondaryLaunchFile)',
   "for (const formatId of ['opml', 'raster-image'])",
   'installed-user-triggered-default-app-candidates',
