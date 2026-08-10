@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 
-const read = file => fs.readFileSync(file, 'utf8')
+const read = file => fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n')
 const json = file => JSON.parse(read(file))
 const failures = []
 const requireText = (source, token, message) => {
