@@ -21,6 +21,8 @@ for (const token of [
   "spawn(installedExecutable, [secondaryLaunchFile]",
   'installed-external-cold-launch-unicode-space-path',
   'installed-single-instance-external-handoff',
+  "const windowsDevicePrefix = '\\\\\\\\?\\\\'",
+  'normalized.slice(4)',
   "for (const formatId of ['opml', 'raster-image'])",
   'installed-user-triggered-default-app-candidates',
   'installed-default-app-candidates.jpg',

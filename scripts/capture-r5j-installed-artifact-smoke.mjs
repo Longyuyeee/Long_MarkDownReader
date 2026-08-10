@@ -15,6 +15,7 @@ const sourceCommit = process.env.LONGEDIT_R5J_SOURCE_COMMIT || ''
 const signedArtifactRuntimeProven = process.env.LONGEDIT_R5J_SIGNED_RUNTIME === 'true'
 const coldLaunchFile = process.env.LONGEDIT_EA5B_COLD_FILE ? path.resolve(process.env.LONGEDIT_EA5B_COLD_FILE) : ''
 const secondaryLaunchFile = process.env.LONGEDIT_EA5B_SECONDARY_FILE ? path.resolve(process.env.LONGEDIT_EA5B_SECONDARY_FILE) : ''
+const windowsDevicePrefix = '\\\\?\\'
 if (!library || !output || !installedExecutable || !coldLaunchFile || !secondaryLaunchFile || !appVersion || !/^[a-f0-9]{64}$/.test(installerSha256) || !/^[a-f0-9]{40}$/.test(sourceCommit)) {
   throw new Error('R5J library, output, executable, external launch fixtures, version, installer hash, and source commit are required')
 }
@@ -308,7 +309,10 @@ try {
   await waitFor(
     `(() => {
       const query = new URLSearchParams(location.hash.split('?')[1] || '')
-      const normalize = value => String(value || '').replace(/^\\\\\\?\\\\/, '').replace(/\\//g, '\\\\').toLocaleLowerCase()
+      const normalize = value => {
+        const normalized = String(value || '').replaceAll('/', '\\\\').toLocaleLowerCase()
+        return normalized.startsWith(${JSON.stringify(windowsDevicePrefix)}) ? normalized.slice(4) : normalized
+      }
       return location.hash.includes('/text')
         && query.get('external') === '1'
         && normalize(query.get('path')) === normalize(${JSON.stringify(secondaryLaunchFile)})
