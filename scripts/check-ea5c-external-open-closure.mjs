@@ -115,7 +115,7 @@ for (const token of [
   "import('./check-default-app-installed-lifecycle-harness.mjs')",
 ]) if (!currentAudit.includes(token)) fail(`current development audit is missing ${token}`)
 if (!pkg.scripts?.['check:ea5c-external-open-closure']) fail('EA-5C package script is missing')
-if (!alignment.includes('当前阶段：**`1.0.6` 无签名社区发布准备**')) fail('development alignment is stale')
+if (!alignment.includes('当前阶段：**`1.0.6` 无签名社区发布候选（待发布）**')) fail('development alignment is stale')
 
 for (const [name, workflow] of [['quality gate', qualityWorkflow], ['U2 lifecycle', lifecycleWorkflow]]) {
   if (!workflow.includes('actions/setup-node@v6') || workflow.includes('actions/setup-node@v4')) fail(`${name} still uses the deprecated Node 20 action runtime`)

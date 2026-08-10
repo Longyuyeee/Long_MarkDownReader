@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-10 v1.0.6 发布候选入口：** 冻结产品提交 `9349c334b22753dacd0a58fad7f1ce55aa0bf6dc` 的完整 Quality Gate（运行 `31392652689`）、本地 MSI/NSIS 构建及 GitHub 托管安装生命周期（运行 `31394967949`）均已通过。托管环境完成 22/22 生命周期和 18/18 安装态工作区检查；本机因已有 LongEdit 单实例运行，没有终止用户进程或执行安装器。社区无签名候选现为 `ready-to-publish`，企业签名候选仍为 false。接手后先等待本证据提交的远端门禁，再创建 `v1.0.6` Release、复核远端附件并更新 README；最后单独执行 `1.0.5 -> 1.0.6` 应用内更新观察。详见 [`V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md`](./V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md)。
+
 > **2026-08-10 v1.0.6 发布准备入口：** package、Cargo、Tauri 和现行发布事实源已提升到 `1.0.6`，本地 `ci:patch-release` 已通过，社区策略仍等待远端质量门与安装包证据；公开下载保持 `v1.0.5`。README 与 `RELEASE_NOTES_v1.0.6.md` 已对齐 EA-5C 的 29 类外部编辑、8 类外部预览、6 类显式转换，以及 37 类/85 扩展名逐项默认应用候选。接手后先等待远端 Quality Gate，再从冻结提交构建 MSI/NSIS、记录哈希、发布并执行 `1.0.5 -> 1.0.6` 受控更新观察。详见 [`V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md`](./V1_0_6_Unsigned_Community_Release_Audit_2026-08-10.md)。
 
 > **2026-08-10 EA-5C 最新接手入口：** 外部打开与默认应用阶段已完成有界收口：43 类格式分为 29 类直接编辑、8 类只读预览、6 类显式转换；37 类/85 扩展名候选只由用户逐项触发。UX-01 至 UX-41 基础清单已全部回写为完成或有界完成，EA-5B2B 的 22 项生命周期与 18 项安装工作区证据已由 SHA-256 清单锁定。两个 GitHub 工作流已升级到 `actions/setup-node@v6`。下一步提升到 `1.0.6`，重写 README/Release Notes、构建并发布无签名 MSI/NSIS，再执行 `1.0.5 -> 1.0.6` 自动更新观察。详见 [`UX50T_External_Open_and_Experience_Closure_Audit_2026-08-10.md`](./UX50T_External_Open_and_Experience_Closure_Audit_2026-08-10.md)。

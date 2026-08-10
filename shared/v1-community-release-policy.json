@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.0.6",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-10",
-  "currentStatus": "v1.0.6-community-release-quality-gate-pending",
+  "currentStatus": "v1.0.6-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -27,19 +27,19 @@
     "frontendBuildPassed": true,
     "rustLockedCheckPassed": true,
     "productionDependencyAuditPassed": true,
-    "msiBuilt": false,
-    "nsisBuilt": false,
-    "artifactHashesVerified": false,
+    "msiBuilt": true,
+    "nsisBuilt": true,
+    "artifactHashesVerified": true,
     "localRuntimeSmokePassed": false,
-    "installedLifecyclePassed": false,
-    "qualityGatePassed": false,
+    "installedLifecyclePassed": true,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "patchValidation": {
     "previousPublicVersion": "1.0.5",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": false,
+    "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
     "managedUpdaterUpgradePath": "1.0.5-to-1.0.6-pending",
@@ -51,10 +51,34 @@
     "assetMode": "managed-nsis-msi-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": null,
-    "qualityGateRunId": null,
-    "qualityGateRunUrl": null,
-    "artifacts": []
+    "artifactSourceCommit": "9349c334b22753dacd0a58fad7f1ce55aa0bf6dc",
+    "qualityGateRunId": 31392652689,
+    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31392652689",
+    "hostedInstalledLifecycleRunId": 31394967949,
+    "hostedInstalledLifecycleRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31394967949",
+    "artifacts": [
+      {
+        "target": "release-executable",
+        "fileName": "tauri-app.exe",
+        "sizeBytes": 87552512,
+        "sha256": "d8d22c9805d3edd9eabb3536dd209cd9e3f26e42310afaab3053b5b9d5a1b9ac",
+        "authenticodeStatus": "NotSigned"
+      },
+      {
+        "target": "msi",
+        "fileName": "LongEdit_1.0.6_x64_zh-CN.msi",
+        "sizeBytes": 58814464,
+        "sha256": "ae93e0217c7f8df6cba09ac29541d2792b1203a8750de69793af6eecff272114",
+        "authenticodeStatus": "NotSigned"
+      },
+      {
+        "target": "nsis",
+        "fileName": "LongEdit_1.0.6_x64-setup.exe",
+        "sizeBytes": 53839365,
+        "sha256": "e65d374732ef7f8777df25fb82e7dec1161165fd87f91c93db21cca647bfb36c",
+        "authenticodeStatus": "NotSigned"
+      }
+    ]
   },
   "release": null,
   "releaseWarnings": [
@@ -64,5 +88,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "freeze-source-run-quality-gate-build-and-audit-v1.0.6"
+  "nextAction": "publish-v1.0.6-and-verify-remote-release-assets"
 }

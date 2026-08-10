@@ -1,9 +1,11 @@
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 
 const read = path => fs.readFileSync(path, 'utf8')
 const json = path => JSON.parse(read(path))
 const failures = []
 const fail = message => failures.push(message)
+const sha256 = path => crypto.createHash('sha256').update(fs.readFileSync(path)).digest('hex')
 
 const pkg = json('package.json')
 const tauri = json('src-tauri/tauri.conf.json')
@@ -40,7 +42,14 @@ const ready = !published && policy.gates?.qualityGatePassed === true
 if (published) {
   if (!policy.releaseCandidate || policy.currentStatus !== `${tag}-community-release-published` || policy.release?.tag !== tag || policy.release?.url !== releaseUrl || !/^[0-9a-f]{40}$/.test(policy.release?.taggedCommit ?? '')) fail('published release receipt drift')
 } else if (ready) {
-  if (!policy.releaseCandidate || policy.currentStatus !== `${tag}-community-release-ready-to-publish` || policy.gates?.msiBuilt !== true || policy.gates?.nsisBuilt !== true || policy.gates?.artifactHashesVerified !== true) fail('ready-to-publish state drift')
+  if (!policy.releaseCandidate
+    || policy.currentStatus !== `${tag}-community-release-ready-to-publish`
+    || policy.gates?.msiBuilt !== true
+    || policy.gates?.nsisBuilt !== true
+    || policy.gates?.artifactHashesVerified !== true
+    || policy.gates?.installedLifecyclePassed !== true
+    || policy.patchValidation?.fullInstalledLifecycleRerun !== true
+    || !Number.isInteger(policy.candidate?.hostedInstalledLifecycleRunId)) fail('ready-to-publish state drift')
 } else if (policy.releaseCandidate !== false || policy.currentStatus !== `${tag}-community-release-quality-gate-pending` || policy.gates?.msiBuilt !== false || policy.gates?.nsisBuilt !== false) {
   fail('pre-quality release state drift')
 }
@@ -52,6 +61,46 @@ if (ready || published) {
     const manifest = json(manifestPath)
     if (manifest.appVersion !== pkg.version || manifest.sourceVersion !== pkg.version || manifest.sourceCommit !== policy.candidate?.artifactSourceCommit || manifest.artifacts?.length !== 3 || manifest.artifacts.some(item => item.authenticodeStatus !== 'NotSigned')) fail('current artifact manifest drift')
     if (!/^[0-9a-f]{40}$/.test(manifest.sourceCommit ?? '')) fail('artifact source commit is invalid')
+    if (manifest.qualityGate?.status !== 'passed'
+      || manifest.qualityGate?.runId !== policy.candidate?.qualityGateRunId
+      || manifest.hostedInstalledLifecycle?.status !== 'passed'
+      || manifest.hostedInstalledLifecycle?.runId !== policy.candidate?.hostedInstalledLifecycleRunId
+      || manifest.hostedInstalledLifecycle?.sourceCommit !== manifest.sourceCommit
+      || manifest.hostedInstalledLifecycle?.lifecycleChecksPassed !== 22
+      || manifest.hostedInstalledLifecycle?.installedWorkspaceChecksPassed !== 18
+      || manifest.hostedInstalledLifecycle?.failedChecks !== 0
+      || manifest.hostedInstalledLifecycle?.sourceUserContentIncluded !== false
+      || manifest.runtimeSmoke?.status !== 'blocked-existing-single-instance'
+      || manifest.boundaries?.communityUnsigned !== true
+      || manifest.boundaries?.enterprisePromotionEligible !== false) fail('current release evidence boundary drift')
+    for (const artifact of manifest.artifacts ?? []) {
+      const candidate = policy.candidate?.artifacts?.find(item => item.target === artifact.target)
+      if (!candidate || candidate.fileName !== artifact.fileName || candidate.sizeBytes !== artifact.sizeBytes || candidate.sha256 !== artifact.sha256 || candidate.authenticodeStatus !== artifact.authenticodeStatus) fail(`candidate artifact drift: ${artifact.target}`)
+    }
+
+    const hostedRoot = `docs/evidence/v${pkg.version}-release/hosted-lifecycle`
+    const hostedManifestPath = `${hostedRoot}/import-manifest.json`
+    if (!fs.existsSync(hostedManifestPath)) fail('hosted lifecycle import manifest is missing')
+    else {
+      const hosted = json(hostedManifestPath)
+      if (hosted.status !== 'accepted-for-unsigned-community-release'
+        || hosted.githubRunId !== policy.candidate?.hostedInstalledLifecycleRunId
+        || hosted.productSourceCommit !== manifest.sourceCommit
+        || hosted.appVersion !== pkg.version
+        || hosted.authenticodeStatus !== 'NotSigned'
+        || hosted.lifecycleChecks?.passed !== 22
+        || hosted.lifecycleChecks?.failed !== 0
+        || hosted.installedArtifactChecks?.passed !== 18
+        || hosted.installedArtifactChecks?.failed !== 0
+        || hosted.communityReleaseCandidateEvidence !== true
+        || hosted.enterpriseReleaseCandidate !== false
+        || hosted.sourceUserContentIncluded !== false) fail('hosted lifecycle import boundary drift')
+      for (const file of hosted.files ?? []) {
+        const evidencePath = `${hostedRoot}/${file.path}`
+        if (!fs.existsSync(evidencePath)) fail(`hosted lifecycle evidence is missing: ${file.path}`)
+        else if (fs.statSync(evidencePath).size !== file.bytes || sha256(evidencePath) !== file.sha256) fail(`hosted lifecycle evidence hash drift: ${file.path}`)
+      }
+    }
   }
 }
 

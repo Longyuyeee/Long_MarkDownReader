@@ -19,8 +19,8 @@ const required = [
   [`当前版本：\`${pkg.version}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
   [
-    '当前阶段：**`1.0.6` 无签名社区发布准备**',
-    pkg.version === '1.0.6' && policy.currentStatus === 'v1.0.6-community-release-quality-gate-pending',
+    '当前阶段：**`1.0.6` 无签名社区发布候选（待发布）**',
+    pkg.version === '1.0.6' && policy.currentStatus === 'v1.0.6-community-release-ready-to-publish',
   ],
 ]
 
