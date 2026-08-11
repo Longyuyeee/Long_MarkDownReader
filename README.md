@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.8"><img src="https://img.shields.io/badge/Release-v1.0.8-cca43b" alt="Release v1.0.8"></a>
+  <img src="https://img.shields.io/badge/Next-v1.0.9%20recovery-0f766e" alt="v1.0.9 updater recovery">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/License-AGPL--3.0-7c3aed" alt="AGPL-3.0">
@@ -25,7 +26,14 @@
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本无法自动迁移，需要手动安装 v1.0.5 或 v1.0.8 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
 
-v1.0.8 的 Tag、Release 和三项远端附件已经复核：公开资产名称、大小及 SHA-256 与冻结候选一致。完整范围与边界见 [v1.0.8 发布说明](docs/RELEASE_NOTES_v1.0.8.md)。
+v1.0.8 的 Tag、Release 和三项远端附件已经复核，但官方 `1.0.7 -> 1.0.8` 托管测试确认覆盖安装后没有自动重新打开。`main` 正在准备 v1.0.9 恢复补丁；当前下载仍为 v1.0.8，手动重新打开即可使用已安装的新版本。修复范围见 [v1.0.9 发布说明](docs/RELEASE_NOTES_v1.0.9.md)。
+
+## v1.0.9 恢复重点
+
+- 更新助手在安装器退出后延迟启动，避免旧实例和安装器收尾竞态。
+- 新进程启动后必须持续存活才算重启成功；若立即退出，助手会重试而不是直接结束。
+- 更新缓存目录记录不含文档、路径正文或凭据的重启状态，便于诊断安装后未打开问题。
+- v1.0.8 的外部文件独立窗口、代码文件创建和全部既有格式能力保持不变。
 
 ## v1.0.8 更新重点
 
@@ -141,7 +149,7 @@ docs/                审计、发布说明和开发交接文档
 design/brand/        品牌图标母版
 ```
 
-开发状态见 [收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选记录与能力边界见 [v1.0.8 发布说明](docs/RELEASE_NOTES_v1.0.8.md)。
+开发状态见 [收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选记录与能力边界见 [v1.0.9 发布说明](docs/RELEASE_NOTES_v1.0.9.md)。
 
 ## 许可证
 

@@ -30,11 +30,17 @@ if (policy.userDecision?.authenticodeRequired !== false || policy.userDecision?.
 if (policy.targetRelease?.tag !== tag || policy.targetRelease?.url !== releaseUrl || policy.targetRelease?.assetMode !== 'managed-nsis-msi-with-sha256') fail('target release drift')
 if (updater.status !== 'active-from-v1.0.5' || updater.migration?.firstManagedUpdaterVersion !== '1.0.5' || policy.updater?.mode !== 'github-release-sha256-managed' || policy.updater?.enabled !== true || policy.updater?.automaticCheckIntervalHours !== 24 || policy.updater?.integrityDigestRequired !== true || policy.updater?.latestManifestAsset !== null) fail('managed updater release boundary drift')
 for (const token of ['api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest', 'Sha256::digest', 'LongEdit_{expected_version}_x64-setup.exe']) if (!backendUpdater.includes(token)) fail(`managed updater implementation missing: ${token}`)
+const previousUpdaterAccepted = managedUpdaterLifecycle.status === 'hosted-managed-update-passed'
+  || (pkg.version === '1.0.9'
+    && managedUpdaterLifecycle.status === 'hosted-automatic-relaunch-failed'
+    && managedUpdaterLifecycle.githubRun?.id === 31486852139
+    && managedUpdaterLifecycle.githubRun?.failedCheck === 'automatic-relaunch-after-managed-update'
+    && policy.patchValidation?.scope === 'updater-relaunch-retry-and-stability-recovery')
 if (previousLifecycle.stage !== 'EA-5B2B'
   || previousLifecycle.artifacts?.appVersion !== policy.patchValidation?.previousInstalledLifecycleEvidenceVersion
   || previousLifecycle.checks?.lifecycle?.failed !== 0
   || previousLifecycle.checks?.installedArtifactSmoke?.failed !== 0
-  || managedUpdaterLifecycle.status !== 'hosted-managed-update-passed'
+  || !previousUpdaterAccepted
   || managedUpdaterLifecycle.releases?.current?.version !== previousPublicVersion
   || policy.patchValidation?.previousPublicVersion !== previousPublicVersion
   || policy.patchValidation?.previousInstalledLifecycleEvidenceVersion !== '1.0.5'

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.0.8",
-  "releaseCandidate": true,
+  "appVersion": "1.0.9",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-11",
-  "currentStatus": "v1.0.8-community-release-published",
+  "currentStatus": "v1.0.9-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -27,75 +27,44 @@
     "frontendBuildPassed": true,
     "rustLockedCheckPassed": true,
     "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
     "localRuntimeSmokePassed": false,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.0.7",
+    "previousPublicVersion": "1.0.8",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.7-to-1.0.8-pending",
-    "scope": "code-file-creation-updater-relaunch-and-independent-external-windows"
+    "managedUpdaterUpgradePath": "1.0.8-to-1.0.9-pending",
+    "scope": "updater-relaunch-retry-and-stability-recovery"
   },
   "targetRelease": {
-    "tag": "v1.0.8",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.8",
+    "tag": "v1.0.9",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.9",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": "b963b2b3a9abe6d1b45bcd8c8fb8fd967e45f561",
-    "qualityGateRunId": 31478234776,
-    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31478234776",
-    "hostedInstalledLifecycleRunId": 31482508935,
-    "hostedInstalledLifecycleRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31482508935",
-    "artifacts": [
-      {
-        "target": "release-executable",
-        "fileName": "tauri-app.exe",
-        "sizeBytes": 87439360,
-        "sha256": "c06c60be0b214c75083255ae8cf50a174aa2ac3f69339649e0c3321d05116791",
-        "authenticodeStatus": "NotSigned"
-      },
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.0.8_x64_zh-CN.msi",
-        "sizeBytes": 58785792,
-        "sha256": "7ac53d4c0e5651ddef688e29107c83b006ec336b51323adc9662be42bb3b5e47",
-        "authenticodeStatus": "NotSigned"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.0.8_x64-setup.exe",
-        "sizeBytes": 53789070,
-        "sha256": "3ff25f9a005a6ad7685d6545592395da297c34bf38efa81bd30d33c61b9c853b",
-        "authenticodeStatus": "NotSigned"
-      }
-    ]
+    "artifactSourceCommit": null,
+    "qualityGateRunId": null,
+    "qualityGateRunUrl": null,
+    "hostedInstalledLifecycleRunId": null,
+    "hostedInstalledLifecycleRunUrl": null,
+    "artifacts": []
   },
-  "release": {
-    "databaseId": 368514584,
-    "tag": "v1.0.8",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.8",
-    "taggedCommit": "090f228adda2bb186ea46049ba49f5d9418fa35f",
-    "publishedAt": "2026-08-11T11:13:44Z",
-    "candidateEvidenceQualityGateRunId": 31485200733,
-    "remoteAssetsVerified": true,
-    "receipt": "docs/evidence/v1.0.8-release/release-receipt.json"
-  },
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.7-to-v1.0.8-managed-update-observation-pending",
+    "v1.0.8-to-v1.0.9-managed-update-observation-pending",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "observe-v1.0.7-to-v1.0.8-managed-updater-and-user-data-retention"
+  "nextAction": "freeze-source-run-quality-gate-build-and-audit-v1.0.9"
 }
