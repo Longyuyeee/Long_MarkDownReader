@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.7"><img src="https://img.shields.io/badge/Release-v1.0.7-cca43b" alt="Release v1.0.7"></a>
+  <img src="https://img.shields.io/badge/Next-v1.0.8%20preparing-0f766e" alt="v1.0.8 preparing">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/License-AGPL--3.0-7c3aed" alt="AGPL-3.0">
@@ -25,16 +26,16 @@
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本无法自动迁移，需要手动安装 v1.0.5 或 v1.0.7 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
 
-v1.0.7 的 Tag、Release 和三项远端附件已经复核：公开资产名称、大小及 SHA-256 与冻结候选一致。完整范围与边界见 [v1.0.7 发布说明](docs/RELEASE_NOTES_v1.0.7.md)。
+v1.0.7 的 Tag、Release 和三项远端附件已经复核：公开资产名称、大小及 SHA-256 与冻结候选一致。`main` 当前正在准备 v1.0.8，新安装包尚未发布，因此继续提供有效的 v1.0.7 下载入口。候选范围与边界见 [v1.0.8 发布说明](docs/RELEASE_NOTES_v1.0.8.md)。
 
-## v1.0.7 更新重点
+## v1.0.8 更新重点
 
-- XLSX 的七种经典 Excel 错误值可在已有错误单元格中受限编辑，保存为 OOXML 错误类型并在重新打开后保持语义。
-- XLSX 的已有日期、日期时间和时间单元格支持规范 ISO 输入，按工作簿的 1900/1904 日期系统转换，同时保留原数字格式。
-- XLSX 内容可按工作表进入本地资料库搜索；点击结果直接打开命中的工作表，索引只读取缓存值，不执行公式、不刷新外部连接、不写源文件。
-- 工作簿索引增加文件、ZIP 条目、展开量、压缩比、工作表、行列、非空单元格和字符预算，异常压缩容器会在解析前拒绝。
-- v1.0.6 的外部打开、逐格式默认应用、UI/格式体验和受控更新能力全部保留；当前 43 类格式、91 个扩展名和 19 个主题组合进入发布范围冻结。
-- 自动更新继续使用固定 GitHub Release、严格 NSIS 名称与 SHA-256。`1.0.6 -> 1.0.7` 托管应用内更新已通过 11/11 检查，覆盖安装、首启、最新版状态及覆盖/卸载后的合成资料保留均已验证。
+- 新建菜单覆盖 JavaScript、TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 与 HTML/CSS/Vue，共 32 个注册后缀；文件先创建草稿，只有显式保存才写入内容。
+- 从资源管理器、系统默认应用或 Long编辑内部打开外部文件时，会创建独立浮动窗口，不再占用主资料库窗口或增加内部标签页。
+- 37 类允许外部打开的格式统一进入各自完整编辑或预览页面；外部窗口隐藏资料库标签栏和主窗口更新提示，源文件仍遵守显式保存与冲突保护。
+- 自动更新在校验官方 NSIS 的 SHA-256 后由隐藏助手安装；助手等待安装完成并检查退出码，然后自动重新打开 Long编辑。
+- 真实 Tauri WebView2 已验证主资料库、外部 TXT 和外部 JSON 三窗口同时存在，主窗口路由保持不变且运行时错误为 0。
+- v1.0.7 的 XLSX 类型编辑、按工作表索引、外部格式能力、主题和安全边界全部保留。
 
 ## 这是什么
 
@@ -141,7 +142,7 @@ docs/                审计、发布说明和开发交接文档
 design/brand/        品牌图标母版
 ```
 
-开发状态见 [收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选记录与能力边界见 [v1.0.7 发布说明](docs/RELEASE_NOTES_v1.0.7.md)。
+开发状态见 [收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选记录与能力边界见 [v1.0.8 发布说明](docs/RELEASE_NOTES_v1.0.8.md)。
 
 ## 许可证
 

@@ -16,7 +16,9 @@ const counts = matrix.formats.reduce((result, item) => {
   result[item.readiness] = (result[item.readiness] ?? 0) + 1
   return result
 }, {})
-const expectedStage = currentUpdater.status === 'hosted-managed-update-passed'
+const currentUpdaterMatchesPackage = currentUpdater.status === 'hosted-managed-update-passed'
+  && currentUpdater.releases?.current?.version === pkg.version
+const expectedStage = currentUpdaterMatchesPackage
   ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布并完成更新链收口**`
   : policy.gates?.githubReleasePublished === true
     ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
