@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-11 v1.0.7 发布候选入口：** 冻结产品提交 `7cd90c52e024b1d0232277cb33c1eb9d74aeb3a1` 的完整 Quality Gate（运行 `31452738912`）、本地 MSI/NSIS 构建及 GitHub 托管安装生命周期（运行 `31453750795`）均已通过。托管环境完成 22/22 生命周期和 18/18 安装态工作区检查；本机因已有 LongEdit 单实例运行，没有终止用户进程或执行安装器。社区无签名候选现为 `ready-to-publish`，企业签名候选仍为 false。接手后先等待本证据提交的远端门禁，再创建 `v1.0.7` Release、复核远端附件并更新 README；最后单独执行 `1.0.6 -> 1.0.7` 应用内更新观察。详见 [`V1_0_7_Unsigned_Community_Release_Audit_2026-08-11.md`](./V1_0_7_Unsigned_Community_Release_Audit_2026-08-11.md)。
+
 > **2026-08-11 v1.0.7 发布候选准备：** 能力范围冻结后，package、Cargo、Tauri、Windows 生命周期、性能与能力事实源已开始同步到 `1.0.7`。README 保留已验证的 v1.0.6 下载并标出 v1.0.7 准备中；新增 Release Notes 与无签名社区发布审计。接手后按质量门、冻结提交、MSI/NSIS、托管安装生命周期、Release 远端复核和 `1.0.6 -> 1.0.7` 更新观察顺序完成，不再插入新能力。详见 [`V1_0_7_Unsigned_Community_Release_Audit_2026-08-11.md`](./V1_0_7_Unsigned_Community_Release_Audit_2026-08-11.md)。
 
 > **2026-08-11 XLSX 知识索引与能力冻结：** XLSX 已进入资料库持久索引和实时回退搜索，按工作表索引缓存值并可从搜索结果直接定位；索引不执行公式、不刷新外部数据、不写源文件，并受文件、工作表、行列、单元格和字符预算约束。既定 Excel、新格式编辑器、主题预设与专业知识工作台需求已完成本机可执行范围冻结。接手后只进行最终补丁版本验收、README/Release Notes、安装包、GitHub Release 与更新链复测。详见 [`XLSX_Knowledge_Index_and_Capability_Freeze_Audit_2026-08-11.md`](./XLSX_Knowledge_Index_and_Capability_Freeze_Audit_2026-08-11.md)。
