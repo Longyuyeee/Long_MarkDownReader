@@ -8,10 +8,12 @@ use crate::formats::pptx::{parse_pptx, pptx_search_segments};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::reliable_write::write_utf8;
+use calamine::{open_workbook_from_rs, Data, Reader as CalamineReader, Xlsx};
 use chardetng::EncodingDetector;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::UNIX_EPOCH;
@@ -26,6 +28,15 @@ const MAX_INDEX_OBJECTS: usize = 250_000;
 const MAX_INDEX_RELATIONS: usize = 500_000;
 const MAX_INDEX_SEARCH_SEGMENTS: usize = 500_000;
 const MAX_INDEX_TEXT_FILE_BYTES: u64 = 20 * 1024 * 1024;
+const MAX_WORKBOOK_INDEX_BYTES: usize = 128 * 1024 * 1024;
+const MAX_WORKBOOK_INDEX_ARCHIVE_ENTRIES: usize = 4_096;
+const MAX_WORKBOOK_INDEX_UNCOMPRESSED_BYTES: u64 = 256 * 1024 * 1024;
+const MAX_WORKBOOK_INDEX_COMPRESSION_RATIO: u64 = 500;
+const MAX_WORKBOOK_INDEX_SHEETS: usize = 64;
+const MAX_WORKBOOK_INDEX_ROWS: usize = 50_000;
+const MAX_WORKBOOK_INDEX_COLUMNS: usize = 256;
+const MAX_WORKBOOK_INDEX_CELLS: usize = 250_000;
+const MAX_WORKBOOK_INDEX_CHARS: usize = 2_000_000;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -347,6 +358,123 @@ pub(crate) fn build_odf_content_index_segments(
     Ok(segments)
 }
 
+pub(crate) fn build_workbook_index_segments(
+    title: &str,
+    path: &str,
+    object_type: &str,
+    bytes: &[u8],
+) -> Result<Vec<IndexedSearchSegment>, String> {
+    if bytes.len() > MAX_WORKBOOK_INDEX_BYTES {
+        return Err("XLSX 超过知识索引 128 MB 上限".into());
+    }
+    validate_workbook_index_archive(bytes)?;
+    let mut workbook: Xlsx<_> = open_workbook_from_rs(Cursor::new(bytes))
+        .map_err(|error| format!("解析 XLSX 知识索引失败: {error}"))?;
+    let mut segments = vec![IndexedSearchSegment {
+        title: title.into(),
+        path: path.into(),
+        object_type: object_type.into(),
+        match_kind: "title".into(),
+        text: String::new(),
+        page: None,
+        annotation_id: None,
+        locator_kind: None,
+        locator_object_id: None,
+        location_label: None,
+        extraction_failed: false,
+    }];
+    let sheet_names = workbook
+        .sheet_names()
+        .into_iter()
+        .take(MAX_WORKBOOK_INDEX_SHEETS)
+        .collect::<Vec<_>>();
+    let mut remaining_rows = MAX_WORKBOOK_INDEX_ROWS;
+    let mut remaining_cells = MAX_WORKBOOK_INDEX_CELLS;
+    let mut remaining_chars = MAX_WORKBOOK_INDEX_CHARS;
+    for sheet in sheet_names {
+        if remaining_rows == 0 || remaining_cells == 0 || remaining_chars == 0 {
+            break;
+        }
+        let range = workbook
+            .worksheet_range(&sheet)
+            .map_err(|error| format!("读取 XLSX 工作表 {sheet} 失败: {error}"))?;
+        let mut text = String::new();
+        text.push_str(&sheet);
+        text.push('\n');
+        for row in range.rows().take(remaining_rows) {
+            if remaining_cells == 0 || remaining_chars == 0 {
+                break;
+            }
+            remaining_rows -= 1;
+            let mut values = Vec::new();
+            for cell in row.iter().take(MAX_WORKBOOK_INDEX_COLUMNS) {
+                if remaining_cells == 0 || remaining_chars == 0 {
+                    break;
+                }
+                if matches!(cell, Data::Empty) {
+                    continue;
+                }
+                let value = cell.to_string();
+                if value.trim().is_empty() {
+                    continue;
+                }
+                remaining_cells -= 1;
+                let value = value.chars().take(remaining_chars).collect::<String>();
+                remaining_chars = remaining_chars.saturating_sub(value.chars().count());
+                values.push(value);
+            }
+            if !values.is_empty() {
+                text.push_str(&values.join("\t"));
+                text.push('\n');
+            }
+        }
+        segments.push(IndexedSearchSegment {
+            title: title.into(),
+            path: path.into(),
+            object_type: object_type.into(),
+            match_kind: "body".into(),
+            text,
+            page: None,
+            annotation_id: None,
+            locator_kind: Some("workbook-sheet".into()),
+            locator_object_id: Some(sheet.clone()),
+            location_label: Some(format!("工作表：{sheet}")),
+            extraction_failed: false,
+        });
+    }
+    Ok(segments)
+}
+
+fn validate_workbook_index_archive(bytes: &[u8]) -> Result<(), String> {
+    let mut archive = zip::ZipArchive::new(Cursor::new(bytes))
+        .map_err(|error| format!("解析 XLSX 压缩容器失败: {error}"))?;
+    if archive.len() > MAX_WORKBOOK_INDEX_ARCHIVE_ENTRIES {
+        return Err("XLSX 压缩容器条目过多，已停止知识索引".into());
+    }
+    let mut uncompressed_total = 0_u64;
+    for index in 0..archive.len() {
+        let entry = archive
+            .by_index(index)
+            .map_err(|error| format!("读取 XLSX 压缩条目失败: {error}"))?;
+        let uncompressed = entry.size();
+        let compressed = entry.compressed_size();
+        uncompressed_total = uncompressed_total
+            .checked_add(uncompressed)
+            .ok_or_else(|| "XLSX 展开大小溢出，已停止知识索引".to_string())?;
+        if uncompressed_total > MAX_WORKBOOK_INDEX_UNCOMPRESSED_BYTES {
+            return Err("XLSX 展开内容超过知识索引 256 MB 上限".into());
+        }
+        if uncompressed > 0
+            && (compressed == 0
+                || uncompressed
+                    > compressed.saturating_mul(MAX_WORKBOOK_INDEX_COMPRESSION_RATIO))
+        {
+            return Err("XLSX 压缩比异常，已停止知识索引".into());
+        }
+    }
+    Ok(())
+}
+
 fn decode_searchable_text(path: &Path, indexer: &str) -> Option<String> {
     let bytes = path
         .metadata()
@@ -595,6 +723,18 @@ fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<Ind
                 })
             {
                 segments.extend(pptx_segments);
+            }
+        } else if indexer == "workbook" {
+            if let Some(workbook_segments) = path
+                .metadata()
+                .ok()
+                .filter(|metadata| metadata.len() <= format.max_bytes)
+                .and_then(|_| fs::read(&path).ok())
+                .and_then(|bytes| {
+                    build_workbook_index_segments(&title, &path_string, &format.id, &bytes).ok()
+                })
+            {
+                segments.extend(workbook_segments);
             }
         } else if matches!(
             indexer,
@@ -910,6 +1050,9 @@ pub fn delete_index(cache_root: &Path, workspace: &Path) -> Result<(), String> {
 mod tests {
     use super::*;
     use crate::commands::graph::{GraphEdge, GraphNode};
+    use std::io::Write;
+    use zip::write::SimpleFileOptions;
+    use zip::{CompressionMethod, ZipWriter};
 
     fn fixture(name: &str) -> (PathBuf, PathBuf, PathBuf) {
         let base = std::env::temp_dir().join(format!(
@@ -1085,5 +1228,52 @@ mod tests {
                 && segment.text.contains("LongEdit E1C ODP fixture")
         }));
         fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn real_xlsx_enters_persistent_search_by_sheet_without_mutation() {
+        let (base, workspace, _) = fixture("xlsx-search");
+        let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/workbook/compatibility-baseline.xlsx");
+        let target = workspace.join("Quarterly Evidence.xlsx");
+        fs::copy(&source, &target).unwrap();
+        let before = fs::read(&target).unwrap();
+        let snapshot = snapshot_from_graph(
+            &workspace,
+            GraphData {
+                nodes: Vec::new(),
+                edges: Vec::new(),
+            },
+        );
+        assert!(snapshot.sources.iter().any(|source| source.path.ends_with("Quarterly Evidence.xlsx")));
+        assert!(snapshot.search_segments.iter().any(|segment| {
+            segment.object_type == "workbook"
+                && segment.locator_kind.as_deref() == Some("workbook-sheet")
+                && segment.locator_object_id.as_deref() == Some("Summary")
+                && segment.text.contains("Alpha")
+                && segment.text.contains("1250.5")
+        }));
+        assert!(snapshot.search_segments.iter().any(|segment| {
+            segment.object_type == "workbook"
+                && segment.locator_object_id.as_deref() == Some("Details")
+        }));
+        assert_eq!(fs::read(&target).unwrap(), before);
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn workbook_index_rejects_extreme_archive_expansion() {
+        let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+        writer
+            .start_file(
+                "xl/worksheets/sheet1.xml",
+                SimpleFileOptions::default().compression_method(CompressionMethod::Deflated),
+            )
+            .unwrap();
+        writer.write_all(&vec![b'0'; 1024 * 1024]).unwrap();
+        let bytes = writer.finish().unwrap().into_inner();
+        let error = build_workbook_index_segments("bomb.xlsx", "bomb.xlsx", "workbook", &bytes)
+            .unwrap_err();
+        assert!(error.contains("压缩比异常"));
     }
 }

@@ -1763,6 +1763,11 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
         ...(result.page ? { page: String(result.page) } : {}),
         ...(result.annotationId ? { annotation: result.annotationId } : {}),
     })
+  } else if (result.objectType === 'workbook') {
+    void openManagedFile(router, result.path, {
+      ...(result.locatorObjectId ? { sheet: result.locatorObjectId } : {}),
+      locatorToken: nextKnowledgeLocatorToken(),
+    }, 'replace')
   } else if (['docx', 'odt', 'ods', 'odp'].includes(result.objectType)) {
     void openManagedFile(router, result.path, {
         ...(result.locatorObjectId ? { locator: result.locatorObjectId } : {}),

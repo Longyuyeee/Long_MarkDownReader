@@ -4,8 +4,8 @@ use crate::formats::odt::parse_odt;
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
 use crate::services::knowledge_index::{
-    build_odf_content_index_segments, build_pptx_index_segments, delete_index, inspect_index,
-    read_ready_snapshot, recover_index_cache, snapshot_from_graph, write_snapshot,
+    build_odf_content_index_segments, build_pptx_index_segments, build_workbook_index_segments,
+    delete_index, inspect_index, read_ready_snapshot, recover_index_cache, snapshot_from_graph, write_snapshot,
     IndexedSearchSegment, KnowledgeIndexRecoveryReport, KnowledgeIndexRuntime,
     KnowledgeIndexStatus,
 };
@@ -509,6 +509,18 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                 });
             if let Some(pptx_segments) = pptx_segments {
                 results.extend(search_segments(&pptx_segments, query));
+            }
+        } else if indexer == "workbook" {
+            let workbook_segments = path
+                .metadata()
+                .ok()
+                .filter(|metadata| metadata.len() <= format.max_bytes)
+                .and_then(|_| fs::read(&path).ok())
+                .and_then(|bytes| {
+                    build_workbook_index_segments(&title, &path_string, &format.id, &bytes).ok()
+                });
+            if let Some(workbook_segments) = workbook_segments {
+                results.extend(search_segments(&workbook_segments, query));
             }
         } else if matches!(
             indexer,

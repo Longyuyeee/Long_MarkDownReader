@@ -24,7 +24,7 @@
     },
     "ux38c-workbook": {
       "evidence": ["docs/evidence/ux38c2-workbook-context/manifest.json", "docs/evidence/ux38b-workspace-tabs/manifest.json"],
-      "boundary": "XLSX 提供有界工作簿编辑、冻结与上下文恢复，复杂 Excel 对象仍按能力矩阵处理，不宣称完整 Excel 等价。",
+      "boundary": "XLSX 提供有界工作簿编辑、冻结、上下文恢复和按工作表的本地缓存值搜索；不计算公式、不刷新外部数据，复杂 Excel 对象仍按能力矩阵处理，不宣称完整 Excel 等价。",
       "dimensions": {
         "open": "accepted", "load": "accepted", "states": "accepted", "edit": "partial", "save": "partial", "return": "accepted",
         "tab": "accepted", "theme": "partial", "scale": "accepted", "keyboard": "partial", "performance": "accepted", "errors": "accepted"

@@ -1100,6 +1100,7 @@ let fillSource: SelectionArea | null = null
 let filling = false
 
 const workbookPath = computed(() => String(route.query.path || store.activeTabId || ''))
+const requestedSheet = computed(() => String(route.query.sheet || ''))
 const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => workbookPath.value.split(/[\\/]/).pop() || '工作簿.xlsx')
 const readSheetPage = (sheet: string, rowOffset: number, rowLimit: number) => invoke<WorkbookSheetPage>(
@@ -4413,7 +4414,9 @@ const loadWorkbook = async () => {
     invalidateCalculation()
     loading.value = false
     const viewState = recallWorkspaceViewState(workbookPath.value)
-    const targetSheet = viewState?.section && document.sheets.includes(viewState.section) ? viewState.section : document.sheets[0]
+    const targetSheet = requestedSheet.value && document.sheets.includes(requestedSheet.value)
+      ? requestedSheet.value
+      : viewState?.section && document.sheets.includes(viewState.section) ? viewState.section : document.sheets[0]
     await selectSheet(targetSheet)
     if (viewState) {
       await nextTick()
@@ -4532,6 +4535,9 @@ const stopCellSelection = () => {
 
 watch([workbookPath, isExternal], () => {
   drafts.value = new Map(); styleDrafts.value = new Map(); rowHeightDrafts.value = new Map(); columnWidthDrafts.value = new Map(); mergeDrafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook()
+})
+watch(() => [requestedSheet.value, String(route.query.locatorToken || '')] as const, ([sheet]) => {
+  if (sheet && workbook.value?.sheets.includes(sheet) && sheet !== activeSheet.value) void selectSheet(sheet)
 })
 watch(() => [sheetInfo.value?.sheet || '', workbook.value?.signature || ''], syncPageLayoutDraft, { immediate: true })
 watch(() => headerFooterDraft.value.differentOddEven, enabled => {

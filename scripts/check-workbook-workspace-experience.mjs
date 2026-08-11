@@ -41,6 +41,12 @@ requireTokens(view, 'Workbook compact formula bar', [
   'handleDefinedNameAction',
   '.formula-bar .name-manager-button',
 ])
+requireTokens(view, 'Workbook knowledge search locator', [
+  "const requestedSheet = computed(() => String(route.query.sheet || ''))",
+  'document.sheets.includes(requestedSheet.value)',
+  "String(route.query.locatorToken || '')",
+  'void selectSheet(sheet)',
+])
 if (!/<div[^>]+activeToolPanel === 'format'[^>]+class="format-toolbar"/.test(view)) fail('Format tools must remain collapsed until explicitly requested.')
 if (!/<div[^>]+activeToolPanel === 'chart'[^>]+class="drawing-toolbar"/.test(view)) fail('Drawing tools must remain collapsed until explicitly requested.')
 
