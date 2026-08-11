@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "stage": "CF-1",
   "appBaseline": "1.0.7",
-  "status": "automated-gates-passed-desktop-evidence-pending",
+  "status": "accepted",
   "scope": "registered-code-and-web-source-creation",
   "formatFamilies": 10,
   "extensionVariants": 32,
@@ -22,7 +22,12 @@
     "frontendVariantMenuImplemented": true,
     "rustCreationBoundaryImplemented": true,
     "automatedRegressionPassed": true,
-    "desktopEvidenceAccepted": false
+    "desktopEvidenceAccepted": true
   },
-  "nextAction": "capture-isolated-desktop-creation-save-and-reopen-evidence"
+  "desktopEvidence": {
+    "manifest": "docs/evidence/cf1-code-file-creation/manifest.json",
+    "checks": 8,
+    "screenshots": 5
+  },
+  "nextAction": "monitor-regressions-and-wait-for-new-producer-evidence"
 }

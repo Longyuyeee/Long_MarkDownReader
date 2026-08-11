@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "stage": "CF-1",
+  "capturedAt": "2026-08-11T05:28:58.515Z",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "fixtureLocation": "isolated temporary workspace",
+  "sourceCommit": "c1f04a3c67e7b8b7fc0f96932883772a9cff9c02",
+  "formatFamilies": [
+    "javascript",
+    "typescript",
+    "python",
+    "rust",
+    "go",
+    "jvm-code",
+    "c-family",
+    "shell",
+    "sql",
+    "web-source"
+  ],
+  "createdFiles": [
+    "未命名 JavaScript.js",
+    "未命名组件.tsx",
+    "未命名 Python.py",
+    "未命名 Rust.rs",
+    "未命名 Go.go",
+    "未命名 Kotlin.kt",
+    "未命名 CSharp.cs",
+    "未命名 PowerShell.ps1",
+    "未命名 SQL.sql",
+    "未命名组件.vue",
+    "未命名 JavaScript 1.js"
+  ],
+  "javascriptSha256": "d8bb4c40796113725b817049b422fb4f390cf62e99ce78bddbddee149f1c1558",
+  "firstFilePreservedAfterDuplicateCreate": true,
+  "sourceUserContentIncluded": false,
+  "runtimeErrorCount": 0,
+  "blockingErrorSurfaceObserved": false,
+  "checks": [
+    {
+      "id": "nested-code-and-web-create-menus",
+      "status": "passed"
+    },
+    {
+      "id": "ten-format-families-created-through-ui",
+      "status": "passed"
+    },
+    {
+      "id": "registered-multi-extension-variants-created",
+      "status": "passed"
+    },
+    {
+      "id": "draft-does-not-write-before-save",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-persists-source-bytes",
+      "status": "passed"
+    },
+    {
+      "id": "close-and-reopen-restores-saved-content",
+      "status": "passed"
+    },
+    {
+      "id": "duplicate-create-never-overwrites",
+      "status": "passed"
+    },
+    {
+      "id": "runtime-remains-error-free",
+      "status": "passed"
+    }
+  ]
+}

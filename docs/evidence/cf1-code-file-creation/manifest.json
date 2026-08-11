@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "stage": "CF-1",
+  "status": "accepted",
+  "visualReview": "accepted",
+  "sourceCommit": "c1f04a3c67e7b8b7fc0f96932883772a9cff9c02",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "33ae5d1cc2802c90f0a37d5afb47448317d7bad8f1b8d1229ba03195e55fdf9e",
+  "screenshots": [
+    {
+      "file": "cf1-code-create-menu.jpg",
+      "bytes": 74796,
+      "sha256": "f63ff6e2089c904fab5eefbd6bee4e8ddd0847111c554458159c6870c1fe4271"
+    },
+    {
+      "file": "cf1-javascript-saved.jpg",
+      "bytes": 66883,
+      "sha256": "3c80d965160cbfef8904eb322e94a37328b9dd3f5d777c67a215948b9ae6fb28"
+    },
+    {
+      "file": "cf1-javascript-reopened.jpg",
+      "bytes": 67569,
+      "sha256": "f9525b39b3d20c7a0d2c4502ff530a52e0e58d33f8a858db549e399ae0c33824"
+    },
+    {
+      "file": "cf1-web-create-menu.jpg",
+      "bytes": 110595,
+      "sha256": "f1e0152145d82815797d1ce7dfb4016bdcb4c44f8b953e51d4e3df832c10193a"
+    },
+    {
+      "file": "cf1-created-format-families.jpg",
+      "bytes": 95604,
+      "sha256": "4e8480924dc7275bb4720ed23b71d88bdb1376afd447b61c98ce7db08458983e"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

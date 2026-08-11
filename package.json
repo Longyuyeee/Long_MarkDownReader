@@ -161,6 +161,8 @@
     "check:log-workspace-editing": "node scripts/check-log-workspace-editing.mjs",
     "check:code-html-workspace": "node scripts/check-code-html-workspace.mjs",
     "check:code-file-creation": "node scripts/check-code-file-creation.mjs",
+    "check:cf1-desktop-audit": "node scripts/check-cf1-code-file-creation-audit.mjs",
+    "audit:cf1-desktop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-cf1-code-file-creation-audit.ps1",
     "check:json-workspace-experience": "node scripts/check-json-workspace-experience.mjs",
     "check:text-workspace-layout": "node scripts/check-text-workspace-layout.mjs",
     "check:external-change-identity": "node scripts/check-external-change-identity.mjs",
