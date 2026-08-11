@@ -7,8 +7,7 @@
 <p align="center">本地优先的 Windows 知识工作台，在一个资料库里管理、阅读和编辑文本、表格、Office、PDF、图表、思维导图与媒体文件。</p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.6"><img src="https://img.shields.io/badge/Release-v1.0.6-cca43b" alt="Release v1.0.6"></a>
-  <img src="https://img.shields.io/badge/Next-v1.0.7%20candidate-0f766e" alt="v1.0.7 candidate">
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.7"><img src="https://img.shields.io/badge/Release-v1.0.7-cca43b" alt="Release v1.0.7"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/License-AGPL--3.0-7c3aed" alt="AGPL-3.0">
@@ -16,17 +15,17 @@
 
 ## 下载
 
-当前已发布版本是 Long编辑 v1.0.6，支持 Windows 10/11 x64：
+当前已发布版本是 Long编辑 v1.0.7，支持 Windows 10/11 x64：
 
-- [NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.6/LongEdit_1.0.6_x64-setup.exe)（推荐）
-- [MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.6/LongEdit_1.0.6_x64_zh-CN.msi)
-- [Release、更新说明与 SHA-256](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.6)
+- [NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.7/LongEdit_1.0.7_x64-setup.exe)（推荐）
+- [MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.7/LongEdit_1.0.7_x64_zh-CN.msi)
+- [Release、更新说明与 SHA-256](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.7)
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同一页面的 `SHA256SUMS.txt` 核对文件。
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本无法自动迁移，需要手动安装 v1.0.5 或 v1.0.6 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本无法自动迁移，需要手动安装 v1.0.5 或 v1.0.7 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
 
-v1.0.6 的 Tag、Release 和三项远端附件已经复核：公开资产名称、大小及 SHA-256 与冻结候选一致。v1.0.7 的源码、质量门、安装包和托管安装生命周期均已通过，但 GitHub Release 尚未发布，因此继续提供有效的 v1.0.6 下载入口。候选范围与边界见 [v1.0.7 发布说明](docs/RELEASE_NOTES_v1.0.7.md)。
+v1.0.7 的 Tag、Release 和三项远端附件已经复核：公开资产名称、大小及 SHA-256 与冻结候选一致。完整范围与边界见 [v1.0.7 发布说明](docs/RELEASE_NOTES_v1.0.7.md)。
 
 ## v1.0.7 更新重点
 
