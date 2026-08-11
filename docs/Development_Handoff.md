@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-11 v1.0.7 发布候选准备：** 能力范围冻结后，package、Cargo、Tauri、Windows 生命周期、性能与能力事实源已开始同步到 `1.0.7`。README 保留已验证的 v1.0.6 下载并标出 v1.0.7 准备中；新增 Release Notes 与无签名社区发布审计。接手后按质量门、冻结提交、MSI/NSIS、托管安装生命周期、Release 远端复核和 `1.0.6 -> 1.0.7` 更新观察顺序完成，不再插入新能力。详见 [`V1_0_7_Unsigned_Community_Release_Audit_2026-08-11.md`](./V1_0_7_Unsigned_Community_Release_Audit_2026-08-11.md)。
+
 > **2026-08-11 XLSX 知识索引与能力冻结：** XLSX 已进入资料库持久索引和实时回退搜索，按工作表索引缓存值并可从搜索结果直接定位；索引不执行公式、不刷新外部数据、不写源文件，并受文件、工作表、行列、单元格和字符预算约束。既定 Excel、新格式编辑器、主题预设与专业知识工作台需求已完成本机可执行范围冻结。接手后只进行最终补丁版本验收、README/Release Notes、安装包、GitHub Release 与更新链复测。详见 [`XLSX_Knowledge_Index_and_Capability_Freeze_Audit_2026-08-11.md`](./XLSX_Knowledge_Index_and_Capability_Freeze_Audit_2026-08-11.md)。
 
 > **2026-08-11 XLSX 日期时间编辑增量：** 已有日期型单元格现支持规范 ISO 日期、日期时间和时间输入，统一进入草稿、撤销/重做、区域粘贴与显式保存链。后端使用真实日历校验，并按工作簿 1900/1904 日期系统转换 Excel 序列，保存后语义复读通过且原数字格式保持不变。普通空白格不做隐式日期猜测，ISO 持续时间和虚构日期 `1900-02-29` 继续只读。当前还剩 1 个能力与范围冻结阶段和 1 个最终版本验收阶段。详见 [`XLSX_Date_Time_Editing_Audit_2026-08-11.md`](./XLSX_Date_Time_Editing_Audit_2026-08-11.md)。

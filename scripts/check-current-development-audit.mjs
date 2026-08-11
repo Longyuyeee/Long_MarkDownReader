@@ -11,6 +11,11 @@ const counts = matrix.formats.reduce((result, item) => {
   result[item.readiness] = (result[item.readiness] ?? 0) + 1
   return result
 }, {})
+const expectedStage = policy.gates?.githubReleasePublished === true
+  ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
+  : policy.gates?.qualityGatePassed === true
+    ? `当前阶段：**\`${pkg.version}\` 无签名社区版待发布**`
+    : `当前阶段：**\`${pkg.version}\` 无签名社区版发布候选准备中**`
 const required = [
   ['43 类格式', matrix.formats.length === 43],
   ['30 类为已验证', counts.verified === 30],
@@ -19,10 +24,7 @@ const required = [
   ['11 套发布能力配置', matrix.profiles.length === 11],
   [`当前版本：\`${pkg.version}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  [
-    '当前阶段：**`1.0.6` 无签名社区版已发布**',
-    pkg.version === '1.0.6' && policy.currentStatus === 'v1.0.6-community-release-published',
-  ],
+  [expectedStage, policy.currentStatus.startsWith(`v${pkg.version}-community-release-`)],
 ]
 
 for (const [token, condition] of required) {

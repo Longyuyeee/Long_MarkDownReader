@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.6"><img src="https://img.shields.io/badge/Release-v1.0.6-cca43b" alt="Release v1.0.6"></a>
+  <img src="https://img.shields.io/badge/Next-v1.0.7%20preparing-0f766e" alt="v1.0.7 preparing">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/License-AGPL--3.0-7c3aed" alt="AGPL-3.0">
@@ -25,16 +26,16 @@
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本无法自动迁移，需要手动安装 v1.0.5 或 v1.0.6 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
 
-v1.0.6 的 Tag、Release 和三项远端附件已经复核：公开资产名称、大小及 SHA-256 与冻结候选一致。完整范围与边界见 [v1.0.6 发布说明](docs/RELEASE_NOTES_v1.0.6.md)。
+v1.0.6 的 Tag、Release 和三项远端附件已经复核：公开资产名称、大小及 SHA-256 与冻结候选一致。`main` 当前正在准备 v1.0.7，新安装包尚未发布，因此继续提供有效的 v1.0.6 下载入口。候选范围与边界见 [v1.0.7 发布说明](docs/RELEASE_NOTES_v1.0.7.md)。
 
-## v1.0.6 更新重点
+## v1.0.7 更新重点
 
-- 外部打开覆盖全部 43 类注册格式：29 类进入专用编辑工作区，8 类进入只读预览，6 类旧 Office/WPS 使用显式转换或桌面程序交接。
-- 外部编辑保持撤销、重做、未保存保护、源文件身份冲突检查和“点击保存才写回”；外部预览不会获得写入权限。
-- “格式能力”提供 37 类、85 个扩展名的逐格式默认应用候选，必须由用户主动触发并在 Windows 中确认，不会批量接管全部支持格式。
-- Windows 单实例链支持 Unicode、空格路径、冷启动和已有窗口二次文件转交；卸载只清理 LongEdit 自己创建的候选注册。
-- UX-01 至 UX-41 基础体验要求均已有代码、专项合同、真实 Tauri 或安装态证据，并保留 Office、视频解码器与无签名发布边界。
-- 自动更新继续使用固定 GitHub Release、严格 NSIS 名称与 SHA-256；`1.0.5 -> 1.0.6` 已在 GitHub 托管的一次性 Windows 中完成真实确认、覆盖安装、首启、最新版检查与资料保留验证。
+- XLSX 的七种经典 Excel 错误值可在已有错误单元格中受限编辑，保存为 OOXML 错误类型并在重新打开后保持语义。
+- XLSX 的已有日期、日期时间和时间单元格支持规范 ISO 输入，按工作簿的 1900/1904 日期系统转换，同时保留原数字格式。
+- XLSX 内容可按工作表进入本地资料库搜索；点击结果直接打开命中的工作表，索引只读取缓存值，不执行公式、不刷新外部连接、不写源文件。
+- 工作簿索引增加文件、ZIP 条目、展开量、压缩比、工作表、行列、非空单元格和字符预算，异常压缩容器会在解析前拒绝。
+- v1.0.6 的外部打开、逐格式默认应用、UI/格式体验和受控更新能力全部保留；当前 43 类格式、91 个扩展名和 19 个主题组合进入发布范围冻结。
+- 自动更新继续使用固定 GitHub Release、严格 NSIS 名称与 SHA-256。v1.0.7 发布后将执行 `1.0.6 -> 1.0.7` 的托管覆盖安装与资料保留验证。
 
 ## 这是什么
 
@@ -54,7 +55,7 @@ Long编辑把“文件编辑器”和“本地知识库”放在同一个工作�
 - TXT、LOG、代码和结构化源码使用统一的专业编辑器主题、光标对比度、撤销/重做和显式保存。
 - JSON 提供源码、虚拟化树形查看、诊断和带引导的路径定位；YAML、XML、TOML 具有结构面板与校验。
 - CSV、TSV 和开放 Table 支持网格编辑、冻结前 N 列、看板、导入导出以及有明确目标的格式转换。
-- XLSX 工作区支持多工作表、公式、样式、图表、筛选和部分高级对象；复杂生产者结构按能力矩阵降级，不宣称完全等价 Microsoft Excel。
+- XLSX 工作区支持多工作表、公式、样式、图表、筛选、经典错误值、已有日期时间单元格和部分高级对象；复杂生产者结构按能力矩阵降级，不宣称完全等价 Microsoft Excel。
 
 ### 文档、图形与媒体
 
@@ -73,7 +74,7 @@ Long编辑把“文件编辑器”和“本地知识库”放在同一个工作�
 | Markdown / TXT / LOG | 编辑、预览、搜索、撤销与显式保存 | LOG 大文件优先使用专业查看模式 |
 | JSON / YAML / XML / TOML / 代码 | 语法高亮、结构查看、诊断、补全与保存 | HTML 预览经过净化和 sandbox，不执行危险脚本 |
 | CSV / TSV / Table | 网格、冻结列、看板、转换、导入导出 | 不承诺复杂 Excel 对象语义 |
-| XLSX / XLSM / XLSB | 工作表、公式、样式、图表、筛选和有界高级对象 | 宏不执行；部分高级结构只读或可靠副本 |
+| XLSX / XLSM / XLSB | 工作表、公式、样式、图表、筛选、有界类型编辑和按工作表搜索 | 宏不执行；索引不计算公式；部分高级结构只读或可靠副本 |
 | DOCX / PPTX | 阅读、受管草稿与可靠保存 | 不宣称完整等价 Office |
 | PDF | 阅读、批注和页面管理 | 不是通用内容重排编辑器 |
 | Mermaid / Draw.io / SVG | 查看、编辑、画布操作与安全保存 | 外部资源和危险协议会被阻断 |
@@ -141,7 +142,7 @@ docs/                审计、发布说明和开发交接文档
 design/brand/        品牌图标母版
 ```
 
-开发状态见 [收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前公开版本记录与能力边界见 [v1.0.6 发布说明](docs/RELEASE_NOTES_v1.0.6.md)。
+开发状态见 [收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选记录与能力边界见 [v1.0.7 发布说明](docs/RELEASE_NOTES_v1.0.7.md)。
 
 ## 许可证
 

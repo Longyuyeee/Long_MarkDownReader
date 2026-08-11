@@ -20,9 +20,9 @@ const tag = `v${pkg.version}`
 const releaseUrl = `https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/${tag}`
 const auditPath = `docs/V${pkg.version.replaceAll('.', '_')}_Unsigned_Community_Release_Audit_${policy.generatedAt}.md`
 const notesPath = `docs/RELEASE_NOTES_v${pkg.version}.md`
-const managedUpdaterUpgradePath = managedUpdaterLifecycle.status === 'hosted-managed-update-passed'
-  ? '1.0.5-to-1.0.6-passed'
-  : '1.0.5-to-1.0.6-pending'
+const [major, minor, patch] = pkg.version.split('.').map(Number)
+const previousPublicVersion = `${major}.${minor}.${patch - 1}`
+const managedUpdaterUpgradePrefix = `${previousPublicVersion}-to-${pkg.version}`
 
 if (!/^1\.\d+\.\d+$/.test(pkg.version) || tauri.version !== pkg.version || !cargo.includes(`version = "${pkg.version}"`)) fail('V1 version identity drift')
 if (policy.schemaVersion !== 1 || policy.stage !== 'V1' || policy.appVersion !== pkg.version || policy.channel !== 'community-unsigned') fail('V1 policy identity drift')
@@ -34,10 +34,12 @@ if (previousLifecycle.stage !== 'EA-5B2B'
   || previousLifecycle.artifacts?.appVersion !== policy.patchValidation?.previousInstalledLifecycleEvidenceVersion
   || previousLifecycle.checks?.lifecycle?.failed !== 0
   || previousLifecycle.checks?.installedArtifactSmoke?.failed !== 0
-  || policy.patchValidation?.previousPublicVersion !== '1.0.5'
+  || managedUpdaterLifecycle.status !== 'hosted-managed-update-passed'
+  || managedUpdaterLifecycle.releases?.current?.version !== previousPublicVersion
+  || policy.patchValidation?.previousPublicVersion !== previousPublicVersion
   || policy.patchValidation?.previousInstalledLifecycleEvidenceVersion !== '1.0.5'
   || policy.patchValidation?.previousEvidenceInheritedAsCurrent !== false
-  || policy.patchValidation?.managedUpdaterUpgradePath !== managedUpdaterUpgradePath) fail('previous installed lifecycle must remain a bounded v1.0.5 baseline')
+  || ![`${managedUpdaterUpgradePrefix}-pending`, `${managedUpdaterUpgradePrefix}-passed`].includes(policy.patchValidation?.managedUpdaterUpgradePath)) fail('previous release and managed updater baseline drift')
 if (!fs.existsSync(auditPath) || !fs.existsSync(notesPath)) fail('current release documents are missing')
 for (const token of [tag, '未知发布者', 'SHA-256', '自动更新']) if (!readme.includes(token)) fail(`README release disclosure missing: ${token}`)
 

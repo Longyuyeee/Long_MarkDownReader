@@ -11,7 +11,6 @@ const requireTokens = (source, tokens, area) => tokens.forEach(token => {
 })
 
 const policy = json('shared/v1-managed-updater-lifecycle-policy.json')
-const releasePolicy = json('shared/v1-community-release-policy.json')
 const releaseReceipt = json('docs/evidence/v1.0.6-release/release-receipt.json')
 const artifactManifest = json('docs/evidence/v1.0.6-release/artifact-manifest.json')
 const previousManifest = json('docs/evidence/v1.0.5-release/artifact-manifest.json')
@@ -26,7 +25,7 @@ if (policy.releases?.previous?.version !== '1.0.5'
   || policy.releases?.previous?.installer?.fileName !== 'LongEdit_1.0.5_x64-setup.exe'
   || policy.releases?.previous?.installer?.sizeBytes !== previousManifest.artifacts.find(item => item.target === 'nsis')?.sizeBytes
   || policy.releases?.previous?.installer?.sha256 !== previousManifest.artifacts.find(item => item.target === 'nsis')?.sha256) fail('managed updater previous release drift')
-if (policy.releases?.current?.version !== releasePolicy.appVersion
+if (policy.releases?.current?.version !== artifactManifest.appVersion
   || policy.releases?.current?.tag !== releaseReceipt.release?.tag
   || policy.releases?.current?.url !== releaseReceipt.release?.url
   || policy.releases?.current?.taggedCommit !== releaseReceipt.release?.taggedCommit
