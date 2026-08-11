@@ -1,6 +1,7 @@
 pub mod credentials;
 pub mod data_migration;
 pub mod external_file_access;
+pub mod external_windows;
 pub mod knowledge_index;
 pub mod pdf_index;
 pub mod reliable_write;

@@ -3,7 +3,7 @@ import { ODT_PREVIEW_FORMAT } from './odt-release-state-machine.mjs'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, docxPatchKernel, pptxKernel, pptxEditKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, pptxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, pptxReader, pptxObjectContent, logViewer, workspaceTabs, router, app, externalNavigation, appStore, settings, canvas, mindmap, opml, knowledgeIndex, codeEditingSupport, safeHtmlPreview] = await Promise.all([
+const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel, xmlKernel, tomlKernel, docxKernel, docxPatchKernel, pptxKernel, pptxEditKernel, formatCommands, jsonCommands, yamlCommands, xmlCommands, tomlCommands, docxCommands, pptxCommands, files, externalAccess, index, library, textEditor, jsonEditor, yamlEditor, xmlEditor, tomlEditor, docxReader, pptxReader, pptxObjectContent, logViewer, workspaceTabs, router, app, externalWindows, appStore, settings, canvas, mindmap, opml, knowledgeIndex, codeEditingSupport, safeHtmlPreview] = await Promise.all([
   read('shared/file-formats.json'),
   read('src/config/fileFormats.ts'),
   read('src-tauri/src/formats/file_registry.rs'),
@@ -39,7 +39,7 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src/components/WorkspaceTabs.vue'),
   read('src/router/index.ts'),
   read('src/App.vue'),
-  read('src/services/externalFileNavigation.ts'),
+  read('src-tauri/src/services/external_windows.rs'),
   read('src/store/app.ts'),
   read('src/views/SettingsView.vue'),
   read('src/views/CanvasView.vue'),
@@ -674,7 +674,7 @@ requireText(workspaceTabs, 'tab.isDirty', 'unified tabs must confirm before disc
 requireText(appStore, '.filter(tab => !tab.external)', 'external authorization tabs must not survive process restart')
 requireText(app, 'confirmDiscardUnsaved', 'application exit must coordinate dirty session tabs')
 requireText(app, "'pick_external_openable_file'", 'external picker must accept every registered externally openable format')
-requireText(externalNavigation, "external: '1'", 'external TXT routes must retain their authorization context')
+requireText(externalWindows, 'external=1', 'external TXT windows must retain their authorization context')
 forbid(settings, /TXT 自动保存/, 'settings must not promise background TXT writes')
 requireText(files, 'file_format_registry()', 'workspace scanning must consume registry')
 requireText(externalAccess, 'file_format_for_path', 'external authorization must consume registry')

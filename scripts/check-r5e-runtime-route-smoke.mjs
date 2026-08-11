@@ -62,11 +62,10 @@ requireIncludes('R5E capability alignment', policy.capabilityAlignment, [
 ])
 
 for (const token of [
-  "import { isTauriRuntime } from './services/tauriRuntime'",
-  'if (isTauriRuntime())',
   '__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__',
-  "listen<string>('open-file'",
-  "invoke<string[]>('get_launch_args')",
+  'getCurrentWindow',
+  "appWindow.label === 'main'",
+  "invoke<string>('open_external_file_window'",
 ]) {
   if (!appVue.includes(token)) fail(`R5E App.vue runtime boundary token missing: ${token}`)
 }

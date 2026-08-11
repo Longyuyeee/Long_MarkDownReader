@@ -507,7 +507,7 @@ mod tests {
             assert!(format.capabilities.read.is_supported());
             assert!(format.capabilities.edit.is_supported());
             assert!(format.capabilities.index.is_supported());
-            assert_eq!(format.capabilities.create, CapabilityLevel::Planned);
+            assert_eq!(format.capabilities.create, CapabilityLevel::Supported);
             assert_eq!(format.user_capability.level, UserCapabilityLevel::BasicEdit);
             assert_eq!(format.adapters.reader.as_deref(), Some("text"));
             assert_eq!(format.adapters.writer.as_deref(), Some("text"));

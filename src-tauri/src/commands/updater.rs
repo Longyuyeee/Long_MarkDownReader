@@ -1,9 +1,11 @@
 use reqwest::header::{ACCEPT, USER_AGENT};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{fs, path::PathBuf, process::Command, time::Duration};
+use std::{fs, path::PathBuf, time::Duration};
 use tauri::AppHandle;
 
+#[cfg(windows)]
+use std::process::Command;
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
 
@@ -11,6 +13,50 @@ const RELEASE_API: &str =
     "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest";
 const RELEASE_DOWNLOAD_PREFIX: &str = "/Longyuyeee/Long_MarkDownReader/releases/download/";
 const MAX_INSTALLER_BYTES: u64 = 250 * 1024 * 1024;
+
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+#[cfg(windows)]
+const CREATE_NEW_PROCESS_GROUP: u32 = 0x00000200;
+
+#[cfg(windows)]
+const UPDATE_RELAUNCH_SCRIPT: &str = r#"
+$ErrorActionPreference = 'Stop'
+$installer = $env:LONGEDIT_UPDATE_INSTALLER
+$application = $env:LONGEDIT_UPDATE_APPLICATION
+$install = Start-Process -FilePath $installer -ArgumentList '/S' -PassThru -Wait
+if ($install.ExitCode -ne 0) { exit $install.ExitCode }
+Remove-Item Env:LONGEDIT_UPDATE_INSTALLER -ErrorAction SilentlyContinue
+Remove-Item Env:LONGEDIT_UPDATE_APPLICATION -ErrorAction SilentlyContinue
+for ($attempt = 0; $attempt -lt 20; $attempt += 1) {
+  if (Test-Path -LiteralPath $application) {
+    try { Start-Process -FilePath $application; exit 0 } catch {}
+  }
+  Start-Sleep -Milliseconds 500
+}
+exit 1
+"#;
+
+#[cfg(windows)]
+fn spawn_update_relauncher(installer: &std::path::Path) -> Result<(), String> {
+    let application = std::env::current_exe()
+        .map_err(|error| format!("无法定位更新后的应用程序：{error}"))?;
+    Command::new("powershell.exe")
+        .args([
+            "-NoProfile",
+            "-NonInteractive",
+            "-WindowStyle",
+            "Hidden",
+            "-Command",
+            UPDATE_RELAUNCH_SCRIPT,
+        ])
+        .env("LONGEDIT_UPDATE_INSTALLER", installer)
+        .env("LONGEDIT_UPDATE_APPLICATION", application)
+        .creation_flags(CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP)
+        .spawn()
+        .map_err(|error| format!("启动更新安装与重启助手失败：{error}"))?;
+    Ok(())
+}
 
 #[derive(Debug, Deserialize)]
 struct GithubRelease {
@@ -225,12 +271,7 @@ pub async fn install_community_update(
 
     #[cfg(windows)]
     {
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-        Command::new(&installer)
-            .arg("/S")
-            .creation_flags(CREATE_NO_WINDOW)
-            .spawn()
-            .map_err(|error| format!("启动更新安装器失败：{error}"))?;
+        spawn_update_relauncher(&installer)?;
         app.exit(0);
         Ok(())
     }
@@ -267,5 +308,14 @@ mod tests {
         assert!(parse_sha256(Some(&format!("sha256:{}", "a".repeat(64)))).is_ok());
         assert!(parse_sha256(Some("sha256:abc")).is_err());
         assert!(parse_sha256(None).is_err());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn update_relauncher_waits_for_install_and_reopens_the_application() {
+        assert!(UPDATE_RELAUNCH_SCRIPT.contains("-PassThru -Wait"));
+        assert!(UPDATE_RELAUNCH_SCRIPT.contains("$install.ExitCode"));
+        assert!(UPDATE_RELAUNCH_SCRIPT.contains("Start-Process -FilePath $application"));
+        assert_eq!(CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP, 0x08000200);
     }
 }

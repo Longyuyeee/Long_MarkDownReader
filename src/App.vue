@@ -2,11 +2,11 @@
   <n-config-provider :theme="activeTheme" :theme-overrides="themeOverrides">
     <n-dialog-provider>
     <n-message-provider :placement="'top'" :container-style="{ marginTop: '40px' }">
-      <div class="app-container" :class="{ 'is-dark': isDark, 'zen-mode': store.isZen }" :data-theme="currentThemeName">
+      <div class="app-container" :class="{ 'is-dark': isDark, 'zen-mode': store.isZen }" :data-theme="currentThemeName" :data-window-role="windowRole">
         <div class="custom-titlebar" v-if="showMainTitlebar" data-tauri-drag-region>
           <div class="titlebar-left" data-tauri-drag-region>
             <img class="app-logo" src="/icon.png" alt="" aria-hidden="true">
-            <div class="titlebar-title">Long编辑</div>
+            <div class="titlebar-title">{{ windowTitle }}</div>
           </div>
           <div class="titlebar-right">
             <div class="window-controls">
@@ -37,11 +37,11 @@
           </div>
         </div>
         <CommandPalette :show="showPalette" @close="showPalette = false" @execute="handleCommand" />
-        <AppUpdater />
+        <AppUpdater v-if="isMainWindow" />
 
         <!-- 手写极简退出确认弹窗 (无侵入式) -->
         <transition name="modal-fade">
-          <div v-if="showExitModal" class="exit-modal-overlay">
+          <div v-if="isMainWindow && showExitModal" class="exit-modal-overlay">
             <div class="exit-modal-card">
               <div class="modal-header">退出确认</div>
               <div class="modal-body">您想如何处理当前窗口？</div>
@@ -65,23 +65,29 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { darkTheme, useOsTheme, GlobalThemeOverrides } from 'naive-ui'
-import { Window } from '@tauri-apps/api/window'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
-import { listen, emit } from '@tauri-apps/api/event'
+import { emit } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import FileRelationContext from './components/FileRelationContext.vue'
 import AppUpdater from './components/AppUpdater.vue'
 import { useAppStore } from './store/app'
-import { findFileFormat, isExternallyOpenable, opensInLibraryShell, routeForFile } from './config/fileFormats'
+import { findFileFormat, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 import { openManagedFile } from './services/fileNavigation'
-import { externalRouteForFile } from './services/externalFileNavigation'
-import { isTauriRuntime, withTimeout } from './services/tauriRuntime'
 
 const osTheme = useOsTheme()
 const router = useRouter()
 const store = useAppStore()
+const appWindow = getCurrentWindow()
+const isMainWindow = appWindow.label === 'main'
+const windowRole = isMainWindow ? 'main' : 'external'
+const windowTitle = computed(() => {
+  if (isMainWindow) return 'Long编辑'
+  const path = String(router.currentRoute.value.query.path || '')
+  return path.split(/[\\/]/).pop() || '外部文件'
+})
 const relationContextRoutes = new Set([
   'LibraryMode', 'TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'DrawioEditor', 'TomlEditor',
   'LogViewer', 'DocxEditor', 'OdtReader', 'OdfReader', 'PptxReader', 'Pdf', 'Table', 'Workbook',
@@ -198,9 +204,6 @@ const showPalette = ref(false)
 const showExitModal = ref(false)
 const dontAskAgain = ref(false)
 const routeErrorMessage = ref('')
-let unlistenOpenFile: (() => void) | null = null
-let pendingExternalOpenTimer: ReturnType<typeof setInterval> | null = null
-let drainingPendingExternalFiles = false
 let routeMeasurementStartedAt = performance.now()
 let routeMeasurementName = 'initial'
 let routeMeasurementSequence = 0
@@ -279,6 +282,10 @@ const finishRouteMeasurement = (sequence = routeMeasurementSequence) => {
 const removeBeforeEach = router.beforeEach((to) => {
   routeErrorMessage.value = ''
   startRouteMeasurement(to.name)
+  if (!isMainWindow && to.name === 'LibraryMode') {
+    if (confirmDiscardUnsaved()) void appWindow.close()
+    return false
+  }
   if (to.name === 'LibraryMode' && typeof to.query.path !== 'string' && store.activeTabId) {
     return { name: 'LibraryMode', query: { ...to.query, path: store.activeTabId }, replace: true }
   }
@@ -308,15 +315,9 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
   if (e.key === 'F11') { e.preventDefault(); store.toggleZen() }
 }
 
-const routeExternalFile = async (filePath: string) => {
-  const cleanPath = filePath.replace(/^"|"$/g, '')
-  const target = externalRouteForFile(cleanPath)
-  if (target) await router.push(target)
-}
-
 const openExternalFile = async () => {
   const filePath = await invoke<string | null>('pick_external_openable_file')
-  if (filePath) await routeExternalFile(filePath)
+  if (filePath) await invoke<string>('open_external_file_window', { path: filePath })
 }
 
 const handleCommand = async (item: any) => {
@@ -336,7 +337,6 @@ const handleCommand = async (item: any) => {
   }
 }
 
-const appWindow = new Window('main')
 const minimizeWindow = () => appWindow.minimize()
 const maximizeWindow = async () => {
   const isMaximized = await appWindow.isMaximized()
@@ -344,6 +344,10 @@ const maximizeWindow = async () => {
   else appWindow.maximize()
 }
 const closeWindow = async () => {
+  if (!isMainWindow) {
+    if (confirmDiscardUnsaved()) await appWindow.close()
+    return
+  }
   // 识别当前路由：如果是临时编辑界面，关闭时应重置回到主库
   if (router.currentRoute.value.name === 'TempMode') {
     if (store.isTempDirty) {
@@ -387,60 +391,15 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   event.returnValue = ''
 }
 
-const drainPendingExternalOpenFiles = async () => {
-  if (drainingPendingExternalFiles) return
-  drainingPendingExternalFiles = true
-  try {
-    const paths = await withTimeout(
-      invoke<string[]>('take_pending_external_open_files'),
-      2500,
-      'invoke:take_pending_external_open_files',
-    )
-    for (const filePath of paths) {
-      if (isExternallyOpenable(filePath)) await routeExternalFile(filePath)
-    }
-  } catch (cause) {
-    console.warn('Pending external files unavailable', cause)
-  } finally {
-    drainingPendingExternalFiles = false
-  }
-}
-
-const initializeExternalFileRouting = async () => {
-  try {
-    unlistenOpenFile = await withTimeout(listen<string>('open-file', async () => {
-      await drainPendingExternalOpenFiles()
-    }), 2500, 'event:open-file')
-  } catch (cause) {
-    console.warn('Open-file event registration timed out', cause)
-  }
-
-  try {
-    const args = await withTimeout(invoke<string[]>('get_launch_args'), 2500, 'invoke:get_launch_args')
-    const filePath = args.find(arg => isExternallyOpenable(arg.replace(/^"|"$/g, '')))
-    if (filePath) await routeExternalFile(filePath)
-  } catch (cause) {
-    console.warn('Launch arguments unavailable', cause)
-  }
-
-  await drainPendingExternalOpenFiles()
-  pendingExternalOpenTimer = setInterval(() => {
-    void drainPendingExternalOpenFiles()
-  }, 1000)
-}
-
 onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown)
   window.addEventListener('beforeunload', handleBeforeUnload)
   void store.loadConfig()
-  if (isTauriRuntime()) void initializeExternalFileRouting()
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown)
   window.removeEventListener('beforeunload', handleBeforeUnload)
-  if (unlistenOpenFile) unlistenOpenFile()
-  if (pendingExternalOpenTimer) clearInterval(pendingExternalOpenTimer)
   removeBeforeEach()
   removeAfterEach()
   removeRouteError()
@@ -463,6 +422,7 @@ body {
 }
 
 .app-container { height: 100vh; display: flex; flex-direction: column; background: transparent; position: relative; }
+.app-container[data-window-role="external"] .workspace-tabs { display: none !important; }
 
 /* 退出弹窗 Simplaised */
 .exit-modal-overlay {

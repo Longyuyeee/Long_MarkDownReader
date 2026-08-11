@@ -7,7 +7,7 @@ const exporter = read('scripts/export-r5k-windows-evidence-bundle.ps1')
 const view = read('src/views/ReleaseCapabilitiesView.vue')
 const app = read('src/App.vue')
 const rustApp = read('src-tauri/src/lib.rs')
-const externalAccess = read('src-tauri/src/services/external_file_access.rs')
+const externalWindows = read('src-tauri/src/services/external_windows.rs')
 const workflow = read('.github/workflows/u2-unsigned-lifecycle.yml')
 const failures = []
 
@@ -27,6 +27,9 @@ for (const token of [
   'single-instance external TXT route with Chinese and spaces',
   'single-instance external TXT content marker',
   'normalizeWindowsPath(routedSecondaryPath) !== normalizeWindowsPath(secondaryLaunchFile)',
+  "waitForCdpTarget(item => item.url.includes('/mindmap?'))",
+  "waitForCdpTarget(item => item.id !== coldTarget.id && item.url.includes('/text?')",
+  "document.querySelector('.app-container')?.dataset.windowRole === 'main'",
   "for (const formatId of ['opml', 'raster-image'])",
   'installed-user-triggered-default-app-candidates',
   'installed-default-app-candidates.jpg',
@@ -37,27 +40,30 @@ if (smoke.includes("location.hash.split('?')")) {
 }
 
 for (const token of [
-  "invoke<string[]>('take_pending_external_open_files')",
-  "listen<string>('open-file', async ()",
-  'pendingExternalOpenTimer = setInterval',
-]) requireText(app, token, `single-instance handoff recovery is missing ${token}`)
+  "appWindow.label === 'main'",
+  'data-window-role',
+  "invoke<string>('open_external_file_window'",
+  '<AppUpdater v-if="isMainWindow" />',
+]) requireText(app, token, `independent external window shell is missing ${token}`)
 
 for (const token of [
-  '.manage(PendingExternalOpenFiles::default())',
-  'pending.enqueue(path.clone())',
-  'take_pending_external_open_files,',
+  'open_external_arguments',
+  'authorize_and_create_external_window',
+  'focus_main_window',
+  'LONGEDIT_E2E_SINGLE_INSTANCE',
   'let builder = tauri::Builder::default();',
-]) requireText(rustApp, token, `single-instance backend queue is missing ${token}`)
+]) requireText(rustApp, token, `single-instance external window routing is missing ${token}`)
 
 if (rustApp.indexOf('plugin(tauri_plugin_single_instance::init') > rustApp.indexOf('.manage(ExternalFileAccess::default())')) {
   failures.push('single-instance plugin must be registered before managed state and all other plugins')
 }
 
 for (const token of [
-  'pub struct PendingExternalOpenFiles',
-  'pub fn enqueue(&self, path: PathBuf)',
-  'pub fn take_all(&self) -> Result<Vec<String>, String>',
-]) requireText(externalAccess, token, `single-instance pending state is missing ${token}`)
+  'WebviewWindowBuilder::new',
+  'external-{}-{sequence}',
+  'external=1',
+  'authorize_openable',
+]) requireText(externalWindows, token, `dedicated external window service is missing ${token}`)
 
 for (const token of [
   '$unicodeMarker = -join @([char]0x4E2D, [char]0x6587)',
@@ -107,4 +113,4 @@ if (failures.length) {
   console.error(failures.map(failure => `- ${failure}`).join('\n'))
   process.exit(1)
 }
-console.log('EA-5B2A installed lifecycle harness passed: user-triggered candidates, Unicode cold/hot launch, Windows ownership, uninstall recovery, and disposable evidence export are locked.')
+console.log('EA-5B2A installed lifecycle harness passed: user-triggered candidates, independent Unicode launch windows, Windows ownership, uninstall recovery, and disposable evidence export are locked.')

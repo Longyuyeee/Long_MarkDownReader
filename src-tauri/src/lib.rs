@@ -34,10 +34,9 @@ use commands::external_apps::{discover_external_applications, open_workspace_fil
 use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
     export_markdown_file, export_to_html, get_external_image_base64, get_file_stats,
-    get_folder_order, get_image_base64, get_launch_args, import_to_library, move_item, move_items,
+    get_folder_order, get_image_base64, import_to_library, move_item, move_items,
     pick_external_openable_file, read_external_markdown_file, read_markdown_file, rename_item,
-    save_folder_order, scan_directory, take_pending_external_open_files,
-    write_external_markdown_file, write_markdown_file,
+    save_folder_order, scan_directory, write_external_markdown_file, write_markdown_file,
 };
 pub(crate) use commands::files::{sanitize_filename, FileContent, FileEntry};
 use commands::formats::{
@@ -142,13 +141,34 @@ use commands::yaml::{
     analyze_yaml_source, write_external_yaml_source_document, write_yaml_source_document,
 };
 use services::data_migration::check_and_migrate_data;
-use services::external_file_access::{ExternalFileAccess, PendingExternalOpenFiles};
+use services::external_file_access::ExternalFileAccess;
+use services::external_windows::{
+    authorize_and_create_external_window, open_external_file_window,
+};
 use services::knowledge_index::KnowledgeIndexRuntime;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
-use tauri::Emitter;
 use tauri::Manager;
 use window_vibrancy::{apply_blur, apply_mica};
+
+fn open_external_arguments(app: &tauri::AppHandle, args: &[String]) -> bool {
+    let access = app.state::<ExternalFileAccess>();
+    let mut opened = false;
+    for argument in args.iter().skip(1) {
+        if authorize_and_create_external_window(app, &access, argument.trim_matches('"')).is_ok() {
+            opened = true;
+        }
+    }
+    opened
+}
+
+fn focus_main_window(app: &tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -156,46 +176,27 @@ pub fn run() {
 
     // This plugin must run before every plugin that can initialize a secondary process.
     #[cfg(debug_assertions)]
-    let builder = if std::env::var_os("LONGEDIT_E2E_LIBRARY").is_some() {
+    let builder = if std::env::var_os("LONGEDIT_E2E_LIBRARY").is_some()
+        && std::env::var_os("LONGEDIT_E2E_SINGLE_INSTANCE").is_none()
+    {
         builder
     } else {
         builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            if let Some(win) = app.get_webview_window("main") {
-                let _ = win.unminimize();
-                let _ = win.show();
-                let _ = win.set_focus();
-            }
-            let access = app.state::<ExternalFileAccess>();
-            let pending = app.state::<PendingExternalOpenFiles>();
-            for argument in args.iter().skip(1) {
-                if let Ok(path) = access.authorize_openable(argument.trim_matches('"')) {
-                    let _ = pending.enqueue(path.clone());
-                    let _ = app.emit("open-file", path.to_string_lossy().into_owned());
-                }
+            if !open_external_arguments(app, &args) {
+                focus_main_window(app);
             }
         }))
     };
 
     #[cfg(not(debug_assertions))]
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-        if let Some(win) = app.get_webview_window("main") {
-            let _ = win.unminimize();
-            let _ = win.show();
-            let _ = win.set_focus();
-        }
-        let access = app.state::<ExternalFileAccess>();
-        let pending = app.state::<PendingExternalOpenFiles>();
-        for argument in args.iter().skip(1) {
-            if let Ok(path) = access.authorize_openable(argument.trim_matches('"')) {
-                let _ = pending.enqueue(path.clone());
-                let _ = app.emit("open-file", path.to_string_lossy().into_owned());
-            }
+        if !open_external_arguments(app, &args) {
+            focus_main_window(app);
         }
     }));
 
     let builder = builder
         .manage(ExternalFileAccess::default())
-        .manage(PendingExternalOpenFiles::default())
         .manage(KnowledgeIndexRuntime::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -241,11 +242,8 @@ pub fn run() {
 
             // 根据启动参数控制窗口显示：手动启动则显示窗口，自启参数 --minimized 则保持隐藏
             let args: Vec<String> = std::env::args().collect();
-            let access = app.state::<ExternalFileAccess>();
-            for argument in args.iter().skip(1) {
-                let _ = access.authorize_openable(argument.trim_matches('"'));
-            }
-            if !args.contains(&"--minimized".to_string()) {
+            let opened_external = open_external_arguments(app.handle(), &args);
+            if !args.contains(&"--minimized".to_string()) && !opened_external {
                 let _ = window.show();
                 let _ = window.set_focus();
             }
@@ -465,8 +463,7 @@ pub fn run() {
             repair_graph_links,
             update_graph_relation,
             update_graph_relation_decision,
-            get_launch_args,
-            take_pending_external_open_files,
+            open_external_file_window,
             scan_directory,
             get_folder_order,
             save_folder_order,

@@ -34,8 +34,13 @@ requireTokens(backend, [
   'actual != release.sha256',
   'LongEdit_{expected_version}_x64-setup.exe',
   'MAX_INSTALLER_BYTES',
-  '.arg("/S")',
+  'UPDATE_RELAUNCH_SCRIPT',
+  '-PassThru -Wait',
+  '$install.ExitCode',
+  'Start-Process -FilePath $application',
+  'LONGEDIT_UPDATE_APPLICATION',
   'CREATE_NO_WINDOW',
+  'CREATE_NEW_PROCESS_GROUP',
 ], 'backend updater')
 requireTokens(handler, ['check_community_update', 'install_community_update'], 'Tauri handler')
 requireTokens(service, [
@@ -44,9 +49,9 @@ requireTokens(service, [
   "invoke<CommunityUpdateInfo>('check_community_update')",
   "invoke('install_community_update'",
 ], 'frontend updater service')
-requireTokens(modal, ['发现新版本', 'SHA-256', '下载并安装', 'checkForUpdates(false)'], 'automatic update prompt')
+requireTokens(modal, ['发现新版本', 'SHA-256', '下载并安装', '安装完成后 Long编辑会自动重新打开', 'checkForUpdates(false)'], 'automatic update prompt')
 requireTokens(settings, ['每 24 小时自动检查', '检查更新', '下载并安装'], 'update settings')
-requireTokens(app, ['<AppUpdater />', "import AppUpdater from './components/AppUpdater.vue'"], 'application shell')
+requireTokens(app, ['<AppUpdater v-if="isMainWindow" />', "import AppUpdater from './components/AppUpdater.vue'"], 'application shell')
 
 for (const unsafe of ['downloadUrl:', 'installerPath:', 'expectedSha256:']) {
   if (service.includes(unsafe)) failures.push(`frontend must not control updater trust input: ${unsafe}`)
@@ -56,4 +61,4 @@ if (failures.length) {
   console.error(failures.map(item => `- ${item}`).join('\n'))
   process.exit(1)
 }
-console.log('Community updater contract passed: fixed GitHub source, daily/manual checks, SHA-256 verification and confirmed install are aligned.')
+console.log('Community updater contract passed: fixed GitHub source, SHA-256 verification, hidden install and automatic relaunch are aligned.')

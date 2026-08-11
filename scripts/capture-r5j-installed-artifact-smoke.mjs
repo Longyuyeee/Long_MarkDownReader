@@ -39,7 +39,7 @@ const nativeDocxFixtures = [
 const embeddedEditorSelector = '.library-embedded-editor .cm-content'
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 const sha256 = async file => crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex')
-const waitForCdpTarget = async (attempts = 120) => {
+const waitForCdpTarget = async (predicate = () => true, attempts = 120) => {
   let lastError = ''
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
@@ -47,7 +47,7 @@ const waitForCdpTarget = async (attempts = 120) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         return response.json()
       })
-      const target = targets.find(item => item.type === 'page' && item.webSocketDebuggerUrl)
+      const target = targets.find(item => item.type === 'page' && item.webSocketDebuggerUrl && predicate(item))
       if (target) return target
       lastError = 'no page target advertised'
     } catch (error) {
@@ -57,34 +57,42 @@ const waitForCdpTarget = async (attempts = 120) => {
   }
   throw new Error(`R5J installed Tauri WebView CDP target was not found after ${attempts} attempts: ${lastError}`)
 }
-const target = await waitForCdpTarget()
-
-const socket = new WebSocket(target.webSocketDebuggerUrl)
-await new Promise((resolve, reject) => {
-  socket.addEventListener('open', resolve, { once: true })
-  socket.addEventListener('error', reject, { once: true })
-})
-
-let sequence = 0
-const pending = new Map()
-socket.addEventListener('message', event => {
-  const message = JSON.parse(event.data)
-  if (!message.id || !pending.has(message.id)) return
-  const request = pending.get(message.id)
-  pending.delete(message.id)
-  if (message.error) request.reject(new Error(`${message.error.message} (${message.error.code})`))
-  else request.resolve(message.result)
-})
-const send = (method, params = {}) => new Promise((resolve, reject) => {
-  const id = ++sequence
-  pending.set(id, { resolve, reject })
-  socket.send(JSON.stringify({ id, method, params }))
-})
-const evaluate = async expression => {
-  const result = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })
-  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text || 'WebView evaluation failed')
-  return result.result.value
+const coldTarget = await waitForCdpTarget(item => item.url.includes('/mindmap?'))
+let socket
+let send
+let evaluate
+const activateTarget = async target => {
+  if (socket?.readyState === WebSocket.OPEN) socket.close()
+  socket = new WebSocket(target.webSocketDebuggerUrl)
+  await new Promise((resolve, reject) => {
+    socket.addEventListener('open', resolve, { once: true })
+    socket.addEventListener('error', reject, { once: true })
+  })
+  let sequence = 0
+  const pending = new Map()
+  socket.addEventListener('message', event => {
+    const message = JSON.parse(event.data)
+    if (!message.id || !pending.has(message.id)) return
+    const request = pending.get(message.id)
+    pending.delete(message.id)
+    if (message.error) request.reject(new Error(`${message.error.message} (${message.error.code})`))
+    else request.resolve(message.result)
+  })
+  send = (method, params = {}) => new Promise((resolve, reject) => {
+    const id = ++sequence
+    pending.set(id, { resolve, reject })
+    socket.send(JSON.stringify({ id, method, params }))
+  })
+  evaluate = async expression => {
+    const result = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })
+    if (result.exceptionDetails) throw new Error(result.exceptionDetails.text || 'WebView evaluation failed')
+    return result.result.value
+  }
+  await send('Page.enable')
+  await send('Runtime.enable')
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 820, deviceScaleFactor: 1, mobile: false })
 }
+await activateTarget(coldTarget)
 const invokeTauri = (command, args) => evaluate(`window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)}, ${JSON.stringify(args)})`)
 const waitFor = async (expression, description, attempts = 300) => {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -278,9 +286,6 @@ const waitForStableVisibleSurface = async (selector, description) => {
 }
 
 await fs.mkdir(output, { recursive: true })
-await send('Page.enable')
-await send('Runtime.enable')
-await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 820, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('#app')?.children.length > 0`, 'installed desktop app bootstrap')
 await waitFor(`typeof window.__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__ === 'function'`, 'route performance export')
 const checks = [{ id: 'installed-current-webview-bootstrap', status: 'passed' }]
@@ -310,6 +315,8 @@ const [secondaryExitCode] = await Promise.race([
   delay(15_000).then(() => { throw new Error('Secondary LongEdit process did not exit through the single-instance handoff') }),
 ])
 if (secondaryExitCode !== 0) throw new Error(`Secondary LongEdit process exited with ${secondaryExitCode}`)
+const secondaryTarget = await waitForCdpTarget(item => item.id !== coldTarget.id && item.url.includes('/text?'), 1200)
+await activateTarget(secondaryTarget)
 try {
   await waitFor(
     `(() => {
@@ -345,6 +352,9 @@ if (normalizeWindowsPath(routedSecondaryPath) !== normalizeWindowsPath(secondary
 }
 checks.push({ id: 'installed-single-instance-external-handoff', status: 'passed' })
 
+const mainTarget = await waitForCdpTarget(item => ![coldTarget.id, secondaryTarget.id].includes(item.id), 1200)
+await activateTarget(mainTarget)
+await waitFor(`document.querySelector('.app-container')?.dataset.windowRole === 'main'`, 'installed main window shell', 1200)
 await navigate('#/workspace', '.workspace-home', 'installed workspace initialization')
 await waitFor(
   `document.querySelector('[data-testid="knowledge-network-pulse"]') !== null`,

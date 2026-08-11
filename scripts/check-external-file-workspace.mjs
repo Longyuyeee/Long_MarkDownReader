@@ -10,8 +10,8 @@ const requireText = (source, token, message) => {
 const registry = json('shared/file-formats.json')
 const tauri = json('src-tauri/tauri.conf.json')
 const lifecycle = json('shared/windows-lifecycle-policy.json')
-const navigation = read('src/services/externalFileNavigation.ts')
 const app = read('src/App.vue')
+const externalWindows = read('src-tauri/src/services/external_windows.rs')
 const markdown = read('src/views/TempMode.vue')
 const text = read('src/views/TextEditorView.vue')
 const structuredViews = {
@@ -85,14 +85,15 @@ if (opml?.externalPolicy !== 'edit' || opml.routeName !== 'MindMap' || opml.adap
 }
 
 for (const token of [
-  "['edit', 'preview'].includes(format.externalPolicy)",
-  "format.id === 'markdown'",
-  "name: 'TempMode'",
-  'return { name: format.routeName, query }',
-  "external: '1'",
-]) requireText(navigation, token, `external route mapping is missing ${token}`)
+  'matches!(format.external_policy.as_str(), "edit" | "preview")',
+  'format_id == "markdown"',
+  'WebviewWindowBuilder::new',
+  'external=1',
+  'authorize_openable',
+]) requireText(externalWindows, token, `external window routing is missing ${token}`)
 requireText(commands, 'pick_external_openable_file', 'external picker must expose the openable format boundary')
-requireText(app, 'externalRouteForFile(cleanPath)', 'App does not use the explicit external route mapping')
+requireText(app, "invoke<string>('open_external_file_window'", 'App does not open selected files in a dedicated window')
+requireText(app, "appWindow.label === 'main'", 'App does not distinguish main and external windows')
 if (app.includes("router.push({ name: 'TempMode', query: { path: cleanPath")) failures.push('generic Markdown fallback returned')
 
 for (const token of [

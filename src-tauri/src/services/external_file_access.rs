@@ -10,35 +10,6 @@ pub struct ExternalFileAccess {
     authorized_imports: Mutex<HashSet<PathBuf>>,
 }
 
-#[derive(Debug, Default)]
-pub struct PendingExternalOpenFiles {
-    paths: Mutex<Vec<PathBuf>>,
-}
-
-impl PendingExternalOpenFiles {
-    pub fn enqueue(&self, path: PathBuf) -> Result<(), String> {
-        let mut paths = self
-            .paths
-            .lock()
-            .map_err(|_| "Pending external file state is unavailable".to_string())?;
-        if !paths.contains(&path) {
-            paths.push(path);
-        }
-        Ok(())
-    }
-
-    pub fn take_all(&self) -> Result<Vec<String>, String> {
-        let mut paths = self
-            .paths
-            .lock()
-            .map_err(|_| "Pending external file state is unavailable".to_string())?;
-        Ok(paths
-            .drain(..)
-            .map(|path| path.to_string_lossy().into_owned())
-            .collect())
-    }
-}
-
 impl ExternalFileAccess {
     pub fn authorize_editable(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
         let resolved = resolve_editable(path.as_ref())?;
@@ -350,23 +321,4 @@ mod tests {
         fs::remove_dir_all(directory).unwrap();
     }
 
-    #[test]
-    fn pending_external_open_files_are_deduplicated_and_consumed_once() {
-        let pending = PendingExternalOpenFiles::default();
-        let first = PathBuf::from(r"C:\LongEdit EA5B\first file.txt");
-        let second = PathBuf::from(r"C:\LongEdit EA5B\second file.opml");
-
-        pending.enqueue(first.clone()).unwrap();
-        pending.enqueue(first.clone()).unwrap();
-        pending.enqueue(second.clone()).unwrap();
-
-        assert_eq!(
-            pending.take_all().unwrap(),
-            vec![
-                first.to_string_lossy().into_owned(),
-                second.to_string_lossy().into_owned(),
-            ]
-        );
-        assert!(pending.take_all().unwrap().is_empty());
-    }
 }

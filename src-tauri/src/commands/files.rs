@@ -1,6 +1,6 @@
 use crate::commands::history::history_dir;
 use crate::formats::file_registry::{file_format_for_path, file_format_registry};
-use crate::services::external_file_access::{ExternalFileAccess, PendingExternalOpenFiles};
+use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
@@ -452,18 +452,6 @@ fn read_markdown(path: PathBuf) -> Result<FileContent, String> {
         encoding: encoding.name().to_string(),
         path: path.to_string_lossy().into_owned(),
     })
-}
-
-#[tauri::command]
-pub fn get_launch_args() -> Vec<String> {
-    std::env::args().collect()
-}
-
-#[tauri::command]
-pub fn take_pending_external_open_files(
-    pending: State<'_, PendingExternalOpenFiles>,
-) -> Result<Vec<String>, String> {
-    pending.take_all()
 }
 
 #[tauri::command]

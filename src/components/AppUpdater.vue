@@ -12,7 +12,7 @@
       <ArrowRightIcon :size="17" aria-hidden="true" />
       <strong>v{{ state.latestVersion }}</strong>
     </div>
-    <p class="update-summary">更新将从官方 GitHub Release 下载，并在 SHA-256 校验通过后自动安装。</p>
+    <p class="update-summary">更新将从官方 GitHub Release 下载，并在 SHA-256 校验通过后自动安装；安装完成后 Long编辑会自动重新打开。</p>
     <div class="update-facts">
       <span>{{ formatBytes(state.installerSize) }}</span>
       <span>Windows x64</span>

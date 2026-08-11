@@ -13,7 +13,7 @@ const tauri = json('src-tauri/tauri.conf.json')
 const system = read('src-tauri/src/commands/system.rs')
 const lib = read('src-tauri/src/lib.rs')
 const app = read('src/App.vue')
-const navigation = read('src/services/externalFileNavigation.ts')
+const externalWindows = read('src-tauri/src/services/external_windows.rs')
 const view = read('src/views/ReleaseCapabilitiesView.vue')
 
 const candidates = registry.formats.filter(format => ['edit', 'preview'].includes(format.externalPolicy))
@@ -60,17 +60,21 @@ for (const token of [
 
 for (const token of [
   "if (route.query.external === '1') return ''",
-  "withTimeout(listen<string>('open-file'",
-  "withTimeout(invoke<string[]>('get_launch_args')",
-  'if (isExternallyOpenable(filePath)) await routeExternalFile(filePath)',
+  "appWindow.label === 'main'",
+  "invoke<string>('open_external_file_window'",
+  'data-window-role',
+  '<AppUpdater v-if="isMainWindow" />',
 ]) requireText(app, token, `installed external launch shell is missing ${token}`)
 for (const token of [
-  "!['edit', 'preview'].includes(format.externalPolicy)",
-  "external: '1'",
-]) requireText(navigation, token, `external route policy is missing ${token}`)
+  'matches!(format.external_policy.as_str(), "edit" | "preview")',
+  'WebviewWindowBuilder::new',
+  'external=1',
+  'authorize_openable',
+]) requireText(externalWindows, token, `external window policy is missing ${token}`)
 for (const token of [
-  'access.authorize_openable(argument.trim_matches',
-  'app.emit("open-file"',
+  'open_external_arguments',
+  'authorize_and_create_external_window',
+  'focus_main_window',
 ]) requireText(lib, token, `single-instance authorization is missing ${token}`)
 
 const associations = tauri.bundle?.fileAssociations || []
@@ -82,4 +86,4 @@ if (failures.length) {
   console.error(failures.map(failure => `- ${failure}`).join('\n'))
   process.exit(1)
 }
-console.log('EA-5A default-app candidate workflow passed: 37 format profiles are user-triggered, Windows-confirmed, full-workspace routed, and installer-safe.')
+console.log('EA-5A default-app candidate workflow passed: 37 format profiles are user-triggered, Windows-confirmed, independently windowed, and installer-safe.')

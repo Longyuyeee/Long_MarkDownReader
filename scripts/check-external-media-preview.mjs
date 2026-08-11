@@ -28,7 +28,7 @@ const access = read('src-tauri/src/services/external_file_access.rs')
 const mediaBackend = read('src-tauri/src/commands/media.rs')
 const mediaView = read('src/views/MediaViewerView.vue')
 const app = read('src/App.vue')
-const navigation = read('src/services/externalFileNavigation.ts')
+const externalWindows = read('src-tauri/src/services/external_windows.rs')
 const capabilities = read('src/views/ReleaseCapabilitiesView.vue')
 const files = read('src-tauri/src/commands/files.rs')
 const lib = read('src-tauri/src/lib.rs')
@@ -46,12 +46,13 @@ for (const token of [
   '外部文件 · ',
   '不会写回',
 ]) requireText(mediaView, token, `external media workspace is missing ${token}`)
-for (const token of ['isExternallyOpenable', "'pick_external_openable_file'"]) {
+for (const token of ["'pick_external_openable_file'", "invoke<string>('open_external_file_window'"]) {
   requireText(app, token, `application external preview entry is missing ${token}`)
 }
-requireText(navigation, "['edit', 'preview'].includes(format.externalPolicy)", 'external navigation does not route preview formats')
+requireText(externalWindows, 'matches!(format.external_policy.as_str(), "edit" | "preview")', 'external windows do not route preview formats')
+requireText(externalWindows, '"MediaViewer" => Ok("/media")', 'external media window route is missing')
 requireText(files, 'matches!(format.external_policy.as_str(), "edit" | "preview")', 'file picker does not include preview formats')
-requireText(lib, 'access.authorize_openable', 'startup and single-instance routing do not authorize preview formats')
+requireText(lib, 'authorize_and_create_external_window', 'startup and single-instance routing do not create authorized preview windows')
 for (const token of ['externalPreviewCount', "externalPolicy === 'preview'", '预览格式永不写回', "preview: '"]) {
   requireText(capabilities, token, `format capability UI is missing ${token}`)
 }
