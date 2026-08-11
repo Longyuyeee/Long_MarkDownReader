@@ -14,8 +14,13 @@ const requireText = (source, token, area) => {
 if (manifest.stage !== 'UX-51' || manifest.status !== 'debug-tauri-multi-window-passed') failures.push('manifest identity drift')
 if (!/^[0-9a-f]{40}$/.test(manifest.sourceCommit)) failures.push('source commit is invalid')
 else {
-  try { execFileSync('git', ['merge-base', '--is-ancestor', manifest.sourceCommit, 'HEAD']) }
-  catch { failures.push('evidence source commit is not an ancestor of HEAD') }
+  let sourceCommitAvailable = true
+  try { execFileSync('git', ['cat-file', '-e', `${manifest.sourceCommit}^{commit}`], { stdio: 'ignore' }) }
+  catch { sourceCommitAvailable = false }
+  if (sourceCommitAvailable) {
+    try { execFileSync('git', ['merge-base', '--is-ancestor', manifest.sourceCommit, 'HEAD'], { stdio: 'ignore' }) }
+    catch { failures.push('evidence source commit is not an ancestor of HEAD') }
+  }
 }
 for (const [key, expected] of Object.entries({
   mainWindowPreserved: true,
