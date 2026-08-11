@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.8-U1",
-  "status": "hosted-execution-pending",
+  "status": "hosted-automatic-relaunch-failed",
   "environment": "github-hosted-disposable-windows",
   "workflow": ".github/workflows/v108-managed-updater-lifecycle.yml",
   "releases": {
@@ -47,19 +47,25 @@
   },
   "gates": {
     "harnessImplemented": true,
-    "qualityGatePassed": false,
+    "qualityGatePassed": true,
     "hostedWorkflowPassed": false,
-    "releaseDiscoveryPassed": false,
-    "confirmationBoundaryPassed": false,
-    "downloadHashPassed": false,
-    "overwriteInstallPassed": false,
+    "releaseDiscoveryPassed": true,
+    "confirmationBoundaryPassed": true,
+    "downloadHashPassed": true,
+    "overwriteInstallPassed": true,
     "automaticRelaunchPassed": false,
     "firstLaunchPassed": false,
     "postUpgradeCurrentPassed": false,
     "userDataRetentionPassed": false,
     "evidenceImported": false
   },
-  "githubRun": null,
+  "githubRun": {
+    "id": 31486852139,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31486852139",
+    "headCommit": "ee4462aa55e5c1b25a0adf0e5b5d2ec403ec8bba",
+    "conclusion": "failure",
+    "failedCheck": "automatic-relaunch-after-managed-update"
+  },
   "evidenceRoot": "docs/evidence/v1.0.8-managed-updater",
-  "nextAction": "push-harness-pass-quality-gate-and-run-hosted-managed-updater-lifecycle"
+  "nextAction": "release-v1.0.9-updater-automatic-relaunch-recovery"
 }

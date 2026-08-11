@@ -24,16 +24,37 @@ const UPDATE_RELAUNCH_SCRIPT: &str = r#"
 $ErrorActionPreference = 'Stop'
 $installer = $env:LONGEDIT_UPDATE_INSTALLER
 $application = $env:LONGEDIT_UPDATE_APPLICATION
+$workingDirectory = Split-Path -Parent $application
+$log = Join-Path (Split-Path -Parent $installer) 'relaunch.log'
+function Write-RelaunchLog([string]$message) {
+  Add-Content -LiteralPath $log -Value "$(Get-Date -Format o) $message" -Encoding UTF8 -ErrorAction SilentlyContinue
+}
+Write-RelaunchLog 'installer-start'
 $install = Start-Process -FilePath $installer -ArgumentList '/S' -PassThru -Wait
+Write-RelaunchLog "installer-exit=$($install.ExitCode)"
 if ($install.ExitCode -ne 0) { exit $install.ExitCode }
 Remove-Item Env:LONGEDIT_UPDATE_INSTALLER -ErrorAction SilentlyContinue
 Remove-Item Env:LONGEDIT_UPDATE_APPLICATION -ErrorAction SilentlyContinue
-for ($attempt = 0; $attempt -lt 20; $attempt += 1) {
+Start-Sleep -Milliseconds 1500
+for ($attempt = 0; $attempt -lt 40; $attempt += 1) {
   if (Test-Path -LiteralPath $application) {
-    try { Start-Process -FilePath $application; exit 0 } catch {}
+    try {
+      $relaunch = Start-Process -FilePath $application -WorkingDirectory $workingDirectory -PassThru
+      Start-Sleep -Milliseconds 1500
+      $relaunch.Refresh()
+      if (-not $relaunch.HasExited) {
+        Write-RelaunchLog "relaunch-stable pid=$($relaunch.Id) attempt=$attempt"
+        exit 0
+      }
+      Write-RelaunchLog "relaunch-exited code=$($relaunch.ExitCode) attempt=$attempt"
+    }
+    catch {
+      Write-RelaunchLog "relaunch-error attempt=$attempt type=$($_.Exception.GetType().Name)"
+    }
   }
   Start-Sleep -Milliseconds 500
 }
+Write-RelaunchLog 'relaunch-failed'
 exit 1
 "#;
 
@@ -315,7 +336,9 @@ mod tests {
     fn update_relauncher_waits_for_install_and_reopens_the_application() {
         assert!(UPDATE_RELAUNCH_SCRIPT.contains("-PassThru -Wait"));
         assert!(UPDATE_RELAUNCH_SCRIPT.contains("$install.ExitCode"));
-        assert!(UPDATE_RELAUNCH_SCRIPT.contains("Start-Process -FilePath $application"));
+        assert!(UPDATE_RELAUNCH_SCRIPT.contains("-WorkingDirectory $workingDirectory -PassThru"));
+        assert!(UPDATE_RELAUNCH_SCRIPT.contains("-not $relaunch.HasExited"));
+        assert!(UPDATE_RELAUNCH_SCRIPT.contains("relaunch-stable"));
         assert_eq!(CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP, 0x08000200);
     }
 }

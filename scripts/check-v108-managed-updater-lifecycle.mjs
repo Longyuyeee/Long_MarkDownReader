@@ -20,7 +20,7 @@ const probe = read('scripts/capture-v108-managed-updater-lifecycle.mjs')
 const audit = read('docs/V1_0_8_Managed_Updater_Lifecycle_Audit_2026-08-11.md')
 
 if (policy.schemaVersion !== 1 || policy.stage !== 'V1.0.8-U1'
-  || !['hosted-execution-pending', 'hosted-managed-update-passed'].includes(policy.status)) fail('v1.0.8 updater policy identity drift')
+  || !['hosted-execution-pending', 'hosted-automatic-relaunch-failed', 'hosted-managed-update-passed'].includes(policy.status)) fail('v1.0.8 updater policy identity drift')
 const previousAsset = previousReceipt.assets.find(item => item.name.endsWith('-setup.exe'))
 const currentAsset = currentReceipt.assets.find(item => item.name.endsWith('-setup.exe'))
 if (policy.releases?.previous?.version !== '1.0.7'
@@ -79,7 +79,20 @@ for (const token of ['v1.0.7', 'v1.0.8', '用户确认', 'SHA-256', '自动重�
 }
 
 const completed = policy.status === 'hosted-managed-update-passed'
-if (!completed) {
+const failedRelaunch = policy.status === 'hosted-automatic-relaunch-failed'
+if (failedRelaunch) {
+  if (policy.gates?.harnessImplemented !== true
+    || policy.gates?.qualityGatePassed !== true
+    || policy.gates?.releaseDiscoveryPassed !== true
+    || policy.gates?.confirmationBoundaryPassed !== true
+    || policy.gates?.downloadHashPassed !== true
+    || policy.gates?.overwriteInstallPassed !== true
+    || policy.gates?.automaticRelaunchPassed !== false
+    || policy.githubRun?.id !== 31486852139
+    || policy.githubRun?.conclusion !== 'failure'
+    || policy.githubRun?.failedCheck !== 'automatic-relaunch-after-managed-update'
+    || policy.nextAction !== 'release-v1.0.9-updater-automatic-relaunch-recovery') fail('failed automatic relaunch evidence drift')
+} else if (!completed) {
   if (policy.gates?.harnessImplemented !== true
     || Object.entries(policy.gates ?? {}).some(([key, value]) => key !== 'harnessImplemented' && value !== false)
     || policy.githubRun !== null
@@ -136,4 +149,4 @@ if (failures.length) {
   console.error(failures.map(message => `- ${message}`).join('\n'))
   process.exit(1)
 }
-console.log(`V1.0.8 managed updater lifecycle passed: ${completed ? 'hosted 1.0.7 -> 1.0.8 evidence accepted' : 'safe hosted execution harness is ready'}.`)
+console.log(`V1.0.8 managed updater lifecycle contract passed: ${completed ? 'hosted 1.0.7 -> 1.0.8 evidence accepted' : failedRelaunch ? 'automatic relaunch failure is recorded for v1.0.9 recovery' : 'safe hosted execution harness is ready'}.`)
