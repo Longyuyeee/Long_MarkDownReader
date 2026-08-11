@@ -16,12 +16,9 @@
         <FileInput :size="20" />
         <div>
           <strong>外部打开与默认应用</strong>
-          <p>{{ externalEditableCount }} 类格式可直接编辑，{{ externalPreviewCount }} 类文件可只读预览；编辑格式只有点击保存才写回，预览格式永不写回。Windows 默认应用始终由你确认，并按格式逐项选择。</p>
+          <p>{{ externalEditableCount }} 类格式可直接编辑，{{ externalPreviewCount }} 类文件可只读预览，预览格式永不写回。展开格式即可启用或关闭 Long编辑；设为系统默认时，Windows 会显示一次必要的确认。</p>
         </div>
-        <button type="button" @click="openDefaultAppsSettings">
-          <ExternalLink :size="15" />
-          Windows 默认应用
-        </button>
+        <span class="managed-here"><SlidersHorizontal :size="15" />在此页逐项管理</span>
       </section>
 
       <div class="toolbar">
@@ -95,22 +92,44 @@
                 class="default-app-control"
               >
                 <div class="default-app-copy">
-                  <strong>{{ row.format.extensions.join(' · ') }}</strong>
+                  <div class="default-app-status-line">
+                    <strong>{{ row.format.extensions.join(' · ') }}</strong>
+                    <span class="status-chip" :class="{ active: candidatePrepared(row.format.id) }">
+                      {{ candidatePrepared(row.format.id) ? '已启用' : '未启用' }}
+                    </span>
+                    <span v-if="candidateDefaultLabel(row.format.id)" class="status-chip default">
+                      {{ candidateDefaultLabel(row.format.id) }}
+                    </span>
+                  </div>
                   <span>{{ candidateHint(row.format.id) }}</span>
                 </div>
-                <button
-                  type="button"
-                  class="default-app-action"
-                  :data-testid="`default-app-candidate-${row.format.id}`"
-                  :data-prepared="candidatePrepared(row.format.id)"
-                  :disabled="preparingFormatId === row.format.id"
-                  @click="prepareDefaultApp(row.format.id, row.format.label)"
-                >
-                  <LoaderCircle v-if="preparingFormatId === row.format.id" class="spin" :size="14" />
-                  <CheckCircle2 v-else-if="candidatePrepared(row.format.id)" :size="14" />
-                  <ExternalLink v-else :size="14" />
-                  {{ candidatePrepared(row.format.id) ? '已准备 · 去 Windows 确认' : '选择 LongEdit 打开' }}
-                </button>
+                <div class="default-app-actions">
+                  <button
+                    type="button"
+                    class="default-app-action"
+                    :class="{ enabled: candidatePrepared(row.format.id) }"
+                    role="switch"
+                    :aria-checked="candidatePrepared(row.format.id)"
+                    :data-testid="`default-app-candidate-${row.format.id}`"
+                    :data-prepared="candidatePrepared(row.format.id)"
+                    :disabled="busyFormatId === row.format.id"
+                    @click="toggleDefaultAppCandidate(row.format.id, row.format.label)"
+                  >
+                    <LoaderCircle v-if="busyFormatId === row.format.id" class="spin" :size="14" />
+                    <Power v-else :size="14" />
+                    {{ candidatePrepared(row.format.id) ? '关闭 Long编辑打开' : '启用 Long编辑打开' }}
+                  </button>
+                  <button
+                    v-if="candidatePrepared(row.format.id) && !candidateFullyDefault(row.format.id)"
+                    type="button"
+                    class="default-app-action primary"
+                    :disabled="busyFormatId === row.format.id"
+                    @click="requestDefaultApp(row.format.id, row.format.label)"
+                  >
+                    <ExternalLink :size="14" />
+                    设为系统默认
+                  </button>
+                </div>
               </div>
             </section>
           </div>
@@ -135,11 +154,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
-import { CheckCircle2, ChevronDown, ExternalLink, FileInput, LoaderCircle, Search, ShieldCheck } from 'lucide-vue-next'
+import { ChevronDown, ExternalLink, FileInput, LoaderCircle, Power, Search, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next'
 import WorkspaceManagementContent from '../components/workspace/WorkspaceManagementContent.vue'
 import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
 import {
@@ -157,6 +176,7 @@ interface DefaultAppCandidateStatus {
   formatId: string
   extensions: string[]
   registeredExtensions: string[]
+  defaultExtensions: string[]
   available: boolean
   userChoiceRequired: boolean
   diagnostic: string
@@ -169,7 +189,8 @@ const query = ref('')
 const activeFilter = ref<FilterValue>('all')
 const candidateStatuses = ref<Record<string, DefaultAppCandidateStatus>>({})
 const candidateLoading = new Set<string>()
-const preparingFormatId = ref('')
+const loadedFormatIds = new Set<string>()
+const busyFormatId = ref('')
 const externalEditableCount = RELEASE_CAPABILITY_ROWS.filter(row => row.format.externalPolicy === 'edit').length
 const externalPreviewCount = RELEASE_CAPABILITY_ROWS.filter(row => row.format.externalPolicy === 'preview').length
 const externalReadyCount = externalEditableCount + externalPreviewCount
@@ -208,26 +229,35 @@ const externalPolicyDescription = (policy: ExternalFilePolicy) => ({
   none: '当前不接受外部启动或导入。',
 })[policy]
 
-const openDefaultAppsSettings = async () => {
-  try {
-    await invoke('open_default_apps_settings')
-  } catch (cause) {
-    message.error(`无法打开 Windows 默认应用设置：${String(cause)}`)
-  }
-}
-
 const candidatePrepared = (formatId: string) => {
   const status = candidateStatuses.value[formatId]
   return Boolean(status?.extensions.length && status.registeredExtensions.length === status.extensions.length)
 }
 
+const candidateFullyDefault = (formatId: string) => {
+  const status = candidateStatuses.value[formatId]
+  return Boolean(status?.extensions.length && status.defaultExtensions.length === status.extensions.length)
+}
+
+const candidateDefaultLabel = (formatId: string) => {
+  const status = candidateStatuses.value[formatId]
+  if (!status?.defaultExtensions.length) return ''
+  return candidateFullyDefault(formatId)
+    ? '当前系统默认'
+    : `${status.defaultExtensions.length}/${status.extensions.length} 个扩展名为默认`
+}
+
 const candidateHint = (formatId: string) => {
   const status = candidateStatuses.value[formatId]
-  if (!status) return '只为当前格式加入系统候选，不会自动改成默认应用。'
+  if (!status) return '状态将在展开后读取；启用和关闭只影响当前格式。'
   if (!status.available) return status.diagnostic
   return candidatePrepared(formatId)
-    ? 'LongEdit 已加入这些扩展名的候选；默认应用仍需在 Windows 页面逐项确认。'
-    : '尚未加入系统候选；其他格式不会受此操作影响。'
+    ? candidateFullyDefault(formatId)
+      ? '这些扩展名双击时会由 Long编辑在独立窗口打开。'
+      : 'Long编辑已可用于这些扩展名；点击“设为系统默认”完成 Windows 确认。'
+    : status.defaultExtensions.length
+      ? 'Long编辑候选已关闭；Windows 仍保存旧选择，下次打开文件时会要求重新选择应用。'
+      : 'Long编辑不会接管这些扩展名，其他格式不受影响。'
 }
 
 const refreshCandidateStatus = async (formatId: string) => {
@@ -246,22 +276,48 @@ const refreshCandidateStatus = async (formatId: string) => {
 const loadCandidateStatus = (event: Event, formatId: string, policy: ExternalFilePolicy) => {
   if (!['edit', 'preview'].includes(policy)) return
   if (!(event.currentTarget as HTMLDetailsElement).open || candidateStatuses.value[formatId]) return
+  loadedFormatIds.add(formatId)
   void refreshCandidateStatus(formatId)
 }
 
-const prepareDefaultApp = async (formatId: string, label: string) => {
-  if (preparingFormatId.value) return
-  preparingFormatId.value = formatId
+const toggleDefaultAppCandidate = async (formatId: string, label: string) => {
+  if (busyFormatId.value) return
+  busyFormatId.value = formatId
   try {
-    const status = await invoke<DefaultAppCandidateStatus>('prepare_default_app_candidate', { formatId })
+    const command = candidatePrepared(formatId)
+      ? 'remove_default_app_candidate'
+      : 'prepare_default_app_candidate'
+    const status = await invoke<DefaultAppCandidateStatus>(command, { formatId })
     candidateStatuses.value = { ...candidateStatuses.value, [formatId]: status }
-    message.success(`${label} 已加入 LongEdit 候选，请在 Windows 中确认需要的扩展名`)
+    message.success(candidatePrepared(formatId)
+      ? `${label} 已启用 Long编辑打开`
+      : `${label} 已关闭 Long编辑打开`)
   } catch (cause) {
-    message.error(`无法准备 ${label} 的默认应用选项：${String(cause)}`)
+    message.error(`无法更新 ${label} 的打开方式：${String(cause)}`)
   } finally {
-    preparingFormatId.value = ''
+    busyFormatId.value = ''
   }
 }
+
+const requestDefaultApp = async (formatId: string, label: string) => {
+  if (busyFormatId.value) return
+  busyFormatId.value = formatId
+  try {
+    const status = await invoke<DefaultAppCandidateStatus>('request_default_app_selection', { formatId })
+    candidateStatuses.value = { ...candidateStatuses.value, [formatId]: status }
+    message.info(`请在 Windows 确认 ${label} 的默认扩展名；返回后状态会自动刷新`)
+  } catch (cause) {
+    message.error(`无法请求 ${label} 的系统默认设置：${String(cause)}`)
+  } finally {
+    busyFormatId.value = ''
+  }
+}
+
+const refreshLoadedCandidateStatuses = () => {
+  for (const formatId of loadedFormatIds) void refreshCandidateStatus(formatId)
+}
+onMounted(() => window.addEventListener('focus', refreshLoadedCandidateStatuses))
+onBeforeUnmount(() => window.removeEventListener('focus', refreshLoadedCandidateStatuses))
 
 const saveModeLabel = (mode: SaveMode) => ({
   overwrite: '原文件保存',
@@ -311,7 +367,6 @@ const dependencyLabel = (dependency: ReleaseDependency) => ({
 .external-opening-summary > svg { color: var(--theme-primary); }
 .external-opening-summary strong { font-size: 13px; }
 .external-opening-summary p { margin: 3px 0 0; color: var(--theme-text-secondary); font-size: 12px; line-height: 1.5; }
-.external-opening-summary button,
 .default-app-action {
   min-height: 32px;
   padding: 0 10px;
@@ -328,8 +383,19 @@ const dependencyLabel = (dependency: ReleaseDependency) => ({
   white-space: nowrap;
   cursor: pointer;
 }
-.external-opening-summary button:hover,
 .default-app-action:hover { background: rgba(var(--theme-primary-rgb), 0.08); }
+.managed-here {
+  min-height: 30px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: var(--theme-border);
+  border-radius: 5px;
+  color: var(--theme-primary);
+  font-size: 11px;
+  white-space: nowrap;
+}
 .default-app-control {
   margin-top: 9px;
   padding: 9px 10px;
@@ -342,9 +408,17 @@ const dependencyLabel = (dependency: ReleaseDependency) => ({
   background: var(--theme-surface);
 }
 .default-app-copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.default-app-status-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 .default-app-copy strong { color: var(--theme-text); font-size: 11px; overflow-wrap: anywhere; }
 .default-app-copy span { color: var(--theme-text-secondary); font-size: 11px; line-height: 1.4; }
+.default-app-copy .status-chip { padding: 2px 6px; border-radius: 4px; background: var(--theme-bg); }
+.default-app-copy .status-chip.active,
+.default-app-copy .status-chip.default { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.1); }
+.default-app-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 7px; }
 .default-app-action { flex: 0 0 auto; }
+.default-app-action.enabled { color: var(--theme-error, #c2413b); }
+.default-app-action.primary { color: var(--theme-bg); border-color: var(--theme-primary); background: var(--theme-primary); }
+.default-app-action.primary:hover { background: var(--theme-primary); filter: brightness(1.06); }
 .default-app-action:disabled { cursor: wait; opacity: 0.62; }
 .spin { animation: spin 900ms linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -481,7 +555,7 @@ const dependencyLabel = (dependency: ReleaseDependency) => ({
 
 @media (max-width: 760px) {
   .external-opening-summary { grid-template-columns: 24px minmax(0, 1fr); }
-  .external-opening-summary button { grid-column: 1 / -1; width: 100%; }
+  .managed-here { grid-column: 1 / -1; justify-content: center; }
   .toolbar { align-items: stretch; flex-direction: column; }
   .search-box { width: 100%; box-sizing: border-box; }
   .matrix-head { display: none; }
@@ -492,6 +566,7 @@ const dependencyLabel = (dependency: ReleaseDependency) => ({
   .save-mode, .dependency { display: none; }
   .row-detail { grid-template-columns: 1fr; }
   .default-app-control { align-items: stretch; flex-direction: column; }
+  .default-app-actions { align-items: stretch; flex-direction: column; }
   .default-app-action { width: 100%; }
   .gate-row { grid-template-columns: 90px 1fr 50px; }
   .gate-row p { grid-column: 1 / -1; }

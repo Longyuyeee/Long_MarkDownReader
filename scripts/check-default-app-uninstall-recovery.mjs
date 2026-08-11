@@ -29,7 +29,12 @@ for (const token of [
 ]) {
   if (!hooks.includes(token)) failures.push(`NSIS runtime candidate cleanup is missing ${token}`)
 }
-if (hooks.includes('UserChoice') || system.includes('UserChoice')) failures.push('LongEdit must never mutate Windows UserChoice')
+if (hooks.includes('UserChoice')
+  || !system.includes('UserChoice')
+  || system.includes('set_value("ProgId"')
+  || system.includes('delete_value("ProgId"')) {
+  failures.push('LongEdit may read Windows UserChoice for status but must never mutate it')
+}
 if (!system.includes('Software\\Classes\\{}\\OpenWithProgids') || !system.includes('Software\\RegisteredApplications')) {
   failures.push('runtime registration and uninstall recovery no longer target the same registry surfaces')
 }

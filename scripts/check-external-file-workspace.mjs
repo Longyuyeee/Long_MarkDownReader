@@ -136,15 +136,15 @@ for (const token of ['| "log"\n            | "drawio"\n            | "diagram"\n
 
 for (const token of [
   '格式能力与默认应用',
-  'Long编辑不会自动覆盖',
-  '查看与配置',
-  '打开系统设置',
+  '逐项启用、关闭并查看',
+  '管理打开方式',
 ]) requireText(settings, token, `default-app settings are missing ${token}`)
 for (const token of [
   '外部打开与默认应用',
   "'external-ready'",
-  'Windows 默认应用始终由你确认',
-  "invoke('open_default_apps_settings')",
+  '在此页逐项管理',
+  "'remove_default_app_candidate'",
+  "invoke<DefaultAppCandidateStatus>('request_default_app_selection'",
   'externalPolicyDescription',
 ]) requireText(capabilities, token, `format capability external-opening UI is missing ${token}`)
 

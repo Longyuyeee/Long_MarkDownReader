@@ -122,11 +122,10 @@
             >
               <div class="info">
                 <div class="label">格式能力与默认应用</div>
-                <div class="desc">逐格式查看编辑与外部打开边界；默认应用由你在 Windows 中确认，Long编辑不会自动覆盖</div>
+                <div class="desc">在格式能力页逐项启用、关闭并查看 Long编辑的默认打开状态</div>
               </div>
               <div class="backup-actions">
-                <n-button secondary @click="openReleaseCapabilities">查看与配置</n-button>
-                <n-button secondary type="info" @click="openDefaultAppsSettings">打开系统设置</n-button>
+                <n-button secondary type="info" @click="openReleaseCapabilities">管理打开方式</n-button>
               </div>
             </div>
             <UpdateSettingsRow v-show="activeCategory === 'system'" />
@@ -1181,13 +1180,6 @@ onUnmounted(() => {
   if (saveDebounce) clearTimeout(saveDebounce)
 })
 
-const openDefaultAppsSettings = async () => {
-  try {
-    await invoke('open_default_apps_settings')
-  } catch (err) {
-    message.error('无法打开系统设置: ' + err)
-  }
-}
 // 移除 saveAll 函数
 </script>
 

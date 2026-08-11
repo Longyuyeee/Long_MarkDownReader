@@ -19,6 +19,10 @@
     "directRegistryDefaultWrite": false,
     "candidateRegistrationOwner": "explicit-user-action",
     "runtimeCandidateRegistration": "current-user-open-with-only",
+    "inAppCandidateManagement": true,
+    "candidateRemovalOwner": "explicit-user-action",
+    "actualDefaultStatusVisibleInApp": true,
+    "systemConfirmationOnlyForDefaultSelection": true,
     "runtimeCandidatePolicies": ["edit", "preview"],
     "groups": [
       {

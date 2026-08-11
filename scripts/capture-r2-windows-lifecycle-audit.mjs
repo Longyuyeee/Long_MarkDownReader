@@ -124,9 +124,9 @@ if (scenario === 'cloud-paper') {
   await navigate('#/settings', '.settings-view', 'settings route')
   await waitFor(
     `document.body.textContent.includes('格式能力与默认应用')
-      && document.body.textContent.includes('Long编辑不会自动覆盖')
-      && [...document.querySelectorAll('button')].some(button => button.textContent.includes('打开系统设置'))`,
-    'safe default-app settings entry',
+      && document.body.textContent.includes('逐项启用、关闭并查看')
+      && [...document.querySelectorAll('button')].some(button => button.textContent.includes('管理打开方式'))`,
+    'in-app default-app management entry',
   )
   await waitFor(`document.querySelector('.page-loader') === null`, 'settings route transition')
   await evaluate(`(() => {
@@ -137,7 +137,7 @@ if (scenario === 'cloud-paper') {
   })()`)
   await delay(300)
   await capture('r2-default-app-settings-1280.jpg')
-  checks.push('windows-owned-default-app-entry')
+  checks.push('in-app-default-app-management-entry')
   evidenceFiles.push('r2-default-app-settings-1280.jpg')
 } else {
   const externalButtonClicked = await evaluate(`(() => {

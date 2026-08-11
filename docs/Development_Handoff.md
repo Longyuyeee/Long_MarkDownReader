@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-12 UX-52 应用内默认打开管理：** 格式能力页现可对 37 类外部格式逐项启用或关闭 Long编辑候选，并显示当前系统默认及部分扩展名默认状态；设置页不再提供笼统的系统设置旁路。Windows 保护的最终默认选择仍由用户点击“设为系统默认”后在系统确认页完成，代码只读 `UserChoice`，不直接写入或绕过系统保护。本项属于 v1.0.9 发布后的维护增量，尚未重打公开安装包。详见 [`UX52_In_App_Default_Application_Management_Audit_2026-08-12.md`](./UX52_In_App_Default_Application_Management_Audit_2026-08-12.md)。
+
 > **2026-08-11 v1.0.9 最终收口：** GitHub 托管运行 [`31495885209`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31495885209) 已完成官方 `v1.0.8 -> v1.0.9` 应用内更新，12/12 检查通过。测试脚本没有手动启动新版，更新助手自动拉起 v1.0.9 并确认进程持续存活；用户确认、官方 NSIS SHA-256、覆盖安装、最新版状态及覆盖/卸载后的合成资料保留均已验证。九份脱敏证据已导入 `docs/evidence/v1.0.9-managed-updater/`。社区版发布链已收口，接手后进入维护模式。
 
 > **2026-08-11 v1.0.9 自动更新最终验收：** 已新增官方 `v1.0.8 -> v1.0.9` 托管 Windows 工作流，继续沿用会真实捕获旧版自动重启失败的测试边界。覆盖安装后脚本不会手动启动新版，必须等待更新助手拉起 `tauri-app.exe` 并确认进程持续存活；12 项检查全部通过后才允许收口。详见 [`V1_0_9_Managed_Updater_Lifecycle_Audit_2026-08-11.md`](./V1_0_9_Managed_Updater_Lifecycle_Audit_2026-08-11.md)。

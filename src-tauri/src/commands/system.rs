@@ -4,7 +4,10 @@ use serde::Serialize;
 #[cfg(target_os = "windows")]
 use std::process::Command;
 #[cfg(target_os = "windows")]
-use winreg::{enums::HKEY_CURRENT_USER, RegKey};
+use winreg::{
+    enums::{HKEY_CURRENT_USER, KEY_READ, KEY_WRITE},
+    RegKey,
+};
 
 const LONGEDIT_REGISTERED_APP: &str = "LongEdit";
 const LONGEDIT_PROG_ID: &str = "LongEdit.ExternalFile";
@@ -16,6 +19,7 @@ pub struct DefaultAppCandidateStatus {
     pub format_id: String,
     pub extensions: Vec<String>,
     pub registered_extensions: Vec<String>,
+    pub default_extensions: Vec<String>,
     pub available: bool,
     pub user_choice_required: bool,
     pub diagnostic: String,
@@ -30,6 +34,10 @@ fn default_app_candidate_extensions(format_id: &str) -> Result<Vec<String>, Stri
         ));
     }
     Ok(format.extensions.clone())
+}
+
+fn is_longedit_prog_id(prog_id: &str) -> bool {
+    matches!(prog_id, LONGEDIT_PROG_ID | "LongEdit.Markdown")
 }
 
 #[cfg(target_os = "windows")]
@@ -48,12 +56,51 @@ fn registered_candidate_extensions(extensions: &[String]) -> Vec<String> {
 }
 
 #[cfg(target_os = "windows")]
+fn current_default_extensions(extensions: &[String]) -> Vec<String> {
+    let current_user = RegKey::predef(HKEY_CURRENT_USER);
+    extensions
+        .iter()
+        .filter(|extension| {
+            current_user
+                .open_subkey(format!(
+                    r"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\{}\UserChoice",
+                    extension
+                ))
+                .and_then(|key| key.get_value::<String, _>("ProgId"))
+                .map(|prog_id| is_longedit_prog_id(&prog_id))
+                .unwrap_or(false)
+        })
+        .cloned()
+        .collect()
+}
+
+#[cfg(target_os = "windows")]
+fn delete_registry_value(key: &RegKey, name: &str, context: &str) -> Result<(), String> {
+    match key.delete_value(name) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(format!("{context}: {error}")),
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn delete_registry_tree(key: &RegKey, path: &str, context: &str) -> Result<(), String> {
+    match key.delete_subkey_all(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(format!("{context}: {error}")),
+    }
+}
+
+#[cfg(target_os = "windows")]
 fn default_app_status(format_id: &str, extensions: Vec<String>) -> DefaultAppCandidateStatus {
     let registered_extensions = registered_candidate_extensions(&extensions);
+    let default_extensions = current_default_extensions(&extensions);
     DefaultAppCandidateStatus {
         format_id: format_id.to_string(),
         extensions,
         registered_extensions,
+        default_extensions,
         available: true,
         user_choice_required: true,
         diagnostic: "LongEdit 只注册为可选应用；是否成为默认应用仍由 Windows 和用户确认。".into(),
@@ -66,6 +113,7 @@ fn default_app_status(format_id: &str, extensions: Vec<String>) -> DefaultAppCan
         format_id: format_id.to_string(),
         extensions,
         registered_extensions: Vec::new(),
+        default_extensions: Vec::new(),
         available: false,
         user_choice_required: true,
         diagnostic: "逐格式默认应用配置当前仅支持 Windows。".into(),
@@ -143,12 +191,100 @@ pub fn prepare_default_app_candidate(
             .set_value(LONGEDIT_REGISTERED_APP, &LONGEDIT_CAPABILITIES_PATH)
             .map_err(|error| format!("无法登记 LongEdit 默认应用入口: {error}"))?;
 
-        open_default_apps_settings_for_longedit()?;
         return Ok(default_app_status(&format_id, extensions));
     }
 
     #[cfg(not(target_os = "windows"))]
     Err("逐格式默认应用配置当前仅支持 Windows。".to_string())
+}
+
+#[tauri::command]
+pub fn remove_default_app_candidate(
+    format_id: String,
+) -> Result<DefaultAppCandidateStatus, String> {
+    let extensions = default_app_candidate_extensions(&format_id)?;
+
+    #[cfg(target_os = "windows")]
+    {
+        let current_user = RegKey::predef(HKEY_CURRENT_USER);
+        for extension in &extensions {
+            match current_user.open_subkey_with_flags(
+                format!(r"Software\Classes\{}\OpenWithProgids", extension),
+                KEY_READ | KEY_WRITE,
+            ) {
+                Ok(open_with) => delete_registry_value(
+                    &open_with,
+                    LONGEDIT_PROG_ID,
+                    &format!("无法关闭 {extension} 的 LongEdit 候选"),
+                )?,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => return Err(format!("无法读取 {extension} 的应用候选: {error}")),
+            }
+        }
+
+        let remaining = match current_user.open_subkey_with_flags(
+            format!(r"{LONGEDIT_CAPABILITIES_PATH}\FileAssociations"),
+            KEY_READ | KEY_WRITE,
+        ) {
+            Ok(associations) => {
+                for extension in &extensions {
+                    delete_registry_value(
+                        &associations,
+                        extension,
+                        &format!("无法移除 {extension} 的 LongEdit 默认应用能力"),
+                    )?;
+                }
+                associations.enum_values().flatten().count()
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => 0,
+            Err(error) => return Err(format!("无法读取 LongEdit 格式能力: {error}")),
+        };
+
+        if remaining == 0 {
+            match current_user
+                .open_subkey_with_flags(r"Software\RegisteredApplications", KEY_READ | KEY_WRITE)
+            {
+                Ok(registered_apps) => delete_registry_value(
+                    &registered_apps,
+                    LONGEDIT_REGISTERED_APP,
+                    "无法移除 LongEdit 默认应用入口",
+                )?,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => return Err(format!("无法读取 Windows 默认应用入口: {error}")),
+            }
+            delete_registry_tree(
+                &current_user,
+                LONGEDIT_CAPABILITIES_PATH,
+                "无法清理 LongEdit 默认应用能力",
+            )?;
+            delete_registry_tree(
+                &current_user,
+                &format!(r"Software\Classes\{LONGEDIT_PROG_ID}"),
+                "无法清理 LongEdit 外部打开能力",
+            )?;
+        }
+
+        return Ok(default_app_status(&format_id, extensions));
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    Err("逐格式默认应用配置当前仅支持 Windows。".to_string())
+}
+
+#[tauri::command]
+pub fn request_default_app_selection(
+    format_id: String,
+) -> Result<DefaultAppCandidateStatus, String> {
+    let status = prepare_default_app_candidate(format_id.clone())?;
+
+    #[cfg(target_os = "windows")]
+    {
+        open_default_apps_settings_for_longedit()?;
+        return Ok(status);
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    Err("默认应用设置仅在 Windows 上可用".to_string())
 }
 
 #[tauri::command]
@@ -211,5 +347,12 @@ mod tests {
         assert!(default_app_candidate_extensions("legacy-doc").is_err());
         assert!(default_app_candidate_extensions("wps-document").is_err());
         assert!(default_app_candidate_extensions("missing-format").is_err());
+    }
+
+    #[test]
+    fn default_app_status_recognizes_runtime_and_installer_prog_ids() {
+        assert!(is_longedit_prog_id(LONGEDIT_PROG_ID));
+        assert!(is_longedit_prog_id("LongEdit.Markdown"));
+        assert!(!is_longedit_prog_id("Applications\\notepad.exe"));
     }
 }

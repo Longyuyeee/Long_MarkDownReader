@@ -103,7 +103,7 @@ use commands::svg::{
 };
 use commands::system::{
     exit_app, get_default_app_candidate_status, get_url_title, open_default_apps_settings,
-    prepare_default_app_candidate,
+    prepare_default_app_candidate, remove_default_app_candidate, request_default_app_selection,
 };
 use commands::table::{
     create_table_file, export_table_file, import_table_file, read_external_table_file,
@@ -497,6 +497,8 @@ pub fn run() {
             open_default_apps_settings,
             get_default_app_candidate_status,
             prepare_default_app_candidate,
+            remove_default_app_candidate,
+            request_default_app_selection,
             save_history_version,
             save_external_history_version,
             list_history,

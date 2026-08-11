@@ -87,6 +87,10 @@ failUnless(
     && policy.fileAssociations.directRegistryDefaultWrite === false
     && policy.fileAssociations.candidateRegistrationOwner === 'explicit-user-action'
     && policy.fileAssociations.runtimeCandidateRegistration === 'current-user-open-with-only'
+    && policy.fileAssociations.inAppCandidateManagement === true
+    && policy.fileAssociations.candidateRemovalOwner === 'explicit-user-action'
+    && policy.fileAssociations.actualDefaultStatusVisibleInApp === true
+    && policy.fileAssociations.systemConfirmationOnlyForDefaultSelection === true
     && sameJson(policy.fileAssociations.runtimeCandidatePolicies, ['edit', 'preview'])
     && tauri.bundle.windows.nsis.installerHooks === 'windows/nsis-hooks.nsh'
     && nsisHooks.includes('NSIS_HOOK_POSTINSTALL')
@@ -107,17 +111,20 @@ failUnless(
 failUnless(
   system.includes('prepare_default_app_candidate')
     && system.includes('get_default_app_candidate_status')
+    && system.includes('remove_default_app_candidate')
+    && system.includes('request_default_app_selection')
     && system.includes('OpenWithProgids')
     && system.includes('Software\\RegisteredApplications')
     && system.includes('registeredAppUser=LongEdit')
     && system.includes('matches!(format.external_policy.as_str(), "edit" | "preview")')
-    && !system.includes('UserChoice'),
+    && system.includes('UserChoice')
+    && !system.includes('set_value("ProgId"'),
   'runtime candidate registration must be explicit, format-bounded, and leave Windows UserChoice untouched',
 )
 failUnless(
-  settings.includes("invoke('open_default_apps_settings')")
-    && settings.includes('格式能力与默认应用')
-    && settings.includes('Long编辑不会自动覆盖')
+  settings.includes('格式能力与默认应用')
+    && settings.includes('逐项启用、关闭并查看')
+    && settings.includes('管理打开方式')
     && !settings.includes('set_as_default_handler'),
   'settings default-app workflow drift',
 )

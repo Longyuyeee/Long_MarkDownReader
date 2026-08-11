@@ -26,6 +26,10 @@ if (lifecycle.fileAssociations.defaultSelectionOwner !== 'windows'
   || lifecycle.fileAssociations.directRegistryDefaultWrite !== false
   || lifecycle.fileAssociations.candidateRegistrationOwner !== 'explicit-user-action'
   || lifecycle.fileAssociations.runtimeCandidateRegistration !== 'current-user-open-with-only'
+  || lifecycle.fileAssociations.inAppCandidateManagement !== true
+  || lifecycle.fileAssociations.candidateRemovalOwner !== 'explicit-user-action'
+  || lifecycle.fileAssociations.actualDefaultStatusVisibleInApp !== true
+  || lifecycle.fileAssociations.systemConfirmationOnlyForDefaultSelection !== true
   || JSON.stringify(lifecycle.fileAssociations.runtimeCandidatePolicies) !== JSON.stringify(['edit', 'preview'])) {
   failures.push('Windows candidate registration policy drift')
 }
@@ -35,27 +39,34 @@ for (const token of [
   'matches!(format.external_policy.as_str(), "edit" | "preview")',
   'get_default_app_candidate_status',
   'prepare_default_app_candidate',
+  'remove_default_app_candidate',
+  'request_default_app_selection',
   'Software\\Classes\\{}\\OpenWithProgids',
   'Software\\RegisteredApplications',
   'registeredAppUser=LongEdit',
+  'default_extensions',
+  'delete_registry_value(',
   'user_choice_required: true',
   'default_app_candidates_follow_external_workspace_policy',
 ]) requireText(system, token, `default-app backend is missing ${token}`)
-if (system.includes('UserChoice') || system.includes('reg.exe')) {
+if (!system.includes('UserChoice') || system.includes('set_value("ProgId"') || system.includes('reg.exe')) {
   failures.push('default-app backend must not write Windows UserChoice or spawn reg.exe')
 }
-for (const token of ['get_default_app_candidate_status', 'prepare_default_app_candidate']) {
+for (const token of ['get_default_app_candidate_status', 'prepare_default_app_candidate', 'remove_default_app_candidate', 'request_default_app_selection']) {
   requireText(lib, token, `Tauri command registry is missing ${token}`)
 }
 
 for (const token of [
   '@toggle="loadCandidateStatus($event, row.format.id, row.format.externalPolicy)"',
   "invoke<DefaultAppCandidateStatus>('get_default_app_candidate_status'",
-  "invoke<DefaultAppCandidateStatus>('prepare_default_app_candidate'",
-  '只为当前格式加入系统候选，不会自动改成默认应用。',
-  '默认应用仍需在 Windows 页面逐项确认。',
-  '其他格式不会受此操作影响。',
-  '选择 LongEdit 打开',
+  "'prepare_default_app_candidate'",
+  "'remove_default_app_candidate'",
+  "invoke<DefaultAppCandidateStatus>('request_default_app_selection'",
+  '启用 Long编辑打开',
+  '关闭 Long编辑打开',
+  '设为系统默认',
+  '当前系统默认',
+  '返回后状态会自动刷新',
 ]) requireText(view, token, `format capability workflow is missing ${token}`)
 
 for (const token of [
