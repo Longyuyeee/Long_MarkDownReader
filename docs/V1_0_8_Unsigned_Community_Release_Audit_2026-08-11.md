@@ -1,6 +1,6 @@
 # v1.0.8 无签名社区版发布审计
 
-状态：**冻结构建、质量门与托管安装生命周期已通过，候选可进入发布门禁**
+状态：**v1.0.8 社区版已发布，远端附件已复核，官方更新链待观察**
 
 渠道：`community-unsigned`
 
@@ -27,15 +27,21 @@
 
 本机已有一个 LongEdit 实例在运行，本次未终止用户进程、未启动候选 EXE、未执行本机安装器；本机运行冒烟据实记录为 `blocked-existing-single-instance`。安装态结论由一次性 Windows runner 提供，证据位于 `docs/evidence/v1.0.8-release/`，不含用户资料正文。
 
+## 发布回执
+
+- GitHub Release [`v1.0.8`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.8) 编号为 `368514584`，发布时间为 `2026-08-11T11:13:44Z`。
+- 轻量 Tag 与 Release 目标均绑定候选证据提交 `090f228adda2bb186ea46049ba49f5d9418fa35f`；该提交的 Quality Gate `31485200733` 已通过。
+- NSIS、MSI 与 `SHA256SUMS.txt` 已从远端下载到独立目录，三项名称、字节数和 SHA-256 与本地候选全部一致。
+- 结构化发布回执位于 `docs/evidence/v1.0.8-release/release-receipt.json`。
+
 ## 发布顺序
 
-1. 提交当前候选证据并通过第二次 Quality Gate。
-2. 创建 `v1.0.8` GitHub Release，上传 NSIS、MSI 与 `SHA256SUMS.txt`，再从远端下载逐项复核名称、大小和哈希。
-3. 使用官方 v1.0.7 与 v1.0.8 Release 验证应用内发现、确认、下载校验、覆盖安装、自动重启和资料保留。
+1. 使用官方 v1.0.7 与 v1.0.8 Release 验证应用内发现、确认、下载校验、覆盖安装、自动重启和资料保留。
+2. 导入脱敏证据并将更新链状态从 `pending` 改为 `passed`；没有新的可复现回归时结束本补丁开发。
 
 ## 发布边界
 
-- `v1.0.8` 尚未发布，当前公开稳定版仍为 `v1.0.7`。
+- `v1.0.8` 是当前公开稳定版，README 下载入口只指向已经远端复核的正式附件。
 - v1.0.4 及更早版本仍需先手动下载安装 v1.0.5 或更高版本，才能进入受控更新链。
 - 安装包无 Authenticode 商业签名，必须保留未知发布者提示和 SHA-256 校验说明。
 - 不发布旧 Tauri 私钥链要求的 `latest.json` 或 `.sig`；受控更新使用固定 GitHub Release 与附件摘要。
