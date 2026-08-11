@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX-51",
+  "status": "debug-tauri-multi-window-passed",
+  "sourceCommit": "a0a3ab3b0ebaacbee679c8f76585b52f34ddac41",
+  "environment": "Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "checks": {
+    "mainWindowPreserved": true,
+    "secondaryProcessHandoff": true,
+    "independentTextWindow": true,
+    "independentJsonWindow": true,
+    "simultaneousWindowCount": 3,
+    "externalTabsHidden": true,
+    "updaterLimitedToMainWindow": true,
+    "runtimeErrorCount": 0
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

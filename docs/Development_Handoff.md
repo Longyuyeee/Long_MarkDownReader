@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-11 UX-51 发布阻断修复：** 自动更新现由隐藏助手等待 NSIS 完成并重新启动 Long编辑；系统或应用内外部打开会创建独立 `external-*` 顶层窗口，不再占用主资料库或增加内部标签。37 个外部编辑/预览格式已完成映射测试，真实 Tauri WebView2 同时保留主窗口、TXT 与 JSON 三窗口且零运行时错误。实现提交为 `a0a3ab3`，下一步等待 Quality Gate 后提升到 `1.0.8`、打包并执行安装态更新复测。详见 [`UX51_Updater_Relaunch_and_External_Window_Audit_2026-08-11.md`](./UX51_Updater_Relaunch_and_External_Window_Audit_2026-08-11.md)。
+
 > **2026-08-11 CF-1 代码与 Web 源文件创建已验收：** JavaScript、TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 与 HTML/CSS/Vue 十个格式族已接入统一分层“新建”菜单，共覆盖 32 个注册后缀。前后端白名单、原子新建、重名不覆盖和非法扩展拒绝均通过；隔离 Tauri WebView2 又完成 8 项真实创建、保存前不落盘、显式保存、关闭重开和零阻断错误检查，5 张截图已视觉复核。CF-1 已收口，接手后只观察可复现回归或等待新的 Office/Excel 真实生产者证据。详见 [`CF1_Code_and_Web_Source_Creation_Audit_2026-08-11.md`](./CF1_Code_and_Web_Source_Creation_Audit_2026-08-11.md)。
 
 > **2026-08-11 v1.0.7 最终收口：** GitHub 托管运行 [`31458701294`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31458701294) 已完成官方 `v1.0.6 -> v1.0.7` 应用内更新，11/11 检查通过；用户确认、NSIS SHA-256、同目录覆盖、升级首启、最新版状态及覆盖/卸载后的合成资料保留均已验证。九份脱敏证据已导入 `docs/evidence/v1.0.7-managed-updater/` 并受哈希门禁保护。当前版本在本机可执行范围内已收口；接手后先复核 Quality Gate，仅在出现可复现回归或新增真实生产者证据时继续开发。详见 [`V1_0_7_Managed_Updater_Lifecycle_Audit_2026-08-11.md`](./V1_0_7_Managed_Updater_Lifecycle_Audit_2026-08-11.md)。

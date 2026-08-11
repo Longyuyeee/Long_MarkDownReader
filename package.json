@@ -163,6 +163,8 @@
     "check:code-file-creation": "node scripts/check-code-file-creation.mjs",
     "check:cf1-desktop-audit": "node scripts/check-cf1-code-file-creation-audit.mjs",
     "audit:cf1-desktop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-cf1-code-file-creation-audit.ps1",
+    "check:ux51-external-window-lifecycle": "node scripts/check-ux51-external-window-lifecycle.mjs",
+    "audit:ux51-external-window-lifecycle": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-external-window-lifecycle-audit.ps1",
     "check:json-workspace-experience": "node scripts/check-json-workspace-experience.mjs",
     "check:text-workspace-layout": "node scripts/check-text-workspace-layout.mjs",
     "check:external-change-identity": "node scripts/check-external-change-identity.mjs",
