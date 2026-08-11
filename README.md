@@ -7,8 +7,8 @@
 <p align="center">本地优先的 Windows 知识工作台，在一个资料库里管理、阅读和编辑文本、表格、Office、PDF、图表、思维导图与媒体文件。</p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.8"><img src="https://img.shields.io/badge/Release-v1.0.8-cca43b" alt="Release v1.0.8"></a>
-  <img src="https://img.shields.io/badge/Next-v1.0.9%20recovery-0f766e" alt="v1.0.9 updater recovery">
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.9"><img src="https://img.shields.io/badge/Release-v1.0.9-cca43b" alt="Release v1.0.9"></a>
+  <img src="https://img.shields.io/badge/Updater%20path-validation%20pending-0f766e" alt="Updater path validation pending">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/License-AGPL--3.0-7c3aed" alt="AGPL-3.0">
@@ -16,17 +16,17 @@
 
 ## 下载
 
-当前已发布版本是 Long编辑 v1.0.8，支持 Windows 10/11 x64：
+当前已发布版本是 Long编辑 v1.0.9，支持 Windows 10/11 x64：
 
-- [NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.8/LongEdit_1.0.8_x64-setup.exe)（推荐）
-- [MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.8/LongEdit_1.0.8_x64_zh-CN.msi)
-- [Release、更新说明与 SHA-256](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.8)
+- [NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.9/LongEdit_1.0.9_x64-setup.exe)（推荐）
+- [MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.9/LongEdit_1.0.9_x64_zh-CN.msi)
+- [Release、更新说明与 SHA-256](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.9)
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同一页面的 `SHA256SUMS.txt` 核对文件。
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本无法自动迁移，需要手动安装 v1.0.5 或 v1.0.8 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本无法自动迁移，需要手动安装 v1.0.5 或 v1.0.9 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
 
-v1.0.8 的 Tag、Release 和三项远端附件已经复核，但官方 `1.0.7 -> 1.0.8` 托管测试确认覆盖安装后没有自动重新打开。`main` 正在准备 v1.0.9 恢复补丁；当前下载仍为 v1.0.8，手动重新打开即可使用已安装的新版本。修复范围见 [v1.0.9 发布说明](docs/RELEASE_NOTES_v1.0.9.md)。
+v1.0.9 的 Tag、Release 和三项远端附件已经复核。它修复 v1.0.8 更新后未自动重新打开的问题，并保留外部文件独立顶层窗口；官方 `1.0.8 -> 1.0.9` 自动重启链仍在最终验收中。若覆盖安装后没有自动打开，可手动启动 Long编辑，已安装内容不受影响。修复范围见 [v1.0.9 发布说明](docs/RELEASE_NOTES_v1.0.9.md)。
 
 ## v1.0.9 恢复重点
 
