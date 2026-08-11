@@ -69,6 +69,13 @@ for (const format of registry.formats || []) {
   }
   for (const level of Object.values(format.capabilities || {})) if (!levels.has(level)) failures.push(`invalid capability level in ${format.id}`)
   if ((format.capabilities?.create === 'supported') !== Boolean(format.creation && format.adapters?.creator)) failures.push(`creation contract mismatch: ${format.id}`)
+  if (format.creation) {
+    if (!format.extensions.includes(format.creation.defaultExtension)) failures.push(`default creation extension is not registered: ${format.id}`)
+    const variants = format.creation.variants || []
+    const variantExtensions = new Set(variants.map(variant => variant.extension))
+    if (variants.some(variant => !variant.label || !variant.defaultName || !format.extensions.includes(variant.extension)) || variantExtensions.size !== variants.length) failures.push(`invalid creation variants: ${format.id}`)
+    if (variants.length && (variantExtensions.size !== format.extensions.length || format.extensions.some(extension => !variantExtensions.has(extension)))) failures.push(`incomplete creation variants: ${format.id}`)
+  }
   if ((format.capabilities?.index === 'supported') !== Boolean(format.adapters?.indexer)) failures.push(`index contract mismatch: ${format.id}`)
 }
 
@@ -113,12 +120,13 @@ for (const id of ['javascript', 'typescript', 'python', 'rust', 'go', 'jvm-code'
     || format.routeName !== 'TextEditor'
     || format.capabilities?.read !== 'supported'
     || format.capabilities?.edit !== 'supported'
-    || format.capabilities?.create !== 'planned'
+    || format.capabilities?.create !== 'supported'
     || format.capabilities?.index !== 'supported'
     || format.adapters?.reader !== 'text'
     || format.adapters?.writer !== 'text'
-    || format.adapters?.creator !== null
+    || format.adapters?.creator !== 'text-template'
     || format.adapters?.indexer !== 'text'
+    || !format.creation?.defaultContent
     || format.userCapability?.level !== 'basic-edit') failures.push(`A4 ${id} lightweight-code contract is incomplete`)
 }
 const yamlFormat = registry.formats?.find(format => format.id === 'yaml')

@@ -29,14 +29,14 @@ for (const screenshot of manifest.screenshots) {
 }
 
 const creatable = registry.formats.filter(format => format.capabilities.create === 'supported')
-if (creatable.length !== 18) fail(`creatable registry count drift: ${creatable.length}`)
+if (creatable.length !== 28) fail(`current creatable registry count drift: ${creatable.length}`)
 for (const token of [
   'data-testid="library-tree-viewport"',
   '@contextmenu="openRootContextMenu"',
   "{ label: '文档', ids: ['markdown', 'plain-text']",
   "{ label: '数据', ids: ['json', 'jsonc', 'yaml', 'xml', 'toml', 'table']",
   "{ label: '图表与画布', ids: ['canvas', 'drawio', 'diagram', 'opml', 'svg']",
-  "{ label: '代码与配置', ids: ['env', 'ini', 'properties', 'editorconfig', 'gitignore']",
+  "{ label: '代码与配置', ids: ['javascript', 'typescript', 'python', 'rust', 'go', 'jvm-code', 'c-family', 'shell', 'sql', 'web-source', 'env', 'ini', 'properties', 'editorconfig', 'gitignore']",
   "label: '新建'",
   "key: `create-format:${format.id}`",
   "完整名称{{ renameState.isDir ? '' : '（包含后缀）' }}",
@@ -60,4 +60,4 @@ for (const token of ['LONGEDIT_E2E_LIBRARY', 'UX36 Rename Source.md', 'UX36 Conf
 if (!packageJson.scripts?.['audit:ux36-file-tree-actions'] || !packageJson.scripts?.['check:ux36-file-tree-actions']) fail('package commands missing')
 if (!packageJson.scripts?.['check:current-development-audit']?.includes('check-ux36-file-tree-actions')) fail('UX-36 checker is not in the development audit chain')
 
-console.log('UX-36 file-tree actions passed: root and directory menus expose 18 grouped formats, full-name rename rejects conflicts, and confirmed extension changes keep tree, tab, and route synchronized.')
+console.log('UX-36 file-tree actions passed: historical 18-format evidence remains immutable while the current registry exposes 28 grouped formats; rename safety stays aligned.')

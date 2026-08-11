@@ -515,6 +515,7 @@ pub async fn create_format_file(
     format_id: String,
     prefix: Option<String>,
     content: Option<String>,
+    extension: Option<String>,
 ) -> Result<String, String> {
     let format = ensure_capability(&format_id, "create")?;
     if !matches!(
@@ -527,6 +528,26 @@ pub async fn create_format_file(
         .creation
         .as_ref()
         .ok_or_else(|| format!("{} 缺少创建契约", format.label))?;
+    let requested_extension = extension.unwrap_or_else(|| creation.default_extension.clone());
+    let variant = creation
+        .variants
+        .iter()
+        .find(|variant| variant.extension == requested_extension);
+    if requested_extension != creation.default_extension && variant.is_none() {
+        return Err(format!(
+            "{} 不允许创建 {} 文件",
+            format.label, requested_extension
+        ));
+    }
+    if !format.extensions.contains(&requested_extension) {
+        return Err(format!("{} 创建扩展名未注册", format.label));
+    }
+    let default_name = variant
+        .map(|variant| variant.default_name.as_str())
+        .unwrap_or(&creation.default_name);
+    let default_content = variant
+        .and_then(|variant| variant.default_content.clone())
+        .or_else(|| creation.default_content.clone());
     let guard = WorkspaceGuard::new(&library_root)?;
     let directory = match target_dir {
         Some(path) => guard.resolve_for_write(path)?,
@@ -539,26 +560,24 @@ pub async fn create_format_file(
         return Err("创建目标必须是目录".into());
     }
     let canonical_dotfile = prefix.is_none()
-        && creation.default_name == creation.default_extension
-        && creation.default_extension.starts_with('.');
+        && default_name == requested_extension
+        && requested_extension.starts_with('.');
     let base_name = if canonical_dotfile {
-        creation.default_name.clone()
+        default_name.to_owned()
     } else {
-        sanitize_filename(&prefix.unwrap_or_else(|| creation.default_name.clone()))
+        sanitize_filename(&prefix.unwrap_or_else(|| default_name.to_owned()))
     };
     if base_name.is_empty() {
         return Err("文件名不能为空".into());
     }
-    let body = content
-        .or_else(|| creation.default_content.clone())
-        .unwrap_or_default();
+    let body = content.or(default_content).unwrap_or_default();
     if body.len() as u64 > format.max_bytes {
         return Err(format!("{} 模板超过大小限制", format.label));
     }
     let path = if canonical_dotfile {
         let candidate = directory.join(&base_name);
         if candidate.exists() {
-            return Err(format!("{} 已存在", creation.default_extension));
+            return Err(format!("{} 已存在", requested_extension));
         }
         candidate
     } else {
@@ -569,8 +588,7 @@ pub async fn create_format_file(
             } else {
                 format!(" {index}")
             };
-            let candidate =
-                directory.join(format!("{base_name}{suffix}{}", creation.default_extension));
+            let candidate = directory.join(format!("{base_name}{suffix}{requested_extension}"));
             if !candidate.exists() {
                 break candidate;
             }
@@ -618,6 +636,7 @@ mod tests {
             "plain-text".into(),
             Some("adapter fixture".into()),
             Some(include_str!("../../tests/fixtures/formats/plain-text.txt").into()),
+            None,
         ))
         .unwrap();
         assert!(path.ends_with("adapter fixture.txt"));
@@ -668,6 +687,7 @@ mod tests {
             "yaml".into(),
             None,
             None,
+            None,
         ))
         .unwrap();
         assert!(path.ends_with("未命名配置.yaml"));
@@ -698,6 +718,7 @@ mod tests {
                 format_id.into(),
                 None,
                 None,
+                None,
             ))
             .unwrap();
             assert_eq!(Path::new(&first).file_name().unwrap(), expected_name);
@@ -710,6 +731,7 @@ mod tests {
                 root_string.clone(),
                 None,
                 format_id.into(),
+                None,
                 None,
                 None,
             ))
@@ -739,6 +761,7 @@ mod tests {
             "xml".into(),
             None,
             None,
+            None,
         ))
         .unwrap();
         assert!(path.ends_with("未命名 XML.xml"));
@@ -762,6 +785,7 @@ mod tests {
             root.to_string_lossy().into_owned(),
             None,
             "toml".into(),
+            None,
             None,
             None,
         ))
@@ -795,6 +819,7 @@ mod tests {
                 format_id.into(),
                 None,
                 None,
+                None,
             ))
             .unwrap();
             assert_eq!(Path::new(&path).file_name().unwrap(), name);
@@ -804,9 +829,85 @@ mod tests {
                 format_id.into(),
                 None,
                 None,
+                None,
             ))
             .is_err());
         }
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn code_creation_variants_cover_registered_extensions_and_never_overwrite() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-code-create-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let root_string = root.to_string_lossy().into_owned();
+        let registry = file_format_registry().unwrap();
+        let code_ids = [
+            "javascript",
+            "typescript",
+            "python",
+            "rust",
+            "go",
+            "jvm-code",
+            "c-family",
+            "shell",
+            "sql",
+            "web-source",
+        ];
+
+        for format_id in code_ids {
+            let format = registry.by_id(format_id).unwrap();
+            let creation = format.creation.as_ref().unwrap();
+            for extension in &format.extensions {
+                let expected_content = creation
+                    .variants
+                    .iter()
+                    .find(|variant| &variant.extension == extension)
+                    .and_then(|variant| variant.default_content.as_deref())
+                    .or(creation.default_content.as_deref())
+                    .unwrap_or_default();
+                let first = tauri::async_runtime::block_on(create_format_file(
+                    root_string.clone(),
+                    None,
+                    format_id.into(),
+                    None,
+                    None,
+                    Some(extension.clone()),
+                ))
+                .unwrap();
+                assert!(first.ends_with(extension));
+                assert_eq!(fs::read_to_string(&first).unwrap(), expected_content);
+                let first_bytes = fs::read(&first).unwrap();
+                let second = tauri::async_runtime::block_on(create_format_file(
+                    root_string.clone(),
+                    None,
+                    format_id.into(),
+                    None,
+                    None,
+                    Some(extension.clone()),
+                ))
+                .unwrap();
+                assert_ne!(first, second);
+                assert_eq!(fs::read(&first).unwrap(), first_bytes);
+            }
+            assert!(tauri::async_runtime::block_on(create_format_file(
+                root_string.clone(),
+                None,
+                format_id.into(),
+                None,
+                None,
+                Some(".exe".into()),
+            ))
+            .is_err());
+        }
+
         fs::remove_dir_all(root).unwrap();
     }
 

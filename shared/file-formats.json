@@ -99,11 +99,21 @@
       "mimeTypes": ["text/javascript", "application/javascript"],
       "routeName": "TextEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "JavaScript 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含编译、调试或语言服务。" },
       "externalPolicy": "edit",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": {
+        "defaultExtension": ".js",
+        "defaultContent": "export function main() {\n  console.log('Hello from LongEdit')\n}\n\nmain()\n",
+        "defaultName": "未命名 JavaScript",
+        "variants": [
+          { "label": "JavaScript", "extension": ".js", "defaultContent": "export function main() {\n  console.log('Hello from LongEdit')\n}\n\nmain()\n", "defaultName": "未命名 JavaScript" },
+          { "label": "JSX", "extension": ".jsx", "defaultContent": "export const App = () => <main>Hello from LongEdit</main>\n", "defaultName": "未命名组件" },
+          { "label": "ES Module", "extension": ".mjs", "defaultContent": "export const value = 'LongEdit'\n", "defaultName": "未命名模块" },
+          { "label": "CommonJS", "extension": ".cjs", "defaultContent": "module.exports = {}\n", "defaultName": "未命名模块" }
+        ]
+      }
     },
     {
       "id": "typescript",
@@ -112,11 +122,21 @@
       "mimeTypes": ["text/typescript", "application/typescript"],
       "routeName": "TextEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "TypeScript 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含类型检查、编译、调试或语言服务。" },
       "externalPolicy": "edit",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": {
+        "defaultExtension": ".ts",
+        "defaultContent": "export const main = (): void => {\n  console.log('Hello from LongEdit')\n}\n\nmain()\n",
+        "defaultName": "未命名 TypeScript",
+        "variants": [
+          { "label": "TypeScript", "extension": ".ts", "defaultContent": "export const main = (): void => {\n  console.log('Hello from LongEdit')\n}\n\nmain()\n", "defaultName": "未命名 TypeScript" },
+          { "label": "TSX", "extension": ".tsx", "defaultContent": "export const App = () => <main>Hello from LongEdit</main>\n", "defaultName": "未命名组件" },
+          { "label": "ES Module TypeScript", "extension": ".mts", "defaultContent": "export const value: string = 'LongEdit'\n", "defaultName": "未命名模块" },
+          { "label": "CommonJS TypeScript", "extension": ".cts", "defaultContent": "const config = {}\nexport = config\n", "defaultName": "未命名模块" }
+        ]
+      }
     },
     {
       "id": "python",
@@ -125,11 +145,11 @@
       "mimeTypes": ["text/x-python"],
       "routeName": "TextEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Python 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含运行、调试或语言服务。" },
       "externalPolicy": "edit",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".py", "defaultContent": "def main():\n    print(\"Hello from LongEdit\")\n\n\nif __name__ == \"__main__\":\n    main()\n", "defaultName": "未命名 Python" }
     },
     {
       "id": "rust",
@@ -138,11 +158,11 @@
       "mimeTypes": ["text/x-rust"],
       "routeName": "TextEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Rust 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
       "externalPolicy": "edit",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".rs", "defaultContent": "fn main() {\n    println!(\"Hello from LongEdit\");\n}\n", "defaultName": "未命名 Rust" }
     },
     {
       "id": "go",
@@ -151,11 +171,11 @@
       "mimeTypes": ["text/x-go"],
       "routeName": "TextEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Go 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
       "externalPolicy": "edit",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".go", "defaultContent": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"Hello from LongEdit\")\n}\n", "defaultName": "未命名 Go" }
     },
     {
       "id": "jvm-code",
@@ -164,11 +184,20 @@
       "mimeTypes": ["text/x-java-source", "text/x-kotlin"],
       "routeName": "TextEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Java 与 Kotlin 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
       "externalPolicy": "edit",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": {
+        "defaultExtension": ".java",
+        "defaultContent": "class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello from LongEdit\");\n    }\n}\n",
+        "defaultName": "未命名 Java",
+        "variants": [
+          { "label": "Java", "extension": ".java", "defaultContent": "class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello from LongEdit\");\n    }\n}\n", "defaultName": "未命名 Java" },
+          { "label": "Kotlin", "extension": ".kt", "defaultContent": "fun main() {\n    println(\"Hello from LongEdit\")\n}\n", "defaultName": "未命名 Kotlin" },
+          { "label": "Kotlin Script", "extension": ".kts", "defaultContent": "println(\"Hello from LongEdit\")\n", "defaultName": "未命名 Kotlin 脚本" }
+        ]
+      }
     },
     {
       "id": "c-family",
@@ -177,11 +206,24 @@
       "mimeTypes": ["text/x-c", "text/x-c++src", "text/x-csharp"],
       "routeName": "TextEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "C、C++ 与 C# 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不包含构建、调试或语言服务。" },
       "externalPolicy": "edit",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": {
+        "defaultExtension": ".c",
+        "defaultContent": "#include <stdio.h>\n\nint main(void) {\n    puts(\"Hello from LongEdit\");\n    return 0;\n}\n",
+        "defaultName": "未命名 C",
+        "variants": [
+          { "label": "C", "extension": ".c", "defaultContent": "#include <stdio.h>\n\nint main(void) {\n    puts(\"Hello from LongEdit\");\n    return 0;\n}\n", "defaultName": "未命名 C" },
+          { "label": "C Header", "extension": ".h", "defaultContent": "#pragma once\n", "defaultName": "未命名头文件" },
+          { "label": "C++ Source", "extension": ".cc", "defaultContent": "#include <iostream>\n\nint main() {\n    std::cout << \"Hello from LongEdit\\n\";\n    return 0;\n}\n", "defaultName": "未命名 C++" },
+          { "label": "C++ Source", "extension": ".cpp", "defaultContent": "#include <iostream>\n\nint main() {\n    std::cout << \"Hello from LongEdit\\n\";\n    return 0;\n}\n", "defaultName": "未命名 C++" },
+          { "label": "C++ Source", "extension": ".cxx", "defaultContent": "#include <iostream>\n\nint main() {\n    std::cout << \"Hello from LongEdit\\n\";\n    return 0;\n}\n", "defaultName": "未命名 C++" },
+          { "label": "C++ Header", "extension": ".hpp", "defaultContent": "#pragma once\n", "defaultName": "未命名头文件" },
+          { "label": "C#", "extension": ".cs", "defaultContent": "using System;\n\nclass Program\n{\n    static void Main() => Console.WriteLine(\"Hello from LongEdit\");\n}\n", "defaultName": "未命名 CSharp" }
+        ]
+      }
     },
     {
       "id": "shell",
@@ -190,11 +232,21 @@
       "mimeTypes": ["text/x-shellscript", "text/x-powershell"],
       "routeName": "TextEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "Shell 与 PowerShell 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入且不执行脚本。" },
       "externalPolicy": "edit",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": {
+        "defaultExtension": ".sh",
+        "defaultContent": "#!/usr/bin/env sh\nset -eu\n\nprintf '%s\\n' 'Hello from LongEdit'\n",
+        "defaultName": "未命名 Shell",
+        "variants": [
+          { "label": "Shell", "extension": ".sh", "defaultContent": "#!/usr/bin/env sh\nset -eu\n\nprintf '%s\\n' 'Hello from LongEdit'\n", "defaultName": "未命名 Shell" },
+          { "label": "Bash", "extension": ".bash", "defaultContent": "#!/usr/bin/env bash\nset -euo pipefail\n\nprintf '%s\\n' 'Hello from LongEdit'\n", "defaultName": "未命名 Bash" },
+          { "label": "Zsh", "extension": ".zsh", "defaultContent": "#!/usr/bin/env zsh\nset -eu\n\nprint 'Hello from LongEdit'\n", "defaultName": "未命名 Zsh" },
+          { "label": "PowerShell", "extension": ".ps1", "defaultContent": "Set-StrictMode -Version Latest\nWrite-Output 'Hello from LongEdit'\n", "defaultName": "未命名 PowerShell" }
+        ]
+      }
     },
     {
       "id": "sql",
@@ -203,11 +255,11 @@
       "mimeTypes": ["application/sql", "text/x-sql"],
       "routeName": "TextEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "SQL 支持语法高亮、括号匹配、自动缩进、关键字与文档词补全、基础诊断、查找替换和签名保护保存；只有点击保存才写入，不连接或执行数据库语句。" },
       "externalPolicy": "edit",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": { "defaultExtension": ".sql", "defaultContent": "-- SQL 草稿；LongEdit 不会执行此文件。\n\nSELECT 1;\n", "defaultName": "未命名 SQL" }
     },
     {
       "id": "web-source",
@@ -216,11 +268,23 @@
       "mimeTypes": ["text/html", "text/css", "text/x-vue"],
       "routeName": "TextEditor",
       "maxBytes": 16777216,
-      "capabilities": { "read": "supported", "edit": "supported", "create": "planned", "index": "supported" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
       "userCapability": { "level": "basic-edit", "label": "专业源码编辑", "saveMode": "overwrite", "description": "HTML、CSS、SCSS、Less 与 Vue 支持语法高亮、括号匹配、自动缩进、标签/关键字/文档词补全、基础诊断和签名保护保存；HTML 可预览当前草稿，预览会移除危险能力并禁止外部资源，只有点击保存才写入。" },
       "externalPolicy": "edit",
-      "adapters": { "reader": "text", "writer": "text", "creator": null, "indexer": "text" },
-      "creation": null
+      "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
+      "creation": {
+        "defaultExtension": ".html",
+        "defaultContent": "<!doctype html>\n<html lang=\"zh-CN\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>LongEdit 页面</title>\n</head>\n<body>\n  <main>Hello from LongEdit</main>\n</body>\n</html>\n",
+        "defaultName": "未命名页面",
+        "variants": [
+          { "label": "HTML", "extension": ".html", "defaultContent": "<!doctype html>\n<html lang=\"zh-CN\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>LongEdit 页面</title>\n</head>\n<body>\n  <main>Hello from LongEdit</main>\n</body>\n</html>\n", "defaultName": "未命名页面" },
+          { "label": "HTML（兼容后缀）", "extension": ".htm", "defaultContent": "<!doctype html>\n<html lang=\"zh-CN\">\n<head><meta charset=\"UTF-8\"><title>LongEdit 页面</title></head>\n<body>Hello from LongEdit</body>\n</html>\n", "defaultName": "未命名页面" },
+          { "label": "CSS", "extension": ".css", "defaultContent": ":root {\n  color-scheme: light dark;\n}\n\nbody {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n}\n", "defaultName": "未命名样式" },
+          { "label": "SCSS", "extension": ".scss", "defaultContent": "$accent: #d7a928;\n\nbody {\n  color: $accent;\n}\n", "defaultName": "未命名样式" },
+          { "label": "Less", "extension": ".less", "defaultContent": "@accent: #d7a928;\n\nbody {\n  color: @accent;\n}\n", "defaultName": "未命名样式" },
+          { "label": "Vue 单文件组件", "extension": ".vue", "defaultContent": "<template>\n  <main>Hello from LongEdit</main>\n</template>\n\n<script setup lang=\"ts\">\n</script>\n\n<style scoped>\n</style>\n", "defaultName": "未命名组件" }
+        ]
+      }
     },
     {
       "id": "json",

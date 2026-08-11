@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-11 CF-1 代码与 Web 源文件创建增量：** v1.0.7 发布后的下一周期开发已启动。JavaScript、TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 与 HTML/CSS/Vue 十个既有格式族已接入统一“新建”菜单，共覆盖 32 个注册后缀。前后端共用变体合同，Rust 仅接受白名单后缀并以 `write_new_bytes` 原子新建；逐后缀模板、重名不覆盖和非法 `.exe` 拒绝回归已通过。接手后先等待本提交 Quality Gate，再采集隔离桌面的创建、保存、重开证据。详见 [`CF1_Code_and_Web_Source_Creation_Audit_2026-08-11.md`](./CF1_Code_and_Web_Source_Creation_Audit_2026-08-11.md)。
+
 > **2026-08-11 v1.0.7 最终收口：** GitHub 托管运行 [`31458701294`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31458701294) 已完成官方 `v1.0.6 -> v1.0.7` 应用内更新，11/11 检查通过；用户确认、NSIS SHA-256、同目录覆盖、升级首启、最新版状态及覆盖/卸载后的合成资料保留均已验证。九份脱敏证据已导入 `docs/evidence/v1.0.7-managed-updater/` 并受哈希门禁保护。当前版本在本机可执行范围内已收口；接手后先复核 Quality Gate，仅在出现可复现回归或新增真实生产者证据时继续开发。详见 [`V1_0_7_Managed_Updater_Lifecycle_Audit_2026-08-11.md`](./V1_0_7_Managed_Updater_Lifecycle_Audit_2026-08-11.md)。
 
 > **2026-08-11 v1.0.7 更新观察合同：** 已新增独立的 `v1.0.6 -> v1.0.7` GitHub 托管受控更新链。它只下载两版官方 NSIS，要求用户确认、严格 SHA-256、同目录覆盖、首启最新版状态及覆盖/卸载后的合成资料保留；不会重建发布包，也不会接触本机 LongEdit。接手后先等待本合同提交的 Quality Gate，再运行 `V1.0.7 Managed Updater Lifecycle` 并导入证据。详见 [`V1_0_7_Managed_Updater_Lifecycle_Audit_2026-08-11.md`](./V1_0_7_Managed_Updater_Lifecycle_Audit_2026-08-11.md)。

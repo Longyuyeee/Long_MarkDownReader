@@ -24,6 +24,14 @@ export interface FileFormatCreation {
   defaultExtension: string
   defaultContent: string | null
   defaultName: string
+  variants?: readonly FileFormatCreationVariant[]
+}
+
+export interface FileFormatCreationVariant {
+  label: string
+  extension: string
+  defaultContent: string | null
+  defaultName: string
 }
 
 export interface FileFormatUserCapability {
@@ -72,6 +80,19 @@ const validateRegistry = () => {
     }
     if (supported(format.capabilities.edit) !== Boolean(format.adapters.writer)) throw new Error(`Invalid edit contract ${format.id}`)
     if (supported(format.capabilities.create) !== Boolean(format.creation && format.adapters.creator)) throw new Error(`Invalid creation contract ${format.id}`)
+    if (format.creation) {
+      if (!format.extensions.includes(format.creation.defaultExtension)) throw new Error(`Invalid default creation extension ${format.id}`)
+      const variantExtensions = new Set<string>()
+      for (const variant of format.creation.variants ?? []) {
+        if (!variant.label || !variant.defaultName || !format.extensions.includes(variant.extension) || variantExtensions.has(variant.extension)) {
+          throw new Error(`Invalid creation variant ${format.id}:${variant.extension}`)
+        }
+        variantExtensions.add(variant.extension)
+      }
+      if (variantExtensions.size && (variantExtensions.size !== format.extensions.length || !format.extensions.every(extension => variantExtensions.has(extension)))) {
+        throw new Error(`Incomplete creation variants ${format.id}`)
+      }
+    }
     if (supported(format.capabilities.index) !== Boolean(format.adapters.indexer)) throw new Error(`Invalid index contract ${format.id}`)
   }
 }

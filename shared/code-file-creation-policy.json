@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "stage": "CF-1",
+  "appBaseline": "1.0.7",
+  "status": "automated-gates-passed-desktop-evidence-pending",
+  "scope": "registered-code-and-web-source-creation",
+  "formatFamilies": 10,
+  "extensionVariants": 32,
+  "creatableFormatFamiliesTotal": 28,
+  "requirements": {
+    "registryDriven": true,
+    "allRegisteredExtensionsCovered": true,
+    "workspaceGuardRequired": true,
+    "atomicCreateOnly": true,
+    "existingFilesNeverOverwritten": true,
+    "generatedCodeNeverExecuted": true,
+    "explicitSaveAfterCreation": true,
+    "unregisteredExtensionsRejected": true
+  },
+  "gates": {
+    "registryContractImplemented": true,
+    "frontendVariantMenuImplemented": true,
+    "rustCreationBoundaryImplemented": true,
+    "automatedRegressionPassed": true,
+    "desktopEvidenceAccepted": false
+  },
+  "nextAction": "capture-isolated-desktop-creation-save-and-reopen-evidence"
+}

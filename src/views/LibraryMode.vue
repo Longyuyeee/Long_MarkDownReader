@@ -2313,21 +2313,45 @@ const CREATE_FORMAT_GROUPS = [
   { label: '文档', ids: ['markdown', 'plain-text'], icon: FileIcon },
   { label: '数据', ids: ['json', 'jsonc', 'yaml', 'xml', 'toml', 'table'], icon: DatabaseIcon },
   { label: '图表与画布', ids: ['canvas', 'drawio', 'diagram', 'opml', 'svg'], icon: DashboardIcon },
-  { label: '代码与配置', ids: ['env', 'ini', 'properties', 'editorconfig', 'gitignore'], icon: SettingsIcon },
+  { label: '代码与配置', ids: ['javascript', 'typescript', 'python', 'rust', 'go', 'jvm-code', 'c-family', 'shell', 'sql', 'web-source', 'env', 'ini', 'properties', 'editorconfig', 'gitignore'], icon: SettingsIcon },
 ] as const
+const CREATE_CODE_SUBGROUPS = [
+  { label: '编程语言', ids: ['javascript', 'typescript', 'python', 'rust', 'go', 'jvm-code', 'c-family', 'shell'] },
+  { label: 'Web 与查询', ids: ['web-source', 'sql'] },
+  { label: '配置文件', ids: ['env', 'ini', 'properties', 'editorconfig', 'gitignore'] },
+] as const
+const createFormatMenuOption = (format: (typeof CREATABLE_FILE_FORMATS)[number]) => {
+  const variants = format.creation?.variants ?? []
+  if (variants.length <= 1) return {
+    label: `${format.label}（${format.creation?.defaultExtension}）`,
+    key: `create-format:${format.id}`,
+  }
+  return {
+    label: format.label,
+    key: `create-format-family:${format.id}`,
+    children: variants.map(variant => ({
+      label: `${variant.label}（${variant.extension}）`,
+      key: `create-format:${format.id}:${variant.extension}`,
+    })),
+  }
+}
 const buildCreateMenuOptions = () => {
   const registered = new Map(CREATABLE_FILE_FORMATS.map(format => [format.id, format]))
+  const optionsForIds = (ids: readonly string[]) => ids
+    .map(id => registered.get(id))
+    .filter((format): format is NonNullable<typeof format> => Boolean(format))
+    .map(createFormatMenuOption)
   const formatGroups = CREATE_FORMAT_GROUPS.map(group => ({
     label: group.label,
     key: `create-group:${group.label}`,
     icon: () => h(NIcon, null, { default: () => h(group.icon) }),
-    children: group.ids
-      .map(id => registered.get(id))
-      .filter((format): format is NonNullable<typeof format> => Boolean(format))
-      .map(format => ({
-        label: `${format.label}（${format.creation?.defaultExtension}）`,
-        key: `create-format:${format.id}`,
-      })),
+    children: group.label === '代码与配置'
+      ? CREATE_CODE_SUBGROUPS.map(subgroup => ({
+        label: subgroup.label,
+        key: `create-subgroup:${subgroup.label}`,
+        children: optionsForIds(subgroup.ids),
+      })).filter(subgroup => subgroup.children.length > 0)
+      : optionsForIds(group.ids),
   })).filter(group => group.children.length > 0)
   return [{
     label: '新建',
@@ -2423,9 +2447,9 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
 const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
   if (key.startsWith('create-format:')) {
-    const formatId = key.slice('create-format:'.length)
+    const [formatId, extension] = key.slice('create-format:'.length).split(':')
     try {
-      const created = await createRegisteredFile(formatId, path)
+      const created = await createRegisteredFile(formatId, path, undefined, undefined, extension)
       if (path !== store.libraryPath && !expandedKeys.value.includes(path)) expandedKeys.value.push(path)
       await refreshNode(path)
       handleNodeSelect([created])
@@ -2478,7 +2502,7 @@ const selectedTargetDirectory = () => {
   return selected.substring(0, Math.max(selected.lastIndexOf('\\'), selected.lastIndexOf('/')))
 }
 
-const createRegisteredFile = async (formatId: string, target: string, prefix?: string, content?: string) => {
+const createRegisteredFile = async (formatId: string, target: string, prefix?: string, content?: string, extension?: string) => {
   const format = findFileFormatById(formatId)
   if (!format?.creation || !format.adapters.creator) throw new Error(`格式 ${formatId} 不支持创建`)
   if (format.adapters.creator === 'table') {
@@ -2490,6 +2514,7 @@ const createRegisteredFile = async (formatId: string, target: string, prefix?: s
     formatId,
     prefix,
     content,
+    extension,
   })
 }
 

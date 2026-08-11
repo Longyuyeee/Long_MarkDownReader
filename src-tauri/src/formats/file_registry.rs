@@ -71,6 +71,17 @@ pub struct FileFormatCreation {
     pub default_extension: String,
     pub default_content: Option<String>,
     pub default_name: String,
+    #[serde(default)]
+    pub variants: Vec<FileFormatCreationVariant>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FileFormatCreationVariant {
+    pub label: String,
+    pub extension: String,
+    pub default_content: Option<String>,
+    pub default_name: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -135,6 +146,30 @@ impl FileFormatRegistry {
             let has_creation = format.creation.is_some() && format.adapters.creator.is_some();
             if format.capabilities.create.is_supported() != has_creation {
                 return Err(format!("创建能力与适配器不一致: {}", format.id));
+            }
+            if let Some(creation) = &format.creation {
+                if !format.extensions.contains(&creation.default_extension) {
+                    return Err(format!("默认创建扩展名未注册: {}", format.id));
+                }
+                let mut variant_extensions = HashSet::new();
+                for variant in &creation.variants {
+                    if variant.label.trim().is_empty()
+                        || variant.default_name.trim().is_empty()
+                        || !format.extensions.contains(&variant.extension)
+                        || !variant_extensions.insert(variant.extension.as_str())
+                    {
+                        return Err(format!("创建变体无效: {}:{}", format.id, variant.extension));
+                    }
+                }
+                if !variant_extensions.is_empty()
+                    && (variant_extensions.len() != format.extensions.len()
+                        || format
+                            .extensions
+                            .iter()
+                            .any(|extension| !variant_extensions.contains(extension.as_str())))
+                {
+                    return Err(format!("创建变体未覆盖全部扩展名: {}", format.id));
+                }
             }
             if format.capabilities.index.is_supported() != format.adapters.indexer.is_some() {
                 return Err(format!("索引能力与适配器不一致: {}", format.id));
