@@ -1,0 +1,26 @@
+{
+    "schemaVersion":  1,
+    "stage":  "EA-5B2",
+    "capturedAt":  "2026-08-11T10:58:48.4601031Z",
+    "status":  "passed",
+    "environment":  "disposable-windows-installed-nsis",
+    "selectedFormats":  [
+                            "opml",
+                            "raster-image"
+                        ],
+    "selectedExtensionsVerified":  [
+                                       ".opml",
+                                       ".png",
+                                       ".avif"
+                                   ],
+    "unselectedExtensionsVerified":  [
+                                         ".json"
+                                     ],
+    "coldLaunchUnicodeSpacePath":  true,
+    "secondarySingleInstanceHandoff":  true,
+    "windowsDefaultSelectionChanged":  false,
+    "longEditRegistrationsRemovedAfterUninstall":  true,
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false,
+    "promotionEligible":  false
+}

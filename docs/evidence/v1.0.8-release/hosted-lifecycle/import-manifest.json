@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.8-U2",
+  "status": "accepted-for-unsigned-community-release",
+  "importedAt": "2026-08-11",
+  "githubRunId": 31482508935,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31482508935",
+  "workflowConclusion": "success",
+  "productSourceCommit": "b963b2b3a9abe6d1b45bcd8c8fb8fd967e45f561",
+  "appVersion": "1.0.8",
+  "previousVersion": "0.6.2",
+  "currentInstallerSha256": "b7bbe68a89183bbf508803090bfd8de592d21c1938cc8c04828eae7563ecc03b",
+  "installedExecutableSha256": "83c066050c9ac68a7da65c4ec04df2d8f4b5cb356627b46fd44a881a51cab0fc",
+  "authenticodeStatus": "NotSigned",
+  "lifecycleChecks": {
+    "passed": 22,
+    "failed": 0
+  },
+  "installedArtifactChecks": {
+    "passed": 18,
+    "failed": 0
+  },
+  "communityReleaseCandidateEvidence": true,
+  "enterpriseReleaseCandidate": false,
+  "promotionEligible": false,
+  "sourceUserContentIncluded": false,
+  "files": [
+    {
+      "path": "installed-artifact-smoke.json",
+      "bytes": 9806,
+      "sha256": "f6e3dffeddc87c467e950cd28eff40b9e3eb70051ab7bc11c8e9eabb7c6e5a41"
+    },
+    {
+      "path": "installed-default-app-candidates.jpg",
+      "bytes": 92732,
+      "sha256": "7bc610b5cde490ff302b3cd242b13537c8eecd82a22867d069c7de79e1a64aa1",
+      "visuallyReviewed": true
+    },
+    {
+      "path": "installed-default-app-lifecycle-evidence.json",
+      "bytes": 981,
+      "sha256": "905238abd58bf08c27cb9faf392ff57b3818d8dbc11eb59d4f6bab3e0303beec"
+    },
+    {
+      "path": "lifecycle-result.json",
+      "bytes": 5796,
+      "sha256": "f1a1b44cef9548d5fb239a58f6061ff4ead20f8b2d9a0a6049e7c3021c689d20"
+    },
+    {
+      "path": "management-backup-index-evidence.json",
+      "bytes": 2174,
+      "sha256": "458ae1bfe9c541c8ff6229260fcad4a411da5e83e4f2a7a092e81a6f870289a2"
+    },
+    {
+      "path": "runner-build-receipt.json",
+      "bytes": 568,
+      "sha256": "d97d7935858269df5e1d0903fde25a65eb883937769f7016129ff339fc7f1622"
+    }
+  ]
+}

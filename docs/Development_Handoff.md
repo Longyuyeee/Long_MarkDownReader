@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-11 v1.0.8 发布候选入口：** 冻结产品提交 `b963b2b3a9abe6d1b45bcd8c8fb8fd967e45f561` 的 Quality Gate `31478234776`、本地 EXE/MSI/NSIS 构建和 GitHub 托管安装生命周期 `31482508935` 均已通过。托管环境完成 22/22 生命周期与 18/18 安装态工作区检查；本机因已有 LongEdit 实例未执行候选或安装器。社区无签名候选现为 `ready-to-publish`，接手后先等待本证据提交的第二轮门禁，再发布并远端复核三个附件，最后执行官方 `1.0.7 -> 1.0.8` 自动更新重启观察。详见 [`V1_0_8_Unsigned_Community_Release_Audit_2026-08-11.md`](./V1_0_8_Unsigned_Community_Release_Audit_2026-08-11.md)。
+
 > **2026-08-11 v1.0.8 发布准备：** 版本事实源已提升到 `1.0.8`，范围固定为代码/Web 文件主动创建、自动更新安装后重启和外部文件独立顶层窗口。README 保留 v1.0.7 有效下载并标出 v1.0.8 准备中。接手后依次完成本地与远端质量门、冻结提交构建 MSI/NSIS、安装态多窗口与自动重启复测、候选证据回写、GitHub Release 和 `1.0.7 -> 1.0.8` 更新观察。详见 [`V1_0_8_Unsigned_Community_Release_Audit_2026-08-11.md`](./V1_0_8_Unsigned_Community_Release_Audit_2026-08-11.md)。
 
 > **2026-08-11 UX-51 发布阻断修复：** 自动更新现由隐藏助手等待 NSIS 完成并重新启动 Long编辑；系统或应用内外部打开会创建独立 `external-*` 顶层窗口，不再占用主资料库或增加内部标签。37 个外部编辑/预览格式已完成映射测试，真实 Tauri WebView2 同时保留主窗口、TXT 与 JSON 三窗口且零运行时错误。实现提交为 `a0a3ab3`，下一步等待 Quality Gate 后提升到 `1.0.8`、打包并执行安装态更新复测。详见 [`UX51_Updater_Relaunch_and_External_Window_Audit_2026-08-11.md`](./UX51_Updater_Relaunch_and_External_Window_Audit_2026-08-11.md)。
