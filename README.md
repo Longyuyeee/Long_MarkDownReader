@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.9"><img src="https://img.shields.io/badge/Release-v1.0.9-cca43b" alt="Release v1.0.9"></a>
-  <img src="https://img.shields.io/badge/Updater%20path-validation%20pending-0f766e" alt="Updater path validation pending">
+  <img src="https://img.shields.io/badge/Updater%20path-verified-0f766e" alt="Updater path verified">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/License-AGPL--3.0-7c3aed" alt="AGPL-3.0">
@@ -26,7 +26,7 @@
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本无法自动迁移，需要手动安装 v1.0.5 或 v1.0.9 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
 
-v1.0.9 的 Tag、Release 和三项远端附件已经复核。它修复 v1.0.8 更新后未自动重新打开的问题，并保留外部文件独立顶层窗口；官方 `1.0.8 -> 1.0.9` 自动重启链仍在最终验收中。若覆盖安装后没有自动打开，可手动启动 Long编辑，已安装内容不受影响。修复范围见 [v1.0.9 发布说明](docs/RELEASE_NOTES_v1.0.9.md)。
+v1.0.9 的 Tag、Release 和三项远端附件已经复核。官方 `1.0.8 -> 1.0.9` 托管更新完成 12/12 检查，安装后由更新助手自动重新打开新版的路径已经验证；外部文件继续使用独立顶层窗口，不占用主资料库窗口。修复范围见 [v1.0.9 发布说明](docs/RELEASE_NOTES_v1.0.9.md)。
 
 ## v1.0.9 恢复重点
 

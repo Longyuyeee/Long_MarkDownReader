@@ -42,7 +42,7 @@
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.8-to-1.0.9-pending",
+    "managedUpdaterUpgradePath": "1.0.8-to-1.0.9-passed",
     "scope": "updater-relaunch-retry-and-stability-recovery"
   },
   "targetRelease": {
@@ -75,9 +75,9 @@
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.8-to-v1.0.9-managed-update-observation-pending",
+    "v1.0.8-to-v1.0.9-managed-update-verified",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "verify-v1.0.8-to-v1.0.9-managed-updater-automatic-relaunch"
+  "nextAction": "enter-maintenance-mode-after-v1.0.9"
 }
