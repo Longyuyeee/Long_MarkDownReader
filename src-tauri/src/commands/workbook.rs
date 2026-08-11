@@ -658,6 +658,43 @@ fn cell_kind(cell: &Data) -> &'static str {
     }
 }
 
+fn date_edit_metadata(cell: &Data) -> (Option<String>, Option<String>, bool) {
+    match cell {
+        Data::DateTime(value) if !value.is_duration() => {
+            let (year, month, day, hour, minute, second, millis) = value.to_ymd_hms_milli();
+            let has_date = value.as_f64().abs() >= 1.0;
+            let has_time = value.as_f64().fract().abs() > f64::EPSILON;
+            let date_kind = if has_date && has_time {
+                "datetime"
+            } else if has_date {
+                "date"
+            } else {
+                "time"
+            };
+            let time = if millis > 0 {
+                format!("{hour:02}:{minute:02}:{second:02}.{millis:03}")
+            } else if second > 0 {
+                format!("{hour:02}:{minute:02}:{second:02}")
+            } else {
+                format!("{hour:02}:{minute:02}")
+            };
+            let input = match date_kind {
+                "date" => format!("{year:04}-{month:02}-{day:02}"),
+                "datetime" => format!("{year:04}-{month:02}-{day:02} {time}"),
+                _ => time,
+            };
+            (Some(input), Some(date_kind.into()), true)
+        }
+        Data::DateTimeIso(value) => {
+            let normalized = value.replace('T', " ");
+            let date_kind = if normalized.contains(' ') { "datetime" } else { "date" };
+            (Some(normalized), Some(date_kind.into()), true)
+        }
+        Data::DurationIso(value) => (Some(value.clone()), Some("duration".into()), false),
+        _ => (None, None, false),
+    }
+}
+
 fn used_dimensions<T: CellType>(range: &calamine::Range<T>) -> (usize, usize) {
     range
         .end()
@@ -776,10 +813,14 @@ impl WorkbookEngine for CalamineWorkbookEngine {
                             .cloned()
                             .unwrap_or(Data::Empty);
                         let formula = layout.formulas.get(&(row, column)).cloned();
+                        let (edit_value, date_kind, date_editable) = date_edit_metadata(&value);
                         WorkbookCell {
                             value: value.to_string(),
                             formula,
                             kind: cell_kind(&value).into(),
+                            edit_value,
+                            date_kind,
+                            date_editable,
                             style: layout
                                 .styles
                                 .get(&(row, column))
@@ -2635,6 +2676,18 @@ mod tests {
         assert_eq!(page.rows[2][1].value, "1250.5");
         assert_eq!(page.rows[1][3].kind, "date");
         assert_eq!(page.rows[1][4].kind, "date");
+        assert!(page.rows[1][3].date_editable);
+        assert!(page.rows[1][4].date_editable);
+        assert_eq!(page.rows[1][3].date_kind.as_deref(), Some("date"));
+        assert_eq!(page.rows[1][4].date_kind.as_deref(), Some("datetime"));
+        assert!(page.rows[1][3]
+            .edit_value
+            .as_deref()
+            .is_some_and(|value| value.len() == 10 && value.as_bytes()[4] == b'-'));
+        assert!(page.rows[1][4]
+            .edit_value
+            .as_deref()
+            .is_some_and(|value| value.contains(' ')));
         assert_eq!(page.rows[1][5].kind, "error");
         assert_eq!(page.rows[1][5].value, "#DIV/0!");
         assert_eq!(

@@ -558,6 +558,11 @@ pub struct WorkbookCell {
     pub value: String,
     pub formula: Option<String>,
     pub kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub edit_value: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date_kind: Option<String>,
+    pub date_editable: bool,
     pub style: WorkbookCellStyle,
 }
 

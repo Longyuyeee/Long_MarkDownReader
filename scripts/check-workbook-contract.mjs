@@ -92,6 +92,12 @@ const namedRanges = matrix.features.find(item => item.id === 'named_ranges')
 if (!namedRanges || namedRanges.edit !== 'limited' || namedRanges.roundTrip !== 'supported') fail('named range S8-3A status drift')
 const errorValues = matrix.features.find(item => item.id === 'error_values')
 if (!errorValues || errorValues.edit !== 'limited' || errorValues.roundTrip !== 'supported') fail('error value bounded edit status drift')
+const dateTimeValues = matrix.features.find(item => item.id === 'date_time_values')
+if (!dateTimeValues || dateTimeValues.edit !== 'limited' || dateTimeValues.roundTrip !== 'supported') fail('date/time bounded edit status drift')
+for (const kind of ['"date"', '"datetime"', '"time"']) {
+  if (!ooxml.includes(kind)) fail(`typed date/time backend kind ${kind} missing`)
+}
+if (!ooxml.includes('workbook_uses_1904_date_system') || !ooxml.includes('typed_date_time_values_round_trip_in_1900_and_1904_workbooks') || !engine.includes('date_edit_metadata') || !view.includes('source.dateEditable') || !view.includes("kind: 'datetime'")) fail('date/time edit/save/reopen boundary evidence missing')
 for (const value of ['#NULL!', '#DIV/0!', '#VALUE!', '#REF!', '#NAME?', '#NUM!', '#N/A']) {
   if (!ooxml.includes(`"${value}"`) || !view.includes(`'${value}'`)) fail(`editable error value ${value} is not aligned across backend and UI`)
 }

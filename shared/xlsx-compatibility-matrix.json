@@ -27,10 +27,10 @@
       "label": "日期与日期时间值",
       "read": "supported",
       "view": "supported",
-      "edit": "planned",
+      "edit": "limited",
       "calculate": "limited",
       "roundTrip": "supported",
-      "evidence": "Summary!D2:E2 fixture + semantic round-trip test"
+      "evidence": "Existing typed date cells expose canonical ISO date/date-time/time input with undo and batch paths; backend validates real calendar values, converts through the workbook 1900/1904 epoch, preserves the existing number format, and passes save-reopen semantic tests for both date systems. Blank general cells are not implicitly coerced; ISO durations and Excel's synthetic 1900-02-29 remain read-only boundaries."
     },
     {
       "id": "error_values",

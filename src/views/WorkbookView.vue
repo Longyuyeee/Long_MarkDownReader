@@ -873,7 +873,7 @@ interface WorkbookStylePatch {
   horizontalAlignment?: string
   wrapText?: boolean
 }
-interface WorkbookCell { value: string; formula?: string; kind: string; style: WorkbookCellStyle }
+interface WorkbookCell { value: string; formula?: string; kind: string; editValue?: string; dateKind?: 'date' | 'datetime' | 'time' | 'duration'; dateEditable: boolean; style: WorkbookCellStyle }
 interface WorkbookRowHeight { row: number; height: number }
 interface WorkbookColumnWidth { startColumn: number; endColumn: number; width: number }
 interface WorkbookMergeRange { top: number; bottom: number; left: number; right: number }
@@ -937,7 +937,7 @@ interface WorkbookSheetPage {
 }
 interface WorkbookBorderSide { style: string; color?: string }
 interface WorkbookNamedStyle { name: string; builtinId?: number }
-interface WorkbookCellEdit { sheet: string; row: number; column: number; input: string; kind: 'string' | 'number' | 'boolean' | 'error' | 'empty' | 'formula' }
+interface WorkbookCellEdit { sheet: string; row: number; column: number; input: string; kind: 'string' | 'number' | 'boolean' | 'error' | 'date' | 'datetime' | 'time' | 'empty' | 'formula' }
 interface WorkbookCellStyleEdit { sheet: string; row: number; column: number; patch: WorkbookStylePatch }
 interface WorkbookRowHeightEdit { sheet: string; row: number; height: number | null }
 interface WorkbookColumnWidthEdit { sheet: string; startColumn: number; endColumn: number; width: number | null }
@@ -1657,7 +1657,7 @@ const dataViewRows = computed(() => {
 })
 const emptyBorderSide = (): WorkbookBorderSide => ({ style: 'none' })
 const defaultStyle: WorkbookCellStyle = { styleId: 0, namedStyle: 'Normal', numberFormat: 'general', fontName: 'Calibri', fontSize: 11, bold: false, italic: false, underline: false, borderStyle: 'none', borderTop: emptyBorderSide(), borderRight: emptyBorderSide(), borderBottom: emptyBorderSide(), borderLeft: emptyBorderSide(), horizontalAlignment: 'general', wrapText: false }
-const emptyCell: WorkbookCell = { value: '', kind: 'empty', style: defaultStyle }
+const emptyCell: WorkbookCell = { value: '', kind: 'empty', dateEditable: false, style: defaultStyle }
 const fontOptions = ['Calibri', 'Aptos', 'Arial', 'Microsoft YaHei', 'SimSun', 'Times New Roman']
 const formatBytes = (size: number) => size >= 1024 * 1024 ? `${(size / 1024 / 1024).toFixed(1)} MB` : `${(size / 1024).toFixed(1)} KB`
 const columnLabel = (index: number) => {
@@ -2023,8 +2023,9 @@ const cellAt = (row: number, column: number): WorkbookCell => {
     const source = sourceCellAt(row, column)
     return { ...source, ...(source.formula && calculated ? { value: calculated.value, kind: calculated.kind } : {}), style: cellStyleAt(row, column) }
   }
-  if (edit.kind === 'formula') return { value: calculated?.value || '', formula: edit.input, kind: calculated?.kind || 'formula', style: cellStyleAt(row, column) }
-  return { value: edit.input, kind: edit.kind === 'string' ? 'text' : edit.kind, style: cellStyleAt(row, column) }
+  if (edit.kind === 'formula') return { value: calculated?.value || '', formula: edit.input, kind: calculated?.kind || 'formula', dateEditable: false, style: cellStyleAt(row, column) }
+  const dateKind = ['date', 'datetime', 'time'].includes(edit.kind) ? edit.kind as 'date' | 'datetime' | 'time' : undefined
+  return { value: edit.input, kind: dateKind ? 'date' : edit.kind === 'string' ? 'text' : edit.kind, editValue: dateKind ? edit.input : undefined, dateKind, dateEditable: Boolean(dateKind), style: cellStyleAt(row, column) }
 }
 const invalidateCalculation = () => {
   calculatedValues.value = new Map()
@@ -2041,7 +2042,7 @@ const invalidateCalculation = () => {
   pivotSavedCopyResults.value = new Map()
   pivotVariantVerificationResults.value = new Map()
 }
-const originalInput = (cell: WorkbookCell) => cell.formula || cell.value || ''
+const originalInput = (cell: WorkbookCell) => cell.formula || cell.editValue || cell.value || ''
 const isEditableCell = (row: number, column: number) => {
   if (isExternal.value) return false
   if (sheetProtected.value) return false
@@ -2049,7 +2050,7 @@ const isEditableCell = (row: number, column: number) => {
   if (arrayFormulaAt(row, column)) return false
   const source = sourceCellAt(row, column)
   if (source.formula) return true
-  if (source.kind === 'date') return false
+  if (source.kind === 'date') return source.dateEditable
   if (source.kind === 'error') return EDITABLE_ERROR_VALUES.has(source.value)
   return true
 }
@@ -2094,6 +2095,7 @@ const cellDisplay = (row: number, column: number) => {
   const cell = cellAt(row, column)
   if (showFormulas.value && cell.formula) return cell.formula
   const raw = cell.value || (cell.formula ? cell.formula : '')
+  if (cell.kind === 'date' && cell.editValue) return cell.editValue
   const numeric = Number(raw)
   if (!raw || !Number.isFinite(numeric)) return raw
   if (cell.style.numberFormat === 'integer') return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(numeric)
@@ -2246,6 +2248,12 @@ const inferEdit = (selection: CellSelection, input: string): WorkbookCellEdit =>
   if (!input) return { ...selection, input, kind: 'empty' }
   if (/^(true|false)$/i.test(input)) return { ...selection, input: input.toLowerCase(), kind: 'boolean' }
   if (EDITABLE_ERROR_VALUES.has(input.toUpperCase())) return { ...selection, input: input.toUpperCase(), kind: 'error' }
+  const source = sourceCellAt(selection.row, selection.column)
+  if (source.kind === 'date' && source.dateEditable) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return { ...selection, input, kind: 'date' }
+    if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(input)) return { ...selection, input: input.replace('T', ' '), kind: 'datetime' }
+    if (/^\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(input)) return { ...selection, input, kind: 'time' }
+  }
   if (/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(input) && Number.isFinite(Number(input))) return { ...selection, input, kind: 'number' }
   return { ...selection, input, kind: 'string' }
 }
@@ -3263,7 +3271,7 @@ const applyBatchInputs = (start: CellSelection, matrix: string[][]) => {
     const key = editKey(selection.sheet, selection.row, selection.column)
     const before = drafts.value.get(key)
     const source = sourceCellAt(selection.row, selection.column)
-    if (!before && (source.kind === 'date' || (source.kind === 'error' && !EDITABLE_ERROR_VALUES.has(source.value)))) throw new Error(`${columnLabel(selection.column)}${selection.row + 1} 当前类型暂不支持区域写入`)
+    if (!before && ((source.kind === 'date' && !source.dateEditable) || (source.kind === 'error' && !EDITABLE_ERROR_VALUES.has(source.value)))) throw new Error(`${columnLabel(selection.column)}${selection.row + 1} 当前类型暂不支持区域写入`)
     const after = input === originalInput(source) || (!input && source.kind === 'empty') ? undefined : inferEdit(selection, input)
     if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
   }))
@@ -3327,7 +3335,7 @@ const clearSelection = () => {
       const key = editKey(focus.sheet, row, column)
       const before = drafts.value.get(key)
       const source = sourceCellAt(row, column)
-      if (!before && (source.kind === 'date' || (source.kind === 'error' && !EDITABLE_ERROR_VALUES.has(source.value)))) throw new Error(`${columnLabel(column)}${row + 1} 当前类型暂不支持区域写入`)
+      if (!before && ((source.kind === 'date' && !source.dateEditable) || (source.kind === 'error' && !EDITABLE_ERROR_VALUES.has(source.value)))) throw new Error(`${columnLabel(column)}${row + 1} 当前类型暂不支持区域写入`)
       const selection = { sheet: focus.sheet, row, column }
       const after = source.kind === 'empty' ? undefined : inferEdit(selection, '')
       if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })

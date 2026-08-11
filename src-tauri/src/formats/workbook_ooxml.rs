@@ -38,6 +38,7 @@ use crate::formats::workbook_pivot::{
 };
 use crate::formats::workbook_styles::{parse_styles, resolve_style_edits, ResolvedStyleEdit};
 use calamine::{open_workbook_from_rs, Data, Reader as CalamineReader, Xlsx};
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime, Timelike};
 use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::name::QName;
 use quick_xml::{Reader, Writer, XmlVersion};
@@ -927,6 +928,7 @@ pub(crate) fn validate_edit(edit: &WorkbookCellEdit) -> Result<(), String> {
         },
         "boolean" if matches!(edit.input.to_ascii_lowercase().as_str(), "true" | "false") => Ok(()),
         "error" if EDITABLE_ERROR_VALUES.contains(&edit.input.as_str()) => Ok(()),
+        "date" | "datetime" | "time" => parse_date_time_edit(edit, false).map(|_| ()),
         "empty" if edit.input.is_empty() => Ok(()),
         "formula"
             if edit.input.starts_with('=')
@@ -940,6 +942,111 @@ pub(crate) fn validate_edit(edit: &WorkbookCellEdit) -> Result<(), String> {
         "formula" => Err("公式必须以 = 开头且不能超过 8192 个字符".into()),
         _ => Err("不支持的单元格编辑类型".into()),
     }
+}
+
+fn parse_date_time_edit(edit: &WorkbookCellEdit, date_1904: bool) -> Result<f64, String> {
+    let (date, time) = match edit.kind.as_str() {
+        "date" => (
+            Some(
+                NaiveDate::parse_from_str(&edit.input, "%Y-%m-%d")
+                    .map_err(|_| "日期必须使用 YYYY-MM-DD 格式")?,
+            ),
+            None,
+        ),
+        "datetime" => {
+            let normalized = edit.input.replace('T', " ");
+            let value = [
+                "%Y-%m-%d %H:%M:%S%.3f",
+                "%Y-%m-%d %H:%M:%S",
+                "%Y-%m-%d %H:%M",
+            ]
+            .iter()
+            .find_map(|format| NaiveDateTime::parse_from_str(&normalized, format).ok())
+            .ok_or("日期时间必须使用 YYYY-MM-DD HH:mm[:ss[.SSS]] 格式")?;
+            (Some(value.date()), Some(value.time()))
+        }
+        "time" => {
+            let value = ["%H:%M:%S%.3f", "%H:%M:%S", "%H:%M"]
+                .iter()
+                .find_map(|format| NaiveTime::parse_from_str(&edit.input, format).ok())
+                .ok_or("时间必须使用 HH:mm[:ss[.SSS]] 格式")?;
+            (None, Some(value))
+        }
+        _ => return Err("不支持的日期时间编辑类型".into()),
+    };
+    let mut serial = if let Some(date) = date {
+        let epoch = if date_1904 {
+            NaiveDate::from_ymd_opt(1904, 1, 1).expect("valid Excel epoch")
+        } else {
+            NaiveDate::from_ymd_opt(1899, 12, 31).expect("valid Excel epoch")
+        };
+        let days = date.signed_duration_since(epoch).num_days();
+        if days < 0 {
+            return Err(if date_1904 {
+                "1904 日期系统不接受 1904-01-01 之前的日期".into()
+            } else {
+                "1900 日期系统不接受 1899-12-31 之前的日期".into()
+            });
+        }
+        let leap_bug_offset = !date_1904
+            && date >= NaiveDate::from_ymd_opt(1900, 3, 1).expect("valid leap boundary");
+        days as f64 + if leap_bug_offset { 1.0 } else { 0.0 }
+    } else {
+        0.0
+    };
+    if let Some(time) = time {
+        let milliseconds = time.num_seconds_from_midnight() as u64 * 1_000
+            + u64::from(time.nanosecond() / 1_000_000);
+        serial += milliseconds as f64 / 86_400_000.0;
+    }
+    Ok(serial)
+}
+
+fn workbook_uses_1904_date_system(entries: &[PackageEntry]) -> Result<bool, String> {
+    let workbook = entries
+        .iter()
+        .find(|entry| entry.name == "xl/workbook.xml")
+        .ok_or("XLSX 缺少 xl/workbook.xml")?;
+    let mut reader = Reader::from_reader(workbook.data.as_slice());
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("解析工作簿日期系统失败: {error}"))?
+        {
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"workbookPr" =>
+            {
+                let value = xml_value(event, b"date1904", reader.decoder())?;
+                return Ok(value.is_some_and(|value| matches!(value.as_str(), "1" | "true")));
+            }
+            Event::Eof => return Ok(false),
+            _ => {}
+        }
+        buffer.clear();
+    }
+}
+
+fn normalize_date_time_edit(
+    edit: &WorkbookCellEdit,
+    date_1904: bool,
+) -> Result<WorkbookCellEdit, String> {
+    if !matches!(edit.kind.as_str(), "date" | "datetime" | "time") {
+        return Ok(edit.clone());
+    }
+    let serial = parse_date_time_edit(edit, date_1904)?;
+    Ok(WorkbookCellEdit {
+        sheet: edit.sheet.clone(),
+        row: edit.row,
+        column: edit.column,
+        input: if serial.fract() == 0.0 {
+            format!("{serial:.0}")
+        } else {
+            serial.to_string()
+        },
+        kind: "number".into(),
+    })
 }
 
 fn validation_contains(validation: &WorkbookDataValidation, row: usize, column: usize) -> bool {
@@ -18531,6 +18638,11 @@ pub fn patch_workbook(
         .collect::<HashSet<_>>();
     let mut entries =
         load_package_for_cell_patch(source, &touched_sheets, !style_edits.is_empty())?;
+    let date_1904 = workbook_uses_1904_date_system(&entries)?;
+    let normalized_edits = edits
+        .iter()
+        .map(|edit| normalize_date_time_edit(edit, date_1904))
+        .collect::<Result<Vec<_>, _>>()?;
     let sheet_paths = workbook_sheet_paths(&entries)?;
     for sheet in &touched_sheets {
         let path = sheet_paths
@@ -18683,7 +18795,7 @@ pub fn patch_workbook(
         resolved
     };
     let mut patches_by_path: HashMap<String, SheetPatches<'_>> = HashMap::new();
-    for edit in edits {
+    for edit in &normalized_edits {
         let path = sheet_paths
             .get(&edit.sheet)
             .ok_or_else(|| format!("工作表不存在: {}", edit.sheet))?;
@@ -18731,13 +18843,15 @@ pub fn patch_workbook(
 #[cfg(test)]
 mod tests {
     use super::{
-        audit_workbook_pivot_multi_axis_isolated, parse_chart_part, patch_calc_chain_rows,
+        audit_workbook_pivot_multi_axis_isolated, load_package, parse_chart_part,
+        patch_calc_chain_rows,
         patch_sheet_structure_axis, patch_workbook, patch_workbook_conditional_format,
         patch_workbook_data_validation, patch_workbook_defined_name, patch_workbook_drawing,
         patch_workbook_filter, patch_workbook_structure, patch_workbook_table, read_array_formulas,
         read_sheet_formulas, read_workbook_defined_names, read_workbook_linked_data,
         read_workbook_sheet_layout, rebuild_workbook_pivot_aggregation_variant_isolated,
-        validate_plain_structure_sheet, validate_workbook_package, MAX_ARRAY_DIAGNOSTIC_CELLS,
+        validate_plain_structure_sheet, validate_workbook_package, write_package,
+        MAX_ARRAY_DIAGNOSTIC_CELLS,
     };
     use crate::formats::workbook::{
         WorkbookCellEdit, WorkbookChartDataLabels, WorkbookConditionalColorScale,
@@ -18777,6 +18891,102 @@ mod tests {
             .unwrap()
             .by_name(name)
             .is_ok()
+    }
+
+    fn workbook_with_1904_date_system(source: &[u8]) -> Vec<u8> {
+        let mut entries = load_package(source).unwrap();
+        let workbook = entries
+            .iter_mut()
+            .find(|entry| entry.name == "xl/workbook.xml")
+            .unwrap();
+        let xml = String::from_utf8(workbook.data.clone()).unwrap();
+        assert!(!xml.contains("date1904="));
+        workbook.data = xml
+            .replacen("<workbookPr", "<workbookPr date1904=\"1\"", 1)
+            .into_bytes();
+        write_package(entries, source.len() + 128).unwrap()
+    }
+
+    #[test]
+    fn typed_date_time_values_round_trip_in_1900_and_1904_workbooks() {
+        const FIXTURE: &[u8] =
+            include_bytes!("../../tests/fixtures/workbook/compatibility-baseline.xlsx");
+        for (date_1904, source) in [
+            (false, FIXTURE.to_vec()),
+            (true, workbook_with_1904_date_system(FIXTURE)),
+        ] {
+            let edits = [
+                WorkbookCellEdit {
+                    sheet: "Summary".into(),
+                    row: 1,
+                    column: 3,
+                    input: "2024-02-29".into(),
+                    kind: "date".into(),
+                },
+                WorkbookCellEdit {
+                    sheet: "Summary".into(),
+                    row: 1,
+                    column: 4,
+                    input: "2024-02-29 13:14:15.250".into(),
+                    kind: "datetime".into(),
+                },
+            ];
+            let output = patch_workbook(&source, &edits, &[], &[], &[], &[]).unwrap();
+            let mut workbook: Xlsx<_> = open_workbook_from_rs(Cursor::new(output)).unwrap();
+            assert_eq!(workbook.has_1904_epoch(), date_1904);
+            let values = workbook.worksheet_range("Summary").unwrap();
+            let Data::DateTime(date) = values.get_value((1, 3)).unwrap() else {
+                panic!("date cell did not reopen as a typed date")
+            };
+            assert_eq!(date.to_ymd_hms_milli(), (2024, 2, 29, 0, 0, 0, 0));
+            let Data::DateTime(datetime) = values.get_value((1, 4)).unwrap() else {
+                panic!("datetime cell did not reopen as a typed datetime")
+            };
+            assert_eq!(
+                datetime.to_ymd_hms_milli(),
+                (2024, 2, 29, 13, 14, 15, 250)
+            );
+
+            let time_output = patch_workbook(
+                &source,
+                &[WorkbookCellEdit {
+                    sheet: "Summary".into(),
+                    row: 1,
+                    column: 4,
+                    input: "23:59:58.125".into(),
+                    kind: "time".into(),
+                }],
+                &[],
+                &[],
+                &[],
+                &[],
+            )
+            .unwrap();
+            let mut workbook: Xlsx<_> = open_workbook_from_rs(Cursor::new(time_output)).unwrap();
+            let values = workbook.worksheet_range("Summary").unwrap();
+            let Data::DateTime(time) = values.get_value((1, 4)).unwrap() else {
+                panic!("time cell did not reopen as a typed time")
+            };
+            let (_, _, _, hour, minute, second, millis) = time.to_ymd_hms_milli();
+            assert_eq!((hour, minute, second, millis), (23, 59, 58, 125));
+        }
+
+        let invalid = patch_workbook(
+            FIXTURE,
+            &[WorkbookCellEdit {
+                sheet: "Summary".into(),
+                row: 1,
+                column: 3,
+                input: "2023-02-29".into(),
+                kind: "date".into(),
+            }],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap_err();
+        assert!(invalid.contains("YYYY-MM-DD"));
     }
 
     #[test]
