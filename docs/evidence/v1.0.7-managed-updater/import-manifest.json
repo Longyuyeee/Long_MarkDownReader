@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.7-U1I",
+  "status": "accepted",
+  "importedAt": "2026-08-11",
+  "githubRunId": 31458701294,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31458701294",
+  "workflowConclusion": "success",
+  "headCommit": "c33114edc0a4dd821cb4387627cb9dd52300a3de",
+  "previousVersion": "1.0.6",
+  "currentVersion": "1.0.7",
+  "officialInstallerSha256": "cabf41af31d2a35a2d9edaba679d35365265bc5f5b9f5f6216e98e55d4aad644",
+  "installedExecutableSha256": "d71fa8a80ae250f58c6de5e48d8c610c3403e730d244eefdfd13a8d0f5b6ed34",
+  "authenticodeStatus": "NotSigned",
+  "lifecycleChecks": {
+    "passed": 11,
+    "failed": 0
+  },
+  "sourceUserContentIncluded": false,
+  "files": [
+    {
+      "path": "managed-updater-available.jpg",
+      "bytes": 53432,
+      "sha256": "0093ee296de1c40f1623186ed72225d0dae5151e3a3c29475731e08d9faaa37c",
+      "visuallyReviewed": true
+    },
+    {
+      "path": "managed-updater-current.jpg",
+      "bytes": 50352,
+      "sha256": "97f6427a6c272c4e6e472eb2a90b5c6e7e3d783864e77211d64f3a3b4a1cc382",
+      "visuallyReviewed": true
+    },
+    {
+      "path": "managed-updater-discovery-evidence.json",
+      "bytes": 4949,
+      "sha256": "05acf63b7e39ae45ef5dd98ae393a56a0e255da9c7fe543526459e6cca7bbf54"
+    },
+    {
+      "path": "managed-updater-installed-binary.json",
+      "bytes": 648,
+      "sha256": "0e7e10cdf5becfe6cd821c1209ffad88084b38b7ccc65e41c74f1ac757bf275e"
+    },
+    {
+      "path": "managed-updater-installing.jpg",
+      "bytes": 53348,
+      "sha256": "d0f7fd0297ff6010e53555f98248433bafac52499fdfcc758dde1d0196023f9e",
+      "visuallyReviewed": true
+    },
+    {
+      "path": "managed-updater-lifecycle-result.json",
+      "bytes": 4486,
+      "sha256": "9702f9048da84a8cd4506fb4d6ea144ffec52ac23d7d65865091703f2909a9a3"
+    },
+    {
+      "path": "managed-updater-post-upgrade-evidence.json",
+      "bytes": 3770,
+      "sha256": "d0aedc4988e44baf0932970168b7c89c3b60fb8cd6584622945fb8fa18b6c4ce"
+    },
+    {
+      "path": "managed-updater-post-upgrade-navigation.json",
+      "bytes": 360,
+      "sha256": "0c9b8e2156c11e61eedd365a60c855f32216a0105c4a954349e7e3fd0af172a7"
+    },
+    {
+      "path": "official-release-assets.json",
+      "bytes": 994,
+      "sha256": "089e33ccbfd034d5dfe9eafac5b016fd9a105c4f4765bea63c143db4c5225577"
+    }
+  ]
+}

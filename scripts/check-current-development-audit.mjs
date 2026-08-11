@@ -7,13 +7,16 @@ import './check-v107-managed-updater-lifecycle.mjs'
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))
 const policy = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.json', 'utf8'))
+const currentUpdater = JSON.parse(fs.readFileSync('shared/v107-managed-updater-lifecycle-policy.json', 'utf8'))
 const audit = fs.readFileSync('docs/Development_Alignment_and_Closure_Plan_2026-08-02.md', 'utf8')
 const counts = matrix.formats.reduce((result, item) => {
   result[item.readiness] = (result[item.readiness] ?? 0) + 1
   return result
 }, {})
-const expectedStage = policy.gates?.githubReleasePublished === true
-  ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
+const expectedStage = currentUpdater.status === 'hosted-managed-update-passed'
+  ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布并完成更新链收口**`
+  : policy.gates?.githubReleasePublished === true
+    ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
   : policy.gates?.qualityGatePassed === true
     ? `当前阶段：**\`${pkg.version}\` 无签名社区版待发布**`
     : `当前阶段：**\`${pkg.version}\` 无签名社区版发布候选准备中**`

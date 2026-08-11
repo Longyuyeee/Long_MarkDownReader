@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.7-U1",
-  "status": "hosted-execution-pending",
+  "status": "hosted-managed-update-passed",
   "environment": "github-hosted-disposable-windows",
   "workflow": ".github/workflows/v107-managed-updater-lifecycle.yml",
   "releases": {
@@ -27,7 +27,14 @@
         "sha256": "cabf41af31d2a35a2d9edaba679d35365265bc5f5b9f5f6216e98e55d4aad644",
         "authenticodeStatus": "NotSigned"
       },
-      "standaloneReleaseExecutableReferenceSha256": "7777b5e786f595a4cb7bceeb9127daa3b96bfb91ae0c657c841d855b65b22aaf"
+      "standaloneReleaseExecutableReferenceSha256": "7777b5e786f595a4cb7bceeb9127daa3b96bfb91ae0c657c841d855b65b22aaf",
+      "installedPackageExecutable": {
+        "sizeBytes": 87534592,
+        "sha256": "d71fa8a80ae250f58c6de5e48d8c610c3403e730d244eefdfd13a8d0f5b6ed34",
+        "authenticodeStatus": "NotSigned",
+        "matchesStandaloneReleaseExecutableReference": false,
+        "trustAnchor": "verified-official-nsis-installer"
+      }
     }
   },
   "requirements": {
@@ -46,18 +53,23 @@
   },
   "gates": {
     "harnessImplemented": true,
-    "qualityGatePassed": false,
-    "hostedWorkflowPassed": false,
-    "releaseDiscoveryPassed": false,
-    "confirmationBoundaryPassed": false,
-    "downloadHashPassed": false,
-    "overwriteInstallPassed": false,
-    "firstLaunchPassed": false,
-    "postUpgradeCurrentPassed": false,
-    "userDataRetentionPassed": false,
-    "evidenceImported": false
+    "qualityGatePassed": true,
+    "hostedWorkflowPassed": true,
+    "releaseDiscoveryPassed": true,
+    "confirmationBoundaryPassed": true,
+    "downloadHashPassed": true,
+    "overwriteInstallPassed": true,
+    "firstLaunchPassed": true,
+    "postUpgradeCurrentPassed": true,
+    "userDataRetentionPassed": true,
+    "evidenceImported": true
   },
-  "githubRun": null,
+  "githubRun": {
+    "id": 31458701294,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31458701294",
+    "headCommit": "c33114edc0a4dd821cb4387627cb9dd52300a3de",
+    "conclusion": "success"
+  },
   "evidenceRoot": "docs/evidence/v1.0.7-managed-updater",
-  "nextAction": "push-harness-pass-quality-gate-and-run-hosted-managed-updater-lifecycle"
+  "nextAction": "v1.0.7-release-closure-complete"
 }

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.7-U1-POST-UPGRADE",
+  "capturedAt": "2026-08-11T04:32:13.154Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows updated through the installed v1.0.6 client",
+  "release": {
+    "available": false,
+    "currentVersion": "1.0.7",
+    "latestVersion": "1.0.7",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.7",
+    "releaseNotes": "# Long编辑 v1.0.7\n\nv1.0.7 是完整能力范围冻结后的 Excel 类型编辑与本地知识搜索补丁。它延续 v1.0.6 的外部打开、逐格式默认应用和体验收口，不扩大宏执行、外部数据刷新或完整 Office 等价承诺。\n\n## 主要变化\n\n- 七种经典 Excel 错误值进入 XLSX 显式编辑、撤销/重做、区域粘贴和保存复读链；读取引擎无法稳定复读的扩展错误继续阻断类型化写回。\n- 已有日期型单元格支持 ISO 日期、日期时间和时间输入，使用真实日历校验，并按工作簿 1900/1904 日期系统转换 Excel 序列。\n- 日期时间编辑保留原数字格式；普通空白格不会被隐式猜测为日期，持续时间与虚构日期 `1900-02-29` 保持只读边界。\n- XLSX 现在可按工作表进入资料库持久索引和实时回退搜索；搜索结果会打开工作簿并切换到命中的工作表。\n- 索引只读取文件内缓存值，不执行公式、不刷新外部数据、不访问外部连接，也不会修改源文件。\n- 工作簿索引具备 ZIP 容器预检和固定资源预算，异常条目数、展开量或压缩比会在内容解析前 fail-closed。\n- 格式、主题、Office 高级对象和外部打开范围已冻结；没有真实生产者证据的复杂写回继续留在后续证据门禁。\n\n## 安装与更新\n\n- v1.0.7 已完成远端质量门、安装包哈希、托管安装生命周期和公开附件复核，是当前稳定版。\n- v1.0.6 用户可通过应用内检查发现新版本，确认后下载并校验官方 NSIS 的 SHA-256；完整覆盖更新观察仍在发布后单独执行。\n- v1.0.4 及更早版本没有受控更新链，需要先手动安装 v1.0.5 或更高版本。\n- 本版本仍未使用 Authenticode 商业签名，Windows 可能显示“未知发布者”或 SmartScreen。请只从官方 GitHub Release 下载并核对 `SHA256SUMS.txt`。\n\n## 能力边界\n\n- Long编辑不执行 XLSM 宏，不刷新外部数据连接，不将本地公式引擎描述为 Microsoft Excel 的完整替代品。\n- 错误值和日期时间编辑只对能够稳定识别、校验和复读的单元格开放，无法证明安全的结构保持只读。\n- Excel/WPS/LibreOffice 三生产者动态数组写回仍等待外部证据，不阻塞本次社区补丁发布。\n- 社区安装包保持 `NotSigned`，不代表企业签名候选或商业发布资格。\n",
+    "publishedAt": "2026-08-11T03:58:19Z",
+    "installerName": "LongEdit_1.0.7_x64-setup.exe",
+    "installerSize": 53823283,
+    "installerSha256": "cabf41af31d2a35a2d9edaba679d35365265bc5f5b9f5f6216e98e55d4aad644"
+  },
+  "manualCheckVisible": true,
+  "settingsNavigation": {
+    "beforeHash": "#/library",
+    "entryVisible": true,
+    "entryText": "Active LibraryManaged Updater Synthetic Vault",
+    "afterHash": "#/settings?category=system",
+    "systemCategorySelected": true
+  },
+  "upToDateSurface": {
+    "text": "软件更新当前版本 v1.0.7 · 每 24 小时自动检查，也可随时手动检查当前已是最新版本 v1.0.7。 检查更新",
+    "visible": true,
+    "viewport": {
+      "top": 418.4375,
+      "bottom": 515.625,
+      "width": 702,
+      "height": 97.1875
+    }
+  },
+  "screenshot": "managed-updater-current.jpg",
+  "sourceUserContentIncluded": false
+}

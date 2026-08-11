@@ -42,7 +42,7 @@
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.6-to-1.0.7-pending",
+    "managedUpdaterUpgradePath": "1.0.6-to-1.0.7-passed",
     "scope": "xlsx-typed-editing-local-index-and-capability-freeze"
   },
   "targetRelease": {
@@ -88,14 +88,16 @@
     "publishedAt": "2026-08-11T03:58:19Z",
     "candidateEvidenceQualityGateRunId": 31456635064,
     "remoteAssetsVerified": true,
-    "receipt": "docs/evidence/v1.0.7-release/release-receipt.json"
+    "receipt": "docs/evidence/v1.0.7-release/release-receipt.json",
+    "managedUpdaterLifecycleRunId": 31458701294,
+    "managedUpdaterLifecycleRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31458701294"
   },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.6-to-v1.0.7-managed-update-observation-pending",
+    "v1.0.6-to-v1.0.7-managed-update-observation-passed",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "observe-v1.0.6-to-v1.0.7-managed-updater-and-user-data-retention"
+  "nextAction": "v1.0.7-release-closure-complete"
 }

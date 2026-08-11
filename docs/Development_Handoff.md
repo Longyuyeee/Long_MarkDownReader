@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-11 v1.0.7 最终收口：** GitHub 托管运行 [`31458701294`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31458701294) 已完成官方 `v1.0.6 -> v1.0.7` 应用内更新，11/11 检查通过；用户确认、NSIS SHA-256、同目录覆盖、升级首启、最新版状态及覆盖/卸载后的合成资料保留均已验证。九份脱敏证据已导入 `docs/evidence/v1.0.7-managed-updater/` 并受哈希门禁保护。当前版本在本机可执行范围内已收口；接手后先复核 Quality Gate，仅在出现可复现回归或新增真实生产者证据时继续开发。详见 [`V1_0_7_Managed_Updater_Lifecycle_Audit_2026-08-11.md`](./V1_0_7_Managed_Updater_Lifecycle_Audit_2026-08-11.md)。
+
 > **2026-08-11 v1.0.7 更新观察合同：** 已新增独立的 `v1.0.6 -> v1.0.7` GitHub 托管受控更新链。它只下载两版官方 NSIS，要求用户确认、严格 SHA-256、同目录覆盖、首启最新版状态及覆盖/卸载后的合成资料保留；不会重建发布包，也不会接触本机 LongEdit。接手后先等待本合同提交的 Quality Gate，再运行 `V1.0.7 Managed Updater Lifecycle` 并导入证据。详见 [`V1_0_7_Managed_Updater_Lifecycle_Audit_2026-08-11.md`](./V1_0_7_Managed_Updater_Lifecycle_Audit_2026-08-11.md)。
 
 > **2026-08-11 v1.0.7 已发布入口：** 冻结产品提交 `7cd90c52e024b1d0232277cb33c1eb9d74aeb3a1` 的质量门、本地 MSI/NSIS 构建和托管安装生命周期均通过；候选证据提交经修复证据字节属性后的 Quality Gate `31456635064` 也通过。GitHub Release `368323686` 已公开，Tag 绑定 `4612843`，NSIS、MSI 与 `SHA256SUMS.txt` 从远端重新下载后大小和 SHA-256 全部匹配。社区渠道已发布，企业签名候选仍为 false；接手后只需完成 `1.0.6 -> 1.0.7` 应用内更新观察。详见 [`V1_0_7_Unsigned_Community_Release_Audit_2026-08-11.md`](./V1_0_7_Unsigned_Community_Release_Audit_2026-08-11.md)。

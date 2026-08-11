@@ -1,0 +1,95 @@
+{
+    "schemaVersion":  1,
+    "stage":  "V1.0.7-U1",
+    "capturedAt":  "2026-08-11T04:32:14.5425017Z",
+    "environment":  "GitHub-hosted disposable Windows official community release update",
+    "status":  "passed",
+    "previousVersion":  "1.0.6",
+    "currentVersion":  "1.0.7",
+    "previousInstallerSha256":  "e65d374732ef7f8777df25fb82e7dec1161165fd87f91c93db21cca647bfb36c",
+    "currentInstallerSha256":  "cabf41af31d2a35a2d9edaba679d35365265bc5f5b9f5f6216e98e55d4aad644",
+    "currentInstallerSizeBytes":  53823283,
+    "installedExecutableSha256":  "d71fa8a80ae250f58c6de5e48d8c610c3403e730d244eefdfd13a8d0f5b6ed34",
+    "installedExecutableAuthenticodeStatus":  "NotSigned",
+    "standaloneReleaseExecutableReferenceSha256":  "7777b5e786f595a4cb7bceeb9127daa3b96bfb91ae0c657c841d855b65b22aaf",
+    "matchesStandaloneReleaseExecutableReference":  false,
+    "releaseUrl":  "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.7",
+    "taggedCommit":  "46128430c5eda3c1638097994b572df98cababd6",
+    "checks":  [
+                   {
+                       "id":  "official-v1.0.6-fresh-install",
+                       "status":  "passed",
+                       "version":  "1.0.6",
+                       "installerSha256":  "e65d374732ef7f8777df25fb82e7dec1161165fd87f91c93db21cca647bfb36c"
+                   },
+                   {
+                       "id":  "official-release-discovery",
+                       "status":  "passed",
+                       "from":  "1.0.6",
+                       "to":  "1.0.7",
+                       "releaseUrl":  "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.7"
+                   },
+                   {
+                       "id":  "explicit-user-confirmation",
+                       "status":  "passed",
+                       "installerStartedBeforeConfirmation":  false
+                   },
+                   {
+                       "id":  "silent-overwrite-install",
+                       "status":  "passed",
+                       "installRootPreserved":  true
+                   },
+                   {
+                       "id":  "downloaded-installer-sha256",
+                       "status":  "passed",
+                       "fileName":  "LongEdit_1.0.7_x64-setup.exe",
+                       "sizeBytes":  53823283,
+                       "sha256":  "cabf41af31d2a35a2d9edaba679d35365265bc5f5b9f5f6216e98e55d4aad644"
+                   },
+                   {
+                       "id":  "installed-version-and-binary-recorded",
+                       "status":  "passed",
+                       "version":  "1.0.7",
+                       "sha256":  "d71fa8a80ae250f58c6de5e48d8c610c3403e730d244eefdfd13a8d0f5b6ed34",
+                       "authenticodeStatus":  "NotSigned",
+                       "matchesStandaloneReleaseExecutableReference":  false,
+                       "trustAnchor":  "verified-official-nsis-installer"
+                   },
+                   {
+                       "id":  "overwrite-retains-user-data",
+                       "status":  "passed",
+                       "libraryMarker":  true,
+                       "configMarker":  true
+                   },
+                   {
+                       "id":  "first-launch-after-managed-update",
+                       "status":  "passed",
+                       "version":  "1.0.7"
+                   },
+                   {
+                       "id":  "post-upgrade-reports-current",
+                       "status":  "passed",
+                       "updateAvailable":  false
+                   },
+                   {
+                       "id":  "post-update-uninstall",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "uninstall-retains-user-data",
+                       "status":  "passed",
+                       "libraryMarker":  true,
+                       "configMarker":  true
+                   }
+               ],
+    "checksPassed":  11,
+    "checksFailed":  0,
+    "downloadedFromOfficialRelease":  true,
+    "explicitUserConfirmation":  true,
+    "userDataRetainedAfterOverwrite":  true,
+    "userDataRetainedAfterUninstall":  true,
+    "sourceUserContentIncluded":  false,
+    "authenticodeStatus":  "NotSigned",
+    "communityReleaseEvidence":  true,
+    "enterprisePromotionEligible":  false
+}
