@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-11 v1.0.8 自动更新重启合同：** 已新增官方 `v1.0.7 -> v1.0.8` 一次性 Windows 更新流程。与上一版测试不同，覆盖安装后不再由脚本手动启动新版，而是等待更新助手自动拉起 `tauri-app.exe` 并连接其 WebView2；未自动重启将直接失败。接手后先等待本合同 Quality Gate，再运行 `V1.0.8 Managed Updater Lifecycle` 并导入 12 项检查证据。详见 [`V1_0_8_Managed_Updater_Lifecycle_Audit_2026-08-11.md`](./V1_0_8_Managed_Updater_Lifecycle_Audit_2026-08-11.md)。
+
 > **2026-08-11 v1.0.8 已发布入口：** GitHub Release `368514584` 已公开，Tag 绑定通过门禁的候选证据提交 `090f228`。NSIS、MSI 与 `SHA256SUMS.txt` 已从远端重新下载，名称、大小和 SHA-256 全部与冻结候选一致；README 已切换到 v1.0.8。接手后只需在一次性 Windows 上完成官方 `1.0.7 -> 1.0.8` 应用内更新，重点确认安装后自动重启与资料保留，然后回写最终证据。详见 [`V1_0_8_Unsigned_Community_Release_Audit_2026-08-11.md`](./V1_0_8_Unsigned_Community_Release_Audit_2026-08-11.md)。
 
 > **2026-08-11 v1.0.8 发布候选入口：** 冻结产品提交 `b963b2b3a9abe6d1b45bcd8c8fb8fd967e45f561` 的 Quality Gate `31478234776`、本地 EXE/MSI/NSIS 构建和 GitHub 托管安装生命周期 `31482508935` 均已通过。托管环境完成 22/22 生命周期与 18/18 安装态工作区检查；本机因已有 LongEdit 实例未执行候选或安装器。社区无签名候选现为 `ready-to-publish`，接手后先等待本证据提交的第二轮门禁，再发布并远端复核三个附件，最后执行官方 `1.0.7 -> 1.0.8` 自动更新重启观察。详见 [`V1_0_8_Unsigned_Community_Release_Audit_2026-08-11.md`](./V1_0_8_Unsigned_Community_Release_Audit_2026-08-11.md)。
