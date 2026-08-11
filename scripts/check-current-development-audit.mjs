@@ -4,6 +4,7 @@ import './check-command-strip-layout.mjs'
 import './check-v106-managed-updater-lifecycle.mjs'
 import './check-v107-managed-updater-lifecycle.mjs'
 import './check-v108-managed-updater-lifecycle.mjs'
+import './check-v109-managed-updater-lifecycle.mjs'
 import './check-code-file-creation.mjs'
 import './check-cf1-code-file-creation-audit.mjs'
 import './check-ux51-external-window-lifecycle.mjs'
@@ -11,7 +12,7 @@ import './check-ux51-external-window-lifecycle.mjs'
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))
 const policy = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.json', 'utf8'))
-const currentUpdater = JSON.parse(fs.readFileSync('shared/v108-managed-updater-lifecycle-policy.json', 'utf8'))
+const currentUpdater = JSON.parse(fs.readFileSync('shared/v109-managed-updater-lifecycle-policy.json', 'utf8'))
 const audit = fs.readFileSync('docs/Development_Alignment_and_Closure_Plan_2026-08-02.md', 'utf8')
 const counts = matrix.formats.reduce((result, item) => {
   result[item.readiness] = (result[item.readiness] ?? 0) + 1
