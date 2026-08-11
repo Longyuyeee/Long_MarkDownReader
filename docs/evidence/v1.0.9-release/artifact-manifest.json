@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.9",
+  "status": "candidate-ready-hosted-lifecycle-passed-local-smoke-blocked-existing-single-instance",
+  "appVersion": "1.0.9",
+  "capturedAt": "2026-08-11T12:46:00Z",
+  "sourceCommit": "8f668bc402ca45b4c621193ba5b65ece63de51a7",
+  "sourceVersion": "1.0.9",
+  "build": {
+    "command": "npm run build:ux39-unsigned",
+    "completed": true,
+    "durationSeconds": 434,
+    "frontendTypeCheckPassed": true,
+    "frontendProductionBuildPassed": true,
+    "rustReleaseBuildPassed": true,
+    "msiBundlePassed": true,
+    "nsisBundlePassed": true
+  },
+  "qualityGate": {
+    "status": "passed",
+    "runId": 31489160736,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31489160736",
+    "headCommit": "8f668bc402ca45b4c621193ba5b65ece63de51a7"
+  },
+  "artifacts": [
+    { "target": "release-executable", "fileName": "tauri-app.exe", "sizeBytes": 87442944, "sha256": "dc3837a6f2cc1ad044c0724f652712cb78e1bcc95f57a47a9c6220042aef213a", "authenticodeStatus": "NotSigned", "fileVersion": "1.0.9", "productVersion": "1.0.9" },
+    { "target": "msi", "fileName": "LongEdit_1.0.9_x64_zh-CN.msi", "sizeBytes": 58785792, "sha256": "3bd409f09db2ffc4e9401c2267bf5fb3cdbe54d41593137aec856c3cfd22539f", "authenticodeStatus": "NotSigned", "productVersion": "1.0.9" },
+    { "target": "nsis", "fileName": "LongEdit_1.0.9_x64-setup.exe", "sizeBytes": 53795116, "sha256": "2b188fee7f30667e0df80c5389c2fc0f4a464e685c4d507645d3e0c98fe7dd19", "authenticodeStatus": "NotSigned", "fileVersion": "1.0.9", "productVersion": "1.0.9" }
+  ],
+  "checksumFile": { "fileName": "SHA256SUMS.txt", "sizeBytes": 190, "sha256": "fabb9e4290927396c97c0127e396de2d43fa65b1d3a3a26a8123a50469bba1d8" },
+  "runtimeSmoke": {
+    "status": "blocked-existing-single-instance",
+    "existingProductProcessCount": 1,
+    "executableStarted": false,
+    "installerExecuted": false,
+    "userProcessTerminated": false
+  },
+  "hostedInstalledLifecycle": {
+    "status": "passed",
+    "runId": 31490343424,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31490343424",
+    "sourceCommit": "8f668bc402ca45b4c621193ba5b65ece63de51a7",
+    "currentInstallerSizeBytes": 53647092,
+    "currentInstallerSha256": "ba776fd2978be76bd8875025df668891ecf43c5f3b5b8b640b2d8e7e18da559d",
+    "installedExecutableSizeBytes": 86810624,
+    "installedExecutableSha256": "ab20be70babb0d99b45879ce5a1b3bbc8a20bd9e71bb7f7f8137ad2e947c2d43",
+    "lifecycleChecksPassed": 22,
+    "installedWorkspaceChecksPassed": 18,
+    "failedChecks": 0,
+    "sourceUserContentIncluded": false,
+    "evidenceManifest": "hosted-lifecycle/import-manifest.json"
+  },
+  "releaseReceipt": null,
+  "boundaries": {
+    "releaseCandidate": true,
+    "communityUnsigned": true,
+    "enterprisePromotionEligible": false,
+    "authenticodeRequired": false,
+    "managedUpdaterReleaseAssetsPresent": false,
+    "legacyTauriUpdaterArtifactsPresent": false,
+    "managedUpdaterEnabled": true,
+    "artifactFilesCommitted": false,
+    "sourceUserContentIncluded": false
+  }
+}
