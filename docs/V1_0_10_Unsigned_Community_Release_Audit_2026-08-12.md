@@ -1,6 +1,6 @@
 # v1.0.10 无签名社区版发布审计
 
-状态：**版本事实源已冻结，等待 Quality Gate 与安装包证据**
+状态：**候选证据已完成，等待证据提交 Quality Gate 后发布**
 
 渠道：`community-unsigned`
 
@@ -18,6 +18,14 @@
 3. 在隔离 Windows 执行安装生命周期与默认应用启用、关闭、状态回读。
 4. 发布 GitHub Release，重新下载并复核 MSI、NSIS 与 `SHA256SUMS.txt`。
 5. 单独验证官方 `v1.0.9 -> v1.0.10` 应用内更新链。
+
+## 候选结果
+
+- 冻结产品提交：`558a16d113fdead7d044207ec57caac16ef862e0`。
+- 源码 Quality Gate：`31554131290`，结论 `success`。
+- 本地 EXE、MSI 与 NSIS 均为 `1.0.10`、`NotSigned`，大小和 SHA-256 已写入 `docs/evidence/v1.0.10-release/artifact-manifest.json`。
+- 托管安装生命周期：`31556348980`，22/22 生命周期检查和 18/18 安装后工作区检查通过，失败 0。
+- 本机已有 Long编辑实例正在运行，因此未关闭用户进程、未执行本地安装；真实安装验证由可丢弃 Windows runner 完成。
 
 ## 发布边界
 

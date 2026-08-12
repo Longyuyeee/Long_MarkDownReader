@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-12 v1.0.10 发布候选：** 版本事实源已冻结到 `1.0.10`，产品提交 `558a16d` 的 Quality Gate `31554131290` 已通过；本地 MSI/NSIS 及 SHA-256 已登记。托管 Windows 运行 `31556348980` 完成 22/22 安装生命周期检查和 18/18 安装后工作区检查，默认应用候选启用、关闭、真实状态与卸载恢复均通过。接手后只需等待候选证据提交的 Quality Gate，随后创建 GitHub Release、重新下载复核三个附件、切换 README 下载链接并记录发布回执；`1.0.9 -> 1.0.10` 应用内更新观察作为发布后的独立收口。
+
 > **2026-08-12 v1.0.10 发布准备：** package、Cargo、Tauri、Windows 生命周期、性能与能力事实源已提升到 `1.0.10`，发布范围固定为 UX-52 应用内默认打开管理。当前公开下载仍为 v1.0.9；接手后依次完成 Quality Gate、冻结候选打包、隔离安装态默认应用复测、GitHub Release 远端复核及官方 `1.0.9 -> 1.0.10` 更新观察。详见 [`V1_0_10_Unsigned_Community_Release_Audit_2026-08-12.md`](./V1_0_10_Unsigned_Community_Release_Audit_2026-08-12.md)。
 
 > **2026-08-12 UX-52 应用内默认打开管理：** 格式能力页现可对 37 类外部格式逐项启用或关闭 Long编辑候选，并显示当前系统默认及部分扩展名默认状态；设置页不再提供笼统的系统设置旁路。Windows 保护的最终默认选择仍由用户点击“设为系统默认”后在系统确认页完成，代码只读 `UserChoice`，不直接写入或绕过系统保护。本项属于 v1.0.9 发布后的维护增量，尚未重打公开安装包。详见 [`UX52_In_App_Default_Application_Management_Audit_2026-08-12.md`](./UX52_In_App_Default_Application_Management_Audit_2026-08-12.md)。
