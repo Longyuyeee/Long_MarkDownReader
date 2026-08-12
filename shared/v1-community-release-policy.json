@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.0.9",
-  "releaseCandidate": true,
+  "appVersion": "1.0.10",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
-  "generatedAt": "2026-08-11",
-  "currentStatus": "v1.0.9-community-release-published",
+  "generatedAt": "2026-08-12",
+  "currentStatus": "v1.0.10-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,60 +24,40 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
     "localRuntimeSmokePassed": false,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.0.8",
+    "previousPublicVersion": "1.0.9",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.8-to-1.0.9-passed",
-    "scope": "updater-relaunch-retry-and-stability-recovery"
+    "managedUpdaterUpgradePath": "1.0.9-to-1.0.10-pending",
+    "scope": "in-app-default-application-management"
   },
   "targetRelease": {
-    "tag": "v1.0.9",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.9",
+    "tag": "v1.0.10",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.10",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "8f668bc402ca45b4c621193ba5b65ece63de51a7",
-    "qualityGateRunId": 31489160736,
-    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31489160736",
-    "hostedInstalledLifecycleRunId": 31490343424,
-    "hostedInstalledLifecycleRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31490343424",
-    "artifacts": [
-      { "target": "release-executable", "fileName": "tauri-app.exe", "sizeBytes": 87442944, "sha256": "dc3837a6f2cc1ad044c0724f652712cb78e1bcc95f57a47a9c6220042aef213a", "authenticodeStatus": "NotSigned" },
-      { "target": "msi", "fileName": "LongEdit_1.0.9_x64_zh-CN.msi", "sizeBytes": 58785792, "sha256": "3bd409f09db2ffc4e9401c2267bf5fb3cdbe54d41593137aec856c3cfd22539f", "authenticodeStatus": "NotSigned" },
-      { "target": "nsis", "fileName": "LongEdit_1.0.9_x64-setup.exe", "sizeBytes": 53795116, "sha256": "2b188fee7f30667e0df80c5389c2fc0f4a464e685c4d507645d3e0c98fe7dd19", "authenticodeStatus": "NotSigned" }
-    ]
-  },
-  "release": {
-    "databaseId": 368579987,
-    "tag": "v1.0.9",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.9",
-    "taggedCommit": "7ed1defb967bc0521b100e5e6057c61aa8a5537f",
-    "publishedAt": "2026-08-11T13:10:47Z",
-    "candidateEvidenceQualityGateRunId": 31494295524,
-    "remoteAssetsVerified": true,
-    "receipt": "docs/evidence/v1.0.9-release/release-receipt.json"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.8-to-v1.0.9-managed-update-verified",
+    "v1.0.9-to-v1.0.10-managed-update-observation-pending",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "enter-maintenance-mode-after-v1.0.9"
+  "nextAction": "pass-quality-gate-and-build-v1.0.10-candidate"
 }
