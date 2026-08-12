@@ -1,6 +1,6 @@
 # v1.0.10 无签名社区版发布审计
 
-状态：**候选证据已完成，等待证据提交 Quality Gate 后发布**
+状态：**已发布，远端附件已重新下载并核验**
 
 渠道：`community-unsigned`
 
@@ -26,6 +26,13 @@
 - 本地 EXE、MSI 与 NSIS 均为 `1.0.10`、`NotSigned`，大小和 SHA-256 已写入 `docs/evidence/v1.0.10-release/artifact-manifest.json`。
 - 托管安装生命周期：`31556348980`，22/22 生命周期检查和 18/18 安装后工作区检查通过，失败 0。
 - 本机已有 Long编辑实例正在运行，因此未关闭用户进程、未执行本地安装；真实安装验证由可丢弃 Windows runner 完成。
+
+## 发布结果
+
+- 候选证据提交：`380f51da912ea4daf67ae9ea21af740a24676432`，Quality Gate `31558312102` 通过。
+- GitHub Release：`368970200`，Tag `v1.0.10`，非草稿、非预发布。
+- NSIS、MSI 与 `SHA256SUMS.txt` 已从公开 Release URL 重新下载，大小和 SHA-256 与本地冻结产物全部一致。
+- README 下载入口已切换到 v1.0.10；后续只需独立观察官方 `v1.0.9 -> v1.0.10` 应用内更新链。
 
 ## 发布边界
 

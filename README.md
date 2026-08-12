@@ -7,7 +7,7 @@
 <p align="center">本地优先的 Windows 知识工作台，在一个资料库里管理、阅读和编辑文本、表格、Office、PDF、图表、思维导图与媒体文件。</p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.9"><img src="https://img.shields.io/badge/Release-v1.0.9-cca43b" alt="Release v1.0.9"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.10"><img src="https://img.shields.io/badge/Release-v1.0.10-cca43b" alt="Release v1.0.10"></a>
   <img src="https://img.shields.io/badge/Updater%20path-verified-0f766e" alt="Updater path verified">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
@@ -16,19 +16,27 @@
 
 ## 下载
 
-当前已发布版本是 Long编辑 v1.0.9，支持 Windows 10/11 x64：
+当前已发布版本是 Long编辑 v1.0.10，支持 Windows 10/11 x64：
 
-- [NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.9/LongEdit_1.0.9_x64-setup.exe)（推荐）
-- [MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.9/LongEdit_1.0.9_x64_zh-CN.msi)
-- [Release、更新说明与 SHA-256](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.9)
+- [NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.10/LongEdit_1.0.10_x64-setup.exe)（推荐）
+- [MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.10/LongEdit_1.0.10_x64_zh-CN.msi)
+- [Release、更新说明与 SHA-256](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.10)
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同一页面的 `SHA256SUMS.txt` 核对文件。
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本无法自动迁移，需要手动安装 v1.0.5 或 v1.0.9 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本无法自动迁移，需要手动安装 v1.0.5 或 v1.0.10 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
 
 v1.0.9 的 Tag、Release 和三项远端附件已经复核。官方 `1.0.8 -> 1.0.9` 托管更新完成 12/12 检查，安装后由更新助手自动重新打开新版的路径已经验证；外部文件继续使用独立顶层窗口，不占用主资料库窗口。修复范围见 [v1.0.9 发布说明](docs/RELEASE_NOTES_v1.0.9.md)。
 
-v1.0.10 正在准备发布，范围固定为应用内默认打开管理：格式能力页可逐项启用、关闭并查看真实默认状态，只有改变 Windows 最终默认选择时才进入系统确认。当前下载链接在新 Release 公开前继续指向已验证的 v1.0.9，详情见 [v1.0.10 发布说明](docs/RELEASE_NOTES_v1.0.10.md)。
+v1.0.10 的 Tag、Release 和三项远端附件已经复核。格式能力页现在可对 37 类外部格式逐项启用、关闭并查看真实默认状态；Long编辑只管理自己的候选映射，只有改变 Windows 最终默认选择时才进入系统确认。托管 Windows 已完成 22/22 安装生命周期和 18/18 安装后工作区检查，详情见 [v1.0.10 发布说明](docs/RELEASE_NOTES_v1.0.10.md)。
+
+## v1.0.10 更新重点
+
+- 在“格式能力”页面直接管理每类格式是否把 Long编辑加入可选打开应用，无需先跳到系统设置。
+- 展开格式即可查看未启用、已启用、当前系统默认或部分扩展名默认状态。
+- 关闭某类格式只清理 Long编辑拥有的映射，不影响其他应用和其他格式。
+- Windows `UserChoice` 保持只读；最终默认应用仍由用户在系统确认页面明确选择。
+- v1.0.9 的自动更新重启恢复、外部文件独立窗口、显式保存和格式能力边界全部保留。
 
 ## v1.0.9 恢复重点
 

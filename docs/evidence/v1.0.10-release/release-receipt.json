@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.10-RELEASE",
+  "status": "published-and-remote-assets-verified",
+  "verifiedAt": "2026-08-12T03:07:30Z",
+  "release": {
+    "databaseId": 368970200,
+    "tag": "v1.0.10",
+    "name": "LongEdit v1.0.10",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.10",
+    "taggedCommit": "380f51da912ea4daf67ae9ea21af740a24676432",
+    "publishedAt": "2026-08-12T03:06:11Z",
+    "isDraft": false,
+    "isPrerelease": false
+  },
+  "qualityGates": {
+    "frozenProductRunId": 31554131290,
+    "candidateEvidenceRunId": 31558312102,
+    "hostedInstalledLifecycleRunId": 31556348980
+  },
+  "assets": [
+    {
+      "assetId": 510980733,
+      "name": "LongEdit_1.0.10_x64-setup.exe",
+      "sizeBytes": 53799388,
+      "sha256": "598c460c37dd9f3c333f504820c46ef8dd4cf4e6921ef4148b6098fc98632bbe",
+      "remoteDownloadVerified": true
+    },
+    {
+      "assetId": 510980732,
+      "name": "LongEdit_1.0.10_x64_zh-CN.msi",
+      "sizeBytes": 58802176,
+      "sha256": "0e0b66e95a8d4d22fb870e52605e64e06e69acdf336162486ec5e64392a6c028",
+      "remoteDownloadVerified": true
+    },
+    {
+      "assetId": 510980734,
+      "name": "SHA256SUMS.txt",
+      "sizeBytes": 192,
+      "sha256": "74c094a8eae34d77898bc237d472d3fdf272defa76e21490293f5f435fc8d3fc",
+      "remoteDownloadVerified": true
+    }
+  ],
+  "authenticodeStatus": "NotSigned",
+  "sourceUserContentIncluded": false,
+  "managedUpdaterObservation": "1.0.9-to-1.0.10-pending"
+}
