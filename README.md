@@ -1,121 +1,169 @@
 <p align="center">
-  <img src="design/brand/longedit-icon-v1.0.2.png" width="168" alt="Long编辑图标：深蓝底、实心金色 L 与金色编辑笔尖">
+  <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>
 
 <h1 align="center">Long编辑</h1>
 
-<p align="center">本地优先的 Windows 知识工作台，在一个资料库里管理、阅读和编辑文本、表格、Office、PDF、图表、思维导图与媒体文件。</p>
+<p align="center">
+  <strong>本地优先的 Windows 知识工作台</strong><br>
+  在一个资料库里管理、阅读和编辑文本、表格、Office、PDF、图表、思维导图与媒体文件。
+</p>
 
 <p align="center">
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.10"><img src="https://img.shields.io/badge/Release-v1.0.10-cca43b" alt="Release v1.0.10"></a>
-  <img src="https://img.shields.io/badge/Updater%20path-verified-0f766e" alt="Updater path verified">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
+  <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
   <img src="https://img.shields.io/badge/License-AGPL--3.0-7c3aed" alt="AGPL-3.0">
 </p>
 
+<p align="center">
+  <a href="#下载">下载</a> ·
+  <a href="#真实界面">真实界面</a> ·
+  <a href="#核心能力">核心能力</a> ·
+  <a href="#格式能力">格式能力</a> ·
+  <a href="#开发与验证">开发与验证</a>
+</p>
+
+<p align="center">
+  <img src="docs/images/readme/workspace-markdown-dark.png" width="100%" alt="Long编辑深色主题主工作区，包含资料库文件树、多文档标签和 Markdown 所见即所得编辑器">
+</p>
+
+> 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
+
 ## 下载
 
-当前已发布版本是 Long编辑 v1.0.10，支持 Windows 10/11 x64：
+Long编辑 v1.0.10 支持 Windows 10/11 x64。
 
-- [NSIS 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.10/LongEdit_1.0.10_x64-setup.exe)（推荐）
-- [MSI 安装程序](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.10/LongEdit_1.0.10_x64_zh-CN.msi)
-- [Release、更新说明与 SHA-256](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.10)
+| 安装方式 | 下载 | 适用场景 |
+| --- | --- | --- |
+| NSIS 安装程序 | [LongEdit_1.0.10_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.10/LongEdit_1.0.10_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.0.10_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.10/LongEdit_1.0.10_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.0.10](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.10) | Release Notes 与 SHA-256 |
 
-社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同一页面的 `SHA256SUMS.txt` 核对文件。
+社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 `SHA256SUMS.txt` 核对文件。
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本无法自动迁移，需要手动安装 v1.0.5 或 v1.0.10 一次；从 v1.0.5 开始，应用会每 24 小时检查最新稳定 Release，也可以在设置中手动检查。安装前必须由用户确认，下载的 NSIS 会使用 GitHub 附件 SHA-256 校验。
+```text
+598c460c37dd9f3c333f504820c46ef8dd4cf4e6921ef4148b6098fc98632bbe  LongEdit_1.0.10_x64-setup.exe
+0e0b66e95a8d4d22fb870e52605e64e06e69acdf336162486ec5e64392a6c028  LongEdit_1.0.10_x64_zh-CN.msi
+```
 
-v1.0.9 的 Tag、Release 和三项远端附件已经复核。官方 `1.0.8 -> 1.0.9` 托管更新完成 12/12 检查，安装后由更新助手自动重新打开新版的路径已经验证；外部文件继续使用独立顶层窗口，不占用主资料库窗口。修复范围见 [v1.0.9 发布说明](docs/RELEASE_NOTES_v1.0.9.md)。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。
 
-v1.0.10 的 Tag、Release 和三项远端附件已经复核。格式能力页现在可对 37 类外部格式逐项启用、关闭并查看真实默认状态；Long编辑只管理自己的候选映射，只有改变 Windows 最终默认选择时才进入系统确认。托管 Windows 已完成 22/22 安装生命周期和 18/18 安装后工作区检查，详情见 [v1.0.10 发布说明](docs/RELEASE_NOTES_v1.0.10.md)。
+## v1.0.10
 
-## v1.0.10 更新重点
+这一版本把默认打开管理真正收回应用内部，同时保持 Windows 的最终选择权：
 
-- 在“格式能力”页面直接管理每类格式是否把 Long编辑加入可选打开应用，无需先跳到系统设置。
+- 在“格式能力”页面逐类启用或关闭 Long编辑候选，覆盖 37 类允许外部编辑或预览的格式。
 - 展开格式即可查看未启用、已启用、当前系统默认或部分扩展名默认状态。
-- 关闭某类格式只清理 Long编辑拥有的映射，不影响其他应用和其他格式。
-- Windows `UserChoice` 保持只读；最终默认应用仍由用户在系统确认页面明确选择。
-- v1.0.9 的自动更新重启恢复、外部文件独立窗口、显式保存和格式能力边界全部保留。
+- 关闭某类格式只清理 Long编辑拥有的映射，不影响其他应用或其他格式。
+- Windows `UserChoice` 保持只读；只有用户主动设置最终默认应用时才进入系统确认页。
+- 延续自动更新后的稳定重启、外部文件独立窗口、显式保存和冲突保护。
 
-## v1.0.9 恢复重点
+发布已通过源码 Quality Gate、22/22 安装生命周期检查、18/18 安装后工作区检查，以及公开附件重新下载哈希复核。完整变更见 [v1.0.10 发布说明](docs/RELEASE_NOTES_v1.0.10.md)。
 
-- 更新助手在安装器退出后延迟启动，避免旧实例和安装器收尾竞态。
-- 新进程启动后必须持续存活才算重启成功；若立即退出，助手会重试而不是直接结束。
-- 更新缓存目录记录不含文档、路径正文或凭据的重启状态，便于诊断安装后未打开问题。
-- v1.0.8 的外部文件独立窗口、代码文件创建和全部既有格式能力保持不变。
+## 真实界面
 
-## v1.0.8 更新重点
+### 专业编辑工作区
 
-- 新建菜单覆盖 JavaScript、TypeScript、Python、Rust、Go、Java/Kotlin、C/C++/C#、Shell/PowerShell、SQL 与 HTML/CSS/Vue，共 32 个注册后缀；文件先创建草稿，只有显式保存才写入内容。
-- 从资源管理器、系统默认应用或 Long编辑内部打开外部文件时，会创建独立浮动窗口，不再占用主资料库窗口或增加内部标签页。
-- 37 类允许外部打开的格式统一进入各自完整编辑或预览页面；外部窗口隐藏资料库标签栏和主窗口更新提示，源文件仍遵守显式保存与冲突保护。
-- 自动更新在校验官方 NSIS 的 SHA-256 后由隐藏助手安装；助手等待安装完成并检查退出码，然后自动重新打开 Long编辑。
-- 真实 Tauri WebView2 已验证主资料库、外部 TXT 和外部 JSON 三窗口同时存在，主窗口路由保持不变且运行时错误为 0。
-- v1.0.7 的 XLSX 类型编辑、按工作表索引、外部格式能力、主题和安全边界全部保留。
+文件树保留完整扩展名并按类型使用不同图标；顶部标签支持多文档切换和横向滚轮导航。编辑器、状态栏与上下文工具共享一致的主题和保存状态。
 
-## 这是什么
+<p align="center">
+  <img src="docs/images/readme/json-editor-dark.png" width="100%" alt="Long编辑 JSON 专业编辑器，包含语法高亮、树形模式、解析状态和字段路径定位">
+</p>
 
-Long编辑把“文件编辑器”和“本地知识库”放在同一个工作区：左侧浏览资料库、搜索和保存视图，中间打开多个文件标签，右侧按需查看文件上下文。文档内容默认留在本机，编辑只在点击保存后写回；受限格式会明确显示只读、可靠副本或外部程序边界。
+JSON、YAML、XML、TOML 与代码文件使用专业源码编辑体验。JSON 还提供虚拟化树形查看、结构诊断、字段路径定位和明确的安全编辑提示。
 
-### 资料库与知识组织
+### 表格与工作簿
 
-- 文件树显示完整扩展名，并按格式使用不同图标和识别色。
-- 文件可设置本机显示标记，包括背景、文字颜色和标记图标。
-- 支持搜索、标签、保存视图、引用、反向链接、知识图谱、历史与管理备份。
-- 文件标签保持可读宽度；标签栏、工具栏和横向集合支持滚轮横向导航。
-- 从搜索、图谱、关系界面和 Canvas 返回时保留活动文件与工作区位置。
+<p align="center">
+  <img src="docs/images/readme/xlsx-workbook-dark.png" width="100%" alt="Long编辑 XLSX 工作簿编辑界面，包含多工作表、公式栏、页面工具和网格编辑区">
+</p>
 
-### 编辑体验
+CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出和显式转换；XLSX 工作区提供多工作表、公式、样式、图表、筛选、页面设置、经典错误值和已有日期时间单元格的有界编辑。
 
-- Markdown 默认所见即所得，也可切换即时渲染和源码模式。
-- TXT、LOG、代码和结构化源码使用统一的专业编辑器主题、光标对比度、撤销/重做和显式保存。
-- JSON 提供源码、虚拟化树形查看、诊断和带引导的路径定位；YAML、XML、TOML 具有结构面板与校验。
-- CSV、TSV 和开放 Table 支持网格编辑、冻结前 N 列、看板、导入导出以及有明确目标的格式转换。
-- XLSX 工作区支持多工作表、公式、样式、图表、筛选、经典错误值、已有日期时间单元格和部分高级对象；复杂生产者结构按能力矩阵降级，不宣称完全等价 Microsoft Excel。
+### 知识图谱与思维导图
 
-### 文档、图形与媒体
+<p align="center">
+  <img src="docs/images/readme/knowledge-graph-dark.png" width="100%" alt="Long编辑知识图谱，包含关系网络、节点详情、布局主题、导出和画布操作">
+</p>
 
-- PDF：阅读、搜索、批注、页面提取、合并和插入，写入保持 sidecar 或可靠新文件边界。
-- DOCX/PPTX：阅读、受控草稿编辑和可靠副本；ODT/ODS/ODP 与旧 Office 按已验证能力预览或交给桌面程序。
-- Mermaid、Draw.io、SVG、OPML、JSON Canvas 和知识图谱提供专业画布、拖动、缩放、右键操作与显式保存。
-- 图片支持 PNG、JPEG、GIF、WebP、BMP、ICO、AVIF，可缩放、适应窗口、旋转和查看透明网格。
-- 视频支持 MP4、WebM、OGV、M4V，并按系统解码器尝试 MOV、MKV、AVI、MPEG、MPG；提供按需流式读取、前后 10 秒、循环、静音、倍速、画中画和全屏。
+知识图谱把文件、标题、链接与 Canvas 节点组织成可交互网络。支持搜索、筛选、多种布局与主题、框选和拖动、缩放、右键操作、中心节点、视图保存以及 SVG/PNG 导出。
+
+### 设置、主题与资料库
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/readme/settings-appearance-light.png" alt="Long编辑外观设置，包含界面风格和动效节奏"></td>
+    <td width="50%"><img src="docs/images/readme/settings-library-management.png" alt="Long编辑资料库管理，可切换、添加和移除资料库"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>主题、界面风格与动效节奏</sub></td>
+    <td align="center"><sub>多资料库管理与切换</sub></td>
+  </tr>
+</table>
+
+设置按资料库、编辑与保存、外观、格式与文件、知识能力、系统与更新、隐私与诊断、AI 分类。主题不仅切换颜色，也统一编辑器、表格、画布、弹窗、选择器、光标和焦点状态。
+
+## 核心能力
+
+| 工作方向 | 已提供的体验 |
+| --- | --- |
+| 本地资料库 | 多资料库、文件树、全文搜索、标签、保存视图、历史、管理备份 |
+| 专业编辑 | 多标签、撤销/重做、显式保存、外部修改冲突保护、语法诊断 |
+| 知识组织 | 引用、反向链接、知识图谱、思维导图、JSON Canvas、关系定位 |
+| 表格数据 | CSV/TSV/Table 网格与看板，XLSX/ODS 工作区和有界高级对象支持 |
+| 文档与演示 | PDF 阅读与页面工具，DOCX/PPTX 阅读、受控草稿和可靠副本 |
+| 图形与媒体 | Mermaid、Draw.io、SVG、图片查看器和按需流式视频播放器 |
+| 外部打开 | 支持格式使用独立顶层窗口，不占用主资料库窗口或增加内部标签 |
+| 个性化 | 核心主题、场景预设、外观组合、文件颜色与图标标记 |
+
+所有可编辑格式都遵守同一条原则：修改先保留在草稿中，只有点击保存或按 `Ctrl+S` 才写回源文件。只读、可靠副本、显式转换和外部程序交接会在界面中明确说明。
 
 ## 格式能力
 
-当前注册 43 类格式、91 个扩展名，映射到 11 套发布能力配置：30 类已验证、7 类有限能力、6 类依赖外部程序。
+当前注册 **43 类格式、91 个扩展名**，映射到 11 套发布能力配置：30 类已验证、7 类有限能力、6 类依赖外部程序。
 
 | 格式族 | 主要能力 | 明确边界 |
 | --- | --- | --- |
-| Markdown / TXT / LOG | 编辑、预览、搜索、撤销与显式保存 | LOG 大文件优先使用专业查看模式 |
-| JSON / YAML / XML / TOML / 代码 | 语法高亮、结构查看、诊断、补全与保存 | HTML 预览经过净化和 sandbox，不执行危险脚本 |
+| Markdown / TXT / LOG | 所见即所得或源码、搜索、撤销与显式保存 | LOG 大文件优先使用专业查看模式 |
+| JSON / YAML / XML / TOML / 代码 | 语法高亮、结构查看、诊断、补全与保存 | HTML 预览经过净化和 sandbox |
 | CSV / TSV / Table | 网格、冻结列、看板、转换、导入导出 | 不承诺复杂 Excel 对象语义 |
-| XLSX / XLSM / XLSB | 工作表、公式、样式、图表、筛选、有界类型编辑和按工作表搜索 | 宏不执行；索引不计算公式；部分高级结构只读或可靠副本 |
-| DOCX / PPTX | 阅读、受管草稿与可靠保存 | 不宣称完整等价 Office |
-| PDF | 阅读、批注和页面管理 | 不是通用内容重排编辑器 |
+| XLSX / XLSM / XLSB | 工作表、公式、样式、图表、筛选与有界类型编辑 | 宏不执行；部分高级结构只读或保存可靠副本 |
+| DOCX / PPTX | 阅读、受管草稿与可靠保存 | 不宣称完整等价 Microsoft Office |
+| PDF | 阅读、搜索、批注和页面管理 | 不是通用内容重排编辑器 |
 | Mermaid / Draw.io / SVG | 查看、编辑、画布操作与安全保存 | 外部资源和危险协议会被阻断 |
 | OPML / JSON Canvas | 思维导图、卡片与关系画布 | 修改需显式保存 |
-| 图片 | 七种常见位图格式查看 | 只读，不修改源文件 |
-| 视频 | 九种容器入口与专业播放工具 | MOV/MKV/AVI/MPEG/MPG 取决于系统解码器 |
+| 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、AVIF | 只读，不修改源文件 |
+| 视频 | MP4、WebM、OGV、M4V 及五种系统解码入口 | MOV/MKV/AVI/MPEG/MPG 取决于系统解码器 |
 | ODF / 旧 Office / WPS | 有界预览、转换或外部程序交接 | 能力依赖文件生产者与本机软件 |
 
-完整事实源位于 [`shared/file-formats.json`](shared/file-formats.json) 和 [`shared/release-capability-matrix.json`](shared/release-capability-matrix.json)。
+格式事实源位于 [`shared/file-formats.json`](shared/file-formats.json)，发布边界位于 [`shared/release-capability-matrix.json`](shared/release-capability-matrix.json)。
 
-## 主题与界面
+## 设计原则
+
+- **本地优先**：文档、索引和知识关系默认留在本机，不要求云端账号。
+- **显式保存**：编辑不会在后台悄悄覆盖源文件，危险覆盖和格式降级需要确认。
+- **能力诚实**：完整编辑、有限编辑、只读预览、可靠副本和外部依赖不会混为一谈。
+- **恢复优先**：外部修改、路由错误和索引损坏提供比较、重载、隔离或重建路径。
+- **用户控制**：默认应用、自动更新、外部程序接管和删除操作都由用户明确触发。
+- **隐私可审计**：诊断和管理备份移除文档正文、完整路径、API Key、凭据与缓存正文。
+
+## 主题与交互
 
 - 3 套核心预设：专业浅色、专业深色、高对比。
 - 4 套场景预设：长文阅读、护眼研读、编码专注、创意图谱。
-- 共 19 个主题与外观组合，编辑器、表格、图表和管理页面共享颜色、排版、动效与焦点语义。
-- 左侧导航会根据宽度在“图标 + 文字”和纯图标之间切换；紧凑工具栏保持按钮尺寸并使用横向滚动，不挤压正文。
+- 19 个主题与外观组合，覆盖排版、色彩、控件形态与动效节奏。
+- 紧凑工具栏保持按钮尺寸并支持横向滚轮导航，不通过挤压文字换取空间。
+- 左侧导航根据可用宽度在“图标 + 文字”和纯图标之间自适应。
 
-## 使用
+## 快速开始
 
 1. 安装并启动 Long编辑。
-2. 选择或创建一个本地目录作为知识库。
-3. 从左侧文件树打开文件，或使用搜索、保存视图和知识图谱定位内容。
-4. 在工作区编辑；只有点击保存或按 `Ctrl+S` 才会写回支持编辑的源文件。
-5. 遇到只读、可靠副本或外部程序格式时，按界面的能力说明操作。
+2. 选择或创建一个本地目录作为资料库。
+3. 从文件树打开文件，或通过搜索、保存视图和知识图谱定位内容。
+4. 在工作区编辑；点击保存或按 `Ctrl+S` 后才写回支持编辑的源文件。
+5. 在“设置 → 格式与文件 → 格式能力”中按格式管理外部打开候选。
 
 | 快捷键 | 操作 |
 | --- | --- |
@@ -126,29 +174,21 @@ Long编辑把“文件编辑器”和“本地知识库”放在同一个工作�
 | `Ctrl+F` | 搜索当前工作区 |
 | `Ctrl+,` | 打开设置 |
 
-## 本地与安全
-
-- 文档、索引和知识关系默认保存在本机，不要求云端账号。
-- 保存命令使用文件签名或内容身份检查，发现外部变化时由用户决定比较、保留草稿或重新加载。
-- 删除、覆盖、格式降级、外部程序接管和自动安装均需要明确确认。
-- 管理备份与隐私诊断会移除文档正文、完整路径、API Key、凭据和缓存正文。
-- 更新安装器仅接受固定 GitHub 仓库、稳定 Release、严格文件名、大小上限和 SHA-256 匹配。
-
 ## 开发与验证
 
-需要 Node.js 22、Rust stable、Windows WebView2 和 Tauri 2 所需的 Windows 构建工具。
+技术栈为 Vue 3、TypeScript、Tauri 2 与 Rust。开发环境需要 Node.js 22、Rust stable、Windows WebView2 和 Tauri 2 所需的 Windows 构建工具。
 
 ```powershell
 npm ci
 npm run tauri dev
 ```
 
+发布前完整检查与无签名社区安装包构建：
+
 ```powershell
 npm run ci:patch-release
 npm run build:ux39-unsigned
 ```
-
-安装包使用 Tauri 生成 MSI 与 NSIS。社区发布上传两个安装器和 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
 ```text
 src/                 Vue 3 前端、编辑器与知识工作区
@@ -159,8 +199,10 @@ docs/                审计、发布说明和开发交接文档
 design/brand/        品牌图标母版
 ```
 
-开发状态见 [收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选记录与能力边界见 [v1.0.9 发布说明](docs/RELEASE_NOTES_v1.0.9.md)。
+安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
+
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前发布证据见 [v1.0.10 发布审计](docs/V1_0_10_Unsigned_Community_Release_Audit_2026-08-12.md)。
 
 ## 许可证
 
-[GNU Affero General Public License v3.0](LICENSE)
+[GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.html)
