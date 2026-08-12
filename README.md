@@ -195,8 +195,9 @@ src/                 Vue 3 前端、编辑器与知识工作区
 src-tauri/           Rust/Tauri 桌面端、文件与格式命令
 shared/              格式、能力、主题与发布事实合同
 scripts/             自动化检查、证据采集与发布工具
-docs/                审计、发布说明和开发交接文档
+docs/                当前审计、发布说明、开发交接与历史归档
 design/brand/        品牌图标母版
+releases/            仍受合同引用的历史产物与旧安装包归档
 ```
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。

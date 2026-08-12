@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Generated desktop artifacts belong in GitHub Releases or an explicit archive.
+/*.exe
+/*.msi
+/src-tauri/target/
+/src-tauri/gen/
+
 # Local release credentials (never commit updater private keys or passwords)
 .release-secrets/
 
