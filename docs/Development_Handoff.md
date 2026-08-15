@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-A3B 图片基础编辑收口：** 既有右侧图片编辑面板已接入精确数值裁剪、裁剪比例感知缩放、JPEG 质量与强制隐私元数据清理说明；未新建独立页面，左侧资料库与右侧编辑结构保持不变。真实 custom-protocol Tauri WebView2 在 1280×800、720×680 下验证 120/60/600/360 裁剪、300×180 输出、JPEG 质量 72、源不变、副本复开、零运行时错误。审计过程中发现并修复“锁定比例仍使用原图比例”的预期不一致。下一步进入 PDF 安全编辑增强。详见 [`P1A3B_Image_Editor_Closure_Audit_2026-08-15.md`](./P1A3B_Image_Editor_Closure_Audit_2026-08-15.md)。
+
 > **2026-08-15 P1-A3A 图片裁剪与隐私后端：** 图片可靠副本内核已增加旋转/翻转后有界裁剪、JPEG 1–100 质量控制、EXIF 方向归一和像素级重新编码元数据清理。合成 EXIF Orientation=6 JPEG 已验证尺寸从 2×3 归一为 3×2，输出不含 EXIF 标记；越界裁剪、非 JPEG 质量参数和非法质量均阻断。公开能力暂不扩写，下一步 P1-A3B 在既有右侧图片编辑面板接入交互并补真实桌面证据。详见 [`P1A3A_Image_Crop_Compression_Privacy_Backend_Audit_2026-08-15.md`](./P1A3A_Image_Crop_Compression_Privacy_Backend_Audit_2026-08-15.md)。
 
 > **2026-08-15 P1-A2 图片编辑工作区验收：** 资料库内 PNG/JPEG/WebP/BMP 已在原有右侧 `MediaViewerView` 中提供旋转、翻转、锁定比例缩放、格式转换和可靠另存；外部图片及 GIF/ICO/AVIF 仍只读。真实 Tauri WebView2 在 1280×800 与 720×680 下验证无文档横向溢出、面板保持可达，960×540 PNG 变换为 480×270 WebP 后完成原图不变、落盘复读和副本重开。下一步进入 P1-A3 裁剪、压缩质量和隐私元数据清理。

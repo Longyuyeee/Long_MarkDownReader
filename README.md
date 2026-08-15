@@ -134,7 +134,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 | PDF | 阅读、搜索、批注和页面管理 | 不是通用内容重排编辑器 |
 | Mermaid / Draw.io / SVG | 查看、编辑、画布操作与安全保存 | 外部资源和危险协议会被阻断 |
 | OPML / JSON Canvas | 思维导图、卡片与关系画布 | 修改需显式保存 |
-| 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、AVIF | PNG/JPEG/WebP/BMP 可旋转、翻转、缩放、转换并另存副本；GIF/ICO/AVIF 与外部图片只读 |
+| 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、AVIF | PNG/JPEG/WebP/BMP 可在右侧编辑区旋转、翻转、精确裁剪、缩放、转换并另存副本；JPEG 支持质量控制，副本自动校正 EXIF 方向并清理隐私元数据；GIF/ICO/AVIF 与外部图片只读 |
 | 视频 | MP4、WebM、OGV、M4V 及五种系统解码入口 | MOV/MKV/AVI/MPEG/MPG 取决于系统解码器 |
 | ODS / ODP / 旧 Office / WPS | ODS/ODP 有界预览，旧 Office 转换，WPS 原生格式交给外部程序 | ODT 尚未正式注册；`.wps/.et/.dps` 不在软件内编辑 |
 

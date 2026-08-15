@@ -110,6 +110,17 @@
           </div>
         </section>
         <section>
+          <div class="section-heading"><label>精确裁剪</label><button class="text-button" @click="resetCrop">使用完整画面</button></div>
+          <div class="crop-grid">
+            <label>X<input v-model.number="cropX" type="number" min="0" :max="Math.max(0, cropBounds.width - 1)" @input="onCropInput" /></label>
+            <label>Y<input v-model.number="cropY" type="number" min="0" :max="Math.max(0, cropBounds.height - 1)" @input="onCropInput" /></label>
+            <label>宽<input v-model.number="cropWidth" type="number" min="1" :max="cropBounds.width" @input="onCropInput" /></label>
+            <label>高<input v-model.number="cropHeight" type="number" min="1" :max="cropBounds.height" @input="onCropInput" /></label>
+          </div>
+          <p>{{ cropEnabled ? `保留 ${cropWidth} × ${cropHeight} px，起点 ${cropX}, ${cropY}` : `完整画面 ${cropBounds.width} × ${cropBounds.height} px` }}</p>
+          <p v-if="cropEnabled && !validCrop" class="field-error">裁剪区域必须完整位于当前画面内。</p>
+        </section>
+        <section>
           <div class="section-heading"><label>输出尺寸</label><button class="text-button" @click="resetOutputSize">使用原尺寸</button></div>
           <div class="dimension-grid">
             <label>宽<input v-model.number="draftWidth" type="number" min="1" :max="editIdentity.maxEdge" @input="onDimensionInput('width')" /></label>
@@ -123,7 +134,12 @@
           <select id="image-output-format" v-model="outputExtension">
             <option value="png">PNG</option><option value="jpg">JPEG</option><option value="webp">WebP</option><option value="bmp">BMP</option>
           </select>
+          <label v-if="outputExtension === 'jpg'" class="quality-control">
+            <span>JPEG 质量 <strong>{{ jpegQuality }}</strong></span>
+            <input v-model.number="jpegQuality" type="range" min="1" max="100" step="1" />
+          </label>
           <p>{{ effectiveOutputWidth }} × {{ effectiveOutputHeight }} px · 仅在资料库内另存新文件</p>
+          <p class="privacy-note">保存时自动校正 EXIF 方向，并移除 EXIF、GPS、注释等隐私元数据。</p>
         </section>
         <div v-if="editError" class="edit-message error" role="alert">{{ editError }}</div>
         <div v-if="savedCopy" class="edit-message success" role="status">
@@ -132,7 +148,7 @@
         </div>
         <div class="editor-footer">
           <button class="secondary" :disabled="saving" @click="resetImageTransform">重置</button>
-          <button class="primary" :disabled="saving || !validOutputDimensions" data-testid="image-save-copy" @click="saveEditedCopy"><SaveIcon />{{ saving ? '正在验证…' : '另存副本' }}</button>
+          <button class="primary" :disabled="saving || !validOutputDimensions || !validCrop || !validJpegQuality" data-testid="image-save-copy" @click="saveEditedCopy"><SaveIcon />{{ saving ? '正在验证…' : '另存副本' }}</button>
         </div>
       </template>
       <div v-else class="editor-state error">{{ editError || '当前图片暂不支持基础编辑。' }}</div>
@@ -201,6 +217,9 @@ interface ImageSavedCopyReport {
   outputWidth: number
   outputHeight: number
   outputDigest: string
+  jpegQuality?: number
+  orientationNormalized: boolean
+  metadataRemoved: boolean
   sourceUnchanged: boolean
   targetReopened: boolean
 }
@@ -241,6 +260,12 @@ const draftHeight = ref(1)
 const resizeEnabled = ref(false)
 const lockAspectRatio = ref(true)
 const outputExtension = ref('png')
+const cropEnabled = ref(false)
+const cropX = ref(0)
+const cropY = ref(0)
+const cropWidth = ref(1)
+const cropHeight = ref(1)
+const jpegQuality = ref(85)
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2]
 const editableImageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'bmp']
 let loadToken = 0
@@ -260,6 +285,20 @@ const rotatedSourceDimensions = computed(() => {
   const height = editIdentity.value?.height || mediaHeight.value
   return rotation.value % 180 === 0 ? { width, height } : { width: height, height: width }
 })
+const cropBounds = computed(() => rotatedSourceDimensions.value)
+const validCrop = computed(() => {
+  if (!cropEnabled.value) return true
+  const values = [cropX.value, cropY.value, cropWidth.value, cropHeight.value].map(Number)
+  if (!values.every(Number.isInteger)) return false
+  const [x, y, width, height] = values
+  return x >= 0 && y >= 0 && width > 0 && height > 0
+    && x + width <= cropBounds.value.width && y + height <= cropBounds.value.height
+})
+const workingSourceDimensions = computed(() => cropEnabled.value && validCrop.value
+  ? { width: Number(cropWidth.value), height: Number(cropHeight.value) }
+  : cropBounds.value)
+const validJpegQuality = computed(() => outputExtension.value !== 'jpg'
+  || (Number.isInteger(Number(jpegQuality.value)) && Number(jpegQuality.value) >= 1 && Number(jpegQuality.value) <= 100))
 const validOutputDimensions = computed(() => {
   const width = Number(draftWidth.value)
   const height = Number(draftHeight.value)
@@ -269,10 +308,10 @@ const validOutputDimensions = computed(() => {
 })
 const effectiveOutputWidth = computed(() => editOpen.value && resizeEnabled.value && validOutputDimensions.value
   ? Number(draftWidth.value)
-  : rotatedSourceDimensions.value.width)
+  : workingSourceDimensions.value.width)
 const effectiveOutputHeight = computed(() => editOpen.value && resizeEnabled.value && validOutputDimensions.value
   ? Number(draftHeight.value)
-  : rotatedSourceDimensions.value.height)
+  : workingSourceDimensions.value.height)
 const pictureInPictureAvailable = computed(() => {
   const pipDocument = document as Document & { pictureInPictureEnabled?: boolean }
   const pipVideo = videoRef.value as HTMLVideoElement & { requestPictureInPicture?: () => Promise<unknown> }
@@ -310,6 +349,7 @@ const zoomBy = (amount: number) => setScale(Number((scale.value + amount).toFixe
 const rotateBy = (amount: number) => {
   const shouldRefit = fitToWindow.value
   rotation.value = (rotation.value + amount + 360) % 360
+  if (editOpen.value) resetCrop()
   if (editOpen.value && !resizeEnabled.value) syncNaturalOutputSize()
   if (shouldRefit) void nextTick(fitImage)
 }
@@ -383,8 +423,24 @@ const openExternally = () => { if (mediaPath.value) void openPath(mediaPath.valu
 const leaveViewer = () => router.push({ name: 'LibraryMode' })
 
 const syncNaturalOutputSize = () => {
-  draftWidth.value = rotatedSourceDimensions.value.width || 1
-  draftHeight.value = rotatedSourceDimensions.value.height || 1
+  draftWidth.value = workingSourceDimensions.value.width || 1
+  draftHeight.value = workingSourceDimensions.value.height || 1
+}
+const resetCrop = () => {
+  cropEnabled.value = false
+  cropX.value = 0
+  cropY.value = 0
+  cropWidth.value = cropBounds.value.width || 1
+  cropHeight.value = cropBounds.value.height || 1
+  savedCopy.value = undefined
+  if (!resizeEnabled.value) syncNaturalOutputSize()
+  if (fitToWindow.value) void nextTick(fitImage)
+}
+const onCropInput = () => {
+  cropEnabled.value = true
+  savedCopy.value = undefined
+  if (!resizeEnabled.value && validCrop.value) syncNaturalOutputSize()
+  if (fitToWindow.value) void nextTick(fitImage)
 }
 const resetOutputSize = () => {
   resizeEnabled.value = false
@@ -396,8 +452,10 @@ const resetImageTransform = () => {
   flipHorizontal.value = false
   flipVertical.value = false
   resizeEnabled.value = false
+  jpegQuality.value = 85
   savedCopy.value = undefined
   editError.value = ''
+  resetCrop()
   syncNaturalOutputSize()
   void nextTick(fitImage)
 }
@@ -406,7 +464,7 @@ const onDimensionInput = (axis: 'width' | 'height') => {
   resizeEnabled.value = true
   savedCopy.value = undefined
   if (!lockAspectRatio.value) return
-  const natural = rotatedSourceDimensions.value
+  const natural = workingSourceDimensions.value
   if (!natural.width || !natural.height) return
   dimensionSyncing = true
   if (axis === 'width' && Number(draftWidth.value) > 0) {
@@ -440,7 +498,7 @@ const toggleImageEditor = async () => {
 }
 const editedCopyDefaultPath = () => mediaPath.value.replace(/(\.[^./\\]+)?$/, `-edited.${outputExtension.value}`)
 const saveEditedCopy = async () => {
-  if (!editIdentity.value || !validOutputDimensions.value || saving.value) return
+  if (!editIdentity.value || !validOutputDimensions.value || !validCrop.value || !validJpegQuality.value || saving.value) return
   editError.value = ''
   savedCopy.value = undefined
   const targetPath = await save({
@@ -462,9 +520,18 @@ const saveEditedCopy = async () => {
         flipVertical: flipVertical.value,
         width: resizeEnabled.value ? Number(draftWidth.value) : null,
         height: resizeEnabled.value ? Number(draftHeight.value) : null,
+        crop: cropEnabled.value ? {
+          x: Number(cropX.value),
+          y: Number(cropY.value),
+          width: Number(cropWidth.value),
+          height: Number(cropHeight.value),
+        } : null,
+        jpegQuality: outputExtension.value === 'jpg' ? Number(jpegQuality.value) : null,
+        normalizeOrientation: true,
       },
     })
-    if (saved.status !== 'saved_verified' || !saved.sourceUnchanged || !saved.targetReopened) throw new Error('图片副本没有完成可靠保存复核')
+    if (saved.status !== 'saved_verified' || !saved.sourceUnchanged || !saved.targetReopened
+      || !saved.orientationNormalized || !saved.metadataRemoved) throw new Error('图片副本没有完成可靠保存与隐私清理复核')
     savedCopy.value = saved
   } catch (error) {
     editError.value = String(error).replace(/^Error:\s*/, '')
@@ -494,6 +561,12 @@ const load = async () => {
   savedCopy.value = undefined
   flipHorizontal.value = false
   flipVertical.value = false
+  cropEnabled.value = false
+  cropX.value = 0
+  cropY.value = 0
+  cropWidth.value = 1
+  cropHeight.value = 1
+  jpegQuality.value = 85
   fitToWindow.value = true
   clearMediaUrl()
   try {
@@ -575,7 +648,7 @@ button,.playback-rate { height: 30px; flex: none; display: inline-flex; align-it
 .image-editor { width: 286px; min-width: 286px; min-height: 0; overflow-y: auto; padding: 12px; box-sizing: border-box; border-left: var(--theme-border); background: var(--theme-card); font-size: var(--text-compact); }
 .image-editor > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 10px; border-bottom: var(--theme-border); }.image-editor > header div { display: grid; gap: 2px; }.image-editor > header strong { font-size: 13px; }.image-editor > header span,.image-editor section p { color: var(--theme-text-secondary); }.image-editor > header button { width: 28px; padding: 0; cursor: pointer; }.image-editor > header svg { width: 14px; }
 .image-editor section { display: grid; gap: 8px; padding: 12px 0; border-bottom: var(--theme-border); }.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.image-editor label { color: var(--theme-text-secondary); }.transform-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }.transform-buttons button,.editor-footer button { width: auto; gap: 5px; padding: 0 8px; cursor: pointer; font-size: var(--text-compact); }.transform-buttons svg,.editor-footer svg { width: 14px; height: 14px; }
-.dimension-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 6px; }.dimension-grid label { display: grid; gap: 4px; }.dimension-grid input,.image-editor select { width: 100%; height: 30px; box-sizing: border-box; padding: 0 7px; border: 1px solid var(--workspace-border-color); border-radius: 6px; outline: none; color: var(--theme-text); background: var(--workspace-control-bg); font: inherit; }.dimension-grid input:focus,.image-editor select:focus { border-color: rgba(var(--theme-primary-rgb),.55); }.dimension-grid > span { height: 30px; display: flex; align-items: center; color: var(--theme-text-secondary); }.ratio-lock { display: flex; align-items: center; gap: 6px; }.ratio-lock input { margin: 0; accent-color: var(--theme-primary); }.image-editor section p { margin: 0; line-height: 1.5; }
+.dimension-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 6px; }.dimension-grid label,.crop-grid label { display: grid; gap: 4px; }.dimension-grid input,.crop-grid input,.image-editor select { width: 100%; height: 30px; box-sizing: border-box; padding: 0 7px; border: 1px solid var(--workspace-border-color); border-radius: 6px; outline: none; color: var(--theme-text); background: var(--workspace-control-bg); font: inherit; }.dimension-grid input:focus,.crop-grid input:focus,.image-editor select:focus { border-color: rgba(var(--theme-primary-rgb),.55); }.dimension-grid > span { height: 30px; display: flex; align-items: center; color: var(--theme-text-secondary); }.crop-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }.ratio-lock { display: flex; align-items: center; gap: 6px; }.ratio-lock input { margin: 0; accent-color: var(--theme-primary); }.quality-control { display: grid; gap: 6px; }.quality-control span { display: flex; justify-content: space-between; }.quality-control input { width: 100%; accent-color: var(--theme-primary); }.image-editor section p { margin: 0; line-height: 1.5; }.image-editor section .field-error { color: var(--theme-danger); }.image-editor section .privacy-note { padding: 7px 8px; border-radius: 6px; color: var(--theme-text-secondary); background: color-mix(in srgb,var(--theme-primary) 7%,transparent); }
 .text-button { width: auto; height: auto; padding: 0; border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; font: inherit; }.edit-message { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; padding: 8px; border-radius: 6px; line-height: 1.4; }.edit-message.error,.editor-state.error { color: var(--theme-danger); background: color-mix(in srgb,var(--theme-danger) 8%,transparent); }.edit-message.success { color: var(--theme-success); background: color-mix(in srgb,var(--theme-success) 8%,transparent); }.editor-state { display: flex; align-items: center; gap: 7px; padding: 16px 2px; color: var(--theme-text-secondary); }.editor-state svg { width: 15px; }
 .editor-footer { display: flex; justify-content: flex-end; gap: 7px; padding-top: 12px; }.editor-footer .primary { color: var(--theme-primary-contrast); border-color: var(--theme-primary); background: var(--theme-primary); }.editor-footer button:disabled { opacity: .45; cursor: default; }
 .media-status { min-height: 32px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 12px; border-top: var(--theme-border); color: var(--theme-text-secondary); background: var(--theme-card); font-size: var(--text-compact); }.media-status div { min-width: 0; display: flex; gap: 14px; overflow: hidden; }.media-status span { white-space: nowrap; }
