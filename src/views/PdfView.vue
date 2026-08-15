@@ -25,7 +25,7 @@
         <button class="scale-label" title="恢复 100%" @click="setScale(1)">{{ Math.round(scale * 100) }}%</button>
         <button class="icon-btn" title="放大" @click="changeScale(0.1)">＋</button>
         <button class="fit-btn" :class="{ active: fitWidth }" :aria-pressed="fitWidth" title="适合宽度" @click="toggleFitWidth"><Columns3Icon :size="14"/><span class="action-label">适合宽度</span></button>
-        <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'forms' }" :aria-pressed="sidebarOpen && sidebarTab === 'forms'" title="只读检查 PDF 表单结构" @click="openPdfFormPanel"><ListChecksIcon :size="14"/><span class="action-label">表单</span></button>
+        <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'forms' }" :aria-pressed="sidebarOpen && sidebarTab === 'forms'" title="检查并填写 PDF 表单副本" @click="openPdfFormPanel"><ListChecksIcon :size="14"/><span class="action-label">表单</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" :aria-pressed="sidebarOpen && sidebarTab === 'ocr'" title="离线识别扫描页" @click="openOcrPanel"><ScanTextIcon :size="14"/><span class="action-label">OCR</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'organize' }" :aria-pressed="sidebarOpen && sidebarTab === 'organize'" title="非破坏式页面整理预览" @click="openPageOrganizer"><ListOrderedIcon :size="14"/><span class="action-label">页面整理</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: areaMode }" :aria-pressed="areaMode" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
@@ -84,8 +84,15 @@
           :report="pdfFormInspection"
           :loading="pdfFormInspectionLoading"
           :error="pdfFormInspectionError"
+          :verification="pdfFormTextVerification"
+          :working="pdfFormTextWorking"
+          :operation-error="pdfFormTextError"
+          :default-copy-name="pdfFormDefaultCopyName"
           @retry="loadPdfFormInspection(true)"
           @go-page="goToPage"
+          @draft-change="invalidatePdfFormTextVerification"
+          @preview-copy="previewPdfFormTextCopy"
+          @save-copy="savePdfFormTextCopy"
         />
         <div v-else-if="!isExternal && sidebarTab === 'organize'" class="page-organizer">
           <div class="page-plan-summary">
@@ -439,7 +446,7 @@ import { buildPdfPageText, findPdfPageMatches, type PdfSearchMatch } from '../ut
 import type { PdfAnnotationReference } from '../utils/pdfReference'
 import type { PdfAnnotation, PdfAnnotationColor, PdfAnnotationDocument, PdfAnnotationKind, PdfAnnotationRect } from '../types/pdfAnnotations'
 import type { PdfOcrDocument, PdfOcrPage, PdfOcrTaskState } from '../types/pdfOcr'
-import type { PdfFormInspectionReport } from '../types/pdfForms'
+import type { PdfFormInspectionReport, PdfFormTextChange, PdfFormTextFillReport, PdfSavedFormTextReport } from '../types/pdfForms'
 import { createOfflineOcrWorker } from '../utils/pdfOcr'
 import { TauriPdfRangeTransport, type PdfReadDescriptor } from '../utils/tauriPdfRangeTransport'
 import {
@@ -622,6 +629,10 @@ const ocrSourceChanged = ref(false)
 const pdfFormInspection = ref<PdfFormInspectionReport | null>(null)
 const pdfFormInspectionLoading = ref(false)
 const pdfFormInspectionError = ref('')
+const pdfFormTextVerification = ref<PdfFormTextFillReport | null>(null)
+const pdfFormTextWorking = ref(false)
+const pdfFormTextError = ref('')
+const pdfFormDefaultCopyName = computed(() => `${fileName.value.replace(/\.pdf$/i, '') || 'document'}-form-filled.pdf`)
 const selectionTool = ref({ show: false, page: 0, quote: '', rects: [] as PdfAnnotationRect[], x: 0, y: 0 })
 const pagePlan = ref<PdfPagePlanEntry[]>([])
 const pagePlanUndo = ref<PdfPagePlanEntry[][]>([])
@@ -916,6 +927,53 @@ const openPdfFormPanel = () => {
   sidebarOpen.value = true
   sidebarTab.value = 'forms'
   void loadPdfFormInspection()
+}
+
+const invalidatePdfFormTextVerification = () => {
+  pdfFormTextVerification.value = null
+  pdfFormTextError.value = ''
+}
+
+const previewPdfFormTextCopy = async (changes: PdfFormTextChange[]) => {
+  if (!pdfFormInspection.value || pdfFormTextWorking.value || !changes.length) return
+  pdfFormTextWorking.value = true
+  pdfFormTextError.value = ''
+  try {
+    pdfFormTextVerification.value = await invoke<PdfFormTextFillReport>('preview_pdf_form_text_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      expectedSourceDigest: pdfFormInspection.value.sourceDigest,
+      changes,
+    })
+  } catch (cause) {
+    pdfFormTextVerification.value = null
+    pdfFormTextError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfFormTextWorking.value = false
+  }
+}
+
+const savePdfFormTextCopy = async (request: { changes: PdfFormTextChange[]; targetFileName: string }) => {
+  const verification = pdfFormTextVerification.value
+  if (!pdfFormInspection.value || !verification?.outputDigest || pdfFormTextWorking.value) return
+  pdfFormTextWorking.value = true
+  pdfFormTextError.value = ''
+  try {
+    const saved = await invoke<PdfSavedFormTextReport>('save_pdf_form_text_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      targetFileName: request.targetFileName,
+      expectedSourceDigest: pdfFormInspection.value.sourceDigest,
+      expectedOutputDigest: verification.outputDigest,
+      changes: request.changes,
+    })
+    message.success(`已可靠另存并验证：${request.targetFileName}（${saved.changedFields.length} 个字段）`)
+    pdfFormTextVerification.value = null
+  } catch (cause) {
+    pdfFormTextError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfFormTextWorking.value = false
+  }
 }
 
 const mergeFileName = (path: string) => path.split(/[\\/]/).pop() || path
@@ -1850,6 +1908,9 @@ const loadPdf = async () => {
   pdfFormInspection.value = null
   pdfFormInspectionLoading.value = false
   pdfFormInspectionError.value = ''
+  pdfFormTextVerification.value = null
+  pdfFormTextWorking.value = false
+  pdfFormTextError.value = ''
   pagePlan.value = []
   pagePlanUndo.value = []
   pagePlanRedo.value = []

@@ -42,3 +42,24 @@ export interface PdfFormInspectionReport {
   fields: PdfFormFieldSummary[]
   widgets: PdfFormWidgetSummary[]
 }
+
+export interface PdfFormTextChange { fieldName: string; value: string }
+export interface PdfFormTextFillReport {
+  status: 'isolated_verified' | 'blocked'
+  engine: string
+  sourceDigest: string
+  outputDigest?: string | null
+  outputBytes: number
+  changedFields: string[]
+  appearanceStreamsWritten: number
+  fieldTreeVerified: boolean
+  widgetAppearancesVerified: boolean
+  blockers: string[]
+}
+export interface PdfSavedFormTextReport {
+  status: 'saved_verified'
+  targetPath: string
+  targetDigest: string
+  sourceUnchanged: boolean
+  changedFields: string[]
+}

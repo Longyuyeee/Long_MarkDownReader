@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B2B2",
+  "wide": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 271.20001220703125,
+      "height": 626.4000244140625
+    },
+    "integrated": true,
+    "hasVerified": true,
+    "hasNoOverwrite": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "narrow": {
+    "viewport": [
+      720,
+      680
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 271.20001220703125,
+      "height": 432.8000183105469
+    },
+    "integrated": true,
+    "hasVerified": true,
+    "hasNoOverwrite": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "sourceDigest": "bc9d309854314e9bb63368017329f321d58bda1cfc682cc8aeee7703c63b18f6",
+  "sourceUnchanged": true,
+  "targetBytes": 1875,
+  "targetDigest": "06563515d89e572ad882567ffee0b6f0dc1cfed2f0630ea3f8a88704abad78b4",
+  "reopened": {
+    "status": "inspectable",
+    "fieldValue": "Bob QA",
+    "hasNormalAppearance": true
+  },
+  "runtimeErrorCount": 0,
+  "sourceUserContentIncluded": false,
+  "passed": true
+}

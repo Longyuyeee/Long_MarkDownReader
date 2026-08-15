@@ -44,6 +44,10 @@
           <p v-if="field.password" class="form-private-value">密码值已隐藏</p>
           <p v-else-if="field.value">{{ field.value }}</p>
           <p v-else class="form-empty-value">未填写</p>
+          <label v-if="editableTextField(field)" class="form-text-edit">
+            <span>副本中的文本</span>
+            <input :value="draftValue(field)" maxlength="1024" @input="updateDraft(field.name, inputValue($event))">
+          </label>
           <div class="form-field-flags">
             <i v-if="field.fillableCandidate">候选</i>
             <i v-if="field.required">必填</i>
@@ -61,27 +65,42 @@
       </div>
       <p v-else-if="report.status !== 'no_form'" class="form-panel-empty">没有匹配的字段</p>
       <p v-if="filteredFields.length > renderLimit" class="form-render-limit">为保持界面流畅，仅显示前 {{ renderLimit }} 项；继续输入名称可缩小范围。</p>
-      <p class="form-readonly-note">结构检查只读；本阶段没有填写、保存或覆盖入口。摘要 {{ report.sourceDigest.slice(0, 12) }}…</p>
+      <section v-if="editableTextCount" class="form-copy-actions" data-testid="p1b2b2-pdf-form-copy">
+        <strong>文本表单可靠副本</strong>
+        <p>仅修改新副本；源 PDF 和已有文件不会覆盖。当前支持基础拉丁单行文本。</p>
+        <WorkspaceStateNotice v-if="operationError" kind="error" tone="danger" compact>{{ operationError }}</WorkspaceStateNotice>
+        <WorkspaceStateNotice v-else-if="verification" :kind="verification.status === 'isolated_verified' ? 'saved' : 'limited'" :tone="verification.status === 'isolated_verified' ? 'success' : 'warning'" compact>
+          {{ verification.status === 'isolated_verified' ? `已验证 ${verification.changedFields.length} 个字段与 ${verification.appearanceStreamsWritten} 个外观` : `已阻断：${verification.blockers.join('、')}` }}
+        </WorkspaceStateNotice>
+        <label class="form-copy-name"><span>副本文件名</span><input v-model="targetFileName" maxlength="180"></label>
+        <div class="form-copy-buttons">
+          <button :disabled="working || !changes.length" @click="$emit('preview-copy', changes)">{{ working ? '处理中…' : '验证副本' }}</button>
+          <button class="primary" :disabled="working || verification?.status !== 'isolated_verified' || !targetFileName.trim()" @click="$emit('save-copy', { changes, targetFileName: targetFileName.trim() })">可靠另存</button>
+        </div>
+      </section>
+      <p class="form-readonly-note">未支持的字段保持只读。源摘要 {{ report.sourceDigest.slice(0, 12) }}…</p>
     </template>
     <p v-else class="form-panel-empty">打开“表单”后开始只读检查</p>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import WorkspaceStateNotice from '../workspace/WorkspaceStateNotice.vue'
-import type { PdfFormInspectionReport, PdfFormWidgetSummary } from '../../types/pdfForms'
+import type { PdfFormFieldSummary, PdfFormInspectionReport, PdfFormTextChange, PdfFormTextFillReport, PdfFormWidgetSummary } from '../../types/pdfForms'
 
-const props = defineProps<{ report: PdfFormInspectionReport | null; loading: boolean; error: string }>()
-defineEmits<{ retry: []; 'go-page': [page: number] }>()
+const props = defineProps<{ report: PdfFormInspectionReport | null; loading: boolean; error: string; verification: PdfFormTextFillReport | null; working: boolean; operationError: string; defaultCopyName: string }>()
+const emit = defineEmits<{ retry: []; 'go-page': [page: number]; 'preview-copy': [changes: PdfFormTextChange[]]; 'save-copy': [request: { changes: PdfFormTextChange[]; targetFileName: string }]; 'draft-change': [] }>()
 
 const query = ref('')
+const drafts = ref<Record<string, string>>({})
+const targetFileName = ref(props.defaultCopyName)
 const renderLimit = 300
 const statusTitle = computed(() => props.report?.status === 'blocked' ? '表单结构存在风险' : props.report?.status === 'inspectable' ? '表单结构可检查' : '未检测到 AcroForm')
 const statusDescription = computed(() => props.report?.status === 'blocked'
   ? '可以查看字段，但不能进入后续填写流程。'
   : props.report?.status === 'inspectable'
-    ? '字段与页面控件关联清晰；当前仍为只读检查。'
+    ? '字段与页面控件关联清晰；可为安全文本子集创建可靠副本。'
     : '这份 PDF 没有标准 AcroForm 字段。')
 const filteredFields = computed(() => {
   const normalized = query.value.trim().toLocaleLowerCase()
@@ -89,6 +108,13 @@ const filteredFields = computed(() => {
   return (props.report?.fields || []).filter(field => `${field.name}\n${field.value || ''}\n${field.defaultValue || ''}`.toLocaleLowerCase().includes(normalized))
 })
 const visibleFields = computed(() => filteredFields.value.slice(0, renderLimit))
+const editableTextField = (field: PdfFormFieldSummary) => props.report?.status === 'inspectable' && field.fieldType === 'Tx' && field.fillableCandidate && !field.multiline && !field.password && !field.hasActions
+const editableTextCount = computed(() => (props.report?.fields || []).filter(editableTextField).length)
+const draftValue = (field: PdfFormFieldSummary) => drafts.value[field.name] ?? field.value ?? ''
+const changes = computed<PdfFormTextChange[]>(() => (props.report?.fields || []).filter(editableTextField).filter(field => draftValue(field) !== (field.value ?? '')).map(field => ({ fieldName: field.name, value: draftValue(field) })))
+const updateDraft = (name: string, value: string) => { drafts.value = { ...drafts.value, [name]: value }; emit('draft-change') }
+const inputValue = (event: Event) => (event.target as HTMLInputElement).value
+watch(() => props.report?.sourceDigest, () => { drafts.value = {}; targetFileName.value = props.defaultCopyName })
 const widgetsByField = computed(() => {
   const result = new Map<string, PdfFormWidgetSummary[]>()
   for (const widget of props.report?.widgets || []) {
@@ -131,7 +157,9 @@ const diagnosticLabel = (item: string) => ({
 .form-field-tools { position: sticky; top: 0; z-index: 1; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 6px; margin: 9px -2px 7px; padding: 2px; background: var(--theme-card); }.form-field-tools input { min-width: 0; height: 29px; padding: 0 8px; border: 1px solid var(--workspace-border-color); border-radius: 6px; outline: 0; color: var(--theme-text); background: var(--workspace-control-bg); font: inherit; }.form-field-tools input:focus { border-color: rgba(var(--theme-primary-rgb),.5); }.form-field-tools span { color: var(--theme-text-secondary); }
 .form-field-list { display: grid; gap: 7px; }.form-field-card { min-width: 0; padding: 8px; border: 1px solid var(--workspace-border-color); border-radius: 7px; background: var(--workspace-surface-raised); }.form-field-heading { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 7px; }.form-field-heading strong { overflow: hidden; color: var(--theme-text); font-size: var(--text-compact); text-overflow: ellipsis; white-space: nowrap; }.form-field-heading > span { padding: 2px 5px; border-radius: 999px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.09); }
 .form-field-card > p { display: -webkit-box; margin: 6px 0; overflow: hidden; color: var(--theme-text-secondary); line-height: 1.45; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.form-field-card > .form-private-value { color: var(--status-warning); }.form-field-card > .form-empty-value { opacity: .7; font-style: italic; }
+.form-text-edit,.form-copy-name { display: grid; gap: 4px; margin-top: 7px; color: var(--theme-text-secondary); }.form-text-edit input,.form-copy-name input { min-width: 0; height: 30px; padding: 0 8px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-control-bg); font: inherit; }
 .form-field-flags { display: flex; flex-wrap: wrap; gap: 4px; }.form-field-flags i { padding: 2px 5px; border: 1px solid var(--workspace-border-color); border-radius: 4px; color: var(--theme-text-secondary); font-style: normal; }
 .form-widget-links { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; padding-top: 6px; border-top: 1px solid var(--workspace-border-color); }.form-widget-links button { min-height: 24px; padding: 2px 6px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font: inherit; }
 .form-panel-empty,.form-render-limit,.form-readonly-note { margin: 10px 0 0; color: var(--theme-text-secondary); line-height: 1.5; text-align: center; }.form-render-limit { color: var(--status-warning); }.form-readonly-note { padding-top: 8px; border-top: 1px solid var(--workspace-border-color); overflow-wrap: anywhere; }
+.form-copy-actions { display: grid; gap: 7px; margin-top: 9px; padding: 9px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 8px; background: rgba(var(--theme-primary-rgb),.05); }.form-copy-actions > p { margin: 0; color: var(--theme-text-secondary); line-height: 1.45; }.form-copy-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }.form-copy-buttons button { min-height: 30px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-control-bg); font: inherit; }.form-copy-buttons .primary { border-color: rgba(var(--theme-primary-rgb),.4); color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); }.form-copy-buttons button:disabled { opacity: .5; }
 </style>

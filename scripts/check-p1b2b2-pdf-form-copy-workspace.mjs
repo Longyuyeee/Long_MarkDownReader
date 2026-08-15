@@ -1,0 +1,17 @@
+import fs from 'node:fs'
+const read = path => fs.readFileSync(path, 'utf8')
+const view = read('src/views/PdfView.vue')
+const panel = read('src/components/pdf/PdfFormInspectorPanel.vue')
+const types = read('src/types/pdfForms.ts')
+const evidence = JSON.parse(read('docs/evidence/p1b2b2-pdf-form-copy/runtime-evidence.json'))
+const manifest = JSON.parse(read('docs/evidence/p1b2b2-pdf-form-copy/manifest.json'))
+const contract = JSON.parse(read('shared/pdf-advanced-editing-contract.json'))
+const fail = message => { console.error(message); process.exit(1) }
+for (const token of ['preview_pdf_form_text_copy', 'save_pdf_form_text_copy', 'expectedSourceDigest', 'expectedOutputDigest', 'invalidatePdfFormTextVerification']) if (!view.includes(token)) fail(`P1-B2B2 view marker missing: ${token}`)
+for (const token of ['p1b2b2-pdf-form-copy', '验证副本', '可靠另存', '源 PDF 和已有文件不会覆盖', "field.fieldType === 'Tx'", '!field.multiline']) if (!panel.includes(token)) fail(`P1-B2B2 panel boundary missing: ${token}`)
+for (const token of ['PdfFormTextFillReport', 'PdfSavedFormTextReport']) if (!types.includes(token)) fail(`P1-B2B2 type missing: ${token}`)
+if (contract.stage !== 'P1-B2B2' || contract.status !== 'text-form-copy-workspace-complete') fail('P1-B2B2 contract stage is stale')
+if (manifest.stage !== 'P1-B2B2' || manifest.status !== 'accepted' || manifest.screenshots?.length !== 2 || manifest.sourceUserContentIncluded !== false) fail('P1-B2B2 manifest invalid')
+if (!evidence.passed || !evidence.sourceUnchanged || evidence.runtimeErrorCount !== 0 || evidence.reopened?.fieldValue !== 'Bob QA' || !evidence.reopened?.hasNormalAppearance) fail('P1-B2B2 runtime evidence invalid')
+for (const viewport of [evidence.wide, evidence.narrow]) if (!viewport.integrated || !viewport.hasVerified || !viewport.hasNoOverwrite || !viewport.saveReachable || viewport.errorVisible || viewport.overflow > 2 || viewport.panel?.width < 260) fail('P1-B2B2 responsive evidence invalid')
+console.log('P1-B2B2 PDF form workspace passed: original right workspace, preview-before-save, reliable new copy and wide/narrow desktop evidence are accepted.')

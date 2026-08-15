@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-B2B2 PDF 文本表单可靠副本工作区：** B2B1 后端已接入原 `PdfView` 右侧表单侧栏，没有新增窗口、路由或视觉体系。唯一命名、非多行、非密码的安全 `Tx` 字段可编辑草稿，必须先隔离验证再可靠另存；真实 Tauri 宽窄屏完成 `Bob QA` 写入、目标复开、非空外观、源摘要不变和零运行时错误。Unicode、复选框、单选和选择字段继续阻断。详见 [`P1B2B2_PDF_Form_Copy_Workspace_Desktop_Audit_2026-08-15.md`](./P1B2B2_PDF_Form_Copy_Workspace_Desktop_Audit_2026-08-15.md)。
+
 > **2026-08-15 P1-B2B1 PDF 文本表单可靠副本后端：** 新增资料库内 `Tx` 文本字段隔离预览与可靠另存命令；只接受唯一命名、非只读、非密码、带 Widget 且无签名/加密/XFA/JavaScript/动作/结构歧义的字段。基础拉丁值会同时写入规范 `/V` 和每个 Widget 的非空 `/AP /N`，保存强制源摘要、预览输出摘要、同目录新目标、不覆盖及写后复读，失败的新目标会清理。UI、Unicode 嵌入字体、复选框/单选/选择仍未开放。详见 [`P1B2B1_PDF_Text_Form_Reliable_Copy_Backend_2026-08-15.md`](./P1B2B1_PDF_Text_Form_Reliable_Copy_Backend_2026-08-15.md)。
 
 > **2026-08-15 P1-B2B0 PDF 能力登记对齐：** 在表单写入前，已把 PDF 从历史 `edit: unsupported`/sidecar-only 修正为资料库内 `basic-edit` + `copy` + `pdf-copy`，准确覆盖既有页面旋转、排序、排除、提取、合并和插页可靠副本；表单仍明确为只读检查，外部 PDF 继续只读，源覆盖与 PDF 创建仍不支持。发布 profile 与安全降级通道同步独立为 `pdf-copy`/`pdf-reliable-copy-isolation`。下一步 P1-B2B1 实现可靠填写副本后端。详见 [`P1B2B0_PDF_Capability_Registry_Reconciliation_2026-08-15.md`](./P1B2B0_PDF_Capability_Registry_Reconciliation_2026-08-15.md)。

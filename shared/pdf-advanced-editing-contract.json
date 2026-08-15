@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B2B1",
-  "status": "text-form-copy-backend-complete",
+  "stage": "P1-B2B2",
+  "status": "text-form-copy-workspace-complete",
   "sourcePolicy": "library-only-reliable-copy",
   "externalPolicy": "preview-only",
   "currentCapabilities": [
@@ -36,8 +36,9 @@
     {
       "id": "P1-B2B",
       "name": "bounded-acroform-fill-copy",
-      "status": "text-backend-complete-ui-and-additional-field-types-pending",
+      "status": "text-workspace-complete-additional-field-types-pending",
       "deliveredTextBackend": "src-tauri/src/formats/pdf_form_fill.rs",
+      "deliveredTextWorkspace": "src/components/pdf/PdfFormInspectorPanel.vue",
       "writeUserFile": true,
       "requirements": [
         "text-checkbox-radio-and-choice-safe-subset",
