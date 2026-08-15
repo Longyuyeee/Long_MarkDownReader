@@ -371,10 +371,10 @@
       "mimeTypes": ["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp", "image/x-icon", "image/avif"],
       "routeName": "MediaViewer",
       "maxBytes": 104857600,
-      "capabilities": { "read": "supported", "edit": "unsupported", "create": "unsupported", "index": "unsupported" },
-      "userCapability": { "level": "preview-only", "label": "专业图片查看", "saveMode": "none", "description": "PNG、JPEG、GIF、WebP、BMP、ICO 与 AVIF 可在应用内查看、缩放和旋转；预览只读，不会修改源文件。" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "unsupported", "index": "unsupported" },
+      "userCapability": { "level": "basic-edit", "label": "图片基础编辑", "saveMode": "copy", "description": "PNG、JPEG、WebP 与 BMP 可在资料库右侧工作区旋转、翻转、缩放并转换格式，结果只另存新副本；GIF、ICO、AVIF 和所有外部图片继续只读预览。" },
       "externalPolicy": "preview",
-      "adapters": { "reader": "media", "writer": null, "creator": null, "indexer": null },
+      "adapters": { "reader": "media", "writer": "image-copy", "creator": null, "indexer": null },
       "creation": null
     },
     {

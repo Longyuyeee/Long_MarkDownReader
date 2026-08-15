@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-A2 图片编辑工作区验收：** 资料库内 PNG/JPEG/WebP/BMP 已在原有右侧 `MediaViewerView` 中提供旋转、翻转、锁定比例缩放、格式转换和可靠另存；外部图片及 GIF/ICO/AVIF 仍只读。真实 Tauri WebView2 在 1280×800 与 720×680 下验证无文档横向溢出、面板保持可达，960×540 PNG 变换为 480×270 WebP 后完成原图不变、落盘复读和副本重开。下一步进入 P1-A3 裁剪、压缩质量和隐私元数据清理。
+
 > **2026-08-15 P1-A1 图片可靠另存内核：** PNG/JPEG/WebP/BMP 已具备有界旋转、翻转、缩放和格式转换后端；源 SHA-256 冲突保护、知识库路径边界、目标不覆盖、原子新建、落盘复读及源文件不变均有测试与机器合同。GIF/ICO/AVIF 和外部媒体仍只读。本阶段尚未改公开能力声明，接手后进入 P1-A2，只在现有右侧 `MediaViewerView` 接入编辑 UI，完成桌面证据后再更新注册表。详见 [`P1A1_Image_Transform_Copy_Backend_Audit_2026-08-15.md`](./P1A1_Image_Transform_Copy_Backend_Audit_2026-08-15.md)。
 
 > **2026-08-15 v1.0.10 官方更新链收口：** GitHub 托管运行 [`31872858203`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31872858203) 已从官方 v1.0.9 通过应用内更新升级到官方 v1.0.10，12/12 检查通过。用户确认、官方 NSIS SHA-256、同目录覆盖、自动重启、最新版状态及覆盖/卸载后的合成资料保留均已验证；三张截图已人工复核，九份脱敏证据受逐文件哈希门禁保护。P0 已收口，下一步进入图片基础编辑。详见 [`V1_0_10_Managed_Updater_Lifecycle_Audit_2026-08-15.md`](./V1_0_10_Managed_Updater_Lifecycle_Audit_2026-08-15.md)。

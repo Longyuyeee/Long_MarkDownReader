@@ -15,7 +15,7 @@ const forbidTokens = (source, label, tokens) => {
 
 const image = registry.formats.find(format => format.id === 'raster-image')
 const video = registry.formats.find(format => format.id === 'video')
-if (!image || image.routeName !== 'MediaViewer' || image.capabilities.read !== 'supported' || image.userCapability.saveMode !== 'none') fail('Image preview contract is incomplete')
+if (!image || image.routeName !== 'MediaViewer' || image.capabilities.read !== 'supported' || image.capabilities.edit !== 'supported' || image.userCapability.saveMode !== 'copy' || image.adapters.writer !== 'image-copy') fail('Image preview and reliable-copy edit contract is incomplete')
 if (!video || video.routeName !== 'MediaViewer' || video.capabilities.read !== 'supported' || video.userCapability.saveMode !== 'none') fail('Video preview contract is incomplete')
 for (const extension of ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.ico', '.avif']) if (!image.extensions.includes(extension)) fail(`Image extension missing: ${extension}`)
 for (const extension of ['.mp4', '.webm', '.ogv', '.m4v', '.mov', '.mkv', '.avi', '.mpeg', '.mpg']) if (!video.extensions.includes(extension)) fail(`Video extension missing: ${extension}`)
@@ -33,6 +33,9 @@ requireTokens(mediaWorkspace, 'Media workspace', [
   'ResizeObserver',
   'fitImage',
   'rotateBy',
+  'data-testid="image-editor-panel"',
+  "invoke<ImageEditIdentity>('inspect_image_edit_source'",
+  "invoke<ImageSavedCopyReport>('save_image_transform_copy'",
   'playbackRate',
   '源文件保持只读',
 ])

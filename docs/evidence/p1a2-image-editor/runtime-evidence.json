@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-A2",
+  "wide": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "documentOverflow": 0,
+    "panel": {
+      "x": 989.2000122070312,
+      "y": 127,
+      "width": 286,
+      "height": 637
+    },
+    "stage": {
+      "x": 265.8000183105469,
+      "y": 127,
+      "width": 723.4000244140625,
+      "height": 637
+    },
+    "image": {
+      "naturalWidth": 960,
+      "naturalHeight": 540,
+      "transform": "scaleX(-1) scaleY(1) rotate(90deg)"
+    },
+    "inputs": [
+      480,
+      270
+    ],
+    "saveEnabled": true,
+    "errorVisible": false
+  },
+  "narrow": {
+    "viewport": {
+      "width": 720,
+      "height": 680
+    },
+    "documentOverflow": 0,
+    "panel": {
+      "x": 205.8000030517578,
+      "y": 424.5812683105469,
+      "width": 509.3999938964844,
+      "height": 219.4187469482422
+    },
+    "stage": {
+      "x": 205.8000030517578,
+      "y": 167,
+      "width": 509.3999938964844,
+      "height": 257.5812683105469
+    },
+    "image": {
+      "naturalWidth": 960,
+      "naturalHeight": 540,
+      "transform": "scaleX(-1) scaleY(1) rotate(90deg)"
+    },
+    "inputs": [
+      480,
+      270
+    ],
+    "saveEnabled": true,
+    "errorVisible": false
+  },
+  "saveReport": {
+    "status": "saved_verified",
+    "outputDigest": "67202ffc12ee6bf0d77af566cb0eebaabda4dfe99766b3d6d1c70c5c68a9fb58",
+    "sourceWidth": 960,
+    "sourceHeight": 540,
+    "outputWidth": 480,
+    "outputHeight": 270,
+    "outputMimeType": "image/webp",
+    "outputBytes": 21740,
+    "sourceUnchanged": true,
+    "targetReopened": true
+  },
+  "reopened": {
+    "viewport": {
+      "width": 720,
+      "height": 680
+    },
+    "documentOverflow": 0,
+    "stage": {
+      "x": 205.8000030517578,
+      "y": 167,
+      "width": 509.3999938964844,
+      "height": 477
+    },
+    "image": {
+      "naturalWidth": 480,
+      "naturalHeight": 270,
+      "transform": "scaleX(1) scaleY(1) rotate(0deg)"
+    },
+    "inputs": [],
+    "saveEnabled": true,
+    "errorVisible": false
+  },
+  "runtimeErrorCount": 0,
+  "sourceUserContentIncluded": false,
+  "passed": true
+}

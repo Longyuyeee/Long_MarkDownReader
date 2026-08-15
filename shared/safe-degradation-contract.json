@@ -45,7 +45,7 @@
     },
     {
       "id": "strict-readonly-preview",
-      "formats": ["ods", "odp", "raster-image", "video"],
+      "formats": ["ods", "odp", "video"],
       "saveModes": ["none"],
       "profiles": ["odf-preview", "media-preview"],
       "sourcePolicy": "never-write-source",
@@ -62,6 +62,24 @@
         {
           "path": "src-tauri/src/commands/media.rs",
           "markers": ["WorkspaceGuard::new(library_root)", "asset_protocol_scope", "read_only: true"]
+        }
+      ]
+    },
+    {
+      "id": "verified-image-copy",
+      "formats": ["raster-image"],
+      "saveModes": ["copy"],
+      "profiles": ["media-preview"],
+      "sourcePolicy": "never-write-source-copy-only",
+      "failurePolicy": "reject-stale-source-or-unverified-output",
+      "evidence": [
+        {
+          "path": "src-tauri/src/commands/media.rs",
+          "markers": ["expected_source_digest", "write_new_bytes", "source_unchanged: true", "target_reopened: true"]
+        },
+        {
+          "path": "src-tauri/src/formats/raster_image.rs",
+          "markers": ["MAX_IMAGE_PIXELS", "reader.limits(limits)", "结构复读尺寸"]
         }
       ]
     },

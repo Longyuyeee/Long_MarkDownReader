@@ -106,6 +106,7 @@ if (
 const expectedLanes = new Set([
   "signature-protected-overwrite",
   "strict-readonly-preview",
+  "verified-image-copy",
   "pdf-sidecar-isolation",
   "verified-office-copy",
   "external-application-handoff",
@@ -125,6 +126,7 @@ for (const [id, saveMode, profile] of [
   ["pptx", "copy", "office-copy"],
   ["ods", "none", "odf-preview"],
   ["odp", "none", "odf-preview"],
+  ["raster-image", "copy", "media-preview"],
   ["workbook", "bounded-overwrite", "workbook-bounded"],
 ]) {
   const format = registryById.get(id);
