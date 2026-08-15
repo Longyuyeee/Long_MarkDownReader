@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-B2B1 PDF 文本表单可靠副本后端：** 新增资料库内 `Tx` 文本字段隔离预览与可靠另存命令；只接受唯一命名、非只读、非密码、带 Widget 且无签名/加密/XFA/JavaScript/动作/结构歧义的字段。基础拉丁值会同时写入规范 `/V` 和每个 Widget 的非空 `/AP /N`，保存强制源摘要、预览输出摘要、同目录新目标、不覆盖及写后复读，失败的新目标会清理。UI、Unicode 嵌入字体、复选框/单选/选择仍未开放。详见 [`P1B2B1_PDF_Text_Form_Reliable_Copy_Backend_2026-08-15.md`](./P1B2B1_PDF_Text_Form_Reliable_Copy_Backend_2026-08-15.md)。
+
 > **2026-08-15 P1-B2B0 PDF 能力登记对齐：** 在表单写入前，已把 PDF 从历史 `edit: unsupported`/sidecar-only 修正为资料库内 `basic-edit` + `copy` + `pdf-copy`，准确覆盖既有页面旋转、排序、排除、提取、合并和插页可靠副本；表单仍明确为只读检查，外部 PDF 继续只读，源覆盖与 PDF 创建仍不支持。发布 profile 与安全降级通道同步独立为 `pdf-copy`/`pdf-reliable-copy-isolation`。下一步 P1-B2B1 实现可靠填写副本后端。详见 [`P1B2B0_PDF_Capability_Registry_Reconciliation_2026-08-15.md`](./P1B2B0_PDF_Capability_Registry_Reconciliation_2026-08-15.md)。
 
 > **2026-08-15 P1-B2A2 PDF 表单检查面板：** B2A1 只读后端已接入原 PDF 工作区的“表单”标签，没有新增路由或窗口；外部 PDF 无入口，字段渲染和 Widget 页码有界，密码值隐藏且无填写/保存控件。真实 custom-protocol Tauri WebView2 在 1280×800、720×680 下验证标准 AcroForm 的 2 字段/2 控件、源摘要不变、零运行时错误和原壳层结构。下一步 P1-B2B 只做无风险字段的可靠填写新副本。详见 [`P1B2A2_PDF_Form_Panel_Desktop_Audit_2026-08-15.md`](./P1B2A2_PDF_Form_Panel_Desktop_Audit_2026-08-15.md)。
