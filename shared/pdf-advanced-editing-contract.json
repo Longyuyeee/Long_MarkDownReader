@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B5A",
-  "status": "metadata-safety-audit-complete",
+  "stage": "P1-B5B",
+  "status": "metadata-backend-complete",
   "sourcePolicy": "library-only-reliable-copy",
   "externalPolicy": "preview-only",
   "currentCapabilities": [
@@ -91,9 +91,10 @@
     {
       "id": "P1-B5",
       "name": "metadata-copy",
-      "status": "safety-audit-complete-backend-pending",
+      "status": "backend-complete-workspace-pending",
       "deliveredContract": "shared/pdf-metadata-safety-contract.json",
-      "backendWriteUserFile": false,
+      "deliveredBackend": "src-tauri/src/formats/pdf_metadata.rs",
+      "backendWriteUserFile": true,
       "currentWriteUserFile": false,
       "writeUserFile": true,
       "requirements": [

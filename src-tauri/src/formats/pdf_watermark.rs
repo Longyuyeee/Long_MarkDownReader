@@ -46,14 +46,14 @@ pub struct PdfWatermarkCopyReport {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-struct PageGeometry {
+pub(crate) struct PageGeometry {
     media_box: [f32; 4],
     crop_box: [f32; 4],
     rotation: i16,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-struct PreservationInventory {
+pub(crate) struct PreservationInventory {
     acro_form: bool,
     outlines: bool,
     metadata: bool,
@@ -69,7 +69,7 @@ struct EmbeddedFont {
     advances: HashMap<char, f32>,
 }
 
-fn digest(bytes: &[u8]) -> String {
+pub(crate) fn digest(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
 
@@ -81,7 +81,7 @@ fn object_dictionary(object: &Object) -> Option<&Dictionary> {
     }
 }
 
-fn has_digital_signature(document: &Document) -> bool {
+pub(crate) fn has_digital_signature(document: &Document) -> bool {
     document.objects.values().any(|object| {
         object_dictionary(object).is_some_and(|dictionary| {
             dictionary
@@ -115,7 +115,7 @@ fn inherited_page_value(document: &Document, page_id: ObjectId, key: &[u8]) -> O
     None
 }
 
-fn validated_page_ids(document: &Document) -> Result<Vec<ObjectId>, String> {
+pub(crate) fn validated_page_ids(document: &Document) -> Result<Vec<ObjectId>, String> {
     let root = document
         .catalog()
         .map_err(|_| "PDF Catalog 无效")?
@@ -201,7 +201,7 @@ fn normalized_rotation(value: i64) -> i16 {
     (((value % 360) + 360) % 360) as i16
 }
 
-fn page_geometry(document: &Document, page_id: ObjectId) -> Option<PageGeometry> {
+pub(crate) fn page_geometry(document: &Document, page_id: ObjectId) -> Option<PageGeometry> {
     let media_box = resolved_box(document, page_id, b"MediaBox")?;
     let crop_box = resolved_box(document, page_id, b"CropBox").unwrap_or(media_box);
     let rotation = inherited_page_value(document, page_id, b"Rotate")
@@ -219,7 +219,7 @@ fn catalog_has(document: &Document, key: &[u8]) -> bool {
     document.catalog().is_ok_and(|catalog| catalog.has(key))
 }
 
-fn has_embedded_files(document: &Document) -> bool {
+pub(crate) fn has_embedded_files(document: &Document) -> bool {
     let Ok(catalog) = document.catalog() else {
         return false;
     };
@@ -257,7 +257,10 @@ fn page_annotation_counts(document: &Document, page_id: ObjectId) -> (usize, usi
     (annotations.len(), links)
 }
 
-fn preservation_inventory(document: &Document, page_ids: &[ObjectId]) -> PreservationInventory {
+pub(crate) fn preservation_inventory(
+    document: &Document,
+    page_ids: &[ObjectId],
+) -> PreservationInventory {
     let counts = page_ids
         .iter()
         .map(|page_id| page_annotation_counts(document, *page_id))
@@ -565,7 +568,7 @@ fn watermark_stream_count(document: &Document, page_id: ObjectId) -> usize {
         .count()
 }
 
-fn has_pdfa_marker(source: &[u8]) -> bool {
+pub(crate) fn has_pdfa_marker(source: &[u8]) -> bool {
     let lowered = String::from_utf8_lossy(source).to_ascii_lowercase();
     lowered.contains("pdfaid:part") || lowered.contains("pdfa1") || lowered.contains("pdfa2")
 }
