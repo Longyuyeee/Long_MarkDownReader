@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B4A",
+  "status": "safety-audit-complete-backend-pending",
+  "requirement": "library-pdf-bounded-text-watermark-reliable-copy",
+  "currentWriteCapability": false,
+  "securityMeaning": "visible-attribution-only-not-redaction-drm-or-access-control",
+  "approvedArchitecture": "full-rewrite-source-clone-plus-isolated-overlay-content-stream",
+  "inputConstraints": {
+    "libraryOnly": true,
+    "externalPdfWrite": false,
+    "sourceOverwrite": false,
+    "existingTargetOverwrite": false,
+    "maxSourceBytes": 134217728,
+    "maxPages": 512,
+    "pageSelection": "all-pages-only-in-initial-slice",
+    "placement": "crop-box-centered-single-diagonal-line",
+    "textUnicodeScalars": {
+      "minimum": 1,
+      "maximum": 64,
+      "trimmed": true,
+      "controlsAndBidiOverrides": false,
+      "complexShapingEmojiAndVerticalWriting": false
+    },
+    "font": "embedded-subset-Noto-Sans-CJK-SC-2.004",
+    "fontSizePoints": {
+      "mode": "auto-fit",
+      "minimum": 18,
+      "maximum": 72
+    },
+    "angleDegrees": {
+      "minimum": -60,
+      "maximum": 60,
+      "default": -35
+    },
+    "opacity": {
+      "minimum": 0.08,
+      "maximum": 0.5,
+      "default": 0.18
+    },
+    "color": "bounded-device-gray"
+  },
+  "hardBlockers": [
+    "encrypted_pdf_unverified",
+    "digital_signature_or_certification_present",
+    "invalid_or_cyclic_page_tree",
+    "missing_or_invalid_media_crop_box",
+    "non_quarter_turn_page_rotation",
+    "unsupported_user_unit",
+    "pdfa_conformance_unverified",
+    "font_subset_or_glyph_coverage_failure",
+    "resource_or_content_stream_resolution_failure",
+    "source_digest_changed",
+    "source_or_output_budget_exceeded",
+    "existing_target_path"
+  ],
+  "preservationInvariants": [
+    "source-document-is-cloned-and-saved-as-a-full-new-revision-not-an-incremental-update",
+    "source-file-and-existing-targets-are-never-overwritten",
+    "page-count-order-media-box-crop-box-and-rotation-are-preserved",
+    "existing-content-streams-fonts-images-forms-links-annotations-outlines-attachments-tags-and-metadata-are-preserved",
+    "watermark-content-is-appended-last-inside-balanced-q-Q-and-Artifact-BDC-EMC-boundaries",
+    "watermark-font-and-extgstate-names-are-unique-against-local-and-inherited-resources",
+    "shared-resource-dictionaries-are-never-mutated-in-place",
+    "watermark-font-is-embedded-as-a-licensed-glyph-subset-with-ToUnicode",
+    "output-trailer-has-no-Prev-chain-and-source-digest-remains-unchanged"
+  ],
+  "verificationGates": [
+    "source-sha256-before-and-after-match",
+    "preview-output-sha256-locks-the-save-request",
+    "saved-target-byte-identity-matches-preview-output",
+    "saved-target-reopens-with-page-tree-and-preserved-structure-invariants",
+    "every-page-has-one-balanced-isolated-watermark-stream-and-resolvable-private-resources",
+    "watermark-text-extracts-on-every-page-with-the-expected-Unicode-value",
+    "independent-poppler-render-confirms-visible-watermark-without-clipping",
+    "independent-render-diff-confirms-non-watermark-regions-remain-visually-stable",
+    "source-and-target-forms-links-annotations-outlines-attachments-and-metadata-inventories-match"
+  ],
+  "explicitUserDisclosures": [
+    "watermark-is-visible-attribution-and-does-not-remove-or-protect-source-content",
+    "a-skilled-recipient-may-remove-or-edit-the-watermark",
+    "watermark-text-becomes-part-of-searchable-and-extractable-PDF-content",
+    "output-is-a-new-copy-and-the-source-remains-unchanged",
+    "PDF-A-or-digital-signature-conformance-is-not-preserved-by-the-initial-slice"
+  ],
+  "rejectedApproaches": [
+    "annotation-only-watermark",
+    "optional-content-layer-that-can-be-toggled-off",
+    "incremental-update-that-keeps-old-revisions",
+    "mutating-inherited-or-shared-resource-dictionaries",
+    "unembedded-system-font-reference",
+    "rasterizing-the-whole-document-for-a-watermark",
+    "marketing-watermark-as-redaction-drm-or-copy-protection",
+    "silent-source-overwrite"
+  ],
+  "implementationSlices": [
+    {
+      "id": "P1-B4A",
+      "name": "threat-model-and-vector-overlay-contract",
+      "status": "completed",
+      "writeUserFile": false
+    },
+    {
+      "id": "P1-B4B",
+      "name": "isolated-watermark-copy-backend",
+      "status": "planned",
+      "writeUserFile": true
+    },
+    {
+      "id": "P1-B4C",
+      "name": "original-workspace-watermark-panel",
+      "status": "planned",
+      "writeUserFile": true
+    },
+    {
+      "id": "P1-B4D",
+      "name": "desktop-reopen-and-independent-render-evidence",
+      "status": "planned",
+      "writeUserFile": false
+    }
+  ]
+}

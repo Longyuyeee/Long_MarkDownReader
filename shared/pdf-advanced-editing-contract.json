@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B3D",
-  "status": "permanent-redaction-complete",
+  "stage": "P1-B4A",
+  "status": "watermark-safety-audit-complete",
   "sourcePolicy": "library-only-reliable-copy",
   "externalPolicy": "preview-only",
   "currentCapabilities": [
@@ -72,6 +72,9 @@
     {
       "id": "P1-B4",
       "name": "watermark-copy",
+      "status": "safety-audit-complete-backend-pending",
+      "deliveredContract": "shared/pdf-watermark-safety-contract.json",
+      "currentWriteUserFile": false,
       "writeUserFile": true,
       "requirements": [
         "bounded-text-watermark",
