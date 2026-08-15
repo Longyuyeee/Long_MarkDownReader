@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B2B3",
+  "wide": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 271.20001220703125,
+      "height": 626.4000244140625
+    },
+    "integrated": true,
+    "hasVerified": true,
+    "hasNoOverwrite": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "narrow": {
+    "viewport": [
+      720,
+      680
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 271.20001220703125,
+      "height": 432.8000183105469
+    },
+    "integrated": true,
+    "hasVerified": true,
+    "hasNoOverwrite": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "sourceDigest": "bc9d309854314e9bb63368017329f321d58bda1cfc682cc8aeee7703c63b18f6",
+  "sourceUnchanged": true,
+  "targetBytes": 6754,
+  "targetDigest": "58247985aca15575aca612bd1c03fa5e08e36a62ef5a37555beffd3387fd6c13",
+  "reopened": {
+    "status": "inspectable",
+    "fieldValue": "中文编辑 QA",
+    "hasNormalAppearance": true
+  },
+  "render": {
+    "canvas": [
+      132,
+      170
+    ],
+    "sample": [
+      16,
+      31,
+      67,
+      36
+    ],
+    "darkPixels": 23,
+    "hasInkInField": true
+  },
+  "runtimeErrorCount": 0,
+  "sourceUserContentIncluded": false,
+  "passed": true
+}

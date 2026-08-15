@@ -67,7 +67,7 @@
       <p v-if="filteredFields.length > renderLimit" class="form-render-limit">为保持界面流畅，仅显示前 {{ renderLimit }} 项；继续输入名称可缩小范围。</p>
       <section v-if="editableTextCount" class="form-copy-actions" data-testid="p1b2b2-pdf-form-copy">
         <strong>文本表单可靠副本</strong>
-        <p>仅修改新副本；源 PDF 和已有文件不会覆盖。当前支持基础拉丁单行文本。</p>
+        <p>仅修改新副本；源 PDF 和已有文件不会覆盖。支持中文及内置字体覆盖的单行文本。</p>
         <WorkspaceStateNotice v-if="operationError" kind="error" tone="danger" compact>{{ operationError }}</WorkspaceStateNotice>
         <WorkspaceStateNotice v-else-if="verification" :kind="verification.status === 'isolated_verified' ? 'saved' : 'limited'" :tone="verification.status === 'isolated_verified' ? 'success' : 'warning'" compact>
           {{ verification.status === 'isolated_verified' ? `已验证 ${verification.changedFields.length} 个字段与 ${verification.appearanceStreamsWritten} 个外观` : `已阻断：${verification.blockers.join('、')}` }}
