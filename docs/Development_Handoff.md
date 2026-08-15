@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P0-B v1.0.10 更新验证工具：** 官方 `v1.0.9 -> v1.0.10` 专用策略、GitHub 托管一次性 Windows 工作流和机器门禁已建立；它复用曾捕获 v1.0.8 自动重启失败并验证 v1.0.9 修复的安装 runner 与 WebView 探针。当前只表示工具就绪，真实执行、12/12 检查、截图复核和证据导入尚未完成，状态保持 pending。详见 [`V1_0_10_Managed_Updater_Lifecycle_Audit_2026-08-15.md`](./V1_0_10_Managed_Updater_Lifecycle_Audit_2026-08-15.md)。
+
 > **2026-08-15 P0-A 能力声明对齐：** README 已撤回未注册的 `XLSM/XLSB` 软件内编辑承诺，明确当前工作簿入口仅为 `.xlsx`；ODS/ODP、未注册 ODT 与 WPS 原生格式的边界也已拆开。格式合同新增 README 反向门禁，防止公开说明再次超过共享注册表。`1.0.9 -> 1.0.10` 真实应用内更新仍为 pending，下一步单独建立 v1.0.10 托管更新证据链。详见 [`P0_Capability_Claims_and_Release_Fact_Alignment_Audit_2026-08-15.md`](./P0_Capability_Claims_and_Release_Fact_Alignment_Audit_2026-08-15.md)。
 
 > **2026-08-12 v1.0.10 已发布：** Release `368970200` 已公开，Tag `v1.0.10` 绑定候选证据提交 `380f51d`；源码门禁 `31554131290`、托管安装生命周期 `31556348980` 和候选证据门禁 `31558312102` 全部通过。NSIS、MSI 与 `SHA256SUMS.txt` 已从公开 URL 重新下载，大小和 SHA-256 与冻结产物一致；README 已切换到 v1.0.10。接手后只需执行官方 `1.0.9 -> 1.0.10` 应用内更新观察并回写闭环。
