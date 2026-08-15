@@ -33,7 +33,7 @@ function Get-Sha256([string]$Path) {
   $stream = [IO.File]::OpenRead($Path)
   try {
     $sha = [Security.Cryptography.SHA256]::Create()
-    try { return [Convert]::ToHexString($sha.ComputeHash($stream)) }
+    try { return ([BitConverter]::ToString($sha.ComputeHash($stream))).Replace("-", "") }
     finally { $sha.Dispose() }
   } finally { $stream.Dispose() }
 }
