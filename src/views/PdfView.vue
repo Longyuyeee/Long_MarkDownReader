@@ -25,6 +25,7 @@
         <button class="scale-label" title="恢复 100%" @click="setScale(1)">{{ Math.round(scale * 100) }}%</button>
         <button class="icon-btn" title="放大" @click="changeScale(0.1)">＋</button>
         <button class="fit-btn" :class="{ active: fitWidth }" :aria-pressed="fitWidth" title="适合宽度" @click="toggleFitWidth"><Columns3Icon :size="14"/><span class="action-label">适合宽度</span></button>
+        <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'forms' }" :aria-pressed="sidebarOpen && sidebarTab === 'forms'" title="只读检查 PDF 表单结构" @click="openPdfFormPanel"><ListChecksIcon :size="14"/><span class="action-label">表单</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" :aria-pressed="sidebarOpen && sidebarTab === 'ocr'" title="离线识别扫描页" @click="openOcrPanel"><ScanTextIcon :size="14"/><span class="action-label">OCR</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'organize' }" :aria-pressed="sidebarOpen && sidebarTab === 'organize'" title="非破坏式页面整理预览" @click="openPageOrganizer"><ListOrderedIcon :size="14"/><span class="action-label">页面整理</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: areaMode }" :aria-pressed="areaMode" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
@@ -33,7 +34,7 @@
     </WorkspaceToolbar>
 
     <main class="pdf-workspace">
-      <aside v-if="sidebarOpen && pdfDocument" class="pdf-sidebar" :class="{ 'organize-open': sidebarTab === 'organize' }">
+      <aside v-if="sidebarOpen && pdfDocument" class="pdf-sidebar" :class="{ 'organize-open': sidebarTab === 'organize', 'forms-open': sidebarTab === 'forms' }">
         <div
           class="sidebar-switch"
           role="tablist"
@@ -44,6 +45,7 @@
           <button role="tab" :aria-selected="sidebarTab === 'thumbnails'" :class="{ active: sidebarTab === 'thumbnails' }" @click="sidebarTab = 'thumbnails'">缩略图</button>
           <button role="tab" :aria-selected="sidebarTab === 'outline'" :class="{ active: sidebarTab === 'outline' }" @click="sidebarTab = 'outline'">目录</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'annotations'" :class="{ active: sidebarTab === 'annotations' }" @click="sidebarTab = 'annotations'">批注 {{ annotations.length || '' }}</button>
+          <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'forms'" :class="{ active: sidebarTab === 'forms' }" @click="openPdfFormPanel">表单 {{ pdfFormInspection?.fieldCount || '' }}</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'ocr'" :class="{ active: sidebarTab === 'ocr' }" @click="sidebarTab = 'ocr'">OCR {{ ocrDocument?.pages.length || '' }}</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'organize'" :class="{ active: sidebarTab === 'organize' }" @click="sidebarTab = 'organize'">页面</button>
         </div>
@@ -77,6 +79,14 @@
           <div v-if="referenceNotice" class="annotation-alert" aria-live="polite">{{ referenceNotice }}</div>
           <WorkspaceStateNotice v-if="annotationDocument" class="annotation-save-state" :kind="annotationSaveError ? 'error' : annotationSaving ? 'loading' : annotationDirty ? 'limited' : 'saved'" :tone="annotationSaveError ? 'danger' : annotationDirty ? 'warning' : annotationSaving ? 'info' : 'success'" compact>{{ annotationSaveError || (annotationSaving ? '正在保存批注' : annotationDirty ? '等待保存' : '批注已保存到 sidecar') }}</WorkspaceStateNotice>
         </div>
+        <PdfFormInspectorPanel
+          v-else-if="!isExternal && sidebarTab === 'forms'"
+          :report="pdfFormInspection"
+          :loading="pdfFormInspectionLoading"
+          :error="pdfFormInspectionError"
+          @retry="loadPdfFormInspection(true)"
+          @go-page="goToPage"
+        />
         <div v-else-if="!isExternal && sidebarTab === 'organize'" class="page-organizer">
           <div class="page-plan-summary">
             <WorkspaceStateNotice v-if="savedCopyNotice?.path === pdfPath" class="page-plan-saved" kind="saved" tone="success" compact>
@@ -409,6 +419,7 @@ import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import PdfFormInspectorPanel from '../components/pdf/PdfFormInspectorPanel.vue'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist'
@@ -417,6 +428,7 @@ import {
   Columns3Icon,
   FolderOpenIcon,
   ListOrderedIcon,
+  ListChecksIcon,
   MessageSquareTextIcon,
   ScanLineIcon,
   ScanTextIcon,
@@ -427,6 +439,7 @@ import { buildPdfPageText, findPdfPageMatches, type PdfSearchMatch } from '../ut
 import type { PdfAnnotationReference } from '../utils/pdfReference'
 import type { PdfAnnotation, PdfAnnotationColor, PdfAnnotationDocument, PdfAnnotationKind, PdfAnnotationRect } from '../types/pdfAnnotations'
 import type { PdfOcrDocument, PdfOcrPage, PdfOcrTaskState } from '../types/pdfOcr'
+import type { PdfFormInspectionReport } from '../types/pdfForms'
 import { createOfflineOcrWorker } from '../utils/pdfOcr'
 import { TauriPdfRangeTransport, type PdfReadDescriptor } from '../utils/tauriPdfRangeTransport'
 import {
@@ -576,7 +589,7 @@ const pageInput = ref(1)
 const scale = ref(1)
 const fitWidth = ref(false)
 const sidebarOpen = ref(true)
-const sidebarTab = ref<'thumbnails' | 'outline' | 'annotations' | 'ocr' | 'organize'>('thumbnails')
+const sidebarTab = ref<'thumbnails' | 'outline' | 'annotations' | 'forms' | 'ocr' | 'organize'>('thumbnails')
 const outline = ref<OutlineEntry[]>([])
 const outlineLoading = ref(false)
 const basePage = ref({ width: 612, height: 792 })
@@ -606,6 +619,9 @@ const ocrPageProgress = ref(0)
 const ocrProgressStatus = ref('')
 const ocrError = ref('')
 const ocrSourceChanged = ref(false)
+const pdfFormInspection = ref<PdfFormInspectionReport | null>(null)
+const pdfFormInspectionLoading = ref(false)
+const pdfFormInspectionError = ref('')
 const selectionTool = ref({ show: false, page: 0, quote: '', rects: [] as PdfAnnotationRect[], x: 0, y: 0 })
 const pagePlan = ref<PdfPagePlanEntry[]>([])
 const pagePlanUndo = ref<PdfPagePlanEntry[][]>([])
@@ -656,6 +672,7 @@ let annotationRevision = 0
 let annotationSourcePath = ''
 let annotationLibraryRoot = ''
 let annotationLoadGeneration = 0
+let pdfFormInspectionGeneration = 0
 let ocrGeneration = 0
 let ocrWorker: TesseractWorker | null = null
 const textPromises = new Map<number, Promise<TextContent | undefined>>()
@@ -871,6 +888,34 @@ const loadOcrDocument = async (document: PDFDocumentProxy) => {
 const openOcrPanel = () => {
   sidebarOpen.value = true
   sidebarTab.value = 'ocr'
+}
+
+const loadPdfFormInspection = async (force = false) => {
+  if (isExternal.value || !pdfDocument.value || (!force && pdfFormInspection.value)) return
+  const document = pdfDocument.value
+  const generation = ++pdfFormInspectionGeneration
+  pdfFormInspectionLoading.value = true
+  pdfFormInspectionError.value = ''
+  try {
+    const report = await invoke<PdfFormInspectionReport>('inspect_pdf_form_structure', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+    })
+    if (generation !== pdfFormInspectionGeneration || pdfDocument.value !== document) return
+    pdfFormInspection.value = report
+  } catch (cause) {
+    if (generation !== pdfFormInspectionGeneration || pdfDocument.value !== document) return
+    pdfFormInspection.value = null
+    pdfFormInspectionError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    if (generation === pdfFormInspectionGeneration) pdfFormInspectionLoading.value = false
+  }
+}
+
+const openPdfFormPanel = () => {
+  sidebarOpen.value = true
+  sidebarTab.value = 'forms'
+  void loadPdfFormInspection()
 }
 
 const mergeFileName = (path: string) => path.split(/[\\/]/).pop() || path
@@ -1778,6 +1823,7 @@ const loadPdf = async () => {
   await cancelOcr()
   ocrGeneration++
   annotationLoadGeneration++
+  pdfFormInspectionGeneration++
   window.clearTimeout(annotationSaveTimer)
   await persistAnnotations()
   error.value = ''
@@ -1801,6 +1847,9 @@ const loadPdf = async () => {
   ocrTaskState.value = 'idle'
   ocrError.value = ''
   ocrSourceChanged.value = false
+  pdfFormInspection.value = null
+  pdfFormInspectionLoading.value = false
+  pdfFormInspectionError.value = ''
   pagePlan.value = []
   pagePlanUndo.value = []
   pagePlanRedo.value = []
@@ -1900,7 +1949,7 @@ const loadPdf = async () => {
     const rememberedPage = Number(viewState?.section)
     const restored = Math.max(1, Math.min(document.numPages, routedPage || (Number.isInteger(rememberedPage) ? rememberedPage : 0) || readPositions()[positionId()] || 1))
     if (typeof viewState?.sidebarOpen === 'boolean') sidebarOpen.value = viewState.sidebarOpen
-    const availableSidebarTabs = isExternal.value ? ['thumbnails', 'outline'] : ['thumbnails', 'outline', 'annotations', 'ocr', 'organize']
+    const availableSidebarTabs = isExternal.value ? ['thumbnails', 'outline'] : ['thumbnails', 'outline', 'annotations', 'forms', 'ocr', 'organize']
     if (availableSidebarTabs.includes(viewState?.sidebarTab || '')) {
       sidebarTab.value = viewState?.sidebarTab as typeof sidebarTab.value
     }
@@ -1925,6 +1974,7 @@ const loadPdf = async () => {
     if (!isExternal.value) {
       await loadAnnotations(document)
       await loadOcrDocument(document)
+      if (sidebarTab.value === 'forms') void loadPdfFormInspection()
     }
   } catch (cause) {
     if (!error.value) error.value = String(cause).replace(/^Error:\s*/, '')
@@ -2033,6 +2083,7 @@ onMounted(() => {
 })
 onBeforeUnmount(async () => {
   await cancelOcr()
+  pdfFormInspectionGeneration++
   savePosition()
   rememberPdfViewState()
   window.clearTimeout(positionTimer)
@@ -2075,8 +2126,8 @@ onBeforeUnmount(async () => {
 .page-jump input { width: 42px; border: 0; outline: 0; color: var(--theme-text); background: transparent; text-align: right; }
 .pdf-workspace { min-height: 0; flex: 1; display: flex; }
 .pdf-sidebar { width: 220px; flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--workspace-border-color); background: color-mix(in srgb, var(--theme-card) 96%, #d9dde3); }
-.pdf-sidebar.organize-open { width: 272px; }
-.sidebar-switch { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; padding: 9px; border-bottom: 1px solid var(--workspace-border-color); }
+.pdf-sidebar.organize-open,.pdf-sidebar.forms-open { width: 272px; }
+.sidebar-switch { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; padding: 9px; border-bottom: 1px solid var(--workspace-border-color); }
 .sidebar-switch button { height: 28px; border: 0; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: var(--text-compact); white-space: nowrap; }
 .sidebar-switch button.active { color: var(--workspace-on-accent); background: var(--theme-primary); }
 .thumbnail-list,.outline-list { min-height: 0; flex: 1; overflow: auto; padding: 12px; }

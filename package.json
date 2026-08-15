@@ -156,6 +156,7 @@
     "check:p1a3b-image-editor": "node scripts/check-p1a3b-image-editor-controls.mjs && node scripts/check-p1a3b-image-editor-audit.mjs",
     "check:p1b1-pdf-safety-audit": "node scripts/check-p1b1-pdf-safety-audit.mjs",
     "check:p1b2a1-pdf-form-inspector": "node scripts/check-p1b2a1-pdf-form-inspector.mjs",
+    "check:p1b2a2-pdf-form-panel": "node scripts/check-p1b2a2-pdf-form-panel.mjs",
     "audit:media-workspace": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-media-workspace-audit.ps1",
     "check:markdown-code-theme-contrast": "node scripts/check-markdown-code-theme-contrast.mjs",
     "check:code-editor-theme-contract": "node scripts/check-code-editor-theme-contract.mjs",

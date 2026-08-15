@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B2A2",
+  "report": {
+    "status": "inspectable",
+    "fieldCount": 2,
+    "widgetCount": 2,
+    "fillableCandidateCount": 2,
+    "missingAppearanceCount": 0,
+    "sourceDigest": "bc9d309854314e9bb63368017329f321d58bda1cfc682cc8aeee7703c63b18f6"
+  },
+  "wide": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "overflow": 0,
+    "panel": {
+      "x": 265.8000183105469,
+      "y": 169.60000610351562,
+      "width": 271.20001220703125,
+      "height": 626.4000244140625
+    },
+    "integrated": true,
+    "fields": 2,
+    "hasSummary": true,
+    "hasReadOnlyBoundary": true,
+    "hasWriteAction": false,
+    "errorVisible": false
+  },
+  "narrow": {
+    "viewport": [
+      720,
+      680
+    ],
+    "overflow": 0,
+    "panel": {
+      "x": 205.8000030517578,
+      "y": 243.1999969482422,
+      "width": 271.20001220703125,
+      "height": 432.8000183105469
+    },
+    "integrated": true,
+    "fields": 2,
+    "hasSummary": true,
+    "hasReadOnlyBoundary": true,
+    "hasWriteAction": false,
+    "errorVisible": false
+  },
+  "sourceUnchanged": true,
+  "runtimeErrorCount": 0,
+  "sourceUserContentIncluded": false,
+  "passed": true
+}
