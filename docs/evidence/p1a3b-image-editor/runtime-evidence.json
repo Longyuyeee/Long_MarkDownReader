@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-A3B",
+  "wide": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "overflow": 0,
+    "panel": {
+      "x": 989.2000122070312,
+      "y": 127,
+      "width": 286,
+      "height": 637
+    },
+    "stage": {
+      "x": 265.8000183105469,
+      "y": 127,
+      "width": 723.4000244140625,
+      "height": 637
+    },
+    "crop": [
+      120,
+      60,
+      600,
+      360
+    ],
+    "size": [
+      300,
+      180
+    ],
+    "quality": 72,
+    "privacy": "保存时自动校正 EXIF 方向，并移除 EXIF、GPS、注释等隐私元数据。",
+    "saveEnabled": true,
+    "errorVisible": false
+  },
+  "narrow": {
+    "viewport": [
+      720,
+      680
+    ],
+    "overflow": 0,
+    "panel": {
+      "x": 205.8000030517578,
+      "y": 424.5812683105469,
+      "width": 509.3999938964844,
+      "height": 219.4187469482422
+    },
+    "stage": {
+      "x": 205.8000030517578,
+      "y": 167,
+      "width": 509.3999938964844,
+      "height": 257.5812683105469
+    },
+    "crop": [
+      120,
+      60,
+      600,
+      360
+    ],
+    "size": [
+      300,
+      180
+    ],
+    "quality": 72,
+    "privacy": "保存时自动校正 EXIF 方向，并移除 EXIF、GPS、注释等隐私元数据。",
+    "saveEnabled": true,
+    "errorVisible": false
+  },
+  "saveReport": {
+    "status": "saved_verified",
+    "sourceDigest": "8088f375dcf74de48c3b70e8a1b3faa8e49af23564f49300115be372a7cb0283",
+    "outputDigest": "5b0d46c56465cc59eeda1eee5a6305de12e1c5623b32f9968d6bdc9bdf6dc2f4",
+    "sourceWidth": 960,
+    "sourceHeight": 540,
+    "outputWidth": 300,
+    "outputHeight": 180,
+    "outputMimeType": "image/jpeg",
+    "outputBytes": 5840,
+    "jpegQuality": 72,
+    "orientationNormalized": true,
+    "metadataRemoved": true,
+    "sourceUnchanged": true,
+    "targetReopened": true
+  },
+  "runtimeErrorCount": 0,
+  "sourceUserContentIncluded": false,
+  "passed": true
+}
