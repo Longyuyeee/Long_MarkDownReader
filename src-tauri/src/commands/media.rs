@@ -62,6 +62,9 @@ pub struct ImageSavedCopyReport {
     pub output_height: u32,
     pub output_mime_type: String,
     pub output_bytes: u64,
+    pub jpeg_quality: Option<u8>,
+    pub orientation_normalized: bool,
+    pub metadata_removed: bool,
     pub source_unchanged: bool,
     pub target_reopened: bool,
 }
@@ -247,6 +250,9 @@ fn save_image_transform_copy_to_path(
         output_height: transformed.output_height,
         output_mime_type: transformed.output_mime_type,
         output_bytes: transformed.output_bytes.len() as u64,
+        jpeg_quality: transformed.jpeg_quality,
+        orientation_normalized: transformed.orientation_normalized,
+        metadata_removed: transformed.metadata_removed,
         source_unchanged: true,
         target_reopened: true,
     })
@@ -355,10 +361,10 @@ mod tests {
             &source_digest,
             &RasterImageTransform {
                 quarter_turns: 1,
-                flip_horizontal: false,
                 flip_vertical: true,
                 width: Some(8),
                 height: Some(12),
+                ..RasterImageTransform::default()
             },
         )
         .unwrap();
@@ -371,11 +377,7 @@ mod tests {
             &target_path,
             &source_digest,
             &RasterImageTransform {
-                quarter_turns: 0,
-                flip_horizontal: false,
-                flip_vertical: false,
-                width: None,
-                height: None,
+                ..RasterImageTransform::default()
             },
         )
         .unwrap_err()
