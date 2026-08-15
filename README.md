@@ -129,14 +129,14 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 | Markdown / TXT / LOG | 所见即所得或源码、搜索、撤销与显式保存 | LOG 大文件优先使用专业查看模式 |
 | JSON / YAML / XML / TOML / 代码 | 语法高亮、结构查看、诊断、补全与保存 | HTML 预览经过净化和 sandbox |
 | CSV / TSV / Table | 网格、冻结列、看板、转换、导入导出 | 不承诺复杂 Excel 对象语义 |
-| XLSX / XLSM / XLSB | 工作表、公式、样式、图表、筛选与有界类型编辑 | 宏不执行；部分高级结构只读或保存可靠副本 |
+| XLSX | 工作表、公式、样式、图表、筛选与有界类型编辑 | 仅正式注册 `.xlsx`；宏不执行，部分高级结构只读或保存可靠副本 |
 | DOCX / PPTX | 阅读、受管草稿与可靠保存 | 不宣称完整等价 Microsoft Office |
 | PDF | 阅读、搜索、批注和页面管理 | 不是通用内容重排编辑器 |
 | Mermaid / Draw.io / SVG | 查看、编辑、画布操作与安全保存 | 外部资源和危险协议会被阻断 |
 | OPML / JSON Canvas | 思维导图、卡片与关系画布 | 修改需显式保存 |
 | 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、AVIF | 只读，不修改源文件 |
 | 视频 | MP4、WebM、OGV、M4V 及五种系统解码入口 | MOV/MKV/AVI/MPEG/MPG 取决于系统解码器 |
-| ODF / 旧 Office / WPS | 有界预览、转换或外部程序交接 | 能力依赖文件生产者与本机软件 |
+| ODS / ODP / 旧 Office / WPS | ODS/ODP 有界预览，旧 Office 转换，WPS 原生格式交给外部程序 | ODT 尚未正式注册；`.wps/.et/.dps` 不在软件内编辑 |
 
 格式事实源位于 [`shared/file-formats.json`](shared/file-formats.json)，发布边界位于 [`shared/release-capability-matrix.json`](shared/release-capability-matrix.json)。
 
