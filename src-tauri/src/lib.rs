@@ -88,9 +88,9 @@ use commands::odt::read_odt_document;
 use commands::pdf::{
     build_pdf_annotation_reference, preview_pdf_insert_isolated_copy,
     preview_pdf_merge_isolated_copy, preview_pdf_page_plan_isolated_copy,
-    preview_pdf_page_range_extract_copy, read_external_pdf_info, read_external_pdf_range,
-    read_pdf_annotations, read_pdf_file, read_pdf_info, read_pdf_ocr, read_pdf_range,
-    save_pdf_insert_copy, save_pdf_merge_copy,
+    preview_pdf_page_range_extract_copy, inspect_pdf_form_structure, read_external_pdf_info,
+    read_external_pdf_range, read_pdf_annotations, read_pdf_file, read_pdf_info, read_pdf_ocr,
+    read_pdf_range, save_pdf_insert_copy, save_pdf_merge_copy,
     save_pdf_page_plan_copy, save_pdf_page_range_copy, write_pdf_annotations, write_pdf_ocr,
 };
 use commands::pptx::{
@@ -400,6 +400,7 @@ pub fn run() {
             read_pdf_range,
             read_external_pdf_info,
             read_external_pdf_range,
+            inspect_pdf_form_structure,
             preview_pdf_page_plan_isolated_copy,
             save_pdf_page_plan_copy,
             preview_pdf_page_range_extract_copy,

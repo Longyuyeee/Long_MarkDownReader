@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-B2A1 PDF 表单检查后端：** 新增资料库内只读 AcroForm 检查命令，同时遍历规范字段树和页面 Widget，报告关联、类型、值/默认值、选项、标志、外观、重复名、孤儿及 XFA/JavaScript/签名风险；密码字段值不会出现在报告中。输入、字段数、Widget 数、深度和字符串均有上限，无任何保存参数或写入路径。下一步 P1-B2A2 只在原 PDF 右侧栏展示检查结果并补真实桌面证据。详见 [`P1B2A1_PDF_Form_Inspection_Backend_Audit_2026-08-15.md`](./P1B2A1_PDF_Form_Inspection_Backend_Audit_2026-08-15.md)。
+
 > **2026-08-15 P1-B1 PDF 安全编辑边界审计：** 已确认现有 PDF 具备阅读/搜索、批注和 OCR sidecar，以及旋转、改序、排除、范围提取、合并、插页的可靠新副本；尚无 AcroForm 填写、永久脱敏、水印或元数据编辑。审计发现格式注册表仍低估为 `edit: unsupported`/sidecar-only，需在开放表单写入前统一注册表、发布矩阵和安全降级合同。下一步 P1-B2A 只做规范字段树与页面 Widget 的只读结构检查，加密和签名 PDF 保持强制阻断。详见 [`P1B1_PDF_Safety_Boundary_Audit_2026-08-15.md`](./P1B1_PDF_Safety_Boundary_Audit_2026-08-15.md)。
 
 > **2026-08-15 P1-A3B 图片基础编辑收口：** 既有右侧图片编辑面板已接入精确数值裁剪、裁剪比例感知缩放、JPEG 质量与强制隐私元数据清理说明；未新建独立页面，左侧资料库与右侧编辑结构保持不变。真实 custom-protocol Tauri WebView2 在 1280×800、720×680 下验证 120/60/600/360 裁剪、300×180 输出、JPEG 质量 72、源不变、副本复开、零运行时错误。审计过程中发现并修复“锁定比例仍使用原图比例”的预期不一致。下一步进入 PDF 安全编辑增强。详见 [`P1A3B_Image_Editor_Closure_Audit_2026-08-15.md`](./P1A3B_Image_Editor_Closure_Audit_2026-08-15.md)。
