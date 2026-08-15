@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B4C",
-  "status": "workspace-complete-desktop-evidence-pending",
+  "stage": "P1-B4D",
+  "status": "desktop-and-independent-render-verified",
   "requirement": "library-pdf-bounded-text-watermark-reliable-copy",
   "currentWriteCapability": true,
   "backendWriteCapability": true,
@@ -123,7 +123,8 @@
     {
       "id": "P1-B4D",
       "name": "desktop-reopen-and-independent-render-evidence",
-      "status": "planned",
+      "status": "completed",
+      "deliveredEvidence": "docs/evidence/p1b4d-pdf-watermark/manifest.json",
       "writeUserFile": false
     }
   ]

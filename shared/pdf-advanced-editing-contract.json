@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B4C",
-  "status": "watermark-workspace-complete",
+  "stage": "P1-B4D",
+  "status": "watermark-complete",
   "sourcePolicy": "library-only-reliable-copy",
   "externalPolicy": "preview-only",
   "currentCapabilities": [
@@ -73,11 +73,12 @@
     {
       "id": "P1-B4",
       "name": "watermark-copy",
-      "status": "workspace-complete-desktop-evidence-pending",
+      "status": "completed",
       "deliveredContract": "shared/pdf-watermark-safety-contract.json",
       "deliveredBackend": "src-tauri/src/formats/pdf_watermark.rs",
       "backendWriteUserFile": true,
       "deliveredWorkspace": "src/components/pdf/PdfWatermarkPanel.vue",
+      "deliveredEvidence": "docs/evidence/p1b4d-pdf-watermark/manifest.json",
       "currentWriteUserFile": true,
       "writeUserFile": true,
       "requirements": [

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B4D",
+  "engine": "pypdf + Poppler + Pillow",
+  "sourcePages": 2,
+  "targetPages": 2,
+  "watermarkText": "项目机密 P1B4D",
+  "targetPageText": [
+    "P1-B4D SOURCE - PORTRAIT\nOriginal text, page geometry, metadata and link must remain readable.\nThe watermark is visible attribution, not DRM or redaction.\nhttps://example.com/longedit-watermark-audit\nSTRUCTURE PRESERVATION BOX\n项目机密 P1B4D",
+    "P1-B4D SOURCE - LANDSCAPE\nA second page with a different aspect ratio verifies automatic sizing.\n PUBLIC CONTENT\n项目机密 P1B4D"
+  ],
+  "sourceAnnotations": [
+    1,
+    0
+  ],
+  "targetAnnotations": [
+    1,
+    0
+  ],
+  "targetRender": {
+    "width": 1191,
+    "height": 1684,
+    "changedPixels": 40363,
+    "differenceBounds": [
+      140,
+      513,
+      1042,
+      1148
+    ]
+  },
+  "sourceRenderSha256": "f5e8d816d60e226d2b3995c8b0d12fc003088a8f3ab2927a758558d3f5c43cf8",
+  "targetRenderSha256": "8e153f1a5afb52c545db7f4e243283dd2f20596d586b386d947ea38a492e5bb7",
+  "targetPageTwoRenderSha256": "1b7651c5d21a398f405fafa0403f1e4fc8528c949a42b96d658a82426aa2a98a",
+  "checks": {
+    "pageCountPreserved": true,
+    "watermarkExtractedEveryPage": true,
+    "originalTextPreservedEveryPage": true,
+    "pageGeometryPreserved": true,
+    "annotationsPreserved": true,
+    "metadataPreserved": true,
+    "visibleWatermarkDifference": true,
+    "watermarkNotClipped": true,
+    "landscapePageRendered": true,
+    "fullRewriteTrailerHasNoPrev": true
+  },
+  "sourceUserContentIncluded": false,
+  "passed": true
+}
