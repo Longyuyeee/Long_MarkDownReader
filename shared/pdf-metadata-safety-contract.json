@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B5B",
-  "status": "backend-complete-workspace-pending",
+  "stage": "P1-B5C",
+  "status": "workspace-complete-desktop-evidence-pending",
   "requirement": "library-pdf-bounded-descriptive-metadata-reliable-copy",
-  "currentWriteCapability": false,
+  "currentWriteCapability": true,
   "securityMeaning": "descriptive-document-properties-only-not-complete-privacy-scrubbing",
   "approvedArchitecture": "full-rewrite-source-clone-plus-canonical-info-dictionary",
   "editableFields": [
@@ -123,8 +123,10 @@
     {
       "id": "P1-B5C",
       "name": "original-workspace-and-desktop-evidence",
-      "status": "planned",
-      "writeUserFile": false
+      "status": "workspace-complete-desktop-evidence-pending",
+      "deliveredWorkspace": "src/components/pdf/PdfMetadataPanel.vue",
+      "workspaceHost": "src/views/PdfView.vue",
+      "writeUserFile": true
     }
   ]
 }

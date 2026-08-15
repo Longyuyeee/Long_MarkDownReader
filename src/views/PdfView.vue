@@ -26,6 +26,7 @@
         <button class="icon-btn" title="放大" @click="changeScale(0.1)">＋</button>
         <button class="fit-btn" :class="{ active: fitWidth }" :aria-pressed="fitWidth" title="适合宽度" @click="toggleFitWidth"><Columns3Icon :size="14"/><span class="action-label">适合宽度</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'forms' }" :aria-pressed="sidebarOpen && sidebarTab === 'forms'" title="检查并填写 PDF 表单副本" @click="openPdfFormPanel"><ListChecksIcon :size="14"/><span class="action-label">表单</span></button>
+        <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'metadata' }" :aria-pressed="sidebarOpen && sidebarTab === 'metadata'" title="编辑 PDF 标题、作者、主题和关键词并可靠另存" @click="openPdfMetadataPanel"><FilePenLineIcon :size="14"/><span class="action-label">文档属性</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'redaction' }" :aria-pressed="sidebarOpen && sidebarTab === 'redaction'" title="永久移除敏感区域并另存图片型副本" @click="openRedactionPanel"><ShieldXIcon :size="14"/><span class="action-label">永久脱敏</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'watermark' }" :aria-pressed="sidebarOpen && sidebarTab === 'watermark'" title="为全部页面添加文字水印并可靠另存" @click="openWatermarkPanel"><StampIcon :size="14"/><span class="action-label">文字水印</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" :aria-pressed="sidebarOpen && sidebarTab === 'ocr'" title="离线识别扫描页" @click="openOcrPanel"><ScanTextIcon :size="14"/><span class="action-label">OCR</span></button>
@@ -36,7 +37,7 @@
     </WorkspaceToolbar>
 
     <main class="pdf-workspace">
-      <aside v-if="sidebarOpen && pdfDocument" class="pdf-sidebar" :class="{ 'organize-open': sidebarTab === 'organize', 'forms-open': sidebarTab === 'forms', 'redaction-open': sidebarTab === 'redaction', 'watermark-open': sidebarTab === 'watermark' }">
+      <aside v-if="sidebarOpen && pdfDocument" class="pdf-sidebar" :class="{ 'organize-open': sidebarTab === 'organize', 'forms-open': sidebarTab === 'forms', 'metadata-open': sidebarTab === 'metadata', 'redaction-open': sidebarTab === 'redaction', 'watermark-open': sidebarTab === 'watermark' }">
         <div
           class="sidebar-switch"
           role="tablist"
@@ -48,6 +49,7 @@
           <button role="tab" :aria-selected="sidebarTab === 'outline'" :class="{ active: sidebarTab === 'outline' }" @click="sidebarTab = 'outline'">目录</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'annotations'" :class="{ active: sidebarTab === 'annotations' }" @click="sidebarTab = 'annotations'">批注 {{ annotations.length || '' }}</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'forms'" :class="{ active: sidebarTab === 'forms' }" @click="openPdfFormPanel">表单 {{ pdfFormInspection?.fieldCount || '' }}</button>
+          <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'metadata'" :class="{ active: sidebarTab === 'metadata' }" @click="openPdfMetadataPanel">属性</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'redaction'" :class="{ active: sidebarTab === 'redaction' }" @click="openRedactionPanel">脱敏 {{ pdfRedactions.length || '' }}</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'watermark'" :class="{ active: sidebarTab === 'watermark' }" @click="openWatermarkPanel">水印</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'ocr'" :class="{ active: sidebarTab === 'ocr' }" @click="sidebarTab = 'ocr'">OCR {{ ocrDocument?.pages.length || '' }}</button>
@@ -97,6 +99,20 @@
           @draft-change="invalidatePdfFormTextVerification"
           @preview-copy="previewPdfFormTextCopy"
           @save-copy="savePdfFormTextCopy"
+        />
+        <PdfMetadataPanel
+          v-else-if="!isExternal && sidebarTab === 'metadata'"
+          :model-value="pdfMetadataValues"
+          :verification="pdfMetadataVerification"
+          :loading="pdfMetadataLoading"
+          :working="pdfMetadataWorking"
+          :saving="pdfMetadataSaving"
+          :dirty="pdfMetadataDirty"
+          :operation-error="pdfMetadataError"
+          :default-copy-name="pdfMetadataCopyName"
+          @update:model-value="updatePdfMetadataValues"
+          @preview="previewPdfMetadataCopy"
+          @save="savePdfMetadataCopy"
         />
         <div v-else-if="!isExternal && sidebarTab === 'redaction'" class="redaction-panel" data-testid="p1b3c-pdf-redaction">
           <WorkspaceStateNotice kind="limited" tone="warning" title="永久移除，不是视觉黑框">
@@ -495,6 +511,7 @@ import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.v
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import PdfFormInspectorPanel from '../components/pdf/PdfFormInspectorPanel.vue'
+import PdfMetadataPanel from '../components/pdf/PdfMetadataPanel.vue'
 import PdfWatermarkPanel from '../components/pdf/PdfWatermarkPanel.vue'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
@@ -502,6 +519,7 @@ import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist'
 import type { TextContent } from 'pdfjs-dist/types/src/display/api'
 import {
   Columns3Icon,
+  FilePenLineIcon,
   FolderOpenIcon,
   ListOrderedIcon,
   ListChecksIcon,
@@ -520,6 +538,7 @@ import type { PdfOcrDocument, PdfOcrPage, PdfOcrTaskState } from '../types/pdfOc
 import type { PdfFormInspectionReport, PdfFormTextChange, PdfFormTextFillReport, PdfSavedFormTextReport } from '../types/pdfForms'
 import type { PdfRasterizedRedactionPage, PdfRedactionColor, PdfRedactionCopyReport, PdfRedactionOverlay, PdfSavedRedactionCopyReport } from '../types/pdfRedaction'
 import type { PdfSavedWatermarkCopyReport, PdfWatermarkCopyReport, PdfWatermarkSpec } from '../types/pdfWatermark'
+import type { PdfMetadataCopyReport, PdfMetadataValues, PdfSavedMetadataCopyReport } from '../types/pdfMetadata'
 import { createOfflineOcrWorker } from '../utils/pdfOcr'
 import { digestPdfDocument, MAX_PDF_REDACTION_RECTS, MAX_PDF_REDACTION_SOURCE_BYTES, renderPdfRedactionPages } from '../utils/pdfRedaction'
 import { TauriPdfRangeTransport, type PdfReadDescriptor } from '../utils/tauriPdfRangeTransport'
@@ -670,7 +689,7 @@ const pageInput = ref(1)
 const scale = ref(1)
 const fitWidth = ref(false)
 const sidebarOpen = ref(true)
-const sidebarTab = ref<'thumbnails' | 'outline' | 'annotations' | 'forms' | 'redaction' | 'watermark' | 'ocr' | 'organize'>('thumbnails')
+const sidebarTab = ref<'thumbnails' | 'outline' | 'annotations' | 'forms' | 'metadata' | 'redaction' | 'watermark' | 'ocr' | 'organize'>('thumbnails')
 const outline = ref<OutlineEntry[]>([])
 const outlineLoading = ref(false)
 const basePage = ref({ width: 612, height: 792 })
@@ -727,6 +746,17 @@ const pdfWatermarkWorking = ref(false)
 const pdfWatermarkSaving = ref(false)
 const pdfWatermarkError = ref('')
 const pdfWatermarkCopyName = ref('')
+const emptyPdfMetadataValues = (): PdfMetadataValues => ({ title: '', author: '', subject: '', keywords: '' })
+const pdfMetadataValues = ref<PdfMetadataValues>(emptyPdfMetadataValues())
+const pdfMetadataBaseline = ref<PdfMetadataValues>(emptyPdfMetadataValues())
+const pdfMetadataVerification = ref<PdfMetadataCopyReport | null>(null)
+const pdfMetadataSourceDigest = ref('')
+const pdfMetadataLoading = ref(false)
+const pdfMetadataWorking = ref(false)
+const pdfMetadataSaving = ref(false)
+const pdfMetadataLoaded = ref(false)
+const pdfMetadataError = ref('')
+const pdfMetadataCopyName = ref('')
 const selectionTool = ref({ show: false, page: 0, quote: '', rects: [] as PdfAnnotationRect[], x: 0, y: 0 })
 const pagePlan = ref<PdfPagePlanEntry[]>([])
 const pagePlanUndo = ref<PdfPagePlanEntry[][]>([])
@@ -836,8 +866,10 @@ const pagePlanDirty = computed(() => pagePlanSummary.value.changed > 0)
 const pdfMergeDirty = computed(() => pdfMergeInputs.value.length > 1)
 const pdfInsertDirty = computed(() => Boolean(pdfInsertSourcePath.value))
 const pdfWatermarkDirty = computed(() => pdfWatermarkSpec.value.text.trim().length > 0)
-const pdfWorkspaceDirty = computed(() => pagePlanDirty.value || pdfMergeDirty.value || pdfInsertDirty.value || pdfRedactions.value.length > 0 || pdfWatermarkDirty.value)
-const pdfWorkspaceDraftLabel = computed(() => pdfRedactions.value.length ? '脱敏草稿' : pdfWatermarkDirty.value ? '水印草稿' : '页面草稿')
+const normalizedPdfMetadata = (values: PdfMetadataValues) => Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value.trim()])) as unknown as PdfMetadataValues
+const pdfMetadataDirty = computed(() => JSON.stringify(normalizedPdfMetadata(pdfMetadataValues.value)) !== JSON.stringify(normalizedPdfMetadata(pdfMetadataBaseline.value)))
+const pdfWorkspaceDirty = computed(() => pagePlanDirty.value || pdfMergeDirty.value || pdfInsertDirty.value || pdfRedactions.value.length > 0 || pdfWatermarkDirty.value || pdfMetadataDirty.value)
+const pdfWorkspaceDraftLabel = computed(() => pdfRedactions.value.length ? '脱敏草稿' : pdfWatermarkDirty.value ? '水印草稿' : pdfMetadataDirty.value ? '属性草稿' : '页面草稿')
 const pagePlanStatus = computed(() => {
   if (pagePlanMode.value === 'extract' && pageRangePages.value.length) {
     return `提取 ${pageRangePages.value.length}/${pagePlan.value.length} 页`
@@ -1276,6 +1308,102 @@ const savePdfWatermarkCopy = async (targetFileName: string) => {
     pdfWatermarkError.value = String(cause).replace(/^Error:\s*/, '')
   } finally {
     pdfWatermarkSaving.value = false
+  }
+}
+
+const invalidatePdfMetadataVerification = () => {
+  pdfMetadataVerification.value = null
+  pdfMetadataSourceDigest.value = ''
+  pdfMetadataError.value = ''
+}
+
+const updatePdfMetadataValues = (values: PdfMetadataValues) => {
+  pdfMetadataValues.value = values
+  invalidatePdfMetadataVerification()
+}
+
+const loadPdfMetadataValues = async () => {
+  const document = pdfDocument.value
+  if (!document || isExternal.value || pdfMetadataLoaded.value || pdfMetadataLoading.value) return
+  pdfMetadataLoading.value = true
+  pdfMetadataError.value = ''
+  try {
+    const sourceDigest = await digestPdfDocument(document)
+    const report = await invoke<PdfMetadataCopyReport>('preview_pdf_metadata_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      expectedSourceDigest: sourceDigest,
+      values: emptyPdfMetadataValues(),
+    })
+    pdfMetadataValues.value = { ...report.existingValues }
+    pdfMetadataBaseline.value = { ...report.existingValues }
+    pdfMetadataLoaded.value = true
+    pdfMetadataVerification.value = report.status === 'blocked' ? report : null
+  } catch (cause) {
+    pdfMetadataError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfMetadataLoading.value = false
+  }
+}
+
+const openPdfMetadataPanel = () => {
+  sidebarOpen.value = true
+  sidebarTab.value = 'metadata'
+  areaMode.value = false
+  redactionMode.value = false
+  dismissSelectionTool()
+  void loadPdfMetadataValues()
+}
+
+const previewPdfMetadataCopy = async () => {
+  const document = pdfDocument.value
+  if (!document || isExternal.value || !pdfMetadataDirty.value || pdfMetadataWorking.value) return
+  pdfMetadataWorking.value = true
+  invalidatePdfMetadataVerification()
+  try {
+    const sourceDigest = await digestPdfDocument(document)
+    const report = await invoke<PdfMetadataCopyReport>('preview_pdf_metadata_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      expectedSourceDigest: sourceDigest,
+      values: pdfMetadataValues.value,
+    })
+    pdfMetadataVerification.value = report
+    if (report.status === 'isolated_verified' && report.outputDigest) {
+      pdfMetadataSourceDigest.value = sourceDigest
+    }
+  } catch (cause) {
+    pdfMetadataError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfMetadataWorking.value = false
+  }
+}
+
+const savePdfMetadataCopy = async (targetFileName: string) => {
+  const verification = pdfMetadataVerification.value
+  if (!verification?.outputDigest || !pdfMetadataSourceDigest.value || pdfMetadataSaving.value) return
+  pdfMetadataSaving.value = true
+  pdfMetadataError.value = ''
+  try {
+    const saved = await invoke<PdfSavedMetadataCopyReport>('save_pdf_metadata_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      targetFileName,
+      expectedSourceDigest: pdfMetadataSourceDigest.value,
+      expectedOutputDigest: verification.outputDigest,
+      values: pdfMetadataValues.value,
+    })
+    if (!saved.sourceUnchanged || !saved.structuralReopenVerified || !saved.metadataReopenVerified || !saved.preservedInfoVerified || !saved.preservedStructureVerified || !saved.fullRewriteVerified) {
+      throw new Error('属性副本没有通过完整的落盘复读验证')
+    }
+    pdfMetadataBaseline.value = { ...saved.requestedValues }
+    invalidatePdfMetadataVerification()
+    message.success(`已更新文档属性并可靠另存：${targetFileName}`)
+    await openManagedFile(router, saved.targetPath, {}, 'replace')
+  } catch (cause) {
+    pdfMetadataError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfMetadataSaving.value = false
   }
 }
 
@@ -2233,6 +2361,16 @@ const loadPdf = async () => {
   pdfWatermarkSaving.value = false
   pdfWatermarkError.value = ''
   pdfWatermarkCopyName.value = ''
+  pdfMetadataValues.value = emptyPdfMetadataValues()
+  pdfMetadataBaseline.value = emptyPdfMetadataValues()
+  pdfMetadataVerification.value = null
+  pdfMetadataSourceDigest.value = ''
+  pdfMetadataLoading.value = false
+  pdfMetadataWorking.value = false
+  pdfMetadataSaving.value = false
+  pdfMetadataLoaded.value = false
+  pdfMetadataError.value = ''
+  pdfMetadataCopyName.value = ''
   pagePlan.value = []
   pagePlanUndo.value = []
   pagePlanRedo.value = []
@@ -2334,7 +2472,7 @@ const loadPdf = async () => {
     const rememberedPage = Number(viewState?.section)
     const restored = Math.max(1, Math.min(document.numPages, routedPage || (Number.isInteger(rememberedPage) ? rememberedPage : 0) || readPositions()[positionId()] || 1))
     if (typeof viewState?.sidebarOpen === 'boolean') sidebarOpen.value = viewState.sidebarOpen
-    const availableSidebarTabs = isExternal.value ? ['thumbnails', 'outline'] : ['thumbnails', 'outline', 'annotations', 'forms', 'redaction', 'watermark', 'ocr', 'organize']
+    const availableSidebarTabs = isExternal.value ? ['thumbnails', 'outline'] : ['thumbnails', 'outline', 'annotations', 'forms', 'metadata', 'redaction', 'watermark', 'ocr', 'organize']
     if (availableSidebarTabs.includes(viewState?.sidebarTab || '')) {
       sidebarTab.value = viewState?.sidebarTab as typeof sidebarTab.value
     }
@@ -2348,6 +2486,7 @@ const loadPdf = async () => {
     pdfInsertCopyName.value = `${fileName.value}-插页.pdf`
     pdfRedactionCopyName.value = `${fileName.value}-永久脱敏.pdf`
     pdfWatermarkCopyName.value = `${fileName.value}-文字水印.pdf`
+    pdfMetadataCopyName.value = `${fileName.value}-文档属性.pdf`
     loading.value = false
     await nextTick()
     if (fitWidth.value) applyFitWidth()
@@ -2362,6 +2501,7 @@ const loadPdf = async () => {
       await loadAnnotations(document)
       await loadOcrDocument(document)
       if (sidebarTab.value === 'forms') void loadPdfFormInspection()
+      if (sidebarTab.value === 'metadata') void loadPdfMetadataValues()
     }
   } catch (cause) {
     if (!error.value) error.value = String(cause).replace(/^Error:\s*/, '')
@@ -2445,7 +2585,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 const handleResize = () => { if (fitWidth.value) applyFitWidth() }
-const mayDiscardPagePlan = () => !pdfWorkspaceDirty.value || window.confirm('PDF 编辑草稿尚未生成新文件，离开后将丢失页面整理、合并、永久脱敏框选或文字水印参数。确定离开吗？')
+const mayDiscardPagePlan = () => !pdfWorkspaceDirty.value || window.confirm('PDF 编辑草稿尚未生成新文件，离开后将丢失页面整理、合并、永久脱敏框选、文字水印或文档属性修改。确定离开吗？')
 const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
   if (!pdfWorkspaceDirty.value) return
   event.preventDefault()
@@ -2521,7 +2661,7 @@ onBeforeUnmount(async () => {
 .pdf-workspace { min-height: 0; flex: 1; display: flex; }
 .pdf-sidebar { width: 220px; flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--workspace-border-color); background: color-mix(in srgb, var(--theme-card) 96%, #d9dde3); }
 .pdf-sidebar.organize-open,.pdf-sidebar.forms-open { width: 272px; }
-.pdf-sidebar.redaction-open,.pdf-sidebar.watermark-open { width: 300px; }
+.pdf-sidebar.redaction-open,.pdf-sidebar.watermark-open,.pdf-sidebar.metadata-open { width: 300px; }
 .sidebar-switch { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; padding: 9px; border-bottom: 1px solid var(--workspace-border-color); }
 .sidebar-switch button { height: 28px; border: 0; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: var(--text-compact); white-space: nowrap; }
 .sidebar-switch button.active { color: var(--workspace-on-accent); background: var(--theme-primary); }
