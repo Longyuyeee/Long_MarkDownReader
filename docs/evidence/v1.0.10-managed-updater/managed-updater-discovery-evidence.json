@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.10-U1-DISCOVERY",
+  "capturedAt": "2026-08-15T07:48:30.185Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows installed official v1.0.9",
+  "release": {
+    "available": true,
+    "currentVersion": "1.0.9",
+    "latestVersion": "1.0.10",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.10",
+    "releaseNotes": "# Long编辑 v1.0.10\n\nv1.0.10 是默认打开管理体验补丁。格式能力页不再只是跳转 Windows 设置，而是直接提供逐格式启用、关闭和状态查看；Windows 保护的最终默认选择仍由用户确认。\n\n## 主要变化\n\n- 37 类允许外部编辑或预览的格式可在“格式能力”页面逐项启用或关闭 Long编辑打开。\n- 展开格式后显示未启用、已启用、当前系统默认或部分扩展名默认状态。\n- “设为系统默认”只在用户主动点击后打开 Windows 针对 Long编辑的确认页面；返回应用时自动刷新状态。\n- 关闭操作清理当前格式的 Long编辑候选映射，不影响其他格式；权限或注册表错误会明确反馈。\n- 设置页统一为“管理打开方式”入口，不再并列显示笼统的系统设置按钮。\n\n## 安装与更新\n\n- v1.0.9 用户可通过应用内检查更新升级；安装前仍需用户确认，下载后严格核对官方 NSIS 的大小与 SHA-256。\n- 外部文件继续在独立顶层窗口打开，不占用主资料库窗口或增加内部标签页。\n- 社区安装包仍为 `NotSigned`，Windows 可能显示未知发布者或 SmartScreen。请只从官方 GitHub Release 下载并核对 `SHA256SUMS.txt`。\n\n## Windows 边界\n\n- Long编辑只读取 Windows `UserChoice` 用于显示真实状态，不直接写入、删除或绕过其保护哈希。\n- 应用内启用表示将 Long编辑加入当前格式的可选应用；真正改变系统默认仍需 Windows 显式确认。\n- 安装器默认关联仍仅包含 Markdown；其他格式不会在安装或升级时被批量接管。\n\n## 能力边界\n\n- 本补丁不扩大 Office、Excel、PDF 或其他格式的写回范围。\n- v1.0.9 的自动更新重启恢复和外部文件独立窗口能力保持不变。\n",
+    "publishedAt": "2026-08-12T03:06:11Z",
+    "installerName": "LongEdit_1.0.10_x64-setup.exe",
+    "installerSize": 53799388,
+    "installerSha256": "598c460c37dd9f3c333f504820c46ef8dd4cf4e6921ef4148b6098fc98632bbe"
+  },
+  "confirmation": {
+    "title": "发现新版本",
+    "text": "发现新版本v1.0.9v1.0.10更新将从官方 GitHub Relea e 下载，并在 SHA-256 校验通过后自动安装；安装完成后 Long编辑会自动重新打开。51.3 MBWindow  x64覆盖安装# Long编辑 v1.0.10\n\nv1.0.10 是默认打开管理体验补丁。格式能力页不再只是跳转 Window  设置，而是直接提供逐格式启用、关闭和状态查看；Window  保护的最终默认选择仍由用户确认。\n\n## 主要变化\n\n- 37 类允许外部编辑或预览的格式可在“格式能力”页面逐项启用或关闭 Long编辑打开。\n- 展开格式后显示未启用、已启用、当前系统默认或部分扩展名默认状态。\n- “设为系统默认”只在用户主动点击后打开 Window  针对 Long编辑的确认页面；返回应用时自动刷新状态。\n- 关闭操作清理当前格式的 Long编辑候选映射，不影响其他格式；权限或注册表错误会明确反馈。\n- 设置页统一为“管理打开方式”入口，不再并列显示笼统的系统设置按钮。\n\n## 安装与更新\n\n- v1.0.9 用户可通过应用内检查更新升级；安装前仍需用户确认，下载后严格核对官方 NSIS 的大小与 SHA-256。\n- 外部文件继续在独立顶层窗口打开，不占用主资料库窗口或增加内部标签页。\n- 社区安装包仍为 `NotSigned`，Window  当前为未签名社区版，Window  仍可能显示“未知发布者”提示。查看发布页稍后提醒 下载并安装",
+    "modalVisible": true,
+    "confirmationVisible": true,
+    "confirmationLabel": "下载并安装",
+    "userActionRequired": true,
+    "clicked": true,
+    "installerStartedBeforeConfirmation": false,
+    "clickedAt": "2026-08-15T07:48:30.202Z"
+  },
+  "screenshot": "managed-updater-available.jpg",
+  "sourceUserContentIncluded": false
+}

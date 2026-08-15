@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 v1.0.10 官方更新链收口：** GitHub 托管运行 [`31872858203`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31872858203) 已从官方 v1.0.9 通过应用内更新升级到官方 v1.0.10，12/12 检查通过。用户确认、官方 NSIS SHA-256、同目录覆盖、自动重启、最新版状态及覆盖/卸载后的合成资料保留均已验证；三张截图已人工复核，九份脱敏证据受逐文件哈希门禁保护。P0 已收口，下一步进入图片基础编辑。详见 [`V1_0_10_Managed_Updater_Lifecycle_Audit_2026-08-15.md`](./V1_0_10_Managed_Updater_Lifecycle_Audit_2026-08-15.md)。
+
 > **2026-08-15 P0-B v1.0.10 更新验证工具：** 官方 `v1.0.9 -> v1.0.10` 专用策略、GitHub 托管一次性 Windows 工作流和机器门禁已建立；它复用曾捕获 v1.0.8 自动重启失败并验证 v1.0.9 修复的安装 runner 与 WebView 探针。当前只表示工具就绪，真实执行、12/12 检查、截图复核和证据导入尚未完成，状态保持 pending。详见 [`V1_0_10_Managed_Updater_Lifecycle_Audit_2026-08-15.md`](./V1_0_10_Managed_Updater_Lifecycle_Audit_2026-08-15.md)。
 
 > **2026-08-15 P0-A 能力声明对齐：** README 已撤回未注册的 `XLSM/XLSB` 软件内编辑承诺，明确当前工作簿入口仅为 `.xlsx`；ODS/ODP、未注册 ODT 与 WPS 原生格式的边界也已拆开。格式合同新增 README 反向门禁，防止公开说明再次超过共享注册表。`1.0.9 -> 1.0.10` 真实应用内更新仍为 pending，下一步单独建立 v1.0.10 托管更新证据链。详见 [`P0_Capability_Claims_and_Release_Fact_Alignment_Audit_2026-08-15.md`](./P0_Capability_Claims_and_Release_Fact_Alignment_Audit_2026-08-15.md)。

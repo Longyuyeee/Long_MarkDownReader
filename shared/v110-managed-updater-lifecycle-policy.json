@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.10-U1",
-  "status": "hosted-execution-pending",
+  "status": "hosted-managed-update-passed",
   "environment": "github-hosted-disposable-windows",
   "workflow": ".github/workflows/v110-managed-updater-lifecycle.yml",
   "releases": {
@@ -27,7 +27,14 @@
         "sha256": "598c460c37dd9f3c333f504820c46ef8dd4cf4e6921ef4148b6098fc98632bbe",
         "authenticodeStatus": "NotSigned"
       },
-      "standaloneReleaseExecutableReferenceSha256": "160b065b2d1f3312b937ec8eca3b4d3c7c9cb44efa127913ad11f24285b528ef"
+      "standaloneReleaseExecutableReferenceSha256": "160b065b2d1f3312b937ec8eca3b4d3c7c9cb44efa127913ad11f24285b528ef",
+      "installedPackageExecutable": {
+        "fileName": "tauri-app.exe",
+        "sizeBytes": 87478272,
+        "sha256": "4b75b7b1d8ac20bd5e3f92a6267b66886aeb99c436f4bc38ab74d03918dd90a1",
+        "authenticodeStatus": "NotSigned",
+        "trustAnchor": "verified-official-nsis-installer"
+      }
     }
   },
   "requirements": {
@@ -47,19 +54,24 @@
   },
   "gates": {
     "harnessImplemented": true,
-    "qualityGatePassed": false,
-    "hostedWorkflowPassed": false,
-    "releaseDiscoveryPassed": false,
-    "confirmationBoundaryPassed": false,
-    "downloadHashPassed": false,
-    "overwriteInstallPassed": false,
-    "automaticRelaunchPassed": false,
-    "firstLaunchPassed": false,
-    "postUpgradeCurrentPassed": false,
-    "userDataRetentionPassed": false,
-    "evidenceImported": false
+    "qualityGatePassed": true,
+    "hostedWorkflowPassed": true,
+    "releaseDiscoveryPassed": true,
+    "confirmationBoundaryPassed": true,
+    "downloadHashPassed": true,
+    "overwriteInstallPassed": true,
+    "automaticRelaunchPassed": true,
+    "firstLaunchPassed": true,
+    "postUpgradeCurrentPassed": true,
+    "userDataRetentionPassed": true,
+    "evidenceImported": true
   },
-  "githubRun": null,
+  "githubRun": {
+    "id": 31872858203,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31872858203",
+    "headCommit": "3d7bb9b9af4ac41ca9682f3aa90f7dd25028b747",
+    "conclusion": "success"
+  },
   "evidenceRoot": "docs/evidence/v1.0.10-managed-updater",
-  "nextAction": "push-harness-pass-quality-gate-and-run-hosted-managed-updater-lifecycle"
+  "nextAction": "v1.0.10-release-closure-complete"
 }
