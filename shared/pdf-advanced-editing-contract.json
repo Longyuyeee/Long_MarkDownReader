@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B1",
+  "status": "audit-complete",
+  "sourcePolicy": "library-only-reliable-copy",
+  "externalPolicy": "preview-only",
+  "currentCapabilities": [
+    "read-search-outline",
+    "annotation-sidecar",
+    "ocr-sidecar",
+    "rotate-reorder-remove-copy",
+    "page-range-extract-copy",
+    "merge-copy",
+    "insert-copy"
+  ],
+  "mandatoryBlockers": [
+    "encrypted_pdf_unverified",
+    "digital_signature_unverified"
+  ],
+  "plannedSlices": [
+    {
+      "id": "P1-B2A",
+      "name": "acroform-structure-inspection",
+      "writeUserFile": false,
+      "requirements": [
+        "canonical-field-tree-and-page-widget-enumeration",
+        "parent-kids-cycle-and-depth-guards",
+        "duplicate-name-and-orphan-widget-diagnostics",
+        "field-type-value-and-appearance-inventory",
+        "source-digest-and-resource-bounds"
+      ]
+    },
+    {
+      "id": "P1-B2B",
+      "name": "bounded-acroform-fill-copy",
+      "writeUserFile": true,
+      "requirements": [
+        "text-checkbox-radio-and-choice-safe-subset",
+        "canonical-value-and-widget-effective-value-agree",
+        "non-empty-widget-normal-appearance",
+        "structural-reopen-and-render-verification",
+        "never-flatten-or-touch-signatures",
+        "never-overwrite-source-or-existing-target"
+      ]
+    },
+    {
+      "id": "P1-B3",
+      "name": "permanent-redaction-copy",
+      "writeUserFile": true,
+      "requirements": [
+        "content-removal-not-visual-overlay",
+        "text-image-vector-and-hidden-content-audit",
+        "search-extraction-and-render-verification"
+      ]
+    },
+    {
+      "id": "P1-B4",
+      "name": "watermark-copy",
+      "writeUserFile": true,
+      "requirements": [
+        "bounded-text-watermark",
+        "resource-name-isolation",
+        "page-box-aware-placement",
+        "render-and-structural-reopen-verification"
+      ]
+    },
+    {
+      "id": "P1-B5",
+      "name": "metadata-copy",
+      "writeUserFile": true,
+      "requirements": [
+        "info-and-xmp-inventory",
+        "allowlisted-fields-only",
+        "source-digest-and-copy-reopen-verification"
+      ]
+    }
+  ],
+  "registryFinding": {
+    "status": "underclaimed",
+    "current": "read-annotate-sidecar",
+    "actual": "bounded-page-edit-reliable-copy-plus-sidecars",
+    "requiredBeforeB2B": "reconcile-format-registry-release-matrix-and-safe-degradation-contract"
+  },
+  "notPlanned": [
+    "arbitrary-pdf-body-reflow",
+    "signed-pdf-mutation",
+    "encrypted-pdf-writeback",
+    "silent-source-overwrite"
+  ]
+}
