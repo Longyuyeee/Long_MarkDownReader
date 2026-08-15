@@ -75,7 +75,10 @@ use commands::legacy_binary_office::{
     convert_legacy_binary_office_to_modern_copy, preflight_legacy_binary_office,
 };
 use commands::legacy_office::{convert_legacy_doc_to_docx_copy, preflight_legacy_doc};
-use commands::media::{inspect_external_media_file, inspect_media_file};
+use commands::media::{
+    inspect_external_media_file, inspect_image_edit_source, inspect_media_file,
+    save_image_transform_copy,
+};
 use commands::mindmap::{
     create_canvas_from_opml, read_external_opml_file, read_opml_file,
     write_external_opml_file, write_opml_file,
@@ -521,6 +524,8 @@ pub fn run() {
             get_external_image_base64,
             inspect_media_file,
             inspect_external_media_file,
+            inspect_image_edit_source,
+            save_image_transform_copy,
             get_file_stats,
             get_text_document_identity,
             search_all_libraries,
