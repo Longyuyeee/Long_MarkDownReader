@@ -26,6 +26,7 @@ const managedUpdaterPolicyToken = previousPublicVersion.replace(/^1\.0\./, '1')
 const managedUpdaterLifecycle = json(`shared/v${managedUpdaterPolicyToken}-managed-updater-lifecycle-policy.json`)
 
 if (!/^1\.\d+\.\d+$/.test(pkg.version) || tauri.version !== pkg.version || !cargo.includes(`version = "${pkg.version}"`)) fail('V1 version identity drift')
+if (tauri.bundle?.createUpdaterArtifacts !== false) fail('unsigned managed-SHA256 release must not require legacy Tauri updater signatures')
 if (policy.schemaVersion !== 1 || policy.stage !== 'V1' || policy.appVersion !== pkg.version || policy.channel !== 'community-unsigned') fail('V1 policy identity drift')
 if (policy.userDecision?.authenticodeRequired !== false || policy.userDecision?.unsignedCommunityReleaseApproved !== true || policy.userDecision?.unknownPublisherWarningRequired !== true) fail('unsigned community decision drift')
 if (policy.targetRelease?.tag !== tag || policy.targetRelease?.url !== releaseUrl || policy.targetRelease?.assetMode !== 'managed-nsis-msi-with-sha256') fail('target release drift')
