@@ -22,7 +22,7 @@ const counts = matrix.formats.reduce((result, item) => {
 const currentUpdaterMatchesPackage = currentUpdater.status === 'hosted-managed-update-passed'
   && currentUpdater.releases?.current?.version === pkg.version
 const expectedStage = currentUpdaterMatchesPackage
-  ? '当前阶段：**P1-B2A PDF 表单只读检查已收口，下一步进入 B2B 受限填写副本**'
+  ? '当前阶段：**P1-B2B0 PDF 能力登记已对齐，下一步实现 B2B1 可靠填写副本后端**'
   : policy.gates?.githubReleasePublished === true
     ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
   : policy.gates?.qualityGatePassed === true
@@ -60,3 +60,4 @@ await import('./check-p1a3b-image-editor-audit.mjs')
 await import('./check-p1b1-pdf-safety-audit.mjs')
 await import('./check-p1b2a1-pdf-form-inspector.mjs')
 await import('./check-p1b2a2-pdf-form-panel.mjs')
+await import('./check-p1b2b0-pdf-registry-reconciliation.mjs')

@@ -9,9 +9,9 @@ const requireText = (source, token, message) => {
 
 const registry = json('shared/file-formats.json')
 const pdf = registry.formats.find(format => format.id === 'pdf')
-if (!pdf || pdf.externalPolicy !== 'preview' || pdf.routeName !== 'Pdf' || pdf.capabilities.edit !== 'unsupported'
-  || pdf.adapters.writer !== null || pdf.userCapability.saveMode !== 'sidecar') {
-  failures.push('PDF must remain a sidecar-capable library format with read-only external preview')
+if (!pdf || pdf.externalPolicy !== 'preview' || pdf.routeName !== 'Pdf' || pdf.capabilities.edit !== 'supported'
+  || pdf.adapters.writer !== 'pdf-copy' || pdf.userCapability.saveMode !== 'copy') {
+  failures.push('PDF must expose library-only reliable copies while external preview remains read-only')
 }
 
 const backend = read('src-tauri/src/commands/pdf.rs')

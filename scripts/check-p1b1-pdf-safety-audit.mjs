@@ -11,9 +11,9 @@ for (const token of ['encrypted_pdf_unverified', 'digital_signature_unverified',
   if (!backend.includes(token)) fail(`P1-B1 backend fact is missing: ${token}`)
 }
 const pdf = registry.formats.find(item => item.id === 'pdf')
-if (!pdf || pdf.capabilities?.edit !== 'unsupported' || pdf.userCapability?.saveMode !== 'sidecar' || pdf.adapters?.writer !== null) fail('P1-B1 registry underclaim finding is no longer current; perform the planned reconciliation')
+if (!pdf || pdf.capabilities?.edit !== 'supported' || pdf.userCapability?.saveMode !== 'copy' || pdf.adapters?.writer !== 'pdf-copy' || contract.registryFinding?.status !== 'reconciled-before-b2b') fail('P1-B1 registry reconciliation is incomplete')
 for (const section of ['## 1. 结论', '## 2. 当前真实能力', '## 3. 审计发现', '## 4. 高风险边界', '## 5. 顺序开发计划', '## 6. P1-B2A 入口']) {
   if (!audit.includes(section)) fail(`P1-B1 audit section is missing: ${section}`)
 }
 
-console.log('P1-B1 PDF safety audit passed: current copy/sidecar capabilities, registry underclaim, mandatory blockers and B2A-B5 sequence are frozen.')
+console.log('P1-B1 PDF safety audit passed: copy/sidecar capabilities are reconciled while mandatory blockers and the B2A-B5 sequence remain frozen.')

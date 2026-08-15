@@ -423,10 +423,10 @@
       "mimeTypes": ["application/pdf"],
       "routeName": "Pdf",
       "maxBytes": 536870912,
-      "capabilities": { "read": "supported", "edit": "unsupported", "create": "unsupported", "index": "supported" },
-      "userCapability": { "level": "read-annotate", "label": "阅读/批注", "saveMode": "sidecar", "description": "PDF 原文只读，批注、OCR 和引用写入 sidecar。" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "unsupported", "index": "supported" },
+      "userCapability": { "level": "basic-edit", "label": "受限 PDF 编辑", "saveMode": "copy", "description": "PDF 支持阅读、搜索、批注与 OCR sidecar，以及页面旋转、排序、排除、提取、合并和插页的可靠新副本；表单结构可只读检查，源 PDF 永不覆盖。" },
       "externalPolicy": "preview",
-      "adapters": { "reader": "pdf", "writer": null, "creator": null, "indexer": "pdf" },
+      "adapters": { "reader": "pdf", "writer": "pdf-copy", "creator": null, "indexer": "pdf" },
       "creation": null
     },
     {

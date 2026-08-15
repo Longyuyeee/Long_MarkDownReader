@@ -31,6 +31,8 @@
 
 `shared/file-formats.json` 仍把 PDF 登记为 `edit: unsupported`、`read-annotate`、`saveMode: sidecar` 且 writer 为空；实际产品已经具备页面级可靠副本编辑。发布矩阵与安全降级合同也只描述 sidecar。
 
+> 后续整改（2026-08-15）：P1-B2B0 已将上述登记欠报对齐为 `basic-edit / copy / pdf-copy`，只覆盖已经验证的页面级可靠副本与 sidecar 能力；PDF 表单填写仍未开放，须通过 B2B1 及后续验收后才能进入能力声明。
+
 这不会造成数据风险，但会让能力中心、用户说明和开发门禁低估 PDF。P1-B2A 可以保持只读并行开发；在开放 P1-B2B 表单填写前，必须把注册表、发布矩阵与安全降级合同统一为“sidecar + 有界可靠副本”，同时保持外部 PDF 只读。
 
 ### 3.2 AcroForm 不能只读一个字段表

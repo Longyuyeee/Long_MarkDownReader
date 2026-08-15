@@ -192,7 +192,7 @@ if (!knowledgeIndex.includes('build_workbook_index_segments')
 if (!index.includes('indexer == "workbook"') || !index.includes('build_workbook_index_segments')) failures.push('workbook live search fallback is incomplete')
 if (!library.includes("result.objectType === 'workbook'") || !library.includes('{ sheet: result.locatorObjectId }')) failures.push('workbook search result routing is incomplete')
 const pdfFormat = registry.formats?.find(format => format.id === 'pdf')
-if (pdfFormat?.userCapability?.level !== 'read-annotate' || pdfFormat?.userCapability?.saveMode !== 'sidecar') failures.push('PDF must be displayed as read/annotate sidecar mode')
+if (pdfFormat?.capabilities?.edit !== 'supported' || pdfFormat?.adapters?.writer !== 'pdf-copy' || pdfFormat?.userCapability?.level !== 'basic-edit' || pdfFormat?.userCapability?.saveMode !== 'copy') failures.push('PDF must expose bounded reliable-copy editing without source overwrite')
 const docxFormat = registry.formats?.find(format => format.id === 'docx')
 if (!docxFormat
   || docxFormat.routeName !== 'DocxEditor'

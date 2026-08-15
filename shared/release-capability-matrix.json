@@ -34,11 +34,11 @@
       "knownLimitations": ["编辑模式限制为 8 MiB；进入编辑会暂停自动刷新和尾部跟随；不提供并发日志合并"]
     },
     {
-      "id": "pdf-sidecar",
+      "id": "pdf-copy",
       "dependency": "none",
-      "sourcePolicy": "PDF 原文只读，批注与 OCR 写入 sidecar",
+      "sourcePolicy": "PDF 原文永不覆盖；批注与 OCR 写入 sidecar，页面级受限编辑只生成经复读验证的新副本",
       "privacyBoundary": "正文、批注与 OCR 数据保持本地",
-      "knownLimitations": ["不提供 PDF 正文等价编辑；页面操作输出可靠新副本"]
+      "knownLimitations": ["不提供 PDF 正文等价重排；表单目前只读检查，填写副本尚未开放；签名、加密和主动内容保持阻断"]
     },
     {
       "id": "office-copy",
@@ -111,7 +111,7 @@
     { "id": "video", "profile": "media-preview", "readiness": "verified-with-limitations" },
     { "id": "toml", "profile": "local-overwrite", "readiness": "verified" },
     { "id": "canvas", "profile": "local-overwrite", "readiness": "verified" },
-    { "id": "pdf", "profile": "pdf-sidecar", "readiness": "verified-with-limitations" },
+    { "id": "pdf", "profile": "pdf-copy", "readiness": "verified-with-limitations" },
     { "id": "table", "profile": "local-overwrite", "readiness": "verified" },
     { "id": "docx", "profile": "office-copy", "readiness": "verified-with-limitations" },
     { "id": "ods", "profile": "odf-preview", "readiness": "verified-with-limitations" },
