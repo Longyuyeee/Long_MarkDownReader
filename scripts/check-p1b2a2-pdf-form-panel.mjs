@@ -9,7 +9,7 @@ const fail = message => { console.error(message); process.exit(1) }
 for (const token of ["sidebarTab === 'forms'", 'inspect_pdf_form_structure', 'PdfFormInspectorPanel', "isExternal.value || !pdfDocument.value", "availableSidebarTabs = isExternal.value ? ['thumbnails', 'outline']"]) {
   if (!view.includes(token)) fail(`P1-B2A2 integrated PDF workspace marker is missing: ${token}`)
 }
-for (const token of ['renderLimit = 300', '密码值已隐藏', '没有填写、保存或覆盖入口', 'sourceDigest.slice', 'fieldWidgets(field.name)']) {
+for (const token of ['renderLimit = 300', '密码值已隐藏', 'sourceDigest.slice', 'fieldWidgets(field.name)', 'p1b2b2-pdf-form-copy']) {
   if (!panel.includes(token)) fail(`P1-B2A2 form panel marker is missing: ${token}`)
 }
 if (manifest.stage !== 'P1-B2A2' || manifest.status !== 'accepted' || manifest.sourceUserContentIncluded !== false || manifest.screenshots?.length !== 2) fail('P1-B2A2 manifest is invalid')
@@ -19,4 +19,4 @@ for (const viewport of [evidence.wide, evidence.narrow]) {
   if (!viewport?.integrated || !viewport.hasSummary || !viewport.hasReadOnlyBoundary || viewport.hasWriteAction || viewport.errorVisible || viewport.overflow > 2 || viewport.panel?.width < 260) fail('P1-B2A2 responsive integrated panel evidence failed')
 }
 
-console.log('P1-B2A2 PDF form panel passed: the original PDF workspace exposes bounded read-only AcroForm inspection with accepted wide and narrow Tauri evidence.')
+console.log('P1-B2A2 PDF form panel passed: historical read-only evidence remains accepted while the original workspace has progressed to bounded reliable copies.')
