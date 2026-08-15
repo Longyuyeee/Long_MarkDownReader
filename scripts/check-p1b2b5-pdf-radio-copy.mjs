@@ -12,10 +12,10 @@ const manifest = JSON.parse(read(`${evidenceRoot}/manifest.json`))
 const evidence = JSON.parse(read(`${evidenceRoot}/runtime-evidence.json`))
 
 for (const token of ['button_widget_export_states', 'expected_button_widget_states', '导出状态必须唯一', 'writes_mutually_exclusive_radio_widget_states']) if (!engine.includes(token)) fail(`P1-B2B5 radio engine marker missing: ${token}`)
-for (const token of ['data-stage-capability="p1b2b5-radio-copy"', 'type="radio"', "field.buttonKind !== 'radio'", 'new Set(options)', '互斥单选组']) if (!panel.includes(token)) fail(`P1-B2B5 workspace marker missing: ${token}`)
+for (const token of ['data-stage-capability="p1b2b5-radio-copy"', 'type="radio"', "field.buttonKind !== 'radio'", 'new Set(options)', '单选组与有界单选 Choice']) if (!panel.includes(token)) fail(`P1-B2B5 workspace marker missing: ${token}`)
 for (const token of ['/Ff 32768', '/Kids [8 0 R 9 0 R]', '/Standard', '/Professional']) if (!fixture.includes(token)) fail(`P1-B2B5 fixture marker missing: ${token}`)
-if (contract.stage !== 'P1-B2B5' || contract.status !== 'radio-form-copy-complete' || !contract.currentCapabilities?.includes('bounded-radio-form-copy')) fail('P1-B2B5 contract is stale')
-if (contract.plannedSlices?.find(item => item.id === 'P1-B2B')?.status !== 'radio-complete-choice-pending') fail('P1-B2B5 next-slice boundary is stale')
+if (!['P1-B2B5', 'P1-B2B6'].includes(contract.stage) || !['radio-form-copy-complete', 'single-choice-form-copy-complete'].includes(contract.status) || !contract.currentCapabilities?.includes('bounded-radio-form-copy')) fail('P1-B2B5 contract is stale')
+if (!['radio-complete-choice-pending', 'safe-standard-fields-complete'].includes(contract.plannedSlices?.find(item => item.id === 'P1-B2B')?.status)) fail('P1-B2B5 next-slice boundary is stale')
 if (manifest.stage !== 'P1-B2B5' || manifest.status !== 'accepted' || manifest.screenshots?.length !== 3 || manifest.sourceUserContentIncluded !== false) fail('P1-B2B5 manifest invalid')
 for (const screenshot of manifest.screenshots) {
   const bytes = fs.readFileSync(`${evidenceRoot}/${screenshot.file}`)

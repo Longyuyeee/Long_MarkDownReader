@@ -42,6 +42,13 @@ struct TextFieldTarget {
     flags: i64,
 }
 
+#[derive(Clone)]
+struct ChoiceOption {
+    index: usize,
+    export_value: String,
+    display_value: String,
+}
+
 fn digest(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
@@ -434,6 +441,81 @@ fn expected_button_widget_states(
         .collect())
 }
 
+fn strict_choice_text(document: &Document, object: &Object) -> Option<String> {
+    let (_, resolved) = document.dereference(object).ok()?;
+    resolved.as_str().ok().map(decode_pdf_text)
+}
+
+fn choice_option_for_value(
+    document: &Document,
+    target: &TextFieldTarget,
+    field_name: &str,
+    value: &str,
+) -> Result<ChoiceOption, String> {
+    if target.flags & (1 << 18) != 0 || target.flags & (1 << 21) != 0 {
+        return Err(format!(
+            "PDF Choice 可自由输入或多选字段不能可靠填写：{field_name}"
+        ));
+    }
+    let field = document
+        .get_dictionary(target.field_id)
+        .map_err(|_| format!("PDF Choice 字段对象无效：{field_name}"))?;
+    let options = field
+        .get(b"Opt")
+        .ok()
+        .and_then(|object| document.dereference(object).ok())
+        .and_then(|(_, object)| object.as_array().ok())
+        .cloned()
+        .ok_or_else(|| format!("PDF Choice 缺少选项数组：{field_name}"))?;
+    if !(2..=512).contains(&options.len()) {
+        return Err(format!("PDF Choice 选项必须在 2～512 项之间：{field_name}"));
+    }
+    let mut parsed = Vec::with_capacity(options.len());
+    let mut exports = HashSet::new();
+    for (index, option) in options.iter().enumerate() {
+        let (_, resolved) = document
+            .dereference(option)
+            .map_err(|_| format!("PDF Choice 选项引用无效：{field_name}"))?;
+        let (export_value, display_value) = if let Ok(pair) = resolved.as_array() {
+            if pair.len() != 2 {
+                return Err(format!("PDF Choice 选项映射无效：{field_name}"));
+            }
+            (
+                strict_choice_text(document, &pair[0]),
+                strict_choice_text(document, &pair[1]),
+            )
+        } else {
+            let text = strict_choice_text(document, option);
+            (text.clone(), text)
+        };
+        let export_value = export_value
+            .filter(|text| !text.is_empty() && text.chars().count() <= MAX_TEXT_VALUE_CHARS)
+            .ok_or_else(|| format!("PDF Choice 导出值无效：{field_name}"))?;
+        let display_value = display_value
+            .filter(|text| !text.is_empty() && text.chars().count() <= MAX_TEXT_VALUE_CHARS)
+            .ok_or_else(|| format!("PDF Choice 显示值无效：{field_name}"))?;
+        if !exports.insert(export_value.clone()) {
+            return Err(format!("PDF Choice 导出值重复：{field_name}"));
+        }
+        if display_value
+            .chars()
+            .any(|character| character.is_control())
+            || display_value.chars().any(requires_complex_shaping)
+        {
+            return Err(format!("PDF Choice 显示值超出可靠外观子集：{field_name}"));
+        }
+        parsed.push(ChoiceOption {
+            index,
+            export_value,
+            display_value,
+        });
+    }
+    parsed
+        .into_iter()
+        .find(|option| option.export_value == value)
+        .ok_or_else(|| format!("PDF Choice 选择值无效：{field_name}"))
+}
+
 fn widget_size(document: &Document, widget_id: ObjectId) -> (f32, f32) {
     let rect = document
         .get_dictionary(widget_id)
@@ -506,7 +588,7 @@ pub fn build_pdf_text_form_copy(
             ));
         }
         match target.field_type.as_str() {
-            "Tx" if target.flags & (1 << 13) == 0 => text_values.push(change.value.as_str()),
+            "Tx" if target.flags & (1 << 13) == 0 => text_values.push(change.value.clone()),
             "Btn" => {
                 expected_button_widget_states(
                     &document,
@@ -515,6 +597,10 @@ pub fn build_pdf_text_form_copy(
                     &change.value,
                 )?;
             }
+            "Ch" => text_values.push(
+                choice_option_for_value(&document, target, &change.field_name, &change.value)?
+                    .display_value,
+            ),
             _ => {
                 return Err(format!(
                     "PDF 字段不属于可可靠填写子集：{}",
@@ -523,8 +609,9 @@ pub fn build_pdf_text_form_copy(
             }
         }
     }
-    let font = (!text_values.is_empty())
-        .then(|| embed_unicode_font(&mut document, &text_values))
+    let font_values = text_values.iter().map(String::as_str).collect::<Vec<_>>();
+    let font = (!font_values.is_empty())
+        .then(|| embed_unicode_font(&mut document, &font_values))
         .transpose()?;
     let mut appearance_streams_written = 0;
     let mut widget_states_written = 0;
@@ -533,20 +620,41 @@ pub fn build_pdf_text_form_copy(
         let target = targets
             .get(&change.field_name)
             .ok_or_else(|| format!("PDF 字段不存在：{}", change.field_name))?;
-        if target.field_type == "Tx" {
+        if matches!(target.field_type.as_str(), "Tx" | "Ch") {
+            let choice = (target.field_type == "Ch")
+                .then(|| {
+                    choice_option_for_value(&document, target, &change.field_name, &change.value)
+                })
+                .transpose()?;
+            let appearance_value = choice.as_ref().map_or(change.value.as_str(), |option| {
+                option.display_value.as_str()
+            });
             document
                 .get_dictionary_mut(target.field_id)
                 .map_err(|_| format!("PDF 字段对象无效：{}", change.field_name))?
                 .set("V", pdf_text_string(&change.value));
+            if let Some(option) = &choice {
+                document
+                    .get_dictionary_mut(target.field_id)
+                    .map_err(|_| format!("PDF Choice 字段对象无效：{}", change.field_name))?
+                    .set("I", vec![Object::Integer(option.index as i64)]);
+            }
             let font = font.as_ref().ok_or("PDF 文本字体没有初始化")?;
             for widget_id in &target.widget_ids {
                 let (width, height) = widget_size(&document, *widget_id);
-                let glyphs = encoded_glyphs(&change.value, font)?;
-                let content = format!(
-                    "q BT /LECJK 10 Tf 0 g 2 {} Td <{}> Tj ET Q",
-                    (height - 12.0).max(2.0),
-                    glyphs
-                );
+                let glyphs = encoded_glyphs(appearance_value, font)?;
+                let content = if choice.is_some() {
+                    format!(
+                        "q 1 g 0 0 {width} {height} re f 0.75 G 0 0 {width} {height} re S BT /LECJK 10 Tf 0 g 4 {} Td <{}> Tj ET Q",
+                        (height - 12.0).max(2.0), glyphs
+                    )
+                } else {
+                    format!(
+                        "q BT /LECJK 10 Tf 0 g 2 {} Td <{}> Tj ET Q",
+                        (height - 12.0).max(2.0),
+                        glyphs
+                    )
+                };
                 let appearance_id = document.add_object(Stream::new(dictionary! {
                     "Type" => "XObject", "Subtype" => "Form", "FormType" => 1,
                     "BBox" => vec![0.into(), 0.into(), Object::Real(width), Object::Real(height)],
@@ -606,7 +714,7 @@ pub fn build_pdf_text_form_copy(
         }) && reopened_targets
             .get(&change.field_name)
             .is_some_and(|target| {
-                reopened
+                let value_agrees = reopened
                     .get_dictionary(target.field_id)
                     .ok()
                     .and_then(|field| field.get(b"V").ok())
@@ -614,7 +722,27 @@ pub fn build_pdf_text_form_copy(
                         Object::String(bytes, _) => decode_pdf_text(bytes) == change.value,
                         Object::Name(bytes) => bytes == change.value.as_bytes(),
                         _ => false,
-                    })
+                    });
+                let choice_index_agrees = target.field_type != "Ch"
+                    || choice_option_for_value(
+                        &reopened,
+                        target,
+                        &change.field_name,
+                        &change.value,
+                    )
+                    .ok()
+                    .is_some_and(|option| {
+                        reopened
+                            .get_dictionary(target.field_id)
+                            .ok()
+                            .and_then(|field| field.get(b"I").ok())
+                            .and_then(|indices| indices.as_array().ok())
+                            .is_some_and(|indices| {
+                                indices.len() == 1
+                                    && indices[0].as_i64().ok() == Some(option.index as i64)
+                            })
+                    });
+                value_agrees && choice_index_agrees
             })
     });
     let widget_appearances_verified = changes.iter().all(|change| {
@@ -860,6 +988,58 @@ mod tests {
         bytes
     }
 
+    fn choice_form_fixture(flags: i64) -> Vec<u8> {
+        let mut document = Document::with_version("1.7");
+        let pages_id = document.new_object_id();
+        let page_id = document.new_object_id();
+        let field_id = document.new_object_id();
+        let content_id = document.add_object(Stream::new(dictionary! {}, Vec::new()));
+        let appearance_id = document.add_object(Stream::new(
+            dictionary! {
+                "Type" => "XObject", "Subtype" => "Form", "BBox" => vec![0.into(), 0.into(), 180.into(), 24.into()]
+            },
+            b"q 1 g 0 0 180 24 re f 0 G 0 0 180 24 re S Q".to_vec(),
+        ));
+        document.objects.insert(
+            field_id,
+            Object::Dictionary(dictionary! {
+                "Type" => "Annot", "Subtype" => "Widget", "FT" => "Ch",
+                "T" => Object::string_literal("region"), "V" => Object::string_literal("cn-north"),
+                "I" => vec![Object::Integer(0)], "Ff" => flags,
+                "Opt" => vec![
+                    Object::Array(vec![Object::string_literal("cn-north"), Object::string_literal("华北")]),
+                    Object::Array(vec![Object::string_literal("cn-east"), Object::string_literal("华东")]),
+                    Object::Array(vec![Object::string_literal("cn-south"), Object::string_literal("华南")])
+                ],
+                "Rect" => vec![10.into(), 10.into(), 190.into(), 34.into()], "P" => Object::Reference(page_id),
+                "AP" => dictionary! { "N" => Object::Reference(appearance_id) }
+            }),
+        );
+        document.objects.insert(
+            page_id,
+            Object::Dictionary(dictionary! {
+                "Type" => "Page", "Parent" => Object::Reference(pages_id),
+                "MediaBox" => vec![0.into(), 0.into(), 300.into(), 300.into()],
+                "Contents" => Object::Reference(content_id), "Annots" => vec![Object::Reference(field_id)]
+            }),
+        );
+        document.objects.insert(
+            pages_id,
+            Object::Dictionary(dictionary! {
+                "Type" => "Pages", "Kids" => vec![Object::Reference(page_id)], "Count" => 1
+            }),
+        );
+        let acro_form_id =
+            document.add_object(dictionary! { "Fields" => vec![Object::Reference(field_id)] });
+        let catalog_id = document.add_object(dictionary! {
+            "Type" => "Catalog", "Pages" => Object::Reference(pages_id), "AcroForm" => Object::Reference(acro_form_id)
+        });
+        document.trailer.set("Root", Object::Reference(catalog_id));
+        let mut bytes = Vec::new();
+        document.save_to(&mut bytes).unwrap();
+        bytes
+    }
+
     #[test]
     fn writes_text_value_and_non_empty_widget_appearance_in_isolated_copy() {
         let source = text_form_fixture(false);
@@ -1037,5 +1217,48 @@ mod tests {
             }],
         )
         .is_err());
+    }
+
+    #[test]
+    fn writes_single_choice_export_index_and_display_appearance() {
+        let source = choice_form_fixture(1 << 17);
+        let changes = [PdfFormTextChange {
+            field_name: "region".into(),
+            value: "cn-east".into(),
+        }];
+        let (report, output) =
+            build_pdf_text_form_copy(&source, &digest(&source), &changes).unwrap();
+        let output = output.unwrap();
+        assert_eq!(report.appearance_streams_written, 1);
+        assert!(report.field_tree_verified);
+        assert!(report.widget_appearances_verified);
+        let inspection = inspect_pdf_forms(&output).unwrap();
+        let field = &inspection.fields[0];
+        assert_eq!(field.value.as_deref(), Some("cn-east"));
+        assert_eq!(field.choice_kind.as_deref(), Some("combo"));
+        assert_eq!(field.selected_indices, vec![1]);
+        assert_eq!(field.choice_options[1].display_value, "华东");
+        assert!(inspection.widgets[0].has_normal_appearance);
+        assert!(build_pdf_text_form_copy(
+            &source,
+            &digest(&source),
+            &[PdfFormTextChange {
+                field_name: "region".into(),
+                value: "cn-west".into()
+            }],
+        )
+        .is_err());
+        for flags in [(1 << 17) | (1 << 18), 1 << 21] {
+            let blocked = choice_form_fixture(flags);
+            assert!(build_pdf_text_form_copy(
+                &blocked,
+                &digest(&blocked),
+                &[PdfFormTextChange {
+                    field_name: "region".into(),
+                    value: "cn-east".into()
+                }],
+            )
+            .is_err());
+        }
     }
 }

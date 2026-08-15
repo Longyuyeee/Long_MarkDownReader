@@ -59,11 +59,19 @@
               <span>{{ option }}</span>
             </label>
           </fieldset>
+          <label v-else-if="editableChoiceField(field)" class="form-choice-edit">
+            <span>副本中的{{ field.choiceKind === 'combo' ? '下拉选项' : '列表选项' }}</span>
+            <select :value="draftValue(field)" @change="updateChoiceDraft(field, choiceValue($event))">
+              <option v-for="option in field.choiceOptions" :key="option.exportValue" :value="option.exportValue">{{ option.displayValue }}</option>
+            </select>
+          </label>
           <div class="form-field-flags">
             <i v-if="field.fillableCandidate">候选</i>
             <i v-if="field.required">必填</i>
             <i v-if="field.readOnly">只读</i>
             <i v-if="field.multiline">多行</i>
+            <i v-if="field.choiceEditable">可自由输入</i>
+            <i v-if="field.choiceMultiSelect">多选</i>
             <i v-if="field.optionCount">{{ field.optionCount }} 选项</i>
             <i>{{ field.widgetCount }} 控件</i>
           </div>
@@ -76,9 +84,9 @@
       </div>
       <p v-else-if="report.status !== 'no_form'" class="form-panel-empty">没有匹配的字段</p>
       <p v-if="filteredFields.length > renderLimit" class="form-render-limit">为保持界面流畅，仅显示前 {{ renderLimit }} 项；继续输入名称可缩小范围。</p>
-      <section v-if="editableFieldCount" class="form-copy-actions" data-testid="p1b2b2-pdf-form-copy" data-capability="p1b2b4-checkbox-copy" data-stage-capability="p1b2b5-radio-copy">
+      <section v-if="editableFieldCount" class="form-copy-actions" data-testid="p1b2b2-pdf-form-copy" data-capability="p1b2b4-checkbox-copy" data-stage-capability="p1b2b5-radio-copy" data-current-capability="p1b2b6-choice-copy">
         <strong>表单可靠副本</strong>
-        <p>仅修改新副本；源 PDF 和已有文件不会覆盖。支持中文单行文本、具有唯一导出状态的复选框与互斥单选组。</p>
+        <p>仅修改新副本；源 PDF 和已有文件不会覆盖。支持中文单行文本、复选框、单选组与有界单选 Choice 字段。</p>
         <WorkspaceStateNotice v-if="operationError" kind="error" tone="danger" compact>{{ operationError }}</WorkspaceStateNotice>
         <WorkspaceStateNotice v-else-if="verification" :kind="verification.status === 'isolated_verified' ? 'saved' : 'limited'" :tone="verification.status === 'isolated_verified' ? 'success' : 'warning'" compact>
           {{ verification.status === 'isolated_verified' ? `已验证 ${verification.changedFields.length} 个字段、${verification.appearanceStreamsWritten} 个文本外观与 ${verification.widgetStatesWritten} 个按钮状态` : `已阻断：${verification.blockers.join('、')}` }}
@@ -111,7 +119,7 @@ const statusTitle = computed(() => props.report?.status === 'blocked' ? '表单�
 const statusDescription = computed(() => props.report?.status === 'blocked'
   ? '可以查看字段，但不能进入后续填写流程。'
   : props.report?.status === 'inspectable'
-    ? '字段与页面控件关联清晰；可为安全文本、复选框与单选组子集创建可靠副本。'
+    ? '字段与页面控件关联清晰；可为安全文本、按钮与单选 Choice 子集创建可靠副本。'
     : '这份 PDF 没有标准 AcroForm 字段。')
 const filteredFields = computed(() => {
   const normalized = query.value.trim().toLocaleLowerCase()
@@ -128,7 +136,12 @@ const editableRadioField = (field: PdfFormFieldSummary) => {
   const options = radioOptions(field)
   return widgets.length === field.widgetCount && options.length === widgets.length && new Set(options).size === options.length && options.every(option => field.buttonExportValues.includes(option)) && widgets.every(widget => widget.appearanceStates.includes('Off'))
 }
-const editableField = (field: PdfFormFieldSummary) => editableTextField(field) || editableCheckboxField(field) || editableRadioField(field)
+const editableChoiceField = (field: PdfFormFieldSummary) => {
+  if (props.report?.status !== 'inspectable' || field.fieldType !== 'Ch' || !field.fillableCandidate || field.hasActions || field.choiceEditable || field.choiceMultiSelect || field.choiceOptions.length < 2 || field.choiceOptions.length > 512 || field.choiceOptions.length !== field.optionCount) return false
+  const exports = field.choiceOptions.map(option => option.exportValue)
+  return exports.every(value => value.length > 0) && new Set(exports).size === exports.length && fieldWidgets(field.name).length === field.widgetCount
+}
+const editableField = (field: PdfFormFieldSummary) => editableTextField(field) || editableCheckboxField(field) || editableRadioField(field) || editableChoiceField(field)
 const editableFieldCount = computed(() => (props.report?.fields || []).filter(editableField).length)
 const draftValue = (field: PdfFormFieldSummary) => drafts.value[field.name] ?? field.value ?? ''
 const changes = computed<PdfFormTextChange[]>(() => (props.report?.fields || []).filter(editableField).filter(field => draftValue(field) !== (field.value ?? '')).map(field => ({ fieldName: field.name, value: draftValue(field) })))
@@ -136,6 +149,8 @@ const updateDraft = (name: string, value: string) => { drafts.value = { ...draft
 const checkboxChecked = (field: PdfFormFieldSummary) => draftValue(field) === field.buttonExportValues[0]
 const checkboxCheckedEvent = (event: Event) => (event.target as HTMLInputElement).checked
 const updateCheckboxDraft = (field: PdfFormFieldSummary, checked: boolean) => updateDraft(field.name, checked ? field.buttonExportValues[0] : 'Off')
+const updateChoiceDraft = (field: PdfFormFieldSummary, value: string) => updateDraft(field.name, value)
+const choiceValue = (event: Event) => (event.target as HTMLSelectElement).value
 const inputValue = (event: Event) => (event.target as HTMLInputElement).value
 watch(() => props.report?.sourceDigest, () => { drafts.value = {}; targetFileName.value = props.defaultCopyName })
 const widgetsByField = computed(() => {
@@ -149,7 +164,7 @@ const widgetsByField = computed(() => {
 })
 const fieldWidgets = (name: string) => widgetsByField.value.get(name) || []
 const formatBytes = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
-const fieldTypeLabel = (field: PdfFormFieldSummary) => field.buttonKind === 'checkbox' ? '复选框' : field.buttonKind === 'radio' ? '单选组' : field.buttonKind === 'pushbutton' ? '按钮' : ({ Tx: '文本', Btn: '按钮', Ch: '选项', Sig: '签名' }[field.fieldType] || field.fieldType || '未知')
+const fieldTypeLabel = (field: PdfFormFieldSummary) => field.buttonKind === 'checkbox' ? '复选框' : field.buttonKind === 'radio' ? '单选组' : field.buttonKind === 'pushbutton' ? '按钮' : field.choiceKind === 'combo' ? '下拉框' : field.choiceKind === 'list' ? '列表框' : ({ Tx: '文本', Btn: '按钮', Ch: '选项', Sig: '签名' }[field.fieldType] || field.fieldType || '未知')
 const blockerLabel = (item: string) => ({
   encrypted_pdf_unverified: 'PDF 已加密，无法验证安全写入边界',
   digital_signature_unverified: '包含数字签名或权限签名',
@@ -180,7 +195,7 @@ const diagnosticLabel = (item: string) => ({
 .form-field-tools { position: sticky; top: 0; z-index: 1; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 6px; margin: 9px -2px 7px; padding: 2px; background: var(--theme-card); }.form-field-tools input { min-width: 0; height: 29px; padding: 0 8px; border: 1px solid var(--workspace-border-color); border-radius: 6px; outline: 0; color: var(--theme-text); background: var(--workspace-control-bg); font: inherit; }.form-field-tools input:focus { border-color: rgba(var(--theme-primary-rgb),.5); }.form-field-tools span { color: var(--theme-text-secondary); }
 .form-field-list { display: grid; gap: 7px; }.form-field-card { min-width: 0; padding: 8px; border: 1px solid var(--workspace-border-color); border-radius: 7px; background: var(--workspace-surface-raised); }.form-field-heading { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 7px; }.form-field-heading strong { overflow: hidden; color: var(--theme-text); font-size: var(--text-compact); text-overflow: ellipsis; white-space: nowrap; }.form-field-heading > span { padding: 2px 5px; border-radius: 999px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.09); }
 .form-field-card > p { display: -webkit-box; margin: 6px 0; overflow: hidden; color: var(--theme-text-secondary); line-height: 1.45; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.form-field-card > .form-private-value { color: var(--status-warning); }.form-field-card > .form-empty-value { opacity: .7; font-style: italic; }
-.form-text-edit,.form-copy-name { display: grid; gap: 4px; margin-top: 7px; color: var(--theme-text-secondary); }.form-text-edit input,.form-copy-name input { min-width: 0; height: 30px; padding: 0 8px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-control-bg); font: inherit; }
+.form-text-edit,.form-choice-edit,.form-copy-name { display: grid; gap: 4px; margin-top: 7px; color: var(--theme-text-secondary); }.form-text-edit input,.form-choice-edit select,.form-copy-name input { min-width: 0; height: 30px; padding: 0 8px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-control-bg); font: inherit; }
 .form-checkbox-edit { display: flex; align-items: center; gap: 7px; margin-top: 7px; padding: 7px; border-radius: 6px; color: var(--theme-text-secondary); background: var(--workspace-control-bg); line-height: 1.35; }.form-checkbox-edit input { width: 16px; height: 16px; margin: 0; accent-color: var(--theme-primary); }
 .form-radio-edit { display: grid; gap: 5px; margin: 7px 0 0; padding: 7px; border: 0; border-radius: 6px; color: var(--theme-text-secondary); background: var(--workspace-control-bg); }.form-radio-edit legend { padding: 0; color: var(--theme-text-secondary); }.form-radio-edit label { display: flex; align-items: center; gap: 7px; min-width: 0; line-height: 1.35; }.form-radio-edit input { width: 16px; height: 16px; margin: 0; accent-color: var(--theme-primary); }.form-radio-edit span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .form-field-flags { display: flex; flex-wrap: wrap; gap: 4px; }.form-field-flags i { padding: 2px 5px; border: 1px solid var(--workspace-border-color); border-radius: 4px; color: var(--theme-text-secondary); font-style: normal; }

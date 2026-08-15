@@ -11,6 +11,13 @@ const MAX_FIELD_STRING_CHARS: usize = 4_096;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct PdfChoiceOptionSummary {
+    pub export_value: String,
+    pub display_value: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PdfFormFieldSummary {
     pub name: String,
     pub field_type: String,
@@ -19,6 +26,11 @@ pub struct PdfFormFieldSummary {
     pub option_count: usize,
     pub button_kind: Option<String>,
     pub button_export_values: Vec<String>,
+    pub choice_kind: Option<String>,
+    pub choice_editable: bool,
+    pub choice_multi_select: bool,
+    pub choice_options: Vec<PdfChoiceOptionSummary>,
+    pub selected_indices: Vec<usize>,
     pub widget_count: usize,
     pub read_only: bool,
     pub required: bool,
@@ -178,15 +190,59 @@ fn normal_appearance_states(document: &Document, dictionary: &Dictionary) -> Vec
     states
 }
 
-fn option_count(document: &Document, dictionary: &Dictionary) -> usize {
+fn choice_options(
+    document: &Document,
+    dictionary: &Dictionary,
+) -> (usize, Vec<PdfChoiceOptionSummary>) {
     let Ok(options) = dictionary.get(b"Opt") else {
-        return 0;
+        return (0, Vec::new());
     };
-    document
+    let values = document
         .dereference(options)
         .ok()
         .and_then(|(_, value)| value.as_array().ok())
-        .map_or(0, |values| values.len().min(MAX_FORM_FIELDS))
+        .cloned()
+        .unwrap_or_default();
+    let count = values.len().min(MAX_FORM_FIELDS);
+    let parsed = values
+        .into_iter()
+        .take(MAX_FORM_FIELDS)
+        .filter_map(|option| {
+            let (_, option) = document.dereference(&option).ok()?;
+            if let Ok(pair) = option.as_array() {
+                if pair.len() != 2 {
+                    return None;
+                }
+                return Some(PdfChoiceOptionSummary {
+                    export_value: pdf_string(&pair[0])?,
+                    display_value: pdf_string(&pair[1])?,
+                });
+            }
+            let value = pdf_string(option)?;
+            Some(PdfChoiceOptionSummary {
+                export_value: value.clone(),
+                display_value: value,
+            })
+        })
+        .collect();
+    (count, parsed)
+}
+
+fn selected_indices(document: &Document, dictionary: &Dictionary) -> Vec<usize> {
+    dictionary
+        .get(b"I")
+        .ok()
+        .and_then(|value| document.dereference(value).ok())
+        .and_then(|(_, value)| value.as_array().ok())
+        .map(|values| {
+            values
+                .iter()
+                .filter_map(|value| value.as_i64().ok())
+                .filter_map(|value| usize::try_from(value).ok())
+                .take(MAX_FORM_FIELDS)
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 fn is_widget(dictionary: &Dictionary) -> bool {
@@ -296,10 +352,30 @@ impl InspectionState<'_> {
             button_export_values.sort();
             button_export_values.dedup();
         }
+        let choice_kind = (kind == "Ch").then(|| {
+            if flags & (1 << 17) != 0 {
+                "combo"
+            } else {
+                "list"
+            }
+            .to_string()
+        });
+        let choice_editable = kind == "Ch" && flags & (1 << 18) != 0;
+        let choice_multi_select = kind == "Ch" && flags & (1 << 21) != 0;
+        let (choice_option_count, choice_options) = if kind == "Ch" {
+            choice_options(self.document, &dictionary)
+        } else {
+            (0, Vec::new())
+        };
         let field_option_count = if kind == "Btn" {
             button_export_values.len()
         } else {
-            option_count(self.document, &dictionary)
+            choice_option_count
+        };
+        let selected_choice_indices = if kind == "Ch" {
+            selected_indices(self.document, &dictionary)
+        } else {
+            Vec::new()
         };
         self.fields.push(PdfFormFieldSummary {
             name: full_name,
@@ -313,6 +389,11 @@ impl InspectionState<'_> {
             option_count: field_option_count,
             button_kind,
             button_export_values,
+            choice_kind,
+            choice_editable,
+            choice_multi_select,
+            choice_options,
+            selected_indices: selected_choice_indices,
             widget_count,
             read_only,
             required: flags & 2 != 0,

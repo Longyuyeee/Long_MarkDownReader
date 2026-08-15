@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B2B5",
-  "status": "radio-form-copy-complete",
+  "stage": "P1-B2B6",
+  "status": "single-choice-form-copy-complete",
   "sourcePolicy": "library-only-reliable-copy",
   "externalPolicy": "preview-only",
   "currentCapabilities": [
@@ -14,7 +14,8 @@
     "insert-copy",
     "bounded-unicode-text-form-copy",
     "bounded-checkbox-form-copy",
-    "bounded-radio-form-copy"
+    "bounded-radio-form-copy",
+    "bounded-single-choice-form-copy"
   ],
   "mandatoryBlockers": [
     "encrypted_pdf_unverified",
@@ -39,7 +40,7 @@
     {
       "id": "P1-B2B",
       "name": "bounded-acroform-fill-copy",
-      "status": "radio-complete-choice-pending",
+      "status": "safe-standard-fields-complete",
       "deliveredTextBackend": "src-tauri/src/formats/pdf_form_fill.rs",
       "deliveredTextWorkspace": "src/components/pdf/PdfFormInspectorPanel.vue",
       "writeUserFile": true,
@@ -93,6 +94,8 @@
   },
   "notPlanned": [
     "arbitrary-pdf-body-reflow",
+    "editable-choice-free-text-writeback",
+    "multi-select-choice-writeback",
     "signed-pdf-mutation",
     "encrypted-pdf-writeback",
     "silent-source-overwrite"

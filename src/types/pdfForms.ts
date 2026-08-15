@@ -6,6 +6,11 @@ export interface PdfFormFieldSummary {
   optionCount: number
   buttonKind?: 'checkbox' | 'radio' | 'pushbutton'
   buttonExportValues: string[]
+  choiceKind?: 'combo' | 'list'
+  choiceEditable: boolean
+  choiceMultiSelect: boolean
+  choiceOptions: Array<{ exportValue: string; displayValue: string }>
+  selectedIndices: number[]
   widgetCount: number
   readOnly: boolean
   required: boolean

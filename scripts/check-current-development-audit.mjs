@@ -22,7 +22,7 @@ const counts = matrix.formats.reduce((result, item) => {
 const currentUpdaterMatchesPackage = currentUpdater.status === 'hosted-managed-update-passed'
   && currentUpdater.releases?.current?.version === pkg.version
 const expectedStage = currentUpdaterMatchesPackage
-  ? '当前阶段：**P1-B2B5 PDF 单选组可靠副本已完成，下一步审计选择字段**'
+  ? '当前阶段：**P1-B2B6 PDF 单选 Choice 可靠副本已完成，下一步审计永久脱敏**'
   : policy.gates?.githubReleasePublished === true
     ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
   : policy.gates?.qualityGatePassed === true
@@ -66,3 +66,4 @@ await import('./check-p1b2b2-pdf-form-copy-workspace.mjs')
 await import('./check-p1b2b3-pdf-unicode-form-copy.mjs')
 await import('./check-p1b2b4-pdf-checkbox-copy.mjs')
 await import('./check-p1b2b5-pdf-radio-copy.mjs')
+await import('./check-p1b2b6-pdf-choice-copy.mjs')
