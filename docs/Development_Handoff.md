@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-B2B6 PDF 单选 Choice 可靠副本：** 原 PDF 右侧表单工作区现支持有界单选下拉框与列表框。只有非自由输入、非多选、无动作、2～512 个已完整解析选项且导出值非空唯一时才开放编辑；`/Opt` 的导出/展示映射被完整保留，副本把 `/V` 写为导出值、`/I` 写为单项索引，Widget `/AP /N` 则显示展示值。真实 Tauri 宽窄屏、目标重开与 Poppler 源/目标渲染确认 `region-east`/`East` 一致，源摘要不变。至此文本、复选框、单选组和单选 Choice 的 AcroForm 安全标准字段子集收口；自由输入/多选 Choice、签名/加密 PDF 和正文重排继续阻断。下一步 P1-B3 审计永久脱敏是否能证明内容真正移除。详见 [`P1B2B6_PDF_Choice_Copy_Audit_2026-08-15.md`](./P1B2B6_PDF_Choice_Copy_Audit_2026-08-15.md)。
+
 > **2026-08-15 P1-B2B5 PDF 单选组可靠副本：** 原 PDF 右侧表单工作区现支持标准 radio group 的有界填写。只有父字段与至少两个 Widget 关系清晰、每个 Widget 同时具备非空 `Off` 和唯一导出外观、且组内导出值互异时才开放编辑。副本把父字段 `/V` 写成选中值，对应 Widget `/AS` 写同名状态，其余 Widget 全部写 `Off`；保存后逐控件复读互斥关系。真实 Tauri 宽窄屏、源摘要、目标重开及 Poppler 源/目标渲染都确认选中项从 `Standard` 移到 `Professional`。Choice 字段、复杂按钮、签名/加密 PDF 和正文重排继续阻断。下一步 P1-B2B6 先审计 Choice 下拉/列表值映射。详见 [`P1B2B5_PDF_Radio_Copy_Audit_2026-08-15.md`](./P1B2B5_PDF_Radio_Copy_Audit_2026-08-15.md)。
 
 > **2026-08-15 P1-B2B4 PDF 复选框可靠副本：** 原 PDF 右侧表单工作区现支持标准 checkbox 的有界填写。检查器会识别按钮类型、真实导出值以及每个 Widget 的 `/AP /N` 状态；只有唯一导出值且所有 Widget 都具备 `Off` 与该导出外观时才开放编辑。副本同时写入字段 `/V` 和 Widget `/AS`，保存后强制复读；真实 Tauri 宽窄屏、源摘要、目标重开及 Poppler 源/目标独立渲染对比全部通过。单选组、选择字段、复杂按钮、签名/加密 PDF 和任意正文重排继续阻断。下一步 P1-B2B5 单独处理单选组。详见 [`P1B2B4_PDF_Checkbox_Copy_Audit_2026-08-15.md`](./P1B2B4_PDF_Checkbox_Copy_Audit_2026-08-15.md)。

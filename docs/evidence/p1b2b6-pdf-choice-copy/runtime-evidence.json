@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B2B6",
+  "wide": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 271.20001220703125,
+      "height": 626.4000244140625
+    },
+    "integrated": true,
+    "optionCount": 3,
+    "selectedValue": "region-east",
+    "selectedText": "East",
+    "hasVerified": true,
+    "hasNoOverwrite": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "narrow": {
+    "viewport": [
+      720,
+      680
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 271.20001220703125,
+      "height": 432.8000183105469
+    },
+    "integrated": true,
+    "optionCount": 3,
+    "selectedValue": "region-east",
+    "selectedText": "East",
+    "hasVerified": true,
+    "hasNoOverwrite": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "sourceDigest": "aff3307aa7e8e661c217f998760d05265c496a92116e9fde8e89b43b25db5950",
+  "sourceUnchanged": true,
+  "targetBytes": 5709,
+  "targetDigest": "d9d0fab8f74f4814aed52ae05f4e85f9bd15ee76aae7c5bdabece41809a35cb2",
+  "reopened": {
+    "status": "inspectable",
+    "fieldValue": "region-east",
+    "choiceKind": "combo",
+    "choiceEditable": false,
+    "choiceMultiSelect": false,
+    "choiceOptions": [
+      {
+        "exportValue": "region-north",
+        "displayValue": "Northwest Operations"
+      },
+      {
+        "exportValue": "region-east",
+        "displayValue": "East"
+      },
+      {
+        "exportValue": "region-south",
+        "displayValue": "South"
+      }
+    ],
+    "selectedIndices": [
+      1
+    ],
+    "hasNormalAppearance": true
+  },
+  "sourceRender": {
+    "canvas": [
+      612,
+      792
+    ],
+    "rect": [
+      72,
+      204,
+      300,
+      232
+    ],
+    "darkPixels": 260
+  },
+  "render": {
+    "canvas": [
+      612,
+      792
+    ],
+    "rect": [
+      72,
+      204,
+      300,
+      232
+    ],
+    "darkPixels": 62
+  },
+  "runtimeErrorCount": 0,
+  "sourceUserContentIncluded": false,
+  "passed": true
+}

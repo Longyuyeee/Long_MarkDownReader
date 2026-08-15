@@ -163,6 +163,7 @@
     "check:p1b2b3-pdf-unicode-form-copy": "node scripts/check-p1b2b3-pdf-unicode-form-copy.mjs",
     "check:p1b2b4-pdf-checkbox-copy": "node scripts/check-p1b2b4-pdf-checkbox-copy.mjs",
     "check:p1b2b5-pdf-radio-copy": "node scripts/check-p1b2b5-pdf-radio-copy.mjs",
+    "check:p1b2b6-pdf-choice-copy": "node scripts/check-p1b2b6-pdf-choice-copy.mjs",
     "audit:media-workspace": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-media-workspace-audit.ps1",
     "check:markdown-code-theme-contrast": "node scripts/check-markdown-code-theme-contrast.mjs",
     "check:code-editor-theme-contract": "node scripts/check-code-editor-theme-contract.mjs",
