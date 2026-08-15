@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-B4B PDF 隔离矢量水印后端：** 已新增独立 `pdf_watermark` 引擎和 `preview_pdf_watermark_copy` / `save_pdf_watermark_copy` 命令。资料库内 1～512 页、128 MiB 以内 PDF 可生成全部页面单条居中斜向文字水印预览，文字使用 Noto Sans CJK SC 2.004 内嵌子集与 ToUnicode；每页复制继承资源为私有字典，追加带 `q/Q`、Artifact BDC/EMC 和私有 ExtGState 的最后内容流。保存绑定源/输出 SHA-256，只创建新目标，并复读页面几何、表单/链接/批注/书签/附件/标签/元数据清单、水印流、可提取中文和无 `Prev` 全量重写。加密、签名/PDF-A、异常页框/旋转/UserUnit、复杂塑形与已有目标保持阻断。Poppler 144 DPI 复核发现并修正首版边缘裁切，当前宽窄轴包围盒自动字号无裁切。命令虽已注册，原 `PdfView` 尚无入口，公开能力仍关闭。下一步 P1-B4C 接入原右侧工作区。详见 [`P1B4B_PDF_Watermark_Backend_Audit_2026-08-15.md`](./P1B4B_PDF_Watermark_Backend_Audit_2026-08-15.md)。
+
 > **2026-08-15 P1-B4A PDF 文字水印安全审计：** 已明确水印只是可见归属标识，不是脱敏、DRM 或防复制。首个安全子集限定资料库内全部页面、单条居中斜向文字、Noto Sans CJK SC 内嵌子集、受限字号/角度/透明度和可靠新副本；批准架构为完整克隆源文档、非增量全量重写、按继承 CropBox/MediaBox/Rotate 定位，并以私有 Font/ExtGState、`q/Q` 和 Artifact 边界追加最后内容流。签名/加密/PDF-A/异常页框与已有目标保持阻断，当前没有命令或 UI。下一步 P1-B4B 只实现隔离后端和攻击面测试。详见 [`P1B4A_PDF_Watermark_Copy_Safety_Audit_2026-08-15.md`](./P1B4A_PDF_Watermark_Copy_Safety_Audit_2026-08-15.md)。
 
 > **2026-08-15 P1-B3D PDF 永久脱敏最终收口：** 真实 custom-protocol Tauri WebView2 已在 1280×800 与 720×680 完成原右侧工作区框选、草稿离开保护、全页预验证、取舍确认、可靠另存和目标自动复开，外层横向溢出为 0、运行时错误为 0、源摘要不变。Poppler 144 DPI 与 pypdf/Pillow 独立验证目标两页、可提取文字为空、秘密标记不存在、批注/表单/书签/元数据移除、黑框像素 100% 不透明且公开内容可读。P1-B3 已收口，下一步 P1-B4 先做水印副本安全审计。详见 [`P1B3D_PDF_Permanent_Redaction_Desktop_Evidence_Audit_2026-08-15.md`](./P1B3D_PDF_Permanent_Redaction_Desktop_Evidence_Audit_2026-08-15.md)。

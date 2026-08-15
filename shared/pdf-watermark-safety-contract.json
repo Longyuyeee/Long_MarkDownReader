@@ -1,9 +1,10 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B4A",
-  "status": "safety-audit-complete-backend-pending",
+  "stage": "P1-B4B",
+  "status": "isolated-vector-backend-complete-workspace-pending",
   "requirement": "library-pdf-bounded-text-watermark-reliable-copy",
   "currentWriteCapability": false,
+  "backendWriteCapability": true,
   "securityMeaning": "visible-attribution-only-not-redaction-drm-or-access-control",
   "approvedArchitecture": "full-rewrite-source-clone-plus-isolated-overlay-content-stream",
   "inputConstraints": {
@@ -103,7 +104,12 @@
     {
       "id": "P1-B4B",
       "name": "isolated-watermark-copy-backend",
-      "status": "planned",
+      "status": "completed",
+      "deliveredBackend": "src-tauri/src/formats/pdf_watermark.rs",
+      "deliveredCommands": [
+        "preview_pdf_watermark_copy",
+        "save_pdf_watermark_copy"
+      ],
       "writeUserFile": true
     },
     {
