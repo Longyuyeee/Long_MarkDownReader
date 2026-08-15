@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B3A",
-  "status": "permanent-redaction-safety-audit-complete",
+  "stage": "P1-B3B",
+  "status": "permanent-redaction-backend-complete",
   "sourcePolicy": "library-only-reliable-copy",
   "externalPolicy": "preview-only",
   "currentCapabilities": [
@@ -56,7 +56,7 @@
     {
       "id": "P1-B3",
       "name": "permanent-redaction-copy",
-      "status": "safety-audit-complete-raster-backend-pending",
+      "status": "raster-backend-complete-workspace-pending",
       "deliveredContract": "shared/pdf-redaction-safety-contract.json",
       "currentWriteUserFile": false,
       "writeUserFile": true,

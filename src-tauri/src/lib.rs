@@ -8,8 +8,8 @@ use commands::backup::{
 };
 use commands::canvas::{
     create_canvas_file, create_canvas_from_graph, create_canvas_from_markdown,
-    create_project_note_from_graph, read_canvas_file, read_external_canvas_file,
-    write_canvas_file, write_external_canvas_file,
+    create_project_note_from_graph, read_canvas_file, read_external_canvas_file, write_canvas_file,
+    write_external_canvas_file,
 };
 use commands::config::{
     clear_ai_credential, get_ai_credential_status, get_config, save_config, set_ai_credential,
@@ -80,8 +80,8 @@ use commands::media::{
     save_image_transform_copy,
 };
 use commands::mindmap::{
-    create_canvas_from_opml, read_external_opml_file, read_opml_file,
-    write_external_opml_file, write_opml_file,
+    create_canvas_from_opml, read_external_opml_file, read_opml_file, write_external_opml_file,
+    write_opml_file,
 };
 use commands::odf_content::{read_external_odf_content_document, read_odf_content_document};
 use commands::odt::read_odt_document;
@@ -89,9 +89,10 @@ use commands::pdf::{
     build_pdf_annotation_reference, inspect_pdf_form_structure, preview_pdf_form_copy,
     preview_pdf_form_text_copy, preview_pdf_insert_isolated_copy, preview_pdf_merge_isolated_copy,
     preview_pdf_page_plan_isolated_copy, preview_pdf_page_range_extract_copy,
-    read_external_pdf_info, read_external_pdf_range, read_pdf_annotations, read_pdf_file,
-    read_pdf_info, read_pdf_ocr, read_pdf_range, save_pdf_form_copy, save_pdf_form_text_copy,
-    save_pdf_insert_copy, save_pdf_merge_copy, save_pdf_page_plan_copy, save_pdf_page_range_copy,
+    preview_pdf_redaction_copy, read_external_pdf_info, read_external_pdf_range,
+    read_pdf_annotations, read_pdf_file, read_pdf_info, read_pdf_ocr, read_pdf_range,
+    save_pdf_form_copy, save_pdf_form_text_copy, save_pdf_insert_copy, save_pdf_merge_copy,
+    save_pdf_page_plan_copy, save_pdf_page_range_copy, save_pdf_redaction_copy,
     write_pdf_annotations, write_pdf_ocr,
 };
 use commands::pptx::{
@@ -146,9 +147,7 @@ use commands::yaml::{
 };
 use services::data_migration::check_and_migrate_data;
 use services::external_file_access::ExternalFileAccess;
-use services::external_windows::{
-    authorize_and_create_external_window, open_external_file_window,
-};
+use services::external_windows::{authorize_and_create_external_window, open_external_file_window};
 use services::knowledge_index::KnowledgeIndexRuntime;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
@@ -406,6 +405,8 @@ pub fn run() {
             save_pdf_form_text_copy,
             preview_pdf_form_copy,
             save_pdf_form_copy,
+            preview_pdf_redaction_copy,
+            save_pdf_redaction_copy,
             preview_pdf_page_plan_isolated_copy,
             save_pdf_page_plan_copy,
             preview_pdf_page_range_extract_copy,

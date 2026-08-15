@@ -11,6 +11,10 @@ use crate::formats::pdf_forms::{
 use crate::formats::pdf_ocr::{
     validate_pdf_ocr, PdfOcrDocument, PdfOcrSource, MAX_OCR_SIDECAR_BYTES,
 };
+use crate::formats::pdf_redaction::{
+    build_pdf_redaction_copy, verify_pdf_redaction_output, PdfRasterizedRedactionPage,
+    PdfRedactionCopyReport,
+};
 use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_new_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -458,6 +462,135 @@ pub async fn save_pdf_form_copy(
         changes,
     )
     .await
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfSavedRedactionCopyReport {
+    pub status: String,
+    pub engine: String,
+    pub target_path: String,
+    pub target_signature: String,
+    pub target_digest: String,
+    pub source_digest: String,
+    pub source_unchanged: bool,
+    pub output_pages: usize,
+    pub output_bytes: usize,
+    pub structural_reopen_verified: bool,
+    pub text_absence_reopen_verified: bool,
+    pub source_object_isolation_reopen_verified: bool,
+}
+
+#[tauri::command]
+pub async fn preview_pdf_redaction_copy(
+    library_root: String,
+    path: String,
+    expected_source_digest: String,
+    pages: Vec<PdfRasterizedRedactionPage>,
+) -> Result<PdfRedactionCopyReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pdf"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let source = fs::read(&source_path).map_err(|error| format!("读取 PDF 失败: {error}"))?;
+        build_pdf_redaction_copy(&source, &expected_source_digest, &pages).map(|(report, _)| report)
+    })
+    .await
+    .map_err(|error| format!("永久脱敏隔离任务失败: {error}"))?
+}
+
+fn save_pdf_redaction_copy_to_path(
+    source_path: &Path,
+    target_path: &Path,
+    expected_source_digest: &str,
+    expected_output_digest: &str,
+    pages: &[PdfRasterizedRedactionPage],
+) -> Result<PdfSavedRedactionCopyReport, String> {
+    if source_path == target_path {
+        return Err("可靠另存禁止覆盖源 PDF".into());
+    }
+    if target_path.exists() {
+        return Err("目标文件已存在；可靠另存不会覆盖现有文件".into());
+    }
+    let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
+    if expected_output_digest.len() != 64
+        || !expected_output_digest
+            .bytes()
+            .all(|value| value.is_ascii_hexdigit())
+    {
+        return Err("永久脱敏隔离输出摘要无效，请重新验证".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 PDF 失败: {error}"))?;
+    let (report, output) = build_pdf_redaction_copy(&source, expected_source_digest, pages)?;
+    if report.status != "isolated_verified" {
+        return Err(format!(
+            "当前 PDF 不能安全永久脱敏：{}",
+            report.blockers.join(", ")
+        ));
+    }
+    let output = output.ok_or("永久脱敏隔离验证未生成输出")?;
+    if report.output_digest.as_deref() != Some(expected_output_digest.as_str()) {
+        return Err("永久脱敏页面或隔离输出已变化，请重新验证".into());
+    }
+    write_new_bytes(target_path, &output)?;
+    let saved =
+        fs::read(target_path).map_err(|error| format!("脱敏目标已创建，但无法复读: {error}"))?;
+    let target_digest = format!("{:x}", Sha256::digest(&saved));
+    if saved != output || target_digest != expected_output_digest {
+        return Err("脱敏目标已创建，但落盘字节与隔离验证不一致；请保留文件并人工检查".into());
+    }
+    verify_pdf_redaction_output(&saved, report.output_pages)?;
+    let source_after = fs::read(source_path)
+        .map_err(|error| format!("脱敏目标已创建，但源 PDF 复核失败: {error}"))?;
+    let source_unchanged = format!("{:x}", Sha256::digest(&source_after)) == report.source_digest;
+    if !source_unchanged {
+        return Err("脱敏目标已创建，但源 PDF 摘要发生变化；请保留文件并人工检查".into());
+    }
+    let target_metadata = target_path
+        .metadata()
+        .map_err(|error| format!("脱敏目标已创建，但元数据复核失败: {error}"))?;
+    Ok(PdfSavedRedactionCopyReport {
+        status: "saved_verified".into(),
+        engine: report.engine,
+        target_path: target_path.to_string_lossy().into_owned(),
+        target_signature: pdf_signature(&target_metadata),
+        target_digest,
+        source_digest: report.source_digest,
+        source_unchanged,
+        output_pages: report.output_pages,
+        output_bytes: saved.len(),
+        structural_reopen_verified: true,
+        text_absence_reopen_verified: true,
+        source_object_isolation_reopen_verified: true,
+    })
+}
+
+#[tauri::command]
+pub async fn save_pdf_redaction_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_source_digest: String,
+    expected_output_digest: String,
+    pages: Vec<PdfRasterizedRedactionPage>,
+) -> Result<PdfSavedRedactionCopyReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pdf"])?;
+    let target_file_name = validate_pdf_copy_file_name(&target_file_name)?;
+    let target_path = source_path
+        .parent()
+        .ok_or("源 PDF 没有父目录")?
+        .join(target_file_name);
+    tauri::async_runtime::spawn_blocking(move || {
+        save_pdf_redaction_copy_to_path(
+            &source_path,
+            &target_path,
+            &expected_source_digest,
+            &expected_output_digest,
+            &pages,
+        )
+    })
+    .await
+    .map_err(|error| format!("永久脱敏可靠另存任务失败: {error}"))?
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -2537,7 +2670,10 @@ mod tests {
     use super::*;
     use crate::formats::pdf_annotations::{PdfAnnotation, PdfAnnotationKind, PdfAnnotationRect};
     use crate::formats::pdf_ocr::PdfOcrPage;
+    use crate::formats::pdf_redaction::PdfRedactionRect;
+    use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
     use lopdf::{EncryptionState, EncryptionVersion, Permissions, Stream, StringFormat};
+    use std::io::Cursor;
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -2741,6 +2877,94 @@ mod tests {
                 removed: *removed,
             })
             .collect()
+    }
+
+    fn redaction_raster_page(page: u32) -> PdfRasterizedRedactionPage {
+        let image = ImageBuffer::from_fn(300, 300, |x, y| {
+            if page == 1 && (60..150).contains(&x) && (60..150).contains(&y) {
+                Rgba([0, 0, 0, 255])
+            } else {
+                Rgba([248, 248, 248, 255])
+            }
+        });
+        let mut png_bytes = Vec::new();
+        DynamicImage::ImageRgba8(image)
+            .write_to(&mut Cursor::new(&mut png_bytes), ImageFormat::Png)
+            .unwrap();
+        PdfRasterizedRedactionPage {
+            page,
+            png_bytes,
+            redactions: (page == 1)
+                .then(|| {
+                    vec![PdfRedactionRect {
+                        x: 0.2,
+                        y: 0.2,
+                        width: 0.3,
+                        height: 0.3,
+                        color: "black".into(),
+                    }]
+                })
+                .unwrap_or_default(),
+        }
+    }
+
+    #[test]
+    fn permanent_redaction_copy_saves_new_target_reopens_and_preserves_source() {
+        let workspace = TestWorkspace::new();
+        let source_path = workspace.root.join("redaction-source.pdf");
+        let target_path = workspace.root.join("redaction-safe-copy.pdf");
+        let source = write_two_page_pdf(&source_path);
+        let source_digest = format!("{:x}", Sha256::digest(&source));
+        let pages = [redaction_raster_page(1), redaction_raster_page(2)];
+        let (preview, _) = build_pdf_redaction_copy(&source, &source_digest, &pages).unwrap();
+        let output_digest = preview.output_digest.clone().unwrap();
+        let saved = save_pdf_redaction_copy_to_path(
+            &source_path,
+            &target_path,
+            &source_digest,
+            &output_digest,
+            &pages,
+        )
+        .unwrap();
+        assert_eq!(saved.status, "saved_verified");
+        assert!(saved.source_unchanged);
+        assert!(saved.structural_reopen_verified);
+        assert!(saved.text_absence_reopen_verified);
+        assert!(saved.source_object_isolation_reopen_verified);
+        assert_eq!(saved.target_digest, output_digest);
+        assert_eq!(fs::read(&source_path).unwrap(), source);
+        assert!(
+            pdf_extract::extract_text_from_mem(&fs::read(&target_path).unwrap())
+                .unwrap()
+                .trim()
+                .is_empty()
+        );
+        if let Ok(evidence_root) = std::env::var("LONGEDIT_PDF_REDACTION_EVIDENCE_DIR") {
+            let evidence_root = PathBuf::from(evidence_root);
+            fs::create_dir_all(&evidence_root).unwrap();
+            fs::write(evidence_root.join("redaction-source.pdf"), &source).unwrap();
+            fs::write(
+                evidence_root.join("redaction-image-only-copy.pdf"),
+                fs::read(&target_path).unwrap(),
+            )
+            .unwrap();
+        }
+        assert!(save_pdf_redaction_copy_to_path(
+            &source_path,
+            &target_path,
+            &source_digest,
+            &output_digest,
+            &pages,
+        )
+        .is_err());
+        assert!(save_pdf_redaction_copy_to_path(
+            &source_path,
+            &source_path,
+            &source_digest,
+            &output_digest,
+            &pages,
+        )
+        .is_err());
     }
 
     #[test]
