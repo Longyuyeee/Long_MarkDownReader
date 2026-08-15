@@ -15,6 +15,7 @@ pub mod pdf_annotations;
 pub mod pdf_ocr;
 pub mod pptx;
 pub mod pptx_edit;
+pub mod raster_image;
 pub mod svg;
 pub mod table;
 pub mod text;
