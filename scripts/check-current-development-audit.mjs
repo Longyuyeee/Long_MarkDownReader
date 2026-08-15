@@ -22,7 +22,7 @@ const counts = matrix.formats.reduce((result, item) => {
 const currentUpdaterMatchesPackage = currentUpdater.status === 'hosted-managed-update-passed'
   && currentUpdater.releases?.current?.version === pkg.version
 const expectedStage = currentUpdaterMatchesPackage
-  ? '当前阶段：**P1-B3C PDF 永久脱敏右侧工作区已完成，下一步补真实桌面与独立渲染证据**'
+  ? '当前阶段：**P1-B3 PDF 永久脱敏已完成真实桌面与独立渲染收口，下一步进入 P1-B4 水印副本安全审计**'
   : policy.gates?.githubReleasePublished === true
     ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
   : policy.gates?.qualityGatePassed === true
@@ -70,3 +70,4 @@ await import('./check-p1b2b6-pdf-choice-copy.mjs')
 await import('./check-p1b3a-pdf-redaction-safety-audit.mjs')
 await import('./check-p1b3b-pdf-redaction-backend.mjs')
 await import('./check-p1b3c-pdf-redaction-workspace.mjs')
+await import('./check-p1b3d-pdf-redaction-evidence.mjs')
