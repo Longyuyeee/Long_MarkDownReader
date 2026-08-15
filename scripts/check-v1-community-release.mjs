@@ -22,7 +22,8 @@ const notesPath = `docs/RELEASE_NOTES_v${pkg.version}.md`
 const [major, minor, patch] = pkg.version.split('.').map(Number)
 const previousPublicVersion = `${major}.${minor}.${patch - 1}`
 const managedUpdaterUpgradePrefix = `${previousPublicVersion}-to-${pkg.version}`
-const managedUpdaterLifecycle = json(`shared/v${previousPublicVersion.replaceAll('.', '')}-managed-updater-lifecycle-policy.json`)
+const managedUpdaterPolicyToken = previousPublicVersion.replace(/^1\.0\./, '1')
+const managedUpdaterLifecycle = json(`shared/v${managedUpdaterPolicyToken}-managed-updater-lifecycle-policy.json`)
 
 if (!/^1\.\d+\.\d+$/.test(pkg.version) || tauri.version !== pkg.version || !cargo.includes(`version = "${pkg.version}"`)) fail('V1 version identity drift')
 if (policy.schemaVersion !== 1 || policy.stage !== 'V1' || policy.appVersion !== pkg.version || policy.channel !== 'community-unsigned') fail('V1 policy identity drift')
