@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B4D",
+  "sourceCommit": "427a5b18f65485741072841dd8e1a2fc7ca89f1c",
+  "watermarkText": "项目机密 P1B4D",
+  "watermarkSpec": {
+    "angleDegrees": -33,
+    "opacity": 0.24,
+    "gray": 0.35
+  },
+  "sourceDigest": "cecc517c6c4086c49cbd80daccd2f8de9f78dbbdd70dc05f47b01e36477ec85a",
+  "sourceUnchanged": true,
+  "targetDigest": "c632397f003cb46f5b0cae7b0ae3669b8827629489e080e6a3cf92fd8947359e",
+  "targetBytes": 8900,
+  "draftGuard": {
+    "message": "PDF 编辑草稿尚未生成新文件，离开后将丢失页面整理、合并、永久脱敏框选或文字水印参数。确定离开吗？",
+    "routeRetained": true
+  },
+  "draftWide": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 299,
+      "height": 595
+    },
+    "integrated": true,
+    "inputValue": "项目机密 P1B4D",
+    "verified": false,
+    "tradeoffVisible": false,
+    "saveReachable": false,
+    "errorVisible": false
+  },
+  "verifiedWide": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 299,
+      "height": 595
+    },
+    "integrated": true,
+    "inputValue": "项目机密 P1B4D",
+    "verified": true,
+    "tradeoffVisible": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "verifiedNarrow": {
+    "viewport": [
+      720,
+      680
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 299,
+      "height": 399
+    },
+    "integrated": true,
+    "inputValue": "项目机密 P1B4D",
+    "verified": true,
+    "tradeoffVisible": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "reopened": {
+    "route": "#/library?path=\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-p1b4d-37224-1786812373815\\library\\P1B4D+Watermark+Evidence-文字水印.pdf",
+    "pageCount": 2,
+    "canvasReady": true,
+    "workspace": true,
+    "errorVisible": false
+  },
+  "runtimeErrorCount": 0,
+  "sourceUserContentIncluded": false,
+  "passed": true
+}
