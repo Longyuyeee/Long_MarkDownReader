@@ -107,7 +107,7 @@ const expectedLanes = new Set([
   "signature-protected-overwrite",
   "strict-readonly-preview",
   "verified-image-copy",
-  "pdf-sidecar-isolation",
+  "pdf-reliable-copy-isolation",
   "verified-office-copy",
   "external-application-handoff",
   "bounded-structured-write",
@@ -121,7 +121,7 @@ if (
 
 for (const [id, saveMode, profile] of [
   ["log", "overwrite", "professional-log"],
-  ["pdf", "sidecar", "pdf-sidecar"],
+  ["pdf", "copy", "pdf-copy"],
   ["docx", "bounded-overwrite", "office-copy"],
   ["pptx", "copy", "office-copy"],
   ["ods", "none", "odf-preview"],

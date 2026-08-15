@@ -47,8 +47,9 @@ const mappingFor = id => matrix.formats.find(mapping => mapping.id === id)
 for (const format of registry.formats) {
   const mapping = mappingFor(format.id)
   if (!mapping) continue
-  const isVerifiedImageCopy = format.id === 'raster-image' && mapping.profile === 'media-preview'
-  if (format.userCapability.saveMode === 'copy' && mapping.profile !== 'office-copy' && !isVerifiedImageCopy) {
+  const isSpecializedCopy = (format.id === 'raster-image' && mapping.profile === 'media-preview')
+    || (format.id === 'pdf' && mapping.profile === 'pdf-copy')
+  if (format.userCapability.saveMode === 'copy' && mapping.profile !== 'office-copy' && !isSpecializedCopy) {
     failures.push(`${format.id} copy-only format must use office-copy`)
   }
   if (format.userCapability.level === 'external-open'
@@ -63,7 +64,7 @@ for (const format of registry.formats) {
 for (const [id, profile] of [
   ['env', 'protected-local-overwrite'],
   ['log', 'professional-log'],
-  ['pdf', 'pdf-sidecar'],
+  ['pdf', 'pdf-copy'],
   ['docx', 'office-copy'],
   ['pptx', 'office-copy'],
   ['ods', 'odf-preview'],

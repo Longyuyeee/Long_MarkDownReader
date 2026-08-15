@@ -84,12 +84,12 @@
       ]
     },
     {
-      "id": "pdf-sidecar-isolation",
+      "id": "pdf-reliable-copy-isolation",
       "formats": ["pdf"],
-      "saveModes": ["sidecar"],
-      "profiles": ["pdf-sidecar"],
-      "sourcePolicy": "never-write-source",
-      "failurePolicy": "preserve-sidecar-and-report-source-mismatch",
+      "saveModes": ["copy"],
+      "profiles": ["pdf-copy"],
+      "sourcePolicy": "never-overwrite-source-sidecars-and-new-copies-only",
+      "failurePolicy": "reject-stale-source-existing-target-or-unverified-copy",
       "evidence": [
         {
           "path": "src-tauri/src/commands/pdf.rs",

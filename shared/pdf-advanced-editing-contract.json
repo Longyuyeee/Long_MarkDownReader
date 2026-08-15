@@ -79,10 +79,11 @@
     }
   ],
   "registryFinding": {
-    "status": "underclaimed",
-    "current": "read-annotate-sidecar",
-    "actual": "bounded-page-edit-reliable-copy-plus-sidecars",
-    "requiredBeforeB2B": "reconcile-format-registry-release-matrix-and-safe-degradation-contract"
+    "status": "reconciled-before-b2b",
+    "previous": "read-annotate-sidecar",
+    "current": "bounded-page-edit-reliable-copy-plus-sidecars",
+    "writer": "pdf-copy",
+    "externalPolicy": "preview-only"
   },
   "notPlanned": [
     "arbitrary-pdf-body-reflow",
