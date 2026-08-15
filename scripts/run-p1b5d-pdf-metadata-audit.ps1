@@ -28,7 +28,17 @@ $python = "C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\de
 if (-not (Test-Path -LiteralPath $python)) { throw "P1-B5D Python runtime is unavailable" }
 & $python (Join-Path $workspace "scripts\create-p1b5d-pdf-metadata-fixture.py") $source
 if ($LASTEXITCODE -ne 0) { throw "P1-B5D fixture generation failed" }
-$sourceHash = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash
+
+function Get-Sha256([string]$Path) {
+  $stream = [IO.File]::OpenRead($Path)
+  try {
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { return [Convert]::ToHexString($sha.ComputeHash($stream)) }
+    finally { $sha.Dispose() }
+  } finally { $stream.Dispose() }
+}
+
+$sourceHash = Get-Sha256 $source
 
 function Wait-Port([int]$Port,[bool]$Listening) {
   for ($index=0;$index -lt 300;$index++) {
@@ -63,7 +73,7 @@ try {
     $targetFile = Get-ChildItem -LiteralPath $library -Filter "*.pdf" | Where-Object { $_.FullName -ne $source } | Select-Object -First 1
     if (-not $targetFile) { throw "P1-B5D target PDF was not created" }
     $target = $targetFile.FullName
-    if ($sourceHash -ne (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash) { throw "P1-B5D source fixture changed" }
+    if ($sourceHash -ne (Get-Sha256 $source)) { throw "P1-B5D source fixture changed" }
 
     $popplerRoot="C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\poppler\Library\bin"
     $pdftoppm=Join-Path $popplerRoot "pdftoppm.exe"
