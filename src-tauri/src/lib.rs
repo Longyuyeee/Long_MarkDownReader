@@ -86,12 +86,13 @@ use commands::mindmap::{
 use commands::odf_content::{read_external_odf_content_document, read_odf_content_document};
 use commands::odt::read_odt_document;
 use commands::pdf::{
-    build_pdf_annotation_reference, preview_pdf_insert_isolated_copy,
-    preview_pdf_merge_isolated_copy, preview_pdf_page_plan_isolated_copy,
-    preview_pdf_page_range_extract_copy, preview_pdf_form_text_copy, inspect_pdf_form_structure, read_external_pdf_info,
-    read_external_pdf_range, read_pdf_annotations, read_pdf_file, read_pdf_info, read_pdf_ocr,
-    read_pdf_range, save_pdf_insert_copy, save_pdf_merge_copy,
-    save_pdf_page_plan_copy, save_pdf_page_range_copy, save_pdf_form_text_copy, write_pdf_annotations, write_pdf_ocr,
+    build_pdf_annotation_reference, inspect_pdf_form_structure, preview_pdf_form_copy,
+    preview_pdf_form_text_copy, preview_pdf_insert_isolated_copy, preview_pdf_merge_isolated_copy,
+    preview_pdf_page_plan_isolated_copy, preview_pdf_page_range_extract_copy,
+    read_external_pdf_info, read_external_pdf_range, read_pdf_annotations, read_pdf_file,
+    read_pdf_info, read_pdf_ocr, read_pdf_range, save_pdf_form_copy, save_pdf_form_text_copy,
+    save_pdf_insert_copy, save_pdf_merge_copy, save_pdf_page_plan_copy, save_pdf_page_range_copy,
+    write_pdf_annotations, write_pdf_ocr,
 };
 use commands::pptx::{
     audit_pptx_edit_baseline, preview_pptx_alt_text_patch_isolated_copy,
@@ -403,6 +404,8 @@ pub fn run() {
             inspect_pdf_form_structure,
             preview_pdf_form_text_copy,
             save_pdf_form_text_copy,
+            preview_pdf_form_copy,
+            save_pdf_form_copy,
             preview_pdf_page_plan_isolated_copy,
             save_pdf_page_plan_copy,
             preview_pdf_page_range_extract_copy,

@@ -17,6 +17,8 @@ pub struct PdfFormFieldSummary {
     pub value: Option<String>,
     pub default_value: Option<String>,
     pub option_count: usize,
+    pub button_kind: Option<String>,
+    pub button_export_values: Vec<String>,
     pub widget_count: usize,
     pub read_only: bool,
     pub required: bool,
@@ -35,6 +37,8 @@ pub struct PdfFormWidgetSummary {
     pub field_type: String,
     pub linked_to_canonical_field: bool,
     pub has_normal_appearance: bool,
+    pub appearance_states: Vec<String>,
+    pub appearance_state: Option<String>,
     pub has_actions: bool,
 }
 
@@ -155,6 +159,25 @@ fn has_normal_appearance(document: &Document, dictionary: &Dictionary) -> bool {
     }
 }
 
+fn normal_appearance_states(document: &Document, dictionary: &Dictionary) -> Vec<String> {
+    let mut states = dictionary
+        .get(b"AP")
+        .ok()
+        .and_then(|appearance| dictionary_for(document, appearance))
+        .and_then(|(_, appearance)| appearance.get(b"N").ok().cloned())
+        .and_then(|normal| dictionary_for(document, &normal))
+        .map(|(_, states)| {
+            states
+                .iter()
+                .map(|(name, _)| String::from_utf8_lossy(name).into_owned())
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    states.sort();
+    states.dedup();
+    states
+}
+
 fn option_count(document: &Document, dictionary: &Dictionary) -> usize {
     let Ok(options) = dictionary.get(b"Opt") else {
         return 0;
@@ -217,8 +240,8 @@ impl InspectionState<'_> {
             .unwrap_or_default();
         let mut widget_count = usize::from(is_widget(&dictionary));
         let mut child_fields = Vec::new();
-        for kid in kids {
-            let Some((kid_id, kid_dictionary)) = dictionary_for(self.document, &kid) else {
+        for kid in &kids {
+            let Some((kid_id, kid_dictionary)) = dictionary_for(self.document, kid) else {
                 self.diagnostics.insert("invalid_kid_reference".into());
                 continue;
             };
@@ -228,7 +251,7 @@ impl InspectionState<'_> {
                     self.linked_widget_ids.insert(id);
                 }
             } else {
-                child_fields.push(kid);
+                child_fields.push(kid.clone());
             }
         }
         let next_inherited = InheritedField {
@@ -251,6 +274,33 @@ impl InspectionState<'_> {
         let supported_type = matches!(kind.as_str(), "Tx" | "Btn" | "Ch");
         let read_only = flags & 1 != 0;
         let password = flags & (1 << 13) != 0;
+        let button_kind = (kind == "Btn").then(|| {
+            if flags & (1 << 16) != 0 {
+                "pushbutton"
+            } else if flags & (1 << 15) != 0 {
+                "radio"
+            } else {
+                "checkbox"
+            }
+            .to_string()
+        });
+        let mut button_export_values = Vec::new();
+        if kind == "Btn" {
+            button_export_values.extend(normal_appearance_states(self.document, &dictionary));
+            for kid in &kids {
+                if let Some((_, widget)) = dictionary_for(self.document, kid) {
+                    button_export_values.extend(normal_appearance_states(self.document, &widget));
+                }
+            }
+            button_export_values.retain(|value| value != "Off");
+            button_export_values.sort();
+            button_export_values.dedup();
+        }
+        let field_option_count = if kind == "Btn" {
+            button_export_values.len()
+        } else {
+            option_count(self.document, &dictionary)
+        };
         self.fields.push(PdfFormFieldSummary {
             name: full_name,
             field_type: kind,
@@ -260,7 +310,9 @@ impl InspectionState<'_> {
                 dictionary.get(b"V").ok().and_then(pdf_string)
             },
             default_value: dictionary.get(b"DV").ok().and_then(pdf_string),
-            option_count: option_count(self.document, &dictionary),
+            option_count: field_option_count,
+            button_kind,
+            button_export_values,
             widget_count,
             read_only,
             required: flags & 2 != 0,
@@ -433,6 +485,8 @@ pub fn inspect_pdf_forms(source: &[u8]) -> Result<PdfFormInspectionReport, Strin
                     .unwrap_or_else(|| "Unknown".into()),
                 linked_to_canonical_field: linked,
                 has_normal_appearance: has_normal_appearance(&document, &dictionary),
+                appearance_states: normal_appearance_states(&document, &dictionary),
+                appearance_state: dictionary.get(b"AS").ok().and_then(pdf_string),
                 has_actions: has_actions(&dictionary),
             });
         }

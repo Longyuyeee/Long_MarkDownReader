@@ -28,6 +28,7 @@ pub struct PdfFormTextFillReport {
     pub output_bytes: usize,
     pub changed_fields: Vec<String>,
     pub appearance_streams_written: usize,
+    pub widget_states_written: usize,
     pub field_tree_verified: bool,
     pub widget_appearances_verified: bool,
     pub blockers: Vec<String>,
@@ -317,6 +318,72 @@ fn encoded_glyphs(value: &str, font: &EmbeddedFont) -> Result<String, String> {
     Ok(output)
 }
 
+fn checkbox_export_value(
+    document: &Document,
+    target: &TextFieldTarget,
+    field_name: &str,
+) -> Result<String, String> {
+    if target.flags & (1 << 15) != 0 || target.flags & (1 << 16) != 0 {
+        return Err(format!("PDF 字段不是可可靠填写的复选框：{field_name}"));
+    }
+    let mut export_value = None;
+    for widget_id in &target.widget_ids {
+        let widget = document
+            .get_dictionary(*widget_id)
+            .map_err(|_| format!("PDF 复选框 Widget 无效：{field_name}"))?;
+        let (_, appearance) = dictionary_for(
+            document,
+            widget
+                .get(b"AP")
+                .map_err(|_| format!("PDF 复选框缺少外观：{field_name}"))?,
+        )
+        .ok_or_else(|| format!("PDF 复选框外观无效：{field_name}"))?;
+        let (_, normal) = dictionary_for(
+            document,
+            appearance
+                .get(b"N")
+                .map_err(|_| format!("PDF 复选框缺少正常外观：{field_name}"))?,
+        )
+        .ok_or_else(|| format!("PDF 复选框正常外观不是状态字典：{field_name}"))?;
+        if !normal.has(b"Off") {
+            return Err(format!("PDF 复选框缺少 Off 状态：{field_name}"));
+        }
+        let enabled = normal
+            .iter()
+            .filter_map(|(name, appearance)| {
+                (name != b"Off")
+                    .then(|| {
+                        document
+                            .dereference(appearance)
+                            .ok()
+                            .is_some_and(|(_, value)| {
+                                value
+                                    .as_stream()
+                                    .is_ok_and(|stream| !stream.content.is_empty())
+                            })
+                            .then(|| String::from_utf8_lossy(name).into_owned())
+                    })
+                    .flatten()
+            })
+            .collect::<Vec<_>>();
+        if enabled.len() != 1 {
+            return Err(format!(
+                "PDF 复选框必须只有一个非 Off 外观状态：{field_name}"
+            ));
+        }
+        if export_value
+            .as_ref()
+            .is_some_and(|value| value != &enabled[0])
+        {
+            return Err(format!(
+                "PDF 复选框各 Widget 的导出状态不一致：{field_name}"
+            ));
+        }
+        export_value = Some(enabled[0].clone());
+    }
+    export_value.ok_or_else(|| format!("PDF 复选框没有可用导出状态：{field_name}"))
+}
+
 fn widget_size(document: &Document, widget_id: ObjectId) -> (f32, f32) {
     let rect = document
         .get_dictionary(widget_id)
@@ -366,6 +433,7 @@ pub fn build_pdf_text_form_copy(
                 output_bytes: 0,
                 changed_fields: Vec::new(),
                 appearance_streams_written: 0,
+                widget_states_written: 0,
                 field_tree_verified: false,
                 widget_appearances_verified: false,
                 blockers: inspection.blockers,
@@ -376,54 +444,84 @@ pub fn build_pdf_text_form_copy(
     let mut document =
         Document::load_mem(source).map_err(|error| format!("无法解析 PDF 表单结构: {error}"))?;
     let targets = collect_targets(&document)?;
-    let font = embed_unicode_font(
-        &mut document,
-        &changes
-            .iter()
-            .map(|change| change.value.as_str())
-            .collect::<Vec<_>>(),
-    )?;
+    let mut text_values = Vec::new();
+    for change in changes {
+        let target = targets
+            .get(&change.field_name)
+            .ok_or_else(|| format!("PDF 字段不存在：{}", change.field_name))?;
+        if target.flags & 1 != 0 || target.widget_ids.is_empty() {
+            return Err(format!(
+                "PDF 字段不属于可可靠填写子集：{}",
+                change.field_name
+            ));
+        }
+        match target.field_type.as_str() {
+            "Tx" if target.flags & (1 << 13) == 0 => text_values.push(change.value.as_str()),
+            "Btn" => {
+                let export = checkbox_export_value(&document, target, &change.field_name)?;
+                if change.value != "Off" && change.value != export {
+                    return Err(format!("PDF 复选框状态无效：{}", change.field_name));
+                }
+            }
+            _ => {
+                return Err(format!(
+                    "PDF 字段不属于可可靠填写子集：{}",
+                    change.field_name
+                ))
+            }
+        }
+    }
+    let font = (!text_values.is_empty())
+        .then(|| embed_unicode_font(&mut document, &text_values))
+        .transpose()?;
     let mut appearance_streams_written = 0;
+    let mut widget_states_written = 0;
     let mut changed_fields = Vec::new();
     for change in changes {
         let target = targets
             .get(&change.field_name)
             .ok_or_else(|| format!("PDF 字段不存在：{}", change.field_name))?;
-        if target.field_type != "Tx"
-            || target.flags & 1 != 0
-            || target.flags & (1 << 13) != 0
-            || target.widget_ids.is_empty()
-        {
-            return Err(format!(
-                "PDF 字段不属于可可靠填写的文本子集：{}",
-                change.field_name
-            ));
-        }
-        document
-            .get_dictionary_mut(target.field_id)
-            .map_err(|_| format!("PDF 字段对象无效：{}", change.field_name))?
-            .set("V", pdf_text_string(&change.value));
-        for widget_id in &target.widget_ids {
-            let (width, height) = widget_size(&document, *widget_id);
-            let glyphs = encoded_glyphs(&change.value, &font)?;
-            let content = format!(
-                "q BT /LECJK 10 Tf 0 g 2 {} Td <{}> Tj ET Q",
-                (height - 12.0).max(2.0),
-                glyphs
-            );
-            let appearance_id = document.add_object(Stream::new(dictionary! {
-                "Type" => "XObject", "Subtype" => "Form", "FormType" => 1,
-                "BBox" => vec![0.into(), 0.into(), Object::Real(width), Object::Real(height)],
-                "Resources" => dictionary! { "Font" => dictionary! { "LECJK" => Object::Reference(font.font_id) } }
-            }, content.into_bytes()));
+        if target.field_type == "Tx" {
             document
-                .get_dictionary_mut(*widget_id)
-                .map_err(|_| format!("PDF Widget 对象无效：{}", change.field_name))?
-                .set(
-                    "AP",
-                    dictionary! { "N" => Object::Reference(appearance_id) },
+                .get_dictionary_mut(target.field_id)
+                .map_err(|_| format!("PDF 字段对象无效：{}", change.field_name))?
+                .set("V", pdf_text_string(&change.value));
+            let font = font.as_ref().ok_or("PDF 文本字体没有初始化")?;
+            for widget_id in &target.widget_ids {
+                let (width, height) = widget_size(&document, *widget_id);
+                let glyphs = encoded_glyphs(&change.value, font)?;
+                let content = format!(
+                    "q BT /LECJK 10 Tf 0 g 2 {} Td <{}> Tj ET Q",
+                    (height - 12.0).max(2.0),
+                    glyphs
                 );
-            appearance_streams_written += 1;
+                let appearance_id = document.add_object(Stream::new(dictionary! {
+                    "Type" => "XObject", "Subtype" => "Form", "FormType" => 1,
+                    "BBox" => vec![0.into(), 0.into(), Object::Real(width), Object::Real(height)],
+                    "Resources" => dictionary! { "Font" => dictionary! { "LECJK" => Object::Reference(font.font_id) } }
+                }, content.into_bytes()));
+                document
+                    .get_dictionary_mut(*widget_id)
+                    .map_err(|_| format!("PDF Widget 对象无效：{}", change.field_name))?
+                    .set(
+                        "AP",
+                        dictionary! { "N" => Object::Reference(appearance_id) },
+                    );
+                appearance_streams_written += 1;
+            }
+        } else {
+            let state = change.value.as_bytes().to_vec();
+            document
+                .get_dictionary_mut(target.field_id)
+                .map_err(|_| format!("PDF 复选框字段对象无效：{}", change.field_name))?
+                .set("V", Object::Name(state.clone()));
+            for widget_id in &target.widget_ids {
+                document
+                    .get_dictionary_mut(*widget_id)
+                    .map_err(|_| format!("PDF 复选框 Widget 无效：{}", change.field_name))?
+                    .set("AS", Object::Name(state.clone()));
+                widget_states_written += 1;
+            }
         }
         changed_fields.push(change.field_name.clone());
     }
@@ -454,8 +552,11 @@ pub fn build_pdf_text_form_copy(
                     .get_dictionary(target.field_id)
                     .ok()
                     .and_then(|field| field.get(b"V").ok())
-                    .and_then(|value| value.as_str().ok())
-                    .is_some_and(|value| decode_pdf_text(value) == change.value)
+                    .is_some_and(|value| match value {
+                        Object::String(bytes, _) => decode_pdf_text(bytes) == change.value,
+                        Object::Name(bytes) => bytes == change.value.as_bytes(),
+                        _ => false,
+                    })
             })
     });
     let widget_appearances_verified = changes.iter().all(|change| {
@@ -471,26 +572,40 @@ pub fn build_pdf_text_form_copy(
                     let field_value = reopened
                         .get_dictionary(target.field_id)
                         .ok()
-                        .and_then(|field| field.get(b"V").ok())
-                        .and_then(|value| value.as_str().ok());
+                        .and_then(|field| field.get(b"V").ok());
                     !target.widget_ids.is_empty()
                         && target.widget_ids.iter().all(|widget_id| {
                             reopened
                                 .get_dictionary(*widget_id)
                                 .ok()
-                                .and_then(|widget| {
-                                    widget
-                                        .get(b"V")
-                                        .ok()
-                                        .and_then(|value| value.as_str().ok())
-                                        .or(field_value)
+                                .and_then(|widget| widget.get(b"V").ok().or(field_value))
+                                .is_some_and(|value| match value {
+                                    Object::String(bytes, _) => {
+                                        decode_pdf_text(bytes) == change.value
+                                    }
+                                    Object::Name(bytes) => bytes == change.value.as_bytes(),
+                                    _ => false,
                                 })
-                                .is_some_and(|value| decode_pdf_text(value) == change.value)
+                        })
+                });
+        let appearance_state_agrees =
+            reopened_targets
+                .get(&change.field_name)
+                .is_some_and(|target| {
+                    target.field_type != "Btn"
+                        || target.widget_ids.iter().all(|widget_id| {
+                            reopened
+                                .get_dictionary(*widget_id)
+                                .ok()
+                                .and_then(|widget| widget.get(b"AS").ok())
+                                .and_then(|value| value.as_name().ok())
+                                .is_some_and(|state| state == change.value.as_bytes())
                         })
                 });
         !widgets.is_empty()
             && widgets.iter().all(|widget| widget.has_normal_appearance)
             && effective_values_agree
+            && appearance_state_agrees
     });
     if !field_tree_verified || !widget_appearances_verified {
         return Err("PDF 表单副本的字段树、Widget 或外观复读不一致".into());
@@ -505,6 +620,7 @@ pub fn build_pdf_text_form_copy(
             output_bytes: output.len(),
             changed_fields,
             appearance_streams_written,
+            widget_states_written,
             field_tree_verified,
             widget_appearances_verified,
             blockers: Vec::new(),
@@ -541,6 +657,54 @@ mod tests {
             "MediaBox" => vec![0.into(), 0.into(), 300.into(), 300.into()],
             "Contents" => Object::Reference(content_id), "Annots" => vec![Object::Reference(widget_id)]
         }));
+        document.objects.insert(
+            pages_id,
+            Object::Dictionary(dictionary! {
+                "Type" => "Pages", "Kids" => vec![Object::Reference(page_id)], "Count" => 1
+            }),
+        );
+        let acro_form_id =
+            document.add_object(dictionary! { "Fields" => vec![Object::Reference(field_id)] });
+        let catalog_id = document.add_object(dictionary! {
+            "Type" => "Catalog", "Pages" => Object::Reference(pages_id), "AcroForm" => Object::Reference(acro_form_id)
+        });
+        document.trailer.set("Root", Object::Reference(catalog_id));
+        let mut bytes = Vec::new();
+        document.save_to(&mut bytes).unwrap();
+        bytes
+    }
+
+    fn button_form_fixture(flags: i64) -> Vec<u8> {
+        let mut document = Document::with_version("1.7");
+        let pages_id = document.new_object_id();
+        let page_id = document.new_object_id();
+        let field_id = document.new_object_id();
+        let content_id = document.add_object(Stream::new(dictionary! {}, Vec::new()));
+        let off_id = document.add_object(Stream::new(
+            dictionary! { "BBox" => vec![0.into(), 0.into(), 20.into(), 20.into()] },
+            b"q 1 g 0 0 20 20 re f 0 G 0 0 20 20 re S Q".to_vec(),
+        ));
+        let yes_id = document.add_object(Stream::new(
+            dictionary! { "BBox" => vec![0.into(), 0.into(), 20.into(), 20.into()] },
+            b"q 1 g 0 0 20 20 re f 0 G 0 0 20 20 re S 2 w 4 10 m 8 5 l 16 16 l S Q".to_vec(),
+        ));
+        document.objects.insert(
+            field_id,
+            Object::Dictionary(dictionary! {
+                "Type" => "Annot", "Subtype" => "Widget", "FT" => "Btn",
+                "T" => Object::string_literal("consent"), "V" => "Off", "AS" => "Off", "Ff" => flags,
+                "Rect" => vec![10.into(), 10.into(), 30.into(), 30.into()], "P" => Object::Reference(page_id),
+                "AP" => dictionary! { "N" => dictionary! { "Off" => Object::Reference(off_id), "Approved" => Object::Reference(yes_id) } }
+            }),
+        );
+        document.objects.insert(
+            page_id,
+            Object::Dictionary(dictionary! {
+                "Type" => "Page", "Parent" => Object::Reference(pages_id),
+                "MediaBox" => vec![0.into(), 0.into(), 300.into(), 300.into()],
+                "Contents" => Object::Reference(content_id), "Annots" => vec![Object::Reference(field_id)]
+            }),
+        );
         document.objects.insert(
             pages_id,
             Object::Dictionary(dictionary! {
@@ -624,6 +788,77 @@ mod tests {
             &[PdfFormTextChange {
                 field_name: "customer.name".into(),
                 value: "line\nbreak".into()
+            }],
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn writes_checkbox_export_value_and_widget_appearance_state() {
+        let source = button_form_fixture(0);
+        let changes = [PdfFormTextChange {
+            field_name: "consent".into(),
+            value: "Approved".into(),
+        }];
+        let (report, output) =
+            build_pdf_text_form_copy(&source, &digest(&source), &changes).unwrap();
+        let output = output.unwrap();
+        assert_eq!(report.widget_states_written, 1);
+        assert_eq!(report.appearance_streams_written, 0);
+        assert!(report.field_tree_verified);
+        assert!(report.widget_appearances_verified);
+        let inspection = inspect_pdf_forms(&output).unwrap();
+        assert_eq!(inspection.fields[0].value.as_deref(), Some("Approved"));
+        assert_eq!(
+            inspection.fields[0].button_kind.as_deref(),
+            Some("checkbox")
+        );
+        assert_eq!(inspection.fields[0].button_export_values, vec!["Approved"]);
+        assert_eq!(
+            inspection.widgets[0].appearance_states,
+            vec!["Approved", "Off"]
+        );
+        let reopened = Document::load_mem(&output).unwrap();
+        let target = collect_targets(&reopened)
+            .unwrap()
+            .remove("consent")
+            .unwrap();
+        assert_eq!(
+            reopened
+                .get_dictionary(target.field_id)
+                .unwrap()
+                .get(b"V")
+                .unwrap()
+                .as_name()
+                .unwrap(),
+            b"Approved"
+        );
+        assert_eq!(
+            reopened
+                .get_dictionary(target.widget_ids[0])
+                .unwrap()
+                .get(b"AS")
+                .unwrap()
+                .as_name()
+                .unwrap(),
+            b"Approved"
+        );
+        assert!(build_pdf_text_form_copy(
+            &source,
+            &digest(&source),
+            &[PdfFormTextChange {
+                field_name: "consent".into(),
+                value: "Maybe".into()
+            }],
+        )
+        .is_err());
+        let radio = button_form_fixture(1 << 15);
+        assert!(build_pdf_text_form_copy(
+            &radio,
+            &digest(&radio),
+            &[PdfFormTextChange {
+                field_name: "consent".into(),
+                value: "Approved".into()
             }],
         )
         .is_err());
