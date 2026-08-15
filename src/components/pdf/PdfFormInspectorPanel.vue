@@ -52,6 +52,13 @@
             <input type="checkbox" :checked="checkboxChecked(field)" @change="updateCheckboxDraft(field, checkboxCheckedEvent($event))">
             <span>在副本中{{ checkboxChecked(field) ? '保持勾选' : '设为勾选' }}（导出值 {{ field.buttonExportValues[0] }}）</span>
           </label>
+          <fieldset v-else-if="editableRadioField(field)" class="form-radio-edit">
+            <legend>副本中的单选项</legend>
+            <label v-for="option in radioOptions(field)" :key="option">
+              <input type="radio" :name="`pdf-form-${field.name}`" :value="option" :checked="draftValue(field) === option" @change="updateDraft(field.name, option)">
+              <span>{{ option }}</span>
+            </label>
+          </fieldset>
           <div class="form-field-flags">
             <i v-if="field.fillableCandidate">候选</i>
             <i v-if="field.required">必填</i>
@@ -69,9 +76,9 @@
       </div>
       <p v-else-if="report.status !== 'no_form'" class="form-panel-empty">没有匹配的字段</p>
       <p v-if="filteredFields.length > renderLimit" class="form-render-limit">为保持界面流畅，仅显示前 {{ renderLimit }} 项；继续输入名称可缩小范围。</p>
-      <section v-if="editableFieldCount" class="form-copy-actions" data-testid="p1b2b2-pdf-form-copy" data-capability="p1b2b4-checkbox-copy">
+      <section v-if="editableFieldCount" class="form-copy-actions" data-testid="p1b2b2-pdf-form-copy" data-capability="p1b2b4-checkbox-copy" data-stage-capability="p1b2b5-radio-copy">
         <strong>表单可靠副本</strong>
-        <p>仅修改新副本；源 PDF 和已有文件不会覆盖。支持中文单行文本与具有唯一导出状态的复选框。</p>
+        <p>仅修改新副本；源 PDF 和已有文件不会覆盖。支持中文单行文本、具有唯一导出状态的复选框与互斥单选组。</p>
         <WorkspaceStateNotice v-if="operationError" kind="error" tone="danger" compact>{{ operationError }}</WorkspaceStateNotice>
         <WorkspaceStateNotice v-else-if="verification" :kind="verification.status === 'isolated_verified' ? 'saved' : 'limited'" :tone="verification.status === 'isolated_verified' ? 'success' : 'warning'" compact>
           {{ verification.status === 'isolated_verified' ? `已验证 ${verification.changedFields.length} 个字段、${verification.appearanceStreamsWritten} 个文本外观与 ${verification.widgetStatesWritten} 个按钮状态` : `已阻断：${verification.blockers.join('、')}` }}
@@ -104,7 +111,7 @@ const statusTitle = computed(() => props.report?.status === 'blocked' ? '表单�
 const statusDescription = computed(() => props.report?.status === 'blocked'
   ? '可以查看字段，但不能进入后续填写流程。'
   : props.report?.status === 'inspectable'
-    ? '字段与页面控件关联清晰；可为安全文本与复选框子集创建可靠副本。'
+    ? '字段与页面控件关联清晰；可为安全文本、复选框与单选组子集创建可靠副本。'
     : '这份 PDF 没有标准 AcroForm 字段。')
 const filteredFields = computed(() => {
   const normalized = query.value.trim().toLocaleLowerCase()
@@ -114,9 +121,17 @@ const filteredFields = computed(() => {
 const visibleFields = computed(() => filteredFields.value.slice(0, renderLimit))
 const editableTextField = (field: PdfFormFieldSummary) => props.report?.status === 'inspectable' && field.fieldType === 'Tx' && field.fillableCandidate && !field.multiline && !field.password && !field.hasActions
 const editableCheckboxField = (field: PdfFormFieldSummary) => props.report?.status === 'inspectable' && field.fieldType === 'Btn' && field.buttonKind === 'checkbox' && field.fillableCandidate && !field.hasActions && field.buttonExportValues.length === 1 && fieldWidgets(field.name).every(widget => widget.appearanceStates.includes('Off') && widget.appearanceStates.includes(field.buttonExportValues[0]))
-const editableFieldCount = computed(() => (props.report?.fields || []).filter(field => editableTextField(field) || editableCheckboxField(field)).length)
+const radioOptions = (field: PdfFormFieldSummary) => fieldWidgets(field.name).map(widget => widget.appearanceStates.filter(state => state !== 'Off')).filter(states => states.length === 1).map(states => states[0])
+const editableRadioField = (field: PdfFormFieldSummary) => {
+  if (props.report?.status !== 'inspectable' || field.fieldType !== 'Btn' || field.buttonKind !== 'radio' || !field.fillableCandidate || field.hasActions || field.buttonExportValues.length < 2) return false
+  const widgets = fieldWidgets(field.name)
+  const options = radioOptions(field)
+  return widgets.length === field.widgetCount && options.length === widgets.length && new Set(options).size === options.length && options.every(option => field.buttonExportValues.includes(option)) && widgets.every(widget => widget.appearanceStates.includes('Off'))
+}
+const editableField = (field: PdfFormFieldSummary) => editableTextField(field) || editableCheckboxField(field) || editableRadioField(field)
+const editableFieldCount = computed(() => (props.report?.fields || []).filter(editableField).length)
 const draftValue = (field: PdfFormFieldSummary) => drafts.value[field.name] ?? field.value ?? ''
-const changes = computed<PdfFormTextChange[]>(() => (props.report?.fields || []).filter(field => editableTextField(field) || editableCheckboxField(field)).filter(field => draftValue(field) !== (field.value ?? '')).map(field => ({ fieldName: field.name, value: draftValue(field) })))
+const changes = computed<PdfFormTextChange[]>(() => (props.report?.fields || []).filter(editableField).filter(field => draftValue(field) !== (field.value ?? '')).map(field => ({ fieldName: field.name, value: draftValue(field) })))
 const updateDraft = (name: string, value: string) => { drafts.value = { ...drafts.value, [name]: value }; emit('draft-change') }
 const checkboxChecked = (field: PdfFormFieldSummary) => draftValue(field) === field.buttonExportValues[0]
 const checkboxCheckedEvent = (event: Event) => (event.target as HTMLInputElement).checked
@@ -167,6 +182,7 @@ const diagnosticLabel = (item: string) => ({
 .form-field-card > p { display: -webkit-box; margin: 6px 0; overflow: hidden; color: var(--theme-text-secondary); line-height: 1.45; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.form-field-card > .form-private-value { color: var(--status-warning); }.form-field-card > .form-empty-value { opacity: .7; font-style: italic; }
 .form-text-edit,.form-copy-name { display: grid; gap: 4px; margin-top: 7px; color: var(--theme-text-secondary); }.form-text-edit input,.form-copy-name input { min-width: 0; height: 30px; padding: 0 8px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-control-bg); font: inherit; }
 .form-checkbox-edit { display: flex; align-items: center; gap: 7px; margin-top: 7px; padding: 7px; border-radius: 6px; color: var(--theme-text-secondary); background: var(--workspace-control-bg); line-height: 1.35; }.form-checkbox-edit input { width: 16px; height: 16px; margin: 0; accent-color: var(--theme-primary); }
+.form-radio-edit { display: grid; gap: 5px; margin: 7px 0 0; padding: 7px; border: 0; border-radius: 6px; color: var(--theme-text-secondary); background: var(--workspace-control-bg); }.form-radio-edit legend { padding: 0; color: var(--theme-text-secondary); }.form-radio-edit label { display: flex; align-items: center; gap: 7px; min-width: 0; line-height: 1.35; }.form-radio-edit input { width: 16px; height: 16px; margin: 0; accent-color: var(--theme-primary); }.form-radio-edit span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .form-field-flags { display: flex; flex-wrap: wrap; gap: 4px; }.form-field-flags i { padding: 2px 5px; border: 1px solid var(--workspace-border-color); border-radius: 4px; color: var(--theme-text-secondary); font-style: normal; }
 .form-widget-links { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; padding-top: 6px; border-top: 1px solid var(--workspace-border-color); }.form-widget-links button { min-height: 24px; padding: 2px 6px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font: inherit; }
 .form-panel-empty,.form-render-limit,.form-readonly-note { margin: 10px 0 0; color: var(--theme-text-secondary); line-height: 1.5; text-align: center; }.form-render-limit { color: var(--status-warning); }.form-readonly-note { padding-top: 8px; border-top: 1px solid var(--workspace-border-color); overflow-wrap: anywhere; }
