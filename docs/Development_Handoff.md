@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-B2B3 PDF 中文文本表单可靠副本：** 原 PDF 右侧表单工作区现支持中文及 Noto Sans CJK SC 覆盖的非复杂字形；规范 `/V` 使用 UTF-16BE，Widget 外观使用 Type0/CIDFontType0、Identity-H、ToUnicode 和按需字形子集。字体来自官方 Noto CJK 2.004，SIL OFL 1.1 许可随仓库保留。真实 Tauri 宽窄屏、结构复读和 Poppler 像素渲染均通过，源文件不变。复杂塑形文字、复选框、单选和选择字段继续阻断。详见 [`P1B2B3_PDF_Unicode_Text_Form_Copy_Audit_2026-08-15.md`](./P1B2B3_PDF_Unicode_Text_Form_Copy_Audit_2026-08-15.md)。
+
 > **2026-08-15 P1-B2B2 PDF 文本表单可靠副本工作区：** B2B1 后端已接入原 `PdfView` 右侧表单侧栏，没有新增窗口、路由或视觉体系。唯一命名、非多行、非密码的安全 `Tx` 字段可编辑草稿，必须先隔离验证再可靠另存；真实 Tauri 宽窄屏完成 `Bob QA` 写入、目标复开、非空外观、源摘要不变和零运行时错误。Unicode、复选框、单选和选择字段继续阻断。详见 [`P1B2B2_PDF_Form_Copy_Workspace_Desktop_Audit_2026-08-15.md`](./P1B2B2_PDF_Form_Copy_Workspace_Desktop_Audit_2026-08-15.md)。
 
 > **2026-08-15 P1-B2B1 PDF 文本表单可靠副本后端：** 新增资料库内 `Tx` 文本字段隔离预览与可靠另存命令；只接受唯一命名、非只读、非密码、带 Widget 且无签名/加密/XFA/JavaScript/动作/结构歧义的字段。基础拉丁值会同时写入规范 `/V` 和每个 Widget 的非空 `/AP /N`，保存强制源摘要、预览输出摘要、同目录新目标、不覆盖及写后复读，失败的新目标会清理。UI、Unicode 嵌入字体、复选框/单选/选择仍未开放。详见 [`P1B2B1_PDF_Text_Form_Reliable_Copy_Backend_2026-08-15.md`](./P1B2B1_PDF_Text_Form_Reliable_Copy_Backend_2026-08-15.md)。

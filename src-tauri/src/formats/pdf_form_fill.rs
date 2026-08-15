@@ -1,12 +1,15 @@
 use crate::formats::pdf_forms::{inspect_pdf_forms, MAX_PDF_FORM_INPUT_BYTES};
-use lopdf::{dictionary, Dictionary, Document, Object, ObjectId, Stream};
+use lopdf::{dictionary, Dictionary, Document, Object, ObjectId, Stream, StringFormat};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
+use subsetter::{subset, GlyphRemapper};
+use ttf_parser::Face;
 
 const MAX_TEXT_CHANGES: usize = 128;
 const MAX_TEXT_VALUE_CHARS: usize = 1024;
 const MAX_FIELD_DEPTH: usize = 64;
+const NOTO_SANS_CJK_SC: &[u8] = include_bytes!("../../assets/fonts/NotoSansCJKsc-Regular.otf");
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -60,8 +63,19 @@ fn string_value(dictionary: &Dictionary, key: &[u8]) -> String {
         .get(key)
         .ok()
         .and_then(|value| value.as_str().ok())
-        .map(|value| String::from_utf8_lossy(value).into_owned())
+        .map(decode_pdf_text)
         .unwrap_or_default()
+}
+
+fn decode_pdf_text(bytes: &[u8]) -> String {
+    if bytes.starts_with(&[0xfe, 0xff]) {
+        let units = bytes[2..]
+            .chunks_exact(2)
+            .map(|pair| u16::from_be_bytes([pair[0], pair[1]]));
+        String::from_utf16_lossy(&units.collect::<Vec<_>>())
+    } else {
+        String::from_utf8_lossy(bytes).into_owned()
+    }
 }
 
 fn is_widget(dictionary: &Dictionary) -> bool {
@@ -177,25 +191,130 @@ fn validate_changes(changes: &[PdfFormTextChange]) -> Result<(), String> {
         if change.value.chars().count() > MAX_TEXT_VALUE_CHARS {
             return Err("PDF 文本字段值超过 1024 字符安全上限".into());
         }
-        if !change.value.chars().all(|value| {
-            value == '\n' || value == '\r' || value == '\t' || (' '..='~').contains(&value)
-        }) {
-            return Err(
-                "当前可靠外观仅支持基础拉丁文本；中文与其他 Unicode 值将在嵌入字体阶段开放".into(),
-            );
+        if change.value.chars().any(|value| value.is_control()) {
+            return Err("PDF 单行文本字段不接受换行、制表符或其他控制字符".into());
+        }
+        if change.value.chars().any(requires_complex_shaping) {
+            return Err("当前可靠外观暂不支持需要复杂字形塑形的文字".into());
         }
     }
     Ok(())
 }
 
-fn escaped_literal(value: &str) -> String {
+fn requires_complex_shaping(value: char) -> bool {
+    matches!(value as u32,
+        0x0300..=0x036f | 0x0590..=0x08ff | 0x0900..=0x109f |
+        0x1100..=0x11ff | 0x1780..=0x18af | 0x1ab0..=0x1aff |
+        0x1dc0..=0x1dff | 0x20d0..=0x20ff | 0xfe00..=0xfe0f |
+        0xfe20..=0xfe2f | 0x1f1e6..=0x1f1ff | 0x1f3fb..=0x1f3ff |
+        0xe0100..=0xe01ef
+    )
+}
+
+fn pdf_text_string(value: &str) -> Object {
+    let mut bytes = vec![0xfe, 0xff];
+    bytes.extend(value.encode_utf16().flat_map(u16::to_be_bytes));
+    Object::String(bytes, StringFormat::Hexadecimal)
+}
+
+struct EmbeddedFont {
+    font_id: ObjectId,
+    encoded: HashMap<char, u16>,
+}
+
+fn scale_font_metric(value: i16, units_per_em: u16) -> i64 {
+    ((i64::from(value) * 1000) / i64::from(units_per_em)).clamp(-32_768, 32_767)
+}
+
+fn unicode_hex(value: char) -> String {
     value
-        .replace('\\', "\\\\")
-        .replace('(', "\\(")
-        .replace(')', "\\)")
-        .replace('\r', " ")
-        .replace('\n', " ")
-        .replace('\t', " ")
+        .encode_utf16(&mut [0; 2])
+        .iter()
+        .map(|unit| format!("{unit:04X}"))
+        .collect()
+}
+
+fn build_to_unicode(mapping: &BTreeMap<u16, char>) -> Vec<u8> {
+    let mut cmap = String::from("/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /LongEditUnicode def\n/CMapType 2 def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n");
+    for chunk in mapping.iter().collect::<Vec<_>>().chunks(100) {
+        cmap.push_str(&format!("{} beginbfchar\n", chunk.len()));
+        for (cid, character) in chunk {
+            cmap.push_str(&format!("<{cid:04X}> <{}>\n", unicode_hex(**character)));
+        }
+        cmap.push_str("endbfchar\n");
+    }
+    cmap.push_str("endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n");
+    cmap.into_bytes()
+}
+
+fn embed_unicode_font(document: &mut Document, values: &[&str]) -> Result<EmbeddedFont, String> {
+    let face = Face::parse(NOTO_SANS_CJK_SC, 0).map_err(|_| "内置 Noto Sans CJK SC 字体无效")?;
+    let mut remapper = GlyphRemapper::new();
+    remapper.remap(0);
+    let mut original_glyphs = BTreeMap::new();
+    for character in values.iter().flat_map(|value| value.chars()) {
+        let glyph = face
+            .glyph_index(character)
+            .ok_or_else(|| format!("内置字体不包含字符 U+{:04X}", character as u32))?;
+        remapper.remap(glyph.0);
+        original_glyphs.insert(character, glyph);
+    }
+    let subset = subset(NOTO_SANS_CJK_SC, 0, &remapper)
+        .map_err(|error| format!("无法生成 PDF 字体子集: {error:?}"))?;
+    let mut encoded = HashMap::new();
+    let mut reverse = BTreeMap::new();
+    let mut widths = Vec::new();
+    for (character, glyph) in original_glyphs {
+        let cid = remapper.get(glyph.0).ok_or("PDF 字体字形映射丢失")?;
+        encoded.insert(character, cid);
+        reverse.insert(cid, character);
+        let width = face.glyph_hor_advance(glyph).unwrap_or(face.units_per_em());
+        let scaled = (u64::from(width) * 1000 / u64::from(face.units_per_em())) as i64;
+        widths.push(Object::Integer(i64::from(cid)));
+        widths.push(Object::Array(vec![Object::Integer(scaled)]));
+    }
+    let font_file_id =
+        document.add_object(Stream::new(dictionary! { "Subtype" => "OpenType" }, subset));
+    let bbox = face.global_bounding_box();
+    let descriptor_id = document.add_object(dictionary! {
+        "Type" => "FontDescriptor", "FontName" => "LEPDF+NotoSansCJKsc-Regular",
+        "Flags" => 4, "FontBBox" => vec![
+            scale_font_metric(bbox.x_min, face.units_per_em()).into(),
+            scale_font_metric(bbox.y_min, face.units_per_em()).into(),
+            scale_font_metric(bbox.x_max, face.units_per_em()).into(),
+            scale_font_metric(bbox.y_max, face.units_per_em()).into()
+        ],
+        "ItalicAngle" => 0, "Ascent" => scale_font_metric(face.ascender(), face.units_per_em()),
+        "Descent" => scale_font_metric(face.descender(), face.units_per_em()),
+        "CapHeight" => scale_font_metric(face.capital_height().unwrap_or(face.ascender()), face.units_per_em()),
+        "StemV" => 80, "FontFile3" => Object::Reference(font_file_id)
+    });
+    let descendant_id = document.add_object(dictionary! {
+        "Type" => "Font", "Subtype" => "CIDFontType0", "BaseFont" => "LEPDF+NotoSansCJKsc-Regular",
+        "CIDSystemInfo" => dictionary! { "Registry" => Object::string_literal("Adobe"), "Ordering" => Object::string_literal("Identity"), "Supplement" => 0 },
+        "FontDescriptor" => Object::Reference(descriptor_id), "DW" => 1000,
+        "W" => Object::Array(widths)
+    });
+    let to_unicode_id =
+        document.add_object(Stream::new(dictionary! {}, build_to_unicode(&reverse)));
+    let font_id = document.add_object(dictionary! {
+        "Type" => "Font", "Subtype" => "Type0", "BaseFont" => "LEPDF+NotoSansCJKsc-Regular",
+        "Encoding" => "Identity-H", "DescendantFonts" => vec![Object::Reference(descendant_id)],
+        "ToUnicode" => Object::Reference(to_unicode_id)
+    });
+    Ok(EmbeddedFont { font_id, encoded })
+}
+
+fn encoded_glyphs(value: &str, font: &EmbeddedFont) -> Result<String, String> {
+    let mut output = String::with_capacity(value.chars().count() * 4);
+    for character in value.chars() {
+        let cid = font
+            .encoded
+            .get(&character)
+            .ok_or_else(|| format!("字符 U+{:04X} 缺少 PDF 字形映射", character as u32))?;
+        output.push_str(&format!("{cid:04X}"));
+    }
+    Ok(output)
 }
 
 fn widget_size(document: &Document, widget_id: ObjectId) -> (f32, f32) {
@@ -241,7 +360,7 @@ pub fn build_pdf_text_form_copy(
         return Ok((
             PdfFormTextFillReport {
                 status: "blocked".into(),
-                engine: "lopdf 0.42.0 (MIT)".into(),
+                engine: "lopdf 0.42.0 + subsetter 0.2.6 + Noto Sans CJK SC 2.004".into(),
                 source_digest,
                 output_digest: None,
                 output_bytes: 0,
@@ -257,9 +376,13 @@ pub fn build_pdf_text_form_copy(
     let mut document =
         Document::load_mem(source).map_err(|error| format!("无法解析 PDF 表单结构: {error}"))?;
     let targets = collect_targets(&document)?;
-    let font_id = document.add_object(Object::Dictionary(dictionary! {
-        "Type" => "Font", "Subtype" => "Type1", "BaseFont" => "Helvetica", "Encoding" => "WinAnsiEncoding"
-    }));
+    let font = embed_unicode_font(
+        &mut document,
+        &changes
+            .iter()
+            .map(|change| change.value.as_str())
+            .collect::<Vec<_>>(),
+    )?;
     let mut appearance_streams_written = 0;
     let mut changed_fields = Vec::new();
     for change in changes {
@@ -279,18 +402,19 @@ pub fn build_pdf_text_form_copy(
         document
             .get_dictionary_mut(target.field_id)
             .map_err(|_| format!("PDF 字段对象无效：{}", change.field_name))?
-            .set("V", Object::string_literal(change.value.as_bytes()));
+            .set("V", pdf_text_string(&change.value));
         for widget_id in &target.widget_ids {
             let (width, height) = widget_size(&document, *widget_id);
+            let glyphs = encoded_glyphs(&change.value, &font)?;
             let content = format!(
-                "q BT /Helv 10 Tf 0 g 2 {} Td ({}) Tj ET Q",
+                "q BT /LECJK 10 Tf 0 g 2 {} Td <{}> Tj ET Q",
                 (height - 12.0).max(2.0),
-                escaped_literal(&change.value)
+                glyphs
             );
             let appearance_id = document.add_object(Stream::new(dictionary! {
                 "Type" => "XObject", "Subtype" => "Form", "FormType" => 1,
                 "BBox" => vec![0.into(), 0.into(), Object::Real(width), Object::Real(height)],
-                "Resources" => dictionary! { "Font" => dictionary! { "Helv" => Object::Reference(font_id) } }
+                "Resources" => dictionary! { "Font" => dictionary! { "LECJK" => Object::Reference(font.font_id) } }
             }, content.into_bytes()));
             document
                 .get_dictionary_mut(*widget_id)
@@ -317,10 +441,22 @@ pub fn build_pdf_text_form_copy(
         .save_to(&mut output)
         .map_err(|error| format!("生成 PDF 表单副本失败: {error}"))?;
     let verified = inspect_pdf_forms(&output)?;
+    let reopened =
+        Document::load_mem(&output).map_err(|error| format!("无法复读 PDF 表单副本: {error}"))?;
+    let reopened_targets = collect_targets(&reopened)?;
     let field_tree_verified = changes.iter().all(|change| {
         verified.fields.iter().any(|field| {
             field.name == change.field_name && field.value.as_deref() == Some(change.value.as_str())
-        })
+        }) && reopened_targets
+            .get(&change.field_name)
+            .is_some_and(|target| {
+                reopened
+                    .get_dictionary(target.field_id)
+                    .ok()
+                    .and_then(|field| field.get(b"V").ok())
+                    .and_then(|value| value.as_str().ok())
+                    .is_some_and(|value| decode_pdf_text(value) == change.value)
+            })
     });
     let widget_appearances_verified = changes.iter().all(|change| {
         let widgets = verified
@@ -328,7 +464,33 @@ pub fn build_pdf_text_form_copy(
             .iter()
             .filter(|widget| widget.field_name == change.field_name)
             .collect::<Vec<_>>();
-        !widgets.is_empty() && widgets.iter().all(|widget| widget.has_normal_appearance)
+        let effective_values_agree =
+            reopened_targets
+                .get(&change.field_name)
+                .is_some_and(|target| {
+                    let field_value = reopened
+                        .get_dictionary(target.field_id)
+                        .ok()
+                        .and_then(|field| field.get(b"V").ok())
+                        .and_then(|value| value.as_str().ok());
+                    !target.widget_ids.is_empty()
+                        && target.widget_ids.iter().all(|widget_id| {
+                            reopened
+                                .get_dictionary(*widget_id)
+                                .ok()
+                                .and_then(|widget| {
+                                    widget
+                                        .get(b"V")
+                                        .ok()
+                                        .and_then(|value| value.as_str().ok())
+                                        .or(field_value)
+                                })
+                                .is_some_and(|value| decode_pdf_text(value) == change.value)
+                        })
+                });
+        !widgets.is_empty()
+            && widgets.iter().all(|widget| widget.has_normal_appearance)
+            && effective_values_agree
     });
     if !field_tree_verified || !widget_appearances_verified {
         return Err("PDF 表单副本的字段树、Widget 或外观复读不一致".into());
@@ -337,7 +499,7 @@ pub fn build_pdf_text_form_copy(
     Ok((
         PdfFormTextFillReport {
             status: "isolated_verified".into(),
-            engine: "lopdf 0.42.0 (MIT)".into(),
+            engine: "lopdf 0.42.0 + subsetter 0.2.6 + Noto Sans CJK SC 2.004".into(),
             source_digest,
             output_digest: Some(output_digest),
             output_bytes: output.len(),
@@ -418,7 +580,7 @@ mod tests {
     }
 
     #[test]
-    fn blocks_actions_stale_digest_and_unrenderable_unicode() {
+    fn writes_unicode_value_with_subset_font_and_blocks_unsafe_inputs() {
         let risky = text_form_fixture(true);
         let (report, output) = build_pdf_text_form_copy(
             &risky,
@@ -441,12 +603,27 @@ mod tests {
             }],
         )
         .is_err());
+        let (unicode_report, unicode_output) = build_pdf_text_form_copy(
+            &source,
+            &digest(&source),
+            &[PdfFormTextChange {
+                field_name: "customer.name".into(),
+                value: "中文 QA".into(),
+            }],
+        )
+        .unwrap();
+        let unicode_output = unicode_output.unwrap();
+        assert_eq!(unicode_report.status, "isolated_verified");
+        assert!(unicode_output.len() < 1_000_000, "font must be subsetted");
+        let reopened = inspect_pdf_forms(&unicode_output).unwrap();
+        assert_eq!(reopened.fields[0].value.as_deref(), Some("中文 QA"));
+        assert!(reopened.widgets[0].has_normal_appearance);
         assert!(build_pdf_text_form_copy(
             &source,
             &digest(&source),
             &[PdfFormTextChange {
                 field_name: "customer.name".into(),
-                value: "中文".into()
+                value: "line\nbreak".into()
             }],
         )
         .is_err());

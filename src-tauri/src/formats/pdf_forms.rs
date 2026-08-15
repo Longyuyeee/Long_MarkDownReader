@@ -83,7 +83,7 @@ fn object_id_label(id: ObjectId) -> String {
 
 fn pdf_string(object: &Object) -> Option<String> {
     let text = match object {
-        Object::String(bytes, _) => String::from_utf8_lossy(bytes).into_owned(),
+        Object::String(bytes, _) => decode_pdf_text_string(bytes),
         Object::Name(bytes) => String::from_utf8_lossy(bytes).into_owned(),
         Object::Integer(value) => value.to_string(),
         Object::Real(value) => value.to_string(),
@@ -92,6 +92,22 @@ fn pdf_string(object: &Object) -> Option<String> {
         _ => return Some("[复杂值]".into()),
     };
     Some(text.chars().take(MAX_FIELD_STRING_CHARS).collect())
+}
+
+fn decode_pdf_text_string(bytes: &[u8]) -> String {
+    if bytes.starts_with(&[0xfe, 0xff]) {
+        let units = bytes[2..]
+            .chunks_exact(2)
+            .map(|pair| u16::from_be_bytes([pair[0], pair[1]]));
+        String::from_utf16_lossy(&units.collect::<Vec<_>>())
+    } else if bytes.starts_with(&[0xff, 0xfe]) {
+        let units = bytes[2..]
+            .chunks_exact(2)
+            .map(|pair| u16::from_le_bytes([pair[0], pair[1]]));
+        String::from_utf16_lossy(&units.collect::<Vec<_>>())
+    } else {
+        String::from_utf8_lossy(bytes).into_owned()
+    }
 }
 
 fn dictionary_for(document: &Document, object: &Object) -> Option<(Option<ObjectId>, Dictionary)> {
