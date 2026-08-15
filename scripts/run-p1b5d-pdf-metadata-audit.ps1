@@ -12,7 +12,7 @@ if (Test-Path -LiteralPath $output) {
 
 $sourceCommit = (& git -C $workspace rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') { throw "Unable to resolve source commit" }
-$appPort = 14210
+$appPort = 14200
 $cdpPort = 14530
 if (Get-NetTCPConnection -LocalPort $appPort,$cdpPort -State Listen -ErrorAction SilentlyContinue) { throw "P1-B5D requires free ports $appPort and $cdpPort" }
 $env:TAURI_CONFIG = Get-Content -LiteralPath (Join-Path $workspace "src-tauri\tauri.e2e.conf.json") -Raw
