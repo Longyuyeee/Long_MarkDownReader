@@ -22,7 +22,7 @@ const counts = matrix.formats.reduce((result, item) => {
 const currentUpdaterMatchesPackage = currentUpdater.status === 'hosted-managed-update-passed'
   && currentUpdater.releases?.current?.version === pkg.version
 const expectedStage = currentUpdaterMatchesPackage
-  ? '当前阶段：**P1-B5D PDF 元数据已完成真实桌面与独立证据，下一步执行 P1 总收口**'
+  ? '当前阶段：**P1 总收口已完成，下一步进入 1.0.11 无签名补丁发布**'
   : policy.gates?.githubReleasePublished === true
     ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
   : policy.gates?.qualityGatePassed === true
@@ -79,3 +79,4 @@ await import('./check-p1b5a-pdf-metadata-safety-audit.mjs')
 await import('./check-p1b5b-pdf-metadata-backend.mjs')
 await import('./check-p1b5c-pdf-metadata-workspace.mjs')
 await import('./check-p1b5d-pdf-metadata-evidence.mjs')
+await import('./check-p1-final-capability-closure.mjs')
