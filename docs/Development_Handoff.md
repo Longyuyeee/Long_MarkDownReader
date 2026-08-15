@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-B4A PDF 文字水印安全审计：** 已明确水印只是可见归属标识，不是脱敏、DRM 或防复制。首个安全子集限定资料库内全部页面、单条居中斜向文字、Noto Sans CJK SC 内嵌子集、受限字号/角度/透明度和可靠新副本；批准架构为完整克隆源文档、非增量全量重写、按继承 CropBox/MediaBox/Rotate 定位，并以私有 Font/ExtGState、`q/Q` 和 Artifact 边界追加最后内容流。签名/加密/PDF-A/异常页框与已有目标保持阻断，当前没有命令或 UI。下一步 P1-B4B 只实现隔离后端和攻击面测试。详见 [`P1B4A_PDF_Watermark_Copy_Safety_Audit_2026-08-15.md`](./P1B4A_PDF_Watermark_Copy_Safety_Audit_2026-08-15.md)。
+
 > **2026-08-15 P1-B3D PDF 永久脱敏最终收口：** 真实 custom-protocol Tauri WebView2 已在 1280×800 与 720×680 完成原右侧工作区框选、草稿离开保护、全页预验证、取舍确认、可靠另存和目标自动复开，外层横向溢出为 0、运行时错误为 0、源摘要不变。Poppler 144 DPI 与 pypdf/Pillow 独立验证目标两页、可提取文字为空、秘密标记不存在、批注/表单/书签/元数据移除、黑框像素 100% 不透明且公开内容可读。P1-B3 已收口，下一步 P1-B4 先做水印副本安全审计。详见 [`P1B3D_PDF_Permanent_Redaction_Desktop_Evidence_Audit_2026-08-15.md`](./P1B3D_PDF_Permanent_Redaction_Desktop_Evidence_Audit_2026-08-15.md)。
 
 > **2026-08-15 P1-B3C PDF 永久脱敏右侧工作区：** 原 `PdfView` 工具栏和侧栏已增加“永久脱敏”，用户可在右侧 PDF.js 页面直接框选黑/白区域、管理草稿、渲染全部页面、预验证并在确认图片型副本损失后可靠另存；没有新增路由或独立界面。全页渲染遵守 64 页、4096 单边、1.2 亿像素和 256 区域预算，矩形按 Rust 同一 `ceil/floor` 边界在 PNG 编码前烧入。IPC 改用严格 Base64 并在 Rust 端限制 256 MB，源/输出摘要、已有目标拒绝、落盘复读、文字为空、源对象隔离和源不变继续生效。下一步 P1-B3D 补真实 Tauri 宽窄屏、自动打开、Poppler 独立渲染与文字清除证据。详见 [`P1B3C_PDF_Permanent_Redaction_Workspace_Audit_2026-08-15.md`](./P1B3C_PDF_Permanent_Redaction_Workspace_Audit_2026-08-15.md)。
