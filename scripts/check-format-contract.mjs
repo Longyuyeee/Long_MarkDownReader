@@ -50,6 +50,7 @@ const [registryText, frontend, rustRegistry, textKernel, jsonKernel, yamlKernel,
   read('src/utils/safeHtmlPreview.ts'),
 ])
 const registry = JSON.parse(registryText)
+const readme = await read('README.md')
 const failures = []
 const ids = new Set()
 const extensions = new Set()
@@ -178,6 +179,8 @@ const opmlFormat = registry.formats?.find(format => format.id === 'opml')
 if (!opmlFormat || opmlFormat.routeName !== 'MindMap' || opmlFormat.adapters?.reader !== 'opml' || opmlFormat.adapters?.indexer !== 'opml') failures.push('OPML professional adapter is incomplete')
 const workbookFormat = registry.formats?.find(format => format.id === 'workbook')
 if (!workbookFormat || workbookFormat.maxBytes !== 128 * 1024 * 1024) failures.push('workbook size limit must match the 128 MB backend budget')
+if (workbookFormat?.extensions?.join(',') !== '.xlsx') failures.push('public workbook registration must remain explicit and evidence-backed')
+if (!readme.includes('| XLSX |') || /\bXLSM\b|\bXLSB\b/.test(readme)) failures.push('README workbook claim must match the registered .xlsx-only capability')
 if (workbookFormat?.userCapability?.level !== 'basic-edit' || workbookFormat?.userCapability?.saveMode !== 'bounded-overwrite') failures.push('workbook must be displayed as bounded basic editing')
 if (workbookFormat?.capabilities?.index !== 'supported' || workbookFormat?.adapters?.indexer !== 'workbook') failures.push('workbook must expose bounded local sheet indexing')
 if (!knowledgeIndex.includes('build_workbook_index_segments')
