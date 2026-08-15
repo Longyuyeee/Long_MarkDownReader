@@ -14,7 +14,7 @@ for (const token of ['preview_pdf_form_text_copy', 'save_pdf_form_text_copy', 'ç
   if (!commands.includes(token)) fail(`P1-B2B1 command boundary is missing: ${token}`)
 }
 for (const token of ['preview_pdf_form_text_copy', 'save_pdf_form_text_copy']) if (!lib.includes(token)) fail(`P1-B2B1 Tauri registration is missing: ${token}`)
-if (!['P1-B2B1', 'P1-B2B2', 'P1-B2B3', 'P1-B2B4', 'P1-B2B5', 'P1-B2B6', 'P1-B3A'].includes(contract.stage) || !['text-form-copy-backend-complete', 'text-form-copy-workspace-complete', 'unicode-text-form-copy-complete', 'checkbox-form-copy-complete', 'radio-form-copy-complete', 'single-choice-form-copy-complete', 'permanent-redaction-safety-audit-complete'].includes(contract.status)) fail('P1-B2B1 contract lineage is stale')
+if (!['P1-B2B1', 'P1-B2B2', 'P1-B2B3', 'P1-B2B4', 'P1-B2B5', 'P1-B2B6', 'P1-B3A', 'P1-B3B'].includes(contract.stage) || !['text-form-copy-backend-complete', 'text-form-copy-workspace-complete', 'unicode-text-form-copy-complete', 'checkbox-form-copy-complete', 'radio-form-copy-complete', 'single-choice-form-copy-complete', 'permanent-redaction-safety-audit-complete', 'permanent-redaction-backend-complete'].includes(contract.status)) fail('P1-B2B1 contract lineage is stale')
 if (!engine.includes('writes_text_value_and_non_empty_widget_appearance_in_isolated_copy') || !engine.includes('writes_unicode_value_with_subset_font_and_blocks_unsafe_inputs')) fail('P1-B2B1 engine tests are missing')
 
 console.log('P1-B2B1 PDF text form copy passed: digest-locked isolated preview, new-target save, canonical value and non-empty widget appearance verification are present.')

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B3A",
-  "status": "safety-audit-complete",
+  "stage": "P1-B3B",
+  "status": "raster-backend-complete-workspace-pending",
   "requirement": "library-pdf-permanent-redaction-reliable-copy",
   "currentWriteCapability": false,
   "approvedArchitecture": "fresh-document-full-page-rasterization",
@@ -72,7 +72,9 @@
     {
       "id": "P1-B3B",
       "name": "fresh-image-only-pdf-backend",
-      "status": "planned",
+      "status": "completed",
+      "deliveredBackend": "src-tauri/src/formats/pdf_redaction.rs",
+      "deliveredCommands": "src-tauri/src/commands/pdf.rs",
       "writeUserFile": true
     },
     {
