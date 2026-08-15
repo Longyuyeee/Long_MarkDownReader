@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B5D",
+  "engine": "pypdf + Poppler + Pillow",
+  "sourcePages": 2,
+  "targetPages": 2,
+  "requested": {
+    "/Title": "知识图谱专业管理 P1B5D",
+    "/Author": "LongEdit 证据审计",
+    "/Keywords": "知识管理, PDF, 元数据, P1B5D"
+  },
+  "sourcePreservedMetadata": {
+    "/Creator": "LongEdit Metadata Fixture",
+    "/Producer": "ReportLab PDF Library - (opensource)",
+    "/CreationDate": "D:20260816020510+08'00'",
+    "/ModDate": "D:20260816020510+08'00'",
+    "/Trapped": "/False"
+  },
+  "targetPreservedMetadata": {
+    "/Creator": "LongEdit Metadata Fixture",
+    "/Producer": "ReportLab PDF Library - (opensource)",
+    "/CreationDate": "D:20260816020510+08'00'",
+    "/ModDate": "D:20260816020510+08'00'",
+    "/Trapped": "/False"
+  },
+  "sourceAnnotations": [
+    1,
+    0
+  ],
+  "targetAnnotations": [
+    1,
+    0
+  ],
+  "renderSha256": [
+    {
+      "source": "36d39f0eaf9beb9c52a0313862e1a9dd5d728c6195f8f2d8a89b31c78f0d555e",
+      "target": "36d39f0eaf9beb9c52a0313862e1a9dd5d728c6195f8f2d8a89b31c78f0d555e",
+      "size": [
+        1191,
+        1684
+      ]
+    },
+    {
+      "source": "4d17492595f3c16a32e3c9e7c6efdbeace78ec8ee78ccf84e2e379a023cc632e",
+      "target": "4d17492595f3c16a32e3c9e7c6efdbeace78ec8ee78ccf84e2e379a023cc632e",
+      "size": [
+        1584,
+        1224
+      ]
+    }
+  ],
+  "checks": {
+    "pageCountPreserved": true,
+    "requestedMetadataMatches": true,
+    "subjectRemoved": true,
+    "preservedInfoMatches": true,
+    "originalTextPreserved": true,
+    "pageGeometryPreserved": true,
+    "annotationsPreserved": true,
+    "popplerPixelsIdentical": true,
+    "fullRewriteTrailerHasNoPrev": true
+  },
+  "sourceUserContentIncluded": false,
+  "passed": true
+}

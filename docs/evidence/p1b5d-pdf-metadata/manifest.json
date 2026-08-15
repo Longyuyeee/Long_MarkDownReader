@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B5D",
+  "status": "accepted",
+  "sourceCommit": "453a024896a12640a9181c15894a4e39e934340a",
+  "artifacts": [
+    {
+      "file": "runtime-evidence.json",
+      "bytes": 2802,
+      "sha256": "676506cd6eaa2f5d14760888136317d6cd29121103ade7c5084b4233cd317a33"
+    },
+    {
+      "file": "independent-verification.json",
+      "bytes": 1760,
+      "sha256": "27cac459107a85aaab9f12267313cdcdffc6ee5b4f637856d82a8b79fce2c3ec"
+    },
+    {
+      "file": "metadata-draft-wide.png",
+      "bytes": 103917,
+      "sha256": "b30e43ccf7234d24a5809b86a5965b7dbf28c02d36eea609cf90400a7d53467d"
+    },
+    {
+      "file": "metadata-verified-wide.png",
+      "bytes": 105635,
+      "sha256": "69ee28f51258b66c8c0f727870063cedd49794f322a9be2c08f9e862e6ad9f7c"
+    },
+    {
+      "file": "metadata-verified-narrow.png",
+      "bytes": 68891,
+      "sha256": "718b42afe800edb1ab0028b77d74092098b7e7b848ee7ab59065f74956878e1e"
+    },
+    {
+      "file": "metadata-saved-reopened.png",
+      "bytes": 74419,
+      "sha256": "8b38ac4f3dc153ce0829ad53b4989368f00b5616518c19586da2830abfb98d6b"
+    },
+    {
+      "file": "poppler-source-page-1.png",
+      "bytes": 49449,
+      "sha256": "36d39f0eaf9beb9c52a0313862e1a9dd5d728c6195f8f2d8a89b31c78f0d555e"
+    },
+    {
+      "file": "poppler-source-page-2.png",
+      "bytes": 36126,
+      "sha256": "4d17492595f3c16a32e3c9e7c6efdbeace78ec8ee78ccf84e2e379a023cc632e"
+    },
+    {
+      "file": "poppler-target-page-1.png",
+      "bytes": 49449,
+      "sha256": "36d39f0eaf9beb9c52a0313862e1a9dd5d728c6195f8f2d8a89b31c78f0d555e"
+    },
+    {
+      "file": "poppler-target-page-2.png",
+      "bytes": 36126,
+      "sha256": "4d17492595f3c16a32e3c9e7c6efdbeace78ec8ee78ccf84e2e379a023cc632e"
+    }
+  ],
+  "sourceUserContentIncluded": false
+}

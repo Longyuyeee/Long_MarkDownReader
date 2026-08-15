@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B5C",
-  "status": "workspace-complete-desktop-evidence-pending",
+  "stage": "P1-B5D",
+  "status": "desktop-and-independent-render-verified",
   "requirement": "library-pdf-bounded-descriptive-metadata-reliable-copy",
   "currentWriteCapability": true,
   "securityMeaning": "descriptive-document-properties-only-not-complete-privacy-scrubbing",
@@ -123,9 +123,16 @@
     {
       "id": "P1-B5C",
       "name": "original-workspace-and-desktop-evidence",
-      "status": "workspace-complete-desktop-evidence-pending",
+      "status": "completed",
       "deliveredWorkspace": "src/components/pdf/PdfMetadataPanel.vue",
       "workspaceHost": "src/views/PdfView.vue",
+      "writeUserFile": true
+    },
+    {
+      "id": "P1-B5D",
+      "name": "desktop-and-independent-output-evidence",
+      "status": "completed",
+      "deliveredEvidence": "docs/evidence/p1b5d-pdf-metadata/manifest.json",
       "writeUserFile": true
     }
   ]
