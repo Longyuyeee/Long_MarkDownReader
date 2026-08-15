@@ -174,6 +174,7 @@
     "audit:p1b4d-pdf-watermark-evidence": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-p1b4d-pdf-watermark-audit.ps1",
     "check:p1b4d-pdf-watermark-evidence": "node scripts/check-p1b4d-pdf-watermark-evidence.mjs",
     "check:p1b5a-pdf-metadata-safety-audit": "node scripts/check-p1b5a-pdf-metadata-safety-audit.mjs",
+    "check:p1b5b-pdf-metadata-backend": "node scripts/check-p1b5b-pdf-metadata-backend.mjs",
     "audit:media-workspace": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-media-workspace-audit.ps1",
     "check:markdown-code-theme-contrast": "node scripts/check-markdown-code-theme-contrast.mjs",
     "check:code-editor-theme-contract": "node scripts/check-code-editor-theme-contract.mjs",

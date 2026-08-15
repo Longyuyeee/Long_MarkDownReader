@@ -14,6 +14,7 @@ pub mod opml;
 pub mod pdf_annotations;
 pub mod pdf_form_fill;
 pub mod pdf_forms;
+pub mod pdf_metadata;
 pub mod pdf_ocr;
 pub mod pdf_redaction;
 pub mod pdf_watermark;

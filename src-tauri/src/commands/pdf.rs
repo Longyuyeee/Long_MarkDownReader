@@ -8,6 +8,9 @@ use crate::formats::pdf_form_fill::{
 use crate::formats::pdf_forms::{
     inspect_pdf_forms, PdfFormInspectionReport, MAX_PDF_FORM_INPUT_BYTES,
 };
+use crate::formats::pdf_metadata::{
+    build_pdf_metadata_copy, PdfMetadataCopyReport, PdfMetadataValues,
+};
 use crate::formats::pdf_ocr::{
     validate_pdf_ocr, PdfOcrDocument, PdfOcrSource, MAX_OCR_SIDECAR_BYTES,
 };
@@ -504,6 +507,167 @@ pub struct PdfSavedWatermarkCopyReport {
     pub watermark_streams_verified: bool,
     pub watermark_text_verified: bool,
     pub full_rewrite_verified: bool,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfSavedMetadataCopyReport {
+    pub status: String,
+    pub engine: String,
+    pub target_path: String,
+    pub target_signature: String,
+    pub target_digest: String,
+    pub source_digest: String,
+    pub source_unchanged: bool,
+    pub source_pages: usize,
+    pub output_bytes: usize,
+    pub requested_values: PdfMetadataValues,
+    pub updated_fields: Vec<String>,
+    pub removed_fields: Vec<String>,
+    pub structural_reopen_verified: bool,
+    pub metadata_reopen_verified: bool,
+    pub preserved_info_verified: bool,
+    pub preserved_structure_verified: bool,
+    pub full_rewrite_verified: bool,
+}
+
+#[tauri::command]
+pub async fn preview_pdf_metadata_copy(
+    library_root: String,
+    path: String,
+    expected_source_digest: String,
+    values: PdfMetadataValues,
+) -> Result<PdfMetadataCopyReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pdf"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let source = fs::read(source_path).map_err(|error| format!("读取 PDF 失败: {error}"))?;
+        build_pdf_metadata_copy(&source, &expected_source_digest, &values).map(|(report, _)| report)
+    })
+    .await
+    .map_err(|error| format!("PDF 元数据隔离预览任务失败: {error}"))?
+}
+
+fn save_pdf_metadata_copy_to_path(
+    source_path: &Path,
+    target_path: &Path,
+    expected_source_digest: &str,
+    expected_output_digest: &str,
+    values: &PdfMetadataValues,
+) -> Result<PdfSavedMetadataCopyReport, String> {
+    if source_path == target_path {
+        return Err("PDF 元数据可靠另存禁止覆盖源文件".into());
+    }
+    if target_path.exists() {
+        return Err("目标文件已存在；PDF 元数据可靠另存不会覆盖现有文件".into());
+    }
+    let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
+    if expected_output_digest.len() != 64
+        || !expected_output_digest
+            .bytes()
+            .all(|value| value.is_ascii_hexdigit())
+    {
+        return Err("PDF 元数据隔离输出摘要无效，请重新预览".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 PDF 失败: {error}"))?;
+    let (report, output) = build_pdf_metadata_copy(&source, expected_source_digest, values)?;
+    if report.status != "isolated_verified" {
+        return Err(format!(
+            "当前 PDF 不能安全编辑元数据：{}",
+            report.blockers.join(", ")
+        ));
+    }
+    let output = output.ok_or("PDF 元数据隔离预览未生成输出")?;
+    if report.output_digest.as_deref() != Some(expected_output_digest.as_str()) {
+        return Err("PDF 元数据参数或隔离输出已变化，请重新预览".into());
+    }
+    let source_before =
+        fs::read(source_path).map_err(|error| format!("保存前复核源 PDF 失败: {error}"))?;
+    if format!("{:x}", Sha256::digest(&source_before)) != report.source_digest {
+        return Err("PDF 源文件在保存前发生变化，请重新预览元数据".into());
+    }
+    write_new_bytes(target_path, &output)?;
+    let verification = (|| -> Result<Vec<u8>, String> {
+        let saved =
+            fs::read(target_path).map_err(|error| format!("复读 PDF 元数据副本失败: {error}"))?;
+        if saved != output || format!("{:x}", Sha256::digest(&saved)) != expected_output_digest {
+            return Err("PDF 元数据副本落盘字节与隔离预览不一致".into());
+        }
+        let (reopened, _) = build_pdf_metadata_copy(&source, expected_source_digest, values)?;
+        if reopened.output_digest.as_deref() != Some(expected_output_digest.as_str())
+            || !reopened.structural_reopen_verified
+            || !reopened.metadata_reopen_verified
+            || !reopened.preserved_info_verified
+            || !reopened.preserved_structure_verified
+            || !reopened.full_rewrite_verified
+        {
+            return Err("PDF 元数据副本重开验证不一致".into());
+        }
+        Ok(saved)
+    })();
+    let saved = match verification {
+        Ok(saved) => saved,
+        Err(error) => {
+            let _ = fs::remove_file(target_path);
+            return Err(format!("{error}；未通过验证的新目标已清理"));
+        }
+    };
+    let source_after =
+        fs::read(source_path).map_err(|error| format!("保存后复核源 PDF 失败: {error}"))?;
+    let source_unchanged = format!("{:x}", Sha256::digest(&source_after)) == report.source_digest;
+    if !source_unchanged {
+        let _ = fs::remove_file(target_path);
+        return Err("源 PDF 在保存期间发生变化；未通过验证的新目标已清理".into());
+    }
+    let metadata = target_path
+        .metadata()
+        .map_err(|error| format!("读取 PDF 元数据副本文件属性失败: {error}"))?;
+    Ok(PdfSavedMetadataCopyReport {
+        status: "saved_verified".into(),
+        engine: report.engine,
+        target_path: target_path.to_string_lossy().into_owned(),
+        target_signature: pdf_signature(&metadata),
+        target_digest: format!("{:x}", Sha256::digest(&saved)),
+        source_digest: report.source_digest,
+        source_unchanged,
+        source_pages: report.source_pages,
+        output_bytes: saved.len(),
+        requested_values: report.requested_values,
+        updated_fields: report.updated_fields,
+        removed_fields: report.removed_fields,
+        structural_reopen_verified: report.structural_reopen_verified,
+        metadata_reopen_verified: report.metadata_reopen_verified,
+        preserved_info_verified: report.preserved_info_verified,
+        preserved_structure_verified: report.preserved_structure_verified,
+        full_rewrite_verified: report.full_rewrite_verified,
+    })
+}
+
+#[tauri::command]
+pub async fn save_pdf_metadata_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_source_digest: String,
+    expected_output_digest: String,
+    values: PdfMetadataValues,
+) -> Result<PdfSavedMetadataCopyReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pdf"])?;
+    let target_file_name = validate_pdf_copy_file_name(&target_file_name)?;
+    let target_path =
+        guard.resolve_file_for_write(source_path.with_file_name(target_file_name), &["pdf"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_pdf_metadata_copy_to_path(
+            &source_path,
+            &target_path,
+            &expected_source_digest,
+            &expected_output_digest,
+            &values,
+        )
+    })
+    .await
+    .map_err(|error| format!("PDF 元数据可靠另存任务失败: {error}"))?
 }
 
 #[tauri::command]
@@ -3208,6 +3372,154 @@ mod tests {
             &pages,
         )
         .is_err());
+    }
+
+    #[test]
+    fn metadata_copy_saves_unicode_removes_fields_and_preserves_info_and_source() {
+        let workspace = TestWorkspace::new();
+        let source_path = workspace.root.join("metadata-source.pdf");
+        let target_path = workspace.root.join("metadata-copy.pdf");
+        let base = write_two_page_pdf(&source_path);
+        let mut document = Document::load_mem(&base).unwrap();
+        let info_id = document.add_object(dictionary! {
+            "Title" => lopdf::text_string("旧标题"),
+            "Author" => lopdf::text_string("旧作者"),
+            "Subject" => lopdf::text_string("待删除主题"),
+            "Keywords" => lopdf::text_string("alpha,beta"),
+            "Creator" => lopdf::text_string("LongEdit Fixture"),
+            "Producer" => lopdf::text_string("lopdf fixture producer"),
+            "CreationDate" => Object::String(b"D:20260816010101+08'00'".to_vec(), StringFormat::Literal),
+            "ModDate" => Object::String(b"D:20260816010203+08'00'".to_vec(), StringFormat::Literal),
+            "Trapped" => Object::Name(b"False".to_vec()),
+        });
+        document.trailer.set("Info", Object::Reference(info_id));
+        let mut source = Vec::new();
+        document.save_to(&mut source).unwrap();
+        fs::write(&source_path, &source).unwrap();
+        let source_digest = format!("{:x}", Sha256::digest(&source));
+        let values = PdfMetadataValues {
+            title: "项目知识图谱 · 版本一".into(),
+            author: "龙宇烨 / LongEdit".into(),
+            subject: String::new(),
+            keywords: "知识管理, PDF, 元数据".into(),
+        };
+        let (preview, output) = build_pdf_metadata_copy(&source, &source_digest, &values).unwrap();
+        assert_eq!(preview.status, "isolated_verified");
+        assert_eq!(preview.existing_values.title, "旧标题");
+        assert_eq!(preview.requested_values, values);
+        assert!(preview.updated_fields.contains(&"title".into()));
+        assert!(preview.removed_fields.contains(&"subject".into()));
+        assert!(preview.metadata_reopen_verified);
+        assert!(preview.preserved_info_verified);
+        assert!(preview.preserved_structure_verified);
+        assert!(preview.full_rewrite_verified);
+        let output = output.unwrap();
+        let output_digest = preview.output_digest.clone().unwrap();
+        assert_eq!(format!("{:x}", Sha256::digest(&output)), output_digest);
+
+        let saved = save_pdf_metadata_copy_to_path(
+            &source_path,
+            &target_path,
+            &source_digest,
+            &output_digest,
+            &values,
+        )
+        .unwrap();
+        assert_eq!(saved.status, "saved_verified");
+        assert!(saved.source_unchanged);
+        assert_eq!(saved.target_digest, output_digest);
+        assert_eq!(fs::read(&source_path).unwrap(), source);
+        let saved_document = Document::load(&target_path).unwrap();
+        let (_, info) = saved_document
+            .dereference(saved_document.trailer.get(b"Info").unwrap())
+            .unwrap();
+        let info = info.as_dict().unwrap();
+        assert_eq!(
+            lopdf::decode_text_string(info.get(b"Title").unwrap()).unwrap(),
+            values.title
+        );
+        assert!(!info.has(b"Subject"));
+        assert_eq!(
+            info.get(b"Creator").unwrap(),
+            &lopdf::text_string("LongEdit Fixture")
+        );
+        assert!(save_pdf_metadata_copy_to_path(
+            &source_path,
+            &target_path,
+            &source_digest,
+            &output_digest,
+            &values,
+        )
+        .is_err());
+        assert!(save_pdf_metadata_copy_to_path(
+            &source_path,
+            &source_path,
+            &source_digest,
+            &output_digest,
+            &values,
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn metadata_copy_blocks_custom_info_xmp_and_signed_pdfs() {
+        let workspace = TestWorkspace::new();
+        let source_path = workspace.root.join("metadata-blocked.pdf");
+        let base = write_two_page_pdf(&source_path);
+        let values = PdfMetadataValues {
+            title: "Safe title".into(),
+            ..Default::default()
+        };
+
+        let mut custom = Document::load_mem(&base).unwrap();
+        let info_id = custom.add_object(dictionary! {
+            "Title" => lopdf::text_string("Old"),
+            "Company" => lopdf::text_string("Must not be discarded"),
+        });
+        custom.trailer.set("Info", Object::Reference(info_id));
+        let mut custom_bytes = Vec::new();
+        custom.save_to(&mut custom_bytes).unwrap();
+        let custom_digest = format!("{:x}", Sha256::digest(&custom_bytes));
+        let (custom_report, custom_output) =
+            build_pdf_metadata_copy(&custom_bytes, &custom_digest, &values).unwrap();
+        assert_eq!(custom_report.status, "blocked");
+        assert!(custom_report
+            .blockers
+            .contains(&"custom_info_keys_present".into()));
+        assert!(custom_output.is_none());
+
+        let mut xmp = Document::load_mem(&base).unwrap();
+        let metadata_id = xmp.add_object(Stream::new(
+            dictionary! { "Type" => "Metadata", "Subtype" => "XML" },
+            b"<x:xmpmeta/>".to_vec(),
+        ));
+        xmp.catalog_mut()
+            .unwrap()
+            .set("Metadata", Object::Reference(metadata_id));
+        let mut xmp_bytes = Vec::new();
+        xmp.save_to(&mut xmp_bytes).unwrap();
+        let xmp_digest = format!("{:x}", Sha256::digest(&xmp_bytes));
+        let (xmp_report, xmp_output) =
+            build_pdf_metadata_copy(&xmp_bytes, &xmp_digest, &values).unwrap();
+        assert!(xmp_report
+            .blockers
+            .contains(&"xmp_packet_present_write_unverified".into()));
+        assert!(xmp_output.is_none());
+
+        let mut signed = Document::load_mem(&base).unwrap();
+        signed.add_object(dictionary! {
+            "Type" => "Sig",
+            "ByteRange" => vec![0.into(), 10.into(), 20.into(), 30.into()],
+        });
+        let mut signed_bytes = Vec::new();
+        signed.save_to(&mut signed_bytes).unwrap();
+        let signed_digest = format!("{:x}", Sha256::digest(&signed_bytes));
+        let (signed_report, signed_output) =
+            build_pdf_metadata_copy(&signed_bytes, &signed_digest, &values).unwrap();
+        assert!(signed_report
+            .blockers
+            .contains(&"digital_signature_or_certification_present".into()));
+        assert!(signed_output.is_none());
     }
 
     #[test]

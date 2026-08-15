@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B5A",
-  "status": "safety-audit-complete-backend-pending",
+  "stage": "P1-B5B",
+  "status": "backend-complete-workspace-pending",
   "requirement": "library-pdf-bounded-descriptive-metadata-reliable-copy",
   "currentWriteCapability": false,
   "securityMeaning": "descriptive-document-properties-only-not-complete-privacy-scrubbing",
@@ -112,7 +112,12 @@
     {
       "id": "P1-B5B",
       "name": "canonical-info-reliable-copy-backend",
-      "status": "planned",
+      "status": "completed",
+      "deliveredBackend": "src-tauri/src/formats/pdf_metadata.rs",
+      "deliveredCommands": [
+        "preview_pdf_metadata_copy",
+        "save_pdf_metadata_copy"
+      ],
       "writeUserFile": false
     },
     {
