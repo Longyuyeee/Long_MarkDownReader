@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-B2A2 PDF 表单检查面板：** B2A1 只读后端已接入原 PDF 工作区的“表单”标签，没有新增路由或窗口；外部 PDF 无入口，字段渲染和 Widget 页码有界，密码值隐藏且无填写/保存控件。真实 custom-protocol Tauri WebView2 在 1280×800、720×680 下验证标准 AcroForm 的 2 字段/2 控件、源摘要不变、零运行时错误和原壳层结构。下一步 P1-B2B 只做无风险字段的可靠填写新副本。详见 [`P1B2A2_PDF_Form_Panel_Desktop_Audit_2026-08-15.md`](./P1B2A2_PDF_Form_Panel_Desktop_Audit_2026-08-15.md)。
+
 > **2026-08-15 P1-B2A1 PDF 表单检查后端：** 新增资料库内只读 AcroForm 检查命令，同时遍历规范字段树和页面 Widget，报告关联、类型、值/默认值、选项、标志、外观、重复名、孤儿及 XFA/JavaScript/签名风险；密码字段值不会出现在报告中。输入、字段数、Widget 数、深度和字符串均有上限，无任何保存参数或写入路径。下一步 P1-B2A2 只在原 PDF 右侧栏展示检查结果并补真实桌面证据。详见 [`P1B2A1_PDF_Form_Inspection_Backend_Audit_2026-08-15.md`](./P1B2A1_PDF_Form_Inspection_Backend_Audit_2026-08-15.md)。
 
 > **2026-08-15 P1-B1 PDF 安全编辑边界审计：** 已确认现有 PDF 具备阅读/搜索、批注和 OCR sidecar，以及旋转、改序、排除、范围提取、合并、插页的可靠新副本；尚无 AcroForm 填写、永久脱敏、水印或元数据编辑。审计发现格式注册表仍低估为 `edit: unsupported`/sidecar-only，需在开放表单写入前统一注册表、发布矩阵和安全降级合同。下一步 P1-B2A 只做规范字段树与页面 Widget 的只读结构检查，加密和签名 PDF 保持强制阻断。详见 [`P1B1_PDF_Safety_Boundary_Audit_2026-08-15.md`](./P1B1_PDF_Safety_Boundary_Audit_2026-08-15.md)。
