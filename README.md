@@ -114,7 +114,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 | 知识组织 | 引用、反向链接、知识图谱、思维导图、JSON Canvas、关系定位 |
 | 表格数据 | CSV/TSV/Table 网格与看板，XLSX/ODS 工作区和有界高级对象支持 |
 | 文档与演示 | PDF 阅读与页面工具，DOCX/PPTX 阅读、受控草稿和可靠副本 |
-| 图形与媒体 | Mermaid、Draw.io、SVG、图片查看器和按需流式视频播放器 |
+| 图形与媒体 | Mermaid、Draw.io、SVG、图片基础编辑器和按需流式视频播放器 |
 | 外部打开 | 支持格式使用独立顶层窗口，不占用主资料库窗口或增加内部标签 |
 | 个性化 | 核心主题、场景预设、外观组合、文件颜色与图标标记 |
 
@@ -134,7 +134,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 | PDF | 阅读、搜索、批注和页面管理 | 不是通用内容重排编辑器 |
 | Mermaid / Draw.io / SVG | 查看、编辑、画布操作与安全保存 | 外部资源和危险协议会被阻断 |
 | OPML / JSON Canvas | 思维导图、卡片与关系画布 | 修改需显式保存 |
-| 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、AVIF | 只读，不修改源文件 |
+| 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、AVIF | PNG/JPEG/WebP/BMP 可旋转、翻转、缩放、转换并另存副本；GIF/ICO/AVIF 与外部图片只读 |
 | 视频 | MP4、WebM、OGV、M4V 及五种系统解码入口 | MOV/MKV/AVI/MPEG/MPG 取决于系统解码器 |
 | ODS / ODP / 旧 Office / WPS | ODS/ODP 有界预览，旧 Office 转换，WPS 原生格式交给外部程序 | ODT 尚未正式注册；`.wps/.et/.dps` 不在软件内编辑 |
 

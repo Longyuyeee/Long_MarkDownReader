@@ -47,7 +47,8 @@ const mappingFor = id => matrix.formats.find(mapping => mapping.id === id)
 for (const format of registry.formats) {
   const mapping = mappingFor(format.id)
   if (!mapping) continue
-  if (format.userCapability.saveMode === 'copy' && mapping.profile !== 'office-copy') {
+  const isVerifiedImageCopy = format.id === 'raster-image' && mapping.profile === 'media-preview'
+  if (format.userCapability.saveMode === 'copy' && mapping.profile !== 'office-copy' && !isVerifiedImageCopy) {
     failures.push(`${format.id} copy-only format must use office-copy`)
   }
   if (format.userCapability.level === 'external-open'
@@ -68,6 +69,7 @@ for (const [id, profile] of [
   ['ods', 'odf-preview'],
   ['odp', 'odf-preview'],
   ['workbook', 'workbook-bounded'],
+  ['raster-image', 'media-preview'],
 ]) {
   if (mappingFor(id)?.profile !== profile) failures.push(`${id} release boundary drift`)
 }

@@ -78,9 +78,9 @@
     {
       "id": "media-preview",
       "dependency": "none",
-      "sourcePolicy": "图片和视频源文件只读，应用内预览不提供写回",
-      "privacyBoundary": "媒体字节只在本机读取并交给系统 WebView 解码，不上传、不索引",
-      "knownLimitations": ["视频播放取决于系统 WebView 编解码器；超出应用内大小预算时交给外部程序"]
+      "sourcePolicy": "图片源文件只读且仅允许在资料库内另存编辑副本；视频和外部媒体不提供写回",
+      "privacyBoundary": "媒体字节只在本机读取和处理，不上传、不索引；图片输出必须通过有界解码、摘要校验和复读",
+      "knownLimitations": ["图片基础编辑限 PNG/JPEG/WebP/BMP 的旋转、翻转、缩放和格式转换；GIF/ICO/AVIF 只读；视频播放取决于系统 WebView 编解码器"]
     }
   ],
   "formats": [

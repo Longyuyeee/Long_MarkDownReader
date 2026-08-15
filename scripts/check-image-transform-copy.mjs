@@ -10,6 +10,8 @@ const cargo = read('src-tauri/Cargo.toml')
 const engine = read('src-tauri/src/formats/raster_image.rs')
 const commands = read('src-tauri/src/commands/media.rs')
 const tauriLib = read('src-tauri/src/lib.rs')
+const registry = JSON.parse(read('shared/file-formats.json'))
+const mediaView = read('src/views/MediaViewerView.vue')
 
 requireTokens(cargo, 'Image dependency', [
   'image = { version = "=0.25.10"',
@@ -48,5 +50,20 @@ requireTokens(tauriLib, 'Tauri command registration', [
 if (commands.includes('inspect_external_image_edit_source') || commands.includes('save_external_image_transform_copy')) {
   fail('External image write authorization must not be introduced in P1-A1')
 }
+const rasterImage = registry.formats.find(format => format.id === 'raster-image')
+if (rasterImage?.capabilities.edit !== 'supported' || rasterImage?.userCapability.saveMode !== 'copy'
+  || rasterImage?.externalPolicy !== 'preview' || rasterImage?.adapters.writer !== 'image-copy') {
+  fail('Raster image capability must advertise library copy editing while retaining external preview policy')
+}
+requireTokens(mediaView, 'Right-side image editor workspace', [
+  'data-testid="image-edit-toggle"',
+  'data-testid="image-editor-panel"',
+  'data-testid="image-save-copy"',
+  "!isExternal.value",
+  "invoke<ImageEditIdentity>('inspect_image_edit_source'",
+  "invoke<ImageSavedCopyReport>('save_image_transform_copy'",
+  "openManagedFile(router, savedCopy.value.targetPath)",
+  '仅在资料库内另存新文件',
+])
 
-console.log('P1-A1 image transform copy contract passed: bounded PNG/JPEG/WebP/BMP processing, source identity checks, atomic no-overwrite save, and output reopen verification are present.')
+console.log('P1-A2 image editor contract passed: the right-side workspace exposes bounded library-only copy editing over the verified PNG/JPEG/WebP/BMP transform engine.')

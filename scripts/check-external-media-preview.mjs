@@ -16,12 +16,15 @@ const previewIds = registry.formats
 if (JSON.stringify(previewIds) !== JSON.stringify(['raster-image', 'video'])) {
   failures.push(`EA-3A external preview boundary drift: ${previewIds.join(', ')}`)
 }
-for (const id of previewIds) {
-  const format = registry.formats.find(item => item.id === id)
-  if (format.routeName !== 'MediaViewer' || format.capabilities.edit !== 'unsupported'
-    || format.adapters.writer !== null || format.userCapability.saveMode !== 'none') {
-    failures.push(`${id} must remain a read-only MediaViewer format without a writer`)
-  }
+const image = registry.formats.find(item => item.id === 'raster-image')
+const video = registry.formats.find(item => item.id === 'video')
+if (image?.routeName !== 'MediaViewer' || image.capabilities.edit !== 'supported'
+  || image.adapters.writer !== 'image-copy' || image.userCapability.saveMode !== 'copy') {
+  failures.push('raster-image must expose library-only reliable copy editing')
+}
+if (video?.routeName !== 'MediaViewer' || video.capabilities.edit !== 'unsupported'
+  || video.adapters.writer !== null || video.userCapability.saveMode !== 'none') {
+  failures.push('video must remain a read-only MediaViewer format without a writer')
 }
 
 const access = read('src-tauri/src/services/external_file_access.rs')
@@ -45,6 +48,8 @@ for (const token of [
   'external: isExternal.value',
   '外部文件 · ',
   '不会写回',
+  '!isExternal.value',
+  "invoke<ImageEditIdentity>('inspect_image_edit_source'",
 ]) requireText(mediaView, token, `external media workspace is missing ${token}`)
 for (const token of ["'pick_external_openable_file'", "invoke<string>('open_external_file_window'"]) {
   requireText(app, token, `application external preview entry is missing ${token}`)
@@ -66,4 +71,4 @@ if (failures.length) {
   console.error(failures.map(failure => `- ${failure}`).join('\n'))
   process.exit(1)
 }
-console.log('EA-3A external media preview contract passed: 2 read-only formats, explicit authorization, zero writer and zero new installer associations.')
+console.log('EA-3A external media preview contract passed: images keep library-only copy editing, while both external media routes remain preview-only with zero external writers or installer associations.')
