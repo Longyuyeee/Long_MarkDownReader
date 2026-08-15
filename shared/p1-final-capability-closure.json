@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-FINAL",
+  "appVersion": "1.0.10",
+  "status": "accepted-bounded-ready-for-patch-release",
+  "releaseCandidate": false,
+  "originalDemand": {
+    "dailyManagement": true,
+    "basicEditing": true,
+    "systematicLibraryManagement": true,
+    "originalLeftLibraryRightWorkspace": true,
+    "knowledgeGraphPresence": true,
+    "mindMapAndDiagramEditing": true,
+    "developerTextFormats": true,
+    "pdfOfficeSpreadsheetFormats": true
+  },
+  "frozenBaseline": {
+    "registeredFormats": 43,
+    "registeredExtensions": 91,
+    "verifiedFormats": 30,
+    "limitedFormats": 7,
+    "externalDependencyFormats": 6,
+    "releaseProfiles": 11
+  },
+  "acceptedProductLanes": [
+    {
+      "id": "library-management",
+      "status": "accepted",
+      "scope": ["library", "search", "tags", "saved-views", "references", "history", "backup", "file-context", "workspace-tabs"]
+    },
+    {
+      "id": "developer-and-structured-text",
+      "status": "accepted-bounded",
+      "scope": ["markdown", "plain-text", "json", "jsonc", "yaml", "xml", "toml", "log", "code-and-web-source"],
+      "boundary": "lightweight-source-editing-not-a-full-ide-or-schema-studio"
+    },
+    {
+      "id": "diagram-and-mind-map",
+      "status": "accepted-bounded",
+      "scope": ["canvas", "mermaid", "drawio", "opml"],
+      "boundary": "direct-source-or-structured-basic-editing-without-full-vendor-equivalence"
+    },
+    {
+      "id": "knowledge-graph",
+      "status": "accepted-bounded",
+      "scope": ["workspace-pulse", "coverage", "cross-format-relations", "five-layout-canvas", "themes", "pan-zoom-selection", "source-navigation"],
+      "boundary": "derived-relationship-exploration-not-an-arbitrary-mind-map-source-editor"
+    },
+    {
+      "id": "pdf",
+      "status": "accepted-bounded",
+      "scope": ["read-search", "annotations-and-ocr-sidecars", "page-copy-operations", "standard-form-copy", "permanent-redaction-copy", "watermark-copy", "descriptive-metadata-copy"],
+      "boundary": "reliable-new-copy-not-arbitrary-body-reflow-or-complete-anonymization"
+    },
+    {
+      "id": "office-and-spreadsheet",
+      "status": "accepted-bounded",
+      "scope": ["docx-basic-reliable-copy", "pptx-basic-reliable-copy", "xlsx-bounded-workbook-editing", "csv-tsv-table-editing", "ods-odp-preview"],
+      "boundary": "no-full-word-powerpoint-excel-equivalence-and-no-internal-wps-native-writeback"
+    },
+    {
+      "id": "media",
+      "status": "accepted-bounded",
+      "scope": ["raster-preview-and-basic-transform-copy", "video-streaming-preview"],
+      "boundary": "not-a-professional-image-or-video-production-suite"
+    }
+  ],
+  "explicitNonClaims": [
+    "all-43-formats-have-equal-editing-depth",
+    "full-microsoft-office-or-wps-equivalence",
+    "arbitrary-pdf-body-editing-or-complete-anonymization",
+    "knowledge-graph-is-the-same-as-a-freeform-mind-map-editor",
+    "macro-execution-or-external-data-refresh",
+    "signed-enterprise-release"
+  ],
+  "deferredEnhancements": [
+    "real-consented-library-observation-for-graph-recommendation-quality",
+    "word-wps-libreoffice-three-producer-office-reopen-matrix",
+    "excel-dynamic-array-and-pivot-external-producer-closure",
+    "advanced-drawio-and-vendor-office-object-equivalence",
+    "enterprise-signing-collaboration-and-governance"
+  ],
+  "patchReleaseGate": {
+    "newCapabilityWorkRequired": false,
+    "documentationAlignmentRequired": true,
+    "versionBumpRequired": true,
+    "unsignedInstallerBuildRequired": true,
+    "hostedInstallLifecycleRequired": true,
+    "githubReleaseAndRemoteHashVerificationRequired": true,
+    "managedUpdaterObservationRequired": true
+  },
+  "nextStage": "V1.0.11-UNSIGNED-PATCH-RELEASE"
+}

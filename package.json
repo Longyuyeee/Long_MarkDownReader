@@ -178,6 +178,7 @@
     "check:p1b5c-pdf-metadata-workspace": "node scripts/check-p1b5c-pdf-metadata-workspace.mjs",
     "audit:p1b5d-pdf-metadata-evidence": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-p1b5d-pdf-metadata-audit.ps1",
     "check:p1b5d-pdf-metadata-evidence": "node scripts/check-p1b5d-pdf-metadata-evidence.mjs",
+    "check:p1-final-capability-closure": "node scripts/check-p1-final-capability-closure.mjs",
     "audit:media-workspace": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-media-workspace-audit.ps1",
     "check:markdown-code-theme-contrast": "node scripts/check-markdown-code-theme-contrast.mjs",
     "check:code-editor-theme-contract": "node scripts/check-code-editor-theme-contract.mjs",
