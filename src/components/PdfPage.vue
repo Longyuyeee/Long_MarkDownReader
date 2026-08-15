@@ -23,6 +23,14 @@
         >◆</button>
       </template>
     </div>
+    <div v-if="!thumbnail && redactions.length" class="pdf-redaction-layer" aria-hidden="true">
+      <span
+        v-for="redaction in redactions"
+        :key="redaction.id"
+        :class="['pdf-redaction-rect', `color-${redaction.color}`]"
+        :style="annotationRectStyle(redaction)"
+      ></span>
+    </div>
     <div v-if="!thumbnail" ref="textLayerRef" class="textLayer" :style="{ '--total-scale-factor': scale }"></div>
     <div
       v-if="!thumbnail && areaMode"
@@ -32,6 +40,15 @@
       @pointerup="finishArea"
       @pointercancel="cancelArea"
     ><div v-if="areaDraft" class="area-draft" :style="annotationRectStyle(areaDraft)"></div></div>
+    <div
+      v-if="!thumbnail && redactionMode"
+      class="redaction-capture"
+      aria-label="永久脱敏框选区域"
+      @pointerdown="startRedaction"
+      @pointermove="moveRedaction"
+      @pointerup="finishRedaction"
+      @pointercancel="cancelRedaction"
+    ><div v-if="redactionDraft" :class="['redaction-draft', `color-${redactionColor}`]" :style="annotationRectStyle(redactionDraft)"></div></div>
     <span v-if="!rendered" class="page-placeholder">{{ pageNumber }}</span>
   </div>
 </template>
@@ -43,6 +60,7 @@ import type { PDFDocumentProxy, PageViewport, RenderTask } from 'pdfjs-dist'
 import type { TextContent } from 'pdfjs-dist/types/src/display/api'
 import { buildPdfPageText, type PdfSearchMatch } from '../utils/pdfText'
 import type { PdfAnnotation, PdfAnnotationRect } from '../types/pdfAnnotations'
+import type { PdfRedactionOverlay } from '../types/pdfRedaction'
 
 const props = defineProps<{
   document: PDFDocumentProxy
@@ -57,12 +75,16 @@ const props = defineProps<{
   annotations?: PdfAnnotation[]
   activeAnnotationId?: string
   areaMode?: boolean
+  redactions?: PdfRedactionOverlay[]
+  redactionMode?: boolean
+  redactionColor?: 'black' | 'white'
   rotation?: number
 }>()
 const emit = defineEmits<{
   needText: [page: number]
   rendered: [page: number]
   areaCreate: [page: number, rect: PdfAnnotationRect]
+  redactionCreate: [page: number, rect: PdfAnnotationRect]
   selectAnnotation: [id: string]
 }>()
 
@@ -73,8 +95,11 @@ const rendered = ref(false)
 const actualWidth = ref(0)
 const actualHeight = ref(0)
 const areaDraft = ref<PdfAnnotationRect | null>(null)
+const redactionDraft = ref<PdfAnnotationRect | null>(null)
 let areaPointerId = -1
 let areaStart = { x: 0, y: 0 }
+let redactionPointerId = -1
+let redactionStart = { x: 0, y: 0 }
 let observer: IntersectionObserver | null = null
 let renderTask: RenderTask | null = null
 let textLayer: TextLayer | null = null
@@ -82,6 +107,8 @@ let lastViewport: PageViewport | null = null
 let renderGeneration = 0
 
 const annotations = computed(() => props.annotations || [])
+const redactions = computed(() => props.redactions || [])
+const redactionColor = computed(() => props.redactionColor || 'black')
 const normalizedRotation = computed(() => ((props.rotation || 0) % 360 + 360) % 360)
 const placeholderSize = computed(() => normalizedRotation.value % 180 === 0
   ? { width: props.placeholderWidth, height: props.placeholderHeight }
@@ -125,6 +152,30 @@ const finishArea = (event: PointerEvent) => {
   cancelArea()
 }
 const cancelArea = () => { areaPointerId = -1; areaDraft.value = null }
+const startRedaction = (event: PointerEvent) => {
+  if (event.button !== 0) return
+  redactionPointerId = event.pointerId
+  ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
+  redactionStart = areaPoint(event)
+  redactionDraft.value = { ...redactionStart, width: 0.0001, height: 0.0001 }
+}
+const moveRedaction = (event: PointerEvent) => {
+  if (event.pointerId !== redactionPointerId) return
+  const point = areaPoint(event)
+  redactionDraft.value = {
+    x: Math.min(redactionStart.x, point.x),
+    y: Math.min(redactionStart.y, point.y),
+    width: Math.abs(point.x - redactionStart.x),
+    height: Math.abs(point.y - redactionStart.y),
+  }
+}
+const finishRedaction = (event: PointerEvent) => {
+  if (event.pointerId !== redactionPointerId || !redactionDraft.value) return
+  const rect = redactionDraft.value
+  if (rect.width >= 0.01 && rect.height >= 0.01) emit('redactionCreate', props.pageNumber, rect)
+  cancelRedaction()
+}
+const cancelRedaction = () => { redactionPointerId = -1; redactionDraft.value = null }
 
 const renderPage = async () => {
   const canvas = canvasRef.value
@@ -276,6 +327,9 @@ onBeforeUnmount(() => {
 .textLayer :deep(.pdf-search-hit) { margin: -1px; padding: 1px; border-radius: 3px; color: transparent; background: rgba(255, 196, 0, .42); }
 .textLayer :deep(.pdf-search-hit.active) { background: rgba(255, 116, 35, .66); outline: 1px solid rgba(190, 68, 0, .55); }
 .pdf-annotation-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.pdf-redaction-layer { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.pdf-redaction-rect { position: absolute; box-sizing: border-box; border: 1px solid rgba(255,255,255,.88); background: #000; box-shadow: 0 0 0 1px rgba(15,23,42,.32); }
+.pdf-redaction-rect.color-white { border-color: rgba(15,23,42,.7); background: #fff; }
 .pdf-annotation-rect { position: absolute; padding: 0; border: 1px solid transparent; border-radius: 2px; pointer-events: none; mix-blend-mode: multiply; }
 .pdf-annotation-rect.color-yellow { background: rgba(255, 220, 55, .38); }.pdf-annotation-rect.color-green { background: rgba(61, 201, 126, .3); }.pdf-annotation-rect.color-pink { background: rgba(248, 105, 170, .3); }.pdf-annotation-rect.color-blue { background: rgba(64, 151, 255, .28); }
 .pdf-annotation-rect.kind-area { border-width: 2px; border-color: currentColor; background: transparent; mix-blend-mode: normal; }.pdf-annotation-rect.kind-area.color-yellow { color: #c89200; }.pdf-annotation-rect.kind-area.color-green { color: #149653; }.pdf-annotation-rect.kind-area.color-pink { color: #d83a83; }.pdf-annotation-rect.kind-area.color-blue { color: #1674d1; }
@@ -283,4 +337,7 @@ onBeforeUnmount(() => {
 .annotation-comment-marker { position: absolute; z-index: 4; width: 18px; height: 18px; display: grid; place-items: center; padding: 0; border: 2px solid #fff; border-radius: 50%; pointer-events: auto; cursor: pointer; color: #fff; background: #d59a00; box-shadow: 0 2px 6px rgba(0,0,0,.24); font-size: var(--text-compact); transform: translate(-50%,-50%); }.annotation-comment-marker.color-green { background: #159653; }.annotation-comment-marker.color-pink { background: #d83a83; }.annotation-comment-marker.color-blue { background: #1674d1; }.annotation-comment-marker.active { outline: 2px solid #ff6b21; }
 .area-capture { position: absolute; inset: 0; z-index: 5; cursor: crosshair; touch-action: none; background: rgba(0,122,255,.025); }
 .area-draft { position: absolute; box-sizing: border-box; border: 2px dashed #007aff; background: rgba(0,122,255,.1); }
+.redaction-capture { position: absolute; inset: 0; z-index: 6; cursor: crosshair; touch-action: none; background: rgba(185,28,28,.025); }
+.redaction-draft { position: absolute; box-sizing: border-box; border: 2px solid #fff; outline: 1px dashed #991b1b; background: #000; opacity: .9; }
+.redaction-draft.color-white { border-color: #991b1b; background: #fff; }
 </style>

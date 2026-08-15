@@ -14,9 +14,13 @@ for (const token of ['MAX_PDF_REDACTION_SOURCE_BYTES', 'MAX_PDF_REDACTION_PAGES'
 for (const token of ['preview_pdf_redaction_copy', 'save_pdf_redaction_copy', 'save_pdf_redaction_copy_to_path', 'expected_output_digest', 'write_new_bytes', 'verify_pdf_redaction_output', 'source_unchanged', 'source_object_isolation_reopen_verified']) if (!commands.includes(token)) fail(`P1-B3B command marker missing: ${token}`)
 for (const token of ['builds_fresh_image_only_pdf_and_removes_source_markers', 'blocks_incomplete_transparent_or_unburned_rasters_and_signatures']) if (!engine.includes(token)) fail(`P1-B3B engine test missing: ${token}`)
 if (!commands.includes('permanent_redaction_copy_saves_new_target_reopens_and_preserves_source')) fail('P1-B3B save/reopen test missing')
-for (const token of ['preview_pdf_redaction_copy', 'save_pdf_redaction_copy']) if (!tauri.includes(token) || view.includes(token)) fail(`P1-B3B must register backend without exposing UI: ${token}`)
-if (safety.stage !== 'P1-B3B' || safety.status !== 'raster-backend-complete-workspace-pending' || safety.currentWriteCapability !== false || safety.implementationSlices?.find(item => item.id === 'P1-B3B')?.status !== 'completed') fail('P1-B3B safety contract is stale')
-if (advanced.stage !== 'P1-B3B' || advanced.status !== 'permanent-redaction-backend-complete' || advanced.currentCapabilities?.includes('permanent-redaction-copy') || advanced.plannedSlices?.find(item => item.id === 'P1-B3')?.status !== 'raster-backend-complete-workspace-pending') fail('P1-B3B advanced capability boundary is stale')
+for (const token of ['preview_pdf_redaction_copy', 'save_pdf_redaction_copy']) {
+  if (!tauri.includes(token)) fail(`P1-B3B registered command missing: ${token}`)
+  if (safety.stage === 'P1-B3B' && view.includes(token)) fail(`P1-B3B must not expose UI before P1-B3C: ${token}`)
+  if (safety.stage === 'P1-B3C' && !view.includes(token)) fail(`P1-B3C workspace must consume backend command: ${token}`)
+}
+if (!['P1-B3B', 'P1-B3C'].includes(safety.stage) || !['raster-backend-complete-workspace-pending', 'workspace-complete-desktop-evidence-pending'].includes(safety.status) || safety.currentWriteCapability !== (safety.stage === 'P1-B3C') || safety.implementationSlices?.find(item => item.id === 'P1-B3B')?.status !== 'completed') fail('P1-B3B safety contract lineage is stale')
+if (!['P1-B3B', 'P1-B3C'].includes(advanced.stage) || !['permanent-redaction-backend-complete', 'permanent-redaction-workspace-complete'].includes(advanced.status) || advanced.currentCapabilities?.includes('permanent-redaction-copy') !== (advanced.stage === 'P1-B3C') || !['raster-backend-complete-workspace-pending', 'workspace-complete-desktop-evidence-pending'].includes(advanced.plannedSlices?.find(item => item.id === 'P1-B3')?.status)) fail('P1-B3B advanced capability lineage is stale')
 for (const section of ['## 1. 需求对齐与结论', '## 2. 后端实现', '## 3. 安全验证', '## 4. 测试与视觉复核', '## 5. 当前边界与下一步']) if (!audit.includes(section)) fail(`P1-B3B audit section missing: ${section}`)
 
 console.log('P1-B3B PDF permanent redaction backend passed: bounded opaque PNG input, burned-pixel verification, fresh image-only PDF construction, no-overwrite save, reopen checks and no premature UI are aligned.')
