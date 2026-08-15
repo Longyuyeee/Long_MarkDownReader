@@ -13,11 +13,12 @@ use crate::formats::pdf_ocr::{
 };
 use crate::formats::pdf_redaction::{
     build_pdf_redaction_copy, verify_pdf_redaction_output, PdfRasterizedRedactionPage,
-    PdfRedactionCopyReport,
+    PdfRedactionCopyReport, PdfRedactionRect, MAX_PDF_REDACTION_RASTER_BYTES,
 };
 use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_new_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use lopdf::xref::{XrefEntry, XrefType};
 use lopdf::{dictionary, Dictionary, Document, Object, ObjectId};
 use sha2::{Digest, Sha256};
@@ -481,16 +482,67 @@ pub struct PdfSavedRedactionCopyReport {
     pub source_object_isolation_reopen_verified: bool,
 }
 
+#[derive(Clone, Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfEncodedRedactionPage {
+    pub page: u32,
+    pub png_base64: String,
+    pub redactions: Vec<PdfRedactionRect>,
+}
+
+fn decode_pdf_redaction_pages(
+    pages: Vec<PdfEncodedRedactionPage>,
+) -> Result<Vec<PdfRasterizedRedactionPage>, String> {
+    decode_pdf_redaction_pages_with_budget(pages, MAX_PDF_REDACTION_RASTER_BYTES)
+}
+
+fn decode_pdf_redaction_pages_with_budget(
+    pages: Vec<PdfEncodedRedactionPage>,
+    max_raster_bytes: usize,
+) -> Result<Vec<PdfRasterizedRedactionPage>, String> {
+    let max_encoded_page_bytes = max_raster_bytes
+        .saturating_mul(4)
+        .saturating_div(3)
+        .saturating_add(8);
+    let mut decoded_bytes = 0usize;
+    pages
+        .into_iter()
+        .map(|page| {
+            if page.png_base64.is_empty() || page.png_base64.len() > max_encoded_page_bytes {
+                return Err(format!("第 {} 页 PNG 编码为空或超出资源上限", page.page));
+            }
+            let png_bytes = STANDARD
+                .decode(page.png_base64.as_bytes())
+                .map_err(|_| format!("第 {} 页 PNG Base64 编码无效", page.page))?;
+            decoded_bytes = decoded_bytes
+                .checked_add(png_bytes.len())
+                .ok_or("永久脱敏 PNG 总量溢出")?;
+            if decoded_bytes > max_raster_bytes {
+                return Err(format!(
+                    "永久脱敏 PNG 总量超过 {} 字节上限",
+                    max_raster_bytes
+                ));
+            }
+            Ok(PdfRasterizedRedactionPage {
+                page: page.page,
+                png_bytes,
+                redactions: page.redactions,
+            })
+        })
+        .collect()
+}
+
 #[tauri::command]
 pub async fn preview_pdf_redaction_copy(
     library_root: String,
     path: String,
     expected_source_digest: String,
-    pages: Vec<PdfRasterizedRedactionPage>,
+    pages: Vec<PdfEncodedRedactionPage>,
 ) -> Result<PdfRedactionCopyReport, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
     let source_path = guard.resolve_existing_file(path, &["pdf"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let pages = decode_pdf_redaction_pages(pages)?;
         let source = fs::read(&source_path).map_err(|error| format!("读取 PDF 失败: {error}"))?;
         build_pdf_redaction_copy(&source, &expected_source_digest, &pages).map(|(report, _)| report)
     })
@@ -571,7 +623,7 @@ pub async fn save_pdf_redaction_copy(
     target_file_name: String,
     expected_source_digest: String,
     expected_output_digest: String,
-    pages: Vec<PdfRasterizedRedactionPage>,
+    pages: Vec<PdfEncodedRedactionPage>,
 ) -> Result<PdfSavedRedactionCopyReport, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
     let source_path = guard.resolve_existing_file(path, &["pdf"])?;
@@ -581,6 +633,7 @@ pub async fn save_pdf_redaction_copy(
         .ok_or("源 PDF 没有父目录")?
         .join(target_file_name);
     tauri::async_runtime::spawn_blocking(move || {
+        let pages = decode_pdf_redaction_pages(pages)?;
         save_pdf_redaction_copy_to_path(
             &source_path,
             &target_path,
@@ -2906,6 +2959,33 @@ mod tests {
                 })
                 .unwrap_or_default(),
         }
+    }
+
+    #[test]
+    fn redaction_ipc_pages_decode_strict_base64_and_enforce_budget() {
+        let page = redaction_raster_page(1);
+        let decoded = decode_pdf_redaction_pages(vec![PdfEncodedRedactionPage {
+            page: page.page,
+            png_base64: STANDARD.encode(&page.png_bytes),
+            redactions: page.redactions.clone(),
+        }])
+        .unwrap();
+        assert_eq!(decoded[0].png_bytes, page.png_bytes);
+        assert!(decode_pdf_redaction_pages(vec![PdfEncodedRedactionPage {
+            page: 1,
+            png_base64: "data:image/png;base64,invalid".into(),
+            redactions: Vec::new(),
+        }])
+        .is_err());
+        assert!(decode_pdf_redaction_pages_with_budget(
+            vec![PdfEncodedRedactionPage {
+                page: 1,
+                png_base64: STANDARD.encode(&page.png_bytes),
+                redactions: Vec::new(),
+            }],
+            8,
+        )
+        .is_err());
     }
 
     #[test]

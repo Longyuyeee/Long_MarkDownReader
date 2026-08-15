@@ -5,7 +5,7 @@
       <WorkspaceFileIdentity class="toolbar-leading">
         <button class="icon-btn" :title="isExternal ? '返回资料库' : '返回知识库'" @click="router.push('/library')">←</button>
         <button class="icon-btn" :class="{ active: sidebarOpen }" :aria-pressed="sidebarOpen" title="缩略图与目录" @click="sidebarOpen = !sidebarOpen">☰</button>
-        <div class="document-title"><strong>{{ fileName }}<i v-if="pdfWorkspaceDirty" class="page-plan-dirty" aria-live="polite">页面草稿</i></strong><span v-if="pdfDocument"><template v-if="isExternal">外部文件 · 只读 · </template>{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template><template v-if="isExternal"> · 不会写回</template></span></div>
+        <div class="document-title"><strong>{{ fileName }}<i v-if="pdfWorkspaceDirty" class="page-plan-dirty" aria-live="polite">{{ pdfWorkspaceDraftLabel }}</i></strong><span v-if="pdfDocument"><template v-if="isExternal">外部文件 · 只读 · </template>{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template><template v-if="isExternal"> · 不会写回</template></span></div>
       </WorkspaceFileIdentity>
       <div v-if="pdfDocument" class="toolbar-center">
         <button class="icon-btn" title="上一页" aria-label="上一页" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
@@ -26,6 +26,7 @@
         <button class="icon-btn" title="放大" @click="changeScale(0.1)">＋</button>
         <button class="fit-btn" :class="{ active: fitWidth }" :aria-pressed="fitWidth" title="适合宽度" @click="toggleFitWidth"><Columns3Icon :size="14"/><span class="action-label">适合宽度</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'forms' }" :aria-pressed="sidebarOpen && sidebarTab === 'forms'" title="检查并填写 PDF 表单副本" @click="openPdfFormPanel"><ListChecksIcon :size="14"/><span class="action-label">表单</span></button>
+        <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'redaction' }" :aria-pressed="sidebarOpen && sidebarTab === 'redaction'" title="永久移除敏感区域并另存图片型副本" @click="openRedactionPanel"><ShieldXIcon :size="14"/><span class="action-label">永久脱敏</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" :aria-pressed="sidebarOpen && sidebarTab === 'ocr'" title="离线识别扫描页" @click="openOcrPanel"><ScanTextIcon :size="14"/><span class="action-label">OCR</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'organize' }" :aria-pressed="sidebarOpen && sidebarTab === 'organize'" title="非破坏式页面整理预览" @click="openPageOrganizer"><ListOrderedIcon :size="14"/><span class="action-label">页面整理</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: areaMode }" :aria-pressed="areaMode" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
@@ -34,7 +35,7 @@
     </WorkspaceToolbar>
 
     <main class="pdf-workspace">
-      <aside v-if="sidebarOpen && pdfDocument" class="pdf-sidebar" :class="{ 'organize-open': sidebarTab === 'organize', 'forms-open': sidebarTab === 'forms' }">
+      <aside v-if="sidebarOpen && pdfDocument" class="pdf-sidebar" :class="{ 'organize-open': sidebarTab === 'organize', 'forms-open': sidebarTab === 'forms', 'redaction-open': sidebarTab === 'redaction' }">
         <div
           class="sidebar-switch"
           role="tablist"
@@ -46,6 +47,7 @@
           <button role="tab" :aria-selected="sidebarTab === 'outline'" :class="{ active: sidebarTab === 'outline' }" @click="sidebarTab = 'outline'">目录</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'annotations'" :class="{ active: sidebarTab === 'annotations' }" @click="sidebarTab = 'annotations'">批注 {{ annotations.length || '' }}</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'forms'" :class="{ active: sidebarTab === 'forms' }" @click="openPdfFormPanel">表单 {{ pdfFormInspection?.fieldCount || '' }}</button>
+          <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'redaction'" :class="{ active: sidebarTab === 'redaction' }" @click="openRedactionPanel">脱敏 {{ pdfRedactions.length || '' }}</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'ocr'" :class="{ active: sidebarTab === 'ocr' }" @click="sidebarTab = 'ocr'">OCR {{ ocrDocument?.pages.length || '' }}</button>
           <button v-if="!isExternal" role="tab" :aria-selected="sidebarTab === 'organize'" :class="{ active: sidebarTab === 'organize' }" @click="sidebarTab = 'organize'">页面</button>
         </div>
@@ -94,6 +96,53 @@
           @preview-copy="previewPdfFormTextCopy"
           @save-copy="savePdfFormTextCopy"
         />
+        <div v-else-if="!isExternal && sidebarTab === 'redaction'" class="redaction-panel" data-testid="p1b3c-pdf-redaction">
+          <WorkspaceStateNotice kind="limited" tone="warning" title="永久移除，不是视觉黑框">
+            <p>系统会把整份 PDF 的每一页离线渲染成不透明图片，在编码前烧入所选区域，再从空白文档创建新副本。</p>
+            <small>新副本将失去文字搜索、选择、表单、链接、批注、书签和无障碍结构；源 PDF 始终保留。</small>
+          </WorkspaceStateNotice>
+          <section class="redaction-controls">
+            <div class="redaction-heading"><strong>框选敏感区域</strong><span>{{ pdfRedactions.length }}/256</span></div>
+            <button class="redaction-mode-button" :class="{ active: redactionMode }" :aria-pressed="redactionMode" @click="toggleRedactionMode">
+              {{ redactionMode ? '正在框选 · 点击退出' : '开始框选' }}
+            </button>
+            <div class="redaction-colors" aria-label="脱敏填充颜色">
+              <button :class="{ active: redactionColor === 'black' }" :aria-pressed="redactionColor === 'black'" @click="redactionColor = 'black'">黑色</button>
+              <button class="white" :class="{ active: redactionColor === 'white' }" :aria-pressed="redactionColor === 'white'" @click="redactionColor = 'white'">白色</button>
+            </div>
+            <small>在右侧任意页面拖出矩形。框选只作为草稿，验证通过前不会写入文件。</small>
+          </section>
+          <div v-if="pdfRedactions.length" class="redaction-list">
+            <button v-for="rect in pdfRedactions" :key="rect.id" @click="goToPage(rect.page)">
+              <span><i :class="`color-${rect.color}`"></i><strong>第 {{ rect.page }} 页</strong></span>
+              <small>{{ Math.round(rect.width * 100) }}% × {{ Math.round(rect.height * 100) }}%</small>
+              <b title="移除此区域" aria-label="移除此区域" @click.stop="removePdfRedaction(rect.id)">×</b>
+            </button>
+          </div>
+          <p v-else class="sidebar-empty">尚未框选区域。请选择“开始框选”，然后在右侧页面拖动鼠标。</p>
+          <div class="redaction-draft-actions">
+            <button :disabled="!pdfRedactions.length" @click="undoPdfRedaction">撤销最后一个</button>
+            <button :disabled="!pdfRedactions.length" @click="clearPdfRedactions">清空</button>
+          </div>
+          <button class="redaction-verify" :disabled="!pdfRedactions.length || pdfRedactionWorking" @click="previewPdfRedactionCopy">
+            {{ pdfRedactionWorking ? `正在渲染并验证 ${pdfRedactionProgress.page}/${pdfRedactionProgress.total}…` : '生成并验证脱敏副本' }}
+          </button>
+          <WorkspaceStateNotice v-if="pdfRedactionError" kind="error" tone="danger" title="永久脱敏验证失败"><p>{{ pdfRedactionError }}</p></WorkspaceStateNotice>
+          <WorkspaceStateNotice v-else-if="pdfRedactionVerification?.status === 'blocked'" kind="error" tone="danger" title="当前 PDF 不能安全永久脱敏">
+            <p>{{ pdfRedactionVerification.blockers.map(pdfRedactionBlockerLabel).join(' · ') }}</p>
+          </WorkspaceStateNotice>
+          <section v-else-if="pdfRedactionVerification?.status === 'isolated_verified'" class="redaction-verification">
+            <WorkspaceStateNotice kind="saved" tone="success" title="图片型脱敏副本验证通过" compact>
+              <span>{{ pdfRedactionVerification.outputPages }} 页 · {{ pdfRedactionVerification.redactionRects }} 个区域 · {{ formatBytes(pdfRedactionVerification.outputBytes) }}</span>
+              <small>文字提取为空，源对象未复制；全部页面与纯色遮挡像素已经后端复核。</small>
+            </WorkspaceStateNotice>
+            <label><span>新副本文件名</span><input v-model="pdfRedactionCopyName" maxlength="180" aria-label="永久脱敏 PDF 新副本文件名" @keydown.enter.prevent="savePdfRedactionCopy"></label>
+            <label class="redaction-confirm"><input v-model="pdfRedactionTradeoffConfirmed" type="checkbox"><span>我理解副本会变成图片型 PDF，并失去文字、表单、链接、批注等交互结构。</span></label>
+            <button :disabled="!pdfRedactionTradeoffConfirmed || pdfRedactionSaving || !pdfRedactionCopyName.trim()" @click="savePdfRedactionCopy">
+              {{ pdfRedactionSaving ? '正在可靠另存并复读…' : '另存永久脱敏副本并打开' }}
+            </button>
+          </section>
+        </div>
         <div v-else-if="!isExternal && sidebarTab === 'organize'" class="page-organizer">
           <div class="page-plan-summary">
             <WorkspaceStateNotice v-if="savedCopyNotice?.path === pdfPath" class="page-plan-saved" kind="saved" tone="success" compact>
@@ -395,9 +444,13 @@
               :annotations="annotationsByPage.get(page)"
               :active-annotation-id="selectedAnnotationId"
               :area-mode="areaMode"
+              :redactions="pdfRedactionsByPage.get(page)"
+              :redaction-mode="redactionMode"
+              :redaction-color="redactionColor"
               @need-text="ensurePageText"
               @rendered="recordPageRendered"
               @area-create="createAreaAnnotation"
+              @redaction-create="createPdfRedaction"
               @select-annotation="selectAnnotation"
             />
             <span class="page-number">{{ page }}</span>
@@ -412,6 +465,7 @@
       <button class="close-selection" title="关闭高亮工具" aria-label="关闭高亮工具" @click="dismissSelectionTool">×</button>
     </div>
     <div v-if="areaMode" class="area-mode-hint">区域批注模式：在任意页面拖出矩形，Esc 退出</div>
+    <div v-if="redactionMode" class="redaction-mode-hint">永久脱敏框选：在页面拖出要彻底移除的区域，Esc 退出框选</div>
   </div>
 </template>
 
@@ -439,6 +493,7 @@ import {
   MessageSquareTextIcon,
   ScanLineIcon,
   ScanTextIcon,
+  ShieldXIcon,
 } from 'lucide-vue-next'
 import PdfPage from '../components/PdfPage.vue'
 import { useAppStore } from '../store/app'
@@ -447,7 +502,9 @@ import type { PdfAnnotationReference } from '../utils/pdfReference'
 import type { PdfAnnotation, PdfAnnotationColor, PdfAnnotationDocument, PdfAnnotationKind, PdfAnnotationRect } from '../types/pdfAnnotations'
 import type { PdfOcrDocument, PdfOcrPage, PdfOcrTaskState } from '../types/pdfOcr'
 import type { PdfFormInspectionReport, PdfFormTextChange, PdfFormTextFillReport, PdfSavedFormTextReport } from '../types/pdfForms'
+import type { PdfRasterizedRedactionPage, PdfRedactionColor, PdfRedactionCopyReport, PdfRedactionOverlay, PdfSavedRedactionCopyReport } from '../types/pdfRedaction'
 import { createOfflineOcrWorker } from '../utils/pdfOcr'
+import { digestPdfDocument, MAX_PDF_REDACTION_RECTS, MAX_PDF_REDACTION_SOURCE_BYTES, renderPdfRedactionPages } from '../utils/pdfRedaction'
 import { TauriPdfRangeTransport, type PdfReadDescriptor } from '../utils/tauriPdfRangeTransport'
 import {
   clonePdfPagePlan,
@@ -596,7 +653,7 @@ const pageInput = ref(1)
 const scale = ref(1)
 const fitWidth = ref(false)
 const sidebarOpen = ref(true)
-const sidebarTab = ref<'thumbnails' | 'outline' | 'annotations' | 'forms' | 'ocr' | 'organize'>('thumbnails')
+const sidebarTab = ref<'thumbnails' | 'outline' | 'annotations' | 'forms' | 'redaction' | 'ocr' | 'organize'>('thumbnails')
 const outline = ref<OutlineEntry[]>([])
 const outlineLoading = ref(false)
 const basePage = ref({ width: 612, height: 792 })
@@ -633,12 +690,25 @@ const pdfFormTextVerification = ref<PdfFormTextFillReport | null>(null)
 const pdfFormTextWorking = ref(false)
 const pdfFormTextError = ref('')
 const pdfFormDefaultCopyName = computed(() => `${fileName.value.replace(/\.pdf$/i, '') || 'document'}-form-filled.pdf`)
+const pdfRedactions = ref<PdfRedactionOverlay[]>([])
+const redactionMode = ref(false)
+const redactionColor = ref<PdfRedactionColor>('black')
+const pdfRedactionVerification = ref<PdfRedactionCopyReport | null>(null)
+const pdfRedactionRasterPages = shallowRef<PdfRasterizedRedactionPage[]>([])
+const pdfRedactionSourceDigest = ref('')
+const pdfRedactionWorking = ref(false)
+const pdfRedactionSaving = ref(false)
+const pdfRedactionError = ref('')
+const pdfRedactionCopyName = ref('')
+const pdfRedactionTradeoffConfirmed = ref(false)
+const pdfRedactionProgress = ref({ page: 0, total: 0 })
 const selectionTool = ref({ show: false, page: 0, quote: '', rects: [] as PdfAnnotationRect[], x: 0, y: 0 })
 const pagePlan = ref<PdfPagePlanEntry[]>([])
 const pagePlanUndo = ref<PdfPagePlanEntry[][]>([])
 const pagePlanRedo = ref<PdfPagePlanEntry[][]>([])
 const activePagePlanId = ref('')
 const pdfSourceSignature = ref('')
+const pdfSourceLength = ref(0)
 const pagePlanVerification = ref<PdfIsolatedPagePlanReport | null>(null)
 const pagePlanVerificationError = ref('')
 const pagePlanVerifying = ref(false)
@@ -726,12 +796,22 @@ const annotationsByPage = computed(() => {
   }
   return result
 })
+const pdfRedactionsByPage = computed(() => {
+  const result = new Map<number, PdfRedactionOverlay[]>()
+  for (const redaction of pdfRedactions.value) {
+    const pageRedactions = result.get(redaction.page) || []
+    pageRedactions.push(redaction)
+    result.set(redaction.page, pageRedactions)
+  }
+  return result
+})
 const visiblePagePlan = computed(() => pagePlan.value.filter(entry => !entry.removed))
 const pagePlanSummary = computed(() => summarizePdfPagePlan(pagePlan.value))
 const pagePlanDirty = computed(() => pagePlanSummary.value.changed > 0)
 const pdfMergeDirty = computed(() => pdfMergeInputs.value.length > 1)
 const pdfInsertDirty = computed(() => Boolean(pdfInsertSourcePath.value))
-const pdfWorkspaceDirty = computed(() => pagePlanDirty.value || pdfMergeDirty.value || pdfInsertDirty.value)
+const pdfWorkspaceDirty = computed(() => pagePlanDirty.value || pdfMergeDirty.value || pdfInsertDirty.value || pdfRedactions.value.length > 0)
+const pdfWorkspaceDraftLabel = computed(() => pdfRedactions.value.length ? '脱敏草稿' : '页面草稿')
 const pagePlanStatus = computed(() => {
   if (pagePlanMode.value === 'extract' && pageRangePages.value.length) {
     return `提取 ${pageRangePages.value.length}/${pagePlan.value.length} 页`
@@ -765,6 +845,18 @@ const pdfInsertBlockerLabel = (blocker: string) => {
   if (!match) return pdfPlanBlockerLabel(blocker)
   return `${match[1] === 'base' ? '当前文件' : '来源文件'}：${pdfPlanBlockerLabel(match[2])}`
 }
+const pdfRedactionBlockerLabels: Record<string, string> = {
+  encrypted_pdf_unverified: '加密 PDF 暂不支持永久脱敏',
+  digital_signature_unverified: '数字签名 PDF 禁止永久脱敏',
+  page_render_failure: '至少一页渲染失败',
+  partial_page_set: '没有完整提交全部页面',
+  transparent_redaction_paint: '脱敏画布包含透明像素',
+  invalid_or_out_of_bounds_rectangle: '脱敏区域超出页面',
+  source_or_render_budget_exceeded: '文件、页数或栅格资源超出安全预算',
+  source_digest_changed: '源 PDF 已发生变化',
+  existing_target_path: '目标文件已存在',
+}
+const pdfRedactionBlockerLabel = (blocker: string) => pdfRedactionBlockerLabels[blocker] || blocker
 const formatBytes = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
 const sortedOcrPages = computed(() => [...(ocrDocument.value?.pages || [])].sort((a, b) => a.page - b.page))
 const ocrBusy = computed(() => ocrTaskState.value === 'preparing' || ocrTaskState.value === 'running')
@@ -973,6 +1065,120 @@ const savePdfFormTextCopy = async (request: { changes: PdfFormTextChange[]; targ
     pdfFormTextError.value = String(cause).replace(/^Error:\s*/, '')
   } finally {
     pdfFormTextWorking.value = false
+  }
+}
+
+const invalidatePdfRedactionVerification = () => {
+  pdfRedactionVerification.value = null
+  pdfRedactionRasterPages.value = []
+  pdfRedactionSourceDigest.value = ''
+  pdfRedactionTradeoffConfirmed.value = false
+  pdfRedactionError.value = ''
+  pdfRedactionProgress.value = { page: 0, total: pdfDocument.value?.numPages || 0 }
+}
+
+const openRedactionPanel = () => {
+  sidebarOpen.value = true
+  sidebarTab.value = 'redaction'
+  areaMode.value = false
+  dismissSelectionTool()
+}
+
+const toggleRedactionMode = () => {
+  openRedactionPanel()
+  redactionMode.value = !redactionMode.value
+}
+
+const createPdfRedaction = (page: number, rect: PdfAnnotationRect) => {
+  if (pdfRedactions.value.length >= MAX_PDF_REDACTION_RECTS) {
+    pdfRedactionError.value = `永久脱敏区域不能超过 ${MAX_PDF_REDACTION_RECTS} 个`
+    redactionMode.value = false
+    return
+  }
+  pdfRedactions.value.push({
+    id: typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `redaction-${Date.now()}-${pdfRedactions.value.length}`,
+    page,
+    color: redactionColor.value,
+    ...rect,
+  })
+  invalidatePdfRedactionVerification()
+}
+
+const removePdfRedaction = (id: string) => {
+  pdfRedactions.value = pdfRedactions.value.filter(rect => rect.id !== id)
+  invalidatePdfRedactionVerification()
+}
+
+const undoPdfRedaction = () => {
+  if (!pdfRedactions.value.length) return
+  pdfRedactions.value = pdfRedactions.value.slice(0, -1)
+  invalidatePdfRedactionVerification()
+}
+
+const clearPdfRedactions = () => {
+  if (!pdfRedactions.value.length || !window.confirm('清空全部永久脱敏框选草稿？源 PDF 不会受到影响。')) return
+  pdfRedactions.value = []
+  redactionMode.value = false
+  invalidatePdfRedactionVerification()
+}
+
+const previewPdfRedactionCopy = async () => {
+  const document = pdfDocument.value
+  if (!document || isExternal.value || !pdfRedactions.value.length || pdfRedactionWorking.value) return
+  pdfRedactionWorking.value = true
+  redactionMode.value = false
+  invalidatePdfRedactionVerification()
+  try {
+    if (pdfSourceLength.value > MAX_PDF_REDACTION_SOURCE_BYTES) throw new Error('永久脱敏只支持不超过 128 MB 的 PDF')
+    const sourceDigest = await digestPdfDocument(document)
+    const pages = await renderPdfRedactionPages(document, pdfRedactions.value, (page, total) => {
+      pdfRedactionProgress.value = { page, total }
+    })
+    const report = await invoke<PdfRedactionCopyReport>('preview_pdf_redaction_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      expectedSourceDigest: sourceDigest,
+      pages,
+    })
+    pdfRedactionVerification.value = report
+    if (report.status === 'isolated_verified' && report.outputDigest) {
+      pdfRedactionRasterPages.value = pages
+      pdfRedactionSourceDigest.value = sourceDigest
+    }
+  } catch (cause) {
+    pdfRedactionError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfRedactionWorking.value = false
+  }
+}
+
+const savePdfRedactionCopy = async () => {
+  const verification = pdfRedactionVerification.value
+  if (!verification?.outputDigest || !pdfRedactionTradeoffConfirmed.value || !pdfRedactionRasterPages.value.length || pdfRedactionSaving.value) return
+  pdfRedactionSaving.value = true
+  pdfRedactionError.value = ''
+  try {
+    const saved = await invoke<PdfSavedRedactionCopyReport>('save_pdf_redaction_copy', {
+      libraryRoot: store.libraryPath,
+      path: pdfPath.value,
+      targetFileName: pdfRedactionCopyName.value.trim(),
+      expectedSourceDigest: pdfRedactionSourceDigest.value,
+      expectedOutputDigest: verification.outputDigest,
+      pages: pdfRedactionRasterPages.value,
+    })
+    if (!saved.sourceUnchanged || !saved.structuralReopenVerified || !saved.textAbsenceReopenVerified || !saved.sourceObjectIsolationReopenVerified) {
+      throw new Error('脱敏副本没有通过完整的落盘复读验证')
+    }
+    const savedName = pdfRedactionCopyName.value.trim()
+    pdfRedactions.value = []
+    redactionMode.value = false
+    invalidatePdfRedactionVerification()
+    message.success(`已永久脱敏并可靠另存：${savedName}`)
+    await openManagedFile(router, saved.targetPath, {}, 'replace')
+  } catch (cause) {
+    pdfRedactionError.value = String(cause).replace(/^Error:\s*/, '')
+  } finally {
+    pdfRedactionSaving.value = false
   }
 }
 
@@ -1616,7 +1822,7 @@ const dismissSelectionTool = () => {
 }
 
 const captureTextSelection = () => {
-  if (areaMode.value || !annotationWritable.value) return
+  if (areaMode.value || redactionMode.value || !annotationWritable.value) return
   window.setTimeout(() => {
     const selection = window.getSelection()
     if (!selection || selection.isCollapsed || !selection.rangeCount) { selectionTool.value.show = false; return }
@@ -1911,11 +2117,24 @@ const loadPdf = async () => {
   pdfFormTextVerification.value = null
   pdfFormTextWorking.value = false
   pdfFormTextError.value = ''
+  pdfRedactions.value = []
+  redactionMode.value = false
+  redactionColor.value = 'black'
+  pdfRedactionVerification.value = null
+  pdfRedactionRasterPages.value = []
+  pdfRedactionSourceDigest.value = ''
+  pdfRedactionWorking.value = false
+  pdfRedactionSaving.value = false
+  pdfRedactionError.value = ''
+  pdfRedactionCopyName.value = ''
+  pdfRedactionTradeoffConfirmed.value = false
+  pdfRedactionProgress.value = { page: 0, total: 0 }
   pagePlan.value = []
   pagePlanUndo.value = []
   pagePlanRedo.value = []
   activePagePlanId.value = ''
   pdfSourceSignature.value = ''
+  pdfSourceLength.value = 0
   pagePlanVerification.value = null
   pagePlanVerificationError.value = ''
   pagePlanCopyName.value = ''
@@ -1953,6 +2172,7 @@ const loadPdf = async () => {
       path: pdfPath.value,
     })
     pdfSourceSignature.value = descriptor.signature
+    pdfSourceLength.value = descriptor.length
     if (!isExternal.value) initializePdfMergeInputs(descriptor.signature)
     if (descriptor.fullData) {
       loadMode.value = 'full'
@@ -2010,7 +2230,7 @@ const loadPdf = async () => {
     const rememberedPage = Number(viewState?.section)
     const restored = Math.max(1, Math.min(document.numPages, routedPage || (Number.isInteger(rememberedPage) ? rememberedPage : 0) || readPositions()[positionId()] || 1))
     if (typeof viewState?.sidebarOpen === 'boolean') sidebarOpen.value = viewState.sidebarOpen
-    const availableSidebarTabs = isExternal.value ? ['thumbnails', 'outline'] : ['thumbnails', 'outline', 'annotations', 'forms', 'ocr', 'organize']
+    const availableSidebarTabs = isExternal.value ? ['thumbnails', 'outline'] : ['thumbnails', 'outline', 'annotations', 'forms', 'redaction', 'ocr', 'organize']
     if (availableSidebarTabs.includes(viewState?.sidebarTab || '')) {
       sidebarTab.value = viewState?.sidebarTab as typeof sidebarTab.value
     }
@@ -2022,6 +2242,7 @@ const loadPdf = async () => {
     pageInput.value = restored
     pdfInsertAnchorPage.value = restored
     pdfInsertCopyName.value = `${fileName.value}-插页.pdf`
+    pdfRedactionCopyName.value = `${fileName.value}-永久脱敏.pdf`
     loading.value = false
     await nextTick()
     if (fitWidth.value) applyFitWidth()
@@ -2095,6 +2316,7 @@ const openOutlineItem = async (item: OutlineEntry) => {
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     areaMode.value = false
+    redactionMode.value = false
     dismissSelectionTool()
   }
   if (!(event.ctrlKey || event.metaKey)) return
@@ -2118,7 +2340,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 const handleResize = () => { if (fitWidth.value) applyFitWidth() }
-const mayDiscardPagePlan = () => !pdfWorkspaceDirty.value || window.confirm('PDF 页面整理或合并草稿尚未生成新文件，离开后将丢失。确定离开吗？')
+const mayDiscardPagePlan = () => !pdfWorkspaceDirty.value || window.confirm('PDF 编辑草稿尚未生成新文件，离开后将丢失页面整理、合并或永久脱敏框选。确定离开吗？')
 const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
   if (!pdfWorkspaceDirty.value) return
   event.preventDefault()
@@ -2134,6 +2356,12 @@ watch([() => route.query.page, () => route.query.annotation], () => {
 watch(searchQuery, () => {
   window.clearTimeout(searchTimer)
   searchTimer = window.setTimeout(runSearch, 220)
+})
+watch(sidebarTab, tab => {
+  if (tab !== 'redaction') redactionMode.value = false
+})
+watch(areaMode, enabled => {
+  if (enabled) redactionMode.value = false
 })
 onBeforeRouteLeave(() => mayDiscardPagePlan())
 onBeforeRouteUpdate((to, from) => String(to.query.path || '') === String(from.query.path || '') || mayDiscardPagePlan())
@@ -2188,6 +2416,7 @@ onBeforeUnmount(async () => {
 .pdf-workspace { min-height: 0; flex: 1; display: flex; }
 .pdf-sidebar { width: 220px; flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--workspace-border-color); background: color-mix(in srgb, var(--theme-card) 96%, #d9dde3); }
 .pdf-sidebar.organize-open,.pdf-sidebar.forms-open { width: 272px; }
+.pdf-sidebar.redaction-open { width: 300px; }
 .sidebar-switch { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; padding: 9px; border-bottom: 1px solid var(--workspace-border-color); }
 .sidebar-switch button { height: 28px; border: 0; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: var(--text-compact); white-space: nowrap; }
 .sidebar-switch button.active { color: var(--workspace-on-accent); background: var(--theme-primary); }
@@ -2209,6 +2438,18 @@ onBeforeUnmount(async () => {
 .annotation-reference-actions { display: grid; grid-template-columns: 1fr 1.35fr; gap: 6px; }.annotation-reference-actions button { min-height: 28px; padding: 4px 6px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: var(--text-compact); line-height: 1.25; }.annotation-reference-actions button:disabled { cursor: default; opacity: .4; }
 .delete-annotation { height: 28px; border: 1px solid rgba(220,76,62,.24); border-radius: 6px; color: var(--status-danger); background: rgba(220,76,62,.06); cursor: pointer; font-size: var(--text-compact); }.delete-annotation:disabled,.annotation-colors button:disabled { cursor: default; opacity: .4; }
 .annotation-save-state { margin-top: 10px; text-align: left; }
+.redaction-panel { min-height: 0; flex: 1; display: flex; flex-direction: column; gap: 9px; overflow: auto; padding: 10px; }
+.redaction-panel :deep(.workspace-state-notice) { flex: none; }
+.redaction-panel :deep(p),.redaction-panel :deep(small) { margin: 0; font-size: var(--text-compact); line-height: 1.5; }
+.redaction-controls { display: grid; gap: 7px; padding: 9px; border: 1px solid var(--workspace-border-color); border-radius: 8px; background: var(--workspace-surface-raised); }
+.redaction-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }.redaction-heading strong { font-size: 11px; }.redaction-heading span { color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.redaction-mode-button,.redaction-verify,.redaction-verification > button { min-height: 31px; border: 1px solid rgba(185,28,28,.3); border-radius: 6px; color: #b42318; background: rgba(185,28,28,.07); cursor: pointer; font-size: var(--text-compact); font-weight: 650; }.redaction-mode-button.active { color: var(--workspace-on-accent); border-color: #991b1b; background: #991b1b; }
+.redaction-colors { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }.redaction-colors button { height: 28px; border: 1px solid #111827; border-radius: 5px; color: var(--workspace-on-accent); background: #111827; cursor: pointer; font-size: var(--text-compact); }.redaction-colors button.white { color: #111827; border-color: #9ca3af; background: #fff; }.redaction-colors button.active { outline: 2px solid var(--theme-primary); outline-offset: 1px; }
+.redaction-controls > small { color: var(--theme-text-secondary); }
+.redaction-list { display: grid; gap: 5px; max-height: 188px; overflow: auto; }.redaction-list > button { display: grid; grid-template-columns: minmax(0,1fr) auto 23px; align-items: center; gap: 6px; min-height: 33px; padding: 4px 5px 4px 8px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-surface-raised); cursor: pointer; text-align: left; }.redaction-list > button > span { display: flex; align-items: center; gap: 6px; }.redaction-list i { width: 12px; height: 12px; border: 1px solid #111827; border-radius: 2px; background: #111827; }.redaction-list i.color-white { background: #fff; }.redaction-list strong,.redaction-list small { font-size: var(--text-compact); }.redaction-list small { color: var(--theme-text-secondary); white-space: nowrap; }.redaction-list b { width: 21px; height: 21px; display: grid; border-radius: 4px; place-items: center; color: var(--status-danger); font-size: 14px; font-weight: 500; }.redaction-list b:hover { background: rgba(185,28,28,.08); }
+.redaction-draft-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }.redaction-draft-actions button { min-height: 28px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text-secondary); background: var(--workspace-control-bg); cursor: pointer; font-size: var(--text-compact); }.redaction-draft-actions button:disabled,.redaction-verify:disabled,.redaction-verification > button:disabled { cursor: default; opacity: .4; }
+.redaction-verification { display: grid; gap: 8px; padding-top: 2px; }.redaction-verification > label { display: grid; gap: 4px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.redaction-verification input[type="text"],.redaction-verification label:not(.redaction-confirm) input { width: 100%; height: 29px; box-sizing: border-box; padding: 0 7px; border: 1px solid var(--workspace-border-color); border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--theme-card); font-size: var(--text-compact); }.redaction-verification .redaction-confirm { grid-template-columns: 16px minmax(0,1fr); align-items: start; gap: 6px; color: var(--theme-text); line-height: 1.45; }.redaction-confirm input { margin: 2px 0 0; accent-color: var(--theme-primary); }
+.redaction-verification > button { color: var(--workspace-on-accent); border-color: #991b1b; background: #991b1b; }
 .ocr-panel { min-height: 0; flex: 1; overflow: auto; padding: 10px; }
 .ocr-summary { display: flex; flex-direction: column; gap: 4px; padding: 10px; border: 1px solid rgba(var(--theme-primary-rgb),.18); border-radius: 8px; background: rgba(var(--theme-primary-rgb),.055); }.ocr-summary strong { font-size: 11px; }.ocr-summary span,.ocr-summary p { margin: 0; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.5; }
 .ocr-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }.ocr-actions button,.ocr-progress button { min-height: 30px; border: 1px solid rgba(var(--theme-primary-rgb),.25); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: var(--text-compact); }
@@ -2254,7 +2495,8 @@ onBeforeUnmount(async () => {
 .page-plan-actions { display: flex; flex-direction: column; gap: 4px; }.page-plan-actions button { width: 34px; padding: 0; font-size: 12px; }.page-plan-actions button:last-child { color: var(--status-danger); font-size: var(--text-compact); }.page-plan-actions button.restore { color: var(--status-success); }
 .selection-annotation-tool { position: fixed; z-index: 50; height: 36px; display: flex; align-items: center; gap: 7px; padding: 0 8px; border: 1px solid var(--workspace-border-color); border-radius: 9px; color: #e8edf3; background: #252a31; box-shadow: var(--workspace-shadow); font-size: var(--text-compact); }
 .selection-annotation-tool .comment-selection { height: 24px; padding: 0 8px; border: 0; border-radius: 5px; color: var(--workspace-on-accent); background: #506073; cursor: pointer; font-size: var(--text-compact); }.selection-annotation-tool .close-selection { width: 22px; height: 22px; padding: 0; border: 0; color: #bbc4cf; background: transparent; cursor: pointer; font-size: 16px; }
-.area-mode-hint { position: fixed; right: 18px; bottom: 18px; z-index: 40; padding: 9px 13px; border: 1px solid rgba(0,122,255,.28); border-radius: 8px; color: var(--workspace-on-accent); background: rgba(20,42,67,.92); box-shadow: var(--workspace-shadow); font-size: var(--text-compact); }
+.area-mode-hint,.redaction-mode-hint { position: fixed; right: 18px; bottom: 18px; z-index: 40; padding: 9px 13px; border: 1px solid rgba(0,122,255,.28); border-radius: 8px; color: var(--workspace-on-accent); background: rgba(20,42,67,.92); box-shadow: var(--workspace-shadow); font-size: var(--text-compact); }
+.redaction-mode-hint { border-color: rgba(248,113,113,.45); background: rgba(127,29,29,.94); }
 .pdf-scroll { min-width: 0; flex: 1; overflow: auto; scroll-behavior: smooth; }
 .page-list { min-width: max-content; display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 30px 32px 60px; }
 .page-shell { position: relative; scroll-margin-top: 22px; }

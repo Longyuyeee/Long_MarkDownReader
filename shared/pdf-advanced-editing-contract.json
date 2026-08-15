@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B3B",
-  "status": "permanent-redaction-backend-complete",
+  "stage": "P1-B3C",
+  "status": "permanent-redaction-workspace-complete",
   "sourcePolicy": "library-only-reliable-copy",
   "externalPolicy": "preview-only",
   "currentCapabilities": [
@@ -15,7 +15,8 @@
     "bounded-unicode-text-form-copy",
     "bounded-checkbox-form-copy",
     "bounded-radio-form-copy",
-    "bounded-single-choice-form-copy"
+    "bounded-single-choice-form-copy",
+    "permanent-redaction-copy"
   ],
   "mandatoryBlockers": [
     "encrypted_pdf_unverified",
@@ -56,9 +57,10 @@
     {
       "id": "P1-B3",
       "name": "permanent-redaction-copy",
-      "status": "raster-backend-complete-workspace-pending",
+      "status": "workspace-complete-desktop-evidence-pending",
       "deliveredContract": "shared/pdf-redaction-safety-contract.json",
-      "currentWriteUserFile": false,
+      "deliveredWorkspace": "src/views/PdfView.vue",
+      "currentWriteUserFile": true,
       "writeUserFile": true,
       "requirements": [
         "content-removal-not-visual-overlay",
