@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.10-U1I",
+  "status": "accepted",
+  "importedAt": "2026-08-15",
+  "githubRunId": 31872858203,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31872858203",
+  "workflowConclusion": "success",
+  "headCommit": "3d7bb9b9af4ac41ca9682f3aa90f7dd25028b747",
+  "previousVersion": "1.0.9",
+  "currentVersion": "1.0.10",
+  "officialInstallerSha256": "598c460c37dd9f3c333f504820c46ef8dd4cf4e6921ef4148b6098fc98632bbe",
+  "installedExecutableSha256": "4b75b7b1d8ac20bd5e3f92a6267b66886aeb99c436f4bc38ab74d03918dd90a1",
+  "authenticodeStatus": "NotSigned",
+  "lifecycleChecks": { "passed": 12, "failed": 0 },
+  "sourceUserContentIncluded": false,
+  "files": [
+    { "path": "managed-updater-available.jpg", "bytes": 48352, "sha256": "78e39927a0e1af9ee68340299bdf16b533971952d946337ce9cbefe82a1a0df7", "visuallyReviewed": true },
+    { "path": "managed-updater-current.jpg", "bytes": 50319, "sha256": "61b5db95132055dce56bde5e9bb6d46cb0a68b8d8f560d17ea28b14807c7b75c", "visuallyReviewed": true },
+    { "path": "managed-updater-discovery-evidence.json", "bytes": 4385, "sha256": "816a679746cff69a32ad3af87632ed26dd69562b11df02f781bc8a0a57fdc4b9" },
+    { "path": "managed-updater-installed-binary.json", "bytes": 650, "sha256": "27cf06ea9153df9d8d1399a47da555bc3eff1972cbeab20277b293ecfe0d0566" },
+    { "path": "managed-updater-installing.jpg", "bytes": 54707, "sha256": "35a294717c1459c73e9b91d003485bafe7dec7473ad4f7c0cbb296c4abbfbaba", "visuallyReviewed": true },
+    { "path": "managed-updater-lifecycle-result.json", "bytes": 4880, "sha256": "11889be3e4a043d0c23f6a901fee49815df05b571eb0a4155dec1e9d9fb5ff82" },
+    { "path": "managed-updater-post-upgrade-evidence.json", "bytes": 3179, "sha256": "9ed205e18694ccf1ef983b076c25e74ed26849d68809c36cc7af5f1f43b64513" },
+    { "path": "managed-updater-post-upgrade-navigation.json", "bytes": 361, "sha256": "d247639d8f10c7d95e967ac485c6d7ff6f75f1f90c734766fd1e196e021ee1a8" },
+    { "path": "official-release-assets.json", "bytes": 998, "sha256": "d17bccc13d7cc1668a948cc191d696724c3e423ab4cb5f6dc2c9f75fa6124f72" }
+  ]
+}
