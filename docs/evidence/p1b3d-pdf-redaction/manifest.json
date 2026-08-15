@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B3D",
+  "status": "accepted",
+  "sourceCommit": "49770b03b852303acf9bb8c26c2d15fb24689e54",
+  "artifacts": [
+    {
+      "file": "runtime-evidence.json",
+      "bytes": 1845,
+      "sha256": "d0b2e51b861a821ad77190522593fbc7401f1c9fe349f6868c8e0fcd9fb052f1"
+    },
+    {
+      "file": "independent-verification.json",
+      "bytes": 960,
+      "sha256": "ab139ae4baadbe6d4fdc35acf45d73bf781e77f9099f31ae8d5017f30f4f429f"
+    },
+    {
+      "file": "redaction-draft-wide.png",
+      "bytes": 96773,
+      "sha256": "a9b7d6313f6ca0c039145b1dc21a67de87203dbf1027dd9bdedf348d671ad16b"
+    },
+    {
+      "file": "redaction-verified-wide.png",
+      "bytes": 103611,
+      "sha256": "c1ae4a30cde3fa5fd08e1d354a5b2962caa9d3ea4a3a3abdb23cd53b77ccbac5"
+    },
+    {
+      "file": "redaction-verified-narrow.png",
+      "bytes": 68652,
+      "sha256": "49fb75019b175277631975417759fcb4dcd89303717a0e79b807730800353399"
+    },
+    {
+      "file": "redaction-saved-reopened.png",
+      "bytes": 72813,
+      "sha256": "3831e7ba89e1ae16039c7b3a0e24737353ce43ee82c1f8fa78ff6bdeecab6d17"
+    },
+    {
+      "file": "poppler-source-page-1.png",
+      "bytes": 40146,
+      "sha256": "bbac745aea67ad2b74a6bb9c570ba7e461c79ccac4667b620917289b2a720d56"
+    },
+    {
+      "file": "poppler-target-page-1.png",
+      "bytes": 109108,
+      "sha256": "f81fdc775f75a21d96c53c66b21fd761567f026d41cd35a01b24a27c9bc26d23"
+    }
+  ],
+  "sourceUserContentIncluded": false
+}

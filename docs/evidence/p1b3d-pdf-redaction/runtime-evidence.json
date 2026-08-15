@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B3D",
+  "sourceCommit": "49770b03b852303acf9bb8c26c2d15fb24689e54",
+  "sourceDigest": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+  "sourceUnchanged": true,
+  "targetDigest": "c0ec0e1a67cd189b3e6d8caeb9cd51c0ea265a0236c6f3801753aeec6d704f37",
+  "targetBytes": 203195,
+  "targetSecretBytesAbsent": true,
+  "draftGuard": {
+    "message": "PDF 编辑草稿尚未生成新文件，离开后将丢失页面整理、合并或永久脱敏框选。确定离开吗？",
+    "routeRetained": true
+  },
+  "draftWide": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 299,
+      "height": 595
+    },
+    "integrated": true,
+    "redactionCount": 1,
+    "verified": false,
+    "tradeoffVisible": false,
+    "saveReachable": false,
+    "errorVisible": false
+  },
+  "verifiedWide": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 299,
+      "height": 595
+    },
+    "integrated": true,
+    "redactionCount": 1,
+    "verified": true,
+    "tradeoffVisible": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "verifiedNarrow": {
+    "viewport": [
+      720,
+      680
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 299,
+      "height": 399
+    },
+    "integrated": true,
+    "redactionCount": 1,
+    "verified": true,
+    "tradeoffVisible": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "reopened": {
+    "route": "#/library?path=\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-p1b3d-30504-1786804460843\\library\\P1B3D+Redaction+Evidence-永久脱敏.pdf",
+    "pageCount": 2,
+    "canvasReady": true,
+    "workspace": true,
+    "errorVisible": false
+  },
+  "runtimeErrorCount": 0,
+  "sourceUserContentIncluded": false,
+  "passed": true
+}

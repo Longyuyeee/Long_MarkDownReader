@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B3D",
+  "engine": "pypdf + Poppler + Pillow",
+  "sourcePages": 2,
+  "targetPages": 2,
+  "sourceTextLength": 269,
+  "targetTextLength": 0,
+  "targetAnnotations": 0,
+  "targetMetadataKeys": [],
+  "targetRender": {
+    "width": 1224,
+    "height": 1584,
+    "blackRatio": 1.0,
+    "publicDarkPixels": 15809
+  },
+  "sourceRenderSha256": "bbac745aea67ad2b74a6bb9c570ba7e461c79ccac4667b620917289b2a720d56",
+  "targetRenderSha256": "f81fdc775f75a21d96c53c66b21fd761567f026d41cd35a01b24a27c9bc26d23",
+  "checks": {
+    "sourceHasSecretText": true,
+    "targetTextEmpty": true,
+    "targetSecretBytesAbsent": true,
+    "pageCountPreserved": true,
+    "annotationsRemoved": true,
+    "acroFormRemoved": true,
+    "outlinesRemoved": true,
+    "metadataAllowlist": true,
+    "redactionOpaqueBlack": true,
+    "publicRegionReadable": true
+  },
+  "sourceUserContentIncluded": false,
+  "passed": true
+}

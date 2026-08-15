@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B3C",
-  "status": "workspace-complete-desktop-evidence-pending",
+  "stage": "P1-B3D",
+  "status": "desktop-and-independent-render-verified",
   "requirement": "library-pdf-permanent-redaction-reliable-copy",
   "currentWriteCapability": true,
   "approvedArchitecture": "fresh-document-full-page-rasterization",
@@ -89,7 +89,9 @@
     {
       "id": "P1-B3D",
       "name": "desktop-reopen-and-independent-render-evidence",
-      "status": "planned",
+      "status": "completed",
+      "deliveredEvidence": "docs/evidence/p1b3d-pdf-redaction/manifest.json",
+      "deliveredAudit": "docs/P1B3D_PDF_Permanent_Redaction_Desktop_Evidence_Audit_2026-08-15.md",
       "writeUserFile": false
     }
   ]

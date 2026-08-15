@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-B3D PDF 永久脱敏最终收口：** 真实 custom-protocol Tauri WebView2 已在 1280×800 与 720×680 完成原右侧工作区框选、草稿离开保护、全页预验证、取舍确认、可靠另存和目标自动复开，外层横向溢出为 0、运行时错误为 0、源摘要不变。Poppler 144 DPI 与 pypdf/Pillow 独立验证目标两页、可提取文字为空、秘密标记不存在、批注/表单/书签/元数据移除、黑框像素 100% 不透明且公开内容可读。P1-B3 已收口，下一步 P1-B4 先做水印副本安全审计。详见 [`P1B3D_PDF_Permanent_Redaction_Desktop_Evidence_Audit_2026-08-15.md`](./P1B3D_PDF_Permanent_Redaction_Desktop_Evidence_Audit_2026-08-15.md)。
+
 > **2026-08-15 P1-B3C PDF 永久脱敏右侧工作区：** 原 `PdfView` 工具栏和侧栏已增加“永久脱敏”，用户可在右侧 PDF.js 页面直接框选黑/白区域、管理草稿、渲染全部页面、预验证并在确认图片型副本损失后可靠另存；没有新增路由或独立界面。全页渲染遵守 64 页、4096 单边、1.2 亿像素和 256 区域预算，矩形按 Rust 同一 `ceil/floor` 边界在 PNG 编码前烧入。IPC 改用严格 Base64 并在 Rust 端限制 256 MB，源/输出摘要、已有目标拒绝、落盘复读、文字为空、源对象隔离和源不变继续生效。下一步 P1-B3D 补真实 Tauri 宽窄屏、自动打开、Poppler 独立渲染与文字清除证据。详见 [`P1B3C_PDF_Permanent_Redaction_Workspace_Audit_2026-08-15.md`](./P1B3C_PDF_Permanent_Redaction_Workspace_Audit_2026-08-15.md)。
 
 > **2026-08-15 P1-B3B PDF 永久脱敏栅格后端：** 新后端要求提交全部页面的不透明 PNG，验证页序、继承页面几何、4096 像素单边/1.2 亿总像素/256 矩形预算，并逐像素确认黑/白矩形已烧入；随后去元数据重编码 JPEG，从空 PDF 创建每页唯一 Image XObject 的白名单对象图。预览绑定源/输出 SHA-256；可靠另存使用同目录新建、目标字节一致、文本提取为空、对象图重开和源摘要不变门禁。缺页、透明、未烧入、签名、已有目标和源覆盖测试均通过；Poppler 合成输出清晰。命令虽已注册，但原 `PdfView` 尚无入口，公开能力仍关闭。下一步 P1-B3C 接入原右侧工作区和 PDF.js 全页渲染。详见 [`P1B3B_PDF_Permanent_Redaction_Backend_Audit_2026-08-15.md`](./P1B3B_PDF_Permanent_Redaction_Backend_Audit_2026-08-15.md)。

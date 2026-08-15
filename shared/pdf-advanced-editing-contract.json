@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B3C",
-  "status": "permanent-redaction-workspace-complete",
+  "stage": "P1-B3D",
+  "status": "permanent-redaction-complete",
   "sourcePolicy": "library-only-reliable-copy",
   "externalPolicy": "preview-only",
   "currentCapabilities": [
@@ -57,9 +57,10 @@
     {
       "id": "P1-B3",
       "name": "permanent-redaction-copy",
-      "status": "workspace-complete-desktop-evidence-pending",
+      "status": "completed",
       "deliveredContract": "shared/pdf-redaction-safety-contract.json",
       "deliveredWorkspace": "src/views/PdfView.vue",
+      "deliveredEvidence": "docs/evidence/p1b3d-pdf-redaction/manifest.json",
       "currentWriteUserFile": true,
       "writeUserFile": true,
       "requirements": [
