@@ -2,6 +2,9 @@ use crate::formats::pdf_annotations::{
     validate_pdf_annotations, PdfAnnotationDocument, PdfAnnotationKind, PdfAnnotationSource,
     MAX_ANNOTATION_FILE_BYTES,
 };
+use crate::formats::pdf_forms::{
+    inspect_pdf_forms, PdfFormInspectionReport, MAX_PDF_FORM_INPUT_BYTES,
+};
 use crate::formats::pdf_ocr::{
     validate_pdf_ocr, PdfOcrDocument, PdfOcrSource, MAX_OCR_SIDECAR_BYTES,
 };
@@ -242,6 +245,29 @@ pub async fn read_pdf_file(library_root: String, path: String) -> Result<Vec<u8>
         ));
     }
     fs::read(file_path).map_err(|error| format!("读取 PDF 失败: {}", error))
+}
+
+#[tauri::command]
+pub async fn inspect_pdf_form_structure(
+    library_root: String,
+    path: String,
+) -> Result<PdfFormInspectionReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file_path = guard.resolve_existing_file(path, &["pdf"])?;
+    let size = file_path
+        .metadata()
+        .map_err(|error| format!("读取 PDF 表单元数据失败: {error}"))?
+        .len();
+    if size > MAX_PDF_FORM_INPUT_BYTES as u64 {
+        return Err("PDF 超过表单检查的 128 MiB 安全上限".into());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let source =
+            fs::read(file_path).map_err(|error| format!("读取 PDF 表单结构失败: {error}"))?;
+        inspect_pdf_forms(&source)
+    })
+    .await
+    .map_err(|error| format!("PDF 表单检查任务失败: {error}"))?
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]

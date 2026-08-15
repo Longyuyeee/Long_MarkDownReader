@@ -21,6 +21,8 @@
     {
       "id": "P1-B2A",
       "name": "acroform-structure-inspection",
+      "status": "backend-complete-ui-pending",
+      "deliveredBackend": "src-tauri/src/formats/pdf_forms.rs",
       "writeUserFile": false,
       "requirements": [
         "canonical-field-tree-and-page-widget-enumeration",

@@ -12,6 +12,7 @@ pub mod odf_content;
 pub mod odt;
 pub mod opml;
 pub mod pdf_annotations;
+pub mod pdf_forms;
 pub mod pdf_ocr;
 pub mod pptx;
 pub mod pptx_edit;
