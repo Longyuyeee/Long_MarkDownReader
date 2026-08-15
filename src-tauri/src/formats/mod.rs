@@ -16,6 +16,7 @@ pub mod pdf_form_fill;
 pub mod pdf_forms;
 pub mod pdf_ocr;
 pub mod pdf_redaction;
+pub mod pdf_watermark;
 pub mod pptx;
 pub mod pptx_edit;
 pub mod raster_image;

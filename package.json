@@ -169,6 +169,7 @@
     "check:p1b3c-pdf-redaction-workspace": "node scripts/check-p1b3c-pdf-redaction-workspace.mjs",
     "check:p1b3d-pdf-redaction-evidence": "node scripts/check-p1b3d-pdf-redaction-evidence.mjs",
     "check:p1b4a-pdf-watermark-safety-audit": "node scripts/check-p1b4a-pdf-watermark-safety-audit.mjs",
+    "check:p1b4b-pdf-watermark-backend": "node scripts/check-p1b4b-pdf-watermark-backend.mjs",
     "audit:media-workspace": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-media-workspace-audit.ps1",
     "check:markdown-code-theme-contrast": "node scripts/check-markdown-code-theme-contrast.mjs",
     "check:code-editor-theme-contract": "node scripts/check-code-editor-theme-contract.mjs",

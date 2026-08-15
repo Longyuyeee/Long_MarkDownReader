@@ -15,6 +15,9 @@ use crate::formats::pdf_redaction::{
     build_pdf_redaction_copy, verify_pdf_redaction_output, PdfRasterizedRedactionPage,
     PdfRedactionCopyReport, PdfRedactionRect, MAX_PDF_REDACTION_RASTER_BYTES,
 };
+use crate::formats::pdf_watermark::{
+    build_pdf_watermark_copy, PdfWatermarkCopyReport, PdfWatermarkSpec,
+};
 use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_new_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -480,6 +483,166 @@ pub struct PdfSavedRedactionCopyReport {
     pub structural_reopen_verified: bool,
     pub text_absence_reopen_verified: bool,
     pub source_object_isolation_reopen_verified: bool,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PdfSavedWatermarkCopyReport {
+    pub status: String,
+    pub engine: String,
+    pub target_path: String,
+    pub target_signature: String,
+    pub target_digest: String,
+    pub source_digest: String,
+    pub source_unchanged: bool,
+    pub watermarked_pages: usize,
+    pub output_bytes: usize,
+    pub watermark_text: String,
+    pub structural_reopen_verified: bool,
+    pub page_geometry_verified: bool,
+    pub preserved_structure_verified: bool,
+    pub watermark_streams_verified: bool,
+    pub watermark_text_verified: bool,
+    pub full_rewrite_verified: bool,
+}
+
+#[tauri::command]
+pub async fn preview_pdf_watermark_copy(
+    library_root: String,
+    path: String,
+    expected_source_digest: String,
+    spec: PdfWatermarkSpec,
+) -> Result<PdfWatermarkCopyReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pdf"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let source = fs::read(source_path).map_err(|error| format!("读取 PDF 失败: {error}"))?;
+        build_pdf_watermark_copy(&source, &expected_source_digest, &spec).map(|(report, _)| report)
+    })
+    .await
+    .map_err(|error| format!("PDF 水印隔离预览任务失败: {error}"))?
+}
+
+fn save_pdf_watermark_copy_to_path(
+    source_path: &Path,
+    target_path: &Path,
+    expected_source_digest: &str,
+    expected_output_digest: &str,
+    spec: &PdfWatermarkSpec,
+) -> Result<PdfSavedWatermarkCopyReport, String> {
+    if source_path == target_path {
+        return Err("PDF 水印可靠另存禁止覆盖源文件".into());
+    }
+    if target_path.exists() {
+        return Err("目标文件已存在；PDF 水印可靠另存不会覆盖现有文件".into());
+    }
+    let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
+    if expected_output_digest.len() != 64
+        || !expected_output_digest
+            .bytes()
+            .all(|value| value.is_ascii_hexdigit())
+    {
+        return Err("PDF 水印隔离输出摘要无效，请重新预览".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 PDF 失败: {error}"))?;
+    let (report, output) = build_pdf_watermark_copy(&source, expected_source_digest, spec)?;
+    if report.status != "isolated_verified" {
+        return Err(format!(
+            "当前 PDF 不能安全添加水印：{}",
+            report.blockers.join(", ")
+        ));
+    }
+    let output = output.ok_or("PDF 水印隔离预览未生成输出")?;
+    if report.output_digest.as_deref() != Some(expected_output_digest.as_str()) {
+        return Err("PDF 水印参数或隔离输出已变化，请重新预览".into());
+    }
+    let source_before_save =
+        fs::read(source_path).map_err(|error| format!("保存前复核源 PDF 失败: {error}"))?;
+    if format!("{:x}", Sha256::digest(&source_before_save)) != report.source_digest {
+        return Err("PDF 源文件在保存前发生变化，请重新预览水印".into());
+    }
+    write_new_bytes(target_path, &output)?;
+    let verification = (|| -> Result<Vec<u8>, String> {
+        let saved =
+            fs::read(target_path).map_err(|error| format!("复读 PDF 水印副本失败: {error}"))?;
+        if saved != output || format!("{:x}", Sha256::digest(&saved)) != expected_output_digest {
+            return Err("PDF 水印副本落盘字节与隔离预览不一致".into());
+        }
+        let (reopened, _) = build_pdf_watermark_copy(&source, expected_source_digest, spec)?;
+        if reopened.output_digest.as_deref() != Some(expected_output_digest.as_str())
+            || !reopened.structural_reopen_verified
+            || !reopened.page_geometry_verified
+            || !reopened.preserved_structure_verified
+            || !reopened.watermark_streams_verified
+            || !reopened.watermark_text_verified
+            || !reopened.full_rewrite_verified
+        {
+            return Err("PDF 水印副本重开验证不一致".into());
+        }
+        Ok(saved)
+    })();
+    let saved = match verification {
+        Ok(saved) => saved,
+        Err(error) => {
+            let _ = fs::remove_file(target_path);
+            return Err(format!("{error}；未通过验证的新目标已清理"));
+        }
+    };
+    let source_after =
+        fs::read(source_path).map_err(|error| format!("保存后复核源 PDF 失败: {error}"))?;
+    let source_unchanged = format!("{:x}", Sha256::digest(&source_after)) == report.source_digest;
+    if !source_unchanged {
+        let _ = fs::remove_file(target_path);
+        return Err("源 PDF 在保存期间发生变化；未通过验证的新目标已清理".into());
+    }
+    let metadata = target_path
+        .metadata()
+        .map_err(|error| format!("读取 PDF 水印副本元数据失败: {error}"))?;
+    Ok(PdfSavedWatermarkCopyReport {
+        status: "saved_verified".into(),
+        engine: report.engine,
+        target_path: target_path.to_string_lossy().into_owned(),
+        target_signature: pdf_signature(&metadata),
+        target_digest: format!("{:x}", Sha256::digest(&saved)),
+        source_digest: report.source_digest,
+        source_unchanged,
+        watermarked_pages: report.watermarked_pages,
+        output_bytes: saved.len(),
+        watermark_text: report.watermark_text,
+        structural_reopen_verified: report.structural_reopen_verified,
+        page_geometry_verified: report.page_geometry_verified,
+        preserved_structure_verified: report.preserved_structure_verified,
+        watermark_streams_verified: report.watermark_streams_verified,
+        watermark_text_verified: report.watermark_text_verified,
+        full_rewrite_verified: report.full_rewrite_verified,
+    })
+}
+
+#[tauri::command]
+pub async fn save_pdf_watermark_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_source_digest: String,
+    expected_output_digest: String,
+    spec: PdfWatermarkSpec,
+) -> Result<PdfSavedWatermarkCopyReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pdf"])?;
+    let target_file_name = validate_pdf_copy_file_name(&target_file_name)?;
+    let target_path =
+        guard.resolve_file_for_write(source_path.with_file_name(target_file_name), &["pdf"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_pdf_watermark_copy_to_path(
+            &source_path,
+            &target_path,
+            &expected_source_digest,
+            &expected_output_digest,
+            &spec,
+        )
+    })
+    .await
+    .map_err(|error| format!("PDF 水印可靠另存任务失败: {error}"))?
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -3045,6 +3208,162 @@ mod tests {
             &pages,
         )
         .is_err());
+    }
+
+    #[test]
+    fn watermark_copy_saves_unicode_new_target_reopens_and_preserves_source() {
+        let workspace = TestWorkspace::new();
+        let source_path = workspace.root.join("watermark-source.pdf");
+        let target_path = workspace.root.join("watermark-copy.pdf");
+        let source = write_two_page_pdf(&source_path);
+        let source_digest = format!("{:x}", Sha256::digest(&source));
+        let spec = PdfWatermarkSpec {
+            text: "项目机密 L".into(),
+            angle_degrees: -35.0,
+            opacity: 0.18,
+            gray: 0.55,
+        };
+        let (preview, output) = build_pdf_watermark_copy(&source, &source_digest, &spec).unwrap();
+        assert_eq!(preview.status, "isolated_verified");
+        assert_eq!(preview.watermarked_pages, 2);
+        assert!(preview.page_geometry_verified);
+        assert!(preview.preserved_structure_verified);
+        assert!(preview.watermark_streams_verified);
+        assert!(preview.watermark_text_verified);
+        assert!(preview.full_rewrite_verified);
+        let output = output.unwrap();
+        assert!(
+            pdf_extract::extract_text_from_mem(&output)
+                .unwrap()
+                .matches("项目机密 L")
+                .count()
+                >= 2
+        );
+        let output_digest = preview.output_digest.clone().unwrap();
+        let saved = save_pdf_watermark_copy_to_path(
+            &source_path,
+            &target_path,
+            &source_digest,
+            &output_digest,
+            &spec,
+        )
+        .unwrap();
+        assert_eq!(saved.status, "saved_verified");
+        assert_eq!(saved.target_digest, output_digest);
+        assert!(saved.source_unchanged);
+        assert!(saved.structural_reopen_verified);
+        assert!(saved.watermark_text_verified);
+        assert_eq!(fs::read(&source_path).unwrap(), source);
+        if let Ok(evidence_root) = std::env::var("LONGEDIT_PDF_WATERMARK_EVIDENCE_DIR") {
+            let evidence_root = PathBuf::from(evidence_root);
+            fs::create_dir_all(&evidence_root).unwrap();
+            fs::write(evidence_root.join("watermark-source.pdf"), &source).unwrap();
+            fs::write(
+                evidence_root.join("watermark-vector-copy.pdf"),
+                fs::read(&target_path).unwrap(),
+            )
+            .unwrap();
+        }
+        assert!(save_pdf_watermark_copy_to_path(
+            &source_path,
+            &target_path,
+            &source_digest,
+            &output_digest,
+            &spec,
+        )
+        .is_err());
+        assert!(save_pdf_watermark_copy_to_path(
+            &source_path,
+            &source_path,
+            &source_digest,
+            &output_digest,
+            &spec,
+        )
+        .is_err());
+
+        let rotated_path = workspace.root.join("watermark-rotated-source.pdf");
+        let rotated = write_single_page_pdf(&rotated_path, "Rotated", 400, 240, 90);
+        let rotated_digest = format!("{:x}", Sha256::digest(&rotated));
+        let (rotated_report, _) =
+            build_pdf_watermark_copy(&rotated, &rotated_digest, &spec).unwrap();
+        assert_eq!(rotated_report.status, "isolated_verified");
+        assert!(rotated_report.page_geometry_verified);
+        assert!(rotated_report.watermark_text_verified);
+    }
+
+    #[test]
+    fn watermark_copy_rejects_unsafe_text_and_signed_pdf() {
+        let workspace = TestWorkspace::new();
+        let source_path = workspace.root.join("watermark-blocked.pdf");
+        let source = write_two_page_pdf(&source_path);
+        let source_digest = format!("{:x}", Sha256::digest(&source));
+        assert!(build_pdf_watermark_copy(
+            &source,
+            &source_digest,
+            &PdfWatermarkSpec {
+                text: "unsafe\u{202e}text".into(),
+                angle_degrees: -35.0,
+                opacity: 0.18,
+                gray: 0.55,
+            },
+        )
+        .is_err());
+
+        let mut signed = Document::load_mem(&source).unwrap();
+        signed.add_object(dictionary! {
+            "Type" => "Sig",
+            "ByteRange" => vec![0.into(), 1.into(), 2.into(), 3.into()],
+        });
+        let mut signed_bytes = Vec::new();
+        signed.save_to(&mut signed_bytes).unwrap();
+        let signed_digest = format!("{:x}", Sha256::digest(&signed_bytes));
+        let (report, output) = build_pdf_watermark_copy(
+            &signed_bytes,
+            &signed_digest,
+            &PdfWatermarkSpec {
+                text: "CONFIDENTIAL".into(),
+                angle_degrees: -35.0,
+                opacity: 0.18,
+                gray: 0.55,
+            },
+        )
+        .unwrap();
+        assert_eq!(report.status, "blocked");
+        assert!(report
+            .blockers
+            .contains(&"digital_signature_or_certification_present".into()));
+        assert!(output.is_none());
+
+        let mut cyclic = Document::with_version("1.7");
+        let pages_id = cyclic.new_object_id();
+        cyclic.objects.insert(
+            pages_id,
+            Object::Dictionary(dictionary! {
+                "Type" => "Pages",
+                "Kids" => vec![Object::Reference(pages_id)],
+                "Count" => 1,
+            }),
+        );
+        let catalog_id = cyclic.add_object(dictionary! {
+            "Type" => "Catalog",
+            "Pages" => Object::Reference(pages_id),
+        });
+        cyclic.trailer.set("Root", Object::Reference(catalog_id));
+        let mut cyclic_bytes = Vec::new();
+        cyclic.save_to(&mut cyclic_bytes).unwrap();
+        let cyclic_digest = format!("{:x}", Sha256::digest(&cyclic_bytes));
+        let cyclic_error = build_pdf_watermark_copy(
+            &cyclic_bytes,
+            &cyclic_digest,
+            &PdfWatermarkSpec {
+                text: "CONFIDENTIAL".into(),
+                angle_degrees: -35.0,
+                opacity: 0.18,
+                gray: 0.55,
+            },
+        )
+        .unwrap_err();
+        assert!(cyclic_error.contains("invalid_or_cyclic_page_tree"));
     }
 
     #[test]
