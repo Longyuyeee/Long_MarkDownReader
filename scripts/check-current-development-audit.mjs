@@ -22,7 +22,7 @@ const counts = matrix.formats.reduce((result, item) => {
 const currentUpdaterMatchesPackage = currentUpdater.status === 'hosted-managed-update-passed'
   && currentUpdater.releases?.current?.version === pkg.version
 const expectedStage = currentUpdaterMatchesPackage
-  ? '当前阶段：**P1-B4 PDF 文字水印已完成真实桌面与独立渲染收口，下一步进入 P1-B5 元数据安全副本**'
+  ? '当前阶段：**P1-B5A PDF 元数据安全合同已冻结，下一步实现可靠新副本后端**'
   : policy.gates?.githubReleasePublished === true
     ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
   : policy.gates?.qualityGatePassed === true
@@ -75,3 +75,4 @@ await import('./check-p1b4a-pdf-watermark-safety-audit.mjs')
 await import('./check-p1b4b-pdf-watermark-backend.mjs')
 await import('./check-p1b4c-pdf-watermark-workspace.mjs')
 await import('./check-p1b4d-pdf-watermark-evidence.mjs')
+await import('./check-p1b5a-pdf-metadata-safety-audit.mjs')

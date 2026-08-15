@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-16 P1-B5A PDF 元数据安全副本审计：** 已冻结资料库内 PDF 标题、作者、主题、关键词四字段的可靠新副本合同；空值表示删除对应键，Creator/Producer/CreationDate/ModDate/Trapped 必须字节保持。此能力明确不是完整隐私清理：正文、批注、附件及其他对象仍可能识别人员。现有 XMP、自定义 Info 键、附件级元数据、签名/认证、加密、PDF/A、异常引用和预算超限均先阻断，避免只改 `/Info` 却留下冲突 XMP 或静默丢弃未知业务字段。本阶段没有命令、UI 或用户文件写入；下一步 P1-B5B 实现完整克隆、规范 Info、摘要锁定、可靠另存和复读后端。详见 [`P1B5A_PDF_Metadata_Copy_Safety_Audit_2026-08-16.md`](./P1B5A_PDF_Metadata_Copy_Safety_Audit_2026-08-16.md)。
+
 > **2026-08-16 P1-B4D PDF 文字水印真实桌面与独立渲染收口：** 真实 Tauri WebView2 已完成资料库源 PDF 打开、原 `PdfView` 水印侧栏、中文“项目机密 P1B4D”、-33°/24%/35% 参数、草稿离开拦截、预验证、风险确认、可靠另存和目标两页复开；1280×800 与 720×680 下侧栏均为 299 px、无文档级溢出、零运行时错误。独立 pypdf + Poppler + Pillow 验证确认源 SHA-256 不变、纵向/横向页面几何保持、原文/链接批注/元数据保持、每页中文水印可提取、trailer 无增量 `/Prev` 且 144 DPI 水印可见无裁切。P1-B4 至此收口，下一步 P1-B5A 元数据安全审计。详见 [`P1B4D_PDF_Watermark_Desktop_Evidence_Audit_2026-08-16.md`](./P1B4D_PDF_Watermark_Desktop_Evidence_Audit_2026-08-16.md)。
 
 > **2026-08-16 P1-B4C PDF 文字水印原右侧工作区：** 已在原 `PdfView` 工具栏与侧栏加入“文字水印”，没有新增路由、独立窗口或另一套视觉体系。资料库内 PDF 可填写 1～64 字符文字，调整 -60～60 度、8%～50% 透明度和受限灰度，并查看轻量样式预览；“生成并验证”调用 B4B 后端，只有结构、几何、交互清单、水印流、Unicode 文字和全量重写全部通过后才显示可靠另存。保存前必须确认水印可搜索、提取、编辑或移除且不等于脱敏，落盘复读通过后在同一管理工作流打开目标副本。水印文字草稿进入标题脏标记、路由离开与关闭保护；外部 PDF 不显示入口。下一步 P1-B4D 采集真实 Tauri 宽窄屏、草稿保护、保存复开和独立 Poppler/pypdf 证据。详见 [`P1B4C_PDF_Watermark_Workspace_Audit_2026-08-16.md`](./P1B4C_PDF_Watermark_Workspace_Audit_2026-08-16.md)。

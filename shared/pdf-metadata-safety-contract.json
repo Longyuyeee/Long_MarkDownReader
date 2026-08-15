@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B5A",
+  "status": "safety-audit-complete-backend-pending",
+  "requirement": "library-pdf-bounded-descriptive-metadata-reliable-copy",
+  "currentWriteCapability": false,
+  "securityMeaning": "descriptive-document-properties-only-not-complete-privacy-scrubbing",
+  "approvedArchitecture": "full-rewrite-source-clone-plus-canonical-info-dictionary",
+  "editableFields": [
+    {
+      "id": "title",
+      "pdfInfoKey": "Title",
+      "maximumUnicodeScalars": 256,
+      "emptyMeaning": "remove-key"
+    },
+    {
+      "id": "author",
+      "pdfInfoKey": "Author",
+      "maximumUnicodeScalars": 256,
+      "emptyMeaning": "remove-key"
+    },
+    {
+      "id": "subject",
+      "pdfInfoKey": "Subject",
+      "maximumUnicodeScalars": 512,
+      "emptyMeaning": "remove-key"
+    },
+    {
+      "id": "keywords",
+      "pdfInfoKey": "Keywords",
+      "maximumUnicodeScalars": 512,
+      "emptyMeaning": "remove-key"
+    }
+  ],
+  "inputConstraints": {
+    "libraryOnly": true,
+    "externalPdfWrite": false,
+    "sourceOverwrite": false,
+    "existingTargetOverwrite": false,
+    "maxSourceBytes": 134217728,
+    "maxPages": 512,
+    "maxInfoEntries": 32,
+    "maxDecodedInfoBytes": 65536,
+    "textEncoding": "PDFDocEncoding-or-UTF16BE-with-BOM",
+    "controlsBidiOverridesAndNulls": false,
+    "xmpPolicy": "inventory-and-block-until-synchronized-write-is-verified"
+  },
+  "hardBlockers": [
+    "encrypted_pdf_unverified",
+    "digital_signature_or_certification_present",
+    "pdfa_conformance_unverified",
+    "malformed_or_cyclic_info_dictionary",
+    "info_dictionary_budget_exceeded",
+    "custom_info_keys_present",
+    "xmp_packet_present_write_unverified",
+    "embedded_file_metadata_cleanup_unverified",
+    "invalid_text_encoding_or_forbidden_control",
+    "source_digest_changed",
+    "source_or_output_budget_exceeded",
+    "existing_target_path"
+  ],
+  "preservedInfoKeys": [
+    "Creator",
+    "Producer",
+    "CreationDate",
+    "ModDate",
+    "Trapped"
+  ],
+  "preservationInvariants": [
+    "source-file-and-existing-targets-are-never-overwritten",
+    "output-is-a-full-new-revision-with-no-trailer-Prev-chain",
+    "only-Title-Author-Subject-and-Keywords-may-change-or-be-removed",
+    "Creator-Producer-CreationDate-ModDate-and-Trapped-remain-byte-equivalent",
+    "page-count-order-geometry-content-forms-links-annotations-outlines-attachments-and-tags-remain-equivalent",
+    "unknown-info-keys-and-existing-XMP-cause-a-blocker-instead-of-partial-editing",
+    "source-sha256-before-and-after-match"
+  ],
+  "verificationGates": [
+    "source-sha256-before-and-after-match",
+    "preview-output-sha256-locks-the-save-request",
+    "saved-target-byte-identity-matches-preview-output",
+    "saved-target-reopens-and-canonical-info-values-match-request",
+    "cleared-allowlisted-fields-are-absent-not-empty-stale-values",
+    "preserved-info-keys-remain-byte-equivalent",
+    "non-metadata-structure-inventory-matches-source",
+    "independent-pypdf-read-confirms-requested-values-and-source-preservation",
+    "independent-poppler-render-confirms-pages-remain-visually-equivalent"
+  ],
+  "explicitUserDisclosures": [
+    "metadata-copy-edits-only-four-descriptive-document-properties",
+    "this-is-not-complete-privacy-scrubbing-or-anonymization",
+    "document-content-attachments-annotations-and-other-embedded-data-may-still-identify-people",
+    "existing-XMP-or-custom-metadata-is-blocked-rather-than-silently-discarded",
+    "output-is-a-new-copy-and-the-source-remains-unchanged"
+  ],
+  "rejectedApproaches": [
+    "editing-only-Info-while-leaving-conflicting-XMP",
+    "deleting-all-metadata-without-an-explicit-separate-privacy-contract",
+    "silently-dropping-custom-info-keys-or-XMP-namespaces",
+    "incremental-update-that-keeps-old-metadata-revisions",
+    "rewriting-Creator-Producer-or-timestamps-as-an-edit-side-effect",
+    "marketing-four-field-editing-as-complete-anonymization",
+    "silent-source-overwrite"
+  ],
+  "implementationSlices": [
+    {
+      "id": "P1-B5A",
+      "name": "metadata-threat-model-and-safe-subset",
+      "status": "completed",
+      "writeUserFile": false
+    },
+    {
+      "id": "P1-B5B",
+      "name": "canonical-info-reliable-copy-backend",
+      "status": "planned",
+      "writeUserFile": false
+    },
+    {
+      "id": "P1-B5C",
+      "name": "original-workspace-and-desktop-evidence",
+      "status": "planned",
+      "writeUserFile": false
+    }
+  ]
+}
