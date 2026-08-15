@@ -6,7 +6,7 @@ const registry = JSON.parse(fs.readFileSync('shared/file-formats.json', 'utf8'))
 const audit = fs.readFileSync('docs/P1B1_PDF_Safety_Boundary_Audit_2026-08-15.md', 'utf8')
 const fail = message => { console.error(message); process.exit(1) }
 
-if (!['P1-B1', 'P1-B2B1', 'P1-B2B2', 'P1-B2B3', 'P1-B2B4'].includes(contract.stage) || !['audit-complete', 'text-form-copy-backend-complete', 'text-form-copy-workspace-complete', 'unicode-text-form-copy-complete', 'checkbox-form-copy-complete'].includes(contract.status) || contract.plannedSlices?.length !== 5) fail('P1-B1 contract lineage is incomplete')
+if (!['P1-B1', 'P1-B2B1', 'P1-B2B2', 'P1-B2B3', 'P1-B2B4', 'P1-B2B5'].includes(contract.stage) || !['audit-complete', 'text-form-copy-backend-complete', 'text-form-copy-workspace-complete', 'unicode-text-form-copy-complete', 'checkbox-form-copy-complete', 'radio-form-copy-complete'].includes(contract.status) || contract.plannedSlices?.length !== 5) fail('P1-B1 contract lineage is incomplete')
 for (const token of ['encrypted_pdf_unverified', 'digital_signature_unverified', 'acroform_unverified', 'save_pdf_page_plan_copy', 'save_pdf_page_range_copy', 'save_pdf_merge_copy', 'save_pdf_insert_copy', 'write_pdf_annotations', 'write_pdf_ocr']) {
   if (!backend.includes(token)) fail(`P1-B1 backend fact is missing: ${token}`)
 }

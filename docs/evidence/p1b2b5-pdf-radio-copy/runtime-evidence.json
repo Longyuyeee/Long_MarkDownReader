@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B2B5",
+  "wide": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 271.20001220703125,
+      "height": 626.4000244140625
+    },
+    "integrated": true,
+    "radioCount": 2,
+    "selectedValue": "Professional",
+    "hasVerified": true,
+    "hasNoOverwrite": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "narrow": {
+    "viewport": [
+      720,
+      680
+    ],
+    "overflow": 0,
+    "panel": {
+      "width": 271.20001220703125,
+      "height": 432.8000183105469
+    },
+    "integrated": true,
+    "radioCount": 2,
+    "selectedValue": "Professional",
+    "hasVerified": true,
+    "hasNoOverwrite": true,
+    "saveReachable": true,
+    "errorVisible": false
+  },
+  "sourceDigest": "78f31199a8d6bf09fdb730d409a0220793da167d772332c0dc15a1189bcd048a",
+  "sourceUnchanged": true,
+  "targetBytes": 2415,
+  "targetDigest": "859aee39723c5c3c61912b947f9e2722c99709fc9c6b0cbda0c3164d5c053da7",
+  "reopened": {
+    "status": "inspectable",
+    "fieldValue": "Professional",
+    "buttonKind": "radio",
+    "buttonExportValues": [
+      "Professional",
+      "Standard"
+    ],
+    "widgetStates": [
+      {
+        "appearanceStates": [
+          "Off",
+          "Standard"
+        ],
+        "appearanceState": "Off"
+      },
+      {
+        "appearanceStates": [
+          "Off",
+          "Professional"
+        ],
+        "appearanceState": "Professional"
+      }
+    ]
+  },
+  "sourceRender": {
+    "canvas": [
+      612,
+      792
+    ],
+    "standard": {
+      "rect": [
+        72,
+        202,
+        92,
+        222
+      ],
+      "darkPixels": 112
+    },
+    "professional": {
+      "rect": [
+        72,
+        242,
+        92,
+        262
+      ],
+      "darkPixels": 60
+    }
+  },
+  "render": {
+    "canvas": [
+      612,
+      792
+    ],
+    "standard": {
+      "rect": [
+        72,
+        202,
+        92,
+        222
+      ],
+      "darkPixels": 60
+    },
+    "professional": {
+      "rect": [
+        72,
+        242,
+        92,
+        262
+      ],
+      "darkPixels": 112
+    }
+  },
+  "runtimeErrorCount": 0,
+  "sourceUserContentIncluded": false,
+  "passed": true
+}
