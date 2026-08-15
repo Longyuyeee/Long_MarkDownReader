@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B4B",
-  "status": "isolated-vector-backend-complete-workspace-pending",
+  "stage": "P1-B4C",
+  "status": "workspace-complete-desktop-evidence-pending",
   "requirement": "library-pdf-bounded-text-watermark-reliable-copy",
-  "currentWriteCapability": false,
+  "currentWriteCapability": true,
   "backendWriteCapability": true,
   "securityMeaning": "visible-attribution-only-not-redaction-drm-or-access-control",
   "approvedArchitecture": "full-rewrite-source-clone-plus-isolated-overlay-content-stream",
@@ -115,7 +115,9 @@
     {
       "id": "P1-B4C",
       "name": "original-workspace-watermark-panel",
-      "status": "planned",
+      "status": "completed",
+      "deliveredWorkspace": "src/components/pdf/PdfWatermarkPanel.vue",
+      "integratedHost": "src/views/PdfView.vue",
       "writeUserFile": true
     },
     {

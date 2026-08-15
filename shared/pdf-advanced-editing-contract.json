@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B4B",
-  "status": "watermark-backend-complete",
+  "stage": "P1-B4C",
+  "status": "watermark-workspace-complete",
   "sourcePolicy": "library-only-reliable-copy",
   "externalPolicy": "preview-only",
   "currentCapabilities": [
@@ -16,7 +16,8 @@
     "bounded-checkbox-form-copy",
     "bounded-radio-form-copy",
     "bounded-single-choice-form-copy",
-    "permanent-redaction-copy"
+    "permanent-redaction-copy",
+    "watermark-copy"
   ],
   "mandatoryBlockers": [
     "encrypted_pdf_unverified",
@@ -72,11 +73,12 @@
     {
       "id": "P1-B4",
       "name": "watermark-copy",
-      "status": "isolated-vector-backend-complete-workspace-pending",
+      "status": "workspace-complete-desktop-evidence-pending",
       "deliveredContract": "shared/pdf-watermark-safety-contract.json",
       "deliveredBackend": "src-tauri/src/formats/pdf_watermark.rs",
       "backendWriteUserFile": true,
-      "currentWriteUserFile": false,
+      "deliveredWorkspace": "src/components/pdf/PdfWatermarkPanel.vue",
+      "currentWriteUserFile": true,
       "writeUserFile": true,
       "requirements": [
         "bounded-text-watermark",
