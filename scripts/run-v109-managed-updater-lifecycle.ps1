@@ -30,6 +30,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$currentStage = "V$CurrentVersion-U1"
 
 if (-not $ConfirmDisposableMachine -or -not $AllowInstallerMutation) {
     throw "Managed updater lifecycle requires both -ConfirmDisposableMachine and -AllowInstallerMutation."
@@ -205,7 +206,7 @@ $checks = New-Object System.Collections.Generic.List[object]
 
 New-Item -ItemType Directory -Path $OutputDirectory, $libraryRoot, $webViewRoot, $configRoot -Force | Out-Null
 [IO.File]::WriteAllText($libraryMarker, "MANAGED_UPDATER_LIBRARY_MUST_SURVIVE", [Text.UTF8Encoding]::new($false))
-[IO.File]::WriteAllText($configMarker, '{"stage":"V1.0.9-U1","retain":true}', [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText($configMarker, "{`"stage`":`"$currentStage`",`"retain`":true}", [Text.UTF8Encoding]::new($false))
 $config = [ordered]@{
     libraries = @([ordered]@{
         name = "Managed Updater Synthetic Vault"
@@ -246,7 +247,7 @@ try {
     if (-not (Test-Path -LiteralPath $mainBinary -PathType Leaf) -or (Get-BinaryVersion $mainBinary) -ne $PreviousVersion) {
         throw "Official previous version was not installed into the isolated root."
     }
-    $checks.Add([ordered]@{ id = "official-v1.0.8-fresh-install"; status = "passed"; version = $PreviousVersion; installerSha256 = $previousInstallerSha256 })
+    $checks.Add([ordered]@{ id = "official-v$PreviousVersion-fresh-install"; status = "passed"; version = $PreviousVersion; installerSha256 = $previousInstallerSha256 })
 
     $env:LONGEDIT_E2E_LIBRARY = $libraryRoot
     $env:LONGEDIT_E2E_THEME = "white"
@@ -326,7 +327,7 @@ try {
     $matchesStandaloneReference = $installedExecutableSha256 -eq $ReleaseExecutableReferenceSha256.ToLowerInvariant()
     $installedBinaryReceipt = [ordered]@{
         schemaVersion = 1
-        stage = "V1.0.9-U1-INSTALLED-BINARY"
+        stage = "$currentStage-INSTALLED-BINARY"
         capturedAt = (Get-Date).ToUniversalTime().ToString("o")
         status = "recorded"
         version = $CurrentVersion
@@ -404,7 +405,7 @@ try {
 
     $result = [ordered]@{
         schemaVersion = 1
-        stage = "V1.0.9-U1"
+        stage = $currentStage
         capturedAt = (Get-Date).ToUniversalTime().ToString("o")
         environment = "GitHub-hosted disposable Windows official community release update"
         status = "passed"
@@ -437,7 +438,7 @@ try {
         ($result | ConvertTo-Json -Depth 8),
         [Text.UTF8Encoding]::new($false)
     )
-    Write-Host "v1.0.8 -> v1.0.9 managed updater lifecycle and automatic relaunch passed."
+    Write-Host "v$PreviousVersion -> v$CurrentVersion managed updater lifecycle and automatic relaunch passed."
 }
 finally {
     if ($startedProcess -and -not $startedProcess.HasExited) {

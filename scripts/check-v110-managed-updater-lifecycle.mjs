@@ -60,12 +60,15 @@ requireTokens(runner, [
   'automatic-relaunch-after-managed-update',
   'post-upgrade-reports-current',
   'uninstall-retains-user-data',
+  '$currentStage = "V$CurrentVersion-U1"',
+  'official-v$PreviousVersion-fresh-install',
 ], 'managed updater runner')
 requireTokens(probe, [
   "invokeTauri('check_community_update')",
   "document.querySelector('.update-modal')",
   "textContent?.includes('下载并安装')",
   'installerStartedBeforeConfirmation: false',
+  'const currentStage = `V${currentVersion}-U1`',
 ], 'managed updater probe')
 for (const token of ['v1.0.9', 'v1.0.10', '用户确认', 'SHA-256', '自动重启', '资料保留', '托管 Windows']) {
   if (!audit.includes(token)) fail(`v1.0.10 updater audit missing: ${token}`)
