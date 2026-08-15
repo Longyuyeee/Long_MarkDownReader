@@ -28,6 +28,11 @@ requireTokens(engine, 'Bounded raster engine', [
   'fliph()',
   'flipv()',
   'resize_exact',
+  'crop_imm',
+  'JpegEncoder::new_with_quality',
+  'apply_orientation',
+  'metadata_removed: true',
+  'normalizes_exif_orientation_before_cropping_and_strips_metadata',
   '结构复读尺寸',
   'rejects_preview_only_and_unknown_output_formats',
 ])
@@ -41,6 +46,7 @@ requireTokens(commands, 'Reliable image copy commands', [
   'remove_created_image_if_exact',
   'source_unchanged: true',
   'target_reopened: true',
+  'metadata_removed: transformed.metadata_removed',
   'saves_verified_copy_without_changing_or_overwriting_source',
 ])
 requireTokens(tauriLib, 'Tauri command registration', [

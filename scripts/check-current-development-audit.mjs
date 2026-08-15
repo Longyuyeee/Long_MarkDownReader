@@ -22,7 +22,7 @@ const counts = matrix.formats.reduce((result, item) => {
 const currentUpdaterMatchesPackage = currentUpdater.status === 'hosted-managed-update-passed'
   && currentUpdater.releases?.current?.version === pkg.version
 const expectedStage = currentUpdaterMatchesPackage
-  ? '当前阶段：**P1 图片基础编辑：A2 右侧工作区与可靠副本已验收，A3 裁剪、压缩和隐私清理待开发**'
+  ? '当前阶段：**P1 图片基础编辑：A3A 裁剪、JPEG 质量与隐私清理后端已完成，A3B 右侧交互待开发**'
   : policy.gates?.githubReleasePublished === true
     ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
   : policy.gates?.qualityGatePassed === true

@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-A3A 图片裁剪与隐私后端：** 图片可靠副本内核已增加旋转/翻转后有界裁剪、JPEG 1–100 质量控制、EXIF 方向归一和像素级重新编码元数据清理。合成 EXIF Orientation=6 JPEG 已验证尺寸从 2×3 归一为 3×2，输出不含 EXIF 标记；越界裁剪、非 JPEG 质量参数和非法质量均阻断。公开能力暂不扩写，下一步 P1-A3B 在既有右侧图片编辑面板接入交互并补真实桌面证据。详见 [`P1A3A_Image_Crop_Compression_Privacy_Backend_Audit_2026-08-15.md`](./P1A3A_Image_Crop_Compression_Privacy_Backend_Audit_2026-08-15.md)。
+
 > **2026-08-15 P1-A2 图片编辑工作区验收：** 资料库内 PNG/JPEG/WebP/BMP 已在原有右侧 `MediaViewerView` 中提供旋转、翻转、锁定比例缩放、格式转换和可靠另存；外部图片及 GIF/ICO/AVIF 仍只读。真实 Tauri WebView2 在 1280×800 与 720×680 下验证无文档横向溢出、面板保持可达，960×540 PNG 变换为 480×270 WebP 后完成原图不变、落盘复读和副本重开。下一步进入 P1-A3 裁剪、压缩质量和隐私元数据清理。
 
 > **2026-08-15 P1-A1 图片可靠另存内核：** PNG/JPEG/WebP/BMP 已具备有界旋转、翻转、缩放和格式转换后端；源 SHA-256 冲突保护、知识库路径边界、目标不覆盖、原子新建、落盘复读及源文件不变均有测试与机器合同。GIF/ICO/AVIF 和外部媒体仍只读。本阶段尚未改公开能力声明，接手后进入 P1-A2，只在现有右侧 `MediaViewerView` 接入编辑 UI，完成桌面证据后再更新注册表。详见 [`P1A1_Image_Transform_Copy_Backend_Audit_2026-08-15.md`](./P1A1_Image_Transform_Copy_Backend_Audit_2026-08-15.md)。
