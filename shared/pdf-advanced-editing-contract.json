@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B2B3",
-  "status": "unicode-text-form-copy-complete",
+  "stage": "P1-B2B4",
+  "status": "checkbox-form-copy-complete",
   "sourcePolicy": "library-only-reliable-copy",
   "externalPolicy": "preview-only",
   "currentCapabilities": [
@@ -12,7 +12,8 @@
     "page-range-extract-copy",
     "merge-copy",
     "insert-copy",
-    "bounded-unicode-text-form-copy"
+    "bounded-unicode-text-form-copy",
+    "bounded-checkbox-form-copy"
   ],
   "mandatoryBlockers": [
     "encrypted_pdf_unverified",
@@ -37,7 +38,7 @@
     {
       "id": "P1-B2B",
       "name": "bounded-acroform-fill-copy",
-      "status": "unicode-text-complete-additional-field-types-pending",
+      "status": "checkbox-complete-radio-choice-pending",
       "deliveredTextBackend": "src-tauri/src/formats/pdf_form_fill.rs",
       "deliveredTextWorkspace": "src/components/pdf/PdfFormInspectorPanel.vue",
       "writeUserFile": true,

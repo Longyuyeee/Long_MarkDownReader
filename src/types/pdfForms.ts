@@ -4,6 +4,8 @@ export interface PdfFormFieldSummary {
   value?: string | null
   defaultValue?: string | null
   optionCount: number
+  buttonKind?: 'checkbox' | 'radio' | 'pushbutton'
+  buttonExportValues: string[]
   widgetCount: number
   readOnly: boolean
   required: boolean
@@ -20,6 +22,8 @@ export interface PdfFormWidgetSummary {
   fieldType: string
   linkedToCanonicalField: boolean
   hasNormalAppearance: boolean
+  appearanceStates: string[]
+  appearanceState?: string | null
   hasActions: boolean
 }
 
@@ -52,6 +56,7 @@ export interface PdfFormTextFillReport {
   outputBytes: number
   changedFields: string[]
   appearanceStreamsWritten: number
+  widgetStatesWritten: number
   fieldTreeVerified: boolean
   widgetAppearancesVerified: boolean
   blockers: string[]
@@ -62,4 +67,5 @@ export interface PdfSavedFormTextReport {
   targetDigest: string
   sourceUnchanged: boolean
   changedFields: string[]
+  widgetStatesWritten: number
 }

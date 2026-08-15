@@ -939,7 +939,7 @@ const previewPdfFormTextCopy = async (changes: PdfFormTextChange[]) => {
   pdfFormTextWorking.value = true
   pdfFormTextError.value = ''
   try {
-    pdfFormTextVerification.value = await invoke<PdfFormTextFillReport>('preview_pdf_form_text_copy', {
+    pdfFormTextVerification.value = await invoke<PdfFormTextFillReport>('preview_pdf_form_copy', {
       libraryRoot: store.libraryPath,
       path: pdfPath.value,
       expectedSourceDigest: pdfFormInspection.value.sourceDigest,
@@ -959,7 +959,7 @@ const savePdfFormTextCopy = async (request: { changes: PdfFormTextChange[]; targ
   pdfFormTextWorking.value = true
   pdfFormTextError.value = ''
   try {
-    const saved = await invoke<PdfSavedFormTextReport>('save_pdf_form_text_copy', {
+    const saved = await invoke<PdfSavedFormTextReport>('save_pdf_form_copy', {
       libraryRoot: store.libraryPath,
       path: pdfPath.value,
       targetFileName: request.targetFileName,

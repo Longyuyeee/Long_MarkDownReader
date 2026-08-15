@@ -2,11 +2,11 @@ use crate::formats::pdf_annotations::{
     validate_pdf_annotations, PdfAnnotationDocument, PdfAnnotationKind, PdfAnnotationSource,
     MAX_ANNOTATION_FILE_BYTES,
 };
-use crate::formats::pdf_forms::{
-    inspect_pdf_forms, PdfFormInspectionReport, MAX_PDF_FORM_INPUT_BYTES,
-};
 use crate::formats::pdf_form_fill::{
     build_pdf_text_form_copy, PdfFormTextChange, PdfFormTextFillReport,
+};
+use crate::formats::pdf_forms::{
+    inspect_pdf_forms, PdfFormInspectionReport, MAX_PDF_FORM_INPUT_BYTES,
 };
 use crate::formats::pdf_ocr::{
     validate_pdf_ocr, PdfOcrDocument, PdfOcrSource, MAX_OCR_SIDECAR_BYTES,
@@ -284,6 +284,7 @@ pub struct PdfSavedFormTextReport {
     pub source_unchanged: bool,
     pub changed_fields: Vec<String>,
     pub appearance_streams_written: usize,
+    pub widget_states_written: usize,
     pub field_tree_verified: bool,
     pub widget_appearances_verified: bool,
 }
@@ -298,13 +299,23 @@ pub async fn preview_pdf_form_text_copy(
     let guard = WorkspaceGuard::new(library_root)?;
     let source_path = guard.resolve_existing_file(path, &["pdf"])?;
     tauri::async_runtime::spawn_blocking(move || {
-        let source = fs::read(source_path)
-            .map_err(|error| format!("读取 PDF 表单源文件失败: {error}"))?;
+        let source =
+            fs::read(source_path).map_err(|error| format!("读取 PDF 表单源文件失败: {error}"))?;
         build_pdf_text_form_copy(&source, &expected_source_digest, &changes)
             .map(|(report, _)| report)
     })
     .await
     .map_err(|error| format!("PDF 表单隔离填写任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_pdf_form_copy(
+    library_root: String,
+    path: String,
+    expected_source_digest: String,
+    changes: Vec<PdfFormTextChange>,
+) -> Result<PdfFormTextFillReport, String> {
+    preview_pdf_form_text_copy(library_root, path, expected_source_digest, changes).await
 }
 
 fn save_pdf_form_text_copy_to_path(
@@ -320,33 +331,51 @@ fn save_pdf_form_text_copy_to_path(
     if target_path.exists() {
         return Err("目标文件已存在；PDF 表单可靠另存不会覆盖现有文件".into());
     }
-    let source = fs::read(source_path).map_err(|error| format!("读取 PDF 表单源文件失败: {error}"))?;
-    let (preview, output) = build_pdf_text_form_copy(
-        &source,
-        expected_source_digest,
-        changes,
-    )?;
+    let source =
+        fs::read(source_path).map_err(|error| format!("读取 PDF 表单源文件失败: {error}"))?;
+    let (preview, output) = build_pdf_text_form_copy(&source, expected_source_digest, changes)?;
     if preview.status != "isolated_verified" {
-        return Err(format!("PDF 表单包含未验证特性：{}", preview.blockers.join(", ")));
+        return Err(format!(
+            "PDF 表单包含未验证特性：{}",
+            preview.blockers.join(", ")
+        ));
     }
     let output = output.ok_or("PDF 表单隔离填写未生成输出")?;
     let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
     if preview.output_digest.as_deref() != Some(expected_output_digest.as_str()) {
         return Err("PDF 表单填写内容或隔离输出已变化，请重新预览".into());
     }
-    if format!("{:x}", Sha256::digest(&fs::read(source_path).map_err(|error| format!("保存前复核源 PDF 失败: {error}"))?)) != preview.source_digest {
+    if format!(
+        "{:x}",
+        Sha256::digest(
+            &fs::read(source_path).map_err(|error| format!("保存前复核源 PDF 失败: {error}"))?
+        )
+    ) != preview.source_digest
+    {
         return Err("PDF 源文件在保存前发生变化，请重新检查表单".into());
     }
     write_new_bytes(target_path, &output)?;
     let verification = (|| -> Result<(Vec<u8>, PdfFormInspectionReport), String> {
-        let saved = fs::read(target_path).map_err(|error| format!("复读 PDF 表单副本失败: {error}"))?;
+        let saved =
+            fs::read(target_path).map_err(|error| format!("复读 PDF 表单副本失败: {error}"))?;
         if saved != output || format!("{:x}", Sha256::digest(&saved)) != expected_output_digest {
             return Err("PDF 表单副本落盘字节与隔离输出不一致".into());
         }
         let inspection = inspect_pdf_forms(&saved)?;
         if !inspection.blockers.is_empty()
-            || !changes.iter().all(|change| inspection.fields.iter().any(|field| field.name == change.field_name && field.value.as_deref() == Some(change.value.as_str())))
-            || !changes.iter().all(|change| inspection.widgets.iter().filter(|widget| widget.field_name == change.field_name).all(|widget| widget.has_normal_appearance))
+            || !changes.iter().all(|change| {
+                inspection.fields.iter().any(|field| {
+                    field.name == change.field_name
+                        && field.value.as_deref() == Some(change.value.as_str())
+                })
+            })
+            || !changes.iter().all(|change| {
+                inspection
+                    .widgets
+                    .iter()
+                    .filter(|widget| widget.field_name == change.field_name)
+                    .all(|widget| widget.has_normal_appearance)
+            })
         {
             return Err("PDF 表单副本重开后字段树、Widget 或外观不一致".into());
         }
@@ -359,13 +388,16 @@ fn save_pdf_form_text_copy_to_path(
             return Err(format!("{error}；未通过验证的新目标已清理"));
         }
     };
-    let source_after = fs::read(source_path).map_err(|error| format!("保存后复核源 PDF 失败: {error}"))?;
+    let source_after =
+        fs::read(source_path).map_err(|error| format!("保存后复核源 PDF 失败: {error}"))?;
     let source_unchanged = format!("{:x}", Sha256::digest(&source_after)) == preview.source_digest;
     if !source_unchanged {
         let _ = fs::remove_file(target_path);
         return Err("源 PDF 在保存期间发生变化；未通过验证的新目标已清理".into());
     }
-    let metadata = target_path.metadata().map_err(|error| format!("读取 PDF 表单副本元数据失败: {error}"))?;
+    let metadata = target_path
+        .metadata()
+        .map_err(|error| format!("读取 PDF 表单副本元数据失败: {error}"))?;
     Ok(PdfSavedFormTextReport {
         status: "saved_verified".into(),
         engine: preview.engine,
@@ -375,6 +407,7 @@ fn save_pdf_form_text_copy_to_path(
         source_unchanged,
         changed_fields: preview.changed_fields,
         appearance_streams_written: preview.appearance_streams_written,
+        widget_states_written: preview.widget_states_written,
         field_tree_verified: preview.field_tree_verified,
         widget_appearances_verified: preview.widget_appearances_verified,
     })
@@ -392,7 +425,8 @@ pub async fn save_pdf_form_text_copy(
     let guard = WorkspaceGuard::new(library_root)?;
     let source_path = guard.resolve_existing_file(path, &["pdf"])?;
     let target_file_name = validate_pdf_copy_file_name(&target_file_name)?;
-    let target_path = guard.resolve_file_for_write(source_path.with_file_name(target_file_name), &["pdf"])?;
+    let target_path =
+        guard.resolve_file_for_write(source_path.with_file_name(target_file_name), &["pdf"])?;
     tauri::async_runtime::spawn_blocking(move || {
         save_pdf_form_text_copy_to_path(
             &source_path,
@@ -404,6 +438,26 @@ pub async fn save_pdf_form_text_copy(
     })
     .await
     .map_err(|error| format!("PDF 表单可靠另存任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn save_pdf_form_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_source_digest: String,
+    expected_output_digest: String,
+    changes: Vec<PdfFormTextChange>,
+) -> Result<PdfSavedFormTextReport, String> {
+    save_pdf_form_text_copy(
+        library_root,
+        path,
+        target_file_name,
+        expected_source_digest,
+        expected_output_digest,
+        changes,
+    )
+    .await
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]

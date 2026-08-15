@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-15 P1-B2B4 PDF 复选框可靠副本：** 原 PDF 右侧表单工作区现支持标准 checkbox 的有界填写。检查器会识别按钮类型、真实导出值以及每个 Widget 的 `/AP /N` 状态；只有唯一导出值且所有 Widget 都具备 `Off` 与该导出外观时才开放编辑。副本同时写入字段 `/V` 和 Widget `/AS`，保存后强制复读；真实 Tauri 宽窄屏、源摘要、目标重开及 Poppler 源/目标独立渲染对比全部通过。单选组、选择字段、复杂按钮、签名/加密 PDF 和任意正文重排继续阻断。下一步 P1-B2B5 单独处理单选组。详见 [`P1B2B4_PDF_Checkbox_Copy_Audit_2026-08-15.md`](./P1B2B4_PDF_Checkbox_Copy_Audit_2026-08-15.md)。
+
 > **2026-08-15 P1-B2B3 PDF 中文文本表单可靠副本：** 原 PDF 右侧表单工作区现支持中文及 Noto Sans CJK SC 覆盖的非复杂字形；规范 `/V` 使用 UTF-16BE，Widget 外观使用 Type0/CIDFontType0、Identity-H、ToUnicode 和按需字形子集。字体来自官方 Noto CJK 2.004，SIL OFL 1.1 许可随仓库保留。真实 Tauri 宽窄屏、结构复读和 Poppler 像素渲染均通过，源文件不变。复杂塑形文字、复选框、单选和选择字段继续阻断。详见 [`P1B2B3_PDF_Unicode_Text_Form_Copy_Audit_2026-08-15.md`](./P1B2B3_PDF_Unicode_Text_Form_Copy_Audit_2026-08-15.md)。
 
 > **2026-08-15 P1-B2B2 PDF 文本表单可靠副本工作区：** B2B1 后端已接入原 `PdfView` 右侧表单侧栏，没有新增窗口、路由或视觉体系。唯一命名、非多行、非密码的安全 `Tx` 字段可编辑草稿，必须先隔离验证再可靠另存；真实 Tauri 宽窄屏完成 `Bob QA` 写入、目标复开、非空外观、源摘要不变和零运行时错误。Unicode、复选框、单选和选择字段继续阻断。详见 [`P1B2B2_PDF_Form_Copy_Workspace_Desktop_Audit_2026-08-15.md`](./P1B2B2_PDF_Form_Copy_Workspace_Desktop_Audit_2026-08-15.md)。
