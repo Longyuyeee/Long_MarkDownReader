@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-16 v1.0.11 无签名打包纠偏：** 首次冻结构建已生成 EXE/MSI/NSIS，但 Tauri 因主配置仍要求旧式 updater `.sig` 而在产物完成后返回失败。当前社区更新实际使用 GitHub Release + 严格附件名 + SHA-256，且明确不发布 `.sig`/`latest.json`，因此主配置已改为 `createUpdaterArtifacts=false` 并加入发布门禁。必须等待本修复的新冻结提交和 Quality Gate 后重新构建，旧产物不得登记为候选。
+
 > **2026-08-16 v1.0.11 发布准备：** package、Cargo、Tauri、Windows 生命周期、性能、能力矩阵和 P1 总收口事实源开始同步到 `1.0.11`；发布范围冻结为 v1.0.10 之后的图片基础编辑、PDF 表单/永久脱敏/水印/文档属性与能力对齐。当前 README 下载仍指向已验证 v1.0.10。下一步等待完整 Quality Gate，随后冻结产品提交、构建 MSI/NSIS、运行托管安装生命周期、回写候选证据、发布并复核远端附件，最后单独验证官方 `1.0.10 -> 1.0.11` 应用内更新。详见 [`V1_0_11_Unsigned_Community_Release_Audit_2026-08-16.md`](./V1_0_11_Unsigned_Community_Release_Audit_2026-08-16.md)。
 
 > **2026-08-16 P1 总收口：** 最初“日常管理、基础编辑、成体系管理、左侧资料库 + 右侧工作区、知识图谱与思维导图/图形、开发文本、PDF/Office/表格”的需求已按有界能力通过。当前 43 类格式/91 个扩展名分为直接编辑、有界可靠副本、预览或外部依赖三层；知识图谱是派生关系探索，Canvas/OPML/Mermaid/Draw.io 承担思维导图与图形源编辑，不能混写为同一能力。P1 没有剩余补丁阻断型功能，下一步进入 `1.0.11` 无签名发布。合同见 [`p1-final-capability-closure.json`](../shared/p1-final-capability-closure.json)，审计见 [`P1_Final_Capability_Closure_Audit_2026-08-16.md`](./P1_Final_Capability_Closure_Audit_2026-08-16.md)。

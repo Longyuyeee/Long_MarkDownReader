@@ -32,7 +32,7 @@
   },
   "bundle": {
     "active": true,
-    "createUpdaterArtifacts": true,
+    "createUpdaterArtifacts": false,
     "targets": ["msi", "nsis"],
     "fileAssociations": [
       {
