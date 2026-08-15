@@ -10,6 +10,7 @@ const expectedInstallerName = process.env.LONGEDIT_MANAGED_UPDATER_INSTALLER_NAM
 const expectedInstallerSize = Number(process.env.LONGEDIT_MANAGED_UPDATER_INSTALLER_SIZE)
 const expectedInstallerSha256 = process.env.LONGEDIT_MANAGED_UPDATER_INSTALLER_SHA256
 const expectedReleaseUrl = process.env.LONGEDIT_MANAGED_UPDATER_RELEASE_URL
+const currentStage = `V${currentVersion}-U1`
 
 for (const [name, value] of Object.entries({
   mode,
@@ -157,10 +158,10 @@ if (mode === 'discover-install') {
   await capture('managed-updater-available.jpg')
   const evidence = {
     schemaVersion: 1,
-    stage: 'V1.0.9-U1-DISCOVERY',
+    stage: `${currentStage}-DISCOVERY`,
     capturedAt: new Date().toISOString(),
     status: 'passed',
-    environment: 'GitHub-hosted disposable Windows installed official v1.0.8',
+    environment: `GitHub-hosted disposable Windows installed official v${previousVersion}`,
     release: info,
     confirmation: {
       ...surface,
@@ -224,7 +225,7 @@ if (mode === 'discover-install') {
   navigation.systemCategorySelected = true
   await writeEvidence('managed-updater-post-upgrade-navigation.json', {
     schemaVersion: 1,
-    stage: 'V1.0.9-U1-NAVIGATION',
+    stage: `${currentStage}-NAVIGATION`,
     capturedAt: new Date().toISOString(),
     status: 'passed',
     ...navigation,
@@ -274,10 +275,10 @@ if (mode === 'discover-install') {
   await capture('managed-updater-current.jpg')
   await writeEvidence('managed-updater-post-upgrade-evidence.json', {
     schemaVersion: 1,
-    stage: 'V1.0.9-U1-POST-UPGRADE',
+    stage: `${currentStage}-POST-UPGRADE`,
     capturedAt: new Date().toISOString(),
     status: 'passed',
-    environment: 'GitHub-hosted disposable Windows updated through the installed v1.0.8 client',
+    environment: `GitHub-hosted disposable Windows updated through the installed v${previousVersion} client`,
     release: info,
     manualCheckVisible: true,
     settingsNavigation: navigation,
