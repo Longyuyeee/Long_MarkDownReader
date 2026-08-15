@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "stage": "P1-B5B",
-  "status": "metadata-backend-complete",
+  "stage": "P1-B5C",
+  "status": "metadata-workspace-complete",
   "sourcePolicy": "library-only-reliable-copy",
   "externalPolicy": "preview-only",
   "currentCapabilities": [
@@ -17,7 +17,8 @@
     "bounded-radio-form-copy",
     "bounded-single-choice-form-copy",
     "permanent-redaction-copy",
-    "watermark-copy"
+    "watermark-copy",
+    "metadata-copy"
   ],
   "mandatoryBlockers": [
     "encrypted_pdf_unverified",
@@ -91,11 +92,12 @@
     {
       "id": "P1-B5",
       "name": "metadata-copy",
-      "status": "backend-complete-workspace-pending",
+      "status": "workspace-complete-desktop-evidence-pending",
       "deliveredContract": "shared/pdf-metadata-safety-contract.json",
       "deliveredBackend": "src-tauri/src/formats/pdf_metadata.rs",
       "backendWriteUserFile": true,
-      "currentWriteUserFile": false,
+      "deliveredWorkspace": "src/components/pdf/PdfMetadataPanel.vue",
+      "currentWriteUserFile": true,
       "writeUserFile": true,
       "requirements": [
         "info-and-xmp-inventory",

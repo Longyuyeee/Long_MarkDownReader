@@ -968,3 +968,9 @@ U2 可丢弃 Windows runner 已接入 EA-5B 安装态探针：带中文/空格�
 标题、作者、主题、关键词四字段已实现资料库内 PDF 可靠新副本后端：PDFDocEncoding/UTF-16BE Unicode 写入、空值真实删除、五类保留 Info 键逐对象等价、可达非 Info 对象保真、完整重写、预览摘要锁定、目标不覆盖和源 SHA-256 前后复核均已进入自动回归。自定义 Info、XMP、附件、签名、加密与 PDF/A 继续 fail closed；这不是匿名化或完整隐私清理。
 
 命令已经注册，但 `PdfView` UI 仍按阶段合同关闭。接手后进入 P1-B5C，只在原 PDF 右侧工作区接入紧凑面板、草稿离开保护、预验证与另存复开，并完成真实 Tauri 宽窄屏、中文路径、pypdf 和 Poppler 证据；随后执行 P1 总收口，再进入下一补丁版本发布。详见 [`P1B5B_PDF_Metadata_Copy_Backend_Audit_2026-08-16.md`](./P1B5B_PDF_Metadata_Copy_Backend_Audit_2026-08-16.md)。
+
+## 2026-08-16 P1-B5C PDF 元数据原工作区
+
+四字段属性面板已经进入原 `PdfView` 侧栏与命令条，没有新建顶层窗口。打开面板会先读取现有字段作为无修改基线；输入变更进入统一“属性草稿”与离开保护，任意修改都会使旧预验证失效。验证通过后必须确认这不是匿名化，才能可靠另存并在同一工作区打开新副本。外部 PDF 保持只读，面板字号、间距、边框、按钮与既有水印/表单面板使用同一主题变量。
+
+静态合同、TypeScript 类型检查和生产构建已通过，阶段状态为 `workspace-complete-desktop-evidence-pending`。接手后进入 P1-B5D，执行真实 Tauri 宽窄屏、中文字段、草稿保护、保存复开、源文件不变，并用 pypdf/Poppler 独立核对；证据通过后进行 P1 总收口。详见 [`P1B5C_PDF_Metadata_Workspace_Audit_2026-08-16.md`](./P1B5C_PDF_Metadata_Workspace_Audit_2026-08-16.md)。
