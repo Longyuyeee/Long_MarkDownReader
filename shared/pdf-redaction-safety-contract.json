@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "stage": "P1-B3A",
+  "status": "safety-audit-complete",
+  "requirement": "library-pdf-permanent-redaction-reliable-copy",
+  "currentWriteCapability": false,
+  "approvedArchitecture": "fresh-document-full-page-rasterization",
+  "securityObjective": "remove-source-content-not-cover-it",
+  "inputConstraints": {
+    "libraryOnly": true,
+    "externalPdfWrite": false,
+    "maxSourceBytes": 134217728,
+    "maxPages": 64,
+    "maxRenderedDimensionPixels": 4096,
+    "maxTotalRenderedPixels": 120000000,
+    "maxRedactionRects": 256,
+    "minimumRedactionRects": 1,
+    "rectangleCoordinates": "normalized-page-space-clamped-and-finite",
+    "redactionPaint": "fully-opaque-black-or-white"
+  },
+  "hardBlockers": [
+    "encrypted_pdf_unverified",
+    "digital_signature_unverified",
+    "page_render_failure",
+    "partial_page_set",
+    "transparent_redaction_paint",
+    "invalid_or_out_of_bounds_rectangle",
+    "source_or_render_budget_exceeded",
+    "source_digest_changed",
+    "existing_target_path"
+  ],
+  "securityInvariants": [
+    "every-source-page-is-rendered-to-an-opaque-bitmap",
+    "redaction-rectangles-are-burned-into-pixels-before-image-encoding",
+    "output-is-built-from-a-new-empty-pdf-document",
+    "source-content-streams-fonts-images-xobjects-and-object-ids-are-never-copied",
+    "source-annotations-forms-actions-layers-attachments-outlines-tags-and-metadata-are-never-copied",
+    "output-object-graph-is-limited-to-catalog-pages-page-content-and-image-xobjects",
+    "source-file-and-existing-targets-are-never-overwritten"
+  ],
+  "verificationGates": [
+    "source-sha256-before-and-after-match",
+    "rendered-page-count-and-page-geometry-match-source",
+    "every-output-page-has-exactly-one-image-xobject-and-no-annotations",
+    "output-has-no-acroform-names-outlines-optional-content-structure-or-metadata",
+    "pdf-text-extraction-returns-empty-for-every-output-page",
+    "fixture-secret-markers-are-absent-from-output-bytes-and-extracted-text",
+    "independent-poppler-render-confirms-opaque-redaction-and-readable-unredacted-regions",
+    "saved-target-reopen-repeats-structural-and-text-absence-verification"
+  ],
+  "acceptedTradeoffs": [
+    "output-is-image-only-and-loses-text-selection-search-and-accessibility-structure",
+    "forms-links-annotations-bookmarks-and-document-metadata-are-removed",
+    "output-can-be-larger-than-the-source",
+    "ocr-must-be-run-again-on-the-redacted-copy-if-search-is-needed"
+  ],
+  "rejectedApproaches": [
+    "visual-overlay-only",
+    "incremental-update-that-keeps-old-revisions",
+    "content-operator-bounding-box-heuristics",
+    "copying-unaffected-pages-or-shared-source-resources",
+    "annotation-or-sidecar-redaction",
+    "reusing-source-ocr-text"
+  ],
+  "implementationSlices": [
+    {
+      "id": "P1-B3A",
+      "name": "threat-model-and-raster-contract",
+      "status": "completed",
+      "writeUserFile": false
+    },
+    {
+      "id": "P1-B3B",
+      "name": "fresh-image-only-pdf-backend",
+      "status": "planned",
+      "writeUserFile": true
+    },
+    {
+      "id": "P1-B3C",
+      "name": "original-workspace-redaction-ui",
+      "status": "planned",
+      "writeUserFile": false
+    },
+    {
+      "id": "P1-B3D",
+      "name": "desktop-reopen-and-independent-render-evidence",
+      "status": "planned",
+      "writeUserFile": false
+    }
+  ]
+}
