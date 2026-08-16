@@ -1,0 +1,136 @@
+{
+    "schemaVersion":  1,
+    "stage":  "R5I",
+    "capturedAt":  "2026-08-15T19:29:07.5941832Z",
+    "environment":  "disposable-windows-guest",
+    "currentVersion":  "1.0.11",
+    "previousVersion":  "0.6.2",
+    "currentInstallerSha256":  "05af2656ecd5c530051dfa3b2540aedb227aeb0ac832abb8bcfab5f3bdd4a250",
+    "previousInstallerSha256":  "a1077dfa461be7656fade1f361c635a6ab93ea9244512b2d944a9798058f5fce",
+    "status":  "passed",
+    "releaseCandidate":  false,
+    "promotionEligible":  false,
+    "signedArtifactRuntimeProven":  false,
+    "signature":  {
+                      "status":  "NotSigned",
+                      "valid":  false,
+                      "timestamped":  false,
+                      "signerCertificateSha256":  null,
+                      "timestampCertificateSha256":  null
+                  },
+    "sourceUserContentIncluded":  false,
+    "checks":  [
+                   {
+                       "id":  "previous-version-fresh-install",
+                       "status":  "passed",
+                       "version":  "0.6.2"
+                   },
+                   {
+                       "id":  "controlled-upgrade",
+                       "status":  "passed",
+                       "from":  "0.6.2",
+                       "to":  "1.0.11"
+                   },
+                   {
+                       "id":  "file-association-registration",
+                       "status":  "passed",
+                       "defaultSelectionChanged":  false,
+                       "previousMdDefault":  "",
+                       "previousMarkdownDefault":  ""
+                   },
+                   {
+                       "id":  "default-app-candidate-registration",
+                       "status":  "passed",
+                       "selectedFormats":  [
+                                               "opml",
+                                               "raster-image"
+                                           ],
+                       "unselectedFormat":  "json"
+                   },
+                   {
+                       "id":  "external-cold-launch-unicode-space-path",
+                       "status":  "passed",
+                       "sourceUserContentIncluded":  false
+                   },
+                   {
+                       "id":  "single-instance-secondary-file-handoff",
+                       "status":  "passed",
+                       "sourceUserContentIncluded":  false
+                   },
+                   {
+                       "id":  "first-launch-after-upgrade",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "installed-artifact-route-and-io-smoke",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "management-backup-and-index-prepare",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "legacy-downgrade-detected",
+                       "status":  "passed",
+                       "version":  "0.6.2",
+                       "reason":  "historical-installer-predates-downgrade-policy"
+                   },
+                   {
+                       "id":  "controlled-downgrade-safety",
+                       "status":  "passed",
+                       "mode":  "legacy-downgrade-detected-and-current-restored",
+                       "installerExitCode":  0,
+                       "currentVersionRestored":  true,
+                       "restoredBinarySha256":  "72d2a624e8b757984bf24f879f1775bb524be798ca97b98cfe666d367899a531"
+                   },
+                   {
+                       "id":  "silent-uninstall",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "file-association-recovery",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "default-app-candidate-uninstall-recovery",
+                       "status":  "passed",
+                       "defaultSelectionChanged":  false
+                   },
+                   {
+                       "id":  "uninstall-retains-user-data",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "rollback-previous-install",
+                       "status":  "passed",
+                       "version":  "0.6.2"
+                   },
+                   {
+                       "id":  "rollback-first-launch",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "rollback-cleanup-retains-user-data",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "post-rollback-management-backup-restore",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "post-restore-knowledge-index-rebuild",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "post-restore-representative-file-reopen",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "post-restore-uninstall-retains-management-data",
+                       "status":  "passed"
+                   }
+               ],
+    "installedArtifactSmokeEvidence":  "installed-artifact-smoke.json",
+    "defaultAppLifecycleEvidence":  "installed-default-app-lifecycle-evidence.json",
+    "managementRollbackEvidence":  "management-backup-index-evidence.json"
+}
