@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.10"><img src="https://img.shields.io/badge/Release-v1.0.10-cca43b" alt="Release v1.0.10"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.11"><img src="https://img.shields.io/badge/Release-v1.0.11-cca43b" alt="Release v1.0.11"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -31,38 +31,38 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.11 正在准备发布，范围为图片基础编辑、PDF 标准表单安全子集、永久脱敏、文字水印、文档属性和 P1 能力总收口。新 Release 公开前，下方下载与 SHA-256 继续指向已验证的 v1.0.10。详见 [v1.0.11 发布说明](docs/RELEASE_NOTES_v1.0.11.md)。
+> v1.0.11 已发布，完成图片基础编辑、PDF 标准表单安全子集、永久脱敏、文字水印、文档属性和 P1 能力总收口。完整范围与边界见 [v1.0.11 发布说明](docs/RELEASE_NOTES_v1.0.11.md)。
 
 ## 下载
 
-Long编辑 v1.0.10 支持 Windows 10/11 x64。
+Long编辑 v1.0.11 支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.0.10_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.10/LongEdit_1.0.10_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.0.10_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.10/LongEdit_1.0.10_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.0.10](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.10) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.0.11_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.11/LongEdit_1.0.11_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.0.11_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.11/LongEdit_1.0.11_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.0.11](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.11) | Release Notes 与 SHA-256 |
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 `SHA256SUMS.txt` 核对文件。
 
 ```text
-598c460c37dd9f3c333f504820c46ef8dd4cf4e6921ef4148b6098fc98632bbe  LongEdit_1.0.10_x64-setup.exe
-0e0b66e95a8d4d22fb870e52605e64e06e69acdf336162486ec5e64392a6c028  LongEdit_1.0.10_x64_zh-CN.msi
+aa81c91e2e60f60d5cc384e1bfcdc0a8a309edd91cadce6fe5838bfa69743b9a  LongEdit_1.0.11_x64-setup.exe
+ba9d5eca3ad23a28c64edb1689563693da2ed695b37a2465af856f2adadcf4c6  LongEdit_1.0.11_x64_zh-CN.msi
 ```
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。
 
-## v1.0.10
+## v1.0.11
 
-这一版本把默认打开管理真正收回应用内部，同时保持 Windows 的最终选择权：
+这一版本完成 P1 有界格式编辑和知识工作台收口：
 
-- 在“格式能力”页面逐类启用或关闭 Long编辑候选，覆盖 37 类允许外部编辑或预览的格式。
-- 展开格式即可查看未启用、已启用、当前系统默认或部分扩展名默认状态。
-- 关闭某类格式只清理 Long编辑拥有的映射，不影响其他应用或其他格式。
-- Windows `UserChoice` 保持只读；只有用户主动设置最终默认应用时才进入系统确认页。
-- 延续自动更新后的稳定重启、外部文件独立窗口、显式保存和冲突保护。
+- PNG/JPEG/WebP/BMP 在原右侧媒体工作区支持旋转、翻转、精确裁剪、缩放、格式转换、JPEG 质量和隐私元数据清理。
+- PDF 在原右侧工作区支持标准表单安全子集、图片型永久脱敏副本、中文矢量文字水印和四字段文档属性副本。
+- 43 类格式、91 个扩展名按“直接编辑 / 有界可靠副本 / 预览或外部依赖”公开，避免把不同能力夸大为完整 Office、WPS 或 PDF 等价编辑。
+- 知识图谱继续承担派生关系探索；Canvas、OPML、Mermaid 与 Draw.io 分别承担可编辑思维导图和图形源。
+- 延续默认打开管理、自动更新稳定重启、外部文件独立窗口、显式保存和冲突保护。
 
-发布已通过源码 Quality Gate、22/22 安装生命周期检查、18/18 安装后工作区检查，以及公开附件重新下载哈希复核。完整变更见 [v1.0.10 发布说明](docs/RELEASE_NOTES_v1.0.10.md)。
+发布已通过源码 Quality Gate、22/22 安装生命周期检查、18/18 安装后工作区检查，以及公开附件重新下载哈希复核。完整变更见 [v1.0.11 发布说明](docs/RELEASE_NOTES_v1.0.11.md)。
 
 ## 真实界面
 

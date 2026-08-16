@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.11",
-  "status": "ready-to-publish-hosted-lifecycle-passed-local-smoke-blocked-existing-single-instance",
+  "status": "published-remote-assets-verified-hosted-lifecycle-passed-local-smoke-blocked-existing-single-instance",
   "appVersion": "1.0.11",
   "capturedAt": "2026-08-16T03:35:00Z",
   "sourceCommit": "73932f323148f1c549ab74be1424eff34b8b5e05",
@@ -49,13 +49,13 @@
     "sourceUserContentIncluded": false,
     "evidenceManifest": "hosted-lifecycle/import-manifest.json"
   },
-  "releaseReceipt": null,
+  "releaseReceipt": "release-receipt.json",
   "boundaries": {
     "releaseCandidate": true,
     "communityUnsigned": true,
     "enterprisePromotionEligible": false,
     "authenticodeRequired": false,
-    "managedUpdaterReleaseAssetsPresent": false,
+    "managedUpdaterReleaseAssetsPresent": true,
     "legacyTauriUpdaterArtifactsPresent": false,
     "managedUpdaterEnabled": true,
     "artifactFilesCommitted": false,
