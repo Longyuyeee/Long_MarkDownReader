@@ -5,7 +5,7 @@
   "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-16",
-  "currentStatus": "v1.0.11-community-release-ready-to-publish",
+  "currentStatus": "v1.0.11-community-release-published",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -33,7 +33,7 @@
     "localRuntimeSmokePassed": false,
     "installedLifecyclePassed": true,
     "qualityGatePassed": true,
-    "githubReleasePublished": false
+    "githubReleasePublished": true
   },
   "patchValidation": {
     "previousPublicVersion": "1.0.10",
@@ -62,7 +62,16 @@
       { "target": "nsis", "fileName": "LongEdit_1.0.11_x64-setup.exe", "sizeBytes": 65547099, "sha256": "aa81c91e2e60f60d5cc384e1bfcdc0a8a309edd91cadce6fe5838bfa69743b9a", "authenticodeStatus": "NotSigned" }
     ]
   },
-  "release": null,
+  "release": {
+    "databaseId": 371253676,
+    "tag": "v1.0.11",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.11",
+    "taggedCommit": "4615cfe26d8e36222bb7d456ae160c4e6b32ea73",
+    "publishedAt": "2026-08-16T06:50:17Z",
+    "candidateEvidenceQualityGateRunId": 31932154818,
+    "remoteAssetsVerified": true,
+    "receipt": "docs/evidence/v1.0.11-release/release-receipt.json"
+  },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -70,5 +79,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "push-candidate-evidence-pass-quality-gate-publish-and-verify-v1.0.11"
+  "nextAction": "verify-official-v1.0.10-to-v1.0.11-managed-update"
 }
