@@ -23,7 +23,7 @@ const counts = matrix.formats.reduce((result, item) => {
 const currentUpdaterMatchesPackage = currentUpdater.status === 'hosted-managed-update-passed'
   && currentUpdater.releases?.current?.version === pkg.version
 const expectedStage = currentUpdaterMatchesPackage
-  ? '当前阶段：**P1 总收口已完成，下一步进入 1.0.11 无签名补丁发布**'
+  ? `当前阶段：**\`${pkg.version}\` 无签名社区版发布与更新链已收口**`
   : policy.gates?.githubReleasePublished === true
     ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
   : policy.gates?.qualityGatePassed === true
