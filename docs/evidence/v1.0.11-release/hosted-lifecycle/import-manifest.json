@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.11-U2",
+  "status": "accepted-for-unsigned-community-release",
+  "importedAt": "2026-08-16",
+  "githubRunId": 31902477250,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31902477250",
+  "workflowConclusion": "success",
+  "productSourceCommit": "73932f323148f1c549ab74be1424eff34b8b5e05",
+  "appVersion": "1.0.11",
+  "previousVersion": "0.6.2",
+  "currentInstallerSha256": "05af2656ecd5c530051dfa3b2540aedb227aeb0ac832abb8bcfab5f3bdd4a250",
+  "installedExecutableSha256": "72d2a624e8b757984bf24f879f1775bb524be798ca97b98cfe666d367899a531",
+  "authenticodeStatus": "NotSigned",
+  "lifecycleChecks": { "passed": 22, "failed": 0 },
+  "installedArtifactChecks": { "passed": 18, "failed": 0 },
+  "communityReleaseCandidateEvidence": true,
+  "enterpriseReleaseCandidate": false,
+  "promotionEligible": false,
+  "sourceUserContentIncluded": false,
+  "files": [
+    { "path": "installed-artifact-smoke.json", "bytes": 9808, "sha256": "4bc36960c834ef79bab83d581f932c3db4746f02590d72b5b1f212f4cb0b36d2" },
+    { "path": "installed-default-app-candidates.jpg", "bytes": 89735, "sha256": "1502d01d5c6ea940120f2e2b6ee42aac1ef06a004ec741d02d5d3ce9591dea1d", "visuallyReviewed": true },
+    { "path": "installed-default-app-lifecycle-evidence.json", "bytes": 981, "sha256": "9629fd5615217ef714982c40d1e38b72ed051a7a8af7dd0dd81a055c1de5fabe" },
+    { "path": "lifecycle-result.json", "bytes": 5798, "sha256": "063269980303be28d9f664e9fe3bd95481e679ca9bbaca0fae81dff99ae7690d" },
+    { "path": "management-backup-index-evidence.json", "bytes": 2174, "sha256": "9ae8d8d3d390ba574cd06d9905563542c644d2ea348e76fd66f2b41e4d1a7ac7" },
+    { "path": "runner-build-receipt.json", "bytes": 569, "sha256": "b961450c8ed2b216523e0b79406731cd541afe7514b61c4c0d434f49fe6bae5a" }
+  ]
+}
