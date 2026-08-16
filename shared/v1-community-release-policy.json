@@ -42,7 +42,7 @@
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.10-to-1.0.11-pending",
+    "managedUpdaterUpgradePath": "1.0.10-to-1.0.11-passed",
     "scope": "p1-bounded-image-pdf-and-capability-closure"
   },
   "targetRelease": {
@@ -75,9 +75,9 @@
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.10-to-v1.0.11-managed-update-observation-pending",
+    "v1.0.10-to-v1.0.11-managed-update-observation-passed",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "verify-official-v1.0.10-to-v1.0.11-managed-update"
+  "nextAction": "v1.0.11-release-closure-complete"
 }
