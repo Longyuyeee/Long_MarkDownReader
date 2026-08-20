@@ -36,9 +36,9 @@
     {
       "id": "pdf-copy",
       "dependency": "none",
-      "sourcePolicy": "PDF 原文永不覆盖；批注与 OCR 写入 sidecar，页面级受限编辑只生成经复读验证的新副本",
+      "sourcePolicy": "PDF 原文永不覆盖；批注与 OCR 写入 sidecar，页面操作、表单安全子集、永久脱敏、文字水印和文档属性只生成经复读验证的新副本",
       "privacyBoundary": "正文、批注与 OCR 数据保持本地",
-      "knownLimitations": ["不提供 PDF 正文等价重排；表单目前只读检查，填写副本尚未开放；签名、加密和主动内容保持阻断"]
+      "knownLimitations": ["不提供 PDF 正文等价重排；表单填写仅支持已验证的单行文本、复选框、单选组和单选 Choice；自由输入或多选 Choice、复杂按钮、签名、加密、XFA 和主动内容保持阻断；永久脱敏输出为失去搜索与交互能力的图片型副本"]
     },
     {
       "id": "office-copy",
