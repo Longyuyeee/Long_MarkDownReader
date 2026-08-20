@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-20 P2-B 图片色彩调整真实收口：** 现有图片编辑侧栏已新增亮度、对比度、饱和度与恢复原色，PNG/JPEG/WebP/BMP 仍只可靠另存新副本。Rust 真实像素测试 6/6、生产构建、Tauri 1280×800/720×680、IPC 另存复开和独立 `System.Drawing` 验证均通过；实际灰度采样为 `134/134/134/255`，源 SHA-256 不变，运行时错误 0。下一步先做 P2-C 图片交互深化的可行性审计，再做 43 格式能力事实巡检；外部 Office 生产者证据没有对应环境时继续阻断。详见 [`P2B_Image_Color_Adjustments_Real_Desktop_Audit_2026-08-20.md`](./P2B_Image_Color_Adjustments_Real_Desktop_Audit_2026-08-20.md) 与 [`Post_v1.0.11_Enhancement_Audit_and_Plan_2026-08-20.md`](./Post_v1.0.11_Enhancement_Audit_and_Plan_2026-08-20.md)。
+
 > **2026-08-20 P2-A PDF 能力登记重新对齐：** 已确认最领先成果均在 `main`，v1.0.11 发布与官方更新链已经收口。审计发现格式能力页仍错误停留在“表单只读”，现已对齐安全表单子集填写、永久脱敏、文字水印和文档属性可靠副本，并新增机器门禁防止声明再次漂移。修正前真实对比缺少四项能力并返回 `FAIL`，修正后合同检查通过。下一步 P2-B 补强图片基础编辑，并以真实像素、源摘要、目标复开和 Tauri 桌面证据验收。详见 [`P2A_PDF_Capability_Registry_Reconciliation_Audit_2026-08-20.md`](./P2A_PDF_Capability_Registry_Reconciliation_Audit_2026-08-20.md)。
 
 > **2026-08-16 v1.0.11 发布流程完全收口：** 官方 `v1.0.10 -> v1.0.11` 应用内更新运行 `31933205654` 已通过 12/12、0 失败。发现更新、显式确认、官方 NSIS SHA-256、同目录覆盖、更新助手自动重启、最新版状态以及覆盖/卸载后的合成资料保留均通过；三张截图已人工复核，九份脱敏证据已导入并受 SHA-256 清单约束。至此版本发布、远端附件与官方更新链全部收口，后续进入独立增强迭代。

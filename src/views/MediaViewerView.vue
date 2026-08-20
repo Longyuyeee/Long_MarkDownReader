@@ -130,6 +130,13 @@
           <label class="ratio-lock"><input v-model="lockAspectRatio" type="checkbox" />锁定宽高比</label>
         </section>
         <section>
+          <div class="section-heading"><label>色彩调整</label><button class="text-button" @click="resetColorAdjustments">恢复原色</button></div>
+          <label class="quality-control"><span>亮度 <strong>{{ signedAdjustment(brightness) }}</strong></span><input v-model.number="brightness" type="range" min="-100" max="100" step="1" /></label>
+          <label class="quality-control"><span>对比度 <strong>{{ signedAdjustment(contrast) }}</strong></span><input v-model.number="contrast" type="range" min="-100" max="100" step="1" /></label>
+          <label class="quality-control"><span>饱和度 <strong>{{ saturation }}%</strong></span><input v-model.number="saturation" type="range" min="0" max="200" step="1" /></label>
+          <p>画面实时预览；另存时使用确定性像素处理。</p>
+        </section>
+        <section>
           <label for="image-output-format">副本格式</label>
           <select id="image-output-format" v-model="outputExtension">
             <option value="png">PNG</option><option value="jpg">JPEG</option><option value="webp">WebP</option><option value="bmp">BMP</option>
@@ -218,6 +225,9 @@ interface ImageSavedCopyReport {
   outputHeight: number
   outputDigest: string
   jpegQuality?: number
+  brightness: number
+  contrast: number
+  saturation: number
   orientationNormalized: boolean
   metadataRemoved: boolean
   sourceUnchanged: boolean
@@ -266,6 +276,9 @@ const cropY = ref(0)
 const cropWidth = ref(1)
 const cropHeight = ref(1)
 const jpegQuality = ref(85)
+const brightness = ref(0)
+const contrast = ref(0)
+const saturation = ref(100)
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2]
 const editableImageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'bmp']
 let loadToken = 0
@@ -324,6 +337,7 @@ const imageStyle = computed(() => ({
   width: `${Math.max(1, (rotation.value % 180 === 0 ? effectiveOutputWidth.value : effectiveOutputHeight.value) * scale.value)}px`,
   height: `${Math.max(1, (rotation.value % 180 === 0 ? effectiveOutputHeight.value : effectiveOutputWidth.value) * scale.value)}px`,
   transform: `scaleX(${flipHorizontal.value ? -1 : 1}) scaleY(${flipVertical.value ? -1 : 1}) rotate(${rotation.value}deg)`,
+  filter: `brightness(${100 + brightness.value}%) contrast(${100 + contrast.value}%) saturate(${saturation.value}%) drop-shadow(0 8px 22px rgba(0,0,0,.18))`,
 }))
 
 const clearMediaUrl = () => {
@@ -344,6 +358,7 @@ const formatDuration = (value: number) => {
   const seconds = total % 60
   return hours ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}` : `${minutes}:${String(seconds).padStart(2, '0')}`
 }
+const signedAdjustment = (value: number) => value > 0 ? `+${value}` : String(value)
 const setScale = (value: number) => { scale.value = Math.min(8, Math.max(0.1, value)); fitToWindow.value = false }
 const zoomBy = (amount: number) => setScale(Number((scale.value + amount).toFixed(2)))
 const rotateBy = (amount: number) => {
@@ -453,11 +468,18 @@ const resetImageTransform = () => {
   flipVertical.value = false
   resizeEnabled.value = false
   jpegQuality.value = 85
+  resetColorAdjustments()
   savedCopy.value = undefined
   editError.value = ''
   resetCrop()
   syncNaturalOutputSize()
   void nextTick(fitImage)
+}
+const resetColorAdjustments = () => {
+  brightness.value = 0
+  contrast.value = 0
+  saturation.value = 100
+  savedCopy.value = undefined
 }
 const onDimensionInput = (axis: 'width' | 'height') => {
   if (dimensionSyncing) return
@@ -527,6 +549,9 @@ const saveEditedCopy = async () => {
           height: Number(cropHeight.value),
         } : null,
         jpegQuality: outputExtension.value === 'jpg' ? Number(jpegQuality.value) : null,
+        brightness: Number(brightness.value),
+        contrast: Number(contrast.value),
+        saturation: Number(saturation.value),
         normalizeOrientation: true,
       },
     })
@@ -567,6 +592,9 @@ const load = async () => {
   cropWidth.value = 1
   cropHeight.value = 1
   jpegQuality.value = 85
+  brightness.value = 0
+  contrast.value = 0
+  saturation.value = 100
   fitToWindow.value = true
   clearMediaUrl()
   try {

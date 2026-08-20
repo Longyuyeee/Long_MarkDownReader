@@ -25,6 +25,10 @@ fn enabled_by_default() -> bool {
     true
 }
 
+fn default_saturation() -> u16 {
+    100
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RasterImageTransform {
@@ -40,6 +44,12 @@ pub struct RasterImageTransform {
     pub crop: Option<RasterImageCrop>,
     #[serde(default)]
     pub jpeg_quality: Option<u8>,
+    #[serde(default)]
+    pub brightness: i16,
+    #[serde(default)]
+    pub contrast: i16,
+    #[serde(default = "default_saturation")]
+    pub saturation: u16,
     #[serde(default = "enabled_by_default")]
     pub normalize_orientation: bool,
 }
@@ -54,6 +64,9 @@ impl Default for RasterImageTransform {
             height: None,
             crop: None,
             jpeg_quality: None,
+            brightness: 0,
+            contrast: 0,
+            saturation: 100,
             normalize_orientation: true,
         }
     }
@@ -70,6 +83,9 @@ pub struct RasterImageTransformResult {
     pub output_digest: String,
     pub output_mime_type: String,
     pub jpeg_quality: Option<u8>,
+    pub brightness: i16,
+    pub contrast: i16,
+    pub saturation: u16,
     pub orientation_normalized: bool,
     pub metadata_removed: bool,
 }
@@ -111,6 +127,26 @@ fn image_format(extension: &str) -> Result<(ImageFormat, &'static str), String> 
     }
 }
 
+fn adjust_saturation(image: DynamicImage, saturation: u16) -> DynamicImage {
+    if saturation == 100 {
+        return image;
+    }
+    let factor = f32::from(saturation) / 100.0;
+    let mut rgba = image.to_rgba8();
+    for pixel in rgba.pixels_mut() {
+        let [red, green, blue, alpha] = pixel.0;
+        let luminance =
+            0.2126 * f32::from(red) + 0.7152 * f32::from(green) + 0.0722 * f32::from(blue);
+        let mix = |channel: u8| {
+            (luminance + (f32::from(channel) - luminance) * factor)
+                .round()
+                .clamp(0.0, 255.0) as u8
+        };
+        *pixel = image::Rgba([mix(red), mix(green), mix(blue), alpha]);
+    }
+    DynamicImage::ImageRgba8(rgba)
+}
+
 fn decode_image(
     source: &[u8],
     source_extension: &str,
@@ -146,6 +182,15 @@ pub fn transform_raster_image(
     output_extension: &str,
     transform: &RasterImageTransform,
 ) -> Result<RasterImageTransformResult, String> {
+    if !(-100..=100).contains(&transform.brightness) {
+        return Err("图片亮度必须位于 -100 到 100 之间".into());
+    }
+    if !(-100..=100).contains(&transform.contrast) {
+        return Err("图片对比度必须位于 -100 到 100 之间".into());
+    }
+    if transform.saturation > 200 {
+        return Err("图片饱和度必须位于 0 到 200 之间".into());
+    }
     let (decoded, orientation_applied) =
         decode_image(source, source_extension, transform.normalize_orientation)?;
     let (source_width, source_height) = decoded.dimensions();
@@ -178,6 +223,13 @@ pub fn transform_raster_image(
         }
         _ => return Err("缩放时必须同时提供宽度和高度".into()),
     }
+    if transform.brightness != 0 {
+        output = output.brighten(i32::from(transform.brightness) * 255 / 100);
+    }
+    if transform.contrast != 0 {
+        output = output.adjust_contrast(f32::from(transform.contrast));
+    }
+    output = adjust_saturation(output, transform.saturation);
     checked_dimensions(output.width(), output.height(), "输出图片")?;
     let (format, output_mime_type) = image_format(output_extension)?;
     let jpeg_quality = match (format, transform.jpeg_quality) {
@@ -212,6 +264,9 @@ pub fn transform_raster_image(
         output_digest: format!("{:x}", Sha256::digest(&output_bytes)),
         output_mime_type: output_mime_type.into(),
         jpeg_quality,
+        brightness: transform.brightness,
+        contrast: transform.contrast,
+        saturation: transform.saturation,
         orientation_normalized: transform.normalize_orientation || orientation_applied,
         metadata_removed: true,
         output_bytes,
@@ -397,5 +452,53 @@ mod tests {
             .output_bytes
             .windows(6)
             .any(|window| window == b"Exif\0\0"));
+    }
+
+    #[test]
+    fn applies_bounded_color_adjustments_to_real_output_pixels() {
+        let source = fixture_png();
+        let result = transform_raster_image(
+            &source,
+            "png",
+            "png",
+            &RasterImageTransform {
+                brightness: 20,
+                contrast: 15,
+                saturation: 0,
+                ..RasterImageTransform::default()
+            },
+        )
+        .unwrap();
+        let output = image::load_from_memory_with_format(&result.output_bytes, ImageFormat::Png)
+            .unwrap()
+            .to_rgba8();
+        let pixel = output.get_pixel(0, 0).0;
+        assert_eq!(pixel[0], pixel[1]);
+        assert_eq!(pixel[1], pixel[2]);
+        assert_eq!(
+            (result.brightness, result.contrast, result.saturation),
+            (20, 15, 0)
+        );
+        assert_ne!(
+            result.output_digest,
+            format!("{:x}", Sha256::digest(&source))
+        );
+
+        for transform in [
+            RasterImageTransform {
+                brightness: 101,
+                ..RasterImageTransform::default()
+            },
+            RasterImageTransform {
+                contrast: -101,
+                ..RasterImageTransform::default()
+            },
+            RasterImageTransform {
+                saturation: 201,
+                ..RasterImageTransform::default()
+            },
+        ] {
+            assert!(transform_raster_image(&source, "png", "png", &transform).is_err());
+        }
     }
 }

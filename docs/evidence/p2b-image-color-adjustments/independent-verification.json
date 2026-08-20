@@ -1,0 +1,32 @@
+﻿{
+    "schemaVersion":  1,
+    "stage":  "P2-B",
+    "status":  "passed",
+    "expected":  {
+                     "sourceUnchanged":  true,
+                     "outputReopens":  true,
+                     "sampleIsGrayscale":  true,
+                     "dimensions":  [
+                                        960,
+                                        540
+                                    ]
+                 },
+    "actual":  {
+                   "sourceUnchanged":  true,
+                   "outputReopens":  true,
+                   "sample":  [
+                                  134,
+                                  134,
+                                  134,
+                                  255
+                              ],
+                   "sampleIsGrayscale":  true,
+                   "dimensions":  [
+                                      960,
+                                      540
+                                  ]
+               },
+    "sourceSha256":  "7facf9f1aed8f29a1b14ce18742c38b3beeb9af13b2f68a6788af3fcfcdadeff",
+    "targetSha256":  "30e668bad6099dd1d44436829cbcd939ed7294efeb437ac9dcd026c028ecb690",
+    "sourceUserContentIncluded":  false
+}

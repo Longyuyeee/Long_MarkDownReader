@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "stage": "P2-B",
+  "wide": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "overflow": 0,
+    "panel": {
+      "x": 989,
+      "y": 127.390625,
+      "width": 286,
+      "height": 636.609375
+    },
+    "stage": {
+      "x": 266,
+      "y": 127.390625,
+      "width": 723,
+      "height": 636.609375
+    },
+    "filter": "brightness(120%) contrast(115%) saturate(0%) drop-shadow(rgba(0, 0, 0, 0.18) 0px 8px 22px)",
+    "adjustments": {
+      "亮度": 20,
+      "对比度": 15,
+      "饱和度": 0
+    },
+    "saveEnabled": true,
+    "errorVisible": false
+  },
+  "narrow": {
+    "viewport": [
+      720,
+      680
+    ],
+    "overflow": 0,
+    "panel": {
+      "x": 206,
+      "y": 424.765625,
+      "width": 509,
+      "height": 219.234375
+    },
+    "stage": {
+      "x": 206,
+      "y": 167.390625,
+      "width": 509,
+      "height": 257.375
+    },
+    "filter": "brightness(120%) contrast(115%) saturate(0%) drop-shadow(rgba(0, 0, 0, 0.18) 0px 8px 22px)",
+    "adjustments": {
+      "亮度": 20,
+      "对比度": 15,
+      "饱和度": 0
+    },
+    "saveEnabled": true,
+    "errorVisible": false
+  },
+  "saveReport": {
+    "status": "saved_verified",
+    "sourceDigest": "7facf9f1aed8f29a1b14ce18742c38b3beeb9af13b2f68a6788af3fcfcdadeff",
+    "outputDigest": "30e668bad6099dd1d44436829cbcd939ed7294efeb437ac9dcd026c028ecb690",
+    "outputWidth": 960,
+    "outputHeight": 540,
+    "outputMimeType": "image/png",
+    "brightness": 20,
+    "contrast": 15,
+    "saturation": 0,
+    "metadataRemoved": true,
+    "sourceUnchanged": true,
+    "targetReopened": true
+  },
+  "runtimeErrorCount": 0,
+  "sourceUserContentIncluded": false,
+  "passed": true
+}
