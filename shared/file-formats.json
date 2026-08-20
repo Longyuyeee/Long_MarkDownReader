@@ -372,7 +372,7 @@
       "routeName": "MediaViewer",
       "maxBytes": 104857600,
       "capabilities": { "read": "supported", "edit": "supported", "create": "unsupported", "index": "unsupported" },
-      "userCapability": { "level": "basic-edit", "label": "图片基础编辑", "saveMode": "copy", "description": "PNG、JPEG、WebP 与 BMP 可在资料库右侧工作区旋转、翻转、精确裁剪、缩放、调整亮度/对比度/饱和度并转换格式，结果只另存新副本；GIF、ICO、AVIF 和所有外部图片继续只读预览。" },
+      "userCapability": { "level": "basic-edit", "label": "图片基础编辑", "saveMode": "copy", "description": "图片查看支持光标锚定滚轮缩放、按住拖动平移和双击切换 100%/适应窗口；PNG、JPEG、WebP 与 BMP 还可在资料库右侧工作区旋转、翻转、精确裁剪、缩放、调整亮度/对比度/饱和度并转换格式，结果只另存新副本；GIF、ICO、AVIF 和所有外部图片继续只读预览。" },
       "externalPolicy": "preview",
       "adapters": { "reader": "media", "writer": "image-copy", "creator": null, "indexer": null },
       "creation": null

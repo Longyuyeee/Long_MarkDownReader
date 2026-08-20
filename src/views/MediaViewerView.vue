@@ -46,7 +46,17 @@
     </header>
 
     <div class="media-content">
-    <main ref="stageRef" class="media-stage" :class="{ checkerboard, 'video-stage': isVideo }">
+    <main
+      ref="stageRef"
+      class="media-stage"
+      :class="{ checkerboard, 'video-stage': isVideo, 'image-stage': report?.kind === 'image', panning: isPanning }"
+      @wheel="handleImageWheel"
+      @pointerdown="handlePanStart"
+      @pointermove="handlePanMove"
+      @pointerup="handlePanEnd"
+      @pointercancel="handlePanEnd"
+      @dblclick="handleImageDoubleClick"
+    >
       <div v-if="loading && !mediaUrl" class="media-state">
         <RefreshCwIcon class="spinning" />
         <span>正在准备媒体预览…</span>
@@ -56,16 +66,17 @@
         <div><strong>无法打开媒体文件</strong><p>{{ loadError }}</p></div>
         <button @click="openExternally">使用系统默认程序打开</button>
       </div>
-      <img
-        v-else-if="report?.kind === 'image' && mediaUrl"
-        ref="imageRef"
-        :src="mediaUrl"
-        :alt="fileName"
-        :style="imageStyle"
-        draggable="false"
-        @load="onImageLoaded"
-        @error="onMediaError"
-      />
+      <div v-else-if="report?.kind === 'image' && mediaUrl" class="image-pan-surface" :style="imageSurfaceStyle">
+        <img
+          ref="imageRef"
+          :src="mediaUrl"
+          :alt="fileName"
+          :style="imageStyle"
+          draggable="false"
+          @load="onImageLoaded"
+          @error="onMediaError"
+        />
+      </div>
       <video
         v-else-if="report?.kind === 'video' && mediaUrl"
         ref="videoRef"
@@ -279,12 +290,14 @@ const jpegQuality = ref(85)
 const brightness = ref(0)
 const contrast = ref(0)
 const saturation = ref(100)
+const isPanning = ref(false)
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2]
 const editableImageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'bmp']
 let loadToken = 0
 let fitFrame = 0
 let dimensionSyncing = false
 let stageResizeObserver: ResizeObserver | undefined
+let panOrigin: { pointerId: number; clientX: number; clientY: number; scrollLeft: number; scrollTop: number } | undefined
 
 const mediaPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const isExternal = computed(() => route.query.external === '1')
@@ -339,6 +352,14 @@ const imageStyle = computed(() => ({
   transform: `scaleX(${flipHorizontal.value ? -1 : 1}) scaleY(${flipVertical.value ? -1 : 1}) rotate(${rotation.value}deg)`,
   filter: `brightness(${100 + brightness.value}%) contrast(${100 + contrast.value}%) saturate(${saturation.value}%) drop-shadow(0 8px 22px rgba(0,0,0,.18))`,
 }))
+const imageSurfaceStyle = computed(() => {
+  const width = (rotation.value % 180 === 0 ? effectiveOutputWidth.value : effectiveOutputHeight.value) * scale.value
+  const height = (rotation.value % 180 === 0 ? effectiveOutputHeight.value : effectiveOutputWidth.value) * scale.value
+  return {
+    width: `max(100%, ${Math.max(1, width + 48)}px)`,
+    height: `max(100%, ${Math.max(1, height + 48)}px)`,
+  }
+})
 
 const clearMediaUrl = () => {
   if (videoRef.value) {
@@ -359,8 +380,56 @@ const formatDuration = (value: number) => {
   return hours ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}` : `${minutes}:${String(seconds).padStart(2, '0')}`
 }
 const signedAdjustment = (value: number) => value > 0 ? `+${value}` : String(value)
-const setScale = (value: number) => { scale.value = Math.min(8, Math.max(0.1, value)); fitToWindow.value = false }
+const setScale = (value: number, clientX?: number, clientY?: number) => {
+  const stage = stageRef.value
+  const nextScale = Math.min(8, Math.max(0.1, value))
+  if (!stage || Math.abs(nextScale - scale.value) < 0.001) return
+  const rect = stage.getBoundingClientRect()
+  const viewportX = clientX === undefined ? stage.clientWidth / 2 : clientX - rect.left
+  const viewportY = clientY === undefined ? stage.clientHeight / 2 : clientY - rect.top
+  const anchorX = (stage.scrollLeft + viewportX) / Math.max(1, stage.scrollWidth)
+  const anchorY = (stage.scrollTop + viewportY) / Math.max(1, stage.scrollHeight)
+  scale.value = nextScale
+  fitToWindow.value = false
+  void nextTick(() => {
+    stage.scrollLeft = anchorX * stage.scrollWidth - viewportX
+    stage.scrollTop = anchorY * stage.scrollHeight - viewportY
+  })
+}
 const zoomBy = (amount: number) => setScale(Number((scale.value + amount).toFixed(2)))
+const normalizedWheelDelta = (event: WheelEvent) => event.deltaY * (event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? 240 : 1)
+const handleImageWheel = (event: WheelEvent) => {
+  if (report.value?.kind !== 'image' || !mediaUrl.value) return
+  event.preventDefault()
+  const factor = Math.exp(-normalizedWheelDelta(event) * 0.0015)
+  setScale(Number((scale.value * factor).toFixed(3)), event.clientX, event.clientY)
+}
+const handlePanStart = (event: PointerEvent) => {
+  const stage = stageRef.value
+  if (!stage || report.value?.kind !== 'image' || event.button !== 0 || !mediaUrl.value) return
+  panOrigin = { pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY, scrollLeft: stage.scrollLeft, scrollTop: stage.scrollTop }
+  isPanning.value = true
+  stage.setPointerCapture(event.pointerId)
+  event.preventDefault()
+}
+const handlePanMove = (event: PointerEvent) => {
+  const stage = stageRef.value
+  if (!stage || !panOrigin || panOrigin.pointerId !== event.pointerId) return
+  stage.scrollLeft = panOrigin.scrollLeft - (event.clientX - panOrigin.clientX)
+  stage.scrollTop = panOrigin.scrollTop - (event.clientY - panOrigin.clientY)
+}
+const handlePanEnd = (event: PointerEvent) => {
+  const stage = stageRef.value
+  if (!panOrigin || panOrigin.pointerId !== event.pointerId) return
+  if (stage?.hasPointerCapture(event.pointerId)) stage.releasePointerCapture(event.pointerId)
+  panOrigin = undefined
+  isPanning.value = false
+}
+const handleImageDoubleClick = (event: MouseEvent) => {
+  if (report.value?.kind !== 'image') return
+  if (Math.abs(scale.value - 1) > 0.01) setScale(1, event.clientX, event.clientY)
+  else fitImage()
+}
 const rotateBy = (amount: number) => {
   const shouldRefit = fitToWindow.value
   rotation.value = (rotation.value + amount + 360) % 360
@@ -375,6 +444,7 @@ const fitImage = () => {
   const height = effectiveOutputHeight.value
   scale.value = Math.min(1, Math.max(0.1, (stage.clientWidth - 48) / width, 0.1), Math.max(0.1, (stage.clientHeight - 48) / height))
   fitToWindow.value = true
+  void nextTick(() => { stage.scrollLeft = 0; stage.scrollTop = 0 })
 }
 const onImageLoaded = () => {
   mediaWidth.value = imageRef.value?.naturalWidth || 0
@@ -595,6 +665,8 @@ const load = async () => {
   brightness.value = 0
   contrast.value = 0
   saturation.value = 100
+  isPanning.value = false
+  panOrigin = undefined
   fitToWindow.value = true
   clearMediaUrl()
   try {
@@ -628,6 +700,10 @@ const handleKeydown = (event: KeyboardEvent) => {
     else if (event.key === '-') zoomBy(-0.1)
     else if (event.key === '0') fitImage()
     else if (event.key.toLowerCase() === 'r') rotateBy(event.shiftKey ? -90 : 90)
+    else if (event.key === 'ArrowLeft') stageRef.value?.scrollBy({ left: -80 })
+    else if (event.key === 'ArrowRight') stageRef.value?.scrollBy({ left: 80 })
+    else if (event.key === 'ArrowUp') stageRef.value?.scrollBy({ top: -80 })
+    else if (event.key === 'ArrowDown') stageRef.value?.scrollBy({ top: 80 })
     else return
   } else if (report.value?.kind === 'video') {
     if (event.key === ' ') void togglePlayback()
@@ -655,6 +731,7 @@ onBeforeUnmount(() => {
   loadToken += 1
   cancelAnimationFrame(fitFrame)
   stageResizeObserver?.disconnect()
+  panOrigin = undefined
   clearMediaUrl()
 })
 </script>
@@ -669,6 +746,7 @@ button,.playback-rate { height: 30px; flex: none; display: inline-flex; align-it
 .playback-rate { gap: 5px; padding: 0 7px; }.playback-rate select { border: 0; outline: 0; color: inherit; background: transparent; font-size: var(--text-compact); }
 .media-content { min-width: 0; min-height: 0; flex: 1; display: flex; }
 .media-stage { min-width: 0; min-height: 0; flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; overflow: auto; box-sizing: border-box; background: color-mix(in srgb, var(--theme-surface) 96%, #7f8a99); }.media-stage.checkerboard { background-color: var(--theme-surface); background-image: linear-gradient(45deg,rgba(127,138,153,.13) 25%,transparent 25%),linear-gradient(-45deg,rgba(127,138,153,.13) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,rgba(127,138,153,.13) 75%),linear-gradient(-45deg,transparent 75%,rgba(127,138,153,.13) 75%); background-size: 24px 24px; background-position: 0 0,0 12px,12px -12px,-12px 0; }.media-stage.video-stage { background: #101318; }.media-stage img { max-width: none; max-height: none; flex: none; object-fit: contain; transform-origin: center; image-rendering: auto; filter: drop-shadow(0 8px 22px rgba(0,0,0,.18)); }.media-stage video { width: min(100%, 1180px); max-height: 100%; border-radius: 6px; background: #000; box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+.media-stage.image-stage { display: block; padding: 0; overscroll-behavior: contain; touch-action: none; cursor: grab; user-select: none; }.media-stage.image-stage.panning { cursor: grabbing; }.image-pan-surface { min-width: 100%; min-height: 100%; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }.image-pan-surface img { pointer-events: none; }
 .media-stage { position: relative; }
 .codec-notice,.playback-notice { position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 14px; min-width: 0; display: flex; align-items: center; gap: 9px; padding: 9px 11px; border: 1px solid rgba(255,255,255,.15); border-radius: 6px; color: #eaf0f7; background: rgba(20,24,31,.92); box-shadow: 0 8px 24px rgba(0,0,0,.22); backdrop-filter: blur(10px); font-size: var(--text-compact); }
 .codec-notice > svg,.playback-notice > svg { width: 17px; height: 17px; flex: none; color: #f6c453; }.codec-notice span,.playback-notice span { min-width: 0; flex: 1; }.codec-notice strong { display: block; margin-bottom: 2px; color: #fff; }.codec-notice button,.playback-notice button { width: auto; padding: 0 10px; cursor: pointer; color: #fff; border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.08); }.playback-notice { bottom: 70px; left: 50%; right: auto; width: min(520px,calc(100% - 32px)); transform: translateX(-50%); }

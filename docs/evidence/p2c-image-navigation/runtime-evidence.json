@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "stage": "P2-C",
+  "status": "accepted",
+  "expected": {
+    "cursorAnchoredWheelZoom": true,
+    "dragPanBothAxes": true,
+    "doubleClickActualAndFit": true,
+    "wideNarrowNoPageOverflow": true
+  },
+  "actual": {
+    "initial": {
+      "viewport": [
+        1280,
+        800
+      ],
+      "overflow": 0,
+      "scale": 0.37,
+      "stage": {
+        "x": 266,
+        "y": 127.390625,
+        "width": 1009,
+        "height": 636.609375,
+        "scrollLeft": 0,
+        "scrollTop": 0,
+        "scrollWidth": 1001,
+        "scrollHeight": 637
+      },
+      "image": {
+        "x": 324.75,
+        "y": 151.390625,
+        "width": 883.5,
+        "height": 589
+      },
+      "cursor": "grab",
+      "runtimeState": ""
+    },
+    "zoomed": {
+      "viewport": [
+        1280,
+        800
+      ],
+      "overflow": 0,
+      "scale": 3.19,
+      "stage": {
+        "x": 266,
+        "y": 127.390625,
+        "width": 1009,
+        "height": 636.609375,
+        "scrollLeft": 4188.5,
+        "scrollTop": 2522,
+        "scrollWidth": 7709,
+        "scrollHeight": 5155
+      },
+      "image": {
+        "x": -3898.5,
+        "y": -2370.609375,
+        "width": 7660.796875,
+        "height": 5107.1953125
+      },
+      "cursor": "grab",
+      "runtimeState": ""
+    },
+    "anchorDrift": {
+      "x": 0.016301520883852616,
+      "y": 0.005600670225772264
+    },
+    "panned": {
+      "viewport": [
+        1280,
+        800
+      ],
+      "overflow": 0,
+      "scale": 3.19,
+      "stage": {
+        "x": 266,
+        "y": 127.390625,
+        "width": 1009,
+        "height": 636.609375,
+        "scrollLeft": 4338.5,
+        "scrollTop": 2622,
+        "scrollWidth": 7709,
+        "scrollHeight": 5155
+      },
+      "image": {
+        "x": -4048.5,
+        "y": -2470.609375,
+        "width": 7660.796875,
+        "height": 5107.1953125
+      },
+      "cursor": "grab",
+      "runtimeState": ""
+    },
+    "actualSize": {
+      "viewport": [
+        1280,
+        800
+      ],
+      "overflow": 0,
+      "scale": 1,
+      "stage": {
+        "x": 266,
+        "y": 127.390625,
+        "width": 1009,
+        "height": 636.609375,
+        "scrollLeft": 951,
+        "scrollTop": 596.5,
+        "scrollWidth": 2448,
+        "scrollHeight": 1648
+      },
+      "image": {
+        "x": -661,
+        "y": -445.109375,
+        "width": 2400,
+        "height": 1600
+      },
+      "cursor": "grab",
+      "runtimeState": ""
+    },
+    "fittedAgain": {
+      "viewport": [
+        1280,
+        800
+      ],
+      "overflow": 0,
+      "scale": 0.37,
+      "stage": {
+        "x": 266,
+        "y": 127.390625,
+        "width": 1009,
+        "height": 636.609375,
+        "scrollLeft": 0,
+        "scrollTop": 0,
+        "scrollWidth": 1001,
+        "scrollHeight": 637
+      },
+      "image": {
+        "x": 324.75,
+        "y": 151.390625,
+        "width": 883.5,
+        "height": 589
+      },
+      "cursor": "grab",
+      "runtimeState": ""
+    },
+    "narrowInitial": {
+      "viewport": [
+        720,
+        680
+      ],
+      "overflow": 0,
+      "scale": 0.19,
+      "stage": {
+        "x": 206,
+        "y": 167.390625,
+        "width": 509,
+        "height": 476.609375,
+        "scrollLeft": 0,
+        "scrollTop": 0,
+        "scrollWidth": 509,
+        "scrollHeight": 477
+      },
+      "image": {
+        "x": 230,
+        "y": 252.03125,
+        "width": 461,
+        "height": 307.328125
+      },
+      "cursor": "grab",
+      "runtimeState": ""
+    },
+    "narrowZoomed": {
+      "viewport": [
+        720,
+        680
+      ],
+      "overflow": 0,
+      "scale": 0.91,
+      "stage": {
+        "x": 206,
+        "y": 167.390625,
+        "width": 509,
+        "height": 476.609375,
+        "scrollLeft": 865,
+        "scrollTop": 514.5,
+        "scrollWidth": 2242,
+        "scrollHeight": 1510
+      },
+      "image": {
+        "x": -635,
+        "y": -323.109375,
+        "width": 2193.59375,
+        "height": 1462.3984375
+      },
+      "cursor": "grab",
+      "runtimeState": ""
+    }
+  },
+  "runtimeErrorCount": 0,
+  "sourceUserContentIncluded": false,
+  "passed": true
+}

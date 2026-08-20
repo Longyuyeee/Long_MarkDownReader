@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-20 P2-C 图片导航真实收口：** 图片查看已增加光标锚定滚轮缩放、双轴拖拽平移、双击切换 100%/适应窗口和方向键平移。修正前静态基线确认滚轮、指针和导航处理均缺失；修正后真实 Tauri 鼠标输入在 1280×800 与 720×680 通过，锚点漂移约 1.6%/0.6%，拖拽双轴滚动变化 150/100 px，页面溢出和运行时错误均为 0。下一步执行综合门禁并审计是否达到 v1.0.12 候选阈值。详见 [`P2C_Image_Navigation_Real_Desktop_Audit_2026-08-20.md`](./P2C_Image_Navigation_Real_Desktop_Audit_2026-08-20.md)。
+
 > **2026-08-20 P2-B 图片色彩调整真实收口：** 现有图片编辑侧栏已新增亮度、对比度、饱和度与恢复原色，PNG/JPEG/WebP/BMP 仍只可靠另存新副本。Rust 真实像素测试 6/6、生产构建、Tauri 1280×800/720×680、IPC 另存复开和独立 `System.Drawing` 验证均通过；实际灰度采样为 `134/134/134/255`，源 SHA-256 不变，运行时错误 0。下一步先做 P2-C 图片交互深化的可行性审计，再做 43 格式能力事实巡检；外部 Office 生产者证据没有对应环境时继续阻断。详见 [`P2B_Image_Color_Adjustments_Real_Desktop_Audit_2026-08-20.md`](./P2B_Image_Color_Adjustments_Real_Desktop_Audit_2026-08-20.md) 与 [`Post_v1.0.11_Enhancement_Audit_and_Plan_2026-08-20.md`](./Post_v1.0.11_Enhancement_Audit_and_Plan_2026-08-20.md)。
 
 > **2026-08-20 P2-A PDF 能力登记重新对齐：** 已确认最领先成果均在 `main`，v1.0.11 发布与官方更新链已经收口。审计发现格式能力页仍错误停留在“表单只读”，现已对齐安全表单子集填写、永久脱敏、文字水印和文档属性可靠副本，并新增机器门禁防止声明再次漂移。修正前真实对比缺少四项能力并返回 `FAIL`，修正后合同检查通过。下一步 P2-B 补强图片基础编辑，并以真实像素、源摘要、目标复开和 Tauri 桌面证据验收。详见 [`P2A_PDF_Capability_Registry_Reconciliation_Audit_2026-08-20.md`](./P2A_PDF_Capability_Registry_Reconciliation_Audit_2026-08-20.md)。

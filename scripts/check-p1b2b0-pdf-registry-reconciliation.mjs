@@ -14,8 +14,12 @@ if (!pdf || pdf.capabilities?.edit !== 'supported' || pdf.capabilities?.create !
 }
 const mapping = release.formats.find(item => item.id === 'pdf')
 const profile = release.profiles.find(item => item.id === 'pdf-copy')
+const limitations = profile?.knownLimitations?.join(' ') || ''
+const hasHistoricalFormBoundary = limitations.includes('填写副本尚未开放')
+const hasCurrentBoundedFormBoundary = ['单行文本', '复选框', '单选组', '单选 Choice']
+  .every(token => limitations.includes(token))
 if (mapping?.profile !== 'pdf-copy' || mapping.readiness !== 'verified-with-limitations' || !profile
-  || !profile.sourcePolicy.includes('永不覆盖') || !profile.knownLimitations.some(item => item.includes('填写副本尚未开放'))) {
+  || !profile.sourcePolicy.includes('永不覆盖') || (!hasHistoricalFormBoundary && !hasCurrentBoundedFormBoundary)) {
   fail('P1-B2B0 release capability boundary is incomplete')
 }
 const lane = degradation.lanes.find(item => item.id === 'pdf-reliable-copy-isolation')
@@ -27,4 +31,4 @@ if (contract.registryFinding?.status !== 'reconciled-before-b2b' || contract.reg
   fail('P1-B2B0 advanced editing contract is not reconciled')
 }
 
-console.log('P1-B2B0 PDF registry reconciliation passed: library-only reliable copies are declared without claiming form filling, source overwrite, creation, or external editing.')
+console.log(`P1-B2B0 PDF registry reconciliation passed: library-only copy boundaries remain intact and the public form state is ${hasCurrentBoundedFormBoundary ? 'advanced-but-bounded' : 'historical-read-only'}.`)

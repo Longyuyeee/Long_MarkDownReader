@@ -80,7 +80,7 @@
       "dependency": "none",
       "sourcePolicy": "图片源文件只读且仅允许在资料库内另存编辑副本；视频和外部媒体不提供写回",
       "privacyBoundary": "媒体字节只在本机读取和处理，不上传、不索引；图片输出必须通过有界解码、摘要校验和复读",
-      "knownLimitations": ["图片基础编辑限 PNG/JPEG/WebP/BMP 的旋转、翻转、精确裁剪、缩放、亮度/对比度/饱和度和格式转换，不提供图层、蒙版或专业色彩管理；GIF/ICO/AVIF 只读；视频播放取决于系统 WebView 编解码器"]
+      "knownLimitations": ["图片查看支持光标锚定滚轮缩放、拖拽平移和双击切换 100%/适应窗口；基础编辑限 PNG/JPEG/WebP/BMP 的旋转、翻转、精确裁剪、缩放、亮度/对比度/饱和度和格式转换，不提供图层、蒙版或专业色彩管理；GIF/ICO/AVIF 只读；视频播放取决于系统 WebView 编解码器"]
     }
   ],
   "formats": [
