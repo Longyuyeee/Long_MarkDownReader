@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="docs/RELEASE_NOTES_v1.0.12.md"><img src="https://img.shields.io/badge/Next-v1.0.12-cca43b" alt="v1.0.12 candidate"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.12"><img src="https://img.shields.io/badge/Release-v1.0.12-cca43b" alt="Release v1.0.12"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -31,28 +31,28 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.12 正在执行发布门禁，新增图片色彩调整、光标锚定滚轮缩放、拖拽平移与双击查看，并修正 PDF 公开能力说明。当前可下载稳定版仍为 v1.0.11；候选范围见 [v1.0.12 发布说明](docs/RELEASE_NOTES_v1.0.12.md)。
+> v1.0.12 已发布，新增图片色彩调整、光标锚定滚轮缩放、拖拽平移与双击查看，并修正 PDF 公开能力说明。完整范围与边界见 [v1.0.12 发布说明](docs/RELEASE_NOTES_v1.0.12.md)。
 
 ## 下载
 
-当前稳定版 Long编辑 v1.0.11 支持 Windows 10/11 x64。v1.0.12 只有在质量门、安装生命周期和远端哈希复核全部通过后才会替换以下链接。
+Long编辑 v1.0.12 支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.0.11_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.11/LongEdit_1.0.11_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.0.11_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.11/LongEdit_1.0.11_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.0.11](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.11) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.0.12_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.12/LongEdit_1.0.12_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.0.12_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.12/LongEdit_1.0.12_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.0.12](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.12) | Release Notes 与 SHA-256 |
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 `SHA256SUMS.txt` 核对文件。
 
 ```text
-aa81c91e2e60f60d5cc384e1bfcdc0a8a309edd91cadce6fe5838bfa69743b9a  LongEdit_1.0.11_x64-setup.exe
-ba9d5eca3ad23a28c64edb1689563693da2ed695b37a2465af856f2adadcf4c6  LongEdit_1.0.11_x64_zh-CN.msi
+d6e2866ff6e9d3a91442986151bb1653694658b81b82646b0ebe1159d87571f4  LongEdit_1.0.12_x64-setup.exe
+a272b8eab955cf76ccda1ffa2843dc9785be75eaa38ae233970e9283b51cd8c1  LongEdit_1.0.12_x64_zh-CN.msi
 ```
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。
 
-## v1.0.12 候选
+## v1.0.12
 
 这一补丁围绕图片工作区和能力真实性收口：
 
@@ -62,7 +62,7 @@ v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手
 - PDF 格式能力页同步已完成的标准表单安全子集、永久脱敏、文字水印和文档属性，不再显示旧的只读阶段说明。
 - 图片功能已通过真实 Tauri 宽窄窗口、原生鼠标输入、Rust 像素测试、独立像素采样、源摘要和目标复开验证。
 
-候选不等于正式发布。完整范围、测试事实与边界见 [v1.0.12 发布说明](docs/RELEASE_NOTES_v1.0.12.md) 和 [发布审计](docs/V1_0_12_Unsigned_Community_Release_Audit_2026-08-20.md)。
+发布已通过完整 Quality Gate、22/22 安装生命周期检查、18/18 安装后工作区检查，以及三个公开附件重新下载哈希复核。完整范围、测试事实与边界见 [v1.0.12 发布说明](docs/RELEASE_NOTES_v1.0.12.md) 和 [发布审计](docs/V1_0_12_Unsigned_Community_Release_Audit_2026-08-20.md)。
 
 ## v1.0.11
 
