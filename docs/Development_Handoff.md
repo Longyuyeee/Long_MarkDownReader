@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-20 v1.0.12 候选冻结：** P2-A 至 P2-C 已构成 PDF 能力声明纠偏、图片色彩调整和图片鼠标导航增强包，package/Cargo/Tauri 与发布事实源开始提升至 1.0.12。当前仍是质量门待验证状态，公开稳定版和 README 下载保持 v1.0.11；必须完成完整 Quality Gate、无签名 MSI/NSIS、托管安装生命周期、候选证据回写、GitHub Release 与远端附件复核后才能宣布发布。详见 [`V1_0_12_Unsigned_Community_Release_Audit_2026-08-20.md`](./V1_0_12_Unsigned_Community_Release_Audit_2026-08-20.md)。
+
 > **2026-08-20 P2-C 图片导航真实收口：** 图片查看已增加光标锚定滚轮缩放、双轴拖拽平移、双击切换 100%/适应窗口和方向键平移。修正前静态基线确认滚轮、指针和导航处理均缺失；修正后真实 Tauri 鼠标输入在 1280×800 与 720×680 通过，锚点漂移约 1.6%/0.6%，拖拽双轴滚动变化 150/100 px，页面溢出和运行时错误均为 0。下一步执行综合门禁并审计是否达到 v1.0.12 候选阈值。详见 [`P2C_Image_Navigation_Real_Desktop_Audit_2026-08-20.md`](./P2C_Image_Navigation_Real_Desktop_Audit_2026-08-20.md)。
 
 > **2026-08-20 P2-B 图片色彩调整真实收口：** 现有图片编辑侧栏已新增亮度、对比度、饱和度与恢复原色，PNG/JPEG/WebP/BMP 仍只可靠另存新副本。Rust 真实像素测试 6/6、生产构建、Tauri 1280×800/720×680、IPC 另存复开和独立 `System.Drawing` 验证均通过；实际灰度采样为 `134/134/134/255`，源 SHA-256 不变，运行时错误 0。下一步先做 P2-C 图片交互深化的可行性审计，再做 43 格式能力事实巡检；外部 Office 生产者证据没有对应环境时继续阻断。详见 [`P2B_Image_Color_Adjustments_Real_Desktop_Audit_2026-08-20.md`](./P2B_Image_Color_Adjustments_Real_Desktop_Audit_2026-08-20.md) 与 [`Post_v1.0.11_Enhancement_Audit_and_Plan_2026-08-20.md`](./Post_v1.0.11_Enhancement_Audit_and_Plan_2026-08-20.md)。

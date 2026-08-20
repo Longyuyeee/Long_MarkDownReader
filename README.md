@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.11"><img src="https://img.shields.io/badge/Release-v1.0.11-cca43b" alt="Release v1.0.11"></a>
+  <a href="docs/RELEASE_NOTES_v1.0.12.md"><img src="https://img.shields.io/badge/Next-v1.0.12-cca43b" alt="v1.0.12 candidate"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -31,11 +31,11 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.11 已发布，完成图片基础编辑、PDF 标准表单安全子集、永久脱敏、文字水印、文档属性和 P1 能力总收口。完整范围与边界见 [v1.0.11 发布说明](docs/RELEASE_NOTES_v1.0.11.md)。
+> v1.0.12 正在执行发布门禁，新增图片色彩调整、光标锚定滚轮缩放、拖拽平移与双击查看，并修正 PDF 公开能力说明。当前可下载稳定版仍为 v1.0.11；候选范围见 [v1.0.12 发布说明](docs/RELEASE_NOTES_v1.0.12.md)。
 
 ## 下载
 
-Long编辑 v1.0.11 支持 Windows 10/11 x64。
+当前稳定版 Long编辑 v1.0.11 支持 Windows 10/11 x64。v1.0.12 只有在质量门、安装生命周期和远端哈希复核全部通过后才会替换以下链接。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
@@ -51,6 +51,18 @@ ba9d5eca3ad23a28c64edb1689563693da2ed695b37a2465af856f2adadcf4c6  LongEdit_1.0.1
 ```
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。
+
+## v1.0.12 候选
+
+这一补丁围绕图片工作区和能力真实性收口：
+
+- 滚轮缩放会保持鼠标下方内容的视觉锚点，放大后可以按住图片进行横纵拖拽。
+- 双击在 100% 实际大小与适应窗口之间切换，方向键也能移动大图视口。
+- PNG/JPEG/WebP/BMP 新增亮度、对比度、饱和度和恢复原色，仍只生成经过验证的新副本。
+- PDF 格式能力页同步已完成的标准表单安全子集、永久脱敏、文字水印和文档属性，不再显示旧的只读阶段说明。
+- 图片功能已通过真实 Tauri 宽窄窗口、原生鼠标输入、Rust 像素测试、独立像素采样、源摘要和目标复开验证。
+
+候选不等于正式发布。完整范围、测试事实与边界见 [v1.0.12 发布说明](docs/RELEASE_NOTES_v1.0.12.md) 和 [发布审计](docs/V1_0_12_Unsigned_Community_Release_Audit_2026-08-20.md)。
 
 ## v1.0.11
 
@@ -136,7 +148,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 | PDF | 阅读、搜索、批注和页面管理 | 不是通用内容重排编辑器 |
 | Mermaid / Draw.io / SVG | 查看、编辑、画布操作与安全保存 | 外部资源和危险协议会被阻断 |
 | OPML / JSON Canvas | 思维导图、卡片与关系画布 | 修改需显式保存 |
-| 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、AVIF | PNG/JPEG/WebP/BMP 可在右侧编辑区旋转、翻转、精确裁剪、缩放、转换并另存副本；JPEG 支持质量控制，副本自动校正 EXIF 方向并清理隐私元数据；GIF/ICO/AVIF 与外部图片只读 |
+| 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、AVIF | 查看支持光标锚定滚轮缩放、拖拽平移和双击 100%/适应窗口；PNG/JPEG/WebP/BMP 可旋转、翻转、精确裁剪、缩放、调整亮度/对比度/饱和度、转换并另存副本；GIF/ICO/AVIF 与外部图片只读 |
 | 视频 | MP4、WebM、OGV、M4V 及五种系统解码入口 | MOV/MKV/AVI/MPEG/MPG 取决于系统解码器 |
 | ODS / ODP / 旧 Office / WPS | ODS/ODP 有界预览，旧 Office 转换，WPS 原生格式交给外部程序 | ODT 尚未正式注册；`.wps/.et/.dps` 不在软件内编辑 |
 
@@ -204,7 +216,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
-开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前发布证据见 [v1.0.10 发布审计](docs/V1_0_10_Unsigned_Community_Release_Audit_2026-08-12.md)。
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选审计见 [v1.0.12 发布审计](docs/V1_0_12_Unsigned_Community_Release_Audit_2026-08-20.md)。
 
 ## 许可证
 

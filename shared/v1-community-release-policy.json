@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.0.11",
-  "releaseCandidate": true,
+  "appVersion": "1.0.12",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
-  "generatedAt": "2026-08-16",
-  "currentStatus": "v1.0.11-community-release-published",
+  "generatedAt": "2026-08-20",
+  "currentStatus": "v1.0.12-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,60 +24,40 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
     "localRuntimeSmokePassed": false,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.0.10",
+    "previousPublicVersion": "1.0.11",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.10-to-1.0.11-passed",
-    "scope": "p1-bounded-image-pdf-and-capability-closure"
+    "managedUpdaterUpgradePath": "1.0.11-to-1.0.12-pending",
+    "scope": "pdf-capability-truth-and-image-color-navigation"
   },
   "targetRelease": {
-    "tag": "v1.0.11",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.11",
+    "tag": "v1.0.12",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.12",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "73932f323148f1c549ab74be1424eff34b8b5e05",
-    "qualityGateRunId": 31902257921,
-    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31902257921",
-    "hostedInstalledLifecycleRunId": 31902477250,
-    "hostedInstalledLifecycleRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/31902477250",
-    "artifacts": [
-      { "target": "release-executable", "fileName": "tauri-app.exe", "sizeBytes": 107208704, "sha256": "252f605da60af0ab701fa12ba8aa7472aa7f73280cf6ce52e15cffa1dea122b8", "authenticodeStatus": "NotSigned" },
-      { "target": "msi", "fileName": "LongEdit_1.0.11_x64_zh-CN.msi", "sizeBytes": 73613312, "sha256": "ba9d5eca3ad23a28c64edb1689563693da2ed695b37a2465af856f2adadcf4c6", "authenticodeStatus": "NotSigned" },
-      { "target": "nsis", "fileName": "LongEdit_1.0.11_x64-setup.exe", "sizeBytes": 65547099, "sha256": "aa81c91e2e60f60d5cc384e1bfcdc0a8a309edd91cadce6fe5838bfa69743b9a", "authenticodeStatus": "NotSigned" }
-    ]
-  },
-  "release": {
-    "databaseId": 371253676,
-    "tag": "v1.0.11",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.11",
-    "taggedCommit": "4615cfe26d8e36222bb7d456ae160c4e6b32ea73",
-    "publishedAt": "2026-08-16T06:50:17Z",
-    "candidateEvidenceQualityGateRunId": 31932154818,
-    "remoteAssetsVerified": true,
-    "receipt": "docs/evidence/v1.0.11-release/release-receipt.json"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.10-to-v1.0.11-managed-update-observation-passed",
+    "v1.0.11-to-v1.0.12-managed-update-observation-pending",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "v1.0.11-release-closure-complete"
+  "nextAction": "pass-quality-gate-and-build-v1.0.12-candidate"
 }

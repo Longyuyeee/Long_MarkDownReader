@@ -14,7 +14,7 @@ const audit = read('docs/P1_Final_Capability_Closure_Audit_2026-08-16.md')
 const plan = read('docs/Development_Alignment_and_Closure_Plan_2026-08-02.md')
 const handoff = read('docs/Development_Handoff.md')
 
-if (closure.stage !== 'P1-FINAL' || closure.status !== 'accepted-bounded-ready-for-patch-release' || closure.appVersion !== packageJson.version || closure.releaseCandidate !== false || closure.nextStage !== 'V1.0.11-UNSIGNED-PATCH-RELEASE') fail('P1 final identity is stale')
+if (closure.stage !== 'P1-FINAL' || closure.status !== 'accepted-bounded-ready-for-patch-release' || closure.appVersion !== packageJson.version || closure.releaseCandidate !== false || closure.nextStage !== `V${packageJson.version}-UNSIGNED-PATCH-RELEASE`) fail('P1 final identity is stale')
 const readiness = release.formats.reduce((counts, item) => ({ ...counts, [item.readiness]: (counts[item.readiness] || 0) + 1 }), {})
 const extensionCount = registry.formats.reduce((sum, item) => sum + item.extensions.length, 0)
 const expected = { registeredFormats: registry.formats.length, registeredExtensions: extensionCount, verifiedFormats: readiness.verified, limitedFormats: readiness['verified-with-limitations'], externalDependencyFormats: readiness['external-dependency'], releaseProfiles: release.profiles.length }
@@ -29,4 +29,4 @@ if (!packageJson.scripts?.['check:p1-final-capability-closure'] || !read('script
 for (const section of ['## 1. 总结论', '## 2. 最初需求逐项对齐', '## 3. 格式能力分层', '## 4. 知识图谱与思维导图结论', '## 5. 发布边界', '## 6. 下一阶段执行顺序']) if (!audit.includes(section)) fail(`P1 final audit section missing: ${section}`)
 for (const [label, source, markers] of [['plan', plan, ['P1 总收口已完成', '1.0.11']], ['handoff', handoff, ['P1 总收口', 'p1-final-capability-closure.json']]]) for (const marker of markers) if (!source.includes(marker)) fail(`${label} marker missing: ${marker}`)
 
-console.log(`P1 final capability closure passed: ${registry.formats.length} formats/${extensionCount} extensions are tiered truthfully; bounded daily management and basic editing are ready for the v1.0.11 unsigned patch release flow.`)
+console.log(`P1 final capability closure passed: ${registry.formats.length} formats/${extensionCount} extensions are tiered truthfully; bounded daily management and basic editing remain ready for the v${packageJson.version} unsigned patch release flow.`)
