@@ -3,7 +3,7 @@
     <aside v-if="open" class="health-panel" aria-label="知识图谱治理">
       <header>
         <div>
-          <span class="health-kicker">GRAPH HEALTH</span>
+          <span class="health-kicker">关系健康</span>
           <h2>知识图谱治理</h2>
         </div>
         <button class="close-button" aria-label="关闭知识图谱治理" @click="emit('close')">×</button>

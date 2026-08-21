@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "status": "accepted",
+  "expected": {
+    "workspace": [
+      "当前工作区",
+      "最近活动",
+      "关系概览",
+      "未完成事项",
+      "可视画布",
+      "快捷视图",
+      "资料治理"
+    ],
+    "pptx": [
+      "编辑安全基线",
+      "文本编辑预览",
+      "样式与替代文本",
+      "图片替换",
+      "基础形状",
+      "幻灯片管理"
+    ],
+    "blocked": [
+      "GRAPH HEALTH",
+      "LOCAL GRAPH",
+      "GOVERNANCE",
+      "ACTIVE WORKSPACE",
+      "ACTIVITY",
+      "KNOWLEDGE HEALTH",
+      "OPEN TASKS",
+      "SAVED VIEWS",
+      "C4A",
+      "C4B",
+      "C4C",
+      "C4D",
+      "C5A",
+      "C5B",
+      "C5C"
+    ]
+  },
+  "actual": {
+    "workspace": {
+      "labels": [
+        "当前工作区",
+        "最近活动",
+        "关系概览",
+        "未完成事项",
+        "可视画布",
+        "快捷视图",
+        "资料治理"
+      ],
+      "text": "返回资料库工作台Chart visual matrix图谱当前工作区Chart visual matrixC:\\Users\\39633\\AppData\\Local\\Temp\\longedit-terminology-28728-1787279694428\\library搜索与关联：可用10:35可管理文件1Markdown0Canvas0未完成任务0治理风险0最近活动继续工作最近使用婕旂ず鏂囩鏈楠屾敹婕旂ず鏂囩鏈楠屾敹.pptx1关系关系概览知识库健康查看图谱断链0歧义0孤立笔记0关系覆盖100%4 已连接 · 0 孤立 · 3 关系包含 3婕旂ず鏂囩鏈楠屾敹3WPS Presentation Producer Fixture1WPS grouped shapes, connector and table1WPS images and relationships1丰富关系语义当前 1 类，建议达到 3 类以上。 记录治理基线 搜索与关联：可用4 个对象 · 3 条关系pptx1未完成事项待办0没有未完成任务可视画布常用画布浏览文件暂无 Canvas快捷视图保存视图管理视图暂无保存视图资料治理治理队列1 个文件 · 0 条批注重复文件0 组未发现内容完全相同的文件未处理批注0 条所有 PDF 批注均已进入知识引用",
+      "overflow": 0
+    },
+    "pptx": {
+      "headings": [
+        "编辑安全基线",
+        "文本编辑预览",
+        "样式与替代文本",
+        "图片替换",
+        "基础形状",
+        "幻灯片管理",
+        "演讲者备注",
+        "兼容画像",
+        "只读边界"
+      ],
+      "text": "编辑安全基线已验证隔离方式内存 + 临时副本OOXML 部件114候选编辑部件6原样保全部件114临时副本复读通过源文件写入否 SHA-256 · 1bbb8343566166a3… 保护基线覆盖文本/备注、基础字符样式、图片替代文本与替换、基础形状和幻灯片生命周期编辑；所有操作均在隔离副本中验证。文本编辑预览安全编辑目标 幻灯片 1 · WPS C3D Title 幻灯片 1 · WPS rounded rectangle 幻灯片 2 · WPS Image Title 幻灯片 3 · WPS Object Title 幻灯片 3 · WPS group rectangle 幻灯片 3 · WPS group oval 幻灯片 1 · 备注 幻灯片 2 · 备注 幻灯片 3 · 备注隔离替换文本33/32767 · 不写入当前文件 验证隔离补丁样式与替代文本单运行字符样式形状文本目标 幻灯片 1 · 文本框 · WPS C3D Title 幻灯片 1 · 形状 · WPS rounded rectangle 幻灯片 2 · 文本框 · WPS Image Title 幻灯片 3 · 文本框 · WPS Object Title 幻灯片 3 · 形状 · WPS group rectangle 幻灯片 3 · 形状 · WPS group oval字号（pt）字体颜色对齐左对齐居中右对齐两端对齐粗体斜体下划线单运行、单段落 · 不写入当前文件 验证样式补丁 图片替代文本内嵌图片目标 幻灯片 2 · WPS producer image替代文本（留空可清除）31/1024 · 图片字节保持不变 验证替代文本图片替换单引用图片目标 幻灯片 2 · WPS producer image · PNG同格式替换图片（最大 8 MiB）共享图片、格式变化和新增关系均会被拒绝 验证隔离替换基础形状 新增  删除 目标幻灯片 幻灯片 1 · 新对象 ID 5 幻灯片 2 · 新对象 ID 4 幻灯片 3 · 新对象 ID 8形状类型矩形椭圆线条X（cm）Y（cm）宽（cm）高（cm）填充描边线宽（pt）只修改 ppt/slides/slide1.xml 验证新增幻灯片管理新增复制删除排序目标幻灯片 幻灯片 1 · WPS Presentation Producer Fixture 幻灯片 2 · WPS images and relationships 幻灯片 3 · WPS grouped shapes, connector and table在所选页后新增空白页并继承版式 验证操作演讲者备注WPS speaker note evidence for slide one.兼容画像生产者WPS Presentation幻灯片3文本对象7图片 / 形状1 / 1备注3母版 / 主题1 / 2图表 / SmartArt0 / 0动画页0只读边界检测到未知演示部件；当前严格只读，不会重写原包",
+      "overflow": 0
+    },
+    "blockedPresent": [],
+    "sourceUnchanged": true,
+    "sourceSha256": "1bbb8343566166a351ff37054cfbb91ad61122930fb2e3f588e9658afda59f9a",
+    "runtimeErrorCount": 0
+  },
+  "passed": true
+}

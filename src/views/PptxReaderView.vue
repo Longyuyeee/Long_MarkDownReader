@@ -149,7 +149,7 @@
         <section v-if="editBaseline && !isExternal" class="isolated-text-patch">
           <header>
             <PenLineIcon :size="15" />
-            <strong>C4B 隔离文本预览</strong>
+            <strong>文本编辑预览</strong>
             <span v-if="textPatchReport" class="verified-badge">已通过</span>
           </header>
           <template v-if="safeEditTargets.length">
@@ -196,12 +196,12 @@
               单部件白名单 · {{ textPatchReport.targetPart }}
             </p>
           </template>
-          <p v-else class="muted">此演示文稿没有符合 C4B 保守规则的单文本目标。</p>
+          <p v-else class="muted">此演示文稿没有符合安全编辑规则的单文本目标。</p>
         </section>
         <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c4c-patch-panel">
           <header>
             <PaletteIcon :size="15" />
-            <strong>C4C 样式与无障碍预览</strong>
+            <strong>样式与替代文本</strong>
             <span v-if="stylePatchReport || altTextPatchReport" class="verified-badge">已通过</span>
           </header>
           <div class="c4c-block">
@@ -308,7 +308,7 @@
         <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c5a-image-panel">
           <header>
             <ImageIcon :size="15" />
-            <strong>C5A 隔离图片替换</strong>
+            <strong>图片替换</strong>
             <span v-if="imagePatchReport" class="verified-badge">已通过</span>
           </header>
           <template v-if="safeImageTargets.length">
@@ -363,7 +363,7 @@
         <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c5b-shape-panel">
           <header>
             <ShapesIcon :size="15" />
-            <strong>C5B 基础形状</strong>
+            <strong>基础形状</strong>
             <span v-if="shapePatchReport" class="verified-badge">已通过</span>
           </header>
           <div class="shape-mode" role="tablist" aria-label="形状操作">
@@ -463,7 +463,7 @@
         <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c5c-slide-panel">
           <header>
             <PresentationIcon :size="15" />
-            <strong>C5C 幻灯片管理</strong>
+            <strong>幻灯片管理</strong>
             <span v-if="slideLifecycleReport" class="verified-badge">已通过</span>
           </header>
           <div class="slide-lifecycle-mode" role="tablist" aria-label="幻灯片操作">
@@ -540,12 +540,12 @@
               <div><dt>语义复读</dt><dd>{{ slideLifecycleReport.semanticReparseVerified ? '通过' : '未通过' }}</dd></div>
             </dl>
           </template>
-          <p v-else class="muted">没有通过 C5C 关系与部件边界审计的幻灯片。</p>
+          <p v-else class="muted">没有通过关系和部件安全检查的幻灯片。</p>
         </section>
         <section v-if="verifiedPreview && verifiedOperation && !isExternal" class="reliable-save-copy" data-testid="c4d-save-panel" aria-live="polite">
           <header>
             <SaveIcon :size="15" />
-            <strong>C4D 可靠另存副本</strong>
+            <strong>可靠另存副本</strong>
             <span v-if="savedCopyReport" class="verified-badge">已保存</span>
           </header>
           <p class="save-summary">
@@ -630,10 +630,10 @@
       <span>{{ report.model.slides.length }} 张幻灯片 · {{ formatBytes(report.size) }}</span>
       <span v-if="routeTargetLabel" class="route-target-status" aria-live="polite">已定位：{{ routeTargetLabel }}</span>
       <span v-else-if="isExternal" class="baseline-status">外部文件只读预览 · 源文件未修改</span>
-      <span v-else-if="savedCopyReport" class="baseline-status">C4D 新副本已可靠保存 · 原文件未修改</span>
-      <span v-else-if="stylePatchReport || altTextPatchReport" class="baseline-status">C4C 隔离补丁已验证 · 原文件未修改</span>
-      <span v-else-if="textPatchReport" class="baseline-status">C4B 隔离补丁已验证 · 原文件未修改</span>
-      <span v-else-if="editBaseline" class="baseline-status">C4A 编辑隔离基线已验证 · 原文件未修改</span>
+      <span v-else-if="savedCopyReport" class="baseline-status">新副本已可靠保存 · 原文件未修改</span>
+      <span v-else-if="stylePatchReport || altTextPatchReport" class="baseline-status">样式或替代文本修改已验证 · 原文件未修改</span>
+      <span v-else-if="textPatchReport" class="baseline-status">文本修改已验证 · 原文件未修改</span>
+      <span v-else-if="editBaseline" class="baseline-status">编辑安全基线已验证 · 原文件未修改</span>
       <span>{{ activeSlide?.objects.length || 0 }} 个当前页对象</span>
     </footer>
 
@@ -1575,7 +1575,7 @@ const previewTextPatch = async () => {
       || !patch.sourceUnchanged
       || patch.writesUserFile
     ) {
-      throw new Error('PPTX C4B 隔离补丁未通过单部件保护门禁')
+      throw new Error('PPTX 文本修改未通过单部件安全检查')
     }
     textPatchReport.value = patch
     verifiedOperation.value = {
@@ -1646,7 +1646,7 @@ const previewStylePatch = async () => {
       || !patch.sourceUnchanged
       || patch.writesUserFile
     ) {
-      throw new Error('PPTX C4C 样式补丁未通过单部件保护门禁')
+      throw new Error('PPTX 样式修改未通过单部件安全检查')
     }
     stylePatchReport.value = patch
     verifiedOperation.value = {
@@ -1704,7 +1704,7 @@ const previewAltTextPatch = async () => {
       || !patch.sourceUnchanged
       || patch.writesUserFile
     ) {
-      throw new Error('PPTX C4C 替代文本补丁未通过单部件保护门禁')
+      throw new Error('PPTX 替代文本修改未通过单部件安全检查')
     }
     altTextPatchReport.value = patch
     verifiedOperation.value = {
@@ -1808,7 +1808,7 @@ const previewImagePatch = async () => {
       || !patch.sourceUnchanged
       || patch.writesUserFile
     ) {
-      throw new Error('PPTX C5A 图片替换未通过单媒体部件保护门禁')
+      throw new Error('PPTX 图片替换未通过单媒体部件安全检查')
     }
     imagePatchReport.value = patch
     verifiedOperation.value = {
@@ -1874,7 +1874,7 @@ const previewShapeAdd = async () => {
       || !patch.sourceUnchanged
       || patch.writesUserFile
     ) {
-      throw new Error('PPTX C5B 形状新增未通过单幻灯片部件保护门禁')
+      throw new Error('PPTX 形状新增未通过单幻灯片部件安全检查')
     }
     shapePatchReport.value = patch
     verifiedOperation.value = {
@@ -1923,7 +1923,7 @@ const previewShapeDelete = async () => {
       || !patch.sourceUnchanged
       || patch.writesUserFile
     ) {
-      throw new Error('PPTX C5B 形状删除未通过单幻灯片部件保护门禁')
+      throw new Error('PPTX 形状删除未通过单幻灯片部件安全检查')
     }
     shapePatchReport.value = patch
     verifiedOperation.value = {
@@ -2010,7 +2010,7 @@ const previewSlideLifecycle = async () => {
       || !patch.sourceUnchanged
       || patch.writesUserFile
     ) {
-      throw new Error('PPTX C5C 幻灯片操作未通过部件白名单与语义复读门禁')
+      throw new Error('PPTX 幻灯片操作未通过部件白名单与内容复读检查')
     }
     slideLifecycleReport.value = patch
     verifiedOperation.value = operation
@@ -2066,7 +2066,7 @@ const savePptxCopy = async () => {
       || saved.producerMatrixBaseline.length !== 3
       || !saved.externalProducerReopenRequired
     ) {
-      throw new Error('PPTX C4D 保存结果未通过无覆盖、复读与源文件保护门禁')
+      throw new Error('PPTX 保存结果未通过无覆盖、内容复读与源文件保护检查')
     }
     savedCopyReport.value = saved
     message.success(`已可靠另存并验证：${copyFileName.value.trim()}`)

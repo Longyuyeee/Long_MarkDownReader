@@ -1,7 +1,7 @@
 <template>
   <div class="governance-queue">
     <div class="queue-heading">
-      <div><span>GOVERNANCE</span><h2>治理队列</h2></div>
+      <div><span>资料治理</span><h2>治理队列</h2></div>
       <p>{{ report.scannedFiles }} 个文件 · {{ report.scannedAnnotations }} 条批注</p>
     </div>
 

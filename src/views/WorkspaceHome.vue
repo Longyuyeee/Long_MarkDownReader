@@ -19,7 +19,7 @@
     <WorkspaceManagementContent v-if="store.libraryPath" class="workspace-content">
       <section class="workspace-identity">
         <div>
-          <span class="section-kicker">ACTIVE WORKSPACE</span>
+          <span class="section-kicker">当前工作区</span>
           <h1>{{ store.currentLibraryName }}</h1>
           <p :title="store.libraryPath">{{ store.libraryPath }}</p>
         </div>
@@ -41,7 +41,7 @@
 
       <div class="workspace-grid">
         <section class="workspace-section activity-section">
-          <div class="section-heading"><div><span class="section-kicker">ACTIVITY</span><h2>继续工作</h2></div></div>
+          <div class="section-heading"><div><span class="section-kicker">最近活动</span><h2>继续工作</h2></div></div>
           <template v-if="starredItems.length">
             <div class="list-label">已收藏</div>
             <div class="file-list starred-list">
@@ -70,7 +70,7 @@
         </section>
 
         <section class="workspace-section health-section">
-          <div class="section-heading"><div><span class="section-kicker">KNOWLEDGE HEALTH</span><h2>知识库健康</h2></div><button class="text-command" @click="router.push({ name: 'Graph' })">查看图谱</button></div>
+          <div class="section-heading"><div><span class="section-kicker">关系概览</span><h2>知识库健康</h2></div><button class="text-command" @click="router.push({ name: 'Graph' })">查看图谱</button></div>
           <div class="health-grid">
             <button @click="router.push({ name: 'Graph' })"><span>断链</span><strong>{{ health.brokenLinks.length }}</strong></button>
             <button @click="router.push({ name: 'Graph' })"><span>歧义</span><strong>{{ health.ambiguousLinks.length }}</strong></button>
@@ -120,7 +120,7 @@
         </section>
 
         <section ref="tasksSection" class="workspace-section task-section">
-          <div class="section-heading"><div><span class="section-kicker">OPEN TASKS</span><h2>待办</h2></div><span class="section-count">{{ overview.tasks.length }}</span></div>
+          <div class="section-heading"><div><span class="section-kicker">未完成事项</span><h2>待办</h2></div><span class="section-count">{{ overview.tasks.length }}</span></div>
           <div v-if="overview.tasks.length" class="task-list">
             <button v-for="task in overview.tasks" :key="`${task.path}:${task.line}`" @click="openPath(task.path)">
               <span class="task-check"></span>
@@ -132,7 +132,7 @@
         </section>
 
         <section class="workspace-section canvas-section">
-          <div class="section-heading"><div><span class="section-kicker">CANVAS</span><h2>常用画布</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode' })">浏览文件</button></div>
+          <div class="section-heading"><div><span class="section-kicker">可视画布</span><h2>常用画布</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode' })">浏览文件</button></div>
           <div v-if="canvasItems.length" class="canvas-list">
             <button v-for="canvas in canvasItems" :key="canvas.path" @click="openPath(canvas.path)">
               <CanvasIcon />
@@ -144,7 +144,7 @@
         </section>
 
         <section class="workspace-section collection-section">
-          <div class="section-heading"><div><span class="section-kicker">SAVED VIEWS</span><h2>保存视图</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode', query: { panel: 'collections' } })">管理视图</button></div>
+          <div class="section-heading"><div><span class="section-kicker">快捷视图</span><h2>保存视图</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode', query: { panel: 'collections' } })">管理视图</button></div>
           <div v-if="savedSearches.length" class="collection-list">
             <button v-for="search in savedSearches" :key="search.id" @click="openSavedSearch(search)">
               <CollectionIcon />

@@ -188,6 +188,8 @@
     "check:p2c-image-navigation-evidence": "node scripts/check-p2c-image-navigation-evidence.mjs",
     "check:main-version-indicator": "node scripts/check-main-version-indicator.mjs",
     "audit:main-version-indicator": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-main-version-indicator-audit.ps1",
+    "check:user-facing-terminology": "node scripts/check-user-facing-terminology.mjs",
+    "audit:user-facing-terminology": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-user-facing-terminology-audit.ps1",
     "audit:media-workspace": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-media-workspace-audit.ps1",
     "check:markdown-code-theme-contrast": "node scripts/check-markdown-code-theme-contrast.mjs",
     "check:code-editor-theme-contract": "node scripts/check-code-editor-theme-contract.mjs",

@@ -2,7 +2,7 @@
   <section class="local-graph-card" aria-label="当前笔记局部图谱">
     <div class="local-graph-header">
       <div>
-        <span class="local-kicker">LOCAL GRAPH</span>
+        <span class="local-kicker">局部图谱</span>
         <strong>当前笔记关系</strong>
       </div>
       <div class="depth-switch" aria-label="局部图谱深度">
