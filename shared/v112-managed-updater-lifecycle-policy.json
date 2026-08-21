@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.12-U1",
+  "status": "hosted-execution-pending",
+  "environment": "github-hosted-disposable-windows",
+  "workflow": ".github/workflows/v112-managed-updater-lifecycle.yml",
+  "releases": {
+    "previous": {
+      "version": "1.0.11",
+      "tag": "v1.0.11",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.11",
+      "installer": {
+        "fileName": "LongEdit_1.0.11_x64-setup.exe",
+        "sizeBytes": 65547099,
+        "sha256": "aa81c91e2e60f60d5cc384e1bfcdc0a8a309edd91cadce6fe5838bfa69743b9a",
+        "authenticodeStatus": "NotSigned"
+      }
+    },
+    "current": {
+      "version": "1.0.12",
+      "tag": "v1.0.12",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.12",
+      "taggedCommit": "505d69d913509a0abd2a72b23831cbe6d8355ce8",
+      "installer": {
+        "fileName": "LongEdit_1.0.12_x64-setup.exe",
+        "sizeBytes": 65543238,
+        "sha256": "d6e2866ff6e9d3a91442986151bb1653694658b81b82646b0ebe1159d87571f4",
+        "authenticodeStatus": "NotSigned"
+      },
+      "standaloneReleaseExecutableReferenceSha256": "d9d4668776446351fe29433c56ace68e26d4cb8bce9fb90a507c8b6cd0d9efad",
+      "installedPackageExecutable": null
+    }
+  },
+  "requirements": {
+    "officialLatestRelease": true,
+    "explicitUserConfirmation": true,
+    "sha256BeforeInstall": true,
+    "silentOverwrite": true,
+    "sameInstallRoot": true,
+    "installedExecutableIdentityRecorded": true,
+    "automaticRelaunchAfterInstall": true,
+    "firstLaunchAfterUpdate": true,
+    "postUpgradeReportsCurrent": true,
+    "libraryDataRetained": true,
+    "configDataRetained": true,
+    "uninstallRetainsUserData": true,
+    "sourceUserContentIncluded": false
+  },
+  "gates": {
+    "harnessImplemented": true,
+    "qualityGatePassed": false,
+    "hostedWorkflowPassed": false,
+    "releaseDiscoveryPassed": false,
+    "confirmationBoundaryPassed": false,
+    "downloadHashPassed": false,
+    "overwriteInstallPassed": false,
+    "automaticRelaunchPassed": false,
+    "firstLaunchPassed": false,
+    "postUpgradeCurrentPassed": false,
+    "userDataRetentionPassed": false,
+    "evidenceImported": false
+  },
+  "githubRun": null,
+  "evidenceRoot": "docs/evidence/v1.0.12-managed-updater",
+  "nextAction": "push-harness-pass-quality-gate-and-run-hosted-managed-updater-lifecycle"
+}
