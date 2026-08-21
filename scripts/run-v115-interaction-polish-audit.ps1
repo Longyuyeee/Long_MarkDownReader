@@ -5,7 +5,7 @@ $workspace = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $output = [IO.Path]::GetFullPath((Join-Path $workspace $OutputDirectory))
 $expectedOutput = [IO.Path]::GetFullPath((Join-Path $workspace "docs\evidence\v115-interaction-polish"))
 if ($output -ne $expectedOutput) { throw "v1.0.15 output must remain inside $expectedOutput" }
-$appPort = 14315
+$appPort = 14200
 $cdpPort = 14515
 if (Get-NetTCPConnection -LocalPort $appPort,$cdpPort -State Listen -ErrorAction SilentlyContinue) { throw "v1.0.15 audit requires free ports $appPort and $cdpPort" }
 $sourceCommit = (& git -C $workspace rev-parse HEAD).Trim()
