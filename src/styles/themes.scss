@@ -792,6 +792,11 @@ body[data-theme="dark"][data-style="neo"] {
   --theme-shadow-sm:
     5px 5px 16px rgba(0, 0, 0, 0.4),
     -4px -4px 12px rgba(255, 255, 255, 0.02);
+  --theme-shadow-hover:
+    12px 14px 32px rgba(0, 0, 0, 0.46),
+    0 0 22px rgba(var(--theme-primary-rgb), 0.24),
+    0 0 0 1px rgba(var(--theme-primary-rgb), 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --style-card-gradient: linear-gradient(135deg,
     rgba(255, 255, 255, 0.1) 0%,
     rgba(255, 255, 255, 0.05) 50%,

@@ -26,6 +26,7 @@ requireMatch(registry, /export const themePresetGroups =/, 'theme preset groups 
 requireMatch(registry, /contrastRatio\(colors\.text, colors\.background\) < 4\.5/, 'release presets must enforce WCAG AA text contrast')
 requireMatch(registry, /tone\('contrast',[\s\S]*?'high-contrast'/, 'high-contrast tone must declare its mode')
 requireMatch(styles, /body\[data-theme="contrast"\]/, 'high-contrast CSS tokens are missing')
+requireMatch(styles, /body\[data-theme="dark"\]\[data-style="neo"\][\s\S]*?--theme-shadow-hover:[\s\S]*?rgba\(var\(--theme-primary-rgb\), 0\.24\)/, 'dark neo hover shadow must use a bounded theme glow')
 requireMatch(app, /getThemeTone\(/, 'App must consume the theme registry')
 requireMatch(settings, /themeTones\.map\(/, 'Settings must derive tone options from the registry')
 requireMatch(settings, /themeFilters/, 'Settings must expose one filterable theme library')

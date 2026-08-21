@@ -15,6 +15,8 @@ for (const token of [
   'ref="settingsPanelRef"',
   "settingsPanelRef.value?.scrollTo({ top: 0, behavior: 'auto' })",
   'scrollbar-gutter: stable',
+  'transform-origin: center top',
+  'scale(1.002)',
   '@media (max-width: 900px)',
   'grid-auto-flow: column',
 ]) requireText(token, `设置分类导航合同缺失：${token}`)

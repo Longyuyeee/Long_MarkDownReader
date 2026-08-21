@@ -1330,6 +1330,7 @@ onUnmounted(() => {
 }
 
 .setting-card, .library-manager-card {
+  transform-origin: center top;
   transition:
     border-color var(--motion-base) var(--ease-standard),
     box-shadow var(--motion-base) var(--ease-standard),
@@ -1339,7 +1340,7 @@ onUnmounted(() => {
 .setting-card:hover, .library-manager-card:hover {
   border-color: rgba(var(--theme-primary-rgb), 0.28);
   box-shadow: var(--theme-shadow-hover);
-  transform: translateY(var(--style-hover-lift)) scale(var(--style-hover-scale));
+  transform: translateY(var(--style-hover-lift)) scale(1.002);
 }
 
 .library-manager-card {
