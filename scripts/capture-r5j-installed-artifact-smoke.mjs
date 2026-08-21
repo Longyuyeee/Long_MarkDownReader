@@ -418,6 +418,11 @@ for (const fixture of nativeDocxFixtures) {
     `${fixture.producerId} installed DOCX identity`,
     1200,
   )
+  await waitFor(
+    `document.querySelectorAll('.docx-workspace .editable-hyperlink').length === ${fixture.expectedEditableLinks}`,
+    `${fixture.producerId} installed DOCX editable model ready`,
+    1200,
+  )
   const editorAvailable = await evaluate(`(() => {
     if (document.querySelector('.docx-editor')) return true
     const button = document.querySelector('.docx-toolbar button[title="打开 DOCX 页面编辑"]')
