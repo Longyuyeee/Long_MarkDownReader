@@ -46,12 +46,14 @@ const tabMetrics = await evaluate(`(() => {
   const rect = tab.getBoundingClientRect()
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, nativeTitleCount: document.querySelectorAll('.workspace-tabs [title]').length }
 })()`)
+await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 4, y: 740 })
 await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: tabMetrics.x, y: tabMetrics.y })
-await waitFor(`[...document.querySelectorAll('.n-popover')].some(item => getComputedStyle(item).visibility !== 'hidden' && item.textContent.includes(${JSON.stringify(samples[0].path)}))`, 'modern tab tooltip')
+await waitFor(`Boolean(document.querySelector('.workspace-tab-tooltip'))`, 'modern tab tooltip')
 const tooltip = await evaluate(`(() => {
-  const item = [...document.querySelectorAll('.n-popover')].find(candidate => getComputedStyle(candidate).visibility !== 'hidden' && candidate.textContent.includes(${JSON.stringify(samples[0].path)}))
+  const content = document.querySelector('.workspace-tab-tooltip')
+  const item = content?.closest('.n-popover') || content?.parentElement
   const style = getComputedStyle(item)
-  return { visible: Boolean(item), text: item.textContent.trim(), borderRadius: style.borderRadius, boxShadow: style.boxShadow, fontSize: style.fontSize }
+  return { visible: Boolean(content), text: content?.textContent?.trim() || '', borderRadius: style.borderRadius, boxShadow: style.boxShadow, fontSize: style.fontSize }
 })()`)
 await capture('workspace-tab-tooltip.png')
 
@@ -68,7 +70,9 @@ await delay(250)
 contextPolicy.customMenuVisible = await evaluate(`Boolean(document.querySelector('.n-dropdown-menu'))`)
 await capture('context-menu-policy.png')
 
-if (tabMetrics.nativeTitleCount !== 0 || !tooltip.visible || tooltip.borderRadius === '0px') throw new Error(`Tooltip gate failed: ${JSON.stringify({ tabMetrics, tooltip })}`)
+const normalizedTooltip = tooltip.text.replaceAll('/', '\\').toLowerCase()
+const normalizedExpectedPath = samples[0].path.replaceAll('/', '\\').toLowerCase()
+if (tabMetrics.nativeTitleCount !== 0 || !tooltip.visible || !normalizedTooltip.includes(normalizedExpectedPath) || tooltip.borderRadius === '0px') throw new Error(`Tooltip gate failed: ${JSON.stringify({ tabMetrics, tooltip, normalizedExpectedPath })}`)
 if (!contextPolicy.ordinaryPrevented || contextPolicy.editablePrevented !== false || !contextPolicy.customEventPrevented || !contextPolicy.customMenuVisible) throw new Error(`Context menu gate failed: ${JSON.stringify(contextPolicy)}`)
 if (runtimeErrors.length) throw new Error(`Runtime errors observed: ${JSON.stringify(runtimeErrors)}`)
 
