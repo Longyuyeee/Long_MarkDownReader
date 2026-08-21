@@ -1,0 +1,83 @@
+import crypto from 'node:crypto'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+
+const endpoint = process.env.LONGEDIT_CDP_ENDPOINT || 'http://127.0.0.1:14515'
+const output = path.resolve(process.env.LONGEDIT_V115_AUDIT_OUTPUT || 'docs/evidence/v115-interaction-polish')
+const sourceCommit = process.env.LONGEDIT_V115_SOURCE_COMMIT || ''
+const samples = JSON.parse(process.env.LONGEDIT_V115_SAMPLES || '[]')
+if (!/^[0-9a-f]{40}$/i.test(sourceCommit) || samples.length !== 3) throw new Error('v1.0.15 interaction audit environment is incomplete')
+
+const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
+const targets = await fetch(`${endpoint}/json`).then(response => response.json())
+const target = targets.find(item => item.type === 'page' && item.webSocketDebuggerUrl && !item.url.startsWith('devtools://'))
+if (!target?.webSocketDebuggerUrl) throw new Error('LongEdit Tauri WebView target was not found')
+const socket = new WebSocket(target.webSocketDebuggerUrl)
+await new Promise((resolve, reject) => { socket.addEventListener('open', resolve, { once: true }); socket.addEventListener('error', reject, { once: true }) })
+let sequence = 0
+const pending = new Map()
+const runtimeErrors = []
+socket.addEventListener('message', event => {
+  const message = JSON.parse(event.data)
+  if (message.method === 'Runtime.exceptionThrown') runtimeErrors.push(message.params?.exceptionDetails?.exception?.description || message.params?.exceptionDetails?.text || 'Unknown runtime exception')
+  if (message.method === 'Log.entryAdded' && message.params?.entry?.level === 'error') runtimeErrors.push(message.params.entry.text || 'Unknown WebView log error')
+  if (!message.id || !pending.has(message.id)) return
+  const request = pending.get(message.id); pending.delete(message.id)
+  message.error ? request.reject(new Error(message.error.message)) : request.resolve(message.result)
+})
+const send = (method, params = {}) => new Promise((resolve, reject) => { const id = ++sequence; pending.set(id, { resolve, reject }); socket.send(JSON.stringify({ id, method, params })) })
+const evaluate = async expression => { const result = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }); if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text); return result.result.value }
+const waitFor = async (expression, description, attempts = 240) => { for (let attempt = 0; attempt < attempts; attempt += 1) { if (await evaluate(expression)) return; await delay(100) } throw new Error(`Timed out waiting for ${description}`) }
+const capture = async name => { const shot = await send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false }); await fs.writeFile(path.join(output, name), Buffer.from(shot.data, 'base64')) }
+
+await fs.mkdir(output, { recursive: true })
+await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable')
+await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 760, deviceScaleFactor: 1, mobile: false })
+await waitFor(`document.querySelector('.library-mode') && !document.querySelector('.page-loader')`, 'library shell')
+for (const sample of samples) {
+  await evaluate(`location.hash = '#/library?path=' + encodeURIComponent(${JSON.stringify(sample.path)})`)
+  await waitFor(`document.querySelector('.workspace-tab')?.textContent && document.body.textContent.includes(${JSON.stringify(sample.file)}) && !document.querySelector('.page-loader')`, `${sample.file} tab`)
+  await delay(180)
+}
+await waitFor(`document.querySelectorAll('.tabs-bar > .workspace-tabs .workspace-tab').length === 3`, 'three workspace tabs')
+
+const tabMetrics = await evaluate(`(() => {
+  const tab = document.querySelector('.tabs-bar > .workspace-tabs .workspace-tab')
+  const rect = tab.getBoundingClientRect()
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, nativeTitleCount: document.querySelectorAll('.workspace-tabs [title]').length }
+})()`)
+await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: tabMetrics.x, y: tabMetrics.y })
+await waitFor(`[...document.querySelectorAll('.n-popover')].some(item => getComputedStyle(item).visibility !== 'hidden' && item.textContent.includes(${JSON.stringify(samples[0].path)}))`, 'modern tab tooltip')
+const tooltip = await evaluate(`(() => {
+  const item = [...document.querySelectorAll('.n-popover')].find(candidate => getComputedStyle(candidate).visibility !== 'hidden' && candidate.textContent.includes(${JSON.stringify(samples[0].path)}))
+  const style = getComputedStyle(item)
+  return { visible: Boolean(item), text: item.textContent.trim(), borderRadius: style.borderRadius, boxShadow: style.boxShadow, fontSize: style.fontSize }
+})()`)
+await capture('workspace-tab-tooltip.png')
+
+const contextPolicy = await evaluate(`(() => {
+  const dispatch = target => { const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 220, clientY: 220 }); target.dispatchEvent(event); return event.defaultPrevented }
+  const ordinary = dispatch(document.querySelector('.library-main, .library-mode'))
+  const input = document.querySelector('input:not([type="checkbox"]):not([type="radio"])')
+  const editable = input ? dispatch(input) : null
+  const tree = document.querySelector('.tree-viewport')
+  const custom = tree ? dispatch(tree) : null
+  return { ordinaryPrevented: ordinary, editablePrevented: editable, customEventPrevented: custom }
+})()`)
+await delay(250)
+contextPolicy.customMenuVisible = await evaluate(`Boolean(document.querySelector('.n-dropdown-menu'))`)
+await capture('context-menu-policy.png')
+
+if (tabMetrics.nativeTitleCount !== 0 || !tooltip.visible || tooltip.borderRadius === '0px') throw new Error(`Tooltip gate failed: ${JSON.stringify({ tabMetrics, tooltip })}`)
+if (!contextPolicy.ordinaryPrevented || contextPolicy.editablePrevented !== false || !contextPolicy.customEventPrevented || !contextPolicy.customMenuVisible) throw new Error(`Context menu gate failed: ${JSON.stringify(contextPolicy)}`)
+if (runtimeErrors.length) throw new Error(`Runtime errors observed: ${JSON.stringify(runtimeErrors)}`)
+
+const evidence = { schemaVersion: 1, stage: 'V1.0.15-interaction-polish', sourceCommit, tabMetrics, tooltip, contextPolicy, runtimeErrorCount: runtimeErrors.length, sourceUserContentIncluded: false, releaseCandidate: false }
+const evidencePath = path.join(output, 'interaction-evidence.json')
+await fs.writeFile(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`)
+const screenshots = []
+for (const file of ['workspace-tab-tooltip.png', 'context-menu-policy.png']) { const bytes = await fs.readFile(path.join(output, file)); screenshots.push({ file, bytes: bytes.length, sha256: crypto.createHash('sha256').update(bytes).digest('hex') }) }
+const evidenceBytes = await fs.readFile(evidencePath)
+await fs.writeFile(path.join(output, 'manifest.json'), `${JSON.stringify({ schemaVersion: 1, stage: evidence.stage, status: 'captured-pending-visual-review', sourceCommit, evidenceFile: 'interaction-evidence.json', evidenceSha256: crypto.createHash('sha256').update(evidenceBytes).digest('hex'), screenshots, sourceUserContentIncluded: false, releaseCandidate: false }, null, 2)}\n`)
+socket.close()
+console.log('v1.0.15 interaction polish desktop capture passed.')

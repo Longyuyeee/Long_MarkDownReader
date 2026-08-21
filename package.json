@@ -149,6 +149,7 @@
     "check:horizontal-wheel-navigation": "node scripts/check-horizontal-wheel-navigation.mjs",
     "check:v115-context-menu-policy": "node scripts/check-v115-context-menu-policy.mjs",
     "check:v115-app-dialog-policy": "node scripts/check-v115-app-dialog-policy.mjs",
+    "audit:v115-interaction-polish": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-v115-interaction-polish-audit.ps1",
     "check:canvas-pointer-interactions": "node scripts/check-canvas-pointer-interactions.mjs",
     "check:table-board-experience": "node scripts/check-table-board-experience.mjs",
     "check:media-workspace": "node scripts/check-media-workspace.mjs",
