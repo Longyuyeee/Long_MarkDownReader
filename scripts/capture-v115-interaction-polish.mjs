@@ -103,7 +103,7 @@ await evaluate(`document.querySelector('[data-testid="library-create-menu"]').cl
 await waitFor(`[...document.querySelectorAll('.n-dropdown-menu')].some(item => item.getBoundingClientRect().width > 0)`, 'library create dropdown')
 const dropdownLight = await readOverlayMetrics('.n-dropdown-menu')
 await capture('dropdown-light.png')
-await evaluate(`document.querySelector('.library-main, .library-mode').click()`)
+await evaluate(`document.querySelector('[data-testid="library-create-menu"]').click()`)
 await waitFor(`![...document.querySelectorAll('.n-dropdown-menu')].some(item => item.getBoundingClientRect().width > 0)`, 'light dropdown dismissal')
 
 await evaluate(`(() => { const pinia = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia; const store = pinia._s.get('app'); const tab = store.tabs.find(item => item.id === store.activeTabId) || store.tabs[0]; tab.isDirty = true; document.querySelector('.workspace-tab.active .close-tab').click() })()`)
