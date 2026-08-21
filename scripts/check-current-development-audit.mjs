@@ -12,6 +12,7 @@ import './check-v113-managed-updater-lifecycle.mjs'
 import './check-code-file-creation.mjs'
 import './check-cf1-code-file-creation-audit.mjs'
 import './check-ux51-external-window-lifecycle.mjs'
+import './check-v115-interaction-polish-audit.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))

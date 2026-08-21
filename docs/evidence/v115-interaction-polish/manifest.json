@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.15-interaction-polish",
+  "status": "accepted",
+  "sourceCommit": "27cc5ac54a0c1d4b0ecba7514bfd081218c3a67e",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "575dd7a3230972337a6eafed655a0a8145aa005d5308da29842784da08cbc98a",
+  "screenshots": [
+    {
+      "file": "workspace-tab-tooltip.png",
+      "bytes": 83877,
+      "sha256": "47525f35f06e0bc13405e19831657b344cb5a5a0477d13fc423c2aa52943b7c7"
+    },
+    {
+      "file": "context-menu-policy.png",
+      "bytes": 70803,
+      "sha256": "733bcf7d0d18052356e37d87fafbe490308bd01a2aa693a15c1cf53af24e4fae"
+    }
+  ],
+  "visualReview": {
+    "reviewedAt": "2026-08-21",
+    "workspaceShellAligned": true,
+    "tooltipSurfaceAligned": true,
+    "defaultWebViewMenuAbsent": true,
+    "customFileTreeMenuVisible": true
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
