@@ -52,6 +52,7 @@
                   <n-dropdown
                     trigger="click"
                     scrollable
+                    :z-index="1000"
                     :menu-props="templateMenuProps"
                     :options="templateOptions"
                     @select="handleTemplateCreate"

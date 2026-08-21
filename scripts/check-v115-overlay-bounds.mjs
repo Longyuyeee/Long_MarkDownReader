@@ -6,6 +6,7 @@ const fail = message => { throw new Error(`v1.0.15 overlay-bounds contract rejec
 
 for (const token of [
   '<n-dropdown\n                    trigger="click"\n                    scrollable',
+  ':z-index="1000"',
   ':menu-props="templateMenuProps"',
   "class: 'library-create-dropdown-menu'",
   "style: 'max-height: min(520px, calc(100vh - 24px)); min-width: 188px;'",
