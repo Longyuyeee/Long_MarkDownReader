@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "status": "accepted",
+  "expected": {
+    "version": "1.0.12",
+    "placement": "sidebar-library-footer",
+    "normalAndCompactContainment": true
+  },
+  "actual": {
+    "normal": {
+      "viewport": [
+        1280,
+        800
+      ],
+      "pageOverflow": 0,
+      "sidebarWidth": 260,
+      "text": "v1.0.12",
+      "title": "当前软件版本 v1.0.12",
+      "label": "当前资料库",
+      "footer": {
+        "x": 12,
+        "y": 727.609375,
+        "width": 235,
+        "height": 60.390625,
+        "right": 247,
+        "bottom": 788
+      },
+      "badge": {
+        "x": 163.3515625,
+        "y": 737.40625,
+        "width": 47.8515625,
+        "height": 18,
+        "right": 211.203125,
+        "bottom": 755.40625
+      },
+      "info": {
+        "x": 69.796875,
+        "width": 141.40625,
+        "right": 211.203125
+      }
+    },
+    "compact": {
+      "viewport": [
+        1280,
+        800
+      ],
+      "pageOverflow": 0,
+      "sidebarWidth": 220,
+      "text": "v1.0.12",
+      "title": "当前软件版本 v1.0.12",
+      "label": "当前资料库",
+      "footer": {
+        "x": 12,
+        "y": 710.421875,
+        "width": 195,
+        "height": 77.578125,
+        "right": 207,
+        "bottom": 788
+      },
+      "badge": {
+        "x": 123.3515625,
+        "y": 728.8125,
+        "width": 47.8515625,
+        "height": 18,
+        "right": 171.203125,
+        "bottom": 746.8125
+      },
+      "info": {
+        "x": 69.796875,
+        "width": 101.40625,
+        "right": 171.203125
+      }
+    },
+    "runtimeErrorCount": 0
+  },
+  "passed": true
+}

@@ -344,8 +344,14 @@
             </div>
             <div class="lib-info-box">
               <div class="lib-name-row">
-                <span class="lib-label">Active Library</span>
+                <span class="lib-label">当前资料库</span>
                 <div class="lib-status-dot"></div>
+                <span
+                  class="app-version-badge"
+                  data-testid="main-app-version"
+                  :title="`当前软件版本 v${currentAppVersion}`"
+                  :aria-label="`当前软件版本 v${currentAppVersion}`"
+                >v{{ currentAppVersion }}</span>
               </div>
               <span class="meta-path" :title="store.libraryPath">{{ store.currentLibraryName }}</span>
             </div>
@@ -704,6 +710,8 @@ import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { isTauriRuntime, listen } from '../services/tauriRuntime'
+import { initializeUpdater, updaterState } from '../services/appUpdater'
+import { RELEASE_MATRIX_VERSION } from '../config/releaseCapabilities'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
@@ -730,6 +738,14 @@ import {
 } from '../config/fileTreeAppearance'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
+
+const currentAppVersion = computed(() => {
+  const runtimeVersion = updaterState.currentVersion.trim()
+  return updaterState.status !== 'idle' && runtimeVersion !== '1.0.0'
+    ? runtimeVersion
+    : RELEASE_MATRIX_VERSION
+})
+
 interface ExternalAppExecutable {
   role: string
   path: string
@@ -3044,6 +3060,7 @@ const handleExportHtml = async () => {
 }
 
 onMounted(async () => {
+  void initializeUpdater()
   window.addEventListener('longedit:reveal-library-file', revealLibraryFile)
   window.addEventListener('longedit:library-file-created', refreshCreatedLibraryFile)
   await store.loadConfig()
@@ -4233,10 +4250,24 @@ watch(activeTabId, (newId, oldId) => {
 .sidebar-footer:hover .rotating-settings { transform: rotate(180deg); }
 
 .lib-info-box { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.lib-name-row { display: flex; align-items: center; gap: 6px; }
+.lib-name-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .lib-label { font-size: var(--text-compact); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.3; transition: opacity 0.3s; }
 .sidebar-footer:hover .lib-label { opacity: 0.5; }
 .lib-status-dot { width: 6px; height: 6px; background: #42b883; border-radius: 50%; box-shadow: 0 0 8px rgba(66, 184, 131, 0.4); }
+.app-version-badge {
+  flex: none;
+  margin-left: auto;
+  padding: 2px 6px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.3);
+  border-radius: var(--theme-radius-sm);
+  background: rgba(var(--theme-primary-rgb), 0.08);
+  color: var(--theme-primary);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
 .meta-path { font-size: 13px; font-weight: 700; color: var(--theme-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.9; }
 .footer-chevron { font-size: 14px; opacity: 0.2; transition: all 0.3s; transform: translateX(-4px); }
 .sidebar-footer:hover .footer-chevron { opacity: 0.6; transform: translateX(0); }
