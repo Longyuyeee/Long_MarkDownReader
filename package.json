@@ -189,6 +189,7 @@
     "check:main-version-indicator": "node scripts/check-main-version-indicator.mjs",
     "audit:main-version-indicator": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-main-version-indicator-audit.ps1",
     "audit:sidebar-footer-responsive": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-sidebar-footer-responsive-audit.ps1",
+    "audit:small-window-ui": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-small-window-ui-audit.ps1",
     "check:user-facing-terminology": "node scripts/check-user-facing-terminology.mjs",
     "audit:user-facing-terminology": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-user-facing-terminology-audit.ps1",
     "check:p2d-format-facts": "node scripts/check-p2d-format-fact-audit.mjs",

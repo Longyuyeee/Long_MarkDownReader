@@ -1,0 +1,1202 @@
+{
+  "schemaVersion": 1,
+  "mode": "acceptance",
+  "status": "accepted",
+  "viewports": [
+    {
+      "id": "compact",
+      "width": 900,
+      "height": 720
+    },
+    {
+      "id": "narrow",
+      "width": 720,
+      "height": 640
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "library",
+      "hash": "#/library"
+    },
+    {
+      "id": "workspace",
+      "hash": "#/workspace"
+    },
+    {
+      "id": "settings-library",
+      "hash": "#/settings?category=library"
+    },
+    {
+      "id": "settings-editing",
+      "hash": "#/settings?category=editing"
+    },
+    {
+      "id": "settings-appearance",
+      "hash": "#/settings?category=appearance"
+    },
+    {
+      "id": "settings-formats",
+      "hash": "#/settings?category=formats"
+    },
+    {
+      "id": "settings-knowledge",
+      "hash": "#/settings?category=knowledge"
+    },
+    {
+      "id": "settings-system",
+      "hash": "#/settings?category=system"
+    },
+    {
+      "id": "settings-privacy",
+      "hash": "#/settings?category=privacy"
+    },
+    {
+      "id": "settings-ai",
+      "hash": "#/settings?category=ai"
+    },
+    {
+      "id": "release-capabilities",
+      "hash": "#/release-capabilities"
+    },
+    {
+      "id": "graph-network",
+      "hash": "#/graph?mode=network"
+    },
+    {
+      "id": "graph-mindmap",
+      "hash": "#/graph?mode=mindmap"
+    }
+  ],
+  "entries": [
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "library",
+        "hash": "#/library",
+        "selector": ".library-mode"
+      },
+      "file": "compact-library.jpg",
+      "geometry": {
+        "surfaceId": "library",
+        "route": "#/library",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "workspace",
+        "hash": "#/workspace",
+        "selector": ".workspace-home"
+      },
+      "file": "compact-workspace.jpg",
+      "geometry": {
+        "surfaceId": "workspace",
+        "route": "#/workspace",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "settings-library",
+        "hash": "#/settings?category=library",
+        "selector": ".settings-view"
+      },
+      "file": "compact-settings-library.jpg",
+      "geometry": {
+        "surfaceId": "settings-library",
+        "route": "#/settings?category=library",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "settings-editing",
+        "hash": "#/settings?category=editing",
+        "selector": ".settings-view"
+      },
+      "file": "compact-settings-editing.jpg",
+      "geometry": {
+        "surfaceId": "settings-editing",
+        "route": "#/settings?category=editing",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "settings-appearance",
+        "hash": "#/settings?category=appearance",
+        "selector": ".settings-view"
+      },
+      "file": "compact-settings-appearance.jpg",
+      "geometry": {
+        "surfaceId": "settings-appearance",
+        "route": "#/settings?category=appearance",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "settings-formats",
+        "hash": "#/settings?category=formats",
+        "selector": ".settings-view"
+      },
+      "file": "compact-settings-formats.jpg",
+      "geometry": {
+        "surfaceId": "settings-formats",
+        "route": "#/settings?category=formats",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "settings-knowledge",
+        "hash": "#/settings?category=knowledge",
+        "selector": ".settings-view"
+      },
+      "file": "compact-settings-knowledge.jpg",
+      "geometry": {
+        "surfaceId": "settings-knowledge",
+        "route": "#/settings?category=knowledge",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "settings-system",
+        "hash": "#/settings?category=system",
+        "selector": ".settings-view"
+      },
+      "file": "compact-settings-system.jpg",
+      "geometry": {
+        "surfaceId": "settings-system",
+        "route": "#/settings?category=system",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "settings-privacy",
+        "hash": "#/settings?category=privacy",
+        "selector": ".settings-view"
+      },
+      "file": "compact-settings-privacy.jpg",
+      "geometry": {
+        "surfaceId": "settings-privacy",
+        "route": "#/settings?category=privacy",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "settings-ai",
+        "hash": "#/settings?category=ai",
+        "selector": ".settings-view"
+      },
+      "file": "compact-settings-ai.jpg",
+      "geometry": {
+        "surfaceId": "settings-ai",
+        "route": "#/settings?category=ai",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "release-capabilities",
+        "hash": "#/release-capabilities",
+        "selector": ".release-capabilities"
+      },
+      "file": "compact-release-capabilities.jpg",
+      "geometry": {
+        "surfaceId": "release-capabilities",
+        "route": "#/release-capabilities",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "graph-network",
+        "hash": "#/graph?mode=network",
+        "selector": ".graph-container"
+      },
+      "file": "compact-graph-network.jpg",
+      "geometry": {
+        "surfaceId": "graph-network",
+        "route": "#/graph?mode=network",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "compact",
+        "width": 900,
+        "height": 720
+      },
+      "surface": {
+        "id": "graph-mindmap",
+        "hash": "#/graph?mode=mindmap",
+        "selector": ".graph-container"
+      },
+      "file": "compact-graph-mindmap.jpg",
+      "geometry": {
+        "surfaceId": "graph-mindmap",
+        "route": "#/graph?mode=mindmap",
+        "viewport": [
+          900,
+          720
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 900,
+          "height": 688,
+          "right": 900,
+          "bottom": 720
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "library",
+        "hash": "#/library",
+        "selector": ".library-mode"
+      },
+      "file": "narrow-library.jpg",
+      "geometry": {
+        "surfaceId": "library",
+        "route": "#/library",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "workspace",
+        "hash": "#/workspace",
+        "selector": ".workspace-home"
+      },
+      "file": "narrow-workspace.jpg",
+      "geometry": {
+        "surfaceId": "workspace",
+        "route": "#/workspace",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "settings-library",
+        "hash": "#/settings?category=library",
+        "selector": ".settings-view"
+      },
+      "file": "narrow-settings-library.jpg",
+      "geometry": {
+        "surfaceId": "settings-library",
+        "route": "#/settings?category=library",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [
+          {
+            "tag": "button",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 647.796875,
+              "y": 121,
+              "width": 111,
+              "height": 40,
+              "right": 758.796875,
+              "bottom": 161
+            }
+          },
+          {
+            "tag": "span",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 683.796875,
+              "y": 130.59375,
+              "width": 65,
+              "height": 20.796875,
+              "right": 748.796875,
+              "bottom": 151.390625
+            }
+          }
+        ],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "settings-editing",
+        "hash": "#/settings?category=editing",
+        "selector": ".settings-view"
+      },
+      "file": "narrow-settings-editing.jpg",
+      "geometry": {
+        "surfaceId": "settings-editing",
+        "route": "#/settings?category=editing",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [
+          {
+            "tag": "button",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 647.796875,
+              "y": 121,
+              "width": 111,
+              "height": 40,
+              "right": 758.796875,
+              "bottom": 161
+            }
+          },
+          {
+            "tag": "span",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 683.796875,
+              "y": 130.59375,
+              "width": 65,
+              "height": 20.796875,
+              "right": 748.796875,
+              "bottom": 151.390625
+            }
+          }
+        ],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "settings-appearance",
+        "hash": "#/settings?category=appearance",
+        "selector": ".settings-view"
+      },
+      "file": "narrow-settings-appearance.jpg",
+      "geometry": {
+        "surfaceId": "settings-appearance",
+        "route": "#/settings?category=appearance",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [
+          {
+            "tag": "button",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 647.796875,
+              "y": 121,
+              "width": 111,
+              "height": 40,
+              "right": 758.796875,
+              "bottom": 161
+            }
+          },
+          {
+            "tag": "span",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 683.796875,
+              "y": 130.59375,
+              "width": 65,
+              "height": 20.796875,
+              "right": 748.796875,
+              "bottom": 151.390625
+            }
+          }
+        ],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "settings-formats",
+        "hash": "#/settings?category=formats",
+        "selector": ".settings-view"
+      },
+      "file": "narrow-settings-formats.jpg",
+      "geometry": {
+        "surfaceId": "settings-formats",
+        "route": "#/settings?category=formats",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [
+          {
+            "tag": "button",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 647.796875,
+              "y": 121,
+              "width": 111,
+              "height": 40,
+              "right": 758.796875,
+              "bottom": 161
+            }
+          },
+          {
+            "tag": "span",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 683.796875,
+              "y": 130.59375,
+              "width": 65,
+              "height": 20.796875,
+              "right": 748.796875,
+              "bottom": 151.390625
+            }
+          }
+        ],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "settings-knowledge",
+        "hash": "#/settings?category=knowledge",
+        "selector": ".settings-view"
+      },
+      "file": "narrow-settings-knowledge.jpg",
+      "geometry": {
+        "surfaceId": "settings-knowledge",
+        "route": "#/settings?category=knowledge",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [
+          {
+            "tag": "button",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 647.796875,
+              "y": 121,
+              "width": 111,
+              "height": 40,
+              "right": 758.796875,
+              "bottom": 161
+            }
+          },
+          {
+            "tag": "span",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 683.796875,
+              "y": 130.59375,
+              "width": 65,
+              "height": 20.796875,
+              "right": 748.796875,
+              "bottom": 151.390625
+            }
+          }
+        ],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "settings-system",
+        "hash": "#/settings?category=system",
+        "selector": ".settings-view"
+      },
+      "file": "narrow-settings-system.jpg",
+      "geometry": {
+        "surfaceId": "settings-system",
+        "route": "#/settings?category=system",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [
+          {
+            "tag": "button",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 647.796875,
+              "y": 121,
+              "width": 111,
+              "height": 40,
+              "right": 758.796875,
+              "bottom": 161
+            }
+          },
+          {
+            "tag": "span",
+            "className": "",
+            "text": "隐私与诊断",
+            "rect": {
+              "x": 683.796875,
+              "y": 130.59375,
+              "width": 65,
+              "height": 20.796875,
+              "right": 748.796875,
+              "bottom": 151.390625
+            }
+          }
+        ],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "settings-privacy",
+        "hash": "#/settings?category=privacy",
+        "selector": ".settings-view"
+      },
+      "file": "narrow-settings-privacy.jpg",
+      "geometry": {
+        "surfaceId": "settings-privacy",
+        "route": "#/settings?category=privacy",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "settings-ai",
+        "hash": "#/settings?category=ai",
+        "selector": ".settings-view"
+      },
+      "file": "narrow-settings-ai.jpg",
+      "geometry": {
+        "surfaceId": "settings-ai",
+        "route": "#/settings?category=ai",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [
+          {
+            "tag": "button",
+            "className": "",
+            "text": "编辑与保存",
+            "rect": {
+              "x": -15.203125,
+              "y": 121,
+              "width": 111,
+              "height": 40,
+              "right": 95.796875,
+              "bottom": 161
+            }
+          }
+        ],
+        "activeSettingsCategoryVisible": true,
+        "settingsHeadingTop": 184,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "release-capabilities",
+        "hash": "#/release-capabilities",
+        "selector": ".release-capabilities"
+      },
+      "file": "narrow-release-capabilities.jpg",
+      "geometry": {
+        "surfaceId": "release-capabilities",
+        "route": "#/release-capabilities",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "graph-network",
+        "hash": "#/graph?mode=network",
+        "selector": ".graph-container"
+      },
+      "file": "narrow-graph-network.jpg",
+      "geometry": {
+        "surfaceId": "graph-network",
+        "route": "#/graph?mode=network",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "runtimeErrors": []
+      }
+    },
+    {
+      "viewport": {
+        "id": "narrow",
+        "width": 720,
+        "height": 640
+      },
+      "surface": {
+        "id": "graph-mindmap",
+        "hash": "#/graph?mode=mindmap",
+        "selector": ".graph-container"
+      },
+      "file": "narrow-graph-mindmap.jpg",
+      "geometry": {
+        "surfaceId": "graph-mindmap",
+        "route": "#/graph?mode=mindmap",
+        "viewport": [
+          720,
+          640
+        ],
+        "root": {
+          "x": 0,
+          "y": 32,
+          "width": 720,
+          "height": 608,
+          "right": 720,
+          "bottom": 640
+        },
+        "pageOverflowX": 0,
+        "pageOverflowY": 0,
+        "verticalWrap": [],
+        "clippedControls": [],
+        "outsideViewport": [],
+        "activeSettingsCategoryVisible": true,
+        "runtimeErrors": []
+      }
+    }
+  ],
+  "failureCount": 0
+}

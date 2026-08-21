@@ -8,7 +8,7 @@
 
     <WorkspaceManagementContent class="settings-content">
       <div class="settings-layout">
-        <nav class="settings-navigation" aria-label="设置分类" data-horizontal-wheel="always">
+        <nav ref="settingsNavigationRef" class="settings-navigation" aria-label="设置分类" data-horizontal-wheel="always">
           <button
             v-for="category in settingsCategories"
             :key="category.id"
@@ -445,11 +445,26 @@ const categoryForRoute = (): SettingsCategory => {
 }
 const activeCategory = ref<SettingsCategory>(categoryForRoute())
 const settingsPanelRef = ref<HTMLElement | null>(null)
+const settingsNavigationRef = ref<HTMLElement | null>(null)
 const activeCategoryMeta = computed(() => settingsCategories.find(category => category.id === activeCategory.value) || settingsCategories[0])
+const alignActiveSettingsCategory = () => nextTick(() => {
+  settingsPanelRef.value?.scrollTo({ top: 0, behavior: 'auto' })
+  settingsPanelRef.value?.closest<HTMLElement>('.settings-content')?.scrollTo({ top: 0, behavior: 'auto' })
+
+  const navigation = settingsNavigationRef.value
+  const activeButton = navigation?.querySelector<HTMLElement>('button.active')
+  if (!navigation || !activeButton) return
+  const left = activeButton.offsetLeft
+  const right = left + activeButton.offsetWidth
+  if (left < navigation.scrollLeft) navigation.scrollTo({ left, behavior: 'auto' })
+  else if (right > navigation.scrollLeft + navigation.clientWidth) {
+    navigation.scrollTo({ left: right - navigation.clientWidth, behavior: 'auto' })
+  }
+})
 const selectSettingsCategory = (category: SettingsCategory) => {
   if (category === activeCategory.value) return
   activeCategory.value = category
-  settingsPanelRef.value?.scrollTo({ top: 0, behavior: 'auto' })
+  alignActiveSettingsCategory()
   router.replace({ name: 'Settings', query: { category } })
 }
 
@@ -756,6 +771,7 @@ onMounted(async () => {
 
   nextTick(() => {
     isInitializing.value = false
+    alignActiveSettingsCategory()
     if (formatCapabilityRouteFocused.value) formatCapabilityRow.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     if (observationRouteFocused.value) knowledgeObservationRow.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     if (softwareUpdateRouteFocused.value) document.querySelector<HTMLElement>('[data-testid="app-update-settings"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -764,7 +780,7 @@ onMounted(async () => {
 
 watch(() => [route.query.category, route.query.focus], () => {
   activeCategory.value = categoryForRoute()
-  settingsPanelRef.value?.scrollTo({ top: 0, behavior: 'auto' })
+  alignActiveSettingsCategory()
 })
 
 // 深度监听配置对象，实现实时保存
@@ -2363,7 +2379,7 @@ onUnmounted(() => {
 
 @media (max-width: 900px) {
   .settings-content { overflow-y: auto; }
-  .settings-layout { height: auto; min-height: 100%; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 16px; }
+  .settings-layout { height: auto; min-height: 100%; grid-template-columns: minmax(0, 1fr); align-content: start; align-items: start; gap: 16px; }
   .settings-navigation {
     position: sticky;
     top: 0;
