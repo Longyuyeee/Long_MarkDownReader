@@ -42,7 +42,7 @@
                     <n-input v-model:value="searchQuery" placeholder="搜索文档..." size="small" round clearable>
                       <template #prefix><n-icon :component="SearchIcon" /></template>
                     </n-input>
-                    <n-button quaternary circle size="small" title="保存当前搜索" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
+                    <n-button quaternary circle size="small" title="保存为常用搜索" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
                       <template #icon><n-icon :component="BookmarkAddIcon" /></template>
                     </n-button>
                   </div>
@@ -159,21 +159,26 @@
             </div>
 
             <div v-else-if="activeSidebarTab === 'collections'" :key="'collections'" class="tab-pane collections-pane" role="tabpanel" id="panel-collections" aria-labelledby="tab-collections">
-              <div class="collections-header">
-                <div><strong>常用搜索</strong><small>{{ librarySavedSearches.length }} 个</small></div>
-                <n-button quaternary circle size="small" title="保存当前搜索" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
+              <div class="sidebar-panel-intro">
+                <n-icon :component="CollectionIcon" size="18" />
+                <div><strong>常用搜索</strong><span>记录文件页的关键词和格式条件，点击后会回到文件列表并重新执行搜索。</span></div>
+                <small>{{ librarySavedSearches.length }} 项</small>
+              </div>
+              <div class="collections-action">
+                <span>{{ searchQuery.trim() ? `当前：${searchQuery.trim()}` : '先在“文件”页输入搜索关键词' }}</span>
+                <n-button size="tiny" type="primary" title="保存当前关键词和格式条件" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
                   <template #icon><n-icon :component="BookmarkAddIcon" /></template>
+                  保存当前条件
                 </n-button>
               </div>
-              <div class="panel-guide compact-guide">保存关键词和格式筛选，之后可以一键重新搜索；不会复制或修改文件。</div>
-              <div v-if="!librarySavedSearches.length" class="empty-state-hint"><n-empty description="暂无保存的搜索" size="small" /></div>
+              <div v-if="!librarySavedSearches.length" class="empty-state-hint"><n-empty description="还没有常用搜索" size="small" /></div>
               <div v-else class="collection-list">
                 <div v-for="search in librarySavedSearches" :key="search.id" class="collection-row">
                   <button class="collection-open" @click="openSavedSearch(search)">
                     <n-icon :component="CollectionIcon" />
                     <span><strong>{{ search.name }}</strong><small>{{ collectionFilterLabel(search) }}</small></span>
                   </button>
-                  <n-button quaternary circle size="tiny" title="删除保存视图" @click="confirmRemoveSavedSearch(search.id, search.name)">
+                  <n-button quaternary circle size="tiny" title="删除常用搜索" @click="confirmRemoveSavedSearch(search.id, search.name)">
                     <template #icon><n-icon :component="TrashIcon" /></template>
                   </n-button>
                 </div>
@@ -182,12 +187,19 @@
 
             <!-- 标签管理面板 -->
             <div v-else-if="activeSidebarTab === 'tags'" :key="'tags'" class="tab-pane tags-pane" role="tabpanel" id="panel-tags" aria-labelledby="tab-tags">
-              <div class="tags-help"><strong>Markdown 标签</strong><span>在笔记正文输入 <code>#标签名</code>，保存后会自动汇总到这里；点击标签可搜索相关笔记。</span></div>
+              <div class="sidebar-panel-intro tags-intro">
+                <n-icon :component="TagIcon" size="18" />
+                <div><strong>文内标签</strong><span>读取 Markdown 正文中的 <code>#标签名</code>；保存后自动汇总。</span></div>
+                <small>仅 Markdown</small>
+              </div>
 
               <!-- 给当前文件加标签 -->
-              <div class="tag-add-row" v-if="activeTabId && activeIsMarkdown">
-                <n-input v-model:value="newTagName" placeholder="输入标签名..." size="small" @keydown.enter="addTagToCurrentFile" />
-                <n-button size="tiny" type="primary" title="添加到当前 Markdown 笔记" @click="addTagToCurrentFile" :disabled="!newTagName.trim()">添加</n-button>
+              <div class="tag-add-area" v-if="activeTabId && activeIsMarkdown">
+                <span>添加到当前笔记</span>
+                <div class="tag-add-row">
+                  <n-input v-model:value="newTagName" placeholder="标签名" size="small" @keydown.enter="addTagToCurrentFile" />
+                  <n-button size="small" type="primary" title="写入当前 Markdown 笔记" @click="addTagToCurrentFile" :disabled="!newTagName.trim()">添加</n-button>
+                </div>
               </div>
               <div v-else-if="activeTabId" class="panel-guide">当前格式不使用 Markdown 标签。打开 Markdown 笔记后可以在这里添加。</div>
 
@@ -199,11 +211,11 @@
                   <n-input v-model:value="tagFilterText" placeholder="筛选标签..." size="small" clearable />
                 </div>
                 <div class="tag-cloud">
-                  <div class="tag-row" v-for="t in filteredTags" :key="t.tag" @click="searchByTag(t.tag)">
+                  <button type="button" class="tag-row" v-for="t in filteredTags" :key="t.tag" :title="`查找带有 #${t.tag} 的 Markdown 笔记`" @click="searchByTag(t.tag)">
                     <n-icon :component="TagIcon" size="14" />
                     <span class="tag-name">#{{ t.tag }}</span>
                     <span class="tag-count">{{ t.count }} 篇</span>
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1064,12 +1076,12 @@ const handleError = (error: any, userMessage: string, logContext?: string) => {
 const activeSidebarTab = ref<'files' | 'quick' | 'collections' | 'tags' | 'outline' | 'links' | 'history'>('files')
 const sidebarTabs = [
   { key: 'files' as const, icon: FileIcon, label: '文件', description: '文件：浏览和管理资料库文件' },
-  { key: 'collections' as const, icon: CollectionIcon, label: '搜索', description: '常用搜索：保存并重复使用关键词与格式筛选' },
   { key: 'outline' as const, icon: ListIcon, label: '目录', description: '目录：查看当前文档的标题大纲' },
-  { key: 'tags' as const, icon: TagIcon, label: '标签', description: '标签：管理 Markdown 正文中的 #标签名' },
-  { key: 'links' as const, icon: LinkIcon, label: '关系', description: '关系：查看当前 Markdown 的链出与反向链接' },
   { key: 'quick' as const, icon: ClockIcon, label: '最近', description: '最近：打开收藏文件和最近访问记录' },
   { key: 'history' as const, icon: SaveIcon, label: '备份', description: '备份：恢复当前文件的本地历史快照' },
+  { key: 'collections' as const, icon: CollectionIcon, label: '常用搜索', description: '常用搜索：保存并重复使用文件搜索的关键词与格式条件' },
+  { key: 'links' as const, icon: LinkIcon, label: '关系', description: '关系：查看当前 Markdown 的链出与反向链接' },
+  { key: 'tags' as const, icon: TagIcon, label: '标签', description: '标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown' },
 ]
 const outgoingLinks = ref<string[]>([])
 const backlinks = ref<{ title: string; path: string; context: string }[]>([])
@@ -1206,7 +1218,7 @@ const saveCurrentSearch = async () => {
   try {
     const before = store.savedSearches.length
     await store.addSavedSearch(searchQuery.value, searchObjectTypes.value)
-    message.success(store.savedSearches.length === before ? '该搜索已保存' : '已保存为视图')
+    message.success(store.savedSearches.length === before ? '该条件已在常用搜索中' : '已加入常用搜索')
   } catch (error) { message.error(`保存搜索失败：${String(error)}`) }
 }
 const openSavedSearch = (search: SavedSearchConfig) => {
@@ -1221,7 +1233,7 @@ const openSavedSearch = (search: SavedSearchConfig) => {
 }
 const confirmRemoveSavedSearch = (id: string, name: string) => {
   dialog.warning({
-    title: '删除保存视图',
+    title: '删除常用搜索',
     content: `删除“${name}”？这不会删除任何知识库文件。`,
     positiveText: '删除',
     negativeText: '取消',
@@ -3732,8 +3744,28 @@ watch(activeTabId, (newId, oldId) => {
 }
 
 .quick-pane { padding: 8px 0; overflow-y: auto; }
-.collections-pane { overflow-y: auto; }.collections-header { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border-bottom: var(--theme-border); }.collections-header>div { display: flex; align-items: baseline; gap: 7px; }.collections-header strong { font-size: 11px; }.collections-header small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.collection-list { display: grid; padding: 5px 10px 14px; }.collection-row { min-height: 54px; display: grid; grid-template-columns: minmax(0,1fr) 28px; align-items: center; gap: 4px; border-bottom: var(--theme-border); }.collection-open { min-width: 0; height: 100%; display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 8px; padding: 6px 2px; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.collection-open:hover { color: var(--theme-primary); }.collection-open>svg { width: 15px; color: var(--theme-primary); }.collection-open>span { min-width: 0; display: grid; gap: 3px; }.collection-open strong,.collection-open small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-open strong { font-size: var(--text-compact); }.collection-open small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
-.tags-pane { padding: 12px; overflow-y: auto; }
+.collections-pane { overflow-y: auto; }.collection-list { display: grid; padding: 5px 10px 14px; }.collection-row { min-height: 54px; display: grid; grid-template-columns: minmax(0,1fr) 28px; align-items: center; gap: 4px; border-bottom: var(--theme-border); }.collection-open { min-width: 0; height: 100%; display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 8px; padding: 6px 2px; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.collection-open:hover { color: var(--theme-primary); }.collection-open>svg { width: 15px; color: var(--theme-primary); }.collection-open>span { min-width: 0; display: grid; gap: 3px; }.collection-open strong,.collection-open small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-open strong { font-size: var(--text-compact); }.collection-open small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.tags-pane { overflow-y: auto; }
+
+.sidebar-panel-intro {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 2px 8px;
+  margin: 10px;
+  padding: 11px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.16);
+  border-radius: 7px;
+  background: rgba(var(--theme-primary-rgb), 0.045);
+}
+.sidebar-panel-intro > svg { grid-row: 1 / 3; align-self: start; margin-top: 2px; color: var(--theme-primary); }
+.sidebar-panel-intro > div { min-width: 0; display: grid; gap: 4px; }
+.sidebar-panel-intro strong { color: var(--theme-text); font-size: 12px; }
+.sidebar-panel-intro span { color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.5; }
+.sidebar-panel-intro small { grid-column: 2; width: fit-content; padding: 2px 6px; border-radius: 4px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.1); font-size: var(--text-compact); font-weight: 700; }
+.sidebar-panel-intro code { color: var(--theme-primary); font-size: inherit; }
+.collections-action { display: grid; gap: 7px; margin: 0 10px 8px; padding: 9px 10px; border-bottom: var(--theme-border); }
+.collections-action > span { overflow: hidden; color: var(--theme-text-secondary); font-size: var(--text-compact); text-overflow: ellipsis; white-space: nowrap; }
+.collections-action .n-button { justify-self: stretch; }
 
 .panel-guide {
   margin: 10px 12px;
@@ -3747,42 +3779,12 @@ watch(activeTabId, (newId, oldId) => {
 }
 .panel-guide.compact-guide { margin-top: 8px; margin-bottom: 4px; }
 
-.tags-help {
-  display: grid;
-  gap: 4px;
-  font-size: 11px;
-  opacity: 0.6;
-  margin-bottom: 12px;
-  padding: 8px 10px;
-  background: linear-gradient(135deg,
-    rgba(var(--theme-primary-rgb), 0.05),
-    rgba(var(--theme-primary-rgb), 0.02));
-  border-radius: var(--theme-radius-sm);
-  line-height: 1.6;
-  border: 1px solid rgba(var(--theme-primary-rgb), 0.1);
-}
-
-.tags-help code {
-  background: rgba(var(--theme-primary-rgb), 0.12);
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--theme-primary);
-}
-
-.tag-add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.tag-add-area { display: grid; gap: 6px; margin: 0 10px 12px; }
+.tag-add-area > span { color: var(--theme-text-secondary); font-size: var(--text-compact); font-weight: 700; }
+.tag-add-row { display: flex; gap: 8px; }
 .tag-add-row .n-input { flex: 1; }
 
-.is-dark .tags-help {
-  background: linear-gradient(135deg,
-    rgba(255,255,255,0.05),
-    rgba(255,255,255,0.02));
-}
-.is-dark .tags-help code { background: rgba(255,255,255,0.1); }
-
-.tags-manage { display: flex; flex-direction: column; gap: 12px; }
-.tags-search { margin-bottom: 6px; }
+.tags-manage { display: flex; flex-direction: column; gap: 8px; padding: 0 10px 14px; }
 .knowledge-search-results { display: flex; flex-direction: column; gap: 6px; padding: 6px 8px 14px; overflow-y: auto; }
 .knowledge-search-state { padding: 24px 10px; color: var(--theme-text-secondary); font-size: 11px; text-align: center; line-height: 1.6; }
 .knowledge-search-result { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 6px; width: 100%; padding: 4px 6px 4px 0; border: 1px solid rgba(0,0,0,.07); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: rgba(var(--theme-primary-rgb),.035); }
@@ -3795,15 +3797,19 @@ watch(activeTabId, (newId, oldId) => {
 .knowledge-index-strip>svg { grid-row:1 / 3; }.knowledge-index-strip>span { align-self:end; overflow:hidden; color:var(--theme-text); font-weight:650; text-overflow:ellipsis; white-space:nowrap; }.knowledge-index-strip>small { grid-column:2; align-self:start; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.knowledge-index-strip.state-ready>svg { color:#168a52; }.knowledge-index-strip.state-stale>svg,.knowledge-index-strip.state-corrupt>svg,.knowledge-index-strip.state-error>svg { color:#c47a16; }.knowledge-index-actions { grid-column:3; grid-row:1 / 3; display:flex; align-items:center; }
 
 .tag-row {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
   border-radius: var(--theme-radius-sm);
+  color: var(--theme-text);
+  background: var(--theme-surface);
+  text-align: left;
   cursor: pointer;
   transition: all var(--motion-base) var(--ease-premium);
   font-size: 13px;
-  border: 1px solid transparent;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.1);
   position: relative;
   overflow: hidden;
 }

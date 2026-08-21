@@ -4,12 +4,12 @@
   "expected": {
     "labels": [
       "文件",
-      "搜索",
       "目录",
-      "标签",
-      "关系",
       "最近",
-      "备份"
+      "备份",
+      "常用搜索",
+      "关系",
+      "标签"
     ],
     "sidebarMaximumWidthPx": 262,
     "relationSummary": {
@@ -43,28 +43,10 @@
             "ariaLabel": "文件：浏览和管理资料库文件"
           },
           {
-            "id": "tab-collections",
-            "label": "搜索",
-            "title": "常用搜索：保存并重复使用关键词与格式筛选",
-            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
-          },
-          {
             "id": "tab-outline",
             "label": "目录",
             "title": "目录：查看当前文档的标题大纲",
             "ariaLabel": "目录：查看当前文档的标题大纲"
-          },
-          {
-            "id": "tab-tags",
-            "label": "标签",
-            "title": "标签：管理 Markdown 正文中的 #标签名",
-            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
-          },
-          {
-            "id": "tab-links",
-            "label": "关系",
-            "title": "关系：查看当前 Markdown 的链出与反向链接",
-            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
           },
           {
             "id": "tab-quick",
@@ -77,9 +59,27 @@
             "label": "备份",
             "title": "备份：恢复当前文件的本地历史快照",
             "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          },
+          {
+            "id": "tab-collections",
+            "label": "常用搜索",
+            "title": "常用搜索：保存并重复使用文件搜索的关键词与格式条件",
+            "ariaLabel": "常用搜索：保存并重复使用文件搜索的关键词与格式条件"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown"
           }
         ],
-        "text": "常用搜索0 个保存关键词和格式筛选，之后可以一键重新搜索；不会复制或修改文件。暂无保存的搜索",
+        "text": "常用搜索记录文件页的关键词和格式条件，点击后会回到文件列表并重新执行搜索。0 项先在“文件”页输入搜索关键词 保存当前条件 还没有常用搜索",
         "hasLocalGraphCanvas": false
       },
       {
@@ -105,28 +105,10 @@
             "ariaLabel": "文件：浏览和管理资料库文件"
           },
           {
-            "id": "tab-collections",
-            "label": "搜索",
-            "title": "常用搜索：保存并重复使用关键词与格式筛选",
-            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
-          },
-          {
             "id": "tab-outline",
             "label": "目录",
             "title": "目录：查看当前文档的标题大纲",
             "ariaLabel": "目录：查看当前文档的标题大纲"
-          },
-          {
-            "id": "tab-tags",
-            "label": "标签",
-            "title": "标签：管理 Markdown 正文中的 #标签名",
-            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
-          },
-          {
-            "id": "tab-links",
-            "label": "关系",
-            "title": "关系：查看当前 Markdown 的链出与反向链接",
-            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
           },
           {
             "id": "tab-quick",
@@ -139,6 +121,24 @@
             "label": "备份",
             "title": "备份：恢复当前文件的本地历史快照",
             "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          },
+          {
+            "id": "tab-collections",
+            "label": "常用搜索",
+            "title": "常用搜索：保存并重复使用文件搜索的关键词与格式条件",
+            "ariaLabel": "常用搜索：保存并重复使用文件搜索的关键词与格式条件"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown"
           }
         ],
         "text": "Relation Entry Test",
@@ -167,28 +167,10 @@
             "ariaLabel": "文件：浏览和管理资料库文件"
           },
           {
-            "id": "tab-collections",
-            "label": "搜索",
-            "title": "常用搜索：保存并重复使用关键词与格式筛选",
-            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
-          },
-          {
             "id": "tab-outline",
             "label": "目录",
             "title": "目录：查看当前文档的标题大纲",
             "ariaLabel": "目录：查看当前文档的标题大纲"
-          },
-          {
-            "id": "tab-tags",
-            "label": "标签",
-            "title": "标签：管理 Markdown 正文中的 #标签名",
-            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
-          },
-          {
-            "id": "tab-links",
-            "label": "关系",
-            "title": "关系：查看当前 Markdown 的链出与反向链接",
-            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
           },
           {
             "id": "tab-quick",
@@ -201,9 +183,27 @@
             "label": "备份",
             "title": "备份：恢复当前文件的本地历史快照",
             "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          },
+          {
+            "id": "tab-collections",
+            "label": "常用搜索",
+            "title": "常用搜索：保存并重复使用文件搜索的关键词与格式条件",
+            "ariaLabel": "常用搜索：保存并重复使用文件搜索的关键词与格式条件"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown"
           }
         ],
-        "text": "Markdown 标签在笔记正文输入 #标签名，保存后会自动汇总到这里；点击标签可搜索相关笔记。输入标签名...添加筛选标签...#product.1 篇",
+        "text": "文内标签读取 Markdown 正文中的 #标签名；保存后自动汇总。仅 Markdown添加到当前笔记标签名添加筛选标签...#product1 篇",
         "hasLocalGraphCanvas": false
       },
       {
@@ -229,28 +229,10 @@
             "ariaLabel": "文件：浏览和管理资料库文件"
           },
           {
-            "id": "tab-collections",
-            "label": "搜索",
-            "title": "常用搜索：保存并重复使用关键词与格式筛选",
-            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
-          },
-          {
             "id": "tab-outline",
             "label": "目录",
             "title": "目录：查看当前文档的标题大纲",
             "ariaLabel": "目录：查看当前文档的标题大纲"
-          },
-          {
-            "id": "tab-tags",
-            "label": "标签",
-            "title": "标签：管理 Markdown 正文中的 #标签名",
-            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
-          },
-          {
-            "id": "tab-links",
-            "label": "关系",
-            "title": "关系：查看当前 Markdown 的链出与反向链接",
-            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
           },
           {
             "id": "tab-quick",
@@ -263,6 +245,24 @@
             "label": "备份",
             "title": "备份：恢复当前文件的本地历史快照",
             "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          },
+          {
+            "id": "tab-collections",
+            "label": "常用搜索",
+            "title": "常用搜索：保存并重复使用文件搜索的关键词与格式条件",
+            "ariaLabel": "常用搜索：保存并重复使用文件搜索的关键词与格式条件"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown"
           }
         ],
         "text": "当前文件关系来自正文中的 [[笔记名]] 双向链接1 链出1 链入在知识图谱中查看链出到其他文件 (1)Linked Note链接到当前文件 (1)Linked NoteReturn to [[Relation Entry Test]].",
@@ -291,28 +291,10 @@
             "ariaLabel": "文件：浏览和管理资料库文件"
           },
           {
-            "id": "tab-collections",
-            "label": "搜索",
-            "title": "常用搜索：保存并重复使用关键词与格式筛选",
-            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
-          },
-          {
             "id": "tab-outline",
             "label": "目录",
             "title": "目录：查看当前文档的标题大纲",
             "ariaLabel": "目录：查看当前文档的标题大纲"
-          },
-          {
-            "id": "tab-tags",
-            "label": "标签",
-            "title": "标签：管理 Markdown 正文中的 #标签名",
-            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
-          },
-          {
-            "id": "tab-links",
-            "label": "关系",
-            "title": "关系：查看当前 Markdown 的链出与反向链接",
-            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
           },
           {
             "id": "tab-quick",
@@ -325,6 +307,24 @@
             "label": "备份",
             "title": "备份：恢复当前文件的本地历史快照",
             "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          },
+          {
+            "id": "tab-collections",
+            "label": "常用搜索",
+            "title": "常用搜索：保存并重复使用文件搜索的关键词与格式条件",
+            "ariaLabel": "常用搜索：保存并重复使用文件搜索的关键词与格式条件"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown"
           }
         ],
         "text": "最近打开Relation Entry Test.md",
@@ -353,28 +353,10 @@
             "ariaLabel": "文件：浏览和管理资料库文件"
           },
           {
-            "id": "tab-collections",
-            "label": "搜索",
-            "title": "常用搜索：保存并重复使用关键词与格式筛选",
-            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
-          },
-          {
             "id": "tab-outline",
             "label": "目录",
             "title": "目录：查看当前文档的标题大纲",
             "ariaLabel": "目录：查看当前文档的标题大纲"
-          },
-          {
-            "id": "tab-tags",
-            "label": "标签",
-            "title": "标签：管理 Markdown 正文中的 #标签名",
-            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
-          },
-          {
-            "id": "tab-links",
-            "label": "关系",
-            "title": "关系：查看当前 Markdown 的链出与反向链接",
-            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
           },
           {
             "id": "tab-quick",
@@ -387,6 +369,24 @@
             "label": "备份",
             "title": "备份：恢复当前文件的本地历史快照",
             "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          },
+          {
+            "id": "tab-collections",
+            "label": "常用搜索",
+            "title": "常用搜索：保存并重复使用文件搜索的关键词与格式条件",
+            "ariaLabel": "常用搜索：保存并重复使用文件搜索的关键词与格式条件"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown"
           }
         ],
         "text": "影子副本 (0)暂无历史快照",

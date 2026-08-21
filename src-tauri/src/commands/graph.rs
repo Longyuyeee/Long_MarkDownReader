@@ -17,8 +17,9 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
-static RE_TAG: LazyLock<regex::Regex> =
-    LazyLock::new(|| regex::Regex::new(r"(?:^|\s)#([^\s#`\[\]()]+)").unwrap());
+static RE_TAG: LazyLock<regex::Regex> = LazyLock::new(|| {
+    regex::Regex::new(r#"(?:^|\s)#([^\s#`\[\](){}.,;:!?，。；：！？、\"'<>]+)"#).unwrap()
+});
 const MAX_RELATION_SUMMARY_PATHS: usize = 100;
 const MAX_RELATION_CONTEXT_ITEMS: usize = 80;
 const MAX_RELATION_DECISIONS: usize = 512;

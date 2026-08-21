@@ -23,10 +23,8 @@ try {
   $vite=Start-Process -FilePath "npm.cmd" -ArgumentList @("run","dev","--","--host","127.0.0.1","--port","9000","--strictPort") -WorkingDirectory $workspace -WindowStyle Hidden -PassThru
   Wait-Port 9000 $true
   $appPath=Join-Path $workspace "src-tauri\target\debug\tauri-app.exe"
-  if (-not (Test-Path -LiteralPath $appPath)) {
-    & cargo build --locked --manifest-path (Join-Path $workspace "src-tauri\Cargo.toml") --bin tauri-app
-    if ($LASTEXITCODE -ne 0) { throw "Tauri debug build failed" }
-  }
+  & cargo build --locked --manifest-path (Join-Path $workspace "src-tauri\Cargo.toml") --bin tauri-app
+  if ($LASTEXITCODE -ne 0) { throw "Tauri debug build failed" }
   $env:LONGEDIT_E2E_LIBRARY=$library
   $env:WEBVIEW2_USER_DATA_FOLDER=$webviewData
   $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS="--remote-debugging-port=$cdpPort --remote-allow-origins=*"

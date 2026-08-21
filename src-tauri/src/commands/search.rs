@@ -6,8 +6,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
-static RE_TAG: LazyLock<regex::Regex> =
-    LazyLock::new(|| regex::Regex::new(r"(?:^|\s)#([^\s#`\[\]()]+)").unwrap());
+static RE_TAG: LazyLock<regex::Regex> = LazyLock::new(|| {
+    regex::Regex::new(r#"(?:^|\s)#([^\s#`\[\](){}.,;:!?，。；：！？、\"'<>]+)"#).unwrap()
+});
 
 #[tauri::command]
 pub async fn search_library(library_root: String, query: String) -> Result<Vec<FileEntry>, String> {
@@ -167,7 +168,10 @@ fn search_tag_recursive(dir: &Path, tag: &str, results: &mut Vec<FileEntry>) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
     };
-    let pattern = format!(r"(?:^|\s)#{}(?:$|\s|[.,;:!\[\](){{}}])", regex::escape(tag));
+    let pattern = format!(
+        r#"(?:^|\s)#{}(?:$|\s|[.,;:!?，。；：！？、\[\](){{}}\"'<>])"#,
+        regex::escape(tag)
+    );
     let Ok(tag_regex) = regex::Regex::new(&pattern) else {
         return;
     };
@@ -204,5 +208,15 @@ mod tests {
         assert!(is_searchable_file("diagram.MERMAID"));
         assert!(!is_searchable_file("archive.zip"));
         assert!(!is_searchable_file("notes.md.exe"));
+    }
+
+    #[test]
+    fn markdown_tags_stop_before_sentence_punctuation() {
+        let content = "Uses #product. 中文 #项目，and #release-v1!";
+        let tags: Vec<&str> = RE_TAG
+            .captures_iter(content)
+            .map(|capture| capture.get(1).unwrap().as_str())
+            .collect();
+        assert_eq!(tags, vec!["product", "项目", "release-v1"]);
     }
 }

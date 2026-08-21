@@ -6,8 +6,14 @@ const output = path.resolve('docs/evidence/post-v1013-sidebar-information-archit
 const samplePath = process.env.LONGEDIT_SIDEBAR_SAMPLE_PATH
 if (!samplePath) throw new Error('LONGEDIT_SIDEBAR_SAMPLE_PATH is required')
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
-const targets = await fetch(`${endpoint}/json`).then(response => response.json())
-const target = targets.find(item => item.type === 'page' && item.url.includes('127.0.0.1:9000') && item.webSocketDebuggerUrl)
+let target
+for (let attempt = 0; attempt < 100 && !target; attempt += 1) {
+  const targets = await fetch(`${endpoint}/json`).then(response => response.json())
+  target = targets.find(item => item.type === 'page'
+    && (item.url.includes('127.0.0.1:9000') || item.url.includes('tauri.localhost'))
+    && item.webSocketDebuggerUrl)
+  if (!target) await delay(100)
+}
 if (!target) throw new Error('LongEdit Tauri WebView target was not found')
 
 const socket = new WebSocket(target.webSocketDebuggerUrl)
@@ -102,11 +108,11 @@ const descriptionsComplete = entries[0].tabs.every(tab => tab.title?.includes('�
 const relationEntry = entries.find(entry => entry.tab === 'links')
 const searchEntry = entries.find(entry => entry.tab === 'collections')
 const tagsEntry = entries.find(entry => entry.tab === 'tags')
-const passed = JSON.stringify(tabLabels) === JSON.stringify(['文件', '搜索', '目录', '标签', '关系', '最近', '备份'])
+const passed = JSON.stringify(tabLabels) === JSON.stringify(['文件', '目录', '最近', '备份', '常用搜索', '关系', '标签'])
   && descriptionsComplete
   && entries.every(entry => entry.sidebar.width <= 262 && entry.panelOverflowX <= 2 && entry.pageOverflowX <= 2)
-  && searchEntry.text.includes('保存关键词和格式筛选')
-  && tagsEntry.text.includes('Markdown 标签') && tagsEntry.text.includes('#标签名')
+  && searchEntry.text.includes('记录文件页的关键词和格式条件')
+  && tagsEntry.text.includes('仅 Markdown') && tagsEntry.text.includes('#标签名')
   && relationEntry.text.includes('1 链出') && relationEntry.text.includes('1 链入')
   && relationEntry.text.includes('在知识图谱中查看')
   && !relationEntry.hasLocalGraphCanvas
@@ -116,7 +122,7 @@ await fs.writeFile(path.join(output, 'runtime-evidence.json'), `${JSON.stringify
   schemaVersion: 1,
   status: passed ? 'accepted' : 'rejected',
   expected: {
-    labels: ['文件', '搜索', '目录', '标签', '关系', '最近', '备份'],
+    labels: ['文件', '目录', '最近', '备份', '常用搜索', '关系', '标签'],
     sidebarMaximumWidthPx: 262,
     relationSummary: { outgoing: 1, incoming: 1, embeddedGraphRemoved: true },
   },
