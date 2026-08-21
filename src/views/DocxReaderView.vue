@@ -1343,6 +1343,7 @@ const load = async () => {
   const viewState = recallWorkspaceViewState(requestedPath)
   loading.value = true
   loadError.value = ''
+  report.value = null
   try {
     const nextReport = await invoke<DocxReadReport>(requestedExternal ? 'read_external_docx_document' : 'read_docx_document', {
       ...(requestedExternal ? {} : { libraryRoot: store.libraryPath }),
