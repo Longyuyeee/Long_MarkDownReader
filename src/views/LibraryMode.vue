@@ -698,7 +698,6 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
@@ -724,7 +723,7 @@ import RelationSummaryBadge, { type GraphRelationSummary } from '../components/R
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { isTauriRuntime, listen } from '../services/tauriRuntime'
+import { invoke, isTauriRuntime, listen } from '../services/tauriRuntime'
 import { initializeUpdater, updaterState } from '../services/appUpdater'
 import { RELEASE_MATRIX_VERSION } from '../config/releaseCapabilities'
 import { useOutline } from '../composables/useOutline'
@@ -929,6 +928,10 @@ const externalOpenOptions = computed(() =>
   activeTabId.value ? buildExternalOpenOptions(activeTabId.value) : [],
 )
 const loadExternalApplications = async () => {
+  if (!isTauriRuntime()) {
+    externalApplications.value = []
+    return
+  }
   externalAppsLoading.value = true
   try {
     externalApplications.value = await invoke<ExternalApplicationCapability[]>('discover_external_applications')
@@ -3495,6 +3498,8 @@ watch(activeTabId, (newId, oldId) => {
   height: 100%; background: color-mix(in srgb, var(--theme-surface) 84%, var(--theme-bg)); backdrop-filter: none;
   border-right: var(--theme-border); display: flex; flex-direction: column; overflow: hidden;
   transition: width var(--motion-page) var(--ease-emphasized), opacity var(--motion-slow) var(--ease-standard); z-index: 20;
+  container-name: library-sidebar;
+  container-type: inline-size;
 }
 .is-dark .sidebar { background: color-mix(in srgb, var(--theme-surface) 90%, var(--theme-bg)); border-right: 1px solid rgba(255, 255, 255, 0.08); }
 .sidebar-inner { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
@@ -4312,6 +4317,35 @@ watch(activeTabId, (newId, oldId) => {
 .meta-path { font-size: 13px; font-weight: 700; color: var(--theme-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.9; }
 .footer-chevron { font-size: 14px; opacity: 0.2; transition: all 0.3s; transform: translateX(-4px); }
 .sidebar-footer:hover .footer-chevron { opacity: 0.6; transform: translateX(0); }
+
+@container library-sidebar (max-width: 230px) {
+  .sidebar-footer-container { padding: 8px; }
+  .sidebar-footer {
+    gap: 8px;
+    min-height: 56px;
+    padding: 8px;
+  }
+  .settings-icon-box {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+  }
+  .lib-name-row { gap: 4px; }
+  .lib-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0;
+  }
+  .lib-status-dot,
+  .footer-chevron { display: none; }
+  .app-version-badge {
+    margin-left: 0;
+    padding: 2px 5px;
+  }
+  .meta-path { font-size: var(--text-body-sm); }
+}
 
 .resizer-area { position: relative; width: 1px; height: 100%; z-index: 100; background: rgba(0, 0, 0, 0.03); cursor: col-resize; }
 .resizer-area:hover { background: var(--theme-primary); }

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "status": "accepted",
+  "expected": {
+    "viewport": [
+      900,
+      720
+    ],
+    "sidebarMaximumWidthPx": 202,
+    "footerMaximumHeightPx": 74,
+    "singleLineLabel": true
+  },
+  "actual": {
+    "narrow": {
+      "viewport": [
+        900,
+        720
+      ],
+      "sidebar": {
+        "x": 0,
+        "y": 32,
+        "width": 200,
+        "height": 688,
+        "right": 200,
+        "bottom": 720
+      },
+      "footer": {
+        "x": 8,
+        "y": 652.015625,
+        "width": 183,
+        "height": 59.984375,
+        "right": 191,
+        "bottom": 712
+      },
+      "label": {
+        "x": 57,
+        "y": 661.8125,
+        "width": 55,
+        "height": 17.59375,
+        "right": 112,
+        "bottom": 679.40625,
+        "text": "当前资料库",
+        "whiteSpace": "nowrap"
+      },
+      "name": {
+        "x": 57,
+        "y": 682.203125,
+        "width": 125,
+        "height": 20.796875,
+        "right": 182,
+        "bottom": 703
+      },
+      "badge": {
+        "x": 116,
+        "y": 661.015625,
+        "width": 49.234375,
+        "height": 19.1875,
+        "right": 165.234375,
+        "bottom": 680.203125,
+        "text": "v1.0.13"
+      },
+      "statusDotDisplay": "none",
+      "chevronDisplay": "none",
+      "pageOverflow": 0
+    },
+    "runtimeErrorCount": 0
+  },
+  "passed": true
+}

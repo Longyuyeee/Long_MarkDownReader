@@ -16,6 +16,10 @@ const checks = {
   updateAwareness: source.includes("updaterState.status === 'available'") && source.includes('version-update-dot'),
   keyboardReachableFooter: source.includes('aria-label="打开资料库设置"') && source.includes('@keydown.space.prevent="openSettings"'),
   responsiveContainment: /\.app-version-badge\s*\{[\s\S]*?flex:\s*none;[\s\S]*?white-space:\s*nowrap;[\s\S]*?\}/.test(source),
+  compactSidebarFooter: source.includes('@container library-sidebar (max-width: 230px)')
+    && source.includes('container-name: library-sidebar')
+    && source.includes('.lib-status-dot,')
+    && source.includes('.footer-chevron { display: none; }'),
 }
 
 const failed = Object.entries(checks).filter(([, passed]) => !passed).map(([name]) => name)

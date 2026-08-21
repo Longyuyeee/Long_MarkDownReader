@@ -53,9 +53,13 @@ const metrics = () => evaluate(`(() => {
   const sidebar = document.querySelector('.sidebar')
   const badge = document.querySelector('[data-testid="main-app-version"]')
   const info = document.querySelector('.lib-info-box')
+  const label = document.querySelector('.lib-label')
+  const name = document.querySelector('.meta-path')
   const footerRect = footer?.getBoundingClientRect()
   const badgeRect = badge?.getBoundingClientRect()
   const infoRect = info?.getBoundingClientRect()
+  const labelRect = label?.getBoundingClientRect()
+  const nameRect = name?.getBoundingClientRect()
   const sidebarRect = sidebar?.getBoundingClientRect()
   return {
     viewport: [innerWidth, innerHeight],
@@ -63,10 +67,12 @@ const metrics = () => evaluate(`(() => {
     sidebarWidth: sidebarRect?.width,
     text: badge?.textContent?.trim(),
     title: badge?.getAttribute('title'),
-    label: document.querySelector('.lib-label')?.textContent?.trim(),
+    labelText: document.querySelector('.lib-label')?.textContent?.trim(),
     footer: footerRect && { x: footerRect.x, y: footerRect.y, width: footerRect.width, height: footerRect.height, right: footerRect.right, bottom: footerRect.bottom },
     badge: badgeRect && { x: badgeRect.x, y: badgeRect.y, width: badgeRect.width, height: badgeRect.height, right: badgeRect.right, bottom: badgeRect.bottom },
     info: infoRect && { x: infoRect.x, width: infoRect.width, right: infoRect.right },
+    labelRect: labelRect && { x: labelRect.x, y: labelRect.y, width: labelRect.width, height: labelRect.height, right: labelRect.right, bottom: labelRect.bottom, whiteSpace: getComputedStyle(label).whiteSpace },
+    name: nameRect && { x: nameRect.x, y: nameRect.y, width: nameRect.width, height: nameRect.height, right: nameRect.right, bottom: nameRect.bottom },
   }
 })()`)
 
@@ -97,25 +103,37 @@ await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: 220, y: 300, 
 await delay(250)
 const compact = await metrics()
 
+await send('Emulation.setDeviceMetricsOverride', { width: 900, height: 720, deviceScaleFactor: 1, mobile: false })
+await delay(300)
+const narrow = await metrics()
+await capture('main-version-indicator-narrow.png')
+
 const contained = state => state.badge.x >= state.footer.x
   && state.badge.right <= state.footer.right
   && state.badge.y >= state.footer.y
   && state.badge.bottom <= state.footer.bottom
 const passed = normal.text === `v${expectedVersion}`
   && normal.title === `当前软件版本 v${expectedVersion}，点击查看更新`
-  && normal.label === '当前资料库'
+  && normal.labelText === '当前资料库'
   && normal.pageOverflow <= 2
   && compact.pageOverflow <= 2
+  && narrow.pageOverflow <= 2
   && contained(normal)
   && contained(compact)
+  && contained(narrow)
   && normal.sidebarWidth >= 250
   && compact.sidebarWidth <= 222
   && compact.sidebarWidth < normal.sidebarWidth
   && compact.info.width > 70
+  && narrow.sidebarWidth <= 202
+  && narrow.footer.height <= 74
+  && narrow.labelRect.height <= 18
+  && narrow.labelRect.whiteSpace === 'nowrap'
+  && narrow.name.right <= narrow.footer.right
   && runtimeErrors.length === 0
 if (!passed) throw new Error(`Main version indicator runtime gate failed: ${JSON.stringify({ normal, compact, runtimeErrors })}`)
 
-const badgeCenter = { x: compact.badge.x + compact.badge.width / 2, y: compact.badge.y + compact.badge.height / 2 }
+const badgeCenter = { x: narrow.badge.x + narrow.badge.width / 2, y: narrow.badge.y + narrow.badge.height / 2 }
 await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: badgeCenter.x, y: badgeCenter.y, button: 'left', buttons: 1, clickCount: 1 })
 await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: badgeCenter.x, y: badgeCenter.y, button: 'left', buttons: 0, clickCount: 1 })
 await waitFor(`location.hash.includes('/settings') && new URLSearchParams(location.hash.split('?')[1] || '').get('category') === 'system' && document.querySelector('[data-testid="app-update-settings"]')`, 'software update settings route')
@@ -128,7 +146,7 @@ await fs.writeFile(path.join(output, 'runtime-evidence.json'), `${JSON.stringify
   schemaVersion: 1,
   status: 'accepted',
   expected: { version: expectedVersion, placement: 'sidebar-library-footer', normalAndCompactContainment: true },
-  actual: { normal, compact, updateRoute, runtimeErrorCount: runtimeErrors.length },
+  actual: { normal, compact, narrow, updateRoute, runtimeErrorCount: runtimeErrors.length },
   passed,
 }, null, 2)}\n`)
 socket.close()
