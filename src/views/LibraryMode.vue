@@ -49,7 +49,13 @@
                   <n-select v-if="searchQuery.trim()" v-model:value="searchObjectTypes" class="search-format-filter" size="tiny" multiple clearable :max-tag-count="1" placeholder="全部格式" :options="searchFormatOptions" />
                 </div>
                 <div class="toolbar-area">
-                  <n-dropdown trigger="click" :options="templateOptions" @select="handleTemplateCreate">
+                  <n-dropdown
+                    trigger="click"
+                    scrollable
+                    :menu-props="templateMenuProps"
+                    :options="templateOptions"
+                    @select="handleTemplateCreate"
+                  >
                     <n-button data-testid="library-create-menu" quaternary circle size="small" title="新建笔记或画布">
                       <template #icon><n-icon :component="PlusIcon" /></template>
                     </n-button>
@@ -2535,6 +2541,11 @@ const templateOptions = [
     key: `__format:${format.id}`,
   })),
 ]
+
+const templateMenuProps = () => ({
+  class: 'library-create-dropdown-menu',
+  style: 'max-height: min(520px, calc(100vh - 24px)); min-width: 188px;',
+})
 
 const selectedTargetDirectory = () => {
   if (!selectedKeys.value.length) return store.libraryPath
