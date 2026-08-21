@@ -31,12 +31,20 @@
       <strong>本次更新</strong>
       <ul><li v-for="line in releaseHighlights" :key="line">{{ line }}</li></ul>
     </section>
+    <section v-if="state.status === 'installing'" class="download-progress" aria-live="polite">
+      <div class="progress-heading">
+        <strong>{{ progressLabel }}</strong>
+        <span>{{ state.progressPercent }}%</span>
+      </div>
+      <n-progress type="line" :percentage="state.progressPercent" :show-indicator="false" processing />
+      <small>{{ progressDetail }}</small>
+    </section>
     <p class="restart-note"><ShieldCheckIcon :size="14" aria-hidden="true" />安装完成后 Long编辑会自动重新打开。</p>
     <p class="unsigned-note">未签名社区版仍可能触发 Windows“未知发布者”提示。</p>
     <template #footer>
       <div class="modal-actions">
-        <n-button class="release-link" quaternary @click="openRelease">发布详情</n-button>
-        <n-button @click="dismiss">稍后提醒</n-button>
+        <n-button class="release-link" quaternary :disabled="state.status === 'installing'" @click="openRelease">发布详情</n-button>
+        <n-button :disabled="state.status === 'installing'" @click="dismiss">稍后提醒</n-button>
         <n-button type="primary" :loading="state.status === 'installing'" @click="install">
           <template #icon><DownloadIcon /></template>
           下载并安装
@@ -48,7 +56,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { NButton, NModal, useMessage } from 'naive-ui'
+import { NButton, NModal, NProgress, useMessage } from 'naive-ui'
 import {
   ArrowRight as ArrowRightIcon,
   Download as DownloadIcon,
@@ -76,6 +84,19 @@ const releaseHighlights = computed(() => state.releaseNotes
   .slice(0, 4))
 
 const formatBytes = (bytes: number) => bytes > 0 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : '安装包'
+const progressLabel = computed(() => ({
+  downloading: '正在下载安装包',
+  verifying: '正在校验 SHA-256',
+  installing: '下载完成，正在启动安装',
+  idle: '正在准备下载',
+})[state.progressPhase])
+const progressDetail = computed(() => state.progressPhase === 'downloading'
+  ? `${formatBytes(state.downloadedBytes)} / ${formatBytes(state.totalBytes || state.installerSize)}`
+  : state.progressPhase === 'verifying'
+    ? '正在确认安装包来自官方发布且内容完整'
+    : state.progressPhase === 'installing'
+      ? 'Long编辑即将退出，安装完成后会自动重新打开'
+      : '正在连接官方 GitHub Release')
 const dismiss = () => { dismissedVersion.value = state.latestVersion }
 const openRelease = async () => { await openLatestRelease() }
 const install = async () => {
@@ -119,6 +140,10 @@ onMounted(() => void checkForUpdates(false))
 }
 .release-note strong { display: block; margin-bottom: 5px; font-size: 12px; }
 .release-note ul { margin: 0; padding-left: 17px; color: var(--theme-text-secondary, #667085); font-size: 11px; line-height: 1.55; }
+.download-progress { display: grid; gap: 7px; margin-top: 13px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--theme-primary, #5b7cfa) 28%, transparent); border-radius: 7px; background: color-mix(in srgb, var(--theme-primary, #5b7cfa) 7%, transparent); }
+.progress-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; }
+.progress-heading span { color: var(--theme-primary, #5b7cfa); font-variant-numeric: tabular-nums; }
+.download-progress small { color: var(--theme-text-secondary, #667085); font-size: 11px; line-height: 1.45; }
 .restart-note, .unsigned-note { margin: 10px 0 0; color: var(--theme-text-secondary, #667085); font-size: 11px; line-height: 1.45; }
 .restart-note { display: flex; align-items: center; gap: 6px; color: var(--theme-text); }
 .restart-note svg { color: var(--theme-success, #22a06b); }

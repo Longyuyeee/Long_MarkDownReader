@@ -1,18 +1,20 @@
 use reqwest::header::{ACCEPT, USER_AGENT};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{fs, path::PathBuf, time::Duration};
-use tauri::AppHandle;
+use std::{fs, io::Write, path::PathBuf, time::Duration};
+use tauri::{AppHandle, Emitter};
 
 #[cfg(windows)]
-use std::process::Command;
-#[cfg(windows)]
 use std::os::windows::process::CommandExt;
+#[cfg(windows)]
+use std::process::Command;
 
 const RELEASE_API: &str =
     "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest";
 const RELEASE_DOWNLOAD_PREFIX: &str = "/Longyuyeee/Long_MarkDownReader/releases/download/";
 const MAX_INSTALLER_BYTES: u64 = 250 * 1024 * 1024;
+const PROGRESS_EMIT_BYTES: u64 = 256 * 1024;
+const UPDATE_PROGRESS_EVENT: &str = "community-update-progress";
 
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
@@ -60,8 +62,8 @@ exit 1
 
 #[cfg(windows)]
 fn spawn_update_relauncher(installer: &std::path::Path) -> Result<(), String> {
-    let application = std::env::current_exe()
-        .map_err(|error| format!("无法定位更新后的应用程序：{error}"))?;
+    let application =
+        std::env::current_exe().map_err(|error| format!("无法定位更新后的应用程序：{error}"))?;
     Command::new("powershell.exe")
         .args([
             "-NoProfile",
@@ -110,6 +112,35 @@ pub struct CommunityUpdateInfo {
     installer_name: String,
     installer_size: u64,
     installer_sha256: String,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CommunityUpdateProgress {
+    phase: &'static str,
+    downloaded_bytes: u64,
+    total_bytes: u64,
+    percent: u8,
+}
+
+fn progress_percent(downloaded: u64, total: u64) -> u8 {
+    if total == 0 {
+        0
+    } else {
+        ((downloaded.saturating_mul(100) / total).min(100)) as u8
+    }
+}
+
+fn emit_update_progress(app: &AppHandle, phase: &'static str, downloaded: u64, total: u64) {
+    let _ = app.emit(
+        UPDATE_PROGRESS_EVENT,
+        CommunityUpdateProgress {
+            phase,
+            downloaded_bytes: downloaded,
+            total_bytes: total,
+            percent: progress_percent(downloaded, total),
+        },
+    );
 }
 
 struct ValidatedRelease {
@@ -252,7 +283,7 @@ pub async fn install_community_update(
         return Err("远端最新版本已经变化，请重新检查更新后再安装".to_string());
     }
 
-    let response = reqwest::Client::builder()
+    let mut response = reqwest::Client::builder()
         .timeout(Duration::from_secs(180))
         .build()
         .map_err(|error| format!("无法初始化更新下载：{error}"))?
@@ -269,26 +300,64 @@ pub async fn install_community_update(
     if response.content_length().unwrap_or(release.asset.size) > MAX_INSTALLER_BYTES {
         return Err("下载响应大小异常，已停止安装".to_string());
     }
-    let bytes = response
-        .bytes()
-        .await
-        .map_err(|error| format!("读取安装包失败：{error}"))?;
-    if bytes.len() as u64 != release.asset.size {
-        return Err("安装包下载不完整，已停止安装".to_string());
-    }
-    let actual = format!("{:x}", Sha256::digest(&bytes));
-    if actual != release.sha256 {
-        return Err("安装包 SHA-256 校验失败，已删除下载并停止安装".to_string());
-    }
 
     let directory = update_directory()?;
     let temporary = directory.join(format!("{}.download", release.asset.name));
     let installer = directory.join(&release.asset.name);
-    fs::write(&temporary, &bytes).map_err(|error| format!("保存安装包失败：{error}"))?;
-    if installer.exists() {
-        fs::remove_file(&installer).map_err(|error| format!("清理旧安装包失败：{error}"))?;
+    if temporary.exists() {
+        fs::remove_file(&temporary).map_err(|error| format!("清理未完成下载失败：{error}"))?;
     }
-    fs::rename(&temporary, &installer).map_err(|error| format!("准备安装包失败：{error}"))?;
+
+    let download_result: Result<(), String> = async {
+        let mut file = fs::File::create(&temporary)
+            .map_err(|error| format!("创建更新下载文件失败：{error}"))?;
+        let mut hasher = Sha256::new();
+        let mut downloaded = 0_u64;
+        let mut last_emitted = 0_u64;
+        emit_update_progress(&app, "downloading", 0, release.asset.size);
+
+        while let Some(chunk) = response
+            .chunk()
+            .await
+            .map_err(|error| format!("读取安装包失败：{error}"))?
+        {
+            downloaded = downloaded.saturating_add(chunk.len() as u64);
+            if downloaded > release.asset.size || downloaded > MAX_INSTALLER_BYTES {
+                return Err("安装包下载大小超过发布记录，已停止安装".to_string());
+            }
+            file.write_all(&chunk)
+                .map_err(|error| format!("保存安装包失败：{error}"))?;
+            hasher.update(&chunk);
+            if downloaded == release.asset.size
+                || downloaded.saturating_sub(last_emitted) >= PROGRESS_EMIT_BYTES
+            {
+                emit_update_progress(&app, "downloading", downloaded, release.asset.size);
+                last_emitted = downloaded;
+            }
+        }
+        file.flush()
+            .map_err(|error| format!("刷新安装包缓存失败：{error}"))?;
+        if downloaded != release.asset.size {
+            return Err("安装包下载不完整，已停止安装".to_string());
+        }
+
+        emit_update_progress(&app, "verifying", downloaded, release.asset.size);
+        let actual = format!("{:x}", hasher.finalize());
+        if actual != release.sha256 {
+            return Err("安装包 SHA-256 校验失败，已删除下载并停止安装".to_string());
+        }
+        if installer.exists() {
+            fs::remove_file(&installer).map_err(|error| format!("清理旧安装包失败：{error}"))?;
+        }
+        fs::rename(&temporary, &installer).map_err(|error| format!("准备安装包失败：{error}"))?;
+        emit_update_progress(&app, "installing", downloaded, release.asset.size);
+        Ok(())
+    }
+    .await;
+    if let Err(error) = download_result {
+        let _ = fs::remove_file(&temporary);
+        return Err(error);
+    }
 
     #[cfg(windows)]
     {
@@ -329,6 +398,16 @@ mod tests {
         assert!(parse_sha256(Some(&format!("sha256:{}", "a".repeat(64)))).is_ok());
         assert!(parse_sha256(Some("sha256:abc")).is_err());
         assert!(parse_sha256(None).is_err());
+    }
+
+    #[test]
+    fn download_progress_is_bounded_and_monotonic() {
+        assert_eq!(progress_percent(0, 0), 0);
+        assert_eq!(progress_percent(0, 100), 0);
+        assert_eq!(progress_percent(1, 3), 33);
+        assert_eq!(progress_percent(50, 100), 50);
+        assert_eq!(progress_percent(100, 100), 100);
+        assert_eq!(progress_percent(120, 100), 100);
     }
 
     #[cfg(windows)]

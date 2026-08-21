@@ -31,7 +31,7 @@ if (policy.schemaVersion !== 1 || policy.stage !== 'V1' || policy.appVersion !==
 if (policy.userDecision?.authenticodeRequired !== false || policy.userDecision?.unsignedCommunityReleaseApproved !== true || policy.userDecision?.unknownPublisherWarningRequired !== true) fail('unsigned community decision drift')
 if (policy.targetRelease?.tag !== tag || policy.targetRelease?.url !== releaseUrl || policy.targetRelease?.assetMode !== 'managed-nsis-msi-with-sha256') fail('target release drift')
 if (updater.status !== 'active-from-v1.0.5' || updater.migration?.firstManagedUpdaterVersion !== '1.0.5' || policy.updater?.mode !== 'github-release-sha256-managed' || policy.updater?.enabled !== true || policy.updater?.automaticCheckIntervalHours !== 24 || policy.updater?.integrityDigestRequired !== true || policy.updater?.latestManifestAsset !== null) fail('managed updater release boundary drift')
-for (const token of ['api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest', 'Sha256::digest', 'LongEdit_{expected_version}_x64-setup.exe']) if (!backendUpdater.includes(token)) fail(`managed updater implementation missing: ${token}`)
+for (const token of ['api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest', 'Sha256::new()', 'hasher.update(&chunk)', 'hasher.finalize()', '.chunk()', 'LongEdit_{expected_version}_x64-setup.exe']) if (!backendUpdater.includes(token)) fail(`managed updater implementation missing: ${token}`)
 const previousUpdaterAccepted = managedUpdaterLifecycle.status === 'hosted-managed-update-passed'
   || (pkg.version === '1.0.9'
     && managedUpdaterLifecycle.status === 'hosted-automatic-relaunch-failed'

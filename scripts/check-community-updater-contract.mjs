@@ -30,10 +30,17 @@ requireTokens(backend, [
   'GithubRelease',
   'draft || response.prerelease',
   'parse_sha256',
-  'Sha256::digest',
+  'Sha256::new()',
+  'hasher.update(&chunk)',
+  'hasher.finalize()',
   'actual != release.sha256',
   'LongEdit_{expected_version}_x64-setup.exe',
   'MAX_INSTALLER_BYTES',
+  'community-update-progress',
+  '.chunk()',
+  'PROGRESS_EMIT_BYTES',
+  'emit_update_progress(&app, "verifying"',
+  'progress_percent(downloaded, total)',
   'UPDATE_RELAUNCH_SCRIPT',
   '-PassThru -Wait',
   '$install.ExitCode',
@@ -48,6 +55,9 @@ requireTokens(service, [
   'checkForUpdates',
   "invoke<CommunityUpdateInfo>('check_community_update')",
   "invoke('install_community_update'",
+  "listen<CommunityUpdateProgress>('community-update-progress'",
+  'progressPercent',
+  "updaterState.status === 'installing'",
 ], 'frontend updater service')
 requireTokens(modal, [
   '发现新版本',
@@ -58,8 +68,11 @@ requireTokens(modal, [
   ':style="updateModalStyle"',
   "width: 'min(460px, calc(100vw - 24px))'",
   'releaseHighlights',
+  '<n-progress',
+  '正在校验 SHA-256',
+  ':disabled="state.status === \'installing\'"',
 ], 'automatic update prompt')
-requireTokens(settings, ['每 24 小时自动检查', '检查更新', '下载并安装'], 'update settings')
+requireTokens(settings, ['每 24 小时自动检查', '检查更新', '下载并安装', '<n-progress', 'progressDetail'], 'update settings')
 requireTokens(app, ['<AppUpdater v-if="isMainWindow" />', "import AppUpdater from './components/AppUpdater.vue'"], 'application shell')
 
 for (const unsafe of ['downloadUrl:', 'installerPath:', 'expectedSha256:']) {

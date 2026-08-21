@@ -2,7 +2,7 @@ import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { reactive } from 'vue'
-import { isTauriRuntime } from './tauriRuntime'
+import { isTauriRuntime, listen } from './tauriRuntime'
 
 export const LATEST_RELEASE_URL = 'https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest'
 const LAST_CHECK_KEY = 'longedit.update.last-successful-check'
@@ -31,6 +31,15 @@ export interface CommunityUpdateInfo {
   installerSha256: string
 }
 
+export type UpdateProgressPhase = 'idle' | 'downloading' | 'verifying' | 'installing'
+
+interface CommunityUpdateProgress {
+  phase: Exclude<UpdateProgressPhase, 'idle'>
+  downloadedBytes: number
+  totalBytes: number
+  percent: number
+}
+
 export const updaterState = reactive({
   status: 'idle' as UpdateStatus,
   currentVersion: '1.0.0',
@@ -41,13 +50,37 @@ export const updaterState = reactive({
   installerName: '',
   installerSize: 0,
   installerSha256: '',
+  progressPhase: 'idle' as UpdateProgressPhase,
+  downloadedBytes: 0,
+  totalBytes: 0,
+  progressPercent: 0,
   error: '',
 })
 
 let initialization: Promise<void> | null = null
 let activeCheck: Promise<CommunityUpdateInfo | null> | null = null
+let progressListener: Promise<void> | null = null
 
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : String(error)
+
+const resetProgress = () => {
+  updaterState.progressPhase = 'idle'
+  updaterState.downloadedBytes = 0
+  updaterState.totalBytes = updaterState.installerSize
+  updaterState.progressPercent = 0
+}
+
+const initializeProgressListener = () => {
+  if (progressListener) return progressListener
+  progressListener = listen<CommunityUpdateProgress>('community-update-progress', event => {
+    const progress = event.payload
+    updaterState.progressPhase = progress.phase
+    updaterState.downloadedBytes = Math.max(0, progress.downloadedBytes)
+    updaterState.totalBytes = Math.max(0, progress.totalBytes)
+    updaterState.progressPercent = Math.min(100, Math.max(0, progress.percent))
+  }).then(() => undefined)
+  return progressListener
+}
 
 export const initializeUpdater = async () => {
   if (initialization) return initialization
@@ -57,6 +90,7 @@ export const initializeUpdater = async () => {
         updaterState.status = 'unsupported'
         return
       }
+      await initializeProgressListener()
       updaterState.currentVersion = await getVersion()
       updaterState.status = 'ready'
     } catch (error) {
@@ -75,6 +109,7 @@ export const shouldRunAutomaticCheck = () => {
 export const checkForUpdates = async (manual = false): Promise<CommunityUpdateInfo | null> => {
   await initializeUpdater()
   if (!isTauriRuntime()) return null
+  if (updaterState.status === 'installing') return null
   if (!manual && !shouldRunAutomaticCheck()) return null
   if (activeCheck) return activeCheck
 
@@ -90,6 +125,7 @@ export const checkForUpdates = async (manual = false): Promise<CommunityUpdateIn
       updaterState.installerName = info.installerName
       updaterState.installerSize = info.installerSize
       updaterState.installerSha256 = info.installerSha256
+      resetProgress()
       updaterState.status = info.available ? 'available' : 'up-to-date'
       localStorage.setItem(LAST_CHECK_KEY, String(Date.now()))
       return info
@@ -107,6 +143,8 @@ export const checkForUpdates = async (manual = false): Promise<CommunityUpdateIn
 
 export const installAvailableUpdate = async () => {
   if (!updaterState.latestVersion || updaterState.status !== 'available') return false
+  await initializeProgressListener()
+  resetProgress()
   updaterState.status = 'installing'
   updaterState.error = ''
   try {
@@ -120,6 +158,7 @@ export const installAvailableUpdate = async () => {
 }
 
 export const openLatestRelease = async () => {
+  if (updaterState.status === 'installing') return false
   updaterState.status = 'opening'
   updaterState.error = ''
   try {
