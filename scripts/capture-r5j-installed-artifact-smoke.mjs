@@ -400,9 +400,11 @@ const clickByTitle = title => evaluate(`(() => {
   return true
 })()`)
 const installedDocxResults = []
+const installedDocxRunNonce = `${Date.now()}-${process.pid}`
 for (const fixture of nativeDocxFixtures) {
   const source = path.join(repoRoot, 'fixtures', 'docx', 'hyperlinks', fixture.sourceFile)
-  const targetFile = path.join(library, fixture.copyFile)
+  const runCopyFile = fixture.copyFile.replace(/\.docx$/i, `-${installedDocxRunNonce}.docx`)
+  const targetFile = path.join(library, runCopyFile)
   const sourceSha256 = await sha256(source)
   await fs.copyFile(source, targetFile)
   const initialCopySha256 = await sha256(targetFile)
@@ -447,7 +449,7 @@ for (const fixture of nativeDocxFixtures) {
   const result = {
     producerId: fixture.producerId,
     sourceFile: fixture.sourceFile,
-    route: `#/library?path=<disposable-library>/${encodeURIComponent(fixture.copyFile)}`,
+    route: `#/library?path=<disposable-library>/${encodeURIComponent(runCopyFile)}`,
     sourceSha256,
     expectedEditableLinks: fixture.expectedEditableLinks,
     linkTargetLabels: initialState.linkTargetLabels,
