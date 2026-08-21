@@ -1358,9 +1358,9 @@ const load = async () => {
     if (!isExternal.value && typeof viewState?.panelOpen === 'boolean') editorOpen.value = viewState.panelOpen
     if (isExternal.value) editorOpen.value = false
     selectedTargetId.value = (
-      availableMode === 'text'
+      editMode.value === 'text'
         ? report.value.editableTextTargets[0]
-        : availableMode === 'style'
+        : editMode.value === 'style'
           ? report.value.editableStyleTargets[0]
           : report.value.editableImageTargets[0]
     )?.id || ''
