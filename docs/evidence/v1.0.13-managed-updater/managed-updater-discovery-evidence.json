@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.13-U1-DISCOVERY",
+  "capturedAt": "2026-08-21T08:02:39.643Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows installed official v1.0.12",
+  "release": {
+    "available": true,
+    "currentVersion": "1.0.12",
+    "latestVersion": "1.0.13",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.13",
+    "releaseNotes": "# Long编辑 v1.0.13\n\n已于 2026-08-21 发布。NSIS、MSI 与 `SHA256SUMS.txt` 已从 GitHub Release 重新下载并完成 SHA-256 复核。\n\nv1.0.13 是版本入口、界面语言和发布事实可靠性增强版本。\n\n## 主要变化\n\n- 主资料库左下角显示真实运行版本，点击可直接进入系统与更新设置；检测到新版本时提供状态提示。\n- 设置页支持从版本入口准确定位更新区域，并保持键盘可访问性。\n- 自动更新提示改为紧凑信息卡，清理原始 Markdown 标记并明确版本、安装包、平台、校验、重启和操作层级。\n- 桌面设置页改为左侧分类固定、右侧内容独立滚动；切换分类自动回到内容顶部，不再带动左侧导航上下浮动。\n- 工作台、知识图谱和演示文稿界面清理残余英文及内部开发编号，用户提示改为明确的中文能力名称。\n- 43 类格式与 91 个扩展名新增统一事实审计，持续核对路由、能力层级、保存模式、writer、发布配置、外部依赖与安全降级通道。\n- Windows 安装包证据采集新增独立 SHA-256 实现，并固定加载系统签名模块，避免 PowerShell 模块路径污染导致采集失败。\n\n## 真实验证\n\n- 主界面版本入口已在真实 Tauri 宽窄窗口完成点击、键盘与路由定位验证。\n- 更新提示在 1000×700 下为 460×400 px，在 480×700 下为 456×442 px，均无视口溢出；设置分类连续切换时左侧导航纵坐标稳定为 114 px，运行时错误为 0。\n- 用户可见术语已通过静态扫描和真实桌面界面复核。\n- 格式事实审计覆盖 43 类格式、91 个扩展名和 43 条唯一安全映射。\n- v1.0.12 官方 NSIS/MSI 已重新计算 SHA-256 并核对 `NotSigned`；当前主机安装变更继续安全阻断。\n- 官方 v1.0.11 -> v1.0.12 更新已在托管 Windows 完成 12/12、0 失败，自动重启与资料保留均通过。\n\n## 安装与更新\n\n- v1.0.12 用户可在 v1.0.13 发布后通过应用内检查更新；安装前需要明确确认，并核对官方 NSIS 大小与 SHA-256。\n- 社区安装包不含 Authenticode 商业签名，Windows 可能显示未知发布者或 SmartScreen。\n- 只从官方 GitHub Release 下载，并核对同页 `SHA256SUMS.txt`。\n\n## 能力边界\n\n- 本版本不扩大 Office、PDF、工作簿或媒体格式的写回承诺，保存与可靠副本边界保持不变。\n- 企业签名、Windows 10/11 双矩阵和外部 Office 三生产者证据仍是独立的 fail-closed 门禁。\n",
+    "publishedAt": "2026-08-21T04:31:14Z",
+    "installerName": "LongEdit_1.0.13_x64-setup.exe",
+    "installerSize": 65533822,
+    "installerSha256": "f1fdd8ba55e47112c19a4e07eb508f1f2b2b12c3b56e6567d2efeed7ce3f67eb"
+  },
+  "confirmation": {
+    "title": "发现新版本",
+    "text": "发现新版本v1.0.12v1.0.13更新将从官方 GitHub Relea e 下载，并在 SHA-256 校验通过后自动安装；安装完成后 Long编辑会自动重新打开。62.5 MBWindow  x64覆盖安装# Long编辑 v1.0.13\n\n已于 2026-08-21 发布。NSIS、MSI 与 `SHA256SUMS.txt` 已从 GitHub Relea e 重新下载并完成 SHA-256 复核。\n\nv1.0.13 是版本入口、界面语言和发布事实可靠性增强版本。\n\n## 主要变化\n\n- 主资料库左下角显示真实运行版本，点击可直接进入系统与更新设置；检测到新版本时提供状态提示。\n- 设置页支持从版本入口准确定位更新区域，并保持键盘可访问性。\n- 自动更新提示改为紧凑信息卡，清理原始 Markdown 标记并明确版本、安装包、平台、校验、重启和操作层级。\n- 桌面设置页改为左侧分类固定、右侧内容独立滚动；切换分类自动回到内容顶部，不再带动左侧导航上下浮动。\n- 工作台、知识图谱和演示文稿界面清理残余英文及内部开发编号，用户提示改为明确的中文能力名称。\n- 43 类格式与 91 个扩展名新增统一事实审计，持续核对路由、能力层级、保存模式、writer、发布配置、外部依赖与安全降级通道。\n- Window  安装包证据采集新增独立 SHA-256 实当前为未签名社区版，Window  仍可能显示“未知发布者”提示。查看发布页稍后提醒 下载并安装",
+    "modalVisible": true,
+    "confirmationVisible": true,
+    "confirmationLabel": "下载并安装",
+    "userActionRequired": true,
+    "clicked": true,
+    "installerStartedBeforeConfirmation": false,
+    "clickedAt": "2026-08-21T08:02:39.663Z"
+  },
+  "screenshot": "managed-updater-available.jpg",
+  "sourceUserContentIncluded": false
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.13-U1I",
+  "status": "accepted",
+  "importedAt": "2026-08-21T08:05:00Z",
+  "githubRunId": 32461276174,
+  "headCommit": "cd5c43b13e09fdae861387c5369462deae2524da",
+  "previousVersion": "1.0.12",
+  "currentVersion": "1.0.13",
+  "officialInstallerSha256": "f1fdd8ba55e47112c19a4e07eb508f1f2b2b12c3b56e6567d2efeed7ce3f67eb",
+  "installedExecutableSha256": "d4fd25ddc0fbe1178d4c3f2bbfbf3b64a411e941d87d20945c63d1912119e623",
+  "lifecycleChecks": { "passed": 12, "failed": 0 },
+  "sourceUserContentIncluded": false,
+  "files": [
+    { "path": "managed-updater-available.jpg", "bytes": 49694, "sha256": "e98edc0bd8b9e227c87ffe7c9b9017b866173c9209da5bb4cbb674ba864a37ff", "visuallyReviewed": true },
+    { "path": "managed-updater-current.jpg", "bytes": 50233, "sha256": "0f6409f27b628aa022208ac5bea0edff835248afd50fce7c6801606f13ca52e5", "visuallyReviewed": true },
+    { "path": "managed-updater-discovery-evidence.json", "bytes": 5094, "sha256": "18aa9ebe5960b0b95b3c1d7ef5fbdc326fc22e248c9f085adc45fe667d9cac36" },
+    { "path": "managed-updater-installed-binary.json", "bytes": 651, "sha256": "400d3ee51caec25b76f8f34908724c0ca688ab4a65b577ddbc743f78f3b0d0e3" },
+    { "path": "managed-updater-installing.jpg", "bytes": 53428, "sha256": "b9aa12e997ee3670d1d0dd12af51a21dea91d75f3747ed9a472e519a86cbc9a4", "visuallyReviewed": true },
+    { "path": "managed-updater-lifecycle-result.json", "bytes": 4884, "sha256": "c4b26eae9ebe5425d082534855c22a05ecfec8c3753b34814ad946e98aba0698" },
+    { "path": "managed-updater-post-upgrade-evidence.json", "bytes": 3919, "sha256": "c24047a25dcf0ac06889c5972eb7a5d955e672a0bac9b564d20ed09aab9e3003" },
+    { "path": "managed-updater-post-upgrade-navigation.json", "bytes": 370, "sha256": "62e7d1ae118a9b030a5757d7bdb0ebe6020f55e3fa740b96b7f483ce6f8a7372" },
+    { "path": "official-release-assets.json", "bytes": 1000, "sha256": "5e21537425f138526350a10dfdb24ae2cfbb5ec373c92137b5a6070de8f2d1ed" }
+  ]
+}
