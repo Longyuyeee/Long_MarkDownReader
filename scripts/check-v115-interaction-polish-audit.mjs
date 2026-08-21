@@ -24,14 +24,21 @@ if (!evidence.tooltip.borderRadius || evidence.tooltip.borderRadius === '0px' ||
 if (evidence.contextPolicy?.ordinaryPrevented !== true) fail('ordinary WebView context menu was not suppressed')
 if (evidence.contextPolicy?.editablePrevented !== false) fail('editable text context menu was incorrectly suppressed')
 if (evidence.contextPolicy?.customEventPrevented !== true || evidence.contextPolicy?.customMenuVisible !== true) fail('file-tree custom context menu was not preserved')
+if (evidence.globalTooltipTarget?.nativeTitleCount !== 0 || evidence.globalTooltipTarget?.managedCount < 8) fail('global native-title adoption was not demonstrated')
+if (!evidence.globalTooltipLight?.visible || evidence.globalTooltipLight?.borderRadius === '0px' || evidence.globalTooltipLight?.boxShadow === 'none') fail('light application tooltip surface is not accepted')
+if (evidence.keyboardTooltip?.nativeTitle !== null || !evidence.keyboardTooltip?.describedBy?.includes('longedit-app-tooltip') || !evidence.keyboardTooltip?.ariaLabel) fail('keyboard tooltip semantics are incomplete')
+if (!evidence.dropdownLight?.visible || evidence.dropdownLight?.borderRadius === '0px' || evidence.dropdownLight?.boxShadow === 'none') fail('light dropdown surface is not accepted')
+if (!evidence.dialogLight?.visible || evidence.dialogLight?.borderRadius === '0px' || evidence.dialogLight?.boxShadow === 'none') fail('application dialog surface is not accepted')
+if (evidence.globalTooltipDarkNarrow?.devicePixelRatio !== 1.5 || evidence.globalTooltipDarkNarrow?.left < 7 || evidence.globalTooltipDarkNarrow?.right > evidence.globalTooltipDarkNarrow?.viewportWidth - 7) fail('dark narrow high-DPI tooltip bounds are not accepted')
+if (!evidence.dropdownDarkNarrow?.visible || evidence.dropdownDarkNarrow?.right > evidence.dropdownDarkNarrow?.viewportWidth + 1) fail('dark narrow dropdown bounds are not accepted')
 if (evidence.runtimeErrorCount !== 0) fail('runtime errors were captured')
 
 for (const screenshot of manifest.screenshots || []) {
   const bytes = fs.readFileSync(path.join(root, screenshot.file))
   if (bytes.length !== screenshot.bytes || sha256(bytes) !== screenshot.sha256) fail(`screenshot integrity mismatch: ${screenshot.file}`)
 }
-if (manifest.screenshots?.length !== 2) fail('expected two desktop screenshots')
-for (const key of ['workspaceShellAligned', 'tooltipSurfaceAligned', 'defaultWebViewMenuAbsent', 'customFileTreeMenuVisible']) {
+if (manifest.screenshots?.length !== 7) fail('expected seven desktop screenshots')
+for (const key of ['workspaceShellAligned', 'tooltipSurfaceAligned', 'globalTooltipPolicyAligned', 'dropdownSurfaceAligned', 'dialogSurfaceAligned', 'darkNarrowHighDpiAligned', 'defaultWebViewMenuAbsent', 'customFileTreeMenuVisible']) {
   if (manifest.visualReview?.[key] !== true) fail(`visual review is missing: ${key}`)
 }
 
