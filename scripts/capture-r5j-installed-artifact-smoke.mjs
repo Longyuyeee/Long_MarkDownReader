@@ -424,14 +424,17 @@ for (const fixture of nativeDocxFixtures) {
     return true
   })()`)
   if (editorAvailable) await waitFor(`document.querySelector('.docx-editor') !== null`, `${fixture.producerId} installed DOCX editor`)
-  const textModeSelected = await evaluate(`(() => {
-    const button = [...document.querySelectorAll('.edit-mode-tabs button')]
-      .find(item => item.textContent.trim() === '文本')
-    if (!button || button.disabled) return false
+  const textModeState = await evaluate(`(() => {
+    const buttons = [...document.querySelectorAll('.docx-editor button')]
+    const button = buttons.find(item => item.textContent.trim() === '文本')
+    if (!button || button.disabled) return {
+      selected: false,
+      buttons: buttons.map(item => ({ text: item.textContent.trim(), disabled: item.disabled, className: item.className })),
+    }
     button.click()
-    return true
+    return { selected: true, buttons: [] }
   })()`)
-  if (!textModeSelected) throw new Error(`${fixture.producerId} installed DOCX text mode unavailable`)
+  if (!textModeState.selected) throw new Error(`${fixture.producerId} installed DOCX text mode unavailable: ${JSON.stringify(textModeState.buttons)}`)
   await waitFor(
     `document.querySelector('.docx-editor .edit-field select')?.options.length > 0`,
     `${fixture.producerId} installed DOCX text targets`,
