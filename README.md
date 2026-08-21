@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="docs/RELEASE_NOTES_v1.0.13.md"><img src="https://img.shields.io/badge/Next-v1.0.13-cca43b" alt="v1.0.13 candidate"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.13"><img src="https://img.shields.io/badge/Stable-v1.0.13-16a34a" alt="v1.0.13 stable"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -31,28 +31,28 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.13 正在执行发布门禁，新增主界面版本与更新入口，提供更紧凑的更新提示和稳定的设置分类导航，并清理用户可见内部术语、加固格式与发布事实审计。当前可下载稳定版仍为 v1.0.12；候选范围见 [v1.0.13 发布说明](docs/RELEASE_NOTES_v1.0.13.md)。
+> v1.0.13 已发布：新增主界面版本与更新入口，提供更紧凑的更新提示和稳定的设置分类导航，并清理用户可见内部术语、加固格式与发布事实审计。完整范围见 [v1.0.13 发布说明](docs/RELEASE_NOTES_v1.0.13.md)。
 
 ## 下载
 
-Long编辑 v1.0.12 支持 Windows 10/11 x64。
+Long编辑 v1.0.13 支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.0.12_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.12/LongEdit_1.0.12_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.0.12_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.12/LongEdit_1.0.12_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.0.12](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.12) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.0.13_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.13/LongEdit_1.0.13_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.0.13_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.13/LongEdit_1.0.13_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.0.13](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.13) | Release Notes 与 SHA-256 |
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 `SHA256SUMS.txt` 核对文件。
 
 ```text
-d6e2866ff6e9d3a91442986151bb1653694658b81b82646b0ebe1159d87571f4  LongEdit_1.0.12_x64-setup.exe
-a272b8eab955cf76ccda1ffa2843dc9785be75eaa38ae233970e9283b51cd8c1  LongEdit_1.0.12_x64_zh-CN.msi
+f1fdd8ba55e47112c19a4e07eb508f1f2b2b12c3b56e6567d2efeed7ce3f67eb  LongEdit_1.0.13_x64-setup.exe
+f06495df25b4fd1cba725d9dd3e724c8a018c856805977187cdc4d9286ef3c81  LongEdit_1.0.13_x64_zh-CN.msi
 ```
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。
 
-## v1.0.13 候选
+## v1.0.13
 
 这一补丁围绕版本可见性、界面语言和发布事实可靠性收口：
 
@@ -63,7 +63,7 @@ v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手
 - Windows 安装包证据采集兼容不同 PowerShell 模块环境，并继续记录真实 SHA-256 与 `NotSigned` 边界。
 - 官方 v1.0.11 -> v1.0.12 应用内更新已通过托管 Windows 12/12 检查，为 v1.0.13 发布建立更新基线。
 
-候选不等于正式发布。完整范围、测试事实与边界见 [v1.0.13 发布说明](docs/RELEASE_NOTES_v1.0.13.md) 和 [发布审计](docs/V1_0_13_Unsigned_Community_Release_Audit_2026-08-21.md)。
+发布已通过完整 Quality Gate、22/22 安装生命周期检查、18/18 安装后工作区检查，以及三个公开附件重新下载哈希复核。完整范围、测试事实与边界见 [v1.0.13 发布说明](docs/RELEASE_NOTES_v1.0.13.md) 和 [发布审计](docs/V1_0_13_Unsigned_Community_Release_Audit_2026-08-21.md)。
 
 ## v1.0.12
 
