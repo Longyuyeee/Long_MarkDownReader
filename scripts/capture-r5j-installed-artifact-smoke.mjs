@@ -394,7 +394,12 @@ await capture('installed-json-save-reopen.jpg')
 checks.push({ id: 'installed-json-read-edit-save-reopen', status: 'passed', visual: jsonVisual })
 
 const clickByTitle = title => evaluate(`(() => {
-  const button = document.querySelector(${JSON.stringify(`button[title="${title}"]`)})
+  const label = ${JSON.stringify(title)}
+  const button = [...document.querySelectorAll('button')].find(item =>
+    item.title === label
+      || item.getAttribute('aria-label') === label
+      || item.getAttribute('data-app-tooltip') === label
+  )
   if (!button || button.disabled) return false
   button.click()
   return true
