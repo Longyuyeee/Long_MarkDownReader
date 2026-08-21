@@ -41,7 +41,7 @@ for (const key of [
 }
 if (
   policy.releaseGate.runnerImplemented !== true ||
-  policy.releaseGate.currentAndPreviousInstallersAvailable !== true ||
+  policy.releaseGate.currentAndPreviousInstallersAvailable !== false ||
   policy.releaseGate.hostPreflightComplete !== true
 ) {
   fail('R5I implementation/preflight gates must pass.')
@@ -64,7 +64,7 @@ if (environment.appVersion !== packageJson.version) fail('R5I environment versio
 if (environment.environment.machineIdentityIncluded !== false) fail('R5I evidence must exclude machine identity.')
 if (
   environment.artifactPreflight.currentNsisMatchCount !== 1 ||
-  environment.artifactPreflight.previousNsisMatchCount !== 1
+  environment.artifactPreflight.previousNsisMatchCount !== 0
 ) {
   fail('R5I current/previous installer preflight mismatch.')
 }

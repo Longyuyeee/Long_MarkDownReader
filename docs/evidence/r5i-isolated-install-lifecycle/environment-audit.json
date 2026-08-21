@@ -1,13 +1,13 @@
 {
     "schemaVersion":  1,
     "stage":  "R5I",
-    "appVersion":  "1.0.0",
-    "capturedAt":  "2026-07-30T17:12:22.7575260Z",
+    "appVersion":  "1.0.12",
+    "capturedAt":  "2026-08-21T02:46:07.1806081Z",
     "environment":  {
-                        "windowsProductName":  "Windows 10 Pro",
+                        "windowsProductName":  "Windows 10 Home China",
                         "windowsVersion":  "2009",
-                        "osBuildNumber":  "22621",
-                        "osArchitecture":  "64 位",
+                        "osBuildNumber":  "26200",
+                        "osArchitecture":  "64-bit",
                         "machineIdentityIncluded":  false
                     },
     "virtualization":  {
@@ -20,14 +20,14 @@
                        },
     "artifactPreflight":  {
                               "currentNsisMatchCount":  1,
-                              "previousNsisMatchCount":  1,
-                              "currentInstallerVersion":  "0.7.0",
+                              "previousNsisMatchCount":  0,
+                              "currentInstallerVersion":  "1.0.12",
                               "previousInstallerVersion":  "0.6.2"
                           },
     "hostSafety":  {
                        "existingProductRegistrationCount":  1,
                        "existingProductVersions":  [
-                                                       "0.6.9"
+                                                       "1.0.12"
                                                    ],
                        "runningProductProcessCount":  1,
                        "hostInstallerMutationAllowed":  false,

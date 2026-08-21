@@ -88,7 +88,8 @@ for (const artifact of manifest.artifacts) {
 for (const token of [
   'npm run tauri -- build',
   'Get-AuthenticodeSignature',
-  'Get-FileHash',
+  'Get-Sha256Hex',
+  'Microsoft.PowerShell.Security.psd1',
   'sourceUserContentIncluded = $false',
   'installedArtifactSmokeExecuted = $false',
 ]) {

@@ -49,7 +49,8 @@ for (const token of [
 }
 
 for (const token of [
-  "import { invoke, isTauriRuntime } from '../services/tauriRuntime'",
+  "import { invoke, invokeWithTimeout, isTauriRuntime, withTimeout } from '../services/tauriRuntime'",
+  "invokeWithTimeout<any>('get_config'",
   'if (!isTauriRuntime())',
   'this.restoreTabsState()',
 ]) {

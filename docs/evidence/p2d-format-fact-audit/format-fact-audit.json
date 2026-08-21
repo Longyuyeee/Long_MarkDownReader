@@ -1,0 +1,754 @@
+{
+  "schemaVersion": 1,
+  "stage": "P2-D",
+  "status": "accepted",
+  "expected": {
+    "formatCount": 43,
+    "extensionCount": 91,
+    "uniqueRouteProfileAndSafetyFacts": true,
+    "livingVersionsAligned": true
+  },
+  "actual": {
+    "formatCount": 43,
+    "extensionCount": 91,
+    "versions": {
+      "package": "1.0.12",
+      "capabilityMatrix": "1.0.12",
+      "safeDegradation": "1.0.12",
+      "communityRelease": "1.0.12",
+      "windowsLifecycle": "1.0.12",
+      "windowsReadiness": "1.0.12",
+      "r5:frontend-release-hardening-policy.json": "1.0.12",
+      "r5:desktop-startup-performance-policy.json": "1.0.12",
+      "r5:r5c-route-performance-smoke-policy.json": "1.0.12",
+      "r5:r5d-production-route-smoke-preflight-policy.json": "1.0.12",
+      "r5:r5e-runtime-route-smoke-policy.json": "1.0.12",
+      "r5:r5f-safe-tauri-runtime-policy.json": "1.0.12",
+      "r5:r5g-desktop-artifact-smoke-policy.json": "1.0.12",
+      "r5:r5h-current-installer-evidence-policy.json": "1.0.12",
+      "r5:r5i-isolated-install-lifecycle-policy.json": "1.0.12",
+      "r5:r5j-installed-artifact-smoke-policy.json": "1.0.12",
+      "r5:r5k-windows-matrix-handoff-policy.json": "1.0.12",
+      "r5:r5l-management-rollback-closure-policy.json": "1.0.12",
+      "r5:r5m-final-release-closure-policy.json": "1.0.12",
+      "r5:r5n-external-release-execution-policy.json": "1.0.12"
+    },
+    "readinessCounts": {
+      "external-dependency": 6,
+      "verified": 30,
+      "verified-with-limitations": 7
+    },
+    "saveModeCounts": {
+      "bounded-overwrite": 2,
+      "copy": 3,
+      "none": 9,
+      "overwrite": 29
+    },
+    "safetyLaneCounts": {
+      "bounded-structured-write": 2,
+      "external-application-handoff": 6,
+      "pdf-reliable-copy-isolation": 1,
+      "signature-protected-overwrite": 29,
+      "strict-readonly-preview": 3,
+      "verified-image-copy": 1,
+      "verified-office-copy": 1
+    },
+    "rows": [
+      {
+        "id": "markdown",
+        "label": "Markdown",
+        "extensions": [
+          ".md"
+        ],
+        "routeName": "LibraryMode",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "plain-text",
+        "label": "纯文本",
+        "extensions": [
+          ".txt"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "env",
+        "label": "环境变量",
+        "extensions": [
+          ".env",
+          ".env.local",
+          ".env.development",
+          ".env.production",
+          ".env.test"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "protected-local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "ini",
+        "label": "INI / CONF 配置",
+        "extensions": [
+          ".ini",
+          ".conf",
+          ".cfg"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "properties",
+        "label": "Java Properties",
+        "extensions": [
+          ".properties"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "editorconfig",
+        "label": "EditorConfig",
+        "extensions": [
+          ".editorconfig"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "gitignore",
+        "label": "Git 忽略规则",
+        "extensions": [
+          ".gitignore"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "javascript",
+        "label": "JavaScript",
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".mjs",
+          ".cjs"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "lightweight-source",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "typescript",
+        "label": "TypeScript",
+        "extensions": [
+          ".ts",
+          ".tsx",
+          ".mts",
+          ".cts"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "lightweight-source",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "python",
+        "label": "Python",
+        "extensions": [
+          ".py"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "lightweight-source",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "rust",
+        "label": "Rust",
+        "extensions": [
+          ".rs"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "lightweight-source",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "go",
+        "label": "Go",
+        "extensions": [
+          ".go"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "lightweight-source",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "jvm-code",
+        "label": "Java / Kotlin",
+        "extensions": [
+          ".java",
+          ".kt",
+          ".kts"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "lightweight-source",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "c-family",
+        "label": "C / C++ / C#",
+        "extensions": [
+          ".c",
+          ".h",
+          ".cc",
+          ".cpp",
+          ".cxx",
+          ".hpp",
+          ".cs"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "lightweight-source",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "shell",
+        "label": "Shell / PowerShell",
+        "extensions": [
+          ".sh",
+          ".bash",
+          ".zsh",
+          ".ps1"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "lightweight-source",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "sql",
+        "label": "SQL",
+        "extensions": [
+          ".sql"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "lightweight-source",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "web-source",
+        "label": "HTML / CSS / Vue",
+        "extensions": [
+          ".html",
+          ".htm",
+          ".css",
+          ".scss",
+          ".less",
+          ".vue"
+        ],
+        "routeName": "TextEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "lightweight-source",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "json",
+        "label": "JSON",
+        "extensions": [
+          ".json"
+        ],
+        "routeName": "JsonEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "log",
+        "label": "日志",
+        "extensions": [
+          ".log"
+        ],
+        "routeName": "LogViewer",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "professional-log",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "jsonc",
+        "label": "JSONC",
+        "extensions": [
+          ".jsonc"
+        ],
+        "routeName": "JsonEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "yaml",
+        "label": "YAML",
+        "extensions": [
+          ".yaml",
+          ".yml"
+        ],
+        "routeName": "YamlEditor",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "xml",
+        "label": "XML",
+        "extensions": [
+          ".xml"
+        ],
+        "routeName": "XmlEditor",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "svg",
+        "label": "SVG",
+        "extensions": [
+          ".svg"
+        ],
+        "routeName": "XmlEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "raster-image",
+        "label": "图片",
+        "extensions": [
+          ".png",
+          ".jpg",
+          ".jpeg",
+          ".gif",
+          ".webp",
+          ".bmp",
+          ".ico",
+          ".avif"
+        ],
+        "routeName": "MediaViewer",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "copy",
+        "writer": "image-copy",
+        "releaseProfile": "media-preview",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "verified-image-copy"
+      },
+      {
+        "id": "video",
+        "label": "视频",
+        "extensions": [
+          ".mp4",
+          ".webm",
+          ".ogv",
+          ".m4v",
+          ".mov",
+          ".mkv",
+          ".avi",
+          ".mpeg",
+          ".mpg"
+        ],
+        "routeName": "MediaViewer",
+        "capabilityLevel": "preview-only",
+        "saveMode": "none",
+        "writer": null,
+        "releaseProfile": "media-preview",
+        "readiness": "verified-with-limitations",
+        "dependency": "none",
+        "safetyLane": "strict-readonly-preview"
+      },
+      {
+        "id": "toml",
+        "label": "TOML",
+        "extensions": [
+          ".toml"
+        ],
+        "routeName": "TomlEditor",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "canvas",
+        "label": "JSON Canvas",
+        "extensions": [
+          ".canvas"
+        ],
+        "routeName": "Canvas",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "canvas",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "pdf",
+        "label": "PDF",
+        "extensions": [
+          ".pdf"
+        ],
+        "routeName": "Pdf",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "copy",
+        "writer": "pdf-copy",
+        "releaseProfile": "pdf-copy",
+        "readiness": "verified-with-limitations",
+        "dependency": "none",
+        "safetyLane": "pdf-reliable-copy-isolation"
+      },
+      {
+        "id": "table",
+        "label": "开放数据表",
+        "extensions": [
+          ".table.json",
+          ".csv",
+          ".tsv"
+        ],
+        "routeName": "Table",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "table",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "docx",
+        "label": "Word 文档",
+        "extensions": [
+          ".docx"
+        ],
+        "routeName": "DocxEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "bounded-overwrite",
+        "writer": "docx",
+        "releaseProfile": "office-copy",
+        "readiness": "verified-with-limitations",
+        "dependency": "none",
+        "safetyLane": "bounded-structured-write"
+      },
+      {
+        "id": "ods",
+        "label": "OpenDocument 电子表格",
+        "extensions": [
+          ".ods"
+        ],
+        "routeName": "OdfReader",
+        "capabilityLevel": "preview-only",
+        "saveMode": "none",
+        "writer": null,
+        "releaseProfile": "odf-preview",
+        "readiness": "verified-with-limitations",
+        "dependency": "none",
+        "safetyLane": "strict-readonly-preview"
+      },
+      {
+        "id": "odp",
+        "label": "OpenDocument 演示文稿",
+        "extensions": [
+          ".odp"
+        ],
+        "routeName": "OdfReader",
+        "capabilityLevel": "preview-only",
+        "saveMode": "none",
+        "writer": null,
+        "releaseProfile": "odf-preview",
+        "readiness": "verified-with-limitations",
+        "dependency": "none",
+        "safetyLane": "strict-readonly-preview"
+      },
+      {
+        "id": "legacy-doc",
+        "label": "旧版 Word 文档",
+        "extensions": [
+          ".doc"
+        ],
+        "routeName": "LegacyOffice",
+        "capabilityLevel": "external-open",
+        "saveMode": "none",
+        "writer": null,
+        "releaseProfile": "legacy-conversion",
+        "readiness": "external-dependency",
+        "dependency": "compatible-office-suite",
+        "safetyLane": "external-application-handoff"
+      },
+      {
+        "id": "legacy-xls",
+        "label": "旧版 Excel 工作簿",
+        "extensions": [
+          ".xls"
+        ],
+        "routeName": "LegacyOffice",
+        "capabilityLevel": "external-open",
+        "saveMode": "none",
+        "writer": null,
+        "releaseProfile": "legacy-conversion",
+        "readiness": "external-dependency",
+        "dependency": "compatible-office-suite",
+        "safetyLane": "external-application-handoff"
+      },
+      {
+        "id": "legacy-ppt",
+        "label": "旧版 PowerPoint 演示",
+        "extensions": [
+          ".ppt"
+        ],
+        "routeName": "LegacyOffice",
+        "capabilityLevel": "external-open",
+        "saveMode": "none",
+        "writer": null,
+        "releaseProfile": "legacy-conversion",
+        "readiness": "external-dependency",
+        "dependency": "compatible-office-suite",
+        "safetyLane": "external-application-handoff"
+      },
+      {
+        "id": "pptx",
+        "label": "PowerPoint 演示",
+        "extensions": [
+          ".pptx"
+        ],
+        "routeName": "PptxReader",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "copy",
+        "writer": "pptx",
+        "releaseProfile": "office-copy",
+        "readiness": "verified-with-limitations",
+        "dependency": "none",
+        "safetyLane": "verified-office-copy"
+      },
+      {
+        "id": "wps-document",
+        "label": "WPS 文字",
+        "extensions": [
+          ".wps"
+        ],
+        "routeName": "ExternalOffice",
+        "capabilityLevel": "external-open",
+        "saveMode": "none",
+        "writer": null,
+        "releaseProfile": "wps-external",
+        "readiness": "external-dependency",
+        "dependency": "compatible-desktop-application",
+        "safetyLane": "external-application-handoff"
+      },
+      {
+        "id": "wps-spreadsheet",
+        "label": "WPS 表格",
+        "extensions": [
+          ".et"
+        ],
+        "routeName": "ExternalOffice",
+        "capabilityLevel": "external-open",
+        "saveMode": "none",
+        "writer": null,
+        "releaseProfile": "wps-external",
+        "readiness": "external-dependency",
+        "dependency": "compatible-desktop-application",
+        "safetyLane": "external-application-handoff"
+      },
+      {
+        "id": "wps-presentation",
+        "label": "WPS 演示",
+        "extensions": [
+          ".dps"
+        ],
+        "routeName": "ExternalOffice",
+        "capabilityLevel": "external-open",
+        "saveMode": "none",
+        "writer": null,
+        "releaseProfile": "wps-external",
+        "readiness": "external-dependency",
+        "dependency": "compatible-desktop-application",
+        "safetyLane": "external-application-handoff"
+      },
+      {
+        "id": "workbook",
+        "label": "Excel 工作簿",
+        "extensions": [
+          ".xlsx"
+        ],
+        "routeName": "Workbook",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "bounded-overwrite",
+        "writer": "workbook",
+        "releaseProfile": "workbook-bounded",
+        "readiness": "verified-with-limitations",
+        "dependency": "none",
+        "safetyLane": "bounded-structured-write"
+      },
+      {
+        "id": "drawio",
+        "label": "Draw.io 图表",
+        "extensions": [
+          ".drawio",
+          ".dio"
+        ],
+        "routeName": "DrawioEditor",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "overwrite",
+        "writer": "text",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "diagram",
+        "label": "Mermaid 图表",
+        "extensions": [
+          ".mmd",
+          ".mermaid"
+        ],
+        "routeName": "Diagram",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "diagram",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      },
+      {
+        "id": "opml",
+        "label": "OPML 思维导图",
+        "extensions": [
+          ".opml"
+        ],
+        "routeName": "MindMap",
+        "capabilityLevel": "complete-edit",
+        "saveMode": "overwrite",
+        "writer": "opml",
+        "releaseProfile": "local-overwrite",
+        "readiness": "verified",
+        "dependency": "none",
+        "safetyLane": "signature-protected-overwrite"
+      }
+    ]
+  },
+  "failures": [],
+  "passed": true
+}

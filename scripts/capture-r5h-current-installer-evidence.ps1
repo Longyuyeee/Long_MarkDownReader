@@ -4,6 +4,25 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$securityModule = Join-Path $env:WINDIR "System32\WindowsPowerShell\v1.0\Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1"
+Import-Module $securityModule -ErrorAction Stop
+
+function Get-Sha256Hex {
+    param([Parameter(Mandatory = $true)][string]$LiteralPath)
+
+    $stream = [System.IO.File]::OpenRead($LiteralPath)
+    try {
+        $sha256 = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            return ([System.BitConverter]::ToString($sha256.ComputeHash($stream))).Replace("-", "").ToLowerInvariant()
+        } finally {
+            $sha256.Dispose()
+        }
+    } finally {
+        $stream.Dispose()
+    }
+}
+
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $package = Get-Content -LiteralPath (Join-Path $repoRoot "package.json") -Raw | ConvertFrom-Json
 $version = [string]$package.version
@@ -40,7 +59,7 @@ $artifacts = foreach ($expected in $expectedArtifacts) {
     $artifactPath = $matches[0].FullName
 
     $item = Get-Item -LiteralPath $artifactPath
-    $hash = Get-FileHash -LiteralPath $artifactPath -Algorithm SHA256
+    $hash = Get-Sha256Hex -LiteralPath $artifactPath
     $signature = Get-AuthenticodeSignature -LiteralPath $artifactPath
     $relativeDirectory = $expected.directory.Substring($repoRoot.Length).TrimStart("\").Replace("\", "/")
 
@@ -50,7 +69,7 @@ $artifacts = foreach ($expected in $expectedArtifacts) {
         relativeDirectory = $relativeDirectory
         sizeBytes = $item.Length
         lastWriteTimeUtc = $item.LastWriteTimeUtc.ToString("o")
-        sha256 = $hash.Hash.ToLowerInvariant()
+        sha256 = $hash
         authenticodeStatus = $signature.Status.ToString()
         signed = $signature.Status -eq [System.Management.Automation.SignatureStatus]::Valid
         signerSubject = if ($signature.SignerCertificate) { $signature.SignerCertificate.Subject } else { $null }
