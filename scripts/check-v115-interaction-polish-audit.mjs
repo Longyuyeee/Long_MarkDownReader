@@ -13,7 +13,8 @@ const fail = message => { throw new Error(`[v115-interaction-polish-audit] ${mes
 if (manifest.stage !== 'V1.0.15-interaction-polish' || evidence.stage !== manifest.stage) fail('stage mismatch')
 if (manifest.status !== 'accepted') fail('visual evidence is not accepted')
 if (!/^[0-9a-f]{40}$/i.test(manifest.sourceCommit) || evidence.sourceCommit !== manifest.sourceCommit) fail('source commit mismatch')
-if (sha256(evidenceBytes) !== manifest.evidenceSha256) fail('interaction evidence hash mismatch')
+const normalizedEvidenceBytes = Buffer.from(evidenceBytes.toString('utf8').replaceAll('\r\n', '\n'))
+if (sha256(normalizedEvidenceBytes) !== manifest.evidenceSha256) fail('interaction evidence hash mismatch')
 if (manifest.sourceUserContentIncluded !== false || evidence.sourceUserContentIncluded !== false) fail('evidence must not contain user content')
 if (manifest.releaseCandidate !== false || evidence.releaseCandidate !== false) fail('interaction evidence must not claim release-candidate status')
 
