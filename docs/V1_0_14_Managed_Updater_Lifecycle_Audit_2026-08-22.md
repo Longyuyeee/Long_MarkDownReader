@@ -20,4 +20,4 @@
 
 ## 当前状态
 
-托管工作流已准备，等待冻结提交推送、Quality Gate 与手动触发。通过后导入脱敏证据并更新本审计。
+GitHub Actions [#32503105554](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32503105554) 已通过：12/12 生命周期检查成功，失败 0；官方附件摘要、用户确认、覆盖安装、自动重启、更新后版本与资料保留全部符合合同。三张合成资料截图已人工复核，证据已脱敏导入 `docs/evidence/v1.0.14-managed-updater/`。v1.0.15 的上一公开版本更新基线已满足。

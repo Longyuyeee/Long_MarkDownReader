@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.14-U1-DISCOVERY",
+  "capturedAt": "2026-08-21T16:30:10.829Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows installed official v1.0.13",
+  "release": {
+    "available": true,
+    "currentVersion": "1.0.13",
+    "latestVersion": "1.0.14",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14",
+    "releaseNotes": "# Long编辑 v1.0.14\n\nv1.0.14 是小窗口稳定性、资料库侧栏可理解性与标签可靠性增强版本。\n\n## 主要变化\n\n- 修复窄侧栏底部资料库卡片被压成竖排、版本徽标越界的问题；名称在空间不足时稳定省略。\n- 横向审计资料库、工作台、8 个设置分类、格式能力和两类图谱，共 26 个小窗口样本；修复设置分类切换时内容位置漂移和激活项不可见。\n- 资料库侧栏按使用频率调整为“文件、目录、最近、备份、常用搜索、关系、标签”。\n- 原“保存”明确为“常用搜索”：记录文件页关键词与格式条件，点击后重新执行，不复制或修改文件。\n- Markdown 专属标签移动到末位，增加格式范围、当前笔记添加区和清晰结果列表。\n- 当前文件关系面板移除窄栏内重复且易变形的局部图谱，只保留链出、链入与完整知识图谱入口。\n- 标签解析排除中英文句末标点，例如 `#product.` 会正确汇总和检索为 `#product`。\n- 侧栏真实 Tauri 审计每次重新编译当前程序，并核对界面版本，避免旧调试二进制造成伪结果。\n\n## 真实验证\n\n- 完整 `ci:patch-release` 基线通过，生产依赖漏洞为 0。\n- 900 × 720 与 720 × 640 下的 26 个管理界面样本无横向溢出、竖排文字、控件裁切或运行时错误。\n- 200 px 侧栏真实资料库验证七个入口、标签索引、1 条链出和 1 条链入，面板横向溢出为 0。\n- Rust 标签测试覆盖英文标点、中文标点和连字符标签。\n\n## 安装与更新\n\n- v1.0.13 用户可在 v1.0.14 发布后通过应用内检查更新；安装前仍需用户确认并完成官方 NSIS 大小与 SHA-256 校验。\n- 社区安装包不含 Authenticode 商业签名，Windows 可能显示未知发布者或 SmartScreen。\n- 只从官方 GitHub Release 下载，并核对同页 `SHA256SUMS.txt`。\n\n## 能力边界\n\n- 本版本没有扩大 Office、PDF、工作簿或媒体格式的写回承诺。\n- 企业签名、Windows 10/11 双矩阵和外部 Office 三生产者证据继续属于独立门禁。\n",
+    "publishedAt": "2026-08-21T09:00:08Z",
+    "installerName": "LongEdit_1.0.14_x64-setup.exe",
+    "installerSize": 65568349,
+    "installerSha256": "889ece196cc70ae33b171c1e14d366ca7f024c33709736417304d92200991499"
+  },
+  "confirmation": {
+    "title": "发现新版本已通过官方发布源检查",
+    "text": "发现新版本已通过官方发布源检查v1.0.13v1.0.14安装包将从官方 GitHub Relea e 下载，并在 SHA-256 校验通过后安装。62.5 MBWindow  x64覆盖安装本次更新v1.0.14 是小窗口稳定性、资料库侧栏可理解性与标签可靠性增强版本。主要变化修复窄侧栏底部资料库卡片被压成竖排、版本徽标越界的问题；名称在空间不足时稳定省略。横向审计资料库、工作台、8 个设置分类、格式能力和两类图谱，共 26 个小窗口样本；修复设置分类切换时内容位置漂移和激活项不可见。安装完成后 Long编辑会自动重新打开。未签名社区版仍可能触发 Window “未知发布者”提示。发布详情稍后提醒 下载并安装",
+    "modalVisible": true,
+    "confirmationVisible": true,
+    "confirmationLabel": "下载并安装",
+    "userActionRequired": true,
+    "clicked": true,
+    "installerStartedBeforeConfirmation": false,
+    "clickedAt": "2026-08-21T16:30:10.848Z"
+  },
+  "screenshot": "managed-updater-available.jpg",
+  "sourceUserContentIncluded": false
+}
