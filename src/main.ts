@@ -34,6 +34,7 @@ import { managedFileLocation } from './services/fileNavigation'
 import { installRecoverableLayoutErrorBoundary } from './services/recoverableRuntimeErrors'
 import { installHorizontalWheelNavigation } from './services/horizontalWheel'
 import { installContextMenuPolicy } from './services/contextMenuPolicy'
+import { installAppTooltipPolicy } from './services/appTooltipPolicy'
 import { withTimeout } from './services/tauriRuntime'
 
 import 'vfonts/Inter.css'
@@ -46,10 +47,12 @@ import './styles/vditor-content-themes.scss'
 const removeRecoverableLayoutErrorBoundary = installRecoverableLayoutErrorBoundary()
 const removeHorizontalWheelNavigation = installHorizontalWheelNavigation()
 const removeContextMenuPolicy = installContextMenuPolicy()
+const removeAppTooltipPolicy = installAppTooltipPolicy()
 import.meta.hot?.dispose(() => {
   removeRecoverableLayoutErrorBoundary()
   removeHorizontalWheelNavigation()
   removeContextMenuPolicy()
+  removeAppTooltipPolicy()
 })
 
 const app = createApp(App)
