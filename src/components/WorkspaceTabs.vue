@@ -1,6 +1,6 @@
 <template>
   <div class="workspace-tabs" :class="{ 'can-scroll-left': canScrollLeft, 'can-scroll-right': canScrollRight }">
-    <n-tooltip placement="bottom-start" :delay="tooltipDelay" :duration="tooltipDuration" :show-arrow="false" :content-style="compactTooltipStyle">
+    <n-tooltip placement="bottom-start" :delay="tooltipDelay" :duration="tooltipDuration" :show-arrow="false" :theme-overrides="compactTooltipTheme" :content-style="compactTooltipStyle">
       <template #trigger>
         <button
           type="button"
@@ -22,6 +22,7 @@
         :delay="tooltipDelay"
         :duration="tooltipDuration"
         :show-arrow="false"
+        :theme-overrides="documentTooltipTheme"
         :content-style="documentTooltipStyle"
       >
         <template #trigger>
@@ -53,7 +54,7 @@
         </div>
       </n-tooltip>
     </div>
-    <n-tooltip placement="bottom-end" :delay="tooltipDelay" :duration="tooltipDuration" :show-arrow="false" :content-style="compactTooltipStyle">
+    <n-tooltip placement="bottom-end" :delay="tooltipDelay" :duration="tooltipDuration" :show-arrow="false" :theme-overrides="compactTooltipTheme" :content-style="compactTooltipStyle">
       <template #trigger>
         <button
           type="button"
@@ -89,23 +90,28 @@ const canScrollRight = ref(false)
 let resizeObserver: ResizeObserver | null = null
 const tooltipDelay = 420
 const tooltipDuration = 120
-const tooltipBaseStyle: CSSProperties = {
-  border: 'var(--theme-border)',
+const tooltipThemeBase = {
   borderRadius: 'var(--theme-radius-sm)',
-  background: 'var(--theme-surface)',
-  color: 'var(--theme-text)',
+  color: 'var(--theme-surface)',
+  textColor: 'var(--theme-text)',
   boxShadow: 'var(--workspace-shadow)',
+}
+const compactTooltipTheme = {
+  ...tooltipThemeBase,
+  padding: '7px 9px',
+}
+const documentTooltipTheme = {
+  ...tooltipThemeBase,
+  padding: '9px 11px',
+}
+const compactTooltipStyle: CSSProperties = {
   fontSize: '12px',
   lineHeight: '1.45',
 }
-const compactTooltipStyle: CSSProperties = {
-  ...tooltipBaseStyle,
-  padding: '7px 9px',
-}
 const documentTooltipStyle: CSSProperties = {
-  ...tooltipBaseStyle,
   maxWidth: 'min(420px, calc(100vw - 24px))',
-  padding: '9px 11px',
+  fontSize: '12px',
+  lineHeight: '1.45',
 }
 
 const updateScrollState = () => {
