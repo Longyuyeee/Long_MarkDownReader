@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.0.14",
-  "releaseCandidate": true,
+  "appVersion": "1.0.15",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
-  "generatedAt": "2026-08-21",
-  "currentStatus": "v1.0.14-community-release-published",
+  "generatedAt": "2026-08-22",
+  "currentStatus": "v1.0.15-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": { "authenticodeRequired": false, "unsignedCommunityReleaseApproved": true, "unknownPublisherWarningRequired": true },
   "updater": {
@@ -14,32 +14,21 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true, "rustLockedCheckPassed": true, "productionDependencyAuditPassed": true,
-    "msiBuilt": true, "nsisBuilt": true, "artifactHashesVerified": true, "localRuntimeSmokePassed": false,
-    "installedLifecyclePassed": true, "qualityGatePassed": true, "githubReleasePublished": true
+    "frontendBuildPassed": false, "rustLockedCheckPassed": false, "productionDependencyAuditPassed": false,
+    "msiBuilt": false, "nsisBuilt": false, "artifactHashesVerified": false, "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false, "qualityGatePassed": false, "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.0.13", "previousInstalledLifecycleEvidenceVersion": "1.0.5", "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true, "managedUpdaterFirstRelease": false, "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.13-to-1.0.14-pending", "scope": "compact-window-sidebar-navigation-and-tag-reliability"
+    "previousPublicVersion": "1.0.14", "previousInstalledLifecycleEvidenceVersion": "1.0.5", "previousEvidenceInheritedAsCurrent": false,
+    "fullInstalledLifecycleRerun": false, "managedUpdaterFirstRelease": false, "v1_0_4RequiresManualMigration": true,
+    "managedUpdaterUpgradePath": "1.0.14-to-1.0.15-pending", "scope": "desktop-interaction-tooltip-context-menu-dialog-and-overlay-closure"
   },
-  "targetRelease": { "tag": "v1.0.14", "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14", "assetMode": "managed-nsis-msi-with-sha256" },
-  "candidate": {
-    "artifactSourceCommit": "cd5c43b13e09fdae861387c5369462deae2524da",
-    "qualityGateRunId": 32465180997,
-    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32465180997",
-    "hostedInstalledLifecycleRunId": 32462354721,
-    "hostedInstalledLifecycleRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32462354721",
-    "artifacts": [
-      { "target": "release-executable", "fileName": "tauri-app.exe", "sizeBytes": 107179520, "sha256": "301c890e5295cf51052fd8b51103b62427ab398d4b002cfb83bc041006ca35a5", "authenticodeStatus": "NotSigned" },
-      { "target": "msi", "fileName": "LongEdit_1.0.14_x64_zh-CN.msi", "sizeBytes": 73613312, "sha256": "194816764a99b86aff486cb9bce71f75a5074dfa4ba3648c821c26e01d5713ee", "authenticodeStatus": "NotSigned" },
-      { "target": "nsis", "fileName": "LongEdit_1.0.14_x64-setup.exe", "sizeBytes": 65568349, "sha256": "889ece196cc70ae33b171c1e14d366ca7f024c33709736417304d92200991499", "authenticodeStatus": "NotSigned" }
-    ]
-  },
-  "release": { "tag": "v1.0.14", "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14", "taggedCommit": "9f285cd4d8397be719e27f84a7b0c2c0be6ad783", "databaseId": 374274160 },
+  "targetRelease": { "tag": "v1.0.15", "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.15", "assetMode": "managed-nsis-msi-with-sha256" },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear", "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.13-to-v1.0.14-managed-update-observation-pending", "download-only-from-official-github-release", "verify-published-sha256-before-install"
+    "v1.0.14-to-v1.0.15-managed-update-observation-pending", "download-only-from-official-github-release", "verify-published-sha256-before-install"
   ],
-  "nextAction": "observe-official-v1.0.13-to-v1.0.14-managed-update"
+  "nextAction": "pass-quality-gate-and-build-v1.0.15-candidate"
 }

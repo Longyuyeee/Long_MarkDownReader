@@ -1,6 +1,6 @@
 # Long Markdown Reader 开发交接
 
-> **2026-08-22 v1.0.15 交互治理范围已收口：** 顶部文档标签与全软件静态/动态 `title` 已统一为主题化应用提示层；普通壳层右键不再出现 WebView 默认菜单，真实文本编辑区和文件树专用菜单仍保留正确能力；原生 `confirm`、`alert`、`prompt` 已全部迁移到应用内对话框。资料库约 30 项的“新建”长菜单现为视口内滚动浮层，并通过亮色、深色、720×680 窄屏与 DPR 1.5 验收。来源提交 `ae4d3e1` 的七张真实 Tauri 截图已人工接受，干净提交 `0572fcc` 的完整开发审计通过，运行时错误为 0。当前事实版本仍为 1.0.14；进入发布流程时再统一提升到 1.0.15。详见 [`V1_0_15_Interaction_Polish_Audit_2026-08-21.md`](./V1_0_15_Interaction_Polish_Audit_2026-08-21.md)。
+> **2026-08-22 v1.0.15 已进入无签名社区版发布流程：** 交互治理范围已完成七张真实 Tauri 截图和完整开发审计；v1.0.13 → v1.0.14 官方应用内更新也在 GitHub 托管 Windows 完成 12/12 生命周期检查。package、Cargo、Tauri 与能力事实源现已统一提升到 1.0.15，当前阶段为候选质量门禁、无签名 NSIS/MSI 构建、安装生命周期和 GitHub Release，不得在远端附件复核前宣称已经发布。详见 [`V1_0_15_Interaction_Polish_Audit_2026-08-21.md`](./V1_0_15_Interaction_Polish_Audit_2026-08-21.md) 与 [`V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md`](./V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
 
 > **2026-08-21 v1.0.13 发布前界面收口：** 更新提示已从未生效的 scoped 宽度约束改为 460 px 响应式信息卡，发布说明会清理 Markdown 并最多展示四条摘要；设置页桌面布局改为左侧分类固定、右侧独立滚动，分类切换回到内容顶部。隔离真实页面在 1280×800、1000×700、480×700 完成测量：导航纵坐标三次均为 114 px，弹窗最大 460×442 px，横向溢出与运行时错误均为 0。证据位于 `docs/evidence/v1013-update-settings-ui/`；下一步提交推送后恢复完整 Quality Gate、无签名打包与 Release。
 
