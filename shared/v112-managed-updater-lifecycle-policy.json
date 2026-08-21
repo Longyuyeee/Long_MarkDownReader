@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.12-U1",
-  "status": "hosted-execution-pending",
+  "status": "hosted-managed-update-passed",
   "environment": "github-hosted-disposable-windows",
   "workflow": ".github/workflows/v112-managed-updater-lifecycle.yml",
   "releases": {
@@ -28,7 +28,13 @@
         "authenticodeStatus": "NotSigned"
       },
       "standaloneReleaseExecutableReferenceSha256": "d9d4668776446351fe29433c56ace68e26d4cb8bce9fb90a507c8b6cd0d9efad",
-      "installedPackageExecutable": null
+      "installedPackageExecutable": {
+        "fileName": "tauri-app.exe",
+        "sizeBytes": 107182592,
+        "sha256": "f5fc1b30b5712a8d4fdc16819d2b456cb3b61aeb895bcbb2a3c931edd99e3f57",
+        "authenticodeStatus": "NotSigned",
+        "trustAnchor": "verified-official-nsis-installer"
+      }
     }
   },
   "requirements": {
@@ -48,19 +54,24 @@
   },
   "gates": {
     "harnessImplemented": true,
-    "qualityGatePassed": false,
-    "hostedWorkflowPassed": false,
-    "releaseDiscoveryPassed": false,
-    "confirmationBoundaryPassed": false,
-    "downloadHashPassed": false,
-    "overwriteInstallPassed": false,
-    "automaticRelaunchPassed": false,
-    "firstLaunchPassed": false,
-    "postUpgradeCurrentPassed": false,
-    "userDataRetentionPassed": false,
-    "evidenceImported": false
+    "qualityGatePassed": true,
+    "hostedWorkflowPassed": true,
+    "releaseDiscoveryPassed": true,
+    "confirmationBoundaryPassed": true,
+    "downloadHashPassed": true,
+    "overwriteInstallPassed": true,
+    "automaticRelaunchPassed": true,
+    "firstLaunchPassed": true,
+    "postUpgradeCurrentPassed": true,
+    "userDataRetentionPassed": true,
+    "evidenceImported": true
   },
-  "githubRun": null,
+  "githubRun": {
+    "id": 32441493681,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32441493681",
+    "headCommit": "46e8d59dfb0a624261f41ea2de36b1d52f29b23f",
+    "conclusion": "success"
+  },
   "evidenceRoot": "docs/evidence/v1.0.12-managed-updater",
-  "nextAction": "push-harness-pass-quality-gate-and-run-hosted-managed-updater-lifecycle"
+  "nextAction": "v1.0.12-release-closure-complete"
 }

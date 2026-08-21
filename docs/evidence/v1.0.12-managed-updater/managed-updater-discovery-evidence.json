@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.12-U1-DISCOVERY",
+  "capturedAt": "2026-08-21T02:55:43.512Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows installed official v1.0.11",
+  "release": {
+    "available": true,
+    "currentVersion": "1.0.11",
+    "latestVersion": "1.0.12",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.12",
+    "releaseNotes": "# Long编辑 v1.0.12\n\nv1.0.12 是图片查看与基础编辑体验增强版本，同时修正 PDF 已实现能力在公开格式矩阵中的陈旧说明。\n\n## 主要变化\n\n- 图片查看支持以鼠标光标为锚的滚轮缩放，放大后可按住拖动横纵平移。\n- 双击图片可在 100% 实际大小与适应窗口之间切换，方向键也可平移视口。\n- PNG、JPEG、WebP、BMP 的可靠副本编辑新增亮度、对比度与饱和度调整，并提供一键恢复原色。\n- 图片调整继续沿用源文件只读、新目标另存、摘要锁定和写后复开验证；GIF、ICO、AVIF 与外部图片继续只读。\n- 格式能力页已准确公开 PDF 标准表单安全子集、永久脱敏图片型副本、文字水印和四字段文档属性，不再显示早期“表单只读”旧状态。\n\n## 验证结果\n\n- Quality Gate `32345467107` 通过。\n- 托管 U2 `32342021774` 完成 22/22 生命周期与 18/18 安装后工作区检查，0 失败。\n- Rust 像素测试 6/6 通过；真实 Tauri 宽窄窗口、原生鼠标输入、独立像素采样、源摘要和目标复开均通过。\n- MSI 与 NSIS 均为 1.0.12、`NotSigned`，附件由 `SHA256SUMS.txt` 约束。\n\n## 安装与更新\n\n- v1.0.11 用户可通过应用内检查更新；安装前需要明确确认，下载后会核对官方 NSIS 的大小与 SHA-256。\n- 社区安装包不含 Authenticode 商业签名，Windows 可能显示未知发布者或 SmartScreen。\n- 只从本 Release 下载，并核对 `SHA256SUMS.txt`；本版本不发布旧 Tauri 更新器的 `latest.json` 或 `.sig`。\n\n## 能力边界\n\n- 图片调整是基础像素操作，不提供图层、蒙版、局部选区、直方图或专业色彩管理。\n- PDF 仍不是任意正文重排编辑器；签名、加密、XFA、主动内容及不满足安全合同的结构保持阻断。\n- DOCX、PPTX、XLSX 继续是有界基础编辑或可靠副本，不宣称完整等价 Microsoft Office。\n",
+    "publishedAt": "2026-08-20T07:53:13Z",
+    "installerName": "LongEdit_1.0.12_x64-setup.exe",
+    "installerSize": 65543238,
+    "installerSha256": "d6e2866ff6e9d3a91442986151bb1653694658b81b82646b0ebe1159d87571f4"
+  },
+  "confirmation": {
+    "title": "发现新版本",
+    "text": "发现新版本v1.0.11v1.0.12更新将从官方 GitHub Relea e 下载，并在 SHA-256 校验通过后自动安装；安装完成后 Long编辑会自动重新打开。62.5 MBWindow  x64覆盖安装# Long编辑 v1.0.12\n\nv1.0.12 是图片查看与基础编辑体验增强版本，同时修正 PDF 已实现能力在公开格式矩阵中的陈旧说明。\n\n## 主要变化\n\n- 图片查看支持以鼠标光标为锚的滚轮缩放，放大后可按住拖动横纵平移。\n- 双击图片可在 100% 实际大小与适应窗口之间切换，方向键也可平移视口。\n- PNG、JPEG、WebP、BMP 的可靠副本编辑新增亮度、对比度与饱和度调整，并提供一键恢复原色。\n- 图片调整继续沿用源文件只读、新目标另存、摘要锁定和写后复开验证；GIF、ICO、AVIF 与外部图片继续只读。\n- 格式能力页已准确公开 PDF 标准表单安全子集、永久脱敏图片型副本、文字水印和四字段文档属性，不再显示早期“表单只读”旧状态。\n\n## 验证结果\n\n- Quality Gate `32345467107` 通过。\n- 托管 U2 `32342021774` 完成 22/22 生命周期与 18/18 安装后工作区检查，0 失败。\n- Ru t 像素测试 6/6 通过；真实 Tauri 宽窄窗口、原生鼠标输入、独立像素采样当前为未签名社区版，Window  仍可能显示“未知发布者”提示。查看发布页稍后提醒 下载并安装",
+    "modalVisible": true,
+    "confirmationVisible": true,
+    "confirmationLabel": "下载并安装",
+    "userActionRequired": true,
+    "clicked": true,
+    "installerStartedBeforeConfirmation": false,
+    "clickedAt": "2026-08-21T02:55:43.532Z"
+  },
+  "screenshot": "managed-updater-available.jpg",
+  "sourceUserContentIncluded": false
+}

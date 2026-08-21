@@ -18,6 +18,16 @@
 - 更新后必须显示 `v1.0.12` 且报告已是最新版；覆盖与卸载后合成资料库、配置均须保留。
 - 证据不得包含真实用户文档、完整用户路径、凭据或机器身份。
 
-## 当前状态
+## 实际结果
 
-`shared/v112-managed-updater-lifecycle-policy.json` 与 `.github/workflows/v112-managed-updater-lifecycle.yml` 已准备，状态为 `hosted-execution-pending`。只有托管 Windows 运行成功、截图人工复核、九份证据导入并通过哈希门禁后，才能写为 `hosted-managed-update-passed`。
+GitHub 托管 Windows 运行 `32441493681` 成功，冻结提交为 `46e8d59dfb0a624261f41ea2de36b1d52f29b23f`。
+
+- 12/12 生命周期检查通过，0 失败。
+- 用户确认前没有启动安装器；下载的 v1.0.12 NSIS SHA-256 为 `d6e2866ff6e9d3a91442986151bb1653694658b81b82646b0ebe1159d87571f4`。
+- 安装目录保持不变，更新助手自动拉起 v1.0.12，测试脚本没有手动启动新版。
+- 更新后设置页显示“当前已是最新版本 v1.0.12”。
+- 覆盖安装和卸载后，合成资料库与配置标记均保留。
+- 安装后二进制 SHA-256 为 `f5fc1b30b5712a8d4fdc16819d2b456cb3b61aeb895bcbb2a3c931edd99e3f57`，来源锚定经官方 NSIS 验证，Authenticode 仍为 `NotSigned`。
+- 三张截图已人工复核，九份脱敏证据已导入 `docs/evidence/v1.0.12-managed-updater/`。
+
+结论：状态提升为 `hosted-managed-update-passed`，v1.0.12 社区发布与官方更新链收口。

@@ -42,7 +42,7 @@
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.11-to-1.0.12-pending",
+    "managedUpdaterUpgradePath": "1.0.11-to-1.0.12-passed",
     "scope": "pdf-capability-truth-and-image-color-navigation"
   },
   "targetRelease": {
@@ -75,9 +75,9 @@
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.11-to-v1.0.12-managed-update-observation-pending",
+    "v1.0.11-to-v1.0.12-managed-update-observation-passed",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "observe-v1.0.11-to-v1.0.12-managed-update"
+  "nextAction": "resume-bounded-enhancement-and-prepare-v1.0.13"
 }
