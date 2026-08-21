@@ -4286,7 +4286,7 @@ watch(activeTabId, (newId, oldId) => {
   border-radius: var(--theme-radius-sm);
   background: rgba(var(--theme-primary-rgb), 0.08);
   color: var(--theme-primary);
-  font-size: 10px;
+  font-size: var(--text-compact);
   font-variant-numeric: tabular-nums;
   font-weight: 800;
   line-height: 1.2;
