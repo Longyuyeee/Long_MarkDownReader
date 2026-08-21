@@ -83,7 +83,8 @@ const globalTooltipTarget = await evaluate(`(() => {
 await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: globalTooltipTarget.x, y: globalTooltipTarget.y })
 await waitFor(`document.querySelector('#longedit-app-tooltip[data-visible="true"]')?.textContent === ${JSON.stringify(globalTooltipTarget.text)}`, 'global application tooltip')
 const readOverlayMetrics = selector => evaluate(`(() => {
-  const item = document.querySelector(${JSON.stringify(selector)})
+  const items = [...document.querySelectorAll(${JSON.stringify(selector)})]
+  const item = items.find(candidate => candidate.getBoundingClientRect().width > 0 && candidate.getBoundingClientRect().height > 0) || items[0]
   const rect = item.getBoundingClientRect()
   const style = getComputedStyle(item)
   return { visible: rect.width > 0 && rect.height > 0, text: item.textContent.trim(), left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height, backgroundColor: style.backgroundColor, color: style.color, borderRadius: style.borderRadius, boxShadow: style.boxShadow, fontSize: style.fontSize }
@@ -99,11 +100,11 @@ await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Esca
 await waitFor(`document.querySelector('#longedit-app-tooltip')?.dataset.visible === 'false'`, 'Escape tooltip dismissal')
 
 await evaluate(`document.querySelector('[data-testid="library-create-menu"]').click()`)
-await waitFor(`Boolean(document.querySelector('.n-dropdown-menu'))`, 'library create dropdown')
+await waitFor(`[...document.querySelectorAll('.n-dropdown-menu')].some(item => item.getBoundingClientRect().width > 0)`, 'library create dropdown')
 const dropdownLight = await readOverlayMetrics('.n-dropdown-menu')
 await capture('dropdown-light.png')
 await evaluate(`document.querySelector('.library-main, .library-mode').click()`)
-await waitFor(`!document.querySelector('.n-dropdown-menu')`, 'light dropdown dismissal')
+await waitFor(`![...document.querySelectorAll('.n-dropdown-menu')].some(item => item.getBoundingClientRect().width > 0)`, 'light dropdown dismissal')
 
 await evaluate(`(() => { const pinia = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia; const store = pinia._s.get('app'); const tab = store.tabs.find(item => item.id === store.activeTabId) || store.tabs[0]; tab.isDirty = true; document.querySelector('.workspace-tab.active .close-tab').click() })()`)
 await waitFor(`Boolean(document.querySelector('.n-dialog'))`, 'application confirmation dialog')
@@ -130,7 +131,7 @@ await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Escape', code: 
 await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
 
 await evaluate(`document.querySelector('[data-testid="library-create-menu"]').click()`)
-await waitFor(`Boolean(document.querySelector('.n-dropdown-menu'))`, 'dark narrow dropdown')
+await waitFor(`[...document.querySelectorAll('.n-dropdown-menu')].some(item => item.getBoundingClientRect().width > 0)`, 'dark narrow dropdown')
 const dropdownDarkNarrow = await readOverlayMetrics('.n-dropdown-menu')
 dropdownDarkNarrow.viewportWidth = await evaluate('window.innerWidth')
 await capture('dropdown-dark-narrow.png')
