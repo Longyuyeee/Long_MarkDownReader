@@ -1,40 +1,34 @@
 {
   "schemaVersion": 1,
-  "stage": "V1.0.13-U1",
-  "status": "hosted-managed-update-passed",
+  "stage": "V1.0.14-U1",
+  "status": "hosted-execution-pending",
   "environment": "github-hosted-disposable-windows",
   "workflow": ".github/workflows/v113-managed-updater-lifecycle.yml",
   "releases": {
     "previous": {
-      "version": "1.0.12",
-      "tag": "v1.0.12",
-      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.12",
-      "installer": {
-        "fileName": "LongEdit_1.0.12_x64-setup.exe",
-        "sizeBytes": 65543238,
-        "sha256": "d6e2866ff6e9d3a91442986151bb1653694658b81b82646b0ebe1159d87571f4",
-        "authenticodeStatus": "NotSigned"
-      }
-    },
-    "current": {
       "version": "1.0.13",
       "tag": "v1.0.13",
       "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.13",
-      "taggedCommit": "d46e9f6884734a668851ab6fc24111525184029b",
       "installer": {
         "fileName": "LongEdit_1.0.13_x64-setup.exe",
         "sizeBytes": 65533822,
         "sha256": "f1fdd8ba55e47112c19a4e07eb508f1f2b2b12c3b56e6567d2efeed7ce3f67eb",
         "authenticodeStatus": "NotSigned"
-      },
-      "standaloneReleaseExecutableReferenceSha256": "78682730c114644aa0213e309bd10ef013d6ad0eef54f05cf46123d6d7a81916",
-      "installedPackageExecutable": {
-        "fileName": "tauri-app.exe",
-        "sizeBytes": 107183616,
-        "sha256": "d4fd25ddc0fbe1178d4c3f2bbfbf3b64a411e941d87d20945c63d1912119e623",
-        "authenticodeStatus": "NotSigned",
-        "trustAnchor": "verified-official-nsis-installer"
       }
+    },
+    "current": {
+      "version": "1.0.14",
+      "tag": "v1.0.14",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14",
+      "taggedCommit": "9f285cd4d8397be719e27f84a7b0c2c0be6ad783",
+      "installer": {
+        "fileName": "LongEdit_1.0.14_x64-setup.exe",
+        "sizeBytes": 65568349,
+        "sha256": "889ece196cc70ae33b171c1e14d366ca7f024c33709736417304d92200991499",
+        "authenticodeStatus": "NotSigned"
+      },
+      "standaloneReleaseExecutableReferenceSha256": "301c890e5295cf51052fd8b51103b62427ab398d4b002cfb83bc041006ca35a5",
+      "installedPackageExecutable": null
     }
   },
   "requirements": {
@@ -54,24 +48,19 @@
   },
   "gates": {
     "harnessImplemented": true,
-    "qualityGatePassed": true,
-    "hostedWorkflowPassed": true,
-    "releaseDiscoveryPassed": true,
-    "confirmationBoundaryPassed": true,
-    "downloadHashPassed": true,
-    "overwriteInstallPassed": true,
-    "automaticRelaunchPassed": true,
-    "firstLaunchPassed": true,
-    "postUpgradeCurrentPassed": true,
-    "userDataRetentionPassed": true,
-    "evidenceImported": true
+    "qualityGatePassed": false,
+    "hostedWorkflowPassed": false,
+    "releaseDiscoveryPassed": false,
+    "confirmationBoundaryPassed": false,
+    "downloadHashPassed": false,
+    "overwriteInstallPassed": false,
+    "automaticRelaunchPassed": false,
+    "firstLaunchPassed": false,
+    "postUpgradeCurrentPassed": false,
+    "userDataRetentionPassed": false,
+    "evidenceImported": false
   },
-  "githubRun": {
-    "id": 32461276174,
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32461276174",
-    "headCommit": "cd5c43b13e09fdae861387c5369462deae2524da",
-    "conclusion": "success"
-  },
-  "evidenceRoot": "docs/evidence/v1.0.13-managed-updater",
-  "nextAction": "v1.0.13-release-closure-complete"
+  "githubRun": null,
+  "evidenceRoot": "managed-updater-output",
+  "nextAction": "push-harness-pass-quality-gate-and-run-hosted-managed-updater-lifecycle"
 }
