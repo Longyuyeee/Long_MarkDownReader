@@ -19,13 +19,13 @@
             role="tab"
             :id="`tab-${tab.key}`"
             :aria-selected="activeSidebarTab === tab.key"
-            :aria-label="tab.label"
+            :aria-label="tab.description"
             :aria-controls="`panel-${tab.key}`"
             tabindex="0"
             @click="activeSidebarTab = tab.key"
             @keydown.enter="activeSidebarTab = tab.key"
             @keydown.space.prevent="activeSidebarTab = tab.key"
-            :title="tab.label"
+            :title="tab.description"
           >
             <n-icon :component="tab.icon" size="18" />
             <span class="icon-tab-text">{{ tab.label }}</span>
@@ -138,7 +138,7 @@
             </div>
 
             <!-- 历史面板（收藏 + 最近） -->
-            <div v-else-if="activeSidebarTab === 'quick'" :key="'quick'" class="tab-pane quick-pane">
+            <div v-else-if="activeSidebarTab === 'quick'" :key="'quick'" class="tab-pane quick-pane" role="tabpanel" id="panel-quick" aria-labelledby="tab-quick">
               <div v-if="!store.starredFiles.length && !store.recentFiles.length" class="empty-state-hint">
                 <n-empty description="暂无记录" size="small" />
               </div>
@@ -158,13 +158,14 @@
               </div>
             </div>
 
-            <div v-else-if="activeSidebarTab === 'collections'" :key="'collections'" class="tab-pane collections-pane">
+            <div v-else-if="activeSidebarTab === 'collections'" :key="'collections'" class="tab-pane collections-pane" role="tabpanel" id="panel-collections" aria-labelledby="tab-collections">
               <div class="collections-header">
-                <div><strong>已保存视图</strong><small>{{ librarySavedSearches.length }} 个</small></div>
+                <div><strong>常用搜索</strong><small>{{ librarySavedSearches.length }} 个</small></div>
                 <n-button quaternary circle size="small" title="保存当前搜索" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
                   <template #icon><n-icon :component="BookmarkAddIcon" /></template>
                 </n-button>
               </div>
+              <div class="panel-guide compact-guide">保存关键词和格式筛选，之后可以一键重新搜索；不会复制或修改文件。</div>
               <div v-if="!librarySavedSearches.length" class="empty-state-hint"><n-empty description="暂无保存的搜索" size="small" /></div>
               <div v-else class="collection-list">
                 <div v-for="search in librarySavedSearches" :key="search.id" class="collection-row">
@@ -180,14 +181,15 @@
             </div>
 
             <!-- 标签管理面板 -->
-            <div v-else-if="activeSidebarTab === 'tags'" :key="'tags'" class="tab-pane tags-pane">
-              <div class="tags-help">标签从笔记中的 <code>#标签名</code> 语法自动识别</div>
+            <div v-else-if="activeSidebarTab === 'tags'" :key="'tags'" class="tab-pane tags-pane" role="tabpanel" id="panel-tags" aria-labelledby="tab-tags">
+              <div class="tags-help"><strong>Markdown 标签</strong><span>在笔记正文输入 <code>#标签名</code>，保存后会自动汇总到这里；点击标签可搜索相关笔记。</span></div>
 
               <!-- 给当前文件加标签 -->
-              <div class="tag-add-row" v-if="activeTabId">
+              <div class="tag-add-row" v-if="activeTabId && activeIsMarkdown">
                 <n-input v-model:value="newTagName" placeholder="输入标签名..." size="small" @keydown.enter="addTagToCurrentFile" />
-                <n-button size="tiny" type="primary" @click="addTagToCurrentFile" :disabled="!newTagName.trim()">+</n-button>
+                <n-button size="tiny" type="primary" title="添加到当前 Markdown 笔记" @click="addTagToCurrentFile" :disabled="!newTagName.trim()">添加</n-button>
               </div>
+              <div v-else-if="activeTabId" class="panel-guide">当前格式不使用 Markdown 标签。打开 Markdown 笔记后可以在这里添加。</div>
 
               <div v-if="allTags.length === 0" class="empty-state-hint">
                 <n-empty description="暂无标签" size="small" />
@@ -207,7 +209,7 @@
             </div>
 
             <!-- 大纲面板 -->
-            <div v-else-if="activeSidebarTab === 'outline'" :key="'outline'" class="tab-pane outline-pane">
+            <div v-else-if="activeSidebarTab === 'outline'" :key="'outline'" class="tab-pane outline-pane" role="tabpanel" id="panel-outline" aria-labelledby="tab-outline">
               <div class="manual-outline-box">
                 <div v-if="!activeTabId" class="empty-state-hint">
                   <n-empty description="未打开文件" size="small" />
@@ -229,23 +231,26 @@
               </div>
             </div>
 
-            <!-- 引用面板 -->
-            <div v-else-if="activeSidebarTab === 'links'" :key="'links'" class="tab-pane links-pane">
+            <!-- 当前文件关系面板 -->
+            <div v-else-if="activeSidebarTab === 'links'" :key="'links'" class="tab-pane links-pane" role="tabpanel" id="panel-links" aria-labelledby="tab-links">
               <div v-if="!activeTabId" class="path-guide"><n-empty description="未打开文件" size="small" /></div>
+              <div v-else-if="!activeIsMarkdown" class="path-guide"><n-empty description="当前格式没有 Markdown 文件关系" size="small" /></div>
               <div v-else class="links-content">
-                <LocalGraph
-                  :library-root="store.libraryPath"
-                  :current-path="activeTabId"
-                  @select="path => handleNodeSelect([path])"
-                  @open-mindmap="openLocalMindMap"
-                  @open-canvas="createCanvasFromCurrentGraph"
-                />
-                <div class="links-section" v-if="outgoingLinks.length > 0">
-                  <div class="links-section-title">链出 ({{ outgoingLinks.length }})</div>
+                <div class="relation-overview">
+                  <div><strong>当前文件关系</strong><span>来自正文中的 <code>[[笔记名]]</code> 双向链接</span></div>
+                  <div class="relation-counts">
+                    <span><b>{{ outgoingLinks.length }}</b> 链出</span>
+                    <span><b>{{ backlinks.length }}</b> 链入</span>
+                  </div>
+                  <button type="button" @click="openCurrentRelations">在知识图谱中查看</button>
+                </div>
+                <div class="links-section">
+                  <div class="links-section-title">链出到其他文件 ({{ outgoingLinks.length }})</div>
+                  <div v-if="outgoingLinks.length === 0" class="links-empty">正文中还没有 <code>[[笔记名]]</code> 链接</div>
                   <div class="link-item" v-for="link in outgoingLinks" :key="link" @click="navigateToLink(link)">{{ link }}</div>
                 </div>
                 <div class="links-section">
-                  <div class="links-section-title">反向链接 ({{ backlinks.length }})</div>
+                  <div class="links-section-title">链接到当前文件 ({{ backlinks.length }})</div>
                   <div v-if="backlinks.length === 0" class="links-empty">暂无其他文件链接到此处</div>
                   <div class="backlink-item" v-for="bl in backlinks" :key="bl.path" @click="handleNodeSelect([bl.path])" :title="bl.path">
                     <div class="bl-title">{{ bl.title }}</div>
@@ -256,7 +261,7 @@
             </div>
 
             <!-- 历史面板 -->
-            <div v-else-if="activeSidebarTab === 'history'" :key="'history'" class="tab-pane history-pane">
+            <div v-else-if="activeSidebarTab === 'history'" :key="'history'" class="tab-pane history-pane" role="tabpanel" id="panel-history" aria-labelledby="tab-history">
               <div class="history-box">
                 <div class="history-header">
                   <div class="history-title-row">
@@ -717,7 +722,6 @@ import { isActiveThemeDark } from '../config/themePresets'
 import { markdownCodeThemeChoices, resolveMarkdownEditorAppearance } from '../config/markdownCodeTheme'
 import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
-import LocalGraph from '../components/LocalGraph.vue'
 import MarkdownChartEmbeds from '../components/MarkdownChartEmbeds.vue'
 import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
@@ -1059,13 +1063,13 @@ const handleError = (error: any, userMessage: string, logContext?: string) => {
 
 const activeSidebarTab = ref<'files' | 'quick' | 'collections' | 'tags' | 'outline' | 'links' | 'history'>('files')
 const sidebarTabs = [
-  { key: 'files' as const, icon: FileIcon, label: '文件' },
-  { key: 'collections' as const, icon: CollectionIcon, label: '保存' },
-  { key: 'outline' as const, icon: ListIcon, label: '目录' },
-  { key: 'tags' as const, icon: TagIcon, label: '标签' },
-  { key: 'links' as const, icon: LinkIcon, label: '引用' },
-  { key: 'quick' as const, icon: ClockIcon, label: '最近' },
-  { key: 'history' as const, icon: SaveIcon, label: '备份' },
+  { key: 'files' as const, icon: FileIcon, label: '文件', description: '文件：浏览和管理资料库文件' },
+  { key: 'collections' as const, icon: CollectionIcon, label: '搜索', description: '常用搜索：保存并重复使用关键词与格式筛选' },
+  { key: 'outline' as const, icon: ListIcon, label: '目录', description: '目录：查看当前文档的标题大纲' },
+  { key: 'tags' as const, icon: TagIcon, label: '标签', description: '标签：管理 Markdown 正文中的 #标签名' },
+  { key: 'links' as const, icon: LinkIcon, label: '关系', description: '关系：查看当前 Markdown 的链出与反向链接' },
+  { key: 'quick' as const, icon: ClockIcon, label: '最近', description: '最近：打开收藏文件和最近访问记录' },
+  { key: 'history' as const, icon: SaveIcon, label: '备份', description: '备份：恢复当前文件的本地历史快照' },
 ]
 const outgoingLinks = ref<string[]>([])
 const backlinks = ref<{ title: string; path: string; context: string }[]>([])
@@ -1688,24 +1692,9 @@ const openSettings = () => router.push('/settings')
 const openUpdateSettings = () => router.push({ name: 'Settings', query: { category: 'system', focus: 'software-update' } })
 const openWorkspace = () => router.push('/workspace')
 const openGraph = () => router.push('/graph')
-const openLocalMindMap = () => {
+const openCurrentRelations = () => {
   if (!activeTabId.value) return
-  router.push({ name: 'Graph', query: { mode: 'mindmap', root: activeTabId.value } })
-}
-
-const createCanvasFromCurrentGraph = async (depth: number) => {
-  if (!activeTabId.value) return
-  try {
-    const path = await invoke<string>('create_canvas_from_graph', {
-      libraryRoot: store.libraryPath,
-      centerPath: activeTabId.value,
-      depth
-    })
-    await refreshLibrary()
-    openManagedFile(router, path)
-  } catch (error) {
-    message.error(`生成画布失败：${String(error)}`)
-  }
+  router.push({ name: 'Graph', query: { mode: 'network', root: activeTabId.value } })
 }
 
 const createMindMapFromCurrentMarkdown = async () => {
@@ -3746,7 +3735,21 @@ watch(activeTabId, (newId, oldId) => {
 .collections-pane { overflow-y: auto; }.collections-header { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border-bottom: var(--theme-border); }.collections-header>div { display: flex; align-items: baseline; gap: 7px; }.collections-header strong { font-size: 11px; }.collections-header small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.collection-list { display: grid; padding: 5px 10px 14px; }.collection-row { min-height: 54px; display: grid; grid-template-columns: minmax(0,1fr) 28px; align-items: center; gap: 4px; border-bottom: var(--theme-border); }.collection-open { min-width: 0; height: 100%; display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 8px; padding: 6px 2px; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.collection-open:hover { color: var(--theme-primary); }.collection-open>svg { width: 15px; color: var(--theme-primary); }.collection-open>span { min-width: 0; display: grid; gap: 3px; }.collection-open strong,.collection-open small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-open strong { font-size: var(--text-compact); }.collection-open small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .tags-pane { padding: 12px; overflow-y: auto; }
 
+.panel-guide {
+  margin: 10px 12px;
+  padding: 9px 10px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.12);
+  border-radius: 6px;
+  color: var(--theme-text-secondary);
+  background: rgba(var(--theme-primary-rgb), 0.04);
+  font-size: var(--text-compact);
+  line-height: 1.55;
+}
+.panel-guide.compact-guide { margin-top: 8px; margin-bottom: 4px; }
+
 .tags-help {
+  display: grid;
+  gap: 4px;
   font-size: 11px;
   opacity: 0.6;
   margin-bottom: 12px;
@@ -3915,7 +3918,35 @@ watch(activeTabId, (newId, oldId) => {
 
 /* 链接面板 */
 .links-content { padding: 12px; overflow-y: auto; }
-.links-section { margin-bottom: 22px; }
+.relation-overview {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 12px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.16);
+  border-radius: 7px;
+  background: rgba(var(--theme-primary-rgb), 0.045);
+}
+.relation-overview > div:first-child { min-width: 0; display: grid; gap: 4px; }
+.relation-overview strong { color: var(--theme-text); font-size: 12px; }
+.relation-overview span { color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.5; }
+.relation-overview code, .links-empty code { color: var(--theme-primary); font-size: inherit; }
+.relation-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.relation-counts span { padding: 7px; border-radius: 5px; background: var(--theme-surface); text-align: center; }
+.relation-counts b { color: var(--theme-primary); font-size: 13px; }
+.relation-overview > button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.25);
+  border-radius: 6px;
+  color: var(--theme-primary);
+  background: rgba(var(--theme-primary-rgb), 0.07);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+.relation-overview > button:hover { background: rgba(var(--theme-primary-rgb), 0.13); }
+.links-section { margin-bottom: 18px; }
 
 .links-section-title {
   font-size: 11px;
@@ -3948,6 +3979,9 @@ watch(activeTabId, (newId, oldId) => {
   border: 1px solid transparent;
   position: relative;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .link-item::before {
@@ -4299,6 +4333,9 @@ watch(activeTabId, (newId, oldId) => {
   cursor: pointer;
   transition: border-color var(--motion-fast) var(--ease-standard), background var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard);
 }
+
+.tags-help strong { color: var(--theme-text); font-size: 12px; }
+.tags-help span { color: var(--theme-text-secondary); }
 .app-version-badge:hover,
 .app-version-badge:focus-visible {
   border-color: rgba(var(--theme-primary-rgb), 0.65);

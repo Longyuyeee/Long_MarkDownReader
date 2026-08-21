@@ -1,0 +1,400 @@
+{
+  "schemaVersion": 1,
+  "status": "accepted",
+  "expected": {
+    "labels": [
+      "文件",
+      "搜索",
+      "目录",
+      "标签",
+      "关系",
+      "最近",
+      "备份"
+    ],
+    "sidebarMaximumWidthPx": 262,
+    "relationSummary": {
+      "outgoing": 1,
+      "incoming": 1,
+      "embeddedGraphRemoved": true
+    }
+  },
+  "actual": {
+    "entries": [
+      {
+        "tab": "collections",
+        "sidebar": {
+          "x": 0,
+          "width": 200,
+          "right": 200
+        },
+        "panel": {
+          "x": 0,
+          "width": 199,
+          "right": 199,
+          "scrollWidth": 199
+        },
+        "panelOverflowX": 0,
+        "pageOverflowX": 0,
+        "tabs": [
+          {
+            "id": "tab-files",
+            "label": "文件",
+            "title": "文件：浏览和管理资料库文件",
+            "ariaLabel": "文件：浏览和管理资料库文件"
+          },
+          {
+            "id": "tab-collections",
+            "label": "搜索",
+            "title": "常用搜索：保存并重复使用关键词与格式筛选",
+            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
+          },
+          {
+            "id": "tab-outline",
+            "label": "目录",
+            "title": "目录：查看当前文档的标题大纲",
+            "ariaLabel": "目录：查看当前文档的标题大纲"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-quick",
+            "label": "最近",
+            "title": "最近：打开收藏文件和最近访问记录",
+            "ariaLabel": "最近：打开收藏文件和最近访问记录"
+          },
+          {
+            "id": "tab-history",
+            "label": "备份",
+            "title": "备份：恢复当前文件的本地历史快照",
+            "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          }
+        ],
+        "text": "常用搜索0 个保存关键词和格式筛选，之后可以一键重新搜索；不会复制或修改文件。暂无保存的搜索",
+        "hasLocalGraphCanvas": false
+      },
+      {
+        "tab": "outline",
+        "sidebar": {
+          "x": 0,
+          "width": 200,
+          "right": 200
+        },
+        "panel": {
+          "x": 0,
+          "width": 199,
+          "right": 199,
+          "scrollWidth": 199
+        },
+        "panelOverflowX": 0,
+        "pageOverflowX": 0,
+        "tabs": [
+          {
+            "id": "tab-files",
+            "label": "文件",
+            "title": "文件：浏览和管理资料库文件",
+            "ariaLabel": "文件：浏览和管理资料库文件"
+          },
+          {
+            "id": "tab-collections",
+            "label": "搜索",
+            "title": "常用搜索：保存并重复使用关键词与格式筛选",
+            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
+          },
+          {
+            "id": "tab-outline",
+            "label": "目录",
+            "title": "目录：查看当前文档的标题大纲",
+            "ariaLabel": "目录：查看当前文档的标题大纲"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-quick",
+            "label": "最近",
+            "title": "最近：打开收藏文件和最近访问记录",
+            "ariaLabel": "最近：打开收藏文件和最近访问记录"
+          },
+          {
+            "id": "tab-history",
+            "label": "备份",
+            "title": "备份：恢复当前文件的本地历史快照",
+            "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          }
+        ],
+        "text": "Relation Entry Test",
+        "hasLocalGraphCanvas": false
+      },
+      {
+        "tab": "tags",
+        "sidebar": {
+          "x": 0,
+          "width": 200,
+          "right": 200
+        },
+        "panel": {
+          "x": 0,
+          "width": 199,
+          "right": 199,
+          "scrollWidth": 199
+        },
+        "panelOverflowX": 0,
+        "pageOverflowX": 0,
+        "tabs": [
+          {
+            "id": "tab-files",
+            "label": "文件",
+            "title": "文件：浏览和管理资料库文件",
+            "ariaLabel": "文件：浏览和管理资料库文件"
+          },
+          {
+            "id": "tab-collections",
+            "label": "搜索",
+            "title": "常用搜索：保存并重复使用关键词与格式筛选",
+            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
+          },
+          {
+            "id": "tab-outline",
+            "label": "目录",
+            "title": "目录：查看当前文档的标题大纲",
+            "ariaLabel": "目录：查看当前文档的标题大纲"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-quick",
+            "label": "最近",
+            "title": "最近：打开收藏文件和最近访问记录",
+            "ariaLabel": "最近：打开收藏文件和最近访问记录"
+          },
+          {
+            "id": "tab-history",
+            "label": "备份",
+            "title": "备份：恢复当前文件的本地历史快照",
+            "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          }
+        ],
+        "text": "Markdown 标签在笔记正文输入 #标签名，保存后会自动汇总到这里；点击标签可搜索相关笔记。输入标签名...添加筛选标签...#product.1 篇",
+        "hasLocalGraphCanvas": false
+      },
+      {
+        "tab": "links",
+        "sidebar": {
+          "x": 0,
+          "width": 200,
+          "right": 200
+        },
+        "panel": {
+          "x": 0,
+          "width": 199,
+          "right": 199,
+          "scrollWidth": 199
+        },
+        "panelOverflowX": 0,
+        "pageOverflowX": 0,
+        "tabs": [
+          {
+            "id": "tab-files",
+            "label": "文件",
+            "title": "文件：浏览和管理资料库文件",
+            "ariaLabel": "文件：浏览和管理资料库文件"
+          },
+          {
+            "id": "tab-collections",
+            "label": "搜索",
+            "title": "常用搜索：保存并重复使用关键词与格式筛选",
+            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
+          },
+          {
+            "id": "tab-outline",
+            "label": "目录",
+            "title": "目录：查看当前文档的标题大纲",
+            "ariaLabel": "目录：查看当前文档的标题大纲"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-quick",
+            "label": "最近",
+            "title": "最近：打开收藏文件和最近访问记录",
+            "ariaLabel": "最近：打开收藏文件和最近访问记录"
+          },
+          {
+            "id": "tab-history",
+            "label": "备份",
+            "title": "备份：恢复当前文件的本地历史快照",
+            "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          }
+        ],
+        "text": "当前文件关系来自正文中的 [[笔记名]] 双向链接1 链出1 链入在知识图谱中查看链出到其他文件 (1)Linked Note链接到当前文件 (1)Linked NoteReturn to [[Relation Entry Test]].",
+        "hasLocalGraphCanvas": false
+      },
+      {
+        "tab": "quick",
+        "sidebar": {
+          "x": 0,
+          "width": 200,
+          "right": 200
+        },
+        "panel": {
+          "x": 0,
+          "width": 199,
+          "right": 199,
+          "scrollWidth": 199
+        },
+        "panelOverflowX": 0,
+        "pageOverflowX": 0,
+        "tabs": [
+          {
+            "id": "tab-files",
+            "label": "文件",
+            "title": "文件：浏览和管理资料库文件",
+            "ariaLabel": "文件：浏览和管理资料库文件"
+          },
+          {
+            "id": "tab-collections",
+            "label": "搜索",
+            "title": "常用搜索：保存并重复使用关键词与格式筛选",
+            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
+          },
+          {
+            "id": "tab-outline",
+            "label": "目录",
+            "title": "目录：查看当前文档的标题大纲",
+            "ariaLabel": "目录：查看当前文档的标题大纲"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-quick",
+            "label": "最近",
+            "title": "最近：打开收藏文件和最近访问记录",
+            "ariaLabel": "最近：打开收藏文件和最近访问记录"
+          },
+          {
+            "id": "tab-history",
+            "label": "备份",
+            "title": "备份：恢复当前文件的本地历史快照",
+            "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          }
+        ],
+        "text": "最近打开Relation Entry Test.md",
+        "hasLocalGraphCanvas": false
+      },
+      {
+        "tab": "history",
+        "sidebar": {
+          "x": 0,
+          "width": 200,
+          "right": 200
+        },
+        "panel": {
+          "x": 0,
+          "width": 199,
+          "right": 199,
+          "scrollWidth": 199
+        },
+        "panelOverflowX": 0,
+        "pageOverflowX": 0,
+        "tabs": [
+          {
+            "id": "tab-files",
+            "label": "文件",
+            "title": "文件：浏览和管理资料库文件",
+            "ariaLabel": "文件：浏览和管理资料库文件"
+          },
+          {
+            "id": "tab-collections",
+            "label": "搜索",
+            "title": "常用搜索：保存并重复使用关键词与格式筛选",
+            "ariaLabel": "常用搜索：保存并重复使用关键词与格式筛选"
+          },
+          {
+            "id": "tab-outline",
+            "label": "目录",
+            "title": "目录：查看当前文档的标题大纲",
+            "ariaLabel": "目录：查看当前文档的标题大纲"
+          },
+          {
+            "id": "tab-tags",
+            "label": "标签",
+            "title": "标签：管理 Markdown 正文中的 #标签名",
+            "ariaLabel": "标签：管理 Markdown 正文中的 #标签名"
+          },
+          {
+            "id": "tab-links",
+            "label": "关系",
+            "title": "关系：查看当前 Markdown 的链出与反向链接",
+            "ariaLabel": "关系：查看当前 Markdown 的链出与反向链接"
+          },
+          {
+            "id": "tab-quick",
+            "label": "最近",
+            "title": "最近：打开收藏文件和最近访问记录",
+            "ariaLabel": "最近：打开收藏文件和最近访问记录"
+          },
+          {
+            "id": "tab-history",
+            "label": "备份",
+            "title": "备份：恢复当前文件的本地历史快照",
+            "ariaLabel": "备份：恢复当前文件的本地历史快照"
+          }
+        ],
+        "text": "影子副本 (0)暂无历史快照",
+        "hasLocalGraphCanvas": false
+      }
+    ],
+    "runtimeErrorCount": 0,
+    "runtimeErrors": []
+  },
+  "passed": true
+}

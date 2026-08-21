@@ -22,10 +22,14 @@ for (const token of [
 if (/\.icon-tab\.active\s+\.icon-tab-text/.test(library)) failures.push('only the active tab must not gain a text label')
 if (/\.icon-tab\.active\s*\{[^}]*width\s*:/s.test(library)) failures.push('active tabs must not change navigation track width')
 if (relatedSurfaces.includes('智能集合')) failures.push('the internal smart-collection term remains visible')
-for (const label of ['文件', '保存', '目录', '标签', '引用', '最近', '备份']) requireText(library, `label: '${label}'`, `sidebar label missing: ${label}`)
+for (const label of ['文件', '搜索', '目录', '标签', '关系', '最近', '备份']) requireText(library, `label: '${label}'`, `sidebar label missing: ${label}`)
+for (const description of ['常用搜索：保存并重复使用关键词与格式筛选', '标签：管理 Markdown 正文中的 #标签名', '关系：查看当前 Markdown 的链出与反向链接']) {
+  requireText(library, description, `sidebar purpose missing: ${description}`)
+}
+if (library.includes("label: '保存'") || library.includes("label: '引用'")) failures.push('misleading legacy sidebar labels remain visible')
 
 if (failures.length) {
   console.error(`Sidebar tab responsiveness check failed:\n- ${failures.join('\n- ')}`)
   process.exit(1)
 }
-console.log('Sidebar tabs passed: saved views use plain language, wide layouts show stable labels, compact layouts show icons, and motion can be reduced.')
+console.log('Sidebar tabs passed: search, tags and relations explain their purpose; wide layouts show stable labels, compact layouts show icons, and motion can be reduced.')
