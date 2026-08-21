@@ -1,6 +1,6 @@
 # v1.0.14 无签名社区版发布审计
 
-状态：**候选门禁通过，待发布**
+状态：**已发布，远端附件已复核**
 
 渠道：`community-unsigned`
 
@@ -28,6 +28,7 @@
 - GitHub Quality Gate [32462815326](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32462815326) 通过。
 - 托管 Windows 生命周期 [32462354721](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32462354721) 通过：22/22 安装生命周期、18/18 安装后工作区检查，失败 0。
 - 本地构建生成 NSIS 与 MSI，版本均为 1.0.14，Authenticode 状态均为 `NotSigned`。
+- [GitHub Release v1.0.14](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14) 已发布；NSIS、MSI 与 `SHA256SUMS.txt` 回下载后的大小和 SHA-256 全部一致。
 
 ## 当前边界
 

@@ -5,7 +5,7 @@
   "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-21",
-  "currentStatus": "v1.0.14-community-release-ready-to-publish",
+  "currentStatus": "v1.0.14-community-release-published",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": { "authenticodeRequired": false, "unsignedCommunityReleaseApproved": true, "unknownPublisherWarningRequired": true },
   "updater": {
@@ -16,7 +16,7 @@
   "gates": {
     "frontendBuildPassed": true, "rustLockedCheckPassed": true, "productionDependencyAuditPassed": true,
     "msiBuilt": true, "nsisBuilt": true, "artifactHashesVerified": true, "localRuntimeSmokePassed": false,
-    "installedLifecyclePassed": true, "qualityGatePassed": true, "githubReleasePublished": false
+    "installedLifecyclePassed": true, "qualityGatePassed": true, "githubReleasePublished": true
   },
   "patchValidation": {
     "previousPublicVersion": "1.0.13", "previousInstalledLifecycleEvidenceVersion": "1.0.5", "previousEvidenceInheritedAsCurrent": false,
@@ -26,8 +26,8 @@
   "targetRelease": { "tag": "v1.0.14", "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14", "assetMode": "managed-nsis-msi-with-sha256" },
   "candidate": {
     "artifactSourceCommit": "cd5c43b13e09fdae861387c5369462deae2524da",
-    "qualityGateRunId": 32462815326,
-    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32462815326",
+    "qualityGateRunId": 32465180997,
+    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32465180997",
     "hostedInstalledLifecycleRunId": 32462354721,
     "hostedInstalledLifecycleRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32462354721",
     "artifacts": [
@@ -36,10 +36,10 @@
       { "target": "nsis", "fileName": "LongEdit_1.0.14_x64-setup.exe", "sizeBytes": 65568349, "sha256": "889ece196cc70ae33b171c1e14d366ca7f024c33709736417304d92200991499", "authenticodeStatus": "NotSigned" }
     ]
   },
-  "release": null,
+  "release": { "tag": "v1.0.14", "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14", "taggedCommit": "9f285cd4d8397be719e27f84a7b0c2c0be6ad783", "databaseId": 374274160 },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear", "v1.0.4-users-must-install-v1.0.5-manually-once",
     "v1.0.13-to-v1.0.14-managed-update-observation-pending", "download-only-from-official-github-release", "verify-published-sha256-before-install"
   ],
-  "nextAction": "publish-v1.0.14-and-verify-remote-assets"
+  "nextAction": "observe-official-v1.0.13-to-v1.0.14-managed-update"
 }

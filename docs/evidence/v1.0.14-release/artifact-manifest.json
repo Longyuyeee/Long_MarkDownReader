@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.14",
-  "status": "ready-to-publish-hosted-lifecycle-passed-local-smoke-blocked-existing-single-instance",
+  "status": "published-remote-assets-verified-hosted-lifecycle-passed-local-smoke-blocked-existing-single-instance",
   "appVersion": "1.0.14",
   "capturedAt": "2026-08-21T08:42:00Z",
   "sourceCommit": "cd5c43b13e09fdae861387c5369462deae2524da",
   "sourceVersion": "1.0.14",
   "build": { "command": "npm run tauri -- build", "completed": true, "frontendTypeCheckPassed": true, "frontendProductionBuildPassed": true, "rustReleaseBuildPassed": true, "msiBundlePassed": true, "nsisBundlePassed": true },
-  "qualityGate": { "status": "passed", "runId": 32462815326, "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32462815326", "headCommit": "240c35d01e84ebf11c08a1eb7b0d83ee0c64da23" },
+  "qualityGate": { "status": "passed", "runId": 32465180997, "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32465180997", "headCommit": "9f285cd4d8397be719e27f84a7b0c2c0be6ad783" },
   "artifacts": [
     { "target": "release-executable", "fileName": "tauri-app.exe", "sizeBytes": 107179520, "sha256": "301c890e5295cf51052fd8b51103b62427ab398d4b002cfb83bc041006ca35a5", "authenticodeStatus": "NotSigned", "fileVersion": "1.0.14", "productVersion": "1.0.14" },
     { "target": "msi", "fileName": "LongEdit_1.0.14_x64_zh-CN.msi", "sizeBytes": 73613312, "sha256": "194816764a99b86aff486cb9bce71f75a5074dfa4ba3648c821c26e01d5713ee", "authenticodeStatus": "NotSigned", "productVersion": "1.0.14" },
@@ -21,6 +21,6 @@
     "installedExecutableSizeBytes": 123371520, "installedExecutableSha256": "c6cef3256887355f90005adad9d01abbeb062c22520361b306349135855d9f5f",
     "lifecycleChecksPassed": 22, "installedWorkspaceChecksPassed": 18, "failedChecks": 0, "sourceUserContentIncluded": false, "evidenceManifest": "hosted-lifecycle/import-manifest.json"
   },
-  "releaseReceipt": null,
-  "boundaries": { "releaseCandidate": true, "communityUnsigned": true, "enterprisePromotionEligible": false, "authenticodeRequired": false, "managedUpdaterReleaseAssetsPresent": false, "legacyTauriUpdaterArtifactsPresent": false, "managedUpdaterEnabled": true, "artifactFilesCommitted": false, "sourceUserContentIncluded": false }
+  "releaseReceipt": "release-receipt.json",
+  "boundaries": { "releaseCandidate": true, "communityUnsigned": true, "enterprisePromotionEligible": false, "authenticodeRequired": false, "managedUpdaterReleaseAssetsPresent": true, "legacyTauriUpdaterArtifactsPresent": false, "managedUpdaterEnabled": true, "artifactFilesCommitted": false, "sourceUserContentIncluded": false }
 }
