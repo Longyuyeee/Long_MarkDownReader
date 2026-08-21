@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.0.13",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-21",
-  "currentStatus": "v1.0.13-community-release-quality-gate-pending",
+  "currentStatus": "v1.0.13-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,22 +24,22 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": false,
-    "rustLockedCheckPassed": false,
-    "productionDependencyAuditPassed": false,
-    "msiBuilt": false,
-    "nsisBuilt": false,
-    "artifactHashesVerified": false,
+    "frontendBuildPassed": true,
+    "rustLockedCheckPassed": true,
+    "productionDependencyAuditPassed": true,
+    "msiBuilt": true,
+    "nsisBuilt": true,
+    "artifactHashesVerified": true,
     "localRuntimeSmokePassed": false,
-    "installedLifecyclePassed": false,
-    "qualityGatePassed": false,
+    "installedLifecyclePassed": true,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "patchValidation": {
     "previousPublicVersion": "1.0.12",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": false,
+    "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
     "managedUpdaterUpgradePath": "1.0.12-to-1.0.13-pending",
@@ -50,7 +50,18 @@
     "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.13",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": null,
+  "candidate": {
+    "artifactSourceCommit": "520588b78607ca12160d27802a412d2a5474418b",
+    "qualityGateRunId": 32443494918,
+    "qualityGateRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32443494918",
+    "hostedInstalledLifecycleRunId": 32444502244,
+    "hostedInstalledLifecycleRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32444502244",
+    "artifacts": [
+      { "target": "release-executable", "fileName": "tauri-app.exe", "sizeBytes": 107183616, "sha256": "78682730c114644aa0213e309bd10ef013d6ad0eef54f05cf46123d6d7a81916", "authenticodeStatus": "NotSigned" },
+      { "target": "msi", "fileName": "LongEdit_1.0.13_x64_zh-CN.msi", "sizeBytes": 73609216, "sha256": "f06495df25b4fd1cba725d9dd3e724c8a018c856805977187cdc4d9286ef3c81", "authenticodeStatus": "NotSigned" },
+      { "target": "nsis", "fileName": "LongEdit_1.0.13_x64-setup.exe", "sizeBytes": 65533822, "sha256": "f1fdd8ba55e47112c19a4e07eb508f1f2b2b12c3b56e6567d2efeed7ce3f67eb", "authenticodeStatus": "NotSigned" }
+    ]
+  },
   "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
@@ -59,5 +70,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "pass-quality-gate-and-build-v1.0.13-candidate"
+  "nextAction": "publish-v1.0.13-and-verify-remote-assets"
 }

@@ -1,10 +1,10 @@
 # v1.0.13 无签名社区版发布审计
 
-状态：**质量门待验证，尚未发布**
+状态：**候选证据已闭环，待发布并复核远端附件**
 
 渠道：`community-unsigned`
 
-企业发布候选：`releaseCandidate=false`
+社区发布候选：`releaseCandidate=true`
 
 ## 候选范围
 
@@ -37,3 +37,12 @@
 - 社区安装包无 Authenticode 商业签名，Windows 可能显示未知发布者或 SmartScreen。
 - 用户始终可以从官方 Release 手动下载安装；应用内更新也必须先确认并通过 SHA-256 校验。
 - 候选测试和本地构建不能描述成正式发布；README 下载链接在发布前继续指向已验证的 v1.0.12。
+
+## 候选验证结果
+
+- 冻结产品提交：`520588b78607ca12160d27802a412d2a5474418b`。
+- 完整 Quality Gate：GitHub Actions `32443494918`，通过。
+- 本地 MSI 与 NSIS 构建通过，版本均为 `1.0.13`，Authenticode 均为 `NotSigned`，SHA-256 已写入结构化清单。
+- 托管安装生命周期：GitHub Actions `32444502244`，22/22 安装、升级、回滚与卸载检查通过；18/18 安装后工作区检查通过，失败 0。
+- 本地便携烟测因当前已有 1 个 Long编辑实例运行而安全阻断；未关闭用户进程、未执行安装器，也未修改注册表。
+- 候选证据位于 `docs/evidence/v1.0.13-release/`；下一步只发布 GitHub Release、重新下载三个公开附件并核对大小与 SHA-256。
