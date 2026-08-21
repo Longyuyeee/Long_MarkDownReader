@@ -3,6 +3,7 @@ import path from 'node:path'
 
 const endpoint = process.env.LONGEDIT_CDP_ENDPOINT || 'http://127.0.0.1:14527'
 const output = path.resolve('docs/evidence/post-v1013-sidebar-information-architecture')
+const expectedAppVersion = JSON.parse(await fs.readFile(path.resolve('package.json'), 'utf8')).version
 const samplePath = process.env.LONGEDIT_SIDEBAR_SAMPLE_PATH
 if (!samplePath) throw new Error('LONGEDIT_SIDEBAR_SAMPLE_PATH is required')
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -74,6 +75,7 @@ const inspectPanel = tab => evaluate(`(() => {
     panelOverflowX: panel ? Math.max(0, panel.scrollWidth - panel.clientWidth) : null,
     pageOverflowX: Math.max(0, document.documentElement.scrollWidth - innerWidth),
     tabs,
+    appVersion: document.querySelector('[data-testid="main-app-version"]')?.textContent?.trim(),
     text: panel?.textContent?.replace(/\\s+/g, ' ').trim(),
     hasLocalGraphCanvas: Boolean(panel?.querySelector('.local-graph-card, .local-graph-canvas')),
   }
@@ -110,6 +112,7 @@ const searchEntry = entries.find(entry => entry.tab === 'collections')
 const tagsEntry = entries.find(entry => entry.tab === 'tags')
 const passed = JSON.stringify(tabLabels) === JSON.stringify(['文件', '目录', '最近', '备份', '常用搜索', '关系', '标签'])
   && descriptionsComplete
+  && entries.every(entry => entry.appVersion === `v${expectedAppVersion}`)
   && entries.every(entry => entry.sidebar.width <= 262 && entry.panelOverflowX <= 2 && entry.pageOverflowX <= 2)
   && searchEntry.text.includes('记录文件页的关键词和格式条件')
   && tagsEntry.text.includes('仅 Markdown') && tagsEntry.text.includes('#标签名')
@@ -123,6 +126,7 @@ await fs.writeFile(path.join(output, 'runtime-evidence.json'), `${JSON.stringify
   status: passed ? 'accepted' : 'rejected',
   expected: {
     labels: ['文件', '目录', '最近', '备份', '常用搜索', '关系', '标签'],
+    appVersion: `v${expectedAppVersion}`,
     sidebarMaximumWidthPx: 262,
     relationSummary: { outgoing: 1, incoming: 1, embeddedGraphRemoved: true },
   },
