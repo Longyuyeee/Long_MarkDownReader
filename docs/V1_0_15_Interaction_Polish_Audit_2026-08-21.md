@@ -1,8 +1,11 @@
 # v1.0.15 交互细节治理与桌面验收审计
 
-审计日期：2026-08-21  
-开发分支：`codex/v1.0.15-interaction-polish`  
-当前软件事实版本：`1.0.14`  
+审计日期：2026-08-21
+
+开发分支：`codex/v1.0.15-interaction-polish`
+
+当前软件事实版本：`1.0.14`
+
 本轮定位：v1.0.15 候选范围中的交互治理增量，不代表已经提升版本或进入发布候选。
 
 ## 1. 结论
@@ -69,4 +72,3 @@ npm run check:current-development-audit
 ```powershell
 npm run audit:v115-interaction-polish
 ```
-
