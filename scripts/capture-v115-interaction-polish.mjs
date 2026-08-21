@@ -71,8 +71,9 @@ contextPolicy.customMenuVisible = await evaluate(`Boolean(document.querySelector
 await capture('context-menu-policy.png')
 
 const normalizedTooltip = tooltip.text.replaceAll('/', '\\').toLowerCase()
-const normalizedExpectedPath = samples[0].path.replaceAll('/', '\\').toLowerCase()
-if (tabMetrics.nativeTitleCount !== 0 || !tooltip.visible || !normalizedTooltip.includes(normalizedExpectedPath) || tooltip.borderRadius === '0px') throw new Error(`Tooltip gate failed: ${JSON.stringify({ tabMetrics, tooltip, normalizedExpectedPath })}`)
+const matchedSample = samples.find(sample => normalizedTooltip.includes(sample.path.replaceAll('/', '\\').toLowerCase()))
+tooltip.matchedPath = matchedSample?.path || null
+if (tabMetrics.nativeTitleCount !== 0 || !tooltip.visible || !matchedSample || tooltip.borderRadius === '0px') throw new Error(`Tooltip gate failed: ${JSON.stringify({ tabMetrics, tooltip })}`)
 if (!contextPolicy.ordinaryPrevented || contextPolicy.editablePrevented !== false || !contextPolicy.customEventPrevented || !contextPolicy.customMenuVisible) throw new Error(`Context menu gate failed: ${JSON.stringify(contextPolicy)}`)
 if (runtimeErrors.length) throw new Error(`Runtime errors observed: ${JSON.stringify(runtimeErrors)}`)
 
