@@ -49,7 +49,7 @@ await evaluate(`location.hash = '#/library?path=' + encodeURIComponent(${JSON.st
 await waitFor(`document.querySelector('.docx-workspace .docx-stage') && document.querySelector('.docx-page') && document.querySelector('.document-title')?.textContent?.includes('UX38D2 LibreOffice Document')`, 'DOCX workspace')
 await delay(600)
 const docxLoaded = true
-await evaluate(`[...document.querySelectorAll('.docx-workspace .toolbar-actions button')].find(node => node.title === '打开 DOCX 页面编辑')?.click()`)
+await evaluate(`[...document.querySelectorAll('.docx-workspace .toolbar-actions button')].find(node => (node.getAttribute('aria-label') || node.getAttribute('data-app-tooltip') || node.title) === '打开 DOCX 页面编辑')?.click()`)
 await waitFor(`document.querySelector('.docx-editor')`, 'DOCX editor panel')
 await evaluate(`(() => { const stage = document.querySelector('.docx-stage'); stage.scrollTo({ top: Math.min(260, stage.scrollHeight - stage.clientHeight), left: 0 }); stage.dispatchEvent(new Event('scroll')) })()`)
 await delay(350)

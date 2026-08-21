@@ -75,7 +75,7 @@ const navigate = async fixture => {
 }
 const openEditor = () => evaluate(`(() => {
   if (document.querySelector('.docx-editor')) return true
-  const button = document.querySelector('.docx-toolbar button[title="打开 DOCX 页面编辑"]')
+  const button = document.querySelector('.docx-toolbar button[aria-label="打开 DOCX 页面编辑"], .docx-toolbar button[data-app-tooltip="打开 DOCX 页面编辑"], .docx-toolbar button[title="打开 DOCX 页面编辑"]')
   if (!button || button.disabled) return false
   button.click()
   return true
