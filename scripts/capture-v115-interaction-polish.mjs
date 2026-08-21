@@ -42,11 +42,14 @@ for (const sample of samples) {
 await waitFor(`document.querySelectorAll('.tabs-bar > .workspace-tabs .workspace-tab').length === 3`, 'three workspace tabs')
 
 const tabMetrics = await evaluate(`(() => {
-  const tab = document.querySelector('.tabs-bar > .workspace-tabs .workspace-tab')
+  const tab = document.querySelector('.tabs-bar > .workspace-tabs .workspace-tab.active') || document.querySelector('.tabs-bar > .workspace-tabs .workspace-tab')
+  tab.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   const rect = tab.getBoundingClientRect()
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, nativeTitleCount: document.querySelectorAll('.workspace-tabs [title]').length }
 })()`)
 await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 4, y: 740 })
+await delay(120)
+await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: tabMetrics.x + 2, y: tabMetrics.y })
 await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: tabMetrics.x, y: tabMetrics.y })
 await waitFor(`Boolean(document.querySelector('.workspace-tab-tooltip'))`, 'modern tab tooltip')
 const tooltip = await evaluate(`(() => {
@@ -92,8 +95,10 @@ const readOverlayMetrics = selector => evaluate(`(() => {
 const globalTooltipLight = await readOverlayMetrics('#longedit-app-tooltip')
 await capture('global-tooltip-light.png')
 
-await evaluate(`(() => { const target = [...document.querySelectorAll('button[data-app-tooltip]')].find(item => !item.closest('.workspace-tabs') && !item.matches('[data-testid="library-create-menu"]') && item.getBoundingClientRect().width > 0 && !item.disabled); target.setAttribute('title', '动态标题也使用应用提示层'); target.focus() })()`)
-await waitFor(`document.querySelector('#longedit-app-tooltip[data-visible="true"]')?.textContent === '动态标题也使用应用提示层' && !document.querySelector('button[title="动态标题也使用应用提示层"]')`, 'dynamic keyboard tooltip adoption')
+await evaluate(`(() => { const target = [...document.querySelectorAll('button[data-app-tooltip]')].find(item => !item.closest('.workspace-tabs') && !item.matches('[data-testid="library-create-menu"]') && item.getBoundingClientRect().width > 0 && !item.disabled); target.dataset.v115KeyboardTooltipTarget = 'true'; target.setAttribute('title', '动态标题也使用应用提示层') })()`)
+await waitFor(`document.querySelector('[data-v115-keyboard-tooltip-target="true"][data-app-tooltip="动态标题也使用应用提示层"]:not([title])')`, 'dynamic tooltip title adoption')
+await evaluate(`document.querySelector('[data-v115-keyboard-tooltip-target="true"]').focus()`)
+await waitFor(`document.querySelector('#longedit-app-tooltip[data-visible="true"]')?.textContent === '动态标题也使用应用提示层'`, 'dynamic keyboard tooltip presentation')
 const keyboardTooltip = await evaluate(`(() => { const target = document.activeElement; return { text: document.querySelector('#longedit-app-tooltip').textContent, describedBy: target.getAttribute('aria-describedby'), ariaLabel: target.getAttribute('aria-label'), nativeTitle: target.getAttribute('title') } })()`)
 await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
 await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
