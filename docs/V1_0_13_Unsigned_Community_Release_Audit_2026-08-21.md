@@ -6,6 +6,8 @@
 
 社区发布候选：`releaseCandidate=true`
 
+企业发布候选：`releaseCandidate=false`
+
 ## 候选范围
 
 - 主界面真实版本显示、更新状态提示及设置页精确入口。
