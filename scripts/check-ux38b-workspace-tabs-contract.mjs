@@ -23,6 +23,11 @@ for (const token of [
   '@keydown.right.prevent="focusAdjacentTab(tab, 1)"',
   'new ResizeObserver(updateScrollState)',
   'resizeObserver?.disconnect()',
+  "import { NTooltip } from 'naive-ui'",
+  'const tooltipDelay = 420',
+  ':content-style="documentTooltipStyle"',
+  'class="workspace-tab-tooltip"',
+  ':aria-label="`${tab.title}${tab.isDirty',
   'flex: 0 0 176px',
   'min-width: 156px',
   'scrollbar-width: none',
@@ -31,6 +36,7 @@ for (const token of [
 
 if (/scrollbar-width:\s*(thin|auto)/.test(source)) fail('native scrollbar styling returned')
 if (/min-width:\s*92px/.test(source)) fail('compressed 92px tab width returned')
+if (/(?:^|\s):?title=/.test(source)) fail('native browser tooltip returned to workspace tabs')
 if (!packageJson.scripts?.['check:ux38b-workspace-tabs']) fail('package checker command missing')
 if (!packageJson.scripts?.['audit:ux38b-workspace-tabs']) fail('desktop audit command missing')
 if (!packageJson.scripts?.['check:current-development-audit']?.includes('check-ux38b-workspace-tabs-contract')) fail('checker is outside the development audit chain')
