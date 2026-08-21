@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.15-U2",
+  "status": "accepted-for-unsigned-community-release",
+  "importedAt": "2026-08-22",
+  "githubRunId": 32518530525,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32518530525",
+  "workflowConclusion": "success",
+  "productSourceCommit": "9aaa810f9a96bb3e741551b966091bd1b67f5b1e",
+  "appVersion": "1.0.15",
+  "previousVersion": "0.6.2",
+  "currentInstallerSha256": "55737e36a552275af1413963650d234810e5e13b59e262a8b1e96c284d747262",
+  "installedExecutableSha256": "ce04e714ba4f435be823eaaf5bb979705b45b7b344b008021cc899b063367020",
+  "authenticodeStatus": "NotSigned",
+  "lifecycleChecks": { "passed": 22, "failed": 0 },
+  "installedArtifactChecks": { "passed": 18, "failed": 0 },
+  "communityReleaseCandidateEvidence": true,
+  "enterpriseReleaseCandidate": false,
+  "promotionEligible": false,
+  "sourceUserContentIncluded": false,
+  "files": [
+    { "path": "installed-artifact-smoke.json", "bytes": 9808, "sha256": "5a2afa3218be6c6c33fa87d6eda74d43592f32749572041f6af5a430a6aa9338" },
+    { "path": "installed-default-app-candidates.jpg", "bytes": 90114, "sha256": "d8e3cd31854b233025764b4b804a6b31a70254ce4df1a5c99710a05a5fa1aa9d", "visuallyReviewed": true },
+    { "path": "installed-default-app-lifecycle-evidence.json", "bytes": 981, "sha256": "84bd79939350ea1512d2997a1277213278481ddfc1448cf9ac5651606eff901d" },
+    { "path": "installed-docx-hyperlink-evidence.json", "bytes": 2859, "sha256": "e5f4077ff599fc11ae2c8b7f40b8001ca68dddf01b6a860567b85c694101daac" },
+    { "path": "installed-libreoffice-writer-docx-hyperlink.jpg", "bytes": 124249, "sha256": "6ae9c1946cff92839c48c95f2abddeb4383dd05d6dcdbf3b3ba0df3ffbf05d59", "visuallyReviewed": true },
+    { "path": "installed-microsoft-word-docx-hyperlink.jpg", "bytes": 120348, "sha256": "59cf06fa895562e8aca27d3d891d84ceb5f84d8f759af2fd0c628474d50f1fe3", "visuallyReviewed": true },
+    { "path": "installed-wps-writer-docx-hyperlink-readonly.jpg", "bytes": 114534, "sha256": "0eec74c9c39d098bdee867f0a91ed404f19aa70dabe8d2893214bf879f459f79", "visuallyReviewed": true },
+    { "path": "lifecycle-result.json", "bytes": 5798, "sha256": "ecb69a5c4e649dee965eeb4d9881e6d99221506ca269e84e9949b442e24bfd5b" },
+    { "path": "management-backup-index-evidence.json", "bytes": 2174, "sha256": "134f78572bea2ddb7e92ae44dc4c6802b167b1388674eb329a4a4da0079a1a56" },
+    { "path": "runner-build-receipt.json", "bytes": 569, "sha256": "802c2be8b220269d3decb4119b0621c6ae2a93e8ea95af720c1bdec82899a718" }
+  ]
+}
