@@ -2,28 +2,56 @@
   "schemaVersion": 1,
   "stage": "V1.0.15-interaction-polish",
   "status": "accepted",
-  "sourceCommit": "27cc5ac54a0c1d4b0ecba7514bfd081218c3a67e",
+  "sourceCommit": "ae4d3e140f35a11ca60dc0d69de78135ff749786",
   "evidenceFile": "interaction-evidence.json",
-  "evidenceSha256": "575dd7a3230972337a6eafed655a0a8145aa005d5308da29842784da08cbc98a",
+  "evidenceSha256": "8629fe1e9ea311a8673d537976e656b58eaa465d09f098cbd91220fdeede0217",
   "screenshots": [
     {
       "file": "workspace-tab-tooltip.png",
-      "bytes": 83877,
-      "sha256": "47525f35f06e0bc13405e19831657b344cb5a5a0477d13fc423c2aa52943b7c7"
+      "bytes": 84182,
+      "sha256": "e2d58958f51682299c315f884b830e5066742943041348f636cea123b7969940"
     },
     {
       "file": "context-menu-policy.png",
-      "bytes": 70803,
-      "sha256": "733bcf7d0d18052356e37d87fafbe490308bd01a2aa693a15c1cf53af24e4fae"
+      "bytes": 70890,
+      "sha256": "c8a50943c354b946cf130ad0ecc2be0523f8b628edc5d7df920f756d0bcb7774"
+    },
+    {
+      "file": "global-tooltip-light.png",
+      "bytes": 67721,
+      "sha256": "1bd8008c08a64ac122492159770957fb6a8f061545f28dbee8c54d19ea0514c2"
+    },
+    {
+      "file": "dropdown-light.png",
+      "bytes": 78409,
+      "sha256": "f136a64dff1ac60dee47055ea12275419c8368dedd3495a67586ad24e8c435b7"
+    },
+    {
+      "file": "dialog-light.png",
+      "bytes": 80013,
+      "sha256": "a1459c519ecf8e1414eb1ad62cfb9baaa482e4beeeb302179baff3748d24b4fa"
+    },
+    {
+      "file": "global-tooltip-dark-narrow.png",
+      "bytes": 69675,
+      "sha256": "9dd5954ee2102650f94b5f4ede63fcfafe35e1fd365a285247f77607f35c22dd"
+    },
+    {
+      "file": "dropdown-dark-narrow.png",
+      "bytes": 80608,
+      "sha256": "f3f46f50e62a88b47fffac16df9bfaab2580d0b54a1360154795ca8aa54ca091"
     }
   ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
   "visualReview": {
-    "reviewedAt": "2026-08-21",
     "workspaceShellAligned": true,
     "tooltipSurfaceAligned": true,
+    "globalTooltipPolicyAligned": true,
+    "dropdownSurfaceAligned": true,
+    "dialogSurfaceAligned": true,
+    "darkNarrowHighDpiAligned": true,
     "defaultWebViewMenuAbsent": true,
     "customFileTreeMenuVisible": true
-  },
-  "sourceUserContentIncluded": false,
-  "releaseCandidate": false
+  }
 }
