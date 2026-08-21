@@ -267,6 +267,7 @@
 import { computed, nextTick, reactive, ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
+import { useMessage } from 'naive-ui'
 import { Circle, CircleHelp, Link2, Maximize2, Network, Redo2, RotateCcw, Search, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { managedFileLocation, openManagedFile } from '../services/fileNavigation'
 import { useAppStore } from '../store/app'
@@ -288,6 +289,7 @@ const canvasRef = ref<HTMLCanvasElement | null>(null)
 const store = useAppStore()
 const router = useRouter()
 const route = useRoute()
+const message = useMessage()
 
 const graphData = ref<GraphData>({ nodes: [], edges: [] })
 const isLoading = ref(true)
@@ -466,7 +468,7 @@ const addGraphRelation = async () => {
     relationDraftTarget.value = ''
     await reloadAfterRelationMutation(source.path)
   } catch (error) {
-    window.alert(`添加图谱关系失败：${String(error)}`)
+    message.error(`添加图谱关系失败：${String(error)}`)
   } finally {
     relationSaving.value = false
   }
@@ -493,7 +495,7 @@ const removeGraphRelation = async (relation: SelectedRelation) => {
     })
     await reloadAfterRelationMutation(selectedPath)
   } catch (error) {
-    window.alert(`删除图谱关系失败：${String(error)}`)
+    message.error(`删除图谱关系失败：${String(error)}`)
   } finally {
     relationSaving.value = false
   }
@@ -807,7 +809,7 @@ const exportGraph = async (format: 'svg' | 'png') => {
     const bytes = format === 'svg' ? new TextEncoder().encode(svg) : await graphSvgToPng(svg)
     await writeFile(path, bytes)
   } catch (error) {
-    window.alert(`图谱导出失败：${String(error)}`)
+    message.error(`图谱导出失败：${String(error)}`)
   } finally {
     isExporting.value = false
   }
@@ -929,7 +931,7 @@ const sendToCanvas = async (node: GraphNode) => {
     })
     openManagedFile(router, path)
   } catch (error) {
-    window.alert(`生成画布失败：${String(error)}`)
+    message.error(`生成画布失败：${String(error)}`)
   } finally {
     isCreatingCanvas.value = false
   }
@@ -946,7 +948,7 @@ const createProjectNote = async (node: GraphNode) => {
     })
     openManagedFile(router, path)
   } catch (error) {
-    window.alert(`生成项目笔记失败：${String(error)}`)
+    message.error(`生成项目笔记失败：${String(error)}`)
   } finally {
     isCreatingProject.value = false
   }
@@ -959,7 +961,7 @@ const saveGraphCollection = async (node: GraphNode) => {
     const collection = await store.addGraphCollection(`${node.title} 关系`, node.path, mindmapDepth.value)
     router.push({ name: 'LibraryMode', query: { collection: collection.id } })
   } catch (error) {
-    window.alert(`保存图谱集合失败：${String(error)}`)
+    message.error(`保存图谱集合失败：${String(error)}`)
   } finally {
     isSavingCollection.value = false
   }

@@ -72,15 +72,17 @@
 
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
-import { NTooltip } from 'naive-ui'
+import { NTooltip, useDialog } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, FileText as FileTextIcon, X as XIcon } from 'lucide-vue-next'
 import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
+import { confirmAppAction } from '../services/appDialog'
 import { type TabInfo, useAppStore } from '../store/app'
 
 const router = useRouter()
 const store = useAppStore()
+const dialog = useDialog()
 const scrollRef = ref<HTMLElement | null>(null)
 const canScrollLeft = ref(false)
 const canScrollRight = ref(false)
@@ -167,7 +169,12 @@ const focusAdjacentTab = async (tab: TabInfo, direction: -1 | 1) => {
 }
 
 const close = async (tab: TabInfo) => {
-  if (tab.isDirty && !window.confirm(`“${tab.title}”有未保存修改，关闭后将丢失，是否继续？`)) return
+  if (tab.isDirty && !await confirmAppAction(dialog, {
+    title: '关闭未保存的标签？',
+    content: `“${tab.title}”包含未保存修改，关闭后将无法恢复。`,
+    positiveText: '放弃修改并关闭',
+    danger: true,
+  })) return
   const wasActive = store.activeTabId === tab.id
   store.removeTab(tab.id)
   if (!wasActive) return

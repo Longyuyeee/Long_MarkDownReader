@@ -11,11 +11,12 @@ for (const token of [
   'const undo = async () =>',
   'const redo = async () =>',
   'reloadFromDisk',
-  "window.confirm('Draw.io 还有未保存修改",
+  'confirmAppAction(dialog',
   "window.addEventListener('beforeunload', beforeUnload)",
   'container-type: inline-size',
   '@container (max-width: 760px)',
 ]) if (!drawio.includes(token)) fail(`Draw.io token missing: ${token}`)
+if (/window\.confirm\s*\(/.test(drawio)) fail('Draw.io native confirm returned')
 
 for (const token of [
   'class="history-button" title="撤销"',

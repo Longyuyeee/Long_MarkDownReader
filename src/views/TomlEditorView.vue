@@ -75,6 +75,7 @@ import { findFileFormat } from '../config/fileFormats'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { type TabInfo, useAppStore } from '../store/app'
 import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../utils/structuredAnalysis'
+import { confirmAppAction } from '../services/appDialog'
 
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string }
 interface Range { start: number; end: number }
@@ -118,7 +119,15 @@ const restore = async (tab: TabInfo) => { signature.value = tab.textSignature ||
 const load = async (discard = false) => { const id = ++loadId; analysisId++; clearTimer(); loading.value = true; loadError.value = ''; analysis.value = null; try { if (!path.value || format.value?.id !== 'toml') throw new Error('当前路径不是已注册的 TOML 文件'); const draft = currentTab.value; if (!discard && draft?.isDirty && draft.content !== undefined) { await restore(draft); return } const s = await invoke<Snapshot>(isExternal.value ? 'read_external_text_document' : 'read_text_document', { ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }), path: path.value, formatId: 'toml', readOptions: undefined }); if (id === loadId) await apply(s) } catch (e) { if (id === loadId) loadError.value = errorText(e) } finally { if (id === loadId) loading.value = false } }
 const reveal = (range: Range) => { if (!editor) return; const bytes = new TextEncoder().encode(content.value), point = (n: number) => new TextDecoder().decode(bytes.slice(0, Math.min(n, bytes.length))).length, from = point(range.start), to = Math.max(from, point(range.end)); editor.dispatch({ selection: { anchor: from, head: to }, effects: EditorView.scrollIntoView(from, { y: 'center' }) }); editor.focus() }
 const save = async (allowInvalid = false) => { if (!editor || readOnly.value || !dirty.value || saving.value) return; clearTimer(); const source = editor.state.doc.toString(); saving.value = true; try { const result = await analyze(source); if (!result.valid && !allowInvalid) { dialog.warning({ title: 'TOML 存在语法错误', content: '默认不会覆盖磁盘文件。可以继续修复，或明确按当前源码保存。', positiveText: '按源码保存', negativeText: '继续编辑', onPositiveClick: () => { void save(true) } }); return } const s = await invoke<Snapshot>(isExternal.value ? 'write_external_toml_source_document' : 'write_toml_source_document', { ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }), path: path.value, content: source, expectedSignature: signature.value, allowInvalid }); if (editor.state.doc.toString() === source) await apply(s); else { signature.value = s.signature; dirty.value = true; syncTab(true); schedule() } message.success(result.valid ? 'TOML 已安全保存' : 'TOML 已按源码保存') } catch (cause) { const e = cause as { code?: string }; if (e?.code === 'external-modified') dialog.warning({ title: '文件已在外部修改', content: errorText(cause), positiveText: '重新加载', negativeText: '保留编辑内容', onPositiveClick: () => { void load(true) } }); else message.error(`保存失败：${errorText(cause)}`) } finally { saving.value = false } }
-const reload = async () => { if (dirty.value && !window.confirm('重新读取会覆盖未保存的 TOML 源码，是否继续？')) return; await load(true) }
+const reload = async () => {
+  if (dirty.value && !await confirmAppAction(dialog, {
+    title: '重新读取 TOML？',
+    content: '磁盘源码将覆盖当前未保存的 TOML 修改。',
+    positiveText: '放弃修改并重新读取',
+    danger: true,
+  })) return
+  await load(true)
+}
 const keydown = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); void save() } }
 watch([path, isExternal], (_current, [previous]) => { if (previous) syncTab(); void load() })
 onMounted(async () => { await nextTick(); if (editorHost.value) editor = new EditorView({ state: EditorState.create({ doc: '', extensions: extensions(true) }), parent: editorHost.value }); await load(); window.addEventListener('keydown', keydown); offSave = await listen('command-save', () => { void save() }); offRefresh = await listen('command-refresh', () => { void reload() }) })

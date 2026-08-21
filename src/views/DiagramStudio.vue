@@ -106,6 +106,7 @@ import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.v
 import WorkspaceStatusBar from '../components/workspace/WorkspaceStatusBar.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
+import { confirmAppAction } from '../services/appDialog'
 import { diagramSvgToPng, prepareDiagramSvg, type DiagramBackground } from '../utils/diagramExport'
 
 interface DiagramDocument { path: string; content: string; signature: string }
@@ -294,10 +295,15 @@ const redo = () => {
   undoStack.value.push(source.value)
   restoreHistory(next)
 }
-const applySelectedTemplate = () => {
+const applySelectedTemplate = async () => {
   const template = templates.find(item => item.id === selectedTemplate.value)
   selectedTemplate.value = ''
-  if (!template || (dirty.value && !window.confirm(`使用“${template.name}”模板替换当前源码？`))) return
+  if (!template || (dirty.value && !await confirmAppAction(dialog, {
+    title: `应用“${template.name}”模板？`,
+    content: '模板将替换当前未保存的 Mermaid 源码。',
+    positiveText: '替换源码',
+    danger: true,
+  }))) return
   replaceSource(template.source, `已应用${template.name}模板`)
 }
 const selectNode = (node: StructureNode) => {
@@ -443,7 +449,12 @@ const handleKeydown = (event: KeyboardEvent) => {
   else if (event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? redo() : undo() }
   else if (event.key.toLowerCase() === 'y') { event.preventDefault(); redo() }
 }
-const mayLeave = () => !dirty.value || window.confirm('Mermaid 图表还有未保存修改，确定离开吗？')
+const mayLeave = async () => !dirty.value || await confirmAppAction(dialog, {
+  title: '离开图表工作室？',
+  content: '当前 Mermaid 图表仍有未保存修改，离开后将无法恢复。',
+  positiveText: '放弃修改并离开',
+  danger: true,
+})
 const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
 
 watch([diagramPath, isExternal], loadDiagram)

@@ -23,7 +23,7 @@ for (const token of [
   '@keydown.right.prevent="focusAdjacentTab(tab, 1)"',
   'new ResizeObserver(updateScrollState)',
   'resizeObserver?.disconnect()',
-  "import { NTooltip } from 'naive-ui'",
+  "import { NTooltip, useDialog } from 'naive-ui'",
   'const tooltipDelay = 420',
   ':content-style="documentTooltipStyle"',
   'class="workspace-tab-tooltip"',

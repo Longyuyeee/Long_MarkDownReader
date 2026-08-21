@@ -311,6 +311,7 @@ import { isActiveThemeDark } from '../config/themePresets'
 import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
+import { confirmAppAction } from '../services/appDialog'
 import TableChartEmbed from '../components/TableChartEmbed.vue'
 import MermaidDiagramEmbed from '../components/MermaidDiagramEmbed.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
@@ -1380,7 +1381,12 @@ const queueViewportSize = (entry?: ResizeObserverEntry) => {
 }
 const saveCanvas = async () => {
   if (!canvasPath.value || (!isExternal.value && !store.libraryPath) || !['dirty', 'error'].includes(saveState.value)) return
-  if (isExternal.value && !window.confirm('保存将覆盖当前外部 Canvas 源文件。确定继续吗？')) return
+  if (isExternal.value && !await confirmAppAction(dialog, {
+    title: '覆盖外部 Canvas？',
+    content: '保存会直接覆盖当前外部 Canvas 源文件。',
+    positiveText: '覆盖并保存',
+    danger: true,
+  })) return
   saveState.value = 'saving'
   try {
     const content = JSON.stringify(document, null, 2) + '\n'
@@ -1462,8 +1468,13 @@ const handleKeydown = (event: KeyboardEvent) => {
   else if (event.key === 'Delete' || event.key === 'Backspace') removeSelection()
   else if (event.key === 'Escape') { setTool('select'); clearSelection() }
 }
-const mayLeave = () => !['dirty', 'error'].includes(saveState.value)
-  || window.confirm('Canvas 还有未保存修改，确定离开并丢弃这些修改吗？')
+const mayLeave = async () => !['dirty', 'error'].includes(saveState.value)
+  || await confirmAppAction(dialog, {
+    title: '离开 Canvas？',
+    content: '当前画布还有未保存修改，离开后将无法恢复。',
+    positiveText: '放弃修改并离开',
+    danger: true,
+  })
 const beforeUnload = (event: BeforeUnloadEvent) => {
   if (!['dirty', 'error'].includes(saveState.value)) return
   event.preventDefault()

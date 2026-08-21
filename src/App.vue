@@ -56,6 +56,18 @@
             </div>
           </div>
         </transition>
+        <transition name="modal-fade">
+          <div v-if="showDiscardConfirm" class="exit-modal-overlay" @click.self="resolveDiscardConfirm(false)">
+            <div class="exit-modal-card" role="alertdialog" aria-modal="true" aria-labelledby="discard-confirm-title" aria-describedby="discard-confirm-content">
+              <div id="discard-confirm-title" class="modal-header">{{ discardConfirmTitle }}</div>
+              <div id="discard-confirm-content" class="modal-body">{{ discardConfirmContent }}</div>
+              <div class="modal-footer">
+                <n-button quaternary @click="resolveDiscardConfirm(false)">取消</n-button>
+                <n-button secondary type="error" @click="resolveDiscardConfirm(true)">放弃修改并继续</n-button>
+              </div>
+            </div>
+          </div>
+        </transition>
       </div>
     </n-message-provider>
     </n-dialog-provider>
@@ -202,6 +214,10 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
 
 const showPalette = ref(false)
 const showExitModal = ref(false)
+const showDiscardConfirm = ref(false)
+const discardConfirmTitle = ref('放弃未保存修改？')
+const discardConfirmContent = ref('未保存内容将无法恢复。')
+let discardConfirmResolver: ((confirmed: boolean) => void) | null = null
 const dontAskAgain = ref(false)
 const routeErrorMessage = ref('')
 let routeMeasurementStartedAt = performance.now()
@@ -279,11 +295,11 @@ const finishRouteMeasurement = (sequence = routeMeasurementSequence) => {
   recordRoutePerformance(routeMeasurementName, totalElapsedMs)
 }
 
-const removeBeforeEach = router.beforeEach((to) => {
+const removeBeforeEach = router.beforeEach(async (to) => {
   routeErrorMessage.value = ''
   startRouteMeasurement(to.name)
   if (!isMainWindow && to.name === 'LibraryMode') {
-    if (confirmDiscardUnsaved()) void appWindow.close()
+    if (await confirmDiscardUnsaved('关闭当前窗口？')) void appWindow.close()
     return false
   }
   if (to.name === 'LibraryMode' && typeof to.query.path !== 'string' && store.activeTabId) {
@@ -345,14 +361,13 @@ const maximizeWindow = async () => {
 }
 const closeWindow = async () => {
   if (!isMainWindow) {
-    if (confirmDiscardUnsaved()) await appWindow.close()
+    if (await confirmDiscardUnsaved('关闭当前窗口？')) await appWindow.close()
     return
   }
   // 识别当前路由：如果是临时编辑界面，关闭时应重置回到主库
   if (router.currentRoute.value.name === 'TempMode') {
     if (store.isTempDirty) {
-      // 窗口关闭流程是同步的，必须用同步 confirm，async dialog 无法在此处工作
-      if (!window.confirm('临时编辑中有未保存的修改，确定关闭吗？')) return
+      if (!await requestDiscardConfirm('关闭临时编辑？', '当前临时文档还有未保存修改，关闭后将无法恢复。')) return
       store.isTempDirty = false
     }
     await router.push({ name: 'LibraryMode' })
@@ -366,9 +381,24 @@ const closeWindow = async () => {
     showExitModal.value = true 
   }
 }
-const confirmDiscardUnsaved = () => {
+const resolveDiscardConfirm = (confirmed: boolean) => {
+  showDiscardConfirm.value = false
+  const resolver = discardConfirmResolver
+  discardConfirmResolver = null
+  resolver?.(confirmed)
+}
+const requestDiscardConfirm = (title: string, content: string) => {
+  if (showDiscardConfirm.value) return Promise.resolve(false)
+  discardConfirmTitle.value = title
+  discardConfirmContent.value = content
+  showDiscardConfirm.value = true
+  return new Promise<boolean>(resolve => { discardConfirmResolver = resolve })
+}
+const confirmDiscardUnsaved = (title = '退出 Long编辑？') => {
   const dirtyCount = store.tabs.filter(tab => tab.isDirty).length + (store.isTempDirty ? 1 : 0)
-  return dirtyCount === 0 || window.confirm(`仍有 ${dirtyCount} 个文档包含未保存修改，彻底退出后将丢失，是否继续？`)
+  return dirtyCount === 0
+    ? Promise.resolve(true)
+    : requestDiscardConfirm(title, `仍有 ${dirtyCount} 个文档包含未保存修改，继续后这些内容将无法恢复。`)
 }
 const handleHide = () => { 
   if (dontAskAgain.value) {
@@ -377,8 +407,8 @@ const handleHide = () => {
   showExitModal.value = false; 
   appWindow.hide() 
 }
-const handleExit = () => { 
-  if (!confirmDiscardUnsaved()) return
+const handleExit = async () => {
+  if (!await confirmDiscardUnsaved()) return
   if (dontAskAgain.value) {
     store.updateConfig({ exitStrategy: 'quit' })
   }
@@ -398,6 +428,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  resolveDiscardConfirm(false)
   window.removeEventListener('keydown', handleGlobalKeydown)
   window.removeEventListener('beforeunload', handleBeforeUnload)
   removeBeforeEach()

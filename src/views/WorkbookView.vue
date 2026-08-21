@@ -797,6 +797,7 @@ import WorkspaceStatusBar from '../components/workspace/WorkspaceStatusBar.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
+import { confirmAppAction } from '../services/appDialog'
 import { useDialog, useMessage } from 'naive-ui'
 import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, MoreHorizontal as MoreIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, Save as SaveIcon, SlidersHorizontal as SlidersIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
@@ -4562,7 +4563,12 @@ watch(() => [selectedDrawingId.value, selectedChartSeriesIndex.value, workbook.v
   targetSeriesColor.value = series?.color || chartThemePalette.value[series?.index || 0] || '#2A6FDB'
   void loadChartPreview()
 })
-onBeforeRouteLeave(() => !dirtyCount.value || window.confirm(`还有 ${dirtyCount.value} 个单元格未保存，确定离开吗？`))
+onBeforeRouteLeave(() => !dirtyCount.value || confirmAppAction(dialog, {
+  title: '离开工作簿？',
+  content: `还有 ${dirtyCount.value} 个单元格未保存，离开后将无法恢复。`,
+  positiveText: '放弃修改并离开',
+  danger: true,
+}))
 onMounted(() => {
   void loadWorkbook()
   resizeObserver = new ResizeObserver(() => { if (scrollRef.value) viewportHeight.value = scrollRef.value.clientHeight })

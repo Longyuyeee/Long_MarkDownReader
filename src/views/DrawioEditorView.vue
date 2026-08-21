@@ -168,6 +168,7 @@ import {
 } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
+import { confirmAppAction } from '../services/appDialog'
 import { useAppStore } from '../store/app'
 
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string }
@@ -321,9 +322,14 @@ const load = async (discardDraft = false) => {
     loading.value = false
   }
 }
-const reloadFromDisk = () => {
-  if (dirty.value && !window.confirm('重新读取会丢弃当前 Draw.io 内存草稿，确定继续吗？')) return
-  void load(true)
+const reloadFromDisk = async () => {
+  if (dirty.value && !await confirmAppAction(dialog, {
+    title: '重新读取 Draw.io？',
+    content: '当前内存草稿将被磁盘内容替换。',
+    positiveText: '放弃草稿并重新读取',
+    danger: true,
+  })) return
+  await load(true)
 }
 const selectPage = (id: string) => {
   activePageId.value = id
@@ -441,7 +447,11 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (event.key.toLowerCase() === 'z') { event.preventDefault(); void (event.shiftKey ? redo() : undo()) }
   else if (event.key.toLowerCase() === 'y') { event.preventDefault(); void redo() }
 }
-const mayLeave = () => !dirty.value || window.confirm('Draw.io 还有未保存修改，确定离开吗？磁盘文件不会改变，草稿仍保留在当前标签中。')
+const mayLeave = async () => !dirty.value || await confirmAppAction(dialog, {
+  title: '离开 Draw.io 编辑器？',
+  content: '当前标签仍有未保存修改。磁盘文件不会改变，草稿会继续保留在标签中。',
+  positiveText: '离开编辑器',
+})
 const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
 onBeforeRouteLeave(() => mayLeave())
 onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
