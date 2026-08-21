@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "status": "accepted",
+  "expected": {
+    "settingsNavigationMaximumShiftPx": 1,
+    "categorySwitchPanelScrollTop": 0,
+    "updateModalMaximumWidthPx": 462,
+    "testedViewports": [
+      [
+        1280,
+        800
+      ],
+      [
+        1000,
+        700
+      ],
+      [
+        480,
+        700
+      ]
+    ]
+  },
+  "actual": {
+    "appearance": {
+      "navigation": {
+        "x": 51.203125,
+        "y": 114,
+        "width": 190,
+        "height": 362
+      },
+      "panelScrollTop": 640,
+      "contentOverflow": 0,
+      "pageOverflow": 0
+    },
+    "formats": {
+      "navigation": {
+        "x": 51.203125,
+        "y": 114,
+        "width": 190,
+        "height": 362
+      },
+      "panelScrollTop": 0,
+      "contentOverflow": 0,
+      "pageOverflow": 0
+    },
+    "system": {
+      "navigation": {
+        "x": 51.203125,
+        "y": 114,
+        "width": 190,
+        "height": 362
+      },
+      "panelScrollTop": 0,
+      "contentOverflow": 0,
+      "pageOverflow": 0
+    },
+    "updateWide": {
+      "viewport": [
+        1000,
+        700
+      ],
+      "modal": {
+        "x": 270,
+        "y": 150.109375,
+        "width": 460,
+        "height": 399.78125,
+        "right": 730,
+        "bottom": 549.890625
+      },
+      "actions": {
+        "width": 412,
+        "height": 34
+      },
+      "pageOverflow": 0,
+      "title": "发现新版本",
+      "version": "v1.0.12v1.0.13"
+    },
+    "updateNarrow": {
+      "viewport": [
+        480,
+        700
+      ],
+      "modal": {
+        "x": 12,
+        "y": 129.109375,
+        "width": 456,
+        "height": 441.78125,
+        "right": 468,
+        "bottom": 570.890625
+      },
+      "actions": {
+        "width": 408,
+        "height": 76
+      },
+      "pageOverflow": 0,
+      "title": "发现新版本",
+      "version": "v1.0.12v1.0.13"
+    },
+    "navigationPositions": [
+      114,
+      114,
+      114
+    ],
+    "runtimeErrorCount": 0
+  },
+  "passed": true
+}

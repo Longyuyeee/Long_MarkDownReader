@@ -20,7 +20,7 @@
             <span>{{ category.label }}</span>
           </button>
         </nav>
-        <section class="settings-panel">
+        <section ref="settingsPanelRef" class="settings-panel">
           <header class="settings-category-heading">
             <div>
               <h2>{{ activeCategoryMeta.label }}</h2>
@@ -444,9 +444,12 @@ const categoryForRoute = (): SettingsCategory => {
   return isSettingsCategory(route.query.category) ? route.query.category : 'library'
 }
 const activeCategory = ref<SettingsCategory>(categoryForRoute())
+const settingsPanelRef = ref<HTMLElement | null>(null)
 const activeCategoryMeta = computed(() => settingsCategories.find(category => category.id === activeCategory.value) || settingsCategories[0])
 const selectSettingsCategory = (category: SettingsCategory) => {
+  if (category === activeCategory.value) return
   activeCategory.value = category
+  settingsPanelRef.value?.scrollTo({ top: 0, behavior: 'auto' })
   router.replace({ name: 'Settings', query: { category } })
 }
 
@@ -761,6 +764,7 @@ onMounted(async () => {
 
 watch(() => [route.query.category, route.query.focus], () => {
   activeCategory.value = categoryForRoute()
+  settingsPanelRef.value?.scrollTo({ top: 0, behavior: 'auto' })
 })
 
 // 深度监听配置对象，实现实时保存
@@ -1200,19 +1204,21 @@ onUnmounted(() => {
 
 .settings-content {
   flex: 1;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .settings-layout {
+  height: 100%;
+  min-height: 0;
   display: grid;
   grid-template-columns: 190px minmax(0, 1fr);
-  align-items: start;
+  align-items: stretch;
   gap: 28px;
 }
 
 .settings-navigation {
-  position: sticky;
-  top: 16px;
+  align-self: start;
   display: grid;
   gap: 4px;
   padding: 6px;
@@ -1241,7 +1247,14 @@ onUnmounted(() => {
 .settings-navigation button.active { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.11); font-weight: 700; }
 .settings-navigation .n-icon { flex: none; font-size: 17px; }
 
-.settings-panel { min-width: 0; }
+.settings-panel {
+  min-width: 0;
+  min-height: 0;
+  padding-right: 4px;
+  padding-bottom: 40px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
 
 .settings-category-heading {
   min-height: 56px;
@@ -2349,7 +2362,8 @@ onUnmounted(() => {
 .theme-vscode .method { color: #dcdcaa; }
 
 @media (max-width: 900px) {
-  .settings-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .settings-content { overflow-y: auto; }
+  .settings-layout { height: auto; min-height: 100%; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 16px; }
   .settings-navigation {
     position: sticky;
     top: 0;
@@ -2359,6 +2373,7 @@ onUnmounted(() => {
     overflow-x: auto;
   }
   .settings-navigation button { width: auto; min-width: max-content; }
+  .settings-panel { min-height: auto; padding-right: 0; padding-bottom: 0; overflow: visible; scrollbar-gutter: auto; }
   .settings-category-heading { margin-bottom: 14px; }
 }
 

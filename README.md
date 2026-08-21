@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.12"><img src="https://img.shields.io/badge/Release-v1.0.12-cca43b" alt="Release v1.0.12"></a>
+  <a href="docs/RELEASE_NOTES_v1.0.13.md"><img src="https://img.shields.io/badge/Next-v1.0.13-cca43b" alt="v1.0.13 candidate"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -31,7 +31,7 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.12 已发布，新增图片色彩调整、光标锚定滚轮缩放、拖拽平移与双击查看，并修正 PDF 公开能力说明。完整范围与边界见 [v1.0.12 发布说明](docs/RELEASE_NOTES_v1.0.12.md)。
+> v1.0.13 正在执行发布门禁，新增主界面版本与更新入口，提供更紧凑的更新提示和稳定的设置分类导航，并清理用户可见内部术语、加固格式与发布事实审计。当前可下载稳定版仍为 v1.0.12；候选范围见 [v1.0.13 发布说明](docs/RELEASE_NOTES_v1.0.13.md)。
 
 ## 下载
 
@@ -51,6 +51,19 @@ a272b8eab955cf76ccda1ffa2843dc9785be75eaa38ae233970e9283b51cd8c1  LongEdit_1.0.1
 ```
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。
+
+## v1.0.13 候选
+
+这一补丁围绕版本可见性、界面语言和发布事实可靠性收口：
+
+- 主资料库左下角直接显示真实运行版本；点击版本可进入“设置 → 系统与更新”，发现新版本时显示状态提示。
+- 更新提示以紧凑信息卡说明版本、安装校验和自动重启；桌面设置页左侧分类保持固定，切换分类只滚动右侧内容。
+- 工作台、知识图谱与演示文稿界面移除残余英文和内部开发编号，改用用户能够理解的中文能力名称。
+- 43 类格式、91 个扩展名统一核对路由、能力层级、保存模式、writer、发布配置、外部依赖与安全降级通道。
+- Windows 安装包证据采集兼容不同 PowerShell 模块环境，并继续记录真实 SHA-256 与 `NotSigned` 边界。
+- 官方 v1.0.11 -> v1.0.12 应用内更新已通过托管 Windows 12/12 检查，为 v1.0.13 发布建立更新基线。
+
+候选不等于正式发布。完整范围、测试事实与边界见 [v1.0.13 发布说明](docs/RELEASE_NOTES_v1.0.13.md) 和 [发布审计](docs/V1_0_13_Unsigned_Community_Release_Audit_2026-08-21.md)。
 
 ## v1.0.12
 
@@ -216,7 +229,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
-开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选审计见 [v1.0.12 发布审计](docs/V1_0_12_Unsigned_Community_Release_Audit_2026-08-20.md)。
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选审计见 [v1.0.13 发布审计](docs/V1_0_13_Unsigned_Community_Release_Audit_2026-08-21.md)。
 
 ## 许可证
 

@@ -49,7 +49,16 @@ requireTokens(service, [
   "invoke<CommunityUpdateInfo>('check_community_update')",
   "invoke('install_community_update'",
 ], 'frontend updater service')
-requireTokens(modal, ['发现新版本', 'SHA-256', '下载并安装', '安装完成后 Long编辑会自动重新打开', 'checkForUpdates(false)'], 'automatic update prompt')
+requireTokens(modal, [
+  '发现新版本',
+  'SHA-256',
+  '下载并安装',
+  '安装完成后 Long编辑会自动重新打开',
+  'checkForUpdates(false)',
+  ':style="updateModalStyle"',
+  "width: 'min(460px, calc(100vw - 24px))'",
+  'releaseHighlights',
+], 'automatic update prompt')
 requireTokens(settings, ['每 24 小时自动检查', '检查更新', '下载并安装'], 'update settings')
 requireTokens(app, ['<AppUpdater v-if="isMainWindow" />', "import AppUpdater from './components/AppUpdater.vue'"], 'application shell')
 

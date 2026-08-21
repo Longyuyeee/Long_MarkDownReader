@@ -35,7 +35,8 @@ export const withTimeout = <T>(promise: Promise<T>, timeoutMs: number, operation
   })
 
 export const isTauriRuntime = () =>
-  typeof window !== 'undefined' && Boolean(window.__TAURI_INTERNALS__)
+  typeof window !== 'undefined'
+  && typeof (window.__TAURI_INTERNALS__ as { invoke?: unknown } | undefined)?.invoke === 'function'
 
 export const invoke = <T>(
   command: string,

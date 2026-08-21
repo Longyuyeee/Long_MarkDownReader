@@ -1,7 +1,7 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "1.0.12",
+  "version": "1.0.13",
   "type": "module",
   "displayName": "Long编辑",
   "scripts": {
@@ -257,6 +257,7 @@
     "check:u2-github-hosted-workflow": "node scripts/check-u2-github-hosted-workflow.mjs",
     "check:v1-community-release": "node scripts/check-v1-community-release.mjs",
     "check:community-updater": "node scripts/check-community-updater-contract.mjs",
+    "audit:update-settings-layout": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-update-settings-layout-audit.ps1",
     "check:v1-managed-updater-lifecycle": "node scripts/check-v106-managed-updater-lifecycle.mjs",
     "check:v107-managed-updater-lifecycle": "node scripts/check-v107-managed-updater-lifecycle.mjs",
     "check:v108-managed-updater-lifecycle": "node scripts/check-v108-managed-updater-lifecycle.mjs",

@@ -12,6 +12,9 @@ for (const token of [
   'class="settings-navigation"',
   'activeCategoryMeta.description',
   "router.replace({ name: 'Settings', query: { category } })",
+  'ref="settingsPanelRef"',
+  "settingsPanelRef.value?.scrollTo({ top: 0, behavior: 'auto' })",
+  'scrollbar-gutter: stable',
   '@media (max-width: 900px)',
   'grid-auto-flow: column',
 ]) requireText(token, `设置分类导航合同缺失：${token}`)
