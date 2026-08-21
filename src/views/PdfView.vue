@@ -506,7 +506,7 @@ import { useDialog, useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
-import { confirmAppAction } from '../services/appDialog'
+import { confirmAppAction, promptAppAction } from '../services/appDialog'
 import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity.vue'
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
@@ -2087,25 +2087,39 @@ const captureTextSelection = () => {
   }, 0)
 }
 
-const createSelectionAnnotation = (color: PdfAnnotationColor, withComment: boolean) => {
+const createSelectionAnnotation = async (color: PdfAnnotationColor, withComment: boolean) => {
   const tool = selectionTool.value
   if (!tool.show) return
   annotationColor.value = color
-  const comment = withComment ? window.prompt('为这段高亮添加评论（可留空）', '') : ''
+  const comment = withComment ? await promptAppAction(dialog, {
+    title: '添加高亮评论',
+    content: '评论可以留空，高亮范围不会改变。',
+    positiveText: '保存高亮',
+    multiline: true,
+  }) : ''
   if (withComment && comment === null) return
   addAnnotation(makeAnnotation('highlight', tool.page, tool.rects, tool.quote, comment || '', color))
   dismissSelectionTool()
 }
 
-const createAreaAnnotation = (page: number, rect: PdfAnnotationRect) => {
-  const comment = window.prompt('区域批注评论（可留空）', '')
+const createAreaAnnotation = async (page: number, rect: PdfAnnotationRect) => {
+  const comment = await promptAppAction(dialog, {
+    title: '添加区域批注',
+    content: '为当前框选区域补充评论，也可以留空。',
+    positiveText: '保存区域批注',
+    multiline: true,
+  })
   if (comment === null) return
   addAnnotation(makeAnnotation('area', page, [rect], '', comment))
   areaMode.value = false
 }
 
-const createPageComment = () => {
-  const comment = window.prompt(`为第 ${currentPage.value} 页添加评论`, '')
+const createPageComment = async () => {
+  const comment = await promptAppAction(dialog, {
+    title: `为第 ${currentPage.value} 页添加评论`,
+    positiveText: '添加页评论',
+    multiline: true,
+  })
   if (!comment?.trim()) return
   addAnnotation(makeAnnotation('comment', currentPage.value, [], '', comment.trim()))
 }
@@ -2459,13 +2473,20 @@ const loadPdf = async () => {
     }
     loadingTask.onProgress = (progress: { loaded: number; total: number }) => { if (progress.total) loadProgress.value = Math.min(100, Math.round(progress.loaded / progress.total * 100)) }
     loadingTask.onPassword = (updatePassword: (password: string) => void) => {
-      const password = window.prompt('此 PDF 受密码保护，请输入密码')
-      if (password !== null) updatePassword(password)
-      else {
-        error.value = '已取消输入 PDF 密码'
-        loading.value = false
-        loadingTask?.destroy()
-      }
+      void promptAppAction(dialog, {
+        title: '打开受保护的 PDF',
+        content: '此 PDF 需要密码。密码只用于当前本地打开操作。',
+        placeholder: '输入 PDF 密码',
+        positiveText: '打开 PDF',
+        password: true,
+      }).then(password => {
+        if (password !== null) updatePassword(password)
+        else {
+          error.value = '已取消输入 PDF 密码'
+          loading.value = false
+          loadingTask?.destroy()
+        }
+      })
     }
     const document = await loadingTask.promise
     pdfDocument.value = document

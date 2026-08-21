@@ -199,6 +199,7 @@ import { useAppStore } from '../store/app'
 import TableChartEditor from '../components/TableChartEditor.vue'
 import TableDashboard, { type DashboardItem } from '../components/TableDashboard.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import { promptAppAction } from '../services/appDialog'
 
 type ViewKind = 'grid' | 'board' | 'chart' | 'dashboard'
 type ChartType = 'bar' | 'line' | 'pie' | 'scatter'
@@ -486,8 +487,12 @@ const addView = (kind: ViewKind, event?: MouseEvent) => {
   markDirty()
   ;(event?.currentTarget as HTMLElement | undefined)?.closest('details')?.removeAttribute('open')
 }
-const renameView = (view: TableViewDefinition) => {
-  const name = window.prompt('视图名称', view.name)?.trim()
+const renameView = async (view: TableViewDefinition) => {
+  const name = (await promptAppAction(dialog, {
+    title: '重命名视图',
+    initialValue: view.name,
+    positiveText: '保存名称',
+  }))?.trim()
   if (name && name.length <= 120) { view.name = name; markDirty() }
 }
 const deleteView = (view: TableViewDefinition) => {
