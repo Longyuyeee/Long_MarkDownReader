@@ -427,20 +427,20 @@ for (const fixture of nativeDocxFixtures) {
   })()`)
   if (editorAvailable) await waitFor(`document.querySelector('.docx-editor') !== null`, `${fixture.producerId} installed DOCX editor`)
   await waitFor(
-    `(() => {
-      const select = document.querySelector('.docx-editor .edit-field select')
-      if (!select || select.options.length === 0) return false
-      return [...select.options].filter(item => item.textContent.trim().startsWith('链接文字')).length === ${fixture.expectedEditableLinks}
-    })()`,
+    `document.querySelector('.docx-editor .edit-field select')?.options.length > 0`,
     `${fixture.producerId} installed DOCX text targets ready`,
-    1200,
   )
   const initialState = await evaluate(`(() => {
     const select = document.querySelector('.docx-editor .edit-field select')
     const labels = select ? [...select.options].map(item => item.textContent.trim()) : []
+    const buttons = [...document.querySelectorAll('button')]
+      .filter(item => ['文本', '样式', '图片说明'].includes(item.textContent.trim()))
     return {
+      targetLabels: labels,
       linkTargetLabels: labels.filter(label => label.startsWith('链接文字')),
       editableHyperlinkCount: document.querySelectorAll('.docx-workspace .editable-hyperlink').length,
+      modeButtons: buttons.map(item => ({ text: item.textContent.trim(), disabled: item.disabled, className: item.className })),
+      editorHtml: document.querySelector('.docx-editor')?.outerHTML.slice(0, 1200) || '',
     }
   })()`)
   if (initialState.linkTargetLabels.length !== fixture.expectedEditableLinks || initialState.editableHyperlinkCount !== fixture.expectedEditableLinks) {
