@@ -425,7 +425,7 @@ for (const fixture of nativeDocxFixtures) {
   })()`)
   if (editorAvailable) await waitFor(`document.querySelector('.docx-editor') !== null`, `${fixture.producerId} installed DOCX editor`)
   const textModeSelected = await evaluate(`(() => {
-    const button = [...document.querySelectorAll('.docx-editor-tabs button')]
+    const button = [...document.querySelectorAll('.edit-mode-tabs button')]
       .find(item => item.textContent.trim() === '文本')
     if (!button || button.disabled) return false
     button.click()
