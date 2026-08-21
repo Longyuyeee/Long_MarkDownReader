@@ -1,6 +1,6 @@
 # v1.0.14 无签名社区版发布审计
 
-状态：**候选准备中**
+状态：**候选门禁通过，待发布**
 
 渠道：`community-unsigned`
 
@@ -21,6 +21,13 @@
 3. 发布 GitHub Release，上传两个安装器与 `SHA256SUMS.txt`。
 4. 从远端重新下载三个附件并核对大小与 SHA-256。
 5. 发布后单独观察官方 `v1.0.13 -> v1.0.14` 应用内更新、自动重启和合成资料保留。
+
+## 实际结果
+
+- 本地 `npm run ci:patch-release` 全部通过，生产依赖漏洞为 0。
+- GitHub Quality Gate [32462815326](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32462815326) 通过。
+- 托管 Windows 生命周期 [32462354721](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32462354721) 通过：22/22 安装生命周期、18/18 安装后工作区检查，失败 0。
+- 本地构建生成 NSIS 与 MSI，版本均为 1.0.14，Authenticode 状态均为 `NotSigned`。
 
 ## 当前边界
 

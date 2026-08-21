@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.14",
+  "status": "ready-to-publish-hosted-lifecycle-passed-local-smoke-blocked-existing-single-instance",
+  "appVersion": "1.0.14",
+  "capturedAt": "2026-08-21T08:42:00Z",
+  "sourceCommit": "cd5c43b13e09fdae861387c5369462deae2524da",
+  "sourceVersion": "1.0.14",
+  "build": { "command": "npm run tauri -- build", "completed": true, "frontendTypeCheckPassed": true, "frontendProductionBuildPassed": true, "rustReleaseBuildPassed": true, "msiBundlePassed": true, "nsisBundlePassed": true },
+  "qualityGate": { "status": "passed", "runId": 32462815326, "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32462815326", "headCommit": "240c35d01e84ebf11c08a1eb7b0d83ee0c64da23" },
+  "artifacts": [
+    { "target": "release-executable", "fileName": "tauri-app.exe", "sizeBytes": 107179520, "sha256": "301c890e5295cf51052fd8b51103b62427ab398d4b002cfb83bc041006ca35a5", "authenticodeStatus": "NotSigned", "fileVersion": "1.0.14", "productVersion": "1.0.14" },
+    { "target": "msi", "fileName": "LongEdit_1.0.14_x64_zh-CN.msi", "sizeBytes": 73613312, "sha256": "194816764a99b86aff486cb9bce71f75a5074dfa4ba3648c821c26e01d5713ee", "authenticodeStatus": "NotSigned", "productVersion": "1.0.14" },
+    { "target": "nsis", "fileName": "LongEdit_1.0.14_x64-setup.exe", "sizeBytes": 65568349, "sha256": "889ece196cc70ae33b171c1e14d366ca7f024c33709736417304d92200991499", "authenticodeStatus": "NotSigned", "fileVersion": "1.0.14", "productVersion": "1.0.14" }
+  ],
+  "checksumFile": { "fileName": "SHA256SUMS.txt", "sizeBytes": 192, "sha256": "4891c0f845eb03f4552a0b92f2ddf4bc0d535c0320f9cb357398281cbac4ad2d" },
+  "runtimeSmoke": { "status": "blocked-existing-single-instance", "existingProductProcessCount": 1, "executableStarted": false, "installerExecuted": false, "userProcessTerminated": false },
+  "hostedInstalledLifecycle": {
+    "status": "passed", "runId": 32462354721, "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32462354721", "sourceCommit": "cd5c43b13e09fdae861387c5369462deae2524da",
+    "currentInstallerSizeBytes": 76079585, "currentInstallerSha256": "da5f9567ad047bfb31ab0bd4d29e0a7622fe643dd988c5749111a050eafbf515",
+    "installedExecutableSizeBytes": 123371520, "installedExecutableSha256": "c6cef3256887355f90005adad9d01abbeb062c22520361b306349135855d9f5f",
+    "lifecycleChecksPassed": 22, "installedWorkspaceChecksPassed": 18, "failedChecks": 0, "sourceUserContentIncluded": false, "evidenceManifest": "hosted-lifecycle/import-manifest.json"
+  },
+  "releaseReceipt": null,
+  "boundaries": { "releaseCandidate": true, "communityUnsigned": true, "enterprisePromotionEligible": false, "authenticodeRequired": false, "managedUpdaterReleaseAssetsPresent": false, "legacyTauriUpdaterArtifactsPresent": false, "managedUpdaterEnabled": true, "artifactFilesCommitted": false, "sourceUserContentIncluded": false }
+}

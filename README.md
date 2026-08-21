@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="docs/RELEASE_NOTES_v1.0.14.md"><img src="https://img.shields.io/badge/Next-v1.0.14-cca43b" alt="v1.0.14 candidate"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14"><img src="https://img.shields.io/badge/Stable-v1.0.14-16a34a" alt="v1.0.14 stable"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -31,28 +31,28 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.14 正在执行发布门禁，集中修复窄窗口布局、资料库侧栏入口含义和 Markdown 标签可靠性。当前可下载稳定版仍为 v1.0.13；候选范围见 [v1.0.14 发布说明](docs/RELEASE_NOTES_v1.0.14.md)。
+> v1.0.14 已完成本地与远端质量门禁、真实 Windows 安装生命周期和附件摘要核验，集中修复窄窗口布局、资料库侧栏入口含义与 Markdown 标签可靠性。完整范围见 [v1.0.14 发布说明](docs/RELEASE_NOTES_v1.0.14.md)。
 
 ## 下载
 
-Long编辑 v1.0.13 支持 Windows 10/11 x64。
+Long编辑 v1.0.14 支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.0.13_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.13/LongEdit_1.0.13_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.0.13_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.13/LongEdit_1.0.13_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.0.13](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.13) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.0.14_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.14/LongEdit_1.0.14_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.0.14_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.14/LongEdit_1.0.14_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.0.14](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14) | Release Notes 与 SHA-256 |
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 `SHA256SUMS.txt` 核对文件。
 
 ```text
-f1fdd8ba55e47112c19a4e07eb508f1f2b2b12c3b56e6567d2efeed7ce3f67eb  LongEdit_1.0.13_x64-setup.exe
-f06495df25b4fd1cba725d9dd3e724c8a018c856805977187cdc4d9286ef3c81  LongEdit_1.0.13_x64_zh-CN.msi
+889ece196cc70ae33b171c1e14d366ca7f024c33709736417304d92200991499  LongEdit_1.0.14_x64-setup.exe
+194816764a99b86aff486cb9bce71f75a5074dfa4ba3648c821c26e01d5713ee  LongEdit_1.0.14_x64_zh-CN.msi
 ```
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。
 
-## v1.0.14 候选
+## v1.0.14
 
 这一补丁围绕小窗口稳定性、资料库侧栏可理解性与标签可靠性收口：
 
@@ -64,7 +64,7 @@ v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手
 - 标签解析排除中英文句末标点，`#product.` 会正确识别为 `#product`。
 - 真实 Tauri 审计强制使用当前编译版本，并核对界面版本与发布事实源。
 
-候选不等于正式发布。完整范围与边界见 [v1.0.14 发布说明](docs/RELEASE_NOTES_v1.0.14.md) 和 [发布审计](docs/V1_0_14_Unsigned_Community_Release_Audit_2026-08-21.md)。
+发布已通过完整本地与远端 Quality Gate、22/22 安装生命周期检查和 18/18 安装后工作区检查。完整范围、测试事实与边界见 [v1.0.14 发布说明](docs/RELEASE_NOTES_v1.0.14.md) 和 [发布审计](docs/V1_0_14_Unsigned_Community_Release_Audit_2026-08-21.md)。
 
 ## v1.0.13
 
