@@ -102,7 +102,7 @@ const contained = state => state.badge.x >= state.footer.x
   && state.badge.y >= state.footer.y
   && state.badge.bottom <= state.footer.bottom
 const passed = normal.text === `v${expectedVersion}`
-  && normal.title === `当前软件版本 v${expectedVersion}`
+  && normal.title === `当前软件版本 v${expectedVersion}，点击查看更新`
   && normal.label === '当前资料库'
   && normal.pageOverflow <= 2
   && compact.pageOverflow <= 2
@@ -115,11 +115,20 @@ const passed = normal.text === `v${expectedVersion}`
   && runtimeErrors.length === 0
 if (!passed) throw new Error(`Main version indicator runtime gate failed: ${JSON.stringify({ normal, compact, runtimeErrors })}`)
 
+const badgeCenter = { x: compact.badge.x + compact.badge.width / 2, y: compact.badge.y + compact.badge.height / 2 }
+await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: badgeCenter.x, y: badgeCenter.y, button: 'left', buttons: 1, clickCount: 1 })
+await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: badgeCenter.x, y: badgeCenter.y, button: 'left', buttons: 0, clickCount: 1 })
+await waitFor(`location.hash.includes('/settings') && new URLSearchParams(location.hash.split('?')[1] || '').get('category') === 'system' && document.querySelector('[data-testid="app-update-settings"]')`, 'software update settings route')
+await delay(300)
+const updateRoute = await evaluate(`({ hash: location.hash, heading: document.querySelector('.settings-category-heading h2')?.textContent?.trim(), updateVisible: Boolean(document.querySelector('[data-testid="app-update-settings"]')?.offsetParent), pageOverflow: document.documentElement.scrollWidth - innerWidth })`)
+await capture('main-version-update-route.png')
+if (updateRoute.heading !== '系统与更新' || !updateRoute.updateVisible || updateRoute.pageOverflow > 2) throw new Error(`Version update route failed: ${JSON.stringify(updateRoute)}`)
+
 await fs.writeFile(path.join(output, 'runtime-evidence.json'), `${JSON.stringify({
   schemaVersion: 1,
   status: 'accepted',
   expected: { version: expectedVersion, placement: 'sidebar-library-footer', normalAndCompactContainment: true },
-  actual: { normal, compact, runtimeErrorCount: runtimeErrors.length },
+  actual: { normal, compact, updateRoute, runtimeErrorCount: runtimeErrors.length },
   passed,
 }, null, 2)}\n`)
 socket.close()

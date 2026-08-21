@@ -128,7 +128,10 @@
                 <n-button secondary type="info" @click="openReleaseCapabilities">管理打开方式</n-button>
               </div>
             </div>
-            <UpdateSettingsRow v-show="activeCategory === 'system'" />
+            <UpdateSettingsRow
+              v-show="activeCategory === 'system'"
+              :class="{ 'is-route-focused': softwareUpdateRouteFocused }"
+            />
             <div v-show="activeCategory === 'privacy'" class="setting-row">
               <!-- R3 管理备份不包含文档正文或凭据，导入恢复要求路径重新映射。 -->
               <div class="info">
@@ -437,6 +440,7 @@ const isSettingsCategory = (value: unknown): value is SettingsCategory => settin
 const categoryForRoute = (): SettingsCategory => {
   if (route.query.focus === 'format-capabilities') return 'formats'
   if (route.query.focus === 'knowledge-observation') return 'knowledge'
+  if (route.query.focus === 'software-update') return 'system'
   return isSettingsCategory(route.query.category) ? route.query.category : 'library'
 }
 const activeCategory = ref<SettingsCategory>(categoryForRoute())
@@ -554,6 +558,7 @@ const formatCapabilityRow = ref<HTMLElement | null>(null)
 const knowledgeObservationRow = ref<HTMLElement | null>(null)
 const formatCapabilityRouteFocused = computed(() => route.query.focus === 'format-capabilities')
 const observationRouteFocused = computed(() => route.query.focus === 'knowledge-observation')
+const softwareUpdateRouteFocused = computed(() => route.query.focus === 'software-update')
 const openReleaseCapabilities = () => router.push({
   name: 'ReleaseCapabilities',
   query: { from: 'settings', settingsFocus: 'format-capabilities' },
@@ -750,6 +755,7 @@ onMounted(async () => {
     isInitializing.value = false
     if (formatCapabilityRouteFocused.value) formatCapabilityRow.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     if (observationRouteFocused.value) knowledgeObservationRow.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (softwareUpdateRouteFocused.value) document.querySelector<HTMLElement>('[data-testid="app-update-settings"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   })
 })
 

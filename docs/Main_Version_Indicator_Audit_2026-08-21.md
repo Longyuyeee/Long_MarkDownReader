@@ -10,6 +10,8 @@
 
 - 位置：左侧栏底部“当前资料库”卡片的状态行右侧。
 - 显示：`v{当前版本}`；悬浮提示和无障碍名称均为“当前软件版本 v{当前版本}”。
+- 入口：点击版本徽标直接进入“设置 → 系统与更新”；发现新版时以状态点提示并继续由用户明确确认安装。
+- 键盘：资料库卡片支持 Enter/Space，版本徽标保持独立按钮语义，不会误触发资料库设置入口。
 - 数据：初始化 Tauri 更新服务后读取运行时版本；初始化期间使用已与包版本对齐的发布能力矩阵版本。
 - 布局：版本徽标不收缩、不换行；资料库名称继续在第二行省略显示。
 
@@ -20,12 +22,14 @@
 | 发布版本一致性 | package、Tauri、能力矩阵一致 | 均为 `1.0.12` |
 | 主界面显示 | 左下资料库卡片显示当前版本 | 显示 `v1.0.12` |
 | 正常与最小侧栏 | 徽标完整留在卡片内，无页面横向溢出 | 桌面 WebView 自动测量通过 |
+| 更新入口 | 点击徽标定位系统与更新并显示更新卡片 | 真实鼠标点击与路由检查通过 |
 | 运行时稳定性 | 无脚本异常与控制台错误 | `runtimeErrorCount = 0` |
 
 证据：
 
 - `docs/evidence/main-version-indicator/main-version-indicator-wide.png`
 - `docs/evidence/main-version-indicator/main-version-indicator-detail.png`
+- `docs/evidence/main-version-indicator/main-version-update-route.png`
 - `docs/evidence/main-version-indicator/runtime-evidence.json`
 
 验证命令：

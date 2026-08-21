@@ -338,7 +338,15 @@
         </div>
         <!-- 侧边栏页脚 -->
         <div class="sidebar-footer-container">
-          <div class="sidebar-footer" @click="openSettings">
+          <div
+            class="sidebar-footer"
+            role="button"
+            tabindex="0"
+            aria-label="打开资料库设置"
+            @click="openSettings"
+            @keydown.enter="openSettings"
+            @keydown.space.prevent="openSettings"
+          >
             <div class="settings-icon-box">
               <n-icon :component="SettingsIcon" class="rotating-settings" />
             </div>
@@ -346,12 +354,19 @@
               <div class="lib-name-row">
                 <span class="lib-label">当前资料库</span>
                 <div class="lib-status-dot"></div>
-                <span
+                <button
+                  type="button"
                   class="app-version-badge"
+                  :class="{ 'has-update': hasAvailableUpdate }"
                   data-testid="main-app-version"
-                  :title="`当前软件版本 v${currentAppVersion}`"
-                  :aria-label="`当前软件版本 v${currentAppVersion}`"
-                >v{{ currentAppVersion }}</span>
+                  :data-update-status="updaterState.status"
+                  :title="versionIndicatorLabel"
+                  :aria-label="versionIndicatorLabel"
+                  @click.stop="openUpdateSettings"
+                >
+                  <span v-if="hasAvailableUpdate" class="version-update-dot" aria-hidden="true"></span>
+                  v{{ currentAppVersion }}
+                </button>
               </div>
               <span class="meta-path" :title="store.libraryPath">{{ store.currentLibraryName }}</span>
             </div>
@@ -745,6 +760,10 @@ const currentAppVersion = computed(() => {
     ? runtimeVersion
     : RELEASE_MATRIX_VERSION
 })
+const hasAvailableUpdate = computed(() => updaterState.status === 'available' && Boolean(updaterState.latestVersion))
+const versionIndicatorLabel = computed(() => hasAvailableUpdate.value
+  ? `发现新版本 v${updaterState.latestVersion}，点击查看更新`
+  : `当前软件版本 v${currentAppVersion.value}，点击查看更新`)
 
 interface ExternalAppExecutable {
   role: string
@@ -1663,6 +1682,7 @@ const handleExport = async (key: string) => {
 const historyList = ref<{timestamp: number, content: string}[]>([])
 
 const openSettings = () => router.push('/settings')
+const openUpdateSettings = () => router.push({ name: 'Settings', query: { category: 'system', focus: 'software-update' } })
 const openWorkspace = () => router.push('/workspace')
 const openGraph = () => router.push('/graph')
 const openLocalMindMap = () => {
@@ -4255,6 +4275,10 @@ watch(activeTabId, (newId, oldId) => {
 .sidebar-footer:hover .lib-label { opacity: 0.5; }
 .lib-status-dot { width: 6px; height: 6px; background: #42b883; border-radius: 50%; box-shadow: 0 0 8px rgba(66, 184, 131, 0.4); }
 .app-version-badge {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   flex: none;
   margin-left: auto;
   padding: 2px 6px;
@@ -4267,6 +4291,23 @@ watch(activeTabId, (newId, oldId) => {
   font-weight: 800;
   line-height: 1.2;
   white-space: nowrap;
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease-standard), background var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard);
+}
+.app-version-badge:hover,
+.app-version-badge:focus-visible {
+  border-color: rgba(var(--theme-primary-rgb), 0.65);
+  background: rgba(var(--theme-primary-rgb), 0.15);
+  box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.12);
+  outline: none;
+}
+.app-version-badge.has-update { color: var(--theme-warning, #d97706); border-color: color-mix(in srgb, var(--theme-warning, #d97706) 45%, transparent); }
+.version-update-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 14%, transparent);
 }
 .meta-path { font-size: 13px; font-weight: 700; color: var(--theme-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.9; }
 .footer-chevron { font-size: 14px; opacity: 0.2; transition: all 0.3s; transform: translateX(-4px); }

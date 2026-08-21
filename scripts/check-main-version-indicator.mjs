@@ -10,8 +10,11 @@ const checks = {
   versionsAligned: packageVersion === tauriVersion && tauriVersion === releaseVersion,
   runtimeVersionInitialized: source.includes('void initializeUpdater()'),
   runtimeVersionBound: source.includes('updaterState.currentVersion.trim()') && source.includes('RELEASE_MATRIX_VERSION'),
-  visibleMainIndicator: source.includes('data-testid="main-app-version"') && source.includes('>v{{ currentAppVersion }}</span>'),
-  accessibleDescription: source.includes(':aria-label="`当前软件版本 v${currentAppVersion}`"'),
+  visibleMainIndicator: source.includes('data-testid="main-app-version"') && source.includes('v{{ currentAppVersion }}'),
+  accessibleDescription: source.includes(':aria-label="versionIndicatorLabel"'),
+  directUpdateRoute: source.includes("focus: 'software-update'") && source.includes('@click.stop="openUpdateSettings"'),
+  updateAwareness: source.includes("updaterState.status === 'available'") && source.includes('version-update-dot'),
+  keyboardReachableFooter: source.includes('aria-label="打开资料库设置"') && source.includes('@keydown.space.prevent="openSettings"'),
   responsiveContainment: /\.app-version-badge\s*\{[\s\S]*?flex:\s*none;[\s\S]*?white-space:\s*nowrap;[\s\S]*?\}/.test(source),
 }
 

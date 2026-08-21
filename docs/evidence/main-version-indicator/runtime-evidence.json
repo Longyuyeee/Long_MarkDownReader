@@ -15,7 +15,7 @@
       "pageOverflow": 0,
       "sidebarWidth": 260,
       "text": "v1.0.12",
-      "title": "当前软件版本 v1.0.12",
+      "title": "当前软件版本 v1.0.12，点击查看更新",
       "label": "当前资料库",
       "footer": {
         "x": 12,
@@ -47,7 +47,7 @@
       "pageOverflow": 0,
       "sidebarWidth": 220,
       "text": "v1.0.12",
-      "title": "当前软件版本 v1.0.12",
+      "title": "当前软件版本 v1.0.12，点击查看更新",
       "label": "当前资料库",
       "footer": {
         "x": 12,
@@ -70,6 +70,12 @@
         "width": 101.40625,
         "right": 171.203125
       }
+    },
+    "updateRoute": {
+      "hash": "#/settings?category=system&focus=software-update",
+      "heading": "系统与更新",
+      "updateVisible": true,
+      "pageOverflow": 0
     },
     "runtimeErrorCount": 0
   },
