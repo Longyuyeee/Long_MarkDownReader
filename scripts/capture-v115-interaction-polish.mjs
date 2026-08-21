@@ -75,7 +75,7 @@ await delay(180)
 
 const globalTooltipTarget = await evaluate(`(() => {
   const candidates = [...document.querySelectorAll('button[data-app-tooltip]')]
-    .filter(item => !item.closest('.workspace-tabs') && item.getBoundingClientRect().width > 0 && item.getBoundingClientRect().height > 0 && !item.disabled)
+    .filter(item => !item.closest('.workspace-tabs') && !item.matches('[data-testid="library-create-menu"]') && item.getBoundingClientRect().width > 0 && item.getBoundingClientRect().height > 0 && !item.disabled)
   const target = candidates[0]
   const rect = target.getBoundingClientRect()
   return { text: target.dataset.appTooltip, x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, managedCount: document.querySelectorAll('[data-app-tooltip-managed="true"]').length, nativeTitleCount: document.querySelectorAll('[title]').length }
@@ -91,7 +91,7 @@ const readOverlayMetrics = selector => evaluate(`(() => {
 const globalTooltipLight = await readOverlayMetrics('#longedit-app-tooltip')
 await capture('global-tooltip-light.png')
 
-await evaluate(`(() => { const target = [...document.querySelectorAll('button[data-app-tooltip]')].find(item => !item.closest('.workspace-tabs') && item.getBoundingClientRect().width > 0 && !item.disabled); target.setAttribute('title', '动态标题也使用应用提示层'); target.focus() })()`)
+await evaluate(`(() => { const target = [...document.querySelectorAll('button[data-app-tooltip]')].find(item => !item.closest('.workspace-tabs') && !item.matches('[data-testid="library-create-menu"]') && item.getBoundingClientRect().width > 0 && !item.disabled); target.setAttribute('title', '动态标题也使用应用提示层'); target.focus() })()`)
 await waitFor(`document.querySelector('#longedit-app-tooltip[data-visible="true"]')?.textContent === '动态标题也使用应用提示层' && !document.querySelector('button[title="动态标题也使用应用提示层"]')`, 'dynamic keyboard tooltip adoption')
 const keyboardTooltip = await evaluate(`(() => { const target = document.activeElement; return { text: document.querySelector('#longedit-app-tooltip').textContent, describedBy: target.getAttribute('aria-describedby'), ariaLabel: target.getAttribute('aria-label'), nativeTitle: target.getAttribute('title') } })()`)
 await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
@@ -102,9 +102,8 @@ await evaluate(`document.querySelector('[data-testid="library-create-menu"]').cl
 await waitFor(`Boolean(document.querySelector('.n-dropdown-menu'))`, 'library create dropdown')
 const dropdownLight = await readOverlayMetrics('.n-dropdown-menu')
 await capture('dropdown-light.png')
-await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
-await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
-await delay(180)
+await evaluate(`document.querySelector('.library-main, .library-mode').click()`)
+await waitFor(`!document.querySelector('.n-dropdown-menu')`, 'light dropdown dismissal')
 
 await evaluate(`(() => { const pinia = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia; const store = pinia._s.get('app'); const tab = store.tabs.find(item => item.id === store.activeTabId) || store.tabs[0]; tab.isDirty = true; document.querySelector('.workspace-tab.active .close-tab').click() })()`)
 await waitFor(`Boolean(document.querySelector('.n-dialog'))`, 'application confirmation dialog')
@@ -118,13 +117,13 @@ await waitFor(`document.body.dataset.theme === 'dark'`, 'dark theme')
 await delay(250)
 await send('Emulation.setDeviceMetricsOverride', { width: 720, height: 680, deviceScaleFactor: 1.5, mobile: false })
 await delay(350)
-const narrowTarget = await evaluate(`(() => { const target = [...document.querySelectorAll('button[data-app-tooltip]')].find(item => !item.closest('.workspace-tabs') && item.getBoundingClientRect().width > 0 && !item.disabled); target.blur(); target.setAttribute('title', '窄窗口与高 DPI 下仍保持在屏幕内的应用提示信息'); const rect = target.getBoundingClientRect(); return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } })()`)
+const narrowTarget = await evaluate(`(() => { const target = [...document.querySelectorAll('button[data-app-tooltip]')].find(item => !item.closest('.workspace-tabs') && !item.matches('[data-testid="library-create-menu"]') && item.getBoundingClientRect().width > 0 && !item.disabled); target.blur(); target.setAttribute('title', '窄窗口与高 DPI 下仍保持在屏幕内的应用提示信息'); const rect = target.getBoundingClientRect(); return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } })()`)
 await waitFor(`Boolean(document.querySelector('[data-app-tooltip="窄窗口与高 DPI 下仍保持在屏幕内的应用提示信息"]'))`, 'narrow dynamic tooltip adoption')
 await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 710, y: 670 })
 await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: narrowTarget.x, y: narrowTarget.y })
 await waitFor(`document.querySelector('#longedit-app-tooltip[data-visible="true"]')?.textContent.includes('窄窗口与高 DPI')`, 'dark narrow tooltip')
 const globalTooltipDarkNarrow = await readOverlayMetrics('#longedit-app-tooltip')
-globalTooltipDarkNarrow.viewportWidth = await evaluate('window.innerWidth')
+globalTooltipDarkNarrow.viewportWidth = await evaluate('document.documentElement.clientWidth')
 globalTooltipDarkNarrow.devicePixelRatio = await evaluate('window.devicePixelRatio')
 await capture('global-tooltip-dark-narrow.png')
 await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
@@ -147,7 +146,7 @@ if (globalTooltipTarget.nativeTitleCount !== 0 || globalTooltipTarget.managedCou
 if (keyboardTooltip.text !== '动态标题也使用应用提示层' || keyboardTooltip.nativeTitle !== null || !keyboardTooltip.describedBy?.includes('longedit-app-tooltip') || !keyboardTooltip.ariaLabel) throw new Error(`Keyboard tooltip gate failed: ${JSON.stringify(keyboardTooltip)}`)
 if (!dropdownLight.visible || dropdownLight.borderRadius === '0px' || dropdownLight.boxShadow === 'none') throw new Error(`Dropdown light gate failed: ${JSON.stringify(dropdownLight)}`)
 if (!dialogLight.visible || dialogLight.borderRadius === '0px' || dialogLight.boxShadow === 'none') throw new Error(`Dialog light gate failed: ${JSON.stringify(dialogLight)}`)
-if (globalTooltipDarkNarrow.left < 7 || globalTooltipDarkNarrow.right > globalTooltipDarkNarrow.viewportWidth - 7 || globalTooltipDarkNarrow.width > globalTooltipDarkNarrow.viewportWidth - 16 || globalTooltipDarkNarrow.devicePixelRatio !== 1.5) throw new Error(`Dark narrow tooltip gate failed: ${JSON.stringify(globalTooltipDarkNarrow)}`)
+if (globalTooltipDarkNarrow.left < 7 || globalTooltipDarkNarrow.right > globalTooltipDarkNarrow.viewportWidth - 7 || globalTooltipDarkNarrow.width > globalTooltipDarkNarrow.viewportWidth - 16 || Math.abs(globalTooltipDarkNarrow.devicePixelRatio - 1.5) > 0.001) throw new Error(`Dark narrow tooltip gate failed: ${JSON.stringify(globalTooltipDarkNarrow)}`)
 if (!dropdownDarkNarrow.visible || dropdownDarkNarrow.right > dropdownDarkNarrow.viewportWidth + 1) throw new Error(`Dark narrow dropdown gate failed: ${JSON.stringify(dropdownDarkNarrow)}`)
 if (runtimeErrors.length) throw new Error(`Runtime errors observed: ${JSON.stringify(runtimeErrors)}`)
 
