@@ -4,7 +4,10 @@ const source = fs.readFileSync('src/views/CanvasView.vue', 'utf8')
 const fail = message => { console.error(`UX-38E Canvas explicit-save contract rejected: ${message}`); process.exit(1) }
 for (const token of [
   "!['dirty', 'error'].includes(saveState.value)",
-  "window.confirm('Canvas 还有未保存修改",
+  'const mayLeave = async () =>',
+  'await confirmAppAction(dialog',
+  "title: '离开 Canvas？'",
+  '当前画布还有未保存修改',
   "window.addEventListener('beforeunload', beforeUnload)",
   'onBeforeRouteLeave(() => mayLeave())',
   "command && event.key.toLowerCase() === 's'",
