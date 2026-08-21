@@ -1,7 +1,8 @@
 import fs from 'node:fs'
 
-const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
-const capture = fs.readFileSync('scripts/capture-v115-interaction-polish.mjs', 'utf8')
+const normalize = value => value.replaceAll('\r\n', '\n')
+const library = normalize(fs.readFileSync('src/views/LibraryMode.vue', 'utf8'))
+const capture = normalize(fs.readFileSync('scripts/capture-v115-interaction-polish.mjs', 'utf8'))
 const fail = message => { throw new Error(`v1.0.15 overlay-bounds contract rejected: ${message}`) }
 
 for (const token of [
