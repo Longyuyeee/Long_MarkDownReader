@@ -17,6 +17,7 @@ for (const token of [
   'dropdownDarkNarrow.viewportHeight',
   'dropdownDarkNarrow.bottom > dropdownDarkNarrow.viewportHeight + 1',
   'dropdownLight.height > 520',
+  'Number(dropdownLight.overlayOpacity) < 0.98',
 ]) if (!capture.includes(token)) fail(`desktop evidence token missing: ${token}`)
 
 console.log('v1.0.15 overlay-bounds contract passed: the long create menu is scrollable, uniquely measurable and viewport bounded.')
