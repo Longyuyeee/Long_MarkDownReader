@@ -4,7 +4,7 @@
 
 渠道：`community-unsigned`
 
-企业发布候选：`false`（无商业签名，不作为企业签名版）
+企业发布候选：`releaseCandidate=false`（无商业签名，不作为企业签名版）
 
 ## 候选范围
 
