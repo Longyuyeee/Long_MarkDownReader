@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="docs/RELEASE_NOTES_v1.0.15.md"><img src="https://img.shields.io/badge/Next-v1.0.15-cca43b" alt="v1.0.15 candidate"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.15"><img src="https://img.shields.io/badge/Stable-v1.0.15-cca43b" alt="v1.0.15 stable"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -31,28 +31,28 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.15 正在执行发布门禁，集中统一应用提示层、右键菜单、应用内对话框、长格式菜单和更新进度反馈。当前可下载稳定版仍为 v1.0.14；候选范围见 [v1.0.15 发布说明](docs/RELEASE_NOTES_v1.0.15.md)。
+> v1.0.15 已发布并完成三个公开附件的回下载 SHA-256 复核，集中统一应用提示层、右键菜单、应用内对话框、长格式菜单和更新进度反馈。完整范围见 [v1.0.15 发布说明](docs/RELEASE_NOTES_v1.0.15.md)。
 
 ## 下载
 
-Long编辑 v1.0.14 支持 Windows 10/11 x64。
+Long编辑 v1.0.15 支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.0.14_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.14/LongEdit_1.0.14_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.0.14_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.14/LongEdit_1.0.14_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.0.14](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.0.15_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.15/LongEdit_1.0.15_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.0.15_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.15/LongEdit_1.0.15_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.0.15](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.15) | Release Notes 与 SHA-256 |
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 `SHA256SUMS.txt` 核对文件。
 
 ```text
-889ece196cc70ae33b171c1e14d366ca7f024c33709736417304d92200991499  LongEdit_1.0.14_x64-setup.exe
-194816764a99b86aff486cb9bce71f75a5074dfa4ba3648c821c26e01d5713ee  LongEdit_1.0.14_x64_zh-CN.msi
+03fda623363e196f87dc09c6204a752a1b112df03e57945ecf06ba97c9e44965  LongEdit_1.0.15_x64-setup.exe
+44653300bc0c26afb9472cf356224c0d12a921787b8ab5c1596162785c0667ec  LongEdit_1.0.15_x64_zh-CN.msi
 ```
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.15 发布后将继续沿用这一安全更新链。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.15 继续沿用这一安全更新链。
 
-## v1.0.15 候选
+## v1.0.15
 
 这一补丁围绕专业桌面交互一致性和更新可靠性收口：
 
@@ -61,9 +61,9 @@ v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手
 - 原生确认、提示和参数输入全部迁移到软件内对话框。
 - 资料库约 30 项的“新建”菜单支持视口内滚动，修复窄屏越界、层级遮挡和过渡透明问题。
 - 更新界面提供下载进度、容量、SHA-256 校验和安装阶段反馈，并修复设置卡片缩放细节。
-- 亮色、深色、720×680 窄屏与 DPR 1.5 真实 Tauri 验收通过；v1.0.13 → v1.0.14 官方自动更新 12/12 检查通过。
+- 亮色、深色、720×680 窄屏与 DPR 1.5 真实 Tauri 验收通过；安装生命周期 22/22、安装后工作区 18/18、远端附件回下载哈希复核全部通过。
 
-候选不等于正式发布。完整范围与边界见 [v1.0.15 发布说明](docs/RELEASE_NOTES_v1.0.15.md) 和 [发布审计](docs/V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
+发布已通过完整 Quality Gate、22/22 安装生命周期、18/18 安装后工作区检查，以及三个公开附件重新下载哈希复核。完整范围与边界见 [v1.0.15 发布说明](docs/RELEASE_NOTES_v1.0.15.md) 和 [发布审计](docs/V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
 
 ## v1.0.14
 

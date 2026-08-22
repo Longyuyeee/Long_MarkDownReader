@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.15",
-  "status": "ready-to-publish-hosted-lifecycle-passed-local-smoke-blocked-existing-single-instance",
+  "status": "published-remote-assets-verified-hosted-lifecycle-passed-local-smoke-blocked-existing-single-instance",
   "appVersion": "1.0.15",
   "capturedAt": "2026-08-22T00:00:00Z",
   "sourceCommit": "9aaa810f9a96bb3e741551b966091bd1b67f5b1e",
@@ -21,6 +21,6 @@
     "installedExecutableSizeBytes": 123379712, "installedExecutableSha256": "ce04e714ba4f435be823eaaf5bb979705b45b7b344b008021cc899b063367020",
     "lifecycleChecksPassed": 22, "installedWorkspaceChecksPassed": 18, "failedChecks": 0, "sourceUserContentIncluded": false, "evidenceManifest": "hosted-lifecycle/import-manifest.json"
   },
-  "releaseReceipt": null,
-  "boundaries": { "releaseCandidate": true, "communityUnsigned": true, "enterprisePromotionEligible": false, "authenticodeRequired": false, "managedUpdaterReleaseAssetsPresent": false, "legacyTauriUpdaterArtifactsPresent": false, "managedUpdaterEnabled": true, "artifactFilesCommitted": false, "sourceUserContentIncluded": false }
+  "releaseReceipt": "release-receipt.json",
+  "boundaries": { "releaseCandidate": true, "communityUnsigned": true, "enterprisePromotionEligible": false, "authenticodeRequired": false, "managedUpdaterReleaseAssetsPresent": true, "legacyTauriUpdaterArtifactsPresent": false, "managedUpdaterEnabled": true, "artifactFilesCommitted": false, "sourceUserContentIncluded": false }
 }

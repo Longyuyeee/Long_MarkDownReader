@@ -1,6 +1,6 @@
 # Long Markdown Reader 开发交接
 
-> **2026-08-22 v1.0.15 已达到无签名社区版待发布阶段：** 交互治理已完成七张真实 Tauri 截图；冻结产品提交 `9aaa810f9a96bb3e741551b966091bd1b67f5b1e` 的无签名 NSIS/MSI 已真实构建，托管运行 `32518530525` 完成 22/22 安装生命周期与 18/18 安装后工作区检查，0 失败。发布证据已导入 `docs/evidence/v1.0.15-release/`；当前只剩证据提交的干净 Quality Gate、GitHub Release 和三个远端附件回下载哈希复核，在此之前不得宣称已经发布。详见 [`V1_0_15_Interaction_Polish_Audit_2026-08-21.md`](./V1_0_15_Interaction_Polish_Audit_2026-08-21.md) 与 [`V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md`](./V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
+> **2026-08-22 v1.0.15 无签名社区版已发布并复核：** 交互治理七张真实 Tauri 截图、冻结产品提交 `9aaa810f9a96bb3e741551b966091bd1b67f5b1e` 的无签名 NSIS/MSI、托管运行 `32518530525` 的 22/22 安装生命周期与 18/18 安装后工作区检查均通过。Release `374954902` 已公开，Tag `v1.0.15` 绑定合并提交 `317b667679fff4e8e29ce2a0ca94f8e480764d13`；三个公开附件重新下载后的大小与 SHA-256 全部匹配。下一步只执行独立的 `v1.0.14 -> v1.0.15` 官方应用内更新观察。详见 [`V1_0_15_Interaction_Polish_Audit_2026-08-21.md`](./V1_0_15_Interaction_Polish_Audit_2026-08-21.md) 与 [`V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md`](./V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
 
 > **2026-08-21 v1.0.13 发布前界面收口：** 更新提示已从未生效的 scoped 宽度约束改为 460 px 响应式信息卡，发布说明会清理 Markdown 并最多展示四条摘要；设置页桌面布局改为左侧分类固定、右侧独立滚动，分类切换回到内容顶部。隔离真实页面在 1280×800、1000×700、480×700 完成测量：导航纵坐标三次均为 114 px，弹窗最大 460×442 px，横向溢出与运行时错误均为 0。证据位于 `docs/evidence/v1013-update-settings-ui/`；下一步提交推送后恢复完整 Quality Gate、无签名打包与 Release。
 
