@@ -1,6 +1,6 @@
 # v1.0.15 无签名社区版发布审计
 
-状态：**无签名社区版已达到可发布条件**
+状态：**无签名社区版已发布并完成远端附件复核**
 
 渠道：`community-unsigned`
 
@@ -29,6 +29,8 @@
 - Quality Gate：[32516202564](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32516202564)
 - 安装生命周期：[32518530525](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32518530525)
 - 本地证据：`docs/evidence/v1.0.15-release/`
+- GitHub Release：[v1.0.15](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.15)，Release ID `374954902`
+- 三个公开附件已重新下载；大小与 SHA-256 均与冻结清单一致。
 
 ## 精简后的后续工作流
 
@@ -39,6 +41,6 @@
 
 ## 当前边界
 
-- 当前是“可发布候选”，在 GitHub Release 完成并回下载核验前，公开稳定版仍为 v1.0.14。
+- 当前公开稳定版为 v1.0.15；发布附件已完成回下载核验。
 - 社区安装包无 Authenticode 商业签名，Windows 可能显示未知发布者或 SmartScreen。
 - 用户可手动下载安装，自动更新也必须先确认并通过 SHA-256 校验。
