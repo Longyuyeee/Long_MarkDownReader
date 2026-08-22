@@ -1333,18 +1333,26 @@ const moveSearch = (direction: -1 | 1) => {
   matchIndex.value = (matchIndex.value + direction + matches.value.length) % matches.value.length
   scrollToBlock(matches.value[matchIndex.value].id)
 }
+let loadRequestId = 0
 const load = async () => {
-  if (!docxPath.value || loading.value) return
-  const viewState = recallWorkspaceViewState(docxPath.value)
+  const requestedPath = docxPath.value
+  const requestedExternal = isExternal.value
+  if (!requestedPath) return
+  const requestId = ++loadRequestId
+  const requestedFileName = requestedPath.split(/[\\/]/).pop() || '未命名.docx'
+  const viewState = recallWorkspaceViewState(requestedPath)
   loading.value = true
   loadError.value = ''
+  report.value = null
   try {
-    report.value = await invoke<DocxReadReport>(isExternal.value ? 'read_external_docx_document' : 'read_docx_document', {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: docxPath.value,
+    const nextReport = await invoke<DocxReadReport>(requestedExternal ? 'read_external_docx_document' : 'read_docx_document', {
+      ...(requestedExternal ? {} : { libraryRoot: store.libraryPath }),
+      path: requestedPath,
     })
-    store.addTab({ id: docxPath.value, title: fileName.value, path: docxPath.value, isDirty: false, external: isExternal.value })
-    const baseName = fileName.value.replace(/\.docx$/i, '')
+    if (requestId !== loadRequestId) return
+    report.value = nextReport
+    store.addTab({ id: requestedPath, title: requestedFileName, path: requestedPath, isDirty: false, external: requestedExternal })
+    const baseName = requestedFileName.replace(/\.docx$/i, '')
     copyFileName.value = `${baseName}-LongEdit副本.docx`
     const availableMode = report.value.editableTextTargets.length
       ? 'text'
@@ -1355,12 +1363,12 @@ const load = async () => {
     if (viewState?.mode === 'text' && report.value.editableTextTargets.length) editMode.value = 'text'
     if (viewState?.mode === 'style' && report.value.editableStyleTargets.length) editMode.value = 'style'
     if (viewState?.mode === 'imageAltText' && report.value.editableImageTargets.length) editMode.value = 'imageAltText'
-    if (!isExternal.value && typeof viewState?.panelOpen === 'boolean') editorOpen.value = viewState.panelOpen
-    if (isExternal.value) editorOpen.value = false
+    if (!requestedExternal && typeof viewState?.panelOpen === 'boolean') editorOpen.value = viewState.panelOpen
+    if (requestedExternal) editorOpen.value = false
     selectedTargetId.value = (
-      availableMode === 'text'
+      editMode.value === 'text'
         ? report.value.editableTextTargets[0]
-        : availableMode === 'style'
+        : editMode.value === 'style'
           ? report.value.editableStyleTargets[0]
           : report.value.editableImageTargets[0]
     )?.id || ''
@@ -1369,12 +1377,13 @@ const load = async () => {
     resetTargetDraft()
     invalidatePreview()
   } catch (cause) {
+    if (requestId !== loadRequestId) return
     report.value = null
     loadError.value = String(cause).replace(/^Error:\s*/, '')
   } finally {
-    loading.value = false
+    if (requestId === loadRequestId) loading.value = false
   }
-  if (report.value) {
+  if (requestId === loadRequestId && report.value) {
     await nextTick()
     if (routeLocator.value) scrollToRouteLocator()
     else if (viewState) stageRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })

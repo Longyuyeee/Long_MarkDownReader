@@ -311,6 +311,7 @@ import { isActiveThemeDark } from '../config/themePresets'
 import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
+import { confirmAppAction, promptAppAction } from '../services/appDialog'
 import TableChartEmbed from '../components/TableChartEmbed.vue'
 import MermaidDiagramEmbed from '../components/MermaidDiagramEmbed.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
@@ -923,13 +924,23 @@ const addNode = (node: NewCanvasNode, position = viewportCenter()) => {
   return created
 }
 const addTextNode = () => addNode({ type: 'text', text: '# 新想法\n\n开始记录…', width: 280, height: 180 })
-const addFileNode = () => {
-  const file = window.prompt('输入知识库内的文件路径（相对路径或绝对路径）', '笔记.md')
+const addFileNode = async () => {
+  const file = await promptAppAction(dialog, {
+    title: '添加知识库文件',
+    content: '输入相对知识库的路径，也可以输入绝对路径。',
+    initialValue: '笔记.md',
+    positiveText: '添加文件节点',
+  })
   if (file?.trim()) addNode({ type: 'file', file: file.trim(), width: 280, height: 150 })
 }
 interface ChartSourceDocument { views: { id: string; name: string; kind: string }[] }
 const addChartNode = async () => {
-  const source = window.prompt('输入要引用的 .table.json 路径（相对当前 Canvas 或绝对路径）', 'data.table.json')?.trim()
+  const source = (await promptAppAction(dialog, {
+    title: '添加 Table 图表',
+    content: '输入相对当前 Canvas 的 .table.json 路径，也可以输入绝对路径。',
+    initialValue: 'data.table.json',
+    positiveText: '读取图表源',
+  }))?.trim()
   if (!source) return
   if (!source.toLocaleLowerCase().endsWith('.table.json')) { message.error('图表源必须是 .table.json 文件'); return }
   try {
@@ -937,14 +948,24 @@ const addChartNode = async () => {
     const charts = table.views.filter(view => view.kind === 'chart')
     if (!charts.length) { message.warning('该 Table 尚未创建图表视图'); return }
     const suggested = charts[0].id
-    const viewId = window.prompt(`输入图表视图 ID\n${charts.map(view => `${view.id} — ${view.name}`).join('\n')}`, suggested)?.trim()
+    const viewId = (await promptAppAction(dialog, {
+      title: '选择图表视图',
+      content: charts.map(view => `${view.id} — ${view.name}`).join('\n'),
+      initialValue: suggested,
+      positiveText: '添加图表节点',
+    }))?.trim()
     if (!viewId) return
     if (!charts.some(view => view.id === viewId)) { message.error('输入的 chart 视图不存在'); return }
     addNode({ type: 'file', file: source, longeditViewId: viewId, width: 660, height: 430 })
   } catch (cause) { message.error(`无法读取图表源：${String(cause).replace(/^Error:\s*/, '')}`) }
 }
 const addMermaidNode = async () => {
-  const source = window.prompt('输入要引用的 .mmd / .mermaid 路径（相对当前 Canvas 或绝对路径）', '流程图.mmd')?.trim()
+  const source = (await promptAppAction(dialog, {
+    title: '添加 Mermaid 图表',
+    content: '输入相对当前 Canvas 的 .mmd 或 .mermaid 路径，也可以输入绝对路径。',
+    initialValue: '流程图.mmd',
+    positiveText: '添加图表节点',
+  }))?.trim()
   if (!source) return
   if (!/\.(?:mmd|mermaid)$/i.test(source)) { message.error('Mermaid 源必须是 .mmd 或 .mermaid 文件'); return }
   try {
@@ -952,8 +973,13 @@ const addMermaidNode = async () => {
     addNode({ type: 'file', file: source, width: 660, height: 430 })
   } catch (cause) { message.error(`无法读取 Mermaid 源：${String(cause).replace(/^Error:\s*/, '')}`) }
 }
-const addLinkNode = () => {
-  const url = window.prompt('输入网页链接', 'https://')
+const addLinkNode = async () => {
+  const url = await promptAppAction(dialog, {
+    title: '添加网页链接',
+    content: '输入要关联到画布的完整网页地址。',
+    initialValue: 'https://',
+    positiveText: '添加链接节点',
+  })
   if (url?.trim()) addNode({ type: 'link', url: url.trim(), width: 300, height: 150 })
 }
 const addGroupNode = () => addNode({ type: 'group', label: '主题分组', width: 560, height: 360 })
@@ -1380,7 +1406,12 @@ const queueViewportSize = (entry?: ResizeObserverEntry) => {
 }
 const saveCanvas = async () => {
   if (!canvasPath.value || (!isExternal.value && !store.libraryPath) || !['dirty', 'error'].includes(saveState.value)) return
-  if (isExternal.value && !window.confirm('保存将覆盖当前外部 Canvas 源文件。确定继续吗？')) return
+  if (isExternal.value && !await confirmAppAction(dialog, {
+    title: '覆盖外部 Canvas？',
+    content: '保存会直接覆盖当前外部 Canvas 源文件。',
+    positiveText: '覆盖并保存',
+    danger: true,
+  })) return
   saveState.value = 'saving'
   try {
     const content = JSON.stringify(document, null, 2) + '\n'
@@ -1462,8 +1493,13 @@ const handleKeydown = (event: KeyboardEvent) => {
   else if (event.key === 'Delete' || event.key === 'Backspace') removeSelection()
   else if (event.key === 'Escape') { setTool('select'); clearSelection() }
 }
-const mayLeave = () => !['dirty', 'error'].includes(saveState.value)
-  || window.confirm('Canvas 还有未保存修改，确定离开并丢弃这些修改吗？')
+const mayLeave = async () => !['dirty', 'error'].includes(saveState.value)
+  || await confirmAppAction(dialog, {
+    title: '离开 Canvas？',
+    content: '当前画布还有未保存修改，离开后将无法恢复。',
+    positiveText: '放弃修改并离开',
+    danger: true,
+  })
 const beforeUnload = (event: BeforeUnloadEvent) => {
   if (!['dirty', 'error'].includes(saveState.value)) return
   event.preventDefault()

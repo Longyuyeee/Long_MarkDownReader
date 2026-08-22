@@ -49,7 +49,14 @@
                   <n-select v-if="searchQuery.trim()" v-model:value="searchObjectTypes" class="search-format-filter" size="tiny" multiple clearable :max-tag-count="1" placeholder="全部格式" :options="searchFormatOptions" />
                 </div>
                 <div class="toolbar-area">
-                  <n-dropdown trigger="click" :options="templateOptions" @select="handleTemplateCreate">
+                  <n-dropdown
+                    trigger="click"
+                    scrollable
+                    :z-index="1000"
+                    :menu-props="templateMenuProps"
+                    :options="templateOptions"
+                    @select="handleTemplateCreate"
+                  >
                     <n-button data-testid="library-create-menu" quaternary circle size="small" title="新建笔记或画布">
                       <template #icon><n-icon :component="PlusIcon" /></template>
                     </n-button>
@@ -760,6 +767,7 @@ import {
   routeForFile,
 } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
+import { promptAppAction } from '../services/appDialog'
 import {
   FILE_MARKER_ICON_OPTIONS,
   resolveFileTreeVisual,
@@ -2535,6 +2543,11 @@ const templateOptions = [
   })),
 ]
 
+const templateMenuProps = () => ({
+  class: 'library-create-dropdown-menu',
+  style: 'max-height: min(520px, calc(100vh - 24px)); min-width: 188px;',
+})
+
 const selectedTargetDirectory = () => {
   if (!selectedKeys.value.length) return store.libraryPath
   const selected = selectedKeys.value[0]
@@ -2893,14 +2906,24 @@ const resolveMarkdownReference = (source: string, host: string) => {
 }
 const insertTableChartReference = async () => {
   if (!vditor || !activeTabId.value) return
-  const source = window.prompt('输入要引用的 .table.json 路径（相对当前 Markdown 或绝对路径）', 'data.table.json')?.trim()
+  const source = (await promptAppAction(dialog, {
+    title: '插入 Table 图表',
+    content: '输入相对当前 Markdown 的 .table.json 路径，也可以输入绝对路径。',
+    initialValue: 'data.table.json',
+    positiveText: '读取图表源',
+  }))?.trim()
   if (!source) return
   if (!source.toLocaleLowerCase().endsWith('.table.json')) { message.error('图表源必须是 .table.json 文件'); return }
   try {
     const table = await invoke<ChartSourceDocument>('read_table_file', { libraryRoot: store.libraryPath, path: resolveMarkdownReference(source, activeTabId.value) })
     const charts = table.views.filter(view => view.kind === 'chart')
     if (!charts.length) { message.warning('该 Table 尚未创建图表视图'); return }
-    const viewId = window.prompt(`输入图表视图 ID\n${charts.map(view => `${view.id} — ${view.name}`).join('\n')}`, charts[0].id)?.trim()
+    const viewId = (await promptAppAction(dialog, {
+      title: '选择图表视图',
+      content: charts.map(view => `${view.id} — ${view.name}`).join('\n'),
+      initialValue: charts[0].id,
+      positiveText: '插入图表引用',
+    }))?.trim()
     if (!viewId) return
     if (!charts.some(view => view.id === viewId)) { message.error('输入的 chart 视图不存在'); return }
     const reference = JSON.stringify({ source, view: viewId })

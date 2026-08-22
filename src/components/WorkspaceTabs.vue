@@ -1,66 +1,118 @@
 <template>
   <div class="workspace-tabs" :class="{ 'can-scroll-left': canScrollLeft, 'can-scroll-right': canScrollRight }">
-    <button
-      type="button"
-      class="tab-scroll-button scroll-left"
-      title="向左浏览标签"
-      aria-label="向左浏览标签"
-      :disabled="!canScrollLeft"
-      @click="scrollTabs(-1)"
-    >
-      <ChevronLeftIcon :size="16" />
-    </button>
+    <n-tooltip placement="bottom-start" :delay="tooltipDelay" :duration="tooltipDuration" :show-arrow="false" :theme-overrides="compactTooltipTheme" :content-style="compactTooltipStyle">
+      <template #trigger>
+        <button
+          type="button"
+          class="tab-scroll-button scroll-left"
+          aria-label="向左浏览标签"
+          :disabled="!canScrollLeft"
+          @click="scrollTabs(-1)"
+        >
+          <ChevronLeftIcon :size="16" />
+        </button>
+      </template>
+      向左浏览标签
+    </n-tooltip>
     <div ref="scrollRef" class="workspace-tabs-scroll" role="tablist" aria-label="打开的文档" @scroll="updateScrollState" @wheel="handleWheel">
-      <div
+      <n-tooltip
         v-for="tab in store.tabs"
         :key="tab.id"
-        class="workspace-tab"
-        :class="{ active: store.activeTabId === tab.id }"
-        role="tab"
-        :tabindex="store.activeTabId === tab.id ? 0 : -1"
-        :aria-selected="store.activeTabId === tab.id"
-        :title="tab.path"
-        @click="activate(tab)"
-        @keydown.enter.prevent="activate(tab)"
-        @keydown.space.prevent="activate(tab)"
-        @keydown.left.prevent="focusAdjacentTab(tab, -1)"
-        @keydown.right.prevent="focusAdjacentTab(tab, 1)"
+        placement="bottom-start"
+        :delay="tooltipDelay"
+        :duration="tooltipDuration"
+        :show-arrow="false"
+        :theme-overrides="documentTooltipTheme"
+        :content-style="documentTooltipStyle"
       >
-        <FileTextIcon :size="13" />
-        <span>{{ tab.title }}</span>
-        <i :class="{ visible: tab.isDirty }" :title="tab.isDirty ? '有未保存的修改' : undefined"></i>
-        <button type="button" class="close-tab" title="关闭标签" @click.stop="close(tab)" @keydown.stop>
-          <XIcon :size="12" />
-        </button>
-      </div>
+        <template #trigger>
+          <div
+            class="workspace-tab"
+            :class="{ active: store.activeTabId === tab.id }"
+            role="tab"
+            :tabindex="store.activeTabId === tab.id ? 0 : -1"
+            :aria-selected="store.activeTabId === tab.id"
+            :aria-label="`${tab.title}${tab.isDirty ? '，有未保存的修改' : ''}`"
+            @click="activate(tab)"
+            @keydown.enter.prevent="activate(tab)"
+            @keydown.space.prevent="activate(tab)"
+            @keydown.left.prevent="focusAdjacentTab(tab, -1)"
+            @keydown.right.prevent="focusAdjacentTab(tab, 1)"
+          >
+            <FileTextIcon :size="13" />
+            <span>{{ tab.title }}</span>
+            <i :class="{ visible: tab.isDirty }" aria-hidden="true"></i>
+            <button type="button" class="close-tab" :aria-label="`关闭标签：${tab.title}`" @click.stop="close(tab)" @keydown.stop>
+              <XIcon :size="12" />
+            </button>
+          </div>
+        </template>
+        <div class="workspace-tab-tooltip">
+          <strong>{{ tab.title }}</strong>
+          <span>{{ tab.path }}</span>
+          <small v-if="tab.isDirty">有未保存的修改</small>
+        </div>
+      </n-tooltip>
     </div>
-    <button
-      type="button"
-      class="tab-scroll-button scroll-right"
-      title="向右浏览标签"
-      aria-label="向右浏览标签"
-      :disabled="!canScrollRight"
-      @click="scrollTabs(1)"
-    >
-      <ChevronRightIcon :size="16" />
-    </button>
+    <n-tooltip placement="bottom-end" :delay="tooltipDelay" :duration="tooltipDuration" :show-arrow="false" :theme-overrides="compactTooltipTheme" :content-style="compactTooltipStyle">
+      <template #trigger>
+        <button
+          type="button"
+          class="tab-scroll-button scroll-right"
+          aria-label="向右浏览标签"
+          :disabled="!canScrollRight"
+          @click="scrollTabs(1)"
+        >
+          <ChevronRightIcon :size="16" />
+        </button>
+      </template>
+      向右浏览标签
+    </n-tooltip>
   </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
+import { NTooltip, useDialog } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, FileText as FileTextIcon, X as XIcon } from 'lucide-vue-next'
 import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
+import { confirmAppAction } from '../services/appDialog'
 import { type TabInfo, useAppStore } from '../store/app'
 
 const router = useRouter()
 const store = useAppStore()
+const dialog = useDialog()
 const scrollRef = ref<HTMLElement | null>(null)
 const canScrollLeft = ref(false)
 const canScrollRight = ref(false)
 let resizeObserver: ResizeObserver | null = null
+const tooltipDelay = 420
+const tooltipDuration = 120
+const tooltipThemeBase = {
+  borderRadius: 'var(--theme-radius-sm)',
+  color: 'var(--theme-surface)',
+  textColor: 'var(--theme-text)',
+  boxShadow: 'var(--workspace-shadow)',
+}
+const compactTooltipTheme = {
+  ...tooltipThemeBase,
+  padding: '7px 9px',
+}
+const documentTooltipTheme = {
+  ...tooltipThemeBase,
+  padding: '9px 11px',
+}
+const compactTooltipStyle: CSSProperties = {
+  fontSize: '12px',
+  lineHeight: '1.45',
+}
+const documentTooltipStyle: CSSProperties = {
+  maxWidth: 'min(420px, calc(100vw - 24px))',
+  fontSize: '12px',
+  lineHeight: '1.45',
+}
 
 const updateScrollState = () => {
   const element = scrollRef.value
@@ -123,7 +175,12 @@ const focusAdjacentTab = async (tab: TabInfo, direction: -1 | 1) => {
 }
 
 const close = async (tab: TabInfo) => {
-  if (tab.isDirty && !window.confirm(`“${tab.title}”有未保存修改，关闭后将丢失，是否继续？`)) return
+  if (tab.isDirty && !await confirmAppAction(dialog, {
+    title: '关闭未保存的标签？',
+    content: `“${tab.title}”包含未保存修改，关闭后将无法恢复。`,
+    positiveText: '放弃修改并关闭',
+    danger: true,
+  })) return
   const wasActive = store.activeTabId === tab.id
   store.removeTab(tab.id)
   if (!wasActive) return
@@ -285,5 +342,31 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
 .close-tab:hover {
   color: var(--theme-text);
   background: rgba(var(--theme-primary-rgb), 0.1);
+}
+
+.workspace-tab-tooltip {
+  display: grid;
+  gap: 3px;
+  min-width: 150px;
+}
+
+.workspace-tab-tooltip strong,
+.workspace-tab-tooltip span {
+  overflow-wrap: anywhere;
+}
+
+.workspace-tab-tooltip strong {
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.workspace-tab-tooltip span,
+.workspace-tab-tooltip small {
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+}
+
+.workspace-tab-tooltip small {
+  color: var(--theme-primary);
 }
 </style>

@@ -194,6 +194,7 @@ import {
   collectBasicSourceDiagnostics,
 } from '../utils/codeEditingSupport'
 import { createSafeHtmlPreview } from '../utils/safeHtmlPreview'
+import { confirmAppAction } from '../services/appDialog'
 
 interface TextDocumentError {
   code?: string
@@ -628,7 +629,12 @@ const save = async () => {
 }
 
 const reloadCurrentEncoding = async () => {
-  if (dirty.value && !window.confirm('重新读取会覆盖当前未保存内容，是否继续？')) {
+  if (dirty.value && !await confirmAppAction(dialog, {
+    title: '重新读取当前文件？',
+    content: '磁盘内容将覆盖当前未保存的文本修改。',
+    positiveText: '放弃修改并重新读取',
+    danger: true,
+  })) {
     readEncoding.value = sourceEncoding.value
     return
   }

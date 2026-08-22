@@ -502,10 +502,11 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useMessage } from 'naive-ui'
+import { useDialog, useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
+import { confirmAppAction, promptAppAction } from '../services/appDialog'
 import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity.vue'
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
@@ -676,6 +677,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
 const message = useMessage()
+const dialog = useDialog()
 const scrollRef = ref<HTMLElement | null>(null)
 const searchInputRef = ref<HTMLInputElement | null>(null)
 const pdfDocument = shallowRef<PDFDocumentProxy | null>(null)
@@ -1173,8 +1175,13 @@ const undoPdfRedaction = () => {
   invalidatePdfRedactionVerification()
 }
 
-const clearPdfRedactions = () => {
-  if (!pdfRedactions.value.length || !window.confirm('清空全部永久脱敏框选草稿？源 PDF 不会受到影响。')) return
+const clearPdfRedactions = async () => {
+  if (!pdfRedactions.value.length || !await confirmAppAction(dialog, {
+    title: '清空永久脱敏草稿？',
+    content: '全部框选区域都会被清除；源 PDF 不会受到影响。',
+    positiveText: '清空草稿',
+    danger: true,
+  })) return
   pdfRedactions.value = []
   redactionMode.value = false
   invalidatePdfRedactionVerification()
@@ -2080,25 +2087,39 @@ const captureTextSelection = () => {
   }, 0)
 }
 
-const createSelectionAnnotation = (color: PdfAnnotationColor, withComment: boolean) => {
+const createSelectionAnnotation = async (color: PdfAnnotationColor, withComment: boolean) => {
   const tool = selectionTool.value
   if (!tool.show) return
   annotationColor.value = color
-  const comment = withComment ? window.prompt('为这段高亮添加评论（可留空）', '') : ''
+  const comment = withComment ? await promptAppAction(dialog, {
+    title: '添加高亮评论',
+    content: '评论可以留空，高亮范围不会改变。',
+    positiveText: '保存高亮',
+    multiline: true,
+  }) : ''
   if (withComment && comment === null) return
   addAnnotation(makeAnnotation('highlight', tool.page, tool.rects, tool.quote, comment || '', color))
   dismissSelectionTool()
 }
 
-const createAreaAnnotation = (page: number, rect: PdfAnnotationRect) => {
-  const comment = window.prompt('区域批注评论（可留空）', '')
+const createAreaAnnotation = async (page: number, rect: PdfAnnotationRect) => {
+  const comment = await promptAppAction(dialog, {
+    title: '添加区域批注',
+    content: '为当前框选区域补充评论，也可以留空。',
+    positiveText: '保存区域批注',
+    multiline: true,
+  })
   if (comment === null) return
   addAnnotation(makeAnnotation('area', page, [rect], '', comment))
   areaMode.value = false
 }
 
-const createPageComment = () => {
-  const comment = window.prompt(`为第 ${currentPage.value} 页添加评论`, '')
+const createPageComment = async () => {
+  const comment = await promptAppAction(dialog, {
+    title: `为第 ${currentPage.value} 页添加评论`,
+    positiveText: '添加页评论',
+    multiline: true,
+  })
   if (!comment?.trim()) return
   addAnnotation(makeAnnotation('comment', currentPage.value, [], '', comment.trim()))
 }
@@ -2180,8 +2201,13 @@ const insertSelectedAnnotationReference = async () => {
     referenceWorking.value = false
   }
 }
-const deleteSelectedAnnotation = () => {
-  if (!annotationDocument.value || !selectedAnnotation.value || !window.confirm('确定删除这条 PDF 批注吗？')) return
+const deleteSelectedAnnotation = async () => {
+  if (!annotationDocument.value || !selectedAnnotation.value || !await confirmAppAction(dialog, {
+    title: '删除 PDF 批注？',
+    content: '这条批注将从当前批注文档中删除。',
+    positiveText: '删除批注',
+    danger: true,
+  })) return
   const id = selectedAnnotation.value.id
   annotationDocument.value.annotations = annotationDocument.value.annotations.filter(annotation => annotation.id !== id)
   selectedAnnotationId.value = ''
@@ -2447,13 +2473,20 @@ const loadPdf = async () => {
     }
     loadingTask.onProgress = (progress: { loaded: number; total: number }) => { if (progress.total) loadProgress.value = Math.min(100, Math.round(progress.loaded / progress.total * 100)) }
     loadingTask.onPassword = (updatePassword: (password: string) => void) => {
-      const password = window.prompt('此 PDF 受密码保护，请输入密码')
-      if (password !== null) updatePassword(password)
-      else {
-        error.value = '已取消输入 PDF 密码'
-        loading.value = false
-        loadingTask?.destroy()
-      }
+      void promptAppAction(dialog, {
+        title: '打开受保护的 PDF',
+        content: '此 PDF 需要密码。密码只用于当前本地打开操作。',
+        placeholder: '输入 PDF 密码',
+        positiveText: '打开 PDF',
+        password: true,
+      }).then(password => {
+        if (password !== null) updatePassword(password)
+        else {
+          error.value = '已取消输入 PDF 密码'
+          loading.value = false
+          loadingTask?.destroy()
+        }
+      })
     }
     const document = await loadingTask.promise
     pdfDocument.value = document
@@ -2585,7 +2618,12 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 const handleResize = () => { if (fitWidth.value) applyFitWidth() }
-const mayDiscardPagePlan = () => !pdfWorkspaceDirty.value || window.confirm('PDF 编辑草稿尚未生成新文件，离开后将丢失页面整理、合并、永久脱敏框选、文字水印或文档属性修改。确定离开吗？')
+const mayDiscardPagePlan = async () => !pdfWorkspaceDirty.value || await confirmAppAction(dialog, {
+  title: '离开 PDF 工作区？',
+  content: '编辑草稿尚未生成新文件，页面整理、合并、脱敏、水印和文档属性修改都将丢失。',
+  positiveText: '放弃草稿并离开',
+  danger: true,
+})
 const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
   if (!pdfWorkspaceDirty.value) return
   event.preventDefault()

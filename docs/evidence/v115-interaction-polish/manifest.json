@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.15-interaction-polish",
+  "status": "accepted",
+  "sourceCommit": "ae4d3e140f35a11ca60dc0d69de78135ff749786",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "8629fe1e9ea311a8673d537976e656b58eaa465d09f098cbd91220fdeede0217",
+  "screenshots": [
+    {
+      "file": "workspace-tab-tooltip.png",
+      "bytes": 84182,
+      "sha256": "e2d58958f51682299c315f884b830e5066742943041348f636cea123b7969940"
+    },
+    {
+      "file": "context-menu-policy.png",
+      "bytes": 70890,
+      "sha256": "c8a50943c354b946cf130ad0ecc2be0523f8b628edc5d7df920f756d0bcb7774"
+    },
+    {
+      "file": "global-tooltip-light.png",
+      "bytes": 67721,
+      "sha256": "1bd8008c08a64ac122492159770957fb6a8f061545f28dbee8c54d19ea0514c2"
+    },
+    {
+      "file": "dropdown-light.png",
+      "bytes": 78409,
+      "sha256": "f136a64dff1ac60dee47055ea12275419c8368dedd3495a67586ad24e8c435b7"
+    },
+    {
+      "file": "dialog-light.png",
+      "bytes": 80013,
+      "sha256": "a1459c519ecf8e1414eb1ad62cfb9baaa482e4beeeb302179baff3748d24b4fa"
+    },
+    {
+      "file": "global-tooltip-dark-narrow.png",
+      "bytes": 69675,
+      "sha256": "9dd5954ee2102650f94b5f4ede63fcfafe35e1fd365a285247f77607f35c22dd"
+    },
+    {
+      "file": "dropdown-dark-narrow.png",
+      "bytes": 80608,
+      "sha256": "f3f46f50e62a88b47fffac16df9bfaab2580d0b54a1360154795ca8aa54ca091"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "visualReview": {
+    "workspaceShellAligned": true,
+    "tooltipSurfaceAligned": true,
+    "globalTooltipPolicyAligned": true,
+    "dropdownSurfaceAligned": true,
+    "dialogSurfaceAligned": true,
+    "darkNarrowHighDpiAligned": true,
+    "defaultWebViewMenuAbsent": true,
+    "customFileTreeMenuVisible": true
+  }
+}

@@ -394,15 +394,22 @@ await capture('installed-json-save-reopen.jpg')
 checks.push({ id: 'installed-json-read-edit-save-reopen', status: 'passed', visual: jsonVisual })
 
 const clickByTitle = title => evaluate(`(() => {
-  const button = document.querySelector(${JSON.stringify(`button[title="${title}"]`)})
+  const label = ${JSON.stringify(title)}
+  const button = [...document.querySelectorAll('button')].find(item =>
+    item.title === label
+      || item.getAttribute('aria-label') === label
+      || item.getAttribute('data-app-tooltip') === label
+  )
   if (!button || button.disabled) return false
   button.click()
   return true
 })()`)
 const installedDocxResults = []
+const installedDocxRunNonce = `${Date.now()}-${process.pid}`
 for (const fixture of nativeDocxFixtures) {
   const source = path.join(repoRoot, 'fixtures', 'docx', 'hyperlinks', fixture.sourceFile)
-  const targetFile = path.join(library, fixture.copyFile)
+  const runCopyFile = fixture.copyFile.replace(/\.docx$/i, `-${installedDocxRunNonce}.docx`)
+  const targetFile = path.join(library, runCopyFile)
   const sourceSha256 = await sha256(source)
   await fs.copyFile(source, targetFile)
   const initialCopySha256 = await sha256(targetFile)
@@ -416,20 +423,42 @@ for (const fixture of nativeDocxFixtures) {
     `${fixture.producerId} installed DOCX identity`,
     1200,
   )
+  await waitFor(
+    `document.querySelectorAll('.docx-workspace .editable-hyperlink').length === ${fixture.expectedEditableLinks}`,
+    `${fixture.producerId} installed DOCX editable model ready`,
+    1200,
+  )
   const editorAvailable = await evaluate(`(() => {
     if (document.querySelector('.docx-editor')) return true
-    const button = document.querySelector('.docx-toolbar button[title="打开 DOCX 页面编辑"]')
+    const button = document.querySelector('.docx-toolbar button[aria-label="打开 DOCX 页面编辑"], .docx-toolbar button[data-app-tooltip="打开 DOCX 页面编辑"], .docx-toolbar button[title="打开 DOCX 页面编辑"]')
     if (!button || button.disabled) return false
     button.click()
     return true
   })()`)
   if (editorAvailable) await waitFor(`document.querySelector('.docx-editor') !== null`, `${fixture.producerId} installed DOCX editor`)
+  const textModeSelected = await evaluate(`(() => {
+    const button = [...document.querySelectorAll('.docx-editor .edit-mode-tabs button')]
+      .find(item => item.textContent.trim() === '文本')
+    if (!button || button.disabled) return false
+    button.click()
+    return true
+  })()`)
+  if (!textModeSelected) throw new Error(`${fixture.producerId} installed DOCX text mode unavailable after model readiness`)
+  await waitFor(
+    `document.querySelector('.docx-editor .edit-field select')?.options.length > 0`,
+    `${fixture.producerId} installed DOCX text targets ready`,
+  )
   const initialState = await evaluate(`(() => {
     const select = document.querySelector('.docx-editor .edit-field select')
     const labels = select ? [...select.options].map(item => item.textContent.trim()) : []
+    const buttons = [...document.querySelectorAll('button')]
+      .filter(item => ['文本', '样式', '图片说明'].includes(item.textContent.trim()))
     return {
+      targetLabels: labels,
       linkTargetLabels: labels.filter(label => label.startsWith('链接文字')),
       editableHyperlinkCount: document.querySelectorAll('.docx-workspace .editable-hyperlink').length,
+      modeButtons: buttons.map(item => ({ text: item.textContent.trim(), disabled: item.disabled, className: item.className })),
+      editorHtml: document.querySelector('.docx-editor')?.outerHTML.slice(0, 1200) || '',
     }
   })()`)
   if (initialState.linkTargetLabels.length !== fixture.expectedEditableLinks || initialState.editableHyperlinkCount !== fixture.expectedEditableLinks) {
@@ -438,7 +467,7 @@ for (const fixture of nativeDocxFixtures) {
   const result = {
     producerId: fixture.producerId,
     sourceFile: fixture.sourceFile,
-    route: `#/library?path=<disposable-library>/${encodeURIComponent(fixture.copyFile)}`,
+    route: `#/library?path=<disposable-library>/${encodeURIComponent(runCopyFile)}`,
     sourceSha256,
     expectedEditableLinks: fixture.expectedEditableLinks,
     linkTargetLabels: initialState.linkTargetLabels,

@@ -85,7 +85,7 @@ import { onMounted, ref, computed, onUnmounted, watch, nextTick, reactive } from
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '../services/tauriRuntime'
-import { useMessage, NIcon } from 'naive-ui'
+import { useDialog, useMessage, NIcon } from 'naive-ui'
 import { ArrowLeft as ArrowLeftIcon, BookPlus as BookPlusIcon, List as ListIcon, PanelLeftClose as PanelLeftCloseIcon, PanelLeftOpen as PanelLeftOpenIcon } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -95,10 +95,12 @@ import { resolveMarkdownEditorAppearance } from '../config/markdownCodeTheme'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { useVditorTheme } from '../composables/useVditorTheme'
+import { confirmAppAction } from '../services/appDialog'
 
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
+const dialog = useDialog()
 const store = useAppStore()
 
 const filePath = ref(route.query.path as string || '')
@@ -106,9 +108,14 @@ const fileName = computed(() => filePath.value ? filePath.value.split(/[\\/]/).p
 const isDirty = ref(false)
 watch(isDirty, (v) => { store.isTempDirty = v })
 
-onBeforeRouteLeave((_to, _from, next) => {
+onBeforeRouteLeave(async (_to, _from, next) => {
   if (!isDirty.value) { store.isTempDirty = false; return next() }
-  const answer = window.confirm('当前文档有未保存的修改，确定要离开吗？')
+  const answer = await confirmAppAction(dialog, {
+    title: '离开临时编辑？',
+    content: '当前文档还有未保存修改，离开后将无法恢复。',
+    positiveText: '放弃修改并离开',
+    danger: true,
+  })
   if (answer) { store.isTempDirty = false; next() } else { next(false) }
 })
 

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14"><img src="https://img.shields.io/badge/Stable-v1.0.14-16a34a" alt="v1.0.14 stable"></a>
+  <a href="docs/RELEASE_NOTES_v1.0.15.md"><img src="https://img.shields.io/badge/Next-v1.0.15-cca43b" alt="v1.0.15 candidate"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -31,7 +31,7 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.14 已完成本地与远端质量门禁、真实 Windows 安装生命周期和附件摘要核验，集中修复窄窗口布局、资料库侧栏入口含义与 Markdown 标签可靠性。完整范围见 [v1.0.14 发布说明](docs/RELEASE_NOTES_v1.0.14.md)。
+> v1.0.15 正在执行发布门禁，集中统一应用提示层、右键菜单、应用内对话框、长格式菜单和更新进度反馈。当前可下载稳定版仍为 v1.0.14；候选范围见 [v1.0.15 发布说明](docs/RELEASE_NOTES_v1.0.15.md)。
 
 ## 下载
 
@@ -50,7 +50,20 @@ Long编辑 v1.0.14 支持 Windows 10/11 x64。
 194816764a99b86aff486cb9bce71f75a5074dfa4ba3648c821c26e01d5713ee  LongEdit_1.0.14_x64_zh-CN.msi
 ```
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.15 发布后将继续沿用这一安全更新链。
+
+## v1.0.15 候选
+
+这一补丁围绕专业桌面交互一致性和更新可靠性收口：
+
+- 顶部标签和全软件按钮提示统一为现代化、主题化应用提示层，支持完整路径、键盘与 ARIA。
+- 普通区域不再显示 WebView 默认右键菜单，真实编辑控件和文件树/画布专用菜单保持正确能力。
+- 原生确认、提示和参数输入全部迁移到软件内对话框。
+- 资料库约 30 项的“新建”菜单支持视口内滚动，修复窄屏越界、层级遮挡和过渡透明问题。
+- 更新界面提供下载进度、容量、SHA-256 校验和安装阶段反馈，并修复设置卡片缩放细节。
+- 亮色、深色、720×680 窄屏与 DPR 1.5 真实 Tauri 验收通过；v1.0.13 → v1.0.14 官方自动更新 12/12 检查通过。
+
+候选不等于正式发布。完整范围与边界见 [v1.0.15 发布说明](docs/RELEASE_NOTES_v1.0.15.md) 和 [发布审计](docs/V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
 
 ## v1.0.14
 
@@ -243,7 +256,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
-开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选审计见 [v1.0.14 发布审计](docs/V1_0_14_Unsigned_Community_Release_Audit_2026-08-21.md)。
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选审计见 [v1.0.15 发布审计](docs/V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
 
 ## 许可证
 

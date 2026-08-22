@@ -29,12 +29,12 @@ for (const token of [
 ]) requireText(backend, token, `external DOCX backend is missing ${token}`)
 for (const token of [
   "const isExternal = computed(() => route.query.external === '1')",
-  "isExternal.value ? 'read_external_docx_document' : 'read_docx_document'",
-  '...(isExternal.value ? {} : { libraryRoot: store.libraryPath })',
+  "requestedExternal ? 'read_external_docx_document' : 'read_docx_document'",
+  '...(requestedExternal ? {} : { libraryRoot: store.libraryPath })',
   'v-if="!isExternal"',
   'editorOpen && !isExternal',
   'editorOpen && !isExternal',
-  'external: isExternal.value',
+  'external: requestedExternal',
   '外部 Word 文档 · 只读 · 不会写回',
   '<WorkspaceTabs v-if="isExternal',
 ]) requireText(view, token, `external DOCX workspace is missing ${token}`)

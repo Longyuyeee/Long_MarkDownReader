@@ -190,6 +190,7 @@ import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
 import { type TabInfo, useAppStore } from '../store/app'
 import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../utils/structuredAnalysis'
+import { confirmAppAction } from '../services/appDialog'
 
 interface TextDocumentSnapshot {
   content: string
@@ -552,7 +553,12 @@ const save = async (allowInvalid = false) => {
 }
 
 const reloadFromDisk = async () => {
-  if (dirty.value && !window.confirm('重新读取会覆盖当前未保存的 YAML 源码，是否继续？')) return
+  if (dirty.value && !await confirmAppAction(dialog, {
+    title: '重新读取 YAML？',
+    content: '磁盘源码将覆盖当前未保存的 YAML 修改。',
+    positiveText: '放弃修改并重新读取',
+    danger: true,
+  })) return
   await load(true)
 }
 

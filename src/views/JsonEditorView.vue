@@ -543,6 +543,7 @@ import { findFileFormat } from '../config/fileFormats'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { type TabInfo, useAppStore } from '../store/app'
+import { confirmAppAction } from '../services/appDialog'
 
 interface TextDocumentSnapshot {
   content: string
@@ -1482,7 +1483,12 @@ const save = async (allowInvalid = false) => {
 }
 
 const reloadFromDisk = async () => {
-  if (dirty.value && !window.confirm('重新读取会覆盖当前未保存的 JSON 源码，是否继续？')) return
+  if (dirty.value && !await confirmAppAction(dialog, {
+    title: '重新读取 JSON？',
+    content: '磁盘源码将覆盖当前未保存的 JSON 修改。',
+    positiveText: '放弃修改并重新读取',
+    danger: true,
+  })) return
   await load(true)
 }
 

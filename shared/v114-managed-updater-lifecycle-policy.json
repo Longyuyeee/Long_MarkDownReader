@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.14-U1",
+  "status": "hosted-managed-update-passed",
+  "environment": "github-hosted-disposable-windows",
+  "workflow": ".github/workflows/v113-managed-updater-lifecycle.yml",
+  "workflowReuse": "parameterized-v109-runner-with-audited-v1.0.14-policy-ref",
+  "releases": {
+    "previous": {
+      "version": "1.0.13",
+      "tag": "v1.0.13",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.13",
+      "installer": {
+        "fileName": "LongEdit_1.0.13_x64-setup.exe",
+        "sizeBytes": 65533822,
+        "sha256": "f1fdd8ba55e47112c19a4e07eb508f1f2b2b12c3b56e6567d2efeed7ce3f67eb",
+        "authenticodeStatus": "NotSigned"
+      }
+    },
+    "current": {
+      "version": "1.0.14",
+      "tag": "v1.0.14",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.14",
+      "taggedCommit": "9f285cd4d8397be719e27f84a7b0c2c0be6ad783",
+      "installer": {
+        "fileName": "LongEdit_1.0.14_x64-setup.exe",
+        "sizeBytes": 65568349,
+        "sha256": "889ece196cc70ae33b171c1e14d366ca7f024c33709736417304d92200991499",
+        "authenticodeStatus": "NotSigned"
+      },
+      "standaloneReleaseExecutableReferenceSha256": "301c890e5295cf51052fd8b51103b62427ab398d4b002cfb83bc041006ca35a5",
+      "installedPackageExecutable": {
+        "fileName": "tauri-app.exe",
+        "sizeBytes": 107179520,
+        "sha256": "18197a5f8a4dbb1ae9e18a9a7fd7ec9da341535d310f77c4e4df68111e650aa0",
+        "authenticodeStatus": "NotSigned",
+        "trustAnchor": "verified-official-nsis-installer"
+      }
+    }
+  },
+  "requirements": {
+    "officialLatestRelease": true,
+    "explicitUserConfirmation": true,
+    "sha256BeforeInstall": true,
+    "silentOverwrite": true,
+    "sameInstallRoot": true,
+    "installedExecutableIdentityRecorded": true,
+    "automaticRelaunchAfterInstall": true,
+    "firstLaunchAfterUpdate": true,
+    "postUpgradeReportsCurrent": true,
+    "libraryDataRetained": true,
+    "configDataRetained": true,
+    "uninstallRetainsUserData": true,
+    "sourceUserContentIncluded": false
+  },
+  "gates": {
+    "harnessImplemented": true,
+    "qualityGatePassed": true,
+    "hostedWorkflowPassed": true,
+    "releaseDiscoveryPassed": true,
+    "confirmationBoundaryPassed": true,
+    "downloadHashPassed": true,
+    "overwriteInstallPassed": true,
+    "automaticRelaunchPassed": true,
+    "firstLaunchPassed": true,
+    "postUpgradeCurrentPassed": true,
+    "userDataRetentionPassed": true,
+    "evidenceImported": true
+  },
+  "githubRun": {
+    "id": 32503105554,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/32503105554",
+    "headCommit": "5b8d78874a0c5bc81bc24715423548747f1ae448",
+    "conclusion": "success"
+  },
+  "evidenceRoot": "docs/evidence/v1.0.14-managed-updater",
+  "nextAction": "v1.0.14-release-closure-complete"
+}

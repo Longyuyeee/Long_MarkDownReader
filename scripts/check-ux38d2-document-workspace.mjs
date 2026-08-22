@@ -7,7 +7,7 @@ const read = file => fs.readFileSync(file, 'utf8')
 const fail = message => { console.error(`UX-38D2 document workspace rejected: ${message}`); process.exit(1) }
 const docx = read('src/views/DocxReaderView.vue')
 const odt = read('src/views/OdtReaderView.vue')
-for (const token of ['ref="stageRef" class="docx-stage"', 'rememberDocxViewState()', 'recallWorkspaceViewState(docxPath.value)', 'container-type: inline-size', '@container (max-width: 680px)']) {
+for (const token of ['ref="stageRef" class="docx-stage"', 'rememberDocxViewState()', 'recallWorkspaceViewState(requestedPath)', 'container-type: inline-size', '@container (max-width: 680px)']) {
   if (!docx.includes(token)) fail(`DOCX product token missing: ${token}`)
 }
 for (const token of ['ref="stageRef" class="odt-stage"', 'rememberOdtViewState()', 'recallWorkspaceViewState(odtPath.value)', 'container-type: inline-size', '@container (max-width: 560px)']) {

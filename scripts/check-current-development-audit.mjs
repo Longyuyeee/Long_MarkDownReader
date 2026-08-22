@@ -9,9 +9,13 @@ import './check-v110-managed-updater-lifecycle.mjs'
 import './check-v111-managed-updater-lifecycle.mjs'
 import './check-v112-managed-updater-lifecycle.mjs'
 import './check-v113-managed-updater-lifecycle.mjs'
+import './check-v114-managed-updater-lifecycle.mjs'
 import './check-code-file-creation.mjs'
 import './check-cf1-code-file-creation-audit.mjs'
 import './check-ux51-external-window-lifecycle.mjs'
+import './check-v115-interaction-polish-audit.mjs'
+import './check-v115-global-tooltip-policy.mjs'
+import './check-v115-overlay-bounds.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))

@@ -797,6 +797,7 @@ import WorkspaceStatusBar from '../components/workspace/WorkspaceStatusBar.vue'
 import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
+import { confirmAppAction, promptAppAction } from '../services/appDialog'
 import { useDialog, useMessage } from 'naive-ui'
 import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, MoreHorizontal as MoreIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, Save as SaveIcon, SlidersHorizontal as SlidersIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
@@ -2517,9 +2518,9 @@ const applyBorderSide = (event: Event) => {
   if (side === 'bottom') applyStylePatch({ borderBottom: value })
   if (side === 'left') applyStylePatch({ borderLeft: value })
 }
-const setCustomNumberFormat = () => {
+const setCustomNumberFormat = async () => {
   const current = focusedStyle.value.numberFormat.startsWith('custom:') ? focusedStyle.value.numberFormat.slice(7) : '0.00'
-  const code = window.prompt('输入 Excel 自定义数字格式（最多 128 个字符）', current)
+  const code = await promptAppAction(dialog, { title: '自定义数字格式', content: '输入 Excel 自定义数字格式，最多 128 个字符。', initialValue: current, positiveText: '应用格式' })
   if (code === null) return
   const trimmed = code.trim()
   if (!trimmed || trimmed.length > 128 || /[\u0000-\u001f\u007f]/.test(trimmed)) return void message.error('自定义数字格式不能为空、不能包含控制字符且最多 128 个字符')
@@ -2543,13 +2544,13 @@ const selectedColumnsForResize = () => {
   for (const area of headerAreas) for (let column = area.left; column <= area.right; column += 1) columns.add(column)
   return Array.from(columns)
 }
-const setSelectedRowHeight = () => {
+const setSelectedRowHeight = async () => {
   if (isExternal.value) return
   let rows: number[]
   try { rows = selectedRowsForResize() } catch (cause) { return void message.error(String(cause).replace(/^Error:\s*/, '')) }
   if (!rows.length) return
   const initial = rowHeightPoints(rows[0]).toFixed(2).replace(/\.00$/, '')
-  const input = window.prompt('输入行高（2–409.5 磅）；留空恢复默认行高', initial)
+  const input = await promptAppAction(dialog, { title: '设置行高', content: '允许范围为 2–409.5 磅；留空恢复默认行高。', initialValue: initial, positiveText: '应用行高' })
   if (input === null) return
   const height = input.trim() ? Number(input) : null
   if (height !== null && (!Number.isFinite(height) || height < 2 || height > 409.5)) return void message.error('行高必须在 2 到 409.5 磅之间')
@@ -2570,12 +2571,12 @@ const setSelectedRowHeight = () => {
   undoStack.value.push({ rowHeightChanges: changes })
   redoStack.value = []
 }
-const setSelectedColumnWidth = () => {
+const setSelectedColumnWidth = async () => {
   if (isExternal.value) return
   const columns = selectedColumnsForResize()
   if (!columns.length) return
   const initial = columnWidthUnits(columns[0]).toFixed(2).replace(/\.00$/, '')
-  const input = window.prompt('输入列宽（0.1–255）；留空恢复默认列宽', initial)
+  const input = await promptAppAction(dialog, { title: '设置列宽', content: '允许范围为 0.1–255；留空恢复默认列宽。', initialValue: initial, positiveText: '应用列宽' })
   if (input === null) return
   const width = input.trim() ? Number(input) : null
   if (width !== null && (!Number.isFinite(width) || width < 0.1 || width > 255)) return void message.error('列宽必须在 0.1 到 255 之间')
@@ -2771,15 +2772,15 @@ const commitTableLifecycleChange = async (change: WorkbookTableChange, area: Wor
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { updatingStructure.value = false }
 }
-const promptDataValidationRule = (existing: WorkbookDataValidation | undefined, ranges: WorkbookMergeRange[]): WorkbookDataValidation | null => {
-  const kindInput = window.prompt('规则类型：list（列表）、whole（整数）、decimal（小数）、textLength（文本长度）或 custom（自定义公式）', existing?.kind || 'list')
+const promptDataValidationRule = async (existing: WorkbookDataValidation | undefined, ranges: WorkbookMergeRange[]): Promise<WorkbookDataValidation | null> => {
+  const kindInput = await promptAppAction(dialog, { title: '数据验证类型', content: '可用类型：list（列表）、whole（整数）、decimal（小数）、textLength（文本长度）或 custom（自定义公式）。', initialValue: existing?.kind || 'list', positiveText: '下一步' })
   if (kindInput === null) return null
   const kindAliases: Record<string, string> = { list: 'list', '列表': 'list', whole: 'whole', '整数': 'whole', decimal: 'decimal', '小数': 'decimal', textlength: 'textLength', '文本长度': 'textLength', custom: 'custom', '自定义': 'custom', '自定义公式': 'custom' }
   const kind = kindAliases[kindInput.trim().toLocaleLowerCase()] || kindAliases[kindInput.trim()]
   if (!kind) { message.error('不支持的数据验证类型'); return null }
   let operator: string | undefined
   if (['whole', 'decimal', 'textLength'].includes(kind)) {
-    const input = window.prompt('比较方式：between、notBetween、equal、notEqual、lessThan、lessThanOrEqual、greaterThan、greaterThanOrEqual', existing?.operator || 'between')
+    const input = await promptAppAction(dialog, { title: '数据验证比较方式', content: '可用方式：between、notBetween、equal、notEqual、lessThan、lessThanOrEqual、greaterThan、greaterThanOrEqual。', initialValue: existing?.operator || 'between', positiveText: '下一步' })
     if (input === null) return null
     operator = input.trim()
     if (!['between', 'notBetween', 'equal', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual'].includes(operator)) {
@@ -2791,18 +2792,18 @@ const promptDataValidationRule = (existing: WorkbookDataValidation | undefined, 
     : kind === 'custom'
       ? '输入自定义公式，例如 A1>0；公式按选区左上角作为相对引用基准'
       : '输入第一个比较值或公式'
-  const formula1 = window.prompt(formulaHint, existing?.formula1 || (kind === 'list' ? '"是,否"' : kind === 'custom' ? `${columnLabel(ranges[0].left)}${ranges[0].top + 1}<>""` : '0'))?.trim()
+  const formula1 = (await promptAppAction(dialog, { title: '数据验证来源或公式', content: formulaHint, initialValue: existing?.formula1 || (kind === 'list' ? '"是,否"' : kind === 'custom' ? `${columnLabel(ranges[0].left)}${ranges[0].top + 1}<>""` : '0'), positiveText: '下一步' }))?.trim()
   if (!formula1) return null
   let formula2: string | undefined
   if (operator === 'between' || operator === 'notBetween') {
-    const input = window.prompt('输入第二个比较值或公式', existing?.formula2 || '100')
+    const input = await promptAppAction(dialog, { title: '第二个比较值', content: '输入第二个比较值或公式。', initialValue: existing?.formula2 || '100', positiveText: '下一步' })
     if (input === null) return null
     formula2 = input.trim()
     if (!formula2) return null
   }
-  const error = window.prompt('输入错误提示；留空表示仅保存规则，不阻止当前编辑器中的输入', existing?.error || '输入不符合此单元格的数据验证规则')
+  const error = await promptAppAction(dialog, { title: '数据验证错误提示', content: '留空表示仅保存规则，不阻止当前编辑器中的输入。', initialValue: existing?.error || '输入不符合此单元格的数据验证规则', positiveText: '下一步', multiline: true })
   if (error === null) return null
-  const prompt = window.prompt('输入选中单元格时的提示；可以留空', existing?.prompt || '')
+  const prompt = await promptAppAction(dialog, { title: '单元格输入提示', content: '选中单元格时显示，可以留空。', initialValue: existing?.prompt || '', positiveText: '保存规则', multiline: true })
   if (prompt === null) return null
   return {
     ranges: ranges.map(range => ({ ...range })),
@@ -2838,14 +2839,14 @@ const commitDataValidationChange = async (change: WorkbookDataValidationChange, 
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { updatingStructure.value = false }
 }
-const editDataValidationRule = (action: 'create' | 'update') => {
+const editDataValidationRule = async (action: 'create' | 'update') => {
   commitFormulaInput()
   const area = validationSelection.value
   if (!area || !canEditDataValidation.value) return
   const existing = action === 'update' ? selectedValidation.value : undefined
   const index = action === 'update' ? selectedValidationIndex.value : -1
   if (action === 'update' && (!existing || index < 0)) return void message.error('请选择一个已有数据验证规则')
-  const validation = promptDataValidationRule(existing, existing?.ranges || [{ ...area }])
+  const validation = await promptDataValidationRule(existing, existing?.ranges || [{ ...area }])
   if (!validation) return
   void commitDataValidationChange({
     sheet: activeSheet.value,
@@ -2937,8 +2938,8 @@ const parseIconThresholds = (source: string, count: number): WorkbookConditional
   if (thresholds.every(point => point.kind === thresholds[0].kind) && thresholds.some((point, index) => index > 0 && Number(thresholds[index - 1].value) > Number(point.value))) return null
   return thresholds
 }
-const promptConditionalFormatRule = (existing: WorkbookConditionalFormatRule | undefined, ranges: WorkbookMergeRange[]): WorkbookConditionalFormatRule | null => {
-  const kind = window.prompt('规则类型：cellIs（单元格数值）、expression（引用表达式）、colorScale（色阶）、dataBar（数据条）或 iconSet（图标集）', existing?.kind || 'cellIs')?.trim()
+const promptConditionalFormatRule = async (existing: WorkbookConditionalFormatRule | undefined, ranges: WorkbookMergeRange[]): Promise<WorkbookConditionalFormatRule | null> => {
+  const kind = (await promptAppAction(dialog, { title: '条件格式类型', content: '可用类型：cellIs（单元格数值）、expression（引用表达式）、colorScale（色阶）、dataBar（数据条）或 iconSet（图标集）。', initialValue: existing?.kind || 'cellIs', positiveText: '下一步' }))?.trim()
   if (!kind) return null
   if (!['cellIs', 'expression', 'colorScale', 'dataBar', 'iconSet'].includes(kind)) { message.error('规则类型必须是 cellIs、expression、colorScale、dataBar 或 iconSet'); return null }
   let operator: string | undefined
@@ -2949,27 +2950,27 @@ const promptConditionalFormatRule = (existing: WorkbookConditionalFormatRule | u
   let iconSet: WorkbookConditionalIconSet | undefined
   if (kind === 'colorScale') {
     const existingPoints = existing?.kind === 'colorScale' ? existing.colorScale?.points : undefined
-    const countSource = window.prompt('色阶点数：2 或 3', String(existingPoints?.length || 3))?.trim()
+    const countSource = (await promptAppAction(dialog, { title: '色阶点数', content: '填写 2 或 3。', initialValue: String(existingPoints?.length || 3), positiveText: '下一步' }))?.trim()
     const count = Number(countSource)
     if (!matchesColorScaleLength(count)) { message.error('色阶点数必须是 2 或 3'); return null }
-    const thresholdSource = window.prompt(`输入 ${count} 个阈值：min、max、num:数值、percent:0-100 或 percentile:0-100，以逗号分隔`, existingPoints?.map(colorScaleThresholdToken).join(',') || (count === 2 ? 'min,max' : 'min,percentile:50,max'))?.trim()
+    const thresholdSource = (await promptAppAction(dialog, { title: '色阶阈值', content: `输入 ${count} 个阈值：min、max、num:数值、percent:0-100 或 percentile:0-100，以逗号分隔。`, initialValue: existingPoints?.map(colorScaleThresholdToken).join(',') || (count === 2 ? 'min,max' : 'min,percentile:50,max'), positiveText: '下一步' }))?.trim()
     const thresholds = thresholdSource ? parseColorScaleThresholds(thresholdSource, count) : null
     if (!thresholds) { message.error('色阶阈值格式或顺序无效'); return null }
-    const colorSource = window.prompt(`输入 ${count} 个 #RRGGBB 颜色，以逗号分隔`, existingPoints?.map(point => point.color).join(',') || (count === 2 ? '#F8696B,#63BE7B' : '#F8696B,#FFEB84,#63BE7B'))?.trim()
+    const colorSource = (await promptAppAction(dialog, { title: '色阶颜色', content: `输入 ${count} 个 #RRGGBB 颜色，以逗号分隔。`, initialValue: existingPoints?.map(point => point.color).join(',') || (count === 2 ? '#F8696B,#63BE7B' : '#F8696B,#FFEB84,#63BE7B'), positiveText: '保存色阶规则' }))?.trim()
     const colors = colorSource?.split(',').map(value => value.trim().toUpperCase()) || []
     if (colors.length !== count || colors.some(value => !/^#[0-9A-F]{6}$/.test(value))) { message.error('色阶颜色必须使用 #RRGGBB'); return null }
     colorScale = { points: thresholds.map((point, index) => ({ ...point, color: colors[index] })) }
   } else if (kind === 'dataBar') {
     const existingBar = existing?.kind === 'dataBar' ? existing.dataBar : undefined
-    const thresholdSource = window.prompt('输入两个阈值：min、max、num:数值、percent:0-100 或 percentile:0-100，以逗号分隔；负数固定阈值会自动显示正负轴', existingBar ? `${conditionalThresholdToken(existingBar.minimum)},${conditionalThresholdToken(existingBar.maximum)}` : 'min,max')?.trim()
+    const thresholdSource = (await promptAppAction(dialog, { title: '数据条阈值', content: '输入两个阈值，以逗号分隔；支持 min、max、num、percent 和 percentile。', initialValue: existingBar ? `${conditionalThresholdToken(existingBar.minimum)},${conditionalThresholdToken(existingBar.maximum)}` : 'min,max', positiveText: '下一步' }))?.trim()
     const thresholds = thresholdSource ? parseDataBarThresholds(thresholdSource) : null
     if (!thresholds) { message.error('数据条阈值格式或顺序无效'); return null }
-    const color = window.prompt('数据条颜色（#RRGGBB）', existingBar?.color || '#638EC6')?.trim().toUpperCase()
+    const color = (await promptAppAction(dialog, { title: '数据条颜色', content: '使用 #RRGGBB 格式。', initialValue: existingBar?.color || '#638EC6', positiveText: '下一步' }))?.trim().toUpperCase()
     if (!color || !/^#[0-9A-F]{6}$/.test(color)) { message.error('数据条颜色必须使用 #RRGGBB'); return null }
-    const minLength = Number(window.prompt('最短数据条长度（0-100）', String(existingBar?.minLength ?? 10))?.trim())
-    const maxLength = Number(window.prompt('最长数据条长度（0-100）', String(existingBar?.maxLength ?? 90))?.trim())
+    const minLength = Number((await promptAppAction(dialog, { title: '最短数据条长度', content: '填写 0–100 的整数。', initialValue: String(existingBar?.minLength ?? 10), positiveText: '下一步' }))?.trim())
+    const maxLength = Number((await promptAppAction(dialog, { title: '最长数据条长度', content: '填写 0–100 的整数。', initialValue: String(existingBar?.maxLength ?? 90), positiveText: '下一步' }))?.trim())
     if (!Number.isInteger(minLength) || !Number.isInteger(maxLength) || minLength < 0 || minLength > maxLength || maxLength > 100) { message.error('数据条长度必须满足 0 ≤ 最短长度 ≤ 最长长度 ≤ 100'); return null }
-    const showValueSource = window.prompt('是否显示单元格数值：true 或 false', String(existingBar?.showValue ?? true))?.trim().toLowerCase()
+    const showValueSource = (await promptAppAction(dialog, { title: '显示单元格数值', content: '填写 true 或 false。', initialValue: String(existingBar?.showValue ?? true), positiveText: '保存数据条规则' }))?.trim().toLowerCase()
     if (!['true', 'false'].includes(showValueSource || '')) { message.error('是否显示数值必须填写 true 或 false'); return null }
     dataBar = {
       minimum: thresholds[0],
@@ -2981,36 +2982,36 @@ const promptConditionalFormatRule = (existing: WorkbookConditionalFormatRule | u
     }
   } else if (kind === 'iconSet') {
     const existingSet = existing?.kind === 'iconSet' ? existing.iconSet : undefined
-    const iconSetName = window.prompt(`标准图标集：${Object.keys(STANDARD_ICON_SET_COUNTS).join('、')}`, existingSet?.iconSet || '3TrafficLights1')?.trim()
+    const iconSetName = (await promptAppAction(dialog, { title: '标准图标集', content: Object.keys(STANDARD_ICON_SET_COUNTS).join('、'), initialValue: existingSet?.iconSet || '3TrafficLights1', positiveText: '下一步' }))?.trim()
     const count = iconSetName ? STANDARD_ICON_SET_COUNTS[iconSetName] : undefined
     if (!iconSetName || !count) { message.error('请选择受支持的标准图标集'); return null }
     const defaults = count === 3 ? 'percent:0,percent:33,percent:67' : count === 4 ? 'percent:0,percent:25,percent:50,percent:75' : 'percent:0,percent:20,percent:40,percent:60,percent:80'
-    const thresholdSource = window.prompt(`输入 ${count} 个 num/percent/percentile 阈值；首项必须为 percent:0，在阈值前加 > 表示严格大于`, existingSet?.thresholds.map(iconThresholdToken).join(',') || defaults)?.trim()
+    const thresholdSource = (await promptAppAction(dialog, { title: '图标集阈值', content: `输入 ${count} 个 num/percent/percentile 阈值；首项必须为 percent:0，在阈值前加 > 表示严格大于。`, initialValue: existingSet?.thresholds.map(iconThresholdToken).join(',') || defaults, positiveText: '下一步' }))?.trim()
     const thresholds = thresholdSource ? parseIconThresholds(thresholdSource, count) : null
     if (!thresholds) { message.error('图标阈值格式、数量或顺序无效'); return null }
-    const reverseSource = window.prompt('是否反转图标顺序：true 或 false', String(existingSet?.reverse ?? false))?.trim().toLowerCase()
-    const showValueSource = window.prompt('是否同时显示单元格数值：true 或 false', String(existingSet?.showValue ?? true))?.trim().toLowerCase()
+    const reverseSource = (await promptAppAction(dialog, { title: '反转图标顺序', content: '填写 true 或 false。', initialValue: String(existingSet?.reverse ?? false), positiveText: '下一步' }))?.trim().toLowerCase()
+    const showValueSource = (await promptAppAction(dialog, { title: '显示单元格数值', content: '填写 true 或 false。', initialValue: String(existingSet?.showValue ?? true), positiveText: '保存图标集规则' }))?.trim().toLowerCase()
     if (!['true', 'false'].includes(reverseSource || '') || !['true', 'false'].includes(showValueSource || '')) { message.error('图标选项必须填写 true 或 false'); return null }
     iconSet = { iconSet: iconSetName, thresholds, reverse: reverseSource === 'true', showValue: showValueSource === 'true' }
   } else if (kind === 'expression') {
-    formula1 = window.prompt('输入安全条件表达式，例如 AND($D2="逾期",E2<100)；支持 AND、OR、NOT、多 A1 引用与字面量比较，不支持区域、跨 Sheet 或其他函数', existing?.kind === 'expression' ? existing.formula1 || '' : `${columnLabel(ranges[0]?.left || 0)}${(ranges[0]?.top || 0) + 1}>0`)?.trim()
+    formula1 = (await promptAppAction(dialog, { title: '条件格式表达式', content: '支持 AND、OR、NOT、多 A1 引用与字面量比较；不支持区域、跨 Sheet 或其他函数。', initialValue: existing?.kind === 'expression' ? existing.formula1 || '' : `${columnLabel(ranges[0]?.left || 0)}${(ranges[0]?.top || 0) + 1}>0`, positiveText: '下一步' }))?.trim()
     if (!formula1 || !parseConditionalExpression(formula1)) { message.error('表达式不在安全子集内：仅支持 AND、OR、NOT 和 A1 引用/字面量比较'); return null }
   } else {
-    operator = window.prompt('比较方式：between、notBetween、equal、notEqual、lessThan、lessThanOrEqual、greaterThan、greaterThanOrEqual', existing?.kind === 'cellIs' ? existing.operator || 'greaterThan' : 'greaterThan')?.trim()
+    operator = (await promptAppAction(dialog, { title: '条件格式比较方式', content: '可用方式：between、notBetween、equal、notEqual、lessThan、lessThanOrEqual、greaterThan、greaterThanOrEqual。', initialValue: existing?.kind === 'cellIs' ? existing.operator || 'greaterThan' : 'greaterThan', positiveText: '下一步' }))?.trim()
     if (!operator) return null
     if (!['between', 'notBetween', 'equal', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual'].includes(operator)) {
       message.error('不支持的条件格式比较方式'); return null
     }
-    formula1 = window.prompt('输入第一个数字阈值', existing?.kind === 'cellIs' ? existing.formula1 || '0' : '0')?.trim()
+    formula1 = (await promptAppAction(dialog, { title: '第一个数字阈值', initialValue: existing?.kind === 'cellIs' ? existing.formula1 || '0' : '0', positiveText: '下一步' }))?.trim()
     if (!formula1 || !Number.isFinite(Number(formula1.replace(/^=/, '')))) { message.error('阈值必须是有限数字'); return null }
     if (operator === 'between' || operator === 'notBetween') {
-      formula2 = window.prompt('输入第二个数字阈值', existing?.kind === 'cellIs' ? existing.formula2 || '100' : '100')?.trim()
+      formula2 = (await promptAppAction(dialog, { title: '第二个数字阈值', initialValue: existing?.kind === 'cellIs' ? existing.formula2 || '100' : '100', positiveText: '下一步' }))?.trim()
       if (!formula2 || !Number.isFinite(Number(formula2.replace(/^=/, '')))) { message.error('第二个阈值必须是有限数字'); return null }
     }
   }
   let style: WorkbookConditionalFormatStyle = { bold: false }
   if (!['colorScale', 'dataBar', 'iconSet'].includes(kind)) {
-    const preset = window.prompt('视觉样式：red_fill、yellow_fill、green_fill、red_text 或 green_text', 'yellow_fill')?.trim()
+    const preset = (await promptAppAction(dialog, { title: '条件格式视觉样式', content: '可用样式：red_fill、yellow_fill、green_fill、red_text 或 green_text。', initialValue: 'yellow_fill', positiveText: '下一步' }))?.trim()
     if (!preset) return null
     const selected = CONDITIONAL_STYLE_PRESETS[preset]
     if (!selected) { message.error('不支持的条件格式视觉样式'); return null }
@@ -3018,7 +3019,7 @@ const promptConditionalFormatRule = (existing: WorkbookConditionalFormatRule | u
   }
   let stopIfTrue = false
   if (!['colorScale', 'dataBar', 'iconSet'].includes(kind)) {
-    const stopSource = window.prompt('规则命中后是否停止执行后续规则：true 或 false', String(existing?.stopIfTrue ?? true))?.trim().toLowerCase()
+    const stopSource = (await promptAppAction(dialog, { title: '停止后续规则', content: '规则命中后是否停止执行后续规则，请填写 true 或 false。', initialValue: String(existing?.stopIfTrue ?? true), positiveText: '保存规则' }))?.trim().toLowerCase()
     if (!['true', 'false'].includes(stopSource || '')) { message.error('停止后续规则必须填写 true 或 false'); return null }
     stopIfTrue = stopSource === 'true'
   }
@@ -3059,13 +3060,13 @@ const commitConditionalFormatChange = async (change: WorkbookConditionalFormatCh
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { updatingStructure.value = false }
 }
-const editConditionalFormatRule = (action: 'create' | 'update') => {
+const editConditionalFormatRule = async (action: 'create' | 'update') => {
   commitFormulaInput()
   const area = conditionalSelection.value
   if (!area || !canEditConditionalFormat.value) return
   const existing = action === 'update' ? selectedConditionalFormat.value : undefined
   if (action === 'update' && !existing?.editable) return void message.error('当前条件格式为复杂只读规则')
-  const rule = promptConditionalFormatRule(existing, existing?.ranges || [{ ...area }])
+  const rule = await promptConditionalFormatRule(existing, existing?.ranges || [{ ...area }])
   if (!rule) return
   void commitConditionalFormatChange({ sheet: activeSheet.value, action, groupIndex: existing?.groupIndex, ruleIndex: existing?.ruleIndex, rule }, area, action === 'create' ? '已创建条件格式规则' : '已更新条件格式规则')
 }
@@ -3134,11 +3135,11 @@ const deleteConditionalFormatRule = () => {
     onPositiveClick: () => commitConditionalFormatChange({ sheet: activeSheet.value, action: 'delete', groupIndex: existing.groupIndex, ruleIndex: existing.ruleIndex }, area, '已删除条件格式规则'),
   })
 }
-const renameSelectedTable = () => {
+const renameSelectedTable = async () => {
   commitFormulaInput()
   const table = selectedTable.value
   if (!table) return
-  const newTableName = window.prompt('输入新的 Table 名称', table.displayName)?.trim()
+  const newTableName = (await promptAppAction(dialog, { title: '重命名 Excel Table', initialValue: table.displayName, positiveText: '保存名称' }))?.trim()
   if (!newTableName || newTableName === table.displayName) return
   void commitTableLifecycleChange({
     sheet: activeSheet.value,
@@ -3207,7 +3208,7 @@ const editSelectedTable = async (action: 'create' | 'resize') => {
   }
   if (new Set(columns.map(name => name.toLocaleLowerCase())).size !== columns.length) return void message.error('Table 表头不能重名')
   const defaultName = table?.displayName || `Table${(sheetInfo.value?.tables.length || 0) + 1}`
-  const tableName = action === 'create' ? window.prompt('输入 Table 名称', defaultName)?.trim() : defaultName
+  const tableName = action === 'create' ? (await promptAppAction(dialog, { title: '创建 Excel Table', initialValue: defaultName, positiveText: '创建 Table' }))?.trim() : defaultName
   if (!tableName) return
   updatingStructure.value = true
   try {
@@ -3885,8 +3886,8 @@ const clearHeaderFooter = () => {
     },
   })
 }
-const promptDefinedNameScope = (): string | undefined | null => {
-  const input = window.prompt('输入作用域：填写“工作簿”创建全局名称，或填写一个工作表名称创建局部名称', '工作簿')
+const promptDefinedNameScope = async (): Promise<string | undefined | null> => {
+  const input = await promptAppAction(dialog, { title: '命名区域作用域', content: '填写“工作簿”创建全局名称，或填写一个工作表名称创建局部名称。', initialValue: '工作簿', positiveText: '应用作用域' })
   if (input === null) return null
   const scope = input.trim()
   if (!scope || scope === '工作簿') return undefined
@@ -3916,12 +3917,12 @@ const commitDefinedNameChange = async (change: WorkbookDefinedNameChange, succes
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { updatingStructure.value = false }
 }
-const createDefinedName = () => {
+const createDefinedName = async () => {
   const area = definedNameSelection.value
   if (!area || !canEditDefinedNames.value) return
-  const name = window.prompt('输入命名区域名称', `Range${(workbook.value?.definedNames.filter(item => !item.hidden).length || 0) + 1}`)?.trim()
+  const name = (await promptAppAction(dialog, { title: '创建命名区域', initialValue: `Range${(workbook.value?.definedNames.filter(item => !item.hidden).length || 0) + 1}`, positiveText: '下一步' }))?.trim()
   if (!name) return
-  const scope = promptDefinedNameScope()
+  const scope = await promptDefinedNameScope()
   if (scope === null) return
   void commitDefinedNameChange({
     action: 'create',
@@ -3931,10 +3932,10 @@ const createDefinedName = () => {
     range: { ...area },
   }, `已创建命名区域 ${name}`)
 }
-const renameDefinedName = () => {
+const renameDefinedName = async () => {
   const item = selectedDefinedName.value
   if (!item || !canEditDefinedNames.value) return
-  const newName = window.prompt('输入新的命名区域名称', item.name)?.trim()
+  const newName = (await promptAppAction(dialog, { title: '重命名命名区域', initialValue: item.name, positiveText: '保存名称' }))?.trim()
   if (!newName || newName === item.name) return
   void commitDefinedNameChange({
     action: 'rename',
@@ -4146,10 +4147,10 @@ const commitDrawingChange = async (change: WorkbookDrawingChange, area: Workbook
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
   finally { updatingStructure.value = false }
 }
-const createChartFromSelection = () => {
+const createChartFromSelection = async () => {
   const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
   if (!area || !canCreateChart.value) return
-  const title = window.prompt('图表标题（最多 1024 个字符）', `${activeSheet.value} 图表`)?.trim()
+  const title = (await promptAppAction(dialog, { title: '创建图表', content: '输入图表标题，最多 1024 个字符。', initialValue: `${activeSheet.value} 图表`, positiveText: '创建图表' }))?.trim()
   if (!title) return
   const from: WorkbookDrawingAnchor = {
     row: area.top,
@@ -4213,12 +4214,12 @@ const commitChartPresentation = (
     legendPosition,
   }, area, success)
 }
-const editChartAxes = () => {
+const editChartAxes = async () => {
   const chart = selectedDrawing.value?.chart
   if (!chart || !canEditChartAxes.value) return
-  const categoryAxisTitle = window.prompt('分类轴标题（留空可移除）', chart.categoryAxisTitle || '')
+  const categoryAxisTitle = await promptAppAction(dialog, { title: '分类轴标题', content: '留空可以移除分类轴标题。', initialValue: chart.categoryAxisTitle || '', positiveText: '下一步' })
   if (categoryAxisTitle === null) return
-  const valueAxisTitle = window.prompt('数值轴标题（留空可移除）', chart.valueAxisTitle || '')
+  const valueAxisTitle = await promptAppAction(dialog, { title: '数值轴标题', content: '留空可以移除数值轴标题。', initialValue: chart.valueAxisTitle || '', positiveText: '保存坐标轴' })
   if (valueAxisTitle === null) return
   if (categoryAxisTitle.trim() === (chart.categoryAxisTitle || '') && valueAxisTitle.trim() === (chart.valueAxisTitle || '')) return
   commitChartPresentation(categoryAxisTitle, valueAxisTitle, chart.legendPosition, '已更新图表坐标轴标题')
@@ -4264,12 +4265,12 @@ const deleteSelectedChart = () => {
     }, area, '已删除图表', 'clear'),
   })
 }
-const editDrawingMetadata = () => {
+const editDrawingMetadata = async () => {
   const drawing = selectedDrawing.value
   if (!drawing?.editable || !canEditDrawing.value) return
-  const name = window.prompt('绘图对象名称（最多 255 个字符）', drawing.name)?.trim()
+  const name = (await promptAppAction(dialog, { title: '绘图对象名称', content: '最多 255 个字符。', initialValue: drawing.name, positiveText: '下一步' }))?.trim()
   if (!name) return
-  const description = window.prompt('替代文本/说明（可留空，最多 1024 个字符）', drawing.description || '')
+  const description = await promptAppAction(dialog, { title: '绘图对象替代文本', content: '可以留空，最多 1024 个字符。', initialValue: drawing.description || '', positiveText: '保存对象信息', multiline: true })
   if (description === null) return
   const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
   void commitDrawingChange({
@@ -4304,10 +4305,10 @@ const applyDrawingSelection = () => {
     }, area, '已移动并调整绘图对象'),
   })
 }
-const editChartTitle = () => {
+const editChartTitle = async () => {
   const drawing = selectedDrawing.value
   if (!drawing?.chart?.titleEditable || !canEditChartTitle.value) return
-  const title = window.prompt('图表标题（最多 1024 个字符）', drawing.chart.title || '')?.trim()
+  const title = (await promptAppAction(dialog, { title: '编辑图表标题', content: '最多 1024 个字符。', initialValue: drawing.chart.title || '', positiveText: '保存标题' }))?.trim()
   if (!title || title === drawing.chart.title) return
   const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
   void commitDrawingChange({
@@ -4319,13 +4320,13 @@ const editChartTitle = () => {
     chartTitle: title,
   }, area, '已更新图表标题')
 }
-const editChartSeries = () => {
+const editChartSeries = async () => {
   const drawing = selectedDrawing.value
   const series = selectedChartSeries.value
   if (!drawing?.chart || !series?.editable || !canEditChartSeries.value) return
-  const categories = window.prompt('分类引用：内部工作表的一维 A1 区域', series.categories || '')?.trim()
+  const categories = (await promptAppAction(dialog, { title: '系列分类引用', content: '输入内部工作表的一维 A1 区域。', initialValue: series.categories || '', positiveText: '下一步' }))?.trim()
   if (!categories) return
-  const values = window.prompt('数值引用：必须与分类引用包含相同数量的数据点', series.values || '')?.trim()
+  const values = (await promptAppAction(dialog, { title: '系列数值引用', content: '必须与分类引用包含相同数量的数据点。', initialValue: series.values || '', positiveText: '保存系列引用' }))?.trim()
   if (!values || (categories === series.categories && values === series.values)) return
   const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
   void commitDrawingChange({
@@ -4339,11 +4340,11 @@ const editChartSeries = () => {
     seriesValues: values,
   }, area, `已更新系列 ${series.index + 1} 的引用`)
 }
-const editChartSeriesName = () => {
+const editChartSeriesName = async () => {
   const drawing = selectedDrawing.value
   const series = selectedChartSeries.value
   if (!drawing?.chart || !series?.nameEditable || !canEditChartSeriesName.value) return
-  const seriesName = window.prompt('系列显示名称（留空可移除）', series.name || '')
+  const seriesName = await promptAppAction(dialog, { title: '系列显示名称', content: '留空可以移除系列显示名称。', initialValue: series.name || '', positiveText: '保存系列名称' })
   if (seriesName === null || seriesName.trim() === (series.name || '')) return
   const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
   void commitDrawingChange({
@@ -4562,7 +4563,12 @@ watch(() => [selectedDrawingId.value, selectedChartSeriesIndex.value, workbook.v
   targetSeriesColor.value = series?.color || chartThemePalette.value[series?.index || 0] || '#2A6FDB'
   void loadChartPreview()
 })
-onBeforeRouteLeave(() => !dirtyCount.value || window.confirm(`还有 ${dirtyCount.value} 个单元格未保存，确定离开吗？`))
+onBeforeRouteLeave(() => !dirtyCount.value || confirmAppAction(dialog, {
+  title: '离开工作簿？',
+  content: `还有 ${dirtyCount.value} 个单元格未保存，离开后将无法恢复。`,
+  positiveText: '放弃修改并离开',
+  danger: true,
+}))
 onMounted(() => {
   void loadWorkbook()
   resizeObserver = new ResizeObserver(() => { if (scrollRef.value) viewportHeight.value = scrollRef.value.clientHeight })

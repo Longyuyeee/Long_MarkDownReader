@@ -134,6 +134,7 @@ import { findFileFormat } from '../config/fileFormats'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { type TabInfo, useAppStore } from '../store/app'
 import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../utils/structuredAnalysis'
+import { confirmAppAction } from '../services/appDialog'
 
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string; path: string }
 interface Diagnostic { severity: string; code: string; message: string; start: number; end: number; line: number; column: number; path?: string }
@@ -316,7 +317,12 @@ const save = async (allowInvalid = false) => {
   } finally { saving.value = false }
 }
 const reload = async () => {
-  if (dirty.value && !window.confirm(`重新读取会覆盖当前未保存的 ${formatLabel.value} 源码，是否继续？`)) return
+  if (dirty.value && !await confirmAppAction(dialog, {
+    title: `重新读取 ${formatLabel.value}？`,
+    content: `磁盘源码将覆盖当前未保存的 ${formatLabel.value} 修改。`,
+    positiveText: '放弃修改并重新读取',
+    danger: true,
+  })) return
   await load(true)
 }
 const keydown = (event: KeyboardEvent) => {

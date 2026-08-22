@@ -79,6 +79,47 @@ body {
   box-sizing: border-box;
 }
 
+.app-tooltip-surface {
+  position: fixed;
+  z-index: calc(var(--z-overlay, 10000) + 20);
+  width: max-content;
+  max-width: min(360px, calc(100vw - 16px));
+  padding: 7px 9px;
+  border: 1px solid var(--workspace-border-color, rgba(15, 23, 42, 0.12));
+  border-radius: var(--theme-radius-sm, 8px);
+  background: color-mix(in srgb, var(--theme-surface, #fff) 96%, transparent);
+  color: var(--theme-text, #171a1f);
+  box-shadow: var(--workspace-shadow-sm, 0 2px 10px rgba(15, 23, 42, 0.12));
+  font-family: var(--font-sans);
+  font-size: var(--text-sm, 12px);
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-2px) scale(0.985);
+  transform-origin: top center;
+  transition:
+    opacity var(--motion-fast, 120ms) var(--ease-standard, ease),
+    transform var(--motion-fast, 120ms) var(--ease-standard, ease),
+    visibility 0s linear var(--motion-fast, 120ms);
+  backdrop-filter: blur(14px) saturate(1.08);
+}
+
+.app-tooltip-surface[data-visible='true'] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-tooltip-surface {
+    transition: none;
+  }
+}
+
 button,
 input,
 textarea,
