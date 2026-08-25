@@ -1,0 +1,496 @@
+{
+  "schemaVersion": 1,
+  "stage": "M0",
+  "status": "accepted",
+  "baselineCommit": "runtime-head",
+  "expected": {
+    "formatCount": 43,
+    "extensionCount": 91,
+    "readinessCounts": {
+      "verified": 30,
+      "verified-with-limitations": 7,
+      "external-dependency": 6
+    },
+    "weakFormatCount": 13,
+    "workspace": {
+      "totalRegisteredFiles": 11,
+      "openTaskCount": 2,
+      "canvasCount": 1,
+      "duplicateGroupCount": 1,
+      "unreferencedAnnotationCount": 1,
+      "brokenLinkCount": 1,
+      "ambiguousLinkCount": 1
+    },
+    "graphTiers": [
+      100,
+      1000,
+      5000
+    ]
+  },
+  "actual": {
+    "formatCount": 43,
+    "extensionCount": 91,
+    "readinessCounts": {
+      "external-dependency": 6,
+      "verified": 30,
+      "verified-with-limitations": 7
+    },
+    "weakFormatCount": 13,
+    "weakFormats": [
+      {
+        "id": "workbook",
+        "milestone": "M1A",
+        "expectedDirection": "深化常用公式、数据验证、条件格式、表格、图表和对象级写回边界",
+        "currentReadiness": "verified-with-limitations",
+        "currentProfile": "workbook-bounded",
+        "evidence": [
+          {
+            "file": "src-tauri/tests/fixtures/workbook/compatibility-baseline.xlsx",
+            "bytes": 14483,
+            "sha256": "52410b394655fbcc20850c17397d671d5947540cc5bca1f1dfb1f69434f5486c"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/workbook/formula-function-matrix.xlsx",
+            "bytes": 8990,
+            "sha256": "9dc1e93c2ba0dab6ae19cbc227570b6d6239904813c2a0509b3096d4c24027f0"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/workbook/chart-visual-matrix.xlsx",
+            "bytes": 10934,
+            "sha256": "2b876efdeb778092493da7be042ce57639bb514854a5d08618bb57177a076aa0"
+          }
+        ]
+      },
+      {
+        "id": "docx",
+        "milestone": "M1B",
+        "expectedDirection": "深化页眉页脚、表格、图片布局、段落样式和超链接",
+        "currentReadiness": "verified-with-limitations",
+        "currentProfile": "office-copy",
+        "evidence": [
+          {
+            "file": "fixtures/docx/producers/microsoft-word-16.docx",
+            "bytes": 30078,
+            "sha256": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176"
+          },
+          {
+            "file": "fixtures/docx/producers/wps-writer.docx",
+            "bytes": 83349,
+            "sha256": "0da9fad1284dcddc27689f381c26fd7f52d82f154e8a5cf152faebb7b206868b"
+          },
+          {
+            "file": "fixtures/docx/producers/libreoffice-writer.docx",
+            "bytes": 81767,
+            "sha256": "a549705f8650065a1fbb7111b598b5ae509f0b387ec58db47547f7445e26dea3"
+          }
+        ]
+      },
+      {
+        "id": "pptx",
+        "milestone": "M1B",
+        "expectedDirection": "深化文本框、图片、形状、层级、备注和常见图表",
+        "currentReadiness": "verified-with-limitations",
+        "currentProfile": "office-copy",
+        "evidence": [
+          {
+            "file": "fixtures/pptx/producers/microsoft-powerpoint-16.pptx",
+            "bytes": 51494,
+            "sha256": "858acb4e2d6841b4f0a8ea066d9a8cb3b08bc89ef69a6143216c3bcec39ae82f"
+          },
+          {
+            "file": "fixtures/pptx/producers/wps-presentation.pptx",
+            "bytes": 94574,
+            "sha256": "1bbb8343566166a351ff37054cfbb91ad61122930fb2e3f588e9658afda59f9a"
+          },
+          {
+            "file": "fixtures/pptx/producers/libreoffice-impress.pptx",
+            "bytes": 18288,
+            "sha256": "4ef5578bd9657eb7b1a04fa8c7ffb5eb7c2fc4046f49608ed7a0fff75d8c2140"
+          }
+        ]
+      },
+      {
+        "id": "ods",
+        "milestone": "M1C",
+        "expectedDirection": "审计基础单元格、公式和样式的可靠副本可行性",
+        "currentReadiness": "verified-with-limitations",
+        "currentProfile": "odf-preview",
+        "evidence": [
+          {
+            "file": "src-tauri/tests/fixtures/odf-content/longedit-e1c-spreadsheet.ods",
+            "bytes": 8728,
+            "sha256": "b256a865f04a71218ffe407877c6ec68fa67b4db3803b9c52bd11ecb8ee14206"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/odf-content/manifest.json",
+            "bytes": 1975,
+            "sha256": "45cb863d4c5ae6cd34c0c7662de3c09b2a48e3bb125570222d219f95e98cf423"
+          },
+          {
+            "file": "docs/evidence/e1b-odt-desktop/audit-manifest.json",
+            "bytes": 3831,
+            "sha256": "c7ecf45be7dd170772cdb2395069cce7113ce27daeef9a73f9c9c7d30cb54146"
+          }
+        ]
+      },
+      {
+        "id": "odp",
+        "milestone": "M1C",
+        "expectedDirection": "审计基础文本和备注的可靠副本可行性",
+        "currentReadiness": "verified-with-limitations",
+        "currentProfile": "odf-preview",
+        "evidence": [
+          {
+            "file": "src-tauri/tests/fixtures/odf-content/longedit-e1c-presentation.odp",
+            "bytes": 15864,
+            "sha256": "bb277fbf0043019ecbddf0933fd5b497882a91c2693400ff29b2e1bcd165f148"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/odf-content/manifest.json",
+            "bytes": 1975,
+            "sha256": "45cb863d4c5ae6cd34c0c7662de3c09b2a48e3bb125570222d219f95e98cf423"
+          },
+          {
+            "file": "docs/evidence/ux38d3-presentation-workspace/manifest.json",
+            "bytes": 1270,
+            "sha256": "0a8ebad19a0a500c839c0457df27241b80ab568862cb1c449a58ec30de636187"
+          }
+        ]
+      },
+      {
+        "id": "video",
+        "milestone": "M1D",
+        "expectedDirection": "增加逐帧、截图、位置记忆、字幕轨和解码状态",
+        "currentReadiness": "verified-with-limitations",
+        "currentProfile": "media-preview",
+        "evidence": [
+          {
+            "file": "docs/evidence/ux43-media-workspace/runtime-evidence.json",
+            "bytes": 3189,
+            "sha256": "a0f5f89ecb6085cb0c45715ea5e4e192721af5d87220eb20575cd0e4ac6aff88"
+          },
+          {
+            "file": "docs/evidence/ux43-media-workspace/video-preview.png",
+            "bytes": 116333,
+            "sha256": "f99f2ef4ac1ecc2a353dd0eb7cddc1551a6d92f6af90e57379ec93f81c292ff7"
+          },
+          {
+            "file": "docs/evidence/ux43-media-workspace/video-narrow.png",
+            "bytes": 64644,
+            "sha256": "3f993663e83f7ebe143490ef0ce4ee2b6a1d53dcb876a631c4d9672ba21fa5f0"
+          }
+        ]
+      },
+      {
+        "id": "pdf",
+        "milestone": "deferred-safe-copy",
+        "expectedDirection": "保持安全副本路线，不宣称正文等价编辑",
+        "currentReadiness": "verified-with-limitations",
+        "currentProfile": "pdf-copy",
+        "evidence": [
+          {
+            "file": "docs/evidence/p1b2b6-pdf-choice-copy/runtime-evidence.json",
+            "bytes": 2082,
+            "sha256": "2457cdc599fd662f319cd95434ddae1fd861118f8b92f73805e234a6a853d50a"
+          },
+          {
+            "file": "docs/evidence/p1b3d-pdf-redaction/independent-verification.json",
+            "bytes": 960,
+            "sha256": "ab139ae4baadbe6d4fdc35acf45d73bf781e77f9099f31ae8d5017f30f4f429f"
+          },
+          {
+            "file": "docs/evidence/p1b5d-pdf-metadata/independent-verification.json",
+            "bytes": 1760,
+            "sha256": "27cac459107a85aaab9f12267313cdcdffc6ee5b4f637856d82a8b79fce2c3ec"
+          }
+        ]
+      },
+      {
+        "id": "legacy-doc",
+        "milestone": "external-handoff",
+        "expectedDirection": "继续外部转换与独立复开，不自研旧二进制正文编辑",
+        "currentReadiness": "external-dependency",
+        "currentProfile": "legacy-conversion",
+        "evidence": [
+          {
+            "file": "src-tauri/tests/fixtures/legacy-doc/longedit-e2b-word-document.doc",
+            "bytes": 9216,
+            "sha256": "a1fd8332818683209e509afa14d30959526df8c807cd0a40eb43cc1c869a1c2f"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/legacy-doc/longedit-e2b-libreoffice-output.docx",
+            "bytes": 5212,
+            "sha256": "c98b9321725dba7c0d99a7f43f537dbb69781a0697f17a54a7f9a91accde92d6"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/legacy-doc/manifest.json",
+            "bytes": 1875,
+            "sha256": "f670fc53ba2ac3e717cdf9c6bbb7ff034be3abc6e412abf435fb0f3b0c71e41e"
+          }
+        ]
+      },
+      {
+        "id": "legacy-xls",
+        "milestone": "external-handoff",
+        "expectedDirection": "继续外部转换与独立复开，不自研旧二进制正文编辑",
+        "currentReadiness": "external-dependency",
+        "currentProfile": "legacy-conversion",
+        "evidence": [
+          {
+            "file": "src-tauri/tests/fixtures/legacy-binary-office/longedit-e2c-spreadsheet.xls",
+            "bytes": 5632,
+            "sha256": "5ce66eab601c51be70227aa75595bdfb47027ebff477cf46cda71a368dcb50b6"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/legacy-binary-office/longedit-e2c-spreadsheet-output.xlsx",
+            "bytes": 5702,
+            "sha256": "4945e236580b4fc63a8e74b81c85745f6124ee362692f0b8fd817a5b6bb380a2"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/legacy-binary-office/manifest.json",
+            "bytes": 3040,
+            "sha256": "e9c75c1b8cb8f4d4f746927c0d0fafa53d2d4f0d82a175222861be3908722d65"
+          }
+        ]
+      },
+      {
+        "id": "legacy-ppt",
+        "milestone": "external-handoff",
+        "expectedDirection": "继续外部转换与独立复开，不自研旧二进制正文编辑",
+        "currentReadiness": "external-dependency",
+        "currentProfile": "legacy-conversion",
+        "evidence": [
+          {
+            "file": "src-tauri/tests/fixtures/legacy-binary-office/longedit-e2c-presentation.ppt",
+            "bytes": 459264,
+            "sha256": "45bdbefcaa38e795a0a7d6875dcf312bcb0eceb1d0fe2a10b54f546f8917ef7c"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/legacy-binary-office/longedit-e2c-presentation-output.pptx",
+            "bytes": 9053,
+            "sha256": "d807ceba192b337cc5331b54f36f4a80878f89678a047a8ad628e398c5a5b1bb"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/legacy-binary-office/manifest.json",
+            "bytes": 3040,
+            "sha256": "e9c75c1b8cb8f4d4f746927c0d0fafa53d2d4f0d82a175222861be3908722d65"
+          }
+        ]
+      },
+      {
+        "id": "wps-document",
+        "milestone": "external-handoff",
+        "expectedDirection": "保持用户确认后的外部应用交接",
+        "currentReadiness": "external-dependency",
+        "currentProfile": "wps-external",
+        "evidence": [
+          {
+            "file": "src-tauri/tests/fixtures/wps-native/longedit-e3-document.wps",
+            "bytes": 9922,
+            "sha256": "c7f83b162475bfd92e48af666314f4f3550254c40f77c055ba13f35bd5883233"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/wps-native/manifest.json",
+            "bytes": 1732,
+            "sha256": "42a23c23379dd1202b0de960c0d1934d219c393cd0132370402d77816afe7032"
+          },
+          {
+            "file": "docs/A25_UX38F_External_Office_Workspace_Audit_2026-08-05.md",
+            "bytes": 1884,
+            "sha256": "562b315a6051fcc875ff02e2b34a60d556ad082577cb00a5cf1459663c6e89cd"
+          }
+        ]
+      },
+      {
+        "id": "wps-spreadsheet",
+        "milestone": "external-handoff",
+        "expectedDirection": "保持用户确认后的外部应用交接",
+        "currentReadiness": "external-dependency",
+        "currentProfile": "wps-external",
+        "evidence": [
+          {
+            "file": "src-tauri/tests/fixtures/wps-native/longedit-e3-spreadsheet.et",
+            "bytes": 9329,
+            "sha256": "5dc3ab1c721f9fcc5ccaca710a876b93ae3ad0726795699c2ea6d1137479b179"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/wps-native/manifest.json",
+            "bytes": 1732,
+            "sha256": "42a23c23379dd1202b0de960c0d1934d219c393cd0132370402d77816afe7032"
+          },
+          {
+            "file": "docs/A25_UX38F_External_Office_Workspace_Audit_2026-08-05.md",
+            "bytes": 1884,
+            "sha256": "562b315a6051fcc875ff02e2b34a60d556ad082577cb00a5cf1459663c6e89cd"
+          }
+        ]
+      },
+      {
+        "id": "wps-presentation",
+        "milestone": "external-handoff",
+        "expectedDirection": "保持用户确认后的外部应用交接",
+        "currentReadiness": "external-dependency",
+        "currentProfile": "wps-external",
+        "evidence": [
+          {
+            "file": "src-tauri/tests/fixtures/wps-native/longedit-e3-presentation.dps",
+            "bytes": 126464,
+            "sha256": "1c5e358abb56b1af8ccc14506a9cc83d75be5c183d75c87579d23effe1ec6809"
+          },
+          {
+            "file": "src-tauri/tests/fixtures/wps-native/manifest.json",
+            "bytes": 1732,
+            "sha256": "42a23c23379dd1202b0de960c0d1934d219c393cd0132370402d77816afe7032"
+          },
+          {
+            "file": "docs/A25_UX38F_External_Office_Workspace_Audit_2026-08-05.md",
+            "bytes": 1884,
+            "sha256": "562b315a6051fcc875ff02e2b34a60d556ad082577cb00a5cf1459663c6e89cd"
+          }
+        ]
+      }
+    ],
+    "workspace": {
+      "canvasCount": 1,
+      "duplicateGroupCount": 1,
+      "durationMs": 22,
+      "hashedFiles": 4,
+      "openTaskCount": 2,
+      "scannedFiles": 11,
+      "totalRegisteredFiles": 11,
+      "unreferencedAnnotationCount": 1
+    },
+    "graph": [
+      {
+        "actualEdges": 99,
+        "actualNodes": 100,
+        "durationMs": 105,
+        "expectedEdges": 99,
+        "expectedNodes": 100,
+        "passed": true,
+        "tier": 100
+      },
+      {
+        "actualEdges": 999,
+        "actualNodes": 1000,
+        "durationMs": 773,
+        "expectedEdges": 999,
+        "expectedNodes": 1000,
+        "passed": true,
+        "tier": 1000
+      },
+      {
+        "actualEdges": 4999,
+        "actualNodes": 5000,
+        "durationMs": 4853,
+        "expectedEdges": 4999,
+        "expectedNodes": 5000,
+        "passed": true,
+        "tier": 5000
+      }
+    ]
+  },
+  "differences": [
+    {
+      "id": "format-coverage",
+      "beforeActual": {
+        "formats": 43,
+        "extensions": 91,
+        "readinessCounts": {
+          "external-dependency": 6,
+          "verified": 30,
+          "verified-with-limitations": 7
+        }
+      },
+      "expected": {
+        "formats": 43,
+        "extensions": 91,
+        "readinessCounts": {
+          "verified": 30,
+          "verified-with-limitations": 7,
+          "external-dependency": 6
+        }
+      },
+      "afterActual": "baseline-only-no-product-change",
+      "differenceResolved": true
+    },
+    {
+      "id": "workspace-fixture",
+      "beforeActual": {
+        "canvasCount": 1,
+        "duplicateGroupCount": 1,
+        "durationMs": 22,
+        "hashedFiles": 4,
+        "openTaskCount": 2,
+        "scannedFiles": 11,
+        "totalRegisteredFiles": 11,
+        "unreferencedAnnotationCount": 1
+      },
+      "expected": {
+        "totalRegisteredFiles": 11,
+        "openTaskCount": 2,
+        "canvasCount": 1,
+        "duplicateGroupCount": 1,
+        "unreferencedAnnotationCount": 1,
+        "brokenLinkCount": 1,
+        "ambiguousLinkCount": 1
+      },
+      "afterActual": "baseline-only-no-product-change",
+      "differenceResolved": true
+    },
+    {
+      "id": "graph-scale",
+      "beforeActual": [
+        {
+          "actualEdges": 99,
+          "actualNodes": 100,
+          "durationMs": 105,
+          "expectedEdges": 99,
+          "expectedNodes": 100,
+          "passed": true,
+          "tier": 100
+        },
+        {
+          "actualEdges": 999,
+          "actualNodes": 1000,
+          "durationMs": 773,
+          "expectedEdges": 999,
+          "expectedNodes": 1000,
+          "passed": true,
+          "tier": 1000
+        },
+        {
+          "actualEdges": 4999,
+          "actualNodes": 5000,
+          "durationMs": 4853,
+          "expectedEdges": 4999,
+          "expectedNodes": 5000,
+          "passed": true,
+          "tier": 5000
+        }
+      ],
+      "expected": [
+        {
+          "tier": 100,
+          "nodes": 100,
+          "edges": 99
+        },
+        {
+          "tier": 1000,
+          "nodes": 1000,
+          "edges": 999
+        },
+        {
+          "tier": 5000,
+          "nodes": 5000,
+          "edges": 4999
+        }
+      ],
+      "afterActual": "baseline-only-no-product-change",
+      "differenceResolved": true
+    }
+  ],
+  "failures": [],
+  "sourceUserContentIncluded": false,
+  "passed": true
+}

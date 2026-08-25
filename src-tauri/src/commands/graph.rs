@@ -3234,6 +3234,78 @@ mod tests {
     }
 
     #[test]
+    fn post_v115_m0_graph_baseline_builds_real_markdown_tiers() {
+        let fixed_workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("fixtures")
+            .join("post-v115-m0")
+            .join("workspace")
+            .canonicalize()
+            .unwrap();
+        let health = analyze_workspace(&fixed_workspace).unwrap();
+        assert_eq!(health.broken_links.len(), 1);
+        assert_eq!(health.ambiguous_links.len(), 1);
+
+        let tiers = [100usize, 1_000, 5_000];
+        let mut results = Vec::new();
+        for node_count in tiers {
+            let (base, root) = fixture(&format!("m0-tier-{node_count}"));
+            for index in 0..node_count {
+                let name = format!("Node-{index:05}");
+                let body = if index + 1 < node_count {
+                    format!("# {name}\n\n[[Node-{:05}]]\n", index + 1)
+                } else {
+                    format!("# {name}\n")
+                };
+                fs::write(root.join(format!("{name}.md")), body).unwrap();
+            }
+            let started = std::time::Instant::now();
+            let graph = tauri::async_runtime::block_on(build_link_graph(
+                root.to_string_lossy().into_owned(),
+            ))
+            .unwrap();
+            let duration_ms = started.elapsed().as_millis();
+            assert_eq!(graph.nodes.len(), node_count);
+            assert_eq!(graph.edges.len(), node_count - 1);
+            results.push(serde_json::json!({
+                "tier": node_count,
+                "expectedNodes": node_count,
+                "actualNodes": graph.nodes.len(),
+                "expectedEdges": node_count - 1,
+                "actualEdges": graph.edges.len(),
+                "durationMs": duration_ms,
+                "passed": true
+            }));
+            fs::remove_dir_all(base).unwrap();
+        }
+
+        if let Some(output) = std::env::var_os("LONGEDIT_M0_GRAPH_EVIDENCE") {
+            let output = PathBuf::from(output);
+            fs::create_dir_all(output.parent().unwrap()).unwrap();
+            let evidence = serde_json::json!({
+                "schemaVersion": 1,
+                "stage": "M0-graph-baseline",
+                "fixture": "generated real Markdown files with directed wikilink chains",
+                "expectedTiers": tiers,
+                "fixedWorkspace": {
+                    "expectedBrokenLinks": 1,
+                    "actualBrokenLinks": health.broken_links.len(),
+                    "expectedAmbiguousLinks": 1,
+                    "actualAmbiguousLinks": health.ambiguous_links.len()
+                },
+                "actual": results,
+                "sourceUserContentIncluded": false,
+                "passed": true
+            });
+            fs::write(
+                output,
+                format!("{}\n", serde_json::to_string_pretty(&evidence).unwrap()),
+            )
+            .unwrap();
+        }
+    }
+
+    #[test]
     fn repairs_link_safely_and_preserves_alias() {
         let (base, root) = fixture("repair");
         let source = root.join("Source.md");

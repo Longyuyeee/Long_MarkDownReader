@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "stage": "replace-with-stage-id",
+  "status": "pending",
+  "scope": "replace-with-user-visible-scope",
+  "cases": [
+    {
+      "id": "replace-with-stable-case-id",
+      "fixture": "replace-with-project-authored-or-redacted-fixture",
+      "beforeActual": {
+        "result": "record-observed-result-before-the-change",
+        "measurements": {}
+      },
+      "expected": {
+        "result": "record-observable-target-result",
+        "measurements": {}
+      },
+      "afterActual": {
+        "result": "pending",
+        "measurements": {}
+      },
+      "differenceResolved": false,
+      "evidence": []
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "passed": false
+}

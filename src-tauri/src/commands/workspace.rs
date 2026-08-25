@@ -425,6 +425,7 @@ pub async fn analyze_workspace_health(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
 
     #[test]
     fn overview_collects_registered_files_tasks_and_recent_canvases() {
@@ -495,5 +496,59 @@ mod tests {
         assert_eq!(report.unreferenced_annotations.len(), 1);
         assert_eq!(report.unreferenced_annotations[0].annotation_id, "pending");
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn post_v115_m0_workspace_fixture_matches_current_baseline() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("fixtures")
+            .join("post-v115-m0")
+            .join("workspace")
+            .canonicalize()
+            .unwrap();
+        let started = std::time::Instant::now();
+        let overview = build_workspace_overview(&root);
+        let health = build_workspace_health(&root);
+        let duration_ms = started.elapsed().as_millis();
+
+        assert_eq!(overview.total_files, 11);
+        assert_eq!(overview.tasks.len(), 2);
+        assert_eq!(overview.canvases.len(), 1);
+        assert_eq!(health.duplicate_groups.len(), 1);
+        assert_eq!(health.unreferenced_annotations.len(), 1);
+
+        if let Some(output) = std::env::var_os("LONGEDIT_M0_WORKSPACE_EVIDENCE") {
+            let output = PathBuf::from(output);
+            fs::create_dir_all(output.parent().unwrap()).unwrap();
+            let evidence = serde_json::json!({
+                "schemaVersion": 1,
+                "stage": "M0-workspace-baseline",
+                "expected": {
+                    "totalRegisteredFiles": 11,
+                    "openTaskCount": 2,
+                    "canvasCount": 1,
+                    "duplicateGroupCount": 1,
+                    "unreferencedAnnotationCount": 1
+                },
+                "actual": {
+                    "totalRegisteredFiles": overview.total_files,
+                    "openTaskCount": overview.tasks.len(),
+                    "canvasCount": overview.canvases.len(),
+                    "duplicateGroupCount": health.duplicate_groups.len(),
+                    "unreferencedAnnotationCount": health.unreferenced_annotations.len(),
+                    "scannedFiles": health.scanned_files,
+                    "hashedFiles": health.hashed_files,
+                    "durationMs": duration_ms
+                },
+                "sourceUserContentIncluded": false,
+                "passed": true
+            });
+            fs::write(
+                output,
+                format!("{}\n", serde_json::to_string_pretty(&evidence).unwrap()),
+            )
+            .unwrap();
+        }
     }
 }

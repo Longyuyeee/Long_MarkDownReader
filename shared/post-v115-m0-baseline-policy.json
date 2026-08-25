@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "stage": "M0",
+  "appVersion": "1.0.15",
+  "status": "baseline-required",
+  "expected": {
+    "formatCount": 43,
+    "extensionCount": 91,
+    "readinessCounts": {
+      "verified": 30,
+      "verified-with-limitations": 7,
+      "external-dependency": 6
+    },
+    "weakFormatCount": 13,
+    "workspace": {
+      "totalRegisteredFiles": 11,
+      "openTaskCount": 2,
+      "canvasCount": 1,
+      "duplicateGroupCount": 1,
+      "unreferencedAnnotationCount": 1,
+      "brokenLinkCount": 1,
+      "ambiguousLinkCount": 1
+    },
+    "graphTiers": [100, 1000, 5000]
+  },
+  "formatTargets": [
+    {
+      "id": "workbook",
+      "milestone": "M1A",
+      "expectedDirection": "深化常用公式、数据验证、条件格式、表格、图表和对象级写回边界",
+      "evidence": [
+        "src-tauri/tests/fixtures/workbook/compatibility-baseline.xlsx",
+        "src-tauri/tests/fixtures/workbook/formula-function-matrix.xlsx",
+        "src-tauri/tests/fixtures/workbook/chart-visual-matrix.xlsx"
+      ]
+    },
+    {
+      "id": "docx",
+      "milestone": "M1B",
+      "expectedDirection": "深化页眉页脚、表格、图片布局、段落样式和超链接",
+      "evidence": [
+        "fixtures/docx/producers/microsoft-word-16.docx",
+        "fixtures/docx/producers/wps-writer.docx",
+        "fixtures/docx/producers/libreoffice-writer.docx"
+      ]
+    },
+    {
+      "id": "pptx",
+      "milestone": "M1B",
+      "expectedDirection": "深化文本框、图片、形状、层级、备注和常见图表",
+      "evidence": [
+        "fixtures/pptx/producers/microsoft-powerpoint-16.pptx",
+        "fixtures/pptx/producers/wps-presentation.pptx",
+        "fixtures/pptx/producers/libreoffice-impress.pptx"
+      ]
+    },
+    {
+      "id": "ods",
+      "milestone": "M1C",
+      "expectedDirection": "审计基础单元格、公式和样式的可靠副本可行性",
+      "evidence": [
+        "src-tauri/tests/fixtures/odf-content/longedit-e1c-spreadsheet.ods",
+        "src-tauri/tests/fixtures/odf-content/manifest.json",
+        "docs/evidence/e1b-odt-desktop/audit-manifest.json"
+      ]
+    },
+    {
+      "id": "odp",
+      "milestone": "M1C",
+      "expectedDirection": "审计基础文本和备注的可靠副本可行性",
+      "evidence": [
+        "src-tauri/tests/fixtures/odf-content/longedit-e1c-presentation.odp",
+        "src-tauri/tests/fixtures/odf-content/manifest.json",
+        "docs/evidence/ux38d3-presentation-workspace/manifest.json"
+      ]
+    },
+    {
+      "id": "video",
+      "milestone": "M1D",
+      "expectedDirection": "增加逐帧、截图、位置记忆、字幕轨和解码状态",
+      "evidence": [
+        "docs/evidence/ux43-media-workspace/runtime-evidence.json",
+        "docs/evidence/ux43-media-workspace/video-preview.png",
+        "docs/evidence/ux43-media-workspace/video-narrow.png"
+      ]
+    },
+    {
+      "id": "pdf",
+      "milestone": "deferred-safe-copy",
+      "expectedDirection": "保持安全副本路线，不宣称正文等价编辑",
+      "evidence": [
+        "docs/evidence/p1b2b6-pdf-choice-copy/runtime-evidence.json",
+        "docs/evidence/p1b3d-pdf-redaction/independent-verification.json",
+        "docs/evidence/p1b5d-pdf-metadata/independent-verification.json"
+      ]
+    },
+    {
+      "id": "legacy-doc",
+      "milestone": "external-handoff",
+      "expectedDirection": "继续外部转换与独立复开，不自研旧二进制正文编辑",
+      "evidence": [
+        "src-tauri/tests/fixtures/legacy-doc/longedit-e2b-word-document.doc",
+        "src-tauri/tests/fixtures/legacy-doc/longedit-e2b-libreoffice-output.docx",
+        "src-tauri/tests/fixtures/legacy-doc/manifest.json"
+      ]
+    },
+    {
+      "id": "legacy-xls",
+      "milestone": "external-handoff",
+      "expectedDirection": "继续外部转换与独立复开，不自研旧二进制正文编辑",
+      "evidence": [
+        "src-tauri/tests/fixtures/legacy-binary-office/longedit-e2c-spreadsheet.xls",
+        "src-tauri/tests/fixtures/legacy-binary-office/longedit-e2c-spreadsheet-output.xlsx",
+        "src-tauri/tests/fixtures/legacy-binary-office/manifest.json"
+      ]
+    },
+    {
+      "id": "legacy-ppt",
+      "milestone": "external-handoff",
+      "expectedDirection": "继续外部转换与独立复开，不自研旧二进制正文编辑",
+      "evidence": [
+        "src-tauri/tests/fixtures/legacy-binary-office/longedit-e2c-presentation.ppt",
+        "src-tauri/tests/fixtures/legacy-binary-office/longedit-e2c-presentation-output.pptx",
+        "src-tauri/tests/fixtures/legacy-binary-office/manifest.json"
+      ]
+    },
+    {
+      "id": "wps-document",
+      "milestone": "external-handoff",
+      "expectedDirection": "保持用户确认后的外部应用交接",
+      "evidence": [
+        "src-tauri/tests/fixtures/wps-native/longedit-e3-document.wps",
+        "src-tauri/tests/fixtures/wps-native/manifest.json",
+        "docs/A25_UX38F_External_Office_Workspace_Audit_2026-08-05.md"
+      ]
+    },
+    {
+      "id": "wps-spreadsheet",
+      "milestone": "external-handoff",
+      "expectedDirection": "保持用户确认后的外部应用交接",
+      "evidence": [
+        "src-tauri/tests/fixtures/wps-native/longedit-e3-spreadsheet.et",
+        "src-tauri/tests/fixtures/wps-native/manifest.json",
+        "docs/A25_UX38F_External_Office_Workspace_Audit_2026-08-05.md"
+      ]
+    },
+    {
+      "id": "wps-presentation",
+      "milestone": "external-handoff",
+      "expectedDirection": "保持用户确认后的外部应用交接",
+      "evidence": [
+        "src-tauri/tests/fixtures/wps-native/longedit-e3-presentation.dps",
+        "src-tauri/tests/fixtures/wps-native/manifest.json",
+        "docs/A25_UX38F_External_Office_Workspace_Audit_2026-08-05.md"
+      ]
+    }
+  ],
+  "secondaryTargets": [
+    "image",
+    "json",
+    "yaml",
+    "xml",
+    "toml"
+  ]
+}

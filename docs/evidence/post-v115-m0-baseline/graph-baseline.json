@@ -1,0 +1,47 @@
+{
+  "actual": [
+    {
+      "actualEdges": 99,
+      "actualNodes": 100,
+      "durationMs": 105,
+      "expectedEdges": 99,
+      "expectedNodes": 100,
+      "passed": true,
+      "tier": 100
+    },
+    {
+      "actualEdges": 999,
+      "actualNodes": 1000,
+      "durationMs": 773,
+      "expectedEdges": 999,
+      "expectedNodes": 1000,
+      "passed": true,
+      "tier": 1000
+    },
+    {
+      "actualEdges": 4999,
+      "actualNodes": 5000,
+      "durationMs": 4853,
+      "expectedEdges": 4999,
+      "expectedNodes": 5000,
+      "passed": true,
+      "tier": 5000
+    }
+  ],
+  "expectedTiers": [
+    100,
+    1000,
+    5000
+  ],
+  "fixedWorkspace": {
+    "actualAmbiguousLinks": 1,
+    "actualBrokenLinks": 1,
+    "expectedAmbiguousLinks": 1,
+    "expectedBrokenLinks": 1
+  },
+  "fixture": "generated real Markdown files with directed wikilink chains",
+  "passed": true,
+  "schemaVersion": 1,
+  "sourceUserContentIncluded": false,
+  "stage": "M0-graph-baseline"
+}

@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-25 M0 真实测试基线已通过：** 已冻结 13 类薄弱格式证据矩阵、统一预期/实际差异模板和固定工作台资料库。Rust 当前产品后端实际扫描得到 11 个注册文件、2 个待办、1 个 Canvas、1 组重复文件、1 条未引用批注、1 条断链和 1 条歧义链接；实际生成并解析 100/1,000/5,000 个 Markdown 节点，边数 99/999/4,999，最近构建耗时 105/773/4,853 ms。`audit:post-v115-m0-baseline` 2/2 Rust 测试与机器总账通过。下一步进入 M1A，先审计 XLSX 公式、数据验证、条件格式、表格、图表和高级对象的当前真实边界。详见 [`Post_v1.0.15_M0_Real_Baseline_Audit_2026-08-25.md`](./Post_v1.0.15_M0_Real_Baseline_Audit_2026-08-25.md)。
+
 > **2026-08-25 v1.0.15 后专业能力增强路线已冻结：** 已基于 `main` / `4cd3aa0` / `v1.0.15` 审计薄弱格式、工作台和知识图谱现状，并形成 M0～M4 开发路线。后续依次执行事实与真实测试基线、高频格式深化、工作台 2.0、知识图谱 2.0、跨格式收口与版本候选；每个阶段都必须记录修正前实际结果、目标结果、修正后实际结果和可复核证据。下一步为 M0，不提前扩大任何格式能力声明。详见 [`Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md`](./Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md)。
 
 > **2026-08-22 v1.0.15 无签名社区版已发布并复核：** 交互治理七张真实 Tauri 截图、冻结产品提交 `9aaa810f9a96bb3e741551b966091bd1b67f5b1e` 的无签名 NSIS/MSI、托管运行 `32518530525` 的 22/22 安装生命周期与 18/18 安装后工作区检查均通过。Release `374954902` 已公开，Tag `v1.0.15` 绑定合并提交 `317b667679fff4e8e29ce2a0ca94f8e480764d13`；三个公开附件重新下载后的大小与 SHA-256 全部匹配。下一步只执行独立的 `v1.0.14 -> v1.0.15` 官方应用内更新观察。详见 [`V1_0_15_Interaction_Polish_Audit_2026-08-21.md`](./V1_0_15_Interaction_Polish_Audit_2026-08-21.md) 与 [`V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md`](./V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
