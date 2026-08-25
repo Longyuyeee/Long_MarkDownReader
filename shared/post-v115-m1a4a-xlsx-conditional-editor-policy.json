@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1A4A",
+  "capability": "XLSX basic conditional-format visual editor",
+  "fixture": "src-tauri/tests/fixtures/workbook/compatibility-baseline.xlsx",
+  "target": {
+    "sheet": "Summary",
+    "cell": "B2",
+    "operator": "between",
+    "formula1": "1000",
+    "formula2": "2000",
+    "preset": "green_fill"
+  },
+  "beforeActual": {
+    "singleVisibleForm": false,
+    "visualStylePicker": false,
+    "livePreview": false,
+    "basicRulePromptSteps": 5,
+    "objectChangesUseExplicitSave": false
+  },
+  "expected": {
+    "singleVisibleForm": true,
+    "visualStyleCount": 5,
+    "livePreview": true,
+    "sourceUnchangedWhileEditing": true,
+    "sourceChangedAfterApply": true,
+    "ruleSurvivesReopen": true,
+    "runtimeErrorCount": 0,
+    "narrowViewportContained": true
+  },
+  "deferred": {
+    "advancedRulesRemainInAdvancedEditor": true,
+    "objectDraftUndoExplicitSave": "M1A4B"
+  }
+}

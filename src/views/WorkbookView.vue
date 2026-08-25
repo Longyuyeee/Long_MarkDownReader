@@ -434,6 +434,70 @@
       </template>
     </n-modal>
 
+    <n-modal v-model:show="conditionalFormatModalOpen" preset="card" :title="conditionalFormatEditorTitle" class="conditional-format-modal">
+      <div class="conditional-format-context">
+        <div><span>应用范围</span><strong>{{ conditionalFormatEditorRangeLabel }}</strong></div>
+        <small>应用后立即写入 XLSX；统一撤销与显式保存将在对象草稿阶段接入。</small>
+      </div>
+      <div class="conditional-format-editor">
+        <fieldset>
+          <legend>规则</legend>
+          <WorkspaceSegmentedControl class="conditional-kind-switch" aria-label="条件格式类型">
+            <button :class="{ active: conditionalFormatDraft.kind === 'cellIs' }" @click="conditionalFormatDraft.kind = 'cellIs'">单元格值</button>
+            <button :class="{ active: conditionalFormatDraft.kind === 'expression' }" @click="conditionalFormatDraft.kind = 'expression'">公式</button>
+          </WorkspaceSegmentedControl>
+          <template v-if="conditionalFormatDraft.kind === 'cellIs'">
+            <label>比较方式
+              <select v-model="conditionalFormatDraft.operator">
+                <option value="greaterThan">大于</option><option value="greaterThanOrEqual">大于或等于</option>
+                <option value="lessThan">小于</option><option value="lessThanOrEqual">小于或等于</option>
+                <option value="equal">等于</option><option value="notEqual">不等于</option>
+                <option value="between">介于</option><option value="notBetween">不介于</option>
+              </select>
+            </label>
+            <div class="conditional-thresholds">
+              <label>阈值<input v-model.trim="conditionalFormatDraft.formula1" inputmode="decimal" placeholder="0"></label>
+              <label v-if="conditionalFormatNeedsSecondValue">第二阈值<input v-model.trim="conditionalFormatDraft.formula2" inputmode="decimal" placeholder="100"></label>
+            </div>
+          </template>
+          <label v-else>安全公式
+            <input v-model.trim="conditionalFormatDraft.formula1" class="conditional-expression-input" :placeholder="conditionalFormatExpressionPlaceholder">
+            <small>支持 AND、OR、NOT，以及 A1 单元格引用和字面量比较。</small>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>显示</legend>
+          <div class="conditional-style-grid" role="radiogroup" aria-label="条件格式样式">
+            <button
+              v-for="preset in CONDITIONAL_STYLE_OPTIONS"
+              :key="preset.key"
+              type="button"
+              role="radio"
+              :aria-checked="conditionalFormatDraft.preset === preset.key"
+              :class="{ active: conditionalFormatDraft.preset === preset.key }"
+              :title="preset.label"
+              @click="conditionalFormatDraft.preset = preset.key"
+            ><i :style="{ background: preset.fillColor || 'transparent', color: preset.fontColor }">Aa</i><span>{{ preset.label }}</span></button>
+          </div>
+          <label class="conditional-stop-option"><input v-model="conditionalFormatDraft.stopIfTrue" type="checkbox">命中后停止后续规则</label>
+          <div class="conditional-preview">
+            <span>预览</span>
+            <strong :style="conditionalFormatPreviewStyle">128</strong>
+            <small>{{ conditionalFormatPreviewSummary }}</small>
+          </div>
+        </fieldset>
+      </div>
+      <p v-if="conditionalFormatDraftError" class="conditional-format-error">{{ conditionalFormatDraftError }}</p>
+      <template #footer>
+        <div class="conditional-format-actions">
+          <button @click="openAdvancedConditionalFormatEditor">高级规则…</button>
+          <span></span>
+          <button @click="conditionalFormatModalOpen = false">取消</button>
+          <button class="primary" :disabled="Boolean(conditionalFormatDraftError) || updatingStructure" @click="saveConditionalFormatDraft">应用并写入文件</button>
+        </div>
+      </template>
+    </n-modal>
+
     <div v-if="workbook && sheetInfo" class="formula-bar">
       <select v-model.number="selectedDefinedNameIndex" title="跳转和管理命名区域" :disabled="!navigableDefinedNames.length" @change="navigateDefinedName">
         <option :value="-1">{{ navigableDefinedNames.length ? '命名区域' : '无命名区域' }}</option>
@@ -558,7 +622,7 @@
       <button title="取消当前工作表冻结窗格" :disabled="(!effectiveFreeze.rows && !effectiveFreeze.columns) || saving || updatingStructure || Boolean(dirtyCount)" @click="clearFreezePane">取消冻结</button>
     </div>
 
-    <div v-if="workbook && sheetInfo && !isExternal && activeToolPanel === 'data' && (activeDataRegion || selectedValidation || tableSelection || validationSelection)" class="data-toolbar" data-horizontal-wheel="always">
+    <div v-if="workbook && sheetInfo && !isExternal && activeToolPanel === 'data' && (activeDataRegion || selectedValidation || tableSelection || validationSelection || conditionalSelection)" class="data-toolbar" data-horizontal-wheel="always">
       <button v-if="tableSelection && !selectedTable" title="从选区创建 Excel Table" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('create')">创建 Table</button>
       <button v-if="tableSelection && selectedTable" title="把 Excel Table 调整到选区并同步表头" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('resize')">调整 Table</button>
       <template v-if="selectedTable">
@@ -922,6 +986,8 @@ interface WorkbookConditionalIconThreshold { kind: string; value?: string; resol
 interface WorkbookConditionalIconSet { iconSet: string; thresholds: WorkbookConditionalIconThreshold[]; reverse: boolean; showValue: boolean }
 interface WorkbookConditionalFormatRule { groupIndex: number; ruleIndex: number; ranges: WorkbookMergeRange[]; kind: string; operator?: string; formula1?: string; formula2?: string; priority: number; stopIfTrue: boolean; style: WorkbookConditionalFormatStyle; colorScale?: WorkbookConditionalColorScale; dataBar?: WorkbookConditionalDataBar; iconSet?: WorkbookConditionalIconSet; editable: boolean }
 interface WorkbookConditionalFormatChange { sheet: string; action: 'create' | 'update' | 'delete' | 'move_up' | 'move_down' | 'split' | 'merge'; groupIndex?: number; ruleIndex?: number; rule?: WorkbookConditionalFormatRule }
+type BasicConditionalFormatKind = 'cellIs' | 'expression'
+interface BasicConditionalFormatDraft { kind: BasicConditionalFormatKind; operator: string; formula1: string; formula2: string; preset: string; stopIfTrue: boolean }
 interface WorkbookDrawingAnchor { row: number; column: number; rowOffset: number; columnOffset: number }
 interface WorkbookChartSeries { index: number; name?: string; nameEditable: boolean; color?: string; colorEditable: boolean; categories?: string; values?: string; editable: boolean }
 interface WorkbookChartDataLabels { showValue: boolean; showCategoryName: boolean; showSeriesName: boolean; showPercent: boolean }
@@ -1082,6 +1148,11 @@ const chartPreviewLoading = ref(false)
 const chartPreviewError = ref('')
 let chartPreviewGeneration = 0
 const selectedConditionalRuleKey = ref('')
+const conditionalFormatModalOpen = ref(false)
+const conditionalFormatEditorAction = ref<'create' | 'update'>('create')
+const conditionalFormatEditorArea = ref<WorkbookMergeRange | null>(null)
+const conditionalFormatEditorExisting = ref<WorkbookConditionalFormatRule | undefined>()
+const conditionalFormatDraft = ref<BasicConditionalFormatDraft>({ kind: 'cellIs', operator: 'greaterThan', formula1: '0', formula2: '100', preset: 'yellow_fill', stopIfTrue: true })
 const selectionAnchor = ref<CellSelection | null>(null)
 const selectionAreas = ref<SelectionArea[]>([])
 const fillPreview = ref<SelectionArea | null>(null)
@@ -2242,7 +2313,7 @@ const selectedDefinedName = computed(() => selectedDefinedNameIndex.value >= 0 ?
 const definedNameSelection = computed(() => selectionAreas.value.length === 1 ? selectionBounds.value : null)
 const canEditDefinedNames = computed(() => Boolean(!isExternal.value && workbook.value && !workbook.value.protection.lockStructure && !saving.value && !updatingStructure.value && !dirtyCount.value))
 const activeToolPanelLabel = computed(() => ({ none: '工具', format: '格式', data: '数据', chart: '图表' })[activeToolPanel.value])
-const hasDataToolContext = computed(() => Boolean(activeDataRegion.value || selectedValidation.value || tableSelection.value || validationSelection.value))
+const hasDataToolContext = computed(() => Boolean(activeDataRegion.value || selectedValidation.value || tableSelection.value || validationSelection.value || conditionalSelection.value))
 const workbookToolOptions = computed(() => [
   { label: `${activeToolPanel.value === 'format' ? '✓ ' : ''}单元格格式`, key: 'format' },
   { label: `${activeToolPanel.value === 'data' ? '✓ ' : ''}数据、Table 与规则`, key: 'data', disabled: !hasDataToolContext.value },
@@ -2944,6 +3015,45 @@ const CONDITIONAL_STYLE_PRESETS: Record<string, WorkbookConditionalFormatStyle> 
   red_text: { fontColor: '#C00000', bold: true },
   green_text: { fontColor: '#008000', bold: true },
 }
+const CONDITIONAL_STYLE_OPTIONS = [
+  { key: 'red_fill', label: '红色提醒', fillColor: '#FFC7CE', fontColor: '#9C0006' },
+  { key: 'yellow_fill', label: '黄色关注', fillColor: '#FFEB9C', fontColor: '#9C6500' },
+  { key: 'green_fill', label: '绿色通过', fillColor: '#C6EFCE', fontColor: '#006100' },
+  { key: 'red_text', label: '红色文字', fillColor: '', fontColor: '#C00000' },
+  { key: 'green_text', label: '绿色文字', fillColor: '', fontColor: '#008000' },
+]
+const conditionalFormatNeedsSecondValue = computed(() => ['between', 'notBetween'].includes(conditionalFormatDraft.value.operator))
+const conditionalFormatEditorTitle = computed(() => conditionalFormatEditorAction.value === 'create' ? '新建条件格式' : '编辑条件格式')
+const conditionalFormatEditorRangeLabel = computed(() => {
+  const area = conditionalFormatEditorArea.value
+  if (!area) return '—'
+  return area.top === area.bottom && area.left === area.right ? `${columnLabel(area.left)}${area.top + 1}` : rangeLabel(area)
+})
+const conditionalFormatExpressionPlaceholder = computed(() => {
+  const area = conditionalFormatEditorArea.value
+  return area ? `${columnLabel(area.left)}${area.top + 1}>0` : 'A1>0'
+})
+const conditionalFormatDraftError = computed(() => {
+  const draft = conditionalFormatDraft.value
+  if (draft.kind === 'expression') return draft.formula1 && parseConditionalExpression(draft.formula1) ? '' : '公式不在安全子集内。'
+  if (!Number.isFinite(Number(draft.formula1.replace(/^=/, '')))) return '阈值必须是有限数字。'
+  if (conditionalFormatNeedsSecondValue.value && !Number.isFinite(Number(draft.formula2.replace(/^=/, '')))) return '第二阈值必须是有限数字。'
+  return ''
+})
+const conditionalFormatPreviewStyle = computed<CSSProperties>(() => {
+  const style = CONDITIONAL_STYLE_PRESETS[conditionalFormatDraft.value.preset] || CONDITIONAL_STYLE_PRESETS.yellow_fill
+  return { color: style.fontColor || 'var(--theme-text)', background: style.fillColor || 'var(--theme-card)', fontWeight: style.bold ? '700' : '500' }
+})
+const conditionalFormatPreviewSummary = computed(() => {
+  const draft = conditionalFormatDraft.value
+  if (draft.kind === 'expression') return draft.formula1 || conditionalFormatExpressionPlaceholder.value
+  const labels: Record<string, string> = { greaterThan: '大于', greaterThanOrEqual: '大于或等于', lessThan: '小于', lessThanOrEqual: '小于或等于', equal: '等于', notEqual: '不等于', between: '介于', notBetween: '不介于' }
+  return `${labels[draft.operator] || draft.operator} ${draft.formula1}${conditionalFormatNeedsSecondValue.value ? ` 与 ${draft.formula2}` : ''}`
+})
+const conditionalPresetForStyle = (style?: WorkbookConditionalFormatStyle) => CONDITIONAL_STYLE_OPTIONS.find(option => {
+  const candidate = CONDITIONAL_STYLE_PRESETS[option.key]
+  return candidate.fillColor === style?.fillColor && candidate.fontColor === style?.fontColor && candidate.bold === Boolean(style?.bold)
+})?.key || 'yellow_fill'
 const colorScaleThresholdToken = (point: WorkbookConditionalColorScalePoint) => point.kind === 'min' || point.kind === 'max' ? point.kind : `${point.kind}:${point.value || ''}`
 const conditionalThresholdToken = (point: WorkbookConditionalThreshold) => point.kind === 'min' || point.kind === 'max' ? point.kind : `${point.kind}:${point.value || ''}`
 const parseColorScaleThresholds = (source: string, count: number): WorkbookConditionalColorScalePoint[] | null => {
@@ -3123,6 +3233,58 @@ const editConditionalFormatRule = async (action: 'create' | 'update') => {
   if (!area || !canEditConditionalFormat.value) return
   const existing = action === 'update' ? selectedConditionalFormat.value : undefined
   if (action === 'update' && !existing?.editable) return void message.error('当前条件格式为复杂只读规则')
+  if (existing && !['cellIs', 'expression'].includes(existing.kind)) {
+    const rule = await promptConditionalFormatRule(existing, existing.ranges)
+    if (rule) void commitConditionalFormatChange({ sheet: activeSheet.value, action, groupIndex: existing.groupIndex, ruleIndex: existing.ruleIndex, rule }, area, '已更新条件格式规则')
+    return
+  }
+  conditionalFormatEditorAction.value = action
+  conditionalFormatEditorArea.value = { ...area }
+  conditionalFormatEditorExisting.value = existing
+  conditionalFormatDraft.value = {
+    kind: existing?.kind === 'expression' ? 'expression' : 'cellIs',
+    operator: existing?.operator || 'greaterThan',
+    formula1: existing?.formula1 || (existing?.kind === 'expression' ? conditionalFormatExpressionPlaceholder.value : '0'),
+    formula2: existing?.formula2 || '100',
+    preset: conditionalPresetForStyle(existing?.style),
+    stopIfTrue: existing?.stopIfTrue ?? true,
+  }
+  conditionalFormatModalOpen.value = true
+}
+const conditionalFormatRuleFromDraft = (): WorkbookConditionalFormatRule | null => {
+  const area = conditionalFormatEditorArea.value
+  const existing = conditionalFormatEditorExisting.value
+  const draft = conditionalFormatDraft.value
+  if (!area || conditionalFormatDraftError.value) return null
+  return {
+    groupIndex: existing?.groupIndex ?? 0,
+    ruleIndex: existing?.ruleIndex ?? 0,
+    ranges: existing?.ranges.map(range => ({ ...range })) || [{ ...area }],
+    kind: draft.kind,
+    operator: draft.kind === 'cellIs' ? draft.operator : undefined,
+    formula1: draft.formula1,
+    formula2: draft.kind === 'cellIs' && conditionalFormatNeedsSecondValue.value ? draft.formula2 : undefined,
+    priority: existing?.priority || 0,
+    stopIfTrue: draft.stopIfTrue,
+    style: { ...CONDITIONAL_STYLE_PRESETS[draft.preset] },
+    editable: true,
+  }
+}
+const saveConditionalFormatDraft = () => {
+  const area = conditionalFormatEditorArea.value
+  const existing = conditionalFormatEditorExisting.value
+  const action = conditionalFormatEditorAction.value
+  const rule = conditionalFormatRuleFromDraft()
+  if (!area || !rule) return void message.error(conditionalFormatDraftError.value || '条件格式规则不完整')
+  conditionalFormatModalOpen.value = false
+  void commitConditionalFormatChange({ sheet: activeSheet.value, action, groupIndex: existing?.groupIndex, ruleIndex: existing?.ruleIndex, rule }, area, action === 'create' ? '已创建条件格式规则' : '已更新条件格式规则')
+}
+const openAdvancedConditionalFormatEditor = async () => {
+  const area = conditionalFormatEditorArea.value
+  const existing = conditionalFormatEditorExisting.value
+  const action = conditionalFormatEditorAction.value
+  if (!area) return
+  conditionalFormatModalOpen.value = false
   const rule = await promptConditionalFormatRule(existing, existing?.ranges || [{ ...area }])
   if (!rule) return
   void commitConditionalFormatChange({ sheet: activeSheet.value, action, groupIndex: existing?.groupIndex, ruleIndex: existing?.ruleIndex, rule }, area, action === 'create' ? '已创建条件格式规则' : '已更新条件格式规则')
@@ -4825,6 +4987,50 @@ onBeforeUnmount(() => {
 .print-options-panel .first-page-option > input { width: 100%; height: 32px; box-sizing: border-box; padding: 0 9px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); }
 .print-options-panel .first-page-option > input:disabled { opacity: .5; }
 :deep(.header-footer-modal) { width: min(680px, calc(100vw - 32px)); }
+.conditional-format-context { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--theme-primary) 28%, var(--workspace-border-color)); border-radius: 6px; background: color-mix(in srgb, var(--theme-card) 92%, var(--theme-primary)); }
+.conditional-format-context div { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.conditional-format-context span,.conditional-format-context small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.conditional-format-context strong { overflow: hidden; color: var(--theme-primary); text-overflow: ellipsis; white-space: nowrap; }
+.conditional-format-context small { max-width: 330px; line-height: 1.45; text-align: right; }
+:global(.conditional-format-modal) { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 24px); overflow-y: auto; }
+.conditional-format-editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, .9fr); gap: 14px; }
+.conditional-format-editor fieldset { min-width: 0; display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 14px; border: 1px solid var(--workspace-border-color); border-radius: 6px; }
+.conditional-format-editor legend { padding: 0 5px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.conditional-format-editor label { display: grid; gap: 6px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.conditional-format-editor label small { line-height: 1.45; }
+.conditional-format-editor input:not([type='checkbox']),.conditional-format-editor select { width: 100%; height: 34px; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--workspace-border-color); border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--theme-card); }
+.conditional-format-editor input:focus,.conditional-format-editor select:focus { border-color: var(--theme-primary); box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb),.12); }
+.conditional-kind-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.conditional-kind-switch button { height: 34px; border: 1px solid var(--workspace-border-color); color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; }
+.conditional-kind-switch button:first-child { border-radius: 5px 0 0 5px; }
+.conditional-kind-switch button:last-child { border-left: 0; border-radius: 0 5px 5px 0; }
+.conditional-kind-switch button.active { color: var(--workspace-on-accent); border-color: var(--theme-primary); background: var(--theme-primary); }
+.conditional-thresholds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.conditional-style-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.conditional-style-grid button { min-width: 0; height: 38px; display: flex; align-items: center; gap: 8px; padding: 4px 7px; overflow: hidden; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); cursor: pointer; }
+.conditional-style-grid button.active { border-color: var(--theme-primary); box-shadow: inset 0 0 0 1px var(--theme-primary); }
+.conditional-style-grid i { width: 30px; height: 26px; flex: none; display: grid; place-items: center; border: 1px solid rgba(0,0,0,.12); border-radius: 4px; font-size: 11px; font-style: normal; }
+.conditional-style-grid span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conditional-format-editor label.conditional-stop-option { display: flex; flex-direction: row; align-items: center; gap: 7px; }
+.conditional-stop-option input { accent-color: var(--theme-primary); }
+.conditional-preview { min-height: 62px; display: grid; grid-template-columns: auto 54px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--workspace-border-color); border-radius: 5px; background: var(--theme-surface-2); }
+.conditional-preview span,.conditional-preview small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.conditional-preview strong { height: 34px; display: grid; place-items: center; border: 1px solid rgba(0,0,0,.1); border-radius: 4px; }
+.conditional-preview small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conditional-format-error { margin: 12px 0 0; color: var(--status-danger); font-size: var(--text-compact); }
+.conditional-format-actions { display: flex; align-items: center; gap: 8px; }
+.conditional-format-actions span { flex: 1; }
+.conditional-format-actions button { height: 32px; padding: 0 12px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); cursor: pointer; }
+.conditional-format-actions button.primary { color: var(--workspace-on-accent); border-color: var(--theme-primary); background: var(--theme-primary); }
+.conditional-format-actions button:disabled { cursor: default; opacity: .45; }
+@media (max-width: 640px) {
+  .conditional-format-context { align-items: flex-start; flex-direction: column; }
+  .conditional-format-context small { max-width: none; text-align: left; }
+  .conditional-format-editor { grid-template-columns: 1fr; }
+  .conditional-format-actions { flex-wrap: wrap; }
+  .conditional-format-actions span { display: none; }
+  .conditional-format-actions button.primary { flex: 1; }
+}
 .header-footer-options { display: flex; flex-wrap: wrap; gap: 10px 18px; padding-bottom: 14px; border-bottom: 1px solid var(--workspace-border-color); }
 .header-footer-options label { display: inline-flex; align-items: center; gap: 7px; color: var(--theme-text-secondary); font-size: 11px; }
 .header-footer-modes { display: inline-grid; grid-template-columns: repeat(3, minmax(82px, 1fr)); margin: 14px 0; border: 1px solid var(--workspace-border-color); border-radius: 6px; overflow: hidden; }
