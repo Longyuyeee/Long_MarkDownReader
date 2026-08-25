@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1A2",
+  "capability": "XLSX real desktop scale and object baseline",
+  "tiers": [
+    { "cells": 10000, "rows": 1000, "columns": 10, "maximumOpenMs": 3000, "maximumBottomPageMs": 3000, "maximumSaveMs": 4500 },
+    { "cells": 50000, "rows": 5000, "columns": 10, "maximumOpenMs": 5000, "maximumBottomPageMs": 5000, "maximumSaveMs": 6500 },
+    { "cells": 100000, "rows": 10000, "columns": 10, "maximumOpenMs": 7000, "maximumBottomPageMs": 7000, "maximumSaveMs": 8000 }
+  ],
+  "expected": {
+    "sourceUnchangedBeforeSave": true,
+    "targetChangedAfterSave": true,
+    "editedValueSurvivesReopen": true,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false
+  },
+  "objectAudit": {
+    "fixture": "src-tauri/tests/fixtures/workbook/compatibility-baseline.xlsx",
+    "conditionalFormatWriteTest": "writes_conditional_formats_with_signature_protection",
+    "tablePackageTest": "creates_and_resizes_excel_table_package_parts",
+    "knownInteractionDifference": "conditional-format creation currently uses sequential text prompts and object operations write immediately"
+  }
+}

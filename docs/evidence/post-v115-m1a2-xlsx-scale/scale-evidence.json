@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1A2",
+  "sourceCommit": "6f43d6a0a5bf7a2c814cb96167999a3fc2a78494",
+  "expected": {
+    "tiers": [
+      {
+        "cells": 10000,
+        "maximumOpenMs": 3000,
+        "maximumBottomPageMs": 3000,
+        "maximumSaveMs": 4500
+      },
+      {
+        "cells": 50000,
+        "maximumOpenMs": 5000,
+        "maximumBottomPageMs": 5000,
+        "maximumSaveMs": 6500
+      },
+      {
+        "cells": 100000,
+        "maximumOpenMs": 7000,
+        "maximumBottomPageMs": 7000,
+        "maximumSaveMs": 8000
+      }
+    ],
+    "sourceUnchangedBeforeSave": true,
+    "editedValueSurvivesReopen": true,
+    "runtimeErrorCount": 0
+  },
+  "beforeActual": {
+    "tieredDesktopEvidence": false,
+    "measuredCellTiers": []
+  },
+  "afterActual": {
+    "tiers": [
+      {
+        "cells": 10000,
+        "rows": 1000,
+        "columns": 10,
+        "bytes": 60851,
+        "openMs": 1855,
+        "bottomPageMs": 103,
+        "saveMs": 1403,
+        "sourceUnchangedBeforeSave": true,
+        "targetChangedAfterSave": true
+      },
+      {
+        "cells": 50000,
+        "rows": 5000,
+        "columns": 10,
+        "bytes": 308323,
+        "openMs": 2737,
+        "bottomPageMs": 2392,
+        "saveMs": 4473,
+        "sourceUnchangedBeforeSave": true,
+        "targetChangedAfterSave": true
+      },
+      {
+        "cells": 100000,
+        "rows": 10000,
+        "columns": 10,
+        "bytes": 620457,
+        "openMs": 4313,
+        "bottomPageMs": 6595,
+        "saveMs": 7708,
+        "sourceUnchangedBeforeSave": true,
+        "targetChangedAfterSave": true
+      }
+    ],
+    "reopenedValue": "M1A2-100000",
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "differenceResolved": true
+}
