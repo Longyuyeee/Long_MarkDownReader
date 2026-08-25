@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1A3",
+  "capability": "XLSX bounded worksheet paging cache",
+  "tiers": [
+    { "cells": 10000, "rows": 1000, "columns": 10, "baselineBottomPageMs": 103, "maximumOpenMs": 3500, "maximumBottomPageMs": 1000 },
+    { "cells": 50000, "rows": 5000, "columns": 10, "baselineBottomPageMs": 2392, "maximumOpenMs": 5500, "maximumBottomPageMs": 2500 },
+    { "cells": 100000, "rows": 10000, "columns": 10, "baselineBottomPageMs": 6595, "maximumOpenMs": 8000, "maximumBottomPageMs": 4500 }
+  ],
+  "expected": {
+    "largestTierImproves": true,
+    "largestTierMinimumImprovementRatio": 0.2,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false
+  },
+  "cacheBoundary": {
+    "maximumCachedWorksheets": 1,
+    "keyFields": ["absolute path", "worksheet name", "content signature"],
+    "realInvalidationTest": "worksheet_value_cache_hits_and_invalidates_after_real_file_change"
+  },
+  "acceptedTradeoff": {
+    "scope": "cold open only",
+    "reason": "build one bounded full-sheet layout once so subsequent page reads do not rescan the OOXML worksheet",
+    "followUp": "consider a compact OOXML row index if cold-open budgets need to return to the M1A2 baseline"
+  }
+}

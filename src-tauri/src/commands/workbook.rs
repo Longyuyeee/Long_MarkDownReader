@@ -38,16 +38,17 @@ use crate::formats::workbook_ooxml::{
     read_workbook_sheet_layout, rebuild_workbook_pivot_aggregation_variant_isolated,
     rebuild_workbook_pivot_cache_isolated, rebuild_workbook_pivot_expanded_isolated,
     rebuild_workbook_pivot_isolated, rebuild_workbook_pivot_layout_variant_isolated,
-    validate_workbook_package, verify_workbook_pivot_variants_isolated,
+    validate_workbook_package, verify_workbook_pivot_variants_isolated, WorkbookSheetLayout,
 };
 use crate::formats::workbook_pivot::preview_pivot;
 use crate::sanitize_filename;
 use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_new_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
-use calamine::{open_workbook, CellType, Data, Reader, Xlsx};
+use calamine::{open_workbook, CellType, Data, Range, Reader, Xlsx};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::UNIX_EPOCH;
 use tauri::State;
 
@@ -57,6 +58,21 @@ const MAX_PREVIEW_COLUMNS: usize = 256;
 
 #[derive(Clone, Copy, Debug, Default)]
 struct CalamineWorkbookEngine;
+
+#[derive(Clone)]
+struct WorksheetValueCache {
+    path: PathBuf,
+    sheet: String,
+    signature: String,
+    values: Arc<Range<Data>>,
+    layout: Option<Arc<WorkbookSheetLayout>>,
+}
+
+static WORKSHEET_VALUE_CACHE: OnceLock<Mutex<Option<WorksheetValueCache>>> = OnceLock::new();
+
+fn worksheet_value_cache() -> &'static Mutex<Option<WorksheetValueCache>> {
+    WORKSHEET_VALUE_CACHE.get_or_init(|| Mutex::new(None))
+}
 
 fn workbook_signature(metadata: &fs::Metadata, bytes: &[u8]) -> String {
     let modified = metadata
@@ -646,6 +662,81 @@ fn open_xlsx(path: &Path) -> Result<Xlsx<std::io::BufReader<fs::File>>, String> 
     open_workbook(path).map_err(|error| format!("解析 XLSX 失败: {}", error))
 }
 
+fn read_worksheet_values(
+    path: &Path,
+    sheet: &str,
+    signature: &str,
+) -> Result<(Arc<Range<Data>>, bool), String> {
+    if let Some(cached) = worksheet_value_cache()
+        .lock()
+        .map_err(|_| "XLSX 分页缓存不可用")?
+        .as_ref()
+        .filter(|cached| {
+            cached.path == path && cached.sheet == sheet && cached.signature == signature
+        })
+        .cloned()
+    {
+        return Ok((cached.values, true));
+    }
+
+    let mut workbook = open_xlsx(path)?;
+    if !workbook.sheet_names().iter().any(|name| name == sheet) {
+        return Err("指定的工作表不存在".into());
+    }
+    let values = Arc::new(
+        workbook
+            .worksheet_range(sheet)
+            .map_err(|error| format!("读取工作表失败: {error}"))?,
+    );
+    *worksheet_value_cache()
+        .lock()
+        .map_err(|_| "XLSX 分页缓存不可用")? = Some(WorksheetValueCache {
+        path: path.to_path_buf(),
+        sheet: sheet.into(),
+        signature: signature.into(),
+        values: values.clone(),
+        layout: None,
+    });
+    Ok((values, false))
+}
+
+fn read_worksheet_layout(
+    path: &Path,
+    sheet: &str,
+    signature: &str,
+    source: &[u8],
+    total_rows: usize,
+) -> Result<(Arc<WorkbookSheetLayout>, bool), String> {
+    if let Some(layout) = worksheet_value_cache()
+        .lock()
+        .map_err(|_| "XLSX 分页缓存不可用")?
+        .as_ref()
+        .filter(|cached| {
+            cached.path == path && cached.sheet == sheet && cached.signature == signature
+        })
+        .and_then(|cached| cached.layout.clone())
+    {
+        return Ok((layout, true));
+    }
+
+    let layout = Arc::new(read_workbook_sheet_layout(
+        source,
+        sheet,
+        0,
+        total_rows,
+        MAX_PREVIEW_COLUMNS,
+    )?);
+    let mut cache = worksheet_value_cache()
+        .lock()
+        .map_err(|_| "XLSX 分页缓存不可用")?;
+    if let Some(cached) = cache.as_mut().filter(|cached| {
+        cached.path == path && cached.sheet == sheet && cached.signature == signature
+    }) {
+        cached.layout = Some(layout.clone());
+    }
+    Ok((layout, false))
+}
+
 fn cell_kind(cell: &Data) -> &'static str {
     match cell {
         Data::Empty => "empty",
@@ -781,23 +872,15 @@ impl WorkbookEngine for CalamineWorkbookEngine {
         row_offset: usize,
         row_limit: usize,
     ) -> Result<WorkbookSheetPage, String> {
-        let mut workbook = open_xlsx(path)?;
-        if !workbook.sheet_names().iter().any(|name| name == sheet) {
-            return Err("指定的工作表不存在".into());
-        }
-        let values = workbook
-            .worksheet_range(sheet)
-            .map_err(|error| format!("读取工作表失败: {}", error))?;
         let source = fs::read(path).map_err(|error| format!("读取 XLSX 样式失败: {error}"))?;
+        let metadata = path
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        let signature = workbook_signature(&metadata, &source);
+        let (values, _) = read_worksheet_values(path, sheet, &signature)?;
         let (total_rows, total_columns) = used_dimensions(&values);
-        let requested_end = row_offset.saturating_add(row_limit.clamp(1, MAX_PAGE_ROWS));
-        let layout = read_workbook_sheet_layout(
-            &source,
-            sheet,
-            row_offset,
-            requested_end,
-            MAX_PREVIEW_COLUMNS,
-        )?;
+        let (layout, _) =
+            read_worksheet_layout(path, sheet, &signature, &source, total_rows)?;
         let total_rows = total_rows.max(layout.extent.0);
         let total_columns = total_columns.max(layout.extent.1);
         let returned_columns = total_columns.min(MAX_PREVIEW_COLUMNS);
@@ -841,21 +924,21 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             truncated_columns: total_columns > returned_columns,
             default_row_height: layout.default_row_height,
             default_column_width: layout.default_column_width,
-            row_heights: layout.row_heights,
-            column_widths: layout.column_widths,
-            row_states: layout.row_states,
-            column_states: layout.column_states,
-            merged_cells: layout.merged_cells,
-            named_styles: layout.named_styles,
-            freeze_pane: layout.freeze_pane,
-            auto_filter: layout.auto_filter,
-            auto_filter_state: layout.auto_filter_state,
-            tables: layout.tables,
-            data_validations: layout.data_validations,
-            conditional_formats: layout.conditional_formats,
-            array_formulas: layout.array_formulas,
-            drawings: layout.drawings,
-            page_layout: layout.page_layout,
+            row_heights: layout.row_heights.clone(),
+            column_widths: layout.column_widths.clone(),
+            row_states: layout.row_states.clone(),
+            column_states: layout.column_states.clone(),
+            merged_cells: layout.merged_cells.clone(),
+            named_styles: layout.named_styles.clone(),
+            freeze_pane: layout.freeze_pane.clone(),
+            auto_filter: layout.auto_filter.clone(),
+            auto_filter_state: layout.auto_filter_state.clone(),
+            tables: layout.tables.clone(),
+            data_validations: layout.data_validations.clone(),
+            conditional_formats: layout.conditional_formats.clone(),
+            array_formulas: layout.array_formulas.clone(),
+            drawings: layout.drawings.clone(),
+            page_layout: layout.page_layout.clone(),
         })
     }
 }
@@ -4457,6 +4540,67 @@ mod tests {
             zip_part(&before, "xl/tables/table1.xml"),
             zip_part(&fs::read(&path).unwrap(), "xl/tables/table1.xml")
         );
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn worksheet_value_cache_hits_and_invalidates_after_real_file_change() {
+        let (base, path) = compatibility_fixture_copy("value-cache");
+        *worksheet_value_cache().lock().unwrap() = None;
+        let source = fs::read(&path).unwrap();
+        let signature = workbook_signature(&path.metadata().unwrap(), &source);
+
+        let (first, first_hit) = read_worksheet_values(&path, "Details", &signature).unwrap();
+        let (second, second_hit) = read_worksheet_values(&path, "Details", &signature).unwrap();
+        assert!(!first_hit);
+        assert!(second_hit);
+        assert_eq!(first, second);
+        let (total_rows, _) = used_dimensions(&first);
+        let (_, first_layout_hit) =
+            read_worksheet_layout(&path, "Details", &signature, &source, total_rows).unwrap();
+        let (_, repeated_layout_hit) =
+            read_worksheet_layout(&path, "Details", &signature, &source, total_rows).unwrap();
+        assert!(!first_layout_hit);
+        assert!(repeated_layout_hit);
+
+        let changed = patch_workbook(
+            &source,
+            &[WorkbookCellEdit {
+                sheet: "Details".into(),
+                row: 1,
+                column: 1,
+                input: "Closed".into(),
+                kind: "string".into(),
+            }],
+            &[],
+            &[],
+            &[],
+            &[],
+        )
+        .unwrap();
+        fs::write(&path, changed).unwrap();
+        let changed_source = fs::read(&path).unwrap();
+        let changed_signature = workbook_signature(&path.metadata().unwrap(), &changed_source);
+        assert_ne!(changed_signature, signature);
+
+        let (reparsed, changed_hit) =
+            read_worksheet_values(&path, "Details", &changed_signature).unwrap();
+        let (_, repeated_hit) =
+            read_worksheet_values(&path, "Details", &changed_signature).unwrap();
+        assert!(!changed_hit);
+        assert!(repeated_hit);
+        assert_eq!(reparsed.get_value((1, 1)).unwrap().to_string(), "Closed");
+        let (changed_rows, _) = used_dimensions(&reparsed);
+        let (_, changed_layout_hit) = read_worksheet_layout(
+            &path,
+            "Details",
+            &changed_signature,
+            &changed_source,
+            changed_rows,
+        )
+        .unwrap();
+        assert!(!changed_layout_hit);
+        *worksheet_value_cache().lock().unwrap() = None;
         fs::remove_dir_all(base).unwrap();
     }
 
