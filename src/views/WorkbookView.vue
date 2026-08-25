@@ -733,7 +733,7 @@
               <div v-for="column in canvasColumnCount" :key="column" class="column-header" :class="{ active: isColumnSelected(column - 1), frozen: column <= effectiveFreeze.columns, hidden: columnState(column - 1).hidden, outlined: columnState(column - 1).outlineLevel }" :style="frozenColumnStyle(column - 1, true)" :title="axisStateTitle('column', column - 1)" @pointerdown="selectColumn(column - 1, $event)">{{ columnLabel(column - 1) }}</div>
             </div>
             <div class="virtual-sheet" :style="{ height: `${sheetHeight}px` }">
-              <div v-for="row in visibleRows" :key="row.index" class="sheet-row" :style="[rowLayoutStyle(row.index), gridStyle]">
+              <div v-for="row in visibleRows" :key="row.index" class="sheet-row" :class="{ 'validation-row-open': validationMenuCell?.sheet === activeSheet && validationMenuCell?.row === row.index }" :style="[rowLayoutStyle(row.index), gridStyle]">
                 <div class="row-number" :class="{ active: isRowSelected(row.index), hidden: rowState(row.index).hidden, outlined: rowState(row.index).outlineLevel }" :title="axisStateTitle('row', row.index)" @pointerdown="selectRow(row.index, $event)">{{ row.index + 1 }}</div>
                 <div
                   v-for="column in canvasColumnCount"
@@ -757,6 +757,8 @@
                       'in-table': tableAt(row.index, column - 1),
                       'table-header': isTableHeader(row.index, column - 1),
                       validated: validationAt(row.index, column - 1),
+                      'validation-menu-open': isValidationMenuOpen(row.index, column - 1),
+                      'has-validation-picker': hasInlineValidationOptions(row.index, column - 1) && isSelected(row.index, column - 1),
                       frozen: row.index < effectiveFreeze.rows || column <= effectiveFreeze.columns,
                     },
                   ]"
@@ -775,6 +777,34 @@
                     <span v-if="!conditionalIconHidesValue(row.index, column - 1)">{{ cellDisplay(row.index, column - 1) }}</span>
                   </span>
                   <span v-if="!isExternal && isFillHandleCell(row.index, column - 1)" class="fill-handle" title="拖动填充" @pointerdown.stop="startFill($event)"></span>
+                  <button
+                    v-if="!isExternal && isEditableCell(row.index, column - 1) && isSelected(row.index, column - 1) && hasInlineValidationOptions(row.index, column - 1)"
+                    class="validation-picker"
+                    type="button"
+                    title="选择允许的值"
+                    aria-label="打开数据验证选项"
+                    :aria-expanded="isValidationMenuOpen(row.index, column - 1)"
+                    @pointerdown.stop.prevent
+                    @click.stop="toggleValidationMenu(row.index, column - 1)"
+                  ><n-icon :component="ChevronDownIcon" /></button>
+                  <div
+                    v-if="isValidationMenuOpen(row.index, column - 1)"
+                    class="validation-menu"
+                    role="listbox"
+                    aria-label="允许的单元格值"
+                    @pointerdown.stop
+                  >
+                    <header><span>选择允许的值</span><small>{{ inlineValidationOptionsAt(row.index, column - 1).length }} 项</small></header>
+                    <button
+                      v-for="option in inlineValidationOptionsAt(row.index, column - 1)"
+                      :key="option"
+                      type="button"
+                      role="option"
+                      :aria-selected="formulaInput === option"
+                      :class="{ active: formulaInput === option }"
+                      @click.stop="chooseValidationOption(row.index, column - 1, option)"
+                    ><span>{{ option }}</span><n-icon v-if="formulaInput === option" :component="CheckIcon" /></button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -799,7 +829,7 @@ import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { confirmAppAction, promptAppAction } from '../services/appDialog'
 import { useDialog, useMessage } from 'naive-ui'
-import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, MoreHorizontal as MoreIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, Save as SaveIcon, SlidersHorizontal as SlidersIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
+import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Check as CheckIcon, ChevronDown as ChevronDownIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, MoreHorizontal as MoreIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, Save as SaveIcon, SlidersHorizontal as SlidersIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone } from '../config/themePresets'
 import { conditionalExpressionReferences, evaluateConditionalExpression, parseConditionalExpression } from '../utils/conditionalExpression'
@@ -1039,6 +1069,7 @@ const sourceMergedCells = ref<WorkbookMergeRange[]>([])
 const undoStack = ref<EditAction[]>([])
 const redoStack = ref<EditAction[]>([])
 const selectedCell = ref<CellSelection | null>(null)
+const validationMenuCell = ref<CellSelection | null>(null)
 const selectedDrawingId = ref('')
 const selectedChartSeriesIndex = ref(0)
 const newChartType = ref<'column' | 'line' | 'pie' | 'scatter'>('column')
@@ -1387,6 +1418,32 @@ const containsCell = (range: WorkbookMergeRange, row: number, column: number) =>
 const tableAt = (row: number, column: number) => sheetInfo.value?.tables.find(table => containsCell(table.range, row, column))
 const isTableHeader = (row: number, column: number) => Boolean(sheetInfo.value?.tables.some(table => row === table.range.top && column >= table.range.left && column <= table.range.right))
 const validationAt = (row: number, column: number) => sheetInfo.value?.dataValidations.find(validation => validation.ranges.some(range => containsCell(range, row, column)))
+const literalValidationOptions = (validation?: WorkbookDataValidation) => {
+  const formula = validation?.formula1 || ''
+  return validation?.kind === 'list' && formula.startsWith('"') && formula.endsWith('"') ? formula.slice(1, -1).split(',') : []
+}
+const inlineValidationOptions = (validation?: WorkbookDataValidation) => {
+  const formula = validation?.formula1 || ''
+  if (formula.length < 2 || !formula.startsWith('"') || !formula.endsWith('"') || formula.slice(1, -1).includes('"')) return []
+  const options = literalValidationOptions(validation).filter(option => option.length > 0)
+  return options.length > 0 && options.length <= 128 && options.every(option => option.length <= 255) ? [...new Set(options)] : []
+}
+const inlineValidationOptionsAt = (row: number, column: number) => inlineValidationOptions(validationAt(row, column))
+const hasInlineValidationOptions = (row: number, column: number) => inlineValidationOptionsAt(row, column).length > 0
+const isValidationMenuOpen = (row: number, column: number) => validationMenuCell.value?.sheet === activeSheet.value && validationMenuCell.value.row === row && validationMenuCell.value.column === column
+const closeValidationMenu = () => { validationMenuCell.value = null }
+const toggleValidationMenu = (row: number, column: number) => {
+  if (!hasInlineValidationOptions(row, column)) return
+  if (isValidationMenuOpen(row, column)) { closeValidationMenu(); return }
+  selectCell(row, column)
+  validationMenuCell.value = { sheet: activeSheet.value, row, column }
+}
+const chooseValidationOption = (row: number, column: number, option: string) => {
+  selectCell(row, column)
+  formulaInput.value = option
+  commitFormulaInput()
+  closeValidationMenu()
+}
 const selectedValidation = computed(() => selectedCell.value ? validationAt(selectedCell.value.row, selectedCell.value.column) : undefined)
 const selectedValidationIndex = computed(() => selectedValidation.value ? (sheetInfo.value?.dataValidations.indexOf(selectedValidation.value) ?? -1) : -1)
 const validationSelection = computed(() => {
@@ -2267,6 +2324,7 @@ const setDraft = (key: string, edit?: WorkbookCellEdit) => {
   drafts.value = next
 }
 const setSelectionFocus = (row: number, column: number) => {
+  if (validationMenuCell.value && (validationMenuCell.value.sheet !== activeSheet.value || validationMenuCell.value.row !== row || validationMenuCell.value.column !== column)) closeValidationMenu()
   selectedCell.value = { sheet: activeSheet.value, row, column }
   formulaInput.value = originalInput(cellAt(row, column))
 }
@@ -2372,8 +2430,7 @@ const commitFormulaInput = () => {
   if (!selection || !selectedEditable.value) return
   const validation = validationAt(selection.row, selection.column)
   if (validation?.showErrorMessage && validation.kind === 'list' && formulaInput.value && !formulaInput.value.startsWith('=')) {
-    const formula = validation.formula1 || ''
-    const options = formula.startsWith('"') && formula.endsWith('"') ? formula.slice(1, -1).split(',') : []
+    const options = literalValidationOptions(validation)
     if (options.length && !options.includes(formulaInput.value)) {
       message.error(validation.error || `请输入列表中的值：${options.join('、')}`)
       return
@@ -4488,6 +4545,7 @@ const convertSheet = async () => {
 }
 const handleScroll = () => {
   if (!scrollRef.value) return
+  closeValidationMenu()
   scrollTop.value = scrollRef.value.scrollTop
   rememberWorkspaceViewState(workbookPath.value, {
     scrollTop: scrollRef.value.scrollTop,
@@ -4502,6 +4560,7 @@ const handleScroll = () => {
 const handleShortcut = (event: KeyboardEvent) => {
   const formulaFocused = event.target === formulaInputRef.value
   if (!(event.ctrlKey || event.metaKey)) {
+    if (event.key === 'Escape' && validationMenuCell.value) { event.preventDefault(); closeValidationMenu(); return }
     if (!isExternal.value && !formulaFocused && event.key === 'Delete') { event.preventDefault(); clearSelection() }
     if (!formulaFocused && selectedCell.value && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
       event.preventDefault()
@@ -4523,6 +4582,9 @@ const handleShortcut = (event: KeyboardEvent) => {
   else if (!isExternal.value && !formulaFocused && key === 'y') { event.preventDefault(); redo() }
 }
 const warnBeforeUnload = (event: BeforeUnloadEvent) => { if (dirtyCount.value) event.preventDefault() }
+const handleWindowPointerDown = (event: PointerEvent) => {
+  if (!(event.target as HTMLElement | null)?.closest('.validation-picker, .validation-menu')) closeValidationMenu()
+}
 const stopCellSelection = () => {
   dragSelecting = false
   if (!filling) return
@@ -4575,6 +4637,7 @@ onMounted(() => {
   nextTick(() => { if (scrollRef.value) resizeObserver?.observe(scrollRef.value) })
   window.addEventListener('keydown', handleShortcut)
   window.addEventListener('pointerup', stopCellSelection)
+  window.addEventListener('pointerdown', handleWindowPointerDown)
   window.addEventListener('beforeunload', warnBeforeUnload)
 })
 onBeforeUnmount(() => {
@@ -4590,6 +4653,7 @@ onBeforeUnmount(() => {
   resizeObserver?.disconnect()
   window.removeEventListener('keydown', handleShortcut)
   window.removeEventListener('pointerup', stopCellSelection)
+  window.removeEventListener('pointerdown', handleWindowPointerDown)
   window.removeEventListener('beforeunload', warnBeforeUnload)
 })
 </script>
@@ -4856,6 +4920,7 @@ onBeforeUnmount(() => {
 .sheet-header { position: sticky; top: 0; z-index: 20; height: 38px; background: var(--theme-surface-2); box-shadow: 0 1px 0 var(--workspace-border-color); }
 .virtual-sheet { position: relative; }
 .sheet-row { position: absolute; top: 0; left: 0; }
+.sheet-row.validation-row-open { z-index: 30; }
 .row-number,.column-header,.workbook-cell { min-width: 0; box-sizing: border-box; border-right: 1px solid var(--workspace-border-color); border-bottom: 1px solid var(--workspace-border-color); }
 .row-number { position: sticky; left: 0; z-index: 8; display: grid; place-items: center; color: var(--theme-text-secondary); background: var(--theme-surface-2); font-size: var(--text-compact); }
 .row-number:not(.corner),.column-header,.corner { cursor: pointer; user-select: none; }
@@ -4868,6 +4933,17 @@ onBeforeUnmount(() => {
 .workbook-cell.in-table { background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 94%, var(--theme-primary)); }
 .workbook-cell.table-header { color: var(--theme-primary); font-weight: 700; background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 82%, var(--theme-primary)); }
 .workbook-cell.validated::before { content: ''; position: absolute; top: 3px; right: 3px; width: 3px; height: 3px; border-radius: 50%; background: #d59a2d; }
+.workbook-cell.validation-menu-open { z-index: 12; overflow: visible; }
+.workbook-cell.has-validation-picker .cell-content { padding-right: 18px; }
+.validation-picker { position: absolute; top: 3px; right: 3px; z-index: 7; width: 20px; height: 20px; display: grid; place-items: center; padding: 0; border: 1px solid color-mix(in srgb, var(--theme-primary) 45%, var(--workspace-border-color)); border-radius: 4px; color: var(--theme-primary); background: color-mix(in srgb, var(--theme-surface) 88%, var(--theme-primary)); box-shadow: var(--workspace-shadow-sm); cursor: pointer; }
+.validation-picker:hover,.validation-picker[aria-expanded='true'] { color: var(--workspace-on-accent); background: var(--theme-primary); }
+.validation-menu { position: absolute; top: calc(100% + 4px); right: -2px; z-index: 50; width: max(172px, 100%); max-height: 210px; overflow: auto; padding: 5px; border: 1px solid color-mix(in srgb, var(--theme-primary) 48%, var(--workspace-border-color)); border-radius: 7px; color: var(--theme-text); background: var(--theme-surface); box-shadow: 0 12px 28px rgba(0,0,0,.22); }
+.validation-menu header { min-height: 26px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 7px 4px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.validation-menu header small { color: var(--theme-primary); }
+.validation-menu > button { width: 100%; min-height: 30px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; overflow: hidden; border: 0; border-radius: 5px; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }
+.validation-menu > button span { overflow: hidden; text-overflow: ellipsis; }
+.validation-menu > button:hover,.validation-menu > button.active { color: var(--theme-primary); background: color-mix(in srgb, var(--theme-card) 82%, var(--theme-primary)); }
+.validation-menu > button .n-icon { flex: none; }
 .workbook-cell.editable { cursor: cell; }
 .workbook-cell.in-range { background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 82%, var(--theme-primary)); }
 .workbook-cell.fill-preview { background: color-mix(in srgb, var(--cell-fill, var(--theme-card)) 72%, var(--theme-primary)); }

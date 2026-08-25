@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1A1",
+  "capability": "XLSX inline list data validation picker",
+  "fixture": "src-tauri/tests/fixtures/workbook/compatibility-baseline.xlsx",
+  "target": {
+    "sheet": "Details",
+    "cell": "B2",
+    "options": ["Active", "Paused", "Closed"],
+    "selectedValue": "Closed"
+  },
+  "beforeActual": {
+    "validationRead": true,
+    "invalidValueRejected": true,
+    "validValueRoundTrips": true,
+    "inCellPicker": false,
+    "saveBoundaryVisible": false
+  },
+  "expected": {
+    "inCellPicker": true,
+    "optionCount": 3,
+    "sourceUnchangedBeforeSave": true,
+    "sourceChangedAfterSave": true,
+    "selectedValueSurvivesReopen": true,
+    "undoableDraft": true,
+    "runtimeErrorCount": 0,
+    "narrowViewportContained": true
+  }
+}

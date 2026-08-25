@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-25 M1A1 XLSX 列表验证交互已通过：** 真实 `compatibility-baseline.xlsx` 的 `Details!B2` 已从“只能手输并在保存时校验”补强为可见的三项下拉选择。选择 `Closed` 后临时文件在保存前 SHA-256 不变，显式保存后变化，刷新真实 Tauri 应用并重开仍为 `Closed`；860×700 无弹层越界，运行时错误 0，仓库样本保持不变。当前不提升版本。下一步 M1A2 审计条件格式、表格对象与 10k/50k/100k 大表性能，再选择一个独立可验收子能力。详见 [`Post_v1.0.15_M1A1_XLSX_List_Validation_Audit_2026-08-25.md`](./Post_v1.0.15_M1A1_XLSX_List_Validation_Audit_2026-08-25.md)。
+
 > **2026-08-25 M0 真实测试基线已通过：** 已冻结 13 类薄弱格式证据矩阵、统一预期/实际差异模板和固定工作台资料库。Rust 当前产品后端实际扫描得到 11 个注册文件、2 个待办、1 个 Canvas、1 组重复文件、1 条未引用批注、1 条断链和 1 条歧义链接；实际生成并解析 100/1,000/5,000 个 Markdown 节点，边数 99/999/4,999，最近构建耗时 105/773/4,853 ms。`audit:post-v115-m0-baseline` 2/2 Rust 测试与机器总账通过。下一步进入 M1A，先审计 XLSX 公式、数据验证、条件格式、表格、图表和高级对象的当前真实边界。详见 [`Post_v1.0.15_M0_Real_Baseline_Audit_2026-08-25.md`](./Post_v1.0.15_M0_Real_Baseline_Audit_2026-08-25.md)。
 
 > **2026-08-25 v1.0.15 后专业能力增强路线已冻结：** 已基于 `main` / `4cd3aa0` / `v1.0.15` 审计薄弱格式、工作台和知识图谱现状，并形成 M0～M4 开发路线。后续依次执行事实与真实测试基线、高频格式深化、工作台 2.0、知识图谱 2.0、跨格式收口与版本候选；每个阶段都必须记录修正前实际结果、目标结果、修正后实际结果和可复核证据。下一步为 M0，不提前扩大任何格式能力声明。详见 [`Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md`](./Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md)。

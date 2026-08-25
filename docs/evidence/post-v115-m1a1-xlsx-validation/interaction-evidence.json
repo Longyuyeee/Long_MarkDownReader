@@ -1,0 +1,39 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M1A1",
+    "sourceCommit":  "f6987d8fa7255bcd13e39154378495ef6d20b8c3",
+    "fixture":  "M1A1 Validation.xlsx",
+    "expected":  {
+                     "options":  [
+                                     "Active",
+                                     "Paused",
+                                     "Closed"
+                                 ],
+                     "selectedValue":  "Closed",
+                     "explicitSave":  true
+                 },
+    "beforeActual":  {
+                         "validationCellPresent":  true,
+                         "pickerPresent":  false,
+                         "manualInputRequired":  true
+                     },
+    "afterActual":  {
+                        "options":  [
+                                        "Active",
+                                        "Paused",
+                                        "Closed"
+                                    ],
+                        "draftValue":  "Closed",
+                        "sourceUnchangedBeforeSave":  true,
+                        "sourceChangedAfterSave":  true,
+                        "reopenedValue":  "Closed",
+                        "narrowViewportContained":  true,
+                        "runtimeErrorCount":  0,
+                        "blockingErrorSurfaceObserved":  false,
+                        "repositoryFixtureUnchanged":  true,
+                        "temporaryTargetChanged":  true
+                    },
+    "differenceResolved":  true,
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false
+}
