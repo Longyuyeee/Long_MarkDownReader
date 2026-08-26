@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1B0",
+  "goal": "Audit current DOCX and PPTX common-object editing boundaries before M1B implementation",
+  "requiredProducers": [
+    "microsoft",
+    "wps",
+    "libreoffice"
+  ],
+  "expected": {
+    "docxProducerFixtures": 3,
+    "pptxProducerFixtures": 3,
+    "docxDirectSourceSave": true,
+    "docxDraftUndoRedo": true,
+    "pptxReliableCopySave": true,
+    "pptxDirectSourceSave": true,
+    "pptxDraftUndoRedo": true
+  },
+  "beforeActual": {
+    "docxDirectSourceSave": true,
+    "docxDraftUndoRedo": true,
+    "pptxReliableCopySave": true,
+    "pptxDirectSourceSave": false,
+    "pptxDraftUndoRedo": false,
+    "pptxSingleVerifiedOperationOnly": true
+  },
+  "nextStage": "M1B1A"
+}

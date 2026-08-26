@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1B0",
+  "sourceCommit": "e435f59d7498ce521874c12e48ebc38adfd3b153",
+  "expected": {
+    "docxDirectSourceSave": true,
+    "docxDraftUndoRedo": true,
+    "pptxReliableCopySave": true,
+    "pptxDirectSourceSave": true,
+    "pptxDraftUndoRedo": true,
+    "realProducerFixtures": 6
+  },
+  "beforeActual": {
+    "roadmapAssumedCommonObjectEnhancementWasBroadlyMissing": true
+  },
+  "afterActual": {
+    "docxDirectSourceSave": true,
+    "docxDraftUndoRedo": true,
+    "docxAdvancedObjectsReadonly": [
+      "headers-footers",
+      "comments",
+      "footnotes-endnotes",
+      "fields",
+      "floating-objects"
+    ],
+    "pptxReliableCopySave": true,
+    "pptxDirectSourceSave": false,
+    "pptxDraftUndoRedo": false,
+    "pptxSingleVerifiedOperationOnly": true,
+    "pptxAdvancedObjectsReadonly": [
+      "masters",
+      "animations",
+      "smartart",
+      "complex-charts",
+      "unknown-objects"
+    ],
+    "producerMatrixChecksPassed": true,
+    "realParseTestsPassed": true,
+    "realSaveReopenTestsPassed": true,
+    "fixtureEvidence": [
+      {
+        "format": "docx",
+        "producer": "microsoft-word-16",
+        "file": "fixtures/docx/producers/microsoft-word-16.docx",
+        "bytes": 30078,
+        "sha256": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176"
+      },
+      {
+        "format": "docx",
+        "producer": "wps-writer",
+        "file": "fixtures/docx/producers/wps-writer.docx",
+        "bytes": 83349,
+        "sha256": "0da9fad1284dcddc27689f381c26fd7f52d82f154e8a5cf152faebb7b206868b"
+      },
+      {
+        "format": "docx",
+        "producer": "libreoffice-writer",
+        "file": "fixtures/docx/producers/libreoffice-writer.docx",
+        "bytes": 81767,
+        "sha256": "a549705f8650065a1fbb7111b598b5ae509f0b387ec58db47547f7445e26dea3"
+      },
+      {
+        "format": "pptx",
+        "producer": "microsoft-powerpoint-16",
+        "file": "fixtures/pptx/producers/microsoft-powerpoint-16.pptx",
+        "bytes": 51494,
+        "sha256": "858acb4e2d6841b4f0a8ea066d9a8cb3b08bc89ef69a6143216c3bcec39ae82f"
+      },
+      {
+        "format": "pptx",
+        "producer": "wps-presentation",
+        "file": "fixtures/pptx/producers/wps-presentation.pptx",
+        "bytes": 94574,
+        "sha256": "1bbb8343566166a351ff37054cfbb91ad61122930fb2e3f588e9658afda59f9a"
+      },
+      {
+        "format": "pptx",
+        "producer": "libreoffice-impress",
+        "file": "fixtures/pptx/producers/libreoffice-impress.pptx",
+        "bytes": 18288,
+        "sha256": "4ef5578bd9657eb7b1a04fa8c7ffb5eb7c2fc4046f49608ed7a0fff75d8c2140"
+      }
+    ]
+  },
+  "difference": {
+    "resolvedByAudit": true,
+    "productGapRemaining": true,
+    "nextStage": "M1B1A",
+    "nextGoal": "Add signature-protected reliable PPTX source overwrite while preserving the existing copy path"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
