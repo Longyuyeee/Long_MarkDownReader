@@ -1,0 +1,231 @@
+{
+  "actual": {
+    "existingEditableFamilies": [
+      "safe-body-text",
+      "safe-table-cell-text",
+      "native-hyperlink-labels",
+      "basic-character-style",
+      "inline-image-alt-text"
+    ],
+    "hyperlinkInventory": [
+      {
+        "currentEdit": {
+          "basicCharacterStyleTargets": 1,
+          "hyperlinkLabelTargets": 2,
+          "inlineImageMetadataTargets": 0,
+          "plainTextTargets": 1,
+          "tableCellTargets": 0
+        },
+        "currentRead": {
+          "definedParagraphStyles": 15,
+          "fields": false,
+          "footers": 0,
+          "headers": 0,
+          "images": 0,
+          "mergedCells": 0,
+          "paragraphs": 6,
+          "referencedParagraphStyles": [
+            "1"
+          ],
+          "renderableImages": 0,
+          "tables": 0
+        },
+        "fixture": "fixtures/docx/hyperlinks/microsoft-word-hyperlinks.docx",
+        "producerId": "microsoft-word-16",
+        "sourceBytes": 14058,
+        "sourceSha256": "e828af70515111371aa6eaeea0b32c02870e542a4be2b57ea0831e4cd971837b"
+      },
+      {
+        "currentEdit": {
+          "basicCharacterStyleTargets": 0,
+          "hyperlinkLabelTargets": 0,
+          "inlineImageMetadataTargets": 0,
+          "plainTextTargets": 1,
+          "tableCellTargets": 0
+        },
+        "currentRead": {
+          "definedParagraphStyles": 2,
+          "fields": true,
+          "footers": 0,
+          "headers": 0,
+          "images": 0,
+          "mergedCells": 0,
+          "paragraphs": 6,
+          "referencedParagraphStyles": [
+            "2"
+          ],
+          "renderableImages": 0,
+          "tables": 0
+        },
+        "fixture": "fixtures/docx/hyperlinks/wps-writer-hyperlinks.docx",
+        "producerId": "wps-writer",
+        "sourceBytes": 10685,
+        "sourceSha256": "ef5155b5d29bf0a73e2e1121fdd5cb567b3af980a47c5b25da4c4fb5352c8c0c"
+      },
+      {
+        "currentEdit": {
+          "basicCharacterStyleTargets": 0,
+          "hyperlinkLabelTargets": 2,
+          "inlineImageMetadataTargets": 0,
+          "plainTextTargets": 1,
+          "tableCellTargets": 0
+        },
+        "currentRead": {
+          "definedParagraphStyles": 7,
+          "fields": false,
+          "footers": 0,
+          "headers": 0,
+          "images": 0,
+          "mergedCells": 0,
+          "paragraphs": 6,
+          "referencedParagraphStyles": [
+            "Heading1",
+            "Normal"
+          ],
+          "renderableImages": 0,
+          "tables": 0
+        },
+        "fixture": "fixtures/docx/hyperlinks/libreoffice-writer-hyperlinks.docx",
+        "producerId": "libreoffice-writer",
+        "sourceBytes": 6065,
+        "sourceSha256": "3fbba1da1b32bce15d806ad764cff98d9bf6f0155d8712e76d6a54ea8e6c10e1"
+      }
+    ],
+    "packagePreservation": "existing isolated patches change only word/document.xml and verify every other package part byte-for-byte",
+    "producerInventory": [
+      {
+        "currentEdit": {
+          "basicCharacterStyleTargets": 13,
+          "hyperlinkLabelTargets": 0,
+          "inlineImageMetadataTargets": 1,
+          "plainTextTargets": 13,
+          "tableCellTargets": 5
+        },
+        "currentRead": {
+          "definedParagraphStyles": 21,
+          "fields": false,
+          "footers": 3,
+          "headers": 3,
+          "images": 1,
+          "mergedCells": 2,
+          "paragraphs": 10,
+          "referencedParagraphStyles": [
+            "1",
+            "a9"
+          ],
+          "renderableImages": 1,
+          "tables": 1
+        },
+        "fixture": "fixtures/docx/producers/microsoft-word-16.docx",
+        "producerId": "microsoft-word-16",
+        "sourceBytes": 30078,
+        "sourceSha256": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176"
+      },
+      {
+        "currentEdit": {
+          "basicCharacterStyleTargets": 0,
+          "hyperlinkLabelTargets": 0,
+          "inlineImageMetadataTargets": 1,
+          "plainTextTargets": 13,
+          "tableCellTargets": 6
+        },
+        "currentRead": {
+          "definedParagraphStyles": 2,
+          "fields": false,
+          "footers": 0,
+          "headers": 0,
+          "images": 1,
+          "mergedCells": 0,
+          "paragraphs": 8,
+          "referencedParagraphStyles": [
+            "2"
+          ],
+          "renderableImages": 1,
+          "tables": 1
+        },
+        "fixture": "fixtures/docx/producers/wps-writer.docx",
+        "producerId": "wps-writer",
+        "sourceBytes": 83349,
+        "sourceSha256": "0da9fad1284dcddc27689f381c26fd7f52d82f154e8a5cf152faebb7b206868b"
+      },
+      {
+        "currentEdit": {
+          "basicCharacterStyleTargets": 0,
+          "hyperlinkLabelTargets": 0,
+          "inlineImageMetadataTargets": 0,
+          "plainTextTargets": 10,
+          "tableCellTargets": 6
+        },
+        "currentRead": {
+          "definedParagraphStyles": 8,
+          "fields": false,
+          "footers": 0,
+          "headers": 0,
+          "images": 1,
+          "mergedCells": 0,
+          "paragraphs": 8,
+          "referencedParagraphStyles": [
+            "Heading1",
+            "Normal"
+          ],
+          "renderableImages": 1,
+          "tables": 1
+        },
+        "fixture": "fixtures/docx/producers/libreoffice-writer.docx",
+        "producerId": "libreoffice-writer",
+        "sourceBytes": 81767,
+        "sourceSha256": "a549705f8650065a1fbb7111b598b5ae509f0b387ec58db47547f7445e26dea3"
+      }
+    ],
+    "readonlyOrBlockedFamilies": [
+      "headers-footers",
+      "merged-table-structure",
+      "floating-image-layout",
+      "field-hyperlinks",
+      "paragraph-style-assignment"
+    ]
+  },
+  "difference": {
+    "broadCommonObjectGapConfirmed": false,
+    "crossProducerStyleEditGapConfirmed": true,
+    "floatingImageEvidenceInsufficient": true,
+    "headerFooterCrossProducerEvidenceInsufficient": true
+  },
+  "expected": {
+    "objectFamilies": [
+      "headers-footers",
+      "tables",
+      "image-layout",
+      "paragraph-styles",
+      "hyperlinks"
+    ],
+    "realProducerDocuments": 3,
+    "realProducerHyperlinkDocuments": 3,
+    "writebackOpenedInThisStage": false
+  },
+  "releaseCandidate": false,
+  "schemaVersion": 1,
+  "selection": {
+    "mustPreserve": [
+      "unknown-relationships",
+      "headers-footers",
+      "media",
+      "comments",
+      "footnotes-endnotes",
+      "fields"
+    ],
+    "mustReject": [
+      "missing-style-id",
+      "complex-paragraph-properties",
+      "table-or-header-footer-target",
+      "stale-source-signature"
+    ],
+    "nextStage": "M1B2B",
+    "object": "existing-paragraph-style-assignment",
+    "reason": "all three producer baselines contain paragraph style definitions and references, while current editing only changes character properties",
+    "scope": "simple top-level paragraphs using styles already defined in word/styles.xml"
+  },
+  "sourceUserContentIncluded": false,
+  "stage": "M1B2A",
+  "status": "passed-selection-audit"
+}

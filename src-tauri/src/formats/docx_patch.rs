@@ -2142,4 +2142,167 @@ mod tests {
                 .any(|target| target.image_part == "word/media/image1.png")
         );
     }
+
+    #[test]
+    fn m1b2a_audits_real_producer_object_inventory_and_selects_paragraph_styles() {
+        fn inventory(producer_id: &str, fixture: &str, source: &[u8]) -> serde_json::Value {
+            let model = parse_docx(source).unwrap();
+            let text_targets = inspect_docx_editable_text_targets(source, &model).unwrap();
+            let style_targets = inspect_docx_editable_style_targets(source, &model).unwrap();
+            let image_targets = inspect_docx_editable_image_targets(source, &model).unwrap();
+            let mut referenced_styles = model
+                .blocks
+                .iter()
+                .filter_map(|block| block.style_id.clone())
+                .collect::<Vec<_>>();
+            referenced_styles.sort();
+            referenced_styles.dedup();
+
+            serde_json::json!({
+                "producerId": producer_id,
+                "fixture": fixture,
+                "sourceBytes": source.len(),
+                "sourceSha256": digest(source),
+                "currentRead": {
+                    "paragraphs": model.compatibility.paragraph_count,
+                    "headers": model.compatibility.header_count,
+                    "footers": model.compatibility.footer_count,
+                    "tables": model.compatibility.table_count,
+                    "mergedCells": model.compatibility.merged_cell_count,
+                    "images": model.compatibility.image_count,
+                    "renderableImages": model.compatibility.renderable_image_count,
+                    "definedParagraphStyles": model.compatibility.style_count,
+                    "referencedParagraphStyles": referenced_styles,
+                    "fields": model.compatibility.fields
+                },
+                "currentEdit": {
+                    "plainTextTargets": text_targets.iter().filter(|target| target.carrier == "plain").count(),
+                    "tableCellTargets": text_targets.iter().filter(|target| target.kind == "table-cell").count(),
+                    "hyperlinkLabelTargets": text_targets.iter().filter(|target| target.carrier == "hyperlink-label").count(),
+                    "basicCharacterStyleTargets": style_targets.len(),
+                    "inlineImageMetadataTargets": image_targets.len()
+                }
+            })
+        }
+
+        let producer_fixtures: [(&str, &str, &[u8]); 3] = [
+            (
+                "microsoft-word-16",
+                "fixtures/docx/producers/microsoft-word-16.docx",
+                include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx"),
+            ),
+            (
+                "wps-writer",
+                "fixtures/docx/producers/wps-writer.docx",
+                include_bytes!("../../../fixtures/docx/producers/wps-writer.docx"),
+            ),
+            (
+                "libreoffice-writer",
+                "fixtures/docx/producers/libreoffice-writer.docx",
+                include_bytes!("../../../fixtures/docx/producers/libreoffice-writer.docx"),
+            ),
+        ];
+        let hyperlink_fixtures: [(&str, &str, &[u8], usize); 3] = [
+            (
+                "microsoft-word-16",
+                "fixtures/docx/hyperlinks/microsoft-word-hyperlinks.docx",
+                include_bytes!("../../../fixtures/docx/hyperlinks/microsoft-word-hyperlinks.docx"),
+                2,
+            ),
+            (
+                "wps-writer",
+                "fixtures/docx/hyperlinks/wps-writer-hyperlinks.docx",
+                include_bytes!("../../../fixtures/docx/hyperlinks/wps-writer-hyperlinks.docx"),
+                0,
+            ),
+            (
+                "libreoffice-writer",
+                "fixtures/docx/hyperlinks/libreoffice-writer-hyperlinks.docx",
+                include_bytes!(
+                    "../../../fixtures/docx/hyperlinks/libreoffice-writer-hyperlinks.docx"
+                ),
+                2,
+            ),
+        ];
+
+        let mut producer_inventory = Vec::new();
+        for (producer_id, fixture, source) in producer_fixtures {
+            let model = parse_docx(source).unwrap();
+            assert_eq!(model.compatibility.table_count, 1);
+            assert_eq!(model.compatibility.image_count, 1);
+            assert!(model.compatibility.section_count >= 1);
+            assert!(model.compatibility.style_count > 0);
+            assert!(model.blocks.iter().any(|block| block.style_id.is_some()));
+            producer_inventory.push(inventory(producer_id, fixture, source));
+        }
+        assert!(
+            producer_inventory[0]["currentRead"]["headers"]
+                .as_u64()
+                .unwrap()
+                >= 1
+        );
+        assert!(
+            producer_inventory[0]["currentRead"]["footers"]
+                .as_u64()
+                .unwrap()
+                >= 1
+        );
+
+        let mut hyperlink_inventory = Vec::new();
+        for (producer_id, fixture, source, expected_editable_labels) in hyperlink_fixtures {
+            let item = inventory(producer_id, fixture, source);
+            assert_eq!(
+                item["currentEdit"]["hyperlinkLabelTargets"]
+                    .as_u64()
+                    .unwrap() as usize,
+                expected_editable_labels
+            );
+            hyperlink_inventory.push(item);
+        }
+
+        let evidence = serde_json::json!({
+            "schemaVersion": 1,
+            "stage": "M1B2A",
+            "status": "passed-selection-audit",
+            "expected": {
+                "realProducerDocuments": 3,
+                "realProducerHyperlinkDocuments": 3,
+                "objectFamilies": ["headers-footers", "tables", "image-layout", "paragraph-styles", "hyperlinks"],
+                "writebackOpenedInThisStage": false
+            },
+            "actual": {
+                "producerInventory": producer_inventory,
+                "hyperlinkInventory": hyperlink_inventory,
+                "existingEditableFamilies": ["safe-body-text", "safe-table-cell-text", "native-hyperlink-labels", "basic-character-style", "inline-image-alt-text"],
+                "readonlyOrBlockedFamilies": ["headers-footers", "merged-table-structure", "floating-image-layout", "field-hyperlinks", "paragraph-style-assignment"],
+                "packagePreservation": "existing isolated patches change only word/document.xml and verify every other package part byte-for-byte"
+            },
+            "difference": {
+                "broadCommonObjectGapConfirmed": false,
+                "crossProducerStyleEditGapConfirmed": true,
+                "headerFooterCrossProducerEvidenceInsufficient": true,
+                "floatingImageEvidenceInsufficient": true
+            },
+            "selection": {
+                "nextStage": "M1B2B",
+                "object": "existing-paragraph-style-assignment",
+                "scope": "simple top-level paragraphs using styles already defined in word/styles.xml",
+                "reason": "all three producer baselines contain paragraph style definitions and references, while current editing only changes character properties",
+                "mustPreserve": ["unknown-relationships", "headers-footers", "media", "comments", "footnotes-endnotes", "fields"],
+                "mustReject": ["missing-style-id", "complex-paragraph-properties", "table-or-header-footer-target", "stale-source-signature"]
+            },
+            "sourceUserContentIncluded": false,
+            "releaseCandidate": false
+        });
+
+        if let Ok(path) = std::env::var("LONGEDIT_M1B2A_AUDIT_OUTPUT") {
+            let path = std::path::PathBuf::from(path);
+            std::fs::create_dir_all(&path).unwrap();
+            std::fs::write(
+                path.join("object-selection-evidence.json"),
+                format!("{}\n", serde_json::to_string_pretty(&evidence).unwrap()),
+            )
+            .unwrap();
+        }
+    }
 }
