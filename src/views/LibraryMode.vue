@@ -1425,6 +1425,37 @@ const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserve
 const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => activeTabId.value || '', { libraryRoot: () => store.libraryPath })
 const activeHeadingKey = ref<string | null>(null)
 const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
+let taskLocatorTarget: HTMLElement | null = null
+const revealWorkspaceTask = () => {
+  const routePath = typeof route.query.path === 'string' ? route.query.path : ''
+  const line = Number(route.query.taskLine)
+  if (!vditor || !routePath || routePath !== activeTabId.value || !Number.isInteger(line) || line < 1) return false
+  const tab = tabs.value.find(item => item.path === routePath)
+  const sourceLine = tab?.content?.split(/\r?\n/)[line - 1] || ''
+  const needle = sourceLine.replace(/^\s*[-*]\s+\[[ xX]\]\s*/, '').trim()
+  if (!needle) return false
+  const editor = document.getElementById('vditor-lib')
+  const candidates = [...(editor?.querySelectorAll<HTMLElement>('.vditor-wysiwyg li, .vditor-ir [data-block="0"], .vditor-sv [data-block="0"]') || [])]
+  const normalize = (value: string) => value.replace(/\s+/g, ' ').trim()
+  const normalizedNeedle = normalize(needle)
+  const target = candidates.find(element => normalize(element.textContent || '').includes(normalizedNeedle))
+  if (!target) return false
+  taskLocatorTarget?.classList.remove('workspace-task-locator-target')
+  taskLocatorTarget?.removeAttribute('data-workspace-task-line')
+  taskLocatorTarget = target
+  target.classList.add('workspace-task-locator-target')
+  target.dataset.workspaceTaskLine = String(line)
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  return true
+}
+const scheduleWorkspaceTaskReveal = () => {
+  let attempts = 0
+  const reveal = () => {
+    if (revealWorkspaceTask() || attempts++ >= 20) return
+    window.setTimeout(reveal, 80)
+  }
+  nextTick(reveal)
+}
 
 const updateWordCount = () => {
   if (vditor && isVditorReady) {
@@ -1943,6 +1974,7 @@ const loadFileToEditor = async (path: string) => {
         setupOutlineObserver();
         updateWordCount();
         fixEditorImages(); // 后台增强：通过 Base64 进一步提升图片清晰度/稳定性
+        scheduleWorkspaceTaskReveal();
       }, 50) 
     })
   }
@@ -3250,6 +3282,7 @@ watch(() => route.query.path, (path) => {
   if (opensInLibraryShell(format)) handleNodeSelect([path])
   else router.replace({ name: format.routeName, query: { path } })
 }, { immediate: true })
+watch(() => route.query.taskLocator, () => scheduleWorkspaceTaskReveal())
 const applyRouteSearch = () => {
   if (route.query.panel === 'collections') activeSidebarTab.value = 'collections'
   const collectionId = route.query.collection
@@ -4716,6 +4749,7 @@ watch(activeTabId, (newId, oldId) => {
 .external-change-summary strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .external-change-summary span { color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .external-change-summary p { margin: 6px 0 0; color: var(--theme-text-secondary); line-height: 1.6; }
+:deep(.workspace-task-locator-target) { outline: 2px solid var(--theme-primary); outline-offset: 3px; border-radius: 4px; background: rgba(var(--theme-primary-rgb),.11) !important; scroll-margin-block: 120px; }
 .external-compare-state { min-height: 120px; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--theme-text-secondary); }
 .external-compare-state.error { color: var(--status-danger); }
 .external-compare-grid { min-height: 0; max-height: 52vh; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }

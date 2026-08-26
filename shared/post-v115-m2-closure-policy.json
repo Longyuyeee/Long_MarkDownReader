@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "stage": "M2-closure",
+  "appVersion": "1.0.15",
+  "releaseCandidate": false,
+  "expected": {
+    "largeFixtureFileCount": 1011,
+    "primaryReadyWithinMs": 5000,
+    "loadingStateObserved": true,
+    "keyboardCreateMenu": true,
+    "markdownCreatedAndOpened": true,
+    "createdFileCleanupByteExact": true,
+    "keyboardOpenLibrary": true,
+    "taskLineLocated": 3,
+    "emptyStateVisible": true,
+    "failureStateVisible": true,
+    "failureRetryRecovered": true,
+    "responsive720": true,
+    "responsive480": true,
+    "runtimeErrors": 0
+  },
+  "nextStage": "M1B2A-docx-producer-object-selection-audit"
+}

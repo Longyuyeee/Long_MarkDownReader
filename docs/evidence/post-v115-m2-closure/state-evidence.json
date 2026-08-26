@@ -1,0 +1,16 @@
+{
+  "stage": "M2-closure-states",
+  "actual": {
+    "loadingStateObserved": true,
+    "emptyStateVisible": true,
+    "failureStateVisible": true,
+    "failureRetryRecovered": true,
+    "responsive480": true,
+    "runtimeErrors": 0
+  },
+  "evidenceFiles": [
+    "empty-workspace-720.jpg",
+    "failure-workspace-720.jpg",
+    "empty-workspace-480.jpg"
+  ]
+}

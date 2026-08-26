@@ -23,15 +23,31 @@
           <h1>{{ store.currentLibraryName }}</h1>
           <p :title="store.libraryPath">{{ store.libraryPath }}</p>
         </div>
-        <div class="workspace-signals">
-          <span :class="`signal index-${indexStatus.state}`"><DatabaseIcon />{{ indexLabel }}</span>
-          <span class="signal"><ClockIcon />{{ refreshedLabel }}</span>
+        <div class="workspace-meta">
+          <div class="workspace-quick-actions">
+            <n-dropdown trigger="manual" scrollable :show="workspaceCreateMenuOpen" :options="workspaceCreateOptions" :menu-props="workspaceCreateMenuProps" @clickoutside="workspaceCreateMenuOpen = false" @select="createWorkspaceFile">
+              <button data-testid="m2-closure-create" class="quick-command" aria-haspopup="menu" :aria-expanded="workspaceCreateMenuOpen" @click="workspaceCreateMenuOpen = !workspaceCreateMenuOpen" @keydown.enter.prevent="workspaceCreateMenuOpen = true" @keydown.space.prevent="workspaceCreateMenuOpen = true" @keydown.escape="workspaceCreateMenuOpen = false"><PlusIcon />新建</button>
+            </n-dropdown>
+            <button data-testid="m2-closure-open" class="quick-command" @click="openLibrary" @keydown.enter.prevent="openLibrary" @keydown.space.prevent="openLibrary"><OpenIcon />打开文件</button>
+          </div>
+          <div class="workspace-signals">
+            <span :class="`signal index-${indexStatus.state}`"><DatabaseIcon />{{ indexLabel }}</span>
+            <span class="signal"><ClockIcon />{{ refreshedLabel }}</span>
+          </div>
         </div>
       </section>
 
+      <WorkspaceStateNotice v-if="loading" class="workspace-loading" kind="loading" tone="info" compact data-testid="m2-closure-loading" title="正在准备工作台"><span>正在读取最近文件和待办，完成后会自动更新。</span></WorkspaceStateNotice>
       <WorkspaceStateNotice v-if="error" class="workspace-alert" kind="error" tone="danger" compact><template #icon><AlertIcon /></template><span>{{ error }}</span><template #action><button @click="loadWorkspace">重试</button></template></WorkspaceStateNotice>
 
-      <div class="workspace-grid">
+      <WorkspaceEmptyState v-if="!loading && !error && overview.totalFiles === 0" as="section" class="configured-empty" data-testid="m2-closure-empty">
+        <FileIcon />
+        <h2>这个资料库还是空的</h2>
+        <p>新建一个文件，或回到资料库打开已有内容。</p>
+        <div><button @click="createWorkspaceFile('markdown')"><PlusIcon />新建 Markdown</button><button class="secondary" @click="router.push({ name: 'LibraryMode' })"><OpenIcon />打开文件</button></div>
+      </WorkspaceEmptyState>
+
+      <div v-else class="workspace-grid">
         <section class="workspace-section activity-section">
           <div class="section-heading"><div><span class="section-kicker">最近活动</span><h2>继续工作</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode' })">浏览文件</button></div>
           <div v-if="continueGroups.length" class="continue-groups" data-testid="m2a3-continue-work">
@@ -70,7 +86,7 @@
           <div v-if="filteredTasks.length" class="task-list" data-testid="m2a3-task-results">
             <div v-for="task in filteredTasks" :key="`${task.path}:${task.line}`" class="task-row" :class="{ completed: task.completed }" :data-task-priority="task.priority" :data-task-date="dateBucket(task)">
               <button class="task-complete" :class="{ checked: task.completed }" :data-testid="task.completed ? 'm2a3-task-restore' : 'm2a1-task-complete'" :disabled="taskMutating" :title="task.completed ? `恢复待办：${taskDisplayText(task.text)}` : `完成待办：${taskDisplayText(task.text)}`" @click="changeTaskState(task, !task.completed)"><span class="task-check"><CheckIcon v-if="task.completed" /></span></button>
-              <button class="task-open" @click="openPath(task.path)">
+              <button class="task-open" @click="openTask(task)">
                 <span><strong>{{ taskDisplayText(task.text) }}</strong><small>{{ task.relativePath }} · 第 {{ task.line }} 行<template v-if="task.dueDate"> · {{ task.dueDate }}</template></small></span>
                 <em :class="`priority-${task.priority}`">{{ priorityLabel(task.priority) }}</em>
                 <ArrowIcon />
@@ -129,10 +145,10 @@ import {
   FileText as FileIcon, LayoutDashboard as CanvasIcon, Network as NetworkIcon,
   ListFilter as CollectionIcon, RefreshCw as RefreshIcon, Settings as SettingsIcon,
   Star as StarIcon, Workflow as DiagramIcon, CircleCheck as CheckIcon, Undo2 as UndoIcon,
-  History as HistoryIcon,
+  History as HistoryIcon, Plus as PlusIcon, FolderOpen as OpenIcon,
 } from 'lucide-vue-next'
 import { useAppStore, type SavedSearchConfig } from '../store/app'
-import { fileDisplayName, findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
+import { CREATABLE_FILE_FORMATS, fileDisplayName, findFileFormat, findFileFormatById, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
 import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
 import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceGraphHealth, type WorkspaceHealthReport, type WorkspaceIndexStatus } from '../components/WorkspaceHealthQueue.vue'
@@ -169,7 +185,38 @@ const taskStatusFilter = ref<'open' | 'completed' | 'all'>('open')
 const taskSourceFilter = ref('all')
 const taskPriorityFilter = ref('all')
 const taskDateFilter = ref('all')
+const workspaceCreateMenuOpen = ref(false)
 let loadGeneration = 0
+
+const createOption = (id: string) => {
+  const format = findFileFormatById(id)
+  return format ? { label: `${format.label}（${format.creation?.defaultExtension}）`, key: format.id } : null
+}
+const createGroup = (label: string, key: string, ids: string[]) => ({ label, key, children: ids.map(createOption).filter(Boolean) })
+const workspaceCreateOptions = [
+  createOption('markdown'),
+  createOption('plain-text'),
+  createOption('canvas'),
+  { type: 'divider', key: 'create-divider' },
+  createGroup('数据与结构', 'group-data', ['json', 'jsonc', 'yaml', 'xml', 'toml', 'table']),
+  createGroup('更多图表', 'group-visual', ['drawio', 'diagram', 'opml', 'svg']),
+].filter(Boolean)
+const workspaceCreateMenuProps = () => ({ class: 'workspace-create-menu', style: 'max-height: min(460px, calc(100vh - 24px)); min-width: 190px;' })
+const createWorkspaceFile = async (formatId: string) => {
+  workspaceCreateMenuOpen.value = false
+  const format = CREATABLE_FILE_FORMATS.find(item => item.id === formatId)
+  if (!format?.creation || !format.adapters.creator || !store.libraryPath) return
+  try {
+    const path = format.adapters.creator === 'table'
+      ? await invoke<string>('create_table_file', { libraryRoot: store.libraryPath, targetDir: store.libraryPath })
+      : await invoke<string>('create_format_file', { libraryRoot: store.libraryPath, targetDir: store.libraryPath, formatId })
+    await loadWorkspace()
+    openPath(path)
+  } catch (cause) {
+    message.error(`创建失败：${String(cause).replace(/^Error:\s*/, '')}`)
+  }
+}
+const openLibrary = () => router.push({ name: 'LibraryMode' })
 
 const indexLabel = computed(() => ({
   missing: '搜索与关联：准备中',
@@ -295,6 +342,10 @@ const openPath = (path: string) => {
   if (opensInLibraryShell(findFileFormat(path))) openManagedFile(router, path)
   else router.push(target)
 }
+const openTask = (task: WorkspaceTask) => openManagedFile(router, task.path, {
+  taskLine: String(task.line),
+  taskLocator: `${Date.now()}-${task.line}`,
+})
 const updateTaskState = (task: WorkspaceTask | WorkspaceTaskMutationResult, completed: boolean) => invoke<WorkspaceTaskMutationResult>('set_workspace_markdown_task_state', {
   libraryRoot: store.libraryPath,
   mutation: {
@@ -420,9 +471,9 @@ onMounted(async () => {
 .brand-mark { width: 28px; height: 28px; display: block; border-radius: 7px; object-fit: cover; }.brand-mark.large { width: 44px; height: 44px; border-radius: 10px; }
 .workspace-nav { display: flex; align-items: center; gap: 4px; }.workspace-nav button { min-width: 34px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 9px; border: 1px solid transparent; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: var(--text-compact); }.workspace-nav button:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.22); background: rgba(var(--theme-primary-rgb),.06); }.workspace-nav button:disabled { opacity: .35; cursor: default; }.workspace-nav svg { width: 15px; }.spinning { animation: spin .8s linear infinite; }
 .workspace-content { flex: 1; overflow: auto; }
-.workspace-identity { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 19px; border-bottom: 2px solid var(--theme-text); }.workspace-identity h1 { margin: 4px 0 3px; font-size: 25px; line-height: 1.15; letter-spacing: 0; }.workspace-identity p { max-width: min(620px,60vw); margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }
+.workspace-identity { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 19px; border-bottom: 2px solid var(--theme-text); }.workspace-identity h1 { margin: 4px 0 3px; font-size: 25px; line-height: 1.15; letter-spacing: 0; }.workspace-identity p { max-width: min(620px,60vw); margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.workspace-meta { min-width: 0; display: grid; justify-items: end; gap: 7px; }.workspace-quick-actions,.configured-empty>div { display: flex; gap: 6px; flex-wrap: wrap; }.quick-command { min-height: 31px; display: inline-flex; align-items: center; gap: 6px; padding: 0 9px; border: var(--theme-border); border-radius: 5px; color: var(--theme-text); background: var(--theme-surface); cursor: pointer; font-size: var(--text-compact); }.quick-command:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.35); }.quick-command svg { width: 14px; }
 .section-kicker { color: var(--theme-primary); font-size: var(--text-compact); font-weight: 800; }.workspace-signals { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }.signal { height: 27px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: var(--theme-border); border-radius: 5px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: var(--text-compact); }.signal svg { width: 13px; }.signal.index-ready { color: var(--status-success); }.signal.index-stale,.signal.index-corrupt,.signal.index-error { color: var(--status-warning); }
-.workspace-alert { min-height: 38px; border-width: 0 0 1px; border-radius: 0; color: var(--status-danger); border-color: var(--status-danger-border); background: var(--status-danger-bg); }.workspace-alert svg { width: 14px; }.workspace-alert button,.text-command { border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: var(--text-compact); }
+.workspace-loading,.workspace-alert { min-height: 38px; margin-top: 10px; border-radius: 5px; }.workspace-alert { color: var(--status-danger); border-color: var(--status-danger-border); background: var(--status-danger-bg); }.workspace-alert svg { width: 14px; }.workspace-alert button,.text-command { border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: var(--text-compact); }.configured-empty { min-height: 360px; border-bottom: var(--theme-border); }.configured-empty>svg { width: 30px; color: var(--theme-primary); }.configured-empty h2 { margin: 5px 0 0; font-size: 18px; }.configured-empty p { margin: 0 0 8px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.configured-empty button { min-height: 33px; display: inline-flex; align-items: center; gap: 6px; padding: 0 11px; border: 1px solid var(--theme-primary); border-radius: 5px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; }.configured-empty button.secondary { color: var(--theme-primary); background: transparent; }.configured-empty button svg { width: 14px; }
 .workspace-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,.8fr); column-gap: 32px; }.workspace-section { min-width: 0; padding: 25px 0 28px; border-bottom: var(--theme-border); }.governance-section { grid-column: 1 / -1; }.section-heading { min-height: 35px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }.section-heading h2 { margin: 3px 0 0; font-size: 14px; letter-spacing: 0; }.section-count { min-width: 24px; text-align: right; color: var(--theme-text-secondary); font-size: 11px; }
 .list-label { margin: 9px 0 5px; color: var(--theme-text-secondary); font-size: var(--text-compact); font-weight: 700; }.list-label:first-of-type { margin-top: 0; }.list-label svg { width: 13px; }.list-label span { margin-left: auto; font-weight: 500; }.continue-groups { display: grid; gap: 11px; }.continue-group>.list-label { display: flex; align-items: center; gap: 6px; }.file-list,.task-list { display: grid; }.file-row { min-height: 51px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; padding-right: 8px; border-top: var(--theme-border); }.file-row:hover { background: rgba(var(--theme-primary-rgb),.045); }.file-open { min-width: 0; min-height: 50px; display: grid; grid-template-columns: 28px minmax(0,1fr) 18px; align-items: center; gap: 10px; padding: 6px 0; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.file-icon { width: 26px; height: 26px; display: grid; place-items: center; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); border-radius: 5px; }.file-icon svg,.file-action svg { width: 13px; }.file-copy { min-width: 0; display: grid; gap: 3px; }.file-copy strong,.task-list strong,.canvas-list strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.file-copy small,.task-list small,.canvas-list small { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.file-action { color: var(--theme-text-secondary); }
 .health-grid { display: grid; grid-template-columns: repeat(3,1fr); border-top: var(--theme-border); border-bottom: var(--theme-border); }.health-grid button { min-height: 65px; display: grid; align-content: center; gap: 4px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: center; }.health-grid button:last-child { border-right: 0; }.health-grid span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.health-grid strong { font-size: 17px; }.index-line { min-height: 54px; display: grid; grid-template-columns: 22px minmax(0,1fr) 24px; align-items: center; gap: 8px; border-bottom: var(--theme-border); }.index-line>svg { width: 16px; color: var(--theme-primary); }.index-line>div { display: grid; gap: 2px; }.index-line strong { font-size: var(--text-compact); }.index-line small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.index-line button { border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.index-line button svg { width: 13px; }.format-line { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 10px; }.format-line span { display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: var(--theme-border); border-radius: 4px; font-size: var(--text-compact); }.format-line i { color: var(--theme-text-secondary); font-style: normal; }.format-line b { font-weight: 700; }
@@ -433,7 +484,7 @@ onMounted(async () => {
 .collection-list { display: grid; }.collection-list button { min-height: 48px; display: grid; grid-template-columns: 22px minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 5px 7px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.collection-list button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.045); }.collection-list button>svg { width: 14px; color: var(--theme-primary); }.collection-list button>svg:last-child { width: 12px; color: var(--theme-text-secondary); }.collection-list button>span { min-width: 0; display: grid; gap: 3px; }.collection-list strong,.collection-list small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-list strong { font-size: var(--text-compact); }.collection-list small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .empty-line { min-height: 68px; display: grid; place-items: center; color: var(--theme-text-secondary); border-top: var(--theme-border); font-size: var(--text-compact); }.workspace-empty { flex: 1; display: grid; place-content: center; justify-items: center; gap: 8px; }.workspace-empty h1 { margin: 4px 0 0; font-size: 22px; }.workspace-empty p { margin: 0 0 10px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.workspace-empty button { height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 12px; border: 0; border-radius: 6px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; }.workspace-empty button svg { width: 14px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 900px) { .workspace-grid { grid-template-columns: 1fr; }.health-section { grid-row: auto; }.workspace-nav button span { display: none; }.workspace-identity { align-items: flex-start; flex-direction: column; }.workspace-signals { justify-content: flex-start; }.workspace-identity p { max-width: 80vw; } }
+@media (max-width: 900px) { .workspace-grid { grid-template-columns: 1fr; }.health-section { grid-row: auto; }.workspace-nav button span { display: none; }.workspace-identity { align-items: flex-start; flex-direction: column; }.workspace-meta { justify-items: start; }.workspace-signals { justify-content: flex-start; }.workspace-identity p { max-width: 80vw; } }
 @media (max-width: 700px) { .task-filters { grid-template-columns: repeat(2,minmax(0,1fr)); }.task-status { min-width: 0; grid-column: 1 / -1; } }
 @media (max-width: 560px) { .canvas-list,.pulse-isolation>div:last-child { grid-template-columns: 1fr; }.workspace-nav { gap: 1px; }.workspace-nav button { padding: 0 7px; }.workspace-identity h1 { font-size: 21px; }.task-filters { grid-template-columns: 1fr; }.task-status { grid-column: auto; }.task-open { grid-template-columns: minmax(0,1fr) auto 14px; } }
 </style>

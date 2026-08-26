@@ -7,7 +7,7 @@
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 > 当前权威执行入口：[2026-08-02 当前开发对齐审计与收口计划](./Development_Alignment_and_Closure_Plan_2026-08-02.md)。v1.0.1 已发布；下一代码阶段固定为 P0 内部文件路由收敛，随后按 UI-1～UI-4 完成全量 UI 治理。下方历史“最新入口”仅用于阶段追溯。
 
-> 2026-08-26 权威执行入口：[v1.0.15 后续专业能力增强路线图](./Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md)。M0、M1A、M1B1 与 M2A1～M2A3 已完成；下一阶段为 **M2 工作台收口审计**，只核对快速新建/打开、任务定位、状态覆盖、键盘路径和大型资料库预算。M2A3 证据见 [工作台导航与待办筛选审计](./Post_v1.0.15_M2A3_Workspace_Navigation_and_Task_Filters_Audit_2026-08-26.md)。M2 收口后回到 M1B2A。下方更早入口仅用于历史追溯。
+> 2026-08-26 权威执行入口：[v1.0.15 后续专业能力增强路线图](./Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md)。M0、M1A、M1B1 与 M2 已完成；M2 以真实快速新建/打开、原文行定位、状态恢复、键盘路径和 1011 文件性能预算完成收口，证据见 [M2 工作台收口审计](./Post_v1.0.15_M2_Workspace_Closure_Audit_2026-08-26.md)。下一阶段固定为 **M1B2A DOCX 生产者对象选择审计**，先审计真实 Word/WPS/LibreOffice 样本，不提前开放写回。下方更早入口仅用于历史追溯。
 
 > 2026-07-30 权威执行入口：[R2 Windows 安装与生命周期审计](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。**R1/R2 已完成，下一代码阶段为 R3 索引恢复、备份与隐私净化诊断**。E1B WPS ODT 保持 2/3、X3-B6 数组生产者矩阵保持 1/3，作为外部环境门禁并行等待；不得伪造关闭。下文较早的“下一入口”只保留为阶段追溯。
 
