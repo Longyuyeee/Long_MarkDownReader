@@ -1440,14 +1440,23 @@ pub async fn write_workbook_draft(
         if workbook_signature(&metadata, &source) != payload.expected_signature {
             return Err("XLSX 已被其他程序修改，请重新加载后再保存".into());
         }
-        let mut output = patch_workbook(
-            &source,
-            &payload.edits,
-            &payload.style_edits,
-            &payload.row_height_edits,
-            &payload.column_width_edits,
-            &payload.merge_edits,
-        )?;
+        let mut output = if payload.edits.is_empty()
+            && payload.style_edits.is_empty()
+            && payload.row_height_edits.is_empty()
+            && payload.column_width_edits.is_empty()
+            && payload.merge_edits.is_empty()
+        {
+            source.clone()
+        } else {
+            patch_workbook(
+                &source,
+                &payload.edits,
+                &payload.style_edits,
+                &payload.row_height_edits,
+                &payload.column_width_edits,
+                &payload.merge_edits,
+            )?
+        };
         for change in &payload.conditional_format_changes {
             output = patch_workbook_conditional_format(&output, change)?;
         }
@@ -2816,6 +2825,54 @@ mod tests {
         ));
         assert!(stale.unwrap_err().contains("已被其他程序修改"));
         assert_eq!(fs::read(&path).unwrap(), bytes_after_save);
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn writes_object_only_draft_without_cell_changes() {
+        let (base, path) = fixture();
+        let root = base.join("library");
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let saved = tauri::async_runtime::block_on(write_workbook_draft(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            WorkbookDraftWritePayload {
+                expected_signature: document.signature.clone(),
+                edits: vec![],
+                style_edits: vec![],
+                row_height_edits: vec![],
+                column_width_edits: vec![],
+                merge_edits: vec![],
+                conditional_format_changes: vec![],
+                table_changes: vec![WorkbookTableChange {
+                    sheet: "进度".into(),
+                    action: WorkbookTableAction::Create,
+                    table_name: "ObjectOnlyTable".into(),
+                    new_table_name: None,
+                    style_name: Some("TableStyleMedium4".into()),
+                    show_first_column: None,
+                    show_last_column: None,
+                    show_row_stripes: Some(true),
+                    show_column_stripes: None,
+                    range: WorkbookMergeRange {
+                        top: 0,
+                        bottom: 2,
+                        left: 0,
+                        right: 1,
+                    },
+                    columns: vec!["任务".into(), "完成度".into()],
+                }],
+            },
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "进度", 0, 10)
+            .unwrap();
+        assert_ne!(saved.signature, document.signature);
+        assert!(page
+            .tables
+            .iter()
+            .any(|table| table.display_name == "ObjectOnlyTable"));
         fs::remove_dir_all(base).unwrap();
     }
 

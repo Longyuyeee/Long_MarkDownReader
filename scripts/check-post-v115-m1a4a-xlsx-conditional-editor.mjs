@@ -12,7 +12,7 @@ for (const marker of [
   'conditionalFormatDraftError',
   'saveConditionalFormatDraft',
   'openAdvancedConditionalFormatEditor',
-  '应用并写入文件',
+  '加入待保存更改',
 ]) {
   if (!source.includes(marker)) failures.push(`Conditional-format editor marker is missing: ${marker}`)
 }

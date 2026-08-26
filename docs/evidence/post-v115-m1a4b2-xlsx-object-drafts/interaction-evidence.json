@@ -1,0 +1,54 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M1A4B2",
+    "sourceCommit":  "dc4d2045383f75140d64daa4431b97e4d84bdbfe",
+    "fixture":  "M1A4B2 Object Drafts.xlsx",
+    "expected":  {
+                     "sourceUnchangedWhileDrafting":  true,
+                     "objectDraftCounts":  [
+                                               1,
+                                               2
+                                           ],
+                     "undoCount":  1,
+                     "redoCount":  2,
+                     "sourceChangedAfterSingleSave":  true,
+                     "conditionalOperator":  "between",
+                     "conditionalThresholds":  [
+                                                   "1000",
+                                                   "2000"
+                                               ],
+                     "tableStyle":  "TableStyleMedium4",
+                     "runtimeErrorCount":  0
+                 },
+    "beforeActual":  {
+                         "objectActionsWriteImmediately":  true,
+                         "objectActionsShareUndoHistory":  false,
+                         "mixedObjectSaveBoundary":  false
+                     },
+    "afterActual":  {
+                        "sourceUnchangedAfterConditionalDraft":  true,
+                        "sourceUnchangedAfterTableDraft":  true,
+                        "undoCount":  1,
+                        "redoCount":  2,
+                        "sourceChangedAfterSingleSave":  true,
+                        "reopenedConditional":  {
+                                                    "operator":  "between",
+                                                    "thresholds":  [
+                                                                       "1000",
+                                                                       "2000"
+                                                                   ],
+                                                    "preset":  "绿色通过"
+                                                },
+                        "reopenedTableStyle":  "TableStyleMedium4",
+                        "runtimeErrorCount":  0,
+                        "runtimeErrors":  [
+
+                                          ],
+                        "blockingErrorSurfaceObserved":  false,
+                        "repositoryFixtureUnchanged":  true,
+                        "temporaryTargetChanged":  true
+                    },
+    "differenceResolved":  true,
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false
+}

@@ -437,7 +437,7 @@
     <n-modal v-model:show="conditionalFormatModalOpen" preset="card" :title="conditionalFormatEditorTitle" class="conditional-format-modal">
       <div class="conditional-format-context">
         <div><span>应用范围</span><strong>{{ conditionalFormatEditorRangeLabel }}</strong></div>
-        <small>应用后立即写入 XLSX；统一撤销与显式保存将在对象草稿阶段接入。</small>
+        <small>应用后进入工作簿草稿；可撤销，点击顶部“保存”后才写入 XLSX。</small>
       </div>
       <div class="conditional-format-editor">
         <fieldset>
@@ -493,7 +493,7 @@
           <button @click="openAdvancedConditionalFormatEditor">高级规则…</button>
           <span></span>
           <button @click="conditionalFormatModalOpen = false">取消</button>
-          <button class="primary" :disabled="Boolean(conditionalFormatDraftError) || updatingStructure" @click="saveConditionalFormatDraft">应用并写入文件</button>
+          <button class="primary" :disabled="Boolean(conditionalFormatDraftError) || updatingStructure" @click="saveConditionalFormatDraft">加入待保存更改</button>
         </div>
       </template>
     </n-modal>
@@ -623,19 +623,19 @@
     </div>
 
     <div v-if="workbook && sheetInfo && !isExternal && activeToolPanel === 'data' && (activeDataRegion || selectedValidation || tableSelection || validationSelection || conditionalSelection)" class="data-toolbar" data-horizontal-wheel="always">
-      <button v-if="tableSelection && !selectedTable" title="从选区创建 Excel Table" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('create')">创建 Table</button>
-      <button v-if="tableSelection && selectedTable" title="把 Excel Table 调整到选区并同步表头" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="editSelectedTable('resize')">调整 Table</button>
+      <button v-if="tableSelection && !selectedTable" title="从选区创建 Excel Table" :disabled="saving || updatingStructure || sheetProtected" @click="editSelectedTable('create')">创建 Table</button>
+      <button v-if="tableSelection && selectedTable" title="把 Excel Table 调整到选区并同步表头" :disabled="saving || updatingStructure || sheetProtected" @click="editSelectedTable('resize')">调整 Table</button>
       <template v-if="selectedTable">
-        <button title="重命名当前 Excel Table" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="renameSelectedTable">重命名</button>
-        <select :value="selectedTable.styleName || 'TableStyleMedium2'" title="Table 样式" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @change="setSelectedTableStyle(($event.target as HTMLSelectElement).value)">
+        <button title="重命名当前 Excel Table" :disabled="saving || updatingStructure || sheetProtected" @click="renameSelectedTable">重命名</button>
+        <select :value="selectedTable.styleName || 'TableStyleMedium2'" title="Table 样式" :disabled="saving || updatingStructure || sheetProtected" @change="setSelectedTableStyle(($event.target as HTMLSelectElement).value)">
           <option v-for="style in TABLE_STYLE_PRESETS" :key="style" :value="style">{{ style }}</option>
         </select>
-        <button :class="{ active: selectedTable.showFirstColumn }" title="强调首列" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="setSelectedTableStyleOption('showFirstColumn', !selectedTable.showFirstColumn)">首列</button>
-        <button :class="{ active: selectedTable.showLastColumn }" title="强调末列" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="setSelectedTableStyleOption('showLastColumn', !selectedTable.showLastColumn)">末列</button>
-        <button :class="{ active: selectedTable.showRowStripes }" title="显示行条纹" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="setSelectedTableStyleOption('showRowStripes', !selectedTable.showRowStripes)">行条纹</button>
-        <button :class="{ active: selectedTable.showColumnStripes }" title="显示列条纹" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="setSelectedTableStyleOption('showColumnStripes', !selectedTable.showColumnStripes)">列条纹</button>
-        <button title="移除 Table 结构并保留单元格数据" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="removeSelectedTable('convert_to_range')">转普通区域</button>
-        <button title="删除 Table 定义并保留单元格数据" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="removeSelectedTable('delete')">删除 Table</button>
+        <button :class="{ active: selectedTable.showFirstColumn }" title="强调首列" :disabled="saving || updatingStructure || sheetProtected" @click="setSelectedTableStyleOption('showFirstColumn', !selectedTable.showFirstColumn)">首列</button>
+        <button :class="{ active: selectedTable.showLastColumn }" title="强调末列" :disabled="saving || updatingStructure || sheetProtected" @click="setSelectedTableStyleOption('showLastColumn', !selectedTable.showLastColumn)">末列</button>
+        <button :class="{ active: selectedTable.showRowStripes }" title="显示行条纹" :disabled="saving || updatingStructure || sheetProtected" @click="setSelectedTableStyleOption('showRowStripes', !selectedTable.showRowStripes)">行条纹</button>
+        <button :class="{ active: selectedTable.showColumnStripes }" title="显示列条纹" :disabled="saving || updatingStructure || sheetProtected" @click="setSelectedTableStyleOption('showColumnStripes', !selectedTable.showColumnStripes)">列条纹</button>
+        <button title="移除 Table 结构并保留单元格数据" :disabled="saving || updatingStructure || sheetProtected" @click="removeSelectedTable('convert_to_range')">转普通区域</button>
+        <button title="删除 Table 定义并保留单元格数据" :disabled="saving || updatingStructure || sheetProtected" @click="removeSelectedTable('delete')">删除 Table</button>
       </template>
       <template v-if="activeDataRegion">
         <strong>{{ activeDataRegion.label }}</strong>
@@ -784,6 +784,7 @@
         <WorkspaceStatusBar v-if="isExternal || dirtyCount || sheetInfo.truncatedColumns || pageLoading || updatingStructure || calculationCount || calculationErrors" as="div" class="workbook-status">
           <span v-if="isExternal">外部文件只读分页预览 · 源文件未修改 · 外部链接不会打开</span>
           <span v-if="dirtyCount">{{ dirtyCount }} 个更改项尚未保存</span>
+          <span v-if="objectDrafts.length">其中 {{ objectDrafts.length }} 个对象更改</span>
           <span v-if="sheetInfo.truncatedColumns">当前显示前 {{ sheetInfo.returnedColumns }} 列</span>
           <span v-if="pageLoading">正在载入行数据…</span>
           <span v-if="updatingStructure">正在更新工作表结构…</span>
@@ -1083,7 +1084,16 @@ interface StyleChange { key: string; before?: WorkbookStylePatch; after?: Workbo
 interface RowHeightChange { key: string; before?: number | null; after?: number | null }
 interface ColumnWidthChange { key: string; before?: number | null; after?: number | null }
 interface MergeChange { key: string; before?: WorkbookMergeEdit; after?: WorkbookMergeEdit }
-interface EditAction { changes?: CellChange[]; styleChanges?: StyleChange[]; rowHeightChanges?: RowHeightChange[]; columnWidthChanges?: ColumnWidthChange[]; mergeChanges?: MergeChange[] }
+interface WorkbookObjectDraft {
+  id: string
+  kind: 'conditionalFormat' | 'table'
+  label: string
+  area: WorkbookMergeRange
+  conditionalFormatChange?: WorkbookConditionalFormatChange
+  tableChange?: WorkbookTableChange
+}
+interface ObjectDraftHistoryChange { before: WorkbookObjectDraft[]; after: WorkbookObjectDraft[] }
+interface EditAction { changes?: CellChange[]; styleChanges?: StyleChange[]; rowHeightChanges?: RowHeightChange[]; columnWidthChanges?: ColumnWidthChange[]; mergeChanges?: MergeChange[]; objectDraftChange?: ObjectDraftHistoryChange }
 interface FormulaTranslation { formula: string; rowDelta: number; columnDelta: number }
 interface WorkbookFormulaTarget { sheet: string; row: number; column: number }
 interface WorkbookCalculatedCell { sheet: string; row: number; column: number; value: string; formattedValue: string; kind: string }
@@ -1119,6 +1129,8 @@ const styleDrafts = ref(new Map<string, WorkbookStylePatch>())
 const rowHeightDrafts = ref(new Map<string, number | null>())
 const columnWidthDrafts = ref(new Map<string, number | null>())
 const mergeDrafts = ref(new Map<string, WorkbookMergeEdit>())
+const objectDrafts = ref<WorkbookObjectDraft[]>([])
+let objectDraftSequence = 0
 const updatingStructure = ref(false)
 const selectedDefinedNameIndex = ref(-1)
 const filterQuery = ref('')
@@ -1297,7 +1309,7 @@ const columnPixels = computed(() => Array.from({ length: canvasColumnCount.value
 const sheetWidth = computed(() => 52 + columnPixels.value.reduce((total, width) => total + width, 0))
 const sheetHeight = computed(() => rowOffset(canvasRowCount.value))
 const gridStyle = computed(() => ({ gridTemplateColumns: `52px ${columnPixels.value.map(width => `${width}px`).join(' ')}` }))
-const dirtyCount = computed(() => drafts.value.size + styleDrafts.value.size + rowHeightDrafts.value.size + columnWidthDrafts.value.size + mergeDrafts.value.size)
+const dirtyCount = computed(() => drafts.value.size + styleDrafts.value.size + rowHeightDrafts.value.size + columnWidthDrafts.value.size + mergeDrafts.value.size + objectDrafts.value.length)
 const selectionBounds = computed(() => {
   const areas = selectionAreas.value
   return areas.length ? areas[areas.length - 1] : null
@@ -1527,7 +1539,7 @@ const conditionalSelection = computed(() => validationSelection.value)
 const conditionalFormatsAt = (row: number, column: number) => (sheetInfo.value?.conditionalFormats || [])
   .filter(rule => rule.ranges.some(range => containsCell(range, row, column)))
   .sort((left, right) => left.priority - right.priority)
-const canEditConditionalFormat = computed(() => Boolean(!isExternal.value && workbook.value && conditionalSelection.value && !saving.value && !updatingStructure.value && !sheetProtected.value && !dirtyCount.value))
+const canEditConditionalFormat = computed(() => Boolean(!isExternal.value && workbook.value && conditionalSelection.value && !saving.value && !updatingStructure.value && !sheetProtected.value))
 const conditionalRuleKey = (rule: WorkbookConditionalFormatRule) => `${rule.groupIndex}:${rule.ruleIndex}`
 const selectedConditionalFormats = computed(() => selectedCell.value ? conditionalFormatsAt(selectedCell.value.row, selectedCell.value.column) : [])
 const selectedConditionalFormat = computed(() => selectedConditionalFormats.value.find(rule => conditionalRuleKey(rule) === selectedConditionalRuleKey.value) || selectedConditionalFormats.value[0])
@@ -2554,6 +2566,9 @@ const applyHistoryAction = (action: EditAction, direction: 'undo' | 'redo') => {
     else nextMerges.delete(change.key)
   }
   mergeDrafts.value = nextMerges
+  if (action.objectDraftChange) {
+    objectDrafts.value = cloneDraftData(direction === 'undo' ? action.objectDraftChange.before : action.objectDraftChange.after)
+  }
   const changes = action.changes || []
   const last = changes[changes.length - 1]
   const edit = last && (direction === 'undo' ? last.before : last.after)
@@ -2566,6 +2581,16 @@ const applyHistoryAction = (action: EditAction, direction: 'undo' | 'redo') => {
 }
 const undo = () => { const action = undoStack.value.pop(); if (action) { applyHistoryAction(action, 'undo'); redoStack.value.push(action) } }
 const redo = () => { const action = redoStack.value.pop(); if (action) { applyHistoryAction(action, 'redo'); undoStack.value.push(action) } }
+
+const cloneDraftData = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
+const stageWorkbookObjectDraft = (draft: Omit<WorkbookObjectDraft, 'id'>) => {
+  const before = cloneDraftData(objectDrafts.value)
+  const after = [...before, { ...cloneDraftData(draft), id: `${draft.kind}-${++objectDraftSequence}` }]
+  objectDrafts.value = after
+  undoStack.value.push({ objectDraftChange: { before, after: cloneDraftData(after) } })
+  redoStack.value = []
+  message.success(`${draft.label}，点击顶部“保存”后写入文件`)
+}
 
 const stylePatchMatchesSource = (row: number, column: number, patch: WorkbookStylePatch) => {
   const source = sourceCellAt(row, column).style || defaultStyle
@@ -2880,25 +2905,10 @@ const canApplyDataLabels = computed(() => {
   return (Object.keys(targetDataLabels.value) as (keyof WorkbookChartDataLabels)[])
     .some(key => targetDataLabels.value[key] !== chart.dataLabels[key])
 })
-const commitTableLifecycleChange = async (change: WorkbookTableChange, area: WorkbookMergeRange, success: string) => {
+const commitTableLifecycleChange = (change: WorkbookTableChange, area: WorkbookMergeRange, success: string) => {
   if (isExternal.value || !workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑 Table')
-  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
-  updatingStructure.value = true
-  const sheet = activeSheet.value
-  try {
-    const document = await invoke<WorkbookDocument>('update_workbook_table', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: { expectedSignature: workbook.value.signature, change },
-    })
-    workbook.value = document
-    undoStack.value = []
-    redoStack.value = []
-    await restoreTableSelection(sheet, area)
-    message.success(success)
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+  stageWorkbookObjectDraft({ kind: 'table', label: success, area: { ...area }, tableChange: cloneDraftData(change) })
 }
 const promptDataValidationRule = async (existing: WorkbookDataValidation | undefined, ranges: WorkbookMergeRange[]): Promise<WorkbookDataValidation | null> => {
   const kindInput = await promptAppAction(dialog, { title: '数据验证类型', content: '可用类型：list（列表）、whole（整数）、decimal（小数）、textLength（文本长度）或 custom（自定义公式）。', initialValue: existing?.kind || 'list', positiveText: '下一步' })
@@ -3207,25 +3217,10 @@ const promptConditionalFormatRule = async (existing: WorkbookConditionalFormatRu
     editable: true,
   }
 }
-const commitConditionalFormatChange = async (change: WorkbookConditionalFormatChange, area: WorkbookMergeRange, success: string) => {
+const commitConditionalFormatChange = (change: WorkbookConditionalFormatChange, area: WorkbookMergeRange, success: string) => {
   if (isExternal.value || !workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改条件格式')
-  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
-  updatingStructure.value = true
-  const sheet = activeSheet.value
-  try {
-    const document = await invoke<WorkbookDocument>('update_workbook_conditional_format', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: { expectedSignature: workbook.value.signature, change },
-    })
-    workbook.value = document
-    undoStack.value = []
-    redoStack.value = []
-    await restoreTableSelection(sheet, area)
-    message.success(success)
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+  stageWorkbookObjectDraft({ kind: 'conditionalFormat', label: success, area: { ...area }, conditionalFormatChange: cloneDraftData(change) })
 }
 const editConditionalFormatRule = async (action: 'create' | 'update') => {
   commitFormulaInput()
@@ -3348,7 +3343,7 @@ const deleteConditionalFormatRule = () => {
   if (!existing?.editable || !area || !canEditConditionalFormat.value) return
   dialog.warning({
     title: '删除条件格式规则？',
-    content: '将删除当前单元格命中的整条条件格式规则，且不能通过当前撤销栈恢复。',
+    content: '将把删除操作加入工作簿草稿；可撤销，点击顶部“保存”后才写入 XLSX。',
     positiveText: '删除规则',
     negativeText: '取消',
     onPositiveClick: () => commitConditionalFormatChange({ sheet: activeSheet.value, action: 'delete', groupIndex: existing.groupIndex, ruleIndex: existing.ruleIndex }, area, '已删除条件格式规则'),
@@ -3397,7 +3392,7 @@ const removeSelectedTable = (action: 'convert_to_range' | 'delete') => {
   if (!table) return
   dialog.warning({
     title: action === 'convert_to_range' ? '转换为普通区域？' : '删除 Table？',
-    content: `${action === 'convert_to_range' ? '转换' : '删除'}后将移除 ${table.displayName} 的 Table 定义、样式和筛选入口，但保留当前单元格数据。此操作保存后不能通过当前撤销栈恢复。`,
+    content: `${action === 'convert_to_range' ? '转换' : '删除'}后将移除 ${table.displayName} 的 Table 定义、样式和筛选入口，但保留当前单元格数据。操作先进入草稿，可在保存前撤销。`,
     positiveText: action === 'convert_to_range' ? '转换' : '删除 Table',
     negativeText: '取消',
     onPositiveClick: () => commitTableLifecycleChange({
@@ -3413,7 +3408,6 @@ const editSelectedTable = async (action: 'create' | 'resize') => {
   const area = tableSelection.value
   if (isExternal.value || !area || !workbook.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑 Table')
-  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   const table = selectedTable.value
   if (action === 'resize' && !table) return void message.error('请选择与目标 Table 相交的调整范围')
   if (action === 'create' && table) return void message.error('选区与已有 Table 重叠')
@@ -3429,22 +3423,8 @@ const editSelectedTable = async (action: 'create' | 'resize') => {
   const defaultName = table?.displayName || `Table${(sheetInfo.value?.tables.length || 0) + 1}`
   const tableName = action === 'create' ? (await promptAppAction(dialog, { title: '创建 Excel Table', initialValue: defaultName, positiveText: '创建 Table' }))?.trim() : defaultName
   if (!tableName) return
-  updatingStructure.value = true
-  try {
-    const change: WorkbookTableChange = { sheet: activeSheet.value, action, tableName, range: { ...area }, columns }
-    const document = await invoke<WorkbookDocument>('update_workbook_table', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: { expectedSignature: workbook.value.signature, change },
-    })
-    const sheet = activeSheet.value
-    workbook.value = document
-    undoStack.value = []
-    redoStack.value = []
-    await restoreTableSelection(sheet, area)
-    message.success(action === 'create' ? `已创建 Table ${tableName}` : `已调整 Table ${tableName}`)
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+  const change: WorkbookTableChange = { sheet: activeSheet.value, action, tableName, range: { ...area }, columns }
+  commitTableLifecycleChange(change, area, action === 'create' ? `已创建 Table ${tableName}` : `已调整 Table ${tableName}`)
 }
 const mergeSelection = () => {
   const area = canMergeSelection.value ? selectionBounds.value : null
@@ -4650,7 +4630,7 @@ const loadWorkbook = async () => {
   } finally { if (current === generation) loading.value = false }
 }
 const discardAndReload = () => {
-  drafts.value = new Map(); styleDrafts.value = new Map(); rowHeightDrafts.value = new Map(); columnWidthDrafts.value = new Map(); mergeDrafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook()
+  drafts.value = new Map(); styleDrafts.value = new Map(); rowHeightDrafts.value = new Map(); columnWidthDrafts.value = new Map(); mergeDrafts.value = new Map(); objectDrafts.value = []; undoStack.value = []; redoStack.value = []; void loadWorkbook()
 }
 const refreshWorkbook = () => {
   if (!dirtyCount.value) return void loadWorkbook()
@@ -4675,10 +4655,19 @@ const saveWorkbook = async () => {
       const [sheet, column] = key.split('\u0000')
       return { sheet, startColumn: Number(column), endColumn: Number(column), width }
     })
-    const document = await invoke<WorkbookDocument>('write_workbook_cells', {
+    const document = await invoke<WorkbookDocument>('write_workbook_draft', {
       libraryRoot: store.libraryPath,
       path: workbookPath.value,
-      payload: { expectedSignature: workbook.value.signature, edits: Array.from(drafts.value.values()), styleEdits, rowHeightEdits, columnWidthEdits, mergeEdits: Array.from(mergeDrafts.value.values()) },
+      payload: {
+        expectedSignature: workbook.value.signature,
+        edits: Array.from(drafts.value.values()),
+        styleEdits,
+        rowHeightEdits,
+        columnWidthEdits,
+        mergeEdits: Array.from(mergeDrafts.value.values()),
+        conditionalFormatChanges: objectDrafts.value.flatMap(draft => draft.conditionalFormatChange ? [draft.conditionalFormatChange] : []),
+        tableChanges: objectDrafts.value.flatMap(draft => draft.tableChange ? [draft.tableChange] : []),
+      },
     })
     workbook.value = document
     drafts.value = new Map()
@@ -4686,6 +4675,7 @@ const saveWorkbook = async () => {
     rowHeightDrafts.value = new Map()
     columnWidthDrafts.value = new Map()
     mergeDrafts.value = new Map()
+    objectDrafts.value = []
     undoStack.value = []
     redoStack.value = []
     generation += 1
@@ -4759,7 +4749,7 @@ const stopCellSelection = () => {
 }
 
 watch([workbookPath, isExternal], () => {
-  drafts.value = new Map(); styleDrafts.value = new Map(); rowHeightDrafts.value = new Map(); columnWidthDrafts.value = new Map(); mergeDrafts.value = new Map(); undoStack.value = []; redoStack.value = []; void loadWorkbook()
+  drafts.value = new Map(); styleDrafts.value = new Map(); rowHeightDrafts.value = new Map(); columnWidthDrafts.value = new Map(); mergeDrafts.value = new Map(); objectDrafts.value = []; undoStack.value = []; redoStack.value = []; void loadWorkbook()
 })
 watch(() => [requestedSheet.value, String(route.query.locatorToken || '')] as const, ([sheet]) => {
   if (sheet && workbook.value?.sheets.includes(sheet) && sheet !== activeSheet.value) void selectSheet(sheet)
@@ -4789,7 +4779,7 @@ watch(() => [selectedDrawingId.value, selectedChartSeriesIndex.value, workbook.v
 })
 onBeforeRouteLeave(() => !dirtyCount.value || confirmAppAction(dialog, {
   title: '离开工作簿？',
-  content: `还有 ${dirtyCount.value} 个单元格未保存，离开后将无法恢复。`,
+  content: `还有 ${dirtyCount.value} 个工作簿更改项未保存，离开后将无法恢复。`,
   positiveText: '放弃修改并离开',
   danger: true,
 }))

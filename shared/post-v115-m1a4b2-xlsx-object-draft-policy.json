@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1A4B2",
+  "capability": "XLSX object drafts with shared undo, redo and explicit save",
+  "fixture": "src-tauri/tests/fixtures/workbook/compatibility-baseline.xlsx",
+  "targets": {
+    "conditionalFormat": "Summary!B2",
+    "table": "Inventory!InventoryTable"
+  },
+  "beforeActual": {
+    "objectActionsWriteImmediately": true,
+    "objectActionsShareUndoHistory": false,
+    "mixedCellAndObjectAtomicSave": false
+  },
+  "expected": {
+    "sourceUnchangedWhileDrafting": true,
+    "twoObjectDraftsVisible": true,
+    "undoReducesDraftCount": true,
+    "redoRestoresDraftCount": true,
+    "singleSaveChangesSource": true,
+    "conditionalFormatSurvivesReopen": true,
+    "tableStyleSurvivesReopen": true,
+    "runtimeErrorCount": 0
+  }
+}

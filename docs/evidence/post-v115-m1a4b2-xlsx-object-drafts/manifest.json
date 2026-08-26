@@ -1,0 +1,22 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M1A4B2",
+    "status":  "accepted",
+    "sourceCommit":  "dc4d2045383f75140d64daa4431b97e4d84bdbfe",
+    "evidenceFile":  "interaction-evidence.json",
+    "evidenceSha256":  "c3e12993bb0a86db6cc0adf663cbe6c667ed9b6dd97c7ee2b0e8abc26e8c0b32",
+    "screenshots":  [
+                        {
+                            "file":  "xlsx-object-drafts-before-save.jpg",
+                            "bytes":  124546,
+                            "sha256":  "75f0de71eb5cd3391ae1fbe2ab13df1e9fc65e09ca6e1df944db9def6fb06d02"
+                        },
+                        {
+                            "file":  "xlsx-object-drafts-after-reopen.jpg",
+                            "bytes":  114230,
+                            "sha256":  "36ac13a6d5ccccfbd2cee6bb90b1f64aca2f9a4daf097348b8944b3307dd9943"
+                        }
+                    ],
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false
+}
