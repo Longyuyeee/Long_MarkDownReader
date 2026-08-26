@@ -11,8 +11,8 @@ const registry = json('shared/file-formats.json')
 const pptx = registry.formats.find(format => format.id === 'pptx')
 if (!pptx || pptx.externalPolicy !== 'preview' || pptx.routeName !== 'PptxReader'
   || pptx.capabilities.edit !== 'supported' || pptx.adapters.writer !== 'pptx'
-  || pptx.userCapability.saveMode !== 'copy') {
-  failures.push('PPTX must retain reliable-copy library editing with a separate external preview')
+  || pptx.userCapability.saveMode !== 'bounded-overwrite') {
+  failures.push('PPTX must retain bounded library editing with a separate external preview')
 }
 const backend = read('src-tauri/src/commands/pptx.rs')
 const view = read('src/views/PptxReaderView.vue')
@@ -33,7 +33,7 @@ for (const token of [
   'external: isExternal.value',
   'v-if="!isExternal"',
   'editBaseline && !isExternal',
-  'verifiedPreview && verifiedOperation && !isExternal',
+  'savePreview && draftOperations.length && !isExternal',
   'baselineLoading.value || isExternal.value',
   '外部演示文稿 · 只读 · 不会写回',
   '<WorkspaceTabs v-if="isExternal',
@@ -50,4 +50,4 @@ if (failures.length) {
   console.error(failures.map(failure => `- ${failure}`).join('\n'))
   process.exit(1)
 }
-console.log('EA-3F external PPTX preview passed: external reading has no edit baseline or copy-save UI, and library reliable-copy editing remains intact.')
+console.log('EA-3F external PPTX preview passed: external reading has no edit or save UI, while library bounded source-save and copy fallback remain intact.')

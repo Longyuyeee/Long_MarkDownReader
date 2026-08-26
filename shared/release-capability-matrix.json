@@ -43,7 +43,7 @@
     {
       "id": "office-copy",
       "dependency": "none",
-      "sourcePolicy": "DOCX 经隔离验证和用户确认后可回滚保护覆盖；PPTX 仅可靠另存新副本",
+      "sourcePolicy": "DOCX/PPTX 经事务预览、签名校验和用户确认后可回滚保护覆盖；PPTX 单项草稿仍可可靠另存新副本",
       "privacyBoundary": "解析、索引和副本生成均在本机完成",
       "knownLimitations": ["DOCX/PPTX 仅开放经过真实生产者复开的基础编辑子集；高级对象保持只读"]
     },

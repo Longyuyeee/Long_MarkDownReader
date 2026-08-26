@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1B1C",
+  "fixture": "fixtures/pptx/producers/wps-presentation.pptx",
+  "expected": {
+    "sourceUnchangedBeforeSave": true,
+    "unifiedDrafts": true,
+    "undoRedo": true,
+    "leaveProtection": true,
+    "sameRouteFileSwitchProtection": true,
+    "explicitConfirmedSourceSave": true,
+    "transactionReopen": true,
+    "responsiveDesktop": true,
+    "runtimeErrors": 0
+  }
+}

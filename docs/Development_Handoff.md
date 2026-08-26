@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-26 M1B1C PPTX 统一草稿与显式保存已通过：** 现有七类有界操作已进入统一内存草稿，共享撤销/重做、脏状态、离开保护和顶部显式保存。真实 Tauri 使用 WPS 生产者临时 PPTX 验证保存前、取消同路由文件切换后及撤销后源摘要不变，重做恢复、确认覆盖后摘要变化并重开目标文字；1280 与 960x720 人工复核无溢出，运行时错误 0。审计中修复了真实资料库路由测试、Vue Proxy 草稿克隆以及同组件文件切换绕过离开保护的问题。公开能力已从“只可靠副本”对齐为有界覆盖，单项可靠副本仍保留。M1B1 收口，下一步 M1B2A 对 Microsoft/WPS/LibreOffice 的 DOCX 页眉页脚、表格、图片布局、段落样式和超链接做选择审计。当前不提升版本。详见 [`Post_v1.0.15_M1B1C_PPTX_Unified_Drafts_Desktop_Audit_2026-08-26.md`](./Post_v1.0.15_M1B1C_PPTX_Unified_Drafts_Desktop_Audit_2026-08-26.md)。
+
 > **2026-08-26 M1B1B PPTX 多操作事务基础已通过：** 新增 1–64 个有界操作的确定性事务预览与原文件保存命令，具备重复目标阻断、统一输出摘要、逐步语义验证和逐字节重放。Microsoft/WPS/LibreOffice 三份真实 PPTX 均完成“文本修改 + 幻灯片重排”事务，预览不写盘、保存输出一致、旧签名拒绝、无旁路文件；M1B1A 单操作回归通过。前端和公开能力仍未改变。下一步 M1B1C 接入统一草稿、撤销/重做、离开保护与显式保存 UI。当前不提升版本。详见 [`Post_v1.0.15_M1B1B_PPTX_Transaction_Foundation_Audit_2026-08-26.md`](./Post_v1.0.15_M1B1B_PPTX_Transaction_Foundation_Audit_2026-08-26.md)。
 
 > **2026-08-26 M1B1A PPTX 原文件保存基础已通过：** 新增签名和隔离输出摘要保护的可靠原文件保存命令，包含中断恢复、写前二次复核、原子替换、写后结构/语义重放和失败回滚。Microsoft/WPS/LibreOffice 三份真实 PPTX 均完成原文件目标修改与重开，旧签名被拒绝且文件不再变化；既有可靠副本 3/3 与中断备份恢复回归通过。前端仍保持“源 PPTX 只读”，公开能力未更新。下一步 M1B1B 建立确定性多操作事务，再接统一草稿、撤销/重做和显式保存。当前不提升版本。详见 [`Post_v1.0.15_M1B1A_PPTX_Source_Save_Foundation_Audit_2026-08-26.md`](./Post_v1.0.15_M1B1A_PPTX_Source_Save_Foundation_Audit_2026-08-26.md)。

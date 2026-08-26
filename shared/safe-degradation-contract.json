@@ -102,20 +102,20 @@
       ]
     },
     {
-      "id": "verified-office-copy",
+      "id": "verified-pptx-bounded-overwrite",
       "formats": ["pptx"],
-      "saveModes": ["copy"],
+      "saveModes": ["bounded-overwrite"],
       "profiles": ["office-copy"],
-      "sourcePolicy": "never-overwrite-source",
-      "failurePolicy": "reject-stale-or-existing-target-and-remove-unverified-copy",
+      "sourcePolicy": "explicit-confirmed-overwrite-with-transaction-preview-signature-check-and-rollback-protection",
+      "failurePolicy": "reject-stale-source-or-unverified-transaction-and-restore-source-on-post-write-failure",
       "evidence": [
         {
           "path": "src-tauri/src/commands/pptx.rs",
-          "markers": ["target_path.exists()", "source_signature != expected_signature", "remove_created_pptx_if_exact", "source_unchanged: true"]
+          "markers": ["preview_pptx_patch_transaction", "save_pptx_patch_source_transaction", "source_signature != expected_signature", "rollback_protected", "semantic_reopen_verified"]
         },
         {
           "path": "src/views/PptxReaderView.vue",
-          "markers": ["expectedSignature", "saved.saveMode !== 'copy'"]
+          "markers": ["draftOperations", "undoStack", "redoStack", "confirmAppAction", "save_pptx_patch_source_transaction"]
         }
       ]
     },

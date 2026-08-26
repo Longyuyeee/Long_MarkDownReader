@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1B1C",
+  "expected": {
+    "saveBeforeSourceUnchanged": true,
+    "sameRouteFileSwitchProtected": true,
+    "undoRedo": true,
+    "explicitConfirmation": true,
+    "savedReopen": true,
+    "responsive": true
+  },
+  "actual": {
+    "beforeSha256": "1bbb8343566166a351ff37054cfbb91ad61122930fb2e3f588e9658afda59f9a",
+    "afterSha256": "255a8513b25dcc32cc9e65c3744c6233488c95cd8191d65ec3c936240856773e",
+    "saveBeforeSourceUnchanged": true,
+    "sameRouteFileSwitchProtected": true,
+    "undoRedo": true,
+    "explicitConfirmation": true,
+    "savedReopenText": "LongEdit M1B1C desktop verified",
+    "responsive960": true,
+    "runtimeErrors": 0
+  },
+  "evidenceFiles": [
+    "draft-redo-1280.jpg",
+    "saved-reopen-960.jpg"
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

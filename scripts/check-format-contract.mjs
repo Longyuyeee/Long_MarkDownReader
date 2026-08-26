@@ -222,11 +222,12 @@ if (!pptxFormat
   || pptxFormat.adapters?.creator !== null
   || pptxFormat.adapters?.indexer !== 'pptx'
   || pptxFormat.userCapability?.level !== 'basic-edit'
-  || pptxFormat.userCapability?.label !== '基础编辑副本'
-  || pptxFormat.userCapability?.saveMode !== 'copy'
+  || pptxFormat.userCapability?.label !== '受限演示文稿编辑'
+  || pptxFormat.userCapability?.saveMode !== 'bounded-overwrite'
   || !pptxFormat.userCapability?.description?.includes('单引用 PNG/JPEG')
   || !pptxFormat.userCapability?.description?.includes('幻灯片新增/复制/删除/排序')
-  || !pptxFormat.userCapability?.description?.includes('原演示文稿始终只读')
+  || !pptxFormat.userCapability?.description?.includes('确认后可靠覆盖原文件')
+  || !pptxFormat.userCapability?.description?.includes('可靠另存为同目录新副本')
   || !pptxFormat.userCapability?.description?.includes('母版、动画、SmartArt、复杂图表')) failures.push('C5D PPTX basic copy-edit contract is incomplete')
 const odtFormat = registry.formats?.find(format => format.id === 'odt' || format.extensions?.includes('.odt'))
 if (odtFormat && JSON.stringify(odtFormat) !== JSON.stringify(ODT_PREVIEW_FORMAT)) {
@@ -597,7 +598,7 @@ requireText(pptxCommands, 'remove_created_pptx_if_exact', 'C4D must clean only i
 requireText(pptxCommands, 'external_producer_reopen_required: true', 'C4D must explicitly defer external producer reopen to C4E')
 requireText(pptxReader, 'prepareEditBaseline', 'C4A PPTX workspace must expose edit preparation inside the existing reader')
 requireText(pptxReader, '所有操作均在隔离副本中验证', 'C5D UI must disclose the isolated edit boundary')
-requireText(pptxReader, '源 PPTX 始终只读', 'C5D UI must disclose that the source presentation remains read-only')
+requireText(pptxReader, '只有点击保存并确认后才写入原文件', 'M1B1C UI must disclose the confirmed source-save boundary')
 requireText(pptxReader, '文本编辑预览', 'PPTX text controls must remain inside the existing details panel')
 requireText(pptxReader, 'preview_pptx_text_patch_isolated_copy', 'C4B workspace must invoke only the isolated preview command')
 requireText(pptxReader, '样式与替代文本', 'PPTX style and alt-text controls must remain inside the existing details panel')
@@ -608,7 +609,9 @@ requireText(pptxReader, 'preview_pptx_image_patch_isolated_copy', 'C5A workspace
 requireText(pptxReader, '共享图片、格式变化和新增关系均会被拒绝', 'C5A UI must disclose the shared-media and relationship boundary')
 requireText(pptxReader, '可靠另存副本', 'PPTX save-copy controls must remain inside the existing details panel')
 requireText(pptxReader, 'save_pptx_patch_copy', 'C4D workspace must invoke only the reliable save-copy command')
-requireText(pptxReader, '不覆盖源文件或已有目标', 'C4D UI must disclose its no-overwrite boundary')
+requireText(pptxReader, '单项草稿可可靠另存副本', 'C4D UI must retain the copy-save fallback boundary')
+requireText(pptxReader, 'preview_pptx_patch_transaction', 'M1B1C workspace must preview the unified draft transaction')
+requireText(pptxReader, 'save_pptx_patch_source_transaction', 'M1B1C workspace must invoke the confirmed source-save transaction')
 requireText(pptxCommands, 'preview_pptx_slide_lifecycle_isolated_copy', 'C5C must expose one guarded slide lifecycle preview command')
 requireText(pptxCommands, 'build_pptx_slide_lifecycle_operation', 'C5C preview and save must share the same operation dispatcher')
 requireText(pptxReader, '幻灯片管理', 'PPTX slide controls must remain inside the existing details panel')
@@ -627,7 +630,7 @@ requireText(pptxReader, 'libraryRoot: store.libraryPath', 'C3C2 PPTX workspace m
 for (const forbiddenPptxWrite of ['write_pptx', 'overwrite_pptx', 'save_pptx_overwrite']) {
   if (pptxCommands.includes(forbiddenPptxWrite)) failures.push(`C4D must not expose unsafe PPTX write command: ${forbiddenPptxWrite}`)
 }
-requireText(pptxReader, '基础编辑副本 · 原文件不写回', 'C5D PPTX workspace must identify its bounded copy-edit capability')
+requireText(pptxReader, '演示文稿编辑 · 显式保存', 'M1B1C PPTX workspace must identify its bounded source-edit capability')
 requireText(pptxReader, '搜索 PPTX 文本与备注', 'C3A PPTX workspace must expose in-presentation search')
 requireText(pptxReader, '放映', 'C3A PPTX workspace must expose read-only presentation mode')
 requireText(pptxReader, '兼容画像', 'C3A PPTX workspace must expose its compatibility profile')
