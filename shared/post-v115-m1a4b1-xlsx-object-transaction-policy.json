@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1A4B1",
+  "capability": "Atomic XLSX cell and object draft transaction foundation",
+  "beforeActual": {
+    "cellDraftCommand": "write_workbook_cells",
+    "conditionalFormatCommand": "update_workbook_conditional_format",
+    "tableCommand": "update_workbook_table",
+    "combinedAtomicWrite": false,
+    "frontendObjectDrafts": false
+  },
+  "expected": {
+    "singleSignatureCheck": true,
+    "cellConditionalFormatAndTableCombined": true,
+    "singleReliableWrite": true,
+    "reopenAllChanges": true,
+    "staleSignatureRejected": true,
+    "staleAttemptLeavesBytesUnchanged": true
+  },
+  "deferred": {
+    "frontendObjectDraftsUndoExplicitSave": "M1A4B2"
+  }
+}

@@ -1,0 +1,34 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M1A4B1",
+    "sourceCommit":  "c2e4a8976cd4e6945ef9a7111011e51cd85ac491",
+    "expected":  {
+                     "cellValue":  "88",
+                     "conditionalFormula":  "80",
+                     "tableName":  "ProgressTable",
+                     "combinedAtomicWrite":  true,
+                     "staleSignatureRejected":  true,
+                     "staleAttemptLeavesBytesUnchanged":  true
+                 },
+    "beforeActual":  {
+                         "separateImmediateCommands":  3,
+                         "combinedAtomicWrite":  false,
+                         "frontendObjectDrafts":  false
+                     },
+    "afterActual":  {
+                        "testPassed":  true,
+                        "cellValueReopened":  "88",
+                        "conditionalFormulaReopened":  "80",
+                        "tableReopened":  "ProgressTable",
+                        "staleSignatureRejected":  true,
+                        "staleAttemptLeavesBytesUnchanged":  true,
+                        "singleReliableWriteImplementation":  true,
+                        "frontendObjectDrafts":  false
+                    },
+    "differenceResolved":  true,
+    "deferred":  {
+                     "frontendObjectDraftsUndoExplicitSave":  "M1A4B2"
+                 },
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false
+}

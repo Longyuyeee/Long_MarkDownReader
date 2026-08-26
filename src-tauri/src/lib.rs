@@ -132,6 +132,7 @@ use commands::workbook::{
     update_workbook_freeze_pane, update_workbook_header_footer, update_workbook_outline,
     update_workbook_page_layout, update_workbook_print_options, update_workbook_structure,
     update_workbook_table, verify_workbook_pivot_variants_isolated_copy, write_workbook_cells,
+    write_workbook_draft,
 };
 pub use commands::workbook::{
     generate_workbook_array_audit_report, generate_workbook_pivot_aggregation_audit_copy,
@@ -461,6 +462,7 @@ pub fn run() {
             translate_workbook_formulas,
             preview_workbook_structure_migration,
             write_workbook_cells,
+            write_workbook_draft,
             update_workbook_freeze_pane,
             update_workbook_header_footer,
             update_workbook_page_layout,

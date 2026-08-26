@@ -9,6 +9,7 @@ use crate::formats::workbook::{
     WorkbookCalculationPayload, WorkbookCalculationResult, WorkbookCapabilities,
     WorkbookCapabilityLevel, WorkbookCell, WorkbookConditionalFormatPayload,
     WorkbookDataValidationPayload, WorkbookDefinedNamePayload, WorkbookDocument,
+    WorkbookDraftWritePayload,
     WorkbookDrawingPayload, WorkbookDynamicArrayPreviewPayload, WorkbookDynamicArrayPreviewResult,
     WorkbookEngine, WorkbookFilterPayload, WorkbookHeaderFooterPayload, WorkbookOutlinePayload,
     WorkbookPageLayoutPayload, WorkbookPivotCacheRebuildPayload, WorkbookPivotCacheRebuildResult,
@@ -1422,6 +1423,49 @@ pub async fn write_workbook_cells(
 }
 
 #[tauri::command]
+pub async fn write_workbook_draft(
+    library_root: String,
+    path: String,
+    payload: WorkbookDraftWritePayload,
+) -> Result<WorkbookDocument, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let file = guard.resolve_existing_file(path, &["xlsx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        recover_interrupted_write(&file)?;
+        ensure_workbook(&file)?;
+        let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
+        let metadata = file
+            .metadata()
+            .map_err(|error| format!("读取 XLSX 元数据失败: {error}"))?;
+        if workbook_signature(&metadata, &source) != payload.expected_signature {
+            return Err("XLSX 已被其他程序修改，请重新加载后再保存".into());
+        }
+        let mut output = patch_workbook(
+            &source,
+            &payload.edits,
+            &payload.style_edits,
+            &payload.row_height_edits,
+            &payload.column_width_edits,
+            &payload.merge_edits,
+        )?;
+        for change in &payload.conditional_format_changes {
+            output = patch_workbook_conditional_format(&output, change)?;
+        }
+        for change in &payload.table_changes {
+            output = patch_workbook_table(&output, change)?;
+        }
+        if output.len() as u64 > MAX_WORKBOOK_BYTES {
+            return Err("保存后的 XLSX 不能超过 128 MB".into());
+        }
+        validate_workbook_package(&output)?;
+        write_bytes(&file, &output)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
+    .await
+    .map_err(|error| format!("XLSX 草稿事务写回任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn update_workbook_structure(
     library_root: String,
     path: String,
@@ -1888,7 +1932,8 @@ mod tests {
         WorkbookConditionalFormatPayload, WorkbookConditionalFormatRule,
         WorkbookConditionalFormatStyle, WorkbookDataValidation, WorkbookDataValidationAction,
         WorkbookDataValidationChange, WorkbookDataValidationPayload, WorkbookDefinedNameAction,
-        WorkbookDefinedNameChange, WorkbookDefinedNamePayload, WorkbookDrawingAction,
+        WorkbookDefinedNameChange, WorkbookDefinedNamePayload, WorkbookDraftWritePayload,
+        WorkbookDrawingAction,
         WorkbookDrawingChange, WorkbookDrawingPayload, WorkbookFilterAction, WorkbookFilterChange,
         WorkbookFilterPayload, WorkbookFilterTarget, WorkbookFormulaTarget,
         WorkbookHeaderFooterChange, WorkbookHeaderFooterPayload, WorkbookMergeEdit,
@@ -1896,7 +1941,8 @@ mod tests {
         WorkbookPageLayoutPayload, WorkbookPageMarginsChange, WorkbookPivotPreviewPayload,
         WorkbookPrintOptionsChange, WorkbookPrintOptionsPayload, WorkbookRowHeightEdit,
         WorkbookRowStateEdit, WorkbookStructureAction, WorkbookStructureAxis,
-        WorkbookStructurePayload, WorkbookStylePatch, WorkbookWritePayload,
+        WorkbookStructurePayload, WorkbookStylePatch, WorkbookTableAction, WorkbookTableChange,
+        WorkbookWritePayload,
     };
     use rust_xlsxwriter::{
         ConditionalFormatCell, ConditionalFormatCellRule, Format, Formula, Workbook,
@@ -2669,6 +2715,107 @@ mod tests {
             },
         ));
         assert!(stale.unwrap_err().contains("changed on disk"));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn writes_cell_conditional_format_and_table_drafts_in_one_transaction() {
+        let (base, path) = fixture();
+        let root = base.join("library");
+        let document = CalamineWorkbookEngine.inspect(&path).unwrap();
+        let source = fs::read(&path).unwrap();
+        let payload = WorkbookDraftWritePayload {
+            expected_signature: document.signature.clone(),
+            edits: vec![WorkbookCellEdit {
+                sheet: "进度".into(),
+                row: 1,
+                column: 1,
+                input: "88".into(),
+                kind: "number".into(),
+            }],
+            style_edits: vec![],
+            row_height_edits: vec![],
+            column_width_edits: vec![],
+            merge_edits: vec![],
+            conditional_format_changes: vec![WorkbookConditionalFormatChange {
+                sheet: "进度".into(),
+                action: WorkbookConditionalFormatAction::Create,
+                group_index: None,
+                rule_index: None,
+                rule: Some(WorkbookConditionalFormatRule {
+                    group_index: 0,
+                    rule_index: 0,
+                    ranges: vec![WorkbookMergeRange {
+                        top: 1,
+                        bottom: 2,
+                        left: 1,
+                        right: 1,
+                    }],
+                    kind: "cellIs".into(),
+                    operator: Some("greaterThan".into()),
+                    formula1: Some("80".into()),
+                    formula2: None,
+                    priority: 0,
+                    stop_if_true: true,
+                    style: WorkbookConditionalFormatStyle {
+                        font_color: Some("#006100".into()),
+                        fill_color: Some("#C6EFCE".into()),
+                        bold: false,
+                    },
+                    color_scale: None,
+                    data_bar: None,
+                    icon_set: None,
+                    editable: true,
+                }),
+            }],
+            table_changes: vec![WorkbookTableChange {
+                sheet: "进度".into(),
+                action: WorkbookTableAction::Create,
+                table_name: "ProgressTable".into(),
+                new_table_name: None,
+                style_name: Some("TableStyleMedium2".into()),
+                show_first_column: None,
+                show_last_column: None,
+                show_row_stripes: Some(true),
+                show_column_stripes: None,
+                range: WorkbookMergeRange {
+                    top: 0,
+                    bottom: 2,
+                    left: 0,
+                    right: 1,
+                },
+                columns: vec!["任务".into(), "完成度".into()],
+            }],
+        };
+        let saved = tauri::async_runtime::block_on(write_workbook_draft(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            payload.clone(),
+        ))
+        .unwrap();
+        let page = CalamineWorkbookEngine
+            .read_sheet(&path, "进度", 0, 10)
+            .unwrap();
+        assert_ne!(saved.signature, document.signature);
+        assert_ne!(fs::read(&path).unwrap(), source);
+        assert_eq!(page.rows[1][1].value, "88");
+        assert!(page
+            .conditional_formats
+            .iter()
+            .any(|rule| rule.formula1.as_deref() == Some("80")));
+        assert!(page
+            .tables
+            .iter()
+            .any(|table| table.display_name == "ProgressTable"));
+
+        let bytes_after_save = fs::read(&path).unwrap();
+        let stale = tauri::async_runtime::block_on(write_workbook_draft(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            payload,
+        ));
+        assert!(stale.unwrap_err().contains("已被其他程序修改"));
+        assert_eq!(fs::read(&path).unwrap(), bytes_after_save);
         fs::remove_dir_all(base).unwrap();
     }
 

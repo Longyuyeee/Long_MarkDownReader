@@ -1459,6 +1459,26 @@ pub struct WorkbookWritePayload {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct WorkbookDraftWritePayload {
+    pub expected_signature: String,
+    #[serde(default)]
+    pub edits: Vec<WorkbookCellEdit>,
+    #[serde(default)]
+    pub style_edits: Vec<WorkbookCellStyleEdit>,
+    #[serde(default)]
+    pub row_height_edits: Vec<WorkbookRowHeightEdit>,
+    #[serde(default)]
+    pub column_width_edits: Vec<WorkbookColumnWidthEdit>,
+    #[serde(default)]
+    pub merge_edits: Vec<WorkbookMergeEdit>,
+    #[serde(default)]
+    pub conditional_format_changes: Vec<WorkbookConditionalFormatChange>,
+    #[serde(default)]
+    pub table_changes: Vec<WorkbookTableChange>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WorkbookFormulaTarget {
     pub sheet: String,
     pub row: usize,

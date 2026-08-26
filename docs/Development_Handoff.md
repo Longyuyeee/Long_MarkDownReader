@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-26 M1A4B1 XLSX 对象事务基础已通过：** 新增 `write_workbook_draft`，可在一次签名校验和一次可靠写入中组合单元格、格式、条件格式与 Table 变更。真实临时 XLSX 同一事务写入 `B2=88`、`greaterThan 80` 条件格式和 `ProgressTable` 后全部复读成功；旧签名重放被拒绝且文件字节不变。前端对象草稿尚未接入，现有对象按钮仍会立即写盘，下一步 M1A4B2 迁移到统一撤销/重做、脏状态和顶部显式保存。详见 [`Post_v1.0.15_M1A4B1_XLSX_Object_Transaction_Foundation_Audit_2026-08-26.md`](./Post_v1.0.15_M1A4B1_XLSX_Object_Transaction_Foundation_Audit_2026-08-26.md)。
+
 > **2026-08-26 M1A4A XLSX 条件格式可视编辑已通过：** 基础 `cellIs/expression` 已从多轮内部值输入改为统一中文表单，提供八种比较方式、两个阈值、五种色板、停止规则和实时预览；高级色阶、数据条和图标集保留原入口。真实 `Summary!B2` 验证编辑中不写盘、应用后写盘、刷新复读一致、仓库样本不变；1280×800 与 560×720 人工复核通过，窄屏弹窗可内部滚动，运行时错误 0。审计中还修复数据工具入口遗漏、单格范围文案、Teleport 高度和 PowerShell UTF-8 证据读取。下一步 M1A4B 建立条件格式与 Table 的统一对象草稿、撤销/重做和显式保存。详见 [`Post_v1.0.15_M1A4A_XLSX_Conditional_Format_Editor_Audit_2026-08-26.md`](./Post_v1.0.15_M1A4A_XLSX_Conditional_Format_Editor_Audit_2026-08-26.md)。
 
 > **2026-08-25 M1A4A 暂停交接：** 基础 XLSX 条件格式已实现中文可视表单，包含规则类型、比较方式、阈值、五种色板、停止规则和实时预览；高级规则保留原入口。真实 `compatibility-baseline.xlsx` 已验证 `Summary!B2` 编辑中不写盘、应用后写盘及刷新复读，并在过程中修复数据工具入口遗漏和单格范围文案。最后的 560×720 检查曾超出 23.5 px，Teleport 样式已改为全局限制，但修正后复验被暂停；因此 M1A4A 尚未宣告完成。新电脑应先执行生产构建和 `audit:post-v115-m1a4a-xlsx-conditional-editor`，通过后再进入 M1A4B 统一对象草稿、撤销和显式保存。详见 [`Post_v1.0.15_M1A4A_XLSX_Conditional_Format_Editor_Handoff_2026-08-25.md`](./Post_v1.0.15_M1A4A_XLSX_Conditional_Format_Editor_Handoff_2026-08-25.md)。
