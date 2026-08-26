@@ -1,0 +1,82 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M1A4A",
+    "sourceCommit":  "57563d9204acc530d3e12408671a6e2cf608fd95",
+    "fixture":  "M1A4A Conditional Format.xlsx",
+    "expected":  {
+                     "operator":  "between",
+                     "thresholds":  [
+                                        "1000",
+                                        "2000"
+                                    ],
+                     "preset":  "green_fill",
+                     "visualStyleCount":  5,
+                     "sourceUnchangedWhileEditing":  true,
+                     "sourceChangedAfterApply":  true,
+                     "ruleSurvivesReopen":  true
+                 },
+    "beforeActual":  {
+                         "singleVisibleForm":  false,
+                         "visualStylePicker":  false,
+                         "livePreview":  false,
+                         "basicRulePromptSteps":  5,
+                         "objectChangesUseExplicitSave":  false
+                     },
+    "afterActual":  {
+                        "initialForm":  {
+                                            "title":  "编辑条件格式",
+                                            "range":  "B2",
+                                            "kinds":  [
+                                                          "单元格值",
+                                                          "公式"
+                                                      ],
+                                            "styleLabels":  [
+                                                                "红色提醒",
+                                                                "黄色关注",
+                                                                "绿色通过",
+                                                                "红色文字",
+                                                                "绿色文字"
+                                                            ],
+                                            "preview":  "128",
+                                            "error":  ""
+                                        },
+                        "sourceUnchangedWhileEditing":  true,
+                        "sourceChangedAfterApply":  true,
+                        "reopened":  {
+                                         "operator":  "between",
+                                         "inputs":  [
+                                                        "1000",
+                                                        "2000"
+                                                    ],
+                                         "preset":  "绿色通过",
+                                         "error":  ""
+                                     },
+                        "narrowViewportContained":  true,
+                        "narrowViewportScrollable":  true,
+                        "narrowBounds":  {
+                                             "left":  16,
+                                             "top":  12,
+                                             "right":  544,
+                                             "bottom":  708,
+                                             "width":  560,
+                                             "height":  720,
+                                             "contained":  true,
+                                             "overflowY":  "auto",
+                                             "clientHeight":  696,
+                                             "scrollHeight":  744,
+                                             "scrollable":  true
+                                         },
+                        "runtimeErrorCount":  0,
+                        "blockingErrorSurfaceObserved":  false,
+                        "objectChangesUseExplicitSave":  false,
+                        "repositoryFixtureUnchanged":  true,
+                        "temporaryTargetChanged":  true
+                    },
+    "differenceResolved":  true,
+    "deferred":  {
+                     "advancedRulesRemainInAdvancedEditor":  true,
+                     "objectDraftUndoExplicitSave":  "M1A4B"
+                 },
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false
+}

@@ -68,14 +68,14 @@ try {
   $sourceUnchanged = $sourceHash -eq (Get-Sha256Hex $source)
   $targetChanged = $targetBeforeHash -ne (Get-Sha256Hex $xlsx)
   $evidencePath = Join-Path $output "interaction-evidence.json"
-  $evidence = Get-Content -LiteralPath $evidencePath -Raw | ConvertFrom-Json
+  $evidence = Get-Content -LiteralPath $evidencePath -Raw -Encoding UTF8 | ConvertFrom-Json
   $evidence.afterActual | Add-Member -NotePropertyName repositoryFixtureUnchanged -NotePropertyValue $sourceUnchanged -Force
   $evidence.afterActual | Add-Member -NotePropertyName temporaryTargetChanged -NotePropertyValue $targetChanged -Force
   $evidence.differenceResolved = $evidence.differenceResolved -and $sourceUnchanged -and $targetChanged
   $utf8 = [Text.UTF8Encoding]::new($false)
   [IO.File]::WriteAllText($evidencePath, (($evidence | ConvertTo-Json -Depth 10) + "`n"), $utf8)
   $manifestPath = Join-Path $output "manifest.json"
-  $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+  $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
   $manifest.status = if ($evidence.differenceResolved) { "accepted" } else { "rejected" }
   $manifest.evidenceSha256 = (Get-Sha256Hex $evidencePath).ToLowerInvariant()
   [IO.File]::WriteAllText($manifestPath, (($manifest | ConvertTo-Json -Depth 10) + "`n"), $utf8)

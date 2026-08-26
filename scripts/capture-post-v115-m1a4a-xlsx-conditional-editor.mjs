@@ -108,8 +108,8 @@ if (reopened.operator !== 'between' || JSON.stringify(reopened.inputs) !== JSON.
 
 await send('Emulation.setDeviceMetricsOverride', { width: 560, height: 720, deviceScaleFactor: 1, mobile: false })
 await delay(250)
-const narrowBounds = await evaluate(`(() => { const rect = document.querySelector('.conditional-format-modal').getBoundingClientRect(); const card = document.querySelector('.conditional-format-modal .n-card'); return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: innerWidth, height: innerHeight, contained: rect.left >= 0 && rect.top >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight, scrollable: card ? card.scrollHeight <= card.clientHeight || getComputedStyle(card).overflowY !== 'visible' : false } })()`)
-if (!narrowBounds.contained) throw new Error(`Narrow conditional-format modal overflowed: ${JSON.stringify(narrowBounds)}`)
+const narrowBounds = await evaluate(`(() => { const modal = document.querySelector('.conditional-format-modal'); const rect = modal.getBoundingClientRect(); const overflowY = getComputedStyle(modal).overflowY; return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: innerWidth, height: innerHeight, contained: rect.left >= 0 && rect.top >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight, overflowY, clientHeight: modal.clientHeight, scrollHeight: modal.scrollHeight, scrollable: modal.scrollHeight > modal.clientHeight && ['auto', 'scroll'].includes(overflowY) } })()`)
+if (!narrowBounds.contained || !narrowBounds.scrollable) throw new Error(`Narrow conditional-format modal is not safely reachable: ${JSON.stringify(narrowBounds)}`)
 await capture('xlsx-conditional-editor-narrow.jpg')
 
 const blockingErrorSurfaceObserved = await evaluate(`Boolean(document.querySelector('.crash-fallback, .error-boundary'))`)
@@ -126,12 +126,13 @@ const evidence = {
     sourceChangedAfterApply: afterApplyHash !== beforeHash,
     reopened,
     narrowViewportContained: narrowBounds.contained,
+    narrowViewportScrollable: narrowBounds.scrollable,
     narrowBounds,
     runtimeErrorCount: runtimeErrors.length,
     blockingErrorSurfaceObserved,
     objectChangesUseExplicitSave: false
   },
-  differenceResolved: initialForm.styleLabels.length === 5 && hashWhileEditing === beforeHash && afterApplyHash !== beforeHash && reopened.operator === 'between' && reopened.inputs.join(',') === '1000,2000' && reopened.preset === '绿色通过' && narrowBounds.contained && runtimeErrors.length === 0 && !blockingErrorSurfaceObserved,
+  differenceResolved: initialForm.styleLabels.length === 5 && hashWhileEditing === beforeHash && afterApplyHash !== beforeHash && reopened.operator === 'between' && reopened.inputs.join(',') === '1000,2000' && reopened.preset === '绿色通过' && narrowBounds.contained && narrowBounds.scrollable && runtimeErrors.length === 0 && !blockingErrorSurfaceObserved,
   deferred: { advancedRulesRemainInAdvancedEditor: true, objectDraftUndoExplicitSave: 'M1A4B' },
   sourceUserContentIncluded: false,
   releaseCandidate: false

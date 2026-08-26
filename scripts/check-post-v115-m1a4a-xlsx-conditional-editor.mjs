@@ -18,6 +18,7 @@ for (const marker of [
 }
 if (!fs.existsSync(fixture) || fs.statSync(fixture).size < 1_000) failures.push(`Real XLSX fixture is missing or empty: ${fixture}`)
 if (policy.beforeActual.singleVisibleForm !== false || policy.expected.visualStyleCount !== 5) failures.push('M1A4A expected/actual policy is incomplete')
+if (policy.expected.narrowViewportScrollable !== true) failures.push('M1A4A narrow viewport reachability is not enforced')
 if (policy.deferred.objectDraftUndoExplicitSave !== 'M1A4B') failures.push('M1A4B save-boundary deferral is not explicit')
 
 if (failures.length) {
