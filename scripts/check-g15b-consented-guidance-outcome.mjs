@@ -20,7 +20,7 @@ for (const key of ['realUserComparisonComplete', 'signedWindowsClientEvidenceCom
 
 for (const token of ['pub struct KnowledgeGraphObservationComparison', 'compare_knowledge_graph_observations(', 'load_knowledge_graph_observation(', 'metadata.len() > 1024 * 1024', 'local-consented-aggregate-comparison-only', 'coverage-increased', 'isolated-objects-reduced', '.create_new(true)', 'consented_observation_comparison_reports_improvement_without_identifiers']) requireText(graph, token, `G15B backend/privacy marker missing: ${token}`)
 for (const token of ['get_knowledge_graph_observation_comparison', 'export_knowledge_graph_observation_comparison']) requireText(lib, token, `G15B command registration missing: ${token}`)
-for (const token of ['data-testid="knowledge-observation-compare"', 'previewKnowledgeObservationComparison', '确认保存知识网络改善对比', '请确认基线来自当前资料库', '不会自动上传', 'export_knowledge_graph_observation_comparison']) requireText(settings, token, `G15B consented UI marker missing: ${token}`)
+for (const token of ['data-testid="knowledge-observation-compare"', 'previewKnowledgeObservationComparison', '确认保存关系改善结果', '请确认之前的记录来自当前资料库', '不会自动上传', 'export_knowledge_graph_observation_comparison']) requireText(settings, token, `G15B consented UI marker missing: ${token}`)
 for (const token of ['G15B', 'releaseCandidate=false', '前后对比', '真实资料库', '不会自动上传']) requireText(audit, token, `G15B audit marker missing: ${token}`)
 if (!packageJson.scripts?.['check:g15b-consented-guidance-outcome'] || !packageJson.scripts?.['check:graph-product-contract']?.includes('check-g15b-consented-guidance-outcome')) failures.push('G15B checker must be reachable through graph product contract and ci:check')
 

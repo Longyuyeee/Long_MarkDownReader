@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "stage": "M2A2",
+  "expectedVsPrevious": {
+    "previousBlockingRequests": 5,
+    "currentPrimaryRequests": 2,
+    "currentBackgroundAnalyses": 2,
+    "expectedIssueSurface": "single actionable queue"
+  },
+  "actual": {
+    "primaryReadyBeforeAnalysis": true,
+    "singleAttentionQueue": true,
+    "brokenLinkCount": 1,
+    "ambiguousLinkCount": 1,
+    "duplicateGroupCount": 1,
+    "unreferencedAnnotationCount": 1,
+    "workspacePulseCount": 0,
+    "graphPulseCount": 1,
+    "runtimeErrors": 0,
+    "sourceChanges": 0,
+    "primaryReadyMs": 1105,
+    "analysisReadyMs": 1253,
+    "beforeSha256": "d36bbf0f2ff2ef5929ad8662f7378c9aab0ee64552a4233c929e98394dff7990",
+    "afterSha256": "d36bbf0f2ff2ef5929ad8662f7378c9aab0ee64552a4233c929e98394dff7990",
+    "responsive760": true,
+    "responsive480": true
+  },
+  "evidenceFiles": [
+    "workspace-1280.jpg",
+    "attention-queue-1280.jpg",
+    "workspace-760.jpg",
+    "workspace-480.jpg",
+    "graph-governance-1280.jpg"
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

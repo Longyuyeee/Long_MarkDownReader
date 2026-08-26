@@ -16,7 +16,7 @@
       </nav>
     </WorkspaceManagementHeader>
 
-    <WorkspaceManagementContent v-if="store.libraryPath" class="workspace-content">
+    <WorkspaceManagementContent v-if="store.libraryPath" class="workspace-content" data-testid="m2a2-workspace-primary" :data-primary-state="loading ? 'loading' : 'ready'">
       <section class="workspace-identity">
         <div>
           <span class="section-kicker">当前工作区</span>
@@ -59,56 +59,6 @@
             </div>
           </div>
           <div v-else class="empty-line">暂无最近文件</div>
-        </section>
-
-        <section class="workspace-section health-section">
-          <div class="section-heading"><div><span class="section-kicker">关系概览</span><h2>知识库健康</h2></div><button class="text-command" @click="router.push({ name: 'Graph' })">查看图谱</button></div>
-          <div class="health-grid">
-            <button @click="router.push({ name: 'Graph' })"><span>断链</span><strong>{{ health.brokenLinks.length }}</strong></button>
-            <button @click="router.push({ name: 'Graph' })"><span>歧义</span><strong>{{ health.ambiguousLinks.length }}</strong></button>
-            <button @click="router.push({ name: 'Graph' })"><span>孤立笔记</span><strong>{{ health.orphanNotes.length }}</strong></button>
-          </div>
-          <div class="knowledge-pulse" aria-label="知识网络脉搏" data-testid="knowledge-network-pulse" :data-object-count="graphPulse.objectCount" :data-relation-count="graphPulse.relationCount" :data-connected-count="graphPulse.connectedObjectCount" :data-isolated-count="graphPulse.isolatedObjectCount">
-            <div class="pulse-heading">
-              <div><span>关系覆盖</span><strong>{{ graphPulse.coveragePercent }}%</strong></div>
-              <small>{{ graphPulse.connectedObjectCount }} 已连接 · {{ graphPulse.isolatedObjectCount }} 孤立 · {{ graphPulse.relationCount }} 关系</small>
-            </div>
-            <div class="pulse-track" role="progressbar" aria-label="知识对象关系覆盖率" data-testid="knowledge-network-coverage" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="graphPulse.coveragePercent">
-              <i :style="{ width: `${graphPulse.coveragePercent}%` }"></i>
-            </div>
-            <div v-if="graphPulse.relationTypes.length" class="pulse-types">
-              <span v-for="item in graphPulse.relationTypes.slice(0, 5)" :key="item.relationType" :data-relation-type="item.relationType">{{ relationTypeLabel(item.relationType) }} <b>{{ item.count }}</b></span>
-            </div>
-            <div v-if="graphPulse.topNodes.length" class="pulse-nodes">
-              <button v-for="node in graphPulse.topNodes" :key="node.id" data-testid="knowledge-network-topic" :data-node-id="node.id" :title="`以 ${node.title} 为中心打开图谱`" @click="openPulseNode(node.id)">
-                <span>{{ node.title }}</span><b>{{ node.relationCount }}</b>
-              </button>
-            </div>
-            <button v-else class="pulse-empty" @click="router.push({ name: 'Graph' })">从双向链接、标签或画布连接开始建立知识网络</button>
-            <div v-if="graphPulse.isolatedNodes.length" class="pulse-isolation" data-testid="knowledge-isolation-queue">
-              <div><span>优先连接</span><small>点击对象，以它为中心补充关系</small></div>
-              <div>
-                <button v-for="node in graphPulse.isolatedNodes" :key="node.id" data-testid="knowledge-isolation-item" :data-node-id="node.id" :title="`定位孤立对象：${node.title}`" @click="openPulseNode(node.id)">
-                  <span>{{ node.title }}</span><small>{{ formatLabel(node.objectType) }}</small><ArrowIcon />
-                </button>
-              </div>
-            </div>
-            <button v-if="graphPulse.guidance.length" class="pulse-guidance" data-testid="knowledge-network-guidance" :data-guidance-code="graphPulse.guidance[0].code" @click="openGuidance(graphPulse.guidance[0])">
-              <span><b>{{ guidanceCopy(graphPulse.guidance[0]).title }}</b><small>{{ guidanceCopy(graphPulse.guidance[0]).detail }}</small></span>
-              <ArrowIcon />
-            </button>
-            <button v-if="graphPulse.guidance.length" class="pulse-observation-action" data-testid="knowledge-observation-entry" @click="openKnowledgeObservation">
-              记录治理基线
-            </button>
-          </div>
-          <div class="index-line">
-            <DatabaseIcon />
-            <div><strong>{{ indexLabel }}</strong><small v-if="indexStatus.state === 'ready'">{{ indexStatus.objectCount }} 个对象 · {{ indexStatus.relationCount }} 条关系</small><small v-else>LongEdit 会在后台准备本地搜索缓存</small></div>
-            <button title="打开搜索与关联状态" @click="router.push({ name: 'LibraryMode' })"><ArrowIcon /></button>
-          </div>
-          <div class="format-line" v-if="overview.formatCounts.length">
-            <span v-for="item in overview.formatCounts.slice(0, 6)" :key="item.objectType"><i>{{ formatLabel(item.objectType) }}</i><b>{{ item.count }}</b></span>
-          </div>
         </section>
 
         <section class="workspace-section task-section" data-testid="m2a1-task-section">
@@ -155,7 +105,18 @@
         </section>
 
         <section class="workspace-section governance-section">
-          <WorkspaceHealthQueue :report="workspaceHealth" :error="workspaceHealthError" @open-file="openPath" @open-annotation="openAnnotation" />
+          <WorkspaceHealthQueue
+            :report="workspaceHealth"
+            :graph-health="health"
+            :index-status="indexStatus"
+            :loading="analysisLoading"
+            :error="workspaceHealthError"
+            @open-file="openPath"
+            @open-annotation="openAnnotation"
+            @open-graph="router.push({ name: 'Graph', query: { focus: 'overview' } })"
+            @prepare-index="prepareWorkspaceSearch(store.libraryPath)"
+            @retry="loadSecondaryAnalysis(store.libraryPath)"
+          />
         </section>
       </div>
     </WorkspaceManagementContent>
@@ -185,7 +146,7 @@ import { useAppStore, type SavedSearchConfig } from '../store/app'
 import { fileDisplayName, findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
 import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
-import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceHealthReport } from '../components/WorkspaceHealthQueue.vue'
+import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceGraphHealth, type WorkspaceHealthReport, type WorkspaceIndexStatus } from '../components/WorkspaceHealthQueue.vue'
 import WorkspaceEmptyState from '../components/workspace/WorkspaceEmptyState.vue'
 import WorkspaceManagementContent from '../components/workspace/WorkspaceManagementContent.vue'
 import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
@@ -196,40 +157,24 @@ interface WorkspaceTask { title: string; path: string; relativePath: string; lin
 interface WorkspaceTaskMutationResult { path: string; line: number; text: string; completed: boolean; signature: string }
 interface WorkspaceFile { title: string; path: string; relativePath: string; objectType: string; modifiedAt: number; size: number }
 interface WorkspaceOverview { totalFiles: number; tasks: WorkspaceTask[]; recentFiles: WorkspaceFile[]; canvases: WorkspaceFile[]; formatCounts: { objectType: string; count: number }[] }
-interface GraphHealth { brokenLinks: unknown[]; ambiguousLinks: unknown[]; orphanNotes: unknown[]; scannedNotes: number }
-interface IndexStatus { state: 'missing' | 'building' | 'ready' | 'stale' | 'corrupt' | 'error'; objectCount: number; relationCount: number }
-interface KnowledgeGraphPulseRelationType { relationType: string; count: number }
-interface KnowledgeGraphPulseNode { id: string; title: string; objectType: string; relationCount: number }
-interface KnowledgeGraphGuidance { code: string; priority: 'high' | 'medium' | 'healthy'; currentValue: number; targetValue: number }
-interface KnowledgeGraphPulse {
-  objectCount: number
-  relationCount: number
-  connectedObjectCount: number
-  isolatedObjectCount: number
-  coveragePercent: number
-  relationTypes: KnowledgeGraphPulseRelationType[]
-  topNodes: KnowledgeGraphPulseNode[]
-  isolatedNodes: KnowledgeGraphPulseNode[]
-  guidance: KnowledgeGraphGuidance[]
-}
-
 const router = useRouter()
 const store = useAppStore()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
+const analysisLoading = ref(false)
 const error = ref('')
 const workspaceHealthError = ref('')
 const refreshedAt = ref(0)
 const overview = ref<WorkspaceOverview>({ totalFiles: 0, tasks: [], recentFiles: [], canvases: [], formatCounts: [] })
-const health = ref<GraphHealth>({ brokenLinks: [], ambiguousLinks: [], orphanNotes: [], scannedNotes: 0 })
-const indexStatus = ref<IndexStatus>({ state: 'missing', objectCount: 0, relationCount: 0 })
+const health = ref<WorkspaceGraphHealth>({ brokenLinks: [], ambiguousLinks: [], orphanNotes: [], scannedNotes: 0 })
+const indexStatus = ref<WorkspaceIndexStatus>({ state: 'missing', objectCount: 0, relationCount: 0 })
 const indexAutoPreparing = ref(false)
-const graphPulse = ref<KnowledgeGraphPulse>({ objectCount: 0, relationCount: 0, connectedObjectCount: 0, isolatedObjectCount: 0, coveragePercent: 0, relationTypes: [], topNodes: [], isolatedNodes: [], guidance: [] })
 const workspaceHealth = ref<WorkspaceHealthReport>({ duplicateGroups: [], unreferencedAnnotations: [], scannedFiles: 0, hashedFiles: 0, scannedAnnotations: 0, truncated: false })
 const relationSummaries = ref<Record<string, GraphRelationSummary>>({})
 const taskMutating = ref(false)
 const taskUndo = ref<WorkspaceTaskMutationResult | null>(null)
+let loadGeneration = 0
 
 const indexLabel = computed(() => ({
   missing: '搜索与关联：准备中',
@@ -281,46 +226,18 @@ const openRelationGraph = (path: string) => {
   const summary = relationSummary(path)
   if (summary) router.push({ name: 'Graph', query: { root: summary.nodeId } })
 }
-const openPulseNode = (nodeId: string) => router.push({ name: 'Graph', query: { root: nodeId } })
-const relationTypeLabel = (type: string) => ({
-  'links-to': '链接', related: '相关', contains: '包含', annotates: '批注', 'shares-tag': '同标签', references: '引用',
-} as Record<string, string>)[type] || type
-const guidanceCopy = (item: KnowledgeGraphGuidance) => ({
-  'add-first-knowledge-object': { title: '建立第一个知识对象', detail: '导入或新建文档后，网络会从这里开始。' },
-  'create-first-relation': { title: '建立第一条知识关系', detail: '使用双向链接、标签、画布或大纲连接现有内容。' },
-  'increase-relation-coverage': { title: `把关系覆盖提升到 ${item.targetValue}%`, detail: `当前 ${item.currentValue}%，优先连接孤立对象。` },
-  'connect-isolated-objects': { title: `处理 ${item.currentValue} 个孤立对象`, detail: '从图谱中为它们补充链接、标签或结构关系。' },
-  'diversify-relation-types': { title: '丰富关系语义', detail: `当前 ${item.currentValue} 类，建议达到 ${item.targetValue} 类以上。` },
-  'network-health-on-track': { title: '知识网络状态良好', detail: `关系覆盖 ${item.currentValue}%，继续从核心主题维护网络。` },
-} as Record<string, { title: string; detail: string }>)[item.code] || { title: '检查知识网络', detail: '打开图谱查看关系结构与孤立对象。' }
-const openGuidance = (item: KnowledgeGraphGuidance) => {
-  if (item.code === 'add-first-knowledge-object') {
-    router.push({ name: 'LibraryMode' })
-    return
-  }
-  const focus = ({
-    'create-first-relation': 'relations',
-    'increase-relation-coverage': 'orphans',
-    'connect-isolated-objects': 'orphans',
-    'diversify-relation-types': 'diversity',
-    'network-health-on-track': 'overview',
-  } as Record<string, string>)[item.code] || 'overview'
-  router.push({ name: 'Graph', query: { focus } })
-}
-const openKnowledgeObservation = () => router.push({ name: 'Settings', query: { focus: 'knowledge-observation' } })
-
-const loadRelationSummaries = async () => {
+const loadRelationSummaries = async (libraryRoot = store.libraryPath, generation = loadGeneration) => {
   const paths = [...new Set([...starredItems.value, ...recentItems.value].map(item => item.path))].slice(0, 100)
-  if (!store.libraryPath || !paths.length) {
+  if (!libraryRoot || !paths.length) {
     relationSummaries.value = {}
     return
   }
   try {
     const summaries = await invoke<GraphRelationSummary[]>('summarize_graph_relations', {
-      libraryRoot: store.libraryPath,
+      libraryRoot,
       paths,
     })
-    relationSummaries.value = Object.fromEntries(summaries.map(summary => [summary.path, summary]))
+    if (generation === loadGeneration && store.libraryPath === libraryRoot) relationSummaries.value = Object.fromEntries(summaries.map(summary => [summary.path, summary]))
   } catch {
     relationSummaries.value = {}
   }
@@ -382,34 +299,50 @@ const openAnnotation = (issue: WorkspaceAnnotationIssue) => openManagedFile(
   { page: String(issue.page), annotation: issue.annotationId },
 )
 
+const loadSecondaryAnalysis = async (libraryRoot: string, generation = loadGeneration) => {
+  if (!libraryRoot) return
+  analysisLoading.value = true
+  workspaceHealthError.value = ''
+  const [healthResult, workspaceHealthResult] = await Promise.allSettled([
+    invoke<WorkspaceGraphHealth>('analyze_graph_health', { libraryRoot }),
+    invoke<WorkspaceHealthReport>('analyze_workspace_health', { libraryRoot }),
+  ])
+  if (generation !== loadGeneration || store.libraryPath !== libraryRoot) return
+  if (healthResult.status === 'fulfilled') health.value = healthResult.value
+  if (workspaceHealthResult.status === 'fulfilled') workspaceHealth.value = workspaceHealthResult.value
+  const failures = [
+    healthResult.status === 'rejected' ? `关系检查失败：${String(healthResult.reason)}` : '',
+    workspaceHealthResult.status === 'rejected' ? `资料检查失败：${String(workspaceHealthResult.reason)}` : '',
+  ].filter(Boolean)
+  workspaceHealthError.value = failures.join('；')
+  analysisLoading.value = false
+  void loadRelationSummaries(libraryRoot, generation)
+}
+
 const loadWorkspace = async () => {
   if (!store.libraryPath || loading.value) return
+  const libraryRoot = store.libraryPath
+  const generation = ++loadGeneration
   loading.value = true
+  analysisLoading.value = true
   error.value = ''
   workspaceHealthError.value = ''
-  const [overviewResult, healthResult, indexResult, workspaceHealthResult, graphPulseResult] = await Promise.allSettled([
-    invoke<WorkspaceOverview>('get_workspace_overview', { libraryRoot: store.libraryPath }),
-    invoke<GraphHealth>('analyze_graph_health', { libraryRoot: store.libraryPath }),
-    invoke<IndexStatus>('get_knowledge_index_status', { libraryRoot: store.libraryPath }),
-    invoke<WorkspaceHealthReport>('analyze_workspace_health', { libraryRoot: store.libraryPath }),
-    invoke<KnowledgeGraphPulse>('get_knowledge_graph_pulse', { libraryRoot: store.libraryPath }),
+  const [overviewResult, indexResult] = await Promise.allSettled([
+    invoke<WorkspaceOverview>('get_workspace_overview', { libraryRoot }),
+    invoke<WorkspaceIndexStatus>('get_knowledge_index_status', { libraryRoot }),
   ])
+  if (generation !== loadGeneration || store.libraryPath !== libraryRoot) return
   if (overviewResult.status === 'fulfilled') overview.value = overviewResult.value
   else error.value = `工作台概览不可用：${String(overviewResult.reason)}`
-  if (healthResult.status === 'fulfilled') health.value = healthResult.value
   if (indexResult.status === 'fulfilled') {
     indexStatus.value = indexResult.value
     if (indexResult.value.state === 'missing' || indexResult.value.state === 'stale') {
-      void prepareWorkspaceSearch(store.libraryPath)
+      void prepareWorkspaceSearch(libraryRoot)
     }
   }
-  if (workspaceHealthResult.status === 'fulfilled') workspaceHealth.value = workspaceHealthResult.value
-  else workspaceHealthError.value = `治理扫描不可用：${String(workspaceHealthResult.reason)}`
-  if (graphPulseResult.status === 'fulfilled') graphPulse.value = graphPulseResult.value
-  else graphPulse.value = { objectCount: 0, relationCount: 0, connectedObjectCount: 0, isolatedObjectCount: 0, coveragePercent: 0, relationTypes: [], topNodes: [], isolatedNodes: [], guidance: [] }
-  await loadRelationSummaries()
   refreshedAt.value = Date.now()
   loading.value = false
+  void loadSecondaryAnalysis(libraryRoot, generation)
 }
 
 const prepareWorkspaceSearch = async (libraryRoot: string) => {
@@ -417,7 +350,7 @@ const prepareWorkspaceSearch = async (libraryRoot: string) => {
   indexAutoPreparing.value = true
   indexStatus.value = { ...indexStatus.value, state: 'building' }
   try {
-    const status = await invoke<IndexStatus>('rebuild_knowledge_index', { libraryRoot })
+    const status = await invoke<WorkspaceIndexStatus>('rebuild_knowledge_index', { libraryRoot })
     if (store.libraryPath === libraryRoot) indexStatus.value = status
   } catch {
     if (store.libraryPath === libraryRoot) indexStatus.value = { ...indexStatus.value, state: 'error' }

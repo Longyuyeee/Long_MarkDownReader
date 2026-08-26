@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "stage": "G15D",
-  "appVersion": "1.0.3",
+  "appVersion": "1.0.15",
   "releaseCandidate": false,
   "status": "hosted-installed-observation-entry-passed-real-user-execution-next",
   "scope": "knowledge-guidance-to-consented-outcome-workflow-discoverability",
   "entries": {
-    "workspaceHome": "settings-knowledge-observation-focus",
+    "workspaceHome": "removed-to-avoid-duplicate-governance",
     "graphRemediation": "settings-knowledge-observation-focus"
   },
   "destination": {
@@ -30,7 +30,7 @@
     "installed-knowledge-observation-entry-evidence.json"
   ],
   "qualityGate": {
-    "workspaceEntryImplemented": true,
+    "workspaceEntryImplemented": false,
     "graphFollowUpEntryImplemented": true,
     "settingsFocusImplemented": true,
     "frontendProductionBuildComplete": true,

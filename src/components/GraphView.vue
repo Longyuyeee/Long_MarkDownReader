@@ -112,6 +112,8 @@
       @close="healthOpen = false"
       @open-file="openPath"
       @repaired="handleHealthRepaired"
+      @focus-node="focusHealthNode"
+      @focus-guidance="focusHealthGuidance"
     />
 
     <transition name="hint-fade">
@@ -877,6 +879,18 @@ const centerOnNode = (node: GraphNode) => {
 const selectAndCenter = (node: GraphNode) => {
   selectOnly(node)
   centerOnNode(node)
+}
+const focusHealthNode = (nodeId: string) => {
+  const node = graphData.value.nodes.find(candidate => candidate.id === nodeId)
+  if (node) selectAndCenter(node)
+}
+const focusHealthGuidance = (focus: string) => {
+  if (focus === 'library') {
+    router.push({ name: 'LibraryMode' })
+    return
+  }
+  const query = { ...route.query, focus }
+  router.replace({ name: 'Graph', query })
 }
 
 const focusFirstMatch = () => {

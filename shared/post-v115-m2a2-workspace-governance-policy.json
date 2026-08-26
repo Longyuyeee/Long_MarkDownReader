@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "stage": "M2A2",
+  "appVersion": "1.0.15",
+  "releaseCandidate": false,
+  "fixture": "fixtures/post-v115-m0/workspace",
+  "expected": {
+    "primaryReadyBeforeAnalysis": true,
+    "singleAttentionQueue": true,
+    "brokenLinkCount": 1,
+    "ambiguousLinkCount": 1,
+    "duplicateGroupCount": 1,
+    "unreferencedAnnotationCount": 1,
+    "workspacePulseCount": 0,
+    "graphPulseCount": 1,
+    "runtimeErrors": 0,
+    "sourceChanges": 0
+  },
+  "nextStage": "M2A3-workspace-navigation-consolidation"
+}

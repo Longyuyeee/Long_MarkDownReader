@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [graphCommand, tauriLib, badge, contextPanel, contextCache, app, workspace, library, graphView] = await Promise.all([
+const [graphCommand, tauriLib, badge, contextPanel, contextCache, app, workspace, library, graphView, graphHealthPanel] = await Promise.all([
   read('src-tauri/src/commands/graph.rs'),
   read('src-tauri/src/lib.rs'),
   read('src/components/RelationSummaryBadge.vue'),
@@ -12,6 +12,7 @@ const [graphCommand, tauriLib, badge, contextPanel, contextCache, app, workspace
   read('src/views/WorkspaceHome.vue'),
   read('src/views/LibraryMode.vue'),
   read('src/components/GraphView.vue'),
+  read('src/components/GraphHealthPanel.vue'),
 ])
 
 const failures = []
@@ -37,10 +38,11 @@ requireText(badge, '孤立风险', 'G8 summary UI must make isolation visible')
 requireText(badge, "emit('open')", 'G8 summary UI must provide graph navigation')
 requireText(workspace, "'summarize_graph_relations'", 'default workspace must load relation summaries')
 requireText(workspace, '<RelationSummaryBadge', 'recent and starred workspace files must show relation summaries')
-requireText(workspace, '知识网络脉搏', 'default workspace must make the graph pulse visible')
-requireText(workspace, "'get_knowledge_graph_pulse'", 'default workspace must load the graph pulse')
-requireText(workspace, 'graphPulse.coveragePercent', 'default workspace must show graph coverage')
-requireText(workspace, "query: { root: nodeId }", 'top connected topics must open a centered graph')
+requireText(graphHealthPanel, '知识网络脉搏', 'graph governance must make the graph pulse visible')
+requireText(graphHealthPanel, "'get_knowledge_graph_pulse'", 'graph governance must load the graph pulse')
+requireText(graphHealthPanel, 'pulse.coveragePercent', 'graph governance must show graph coverage')
+requireText(graphHealthPanel, "emit('focusNode', node.id)", 'top connected topics must focus a graph node')
+if (workspace.includes('data-testid="knowledge-network-pulse"') || workspace.includes("'get_knowledge_graph_pulse'")) failures.push('Workspace Home must not duplicate graph pulse analysis')
 requireText(workspace, 'pathIdentity', 'workspace relation summaries must deduplicate equivalent Windows paths')
 requireText(library, "'summarize_graph_relations'", 'library context must load relation summaries')
 requireText(library, 'relationSummary(result.path)', 'knowledge search results must expose relation summaries')

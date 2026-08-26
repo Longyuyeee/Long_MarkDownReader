@@ -1,14 +1,15 @@
 {
   "schemaVersion": 1,
   "stage": "G16",
-  "appVersion": "1.0.3",
+  "appVersion": "1.0.15",
   "releaseCandidate": false,
   "status": "knowledge-isolation-action-queue-source-validated-installed-acceptance-next",
   "scope": "workspace-visible-bounded-isolated-object-remediation-queue",
   "productBoundary": {
     "boundedItemCount": 6,
     "deterministicOrdering": true,
-    "workspaceHomeVisible": true,
+    "workspaceHomeVisible": false,
+    "graphHealthPanelVisible": true,
     "centeredGraphNavigation": true,
     "sameWindowNavigation": true,
     "automaticRelationCreationAllowed": false,

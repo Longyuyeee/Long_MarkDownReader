@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "G9",
-  "appVersion": "1.0.3",
+  "appVersion": "1.0.15",
   "releaseCandidate": false,
   "status": "knowledge-network-pulse-implemented-real-library-acceptance-next",
   "scope": "workspace-visible-knowledge-graph-coverage-and-navigation",
@@ -15,7 +15,8 @@
     "top-connected-topics"
   ],
   "productIntegration": {
-    "workspaceHomeVisible": true,
+    "workspaceHomeVisible": false,
+    "graphHealthPanelVisible": true,
     "centeredGraphNavigation": true,
     "emptyStateGuidance": true,
     "boundedTopTopicCount": 6,

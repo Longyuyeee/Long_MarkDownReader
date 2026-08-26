@@ -15,6 +15,15 @@
         <button @click="loadReport">重新扫描</button>
       </div>
       <template v-else-if="report">
+        <section v-if="pulse" class="network-pulse" aria-label="知识网络脉搏" data-testid="knowledge-network-pulse" :data-object-count="pulse.objectCount" :data-relation-count="pulse.relationCount" :data-connected-count="pulse.connectedObjectCount" :data-isolated-count="pulse.isolatedObjectCount">
+          <div class="pulse-heading"><span>关系覆盖</span><strong>{{ pulse.coveragePercent }}%</strong><small>{{ pulse.connectedObjectCount }} 已连接 · {{ pulse.isolatedObjectCount }} 孤立</small></div>
+          <div class="pulse-track" role="progressbar" aria-label="知识对象关系覆盖率" data-testid="knowledge-network-coverage" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="pulse.coveragePercent"><i :style="{ width: `${pulse.coveragePercent}%` }"></i></div>
+          <div v-if="pulse.relationTypes.length" class="pulse-types"><span v-for="item in pulse.relationTypes.slice(0, 5)" :key="item.relationType" :data-relation-type="item.relationType">{{ relationTypeLabel(item.relationType) }} <b>{{ item.count }}</b></span></div>
+          <div v-if="pulse.topNodes.length" class="pulse-nodes"><button v-for="node in pulse.topNodes" :key="node.id" data-testid="knowledge-network-topic" :data-node-id="node.id" @click="emit('focusNode', node.id)"><span>{{ node.title }}</span><b>{{ node.relationCount }}</b></button></div>
+          <button v-if="pulse.guidance.length" class="pulse-guidance" data-testid="knowledge-network-guidance" :data-guidance-code="pulse.guidance[0].code" @click="applyGuidance(pulse.guidance[0])"><span><b>{{ guidanceCopy(pulse.guidance[0]).title }}</b><small>{{ guidanceCopy(pulse.guidance[0]).detail }}</small></span><ArrowIcon /></button>
+          <div v-if="pulse.isolatedNodes.length" class="pulse-isolation" data-testid="knowledge-isolation-queue"><span>优先连接</span><button v-for="node in pulse.isolatedNodes" :key="node.id" data-testid="knowledge-isolation-item" :data-node-id="node.id" @click="emit('focusNode', node.id)"><span>{{ node.title }}</span><small>{{ node.objectType }}</small></button></div>
+        </section>
+
         <div class="health-summary">
           <button :class="{ active: activeSection === 'broken' }" @click="activeSection = 'broken'">
             <strong>{{ report.brokenLinks.length }}</strong><span>断链</span>
@@ -93,6 +102,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { ArrowRight as ArrowIcon } from 'lucide-vue-next'
 
 interface Candidate {
   title: string
@@ -123,24 +133,43 @@ interface HealthReport {
 }
 interface RepairRequest { sourcePath: string; targetPath: string; line: number; expectedSyntax: string }
 interface RepairResult { repairedLinks: number; changedFiles: number }
+interface PulseNode { id: string; title: string; objectType: string; relationCount: number }
+interface PulseGuidance { code: string; priority: 'high' | 'medium' | 'healthy'; currentValue: number; targetValue: number }
+interface KnowledgeGraphPulse { objectCount: number; relationCount: number; connectedObjectCount: number; isolatedObjectCount: number; coveragePercent: number; relationTypes: { relationType: string; count: number }[]; topNodes: PulseNode[]; isolatedNodes: PulseNode[]; guidance: PulseGuidance[] }
 
 const props = defineProps<{ open: boolean; libraryRoot: string }>()
-const emit = defineEmits<{ close: []; openFile: [path: string]; repaired: [] }>()
+const emit = defineEmits<{ close: []; openFile: [path: string]; repaired: []; focusNode: [nodeId: string]; focusGuidance: [focus: string] }>()
 const loading = ref(false)
 const repairing = ref(false)
 const error = ref('')
 const statusMessage = ref('')
 const report = ref<HealthReport | null>(null)
+const pulse = ref<KnowledgeGraphPulse | null>(null)
 const activeSection = ref<'broken' | 'ambiguous' | 'orphan'>('broken')
 
 const recommendedRepairs = computed(() => report.value?.brokenLinks.filter(issue => issue.recommendedCandidate) || [])
+const relationTypeLabel = (type: string) => ({ 'links-to': '链接', related: '相关', contains: '包含', annotates: '批注', 'shares-tag': '同标签', references: '引用' } as Record<string, string>)[type] || type
+const guidanceCopy = (item: PulseGuidance) => ({
+  'add-first-knowledge-object': { title: '建立第一个知识对象', detail: '导入或新建文档后，网络会从这里开始。' },
+  'create-first-relation': { title: '建立第一条知识关系', detail: '使用双向链接、标签、画布或大纲连接现有内容。' },
+  'increase-relation-coverage': { title: `把关系覆盖提升到 ${item.targetValue}%`, detail: `当前 ${item.currentValue}%，优先连接孤立对象。` },
+  'connect-isolated-objects': { title: `处理 ${item.currentValue} 个孤立对象`, detail: '从图谱中为它们补充链接、标签或结构关系。' },
+  'diversify-relation-types': { title: '丰富关系语义', detail: `当前 ${item.currentValue} 类，建议达到 ${item.targetValue} 类以上。` },
+  'network-health-on-track': { title: '知识网络状态良好', detail: `关系覆盖 ${item.currentValue}%，继续从核心主题维护网络。` },
+} as Record<string, { title: string; detail: string }>)[item.code] || { title: '检查知识网络', detail: '查看关系结构与孤立对象。' }
+const applyGuidance = (item: PulseGuidance) => emit('focusGuidance', ({ 'add-first-knowledge-object': 'library', 'create-first-relation': 'relations', 'increase-relation-coverage': 'orphans', 'connect-isolated-objects': 'orphans', 'diversify-relation-types': 'diversity', 'network-health-on-track': 'overview' } as Record<string, string>)[item.code] || 'overview')
 
 const loadReport = async () => {
   if (!props.libraryRoot) return
   loading.value = true
   error.value = ''
   try {
-    report.value = await invoke<HealthReport>('analyze_graph_health', { libraryRoot: props.libraryRoot })
+    const [healthReport, networkPulse] = await Promise.all([
+      invoke<HealthReport>('analyze_graph_health', { libraryRoot: props.libraryRoot }),
+      invoke<KnowledgeGraphPulse>('get_knowledge_graph_pulse', { libraryRoot: props.libraryRoot }),
+    ])
+    report.value = healthReport
+    pulse.value = networkPulse
   } catch (cause) {
     error.value = `治理扫描失败：${String(cause)}`
   } finally {
@@ -175,7 +204,7 @@ const applyRepair = (issue: LinkIssue, candidate: Candidate) => runRepairs([requ
 const applyRecommendedRepairs = () => runRepairs(recommendedRepairs.value.map(issue => requestFor(issue, issue.recommendedCandidate!)))
 
 watch(() => props.open, value => { if (value) loadReport() })
-watch(() => props.libraryRoot, () => { report.value = null; if (props.open) loadReport() })
+watch(() => props.libraryRoot, () => { report.value = null; pulse.value = null; if (props.open) loadReport() })
 </script>
 
 <style scoped>
@@ -188,6 +217,7 @@ h2 { margin: 4px 0 0; font-size: 19px; }
 .health-spinner { width: 22px; height: 22px; border: 2px solid rgba(var(--theme-primary-rgb), 0.16); border-top-color: var(--theme-primary); border-radius: 50%; animation: health-spin 0.8s linear infinite; }
 .error-state { color: #c94843; }
 .error-state button, .health-toolbar button { border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: var(--text-compact); }
+.network-pulse { display: grid; gap: 8px; margin-bottom: 14px; padding: 12px; border: 1px solid rgba(var(--theme-primary-rgb),.16); border-radius: 7px; background: rgba(var(--theme-primary-rgb),.035); }.pulse-heading { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: baseline; gap: 3px 8px; }.pulse-heading span,.pulse-heading small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.pulse-heading small { grid-column: 1 / -1; }.pulse-heading strong { color: var(--theme-primary); font-size: 17px; }.pulse-track { height: 5px; overflow: hidden; border-radius: 999px; background: rgba(var(--theme-primary-rgb),.1); }.pulse-track i { display: block; height: 100%; border-radius: inherit; background: var(--theme-primary); }.pulse-types,.pulse-nodes { display: flex; flex-wrap: wrap; gap: 4px; }.pulse-types span { padding: 3px 5px; border-radius: 4px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: var(--text-compact); }.pulse-types b { color: var(--theme-text); }.pulse-nodes button { max-width: 145px; display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: 1px solid rgba(var(--theme-primary-rgb),.18); border-radius: 5px; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: var(--text-compact); }.pulse-nodes button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.pulse-nodes button b { color: var(--theme-text-secondary); }.pulse-guidance { min-height: 42px; display: grid; grid-template-columns: minmax(0,1fr) 14px; align-items:center; gap:7px; padding:7px 8px; border:1px solid rgba(var(--theme-primary-rgb),.18); border-radius:5px; color:var(--theme-text); background:var(--theme-surface); cursor:pointer; text-align:left; }.pulse-guidance>span { min-width:0; display:grid; gap:2px; }.pulse-guidance b,.pulse-guidance small { font-size:var(--text-compact); }.pulse-guidance small { overflow:hidden; color:var(--theme-text-secondary); text-overflow:ellipsis; white-space:nowrap; }.pulse-guidance svg { width:12px; color:var(--theme-primary); }.pulse-isolation { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }.pulse-isolation>span { grid-column:1/-1; color:var(--status-warning); font-size:var(--text-compact); font-weight:750; }.pulse-isolation button { min-width:0; display:grid; gap:2px; padding:5px 6px; border:1px solid var(--status-warning-border); border-radius:5px; color:var(--theme-text); background:var(--status-warning-bg); cursor:pointer; text-align:left; }.pulse-isolation button span,.pulse-isolation button small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-compact); }.pulse-isolation button small { color:var(--theme-text-secondary); }
 .health-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
 .health-summary button { display: flex; flex-direction: column; gap: 3px; padding: 11px 6px; border: 1px solid transparent; border-radius: 10px; color: var(--theme-text-secondary); background: rgba(var(--theme-primary-rgb), 0.05); cursor: pointer; }
 .health-summary button.active { border-color: rgba(var(--theme-primary-rgb), 0.32); color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.09); }
