@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1B1B",
+  "expected": {
+    "operationRange": "1..64",
+    "deterministicReplay": true,
+    "duplicateTargetRejected": true,
+    "singleReliableWrite": true,
+    "threeProducerCombinedTransaction": true
+  },
+  "beforeActual": { "multiOperationTransaction": false },
+  "afterActual": {
+    "multiOperationTransactionBackend": true,
+    "frontendUnifiedDrafts": false,
+    "publicCapabilityUpdated": false
+  },
+  "nextStage": "M1B1C"
+}

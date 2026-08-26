@@ -219,6 +219,24 @@ pub struct PptxSavedSourceReport {
     pub external_producer_reopen_required: bool,
 }
 
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxTransactionReport {
+    pub status: String,
+    pub engine: String,
+    pub operation_count: usize,
+    pub operation_kinds: Vec<String>,
+    pub output_digest: String,
+    pub output_bytes: usize,
+    pub changed_parts: Vec<String>,
+    pub unchanged_parts_verified: bool,
+    pub structural_reopen_verified: bool,
+    pub semantic_reopen_verified: bool,
+    pub deterministic_replay_verified: bool,
+    pub source_unchanged: bool,
+    pub writes_user_file: bool,
+}
+
 struct BuiltPptxOperation {
     engine: String,
     operation_kind: String,
@@ -227,6 +245,12 @@ struct BuiltPptxOperation {
     unchanged_parts_verified: bool,
     structural_reparse_verified: bool,
     semantic_reparse_verified: bool,
+    output: Vec<u8>,
+}
+
+#[derive(Debug)]
+struct BuiltPptxTransaction {
+    report: PptxTransactionReport,
     output: Vec<u8>,
 }
 
@@ -846,6 +870,89 @@ fn build_pptx_operation(
     }
 }
 
+fn pptx_operation_conflict_key(operation: &PptxPatchOperation) -> String {
+    match operation {
+        PptxPatchOperation::Text { target_id, .. }
+        | PptxPatchOperation::Style { target_id, .. }
+        | PptxPatchOperation::ImageAltText { target_id, .. }
+        | PptxPatchOperation::ImageBinary { target_id, .. }
+        | PptxPatchOperation::ShapeDelete { target_id, .. }
+        | PptxPatchOperation::SlideAdd { target_id, .. }
+        | PptxPatchOperation::SlideCopy { target_id, .. }
+        | PptxPatchOperation::SlideDelete { target_id, .. } => target_id.clone(),
+        PptxPatchOperation::ShapeAdd {
+            slide_target_id, ..
+        } => format!("shape-add:{slide_target_id}"),
+        PptxPatchOperation::SlideReorder { .. } => "presentation:slide-order".into(),
+    }
+}
+
+fn build_pptx_transaction(
+    source: &[u8],
+    operations: &[PptxPatchOperation],
+) -> Result<BuiltPptxTransaction, String> {
+    if operations.is_empty() {
+        return Err("PPTX 事务至少需要一个操作".into());
+    }
+    if operations.len() > 64 {
+        return Err("PPTX 事务最多接受 64 个操作".into());
+    }
+    let mut targets = HashSet::new();
+    for operation in operations {
+        let key = pptx_operation_conflict_key(operation);
+        if !targets.insert(key.clone()) {
+            return Err(format!("PPTX 事务包含重复目标，已阻止冲突操作: {key}"));
+        }
+    }
+
+    let mut output = source.to_vec();
+    let mut changed_parts = Vec::new();
+    let mut operation_kinds = Vec::with_capacity(operations.len());
+    for operation in operations {
+        let built = build_pptx_operation(&output, operation)?;
+        if !built.unchanged_parts_verified
+            || !built.structural_reparse_verified
+            || !built.semantic_reparse_verified
+        {
+            return Err("PPTX 事务中的操作未通过部件保真与语义复读".into());
+        }
+        changed_parts.extend(built.changed_parts);
+        operation_kinds.push(built.operation_kind);
+        output = built.output;
+    }
+    changed_parts.sort();
+    changed_parts.dedup();
+    parse_pptx(&output).map_err(|error| format!("PPTX 事务输出结构复读失败: {error}"))?;
+    let output_digest = format!("{:x}", Sha256::digest(&output));
+
+    let mut replay = source.to_vec();
+    for operation in operations {
+        replay = build_pptx_operation(&replay, operation)?.output;
+    }
+    if replay != output {
+        return Err("PPTX 事务确定性重放结果不一致".into());
+    }
+
+    Ok(BuiltPptxTransaction {
+        report: PptxTransactionReport {
+            status: "transaction_verified".into(),
+            engine: "pptx-bounded-transaction-v1".into(),
+            operation_count: operations.len(),
+            operation_kinds,
+            output_digest,
+            output_bytes: output.len(),
+            changed_parts,
+            unchanged_parts_verified: true,
+            structural_reopen_verified: true,
+            semantic_reopen_verified: true,
+            deterministic_replay_verified: true,
+            source_unchanged: true,
+            writes_user_file: false,
+        },
+        output,
+    })
+}
+
 fn validate_pptx_copy_file_name(file_name: &str) -> Result<String, String> {
     let file_name = file_name.trim();
     if file_name.is_empty() || file_name.len() > 255 {
@@ -1095,6 +1202,128 @@ fn save_pptx_patch_source_to_path(
         digest,
         output_bytes: built.output.len(),
         changed_parts: built.changed_parts,
+        unchanged_parts_verified: true,
+        structural_reopen_verified: true,
+        semantic_reopen_verified: true,
+        rollback_protected: true,
+        producer_matrix_baseline: vec![
+            "microsoft-powerpoint-16".into(),
+            "wps-presentation".into(),
+            "libreoffice-impress".into(),
+        ],
+        external_producer_reopen_required: true,
+    })
+}
+
+fn preview_pptx_transaction_path(
+    source_path: &Path,
+    expected_signature: &str,
+    operations: &[PptxPatchOperation],
+) -> Result<PptxTransactionReport, String> {
+    let metadata = source_path
+        .metadata()
+        .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_PPTX_FILE_BYTES {
+        return Err("PPTX 文件超过 96 MiB 事务预览上限".into());
+    }
+    let signature = file_signature(&metadata);
+    if signature != expected_signature {
+        return Err("PPTX 已被外部修改，请重新打开后再验证事务".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 PPTX 失败: {error}"))?;
+    let mut built = build_pptx_transaction(&source, operations)?;
+    let source_after =
+        fs::read(source_path).map_err(|error| format!("复核源 PPTX 失败: {error}"))?;
+    let metadata_after = source_path
+        .metadata()
+        .map_err(|error| format!("复核源 PPTX 元数据失败: {error}"))?;
+    if source_after != source || file_signature(&metadata_after) != signature {
+        return Err("PPTX 在事务验证期间发生变化".into());
+    }
+    built.report.source_unchanged = true;
+    Ok(built.report)
+}
+
+fn save_pptx_transaction_source_to_path(
+    source_path: &Path,
+    expected_signature: &str,
+    expected_output_digest: &str,
+    operations: &[PptxPatchOperation],
+) -> Result<PptxSavedSourceReport, String> {
+    recover_interrupted_write(source_path)?;
+    let metadata = source_path
+        .metadata()
+        .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_PPTX_FILE_BYTES {
+        return Err("PPTX 文件超过 96 MiB 事务保存上限".into());
+    }
+    let source_signature = file_signature(&metadata);
+    if source_signature != expected_signature {
+        return Err("PPTX 已被外部修改，请重新打开后再保存事务".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 PPTX 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let built = build_pptx_transaction(&source, operations)?;
+    if built.report.output_digest != expected_output_digest.trim().to_ascii_lowercase() {
+        return Err("PPTX 事务内容或隔离输出已变化，请重新验证后再保存".into());
+    }
+
+    let source_before_write =
+        fs::read(source_path).map_err(|error| format!("事务保存前复核源 PPTX 失败: {error}"))?;
+    let metadata_before_write = source_path
+        .metadata()
+        .map_err(|error| format!("事务保存前复核源 PPTX 元数据失败: {error}"))?;
+    if source_before_write != source
+        || file_signature(&metadata_before_write) != source_signature
+        || format!("{:x}", Sha256::digest(&source_before_write)) != source_digest
+    {
+        return Err("PPTX 在事务验证期间发生变化，请重新打开后再保存".into());
+    }
+
+    write_bytes(source_path, &built.output)?;
+    let verification = (|| -> Result<(String, String), String> {
+        let saved = fs::read(source_path)
+            .map_err(|error| format!("事务已写入但无法复读保存字节: {error}"))?;
+        let digest = format!("{:x}", Sha256::digest(&saved));
+        if saved != built.output || digest != built.report.output_digest {
+            return Err("PPTX 事务落盘字节与隔离输出不一致".into());
+        }
+        parse_pptx(&saved).map_err(|error| format!("PPTX 事务保存后结构复读失败: {error}"))?;
+        let replay = build_pptx_transaction(&source, operations)?;
+        if replay.output != saved || !replay.report.deterministic_replay_verified {
+            return Err("PPTX 事务保存后的确定性重放不一致".into());
+        }
+        let saved_metadata = source_path
+            .metadata()
+            .map_err(|error| format!("读取事务保存后 PPTX 元数据失败: {error}"))?;
+        Ok((digest, file_signature(&saved_metadata)))
+    })();
+    let (digest, signature) = match verification {
+        Ok(value) => value,
+        Err(error) => {
+            write_bytes(source_path, &source).map_err(|rollback_error| {
+                format!("事务复读失败且原文件恢复失败: {error}; {rollback_error}")
+            })?;
+            let restored = fs::read(source_path).map_err(|rollback_error| {
+                format!("事务复读失败且无法确认原文件恢复: {error}; {rollback_error}")
+            })?;
+            if restored != source {
+                return Err(format!("事务复读失败且原文件恢复内容不一致: {error}"));
+            }
+            return Err(format!("PPTX 事务保存验证失败，已恢复原文件: {error}"));
+        }
+    };
+
+    Ok(PptxSavedSourceReport {
+        status: "transaction_source_saved_verified".into(),
+        engine: built.report.engine,
+        save_mode: "source_transaction".into(),
+        operation_kind: format!("transaction:{}", built.report.operation_count),
+        path: source_path.to_string_lossy().into_owned(),
+        signature,
+        digest,
+        output_bytes: built.output.len(),
+        changed_parts: built.report.changed_parts,
         unchanged_parts_verified: true,
         structural_reopen_verified: true,
         semantic_reopen_verified: true,
@@ -1398,6 +1627,44 @@ pub async fn save_pptx_patch_source(
     })
     .await
     .map_err(|error| format!("PPTX M1B1A 可靠原文件保存任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_pptx_patch_transaction(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    operations: Vec<PptxPatchOperation>,
+) -> Result<PptxTransactionReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pptx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_pptx_transaction_path(&source_path, &expected_signature, &operations)
+    })
+    .await
+    .map_err(|error| format!("PPTX M1B1B 事务预览任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn save_pptx_patch_source_transaction(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    expected_output_digest: String,
+    operations: Vec<PptxPatchOperation>,
+) -> Result<PptxSavedSourceReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pptx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_pptx_transaction_source_to_path(
+            &source_path,
+            &expected_signature,
+            &expected_output_digest,
+            &operations,
+        )
+    })
+    .await
+    .map_err(|error| format!("PPTX M1B1B 事务保存任务失败: {error}"))?
 }
 
 #[cfg(test)]
@@ -1725,6 +1992,117 @@ mod tests {
                 "{producer}: {stale_error}"
             );
             assert_eq!(fs::read(&source_path).unwrap(), accepted, "{producer}");
+        }
+
+        assert!(fs::read_dir(&root).unwrap().all(|entry| {
+            let name = entry.unwrap().file_name().to_string_lossy().into_owned();
+            !name.contains(".longedit-tmp") && !name.contains(".longedit-bak")
+        }));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn m1b1b_saves_deterministic_text_and_slide_transactions_for_real_producers() {
+        let fixtures: [(&str, &[u8]); 3] = [
+            (
+                "powerpoint",
+                include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx"),
+            ),
+            (
+                "wps",
+                include_bytes!("../../../fixtures/pptx/producers/wps-presentation.pptx"),
+            ),
+            (
+                "libreoffice",
+                include_bytes!("../../../fixtures/pptx/producers/libreoffice-impress.pptx"),
+            ),
+        ];
+        let root = std::env::temp_dir().join(format!(
+            "longedit-pptx-m1b1b-producers-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+
+        for (producer, original) in fixtures {
+            let source_path = root.join(format!("{producer}-transaction.pptx"));
+            fs::write(&source_path, original).unwrap();
+            let signature = file_signature(&source_path.metadata().unwrap());
+            let (baseline, _) = build_pptx_edit_baseline(original, signature.clone()).unwrap();
+            let text = baseline.editable_text_targets.first().unwrap();
+            assert!(baseline.editable_slide_targets.len() >= 2, "{producer}");
+            let mut ordered_target_ids = baseline
+                .editable_slide_targets
+                .iter()
+                .map(|target| target.id.clone())
+                .collect::<Vec<_>>();
+            ordered_target_ids.reverse();
+            let replacement = format!("LongEdit M1B1B {producer} transaction");
+            let operations = vec![
+                PptxPatchOperation::Text {
+                    target_id: text.id.clone(),
+                    expected_text_digest: text.expected_text_digest.clone(),
+                    expected_part_digest: text.expected_part_digest.clone(),
+                    replacement_text: replacement.clone(),
+                },
+                PptxPatchOperation::SlideReorder {
+                    ordered_target_ids,
+                    expected_presentation_digest: baseline.editable_slide_targets[0]
+                        .expected_presentation_digest
+                        .clone(),
+                },
+            ];
+
+            let preview = build_pptx_transaction(original, &operations)
+                .unwrap_or_else(|error| panic!("{producer} preview: {error}"));
+            assert_eq!(preview.report.operation_count, 2, "{producer}");
+            assert!(preview.report.deterministic_replay_verified, "{producer}");
+            assert!(preview.report.changed_parts.len() >= 2, "{producer}");
+            let path_preview =
+                preview_pptx_transaction_path(&source_path, &signature, &operations).unwrap();
+            assert_eq!(
+                path_preview.output_digest, preview.report.output_digest,
+                "{producer}"
+            );
+            assert_eq!(fs::read(&source_path).unwrap(), original, "{producer}");
+
+            let saved = save_pptx_transaction_source_to_path(
+                &source_path,
+                &signature,
+                &preview.report.output_digest,
+                &operations,
+            )
+            .unwrap_or_else(|error| panic!("{producer} save: {error}"));
+            assert_eq!(
+                saved.status, "transaction_source_saved_verified",
+                "{producer}"
+            );
+            assert_eq!(saved.save_mode, "source_transaction", "{producer}");
+            assert!(saved.rollback_protected, "{producer}");
+            let accepted = fs::read(&source_path).unwrap();
+            assert_eq!(accepted, preview.output, "{producer}");
+            assert!(parse_pptx(&accepted)
+                .unwrap()
+                .plain_text
+                .contains(&replacement));
+
+            let stale = save_pptx_transaction_source_to_path(
+                &source_path,
+                &signature,
+                &preview.report.output_digest,
+                &operations,
+            )
+            .unwrap_err();
+            assert!(stale.contains("外部修改"), "{producer}: {stale}");
+            assert_eq!(fs::read(&source_path).unwrap(), accepted, "{producer}");
+
+            let duplicate = vec![operations[0].clone(), operations[0].clone()];
+            assert!(build_pptx_transaction(original, &duplicate)
+                .unwrap_err()
+                .contains("重复目标"));
         }
 
         assert!(fs::read_dir(&root).unwrap().all(|entry| {

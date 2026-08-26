@@ -100,9 +100,10 @@ use commands::pptx::{
     audit_pptx_edit_baseline, preview_pptx_alt_text_patch_isolated_copy,
     preview_pptx_image_patch_isolated_copy, preview_pptx_shape_add_isolated_copy,
     preview_pptx_shape_delete_isolated_copy, preview_pptx_slide_lifecycle_isolated_copy,
-    preview_pptx_style_patch_isolated_copy, preview_pptx_text_patch_isolated_copy,
+    preview_pptx_patch_transaction, preview_pptx_style_patch_isolated_copy,
+    preview_pptx_text_patch_isolated_copy,
     read_external_pptx_presentation, read_pptx_presentation, save_pptx_patch_copy,
-    save_pptx_patch_source,
+    save_pptx_patch_source, save_pptx_patch_source_transaction,
 };
 use commands::search::{get_all_tags, search_all_libraries, search_by_tag, search_library};
 use commands::svg::{
@@ -436,8 +437,10 @@ pub fn run() {
             preview_pptx_shape_add_isolated_copy,
             preview_pptx_shape_delete_isolated_copy,
             preview_pptx_slide_lifecycle_isolated_copy,
+            preview_pptx_patch_transaction,
             save_pptx_patch_copy,
             save_pptx_patch_source,
+            save_pptx_patch_source_transaction,
             read_table_file,
             read_external_table_file,
             write_table_file,

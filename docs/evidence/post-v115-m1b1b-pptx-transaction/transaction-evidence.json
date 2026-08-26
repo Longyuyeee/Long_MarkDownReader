@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1B1B",
+  "sourceCommit": "fc3c17d27bd303f172a504b0a2309c48729fce36",
+  "expected": {
+    "textAndSlideTransaction": true,
+    "threeProducerReopen": true,
+    "deterministicReplay": true,
+    "staleSignatureRejected": true,
+    "duplicateTargetRejected": true
+  },
+  "beforeActual": {
+    "multiOperationTransaction": false
+  },
+  "afterActual": {
+    "multiOperationTransactionBackend": true,
+    "producerTestsPassed": 3,
+    "operationCountPerFixture": 2,
+    "sourceUnchangedBeforeSave": true,
+    "outputMatchesPreview": true,
+    "staleSignatureRejectedWithoutMutation": true,
+    "duplicateTargetRejected": true,
+    "sidecarsRemaining": 0,
+    "frontendUnifiedDrafts": false
+  },
+  "fixtureEvidence": [
+    {
+      "file": "fixtures/pptx/producers/microsoft-powerpoint-16.pptx",
+      "bytes": 51494,
+      "sha256": "858acb4e2d6841b4f0a8ea066d9a8cb3b08bc89ef69a6143216c3bcec39ae82f"
+    },
+    {
+      "file": "fixtures/pptx/producers/wps-presentation.pptx",
+      "bytes": 94574,
+      "sha256": "1bbb8343566166a351ff37054cfbb91ad61122930fb2e3f588e9658afda59f9a"
+    },
+    {
+      "file": "fixtures/pptx/producers/libreoffice-impress.pptx",
+      "bytes": 18288,
+      "sha256": "4ef5578bd9657eb7b1a04fa8c7ffb5eb7c2fc4046f49608ed7a0fff75d8c2140"
+    }
+  ],
+  "difference": {
+    "backendGapResolved": true,
+    "userFlowGapRemaining": true,
+    "nextStage": "M1B1C"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
