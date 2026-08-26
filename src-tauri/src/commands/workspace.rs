@@ -1,8 +1,12 @@
 use crate::formats::file_registry::file_format_for_path;
 use crate::formats::markdown::extract_pdf_reference_mentions;
+use crate::formats::text::{
+    encode_text_for_save, read_text_snapshot, verify_current_signature, TextSavePolicy,
+};
 use crate::services::pdf_index::load_pdf_index;
+use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
@@ -27,6 +31,27 @@ pub struct WorkspaceTask {
     relative_path: String,
     line: usize,
     text: String,
+    signature: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceTaskMutation {
+    path: String,
+    line: usize,
+    text: String,
+    completed: bool,
+    expected_signature: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceTaskMutationResult {
+    path: String,
+    line: usize,
+    text: String,
+    completed: bool,
+    signature: String,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -120,10 +145,10 @@ fn collect_tasks(root: &Path, path: &Path, title: &str, scan: &mut WorkspaceScan
     {
         return;
     }
-    let Ok(content) = fs::read_to_string(path) else {
+    let Ok(snapshot) = read_text_snapshot(path) else {
         return;
     };
-    for (line_index, line) in content.lines().enumerate() {
+    for (line_index, line) in snapshot.content.lines().enumerate() {
         let trimmed = line.trim_start();
         let task_text = trimmed
             .strip_prefix("- [ ]")
@@ -139,11 +164,114 @@ fn collect_tasks(root: &Path, path: &Path, title: &str, scan: &mut WorkspaceScan
             relative_path: relative_path(root, path),
             line: line_index + 1,
             text: text.chars().take(500).collect(),
+            signature: snapshot.signature.clone(),
         });
         if scan.tasks.len() >= MAX_TASKS {
             break;
         }
     }
+}
+
+fn mutate_workspace_task(
+    root: &Path,
+    mutation: WorkspaceTaskMutation,
+) -> Result<WorkspaceTaskMutationResult, String> {
+    if mutation.line == 0 || mutation.text.trim().is_empty() || mutation.text.chars().count() > 500
+    {
+        return Err("待办位置或内容无效".into());
+    }
+    if mutation.expected_signature.trim().is_empty() {
+        return Err("缺少待办源文件签名，请刷新工作台后重试".into());
+    }
+    let guard = WorkspaceGuard::new(root)?;
+    let path = guard.resolve_existing_file(&mutation.path, &["md", "markdown"])?;
+    recover_interrupted_write(&path)?;
+    let snapshot = read_text_snapshot(&path).map_err(|error| error.message)?;
+    if snapshot.read_only_reason.is_some() {
+        return Err("Markdown 文件为只读，无法更新待办".into());
+    }
+    verify_current_signature(&path, Some(&mutation.expected_signature))
+        .map_err(|error| error.message)?;
+
+    let mut parts: Vec<String> = snapshot
+        .content
+        .split_inclusive('\n')
+        .map(str::to_string)
+        .collect();
+    if parts.is_empty() && !snapshot.content.is_empty() {
+        parts.push(snapshot.content.clone());
+    }
+    let line = parts
+        .get_mut(mutation.line - 1)
+        .ok_or_else(|| "待办所在行已不存在，请刷新工作台后重试".to_string())?;
+    let trimmed = line.trim_start();
+    let marker = if mutation.completed {
+        if trimmed.starts_with("- [ ]") {
+            "- [ ]"
+        } else if trimmed.starts_with("* [ ]") {
+            "* [ ]"
+        } else {
+            return Err("待办状态已变化，请刷新工作台后重试".into());
+        }
+    } else if trimmed.starts_with("- [x]") || trimmed.starts_with("- [X]") {
+        if trimmed.starts_with("- [x]") {
+            "- [x]"
+        } else {
+            "- [X]"
+        }
+    } else if trimmed.starts_with("* [x]") || trimmed.starts_with("* [X]") {
+        if trimmed.starts_with("* [x]") {
+            "* [x]"
+        } else {
+            "* [X]"
+        }
+    } else {
+        return Err("待办状态已变化，请刷新工作台后重试".into());
+    };
+    let actual_text = trimmed[marker.len()..].trim();
+    if actual_text != mutation.text.trim() {
+        return Err("待办内容已变化，请刷新工作台后重试".into());
+    }
+    let marker_offset = line.len() - trimmed.len();
+    let replacement = if mutation.completed {
+        if marker.starts_with('-') {
+            "- [x]"
+        } else {
+            "* [x]"
+        }
+    } else if marker.starts_with('-') {
+        "- [ ]"
+    } else {
+        "* [ ]"
+    };
+    line.replace_range(marker_offset..marker_offset + marker.len(), replacement);
+    let updated = parts.concat();
+    let encoded = encode_text_for_save(
+        &snapshot,
+        &updated,
+        TextSavePolicy {
+            expected_signature: Some(mutation.expected_signature),
+            encoding: None,
+            bom: None,
+            line_ending: None,
+            has_final_newline: None,
+        },
+    )
+    .map_err(|error| error.message)?;
+    verify_current_signature(&path, encoded.expected_signature.as_deref())
+        .map_err(|error| error.message)?;
+    write_bytes(&path, &encoded.bytes)?;
+    let saved = read_text_snapshot(&path).map_err(|error| error.message)?;
+    if saved.content != encoded.normalized_content {
+        return Err("待办写回后复读不一致，请重新打开文件检查".into());
+    }
+    Ok(WorkspaceTaskMutationResult {
+        path: path.to_string_lossy().into_owned(),
+        line: mutation.line,
+        text: mutation.text,
+        completed: mutation.completed,
+        signature: saved.signature,
+    })
 }
 
 fn scan_directory(root: &Path, directory: &Path, scan: &mut WorkspaceScan) {
@@ -412,6 +540,18 @@ pub async fn get_workspace_overview(library_root: String) -> Result<WorkspaceOve
 }
 
 #[tauri::command]
+pub async fn set_workspace_markdown_task_state(
+    library_root: String,
+    mutation: WorkspaceTaskMutation,
+) -> Result<WorkspaceTaskMutationResult, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let root = guard.root().to_path_buf();
+    tauri::async_runtime::spawn_blocking(move || mutate_workspace_task(&root, mutation))
+        .await
+        .map_err(|error| format!("待办更新任务失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn analyze_workspace_health(
     library_root: String,
 ) -> Result<WorkspaceHealthReport, String> {
@@ -460,6 +600,87 @@ mod tests {
             .format_counts
             .iter()
             .any(|item| item.object_type == "markdown" && item.count == 1));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn task_mutation_completes_and_undoes_without_changing_text_format() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-workspace-task-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("计划.md");
+        fs::write(&path, b"\xEF\xBB\xBF# Plan\r\n- [ ] Ship workspace\r\n").unwrap();
+        let initial = read_text_snapshot(&path).unwrap();
+
+        let completed = mutate_workspace_task(
+            &root,
+            WorkspaceTaskMutation {
+                path: path.to_string_lossy().into_owned(),
+                line: 2,
+                text: "Ship workspace".into(),
+                completed: true,
+                expected_signature: initial.signature.clone(),
+            },
+        )
+        .unwrap();
+        let completed_bytes = fs::read(&path).unwrap();
+        assert!(completed_bytes.starts_with(b"\xEF\xBB\xBF"));
+        assert!(String::from_utf8_lossy(&completed_bytes).contains("- [x] Ship workspace\r\n"));
+
+        let undone = mutate_workspace_task(
+            &root,
+            WorkspaceTaskMutation {
+                path: path.to_string_lossy().into_owned(),
+                line: 2,
+                text: "Ship workspace".into(),
+                completed: false,
+                expected_signature: completed.signature,
+            },
+        )
+        .unwrap();
+        assert!(!undone.completed);
+        assert_eq!(
+            fs::read(&path).unwrap(),
+            b"\xEF\xBB\xBF# Plan\r\n- [ ] Ship workspace\r\n"
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn task_mutation_rejects_stale_signature_and_changed_line() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-workspace-task-conflict-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("Plan.md");
+        fs::write(&path, "- [ ] Original\n").unwrap();
+        let initial = read_text_snapshot(&path).unwrap();
+        fs::write(&path, "- [ ] Changed externally\n").unwrap();
+        let before = fs::read(&path).unwrap();
+        let error = mutate_workspace_task(
+            &root,
+            WorkspaceTaskMutation {
+                path: path.to_string_lossy().into_owned(),
+                line: 1,
+                text: "Original".into(),
+                completed: true,
+                expected_signature: initial.signature,
+            },
+        )
+        .unwrap_err();
+        assert!(error.contains("其他程序修改"));
+        assert_eq!(fs::read(&path).unwrap(), before);
         fs::remove_dir_all(root).unwrap();
     }
 

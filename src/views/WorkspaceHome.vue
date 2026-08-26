@@ -29,14 +29,6 @@
         </div>
       </section>
 
-      <section class="metric-strip" aria-label="工作区指标">
-        <button @click="router.push({ name: 'LibraryMode' })"><span>可管理文件</span><strong>{{ overview.totalFiles }}</strong></button>
-        <button @click="router.push({ name: 'LibraryMode' })"><span>Markdown</span><strong>{{ formatCount('markdown') }}</strong></button>
-        <button @click="openFirstCanvas" :disabled="!canvasItems.length"><span>Canvas</span><strong>{{ formatCount('canvas') }}</strong></button>
-        <button @click="scrollToTasks"><span>未完成任务</span><strong>{{ overview.tasks.length }}</strong></button>
-        <button @click="scrollToGovernance"><span>治理风险</span><strong>{{ healthRiskCount }}</strong></button>
-      </section>
-
       <WorkspaceStateNotice v-if="error" class="workspace-alert" kind="error" tone="danger" compact><template #icon><AlertIcon /></template><span>{{ error }}</span><template #action><button @click="loadWorkspace">重试</button></template></WorkspaceStateNotice>
 
       <div class="workspace-grid">
@@ -119,14 +111,21 @@
           </div>
         </section>
 
-        <section ref="tasksSection" class="workspace-section task-section">
+        <section class="workspace-section task-section" data-testid="m2a1-task-section">
           <div class="section-heading"><div><span class="section-kicker">未完成事项</span><h2>待办</h2></div><span class="section-count">{{ overview.tasks.length }}</span></div>
+          <WorkspaceStateNotice v-if="taskUndo" class="task-undo" kind="saved" tone="success" compact data-testid="m2a1-task-undo-notice">
+            <template #icon><CheckIcon /></template>
+            <span>已完成“{{ taskUndo.text }}”</span>
+            <template #action><button data-testid="m2a1-task-undo" :disabled="taskMutating" @click="undoCompletedTask"><UndoIcon />撤销</button></template>
+          </WorkspaceStateNotice>
           <div v-if="overview.tasks.length" class="task-list">
-            <button v-for="task in overview.tasks" :key="`${task.path}:${task.line}`" @click="openPath(task.path)">
-              <span class="task-check"></span>
-              <span><strong>{{ task.text }}</strong><small>{{ task.relativePath }} · 第 {{ task.line }} 行</small></span>
-              <ArrowIcon />
-            </button>
+            <div v-for="task in overview.tasks" :key="`${task.path}:${task.line}`" class="task-row">
+              <button class="task-complete" data-testid="m2a1-task-complete" :disabled="taskMutating" :title="`完成待办：${task.text}`" @click="completeTask(task)"><span class="task-check"></span></button>
+              <button class="task-open" @click="openPath(task.path)">
+                <span><strong>{{ task.text }}</strong><small>{{ task.relativePath }} · 第 {{ task.line }} 行</small></span>
+                <ArrowIcon />
+              </button>
+            </div>
           </div>
           <div v-else class="empty-line">没有未完成任务</div>
         </section>
@@ -155,7 +154,7 @@
           <div v-else class="empty-line">暂无保存视图</div>
         </section>
 
-        <section ref="governanceSection" class="workspace-section governance-section">
+        <section class="workspace-section governance-section">
           <WorkspaceHealthQueue :report="workspaceHealth" :error="workspaceHealthError" @open-file="openPath" @open-annotation="openAnnotation" />
         </section>
       </div>
@@ -174,12 +173,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
+import { useDialog, useMessage } from 'naive-ui'
 import {
   AlertTriangle as AlertIcon, ArrowRight as ArrowIcon,
   Clock3 as ClockIcon, Database as DatabaseIcon, FileSpreadsheet as TableIcon,
   FileText as FileIcon, LayoutDashboard as CanvasIcon, Network as NetworkIcon,
   ListFilter as CollectionIcon, RefreshCw as RefreshIcon, Settings as SettingsIcon,
-  Star as StarIcon, Workflow as DiagramIcon,
+  Star as StarIcon, Workflow as DiagramIcon, CircleCheck as CheckIcon, Undo2 as UndoIcon,
 } from 'lucide-vue-next'
 import { useAppStore, type SavedSearchConfig } from '../store/app'
 import { fileDisplayName, findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
@@ -190,8 +190,10 @@ import WorkspaceEmptyState from '../components/workspace/WorkspaceEmptyState.vue
 import WorkspaceManagementContent from '../components/workspace/WorkspaceManagementContent.vue'
 import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
+import { confirmAppAction } from '../services/appDialog'
 
-interface WorkspaceTask { title: string; path: string; relativePath: string; line: number; text: string }
+interface WorkspaceTask { title: string; path: string; relativePath: string; line: number; text: string; signature: string }
+interface WorkspaceTaskMutationResult { path: string; line: number; text: string; completed: boolean; signature: string }
 interface WorkspaceFile { title: string; path: string; relativePath: string; objectType: string; modifiedAt: number; size: number }
 interface WorkspaceOverview { totalFiles: number; tasks: WorkspaceTask[]; recentFiles: WorkspaceFile[]; canvases: WorkspaceFile[]; formatCounts: { objectType: string; count: number }[] }
 interface GraphHealth { brokenLinks: unknown[]; ambiguousLinks: unknown[]; orphanNotes: unknown[]; scannedNotes: number }
@@ -213,12 +215,12 @@ interface KnowledgeGraphPulse {
 
 const router = useRouter()
 const store = useAppStore()
+const dialog = useDialog()
+const message = useMessage()
 const loading = ref(false)
 const error = ref('')
 const workspaceHealthError = ref('')
 const refreshedAt = ref(0)
-const tasksSection = ref<HTMLElement | null>(null)
-const governanceSection = ref<HTMLElement | null>(null)
 const overview = ref<WorkspaceOverview>({ totalFiles: 0, tasks: [], recentFiles: [], canvases: [], formatCounts: [] })
 const health = ref<GraphHealth>({ brokenLinks: [], ambiguousLinks: [], orphanNotes: [], scannedNotes: 0 })
 const indexStatus = ref<IndexStatus>({ state: 'missing', objectCount: 0, relationCount: 0 })
@@ -226,6 +228,8 @@ const indexAutoPreparing = ref(false)
 const graphPulse = ref<KnowledgeGraphPulse>({ objectCount: 0, relationCount: 0, connectedObjectCount: 0, isolatedObjectCount: 0, coveragePercent: 0, relationTypes: [], topNodes: [], isolatedNodes: [], guidance: [] })
 const workspaceHealth = ref<WorkspaceHealthReport>({ duplicateGroups: [], unreferencedAnnotations: [], scannedFiles: 0, hashedFiles: 0, scannedAnnotations: 0, truncated: false })
 const relationSummaries = ref<Record<string, GraphRelationSummary>>({})
+const taskMutating = ref(false)
+const taskUndo = ref<WorkspaceTaskMutationResult | null>(null)
 
 const indexLabel = computed(() => ({
   missing: '搜索与关联：准备中',
@@ -235,7 +239,6 @@ const indexLabel = computed(() => ({
   corrupt: '搜索与关联：需要处理',
   error: '搜索与关联：需要处理',
 }[indexStatus.value.state]))
-const healthRiskCount = computed(() => health.value.brokenLinks.length + health.value.ambiguousLinks.length + health.value.orphanNotes.length + workspaceHealth.value.duplicateGroups.length + workspaceHealth.value.unreferencedAnnotations.length)
 const refreshedLabel = computed(() => refreshedAt.value ? new Date(refreshedAt.value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '尚未刷新')
 const starredItems = computed(() => store.starredFiles.slice(0, 6).map(path => ({ path })))
 const pathIdentity = (path: string) => path.replace(/^\\\\\?\\/, '').replace(/\\/g, '/').toLocaleLowerCase()
@@ -260,7 +263,6 @@ const savedSearches = computed(() => store.savedSearches
 
 const formatLabels: Record<string, string> = { markdown: 'MD', canvas: 'Canvas', pdf: 'PDF', table: 'Table', workbook: 'XLSX', diagram: 'Mermaid', opml: 'OPML', 'plain-text': 'TXT' }
 const formatIcons: Record<string, typeof FileIcon> = { table: TableIcon, workbook: TableIcon, canvas: CanvasIcon, diagram: DiagramIcon }
-const formatCount = (id: string) => overview.value.formatCounts.find(item => item.objectType === id)?.count || 0
 const formatLabel = (id: string) => formatLabels[id] || id
 const displayName = (path: string, fallback?: string) => fileDisplayName(path) || fallback || path.split(/[\\/]/).pop() || path
 const relativeLabel = (path: string) => {
@@ -268,12 +270,6 @@ const relativeLabel = (path: string) => {
   return visible.replace(displayPath(store.libraryPath), '').replace(/^[\\/]+/, '') || visible
 }
 const iconForPath = (path: string) => formatIcons[findFileFormat(path)?.id || ''] || FileIcon
-const scrollToTasks = () => tasksSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-const scrollToGovernance = () => governanceSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-const openFirstCanvas = () => {
-  const firstCanvas = canvasItems.value[0]
-  if (firstCanvas) openPath(firstCanvas.path)
-}
 const openSavedSearch = (search: SavedSearchConfig) => router.push({
   name: 'LibraryMode',
   query: search.graphRoot
@@ -335,6 +331,49 @@ const openPath = (path: string) => {
   if (!target) return
   if (opensInLibraryShell(findFileFormat(path))) openManagedFile(router, path)
   else router.push(target)
+}
+const updateTaskState = (task: WorkspaceTask | WorkspaceTaskMutationResult, completed: boolean) => invoke<WorkspaceTaskMutationResult>('set_workspace_markdown_task_state', {
+  libraryRoot: store.libraryPath,
+  mutation: {
+    path: task.path,
+    line: task.line,
+    text: task.text,
+    completed,
+    expectedSignature: task.signature,
+  },
+})
+const completeTask = async (task: WorkspaceTask) => {
+  if (taskMutating.value || !await confirmAppAction(dialog, {
+    title: '完成这个待办？',
+    content: `将把“${task.text}”写回 ${task.relativePath} 第 ${task.line} 行。完成后可在工作台撤销。`,
+    positiveText: '完成待办',
+  })) return
+  taskMutating.value = true
+  try {
+    taskUndo.value = await updateTaskState(task, true)
+    overview.value.tasks = overview.value.tasks.filter(item => !(pathIdentity(item.path) === pathIdentity(task.path) && item.line === task.line))
+    message.success('待办已完成并写回原文')
+  } catch (cause) {
+    message.error(String(cause).replace(/^Error:\s*/, ''))
+    await loadWorkspace()
+  } finally {
+    taskMutating.value = false
+  }
+}
+const undoCompletedTask = async () => {
+  if (!taskUndo.value || taskMutating.value) return
+  taskMutating.value = true
+  try {
+    await updateTaskState(taskUndo.value, false)
+    taskUndo.value = null
+    await loadWorkspace()
+    message.success('已恢复未完成状态')
+  } catch (cause) {
+    message.error(String(cause).replace(/^Error:\s*/, ''))
+    await loadWorkspace()
+  } finally {
+    taskMutating.value = false
+  }
 }
 
 const openAnnotation = (issue: WorkspaceAnnotationIssue) => openManagedFile(
@@ -401,18 +440,17 @@ onMounted(async () => {
 .workspace-content { flex: 1; overflow: auto; }
 .workspace-identity { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 19px; border-bottom: 2px solid var(--theme-text); }.workspace-identity h1 { margin: 4px 0 3px; font-size: 25px; line-height: 1.15; letter-spacing: 0; }.workspace-identity p { max-width: min(620px,60vw); margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }
 .section-kicker { color: var(--theme-primary); font-size: var(--text-compact); font-weight: 800; }.workspace-signals { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }.signal { height: 27px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: var(--theme-border); border-radius: 5px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: var(--text-compact); }.signal svg { width: 13px; }.signal.index-ready { color: var(--status-success); }.signal.index-stale,.signal.index-corrupt,.signal.index-error { color: var(--status-warning); }
-.metric-strip { display: grid; grid-template-columns: repeat(5,minmax(100px,1fr)); border-bottom: var(--theme-border); }.metric-strip button { min-height: 74px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; padding: 10px 16px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; }.metric-strip button:first-child { padding-left: 0; }.metric-strip button:last-child { border-right: 0; }.metric-strip button:hover { background: rgba(var(--theme-primary-rgb),.045); }.metric-strip span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.metric-strip strong { font-size: 22px; font-weight: 680; }
 .workspace-alert { min-height: 38px; border-width: 0 0 1px; border-radius: 0; color: var(--status-danger); border-color: var(--status-danger-border); background: var(--status-danger-bg); }.workspace-alert svg { width: 14px; }.workspace-alert button,.text-command { border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: var(--text-compact); }
 .workspace-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,.8fr); column-gap: 32px; }.workspace-section { min-width: 0; padding: 25px 0 28px; border-bottom: var(--theme-border); }.governance-section { grid-column: 1 / -1; }.section-heading { min-height: 35px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }.section-heading h2 { margin: 3px 0 0; font-size: 14px; letter-spacing: 0; }.section-count { min-width: 24px; text-align: right; color: var(--theme-text-secondary); font-size: 11px; }
 .list-label { margin: 9px 0 5px; color: var(--theme-text-secondary); font-size: var(--text-compact); font-weight: 700; }.list-label:first-of-type { margin-top: 0; }.file-list,.task-list { display: grid; }.starred-list { margin-bottom: 15px; }.file-row { min-height: 51px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; padding-right: 8px; border-top: var(--theme-border); }.file-row:hover { background: rgba(var(--theme-primary-rgb),.045); }.file-open { min-width: 0; min-height: 50px; display: grid; grid-template-columns: 28px minmax(0,1fr) 18px; align-items: center; gap: 10px; padding: 6px 0; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.file-icon { width: 26px; height: 26px; display: grid; place-items: center; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); border-radius: 5px; }.file-icon svg,.file-action svg { width: 13px; }.file-copy { min-width: 0; display: grid; gap: 3px; }.file-copy strong,.task-list strong,.canvas-list strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.file-copy small,.task-list small,.canvas-list small { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.file-action { color: var(--theme-text-secondary); }
 .health-grid { display: grid; grid-template-columns: repeat(3,1fr); border-top: var(--theme-border); border-bottom: var(--theme-border); }.health-grid button { min-height: 65px; display: grid; align-content: center; gap: 4px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: center; }.health-grid button:last-child { border-right: 0; }.health-grid span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.health-grid strong { font-size: 17px; }.index-line { min-height: 54px; display: grid; grid-template-columns: 22px minmax(0,1fr) 24px; align-items: center; gap: 8px; border-bottom: var(--theme-border); }.index-line>svg { width: 16px; color: var(--theme-primary); }.index-line>div { display: grid; gap: 2px; }.index-line strong { font-size: var(--text-compact); }.index-line small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.index-line button { border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.index-line button svg { width: 13px; }.format-line { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 10px; }.format-line span { display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: var(--theme-border); border-radius: 4px; font-size: var(--text-compact); }.format-line i { color: var(--theme-text-secondary); font-style: normal; }.format-line b { font-weight: 700; }
 .knowledge-pulse { display: grid; gap: 8px; padding: 12px 0; border-bottom: var(--theme-border); }.pulse-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }.pulse-heading>div { display: flex; align-items: baseline; gap: 6px; }.pulse-heading span,.pulse-heading small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.pulse-heading strong { color: var(--theme-primary); font-size: 16px; }.pulse-track { height: 5px; overflow: hidden; border-radius: 999px; background: rgba(var(--theme-primary-rgb),.09); }.pulse-track i { display: block; height: 100%; border-radius: inherit; background: var(--theme-primary); transition: width .25s ease; }.pulse-types,.pulse-nodes { display: flex; flex-wrap: wrap; gap: 5px; }.pulse-types span { padding: 3px 5px; border-radius: 4px; color: var(--theme-text-secondary); background: rgba(var(--theme-primary-rgb),.055); font-size: var(--text-compact); }.pulse-types b { color: var(--theme-text); }.pulse-nodes button { max-width: 150px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 6px; border: 1px solid rgba(var(--theme-primary-rgb),.16); border-radius: 999px; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: var(--text-compact); }.pulse-nodes button:hover { background: rgba(var(--theme-primary-rgb),.07); }.pulse-nodes span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.pulse-nodes b { min-width: 14px; color: var(--theme-text-secondary); }.pulse-empty { min-height: 30px; padding: 0 8px; border: 1px dashed rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.035); cursor: pointer; font-size: var(--text-compact); }.pulse-guidance { min-height: 42px; display: grid; grid-template-columns: minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 7px 8px; border: 1px solid rgba(var(--theme-primary-rgb),.18); border-radius: 5px; color: var(--theme-text); background: rgba(var(--theme-primary-rgb),.045); cursor: pointer; text-align: left; }.pulse-guidance:hover { border-color: rgba(var(--theme-primary-rgb),.35); }.pulse-guidance>span { min-width: 0; display: grid; gap: 2px; }.pulse-guidance b { font-size: var(--text-compact); }.pulse-guidance small { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.pulse-guidance svg { width: 13px; color: var(--theme-primary); }.pulse-observation-action { justify-self: end; min-height: 26px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.18); border-radius: 5px; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: var(--text-compact); font-weight: 650; }.pulse-observation-action:hover { background: rgba(var(--theme-primary-rgb),.06); }
 .pulse-isolation { display: grid; gap: 5px; padding: 7px 8px; border: 1px solid var(--status-warning-border); border-radius: 5px; background: var(--status-warning-bg); }.pulse-isolation>div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }.pulse-isolation>div:first-child span { color: var(--status-warning); font-size: var(--text-compact); font-weight: 750; }.pulse-isolation>div:first-child small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.pulse-isolation>div:last-child { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 4px; }.pulse-isolation button { min-width: 0; min-height: 27px; display: grid; grid-template-columns: minmax(0,1fr) auto 12px; align-items: center; gap: 5px; padding: 3px 5px; border: 1px solid var(--status-warning-border); border-radius: 4px; color: var(--theme-text); background: var(--theme-surface); cursor: pointer; text-align: left; }.pulse-isolation button:hover { border-color: var(--status-warning); background: var(--status-warning-bg); }.pulse-isolation button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.pulse-isolation button small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.pulse-isolation button svg { width: 10px; color: var(--status-warning); }
-.task-list button { min-height: 48px; display: grid; grid-template-columns: 16px minmax(0,1fr) 16px; align-items: center; gap: 9px; padding: 5px 8px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.task-list button:hover { background: rgba(var(--theme-primary-rgb),.045); }.task-list button>span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }.task-list svg { width: 13px; color: var(--theme-text-secondary); }.task-check { width: 11px; height: 11px; border: 1px solid var(--theme-text-secondary); border-radius: 2px; }
+.task-undo { margin-bottom: 8px; border-radius: 5px; }.task-undo button { display: inline-flex; align-items: center; gap: 5px; border: 0; color: var(--status-success); background: transparent; cursor: pointer; font-weight: 700; }.task-undo button svg { width: 13px; }.task-row { min-height: 48px; display: grid; grid-template-columns: 30px minmax(0,1fr); align-items: stretch; border-top: var(--theme-border); }.task-row:hover { background: rgba(var(--theme-primary-rgb),.045); }.task-complete,.task-open { border: 0; color: var(--theme-text); background: transparent; cursor: pointer; }.task-complete { display: grid; place-items: center; }.task-complete:hover .task-check { border-color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.12); }.task-complete:disabled { cursor: wait; opacity: .45; }.task-open { min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) 16px; align-items: center; gap: 9px; padding: 5px 8px 5px 0; text-align: left; }.task-open>span { min-width: 0; display: grid; gap: 3px; }.task-open svg { width: 13px; color: var(--theme-text-secondary); }.task-check { width: 12px; height: 12px; border: 1px solid var(--theme-text-secondary); border-radius: 3px; transition: .15s ease; }
 .canvas-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }.canvas-list button { min-height: 58px; display: grid; grid-template-columns: 24px minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 8px; border: var(--theme-border); border-radius: 6px; color: var(--theme-text); background: var(--theme-surface); cursor: pointer; text-align: left; }.canvas-list button:hover { border-color: rgba(var(--theme-primary-rgb),.35); }.canvas-list button>svg { width: 15px; color: var(--theme-primary); }.canvas-list button>span { min-width: 0; display: grid; gap: 3px; }.canvas-list button>svg:last-child { width: 12px; color: var(--theme-text-secondary); }
 .collection-list { display: grid; }.collection-list button { min-height: 48px; display: grid; grid-template-columns: 22px minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 5px 7px 5px 0; border: 0; border-top: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.collection-list button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.045); }.collection-list button>svg { width: 14px; color: var(--theme-primary); }.collection-list button>svg:last-child { width: 12px; color: var(--theme-text-secondary); }.collection-list button>span { min-width: 0; display: grid; gap: 3px; }.collection-list strong,.collection-list small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-list strong { font-size: var(--text-compact); }.collection-list small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .empty-line { min-height: 68px; display: grid; place-items: center; color: var(--theme-text-secondary); border-top: var(--theme-border); font-size: var(--text-compact); }.workspace-empty { flex: 1; display: grid; place-content: center; justify-items: center; gap: 8px; }.workspace-empty h1 { margin: 4px 0 0; font-size: 22px; }.workspace-empty p { margin: 0 0 10px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.workspace-empty button { height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 12px; border: 0; border-radius: 6px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; }.workspace-empty button svg { width: 14px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 900px) { .workspace-grid { grid-template-columns: 1fr; }.health-section { grid-row: auto; }.metric-strip { grid-template-columns: repeat(3,1fr); }.metric-strip button:nth-child(3) { border-right: 0; }.workspace-nav button span { display: none; }.workspace-identity { align-items: flex-start; flex-direction: column; }.workspace-signals { justify-content: flex-start; }.workspace-identity p { max-width: 80vw; } }
-@media (max-width: 560px) { .metric-strip { grid-template-columns: repeat(2,1fr); }.metric-strip button { border-right: var(--theme-border) !important; }.metric-strip button:nth-child(2n) { border-right: 0 !important; }.canvas-list,.pulse-isolation>div:last-child { grid-template-columns: 1fr; }.workspace-nav { gap: 1px; }.workspace-nav button { padding: 0 7px; }.workspace-identity h1 { font-size: 21px; } }
+@media (max-width: 900px) { .workspace-grid { grid-template-columns: 1fr; }.health-section { grid-row: auto; }.workspace-nav button span { display: none; }.workspace-identity { align-items: flex-start; flex-direction: column; }.workspace-signals { justify-content: flex-start; }.workspace-identity p { max-width: 80vw; } }
+@media (max-width: 560px) { .canvas-list,.pulse-isolation>div:last-child { grid-template-columns: 1fr; }.workspace-nav { gap: 1px; }.workspace-nav button { padding: 0 7px; }.workspace-identity h1 { font-size: 21px; } }
 </style>

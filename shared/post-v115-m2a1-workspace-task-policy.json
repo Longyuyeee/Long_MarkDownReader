@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "stage": "M2A1",
+  "expected": {
+    "confirmationBeforeWrite": true,
+    "cancelKeepsSourceUnchanged": true,
+    "completeWritesOriginal": true,
+    "undoRestoresOriginalBytes": true,
+    "signatureConflictRejected": true,
+    "encodingAndLineEndingPreserved": true,
+    "responsiveDesktop": true,
+    "runtimeErrors": 0
+  }
+}

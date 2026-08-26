@@ -7,6 +7,8 @@
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 > 当前权威执行入口：[2026-08-02 当前开发对齐审计与收口计划](./Development_Alignment_and_Closure_Plan_2026-08-02.md)。v1.0.1 已发布；下一代码阶段固定为 P0 内部文件路由收敛，随后按 UI-1～UI-4 完成全量 UI 治理。下方历史“最新入口”仅用于阶段追溯。
 
+> 2026-08-26 权威执行入口：[v1.0.15 后续专业能力增强路线图](./Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md)。M0、M1A、M1B1 与 M2A1 已完成；下一阶段为 **M2A2 工作台治理入口收敛**。M1B2A 暂后移到 M2 收口之后，这是产品优先级纠偏，不是否定 Office 深化方向。下方更早入口仅用于历史追溯。
+
 > 2026-07-30 权威执行入口：[R2 Windows 安装与生命周期审计](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。**R1/R2 已完成，下一代码阶段为 R3 索引恢复、备份与隐私净化诊断**。E1B WPS ODT 保持 2/3、X3-B6 数组生产者矩阵保持 1/3，作为外部环境门禁并行等待；不得伪造关闭。下文较早的“下一入口”只保留为阶段追溯。
 
 > 2026-07-30 R3A 已完成：[R3A 知识索引健康与恢复审计](./R3A_Knowledge_Index_Recovery_Audit_2026-07-30.md)。当前索引损坏可在侧栏原索引条中隔离恢复，机器契约为 `shared/data-resilience-policy.json` 和 `npm run check:r3-data-resilience-contract`。剩余收口阶段为 R3B、R3C、R3D、R4 与两个外部证据门禁；下一步直接进入 **R3B 版本化备份导出**。

@@ -141,7 +141,9 @@ pub use commands::workbook::{
     generate_workbook_pivot_audit_copy, generate_workbook_pivot_layout_audit_copy,
     generate_workbook_pivot_multi_axis_audit_copy,
 };
-use commands::workspace::{analyze_workspace_health, get_workspace_overview};
+use commands::workspace::{
+    analyze_workspace_health, get_workspace_overview, set_workspace_markdown_task_state,
+};
 use commands::wps_native::inspect_wps_native_file;
 use commands::xml::{
     analyze_xml_source, write_external_xml_source_document, write_xml_source_document,
@@ -550,6 +552,7 @@ pub fn run() {
             search_all_libraries,
             get_library_stats,
             get_workspace_overview,
+            set_workspace_markdown_task_state,
             analyze_workspace_health,
             extract_wikilinks,
             find_backlinks,

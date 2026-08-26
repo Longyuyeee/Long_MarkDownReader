@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "stage": "M2A1",
+  "expected": {
+    "confirmationBeforeWrite": true,
+    "cancelKeepsSourceUnchanged": true,
+    "completeWritesOriginal": true,
+    "undoRestoresOriginalBytes": true,
+    "responsiveDesktop": true,
+    "runtimeErrors": 0
+  },
+  "actual": {
+    "beforeSha256": "c1818c25573598039e08b28d1c0dab9eeeccea484d4c17f9ada3803032d3103d",
+    "completedSha256": "8ce0f3fb89692eeabb1dff3490aea06458df064352473cacf5759eee6321e633",
+    "afterUndoSha256": "c1818c25573598039e08b28d1c0dab9eeeccea484d4c17f9ada3803032d3103d",
+    "confirmationObserved": true,
+    "cancelSourceUnchanged": true,
+    "completedMarker": "- [x] Complete real workspace task",
+    "undoRestoredOriginalBytes": true,
+    "utf8BomPreserved": true,
+    "crlfPreserved": true,
+    "responsive760": true,
+    "runtimeErrors": 0
+  },
+  "evidenceFiles": [
+    "before-1280.jpg",
+    "completed-1280.jpg",
+    "restored-760.jpg"
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
