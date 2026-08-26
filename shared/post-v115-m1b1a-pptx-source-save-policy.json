@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1B1A",
+  "goal": "Add a signature-protected reliable PPTX source-save foundation without changing the current UI capability claim",
+  "expected": {
+    "sourceSignatureRequired": true,
+    "previewDigestRequired": true,
+    "atomicReliableWrite": true,
+    "structuralReopenRequired": true,
+    "semanticReopenRequired": true,
+    "rollbackProtected": true,
+    "reliableCopyRetained": true,
+    "realProducerFixtures": 3
+  },
+  "beforeActual": {
+    "pptxSourceSave": false,
+    "pptxCopySave": true
+  },
+  "afterActual": {
+    "pptxSourceSaveBackend": true,
+    "pptxCopySave": true,
+    "frontendSourceSave": false,
+    "unifiedDraftUndoRedo": false,
+    "publicCapabilityUpdated": false
+  },
+  "nextStage": "M1B1B"
+}

@@ -215,6 +215,8 @@
     "audit:post-v115-m1a4b2-xlsx-object-drafts": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m1a4b2-xlsx-object-drafts-audit.ps1",
     "check:post-v115-m1b0-office-object-baseline": "node scripts/check-post-v115-m1b0-office-object-baseline.mjs",
     "audit:post-v115-m1b0-office-object-baseline": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m1b0-office-object-baseline-audit.ps1",
+    "check:post-v115-m1b1a-pptx-source-save": "node scripts/check-post-v115-m1b1a-pptx-source-save.mjs",
+    "audit:post-v115-m1b1a-pptx-source-save": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m1b1a-pptx-source-save-audit.ps1",
     "audit:post-v115-m0-baseline": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m0-baseline-audit.ps1",
     "audit:media-workspace": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-media-workspace-audit.ps1",
     "check:markdown-code-theme-contrast": "node scripts/check-markdown-code-theme-contrast.mjs",

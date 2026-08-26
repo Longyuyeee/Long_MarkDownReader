@@ -9,7 +9,7 @@ use crate::formats::pptx_edit::{
     PptxIsolatedTextPatchReport, PptxSlideLifecycleReport,
 };
 use crate::services::external_file_access::ExternalFileAccess;
-use crate::services::reliable_write::write_new_bytes;
+use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_new_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
@@ -195,6 +195,26 @@ pub struct PptxSavedCopyReport {
     pub unchanged_parts_verified: bool,
     pub structural_reopen_verified: bool,
     pub semantic_reopen_verified: bool,
+    pub producer_matrix_baseline: Vec<String>,
+    pub external_producer_reopen_required: bool,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PptxSavedSourceReport {
+    pub status: String,
+    pub engine: String,
+    pub save_mode: String,
+    pub operation_kind: String,
+    pub path: String,
+    pub signature: String,
+    pub digest: String,
+    pub output_bytes: usize,
+    pub changed_parts: Vec<String>,
+    pub unchanged_parts_verified: bool,
+    pub structural_reopen_verified: bool,
+    pub semantic_reopen_verified: bool,
+    pub rollback_protected: bool,
     pub producer_matrix_baseline: Vec<String>,
     pub external_producer_reopen_required: bool,
 }
@@ -977,6 +997,117 @@ fn save_pptx_patch_copy_to_path(
     })
 }
 
+fn save_pptx_patch_source_to_path(
+    source_path: &Path,
+    expected_signature: &str,
+    expected_output_digest: &str,
+    operation: &PptxPatchOperation,
+) -> Result<PptxSavedSourceReport, String> {
+    recover_interrupted_write(source_path)?;
+    let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
+    if expected_output_digest.len() != 64
+        || !expected_output_digest
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit())
+    {
+        return Err("PPTX 隔离预览摘要无效".into());
+    }
+
+    let metadata = source_path
+        .metadata()
+        .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_PPTX_FILE_BYTES {
+        return Err("PPTX 文件超过 96 MiB 可靠保存上限".into());
+    }
+    let source_signature = file_signature(&metadata);
+    if source_signature != expected_signature {
+        return Err("PPTX 已被外部修改，请重新打开后再保存".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 PPTX 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let built = build_pptx_operation(&source, operation)?;
+    if built.output_digest != expected_output_digest {
+        return Err("PPTX 编辑内容或隔离输出已变化，请重新验证后再保存".into());
+    }
+    if !built.unchanged_parts_verified
+        || !built.structural_reparse_verified
+        || !built.semantic_reparse_verified
+    {
+        return Err("PPTX 隔离补丁未通过部件保真与语义复读".into());
+    }
+
+    let source_before_write =
+        fs::read(source_path).map_err(|error| format!("保存前复核源 PPTX 失败: {error}"))?;
+    let metadata_before_write = source_path
+        .metadata()
+        .map_err(|error| format!("保存前复核源 PPTX 元数据失败: {error}"))?;
+    if source_before_write != source
+        || file_signature(&metadata_before_write) != source_signature
+        || format!("{:x}", Sha256::digest(&source_before_write)) != source_digest
+    {
+        return Err("PPTX 在隔离验证期间发生变化，请重新打开后再保存".into());
+    }
+
+    write_bytes(source_path, &built.output)?;
+    let verification = (|| -> Result<(String, String), String> {
+        let saved = fs::read(source_path)
+            .map_err(|error| format!("源文件已替换，但无法复读保存字节: {error}"))?;
+        let digest = format!("{:x}", Sha256::digest(&saved));
+        if saved != built.output || digest != built.output_digest {
+            return Err("源文件落盘字节与隔离验证输出不一致".into());
+        }
+        parse_pptx(&saved).map_err(|error| format!("源 PPTX 结构复读失败: {error}"))?;
+        let semantic = build_pptx_operation(&source, operation)?;
+        if semantic.output != saved
+            || !semantic.semantic_reparse_verified
+            || semantic.changed_parts != built.changed_parts
+        {
+            return Err("源 PPTX 语义复读结果与已验证补丁不一致".into());
+        }
+        let saved_metadata = source_path
+            .metadata()
+            .map_err(|error| format!("读取已保存 PPTX 元数据失败: {error}"))?;
+        Ok((digest, file_signature(&saved_metadata)))
+    })();
+    let (digest, signature) = match verification {
+        Ok(value) => value,
+        Err(error) => {
+            write_bytes(source_path, &source).map_err(|rollback_error| {
+                format!("保存复读失败且原文件恢复失败: {error}; {rollback_error}")
+            })?;
+            let restored = fs::read(source_path).map_err(|rollback_error| {
+                format!("保存复读失败且无法确认原文件恢复: {error}; {rollback_error}")
+            })?;
+            if restored != source {
+                return Err(format!("保存复读失败且原文件恢复内容不一致: {error}"));
+            }
+            return Err(format!("可靠保存验证失败，已恢复原文件: {error}"));
+        }
+    };
+
+    Ok(PptxSavedSourceReport {
+        status: "source_saved_verified".into(),
+        engine: built.engine,
+        save_mode: "source".into(),
+        operation_kind: built.operation_kind,
+        path: source_path.to_string_lossy().into_owned(),
+        signature,
+        digest,
+        output_bytes: built.output.len(),
+        changed_parts: built.changed_parts,
+        unchanged_parts_verified: true,
+        structural_reopen_verified: true,
+        semantic_reopen_verified: true,
+        rollback_protected: true,
+        producer_matrix_baseline: vec![
+            "microsoft-powerpoint-16".into(),
+            "wps-presentation".into(),
+            "libreoffice-impress".into(),
+        ],
+        external_producer_reopen_required: true,
+    })
+}
+
 #[tauri::command]
 pub async fn read_pptx_presentation(
     library_root: String,
@@ -1247,6 +1378,28 @@ pub async fn save_pptx_patch_copy(
     .map_err(|error| format!("PPTX C4D 可靠另存任务失败: {error}"))?
 }
 
+#[tauri::command]
+pub async fn save_pptx_patch_source(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    expected_output_digest: String,
+    operation: PptxPatchOperation,
+) -> Result<PptxSavedSourceReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pptx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_pptx_patch_source_to_path(
+            &source_path,
+            &expected_signature,
+            &expected_output_digest,
+            &operation,
+        )
+    })
+    .await
+    .map_err(|error| format!("PPTX M1B1A 可靠原文件保存任务失败: {error}"))?
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1493,6 +1646,91 @@ mod tests {
             .unwrap_err()
             .contains("不会覆盖"));
         }
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn m1b1a_reliably_overwrites_and_reopens_all_three_producer_sources() {
+        let fixtures: [(&str, &[u8]); 3] = [
+            (
+                "powerpoint",
+                include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx"),
+            ),
+            (
+                "wps",
+                include_bytes!("../../../fixtures/pptx/producers/wps-presentation.pptx"),
+            ),
+            (
+                "libreoffice",
+                include_bytes!("../../../fixtures/pptx/producers/libreoffice-impress.pptx"),
+            ),
+        ];
+        let root = std::env::temp_dir().join(format!(
+            "longedit-pptx-m1b1a-producers-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+
+        for (producer, original) in fixtures {
+            let source_path = root.join(format!("{producer}-source.pptx"));
+            fs::write(&source_path, original).unwrap();
+            let signature = file_signature(&source_path.metadata().unwrap());
+            let (baseline, _) = build_pptx_edit_baseline(original, signature.clone()).unwrap();
+            let target = baseline.editable_text_targets.first().unwrap();
+            let replacement = format!("LongEdit M1B1A {producer} verified source");
+            let operation = PptxPatchOperation::Text {
+                target_id: target.id.clone(),
+                expected_text_digest: target.expected_text_digest.clone(),
+                expected_part_digest: target.expected_part_digest.clone(),
+                replacement_text: replacement.clone(),
+            };
+            let preview = build_pptx_operation(original, &operation).unwrap();
+            let saved = save_pptx_patch_source_to_path(
+                &source_path,
+                &signature,
+                &preview.output_digest,
+                &operation,
+            )
+            .unwrap_or_else(|error| panic!("{producer}: {error}"));
+
+            assert_eq!(saved.status, "source_saved_verified", "{producer}");
+            assert_eq!(saved.save_mode, "source", "{producer}");
+            assert!(saved.rollback_protected, "{producer}");
+            assert!(saved.unchanged_parts_verified, "{producer}");
+            assert!(saved.structural_reopen_verified, "{producer}");
+            assert!(saved.semantic_reopen_verified, "{producer}");
+            assert!(saved.external_producer_reopen_required, "{producer}");
+            assert_eq!(saved.producer_matrix_baseline.len(), 3, "{producer}");
+            let written = fs::read(&source_path).unwrap();
+            assert_ne!(written, original, "{producer}");
+            assert!(parse_pptx(&written)
+                .unwrap()
+                .plain_text
+                .contains(&replacement));
+
+            let accepted = written.clone();
+            let stale_error = save_pptx_patch_source_to_path(
+                &source_path,
+                &signature,
+                &preview.output_digest,
+                &operation,
+            )
+            .unwrap_err();
+            assert!(
+                stale_error.contains("外部修改"),
+                "{producer}: {stale_error}"
+            );
+            assert_eq!(fs::read(&source_path).unwrap(), accepted, "{producer}");
+        }
+
+        assert!(fs::read_dir(&root).unwrap().all(|entry| {
+            let name = entry.unwrap().file_name().to_string_lossy().into_owned();
+            !name.contains(".longedit-tmp") && !name.contains(".longedit-bak")
+        }));
         fs::remove_dir_all(root).unwrap();
     }
 

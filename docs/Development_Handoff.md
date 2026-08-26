@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-26 M1B1A PPTX 原文件保存基础已通过：** 新增签名和隔离输出摘要保护的可靠原文件保存命令，包含中断恢复、写前二次复核、原子替换、写后结构/语义重放和失败回滚。Microsoft/WPS/LibreOffice 三份真实 PPTX 均完成原文件目标修改与重开，旧签名被拒绝且文件不再变化；既有可靠副本 3/3 与中断备份恢复回归通过。前端仍保持“源 PPTX 只读”，公开能力未更新。下一步 M1B1B 建立确定性多操作事务，再接统一草稿、撤销/重做和显式保存。当前不提升版本。详见 [`Post_v1.0.15_M1B1A_PPTX_Source_Save_Foundation_Audit_2026-08-26.md`](./Post_v1.0.15_M1B1A_PPTX_Source_Save_Foundation_Audit_2026-08-26.md)。
+
 > **2026-08-26 M1B0 DOCX/PPTX 对象基线已通过：** 真实 Microsoft/WPS/LibreOffice 的 3 份 DOCX 与 3 份 PPTX 完成矩阵、解析和保存重开验证。审计纠正了“常用对象普遍缺失”的宽泛假设：DOCX 已有统一草稿、撤销/重做与显式原文件保存；PPTX 已有文本、备注、基础样式、图片、形状与幻灯片有界编辑及可靠副本。实际差距是 PPTX 仍为单操作、无统一历史、不能显式覆盖源文件。下一步 M1B1A 先实现签名保护、原子写入、写后语义复读和失败回滚的 PPTX 原文件保存基础，同时保留副本路径。当前不提升版本。详见 [`Post_v1.0.15_M1B0_DOCX_PPTX_Object_Baseline_Audit_2026-08-26.md`](./Post_v1.0.15_M1B0_DOCX_PPTX_Object_Baseline_Audit_2026-08-26.md)。
 
 > **2026-08-26 M1A4B2 与 M1A XLSX 日常编辑增强已收口：** 条件格式与 Table 已进入统一对象草稿，纳入撤销/重做、脏状态、离开保护和顶部显式保存；单元格与对象最终通过 `write_workbook_draft` 一次原子写入。真实 `compatibility-baseline.xlsx` 验证两个对象草稿保存前摘要不变、撤销 `2→1`、重做 `1→2`、一次保存后重开仍为 `between 1000/2000 / 绿色通过` 与 `TableStyleMedium4`，运行时错误 0；纯对象事务 Rust 回归也通过。审计中修复 Vue Proxy 克隆失败和零单元格对象事务误拒绝。当前不提升版本，下一步 M1B0 审计 DOCX/PPTX 常用对象和包保持边界，再确定 M1B1。详见 [`Post_v1.0.15_M1A4B2_XLSX_Object_Drafts_Audit_2026-08-26.md`](./Post_v1.0.15_M1A4B2_XLSX_Object_Drafts_Audit_2026-08-26.md)。
