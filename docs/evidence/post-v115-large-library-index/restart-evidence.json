@@ -1,0 +1,29 @@
+{
+  "stage": "large-library-index-restart",
+  "actual": {
+    "firstOperableMs": 1505,
+    "statusMs": 3878,
+    "status": {
+      "state": "ready",
+      "schemaVersion": 1,
+      "builtAt": 1787726932,
+      "sourceCount": 10001,
+      "objectCount": 10001,
+      "relationCount": 99,
+      "progress": 100,
+      "cacheBytes": 12255721,
+      "error": null,
+      "recoveryAvailable": false,
+      "staleSourceCount": null
+    },
+    "restartReadyQueryMs": 4081,
+    "restartResultCount": 1,
+    "manifestSha256Before": "b10882e39e0de0dcab0de241795ad96004b9ece5269d32a8b4020d67d7ae2895",
+    "manifestSha256After": "b10882e39e0de0dcab0de241795ad96004b9ece5269d32a8b4020d67d7ae2895",
+    "runtimeErrors": 0
+  },
+  "runtimeErrorMessages": [],
+  "evidenceFiles": [
+    "restart-ready-query-1280.jpg"
+  ]
+}

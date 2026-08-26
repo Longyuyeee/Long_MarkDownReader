@@ -10,12 +10,16 @@ use crate::services::pdf_index::load_pdf_index;
 use crate::services::reliable_write::write_utf8;
 use calamine::{open_workbook_from_rs, Data, Reader as CalamineReader, Xlsx};
 use chardetng::EncodingDetector;
+use notify::{EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, Mutex,
+};
 use std::time::UNIX_EPOCH;
 
 pub const KNOWLEDGE_INDEX_SCHEMA_VERSION: u32 = 1;
@@ -137,6 +141,29 @@ impl KnowledgeIndexStatus {
     }
 }
 
+pub fn ready_status_from_snapshot(
+    cache_root: &Path,
+    workspace: &Path,
+    snapshot: &KnowledgeIndexSnapshot,
+) -> KnowledgeIndexStatus {
+    KnowledgeIndexStatus {
+        state: "ready".into(),
+        schema_version: snapshot.schema_version,
+        built_at: Some(snapshot.built_at),
+        source_count: snapshot.sources.len(),
+        object_count: snapshot.objects.len(),
+        relation_count: snapshot.relations.len(),
+        progress: 100,
+        cache_bytes: index_snapshot_path(cache_root, workspace)
+            .metadata()
+            .map(|value| value.len())
+            .unwrap_or(0),
+        error: None,
+        recovery_available: false,
+        stale_source_count: None,
+    }
+}
+
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct KnowledgeIndexRecoveryReport {
@@ -158,6 +185,10 @@ struct RuntimeStatus {
 #[derive(Default)]
 pub struct KnowledgeIndexRuntime {
     states: Mutex<HashMap<String, RuntimeStatus>>,
+    snapshots: Mutex<HashMap<String, Arc<KnowledgeIndexSnapshot>>>,
+    cancellations: Mutex<HashMap<String, Arc<AtomicBool>>>,
+    changed_paths: Arc<Mutex<HashMap<String, HashSet<PathBuf>>>>,
+    watchers: Mutex<HashMap<String, RecommendedWatcher>>,
 }
 
 impl KnowledgeIndexRuntime {
@@ -193,6 +224,107 @@ impl KnowledgeIndexRuntime {
         self.get(workspace)
             .is_some_and(|status| status.state == "building" || status.state == "error")
     }
+
+    pub fn cache_snapshot(&self, workspace: &Path, snapshot: KnowledgeIndexSnapshot) {
+        self.snapshots
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .insert(workspace.to_string_lossy().into_owned(), Arc::new(snapshot));
+    }
+
+    pub fn cached_snapshot(&self, workspace: &Path) -> Option<Arc<KnowledgeIndexSnapshot>> {
+        self.snapshots
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .get(workspace.to_string_lossy().as_ref())
+            .cloned()
+    }
+
+    pub fn invalidate_snapshot(&self, workspace: &Path) {
+        self.snapshots
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .remove(workspace.to_string_lossy().as_ref());
+    }
+
+    pub fn begin_build(&self, workspace: &Path) -> Arc<AtomicBool> {
+        let token = Arc::new(AtomicBool::new(false));
+        self.cancellations
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .insert(workspace.to_string_lossy().into_owned(), token.clone());
+        token
+    }
+
+    pub fn cancel_build(&self, workspace: &Path) -> bool {
+        let token = self
+            .cancellations
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .get(workspace.to_string_lossy().as_ref())
+            .cloned();
+        if let Some(token) = token {
+            token.store(true, Ordering::Relaxed);
+            self.set(workspace, "cancelled", 0, None);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn finish_build(&self, workspace: &Path) {
+        self.cancellations
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .remove(workspace.to_string_lossy().as_ref());
+    }
+
+    pub fn ensure_watcher(&self, workspace: &Path) -> Result<(), String> {
+        let key = workspace.to_string_lossy().into_owned();
+        let mut watchers = self
+            .watchers
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if watchers.contains_key(&key) {
+            return Ok(());
+        }
+        let changed_paths = self.changed_paths.clone();
+        let callback_key = key.clone();
+        let mut watcher =
+            notify::recommended_watcher(move |event: notify::Result<notify::Event>| {
+                let Ok(event) = event else { return };
+                if matches!(event.kind, EventKind::Access(_)) {
+                    return;
+                }
+                let mut changes = changed_paths
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                let workspace_changes = changes.entry(callback_key.clone()).or_default();
+                workspace_changes.extend(event.paths);
+            })
+            .map_err(|error| format!("启动资料库变化监视失败: {error}"))?;
+        watcher
+            .watch(workspace, RecursiveMode::Recursive)
+            .map_err(|error| format!("监视资料库变化失败: {error}"))?;
+        watchers.insert(key, watcher);
+        Ok(())
+    }
+
+    pub fn changed_paths(&self, workspace: &Path) -> Vec<PathBuf> {
+        self.changed_paths
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .get(workspace.to_string_lossy().as_ref())
+            .map(|paths| paths.iter().cloned().collect())
+            .unwrap_or_default()
+    }
+
+    pub fn clear_changes(&self, workspace: &Path) {
+        self.changed_paths
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .remove(workspace.to_string_lossy().as_ref());
+    }
 }
 
 pub fn index_workspace_directory(cache_root: &Path, workspace: &Path) -> PathBuf {
@@ -210,7 +342,53 @@ pub fn workspace_fingerprint(workspace: &Path) -> String {
 
 pub fn collect_index_sources(workspace: &Path) -> Vec<IndexedSource> {
     let mut sources = Vec::new();
-    collect_sources_recursive(workspace, workspace, &mut sources);
+    let mut directories = Vec::new();
+    let Ok(entries) = fs::read_dir(workspace) else {
+        return sources;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if entry
+            .file_type()
+            .map(|kind| kind.is_symlink())
+            .unwrap_or(true)
+        {
+            continue;
+        }
+        let name = path.file_name().unwrap_or_default().to_string_lossy();
+        if name.starts_with('.') || name.ends_with(".assets") || is_sensitive_path(&path) {
+            continue;
+        }
+        if path.is_dir() {
+            directories.push(path);
+        } else {
+            collect_source_file(workspace, &path, &name, &mut sources);
+        }
+    }
+    let worker_count = std::thread::available_parallelism()
+        .map(|value| value.get())
+        .unwrap_or(2)
+        .min(directories.len().max(1));
+    let chunks = directories
+        .chunks(directories.len().div_ceil(worker_count).max(1))
+        .map(|chunk| chunk.to_vec())
+        .collect::<Vec<_>>();
+    std::thread::scope(|scope| {
+        let handles = chunks.into_iter().map(|chunk| {
+            scope.spawn(move || {
+                let mut collected = Vec::new();
+                for directory in chunk {
+                    collect_sources_recursive(workspace, &directory, &mut collected);
+                }
+                collected
+            })
+        });
+        for handle in handles {
+            if let Ok(mut collected) = handle.join() {
+                sources.append(&mut collected);
+            }
+        }
+    });
     sources.sort_by(|left, right| left.path.cmp(&right.path));
     sources
 }
@@ -236,33 +414,41 @@ fn collect_sources_recursive(workspace: &Path, directory: &Path, sources: &mut V
             collect_sources_recursive(workspace, &path, sources);
             continue;
         }
-        let is_sidecar = name.ends_with(".annotations.json") || name.ends_with(".ocr.json");
-        let is_indexed_format = file_format_for_path(&path)
-            .ok()
-            .is_some_and(|format| format.capabilities.index.is_supported());
-        if !is_sidecar && !is_indexed_format {
-            continue;
-        }
-        let Ok(metadata) = fs::metadata(&path) else {
-            continue;
-        };
-        let modified_nanos = metadata
-            .modified()
-            .ok()
-            .and_then(|value| value.duration_since(UNIX_EPOCH).ok())
-            .map(|value| value.as_nanos().min(u64::MAX as u128) as u64)
-            .unwrap_or(0);
-        let relative = path
-            .strip_prefix(workspace)
-            .unwrap_or(&path)
-            .to_string_lossy()
-            .replace('\\', "/");
-        sources.push(IndexedSource {
-            path: relative,
-            size: metadata.len(),
-            modified_nanos,
-        });
+        collect_source_file(workspace, &path, &name, sources);
     }
+}
+
+fn collect_source_file(
+    workspace: &Path,
+    path: &Path,
+    name: &str,
+    sources: &mut Vec<IndexedSource>,
+) {
+    let is_sidecar = name.ends_with(".annotations.json") || name.ends_with(".ocr.json");
+    let is_indexed_format = file_format_for_path(path)
+        .ok()
+        .is_some_and(|format| format.capabilities.index.is_supported());
+    if !is_sidecar && !is_indexed_format {
+        return;
+    }
+    let Ok(metadata) = fs::metadata(path) else {
+        return;
+    };
+    let modified_nanos = metadata
+        .modified()
+        .ok()
+        .and_then(|value| value.duration_since(UNIX_EPOCH).ok())
+        .map(|value| value.as_nanos().min(u64::MAX as u128) as u64)
+        .unwrap_or(0);
+    sources.push(IndexedSource {
+        path: path
+            .strip_prefix(workspace)
+            .unwrap_or(path)
+            .to_string_lossy()
+            .replace('\\', "/"),
+        size: metadata.len(),
+        modified_nanos,
+    });
 }
 
 pub fn source_digest(sources: &[IndexedSource]) -> String {
@@ -466,8 +652,7 @@ fn validate_workbook_index_archive(bytes: &[u8]) -> Result<(), String> {
         }
         if uncompressed > 0
             && (compressed == 0
-                || uncompressed
-                    > compressed.saturating_mul(MAX_WORKBOOK_INDEX_COMPRESSION_RATIO))
+                || uncompressed > compressed.saturating_mul(MAX_WORKBOOK_INDEX_COMPRESSION_RATIO))
         {
             return Err("XLSX 压缩比异常，已停止知识索引".into());
         }
@@ -505,26 +690,96 @@ fn decode_searchable_text(path: &Path, indexer: &str) -> Option<String> {
     }
 }
 
-fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<IndexedSearchSegment> {
+fn build_search_segments_for_source(
+    workspace: &Path,
+    source: &IndexedSource,
+) -> Vec<IndexedSearchSegment> {
     let mut segments = Vec::new();
-    for source in sources {
-        if source.path.ends_with(".annotations.json") || source.path.ends_with(".ocr.json") {
-            continue;
+    if source.path.ends_with(".annotations.json") || source.path.ends_with(".ocr.json") {
+        return segments;
+    }
+    let path = workspace.join(source.path.replace('/', std::path::MAIN_SEPARATOR_STR));
+    if is_sensitive_path(&path) {
+        return segments;
+    }
+    let Ok(format) = file_format_for_path(&path) else {
+        return segments;
+    };
+    let Some(indexer) = format.adapters.indexer.as_deref() else {
+        return segments;
+    };
+    let title = source_title(&path);
+    let path_string = path.to_string_lossy().into_owned();
+    if indexer == "pdf" {
+        let index = load_pdf_index(&path);
+        segments.push(IndexedSearchSegment {
+            title: title.clone(),
+            path: path_string.clone(),
+            object_type: format.id.clone(),
+            match_kind: "title".into(),
+            text: String::new(),
+            page: None,
+            annotation_id: None,
+            locator_kind: None,
+            locator_object_id: None,
+            location_label: None,
+            extraction_failed: index.extraction_failed,
+        });
+        for (page, text) in index.pages.into_iter().enumerate() {
+            if !text.trim().is_empty() {
+                segments.push(IndexedSearchSegment {
+                    title: title.clone(),
+                    path: path_string.clone(),
+                    object_type: format.id.clone(),
+                    match_kind: "body".into(),
+                    text,
+                    page: Some((page + 1) as u32),
+                    annotation_id: None,
+                    locator_kind: None,
+                    locator_object_id: None,
+                    location_label: None,
+                    extraction_failed: index.extraction_failed,
+                });
+            }
         }
-        let path = workspace.join(source.path.replace('/', std::path::MAIN_SEPARATOR_STR));
-        if is_sensitive_path(&path) {
-            continue;
+        for page in index.ocr_pages {
+            segments.push(IndexedSearchSegment {
+                title: title.clone(),
+                path: path_string.clone(),
+                object_type: format.id.clone(),
+                match_kind: "ocr".into(),
+                text: page.text,
+                page: Some(page.page),
+                annotation_id: None,
+                locator_kind: None,
+                locator_object_id: None,
+                location_label: None,
+                extraction_failed: index.extraction_failed,
+            });
         }
-        let Ok(format) = file_format_for_path(&path) else {
-            continue;
-        };
-        let Some(indexer) = format.adapters.indexer.as_deref() else {
-            continue;
-        };
-        let title = source_title(&path);
-        let path_string = path.to_string_lossy().into_owned();
-        if indexer == "pdf" {
-            let index = load_pdf_index(&path);
+        for annotation in index.annotations {
+            segments.push(IndexedSearchSegment {
+                title: title.clone(),
+                path: path_string.clone(),
+                object_type: format.id.clone(),
+                match_kind: "annotation".into(),
+                text: annotation.text,
+                page: Some(annotation.page),
+                annotation_id: Some(annotation.id),
+                locator_kind: None,
+                locator_object_id: None,
+                location_label: None,
+                extraction_failed: index.extraction_failed,
+            });
+        }
+    } else if indexer == "docx" {
+        let model = path
+            .metadata()
+            .ok()
+            .filter(|metadata| metadata.len() <= format.max_bytes)
+            .and_then(|_| fs::read(&path).ok())
+            .and_then(|bytes| parse_docx(&bytes).ok());
+        if let Some(model) = model {
             segments.push(IndexedSearchSegment {
                 title: title.clone(),
                 path: path_string.clone(),
@@ -536,232 +791,179 @@ fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<Ind
                 locator_kind: None,
                 locator_object_id: None,
                 location_label: None,
-                extraction_failed: index.extraction_failed,
+                extraction_failed: false,
             });
-            for (page, text) in index.pages.into_iter().enumerate() {
-                if !text.trim().is_empty() {
-                    segments.push(IndexedSearchSegment {
-                        title: title.clone(),
-                        path: path_string.clone(),
-                        object_type: format.id.clone(),
-                        match_kind: "body".into(),
-                        text,
-                        page: Some((page + 1) as u32),
-                        annotation_id: None,
-                        locator_kind: None,
-                        locator_object_id: None,
-                        location_label: None,
-                        extraction_failed: index.extraction_failed,
-                    });
+            for (index, block) in model.blocks.into_iter().enumerate() {
+                if block.text.trim().is_empty() {
+                    continue;
                 }
-            }
-            for page in index.ocr_pages {
+                let location_label = match block.kind.as_str() {
+                    "heading" => format!("标题：{}", block.text),
+                    "table" => format!("表格 {}", index + 1),
+                    "list-item" => format!("列表项 {}", index + 1),
+                    _ => format!("段落 {}", index + 1),
+                };
                 segments.push(IndexedSearchSegment {
                     title: title.clone(),
                     path: path_string.clone(),
-                    object_type: format.id.clone(),
-                    match_kind: "ocr".into(),
-                    text: page.text,
-                    page: Some(page.page),
-                    annotation_id: None,
-                    locator_kind: None,
-                    locator_object_id: None,
-                    location_label: None,
-                    extraction_failed: index.extraction_failed,
-                });
-            }
-            for annotation in index.annotations {
-                segments.push(IndexedSearchSegment {
-                    title: title.clone(),
-                    path: path_string.clone(),
-                    object_type: format.id.clone(),
-                    match_kind: "annotation".into(),
-                    text: annotation.text,
-                    page: Some(annotation.page),
-                    annotation_id: Some(annotation.id),
-                    locator_kind: None,
-                    locator_object_id: None,
-                    location_label: None,
-                    extraction_failed: index.extraction_failed,
-                });
-            }
-        } else if indexer == "docx" {
-            let model = path
-                .metadata()
-                .ok()
-                .filter(|metadata| metadata.len() <= format.max_bytes)
-                .and_then(|_| fs::read(&path).ok())
-                .and_then(|bytes| parse_docx(&bytes).ok());
-            if let Some(model) = model {
-                segments.push(IndexedSearchSegment {
-                    title: title.clone(),
-                    path: path_string.clone(),
-                    object_type: format.id.clone(),
-                    match_kind: "title".into(),
-                    text: String::new(),
-                    page: None,
-                    annotation_id: None,
-                    locator_kind: None,
-                    locator_object_id: None,
-                    location_label: None,
-                    extraction_failed: false,
-                });
-                for (index, block) in model.blocks.into_iter().enumerate() {
-                    if block.text.trim().is_empty() {
-                        continue;
-                    }
-                    let location_label = match block.kind.as_str() {
-                        "heading" => format!("标题：{}", block.text),
-                        "table" => format!("表格 {}", index + 1),
-                        "list-item" => format!("列表项 {}", index + 1),
-                        _ => format!("段落 {}", index + 1),
-                    };
-                    segments.push(IndexedSearchSegment {
-                        title: title.clone(),
-                        path: path_string.clone(),
-                        object_type: format.id.clone(),
-                        match_kind: "body".into(),
-                        text: block.text,
-                        page: None,
-                        annotation_id: None,
-                        locator_kind: Some("docx-block".into()),
-                        locator_object_id: Some(block.id),
-                        location_label: Some(location_label),
-                        extraction_failed: false,
-                    });
-                }
-                for item in model.related_content {
-                    segments.push(IndexedSearchSegment {
-                        title: title.clone(),
-                        path: path_string.clone(),
-                        object_type: format.id.clone(),
-                        match_kind: "related".into(),
-                        text: item.text,
-                        page: None,
-                        annotation_id: None,
-                        locator_kind: Some(format!("docx-{}", item.kind)),
-                        locator_object_id: Some(item.id),
-                        location_label: Some(item.label),
-                        extraction_failed: false,
-                    });
-                }
-            }
-        } else if indexer == "odt" {
-            let model = path
-                .metadata()
-                .ok()
-                .filter(|metadata| metadata.len() <= format.max_bytes)
-                .and_then(|_| fs::read(&path).ok())
-                .and_then(|bytes| parse_odt(&bytes).ok());
-            if let Some(model) = model {
-                segments.push(IndexedSearchSegment {
-                    title: title.clone(),
-                    path: path_string.clone(),
-                    object_type: format.id.clone(),
-                    match_kind: "title".into(),
-                    text: String::new(),
-                    page: None,
-                    annotation_id: None,
-                    locator_kind: None,
-                    locator_object_id: None,
-                    location_label: None,
-                    extraction_failed: false,
-                });
-                for (index, block) in model.blocks.into_iter().enumerate() {
-                    if block.text.trim().is_empty() {
-                        continue;
-                    }
-                    let location_label = match block.kind.as_str() {
-                        "heading" => format!("标题：{}", block.text),
-                        "table" => format!("表格 {}", index + 1),
-                        "list-item" => format!("列表项 {}", index + 1),
-                        _ => format!("段落 {}", index + 1),
-                    };
-                    segments.push(IndexedSearchSegment {
-                        title: title.clone(),
-                        path: path_string.clone(),
-                        object_type: format.id.clone(),
-                        match_kind: "body".into(),
-                        text: block.text,
-                        page: None,
-                        annotation_id: None,
-                        locator_kind: Some("odt-block".into()),
-                        locator_object_id: Some(block.id),
-                        location_label: Some(location_label),
-                        extraction_failed: false,
-                    });
-                }
-            }
-        } else if indexer == "odf-content" {
-            if let Some(odf_segments) = path
-                .metadata()
-                .ok()
-                .filter(|metadata| metadata.len() <= format.max_bytes)
-                .and_then(|_| fs::read(&path).ok())
-                .and_then(|bytes| {
-                    let extension = path.extension()?.to_str()?;
-                    build_odf_content_index_segments(
-                        &title,
-                        &path_string,
-                        &format.id,
-                        extension,
-                        &bytes,
-                    )
-                    .ok()
-                })
-            {
-                segments.extend(odf_segments);
-            }
-        } else if indexer == "pptx" {
-            if let Some(pptx_segments) = path
-                .metadata()
-                .ok()
-                .filter(|metadata| metadata.len() <= format.max_bytes)
-                .and_then(|_| fs::read(&path).ok())
-                .and_then(|bytes| {
-                    build_pptx_index_segments(&title, &path_string, &format.id, &bytes).ok()
-                })
-            {
-                segments.extend(pptx_segments);
-            }
-        } else if indexer == "workbook" {
-            if let Some(workbook_segments) = path
-                .metadata()
-                .ok()
-                .filter(|metadata| metadata.len() <= format.max_bytes)
-                .and_then(|_| fs::read(&path).ok())
-                .and_then(|bytes| {
-                    build_workbook_index_segments(&title, &path_string, &format.id, &bytes).ok()
-                })
-            {
-                segments.extend(workbook_segments);
-            }
-        } else if matches!(
-            indexer,
-            "markdown" | "text" | "json-text" | "table" | "opml"
-        ) {
-            if let Some(text) = decode_searchable_text(&path, indexer) {
-                segments.push(IndexedSearchSegment {
-                    title,
-                    path: path_string,
                     object_type: format.id.clone(),
                     match_kind: "body".into(),
-                    text,
+                    text: block.text,
                     page: None,
                     annotation_id: None,
-                    locator_kind: None,
-                    locator_object_id: None,
-                    location_label: None,
+                    locator_kind: Some("docx-block".into()),
+                    locator_object_id: Some(block.id),
+                    location_label: Some(location_label),
                     extraction_failed: false,
                 });
             }
+            for item in model.related_content {
+                segments.push(IndexedSearchSegment {
+                    title: title.clone(),
+                    path: path_string.clone(),
+                    object_type: format.id.clone(),
+                    match_kind: "related".into(),
+                    text: item.text,
+                    page: None,
+                    annotation_id: None,
+                    locator_kind: Some(format!("docx-{}", item.kind)),
+                    locator_object_id: Some(item.id),
+                    location_label: Some(item.label),
+                    extraction_failed: false,
+                });
+            }
+        }
+    } else if indexer == "odt" {
+        let model = path
+            .metadata()
+            .ok()
+            .filter(|metadata| metadata.len() <= format.max_bytes)
+            .and_then(|_| fs::read(&path).ok())
+            .and_then(|bytes| parse_odt(&bytes).ok());
+        if let Some(model) = model {
+            segments.push(IndexedSearchSegment {
+                title: title.clone(),
+                path: path_string.clone(),
+                object_type: format.id.clone(),
+                match_kind: "title".into(),
+                text: String::new(),
+                page: None,
+                annotation_id: None,
+                locator_kind: None,
+                locator_object_id: None,
+                location_label: None,
+                extraction_failed: false,
+            });
+            for (index, block) in model.blocks.into_iter().enumerate() {
+                if block.text.trim().is_empty() {
+                    continue;
+                }
+                let location_label = match block.kind.as_str() {
+                    "heading" => format!("标题：{}", block.text),
+                    "table" => format!("表格 {}", index + 1),
+                    "list-item" => format!("列表项 {}", index + 1),
+                    _ => format!("段落 {}", index + 1),
+                };
+                segments.push(IndexedSearchSegment {
+                    title: title.clone(),
+                    path: path_string.clone(),
+                    object_type: format.id.clone(),
+                    match_kind: "body".into(),
+                    text: block.text,
+                    page: None,
+                    annotation_id: None,
+                    locator_kind: Some("odt-block".into()),
+                    locator_object_id: Some(block.id),
+                    location_label: Some(location_label),
+                    extraction_failed: false,
+                });
+            }
+        }
+    } else if indexer == "odf-content" {
+        if let Some(odf_segments) = path
+            .metadata()
+            .ok()
+            .filter(|metadata| metadata.len() <= format.max_bytes)
+            .and_then(|_| fs::read(&path).ok())
+            .and_then(|bytes| {
+                let extension = path.extension()?.to_str()?;
+                build_odf_content_index_segments(
+                    &title,
+                    &path_string,
+                    &format.id,
+                    extension,
+                    &bytes,
+                )
+                .ok()
+            })
+        {
+            segments.extend(odf_segments);
+        }
+    } else if indexer == "pptx" {
+        if let Some(pptx_segments) = path
+            .metadata()
+            .ok()
+            .filter(|metadata| metadata.len() <= format.max_bytes)
+            .and_then(|_| fs::read(&path).ok())
+            .and_then(|bytes| {
+                build_pptx_index_segments(&title, &path_string, &format.id, &bytes).ok()
+            })
+        {
+            segments.extend(pptx_segments);
+        }
+    } else if indexer == "workbook" {
+        if let Some(workbook_segments) = path
+            .metadata()
+            .ok()
+            .filter(|metadata| metadata.len() <= format.max_bytes)
+            .and_then(|_| fs::read(&path).ok())
+            .and_then(|bytes| {
+                build_workbook_index_segments(&title, &path_string, &format.id, &bytes).ok()
+            })
+        {
+            segments.extend(workbook_segments);
+        }
+    } else if matches!(
+        indexer,
+        "markdown" | "text" | "json-text" | "table" | "opml"
+    ) {
+        if let Some(text) = decode_searchable_text(&path, indexer) {
+            segments.push(IndexedSearchSegment {
+                title,
+                path: path_string,
+                object_type: format.id.clone(),
+                match_kind: "body".into(),
+                text,
+                page: None,
+                annotation_id: None,
+                locator_kind: None,
+                locator_object_id: None,
+                location_label: None,
+                extraction_failed: false,
+            });
         }
     }
     segments
 }
 
+fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<IndexedSearchSegment> {
+    sources
+        .iter()
+        .flat_map(|source| build_search_segments_for_source(workspace, source))
+        .collect()
+}
+
+#[cfg(test)]
 pub fn snapshot_from_graph(workspace: &Path, graph: GraphData) -> KnowledgeIndexSnapshot {
     let sources = collect_index_sources(workspace);
+    snapshot_from_graph_with_sources(workspace, graph, sources)
+}
+
+pub fn snapshot_from_graph_with_sources(
+    workspace: &Path,
+    graph: GraphData,
+    sources: Vec<IndexedSource>,
+) -> KnowledgeIndexSnapshot {
     let source_digest = source_digest(&sources);
     let search_segments = build_search_segments(workspace, &sources);
     let mut objects: Vec<IndexedKnowledgeObject> = graph
@@ -860,6 +1062,124 @@ pub fn snapshot_from_graph(workspace: &Path, graph: GraphData) -> KnowledgeIndex
     }
 }
 
+pub fn refresh_snapshot_incremental_for_paths(
+    workspace: &Path,
+    mut snapshot: KnowledgeIndexSnapshot,
+    changed_paths: &[PathBuf],
+) -> Option<KnowledgeIndexSnapshot> {
+    let current_sources = if changed_paths.is_empty() {
+        collect_index_sources(workspace)
+    } else {
+        let unique_paths = changed_paths.iter().collect::<HashSet<_>>();
+        if unique_paths.len() != 1 {
+            return None;
+        }
+        let path = unique_paths.into_iter().next()?;
+        if !path.is_file() {
+            return None;
+        }
+        let relative = path
+            .strip_prefix(workspace)
+            .ok()?
+            .to_string_lossy()
+            .replace('\\', "/");
+        let position = snapshot
+            .sources
+            .iter()
+            .position(|source| source.path == relative)?;
+        let name = path.file_name()?.to_string_lossy();
+        let mut replacement = Vec::new();
+        collect_source_file(workspace, path, &name, &mut replacement);
+        let replacement = replacement.into_iter().next()?;
+        let mut sources = snapshot.sources.clone();
+        sources[position] = replacement;
+        sources
+    };
+    if current_sources.len() != snapshot.sources.len() {
+        return None;
+    }
+    let previous = snapshot
+        .sources
+        .iter()
+        .map(|source| (source.path.as_str(), source))
+        .collect::<HashMap<_, _>>();
+    let changed = current_sources
+        .iter()
+        .filter(|source| {
+            previous.get(source.path.as_str()).is_none_or(|old| {
+                old.size != source.size || old.modified_nanos != source.modified_nanos
+            })
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    if changed.len() != 1 {
+        return None;
+    }
+    let changed = changed.into_iter().next()?;
+    if changed.path.ends_with(".annotations.json") || changed.path.ends_with(".ocr.json") {
+        return None;
+    }
+    let path = workspace.join(changed.path.replace('/', std::path::MAIN_SEPARATOR_STR));
+    let format = file_format_for_path(&path).ok()?;
+    let indexer = format.adapters.indexer.as_deref()?;
+    if !matches!(
+        indexer,
+        "markdown" | "text" | "json-text" | "table" | "opml"
+    ) {
+        return None;
+    }
+    let bytes = fs::read(&path).ok()?;
+    if bytes.len() as u64 > format.max_bytes {
+        return None;
+    }
+    if indexer == "markdown" {
+        let text = String::from_utf8_lossy(&bytes);
+        let absolute = path.to_string_lossy();
+        let previous_text = snapshot
+            .objects
+            .iter()
+            .find(|object| object.path == absolute && object.parent_id.is_none())
+            .map(|object| object.search_text.as_str())
+            .unwrap_or_default();
+        if text.contains("[[")
+            || text.contains(".pdf?")
+            || previous_text.contains("[[")
+            || previous_text.contains(".pdf?")
+        {
+            return None;
+        }
+    }
+    let absolute = path.to_string_lossy().into_owned();
+    let replacement_segments = build_search_segments(workspace, std::slice::from_ref(&changed));
+    snapshot
+        .search_segments
+        .retain(|segment| segment.path != absolute);
+    snapshot
+        .search_segments
+        .extend(replacement_segments.clone());
+    if let Some(object) = snapshot
+        .objects
+        .iter_mut()
+        .find(|object| object.path == absolute && object.parent_id.is_none())
+    {
+        object.search_text = replacement_segments
+            .iter()
+            .map(|segment| segment.text.as_str())
+            .collect::<Vec<_>>()
+            .join("\n")
+            .chars()
+            .take(12_000)
+            .collect();
+    }
+    snapshot.sources = current_sources;
+    snapshot.source_digest = source_digest(&snapshot.sources);
+    snapshot.built_at = std::time::SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|value| value.as_secs())
+        .unwrap_or(0);
+    Some(snapshot)
+}
+
 pub fn write_snapshot(
     cache_root: &Path,
     workspace: &Path,
@@ -935,14 +1255,39 @@ pub fn inspect_index(
     runtime: &KnowledgeIndexRuntime,
 ) -> KnowledgeIndexStatus {
     if let Some(current) = runtime.get(workspace) {
-        if current.state == "building" || current.state == "error" {
+        if current.state == "building" || current.state == "error" || current.state == "cancelled" {
             let mut status = KnowledgeIndexStatus::simple(&current.state);
             status.progress = current.progress;
             status.error = current.error;
             return status;
         }
     }
+    let _ = runtime.ensure_watcher(workspace);
     let path = index_snapshot_path(cache_root, workspace);
+    if path.exists() {
+        if let Some(snapshot) = runtime.cached_snapshot(workspace) {
+            let changed_paths = runtime.changed_paths(workspace);
+            if changed_paths.is_empty() {
+                return ready_status_from_snapshot(cache_root, workspace, &snapshot);
+            }
+            return KnowledgeIndexStatus {
+                state: "stale".into(),
+                schema_version: snapshot.schema_version,
+                built_at: Some(snapshot.built_at),
+                source_count: snapshot.sources.len(),
+                object_count: snapshot.objects.len(),
+                relation_count: snapshot.relations.len(),
+                progress: 0,
+                cache_bytes: index_snapshot_path(cache_root, workspace)
+                    .metadata()
+                    .map(|value| value.len())
+                    .unwrap_or(0),
+                error: None,
+                recovery_available: true,
+                stale_source_count: Some(changed_paths.len()),
+            };
+        }
+    }
     let cache_bytes = path.metadata().map(|value| value.len()).unwrap_or(0);
     match read_snapshot(cache_root, workspace) {
         Ok(None) => KnowledgeIndexStatus::simple("missing"),
@@ -961,6 +1306,12 @@ pub fn inspect_index(
             } else {
                 "stale"
             };
+            if state == "ready" {
+                runtime.cache_snapshot(workspace, snapshot.clone());
+                runtime.clear_changes(workspace)
+            } else {
+                runtime.invalidate_snapshot(workspace)
+            }
             KnowledgeIndexStatus {
                 state: state.into(),
                 schema_version: snapshot.schema_version,
@@ -1094,6 +1445,7 @@ mod tests {
                 |object| object.object_type == "diagram" && object.search_text.contains("A --> B")
             ));
         fs::write(workspace.join("Two.md"), "# Two").unwrap();
+        assert_eq!(inspect_index(&cache, &workspace, &runtime).state, "stale");
         assert_eq!(inspect_index(&cache, &workspace, &runtime).state, "stale");
         delete_index(&cache, &workspace).unwrap();
         assert_eq!(inspect_index(&cache, &workspace, &runtime).state, "missing");
@@ -1245,7 +1597,10 @@ mod tests {
                 edges: Vec::new(),
             },
         );
-        assert!(snapshot.sources.iter().any(|source| source.path.ends_with("Quarterly Evidence.xlsx")));
+        assert!(snapshot
+            .sources
+            .iter()
+            .any(|source| source.path.ends_with("Quarterly Evidence.xlsx")));
         assert!(snapshot.search_segments.iter().any(|segment| {
             segment.object_type == "workbook"
                 && segment.locator_kind.as_deref() == Some("workbook-sheet")
@@ -1275,5 +1630,113 @@ mod tests {
         let error = build_workbook_index_segments("bomb.xlsx", "bomb.xlsx", "workbook", &bytes)
             .unwrap_err();
         assert!(error.contains("压缩比异常"));
+    }
+
+    #[test]
+    fn source_collection_is_sorted_and_excludes_sensitive_files_across_directories() {
+        let (base, workspace, _) = fixture("parallel-source-collection");
+        for directory in ["z-last", "a-first", "m-middle"] {
+            fs::create_dir_all(workspace.join(directory)).unwrap();
+        }
+        fs::write(workspace.join("z-last/visible.txt"), "visible").unwrap();
+        fs::write(workspace.join("a-first/note.md"), "# Note").unwrap();
+        fs::write(workspace.join("m-middle/data.json"), "{\"ok\":true}").unwrap();
+        fs::write(
+            workspace.join("m-middle/deploy-secrets.yaml"),
+            "password: no",
+        )
+        .unwrap();
+
+        let sources = collect_index_sources(&workspace);
+        let paths = sources
+            .iter()
+            .map(|source| source.path.as_str())
+            .collect::<Vec<_>>();
+
+        assert_eq!(
+            paths,
+            vec![
+                "a-first/note.md",
+                "m-middle/data.json",
+                "z-last/visible.txt"
+            ]
+        );
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn one_safe_markdown_change_refreshes_snapshot_without_rebuilding_relations() {
+        let (base, workspace, _) = fixture("incremental-markdown");
+        let note = workspace.join("Note.md");
+        fs::write(&note, "# Before\n\nold-search-value\n").unwrap();
+        let snapshot = snapshot_from_graph(
+            &workspace,
+            GraphData {
+                nodes: vec![GraphNode::test_node("note")],
+                edges: vec![GraphEdge::test_edge("note", "note")],
+            },
+        );
+        let previous_digest = snapshot.source_digest.clone();
+        let previous_relations = snapshot.relations.len();
+        fs::write(&note, "# After\n\nnew-search-value-with-longer-size\n").unwrap();
+
+        let refreshed = refresh_snapshot_incremental_for_paths(&workspace, snapshot, &[]).unwrap();
+
+        assert_ne!(refreshed.source_digest, previous_digest);
+        assert_eq!(refreshed.relations.len(), previous_relations);
+        assert!(refreshed
+            .search_segments
+            .iter()
+            .any(|segment| segment.path.ends_with("Note.md")
+                && segment.text.contains("new-search-value")));
+        assert!(!refreshed
+            .search_segments
+            .iter()
+            .any(|segment| segment.text.contains("old-search-value")));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn relation_bearing_markdown_change_requires_a_full_rebuild() {
+        let (base, workspace, _) = fixture("incremental-relation-guard");
+        let note = workspace.join("Note.md");
+        fs::write(&note, "# Before\n").unwrap();
+        let snapshot = snapshot_from_graph(
+            &workspace,
+            GraphData {
+                nodes: Vec::new(),
+                edges: Vec::new(),
+            },
+        );
+        fs::write(&note, "# After\n\n[[Target]]\n").unwrap();
+
+        assert!(refresh_snapshot_incremental_for_paths(&workspace, snapshot, &[]).is_none());
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn runtime_cache_and_cancellation_have_explicit_lifecycles() {
+        let (base, workspace, _) = fixture("runtime-lifecycle");
+        let snapshot = snapshot_from_graph(
+            &workspace,
+            GraphData {
+                nodes: Vec::new(),
+                edges: Vec::new(),
+            },
+        );
+        let runtime = KnowledgeIndexRuntime::default();
+        runtime.cache_snapshot(&workspace, snapshot);
+        assert!(runtime.cached_snapshot(&workspace).is_some());
+        runtime.invalidate_snapshot(&workspace);
+        assert!(runtime.cached_snapshot(&workspace).is_none());
+
+        let token = runtime.begin_build(&workspace);
+        assert!(!token.load(Ordering::Relaxed));
+        assert!(runtime.cancel_build(&workspace));
+        assert!(token.load(Ordering::Relaxed));
+        assert_eq!(runtime.get(&workspace).unwrap().state, "cancelled");
+        runtime.finish_build(&workspace);
+        assert!(!runtime.cancel_build(&workspace));
+        fs::remove_dir_all(base).unwrap();
     }
 }

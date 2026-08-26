@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "stage": "post-v1.0.15-large-library-index-baseline",
+  "fixture": {
+    "fileCount": 10000,
+    "directoryCount": 100,
+    "needle": "longedit-needle-9876",
+    "requiresPhysicalFiles": true
+  },
+  "expectedBudgetsMs": {
+    "libraryFirstOperable": 5000,
+    "initialRebuild": 12000,
+    "indexedQuery": 500,
+    "staleDetection": 1500,
+    "fallbackQuery": 5000,
+    "singleFileIncrementalRefresh": 2000,
+    "cancelAcknowledgement": 500,
+    "restartReadyQuery": 700
+  },
+  "expectedCapabilities": {
+    "indexedNeedleResultCount": 1,
+    "sourceBytesUnchangedByIndex": true,
+    "singleFileRefresh": true,
+    "cancellableBuild": true,
+    "restartReusesReadyIndex": true,
+    "runtimeErrors": 0,
+    "responsive720": true
+  },
+  "nextStageAfterAcceptance": "M1B2A DOCX producer object selection audit"
+}

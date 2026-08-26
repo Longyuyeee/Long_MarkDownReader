@@ -225,6 +225,7 @@ const indexLabel = computed(() => ({
   stale: '搜索与关联：需要更新',
   corrupt: '搜索与关联：需要处理',
   error: '搜索与关联：需要处理',
+  cancelled: '搜索与关联：已停止',
 }[indexStatus.value.state]))
 const refreshedLabel = computed(() => refreshedAt.value ? new Date(refreshedAt.value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '尚未刷新')
 const pathIdentity = (path: string) => path.replace(/^\\\\\?\\/, '').replace(/\\/g, '/').toLocaleLowerCase()

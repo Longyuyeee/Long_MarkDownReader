@@ -1,0 +1,41 @@
+{
+  "stage": "large-library-index-baseline",
+  "sourceCommit": "3e2b26eec7a0887cf2340ee483419dd31758c78d",
+  "actual": {
+    "firstOperableMs": 4890,
+    "initialRebuildMs": 15796,
+    "initialStatus": {
+      "state": "ready",
+      "schemaVersion": 1,
+      "builtAt": 1787726899,
+      "sourceCount": 10001,
+      "objectCount": 10001,
+      "relationCount": 99,
+      "progress": 100,
+      "cacheBytes": 12255642,
+      "error": null,
+      "recoveryAvailable": false,
+      "staleSourceCount": null
+    },
+    "indexedQueryMs": 4229,
+    "indexedResultCount": 1,
+    "staleDetectionMs": 3574,
+    "staleState": "stale",
+    "fallbackQueryMs": 9001,
+    "fallbackResultCount": 1,
+    "singleFileRefreshMs": 15926,
+    "refreshedResultCount": 1,
+    "cancelSupported": false,
+    "cancelAcknowledgementMs": 4,
+    "cancelError": "",
+    "responsive720": true,
+    "runtimeErrors": 0,
+    "manifestSha256Before": "b10882e39e0de0dcab0de241795ad96004b9ece5269d32a8b4020d67d7ae2895",
+    "manifestSha256After": "b10882e39e0de0dcab0de241795ad96004b9ece5269d32a8b4020d67d7ae2895"
+  },
+  "runtimeErrorMessages": [],
+  "evidenceFiles": [
+    "large-library-index-1280.jpg",
+    "large-library-index-720.jpg"
+  ]
+}

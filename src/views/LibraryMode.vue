@@ -78,10 +78,14 @@
                 <span>{{ knowledgeIndexLabel }}</span>
                 <small v-if="knowledgeIndexStatus.state === 'ready'">{{ knowledgeIndexStatus.objectCount }} 个对象 · {{ knowledgeIndexStatus.relationCount }} 条关系</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'building'">{{ knowledgeIndexStatus.progress }}%</small>
+                <small v-else-if="knowledgeIndexStatus.state === 'cancelled'">已停止，可随时重新准备</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'missing'">首次打开会自动准备</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'stale'">{{ knowledgeIndexStatus.staleSourceCount || knowledgeIndexStatus.sourceCount }} 个文件需要更新</small>
                 <small v-else>打开更多菜单处理</small>
                 <div class="knowledge-index-actions">
+                  <n-button v-if="knowledgeIndexBusy" quaternary circle size="tiny" :loading="knowledgeIndexCancelling" title="停止准备" @click="cancelKnowledgeIndex">
+                    <template #icon><n-icon :component="StopIcon" /></template>
+                  </n-button>
                   <n-dropdown trigger="click" :options="knowledgeIndexMenuOptions" @select="handleKnowledgeIndexAction">
                     <n-button quaternary circle size="tiny" :disabled="knowledgeIndexBusy" title="搜索与关联选项">
                       <template #icon><n-icon :component="MoreIcon" /></template>
@@ -732,7 +736,7 @@ import {
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
   Database as DatabaseIcon, LayoutDashboard as DashboardIcon, ListFilter as CollectionIcon,
   BookmarkPlus as BookmarkAddIcon, Languages as LanguagesIcon, ExternalLink as ExternalOpenIcon,
-  MoreHorizontal as MoreIcon, Palette as PaletteIcon
+  MoreHorizontal as MoreIcon, Palette as PaletteIcon, Square as StopIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -827,7 +831,7 @@ interface KnowledgeSearchResult {
 }
 
 interface KnowledgeIndexStatus {
-  state: 'missing' | 'building' | 'ready' | 'stale' | 'corrupt' | 'error'
+  state: 'missing' | 'building' | 'ready' | 'stale' | 'corrupt' | 'error' | 'cancelled'
   schemaVersion: number
   builtAt?: number
   sourceCount: number
@@ -1280,6 +1284,7 @@ const knowledgeIndexStatus = ref<KnowledgeIndexStatus>({
   relationCount: 0, progress: 0, cacheBytes: 0, recoveryAvailable: false,
 })
 const knowledgeIndexBusy = ref(false)
+const knowledgeIndexCancelling = ref(false)
 const automaticallyPreparingLibraries = new Set<string>()
 const activeGraphCollection = computed(() => store.savedSearches.find(search =>
   search.id === activeCollectionId.value && search.libraryPath === store.libraryPath && search.graphRoot))
@@ -1366,6 +1371,7 @@ const librarySavedSearches = computed(() => store.savedSearches
 const knowledgeIndexLabel = computed(() => ({
   missing: '搜索与关联：准备中', building: '搜索与关联：正在准备', ready: '搜索与关联：可用', stale: '搜索与关联：需要更新',
   corrupt: '搜索与关联：需要处理', error: '搜索与关联：需要处理',
+  cancelled: '搜索与关联：已停止',
 }[knowledgeIndexStatus.value.state]))
 const knowledgeIndexExplanation = computed(() => ({
   missing: 'LongEdit 会在后台读取支持的文件并准备本地搜索缓存，不会修改资料库文件。',
@@ -1374,6 +1380,7 @@ const knowledgeIndexExplanation = computed(() => ({
   stale: '资料库内容发生变化，LongEdit 正在后台更新本地搜索缓存。',
   corrupt: '本地搜索缓存无法读取，可从更多菜单隔离缓存并重新准备；资料库文件不会被删除。',
   error: '本地搜索缓存准备失败，可从更多菜单重试；资料库文件不会被修改。',
+  cancelled: '本次准备已停止，已有缓存和资料库文件都没有被删除或修改。',
 }[knowledgeIndexStatus.value.state]))
 const knowledgeIndexMenuOptions = computed(() => [
   ...(knowledgeIndexStatus.value.state === 'corrupt' && knowledgeIndexStatus.value.recoveryAvailable
@@ -3351,7 +3358,10 @@ const rebuildKnowledgeIndex = async (options: { automatic?: boolean; libraryRoot
   try {
     const status = await invoke<KnowledgeIndexStatus>('rebuild_knowledge_index', { libraryRoot })
     if (store.libraryPath === libraryRoot) knowledgeIndexStatus.value = status
-    if (!options.automatic) message.success('搜索与关联已重新准备')
+    if (!options.automatic) {
+      if (status.state === 'cancelled') message.info('已停止准备搜索与关联')
+      else message.success('搜索与关联已重新准备')
+    }
   } catch (error) {
     if (store.libraryPath === libraryRoot) knowledgeIndexStatus.value = { ...knowledgeIndexStatus.value, state: 'error', progress: 0, error: String(error) }
     if (!options.automatic) message.error(`重新准备搜索与关联失败：${String(error)}`)
@@ -3362,6 +3372,19 @@ const rebuildKnowledgeIndex = async (options: { automatic?: boolean; libraryRoot
     if (store.libraryPath && store.libraryPath !== libraryRoot) {
       void refreshKnowledgeIndexStatus({ libraryRoot: store.libraryPath })
     }
+  }
+}
+const cancelKnowledgeIndex = async () => {
+  const libraryRoot = store.libraryPath
+  if (!libraryRoot || !knowledgeIndexBusy.value || knowledgeIndexCancelling.value) return
+  knowledgeIndexCancelling.value = true
+  try {
+    knowledgeIndexStatus.value = await invoke<KnowledgeIndexStatus>('cancel_knowledge_index', { libraryRoot })
+    message.info('已停止准备搜索与关联')
+  } catch (error) {
+    message.error(`停止失败：${String(error)}`)
+  } finally {
+    knowledgeIndexCancelling.value = false
   }
 }
 const recoverKnowledgeIndex = () => {

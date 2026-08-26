@@ -3,11 +3,14 @@ use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
 use crate::formats::odt::parse_odt;
 use crate::formats::opml::{opml_search_text, parse_opml};
 use crate::formats::table::{parse_internal_table, table_search_text};
+#[cfg(test)]
+use crate::services::knowledge_index::snapshot_from_graph;
 use crate::services::knowledge_index::{
     build_odf_content_index_segments, build_pptx_index_segments, build_workbook_index_segments,
-    delete_index, inspect_index, read_ready_snapshot, recover_index_cache, snapshot_from_graph, write_snapshot,
-    IndexedSearchSegment, KnowledgeIndexRecoveryReport, KnowledgeIndexRuntime,
-    KnowledgeIndexStatus,
+    collect_index_sources, delete_index, inspect_index, read_ready_snapshot, read_snapshot,
+    ready_status_from_snapshot, recover_index_cache, refresh_snapshot_incremental_for_paths,
+    snapshot_from_graph_with_sources, write_snapshot, IndexedSearchSegment,
+    KnowledgeIndexRecoveryReport, KnowledgeIndexRuntime, KnowledgeIndexStatus,
 };
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -51,38 +54,143 @@ pub async fn rebuild_knowledge_index(
         return Err("知识索引正在构建，请稍后再试".into());
     }
     runtime.set(&workspace, "building", 10, None);
-    let graph =
-        match crate::commands::graph::build_link_graph(workspace.to_string_lossy().into_owned())
-            .await
-        {
-            Ok(graph) => graph,
-            Err(error) => {
-                runtime.set(&workspace, "error", 0, Some(error.clone()));
-                return Err(error);
-            }
-        };
+    let cancellation = runtime.begin_build(&workspace);
+    let changed_paths = runtime.changed_paths(&workspace);
+    let incremental_workspace = workspace.clone();
+    let incremental_cache = cache_root.clone();
+    let incremental_result =
+        tauri::async_runtime::spawn_blocking(move || -> Result<Option<_>, String> {
+            let Some(previous) = read_snapshot(&incremental_cache, &incremental_workspace)? else {
+                return Ok(None);
+            };
+            Ok(refresh_snapshot_incremental_for_paths(
+                &incremental_workspace,
+                previous,
+                &changed_paths,
+            ))
+        })
+        .await;
+    let incremental = match incremental_result {
+        Ok(Ok(snapshot)) => snapshot,
+        Ok(Err(error)) => {
+            runtime.finish_build(&workspace);
+            runtime.set(&workspace, "error", 0, Some(error.clone()));
+            return Err(error);
+        }
+        Err(error) => {
+            let error = format!("知识索引增量任务失败: {error}");
+            runtime.finish_build(&workspace);
+            runtime.set(&workspace, "error", 0, Some(error.clone()));
+            return Err(error);
+        }
+    };
+    if let Some(snapshot) = incremental {
+        if cancellation.load(std::sync::atomic::Ordering::Relaxed) {
+            runtime.finish_build(&workspace);
+            runtime.set(&workspace, "cancelled", 0, None);
+            return Ok(inspect_index(&cache_root, &workspace, &runtime));
+        }
+        if let Err(error) = write_snapshot(&cache_root, &workspace, &snapshot) {
+            runtime.finish_build(&workspace);
+            runtime.set(&workspace, "error", 0, Some(error.clone()));
+            return Err(error);
+        }
+        let status = ready_status_from_snapshot(&cache_root, &workspace, &snapshot);
+        runtime.cache_snapshot(&workspace, snapshot);
+        runtime.clear_changes(&workspace);
+        let _ = runtime.ensure_watcher(&workspace);
+        runtime.finish_build(&workspace);
+        runtime.set(&workspace, "ready", 100, None);
+        return Ok(status);
+    }
+    let source_workspace = workspace.clone();
+    let source_task =
+        tauri::async_runtime::spawn_blocking(move || collect_index_sources(&source_workspace));
+    let graph = match crate::commands::graph::build_link_graph_cancellable(
+        workspace.to_string_lossy().into_owned(),
+        cancellation.clone(),
+    )
+    .await
+    {
+        Ok(graph) => graph,
+        Err(error) if error == "knowledge-index-cancelled" => {
+            runtime.finish_build(&workspace);
+            runtime.set(&workspace, "cancelled", 0, None);
+            return Ok(inspect_index(&cache_root, &workspace, &runtime));
+        }
+        Err(error) => {
+            runtime.finish_build(&workspace);
+            runtime.set(&workspace, "error", 0, Some(error.clone()));
+            return Err(error);
+        }
+    };
+    let sources = match source_task.await {
+        Ok(sources) => sources,
+        Err(error) => {
+            let error = format!("知识索引来源扫描失败: {error}");
+            runtime.finish_build(&workspace);
+            runtime.set(&workspace, "error", 0, Some(error.clone()));
+            return Err(error);
+        }
+    };
     runtime.set(&workspace, "building", 75, None);
     let workspace_for_task = workspace.clone();
-    let cache_for_task = cache_root.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
-        let snapshot = snapshot_from_graph(&workspace_for_task, graph);
-        write_snapshot(&cache_for_task, &workspace_for_task, &snapshot)
+        Ok::<_, String>(snapshot_from_graph_with_sources(
+            &workspace_for_task,
+            graph,
+            sources,
+        ))
     })
     .await;
     let result = match result {
         Ok(result) => result,
         Err(error) => {
             let error = format!("知识索引写入任务失败: {error}");
+            runtime.finish_build(&workspace);
             runtime.set(&workspace, "error", 0, Some(error.clone()));
             return Err(error);
         }
     };
-    if let Err(error) = result {
+    let snapshot = match result {
+        Ok(snapshot) => snapshot,
+        Err(error) => {
+            runtime.finish_build(&workspace);
+            runtime.set(&workspace, "error", 0, Some(error.clone()));
+            return Err(error);
+        }
+    };
+    if cancellation.load(std::sync::atomic::Ordering::Relaxed) {
+        runtime.finish_build(&workspace);
+        runtime.set(&workspace, "cancelled", 0, None);
+        return Ok(inspect_index(&cache_root, &workspace, &runtime));
+    }
+    if let Err(error) = write_snapshot(&cache_root, &workspace, &snapshot) {
+        runtime.finish_build(&workspace);
         runtime.set(&workspace, "error", 0, Some(error.clone()));
         return Err(error);
     }
+    let status = ready_status_from_snapshot(&cache_root, &workspace, &snapshot);
+    runtime.cache_snapshot(&workspace, snapshot);
+    runtime.clear_changes(&workspace);
+    let _ = runtime.ensure_watcher(&workspace);
+    runtime.finish_build(&workspace);
     runtime.set(&workspace, "ready", 100, None);
-    Ok(inspect_index(&cache_root, &workspace, &runtime))
+    Ok(status)
+}
+
+#[tauri::command]
+pub fn cancel_knowledge_index(
+    app: AppHandle,
+    runtime: State<'_, KnowledgeIndexRuntime>,
+    library_root: String,
+) -> Result<KnowledgeIndexStatus, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let cache_root = knowledge_index_cache_root(&app)?;
+    if !runtime.cancel_build(guard.root()) {
+        return Err("当前没有正在准备的知识索引".into());
+    }
+    Ok(inspect_index(&cache_root, guard.root(), &runtime))
 }
 
 #[tauri::command]
@@ -98,6 +206,7 @@ pub fn delete_knowledge_index(
         return Err("知识索引正在构建，暂时不能删除".into());
     }
     delete_index(&cache_root, workspace)?;
+    runtime.invalidate_snapshot(workspace);
     runtime.set(workspace, "missing", 0, None);
     Ok(inspect_index(&cache_root, workspace, &runtime))
 }
@@ -602,8 +711,24 @@ pub async fn search_knowledge(
     let root = guard.root().to_path_buf();
     let cache_root = knowledge_index_cache_root(&app)?;
     let runtime_blocks_read = runtime.blocks_index_reads(&root);
+    let changed_paths = runtime.changed_paths(&root);
+    let cached = (!runtime_blocks_read)
+        .then(|| runtime.cached_snapshot(&root))
+        .flatten();
     tauri::async_runtime::spawn_blocking(move || {
-        search_workspace(&root, &query, Some((&cache_root, runtime_blocks_read)))
+        if let Some(snapshot) = cached {
+            if changed_paths.is_empty() {
+                return search_segments(&snapshot.search_segments, &query);
+            }
+            if let Some(overlay) =
+                refresh_snapshot_incremental_for_paths(&root, (*snapshot).clone(), &changed_paths)
+            {
+                return search_segments(&overlay.search_segments, &query);
+            }
+            search_workspace(&root, &query, None)
+        } else {
+            search_workspace(&root, &query, Some((&cache_root, runtime_blocks_read)))
+        }
     })
     .await
     .map_err(|error| format!("知识索引任务失败: {}", error))

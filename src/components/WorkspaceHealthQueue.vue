@@ -30,7 +30,7 @@ export interface WorkspaceHealthReport { duplicateGroups: WorkspaceDuplicateGrou
 export interface GraphLinkIssue { id: string; sourcePath: string; sourceTitle: string; syntax: string; line: number }
 export interface GraphOrphanNote { path: string; title: string; relativePath: string; directory: string }
 export interface WorkspaceGraphHealth { brokenLinks: GraphLinkIssue[]; ambiguousLinks: GraphLinkIssue[]; orphanNotes: GraphOrphanNote[]; scannedNotes: number }
-export interface WorkspaceIndexStatus { state: 'missing' | 'building' | 'ready' | 'stale' | 'corrupt' | 'error'; objectCount: number; relationCount: number }
+export interface WorkspaceIndexStatus { state: 'missing' | 'building' | 'ready' | 'stale' | 'corrupt' | 'error' | 'cancelled'; objectCount: number; relationCount: number }
 const props = defineProps<{ report: WorkspaceHealthReport; graphHealth: WorkspaceGraphHealth; indexStatus: WorkspaceIndexStatus; loading?: boolean; error?: string }>()
 const emit = defineEmits<{ openFile: [path: string]; openAnnotation: [issue: WorkspaceAnnotationIssue]; openGraph: []; prepareIndex: []; retry: [] }>()
 const indexNeedsAttention = computed(() => ['stale', 'corrupt', 'error'].includes(props.indexStatus.state))

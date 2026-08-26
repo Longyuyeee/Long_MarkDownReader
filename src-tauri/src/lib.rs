@@ -62,8 +62,8 @@ use commands::history::{
     save_history_version, save_shadow_copy,
 };
 use commands::index::{
-    delete_knowledge_index, get_knowledge_index_status, rebuild_knowledge_index,
-    recover_knowledge_index_cache, search_knowledge,
+    cancel_knowledge_index, delete_knowledge_index, get_knowledge_index_status,
+    rebuild_knowledge_index, recover_knowledge_index_cache, search_knowledge,
 };
 use commands::json::{
     analyze_json_source, append_json_array_item_source, append_json_object_property_source,
@@ -498,6 +498,7 @@ pub fn run() {
             search_knowledge,
             get_knowledge_index_status,
             rebuild_knowledge_index,
+            cancel_knowledge_index,
             recover_knowledge_index_cache,
             delete_knowledge_index,
             export_to_html,

@@ -1,0 +1,44 @@
+{
+  "stage": "large-library-index-current",
+  "buildProfile": "debug",
+  "sourceCommit": "3e2b26eec7a0887cf2340ee483419dd31758c78d",
+  "actual": {
+    "firstOperableMs": 4691,
+    "initialRebuildMs": 9185,
+    "initialStatus": {
+      "state": "ready",
+      "schemaVersion": 1,
+      "builtAt": 1787731025,
+      "sourceCount": 10001,
+      "objectCount": 10001,
+      "relationCount": 99,
+      "progress": 100,
+      "cacheBytes": 12255642,
+      "error": null,
+      "recoveryAvailable": false,
+      "staleSourceCount": null
+    },
+    "indexedQueryMs": 105,
+    "indexedResultCount": 1,
+    "staleDetectionMs": 5,
+    "staleState": "stale",
+    "fallbackQueryMs": 111,
+    "fallbackResultCount": 1,
+    "singleFileRefreshMs": 993,
+    "refreshedResultCount": 1,
+    "cancelSupported": true,
+    "cancelAcknowledgementMs": 7,
+    "cancelledBuildState": "cancelled",
+    "postCancelRebuildMs": 11384,
+    "cancelError": "",
+    "responsive720": true,
+    "runtimeErrors": 0,
+    "manifestSha256Before": "f39de81f16cc6fd8f278c4a79812831f4879dd91ddf8770d99a509678b1b8c9d",
+    "manifestSha256After": "f39de81f16cc6fd8f278c4a79812831f4879dd91ddf8770d99a509678b1b8c9d"
+  },
+  "runtimeErrorMessages": [],
+  "evidenceFiles": [
+    "current-large-library-index-1280.jpg",
+    "current-large-library-index-720.jpg"
+  ]
+}

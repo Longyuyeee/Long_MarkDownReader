@@ -15,7 +15,10 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, LazyLock,
+};
 
 static RE_TAG: LazyLock<regex::Regex> = LazyLock::new(|| {
     regex::Regex::new(r#"(?:^|\s)#([^\s#`\[\](){}.,;:!?，。；：！？、\"'<>]+)"#).unwrap()
@@ -334,23 +337,38 @@ impl GraphEdge {
 
 #[tauri::command]
 pub async fn build_link_graph(library_root: String) -> Result<GraphData, String> {
+    build_link_graph_cancellable(library_root, Arc::new(AtomicBool::new(false))).await
+}
+
+pub(crate) async fn build_link_graph_cancellable(
+    library_root: String,
+    cancelled: Arc<AtomicBool>,
+) -> Result<GraphData, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
     let root = guard.root().to_path_buf();
     let decisions = read_graph_relation_decision_map(&root)?;
-    tauri::async_runtime::spawn_blocking(move || {
+    tauri::async_runtime::spawn_blocking(move || -> Result<GraphData, String> {
         let mut nodes = Vec::new();
         let mut edges = Vec::new();
         let mut node_ids = HashSet::new();
         let mut name_to_paths = HashMap::new();
-        build_filename_index(&root, &mut name_to_paths);
-        build_graph_recursive(
+        let mut graph_paths = Vec::new();
+        build_filename_index(&root, &mut name_to_paths, &mut graph_paths, &cancelled);
+        if cancelled.load(Ordering::Relaxed) {
+            return Err("knowledge-index-cancelled".into());
+        }
+        build_graph_paths(
             &root,
-            &root,
+            &graph_paths,
             &mut nodes,
             &mut edges,
             &mut node_ids,
             &name_to_paths,
+            &cancelled,
         );
+        if cancelled.load(Ordering::Relaxed) {
+            return Err("knowledge-index-cancelled".into());
+        }
         for edge in &mut edges {
             if edge.relation_type != "annotates" || node_ids.contains(&edge.target) {
                 continue;
@@ -381,10 +399,10 @@ pub async fn build_link_graph(library_root: String) -> Result<GraphData, String>
             let degree = *degrees.get(&node.id).unwrap_or(&0) as f64;
             node.size = (8.0 + degree.sqrt() * 6.0).clamp(8.0, 32.0);
         }
-        GraphData { nodes, edges }
+        Ok(GraphData { nodes, edges })
     })
     .await
-    .map_err(|error| format!("知识图谱索引任务失败: {error}"))
+    .map_err(|error| format!("知识图谱索引任务失败: {error}"))?
 }
 
 pub(crate) fn merge_graph_edges(edges: Vec<GraphEdge>) -> Vec<GraphEdge> {
@@ -1600,11 +1618,22 @@ pub async fn update_graph_relation_decision(
     )
 }
 
-fn build_filename_index(dir: &Path, index: &mut HashMap<String, Vec<String>>) {
+fn build_filename_index(
+    dir: &Path,
+    index: &mut HashMap<String, Vec<String>>,
+    graph_paths: &mut Vec<PathBuf>,
+    cancelled: &AtomicBool,
+) {
+    if cancelled.load(Ordering::Relaxed) {
+        return;
+    }
     let Ok(entries) = fs::read_dir(dir) else {
         return;
     };
     for entry in entries.flatten() {
+        if cancelled.load(Ordering::Relaxed) {
+            return;
+        }
         if entry
             .file_type()
             .map(|kind| kind.is_symlink())
@@ -1618,47 +1647,41 @@ fn build_filename_index(dir: &Path, index: &mut HashMap<String, Vec<String>>) {
             continue;
         }
         if path.is_dir() {
-            build_filename_index(&path, index);
-        } else if name.ends_with(".md") {
-            index
-                .entry(name.trim_end_matches(".md").to_string())
-                .or_default()
-                .push(path.to_string_lossy().into_owned());
+            build_filename_index(&path, index, graph_paths, cancelled);
+        } else {
+            if name.ends_with(".md") {
+                index
+                    .entry(name.trim_end_matches(".md").to_string())
+                    .or_default()
+                    .push(path.to_string_lossy().into_owned());
+            }
+            graph_paths.push(path);
         }
     }
 }
 
-fn build_graph_recursive(
+fn build_graph_paths(
     library_root: &Path,
-    dir: &Path,
+    paths: &[PathBuf],
     nodes: &mut Vec<GraphNode>,
     edges: &mut Vec<GraphEdge>,
     node_ids: &mut HashSet<String>,
     name_to_paths: &HashMap<String, Vec<String>>,
+    cancelled: &AtomicBool,
 ) {
-    let Ok(entries) = fs::read_dir(dir) else {
+    if cancelled.load(Ordering::Relaxed) {
         return;
-    };
-    for entry in entries.flatten() {
-        if entry
-            .file_type()
-            .map(|kind| kind.is_symlink())
-            .unwrap_or(true)
-        {
-            continue;
+    }
+    for path in paths {
+        if cancelled.load(Ordering::Relaxed) {
+            return;
         }
-        let path = entry.path();
         let name = path.file_name().unwrap_or_default().to_string_lossy();
-        if name.starts_with('.') || name.ends_with(".assets") {
-            continue;
-        }
-        if path.is_dir() {
-            build_graph_recursive(library_root, &path, nodes, edges, node_ids, name_to_paths);
-        } else if name.ends_with(".md") {
+        if name.ends_with(".md") {
             add_markdown_node(
                 library_root,
-                dir,
-                &path,
+                path.parent().unwrap_or(library_root),
+                path,
                 &name,
                 nodes,
                 edges,
@@ -1666,18 +1689,18 @@ fn build_graph_recursive(
                 name_to_paths,
             );
         } else if name.to_lowercase().ends_with(".pdf") {
-            add_pdf_node(library_root, &path, &name, nodes, edges, node_ids);
+            add_pdf_node(library_root, path, &name, nodes, edges, node_ids);
         } else if name.to_lowercase().ends_with(".csv")
             || name.to_lowercase().ends_with(".tsv")
             || name.to_lowercase().ends_with(".table.json")
         {
-            add_table_node(library_root, &path, &name, nodes, edges, node_ids);
+            add_table_node(library_root, path, &name, nodes, edges, node_ids);
         } else if name.to_lowercase().ends_with(".canvas") {
-            add_canvas_document(library_root, &path, &name, nodes, edges, node_ids);
+            add_canvas_document(library_root, path, &name, nodes, edges, node_ids);
         } else if name.to_lowercase().ends_with(".opml") {
-            add_opml_document(library_root, &path, &name, nodes, edges, node_ids);
+            add_opml_document(library_root, path, &name, nodes, edges, node_ids);
         } else if name.to_lowercase().ends_with(".pptx") {
-            add_pptx_document(library_root, &path, &name, nodes, edges, node_ids);
+            add_pptx_document(library_root, path, &name, nodes, edges, node_ids);
         }
     }
 }
@@ -3303,6 +3326,21 @@ mod tests {
             )
             .unwrap();
         }
+    }
+
+    #[test]
+    fn cancelled_graph_build_stops_before_publishing_results() {
+        let (base, root) = fixture("cancelled-build");
+        fs::write(root.join("Note.md"), "# Note\n").unwrap();
+        let cancelled = Arc::new(AtomicBool::new(true));
+
+        let result = tauri::async_runtime::block_on(build_link_graph_cancellable(
+            root.to_string_lossy().into_owned(),
+            cancelled,
+        ));
+
+        assert!(matches!(result, Err(error) if error == "knowledge-index-cancelled"));
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]
