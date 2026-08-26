@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "stage": "M2A3",
+  "expectedVsPrevious": {
+    "previousDuplicateCanvasSurfaces": 3,
+    "currentDuplicateCanvasSurfaces": 1,
+    "previousTaskFilters": 0,
+    "currentTaskFilters": 4,
+    "previousCompletedTaskManagement": false,
+    "currentCompletedTaskManagement": true
+  },
+  "actual": {
+    "duplicateCanvasOccurrences": 1,
+    "continueGroupCount": 3,
+    "openTaskCount": 5,
+    "completedTaskCount": 2,
+    "highPriorityTodayCount": 1,
+    "completedMediumOverdueCount": 1,
+    "taskCompletionPersisted": true,
+    "taskRestoreByteExact": true,
+    "responsive1280": true,
+    "responsive1000": true,
+    "responsive720": true,
+    "responsive480": true,
+    "runtimeErrors": 0,
+    "beforeSha256": "da96919b6995e3bd10644f3fe5ff84c1f6a078a2d2eba9d1f2d87f9be179d91d",
+    "afterRestoreSha256": "da96919b6995e3bd10644f3fe5ff84c1f6a078a2d2eba9d1f2d87f9be179d91d"
+  },
+  "evidenceFiles": [
+    "workspace-open-1280.jpg",
+    "workspace-completed-filter-1280.jpg",
+    "workspace-1280.jpg",
+    "workspace-1000.jpg",
+    "workspace-720.jpg",
+    "workspace-480.jpg"
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

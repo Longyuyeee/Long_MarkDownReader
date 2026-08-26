@@ -15,6 +15,7 @@ use std::time::UNIX_EPOCH;
 const MAX_MARKDOWN_TASK_BYTES: u64 = 20 * 1024 * 1024;
 const MAX_SCANNED_ENTRIES: usize = 100_000;
 const MAX_TASKS: usize = 24;
+const MAX_COMPLETED_TASKS: usize = 24;
 const MAX_RECENT_FILES: usize = 8;
 const MAX_CANVASES: usize = 8;
 const MAX_DUPLICATE_FILE_BYTES: u64 = 64 * 1024 * 1024;
@@ -32,6 +33,9 @@ pub struct WorkspaceTask {
     line: usize,
     text: String,
     signature: String,
+    completed: bool,
+    priority: String,
+    due_date: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -77,6 +81,7 @@ pub struct WorkspaceFormatCount {
 pub struct WorkspaceOverview {
     total_files: usize,
     tasks: Vec<WorkspaceTask>,
+    completed_tasks: Vec<WorkspaceTask>,
     recent_files: Vec<WorkspaceFileSummary>,
     canvases: Vec<WorkspaceFileSummary>,
     format_counts: Vec<WorkspaceFormatCount>,
@@ -116,6 +121,7 @@ struct WorkspaceScan {
     scanned_entries: usize,
     total_files: usize,
     tasks: Vec<WorkspaceTask>,
+    completed_tasks: Vec<WorkspaceTask>,
     files: Vec<WorkspaceFileSummary>,
     format_counts: HashMap<String, usize>,
 }
@@ -136,8 +142,38 @@ fn relative_path(root: &Path, path: &Path) -> String {
         .replace('\\', "/")
 }
 
+fn task_priority(text: &str) -> &'static str {
+    let lower = text.to_ascii_lowercase();
+    if lower.contains("!high") || text.contains("#高优先级") {
+        "high"
+    } else if lower.contains("!medium") || text.contains("#中优先级") {
+        "medium"
+    } else if lower.contains("!low") || text.contains("#低优先级") {
+        "low"
+    } else {
+        "normal"
+    }
+}
+
+fn valid_task_date(value: &str) -> bool {
+    value.len() == 10
+        && value.as_bytes()[4] == b'-'
+        && value.as_bytes()[7] == b'-'
+        && value
+            .bytes()
+            .enumerate()
+            .all(|(index, byte)| index == 4 || index == 7 || byte.is_ascii_digit())
+}
+
+fn task_due_date(text: &str) -> Option<String> {
+    let start = text.to_ascii_lowercase().find("@due(")? + 5;
+    let value = text.get(start..start + 10)?;
+    (text.as_bytes().get(start + 10) == Some(&b')') && valid_task_date(value))
+        .then(|| value.to_string())
+}
+
 fn collect_tasks(root: &Path, path: &Path, title: &str, scan: &mut WorkspaceScan) {
-    if scan.tasks.len() >= MAX_TASKS
+    if (scan.tasks.len() >= MAX_TASKS && scan.completed_tasks.len() >= MAX_COMPLETED_TASKS)
         || path
             .metadata()
             .map(|metadata| metadata.len() > MAX_MARKDOWN_TASK_BYTES)
@@ -150,23 +186,44 @@ fn collect_tasks(root: &Path, path: &Path, title: &str, scan: &mut WorkspaceScan
     };
     for (line_index, line) in snapshot.content.lines().enumerate() {
         let trimmed = line.trim_start();
-        let task_text = trimmed
-            .strip_prefix("- [ ]")
-            .or_else(|| trimmed.strip_prefix("* [ ]"))
-            .map(str::trim)
-            .filter(|value| !value.is_empty());
-        let Some(text) = task_text else {
+        let task = [
+            ("- [ ]", false),
+            ("* [ ]", false),
+            ("- [x]", true),
+            ("- [X]", true),
+            ("* [x]", true),
+            ("* [X]", true),
+        ]
+        .into_iter()
+        .find_map(|(marker, completed)| {
+            trimmed
+                .strip_prefix(marker)
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .map(|text| (text, completed))
+        });
+        let Some((text, completed)) = task else {
             continue;
         };
-        scan.tasks.push(WorkspaceTask {
+        let item = WorkspaceTask {
             title: title.to_string(),
             path: path.to_string_lossy().into_owned(),
             relative_path: relative_path(root, path),
             line: line_index + 1,
             text: text.chars().take(500).collect(),
             signature: snapshot.signature.clone(),
-        });
-        if scan.tasks.len() >= MAX_TASKS {
+            completed,
+            priority: task_priority(text).to_string(),
+            due_date: task_due_date(text),
+        };
+        if completed {
+            if scan.completed_tasks.len() < MAX_COMPLETED_TASKS {
+                scan.completed_tasks.push(item);
+            }
+        } else if scan.tasks.len() < MAX_TASKS {
+            scan.tasks.push(item);
+        }
+        if scan.tasks.len() >= MAX_TASKS && scan.completed_tasks.len() >= MAX_COMPLETED_TASKS {
             break;
         }
     }
@@ -356,6 +413,7 @@ fn build_workspace_overview(root: &Path) -> WorkspaceOverview {
     WorkspaceOverview {
         total_files: scan.total_files,
         tasks: scan.tasks,
+        completed_tasks: scan.completed_tasks,
         recent_files,
         canvases,
         format_counts,
@@ -581,7 +639,7 @@ mod tests {
         fs::create_dir_all(root.join(".hidden")).unwrap();
         fs::write(
             root.join("Plan.md"),
-            "# Plan\n- [ ] Ship dashboard\n- [x] Ignore completed\n* [ ] Review index\n",
+            "# Plan\n- [ ] Ship dashboard !high @due(2026-08-26)\n- [x] Ignore completed !low @due(2026-08-20)\n* [ ] Review index\n",
         )
         .unwrap();
         fs::write(root.join("Board.canvas"), r#"{"nodes":[],"edges":[]}"#).unwrap();
@@ -594,6 +652,12 @@ mod tests {
         assert_eq!(overview.total_files, 3);
         assert_eq!(overview.tasks.len(), 2);
         assert_eq!(overview.tasks[0].line, 2);
+        assert_eq!(overview.tasks[0].priority, "high");
+        assert_eq!(overview.tasks[0].due_date.as_deref(), Some("2026-08-26"));
+        assert!(!overview.tasks[0].completed);
+        assert_eq!(overview.completed_tasks.len(), 1);
+        assert!(overview.completed_tasks[0].completed);
+        assert_eq!(overview.completed_tasks[0].priority, "low");
         assert_eq!(overview.canvases.len(), 1);
         assert_eq!(overview.canvases[0].object_type, "canvas");
         assert!(overview

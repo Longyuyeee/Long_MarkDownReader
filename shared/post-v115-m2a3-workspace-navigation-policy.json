@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "stage": "M2A3",
+  "appVersion": "1.0.15",
+  "releaseCandidate": false,
+  "fixture": "temporary copy of fixtures/post-v115-m0/workspace with M2A3 task and Canvas additions",
+  "expected": {
+    "duplicateCanvasOccurrences": 1,
+    "continueGroupCount": 3,
+    "openTaskCount": 5,
+    "completedTaskCount": 2,
+    "highPriorityTodayCount": 1,
+    "completedMediumOverdueCount": 1,
+    "taskCompletionPersisted": true,
+    "taskRestoreByteExact": true,
+    "responsive1280": true,
+    "responsive1000": true,
+    "responsive720": true,
+    "responsive480": true,
+    "runtimeErrors": 0
+  },
+  "nextStage": "M2-workspace-closure-audit"
+}
