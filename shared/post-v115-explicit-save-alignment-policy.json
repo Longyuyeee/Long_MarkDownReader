@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "stage": "post-v1.0.15-explicit-save-alignment",
+  "appVersion": "1.0.15",
+  "releaseCandidate": false,
+  "waitBeyondLegacyAutoSaveMs": 3500,
+  "expected": {
+    "baselineSourceChangedWithoutSave": true,
+    "currentSourceUnchangedAfterWait": true,
+    "dirtyStateRetainedAfterWait": true,
+    "explicitSaveChangedSource": true,
+    "savedContentReopened": true,
+    "responsive720": true,
+    "runtimeErrors": 0
+  },
+  "nextStage": "post-v1.0.15-10k-library-index-and-search-baseline"
+}

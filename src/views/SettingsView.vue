@@ -78,7 +78,7 @@
           <n-grid-item v-if="activeCategory === 'editing'" class="animate-item" style="--delay: 0.2s">
             <div class="section-title">编辑与历史版本</div>
             <div class="setting-card">
-              <n-form-item label="自动保存间隔 (分钟)">
+              <n-form-item label="历史快照间隔 (分钟)">
                 <n-input-number v-model:value="config.autoSaveInterval" :min="1" :max="60">
                   <template #suffix>分钟</template>
                 </n-input-number>
@@ -427,7 +427,7 @@ type ThemeFilter = 'all' | 'light' | 'dark' | 'eye-care' | 'creative' | 'contras
 
 const settingsCategories = [
   { id: 'library', label: '资料库', description: '管理资料库位置、名称与 Git 连接。', icon: LibraryIcon },
-  { id: 'editing', label: '编辑与保存', description: '设置自动保存、历史版本和编辑安全策略。', icon: HistoryIcon },
+  { id: 'editing', label: '编辑与保存', description: '设置历史快照、保留数量和编辑安全策略。正文只在点击保存后写入。', icon: HistoryIcon },
   { id: 'appearance', label: '外观', description: '选择主题组合，并调整颜色、代码高亮和动效。', icon: PaletteIcon },
   { id: 'formats', label: '格式与文件', description: '管理文件打开方式并查看各格式的编辑与保存能力。', icon: FilesIcon },
   { id: 'knowledge', label: '知识能力', description: '使用关系整理与效果对比等高级资料库工具。', icon: NetworkIcon },

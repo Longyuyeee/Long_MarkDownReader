@@ -441,7 +441,7 @@
             <n-button quaternary circle size="small" @click="refreshCurrentFile" :disabled="!activeTabId" title="从磁盘同步内容">
               <template #icon><n-icon :component="RefreshIcon" /></template>
             </n-button>
-            <n-button quaternary circle size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit" :title="activeSaveTitle">
+            <n-button data-testid="library-explicit-save" quaternary circle size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit" :title="activeSaveTitle">
               <template #icon><n-icon :component="SaveIcon" /></template>
             </n-button>
             <n-dropdown trigger="click" :options="textEncodingMenuOptions" @select="handleTextEncodingAction" v-if="activeTabId && activeDocumentFormat?.routeName === 'LibraryMode'">
@@ -1417,7 +1417,6 @@ const externalDiskPreview = computed(() => {
 const contentDigestFromSignature = (signature: string) => signature.match(/:([a-f0-9]{32})$/i)?.[1].toLowerCase() || ''
 
 // 常量定义
-const AUTO_SAVE_DELAY_MS = 2000
 const EDITOR_MODE_SYNC_DELAY_MS = 300
 const IMAGE_FIX_DELAY_MS = 300
 
@@ -2704,40 +2703,6 @@ const applyRename = () => {
   return false
 }
 
-let autoSaveTimer: any = null
-const triggerAutoSave = (content: string) => {
-  if (autoSaveTimer) clearTimeout(autoSaveTimer)
-  autoSaveTimer = setTimeout(async () => {
-    if (!isVditorReady) return
-    const current = tabs.value.find(tab => tab.id === activeTabId.value)
-    const format = current ? findFileFormat(current.path) : undefined
-    if (current && format?.routeName === 'LibraryMode') {
-      if (current.textReadOnlyReason) return
-      try {
-        const savePolicy = current.textReadEncoding ? { encoding: current.textReadEncoding } : undefined
-        const saved = await invoke<TextDocumentSnapshot>('write_text_document', {
-          libraryRoot: store.libraryPath,
-          path: current.path,
-          formatId: format.id,
-          content,
-          expectedSignature: current.textSignature,
-          savePolicy,
-        })
-        current.content = saved.content
-        current.textSignature = saved.signature
-        current.textContentDigest = saved.contentDigest
-        current.textEncoding = saved.encoding
-        current.textBom = saved.bom
-        current.textLineEnding = saved.lineEnding
-        current.textHasFinalNewline = saved.hasFinalNewline
-        current.isDirty = false
-        current.textModified = saved.modified
-        lastPromptedExternalSignature = ''
-      } catch (error) { console.error('Auto-save failed:', error) }
-    }
-  }, AUTO_SAVE_DELAY_MS)
-}
-
 const refreshCurrentFile = async () => {
   if (!activeTabId.value) return
   const currentTab = tabs.value.find(t => t.id === activeTabId.value)
@@ -2880,7 +2845,6 @@ const saveCurrentFile = async (options: unknown = {}) => {
       if (currentLibGitEnabled.value) {
         invoke('git_commit', { libraryPath: store.libraryPath, message: `更新: ${t.title}` }).catch(() => {})
       }
-      if (autoSaveTimer) clearTimeout(autoSaveTimer)
     } catch (e: any) {
       handleError(e, '保存失败', 'saveCurrentFile')
     }
@@ -2897,7 +2861,6 @@ const syncUserSelectedVditorMode = () => {
 const switchEditorMode = (mode: string) => {
   if (!vditor || (store.editorMode === mode && store.editorModeExplicit)) return
   const content = vditor.getValue()
-  if (autoSaveTimer) { clearTimeout(autoSaveTimer); autoSaveTimer = null }
   editorLoading.value = true
   vditor.destroy(); vditor = null; isVditorReady = false
   void store.updateConfig({ editorMode: mode, editorModeExplicit: true })
@@ -2914,7 +2877,6 @@ const ensureVditorModeForFile = (path: string) => {
   if (!vditor || !isVditorReady) return true
   const desiredMode = desiredVditorMode(path)
   if (vditor.getCurrentMode() === desiredMode) return false
-  if (autoSaveTimer) { clearTimeout(autoSaveTimer); autoSaveTimer = null }
   editorLoading.value = true
   cleanupEditorListeners()
   vditor.destroy()
@@ -3012,7 +2974,6 @@ const initVditor = () => {
         const cur = tabs.value.find(t => t.id === activeTabId.value); 
         if (cur) {
           cur.isDirty = true
-          triggerAutoSave(val); 
           store.updateTabContent(cur.path, val);
         }
         wordCount.value = val.length;
@@ -3234,7 +3195,6 @@ onUnmounted(() => {
   window.removeEventListener('longedit:reveal-library-file', revealLibraryFile)
   window.removeEventListener('longedit:library-file-created', refreshCreatedLibraryFile)
   window.removeEventListener('keydown', handleKeyDown)
-  if (autoSaveTimer) clearTimeout(autoSaveTimer)
   if (shadowSaveTimer) clearInterval(shadowSaveTimer)
   if (gitStatusTimer) clearTimeout(gitStatusTimer)
   if (searchTimer) clearTimeout(searchTimer)

@@ -1,15 +1,28 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { readFileSync } from "node:fs";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 // @ts-expect-error process is a nodejs global
 const devPort = Number(process.env.LONGEDIT_DEV_PORT || 9000);
+const explicitSaveBaselineSource = process.env.LONGEDIT_EXPLICIT_SAVE_BASELINE_SOURCE;
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
   plugins: [
+    ...(explicitSaveBaselineSource ? [{
+      name: 'longedit-explicit-save-baseline',
+      enforce: 'pre' as const,
+      transform(_code: string, id: string) {
+        if (id.includes('?')) return null;
+        const normalized = id.split('?')[0].replaceAll('\\', '/');
+        return normalized.endsWith('/src/views/LibraryMode.vue')
+          ? readFileSync(explicitSaveBaselineSource, 'utf8')
+          : null;
+      },
+    }] : []),
     vue(),
     viteStaticCopy({
       targets: [
