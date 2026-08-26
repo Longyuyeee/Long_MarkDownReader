@@ -1,10 +1,12 @@
 use crate::formats::docx::{parse_docx, DocxDocumentModel, MAX_DOCX_FILE_BYTES};
 use crate::formats::docx_patch::{
     build_docx_document_patch_isolated, build_docx_image_alt_text_patch_isolated,
-    build_docx_style_patch_isolated, build_docx_text_patch_isolated, docx_document_part_digest,
-    inspect_docx_editable_image_targets, inspect_docx_editable_style_targets,
-    inspect_docx_editable_text_targets, DocxEditableImageTarget, DocxEditableStyleTarget,
-    DocxEditableTextTarget, DocxIsolatedPatchReport,
+    build_docx_paragraph_style_patch_isolated, build_docx_style_patch_isolated,
+    build_docx_text_patch_isolated, docx_document_part_digest, inspect_docx_editable_image_targets,
+    inspect_docx_editable_paragraph_style_targets, inspect_docx_editable_style_targets,
+    inspect_docx_editable_text_targets, inspect_docx_paragraph_style_options,
+    DocxEditableImageTarget, DocxEditableParagraphStyleTarget, DocxEditableStyleTarget,
+    DocxEditableTextTarget, DocxIsolatedPatchReport, DocxParagraphStyleOption,
 };
 use crate::formats::file_registry::file_format_for_path;
 use crate::services::external_file_access::ExternalFileAccess;
@@ -44,6 +46,8 @@ pub struct DocxReadReport {
     pub document_part_digest: String,
     pub editable_text_targets: Vec<DocxEditableTextTarget>,
     pub editable_style_targets: Vec<DocxEditableStyleTarget>,
+    pub paragraph_style_options: Vec<DocxParagraphStyleOption>,
+    pub editable_paragraph_style_targets: Vec<DocxEditableParagraphStyleTarget>,
     pub editable_image_targets: Vec<DocxEditableImageTarget>,
     pub read_only: bool,
     pub source_preserved: bool,
@@ -96,6 +100,15 @@ pub enum DocxPatchOperation {
         font_color: Option<String>,
         #[serde(rename = "fontSizeHalfPoints")]
         font_size_half_points: Option<u16>,
+    },
+    #[serde(rename = "paragraphStyle")]
+    ParagraphStyle {
+        #[serde(rename = "targetId")]
+        target_id: String,
+        #[serde(rename = "expectedParagraphStyleDigest")]
+        expected_paragraph_style_digest: String,
+        #[serde(rename = "replacementStyleId")]
+        replacement_style_id: String,
     },
     #[serde(rename = "imageAltText")]
     ImageAltText {
@@ -174,6 +187,10 @@ enum DocxBatchExpectation {
         underline: bool,
         font_color: Option<String>,
         font_size_half_points: Option<u16>,
+    },
+    ParagraphStyle {
+        target: DocxEditableParagraphStyleTarget,
+        replacement_style_id: String,
     },
     ImageAltText {
         target: DocxEditableImageTarget,
@@ -327,6 +344,9 @@ fn read_docx_path(path: &Path) -> Result<DocxReadReport, String> {
     let document_part_digest = docx_document_part_digest(&source)?;
     let editable_text_targets = inspect_docx_editable_text_targets(&source, &model)?;
     let editable_style_targets = inspect_docx_editable_style_targets(&source, &model)?;
+    let paragraph_style_options = inspect_docx_paragraph_style_options(&source)?;
+    let editable_paragraph_style_targets =
+        inspect_docx_editable_paragraph_style_targets(&source, &model)?;
     let editable_image_targets = inspect_docx_editable_image_targets(&source, &model)?;
     let (media, media_warnings) = extract_media_previews(&source, &model)?;
     let after = fs::read(path).map_err(|error| format!("复核 DOCX 源文件失败: {error}"))?;
@@ -348,6 +368,8 @@ fn read_docx_path(path: &Path) -> Result<DocxReadReport, String> {
         document_part_digest,
         editable_text_targets,
         editable_style_targets,
+        paragraph_style_options,
+        editable_paragraph_style_targets,
         editable_image_targets,
         read_only: true,
         source_preserved,
@@ -453,6 +475,23 @@ fn preview_docx_style_patch_path(
             underline,
             font_color,
             font_size_half_points,
+        )
+    })
+}
+
+fn preview_docx_paragraph_style_patch_path(
+    path: &Path,
+    expected_signature: &str,
+    target_id: &str,
+    expected_paragraph_style_digest: &str,
+    replacement_style_id: &str,
+) -> Result<DocxIsolatedPatchReport, String> {
+    preview_docx_isolated_path(path, expected_signature, |source| {
+        build_docx_paragraph_style_patch_isolated(
+            source,
+            target_id,
+            expected_paragraph_style_digest,
+            replacement_style_id,
         )
     })
 }
@@ -615,6 +654,16 @@ fn build_docx_operation(
             font_color.as_deref(),
             *font_size_half_points,
         ),
+        DocxPatchOperation::ParagraphStyle {
+            target_id,
+            expected_paragraph_style_digest,
+            replacement_style_id,
+        } => build_docx_paragraph_style_patch_isolated(
+            source,
+            target_id,
+            expected_paragraph_style_digest,
+            replacement_style_id,
+        ),
         DocxPatchOperation::ImageAltText {
             target_id,
             expected_metadata_digest,
@@ -650,6 +699,7 @@ fn inspect_batch_expectations(
     let model = parse_docx(source)?;
     let text_targets = inspect_docx_editable_text_targets(source, &model)?;
     let style_targets = inspect_docx_editable_style_targets(source, &model)?;
+    let paragraph_style_targets = inspect_docx_editable_paragraph_style_targets(source, &model)?;
     let image_targets = inspect_docx_editable_image_targets(source, &model)?;
     let mut anchors = HashSet::new();
     let mut target_ids = HashSet::new();
@@ -736,6 +786,30 @@ fn inspect_batch_expectations(
                     },
                 )
             }
+            DocxPatchOperation::ParagraphStyle {
+                target_id,
+                expected_paragraph_style_digest,
+                replacement_style_id,
+            } => {
+                let target = paragraph_style_targets
+                    .iter()
+                    .find(|target| target.id == *target_id)
+                    .ok_or("DOCX 批量段落样式目标不存在或已不再安全")?;
+                if target.expected_paragraph_style_digest
+                    != expected_paragraph_style_digest.trim().to_ascii_lowercase()
+                {
+                    return Err("DOCX 批量段落样式目标摘要已变化，请重新读取".into());
+                }
+                (
+                    batch_content_anchor(&target.block_id, None, None),
+                    target.id.clone(),
+                    "paragraphStyle".into(),
+                    DocxBatchExpectation::ParagraphStyle {
+                        target: target.clone(),
+                        replacement_style_id: replacement_style_id.clone(),
+                    },
+                )
+            }
         };
         if !target_ids.insert(target_id.clone()) || !anchors.insert(anchor) {
             return Err(
@@ -756,6 +830,7 @@ fn verify_batch_expectations(
     let model = parse_docx(output)?;
     let text_targets = inspect_docx_editable_text_targets(output, &model)?;
     let style_targets = inspect_docx_editable_style_targets(output, &model)?;
+    let paragraph_style_targets = inspect_docx_editable_paragraph_style_targets(output, &model)?;
     let image_targets = inspect_docx_editable_image_targets(output, &model)?;
     for expectation in expectations {
         let satisfied = match expectation {
@@ -793,6 +868,14 @@ fn verify_batch_expectations(
                 item.block_id == target.block_id
                     && item.image_part == target.image_part
                     && item.alt_text == *replacement
+            }),
+            DocxBatchExpectation::ParagraphStyle {
+                target,
+                replacement_style_id,
+            } => paragraph_style_targets.iter().any(|item| {
+                item.id == target.id
+                    && item.text == target.text
+                    && item.current_style_id == *replacement_style_id
             }),
         };
         if !satisfied {
@@ -1462,6 +1545,30 @@ pub async fn preview_docx_style_patch_isolated_copy(
     })
     .await
     .map_err(|error| format!("DOCX C2D 字符样式补丁任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn preview_docx_paragraph_style_patch_isolated_copy(
+    library_root: String,
+    path: String,
+    expected_signature: String,
+    target_id: String,
+    expected_paragraph_style_digest: String,
+    replacement_style_id: String,
+) -> Result<DocxIsolatedPatchReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let document = guard.resolve_existing_file(path, &["docx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        preview_docx_paragraph_style_patch_path(
+            &document,
+            &expected_signature,
+            &target_id,
+            &expected_paragraph_style_digest,
+            &replacement_style_id,
+        )
+    })
+    .await
+    .map_err(|error| format!("DOCX M1B2B 段落样式补丁任务失败: {error}"))?
 }
 
 #[tauri::command]
@@ -2175,6 +2282,129 @@ mod tests {
             )
             .unwrap_err()
             .contains("已存在"));
+            fs::remove_dir_all(base).unwrap();
+        }
+    }
+
+    #[test]
+    fn m1b2b_reliably_saves_existing_paragraph_styles_for_all_real_producers() {
+        let fixtures: [(&str, &[u8]); 3] = [
+            (
+                "microsoft-word-16",
+                include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx"),
+            ),
+            (
+                "wps-writer",
+                include_bytes!("../../../fixtures/docx/producers/wps-writer.docx"),
+            ),
+            (
+                "libreoffice-writer",
+                include_bytes!("../../../fixtures/docx/producers/libreoffice-writer.docx"),
+            ),
+        ];
+        for (producer, source) in fixtures {
+            let base = std::env::temp_dir().join(format!(
+                "longedit-m1b2b-{producer}-{}-{}",
+                std::process::id(),
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            ));
+            fs::create_dir_all(&base).unwrap();
+            let source_path = base.join("source.docx");
+            fs::write(&source_path, source).unwrap();
+            let signature = file_signature(&source_path.metadata().unwrap());
+            let source_styles =
+                crate::formats::docx_patch::read_part_for_test(source, "word/styles.xml").unwrap();
+            let model = parse_docx(source).unwrap();
+            let target = inspect_docx_editable_paragraph_style_targets(source, &model)
+                .unwrap()
+                .into_iter()
+                .find(|target| target.kind == "heading")
+                .unwrap();
+            let replacement = inspect_docx_paragraph_style_options(source)
+                .unwrap()
+                .into_iter()
+                .find(|option| option.id != target.current_style_id)
+                .unwrap();
+            let operation = DocxPatchOperation::ParagraphStyle {
+                target_id: target.id.clone(),
+                expected_paragraph_style_digest: target.expected_paragraph_style_digest.clone(),
+                replacement_style_id: replacement.id.clone(),
+            };
+            let text_target = inspect_docx_editable_text_targets(source, &model)
+                .unwrap()
+                .into_iter()
+                .find(|candidate| {
+                    candidate.block_id != target.block_id
+                        && candidate.kind == "paragraph"
+                        && candidate.carrier == "plain"
+                })
+                .unwrap();
+            let batch_operations = vec![
+                operation.clone(),
+                DocxPatchOperation::Text {
+                    target_id: text_target.id.clone(),
+                    expected_text_digest: text_target.expected_text_digest.clone(),
+                    replacement_text: format!("LongEdit M1B2B {producer} batch text"),
+                },
+            ];
+            let (batch_report, _) = build_docx_batch_operations(source, &batch_operations).unwrap();
+            assert_eq!(batch_report.operation_kinds, ["paragraphStyle", "text"]);
+            assert!(batch_report.semantic_reparse_verified);
+            assert!(batch_report.deterministic_replay_verified);
+            let preview = preview_docx_paragraph_style_patch_path(
+                &source_path,
+                &signature,
+                &target.id,
+                &target.expected_paragraph_style_digest,
+                &replacement.id,
+            )
+            .unwrap();
+            assert!(preview.source_unchanged);
+            assert_eq!(fs::read(&source_path).unwrap(), source);
+
+            let saved = save_docx_patch_source_to_path(
+                &source_path,
+                &signature,
+                &preview.output_digest,
+                &operation,
+            )
+            .unwrap();
+            assert_eq!(saved.status, "source_saved_verified");
+            assert!(saved.rollback_protected);
+            assert!(saved.unchanged_parts_verified);
+            assert!(saved.structural_reopen_verified);
+            assert!(saved.semantic_reopen_verified);
+            let saved_bytes = fs::read(&source_path).unwrap();
+            assert_ne!(saved_bytes, source);
+            assert_eq!(
+                crate::formats::docx_patch::read_part_for_test(&saved_bytes, "word/styles.xml",)
+                    .unwrap(),
+                source_styles
+            );
+            let saved_model = parse_docx(&saved_bytes).unwrap();
+            assert!(
+                inspect_docx_editable_paragraph_style_targets(&saved_bytes, &saved_model)
+                    .unwrap()
+                    .iter()
+                    .any(|candidate| candidate.id == target.id
+                        && candidate.current_style_id == replacement.id)
+            );
+            let digest_after_save = format!("{:x}", Sha256::digest(&saved_bytes));
+            assert!(save_docx_patch_source_to_path(
+                &source_path,
+                &signature,
+                &preview.output_digest,
+                &operation,
+            )
+            .unwrap_err()
+            .contains("外部修改"));
+            assert_eq!(
+                format!("{:x}", Sha256::digest(fs::read(&source_path).unwrap())),
+                digest_after_save
+            );
             fs::remove_dir_all(base).unwrap();
         }
     }

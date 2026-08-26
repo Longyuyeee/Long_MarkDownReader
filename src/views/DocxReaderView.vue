@@ -296,7 +296,13 @@
               :class="{ active: editMode === 'style' }"
               :disabled="!report.editableStyleTargets.length"
               @click="editMode = 'style'"
-            >样式</button>
+            >字符</button>
+            <button
+              type="button"
+              :class="{ active: editMode === 'paragraphStyle' }"
+              :disabled="!report.editableParagraphStyleTargets.length"
+              @click="editMode = 'paragraphStyle'"
+            >段落</button>
             <button
               type="button"
               :class="{ active: editMode === 'imageAltText' }"
@@ -366,6 +372,21 @@
             </div>
           </div>
 
+          <label v-else-if="editMode === 'paragraphStyle'" class="edit-field">
+            <span>段落样式</span>
+            <select
+              v-model="draftParagraphStyleId"
+              @pointerdown="captureDraftHistory(true)"
+              @keydown="captureDraftHistory(true)"
+              @focus="captureDraftHistory(true)"
+            >
+              <option v-for="style in report.paragraphStyleOptions" :key="style.id" :value="style.id">
+                {{ style.name }} · {{ style.id }}
+              </option>
+            </select>
+            <small>只选择当前文件已有样式；不会创建或改写样式定义。</small>
+          </label>
+
           <label v-else class="edit-field">
             <span>图片替代文本</span>
             <textarea v-model="replacementAltText" maxlength="1024" rows="5" @beforeinput="captureDraftHistory()"></textarea>
@@ -381,7 +402,7 @@
               <article v-for="entry in draftEntryList" :key="entry.anchor">
                 <button type="button" class="draft-locate" :title="`定位到${entry.label}`" @click="locateDraftEntry(entry)">
                   <LocateFixedIcon :size="13" />
-                  <span><b>{{ entry.operation.kind === 'text' ? '文本' : entry.operation.kind === 'style' ? '样式' : '图片说明' }}</b>{{ entry.label }}</span>
+                  <span><b>{{ entry.operation.kind === 'text' ? '文本' : entry.operation.kind === 'style' ? '字符' : entry.operation.kind === 'paragraphStyle' ? '段落' : '图片说明' }}</b>{{ entry.label }}</span>
                 </button>
                 <button type="button" class="draft-remove" title="移除这项修改" @click="removeDraftEntry(entry)">
                   <XIcon :size="13" />
@@ -444,7 +465,7 @@
         <div>
           <ShieldCheckIcon v-if="isExternal" :size="13" />
           <SaveIcon v-else :size="13" />
-          <span>{{ isExternal ? '外部文件只读预览；源文件未修改' : '简单文本、列表、单段表格单元格、字符格式和图片说明可编辑；未点击保存不会写盘' }}</span>
+          <span>{{ isExternal ? '外部文件只读预览；源文件未修改' : '简单文本、列表、单段表格单元格、已有段落样式、字符格式和图片说明可编辑；未点击保存不会写盘' }}</span>
         </div>
       </footer>
     </template>
@@ -596,6 +617,15 @@ interface DocxReadReport {
     rowIndex: number | null
     columnIndex: number | null
   }>
+  paragraphStyleOptions: Array<{ id: string; name: string }>
+  editableParagraphStyleTargets: Array<{
+    id: string
+    blockId: string
+    kind: 'paragraph' | 'heading'
+    text: string
+    currentStyleId: string
+    expectedParagraphStyleDigest: string
+  }>
   editableImageTargets: Array<{
     id: string
     blockId: string
@@ -655,12 +685,14 @@ interface DocxSavedSourceReport {
 }
 type DocxTextTarget = DocxReadReport['editableTextTargets'][number]
 type DocxStyleTarget = DocxReadReport['editableStyleTargets'][number]
+type DocxParagraphStyleTarget = DocxReadReport['editableParagraphStyleTargets'][number]
 type DocxImageTarget = DocxReadReport['editableImageTargets'][number]
-type DocxEditableTarget = DocxTextTarget | DocxStyleTarget | DocxImageTarget
-type DocxEditMode = 'text' | 'style' | 'imageAltText'
+type DocxEditableTarget = DocxTextTarget | DocxStyleTarget | DocxParagraphStyleTarget | DocxImageTarget
+type DocxEditMode = 'text' | 'style' | 'paragraphStyle' | 'imageAltText'
 type DocxPatchOperation =
   | { kind: 'text'; targetId: string; expectedTextDigest: string; replacementText: string }
   | { kind: 'style'; targetId: string; expectedStyleDigest: string; bold: boolean; italic: boolean; underline: boolean; fontColor: string | null; fontSizeHalfPoints: number | null }
+  | { kind: 'paragraphStyle'; targetId: string; expectedParagraphStyleDigest: string; replacementStyleId: string }
   | { kind: 'imageAltText'; targetId: string; expectedMetadataDigest: string; replacementAltText: string }
 interface DocxDraftEntry {
   anchor: string
@@ -681,6 +713,7 @@ interface DraftSnapshot {
   underline: boolean
   fontColor: string
   fontSizeHalfPoints: number | null
+  paragraphStyleId: string
 }
 
 const route = useRoute()
@@ -704,6 +737,7 @@ const draftItalic = ref(false)
 const draftUnderline = ref(false)
 const draftFontColor = ref('')
 const draftFontSizeHalfPoints = ref<number | null>(null)
+const draftParagraphStyleId = ref('')
 const previewing = ref(false)
 const previewReport = ref<DocxPatchPreviewReport | null>(null)
 const editError = ref('')
@@ -814,12 +848,13 @@ const documentPages = computed<DocxPage[]>(() => {
 const editableTargetCount = computed(() => {
   const value = report.value
   return value
-    ? value.editableTextTargets.length + value.editableStyleTargets.length + value.editableImageTargets.length
+    ? value.editableTextTargets.length + value.editableStyleTargets.length + value.editableParagraphStyleTargets.length + value.editableImageTargets.length
     : 0
 })
 const activeTargets = computed<DocxEditableTarget[]>(() => {
   if (!report.value) return []
   if (editMode.value === 'style') return report.value.editableStyleTargets
+  if (editMode.value === 'paragraphStyle') return report.value.editableParagraphStyleTargets
   if (editMode.value === 'imageAltText') return report.value.editableImageTargets
   return report.value.editableTextTargets
 })
@@ -828,7 +863,7 @@ const styleTargets = computed(() => report.value?.editableStyleTargets || [])
 const selectedTarget = computed(() => activeTargets.value.find(target => target.id === selectedTargetId.value))
 const semanticAnchor = (target: DocxEditableTarget) => 'imagePart' in target
   ? `image:${target.blockId}`
-  : `content:${target.blockId}:${target.rowIndex ?? '-'}:${target.columnIndex ?? '-'}`
+  : `content:${target.blockId}:${'rowIndex' in target ? target.rowIndex ?? '-' : '-'}:${'columnIndex' in target ? target.columnIndex ?? '-' : '-'}`
 const currentOperation = computed<DocxPatchOperation | null>(() => {
   const target = selectedTarget.value
   if (!target) return null
@@ -852,6 +887,14 @@ const currentOperation = computed<DocxPatchOperation | null>(() => {
       fontSizeHalfPoints: draftFontSizeHalfPoints.value,
     }
   }
+  if (editMode.value === 'paragraphStyle' && 'expectedParagraphStyleDigest' in target) {
+    return {
+      kind: 'paragraphStyle',
+      targetId: target.id,
+      expectedParagraphStyleDigest: target.expectedParagraphStyleDigest,
+      replacementStyleId: draftParagraphStyleId.value,
+    }
+  }
   if (editMode.value === 'imageAltText' && 'expectedMetadataDigest' in target) {
     return {
       kind: 'imageAltText',
@@ -872,6 +915,9 @@ const canPreviewEdit = computed(() => {
       || draftUnderline.value !== target.underline
       || (draftFontColor.value ? draftFontColor.value.slice(1).toUpperCase() : null) !== target.fontColor
       || draftFontSizeHalfPoints.value !== target.fontSizeHalfPoints
+  }
+  if (editMode.value === 'paragraphStyle' && 'currentStyleId' in target) {
+    return draftParagraphStyleId.value !== target.currentStyleId
   }
   return 'altText' in target && replacementAltText.value !== target.altText
 })
@@ -894,6 +940,7 @@ const draftSnapshot = (): DraftSnapshot => ({
   underline: draftUnderline.value,
   fontColor: draftFontColor.value,
   fontSizeHalfPoints: draftFontSizeHalfPoints.value,
+  paragraphStyleId: draftParagraphStyleId.value,
 })
 const sameDraftSnapshot = (left: DraftSnapshot, right: DraftSnapshot) => JSON.stringify(left) === JSON.stringify(right)
 const clearDraftHistory = () => {
@@ -928,6 +975,7 @@ const restoreDraftSnapshot = (snapshot: DraftSnapshot) => {
   draftUnderline.value = snapshot.underline
   draftFontColor.value = snapshot.fontColor
   draftFontSizeHalfPoints.value = snapshot.fontSizeHalfPoints
+  draftParagraphStyleId.value = snapshot.paragraphStyleId
   invalidatePreview()
   void nextTick(() => { restoringDraftSnapshot = false })
 }
@@ -996,7 +1044,7 @@ const removeDraftEntry = (entry: DocxDraftEntry) => {
   invalidatePreview()
 }
 const locateDraftEntry = (entry: DocxDraftEntry) => {
-  const mode: DocxEditMode = entry.operation.kind === 'imageAltText' ? 'imageAltText' : entry.operation.kind
+  const mode: DocxEditMode = entry.operation.kind
   editorOpen.value = true
   editMode.value = mode
   selectedTargetId.value = entry.operation.targetId
@@ -1027,7 +1075,11 @@ const draftTableCellText = (block: DocxBlock, rowIndex: number, columnIndex: num
 }
 const blockEditClasses = (block: DocxBlock) => ({
   'search-hit': matchIds.value.has(block.id),
-  editable: !isExternal.value && Boolean(textTargetForBlock(block.id) || styleTargets.value.some(target => target.blockId === block.id)),
+  editable: !isExternal.value && Boolean(
+    textTargetForBlock(block.id)
+    || styleTargets.value.some(target => target.blockId === block.id)
+    || report.value?.editableParagraphStyleTargets.some(target => target.blockId === block.id),
+  ),
   'edit-selected': selectedTarget.value?.blockId === block.id,
   'has-draft': Array.from(draftEntries.value.values()).some(entry => entry.blockId === block.id),
   'editable-hyperlink': textTargetForBlock(block.id)?.carrier === 'hyperlink-label',
@@ -1039,6 +1091,18 @@ const tableCellEditClasses = (block: DocxBlock, rowIndex: number, columnIndex: n
   'editable-hyperlink': tableTargetForCell(block.id, rowIndex, columnIndex)?.carrier === 'hyperlink-label',
 })
 const draftStyleForBlock = (block: DocxBlock) => {
+  const paragraphTarget = report.value?.editableParagraphStyleTargets.find(candidate => candidate.blockId === block.id)
+  const paragraphEntry = draftEntryForTarget(paragraphTarget)
+  if (paragraphEntry?.operation.kind === 'paragraphStyle') {
+    const paragraphOperation = paragraphEntry.operation
+    const option = report.value?.paragraphStyleOptions.find(style => style.id === paragraphOperation.replacementStyleId)
+    const label = `${option?.name || ''} ${option?.id || ''}`.toLocaleLowerCase()
+    const match = label.match(/(?:heading|title|标题)\s*([1-6])?/)
+    const level = Number(match?.[1] || (match ? 1 : 0))
+    return level
+      ? { fontWeight: '700', fontSize: `${Math.max(16, 30 - level * 2)}px`, lineHeight: '1.3' }
+      : { fontWeight: '400', fontSize: '14px', lineHeight: '1.75' }
+  }
   const target = styleTargets.value.find(candidate => candidate.blockId === block.id && candidate.kind !== 'table-cell')
   const entry = draftEntryForTarget(target)
   if (entry?.operation.kind !== 'style') return undefined
@@ -1056,7 +1120,13 @@ const selectTextTarget = (target?: DocxTextTarget) => {
   editMode.value = 'text'
   selectedTargetId.value = target.id
 }
-const selectTextBlock = (block: DocxBlock) => selectTextTarget(textTargetForBlock(block.id))
+const selectTextBlock = (block: DocxBlock) => {
+  if (isExternal.value) return
+  const target = activeTargets.value.find(candidate => candidate.blockId === block.id && !('rowIndex' in candidate && candidate.rowIndex !== null))
+  if (!target) return
+  editorOpen.value = true
+  selectedTargetId.value = target.id
+}
 const selectTableCell = (block: DocxBlock, rowIndex: number, columnIndex: number) => {
   selectTextTarget(tableTargetForCell(block.id, rowIndex, columnIndex))
 }
@@ -1127,6 +1197,11 @@ const resetTargetDraft = () => {
       ? entry.operation.fontSizeHalfPoints
       : target.fontSizeHalfPoints
   }
+  if ('expectedParagraphStyleDigest' in target) {
+    draftParagraphStyleId.value = entry?.operation.kind === 'paragraphStyle'
+      ? entry.operation.replacementStyleId
+      : target.currentStyleId
+  }
   if ('expectedMetadataDigest' in target) {
     replacementAltText.value = entry?.operation.kind === 'imageAltText'
       ? entry.operation.replacementAltText
@@ -1172,6 +1247,13 @@ const previewEdit = async () => {
         underline: operation.underline,
         fontColor: operation.fontColor,
         fontSizeHalfPoints: operation.fontSizeHalfPoints,
+      })
+    } else if (operation.kind === 'paragraphStyle') {
+      previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_paragraph_style_patch_isolated_copy', {
+        ...base,
+        targetId: operation.targetId,
+        expectedParagraphStyleDigest: operation.expectedParagraphStyleDigest,
+        replacementStyleId: operation.replacementStyleId,
       })
     } else {
       previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_image_alt_text_patch_isolated_copy', {
@@ -1358,10 +1440,13 @@ const load = async () => {
       ? 'text'
       : report.value.editableStyleTargets.length
         ? 'style'
-        : 'imageAltText'
+        : report.value.editableParagraphStyleTargets.length
+          ? 'paragraphStyle'
+          : 'imageAltText'
     editMode.value = availableMode
     if (viewState?.mode === 'text' && report.value.editableTextTargets.length) editMode.value = 'text'
     if (viewState?.mode === 'style' && report.value.editableStyleTargets.length) editMode.value = 'style'
+    if (viewState?.mode === 'paragraphStyle' && report.value.editableParagraphStyleTargets.length) editMode.value = 'paragraphStyle'
     if (viewState?.mode === 'imageAltText' && report.value.editableImageTargets.length) editMode.value = 'imageAltText'
     if (!requestedExternal && typeof viewState?.panelOpen === 'boolean') editorOpen.value = viewState.panelOpen
     if (requestedExternal) editorOpen.value = false
@@ -1370,7 +1455,9 @@ const load = async () => {
         ? report.value.editableTextTargets[0]
         : editMode.value === 'style'
           ? report.value.editableStyleTargets[0]
-          : report.value.editableImageTargets[0]
+          : editMode.value === 'paragraphStyle'
+            ? report.value.editableParagraphStyleTargets[0]
+            : report.value.editableImageTargets[0]
     )?.id || ''
     draftEntries.value = new Map()
     clearDraftHistory()
@@ -1413,7 +1500,7 @@ watch(selectedTargetId, () => {
   invalidatePreview()
 })
 watch(
-  [replacementText, replacementAltText, draftBold, draftItalic, draftUnderline, draftFontColor, draftFontSizeHalfPoints],
+  [replacementText, replacementAltText, draftBold, draftItalic, draftUnderline, draftFontColor, draftFontSizeHalfPoints, draftParagraphStyleId],
   syncCurrentDraft,
 )
 watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocator)
@@ -1515,7 +1602,7 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .docx-editor > header span { color: var(--text-muted); font-size: var(--text-compact); }
 .docx-editor > header button { width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 5px; color: var(--text-secondary); background: transparent; cursor: pointer; }
 .docx-editor > header button:hover { background: var(--hover-bg); }
-.edit-mode-tabs { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
+.edit-mode-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
 .edit-mode-tabs button { min-height: 30px; border: 0; border-right: 1px solid var(--border-color); color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; font: inherit; font-size: 11px; }
 .edit-mode-tabs button:last-child { border-right: 0; }
 .edit-mode-tabs button.active { color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 10%, var(--bg-primary)); }

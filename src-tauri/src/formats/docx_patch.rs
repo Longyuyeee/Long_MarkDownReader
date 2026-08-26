@@ -56,6 +56,24 @@ pub struct DocxEditableImageTarget {
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
+pub struct DocxParagraphStyleOption {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DocxEditableParagraphStyleTarget {
+    pub id: String,
+    pub block_id: String,
+    pub kind: String,
+    pub text: String,
+    pub current_style_id: String,
+    pub expected_paragraph_style_digest: String,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct DocxIsolatedPatchReport {
     pub status: String,
     pub engine: String,
@@ -157,6 +175,17 @@ struct ImageParagraphCandidate {
     metadata: Option<ImageMetadataSpan>,
 }
 
+#[derive(Clone, Debug)]
+struct ParagraphStyleSpan {
+    paragraph_index: usize,
+    start: usize,
+    end: usize,
+    tag_name: String,
+    attributes: Vec<(String, String)>,
+    current_style_id: String,
+    safe: bool,
+}
+
 fn digest(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
@@ -178,6 +207,11 @@ fn read_part(source: &[u8], part_name: &str) -> Result<Vec<u8>, String> {
     part.read_to_end(&mut bytes)
         .map_err(|error| format!("读取 DOCX 目标部件失败: {error}"))?;
     Ok(bytes)
+}
+
+#[cfg(test)]
+pub(crate) fn read_part_for_test(source: &[u8], part_name: &str) -> Result<Vec<u8>, String> {
+    read_part(source, part_name)
 }
 
 pub fn docx_document_part_digest(source: &[u8]) -> Result<String, String> {
@@ -587,6 +621,187 @@ fn scan_document_paragraphs(document_xml: &[u8]) -> Result<Vec<ParagraphTextSpan
     Ok(spans)
 }
 
+fn parse_docx_paragraph_style_options(
+    source: &[u8],
+) -> Result<Vec<DocxParagraphStyleOption>, String> {
+    let styles_xml = read_part(source, "word/styles.xml")?;
+    let mut reader = Reader::from_reader(styles_xml.as_slice());
+    reader.config_mut().trim_text(true);
+    let mut buffer = Vec::new();
+    let mut current: Option<DocxParagraphStyleOption> = None;
+    let mut options = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("DOCX M1B2B styles.xml 损坏: {error}"))?
+        {
+            Event::Start(ref event) if event.local_name().as_ref() == b"style" => {
+                let attributes = decoded_attributes(&reader, event)?;
+                current = if attribute_by_local_name(&attributes, "type") == Some("paragraph") {
+                    attribute_by_local_name(&attributes, "styleId").map(|id| {
+                        DocxParagraphStyleOption {
+                            id: id.to_string(),
+                            name: id.to_string(),
+                        }
+                    })
+                } else {
+                    None
+                };
+            }
+            Event::Start(ref event) | Event::Empty(ref event)
+                if event.local_name().as_ref() == b"name" =>
+            {
+                if let Some(option) = current.as_mut() {
+                    let attributes = decoded_attributes(&reader, event)?;
+                    if let Some(name) = attribute_by_local_name(&attributes, "val") {
+                        if !name.trim().is_empty() {
+                            option.name = name.to_string();
+                        }
+                    }
+                }
+            }
+            Event::End(ref event) if event.local_name().as_ref() == b"style" => {
+                if let Some(option) = current.take() {
+                    options.push(option);
+                }
+            }
+            Event::DocType(_) => return Err("DOCX M1B2B styles.xml 不允许 DOCTYPE".into()),
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    options.sort_by(|left, right| left.name.cmp(&right.name).then(left.id.cmp(&right.id)));
+    options.dedup_by(|left, right| left.id == right.id);
+    Ok(options)
+}
+
+fn scan_paragraph_style_spans(document_xml: &[u8]) -> Result<Vec<ParagraphStyleSpan>, String> {
+    #[derive(Default)]
+    struct State {
+        paragraph_index: usize,
+        safe: bool,
+        in_properties: bool,
+        properties_count: usize,
+        style: Option<ParagraphStyleSpan>,
+    }
+
+    let mut reader = Reader::from_reader(document_xml);
+    reader.config_mut().trim_text(false);
+    let mut buffer = Vec::new();
+    let mut in_body = false;
+    let mut table_depth = 0_usize;
+    let mut sdt_depth = 0_usize;
+    let mut paragraph_number = 0_usize;
+    let mut current: Option<State> = None;
+    let mut spans = Vec::new();
+    loop {
+        match reader
+            .read_event_into(&mut buffer)
+            .map_err(|error| format!("DOCX M1B2B 主文档 XML 损坏: {error}"))?
+        {
+            Event::Start(ref event) => {
+                let name = event.local_name();
+                match name.as_ref() {
+                    b"body" => in_body = true,
+                    b"tbl" => table_depth += 1,
+                    b"sdt" => sdt_depth += 1,
+                    b"p" if in_body => {
+                        paragraph_number += 1;
+                        current = Some(State {
+                            paragraph_index: paragraph_number,
+                            safe: table_depth == 0 && sdt_depth == 0,
+                            ..Default::default()
+                        });
+                    }
+                    b"pPr" => {
+                        if let Some(state) = current.as_mut() {
+                            state.properties_count += 1;
+                            state.in_properties = true;
+                            if state.properties_count != 1 {
+                                state.safe = false;
+                            }
+                        }
+                    }
+                    b"pStyle" => {
+                        if let Some(state) = current.as_mut() {
+                            state.safe = false;
+                        }
+                    }
+                    b"sectPr" | b"framePr" | b"textboxTightWrap" => {
+                        if let Some(state) = current.as_mut().filter(|state| state.in_properties) {
+                            state.safe = false;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            Event::Empty(ref event) => {
+                let name = event.local_name();
+                if name.as_ref() == b"pStyle" {
+                    if let Some(state) = current.as_mut() {
+                        if !state.in_properties || state.style.is_some() {
+                            state.safe = false;
+                        } else {
+                            let attributes = decoded_attributes(&reader, event)?;
+                            let style_id = attribute_by_local_name(&attributes, "val")
+                                .filter(|value| !value.trim().is_empty())
+                                .map(str::to_string);
+                            let end = usize::try_from(reader.buffer_position())
+                                .map_err(|_| "DOCX M1B2B 样式位置超出平台范围")?;
+                            let start = end
+                                .checked_sub(event.len() + 3)
+                                .ok_or("DOCX M1B2B 样式位置无效")?;
+                            if let Some(style_id) = style_id {
+                                state.style = Some(ParagraphStyleSpan {
+                                    paragraph_index: state.paragraph_index,
+                                    start,
+                                    end,
+                                    tag_name: String::from_utf8_lossy(event.name().as_ref())
+                                        .into_owned(),
+                                    attributes,
+                                    current_style_id: style_id,
+                                    safe: true,
+                                });
+                            } else {
+                                state.safe = false;
+                            }
+                        }
+                    }
+                } else if matches!(name.as_ref(), b"sectPr" | b"framePr" | b"textboxTightWrap") {
+                    if let Some(state) = current.as_mut().filter(|state| state.in_properties) {
+                        state.safe = false;
+                    }
+                }
+            }
+            Event::End(ref event) => match event.local_name().as_ref() {
+                b"pPr" => {
+                    if let Some(state) = current.as_mut() {
+                        state.in_properties = false;
+                    }
+                }
+                b"p" => {
+                    if let Some(state) = current.take() {
+                        if let Some(mut style) = state.style {
+                            style.safe = state.safe && state.properties_count == 1;
+                            spans.push(style);
+                        }
+                    }
+                }
+                b"tbl" => table_depth = table_depth.saturating_sub(1),
+                b"sdt" => sdt_depth = sdt_depth.saturating_sub(1),
+                b"body" => in_body = false,
+                _ => {}
+            },
+            Event::DocType(_) => return Err("DOCX M1B2B 主文档不允许 DOCTYPE".into()),
+            Event::Eof => break,
+            _ => {}
+        }
+        buffer.clear();
+    }
+    Ok(spans)
+}
+
 fn decoded_attributes(
     reader: &Reader<&[u8]>,
     event: &BytesStart<'_>,
@@ -970,6 +1185,72 @@ pub fn inspect_docx_editable_style_targets(
     model: &DocxDocumentModel,
 ) -> Result<Vec<DocxEditableStyleTarget>, String> {
     editable_style_targets_with_spans(source, model)
+        .map(|targets| targets.into_iter().map(|(target, _)| target).collect())
+}
+
+pub fn inspect_docx_paragraph_style_options(
+    source: &[u8],
+) -> Result<Vec<DocxParagraphStyleOption>, String> {
+    parse_docx_paragraph_style_options(source)
+}
+
+fn editable_paragraph_style_targets_with_spans(
+    source: &[u8],
+    model: &DocxDocumentModel,
+) -> Result<Vec<(DocxEditableParagraphStyleTarget, ParagraphStyleSpan)>, String> {
+    let options = parse_docx_paragraph_style_options(source)?;
+    let option_ids = options
+        .iter()
+        .map(|option| option.id.as_str())
+        .collect::<std::collections::HashSet<_>>();
+    if options.len() < 2 {
+        return Ok(Vec::new());
+    }
+    let document_xml = read_part(source, DOCX_EDITABLE_DOCUMENT_PART)?;
+    let style_spans = scan_paragraph_style_spans(&document_xml)?;
+    let text_targets = editable_targets_with_spans(source, model)?;
+    let mut targets = Vec::new();
+    for style_span in style_spans {
+        if !style_span.safe || !option_ids.contains(style_span.current_style_id.as_str()) {
+            continue;
+        }
+        let Some((text_target, _)) = text_targets.iter().find(|(target, text_span)| {
+            text_span.paragraph_index == style_span.paragraph_index
+                && target.row_index.is_none()
+                && target.column_index.is_none()
+                && target.carrier == "plain"
+                && matches!(target.kind.as_str(), "paragraph" | "heading")
+        }) else {
+            continue;
+        };
+        let raw_tag = document_xml
+            .get(style_span.start..style_span.end)
+            .ok_or("DOCX M1B2B 段落样式标签范围无效")?;
+        let expected_digest = digest(raw_tag);
+        targets.push((
+            DocxEditableParagraphStyleTarget {
+                id: format!(
+                    "docx-paragraph-style-{}-{}",
+                    style_span.paragraph_index,
+                    &digest(text_target.text.as_bytes())[..12]
+                ),
+                block_id: text_target.block_id.clone(),
+                kind: text_target.kind.clone(),
+                text: text_target.text.clone(),
+                current_style_id: style_span.current_style_id.clone(),
+                expected_paragraph_style_digest: expected_digest,
+            },
+            style_span,
+        ));
+    }
+    Ok(targets)
+}
+
+pub fn inspect_docx_editable_paragraph_style_targets(
+    source: &[u8],
+    model: &DocxDocumentModel,
+) -> Result<Vec<DocxEditableParagraphStyleTarget>, String> {
+    editable_paragraph_style_targets_with_spans(source, model)
         .map(|targets| targets.into_iter().map(|(target, _)| target).collect())
 }
 
@@ -1357,6 +1638,87 @@ pub fn build_docx_style_patch_isolated(
     report.engine = "LongEdit C2D isolated basic character style patch".into();
     report.semantic_target_id = Some(target.id);
     report.semantic_kind = Some("character-style".into());
+    report.semantic_reparse_verified = true;
+    Ok((report, output))
+}
+
+pub fn build_docx_paragraph_style_patch_isolated(
+    source: &[u8],
+    target_id: &str,
+    expected_paragraph_style_digest: &str,
+    replacement_style_id: &str,
+) -> Result<(DocxIsolatedPatchReport, Vec<u8>), String> {
+    let expected_digest = expected_paragraph_style_digest.trim().to_ascii_lowercase();
+    if !valid_digest(&expected_digest) {
+        return Err("DOCX M1B2B 原段落样式摘要无效".into());
+    }
+    let replacement_style_id = replacement_style_id.trim();
+    if replacement_style_id.is_empty() || replacement_style_id.chars().count() > 255 {
+        return Err("DOCX M1B2B 目标段落样式标识无效".into());
+    }
+    let options = parse_docx_paragraph_style_options(source)?;
+    if !options
+        .iter()
+        .any(|option| option.id == replacement_style_id)
+    {
+        return Err("DOCX M1B2B 目标样式未在当前文件 styles.xml 中定义".into());
+    }
+    let model = parse_docx(source)?;
+    let (target, span) = editable_paragraph_style_targets_with_spans(source, &model)?
+        .into_iter()
+        .find(|(target, _)| target.id == target_id)
+        .ok_or("DOCX M1B2B 段落样式目标不存在或包含复杂属性")?;
+    if target.expected_paragraph_style_digest != expected_digest {
+        return Err("DOCX M1B2B 目标段落样式已变化，请重新读取".into());
+    }
+    if target.current_style_id == replacement_style_id {
+        return Err("DOCX M1B2B 段落样式没有变化".into());
+    }
+
+    let mut updated = BytesStart::new(span.tag_name.as_str());
+    let mut replaced_value = false;
+    for (key, value) in &span.attributes {
+        if key.rsplit(':').next() == Some("val") {
+            updated.push_attribute((key.as_str(), replacement_style_id));
+            replaced_value = true;
+        } else {
+            updated.push_attribute((key.as_str(), value.as_str()));
+        }
+    }
+    if !replaced_value {
+        return Err("DOCX M1B2B 段落样式标签缺少 val 属性".into());
+    }
+    let mut writer = Writer::new(Vec::new());
+    writer
+        .write_event(Event::Empty(updated))
+        .map_err(|error| format!("DOCX M1B2B 段落样式编码失败: {error}"))?;
+    let replacement_tag = writer.into_inner();
+
+    let document_xml = read_part(source, DOCX_EDITABLE_DOCUMENT_PART)?;
+    let mut replacement_xml = Vec::with_capacity(
+        document_xml.len() + replacement_tag.len().saturating_sub(span.end - span.start),
+    );
+    replacement_xml.extend_from_slice(&document_xml[..span.start]);
+    replacement_xml.extend_from_slice(&replacement_tag);
+    replacement_xml.extend_from_slice(&document_xml[span.end..]);
+    let replacement_xml = String::from_utf8(replacement_xml)
+        .map_err(|_| "DOCX M1B2B 主文档不是有效 UTF-8，当前保持只读")?;
+    let part_digest = digest(&document_xml);
+    let (mut report, output) =
+        build_docx_document_patch_isolated(source, &part_digest, &replacement_xml)?;
+
+    let output_model = parse_docx(&output)?;
+    let output_targets = inspect_docx_editable_paragraph_style_targets(&output, &output_model)?;
+    if !output_targets.iter().any(|candidate| {
+        candidate.id == target.id
+            && candidate.text == target.text
+            && candidate.current_style_id == replacement_style_id
+    }) {
+        return Err("DOCX M1B2B 隔离输出段落样式复读不一致".into());
+    }
+    report.engine = "LongEdit M1B2B isolated existing paragraph style patch".into();
+    report.semantic_target_id = Some(target.id);
+    report.semantic_kind = Some("paragraph-style".into());
     report.semantic_reparse_verified = true;
     Ok((report, output))
 }
@@ -2303,6 +2665,90 @@ mod tests {
                 format!("{}\n", serde_json::to_string_pretty(&evidence).unwrap()),
             )
             .unwrap();
+        }
+    }
+
+    #[test]
+    fn m1b2b_round_trips_existing_paragraph_styles_for_all_real_producers() {
+        let fixtures: [(&str, &[u8]); 3] = [
+            (
+                "microsoft-word-16",
+                include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx"),
+            ),
+            (
+                "wps-writer",
+                include_bytes!("../../../fixtures/docx/producers/wps-writer.docx"),
+            ),
+            (
+                "libreoffice-writer",
+                include_bytes!("../../../fixtures/docx/producers/libreoffice-writer.docx"),
+            ),
+        ];
+        for (producer, source) in fixtures {
+            let model = parse_docx(source).unwrap();
+            let options = inspect_docx_paragraph_style_options(source).unwrap();
+            let targets = inspect_docx_editable_paragraph_style_targets(source, &model).unwrap();
+            let target = targets
+                .iter()
+                .find(|target| target.kind == "heading")
+                .unwrap_or_else(|| panic!("{producer} lacks a safe heading style target"));
+            let replacement = options
+                .iter()
+                .find(|option| option.id != target.current_style_id)
+                .unwrap();
+            let source_styles = read_part(source, "word/styles.xml").unwrap();
+            let source_parts = package_part_digests(source).unwrap();
+            let (report, output) = build_docx_paragraph_style_patch_isolated(
+                source,
+                &target.id,
+                &target.expected_paragraph_style_digest,
+                &replacement.id,
+            )
+            .unwrap();
+
+            assert_eq!(report.changed_parts, [DOCX_EDITABLE_DOCUMENT_PART]);
+            assert!(report.unchanged_parts_verified);
+            assert!(report.structural_reparse_verified);
+            assert!(report.semantic_reparse_verified);
+            assert_eq!(
+                read_part(&output, "word/styles.xml").unwrap(),
+                source_styles
+            );
+            let output_parts = package_part_digests(&output).unwrap();
+            for (part, source_digest) in &source_parts {
+                if part != DOCX_EDITABLE_DOCUMENT_PART {
+                    assert_eq!(
+                        output_parts.get(part),
+                        Some(source_digest),
+                        "{producer}: {part}"
+                    );
+                }
+            }
+            let output_model = parse_docx(&output).unwrap();
+            let output_target =
+                inspect_docx_editable_paragraph_style_targets(&output, &output_model)
+                    .unwrap()
+                    .into_iter()
+                    .find(|candidate| candidate.id == target.id)
+                    .unwrap();
+            assert_eq!(output_target.current_style_id, replacement.id);
+
+            assert!(build_docx_paragraph_style_patch_isolated(
+                source,
+                &target.id,
+                &"0".repeat(64),
+                &replacement.id,
+            )
+            .unwrap_err()
+            .contains("已变化"));
+            assert!(build_docx_paragraph_style_patch_isolated(
+                source,
+                &target.id,
+                &target.expected_paragraph_style_digest,
+                "LongEditMissingStyle",
+            )
+            .unwrap_err()
+            .contains("未在当前文件"));
         }
     }
 }

@@ -7,7 +7,7 @@
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 > 当前权威执行入口：[2026-08-02 当前开发对齐审计与收口计划](./Development_Alignment_and_Closure_Plan_2026-08-02.md)。v1.0.1 已发布；下一代码阶段固定为 P0 内部文件路由收敛，随后按 UI-1～UI-4 完成全量 UI 治理。下方历史“最新入口”仅用于阶段追溯。
 
-> 2026-08-26 权威执行入口：[v1.0.15 后续专业能力增强路线图](./Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md)。M0、M1A、M1B1、M2、[10,000 文件索引性能基线](./Post_v1.0.15_Large_Library_Index_Search_Audit_2026-08-26.md) 与 [M1B2A DOCX 生产者对象选择审计](./Post_v1.0.15_M1B2A_DOCX_Producer_Object_Selection_Audit_2026-08-26.md) 已完成。下一阶段固定为 **M1B2B 已有段落样式切换**：仅允许简单顶层正文段落选择文件内已定义样式，先完成隔离补丁、失败回滚和三生产者重开，再接 UI；页眉页脚、浮动图片、合并结构和域链接继续只读。下方更早入口仅用于历史追溯。
+> 2026-08-26 权威执行入口：[v1.0.15 后续专业能力增强路线图](./Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md)。M0、M1A、M1B1、M2、[10,000 文件索引性能基线](./Post_v1.0.15_Large_Library_Index_Search_Audit_2026-08-26.md)、[M1B2A 对象选择](./Post_v1.0.15_M1B2A_DOCX_Producer_Object_Selection_Audit_2026-08-26.md) 与 [M1B2B 已有段落样式编辑](./Post_v1.0.15_M1B2B_DOCX_Paragraph_Style_Editing_Audit_2026-08-26.md) 已完成。下一阶段固定为 **M1B2C 外部生产者复开与收口**：不增加编辑对象，使用 Word、WPS Writer、LibreOffice Writer 原生程序复开 M1B2B 输出，检查修复提示、目标样式、未改对象和二次复开；三生产者通过后才关闭 M1B2。下方更早入口仅用于历史追溯。
 
 > 2026-07-30 权威执行入口：[R2 Windows 安装与生命周期审计](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。**R1/R2 已完成，下一代码阶段为 R3 索引恢复、备份与隐私净化诊断**。E1B WPS ODT 保持 2/3、X3-B6 数组生产者矩阵保持 1/3，作为外部环境门禁并行等待；不得伪造关闭。下文较早的“下一入口”只保留为阶段追溯。
 

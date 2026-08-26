@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1B2B",
+  "status": "passed",
+  "sourceCommit": "5c6e2e65ed6283e418f063d411c64e826945002a",
+  "expected": {
+    "realProducerFiles": 3,
+    "sourceUnchangedBeforeSave": true,
+    "undoRedo": true,
+    "isolatedPreview": true,
+    "explicitSave": true,
+    "savedReopen": true,
+    "responsive960x720": true,
+    "runtimeErrors": 0
+  },
+  "actual": {
+    "results": [
+      {
+        "producerId": "microsoft-word-16",
+        "beforeSha256": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+        "afterSha256": "57fa623a5852210812e3294f0989dbc3f0d4ba0b7e1d558ce4906b94615ae8eb",
+        "selectedStyle": {
+          "before": "1",
+          "after": "ab",
+          "label": "Intense Quote · ab",
+          "optionCount": 21
+        },
+        "draftSourceUnchanged": true,
+        "undoRedo": true,
+        "isolatedPreview": true,
+        "explicitSave": true,
+        "savedReopen": true,
+        "responsive960x720": true
+      },
+      {
+        "producerId": "wps-writer",
+        "beforeSha256": "0da9fad1284dcddc27689f381c26fd7f52d82f154e8a5cf152faebb7b206868b",
+        "afterSha256": "9efb2ecda3a4b5c1e127f6515cdd314c56ee0d175731c8757877d567b968566b",
+        "selectedStyle": {
+          "before": "2",
+          "after": "1",
+          "label": "Normal · 1",
+          "optionCount": 2
+        },
+        "draftSourceUnchanged": true,
+        "undoRedo": true,
+        "isolatedPreview": true,
+        "explicitSave": true,
+        "savedReopen": true,
+        "responsive960x720": true
+      },
+      {
+        "producerId": "libreoffice-writer",
+        "beforeSha256": "a549705f8650065a1fbb7111b598b5ae509f0b387ec58db47547f7445e26dea3",
+        "afterSha256": "391f728c9d37175e2e3d9d9a5c0e9cf67ca1542bf7c363b2e7c60e202f9258de",
+        "selectedStyle": {
+          "before": "Heading1",
+          "after": "BodyText",
+          "label": "Body Text · BodyText",
+          "optionCount": 8
+        },
+        "draftSourceUnchanged": true,
+        "undoRedo": true,
+        "isolatedPreview": true,
+        "explicitSave": true,
+        "savedReopen": true,
+        "responsive960x720": true
+      }
+    ],
+    "runtimeErrors": 0
+  },
+  "evidenceFiles": [
+    "microsoft-word-16-paragraph-style-draft.jpg",
+    "wps-writer-paragraph-style-draft.jpg",
+    "libreoffice-writer-paragraph-style-draft.jpg"
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

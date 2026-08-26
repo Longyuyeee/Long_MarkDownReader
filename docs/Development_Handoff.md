@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-26 M1B2B DOCX 已有段落样式编辑已通过：** Microsoft Word、WPS Writer、LibreOffice Writer 三份真实生产者 DOCX 均完成文件内已有样式切换、内存草稿、撤销/重做、隔离验证、确认覆盖及 Long编辑结构/语义复读；保存前源摘要不变，保存后摘要变化，`word/styles.xml` 与其余未改部件保持，960x720 无溢出、运行时错误 0。真实测试纠正了标题切换普通样式后对象类型会变化、E2E 初始化端口/导航竞态、全局工具提示移除 `title` 以及选择框历史入口不稳定等差异。下一步 M1B2C 只做 Word/WPS/LibreOffice 原生程序复开与 M1B2 收口，不增加编辑对象。版本保持 `1.0.15`，`releaseCandidate=false`。详见 [`Post_v1.0.15_M1B2B_DOCX_Paragraph_Style_Editing_Audit_2026-08-26.md`](./Post_v1.0.15_M1B2B_DOCX_Paragraph_Style_Editing_Audit_2026-08-26.md)。
+
 > **2026-08-26 M1B2A DOCX 生产者对象选择审计已通过：** Rust 直接盘点 Microsoft Word、WPS Writer、LibreOffice Writer 的 3 份基础 DOCX 与 3 份超链接 DOCX。安全表格单元格目标为 `5/6/6`、字符样式为 `13/0/0`、图片替代文字为 `1/1/0`、超链接标签为 `2/0/2`；三份基础文件均包含段落样式定义与引用。由此纠正“常用对象普遍缺失”的宽泛预期，下一步 M1B2B 只做简单顶层段落在文件已有样式之间切换，页眉页脚、浮动图片、合并结构和域链接继续只读。六份摘要、实际对象库存及修正前后差异已进入机器门禁。本阶段未开放写回、不提升版本，`releaseCandidate=false`。详见 [`Post_v1.0.15_M1B2A_DOCX_Producer_Object_Selection_Audit_2026-08-26.md`](./Post_v1.0.15_M1B2A_DOCX_Producer_Object_Selection_Audit_2026-08-26.md)。
 
 > **2026-08-26 10,000 文件索引性能阶段已通过：** 100 个目录、10,000 个真实 Markdown/TXT/JSON/YAML 文件的修正前后对照已完成。首次构建由 15,796 ms 降至 9,185 ms，已建查询由 4,229 ms 降至 105 ms，变化检测/过期查询/单文件刷新为 5/111/993 ms，取消确认 7 ms，重启查询 120 ms；720px 无横向溢出、运行时错误 0、fixture manifest SHA-256 不变。运行时现使用文件变化事件、快照缓存、有界单文件覆盖层和显式取消，关系变化与复杂格式仍安全回退全量重建。接手后直接进入 M1B2A DOCX 生产者对象选择审计，不提升版本，`releaseCandidate=false`。详见 [`Post_v1.0.15_Large_Library_Index_Search_Audit_2026-08-26.md`](./Post_v1.0.15_Large_Library_Index_Search_Audit_2026-08-26.md)。
