@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-3",
+  "releaseCandidate": false,
+  "scope": "path-and-relationship-visual-expression-selection-audit",
+  "currentFacts": {
+    "networkEdges": "straight-line",
+    "mindMapEdges": "bezier-curve",
+    "parallelEdgeSeparation": false,
+    "relationLabelsOnCanvas": false,
+    "directedArrowheads": true,
+    "selectedPathUsesFilteredRealEdges": true,
+    "selectedPathDedicatedHighlight": false,
+    "selectedPathDirectionFlow": false,
+    "allPathEdgeEvidenceAvailable": true,
+    "pathEvidencePanelObscuresCanvasSubject": true,
+    "motionPreferenceExists": true,
+    "reducedMotionConsumedByGraph": false,
+    "continuousAnimationFrameLoop": true,
+    "semanticZoomAndCommunityContoursPreserved": true
+  },
+  "decision": {
+    "implementStaticReadabilityBeforeMotion": true,
+    "reason": "Stable curved routing, parallel-edge separation, tangent arrowheads, bounded path labels and camera/panel coexistence are prerequisites for readable direction flow and can be verified without animation timing ambiguity.",
+    "deferred": [
+      "selected-path-direction-animation-and-reduced-motion-consumption",
+      "minimap-fit-selection-cluster-lens-and-fullscreen",
+      "status-rings",
+      "M3C-large-graph-performance"
+    ]
+  },
+  "selectedNextStage": {
+    "id": "M3B-4",
+    "name": "curved-parallel-relations-and-static-path-labels",
+    "requiredOutcomes": [
+      "deterministic-curved-network-edge-routes",
+      "stable-parallel-and-reciprocal-edge-separation",
+      "arrowheads-follow-curve-tangent-and-fact-direction",
+      "selected-path-only-relation-labels-without-evidence-loss",
+      "path-camera-and-evidence-panel-share-the-available-canvas",
+      "dark-white-contrast-and-three-viewport-evidence"
+    ]
+  }
+}

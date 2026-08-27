@@ -131,7 +131,7 @@
         "scope": "community",
         "expectedNodeCount": 4,
         "nodeCount": 4,
-        "graphShape": "4 / 17 节点 3 连接"
+        "graphShape": "4 / 17 节点 4 连接"
       },
       "comparison": {
         "scope": "comparison",
@@ -160,6 +160,7 @@
     },
     "visualBaseline": null,
     "semanticZoom": null,
+    "semanticHierarchy": null,
     "returnedToLibrary": true,
     "runtimeErrors": 0,
     "sourceFilesUnchanged": true,

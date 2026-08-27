@@ -1233,3 +1233,9 @@ M3B-1 已将固定缩放阈值替换为缩放/可见节点密度共同判定的�
 M3B-2 已在中近景建立由稳定 Louvain 社区和成员当前坐标派生的确定性凸包色带。轮廓位于关系与节点下层，不修改坐标、不参与布局、不写入资料库；中景保留社区名/成员数，近景弱化为虚线边界，远景仍使用可进入的摘要。三主题、三档窗口均为 5 个轮廓且成员包覆门禁通过，运行时错误 0、源摘要不变并返回资料库。审计期间还修复了安全区不足时窄屏远景摘要偶发越界。
 
 当前接续点为 **M3B-3 路径与关系视觉表达选择审计**：先对照路线图和实际代码冻结网络曲线、平行边分离、关系标签、选中路径方向表达及减少动效边界，再选择最小实现；不得提前宣称缩略导航、聚类镜头或 M3C 完成。详见 [`Post_v1.0.15_M3B2_Community_Contours_and_Semantic_Hierarchy_Audit_2026-08-28.md`](./Post_v1.0.15_M3B2_Community_Contours_and_Semantic_Hierarchy_Audit_2026-08-28.md)。
+
+## 2026-08-28 M3B-3 选择审计与换机交接
+
+远端 `main` 的功能基线为 `12fe433`，M3B-3 本次只完成事实审计与接续冻结。network 边仍为直线，同端点关系重叠，Canvas 无关系标签或路径专属表达；路径算法、3 条真实边证据、来源回跳、社区语义层级和资料库安全均保持。最新 Tauri 画面确认路径证据面板覆盖主体，图谱也尚未消费全局 `reduced` 偏好。
+
+当前接续点为 **M3B-4 曲线/平行关系与静态路径标签**。换机后先执行 `git pull --ff-only origin main`、`npm ci`、`npm run check:development-version-identity`、`npm run check:post-v115-m3b3-path-relationship-visual-selection` 和 `npm run build`；工作区必须干净。详细事实、边界和命令见 [`Post_v1.0.15_M3B3_Path_and_Relationship_Visual_Selection_and_Handoff_Audit_2026-08-28.md`](./Post_v1.0.15_M3B3_Path_and_Relationship_Visual_Selection_and_Handoff_Audit_2026-08-28.md)。

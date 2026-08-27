@@ -265,6 +265,7 @@
     "audit:post-v115-m3b1-semantic-zoom-community-overview": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3b1-semantic-zoom-audit.ps1",
     "check:post-v115-m3b2-community-contours-semantic-hierarchy": "node scripts/check-post-v115-m3b2-community-contours-semantic-hierarchy.mjs",
     "audit:post-v115-m3b2-community-contours-semantic-hierarchy": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3b2-community-contours-audit.ps1",
+    "check:post-v115-m3b3-path-relationship-visual-selection": "node scripts/check-post-v115-m3b3-path-relationship-visual-selection.mjs",
     "check:post-v115-explicit-save-alignment": "node scripts/check-post-v115-explicit-save-alignment.mjs",
     "check:post-v115-large-library-index": "node scripts/check-post-v115-large-library-index.mjs",
     "audit:post-v115-large-library-index-baseline": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-large-library-index-baseline.ps1",
