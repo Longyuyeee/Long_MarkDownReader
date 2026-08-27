@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "stage": "M3A-2",
+  "stage": "M3A-3",
   "actual": {
     "wide": {
       "legendVisible": true,
@@ -106,50 +106,67 @@
       ],
       "documentFits": true
     },
-    "neighborFocus": {
-      "focusRootVisible": true,
+    "neighborFocus": null,
+    "shortestPath": {
+      "foundText": "3 跳NorthStar → Brief → retention Supports the roadmap → Evidence返回全图",
       "focused": {
         "legendVisible": true,
-        "graphStats": "3 / 17 节点 3 连接 135% 1 个已选",
+        "graphStats": "4 / 17 节点 3 连接 135% 1 个已选",
         "objectTypeIds": [
           "markdown",
-          "canvas_node"
+          "pdf",
+          "pdf_annotation"
         ],
         "relationTypeIds": [
-          "links-to",
-          "embeds",
-          "depends-on"
+          "contains",
+          "depends-on",
+          "annotates"
         ],
         "directed": [
           {
-            "id": "links-to",
-            "directed": "true"
-          },
-          {
-            "id": "embeds",
+            "id": "contains",
             "directed": "true"
           },
           {
             "id": "depends-on",
             "directed": "true"
+          },
+          {
+            "id": "annotates",
+            "directed": "true"
           }
         ],
         "documentFits": true
       },
-      "depthSnapshots": [
-        {
-          "depth": 1,
-          "graphStats": "3 / 17 节点 3 连接 135% 1 个已选"
-        },
-        {
-          "depth": 2,
-          "graphStats": "6 / 17 节点 7 连接 135% 1 个已选"
-        },
-        {
-          "depth": 3,
-          "graphStats": "8 / 17 节点 9 连接 135% 1 个已选"
-        }
-      ],
+      "narrowFocused": {
+        "legendVisible": true,
+        "graphStats": "4 / 17 节点 3 连接 135% 1 个已选",
+        "objectTypeIds": [
+          "markdown",
+          "pdf",
+          "pdf_annotation"
+        ],
+        "relationTypeIds": [
+          "contains",
+          "depends-on",
+          "annotates"
+        ],
+        "directed": [
+          {
+            "id": "contains",
+            "directed": "true"
+          },
+          {
+            "id": "depends-on",
+            "directed": "true"
+          },
+          {
+            "id": "annotates",
+            "directed": "true"
+          }
+        ],
+        "documentFits": true
+      },
       "restored": {
         "legendVisible": true,
         "graphStats": "17 / 17 节点 17 连接 135% 1 个已选",
@@ -202,10 +219,9 @@
         ],
         "documentFits": true
       },
-      "nodeCountReduced": true,
-      "fullGraphRestored": true
+      "fullGraphRestored": true,
+      "unreachableText": "没有可达路径当前筛选范围内两节点不连通，请更换节点或调整筛选。"
     },
-    "shortestPath": null,
     "returnedToLibrary": true,
     "runtimeErrors": 0,
     "sourceFilesUnchanged": true,

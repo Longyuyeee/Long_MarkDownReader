@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-3",
+  "releaseCandidate": false,
+  "scope": "two-node-shortest-path-with-independent-oracle",
+  "traversal": "undirected-discovery-with-original-edge-direction-preserved",
+  "requiredCases": ["connected", "deterministic-tie", "unreachable", "same-node", "invalid-node"],
+  "requiredUi": ["explicit-start", "explicit-end", "visible-path-length", "visible-path-chain", "unreachable-state", "return-to-full-graph"],
+  "selectedNextStage": { "id": "M3A-4", "name": "relation-evidence-return", "reason": "After path discovery, each path edge must expose its evidence and return to the originating object context." }
+}

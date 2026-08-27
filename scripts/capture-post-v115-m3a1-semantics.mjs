@@ -83,6 +83,12 @@ if (stage === 'M3A2') {
   await waitFor(`document.querySelector('[data-testid="graph-neighbor-focus"]')!==null`, 'neighbor focus banner')
   await delay(150)
   const focused = await snapshot()
+  const depthSnapshots = [{ depth: 1, graphStats: focused.graphStats }]
+  for (const depth of [2, 3]) {
+    await evaluate(`(()=>{const select=document.querySelector('[data-testid="graph-neighbor-focus-depth"]');if(!(select instanceof HTMLSelectElement))return false;select.value=${JSON.stringify(String(depth))};select.dispatchEvent(new Event('change',{bubbles:true}));return true})()`)
+    await delay(120)
+    depthSnapshots.push({ depth, graphStats: (await snapshot()).graphStats })
+  }
   await capture('neighbor-focus.jpg')
   const returnClicked = await evaluate(`(()=>{const element=document.querySelector('[data-testid="graph-neighbor-focus-return"]');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
   if (!returnClicked) throw new Error('M3A-2 return-to-full-graph action missing')
@@ -90,7 +96,40 @@ if (stage === 'M3A2') {
   await delay(150)
   const restored = await snapshot()
   const graphShape = value => value.graphStats.match(/^\d+ \/ \d+ 节点 \d+ 连接/)?.[0] || ''
-  neighborFocus = { focusRootVisible: true, focused, restored, nodeCountReduced: graphShape(focused) !== graphShape(wide), fullGraphRestored: graphShape(restored) === graphShape(wide) }
+  neighborFocus = { focusRootVisible: true, focused, depthSnapshots, restored, nodeCountReduced: graphShape(focused) !== graphShape(wide), fullGraphRestored: graphShape(restored) === graphShape(wide) }
+}
+
+let shortestPath = null
+if (stage === 'M3A3') {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await evaluate(`document.querySelector('[data-testid="graph-path-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-path-panel"]')!==null`, 'shortest-path panel')
+  const choose = async (selector, prefix) => {
+    const chosen = await evaluate(`(()=>{const select=document.querySelector(${JSON.stringify(selector)});if(!(select instanceof HTMLSelectElement))return false;const option=[...select.options].find(item=>item.textContent?.startsWith(${JSON.stringify(prefix)}));if(!option)return false;select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));return true})()`)
+    if (!chosen) throw new Error(`M3A-3 option missing: ${prefix}`)
+  }
+  await choose('[data-testid="graph-path-start"]', 'NorthStar · Markdown')
+  await choose('[data-testid="graph-path-end"]', 'Evidence · PDF')
+  await evaluate(`document.querySelector('[data-testid="graph-path-run"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-path-found"]')!==null`, 'connected shortest path')
+  await delay(150)
+  const foundText = await evaluate(`document.querySelector('[data-testid="graph-path-found"]')?.textContent?.replace(/\\s+/g,' ').trim()||''`)
+  const focused = await snapshot()
+  await capture('shortest-path-found.jpg')
+  await send('Emulation.setDeviceMetricsOverride', { width: 720, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(200)
+  const narrowFocused = await snapshot()
+  await capture('shortest-path-narrow.jpg')
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(100)
+  await evaluate(`document.querySelector('[data-testid="graph-path-return"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-path-found"]')===null`, 'shortest-path return')
+  const restored = await snapshot()
+  await choose('[data-testid="graph-path-end"]', 'Review · PowerPoint 演示')
+  await evaluate(`document.querySelector('[data-testid="graph-path-run"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-path-unreachable"]')!==null`, 'unreachable path state')
+  const unreachableText = await evaluate(`document.querySelector('[data-testid="graph-path-unreachable"]')?.textContent?.replace(/\\s+/g,' ').trim()||''`)
+  shortestPath = { foundText, focused, narrowFocused, restored, fullGraphRestored: restored.graphStats.startsWith('17 / 17 节点 17 连接'), unreachableText }
 }
 
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
@@ -99,8 +138,8 @@ await waitFor(`document.querySelector('.library-mode')!==null`, 'return to libra
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { wide, narrow, neighborFocus, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { wide, narrow, neighborFocus, shortestPath, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
