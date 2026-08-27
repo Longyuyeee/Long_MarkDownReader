@@ -30,6 +30,7 @@
             :key="`${edge.source}-${edge.target}`"
             :x1="edge.x1" :y1="edge.y1" :x2="edge.x2" :y2="edge.y2"
             :class="{ related: !edge.directed }"
+            :style="{ stroke: edge.semantic.color, strokeDasharray: edge.semantic.line === 'solid' ? 'none' : edge.semantic.line === 'dashed' ? '5 4' : '2 4' }"
             :marker-end="edge.directed ? 'url(#local-arrow)' : undefined"
           />
         </g>
@@ -45,7 +46,11 @@
           @click="emit('select', node.path)"
           @keydown.enter="emit('select', node.path)"
         >
-          <circle :r="node.id === currentPath ? 18 : 12" />
+          <circle v-if="node.semantic.shape === 'circle'" class="node-mark" :r="node.id === currentPath ? 18 : 12" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
+          <rect v-else-if="node.semantic.shape === 'square'" class="node-mark" :x="node.id === currentPath ? -15 : -10" :y="node.id === currentPath ? -15 : -10" :width="node.id === currentPath ? 30 : 20" :height="node.id === currentPath ? 30 : 20" rx="3" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
+          <rect v-else-if="node.semantic.shape === 'diamond'" class="node-mark" :x="node.id === currentPath ? -13 : -9" :y="node.id === currentPath ? -13 : -9" :width="node.id === currentPath ? 26 : 18" :height="node.id === currentPath ? 26 : 18" rx="2" transform="rotate(45)" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
+          <polygon v-else class="node-mark" :points="node.id === currentPath ? '-16,-9 -8,-16 8,-16 16,-9 16,9 8,16 -8,16 -16,9' : '-11,-6 -6,-11 6,-11 11,-6 11,6 6,11 -6,11 -11,6'" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
+          <text class="node-glyph" y="3" text-anchor="middle">{{ node.semantic.glyph }}</text>
           <text y="26" text-anchor="middle">{{ shortTitle(node.title) }}</text>
           <title>{{ node.title }}</title>
         </g>
@@ -94,11 +99,16 @@ import { computed, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import GraphFilterControls from './GraphFilterControls.vue'
 import { applyGraphFilters, useGraphFilters } from '../composables/useGraphFilters'
+import { graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
+import { isActiveThemeDark } from '../config/themePresets'
+import { useAppStore } from '../store/app'
+import type { GraphObjectSemantic } from '../config/graphSemantics'
 import type { GraphData, GraphNode } from '../types/graph'
-interface PositionedNode extends GraphNode { x: number; y: number; level: number }
+interface PositionedNode extends GraphNode { x: number; y: number; level: number; semantic: GraphObjectSemantic }
 
 const props = defineProps<{ libraryRoot: string; currentPath: string }>()
 const emit = defineEmits<{ select: [path: string]; openMindmap: []; openCanvas: [depth: number] }>()
+const store = useAppStore()
 
 const LOCAL_GRAPH_DEPTH_KEY = 'longedit.localGraph.depth'
 const savedDepth = Number(localStorage.getItem(LOCAL_GRAPH_DEPTH_KEY))
@@ -150,7 +160,7 @@ const positionedNodes = computed<PositionedNode[]>(() => {
     frontier = next
   }
 
-  const result: PositionedNode[] = [{ ...center, x: 150, y: 112, level: 0 }]
+  const result: PositionedNode[] = [{ ...center, x: 150, y: 112, level: 0, semantic: graphObjectSemantic(center.objectType) }]
   for (let level = 1; level <= depth.value; level++) {
     const nodes = filteredGraph.value.nodes.filter(node => levels.get(node.id) === level)
     const radius = Math.min(102, 48 + level * 28)
@@ -161,6 +171,7 @@ const positionedNodes = computed<PositionedNode[]>(() => {
         x: 150 + Math.cos(angle) * radius,
         y: 112 + Math.sin(angle) * radius,
         level,
+        semantic: graphObjectSemantic(node.objectType),
       })
     })
   }
@@ -173,7 +184,7 @@ const positionedEdges = computed(() => {
     const source = positions.get(edge.source)
     const target = positions.get(edge.target)
     if (!source || !target) return []
-    return [{ ...edge, x1: source.x, y1: source.y, x2: target.x, y2: target.y }]
+    return [{ ...edge, semantic: graphRelationSemantic(edge.relationType), x1: source.x, y1: source.y, x2: target.x, y2: target.y }]
   })
 })
 
@@ -195,17 +206,8 @@ const directRelations = computed(() => {
 })
 
 const shortTitle = (title: string) => title.length > 8 ? `${title.slice(0, 8)}…` : title
-const relationTypeLabel = (type: string) => ({
-  'links-to': '普通引用',
-  parent: '父级',
-  child: '子级',
-  'depends-on': '依赖',
-  related: '相关',
-  contains: '包含',
-  cites: '引用文献',
-  annotates: '批注',
-  'derived-from': '派生自',
-}[type] || type || '关系')
+const relationTypeLabel = (type: string) => graphRelationSemantic(type).label
+const nodeColor = (node: PositionedNode) => graphSemanticColor(node.objectType, isActiveThemeDark(store.theme))
 
 watch(depth, value => localStorage.setItem(LOCAL_GRAPH_DEPTH_KEY, String(value)))
 watch([() => props.libraryRoot, () => props.currentPath, depth], loadGraph, { immediate: true })
@@ -232,11 +234,12 @@ watch([() => props.libraryRoot, () => props.currentPath, depth], loadGraph, { im
 .local-edges line { stroke: rgba(var(--theme-primary-rgb), 0.28); stroke-width: 1.2; }
 .local-edges line.related { stroke-dasharray: 4 3; }
 .local-node { cursor: pointer; outline: none; }
-.local-node circle { fill: color-mix(in srgb, var(--theme-card) 88%, var(--theme-primary)); stroke: rgba(var(--theme-primary-rgb), 0.7); stroke-width: 1.5; transition: transform 0.2s ease, fill 0.2s ease; }
-.local-node:hover circle, .local-node:focus circle { fill: var(--theme-primary); transform: scale(1.12); }
-.local-node.center circle { fill: var(--theme-primary); stroke: color-mix(in srgb, var(--theme-primary) 55%, white); stroke-width: 3; filter: drop-shadow(0 4px 8px rgba(var(--theme-primary-rgb), 0.3)); }
+.local-node .node-mark { stroke-width: 1.5; transition: filter 0.2s ease; }
+.local-node:hover .node-mark, .local-node:focus .node-mark { filter: brightness(1.14); }
+.local-node.center .node-mark { stroke: color-mix(in srgb, var(--theme-primary) 55%, white) !important; stroke-width: 3; filter: drop-shadow(0 4px 8px rgba(var(--theme-primary-rgb), 0.3)); }
+.local-node .node-glyph { fill: #fff; font-size: 8px; font-weight: 900; pointer-events: none; }
 .local-node text { fill: var(--theme-text); font-size: var(--text-compact); font-weight: 600; pointer-events: none; }
-.local-node.center text { fill: var(--theme-primary); font-weight: 750; }
+.local-node.center text:not(.node-glyph) { fill: var(--theme-primary); font-weight: 750; }
 .local-graph-summary { display: flex; justify-content: center; gap: 12px; margin-top: -4px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .local-graph-summary span { padding: 3px 7px; border-radius: 999px; background: rgba(var(--theme-primary-rgb), 0.06); }
 .local-graph-state { min-height: 190px; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--theme-text-secondary); font-size: 11px; }

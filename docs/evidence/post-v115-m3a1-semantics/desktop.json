@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-1",
+  "actual": {
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "ca5d3644e776145c387bbe1ce4861a48667e0ad40f49090ec7cba024c6852d11",
+    "afterSha256": "ca5d3644e776145c387bbe1ce4861a48667e0ad40f49090ec7cba024c6852d11"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

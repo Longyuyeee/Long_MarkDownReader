@@ -81,6 +81,7 @@
       </div>
       <button class="remediation-close" aria-label="关闭行动提示" @click="clearRemediation">×</button>
     </div>
+    <GraphSemanticLegend :graph="remediationGraph" :dark="isActiveThemeDark(store.theme)" />
     <canvas
       ref="canvasRef"
       tabindex="0"
@@ -276,11 +277,13 @@ import { useAppStore } from '../store/app'
 import { getActiveThemeTone, isActiveThemeDark } from '../config/themePresets'
 import GraphFilterControls from './GraphFilterControls.vue'
 import GraphHealthPanel from './GraphHealthPanel.vue'
+import GraphSemanticLegend from './GraphSemanticLegend.vue'
 import WorkspaceManagementHeader from './workspace/WorkspaceManagementHeader.vue'
 import WorkspaceSegmentedControl from './workspace/WorkspaceSegmentedControl.vue'
 import WorkspaceStatusBar from './workspace/WorkspaceStatusBar.vue'
 import { applyGraphFilters, useGraphFilters } from '../composables/useGraphFilters'
 import { clearGraphLayout, createGraphSvg, graphSvgToPng, restoreGraphLayout, saveGraphLayout } from '../utils/graphWorkspace'
+import { graphLineDash, graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
 import type { GraphData, GraphNode } from '../types/graph'
 
 const props = defineProps<{ show?: boolean }>()
@@ -322,15 +325,8 @@ const mindmapNodeIds = ref<Set<string> | null>(null)
 const relationSaving = ref(false)
 const relationDraftType = ref('related')
 const relationDraftTarget = ref('')
-const relationTypeOptions = [
-  { value: 'related', label: '相关' },
-  { value: 'parent', label: '父级' },
-  { value: 'child', label: '子级' },
-  { value: 'depends-on', label: '依赖' },
-  { value: 'contains', label: '包含' },
-  { value: 'cites', label: '引用文献' },
-  { value: 'derived-from', label: '派生自' },
-]
+const relationTypeOptions = ['related', 'parent', 'child', 'depends-on', 'contains', 'cites', 'derived-from']
+  .map(value => ({ value, label: graphRelationSemantic(value).label }))
 const editableRelationTypes = new Set(relationTypeOptions.map(option => option.value))
 const remediationFocus = computed(() => typeof route.query.focus === 'string' && ['relations', 'orphans', 'diversity', 'overview'].includes(route.query.focus) ? route.query.focus : '')
 const remediationCopy = computed(() => ({
@@ -429,10 +425,7 @@ const selectedRelations = computed(() => {
 const relationCandidates = computed(() => graphData.value.nodes
   .filter(node => node.objectType === 'markdown' && node.id !== selectedNode.value?.id)
   .sort((a, b) => a.title.localeCompare(b.title, 'zh-CN')))
-const relationTypeLabel = (type: string) => ({
-  'links-to': '普通引用', parent: '父级', child: '子级', 'depends-on': '依赖', related: '相关',
-  contains: '包含', cites: '引用文献', annotates: '批注', 'derived-from': '派生自',
-}[type] || type || '关系')
+const relationTypeLabel = (type: string) => graphRelationSemantic(type).label
 
 type SelectedRelation = (typeof selectedRelations.value)[number]
 const relationSourceNode = (relation: SelectedRelation) => graphData.value.nodes.find(node => node.id === relation.edge.source)
@@ -898,11 +891,7 @@ const focusFirstMatch = () => {
   if (node) selectAndCenter(node)
 }
 
-const objectTypeLabel = (type: string) => ({
-  pdf: 'PDF 资料', pdf_annotation: 'PDF 批注', table: '数据表', table_view: '表格视图',
-  canvas: 'Canvas 画布', canvas_node: 'Canvas 节点', opml: '思维导图', opml_node: '思维导图主题',
-  pptx: 'PowerPoint 演示', pptx_slide: 'PowerPoint 幻灯片', markdown: 'Markdown 笔记'
-}[type] || type)
+const objectTypeLabel = (type: string) => graphObjectSemantic(type).label
 const canCreateProjectNote = (node: GraphNode) => !node.parentId && ['markdown', 'pdf'].includes(node.objectType)
 const displayWorkspacePath = (path: string) => path.replace(/^\\\\\?\\/, '')
 const openNode = (node: GraphNode) => {
@@ -1160,7 +1149,8 @@ const draw = () => {
 
       const isHighlight = hovered && (s === hovered || t === hovered)
 
-      ctx.setLineDash(e.directed ? [] : [5 / zoom, 4 / zoom])
+      const relationSemantic = graphRelationSemantic(e.relationType)
+      ctx.setLineDash(graphLineDash(relationSemantic.line, zoom))
       ctx.beginPath()
       ctx.moveTo(s.x || 0, s.y || 0)
       if (viewMode.value === 'mindmap') {
@@ -1177,10 +1167,12 @@ const draw = () => {
         ctx.strokeStyle = gradient
         ctx.lineWidth = 2.5 / zoom
       } else {
-        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
+        ctx.strokeStyle = relationSemantic.color
+        ctx.globalAlpha = isDark ? 0.42 : 0.5
         ctx.lineWidth = 1 / zoom
       }
       ctx.stroke()
+      ctx.globalAlpha = 1
       ctx.setLineDash([])
 
       if (e.directed) {
@@ -1251,34 +1243,33 @@ const draw = () => {
       ctx.fill()
     }
 
-    // 主体节点
+    // 主体节点：形状和颜色来自统一语义注册表。
+    const objectSemantic = graphObjectSemantic(n.objectType)
+    const nx = n.x || 0, ny = n.y || 0
     ctx.beginPath()
-    ctx.arc(n.x || 0, n.y || 0, r, 0, Math.PI * 2)
+    if (objectSemantic.shape === 'square') {
+      ctx.roundRect(nx - r, ny - r, r * 2, r * 2, Math.max(2, r * 0.22))
+    } else if (objectSemantic.shape === 'diamond') {
+      ctx.moveTo(nx, ny - r); ctx.lineTo(nx + r, ny); ctx.lineTo(nx, ny + r); ctx.lineTo(nx - r, ny); ctx.closePath()
+    } else if (objectSemantic.shape === 'hexagon') {
+      for (let index = 0; index < 6; index += 1) {
+        const angle = Math.PI / 3 * index - Math.PI / 2
+        const x = nx + Math.cos(angle) * r, y = ny + Math.sin(angle) * r
+        index ? ctx.lineTo(x, y) : ctx.moveTo(x, y)
+      }
+      ctx.closePath()
+    } else {
+      ctx.arc(nx, ny, r, 0, Math.PI * 2)
+    }
 
     const nodeGradient = ctx.createRadialGradient(
       (n.x || 0) - r * 0.3, (n.y || 0) - r * 0.3, 0,
       n.x || 0, n.y || 0, r
     )
 
-    if (graphCanvasTheme.value === 'focus') {
-      nodeGradient.addColorStop(0, isDark ? 'rgba(205,214,224,0.96)' : 'rgba(72,84,99,0.92)')
-      nodeGradient.addColorStop(1, isDark ? 'rgba(126,139,153,0.9)' : 'rgba(42,52,64,0.86)')
-    } else if (graphCanvasTheme.value === 'professional') {
-      nodeGradient.addColorStop(0, `${activeTone.ui.primary}f2`)
-      nodeGradient.addColorStop(1, `${activeTone.ui.primary}b8`)
-    } else if (n.objectType === 'pdf') {
-      nodeGradient.addColorStop(0, isDark ? 'rgba(255,190,80,1)' : 'rgba(255,176,48,1)')
-      nodeGradient.addColorStop(1, isDark ? 'rgba(217,132,28,0.88)' : 'rgba(221,132,20,0.85)')
-    } else if (n.objectType === 'table') {
-      nodeGradient.addColorStop(0, isDark ? 'rgba(92,211,211,1)' : 'rgba(22,177,181,1)')
-      nodeGradient.addColorStop(1, isDark ? 'rgba(27,135,145,0.9)' : 'rgba(10,126,139,0.88)')
-    } else if (isHovered) {
-      nodeGradient.addColorStop(0, isDark ? 'rgba(100,220,170,1)' : 'rgba(40,140,255,1)')
-      nodeGradient.addColorStop(1, isDark ? 'rgba(66,184,131,0.9)' : 'rgba(0,122,255,0.9)')
-    } else {
-      nodeGradient.addColorStop(0, isDark ? 'rgba(80,200,150,0.85)' : 'rgba(60,150,255,0.85)')
-      nodeGradient.addColorStop(1, isDark ? 'rgba(66,184,131,0.7)' : 'rgba(0,122,255,0.7)')
-    }
+    const semanticColor = graphSemanticColor(n.objectType, isDark)
+    nodeGradient.addColorStop(0, semanticColor)
+    nodeGradient.addColorStop(1, semanticColor)
 
     ctx.fillStyle = nodeGradient
     ctx.fill()
@@ -1287,6 +1278,14 @@ const draw = () => {
     ctx.strokeStyle = isSelected ? activeTone.ui.primary : (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)')
     ctx.lineWidth = (isHovered || isSelected ? 3 : 1) / zoom
     ctx.stroke()
+
+    if (zoom > 0.55 && r >= 7) {
+      ctx.fillStyle = isDark ? '#111827' : '#ffffff'
+      ctx.font = `800 ${Math.max(7, r * 0.72)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(objectSemantic.glyph, nx, ny + 0.5)
+    }
 
     // 标签 - 根据缩放级别动态显示
     if (zoom > 0.4) {

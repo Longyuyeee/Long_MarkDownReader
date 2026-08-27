@@ -1,4 +1,5 @@
 import type { GraphEdge, GraphNode } from '../types/graph'
+import { graphObjectSemantic, graphRelationSemantic } from '../config/graphSemantics'
 
 type StoredPoint = { x: number; y: number }
 type StoredLayout = { updatedAt: number; positions: Record<string, StoredPoint> }
@@ -110,20 +111,30 @@ export const createGraphSvg = (nodes: GraphNode[], edges: GraphEdge[], options: 
       const length = Math.hypot(dx, dy) || 1, ux = dx / length, uy = dy / length, px = -uy, py = ux
       arrow = `<polygon points="${ax + ux * 6},${ay + uy * 6} ${ax - ux * 4 + px * 4},${ay - uy * 4 + py * 4} ${ax - ux * 4 - px * 4},${ay - uy * 4 - py * 4}"/>`
     }
-    return [`<g class="edge${edge.directed ? ' directed' : ' related'}">${shape}${arrow}</g>`]
+    const semantic = graphRelationSemantic(edge.relationType)
+    return [`<g class="edge${edge.directed ? ' directed' : ' related'} ${semantic.line}" style="--edge-color:${semantic.color}">${shape}${arrow}</g>`]
   }).join('')
   const nodeMarkup = nodes.map(node => {
     const x = node.x || 0, y = node.y || 0
     const label = escapeXml(node.title.length > 28 ? `${node.title.slice(0, 28)}…` : node.title)
+    const semantic = graphObjectSemantic(node.objectType)
+    const semanticColor = options.dark ? semantic.color.dark : semantic.color.light
     if (mindmap) {
       const root = node.id === options.rootId, w = root ? 180 : 160, h = root ? 48 : 42
       return `<g class="node mindmap-node${root ? ' root' : ''}"><rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="${root ? 16 : 11}"/><text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">${label}</text></g>`
     }
     const radius = Math.max(7, node.size * 0.6)
-    return `<g class="node network-node"><circle cx="${x}" cy="${y}" r="${radius}"/><text x="${x}" y="${y + radius + 18}" text-anchor="middle">${label}</text></g>`
+    const shape = semantic.shape === 'square'
+      ? `<rect x="${x - radius}" y="${y - radius}" width="${radius * 2}" height="${radius * 2}" rx="${Math.max(2, radius * 0.22)}"/>`
+      : semantic.shape === 'diamond'
+        ? `<polygon points="${x},${y - radius} ${x + radius},${y} ${x},${y + radius} ${x - radius},${y}"/>`
+        : semantic.shape === 'hexagon'
+          ? `<polygon points="${Array.from({ length: 6 }, (_, index) => { const angle = Math.PI / 3 * index - Math.PI / 2; return `${x + Math.cos(angle) * radius},${y + Math.sin(angle) * radius}` }).join(' ')}"/>`
+          : `<circle cx="${x}" cy="${y}" r="${radius}"/>`
+    return `<g class="node network-node" data-object-type="${escapeXml(semantic.id)}" style="--node-color:${semanticColor}">${shape}<text class="glyph" x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">${escapeXml(semantic.glyph)}</text><text x="${x}" y="${y + radius + 18}" text-anchor="middle">${label}</text></g>`
   }).join('')
   const metadata = escapeXml(`${nodes.length} nodes, ${edges.length} edges`)
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="${minX} ${minY} ${width} ${height}" role="img" aria-label="${escapeXml(options.title)}"><title>${escapeXml(options.title)}</title><desc>${metadata}</desc><rect x="${minX}" y="${minY}" width="${width}" height="${height}" fill="${background}"/><style>.edge path,.edge line{fill:none;stroke:${edgeColor};stroke-width:1.4}.edge polygon{fill:${edgeColor}}.edge.related path,.edge.related line{stroke-dasharray:5 4}.node text{font:600 13px -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;fill:${foreground}}.network-node circle{fill:${primary};stroke:rgba(255,255,255,.55);stroke-width:1.2}.mindmap-node rect{fill:${card};stroke:${edgeColor};stroke-width:1}.mindmap-node.root rect{fill:${primary};stroke:${primary}}.mindmap-node.root text{fill:#fff;font-weight:700}</style><g class="edges">${edgeMarkup}</g><g class="nodes">${nodeMarkup}</g></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="${minX} ${minY} ${width} ${height}" role="img" aria-label="${escapeXml(options.title)}"><title>${escapeXml(options.title)}</title><desc>${metadata}</desc><rect x="${minX}" y="${minY}" width="${width}" height="${height}" fill="${background}"/><style>.edge path,.edge line{fill:none;stroke:var(--edge-color,${edgeColor});stroke-width:1.4}.edge polygon{fill:var(--edge-color,${edgeColor})}.edge.dashed path,.edge.dashed line{stroke-dasharray:6 4}.edge.dotted path,.edge.dotted line{stroke-dasharray:2 4}.node text{font:600 13px -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;fill:${foreground}}.network-node circle,.network-node rect,.network-node polygon{fill:var(--node-color,${primary});stroke:rgba(255,255,255,.55);stroke-width:1.2}.network-node text.glyph{fill:${options.dark ? '#111827' : '#ffffff'};font-size:8px;font-weight:800}.mindmap-node rect{fill:${card};stroke:${edgeColor};stroke-width:1}.mindmap-node.root rect{fill:${primary};stroke:${primary}}.mindmap-node.root text{fill:#fff;font-weight:700}</style><g class="edges">${edgeMarkup}</g><g class="nodes">${nodeMarkup}</g></svg>`
 }
 
 export const graphSvgToPng = async (svg: string) => {

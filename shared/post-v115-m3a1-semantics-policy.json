@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-1",
+  "developmentTargetVersion": "1.0.16",
+  "runtimeBaseVersion": "1.0.15",
+  "releaseCandidate": false,
+  "scope": "stable-object-relation-semantics-and-user-visible-legend",
+  "objectTypeIds": ["markdown", "pdf", "pdf_annotation", "table", "table_view", "canvas", "canvas_node", "opml", "opml_node", "pptx", "pptx_slide"],
+  "relationTypeIds": ["links-to", "parent", "child", "contains", "embeds", "depends-on", "cites", "annotates", "derived-from", "supports", "related", "shares-tag"],
+  "undirectedRelationTypeIds": ["related", "shares-tag"],
+  "requiredConsumers": ["global-graph", "local-graph", "svg-png-export", "user-visible-legend"],
+  "requiredFallbacks": ["unknown-object", "unknown-relation"],
+  "desktopFixture": {
+    "requiredObjectTypes": ["markdown", "pdf", "table", "table_view", "canvas", "canvas_node", "opml", "opml_node", "pptx", "pptx_slide"],
+    "requiredRelationTypes": ["links-to", "contains", "supports"]
+  },
+  "selectedNextStage": {
+    "id": "M3A-2",
+    "name": "neighbor-focus-and-return",
+    "reason": "With stable semantics in place, the next bounded workflow is one-click neighbor focus with a clear return path before shortest-path and community work."
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "objectTypes": [
+    { "id": "markdown", "order": 10, "label": "Markdown 笔记", "shortLabel": "笔记", "glyph": "M", "shape": "circle", "color": { "light": "#2563eb", "dark": "#60a5fa" } },
+    { "id": "pdf", "order": 20, "label": "PDF 资料", "shortLabel": "PDF", "glyph": "P", "shape": "square", "color": { "light": "#d97706", "dark": "#fbbf24" } },
+    { "id": "pdf_annotation", "order": 21, "label": "PDF 批注", "shortLabel": "批注", "glyph": "A", "shape": "diamond", "color": { "light": "#b45309", "dark": "#f59e0b" } },
+    { "id": "table", "order": 30, "label": "数据表", "shortLabel": "表格", "glyph": "T", "shape": "square", "color": { "light": "#0f766e", "dark": "#2dd4bf" } },
+    { "id": "table_view", "order": 31, "label": "表格视图", "shortLabel": "视图", "glyph": "V", "shape": "diamond", "color": { "light": "#0e7490", "dark": "#22d3ee" } },
+    { "id": "canvas", "order": 40, "label": "Canvas 画布", "shortLabel": "Canvas", "glyph": "C", "shape": "hexagon", "color": { "light": "#7c3aed", "dark": "#a78bfa" } },
+    { "id": "canvas_node", "order": 41, "label": "Canvas 节点", "shortLabel": "画布节点", "glyph": "N", "shape": "diamond", "color": { "light": "#6d28d9", "dark": "#c4b5fd" } },
+    { "id": "opml", "order": 50, "label": "思维导图", "shortLabel": "OPML", "glyph": "O", "shape": "hexagon", "color": { "light": "#15803d", "dark": "#4ade80" } },
+    { "id": "opml_node", "order": 51, "label": "思维导图主题", "shortLabel": "主题", "glyph": "N", "shape": "diamond", "color": { "light": "#166534", "dark": "#86efac" } },
+    { "id": "pptx", "order": 60, "label": "PowerPoint 演示", "shortLabel": "PPTX", "glyph": "S", "shape": "square", "color": { "light": "#c2410c", "dark": "#fb923c" } },
+    { "id": "pptx_slide", "order": 61, "label": "PowerPoint 幻灯片", "shortLabel": "幻灯片", "glyph": "S", "shape": "diamond", "color": { "light": "#9a3412", "dark": "#fdba74" } }
+  ],
+  "relationTypes": [
+    { "id": "links-to", "order": 10, "label": "普通引用", "directed": true, "line": "solid", "color": "#64748b" },
+    { "id": "parent", "order": 20, "label": "父级", "directed": true, "line": "solid", "color": "#7c3aed" },
+    { "id": "child", "order": 21, "label": "子级", "directed": true, "line": "solid", "color": "#8b5cf6" },
+    { "id": "contains", "order": 30, "label": "包含", "directed": true, "line": "solid", "color": "#0f766e" },
+    { "id": "embeds", "order": 31, "label": "嵌入", "directed": true, "line": "solid", "color": "#0891b2" },
+    { "id": "depends-on", "order": 40, "label": "依赖", "directed": true, "line": "dashed", "color": "#dc2626" },
+    { "id": "cites", "order": 50, "label": "引用文献", "directed": true, "line": "dashed", "color": "#d97706" },
+    { "id": "annotates", "order": 51, "label": "批注", "directed": true, "line": "dotted", "color": "#ea580c" },
+    { "id": "derived-from", "order": 60, "label": "派生自", "directed": true, "line": "dashed", "color": "#2563eb" },
+    { "id": "supports", "order": 61, "label": "支持", "directed": true, "line": "solid", "color": "#16a34a" },
+    { "id": "related", "order": 70, "label": "相关", "directed": false, "line": "dashed", "color": "#9333ea" },
+    { "id": "shares-tag", "order": 71, "label": "共同标签", "directed": false, "line": "dotted", "color": "#db2777" }
+  ],
+  "fallback": {
+    "object": { "label": "其他对象", "shortLabel": "其他", "glyph": "?", "shape": "circle", "color": { "light": "#475569", "dark": "#94a3b8" } },
+    "relation": { "label": "其他关系", "directed": true, "line": "dotted", "color": "#94a3b8" }
+  }
+}
