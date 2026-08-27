@@ -1151,3 +1151,9 @@ v1.0.14 汇总 v1.0.13 发布后的三组已验收修复：窄侧栏资料库卡
 
 当前开发目标为 `1.0.16`，运行时和当前公开版本仍为 `1.0.15`。`main` 已领先公开标签 `v1.0.15`；主界面与格式能力页必须明确显示开发线身份，package、Cargo、Tauri、公开策略和历史制品哈希只在 M4 发布冻结时原子提升。M1D 对象选择审计已完成，当前阶段为 M1D-A 大 JSON 渐进只读与流式搜索。接手后先运行 `npm run check:development-version-identity` 与 `npm run check:post-v115-m1d-selection`。详见 [`Post_v1.0.15_Development_Version_Identity_Alignment_Audit_2026-08-27.md`](./Post_v1.0.15_Development_Version_Identity_Alignment_Audit_2026-08-27.md) 与 [`Post_v1.0.15_M1D_Media_Structured_Selection_Audit_2026-08-27.md`](./Post_v1.0.15_M1D_Media_Structured_Selection_Audit_2026-08-27.md)。
 > **2026-08-27 M1D 对象选择审计已通过：** 真实 10 MiB JSON 在 98,758 ms 后仍停留“正在读取并分析”，搜索与树形不可用；50 MiB JSON 在 699 ms 明确阻断。真实 WebView2 生成的 1080p/4K VP9 WebM 分别在 292/141 ms 加载，损坏 MKV 在 162 ms 显示清晰解码退路，运行时错误 0，JSON 源摘要不变。下一步固定为 M1D-A 大 JSON 渐进只读、分段导航与流式搜索；小 JSON 保持完整编辑，媒体逐帧/截图顺延至 M1D-B。详见 [`Post_v1.0.15_M1D_Media_Structured_Selection_Audit_2026-08-27.md`](./Post_v1.0.15_M1D_Media_Structured_Selection_Audit_2026-08-27.md)。
+
+## 2026-08-27 当前状态审计与 M3 接手入口
+
+当前权威主线为 `main@67eddb5a5637164932e951984b34fbc5972ecd39`，本地与 `origin/main` 一致；其他远端分支均落后且没有需要合并的独有提交。M0、M1、M2 和 10,000 文件索引基线已经完成，当前阶段固定为 **M3 知识图谱 2.0 选择审计**。运行时/公开版本仍为 `1.0.15`，开发目标为 `1.0.16`，`releaseCandidate=false`。
+
+接手后先用 M0 固定 100/1000/5000 节点图谱记录真实 Tauri 修正前交互与性能，再优先实现“稳定对象/关系语义注册表 + 图例”；随后依次推进邻居聚焦、独立验证的最短路径、社区发现、视觉镜头和大图生命周期。不得先做纯光效，也不得提前进入 M4 或提升版本。完整结论与验收顺序见 [`Current_Development_Status_and_M3_Entry_Audit_2026-08-27.md`](./Current_Development_Status_and_M3_Entry_Audit_2026-08-27.md)。
