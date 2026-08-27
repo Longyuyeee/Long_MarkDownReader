@@ -1,5 +1,5 @@
 <template>
-  <section class="local-graph-card" aria-label="当前笔记局部图谱">
+  <section class="local-graph-card" aria-label="当前笔记局部图谱" data-testid="local-graph-card" :data-current-path="currentPath">
     <div class="local-graph-header">
       <div>
         <span class="local-kicker">局部图谱</span>
@@ -38,7 +38,7 @@
           v-for="node in positionedNodes"
           :key="node.id"
           class="local-node"
-          :class="{ center: node.id === currentPath }"
+          :class="{ center: node.id === centerNodeId }"
           :transform="`translate(${node.x} ${node.y})`"
           tabindex="0"
           role="button"
@@ -46,17 +46,17 @@
           @click="emit('select', node.path)"
           @keydown.enter="emit('select', node.path)"
         >
-          <circle v-if="node.semantic.shape === 'circle'" class="node-mark" :r="node.id === currentPath ? 18 : 12" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
-          <rect v-else-if="node.semantic.shape === 'square'" class="node-mark" :x="node.id === currentPath ? -15 : -10" :y="node.id === currentPath ? -15 : -10" :width="node.id === currentPath ? 30 : 20" :height="node.id === currentPath ? 30 : 20" rx="3" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
-          <rect v-else-if="node.semantic.shape === 'diamond'" class="node-mark" :x="node.id === currentPath ? -13 : -9" :y="node.id === currentPath ? -13 : -9" :width="node.id === currentPath ? 26 : 18" :height="node.id === currentPath ? 26 : 18" rx="2" transform="rotate(45)" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
-          <polygon v-else class="node-mark" :points="node.id === currentPath ? '-16,-9 -8,-16 8,-16 16,-9 16,9 8,16 -8,16 -16,9' : '-11,-6 -6,-11 6,-11 11,-6 11,6 6,11 -6,11 -11,6'" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
+          <circle v-if="node.semantic.shape === 'circle'" class="node-mark" :r="node.id === centerNodeId ? 18 : 12" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
+          <rect v-else-if="node.semantic.shape === 'square'" class="node-mark" :x="node.id === centerNodeId ? -15 : -10" :y="node.id === centerNodeId ? -15 : -10" :width="node.id === centerNodeId ? 30 : 20" :height="node.id === centerNodeId ? 30 : 20" rx="3" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
+          <rect v-else-if="node.semantic.shape === 'diamond'" class="node-mark" :x="node.id === centerNodeId ? -13 : -9" :y="node.id === centerNodeId ? -13 : -9" :width="node.id === centerNodeId ? 26 : 18" :height="node.id === centerNodeId ? 26 : 18" rx="2" transform="rotate(45)" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
+          <polygon v-else class="node-mark" :points="node.id === centerNodeId ? '-16,-9 -8,-16 8,-16 16,-9 16,9 8,16 -8,16 -16,9' : '-11,-6 -6,-11 6,-11 11,-6 11,6 6,11 -6,11 -11,6'" :style="{ fill: nodeColor(node), stroke: nodeColor(node) }" />
           <text class="node-glyph" y="3" text-anchor="middle">{{ node.semantic.glyph }}</text>
           <text y="26" text-anchor="middle">{{ shortTitle(node.title) }}</text>
           <title>{{ node.title }}</title>
         </g>
       </svg>
 
-      <div class="local-graph-summary">
+      <div class="local-graph-summary" data-testid="local-graph-summary" :data-node-count="filteredGraph.nodes.length" :data-edge-count="filteredGraph.edges.length">
         <span>{{ filteredGraph.nodes.length }} / {{ graph.nodes.length }} 个节点</span>
         <span>{{ filteredGraph.edges.length }} 条关系</span>
       </div>
@@ -102,6 +102,7 @@ import { applyGraphFilters, useGraphFilters } from '../composables/useGraphFilte
 import { graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
 import { isActiveThemeDark } from '../config/themePresets'
 import { useAppStore } from '../store/app'
+import { sameWorkspacePath } from '../utils/savedCollections'
 import type { GraphObjectSemantic } from '../config/graphSemantics'
 import type { GraphData, GraphNode } from '../types/graph'
 interface PositionedNode extends GraphNode { x: number; y: number; level: number; semantic: GraphObjectSemantic }
@@ -117,7 +118,8 @@ const loading = ref(false)
 const error = ref('')
 const graph = ref<GraphData>({ nodes: [], edges: [] })
 const { filters } = useGraphFilters()
-const filteredGraph = computed(() => applyGraphFilters(graph.value, filters, props.currentPath))
+const centerNodeId = computed(() => graph.value.nodes.find(node => node.id === props.currentPath || sameWorkspacePath(node.path, props.currentPath))?.id || '')
+const filteredGraph = computed(() => applyGraphFilters(graph.value, filters, centerNodeId.value || props.currentPath))
 
 const loadGraph = async () => {
   if (!props.libraryRoot || !props.currentPath) {
@@ -141,7 +143,7 @@ const loadGraph = async () => {
 }
 
 const positionedNodes = computed<PositionedNode[]>(() => {
-  const center = filteredGraph.value.nodes.find(node => node.id === props.currentPath)
+  const center = filteredGraph.value.nodes.find(node => node.id === centerNodeId.value)
   if (!center) return []
 
   const levels = new Map<string, number>([[center.id, 0]])
@@ -189,10 +191,11 @@ const positionedEdges = computed(() => {
 })
 
 const directRelations = computed(() => {
+  const centerId = centerNodeId.value
   const nodeMap = new Map(filteredGraph.value.nodes.map(node => [node.id, node]))
   return filteredGraph.value.edges.flatMap(edge => {
-    const outgoing = edge.source === props.currentPath
-    const incoming = edge.target === props.currentPath
+    const outgoing = edge.source === centerId
+    const incoming = edge.target === centerId
     if (!outgoing && !incoming) return []
     const other = nodeMap.get(outgoing ? edge.target : edge.source)
     if (!other) return []

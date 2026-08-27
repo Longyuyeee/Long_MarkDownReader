@@ -266,6 +266,7 @@
                     <span><b>{{ backlinks.length }}</b> 链入</span>
                   </div>
                   <button type="button" @click="openCurrentRelations">在知识图谱中查看</button>
+                  <button type="button" data-testid="local-graph-pin" @click="setLocalGraphPinned(true)">固定局部图谱到编辑器右栏</button>
                 </div>
                 <div class="links-section">
                   <div class="links-section-title">链出到其他文件 ({{ outgoingLinks.length }})</div>
@@ -534,6 +535,20 @@
       </div>
     </div>
 
+    <aside v-if="localGraphPinned && activeTabId && !store.isZen" class="local-graph-rail" data-testid="local-graph-rail" :data-active-path="activeTabId">
+      <header>
+        <div><strong>已固定局部关系</strong><span>跟随当前活动标签页</span></div>
+        <button type="button" data-testid="local-graph-unpin" aria-label="取消固定局部图谱" @click="setLocalGraphPinned(false)">×</button>
+      </header>
+      <LocalGraph
+        :library-root="store.libraryPath"
+        :current-path="activeTabId"
+        @select="path => handleNodeSelect([path])"
+        @open-mindmap="openPinnedLocalMindmap"
+        @open-canvas="createPinnedLocalCanvas"
+      />
+    </aside>
+
     <HoverPreview :show="preview.show" :title="preview.title" :path="preview.path" :x="preview.x" :y="preview.y" />
     
     <n-dropdown
@@ -747,6 +762,7 @@ import { storeToRefs } from 'pinia'
 import HoverPreview from '../components/HoverPreview.vue'
 import MarkdownChartEmbeds from '../components/MarkdownChartEmbeds.vue'
 import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
+import LocalGraph from '../components/LocalGraph.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -776,6 +792,7 @@ import {
 } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
 import { promptAppAction } from '../services/appDialog'
+import { readLocalGraphPinned, writeLocalGraphPinned } from '../utils/localGraphPin'
 import {
   FILE_MARKER_ICON_OPTIONS,
   resolveFileTreeVisual,
@@ -1095,6 +1112,7 @@ const handleError = (error: any, userMessage: string, logContext?: string) => {
 }
 
 const activeSidebarTab = ref<'files' | 'quick' | 'collections' | 'tags' | 'outline' | 'links' | 'history'>('files')
+const localGraphPinned = ref(readLocalGraphPinned())
 const sidebarTabs = [
   { key: 'files' as const, icon: FileIcon, label: '文件', description: '文件：浏览和管理资料库文件' },
   { key: 'outline' as const, icon: ListIcon, label: '目录', description: '目录：查看当前文档的标题大纲' },
@@ -1805,6 +1823,25 @@ const openGraph = () => router.push('/graph')
 const openCurrentRelations = () => {
   if (!activeTabId.value) return
   router.push({ name: 'Graph', query: { mode: 'network', root: activeTabId.value } })
+}
+const setLocalGraphPinned = (pinned: boolean) => {
+  localGraphPinned.value = pinned
+  writeLocalGraphPinned(pinned)
+}
+const openPinnedLocalMindmap = () => {
+  if (!activeTabId.value) return
+  router.push({ name: 'Graph', query: { mode: 'mindmap', root: activeTabId.value } })
+}
+const createPinnedLocalCanvas = async (depth: number) => {
+  if (!activeTabId.value) return
+  try {
+    if (activeIsMarkdown.value) await saveCurrentFile()
+    const path = await invoke<string>('create_canvas_from_graph', { libraryRoot: store.libraryPath, centerPath: activeTabId.value, depth })
+    await refreshLibrary()
+    openManagedFile(router, path)
+  } catch (error) {
+    message.error(`生成局部关系画布失败：${String(error)}`)
+  }
 }
 
 const createMindMapFromCurrentMarkdown = async () => {
@@ -3586,7 +3623,7 @@ watch(activeTabId, (newId, oldId) => {
 </script>
 
 <style scoped>
-.library-mode { display: flex; height: 100%; width: 100%; min-width: 0; min-height: 0; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s var(--ease-premium); }
+.library-mode { position: relative; display: flex; height: 100%; width: 100%; min-width: 0; min-height: 0; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s var(--ease-premium); }
 .is-dragging, .is-dragging * { transition: none !important; user-select: none !important; }
 
 .sidebar {
@@ -4499,6 +4536,7 @@ watch(activeTabId, (newId, oldId) => {
 .collapse-btn.left { left: 0px; border-radius: 0 var(--theme-radius) var(--theme-radius) 0; }
 
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
+.local-graph-rail { width: clamp(300px,28vw,380px); height: 100%; min-width: 0; min-height: 0; flex: none; overflow: auto; box-sizing: border-box; border-left: var(--theme-border); background: color-mix(in srgb,var(--theme-surface) 97%,transparent); box-shadow: -8px 0 24px rgba(0,0,0,.06); }.local-graph-rail > header { position: sticky; z-index: 2; top: 0; min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px 7px 14px; box-sizing: border-box; border-bottom: var(--theme-border); background: color-mix(in srgb,var(--theme-surface) 98%,transparent); }.local-graph-rail > header div { min-width: 0; display: grid; gap: 2px; }.local-graph-rail > header strong { font-size: 11px; }.local-graph-rail > header span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.local-graph-rail > header button { width: 28px; height: 28px; flex: none; border: 0; border-radius: 5px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 18px; }.local-graph-rail > header button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }
 .tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; gap: 12px; }
 .embedded-format-capability {
   display: flex;
@@ -4726,6 +4764,7 @@ watch(activeTabId, (newId, oldId) => {
 
 /* 响应式布局优化 - 小屏幕断点 */
 @media (max-width: 1024px) {
+  .local-graph-rail { position: absolute; z-index: 60; top: 0; right: 0; width: min(380px,calc(100% - 16px)); }
   .sidebar {
     width: 200px !important;
   }

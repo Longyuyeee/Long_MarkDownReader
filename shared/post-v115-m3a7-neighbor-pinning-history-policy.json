@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-7",
+  "releaseCandidate": false,
+  "neighborPinning": {
+    "meaning": "pin-local-graph-to-editor-right-rail",
+    "follows": "active-tab",
+    "preferenceStorage": "device-local-state",
+    "userDataWriteback": false
+  },
+  "selectionHistory": {
+    "scope": "current-global-graph-session",
+    "limit": 20,
+    "deduplication": "consecutive-normalized-selection",
+    "branching": "truncate-forward-history-after-new-selection",
+    "missingNodes": "normalize-against-current-graph"
+  },
+  "requiredUi": ["pin-from-selected-node", "editor-right-rail", "follow-active-tab", "unpin", "selection-history-list", "selection-back", "selection-forward"],
+  "selectedNextStage": { "id": "M3A-8", "name": "semantic-exploration-exit-audit", "reason": "All original M3A feature items are implemented; run the complete semantic exploration exit audit before M3B." }
+}

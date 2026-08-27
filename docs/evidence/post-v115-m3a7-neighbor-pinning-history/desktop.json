@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-7",
+  "actual": {
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": null,
+    "nodeComparison": null,
+    "selectionHistory": {
+      "initialSelectedCount": 1,
+      "allSelectedCount": 17,
+      "clearedSelectedCount": 0,
+      "backToAllCount": 17,
+      "backToInitialCount": 1,
+      "forwardToAllCount": 17,
+      "entryCount": 3,
+      "wideFits": true,
+      "narrowFits": true,
+      "panelText": "当前图谱选择历史会话内最多 20 条，不写回资料库×← 上一个选择下一个选择 →已清除选择0 个节点NorthStar、Brief、Evidence 等 17 个17 个节点NorthStar1 个节点"
+    },
+    "neighborPinning": {
+      "railVisible": true,
+      "initialPath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-m3a1-49784-1787848372961\\library\\NorthStar.md",
+      "initialNodeCount": 6,
+      "initialEdgeCount": 7,
+      "wideFits": true,
+      "followedPath": "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-m3a1-49784-1787848372961\\library\\research\\Brief.md",
+      "followedActiveTab": true,
+      "narrowFits": true,
+      "unpinned": true
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
