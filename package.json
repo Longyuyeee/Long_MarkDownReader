@@ -253,6 +253,8 @@
     "audit:post-v115-m3a4-relation-evidence": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3a1-semantics-audit.ps1 -Stage M3A4",
     "check:post-v115-m3a5-community": "node scripts/check-post-v115-m3a5-community.mjs",
     "audit:post-v115-m3a5-community": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3a1-semantics-audit.ps1 -Stage M3A5",
+    "check:post-v115-m3a6-node-comparison": "node scripts/check-post-v115-m3a6-node-comparison.mjs",
+    "audit:post-v115-m3a6-node-comparison": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3a1-semantics-audit.ps1 -Stage M3A6",
     "check:post-v115-explicit-save-alignment": "node scripts/check-post-v115-explicit-save-alignment.mjs",
     "check:post-v115-large-library-index": "node scripts/check-post-v115-large-library-index.mjs",
     "audit:post-v115-large-library-index-baseline": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-large-library-index-baseline.ps1",

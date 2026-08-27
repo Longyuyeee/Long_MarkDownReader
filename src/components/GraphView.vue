@@ -1,5 +1,5 @@
 <template>
-  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'community-focus-active': activeCommunity && !communityOpen }]">
+  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen }]">
     <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls" data-horizontal-wheel="always">
@@ -16,6 +16,7 @@
           <span>如何建立链接</span>
         </button>
         <button class="graph-export-btn" :class="{ active: pathOpen }" data-testid="graph-path-entry" @click="togglePathPanel">最短路径</button>
+        <button class="graph-export-btn" :class="{ active: comparisonOpen }" data-testid="graph-comparison-entry" @click="toggleComparisonPanel">节点比较</button>
         <button class="health-entry" :class="{ active: healthOpen }" @click="healthOpen = !healthOpen">
           <span class="health-dot"></span>知识治理
         </button>
@@ -154,6 +155,51 @@
         </li>
       </ol>
       <button class="graph-path-close" type="button" aria-label="关闭最短路径" @click="closePathPanel">×</button>
+    </section>
+    <section v-if="comparisonOpen" class="graph-comparison-panel" data-testid="graph-comparison-panel">
+      <div class="graph-comparison-fields">
+        <select v-model="comparisonLeftId" data-testid="graph-comparison-left" aria-label="比较左侧节点"><option value="">选择左侧节点</option><option v-for="node in comparisonCandidates" :key="node.id" :value="node.id">{{ node.title }} · {{ objectTypeLabel(node.objectType) }}</option></select>
+        <span>对照</span>
+        <select v-model="comparisonRightId" data-testid="graph-comparison-right" aria-label="比较右侧节点"><option value="">选择右侧节点</option><option v-for="node in comparisonCandidates" :key="node.id" :value="node.id">{{ node.title }} · {{ objectTypeLabel(node.objectType) }}</option></select>
+        <button type="button" data-testid="graph-comparison-run" :disabled="!comparisonLeftId || !comparisonRightId || comparisonLeftId === comparisonRightId" @click="runNodeComparison">比较节点</button>
+      </div>
+      <template v-if="activeNodeComparison?.status === 'compared'">
+        <div class="graph-comparison-summary">
+          <article data-testid="graph-comparison-left-summary">
+            <strong>{{ activeNodeComparison.left.node.title }}</strong><small>{{ objectTypeLabel(activeNodeComparison.left.node.objectType) }} · {{ displayWorkspacePath(activeNodeComparison.left.node.path) }}</small>
+            <span>{{ activeNodeComparison.left.relationCount }} 条关系 · {{ activeNodeComparison.left.neighborCount }} 个邻居 · 入 {{ activeNodeComparison.left.incomingCount }} / 出 {{ activeNodeComparison.left.outgoingCount }}</span>
+          </article>
+          <div><strong>{{ activeNodeComparison.sameObjectType ? '同类对象' : '不同对象类型' }}</strong><span>共同标签 {{ activeNodeComparison.sharedTags.length }}</span></div>
+          <article data-testid="graph-comparison-right-summary">
+            <strong>{{ activeNodeComparison.right.node.title }}</strong><small>{{ objectTypeLabel(activeNodeComparison.right.node.objectType) }} · {{ displayWorkspacePath(activeNodeComparison.right.node.path) }}</small>
+            <span>{{ activeNodeComparison.right.relationCount }} 条关系 · {{ activeNodeComparison.right.neighborCount }} 个邻居 · 入 {{ activeNodeComparison.right.incomingCount }} / 出 {{ activeNodeComparison.right.outgoingCount }}</span>
+          </article>
+        </div>
+        <div class="graph-comparison-tags">
+          <span><b>共同标签</b>{{ activeNodeComparison.sharedTags.join('、') || '无' }}</span>
+          <span><b>左侧独有</b>{{ activeNodeComparison.leftOnlyTags.join('、') || '无' }}</span>
+          <span><b>右侧独有</b>{{ activeNodeComparison.rightOnlyTags.join('、') || '无' }}</span>
+        </div>
+        <div class="graph-comparison-neighbors">
+          <section data-testid="graph-comparison-common" :data-count="activeNodeComparison.commonNeighbors.length"><header>共同邻居 <b>{{ activeNodeComparison.commonNeighbors.length }}</b></header><p v-if="!activeNodeComparison.commonNeighbors.length">无</p><button v-for="node in activeNodeComparison.commonNeighbors" :key="node.id" type="button" @click="selectAndCenter(node)">{{ node.title }}<small>{{ objectTypeLabel(node.objectType) }}</small></button></section>
+          <section data-testid="graph-comparison-left-only" :data-count="activeNodeComparison.leftOnlyNeighbors.length"><header>仅左侧相邻 <b>{{ activeNodeComparison.leftOnlyNeighbors.length }}</b></header><p v-if="!activeNodeComparison.leftOnlyNeighbors.length">无</p><button v-for="node in activeNodeComparison.leftOnlyNeighbors" :key="node.id" type="button" @click="selectAndCenter(node)">{{ node.title }}<small>{{ objectTypeLabel(node.objectType) }}</small></button></section>
+          <section data-testid="graph-comparison-right-only" :data-count="activeNodeComparison.rightOnlyNeighbors.length"><header>仅右侧相邻 <b>{{ activeNodeComparison.rightOnlyNeighbors.length }}</b></header><p v-if="!activeNodeComparison.rightOnlyNeighbors.length">无</p><button v-for="node in activeNodeComparison.rightOnlyNeighbors" :key="node.id" type="button" @click="selectAndCenter(node)">{{ node.title }}<small>{{ objectTypeLabel(node.objectType) }}</small></button></section>
+        </div>
+        <div class="graph-comparison-relations" data-testid="graph-comparison-direct-relations" :data-count="activeNodeComparison.directRelations.length">
+          <header>两节点直接关系 <b>{{ activeNodeComparison.directRelations.length }}</b></header>
+          <p v-if="!activeNodeComparison.directRelations.length">两节点之间没有直接关系。</p>
+          <article v-for="(item, relationIndex) in activeNodeComparison.directRelations" :key="`${relationIndex}-${item.edge.source}-${item.edge.target}-${item.edge.relationType}`" data-testid="graph-comparison-direct-relation" :data-relation-type="item.edge.relationType" :data-directed="String(item.edge.directed)" :data-mention-count="item.mentions.length">
+            <header><strong>{{ relationTypeLabel(item.edge.relationType) }}</strong><span>{{ item.source.title }} {{ item.edge.directed ? '→' : '↔' }} {{ item.target.title }}</span></header>
+            <div v-if="item.mentions.length" class="graph-comparison-mentions">
+              <div v-for="(mention, mentionIndex) in item.mentions" :key="`${mention.line}-${mentionIndex}-${mention.syntax}`" data-testid="graph-comparison-mention"><span><b>证据 {{ mentionIndex + 1 }}</b> · 第 {{ mention.line }} 行 · <code>{{ mention.syntax }}</code></span><button type="button" data-testid="graph-comparison-evidence-return" @click="openComparisonMention(item, mention)">回到来源</button></div>
+            </div>
+            <div v-else class="graph-comparison-structural" data-testid="graph-comparison-structural-evidence"><span>结构关系没有 Markdown mention；来源对象定位是可审计依据。</span><button type="button" data-testid="graph-comparison-evidence-return" @click="openNode(item.source)">打开来源对象</button></div>
+          </article>
+        </div>
+      </template>
+      <p v-else-if="comparisonHasRun" class="graph-comparison-invalid">请选择两个不同且当前可见的节点进行比较。</p>
+      <p v-else class="graph-comparison-empty">比较对象类型、标签、入出关系、共同与独有邻居，并保留两节点间全部关系证据。</p>
+      <button class="graph-comparison-close" type="button" aria-label="关闭节点比较" @click="closeComparisonPanel">×</button>
     </section>
     <GraphSemanticLegend :graph="visibleGraph" :dark="isActiveThemeDark(store.theme)" />
     <canvas
@@ -361,10 +407,12 @@ import { clearGraphLayout, createGraphSvg, graphSvgToPng, restoreGraphLayout, sa
 import { findShortestGraphPath } from '../utils/graphPath'
 import { buildGraphPathEvidence } from '../utils/graphEvidence'
 import { detectGraphCommunities } from '../utils/graphCommunities'
+import { compareGraphNodes } from '../utils/graphComparison'
 import { graphLineDash, graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
 import type { GraphPathResult } from '../utils/graphPath'
 import type { GraphData, GraphNode, RelationMention } from '../types/graph'
 import type { GraphPathEdgeEvidence } from '../utils/graphEvidence'
+import type { GraphComparisonDirectRelation } from '../utils/graphComparison'
 
 const props = defineProps<{ show?: boolean }>()
 const emit = defineEmits(['selectFile'])
@@ -395,6 +443,10 @@ const pathOpen = ref(false)
 const pathStartId = ref('')
 const pathEndId = ref('')
 const shortestPathResult = ref<GraphPathResult | null>(null)
+const comparisonOpen = ref(false)
+const comparisonLeftId = ref('')
+const comparisonRightId = ref('')
+const comparisonHasRun = ref(false)
 const communityOpen = ref(false)
 const activeCommunityId = ref('')
 const contextNode = ref<GraphNode | null>(null)
@@ -488,6 +540,8 @@ const shortestPathChain = computed(() => {
   return activeShortestPath.value?.nodeIds.map(id => nodeMap.get(id) || id).join(' → ') || ''
 })
 const pathEdgeEvidence = computed(() => buildGraphPathEvidence(graphData.value, shortestPathResult.value))
+const comparisonCandidates = computed(() => [...remediationGraph.value.nodes].sort((a, b) => a.title.localeCompare(b.title, 'zh-CN') || a.id.localeCompare(b.id)))
+const activeNodeComparison = computed(() => comparisonHasRun.value ? compareGraphNodes(remediationGraph.value, comparisonLeftId.value, comparisonRightId.value) : null)
 const contextMenuOptions = computed(() => {
   const node = contextNode.value
   if (node) return [
@@ -1005,6 +1059,7 @@ const selectAndCenter = (node: GraphNode) => {
 const focusSelectedNeighbors = () => {
   if (!selectedNode.value) return
   closePathPanel()
+  closeComparisonPanel()
   neighborFocusRootId.value = selectedNode.value.id
   neighborFocusDepth.value = 1
   searchQuery.value = ''
@@ -1021,6 +1076,7 @@ const clearNeighborFocus = () => {
 const togglePathPanel = () => pathOpen.value ? closePathPanel() : openPathPanel()
 const openPathPanel = () => {
   const selectedStartId = selectedNode.value?.id || ''
+  closeComparisonPanel()
   neighborFocusRootId.value = ''
   pathOpen.value = true
   pathStartId.value ||= selectedStartId
@@ -1030,6 +1086,7 @@ const toggleCommunityPanel = () => {
   communityOpen.value = !communityOpen.value
   if (!communityOpen.value) return
   closePathPanel()
+  closeComparisonPanel()
   neighborFocusRootId.value = ''
   selectedNode.value = null
 }
@@ -1058,6 +1115,24 @@ const runShortestPath = () => {
   shortestPathResult.value = findShortestGraphPath(remediationGraph.value, pathStartId.value, pathEndId.value)
   if (shortestPathResult.value.status === 'found') requestAnimationFrame(fitGraph)
 }
+const toggleComparisonPanel = () => comparisonOpen.value ? closeComparisonPanel() : openComparisonPanel()
+const openComparisonPanel = () => {
+  const selectedStartId = selectedNode.value?.id || ''
+  closePathPanel()
+  communityOpen.value = false
+  clearCommunityFilter()
+  neighborFocusRootId.value = ''
+  comparisonOpen.value = true
+  comparisonLeftId.value ||= selectedStartId
+  clearSelection()
+}
+const closeComparisonPanel = () => {
+  comparisonOpen.value = false
+  comparisonLeftId.value = ''
+  comparisonRightId.value = ''
+  comparisonHasRun.value = false
+}
+const runNodeComparison = () => { comparisonHasRun.value = true }
 const focusHealthNode = (nodeId: string) => {
   const node = graphData.value.nodes.find(candidate => candidate.id === nodeId)
   if (node) selectAndCenter(node)
@@ -1106,6 +1181,14 @@ const openNode = (node: GraphNode) => {
   return openManagedFile(router, path)
 }
 const openPathMention = (item: GraphPathEdgeEvidence, mention: RelationMention) => {
+  if (item.source.objectType !== 'markdown') return openNode(item.source)
+  return openManagedFile(router, displayWorkspacePath(item.source.path), {
+    relationLine: String(mention.line),
+    relationSyntax: mention.syntax,
+    relationLocator: `${Date.now()}-${mention.line}`,
+  })
+}
+const openComparisonMention = (item: GraphComparisonDirectRelation, mention: RelationMention) => {
   if (item.source.objectType !== 'markdown') return openNode(item.source)
   return openManagedFile(router, displayWorkspacePath(item.source.path), {
     relationLine: String(mention.line),
@@ -1724,6 +1807,7 @@ const handleGraphKeydown = (event: KeyboardEvent) => {
 watch(() => props.show, (v) => { if (v !== false) loadGraph() })
 watch(() => store.libraryPath, () => { if (props.show !== false) loadGraph() })
 watch(() => selectedNode.value?.id, () => { relationDraftTarget.value = '' })
+watch([comparisonLeftId, comparisonRightId], () => { comparisonHasRun.value = false })
 watch(graphLayoutMode, value => localStorage.setItem('longedit.graph.layout-mode', value))
 watch(graphCanvasTheme, value => localStorage.setItem('longedit.graph.canvas-theme', value))
 watch(remediationFocus, focus => {
@@ -1737,6 +1821,7 @@ watch(remediationFocus, focus => {
 }, { immediate: true })
 watch(filters, () => {
   shortestPathResult.value = null
+  comparisonHasRun.value = false
   const visible = new Set(visibleNodes.value.map(node => node.id))
   selectedNodeIds.value = selectedNodeIds.value.filter(id => visible.has(id))
   if (selectedNode.value && !visible.has(selectedNode.value.id)) selectedNode.value = null
@@ -1872,12 +1957,13 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 .match-count { color: var(--theme-primary); font-weight: 650; }
 .community-entry { min-height: 26px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-text); background: rgba(var(--theme-primary-rgb),.04); cursor: pointer; font-size: 10px; font-weight: 700; white-space: nowrap; }.community-entry.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.42); background: rgba(var(--theme-primary-rgb),.1); }
 .graph-community-panel { position: absolute; z-index: 10; top: 126px; right: 16px; width: min(380px, calc(100% - 32px)); max-height: min(520px, calc(100% - 160px)); display: grid; gap: 8px; padding: 10px; overflow: auto; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb,var(--theme-card) 96%,transparent); box-shadow: var(--workspace-shadow); backdrop-filter: blur(16px); }.graph-community-panel > header { display: flex; align-items: start; justify-content: space-between; gap: 8px; }.graph-community-panel > header div { min-width: 0; display: grid; gap: 2px; }.graph-community-panel > header strong { font-size: 12px; }.graph-community-panel > header span,.graph-community-panel > p { margin: 0; color: var(--theme-text-secondary); font-size: 10px; line-height: 1.45; }.graph-community-panel > header button { width: 24px; height: 24px; flex: none; border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 17px; }.community-return { min-height: 28px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.graph-community-list { display: grid; gap: 6px; }.graph-community-card { min-width: 0; display: grid; gap: 4px; padding: 8px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-control-bg); text-align: left; cursor: pointer; }.graph-community-card:hover,.graph-community-card.active { border-color: rgba(var(--theme-primary-rgb),.44); background: rgba(var(--theme-primary-rgb),.09); }.graph-community-card > span:first-child { min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }.graph-community-card strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }.graph-community-card small,.community-representatives,.community-types { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.community-types { color: var(--theme-primary); }.community-focus-banner { position: absolute; z-index: 7; top: 126px; left: 16px; max-width: min(620px, calc(100% - 32px)); min-height: 34px; display: flex; align-items: center; gap: 10px; padding: 5px 7px 5px 11px; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb,var(--theme-card) 95%,transparent); box-shadow: var(--workspace-shadow-sm); backdrop-filter: blur(14px); font-size: 10px; }.community-focus-banner span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.community-focus-banner button { flex: none; min-height: 24px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.community-focus-active :deep(.graph-semantic-legend) { top: 170px; }
+.graph-comparison-panel { position: absolute; z-index: 11; top: 126px; left: 16px; right: 16px; max-width: 980px; max-height: min(590px, calc(100% - 160px)); display: grid; gap: 8px; padding: 9px 36px 10px 10px; overflow: auto; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb,var(--theme-card) 97%,transparent); box-shadow: var(--workspace-shadow); backdrop-filter: blur(16px); }.graph-comparison-fields { display: grid; grid-template-columns: minmax(130px,1fr) auto minmax(130px,1fr) auto; align-items: center; gap: 7px; }.graph-comparison-fields select { min-width: 0; height: 28px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--workspace-control-bg); font-size: 10px; }.graph-comparison-fields > span { color: var(--theme-text-secondary); font-size: 10px; }.graph-comparison-fields button,.graph-comparison-neighbors button,.graph-comparison-mentions button,.graph-comparison-structural button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.graph-comparison-fields button:disabled { opacity: .45; cursor: not-allowed; }.graph-comparison-summary { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: stretch; gap: 7px; }.graph-comparison-summary article,.graph-comparison-summary > div { min-width: 0; display: grid; gap: 3px; padding: 7px; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: var(--workspace-control-bg); }.graph-comparison-summary > div { align-content: center; justify-items: center; color: var(--theme-primary); font-size: 10px; }.graph-comparison-summary strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }.graph-comparison-summary small,.graph-comparison-summary span { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.graph-comparison-tags { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }.graph-comparison-tags span { min-width: 0; overflow: hidden; padding: 6px 7px; border-radius: 5px; color: var(--theme-text-secondary); background: rgba(var(--theme-primary-rgb),.05); text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.graph-comparison-tags b { margin-right: 6px; color: var(--theme-text); }.graph-comparison-neighbors { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }.graph-comparison-neighbors section { min-width: 0; display: grid; align-content: start; gap: 4px; padding: 7px; border: 1px solid var(--workspace-border-color); border-radius: 6px; }.graph-comparison-neighbors header,.graph-comparison-relations > header { display: flex; justify-content: space-between; color: var(--theme-text-secondary); font-size: 10px; }.graph-comparison-neighbors p,.graph-comparison-relations > p { margin: 0; color: var(--theme-text-secondary); font-size: 10px; }.graph-comparison-neighbors button { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; text-align: left; }.graph-comparison-neighbors button small { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; }.graph-comparison-relations { display: grid; gap: 5px; }.graph-comparison-relations > article { display: grid; gap: 5px; padding: 7px; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: color-mix(in srgb,var(--workspace-control-bg) 90%,transparent); }.graph-comparison-relations > article > header { min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 10px; }.graph-comparison-relations > article > header span { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; }.graph-comparison-mentions { display: grid; gap: 4px; }.graph-comparison-mentions > div,.graph-comparison-structural { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 4px; border-top: 1px dashed var(--workspace-border-color); color: var(--theme-text-secondary); font-size: 10px; }.graph-comparison-mentions span,.graph-comparison-structural span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.graph-comparison-mentions code { color: var(--theme-primary); }.graph-comparison-close { position: absolute; z-index: 2; top: 5px; right: 7px; width: 24px; height: 24px; border: 0; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; font-size: 17px; }.graph-comparison-empty,.graph-comparison-invalid { margin: 0; color: var(--theme-text-secondary); font-size: 10px; }.graph-comparison-active :deep(.graph-semantic-legend) { visibility: hidden; }
 .remediation-banner { position: absolute; top: calc(var(--workspace-management-header-height) + 58px); left: var(--workspace-floating-gutter); right: var(--workspace-floating-gutter); z-index: 3; min-height: 46px; display: grid; grid-template-columns: minmax(0,1fr) auto 24px; align-items: center; gap: 10px; padding: 7px 8px 7px 12px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 94%, transparent); backdrop-filter: blur(16px); box-shadow: var(--workspace-shadow-sm); }.remediation-copy { min-width: 0; display: grid; gap: 2px; }.remediation-banner strong { font-size: 11px; }.remediation-banner span { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.remediation-actions { display: flex; align-items: center; gap: 6px; }.remediation-banner button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font-size: var(--text-compact); font-weight: 650; }.remediation-banner .remediation-close { width: 24px; min-height: 24px; padding: 0; border-color: transparent; color: var(--theme-text-secondary); background: transparent; font-size: 16px; }
 .neighbor-focus-banner { position: absolute; z-index: 7; top: 126px; left: 16px; max-width: min(560px, calc(100% - 32px)); min-height: 34px; display: flex; align-items: center; gap: 8px; padding: 5px 7px 5px 11px; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 95%, transparent); box-shadow: var(--workspace-shadow-sm); backdrop-filter: blur(14px); font-size: 10px; }.neighbor-focus-banner span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.neighbor-focus-banner select { flex: none; height: 24px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--workspace-control-bg); font-size: 10px; }.neighbor-focus-banner button { flex: none; min-height: 24px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.neighbor-focus-active :deep(.graph-semantic-legend) { top: 170px; }
 .graph-path-panel { position: absolute; z-index: 9; top: 126px; left: 16px; right: 16px; max-width: 760px; max-height: min(430px, calc(100% - 170px)); display: grid; gap: 6px; padding: 8px 36px 8px 10px; overflow: auto; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 96%, transparent); box-shadow: var(--workspace-shadow-sm); backdrop-filter: blur(14px); }.graph-path-fields { display: grid; grid-template-columns: minmax(120px,1fr) auto minmax(120px,1fr) auto; align-items: center; gap: 7px; }.graph-path-fields select { min-width: 0; height: 28px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--workspace-control-bg); font-size: 10px; }.graph-path-fields button,.graph-path-result button,.graph-path-evidence-list button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.graph-path-fields button:disabled { opacity: .45; cursor: not-allowed; }.graph-path-result { min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 10px; }.graph-path-result span { min-width: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; }.graph-path-result button { margin-left: auto; flex: none; }.graph-path-result.unreachable strong { color: var(--theme-warning, #d97706); }.graph-path-evidence-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }.graph-path-evidence-edge { display: grid; gap: 6px; padding: 7px; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: color-mix(in srgb,var(--workspace-control-bg) 90%,transparent); }.graph-path-evidence-edge > header { min-width: 0; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 7px; font-size: 10px; }.graph-path-evidence-edge > header span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.graph-path-evidence-edge > header small { color: var(--theme-text-secondary); }.graph-path-mentions { display: grid; gap: 5px; }.graph-path-mentions article { min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 8px; padding-top: 5px; border-top: 1px dashed var(--workspace-border-color); }.graph-path-mentions article > div { min-width: 0; display: flex; gap: 7px; font-size: 10px; }.graph-path-mentions article > div span { color: var(--theme-text-secondary); }.graph-path-mentions code,.graph-path-mentions p { grid-column: 1; min-width: 0; margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.graph-path-mentions code { color: var(--theme-primary); }.graph-path-mentions button { grid-column: 2; grid-row: 1 / 4; align-self: center; }.graph-path-structural-evidence { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 5px; border-top: 1px dashed var(--workspace-border-color); color: var(--theme-text-secondary); font-size: 10px; }.graph-path-structural-evidence button { flex: none; }.graph-path-close { position: sticky; z-index: 2; top: -2px; justify-self: end; width: 24px; height: 24px; margin-top: -36px; margin-right: -30px; border: 0; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; font-size: 17px; }.graph-path-active :deep(.graph-semantic-legend) { top: 214px; }
 
 .graph-path-close { position: absolute; top: 6px; right: 7px; justify-self: auto; margin: 0; }
-@media (max-width: 760px) { .graph-path-panel { max-height: min(480px, calc(100% - 150px)); }.graph-path-fields { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); }.graph-path-fields > button { grid-column: 1 / -1; }.graph-path-evidence-edge > header { grid-template-columns: 1fr; gap: 2px; }.graph-path-mentions article { grid-template-columns: minmax(0,1fr); }.graph-path-mentions button { grid-column: 1; grid-row: auto; justify-self: start; }.graph-path-structural-evidence { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 760px) { .graph-path-panel,.graph-comparison-panel { max-height: min(480px, calc(100% - 150px)); }.graph-path-fields,.graph-comparison-fields { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); }.graph-path-fields > button,.graph-comparison-fields > button { grid-column: 1 / -1; }.graph-path-evidence-edge > header { grid-template-columns: 1fr; gap: 2px; }.graph-path-mentions article { grid-template-columns: minmax(0,1fr); }.graph-path-mentions button { grid-column: 1; grid-row: auto; justify-self: start; }.graph-path-structural-evidence { align-items: flex-start; flex-direction: column; }.graph-comparison-summary { grid-template-columns: minmax(0,1fr); }.graph-comparison-tags,.graph-comparison-neighbors { grid-template-columns: minmax(0,1fr); }.graph-comparison-summary > div { justify-items: start; }.graph-comparison-mentions > div,.graph-comparison-structural { align-items: flex-start; flex-direction: column; } }
 
 .tutorial-btn {
   flex: none;

@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-6",
+  "actual": {
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": null,
+    "nodeComparison": {
+      "commonCount": 1,
+      "leftOnlyCount": 1,
+      "rightOnlyCount": 1,
+      "directRelationCount": 1,
+      "directRelationTypes": [
+        "supports"
+      ],
+      "directRelationDirections": [
+        "true"
+      ],
+      "mentionCount": 0,
+      "text": "选择左侧节点Brief · Markdown 笔记Coverage chart · 表格视图Deliver · 思维导图主题Delivery outline · 思维导图Discover · 思维导图主题Evidence · PDF 资料Grouped shapes and theme · PowerPoint 幻灯片Images and relationships · PowerPoint 幻灯片Management dashboard · 表格视图NorthStar · Markdown 笔记NorthStar.md · Canvas 节点PowerPoint Producer Fixture · PowerPoint 幻灯片research/Roadmap.table.json · Canvas 节点retention Supports the roadmap · PDF 批注Review · PowerPoint 演示Roadmap · 数据表System · Canvas 画布对照选择右侧节点Brief · Markdown 笔记Coverage chart · 表格视图Deliver · 思维导图主题Delivery outline · 思维导图Discover · 思维导图主题Evidence · PDF 资料Grouped shapes and theme · PowerPoint 幻灯片Images and relationships · PowerPoint 幻灯片Management dashboard · 表格视图NorthStar · Markdown 笔记NorthStar.md · Canvas 节点PowerPoint Producer Fixture · PowerPoint 幻灯片research/Roadmap.table.json · Canvas 节点retention Supports the roadmap · PDF 批注Review · PowerPoint 演示Roadmap · 数据表System · Canvas 画布比较节点NorthStar.mdCanvas 节点 · C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-m3a1-50816-1787847651678\\library\\research\\System.canvas3 条关系 · 2 个邻居 · 入 1 / 出 2同类对象共同标签 0research/Roadmap.table.jsonCanvas 节点 · C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-m3a1-50816-1787847651678\\library\\research\\System.canvas3 条关系 · 2 个邻居 · 入 2 / 出 1共同标签无左侧独有无右侧独有无共同邻居 1SystemCanvas 画布仅左侧相邻 1NorthStarMarkdown 笔记仅右侧相邻 1Coverage chart表格视图两节点直接关系 1支持NorthStar.md → research/Roadmap.table.json结构关系没有 Markdown mention；来源对象定位是可审计依据。打开来源对象×",
+      "fits": true,
+      "wideFits": true,
+      "narrowFits": true,
+      "evidencePair": {
+        "commonCount": 0,
+        "leftOnlyCount": 1,
+        "rightOnlyCount": 1,
+        "directRelationCount": 2,
+        "directRelationTypes": [
+          "depends-on",
+          "links-to"
+        ],
+        "directRelationDirections": [
+          "true",
+          "true"
+        ],
+        "mentionCount": 3,
+        "text": "选择左侧节点Brief · Markdown 笔记Coverage chart · 表格视图Deliver · 思维导图主题Delivery outline · 思维导图Discover · 思维导图主题Evidence · PDF 资料Grouped shapes and theme · PowerPoint 幻灯片Images and relationships · PowerPoint 幻灯片Management dashboard · 表格视图NorthStar · Markdown 笔记NorthStar.md · Canvas 节点PowerPoint Producer Fixture · PowerPoint 幻灯片research/Roadmap.table.json · Canvas 节点retention Supports the roadmap · PDF 批注Review · PowerPoint 演示Roadmap · 数据表System · Canvas 画布对照选择右侧节点Brief · Markdown 笔记Coverage chart · 表格视图Deliver · 思维导图主题Delivery outline · 思维导图Discover · 思维导图主题Evidence · PDF 资料Grouped shapes and theme · PowerPoint 幻灯片Images and relationships · PowerPoint 幻灯片Management dashboard · 表格视图NorthStar · Markdown 笔记NorthStar.md · Canvas 节点PowerPoint Producer Fixture · PowerPoint 幻灯片research/Roadmap.table.json · Canvas 节点retention Supports the roadmap · PDF 批注Review · PowerPoint 演示Roadmap · 数据表System · Canvas 画布比较节点NorthStarMarkdown 笔记 · C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-m3a1-50816-1787847651678\\library\\NorthStar.md3 条关系 · 1 个邻居 · 入 2 / 出 1同类对象共同标签 0BriefMarkdown 笔记 · C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-m3a1-50816-1787847651678\\library\\research\\Brief.md3 条关系 · 1 个邻居 · 入 1 / 出 2共同标签无左侧独有无右侧独有无共同邻居 0无仅左侧相邻 1NorthStar.mdCanvas 节点仅右侧相邻 1retention Supports the roadmapPDF 批注两节点直接关系 2依赖Brief → NorthStar证据 1 · 第 3 行 · [[NorthStar]]回到来源证据 2 · 第 3 行 · [[NorthStar]]回到来源普通引用NorthStar → Brief证据 1 · 第 3 行 · [[research/Brief]]回到来源×",
+        "fits": true
+      },
+      "sourceReturn": {
+        "line": "3",
+        "targetVisible": true,
+        "targetText": "relations: depends-on: [[NorthStar]] [[NorthStar]]",
+        "hash": "#/library?relationLine=3&relationSyntax=[[NorthStar]]&relationLocator=1787847658855-3&path=C:%5CUsers%5CAdministrator%5CAppData%5CLocal%5CTemp%5Clongedit-m3a1-50816-1787847651678%5Clibrary%5Cresearch%5CBrief.md"
+      }
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

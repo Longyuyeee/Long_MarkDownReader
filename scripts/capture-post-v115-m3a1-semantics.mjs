@@ -6,7 +6,7 @@ const endpoint = process.env.LONGEDIT_CDP_ENDPOINT
 const output = path.resolve(process.env.LONGEDIT_M3A1_OUTPUT)
 const library = path.resolve(process.env.LONGEDIT_M3A1_LIBRARY)
 const stage = process.env.LONGEDIT_M3_STAGE || 'M3A1'
-if (!endpoint) throw new Error('M3A-1 capture environment is incomplete')
+if (!endpoint) throw new Error(`${stage} capture environment is incomplete`)
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 const hashDirectory = async root => {
   const files = []
@@ -29,7 +29,7 @@ for (let attempt = 0; attempt < 240 && !target; attempt += 1) {
   target = targets.find(item => item.type === 'page' && item.webSocketDebuggerUrl && !item.url.startsWith('devtools://'))
   if (!target) await delay(100)
 }
-if (!target?.webSocketDebuggerUrl) throw new Error('M3A-1 WebView target missing')
+if (!target?.webSocketDebuggerUrl) throw new Error(`${stage} WebView target missing`)
 const socket = new WebSocket(target.webSocketDebuggerUrl)
 await new Promise((resolve, reject) => { socket.addEventListener('open', resolve, { once: true }); socket.addEventListener('error', reject, { once: true }) })
 let sequence = 0
@@ -202,14 +202,55 @@ if (stage === 'M3A5') {
   }
 }
 
+let nodeComparison = null
+if (stage === 'M3A6') {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await evaluate(`document.querySelector('[data-testid="graph-comparison-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-comparison-panel"]')!==null`, 'node comparison panel')
+  const chooseComparison = async (selector, prefix) => {
+    const chosen = await evaluate(`(()=>{const select=document.querySelector(${JSON.stringify(selector)});if(!(select instanceof HTMLSelectElement))return false;const option=[...select.options].find(item=>item.textContent?.startsWith(${JSON.stringify(prefix)}));if(!option)return false;select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));return true})()`)
+    if (!chosen) throw new Error(`M3A-6 option missing: ${prefix}`)
+  }
+  const readComparison = () => evaluate(`(()=>{const panel=document.querySelector('[data-testid="graph-comparison-panel"]');const common=document.querySelector('[data-testid="graph-comparison-common"]');const left=document.querySelector('[data-testid="graph-comparison-left-only"]');const right=document.querySelector('[data-testid="graph-comparison-right-only"]');const relations=[...document.querySelectorAll('[data-testid="graph-comparison-direct-relation"]')];return {commonCount:Number(common?.dataset.count||0),leftOnlyCount:Number(left?.dataset.count||0),rightOnlyCount:Number(right?.dataset.count||0),directRelationCount:relations.length,directRelationTypes:relations.map(item=>item.dataset.relationType||''),directRelationDirections:relations.map(item=>item.dataset.directed||''),mentionCount:relations.reduce((sum,item)=>sum+Number(item.dataset.mentionCount||0),0),text:panel?.textContent?.replace(/\\s+/g,' ').trim()||'',fits:document.documentElement.scrollWidth<=innerWidth+1}})()`)
+  await chooseComparison('[data-testid="graph-comparison-left"]', 'NorthStar.md · Canvas 节点')
+  await chooseComparison('[data-testid="graph-comparison-right"]', 'research/Roadmap.table.json · Canvas 节点')
+  await evaluate(`document.querySelector('[data-testid="graph-comparison-run"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-comparison-common"]')?.dataset.count==='1'`, 'real common neighbor comparison')
+  await delay(150)
+  const wideComparison = await readComparison()
+  await capture('node-comparison-wide.jpg')
+  await send('Emulation.setDeviceMetricsOverride', { width: 720, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(200)
+  const narrowComparison = await readComparison()
+  await capture('node-comparison-narrow.jpg')
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(100)
+  await chooseComparison('[data-testid="graph-comparison-left"]', 'NorthStar · Markdown')
+  await chooseComparison('[data-testid="graph-comparison-right"]', 'Brief · Markdown')
+  await evaluate(`document.querySelector('[data-testid="graph-comparison-run"]')?.click()`)
+  await waitFor(`document.querySelectorAll('[data-testid="graph-comparison-mention"]').length>=3`, 'direct relation mention evidence')
+  await delay(120)
+  const evidenceComparison = await readComparison()
+  await capture('node-comparison-evidence.jpg')
+  const returned = await evaluate(`(()=>{const button=document.querySelector('[data-testid="graph-comparison-mention"] [data-testid="graph-comparison-evidence-return"]');if(!(button instanceof HTMLButtonElement))return false;button.click();return true})()`)
+  if (!returned) throw new Error('M3A-6 comparison evidence return missing')
+  await waitFor(`document.querySelector('.library-mode')!==null`, 'comparison evidence source library')
+  await waitFor(`document.querySelector('.workspace-relation-evidence-target')?.dataset.relationEvidenceLine==='3'`, 'comparison exact evidence line')
+  const sourceReturn = await evaluate(`(()=>{const target=document.querySelector('.workspace-relation-evidence-target');return {line:target?.dataset.relationEvidenceLine||'',targetVisible:Boolean(target),targetText:target?.textContent?.replace(/\\s+/g,' ').trim()||'',hash:location.hash}})()`)
+  await capture('node-comparison-source-return.jpg')
+  nodeComparison = { ...wideComparison, wideFits: wideComparison.fits, narrowFits: narrowComparison.fits, evidencePair: evidenceComparison, sourceReturn }
+  await evaluate(`location.hash='#/graph'`)
+  await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'graph return after comparison evidence')
+}
+
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
 if (!clicked) throw new Error('M3A-1 return control missing')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { wide, narrow, neighborFocus, shortestPath, relationEvidence, community, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }

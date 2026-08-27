@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-6",
+  "releaseCandidate": false,
+  "scope": "current-explorable-graph-with-exclusive-focus-modes-cleared",
+  "neighborSemantics": {
+    "direction": "undirected-for-neighborhood-membership",
+    "parallelEdges": "deduplicated-for-neighbor-sets",
+    "selectedEndpoints": "excluded-from-neighbor-differences"
+  },
+  "relationSemantics": {
+    "direction": "preserve-original",
+    "parallelEdges": "preserve-all",
+    "mentions": "preserve-all",
+    "structuralEvidence": "explicit"
+  },
+  "requiredUi": ["two-node-picker", "attribute-comparison", "common-neighbors", "left-only-neighbors", "right-only-neighbors", "direct-relation-evidence", "source-return"],
+  "selectedNextStage": { "id": "M3A-7", "name": "neighbor-pinning-selection-history", "reason": "The original M3A scope still requires neighbor pinning and selection history before M3B." }
+}
