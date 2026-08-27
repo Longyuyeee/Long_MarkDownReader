@@ -33,6 +33,16 @@ export interface GraphCommunityOverview {
   edges: GraphCommunityOverviewEdge[]
 }
 
+export interface GraphCommunityContour {
+  id: string
+  label: string
+  nodeIds: string[]
+  semanticObjectType: string
+  points: Array<{ x: number; y: number }>
+  labelX: number
+  labelY: number
+}
+
 export const resolveGraphSemanticZoom = (zoom: number, nodeCount: number): GraphSemanticZoomState => {
   const densityPressure = Math.max(1, Math.sqrt(Math.max(1, nodeCount) / 80))
   const effectiveZoom = Math.max(0, zoom) / densityPressure
@@ -61,6 +71,93 @@ const stablePairAngle = (left: string, right: string) => {
   let hash = 2166136261
   for (const character of `${left}\u001f${right}`) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619) >>> 0
   return (hash % 360) * Math.PI / 180
+}
+
+const cross = (origin: { x: number; y: number }, left: { x: number; y: number }, right: { x: number; y: number }) =>
+  (left.x - origin.x) * (right.y - origin.y) - (left.y - origin.y) * (right.x - origin.x)
+
+const convexHull = (points: Array<{ x: number; y: number }>) => {
+  const sorted = [...points].sort((left, right) => left.x - right.x || left.y - right.y)
+  if (sorted.length <= 2) return sorted
+  const lower: Array<{ x: number; y: number }> = []
+  for (const point of sorted) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], point) <= 0) lower.pop()
+    lower.push(point)
+  }
+  const upper: Array<{ x: number; y: number }> = []
+  for (let index = sorted.length - 1; index >= 0; index -= 1) {
+    const point = sorted[index]
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], point) <= 0) upper.pop()
+    upper.push(point)
+  }
+  return lower.slice(0, -1).concat(upper.slice(0, -1))
+}
+
+const circlePoints = (x: number, y: number, radius: number, count = 16) => Array.from({ length: count }, (_, index) => {
+  const angle = Math.PI * 2 * index / count
+  return { x: x + Math.cos(angle) * radius, y: y + Math.sin(angle) * radius }
+})
+
+/**
+ * Builds a visual-only envelope from the current member coordinates. The
+ * geometry never feeds back into layout, so enabling contours cannot move a
+ * real node or alter persisted graph state.
+ */
+export const buildGraphCommunityContours = (
+  graph: GraphData,
+  communities: GraphCommunitySummary[],
+  zoom: number,
+): GraphCommunityContour[] => {
+  const graphNodes = new Map(graph.nodes.map(node => [node.id, node]))
+  const safeZoom = Math.max(0.35, zoom)
+  return communities.flatMap(community => {
+    const members = community.nodeIds.map(id => graphNodes.get(id)).filter((node): node is GraphNode => Boolean(node))
+    if (!members.length) return []
+    const padding = 22 / safeZoom
+    const memberPoints = members.map(node => ({ x: node.x || 0, y: node.y || 0 }))
+    let points: Array<{ x: number; y: number }>
+    if (members.length === 1) {
+      points = circlePoints(memberPoints[0].x, memberPoints[0].y, members[0].size * 0.6 + padding)
+    } else {
+      const samples = members.flatMap((node, index) => circlePoints(
+        memberPoints[index].x,
+        memberPoints[index].y,
+        node.size * 0.6 + padding,
+        10,
+      ))
+      points = convexHull(samples)
+    }
+    const labelPoint = [...points].sort((left, right) => left.y - right.y || left.x - right.x)[0]
+    return [{
+      id: community.id,
+      label: community.label,
+      nodeIds: members.map(node => node.id),
+      semanticObjectType: community.objectTypes.find(item => members.some(node => node.objectType === item.id))?.id || members[0].objectType,
+      points,
+      labelX: labelPoint.x,
+      labelY: labelPoint.y - 8 / safeZoom,
+    }]
+  }).sort((left, right) => compareText(left.id, right.id))
+}
+
+const pointInPolygon = (point: { x: number; y: number }, polygon: Array<{ x: number; y: number }>) => {
+  let inside = false
+  for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index, index += 1) {
+    const currentPoint = polygon[index]
+    const previousPoint = polygon[previous]
+    const crosses = (currentPoint.y > point.y) !== (previousPoint.y > point.y)
+      && point.x < (previousPoint.x - currentPoint.x) * (point.y - currentPoint.y) / (previousPoint.y - currentPoint.y) + currentPoint.x
+    if (crosses) inside = !inside
+  }
+  return inside
+}
+
+export const graphCommunityContoursCoverMembers = (graph: GraphData, contours: GraphCommunityContour[]) => {
+  const nodes = new Map(graph.nodes.map(node => [node.id, node]))
+  return contours.every(contour => contour.nodeIds.every(id => {
+    const node = nodes.get(id)
+    return Boolean(node && pointInPolygon({ x: node.x || 0, y: node.y || 0 }, contour.points))
+  }))
 }
 
 export const buildGraphCommunityOverview = (

@@ -65,7 +65,7 @@ await fs.mkdir(output, { recursive: true })
 await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('.library-mode')!==null`, 'library initialization')
-const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
+const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
 await evaluate(`location.hash=${JSON.stringify(initialGraphHash)}`)
 await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'cross-format object legend')
 await waitFor(`document.querySelector('[data-testid="graph-relation-legend"] [data-semantic-id="supports"]')!==null`, 'cross-format relation legend')
@@ -473,22 +473,24 @@ if (stage === 'M3B0') {
 }
 
 let semanticZoom = null
-if (stage === 'M3B1') {
+let semanticHierarchy = null
+if (stage === 'M3B1' || stage === 'M3B2') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
   const readLevel = () => evaluate(`document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level||''`)
   const wheel = async deltaY => {
     const rect = await evaluate(`(()=>{const rect=document.querySelector('[data-testid="graph-container"] canvas')?.getBoundingClientRect();return rect?{x:rect.left+rect.width/2,y:rect.top+rect.height/2}:null})()`)
-    if (!rect) throw new Error('M3B-1 graph canvas missing')
+    if (!rect) throw new Error(`${stage} graph canvas missing`)
     await send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: rect.x, y: rect.y, deltaX: 0, deltaY })
     await delay(80)
   }
   const reachLevel = async targetLevel => {
+    const rank = { far: 0, middle: 1, near: 2 }
     for (let attempt = 0; attempt < 24; attempt += 1) {
       const current = await readLevel()
       if (current === targetLevel) return
-      await wheel(targetLevel === 'near' ? -120 : 120)
+      await wheel(rank[current] < rank[targetLevel] ? -120 : 120)
     }
-    throw new Error(`M3B-1 could not reach ${targetLevel}`)
+    throw new Error(`${stage} could not reach ${targetLevel}`)
   }
   const viewportSnapshot = async (width, height, file) => {
     await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
@@ -502,14 +504,15 @@ if (stage === 'M3B1') {
   }
 
   await waitFor(`document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level==='near'`, 'M3B-1 near level')
-  const near = { level: await readLevel(), zoomPercent: await evaluate(`Number(document.querySelector('.graph-stats')?.textContent?.match(/(\\d+)%/)?.[1]||0)`) }
+  const readContours = () => evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-container"] canvas');return {count:Number(canvas?.dataset.communityContourCount||0),coversMembers:canvas?.dataset.communityContoursCoverMembers==='true'}})()`)
+  const near = { level: await readLevel(), zoomPercent: await evaluate(`Number(document.querySelector('.graph-stats')?.textContent?.match(/(\\d+)%/)?.[1]||0)`), contours: await readContours() }
   await capture(`${theme}-near-1280.jpg`)
   await reachLevel('middle')
-  const middle = { level: await readLevel(), zoomPercent: await evaluate(`Number(document.querySelector('.graph-stats')?.textContent?.match(/(\\d+)%/)?.[1]||0)`) }
+  const middle = { level: await readLevel(), zoomPercent: await evaluate(`Number(document.querySelector('.graph-stats')?.textContent?.match(/(\\d+)%/)?.[1]||0)`), contours: await readContours() }
   await capture(`${theme}-middle-1280.jpg`)
   await reachLevel('far')
   await waitFor(`document.querySelectorAll('[data-testid="graph-community-overview-entry"]').length===5`, 'M3B-1 five community overview entries')
-  const far = { level: await readLevel(), zoomPercent: await evaluate(`Number(document.querySelector('.graph-stats')?.textContent?.match(/(\\d+)%/)?.[1]||0)`) }
+  const far = { level: await readLevel(), zoomPercent: await evaluate(`Number(document.querySelector('.graph-stats')?.textContent?.match(/(\\d+)%/)?.[1]||0)`), contours: await readContours() }
   const overviewEntryCount = await evaluate(`document.querySelectorAll('[data-testid="graph-community-overview-entry"]').length`)
   await capture(`${theme}-far-1280.jpg`)
 
@@ -527,6 +530,18 @@ if (stage === 'M3B1') {
     await viewportSnapshot(1000, 700, `${theme}-far-1000.jpg`),
     await viewportSnapshot(720, 680, `${theme}-far-720.jpg`),
   ]
+  const contourViewports = []
+  if (stage === 'M3B2') {
+    await evaluate(`document.querySelector('.details-close')?.click()`)
+    for (const [width, height] of [[720, 680], [1000, 700], [1280, 800]]) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
+      await delay(180)
+      await reachLevel('middle')
+      const contourState = await readContours()
+      contourViewports.push({ width, height, fits: await evaluate(`document.documentElement.scrollWidth<=innerWidth+1`), level: await readLevel(), ...contourState })
+      await capture(`${theme}-middle-${width}.jpg`)
+    }
+  }
   semanticZoom = {
     levels: [near.level, middle.level, far.level],
     zoomPercents: { near: near.zoomPercent, middle: middle.zoomPercent, far: far.zoomPercent },
@@ -537,6 +552,14 @@ if (stage === 'M3B1') {
     viewports,
     motionPreference: 'reduced',
   }
+  semanticHierarchy = {
+    nearContours: near.contours,
+    middleContours: middle.contours,
+    farContours: far.contours,
+    stableCommunityCount: overviewEntryCount,
+    contourViewports,
+    nodeLayoutMutation: false,
+  }
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 }
 
@@ -546,11 +569,11 @@ await waitFor(`document.querySelector('.library-mode')!==null`, 'return to libra
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { theme, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { theme, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
-await fs.writeFile(path.join(output, stage === 'M3B1' ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
+await fs.writeFile(path.join(output, ['M3B1', 'M3B2'].includes(stage) ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
 socket.close()
 console.log(`${stage} desktop: ${wide.objectTypeIds.length} object types, ${wide.relationTypeIds.length} relation types, runtime errors ${runtimeErrors.length}`)

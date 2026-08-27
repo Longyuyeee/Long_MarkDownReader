@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-2",
+  "releaseCandidate": false,
+  "scope": "stable-community-contours-and-far-middle-near-thematic-continuity",
+  "contours": {
+    "identity": "existing-stable-louvain-community-id",
+    "geometry": "deterministic-padded-convex-envelope-of-current-member-coordinates",
+    "renderOrder": "behind-real-relationships-and-nodes",
+    "layoutMutation": "none",
+    "middle": "semantic-color-band-with-community-label-and-member-count",
+    "near": "quiet-semantic-color-band-without-competing-label",
+    "far": "existing-community-summary-replaces-member-contours"
+  },
+  "preservedBoundaries": [
+    "contours do not move nodes or feed the force layout",
+    "relationships nodes selection and evidence remain above contour fills",
+    "mind-map and exports retain their existing real-node behavior",
+    "path motion minimap cluster lens and M3C performance remain deferred"
+  ],
+  "requiredThemes": ["dark", "white", "contrast"],
+  "requiredViewports": ["1280x800", "1000x700", "720x680"],
+  "motionPreference": "reduced",
+  "selectedNextStage": {
+    "id": "M3B-3",
+    "name": "path-relationship-visual-expression-selection-audit",
+    "reason": "Community identity is continuous across far, middle and near ranges; the next bounded decision is to audit curve separation, relationship labels and selected-path direction without yet adding navigation chrome or M3C performance claims."
+  }
+}

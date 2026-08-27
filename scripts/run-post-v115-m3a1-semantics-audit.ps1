@@ -1,7 +1,8 @@
-param([switch]$SkipBuild,[switch]$Append,[switch]$SkipEvidenceCheck,[ValidateSet('M3A1','M3A2','M3A3','M3A4','M3A5','M3A6','M3A7','M3A8','M3B0','M3B1')][string]$Stage = 'M3A1',[ValidateSet('dark','white','contrast')][string]$Theme = 'dark')
+param([switch]$SkipBuild,[switch]$Append,[switch]$SkipEvidenceCheck,[ValidateSet('M3A1','M3A2','M3A3','M3A4','M3A5','M3A6','M3A7','M3A8','M3B0','M3B1','M3B2')][string]$Stage = 'M3A1',[ValidateSet('dark','white','contrast')][string]$Theme = 'dark')
 $ErrorActionPreference = 'Stop'
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $outputRelative = if ($Stage -eq 'M3B1') { 'docs\evidence\post-v115-m3b1-semantic-zoom-community-overview' } elseif ($Stage -eq 'M3B0') { 'docs\evidence\post-v115-m3b0-professional-visual-baseline' } elseif ($Stage -eq 'M3A8') { 'docs\evidence\post-v115-m3a8-semantic-exploration-exit' } elseif ($Stage -eq 'M3A7') { 'docs\evidence\post-v115-m3a7-neighbor-pinning-history' } elseif ($Stage -eq 'M3A6') { 'docs\evidence\post-v115-m3a6-node-comparison' } elseif ($Stage -eq 'M3A5') { 'docs\evidence\post-v115-m3a5-community' } elseif ($Stage -eq 'M3A4') { 'docs\evidence\post-v115-m3a4-relation-evidence' } elseif ($Stage -eq 'M3A3') { 'docs\evidence\post-v115-m3a3-shortest-path' } elseif ($Stage -eq 'M3A2') { 'docs\evidence\post-v115-m3a2-neighbor-focus' } else { 'docs\evidence\post-v115-m3a1-semantics' }
+if ($Stage -eq 'M3B2') { $outputRelative = 'docs\evidence\post-v115-m3b2-community-contours-semantic-hierarchy' }
 $output = Join-Path $workspace $outputRelative
 $auditRoot = Join-Path $env:TEMP ("longedit-m3a1-{0}-{1}" -f $PID,[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
 $library = Join-Path $auditRoot 'library'
@@ -68,6 +69,7 @@ try {
   Remove-Item -LiteralPath $auditRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
 $checkRelative = if ($Stage -eq 'M3B1') { 'scripts\check-post-v115-m3b1-semantic-zoom-community-overview.mjs' } elseif ($Stage -eq 'M3B0') { 'scripts\check-post-v115-m3b0-professional-visual-baseline.mjs' } elseif ($Stage -eq 'M3A8') { 'scripts\check-post-v115-m3a8-semantic-exploration-exit.mjs' } elseif ($Stage -eq 'M3A7') { 'scripts\check-post-v115-m3a7-neighbor-pinning-history.mjs' } elseif ($Stage -eq 'M3A6') { 'scripts\check-post-v115-m3a6-node-comparison.mjs' } elseif ($Stage -eq 'M3A5') { 'scripts\check-post-v115-m3a5-community.mjs' } elseif ($Stage -eq 'M3A4') { 'scripts\check-post-v115-m3a4-relation-evidence.mjs' } elseif ($Stage -eq 'M3A3') { 'scripts\check-post-v115-m3a3-shortest-path.mjs' } elseif ($Stage -eq 'M3A2') { 'scripts\check-post-v115-m3a2-neighbor-focus.mjs' } else { 'scripts\check-post-v115-m3a1-semantics.mjs' }
+if ($Stage -eq 'M3B2') { $checkRelative = 'scripts\check-post-v115-m3b2-community-contours-semantic-hierarchy.mjs' }
 if (-not $SkipEvidenceCheck) {
   & node (Join-Path $workspace $checkRelative)
   if ($LASTEXITCODE -ne 0) { throw "$Stage evidence contract failed" }

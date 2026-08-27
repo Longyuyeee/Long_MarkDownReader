@@ -1,5 +1,5 @@
 <template>
-  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen }]" data-testid="graph-container" :data-active-exploration-scopes="activeExplorationScopes.join(',')" :data-semantic-zoom-level="semanticZoomLevel">
+  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen }]" data-testid="graph-container" :data-active-exploration-scopes="activeExplorationScopes.join(',')" :data-semantic-zoom-level="semanticZoomLevel" :data-community-contour-count="communityContourCount">
     <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls" data-horizontal-wheel="always">
@@ -228,6 +228,8 @@
       :data-semantic-zoom-level="semanticZoomLevel"
       :data-community-summary-count="showCommunityOverview ? communityResult.communities.length : 0"
       :data-community-overview-in-bounds="communityOverviewInBounds"
+      :data-community-contour-count="communityContourCount"
+      :data-community-contours-cover-members="communityContoursCoverMembers"
       @mousedown="startDrag"
       @mousemove="onDrag"
       @mouseup="endDrag"
@@ -433,7 +435,7 @@ import { findShortestGraphPath } from '../utils/graphPath'
 import { buildGraphPathEvidence } from '../utils/graphEvidence'
 import { detectGraphCommunities } from '../utils/graphCommunities'
 import { compareGraphNodes } from '../utils/graphComparison'
-import { buildGraphCommunityOverview, resolveGraphSemanticZoom, selectSemanticZoomKeyNodes } from '../utils/graphSemanticZoom'
+import { buildGraphCommunityContours, buildGraphCommunityOverview, graphCommunityContoursCoverMembers, resolveGraphSemanticZoom, selectSemanticZoomKeyNodes } from '../utils/graphSemanticZoom'
 import type { GraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHistory } from '../utils/graphSelectionHistory'
 import { writeLocalGraphPinned } from '../utils/localGraphPin'
@@ -585,6 +587,11 @@ const showCommunityOverview = computed(() => semanticZoomLevel.value === 'far'
   && !activeShortestPath.value
   && !comparisonOpen.value)
 const semanticKeyNodeIds = computed(() => new Set(selectSemanticZoomKeyNodes(visibleGraph.value).map(node => node.id)))
+const communityContours = computed(() => semanticZoomLevel.value === 'far' || viewMode.value !== 'network'
+  ? []
+  : buildGraphCommunityContours(visibleGraph.value, communityResult.value.communities, zoomLevel.value))
+const communityContourCount = computed(() => communityContours.value.length)
+const communityContoursCoverMembers = computed(() => graphCommunityContoursCoverMembers(visibleGraph.value, communityContours.value))
 const pathCandidates = computed(() => [...remediationGraph.value.nodes].sort((a, b) => a.title.localeCompare(b.title, 'zh-CN') || a.id.localeCompare(b.id)))
 const shortestPathChain = computed(() => {
   const nodeMap = new Map(graphData.value.nodes.map(node => [node.id, node.title]))
@@ -1506,8 +1513,16 @@ const frameCommunityOverview = () => {
   const maxX = Math.max(...overview.nodes.map(node => node.x + node.radius))
   const minY = Math.min(...overview.nodes.map(node => node.y - node.radius))
   const maxY = Math.max(...overview.nodes.map(node => node.y + node.radius))
-  viewX = safeLeft + Math.max(0, safeRight - safeLeft - (maxX - minX) * zoom) / 2 - minX * zoom
-  viewY = safeTop + Math.max(0, safeBottom - safeTop - (maxY - minY) * zoom) / 2 - minY * zoom
+  const overviewWidth = (maxX - minX) * zoom
+  const overviewHeight = (maxY - minY) * zoom
+  const horizontalFrame = overviewWidth <= safeRight - safeLeft
+    ? { start: safeLeft, size: safeRight - safeLeft }
+    : { start: 12, size: canvas.clientWidth - 24 }
+  const verticalFrame = overviewHeight <= safeBottom - safeTop
+    ? { start: safeTop, size: safeBottom - safeTop }
+    : { start: 12, size: canvas.clientHeight - 120 }
+  viewX = horizontalFrame.start + Math.max(0, horizontalFrame.size - overviewWidth) / 2 - minX * zoom
+  viewY = verticalFrame.start + Math.max(0, verticalFrame.size - overviewHeight) / 2 - minY * zoom
   communityOverviewCacheKey = ''
 }
 
@@ -1546,6 +1561,34 @@ const draw = () => {
   // 构建节点 Map 加速查找
   const nodeMap = new Map<string, GraphNode>()
   visibleNodes.value.forEach(n => nodeMap.set(n.id, n))
+
+  // Community contours sit behind relationships and nodes. They are derived
+  // from member coordinates only and never feed forces or persisted layout.
+  if (!showCommunityOverview.value && communityContours.value.length) {
+    for (const contour of communityContours.value) {
+      if (contour.points.length < 3) continue
+      const color = graphSemanticColor(contour.semanticObjectType, isDark)
+      ctx.beginPath()
+      ctx.moveTo(contour.points[0].x, contour.points[0].y)
+      for (let index = 1; index < contour.points.length; index += 1) ctx.lineTo(contour.points[index].x, contour.points[index].y)
+      ctx.closePath()
+      ctx.fillStyle = `${color}${semanticZoomLevel.value === 'middle' ? (isDark ? '1f' : '17') : (isDark ? '12' : '0d')}`
+      ctx.fill()
+      ctx.strokeStyle = `${color}${semanticZoomLevel.value === 'middle' ? '9c' : '66'}`
+      ctx.lineWidth = (semanticZoomLevel.value === 'middle' ? 2 : 1.25) / zoom
+      ctx.setLineDash(semanticZoomLevel.value === 'middle' ? [] : [5 / zoom, 4 / zoom])
+      ctx.stroke()
+      ctx.setLineDash([])
+      if (semanticZoomLevel.value === 'middle') {
+        const label = contour.label.length > 18 ? `${contour.label.slice(0, 18)}…` : contour.label
+        ctx.font = `700 ${11 / zoom}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'bottom'
+        ctx.fillStyle = color
+        ctx.fillText(`${label} · ${contour.nodeIds.length}`, contour.labelX, contour.labelY)
+      }
+    }
+  }
 
   if (showCommunityOverview.value) {
     const overview = currentCommunityOverview()

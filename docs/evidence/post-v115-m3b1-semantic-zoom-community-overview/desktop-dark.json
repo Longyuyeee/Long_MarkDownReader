@@ -159,6 +159,23 @@
       ],
       "motionPreference": "reduced"
     },
+    "semanticHierarchy": {
+      "nearContours": {
+        "count": 5,
+        "coversMembers": true
+      },
+      "middleContours": {
+        "count": 5,
+        "coversMembers": true
+      },
+      "farContours": {
+        "count": 0,
+        "coversMembers": true
+      },
+      "stableCommunityCount": 5,
+      "contourViewports": [],
+      "nodeLayoutMutation": false
+    },
     "returnedToLibrary": true,
     "runtimeErrors": 0,
     "sourceFilesUnchanged": true,
